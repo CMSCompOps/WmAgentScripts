@@ -1,0 +1,286 @@
+#!/usr/bin/env python
+#-*- coding: ISO-8859-1 -*-
+# Author:  Valentin Kuznetsov, 2008
+
+"""
+DBS command line interface
+"""
+
+import httplib
+import urllib
+import urllib2
+import types
+import os
+import sys
+from optparse import OptionParser
+from xml.dom.minidom import parse, parseString
+
+class DDOptionParser: 
+  """
+     DDOptionParser is main class to parse options for L{DDHelper} and L{DDServer}.
+  """
+  def __init__(self):
+    self.parser = OptionParser()
+    self.parser.add_option("--dbsInst", action="store", type="string", default="cms_dbs_prod_global", dest="dbsInst",
+         help="specify DBS instance to use, e.g. --dbsInst=cms_dbs_prod_global or --dbsInst=all")
+    self.parser.add_option("--url", action="store", type="string", default=False, dest="url",
+         help="specify DBS url to use, useful for testing DBS test-instances")
+#    self.parser.add_option("-v","--verbose",action="store", type="int", default=0, dest="verbose",
+#         help="specify verbosity level, 0-none, 1-info, 2-debug")
+    self.parser.add_option("--input",action="store", type="string", default=False, dest="input",
+         help="specify input for your request.")
+    self.parser.add_option("--xml",action="store_true",dest="xml",
+         help="request output in XML format")
+    self.parser.add_option("--page",action="store",type="string",default="0",dest="page",
+         help="specify output page, should come together with --limit and --summary")
+    self.parser.add_option("--limit",action="store",type="string",default="10",dest="limit",
+         help="specify a limit on output, e.g. 50 results, the --limit=-1 will list all results")
+    self.parser.add_option("--summary",action="store_true",dest="summary",
+         help="return summary information")
+  def getOpt(self):
+    """
+        Returns parse list of options
+    """
+    return self.parser.parse_args()
+
+def parseCreatedBy(input):
+    if input and type(input) is types.StringType:
+       try:
+           dnList=input.split('/')
+           lastItem = dnList[-1].replace("CN=","").replace("E=","")
+           itemList = []
+           for item in lastItem.split():
+               if  not re.match("[0-9]",item):
+                   itemList.append(item)
+           return ' '.join(itemList)
+       except:
+           pass
+    return input
+
+
+def parseDBSoutput_DBS_2_0_6(data, titles):
+    """
+    DBS XML parser for DBS server DBS_2_0_6 and later
+    """
+    lList = [len(t) for t in titles]
+    dom  = parseString(data)
+    datalist = []
+    for node in dom.getElementsByTagName('row'):
+        olist = []
+        for child in node.childNodes:
+            subnode = child.firstChild
+            if  not subnode:
+                continue
+            if  child.nodeName == 'file.size':
+                data = sizeFormat(subnode.data)
+            elif  child.nodeName.find('createby') !=-1 or \
+                  child.nodeName.find('modby') != -1:
+                data = parseCreatedBy(subnode.data)
+            elif  child.nodeName.find('createdate') !=-1 or \
+                  child.nodeName.find('moddate') != -1:
+                data = parseDate(subnode.data)
+            else:
+                data = subnode.data
+            olist.append((subnode.parentNode.tagName,data))
+        if  len(olist) == 1:
+            datalist.append(olist[-1])
+        else:
+            datalist.append(olist)
+    return datalist, lList
+
+def parseDBSoutput_DBS_2_0_5(data,titles):
+    # output in a format 
+    # <result SUM_FILE_SIZE='25155849149393' FILE_CREATEBY_DN='mlmiller@vocms19.cern.ch' />
+    # I wanted this script be completely stand-alone, so I don't want to use XML parsers
+    # which may not be installed on remote site, so plain filter on <result will work here.
+    oList = []
+    lList = [len(t) for t in titles]
+    for item in data.split('\n'):
+        if item.find("<result")==-1: continue
+        r   = item.split("'")
+        item = []
+        counter = 0
+        for idx in range(1,len(r),2):
+            elem = r[idx]
+            if r[idx-1].lower().find("size=")!=-1: elem = sizeFormat(r[idx])
+            if r[idx-1].lower().find("dn=")!=-1: elem = parseCreatedBy(r[idx])
+            if r[idx-1].lower().find("date=")!=-1: elem = parseDate(r[idx])
+            item.append(elem)
+            if  not lList or len(lList)==counter:
+                lList.append(len(elem))
+            else:
+                if lList[counter]<len(elem): lList[counter]=len(elem)
+            counter+=1    
+        oList.append(item)
+    return oList,lList
+
+def sizeFormat(i):
+    """
+       Format file size utility, it converts file size into KB, MB, GB, TB, PB units
+    """
+    try:
+       num=long(i)
+    except:
+       return "N/A"
+    for x in ['','KB','MB','GB','TB','PB']:
+        if num<1024.:
+            snum=" "*(3-len(str(num).split('.')[0]))+"%3.1f"%num
+            return "%s%s"%(snum,x)
+#            return "%3.1f%s" % (num, x)
+        num /=1024.
+def parseDate(input):
+    # we are getting timestamps in a form 2008-03-13 18:17:17 CET
+    date = input.split()[0]
+    return date
+
+def findInString(s,pat1,pat2,oList=[]):
+    idx1 = s.find(pat1)
+    idx2 = s.find(pat2)
+    if idx1==-1:
+       return
+    if idx2==-1:
+       oList.append(s[idx1+len(pat1):])
+       return
+    oList.append(s[idx1+len(pat1):idx2])
+    return findInString(s[idx2+len(pat2):],pat1,pat2,oList)
+
+def printList(iList,lenList):
+    if  type(iList) is types.ListType:
+        for idx in range(0,len(iList)):
+            item = str(iList[idx])
+            if  len(item)<lenList[idx]:
+                elem=str(item)+" "*(lenList[idx]-len(item))
+            else: elem = item
+            tup = eval(elem)
+            print tup[-1],
+#            print elem,
+        print
+    else:
+        print iList
+
+class DBSManager(object):
+    def __init__(self):
+        self.dbsinstances=['cms_dbs_prod_global',
+                           'cms_dbs_caf_analysis_01',
+                           'cms_dbs_prod_tier0',
+                           'cms_dbs_ph_analysis_01',
+                           'cms_dbs_ph_analysis_02']
+        for i in range(1,11):
+            if i<10: self.dbsinstances.append('cms_dbs_prod_local_0%s'%i)
+            else   : self.dbsinstances.append('cms_dbs_prod_local_%s'%i)
+        self.params = {'apiversion':'DBS_2_0_6','api':'executeQuery'}
+        self.global_url = "http://cmsdbsprod.cern.ch"
+        self.xml = None
+        self.dbs = "cms_dbs_prod_global"
+
+    def getDBSversion(self, dbsurl):
+        params = dict(self.params)
+        params['api'] = 'getDBSServerVersion'
+        data = urllib2.urlopen(dbsurl, urllib.urlencode(params, doseq=True))
+        res = data.read()
+        for line in res.split():
+            if  line.find('server_version') != -1:
+                dbsver = line.split('=')[-1]
+                dbsver = dbsver.replace("'","").replace('"','')
+                return dbsver
+        return None
+
+    def parseDBSoutput(self, dbsurl, data, titles):
+        dbsver = self.getDBSversion(dbsurl)
+        if  not dbsver or dbsver >= 'DBS_2_0_6':
+            return parseDBSoutput_DBS_2_0_6(data, titles)
+        else:
+            return parseDBSoutput_DBS_2_0_5(data, titles)
+
+    def query(self, query, url=None, explain=None, result=None, summary=False, begin=None, end=None):
+        if  url:
+            testurl = url
+        else:
+            testurl = None
+        if  self.dbs == 'all':
+            dbsInstList = self.dbsinstances
+        else:
+            dbsInstList = [self.dbs]
+        if  summary:
+            self.params['api'] = 'executeSummary'
+        if  begin:
+            self.params['begin'] = begin
+        if  end:
+            self.params['end'] = end
+        self.params['query']=query
+        titles = []
+        output = []
+        findInString(query,"find","where",titles)
+        if  len(titles) == 1:
+            titles = titles[0].strip().split(",")
+        for dbs in dbsInstList:
+            if dbs.find('tier0')!=-1: url="http://cmst0dbs.cern.ch"
+            else: url = self.global_url
+            dbsurl= url+"/%s/servlet/DBSServlet"%dbs
+            if  testurl:
+                dbsurl = testurl
+                print "\n### Look-up data in %s instance ###" % dbsurl
+            else:
+                print "\n### Look-up data in %s instance ###"%dbs.upper()
+            data=urllib2.urlopen(dbsurl,
+                         urllib.urlencode(self.params,doseq=True)).read()
+            if  data.lower().find("<exception") != -1:
+                print data
+                return
+            if  self.xml:
+#                if  data.lower().find("<result") != -1:
+                print data
+                return
+            oList,lenList = self.parseDBSoutput(dbsurl, data, titles)
+            if  summary:
+                padding = 0
+                for item in oList:
+                    if  type(item) is types.ListType:
+                        if  item == oList[0]:
+                            for tag, data in item:
+                                name = tag.split('.')[-1]
+                                if  padding < len(name):
+                                    padding = len(name)
+                        for tag,data in item:
+                            name = tag.split('.')[-1].lower()
+                            pad  = (padding - len(name))*" "
+                            print "%s%s: %s" % (name, pad, data)
+                        print
+            else:
+                if  result and oList:
+                    return oList
+                if  explain and oList:
+                    printList(titles,lenList)
+                    explain = None
+                for item in oList:
+                    printList(item,lenList)
+                if  oList or testurl:
+                    break
+                    break
+        print
+
+#
+# main
+#
+if __name__ == "__main__":
+    optManager  = DDOptionParser()
+    (opts,args) = optManager.getOpt()
+    dbsMgr = DBSManager()
+    xml = None
+    if  opts.xml:
+        dbsMgr.xml = 1
+    if  opts.dbsInst:
+        dbsMgr.dbs = opts.dbsInst
+    input = opts.input
+    if  opts.input:
+        if  os.path.isfile(opts.input):
+            input=open(opts.input, 'r').readline()
+        else:
+            input=opts.input
+    else:
+        print "\nUsage: %s --help" % sys.argv[0]
+        sys.exit(0)
+    url = None
+    if  opts.url:
+        url = opts.url
+    dbsMgr.query(input, url=opts.url, summary=opts.summary, begin=opts.page, end=opts.limit)

@@ -1,0 +1,150 @@
+#!/usr/bin/env python
+import json
+import urllib2,urllib, httplib, sys, re, os
+from xml.dom.minidom import getDOMImplementation
+
+#Changes the state of a workflow to closed-out
+def closeOutWorkflow(workflowname):
+    print workflowname,
+    conn = httplib.HTTPConnection('vocms144.cern.ch', 8687)
+    params = {"requestName" : workflowname,"status" : "closed-out"}
+    headers={"Content-type": "application/x-www-form-urlencoded",
+             "Accept": "text/plain"}
+    encodedParams = urllib.urlencode(params)
+    conn.request("PUT", "/reqmgr/reqMgr/request", encodedParams, headers)
+    response = conn.getresponse()	
+    print response.status, response.reason
+    data = response.read()
+    print data
+    conn.close()
+
+def abortWorkflow(workflowname):
+    print workflowname,
+    conn = httplib.HTTPConnection('vocms144.cern.ch', 8687)
+    params = {"requestName" : workflowname,"status" : "aborted"}
+    headers={"Content-type": "application/x-www-form-urlencoded",
+             "Accept": "text/plain"}
+    encodedParams = urllib.urlencode(params)
+    conn.request("PUT", "/reqmgr/reqMgr/request", encodedParams, headers)
+    response = conn.getresponse()	
+    print response.status, response.reason
+    data = response.read()
+    print data
+    conn.close()
+
+    
+#Tests whether a dataset was subscribed to phedex
+def testOutputDataset(datasetName):
+	 url='https://cmsweb.cern.ch/phedex/datasvc/json/prod/Data?dataset=' + datasetName
+         result = json.read(urllib2.urlopen(url))
+	 dataset=result['phedex']['dbs']
+	 if len(dataset)>0:
+		return 1
+	 else:
+		return 0
+
+
+#Test whether the output datasets for a workflow were subscribed
+def testWorkflows(workflows):
+	print "Testing the subscriptions, this process may take some time"
+	for workflow in workflows:
+		print "Testing workflow: "+workflow
+		datasets=outputdatasetsWorkflow(workflow)
+		numsubscribed=len(datasets)
+		for dataset in datasets:
+			if not testOutputDataset(dataset):
+				print "Couldn't subscribe: "+ dataset
+			else:
+				numsubscribed=numsubscribed-1
+		if numsubscribed==0:
+			closeOutWorkflow(workflow)
+			print "Everything subscribed and closedout"
+
+
+
+
+#Return a list of outputdatasets for the workflows on the given list
+def datasetforWorkfows(workflows):
+	datasets=[]
+	for workflow in workflows:
+		datasets=datasets+outputdatasetsWorkflow(workflow)
+	return datasets
+
+#Return a list of workflows from the given file
+def workflownamesfromFile(filename):
+	workflows=[]
+	f=open(filename,'r')
+	for workflow in f:
+		#This line is to remove the carrige return	
+		workflow = workflow.rstrip('\n')
+		workflows.append(workflow)
+	return workflows	
+
+#From a list of datasets return an XML of the datasets in the format required by Phedex
+def createXML(datasets):
+	# Create the minidom document
+	impl=getDOMImplementation()
+	doc=impl.createDocument(None, "data", None)
+	result = doc.createElement("data")
+	result.setAttribute('version', '2')
+	# Create the <dbs> base element
+	dbs = doc.createElement("dbs")
+	dbs.setAttribute("name", "https://cmsdbsprod.cern.ch:8443/cms_dbs_prod_global_writer/servlet/DBSServlet")
+	result.appendChild(dbs)	
+	#Create each of the <dataset> element			
+	for datasetname in datasets:
+		dataset=doc.createElement("dataset")
+		dataset.setAttribute("is-open","y")
+		dataset.setAttribute("is-transient","y")
+		dataset.setAttribute("name",datasetname)
+		dbs.appendChild(dataset)
+   	return result.toprettyxml(indent="  ")
+
+#returns the output datasets for a given workfow
+def outputdatasetsWorkflow(url, workflow):
+	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+	r1=conn.request("GET",'/reqmgr/reqMgr/outputDatasetsByRequestName?requestName=' + workflow)
+	r2=conn.getresponse()
+	datasets = json.read(r2.read())
+	if len(datasets)==0:
+		print "No Outpudatasets for this workflow: "+workflow
+	return datasets
+#Creates the connection to phedex
+def createConnection():
+	key = "/afs/cern.ch/user/e/efajardo/private/grid_cert_priv.pem"
+        cert = "/afs/cern.ch/user/e/efajardo/private/grid_cert_pub.pem"
+	conn = httplib.HTTPSConnection("cmsweb.cern.ch", key_file=key, cert_file=cert)
+    	conn.connect()
+    	print "connected"
+	return conn
+
+# Create the parameters of the request
+def createParams(site, datasetXML, comments):
+	params = urllib.urlencode({ "node" : site+"_MSS","data" : datasetXML, "group": "DataOps", "priority":'normal', "custodial":"y","request_only":"y" ,"no_mail":"n", "comments":comments})
+	return params
+
+def main():
+	args=sys.argv[1:]
+	if not len(args)==3:
+		print "usage site_name file comments"
+	site=args[0]
+	filename=args[1]
+	comments=args[2]
+	workflows=workflownamesfromFile(filename)
+	outputdatasets=datasetforWorkfows(workflows)
+	dataXML=createXML(outputdatasets)
+	params=createParams(site, dataXML, "Custodial Subscription for "+comments)	
+	conn=createConnection()
+	conn.request("POST", "/phedex/datasvc/xml/prod/subscribe", params)
+	response = conn.getresponse()	
+	print response.status, response.reason
+        print response.read()
+	testWorkflows(workflows)
+	for workflow in workflows:
+		print workflow + " closed-out"
+		closeOutWorkflow(workflow)
+	sys.exit(0);
+
+if __name__ == "__main__":
+	main()
+
