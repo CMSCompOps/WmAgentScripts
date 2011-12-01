@@ -5,14 +5,14 @@ from xml.dom.minidom import getDOMImplementation
 
 def getInputDataSet(url, workflow):
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-	r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/'+workflow)
+	r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
 	r2=conn.getresponse()
 	request = json.read(r2.read())
-	inputDataSets=request['InputDatasets']
+	inputDataSets=request['InputDataset']
 	if len(inputDataSets)<1:
 		print "No InputDataSet for workflow " +workflow
 	else:
-		return inputDataSets[0]
+		return inputDataSets
 
 def getEventCountDataSet(dataset):
 	output=os.popen("./dbssql --input='find dataset,sum(block.numevents) where dataset="+dataset+"'"+ "|awk '{print $2}' | grep '[0-9]\{1,\}'").read()
