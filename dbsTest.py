@@ -20,6 +20,14 @@ def getRunWhitelist(url, workflow):
 	runWhitelist=request['RunWhitelist']
 	return runWhitelist
 
+def getBlockWhitelist(url, workflow):
+	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+	r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
+	r2=conn.getresponse()
+	request = json.read(r2.read())
+	BlockWhitelist=request['BlockWhitelist']
+	return BlockWhitelist
+
 def getInputDataSet(url, workflow):
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
@@ -47,6 +55,36 @@ def getEventCountDataSet(dataset):
 		return int(output)
 	except ValueError:
        		return -1
+
+
+def getInputEvents(url, workflow):
+	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+	r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
+	r2=conn.getresponse()
+	request = json.read(r2.read())
+	BlockWhitelist=request['BlockWhitelist']
+	inputDataSet=request['InputDataset']
+	runWhitelist=request['RunWhitelist']
+	querry='find dataset,sum(block.numevents) where dataset='+inputDataSet
+	if len(BlockWhitelist)>0:
+		querry=querry+' AND ('
+		for block in BlockWhitelist:
+			querry=querry+' block= '+block+' OR'
+		
+		querry=querry+' block= '+BlockWhitelist[0] +')'
+	if len(runWhitelist)>0:
+		querry=querry+' AND ('
+		for run in runWhitelist:
+			querry=querry+' run= '+str(run)+' OR'
+		
+		querry=querry+' run= '+str(runWhitelist[0]) +')'
+	output=os.popen("./dbssql --input='"+querry+"'"+ "|awk '{print $2}' | grep '[0-9]\{1,\}'").read()
+	try:
+		int(output)
+		return int(output)
+	except ValueError:
+       		return -1
+	
 def main():
 	args=sys.argv[1:]
 	if not len(args)==1:
@@ -54,15 +92,8 @@ def main():
 		sys.exit(0)
 	workflow=args[0]
 	url='cmsweb.cern.ch'
-	InputDataset=getInputDataSet(url, workflow)
 	outputDataSets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
-	inputEvents=0
-	if (len(getRunWhitelist(url, workflow))==0):
-		inputEvents=getEventCountDataSet(InputDataset)
-	else:
-		runWhitelist=getRunWhitelist(url, workflow)
-		for run in runWhitelist:
-			inputEvents=inputEvents+getEventsRun(url, InputDataset, run)
+	inputEvents=getInputEvents(url, workflow)
 	for dataset in outputDataSets:
 		outputEvents=getEventCountDataSet(dataset)
 		print dataset+" match: "+str(outputEvents/float(inputEvents)*100) +"%"
