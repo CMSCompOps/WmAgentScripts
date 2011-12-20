@@ -4,9 +4,9 @@ import urllib2,urllib, httplib, sys, re, os
 from xml.dom.minidom import getDOMImplementation
 
 #Changes the state of a workflow to closed-out
-def closeOutWorkflow(workflowname):
+def closeOutWorkflow(url, workflowname):
     print workflowname,
-    conn = httplib.HTTPConnection('vocms144.cern.ch', 8687)
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     params = {"requestName" : workflowname,"status" : "closed-out"}
     headers={"Content-type": "application/x-www-form-urlencoded",
              "Accept": "text/plain"}
@@ -18,9 +18,9 @@ def closeOutWorkflow(workflowname):
     print data
     conn.close()
 
-def abortWorkflow(workflowname):
+def abortWorkflow(url, workflowname):
     print workflowname,
-    conn = httplib.HTTPConnection('vocms144.cern.ch', 8687)
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     params = {"requestName" : workflowname,"status" : "aborted"}
     headers={"Content-type": "application/x-www-form-urlencoded",
              "Accept": "text/plain"}
