@@ -56,6 +56,11 @@ def getEventCountDataSet(dataset):
 	except ValueError:
        		return -1
 
+# SPlits a list of chunks of size(n)
+def chunks(lis, n):
+    return [lis[i:i+n] for i in range(0, len(lis), n)]
+
+
 
 def getInputEvents(url, workflow):
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -78,7 +83,23 @@ def getInputEvents(url, workflow):
 			querry=querry+' run= '+str(run)+' OR'
 		
 		querry=querry+' run= '+str(runWhitelist[0]) +')'
-	output=os.popen("./dbssql --input='"+querry+"'"+ "|awk '{print $2}' | grep '[0-9]\{1,\}'").read()
+	if len(runWhitelist)>0 and len(runWhitelist)>30:
+		events=0
+		runChunks=chunks(runWhitelist,30)
+		for runList in runChunks:
+			querry="./dbssql --input='find dataset,sum(block.numevents) where dataset="+inputDataSet+' AND ('
+			for run in runList:
+				querry=querry+" run="+str(run) +" OR "
+			querry=querry+' run= '+str(runList[0]) +')'
+			querry=querry+"'|awk '{print $2}' | grep '[0-9]\{1,\}'"
+			output=os.popen(querry).read()
+			try:
+				events=events+int(output)
+			except ValueError:
+       				return -1
+		return events
+	else:
+		output=os.popen("./dbssql --input='"+querry+"'"+ "|awk '{print $2}' | grep '[0-9]\{1,\}'").read()
 	try:
 		int(output)
 		return int(output)
