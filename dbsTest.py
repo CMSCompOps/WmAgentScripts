@@ -67,6 +67,10 @@ def getInputEvents(url, workflow):
 	r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
 	r2=conn.getresponse()
 	request = json.read(r2.read())
+	requestType=request['RequestType']
+	if requestType=='MonteCarlo':
+		reqevts =request['RequestSizeEvents']
+		return reqevts
 	BlockWhitelist=request['BlockWhitelist']
 	inputDataSet=request['InputDataset']
 	runWhitelist=request['RunWhitelist']
