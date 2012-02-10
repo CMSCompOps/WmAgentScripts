@@ -110,18 +110,28 @@ def outputdatasetsWorkflow(url, workflow):
 		print "No Outpudatasets for this workflow: "+workflow
 	return datasets
 #Creates the connection to phedex
-def createConnection():
-	key = "/afs/cern.ch/user/e/efajardo/private/grid_cert_priv.pem"
-        cert = "/afs/cern.ch/user/e/efajardo/private/grid_cert_pub.pem"
-	conn = httplib.HTTPSConnection("cmsweb.cern.ch", key_file=key, cert_file=cert)
+def createConnection(url):
+	#key = "/afs/cern.ch/user/e/efajardo/private/grid_cert_priv.pem"
+        #cert = "/afs/cern.ch/user/e/efajardo/private/grid_cert_pub.pem"
+	#conn = httplib.HTTPSConnection(url, key_file=key, cert_file=cert)
+	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     	conn.connect()
     	print "connected"
 	return conn
 
 # Create the parameters of the request
 def createParams(site, datasetXML, comments):
-	params = urllib.urlencode({ "node" : site+"_MSS","data" : datasetXML, "group": "DataOps", "priority":'normal', "custodial":"y","request_only":"y" ,"no_mail":"n", "comments":comments})
+	params = urllib.urlencode({ "node" : site+"_MSS","data" : datasetXML, "group": "DataOps", "priority":'normal', "custodial":"y","request_only":"y" ,"move":"y","no_mail":"n", "comments":comments})
 	return params
+
+def makeCustodialMoveRequest(url, site,datasets, comments):
+	dataXML=createXML(datasets)
+	params=createParams(site, dataXML, comments)
+	conn=createConnection(url)
+	conn.request("POST", "/phedex/datasvc/json/prod/subscribe", params)
+	response = conn.getresponse()	
+	print response.status, response.reason
+        print response.read()
 
 def main():
 	args=sys.argv[1:]
