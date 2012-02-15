@@ -111,12 +111,14 @@ def outputdatasetsWorkflow(url, workflow):
 	return datasets
 #Creates the connection to phedex
 def createConnection(url):
-	#key = "/afs/cern.ch/user/e/efajardo/private/grid_cert_priv.pem"
-        #cert = "/afs/cern.ch/user/e/efajardo/private/grid_cert_pub.pem"
-	#conn = httplib.HTTPSConnection(url, key_file=key, cert_file=cert)
-	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    	conn.connect()
-    	print "connected"
+	key = "/afs/cern.ch/user/e/efajardo/private/grid_cert_priv.pem"
+        cert = "/afs/cern.ch/user/e/efajardo/private/grid_cert_pub.pem"
+	conn = httplib.HTTPSConnection(url, key_file=key, cert_file=cert)
+	#conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+	#r1=conn.request("GET",'/phedex/datasvc/perl/prod/auth')
+	#r2=conn.getresponse()
+	#conn.connect()
+    	#print "connected"
 	return conn
 
 # Create the parameters of the request

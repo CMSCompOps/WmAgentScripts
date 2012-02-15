@@ -106,7 +106,10 @@ def getInputEvents(url, workflow):
 		output=os.popen("./dbssql --input='"+querry+"'"+ "|awk '{print $2}' | grep '[0-9]\{1,\}'").read()
 	try:
 		int(output)
-		return int(output)
+		if 'FilterEfficiency' in request.keys():
+			return float(request['FilterEfficiency'])*int(output)
+		else:
+			return int(output)
 	except ValueError:
        		return -1
 	
