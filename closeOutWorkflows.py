@@ -147,7 +147,7 @@ def closeOutMonterCarloRequests(url, workflows):
 							print "This workflow has not been closed-out: " + workflow
 							print dataset +" not completely transfered"
 			if len(datasetsUnsuscribed)>0:
-				phedexSubscription.makeCustodialMoveRequest('phedex-web-dev.cern.ch', site, datasetsUnsuscribed, "Custodial Move Subscription for MonteCarlo")
+				phedexSubscription.makeCustodialMoveRequest('cmsweb-dev.cern.ch', site, datasetsUnsuscribed, "Custodial Move Subscription for MonteCarlo")
 
 def main():
 	url='cmsweb.cern.ch'
