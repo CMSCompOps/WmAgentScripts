@@ -3,6 +3,19 @@ import json
 import urllib2,urllib, httplib, sys, re, os, phedexSubscription, dbsTest
 from xml.dom.minidom import getDOMImplementation
 
+def TransferComplete(url, dataset, site):
+	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+	r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset='+dataset+'&node='+site+'_MSS')
+	r2=conn.getresponse()
+	result = json.read(r2.read())
+	blocks=result['phedex']
+	if 'block' not in blocks.keys():
+		return False
+	for block in blocks['block']:
+		if block['replica'][0]['complete']!='y':
+			return False
+	return True
+			
 
 def CustodialMoveSubscriptionCreated(datasetName):
 	url='https://cmsweb.cern.ch/phedex/datasvc/json/prod/subscriptions?dataset=' + datasetName
@@ -77,10 +90,10 @@ def testEventCountWorkflow(url, workflow):
 		outputEvents=dbsTest.getEventCountDataSet(dataset)
 		percentage=outputEvents/float(inputEvents)
 		if float(percentage)<float(0.95):
-			print "Workflow: " + workflow+" not subscribed cause outputdataset event count too low: "+dataset
+			print "Workflow: " + workflow+" not closed-out cause outputdataset event count too low: "+dataset
 			return 0
 		if float(percentage)>float(1.7):
-			print "Workflow: " + workflow+" not subscribed cause outputdataset event count too HIGH: "+dataset
+			print "Workflow: " + workflow+" not closed-out cause outputdataset event count too HIGH: "+dataset
 			return 0
 	return 1
 
@@ -124,13 +137,17 @@ def closeOutMonterCarloRequests(url, workflows):
 				if testEventCountWorkflow(url, workflow):
 					datasetWorkflow=phedexSubscription.outputdatasetsWorkflow(url, workflow)
 					for dataset in datasetWorkflow:
-						if CustodialMoveSubscriptionCreated(dataset):
-						    print "This workflow is closed-out: " + workflow	
-						    phedexSubscription.closeOutWorkflow(url, workflow)
+						if TransferComplete(url, dataset, site):
+							if CustodialMoveSubscriptionCreated(dataset):
+							    print "This workflow is closed-out: " + workflow	
+							    phedexSubscription.closeOutWorkflow(url, workflow)
+							else:
+							     datasetsUnsuscribed.append(dataset)
 						else:
-						     datasetsUnsuscribed.append(dataset)
+							print "This workflow has not been closed-out: " + workflow
+							print dataset +" not completely transfered"
 			if len(datasetsUnsuscribed)>0:
-				phedexSubscription.makeCustodialMoveRequest(url, site, datasetsUnsuscribed, "Custodial Move Subscription for MonteCarlo")
+				phedexSubscription.makeCustodialMoveRequest('phedex-web-dev.cern.ch', site, datasetsUnsuscribed, "Custodial Move Subscription for MonteCarlo")
 
 def main():
 	url='cmsweb.cern.ch'
