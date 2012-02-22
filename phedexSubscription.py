@@ -3,6 +3,25 @@ import json
 import urllib2,urllib, httplib, sys, re, os
 from xml.dom.minidom import getDOMImplementation
 
+
+def TestCustodialSubscriptionRequested(url, dataset, site):
+	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+	r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset='+dataset+'&node='+site+'_MSS')
+	r2=conn.getresponse()
+	result = json.read(r2.read())
+	requests=result['phedex']
+	if 'request' not in requests.keys():
+		return False
+	for request in result['phedex']['request']:
+		if request['approval']=='pending' or request['approval']=='approved':
+			requestId=request['id']
+			r1=conn.request("GET",'/phedex/datasvc/json/prod/transferrequests?request='+requestId)
+			r2=conn.getresponse()
+			result = json.read(r2.read())
+			requestSubscription=result['phedex']['request'][0]
+			if requestSubscription['custodial']=='y':
+				return True
+	return False
 #Changes the state of a workflow to closed-out
 def closeOutWorkflow(url, workflowname):
     print workflowname,
