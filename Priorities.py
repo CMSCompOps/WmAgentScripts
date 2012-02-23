@@ -15,7 +15,7 @@ def classifyRequests(url, requests, historic, noNameSites, requestType):
 		continue
 	    if 'status' in request.keys():
 			status=request['status']
-	    if status in noNameSites.keys():
+            if status in noNameSites.keys():
 		namefound=0
 		for Site in historic.keys():
  		    if name.find(Site)>=0:
@@ -35,6 +35,7 @@ def orderfunction(workflowTuple):
 
 
 def printTopRequests(historic, noNameSites, numRequests):
+	print historic
 	for Site in historic.keys():
 		print "Site "+Site
 		for stat in historic[Site].keys():
@@ -42,21 +43,28 @@ def printTopRequests(historic, noNameSites, numRequests):
 			completeList.sort(key=orderfunction, reverse=True)
 			print "Status: "+stat
 			if numRequests==-1:
-				numRequests=len(completeList)
-			for workflow in completeList[:numRequests]:
-				print workflow[0]+ " Priority: " + str(workflow[1])
-			print " "
+				for workflow in completeList[:len(completeList)]:
+					print workflow[0]+ " Priority: " + str(workflow[1])
+				print " "
+			else:
+				for workflow in completeList[:numRequests]:
+					print workflow[0]+ " Priority: " + str(workflow[1])
+				print " "
 		print " "
 	print "Other Workflows: "
 	for stat in noNameSites.keys():
 			completeList=noNameSites[stat]
 			completeList.sort(key=orderfunction,reverse=True)
-			print " Status: "+stat
+			print "Status: "+stat
 			if numRequests==-1:
-				numRequests=len(completeList)
-			for workflow in completeList[:numRequests]:
-				print workflow[0]+ " Priority: " + str(workflow[1])
-			print " "
+				for workflow in completeList[:len(completeList)]:
+					print workflow[0]+ " Priority: " + str(workflow[1])
+				print " "
+			else:
+				for workflow in completeList[:numRequests]:
+					print workflow[0]+ " Priority: " + str(workflow[1])
+				print " "
+	print " "
 
 	
 
@@ -73,7 +81,7 @@ def getPriorityWorkflow(url, workflow):
 
 def main():
 	url='cmsweb.cern.ch'	
-	siteList=['CNAF', 'FNAL', 'CCIN2P3', 'PIC', 'KIT', 'ASGC', 'RAL']
+	siteList=['CNAF', 'FNAL', 'IN2P3', 'PIC', 'KIT', 'ASGC', 'RAL']
 	statusList=['assignment-approved','acquired', 'running', 'completed', 'closed-out']
 	historic=dict([(site, dict([(status, []) for status in statusList])) for site in siteList])
 	noNameSites=dict([(status,[]) for status in statusList])
@@ -90,7 +98,9 @@ def main():
 	if not options.type:# The type of request default will be redigi
 		requestType='ReDigi'
 	else:
-		requestType==options.type 
+		requestType=options.type 
+	print "Number of requests :"+str(numrequests)
+	print "Type requested: "+requestType
        	print "Gathering request"
 	requests=closeOutWorkflows.getOverviewRequest()
 	print "Classifying requests"
