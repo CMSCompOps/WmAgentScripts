@@ -35,7 +35,7 @@ def orderfunction(workflowTuple):
 
 
 def printTopRequests(historic, noNameSites, numRequests):
-	print historic
+	#print historic
 	for Site in historic.keys():
 		print "Site "+Site
 		for stat in historic[Site].keys():
@@ -82,13 +82,18 @@ def getPriorityWorkflow(url, workflow):
 def main():
 	url='cmsweb.cern.ch'	
 	siteList=['CNAF', 'FNAL', 'IN2P3', 'PIC', 'KIT', 'ASGC', 'RAL']
-	statusList=['assignment-approved','acquired', 'running', 'completed', 'closed-out']
-	historic=dict([(site, dict([(status, []) for status in statusList])) for site in siteList])
-	noNameSites=dict([(status,[]) for status in statusList])
 	parser = optparse.OptionParser()
 	parser.add_option('-n', '--number', help='Number of Requests',dest='number')
 	parser.add_option('-t', '--type', help='Type of Requests',dest='type')
+	parser.add_option('-s', '--status', help='Status of Requests',dest='status')
 	(options,args) = parser.parse_args()
+	statusList=['assignment-approved','acquired', 'running', 'completed', 'closed-out']
+	if not options.status:
+		statusList=['assignment-approved','acquired', 'running', 'completed', 'closed-out']
+	else:
+		statusList = [options.status]
+	historic=dict([(site, dict([(status, []) for status in statusList])) for site in siteList])
+	noNameSites=dict([(status,[]) for status in statusList])
 	numrequests=-1 # It will print all the requests
 	if not options.number:
 		numrequests=-1
