@@ -19,6 +19,7 @@ def retrieveSchema(workflowName):
     print "done."
     schema = {}
     for (key, value) in helper.data.request.schema.dictionary_().iteritems():
+        print key
         if key == 'ProdConfigCacheID':
             schema['ProcConfigCacheID'] = value
         elif value != None:

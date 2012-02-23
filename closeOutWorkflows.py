@@ -135,21 +135,23 @@ def closeOutMonterCarloRequests(url, workflows):
 			for workflow in workflows[site]:
 				if testEventCountWorkflow(url, workflow):
 					datasetWorkflow=phedexSubscription.outputdatasetsWorkflow(url, workflow)
+					uncompletedTransfers=[]	
 					for dataset in datasetWorkflow:
 						if not phedexSubscription.TestCustodialSubscriptionRequested(url, dataset, site):
 							print "This dataset hasn't been subscribed "+dataset
-							print "This workflow has not been closed-out: " + workflow
 							datasetsUnsuscribed.append(dataset)
-					uncompletedTransfers=[]	
-					for dataset in datasetWorkflow:
-						if not TransferComplete(url, dataset, site):
 							uncompletedTransfers.append(dataset)
-					if len(uncompletedTransfers)>0:
+					datasetWorkflow=phedexSubscription.outputdatasetsWorkflow(url, workflow)
+					for dataset in datasetWorkflow:
+						if TransferComplete(url, dataset, site)==False:
+							uncompletedTransfers.append(dataset)
+					if len(uncompletedTransfers)==0:
+						phedexSubscription.closeOutWorkflow(url, workflow)
+					else:
 						print "This workflow has not been closed-out: " + workflow
 						for dataset in uncompletedTransfers:
 							print dataset +" not completely transfered"
-					else:
-						phedexSubscription.closeOutWorkflow(url, workflow)
+						
 			if len(datasetsUnsuscribed)>0:
 				phedexSubscription.makeCustodialMoveRequest('cmsweb-dev.cern.ch', site, datasetsUnsuscribed, "Custodial Move Subscription for MonteCarlo")
 

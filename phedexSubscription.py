@@ -9,6 +9,7 @@ def TestCustodialSubscriptionRequested(url, dataset, site):
 	r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset='+dataset+'&node='+site+'_MSS')
 	r2=conn.getresponse()
 	result = json.read(r2.read())
+	print result
 	requests=result['phedex']
 	if 'request' not in requests.keys():
 		return False
