@@ -19,7 +19,7 @@ def retrieveSchema(workflowName):
     print "done."
     schema = {}
     for (key, value) in helper.data.request.schema.dictionary_().iteritems():
-        print key
+        #print key
         if key == 'ProdConfigCacheID':
             schema['ProcConfigCacheID'] = value
         elif value != None:
@@ -42,7 +42,6 @@ def submitWorkflow(schema):
     conn.request("POST",  "/reqmgr/create/makeSchema", encodedParams, headers)
     response = conn.getresponse()
     print response.status, response.reason
-
     data = response.read()
     print data
     conn.close()
