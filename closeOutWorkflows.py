@@ -91,7 +91,7 @@ def testEventCountWorkflow(url, workflow):
 		if float(percentage)<float(0.95):
 			print "Workflow: " + workflow+" not closed-out cause outputdataset event count too low: "+dataset
 			return 0
-		if float(percentage)>float(1.3):
+		if float(percentage)>float(1.5):
 			print "Workflow: " + workflow+" not closed-out cause outputdataset event count too HIGH: "+dataset
 			return 0
 	return 1
@@ -168,7 +168,7 @@ def main():
 	if 'NoSite' in workflowsCompleted['MonteCarlo']:
 		print workflowsCompleted['MonteCarlo']['NoSite']
 	if 'NoSite' in workflowsCompleted['MonteCarloFromGEN']:
-		print workflowsCompleted['MonteCarlo']['NoSite']
+		print workflowsCompleted['MonteCarloFromGEN']['NoSite']
 	sys.exit(0);
 
 if __name__ == "__main__":
