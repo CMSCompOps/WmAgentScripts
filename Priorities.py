@@ -23,13 +23,15 @@ def classifyRequests(url, requests, historic, noNameSites, requestType):
 			for stat in historic[Site].keys():#stat is the status of the request in the list of requests
 				if status==stat:
 					priority=getPriorityWorkflow(url, name)
-					historic[Site][stat].append((name,priority))
+					numevents=dbsTest.getInputEvents(url, name)
+					historic[Site][stat].append((name,priority,numevents))
 		if namefound==0:
 			for stat in noNameSites.keys():
 				if status==stat:
 					priority=getPriorityWorkflow(url, name)
-					noNameSites[stat].append((name,priority))
-
+					numevents=dbsTest.getInputEvents(url, name)
+					noNameSites[stat].append((name,priority, numevents))
+					
 def orderfunction(workflowTuple):
 	return workflowTuple[1]
 
@@ -44,11 +46,11 @@ def printTopRequests(historic, noNameSites, numRequests):
 			print "Status: "+stat
 			if numRequests==-1:
 				for workflow in completeList[:len(completeList)]:
-					print workflow[0]+ " Priority: " + str(workflow[1])
+					print workflow[0]+ " Priority: " + str(workflow[1]) + " Number of Events: " +str(workflow[2])
 				print " "
 			else:
 				for workflow in completeList[:numRequests]:
-					print workflow[0]+ " Priority: " + str(workflow[1])
+					print workflow[0]+ " Priority: " + str(workflow[1]) + " Number of Events: " +str(workflow[2])
 				print " "
 		print " "
 	print "Other Workflows: "
@@ -58,11 +60,11 @@ def printTopRequests(historic, noNameSites, numRequests):
 			print "Status: "+stat
 			if numRequests==-1:
 				for workflow in completeList[:len(completeList)]:
-					print workflow[0]+ " Priority: " + str(workflow[1])
+					print workflow[0]+ " Priority: " + str(workflow[1]) + " Number of Events: " +str(workflow[2])
 				print " "
 			else:
 				for workflow in completeList[:numRequests]:
-					print workflow[0]+ " Priority: " + str(workflow[1])
+					print workflow[0]+ " Priority: " + str(workflow[1]) + " Number of Events: " +str(workflow[2])
 				print " "
 	print " "
 
