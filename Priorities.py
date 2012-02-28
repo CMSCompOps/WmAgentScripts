@@ -4,6 +4,17 @@ import urllib2,urllib, httplib, sys, re, os, json, time, math, dbsTest, locale
 import optparse, closeOutWorkflows
 from xml.dom.minidom import getDOMImplementation
 
+def getTimeEventRequest(url, requestName):
+	conn=httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+	r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+requestName)
+	r2=conn.getresponse()
+	request = json.read(r2.read())
+	if 'TimePerEvent' in request.keys():
+		return int(request['TimePerEvent'])
+	else:
+		return 0
+
+
 def classifyRequests(url, requests, historic, noNameSites, requestType):
 	for request in requests:
 	    name=request['request_name']
@@ -22,15 +33,17 @@ def classifyRequests(url, requests, historic, noNameSites, requestType):
 			namefound=1
 			for stat in historic[Site].keys():#stat is the status of the request in the list of requests
 				if status==stat:
+					TimeEvent=getTimeEventRequest(url, name)
 					priority=getPriorityWorkflow(url, name)
 					numevents=dbsTest.getInputEvents(url, name)
-					historic[Site][stat].append((name,priority,numevents))
+					historic[Site][stat].append((name,priority,numevents, TimeEvent))
 		if namefound==0:
 			for stat in noNameSites.keys():
 				if status==stat:
+					TimeEvent=getTimeEventRequest(url, name)
 					priority=getPriorityWorkflow(url, name)
 					numevents=dbsTest.getInputEvents(url, name)
-					noNameSites[stat].append((name,priority, numevents))
+					noNameSites[stat].append((name,priority, numevents, TimeEvent))
 					
 def orderfunction(workflowTuple):
 	return workflowTuple[1]
@@ -39,34 +52,39 @@ def orderfunction(workflowTuple):
 def printTopRequests(historic, noNameSites, numRequests):
 	#print historic
 	for Site in historic.keys():
-		print "Site "+Site
 		for stat in historic[Site].keys():
 			completeList=historic[Site][stat]
 			completeList.sort(key=orderfunction, reverse=True)
-			print "Status: "+stat
+			if len(completeList)==0:
+				continue
+			print '----------------------------------------------------------------------------------------------------------'
+			print '| %70s | Priority | Num Events | Time Event |' % (stat + " Requests " + Site)
+			print '----------------------------------------------------------------------------------------------------------'
 			if numRequests==-1:
 				for workflow in completeList[:len(completeList)]:
-					print workflow[0]+ " Priority: " + str(workflow[1]) + " Number of Events: " +str(workflow[2])
-				print " "
+					print '| %70s | %8d | %10d | %10d |' % (workflow[0], workflow[1], workflow[2], workflow[3])				
 			else:
 				for workflow in completeList[:numRequests]:
-					print workflow[0]+ " Priority: " + str(workflow[1]) + " Number of Events: " +str(workflow[2])
-				print " "
-		print " "
-	print "Other Workflows: "
+					print '| %70s | %8d | %10d | %10d |' % (workflow[0], workflow[1], workflow[2], workflow[3])
+			print '----------------------------------------------------------------------------------------------------------'	
+	#print "Other Workflows: "
 	for stat in noNameSites.keys():
 			completeList=noNameSites[stat]
 			completeList.sort(key=orderfunction,reverse=True)
-			print "Status: "+stat
+			if len(completeList)==0:
+				continue
+			print '----------------------------------------------------------------------------------------------------------'
+			print '| %70s | Priority | Num Events | Time Event |' % (stat + " Requests with No Site")
+			print '----------------------------------------------------------------------------------------------------------'
 			if numRequests==-1:
 				for workflow in completeList[:len(completeList)]:
-					print workflow[0]+ " Priority: " + str(workflow[1]) + " Number of Events: " +str(workflow[2])
-				print " "
+					print '| %70s | %8d | %10d | %10d |' % (workflow[0], workflow[1], workflow[2], workflow[3])				
 			else:
 				for workflow in completeList[:numRequests]:
-					print workflow[0]+ " Priority: " + str(workflow[1]) + " Number of Events: " +str(workflow[2])
-				print " "
-	print " "
+					print '| %70s | %8d | %10d | %10d |' % (workflow[0], workflow[1], workflow[2], workflow[3])
+			print '----------------------------------------------------------------------------------------------------------'
+			
+	
 
 	
 
