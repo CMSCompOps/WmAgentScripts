@@ -11,6 +11,8 @@ def getTimeEventRequest(url, requestName):
 	request = json.read(r2.read())
 	if 'TimePerEvent' in request.keys():
 		return int(request['TimePerEvent'])
+	elif 'time_per_event' in request.keys():
+		return int(request['time_per_event'])
 	else:
 		return 0
 
