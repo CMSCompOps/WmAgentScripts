@@ -14,7 +14,7 @@ def testOutputDataset(datasetName, requestType):
 		for subscription in subscriptions:
 			if subscription['level']=='DATASET' and subscription['custodial']=='y':
 				if 'MonteCarlo' in requestType:
-					if subscription['move']=='y':
+					if subscription['custodial']=='y':
 						print "This dataset is subscribed : "+ datasetName
 						print "Custodial: "+subscription['custodial']
 						request=subscription['request']
@@ -26,6 +26,11 @@ def testOutputDataset(datasetName, requestType):
 					request=subscription['request']
 					print "Request page: https://cmsweb.cern.ch/phedex/prod/Request::View?request="+request
 					return
+			else:
+				print "The Subscription exist but not custodial"
+				request=subscription['request']
+				print "Request page: https://cmsweb.cern.ch/phedex/prod/Request::View?request="+request
+				
 	 else:
 		print "This dataset wasn't subscribed: "+ datasetName
 
