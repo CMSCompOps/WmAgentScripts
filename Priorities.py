@@ -4,6 +4,36 @@ import urllib2,urllib, httplib, sys, re, os, json, time, math, dbsTest, locale
 import optparse, closeOutWorkflows
 from xml.dom.minidom import getDOMImplementation
 
+def datasetHasBigFiles(url, limit, workflow):
+	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+	r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
+	r2=conn.getresponse()
+	request = json.read(r2.read())
+	if not 'InputDataset' in request.keys():
+		return False
+	inputDataSet=request['InputDataset']
+	querry='find file,file.size where dataset ='+inputDataSet+" file.size>"+str(limit)
+	output=os.popen("./dbssql --limit=1000000 --input='"+querry+"'"+ "|wc -l").read()
+	if int(output)==3:
+		return False
+	else:
+		return True
+
+
+def getEffectiveLumiSections(url, workflow):
+	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+	r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
+	r2=conn.getresponse()
+	request = json.read(r2.read())
+	if not 'InputDataset' in request.keys():
+		return -1
+	inputDataSet=request['InputDataset']
+	querry='find file,run,lumi where dataset ='+inputDataSet
+	output=os.popen("./dbssql --limit=1000000 --input='"+querry+"'"+ "|wc -l").read()
+	return int(output)-3
+
+#Gets the time per event of a requests if the parameter hasn't been set up by the requestor it returns 1
+
 def getTimeEventRequest(url, requestName):
 	conn=httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+requestName)
@@ -35,20 +65,54 @@ def classifyRequests(url, requests, historic, noNameSites, requestType):
 			namefound=1
 			for stat in historic[Site].keys():#stat is the status of the request in the list of requests
 				if status==stat:
+					EffectiveLumi=getEffectiveLumiSections(url, name)
 					TimeEvent=getTimeEventRequest(url, name)
 					priority=getPriorityWorkflow(url, name)
 					numevents=dbsTest.getInputEvents(url, name)
-					historic[Site][stat].append((name,priority,numevents, TimeEvent))
+					checkLumi=False
+					if float(numevents/EffectiveLumi)>400:
+						checkLumi=True
+					else:
+						checkLumi=False
+					checkFiles=False
+					if datasetHasBigFiles(url, 5000000, name):
+						checkFiles=True
+					else:
+						checkFiles=False	
+					historic[Site][stat].append((name,priority,numevents, TimeEvent,EffectiveLumi, checkLumi, checkFiles))
 		if namefound==0:
 			for stat in noNameSites.keys():
 				if status==stat:
+					EffectiveLumi=getEffectiveLumiSections(url, name)
 					TimeEvent=getTimeEventRequest(url, name)
 					priority=getPriorityWorkflow(url, name)
 					numevents=dbsTest.getInputEvents(url, name)
-					noNameSites[stat].append((name,priority, numevents, TimeEvent))
+					checkLumi=False
+					if float(numevents/EffectiveLumi)>400:
+						checkLumi=True
+					else:
+						checkLumi=False
+					checkFiles=False
+					if datasetHasBigFiles(url, 5000000, name):
+						checkFiles=True
+					else:
+						checkFiles=False
+					noNameSites[stat].append((name,priority,numevents, TimeEvent,EffectiveLumi, checkLumi, checkFiles))
+					
 					
 def orderfunction(workflowTuple):
 	return workflowTuple[1]
+
+
+def printRequests(completeList, numRequests, status, Site):
+	print '------------------------------------------------------------------------------------------------------------------	-------------------------'
+	print '| %80s | Priority | Num Events | Time Event | Eff Lumi |NumEv/Lum|CkLum|CkSize|' % (status + " Requests " + Site)
+	print '-------------------------------------------------------------------------------------------------------------------------------------------'
+	if numRequests==-1:
+		numRequests=len(completeList)
+	for workflow in completeList[:numRequests]:
+		print '| %80s | %8d | %10d | %10d | %8d|%6f|%5s|%5s|' % (workflow[0], workflow[1], workflow[2], workflow[3], workflow[4], workflow[2]/workflow[4],workflow[5], workflow[6])				
+	print '-------------------------------------------------------------------------------------------------------------------------------------------'	
 
 
 def printTopRequests(historic, noNameSites, numRequests):
@@ -59,34 +123,15 @@ def printTopRequests(historic, noNameSites, numRequests):
 			completeList.sort(key=orderfunction, reverse=True)
 			if len(completeList)==0:
 				continue
-			print '----------------------------------------------------------------------------------------------------------'
-			print '| %70s | Priority | Num Events | Time Event |' % (stat + " Requests " + Site)
-			print '----------------------------------------------------------------------------------------------------------'
-			if numRequests==-1:
-				for workflow in completeList[:len(completeList)]:
-					print '| %70s | %8d | %10d | %10d |' % (workflow[0], workflow[1], workflow[2], workflow[3])				
-			else:
-				for workflow in completeList[:numRequests]:
-					print '| %70s | %8d | %10d | %10d |' % (workflow[0], workflow[1], workflow[2], workflow[3])
-			print '----------------------------------------------------------------------------------------------------------'	
+			printRequests(completeList,numRequests, stat, Site)
+			
 	#print "Other Workflows: "
 	for stat in noNameSites.keys():
 			completeList=noNameSites[stat]
 			completeList.sort(key=orderfunction,reverse=True)
 			if len(completeList)==0:
 				continue
-			print '----------------------------------------------------------------------------------------------------------'
-			print '| %70s | Priority | Num Events | Time Event |' % (stat + " Requests with No Site")
-			print '----------------------------------------------------------------------------------------------------------'
-			if numRequests==-1:
-				for workflow in completeList[:len(completeList)]:
-					print '| %70s | %8d | %10d | %10d |' % (workflow[0], workflow[1], workflow[2], workflow[3])				
-			else:
-				for workflow in completeList[:numRequests]:
-					print '| %70s | %8d | %10d | %10d |' % (workflow[0], workflow[1], workflow[2], workflow[3])
-			print '----------------------------------------------------------------------------------------------------------'
-			
-	
+			printRequests(completeList,numRequests, stat, 'No Site')
 
 	
 

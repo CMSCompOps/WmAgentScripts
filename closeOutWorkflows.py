@@ -153,7 +153,7 @@ def closeOutMonterCarloRequests(url, workflows):
 							print dataset +" not completely transfered"
 						
 			if len(datasetsUnsuscribed)>0:
-				phedexSubscription.makeCustodialMoveRequest('cmsweb-dev.cern.ch', site, datasetsUnsuscribed, "Custodial Move Subscription for MonteCarlo")
+				phedexSubscription.makeCustodialMoveRequest(url, site, datasetsUnsuscribed, "Custodial Move Subscription for MonteCarlo")
 
 def main():
 	url='cmsweb.cern.ch'
