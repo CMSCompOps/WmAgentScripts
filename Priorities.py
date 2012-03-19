@@ -105,14 +105,14 @@ def orderfunction(workflowTuple):
 
 
 def printRequests(completeList, numRequests, status, Site):
-	print '------------------------------------------------------------------------------------------------------------------	-------------------------'
-	print '| %80s | Priority | Num Events | Time Event | Eff Lumi |NumEv/Lum|CkLum|CkSize|' % (status + " Requests " + Site)
-	print '-------------------------------------------------------------------------------------------------------------------------------------------'
+	print '-----------------------------------------------------------------------------------------------------------------------------------------------------'
+	print '| %82s | Priority | Num Events | TimeEv | Ef/Lumi|Num/Lum|CkLum|CkSize|' % (status + " Requests " + Site)
+	print '-----------------------------------------------------------------------------------------------------------------------------------------------------'
 	if numRequests==-1:
 		numRequests=len(completeList)
 	for workflow in completeList[:numRequests]:
-		print '| %80s | %8d | %10d | %10d | %8d|%6f|%5s|%5s|' % (workflow[0], workflow[1], workflow[2], workflow[3], workflow[4], workflow[2]/workflow[4],workflow[5], workflow[6])				
-	print '-------------------------------------------------------------------------------------------------------------------------------------------'	
+		print '| %82s | %8d | %10d | %8d | %7d|%6d|%5s|%5s|' % (workflow[0], workflow[1], workflow[2], workflow[3], workflow[4], int(workflow[2]/workflow[4]),workflow[5], workflow[6])				
+	print '-----------------------------------------------------------------------------------------------------------------------------------------------------'	
 
 
 def printTopRequests(historic, noNameSites, numRequests):
