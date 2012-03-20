@@ -4,6 +4,20 @@ import urllib2,urllib, httplib, sys, re, os, json, time, math, dbsTest, locale
 import optparse, closeOutWorkflows
 from xml.dom.minidom import getDOMImplementation
 
+
+def maxEventsFileDataset(url, workflow):
+	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+	r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
+	r2=conn.getresponse()
+	request = json.read(r2.read())
+	if not 'InputDataset' in request.keys():
+		return False
+	inputDataSet=request['InputDataset']
+	querry="'find dataset, max(file.numevents) where dataset="+inputDataSet+"'"
+	output=os.popen("./dbssql --input="+querry+"| awk '{print $2}' | grep '[0-9]\{1,\}'").read()
+	return int(output)
+
+
 def datasetHasBigFiles(url, limit, workflow):
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
@@ -74,12 +88,8 @@ def classifyRequests(url, requests, historic, noNameSites, requestType):
 						checkLumi=True
 					else:
 						checkLumi=False
-					checkFiles=False
-					if datasetHasBigFiles(url, 5000000, name):
-						checkFiles=True
-					else:
-						checkFiles=False	
-					historic[Site][stat].append((name,priority,numevents, TimeEvent,EffectiveLumi, checkLumi, checkFiles))
+					maxEvents=maxEventsFileDataset(url, name)
+					historic[Site][stat].append((name,priority,numevents, TimeEvent,EffectiveLumi, checkLumi, maxEvents))
 		if namefound==0:
 			for stat in noNameSites.keys():
 				if status==stat:
@@ -92,12 +102,8 @@ def classifyRequests(url, requests, historic, noNameSites, requestType):
 						checkLumi=True
 					else:
 						checkLumi=False
-					checkFiles=False
-					if datasetHasBigFiles(url, 5000000, name):
-						checkFiles=True
-					else:
-						checkFiles=False
-					noNameSites[stat].append((name,priority,numevents, TimeEvent,EffectiveLumi, checkLumi, checkFiles))
+					maxEvents=maxEventsFileDataset(url, name)
+					noNameSites[stat].append((name,priority,numevents, TimeEvent,EffectiveLumi, checkLumi, maxEvents))
 					
 					
 def orderfunction(workflowTuple):
@@ -106,12 +112,12 @@ def orderfunction(workflowTuple):
 
 def printRequests(completeList, numRequests, status, Site):
 	print '-----------------------------------------------------------------------------------------------------------------------------------------------------'
-	print '| %82s | Priority | Num Events | TimeEv | Ef/Lumi|Num/Lum|CkLum|CkSize|' % (status + " Requests " + Site)
+	print '| %82s | Priority | Num Events | TimeEv | Ef/Lumi|Num/Lum|CkLum|FileSize|' % (status + " Requests " + Site)
 	print '-----------------------------------------------------------------------------------------------------------------------------------------------------'
 	if numRequests==-1:
 		numRequests=len(completeList)
 	for workflow in completeList[:numRequests]:
-		print '| %82s | %8d | %10d | %8d | %7d|%6d|%5s|%5s|' % (workflow[0], workflow[1], workflow[2], workflow[3], workflow[4], int(workflow[2]/workflow[4]),workflow[5], workflow[6])				
+		print '| %82s | %8d | %10d | %8d | %7d|%6d|%5s|%8d|' % (workflow[0], workflow[1], workflow[2], workflow[3], workflow[4], int(workflow[2]/workflow[4]),workflow[5], workflow[6])				
 	print '-----------------------------------------------------------------------------------------------------------------------------------------------------'	
 
 
