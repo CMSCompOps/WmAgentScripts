@@ -329,7 +329,7 @@ def main():
 				if not j in team:
 					team.append(j)
 	for t in team:
-		print "* Team: %s" % s
+		print "* Team: %s" % t
 		durationacq = getDurationByZoneTeam(reqinfo,'acquired',t)
 		durationrun = getDurationByZoneTeam(reqinfo,'running',t)
 		tacq = 0
