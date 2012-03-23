@@ -32,7 +32,6 @@ def getzonebyt1(s):
 	return custodial
 
 def getWorkflowInfo(workflow):
-	print "Get workflow: %s" % workflow
 	conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	r1=conn.request('GET','/reqmgr/view/showWorkload?requestName=' + workflow)
 	r2=conn.getresponse()
@@ -309,19 +308,23 @@ def main():
 	listtype = ['MonteCarlo']
 	listtype = ['MonteCarlo','MonteCarloFromGEN']
 	liststatus = ['acquired','running']
+	liststatus = ['acquired']
 	list = getRequestsByTypeStatus(listtype,liststatus)
 	#list = list[1:10]
 
 	reqinfo = {}
 
 	print "Number of workflows in %s: %s" % (liststatus, len(list))
+	count = 1
 	for workflow in list:
+		print "%s Get workflow: %s" % (count,workflow)
 		reqinfo[workflow] = getWorkflowInfo(workflow)
+		count = count + 1
 		#for i in reqinfo[workflow].keys():
 		#	print "\t%s: %s" % (i,reqinfo[workflow][i])
 	print
 
-	print "Overall CPUHours acquired/running (group by team and zone)"
+	print "Overall CPUHours acquired (group by team and zone)"
 	team = []
 	for i in reqinfo.keys():
 		if reqinfo[i]['team'] != []:
@@ -329,24 +332,25 @@ def main():
 				if not j in team:
 					team.append(j)
 	for t in team:
-		print "* Team: %s" % t
 		durationacq = getDurationByZoneTeam(reqinfo,'acquired',t)
-		durationrun = getDurationByZoneTeam(reqinfo,'running',t)
+		#durationrun = getDurationByZoneTeam(reqinfo,'running',t)
+		print "* Team: %s " % t
 		tacq = 0
-		trun = 0
+		#trun = 0
 		for z in durationacq.keys():
 			tacq+=durationacq[z]
-			trun+=durationrun[z]
+			#trun+=durationrun[z]
 		for z in durationacq.keys():
 			try:
 				percacq = round(durationacq[z]*100/tacq,2)
 			except:
 				percacq = 0
-			try:
-				percrun = round(durationrun[z]*100/trun,2)
-			except:
-				percrun = 0
-			print "%5s\t%7d/%7d (%4s%%/%4s%%)" % (z,durationacq[z],durationrun[z],percacq,percrun)
+			#try:
+			#	percrun = round(durationrun[z]*100/trun,2)
+			#except:
+			#	percrun = 0
+			#print "%5s\t%7d\t%7d (%4s%%/%4s%%)" % (z,durationacq[z],durationrun[z],percacq,percrun)
+			print "%5s\t%7d (%4s%%)" % (z,durationacq[z],percacq)
 		print
 	
         sys.exit(0)
