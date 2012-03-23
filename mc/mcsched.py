@@ -288,21 +288,14 @@ def main():
 	list.sort()
 	reqinfo = {}
 
-	if os.path.exists('reqinfo.txt'):
-		reqinfo = open('reqinfo.txt').read()
-		reqinfo = eval(reqinfo)
-	else:
-		for workflow in list:
-			sys.stdout.write("\rAnalyzing requests in %s: %s/%s" % (liststatus,count,len(list))) 
-			sys.stdout.flush()
-	
-			reqinfo[workflow] = getWorkflowInfo(workflow)
+	for workflow in list:
+		sys.stdout.write("\rAnalyzing requests in %s: %s/%s" % (liststatus,count,len(list))) 
+		sys.stdout.flush()
 
-			count = count + 1
+		reqinfo[workflow] = getWorkflowInfo(workflow)
+
+		count = count + 1
 	print
-	output = open('reqinfo.txt', 'w')
-	output.write("%s" % reqinfo)
-	output.close()
 
 	priorities = getpriorities(reqinfo)
 	print 'REQUEST PRIORITY EVENTS DURATION ACQERA PROCESSINGVERSION'
