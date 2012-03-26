@@ -42,7 +42,13 @@ def getEffectiveLumiSections(url, workflow):
 	if not 'InputDataset' in request.keys():
 		return -1
 	inputDataSet=request['InputDataset']
+	BlockWhitelist=request['BlockWhitelist']
 	querry='find file,run,lumi where dataset ='+inputDataSet
+	if len(BlockWhitelist)>0:
+		querry=querry+' AND ('
+		for block in BlockWhitelist:
+			querry=querry+' block= '+block+' OR'
+		querry=querry+' block= '+BlockWhitelist[0] +')'
 	output=os.popen("./dbssql --limit=1000000 --input='"+querry+"'"+ "|wc -l").read()
 	return int(output)-3
 
@@ -112,7 +118,7 @@ def orderfunction(workflowTuple):
 
 def printRequests(completeList, numRequests, status, Site):
 	print '-----------------------------------------------------------------------------------------------------------------------------------------------------'
-	print '| %82s | Priority | Num Events | TimeEv | Ef/Lumi|Num/Lum|CkLum|FileSize|' % (status + " Requests " + Site)
+	print '| %82s | Priority | Num Events | TimeEv  | Ef/Lumi|Num/Lum|CkLum|FileSize|' % (status + " Requests " + Site)
 	print '-----------------------------------------------------------------------------------------------------------------------------------------------------'
 	if numRequests==-1:
 		numRequests=len(completeList)
