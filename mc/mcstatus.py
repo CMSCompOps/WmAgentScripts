@@ -320,8 +320,6 @@ def main():
 		print "%s Get workflow: %s" % (count,workflow)
 		reqinfo[workflow] = getWorkflowInfo(workflow)
 		count = count + 1
-		#for i in reqinfo[workflow].keys():
-		#	print "\t%s: %s" % (i,reqinfo[workflow][i])
 	print
 
 	print "Overall CPUHours acquired (group by team and zone)"
@@ -331,27 +329,38 @@ def main():
 			for j in reqinfo[i]['team']:
 				if not j in team:
 					team.append(j)
+	summary = {}
 	for t in team:
+		summary[t] = {}
 		durationacq = getDurationByZoneTeam(reqinfo,'acquired',t)
-		#durationrun = getDurationByZoneTeam(reqinfo,'running',t)
-		print "* Team: %s " % t
-		tacq = 0
-		#trun = 0
 		for z in durationacq.keys():
-			tacq+=durationacq[z]
-			#trun+=durationrun[z]
-		for z in durationacq.keys():
-			try:
-				percacq = round(durationacq[z]*100/tacq,2)
-			except:
-				percacq = 0
-			#try:
-			#	percrun = round(durationrun[z]*100/trun,2)
-			#except:
-			#	percrun = 0
-			#print "%5s\t%7d\t%7d (%4s%%/%4s%%)" % (z,durationacq[z],durationrun[z],percacq,percrun)
-			print "%5s\t%7d (%4s%%)" % (z,durationacq[z],percacq)
-		print
+			summary[t][z] = durationacq[z]
+
+	zones = durationacq.keys()
+	zones.sort()
+	allteams = {}
+	s = "TEAM           "
+	for i in range(0,len(zones)):
+		z = zones[i]
+		s = s + "%8s" % z
+	print s
+	print
+	for t in summary.keys():
+		s = "%-15s" % t 
+		for i in range(0,len(zones)):
+			z = zones[i]
+			s = s + "%8s" % (summary[t][z])
+			if z in allteams.keys():
+				allteams[z] += summary[t][z]
+			else:
+				allteams[z] = summary[t][z]
+		print s
+	print "-----------------------------------------------------------------------------"
+	s = "TOTAL:         "
+	for z in allteams.keys():
+		s = s + "%8s" % allteams[z]
+	print s
+		
 	
         sys.exit(0)
 
