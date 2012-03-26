@@ -322,7 +322,7 @@ def main():
 		count = count + 1
 	print
 
-	print "Overall CPUHours acquired (group by team and zone)"
+	print "| *Overall CPUHours acquired (group by team and zone)* |||||||||"
 	team = []
 	for i in reqinfo.keys():
 		if reqinfo[i]['team'] != []:
@@ -339,26 +339,26 @@ def main():
 	zones = durationacq.keys()
 	zones.sort()
 	allteams = {}
-	s = "TEAM           "
+	s = "|*TEAM*           |"
 	for i in range(0,len(zones)):
 		z = zones[i]
-		s = s + "%8s" % z
+		s = s + "   %8s|" % ('*!'+z+'*')
 	print s
-	print
 	for t in summary.keys():
-		s = "%-15s" % t 
+		s = "|%-15s  |" % t 
 		for i in range(0,len(zones)):
 			z = zones[i]
-			s = s + "%8s" % (summary[t][z])
+			s = s + " %8s  |" % (summary[t][z])
 			if z in allteams.keys():
 				allteams[z] += summary[t][z]
 			else:
 				allteams[z] = summary[t][z]
 		print s
-	print "-----------------------------------------------------------------------------"
-	s = "TOTAL:         "
-	for z in allteams.keys():
-		s = s + "%8s" % allteams[z]
+
+	s = "|*TOTAL*          |"
+	for i in range(0,len(zones)):
+		z = zones[i]
+		s = s + (" %8s  |" % allteams[z])
 	print s
 		
 	
