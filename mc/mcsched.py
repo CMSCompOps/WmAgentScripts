@@ -154,7 +154,7 @@ def getrequestsByPriority(reqinfo,priority):
 
 def getoverview():
 	c = 0
-	print "Getting overview "
+	print "Getting overview..",
 	while c < 3:
 		try:
 			conn  =  httplib.HTTPSConnection(reqmgrsocket, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -163,7 +163,7 @@ def getoverview():
 			print r2.status, r2.reason
 			if r2.status == 500:
 				c = c + 1
-				print "retrying"
+				print "retrying... ",
 			else:
 				c = 100
 			s = json.loads(r2.read())
@@ -298,12 +298,12 @@ def main():
 	print
 
 	priorities = getpriorities(reqinfo)
-	print 'REQUEST PRIORITY EVENTS DURATION ACQERA PROCESSINGVERSION'
+	print 'REQUEST PRIORITY EVENTS DURATION'
 	for p in range(0,len(priorities)):
 		for i in getrequestsByPriority(reqinfo,priorities[p]):
-			acqera = getacqera(reqinfo[i])
-			procversion = getnextprocessingversion(reqinfo[i])
-			print "%s %s %s %s %s %s" %(i,reqinfo[i]['priority'],reqinfo[i]['expectedevents'],reqinfo[i]['duration'],acqera,procversion)
+			#acqera = getacqera(reqinfo[i])
+			#procversion = getnextprocessingversion(reqinfo[i])
+			print "%s %s %s %s" %(i,reqinfo[i]['priority'],reqinfo[i]['expectedevents'],reqinfo[i]['duration'])
 
         sys.exit(0)
 
