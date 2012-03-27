@@ -342,13 +342,13 @@ def main():
 	s = "|*TEAM*           |"
 	for i in range(0,len(zones)):
 		z = zones[i]
-		s = s + "   %8s|" % ('*!'+z+'*')
+		s = s + "  %10s |" % ('*'+z+'*')
 	print s
 	for t in summary.keys():
 		s = "|%-15s  |" % t 
 		for i in range(0,len(zones)):
 			z = zones[i]
-			s = s + " %8s  |" % (summary[t][z])
+			s = s + " %10s  |" % (summary[t][z])
 			if z in allteams.keys():
 				allteams[z] += summary[t][z]
 			else:
@@ -358,7 +358,7 @@ def main():
 	s = "|*TOTAL*          |"
 	for i in range(0,len(zones)):
 		z = zones[i]
-		s = s + (" %8s  |" % allteams[z])
+		s = s + ("  %10s |" % ('*%s*' % allteams[z]) )
 	print s
 		
 	
