@@ -42,8 +42,6 @@ def assignRequest(url,workflow,team,site,era,procversion, activity, lfn):
     print 'Assigned workflow:',workflow,'to site:',site,'with processing version',procversion
     return
 
-
-
 def main():
 	url='cmsweb.cern.ch'	
 	parser = optparse.OptionParser()
