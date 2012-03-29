@@ -187,7 +187,7 @@ def main():
 		sys.exit(1)
 
 	if options.team:
-		team=options.team
+		teams=options.team.split(',')
 	else:
 		print "Please provide a team!"
 		sys.exit(1)
@@ -212,7 +212,7 @@ def main():
 		
 	reqinfo = {}
 	
-	print "Team is %s" % team
+	print "Team is %s" % teams
 	for w in list:
 		reqinfo[w] = getWorkflowInfo(w)
 		if reqinfo[w]['status'] == '':
@@ -240,12 +240,15 @@ def main():
 			print "\tprocessingversion: %s" % procversion
 		print
 
+	tcount = 0
 	for w in list:
+		team = teams[tcount % len(teams)]
 		if options.test:
 			print "TEST: %s\n\tteam: %s\n\tacquisition era: %s\n\tProcessingVersion: %s\n\tWhitelist: %s\n" % (w,team,acqera,procversion,sitelist)
 		else:
 			print "ASSIGN: %s\n\tteam: %s\n\tacquisition era: %s\n\tProcessingVersion: %s\n\tWhitelist: %s\n" % (w,team,acqera,procversion,sitelist)
 			assignMCRequest(url,w,team,sitelist,acqera,procversion)
+		tcount = tcount + 1
 	
 	print "The following requests:\n"
 	if options.test:
@@ -254,7 +257,7 @@ def main():
 		ts = "ASSIGNED"
 	for w in list:
 		print "\t%s" % w
-	print "\nhave been %s:\n\n\tteam: %s\n\twhitelist: %s\n\tacqera: %s\n\tprocessingversion: %s" % (ts,team,sitelist,acqera,procversion)
+	print "\nhave been %s:\n\n\tteam: %s\n\twhitelist: %s\n\tacqera: %s\n\tprocessingversion: %s" % (ts,teams,sitelist,acqera,procversion)
 	print "\n"
 		
 		
