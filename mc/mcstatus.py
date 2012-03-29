@@ -12,7 +12,7 @@ reqmgrsocket='vocms204.cern.ch'
 overview = ''
 
 def getDurationByZoneTeam(reqinfo,status,team):
-	duration = {'FNAL':0,'RAL':0,'CNAF':0,'IN2P3':0,'ASGC':0,'KIT':0,'PIC':0,'?':0}
+	duration = {'FNAL':0,'RAL':0,'CNAF':0,'IN2P3':0,'ASGC':0,'KIT':0,'PIC':0,'no_cust':0}
 	for workflow in reqinfo.keys():
 		for t in reqinfo[workflow]['team']:
 			if reqinfo[workflow]['status'] == status and t == team:
@@ -22,7 +22,7 @@ def getDurationByZoneTeam(reqinfo,status,team):
 	return duration
 	
 def getzonebyt1(s):
-	custodial = '?'
+	custodial = 'no_cust'
 	if not s:
 		return custodial
 	t1list = {'T1_FR_CCIN2P3':'IN2P3','T1_TW_ASGC':'ASGC','T1_IT_CNAF':'CNAF','T1_US_FNAL':'FNAL','T1_DE_KIT':'KIT','T1_ES_PIC':'PIC','T1_UK_RAL':'RAL'}
@@ -68,7 +68,7 @@ def getWorkflowInfo(workflow):
 		elif 'white' in raw and not '[]' in raw:
 			sites = '['+raw[raw.find("[")+1:raw.find("]")]+']'	
 			sites = eval(sites)		
-	custodialt1 = '?'
+	custodialt1 = 'no_cust'
 	for i in sites:
 		if 'T1_' in i:
 			custodialt1 = i

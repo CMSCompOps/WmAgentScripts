@@ -170,7 +170,8 @@ def main():
 	parser.add_option('--assign', action="store_false",default=True,help='assign mode',dest='test')
 	parser.add_option('-z', '--zone', help='Zone %s or single site or comma-separated list (i.e. T1_US_FNAL,T2_FR_CCIN2P3,T2_DE_DESY)' % zones,dest='zone')
 	parser.add_option('-a', '--acqera', help='Acquisition era: one of %s' % legal_eras,dest='acqera')
-	parser.add_option('-p', '--procversion', help='Processing Version',dest='procversion')
+	#parser.add_option('-p', '--procversion', help='Processing Version',dest='procversion')
+	parser.add_option('-v', '--version', help='Version (it is the vx part of the ProcessingVersion)',dest='version')
 	(options,args) = parser.parse_args()
 
 	list = []
@@ -198,16 +199,15 @@ def main():
 		print "Please provide a zone/site/sitelist!"
 		sys.exit(1)
 
-	procversion=options.procversion
 	if options.acqera:
 		acqera = options.acqera
 	else:
 		print "Acquisition Era not provided, please provide one among %s" % legal_eras
 		sys.exit(1)
-	if options.procversion:
-		procversion = options.procversion
+	if options.version:
+		version = options.version
 	else:
-		print "Please provide a ProcessingVersion!"
+		print "Please provide a version!"
 		sys.exit(1)
 		
 	reqinfo = {}
@@ -233,16 +233,14 @@ def main():
 			sys.exit(1)
 		else:
 			print "\tacqera: %s" % acqera
-		if not reqinfo[w]['globaltag'] in procversion:
-			print "%s: GlobalTag %s not consistent with the provided ProcessingVersion (%s)" % (w,reqinfo[w]['globaltag'],procversion)
-			sys.exit(1)
-		else:
-			print "\tprocessingversion: %s" % procversion
+		procversion = "%s-%s" % (reqinfo[w]['globaltag'],version)
+		print "\tprocessingversion: %s" % procversion
 		print
 
 	tcount = 0
 	for w in list:
 		team = teams[tcount % len(teams)]
+		procversion = "%s-%s" % (reqinfo[w]['globaltag'],version)
 		if options.test:
 			print "TEST: %s\n\tteam: %s\n\tacquisition era: %s\n\tProcessingVersion: %s\n\tWhitelist: %s\n" % (w,team,acqera,procversion,sitelist)
 		else:

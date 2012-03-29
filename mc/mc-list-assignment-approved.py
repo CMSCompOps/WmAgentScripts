@@ -274,7 +274,7 @@ def main():
 	reqinfo = {}
 
 	for workflow in list:
-		print "Analyzing request: %s" % (workflow) 
+		print "%s" % (workflow) 
 		sys.stdout.flush()
 
 		reqinfo[workflow] = getWorkflowInfo(workflow)

@@ -69,7 +69,7 @@ def main():
 	a = response.read()
 	print a
 	print
-	print "Here the request URL: https://cmsweb.cern.ch/phedex/prod/Request::View?request=" % a['request_created']['id']
+	print "Here the request URL: https://cmsweb.cern.ch/phedex/prod/Request::View?request=%s" % a['request_created']['id']
         sys.exit(0)
 
 if __name__ == "__main__":
