@@ -81,6 +81,21 @@ def getInputEvents(url, workflow):
 			querry=querry+' block= '+block+' OR'
 		
 		querry=querry+' block= '+BlockWhitelist[0] +')'
+	if len(BlockWhitelist)>0 and len(BlockWhitelist)>10:
+		events=0
+		blockChunks=chunks(BlockWhitelist,10)
+		for blockList in blockChunks:
+			querry="./dbssql --input='find dataset,sum(block.numevents) where dataset="+inputDataSet+' AND ('
+			for block in blockList:
+				querry=querry+' block= '+block+' OR'
+			querry=querry+' block= '+str(blockList[0]) +')'
+			querry=querry+"'|awk '{print $2}' | grep '[0-9]\{1,\}'"
+			output=os.popen(querry).read()
+			try:
+				events=events+int(output)
+			except ValueError:
+       				return -1
+		return events
 	if len(runWhitelist)>0:
 		querry=querry+' AND ('
 		for run in runWhitelist:
