@@ -25,7 +25,7 @@ def classifyRunningRequests(url, requests):
 			datasetWorkflow=phedexSubscription.outputdatasetsWorkflow(url, name)
 			for dataset in datasetWorkflow:
 						inputEvents=0
-						inputEvents=inputEvents+dbsTest.getInputEvents(url, name)
+						inputEvents=inputEvents+int(dbsTest.getInputEvents(url, name))
 						outputEvents=dbsTest.getEventCountDataSet(dataset)
 						percentage=outputEvents/float(inputEvents)
 						if float(percentage)>float(0.50):

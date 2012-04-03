@@ -90,7 +90,6 @@ def getInputEvents(url, workflow):
 				querry=querry+' block= '+block+' OR'
 			querry=querry+' block= '+str(blockList[0]) +')'
 			querry=querry+"'|awk '{print $2}' | grep '[0-9]\{1,\}'"
-			print querry
 			output=os.popen(querry).read()
 			try:
 				events=events+int(output)
