@@ -63,13 +63,14 @@ def main():
 	#print datasetXML
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	conn.connect()
+	print "SUBSCRIBING"
 	conn.request("POST", "/phedex/datasvc/json/prod/subscribe", params)
 	response = conn.getresponse()
 	print response.status, response.reason
 	a = response.read()
 	print a
 	print
-	print "Here the request URL: https://cmsweb.cern.ch/phedex/prod/Request::View?request=%s" % a['request_created']['id']
+	print "Here the request URL: https://cmsweb.cern.ch/phedex/prod/Request::View?request=%s" % a['phedex']['request_created'][0]['id']
         sys.exit(0)
 
 if __name__ == "__main__":

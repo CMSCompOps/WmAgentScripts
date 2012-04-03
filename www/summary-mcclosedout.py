@@ -165,60 +165,12 @@ def getPhEDExTransferInfo(datasetName):
 			return info
 	return None
 
-def das_get_data(query):
-    params  = {'input':query, 'idx':0, 'limit':0}
-    path    = '/das/cache'
-    pat     = re.compile('http[s]{0,1}://')
-    if  not pat.match(dashost):
-        msg = 'Invalid hostname: %s' % dashost
-        raise Exception(msg)
-    url = dashost + path
-    headers = {"Accept": "application/json"}
-    encoded_data = urllib.urlencode(params, doseq=True)
-    url += '?%s' % encoded_data
-    req  = urllib2.Request(url=url, headers=headers)
-    opener = urllib2.build_opener()
-    fdesc = opener.open(req)
-    data = fdesc.read()
-    fdesc.close()
-
-    pat = re.compile(r'^[a-z0-9]{32}')
-    if  data and isinstance(data, str) and pat.match(data) and len(data) == 32:
-        pid = data
-    else:
-        pid = None
-    count = 1  
-    timeout = 30 
-    while pid:
-        params.update({'pid':data})
-        encoded_data = urllib.urlencode(params, doseq=True)
-        url  = dashost + path + '?%s' % encoded_data
-        req  = urllib2.Request(url=url, headers=headers)
-        try:
-            fdesc = opener.open(req)
-            data = fdesc.read()
-            fdesc.close()
-        except urllib2.HTTPError:
-            print str(urllib2.HTTPError)
-            return ""
-        if  data and isinstance(data, str) and pat.match(data) and len(data) == 32:
-            pid = data
-        else:
-            pid = None
-        time.sleep(count)
-        if  count < timeout:
-            count *= 1
-        else:
-            count = timeout
-    d = eval(data)
-    try:
-    	r = d['data'][0]['dataset']
-    	if isinstance(r,list):
-		return [r[0]['nevents'],r[0]['status']]
-    	else:
-		return [r['nevents'],r['status']]
-    except:
-	return [-1,'']
+def dbs_get_data(dataset):
+    output=os.popen("/afs/cern.ch/user/s/spinoso/public/dbssql --input='find sum(block.numevents),dataset.status where dataset="+dataset+"'"+ "|grep '[0-9]\{1,\}'").read()
+    ret = output.split(' ')
+    ret[0] = int(ret[0])
+    ret[1] = ret[1].rstrip()
+    return ret
 
 def getFilterEfficiency(workflow):
 	conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -258,13 +210,16 @@ def typeWorkflow(jreq,workflow):
 		sys.exit(1)
         return t
 
-def RequestSizeEvents(jreq,workflow):
+def RequestNumEvents(jreq,workflow):
 	try:
 		reqevts = jreq['RequestSizeEvents']
 	except:
-		print "No RequestSizeEvents for this workflow: "+workflow
-		return ''
-        return reqevts
+		try:
+			reqevts = jreq['RequestNumEvents']
+		except:
+			print "No RequestNumEvents for this workflow: "+workflow
+			return ''
+        return int(reqevts)
 
 def inputdatasetWorkflow(jreq,workflow):
 	try:
@@ -300,9 +255,8 @@ def outputdatasetsWorkflow(workflow):
 
 def getdsdetail(dataset):
 	global cachedasage
-	query = 'dataset dataset=' + dataset + ' status=*|grep dataset.nevents,dataset.status'
 
-	[e,st] = das_get_data(query)
+	[e,st] = dbs_get_data(dataset)
 	if e == -1:
 		return [0,'']
 	else:
@@ -420,7 +374,7 @@ def main():
 				else:
 					expectedevents = ie
 			elif type in ['MonteCarlo']:
-				ie = RequestSizeEvents(jreq,workflow)
+				ie = RequestNumEvents(jreq,workflow)
 				expectedevents = ie
 			else:
 				pass

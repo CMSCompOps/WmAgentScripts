@@ -97,7 +97,7 @@ def getWorkflowInfo(workflow):
 	except:
 		status = ''
 	try:
-		reqsize = s['RequestSizeEvents']
+		reqsize = int(s['RequestNumEvents'])
 	except:
 		reqsize = -1
 	try:
@@ -285,7 +285,7 @@ def das_get_data(query):
             pid = data
         else:
             pid = None
-        time.sleep(count)
+        time.sleep(.5)
         if  count < timeout:
             count *= 1
         else:
