@@ -69,7 +69,12 @@ def getInputEvents(url, workflow):
 	request = json.read(r2.read())
 	requestType=request['RequestType']
 	if requestType=='MonteCarlo':
-		reqevts =request['RequestSizeEvents']
+		if 'RequestSizeEvents' in request:
+			reqevts =request['RequestSizeEvents']
+		elif 'RequestNumEvents' in request:
+			reqevts =request['RequestNumEvents']
+		else:
+			reqevts=0
 		return reqevts
 	BlockWhitelist=request['BlockWhitelist']
 	inputDataSet=request['InputDataset']
