@@ -80,9 +80,10 @@ def classifyCompletedRequests(url, requests):
 	return workflows
 
 def testEventCountWorkflow(url, workflow):
+	print workflow
 	#inputDataSet=dbsTest.getInputDataSet(url, workflow)
 	inputEvents=0
-	inputEvents=inputEvents+dbsTest.getInputEvents(url, workflow)
+	inputEvents=inputEvents+int(dbsTest.getInputEvents(url, workflow))
 	datasets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
 	CorrectCount=1
 	for dataset in datasets:
