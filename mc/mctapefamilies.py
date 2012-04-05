@@ -44,10 +44,6 @@ def getWorkflowInfo(workflow):
 		if 'PrepID' in raw:
 			prepid = raw[raw.find("'")+1:]
 			prepid = prepid[0:prepid.find("'")]
-		elif 'TimePerEvent' in raw:
-			a = raw.find("'")
-			b = raw.find("'",a+1)
-			timeev = int(raw[a+1:b])
 		elif 'request.priority' in raw:
 			a = raw.find("'")
 			if a >= 0:
@@ -74,10 +70,6 @@ def getWorkflowInfo(workflow):
 	s = json.loads(data)
 	conn.close()
 	try:
-		filtereff = float(s['FilterEfficiency'])
-	except:
-		filtereff = -1
-	try:
 		type = s['RequestType']
 	except:
 		type = ''
@@ -85,59 +77,8 @@ def getWorkflowInfo(workflow):
 		status = s['RequestStatus']
 	except:
 		status = ''
-	try:
-                reqevts = s['RequestSizeEvents']
-        except:
-                try:
-                        reqevts = s['RequestNumEvents']
-                except:
-                        print "No RequestNumEvents for this workflow: "+workflow
-                        return ''
-	try:
-		inputdataset = s['InputDatasets'][0]
-	except:
-		inputdataset = ''
 	
-	if type in ['MonteCarlo']:
-		expectedevents = int(reqevts)
-	elif type in ['MonteCarloFromGEN']:
-		[ie,ist] = getdsdetail(inputdataset)
-		expectedevents = int(filtereff*ie)
-	else:
-		expectedevents = -1
-	
-	j = {}
-	k = {'success':'success','failure':'failure','Pending':'pending','Running':'running','cooloff':'cooloff','pending':'queued','inWMBS':'inWMBS','total_jobs':'total_jobs','local_queue':'local_queue'}
-	for r in overview:
-		if r['request_name'] == workflow:
-			break
-	if r:
-		for k1 in k.keys():
-			k2 = k[k1]
-			if k1 in r.keys():
-				j[k2] = r[k1]
-				j[k2]
-			else:
-				if k2 == 'local_queue':
-					j[k2] = ''
-				else:
-					j[k2] = 0
-	else:
-		print " getjobsummary error: No such request: %s" % workflow
-		sys.exit(1)
-	
-	conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-	r1=conn.request('GET','/reqmgr/reqMgr/outputDatasetsByRequestName?requestName=' + workflow)
-	r2=conn.getresponse()
-	data = r2.read()
-	s = json.loads(data)
-	conn.close()
-	ods = s
-        if len(ods)==0:
-                print "No Outpudatasets for this workflow: "+workflow
-
-	duration = timeev*expectedevents/3600
-	return {'filtereff':filtereff,'type':type,'status':status,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'timeev':timeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'zone':getzonebyt1(custodialt1),'js':j,'ods':ods,'duration':duration}
+	return {'type':type,'status':status,'primaryds':primaryds,'prepid':prepid}
 
 
 def getoverview():
@@ -257,13 +198,13 @@ def main():
 		acqera = prepid.split('-')[1]
 		if acqera not in eras:
 			print "WARNING: %s: '%s' era is not known, please use one of %s" % (workflow,acqera,eras)
+			sys.exit(1)
 		else:
 			prids = reqinfo[workflow]['primaryds']
 			for i in tiers:
 				tf = "/store/mc/"+acqera+"/"+prids+"/"+i
 				print "%s" % (tf)
-			print "(%s)\n" % prepid
-
+	print "("+",".join(reqinfo[x]['prepid'] for x in reqinfo.keys())+")"
         sys.exit(0)
 
 if __name__ == "__main__":
