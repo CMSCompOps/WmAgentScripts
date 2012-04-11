@@ -3,6 +3,10 @@ import sys,urllib,urllib2,re,time,os
 import optparse
 import httplib
 from xml.dom.minidom import getDOMImplementation
+try:
+    import json
+except ImportError:
+    import simplejson as json
 
 url = 'cmsweb.cern.ch'
 
@@ -68,9 +72,9 @@ def main():
 	response = conn.getresponse()
 	print response.status, response.reason
 	a = response.read()
-	print a
-	print
-	print "Here the request URL: https://cmsweb.cern.ch/phedex/prod/Request::View?request=%s" % a['phedex']['request_created'][0]['id']
+	s = json.loads(a)
+	print s
+	print "Here the request URL: https://cmsweb.cern.ch/phedex/prod/Request::View?request=%s" % s['phedex']['request_created'][0]['id']
         sys.exit(0)
 
 if __name__ == "__main__":
