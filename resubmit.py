@@ -52,8 +52,10 @@ def retrieveSchema(workflowName):
         #print key
         if key == 'ProdConfigCacheID':
             schema['ProcConfigCacheID'] = value
+	elif key=='ProcConfigCacheID':
+	    schema['ProcConfigCacheID'] = value
 	elif key=='RequestSizeEvents':
-	    schema['RequestNumEvents'] = value
+	    schema['RequestSizeEvents'] = value
         elif value != None:
             schema[key] = value
     return schema
@@ -70,7 +72,7 @@ def submitWorkflow(schema):
 
     conn  =  httplib.HTTPSConnection("cmsweb.cern.ch", cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     #conn  =  httplib.HTTPConnection("%s:%s" % (reqmgrHostname, reqmgrPort))
-    #print "  submitting new workflow..."
+    print "  submitting new workflow..."
     conn.request("POST",  "/reqmgr/create/makeSchema", encodedParams, headers)
     response = conn.getresponse()
     #print response.status, response.reason

@@ -100,7 +100,10 @@ def getInputEvents(url, workflow):
 				events=events+int(output)
 			except ValueError:
        				return -1
-		return events
+		if 'FilterEfficiency' in request.keys():
+			return float(request['FilterEfficiency'])*int(events)
+		else:
+			return events
 	if len(runWhitelist)>0:
 		querry=querry+' AND ('
 		for run in runWhitelist:

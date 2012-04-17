@@ -73,6 +73,8 @@ def getInputEvents(url, workflow):
 			reqevts =request['RequestSizeEvents']
 		elif 'RequestNumEvents' in request:
 			reqevts =request['RequestNumEvents']
+		else:
+			reqevts=0
 		return reqevts
 	BlockWhitelist=request['BlockWhitelist']
 	inputDataSet=request['InputDataset']
@@ -98,7 +100,10 @@ def getInputEvents(url, workflow):
 				events=events+int(output)
 			except ValueError:
        				return -1
-		return events
+		if 'FilterEfficiency' in request.keys():
+			return float(request['FilterEfficiency'])*int(events)
+		else:
+			return events
 	if len(runWhitelist)>0:
 		querry=querry+' AND ('
 		for run in runWhitelist:
@@ -125,6 +130,7 @@ def getInputEvents(url, workflow):
 	try:
 		int(output)
 		if 'FilterEfficiency' in request.keys():
+			print request['FilterEfficiency']
 			return float(request['FilterEfficiency'])*int(output)
 		else:
 			return int(output)
