@@ -11,6 +11,8 @@ def TransferComplete(url, dataset, site):
 	blocks=result['phedex']
 	if 'block' not in blocks.keys():
 		return False
+	if len(result['phedex']['block'])==0:
+		return false
 	for block in blocks['block']:
 		if block['replica'][0]['complete']!='y':
 			return False
