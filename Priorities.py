@@ -26,7 +26,19 @@ def datasetHasBigFiles(url, limit, workflow):
 	if not 'InputDataset' in request.keys():
 		return False
 	inputDataSet=request['InputDataset']
+	runWhitelist=request['RunWhitelist']
+	BlockWhitelist=request['BlockWhitelist']	
 	querry='find file,file.size where dataset ='+inputDataSet+" file.size>"+str(limit)
+	if len(BlockWhitelist)>0:
+		querry=querry+' AND ('
+		for block in BlockWhitelist:
+			querry=querry+' block= '+block+' OR'
+		querry=querry+' block= '+BlockWhitelist[0] +')'
+	if len(runWhitelist)>0:
+		querry=querry+' AND ('
+		for run in runWhitelist:
+			querry=querry+' run= '+str(run)+' OR'
+		querry=querry+' run= '+str(runWhitelist[0]) +')'
 	output=os.popen("./dbssql --limit=1000000 --input='"+querry+"'"+ "|wc -l").read()
 	if int(output)==3:
 		return False
@@ -43,12 +55,18 @@ def getEffectiveLumiSections(url, workflow):
 		return -1
 	inputDataSet=request['InputDataset']
 	BlockWhitelist=request['BlockWhitelist']
+	runWhitelist=request['RunWhitelist']
 	querry='find file,run,lumi where dataset ='+inputDataSet
 	if len(BlockWhitelist)>0:
 		querry=querry+' AND ('
 		for block in BlockWhitelist:
 			querry=querry+' block= '+block+' OR'
 		querry=querry+' block= '+BlockWhitelist[0] +')'
+	if len(runWhitelist)>0:
+		querry=querry+' AND ('
+		for run in runWhitelist:
+			querry=querry+' run= '+str(run)+' OR'
+		querry=querry+' run= '+str(runWhitelist[0]) +')'
 	output=os.popen("./dbssql --limit=1000000 --input='"+querry+"'"+ "|wc -l").read()
 	return int(output)-3
 
