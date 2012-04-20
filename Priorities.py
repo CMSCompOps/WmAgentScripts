@@ -13,22 +13,9 @@ def maxEventsFileDataset(url, workflow):
 	if not 'InputDataset' in request.keys():
 		return False
 	inputDataSet=request['InputDataset']
-	querry="'find dataset, max(file.numevents) where dataset="+inputDataSet+"'"
-	output=os.popen("./dbssql --input="+querry+"| awk '{print $2}' | grep '[0-9]\{1,\}'").read()
-	return int(output)
-
-
-def datasetHasBigFiles(url, limit, workflow):
-	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-	r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
-	r2=conn.getresponse()
-	request = json.read(r2.read())
-	if not 'InputDataset' in request.keys():
-		return False
-	inputDataSet=request['InputDataset']
+	BlockWhitelist=request['BlockWhitelist']
 	runWhitelist=request['RunWhitelist']
-	BlockWhitelist=request['BlockWhitelist']	
-	querry='find file,file.size where dataset ='+inputDataSet+" file.size>"+str(limit)
+	querry="'find dataset, max(file.numevents) where dataset="+inputDataSet
 	if len(BlockWhitelist)>0:
 		querry=querry+' AND ('
 		for block in BlockWhitelist:
@@ -39,11 +26,9 @@ def datasetHasBigFiles(url, limit, workflow):
 		for run in runWhitelist:
 			querry=querry+' run= '+str(run)+' OR'
 		querry=querry+' run= '+str(runWhitelist[0]) +')'
-	output=os.popen("./dbssql --limit=1000000 --input='"+querry+"'"+ "|wc -l").read()
-	if int(output)==3:
-		return False
-	else:
-		return True
+	
+	output=os.popen("./dbssql --input="+querry+"'| awk '{print $2}' | grep '[0-9]\{1,\}'").read()
+	return int(output)
 
 
 def getEffectiveLumiSections(url, workflow):
