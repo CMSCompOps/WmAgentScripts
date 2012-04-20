@@ -13,7 +13,7 @@ except ImportError:
 legal_eras = ['Summer11','Summer12']
 zones = ['FNAL','CNAF','ASGC','IN2P3','RAL','PIC','KIT']
 zone2t1 = {'FNAL':'T1_US_FNAL','CNAF':'T1_IT_CNAF','ASGC':'T1_TW_ASGC','IN2P3':'T1_FR_CCIN2P3','RAL':'T1_UK_RAL','PIC':'T1_ES_PIC','KIT':'T1_DE_KIT'}
-siteblacklist = ['T2_AT_Vienna','T2_BR_UERJ','T2_FR_GRIF_IRFU','T2_KR_KNU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_IHEP','T2_RU_ITEP','T2_RU_RRC_KI','T2_TR_METU','T2_UK_SGrid_Bristol','T2_US_Vanderbilt','T2_CH_CERN']
+siteblacklist = ['T2_AT_Vienna','T2_BR_UERJ','T2_FR_GRIF_IRFU','T2_KR_KNU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_ITEP','T2_RU_IHEP','T2_RU_RRC_KI','T2_TR_METU','T2_UK_SGrid_Bristol','T2_US_Vanderbilt','T2_CH_CERN']
 
 def get_linkedt2s(custodialT1):
 	list = []
@@ -30,7 +30,7 @@ def get_linkedt2s(custodialT1):
         	print sys.exc_info()
 		sys.exit(1)
 
-def getsitelist(zone):
+def getsitelist(zone,):
 	global zones,siteblacklist,zone2t1
 	if zone in zones:
 		sitelist = []
@@ -41,7 +41,6 @@ def getsitelist(zone):
 		for i in t2list:
 			if not i in siteblacklist:
 				sitelist.append(i)
-		return sitelist
 	else:
 		sitelist = zone.split(',')
 		t1count = 0
@@ -59,7 +58,7 @@ def getsitelist(zone):
 					if not i in t2list:
 						print "%s has no PhEDEx uplink to %s" % (i,custodialT1)
 						sys.exit(1)
-		return sitelist
+	return sitelist
 
 def getacqera(r):
 	global legal_eras
@@ -222,6 +221,13 @@ def main():
 			print "%s: not a MonteCarlo/MonteCarloFromGEN request!" % w
 			sys.exit(1)
 		print "* CHECKING %s" % w
+		# T3_US_Omaha hook
+		newsitelist = sitelist
+		if 'T2_US_Nebraska' in newsitelist and reqinfo[w]['type'] == 'MonteCarlo':
+			#newsitelist.append('T2_US_Nebraska2')
+			#newsitelist.append('T2_US_Nebraska3')
+			newsitelist.append('T3_US_Omaha')
+		
 		for i in reqinfo[w].keys():
 			print "\t%s: %s" % (i,reqinfo[w][i])
 		if reqinfo[w]['status'] != 'assignment-approved':
@@ -242,10 +248,10 @@ def main():
 		team = teams[tcount % len(teams)]
 		procversion = "%s-%s" % (reqinfo[w]['globaltag'],version)
 		if options.test:
-			print "TEST: %s\n\tteam: %s\n\tacquisition era: %s\n\tProcessingVersion: %s\n\tWhitelist: %s\n" % (w,team,acqera,procversion,sitelist)
+			print "TEST: %s\n\tteam: %s\n\tacquisition era: %s\n\tProcessingVersion: %s\n\tWhitelist: %s\n" % (w,team,acqera,procversion,newsitelist)
 		else:
-			print "ASSIGN: %s\n\tteam: %s\n\tacquisition era: %s\n\tProcessingVersion: %s\n\tWhitelist: %s\n" % (w,team,acqera,procversion,sitelist)
-			assignMCRequest(url,w,team,sitelist,acqera,procversion)
+			print "ASSIGN: %s\n\tteam: %s\n\tacquisition era: %s\n\tProcessingVersion: %s\n\tWhitelist: %s\n" % (w,team,acqera,procversion,newsitelist)
+			assignMCRequest(url,w,team,newsitelist,acqera,procversion)
 		tcount = tcount + 1
 	
 	print "The following requests:\n"

@@ -43,9 +43,14 @@ def getWorkflowInfo(workflow):
 			prepid = raw[raw.find("'")+1:]
 			prepid = prepid[0:prepid.find("'")]
 		elif 'TimePerEvent' in raw:
-			a = raw.find("'")
-			b = raw.find("'",a+1)
-			timeev = int(raw[a+1:b])
+                        a = raw.find("'")
+                        if a >= 0:
+                                b = raw.find("'",a+1)
+                                timeev = int(raw[a+1:b])
+                        else:
+                                a = raw.find(" =")
+                                b = raw.find('<br')
+                                timeev = int(raw[a+3:b])
 		elif 'request.priority' in raw:
 			a = raw.find("'")
 			if a >= 0:
@@ -87,16 +92,20 @@ def getWorkflowInfo(workflow):
 	except:
 		status = ''
 	try:
-		reqsize = s['RequestSizeEvents']
-	except:
-		reqsize = -1
+                reqevts = s['RequestSizeEvents']
+        except:
+                try:
+                        reqevts = s['RequestNumEvents']
+                except:
+                        print "No RequestNumEvents for this workflow: "+workflow
+                        return ''
 	try:
 		inputdataset = s['InputDatasets'][0]
 	except:
 		inputdataset = ''
 	
 	if type in ['MonteCarlo']:
-		expectedevents = reqsize
+		expectedevents = int(reqevts)
 	elif type in ['MonteCarloFromGEN']:
 		[ie,ist] = getdsdetail(inputdataset)
 		expectedevents = int(filtereff*ie)
@@ -192,64 +201,18 @@ def getRequestsByTypeStatus(typelist,status):
 	return r
 	
 def getdsdetail(dataset):
-	query = 'dataset dataset=' + dataset + ' status=*|grep dataset.nevents,dataset.status'
-
-	[e,st] = das_get_data(query)
+	[e,st] = dbs_get_data(dataset)
 	if e == -1:
 		return [0,'']
 	else:
 		return [e,st]
 
-def das_get_data(query):
-    params  = {'input':query, 'idx':0, 'limit':0}
-    path    = '/das/cache'
-    pat     = re.compile('http[s]{0,1}://')
-    if  not pat.match(dashost):
-        msg = 'Invalid hostname: %s' % dashost
-        raise Exception(msg)
-    url = dashost + path
-    headers = {"Accept": "application/json"}
-    encoded_data = urllib.urlencode(params, doseq=True)
-    url += '?%s' % encoded_data
-    req  = urllib2.Request(url=url, headers=headers)
-    opener = urllib2.build_opener()
-    fdesc = opener.open(req)
-    data = fdesc.read()
-    fdesc.close()
-
-    pat = re.compile(r'^[a-z0-9]{32}')
-    if  data and isinstance(data, str) and pat.match(data) and len(data) == 32:
-        pid = data
-    else:
-        pid = None
-    count = 1  
-    timeout = 30 
-    while pid:
-        params.update({'pid':data})
-        encoded_data = urllib.urlencode(params, doseq=True)
-        url  = dashost + path + '?%s' % encoded_data
-        req  = urllib2.Request(url=url, headers=headers)
-        try:
-            fdesc = opener.open(req)
-            data = fdesc.read()
-            fdesc.close()
-        except urllib2.HTTPError:
-            print str(urllib2.HTTPError)
-            return ""
-        if  data and isinstance(data, str) and pat.match(data) and len(data) == 32:
-            pid = data
-        else:
-            pid = None
-        time.sleep(1)
-    d = eval(data)
-    try:
-    	r = d['data'][0]['dataset']
-    	if isinstance(r,list):
-		return [r[0]['nevents'],r[0]['status']]
-    	else:
-		return [r['nevents'],r['status']]
-    except:
-	return [-1,'']
+def dbs_get_data(dataset):
+	output=os.popen("/afs/cern.ch/user/s/spinoso/public/dbssql --input='find sum(block.numevents),dataset.status where dataset="+dataset+"'"+ "|grep '[0-9]\{1,\}'").read()
+	ret = output.split(' ')
+	ret[0] = int(ret[0])
+	ret[1] = ret[1].rstrip()
+	return ret
 
 def getnextprocessingversion(r):
 	c = 0
@@ -289,10 +252,10 @@ def main():
 	reqinfo = {}
 
 	for workflow in list:
-		sys.stdout.write("\rAnalyzing requests in %s: %s/%s" % (liststatus,count,len(list))) 
-		sys.stdout.flush()
-
+		print "Get %s/%s %s" % (count,len(list),workflow)
 		reqinfo[workflow] = getWorkflowInfo(workflow)
+		for i in reqinfo[workflow].keys():
+			print "\t%s: %s" % (i,reqinfo[workflow][i])
 
 		count = count + 1
 	print
@@ -301,8 +264,6 @@ def main():
 	print 'REQUEST PRIORITY EVENTS DURATION'
 	for p in range(0,len(priorities)):
 		for i in getrequestsByPriority(reqinfo,priorities[p]):
-			#acqera = getacqera(reqinfo[i])
-			#procversion = getnextprocessingversion(reqinfo[i])
 			print "%s %s %s %s" %(i,reqinfo[i]['priority'],reqinfo[i]['expectedevents'],reqinfo[i]['duration'])
 
         sys.exit(0)
