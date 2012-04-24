@@ -374,12 +374,10 @@ def main():
 	elif options.assignment:
 		for w in list:
 			reqinfo[w] = getWorkflowInfo(w)
-			print "%s PREPID:%s type:%s status:%s priority:%s events:%s cpuhours:" % (w,reqinfo[w]['prepid'],reqinfo[w]['type'],reqinfo[w]['status'],reqinfo[w]['priority'],reqinfo[w]['events'],reqinfo[w]['duration'])
-			#print " team: %s custodialT1: %s zone: %s" % (",".join(x for x in reqinfo[w]['team']),reqinfo[w]['custodialt1'],reqinfo[w]['zone'])
 			sites = reqinfo[w]['sites']
 			sites.sort()
-			print " sites: %s" % ",".join(x for x in sites)
-			print
+			print "%s PREPID:%s type:%s status:%s priority:%s expectedevents:%s cpuhours:%s sites: %s" % (w,reqinfo[w]['prepid'],reqinfo[w]['type'],reqinfo[w]['status'],reqinfo[w]['priority'],reqinfo[w]['expectedevents'],reqinfo[w]['duration'],",".join(x for x in sites))
+			#print " team: %s custodialT1: %s zone: %s" % (",".join(x for x in reqinfo[w]['team']),reqinfo[w]['custodialt1'],reqinfo[w]['zone'])
 	elif options.datasets:
 		for workflow in list:
 			conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))

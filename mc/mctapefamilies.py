@@ -197,13 +197,11 @@ def main():
 		prepid = reqinfo[workflow]['prepid']
 		acqera = prepid.split('-')[1]
 		if acqera not in eras:
-			print "WARNING: %s: '%s' era is not known, please use one of %s" % (workflow,acqera,eras)
-			sys.exit(1)
-		else:
-			prids = reqinfo[workflow]['primaryds']
-			for i in tiers:
-				tf = "/store/mc/"+acqera+"/"+prids+"/"+i
-				print "%s" % (tf)
+			acqera = "Summer12"
+		prids = reqinfo[workflow]['primaryds']
+		for i in tiers:
+			tf = "/store/mc/"+acqera+"/"+prids+"/"+i
+			print "%s" % (tf)
 	print "("+",".join(reqinfo[x]['prepid'] for x in reqinfo.keys())+")"
         sys.exit(0)
 

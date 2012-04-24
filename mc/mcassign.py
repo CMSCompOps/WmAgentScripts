@@ -11,6 +11,8 @@ except ImportError:
 # TODO guess procversion
 
 legal_eras = ['Summer11','Summer12']
+teams_hp = ['mc_highprio']
+teams_lp = ['mc','production']
 zones = ['FNAL','CNAF','ASGC','IN2P3','RAL','PIC','KIT']
 zone2t1 = {'FNAL':'T1_US_FNAL','CNAF':'T1_IT_CNAF','ASGC':'T1_TW_ASGC','IN2P3':'T1_FR_CCIN2P3','RAL':'T1_UK_RAL','PIC':'T1_ES_PIC','KIT':'T1_DE_KIT'}
 siteblacklist = ['T2_AT_Vienna','T2_BR_UERJ','T2_FR_GRIF_IRFU','T2_KR_KNU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_ITEP','T2_RU_IHEP','T2_RU_RRC_KI','T2_TR_METU','T2_UK_SGrid_Bristol','T2_US_Vanderbilt','T2_CH_CERN']
@@ -30,7 +32,7 @@ def get_linkedt2s(custodialT1):
         	print sys.exc_info()
 		sys.exit(1)
 
-def getsitelist(zone,):
+def getsitelist(zone):
 	global zones,siteblacklist,zone2t1
 	if zone in zones:
 		sitelist = []
@@ -59,6 +61,10 @@ def getsitelist(zone,):
 						print "%s has no PhEDEx uplink to %s" % (i,custodialT1)
 						sys.exit(1)
 	return sitelist
+
+def getcampaign(r):
+        prepid = r['prepid']
+        return prepid.split('-')[1]
 
 def getacqera(r):
 	global legal_eras
@@ -164,7 +170,7 @@ def main():
 	parser = optparse.OptionParser()
 	parser.add_option('-w', '--workflow', help='workflow name',dest='workflow')
 	parser.add_option('-l', '--workflowlist', help='workflow list in textfile',dest='list')
-	parser.add_option('-t', '--team', help='team',dest='team')
+	parser.add_option('-t', '--team', help='team: one of %s' % (teams_hp+teams_lp),dest='team')
 	parser.add_option('--test', action="store_true",default=True,help='test mode: don\'treally assign at the end',dest='test')
 	parser.add_option('--assign', action="store_false",default=True,help='assign mode',dest='test')
 	parser.add_option('-z', '--zone', help='Zone %s or single site or comma-separated list (i.e. T1_US_FNAL,T2_FR_CCIN2P3,T2_DE_DESY)' % zones,dest='zone')
@@ -188,9 +194,10 @@ def main():
 
 	if options.team:
 		teams=options.team.split(',')
+		if 'auto' in teams:
+			teams = []
 	else:
-		print "Please provide a team!"
-		sys.exit(1)
+		teams = []
 	if options.zone:
 		sitelist = getsitelist(options.zone)
 		print "Sitelist: %s" % sitelist
@@ -211,7 +218,6 @@ def main():
 		
 	reqinfo = {}
 	
-	print "Team is %s" % teams
 	for w in list:
 		reqinfo[w] = getWorkflowInfo(w)
 		if reqinfo[w]['status'] == '':
@@ -221,50 +227,58 @@ def main():
 			print "%s: not a MonteCarlo/MonteCarloFromGEN request!" % w
 			sys.exit(1)
 		print "* CHECKING %s" % w
-		# T3_US_Omaha hook
-		newsitelist = sitelist
-		if 'T2_US_Nebraska' in newsitelist and reqinfo[w]['type'] == 'MonteCarlo':
-			#newsitelist.append('T2_US_Nebraska2')
-			#newsitelist.append('T2_US_Nebraska3')
-			newsitelist.append('T3_US_Omaha')
-		
+
 		for i in reqinfo[w].keys():
 			print "\t%s: %s" % (i,reqinfo[w][i])
 		if reqinfo[w]['status'] != 'assignment-approved':
 			print "%s: not in status assignment-approved! (status is '%s')" % (w,reqinfo[w]['status'])
 			sys.exit(1)
-		guess_acqera = getacqera(reqinfo[w])
-		if guess_acqera != acqera:
-			print "%s: PREPID '%s' is not consistent with the provided acquisition era (%s)" % (w,reqinfo[w]['prepid'],acqera)
-			sys.exit(1)
-		else:
-			print "\tacqera: %s" % acqera
-		procversion = "%s-%s" % (reqinfo[w]['globaltag'],version)
-		print "\tprocessingversion: %s" % procversion
-		print
 
+	tcount_hp = 0
+	tcount_lp = 0
 	tcount = 0
 	for w in list:
-		team = teams[tcount % len(teams)]
-		procversion = "%s-%s" % (reqinfo[w]['globaltag'],version)
-		if options.test:
-			print "TEST: %s\n\tteam: %s\n\tacquisition era: %s\n\tProcessingVersion: %s\n\tWhitelist: %s\n" % (w,team,acqera,procversion,newsitelist)
+		priority = reqinfo[w]['priority']
+		if teams == []:
+			if priority >=100000:
+				team = teams_hp[tcount_hp % len(teams_hp)]
+				tcount_hp = tcount_hp + 1
+			else:
+				team = teams_lp[tcount_lp % len(teams_lp)]
+				tcount_lp = tcount_lp + 1
 		else:
-			print "ASSIGN: %s\n\tteam: %s\n\tacquisition era: %s\n\tProcessingVersion: %s\n\tWhitelist: %s\n" % (w,team,acqera,procversion,newsitelist)
-			assignMCRequest(url,w,team,newsitelist,acqera,procversion)
-		tcount = tcount + 1
+			team = teams[tcount % len(teams)]
+			tcount = tcount + 1
+
+		# T3_US_Omaha hook
+		newsitelist = sitelist[:]
+		if 'T2_US_Nebraska' in sitelist and reqinfo[w]['type'] == 'MonteCarlo':
+			newsitelist.append('T3_US_Omaha')
+		
+		campaign = getcampaign(reqinfo[w])
+		if 'Upgrade' in campaign:
+			acqera = 'Summer12'
+			procversion = "%s-%s-%s" % (campaign,reqinfo[w]['globaltag'],version)
+		else:
+			acqera = campaign
+			procversion = "%s-%s" % (reqinfo[w]['globaltag'],version)
+
+		suminfo = "%s\n\tteam: %s\tpriority: %s\n\tacqera: %s\tProcessingVersion: %s\n\tWhitelist: %s" % (w,team,priority,acqera,procversion,newsitelist)
+		if options.test:
+			print "TEST:\t%s" % suminfo
+		else:
+			print "ASSIGN:\t%s" % suminfo
+			#assignMCRequest(url,w,team,newsitelist,acqera,procversion)
+		print
 	
-	print "The following requests:\n"
 	if options.test:
 		ts = "TESTED"
 	else:
 		ts = "ASSIGNED"
+	print "The following requests have been %s:\n" % ts
 	for w in list:
 		print "\t%s" % w
-	print "\nhave been %s:\n\n\tteam: %s\n\twhitelist: %s\n\tacqera: %s\n\tprocessingversion: %s" % (ts,teams,sitelist,acqera,procversion)
 	print "\n"
-		
-		
 
 	sys.exit(0)
 
