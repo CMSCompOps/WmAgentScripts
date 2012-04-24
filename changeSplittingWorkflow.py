@@ -19,7 +19,7 @@ def changeSplittingWorkflow(url, workflow, split):
 	if RequestType=='MonteCarlo':
 		params = {"requestName":workflow,"splittingTask" : '/'+workflow+"/Production", "splittingAlgo":"EventBased", "events_per_job":str(split), "timeout":""}
 	elif RequestType=='ReDigi':
-		params = {"requestName":workflow,"splittingTask" : '/'+workflow+"/StepOneProc", "splittingAlgo":"LumiBased", "lumis_per_job":str(split), "timeout":"", "include_parents":"False", "files_per_job":""}
+		params = {"requestName":workflow,"splittingTask" : '/'+workflow+"/StepOneProc", "splittingAlgo":"LumiBased", "lumis_per_job":str(split), "timeout":"", "include_parents":"False", "files_per_job":"",'halt_job_on_file_boundaries':'True','events_per_job':''}
 	elif RequestType=='MonteCarloFromGEN':
 		params = {"requestName":workflow,"splittingTask" : '/'+workflow+"/MonteCarloFromGEN", "splittingAlgo":"LumiBased", "lumis_per_job":str(split), "timeout":"", "include_parents":"False", "files_per_job":"",'halt_job_on_file_boundaries':'True'}
     	headers={"Content-type": "application/x-www-form-urlencoded",
