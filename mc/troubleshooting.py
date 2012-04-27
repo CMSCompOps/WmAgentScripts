@@ -9,6 +9,7 @@ import httplib
 import datetime
 import time
 import shutil
+import datetime
 
 dashost = 'https://cmsweb.cern.ch'
 reqmgrsocket='vocms204.cern.ch'
@@ -59,6 +60,8 @@ def getWorkflowInfo(workflow):
 	prepid = ''
 	globaltag = ''
 	sites = []
+	datafmt = '%Y %m %d %H %M %S'
+
 	for raw in list:
 		if 'acquisitionEra' in raw:
 			acquisitionEra = raw[raw.find("'")+1:]
@@ -260,19 +263,19 @@ def getrequestsByPriority(reqinfo,priority):
 	return requests
 
 def getoverview():
-        cacheoverviewage = 60
-        cachedoverview = '/tmp/' + os.environ['USER'] + '/overview.cache'
-        if (os.path.exists(cachedoverview)) and (time.time()-os.path.getmtime(cachedoverview)>cacheoverviewage*60):
-                os.remove(cachedoverview)
-        if (not os.path.exists(cachedoverview)):
-                s = getnewoverview()
-                output = open(cachedoverview, 'w')
-                output.write("%s" % s)
-                output.close()
-        else:
-                d = open(cachedoverview).read()
-                s = eval(d)
-        return s
+	cacheoverviewage = 60
+	cachedoverview = '/tmp/' + os.environ['USER'] + '/overview.cache'
+	if (os.path.exists(cachedoverview)) and (time.time()-os.path.getmtime(cachedoverview)>cacheoverviewage*60):
+		os.remove(cachedoverview)
+	if (not os.path.exists(cachedoverview)):
+		s = getnewoverview()
+		output = open(cachedoverview, 'w')
+		output.write("%s" % s)
+		output.close()
+	else:
+		d = open(cachedoverview).read()
+		s = eval(d)
+	return s
 
 def getnewoverview():
 	c = 0
@@ -347,94 +350,74 @@ def getacqera(r):
 def main():
 	global overview
 	
-	viewchoices = ['names','all','production','dataset','run','assignment']
 	parser = optparse.OptionParser()
-	parser.add_option('-l', '--listfile', help='analyze workflows listed in textfile',dest='list')
-	parser.add_option('-w', '--workflow', help='analyze specific workflow',dest='wf')
-	parser.add_option('-p', '--prepid', help='analyze workflow with PREPID',dest='prepid')
-	parser.add_option('-s', '--status', help='analyze workflow in status STATUS',dest='status')
-	parser.add_option('-t', '--type', help='analyze workflow of type TYPE',dest='type')
-	parser.add_option('-n', '--names', help='print just request names',dest='names',action="store_true")
-	parser.add_option('-a','--all', help='print all information about the requests',dest='raw',action="store_true")
-	parser.add_option('-g', '--assignment', help='print just information useful in assignment context',dest='assignment',action="store_true")
-	parser.add_option('-d', '--datasets', help='print just output datasets',dest='datasets',action="store_true")
-	parser.add_option('-j', '--jobs', help='print just information useful in workflow management context',dest='jobs',action="store_true")
+	parser.add_option('-t', '--transfer', help='check for pending transfers on completed/closed-out',dest='transfer',action="store_true")
+	parser.add_option('-n', '--no-running', help='check for running requests with 0 running',dest='norunning',action="store_true")
+	parser.add_option('-e', '--enough-events', help='check for running requests having >=90% events',dest='enough',action="store_true")
+	parser.add_option('-s', '--sleeping', help='check for sleeping requests (staying in their status for too much)',dest='sleeping',action="store_true")
+	parser.add_option('-l', '--lessevents', help='check for less events than expected',dest='lessevents',action="store_true")
 
 	(options,args) = parser.parse_args()
 
 	overview = getoverview()
 	print
-	if options.wf:
-		list = [options.wf]
-	elif options.list:
-		list = open(options.list).read().splitlines()
-	elif options.prepid:
-		list = getRequestsByPREPID(options.prepid)
-	elif options.status or options.type:
-		rtype = typelist
-		if options.type:
-			rtype = options.type.split(',')
-		rstatus = statuslist
-		if options.status:
-			rstatus = options.status.split(',')
-		#print "Selecting requests with type %s and status %s" % (rtype,rstatus)
-		list = getRequestsByTypeStatus(rtype,rstatus)
-	else:
-		print "List not provided."
-		sys.exit(1)
-	list.sort()
-		
 	reqinfo = {}
-	if options.names:
+
+	if options.transfer: #completed/closed-out requests not proceeding in PhEDEx transfer
+		print "Workflows in completed/closed-out having PhEDEx transfer pending:\n"
+		list = getRequestsByTypeStatus(['MonteCarlo','MonteCarloFromGEN'],['completed','closed-out'])
 		for w in list:
-			print w
-	elif options.raw:
-		for workflow in list:
-			reqinfo[workflow] = getWorkflowInfo(workflow)
-			print "%s" % (workflow)
-			for i in reqinfo[workflow].keys():
-				print " %s: %s" % (i,reqinfo[workflow][i])
-			print
-	elif options.assignment:
+			r = getWorkflowInfo(w)
+			for o in r['outputdataset']:
+				if 'perc' in o['phtrinfo'].keys():
+					if o['phtrinfo']['perc'] < 100 and o['phtrinfo']['time_create_days'] > 7:
+						print "%s (created on %s, custodial is %s, %s %s%%, https://cmsweb.cern.ch/phedex/prod/Request::View?request=%s)" % (w,o['phtrinfo']['time_create'].strftime('%b %d'),r['custodialt1'],o['name'],o['phtrinfo']['perc'],o['phreqinfo']['id'])
+
+	elif options.lessevents: # running with 0 jobs running
+		print "Workflows having less events than expected (probable efficiency issues):\n"
+		list = getRequestsByTypeStatus(['MonteCarlo','MonteCarloFromGEN'],['running'])
 		for w in list:
-			reqinfo[w] = getWorkflowInfo(w)
-			sites = reqinfo[w]['sites']
-			sites.sort()
-			print "%s PREPID:%s type:%s status:%s priority:%s expectedevents:%s cpuhours:%s sites: %s" % (w,reqinfo[w]['prepid'],reqinfo[w]['type'],reqinfo[w]['status'],reqinfo[w]['priority'],reqinfo[w]['expectedevents'],reqinfo[w]['duration'],",".join(x for x in sites))
-			#print " team: %s custodialT1: %s zone: %s" % (",".join(x for x in reqinfo[w]['team']),reqinfo[w]['custodialt1'],reqinfo[w]['zone'])
-	elif options.datasets:
-		for workflow in list:
-			conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-			r1=conn.request('GET','/reqmgr/reqMgr/outputDatasetsByRequestName?requestName=' + workflow)
-			r2=conn.getresponse()
-			data = r2.read()
-			ods = json.loads(data)
-			conn.close()
-			for o in ods:
-				print "%s" % o
-			print
-	elif options.jobs:
+			r = getWorkflowInfo(w)
+			expectedevents = r['expectedevents']
+			inWMBS = r['js']['inWMBS']
+			if inWMBS > 0:
+				expectedeventsperjob = expectedevents/inWMBS
+				successfuljobs = r['js']['success']
+				if (float(successfuljobs)/inWMBS) > .7:
+					for o in r['outputdataset']:
+						events = o['events']
+						eventsperjob = events/successfuljobs
+						ratio = float(eventsperjob)/expectedeventsperjob
+						if ratio < .90:
+							print "%s (%s)" % (w,round(ratio,2))
+
+	elif options.norunning: # running with 0 jobs running
+		print "Workflows having no running jobs:\n"
+		list = getRequestsByTypeStatus(['MonteCarlo','MonteCarloFromGEN'],['running'])
+		for w in list:
+			r = getWorkflowInfo(w)
+			if r['js']['running'] == 0:
+				print "%s" % (w)
+
+	elif options.enough: # enough events
+		print "Workflows running that could have enough events:\n"
+		list = getRequestsByTypeStatus(['MonteCarlo','MonteCarloFromGEN'],['running'])
+		for w in list:
+			r = getWorkflowInfo(w)
+			expectedevents = r['expectedevents']
+			for o in r['outputdataset']:
+				perc = int(100*o['events']/expectedevents)
+				if perc > 80:
+						print "%s" % (w)
+
+	elif options.sleeping: # enough events
+		print "Workflows stuck since a long time:\n"
+		list = getRequestsByTypeStatus(['MonteCarlo','MonteCarloFromGEN'],['acquired','running'])
+		for w in list:
+			r = getWorkflowInfo(w)
+			if ( r['requestdays'] > 40 and r['status'] in ['acquired','running']):
+				print "%s (injected %s days ago, status is %s)" % (w,r['requestdays'],r['status'])
 		print
-		print "%-70s %5s %5s %5s %5s %5s %5s %5s %5s %5s" % ('REQUEST','Q','C','P','R','S','F','I','T','status')
-		print "---------------------------------------------------------------------------------------------------------"
-		for w in list:
-			reqinfo[w] = getWorkflowInfo(w)
-			r = reqinfo[w]['js']
-			print "%-70s %5s %5s %5s %5s %5s %5s %5s %5s %4s" % (w,r['queued'],r['cooloff'],r['pending'],r['running'],r['success'],r['failure'],r['inWMBS'],r['total_jobs'],reqinfo[w]['status'])
-		print
-	else:
-		for w in list:
-			reqinfo[w] = getWorkflowInfo(w)
-			print "%s (%s,%s,%s)" % (w,reqinfo[w]['prepid'],reqinfo[w]['type'],reqinfo[w]['status'])
-			r = reqinfo[w]['js']
-			print " Jobs: Q:%s C:%s P:%s R:%s S:%s F:%s T:%s" % (r['queued'],r['cooloff'],r['pending'],r['running'],r['success'],r['failure'],r['total_jobs'])
-			for o in reqinfo[w]['outputdataset']:
-				print " %s %s (reached %s%%, expect %s, status '%s')" % (o['name'],o['events'],int(100*o['events']/reqinfo[w]['expectedevents']),reqinfo[w]['expectedevents'],o['status'])
-				if o['phtrinfo'] != {}:
-					print "  subscribed to %s (%s,%s%%)" % (o['phtrinfo']['node'],o['phtrinfo']['type'],o['phtrinfo']['perc'])
-				if o['phreqinfo'] != {}:
-					print "  request %s: https://cmsweb.cern.ch/phedex/prod/Request::View?request=%s" % (o['phreqinfo']['approval'],o['phreqinfo']['id'])
-			print
 
 	print
         sys.exit(0)
