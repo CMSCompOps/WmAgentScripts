@@ -268,7 +268,7 @@ def main():
 			print "TEST:\t%s" % suminfo
 		else:
 			print "ASSIGN:\t%s" % suminfo
-			#assignMCRequest(url,w,team,newsitelist,acqera,procversion)
+			assignMCRequest(url,w,team,newsitelist,acqera,procversion)
 		print
 	
 	if options.test:

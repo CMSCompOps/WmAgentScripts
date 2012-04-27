@@ -7,6 +7,7 @@ import simplejson as json
 import optparse
 import httplib
 import datetime
+import time
 import shutil
 
 dashost = 'https://cmsweb.cern.ch'
@@ -87,6 +88,12 @@ def getWorkflowInfo(workflow):
 				b = raw.find('<br')
 				#print "*%s*" % raw[a+3:b]
 				priority = int(raw[a+3:b])
+		elif 'RequestDate' in raw:
+			reqdate = raw[raw.find("[")+1:raw.find("]")]	
+			reqdate = reqdate.replace("'","")
+			reqdate= "datetime.datetime(" + reqdate + ")"
+			reqdate= eval(reqdate)
+			requestdays = (datetime.datetime.now()-reqdate).days
 		elif 'white' in raw and not '[]' in raw:
 			sites = '['+raw[raw.find("[")+1:raw.find("]")]+']'	
 			sites = eval(sites)		
@@ -232,7 +239,7 @@ def getWorkflowInfo(workflow):
 
 	duration = timeev*expectedevents/3600
 	
-	return {'filtereff':filtereff,'type':type,'status':status,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'zone':getzonebyt1(custodialt1),'js':j,'outputdataset':outputdataset,'duration':duration,'team':team,'acquisitionEra':acquisitionEra}
+	return {'filtereff':filtereff,'type':type,'status':status,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'zone':getzonebyt1(custodialt1),'js':j,'outputdataset':outputdataset,'duration':duration,'team':team,'acquisitionEra':acquisitionEra,'reqdate':reqdate,'requestdays':requestdays}
 
 def getpriorities(reqinfo):
 	priorities = []
@@ -251,6 +258,21 @@ def getrequestsByPriority(reqinfo,priority):
 	return requests
 
 def getoverview():
+        cacheoverviewage = 60
+        cachedoverview = '/tmp/' + os.environ['USER'] + '/overview.cache'
+        if (os.path.exists(cachedoverview)) and (time.time()-os.path.getmtime(cachedoverview)>cacheoverviewage*60):
+                os.remove(cachedoverview)
+        if (not os.path.exists(cachedoverview)):
+                s = getnewoverview()
+                output = open(cachedoverview, 'w')
+                output.write("%s" % s)
+                output.close()
+        else:
+                d = open(cachedoverview).read()
+                s = eval(d)
+        return s
+
+def getnewoverview():
 	c = 0
 	#print "Getting overview..",
 	while c < 3:
