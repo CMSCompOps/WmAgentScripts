@@ -354,7 +354,7 @@ def main():
 	parser.add_option('-t', '--transfer', help='check for pending transfers on completed/closed-out',dest='transfer',action="store_true")
 	parser.add_option('-n', '--no-running', help='check for running requests with 0 running',dest='norunning',action="store_true")
 	parser.add_option('-e', '--enough-events', help='check for running requests having >=90% events',dest='enough',action="store_true")
-	parser.add_option('-s', '--sleeping', help='check for sleeping requests (staying in their status for too much)',dest='sleeping',action="store_true")
+	parser.add_option('-s', '--stuck', help='check for stuck requests (staying in their status for too much)',dest='stuck',action="store_true")
 	parser.add_option('-l', '--lessevents', help='check for less events than expected',dest='lessevents',action="store_true")
 
 	(options,args) = parser.parse_args()
@@ -410,7 +410,7 @@ def main():
 				if perc > 80:
 						print "%s" % (w)
 
-	elif options.sleeping: # enough events
+	elif options.stuck: # enough events
 		print "Workflows stuck since a long time:\n"
 		list = getRequestsByTypeStatus(['MonteCarlo','MonteCarloFromGEN'],['acquired','running'])
 		for w in list:
