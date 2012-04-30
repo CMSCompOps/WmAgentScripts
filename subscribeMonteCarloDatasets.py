@@ -28,7 +28,7 @@ def classifyRunningRequests(url, requests):
 						inputEvents=inputEvents+int(dbsTest.getInputEvents(url, name))
 						outputEvents=dbsTest.getEventCountDataSet(dataset)
 						percentage=outputEvents/float(inputEvents)
-						if float(percentage)>float(0.50):
+						if float(percentage)>float(0.20):
 							if not phedexSubscription.TestCustodialSubscriptionRequested(url, dataset, site):
 								if site not in datasetsUnsuscribed.keys():
 									datasetsUnsuscribed[site]=[dataset]
