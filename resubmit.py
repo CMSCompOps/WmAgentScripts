@@ -71,13 +71,14 @@ def submitWorkflow(schema):
                  "Accept": "text/plain"}
 
     conn  =  httplib.HTTPSConnection("cmsweb.cern.ch", cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    #conn  =  httplib.HTTPConnection("vocms13.cern.ch:8687")
     #conn  =  httplib.HTTPConnection("%s:%s" % (reqmgrHostname, reqmgrPort))
     print "  submitting new workflow..."
     conn.request("POST",  "/reqmgr/create/makeSchema", encodedParams, headers)
     response = conn.getresponse()
-    #print response.status, response.reason
+    print response.status, response.reason
     data = response.read()
-    #print data
+    print data
     details=re.search("details\/(.*)\'",data)
     return details.group(1)
 

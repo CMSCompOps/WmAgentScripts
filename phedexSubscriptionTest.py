@@ -18,18 +18,18 @@ def testOutputDataset(datasetName, requestType):
 						print "This dataset is subscribed : "+ datasetName
 						print "Custodial: "+subscription['custodial']
 						request=subscription['request']
-						print "Request page: https://cmsweb.cern.ch/phedex/prod/Request::View?request="+request
+						print "Request page: https://cmsweb.cern.ch/phedex/prod/Request::View?request="+str(request)
 						return
 				else:
 					print "This dataset is subscribed : "+ datasetName
 					print "Custodial: "+subscription['custodial']
 					request=subscription['request']
-					print "Request page: https://cmsweb.cern.ch/phedex/prod/Request::View?request="+request
+					print "Request page: https://cmsweb.cern.ch/phedex/prod/Request::View?request="+str(request)
 					return
 			else:
 				print "The Subscription exist but not custodial"
 				request=subscription['request']
-				print "Request page: https://cmsweb.cern.ch/phedex/prod/Request::View?request="+request
+				print "Request page: https://cmsweb.cern.ch/phedex/prod/Request::View?request="+str(request)
 				
 	 else:
 		print "This dataset wasn't subscribed: "+ datasetName

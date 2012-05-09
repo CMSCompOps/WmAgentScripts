@@ -15,7 +15,7 @@ def TestCustodialSubscriptionRequested(url, dataset, site):
 	for request in result['phedex']['request']:
 		if request['approval']=='pending' or request['approval']=='approved':
 			requestId=request['id']
-			r1=conn.request("GET",'/phedex/datasvc/json/prod/transferrequests?request='+requestId)
+			r1=conn.request("GET",'/phedex/datasvc/json/prod/transferrequests?request='+str(requestId))
 			r2=conn.getresponse()
 			result = json.read(r2.read())
 			requestSubscription=result['phedex']['request'][0]

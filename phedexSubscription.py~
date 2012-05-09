@@ -3,10 +3,29 @@ import json
 import urllib2,urllib, httplib, sys, re, os
 from xml.dom.minidom import getDOMImplementation
 
+
+def TestCustodialSubscriptionRequested(url, dataset, site):
+	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+	r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset='+dataset+'&node='+site+'_MSS')
+	r2=conn.getresponse()
+	result = json.read(r2.read())
+	requests=result['phedex']
+	if 'request' not in requests.keys():
+		return False
+	for request in result['phedex']['request']:
+		if request['approval']=='pending' or request['approval']=='approved':
+			requestId=request['id']
+			r1=conn.request("GET",'/phedex/datasvc/json/prod/transferrequests?request='+requestId)
+			r2=conn.getresponse()
+			result = json.read(r2.read())
+			requestSubscription=result['phedex']['request'][0]
+			if requestSubscription['custodial']=='y':
+				return True
+	return False
 #Changes the state of a workflow to closed-out
-def closeOutWorkflow(workflowname):
+def closeOutWorkflow(url, workflowname):
     print workflowname,
-    conn = httplib.HTTPConnection('vocms144.cern.ch', 8687)
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     params = {"requestName" : workflowname,"status" : "closed-out"}
     headers={"Content-type": "application/x-www-form-urlencoded",
              "Accept": "text/plain"}
@@ -18,9 +37,23 @@ def closeOutWorkflow(workflowname):
     print data
     conn.close()
 
-def abortWorkflow(workflowname):
+def setWorkflowRunning(url, workflowname):
     print workflowname,
-    conn = httplib.HTTPConnection('vocms144.cern.ch', 8687)
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    params = {"requestName" : workflowname,"status" : "running"}
+    headers={"Content-type": "application/x-www-form-urlencoded",
+             "Accept": "text/plain"}
+    encodedParams = urllib.urlencode(params)
+    conn.request("PUT", "/reqmgr/reqMgr/request", encodedParams, headers)
+    response = conn.getresponse()	
+    print response.status, response.reason
+    data = response.read()
+    print data
+    conn.close()
+
+def abortWorkflow(url, workflowname):
+    print workflowname,
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     params = {"requestName" : workflowname,"status" : "aborted"}
     headers={"Content-type": "application/x-www-form-urlencoded",
              "Accept": "text/plain"}
@@ -110,18 +143,33 @@ def outputdatasetsWorkflow(url, workflow):
 		print "No Outpudatasets for this workflow: "+workflow
 	return datasets
 #Creates the connection to phedex
-def createConnection():
+def createConnection(url):
 	key = "/afs/cern.ch/user/e/efajardo/private/grid_cert_priv.pem"
         cert = "/afs/cern.ch/user/e/efajardo/private/grid_cert_pub.pem"
-	conn = httplib.HTTPSConnection("cmsweb.cern.ch", key_file=key, cert_file=cert)
-    	conn.connect()
+	#conn = httplib.HTTPSConnection(url, key_file=key, cert_file=cert)
+	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+	#r1=conn.request("GET",'/phedex/datasvc/json/prod/auth')
+	#r1=conn.request("GET",'	/phedex/datasvc/json/prod/secmod')
+	#r1=conn.request("GET",'/phedex/datasvc/json/prod/headers')
+	#r2=conn.getresponse()
+        #print json.read(r2.read())
+	conn.connect()
     	print "connected"
 	return conn
 
 # Create the parameters of the request
 def createParams(site, datasetXML, comments):
-	params = urllib.urlencode({ "node" : site+"_MSS","data" : datasetXML, "group": "DataOps", "priority":'normal', "custodial":"y","request_only":"y" ,"no_mail":"n", "comments":comments})
+	params = urllib.urlencode({ "node" : site+"_MSS","data" : datasetXML, "group": "DataOps", "priority":'normal', "custodial":"y","request_only":"y" ,"move":"y","no_mail":"n", "comments":comments})
 	return params
+
+def makeCustodialMoveRequest(url, site,datasets, comments):
+	dataXML=createXML(datasets)
+	params=createParams(site, dataXML, comments)
+	conn=createConnection(url)
+	conn.request("POST", "/phedex/datasvc/json/prod/subscribe", params)
+	response = conn.getresponse()	
+	print response.status, response.reason
+        print response.read()
 
 def main():
 	args=sys.argv[1:]
