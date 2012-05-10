@@ -80,7 +80,7 @@ def getWorkflowInfo(workflow):
                         else:
                                 a = raw.find(" =")
                                 b = raw.find('<br')
-                                timeev = int(raw[a+3:b])
+                                timeev = int(float(raw[a+3:b]))
 		elif 'request.priority' in raw:
 			a = raw.find("'")
 			if a >= 0:
@@ -370,37 +370,32 @@ def main():
 			r = getWorkflowInfo(w)
 			for o in r['outputdataset']:
 				if 'perc' in o['phtrinfo'].keys():
-					if o['phtrinfo']['perc'] < 100 and o['phtrinfo']['time_create_days'] > 7:
+					if o['phtrinfo']['perc'] < 100 and o['phtrinfo']['time_create_days'] > 10:
 						print "%s (created on %s, custodial is %s, %s %s%%, https://cmsweb.cern.ch/phedex/prod/Request::View?request=%s)" % (w,o['phtrinfo']['time_create'].strftime('%b %d'),r['custodialt1'],o['name'],o['phtrinfo']['perc'],o['phreqinfo']['id'])
 
-	elif options.lessevents: # running with 0 jobs running
-		print "Workflows in completed status having less events than expected (failures or efficiency issues):\n"
-		list = getRequestsByTypeStatus(['MonteCarlo','MonteCarloFromGEN'],['completed'])
-		for w in list:
-			r = getWorkflowInfo(w)
-			expectedevents = r['expectedevents']
-			for o in r['outputdataset']:
-				events = o['events']
-				ratio = float(events)/expectedevents
-				if ratio < .9:
-					print "%s: done %s (%s%%), expected %s)" % (w,events,round(ratio,2),expectedevents)
-		print
-		print "Workflows in running status having less events than expected (proactive check for inefficient processing job)\n"
-		list = getRequestsByTypeStatus(['MonteCarlo','MonteCarloFromGEN'],['running'])
-		for w in list:
-			r = getWorkflowInfo(w)
-			expectedevents = r['expectedevents']
-			inWMBS = r['js']['inWMBS']
-			if inWMBS > 0:
-				expectedeventsperjob = expectedevents/inWMBS
-				successfuljobs = r['js']['success']
-				if (float(successfuljobs)/inWMBS) > .5:
-					for o in r['outputdataset']:
-						events = o['events']
-						eventsperjob = events/successfuljobs
-						ratio = float(eventsperjob)/expectedeventsperjob
-						if ratio < .90:
-							print "%s (%s)" % (w,round(ratio,2))
+	elif options.lessevents: # 
+		for s in ['completed','running']:
+			print "Workflows in status '%s' having less events than expected\n" % s
+			list = getRequestsByTypeStatus(['MonteCarlo','MonteCarloFromGEN'],[s])
+			for w in list:
+				r = getWorkflowInfo(w)
+				expectedevents = r['expectedevents']
+				inWMBS = r['js']['inWMBS']
+				if inWMBS > 0:
+					expectedeventsperjob = expectedevents/inWMBS
+					successfuljobs = r['js']['success']
+					failedjobs = r['js']['failure']
+					if (float(successfuljobs)/r['js']['total_jobs']) > .9: # 90% of the jobs are done
+						for o in r['outputdataset']:
+							events = o['events']
+							eventsperjob = events/successfuljobs
+							ratio = float(eventsperjob)/expectedeventsperjob
+							if ratio < .80:
+								print "%s (%s%% of expected events/job)" % (w,100*round(ratio,2))
+						jratio = float(successfuljobs-failedjobs)/successfuljobs
+						if jratio < .80:
+							print "%s (job failures: %s)" % (w,round(jratio,2))
+						
 
 	elif options.norunning: # running with 0 jobs running
 		print "Workflows having no running jobs:\n"
@@ -418,7 +413,7 @@ def main():
 			expectedevents = r['expectedevents']
 			for o in r['outputdataset']:
 				perc = int(100*o['events']/expectedevents)
-				if perc > 80:
+				if perc > 95:
 						print "%s" % (w)
 
 	elif options.stuck: # enough events

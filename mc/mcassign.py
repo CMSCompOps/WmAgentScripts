@@ -15,7 +15,8 @@ teams_hp = ['mc_highprio']
 teams_lp = ['mc','production']
 zones = ['FNAL','CNAF','ASGC','IN2P3','RAL','PIC','KIT']
 zone2t1 = {'FNAL':'T1_US_FNAL','CNAF':'T1_IT_CNAF','ASGC':'T1_TW_ASGC','IN2P3':'T1_FR_CCIN2P3','RAL':'T1_UK_RAL','PIC':'T1_ES_PIC','KIT':'T1_DE_KIT'}
-siteblacklist = ['T2_AT_Vienna','T2_BR_UERJ','T2_FR_GRIF_IRFU','T2_KR_KNU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_ITEP','T2_RU_IHEP','T2_RU_RRC_KI','T2_TR_METU','T2_UK_SGrid_Bristol','T2_US_Vanderbilt','T2_CH_CERN']
+#siteblacklist = ['T2_AT_Vienna','T2_BR_UERJ','T2_FR_GRIF_IRFU','T2_KR_KNU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_ITEP','T2_RU_IHEP','T2_RU_RRC_KI','T2_TR_METU','T2_UK_SGrid_Bristol','T2_US_Vanderbilt','T2_CH_CERN']
+siteblacklist = ['T2_AT_Vienna','T2_BR_UERJ','T2_FR_GRIF_IRFU','T2_KR_KNU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_ITEP','T2_RU_RRC_KI','T2_TR_METU','T2_UK_SGrid_Bristol','T2_US_Vanderbilt','T2_CH_CERN']
 
 def get_linkedt2s(custodialT1):
 	list = []
@@ -73,8 +74,10 @@ def getacqera(r):
 	if era in legal_eras:
 		return era
 	else:
-		print "'%s' is not a known era, use one of %s" % (era,legal_eras)
-		sys.exit(1)
+		print "*********************************************************"
+		print "WARNING: '%s' is not a known era, using Summer12"  % era
+		print "*********************************************************"
+		return 'Summer12'
 
 def assignMCRequest(url,workflow,team,sitelist,era,procversion):
     params = {"action": "Assign",
@@ -260,7 +263,7 @@ def main():
 			acqera = 'Summer12'
 			procversion = "%s-%s-%s" % (campaign,reqinfo[w]['globaltag'],version)
 		else:
-			acqera = campaign
+			acqera = getacqera(reqinfo[w])
 			procversion = "%s-%s" % (reqinfo[w]['globaltag'],version)
 
 		suminfo = "%s\n\tteam: %s\tpriority: %s\n\tacqera: %s\tProcessingVersion: %s\n\tWhitelist: %s" % (w,team,priority,acqera,procversion,newsitelist)

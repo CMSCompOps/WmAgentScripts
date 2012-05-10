@@ -47,11 +47,11 @@ def getWorkflowInfo(workflow):
 			a = raw.find("'")
 			if a >= 0:
 				b = raw.find("'",a+1)
-				timeev = int(raw[a+1:b])
+				timeev = int(float(raw[a+1:b]))
 			else:
 				a = raw.find(" =")
 				b = raw.find('<br')
-				timeev = int(raw[a+3:b])
+				timeev = int(float(raw[a+3:b]))
 			if timeev < 0:
 				timeev = 0
 		elif 'request.priority' in raw:
@@ -245,7 +245,7 @@ def main():
 
 		reqinfo[workflow] = getWorkflowInfo(workflow)
 		if reqinfo[workflow]['status'] != 'assignment-approved':
-			print "%s not in assignment-approved!"
+			print "%s not in assignment-approved!" % workflow
 			sys.exit(1)
 
 	print

@@ -85,9 +85,9 @@ def getoverview():
 	c = 0
 	#print "Getting overview"
 	sys.stdout.flush()
-	while c < 3:
+	while c < 5:
 		try:
-			conn  =  httplib.HTTPSConnection(reqmgrsocket, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+			conn  =  httplib.HTTPSConnection(reqmgrsocket, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'),timeout=20)
 			r1=conn.request("GET",'/reqmgr/monitorSvc/requestmonitor')
 			r2=conn.getresponse()
 			#print r2.status, r2.reason
@@ -99,6 +99,7 @@ def getoverview():
 			conn.close()
 		except :
 			print "Cannot get overview [1]" 
+			time.sleep(10)
 			sys.exit(1)
 	if s:
 		return s

@@ -59,7 +59,7 @@ def getWorkflowInfo(workflow):
                         else:
                                 a = raw.find(" =")
                                 b = raw.find('<br')
-                                timeev = int(raw[a+3:b])
+                                timeev = int(float(raw[a+3:b]))
 		elif 'request.priority' in raw:
 			a = raw.find("'")
 			if a >= 0:
