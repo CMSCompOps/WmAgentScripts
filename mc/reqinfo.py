@@ -127,6 +127,9 @@ def getWorkflowInfo(workflow):
 		elif 'white' in raw and not '[]' in raw:
 			sites = '['+raw[raw.find("[")+1:raw.find("]")]+']'	
 			sites = eval(sites)		
+		elif 'processingVersion' in raw:
+			processingVersion = raw[raw.find("'")+1:]
+			processingVersion = processingVersion[0:processingVersion.find("'")]
 		elif 'request.schema.GlobalTag' in raw:
 			globaltag = raw[raw.find("'")+1:]
 			globaltag = globaltag[0:globaltag.find(":")]
@@ -275,7 +278,7 @@ def getWorkflowInfo(workflow):
 
 	cpuhours = timeev*expectedevents/3600
 	
-	return {'filtereff':filtereff,'type':type,'status':status,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'zone':getzonebyt1(custodialt1),'js':j,'outputdataset':outputdataset,'cpuhours':cpuhours,'team':team,'acquisitionEra':acquisitionEra,'reqdate':reqdate,'requestdays':requestdays}
+	return {'filtereff':filtereff,'type':type,'status':status,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'zone':getzonebyt1(custodialt1),'js':j,'outputdataset':outputdataset,'cpuhours':cpuhours,'team':team,'acquisitionEra':acquisitionEra,'reqdate':reqdate,'requestdays':requestdays,'processingVersion':processingVersion}
 
 def getpriorities(reqinfo):
 	priorities = []
@@ -456,7 +459,7 @@ def main():
 			addToSummary(reqinfo[w])
 			sites = reqinfo[w]['sites']
 			sites.sort()
-			print "%s PREPID:%s type:%s status:%s priority:%s expectedevents:%s cpuhours:%s custodialt1: %s" % (w,reqinfo[w]['prepid'],reqinfo[w]['type'],reqinfo[w]['status'],reqinfo[w]['priority'],reqinfo[w]['expectedevents'],reqinfo[w]['cpuhours'],reqinfo[w]['custodialt1'])
+			print "%s PREPID:%s type:%s status:%s priority:%s expectedevents:%s cpuhours:%s custodialt1: %s team: %s" % (w,reqinfo[w]['prepid'],reqinfo[w]['type'],reqinfo[w]['status'],reqinfo[w]['priority'],reqinfo[w]['expectedevents'],reqinfo[w]['cpuhours'],reqinfo[w]['custodialt1'],reqinfo[w]['team'])
 			#print " team: %s custodialT1: %s zone: %s" % (",".join(x for x in reqinfo[w]['team']),reqinfo[w]['custodialt1'],reqinfo[w]['zone'])
 	elif options.datasets:
 		for workflow in list:
@@ -492,7 +495,7 @@ def main():
 			addToSummary(reqinfo[w])
 			print "%s (%s,%s,%s at %s)" % (w,reqinfo[w]['prepid'],reqinfo[w]['type'],reqinfo[w]['status'],reqinfo[w]['custodialt1'])
 			r = reqinfo[w]['js']
-			print " Jobs: Q:%s C:%s P:%s R:%s S:%s F:%s T:%s" % (r['queued'],r['cooloff'],r['pending'],r['running'],r['success'],r['failure'],r['total_jobs'])
+			print " Priority: %s Team: %s Jobs: Q:%s C:%s P:%s R:%s S:%s F:%s T:%s" % (reqinfo[w]['priority'],reqinfo[w]['team'],r['queued'],r['cooloff'],r['pending'],r['running'],r['success'],r['failure'],r['total_jobs'])
 			for o in reqinfo[w]['outputdataset']:
 				print " %s %s (reached %s%%, expect %s, status '%s', priority %s)" % (o['name'],o['events'],int(100*o['events']/reqinfo[w]['expectedevents']),reqinfo[w]['expectedevents'],o['status'],reqinfo[w]['priority'])
 				if o['phtrinfo'] != {}:

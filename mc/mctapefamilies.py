@@ -87,7 +87,7 @@ def getoverview():
 	sys.stdout.flush()
 	while c < 5:
 		try:
-			conn  =  httplib.HTTPSConnection(reqmgrsocket, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'),timeout=20)
+			conn  =  httplib.HTTPSConnection(reqmgrsocket, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 			r1=conn.request("GET",'/reqmgr/monitorSvc/requestmonitor')
 			r2=conn.getresponse()
 			#print r2.status, r2.reason

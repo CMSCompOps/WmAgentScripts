@@ -354,6 +354,7 @@ def main():
 	parser.add_option('-t', '--transfer', help='check for pending transfers on completed/closed-out',dest='transfer',action="store_true")
 	parser.add_option('-n', '--no-running', help='check for running requests with 0 running',dest='norunning',action="store_true")
 	parser.add_option('-e', '--enough-events', help='check for running requests having >=90% events',dest='enough',action="store_true")
+	parser.add_option('-c', '--close', help='running, transfer 100%% and dataset >=95%%+PRODUCTION status, can be set as VALID',dest='close',action="store_true")
 	parser.add_option('-s', '--stuck', help='check for stuck requests (staying in their status for too much)',dest='stuck',action="store_true")
 	parser.add_option('-l', '--lessevents', help='check for less events than expected',dest='lessevents',action="store_true")
 
@@ -398,23 +399,47 @@ def main():
 						
 
 	elif options.norunning: # running with 0 jobs running
-		print "Workflows having no running jobs:\n"
+		print "Workflows running and having no queued/pending/running jobs:\n"
 		list = getRequestsByTypeStatus(['MonteCarlo','MonteCarloFromGEN'],['running'])
 		for w in list:
 			r = getWorkflowInfo(w)
-			if r['js']['running'] == 0:
+			if r['js']['running'] + r['js']['pending'] + r['js']['queued'] == 0:
 				print "%s" % (w)
 
 	elif options.enough: # enough events
-		print "Workflows running that could have enough events:\n"
+		print "Workflows running, dataset >95%, PRODUCTION:\n"
 		list = getRequestsByTypeStatus(['MonteCarlo','MonteCarloFromGEN'],['running'])
 		for w in list:
 			r = getWorkflowInfo(w)
 			expectedevents = r['expectedevents']
 			for o in r['outputdataset']:
 				perc = int(100*o['events']/expectedevents)
-				if perc > 95:
-						print "%s" % (w)
+				if perc > 95 and o['status'] == 'PRODUCTION':
+					if 'phtrinfo' in o.keys():
+						if 'perc' in o['phtrinfo']:
+							print "%s dataset:%s%% transfer:%s%%" % (w,perc,o['phtrinfo']['perc'])
+						else:
+							print "%s dataset:%s%% transfer:NO" % (w,perc)
+
+	elif options.close: # close
+		print "Workflows running, dataset >95%, transfer 100% and PRODUCTION: dataset could be set as VALID:\n"
+		list = getRequestsByTypeStatus(['MonteCarlo','MonteCarloFromGEN'],['running'])
+		ds = []
+		for w in list:
+			r = getWorkflowInfo(w)
+			expectedevents = r['expectedevents']
+			for o in r['outputdataset']:
+				perc = int(100*o['events']/expectedevents)
+				if perc > 95 and o['status'] == 'PRODUCTION':
+					if 'phtrinfo' in o.keys():
+						if 'perc' in o['phtrinfo']:
+							if o['phtrinfo']['perc'] == 100:
+								print "%s" % (w)
+								ds.append(o['name'])
+		print
+		print "The corresponding datasets can be safely set as VALID:\n"
+		for d in ds:
+			print d
 
 	elif options.stuck: # enough events
 		print "Workflows stuck since a long time:\n"
