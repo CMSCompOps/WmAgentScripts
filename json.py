@@ -52,7 +52,7 @@ class JsonReader(object):
     def read(self, s):
         self._generator = _StringGenerator(s)
         result = self._read()
-        return result
+	return result
 
     def _read(self):
         self._eatWhitespace()
@@ -66,7 +66,7 @@ class JsonReader(object):
         elif peek == '"':
             return self._readString()
         elif peek == '-' or peek.isdigit():
-            return self._readNumber()
+	    return self._readNumber()
         elif peek == 't':
             return self._readTrue()
         elif peek == 'f':
@@ -107,17 +107,30 @@ class JsonReader(object):
 
     def _readNumber(self):
         isfloat = False
+	Multp=1
         result = self._next()
         peek = self._peek()
         while peek is not None and (peek.isdigit() or peek == "."):
             isfloat = isfloat or peek == "."
             result = result + self._next()
             peek = self._peek()
+	if peek=="e":
+	    isfloat=True
+	    result = result + self._next()
+	    peek = self._peek()
+	    result = result + self._next()
+	    peek = self._peek()
+	    if peek=='0':
+		self._next()
+		result = result + self._next()
+	    else:
+		result = result + self._next()
+	print isfloat
         try:
             if isfloat:
-                return float(result)
+		return float(result)
             else:
-                return int(result)
+		return int(result)
         except ValueError:
             raise ReadException, "Not a valid JSON number: '%s'" % result
 
@@ -201,7 +214,7 @@ class JsonReader(object):
             if not done:
                 ch = self._next()
                 if ch != ",":
-                    raise ReadException, "Not a valid JSON array: '%s' due to: '%s'" % (self._generator.all(), ch)
+		    raise ReadException, "Not a valid JSON array: '%s' due to: '%s'" % (self._generator.all(), ch)
         assert ']' == self._next()
         return result
 
@@ -223,9 +236,9 @@ class JsonReader(object):
             self._eatWhitespace()
             done = self._peek() == '}'
             if not done:
-                ch = self._next()
-                if ch != ",":
-                    raise ReadException, "Not a valid JSON array: '%s' due to: '%s'" % (self._generator.all(), ch)
+		ch = self._next()
+		if ch != ",":
+		    raise ReadException, "Not a valid JSON array: '%s' due to: '%s'" % (self._generator.all(), ch)
 	assert self._next() == "}"
         return result
 
