@@ -125,8 +125,7 @@ class JsonReader(object):
 		result = result + self._next()
 	    else:
 		result = result + self._next()
-	print isfloat
-        try:
+	try:
             if isfloat:
 		return float(result)
             else:

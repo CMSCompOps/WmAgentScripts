@@ -44,7 +44,6 @@ def getOverviewRequest():
 
 
 def findCustodial(url, requestname):
-	print requestname
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+requestname)
 	r2=conn.getresponse()
