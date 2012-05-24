@@ -52,6 +52,8 @@ def findCustodial(url, requestname):
 	if len(filter(lambda s: s[1] == '1', siteList))>1:
 		return "NoSite"
 	for site in siteList:
+		if 'T1_CH_CERN'==site:
+			return "NoSite"
 		if 'T1' in site:
 			return site
 	res=re.search("T1_[A-Z]{2}_[A-Z]{3,4}", requestname)
