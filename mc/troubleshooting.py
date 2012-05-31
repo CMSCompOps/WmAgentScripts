@@ -264,7 +264,8 @@ def getrequestsByPriority(reqinfo,priority):
 
 def getoverview():
 	cacheoverviewage = 60
-	cachedoverview = '/tmp/' + os.environ['USER'] + '/overview.cache'
+	cachedoverview = os.environ['HOME'] + '/public/overview.cache'
+	#cachedoverview = '/tmp/' + os.environ['USER'] + '/overview.cache'
 	if (os.path.exists(cachedoverview)) and (time.time()-os.path.getmtime(cachedoverview)>cacheoverviewage*60):
 		os.remove(cachedoverview)
 	if (not os.path.exists(cachedoverview)):
@@ -371,7 +372,7 @@ def main():
 			r = getWorkflowInfo(w)
 			for o in r['outputdataset']:
 				if 'perc' in o['phtrinfo'].keys():
-					if o['phtrinfo']['perc'] < 100 and o['phtrinfo']['time_create_days'] > 10:
+					if o['phtrinfo']['perc'] < 100 and o['phtrinfo']['time_create_days'] > 5:
 						print "%s (created on %s, custodial is %s, %s %s%%, https://cmsweb.cern.ch/phedex/prod/Request::View?request=%s)" % (w,o['phtrinfo']['time_create'].strftime('%b %d'),r['custodialt1'],o['name'],o['phtrinfo']['perc'],o['phreqinfo']['id'])
 
 	elif options.lessevents: # 
@@ -386,7 +387,11 @@ def main():
 					expectedeventsperjob = expectedevents/inWMBS
 					successfuljobs = r['js']['success']
 					failedjobs = r['js']['failure']
-					if (float(successfuljobs)/r['js']['total_jobs']) > .9: # 90% of the jobs are done
+					if r['js']['total_jobs'] > 0:
+						p = float(successfuljobs)/r['js']['total_jobs']
+					else:
+						p = 0
+					if p > .9: # 90% of the jobs are done
 						for o in r['outputdataset']:
 							events = o['events']
 							eventsperjob = events/successfuljobs

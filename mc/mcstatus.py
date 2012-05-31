@@ -10,6 +10,8 @@ import shutil
 dashost = 'https://cmsweb.cern.ch'
 reqmgrsocket='vocms204.cern.ch'
 overview = ''
+cachedoverview = os.environ['HOME'] + '/public/overview.cache'
+forceoverview = 0
 
 def getDurationByZoneTeam(reqinfo,status,team):
 	duration = {'FNAL':0,'RAL':0,'CNAF':0,'IN2P3':0,'ASGC':0,'KIT':0,'PIC':0,'no_cust':0}
@@ -156,29 +158,50 @@ def getWorkflowInfo(workflow):
 	return {'filtereff':filtereff,'type':type,'status':status,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'timeev':timeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'zone':getzonebyt1(custodialt1),'js':j,'ods':ods,'duration':duration,'team':team}
 
 def getoverview():
+	global cachedoverview,forceoverview
+        cacheoverviewage = 180
+        if (os.path.exists(cachedoverview)) and ( (time.time()-os.path.getmtime(cachedoverview)>cacheoverviewage*60) or forceoverview):
+                os.remove(cachedoverview)
+        if (not os.path.exists(cachedoverview)):
+		print "Reloading cache overview"
+                s = getnewoverview()
+                output = open(cachedoverview, 'w')
+                output.write("%s" % s)
+                output.close()
+        else:
+                d = open(cachedoverview).read()
+                s = eval(d)
+        return s
+
+def getnewoverview():
+	global cachedoverview
 	c = 0
-	sys.stdout.flush()
-	while c < 3:
+	#print "Getting overview..",
+	while c < 10:
 		try:
-			print "Getting overview... ",
+			#conn  =  httplib.HTTPSConnection(reqmgrsocket, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'),timeout=10)
 			conn  =  httplib.HTTPSConnection(reqmgrsocket, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 			r1=conn.request("GET",'/reqmgr/monitorSvc/requestmonitor')
 			r2=conn.getresponse()
-			print r2.status, r2.reason
+			#print r2.status, r2.reason
 			if r2.status == 500:
 				c = c + 1
+				#print "retrying... ",
 			else:
 				c = 100
 			s = json.loads(r2.read())
 			conn.close()
 		except :
 			print "Cannot get overview [1]" 
+                	os.remove(cachedoverview)
 			sys.exit(1)
 	if s:
 		return s
 	else:
 		print "Cannot get overview [2]"
-		sys.exit(1)
+                os.remove(cachedoverview)
+		sys.exit(2)
+
 
 def getRequestsByTypeStatus(typelist,status):
 	global overview
@@ -280,9 +303,9 @@ def main():
 	for workflow in list:
 		print "%s/%s Get workflow: %s" % (count,len(list),workflow)
 		reqinfo[workflow] = getWorkflowInfo(workflow)
-		for i in reqinfo[workflow].keys():
-			print "\t%s: %s" % (i,reqinfo[workflow][i])
-		print
+#		for i in reqinfo[workflow].keys():
+#			print "\t%s: %s" % (i,reqinfo[workflow][i])
+#		print
 		count = count + 1
 	print
 

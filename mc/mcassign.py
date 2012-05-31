@@ -12,11 +12,11 @@ except ImportError:
 
 legal_eras = ['Summer11','Summer12']
 teams_hp = ['mc_highprio']
-teams_lp = ['mc','production']
+teams_lp = ['mc','production','dmwm']
 zones = ['FNAL','CNAF','ASGC','IN2P3','RAL','PIC','KIT']
 zone2t1 = {'FNAL':'T1_US_FNAL','CNAF':'T1_IT_CNAF','ASGC':'T1_TW_ASGC','IN2P3':'T1_FR_CCIN2P3','RAL':'T1_UK_RAL','PIC':'T1_ES_PIC','KIT':'T1_DE_KIT'}
-#siteblacklist = ['T2_AT_Vienna','T2_BR_UERJ','T2_FR_GRIF_IRFU','T2_KR_KNU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_ITEP','T2_RU_IHEP','T2_RU_RRC_KI','T2_TR_METU','T2_UK_SGrid_Bristol','T2_US_Vanderbilt','T2_CH_CERN']
-siteblacklist = ['T2_AT_Vienna','T2_BR_UERJ','T2_FR_GRIF_IRFU','T2_KR_KNU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_ITEP','T2_RU_RRC_KI','T2_TR_METU','T2_UK_SGrid_Bristol','T2_US_Vanderbilt','T2_CH_CERN']
+#siteblacklist = ['T2_AT_Vienna','T2_BR_UERJ','T2_FR_GRIF_IRFU','T2_KR_KNU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_ITEP','T2_RU_RRC_KI','T2_TR_METU','T2_UK_SGrid_Bristol','T2_US_Vanderbilt','T2_CH_CERN']
+siteblacklist = ['T2_AT_Vienna','T2_FR_GRIF_IRFU','T2_KR_KNU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_ITEP','T2_RU_RRC_KI','T2_TR_METU','T2_UK_SGrid_Bristol','T2_US_Vanderbilt','T2_CH_CERN']
 
 def get_linkedt2s(custodialT1):
 	list = []
@@ -52,8 +52,7 @@ def getsitelist(zone):
 				custodialT1 = i
 				t1count = t1count + 1
 		if t1count > 1:
-			print "More than 1 T1 has been specified in %s" % (sitelist)
-			sys.exit(1)
+			print "WARNING: More than 1 T1 has been specified in %s" % (sitelist)
 		t2list = get_linkedt2s(custodialT1)
 		if t1count == 1:
 			for i in sitelist:
@@ -257,6 +256,10 @@ def main():
 		newsitelist = sitelist[:]
 		if 'T2_US_Nebraska' in sitelist and reqinfo[w]['type'] == 'MonteCarlo':
 			newsitelist.append('T3_US_Omaha')
+
+		# T3_US_Colorado hook
+		if 'T2_US_Nebraska' in sitelist:
+			newsitelist.append('T3_US_Colorado')
 		
 		campaign = getcampaign(reqinfo[w])
 		if 'Upgrade' in campaign:

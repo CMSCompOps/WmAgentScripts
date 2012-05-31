@@ -15,7 +15,8 @@ reqmgrsocket='vocms204.cern.ch'
 overview = ''
 typelist = ['MonteCarlo','MonteCarloFromGEN','ReReco','ReDigi']
 statuslist = ['assignment-approved','acquired','running','completed','closed-out','announced']
-cachedoverview = '/tmp/' + os.environ['USER'] + '/overview.cache'
+#cachedoverview = '/tmp/' + os.environ['USER'] + '/overview.cache'
+cachedoverview = os.environ['HOME'] + '/public/overview.cache'
 forceoverview = 0
 sum = {}
 sum['events'] = {'PRODUCTION':0,'VALID':0,'INVALID':0}
@@ -69,7 +70,7 @@ def getzonebyt1(s):
 	custodial = '?'
 	if not s:
 		return custodial
-	t1list = {'T1_FR_CCIN2P3':'IN2P3','T1_TW_ASGC':'ASGC','T1_IT_CNAF':'CNAF','T1_US_FNAL':'FNAL','T1_DE_KIT':'KIT','T1_ES_PIC':'PIC','T1_UK_RAL':'RAL'}
+	t1list = {'T1_CH_CERN':'CERN','T1_FR_CCIN2P3':'IN2P3','T1_TW_ASGC':'ASGC','T1_IT_CNAF':'CNAF','T1_US_FNAL':'FNAL','T1_DE_KIT':'KIT','T1_ES_PIC':'PIC','T1_UK_RAL':'RAL'}
 	for i in t1list.keys():
 		if i in s:
 			custodial = t1list[i]
@@ -91,8 +92,14 @@ def getWorkflowInfo(workflow):
 	sites = []
 	for raw in list:
 		if 'acquisitionEra' in raw:
-			acquisitionEra = raw[raw.find("'")+1:]
-			acquisitionEra = acquisitionEra[0:acquisitionEra.find("'")]
+                        a = raw.find("'")
+                        if a >= 0:
+                                b = raw.find("'",a+1)
+                                acquisitionEra = raw[a+1:b]
+                        else:
+                                a = raw.find(" =")
+                                b = raw.find('<br')
+                                acquisitionEra = raw[a+3:b]
 		elif 'primaryDataset' in raw:
 			primaryds = raw[raw.find("'")+1:]
 			primaryds = primaryds[0:primaryds.find("'")]
@@ -130,6 +137,14 @@ def getWorkflowInfo(workflow):
 		elif 'processingVersion' in raw:
 			processingVersion = raw[raw.find("'")+1:]
 			processingVersion = processingVersion[0:processingVersion.find("'")]
+                        a = raw.find("'")
+                        if a >= 0:
+                                b = raw.find("'",a+1)
+                                processingVersion = raw[a+1:b]
+                        else:
+                                a = raw.find(" =")
+                                b = raw.find('<br')
+                                processingVersion = raw[a+3:b]
 		elif 'request.schema.GlobalTag' in raw:
 			globaltag = raw[raw.find("'")+1:]
 			globaltag = globaltag[0:globaltag.find(":")]
@@ -493,7 +508,7 @@ def main():
 		for w in list:
 			reqinfo[w] = getWorkflowInfo(w)
 			addToSummary(reqinfo[w])
-			print "%s (%s,%s,%s at %s)" % (w,reqinfo[w]['prepid'],reqinfo[w]['type'],reqinfo[w]['status'],reqinfo[w]['custodialt1'])
+			print "%s (%s,%s,%s at %s)" % (w,reqinfo[w]['prepid'],reqinfo[w]['type'],reqinfo[w]['status'],reqinfo[w]['zone'])
 			r = reqinfo[w]['js']
 			print " Priority: %s Team: %s Jobs: Q:%s C:%s P:%s R:%s S:%s F:%s T:%s" % (reqinfo[w]['priority'],reqinfo[w]['team'],r['queued'],r['cooloff'],r['pending'],r['running'],r['success'],r['failure'],r['total_jobs'])
 			for o in reqinfo[w]['outputdataset']:
