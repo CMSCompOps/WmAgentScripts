@@ -55,7 +55,7 @@ def retrieveSchema(workflowName):
 	elif key=='ProcConfigCacheID':
 	    schema['ProcConfigCacheID'] = value
 	elif key=='RequestSizeEvents':
-	    schema['RequestNumEvents'] = value
+	    schema['RequestSizeEvents'] = value
 	elif value != None:
             schema[key] = value
     return schema

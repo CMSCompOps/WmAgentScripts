@@ -49,11 +49,11 @@ def findCustodial(url, requestname):
 	r2=conn.getresponse()
 	request = json.read(r2.read())
 	siteList=request['Site Whitelist']
-	if len(filter(lambda s: s[1] == '1', siteList))>1:
+	if len(filter(lambda s: s[1] == '1', siteList))>1 and (not 'T1_CH_CERN' in siteList):
 		return "NoSite"
 	for site in siteList:
-		if 'T1_CH_CERN'==site:
-			return "NoSite"
+		if 'CERN' in site:
+			continue
 		if 'T1' in site:
 			return site
 	res=re.search("T1_[A-Z]{2}_[A-Z]{3,4}", requestname)

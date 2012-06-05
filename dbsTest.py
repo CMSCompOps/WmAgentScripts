@@ -147,6 +147,9 @@ def main():
 	inputEvents=getInputEvents(url, workflow)
 	for dataset in outputDataSets:
 		outputEvents=getEventCountDataSet(dataset)
+		if inputEvents==0:
+			print "Input Events: 0"
+			sys.exit(0);
 		print dataset+" match: "+str(outputEvents/float(inputEvents)*100) +"%"
 	sys.exit(0);
 

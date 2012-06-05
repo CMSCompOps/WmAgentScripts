@@ -130,7 +130,6 @@ def getInputEvents(url, workflow):
 	try:
 		int(output)
 		if 'FilterEfficiency' in request.keys():
-			print request['FilterEfficiency']
 			return float(request['FilterEfficiency'])*int(output)
 		else:
 			return int(output)
