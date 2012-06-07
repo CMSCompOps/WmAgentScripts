@@ -5,12 +5,25 @@ import sys
 import urllib
 import httplib
 import re
+import Priorities
+import json
+import changePriorityWorkflow
 
 from WMCore.WMSpec.WMWorkload import WMWorkloadHelper
 
 reqmgrCouchURL = "https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache"
 #reqmgrHostname = "vocms144"
 #reqmgrPort = 8687
+
+def getPriorityWorkflow(url, workflow):
+	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+	r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
+	r2=conn.getresponse()
+	request = json.read(r2.read())
+	if 'RequestPriority' in request:
+		return request['RequestPriority']
+	else:	
+		return 0
 
 def approveRequest(url,workflow):
     params = {"requestName": workflow,
@@ -92,4 +105,7 @@ if __name__ == "__main__":
     schema = retrieveSchema(sys.argv[1])
     newWorkflow=submitWorkflow(schema)
     approveRequest('cmsweb.cern.ch',newWorkflow)
+    oldPriority=getPriorityWorkflow('cmsweb.cern.ch',sys.argv[1])
+    changePriorityWorkflow.changePriorityWorkflow('cmsweb.cern.ch', newWorkflow, oldPriority)
+    
     sys.exit(0)
