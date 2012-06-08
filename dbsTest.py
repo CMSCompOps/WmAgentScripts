@@ -120,6 +120,8 @@ def getInputEvents(url, workflow):
 			querry=querry+' run= '+str(runList[0]) +')'
 			querry=querry+"'|awk '{print $2}' | grep '[0-9]\{1,\}'"
 			output=os.popen(querry).read()
+			if not output:
+				output=0
 			try:
 				events=events+int(output)
 			except ValueError:
@@ -145,6 +147,7 @@ def main():
 	url='cmsweb.cern.ch'
 	outputDataSets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
 	inputEvents=getInputEvents(url, workflow)
+	print "number of input events: "+str(inputEvents)
 	for dataset in outputDataSets:
 		outputEvents=getEventCountDataSet(dataset)
 		if inputEvents==0:
