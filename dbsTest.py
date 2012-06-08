@@ -147,7 +147,7 @@ def main():
 	url='cmsweb.cern.ch'
 	outputDataSets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
 	inputEvents=getInputEvents(url, workflow)
-	print "number of input events: "+str(inputEvents)
+#	print "number of input events: "+str(inputEvents)
 	for dataset in outputDataSets:
 		outputEvents=getEventCountDataSet(dataset)
 		if inputEvents==0:
