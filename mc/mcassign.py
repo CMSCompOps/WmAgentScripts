@@ -261,6 +261,18 @@ def main():
 		if 'T2_US_Nebraska' in sitelist:
 			newsitelist.append('T3_US_Colorado')
 		
+		# relval WMA (CERN) hook
+		if team == 'relval':
+			custodialT1 = ''
+			for i in sitelist:
+				if 'T1_' in i:
+					custodialT1 = i
+			if custodialT1 == '':
+				newsitelist = ['T1_CH_CERN']
+			else:
+				newsitelist = ['T1_CH_CERN',custodialT1]
+			print "Using relval instance with sitelist = %s" % newsitelist
+
 		campaign = getcampaign(reqinfo[w])
 		if 'Upgrade' in campaign:
 			acqera = 'Summer12'

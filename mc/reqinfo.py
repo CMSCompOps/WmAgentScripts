@@ -25,6 +25,7 @@ nodbs = 0
 def addToSummary(r):
 	global sum
 	for i in ['queued','cooloff','pending','running','success','failure','inWMBS','total_jobs']:
+		#print "*** %s" % r
 		if i in sum.keys():
 			sum[i] = sum[i] + r['js'][i]
 		else:
@@ -181,10 +182,10 @@ def getWorkflowInfo(workflow):
 	except:
 		status = ''
 	try:
-                reqevts = s['RequestSizeEvents']
+                reqevts = s['RequestNumEvents']
         except:
                 try:
-                        reqevts = s['RequestNumEvents']
+                        reqevts = s['RequestSizeEvents']
                 except:
                         print "No RequestNumEvents for this workflow: "+workflow
                         return ''
@@ -235,7 +236,8 @@ def getWorkflowInfo(workflow):
 	for o in ods:
 		oel = {}
 		oel['name'] = o
-		if status in ['running','completed','closed-out','announced']:
+		#if status in ['running','completed','closed-out','announced']:
+		if 1:
 			[oe,ost] = getdsdetail(o)
 			oel['events'] = oe
 			oel['status'] = ost
@@ -416,6 +418,7 @@ def main():
 	parser.add_option('-p', '--prepid', help='analyze workflow with PREPID',dest='prepid')
 	parser.add_option('-s', '--status', help='analyze workflow in status STATUS',dest='status')
 	parser.add_option('-t', '--type', help='analyze workflow of type TYPE',dest='type')
+	parser.add_option('-i', '--instance', help='select workflows on team INSTANCE',dest='instance')
 	parser.add_option('-n', '--names', help='print just request names',dest='names',action="store_true")
 	parser.add_option('-a','--all', help='print all information about the requests',dest='raw',action="store_true")
 	parser.add_option('-g', '--assignment', help='print just information useful in assignment context',dest='assignment',action="store_true")
@@ -436,6 +439,8 @@ def main():
 		list = [options.wf]
 	elif options.list:
 		list = open(options.list).read().splitlines()
+	elif options.instance:
+		list = ''
 	elif options.prepid:
 		list = getRequestsByPREPID(options.prepid)
 	elif options.status or options.type:
@@ -512,7 +517,11 @@ def main():
 			r = reqinfo[w]['js']
 			print " Priority: %s Team: %s Jobs: Q:%s C:%s P:%s R:%s S:%s F:%s T:%s" % (reqinfo[w]['priority'],reqinfo[w]['team'],r['queued'],r['cooloff'],r['pending'],r['running'],r['success'],r['failure'],r['total_jobs'])
 			for o in reqinfo[w]['outputdataset']:
-				print " %s %s (reached %s%%, expect %s, status '%s', priority %s)" % (o['name'],o['events'],int(100*o['events']/reqinfo[w]['expectedevents']),reqinfo[w]['expectedevents'],o['status'],reqinfo[w]['priority'])
+				try:
+					oo = 100*o['events']/reqinfo[w]['expectedevents']
+				except:
+					oo = 0
+				print " %s %s (reached %s%%, expect %s, status '%s', priority %s)" % (o['name'],o['events'],oo,reqinfo[w]['expectedevents'],o['status'],reqinfo[w]['priority'])
 				if o['phtrinfo'] != {}:
 					print "  subscribed to %s (%s,%s%%)" % (o['phtrinfo']['node'],o['phtrinfo']['type'],o['phtrinfo']['perc'])
 				if o['phreqinfo'] != {}:
@@ -521,12 +530,18 @@ def main():
 
 	if sum and options.summary:
 		print "Summary: \n---------------------------------"
-		percsucc = round(float(sum['success'])/sum['total_jobs'],2)
-		percfail = round(float(sum['failure'])/sum['total_jobs'],2)
-		print "Queued: %s Running: %s TOTAL: %s Successful: %s (%s%%) Failed: %s (%s%%)" % (sum['queued'],sum['running'],sum['total_jobs'],sum['success'],percsucc,sum['failure'],percfail)
+		total_jobs = sum['success']+sum['failure']
+		if total_jobs > 0:
+			percsucc = 100*round(float(sum['success'])/total_jobs,2)
+			percfail = 100*round(float(sum['failure'])/total_jobs,2)
+		else:
+			percsucc = 0
+			percfail = 0
+		print "Queued: %s Running: %s TOTAL: %s Successful: %s (%s%%) Failed: %s (%s%%)" % (sum['queued'],sum['running'],total_jobs,sum['success'],percsucc,sum['failure'],percfail)
 
 		expectedevents = sum['expectedevents']
-		print "| Total requested | %sM |" % round(expectedevents/1000000,1)
+		print "| Number of requests | %s |" % len(list)
+		print "| Total requested events | %sM |" % round(expectedevents/1000000,1)
 		print "| PRODUCTION | %sM (%s%%)|" % (round(sum['events']['PRODUCTION']/1000000,2),round(100*(float(sum['events']['PRODUCTION'])/expectedevents),2))
 		print "| VALID | %sM (%s%%)|" % (round(sum['events']['VALID']/1000000,2),round(100*(float(sum['events']['VALID'])/expectedevents),2))
 		print "| PRODUCTION+VALID | %sM (%s%%)|" % (round(sum['events']['PRODUCTION']/1000000,2)+round(sum['events']['VALID']/1000000,2),round(100*(float(sum['events']['PRODUCTION'])/expectedevents),2)+round(100*(float(sum['events']['VALID'])/expectedevents),2))

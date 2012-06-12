@@ -13,6 +13,8 @@ overview = ''
 count = 1
 tiers = ['GEN-SIM','GEN-SIM-RECO','DQM','AODSIM']
 eras = ['Summer11','Summer12']
+cachedoverview = os.environ['HOME'] + '/public/overview.cache'
+forceoverview = 0
 
 def getzonebyt1(s):
 	custodial = '?'
@@ -82,30 +84,20 @@ def getWorkflowInfo(workflow):
 
 
 def getoverview():
-	c = 0
-	#print "Getting overview"
-	sys.stdout.flush()
-	while c < 5:
-		try:
-			conn  =  httplib.HTTPSConnection(reqmgrsocket, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-			r1=conn.request("GET",'/reqmgr/monitorSvc/requestmonitor')
-			r2=conn.getresponse()
-			#print r2.status, r2.reason
-			if r2.status == 500:
-				c = c + 1
-			else:
-				c = 100
-			s = json.loads(r2.read())
-			conn.close()
-		except :
-			print "Cannot get overview [1]" 
-			time.sleep(10)
-			sys.exit(1)
-	if s:
-		return s
-	else:
-		print "Cannot get overview [2]"
-		sys.exit(1)
+	global cachedoverview,forceoverview
+        cacheoverviewage = 180
+        if (os.path.exists(cachedoverview)) and ( (time.time()-os.path.getmtime(cachedoverview)>cacheoverviewage*60) or forceoverview):
+                os.remove(cachedoverview)
+        if (not os.path.exists(cachedoverview)):
+		print "Reloading cache overview"
+                s = getnewoverview()
+                output = open(cachedoverview, 'w')
+                output.write("%s" % s)
+                output.close()
+        else:
+                d = open(cachedoverview).read()
+                s = eval(d)
+        return s
 
 def getdsdetail(dataset):
 	query = 'dataset dataset=' + dataset + ' status=*|grep dataset.nevents,dataset.status'
