@@ -153,6 +153,9 @@ def main():
 		if inputEvents==0:
 			print "Input Events: 0"
 			sys.exit(0);
+		if inputEvents==-1:
+			print "Input Events: -1"
+			sys.exit(0);
 		print dataset+" match: "+str(outputEvents/float(inputEvents)*100) +"%"
 	sys.exit(0);
 
