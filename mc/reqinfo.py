@@ -316,11 +316,10 @@ def getrequestsByPriority(reqinfo,priority):
 def getoverview():
 	global cachedoverview,forceoverview
         cacheoverviewage = 180
-        if (os.path.exists(cachedoverview)) and ( (time.time()-os.path.getmtime(cachedoverview)>cacheoverviewage*60) or forceoverview):
-                os.remove(cachedoverview)
-        if (not os.path.exists(cachedoverview)):
+        if not os.path.exists(cachedoverview) or forceoverview or (os.path.exists(cachedoverview) and ( (time.time()-os.path.getmtime(cachedoverview)>cacheoverviewage*60))):
 		print "Reloading cache overview"
                 s = getnewoverview()
+                os.remove(cachedoverview)
                 output = open(cachedoverview, 'w')
                 output.write("%s" % s)
                 output.close()
@@ -429,12 +428,12 @@ def main():
 
 	(options,args) = parser.parse_args()
 
-	overview = getoverview()
 	print
 	if options.forceoverview:
 		forceoverview = 1
 	else:
 		forceoverview = 0
+	overview = getoverview()
 	if options.wf:
 		list = [options.wf]
 	elif options.list:

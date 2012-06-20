@@ -295,7 +295,7 @@ def main():
 		ts = "ASSIGNED"
 	print "The following requests have been %s:\n" % ts
 	for w in list:
-		print "\t%s" % w
+		print "%s" % w
 	print "\n"
 
 	sys.exit(0)
