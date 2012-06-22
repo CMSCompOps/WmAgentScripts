@@ -62,15 +62,20 @@ def retrieveSchema(workflowName):
     #print "done."
     schema = {}
     for (key, value) in helper.data.request.schema.dictionary_().iteritems():
-        #print key
+        #print key, value
         if key == 'ProdConfigCacheID':
             schema['ProcConfigCacheID'] = value
-	elif key=='ProcConfigCacheID':
-	    schema['ProcConfigCacheID'] = value
 	elif key=='RequestSizeEvents':
 	    schema['RequestSizeEvents'] = value
+	    #schema['RequestNumEvents'] = int(value)
 	elif value != None:
             schema[key] = value
+    #schema['ScramArch']='slc5_amd64_gcc462'
+    #schema['RequestPriority']=int(schema['RequestPriority'])
+    #schema['TotalTime']=int(schema['TotalTime'])
+    #schema['FilterEfficiency']=float(schema['FilterEfficiency'])
+    #schema['TimePerEvent']=int(schema['TimePerEvent'])
+    #print schema
     return schema
 
 def submitWorkflow(schema):
@@ -86,12 +91,12 @@ def submitWorkflow(schema):
     conn  =  httplib.HTTPSConnection("cmsweb.cern.ch", cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     #conn  =  httplib.HTTPConnection("vocms13.cern.ch:8687")
     #conn  =  httplib.HTTPConnection("%s:%s" % (reqmgrHostname, reqmgrPort))
-    print "  submitting new workflow..."
+    #print "  submitting new workflow..."
     conn.request("POST",  "/reqmgr/create/makeSchema", encodedParams, headers)
     response = conn.getresponse()
-    print response.status, response.reason
+    #print response.status, response.reason
     data = response.read()
-    print data
+    #print data
     details=re.search("details\/(.*)\'",data)
     return details.group(1)
 
@@ -105,7 +110,7 @@ if __name__ == "__main__":
     schema = retrieveSchema(sys.argv[1])
     newWorkflow=submitWorkflow(schema)
     approveRequest('cmsweb.cern.ch',newWorkflow)
-    oldPriority=getPriorityWorkflow('cmsweb.cern.ch',sys.argv[1])
-    changePriorityWorkflow.changePriorityWorkflow('cmsweb.cern.ch', newWorkflow, oldPriority)
+    #oldPriority=getPriorityWorkflow('cmsweb.cern.ch',sys.argv[1])
+    #changePriorityWorkflow.changePriorityWorkflow('cmsweb.cern.ch', newWorkflow, oldPriority)
     
     sys.exit(0)

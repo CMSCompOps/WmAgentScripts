@@ -69,10 +69,11 @@ def getInputEvents(url, workflow):
 	request = json.read(r2.read())
 	requestType=request['RequestType']
 	if requestType=='MonteCarlo':
-		if 'RequestSizeEvents' in request:
+		if 'RequestNumEvents' in request:
+			if request['RequestNumEvents']>0:
+				return request['RequestNumEvents']
+		elif 'RequestSizeEvents' in request:
 			reqevts =request['RequestSizeEvents']
-		elif 'RequestNumEvents' in request:
-			reqevts =request['RequestNumEvents']
 		else:
 			reqevts=0
 		return reqevts
@@ -96,6 +97,8 @@ def getInputEvents(url, workflow):
 			querry=querry+' block= '+str(blockList[0]) +')'
 			querry=querry+"'|awk '{print $2}' | grep '[0-9]\{1,\}'"
 			output=os.popen(querry).read()
+			if not output:
+				output=0
 			try:
 				events=events+int(output)
 			except ValueError:
@@ -120,10 +123,12 @@ def getInputEvents(url, workflow):
 			querry=querry+' run= '+str(runList[0]) +')'
 			querry=querry+"'|awk '{print $2}' | grep '[0-9]\{1,\}'"
 			output=os.popen(querry).read()
+			if not output:
+				output=0
 			try:
 				events=events+int(output)
 			except ValueError:
-       				return -1
+       				return 0
 		return events
 	else:
 		output=os.popen("./dbssql --input='"+querry+"'"+ "|awk '{print $2}' | grep '[0-9]\{1,\}'").read()
