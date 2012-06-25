@@ -240,23 +240,21 @@ def main():
 	reqinfo = {}
 
 	for workflow in list:
-		print "%s" % (workflow) 
-		sys.stdout.flush()
+		#print "%s" % (workflow) 
+		#sys.stdout.flush()
 
-		reqinfo[workflow] = getWorkflowInfo(workflow)
-		if reqinfo[workflow]['status'] != 'assignment-approved':
-			print "%s not in assignment-approved!" % workflow
-			sys.exit(1)
+		r = getWorkflowInfo(workflow)
+		if r['status'] == 'assignment-approved':
+			reqinfo[workflow] = r
 
 	print
 
 	priorities = getpriorities(reqinfo)
-	print 'REQUEST PRIORITY EVENTS DURATION'
 	for p in range(0,len(priorities)):
 		for i in getrequestsByPriority(reqinfo,priorities[p]):
 			#acqera = getacqera(reqinfo[i])
 			#procversion = getnextprocessingversion(reqinfo[i])
-			print "%s %s %s %s" %(i,reqinfo[i]['priority'],reqinfo[i]['expectedevents'],reqinfo[i]['duration'])
+			print "%s prio=%s events=%s cpuh=%s" %(i,reqinfo[i]['priority'],reqinfo[i]['expectedevents'],reqinfo[i]['duration'])
 
         sys.exit(0)
 

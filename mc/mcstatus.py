@@ -13,15 +13,18 @@ overview = ''
 cachedoverview = os.environ['HOME'] + '/public/overview.cache'
 forceoverview = 0
 
-def getDurationByZoneTeam(reqinfo,status,team):
+def getDurationByZoneTeam(reqinfo,team):
 	duration = {'FNAL':0,'RAL':0,'CNAF':0,'IN2P3':0,'ASGC':0,'KIT':0,'PIC':0,'no_cust':0}
+	eta = {'FNAL':0,'RAL':0,'CNAF':0,'IN2P3':0,'ASGC':0,'KIT':0,'PIC':0,'no_cust':0}
 	for workflow in reqinfo.keys():
 		for t in reqinfo[workflow]['team']:
-			if reqinfo[workflow]['status'] == status and t == team:
+			if reqinfo[workflow]['status'] in ['acquired','running'] and t == team:
 				z = reqinfo[workflow]['zone']
-				d = reqinfo[workflow]['duration']
+				d = reqinfo[workflow]['cpuhours']
+				e = reqinfo[workflow]['eta']
 				duration[z] += d
-	return duration
+				eta[z] += e
+	return [duration,eta]
 	
 def getzonebyt1(s):
 	custodial = 'no_cust'
@@ -154,8 +157,73 @@ def getWorkflowInfo(workflow):
         if len(ods)==0:
                 print "No Outpudatasets for this workflow: "+workflow
 
-	duration = timeev*expectedevents/3600
-	return {'filtereff':filtereff,'type':type,'status':status,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'timeev':timeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'zone':getzonebyt1(custodialt1),'js':j,'ods':ods,'duration':duration,'team':team}
+	outputdataset = []
+	for o in ods:
+		oel = {}
+		oel['name'] = o
+		#if status in ['running','completed','closed-out','announced']:
+		if 1:
+			[oe,ost] = getdsdetail(o)
+			oel['events'] = oe
+			oel['status'] = ost
+		
+			phreqinfo = {}
+       		 	url='https://cmsweb.cern.ch/phedex/datasvc/json/prod/RequestList?dataset=' + o
+			try:
+        			result = json.load(urllib.urlopen(url))
+			except:
+				print "Cannot get subscription status from PhEDEx"
+			try:
+				r = result['phedex']['request']
+			except:
+				r = None
+			for i in range(0,len(r)):
+       			 	approval = r[i]['approval']
+ 			       	requested_by = r[i]['requested_by']
+				custodialsite = r[i]['node'][0]['name']
+				id = r[i]['id']
+				if 'T1_' in custodialsite:
+					phreqinfo['custodialsite'] = custodialsite
+					phreqinfo['requested_by'] = requested_by
+					phreqinfo['approval'] = approval
+					phreqinfo['id'] = id
+			oel['phreqinfo'] = phreqinfo
+		
+			phtrinfo = {}
+			url = 'https://cmsweb.cern.ch/phedex/datasvc/json/prod/subscriptions?dataset=' + o
+			try:
+	       		 	result = json.load(urllib.urlopen(url))
+			except:
+				print "Cannot get transfer status from PhEDEx"
+			try:
+				r = result['phedex']['dataset'][0]['subscription']
+			except:
+				r = []
+			for i in r:
+				node = i['node']
+				custodial = i['custodial']
+				if 'T1_' in node and custodial == 'y': 
+					if i['move'] == 'n':
+						phtype = 'Replica'
+					else:
+						phtype = 'Move'
+					phtrinfo['node'] = node
+					phtrinfo['time_create'] = datetime.datetime.fromtimestamp(int(i['time_create']))
+					phtrinfo['time_create_days'] = (datetime.datetime.now() - phtrinfo['time_create']).days
+					try:
+						phtrinfo['perc'] = int(float(i['percent_bytes']))
+					except:
+						phtrinfo['perc'] = 0
+					phtrinfo['type'] = phtype
+			oel['phtrinfo'] = phtrinfo
+			outputdataset.append(oel)
+	cpuhours = timeev*expectedevents/3600
+	eventsdone = 0
+	for o in ods:
+		[oe,ost] = getdsdetail(o)
+		eventsdone = eventsdone + oe
+	eta = timeev*(expectedevents-eventsdone)/3600
+	return {'filtereff':filtereff,'type':type,'status':status,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'timeev':timeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'zone':getzonebyt1(custodialt1),'js':j,'ods':ods,'cpuhours':cpuhours,'eta':eta,'team':team}
 
 def getoverview():
 	global cachedoverview,forceoverview
@@ -277,11 +345,17 @@ def getdsdetail(dataset):
 		return [e,st]
 
 def dbs_get_data(dataset):
-	output=os.popen("/afs/cern.ch/user/s/spinoso/public/dbssql --input='find sum(block.numevents),dataset.status where dataset="+dataset+"'"+ "|grep '[0-9]\{1,\}'").read()
-	ret = output.split(' ')
-	ret[0] = int(ret[0])
-	ret[1] = ret[1].rstrip()
-	return ret
+        output=os.popen("/afs/cern.ch/user/s/spinoso/public/dbssql --input='find sum(block.numevents),dataset.status where dataset="+dataset+"'"+ "|grep '[0-9]\{1,\}'").read()
+        ret = output.split(' ')
+        try:
+                e = int(ret[0])
+        except:
+                e = 0
+        try:
+                st = ret[1].rstrip()
+        except:
+                st = ''
+        return [e,st]
 
 def main():
 	global overview,count,jobcount
@@ -291,7 +365,6 @@ def main():
 	listtype = ['MonteCarlo']
 	listtype = ['MonteCarlo','MonteCarloFromGEN']
 	liststatus = ['acquired','running']
-	liststatus = ['acquired']
 	list = getRequestsByTypeStatus(listtype,liststatus)
 	#list = list[1:10]
 
@@ -299,17 +372,20 @@ def main():
 
 	print
 	print "Number of workflows in %s: %s" % (liststatus, len(list))
+	if len(list) == 0:
+		sys.exit(0)
 	count = 1
 	for workflow in list:
 		print "%s/%s Get workflow: %s" % (count,len(list),workflow)
 		reqinfo[workflow] = getWorkflowInfo(workflow)
+		#print "[duration,eta] = [%s,%s]" % (reqinfo[workflow]['cpuhours'],reqinfo[workflow]['eta'])
 #		for i in reqinfo[workflow].keys():
 #			print "\t%s: %s" % (i,reqinfo[workflow][i])
 #		print
 		count = count + 1
 	print
 
-	print "| *Overall CPUHours acquired (group by team and zone)* |||||||||"
+	print "| *Overall remaining CPUHours in acquired and running (group by team and zone)* |||||||||"
 	team = []
 	for i in reqinfo.keys():
 		if reqinfo[i]['team'] != []:
@@ -319,11 +395,11 @@ def main():
 	summary = {}
 	for t in team:
 		summary[t] = {}
-		durationacq = getDurationByZoneTeam(reqinfo,'acquired',t)
-		for z in durationacq.keys():
-			summary[t][z] = durationacq[z]
+		[duration,eta] = getDurationByZoneTeam(reqinfo,t)
+		for z in duration.keys():
+			summary[t][z] = eta[z]
 
-	zones = durationacq.keys()
+	zones = duration.keys()
 	zones.sort()
 	allteams = {}
 	s = "|*TEAM*           |"

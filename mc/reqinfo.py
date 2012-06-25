@@ -507,7 +507,7 @@ def main():
 			addToSummary(reqinfo[w])
 			r = reqinfo[w]['js']
 			for o in reqinfo[w]['outputdataset']:
-				print "%s %s %s %s %s (%s%%), requested %s, priority %s, running %s" % (w,reqinfo[w]['prepid'],reqinfo[w]['status'],o['name'],o['events'],int(100*o['events']/reqinfo[w]['expectedevents']),reqinfo[w]['expectedevents'],reqinfo[w]['priority'],r['running'])
+				print "%s %s %s %s (%s%%)" % (w,reqinfo[w]['prepid'],o['name'],o['events'],int(100*o['events']/reqinfo[w]['expectedevents']))
 	else:
 		for w in list:
 			reqinfo[w] = getWorkflowInfo(w)
