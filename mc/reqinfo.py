@@ -91,6 +91,8 @@ def getWorkflowInfo(workflow):
 	prepid = ''
 	globaltag = ''
 	sites = []
+	events_per_job = None
+	lumis_per_job = None
 	for raw in list:
 		if 'acquisitionEra' in raw:
                         a = raw.find("'")
@@ -107,6 +109,14 @@ def getWorkflowInfo(workflow):
 		elif 'PrepID' in raw:
 			prepid = raw[raw.find("'")+1:]
 			prepid = prepid[0:prepid.find("'")]
+		elif 'lumis_per_job' in raw:
+			a = raw.find(" =")
+			b = raw.find('<br')
+			lumis_per_job = int(raw[a+3:b])
+		elif 'events_per_job' in raw:
+			a = raw.find(" =")
+			b = raw.find('<br')
+			events_per_job = int(raw[a+3:b])
 		elif 'TimePerEvent' in raw:
                         a = raw.find("'")
                         if a >= 0:
@@ -197,9 +207,14 @@ def getWorkflowInfo(workflow):
 	
 	if type in ['MonteCarlo']:
 		expectedevents = int(reqevts)
+		expectedjobs = expectedevents/events_per_job
+		expectedjobcpuhours = int(timeev*events_per_job/3600)
 	elif type in ['MonteCarloFromGEN']:
 		[inputdataset['events'],inputdataset['status']] = getdsdetail(inputdataset['name'])
+		inputdataset['lumicount'] = dbs_get_lumicount(inputdataset['name'])
+		expectedjobs = inputdataset['lumicount']/lumis_per_job
 		expectedevents = int(filtereff*inputdataset['events'])
+		expectedjobcpuhours = int(timeev*inputdataset['events']/inputdataset['lumicount']/3600)
 	else:
 		expectedevents = -1
 	
@@ -236,7 +251,6 @@ def getWorkflowInfo(workflow):
 	for o in ods:
 		oel = {}
 		oel['name'] = o
-		#if status in ['running','completed','closed-out','announced']:
 		if 1:
 			[oe,ost] = getdsdetail(o)
 			oel['events'] = oe
@@ -294,8 +308,12 @@ def getWorkflowInfo(workflow):
 			outputdataset.append(oel)
 
 	cpuhours = timeev*expectedevents/3600
-	
-	return {'filtereff':filtereff,'type':type,'status':status,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'zone':getzonebyt1(custodialt1),'js':j,'outputdataset':outputdataset,'cpuhours':cpuhours,'team':team,'acquisitionEra':acquisitionEra,'reqdate':reqdate,'requestdays':requestdays,'processingVersion':processingVersion}
+	eventsdone = 0
+	for o in ods:
+		[oe,ost] = getdsdetail(o)
+		eventsdone = eventsdone + oe
+	remainingcpuhours = timeev*(expectedevents-eventsdone)/3600
+	return {'filtereff':filtereff,'type':type,'status':status,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'zone':getzonebyt1(custodialt1),'js':j,'outputdataset':outputdataset,'cpuhours':cpuhours,'remainingcpuhours':remainingcpuhours,'team':team,'acquisitionEra':acquisitionEra,'requestdays':requestdays,'processingVersion':processingVersion,'events_per_job':events_per_job,'lumis_per_job':lumis_per_job,'expectedjobs':expectedjobs,'expectedjobcpuhours':expectedjobcpuhours}
 
 def getpriorities(reqinfo):
 	priorities = []
@@ -331,10 +349,8 @@ def getoverview():
 def getnewoverview():
 	global cachedoverview
 	c = 0
-	#print "Getting overview..",
 	while c < 10:
 		try:
-			#conn  =  httplib.HTTPSConnection(reqmgrsocket, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'),timeout=10)
 			conn  =  httplib.HTTPSConnection(reqmgrsocket, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 			r1=conn.request("GET",'/reqmgr/monitorSvc/requestmonitor')
 			r2=conn.getresponse()
@@ -364,12 +380,23 @@ def getdsdetail(dataset):
 		return [0,'']
 	[e,st] = dbs_get_data(dataset)
 	if e == -1:
-		return [0,'']
+		return [0,'',0]
 	else:
 		return [e,st]
 
+def dbs_get_lumicount(dataset):
+	q = "/afs/cern.ch/user/s/spinoso/public/dbssql --input='find count(lumi) where dataset="+dataset+"'"
+	output=os.popen(q+ "|awk -F \"'\" '/count_lumi/{print $4}'").read()
+	ret = output.split(' ')
+	try:
+		lc = ret[0].rstrip()
+	except:
+		lc = 0
+	return int(lc)
+
 def dbs_get_data(dataset):
-	output=os.popen("/afs/cern.ch/user/s/spinoso/public/dbssql --input='find sum(block.numevents),dataset.status where dataset="+dataset+"'"+ "|grep '[0-9]\{1,\}'").read()
+	q = "/afs/cern.ch/user/s/spinoso/public/dbssql --input='find sum(block.numevents),dataset.status where dataset="+dataset+"'"
+	output=os.popen(q+ "|grep '[0-9]\{1,\}'").read()
 	ret = output.split(' ')
 	try:
 		e = int(ret[0])
@@ -379,7 +406,7 @@ def dbs_get_data(dataset):
 		st = ret[1].rstrip()
 	except:
 		st = ''
-	return [e,st]
+	return [int(e),st]
 
 def getnextprocessingversion(r):
 	c = 0
@@ -420,6 +447,7 @@ def main():
 	parser.add_option('-i', '--instance', help='select workflows on team INSTANCE',dest='instance')
 	parser.add_option('-n', '--names', help='print just request names',dest='names',action="store_true")
 	parser.add_option('-a','--all', help='print all information about the requests',dest='raw',action="store_true")
+	parser.add_option('-x','--export', help='export all information about the requests in JSON format',dest='json',action="store_true")
 	parser.add_option('-g', '--assignment', help='print just information useful in assignment context',dest='assignment',action="store_true")
 	parser.add_option('-d', '--datasets', help='print just output datasets',dest='datasets',action="store_true")
 	parser.add_option('-b', '--no-dbs', help='don\'t contact DBS (faster)',dest='nodbs',action="store_true")
@@ -464,6 +492,13 @@ def main():
 	if options.names:
 		for w in list:
 			print w
+	elif options.json:
+		struct = []
+		for workflow in list:
+			print "%s" % (workflow)
+			reqinfo[workflow] = getWorkflowInfo(workflow)
+			struct.append(reqinfo[workflow])
+		print json.dumps(struct,indent=4,sort_keys=True)
 	elif options.raw:
 		for workflow in list:
 			reqinfo[workflow] = getWorkflowInfo(workflow)
@@ -520,7 +555,7 @@ def main():
 					oo = 100*o['events']/reqinfo[w]['expectedevents']
 				except:
 					oo = 0
-				print " %s %s (reached %s%%, expect %s, status '%s', priority %s)" % (o['name'],o['events'],oo,reqinfo[w]['expectedevents'],o['status'],reqinfo[w]['priority'])
+				print " %s %s (reached %s%%, expect %s, status '%s')" % (o['name'],o['events'],oo,reqinfo[w]['expectedevents'],o['status'])
 				if o['phtrinfo'] != {}:
 					print "  subscribed to %s (%s,%s%%)" % (o['phtrinfo']['node'],o['phtrinfo']['type'],o['phtrinfo']['perc'])
 				if o['phreqinfo'] != {}:
