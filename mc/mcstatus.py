@@ -10,7 +10,7 @@ import shutil
 dashost = 'https://cmsweb.cern.ch'
 reqmgrsocket='vocms204.cern.ch'
 overview = ''
-cachedoverview = os.environ['HOME'] + '/public/overview.cache'
+cachedoverview = '/afs/cern.ch/user/s/spinoso/public/overview.cache'
 forceoverview = 0
 
 def getDurationByZoneTeam(reqinfo,team):
