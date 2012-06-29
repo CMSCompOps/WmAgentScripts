@@ -376,7 +376,7 @@ def main():
 		sys.exit(0)
 	count = 1
 	for workflow in list:
-		print "%s/%s Get workflow: %s" % (count,len(list),workflow)
+		#print "%s/%s Get workflow: %s" % (count,len(list),workflow)
 		reqinfo[workflow] = getWorkflowInfo(workflow)
 		#print "[duration,eta] = [%s,%s]" % (reqinfo[workflow]['cpuhours'],reqinfo[workflow]['eta'])
 #		for i in reqinfo[workflow].keys():

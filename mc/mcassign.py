@@ -12,7 +12,7 @@ except ImportError:
 
 legal_eras = ['Summer11','Summer12']
 teams_hp = ['mc_highprio']
-teams_lp = ['mc','production','dmwm']
+teams_lp = ['mc','production']
 zones = ['FNAL','CNAF','ASGC','IN2P3','RAL','PIC','KIT']
 zone2t1 = {'FNAL':'T1_US_FNAL','CNAF':'T1_IT_CNAF','ASGC':'T1_TW_ASGC','IN2P3':'T1_FR_CCIN2P3','RAL':'T1_UK_RAL','PIC':'T1_ES_PIC','KIT':'T1_DE_KIT'}
 #siteblacklist = ['T2_AT_Vienna','T2_BR_UERJ','T2_FR_GRIF_IRFU','T2_KR_KNU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_ITEP','T2_RU_RRC_KI','T2_TR_METU','T2_UK_SGrid_Bristol','T2_US_Vanderbilt','T2_CH_CERN']
@@ -165,6 +165,13 @@ def getWorkflowInfo(workflow):
 	
 	return {'type':type,'status':status,'prepid':prepid,'globaltag':globaltag,'priority':priority}
 
+def isDatasetNameUsed(datasetname):
+	[e,st] = getdsdetail(datasetname)
+	if e > 0:
+		return 1
+	else:
+		return 0
+
 def main():
 	global legal_eras,zones
 
@@ -281,6 +288,10 @@ def main():
 			acqera = getacqera(reqinfo[w])
 			procversion = "%s-%s" % (reqinfo[w]['globaltag'],version)
 
+		#datasetname = "/%s/%s/GEN-SIM" % (reqinfo[w]['primarydataset'],procversion)
+		#if isDatasetNameUsed(datasetname):
+		#	print "WARNING: %s from %s has already events in DBS!! " % (datasetname,w)
+		#	sys.exit(1)
 		suminfo = "%s\n\tteam: %s\tpriority: %s\n\tacqera: %s\tProcessingVersion: %s\n\tWhitelist: %s" % (w,team,priority,acqera,procversion,newsitelist)
 		if options.test:
 			print "TEST:\t%s" % suminfo
