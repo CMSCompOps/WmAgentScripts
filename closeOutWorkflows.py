@@ -96,7 +96,7 @@ def testEventCountWorkflow(url, workflow):
 		if float(percentage)<float(0.95):
 			print "Workflow: " + workflow+" not closed-out cause outputdataset event count too low: "+dataset
 			return 0
-		if float(percentage)>float(1.5):
+		if float(percentage)>float(1.1):
 			print "Workflow: " + workflow+" not closed-out cause outputdataset event count too HIGH: "+dataset
 			return 0
 	return 1
@@ -111,10 +111,9 @@ def testOutputDataset(datasetName):
 		subscriptions=dicts['subscription']
 		for subscription in subscriptions:
 			if subscription['level']=='DATASET' and subscription['custodial']=='y':
-				return 1
+				return True
 	 else:
-		print "This dataset wasn't subscribed: "+ datasetName
-		return 0
+		return False
 
 def testWorkflow(url, workflow):
 	datasets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
@@ -127,11 +126,12 @@ def testWorkflow(url, workflow):
 
 def closeOutRedigiWorkflows(url, workflows):
 	for workflow in workflows:
-		if testWorkflow(url, workflow) and testEventCountWorkflow(url, workflow):
-			print "This workflow is closed-out: " + workflow
-			phedexSubscription.closeOutWorkflow(url, workflow)
-		else:
-			print "This workflow has not been closed-out: " + workflow
+		datasets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
+		for dataset in datasets:
+			Percentage=PercentageCompletion(url, workflow, dataset)
+			PhedexSubscription=testOutputDataset(dataset)
+			print '| %80s | %90s | %5s | %4s| %4s | %4s| ' % (workflow, dataset,str(Percentage*100), str(PhedexSubscription), True, False)
+			 
 
 def closeOutMonterCarloRequests(url, workflows):
 	for site in workflows.keys():
@@ -160,15 +160,28 @@ def closeOutMonterCarloRequests(url, workflows):
 			if len(datasetsUnsuscribed)>0:
 				phedexSubscription.makeCustodialMoveRequest(url, site, datasetsUnsuscribed, "Custodial Move Subscription for MonteCarlo")
 
+# It assumes dataset is an output dataset from the workflow
+def PercentageCompletion(url, workflow, dataset):
+	inputEvents=0
+	inputEvents=inputEvents+int(dbsTest.getInputEvents(url, workflow))
+	outputEvents=dbsTest.getEventCountDataSet(dataset)
+	percentage=outputEvents/float(inputEvents)
+	return percentage
+
+
+
 def main():
 	url='cmsweb.cern.ch'
 	print "Gathering Requests"
 	requests=getOverviewRequest()
 	print "Classifying Requests"
 	workflowsCompleted=classifyCompletedRequests(url, requests)
+	print '-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'
+    	print '| Request                                                                          | OutputDataSet                                                                 |%Completion|PhEDexSubs|Transfer|ClosedOut| ' 
+   	print '-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'
 	closeOutRedigiWorkflows(url, workflowsCompleted['ReDigi'])
-	closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarlo'])
-	closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarloFromGEN'])
+	#closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarlo'])
+	#closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarloFromGEN'])
 	print "MC Workflows for which couldn't find Custodial Tier1 Site"
 	if 'NoSite' in workflowsCompleted['MonteCarlo']:
 		print workflowsCompleted['MonteCarlo']['NoSite']

@@ -24,7 +24,6 @@ def TestCustodialSubscriptionRequested(url, dataset, site):
 	return False
 #Changes the state of a workflow to closed-out
 def closeOutWorkflow(url, workflowname):
-    print workflowname,
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     params = {"requestName" : workflowname,"status" : "closed-out"}
     headers={"Content-type": "application/x-www-form-urlencoded",
@@ -32,9 +31,9 @@ def closeOutWorkflow(url, workflowname):
     encodedParams = urllib.urlencode(params)
     conn.request("PUT", "/reqmgr/reqMgr/request", encodedParams, headers)
     response = conn.getresponse()	
-    print response.status, response.reason
+    #print response.status, response.reason
     data = response.read()
-    print data
+    #print data
     conn.close()
 
 def setWorkflowRunning(url, workflowname):

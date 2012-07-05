@@ -7,7 +7,7 @@ import httplib
 import re
 import Priorities
 import json
-import changePriorityWorkflow
+#import changePriorityWorkflow
 
 from WMCore.WMSpec.WMWorkload import WMWorkloadHelper
 
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     schema = retrieveSchema(sys.argv[1])
     newWorkflow=submitWorkflow(schema)
     approveRequest('cmsweb.cern.ch',newWorkflow)
-    #oldPriority=getPriorityWorkflow('cmsweb.cern.ch',sys.argv[1])
-    #changePriorityWorkflow.changePriorityWorkflow('cmsweb.cern.ch', newWorkflow, oldPriority)
-    
+    newPriority=getPriorityWorkflow('cmsweb.cern.ch',sys.argv[1])
+    if  newPriority>2:
+	changePriorityWorkflow.changePriorityWorkflow('cmsweb.cern.ch', newWorkflow, newPriority)
     sys.exit(0)

@@ -72,11 +72,10 @@ def getInputEvents(url, workflow):
 		if 'RequestNumEvents' in request:
 			if request['RequestNumEvents']>0:
 				return request['RequestNumEvents']
-		elif 'RequestSizeEvents' in request:
-			reqevts =request['RequestSizeEvents']
+		if 'RequestSizeEvents' in request:
+			return request['RequestSizeEvents']
 		else:
-			reqevts=0
-		return reqevts
+			return 0
 	BlockWhitelist=request['BlockWhitelist']
 	inputDataSet=request['InputDataset']
 	runWhitelist=request['RunWhitelist']
@@ -150,6 +149,7 @@ def main():
 	url='cmsweb.cern.ch'
 	outputDataSets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
 	inputEvents=getInputEvents(url, workflow)
+	#print inputEvents
 	for dataset in outputDataSets:
 		outputEvents=getEventCountDataSet(dataset)
 		print dataset+" match: "+str(outputEvents/float(inputEvents)*100) +"%"
