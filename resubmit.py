@@ -67,7 +67,7 @@ def retrieveSchema(workflowName):
             schema['ProcConfigCacheID'] = value
 	elif key=='RequestSizeEvents':
 	    schema['RequestSizeEvents'] = value
-	    #schema['RequestNumEvents'] = int(value)
+	    schema['RequestNumEvents'] = int(value)
 	elif value != None:
             schema[key] = value
     #schema['ScramArch']='slc5_amd64_gcc462'

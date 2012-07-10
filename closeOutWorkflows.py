@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import json
-import urllib2,urllib, httplib, sys, re, os, phedexSubscription, dbsTest
+import urllib2,urllib, httplib, sys, re, os, phedexSubscription, dbsTest, duplicateEventsGen
 from xml.dom.minidom import getDOMImplementation
 
 def TransferComplete(url, dataset, site):
@@ -17,7 +17,23 @@ def TransferComplete(url, dataset, site):
 		if block['replica'][0]['complete']!='y':
 			return False
 	return True
-			
+
+def TransferPercentage(url, dataset, site):
+	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+	r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset='+dataset+'&node='+site+'_MSS')
+	r2=conn.getresponse()
+	result = json.read(r2.read())
+	blocks=result['phedex']
+	if 'block' not in blocks.keys():
+		return 0
+	if len(result['phedex']['block'])==0:
+		return 0
+	total=len(blocks['block'])
+	completed=0
+	for block in blocks['block']:
+		if block['replica'][0]['complete']=='y':
+			completed=completed+1
+	return float(completed/total)		
 
 def CustodialMoveSubscriptionCreated(datasetName):
 	url='https://cmsweb.cern.ch/phedex/datasvc/json/prod/subscriptions?dataset=' + datasetName
@@ -127,10 +143,23 @@ def testWorkflow(url, workflow):
 def closeOutRedigiWorkflows(url, workflows):
 	for workflow in workflows:
 		datasets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
+		closeOutWorkflow=True
+		InputDataset=dbsTest.getInputDataSet(url, workflow)
+		duplicate=duplicateEventsGen.duplicateLumi(InputDataset)
 		for dataset in datasets:
+			closeOutDataset=True
 			Percentage=PercentageCompletion(url, workflow, dataset)
 			PhedexSubscription=testOutputDataset(dataset)
-			print '| %80s | %90s | %5s | %4s| %4s | %4s| ' % (workflow, dataset,str(Percentage*100), str(PhedexSubscription), True, False)
+			closeOutDataset=False
+			if Percentage>float(0.95) and Percentage<=float(1) and PhedexSubscription and not duplicate:
+				closeOutDataset=True
+			else:
+         			closeOutDataset=False
+			closeOutWorkflow=closeOutWorkflow and closeOutDataset
+			print '| %80s | %100s | %4s | %5s| %3s | %5s|%5s| ' % (workflow, dataset,str(int(Percentage*100)), str(PhedexSubscription), 100, duplicate, closeOutDataset)
+		if closeOutWorkflow:
+			phedexSubscription.closeOutWorkflow(url, workflow)
+	print '----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'
 			 
 
 def closeOutMonterCarloRequests(url, workflows):
@@ -138,28 +167,27 @@ def closeOutMonterCarloRequests(url, workflows):
 		datasetsUnsuscribed=[]
 		if site!='NoSite':
 			for workflow in workflows[site]:
-				if testEventCountWorkflow(url, workflow):
-					datasetWorkflow=phedexSubscription.outputdatasetsWorkflow(url, workflow)
-					uncompletedTransfers=[]	
-					for dataset in datasetWorkflow:
-						if not phedexSubscription.TestCustodialSubscriptionRequested(url, dataset, site):
-							print "This dataset hasn't been subscribed "+dataset
-							datasetsUnsuscribed.append(dataset)
-							uncompletedTransfers.append(dataset)
-					datasetWorkflow=phedexSubscription.outputdatasetsWorkflow(url, workflow)
-					for dataset in datasetWorkflow:
-						if TransferComplete(url, dataset, site)==False:
-							uncompletedTransfers.append(dataset)
-					if len(uncompletedTransfers)==0:
-						phedexSubscription.closeOutWorkflow(url, workflow)
+				datasets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
+				closeOutWorkflow=True
+				for dataset in datasets:
+					closeOutDataset=True
+					Percentage=PercentageCompletion(url, workflow, dataset)
+					PhedexSubscription=phedexSubscription.TestCustodialSubscriptionRequested(url, dataset, site)
+					if not PhedexSubscription:
+						datasetsUnsuscribed.append(dataset)
+					TransPercen=TransferPercentage(url, dataset, site)
+					duplicate=duplicateEventsGen.duplicateLumi(dataset)
+					if Percentage>float(0.95) and Percentage<=float(1.1) and PhedexSubscription and not duplicate and TransPercen==1:
+						closeOutDataset=True
 					else:
-						print "This workflow has not been closed-out: " + workflow
-						for dataset in uncompletedTransfers:
-							print dataset +" not completely transfered"
-						
+         					closeOutDataset=False
+					closeOutWorkflow=closeOutWorkflow and closeOutDataset
+					print '| %80s | %100s | %4s | %5s| %3s | %5s|%5s| ' % (workflow, dataset,str(int(Percentage*100)), str(PhedexSubscription), str(int(TransPercen*100)), duplicate, closeOutDataset)
+				if closeOutWorkflow:
+					phedexSubscription.closeOutWorkflow(url, workflow)
 			if len(datasetsUnsuscribed)>0:
 				phedexSubscription.makeCustodialMoveRequest(url, site, datasetsUnsuscribed, "Custodial Move Subscription for MonteCarlo")
-
+	print '----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'
 # It assumes dataset is an output dataset from the workflow
 def PercentageCompletion(url, workflow, dataset):
 	inputEvents=0
@@ -176,12 +204,12 @@ def main():
 	requests=getOverviewRequest()
 	print "Classifying Requests"
 	workflowsCompleted=classifyCompletedRequests(url, requests)
-	print '-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'
-    	print '| Request                                                                          | OutputDataSet                                                                 |%Completion|PhEDexSubs|Transfer|ClosedOut| ' 
-   	print '-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'
+	print '-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'
+    	print '| Request                                                                          | OutputDataSet                                                                                        |%Compl|Subscr|Tran|Dupl|ClosOu|'
+   	print '-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'
 	closeOutRedigiWorkflows(url, workflowsCompleted['ReDigi'])
-	#closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarlo'])
-	#closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarloFromGEN'])
+	closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarlo'])
+	closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarloFromGEN'])
 	print "MC Workflows for which couldn't find Custodial Tier1 Site"
 	if 'NoSite' in workflowsCompleted['MonteCarlo']:
 		print workflowsCompleted['MonteCarlo']['NoSite']

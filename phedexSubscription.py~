@@ -153,7 +153,7 @@ def createConnection(url):
 	#r2=conn.getresponse()
         #print json.read(r2.read())
 	conn.connect()
-    	print "connected"
+    	#print "connected"
 	return conn
 
 # Create the parameters of the request
@@ -167,8 +167,8 @@ def makeCustodialMoveRequest(url, site,datasets, comments):
 	conn=createConnection(url)
 	conn.request("POST", "/phedex/datasvc/json/prod/subscribe", params)
 	response = conn.getresponse()	
-	print response.status, response.reason
-        print response.read()
+	#print response.status, response.reason
+        #print response.read()
 
 def main():
 	args=sys.argv[1:]

@@ -18,7 +18,10 @@ def TestCustodialSubscriptionRequested(url, dataset, site):
 			r1=conn.request("GET",'/phedex/datasvc/json/prod/transferrequests?request='+str(requestId))
 			r2=conn.getresponse()
 			result = json.read(r2.read())
-			requestSubscription=result['phedex']['request'][0]
+			if len(result['phedex']['request'])>0:
+				requestSubscription=result['phedex']['request'][0]
+			else:
+				return False
 			if requestSubscription['custodial']=='y':
 				return True
 	return False
@@ -153,7 +156,7 @@ def createConnection(url):
 	#r2=conn.getresponse()
         #print json.read(r2.read())
 	conn.connect()
-    	print "connected"
+    	#print "connected"
 	return conn
 
 # Create the parameters of the request
@@ -167,8 +170,8 @@ def makeCustodialMoveRequest(url, site,datasets, comments):
 	conn=createConnection(url)
 	conn.request("POST", "/phedex/datasvc/json/prod/subscribe", params)
 	response = conn.getresponse()	
-	print response.status, response.reason
-        print response.read()
+	#print response.status, response.reason
+        #print response.read()
 
 def main():
 	args=sys.argv[1:]
