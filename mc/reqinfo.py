@@ -195,10 +195,10 @@ def getWorkflowInfo(workflow):
 	except:
 		status = ''
 	try:
-                reqevts = s['RequestNumEvents']
+                reqevts = s['RequestSizeEvents']
         except:
                 try:
-                        reqevts = s['RequestSizeEvents']
+                        reqevts = s['RequestNumEvents']
                 except:
                         print "No RequestNumEvents for this workflow: "+workflow
                         return ''
@@ -381,7 +381,7 @@ def getnewoverview():
 
 def getdsdetail(dataset):
 	global nodbs
-	if 0:
+	if nodbs:
 		return [0,'']
 	[e,st] = dbs_get_data(dataset)
 	if e == -1:
@@ -390,6 +390,9 @@ def getdsdetail(dataset):
 		return [e,st]
 
 def dbs_get_lumicount(dataset):
+	global nodbs
+	if nodbs:
+		return 0
 	q = "/afs/cern.ch/user/s/spinoso/public/dbssql --input='find count(lumi) where dataset="+dataset+"'"
 	output=os.popen(q+ "|awk -F \"'\" '/count_lumi/{print $4}'").read()
 	ret = output.split(' ')
@@ -438,7 +441,7 @@ def getacqera(r):
 	return prepid.split('-')[1]
 
 def main():
-	global overview,forceoverview,sum
+	global overview,forceoverview,sum,nodbs
 	
 	viewchoices = ['names','all','production','dataset','run','assignment']
 	parser = optparse.OptionParser()
@@ -490,6 +493,7 @@ def main():
 		nodbs = 1
 	else:	
 		nodbs = 0
+	print nodbs
 	if options.names:
 		for w in list:
 			print w
