@@ -8,6 +8,7 @@ import re
 import Priorities
 import json
 #import changePriorityWorkflow
+import closeOutWorkflows
 
 from WMCore.WMSpec.WMWorkload import WMWorkloadHelper
 
@@ -49,7 +50,6 @@ def approveRequest(url,workflow):
         print "Exiting!"
         sys.exit(1)
     conn.close()
-    print 'Cloned workflow:',workflow
     return
 
 
@@ -89,14 +89,11 @@ def submitWorkflow(schema):
                  "Accept": "text/plain"}
 
     conn  =  httplib.HTTPSConnection("cmsweb.cern.ch", cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    #conn  =  httplib.HTTPConnection("vocms13.cern.ch:8687")
-    #conn  =  httplib.HTTPConnection("%s:%s" % (reqmgrHostname, reqmgrPort))
-    #print "  submitting new workflow..."
     conn.request("POST",  "/reqmgr/create/makeSchema", encodedParams, headers)
     response = conn.getresponse()
-    #print response.status, response.reason
+    print response.status, response.reason
     data = response.read()
-    #print data
+    print data
     details=re.search("details\/(.*)\'",data)
     return details.group(1)
 
@@ -108,8 +105,10 @@ if __name__ == "__main__":
 
     #print "Going to attempt to resubmit %s..." % sys.argv[1]
     schema = retrieveSchema(sys.argv[1])
+    Site=closeOutWorkflows.findCustodial('cmsweb.cern.ch',sys.argv[1] )
     newWorkflow=submitWorkflow(schema)
     approveRequest('cmsweb.cern.ch',newWorkflow)
+    print 'Cloned workflow:',newWorkflow, ' '+Site
     newPriority=getPriorityWorkflow('cmsweb.cern.ch',sys.argv[1])
     if  newPriority>2:
 	changePriorityWorkflow.changePriorityWorkflow('cmsweb.cern.ch', newWorkflow, newPriority)
