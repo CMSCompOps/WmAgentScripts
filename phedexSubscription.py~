@@ -18,14 +18,18 @@ def TestCustodialSubscriptionRequested(url, dataset, site):
 			r1=conn.request("GET",'/phedex/datasvc/json/prod/transferrequests?request='+str(requestId))
 			r2=conn.getresponse()
 			result = json.read(r2.read())
-			requestSubscription=result['phedex']['request'][0]
+			if len(result['phedex']['request'])>0:
+				requestSubscription=result['phedex']['request'][0]
+			else:
+				return False
 			if requestSubscription['custodial']=='y':
 				return True
 	return False
 #Changes the state of a workflow to closed-out
 def closeOutWorkflow(url, workflowname):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    params = {"requestName" : workflowname,"status" : "closed-out"}
+    params = {"requestName" : workflowname,"status" : "announced"}	
+    #params = {"requestName" : workflowname,"status" : "closed-out"}
     headers={"Content-type": "application/x-www-form-urlencoded",
              "Accept": "text/plain"}
     encodedParams = urllib.urlencode(params)
