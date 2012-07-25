@@ -109,7 +109,7 @@ for schedd in listscheddsCERN+listscheddsFNAL:
 		EnteredCurrentStatus=int(array[4])
 		log = array[5]
 		site = array[6]
-	    if 'sleep' in line:
+	    if 'JobCache' not in line:
 		print line
 		continue
 	    workflow = log.split("/JobCache/")[1].split('/')[0]

@@ -7,8 +7,9 @@ import httplib
 import re
 import Priorities
 import json
-#import changePriorityWorkflow
+import changePriorityWorkflow
 import closeOutWorkflows
+
 
 from WMCore.WMSpec.WMWorkload import WMWorkloadHelper
 

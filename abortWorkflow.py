@@ -11,7 +11,7 @@ def main():
 		sys.exit(0)
 	workflow=args[0]
 	url='cmsweb.cern.ch'
-	phedexSubscription.setWorkflowRunning(url, workflow)
+	#phedexSubscription.setWorkflowRunning(url, workflow)
 	phedexSubscription.abortWorkflow(url, workflow)
 	sys.exit(0);
 

@@ -33,7 +33,7 @@ def TransferPercentage(url, dataset, site):
 	for block in blocks['block']:
 		if block['replica'][0]['complete']=='y':
 			completed=completed+1
-	return float(completed/total)		
+	return float(completed)/float(total)		
 
 def CustodialMoveSubscriptionCreated(datasetName):
 	url='https://cmsweb.cern.ch/phedex/datasvc/json/prod/subscriptions?dataset=' + datasetName
@@ -177,7 +177,7 @@ def closeOutMonterCarloRequests(url, workflows):
 						datasetsUnsuscribed.append(dataset)
 					TransPercen=TransferPercentage(url, dataset, site)
 					duplicate=duplicateEventsGen.duplicateLumi(dataset)
-					if Percentage>float(0.95) and Percentage<=float(1.1) and PhedexSubscription and not duplicate and TransPercen==1:
+					if Percentage>=float(0.90) and PhedexSubscription and not duplicate and TransPercen==1:
 						closeOutDataset=True
 					else:
          					closeOutDataset=False
