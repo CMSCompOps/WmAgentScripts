@@ -12,6 +12,7 @@ reqmgrsocket='vocms204.cern.ch'
 overview = ''
 count = 1
 tiers = ['GEN-SIM','GEN-SIM-RECO','DQM','AODSIM']
+#tiers = ['GEN-SIM','GEN-SIM-RECO','DQM','AODSIM','GEN-SIM-DIGI-RECO']
 eras = ['Summer11','Summer12']
 cachedoverview = os.environ['HOME'] + '/public/overview.cache'
 forceoverview = 0

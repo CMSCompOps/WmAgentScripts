@@ -94,10 +94,10 @@ def getWorkflowInfo(workflow):
 	except:
 		status = ''
 	try:
-		reqsize = s['RequestSizeEvents']
+		reqsize = s['RequestNumEvents']
 	except:
 		try:
-			reqsize = s['RequestNumEvents']
+			reqsize = s['RequestSizeEvents']
 		except:
 			reqsize = -1
 	try:
@@ -180,11 +180,18 @@ def getdsdetail(dataset):
 		return [e,st]
 
 def dbs_get_data(dataset):
-	output=os.popen("/afs/cern.ch/user/s/spinoso/public/dbssql --input='find sum(block.numevents),dataset.status where dataset="+dataset+"'"+ "|grep '[0-9]\{1,\}'").read()
+	q = "/afs/cern.ch/user/s/spinoso/public/dbssql --input='find sum(block.numevents),dataset.status where dataset="+dataset+"'"
+	output=os.popen(q+ "|grep '[0-9]\{1,\}'").read()
 	ret = output.split(' ')
-	ret[0] = int(ret[0])
-	ret[1] = ret[1].rstrip()
-	return ret
+	try:
+		e = int(ret[0])
+	except:
+		e = 0
+	try:
+		st = ret[1].rstrip()
+	except:
+		st = ''
+	return [int(e),st]
 
 def getnextprocessingversion(r):
 	c = 0
@@ -235,7 +242,6 @@ def main():
 		list = getRequestsByTypeStatus(listtype,liststatus)
 
 	list.sort()
-	#list = list[1:30]
 	print "Number of requests: %s" % len(list)
 	reqinfo = {}
 

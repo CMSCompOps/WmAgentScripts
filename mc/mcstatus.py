@@ -13,12 +13,12 @@ overview = ''
 cachedoverview = '/afs/cern.ch/user/s/spinoso/public/overview.cache'
 forceoverview = 0
 
-def getDurationByZoneTeam(reqinfo,team):
+def getDurationByZoneTeam(reqinfo,team,statuses):
 	duration = {'FNAL':0,'RAL':0,'CNAF':0,'IN2P3':0,'ASGC':0,'KIT':0,'PIC':0,'no_cust':0}
 	eta = {'FNAL':0,'RAL':0,'CNAF':0,'IN2P3':0,'ASGC':0,'KIT':0,'PIC':0,'no_cust':0}
 	for workflow in reqinfo.keys():
 		for t in reqinfo[workflow]['team']:
-			if reqinfo[workflow]['status'] in ['acquired','running'] and t == team:
+			if reqinfo[workflow]['status'] in statuses and t == team:
 				z = reqinfo[workflow]['zone']
 				d = reqinfo[workflow]['cpuhours']
 				e = reqinfo[workflow]['eta']
@@ -362,11 +362,10 @@ def main():
 
 	overview = getoverview()
 
-	listtype = ['MonteCarlo']
 	listtype = ['MonteCarlo','MonteCarloFromGEN']
 	liststatus = ['acquired','running']
 	list = getRequestsByTypeStatus(listtype,liststatus)
-	#list = list[1:10]
+	#list = list[1:30]
 
 	reqinfo = {}
 
@@ -385,7 +384,6 @@ def main():
 		count = count + 1
 	print
 
-	print "| *Overall remaining CPUHours in acquired and running (group by team and zone)* |||||||||"
 	team = []
 	for i in reqinfo.keys():
 		if reqinfo[i]['team'] != []:
@@ -395,10 +393,71 @@ def main():
 	summary = {}
 	for t in team:
 		summary[t] = {}
-		[duration,eta] = getDurationByZoneTeam(reqinfo,t)
+		[duration,eta] = getDurationByZoneTeam(reqinfo,t,['acquired','running'])
 		for z in duration.keys():
 			summary[t][z] = eta[z]
 
+
+	print "| *Overall remaining CPUHours in acquired and running (group by team and zone)* |||||||||"
+	zones = duration.keys()
+	zones.sort()
+	allteams = {}
+	s = "|*TEAM*           |"
+	for i in range(0,len(zones)):
+		z = zones[i]
+		s = s + "  %10s |" % ('*'+z+'*')
+	print s
+	for t in summary.keys():
+		s = "|%-15s  |" % t 
+		for i in range(0,len(zones)):
+			z = zones[i]
+			s = s + " %10s  |" % (summary[t][z])
+			if z in allteams.keys():
+				allteams[z] += summary[t][z]
+			else:
+				allteams[z] = summary[t][z]
+		print s
+
+	s = "|*TOTAL*          |"
+	for i in range(0,len(zones)):
+		z = zones[i]
+		s = s + ("  %10s |" % ('*%s*' % allteams[z]) )
+	print s
+
+	liststatus = ['acquired']
+	list = getRequestsByTypeStatus(listtype,liststatus)
+	#list = list[1:30]
+
+	reqinfo = {}
+
+	print
+	print "Number of workflows in %s: %s" % (liststatus, len(list))
+	if len(list) == 0:
+		sys.exit(0)
+	count = 1
+	for workflow in list:
+		#print "%s/%s Get workflow: %s" % (count,len(list),workflow)
+		reqinfo[workflow] = getWorkflowInfo(workflow)
+		#print "[duration,eta] = [%s,%s]" % (reqinfo[workflow]['cpuhours'],reqinfo[workflow]['eta'])
+#		for i in reqinfo[workflow].keys():
+#			print "\t%s: %s" % (i,reqinfo[workflow][i])
+#		print
+		count = count + 1
+	print
+
+	team = []
+	for i in reqinfo.keys():
+		if reqinfo[i]['team'] != []:
+			for j in reqinfo[i]['team']:
+				if not j in team:
+					team.append(j)
+	summary = {}
+	for t in team:
+		summary[t] = {}
+		[duration,eta] = getDurationByZoneTeam(reqinfo,t,['acquired'])
+		for z in duration.keys():
+			summary[t][z] = duration[z]
+	print "| *Overall CPUHours in acquired (group by team and zone)* |||||||||"
 	zones = duration.keys()
 	zones.sort()
 	allteams = {}

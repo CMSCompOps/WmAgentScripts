@@ -11,12 +11,12 @@ except ImportError:
 # TODO guess procversion
 
 legal_eras = ['Summer11','Summer12']
-teams_hp = ['mc_highprio']
-teams_lp = ['mc','production']
+teams_hp = ['production']
+teams_lp = ['dataops','integration','dataops']
 zones = ['FNAL','CNAF','ASGC','IN2P3','RAL','PIC','KIT']
 zone2t1 = {'FNAL':'T1_US_FNAL','CNAF':'T1_IT_CNAF','ASGC':'T1_TW_ASGC','IN2P3':'T1_FR_CCIN2P3','RAL':'T1_UK_RAL','PIC':'T1_ES_PIC','KIT':'T1_DE_KIT'}
 #siteblacklist = ['T2_AT_Vienna','T2_BR_UERJ','T2_FR_GRIF_IRFU','T2_KR_KNU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_ITEP','T2_RU_RRC_KI','T2_TR_METU','T2_UK_SGrid_Bristol','T2_US_Vanderbilt','T2_CH_CERN']
-siteblacklist = ['T2_AT_Vienna','T2_FR_GRIF_IRFU','T2_KR_KNU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_ITEP','T2_RU_RRC_KI','T2_UK_SGrid_Bristol','T2_US_Vanderbilt','T2_CH_CERN']
+siteblacklist = ['T2_FR_GRIF_IRFU','T2_KR_KNU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_ITEP','T2_RU_RRC_KI','T2_UK_SGrid_Bristol','T2_US_Vanderbilt','T2_CH_CERN']
 
 def get_linkedt2s(custodialT1):
 	list = []
@@ -172,6 +172,9 @@ def isDatasetNameUsed(datasetname):
 	else:
 		return 0
 
+#def getCustodialT1FromOldRequest(prepid):
+	
+
 def main():
 	global legal_eras,zones
 
@@ -183,7 +186,7 @@ def main():
 	parser.add_option('--test', action="store_true",default=True,help='test mode: don\'treally assign at the end',dest='test')
 	parser.add_option('--assign', action="store_false",default=True,help='assign mode',dest='test')
 	parser.add_option('-z', '--zone', help='Zone %s or single site or comma-separated list (i.e. T1_US_FNAL,T2_FR_CCIN2P3,T2_DE_DESY)' % zones,dest='zone')
-	parser.add_option('-a', '--acqera', help='Acquisition era: one of %s' % legal_eras,dest='acqera')
+	#parser.add_option('-a', '--acqera', help='Acquisition era: one of %s' % legal_eras,dest='acqera')
 	#parser.add_option('-p', '--procversion', help='Processing Version',dest='procversion')
 	parser.add_option('-v', '--version', help='Version (it is the vx part of the ProcessingVersion)',dest='version')
 	(options,args) = parser.parse_args()
@@ -214,11 +217,11 @@ def main():
 		print "Please provide a zone/site/sitelist!"
 		sys.exit(1)
 
-	if options.acqera:
-		acqera = options.acqera
-	else:
-		print "Acquisition Era not provided, please provide one among %s" % legal_eras
-		sys.exit(1)
+	#if options.acqera:
+	#	acqera = options.acqera
+	#else:
+	#	print "Acquisition Era not provided, please provide one among %s" % legal_eras
+	#	sys.exit(1)
 	if options.version:
 		version = options.version
 	else:
