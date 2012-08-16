@@ -24,6 +24,9 @@ def classifyRunningRequests(url, requests):
 				continue
 			datasetWorkflow=phedexSubscription.outputdatasetsWorkflow(url, name)
 			for dataset in datasetWorkflow:
+						if dataset == "/SMS-T2tt_Mgluino-225to1200_mLSP-0to1000_8TeV-Pythia6Z/Summer12-START52_V9_FSIM-v1/AODSIM": 
+							print "Skipping",dataset
+							continue
 						inputEvents=0
 						inputEvents=inputEvents+int(dbsTest.getInputEvents(url, name))
 						outputEvents=dbsTest.getEventCountDataSet(dataset)
@@ -51,6 +54,8 @@ def main():
 	requests=closeOutWorkflows.getOverviewRequest()
 	print "Classifying Requests"
 	datasetsUnsuscribed=classifyRunningRequests(url, requests)
+	print
+	print datasetsUnsuscribed
 	print "Making Suscription"
 	makeSubscriptions(url, datasetsUnsuscribed)
 	sys.exit(0);
