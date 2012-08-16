@@ -28,6 +28,8 @@ def maxEventsFileDataset(url, workflow):
 		querry=querry+' run= '+str(runWhitelist[0]) +')'
 	
 	output=os.popen("./dbssql --input="+querry+"'| awk '{print $2}' | grep '[0-9]\{1,\}'").read()
+	if not output:
+		output = 0
 	return int(output)
 
 
@@ -41,7 +43,8 @@ def getEffectiveLumiSections(url, workflow):
 	inputDataSet=request['InputDataset']
 	BlockWhitelist=request['BlockWhitelist']
 	runWhitelist=request['RunWhitelist']
-	querry='find file,run,lumi where dataset ='+inputDataSet
+#	querry='find file,run,lumi where dataset ='+inputDataSet
+	querry='find run,lumi where dataset ='+inputDataSet
 	if len(BlockWhitelist)>0:
 		querry=querry+' AND ('
 		for block in BlockWhitelist:
@@ -89,6 +92,8 @@ def classifyRequests(url, requests, historic, noNameSites, requestType):
 			for stat in historic[Site].keys():#stat is the status of the request in the list of requests
 				if status==stat:
 					EffectiveLumi=getEffectiveLumiSections(url, name)
+					if EffectiveLumi <=0:
+						EffectiveLumi=0.0000001
 					TimeEvent=getTimeEventRequest(url, name)
 					priority=getPriorityWorkflow(url, name)
 					numevents=dbsTest.getInputEvents(url, name)
@@ -103,6 +108,8 @@ def classifyRequests(url, requests, historic, noNameSites, requestType):
 			for stat in noNameSites.keys():
 				if status==stat:
 					EffectiveLumi=getEffectiveLumiSections(url, name)
+					if EffectiveLumi <=0:
+						EffectiveLumi=0.0000001
 					TimeEvent=getTimeEventRequest(url, name)
 					priority=getPriorityWorkflow(url, name)
 					numevents=dbsTest.getInputEvents(url, name)
@@ -164,6 +171,7 @@ def getPriorityWorkflow(url, workflow):
 def main():
 	url='cmsweb.cern.ch'	
 	siteList=['CNAF', 'FNAL', 'IN2P3', 'PIC', 'KIT', 'ASGC', 'RAL']
+	#siteList=['ASGC']
 	parser = optparse.OptionParser()
 	parser.add_option('-n', '--number', help='Number of Requests',dest='number')
 	parser.add_option('-t', '--type', help='Type of Requests',dest='type')
