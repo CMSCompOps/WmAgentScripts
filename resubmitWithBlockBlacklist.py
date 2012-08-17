@@ -30,11 +30,7 @@ def getInputDataset(url, workflow):
         r2=conn.getresponse()
         workload=r2.read()
         list = workload.split('\n')
-        pileupDataset = ''
-        blockWhitelist = ''
-        blockBlacklist = ''
         dataset = ''
-        priority = -1
 
         for line in list:
            if 'request.schema.InputDataset' in line:
