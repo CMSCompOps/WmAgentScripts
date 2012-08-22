@@ -91,6 +91,8 @@ def getWorkflowInfo(workflow,nodbs=0):
 	sites = []
 	events_per_job = 0
 	lumis_per_job = 0
+	acquisitionEra = None
+	processingVersion = None
 	for raw in list:
 		if 'acquisitionEra' in raw:
                         a = raw.find("'")
@@ -526,7 +528,7 @@ def main():
 			reqinfo[w] = getWorkflowInfo(w,nodbs=nodbs)
 			addToSummary(reqinfo[w])
 			print "%s (%s,%s at %s)" % (w,reqinfo[w]['type'],reqinfo[w]['status'],reqinfo[w]['zone'])
-			print " Priority: %s Team: %s Timeev: %s Jobs: %s Hours/job: %s ReqEvents: %s ExpectedEvts/job: %s FilterEff: %s %s" % (reqinfo[w]['priority'],reqinfo[w]['team'],reqinfo[w]['timeev'],reqinfo[w]['expectedjobs'],reqinfo[w]['expectedjobcpuhours'],reqinfo[w]['expectedevents'],reqinfo[w]['events_per_job']*reqinfo[w]['filtereff'],reqinfo[w]['filtereff'],reqinfo[w]['cmssw'])
+			print " Priority: %s Team: %s Timeev: %s Jobs: %s Hours/job: %s ReqEvents: %s ExpectedEvts/job: %s FilterEff: %s %s Lumis/Job: %s" % (reqinfo[w]['priority'],reqinfo[w]['team'],reqinfo[w]['timeev'],reqinfo[w]['expectedjobs'],reqinfo[w]['expectedjobcpuhours'],reqinfo[w]['expectedevents'],reqinfo[w]['events_per_job']*reqinfo[w]['filtereff'],reqinfo[w]['filtereff'],reqinfo[w]['cmssw'],reqinfo[w]['lumis_per_job'])
 			print " PrimaryDataset: %s GlobalTag: %s CPUHours: %s" % (reqinfo[w]['primaryds'],reqinfo[w]['globaltag'],reqinfo[w]['cpuhours'])
 			print
 	elif options.datasets:
@@ -538,8 +540,7 @@ def main():
 			ods = json.loads(data)
 			conn.close()
 			for o in ods:
-				print "%s" % o
-			print
+				print "%s %s" % (workflow,o)
 	elif options.jobs:
 		print
 		print "%-70s %6s %6s %6s %6s %6s %6s %6s %6s %6s %-11s %-6s %-10s" % ('REQUEST','Q','C','P','R','S','F','I','T','status','team','custT1','prio')

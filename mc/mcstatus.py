@@ -370,7 +370,8 @@ def main():
 	reqinfo = {}
 
 	print
-	print "Number of workflows in %s: %s" % (liststatus, len(list))
+	acqrun = len(list)
+	#print "Number of workflows in %s: %s" % (liststatus, len(list))
 	if len(list) == 0:
 		sys.exit(0)
 	count = 1
@@ -430,8 +431,8 @@ def main():
 
 	reqinfo = {}
 
-	print
-	print "Number of workflows in %s: %s" % (liststatus, len(list))
+	acq = len(list)
+	#print "Number of workflows in %s: %s" % (liststatus, len(list))
 	if len(list) == 0:
 		sys.exit(0)
 	count = 1
@@ -483,7 +484,11 @@ def main():
 		s = s + ("  %10s |" % ('*%s*' % allteams[z]) )
 	print s
 		
-	
+	print
+	print "| *Number of requests by status* ||"
+	for liststatus in ['acquired','running','completed']:
+		list = getRequestsByTypeStatus(listtype,liststatus)
+		print "| %10s | %4s |" % (liststatus,len(list))
         sys.exit(0)
 
 if __name__ == "__main__":

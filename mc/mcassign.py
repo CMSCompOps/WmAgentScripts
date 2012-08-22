@@ -91,8 +91,8 @@ def assignMCRequest(url,workflow,team,sitelist,era,procversion):
               "MinMergeSize": 2147483648,
               "MaxMergeSize": 4294967296,
               "MaxMergeEvents": 50000,
-	      "maxRSS": 4294967296,
-              "maxVSize": 4294967296,
+	      "maxRSS": 2294967,
+              "maxVSize": 4394967000,
               "AcquisitionEra": era,
 	      "dashboard": "production",
               "ProcessingVersion": procversion,
@@ -220,6 +220,8 @@ def getWorkflowInfo(workflow,nodbs=0):
 	sites = []
 	events_per_job = None
 	lumis_per_job = None
+	acquisitionEra = None
+	processingVersion = None
 	for raw in list:
 		if 'acquisitionEra' in raw:
                         a = raw.find("'")
