@@ -10,6 +10,9 @@ import datetime
 import time
 import shutil
 
+eras = ['Summer11','Summer12']
+tftiers = ['GEN-SIM','GEN-SIM-RECO','DQM','AODSIM']
+#tftiers = ['GEN-SIM','GEN-SIM-RECO','DQM','AODSIM','GEN-SIM-DIGI-RECO']
 dashost = 'https://cmsweb.cern.ch'
 reqmgrsocket='vocms204.cern.ch'
 overview = ''
@@ -85,7 +88,8 @@ def getWorkflowInfo(workflow,nodbs=0):
 
 	primaryds = ''
 	priority = -1
-	timeev = -1
+	timeev = 0
+	sizeev = 0
 	prepid = ''
 	globaltag = ''
 	sites = []
@@ -120,6 +124,15 @@ def getWorkflowInfo(workflow,nodbs=0):
 			a = raw.find(" =")
 			b = raw.find('<br')
 			events_per_job = int(raw[a+3:b])
+		elif 'SizePerEvent' in raw:
+                        a = raw.find("'")
+                        if a >= 0:
+                                b = raw.find("'",a+1)
+                                sizeev = int(raw[a+1:b])
+                        else:
+                                a = raw.find(" =")
+                                b = raw.find('<br')
+                                sizeev = int(float(raw[a+3:b]))
 		elif 'TimePerEvent' in raw:
                         a = raw.find("'")
                         if a >= 0:
@@ -177,7 +190,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 	try:
 		filtereff = float(s['FilterEfficiency'])
 	except:
-		filtereff = -1
+		filtereff = 1
 	try:
 		team = s['Assignments']
 		if len(team) > 0:
@@ -212,7 +225,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 		expectedevents = int(reqevts)
 		expectedjobs = int(expectedevents/(events_per_job*filtereff))
 		expectedjobcpuhours = int(timeev*(events_per_job*filtereff)/3600)
-	elif type in ['MonteCarloFromGEN']:
+	elif type in ['MonteCarloFromGEN','ReReco','ReDigi']:
 		if nodbs:
 			[inputdataset['events'],inputdataset['status']] = [0,'']
 		else:
@@ -235,6 +248,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 		expectedjobs = -1
 		expectedjobcpuhours = -1
 	
+	expectedtotalsize = sizeev * expectedevents / 1000000
 	j = {}
 	k = {'success':'success','failure':'failure','Pending':'pending','Running':'running','cooloff':'cooloff','pending':'queued','inWMBS':'inWMBS','total_jobs':'total_jobs','local_queue':'local_queue'}
 	for r in overview:
@@ -336,7 +350,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 	#	else:
 	#		[oe,ost] = getdsdetail(o)
 	remainingcpuhours = timeev*(expectedevents-eventsdone)/3600
-	return {'filtereff':filtereff,'type':type,'status':status,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'zone':getzonebyt1(custodialt1),'js':j,'outputdataset':outputdataset,'cpuhours':cpuhours,'remainingcpuhours':remainingcpuhours,'team':team,'acquisitionEra':acquisitionEra,'requestdays':requestdays,'processingVersion':processingVersion,'events_per_job':events_per_job,'lumis_per_job':lumis_per_job,'expectedjobs':expectedjobs,'expectedjobcpuhours':expectedjobcpuhours,'cmssw':cmssw}
+	return {'filtereff':filtereff,'type':type,'status':status,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'sizeev':sizeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'zone':getzonebyt1(custodialt1),'js':j,'outputdataset':outputdataset,'cpuhours':cpuhours,'remainingcpuhours':remainingcpuhours,'team':team,'acquisitionEra':acquisitionEra,'requestdays':requestdays,'processingVersion':processingVersion,'events_per_job':events_per_job,'lumis_per_job':lumis_per_job,'expectedjobs':expectedjobs,'expectedjobcpuhours':expectedjobcpuhours,'cmssw':cmssw,'expectedtotalsize':expectedtotalsize}
 
 def getpriorities(reqinfo):
 	priorities = []
@@ -471,6 +485,7 @@ def main():
 	parser.add_option('-b', '--no-dbs', help='don\'t contact DBS (faster)',dest='nodbs',action="store_true")
 	parser.add_option('-j', '--jobs', help='print just information useful in workflow management context',dest='jobs',action="store_true")
 	parser.add_option('-e', '--events', help='print just information useful in user reporting',dest='events',action="store_true")
+	parser.add_option('--tapefamilies', help='print tape families',dest='tapefamilies',action="store_true")
 
 	(options,args) = parser.parse_args()
 
@@ -522,14 +537,34 @@ def main():
 			for i in reqinfo[workflow].keys():
 				print " %s: %s" % (i,reqinfo[workflow][i])
 			print
+	elif options.tapefamilies:
+		expectedbatchsize = 0
+		print
+		for workflow in list:
+			reqinfo[workflow] = getWorkflowInfo(workflow,nodbs=nodbs)
+                	prepid = reqinfo[workflow]['prepid']
+			expectedbatchsize = expectedbatchsize + reqinfo[workflow]['expectedtotalsize']
+               		acqera = prepid.split('-')[1]
+                	if acqera not in eras:
+                        	acqera = "Summer12"
+                	prids = reqinfo[workflow]['primaryds']
+                	for i in tftiers:
+                        	tf = "/store/mc/"+acqera+"/"+prids+"/"+i
+                        	#print "%s (~%sGB)" % (tf,expectedtotalsize)
+				print "%s" % (tf)
+		print 
+		print "Total expected size for GEN-SIM: %s(GB)" % expectedbatchsize
+		print 
+        	#print "PREPIDs: "+" ".join(reqinfo[x]['prepid'] for x in reqinfo.keys())
 	elif options.assignment:
 		print
 		for w in list:
 			reqinfo[w] = getWorkflowInfo(w,nodbs=nodbs)
 			addToSummary(reqinfo[w])
 			print "%s (%s,%s at %s)" % (w,reqinfo[w]['type'],reqinfo[w]['status'],reqinfo[w]['zone'])
-			print " Priority: %s Team: %s Timeev: %s Jobs: %s Hours/job: %s ReqEvents: %s ExpectedEvts/job: %s FilterEff: %s %s Lumis/Job: %s" % (reqinfo[w]['priority'],reqinfo[w]['team'],reqinfo[w]['timeev'],reqinfo[w]['expectedjobs'],reqinfo[w]['expectedjobcpuhours'],reqinfo[w]['expectedevents'],reqinfo[w]['events_per_job']*reqinfo[w]['filtereff'],reqinfo[w]['filtereff'],reqinfo[w]['cmssw'],reqinfo[w]['lumis_per_job'])
+			print " Priority: %s Team: %s Timeev: %s Jobs: %s Sizeev: %s Hours/job: %s ReqEvents: %s ExpectedEvts/job: %s FilterEff: %s %s Lumis/Job: %s" % (reqinfo[w]['priority'],reqinfo[w]['team'],reqinfo[w]['timeev'],reqinfo[w]['expectedjobs'],reqinfo[w]['sizeev'],reqinfo[w]['expectedjobcpuhours'],reqinfo[w]['expectedevents'],reqinfo[w]['events_per_job']*reqinfo[w]['filtereff'],reqinfo[w]['filtereff'],reqinfo[w]['cmssw'],reqinfo[w]['lumis_per_job'])
 			print " PrimaryDataset: %s GlobalTag: %s CPUHours: %s" % (reqinfo[w]['primaryds'],reqinfo[w]['globaltag'],reqinfo[w]['cpuhours'])
+			print " InputDataset: %s" % (reqinfo[w]['inputdataset'])
 			print
 	elif options.datasets:
 		for workflow in list:

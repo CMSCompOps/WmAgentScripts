@@ -485,10 +485,10 @@ def main():
 	print s
 		
 	print
-	print "| *Number of requests by status* ||"
-	for liststatus in ['acquired','running','completed']:
+	print "| *Requests by status* ||"
+	for liststatus in ['acquired','running','completed','closed-out','assignment-approved']:
 		list = getRequestsByTypeStatus(listtype,liststatus)
-		print "| %10s | %4s |" % (liststatus,len(list))
+		print "| %s | %s |" % (liststatus,len(list))
         sys.exit(0)
 
 if __name__ == "__main__":

@@ -38,6 +38,7 @@ def getWorkflowInfo(workflow):
 	primaryds = ''
 	priority = -1
 	timeev = -1
+	sizeev = -1
 	prepid = ''
 	sites = []
 	for raw in list:
@@ -60,6 +61,15 @@ def getWorkflowInfo(workflow):
 		elif 'white' in raw and not '[]' in raw:
 			sites = '['+raw[raw.find("[")+1:raw.find("]")]+']'	
 			sites = eval(sites)		
+		elif 'SizePerEvent' in raw:
+                        a = raw.find("'")
+                        if a >= 0:
+                                b = raw.find("'",a+1)
+                                sizeev = int(raw[a+1:b])
+                        else:
+                                a = raw.find(" =")
+                                b = raw.find('<br')
+                                sizeev = int(float(raw[a+3:b]))
 	custodialt1 = '?'
 	for i in sites:
 		if 'T1_' in i:
@@ -81,7 +91,7 @@ def getWorkflowInfo(workflow):
 	except:
 		status = ''
 	
-	return {'type':type,'status':status,'primaryds':primaryds,'prepid':prepid}
+	return {'type':type,'status':status,'primaryds':primaryds,'prepid':prepid,'sizeev':sizeev}
 
 
 def getoverview():

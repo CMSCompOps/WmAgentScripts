@@ -17,7 +17,7 @@ teams_hp = ['production']
 teams_lp = ['integration','dataops','dataops']
 zones = ['FNAL','CNAF','ASGC','IN2P3','RAL','PIC','KIT']
 zone2t1 = {'FNAL':'T1_US_FNAL','CNAF':'T1_IT_CNAF','ASGC':'T1_TW_ASGC','IN2P3':'T1_FR_CCIN2P3','RAL':'T1_UK_RAL','PIC':'T1_ES_PIC','KIT':'T1_DE_KIT'}
-siteblacklist = ['T2_FR_GRIF_IRFU','T2_KR_KNU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_ITEP','T2_RU_RRC_KI','T2_UK_SGrid_Bristol','T2_US_Vanderbilt','T2_CH_CERN']
+siteblacklist = ['T2_FR_GRIF_IRFU','T2_KR_KNU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_RRC_KI','T2_UK_SGrid_Bristol','T2_US_Vanderbilt','T2_CH_CERN']
 cachedoverview = '/afs/cern.ch/user/s/spinoso/public/overview.cache'
 forceoverview = 0
 
@@ -557,7 +557,7 @@ def main():
 	parser.add_option('-a', '--acqera', help='Acquisition era: one of %s' % legal_eras,dest='acqera')
 	#parser.add_option('-p', '--procversion', help='Processing Version',dest='procversion')
 	parser.add_option('-v', '--version', help='Version (it is the vx part of the ProcessingVersion)',dest='version')
-	parser.add_option('-o', '--optstring', help='Optional string in the processing version, between  global tag and version',dest='optstring')
+	parser.add_option('-p', '--processingversion', help='optionally provide processing version; if not, it will default to GlobalTag-vX',dest='optprocessingversion')
 	(options,args) = parser.parse_args()
 
 	list = []
@@ -592,10 +592,10 @@ def main():
 	#else:
 	#	print "Acquisition Era not provided, please provide one among %s" % legal_eras
 	#	sys.exit(1)
-	if options.optstring:
-		optstring = options.optstring
+	if options.optprocessingversion:
+		optprocessingversion = options.optprocessingversion
 	else:
-		optstring = ''
+		optprocessingversion = ''
 	if options.version:
 		version = options.version
 	else:
@@ -636,11 +636,6 @@ def main():
 		else:
 			team = teams[tcount % len(teams)]
 			tcount = tcount + 1
-		if zone == 'auto':
-			zone = getZoneFromRequest(w)
-			sitelist = getsitelist(zone)
-		if version == 'auto':
-			version = getnextprocessingversion(w)
 
 		# T3_US_Omaha hook
 		newsitelist = sitelist[:]
@@ -665,7 +660,15 @@ def main():
 
 		campaign = getcampaign(reqinfo[w])
 		acqera = getacqera(reqinfo[w])
-		procversion = "%s%s-%s" % (reqinfo[w]['globaltag'],optstring,version)
+		if zone == 'auto':
+			zone = getZoneFromRequest(w)
+			sitelist = getsitelist(zone)
+		if optprocessingversion == '':
+			if version == 'auto':
+				version = getnextprocessingversion(w)
+			procversion = "%s-%s" % (reqinfo[w]['globaltag'],version)
+		else:
+			procversion = optprocessingversion
 
 		suminfo = "%s\n\tteam: %s\tpriority: %s\n\tacqera: %s\tProcessingVersion: %s\n\tZone: %s\tWhitelist: %s" % (w,team,priority,acqera,procversion,zone,newsitelist)
 		if options.test:
