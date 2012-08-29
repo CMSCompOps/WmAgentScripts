@@ -60,6 +60,46 @@ def getEventCountDataSet(dataset):
 def chunks(lis, n):
     return [lis[i:i+n] for i in range(0, len(lis), n)]
 
+#Return the number of events for a given dataset given a blocklist
+def EventsBlockList(dataset, blocklist):
+	events=0
+	if len(blocklist)==0:
+		return getEventCountDataSet(dataset)
+	blockChunks=chunks(blocklist,10)
+	for blockList in blockChunks:
+		querry="./dbssql --input='find dataset,sum(block.numevents) where dataset="+dataset+' AND ('
+		for block in blockList:
+			querry=querry+' block= '+block+' OR'
+			querry=querry+' block= '+str(blockList[0]) +')'
+			querry=querry+"'|awk '{print $2}' | grep '[0-9]\{1,\}'"
+			output=os.popen(querry).read()
+			if not output:
+				events=events
+			try:
+				events=events+int(output)
+			except ValueError:
+       				events=events
+	return events
+
+
+#Return the number of events for a given dataset given a runlist
+def EventsRunList(dataset, runlist):
+		events=0
+		runChunks=chunks(runlist,30)
+		for runList in runChunks:
+			querry="./dbssql --input='find dataset,sum(block.numevents) where dataset="+dataset+' AND ('
+			for run in runList:
+				querry=querry+" run="+str(run) +" OR "
+			querry=querry+' run= '+str(runList[0]) +')'
+			querry=querry+"'|awk '{print $2}' | grep '[0-9]\{1,\}'"
+			output=os.popen(querry).read()
+			if not output:
+				events=events
+			try:
+				events=events+int(output)
+			except ValueError:
+       				events=events
+		return events
 
 
 def getInputEvents(url, workflow):
@@ -76,71 +116,22 @@ def getInputEvents(url, workflow):
 			return request['RequestSizeEvents']
 		else:
 			return 0
-		print workflow
-		return 0
 	BlockWhitelist=request['BlockWhitelist']
+	BlockBlacklist=request['BlockBlacklist']
 	inputDataSet=request['InputDataset']
 	runWhitelist=request['RunWhitelist']
 	querry='find dataset,sum(block.numevents) where dataset='+inputDataSet
+	events=getEventCountDataSet(inputDataSet)
 	if len(BlockWhitelist)>0:
-		querry=querry+' AND ('
-		for block in BlockWhitelist:
-			querry=querry+' block= '+block+' OR'
-		
-		querry=querry+' block= '+BlockWhitelist[0] +')'
-	if len(BlockWhitelist)>0 and len(BlockWhitelist)>10:
-		events=0
-		blockChunks=chunks(BlockWhitelist,10)
-		for blockList in blockChunks:
-			querry="./dbssql --input='find dataset,sum(block.numevents) where dataset="+inputDataSet+' AND ('
-			for block in blockList:
-				querry=querry+' block= '+block+' OR'
-			querry=querry+' block= '+str(blockList[0]) +')'
-			querry=querry+"'|awk '{print $2}' | grep '[0-9]\{1,\}'"
-			output=os.popen(querry).read()
-			if not output:
-				output=0
-			try:
-				events=events+int(output)
-			except ValueError:
-       				return -1
-		if 'FilterEfficiency' in request.keys():
-			return float(request['FilterEfficiency'])*int(events)
-		else:
-			return events
+		events=EventsBlockList(inputDataSet, BlockWhitelist)
+	if len(BlockBlacklist)>0:
+		events=events-EventsBlockList(inputDataSet, BlockBlacklist)
 	if len(runWhitelist)>0:
-		querry=querry+' AND ('
-		for run in runWhitelist:
-			querry=querry+' run= '+str(run)+' OR'
-		
-		querry=querry+' run= '+str(runWhitelist[0]) +')'
-	if len(runWhitelist)>0 and len(runWhitelist)>30:
-		events=0
-		runChunks=chunks(runWhitelist,30)
-		for runList in runChunks:
-			querry="./dbssql --input='find dataset,sum(block.numevents) where dataset="+inputDataSet+' AND ('
-			for run in runList:
-				querry=querry+" run="+str(run) +" OR "
-			querry=querry+' run= '+str(runList[0]) +')'
-			querry=querry+"'|awk '{print $2}' | grep '[0-9]\{1,\}'"
-			output=os.popen(querry).read()
-			if not output:
-				output=0
-			try:
-				events=events+int(output)
-			except ValueError:
-       				return 0
-		return events
+		events=events+EventsRunList(inputDataSet, runWhitelist)
+	if 'FilterEfficiency' in request.keys():
+		return float(request['FilterEfficiency'])*events
 	else:
-		output=os.popen("./dbssql --input='"+querry+"'"+ "|awk '{print $2}' | grep '[0-9]\{1,\}'").read()
-	try:
-		int(output)
-		if 'FilterEfficiency' in request.keys():
-			return float(request['FilterEfficiency'])*int(output)
-		else:
-			return int(output)
-	except ValueError:
-       		return -1
+		return events
 	
 def main():
 	args=sys.argv[1:]
