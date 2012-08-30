@@ -68,17 +68,19 @@ def EventsBlockList(dataset, blocklist):
 	blockChunks=chunks(blocklist,10)
 	for blockList in blockChunks:
 		querry="./dbssql --input='find dataset,sum(block.numevents) where dataset="+dataset+' AND ('
+		if len(blockList)==0:
+			continue
 		for block in blockList:
 			querry=querry+' block= '+block+' OR'
-			querry=querry+' block= '+str(blockList[0]) +')'
-			querry=querry+"'|awk '{print $2}' | grep '[0-9]\{1,\}'"
-			output=os.popen(querry).read()
-			if not output:
-				events=events
-			try:
-				events=events+int(output)
-			except ValueError:
-       				events=events
+		querry=querry+' block='+str(blockList[0]) +' )'
+		querry=querry+"'|awk '{print $2}' | grep '[0-9]\{1,\}'"
+		output=os.popen(querry).read()
+		if not output:
+			events=events
+		try:
+			events=events+int(output)
+		except ValueError:
+       			events=events
 	return events
 
 
@@ -127,7 +129,7 @@ def getInputEvents(url, workflow):
 	if len(BlockBlacklist)>0:
 		events=events-EventsBlockList(inputDataSet, BlockBlacklist)
 	if len(runWhitelist)>0:
-		events=events+EventsRunList(inputDataSet, runWhitelist)
+		events=EventsRunList(inputDataSet, runWhitelist)
 	if 'FilterEfficiency' in request.keys():
 		return float(request['FilterEfficiency'])*events
 	else:

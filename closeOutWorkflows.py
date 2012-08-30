@@ -145,8 +145,8 @@ def closeOutRedigiWorkflows(url, workflows):
 		datasets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
 		closeOutWorkflow=True
 		InputDataset=dbsTest.getInputDataSet(url, workflow)
-		duplicate=duplicateEventsGen.duplicateLumi(InputDataset)
 		for dataset in datasets:
+			duplicate=duplicateEventsGen.duplicateLumi(dataset)
 			closeOutDataset=True
 			Percentage=PercentageCompletion(url, workflow, dataset)
 			PhedexSubscription=testOutputDataset(dataset)
