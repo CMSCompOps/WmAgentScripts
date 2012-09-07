@@ -337,9 +337,7 @@ def getnextprocessingversion(r):
 			acqera = getacqera(r)
 			c = c + 1
 			nextoutputdataset = '/%s/%s-%s-v%s/GEN-SIM' % (r['primaryds'],acqera,r['globaltag'],c)
-			#print nextoutputdataset
 			[e,st] = getdsdetail(nextoutputdataset)
-			#print [e,st]
 		return '%s-v%s' % (r['globaltag'],c)
 	else:
 		return '-'
@@ -372,7 +370,7 @@ def main():
 			r = getWorkflowInfo(w)
 			for o in r['outputdataset']:
 				if 'perc' in o['phtrinfo'].keys():
-					if o['phtrinfo']['perc'] < 100 and o['phtrinfo']['time_create_days'] > 10:
+					if o['phtrinfo']['perc'] < 100 and o['phtrinfo']['time_create_days'] > 7:
 						print "%s (created on %s, custodial is %s, %s %s%%, https://cmsweb.cern.ch/phedex/prod/Request::View?request=%s)" % (w,o['phtrinfo']['time_create'].strftime('%b %d'),r['custodialt1'],o['name'],o['phtrinfo']['perc'],o['phreqinfo']['id'])
 
 	elif options.lessevents: # 
@@ -451,7 +449,7 @@ def main():
 		list = getRequestsByTypeStatus(['MonteCarlo','MonteCarloFromGEN'],['acquired','running'])
 		for w in list:
 			r = getWorkflowInfo(w)
-			if ( r['requestdays'] > 40 and r['status'] in ['acquired','running']):
+			if ( r['requestdays'] > 50 and r['status'] in ['acquired','running']):
 				print "%s (injected %s days ago, status is %s)" % (w,r['requestdays'],r['status'])
 		print
 
