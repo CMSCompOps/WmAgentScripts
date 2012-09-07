@@ -344,11 +344,6 @@ def getWorkflowInfo(workflow,nodbs=0):
 		eventsdone = eventsdone + oe
 
 	cpuhours = timeev*expectedevents/3600
-	#for o in ods:
-	#	if nodbs:
-	#		[oe,ost] = [0,'']
-	#	else:
-	#		[oe,ost] = getdsdetail(o)
 	remainingcpuhours = timeev*(expectedevents-eventsdone)/3600
 	return {'filtereff':filtereff,'type':type,'status':status,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'sizeev':sizeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'zone':getzonebyt1(custodialt1),'js':j,'outputdataset':outputdataset,'cpuhours':cpuhours,'remainingcpuhours':remainingcpuhours,'team':team,'acquisitionEra':acquisitionEra,'requestdays':requestdays,'processingVersion':processingVersion,'events_per_job':events_per_job,'lumis_per_job':lumis_per_job,'expectedjobs':expectedjobs,'expectedjobcpuhours':expectedjobcpuhours,'cmssw':cmssw,'expectedtotalsize':expectedtotalsize}
 
@@ -479,6 +474,7 @@ def main():
 	parser.add_option('-t', '--type', help='analyze workflow of type TYPE',dest='type')
 	parser.add_option('-n', '--names', help='print just request names',dest='names',action="store_true")
 	parser.add_option('-a', '--all', help='print all information about the requests',dest='raw',action="store_true")
+	parser.add_option('--csv', help='print all information about the requests in CSV format',dest='csv',action="store_true")
 	parser.add_option('-x', '--export', help='export all information about the requests in JSON format',dest='json',action="store_true")
 	parser.add_option('-g', '--assignment', help='print just information useful in assignment context',dest='assignment',action="store_true")
 	parser.add_option('-d', '--datasets', help='print just output datasets',dest='datasets',action="store_true")
@@ -537,6 +533,15 @@ def main():
 			for i in reqinfo[workflow].keys():
 				print " %s: %s" % (i,reqinfo[workflow][i])
 			print
+	elif options.csv:
+		keys = ['outputdataset','events','expectedevents','prepid','request','priority','type','status','requestdays','custodialt1','cpuhours']
+		print ",".join(v for k,v in enumerate(keys))
+		for w in list:
+			reqinfo[w] = getWorkflowInfo(w,nodbs=nodbs)
+			addToSummary(reqinfo[w])
+			#sys.stderr.write ("%s\n" % (w))
+			for o in reqinfo[w]['outputdataset']:
+				sys.stdout.write ("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % (o['name'],o['events'],reqinfo[w]['expectedevents'],reqinfo[w]['prepid'],w,reqinfo[w]['priority'],reqinfo[w]['type'],reqinfo[w]['status'],reqinfo[w]['requestdays'],reqinfo[w]['custodialt1'],reqinfo[w]['cpuhours']))
 	elif options.tapefamilies:
 		expectedbatchsize = 0
 		print
@@ -562,9 +567,10 @@ def main():
 			reqinfo[w] = getWorkflowInfo(w,nodbs=nodbs)
 			addToSummary(reqinfo[w])
 			print "%s (%s,%s at %s)" % (w,reqinfo[w]['type'],reqinfo[w]['status'],reqinfo[w]['zone'])
-			print " Priority: %s Team: %s Timeev: %s Jobs: %s Sizeev: %s Hours/job: %s ReqEvents: %s ExpectedEvts/job: %s FilterEff: %s %s Lumis/Job: %s" % (reqinfo[w]['priority'],reqinfo[w]['team'],reqinfo[w]['timeev'],reqinfo[w]['expectedjobs'],reqinfo[w]['sizeev'],reqinfo[w]['expectedjobcpuhours'],reqinfo[w]['expectedevents'],reqinfo[w]['events_per_job']*reqinfo[w]['filtereff'],reqinfo[w]['filtereff'],reqinfo[w]['cmssw'],reqinfo[w]['lumis_per_job'])
+			print " Priority: %s Team: %s Timeev: %s Jobs: %s Sizeev: %s Hours/job: %s\n ReqEvents: %s ExpectedEvts/job: %s FilterEff: %s %s Lumis/Job: %s" % (reqinfo[w]['priority'],reqinfo[w]['team'],reqinfo[w]['timeev'],reqinfo[w]['expectedjobs'],reqinfo[w]['sizeev'],reqinfo[w]['expectedjobcpuhours'],reqinfo[w]['expectedevents'],reqinfo[w]['events_per_job']*reqinfo[w]['filtereff'],reqinfo[w]['filtereff'],reqinfo[w]['cmssw'],reqinfo[w]['lumis_per_job'])
 			print " PrimaryDataset: %s GlobalTag: %s CPUHours: %s" % (reqinfo[w]['primaryds'],reqinfo[w]['globaltag'],reqinfo[w]['cpuhours'])
-			print " InputDataset: %s" % (reqinfo[w]['inputdataset'])
+			if reqinfo[w]['type'] != 'MonteCarlo':
+				print " InputDataset: %s" % (reqinfo[w]['inputdataset'])
 			print
 	elif options.datasets:
 		for workflow in list:
