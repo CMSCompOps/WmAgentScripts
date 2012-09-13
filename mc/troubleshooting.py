@@ -370,7 +370,7 @@ def main():
 			r = getWorkflowInfo(w)
 			for o in r['outputdataset']:
 				if 'perc' in o['phtrinfo'].keys():
-					if o['phtrinfo']['perc'] < 100 and o['phtrinfo']['time_create_days'] > 7:
+					if o['phtrinfo']['perc'] < 100 and o['phtrinfo']['time_create_days'] > 3:
 						print "%s (created on %s, custodial is %s, %s %s%%, https://cmsweb.cern.ch/phedex/prod/Request::View?request=%s)" % (w,o['phtrinfo']['time_create'].strftime('%b %d'),r['custodialt1'],o['name'],o['phtrinfo']['perc'],o['phreqinfo']['id'])
 
 	elif options.lessevents: # 

@@ -13,8 +13,8 @@ except ImportError:
 # TODO guess procversion
 
 legal_eras = ['Summer11','Summer12']
-teams_hp = ['production']
-teams_lp = ['dataops','integration','dataops','dataops']
+teams_hp = ['mc']
+teams_lp = ['production']
 
 zones = ['FNAL','CNAF','ASGC','IN2P3','RAL','PIC','KIT']
 zone2t1 = {'FNAL':'T1_US_FNAL','CNAF':'T1_IT_CNAF','ASGC':'T1_TW_ASGC','IN2P3':'T1_FR_CCIN2P3','RAL':'T1_UK_RAL','PIC':'T1_ES_PIC','KIT':'T1_DE_KIT'}
@@ -222,7 +222,9 @@ def getWorkflowInfo(workflow,nodbs=0):
 	lumis_per_job = None
 	acquisitionEra = None
 	processingVersion = None
+	outputtier = None
 	reqevts = 0
+	requestdays=0
 	for raw in list:
 		if 'acquisitionEra' in raw:
                         a = raw.find("'")
@@ -236,6 +238,9 @@ def getWorkflowInfo(workflow,nodbs=0):
 		elif 'primaryDataset' in raw:
 			primaryds = raw[raw.find("'")+1:]
 			primaryds = primaryds[0:primaryds.find("'")]
+		elif 'output.dataTier' in raw:
+			outputtier = raw[raw.find("'")+1:]
+			outputtier = outputtier[0:outputtier.find("'")]
 		elif 'cmsswVersion' in raw:
 			cmssw = raw[raw.find("'")+1:]
 			cmssw = cmssw[0:cmssw.find("'")]
@@ -330,8 +335,7 @@ def getWorkflowInfo(workflow,nodbs=0):
                 try:
                         reqevts = s['RequestNumEvents']
                 except:
-                        print "No RequestNumEvents for this workflow: "+workflow
-                        return ''
+			reqevts = 0
 	inputdataset = {}
 	try:
 		inputdataset['name'] = s['InputDatasets'][0]
@@ -407,6 +411,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 			oel['events'] = oe
 			oel['status'] = ost
 		
+		if 0:
 			phreqinfo = {}
        		 	url='https://cmsweb.cern.ch/phedex/datasvc/json/prod/RequestList?dataset=' + o
 			try:
@@ -417,17 +422,18 @@ def getWorkflowInfo(workflow,nodbs=0):
 				r = result['phedex']['request']
 			except:
 				r = None
-			for i in range(0,len(r)):
-       			 	approval = r[i]['approval']
- 			       	requested_by = r[i]['requested_by']
-				custodialsite = r[i]['node'][0]['name']
-				id = r[i]['id']
-				if 'T1_' in custodialsite:
-					phreqinfo['custodialsite'] = custodialsite
-					phreqinfo['requested_by'] = requested_by
-					phreqinfo['approval'] = approval
-					phreqinfo['id'] = id
-			oel['phreqinfo'] = phreqinfo
+			if r:
+				for i in range(0,len(r)):
+       			 		approval = r[i]['approval']
+ 			       		requested_by = r[i]['requested_by']
+					custodialsite = r[i]['node'][0]['name']
+					id = r[i]['id']
+					if 'T1_' in custodialsite:
+						phreqinfo['custodialsite'] = custodialsite
+						phreqinfo['requested_by'] = requested_by
+						phreqinfo['approval'] = approval
+						phreqinfo['id'] = id
+				oel['phreqinfo'] = phreqinfo
 		
 			phtrinfo = {}
 			url = 'https://cmsweb.cern.ch/phedex/datasvc/json/prod/subscriptions?dataset=' + o
@@ -466,7 +472,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 	#	else:
 	#		[oe,ost] = getdsdetail(o)
 	remainingcpuhours = timeev*(expectedevents-eventsdone)/3600
-	return {'type':typ,'status':status,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'zone':getzonebyt1(custodialt1),'js':j,'outputdataset':outputdataset,'cpuhours':cpuhours,'remainingcpuhours':remainingcpuhours,'team':team,'acquisitionEra':acquisitionEra,'requestdays':requestdays,'processingVersion':processingVersion,'events_per_job':events_per_job,'lumis_per_job':lumis_per_job,'expectedjobs':expectedjobs,'expectedjobcpuhours':expectedjobcpuhours,'cmssw':cmssw}
+	return {'type':typ,'status':status,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'zone':getzonebyt1(custodialt1),'js':j,'outputdataset':outputdataset,'cpuhours':cpuhours,'remainingcpuhours':remainingcpuhours,'team':team,'acquisitionEra':acquisitionEra,'requestdays':requestdays,'processingVersion':processingVersion,'events_per_job':events_per_job,'lumis_per_job':lumis_per_job,'expectedjobs':expectedjobs,'expectedjobcpuhours':expectedjobcpuhours,'cmssw':cmssw,'outputtier':outputtier}
 
 def isDatasetNameUsed(datasetname):
 	[e,st] = getdsdetail(datasetname)
@@ -542,6 +548,7 @@ def main():
 	url='cmsweb.cern.ch'	
 	parser = optparse.OptionParser()
 	parser.add_option('-w', '--workflow', help='workflow name',dest='workflow')
+	parser.add_option('--debug', help='add debug info',dest='debug',default=False,action="store_true")
 	parser.add_option('-l', '--workflowlist', help='workflow list in textfile',dest='list')
 	parser.add_option('-t', '--team', help='team: one of %s' % (teams_hp+teams_lp),dest='team')
 	parser.add_option('--test', action="store_true",default=True,help='test mode: don\'treally assign at the end',dest='test')
@@ -591,9 +598,10 @@ def main():
 	else:
 		acqera = 'auto'
 
-	print "Testing whitelists:\n"
-	for i in zones:
-		print "%s:\n%s\n" % (i,",".join(x for x in getsitelist(i)))
+	if options.debug:
+		print "Testing whitelists:\n"
+		for i in zones:
+			print "%s:\n%s\n" % (i,",".join(x for x in getsitelist(i)))
 	
 	print "Matching requests:\n"
 	print "REQUEST TEAM PRIORITY ACQERA PROCVS ZONE"
@@ -654,15 +662,17 @@ def main():
 		
 		if procversion == 'auto':
 			newprocversion = "%s-%s" % (reqinfo[w]['globaltag'],version)
-			dataset = '/%s/%s-%s/' % (reqinfo[w]['primaryds'],newacqera,newprocversion)
+			dataset = '/%s/%s-%s/%s' % (reqinfo[w]['primaryds'],newacqera,newprocversion,reqinfo[w]['outputtier'])
+			#print dataset
 			if isInDBS(dataset):
-				print "Processing version already in use: %s -> %s*" % (w,dataset)
+				print "Processing version already in use for %s : %s" % (w,dataset)
 				sys.exit(1)
 		else:
 			newprocversion = procversion
-			dataset = '/%s/%s-%s/' % (reqinfo[w]['primaryds'],newacqera,newprocversion)
+			dataset = '/%s/%s-%s/%s' % (reqinfo[w]['primaryds'],newacqera,newprocversion,reqinfo[w]['outputtier'])
+			#print dataset
 			if isInDBS(dataset):
-				print "Processing version already in use: %s -> %s*" % (w,dataset)
+				print "Processing version already in use for %s : %s" % (w,dataset)
 				sys.exit(1)
 
 		assign_data[w] = {}
@@ -674,27 +684,22 @@ def main():
 		assign_data[w]['zone'] = newzone
 		suminfo = "%s %s %s %s %s %s" % (w,assign_data[w]['team'],assign_data[w]['priority'],assign_data[w]['acqera'],assign_data[w]['procversion'],assign_data[w]['zone'])
 		print "%s" % suminfo
-
 	print
-	for w in list:
-		suminfo = "%s %s %s %s %s" % (w,assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['procversion'],assign_data[w]['whitelist'])
-		if options.test:
-			print "TEST:\t%s" % suminfo
-		else:
-			print "ASSIGN:\t%s" % suminfo
-			assignMCRequest(url,w,assign_data[w]['team'],assign_data[w]['whitelist'],assign_data[w]['acqera'],assign_data[w]['procversion'])
+
+	if not options.test: 
+		print "Assignment:"
 		print
-	
-	if options.test:
-		ts = "TESTED"
-	else:
-		ts = "ASSIGNED"
-	print
-	print "The following requests have been %s:\n" % ts
 	for w in list:
-		print "%s" % w
-	print "\n"
-
+		if options.debug:
+			suminfo = "%s %s %s %s %s" % (w,assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['procversion'],assign_data[w]['whitelist'])
+		else:
+			suminfo = "%s %s %s %s %s" % (w,assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['procversion'],assign_data[w]['zone'])
+		if options.debug and options.test:
+			print "TESTED:\t%s\n" % suminfo
+		if not options.test:
+			print "ASSIGN:\t%s\n" % suminfo
+			assignMCRequest(url,w,assign_data[w]['team'],assign_data[w]['whitelist'],assign_data[w]['acqera'],assign_data[w]['procversion'])
+	
 	sys.exit(0)
 
 if __name__ == "__main__":
