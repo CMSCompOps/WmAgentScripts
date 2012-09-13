@@ -501,7 +501,9 @@ def getZoneFromRequest(prepid):
 	if '?' in zone:
 		zone.remove('?')
 	if len(zone) > 1:
-		print "More than one zone is associated to %s" % zone
+		print "Requests have multiple custodial T1 candidates: %s" % zone
+		for i in reqs:
+			print " %s" % i
 		sys.exit(2)
 	if len(zone) < 1:
 		print "No zones can be guessed."
