@@ -13,13 +13,18 @@ except ImportError:
 # TODO guess procversion
 
 legal_eras = ['Summer11','Summer12']
-teams_hp = ['production']
-teams_lp = ['integration','dataops','dataops']
+teams_hp = ['mc']
+teams_lp = ['production']
+
 zones = ['FNAL','CNAF','ASGC','IN2P3','RAL','PIC','KIT']
 zone2t1 = {'FNAL':'T1_US_FNAL','CNAF':'T1_IT_CNAF','ASGC':'T1_TW_ASGC','IN2P3':'T1_FR_CCIN2P3','RAL':'T1_UK_RAL','PIC':'T1_ES_PIC','KIT':'T1_DE_KIT'}
 siteblacklist = ['T2_FR_GRIF_IRFU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_RRC_KI','T2_UK_SGrid_Bristol','T2_US_Vanderbilt','T2_CH_CERN']
+sitelistsmallrequests = ['T2_DE_DESY','T2_IT_Pisa','T2_ES_CIEMAT','T2_IT_Bari','T2_US_Purdue','T2_US_Caltech','T2_CN_Beijing','T2_DE_RWTH','T2_IT_Legnaro','T2_IT_Rome','T2_US_Florida','T2_US_MIT','T2_US_Wisconsin','T2_US_UCSD']
 cachedoverview = '/afs/cern.ch/user/s/spinoso/public/overview.cache'
 forceoverview = 0
+tcount_hp = 0
+tcount_lp = 0
+tcount = 0
 
 def get_linkedt2s(custodialT1):
 	list = []
@@ -41,8 +46,6 @@ def getsitelist(zone):
 	if zone in zones:
 		sitelist = []
 		sitelist.append(zone2t1[zone])
-		#print "Zone: %s" % zone
-		#print "Custodial T1 is %s" % zone2t1[zone]
 		t2list = get_linkedt2s(zone2t1[zone])
 		for i in t2list:
 			if not i in siteblacklist:
@@ -69,17 +72,14 @@ def getcampaign(r):
         prepid = r['prepid']
         return prepid.split('-')[1]
 
-def getacqera(r):
+def getacqera(prepid):
 	global legal_eras
-        prepid = r['prepid']
         era = prepid.split('-')[1]
-	if era in legal_eras:
-		return era
-	else:
-		print "*********************************************************"
-		print "WARNING: '%s' is not a known era, using Summer12"  % era
-		print "*********************************************************"
-		return 'Summer12'
+	for e in legal_eras:
+		if e in prepid:
+			return e
+	print "   !!! WARNING !!! Cannot guess acquisition era, using Summer12"
+	return 'Summer12'
 
 def assignMCRequest(url,workflow,team,sitelist,era,procversion):
     params = {"action": "Assign",
@@ -222,6 +222,9 @@ def getWorkflowInfo(workflow,nodbs=0):
 	lumis_per_job = None
 	acquisitionEra = None
 	processingVersion = None
+	outputtier = None
+	reqevts = 0
+	requestdays=0
 	for raw in list:
 		if 'acquisitionEra' in raw:
                         a = raw.find("'")
@@ -235,6 +238,9 @@ def getWorkflowInfo(workflow,nodbs=0):
 		elif 'primaryDataset' in raw:
 			primaryds = raw[raw.find("'")+1:]
 			primaryds = primaryds[0:primaryds.find("'")]
+		elif 'output.dataTier' in raw:
+			outputtier = raw[raw.find("'")+1:]
+			outputtier = outputtier[0:outputtier.find("'")]
 		elif 'cmsswVersion' in raw:
 			cmssw = raw[raw.find("'")+1:]
 			cmssw = cmssw[0:cmssw.find("'")]
@@ -323,15 +329,13 @@ def getWorkflowInfo(workflow,nodbs=0):
 		status = s['RequestStatus']
 	except:
 		status = ''
-	#try:
-        #        reqevts = s['RequestSizeEvents']
-        #except:
-        #        try:
-        #                reqevts = s['RequestNumEvents']
-        #        except:
-        #                print "No RequestNumEvents for this workflow: %s" % workflow
-        #                return ''
-	reqevts = 0
+	try:
+                reqevts = s['RequestSizeEvents']
+        except:
+                try:
+                        reqevts = s['RequestNumEvents']
+                except:
+			reqevts = 0
 	inputdataset = {}
 	try:
 		inputdataset['name'] = s['InputDatasets'][0]
@@ -407,6 +411,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 			oel['events'] = oe
 			oel['status'] = ost
 		
+		if 0:
 			phreqinfo = {}
        		 	url='https://cmsweb.cern.ch/phedex/datasvc/json/prod/RequestList?dataset=' + o
 			try:
@@ -417,17 +422,18 @@ def getWorkflowInfo(workflow,nodbs=0):
 				r = result['phedex']['request']
 			except:
 				r = None
-			for i in range(0,len(r)):
-       			 	approval = r[i]['approval']
- 			       	requested_by = r[i]['requested_by']
-				custodialsite = r[i]['node'][0]['name']
-				id = r[i]['id']
-				if 'T1_' in custodialsite:
-					phreqinfo['custodialsite'] = custodialsite
-					phreqinfo['requested_by'] = requested_by
-					phreqinfo['approval'] = approval
-					phreqinfo['id'] = id
-			oel['phreqinfo'] = phreqinfo
+			if r:
+				for i in range(0,len(r)):
+       			 		approval = r[i]['approval']
+ 			       		requested_by = r[i]['requested_by']
+					custodialsite = r[i]['node'][0]['name']
+					id = r[i]['id']
+					if 'T1_' in custodialsite:
+						phreqinfo['custodialsite'] = custodialsite
+						phreqinfo['requested_by'] = requested_by
+						phreqinfo['approval'] = approval
+						phreqinfo['id'] = id
+				oel['phreqinfo'] = phreqinfo
 		
 			phtrinfo = {}
 			url = 'https://cmsweb.cern.ch/phedex/datasvc/json/prod/subscriptions?dataset=' + o
@@ -466,7 +472,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 	#	else:
 	#		[oe,ost] = getdsdetail(o)
 	remainingcpuhours = timeev*(expectedevents-eventsdone)/3600
-	return {'type':typ,'status':status,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'zone':getzonebyt1(custodialt1),'js':j,'outputdataset':outputdataset,'cpuhours':cpuhours,'remainingcpuhours':remainingcpuhours,'team':team,'acquisitionEra':acquisitionEra,'requestdays':requestdays,'processingVersion':processingVersion,'events_per_job':events_per_job,'lumis_per_job':lumis_per_job,'expectedjobs':expectedjobs,'expectedjobcpuhours':expectedjobcpuhours,'cmssw':cmssw}
+	return {'type':typ,'status':status,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'zone':getzonebyt1(custodialt1),'js':j,'outputdataset':outputdataset,'cpuhours':cpuhours,'remainingcpuhours':remainingcpuhours,'team':team,'acquisitionEra':acquisitionEra,'requestdays':requestdays,'processingVersion':processingVersion,'events_per_job':events_per_job,'lumis_per_job':lumis_per_job,'expectedjobs':expectedjobs,'expectedjobcpuhours':expectedjobcpuhours,'cmssw':cmssw,'outputtier':outputtier}
 
 def isDatasetNameUsed(datasetname):
 	[e,st] = getdsdetail(datasetname)
@@ -482,16 +488,14 @@ def getRequestsByPREPID(prepid):
 			r.append(i['request_name'])
 	return r
 	
-def getZoneFromRequest(w):
-	print "Guessing zone"
-	reqinfo = getWorkflowInfo(w,nodbs=1)
-	prepid = reqinfo['prepid']
+def getZoneFromRequest(prepid):
+	#print "Guessing zone"
 	zone = []
 	reqs = getRequestsByPREPID(prepid)
-	print "Found %s total requests with the same PREP ID: %s" % (len(reqs),prepid)
+	#print "Found %s total requests with the same PREP ID: %s" % (len(reqs),prepid)
 	for r in reqs:
-		info = getWorkflowInfo(r)
-		print "%s (%s) %s" % (r,info['status'],info['zone'])
+		info = getWorkflowInfo(r,nodbs=1)
+		#print "%s (%s) %s" % (r,info['status'],info['zone'])
 		if info['zone'] not in zone:
 			zone.append(info['zone'])
 	if '?' in zone:
@@ -502,44 +506,39 @@ def getZoneFromRequest(w):
 	if len(zone) < 1:
 		print "No zones can be guessed."
 		sys.exit(2)
-	print "Zone is %s" % zone[0]
+	#print "Zone is %s" % zone[0]
 	return zone[0]
 
-def getnextprocessingversion(w):
-	print "Guessing processing version"
-	rqinfo = getWorkflowInfo(w,nodbs=0)
-	prepid = rqinfo['prepid']
-	reqs = getRequestsByPREPID(prepid)
-	olddatasets = []
-	for r in reqs:
-		reqinfo = getWorkflowInfo(r)
-		if reqinfo['globaltag'] in reqinfo['processingVersion']:
-			for o in reqinfo['outputdataset']:
-				if not o['name'] in olddatasets:
-					print "Found %s" % o['name']
-					olddatasets.append(o['name'])
-	olddatasets.sort()
-	
-	y = 1
-	c = 1
-	while y > 0:
-		y = 0
-		for o in olddatasets:
-			v = '-v%s' % c
-			if v in o:
-				y = 1
-				break
-		if y:
-			c = c + 1
-	e = 1
-	acqera = getacqera(rqinfo)
-	while e > 0:
-		nextoutputdataset = '/%s/%s-%s-v%s/GEN-SIM' % (rqinfo['primaryds'],acqera,rqinfo['globaltag'],c)
-		[e,st] = getdsdetail(nextoutputdataset)
-	print "%s has no events in DBS" % nextoutputdataset
-	print "Version is v%s" % (c)
-				
-	return 'v%s' % (c)
+def isInDBS(dataset):
+	q = "/afs/cern.ch/user/s/spinoso/public/dbssql --input='find dataset where dataset="+dataset+"*' "
+	#print q
+	output=os.popen("%s|grep '/'" % (q)).read()
+	#print output
+	ret = output.split(' ')
+	#print ret
+	try:
+		ds = ret[1].rstrip()
+		#print ds
+		if ds == '':
+			return False
+		else:
+			return True
+	except:
+		return False
+
+def getteam(teams,r):
+	global tcount_hp,tcount_lp,tcount,teams_lp,teams_hp
+	if teams == 'auto':
+		if r['priority'] >=100000:
+			team = teams_hp[tcount_hp % len(teams_hp)]
+			tcount_hp = tcount_hp + 1
+		else:
+			team = teams_lp[tcount_lp % len(teams_lp)]
+			tcount_lp = tcount_lp + 1
+	else:
+		team = teams[tcount % len(teams)]
+		tcount = tcount + 1
+	return team
 
 def main():
 	global overview,forceoverview,sum,nodbs
@@ -549,15 +548,15 @@ def main():
 	url='cmsweb.cern.ch'	
 	parser = optparse.OptionParser()
 	parser.add_option('-w', '--workflow', help='workflow name',dest='workflow')
+	parser.add_option('--debug', help='add debug info',dest='debug',default=False,action="store_true")
 	parser.add_option('-l', '--workflowlist', help='workflow list in textfile',dest='list')
 	parser.add_option('-t', '--team', help='team: one of %s' % (teams_hp+teams_lp),dest='team')
 	parser.add_option('--test', action="store_true",default=True,help='test mode: don\'treally assign at the end',dest='test')
 	parser.add_option('--assign', action="store_false",default=True,help='assign mode',dest='test')
 	parser.add_option('-z', '--zone', help='Zone %s or single site or comma-separated list (i.e. T1_US_FNAL,T2_FR_CCIN2P3,T2_DE_DESY)' % zones,dest='zone')
 	parser.add_option('-a', '--acqera', help='Acquisition era: one of %s' % legal_eras,dest='acqera')
-	#parser.add_option('-p', '--procversion', help='Processing Version',dest='procversion')
-	parser.add_option('-v', '--version', help='Version (it is the vx part of the ProcessingVersion)',dest='version')
-	parser.add_option('-p', '--processingversion', help='optionally provide processing version; if not, it will default to GlobalTag-vX',dest='optprocessingversion')
+	parser.add_option('-v', '--version', help='Version (it is the vx part of the ProcessingVersion), default is v1',dest='version')
+	parser.add_option('-p', '--processingversion', help='Processing Version, default to GlobalTag-vX',dest='procversion')
 	(options,args) = parser.parse_args()
 
 	list = []
@@ -576,117 +575,131 @@ def main():
 	if options.team:
 		teams=options.team.split(',')
 		if 'auto' in teams:
-			teams = []
+			teams = 'auto'
 	else:
-		teams = []
+		teams = 'auto'
 	if options.zone:
 		zone = options.zone
-		sitelist = getsitelist(zone)
 	else:
 		zone = 'auto'
-		#sys.exit(1)
-	#print "Zone: %s" % zone
-
-	#if options.acqera:
-	#	acqera = options.acqera
-	#else:
-	#	print "Acquisition Era not provided, please provide one among %s" % legal_eras
-	#	sys.exit(1)
-	if options.optprocessingversion:
-		optprocessingversion = options.optprocessingversion
+	if options.procversion:
+		procversion = options.procversion
 	else:
-		optprocessingversion = ''
+		procversion = 'auto'
 	if options.version:
 		version = options.version
 	else:
-		version = 'auto'
-		#print "Please provide a version!"
-		#sys.exit(1)
+		version = 'v1'
 		
 	reqinfo = {}
+
+	if options.acqera:
+		acqera = options.acqera
+	else:
+		acqera = 'auto'
+
+	if options.debug:
+		print "Testing whitelists:\n"
+		for i in zones:
+			print "%s:\n%s\n" % (i,",".join(x for x in getsitelist(i)))
 	
+	print "Matching requests:\n"
+	print "REQUEST TEAM PRIORITY ACQERA PROCVS ZONE"
+	assign_data = {}
 	for w in list:
 		reqinfo[w] = getWorkflowInfo(w)
+
+		# status
 		if reqinfo[w]['status'] == '':
 			print "Cannot get information for %s!" % w
 			sys.exit(1)
-		if not 'MonteCarlo' in reqinfo[w]['type']:
-			print "%s: not a MonteCarlo/MonteCarloFromGEN request!" % w
-			sys.exit(1)
-		print "* CHECKING %s" % w
-
-		#for i in reqinfo[w].keys():
-		#	print " %s: %s" % (i,reqinfo[w][i])
 		if reqinfo[w]['status'] != 'assignment-approved':
 			print "%s: not in status assignment-approved! (status is '%s')" % (w,reqinfo[w]['status'])
 			sys.exit(1)
+	
+		# type
+		if not 'MonteCarlo' in reqinfo[w]['type']:
+			print "%s: not a MonteCarlo/MonteCarloFromGEN request!" % w
+			sys.exit(1)
 
-	tcount_hp = 0
-	tcount_lp = 0
-	tcount = 0
-	for w in list:
+		# priority
 		priority = reqinfo[w]['priority']
-		if teams == []:
-			if priority >=100000:
-				team = teams_hp[tcount_hp % len(teams_hp)]
-				tcount_hp = tcount_hp + 1
-			else:
-				team = teams_lp[tcount_lp % len(teams_lp)]
-				tcount_lp = tcount_lp + 1
-		else:
-			team = teams[tcount % len(teams)]
-			tcount = tcount + 1
+		
+		# team
+		team = getteam(teams,reqinfo[w])
 
-		# T3_US_Omaha hook
+		# acqera
+		if acqera == 'auto':
+			newacqera = getacqera(reqinfo[w]['prepid'])
+		else:
+			newacqera = acqera
+
+		# zone
+		if zone == 'auto':
+			newzone = getZoneFromRequest(reqinfo[w]['prepid'])
+		else:
+			newzone = zone
+
+		# sitelist adjustment
+		sitelist = getsitelist(newzone)
 		newsitelist = sitelist[:]
-		if 'T2_US_Nebraska' in sitelist and reqinfo[w]['type'] == 'MonteCarlo':
+
+		if 'T2_US_Nebraska' in sitelist and reqinfo[w]['type'] == 'MonteCarlo': # T3_US_Omaha hook
 			newsitelist.append('T3_US_Omaha')
 
-		# T3_US_Colorado hook
-		if 'T2_US_Nebraska' in sitelist:
+		if 'T2_US_Nebraska' in sitelist: # T3_US_Colorado hook
 			newsitelist.append('T3_US_Colorado')
+
+		if reqinfo[w]['expectedevents'] > 0 and reqinfo[w]['expectedevents'] <= 100000 :
+			oldsitelist = newsitelist[:]
+			newsitelist = []
+			for i in oldsitelist:
+				if 'T1_' in i:
+					newsitelist.append(i)
+				elif i in sitelistsmallrequests:
+					newsitelist.append(i)
+		# processing version
 		
-		# relval WMA (CERN) hook
-		#if team == 'relval':
-		#	custodialT1 = ''
-		#	for i in sitelist:
-		#		if 'T1_' in i:
-		#			custodialT1 = i
-		#	if custodialT1 == '':
-		#		newsitelist = ['T1_CH_CERN']
-		#	else:
-		#		newsitelist = ['T1_CH_CERN',custodialT1]
-		#	print "Using relval instance with sitelist = %s" % newsitelist
-
-		campaign = getcampaign(reqinfo[w])
-		acqera = getacqera(reqinfo[w])
-		if zone == 'auto':
-			zone = getZoneFromRequest(w)
-			sitelist = getsitelist(zone)
-		if optprocessingversion == '':
-			if version == 'auto':
-				version = getnextprocessingversion(w)
-			procversion = "%s-%s" % (reqinfo[w]['globaltag'],version)
+		if procversion == 'auto':
+			newprocversion = "%s-%s" % (reqinfo[w]['globaltag'],version)
+			dataset = '/%s/%s-%s/%s' % (reqinfo[w]['primaryds'],newacqera,newprocversion,reqinfo[w]['outputtier'])
+			#print dataset
+			if isInDBS(dataset):
+				print "Processing version already in use for %s : %s" % (w,dataset)
+				sys.exit(1)
 		else:
-			procversion = optprocessingversion
+			newprocversion = procversion
+			dataset = '/%s/%s-%s/%s' % (reqinfo[w]['primaryds'],newacqera,newprocversion,reqinfo[w]['outputtier'])
+			#print dataset
+			if isInDBS(dataset):
+				print "Processing version already in use for %s : %s" % (w,dataset)
+				sys.exit(1)
 
-		suminfo = "%s\n\tteam: %s\tpriority: %s\n\tacqera: %s\tProcessingVersion: %s\n\tZone: %s\tWhitelist: %s" % (w,team,priority,acqera,procversion,zone,newsitelist)
-		if options.test:
-			print "TEST:\t%s" % suminfo
-		else:
-			print "ASSIGN:\t%s" % suminfo
-			assignMCRequest(url,w,team,newsitelist,acqera,procversion)
+		assign_data[w] = {}
+		assign_data[w]['team'] = team
+		assign_data[w]['priority'] = priority
+		assign_data[w]['whitelist'] = newsitelist
+		assign_data[w]['acqera'] = newacqera
+		assign_data[w]['procversion'] = newprocversion
+		assign_data[w]['zone'] = newzone
+		suminfo = "%s %s %s %s %s %s" % (w,assign_data[w]['team'],assign_data[w]['priority'],assign_data[w]['acqera'],assign_data[w]['procversion'],assign_data[w]['zone'])
+		print "%s" % suminfo
+	print
+
+	if not options.test: 
+		print "Assignment:"
 		print
-	
-	if options.test:
-		ts = "TESTED"
-	else:
-		ts = "ASSIGNED"
-	print "The following requests have been %s:\n" % ts
 	for w in list:
-		print "%s" % w
-	print "\n"
-
+		if options.debug:
+			suminfo = "%s %s %s %s %s" % (w,assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['procversion'],assign_data[w]['whitelist'])
+		else:
+			suminfo = "%s %s %s %s %s" % (w,assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['procversion'],assign_data[w]['zone'])
+		if options.debug and options.test:
+			print "TESTED:\t%s\n" % suminfo
+		if not options.test:
+			print "ASSIGN:\t%s\n" % suminfo
+			assignMCRequest(url,w,assign_data[w]['team'],assign_data[w]['whitelist'],assign_data[w]['acqera'],assign_data[w]['procversion'])
+	
 	sys.exit(0)
 
 if __name__ == "__main__":
