@@ -555,6 +555,7 @@ def main():
 	parser.add_option('-t', '--team', help='team: one of %s' % (teams_hp+teams_lp),dest='team')
 	parser.add_option('--test', action="store_true",default=True,help='test mode: don\'treally assign at the end',dest='test')
 	parser.add_option('--assign', action="store_false",default=True,help='assign mode',dest='test')
+	parser.add_option('--small', action="store_true",default=False,help='assign requests considering them small',dest='small')
 	parser.add_option('-z', '--zone', help='Zone %s or single site or comma-separated list (i.e. T1_US_FNAL,T2_FR_CCIN2P3,T2_DE_DESY)' % zones,dest='zone')
 	parser.add_option('-a', '--acqera', help='Acquisition era: one of %s' % legal_eras,dest='acqera')
 	parser.add_option('-v', '--version', help='Version (it is the vx part of the ProcessingVersion), default is v1',dest='version')
@@ -652,7 +653,7 @@ def main():
 		if 'T2_US_Nebraska' in sitelist: # T3_US_Colorado hook
 			newsitelist.append('T3_US_Colorado')
 
-		if reqinfo[w]['expectedevents'] > 0 and reqinfo[w]['expectedevents'] <= 100000 :
+		if reqinfo[w]['expectedevents'] > 0 and ( reqinfo[w]['expectedevents'] <= 200000 or options.small ):
 			oldsitelist = newsitelist[:]
 			newsitelist = []
 			for i in oldsitelist:
