@@ -377,12 +377,14 @@ def main():
 
            if options.execute:
               if restrict == 'None' or restrict == siteUse:
-                 print 'Executing...'
 	         assignRequest(url,workflow,team,siteUse,era,procversion, activity, lfn, maxmergeevents, maxRSS, maxVSize)
               else:
                  print 'Skipping workflow ',workflow
            else:
-              print 'Would assign ',workflow,' with ',era,procversion,lfn,siteUse,team,maxmergeevents,activity,maxRSS,maxVSize
+              if restrict == 'None' or restrict == siteUse:
+                 print 'Would assign ',workflow,' with ',era,procversion,lfn,siteUse,team,maxmergeevents,activity,maxRSS,maxVSize
+              else:
+                 print 'Would skip workflow ',workflow
 
 	sys.exit(0)
 
