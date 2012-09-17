@@ -237,10 +237,6 @@ def main():
 		print "A filename is required"
 		sys.exit(0)
 	activity='reprocessing'
-        if not options.version:
-                version='1'
-        else:
-                version=options.version
         if not options.restrict:
                 restrict='None'
         else:
