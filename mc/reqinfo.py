@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.6 -w
+#!/usr/bin/env python
 #TODO select zone
 #TODO analysis (running >=95%)
 #TODO merge -p -t -s
@@ -523,7 +523,6 @@ def main():
 	elif options.json:
 		struct = []
 		for workflow in list:
-			#print "%s" % (workflow)
 			reqinfo[workflow] = getWorkflowInfo(workflow,nodbs=nodbs)
 			struct.append(reqinfo[workflow])
 		print json.dumps(struct,indent=4,sort_keys=True)

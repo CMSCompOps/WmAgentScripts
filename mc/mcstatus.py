@@ -223,6 +223,8 @@ def getWorkflowInfo(workflow):
 		[oe,ost] = getdsdetail(o)
 		eventsdone = eventsdone + oe
 	eta = timeev*(expectedevents-eventsdone)/3600
+	if eta < 0:
+		eta = 0
 	return {'filtereff':filtereff,'type':type,'status':status,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'timeev':timeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'zone':getzonebyt1(custodialt1),'js':j,'ods':ods,'cpuhours':cpuhours,'eta':eta,'team':team}
 
 def getoverview():
