@@ -71,6 +71,9 @@ def retrieveSchema(workflowName):
 	    #schema['RequestNumEvents'] = int(value)
 	elif value != None:
             schema[key] = value
+    #schema['TimePerEvent']=60
+    #schema['Memory']=2394967	
+    #schema['SizePerEvent']=5000
     #schema['ScramArch']='slc5_amd64_gcc462'
     #schema['RequestPriority']=int(schema['RequestPriority'])
     #schema['TotalTime']=int(schema['TotalTime'])

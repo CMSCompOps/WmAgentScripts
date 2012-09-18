@@ -101,6 +101,9 @@ for schedd in listscheddsCERN+listscheddsFNAL:
 	    status = int(array[1])
 	    ServerTime=int(array[2])
 	    JobStartDate=int(array[3])
+            if 'JobCache' not in line:
+                print line
+                continue
 	    if len(array)<8:
 		EnteredCurrentStatus=int(array[3])
 		log =array[4]
@@ -109,9 +112,6 @@ for schedd in listscheddsCERN+listscheddsFNAL:
 		EnteredCurrentStatus=int(array[4])
 		log = array[5]
 		site = array[6]
-	    if 'JobCache' not in line:
-		print line
-		continue
 	    workflow = log.split("/JobCache/")[1].split('/')[0]
 	    numjobstart = int(array[-1])
 	    removereason = "UNDEFINED"
