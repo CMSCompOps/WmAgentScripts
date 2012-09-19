@@ -315,7 +315,7 @@ def main():
            if not team:
               priority = int(getPriority(url, workflow))
               if priority < 100000:
-                 team = 'processing'
+                 team = 't1'
               else:
                  team = 't1_highprio'
 
