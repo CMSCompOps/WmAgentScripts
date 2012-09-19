@@ -64,6 +64,8 @@ def main():
            if 'Fall11_R' in prepID:
               ods = ['GEN-RAW', 'GEN-SIM-RECO', 'AODSIM', 'DQM']
               era = 'Fall11'
+           if 'LowPU2010_DR' in prepID:
+              era = 'Summer12'
 
            # Check for any additionals, e.g. GEN-SIM-RECODEBUG
            for extra in outputDataSets:
