@@ -14,7 +14,7 @@ except ImportError:
 
 legal_eras = ['Summer11','Summer12']
 teams_hp = ['mc']
-teams_lp = ['production']
+teams_lp = ['production','integration']
 
 zones = ['FNAL','CNAF','ASGC','IN2P3','RAL','PIC','KIT']
 zone2t1 = {'FNAL':'T1_US_FNAL','CNAF':'T1_IT_CNAF','ASGC':'T1_TW_ASGC','IN2P3':'T1_FR_CCIN2P3','RAL':'T1_UK_RAL','PIC':'T1_ES_PIC','KIT':'T1_DE_KIT'}
