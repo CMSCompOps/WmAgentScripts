@@ -71,7 +71,7 @@ def main():
            for extra in outputDataSets:
               bits = extra.split('/')
               if bits[len(bits)-1] not in ods:
-                 ods.append(extra)        
+                 ods.append(bits[len(bits)-1])
 
            inputDataset = getInputDataSet(url, workflow)
            inputDatasetComps = inputDataset.split('/')
