@@ -56,6 +56,35 @@ def getEventCountDataSet(dataset):
 	except ValueError:
        		return -1
 
+def getRunLumiCountDataset(dataset):
+	output=os.popen("./dbssql --limit=10000 --input='find run, count(lumi) where dataset="+dataset+"'"+ "| grep '[0-9]\{1,\}' | awk '{s+=$2}END{print s}'").read()
+	try:
+		int(output)
+		return int(output)
+	except ValueError:
+       		return -1
+
+
+def getRunLumiCountDatasetList(dataset, runlist):
+	lumis=0
+	runChunks=chunks(runlist,30)
+        for runList in runChunks:
+		querry="./dbssql --limit=10000 --input='find run, count(lumi) where dataset="+dataset+" AND ("
+		for run in runList:
+				querry=querry+" run="+str(run) +" OR "
+		querry=querry+' run= '+str(runList[0]) +')'
+		querry=querry+"'| grep '[0-9]\{1,\}' | awk '{s+=$2}END{print s}'"
+		print querry
+		output=os.popen(querry).read()
+		if not output:
+			lumis=lumis
+		try:
+			lumis=lumis+int(output)
+		except ValueError:
+       			lumis=lumis
+	return lumis
+  
+
 # SPlits a list of chunks of size(n)
 def chunks(lis, n):
     return [lis[i:i+n] for i in range(0, len(lis), n)]
@@ -122,6 +151,11 @@ def getInputEvents(url, workflow):
 	BlockBlacklist=request['BlockBlacklist']
 	inputDataSet=request['InputDataset']
 	runWhitelist=request['RunWhitelist']
+	if requestType=='ReReco':
+		if len(runWhitelist)>0:
+			return getRunLumiCountDatasetList(inputDataSet, runWhitelist)
+		else:
+			return getRunLumiCountDataset(dataset)
 	querry='find dataset,sum(block.numevents) where dataset='+inputDataSet
 	events=getEventCountDataSet(inputDataSet)
 	if len(BlockWhitelist)>0:
@@ -134,6 +168,17 @@ def getInputEvents(url, workflow):
 		return float(request['FilterEfficiency'])*events
 	else:
 		return events
+
+def getOutputEvents(url, workflow, dataset):
+	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+	r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
+	r2=conn.getresponse()
+	request = json.read(r2.read())
+	requestType=request['RequestType']
+	if requestType=='ReReco':
+		return getRunLumiCountDataset(dataset)
+	else:
+		return getEventCountDataSet(dataset)
 	
 def main():
 	args=sys.argv[1:]
@@ -146,7 +191,7 @@ def main():
 	inputEvents=getInputEvents(url, workflow)
 	#print inputEvents
 	for dataset in outputDataSets:
-		outputEvents=getEventCountDataSet(dataset)
+		outputEvents=getOutputEvents(url, workflow, dataset)
 		print dataset+" match: "+str(outputEvents/float(inputEvents)*100) +"%"
 	sys.exit(0);
 
