@@ -74,7 +74,6 @@ def getRunLumiCountDatasetList(dataset, runlist):
 				querry=querry+" run="+str(run) +" OR "
 		querry=querry+' run= '+str(runList[0]) +')'
 		querry=querry+"'| grep '[0-9]\{1,\}' | awk '{s+=$2}END{print s}'"
-		print querry
 		output=os.popen(querry).read()
 		if not output:
 			lumis=lumis
@@ -155,7 +154,7 @@ def getInputEvents(url, workflow):
 		if len(runWhitelist)>0:
 			return getRunLumiCountDatasetList(inputDataSet, runWhitelist)
 		else:
-			return getRunLumiCountDataset(dataset)
+			return getRunLumiCountDataset(inputDataset)
 	querry='find dataset,sum(block.numevents) where dataset='+inputDataSet
 	events=getEventCountDataSet(inputDataSet)
 	if len(BlockWhitelist)>0:

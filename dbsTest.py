@@ -154,7 +154,7 @@ def getInputEvents(url, workflow):
 		if len(runWhitelist)>0:
 			return getRunLumiCountDatasetList(inputDataSet, runWhitelist)
 		else:
-			return getRunLumiCountDataset(dataset)
+			return getRunLumiCountDataset(inputDataSet)
 	querry='find dataset,sum(block.numevents) where dataset='+inputDataSet
 	events=getEventCountDataSet(inputDataSet)
 	if len(BlockWhitelist)>0:

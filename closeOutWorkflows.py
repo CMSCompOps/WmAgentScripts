@@ -79,7 +79,7 @@ def findCustodial(url, requestname):
 		return "NoSite"
 
 def classifyCompletedRequests(url, requests):
-	workflows={'ReDigi':[],'MonteCarloFromGEN':{},'MonteCarlo':{} }	
+	workflows={'ReDigi':[],'MonteCarloFromGEN':{},'MonteCarlo':{} , 'ReReco':[]}	
 	for request in requests:
 	    name=request['request_name']
 	    status='NoStatus'
@@ -95,7 +95,7 @@ def classifyCompletedRequests(url, requests):
 				workflows[requestType][site]=[name]
 			else:
 				workflows[requestType][site].append(name)
-		if requestType=='ReDigi':
+		if requestType=='ReDigi' or requestType=='ReReco':
 			workflows[requestType].append(name)
 	return workflows
 
@@ -139,6 +139,27 @@ def testWorkflow(url, workflow):
 			subscribed=0
 			return 0
 	return 1
+
+def closeOutReRecoWorkflows(url, workflows):
+	for workflow in workflows:
+		datasets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
+		closeOutWorkflow=True
+		InputDataset=dbsTest.getInputDataSet(url, workflow)
+		for dataset in datasets:
+			duplicate=False
+			closeOutDataset=True
+			Percentage=PercentageCompletion(url, workflow, dataset)
+			PhedexSubscription=testOutputDataset(dataset)
+			closeOutDataset=False
+			if Percentage==1 and PhedexSubscription and not duplicate:
+				closeOutDataset=True
+			else:
+         			closeOutDataset=False
+			closeOutWorkflow=closeOutWorkflow and closeOutDataset
+			print '| %80s | %100s | %4s | %5s| %3s | %5s|%5s| ' % (workflow, dataset,str(int(Percentage*100)), str(PhedexSubscription), 100, duplicate, closeOutDataset)
+		#if closeOutWorkflow:
+		#	phedexSubscription.closeOutWorkflow(url, workflow)
+	print '----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'
 
 def closeOutRedigiWorkflows(url, workflows):
 	for workflow in workflows:
@@ -192,11 +213,9 @@ def closeOutMonterCarloRequests(url, workflows):
 def PercentageCompletion(url, workflow, dataset):
 	inputEvents=0
 	inputEvents=inputEvents+int(dbsTest.getInputEvents(url, workflow))
-	outputEvents=dbsTest.getEventCountDataSet(dataset)
+	outputEvents=dbsTest.getOutputEvents(url, workflow, dataset)
 	percentage=outputEvents/float(inputEvents)
 	return percentage
-
-
 
 def main():
 	url='cmsweb.cern.ch'
@@ -207,6 +226,7 @@ def main():
 	print '-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'
     	print '| Request                                                                          | OutputDataSet                                                                                        |%Compl|Subscr|Tran|Dupl|ClosOu|'
    	print '-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'
+	closeOutReRecoWorkflows(url, workflowsCompleted['ReReco'])	
 	closeOutRedigiWorkflows(url, workflowsCompleted['ReDigi'])
 	closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarlo'])
 	closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarloFromGEN'])
