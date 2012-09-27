@@ -142,6 +142,8 @@ def testWorkflow(url, workflow):
 
 def closeOutReRecoWorkflows(url, workflows):
 	for workflow in workflows:
+		if 'RelVal' in workflow:
+			continue
 		datasets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
 		closeOutWorkflow=True
 		InputDataset=dbsTest.getInputDataSet(url, workflow)
@@ -157,8 +159,8 @@ def closeOutReRecoWorkflows(url, workflows):
          			closeOutDataset=False
 			closeOutWorkflow=closeOutWorkflow and closeOutDataset
 			print '| %80s | %100s | %4s | %5s| %3s | %5s|%5s| ' % (workflow, dataset,str(int(Percentage*100)), str(PhedexSubscription), 100, duplicate, closeOutDataset)
-		#if closeOutWorkflow:
-		#	phedexSubscription.closeOutWorkflow(url, workflow)
+		if closeOutWorkflow:
+			phedexSubscription.closeOutWorkflow(url, workflow)
 	print '----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'
 
 def closeOutRedigiWorkflows(url, workflows):

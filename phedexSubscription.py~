@@ -57,7 +57,7 @@ def setWorkflowRunning(url, workflowname):
 def abortWorkflow(url, workflowname):
     print workflowname,
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    params = {"requestName" : workflowname,"status" : "rejected"}
+    params = {"requestName" : workflowname,"status" : "aborted"}
     headers={"Content-type": "application/x-www-form-urlencoded",
              "Accept": "text/plain"}
     encodedParams = urllib.urlencode(params)
@@ -139,9 +139,14 @@ def createXML(datasets):
 #returns the output datasets for a given workfow
 def outputdatasetsWorkflow(url, workflow):
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-	r1=conn.request("GET",'/reqmgr/reqMgr/outputDatasetsByRequestName?requestName=' + workflow)
+	r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
 	r2=conn.getresponse()
 	datasets = json.read(r2.read())
+	while 'exception' in datasets:
+		conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+		r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
+		r2=conn.getresponse()
+		datasets = json.read(r2.read())
 	if len(datasets)==0:
 		print "No Outpudatasets for this workflow: "+workflow
 	return datasets

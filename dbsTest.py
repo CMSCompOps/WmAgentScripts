@@ -137,6 +137,11 @@ def getInputEvents(url, workflow):
 	r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
 	r2=conn.getresponse()
 	request = json.read(r2.read())
+	while 'exception' in request:
+		conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+		r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
+		r2=conn.getresponse()
+		request = json.read(r2.read())
 	requestType=request['RequestType']
 	if requestType=='MonteCarlo':
 		if 'RequestNumEvents' in request:
@@ -173,6 +178,11 @@ def getOutputEvents(url, workflow, dataset):
 	r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
 	r2=conn.getresponse()
 	request = json.read(r2.read())
+	while 'exception' in request:
+		conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+		r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
+		r2=conn.getresponse()
+		request = json.read(r2.read())
 	requestType=request['RequestType']
 	if requestType=='ReReco':
 		return getRunLumiCountDataset(dataset)
