@@ -55,7 +55,7 @@ def approveRequest(url,workflow):
 
 
 
-def retrieveSchema(workflowName):
+def retrieveSchema(workflowName, user, group ):
     specURL = os.path.join(reqmgrCouchURL, workflowName, "spec")
     helper = WMWorkloadHelper()
     #print "  retrieving original workflow...",
@@ -106,13 +106,14 @@ def submitWorkflow(schema):
     return details.group(1)
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
+    if len(sys.argv) != 4:
         print "Usage:"
-        print "  ./resubmit WORKFLOW_NAME"
+        print "  ./resubmit WORKFLOW_NAME USER GROUP"
         sys.exit(0)
-
+    user=sys.argv[2]
+    group=sys.argv[3]	
     #print "Going to attempt to resubmit %s..." % sys.argv[1]
-    schema = retrieveSchema(sys.argv[1])
+    schema = retrieveSchema(sys.argv[1], user, group)
     Site=closeOutWorkflows.findCustodial('cmsweb.cern.ch',sys.argv[1] )
     newWorkflow=submitWorkflow(schema)
     approveRequest('cmsweb.cern.ch',newWorkflow)
