@@ -19,7 +19,8 @@ teams_lp = ['production','integration']
 zones = ['FNAL','CNAF','ASGC','IN2P3','RAL','PIC','KIT']
 zone2t1 = {'FNAL':'T1_US_FNAL','CNAF':'T1_IT_CNAF','ASGC':'T1_TW_ASGC','IN2P3':'T1_FR_CCIN2P3','RAL':'T1_UK_RAL','PIC':'T1_ES_PIC','KIT':'T1_DE_KIT'}
 siteblacklist = ['T2_FR_GRIF_IRFU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_RRC_KI','T2_UK_SGrid_Bristol','T2_US_Vanderbilt','T2_CH_CERN']
-sitelistsmallrequests = ['T2_DE_DESY','T2_IT_Pisa','T2_ES_CIEMAT','T2_IT_Bari','T2_US_Purdue','T2_US_Caltech','T2_CN_Beijing','T2_DE_RWTH','T2_IT_Legnaro','T2_IT_Rome','T2_US_Florida','T2_US_MIT','T2_US_Wisconsin','T2_US_UCSD','T2_US_Nebraska']
+siteblacklist.extend(['T2_PL_Warsaw','T2_RU_PNPI','T2_BE_IIHE','T2_BE_UCL','T2_KR_KNU'])
+sitelistsmallrequests = ['T2_DE_DESY','T2_IT_Pisa','T2_ES_CIEMAT','T2_IT_Bari','T2_US_Purdue','T2_US_Caltech','T2_CN_Beijing','T2_DE_RWTH','T2_IT_Legnaro','T2_IT_Rome','T2_US_Florida','T2_US_MIT','T2_US_Wisconsin','T2_US_UCSD','T2_US_Nebraska','T2_EE_Estonia']
 cachedoverview = '/afs/cern.ch/user/s/spinoso/public/overview.cache'
 forceoverview = 0
 tcount_hp = 0
@@ -28,6 +29,8 @@ tcount = 0
 
 def get_linkedt2s(custodialT1):
 	list = []
+	if custodialT1 == '':
+		return []
 	try:
 		url = "https://cmsweb.cern.ch/phedex/datasvc/json/prod/links?status=ok&to=%s_Buffer&from=T2_*" % custodialT1
 		response = urllib2.urlopen(url)
@@ -53,6 +56,7 @@ def getsitelist(zone):
 	else:
 		sitelist = zone.split(',')
 		t1count = 0
+		custodialT1 = ''
 		for i in sitelist:
 			if 'T1_' in i:
 				custodialT1 = i
@@ -623,7 +627,7 @@ def main():
 		# type
 		if not 'MonteCarlo' in reqinfo[w]['type']:
 			print "%s: not a MonteCarlo/MonteCarloFromGEN request!" % w
-			sys.exit(1)
+			#sys.exit(1)
 
 		# priority
 		priority = reqinfo[w]['priority']
@@ -653,7 +657,9 @@ def main():
 		if 'T2_US_Nebraska' in sitelist: # T3_US_Colorado hook
 			newsitelist.append('T3_US_Colorado')
 
-		if reqinfo[w]['expectedevents'] > 0 and ( reqinfo[w]['expectedevents'] <= 200000 or options.small ):
+		#if reqinfo[w]['expectedevents'] > 0 and ( reqinfo[w]['priority'] >= 100000 or reqinfo[w]['cpuhours'] <= 100000 or options.small ):
+		if reqinfo[w]['priority'] >= 100000 or reqinfo[w]['cpuhours'] <= 100000 or options.small:
+			small_active='(small)'
 			oldsitelist = newsitelist[:]
 			newsitelist = []
 			for i in oldsitelist:
@@ -661,6 +667,8 @@ def main():
 					newsitelist.append(i)
 				elif i in sitelistsmallrequests:
 					newsitelist.append(i)
+		else:
+			small_active=''
 		# processing version
 		
 		if procversion == 'auto':
@@ -694,9 +702,9 @@ def main():
 		print
 	for w in list:
 		if options.debug:
-			suminfo = "%s %s %s %s %s" % (w,assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['procversion'],assign_data[w]['whitelist'])
+			suminfo = "%s %s %s %s %s %s" % (w,assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['procversion'],small_active,assign_data[w]['whitelist'])
 		else:
-			suminfo = "%s %s %s %s %s" % (w,assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['procversion'],assign_data[w]['zone'])
+			suminfo = "%s %s %s %s %s %s" % (w,assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['procversion'],small_active,assign_data[w]['zone'])
 		if options.debug and options.test:
 			print "TESTED:\t%s\n" % suminfo
 		if not options.test:

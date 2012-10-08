@@ -365,18 +365,22 @@ def main():
 	overview = getoverview()
 
 	listtype = ['MonteCarlo','MonteCarloFromGEN']
-	liststatus = ['acquired','running']
-	list = getRequestsByTypeStatus(listtype,liststatus)
-	#list = list[1:30]
-
-	reqinfo = {}
 
 	print
-	acqrun = len(list)
+	print "| *Requests by status* ||"
+	for liststatus in ['acquired','running','completed','closed-out','assignment-approved']:
+		list = getRequestsByTypeStatus(listtype,liststatus)
+		print "| %s | %s |" % (liststatus,len(list))
+	print
+
+	liststatus = ['acquired','running']
+	list = getRequestsByTypeStatus(listtype,liststatus)
 	#print "Number of workflows in %s: %s" % (liststatus, len(list))
 	if len(list) == 0:
 		sys.exit(0)
 	count = 1
+
+	reqinfo = {}
 	for workflow in list:
 		#print "%s/%s Get workflow: %s" % (count,len(list),workflow)
 		reqinfo[workflow] = getWorkflowInfo(workflow)
@@ -385,6 +389,10 @@ def main():
 #			print "\t%s: %s" % (i,reqinfo[workflow][i])
 #		print
 		count = count + 1
+
+	#list = list[1:30]
+
+
 	print
 
 	team = []
@@ -429,11 +437,9 @@ def main():
 
 	liststatus = ['acquired']
 	list = getRequestsByTypeStatus(listtype,liststatus)
-	#list = list[1:30]
 
 	reqinfo = {}
 
-	acq = len(list)
 	#print "Number of workflows in %s: %s" % (liststatus, len(list))
 	if len(list) == 0:
 		sys.exit(0)
@@ -487,10 +493,6 @@ def main():
 	print s
 		
 	print
-	print "| *Requests by status* ||"
-	for liststatus in ['acquired','running','completed','closed-out','assignment-approved']:
-		list = getRequestsByTypeStatus(listtype,liststatus)
-		print "| %s | %s |" % (liststatus,len(list))
         sys.exit(0)
 
 if __name__ == "__main__":

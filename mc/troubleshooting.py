@@ -1,4 +1,4 @@
-#!/usr/bin/env python -w
+#!/usr/bin/env
 #TODO select zone
 #TODO analysis (running >=95%)
 #TODO merge -p -t -s
@@ -9,7 +9,8 @@ import httplib
 import datetime
 import time
 import shutil
-import datetime
+from datetime import timedelta
+from datetime import date
 
 dashost = 'https://cmsweb.cern.ch'
 reqmgrsocket='vocms204.cern.ch'
@@ -148,7 +149,7 @@ def getWorkflowInfo(workflow):
 	if type in ['MonteCarlo']:
 		expectedevents = int(reqevts)
 	elif type in ['MonteCarloFromGEN']:
-		[inputdataset['events'],inputdataset['status']] = getdsdetail(inputdataset['name'])
+		[inputdataset['events'],inputdataset['date'],inputdataset['status']] = getdsdetail(inputdataset['name'])
 		expectedevents = int(filtereff*inputdataset['events'])
 	else:
 		expectedevents = -1
@@ -187,8 +188,9 @@ def getWorkflowInfo(workflow):
 		oel = {}
 		oel['name'] = o
 		if status in ['running','completed','closed-out','announced']:
-			[oe,ost] = getdsdetail(o)
+			[oe,od,ost] = getdsdetail(o)
 			oel['events'] = oe
+			oel['date'] = od
 			oel['status'] = ost
 		
 			phreqinfo = {}
@@ -305,46 +307,28 @@ def getnewoverview():
 
 
 def getdsdetail(dataset):
-	[e,st] = dbs_get_data(dataset)
+	[e,d,st] = dbs_get_data(dataset)
 	if e == -1:
-		return [0,'']
+		return [0,0,'']
 	else:
-		return [e,st]
+		return [e,d,st]
 
 def dbs_get_data(dataset):
-	output=os.popen("/afs/cern.ch/user/s/spinoso/public/dbssql --input='find sum(block.numevents),dataset.status where dataset="+dataset+"'"+ "|grep '[0-9]\{1,\}'").read()
+	output=os.popen("/afs/cern.ch/user/s/spinoso/public/dbssql --input='find sum(block.numevents),max(block.moddate),dataset.status where dataset="+dataset+"'"+ "|grep '[0-9]\{1,\}'").read()
 	ret = output.split(' ')
 	try:
 		e = int(ret[0])
 	except:
 		e = 0
 	try:
-		st = ret[1].rstrip()
+		d = int(ret[1])
+	except:
+		d = 0
+	try:
+		st = ret[2].rstrip()
 	except:
 		st = ''
-	return [e,st]
-
-def getnextprocessingversion(r):
-	c = 0
-	[e,st] = [1,'xxx']
-	y = 0
-	for i in r['ods']:
-		if 'GEN-SIM' in i:
-			y = 1
-			break
-	if y:
-		while e > 0:
-			acqera = getacqera(r)
-			c = c + 1
-			nextoutputdataset = '/%s/%s-%s-v%s/GEN-SIM' % (r['primaryds'],acqera,r['globaltag'],c)
-			[e,st] = getdsdetail(nextoutputdataset)
-		return '%s-v%s' % (r['globaltag'],c)
-	else:
-		return '-'
-
-def getacqera(r):
-	prepid = r['prepid']
-	return prepid.split('-')[1]
+	return [e,d,st]
 
 def main():
 	global overview
@@ -354,7 +338,8 @@ def main():
 	parser.add_option('-n', '--no-running', help='check for running requests with 0 running',dest='norunning',action="store_true")
 	parser.add_option('-e', '--enough-events', help='check for running requests having >=90% events',dest='enough',action="store_true")
 	parser.add_option('-c', '--close', help='running, transfer 100%% and dataset >=95%%+PRODUCTION status, can be set as VALID',dest='close',action="store_true")
-	parser.add_option('-s', '--stuck', help='check for stuck requests (staying in their status for too much)',dest='stuck',action="store_true")
+	parser.add_option('-s', '--stuck', help='check for stuck requests (dataset moddate older than 1 week)',dest='stuck',action="store_true")
+	parser.add_option('-o', '--old', help='check for requests with very old injection date',dest='old',action="store_true")
 	parser.add_option('-l', '--lessevents', help='check for less events than expected',dest='lessevents',action="store_true")
 
 	(options,args) = parser.parse_args()
@@ -370,8 +355,8 @@ def main():
 			r = getWorkflowInfo(w)
 			for o in r['outputdataset']:
 				if 'perc' in o['phtrinfo'].keys():
-					if o['phtrinfo']['perc'] < 100 and o['phtrinfo']['time_create_days'] > 3:
-						print "%s (created on %s, custodial is %s, %s %s%%, https://cmsweb.cern.ch/phedex/prod/Request::View?request=%s)" % (w,o['phtrinfo']['time_create'].strftime('%b %d'),r['custodialt1'],o['name'],o['phtrinfo']['perc'],o['phreqinfo']['id'])
+					if o['phtrinfo']['perc'] < 100 and o['phtrinfo']['time_create_days'] > 8:
+						print "%s (%s/%s %s %s%% https://cmsweb.cern.ch/phedex/prod/Request::View?request=%s)" % (w,o['phtrinfo']['time_create'].strftime('%b %d'),r['custodialt1'],o['name'],o['phtrinfo']['perc'],o['phreqinfo']['id'])
 
 	elif options.lessevents: # 
 		for s in ['completed','running']:
@@ -444,13 +429,30 @@ def main():
 		for d in ds:
 			print d
 
-	elif options.stuck: # enough events
-		print "Workflows stuck since a long time:\n"
-		list = getRequestsByTypeStatus(['MonteCarlo','MonteCarloFromGEN'],['acquired','running'])
+	elif options.stuck:
+		n = 7
+		print "Workflows running with output dataset stuck since %s days:\n" % n
+		list = getRequestsByTypeStatus(['MonteCarlo','MonteCarloFromGEN'],['running'])
+		now = datetime.datetime.now()
+		d = timedelta(days=n)
 		for w in list:
 			r = getWorkflowInfo(w)
-			if ( r['requestdays'] > 50 and r['status'] in ['acquired','running']):
-				print "%s (injected %s days ago, status is %s)" % (w,r['requestdays'],r['status'])
+			for o in r['outputdataset']:
+				if o['date'] == 0:	
+					continue
+				t = now-datetime.datetime.fromtimestamp(o['date'])
+				if ( t > d and r['status'] in ['running']):
+					print "%s (%s days)" % (w,d.days)
+					continue
+		print
+
+	elif options.old: 
+		print "Workflows injected long time ago and still running/completed" 
+		list = getRequestsByTypeStatus(['MonteCarlo','MonteCarloFromGEN'],['running','completed'])
+		for w in list:
+			r = getWorkflowInfo(w)
+			if r['requestdays'] > 14:
+				print "%s (%s days)" % (w,r['requestdays'])
 		print
 
 	print
@@ -458,4 +460,3 @@ def main():
 
 if __name__ == "__main__":
         main()
-
