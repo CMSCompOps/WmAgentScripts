@@ -218,7 +218,7 @@ def assignRequest(url,workflow,team,site,era,procversion, activity, lfn, maxmerg
         print "Exiting!"
   	sys.exit(1)
     conn.close()
-    print 'Assigned workflow:',workflow,'to site:',site,'acquisition era:',era,'processing version:',procversion,'lfn:',lfn,'maxmergeevents:',maxmergeevents,'maxRSS:',maxRSS,'maxVSize:',maxVSize
+    print 'Assigned workflow:',workflow,'to site:',site,'acquisition era:',era,'team',team,'processing version:',procversion,'lfn:',lfn,'maxmergeevents:',maxmergeevents,'maxRSS:',maxRSS,'maxVSize:',maxVSize
     return
 
 
@@ -315,7 +315,7 @@ def main():
            if not team:
               priority = int(getPriority(url, workflow))
               if priority < 100000:
-                 team = 't1'
+                 team = 'processing'
               else:
                  team = 't1_highprio'
 
@@ -382,7 +382,7 @@ def main():
                  print 'Skipping workflow ',workflow
            else:
               if restrict == 'None' or restrict == siteUse:
-                 print 'Would assign ',workflow,' with ',era,procversion,lfn,siteUse,team,maxmergeevents,activity,maxRSS,maxVSize
+                 print 'Would assign ',workflow,' with ','acquisition era:',era,'version:',procversion,'lfn:',lfn,'site:',siteUse,'team:',team,'maxmergeevents:',maxmergeevents
               else:
                  print 'Would skip workflow ',workflow
 
