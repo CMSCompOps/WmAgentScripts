@@ -234,6 +234,7 @@ def main():
 	parser.add_option('-x', '--restrict', help='Only assign workflows for this site',dest='restrict')
 	parser.add_option('-r', '--rssmax', help='Max RSS',dest='maxRSS')
 	parser.add_option('-v', '--vsizemax', help='Max VMem',dest='maxVSize')
+	parser.add_option('-a', '--aextension', help='Use _ext special name',action="store_true",dest='extension')
 	(options,args) = parser.parse_args()
 	if not options.filename:
 		print "A filename is required"
@@ -348,8 +349,11 @@ def main():
               specialName = 'LowPU2010_DR42_'
 
            # Construct processed dataset version
+           extTag = ''
+           if options.extension:
+              extTag = '_ext'
            if not procversion:
-              procversion = specialName+pileupScenario+'_'+globalTag+'-v'
+              procversion = specialName+pileupScenario+'_'+globalTag+extTag+'-v'
               iVersion = getDatasetVersion(url, workflow, era, procversion)
               procversion = procversion+str(iVersion)
 
