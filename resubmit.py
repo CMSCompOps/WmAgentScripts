@@ -70,9 +70,9 @@ def retrieveSchema(workflowName, user, group ):
 	    schema['RequestSizeEvents'] = value
 	    #schema['RequestNumEvents'] = int(value)
 	elif key=='Requestor':
-	    schema['Requestor']='efajardo'
+	    schema['Requestor']=user
 	elif key=='Group':
-	    schema['Group']='DATAOPS'
+	    schema['Group']=group
 	elif value != None:
             schema[key] = value
     #schema['TimePerEvent']=60

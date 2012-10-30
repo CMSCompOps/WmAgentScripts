@@ -5,8 +5,12 @@ from xml.dom.minidom import getDOMImplementation
 
 def classifyRunningRequests(url, requests):
 	datasetsUnsuscribed={}
+	datasetsUnsuscribedSpecialQueue=[]
 	for request in requests:
 	    name=request['request_name']
+	    team=closeOutWorkflows.getRequestTeam(url, name)
+	    if team=='analysis':
+		continue
 	    status='NoStatus'
 	    if 'status' in request.keys():
 			status=request['status']
@@ -22,23 +26,31 @@ def classifyRunningRequests(url, requests):
 			site=closeOutWorkflows.findCustodial(url, name)
 			if site=='NoSite':
 				continue
-			datasetWorkflow=phedexSubscription.outputdatasetsWorkflow(url, name)
-			for dataset in datasetWorkflow:
-						if dataset == "/SMS-T2tt_Mgluino-225to1200_mLSP-0to1000_8TeV-Pythia6Z/Summer12-START52_V9_FSIM-v1/AODSIM": 
-							print "Skipping",dataset
-							continue
-						inputEvents=0
-						inputEvents=inputEvents+int(dbsTest.getInputEvents(url, name))
-						outputEvents=dbsTest.getEventCountDataSet(dataset)
-						percentage=outputEvents/float(inputEvents)
-						if float(percentage)>float(0.20):
-							if not phedexSubscription.TestCustodialSubscriptionRequested(url, dataset, site):
-								if site not in datasetsUnsuscribed.keys():
-									datasetsUnsuscribed[site]=[dataset]
-								else:
-									datasetsUnsuscribed[site].append(dataset)
-							
-			
+			if closeOutWorkflows.getRequestTeam(url, name)=='analysis': # If the request is running in the special queue
+				datasetWorkflow=phedexSubscription.outputdatasetsWorkflow(url, request)
+				for dataset in datasetWorkflow:
+					PhedexSubscriptionDone=phedexSubscription.TestSubscritpionSpecialRequest(url, dataset, 'T2_DE_DESY')
+					if not PhedexSubscriptionDone:
+						datasetsUnsuscribedSpecialQueue.append(dataset)
+	
+			else:
+				datasetWorkflow=phedexSubscription.outputdatasetsWorkflow(url, name)
+				for dataset in datasetWorkflow:
+					if dataset == "/SMS-T2tt_Mgluino-225to1200_mLSP-0to1000_8TeV-Pythia6Z/Summer12-START52_V9_FSIM-v1/AODSIM": 
+						print "Skipping",dataset
+						continue
+					inputEvents=0
+					inputEvents=inputEvents+int(dbsTest.getInputEvents(url, name))
+					outputEvents=dbsTest.getEventCountDataSet(dataset)
+					percentage=outputEvents/float(inputEvents)
+					if float(percentage)>float(0):
+						if not phedexSubscription.TestCustodialSubscriptionRequested(url, dataset, site):
+							if site not in datasetsUnsuscribed.keys():
+								datasetsUnsuscribed[site]=[dataset]
+							else:
+								datasetsUnsuscribed[site].append(dataset)
+	if len(datasetsUnsuscribedSpecialQueue)>0:				
+		phedexSubscription.makeCustodialReplicaRequest(url, 'T2_DE_DESY',datasetsUnsuscribedSpecialQueue, "Replica Subscription for Request in special production queue")		
 	return datasetsUnsuscribed
 
 

@@ -201,7 +201,10 @@ def main():
 	#print inputEvents
 	for dataset in outputDataSets:
 		outputEvents=getOutputEvents(url, workflow, dataset)
-		print dataset+" match: "+str(outputEvents/float(inputEvents)*100) +"%"
+		if inputEvents!=0:
+			print dataset+" match: "+str(outputEvents/float(inputEvents)*100) +"%"
+		else:
+			print "Input Events 0"
 	sys.exit(0);
 
 if __name__ == "__main__":

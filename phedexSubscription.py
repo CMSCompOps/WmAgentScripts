@@ -4,6 +4,37 @@ import urllib2,urllib, httplib, sys, re, os
 from xml.dom.minidom import getDOMImplementation
 
 
+
+def TestAcceptedSubscritpionSpecialRequest(url, dataset, site):
+	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+	r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset='+dataset+'&node='+site+'&type=xfer'+'&approval=approved')
+	r2=conn.getresponse()
+	result = json.read(r2.read())
+	requests=result['phedex']
+	if 'request' not in requests.keys():
+		return False
+	for request in result['phedex']['request']:
+		for node in request['node']:
+			if node['node']==site and node['decision']=='approved':
+				return True
+	return False
+
+
+
+def TestSubscritpionSpecialRequest(url, dataset, site):
+	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+	r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset='+dataset+'&node='+site+'&type=xfer')
+	r2=conn.getresponse()
+	result = json.read(r2.read())
+	requests=result['phedex']
+	if 'request' not in requests.keys():
+		return False
+	for request in result['phedex']['request']:
+		for node in request['node']:
+			if node['name']==site:
+				return True
+	return False
+
 def TestCustodialSubscriptionRequested(url, dataset, site):
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset='+dataset+'&node='+site+'_MSS')
@@ -25,6 +56,8 @@ def TestCustodialSubscriptionRequested(url, dataset, site):
 			if requestSubscription['custodial']=='y':
 				return True
 	return False
+
+
 #Changes the state of a workflow to closed-out
 def closeOutWorkflow(url, workflowname):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -178,6 +211,14 @@ def makeCustodialMoveRequest(url, site,datasets, comments):
 	response = conn.getresponse()	
 	#print response.status, response.reason
         #print response.read()
+
+def makeCustodialReplicaRequest(url, site,datasets, comments):	
+	dataXML=createXML(datasets)
+	params = urllib.urlencode({ "node" : site,"data" : dataXML, "group": "DataOps", "priority":'normal', "custodial":"y","request_only":"y" ,"move":"n","no_mail":"n", "comments":comments})	
+	conn=createConnection(url)
+	conn.request("POST", "/phedex/datasvc/json/prod/subscribe", params)
+	response = conn.getresponse()	
+
 
 def main():
 	args=sys.argv[1:]
