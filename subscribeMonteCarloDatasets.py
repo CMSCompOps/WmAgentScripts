@@ -8,9 +8,6 @@ def classifyRunningRequests(url, requests):
 	datasetsUnsuscribedSpecialQueue=[]
 	for request in requests:
 	    name=request['request_name']
-	    team=closeOutWorkflows.getRequestTeam(url, name)
-	    if team=='analysis':
-		continue
 	    status='NoStatus'
 	    if 'status' in request.keys():
 			status=request['status']
@@ -20,7 +17,9 @@ def classifyRunningRequests(url, requests):
 	    if 'type' in request.keys():
 			 requestType=request['type']
 	    else:
-		continue	  
+		continue
+            print name		 	  
+	    team=closeOutWorkflows.getRequestTeam(url, name)	
 	    if status=='running':
 		if requestType=='MonteCarloFromGEN' or requestType=='MonteCarlo':
 			site=closeOutWorkflows.findCustodial(url, name)
@@ -39,16 +38,15 @@ def classifyRunningRequests(url, requests):
 					if dataset == "/SMS-T2tt_Mgluino-225to1200_mLSP-0to1000_8TeV-Pythia6Z/Summer12-START52_V9_FSIM-v1/AODSIM": 
 						print "Skipping",dataset
 						continue
-					inputEvents=0
-					inputEvents=inputEvents+int(dbsTest.getInputEvents(url, name))
-					outputEvents=dbsTest.getEventCountDataSet(dataset)
-					percentage=outputEvents/float(inputEvents)
+					percentage=closeOutWorkflows.PercentageCompletion(url, name, dataset)
 					if float(percentage)>float(0):
 						if not phedexSubscription.TestCustodialSubscriptionRequested(url, dataset, site):
 							if site not in datasetsUnsuscribed.keys():
 								datasetsUnsuscribed[site]=[dataset]
 							else:
 								datasetsUnsuscribed[site].append(dataset)
+	    else:
+		continue
 	if len(datasetsUnsuscribedSpecialQueue)>0:				
 		phedexSubscription.makeCustodialReplicaRequest(url, 'T2_DE_DESY',datasetsUnsuscribedSpecialQueue, "Replica Subscription for Request in special production queue")		
 	return datasetsUnsuscribed

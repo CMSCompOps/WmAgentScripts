@@ -215,7 +215,14 @@ def getRequestTeam(url, workflow):
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
 	r2=conn.getresponse()
-	request = json.read(r2.read())		 
+	request = json.read(r2.read())
+	while 'exception' in request:
+		conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+		r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
+		r2=conn.getresponse()
+		request = json.read(r2.read())
+	if 'teams' not in request:
+		return 'NoTeam'		 
 	teams=request['teams']
 	if len(teams)<1:
 		return 'NoTeam'
