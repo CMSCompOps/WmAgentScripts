@@ -318,7 +318,7 @@ def main():
               if priority < 100000:
                  team = 'processing'
               else:
-                 team = 't1_highprio'
+                 team = 't1'
 
            specialName = ''
 
