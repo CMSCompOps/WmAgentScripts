@@ -19,8 +19,8 @@ teams_lp = ['production','integration']
 zones = ['FNAL','CNAF','ASGC','IN2P3','RAL','PIC','KIT']
 zone2t1 = {'FNAL':'T1_US_FNAL','CNAF':'T1_IT_CNAF','ASGC':'T1_TW_ASGC','IN2P3':'T1_FR_CCIN2P3','RAL':'T1_UK_RAL','PIC':'T1_ES_PIC','KIT':'T1_DE_KIT'}
 siteblacklist = ['T2_FR_GRIF_IRFU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_RRC_KI','T2_UK_SGrid_Bristol','T2_US_Vanderbilt','T2_CH_CERN']
-siteblacklist.extend(['T2_PL_Warsaw','T2_RU_PNPI','T2_BE_IIHE','T2_BE_UCL','T2_KR_KNU'])
-sitelistsmallrequests = ['T2_DE_DESY','T2_IT_Pisa','T2_ES_CIEMAT','T2_IT_Bari','T2_US_Purdue','T2_US_Caltech','T2_CN_Beijing','T2_DE_RWTH','T2_IT_Legnaro','T2_IT_Rome','T2_US_Florida','T2_US_MIT','T2_US_Wisconsin','T2_US_UCSD','T2_US_Nebraska','T2_EE_Estonia']
+siteblacklist.extend(['T2_BE_UCL','T2_BE_IIHE','T2_PL_Warsaw','T2_RU_PNPI','T2_KR_KNU','T2_UA_KIPT','T2_AT_Vienna'])
+sitelistsmallrequests = ['T2_DE_DESY','T2_IT_Pisa','T2_ES_CIEMAT','T2_IT_Bari','T2_US_Purdue','T2_US_Caltech','T2_CN_Beijing','T2_DE_RWTH','T2_IT_Legnaro','T2_IT_Rome','T2_US_Florida','T2_US_MIT','T2_US_Wisconsin','T2_US_UCSD','T2_US_Nebraska','T2_RU_IHEP','T3_US_Colorado']
 cachedoverview = '/afs/cern.ch/user/s/spinoso/public/overview.cache'
 forceoverview = 0
 tcount_hp = 0
@@ -657,7 +657,6 @@ def main():
 		if 'T2_US_Nebraska' in sitelist: # T3_US_Colorado hook
 			newsitelist.append('T3_US_Colorado')
 
-		#if reqinfo[w]['expectedevents'] > 0 and ( reqinfo[w]['priority'] >= 100000 or reqinfo[w]['cpuhours'] <= 100000 or options.small ):
 		if reqinfo[w]['priority'] >= 100000 or reqinfo[w]['cpuhours'] <= 100000 or options.small:
 			small_active='(small)'
 			oldsitelist = newsitelist[:]
@@ -674,7 +673,6 @@ def main():
 		if procversion == 'auto':
 			newprocversion = "%s-%s" % (reqinfo[w]['globaltag'],version)
 			dataset = '/%s/%s-%s/%s' % (reqinfo[w]['primaryds'],newacqera,newprocversion,reqinfo[w]['outputtier'])
-			#print dataset
 			if isInDBS(dataset):
 				print "Processing version already in use for %s : %s" % (w,dataset)
 				sys.exit(1)
@@ -685,6 +683,8 @@ def main():
 			if isInDBS(dataset):
 				print "Processing version already in use for %s : %s" % (w,dataset)
 				sys.exit(1)
+		if options.debug:
+			print "Output dataset: %s" % dataset
 
 		assign_data[w] = {}
 		assign_data[w]['team'] = team

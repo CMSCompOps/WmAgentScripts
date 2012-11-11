@@ -12,6 +12,7 @@ import httplib
 import datetime
 import time
 import shutil
+import math
 
 eras = ['Summer11','Summer12']
 tftiers = ['GEN-SIM','GEN-SIM-RECO','DQM','AODSIM']
@@ -231,7 +232,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 		if nodbs:
 			[inputdataset['events'],inputdataset['status']] = [0,'']
 		else:
-			[inputdataset['events'],inputdataset['status']] = getdsdetail(inputdataset['name'])
+			[inputdataset['events'],inputdataset['status'],inputdataset['createts'],inputdataset['lastmodts']] = getdsdetail(inputdataset['name'])
 		if nodbs:
 			inputdataset['lumicount'] = 0
 		else:
@@ -246,9 +247,9 @@ def getWorkflowInfo(workflow,nodbs=0):
 		except:
 			expectedjobcpuhours = 0
 	else:
-		expectedevents = -1
-		expectedjobs = -1
-		expectedjobcpuhours = -1
+		expectedevents = 0
+		expectedjobs = 0
+		expectedjobcpuhours = 0
 	
 	expectedtotalsize = sizeev * expectedevents / 1000000
 	j = {}
@@ -282,16 +283,26 @@ def getWorkflowInfo(workflow,nodbs=0):
                 print "No Outpudatasets for this workflow: "+workflow
 	outputdataset = []
 	eventsdone = 0
+
+	cpuhours = timeev*expectedevents/3600
+	etah = 0
 	for o in ods:
 		oel = {}
 		oel['name'] = o
 		if 1:
 			if nodbs:
-				[oe,ost] = [0,'']
+				[oe,ost,ocreatets,olastmodts] = [0,'',0,0]
 			else:
-				[oe,ost] = getdsdetail(o)
+				[oe,ost,ocreatets,olastmodts] = getdsdetail(o)
 			oel['events'] = oe
 			oel['status'] = ost
+			oel['createts'] = ocreatets
+			oel['lastmodts'] = olastmodts
+
+			if oel['createts'] > 0 and j['running']>0:
+				etah = etah + ( float(expectedevents) / oel['events'] - 1 ) * (oel['lastmodts']-oel['createts'])/3600/j['running']
+			else:
+				etah = 0
 		
 			phreqinfo = {}
        		 	url='https://cmsweb.cern.ch/phedex/datasvc/json/prod/RequestList?dataset=' + o
@@ -334,8 +345,8 @@ def getWorkflowInfo(workflow,nodbs=0):
 					else:
 						phtype = 'Move'
 					phtrinfo['node'] = node
-					phtrinfo['time_create'] = datetime.datetime.fromtimestamp(int(i['time_create']))
-					phtrinfo['time_create_days'] = (datetime.datetime.now() - phtrinfo['time_create']).days
+					phtrinfo['time_create'] = (datetime.datetime.fromtimestamp(int(i['time_create']))).ctime()
+					phtrinfo['time_create_days'] = (datetime.datetime.now() - datetime.datetime.fromtimestamp(int(i['time_create']))).days
 					try:
 						phtrinfo['perc'] = int(float(i['percent_bytes']))
 					except:
@@ -345,9 +356,8 @@ def getWorkflowInfo(workflow,nodbs=0):
 			outputdataset.append(oel)
 		eventsdone = eventsdone + oe
 
-	cpuhours = timeev*expectedevents/3600
 	remainingcpuhours = timeev*(expectedevents-eventsdone)/3600
-	return {'filtereff':filtereff,'type':type,'status':status,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'sizeev':sizeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'zone':getzonebyt1(custodialt1),'js':j,'outputdataset':outputdataset,'cpuhours':cpuhours,'remainingcpuhours':remainingcpuhours,'team':team,'acquisitionEra':acquisitionEra,'requestdays':requestdays,'processingVersion':processingVersion,'events_per_job':events_per_job,'lumis_per_job':lumis_per_job,'expectedjobs':expectedjobs,'expectedjobcpuhours':expectedjobcpuhours,'cmssw':cmssw,'expectedtotalsize':expectedtotalsize}
+	return {'filtereff':filtereff,'type':type,'status':status,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'sizeev':sizeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'zone':getzonebyt1(custodialt1),'js':j,'outputdataset':outputdataset,'cpuhours':cpuhours,'etah':math.ceil(etah*10)/10,'remainingcpuhours':remainingcpuhours,'team':team,'acquisitionEra':acquisitionEra,'requestdays':requestdays,'processingVersion':processingVersion,'events_per_job':events_per_job,'lumis_per_job':lumis_per_job,'expectedjobs':expectedjobs,'expectedjobcpuhours':expectedjobcpuhours,'cmssw':cmssw,'expectedtotalsize':expectedtotalsize}
 
 def getpriorities(reqinfo):
 	priorities = []
@@ -409,11 +419,11 @@ def getnewoverview():
 
 
 def getdsdetail(dataset):
-	[e,st] = dbs_get_data(dataset)
+	[e,st,createts,lastmodts] = dbs_get_data(dataset)
 	if e == -1:
-		return [0,'',0]
+		return [0,'',0,0]
 	else:
-		return [e,st]
+		return [e,st,createts,lastmodts]
 
 def dbs_get_lumicount(dataset):
 	q = "/afs/cern.ch/user/s/spinoso/public/dbssql --input='find count(lumi) where dataset="+dataset+"'"
@@ -426,7 +436,7 @@ def dbs_get_lumicount(dataset):
 	return int(lc)
 
 def dbs_get_data(dataset):
-	q = "/afs/cern.ch/user/s/spinoso/public/dbssql --input='find sum(block.numevents),dataset.status where dataset="+dataset+"'"
+	q = "/afs/cern.ch/user/s/spinoso/public/dbssql --input='find sum(block.numevents),dataset.status,dataset.createdate,max(block.moddate) where dataset="+dataset+"'"
 	output=os.popen(q+ "|grep '[0-9]\{1,\}'").read()
 	ret = output.split(' ')
 	try:
@@ -437,26 +447,15 @@ def dbs_get_data(dataset):
 		st = ret[1].rstrip()
 	except:
 		st = ''
-	return [int(e),st]
-
-def getnextprocessingversion(r):
-	c = 0
-	[e,st] = [1,'xxx']
-	y = 0
-	for i in r['ods']:
-		if 'GEN-SIM' in i:
-			y = 1
-			break
-	if y:
-		while e > 0:
-			acqera = getacqera(r)
-			c = c + 1
-			nextoutputdataset = '/%s/%s-%s-v%s/GEN-SIM' % (r['primaryds'],acqera,r['globaltag'],c)
-			[e,st] = getdsdetail(nextoutputdataset)
-			#print [e,st]
-		return '%s-v%s' % (r['globaltag'],c)
-	else:
-		return '-'
+	try:
+		createts = int(ret[2])
+	except:
+		createts = 0
+	try:
+		lastmodts = int(ret[3])
+	except:
+		lastmodts = 0
+	return [int(e),st,createts,lastmodts]
 
 def getacqera(r):
 	prepid = r['prepid']
@@ -567,8 +566,8 @@ def main():
 		for w in list:
 			reqinfo[w] = getWorkflowInfo(w,nodbs=nodbs)
 			addToSummary(reqinfo[w])
-			print "%s (%s,%s at %s)" % (w,reqinfo[w]['type'],reqinfo[w]['status'],reqinfo[w]['zone'])
-			print " Priority: %s Team: %s Timeev: %s Jobs: %s Sizeev: %s Hours/job: %s\n ReqEvents: %s ExpectedEvts/job: %s FilterEff: %s %s Lumis/Job: %s" % (reqinfo[w]['priority'],reqinfo[w]['team'],reqinfo[w]['timeev'],reqinfo[w]['expectedjobs'],reqinfo[w]['sizeev'],reqinfo[w]['expectedjobcpuhours'],reqinfo[w]['expectedevents'],reqinfo[w]['events_per_job']*reqinfo[w]['filtereff'],reqinfo[w]['filtereff'],reqinfo[w]['cmssw'],reqinfo[w]['lumis_per_job'])
+			print "%s (%s,%s @ %s)" % (w,reqinfo[w]['type'],reqinfo[w]['status'],reqinfo[w]['zone'])
+			print " Priority: %s Team: %s Timeev: %s Jobs: %s Sizeev: %s Hours/job: %s\n ExpectedEvts/job: %s FilterEff: %s %s Lumis/Job: %s" % (reqinfo[w]['priority'],reqinfo[w]['team'],reqinfo[w]['timeev'],reqinfo[w]['expectedjobs'],reqinfo[w]['sizeev'],reqinfo[w]['expectedjobcpuhours'],reqinfo[w]['events_per_job']*reqinfo[w]['filtereff'],reqinfo[w]['filtereff'],reqinfo[w]['cmssw'],reqinfo[w]['lumis_per_job'],)
 			print " PrimaryDataset: %s GlobalTag: %s CPUHours: %s" % (reqinfo[w]['primaryds'],reqinfo[w]['globaltag'],reqinfo[w]['cpuhours'])
 			if reqinfo[w]['type'] != 'MonteCarlo':
 				print " InputDataset: %s" % (reqinfo[w]['inputdataset'])
@@ -608,7 +607,8 @@ def main():
 			addToSummary(reqinfo[w])
 			print "%s (%s,%s,%s at %s)" % (w,reqinfo[w]['prepid'],reqinfo[w]['type'],reqinfo[w]['status'],reqinfo[w]['zone'])
 			r = reqinfo[w]['js']
-			print " Priority: %s Team: %s Jobs: Q:%s C:%s P:%s R:%s S:%s F:%s T:%s" % (reqinfo[w]['priority'],reqinfo[w]['team'],r['queued'],r['cooloff'],r['pending'],r['running'],r['success'],r['failure'],r['total_jobs'])
+			
+			print " ExpectedJobs: %s Jobs: Q:%s C:%s P:%s R:%s S:%s F:%s T:%s\n Priority: %s Team: %s Timeev: %s Sizeev: %s Hours/job: %s ExpectedEvts/job: %s ETA: %sh\n FilterEff: %s %s Lumis/Job: %s GlobalTag: %s" % (reqinfo[w]['expectedjobs'],r['queued'],r['cooloff'],r['pending'],r['running'],r['success'],r['failure'],r['total_jobs'],reqinfo[w]['priority'],reqinfo[w]['team'],reqinfo[w]['timeev'],reqinfo[w]['sizeev'],reqinfo[w]['expectedjobcpuhours'],reqinfo[w]['events_per_job']*reqinfo[w]['filtereff'],reqinfo[w]['etah'],reqinfo[w]['filtereff'],reqinfo[w]['cmssw'],reqinfo[w]['lumis_per_job'],reqinfo[w]['globaltag'])
 			for o in reqinfo[w]['outputdataset']:
 				try:
 					oo = 100*o['events']/reqinfo[w]['expectedevents']

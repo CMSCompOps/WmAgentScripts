@@ -463,12 +463,12 @@ def main():
 	url='cmsweb.cern.ch'
 	overview = getoverview()
 
-	listtype = ['MonteCarlo','MonteCarloFromGEN']
+	listtype = ['MonteCarloFromGEN']
 	liststatus = ['assignment-approved']
 	list = getRequestsByTypeStatus(listtype,liststatus)
 
 	list.sort()
-	print "Number of requests: %s" % len(list)
+	print "Number of assignment-approved MonteCarloFromGEN requests: %s" % len(list)
 	reqinfo = {}
 
 	print "Getting requests: "
@@ -476,19 +476,21 @@ def main():
 		r = getWorkflowInfo(workflow)
 		if r['status'] == 'assignment-approved':
 			reqinfo[workflow] = r
-			h = reqinfo[workflow]['timeev']*reqinfo[workflow]['inputdataset']['events']/reqinfo[workflow]['inputdataset']['lumicount']/3600
-			if h <= 3 and reqinfo[workflow]['lumis_per_job'] != 3:
-				lj = 3
-			elif h > 3 and h <= 6 and reqinfo[workflow]['lumis_per_job'] != 2:
-				lj = 2
-			else:
-				lj = reqinfo[workflow]['lumis_per_job']
-			if lj != reqinfo[workflow]['lumis_per_job']:
-				flag = "FIX! %s -> %s" % (reqinfo[workflow]['lumis_per_job'],lj)
-        			changeSplittingWorkflow(url, workflow, lj,reqinfo[workflow]['type'])
-			else:
-				flag = 'OK'
-			print "%s %s %s(lumis/job) %s(h/lumis) %s" % (workflow,reqinfo[workflow]['type'],reqinfo[workflow]['lumis_per_job'],h,flag) 
+			if reqinfo[workflow]['type'] == 'MonteCarloFromGEN':
+				h = float(reqinfo[workflow]['timeev'])*reqinfo[workflow]['inputdataset']['events']/reqinfo[workflow]['inputdataset']['lumicount']/3600 # h hours per lumi
+			
+				#print "h = %s * %s / %s / 3600 = %s" % (reqinfo[workflow]['timeev'],reqinfo[workflow]['inputdataset']['events'],reqinfo[workflow]['inputdataset']['lumicount'],h)
+				if 'FS52' in r['prepid']:
+					ljmax = 100
+				else:
+					ljmax = 3
+				lj = min(int(round(12/h)),ljmax)
+				if lj != reqinfo[workflow]['lumis_per_job']:
+					flag = "FIX! %s -> %s => %s(h/job)" % (reqinfo[workflow]['lumis_per_job'],lj,round(lj*h))
+       	 				changeSplittingWorkflow(url, workflow, lj,reqinfo[workflow]['type'])
+				else:
+					flag = 'OK'
+				print "%s %s %s(lumis/job) %s(h/lumis) -> %s(h/job)%s" % (workflow,reqinfo[workflow]['type'],reqinfo[workflow]['lumis_per_job'],round(h,1),round(reqinfo[workflow]['lumis_per_job']*h),flag) 
 	print
 	
         sys.exit(0)
