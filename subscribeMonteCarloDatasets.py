@@ -18,9 +18,7 @@ def classifyRunningRequests(url, requests):
 			 requestType=request['type']
 	    else:
 		continue
-            print name		 	  
-	    team=closeOutWorkflows.getRequestTeam(url, name)	
-	    if status=='running':
+            if status=='running' or  status=='completed':
 		if requestType=='MonteCarloFromGEN' or requestType=='MonteCarlo':
 			site=closeOutWorkflows.findCustodial(url, name)
 			if site=='NoSite':
