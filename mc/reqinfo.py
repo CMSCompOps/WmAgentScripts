@@ -357,7 +357,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 		eventsdone = eventsdone + oe
 
 	remainingcpuhours = timeev*(expectedevents-eventsdone)/3600
-	return {'filtereff':filtereff,'type':type,'status':status,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'sizeev':sizeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'zone':getzonebyt1(custodialt1),'js':j,'outputdataset':outputdataset,'cpuhours':cpuhours,'etah':math.ceil(etah*10)/10,'remainingcpuhours':remainingcpuhours,'team':team,'acquisitionEra':acquisitionEra,'requestdays':requestdays,'processingVersion':processingVersion,'events_per_job':events_per_job,'lumis_per_job':lumis_per_job,'expectedjobs':expectedjobs,'expectedjobcpuhours':expectedjobcpuhours,'cmssw':cmssw,'expectedtotalsize':expectedtotalsize}
+	return {'requestname':workflow,'filtereff':filtereff,'type':type,'status':status,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'sizeev':sizeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'zone':getzonebyt1(custodialt1),'js':j,'outputdataset':outputdataset,'cpuhours':cpuhours,'etah':math.ceil(etah*10)/10,'remainingcpuhours':remainingcpuhours,'team':team,'acquisitionEra':acquisitionEra,'requestdays':requestdays,'processingVersion':processingVersion,'events_per_job':events_per_job,'lumis_per_job':lumis_per_job,'expectedjobs':expectedjobs,'expectedjobcpuhours':expectedjobcpuhours,'cmssw':cmssw,'expectedtotalsize':expectedtotalsize}
 
 def getpriorities(reqinfo):
 	priorities = []
@@ -477,7 +477,7 @@ def main():
 	parser.add_option('-a', '--all', help='print all information about the requests',dest='raw',action="store_true")
 	parser.add_option('--csv', help='print all information about the requests in CSV format',dest='csv',action="store_true")
 	parser.add_option('-x', '--export', help='export all information about the requests in JSON format',dest='json',action="store_true")
-	parser.add_option('-g', '--assignment', help='print just information useful in assignment context',dest='assignment',action="store_true")
+	parser.add_option('-g', '--assignment', help='returns a list of asignment-approved requests for a given number of CPU hours',dest='assignment')
 	parser.add_option('-d', '--datasets', help='print just output datasets',dest='datasets',action="store_true")
 	parser.add_option('-b', '--no-dbs', help='don\'t contact DBS (faster)',dest='nodbs',action="store_true")
 	parser.add_option('-j', '--jobs', help='print just information useful in workflow management context',dest='jobs',action="store_true")
@@ -494,8 +494,13 @@ def main():
 
 	if options.wf:
 		list = [options.wf]
+	elif options.assignment:
+		list = getRequestsByTypeStatus(['MonteCarlo','MonteCarloFromGEN'],'assignment-approved')
 	elif options.list:
-		list = open(options.list).read().splitlines()
+		list2 = open(options.list).read().splitlines()
+		list = []
+		for prepid in list2:
+			list.extend(getRequestsByPREPID(prepid))
 	elif options.prepid:
 		list = getRequestsByPREPID(options.prepid)
 	elif options.status or options.type:
@@ -563,15 +568,43 @@ def main():
         	#print "PREPIDs: "+" ".join(reqinfo[x]['prepid'] for x in reqinfo.keys())
 	elif options.assignment:
 		print
+		print "Limit to %s CPUHours" % options.assignment
+		aalist = []
 		for w in list:
-			reqinfo[w] = getWorkflowInfo(w,nodbs=nodbs)
-			addToSummary(reqinfo[w])
-			print "%s (%s,%s @ %s)" % (w,reqinfo[w]['type'],reqinfo[w]['status'],reqinfo[w]['zone'])
-			print " Priority: %s Team: %s Timeev: %s Jobs: %s Sizeev: %s Hours/job: %s\n ExpectedEvts/job: %s FilterEff: %s %s Lumis/Job: %s" % (reqinfo[w]['priority'],reqinfo[w]['team'],reqinfo[w]['timeev'],reqinfo[w]['expectedjobs'],reqinfo[w]['sizeev'],reqinfo[w]['expectedjobcpuhours'],reqinfo[w]['events_per_job']*reqinfo[w]['filtereff'],reqinfo[w]['filtereff'],reqinfo[w]['cmssw'],reqinfo[w]['lumis_per_job'],)
-			print " PrimaryDataset: %s GlobalTag: %s CPUHours: %s" % (reqinfo[w]['primaryds'],reqinfo[w]['globaltag'],reqinfo[w]['cpuhours'])
-			if reqinfo[w]['type'] != 'MonteCarlo':
-				print " InputDataset: %s" % (reqinfo[w]['inputdataset'])
-			print
+			print "%s" % w
+			r = getWorkflowInfo(w,nodbs=nodbs)
+			aalist.append(r)
+		#print len(aalist)
+		print
+		for j in range(1,len(aalist)):
+			for i in range(0,len(aalist)-j):
+				#print "%s %s <> %s %s" % (i,aalist[i]['requestname'],i+1,aalist[i+1]['requestname'])
+				if aalist[i]['priority'] < aalist[i+1]['priority']:
+					aalist[i+1],aalist[i] = aalist[i],aalist[i+1]
+				elif aalist[i]['requestdays'] < aalist[i+1]['requestdays']:
+					aalist[i+1],aalist[i] = aalist[i],aalist[i+1]
+				elif aalist[i]['expectedevents'] > aalist[i+1]['expectedevents']:
+					aalist[i+1],aalist[i] = aalist[i],aalist[i+1]
+		#print "%s %s %s %s %s" % ('#','Request','priority','requestdays','expectedevents')
+		print "%s\t%s" % ('Request','CumulativeCPUHours')
+		acc = 0
+		for i in range(0,len(aalist)-1):
+			#print "%s %s %s %s %s" % (i,aalist[i]['requestname'],aalist[i]['priority'],aalist[i]['requestdays'],aalist[i]['expectedevents'])
+			oldacc = acc
+			acc = acc + aalist[i]['cpuhours']
+			if acc > options.assignment:
+				break
+			print "%s\t%s+%s=%s" % (aalist[i]['requestname'],oldacc,aalist[i]['cpuhours'],acc)
+		print
+		print "%s" % ('Request list:')
+		print
+		acc = 0
+		i = 0
+		while (acc < options.assignment and i<len(aalist)):
+			acc = acc + aalist[i]['cpuhours']
+			print "%s" % (aalist[i]['requestname'])
+			i = i + 1
+		sys.exit(0)
 	elif options.datasets:
 		for workflow in list:
 			conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
