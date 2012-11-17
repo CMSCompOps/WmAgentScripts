@@ -253,8 +253,6 @@ def closeOutMonterCarloRequests(url, workflows):
 		 					closeOutDataset=False
 						closeOutWorkflow=closeOutWorkflow and closeOutDataset
 						print '| %80s | %100s | %4s | %5s| %3s | %5s|%5s| ' % (workflow, dataset,str(int(Percentage*100)), str(PhedexSubscription), str(int(TransPercen*100)), duplicate, closeOutDataset)
-					if len(datasetsUnsuscribed)>0:
-						phedexSubscription.makeCustodialMoveRequest(url, site, datasetsUnsuscribed, "Custodial Move Subscription for MonteCarlo")
 				else:
 					for dataset in datasets:
 						closeOutDataset=True
@@ -273,6 +271,8 @@ def closeOutMonterCarloRequests(url, workflows):
 					print '| %80s | %100s | %4s | %5s| %3s | %5s|%5s| ' % (workflow, dataset,str(int(Percentage*100)), str(PhedexSubscription), str(int(TransPercen*100)), duplicate, closeOutDataset)
 				if closeOutWorkflow:
 					phedexSubscription.closeOutWorkflow(url, workflow)
+			if len(datasetsUnsuscribed)>0:
+				phedexSubscription.makeCustodialMoveRequest(url, site, datasetsUnsuscribed, "Custodial Move Subscription for MonteCarlo")
 	phedexSubscription.makeCustodialReplicaRequest(url, 'T2_DE_DESY',datasetsUnsuscribedSpecialQueue, "Replica Subscription for Request in special production queue")
 	print'-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------' 				    
 # It assumes dataset is an output dataset from the workflow
