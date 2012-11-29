@@ -73,6 +73,21 @@ def closeOutWorkflow(url, workflowname):
     #print data
     conn.close()
 
+def announceWorkflow(url, workflowname):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    #params = {"requestName" : workflowname,"status" : "announced"}	
+    params = {"requestName" : workflowname,"status" : "announced"}
+    headers={"Content-type": "application/x-www-form-urlencoded",
+             "Accept": "text/plain"}
+    encodedParams = urllib.urlencode(params)
+    conn.request("PUT", "/reqmgr/reqMgr/request", encodedParams, headers)
+    response = conn.getresponse()	
+    #print response.status, response.reason
+    data = response.read()
+    #print data
+    conn.close()
+
+
 def setWorkflowRunning(url, workflowname):
     print workflowname,
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))

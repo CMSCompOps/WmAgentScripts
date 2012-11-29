@@ -89,8 +89,10 @@ def classifyCompletedRequests(url, requests):
 	    if 'type' in request.keys():
 			 requestType=request['type']
 	    if status=='completed':
-		if requestType=='MonteCarloFromGEN' or requestType=='MonteCarlo':
+		if requestType=='MonteCarloFromGEN' or requestType=='MonteCarlo' or requestType=='LHEStepZero':
 			site=findCustodial(url, name)
+			if requestType=='LHEStepZero':
+				site='T1_US_FNAL'
 			if site not in workflows[requestType].keys():
 				workflows[requestType][site]=[name]
 			else:
@@ -142,6 +144,10 @@ def testWorkflow(url, workflow):
 
 def closeOutReRecoWorkflows(url, workflows):
 	for workflow in workflows:
+#		if 'franzoni_laserHCALskim' in workflow:
+#			phedexSubscription.closeOutWorkflow(url, workflow)
+#			phedexSubscription.announceWorkflow(url, workflow)
+#			continue
 		if 'RelVal' in workflow:
 			continue
 		datasets=phedexSubscription.outputdatasetsWorkflow(url, workflow)

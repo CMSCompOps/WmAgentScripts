@@ -19,8 +19,10 @@ def classifyRunningRequests(url, requests):
 	    else:
 		continue
             if status=='running' or  status=='completed':
-		if requestType=='MonteCarloFromGEN' or requestType=='MonteCarlo':
+		if requestType=='MonteCarloFromGEN' or requestType=='MonteCarlo' or requestType=='LHEStepZero':
 			site=closeOutWorkflows.findCustodial(url, name)
+			if requestType=='LHEStepZero':
+				site='T1_US_FNAL'
 			if site=='NoSite':
 				continue
 			if closeOutWorkflows.getRequestTeam(url, name)=='analysis': # If the request is running in the special queue

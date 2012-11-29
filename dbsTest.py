@@ -143,7 +143,7 @@ def getInputEvents(url, workflow):
 		r2=conn.getresponse()
 		request = json.read(r2.read())
 	requestType=request['RequestType']
-	if requestType=='MonteCarlo':
+	if requestType=='MonteCarlo' or requestType=='LHEStepZero':
 		if 'RequestNumEvents' in request:
 			if request['RequestNumEvents']>0:
 				return request['RequestNumEvents']
