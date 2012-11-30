@@ -124,7 +124,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 			a = raw.find(" =")
 			b = raw.find('<br')
 			lumis_per_job = int(raw[a+3:b])
-		elif 'events_per_job' in raw:
+		elif '.events_per_job' in raw:
 			a = raw.find(" =")
 			b = raw.find('<br')
 			events_per_job = int(raw[a+3:b])
@@ -224,7 +224,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 	except:
 		pass
 	
-	if type in ['MonteCarlo']:
+	if type in ['MonteCarlo','LHEStepZero']:
 		expectedevents = int(reqevts)
 		expectedjobs = int(expectedevents/(events_per_job*filtereff))
 		expectedjobcpuhours = int(timeev*(events_per_job*filtereff)/3600)
@@ -574,36 +574,23 @@ def main():
 			print "%s" % w
 			r = getWorkflowInfo(w,nodbs=nodbs)
 			aalist.append(r)
-		#print len(aalist)
-		print
-		for j in range(1,len(aalist)):
-			for i in range(0,len(aalist)-j):
-				#print "%s %s <> %s %s" % (i,aalist[i]['requestname'],i+1,aalist[i+1]['requestname'])
-				if aalist[i]['priority'] < aalist[i+1]['priority']:
-					aalist[i+1],aalist[i] = aalist[i],aalist[i+1]
-				elif aalist[i]['requestdays'] < aalist[i+1]['requestdays']:
-					aalist[i+1],aalist[i] = aalist[i],aalist[i+1]
-				elif aalist[i]['expectedevents'] > aalist[i+1]['expectedevents']:
-					aalist[i+1],aalist[i] = aalist[i],aalist[i+1]
-		#print "%s %s %s %s %s" % ('#','Request','priority','requestdays','expectedevents')
-		print "%s\t%s" % ('Request','CumulativeCPUHours')
-		acc = 0
 		for i in range(0,len(aalist)-1):
+			for j in range(i+1,len(aalist)):
+				if aalist[i]['priority'] < aalist[j]['priority']:
+					aalist[j],aalist[i] = aalist[i],aalist[j]
+				elif aalist[i]['priority'] == aalist[j]['priority'] and aalist[i]['requestdays'] < aalist[j]['requestdays']:
+					aalist[j],aalist[i] = aalist[i],aalist[j]
+				elif aalist[i]['priority'] == aalist[j]['priority'] and aalist[i]['requestdays'] == aalist[j]['requestdays'] and aalist[i]['expectedevents'] > aalist[j]['expectedevents']:
+					aalist[j],aalist[i] = aalist[i],aalist[j]
+		acc = 0
+		i = 0
+		while (i<len(aalist)-1 and acc < int(float(options.assignment))):
 			#print "%s %s %s %s %s" % (i,aalist[i]['requestname'],aalist[i]['priority'],aalist[i]['requestdays'],aalist[i]['expectedevents'])
 			oldacc = acc
 			acc = acc + aalist[i]['cpuhours']
-			if acc > options.assignment:
-				break
-			print "%s\t%s+%s=%s" % (aalist[i]['requestname'],oldacc,aalist[i]['cpuhours'],acc)
-		print
-		print "%s" % ('Request list:')
-		print
-		acc = 0
-		i = 0
-		while (acc < options.assignment and i<len(aalist)):
-			acc = acc + aalist[i]['cpuhours']
-			print "%s" % (aalist[i]['requestname'])
+			print "%s prio=%s reqdays=%s expevts=%s cumCPUH=%s+%s=%s" % (aalist[i]['requestname'],aalist[i]['priority'],aalist[i]['requestdays'],aalist[i]['expectedevents'],oldacc,aalist[i]['cpuhours'],acc)
 			i = i + 1
+		print
 		sys.exit(0)
 	elif options.datasets:
 		for workflow in list:
@@ -641,7 +628,7 @@ def main():
 			print "%s (%s,%s,%s at %s)" % (w,reqinfo[w]['prepid'],reqinfo[w]['type'],reqinfo[w]['status'],reqinfo[w]['zone'])
 			r = reqinfo[w]['js']
 			
-			print " ExpectedJobs: %s Jobs: Q:%s C:%s P:%s R:%s S:%s F:%s T:%s\n Priority: %s Team: %s Timeev: %s Sizeev: %s Hours/job: %s ExpectedEvts/job: %s ETA: %sh\n FilterEff: %s %s Lumis/Job: %s GlobalTag: %s" % (reqinfo[w]['expectedjobs'],r['queued'],r['cooloff'],r['pending'],r['running'],r['success'],r['failure'],r['total_jobs'],reqinfo[w]['priority'],reqinfo[w]['team'],reqinfo[w]['timeev'],reqinfo[w]['sizeev'],reqinfo[w]['expectedjobcpuhours'],reqinfo[w]['events_per_job']*reqinfo[w]['filtereff'],reqinfo[w]['etah'],reqinfo[w]['filtereff'],reqinfo[w]['cmssw'],reqinfo[w]['lumis_per_job'],reqinfo[w]['globaltag'])
+			print " ExpectedJobs: %s CPUHours: %s Jobs: Q:%s C:%s P:%s R:%s S:%s F:%s T:%s\n Priority: %s Team: %s Timeev: %s Sizeev: %s Hours/job: %s ExpectedEvts/job: %s\n FilterEff: %s %s Lumis/Job: %s GlobalTag: %s" % (reqinfo[w]['expectedjobs'],reqinfo[w]['cpuhours'],r['queued'],r['cooloff'],r['pending'],r['running'],r['success'],r['failure'],r['total_jobs'],reqinfo[w]['priority'],reqinfo[w]['team'],reqinfo[w]['timeev'],reqinfo[w]['sizeev'],reqinfo[w]['expectedjobcpuhours'],reqinfo[w]['events_per_job']*reqinfo[w]['filtereff'],reqinfo[w]['filtereff'],reqinfo[w]['cmssw'],reqinfo[w]['lumis_per_job'],reqinfo[w]['globaltag'])
 			for o in reqinfo[w]['outputdataset']:
 				try:
 					oo = 100*o['events']/reqinfo[w]['expectedevents']

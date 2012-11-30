@@ -484,7 +484,7 @@ def main():
 					ljmax = 100
 				else:
 					ljmax = 3
-				lj = min(int(round(12/h)),ljmax)
+				lj = min(int(round(8/h)),ljmax)
 				if lj != reqinfo[workflow]['lumis_per_job']:
 					flag = "FIX! %s -> %s => %s(h/job)" % (reqinfo[workflow]['lumis_per_job'],lj,round(lj*h))
        	 				changeSplittingWorkflow(url, workflow, lj,reqinfo[workflow]['type'])

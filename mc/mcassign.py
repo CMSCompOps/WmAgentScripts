@@ -18,9 +18,12 @@ teams_lp = ['production','integration']
 
 zones = ['FNAL','CNAF','ASGC','IN2P3','RAL','PIC','KIT']
 zone2t1 = {'FNAL':'T1_US_FNAL','CNAF':'T1_IT_CNAF','ASGC':'T1_TW_ASGC','IN2P3':'T1_FR_CCIN2P3','RAL':'T1_UK_RAL','PIC':'T1_ES_PIC','KIT':'T1_DE_KIT'}
-siteblacklist = ['T2_FR_GRIF_IRFU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_RRC_KI','T2_UK_SGrid_Bristol','T2_US_Vanderbilt','T2_CH_CERN']
+
+siteblacklist = ['T2_FR_GRIF_IRFU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_RRC_KI','T2_UK_SGrid_Bristol']
 siteblacklist.extend(['T2_BE_UCL','T2_BE_IIHE','T2_PL_Warsaw','T2_RU_PNPI','T2_KR_KNU','T2_UA_KIPT','T2_AT_Vienna'])
-sitelistsmallrequests = ['T2_DE_DESY','T2_IT_Pisa','T2_ES_CIEMAT','T2_IT_Bari','T2_US_Purdue','T2_US_Caltech','T2_CN_Beijing','T2_DE_RWTH','T2_IT_Legnaro','T2_IT_Rome','T2_US_Florida','T2_US_MIT','T2_US_Wisconsin','T2_US_UCSD','T2_US_Nebraska','T2_RU_IHEP','T3_US_Colorado']
+
+sitelistsmallrequests = ['T2_DE_DESY','T2_IT_Pisa','T2_ES_CIEMAT','T2_IT_Bari','T2_US_Purdue','T2_US_Caltech','T2_CN_Beijing','T2_DE_RWTH','T2_IT_Legnaro','T2_IT_Rome','T2_US_Florida','T2_US_MIT','T2_US_Wisconsin','T2_US_UCSD','T2_US_Nebraska','T2_RU_IHEP']
+siteliststep0requests = ['T2_US_Purdue','T2_US_Nebraska','T3_US_Omaha']
 cachedoverview = '/afs/cern.ch/user/s/spinoso/public/overview.cache'
 forceoverview = 0
 tcount_hp = 0
@@ -82,17 +85,18 @@ def getacqera(prepid):
 	for e in legal_eras:
 		if e in prepid:
 			return e
-	print "   !!! WARNING !!! Cannot guess acquisition era, using Summer12"
-	return 'Summer12'
+	print " Cannot guess acquisition era for %s" % prepid
+	sys.exit(1)
+	
 
-def assignMCRequest(url,workflow,team,sitelist,era,procversion):
+def assignMCRequest(url,workflow,team,sitelist,era,procversion,mergedlfnbase,minmergesize):
     params = {"action": "Assign",
               "Team"+team: "checked",
               "SiteWhitelist": sitelist,
               "SiteBlacklist": [],
-              "MergedLFNBase": "/store/mc",
+              "MergedLFNBase": mergedlfnbase,
               "UnmergedLFNBase": "/store/unmerged",
-              "MinMergeSize": 2147483648,
+              "MinMergeSize": minmergesize,
               "MaxMergeSize": 4294967296,
               "MaxMergeEvents": 50000,
 	      "maxRSS": 2294967,
@@ -255,7 +259,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 			a = raw.find(" =")
 			b = raw.find('<br')
 			lumis_per_job = int(raw[a+3:b])
-		elif 'events_per_job' in raw:
+		elif '.events_per_job' in raw:
 			a = raw.find(" =")
 			b = raw.find('<br')
 			events_per_job = int(raw[a+3:b])
@@ -560,6 +564,7 @@ def main():
 	parser.add_option('--test', action="store_true",default=True,help='test mode: don\'treally assign at the end',dest='test')
 	parser.add_option('--assign', action="store_false",default=True,help='assign mode',dest='test')
 	parser.add_option('--small', action="store_true",default=False,help='assign requests considering them small',dest='small')
+	parser.add_option('--hi', action="store_true",default=False,help='heavy ion request (add Vanderbilt to the whitelist, use /store/himc)',dest='hi')
 	parser.add_option('-z', '--zone', help='Zone %s or single site or comma-separated list (i.e. T1_US_FNAL,T2_FR_CCIN2P3,T2_DE_DESY)' % zones,dest='zone')
 	parser.add_option('-a', '--acqera', help='Acquisition era: one of %s' % legal_eras,dest='acqera')
 	parser.add_option('-v', '--version', help='Version (it is the vx part of the ProcessingVersion), default is v1',dest='version')
@@ -611,7 +616,7 @@ def main():
 			print "%s:\n%s\n" % (i,",".join(x for x in getsitelist(i)))
 	
 	print "Matching requests:\n"
-	print "REQUEST TEAM PRIORITY ACQERA PROCVS ZONE"
+	#print "REQUEST TEAM PRIORITY ACQERA PROCVS ZONE"
 	assign_data = {}
 	for w in list:
 		reqinfo[w] = getWorkflowInfo(w)
@@ -625,15 +630,28 @@ def main():
 			sys.exit(1)
 	
 		# type
-		if not 'MonteCarlo' in reqinfo[w]['type']:
-			print "%s: not a MonteCarlo/MonteCarloFromGEN request!" % w
-			#sys.exit(1)
+		if not 'MonteCarlo' in reqinfo[w]['type'] and not 'LHEStepZero' in reqinfo[w]['type']:
+			print "%s: not a MonteCarlo/MonteCarloFromGEN/LHEStepZero request!" % w
+			sys.exit(1)
 
 		# priority
 		priority = reqinfo[w]['priority']
 		
-		# team
-		team = getteam(teams,reqinfo[w])
+		# internal assignment parameters
+		if reqinfo[w]['type'] == 'LHEStepZero':
+			print 'LHEStepZero request'
+			team = 'step0'
+			minmergesize = 1000000000
+			mergedlfnbase = '/store/generator'
+		elif options.hi:
+			print "Heavy Ion request"
+			team = getteam(teams,reqinfo[w])
+			mergedlfnbase = '/store/himc'
+			minmergesize = 2147483648
+		else:
+			mergedlfnbase = '/store/mc'
+			team = getteam(teams,reqinfo[w])
+			minmergesize = 2147483648
 
 		# acqera
 		if acqera == 'auto':
@@ -642,19 +660,29 @@ def main():
 			newacqera = acqera
 
 		# zone
-		if zone == 'auto':
+		if reqinfo[w]['type'] == 'LHEStepZero':
+			newzone = 'FNAL'
+		elif zone == 'auto':
 			newzone = getZoneFromRequest(reqinfo[w]['prepid'])
 		else:
 			newzone = zone
 
 		# sitelist adjustment
-		sitelist = getsitelist(newzone)
+		if zone == 'auto':
+			if reqinfo[w]['type'] == 'LHEStepZero':
+				sitelist = siteliststep0requests
+			else:
+				sitelist = getsitelist(newzone)
+			if options.hi:
+				sitelist.extend(['T2_US_Vanderbilt'])
+		else:
+			sitelist = zone.split(',')
 		newsitelist = sitelist[:]
 
 		if 'T2_US_Nebraska' in sitelist and reqinfo[w]['type'] == 'MonteCarlo': # T3_US_Omaha hook
 			newsitelist.append('T3_US_Omaha')
 
-		if 'T2_US_Nebraska' in sitelist: # T3_US_Colorado hook
+		if 'T2_US_Nebraska' in sitelist and reqinfo[w]['type'] in ['MonteCarlo','MonteCarloFromGEN']: # T3_US_Colorado hook
 			newsitelist.append('T3_US_Colorado')
 
 		if reqinfo[w]['priority'] >= 100000 or reqinfo[w]['cpuhours'] <= 100000 or options.small:
@@ -693,8 +721,9 @@ def main():
 		assign_data[w]['acqera'] = newacqera
 		assign_data[w]['procversion'] = newprocversion
 		assign_data[w]['zone'] = newzone
-		suminfo = "%s %s %s %s %s %s" % (w,assign_data[w]['team'],assign_data[w]['priority'],assign_data[w]['acqera'],assign_data[w]['procversion'],assign_data[w]['zone'])
+		suminfo = "%s t:%s pr:%s er:%s pv:%s z:%s" % (w,assign_data[w]['team'],assign_data[w]['priority'],assign_data[w]['acqera'],assign_data[w]['procversion'],assign_data[w]['zone'])
 		print "%s" % suminfo
+		print
 	print
 
 	if not options.test: 
@@ -702,14 +731,15 @@ def main():
 		print
 	for w in list:
 		if options.debug:
-			suminfo = "%s %s %s %s %s %s" % (w,assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['procversion'],small_active,assign_data[w]['whitelist'])
+			suminfo = "r:%s t:%s er:%s pv:%s %s lfnb:%s minmrg:%s wl:%s" % (w,assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['procversion'],small_active,mergedlfnbase,minmergesize,assign_data[w]['whitelist'])
 		else:
-			suminfo = "%s %s %s %s %s %s" % (w,assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['procversion'],small_active,assign_data[w]['zone'])
+			suminfo = "r:%s t:%s er:%s pv:%s %s z:%s" % (w,assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['procversion'],small_active,assign_data[w]['zone'])
 		if options.debug and options.test:
 			print "TESTED:\t%s\n" % suminfo
+			#print "%s %s %s %s %s %s %s %s" % (url,w,assign_data[w]['team'],assign_data[w]['whitelist'],assign_data[w]['acqera'],assign_data[w]['procversion'],mergedlfnbase,minmergesize)
 		if not options.test:
 			print "ASSIGN:\t%s\n" % suminfo
-			assignMCRequest(url,w,assign_data[w]['team'],assign_data[w]['whitelist'],assign_data[w]['acqera'],assign_data[w]['procversion'])
+			assignMCRequest(url,w,assign_data[w]['team'],assign_data[w]['whitelist'],assign_data[w]['acqera'],assign_data[w]['procversion'],mergedlfnbase,minmergesize)
 	
 	sys.exit(0)
 
