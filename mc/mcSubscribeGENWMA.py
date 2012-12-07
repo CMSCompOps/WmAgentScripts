@@ -63,24 +63,6 @@ def main():
 	print "Custodial T1: %s" % custodialt1
 	print
 
-	params = urllib.urlencode({ "node" : custodialt1, "data" : datasetXML, "group": "DataOps", "priority":'low', "custodial":"y","request_only":"n" ,"move":"n","no_mail":"n", "comments":'Custodial subscription for GEN datasets needed for LHE MC production'})
-	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-	conn.connect()
-	print "SUBSCRIBING"
-	conn.request("POST", "/phedex/datasvc/json/prod/subscribe", params)
-	response = conn.getresponse()
-	print response.status, response.reason
-	print response.msg 
-	a = response.read()
-	if response.status != 200:
-		print a
-		sys.exit(1)
-	s = json.loads(a)
-	print s
-	print
-	print "Custodial replica request to T1: https://cmsweb.cern.ch/phedex/prod/Request::View?request=%s" % s['phedex']['request_created'][0]['id']
-	conn.close()
-
 	params = urllib.urlencode({ "node" : nodelist,"data" : datasetXML, "group": "DataOps", "priority":'low', "custodial":"n","request_only":"y" ,"move":"n","no_mail":"n", "comments":"Input datasets needed for LHE MC production"},doseq=True)
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	conn.connect()

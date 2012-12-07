@@ -584,6 +584,7 @@ def main():
 					aalist[j],aalist[i] = aalist[i],aalist[j]
 		acc = 0
 		i = 0
+		print
 		while (i<len(aalist)-1 and acc < int(float(options.assignment))):
 			#print "%s %s %s %s %s" % (i,aalist[i]['requestname'],aalist[i]['priority'],aalist[i]['requestdays'],aalist[i]['expectedevents'])
 			oldacc = acc

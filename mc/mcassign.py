@@ -17,13 +17,14 @@ teams_hp = ['mc']
 teams_lp = ['production','integration']
 
 zones = ['FNAL','CNAF','ASGC','IN2P3','RAL','PIC','KIT']
-zone2t1 = {'FNAL':'T1_US_FNAL','CNAF':'T1_IT_CNAF','ASGC':'T1_TW_ASGC','IN2P3':'T1_FR_CCIN2P3','RAL':'T1_UK_RAL','PIC':'T1_ES_PIC','KIT':'T1_DE_KIT'}
 
 siteblacklist = ['T2_FR_GRIF_IRFU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_RRC_KI','T2_UK_SGrid_Bristol']
 siteblacklist.extend(['T2_BE_UCL','T2_BE_IIHE','T2_PL_Warsaw','T2_RU_PNPI','T2_KR_KNU','T2_UA_KIPT','T2_AT_Vienna'])
 
-sitelistsmallrequests = ['T2_DE_DESY','T2_IT_Pisa','T2_ES_CIEMAT','T2_IT_Bari','T2_US_Purdue','T2_US_Caltech','T2_CN_Beijing','T2_DE_RWTH','T2_IT_Legnaro','T2_IT_Rome','T2_US_Florida','T2_US_MIT','T2_US_Wisconsin','T2_US_UCSD','T2_US_Nebraska','T2_RU_IHEP']
-siteliststep0requests = ['T2_US_Purdue','T2_US_Nebraska','T3_US_Omaha']
+sitelistsmallrequests = ['T2_DE_DESY','T2_IT_Pisa','T2_ES_CIEMAT','T2_IT_Bari','T2_US_Purdue','T2_US_Caltech','T2_CN_Beijing','T2_DE_RWTH','T2_IT_Legnaro','T2_IT_Rome','T2_US_Florida','T2_US_MIT','T2_US_Wisconsin','T2_US_UCSD','T2_US_Nebraska','T2_RU_IHEP','T2_US_Vanderbilt']
+
+siteliststep0long = ['T2_US_Purdue','T2_US_Nebraska','T3_US_Omaha']
+
 cachedoverview = '/afs/cern.ch/user/s/spinoso/public/overview.cache'
 forceoverview = 0
 tcount_hp = 0
@@ -35,28 +36,69 @@ def get_linkedt2s(custodialT1):
 	if custodialT1 == '':
 		return []
 	try:
+		# get list of linked T2s
 		url = "https://cmsweb.cern.ch/phedex/datasvc/json/prod/links?status=ok&to=%s_Buffer&from=T2_*" % custodialT1
 		response = urllib2.urlopen(url)
 		j = json.load(response)["phedex"]
 		for dict in j['link']:
 			list.append(dict['from'])
+
+		# add list of commissioned T3s that are linked
+		url = "https://cmsweb.cern.ch/phedex/datasvc/json/prod/links?status=ok&to=%s_Buffer&from=T3_*" % custodialT1
+		response = urllib2.urlopen(url)
+		j = json.load(response)["phedex"]
+		for dict in j['link']:
+			if dict['from'] in ['T3_US_Omaha','T3_US_Colorado']:
+				list.append(dict['from'])
+
 		list.sort()
 		return list
+
 	except	Exception:
         	print 'Status:',response.status,'Reason:',response.reason
         	print sys.exc_info()
 		sys.exit(1)
 
-def getsitelist(zone):
-	global zones,siteblacklist,zone2t1
+def getSitelistFromZone(zone,r,hi,blacklist):
+	global zones
+	zone2t1 = {'FNAL':'T1_US_FNAL','CNAF':'T1_IT_CNAF','ASGC':'T1_TW_ASGC','IN2P3':'T1_FR_CCIN2P3','RAL':'T1_UK_RAL','PIC':'T1_ES_PIC','KIT':'T1_DE_KIT'}
+	# if zone is automatic, guess zone
+	if zone == 'auto':
+		if hi:
+			zone = 'IN2P3'
+		elif reqinfo[w]['type'] == 'LHEStepZero':
+			zone = 'FNAL'
+		else:
+			zone = getZoneFromRequest(reqinfo[w]['prepid'])
+
+	# convert zone to list of t1 + linked t2
 	if zone in zones:
 		sitelist = []
-		sitelist.append(zone2t1[zone])
+		
+		# run MC/MCFromGEN @ T1
+		if r['type'] in ['MonteCarlo','MonteCarloFromGEN']:
+			sitelist.append(zone2t1[zone])
+
+		# get all linked T2s
 		t2list = get_linkedt2s(zone2t1[zone])
+
+		# exclude Vanderbilt if not Heavy Ion
+		if not hi:
+			if not 'T2_US_Vanderbilt' in blacklist:
+				blacklist.extend(['T2_US_Vanderbilt'])
+
+		# exclude Omaha from MCFromGEN
+		if r['type'] == 'MonteCarloFromGEN':
+			if not 'T3_US_Omaha' in blacklist:
+				blacklist.extend(['T3_US_Omaha'])
+
+		# no blacklist for MonteCarloFromGEN: we will subscribe only to sites supposed to work		
+
 		for i in t2list:
-			if not i in siteblacklist:
+			if not i in blacklist:
 				sitelist.append(i)
 	else:
+		# explicit sitelist, no guesses
 		sitelist = zone.split(',')
 		t1count = 0
 		custodialT1 = ''
@@ -497,7 +539,7 @@ def getRequestsByPREPID(prepid):
 	return r
 	
 def getZoneFromRequest(prepid):
-	#print "Guessing zone"
+	print "Guessing zone"
 	zone = []
 	reqs = getRequestsByPREPID(prepid)
 	#print "Found %s total requests with the same PREP ID: %s" % (len(reqs),prepid)
@@ -551,7 +593,7 @@ def getteam(teams,r):
 	return team
 
 def main():
-	global overview,forceoverview,sum,nodbs
+	global overview,forceoverview,sum,nodbs,siteblacklist
 	global legal_eras,zones
 
 	overview = getoverview()
@@ -610,15 +652,14 @@ def main():
 	else:
 		acqera = 'auto'
 
-	if options.debug:
-		print "Testing whitelists:\n"
-		for i in zones:
-			print "%s:\n%s\n" % (i,",".join(x for x in getsitelist(i)))
-	
-	print "Matching requests:\n"
+	siteblacklist.sort()
+	print "Default site blacklist: %s\n" % (",".join(x for x in siteblacklist))
+
+	print "Preparing requests:\n"
 	#print "REQUEST TEAM PRIORITY ACQERA PROCVS ZONE"
 	assign_data = {}
 	for w in list:
+		print "Get info for %s" % w
 		reqinfo[w] = getWorkflowInfo(w)
 
 		# status
@@ -638,13 +679,15 @@ def main():
 		priority = reqinfo[w]['priority']
 		
 		# internal assignment parameters
+		hi = False
 		if reqinfo[w]['type'] == 'LHEStepZero':
-			print 'LHEStepZero request'
+			print 'LHEStepZero request: %s' % w
 			team = 'step0'
 			minmergesize = 1000000000
 			mergedlfnbase = '/store/generator'
 		elif options.hi:
-			print "Heavy Ion request"
+			print "Heavy Ion request: %s" % w
+			hi = True
 			team = getteam(teams,reqinfo[w])
 			mergedlfnbase = '/store/himc'
 			minmergesize = 2147483648
@@ -659,34 +702,10 @@ def main():
 		else:
 			newacqera = acqera
 
-		# zone
-		if reqinfo[w]['type'] == 'LHEStepZero':
-			newzone = 'FNAL'
-		elif zone == 'auto':
-			newzone = getZoneFromRequest(reqinfo[w]['prepid'])
-		else:
-			newzone = zone
-
 		# sitelist adjustment
-		if zone == 'auto':
-			if reqinfo[w]['type'] == 'LHEStepZero':
-				sitelist = siteliststep0requests
-			else:
-				sitelist = getsitelist(newzone)
-			if options.hi:
-				sitelist.extend(['T2_US_Vanderbilt'])
-		else:
-			sitelist = zone.split(',')
-		newsitelist = sitelist[:]
-
-		if 'T2_US_Nebraska' in sitelist and reqinfo[w]['type'] == 'MonteCarlo': # T3_US_Omaha hook
-			newsitelist.append('T3_US_Omaha')
-
-		if 'T2_US_Nebraska' in sitelist and reqinfo[w]['type'] in ['MonteCarlo','MonteCarloFromGEN']: # T3_US_Colorado hook
-			newsitelist.append('T3_US_Colorado')
+		newsitelist = getSitelistFromZone(zone,reqinfo[w],hi,siteblacklist)
 
 		if reqinfo[w]['priority'] >= 100000 or reqinfo[w]['cpuhours'] <= 100000 or options.small:
-			small_active='(small)'
 			oldsitelist = newsitelist[:]
 			newsitelist = []
 			for i in oldsitelist:
@@ -694,8 +713,7 @@ def main():
 					newsitelist.append(i)
 				elif i in sitelistsmallrequests:
 					newsitelist.append(i)
-		else:
-			small_active=''
+
 		# processing version
 		
 		if procversion == 'auto':
@@ -711,31 +729,26 @@ def main():
 			if isInDBS(dataset):
 				print "Processing version already in use for %s : %s" % (w,dataset)
 				sys.exit(1)
-		if options.debug:
-			print "Output dataset: %s" % dataset
 
+		# save the parameters for assignment of request 'w'
 		assign_data[w] = {}
 		assign_data[w]['team'] = team
 		assign_data[w]['priority'] = priority
 		assign_data[w]['whitelist'] = newsitelist
 		assign_data[w]['acqera'] = newacqera
 		assign_data[w]['procversion'] = newprocversion
-		assign_data[w]['zone'] = newzone
-		suminfo = "%s t:%s pr:%s er:%s pv:%s z:%s" % (w,assign_data[w]['team'],assign_data[w]['priority'],assign_data[w]['acqera'],assign_data[w]['procversion'],assign_data[w]['zone'])
-		print "%s" % suminfo
-		print
-	print
+		#suminfo = "%s t:%s pr:%s er:%s pv:%s z:%s" % (w,assign_data[w]['team'],assign_data[w]['priority'],assign_data[w]['acqera'],assign_data[w]['procversion'],assign_data[w]['whitelist'])
+		#suminfo = "%s" % (w)
+		#print "%s" % suminfo
+	print "\n----------------------------------------------\n"
 
 	if not options.test: 
 		print "Assignment:"
 		print
 	for w in list:
-		if options.debug:
-			suminfo = "r:%s t:%s er:%s pv:%s %s lfnb:%s minmrg:%s wl:%s" % (w,assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['procversion'],small_active,mergedlfnbase,minmergesize,assign_data[w]['whitelist'])
-		else:
-			suminfo = "r:%s t:%s er:%s pv:%s %s z:%s" % (w,assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['procversion'],small_active,assign_data[w]['zone'])
-		if options.debug and options.test:
-			print "TESTED:\t%s\n" % suminfo
+		suminfo = "%s\nprio:%s team:%s era:%s procvs:%s LFNBase:%s MinMerge:%s\nOutputDataset: %s\nWhitelist: %s" % (w,assign_data[w]['priority'],assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['procversion'],mergedlfnbase,minmergesize,dataset,", ".join(x for x in assign_data[w]['whitelist']))
+		if options.test:
+			print "TEST:\t%s\n" % suminfo
 			#print "%s %s %s %s %s %s %s %s" % (url,w,assign_data[w]['team'],assign_data[w]['whitelist'],assign_data[w]['acqera'],assign_data[w]['procversion'],mergedlfnbase,minmergesize)
 		if not options.test:
 			print "ASSIGN:\t%s\n" % suminfo
