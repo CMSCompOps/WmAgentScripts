@@ -64,8 +64,8 @@ def retrieveSchema(workflowName, user, group ):
     schema = {}
     for (key, value) in helper.data.request.schema.dictionary_().iteritems():
         #print key, value
-        if key == 'ProdConfigCacheID':
-            schema['ProcConfigCacheID'] = value
+        if key == 'ProcConfigCacheID':
+            schema['ConfigCacheID'] = value
 	elif key=='RequestSizeEvents':
 	    schema['RequestSizeEvents'] = value
 	    #schema['RequestNumEvents'] = int(value)
@@ -91,8 +91,12 @@ def submitWorkflow(schema):
                            "BlockBlacklist"]:
         if schemaListItem in schema.keys():
             schema[schemaListItem] = str(schema[schemaListItem])
-            
-    encodedParams = urllib.urlencode(schema, True)
+    jsonEncodedParams = {}
+    for paramKey in schema.keys():
+		jsonEncodedParams[paramKey] = json.write(schema[paramKey])
+    encodedParams = urllib.urlencode(jsonEncodedParams, False)
+
+    #encodedParams = urllib.urlencode(schema, True)
     headers  =  {"Content-type": "application/x-www-form-urlencoded",
                  "Accept": "text/plain"}
 

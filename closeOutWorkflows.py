@@ -79,7 +79,7 @@ def findCustodial(url, requestname):
 		return "NoSite"
 
 def classifyCompletedRequests(url, requests):
-	workflows={'ReDigi':[],'MonteCarloFromGEN':{},'MonteCarlo':{} , 'ReReco':[]}	
+	workflows={'ReDigi':[],'MonteCarloFromGEN':{},'MonteCarlo':{} , 'ReReco':[], 'LHEStepZero':{}}
 	for request in requests:
 	    name=request['request_name']
 	    status='NoStatus'
@@ -304,6 +304,7 @@ def main():
 	closeOutRedigiWorkflows(url, workflowsCompleted['ReDigi'])
 	closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarlo'])
 	closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarloFromGEN'])
+	closeOutMonterCarloRequests(url, workflowsCompleted['LHEStepZero'])
 	print "MC Workflows for which couldn't find Custodial Tier1 Site"
 	if 'NoSite' in workflowsCompleted['MonteCarlo']:
 		print workflowsCompleted['MonteCarlo']['NoSite']
