@@ -66,6 +66,8 @@ def main():
               era = 'Fall11'
            if 'LowPU2010_DR' in prepID:
               era = 'Summer12'
+           if 'UpgradeL1TDR_DR6X' in prepID:
+              era = 'Summer12'
 
            # Check for any additionals, e.g. GEN-SIM-RECODEBUG
            for extra in outputDataSets:
