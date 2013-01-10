@@ -194,6 +194,8 @@ def assignRequest(url,workflow,team,site,era,procversion, activity, lfn, maxmerg
               "UnmergedLFNBase": "/store/unmerged",
               "MinMergeSize": 2147483648,
               "MaxMergeSize": 4294967296,
+              "CustodialSites": site,
+              "Priority" : "Normal",
               #"Memory": 2300.0,
               #"SizePerEvent": 342110,
               #"TimePerEvent": 17.5,
