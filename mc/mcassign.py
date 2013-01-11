@@ -22,6 +22,7 @@ siteblacklist = ['T2_FR_GRIF_IRFU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_RRC_KI'
 siteblacklist.extend(['T2_PL_Warsaw','T2_RU_PNPI','T2_KR_KNU','T2_UA_KIPT','T2_AT_Vienna'])
 
 sitelistsmallrequests = ['T2_DE_DESY','T2_IT_Pisa','T2_ES_CIEMAT','T2_IT_Bari','T2_US_Purdue','T2_US_Caltech','T2_CN_Beijing','T2_DE_RWTH','T2_IT_Legnaro','T2_IT_Rome','T2_US_Florida','T2_US_MIT','T2_US_Wisconsin','T2_US_UCSD','T2_US_Nebraska','T2_RU_IHEP','T2_US_Vanderbilt']
+sitelisthirequests = ['T2_US_MIT','T2_US_Wisconsin','T2_US_Nebraska','T2_US_Vanderbilt']
 
 siteliststep0long = ['T2_US_Purdue','T2_US_Nebraska','T3_US_Omaha']
 
@@ -709,7 +710,15 @@ def main():
 		# sitelist adjustment
 		newsitelist = getSitelistFromZone(zone,reqinfo[w],hi,siteblacklist)
 
-		if reqinfo[w]['priority'] >= 100000 or reqinfo[w]['cpuhours'] <= 100000 or options.small:
+		if options.hi:
+			oldsitelist = newsitelist[:]
+			newsitelist = []
+			for i in oldsitelist:
+				if 'T1_' in i:
+					newsitelist.append(i)
+				elif i in sitelisthirequests:
+					newsitelist.append(i)
+		elif reqinfo[w]['priority'] >= 100000 or options.small:
 			oldsitelist = newsitelist[:]
 			newsitelist = []
 			for i in oldsitelist:
@@ -717,6 +726,7 @@ def main():
 					newsitelist.append(i)
 				elif i in sitelistsmallrequests:
 					newsitelist.append(i)
+			
 
 		# processing version
 		
