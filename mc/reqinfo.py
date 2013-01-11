@@ -477,7 +477,7 @@ def main():
 	parser.add_option('-a', '--all', help='print all information about the requests',dest='raw',action="store_true")
 	parser.add_option('--csv', help='print all information about the requests in CSV format',dest='csv',action="store_true")
 	parser.add_option('-x', '--export', help='export all information about the requests in JSON format',dest='json',action="store_true")
-	parser.add_option('-g', '--assignment', help='returns a list of asignment-approved requests for a given number of CPU hours',dest='assignment')
+	parser.add_option('-g', '--assignment', help='returns a list of asignment-approved requests for a given number of CPU hours',dest='assignment',action="store_true")
 	parser.add_option('-d', '--datasets', help='print just output datasets',dest='datasets',action="store_true")
 	parser.add_option('-b', '--no-dbs', help='don\'t contact DBS (faster)',dest='nodbs',action="store_true")
 	parser.add_option('-j', '--jobs', help='print just information useful in workflow management context',dest='jobs',action="store_true")
@@ -567,8 +567,6 @@ def main():
 		print 
         	#print "PREPIDs: "+" ".join(reqinfo[x]['prepid'] for x in reqinfo.keys())
 	elif options.assignment:
-		print
-		print "Limit to %s CPUHours" % options.assignment
 		aalist = []
 		for w in list:
 			print "%s" % w
@@ -585,11 +583,11 @@ def main():
 		acc = 0
 		i = 0
 		print
-		while (i<len(aalist)-1 and acc < int(float(options.assignment))):
+		while (i<len(aalist)-1):
 			#print "%s %s %s %s %s" % (i,aalist[i]['requestname'],aalist[i]['priority'],aalist[i]['requestdays'],aalist[i]['expectedevents'])
 			oldacc = acc
 			acc = acc + aalist[i]['cpuhours']
-			print "%s prio=%s reqdays=%s expevts=%s cumCPUH=%s+%s=%s" % (aalist[i]['requestname'],aalist[i]['priority'],aalist[i]['requestdays'],aalist[i]['expectedevents'],oldacc,aalist[i]['cpuhours'],acc)
+			print "%s %s prio=%s reqdays=%s evts=%s slots=%s cpuh=%s cumCPUH=%s+%s=%s" % (aalist[i]['requestname'],aalist[i]['type'],aalist[i]['priority'],aalist[i]['requestdays'],aalist[i]['expectedevents'],'?',aalist[i]['cpuhours'],oldacc,aalist[i]['cpuhours'],acc)
 			i = i + 1
 		print
 		sys.exit(0)

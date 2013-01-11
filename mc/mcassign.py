@@ -19,7 +19,7 @@ teams_lp = ['production','integration']
 zones = ['FNAL','CNAF','ASGC','IN2P3','RAL','PIC','KIT']
 
 siteblacklist = ['T2_FR_GRIF_IRFU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_RRC_KI','T2_UK_SGrid_Bristol']
-siteblacklist.extend(['T2_BE_UCL','T2_BE_IIHE','T2_PL_Warsaw','T2_RU_PNPI','T2_KR_KNU','T2_UA_KIPT','T2_AT_Vienna'])
+siteblacklist.extend(['T2_PL_Warsaw','T2_RU_PNPI','T2_KR_KNU','T2_UA_KIPT','T2_AT_Vienna'])
 
 sitelistsmallrequests = ['T2_DE_DESY','T2_IT_Pisa','T2_ES_CIEMAT','T2_IT_Bari','T2_US_Purdue','T2_US_Caltech','T2_CN_Beijing','T2_DE_RWTH','T2_IT_Legnaro','T2_IT_Rome','T2_US_Florida','T2_US_MIT','T2_US_Wisconsin','T2_US_UCSD','T2_US_Nebraska','T2_RU_IHEP','T2_US_Vanderbilt']
 
@@ -66,10 +66,10 @@ def getSitelistFromZone(zone,r,hi,blacklist):
 	if zone == 'auto':
 		if hi:
 			zone = 'IN2P3'
-		elif reqinfo[w]['type'] == 'LHEStepZero':
+		elif r['type'] == 'LHEStepZero':
 			zone = 'FNAL'
 		else:
-			zone = getZoneFromRequest(reqinfo[w]['prepid'])
+			zone = getZoneFromRequest(r['prepid'])
 
 	# convert zone to list of t1 + linked t2
 	if zone in zones:
@@ -131,7 +131,7 @@ def getacqera(prepid):
 	sys.exit(1)
 	
 
-def assignMCRequest(url,workflow,team,sitelist,era,procversion,mergedlfnbase,minmergesize):
+def assignMCRequest(url,workflow,team,sitelist,era,procversion,mergedlfnbase,minmergesize,maxRSS):
     params = {"action": "Assign",
               "Team"+team: "checked",
               "SiteWhitelist": sitelist,
@@ -141,7 +141,8 @@ def assignMCRequest(url,workflow,team,sitelist,era,procversion,mergedlfnbase,min
               "MinMergeSize": minmergesize,
               "MaxMergeSize": 4294967296,
               "MaxMergeEvents": 50000,
-	      "maxRSS": 2294967,
+	      #"maxRSS": 2294967,
+	      "maxRSS": maxRSS,
               "maxVSize": 4394967000,
               "AcquisitionEra": era,
 	      "dashboard": "production",
@@ -174,7 +175,7 @@ def getzonebyt1(s):
 	custodial = '?'
 	if not s:
 		return custodial
-	t1list = {'T1_CH_CERN':'CERN','T1_FR_CCIN2P3':'IN2P3','T1_TW_ASGC':'ASGC','T1_IT_CNAF':'CNAF','T1_US_FNAL':'FNAL','T1_DE_KIT':'KIT','T1_ES_PIC':'PIC','T1_UK_RAL':'RAL'}
+	t1list = {'T1_FR_CCIN2P3':'IN2P3','T1_TW_ASGC':'ASGC','T1_IT_CNAF':'CNAF','T1_US_FNAL':'FNAL','T1_DE_KIT':'KIT','T1_ES_PIC':'PIC','T1_UK_RAL':'RAL'}
 	for i in t1list.keys():
 		if i in s:
 			custodial = t1list[i]
@@ -685,16 +686,19 @@ def main():
 			team = 'step0'
 			minmergesize = 1000000000
 			mergedlfnbase = '/store/generator'
+			maxRSS = 2294967
 		elif options.hi:
 			print "Heavy Ion request: %s" % w
 			hi = True
 			team = getteam(teams,reqinfo[w])
 			mergedlfnbase = '/store/himc'
 			minmergesize = 2147483648
+			maxRSS = 3500000
 		else:
 			mergedlfnbase = '/store/mc'
 			team = getteam(teams,reqinfo[w])
 			minmergesize = 2147483648
+			maxRSS = 2294967
 
 		# acqera
 		if acqera == 'auto':
@@ -746,13 +750,12 @@ def main():
 		print "Assignment:"
 		print
 	for w in list:
-		suminfo = "%s\nprio:%s team:%s era:%s procvs:%s LFNBase:%s MinMerge:%s\nOutputDataset: %s\nWhitelist: %s" % (w,assign_data[w]['priority'],assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['procversion'],mergedlfnbase,minmergesize,dataset,", ".join(x for x in assign_data[w]['whitelist']))
+		suminfo = "%s\nprio:%s team:%s era:%s procvs:%s LFNBase:%s maxRSS:%s MinMerge:%s\nOutputDataset: %s\nWhitelist: %s" % (w,assign_data[w]['priority'],assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['procversion'],mergedlfnbase,maxRSS,minmergesize,dataset,",".join(x for x in assign_data[w]['whitelist']))
 		if options.test:
 			print "TEST:\t%s\n" % suminfo
-			#print "%s %s %s %s %s %s %s %s" % (url,w,assign_data[w]['team'],assign_data[w]['whitelist'],assign_data[w]['acqera'],assign_data[w]['procversion'],mergedlfnbase,minmergesize)
 		if not options.test:
 			print "ASSIGN:\t%s\n" % suminfo
-			assignMCRequest(url,w,assign_data[w]['team'],assign_data[w]['whitelist'],assign_data[w]['acqera'],assign_data[w]['procversion'],mergedlfnbase,minmergesize)
+			assignMCRequest(url,w,assign_data[w]['team'],assign_data[w]['whitelist'],assign_data[w]['acqera'],assign_data[w]['procversion'],mergedlfnbase,minmergesize,maxRSS)
 	
 	sys.exit(0)
 
