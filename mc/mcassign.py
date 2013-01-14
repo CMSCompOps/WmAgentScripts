@@ -60,8 +60,9 @@ def get_linkedt2s(custodialT1):
         	print sys.exc_info()
 		sys.exit(1)
 
-def getSitelistFromZone(zone,r,hi,blacklist):
+def getSitelistFromZone(zone,r,hi,siteblacklist):
 	global zones
+	blacklist = siteblacklist[:]
 	zone2t1 = {'FNAL':'T1_US_FNAL','CNAF':'T1_IT_CNAF','ASGC':'T1_TW_ASGC','IN2P3':'T1_FR_CCIN2P3','RAL':'T1_UK_RAL','PIC':'T1_ES_PIC','KIT':'T1_DE_KIT'}
 	# if zone is automatic, guess zone
 	if zone == 'auto':
@@ -82,6 +83,10 @@ def getSitelistFromZone(zone,r,hi,blacklist):
 
 		# get all linked T2s
 		t2list = get_linkedt2s(zone2t1[zone])
+		
+		# add T3_US_Omaha if T2_US_Nebraska is usable, merged files will always get to Nebraska
+		if 'T2_US_Nebraska' in t2list:
+			t2list.append('T3_US_Omaha')
 
 		# exclude Vanderbilt if not Heavy Ion
 		if not hi:
