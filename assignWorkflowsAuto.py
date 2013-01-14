@@ -241,11 +241,12 @@ def main():
 	parser.add_option('-t', '--team', help='Type of Requests',dest='team')
 	parser.add_option('-s', '--site', help='Force workflow to run at this site',dest='site')
 	parser.add_option('-p', '--procversion', help='Processing Version',dest='procversion')
+	parser.add_option('-n', '--procstring', help='Process String',dest='procstring')
 	parser.add_option('-e', '--execute', help='Actually assign workflows',action="store_true",dest='execute')
 	parser.add_option('-x', '--restrict', help='Only assign workflows for this site',dest='restrict')
 	parser.add_option('-r', '--rssmax', help='Max RSS',dest='maxRSS')
 	parser.add_option('-v', '--vsizemax', help='Max VMem',dest='maxVSize')
-	parser.add_option('-a', '--aextension', help='Use _ext special name',action="store_true",dest='extension')
+	parser.add_option('-a', '--extension', help='Use _ext special name',action="store_true",dest='extension')
 	(options,args) = parser.parse_args()
 	if not options.filename:
 		print "A filename is required"
@@ -364,6 +365,8 @@ def main():
               lfn = '/store/mc'
 
            # Construct processed dataset version
+           if options.procstring:
+              specialName = options.procstring + '_'
            extTag = ''
            if options.extension:
               extTag = '_ext'
