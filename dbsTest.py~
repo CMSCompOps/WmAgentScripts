@@ -121,7 +121,8 @@ def EventsRunList(dataset, runlist):
 			for run in runList:
 				querry=querry+" run="+str(run) +" OR "
 			querry=querry+' run= '+str(runList[0]) +')'
-			querry=querry+"'|awk '{print $2}' | grep '[0-9]\{1,\}'"
+			querry=querry+"'| grep '[0-9]\{1,\}' | awk '{s+=$2}END{print s}'"
+			#querry=querry+"'|awk '{print $2}' | grep '[0-9]\{1,\}'"
 			output=os.popen(querry).read()
 			if not output:
 				events=events
@@ -131,6 +132,22 @@ def EventsRunList(dataset, runlist):
        				events=events
 		return events
 
+def getRunLumiCountDatasetBlockList(dataset,blockList):
+	lumis=0
+	querry="./dbssql --limit=1000000 --input='find block, run, lumi where dataset="+dataset+"' |egrep '("
+	for block in blockList:
+		querry=querry+block+ "|"
+	querry=querry+blockList[0]+"')"
+	querry=querry+"| awk '{print $2, $3}' | sort | uniq | wc -l"
+	output=os.popen(querry).read()
+	if not output:
+		lumis=lumis
+	try:
+		lumis=lumis+int(output)
+	except ValueError:
+       		lumis=lumis
+	#print lumis	
+	return lumis
 
 def getInputEvents(url, workflow):
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -143,7 +160,7 @@ def getInputEvents(url, workflow):
 		r2=conn.getresponse()
 		request = json.read(r2.read())
 	requestType=request['RequestType']
-	if requestType=='MonteCarlo':
+	if requestType=='MonteCarlo' or requestType=='LHEStepZero':
 		if 'RequestNumEvents' in request:
 			if request['RequestNumEvents']>0:
 				return request['RequestNumEvents']
@@ -156,6 +173,10 @@ def getInputEvents(url, workflow):
 	inputDataSet=request['InputDataset']
 	runWhitelist=request['RunWhitelist']
 	if requestType=='ReReco':
+		if len(BlockWhitelist)>0:
+			return getRunLumiCountDatasetBlockList(inputDataSet,BlockWhitelist)
+		if len(BlockBlacklist)>0:
+			return getRunLumiCountDataset(inputDataSet)-getRunLumiCountDatasetBlockList(inputDataSet,BlockBlacklist)
 		if len(runWhitelist)>0:
 			return getRunLumiCountDatasetList(inputDataSet, runWhitelist)
 		else:
