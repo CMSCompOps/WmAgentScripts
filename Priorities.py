@@ -28,12 +28,13 @@ def maxEventsFileDataset(url, workflow):
 		querry=querry+' run= '+str(runWhitelist[0]) +')'
 	
 	output=os.popen("./dbssql --input="+querry+"'| awk '{print $2}' | grep '[0-9]\{1,\}'").read()
+	if "version" in output:
+		output = 0
 	if not output:
 		output = 0
 	return int(output)
 
-
-def getEffectiveLumiSections(url, workflow):
+def getEffectiveLumiSections(url, workflow, requestType):
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
 	r2=conn.getresponse()
@@ -43,8 +44,11 @@ def getEffectiveLumiSections(url, workflow):
 	inputDataSet=request['InputDataset']
 	BlockWhitelist=request['BlockWhitelist']
 	runWhitelist=request['RunWhitelist']
-#	querry='find file,run,lumi where dataset ='+inputDataSet
-	querry='find run,lumi where dataset ='+inputDataSet
+	querry='find file,run,lumi where dataset ='+inputDataSet
+	if requestType == "ReReco":
+		querry='find run,lumi where dataset ='+inputDataSet
+	else:
+		querry="'find dataset,count(lumi) where dataset="+inputDataSet
 	if len(BlockWhitelist)>0:
 		querry=querry+' AND ('
 		for block in BlockWhitelist:
@@ -55,8 +59,15 @@ def getEffectiveLumiSections(url, workflow):
 		for run in runWhitelist:
 			querry=querry+' run= '+str(run)+' OR'
 		querry=querry+' run= '+str(runWhitelist[0]) +')'
-	output=os.popen("./dbssql --limit=1000000 --input='"+querry+"'"+ "|wc -l").read()
-	return int(output)-3
+	if requestType == "ReReco":
+		output=os.popen("./dbssql --limit=1000000 --input='"+querry+"'"+ "|wc -l").read()	
+	else:
+		output=os.popen("./dbssql --limit=1000000 --input="+querry+"'| awk '{print $2}' | grep '[0-9]\{1,\}'").read()
+	if not output:
+		output = 0
+	if requestType == "ReReco":
+		output = int(output)-3
+	return int(output)
 
 #Gets the time per event of a requests if the parameter hasn't been set up by the requestor it returns 1
 
@@ -91,7 +102,7 @@ def classifyRequests(url, requests, historic, noNameSites, requestType):
 			namefound=1
 			for stat in historic[Site].keys():#stat is the status of the request in the list of requests
 				if status==stat:
-					EffectiveLumi=getEffectiveLumiSections(url, name)
+					EffectiveLumi=getEffectiveLumiSections(url, name, requestType)
 					if EffectiveLumi <=0:
 						EffectiveLumi=0.0000001
 					TimeEvent=getTimeEventRequest(url, name)
@@ -107,7 +118,7 @@ def classifyRequests(url, requests, historic, noNameSites, requestType):
 		if namefound==0:
 			for stat in noNameSites.keys():
 				if status==stat:
-					EffectiveLumi=getEffectiveLumiSections(url, name)
+					EffectiveLumi=getEffectiveLumiSections(url, name, requestType)
 					if EffectiveLumi <=0:
 						EffectiveLumi=0.0000001
 					TimeEvent=getTimeEventRequest(url, name)
