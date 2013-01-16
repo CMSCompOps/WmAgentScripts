@@ -22,6 +22,14 @@ def changeSplittingWorkflow(url, workflow, split):
 		params = {"requestName":workflow,"splittingTask" : '/'+workflow+"/StepOneProc", "splittingAlgo":"LumiBased", "lumis_per_job":str(split), "timeout":"", "include_parents":"False", "files_per_job":"",'halt_job_on_file_boundaries':'True','events_per_job':''}
 	elif RequestType=='MonteCarloFromGEN':
 		params = {"requestName":workflow,"splittingTask" : '/'+workflow+"/MonteCarloFromGEN", "splittingAlgo":"LumiBased", "lumis_per_job":str(split), "timeout":"", "include_parents":"False", "files_per_job":"",'halt_job_on_file_boundaries':'True'}
+#        elif RequestType=='ReReco':
+#		params = {"requestName":workflow,"splittingTask" : '/'+workflow+"/DataProcessing", "splittingAlgo":"FileBased", "files_per_job":str(split), "timeout":"", "include_parents":"False", 'halt_job_on_file_boundaries':'True','events_per_job':''}
+#        elif RequestType=='ReReco':
+#		params = {"requestName":workflow,"splittingTask" : '/'+workflow+"/DataProcessing", "splittingAlgo":"LumiBased", "lumis_per_job":str(split), "timeout":"", "include_parents":"False", "files_per_job":"",'halt_job_on_file_boundaries':'True','events_per_job':''}
+        elif RequestType=='ReReco':
+		params = {"requestName":workflow,"splittingTask" : '/'+workflow+"/DataProcessing", "splittingAlgo":"EventAwareLumiBased", "lumis_per_job":"", "timeout":"", "include_parents":"False", "files_per_job":"",'halt_job_on_file_boundaries':'True','events_per_job':'', 'avg_events_per_job':str(split), 'max_events_per_lumi':20000}
+	elif RequestType=='Resubmission':
+		params = {"requestName":workflow,"splittingTask" : '/'+workflow+"/DataProcessing", "splittingAlgo":"LumiBased", "lumis_per_job":str(split), "timeout":"", "include_parents":"False", "files_per_job":"",'halt_job_on_file_boundaries':'True','events_per_job':''}
     	headers={"Content-type": "application/x-www-form-urlencoded",
              "Accept": "text/plain"}
     	encodedParams = urllib.urlencode(params)
