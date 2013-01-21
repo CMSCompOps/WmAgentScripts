@@ -181,14 +181,13 @@ def getInputEvents(url, workflow):
 			return getRunLumiCountDatasetList(inputDataSet, runWhitelist)
 		else:
 			return getRunLumiCountDataset(inputDataSet)
-	querry='find dataset,sum(block.numevents) where dataset='+inputDataSet
 	events=getEventCountDataSet(inputDataSet)
-	if len(BlockWhitelist)>0:
-		events=EventsBlockList(inputDataSet, BlockWhitelist)
 	if len(BlockBlacklist)>0:
 		events=events-EventsBlockList(inputDataSet, BlockBlacklist)
 	if len(runWhitelist)>0:
 		events=EventsRunList(inputDataSet, runWhitelist)
+	if len(BlockWhitelist)>0:
+		events=EventsBlockList(inputDataSet, BlockWhitelist)
 	if 'FilterEfficiency' in request.keys():
 		return float(request['FilterEfficiency'])*events
 	else:
@@ -219,7 +218,6 @@ def main():
 	url='cmsweb.cern.ch'
 	outputDataSets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
 	inputEvents=getInputEvents(url, workflow)
-	#print inputEvents
 	for dataset in outputDataSets:
 		outputEvents=getOutputEvents(url, workflow, dataset)
 		if inputEvents!=0:

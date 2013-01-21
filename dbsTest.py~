@@ -137,7 +137,7 @@ def getRunLumiCountDatasetBlockList(dataset,blockList):
 	querry="./dbssql --limit=1000000 --input='find block, run, lumi where dataset="+dataset+"' |egrep '("
 	for block in blockList:
 		querry=querry+block+ "|"
-	querry=querry+blockList[0]+"')"
+	querry=querry+blockList[0]+")'"
 	querry=querry+"| awk '{print $2, $3}' | sort | uniq | wc -l"
 	output=os.popen(querry).read()
 	if not output:
@@ -181,14 +181,13 @@ def getInputEvents(url, workflow):
 			return getRunLumiCountDatasetList(inputDataSet, runWhitelist)
 		else:
 			return getRunLumiCountDataset(inputDataSet)
-	querry='find dataset,sum(block.numevents) where dataset='+inputDataSet
 	events=getEventCountDataSet(inputDataSet)
-	if len(BlockWhitelist)>0:
-		events=EventsBlockList(inputDataSet, BlockWhitelist)
 	if len(BlockBlacklist)>0:
 		events=events-EventsBlockList(inputDataSet, BlockBlacklist)
 	if len(runWhitelist)>0:
 		events=EventsRunList(inputDataSet, runWhitelist)
+	if len(BlockWhitelist)>0:
+			events=EventsBlockList(inputDataSet, BlockWhitelist)
 	if 'FilterEfficiency' in request.keys():
 		return float(request['FilterEfficiency'])*events
 	else:
@@ -219,7 +218,6 @@ def main():
 	url='cmsweb.cern.ch'
 	outputDataSets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
 	inputEvents=getInputEvents(url, workflow)
-	#print inputEvents
 	for dataset in outputDataSets:
 		outputEvents=getOutputEvents(url, workflow, dataset)
 		if inputEvents!=0:
