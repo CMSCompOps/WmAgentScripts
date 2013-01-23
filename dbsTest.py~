@@ -187,7 +187,8 @@ def getInputEvents(url, workflow):
 	if len(runWhitelist)>0:
 		events=EventsRunList(inputDataSet, runWhitelist)
 	if len(BlockWhitelist)>0:
-			events=EventsBlockList(inputDataSet, BlockWhitelist)
+		events=EventsBlockList(inputDataSet, BlockWhitelist)
+	print events
 	if 'FilterEfficiency' in request.keys():
 		return float(request['FilterEfficiency'])*events
 	else:
