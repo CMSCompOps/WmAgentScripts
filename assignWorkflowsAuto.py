@@ -199,7 +199,7 @@ def assignRequest(url,workflow,team,site,era,procversion, activity, lfn, maxmerg
               #"Memory": 2300.0,
               #"SizePerEvent": 342110,
               #"TimePerEvent": 17.5,
-              "SoftTimeout": 171600,
+              "SoftTimeout": 167000,
               "GracePeriod": 300,
               "MaxMergeEvents": maxmergeevents,
 	      "maxRSS": maxRSS,
