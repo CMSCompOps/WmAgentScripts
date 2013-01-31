@@ -55,6 +55,8 @@ def main():
            ods = []
 
            # Set defaults & era
+           lfn = '/store/mc'
+
            if 'Summer12_DR52X' in prepID:
               ods = ['GEN-SIM-RECO', 'AODSIM', 'DQM']
               era = 'Summer12'
@@ -68,6 +70,11 @@ def main():
               era = 'Summer12'
            if 'UpgradeL1TDR_DR6X' in prepID:
               era = 'Summer12'
+
+           if 'Winter13' in prepID or 'Winter13' in workflow:
+              ods = ['GEN-SIM-RECO', 'AODSIM', 'DQM']
+              era = 'HiWinter13'
+              lfn = '/store/himc'
 
            # Check for any additionals, e.g. GEN-SIM-RECODEBUG
            for extra in outputDataSets:
@@ -92,7 +99,7 @@ def main():
 
            # List required tape families and site name
            for od in ods:
-              tapeFamily = '/store/mc/'+era+'/'+inputDatasetComps[1]+'/'+od
+              tapeFamily = lfn+'/'+era+'/'+inputDatasetComps[1]+'/'+od
               print tapeFamily,' ',siteUse
 
 	sys.exit(0);
