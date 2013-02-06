@@ -13,18 +13,19 @@ except ImportError:
 # TODO guess procversion
 
 legal_eras = ['Summer11','Summer12']
-teams_hp = ['mc']
-teams_lp = ['production','integration']
+teams_lp = ['mc']
+teams_hp = ['mc_highprio']
 
 zones = ['FNAL','CNAF','ASGC','IN2P3','RAL','PIC','KIT']
 
 siteblacklist = ['T2_FR_GRIF_IRFU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_RRC_KI','T2_UK_SGrid_Bristol']
 siteblacklist.extend(['T2_PL_Warsaw','T2_RU_PNPI','T2_KR_KNU','T2_UA_KIPT','T2_AT_Vienna'])
 
-sitelistsmallrequests = ['T2_DE_DESY','T2_IT_Pisa','T2_ES_CIEMAT','T2_IT_Bari','T2_US_Purdue','T2_US_Caltech','T2_CN_Beijing','T2_DE_RWTH','T2_IT_Legnaro','T2_IT_Rome','T2_US_Florida','T2_US_MIT','T2_US_Wisconsin','T2_US_UCSD','T2_US_Nebraska','T2_RU_IHEP','T2_US_Vanderbilt']
-sitelisthirequests = ['T2_US_MIT','T2_US_Wisconsin','T2_US_Nebraska','T2_US_Vanderbilt']
+sitelistsmallrequests = ['T2_DE_DESY','T2_IT_Pisa','T2_ES_CIEMAT','T2_IT_Bari','T2_US_Purdue','T2_US_Caltech','T2_DE_RWTH','T2_IT_Legnaro','T2_IT_Rome','T2_US_Florida','T2_US_MIT','T2_US_Wisconsin','T2_US_UCSD','T2_US_Nebraska','T2_RU_IHEP','T2_US_Vanderbilt']
+sitelisthirequests = ['T2_US_MIT','T2_US_Wisconsin','T2_US_Nebraska','T2_US_Vanderbilt','T2_FR_CCIN2P3']
 
 siteliststep0long = ['T2_US_Purdue','T2_US_Nebraska','T3_US_Omaha']
+sitelistgensubscrnoncust = ['T1_DE_KIT_MSS' ,'T1_ES_PIC_MSS' ,'T1_FR_CCIN2P3_MSS' ,'T1_IT_CNAF_MSS' ,'T1_TW_ASGC_MSS' ,'T1_UK_RAL_MSS' ,'T2_BE_IIHE' ,'T2_BE_UCL' ,'T2_BR_SPRACE' ,'T2_CH_CSCS' ,'T2_CN_Beijing' ,'T2_DE_DESY' ,'T2_DE_RWTH' ,'T2_EE_Estonia' ,'T2_ES_CIEMAT' ,'T2_ES_IFCA' ,'T2_FI_HIP' ,'T2_FR_CCIN2P3' ,'T2_FR_GRIF_LLR' ,'T2_FR_IPHC' ,'T2_HU_Budapest' ,'T2_IN_TIFR' ,'T2_IT_Bari' ,'T2_IT_Legnaro' ,'T2_IT_Pisa' ,'T2_IT_Rome' ,'T2_PL_Warsaw' ,'T2_PT_NCG_Lisbon','T2_RU_JINR' ,'T2_RU_SINP' ,'T2_TR_METU' ,'T2_TW_Taiwan' ,'T2_UK_London_Brunel' ,'T2_UK_London_IC' ,'T2_UK_SGrid_RALPP' ,'T2_US_Caltech' ,'T2_US_Florida' ,'T2_US_MIT' ,'T2_US_Nebraska' ,'T2_US_Purdue' ,'T2_US_UCSD' ,'T2_US_Wisconsin','T2_BR_UERJ','T3_US_Colorado','T2_RU_IHEP','T2_RU_ITEP','T2_CH_CERN']
 
 cachedoverview = '/afs/cern.ch/user/s/spinoso/public/overview.cache'
 forceoverview = 0
@@ -137,13 +138,14 @@ def getacqera(prepid):
 	sys.exit(1)
 	
 
-def assignMCRequest(url,workflow,team,sitelist,era,procversion,mergedlfnbase,minmergesize,maxRSS):
+def assignMCRequest(url,workflow,team,sitelist,era,procversion,mergedlfnbase,minmergesize,maxRSS,custodialsites,softtimeout):
     params = {"action": "Assign",
               "Team"+team: "checked",
               "SiteWhitelist": sitelist,
               "SiteBlacklist": [],
               "MergedLFNBase": mergedlfnbase,
               "UnmergedLFNBase": "/store/unmerged",
+	      "SoftTimeout": softtimeout,
               "MinMergeSize": minmergesize,
               "MaxMergeSize": 4294967296,
               "MaxMergeEvents": 50000,
@@ -153,6 +155,7 @@ def assignMCRequest(url,workflow,team,sitelist,era,procversion,mergedlfnbase,min
               "AcquisitionEra": era,
 	      "dashboard": "production",
               "ProcessingVersion": procversion,
+		"CustodialSites":custodialsites,
               "checkbox"+workflow: "checked"}
 
     encodedParams = urllib.urlencode(params, True)
@@ -615,7 +618,7 @@ def main():
 	parser.add_option('--small', action="store_true",default=False,help='assign requests considering them small',dest='small')
 	parser.add_option('--hi', action="store_true",default=False,help='heavy ion request (add Vanderbilt to the whitelist, use /store/himc)',dest='hi')
 	parser.add_option('-z', '--zone', help='Zone %s or single site or comma-separated list (i.e. T1_US_FNAL,T2_FR_CCIN2P3,T2_DE_DESY)' % zones,dest='zone')
-	parser.add_option('-a', '--acqera', help='Acquisition era: one of %s' % legal_eras,dest='acqera')
+	parser.add_option('-a', '--acqera', help='Acquisition era',dest='acqera')
 	parser.add_option('-v', '--version', help='Version (it is the vx part of the ProcessingVersion), default is v1',dest='version')
 	parser.add_option('-p', '--processingversion', help='Processing Version, default to GlobalTag-vX',dest='procversion')
 	(options,args) = parser.parse_args()
@@ -657,16 +660,19 @@ def main():
 	if options.acqera:
 		acqera = options.acqera
 	else:
-		acqera = 'auto'
+		print "Please provide the acquisition era."
+		sys.exit(1)
 
 	siteblacklist.sort()
 	print "Default site blacklist: %s\n" % (",".join(x for x in siteblacklist))
+	if options.hi:
+		print "Heavy Ion flag is set, parameters will be configured accordingly"
 
 	print "Preparing requests:\n"
 	#print "REQUEST TEAM PRIORITY ACQERA PROCVS ZONE"
 	assign_data = {}
 	for w in list:
-		print "Get info for %s" % w
+		print "%s" % w
 		reqinfo[w] = getWorkflowInfo(w)
 
 		# status
@@ -688,32 +694,36 @@ def main():
 		# internal assignment parameters
 		hi = False
 		if reqinfo[w]['type'] == 'LHEStepZero':
-			print 'LHEStepZero request: %s' % w
+			#print 'LHEStepZero request: %s' % w
 			team = 'step0'
 			minmergesize = 1000000000
+			softtimeout = 167000*2
 			mergedlfnbase = '/store/generator'
 			maxRSS = 2294967
 		elif options.hi:
-			print "Heavy Ion request: %s" % w
 			hi = True
 			team = getteam(teams,reqinfo[w])
+			softtimeout = 167000
 			mergedlfnbase = '/store/himc'
 			minmergesize = 2147483648
 			maxRSS = 3500000
 		else:
 			mergedlfnbase = '/store/mc'
 			team = getteam(teams,reqinfo[w])
+			softtimeout = 167000
 			minmergesize = 2147483648
 			maxRSS = 2294967
 
 		# acqera
-		if acqera == 'auto':
-			newacqera = getacqera(reqinfo[w]['prepid'])
-		else:
-			newacqera = acqera
+		#if acqera == 'auto':
+		#	newacqera = getacqera(reqinfo[w]['prepid'])
+		#else:
+		#	newacqera = acqera
+		newacqera = acqera
 
 		# sitelist adjustment
 		newsitelist = getSitelistFromZone(zone,reqinfo[w],hi,siteblacklist)
+		custodialsites = []
 
 		if options.hi:
 			oldsitelist = newsitelist[:]
@@ -731,7 +741,13 @@ def main():
 					newsitelist.append(i)
 				elif i in sitelistsmallrequests:
 					newsitelist.append(i)
-			
+
+		if reqinfo[w]['type'] == 'LHEStepZero':
+			custodialsites.append('T1_US_FNAL')
+		else:
+			for i in newsitelist:
+				if 'T1_' in i:
+					custodialsites.append(i)
 
 		# processing version
 		
@@ -756,21 +772,26 @@ def main():
 		assign_data[w]['whitelist'] = newsitelist
 		assign_data[w]['acqera'] = newacqera
 		assign_data[w]['procversion'] = newprocversion
-		#suminfo = "%s t:%s pr:%s er:%s pv:%s z:%s" % (w,assign_data[w]['team'],assign_data[w]['priority'],assign_data[w]['acqera'],assign_data[w]['procversion'],assign_data[w]['whitelist'])
-		#suminfo = "%s" % (w)
-		#print "%s" % suminfo
+		assign_data[w]['custodialsites'] = custodialsites
+		assign_data[w]['dataset'] = dataset
+		assign_data[w]['mergedlfnbase'] = mergedlfnbase
+		assign_data[w]['maxRSS'] = maxRSS
+		assign_data[w]['minmergesize'] = minmergesize
+		assign_data[w]['softtimeout'] = softtimeout
+
 	print "\n----------------------------------------------\n"
+
 
 	if not options.test: 
 		print "Assignment:"
 		print
 	for w in list:
-		suminfo = "%s\nprio:%s team:%s era:%s procvs:%s LFNBase:%s maxRSS:%s MinMerge:%s\nOutputDataset: %s\nWhitelist: %s" % (w,assign_data[w]['priority'],assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['procversion'],mergedlfnbase,maxRSS,minmergesize,dataset,",".join(x for x in assign_data[w]['whitelist']))
+		suminfo = "%s\nprio:%s team:%s era:%s procvs:%s LFNBase:%s maxRSS:%s MinMerge:%s SoftTimeout:%s\nOutputDataset: %s\nCustodialSites: %s\nWhitelist: %s" % (w,assign_data[w]['priority'],assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['procversion'],assign_data[w]['mergedlfnbase'],assign_data[w]['maxRSS'],assign_data[w]['minmergesize'],assign_data[w]['softtimeout'],assign_data[w]['dataset'],assign_data[w]['custodialsites'],",".join(x for x in assign_data[w]['whitelist']))
 		if options.test:
 			print "TEST:\t%s\n" % suminfo
 		if not options.test:
 			print "ASSIGN:\t%s\n" % suminfo
-			assignMCRequest(url,w,assign_data[w]['team'],assign_data[w]['whitelist'],assign_data[w]['acqera'],assign_data[w]['procversion'],mergedlfnbase,minmergesize,maxRSS)
+			assignMCRequest(url,w,assign_data[w]['team'],assign_data[w]['whitelist'],assign_data[w]['acqera'],assign_data[w]['procversion'],assign_data[w]['mergedlfnbase'],assign_data[w]['minmergesize'],assign_data[w]['maxRSS'],assign_data[w]['custodialsites'],assign_data[w]['softtimeout'])
 	
 	sys.exit(0)
 

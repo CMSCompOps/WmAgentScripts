@@ -1,7 +1,9 @@
 #!/usr/bin/env python
-#import json
 import sys
-import simplejson as json
+try:
+	import json
+except:
+	import simplejson as json
 import urllib2,urllib, httplib, sys, re, os
 from xml.dom.minidom import getDOMImplementation
 reqmgrsocket='http://localhost:8687'

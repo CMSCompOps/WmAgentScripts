@@ -11,7 +11,6 @@ dashost = 'https://cmsweb.cern.ch'
 reqmgrsocket='vocms204.cern.ch'
 overview = ''
 count = 1
-tiers = ['GEN-SIM','GEN-SIM-RECO','DQM','AODSIM']
 #tiers = ['GEN-SIM','GEN-SIM-RECO','DQM','AODSIM','GEN-SIM-DIGI-RECO']
 eras = ['Summer11','Summer12']
 cachedoverview = os.environ['HOME'] + '/public/overview.cache'
@@ -180,6 +179,11 @@ def main():
 	parser = optparse.OptionParser()
 	parser.add_option('-l', '--listfile', help='analyze workflows listed in textfile',dest='list')
 	parser.add_option('-w', '--workflow', help='analyze specific workflow',dest='wf')
+	parser.add_option('-a', '--acqera', help='acquisition era',dest='acqera')
+	parser.add_option('-c', '--campaign', help='campaign',dest='campaign')
+	parser.add_option('-b', '--batch', help='batch',dest='batch')
+	parser.add_option('-z', '--zone', help='custodial T1',dest='t1')
+	parser.add_option('--fsim', help='FastSim',dest='fsim',action='store_true')
 
 	(options,args) = parser.parse_args()
 
@@ -190,23 +194,57 @@ def main():
 	else:
 		print "List not provided."
 		sys.exit(1)
+
+	if not options.campaign:
+		print "Please provide the campaign"
+		sys.exit(1)
+	else:
+		campaign = options.campaign
+		
+	if not options.acqera:
+		print "Please provide the acquisition era"
+		sys.exit(1)
+	else:
+		acqera = options.acqera
+		
+	if not options.batch:
+		print "Please provide the batch parameter (RXXXX_BYYY)"
+		sys.exit(1)
+	else:
+		batch = options.batch
+		
+	if not options.t1:
+		print "Please provide the custodial T1"
+		sys.exit(1)
+	else:
+		t1 = options.t1
 		
 	overview = getoverview()
 	reqinfo = {}
 	for workflow in list:
 		reqinfo[workflow] = getWorkflowInfo(workflow)
 
+	if options.fsim:
+		tiers = ['AODSIM']
+	else:
+		tiers = ['GEN-SIM','GEN-SIM-RECO','DQM','AODSIM']
+
 	print
+	print "Custodial LFNs for %s %s (%s)" % (campaign,batch,t1)
+	print
+	print "Dear admins,\n\nplease create the tape families below[*], needed for MC production.\n\nThanks!\n Vincenzo & Ajit.\n\n[*]"
+
+	prepidlist = []
 	for workflow in reqinfo.keys():
 		prepid = reqinfo[workflow]['prepid']
-		acqera = prepid.split('-')[1]
-		if acqera not in eras:
-			acqera = "Summer12"
+		prepidlist.append(prepid)
 		prids = reqinfo[workflow]['primaryds']
 		for i in tiers:
 			tf = "/store/mc/"+acqera+"/"+prids+"/"+i
 			print "%s" % (tf)
-	print "("+",".join(reqinfo[x]['prepid'] for x in reqinfo.keys())+")"
+	prepidlist.sort()
+
+	print "\nPREPID: "+",".join(prepidlist)
         sys.exit(0)
 
 if __name__ == "__main__":
