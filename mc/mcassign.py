@@ -311,7 +311,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 			a = raw.find(" =")
 			b = raw.find('<br')
 			lumis_per_job = int(raw[a+3:b])
-		elif '.events_per_job' in raw:
+		elif 'splitting.events_per_job' in raw:
 			a = raw.find(" =")
 			b = raw.find('<br')
 			events_per_job = int(raw[a+3:b])
@@ -402,7 +402,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 	except:
 		pass
 	
-	if typ in ['MonteCarlo']:
+	if typ in ['MonteCarlo','LHEStepZero']:
 		expectedevents = int(reqevts)
 		expectedjobs = int(expectedevents/(events_per_job*filtereff))
 		expectedjobcpuhours = int(timeev*(events_per_job*filtereff)/3600)
@@ -617,6 +617,7 @@ def main():
 	parser.add_option('--assign', action="store_false",default=True,help='assign mode',dest='test')
 	parser.add_option('--small', action="store_true",default=False,help='assign requests considering them small',dest='small')
 	parser.add_option('--hi', action="store_true",default=False,help='heavy ion request (add Vanderbilt to the whitelist, use /store/himc)',dest='hi')
+	parser.add_option('--fsim', action="store_true",default=False,help='FastSim request (add _FSIM in the processing version)',dest='fsim')
 	parser.add_option('-z', '--zone', help='Zone %s or single site or comma-separated list (i.e. T1_US_FNAL,T2_FR_CCIN2P3,T2_DE_DESY)' % zones,dest='zone')
 	parser.add_option('-a', '--acqera', help='Acquisition era',dest='acqera')
 	parser.add_option('-v', '--version', help='Version (it is the vx part of the ProcessingVersion), default is v1',dest='version')
@@ -697,20 +698,20 @@ def main():
 			#print 'LHEStepZero request: %s' % w
 			team = 'step0'
 			minmergesize = 1000000000
-			softtimeout = 167000*2
+			softtimeout = 108000*2
 			mergedlfnbase = '/store/generator'
 			maxRSS = 2294967
 		elif options.hi:
 			hi = True
 			team = getteam(teams,reqinfo[w])
-			softtimeout = 167000
+			softtimeout = 108000
 			mergedlfnbase = '/store/himc'
 			minmergesize = 2147483648
 			maxRSS = 3500000
 		else:
 			mergedlfnbase = '/store/mc'
 			team = getteam(teams,reqinfo[w])
-			softtimeout = 167000
+			softtimeout = 108000
 			minmergesize = 2147483648
 			maxRSS = 2294967
 
@@ -752,7 +753,10 @@ def main():
 		# processing version
 		
 		if procversion == 'auto':
-			newprocversion = "%s-%s" % (reqinfo[w]['globaltag'],version)
+			if reqinfo[w]['type'] == 'MonteCarloFromGEN' and ('_FSIM-' in reqinfo[w]['inputdataset']['name'] or options.fsim):
+				newprocversion = "%s_FSIM-%s" % (reqinfo[w]['globaltag'],version)
+			else:
+				newprocversion = "%s-%s" % (reqinfo[w]['globaltag'],version)
 			dataset = '/%s/%s-%s/%s' % (reqinfo[w]['primaryds'],newacqera,newprocversion,reqinfo[w]['outputtier'])
 			if isInDBS(dataset):
 				print "Processing version already in use for %s : %s" % (w,dataset)
@@ -769,6 +773,8 @@ def main():
 		assign_data[w] = {}
 		assign_data[w]['team'] = team
 		assign_data[w]['priority'] = priority
+		assign_data[w]['events'] = reqinfo[w]['expectedevents']
+		assign_data[w]['cpuhours'] = reqinfo[w]['cpuhours']
 		assign_data[w]['whitelist'] = newsitelist
 		assign_data[w]['acqera'] = newacqera
 		assign_data[w]['procversion'] = newprocversion
@@ -786,7 +792,7 @@ def main():
 		print "Assignment:"
 		print
 	for w in list:
-		suminfo = "%s\nprio:%s team:%s era:%s procvs:%s LFNBase:%s maxRSS:%s MinMerge:%s SoftTimeout:%s\nOutputDataset: %s\nCustodialSites: %s\nWhitelist: %s" % (w,assign_data[w]['priority'],assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['procversion'],assign_data[w]['mergedlfnbase'],assign_data[w]['maxRSS'],assign_data[w]['minmergesize'],assign_data[w]['softtimeout'],assign_data[w]['dataset'],assign_data[w]['custodialsites'],",".join(x for x in assign_data[w]['whitelist']))
+		suminfo = "%s\nprio:%s events:%s cpuhours:%s team:%s era:%s procvs:%s LFNBase:%s maxRSS:%s MinMerge:%s SoftTimeout:%s\nOutputDataset: %s\nCustodialSites: %s\nWhitelist: %s" % (w,assign_data[w]['priority'],assign_data[w]['events'],assign_data[w]['cpuhours'],assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['procversion'],assign_data[w]['mergedlfnbase'],assign_data[w]['maxRSS'],assign_data[w]['minmergesize'],assign_data[w]['softtimeout'],assign_data[w]['dataset'],assign_data[w]['custodialsites'],",".join(x for x in assign_data[w]['whitelist']))
 		if options.test:
 			print "TEST:\t%s\n" % suminfo
 		if not options.test:
