@@ -223,7 +223,9 @@ def getInputEvents(url, workflow):
     BlockWhitelist=request['BlockWhitelist']
     BlockBlacklist=request['BlockBlacklist']
     inputDataSet=request['InputDataset']
-    runWhitelist=request['RunWhitelist']
+    runWhitelist=[]
+    if 'RunWhitelist' in request:
+	runWhitelist=request['RunWhitelist']
     if requestType=='ReReco':
         if len(BlockWhitelist)>0:
             return getRunLumiCountDatasetBlockList(inputDataSet,BlockWhitelist)

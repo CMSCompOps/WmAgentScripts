@@ -150,6 +150,8 @@ def closeOutReRecoWorkflows(url, workflows):
 #			continue
 		if 'RelVal' in workflow:
 			continue
+    		if 'TEST' in workflow:
+			continue
 		datasets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
 		closeOutWorkflow=True
 		InputDataset=dbsTest.getInputDataSet(url, workflow)

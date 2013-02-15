@@ -62,6 +62,7 @@ def retrieveSchema(workflowName, user, group ):
     helper.load(specURL)
     #print "done."
     schema = {}
+    #for (key, value) in helper.data.request.schema.dictionary_whole_tree_().iteritems():
     for (key, value) in helper.data.request.schema.dictionary_().iteritems():
         #print key, value
         if key == 'ProcConfigCacheID':
