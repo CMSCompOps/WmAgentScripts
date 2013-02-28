@@ -185,7 +185,7 @@ def getConfig(url, cacheID):
         config = r2.read()
         return config
 
-def assignRequest(url,workflow,team,site,era,procversion, activity, lfn, maxmergeevents, maxRSS, maxVSize):
+def assignRequest(url,workflow,team,site,era,procversion, activity, lfn, maxmergeevents, maxRSS, maxVSize, useX, siteCust):
     params = {"action": "Assign",
               "Team"+team: "checked",
               "SiteWhitelist": site,
@@ -194,11 +194,8 @@ def assignRequest(url,workflow,team,site,era,procversion, activity, lfn, maxmerg
               "UnmergedLFNBase": "/store/unmerged",
               "MinMergeSize": 2147483648,
               "MaxMergeSize": 4294967296,
-              "CustodialSites": site,
+              "CustodialSites": siteCust,
               "Priority" : "Normal",
-              #"Memory": 2300.0,
-              #"SizePerEvent": 342110,
-              #"TimePerEvent": 17.5,
               "SoftTimeout": 129600,
               "GracePeriod": 300,
               "MaxMergeEvents": maxmergeevents,
@@ -208,6 +205,10 @@ def assignRequest(url,workflow,team,site,era,procversion, activity, lfn, maxmerg
 	      "dashboard": activity,
               "ProcessingVersion": procversion,
               "checkbox"+workflow: "checked"}
+
+    if useX == 1:
+       print "- Using xrootd for input dataset"
+       params['useSiteListAsLocation'] = "true"
 
     encodedParams = urllib.urlencode(params, True)
 
@@ -229,7 +230,7 @@ def assignRequest(url,workflow,team,site,era,procversion, activity, lfn, maxmerg
         print "Exiting!"
   	sys.exit(1)
     conn.close()
-    print 'Assigned workflow:',workflow,'to site:',site,'acquisition era:',era,'team',team,'processing version:',procversion,'lfn:',lfn,'maxmergeevents:',maxmergeevents,'maxRSS:',maxRSS,'maxVSize:',maxVSize
+    print 'Assigned workflow:',workflow,'to site:',site,'custodial site:',siteCust,'acquisition era:',era,'team',team,'processing version:',procversion,'lfn:',lfn,'maxmergeevents:',maxmergeevents,'maxRSS:',maxRSS,'maxVSize:',maxVSize
     return
 
 
@@ -238,8 +239,10 @@ def main():
 	url='cmsweb.cern.ch'	
 	parser = optparse.OptionParser()
 	parser.add_option('-f', '--filename', help='Filename',dest='filename')
+	parser.add_option('-w', '--workflow', help='Workflow',dest='userWorkflow')
 	parser.add_option('-t', '--team', help='Type of Requests',dest='team')
 	parser.add_option('-s', '--site', help='Force workflow to run at this site',dest='site')
+	parser.add_option('-c', '--custodial', help='Custodial site',dest='siteCust')
 	parser.add_option('-p', '--procversion', help='Processing Version',dest='procversion')
 	parser.add_option('-n', '--procstring', help='Process String',dest='procstring')
 	parser.add_option('-e', '--execute', help='Actually assign workflows',action="store_true",dest='execute')
@@ -247,9 +250,10 @@ def main():
 	parser.add_option('-r', '--rssmax', help='Max RSS',dest='maxRSS')
 	parser.add_option('-v', '--vsizemax', help='Max VMem',dest='maxVSize')
 	parser.add_option('-a', '--extension', help='Use _ext special name',action="store_true",dest='extension')
+        parser.add_option('-o', '--xrootd', help='Read input using xrootd',action="store_true",dest='xrootd')
 	(options,args) = parser.parse_args()
-	if not options.filename:
-		print "A filename is required"
+	if not options.filename and not options.userWorkflow:
+		print "A filename or workflow is required"
 		sys.exit(0)
 	activity='reprocessing'
         if not options.restrict:
@@ -268,13 +272,29 @@ def main():
                 maxVSize=options.maxVSize
 	filename=options.filename
 
+        if not options.xrootd:
+           useX = 0
+        else:
+           useX = 1
+
         # Valid Tier-1 sites
         sites = ['T1_DE_KIT', 'T1_FR_CCIN2P3', 'T1_IT_CNAF', 'T1_ES_PIC', 'T1_TW_ASGC', 'T1_UK_RAL', 'T1_US_FNAL']
 
-        f=open(filename,'r')
+        if options.filename:
+           f=open(filename,'r')
+        else:
+           f=[options.userWorkflow]
+
         for workflow in f:
            workflow = workflow.rstrip('\n')
            siteUse=options.site
+           if siteUse == 'T2_US':
+              siteUse =  ['T2_US_Caltech', 'T2_US_Florida', 'T2_US_MIT', 'T2_US_Nebraska', 'T3_US_Omaha', 'T2_US_Purdue', 'T2_US_UCSD', 'T2_US_Wisconsin']
+              if not options.siteCust:
+                 print 'ERROR: A custodial site must be specified'
+                 sys.exit(0)
+              siteCust = options.siteCust
+
            team=options.team
            procversion=options.procversion
 
@@ -301,6 +321,13 @@ def main():
                     print 'ERROR: No custodial site found'
                     sys.exit(0)
                  siteUse = siteUse[:-4]
+     
+           # Set the custodial location if necessary
+           if not options.site or options.site != 'T2_US':
+              if not options.siteCust:
+                 siteCust = siteUse
+              else:
+                 siteCust = options.siteCust
 
            # Extract required part of global tag
            gtRaw = getGlobalTag(url, workflow)
@@ -313,7 +340,7 @@ def main():
            pileupScenario = getPileupScenario(url, workflow)
            if pileupScenario == 'Unknown' and 'MinBias' in pileupDataset:
               print 'ERROR: unable to determine pileup scenario'
-              sys.exit(0)
+              #sys.exit(0)
            elif 'Fall11_R2' in workflow or 'Fall11_R4' in workflow:
               inDataSet = getInputDataSet(url, workflow)
               matchObj = re.match(r".*Fall11-(.*)_START.*", inDataSet)
@@ -323,6 +350,9 @@ def main():
                  pileupScenario == 'Unknown'
            elif pileupScenario == 'Unknown' and 'MinBias' not in pileupDataset:
               pileupScenario = 'NoPileUp'
+
+           if pileupScenario == 'Unknown':
+              pileupScenario = ''
 
            # Decide which team to use if not already defined
            if not team:
@@ -364,14 +394,30 @@ def main():
               era = 'Summer12'
               lfn = '/store/mc'
 
+           if 'HiWinter13' in inputDataset:
+              era = 'HiWinter13'
+              lfn = '/store/himc'
+
+           if 'Winter13_DR53X' in workflow:
+              era = 'HiWinter13'
+              lfn = '/store/himc'
+           if 'HiWinter13_DR53X' in workflow:
+              pileupScenario = ''  
+           if 'pAWinter13_DR53X' in workflow:
+              pileupScenario = 'pa' # not actually the pileup scenario of course
+           if 'ppWinter13_DR53X' in workflow:
+              pileupScenario = 'pp' # not actually the pileup scenario of course
+           
            # Construct processed dataset version
+           if pileupScenario != '':
+              pileupScenario = pileupScenario+'_' 
            if options.procstring:
               specialName = options.procstring + '_'
            extTag = ''
            if options.extension:
               extTag = '_ext'
            if not procversion:
-              procversion = specialName+pileupScenario+'_'+globalTag+extTag+'-v'
+              procversion = specialName+pileupScenario+globalTag+extTag+'-v'
               iVersion = getDatasetVersion(url, workflow, era, procversion)
               procversion = procversion+str(iVersion)
 
@@ -389,7 +435,7 @@ def main():
               print 'ERROR: lfn is not defined'
               sys.exit(0)
 
-           if siteUse not in sites:
+           if siteUse not in sites and options.site != 'T2_US':
               print 'ERROR: invalid site'
               sys.exit(0)
 
@@ -399,12 +445,12 @@ def main():
 
            if options.execute:
               if restrict == 'None' or restrict == siteUse:
-	         assignRequest(url,workflow,team,siteUse,era,procversion, activity, lfn, maxmergeevents, maxRSS, maxVSize)
+	         assignRequest(url,workflow,team,siteUse,era,procversion, activity, lfn, maxmergeevents, maxRSS, maxVSize, useX, siteCust)
               else:
                  print 'Skipping workflow ',workflow
            else:
               if restrict == 'None' or restrict == siteUse:
-                 print 'Would assign ',workflow,' with ','acquisition era:',era,'version:',procversion,'lfn:',lfn,'site:',siteUse,'team:',team,'maxmergeevents:',maxmergeevents
+                 print 'Would assign ',workflow,' with ','acquisition era:',era,'version:',procversion,'lfn:',lfn,'site:',siteUse,'custodial site:',siteCust,'team:',team,'maxmergeevents:',maxmergeevents
               else:
                  print 'Would skip workflow ',workflow
 
