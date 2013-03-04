@@ -101,6 +101,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 	lumis_per_job = 0
 	acquisitionEra = None
 	processingVersion = None
+	campaign = ''
 	for raw in list:
 		if 'acquisitionEra' in raw:
                         a = raw.find("'")
@@ -124,6 +125,9 @@ def getWorkflowInfo(workflow,nodbs=0):
 			a = raw.find(" =")
 			b = raw.find('<br')
 			lumis_per_job = int(raw[a+3:b])
+                elif '.schema.Campaign' in raw:
+                        campaign = raw[raw.find("'")+1:]
+                        campaign = campaign[0:campaign.find("'")]
 		elif '.events_per_job' in raw:
 			a = raw.find(" =")
 			b = raw.find('<br')
@@ -357,7 +361,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 		eventsdone = eventsdone + oe
 
 	remainingcpuhours = timeev*(expectedevents-eventsdone)/3600
-	return {'requestname':workflow,'filtereff':filtereff,'type':type,'status':status,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'sizeev':sizeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'zone':getzonebyt1(custodialt1),'js':j,'outputdataset':outputdataset,'cpuhours':cpuhours,'etah':math.ceil(etah*10)/10,'remainingcpuhours':remainingcpuhours,'team':team,'acquisitionEra':acquisitionEra,'requestdays':requestdays,'processingVersion':processingVersion,'events_per_job':events_per_job,'lumis_per_job':lumis_per_job,'expectedjobs':expectedjobs,'expectedjobcpuhours':expectedjobcpuhours,'cmssw':cmssw,'expectedtotalsize':expectedtotalsize}
+	return {'requestname':workflow,'filtereff':filtereff,'type':type,'campaign':campaign,'status':status,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'sizeev':sizeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'zone':getzonebyt1(custodialt1),'js':j,'outputdataset':outputdataset,'cpuhours':cpuhours,'etah':math.ceil(etah*10)/10,'remainingcpuhours':remainingcpuhours,'team':team,'acquisitionEra':acquisitionEra,'requestdays':requestdays,'processingVersion':processingVersion,'events_per_job':events_per_job,'lumis_per_job':lumis_per_job,'expectedjobs':expectedjobs,'expectedjobcpuhours':expectedjobcpuhours,'cmssw':cmssw,'expectedtotalsize':expectedtotalsize}
 
 def getpriorities(reqinfo):
 	priorities = []

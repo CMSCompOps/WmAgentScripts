@@ -23,6 +23,7 @@ siteblacklist.extend(['T2_PL_Warsaw','T2_RU_PNPI','T2_KR_KNU','T2_UA_KIPT','T2_A
 
 sitelistsmallrequests = ['T2_DE_DESY','T2_IT_Pisa','T2_ES_CIEMAT','T2_IT_Bari','T2_US_Purdue','T2_US_Caltech','T2_DE_RWTH','T2_IT_Legnaro','T2_IT_Rome','T2_US_Florida','T2_US_MIT','T2_US_Wisconsin','T2_US_UCSD','T2_US_Nebraska','T2_RU_IHEP','T2_US_Vanderbilt']
 sitelisthirequests = ['T2_US_MIT','T2_US_Wisconsin','T2_US_Nebraska','T2_US_Vanderbilt','T2_FR_CCIN2P3']
+sitelisthimemrequests = ['T2_US_MIT','T2_US_Wisconsin','T2_US_Nebraska','T2_US_Vanderbilt','T2_FR_CCIN2P3']
 
 siteliststep0long = ['T2_US_Purdue','T2_US_Nebraska','T3_US_Omaha']
 sitelistgensubscrnoncust = ['T1_DE_KIT_MSS' ,'T1_ES_PIC_MSS' ,'T1_FR_CCIN2P3_MSS' ,'T1_IT_CNAF_MSS' ,'T1_TW_ASGC_MSS' ,'T1_UK_RAL_MSS' ,'T2_BE_IIHE' ,'T2_BE_UCL' ,'T2_BR_SPRACE' ,'T2_CH_CSCS' ,'T2_CN_Beijing' ,'T2_DE_DESY' ,'T2_DE_RWTH' ,'T2_EE_Estonia' ,'T2_ES_CIEMAT' ,'T2_ES_IFCA' ,'T2_FI_HIP' ,'T2_FR_CCIN2P3' ,'T2_FR_GRIF_LLR' ,'T2_FR_IPHC' ,'T2_HU_Budapest' ,'T2_IN_TIFR' ,'T2_IT_Bari' ,'T2_IT_Legnaro' ,'T2_IT_Pisa' ,'T2_IT_Rome' ,'T2_PL_Warsaw' ,'T2_PT_NCG_Lisbon','T2_RU_JINR' ,'T2_RU_SINP' ,'T2_TR_METU' ,'T2_TW_Taiwan' ,'T2_UK_London_Brunel' ,'T2_UK_London_IC' ,'T2_UK_SGrid_RALPP' ,'T2_US_Caltech' ,'T2_US_Florida' ,'T2_US_MIT' ,'T2_US_Nebraska' ,'T2_US_Purdue' ,'T2_US_UCSD' ,'T2_US_Wisconsin','T2_BR_UERJ','T3_US_Colorado','T2_RU_IHEP','T2_RU_ITEP','T2_CH_CERN']
@@ -617,6 +618,7 @@ def main():
 	parser.add_option('--assign', action="store_false",default=True,help='assign mode',dest='test')
 	parser.add_option('--small', action="store_true",default=False,help='assign requests considering them small',dest='small')
 	parser.add_option('--hi', action="store_true",default=False,help='heavy ion request (add Vanderbilt to the whitelist, use /store/himc)',dest='hi')
+	parser.add_option('--himem', action="store_true",default=False,help='high memory request (use sites allowing 3GB/job, increase maxRSS)',dest='himem')
 	parser.add_option('--fsim', action="store_true",default=False,help='FastSim request (add _FSIM in the processing version)',dest='fsim')
 	parser.add_option('-z', '--zone', help='Zone %s or single site or comma-separated list (i.e. T1_US_FNAL,T2_FR_CCIN2P3,T2_DE_DESY)' % zones,dest='zone')
 	parser.add_option('-a', '--acqera', help='Acquisition era',dest='acqera')
@@ -667,7 +669,10 @@ def main():
 	siteblacklist.sort()
 	print "Default site blacklist: %s\n" % (",".join(x for x in siteblacklist))
 	if options.hi:
-		print "Heavy Ion flag is set, parameters will be configured accordingly"
+		print "Heavy Ion flag is set, parameters will be configured accordingly\n"
+
+	elif options.himem:
+		print "High memory flag is set, parameters will be configured accordingly\n"
 
 	print "Preparing requests:\n"
 	#print "REQUEST TEAM PRIORITY ACQERA PROCVS ZONE"
@@ -694,6 +699,7 @@ def main():
 		
 		# internal assignment parameters
 		hi = False
+		himem = False
 		if reqinfo[w]['type'] == 'LHEStepZero':
 			#print 'LHEStepZero request: %s' % w
 			team = 'step0'
@@ -706,6 +712,13 @@ def main():
 			team = getteam(teams,reqinfo[w])
 			softtimeout = 108000
 			mergedlfnbase = '/store/himc'
+			minmergesize = 2147483648
+			maxRSS = 3500000
+		elif options.himem:
+			himem = True
+			team = getteam(teams,reqinfo[w])
+			softtimeout = 108000
+			mergedlfnbase = '/store/mc'
 			minmergesize = 2147483648
 			maxRSS = 3500000
 		else:
@@ -733,6 +746,14 @@ def main():
 				if 'T1_' in i:
 					newsitelist.append(i)
 				elif i in sitelisthirequests:
+					newsitelist.append(i)
+		elif options.himem:
+			oldsitelist = newsitelist[:]
+			newsitelist = []
+			for i in oldsitelist:
+				if 'T1_' in i:
+					newsitelist.append(i)
+				elif i in sitelisthimemrequests:
 					newsitelist.append(i)
 		elif reqinfo[w]['priority'] >= 100000 or options.small:
 			oldsitelist = newsitelist[:]
