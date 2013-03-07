@@ -358,11 +358,14 @@ def main():
            if not team:
               priority = int(getPriority(url, workflow))
               if priority < 100000:
-                 team = 'reproc_lowpio'
+                 team = 'reproc_lowprio'
               else:
                  team = 't1'
 
            specialName = ''
+
+           #era = 'Summer12'
+           #lfn = '/store/mc'
 
            # Set era, lfn and campaign-dependent part of name if necessary
            if 'Summer12_DR51X' in workflow:
