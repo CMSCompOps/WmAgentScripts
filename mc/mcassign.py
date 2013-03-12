@@ -9,10 +9,6 @@ try:
 except ImportError:
     import simplejson as json
 
-# TODO suggest TeamList 
-# TODO automatic acqera
-# TODO guess procversion
-
 legal_eras = ['Summer11','Summer12']
 teams_lp = ['mc']
 teams_hp = ['mc_highprio']
@@ -140,7 +136,7 @@ def getacqera(prepid):
 	sys.exit(1)
 	
 
-def assignMCRequest(url,workflow,team,sitelist,era,procversion,mergedlfnbase,minmergesize,maxRSS,custodialsites,softtimeout):
+def assignMCRequest(url,workflow,team,sitelist,era,processingstring,processingversion,mergedlfnbase,minmergesize,maxRSS,custodialsites,softtimeout):
     params = {"action": "Assign",
               "Team"+team: "checked",
               "SiteWhitelist": sitelist,
@@ -151,12 +147,12 @@ def assignMCRequest(url,workflow,team,sitelist,era,procversion,mergedlfnbase,min
               "MinMergeSize": minmergesize,
               "MaxMergeSize": 4294967296,
               "MaxMergeEvents": 50000,
-	      #"maxRSS": 2294967,
 	      "maxRSS": maxRSS,
               "maxVSize": 4394967000,
               "AcquisitionEra": era,
 	      "dashboard": "production",
-              "ProcessingVersion": procversion,
+              "ProcessingVersion": processingversion,
+              "ProcessingString": processingstring,
 		"CustodialSites":custodialsites,
               "checkbox"+workflow: "checked"}
 
@@ -622,9 +618,9 @@ def main():
 	parser.add_option('--himem', action="store_true",default=False,help='high memory request (use sites allowing 3GB/job, increase maxRSS)',dest='himem')
 	parser.add_option('--fsim', action="store_true",default=False,help='FastSim request (add _FSIM in the processing version)',dest='fsim')
 	parser.add_option('-z', '--zone', help='Zone %s or single site or comma-separated list (i.e. T1_US_FNAL,T2_FR_CCIN2P3,T2_DE_DESY)' % zones,dest='zone')
-	parser.add_option('-a', '--acqera', help='Acquisition era',dest='acqera')
-	parser.add_option('-v', '--version', help='Version (it is the vx part of the ProcessingVersion), default is v1',dest='version')
-	parser.add_option('-p', '--processingversion', help='Processing Version, default to GlobalTag-vX',dest='procversion')
+	parser.add_option('-a', '--acqera', help='<AcquisitionEra> in <AcquisitionEra>-<ProcString>-v<ProcVer>',dest='acqera')
+	parser.add_option('-p', '--processingstring', help='<ProcString> in <AcquisitionEra>-<ProcString>-v<ProcVer>, default=GlobalTag-vX',dest='processingstring')
+	parser.add_option('-v', '--processingversion', help='<ProcVer> in <AcquisitionEra>-<ProcString>-v<ProcVer>), default=1',dest='processingversion')
 	(options,args) = parser.parse_args()
 
 	list = []
@@ -650,14 +646,15 @@ def main():
 		zone = options.zone
 	else:
 		zone = 'auto'
-	if options.procversion:
-		procversion = options.procversion
+	if options.processingversion:
+		processingversion = options.processingversion
 	else:
-		procversion = 'auto'
-	if options.version:
-		version = options.version
+		processingversion = '1'
+
+	if options.processingstring:
+		processingstring = options.processingstring
 	else:
-		version = 'v1'
+		processingstring = 'auto'
 		
 	reqinfo = {}
 
@@ -772,20 +769,21 @@ def main():
 				if 'T1_' in i:
 					custodialsites.append(i)
 
-		# processing version
+		# processing string and processing version
 		
-		if procversion == 'auto':
+		if processingstring == 'auto':
 			if reqinfo[w]['type'] == 'MonteCarloFromGEN' and ('_FSIM-' in reqinfo[w]['inputdataset']['name'] or options.fsim):
-				newprocversion = "%s_FSIM-%s" % (reqinfo[w]['globaltag'],version)
+				newprocessingstring = "%s_FSIM" % (reqinfo[w]['globaltag'])
 			else:
-				newprocversion = "%s-%s" % (reqinfo[w]['globaltag'],version)
-			dataset = '/%s/%s-%s/%s' % (reqinfo[w]['primaryds'],newacqera,newprocversion,reqinfo[w]['outputtier'])
+				newprocessingstring = "%s" % (reqinfo[w]['globaltag'])
+
+			dataset = '/%s/%s-%s-v%s/%s' % (reqinfo[w]['primaryds'],newacqera,newprocessingstring,processingversion,reqinfo[w]['outputtier'])
 			if isInDBS(dataset):
-				print "Processing version already in use for %s : %s" % (w,dataset)
+				print "Dataset already exists in DBS: %s -> %s" % (w,dataset)
 				sys.exit(1)
 		else:
-			newprocversion = procversion
-			dataset = '/%s/%s-%s/%s' % (reqinfo[w]['primaryds'],newacqera,newprocversion,reqinfo[w]['outputtier'])
+			newprocessingstring = processingstring
+			dataset = '/%s/%s-%s-v%s/%s' % (reqinfo[w]['primaryds'],newacqera,newprocessingstring,processingversion,reqinfo[w]['outputtier'])
 			#print dataset
 			if isInDBS(dataset):
 				print "Processing version already in use for %s : %s" % (w,dataset)
@@ -799,7 +797,8 @@ def main():
 		assign_data[w]['cpuhours'] = reqinfo[w]['cpuhours']
 		assign_data[w]['whitelist'] = newsitelist
 		assign_data[w]['acqera'] = newacqera
-		assign_data[w]['procversion'] = newprocversion
+		assign_data[w]['processingstring'] = newprocessingstring
+		assign_data[w]['processingversion'] = processingversion
 		assign_data[w]['custodialsites'] = custodialsites
 		assign_data[w]['dataset'] = dataset
 		assign_data[w]['mergedlfnbase'] = mergedlfnbase
@@ -814,12 +813,12 @@ def main():
 		print "Assignment:"
 		print
 	for w in list:
-		suminfo = "%s\nprio:%s events:%s cpuhours:%s team:%s era:%s procvs:%s LFNBase:%s maxRSS:%s MinMerge:%s SoftTimeout:%s\nOutputDataset: %s\nCustodialSites: %s\nWhitelist: %s" % (w,assign_data[w]['priority'],assign_data[w]['events'],assign_data[w]['cpuhours'],assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['procversion'],assign_data[w]['mergedlfnbase'],assign_data[w]['maxRSS'],assign_data[w]['minmergesize'],assign_data[w]['softtimeout'],assign_data[w]['dataset'],assign_data[w]['custodialsites'],",".join(x for x in assign_data[w]['whitelist']))
+		suminfo = "%s\nprio:%s events:%s cpuhours:%s team:%s era:%s procstr: %s procvs:%s LFNBase:%s maxRSS:%s MinMerge:%s SoftTimeout:%s\nOutputDataset: %s\nCustodialSites: %s\nWhitelist: %s" % (w,assign_data[w]['priority'],assign_data[w]['events'],assign_data[w]['cpuhours'],assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['processingstring'],assign_data[w]['processingversion'],assign_data[w]['mergedlfnbase'],assign_data[w]['maxRSS'],assign_data[w]['minmergesize'],assign_data[w]['softtimeout'],assign_data[w]['dataset'],assign_data[w]['custodialsites'],",".join(x for x in assign_data[w]['whitelist']))
 		if options.test:
 			print "TEST:\t%s\n" % suminfo
 		if not options.test:
 			print "ASSIGN:\t%s\n" % suminfo
-			assignMCRequest(url,w,assign_data[w]['team'],assign_data[w]['whitelist'],assign_data[w]['acqera'],assign_data[w]['procversion'],assign_data[w]['mergedlfnbase'],assign_data[w]['minmergesize'],assign_data[w]['maxRSS'],assign_data[w]['custodialsites'],assign_data[w]['softtimeout'])
+			assignMCRequest(url,w,assign_data[w]['team'],assign_data[w]['whitelist'],assign_data[w]['acqera'],assign_data[w]['processingstring'],assign_data[w]['processingversion'],assign_data[w]['mergedlfnbase'],assign_data[w]['minmergesize'],assign_data[w]['maxRSS'],assign_data[w]['custodialsites'],assign_data[w]['softtimeout'])
 	
 	sys.exit(0)
 
