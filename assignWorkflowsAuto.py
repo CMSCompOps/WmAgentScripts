@@ -185,7 +185,7 @@ def getConfig(url, cacheID):
         config = r2.read()
         return config
 
-def assignRequest(url,workflow,team,site,era,procversion, activity, lfn, maxmergeevents, maxRSS, maxVSize, useX, siteCust):
+def assignRequest(url ,workflow ,team ,site ,era, procversion, procstring, activity, lfn, maxmergeevents, maxRSS, maxVSize, useX, siteCust):
     params = {"action": "Assign",
               "Team"+team: "checked",
               "SiteWhitelist": site,
@@ -204,6 +204,7 @@ def assignRequest(url,workflow,team,site,era,procversion, activity, lfn, maxmerg
               "AcquisitionEra": era,
 	      "dashboard": activity,
               "ProcessingVersion": procversion,
+              "ProcessingString": procstring,
               "checkbox"+workflow: "checked"}
 
     if useX == 1:
@@ -243,8 +244,9 @@ def main():
 	parser.add_option('-t', '--team', help='Type of Requests',dest='team')
 	parser.add_option('-s', '--site', help='Force workflow to run at this site',dest='site')
 	parser.add_option('-c', '--custodial', help='Custodial site',dest='siteCust')
-	parser.add_option('-p', '--procversion', help='Processing Version',dest='procversion')
-	parser.add_option('-n', '--procstring', help='Process String',dest='procstring')
+	parser.add_option('-p', '--procstring', help='Process String',dest='inprocstring')
+	parser.add_option('-m', '--procversion', help='Process Version',dest='inprocversion')
+	parser.add_option('-n', '--specialstring', help='Special Process String',dest='specialprocstring')
 	parser.add_option('-e', '--execute', help='Actually assign workflows',action="store_true",dest='execute')
 	parser.add_option('-x', '--restrict', help='Only assign workflows for this site',dest='restrict')
 	parser.add_option('-r', '--rssmax', help='Max RSS',dest='maxRSS')
@@ -289,14 +291,13 @@ def main():
            workflow = workflow.rstrip('\n')
            siteUse=options.site
            if siteUse == 'T2_US':
-              siteUse =  ['T2_US_Caltech', 'T2_US_Florida', 'T2_US_MIT', 'T2_US_Nebraska', 'T3_US_Omaha', 'T2_US_Purdue', 'T2_US_UCSD', 'T2_US_Wisconsin']
+              siteUse =  ['T2_US_Caltech', 'T2_US_Florida', 'T2_US_MIT', 'T2_US_Nebraska', 'T3_US_Omaha', 'T2_US_Purdue', 'T2_US_UCSD', 'T2_US_Vanderbilt', 'T2_US_Wisconsin']
               if not options.siteCust:
                  print 'ERROR: A custodial site must be specified'
                  sys.exit(0)
               siteCust = options.siteCust
 
            team=options.team
-           procversion=options.procversion
 
            inputDataset = getInputDataSet(url, workflow)
 
@@ -414,15 +415,23 @@ def main():
            # Construct processed dataset version
            if pileupScenario != '':
               pileupScenario = pileupScenario+'_' 
-           if options.procstring:
-              specialName = options.procstring + '_'
+           if options.specialprocstring:
+              specialName = options.specialprocstring + '_'
            extTag = ''
            if options.extension:
               extTag = '_ext'
-           if not procversion:
-              procversion = specialName+pileupScenario+globalTag+extTag+'-v'
-              iVersion = getDatasetVersion(url, workflow, era, procversion)
-              procversion = procversion+str(iVersion)
+
+           # ProcessingString
+           if not options.inprocstring:
+              procstring = specialName+pileupScenario+globalTag+extTag
+           else:
+              procstring = options.inprocstring
+
+           # ProcessingVersion
+           if not options.inprocversion:
+              procversion = getDatasetVersion(url, workflow, era, procstring)
+           else:
+              procversion = options.inprocversion
 
            # Set max number of merge events
            maxmergeevents = 50000
@@ -448,12 +457,12 @@ def main():
 
            if options.execute:
               if restrict == 'None' or restrict == siteUse:
-	         assignRequest(url,workflow,team,siteUse,era,procversion, activity, lfn, maxmergeevents, maxRSS, maxVSize, useX, siteCust)
+	         assignRequest(url, workflow, team, siteUse, era, procversion, procstring, activity, lfn, maxmergeevents, maxRSS, maxVSize, useX, siteCust)
               else:
                  print 'Skipping workflow ',workflow
            else:
               if restrict == 'None' or restrict == siteUse:
-                 print 'Would assign ',workflow,' with ','acquisition era:',era,'version:',procversion,'lfn:',lfn,'site:',siteUse,'custodial site:',siteCust,'team:',team,'maxmergeevents:',maxmergeevents
+                 print 'Would assign ',workflow,' with ','Acquisition Era:',era,'ProcessingString:',procstring,'ProcessingVersion:',procversion,'lfn:',lfn,'Site(s):',siteUse,'Custodial Site:',siteCust,'team:',team,'maxmergeevents:',maxmergeevents
               else:
                  print 'Would skip workflow ',workflow
 
