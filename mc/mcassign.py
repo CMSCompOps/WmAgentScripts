@@ -808,6 +808,11 @@ def main():
 
 	print "\n----------------------------------------------\n"
 
+	print "Command line options:\n"
+	for ky in options.__dict__.keys():
+		if options.__dict__[ky]:
+			print "\t%s:\t%s" % (ky,options.__dict__[ky])
+	print
 
 	if not options.test: 
 		print "Assignment:"
