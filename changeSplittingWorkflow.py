@@ -27,14 +27,14 @@ def changeSplittingWorkflow(url, workflow, split):
 #        elif RequestType=='ReReco':
 #		params = {"requestName":workflow,"splittingTask" : '/'+workflow+"/DataProcessing", "splittingAlgo":"LumiBased", "lumis_per_job":str(split), "timeout":"", "include_parents":"False", "files_per_job":"",'halt_job_on_file_boundaries':'True','events_per_job':''}
         elif RequestType=='ReReco':
-		params = {"requestName":workflow,"splittingTask" : '/'+workflow+"/DataProcessing", "splittingAlgo":"EventAwareLumiBased", "lumis_per_job":"", "timeout":"", "include_parents":"False", "files_per_job":"",'halt_job_on_file_boundaries':'True','events_per_job':'', 'avg_events_per_job':str(split), 'max_events_per_lumi':10000}
+		params = {"requestName":workflow,"splittingTask" : '/'+workflow+"/DataProcessing", "splittingAlgo":"EventAwareLumiBased", "lumis_per_job":"", "include_parents":"False", "files_per_job":"",'halt_job_on_file_boundaries':'True','events_per_job':str(split), 'avg_events_per_job':str(split), 'max_events_per_lumi':10000, 'halt_job_on_file_boundaries_event_aware':"True"}
 	elif RequestType=='Resubmission':
 		params = {"requestName":workflow,"splittingTask" : '/'+workflow+"/DataProcessing", "splittingAlgo":"LumiBased", "lumis_per_job":str(split), "timeout":"", "include_parents":"False", "files_per_job":"",'halt_job_on_file_boundaries':'True','events_per_job':''}
 #	elif RequestType=='Resubmission':
 #		params = {"requestName":workflow,"splittingTask" : '/'+workflow+"/DataProcessing", "splittingAlgo":"EventAwareLumiBased", "lumis_per_job":"", "timeout":"", "include_parents":"False", "files_per_job":"",'halt_job_on_file_boundaries':'True','events_per_job':'', 'avg_events_per_job':str(split), 'max_events_per_lumi':10000}
     	headers={"Content-type": "application/x-www-form-urlencoded",
              "Accept": "text/plain"}
-    	encodedParams = urllib.urlencode(params)
+	encodedParams = urllib.urlencode(params)
     	conn.request("POST", "/reqmgr/view/handleSplittingPage", encodedParams, headers)
     	response = conn.getresponse()	
     	print response.status, response.reason

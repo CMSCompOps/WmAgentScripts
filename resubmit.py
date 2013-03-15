@@ -76,15 +76,6 @@ def retrieveSchema(workflowName, user, group ):
 	    schema['Group']=group
 	elif value != None:
             schema[key] = value
-    #schema['TimePerEvent']=60
-    #schema['Memory']=2394967	
-    #schema['SizePerEvent']=5000
-    #schema['ScramArch']='slc5_amd64_gcc462'
-    #schema['RequestPriority']=int(schema['RequestPriority'])
-    #schema['TotalTime']=int(schema['TotalTime'])
-    #schema['FilterEfficiency']=float(schema['FilterEfficiency'])
-    #schema['TimePerEvent']=int(schema['TimePerEvent'])
-    #print schema
     return schema
 
 def submitWorkflow(schema):
@@ -119,11 +110,12 @@ if __name__ == "__main__":
     group=sys.argv[3]	
     #print "Going to attempt to resubmit %s..." % sys.argv[1]
     schema = retrieveSchema(sys.argv[1], user, group)
+    #print schema
     Site=closeOutWorkflows.findCustodial('cmsweb.cern.ch',sys.argv[1] )
     newWorkflow=submitWorkflow(schema)
     approveRequest('cmsweb.cern.ch',newWorkflow)
     print 'Cloned workflow:',newWorkflow, ' '+Site
     newPriority=getPriorityWorkflow('cmsweb.cern.ch',sys.argv[1])
-    if  newPriority>2:
+    if  newPriority>2: 
 	changePriorityWorkflow.changePriorityWorkflow('cmsweb.cern.ch', newWorkflow, newPriority)
     sys.exit(0)
