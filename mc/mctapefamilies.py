@@ -182,6 +182,7 @@ def main():
 	parser.add_option('-a', '--acqera', help='acquisition era',dest='acqera')
 	parser.add_option('-c', '--campaign', help='campaign',dest='campaign')
 	parser.add_option('-b', '--batch', help='batch',dest='batch')
+	parser.add_option('--hi', help='heavyion',dest='heavyion',default=False,action='store_true')
 	parser.add_option('-z', '--zone', help='custodial T1',dest='t1')
 	parser.add_option('--fsim', help='FastSim',dest='fsim',action='store_true')
 
@@ -239,8 +240,12 @@ def main():
 		prepid = reqinfo[workflow]['prepid']
 		prepidlist.append(prepid)
 		prids = reqinfo[workflow]['primaryds']
+		if options.heavyion:
+			path2='himc'
+		else:
+			path2='mc'
 		for i in tiers:
-			tf = "/store/mc/"+acqera+"/"+prids+"/"+i
+			tf = "/store/"+path2+"/"+acqera+"/"+prids+"/"+i
 			print "%s" % (tf)
 	prepidlist.sort()
 
