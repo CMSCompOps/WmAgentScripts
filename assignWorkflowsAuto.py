@@ -231,7 +231,7 @@ def assignRequest(url ,workflow ,team ,site ,era, procversion, procstring, activ
         print "Exiting!"
   	sys.exit(1)
     conn.close()
-    print 'Assigned workflow:',workflow,'to site:',site,'custodial site:',siteCust,'acquisition era:',era,'team',team,'processing version:',procversion,'lfn:',lfn,'maxmergeevents:',maxmergeevents,'maxRSS:',maxRSS,'maxVSize:',maxVSize
+    print 'Assigned workflow:',workflow,'to site:',site,'custodial site:',siteCust,'acquisition era:',era,'team',team,'processin string:',procstring,'processing version:',procversion,'lfn:',lfn,'maxmergeevents:',maxmergeevents,'maxRSS:',maxRSS,'maxVSize:',maxVSize
     return
 
 
@@ -384,6 +384,11 @@ def main():
            if 'Fall11_R' in workflow:
               era = 'Fall11'
               lfn = '/store/mc'
+
+           if 'Fall11_HLTMuonia' in workflow:
+              era = 'Fall11'
+              lfn = '/store/mc'
+              specialName = 'HLTMuonia_'
 
            if 'Summer11_R' in workflow:
               era = 'Summer11'
