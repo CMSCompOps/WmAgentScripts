@@ -7,4 +7,4 @@ fi
 echo $CURL_URL
 file=$(curl -s --insecure -X GET $CURL_URL | awk -F"'" '{print $32}')
 echo $file
-lcg-cp -v -n 1 $file file:////tmp/delete.me
+lcg-cp -v -n 1 $file file:////`pwd`/$3
