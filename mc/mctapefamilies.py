@@ -249,7 +249,7 @@ def main():
 			print "%s" % (tf)
 	prepidlist.sort()
 
-	print "\nPREPID: "+",".join(prepidlist)
+	print "\nPREPID: "+", ".join(prepidlist)
         sys.exit(0)
 
 if __name__ == "__main__":

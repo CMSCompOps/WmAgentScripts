@@ -17,9 +17,10 @@ zones = ['FNAL','CNAF','ASGC','IN2P3','RAL','PIC','KIT']
 
 siteblacklist = ['T2_FR_GRIF_IRFU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_RRC_KI','T2_UK_SGrid_Bristol']
 siteblacklist.extend(['T2_PL_Warsaw','T2_RU_PNPI','T2_KR_KNU','T2_UA_KIPT','T2_AT_Vienna'])
+siteblacklist.extend(['T2_IN_TIFR','T2_RU_JINR','T2_UK_SGrid_RALPP'])
 
 sitelistsmallrequests = ['T2_DE_DESY','T2_IT_Pisa','T2_ES_CIEMAT','T2_IT_Bari','T2_US_Purdue','T2_US_Caltech','T2_DE_RWTH','T2_IT_Legnaro','T2_IT_Rome','T2_US_Florida','T2_US_MIT','T2_US_Wisconsin','T2_US_UCSD','T2_US_Nebraska','T2_RU_IHEP','T2_US_Vanderbilt']
-sitelisthirequests = ['T2_US_MIT','T2_US_Wisconsin','T2_US_Nebraska','T2_US_Vanderbilt','T2_FR_CCIN2P3']
+#sitelisthirequests = ['T2_US_MIT','T2_US_Wisconsin','T2_US_Nebraska','T2_US_Vanderbilt','T2_FR_CCIN2P3']
 sitelisthimemrequests = ['T2_US_MIT','T2_US_Wisconsin','T2_US_Nebraska','T2_US_Vanderbilt','T2_FR_CCIN2P3']
 
 siteliststep0long = ['T2_US_Purdue','T2_US_Nebraska','T3_US_Omaha']
@@ -282,6 +283,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 	processingVersion = None
 	outputtier = None
 	reqevts = 0
+	prepmemory = 0
 	requestdays=0
 	for raw in list:
 		if 'acquisitionEra' in raw:
@@ -313,6 +315,10 @@ def getWorkflowInfo(workflow,nodbs=0):
 			a = raw.find(" =")
 			b = raw.find('<br')
 			events_per_job = int(raw[a+3:b])
+		elif 'request.schema.Memory' in raw:
+			a = raw.find(" =")
+			b = raw.find('<br')
+			prepmemory = int(raw[a+3:b])
 		elif 'TimePerEvent' in raw:
                         a = raw.find("'")
                         if a >= 0:
@@ -530,7 +536,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 	#	else:
 	#		[oe,ost] = getdsdetail(o)
 	remainingcpuhours = timeev*(expectedevents-eventsdone)/3600
-	return {'type':typ,'status':status,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'zone':getzonebyt1(custodialt1),'js':j,'outputdataset':outputdataset,'cpuhours':cpuhours,'remainingcpuhours':remainingcpuhours,'team':team,'acquisitionEra':acquisitionEra,'requestdays':requestdays,'processingVersion':processingVersion,'events_per_job':events_per_job,'lumis_per_job':lumis_per_job,'expectedjobs':expectedjobs,'expectedjobcpuhours':expectedjobcpuhours,'cmssw':cmssw,'outputtier':outputtier}
+	return {'type':typ,'status':status,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'zone':getzonebyt1(custodialt1),'js':j,'outputdataset':outputdataset,'cpuhours':cpuhours,'remainingcpuhours':remainingcpuhours,'team':team,'acquisitionEra':acquisitionEra,'requestdays':requestdays,'processingVersion':processingVersion,'events_per_job':events_per_job,'lumis_per_job':lumis_per_job,'expectedjobs':expectedjobs,'expectedjobcpuhours':expectedjobcpuhours,'cmssw':cmssw,'outputtier':outputtier,'prepmemory':prepmemory}
 
 def isDatasetNameUsed(datasetname):
 	[e,st] = getdsdetail(datasetname)
@@ -696,6 +702,7 @@ def main():
 		priority = reqinfo[w]['priority']
 		
 		# internal assignment parameters
+		prepmemory = reqinfo[w]['prepmemory']
 		hi = False
 		himem = False
 		if reqinfo[w]['type'] == 'LHEStepZero':
@@ -711,7 +718,8 @@ def main():
 			softtimeout = 108000
 			mergedlfnbase = '/store/himc'
 			minmergesize = 2147483648
-			maxRSS = 3500000
+			#maxRSS = 3500000
+			maxRSS = 2294967
 		elif options.himem:
 			himem = True
 			team = getteam(teams,reqinfo[w])
@@ -737,6 +745,7 @@ def main():
 		newsitelist = getSitelistFromZone(zone,reqinfo[w],hi,siteblacklist)
 		custodialsites = []
 
+		"""
 		if options.hi:
 			oldsitelist = newsitelist[:]
 			newsitelist = []
@@ -745,7 +754,8 @@ def main():
 					newsitelist.append(i)
 				elif i in sitelisthirequests:
 					newsitelist.append(i)
-		elif options.himem:
+		"""
+		if options.himem:
 			oldsitelist = newsitelist[:]
 			newsitelist = []
 			for i in oldsitelist:
@@ -802,6 +812,7 @@ def main():
 		assign_data[w]['custodialsites'] = custodialsites
 		assign_data[w]['dataset'] = dataset
 		assign_data[w]['mergedlfnbase'] = mergedlfnbase
+		assign_data[w]['prepmemory'] = prepmemory
 		assign_data[w]['maxRSS'] = maxRSS
 		assign_data[w]['minmergesize'] = minmergesize
 		assign_data[w]['softtimeout'] = softtimeout
@@ -819,7 +830,7 @@ def main():
 		print
 
 	for w in list:
-		suminfo = "%s\nprio:%s events:%s cpuhours:%s team:%s era:%s procstr: %s procvs:%s LFNBase:%s maxRSS:%s MinMerge:%s SoftTimeout:%s\nOutputDataset: %s\nCustodialSites: %s\nWhitelist: %s" % (w,assign_data[w]['priority'],assign_data[w]['events'],assign_data[w]['cpuhours'],assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['processingstring'],assign_data[w]['processingversion'],assign_data[w]['mergedlfnbase'],assign_data[w]['maxRSS'],assign_data[w]['minmergesize'],assign_data[w]['softtimeout'],assign_data[w]['dataset'],assign_data[w]['custodialsites'],",".join(x for x in assign_data[w]['whitelist']))
+		suminfo = "%s\nprio:%s events:%s cpuhours:%s team:%s era:%s procstr: %s procvs:%s LFNBase:%s PREPmem: %s maxRSS:%s MinMerge:%s SoftTimeout:%s\nOutputDataset: %s\nCustodialSites: %s\nWhitelist: %s" % (w,assign_data[w]['priority'],assign_data[w]['events'],assign_data[w]['cpuhours'],assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['processingstring'],assign_data[w]['processingversion'],assign_data[w]['mergedlfnbase'],assign_data[w]['prepmemory'],assign_data[w]['maxRSS'],assign_data[w]['minmergesize'],assign_data[w]['softtimeout'],assign_data[w]['dataset'],assign_data[w]['custodialsites'],",".join(x for x in assign_data[w]['whitelist']))
 		if options.test:
 			print "TEST:\t%s\n" % suminfo
 		if not options.test:

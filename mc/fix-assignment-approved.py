@@ -480,7 +480,7 @@ def main():
 				h = float(reqinfo[workflow]['timeev'])*reqinfo[workflow]['inputdataset']['events']/reqinfo[workflow]['inputdataset']['lumicount']/3600 # h hours per lumi
 			
 				#print "h = %s * %s / %s / 3600 = %s" % (reqinfo[workflow]['timeev'],reqinfo[workflow]['inputdataset']['events'],reqinfo[workflow]['inputdataset']['lumicount'],h)
-				if 'FS52' in r['prepid']:
+				if 'FS52' in r['prepid'] or 'FS53' in r['prepid']:
 					ljmax = 100
 				else:
 					ljmax = 3
