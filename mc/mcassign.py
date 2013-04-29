@@ -19,7 +19,7 @@ siteblacklist = ['T2_FR_GRIF_IRFU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_RRC_KI'
 siteblacklist.extend(['T2_PL_Warsaw','T2_RU_PNPI','T2_KR_KNU','T2_UA_KIPT','T2_AT_Vienna'])
 siteblacklist.extend(['T2_IN_TIFR','T2_RU_JINR','T2_UK_SGrid_RALPP'])
 
-sitelistsmallrequests = ['T2_DE_DESY','T2_IT_Pisa','T2_ES_CIEMAT','T2_IT_Bari','T2_US_Purdue','T2_US_Caltech','T2_DE_RWTH','T2_IT_Legnaro','T2_IT_Rome','T2_US_Florida','T2_US_MIT','T2_US_Wisconsin','T2_US_UCSD','T2_US_Nebraska','T2_RU_IHEP','T2_US_Vanderbilt']
+sitelistsmallrequests = ['T2_DE_DESY','T2_IT_Pisa','T2_ES_CIEMAT','T2_IT_Bari','T2_US_Purdue','T2_US_Caltech','T2_DE_RWTH','T2_IT_Legnaro','T2_IT_Rome','T2_US_Florida','T2_US_MIT','T2_US_Wisconsin','T2_US_UCSD','T2_US_Nebraska','T2_EE_Estonia','T2_US_Vanderbilt']
 #sitelisthirequests = ['T2_US_MIT','T2_US_Wisconsin','T2_US_Nebraska','T2_US_Vanderbilt','T2_FR_CCIN2P3']
 sitelisthimemrequests = ['T2_US_MIT','T2_US_Wisconsin','T2_US_Nebraska','T2_US_Vanderbilt','T2_FR_CCIN2P3']
 
