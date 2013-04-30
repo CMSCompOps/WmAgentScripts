@@ -64,6 +64,11 @@ def findCustodial(url, requestname):
 	r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+requestname)
 	r2=conn.getresponse()
 	request = json.loads(r2.read())
+	while 'exception' in request:
+		conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+		r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
+		r2=conn.getresponse()
+		request = json.loads(r2.read())
 	siteList=request['Site Whitelist']
 	#if len(filter(lambda s: s[1] == '1', siteList))>1:
 	#	return "NoSite"
