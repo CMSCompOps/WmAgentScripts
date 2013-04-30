@@ -2,6 +2,7 @@
 
 import urllib2,urllib, httplib, sys, re, os, json, phedexSubscription
 from xml.dom.minidom import getDOMImplementation
+from das_client import get_data
 
 def getWorkflowType(url, workflow):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -16,7 +17,7 @@ def getRunWhitelist(url, workflow):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
     r2=conn.getresponse()
-    request = json.read(r2.read())
+    request = json.loads(r2.read())
     runWhitelist=request['RunWhitelist']
     return runWhitelist
 
@@ -223,7 +224,9 @@ def getInputEvents(url, workflow):
     BlockWhitelist=request['BlockWhitelist']
     BlockBlacklist=request['BlockBlacklist']
     inputDataSet=request['InputDataset']
-    runWhitelist=request['RunWhitelist']
+    runWhitelist=[]
+    if 'RunWhitelist' in request:
+	runWhitelist=request['RunWhitelist']
     if requestType=='ReReco':
         if len(BlockWhitelist)>0:
             return getRunLumiCountDatasetBlockList(inputDataSet,BlockWhitelist)
@@ -265,7 +268,8 @@ def getOutputEvents(url, workflow, dataset):
              return getEventCountDataSet(dataset)
     else:
         return getEventCountDataSet(dataset)
-    
+
+  
 def main():
     args=sys.argv[1:]
     if not len(args)==1:

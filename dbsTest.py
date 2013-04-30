@@ -2,12 +2,13 @@
 
 import urllib2,urllib, httplib, sys, re, os, json, phedexSubscription
 from xml.dom.minidom import getDOMImplementation
+from das_client import get_data
 
 def getWorkflowType(url, workflow):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
     r2=conn.getresponse()
-    request = json.read(r2.read())
+    request = json.loads(r2.read())
     requestType=request['RequestType']
     return requestType
 
@@ -16,7 +17,7 @@ def getRunWhitelist(url, workflow):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
     r2=conn.getresponse()
-    request = json.read(r2.read())
+    request = json.loads(r2.read())
     runWhitelist=request['RunWhitelist']
     return runWhitelist
 
@@ -24,7 +25,7 @@ def getBlockWhitelist(url, workflow):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
     r2=conn.getresponse()
-    request = json.read(r2.read())
+    request = json.loads(r2.read())
     BlockWhitelist=request['BlockWhitelist']
     return BlockWhitelist
 
@@ -32,7 +33,7 @@ def getInputDataSet(url, workflow):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
     r2=conn.getresponse()
-    request = json.read(r2.read())
+    request = json.loads(r2.read())
     inputDataSets=request['InputDataset']
     if len(inputDataSets)<1:
         print "No InputDataSet for workflow " +workflow
@@ -202,12 +203,12 @@ def getInputEvents(url, workflow):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
     r2=conn.getresponse()
-    request = json.read(r2.read())
+    request = json.loads(r2.read())
     while 'exception' in request:
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
         r2=conn.getresponse()
-        request = json.read(r2.read())
+        request = json.loads(r2.read())
     requestType=request['RequestType']
     if requestType=='MonteCarlo' or requestType=='LHEStepZero':
         if 'RequestNumEvents' in request:
@@ -251,12 +252,12 @@ def getOutputEvents(url, workflow, dataset):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
     r2=conn.getresponse()
-    request = json.read(r2.read())
+    request = json.loads(r2.read())
     while 'exception' in request:
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
         r2=conn.getresponse()
-        request = json.read(r2.read())
+        request = json.loads(r2.read())
     requestType=request['RequestType']
     if requestType=='ReReco':
         return getRunLumiCountDataset(dataset)
@@ -267,7 +268,8 @@ def getOutputEvents(url, workflow, dataset):
              return getEventCountDataSet(dataset)
     else:
         return getEventCountDataSet(dataset)
-    
+
+  
 def main():
     args=sys.argv[1:]
     if not len(args)==1:

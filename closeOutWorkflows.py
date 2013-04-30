@@ -7,7 +7,7 @@ def TransferComplete(url, dataset, site):
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset='+dataset+'&node='+site+'_MSS')
 	r2=conn.getresponse()
-	result = json.read(r2.read())
+	result = json.loads(r2.read())
 	blocks=result['phedex']
 	if 'block' not in blocks.keys():
 		return False
@@ -22,7 +22,7 @@ def TransferPercentage(url, dataset, site):
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset='+dataset+'&node='+site+'_MSS')
 	r2=conn.getresponse()
-	result = json.read(r2.read())
+	result = json.loads(r2.read())
 	blocks=result['phedex']
 	if 'block' not in blocks.keys():
 		return 0
@@ -37,7 +37,7 @@ def TransferPercentage(url, dataset, site):
 
 def CustodialMoveSubscriptionCreated(datasetName):
 	url='https://cmsweb.cern.ch/phedex/datasvc/json/prod/subscriptions?dataset=' + datasetName
-	result = json.read(urllib2.urlopen(url).read())
+	result = json.loads(urllib2.urlopen(url).read())
         datasets=result['phedex']
 	if 'dataset' not in datasets.keys():
 		return False
@@ -55,7 +55,7 @@ def getOverviewRequest():
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	r1=conn.request("GET",'/reqmgr/monitorSvc/requestmonitor')
 	r2=conn.getresponse()
-        requests = json.read(r2.read())
+        requests = json.loads(r2.read())
 	return requests
 
 
@@ -63,13 +63,11 @@ def findCustodial(url, requestname):
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+requestname)
 	r2=conn.getresponse()
-	request = json.read(r2.read())
+	request = json.loads(r2.read())
 	siteList=request['Site Whitelist']
-	if len(filter(lambda s: s[1] == '1', siteList))>1 and (not 'T1_CH_CERN' in siteList):
-		return "NoSite"
+	#if len(filter(lambda s: s[1] == '1', siteList))>1:
+	#	return "NoSite"
 	for site in siteList:
-		if 'CERN' in site:
-			continue
 		if 'T1' in site:
 			return site
 	res=re.search("T1_[A-Z]{2}_[A-Z]{3,4}", requestname)
@@ -122,7 +120,7 @@ def testEventCountWorkflow(url, workflow):
 
 def testOutputDataset(datasetName):
 	 url='https://cmsweb.cern.ch/phedex/datasvc/json/prod/Subscriptions?dataset=' + datasetName
-         result = json.read(urllib2.urlopen(url).read())
+         result = json.loads(urllib2.urlopen(url).read())
 	 datasets=result['phedex']['dataset']
 	 if len(datasets)>0:
 		dicts=datasets[0]
@@ -223,12 +221,12 @@ def getRequestTeam(url, workflow):
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
 	r2=conn.getresponse()
-	request = json.read(r2.read())
+	request = json.loads(r2.read())
 	while 'exception' in request:
 		conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 		r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
 		r2=conn.getresponse()
-		request = json.read(r2.read())
+		request = json.loads(r2.read())
 	if 'teams' not in request:
 		return 'NoTeam'		 
 	teams=request['teams']
@@ -279,8 +277,9 @@ def closeOutMonterCarloRequests(url, workflows):
 					print '| %80s | %100s | %4s | %5s| %3s | %5s|%5s| ' % (workflow, dataset,str(int(Percentage*100)), str(PhedexSubscription), str(int(TransPercen*100)), duplicate, closeOutDataset)
 				if closeOutWorkflow:
 					phedexSubscription.closeOutWorkflow(url, workflow)
-			if len(datasetsUnsuscribed)>0:
-				phedexSubscription.makeCustodialMoveRequest(url, site, datasetsUnsuscribed, "Custodial Move Subscription for MonteCarlo")
+			#Not needed anymore since the WmAgent makes all subscriptions
+			#if len(datasetsUnsuscribed)>0:
+				#phedexSubscription.makeCustodialMoveRequest(url, site, datasetsUnsuscribed, "Custodial Move Subscription for MonteCarlo")
 	phedexSubscription.makeCustodialReplicaRequest(url, 'T2_DE_DESY',datasetsUnsuscribedSpecialQueue, "Replica Subscription for Request in special production queue")
 	print'-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------' 				    
 # It assumes dataset is an output dataset from the workflow
@@ -302,7 +301,7 @@ def main():
 	print '-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'
     	print '| Request                                                                          | OutputDataSet                                                                                        |%Compl|Subscr|Tran|Dupl|ClosOu|'
    	print '-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'
-	closeOutReRecoWorkflows(url, workflowsCompleted['ReReco'])	
+	#closeOutReRecoWorkflows(url, workflowsCompleted['ReReco'])	
 	closeOutRedigiWorkflows(url, workflowsCompleted['ReDigi'])
 	closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarlo'])
 	closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarloFromGEN'])

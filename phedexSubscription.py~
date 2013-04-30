@@ -73,7 +73,7 @@ def closeOutWorkflow(url, workflowname):
     #print data
     conn.close()
 
-def AnnounceWorkflow(url, workflowname):
+def announceWorkflow(url, workflowname):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     #params = {"requestName" : workflowname,"status" : "announced"}	
     params = {"requestName" : workflowname,"status" : "announced"}
@@ -189,7 +189,7 @@ def outputdatasetsWorkflow(url, workflow):
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	r1=conn.request("GET",'/reqmgr/reqMgr/outputDatasetsByRequestName?requestName='+workflow)
 	r2=conn.getresponse()
-	datasets = json.read(r2.read())
+	datasets = json.loads(r2.read())
 	while 'exception' in datasets:
 		conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 		r1=conn.request("GET",'/reqmgr/reqMgr/outputDatasetsByRequestName?requestName='+workflow)
