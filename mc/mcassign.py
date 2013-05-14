@@ -9,22 +9,25 @@ try:
 except ImportError:
     import simplejson as json
 
-legal_eras = ['Summer11','Summer12']
-teams_lp = ['mc']
-teams_hp = ['mc_highprio']
-
-zones = ['FNAL','CNAF','ASGC','IN2P3','RAL','PIC','KIT']
+t1s = {'FNAL':'T1_US_FNAL','CNAF':'T1_IT_CNAF','ASGC':'T1_TW_ASGC','IN2P3':'T1_FR_CCIN2P3','RAL':'T1_UK_RAL','PIC':'T1_ES_PIC','KIT':'T1_DE_KIT'}
 
 siteblacklist = ['T2_FR_GRIF_IRFU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_RRC_KI','T2_UK_SGrid_Bristol']
 siteblacklist.extend(['T2_PL_Warsaw','T2_RU_PNPI','T2_KR_KNU','T2_UA_KIPT','T2_AT_Vienna'])
 siteblacklist.extend(['T2_IN_TIFR','T2_RU_JINR','T2_UK_SGrid_RALPP'])
 
 sitelistsmallrequests = ['T2_DE_DESY','T2_IT_Pisa','T2_ES_CIEMAT','T2_IT_Bari','T2_US_Purdue','T2_US_Caltech','T2_DE_RWTH','T2_IT_Legnaro','T2_IT_Rome','T2_US_Florida','T2_US_MIT','T2_US_Wisconsin','T2_US_UCSD','T2_US_Nebraska','T2_EE_Estonia','T2_US_Vanderbilt']
-#sitelisthirequests = ['T2_US_MIT','T2_US_Wisconsin','T2_US_Nebraska','T2_US_Vanderbilt','T2_FR_CCIN2P3']
 sitelisthimemrequests = ['T2_US_MIT','T2_US_Wisconsin','T2_US_Nebraska','T2_US_Vanderbilt','T2_FR_CCIN2P3']
 
 siteliststep0long = ['T2_US_Purdue','T2_US_Nebraska','T3_US_Omaha']
-sitelistgensubscrnoncust = ['T1_DE_KIT_MSS' ,'T1_ES_PIC_MSS' ,'T1_FR_CCIN2P3_MSS' ,'T1_IT_CNAF_MSS' ,'T1_TW_ASGC_MSS' ,'T1_UK_RAL_MSS' ,'T2_BE_IIHE' ,'T2_BE_UCL' ,'T2_BR_SPRACE' ,'T2_CH_CSCS' ,'T2_CN_Beijing' ,'T2_DE_DESY' ,'T2_DE_RWTH' ,'T2_EE_Estonia' ,'T2_ES_CIEMAT' ,'T2_ES_IFCA' ,'T2_FI_HIP' ,'T2_FR_CCIN2P3' ,'T2_FR_GRIF_LLR' ,'T2_FR_IPHC' ,'T2_HU_Budapest' ,'T2_IN_TIFR' ,'T2_IT_Bari' ,'T2_IT_Legnaro' ,'T2_IT_Pisa' ,'T2_IT_Rome' ,'T2_PL_Warsaw' ,'T2_PT_NCG_Lisbon','T2_RU_JINR' ,'T2_RU_SINP' ,'T2_TR_METU' ,'T2_TW_Taiwan' ,'T2_UK_London_Brunel' ,'T2_UK_London_IC' ,'T2_UK_SGrid_RALPP' ,'T2_US_Caltech' ,'T2_US_Florida' ,'T2_US_MIT' ,'T2_US_Nebraska' ,'T2_US_Purdue' ,'T2_US_UCSD' ,'T2_US_Wisconsin','T2_BR_UERJ','T3_US_Colorado','T2_RU_IHEP','T2_RU_ITEP','T2_CH_CERN']
+gensubscriptionsites = ['T2_CH_CERN','T2_IT_Bari' ,'T2_IT_Legnaro' ,'T2_IT_Pisa' ,'T2_IT_Rome' ,'T1_IT_CNAF','T2_ES_CIEMAT','T2_ES_IFCA','T2_EE_Estonia','T2_US_Wisconsin','T1_DE_KIT' ,'T1_ES_PIC' ,'T1_FR_CCIN2P3','T1_UK_RAL_Disk' ,'T2_BE_IIHE' ,'T2_BE_UCL' ,'T2_BR_SPRACE' ,'T2_CH_CSCS' ,'T2_CN_Beijing' ,'T2_DE_DESY' ,'T2_DE_RWTH' ,'T2_FI_HIP' ,'T2_FR_CCIN2P3' ,'T2_FR_GRIF_LLR' ,'T2_FR_IPHC' ,'T2_HU_Budapest' ,'T2_IN_TIFR' ,'T2_PT_NCG_Lisbon','T2_RU_JINR' ,'T2_RU_SINP' ,'T2_TR_METU' ,'T2_TW_Taiwan' ,'T2_UK_London_Brunel' ,'T2_UK_London_IC' ,'T2_UK_SGrid_RALPP' ,'T2_US_Caltech' ,'T2_US_Florida' ,'T2_US_MIT' ,'T2_US_Nebraska' ,'T2_US_Purdue' ,'T2_US_UCSD' ,'T2_BR_UERJ','T3_US_Colorado','T2_RU_IHEP','T2_RU_ITEP']
+autoapprovelist = ['T2_CH_CERN','T2_IT_Bari' ,'T2_IT_Legnaro' ,'T2_IT_Pisa' ,'T2_IT_Rome' ,'T1_IT_CNAF','T2_ES_CIEMAT','T2_ES_IFCA','T2_EE_Estonia','T2_US_Wisconsin']
+
+campaignconfig = {
+	'Summer12_WMLHE': {'acqera':'Summer12'}
+	,'Summer12_FS52': {'acqera':'Summer12','procstr':'GLOBALTAG_FSIM'}
+	,'Summer12_FS53': {'acqera':'Summer12','procstr':'GLOBALTAG_FSIM'}
+	,'LowPU2010': {'acqera':'Summer12','procstr':'LowPU2010-GLOBALTAG'}
+}
 
 cachedoverview = '/afs/cern.ch/user/s/spinoso/public/overview.cache'
 forceoverview = 0
@@ -32,24 +35,26 @@ tcount_hp = 0
 tcount_lp = 0
 tcount = 0
 
-def get_linkedt2s(custodialT1):
+def get_linkedt2s(custodialt1):
+	global siteblacklist
 	list = []
-	if custodialT1 == '':
+	if custodialt1 == '':
 		return []
 	try:
 		# get list of linked T2s
-		url = "https://cmsweb.cern.ch/phedex/datasvc/json/prod/links?status=ok&to=%s_Buffer&from=T2_*" % custodialT1
+		url = "https://cmsweb.cern.ch/phedex/datasvc/json/prod/links?status=ok&to=%s_Buffer&from=T2_*" % custodialt1
 		response = urllib2.urlopen(url)
 		j = json.load(response)["phedex"]
 		for dict in j['link']:
-			list.append(dict['from'])
+			if dict['from'] not in siteblacklist:
+				list.append(dict['from'])
 
 		# add list of commissioned T3s that are linked
-		url = "https://cmsweb.cern.ch/phedex/datasvc/json/prod/links?status=ok&to=%s_Buffer&from=T3_*" % custodialT1
+		url = "https://cmsweb.cern.ch/phedex/datasvc/json/prod/links?status=ok&to=%s_Buffer&from=T3_*" % custodialt1
 		response = urllib2.urlopen(url)
 		j = json.load(response)["phedex"]
 		for dict in j['link']:
-			if dict['from'] in ['T3_US_Omaha','T3_US_Colorado']:
+			if dict['from'] in ['T3_US_Omaha','T3_US_Colorado'] and dict['from'] not in siteblacklist:
 				list.append(dict['from'])
 
 		list.sort()
@@ -60,84 +65,7 @@ def get_linkedt2s(custodialT1):
         	print sys.exc_info()
 		sys.exit(1)
 
-def getSitelistFromZone(zone,r,hi,siteblacklist):
-	global zones
-	blacklist = siteblacklist[:]
-	zone2t1 = {'FNAL':'T1_US_FNAL','CNAF':'T1_IT_CNAF','ASGC':'T1_TW_ASGC','IN2P3':'T1_FR_CCIN2P3','RAL':'T1_UK_RAL','PIC':'T1_ES_PIC','KIT':'T1_DE_KIT'}
-	# if zone is automatic, guess zone
-	if zone == 'auto':
-		if hi:
-			zone = 'IN2P3'
-		elif r['type'] == 'LHEStepZero':
-			zone = 'FNAL'
-		else:
-			zone = getZoneFromRequest(r['prepid'])
-
-	# convert zone to list of t1 + linked t2
-	if zone in zones:
-		sitelist = []
-		
-		# run MC/MCFromGEN @ T1
-		if r['type'] in ['MonteCarlo','MonteCarloFromGEN']:
-			sitelist.append(zone2t1[zone])
-
-		# get all linked T2s
-		t2list = get_linkedt2s(zone2t1[zone])
-		
-		# add T3_US_Omaha if T2_US_Nebraska is usable, merged files will always get to Nebraska
-		if 'T2_US_Nebraska' in t2list:
-			t2list.append('T3_US_Omaha')
-
-		# exclude Vanderbilt if not Heavy Ion
-		if not hi:
-			if not 'T2_US_Vanderbilt' in blacklist:
-				blacklist.extend(['T2_US_Vanderbilt'])
-
-		# exclude Omaha from MCFromGEN
-		if r['type'] == 'MonteCarloFromGEN':
-			if not 'T3_US_Omaha' in blacklist:
-				blacklist.extend(['T3_US_Omaha'])
-
-		# no blacklist for MonteCarloFromGEN: we will subscribe only to sites supposed to work		
-
-		for i in t2list:
-			if not i in blacklist:
-				sitelist.append(i)
-	else:
-		# explicit sitelist, no guesses
-		sitelist = zone.split(',')
-		t1count = 0
-		custodialT1 = ''
-		for i in sitelist:
-			if 'T1_' in i:
-				custodialT1 = i
-				t1count = t1count + 1
-		if t1count > 1:
-			print "WARNING: More than 1 T1 has been specified in %s" % (sitelist)
-		t2list = get_linkedt2s(custodialT1)
-		if t1count == 1:
-			for i in sitelist:
-				if 'T2_' in i:
-					if not i in t2list:
-						print "%s has no PhEDEx uplink to %s" % (i,custodialT1)
-						sys.exit(1)
-	return sitelist
-
-def getcampaign(r):
-        prepid = r['prepid']
-        return prepid.split('-')[1]
-
-def getacqera(prepid):
-	global legal_eras
-        era = prepid.split('-')[1]
-	for e in legal_eras:
-		if e in prepid:
-			return e
-	print " Cannot guess acquisition era for %s" % prepid
-	sys.exit(1)
-	
-
-def assignMCRequest(url,workflow,team,sitelist,era,processingstring,processingversion,mergedlfnbase,minmergesize,maxRSS,custodialsites,softtimeout):
+def assignMCRequest(url,workflow,team,sitelist,era,processingstring,processingversion,mergedlfnbase,minmergesize,maxRSS,custodialsites,noncustodialsites,custodialsubtype,autoapprovesubscriptionsites,softtimeout,blockclosemaxevents):
     params = {"action": "Assign",
               "Team"+team: "checked",
               "SiteWhitelist": sitelist,
@@ -145,6 +73,7 @@ def assignMCRequest(url,workflow,team,sitelist,era,processingstring,processingve
               "MergedLFNBase": mergedlfnbase,
               "UnmergedLFNBase": "/store/unmerged",
 	      "SoftTimeout": softtimeout,
+	      "BlockCloseMaxEvents": blockclosemaxevents,
               "MinMergeSize": minmergesize,
               "MaxMergeSize": 4294967296,
               "MaxMergeEvents": 50000,
@@ -154,7 +83,10 @@ def assignMCRequest(url,workflow,team,sitelist,era,processingstring,processingve
 	      "dashboard": "production",
               "ProcessingVersion": processingversion,
               "ProcessingString": processingstring,
-		"CustodialSites":custodialsites,
+	      "CustodialSites":custodialsites,
+	      "NonCustodialSites":noncustodialsites,
+	      "AutoApproveSubscriptionSites":autoapprovesubscriptionsites,
+	      "CustodialSubType":custodialsubtype,
               "checkbox"+workflow: "checked"}
 
     encodedParams = urllib.urlencode(params, True)
@@ -178,16 +110,6 @@ def assignMCRequest(url,workflow,team,sitelist,era,processingstring,processingve
   	sys.exit(1)
     conn.close()
     return
-
-def getzonebyt1(s):
-	custodial = '?'
-	if not s:
-		return custodial
-	t1list = {'T1_FR_CCIN2P3':'IN2P3','T1_TW_ASGC':'ASGC','T1_IT_CNAF':'CNAF','T1_US_FNAL':'FNAL','T1_DE_KIT':'KIT','T1_ES_PIC':'PIC','T1_UK_RAL':'RAL'}
-	for i in t1list.keys():
-		if i in s:
-			custodial = t1list[i]
-	return custodial
 
 def getoverview():
 	global cachedoverview,forceoverview
@@ -285,6 +207,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 	reqevts = 0
 	prepmemory = 0
 	requestdays=0
+	campaign = ''
 	for raw in list:
 		if 'acquisitionEra' in raw:
                         a = raw.find("'")
@@ -311,6 +234,9 @@ def getWorkflowInfo(workflow,nodbs=0):
 			a = raw.find(" =")
 			b = raw.find('<br')
 			lumis_per_job = int(raw[a+3:b])
+                elif '.schema.Campaign' in raw:
+                        campaign = raw[raw.find("'")+1:]
+                        campaign = campaign[0:campaign.find("'")]
 		elif 'splitting.events_per_job' in raw:
 			a = raw.find(" =")
 			b = raw.find('<br')
@@ -536,7 +462,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 	#	else:
 	#		[oe,ost] = getdsdetail(o)
 	remainingcpuhours = timeev*(expectedevents-eventsdone)/3600
-	return {'type':typ,'status':status,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'zone':getzonebyt1(custodialt1),'js':j,'outputdataset':outputdataset,'cpuhours':cpuhours,'remainingcpuhours':remainingcpuhours,'team':team,'acquisitionEra':acquisitionEra,'requestdays':requestdays,'processingVersion':processingVersion,'events_per_job':events_per_job,'lumis_per_job':lumis_per_job,'expectedjobs':expectedjobs,'expectedjobcpuhours':expectedjobcpuhours,'cmssw':cmssw,'outputtier':outputtier,'prepmemory':prepmemory}
+	return {'type':typ,'status':status,'campaign':campaign,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'js':j,'outputdataset':outputdataset,'cpuhours':cpuhours,'remainingcpuhours':remainingcpuhours,'team':team,'acquisitionEra':acquisitionEra,'requestdays':requestdays,'processingVersion':processingVersion,'events_per_job':events_per_job,'lumis_per_job':lumis_per_job,'expectedjobs':expectedjobs,'expectedjobcpuhours':expectedjobcpuhours,'cmssw':cmssw,'outputtier':outputtier,'prepmemory':prepmemory}
 
 def isDatasetNameUsed(datasetname):
 	[e,st] = getdsdetail(datasetname)
@@ -552,29 +478,6 @@ def getRequestsByPREPID(prepid):
 			r.append(i['request_name'])
 	return r
 	
-def getZoneFromRequest(prepid):
-	print "Guessing zone"
-	zone = []
-	reqs = getRequestsByPREPID(prepid)
-	#print "Found %s total requests with the same PREP ID: %s" % (len(reqs),prepid)
-	for r in reqs:
-		info = getWorkflowInfo(r,nodbs=1)
-		#print "%s (%s) %s" % (r,info['status'],info['zone'])
-		if info['zone'] not in zone:
-			zone.append(info['zone'])
-	if '?' in zone:
-		zone.remove('?')
-	if len(zone) > 1:
-		print "Requests have multiple custodial T1 candidates: %s" % zone
-		for i in reqs:
-			print " %s" % i
-		sys.exit(2)
-	if len(zone) < 1:
-		print "No zones can be guessed."
-		sys.exit(2)
-	#print "Zone is %s" % zone[0]
-	return zone[0]
-
 def isInDBS(dataset):
 	q = "/afs/cern.ch/user/s/spinoso/public/dbssql --input='find dataset where dataset="+dataset+"*' "
 	#print q
@@ -593,14 +496,12 @@ def isInDBS(dataset):
 		return False
 
 def getteam(teams,r):
-	global tcount_hp,tcount_lp,tcount,teams_lp,teams_hp
+	global tcount_hp,tcount_lp,tcount
 	if teams == 'auto':
 		if r['priority'] >=100000:
-			team = teams_hp[tcount_hp % len(teams_hp)]
-			tcount_hp = tcount_hp + 1
+			team = 'mc_highprio'
 		else:
-			team = teams_lp[tcount_lp % len(teams_lp)]
-			tcount_lp = tcount_lp + 1
+			team = 'mc'
 	else:
 		team = teams[tcount % len(teams)]
 		tcount = tcount + 1
@@ -608,7 +509,6 @@ def getteam(teams,r):
 
 def main():
 	global overview,forceoverview,sum,nodbs,siteblacklist
-	global legal_eras,zones
 
 	overview = getoverview()
 	url='cmsweb.cern.ch'	
@@ -616,14 +516,15 @@ def main():
 	parser.add_option('-w', '--workflow', help='workflow name',dest='workflow')
 	parser.add_option('--debug', help='add debug info',dest='debug',default=False,action="store_true")
 	parser.add_option('-l', '--workflowlist', help='workflow list in textfile',dest='list')
-	parser.add_option('-t', '--team', help='team: one of %s' % (teams_hp+teams_lp),dest='team')
+	parser.add_option('-t', '--team', help='team',dest='team')
 	parser.add_option('--test', action="store_true",default=True,help='test mode: don\'treally assign at the end',dest='test')
 	parser.add_option('--assign', action="store_false",default=True,help='assign mode',dest='test')
 	parser.add_option('--small', action="store_true",default=False,help='assign requests considering them small',dest='small')
 	parser.add_option('--hi', action="store_true",default=False,help='heavy ion request (add Vanderbilt to the whitelist, use /store/himc)',dest='hi')
 	parser.add_option('--himem', action="store_true",default=False,help='high memory request (use sites allowing 3GB/job, increase maxRSS)',dest='himem')
-	parser.add_option('--fsim', action="store_true",default=False,help='FastSim request (add _FSIM in the processing version)',dest='fsim')
-	parser.add_option('-z', '--zone', help='Zone %s or single site or comma-separated list (i.e. T1_US_FNAL,T2_FR_CCIN2P3,T2_DE_DESY)' % zones,dest='zone')
+	parser.add_option('-e','--extension', action="store_true",default=False,help='extension (add -ext to the processing string)',dest='ext')
+	parser.add_option('-c', '--custodialt1', help='Custodial T1',dest='custodialt1')
+	parser.add_option('-s', '--sites', help='Single site or comma-separated list (i.e. T1_US_FNAL,T2_FR_CCIN2P3,T2_DE_DESY)',dest='sites')
 	parser.add_option('-a', '--acqera', help='<AcquisitionEra> in <AcquisitionEra>-<ProcString>-v<ProcVer>',dest='acqera')
 	parser.add_option('-p', '--processingstring', help='<ProcString> in <AcquisitionEra>-<ProcString>-v<ProcVer>, default=GlobalTag-vX',dest='processingstring')
 	parser.add_option('-v', '--processingversion', help='<ProcVer> in <AcquisitionEra>-<ProcString>-v<ProcVer>), default=1',dest='processingversion')
@@ -648,10 +549,20 @@ def main():
 			teams = 'auto'
 	else:
 		teams = 'auto'
-	if options.zone:
-		zone = options.zone
+	if options.custodialt1:
+		custodialt1 = options.custodialt1
+		if custodialt1 not in t1s.values():
+			if custodialt1 in t1s.keys():
+				custodialt1 = t1s[custodialt1]
+			else:
+				print "%s is not a T1." % custodialt1
+				sys.exit(1)
 	else:
-		zone = 'auto'
+		custodialt1 = ''
+	if options.sites:
+		sites = options.sites
+	else:
+		sites = 'auto'
 	if options.processingversion:
 		processingversion = options.processingversion
 	else:
@@ -667,8 +578,7 @@ def main():
 	if options.acqera:
 		acqera = options.acqera
 	else:
-		print "Please provide the acquisition era."
-		sys.exit(1)
+		acqera = 'auto'
 
 	siteblacklist.sort()
 	print "Default site blacklist: %s\n" % (",".join(x for x in siteblacklist))
@@ -678,11 +588,15 @@ def main():
 	elif options.himem:
 		print "High memory flag is set, parameters will be configured accordingly\n"
 
+	if options.ext:
+		print "Extension string enabled\n"
+		ext = '-ext'
+	else:
+		ext = ''
+
 	print "Preparing requests:\n"
-	#print "REQUEST TEAM PRIORITY ACQERA PROCVS ZONE"
 	assign_data = {}
 	for w in list:
-		print "%s" % w
 		reqinfo[w] = getWorkflowInfo(w)
 
 		# status
@@ -705,14 +619,31 @@ def main():
 		prepmemory = reqinfo[w]['prepmemory']
 		hi = False
 		himem = False
+		blockclosemaxevents = 250000000
+		noncustodialsites = []
+		custodialsubtype = "Move"
+		autoapprovesubscriptionsites = autoapprovelist
 		if reqinfo[w]['type'] == 'LHEStepZero':
-			#print 'LHEStepZero request: %s' % w
-			team = 'step0'
+			if 'T1_US_FNAL' not in autoapprovesubscriptionsites:
+				autoapprovesubscriptionsites.append('T1_US_FNAL')
+			noncustodialsites = gensubscriptionsites
+			custodialsubtype = "Replica"
+			blockclosemaxevents = 20000000
 			minmergesize = 1000000000
 			softtimeout = 108000*2
 			mergedlfnbase = '/store/generator'
 			maxRSS = 2294967
+			if '_STEP0ATCERN' in w:
+				# STEP0 @ CERN
+				print '%s (LHEStepZero step0)' % w
+				team = 'step0'
+			else:
+				# full GEN
+				print '%s (LHEStepZero full GEN)' % w
+				team = 'mc_highprio'
+				
 		elif options.hi:
+			print '%s (%s Heavy Ion)' % (w,reqinfo[w]['type'])
 			hi = True
 			team = getteam(teams,reqinfo[w])
 			softtimeout = 108000
@@ -722,28 +653,48 @@ def main():
 			maxRSS = 2294967
 		elif options.himem:
 			himem = True
+			print '%s (%s High Memory)' % (w,reqinfo[w]['type'])
 			team = getteam(teams,reqinfo[w])
 			softtimeout = 108000
 			mergedlfnbase = '/store/mc'
 			minmergesize = 2147483648
 			maxRSS = 3500000
 		else:
+			print '%s (%s)' % (w,reqinfo[w]['type'])
 			mergedlfnbase = '/store/mc'
 			team = getteam(teams,reqinfo[w])
 			softtimeout = 108000
 			minmergesize = 2147483648
 			maxRSS = 2294967
 
-		# acqera
-		#if acqera == 'auto':
-		#	newacqera = getacqera(reqinfo[w]['prepid'])
-		#else:
-		#	newacqera = acqera
-		newacqera = acqera
+
+		if custodialt1 == '':
+			if options.himem:
+				custodialt1 = 'T1_FR_CCIN2P3'
+			elif reqinfo[w]['type'] == 'LHEStepZero':
+				custodialt1 = 'T1_US_FNAL'
+			else:
+				print "Cannot guess the custodial T1. Please use -c <site>."
+				sys.exit(1)
 
 		# sitelist adjustment
-		newsitelist = getSitelistFromZone(zone,reqinfo[w],hi,siteblacklist)
-		custodialsites = []
+		linkedt2list = get_linkedt2s(custodialt1)
+		if sites == 'auto':
+			if reqinfo[w]['type'] == 'LHEStepZero' and '_STEP0ATCERN' in w:
+				newsitelist = ['T2_CH_CERN']
+			else:
+				newsitelist = []
+				newsitelist.append(custodialt1)
+				newsitelist.append('T1_UK_RAL')
+				newsitelist.extend(linkedt2list)
+		else:
+			# explicit sitelist, no guesses
+			newsitelist = sites.split(',')
+			for i in newsitelist:
+				if 'T2_' in i:
+					if not i in linkedt2list:
+						print "%s has no PhEDEx uplink to %s" % (i,custodialt1)
+						sys.exit(1)
 
 		"""
 		if options.hi:
@@ -772,32 +723,37 @@ def main():
 				elif i in sitelistsmallrequests:
 					newsitelist.append(i)
 
-		if reqinfo[w]['type'] == 'LHEStepZero':
-			custodialsites.append('T1_US_FNAL')
-		else:
-			for i in newsitelist:
-				if 'T1_' in i:
-					custodialsites.append(i)
-
 		# processing string and processing version
 		
-		if processingstring == 'auto':
-			if reqinfo[w]['type'] == 'MonteCarloFromGEN' and ('_FSIM-' in reqinfo[w]['inputdataset']['name'] or options.fsim):
-				newprocessingstring = "%s_FSIM" % (reqinfo[w]['globaltag'])
-			else:
-				newprocessingstring = "%s" % (reqinfo[w]['globaltag'])
-
-			dataset = '/%s/%s-%s-v%s/%s' % (reqinfo[w]['primaryds'],newacqera,newprocessingstring,processingversion,reqinfo[w]['outputtier'])
-			if isInDBS(dataset):
-				print "Dataset already exists in DBS: %s -> %s" % (w,dataset)
-				sys.exit(1)
+		if acqera != 'auto':
+			newacqera = acqera
 		else:
+			if reqinfo[w]['campaign'] in campaignconfig.keys():
+				if 'acqera' in campaignconfig[reqinfo[w]['campaign']].keys():
+					newacqera = campaignconfig[reqinfo[w]['campaign']]['acqera']
+				else:
+					newacqera = reqinfo[w]['campaign']
+			else:
+				newacqera = reqinfo[w]['campaign']
+
+		if processingstring != 'auto':
 			newprocessingstring = processingstring
-			dataset = '/%s/%s-%s-v%s/%s' % (reqinfo[w]['primaryds'],newacqera,newprocessingstring,processingversion,reqinfo[w]['outputtier'])
-			#print dataset
-			if isInDBS(dataset):
-				print "Processing version already in use for %s : %s" % (w,dataset)
-				sys.exit(1)
+		else:
+			if reqinfo[w]['campaign'] in campaignconfig.keys():
+				if 'procstr' in campaignconfig[reqinfo[w]['campaign']].keys():
+					newprocessingstring = campaignconfig[reqinfo[w]['campaign']]['procstr']
+					newprocessingstring.replace('GLOBALTAG',reqinfo[w]['globaltag'])
+				else:
+					newprocessingstring = reqinfo[w]['globaltag']
+			else:
+				newprocessingstring = reqinfo[w]['globaltag']
+		
+		newprocessingstring = "%s%s" % (newprocessingstring,ext)
+				
+		dataset = '/%s/%s-%s-v%s/%s' % (reqinfo[w]['primaryds'],newacqera,newprocessingstring,processingversion,reqinfo[w]['outputtier'])
+		if isInDBS(dataset):
+			print "Dataset already exists in DBS: %s -> %s" % (w,dataset)
+			sys.exit(1)
 
 		# save the parameters for assignment of request 'w'
 		assign_data[w] = {}
@@ -805,17 +761,24 @@ def main():
 		assign_data[w]['priority'] = priority
 		assign_data[w]['events'] = reqinfo[w]['expectedevents']
 		assign_data[w]['cpuhours'] = reqinfo[w]['cpuhours']
+		newsitelist.sort()
 		assign_data[w]['whitelist'] = newsitelist
 		assign_data[w]['acqera'] = newacqera
 		assign_data[w]['processingstring'] = newprocessingstring
 		assign_data[w]['processingversion'] = processingversion
-		assign_data[w]['custodialsites'] = custodialsites
+		assign_data[w]['custodialsites'] = [custodialt1]
+		noncustodialsites.sort()
+		assign_data[w]['noncustodialsites'] = noncustodialsites
+		assign_data[w]['custodialsubtype'] = custodialsubtype
+		autoapprovesubscriptionsites.sort()
+		assign_data[w]['autoapprovesubscriptionsites'] = autoapprovesubscriptionsites
 		assign_data[w]['dataset'] = dataset
 		assign_data[w]['mergedlfnbase'] = mergedlfnbase
 		assign_data[w]['prepmemory'] = prepmemory
 		assign_data[w]['maxRSS'] = maxRSS
 		assign_data[w]['minmergesize'] = minmergesize
 		assign_data[w]['softtimeout'] = softtimeout
+		assign_data[w]['blockclosemaxevents'] = blockclosemaxevents
 
 	print "\n----------------------------------------------\n"
 
@@ -830,12 +793,12 @@ def main():
 		print
 
 	for w in list:
-		suminfo = "%s\nprio:%s events:%s cpuhours:%s team:%s era:%s procstr: %s procvs:%s LFNBase:%s PREPmem: %s maxRSS:%s MinMerge:%s SoftTimeout:%s\nOutputDataset: %s\nCustodialSites: %s\nWhitelist: %s" % (w,assign_data[w]['priority'],assign_data[w]['events'],assign_data[w]['cpuhours'],assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['processingstring'],assign_data[w]['processingversion'],assign_data[w]['mergedlfnbase'],assign_data[w]['prepmemory'],assign_data[w]['maxRSS'],assign_data[w]['minmergesize'],assign_data[w]['softtimeout'],assign_data[w]['dataset'],assign_data[w]['custodialsites'],",".join(x for x in assign_data[w]['whitelist']))
+		suminfo = "%s\n\tcampaign: %s prio:%s events:%s cpuhours:%s\n\tteam:%s era:%s procstr: %s procvs:%s\n\tLFNBase:%s PREPmem: %s maxRSS:%s MinMerge:%s SoftTimeout:%s BlockCloseMaxEvents:%s\n\tOutputDataset: %s\n\tCustodialSites: %s\n\tNonCustodialSites: %s\n\tCustodialSubType: %s\n\tAutoApprove: %s\n\tWhitelist: %s" % (w,reqinfo[w]['campaign'],assign_data[w]['priority'],assign_data[w]['events'],assign_data[w]['cpuhours'],assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['processingstring'],assign_data[w]['processingversion'],assign_data[w]['mergedlfnbase'],assign_data[w]['prepmemory'],assign_data[w]['maxRSS'],assign_data[w]['minmergesize'],assign_data[w]['softtimeout'],assign_data[w]['blockclosemaxevents'],assign_data[w]['dataset'],assign_data[w]['custodialsites'],assign_data[w]['noncustodialsites'],assign_data[w]['custodialsubtype'],assign_data[w]['autoapprovesubscriptionsites'],assign_data[w]['whitelist'])
 		if options.test:
 			print "TEST:\t%s\n" % suminfo
 		if not options.test:
 			print "ASSIGN:\t%s\n" % suminfo
-			assignMCRequest(url,w,assign_data[w]['team'],assign_data[w]['whitelist'],assign_data[w]['acqera'],assign_data[w]['processingstring'],assign_data[w]['processingversion'],assign_data[w]['mergedlfnbase'],assign_data[w]['minmergesize'],assign_data[w]['maxRSS'],assign_data[w]['custodialsites'],assign_data[w]['softtimeout'])
+			assignMCRequest(url,w,assign_data[w]['team'],assign_data[w]['whitelist'],assign_data[w]['acqera'],assign_data[w]['processingstring'],assign_data[w]['processingversion'],assign_data[w]['mergedlfnbase'],assign_data[w]['minmergesize'],assign_data[w]['maxRSS'],assign_data[w]['custodialsites'],assign_data[w]['noncustodialsites'],assign_data[w]['custodialsubtype'],assign_data[w]['autoapprovesubscriptionsites'],assign_data[w]['softtimeout'],assign_data[w]['blockclosemaxevents'])
 	
 	sys.exit(0)
 
