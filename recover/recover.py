@@ -272,7 +272,7 @@ def diffDatasets(inputDataset, outputDataset):
                     skipped += 1
                     continue
                 numInputLumis += 1
-                if inputLumi not in outputRunInfo[inputRun]:
+                if inputRun not in outputRunInfo or inputLumi not in outputRunInfo[inputRun]:
                     if inputRun not in diffRunInfo.keys():
                         diffRunInfo[inputRun] = []
                     diffRunInfo[inputRun].append(inputLumi)
@@ -389,22 +389,23 @@ if __name__ == "__main__":
     diffFiles = diffDatasets(inputFiles, outputFiles)
 
     altCollectionName = "%s-recover-%s" % (str(int(time.time())), requestName)
-    collection = CouchCollection(database = "wmagent_acdc", url = getCouchUrl(),
+    collection = CouchCollection(database = "acdcserver", url = "https://cmsweb-testbed.cern.ch/couchdb",
                                  name = altCollectionName,
                                  type = CollectionTypes.DataCollection)
     requestor = wlHelper.getOwner()["name"]
     group = wlHelper.getOwner()["group"]
-    owner = makeUser(group, requestor, getCouchUrl(), "wmagent_acdc")
+    owner = makeUser(group, requestor, "https://cmsweb-testbed.cern.ch/couchdb",
+                     "acdcserver")
     collection.setOwner(owner)
-    fileset = CouchFileset(database = "wmagent_acdc", url = getCouchUrl(),
+    fileset = CouchFileset(database = "acdcserver", url = "https://cmsweb-testbed.cern.ch/couchdb",
                            name = inputTaskName)
     collection.addFileset(fileset)
     fileset.makeFilelist(diffFiles)
 
     print "Original Request Name: %s" % (requestName)
     print "Initial Task Path: %s" % (inputTaskName)
-    print "ACDC Server URL: %s" % (getCouchUrl())
-    print "ACDC Database Name: wmagent_acdc"
+    print "ACDC Server URL: %s" % ("https://cmsweb-testbed.cern.ch/couchdb")
+    print "ACDC Database Name: acdcserver"
     print "Ignored Output Modules: %s" % (taskOutputModules)
     print "Alternative Collection Name: %s" % (altCollectionName)
 
