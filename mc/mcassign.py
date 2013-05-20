@@ -9,6 +9,7 @@ try:
 except ImportError:
     import simplejson as json
 
+teams = ['mc','mc_highprio']
 t1s = {'FNAL':'T1_US_FNAL','CNAF':'T1_IT_CNAF','ASGC':'T1_TW_ASGC','IN2P3':'T1_FR_CCIN2P3','RAL':'T1_UK_RAL','PIC':'T1_ES_PIC','KIT':'T1_DE_KIT'}
 
 siteblacklist = ['T2_FR_GRIF_IRFU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_RRC_KI','T2_UK_SGrid_Bristol']
@@ -20,20 +21,25 @@ sitelisthimemrequests = ['T2_US_MIT','T2_US_Wisconsin','T2_US_Nebraska','T2_US_V
 
 siteliststep0long = ['T2_US_Purdue','T2_US_Nebraska','T3_US_Omaha']
 gensubscriptionsites = ['T2_CH_CERN','T2_IT_Bari' ,'T2_IT_Legnaro' ,'T2_IT_Pisa' ,'T2_IT_Rome' ,'T1_IT_CNAF','T2_ES_CIEMAT','T2_ES_IFCA','T2_EE_Estonia','T2_US_Wisconsin','T1_DE_KIT' ,'T1_ES_PIC' ,'T1_FR_CCIN2P3','T1_UK_RAL_Disk' ,'T2_BE_IIHE' ,'T2_BE_UCL' ,'T2_BR_SPRACE' ,'T2_CH_CSCS' ,'T2_CN_Beijing' ,'T2_DE_DESY' ,'T2_DE_RWTH' ,'T2_FI_HIP' ,'T2_FR_CCIN2P3' ,'T2_FR_GRIF_LLR' ,'T2_FR_IPHC' ,'T2_HU_Budapest' ,'T2_IN_TIFR' ,'T2_PT_NCG_Lisbon','T2_RU_JINR' ,'T2_RU_SINP' ,'T2_TR_METU' ,'T2_TW_Taiwan' ,'T2_UK_London_Brunel' ,'T2_UK_London_IC' ,'T2_UK_SGrid_RALPP' ,'T2_US_Caltech' ,'T2_US_Florida' ,'T2_US_MIT' ,'T2_US_Nebraska' ,'T2_US_Purdue' ,'T2_US_UCSD' ,'T2_BR_UERJ','T3_US_Colorado','T2_RU_IHEP','T2_RU_ITEP']
-autoapprovelist = ['T2_CH_CERN','T2_IT_Bari' ,'T2_IT_Legnaro' ,'T2_IT_Pisa' ,'T2_IT_Rome' ,'T1_IT_CNAF','T2_ES_CIEMAT','T2_ES_IFCA','T2_EE_Estonia','T2_US_Wisconsin']
+autoapprovelist = ['T2_CH_CERN','T2_IT_Bari' ,'T2_IT_Legnaro' ,'T2_IT_Pisa' ,'T2_IT_Rome' ,'T1_IT_CNAF','T2_ES_CIEMAT','T2_ES_IFCA','T2_EE_Estonia','T2_US_Wisconsin','T1_UK_RAL_Disk']
 
-campaignconfig = {
-	'Summer12_WMLHE': {'acqera':'Summer12'}
-	,'Summer12_FS52': {'acqera':'Summer12','procstr':'GLOBALTAG_FSIM'}
-	,'Summer12_FS53': {'acqera':'Summer12','procstr':'GLOBALTAG_FSIM'}
-	,'LowPU2010': {'acqera':'Summer12','procstr':'LowPU2010-GLOBALTAG'}
-}
 
 cachedoverview = '/afs/cern.ch/user/s/spinoso/public/overview.cache'
 forceoverview = 0
-tcount_hp = 0
-tcount_lp = 0
-tcount = 0
+
+def loadcampaignconfig(f):
+        try:
+                d = open(f).read()
+        except:
+                print "Cannot load config file"
+                sys.exit(1)
+        try:
+                s = eval(d)
+        except:
+                print "Cannot eval config file"
+                sys.exit(1)
+	print "Configuration loaded successfully"
+        return s
 
 def get_linkedt2s(custodialt1):
 	global siteblacklist
@@ -495,28 +501,28 @@ def isInDBS(dataset):
 	except:
 		return False
 
-def getteam(teams,r):
-	global tcount_hp,tcount_lp,tcount
-	if teams == 'auto':
-		if r['priority'] >=100000:
-			team = 'mc_highprio'
+def getteam(team,r):
+	global teams
+	if team == 'auto':
+		if r['expectedevents'] <=100000 and r['priority'] > 80000:
+			newteam = 'mc_highprio'
 		else:
-			team = 'mc'
+			newteam = 'mc'
 	else:
-		team = teams[tcount % len(teams)]
-		tcount = tcount + 1
-	return team
+		newteam = team
+	return newteam
 
 def main():
-	global overview,forceoverview,sum,nodbs,siteblacklist
+	global overview,forceoverview,sum,nodbs,siteblacklist,teams
 
+	campaignconfig = loadcampaignconfig('/afs/cern.ch/user/s/spinoso/www/campaign-config.txt')
 	overview = getoverview()
 	url='cmsweb.cern.ch'	
 	parser = optparse.OptionParser()
 	parser.add_option('-w', '--workflow', help='workflow name',dest='workflow')
 	parser.add_option('--debug', help='add debug info',dest='debug',default=False,action="store_true")
 	parser.add_option('-l', '--workflowlist', help='workflow list in textfile',dest='list')
-	parser.add_option('-t', '--team', help='team',dest='team')
+	parser.add_option('-t', '--team', help='team (one of %s)' % (",".join(x for x in teams)),dest='team')
 	parser.add_option('--test', action="store_true",default=True,help='test mode: don\'treally assign at the end',dest='test')
 	parser.add_option('--assign', action="store_false",default=True,help='assign mode',dest='test')
 	parser.add_option('--small', action="store_true",default=False,help='assign requests considering them small',dest='small')
@@ -544,11 +550,10 @@ def main():
 		sys.exit(1)
 
 	if options.team:
-		teams=options.team.split(',')
-		if 'auto' in teams:
-			teams = 'auto'
+		team = options.team
 	else:
-		teams = 'auto'
+		team = 'auto'
+
 	if options.custodialt1:
 		custodialt1 = options.custodialt1
 		if custodialt1 not in t1s.values():
@@ -582,6 +587,7 @@ def main():
 
 	siteblacklist.sort()
 	print "Default site blacklist: %s\n" % (",".join(x for x in siteblacklist))
+		
 	if options.hi:
 		print "Heavy Ion flag is set, parameters will be configured accordingly\n"
 
@@ -599,6 +605,10 @@ def main():
 	for w in list:
 		reqinfo[w] = getWorkflowInfo(w)
 
+		if reqinfo[w]['campaign'] not in campaignconfig.keys():
+			print "Unknown campaign for %s" % w
+			sys.exit(1)
+		
 		# status
 		if reqinfo[w]['status'] == '':
 			print "Cannot get information for %s!" % w
@@ -622,8 +632,9 @@ def main():
 		blockclosemaxevents = 250000000
 		noncustodialsites = []
 		custodialsubtype = "Move"
-		autoapprovesubscriptionsites = autoapprovelist
+		autoapprovesubscriptionsites = []
 		if reqinfo[w]['type'] == 'LHEStepZero':
+			autoapprovesubscriptionsites = autoapprovelist
 			if 'T1_US_FNAL' not in autoapprovesubscriptionsites:
 				autoapprovesubscriptionsites.append('T1_US_FNAL')
 			noncustodialsites = gensubscriptionsites
@@ -635,17 +646,17 @@ def main():
 			maxRSS = 2294967
 			if '_STEP0ATCERN' in w:
 				# STEP0 @ CERN
-				print '%s (LHEStepZero step0)' % w
+				print '%s (%s, LHEStepZero step0)' % (w,reqinfo[w]['campaign'])
 				team = 'step0'
 			else:
 				# full GEN
-				print '%s (LHEStepZero full GEN)' % w
+				print '%s (%s, LHEStepZero full GEN)' % (w,reqinfo[w]['campaign'])
 				team = 'mc_highprio'
 				
 		elif options.hi:
-			print '%s (%s Heavy Ion)' % (w,reqinfo[w]['type'])
+			print '%s (%s Heavy Ion)' % (w,reqinfo[w]['campaign'])
 			hi = True
-			team = getteam(teams,reqinfo[w])
+			team = getteam(team,reqinfo[w])
 			softtimeout = 108000
 			mergedlfnbase = '/store/himc'
 			minmergesize = 2147483648
@@ -653,16 +664,16 @@ def main():
 			maxRSS = 2294967
 		elif options.himem:
 			himem = True
-			print '%s (%s High Memory)' % (w,reqinfo[w]['type'])
-			team = getteam(teams,reqinfo[w])
+			print '%s (%s High Memory)' % (w,reqinfo[w]['campaign'])
+			team = getteam(team,reqinfo[w])
 			softtimeout = 108000
 			mergedlfnbase = '/store/mc'
 			minmergesize = 2147483648
 			maxRSS = 3500000
 		else:
-			print '%s (%s)' % (w,reqinfo[w]['type'])
+			print '%s (%s)' % (w,reqinfo[w]['campaign'])
 			mergedlfnbase = '/store/mc'
-			team = getteam(teams,reqinfo[w])
+			team = getteam(team,reqinfo[w])
 			softtimeout = 108000
 			minmergesize = 2147483648
 			maxRSS = 2294967
@@ -714,7 +725,8 @@ def main():
 					newsitelist.append(i)
 				elif i in sitelisthimemrequests:
 					newsitelist.append(i)
-		elif reqinfo[w]['priority'] >= 100000 or options.small:
+		#elif reqinfo[w]['priority'] >= 100000 or options.small:
+		elif options.small:
 			oldsitelist = newsitelist[:]
 			newsitelist = []
 			for i in oldsitelist:
@@ -742,7 +754,7 @@ def main():
 			if reqinfo[w]['campaign'] in campaignconfig.keys():
 				if 'procstr' in campaignconfig[reqinfo[w]['campaign']].keys():
 					newprocessingstring = campaignconfig[reqinfo[w]['campaign']]['procstr']
-					newprocessingstring.replace('GLOBALTAG',reqinfo[w]['globaltag'])
+					newprocessingstring = newprocessingstring.replace('GLOBALTAG',reqinfo[w]['globaltag'])
 				else:
 					newprocessingstring = reqinfo[w]['globaltag']
 			else:
@@ -793,7 +805,7 @@ def main():
 		print
 
 	for w in list:
-		suminfo = "%s\n\tcampaign: %s prio:%s events:%s cpuhours:%s\n\tteam:%s era:%s procstr: %s procvs:%s\n\tLFNBase:%s PREPmem: %s maxRSS:%s MinMerge:%s SoftTimeout:%s BlockCloseMaxEvents:%s\n\tOutputDataset: %s\n\tCustodialSites: %s\n\tNonCustodialSites: %s\n\tCustodialSubType: %s\n\tAutoApprove: %s\n\tWhitelist: %s" % (w,reqinfo[w]['campaign'],assign_data[w]['priority'],assign_data[w]['events'],assign_data[w]['cpuhours'],assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['processingstring'],assign_data[w]['processingversion'],assign_data[w]['mergedlfnbase'],assign_data[w]['prepmemory'],assign_data[w]['maxRSS'],assign_data[w]['minmergesize'],assign_data[w]['softtimeout'],assign_data[w]['blockclosemaxevents'],assign_data[w]['dataset'],assign_data[w]['custodialsites'],assign_data[w]['noncustodialsites'],assign_data[w]['custodialsubtype'],assign_data[w]['autoapprovesubscriptionsites'],assign_data[w]['whitelist'])
+		suminfo = "%s\n\tcampaign: %s prio:%s events:%s cpuhours:%s\n\tteam:%s era:%s procstr: %s procvs:%s\n\tLFNBase:%s PREPmem: %s maxRSS:%s MinMerge:%s SoftTimeout:%s BlockCloseMaxEvents:%s\n\tOutputDataset: %s\n\tCustodialSites: %s\n\tNonCustodialSites: %s\n\tCustodialSubType: %s\n\tAutoApprove: %s\n\tWhitelist: %s" % (w,reqinfo[w]['campaign'],assign_data[w]['priority'],assign_data[w]['events'],assign_data[w]['cpuhours'],assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['processingstring'],assign_data[w]['processingversion'],assign_data[w]['mergedlfnbase'],assign_data[w]['prepmemory'],assign_data[w]['maxRSS'],assign_data[w]['minmergesize'],assign_data[w]['softtimeout'],assign_data[w]['blockclosemaxevents'],assign_data[w]['dataset'],assign_data[w]['custodialsites'],assign_data[w]['noncustodialsites'],assign_data[w]['custodialsubtype'],assign_data[w]['autoapprovesubscriptionsites'],",".join(x for x in assign_data[w]['whitelist']))
 		if options.test:
 			print "TEST:\t%s\n" % suminfo
 		if not options.test:

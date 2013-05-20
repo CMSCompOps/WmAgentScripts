@@ -236,6 +236,7 @@ def main():
 	print "Dear admins,\n\nplease create the tape families below[*], needed for MC production.\n\nThanks!\n Vincenzo & Ajit.\n\n[*]"
 
 	prepidlist = []
+	paths = []
 	for workflow in reqinfo.keys():
 		prepid = reqinfo[workflow]['prepid']
 		prepidlist.append(prepid)
@@ -246,7 +247,11 @@ def main():
 			path2='mc'
 		for i in tiers:
 			tf = "/store/"+path2+"/"+acqera+"/"+prids+"/"+i
-			print "%s" % (tf)
+			#print "%s" % (tf)
+			if tf not in paths:
+				paths.append(tf)
+	for i in paths:
+		print "%s" % (i)
 	prepidlist.sort()
 
 	print "\nPREPID: "+", ".join(prepidlist)
