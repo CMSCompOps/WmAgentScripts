@@ -504,7 +504,8 @@ def main():
 		list2 = open(options.list).read().splitlines()
 		list = []
 		for prepid in list2:
-			list.extend(getRequestsByPREPID(prepid))
+			i = prepid.strip()
+			list.extend(getRequestsByPREPID(i))
 	elif options.prepid:
 		list = getRequestsByPREPID(options.prepid)
 	elif options.status or options.type:

@@ -16,6 +16,20 @@ eras = ['Summer11','Summer12']
 cachedoverview = '/afs/cern.ch/user/s/spinoso/public/overview.cache'
 forceoverview = 0
 
+def loadcampaignconfig(f):
+        try:
+                d = open(f).read()
+        except:
+                print "Cannot load config file %s" % f
+                sys.exit(1)
+        try:
+                s = eval(d)
+        except:
+                print "Cannot eval config file %s " % f
+                sys.exit(1)
+        print "Configuration loaded successfully from %s" % f
+        return s
+
 def getzonebyt1(s):
 	custodial = '?'
 	if not s:
@@ -176,15 +190,13 @@ def das_get_data(query):
 def main():
 	global overview,count,jobcount
 
+	campaignconfig = loadcampaignconfig('/afs/cern.ch/user/c/cmst2/public/MCCONFIG/campaign.cfg')
+
 	parser = optparse.OptionParser()
 	parser.add_option('-l', '--listfile', help='analyze workflows listed in textfile',dest='list')
 	parser.add_option('-w', '--workflow', help='analyze specific workflow',dest='wf')
-	parser.add_option('-a', '--acqera', help='acquisition era',dest='acqera')
-	parser.add_option('-c', '--campaign', help='campaign',dest='campaign')
 	parser.add_option('-b', '--batch', help='batch',dest='batch')
-	parser.add_option('--hi', help='heavyion',dest='heavyion',default=False,action='store_true')
-	parser.add_option('-z', '--zone', help='custodial T1',dest='t1')
-	parser.add_option('--fsim', help='FastSim',dest='fsim',action='store_true')
+	parser.add_option('-c', '--custodialt1', help='custodial T1',dest='t1')
 
 	(options,args) = parser.parse_args()
 
@@ -196,18 +208,6 @@ def main():
 		print "List not provided."
 		sys.exit(1)
 
-	if not options.campaign:
-		print "Please provide the campaign"
-		sys.exit(1)
-	else:
-		campaign = options.campaign
-		
-	if not options.acqera:
-		print "Please provide the acquisition era"
-		sys.exit(1)
-	else:
-		acqera = options.acqera
-		
 	if not options.batch:
 		print "Please provide the batch parameter (RXXXX_BYYY)"
 		sys.exit(1)
@@ -224,11 +224,6 @@ def main():
 	reqinfo = {}
 	for workflow in list:
 		reqinfo[workflow] = getWorkflowInfo(workflow)
-
-	if options.fsim:
-		tiers = ['AODSIM']
-	else:
-		tiers = ['GEN-SIM','GEN-SIM-RECO','DQM','AODSIM']
 
 	print
 	print "Custodial LFNs for %s %s (%s)" % (campaign,batch,t1)

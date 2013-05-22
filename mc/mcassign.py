@@ -31,14 +31,14 @@ def loadcampaignconfig(f):
         try:
                 d = open(f).read()
         except:
-                print "Cannot load config file"
+                print "Cannot load config file %s" % f
                 sys.exit(1)
         try:
                 s = eval(d)
         except:
-                print "Cannot eval config file"
+                print "Cannot eval config file %s " % f
                 sys.exit(1)
-	print "Configuration loaded successfully"
+	print "\nConfiguration loaded successfully from %s" % f
         return s
 
 def get_linkedt2s(custodialt1):
@@ -190,6 +190,18 @@ def dbs_get_data(dataset):
 		st = ''
 	return [int(e),st]
 
+
+def getWorkflowConfig(workflow):
+	conn = httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+	r1=conn.request('GET','/reqmgr/view/showOriginalConfig/%s' % workflow)
+	r2=conn.getresponse()
+	data = r2.read()
+	conn.close()
+	list = data.split('\n')
+	list2 = []
+	for i in list:
+		list2.append(i.strip())
+	return list2	
 
 def getWorkflowInfo(workflow,nodbs=0):
 	conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -468,7 +480,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 	#	else:
 	#		[oe,ost] = getdsdetail(o)
 	remainingcpuhours = timeev*(expectedevents-eventsdone)/3600
-	return {'type':typ,'status':status,'campaign':campaign,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'js':j,'outputdataset':outputdataset,'cpuhours':cpuhours,'remainingcpuhours':remainingcpuhours,'team':team,'acquisitionEra':acquisitionEra,'requestdays':requestdays,'processingVersion':processingVersion,'events_per_job':events_per_job,'lumis_per_job':lumis_per_job,'expectedjobs':expectedjobs,'expectedjobcpuhours':expectedjobcpuhours,'cmssw':cmssw,'outputtier':outputtier,'prepmemory':prepmemory}
+	return {'requestname':workflow,'type':typ,'status':status,'campaign':campaign,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'js':j,'outputdataset':outputdataset,'cpuhours':cpuhours,'remainingcpuhours':remainingcpuhours,'team':team,'acquisitionEra':acquisitionEra,'requestdays':requestdays,'processingVersion':processingVersion,'events_per_job':events_per_job,'lumis_per_job':lumis_per_job,'expectedjobs':expectedjobs,'expectedjobcpuhours':expectedjobcpuhours,'cmssw':cmssw,'outputtier':outputtier,'prepmemory':prepmemory}
 
 def isDatasetNameUsed(datasetname):
 	[e,st] = getdsdetail(datasetname)
@@ -504,7 +516,7 @@ def isInDBS(dataset):
 def getteam(team,r):
 	global teams
 	if team == 'auto':
-		if r['expectedevents'] <=100000 and r['priority'] > 80000:
+		if r['expectedevents'] <=100000 or r['priority'] >= 100000:
 			newteam = 'mc_highprio'
 		else:
 			newteam = 'mc'
@@ -515,7 +527,7 @@ def getteam(team,r):
 def main():
 	global overview,forceoverview,sum,nodbs,siteblacklist,teams
 
-	campaignconfig = loadcampaignconfig('/afs/cern.ch/user/s/spinoso/www/campaign-config.txt')
+	campaignconfig = loadcampaignconfig('/afs/cern.ch/user/c/cmst2/public/MCCONFIG/campaign.cfg')
 	overview = getoverview()
 	url='cmsweb.cern.ch'	
 	parser = optparse.OptionParser()
@@ -530,6 +542,7 @@ def main():
 	parser.add_option('--himem', action="store_true",default=False,help='high memory request (use sites allowing 3GB/job, increase maxRSS)',dest='himem')
 	parser.add_option('-e','--extension', action="store_true",default=False,help='extension (add -ext to the processing string)',dest='ext')
 	parser.add_option('-c', '--custodialt1', help='Custodial T1',dest='custodialt1')
+	parser.add_option('--tapefamilies', help='Tape Families',dest='tapefamilies')
 	parser.add_option('-s', '--sites', help='Single site or comma-separated list (i.e. T1_US_FNAL,T2_FR_CCIN2P3,T2_DE_DESY)',dest='sites')
 	parser.add_option('-a', '--acqera', help='<AcquisitionEra> in <AcquisitionEra>-<ProcString>-v<ProcVer>',dest='acqera')
 	parser.add_option('-p', '--processingstring', help='<ProcString> in <AcquisitionEra>-<ProcString>-v<ProcVer>, default=GlobalTag-vX',dest='processingstring')
@@ -600,13 +613,72 @@ def main():
 	else:
 		ext = ''
 
+	if options.tapefamilies:
+		campaign = None
+		batch = options.tapefamilies
+		print "Building tape families for batch %s\n" % batch
+		if custodialt1 == '':
+			print "Please provide the custodial T1"
+			sys.exit(1)
+		else:
+			if custodialt1 not in t1s.keys():
+				if custodialt1 in t1s.values():
+					for i in t1s.keys():
+						if custodialt1 == t1s[i]:
+							custodialt1 = i
+							break
+		reqlist = []
+		for w in list:
+			print "%s" % w
+			reqinfo[w] = getWorkflowInfo(w)
+			reqlist.append(reqinfo[w])
+			if not campaign:
+				campaign = reqinfo[w]['campaign']
+				if campaign not in campaignconfig.keys():
+					print "Unknown campaign %s" % campaign
+					sys.exit(1)
+			else:
+				if campaign != reqinfo[w]['campaign']:
+					print "\nError:\n"
+					for i in reqlist:
+						print "%s->%s" % (i['requestname'],i['campaign'])
+					print "Requests come from different campaigns. Aborting."
+					sys.exit(1)
+		print "\n----------------------------------------------------------------\n"
+		print "\nCustodial LFNs for %s %s (%s)\n" % (campaign,batch,custodialt1)
+		print "Dear admins,\n\nplease create the tape families below[*], needed for MC production.\n\nThanks!\n Vincenzo & Ajit.\n\n[*]"
+		
+		if 'tfpath' in campaignconfig[campaign].keys():	
+			tfpath = campaignconfig[campaign]['tfpath']
+		else:
+			tfpath = 'mc'
+		acqera = campaignconfig[campaign]['acqera']
+		if 'tiers' in campaignconfig[campaign].keys():	
+			tiers = campaignconfig[campaign]['tiers']
+		else:
+			tiers = ['GEN-SIM','GEN-SIM-RECO','DQM','AODSIM']
+		tf = []
+		for r in reqlist:
+			for tier in tiers:
+				a = "/store/%s/%s/%s/%s" % (tfpath,acqera,r['primaryds'],tier)
+				if a not in tf:
+					tf.append(a)
+
+		tf.sort()
+		for i in tf:
+			print "%s" % i
+
+		print "\nPREPIDs: %s\n" % (",".join(x['prepid'] for x in reqlist))
+		sys.exit(0)
+			
+
 	print "Preparing requests:\n"
 	assign_data = {}
 	for w in list:
 		reqinfo[w] = getWorkflowInfo(w)
 
 		if reqinfo[w]['campaign'] not in campaignconfig.keys():
-			print "Unknown campaign for %s" % w
+			print "Unknown campaign %s for %s" % (reqinfo[w]['campaign'],w)
 			sys.exit(1)
 		
 		# status
@@ -698,6 +770,8 @@ def main():
 				newsitelist.append(custodialt1)
 				newsitelist.append('T1_UK_RAL')
 				newsitelist.extend(linkedt2list)
+				if not options.hi:
+					newsitelist.remove('T2_US_Vanderbilt')
 		else:
 			# explicit sitelist, no guesses
 			newsitelist = sites.split(',')
@@ -752,6 +826,14 @@ def main():
 			newprocessingstring = processingstring
 		else:
 			if reqinfo[w]['campaign'] in campaignconfig.keys():
+				if reqinfo[w]['campaign'] == 'Summer12_FS53' and reqinfo[w]['prepid'].split()[0] == 'TOP':
+					# if PU is 2012_Startup_inTimeOnly (default) no additional string is needed; 
+					# if PU is 2012_Summer_inTimeOnly then "PU_S12" must be added to the dataset name
+					for i in getWorkflowConfig(w):
+						if 'PileUpProducer.PileUpSimulator' in i:
+							if '2012_Summer_inTimeOnly' in i:
+								newprocessingstring = campaignconfig[reqinfo[w]['campaign']]['procstr']
+								newprocessingstring = newprocessingstring.replace('GLOBALTAG',"%s_PU_S12" % reqinfo[w]['globaltag'])
 				if 'procstr' in campaignconfig[reqinfo[w]['campaign']].keys():
 					newprocessingstring = campaignconfig[reqinfo[w]['campaign']]['procstr']
 					newprocessingstring = newprocessingstring.replace('GLOBALTAG',reqinfo[w]['globaltag'])
