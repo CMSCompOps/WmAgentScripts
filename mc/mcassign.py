@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+#TODO https://github.com/dmwm/WMCore/blob/master/test/data/ReqMgr/requests/ReReco.json
+#TODO: add splitting setting  to config and function here
 import urllib2,urllib, httplib, sys, re, os
 import optparse
 import time
