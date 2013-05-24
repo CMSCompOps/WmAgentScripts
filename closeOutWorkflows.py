@@ -77,8 +77,8 @@ def findCustodial(url, requestname):
 	for site in siteList:
 		if site.startswith('T1'):
 			t1s.add(site)
-		if t1s:
-			return frozenset(t1s)
+	if t1s:
+		return frozenset(t1s)
 	#for site in siteList:
 	#	if 'T1' in site:
 	#		return site
