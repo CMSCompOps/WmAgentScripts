@@ -72,14 +72,21 @@ def findCustodial(url, requestname):
 	siteList=request['Site Whitelist']
 	#if len(filter(lambda s: s[1] == '1', siteList))>1:
 	#	return "NoSite"
+	# Diego B.: This doesn't consider the case of multiple T1s in the list. Changed to return a frozenset 5/24/2013
+	t1s = set()
 	for site in siteList:
-		if 'T1' in site:
-			return site
+		if site.startswith('T1'):
+			t1s.add(site)
+		if t1s:
+			return frozenset(t1s)
+	#for site in siteList:
+	#	if 'T1' in site:
+	#		return site
 	res=re.search("T1_[A-Z]{2}_[A-Z]{3,4}", requestname)
 	if res:
-		return res.group()
+		return frozenset([res.group()])
 	else:
-		return "NoSite"
+		return frozenset(["NoSite"])
 
 def classifyCompletedRequests(url, requests):
 	workflows={'ReDigi':[],'MonteCarloFromGEN':{},'MonteCarlo':{} , 'ReReco':[], 'LHEStepZero':{}}
@@ -95,7 +102,7 @@ def classifyCompletedRequests(url, requests):
 		if requestType=='MonteCarloFromGEN' or requestType=='MonteCarlo' or requestType=='LHEStepZero':
 			site=findCustodial(url, name)
 			if requestType=='LHEStepZero':
-				site='T1_US_FNAL'
+				site=frozenset(['T1_US_FNAL'])
 			if site not in workflows[requestType].keys():
 				workflows[requestType][site]=[name]
 			else:
@@ -243,8 +250,7 @@ def getRequestTeam(url, workflow):
 def closeOutMonterCarloRequests(url, workflows):
 	datasetsUnsuscribedSpecialQueue=[]
 	for site in workflows.keys():
-		if site!='NoSite':
-			datasetsUnsuscribed=[]
+		if site!=frozenset(['NoSite']):
 			for workflow in workflows[site]:
 				datasets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
 				closeOutWorkflow=True
@@ -253,10 +259,17 @@ def closeOutMonterCarloRequests(url, workflows):
 					for dataset in datasets:
 						closeOutDataset=True
 						Percentage=PercentageCompletion(url, workflow, dataset)
-						PhedexSubscription=phedexSubscription.TestCustodialSubscriptionRequested(url, dataset, site)
-						if not PhedexSubscription:
-								datasetsUnsuscribed.append(dataset)
-						TransPercen=TransferPercentage(url, dataset, site)
+						PhedexSubscription = False
+						TransPercen = 0
+						# Diego B. The requirement is that the dataset is subscribed custodially to at least 1 T1
+						# and that it is fully transferred to one of the sites where it is custodially subscribed to
+						for t1site in site:
+							subscribed=phedexSubscription.TestCustodialSubscriptionRequested(url, dataset, t1site)
+							percen=TransferPercentage(url, dataset, t1site)
+							PhedexSubscription = subscribed or PhedexSubscription
+							if subscribed:
+								if percen > TransPercen:
+									TransPercen = percen
 						duplicate=duplicateEventsGen.duplicateLumi(dataset)
 						if Percentage>=float(0.90) and PhedexSubscription and not duplicate and TransPercen==1:
 							closeOutDataset=True
