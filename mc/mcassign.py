@@ -11,6 +11,7 @@ try:
 except ImportError:
     import simplejson as json
 
+max_events_per_job = 500
 teams = ['mc','mc_highprio']
 t1s = {'FNAL':'T1_US_FNAL','CNAF':'T1_IT_CNAF','ASGC':'T1_TW_ASGC','IN2P3':'T1_FR_CCIN2P3','RAL':'T1_UK_RAL','PIC':'T1_ES_PIC','KIT':'T1_DE_KIT'}
 
@@ -28,6 +29,29 @@ autoapprovelist = ['T2_CH_CERN','T2_IT_Bari' ,'T2_IT_Legnaro' ,'T2_IT_Pisa' ,'T2
 
 cachedoverview = '/afs/cern.ch/user/s/spinoso/public/overview.cache'
 forceoverview = 0
+
+def setSplit(url, workflow, typ, split):
+	print "Set Split %s %s %s" % (workflow, typ, split)
+        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+
+	if typ=='MonteCarloFromGEN':
+		params = {"requestName":workflow,"splittingTask" : '/'+workflow+"/MonteCarloFromGEN", "splittingAlgo":"LumiBased", "lumis_per_job":str(split), "timeout":"", "include_parents":"False", "files_per_job":"",'halt_job_on_file_boundaries':'True'}
+	elif typ=='MonteCarlo':
+		params = {"requestName":workflow,"splittingTask" : '/'+workflow+"/Production", "splittingAlgo":"EventBased", "events_per_job":str(split), "timeout":""}
+	else:
+		print "Cannot set splitting on %s requests"
+		sys.exit(1)
+
+
+        headers={"Content-type": "application/x-www-form-urlencoded",
+             "Accept": "text/plain"}
+        encodedParams = urllib.urlencode(params)
+        conn.request("POST", "/reqmgr/view/handleSplittingPage", encodedParams, headers)
+        response = conn.getresponse()
+        #print response.status, response.reason
+        data = response.read()
+        #print data
+        conn.close()
 
 def loadcampaignconfig(f):
         try:
@@ -518,7 +542,8 @@ def isInDBS(dataset):
 def getteam(team,r):
 	global teams
 	if team == 'auto':
-		if r['expectedevents'] <=100000 or r['priority'] >= 100000:
+		#if r['expectedevents'] <=100000 or r['priority'] >= 100000:
+		if r['expectedevents'] <=100000 and r['priority'] >= 80000:
 			newteam = 'mc_highprio'
 		else:
 			newteam = 'mc'
@@ -632,7 +657,7 @@ def main():
 		reqlist = []
 		for w in list:
 			print "%s" % w
-			reqinfo[w] = getWorkflowInfo(w)
+			reqinfo[w] = getWorkflowInfo(w,nodbs=1)
 			reqlist.append(reqinfo[w])
 			if not campaign:
 				campaign = reqinfo[w]['campaign']
@@ -811,8 +836,15 @@ def main():
 				elif i in sitelistsmallrequests:
 					newsitelist.append(i)
 
+		if reqinfo[w]['type'] == 'MonteCarloFromGEN' and reqinfo[w]['campaign'] in campaignconfig.keys():
+			if 'lumisperjob' in campaignconfig[reqinfo[w]['campaign']].keys():
+				#print "%s: [setting lumis/job = %s]" % (w,campaignconfig[reqinfo[w]['campaign']]['lumisperjob'])
+				setSplit(url,w,reqinfo[w]['type'],campaignconfig[reqinfo[w]['campaign']]['lumisperjob'])
+		elif reqinfo[w]['type'] == 'MonteCarlo':
+			if reqinfo[w]['events_per_job'] > max_events_per_job:
+				setSplit(url,w,reqinfo[w]['type'],max_events_per_job)
+
 		# processing string and processing version
-		
 		if acqera != 'auto':
 			newacqera = acqera
 		else:
