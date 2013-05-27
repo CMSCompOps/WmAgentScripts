@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #TODO https://github.com/dmwm/WMCore/blob/master/test/data/ReqMgr/requests/ReReco.json
-#TODO: add splitting setting  to config and function here
+#TODO use reqmgr.py 
 import urllib2,urllib, httplib, sys, re, os
 import optparse
 import time
@@ -641,7 +641,8 @@ def main():
 		ext = ''
 
 	if options.tapefamilies:
-		campaign = None
+		campaigns = []
+		acqera = None
 		batch = options.tapefamilies
 		print "Building tape families for batch %s\n" % batch
 		if custodialt1 == '':
@@ -654,40 +655,44 @@ def main():
 						if custodialt1 == t1s[i]:
 							custodialt1 = i
 							break
-		reqlist = []
 		for w in list:
 			print "%s" % w
 			reqinfo[w] = getWorkflowInfo(w,nodbs=1)
-			reqlist.append(reqinfo[w])
-			if not campaign:
-				campaign = reqinfo[w]['campaign']
-				if campaign not in campaignconfig.keys():
-					print "Unknown campaign %s" % campaign
+			if reqinfo[w]['campaign'] not in campaignconfig.keys():
+				print "Unknown campaign %s" % reqinfo[w]['campaign']
+				sys.exit(1)
+			else:
+				if reqinfo[w]['campaign'] not in campaigns:
+					campaigns.append(reqinfo[w]['campaign'])
+			if acqera:
+				if acqera != campaignconfig[reqinfo[w]['campaign']]['acqera']:
+					for i in reqinfo.keys():
+						print "\nERROR\n\n%s->%s" % (reqinfo[i]['requestname'],campaignconfig[reqinfo[w]['campaign']]['acqera'])
+						break
+					print "%s->%s" % (w,campaignconfig[reqinfo[w]['campaign']]['acqera'])
+					print "\nRequests have different acquisition era. Aborting."
 					sys.exit(1)
 			else:
-				if campaign != reqinfo[w]['campaign']:
-					print "\nError:\n"
-					for i in reqlist:
-						print "%s->%s" % (i['requestname'],i['campaign'])
-					print "Requests come from different campaigns. Aborting."
-					sys.exit(1)
+				acqera = campaignconfig[reqinfo[w]['campaign']]['acqera']
+				print "Acquisition era: %s" % (acqera)
 		print "\n----------------------------------------------------------------\n"
-		print "\nCustodial LFNs for %s %s (%s)\n" % (campaign,batch,custodialt1)
+		print "\nCustodial LFNs for %s %s (%s)\n" % (" ".join(x for x in campaigns),batch,custodialt1)
 		print "Dear admins,\n\nplease create the tape families below[*], needed for MC production.\n\nThanks!\n Vincenzo & Ajit.\n\n[*]"
 		
-		if 'tfpath' in campaignconfig[campaign].keys():	
-			tfpath = campaignconfig[campaign]['tfpath']
-		else:
-			tfpath = 'mc'
-		acqera = campaignconfig[campaign]['acqera']
-		if 'tiers' in campaignconfig[campaign].keys():	
-			tiers = campaignconfig[campaign]['tiers']
-		else:
-			tiers = ['GEN-SIM','GEN-SIM-RECO','DQM','AODSIM']
 		tf = []
-		for r in reqlist:
+		for w in reqinfo.keys():
+			if 'tfpath' in campaignconfig[reqinfo[w]['campaign']].keys():	
+				tfpath = campaignconfig[reqinfo[w]['campaign']]['tfpath']
+			else:
+				tfpath = 'mc'
+		#acqera = campaignconfig[campaign]['acqera']
+			if 'tiers' in campaignconfig[reqinfo[w]['campaign']].keys():	
+				tiers = campaignconfig[reqinfo[w]['campaign']]['tiers']
+			else:
+				tiers = ['GEN-SIM','GEN-SIM-RECO','DQM','AODSIM']
+
 			for tier in tiers:
-				a = "/store/%s/%s/%s/%s" % (tfpath,acqera,r['primaryds'],tier)
+				a = "/store/%s/%s/%s/%s" % (tfpath,acqera,reqinfo[w]['primaryds'],tier)
 				if a not in tf:
 					tf.append(a)
 
@@ -695,12 +700,13 @@ def main():
 		for i in tf:
 			print "%s" % i
 
-		print "\nPREPIDs: %s\n" % (",".join(x['prepid'] for x in reqlist))
+		print "\nPREPIDs: %s\n" % (",".join(reqinfo[x]['prepid'] for x in reqinfo.keys()))
 		sys.exit(0)
 			
 
 	print "Preparing requests:\n"
 	assign_data = {}
+	datasets = {}
 	for w in list:
 		reqinfo[w] = getWorkflowInfo(w)
 
@@ -838,7 +844,6 @@ def main():
 
 		if reqinfo[w]['type'] == 'MonteCarloFromGEN' and reqinfo[w]['campaign'] in campaignconfig.keys():
 			if 'lumisperjob' in campaignconfig[reqinfo[w]['campaign']].keys():
-				#print "%s: [setting lumis/job = %s]" % (w,campaignconfig[reqinfo[w]['campaign']]['lumisperjob'])
 				setSplit(url,w,reqinfo[w]['type'],campaignconfig[reqinfo[w]['campaign']]['lumisperjob'])
 		elif reqinfo[w]['type'] == 'MonteCarlo':
 			if reqinfo[w]['events_per_job'] > max_events_per_job:
@@ -882,6 +887,13 @@ def main():
 		if isInDBS(dataset):
 			print "Dataset already exists in DBS: %s -> %s" % (w,dataset)
 			sys.exit(1)
+		if dataset in datasets.values():
+			print "Requests having same output datasets:\n%s -> %s" % (w,dataset)
+			for i in datasets.keys():
+				if datasets[i] == dataset:
+					print "%s -> %s" % (i,datasets[i])
+			sys.exit(1)
+		datasets[w] = dataset
 
 		# save the parameters for assignment of request 'w'
 		assign_data[w] = {}
@@ -907,6 +919,15 @@ def main():
 		assign_data[w]['minmergesize'] = minmergesize
 		assign_data[w]['softtimeout'] = softtimeout
 		assign_data[w]['blockclosemaxevents'] = blockclosemaxevents
+		if reqinfo[w]['type'] == 'MonteCarlo':
+			assign_data[w]['split'] = reqinfo[w]['events_per_job']
+			splitstring = "events_per_job"
+		elif reqinfo[w]['type'] == 'MonteCarloFromGEN':
+			assign_data[w]['split'] = reqinfo[w]['lumis_per_job']
+			splitstring = "lumis_per_job"
+		else:
+			print "Cannot determine splitting for type %s" % reqinfo[w]['type']
+			sys.exit(1)
 
 	print "\n----------------------------------------------\n"
 
@@ -921,7 +942,7 @@ def main():
 		print
 
 	for w in list:
-		suminfo = "%s\n\tcampaign: %s prio:%s events:%s cpuhours:%s\n\tteam:%s era:%s procstr: %s procvs:%s\n\tLFNBase:%s PREPmem: %s maxRSS:%s MinMerge:%s SoftTimeout:%s BlockCloseMaxEvents:%s\n\tOutputDataset: %s\n\tCustodialSites: %s\n\tNonCustodialSites: %s\n\tCustodialSubType: %s\n\tAutoApprove: %s\n\tWhitelist: %s" % (w,reqinfo[w]['campaign'],assign_data[w]['priority'],assign_data[w]['events'],assign_data[w]['cpuhours'],assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['processingstring'],assign_data[w]['processingversion'],assign_data[w]['mergedlfnbase'],assign_data[w]['prepmemory'],assign_data[w]['maxRSS'],assign_data[w]['minmergesize'],assign_data[w]['softtimeout'],assign_data[w]['blockclosemaxevents'],assign_data[w]['dataset'],assign_data[w]['custodialsites'],assign_data[w]['noncustodialsites'],assign_data[w]['custodialsubtype'],assign_data[w]['autoapprovesubscriptionsites'],",".join(x for x in assign_data[w]['whitelist']))
+		suminfo = "%s\n\tcampaign: %s prio:%s events:%s cpuhours:%s %s:%s\n\tteam:%s era:%s procstr: %s procvs:%s\n\tLFNBase:%s PREPmem: %s maxRSS:%s MinMerge:%s SoftTimeout:%s BlockCloseMaxEvents:%s\n\tOutputDataset: %s\n\tCustodialSites: %s\n\tNonCustodialSites: %s\n\tCustodialSubType: %s\n\tAutoApprove: %s\n\tWhitelist: %s" % (w,reqinfo[w]['campaign'],assign_data[w]['priority'],assign_data[w]['events'],assign_data[w]['cpuhours'],splitstring,assign_data[w]['split'],assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['processingstring'],assign_data[w]['processingversion'],assign_data[w]['mergedlfnbase'],assign_data[w]['prepmemory'],assign_data[w]['maxRSS'],assign_data[w]['minmergesize'],assign_data[w]['softtimeout'],assign_data[w]['blockclosemaxevents'],assign_data[w]['dataset'],assign_data[w]['custodialsites'],assign_data[w]['noncustodialsites'],assign_data[w]['custodialsubtype'],assign_data[w]['autoapprovesubscriptionsites'],",".join(x for x in assign_data[w]['whitelist']))
 		if options.test:
 			print "TEST:\t%s\n" % suminfo
 		if not options.test:

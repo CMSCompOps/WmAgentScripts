@@ -505,7 +505,9 @@ def main():
 		list = []
 		for prepid in list2:
 			i = prepid.strip()
-			list.extend(getRequestsByPREPID(i))
+			for j in getRequestsByPREPID(i):
+				if not j in list:
+					list.append(j)
 	elif options.prepid:
 		list = getRequestsByPREPID(options.prepid)
 	elif options.status or options.type:
