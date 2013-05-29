@@ -56,6 +56,7 @@ def main():
 
            # Set defaults & era
            lfn = '/store/mc'
+           era = 'Summer12_DR53X'       
 
            if 'Summer12_DR52X' in prepID:
               ods = ['GEN-SIM-RECO', 'AODSIM', 'DQM']
@@ -75,6 +76,10 @@ def main():
               ods = ['GEN-SIM-RECO', 'AODSIM', 'DQM']
               era = 'HiWinter13'
               lfn = '/store/himc'
+
+           if 'UpgradePhase' in workflow and 'DR61SLHCx' in workflow:
+              era = 'Summer13'
+              lfn = '/store/mc'
 
            # Check for any additionals, e.g. GEN-SIM-RECODEBUG
            for extra in outputDataSets:
