@@ -25,8 +25,8 @@ def getDatasetVersion(url, workflow, era, partialProcVersion):
         outputs = outputdatasetsWorkflow(url, workflow)
         for output in outputs:
            if 'None-v0' not in output:
-              print 'ERROR: Problem checking output datasets'
-              sys.exit(0)
+              print 'ERROR: Problem checking output datasets: ',output
+           #   sys.exit(0)
            bits = output.split('/')
            lastbit = bits[len(bits)-1]
            outputCheck = re.sub(r'None-v0', era+'-'+partialProcVersion+'*', output)
@@ -43,6 +43,8 @@ def getDatasetVersion(url, workflow, era, partialProcVersion):
 
 def getScenario(ps):
         pss = 'Unknown'
+
+        # OLD STYLE
         if ps == "process.mix=cms.EDProducer(MixingModule,mixProdStep1=cms.bool(False),mixProdStep2=cms.bool(False),maxBunch=cms.int32(3),useCurrentProcessOnly=cms.bool(False),LabelPlayback=cms.string(''),minBunch=cms.int32(-2),bunchspace=cms.int32(50),playback=cms.untracked.bool(False),input=cms.SecSource(PoolSource,nbPileupEvents=cms.PSet(histoFileName=cms.untracked.string('histProbFunction.root'),probFunctionVariable=cms.vint32(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59),probValue=cms.vdouble(2.56e-06,5.239e-06,1.42e-05,5.005e-05,0.0001001,0.0002705,0.001999,0.006097,0.01046,0.01383,0.01685,0.02055,0.02572,0.03262,0.04121,0.04977,0.05539,0.05725,0.05607,0.05312,0.05008,0.04763,0.04558,0.04363,0.04159,0.03933,0.03681,0.03406,0.03116,0.02818,0.02519,0.02226,0.01946,0.01682,0.01437,0.01215,0.01016,0.0084,0.006873,0.005564,0.004457,0.003533,0.002772,0.002154,0.001656,0.001261,0.0009513,0.0007107,0.0005259,0.0003856,0.0002801,0.0002017,0.0001439,0.0001017,7.126e-05,4.948e-05,3.405e-05,2.322e-05,1.57e-05,5.005e-06)),OOT_type=cms.untracked.string('Poisson'),":
            pss = 'PU_S10'
         if ps == "process.mix=cms.EDProducer(MixingModule,mixProdStep1=cms.bool(False),mixProdStep2=cms.bool(False),maxBunch=cms.int32(3),useCurrentProcessOnly=cms.bool(False),LabelPlayback=cms.string(''),minBunch=cms.int32(-2),bunchspace=cms.int32(50),playback=cms.untracked.bool(False),input=cms.SecSource(PoolSource,nbPileupEvents=cms.PSet(averageNumber=cms.double(32.0)),sequential=cms.untracked.bool(False),type=cms.string('poisson'),":
@@ -66,6 +68,14 @@ def getScenario(ps):
 
         if ps == "process.mix=cms.EDProducer(MixingModule,digitizers=cms.PSet(hcal=cms.PSet(HFTuningParameter=cms.double(1.025),HETuningParameter=cms.double(0.9),doHFWindow=cms.bool(False),doNoise=cms.bool(True),hb=cms.PSet(siPMCells=cms.vint32(),readoutFrameSize=cms.int32(10),firstRing=cms.int32(1),timeSmearing=cms.bool(True),binOfMaximum=cms.int32(5),doPhotoStatistics=cms.bool(True),photoelectronsToAnalog=cms.vdouble(0.3305,0.3305,0.3305,0.3305,0.3305,0.3305,0.3305,0.3305,0.3305,0.3305,0.3305,0.3305,0.3305,0.3305,0.3305,0.3305),simHitToPhotoelectrons=cms.double(2000.0),samplingFactors=cms.vdouble(125.44,125.54,125.32,125.13,124.46,125.01,125.22,125.48,124.45,125.9,125.83,127.01,126.82,129.73,131.83,143.52),syncPhase=cms.bool(True),timePhase=cms.double(6.0)),useOldHO=cms.bool(True),useOldHE=cms.bool(True),hoHamamatsu=cms.PSet(readoutFrameSize=cms.int32(10),firstRing=cms.int32(1),timeSmearing=cms.bool(False),siPMCode=cms.int32(2),timePhase=cms.double(5.0),simHitToPhotoelectrons=cms.double(4000.0),binOfMaximum=cms.int32(5),photoelectronsToAnalog=cms.vdouble(3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0),samplingFactors=cms.vdouble(231.0,231.0,231.0,231.0,360.0,360.0,360.0,360.0,360.0,360.0,360.0,360.0,360.0,360.0,360.0),syncPhase=cms.bool(True),doPhotoStatistics=cms.bool(True),pixels=cms.int32(960)),useOldHF=cms.bool(True),injectTestHits=cms.bool(False),useOldHB=cms.bool(True),doEmpty=cms.bool(True),he=cms.PSet(readoutFrameSize=cms.int32(10),firstRing=cms.int32(16),timeSmearing=cms.bool(True),binOfMaximum=cms.int32(5),doPhotoStatistics=cms.bool(True),photoelectronsToAnalog=cms.vdouble(0.3305,0.3305,0.3305,0.3305,0.3305,0.3305,0.3305,0.3305,0.3305,0.3305,0.3305,0.3305,0.3305,0.3305),simHitToPhotoelectrons=cms.double(2000.0),samplingFactors=cms.vdouble(210.55,197.93,186.12,189.64,189.63,190.28,189.61,189.6,190.12,191.22,190.9,193.06,188.42,188.42),syncPhase=cms.bool(True),timePhase=cms.double(6.0)),hf1=cms.PSet(readoutFrameSize=cms.int32(5),binOfMaximum=cms.int32(3),samplingFactor=cms.double(0.383),doPhotoStatistics=cms.bool(True),photoelectronsToAnalog=cms.double(2.79),simHitToPhotoelectrons=cms.double(6.0),syncPhase=cms.bool(True),timePhase=cms.double(14.0)),hf2=cms.PSet(readoutFrameSize=cms.int32(5),binOfMaximum=cms.int32(3),samplingFactor=cms.double(0.368),doPhotoStatistics=cms.bool(True),photoelectronsToAnalog=cms.double(1.843),simHitToPhotoelectrons=cms.double(6.0),syncPhase=cms.bool(True),timePhase=cms.double(13.0)),HBTuningParameter=cms.double(0.875),doThermalNoise=cms.bool(True),accumulatorType=cms.string('HcalDigiProducer'),hoZecotek=cms.PSet(readoutFrameSize=cms.int32(10),firstRing=cms.int32(1),timeSmearing=cms.bool(False),siPMCode=cms.int32(2),timePhase=cms.double(5.0),simHitToPhotoelectrons=cms.double(4000.0),binOfMaximum=cms.int32(5),photoelectronsToAnalog=cms.vdouble(3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0),samplingFactors=cms.vdouble(231.0,231.0,231.0,231.0,360.0,360.0,360.0,360.0,360.0,360.0,360.0,360.0,360.0,360.0,360.0),syncPhase=cms.bool(True),doPhotoStatistics=cms.bool(True),pixels=cms.int32(36000)),hitsProducer=cms.string('g4SimHits'),doTimeSlew=cms.bool(True),ho=cms.PSet(readoutFrameSize=cms.int32(10),firstRing=cms.int32(1),timeSmearing=cms.bool(False),siPMCode=cms.int32(2),doPhotoStatistics=cms.bool(True),photoelectronsToAnalog=cms.vdouble(0.24,0.24,0.24,0.24,0.17,0.17,0.17,0.17,0.17,0.17,0.17,0.17,0.17,0.17,0.17),binOfMaximum=cms.int32(5),simHitToPhotoelectrons=cms.double(4000.0),samplingFactors=cms.vdouble(231.0,231.0,231.0,231.0,360.0,360.0,360.0,360.0,360.0,360.0,360.0,360.0,360.0,360.0,360.0),syncPhase=cms.bool(True),timePhase=cms.double(5.0)),HOTuningParameter=cms.double(1),doIonFeedback=cms.bool(True),makeDigiSimLinks=cms.untracked.bool(False),doHPDNoise=cms.bool(False),zdc=cms.PSet(readoutFrameSize=cms.int32(10),binOfMaximum=cms.int32(5),samplingFactor=cms.double(1.0),doPhotoStatistics=cms.bool(True),photoelectronsToAnalog=cms.double(1.843),simHitToPhotoelectrons=cms.double(6.0),syncPhase=cms.bool(True),timePhase=cms.double(-4.0))),strip=cms.PSet(CouplingConstantPeakIB1=cms.vdouble(0.9006,0.0497),TOFCutForPeak=cms.double(100.0),DeltaProductionCut=cms.double(0.120425),RealPedestals=cms.bool(True),Temperature=cms.double(273.0),CouplingConstantPeakOB1=cms.vdouble(0.8542,0.0729),DepletionVoltage=cms.double(170.0),CouplingConstantDecW2b=cms.vdouble(0.888,0.05,0.006),CouplingConstantPeakIB2=cms.vdouble(0.9342,0.0328),CouplingConstantDecW2a=cms.vdouble(0.7962,0.0914,0.0104),CouplingConstantPeakW7=cms.vdouble(0.964,0.018),BaselineShift=cms.bool(True),SingleStripNoise=cms.bool(True),CouplingConstantDecOB1=cms.vdouble(0.6871,0.1222,0.0342),CouplingConstantPeakOB2=cms.vdouble(0.8719,0.064),CouplingConstantPeakW2b=cms.vdouble(0.998,0.001),Inefficiency=cms.double(0.0),CouplingConstantPeakW2a=cms.vdouble(1.0,0.0),ZeroSuppression=cms.bool(True),cmnRMStec=cms.double(2.44),CouplingConstantDecIB2=cms.vdouble(0.83,0.0756,0.0094),Noise=cms.bool(True),LorentzAngle=cms.string(''),noDiffusion=cms.bool(False),LandauFluctuations=cms.bool(True),FedAlgorithm=cms.int32(4),DigiModeList=cms.PSet(SCDigi=cms.string('ScopeMode'),ZSDigi=cms.string('ZeroSuppressed'),PRDigi=cms.string('ProcessedRaw'),VRDigi=cms.string('VirginRaw')),Gain=cms.string(''),CouplingConstantDecW1a=cms.vdouble(0.786,0.093,0.014),APVSaturationProb=cms.double(0.001),electronPerAdcPeak=cms.double(262.0),CouplingConstantDecW6=cms.vdouble(0.758,0.093,0.026),CouplingConstantDecW5=cms.vdouble(0.7565,0.0913,0.0304),CouplingConstantDecW4=cms.vdouble(0.876,0.06,0.002),CouplingConstantDecW1b=cms.vdouble(0.822,0.08,0.009),hitsProducer=cms.string('g4SimHits'),PedestalsOffset=cms.double(128),ROUList=cms.vstring('TrackerHitsTIBLowTof','TrackerHitsTIBHighTof','TrackerHitsTIDLowTof','TrackerHitsTIDHighTof','TrackerHitsTOBLowTof','TrackerHitsTOBHighTof','TrackerHitsTECLowTof','TrackerHitsTECHighTof'),CouplingConstantDecIB1=cms.vdouble(0.7748,0.0962,0.0165),APVSaturationFromHIP=cms.bool(True),GevPerElectron=cms.double(3.61e-09),CouplingConstantDecW3a=cms.vdouble(0.8164,0.09,0.0018),chargeDivisionsPerStrip=cms.int32(10),TOFCutForDeconvolution=cms.double(50.0),CouplingConstantPeakW3a=cms.vdouble(0.996,0.002),CouplingConstantDecW7=cms.vdouble(0.7828,0.0862,0.0224),cmnRMStid=cms.double(3.08),CouplingConstantPeakW3b=cms.vdouble(0.992,0.004),AppliedVoltage=cms.double(300.0),CouplingConstantPeakW1b=cms.vdouble(0.976,0.012),CouplingConstantPeakW1a=cms.vdouble(0.996,0.002),NoiseSigmaThreshold=cms.double(2.0),cmnRMStib=cms.double(5.92),CouplingConstantDecW3b=cms.vdouble(0.848,0.06,0.016),ChargeDistributionRMS=cms.double(6.5e-10),TrackerConfigurationFromDB=cms.bool(False),APVpeakmode=cms.bool(False),CosmicDelayShift=cms.untracked.double(0.0),cmnRMStob=cms.double(1.08),accumulatorType=cms.string('SiStripDigitizer'),CouplingConstantPeakW6=cms.vdouble(0.972,0.014),CouplingConstantPeakW5=cms.vdouble(0.968,0.016),CouplingConstantPeakW4=cms.vdouble(0.992,0.004),electronPerAdcDec=cms.double(247.0),GeometryType=cms.string('idealForDigi'),ChargeMobility=cms.double(310.0),CouplingConstantDecOB2=cms.vdouble(0.725,0.1102,0.0273),CommonModeNoise=cms.bool(True)),castor=cms.PSet(hitsProducer=cms.string('g4SimHits'),castor=cms.PSet(readoutFrameSize=cms.int32(6),binOfMaximum=cms.int32(5),samplingFactor=cms.double(0.060135),doPhotoStatistics=cms.bool(True),photoelectronsToAnalog=cms.double(4.009),simHitToPhotoelectrons=cms.double(1000.0),syncPhase=cms.bool(True),timePhase=cms.double(-4.0)),doNoise=cms.bool(True),doTimeSlew=cms.bool(True),accumulatorType=cms.string('CastorDigiProducer'),makeDigiSimLinks=cms.untracked.bool(False)),pixel=cms.PSet(DeltaProductionCut=cms.double(0.03),FPix_SignalResponse_p2=cms.double(93.6),FPix_SignalResponse_p3=cms.double(134.6),FPix_SignalResponse_p0=cms.double(0.0043),FPix_SignalResponse_p1=cms.double(1.31),TofUpperCut=cms.double(12.5),AddNoisyPixels=cms.bool(True),TanLorentzAnglePerTesla_BPix=cms.double(0.106),AddNoise=cms.bool(True),GainSmearing=cms.double(0.0),AddThresholdSmearing=cms.bool(True),useDB=cms.bool(True),AdcFullScale=cms.int32(255),TofLowerCut=cms.double(-12.5),killModules=cms.bool(True),DeadModules=cms.VPSet(cms.PSet(Dead_detID=cms.int32(302055940),Module=cms.string('tbmB')),cms.PSet(Dead_detID=cms.int32(302059800),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(302121992),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(302123296),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(302125060),Module=cms.string('tbmA')),cms.PSet(Dead_detID=cms.int32(302125076),Module=cms.string('tbmA')),cms.PSet(Dead_detID=cms.int32(302126364),Module=cms.string('tbmB')),cms.PSet(Dead_detID=cms.int32(302126596),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(302127136),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(302188552),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(302188824),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(302194200),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(302195232),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(302197252),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(302197784),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(352453892),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(352453896),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(352453900),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(352453904),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(352454916),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(352454920),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(352454924),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(352454928),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(352455940),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(352455944),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(352455948),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(352455952),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(352454148),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(352454152),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(352454156),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(352455172),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(352455176),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(352455180),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(352456196),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(352456200),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(352456204),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(343999748),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(343999752),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(343999756),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(343999760),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(344014340),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(344014344),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(344014348),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(344019460),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(344019464),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(344019468),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(344077572),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(344077576),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(344077580),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(344077584),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(344078596),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(344078600),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(344078604),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(344078608),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(344079620),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(344079624),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(344079628),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(344079632),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(344078852),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(344078856),Module=cms.string('whole')),cms.PSet(Dead_detID=cms.int32(344078860),Module=cms.string('whole'))),TanLorentzAnglePerTesla_FPix=cms.double(0.106),accumulatorType=cms.string('SiPixelDigitizer'),AddPixelInefficiency=cms.int32(0),LorentzAngle_DB=cms.bool(True),makeDigiSimLinks=cms.untracked.bool(True),BPix_SignalResponse_p2=cms.double(97.4),BPix_SignalResponse_p3=cms.double(126.5),BPix_SignalResponse_p0=cms.double(0.0035),Alpha2Order=cms.bool(True),hitsProducer=cms.string('g4SimHits'),ReadoutNoiseInElec=cms.double(350.0),DeadModules_DB=cms.bool(True),ROUList=cms.vstring('TrackerHitsPixelBarrelLowTof','TrackerHitsPixelBarrelHighTof','TrackerHitsPixelEndcapLowTof','TrackerHitsPixelEndcapHighTof'),OffsetSmearing=cms.double(0.0),NoiseInElectrons=cms.double(175.0),ChargeVCALSmearing=cms.bool(True),ElectronsPerVcal=cms.double(65.5),MissCalibrate=cms.bool(True),ThresholdInElectrons_BPix=cms.double(3500.0),ThresholdSmearing_BPix=cms.double(245.0),ThresholdInElectrons_FPix=cms.double(3000.0),ElectronsPerVcal_Offset=cms.double(-414.0),ThresholdSmearing_FPix=cms.double(210.0),ElectronPerAdc=cms.double(135.0),GeometryType=cms.string('idealForDigi'),BPix_SignalResponse_p1=cms.double(1.23)),ecal=cms.PSet(EEdigiCollection=cms.string(''),readoutFrameSize=cms.int32(10),EBdigiCollection=cms.string(''),apdShapeTau=cms.double(40.5),ESdigiCollection=cms.string(''),apdSimToPEHigh=cms.double(88200000.0),doNoise=cms.bool(True),apdTimeOffset=cms.double(-13.5),EBCorrNoiseMatrixG06=cms.vdouble(1.0,0.70946,0.58021,0.49846,0.45006,0.41366,0.39699,0.38478,0.37847,0.37055),EECorrNoiseMatrixG12=cms.vdouble(1.0,0.71373,0.44825,0.30152,0.21609,0.14786,0.11772,0.10165,0.09465,0.08098),doESNoise=cms.bool(True),apdSeparateDigi=cms.bool(True),EBCorrNoiseMatrixG01=cms.vdouble(1.0,0.73354,0.64442,0.58851,0.55425,0.53082,0.51916,0.51097,0.50732,0.50409),applyConstantTerm=cms.bool(True),binOfMaximum=cms.int32(6),EBs25notContainment=cms.double(0.97),accumulatorType=cms.string('EcalDigiProducer'),apdTimeOffWidth=cms.double(0.8),simHitToPhotoelectronsBarrel=cms.double(2250.0),syncPhase=cms.bool(True),doPhotostatistics=cms.bool(True),apdShapeTstart=cms.double(74.5),hitsProducer=cms.string('g4SimHits'),apdDoPEStats=cms.bool(True),ConstantTerm=cms.double(0.003),apdSimToPELow=cms.double(2450000.0),cosmicsPhase=cms.bool(False),apdNonlParms=cms.vdouble(1.48,-3.75,1.81,1.26,2.0,45,1.0),photoelectronsToAnalogEndcap=cms.double(0.000555555),photoelectronsToAnalogBarrel=cms.double(0.000444444),apdDigiTag=cms.string('APD'),EECorrNoiseMatrixG01=cms.vdouble(1.0,0.72698,0.62048,0.55691,0.51848,0.49147,0.47813,0.47007,0.46621,0.46265),apdAddToBarrel=cms.bool(False),EBCorrNoiseMatrixG12=cms.vdouble(1.0,0.71073,0.55721,0.46089,0.40449,0.35931,0.33924,0.32439,0.31581,0.30481),EECorrNoiseMatrixG06=cms.vdouble(1.0,0.71217,0.47464,0.34056,0.26282,0.20287,0.17734,0.16256,0.15618,0.14443),makeDigiSimLinks=cms.untracked.bool(False),simHitToPhotoelectronsEndcap=cms.double(1800.0),samplingFactor=cms.double(1.0),cosmicsShift=cms.double(0.0),doFast=cms.bool(True),EEs25notContainment=cms.double(0.975),timePhase=cms.double(0.0))),mixProdStep2=cms.bool(False),maxBunch=cms.int32(3),useCurrentProcessOnly=cms.bool(False),LabelPlayback=cms.string(''),minBunch=cms.int32(-5),bunchspace=cms.int32(50),playback=cms.untracked.bool(False),input=cms.SecSource(PoolSource,nbPileupEvents=cms.PSet(averageNumber=cms.double(35.0)),sequential=cms.untracked.bool(False),type=cms.string('poisson'),":
            pss = 'PU35'
+
+        # NEW STYLE
+        if ps == 'SimGeneral.MixingModule.mix_E8TeV_AVE_16_BX_25ns_cfi':
+           pss = 'PU140Bx25'
+        if ps == 'SimGeneral.MixingModule.mix_2012_Summer_50ns_PoissonOOTPU_cfi':
+           pss = 'PU_S10'
+        if ps == 'SimGeneral.MixingModule.mix_E7TeV_Fall2011_Reprocess_50ns_PoissonOOTPU_cfi':
+           pss = 'PU_S6'
 
         return pss
 
@@ -136,6 +146,14 @@ def getPrepID(url, workflow):
         prepID=request['PrepID']
         return prepID
 
+def getCampaign(url, workflow):
+        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+        r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
+        r2=conn.getresponse()
+        request = json.read(r2.read())
+        campaign=request['Campaign']
+        return campaign
+
 def getGlobalTag(url, workflow):
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
@@ -162,12 +180,18 @@ def getPileup(config):
               i=0
            if i == 1:
               want = want + line
+           if 'SimGeneral.MixingModule' in line and 'process.load' in line:
+              want = line
 
         want = re.sub(r'\s+', '', want)
         want = re.sub(r'\"', '', want)
         want = re.sub(r'\n', '', want)
-           
-        pu = want
+
+        if 'process.load' in want:
+           pu = want[want.find("'")+1:want.find("'",want.find("'")+1)]
+        else:
+           pu = want
+
         return pu
 
 def getCacheID(url, workflow):
@@ -341,7 +365,7 @@ def main():
            pileupScenario = getPileupScenario(url, workflow)
            if pileupScenario == 'Unknown' and 'MinBias' in pileupDataset:
               print 'ERROR: unable to determine pileup scenario'
-              #sys.exit(0)
+              sys.exit(0)
            elif 'Fall11_R2' in workflow or 'Fall11_R4' in workflow:
               inDataSet = getInputDataSet(url, workflow)
               matchObj = re.match(r".*Fall11-(.*)_START.*", inDataSet)
@@ -355,13 +379,16 @@ def main():
            if pileupScenario == 'Unknown':
               pileupScenario = ''
 
+           # Get campaign name
+           campaign = getCampaign(url, workflow)
+
            # Decide which team to use if not already defined
            if not team:
               priority = int(getPriority(url, workflow))
               if priority < 100000:
                  team = 'reproc_lowprio'
               else:
-                 team = 't1'
+                 team = 'reproc_highprio'
 
            specialName = ''
 
@@ -377,7 +404,7 @@ def main():
               era = 'Summer12'
               lfn = '/store/mc'
 
-           if 'Summer12_DR53X' in workflow:
+           if 'Summer12_DR53X' in workflow or ('Summer12' in workflow and 'DR53X' in workflow):
               era = 'Summer12_DR53X'
               lfn = '/store/mc'
 
@@ -416,6 +443,26 @@ def main():
               pileupScenario = 'pa' # not actually the pileup scenario of course
            if 'ppWinter13_DR53X' in workflow:
               pileupScenario = 'pp' # not actually the pileup scenario of course
+
+           if campaign == 'UpgradePhase2LB4PS_2013_DR61SLHCx':
+              era = 'Summer13'
+              lfn = '/store/mc'
+              specialName = campaign + '_'
+
+           if campaign == 'UpgradePhase2BE_2013_DR61SLHCx':
+              era = 'Summer13'
+              lfn = '/store/mc'
+              specialName = campaign + '_'
+
+           if campaign == 'UpgradePhase2LB6PS_2013_DR61SLHCx':
+              era = 'Summer13'
+              lfn = '/store/mc'
+              specialName = campaign + '_'
+  
+           if campaign == 'UpgradePhase1Age0DES_DR61SLHCx':
+              era = 'Summer13'
+              lfn = '/store/mc'
+              specialName = campaign + '_'
            
            # Construct processed dataset version
            if pileupScenario != '':
@@ -442,6 +489,8 @@ def main():
            maxmergeevents = 50000
            if 'Fall11_R1' in workflow:
               maxmergeevents = 6000
+           if 'DR61SLHCx' in workflow:
+              maxmergeevents = 5000
 
            # Checks
            if not era:
