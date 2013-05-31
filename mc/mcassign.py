@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #TODO https://github.com/dmwm/WMCore/blob/master/test/data/ReqMgr/requests/ReReco.json
 #TODO use reqmgr.py 
+#TODO config, add scram_arch, add split events/job for MonteCarlo
 import urllib2,urllib, httplib, sys, re, os
 import optparse
 import time
@@ -24,7 +25,7 @@ sitelisthimemrequests = ['T2_US_MIT','T2_US_Wisconsin','T2_US_Nebraska','T2_US_V
 
 siteliststep0long = ['T2_US_Purdue','T2_US_Nebraska','T3_US_Omaha']
 gensubscriptionsites = ['T2_CH_CERN','T2_IT_Bari' ,'T2_IT_Legnaro' ,'T2_IT_Pisa' ,'T2_IT_Rome' ,'T1_IT_CNAF','T2_ES_CIEMAT','T2_ES_IFCA','T2_EE_Estonia','T2_US_Wisconsin','T1_DE_KIT' ,'T1_ES_PIC' ,'T1_FR_CCIN2P3','T1_UK_RAL_Disk' ,'T2_BE_IIHE' ,'T2_BE_UCL' ,'T2_BR_SPRACE' ,'T2_CH_CSCS' ,'T2_CN_Beijing' ,'T2_DE_DESY' ,'T2_DE_RWTH' ,'T2_FI_HIP' ,'T2_FR_CCIN2P3' ,'T2_FR_GRIF_LLR' ,'T2_FR_IPHC' ,'T2_HU_Budapest' ,'T2_IN_TIFR' ,'T2_PT_NCG_Lisbon','T2_RU_JINR' ,'T2_RU_SINP' ,'T2_TR_METU' ,'T2_TW_Taiwan' ,'T2_UK_London_Brunel' ,'T2_UK_London_IC' ,'T2_UK_SGrid_RALPP' ,'T2_US_Caltech' ,'T2_US_Florida' ,'T2_US_MIT' ,'T2_US_Nebraska' ,'T2_US_Purdue' ,'T2_US_UCSD' ,'T2_BR_UERJ','T3_US_Colorado','T2_RU_IHEP','T2_RU_ITEP']
-autoapprovelist = ['T2_CH_CERN','T2_IT_Bari' ,'T2_IT_Legnaro' ,'T2_IT_Pisa' ,'T2_IT_Rome' ,'T1_IT_CNAF','T2_ES_CIEMAT','T2_ES_IFCA','T2_EE_Estonia','T2_US_Wisconsin','T1_UK_RAL_Disk']
+autoapprovelist = ['T2_CH_CERN','T2_IT_Bari' ,'T2_IT_Legnaro' ,'T2_IT_Pisa' ,'T2_IT_Rome' ,'T1_IT_CNAF','T2_ES_CIEMAT','T2_ES_IFCA','T2_EE_Estonia','T2_US_Wisconsin','T1_UK_RAL_Disk','T3_US_Colorado']
 
 
 cachedoverview = '/afs/cern.ch/user/s/spinoso/public/overview.cache'
@@ -508,20 +509,6 @@ def getWorkflowInfo(workflow,nodbs=0):
 	remainingcpuhours = timeev*(expectedevents-eventsdone)/3600
 	return {'requestname':workflow,'type':typ,'status':status,'campaign':campaign,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'js':j,'outputdataset':outputdataset,'cpuhours':cpuhours,'remainingcpuhours':remainingcpuhours,'team':team,'acquisitionEra':acquisitionEra,'requestdays':requestdays,'processingVersion':processingVersion,'events_per_job':events_per_job,'lumis_per_job':lumis_per_job,'expectedjobs':expectedjobs,'expectedjobcpuhours':expectedjobcpuhours,'cmssw':cmssw,'outputtier':outputtier,'prepmemory':prepmemory}
 
-def isDatasetNameUsed(datasetname):
-	[e,st] = getdsdetail(datasetname)
-	if e > 0:
-		return 1
-	else:
-		return 0
-
-def getRequestsByPREPID(prepid):
-	r = []
-	for i in overview:
-		if prepid in i['request_name']:
-			r.append(i['request_name'])
-	return r
-	
 def isInDBS(dataset):
 	q = "/afs/cern.ch/user/s/spinoso/public/dbssql --input='find dataset where dataset="+dataset+"*' "
 	#print q
@@ -711,8 +698,13 @@ def main():
 		reqinfo[w] = getWorkflowInfo(w)
 
 		if reqinfo[w]['campaign'] not in campaignconfig.keys():
-			print "Unknown campaign %s for %s" % (reqinfo[w]['campaign'],w)
+			print "\nUnknown campaign %s for %s\n" % (reqinfo[w]['campaign'],w)
 			sys.exit(1)
+
+		if reqinfo[w]['type'] == 'MonteCarloFromGEN':
+			if reqinfo[w]['inputdataset']['events'] == 0:
+				print "\n%s input dataset is empty!\n" % w
+				sys.exit(1)
 		
 		# status
 		if reqinfo[w]['status'] == '':
@@ -746,7 +738,7 @@ def main():
 			custodialsubtype = "Replica"
 			blockclosemaxevents = 20000000
 			minmergesize = 1000000000
-			softtimeout = 108000*2
+			softtimeout = 129600*2
 			mergedlfnbase = '/store/generator'
 			maxRSS = 2294967
 			if '_STEP0ATCERN' in w:
@@ -762,7 +754,7 @@ def main():
 			print '%s (%s Heavy Ion)' % (w,reqinfo[w]['campaign'])
 			hi = True
 			team = getteam(team,reqinfo[w])
-			softtimeout = 108000
+			softtimeout = 129600
 			mergedlfnbase = '/store/himc'
 			minmergesize = 2147483648
 			#maxRSS = 3500000
@@ -771,7 +763,7 @@ def main():
 			himem = True
 			print '%s (%s High Memory)' % (w,reqinfo[w]['campaign'])
 			team = getteam(team,reqinfo[w])
-			softtimeout = 108000
+			softtimeout = 129600
 			mergedlfnbase = '/store/mc'
 			minmergesize = 2147483648
 			maxRSS = 3500000
@@ -779,7 +771,7 @@ def main():
 			print '%s (%s)' % (w,reqinfo[w]['campaign'])
 			mergedlfnbase = '/store/mc'
 			team = getteam(team,reqinfo[w])
-			softtimeout = 108000
+			softtimeout = 129600
 			minmergesize = 2147483648
 			maxRSS = 2294967
 
@@ -845,6 +837,7 @@ def main():
 		if reqinfo[w]['type'] == 'MonteCarloFromGEN' and reqinfo[w]['campaign'] in campaignconfig.keys():
 			if 'lumisperjob' in campaignconfig[reqinfo[w]['campaign']].keys():
 				setSplit(url,w,reqinfo[w]['type'],campaignconfig[reqinfo[w]['campaign']]['lumisperjob'])
+				reqinfo[w]['lumis_per_job'] = campaignconfig[reqinfo[w]['campaign']]['lumisperjob']
 		elif reqinfo[w]['type'] == 'MonteCarlo':
 			if reqinfo[w]['events_per_job'] > max_events_per_job:
 				setSplit(url,w,reqinfo[w]['type'],max_events_per_job)
@@ -925,6 +918,9 @@ def main():
 		elif reqinfo[w]['type'] == 'MonteCarloFromGEN':
 			assign_data[w]['split'] = reqinfo[w]['lumis_per_job']
 			splitstring = "lumis_per_job"
+		elif reqinfo[w]['type'] == 'LHEStepZero':
+			assign_data[w]['split'] = ""
+			splitstring = ""
 		else:
 			print "Cannot determine splitting for type %s" % reqinfo[w]['type']
 			sys.exit(1)

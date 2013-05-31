@@ -19,7 +19,7 @@ tftiers = ['GEN-SIM','GEN-SIM-RECO','DQM','AODSIM']
 #tftiers = ['GEN-SIM','GEN-SIM-RECO','DQM','AODSIM','GEN-SIM-DIGI-RECO']
 dashost = 'https://cmsweb.cern.ch'
 reqmgrsocket='vocms204.cern.ch'
-typelist = ['MonteCarlo','MonteCarloFromGEN','ReReco','ReDigi']
+typelist = ['MonteCarlo','MonteCarloFromGEN','ReReco','ReDigi','LHEStepZero']
 statuslist = ['assignment-approved','acquired','running','completed','closed-out','announced']
 #cachedoverview = '/tmp/' + os.environ['USER'] + '/overview.cache'
 cachedoverview = '/afs/cern.ch/user/s/spinoso/public/overview.cache'
@@ -499,7 +499,7 @@ def main():
 	if options.wf:
 		list = [options.wf]
 	elif options.assignment:
-		list = getRequestsByTypeStatus(['MonteCarlo','MonteCarloFromGEN'],'assignment-approved')
+		list = getRequestsByTypeStatus(['MonteCarlo','MonteCarloFromGEN','LHEStepZero'],'assignment-approved')
 	elif options.list:
 		list2 = open(options.list).read().splitlines()
 		list = []
