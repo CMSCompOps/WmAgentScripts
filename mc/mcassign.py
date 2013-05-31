@@ -332,6 +332,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 		elif 'request.schema.GlobalTag' in raw:
 			globaltag = raw[raw.find("'")+1:]
 			globaltag = globaltag[0:globaltag.find(":")]
+	# TODO to be fixed
 	custodialt1 = '?'
 	for i in sites:
 		if 'T1_' in i:
@@ -792,8 +793,10 @@ def main():
 				newsitelist = ['T2_CH_CERN']
 			else:
 				newsitelist = []
-				newsitelist.append(custodialt1)
 				newsitelist.append('T1_UK_RAL')
+				newsitelist.append('T1_IT_CNAF')
+				if custodialt1 not in newsitelist:
+					newsitelist.append(custodialt1)
 				newsitelist.extend(linkedt2list)
 				if not options.hi:
 					newsitelist.remove('T2_US_Vanderbilt')
