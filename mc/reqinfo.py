@@ -102,6 +102,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 	acquisitionEra = None
 	processingVersion = None
 	campaign = ''
+	requestdays=0
 	for raw in list:
 		if 'acquisitionEra' in raw:
                         a = raw.find("'")
@@ -230,8 +231,12 @@ def getWorkflowInfo(workflow,nodbs=0):
 	
 	if type in ['MonteCarlo','LHEStepZero']:
 		expectedevents = int(reqevts)
-		expectedjobs = int(expectedevents/(events_per_job*filtereff))
-		expectedjobcpuhours = int(timeev*(events_per_job*filtereff)/3600)
+		try:
+			expectedjobs = int(expectedevents/(events_per_job*filtereff))
+			expectedjobcpuhours = int(timeev*(events_per_job*filtereff)/3600)
+		except:
+			expectedjobs = 0
+			expectedjobcpuhours = 0
 	elif type in ['MonteCarloFromGEN','ReReco','ReDigi']:
 		if nodbs:
 			[inputdataset['events'],inputdataset['status']] = [0,'']
@@ -313,29 +318,30 @@ def getWorkflowInfo(workflow,nodbs=0):
 			try:
         			result = json.load(urllib.urlopen(url))
 			except:
-				print "Cannot get subscription status from PhEDEx"
+				pass #print "Cannot get subscription status from PhEDEx"
 			try:
 				r = result['phedex']['request']
 			except:
 				r = None
-			for i in range(0,len(r)):
-       			 	approval = r[i]['approval']
- 			       	requested_by = r[i]['requested_by']
-				custodialsite = r[i]['node'][0]['name']
-				id = r[i]['id']
-				if 'T1_' in custodialsite:
-					phreqinfo['custodialsite'] = custodialsite
-					phreqinfo['requested_by'] = requested_by
-					phreqinfo['approval'] = approval
-					phreqinfo['id'] = id
-			oel['phreqinfo'] = phreqinfo
+			if r:
+				for i in range(0,len(r)):
+       			 		approval = r[i]['approval']
+ 			       		requested_by = r[i]['requested_by']
+					custodialsite = r[i]['node'][0]['name']
+					id = r[i]['id']
+					if 'T1_' in custodialsite:
+						phreqinfo['custodialsite'] = custodialsite
+						phreqinfo['requested_by'] = requested_by
+						phreqinfo['approval'] = approval
+						phreqinfo['id'] = id
+				oel['phreqinfo'] = phreqinfo
 		
 			phtrinfo = {}
 			url = 'https://cmsweb.cern.ch/phedex/datasvc/json/prod/subscriptions?dataset=' + o
 			try:
 	       		 	result = json.load(urllib.urlopen(url))
 			except:
-				print "Cannot get transfer status from PhEDEx"
+				pass #print "Cannot get transfer status from PhEDEx"
 			try:
 				r = result['phedex']['dataset'][0]['subscription']
 			except:
@@ -643,7 +649,7 @@ def main():
 				print " %s %s (reached %s%%, expect %s, status '%s')" % (o['name'],o['events'],oo,reqinfo[w]['expectedevents'],o['status'])
 				if o['phtrinfo'] != {}:
 					print "  subscribed to %s (%s,%s%%)" % (o['phtrinfo']['node'],o['phtrinfo']['type'],o['phtrinfo']['perc'])
-				if o['phreqinfo'] != {}:
+				if 'phreqinfo' in o.keys() and o['phreqinfo'] != {}:
 					print "  request %s: https://cmsweb.cern.ch/phedex/prod/Request::View?request=%s" % (o['phreqinfo']['approval'],o['phreqinfo']['id'])
 			print
 

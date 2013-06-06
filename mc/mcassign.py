@@ -2,6 +2,7 @@
 #TODO https://github.com/dmwm/WMCore/blob/master/test/data/ReqMgr/requests/ReReco.json
 #TODO use reqmgr.py 
 #TODO config, add scram_arch, add split events/job for MonteCarlo
+#TODO check for duplicated datasets in the known requests with the same prepid
 import urllib2,urllib, httplib, sys, re, os
 import optparse
 import time
@@ -98,7 +99,7 @@ def get_linkedt2s(custodialt1):
         	print sys.exc_info()
 		sys.exit(1)
 
-def assignMCRequest(url,workflow,team,sitelist,era,processingstring,processingversion,mergedlfnbase,minmergesize,maxRSS,custodialsites,noncustodialsites,custodialsubtype,autoapprovesubscriptionsites,softtimeout,blockclosemaxevents):
+def assignMCRequest(url,workflow,team,sitelist,era,processingstring,processingversion,mergedlfnbase,minmergesize,maxRSS,custodialsites,noncustodialsites,custodialsubtype,autoapprovesubscriptionsites,softtimeout,blockclosemaxevents,maxmergeevents):
     params = {"action": "Assign",
               "Team"+team: "checked",
               "SiteWhitelist": sitelist,
@@ -109,7 +110,7 @@ def assignMCRequest(url,workflow,team,sitelist,era,processingstring,processingve
 	      "BlockCloseMaxEvents": blockclosemaxevents,
               "MinMergeSize": minmergesize,
               "MaxMergeSize": 4294967296,
-              "MaxMergeEvents": 50000,
+              "MaxMergeEvents": maxmergeevents,
 	      "maxRSS": maxRSS,
               "maxVSize": 4394967000,
               "AcquisitionEra": era,
@@ -728,6 +729,7 @@ def main():
 		hi = False
 		himem = False
 		blockclosemaxevents = 250000000
+		maxmergeevents = 50000
 		noncustodialsites = []
 		custodialsubtype = "Move"
 		autoapprovesubscriptionsites = []
@@ -738,6 +740,7 @@ def main():
 			noncustodialsites = gensubscriptionsites
 			custodialsubtype = "Replica"
 			blockclosemaxevents = 20000000
+			maxmergeevents = 4000000
 			minmergesize = 1000000000
 			softtimeout = 129600*2
 			mergedlfnbase = '/store/generator'
@@ -794,7 +797,9 @@ def main():
 			else:
 				newsitelist = []
 				newsitelist.append('T1_UK_RAL')
-				newsitelist.append('T1_IT_CNAF')
+				#if reqinfo[w]['priority'] < 100000:
+				if 1:
+					newsitelist.append('T1_IT_CNAF')
 				if custodialt1 not in newsitelist:
 					newsitelist.append(custodialt1)
 				newsitelist.extend(linkedt2list)
@@ -915,6 +920,7 @@ def main():
 		assign_data[w]['minmergesize'] = minmergesize
 		assign_data[w]['softtimeout'] = softtimeout
 		assign_data[w]['blockclosemaxevents'] = blockclosemaxevents
+		assign_data[w]['maxmergeevents'] = maxmergeevents
 		if reqinfo[w]['type'] == 'MonteCarlo':
 			assign_data[w]['split'] = reqinfo[w]['events_per_job']
 			splitstring = "events_per_job"
@@ -941,12 +947,12 @@ def main():
 		print
 
 	for w in list:
-		suminfo = "%s\n\tcampaign: %s prio:%s events:%s cpuhours:%s %s:%s\n\tteam:%s era:%s procstr: %s procvs:%s\n\tLFNBase:%s PREPmem: %s maxRSS:%s MinMerge:%s SoftTimeout:%s BlockCloseMaxEvents:%s\n\tOutputDataset: %s\n\tCustodialSites: %s\n\tNonCustodialSites: %s\n\tCustodialSubType: %s\n\tAutoApprove: %s\n\tWhitelist: %s" % (w,reqinfo[w]['campaign'],assign_data[w]['priority'],assign_data[w]['events'],assign_data[w]['cpuhours'],splitstring,assign_data[w]['split'],assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['processingstring'],assign_data[w]['processingversion'],assign_data[w]['mergedlfnbase'],assign_data[w]['prepmemory'],assign_data[w]['maxRSS'],assign_data[w]['minmergesize'],assign_data[w]['softtimeout'],assign_data[w]['blockclosemaxevents'],assign_data[w]['dataset'],assign_data[w]['custodialsites'],assign_data[w]['noncustodialsites'],assign_data[w]['custodialsubtype'],assign_data[w]['autoapprovesubscriptionsites'],",".join(x for x in assign_data[w]['whitelist']))
+		suminfo = "%s\n\tcampaign: %s prio:%s events:%s cpuhours:%s %s:%s\n\tteam:%s era:%s procstr: %s procvs:%s\n\tLFNBase:%s PREPmem: %s maxRSS:%s MinMerge:%s SoftTimeout:%s BlockCloseMaxEvents:%s MaxMergeEvents:%s\n\tOutputDataset: %s\n\tCustodialSites: %s\n\tNonCustodialSites: %s\n\tCustodialSubType: %s\n\tAutoApprove: %s\n\tWhitelist: %s" % (w,reqinfo[w]['campaign'],assign_data[w]['priority'],assign_data[w]['events'],assign_data[w]['cpuhours'],splitstring,assign_data[w]['split'],assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['processingstring'],assign_data[w]['processingversion'],assign_data[w]['mergedlfnbase'],assign_data[w]['prepmemory'],assign_data[w]['maxRSS'],assign_data[w]['minmergesize'],assign_data[w]['softtimeout'],assign_data[w]['blockclosemaxevents'],assign_data[w]['maxmergeevents'],assign_data[w]['dataset'],assign_data[w]['custodialsites'],assign_data[w]['noncustodialsites'],assign_data[w]['custodialsubtype'],assign_data[w]['autoapprovesubscriptionsites'],",".join(x for x in assign_data[w]['whitelist']))
 		if options.test:
 			print "TEST:\t%s\n" % suminfo
 		if not options.test:
 			print "ASSIGN:\t%s\n" % suminfo
-			assignMCRequest(url,w,assign_data[w]['team'],assign_data[w]['whitelist'],assign_data[w]['acqera'],assign_data[w]['processingstring'],assign_data[w]['processingversion'],assign_data[w]['mergedlfnbase'],assign_data[w]['minmergesize'],assign_data[w]['maxRSS'],assign_data[w]['custodialsites'],assign_data[w]['noncustodialsites'],assign_data[w]['custodialsubtype'],assign_data[w]['autoapprovesubscriptionsites'],assign_data[w]['softtimeout'],assign_data[w]['blockclosemaxevents'])
+			assignMCRequest(url,w,assign_data[w]['team'],assign_data[w]['whitelist'],assign_data[w]['acqera'],assign_data[w]['processingstring'],assign_data[w]['processingversion'],assign_data[w]['mergedlfnbase'],assign_data[w]['minmergesize'],assign_data[w]['maxRSS'],assign_data[w]['custodialsites'],assign_data[w]['noncustodialsites'],assign_data[w]['custodialsubtype'],assign_data[w]['autoapprovesubscriptionsites'],assign_data[w]['softtimeout'],assign_data[w]['blockclosemaxevents'],assign_data[w]['maxmergeevents'])
 	
 	sys.exit(0)
 
