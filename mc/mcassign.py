@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #TODO https://github.com/dmwm/WMCore/blob/master/test/data/ReqMgr/requests/ReReco.json
 #TODO use reqmgr.py 
-#TODO config, add scram_arch, add split events/job for MonteCarlo
+#TODO config, add split events/job for MonteCarlo
 #TODO check for duplicated datasets in the known requests with the same prepid
 import urllib2,urllib, httplib, sys, re, os
 import optparse
@@ -31,6 +31,23 @@ autoapprovelist = ['T2_CH_CERN','T2_IT_Bari' ,'T2_IT_Legnaro' ,'T2_IT_Pisa' ,'T2
 
 cachedoverview = '/afs/cern.ch/user/s/spinoso/public/overview.cache'
 forceoverview = 0
+
+def human(n):
+        if n<1000:
+                return "%s" % n
+        elif n>=1000 and n<1000000:
+                order = 1
+        elif n>=1000000 and n<1000000000:
+                order = 2
+        else:
+                order = 3
+
+        norm = pow(10,3*order)
+
+        value = float(n)/norm
+
+        letter = {1:'k',2:'M',3:'G'}
+        return ("%.1f%s" % (value,letter[order])).replace(".0", "")
 
 def setSplit(url, workflow, typ, split):
 	print "Set Split %s %s %s" % (workflow, typ, split)
@@ -503,11 +520,6 @@ def getWorkflowInfo(workflow,nodbs=0):
 		eventsdone = eventsdone + oe
 
 	cpuhours = timeev*expectedevents/3600
-	#for o in ods:
-	#	if nodbs:
-	#		[oe,ost] = [0,'']
-	#	else:
-	#		[oe,ost] = getdsdetail(o)
 	remainingcpuhours = timeev*(expectedevents-eventsdone)/3600
 	return {'requestname':workflow,'type':typ,'status':status,'campaign':campaign,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'js':j,'outputdataset':outputdataset,'cpuhours':cpuhours,'remainingcpuhours':remainingcpuhours,'team':team,'acquisitionEra':acquisitionEra,'requestdays':requestdays,'processingVersion':processingVersion,'events_per_job':events_per_job,'lumis_per_job':lumis_per_job,'expectedjobs':expectedjobs,'expectedjobcpuhours':expectedjobcpuhours,'cmssw':cmssw,'outputtier':outputtier,'prepmemory':prepmemory}
 
@@ -644,9 +656,11 @@ def main():
 						if custodialt1 == t1s[i]:
 							custodialt1 = i
 							break
+		totalevents = 0
 		for w in list:
-			print "%s" % w
-			reqinfo[w] = getWorkflowInfo(w,nodbs=1)
+			reqinfo[w] = getWorkflowInfo(w)
+			totalevents = totalevents + reqinfo[w]['expectedevents']
+			print "%s (%s events)" % (w,human(reqinfo[w]['expectedevents']))
 			if reqinfo[w]['campaign'] not in campaignconfig.keys():
 				print "Unknown campaign %s" % reqinfo[w]['campaign']
 				sys.exit(1)
@@ -663,18 +677,20 @@ def main():
 					sys.exit(1)
 			else:
 				acqera = campaignconfig[reqinfo[w]['campaign']]['acqera']
-				print "Acquisition era: %s" % (acqera)
+				print "[Detected acquisition era: %s]" % (acqera)
 		print "\n----------------------------------------------------------------\n"
 		print "\nCustodial LFNs for %s %s (%s)\n" % (" ".join(x for x in campaigns),batch,custodialt1)
-		print "Dear admins,\n\nplease create the tape families below[*], needed for MC production.\n\nThanks!\n Vincenzo & Ajit.\n\n[*]"
+		print "Dear admins,\n\nplease create the tape families below[*], needed for MC production.\n\n"
 		
 		tf = []
+		ids = []
 		for w in reqinfo.keys():
+			if reqinfo[w]['type'] == 'MonteCarloFromGEN':
+				ids.append(reqinfo[w]['inputdataset']['name'])
 			if 'tfpath' in campaignconfig[reqinfo[w]['campaign']].keys():	
 				tfpath = campaignconfig[reqinfo[w]['campaign']]['tfpath']
 			else:
 				tfpath = 'mc'
-		#acqera = campaignconfig[campaign]['acqera']
 			if 'tiers' in campaignconfig[reqinfo[w]['campaign']].keys():	
 				tiers = campaignconfig[reqinfo[w]['campaign']]['tiers']
 			else:
@@ -686,9 +702,17 @@ def main():
 					tf.append(a)
 
 		tf.sort()
+		print "[*]"
 		for i in tf:
 			print "%s" % i
 
+		if ids:
+			print "\nYou may want to replicate the following input datasets if needed:\n"
+			for i in ids:
+				print "%s" % i
+
+		print "\n\nThanks!\n Vincenzo & Ajit.\n\n"
+		print "TOTAL EVENTS: %s" % human(totalevents)
 		print "\nPREPIDs: %s\n" % (",".join(reqinfo[x]['prepid'] for x in reqinfo.keys()))
 		sys.exit(0)
 			
