@@ -14,6 +14,7 @@ except ImportError:
     import simplejson as json
 
 max_events_per_job = 500
+extstring = '-ext'
 teams = ['mc','mc_highprio']
 t1s = {'FNAL':'T1_US_FNAL','CNAF':'T1_IT_CNAF','ASGC':'T1_TW_ASGC','IN2P3':'T1_FR_CCIN2P3','RAL':'T1_UK_RAL','PIC':'T1_ES_PIC','KIT':'T1_DE_KIT'}
 
@@ -628,18 +629,13 @@ def main():
 
 	siteblacklist.sort()
 	print "Default site blacklist: %s\n" % (",".join(x for x in siteblacklist))
+	print "T1s: %s" % (t1s.keys())
 		
-	if options.hi:
-		print "Heavy Ion flag is set, parameters will be configured accordingly\n"
+	#if options.hi:
+	#	print "Heavy Ion flag is set, parameters will be configured accordingly\n"
 
-	elif options.himem:
+	if options.himem:
 		print "High memory flag is set, parameters will be configured accordingly\n"
-
-	if options.ext:
-		print "Extension string enabled\n"
-		ext = '-ext'
-	else:
-		ext = ''
 
 	if options.tapefamilies:
 		campaigns = []
@@ -722,6 +718,10 @@ def main():
 	datasets = {}
 	for w in list:
 		reqinfo[w] = getWorkflowInfo(w)
+		if '_extension_' in w or options.ext:
+			ext = extstring
+		else:
+			ext = ''
 
 		if reqinfo[w]['campaign'] not in campaignconfig.keys():
 			print "\nUnknown campaign %s for %s\n" % (reqinfo[w]['campaign'],w)
@@ -750,7 +750,7 @@ def main():
 		
 		# internal assignment parameters
 		prepmemory = reqinfo[w]['prepmemory']
-		hi = False
+		#hi = False
 		himem = False
 		blockclosemaxevents = 250000000
 		maxmergeevents = 50000
@@ -767,7 +767,6 @@ def main():
 			maxmergeevents = 4000000
 			minmergesize = 1000000000
 			softtimeout = 129600*2
-			mergedlfnbase = '/store/generator'
 			maxRSS = 2294967
 			if '_STEP0ATCERN' in w:
 				# STEP0 @ CERN
@@ -778,31 +777,29 @@ def main():
 				print '%s (%s, LHEStepZero full GEN)' % (w,reqinfo[w]['campaign'])
 				team = 'mc_highprio'
 				
-		elif options.hi:
-			print '%s (%s Heavy Ion)' % (w,reqinfo[w]['campaign'])
-			hi = True
-			team = getteam(team,reqinfo[w])
-			softtimeout = 129600
-			mergedlfnbase = '/store/himc'
-			minmergesize = 2147483648
-			#maxRSS = 3500000
-			maxRSS = 2294967
+		#elif options.hi:
+		#	print '%s (%s Heavy Ion)' % (w,reqinfo[w]['campaign'])
+		#	hi = True
+		#	team = getteam(team,reqinfo[w])
+		#	softtimeout = 129600
+		#	minmergesize = 2147483648
+		#	#maxRSS = 3500000
+		#	maxRSS = 2294967
 		elif options.himem:
 			himem = True
 			print '%s (%s High Memory)' % (w,reqinfo[w]['campaign'])
 			team = getteam(team,reqinfo[w])
 			softtimeout = 129600
-			mergedlfnbase = '/store/mc'
 			minmergesize = 2147483648
 			maxRSS = 3500000
 		else:
 			print '%s (%s)' % (w,reqinfo[w]['campaign'])
-			mergedlfnbase = '/store/mc'
 			team = getteam(team,reqinfo[w])
 			softtimeout = 129600
 			minmergesize = 2147483648
 			maxRSS = 2294967
 
+		
 
 		if custodialt1 == '':
 			if options.himem:
@@ -812,6 +809,14 @@ def main():
 			else:
 				print "Cannot guess the custodial T1. Please use -c <site>."
 				sys.exit(1)
+
+		# LFN path
+		if reqinfo[w]['type'] == 'LHEStepZero':
+			mergedlfnbase = '/store/generator'
+		elif 'tfpath' in campaignconfig[reqinfo[w]['campaign']].keys():
+			mergedlfnbase = "/store/%s" % campaignconfig[reqinfo[w]['campaign']]['tfpath']
+		else:
+			mergedlfnbase = '/store/mc'
 
 		# sitelist adjustment
 		linkedt2list = get_linkedt2s(custodialt1)
@@ -827,7 +832,11 @@ def main():
 				if custodialt1 not in newsitelist:
 					newsitelist.append(custodialt1)
 				newsitelist.extend(linkedt2list)
-				if not options.hi:
+				#TODO: add new flag for special behaviours? or white/blacklists?
+				if mergedlfnbase == '/store/himc':
+					newsitelist.remove('T1_UK_RAL')
+					newsitelist.remove('T1_IT_CNAF')
+				else:
 					newsitelist.remove('T2_US_Vanderbilt')
 		else:
 			# explicit sitelist, no guesses
