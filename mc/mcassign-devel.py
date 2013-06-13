@@ -275,6 +275,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 	prepmemory = 0
 	requestdays=0
 	campaign = ''
+	lheinputfiles = 0
 	for raw in list:
 		if 'acquisitionEra' in raw:
                         a = raw.find("'")
@@ -291,6 +292,13 @@ def getWorkflowInfo(workflow,nodbs=0):
 		elif 'output.dataTier' in raw:
 			outputtier = raw[raw.find("'")+1:]
 			outputtier = outputtier[0:outputtier.find("'")]
+		elif 'schema.LheInputFiles' in raw:
+			lheinputfiles = raw[raw.find("'")+1:]
+			lheinputfiles = lheinputfiles[0:lheinputfiles.find("'")]
+			if lheinputfile == 'True':
+				lheinputfiles = 1
+			else:
+				lheinputfiles = 0
 		elif 'cmsswVersion' in raw:
 			cmssw = raw[raw.find("'")+1:]
 			cmssw = cmssw[0:cmssw.find("'")]
@@ -403,7 +411,6 @@ def getWorkflowInfo(workflow,nodbs=0):
 	if typ in ['MonteCarlo','LHEStepZero']:
 		expectedevents = int(reqevts)
 		expectedjobs = int(expectedevents/(events_per_job*filtereff))
-		expectedjobcpuhours = int(timeev*(events_per_job*filtereff)/3600)
 	elif typ in ['MonteCarloFromGEN']:
 		if nodbs:
 			[inputdataset['events'],inputdataset['status']] = [0,'']
@@ -418,14 +425,9 @@ def getWorkflowInfo(workflow,nodbs=0):
 		except:
 			expectedjobs = 0
 		expectedevents = int(filtereff*inputdataset['events'])
-		try:
-			expectedjobcpuhours = int(timeev*inputdataset['events']/inputdataset['lumicount']/3600)
-		except:
-			expectedjobcpuhours = 0
 	else:
 		expectedevents = -1
 		expectedjobs = -1
-		expectedjobcpuhours = -1
 	
 	j = {}
 	k = {'success':'success','failure':'failure','Pending':'pending','Running':'running','cooloff':'cooloff','pending':'queued','inWMBS':'inWMBS','total_jobs':'total_jobs','local_queue':'local_queue'}
@@ -469,63 +471,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 			oel['events'] = oe
 			oel['status'] = ost
 		
-		if 0:
-			phreqinfo = {}
-       		 	url='https://cmsweb.cern.ch/phedex/datasvc/json/prod/RequestList?dataset=' + o
-			try:
-        			result = json.load(urllib.urlopen(url))
-			except:
-				print "Cannot get subscription status from PhEDEx"
-			try:
-				r = result['phedex']['request']
-			except:
-				r = None
-			if r:
-				for i in range(0,len(r)):
-       			 		approval = r[i]['approval']
- 			       		requested_by = r[i]['requested_by']
-					custodialsite = r[i]['node'][0]['name']
-					id = r[i]['id']
-					if 'T1_' in custodialsite:
-						phreqinfo['custodialsite'] = custodialsite
-						phreqinfo['requested_by'] = requested_by
-						phreqinfo['approval'] = approval
-						phreqinfo['id'] = id
-				oel['phreqinfo'] = phreqinfo
-		
-			phtrinfo = {}
-			url = 'https://cmsweb.cern.ch/phedex/datasvc/json/prod/subscriptions?dataset=' + o
-			try:
-	       		 	result = json.load(urllib.urlopen(url))
-			except:
-				print "Cannot get transfer status from PhEDEx"
-			try:
-				r = result['phedex']['dataset'][0]['subscription']
-			except:
-				r = []
-			for i in r:
-				node = i['node']
-				custodial = i['custodial']
-				if 'T1_' in node and custodial == 'y': 
-					if i['move'] == 'n':
-						phtype = 'Replica'
-					else:
-						phtype = 'Move'
-					phtrinfo['node'] = node
-					phtrinfo['time_create'] = datetime.datetime.fromtimestamp(int(i['time_create']))
-					phtrinfo['time_create_days'] = (datetime.datetime.now() - phtrinfo['time_create']).days
-					try:
-						phtrinfo['perc'] = int(float(i['percent_bytes']))
-					except:
-						phtrinfo['perc'] = 0
-					phtrinfo['type'] = phtype
-			oel['phtrinfo'] = phtrinfo
-			outputdataset.append(oel)
-		eventsdone = eventsdone + oe
-
-	cpuhours = timeev*expectedevents/3600
-	remainingcpuhours = timeev*(expectedevents-eventsdone)/3600
-	return {'requestname':workflow,'type':typ,'status':status,'campaign':campaign,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'js':j,'outputdataset':outputdataset,'cpuhours':cpuhours,'remainingcpuhours':remainingcpuhours,'team':team,'acquisitionEra':acquisitionEra,'requestdays':requestdays,'processingVersion':processingVersion,'events_per_job':events_per_job,'lumis_per_job':lumis_per_job,'expectedjobs':expectedjobs,'expectedjobcpuhours':expectedjobcpuhours,'cmssw':cmssw,'outputtier':outputtier,'prepmemory':prepmemory}
+	return {'requestname':workflow,'type':typ,'status':status,'campaign':campaign,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'js':j,'outputdataset':outputdataset,'team':team,'acquisitionEra':acquisitionEra,'requestdays':requestdays,'processingVersion':processingVersion,'events_per_job':events_per_job,'lumis_per_job':lumis_per_job,'expectedjobs':expectedjobs,'cmssw':cmssw,'outputtier':outputtier,'prepmemory':prepmemory,'lheinputfiles':lheinputfiles}
 
 def isInDBS(dataset):
 	q = "/afs/cern.ch/user/s/spinoso/public/dbssql --input='find dataset where dataset="+dataset+"*' "
@@ -771,7 +717,7 @@ def main():
 			minmergesize = 1000000000
 			softtimeout = 129600*2
 			maxRSS = 2294967
-			if '_STEP0ATCERN' in w:
+			if reqinfo[w]['lheinputfiles']:
 				# STEP0 @ CERN
 				print '%s (%s, LHEStepZero step0)' % (w,reqinfo[w]['campaign'])
 				team = 'step0'
@@ -824,7 +770,7 @@ def main():
 		# sitelist adjustment
 		linkedt2list = get_linkedt2s(custodialt1)
 		if sites == 'auto':
-			if reqinfo[w]['type'] == 'LHEStepZero' and '_STEP0ATCERN' in w:
+			if reqinfo[w]['type'] == 'LHEStepZero' and reqinfo[w]['lheinputfiles']:
 				newsitelist = ['T2_CH_CERN']
 			else:
 				newsitelist = []
@@ -937,7 +883,6 @@ def main():
 		assign_data[w]['team'] = team
 		assign_data[w]['priority'] = priority
 		assign_data[w]['events'] = reqinfo[w]['expectedevents']
-		assign_data[w]['cpuhours'] = reqinfo[w]['cpuhours']
 		newsitelist.sort()
 		assign_data[w]['whitelist'] = newsitelist
 		assign_data[w]['acqera'] = newacqera
@@ -983,7 +928,7 @@ def main():
 		print
 
 	for w in list:
-		suminfo = "%s\n\tcampaign: %s prio:%s events:%s cpuhours:%s %s:%s\n\tteam:%s era:%s procstr: %s procvs:%s\n\tLFNBase:%s injmem: %s maxRSS:%s MinMerge:%s SoftTimeout:%s BlockCloseMaxEvents:%s MaxMergeEvents:%s\n\tOutputDataset: %s\n\tCustodialSites: %s\n\tNonCustodialSites: %s\n\tCustodialSubType: %s\n\tAutoApprove: %s\n\tWhitelist: %s" % (w,reqinfo[w]['campaign'],assign_data[w]['priority'],assign_data[w]['events'],assign_data[w]['cpuhours'],splitstring,assign_data[w]['split'],assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['processingstring'],assign_data[w]['processingversion'],assign_data[w]['mergedlfnbase'],assign_data[w]['prepmemory'],assign_data[w]['maxRSS'],assign_data[w]['minmergesize'],assign_data[w]['softtimeout'],assign_data[w]['blockclosemaxevents'],assign_data[w]['maxmergeevents'],assign_data[w]['dataset'],assign_data[w]['custodialsites'],assign_data[w]['noncustodialsites'],assign_data[w]['custodialsubtype'],assign_data[w]['autoapprovesubscriptionsites'],",".join(x for x in assign_data[w]['whitelist']))
+		suminfo = "%s\n\tcampaign: %s prio:%s events:%s %s:%s\n\tteam:%s era:%s procstr: %s procvs:%s\n\tLFNBase:%s injmem: %s maxRSS:%s MinMerge:%s SoftTimeout:%s BlockCloseMaxEvents:%s MaxMergeEvents:%s\n\tOutputDataset: %s\n\tCustodialSites: %s\n\tNonCustodialSites: %s\n\tCustodialSubType: %s\n\tAutoApprove: %s\n\tWhitelist: %s" % (w,reqinfo[w]['campaign'],assign_data[w]['priority'],assign_data[w]['events'],splitstring,assign_data[w]['split'],assign_data[w]['team'],assign_data[w]['acqera'],assign_data[w]['processingstring'],assign_data[w]['processingversion'],assign_data[w]['mergedlfnbase'],assign_data[w]['prepmemory'],assign_data[w]['maxRSS'],assign_data[w]['minmergesize'],assign_data[w]['softtimeout'],assign_data[w]['blockclosemaxevents'],assign_data[w]['maxmergeevents'],assign_data[w]['dataset'],assign_data[w]['custodialsites'],assign_data[w]['noncustodialsites'],assign_data[w]['custodialsubtype'],assign_data[w]['autoapprovesubscriptionsites'],",".join(x for x in assign_data[w]['whitelist']))
 		if options.test:
 			print "TEST:\t%s\n" % suminfo
 		if not options.test:
