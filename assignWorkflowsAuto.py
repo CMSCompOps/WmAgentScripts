@@ -173,6 +173,7 @@ def getPileup(config):
         lines = config.split('\n')
         want = ''
         i=0
+        j=0
         for line in lines:
            if 'MixingModule' in line and 'EDProducer' in line:
               i=1
@@ -182,6 +183,8 @@ def getPileup(config):
               want = want + line
            if 'SimGeneral.MixingModule' in line and 'process.load' in line:
               want = line
+           if 'process.mix' in line:
+              j = j + 1
 
         want = re.sub(r'\s+', '', want)
         want = re.sub(r'\"', '', want)
@@ -189,6 +192,8 @@ def getPileup(config):
 
         if 'process.load' in want:
            pu = want[want.find("'")+1:want.find("'",want.find("'")+1)]
+           #if j > 1:
+           #   pu = 'Unknown'
         else:
            pu = want
 
@@ -358,29 +363,33 @@ def main():
            gtRaw = getGlobalTag(url, workflow)
            gtBits = gtRaw.split('::')
            globalTag = gtBits[0]
-         
-           # Determine pileup scenario
-           # - Fall11_R2 & Fall11_R4 don't add pileup so extract pileup scenario from input
-           pileupDataset = getPileupDataset(url, workflow)
-           pileupScenario = getPileupScenario(url, workflow)
-           if pileupScenario == 'Unknown' and 'MinBias' in pileupDataset:
-              print 'ERROR: unable to determine pileup scenario'
-              sys.exit(0)
-           elif 'Fall11_R2' in workflow or 'Fall11_R4' in workflow:
-              inDataSet = getInputDataSet(url, workflow)
-              matchObj = re.match(r".*Fall11-(.*)_START.*", inDataSet)
-              if matchObj:
-                 pileupScenario = matchObj.group(1)
-              else:
-                 pileupScenario == 'Unknown'
-           elif pileupScenario == 'Unknown' and 'MinBias' not in pileupDataset:
-              pileupScenario = 'NoPileUp'
-
-           if pileupScenario == 'Unknown':
-              pileupScenario = ''
 
            # Get campaign name
            campaign = getCampaign(url, workflow)
+         
+           # Determine pileup scenario
+           # - Fall11_R2 & Fall11_R4 don't add pileup so extract pileup scenario from input
+           pileupScenario = ''
+           if not options.inprocstring:
+              pileupDataset = getPileupDataset(url, workflow)
+              pileupScenario = getPileupScenario(url, workflow)
+              if campaign == 'Summer12_DR53X_RD':
+                 pileupScenario = 'PU_RD1'
+              if pileupScenario == 'Unknown' and 'MinBias' in pileupDataset:
+                 print 'ERROR: unable to determine pileup scenario'
+                 sys.exit(0)
+              elif 'Fall11_R2' in workflow or 'Fall11_R4' in workflow:
+                 inDataSet = getInputDataSet(url, workflow)
+                 matchObj = re.match(r".*Fall11-(.*)_START.*", inDataSet)
+                 if matchObj:
+                    pileupScenario = matchObj.group(1)
+                 else:
+                    pileupScenario == 'Unknown'
+              elif pileupScenario == 'Unknown' and 'MinBias' not in pileupDataset:
+                 pileupScenario = 'NoPileUp'
+
+              if pileupScenario == 'Unknown':
+                 pileupScenario = ''
 
            # Decide which team to use if not already defined
            if not team:
@@ -464,6 +473,16 @@ def main():
               lfn = '/store/mc'
               specialName = campaign + '_'
            
+           if campaign == 'UpgradePhase1Age0START_DR61SLHCx':
+              era = 'Summer13'
+              lfn = '/store/mc'
+              specialName = campaign + '_'
+
+           if campaign == 'UpgradePhase1Age3H_DR61SLHCx':
+              era = 'Summer13'
+              lfn = '/store/mc'
+              specialName = campaign + '_'
+
            # Construct processed dataset version
            if pileupScenario != '':
               pileupScenario = pileupScenario+'_' 
