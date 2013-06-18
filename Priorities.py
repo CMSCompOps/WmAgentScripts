@@ -9,7 +9,7 @@ def maxEventsFileDataset(url, workflow):
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
 	r2=conn.getresponse()
-	request = json.read(r2.read())
+	request = json.loads(r2.read())
 	if not 'InputDataset' in request.keys():
 		return False
 	inputDataSet=request['InputDataset']
@@ -38,7 +38,7 @@ def getEffectiveLumiSections(url, workflow, requestType):
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
 	r2=conn.getresponse()
-	request = json.read(r2.read())
+	request = json.loads(r2.read())
 	if not 'InputDataset' in request.keys():
 		return -1
 	inputDataSet=request['InputDataset']
@@ -75,7 +75,7 @@ def getTimeEventRequest(url, requestName):
 	conn=httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+requestName)
 	r2=conn.getresponse()
-	request = json.read(r2.read())
+	request = json.loads(r2.read())
 	if 'TimePerEvent' in request.keys():
 		return int(request['TimePerEvent'])
 	elif 'time_per_event' in request.keys():
@@ -173,7 +173,7 @@ def getPriorityWorkflow(url, workflow):
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/'+workflow)
 	r2=conn.getresponse()
-	request = json.read(r2.read())
+	request = json.loads(r2.read())
 	if 'RequestPriority' in request.keys():
 		return int(request['RequestPriority'])
 	else:
