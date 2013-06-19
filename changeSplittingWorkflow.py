@@ -8,7 +8,7 @@ def getWorkflowType(url, workflow):
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
 	r2=conn.getresponse()
-	request = json.read(r2.read())
+	request = json.loads(r2.read())
 	Requesttype=request['RequestType']
 	return Requesttype
 
