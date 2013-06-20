@@ -167,6 +167,8 @@ def getPileupScenario(url, workflow):
         config = getConfig(url, cacheID)
         pileup = getPileup(config)
         scenario = getScenario(pileup)
+	if scenario == 'PU140Bx25' and 'Summer13dr53X' in workflow:
+	   scenario = 'PU25bx25'
         return scenario
 
 def getPileup(config):
@@ -419,6 +421,10 @@ def main():
 
            if 'Fall11_R' in workflow:
               era = 'Fall11'
+              lfn = '/store/mc'
+
+           if 'Summer13dr53X' in workflow:
+              era = 'Summer13dr53X'
               lfn = '/store/mc'
 
            if 'Fall11_HLTMuonia' in workflow:
