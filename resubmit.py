@@ -21,7 +21,7 @@ def getPriorityWorkflow(url, workflow):
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
 	r2=conn.getresponse()
-	request = json.read(r2.read())
+	request = json.loads(r2.read())
 	if 'RequestPriority' in request:
 		return request['RequestPriority']
 	else:	
@@ -85,7 +85,7 @@ def submitWorkflow(schema):
             schema[schemaListItem] = str(schema[schemaListItem])
     jsonEncodedParams = {}
     for paramKey in schema.keys():
-		jsonEncodedParams[paramKey] = json.write(schema[paramKey])
+		jsonEncodedParams[paramKey] = json.dumps(schema[paramKey])
     encodedParams = urllib.urlencode(jsonEncodedParams, False)
 
     #encodedParams = urllib.urlencode(schema, True)

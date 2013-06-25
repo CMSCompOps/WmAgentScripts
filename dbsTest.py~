@@ -3,12 +3,15 @@
 import urllib2,urllib, httplib, sys, re, os, json, phedexSubscription
 from xml.dom.minidom import getDOMImplementation
 from das_client import get_data
+#das_host='https://das.cern.ch'
+#das_host='https://cmsweb.cern.ch'
+das_host='https://cmsweb-testbed.cern.ch'
 
 def getWorkflowType(url, workflow):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
     r2=conn.getresponse()
-    request = json.read(r2.read())
+    request = json.loads(r2.read())
     requestType=request['RequestType']
     return requestType
 
@@ -25,7 +28,7 @@ def getBlockWhitelist(url, workflow):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
     r2=conn.getresponse()
-    request = json.read(r2.read())
+    request = json.loads(r2.read())
     BlockWhitelist=request['BlockWhitelist']
     return BlockWhitelist
 
@@ -33,105 +36,213 @@ def getInputDataSet(url, workflow):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
     r2=conn.getresponse()
-    request = json.read(r2.read())
+    request = json.loads(r2.read())
     inputDataSets=request['InputDataset']
     if len(inputDataSets)<1:
         print "No InputDataSet for workflow " +workflow
     else:
         return inputDataSets
 
-def getEventsRun(url, dataset, run):
-    output=os.popen("./dbssql --input='find dataset,sum(block.numevents) where dataset="+dataset+" and run="+str(run)+"' "+"|awk '{print $2}' | grep '[0-9]\{1,\}'").read()
-    try:
-        int(output)
-        return int(output)
-    except ValueError:
-        return -1   
+
+def duplicateRunLumi(dataset):
+    RunlumisChecked={}
+    query="file run lumi dataset="+dataset
+    das_data = get_data(das_host,query,0,0,0)
+    if isinstance(das_data, basestring):
+        result = json.loads(das_data)
+    else:
+        result = das_data
+    if result['status'] == 'fail' :
+        print 'DAS query failed with reason:',result['reason']
+    else:
+	preresult=result['data'] 
+    for filename in preresult:
+     	run=filename['run'][0]['run_number']
+	if run not in RunlumisChecked:
+		RunlumisChecked[run]=[]
+	newLumis=filename['lumi'][0]['number']
+	for lumiRange in newLumis:
+			newlumiRange=range(lumiRange[0], lumiRange[1]+1)
+			for lumi in newlumiRange:
+				if lumi in RunlumisChecked[run]:
+					return True
+				else:
+					RunlumisChecked[run].append(lumi)
+    return False
+
+def duplicateLumi(dataset):
+    lumisChecked=[]
+    query="file lumi dataset="+dataset
+    das_data = get_data(das_host,query,0,0,0)
+    if isinstance(das_data, basestring):
+        result = json.loads(das_data)
+    else:
+        result = das_data
+    if result['status'] == 'fail' :
+        print 'DAS query failed with reason:',result['reason']
+    else:
+	preresult=result['data']
+	for filename in preresult:
+		newLumis=filename['lumi'][0]['number']
+		for lumiRange in newLumis:
+			newlumiRange=[lumiRange[0]]
+			if lumiRange[0]<lumiRange[1]:
+				newlumiRange=range(lumiRange[0], lumiRange[1])
+			for lumi in newlumiRange:
+				if lumi in lumisChecked:
+					return True
+				else:
+					lumisChecked.append(lumi)
+	return False
 
 
-def getEventCountDataSet(dataset):
-    output=os.popen("./dbssql --input='find dataset,sum(block.numevents) where dataset="+dataset+"'"+ "|awk '{print $2}' | grep '[0-9]\{1,\}'").read()
-    try:
-        int(output)
-        return int(output)
-    except ValueError:
-        return -1
+#Return the number of events for a given dataset given a runlist
+def EventsRunList(das_url, dataset, runlist):
+    events=0
+    for run in runList:
+       events=events+getEventsRun(das_url, dataset, run)
+    return events
 
-def getRunLumiCountDataset(dataset):
-    output=os.popen("./dbssql --limit=10000 --input='find run, count(lumi) where dataset="+dataset+"'"+ "| grep '[0-9]\{1,\}' | awk '{s+=$2}END{print s}'").read()
-    try:
-        int(output)
-        return int(output)
-    except ValueError:
-        return -1
+# Return the number of events in a dataset and in a run
+def getEventsRun(das_url, dataset, run):
+    query="summary dataset dataset="+dataset+" run="+str(run)+" | grep grep summary.nevents"
+    das_data = get_data(das_url,query,0,0,0)
+    if isinstance(das_data, basestring):
+        result = json.loads(das_data)
+    else:
+        result = das_data
+    if result['status'] == 'fail' :
+        print 'DAS query failed with reason:',result['reason']
+    else:
+	if len(result['data'])==0:#dataset not yet registered in DBS
+		return 0
+	preresult=result['data'][0]['summary']
+	for key in preresult:
+		if 'nevents' in key:
+			return key['nevents']		
+	return -1
 
 
-def getRunLumiCountDatasetList(dataset, runlist):
+
+#Returns the number of events in a dataset using DAS
+def getEventCountDataSet(das_url, dataset):
+    query="dataset dataset="+dataset+"  status=* | grep dataset.nevents"
+    das_data = get_data(das_url,query,0,0,0)
+    if isinstance(das_data, basestring):
+        result = json.loads(das_data)
+    else:
+        result = das_data
+    if result['status'] == 'fail' :
+        print 'DAS query failed with reason:',result['reason']
+    else:
+	if len(result['data'])==0:#dataset not yet registered in DBS
+		return 0
+	preresult=result['data'][0]['dataset']
+	for key in preresult:
+		if 'nevents' in key:
+			return key['nevents']		
+	return -1
+
+#Returns a list of runs of a dataset
+def getRunsDataset(das_url, dataset):
+	runList=[]
+	query="run dataset="+dataset+"| grep run.run_number"
+	das_data = get_data(das_url,query,0,0,0)
+	if isinstance(das_data, basestring):
+        	result = json.loads(das_data)
+	else:
+        	result = das_data
+	if result['status'] == 'fail' :
+        	print 'DAS query failed with reason:',result['reason']
+	else:
+		if len(result['data'])==0:#dataset not yet registered in DBS
+			return runList
+		preresult=result['data']
+		for key in preresult:
+			if 'run' in key:
+				runList.append(key['run'][0]['run_number'])
+	return runList
+
+# Get the number of unique lumis in a dataset
+def getRunLumiCountDataset(das_url, dataset):
+	lumis=0
+	query="summary dataset="+dataset+" | grep summary.nlumis"
+	das_data = get_data(das_url,query,0,0,0)
+	if isinstance(das_data, basestring):
+        	result = json.loads(das_data)
+	else:
+        	result = das_data
+	if result['status'] == 'fail' :
+        	print 'DAS query failed with reason:',result['reason']
+	else:
+		if len(result['data'])==0:#dataset not yet registered in DBS
+			return 0
+		preresult=result['data'][0]
+		for key in preresult:
+		    if 'summary' in key:
+			return preresult['summary'][0]['nlumis']		
+		return -1
+
+#Returns the number of lumis in a given run for a dataset using DAS.
+def getRunLumiCountDatasetRun(das_url, dataset, run):
+	lumis=0
+	query="summary dataset="+dataset+"  run="+str(run)+" | sum(summary.nlumis)"
+	das_data = get_data(das_url,query,0,0,0)
+	if isinstance(das_data, basestring):
+        	result = json.loads(das_data)
+	else:
+        	result = das_data
+	if result['status'] == 'fail' :
+        	print 'DAS query failed with reason:',result['reason']
+	else:
+		if len(result['data'])==0:#dataset not yet registered in DBS
+			return 0
+		preresult=result['data']
+		for key in preresult:
+		    if 'result' in key:
+			return key['result']['value']		
+		return -1
+
+#Returns the number of lumis in a dataset and in a given runlist	
+def getRunLumiCountDatasetList(das_url,dataset, runlist):
     lumis=0
-    runChunks=chunks(runlist,30)
-    for runList in runChunks:
-        querry="./dbssql --limit=10000 --input='find run, count(lumi) where dataset="+dataset+" AND ("
-        for run in runList:
-            querry=querry+" run="+str(run) +" OR "
-        querry=querry+' run= '+str(runList[0]) +')'
-        querry=querry+"'| grep '[0-9]\{1,\}' | awk '{s+=$2}END{print s}'"
-        output=os.popen(querry).read()
-        if not output:
-            lumis=lumis
-        try:
-            lumis=lumis+int(output)
-        except ValueError:
-            lumis=lumis
+    for run in runlist:
+        lumis=lumis+getRunLumiCountDatasetRun(das_url, dataset, run)
     return lumis
   
 
 # SPlits a list of chunks of size(n)
 def chunks(lis, n):
     return [lis[i:i+n] for i in range(0, len(lis), n)]
+# Return the number of events in a block using DAS
+def getEventsBlock(das_url, block_name):
+    query="block="+block_name+"  | grep block.nevents"
+    das_data = get_data(das_url,query,0,0,0)
+    if isinstance(das_data, basestring):
+        result = json.loads(das_data)
+    else:
+        result = das_data
+    if result['status'] == 'fail' :
+        print 'DAS query failed with reason:',result['reason']
+    else:
+	if len(result['data'])==0:#dataset not yet registered in DBS
+		return 0
+	preresult=result['data'][0]['block']
+	for key in preresult:
+		if 'nevents' in key:
+			return key['nevents']		
+	return -1
+    return 0
 
 #Return the number of events for a given dataset given a blocklist
-def EventsBlockList(dataset, blocklist):
+def EventsBlockList(das_url, dataset, blocklist):
     events=0
     if len(blocklist)==0:
-        return getEventCountDataSet(dataset)
-    blockChunks=chunks(blocklist,10)
-    for blockList in blockChunks:
-        querry="./dbssql --input='find dataset,sum(block.numevents) where dataset="+dataset+' AND ('
-        if len(blockList)==0:
-            continue
-        for block in blockList:
-            querry=querry+' block= '+block+' OR'
-        querry=querry+' block='+str(blockList[0]) +' )'
-        querry=querry+"'|awk '{print $2}' | grep '[0-9]\{1,\}'"
-        output=os.popen(querry).read()
-        if not output:
-            events=events
-        try:
-            events=events+int(output)
-        except ValueError:
-            events=events
+        return getEventCountDataSet(das_url, dataset)
+    for block in blocklist:
+	events=events+getEventsBlock(das_url, block)
     return events
 
-
-#Return the number of events for a given dataset given a runlist
-def EventsRunList(dataset, runlist):
-    events=0
-    runChunks=chunks(runlist,30)
-    for runList in runChunks:
-        querry="./dbssql --input='find dataset,sum(block.numevents) where dataset="+dataset+' AND ('
-        for run in runList:
-            querry=querry+" run="+str(run) +" OR "
-        querry=querry+' run= '+str(runList[0]) +')'
-        querry=querry+"'| grep '[0-9]\{1,\}' | awk '{s+=$2}END{print s}'"
-        #querry=querry+"'|awk '{print $2}' | grep '[0-9]\{1,\}'"
-        output=os.popen(querry).read()
-        if not output:
-            events=events
-        try:
-            events=events+int(output)
-        except ValueError:
-            events=events
-    return events
 
 def getRunLumiCountDatasetBlockList(dataset,blockList):
     lumis=0
@@ -147,7 +258,6 @@ def getRunLumiCountDatasetBlockList(dataset,blockList):
         lumis=lumis+int(output)
     except ValueError:
         lumis=lumis
-    #print lumis    
     return lumis
 
 def handleTaskChain(request):
@@ -169,13 +279,13 @@ def handleTaskChain(request):
             runBlacklist=request['Task1']['RunBlacklist']
 
         if len(blockWhitelist)>0:
-            return getRunLumiCountDatasetBlockList(inputDataSet,blockWhitelist)
+            return getRunLumiCountDatasetBlockList(das_host, inputDataSet,blockWhitelist)
         if len(blockBlacklist)>0:
-            return getRunLumiCountDataset(inputDataSet)-getRunLumiCountDatasetBlockList(inputDataSet,blockBlacklist)
+            return getRunLumiCountDataset(das_host,inputDataSet)-getRunLumiCountDatasetBlockList(das_host, inputDataSet,blockBlacklist)
         if len(runWhitelist)>0:
-            return getRunLumiCountDatasetList(inputDataSet, runWhitelist)
+            return getRunLumiCountDatasetList(das_host, inputDataSet, runWhitelist)
         else:
-            return getRunLumiCountDataset(inputDataSet)
+            return getRunLumiCountDataset(das_host,inputDataSet)
 
 ### TODO: implement multi white/black list
 #        if len(blockWhitelist)>0 and len(runWhitelist)>0:
@@ -203,12 +313,12 @@ def getInputEvents(url, workflow):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
     r2=conn.getresponse()
-    request = json.read(r2.read())
+    request = json.loads(r2.read())
     while 'exception' in request:
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
         r2=conn.getresponse()
-        request = json.read(r2.read())
+        request = json.loads(r2.read())
     requestType=request['RequestType']
     if requestType=='MonteCarlo' or requestType=='LHEStepZero':
         if 'RequestNumEvents' in request:
@@ -233,16 +343,16 @@ def getInputEvents(url, workflow):
         if len(BlockBlacklist)>0:
             return getRunLumiCountDataset(inputDataSet)-getRunLumiCountDatasetBlockList(inputDataSet,BlockBlacklist)
         if len(runWhitelist)>0:
-            return getRunLumiCountDatasetList(inputDataSet, runWhitelist)
+            return getRunLumiCountDatasetList(das_host, inputDataSet, runWhitelist)
         else:
             return getRunLumiCountDataset(inputDataSet)
-    events=getEventCountDataSet(inputDataSet)
+    events=getEventCountDataSet(das_host, inputDataSet)
     if len(BlockBlacklist)>0:
         events=events-EventsBlockList(inputDataSet, BlockBlacklist)
     if len(runWhitelist)>0:
-        events=EventsRunList(inputDataSet, runWhitelist)
+        events=EventsRunList(das_host, inputDataSet, runWhitelist)
     if len(BlockWhitelist)>0:
-        events=EventsBlockList(inputDataSet, BlockWhitelist)
+        events=EventsBlockList(das_host, inputDataSet, BlockWhitelist)
     if 'FilterEfficiency' in request.keys():
         return float(request['FilterEfficiency'])*events
     else:
@@ -252,22 +362,22 @@ def getOutputEvents(url, workflow, dataset):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
     r2=conn.getresponse()
-    request = json.read(r2.read())
+    request = json.loads(r2.read())
     while 'exception' in request:
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
         r2=conn.getresponse()
-        request = json.read(r2.read())
+        request = json.loads(r2.read())
     requestType=request['RequestType']
     if requestType=='ReReco':
-        return getRunLumiCountDataset(dataset)
+        return getRunLumiCountDataset(das_host, dataset)
     elif requestType=='TaskChain':
         if 'InputDataset' in request['Task1']:
-             return getRunLumiCountDataset(dataset)
+             return getRunLumiCountDataset(das_host, dataset)
         else:
-             return getEventCountDataSet(dataset)
+             return getEventCountDataSet(das_host, dataset)
     else:
-        return getEventCountDataSet(dataset)
+        return getEventCountDataSet(das_host, dataset)
 
   
 def main():

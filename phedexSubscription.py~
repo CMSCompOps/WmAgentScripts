@@ -9,7 +9,7 @@ def TestAcceptedSubscritpionSpecialRequest(url, dataset, site):
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset='+dataset+'&node='+site+'&type=xfer'+'&approval=approved')
 	r2=conn.getresponse()
-	result = json.read(r2.read())
+	result = json.loads(r2.read())
 	requests=result['phedex']
 	if 'request' not in requests.keys():
 		return False
@@ -25,7 +25,7 @@ def TestSubscritpionSpecialRequest(url, dataset, site):
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset='+dataset+'&node='+site+'&type=xfer')
 	r2=conn.getresponse()
-	result = json.read(r2.read())
+	result = json.loads(r2.read())
 	requests=result['phedex']
 	if 'request' not in requests.keys():
 		return False
@@ -39,7 +39,7 @@ def TestCustodialSubscriptionRequested(url, dataset, site):
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset='+dataset+'&node='+site+'_MSS')
 	r2=conn.getresponse()
-	result = json.read(r2.read())
+	result = json.loads(r2.read())
 	requests=result['phedex']
 	if 'request' not in requests.keys():
 		return False
@@ -48,7 +48,7 @@ def TestCustodialSubscriptionRequested(url, dataset, site):
 			requestId=request['id']
 			r1=conn.request("GET",'/phedex/datasvc/json/prod/transferrequests?request='+str(requestId))
 			r2=conn.getresponse()
-			result = json.read(r2.read())
+			result = json.loads(r2.read())
 			if len(result['phedex']['request'])>0:
 				requestSubscription=result['phedex']['request'][0]
 			else:
@@ -57,11 +57,19 @@ def TestCustodialSubscriptionRequested(url, dataset, site):
 				return True
 	return False
 
+def closeOutWorkflow(url, workflowname):
+	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+	params = {"requestName" : workflowname, "cascade" : True}
+	headers={"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
+	encodedParams = urllib.urlencode(params)
+	conn.request("POST", "/reqmgr/reqMgr/closeout", encodedParams, headers)
+	response = conn.getresponse()
+	data = response.read()
+        conn.close()
 
 #Changes the state of a workflow to closed-out
-def closeOutWorkflow(url, workflowname):
+def closeOutWorkflow2(url, workflowname):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    #params = {"requestName" : workflowname,"status" : "announced"}	
     params = {"requestName" : workflowname,"status" : "closed-out"}
     headers={"Content-type": "application/x-www-form-urlencoded",
              "Accept": "text/plain"}
@@ -120,7 +128,7 @@ def abortWorkflow(url, workflowname):
 #Tests whether a dataset was subscribed to phedex
 def testOutputDataset(datasetName):
 	 url='https://cmsweb.cern.ch/phedex/datasvc/json/prod/Data?dataset=' + datasetName
-         result = json.read(urllib2.urlopen(url))
+         result = json.loads(urllib2.urlopen(url))
 	 dataset=result['phedex']['dbs']
 	 if len(dataset)>0:
 		return 1
@@ -194,7 +202,7 @@ def outputdatasetsWorkflow(url, workflow):
 		conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 		r1=conn.request("GET",'/reqmgr/reqMgr/outputDatasetsByRequestName?requestName='+workflow)
 		r2=conn.getresponse()
-		datasets = json.read(r2.read())
+		datasets = json.loads(r2.read())
 	if len(datasets)==0:
 		print "No Outpudatasets for this workflow: "+workflow
 	return datasets

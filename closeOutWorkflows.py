@@ -183,6 +183,7 @@ def getRequestTeam(url, workflow):
 
 def closeOutMonterCarloRequests(url, workflows):
 	for workflow in workflows:
+		print workflow
 		datasets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
 		closeOutWorkflow=True
 		if getRequestTeam(url, workflow)!='analysis':#If request is not in special queue
