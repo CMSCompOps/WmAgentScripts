@@ -3,8 +3,8 @@
 import urllib2,urllib, httplib, sys, re, os, json, phedexSubscription
 from xml.dom.minidom import getDOMImplementation
 from das_client import get_data
-das_host='https://das.cern.ch'
-#das_host='https://cmsweb.cern.ch'
+#das_host='https://das.cern.ch'
+das_host='https://cmsweb.cern.ch'
 #das_host='https://cmsweb-testbed.cern.ch'
 
 def getWorkflowType(url, workflow):
@@ -209,6 +209,16 @@ def getRunLumiCountDatasetList(das_url,dataset, runlist):
     for run in runlist:
         lumis=lumis+getRunLumiCountDatasetRun(das_url, dataset, run)
     return lumis
+
+#GEN check generator true if everything is fine, false otherwise
+def checkCorrectLumisEventGEN(dataset):
+	das_url=das_host
+	numlumis=getRunLumiCountDataset(das_url, dataset)
+	numEvents=getEventCountDataSet(das_url, dataset)
+	if numlumis>numEvents/300:
+		return True
+	else:
+		return False
   
 
 # SPlits a list of chunks of size(n)
