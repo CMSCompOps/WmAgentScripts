@@ -256,11 +256,11 @@ def main():
 	print '-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'
     	print '| Request                                                                          | OutputDataSet                                                                                        |%Compl|Subscr|Tran|Dupl|ClosOu|'
    	print '-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'
-	#closeOutReRecoWorkflows(url, workflowsCompleted['ReReco'])	
-	#closeOutRedigiWorkflows(url, workflowsCompleted['ReDigi'])
-	#closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarlo'])
-	#closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarloFromGEN'])
-	#closeOutMonterCarloRequests(url, workflowsCompleted['LHEStepZero'])
+	closeOutReRecoWorkflows(url, workflowsCompleted['ReReco'])	
+	closeOutRedigiWorkflows(url, workflowsCompleted['ReDigi'])
+	closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarlo'])
+	closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarloFromGEN'])
+	closeOutMonterCarloRequests(url, workflowsCompleted['LHEStepZero'])
 	closeOutStep0Requests(url, workflowsCompleted['LHEStepZero'])
 	print "MC Workflows for which couldn't find Custodial Tier1 Site"
 	if 'NoSite' in workflowsCompleted['MonteCarlo']:
