@@ -60,6 +60,7 @@ def retrieveSchema(workflowName):
 #    print "Retrieved schema:\n", schema
     schema['Requestor'] = 'amaltaro'
     schema['Group'] = 'DATAOPS'
+#    schema['Task1']['SplittingArguments'] = {'lumis_per_job': 5}
 #    schema['Memory'] = 1394
 #    schema['Task1']['KeepOutput'] = True
 #    schema['RequestString'] = 'TEST_Andrew_T2_CH_CERN'
