@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#TODO workflow summary https://cmsweb.cern.ch/couchdb/workloadsummary/alahiff_Run2012Cv1_536_130604_003624_5904
 #TODO select zone
 #TODO analysis (running >=95%)
 #TODO merge -p -t -s
@@ -81,6 +82,34 @@ def getzonebyt1(s):
 		if i in s:
 			custodial = t1list[i]
 	return custodial
+
+def getWorkloadSummary(w):
+	conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+	r1=conn.request('GET','/couchdb/workloadsummary/' + w)
+	r2=conn.getresponse()
+	data = r2.read()
+	s = json.loads(data)
+	conn.close()
+	#print s.keys()
+	avgtimeev = 0
+	overflow = 0
+	if 'performance' not in s:
+		return {}
+	count = 0
+	for i in s['performance']['/%s/Production' % w]['cmsRun1']['AvgEventTime']['histogram']:
+		count = count + i['nEvents']
+		#print "%s %.4f %s" % (i['type'],i['average'],i['nEvents'])
+		if i['type'] == 'standard':
+			avgtimeev = avgtimeev+i['nEvents']*i['average']
+		elif i['type'] == 'overflow':
+			overflow = overflow + 1
+	if count == 0:
+		return {}
+	avgtimeev = avgtimeev / count
+	#print "avgtimeev = %.4f overflow = %.0f%%" % (avgtimeev,100*overflow/count)
+	#print s['performance']['/%s/Production' % w]['cmsRun1']['MinEventCPU']['average']
+	#print s['performance']['/%s/Production' % w]['cmsRun1']['MaxEventTime']['average']
+	return {'avgtimeev':avgtimeev,'count':count,'overflow':overflow}
 
 def getWorkflowInfo(workflow,nodbs=0):
 	conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -478,13 +507,14 @@ def main():
 	parser = optparse.OptionParser()
 	parser.add_option('-l', '--listfile', help='analyze workflows listed in textfile',dest='list')
 	parser.add_option('-f', '--force-overview-update', help='force overview update',dest='forceoverview',action="store_true")
-	parser.add_option('-m', '--summary', help='print a brief summary at the end of the report',dest='summary',action="store_true")
+	parser.add_option('-m', help='print a brief report at the end',dest='mreport',action="store_true")
 	parser.add_option('-w', '--workflow', help='analyze specific workflow',dest='wf')
 	parser.add_option('-p', '--prepid', help='analyze workflow with PREPID',dest='prepid')
 	parser.add_option('-s', '--status', help='analyze workflow in status STATUS',dest='status')
 	parser.add_option('-t', '--type', help='analyze workflow of type TYPE',dest='type')
 	parser.add_option('-n', '--names', help='print just request names',dest='names',action="store_true")
 	parser.add_option('-a', '--all', help='print all information about the requests',dest='raw',action="store_true")
+	parser.add_option('--summary', help='print summary',dest='summary',action="store_true")
 	parser.add_option('--csv', help='print all information about the requests in CSV format',dest='csv',action="store_true")
 	parser.add_option('-x', '--export', help='export all information about the requests in JSON format',dest='json',action="store_true")
 	parser.add_option('-g', '--assignment', help='returns a list of asignment-approved requests for a given number of CPU hours',dest='assignment',action="store_true")
@@ -534,9 +564,15 @@ def main():
 		nodbs = 1
 	else:	
 		nodbs = 0
+
 	if options.names:
 		for w in list:
 			print w
+	elif options.summary:
+		for w in list:
+			print w
+			print getWorkloadSummary(w)
+		sys.exit(0)
 	elif options.json:
 		struct = []
 		for workflow in list:
@@ -653,7 +689,7 @@ def main():
 					print "  request %s: https://cmsweb.cern.ch/phedex/prod/Request::View?request=%s" % (o['phreqinfo']['approval'],o['phreqinfo']['id'])
 			print
 
-	if sum and options.summary:
+	if sum and options.mreport:
 		print "Summary: \n---------------------------------"
 		total_jobs = sum['success']+sum['failure']
 		if total_jobs > 0:

@@ -18,7 +18,7 @@ extstring = '-ext'
 teams = ['mc','mc_highprio']
 t1s = {'FNAL':'T1_US_FNAL','CNAF':'T1_IT_CNAF','ASGC':'T1_TW_ASGC','IN2P3':'T1_FR_CCIN2P3','RAL':'T1_UK_RAL','PIC':'T1_ES_PIC','KIT':'T1_DE_KIT'}
 
-siteblacklist = ['T2_FR_GRIF_IRFU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_RRC_KI','T2_UK_SGrid_Bristol']
+siteblacklist = ['T2_FR_GRIF_IRFU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_RRC_KI']
 siteblacklist.extend(['T2_PL_Warsaw','T2_RU_PNPI','T2_KR_KNU','T2_UA_KIPT','T2_AT_Vienna'])
 siteblacklist.extend(['T2_IN_TIFR','T2_RU_JINR','T2_UK_SGrid_RALPP'])
 
@@ -826,9 +826,8 @@ def main():
 			else:
 				newsitelist = []
 				newsitelist.append('T1_UK_RAL')
-				#if reqinfo[w]['priority'] < 100000:
-				if 1:
-					newsitelist.append('T1_IT_CNAF')
+				newsitelist.append('T1_IT_CNAF')
+				newsitelist.append('T1_ES_PIC')
 				if custodialt1 not in newsitelist:
 					newsitelist.append(custodialt1)
 				newsitelist.extend(linkedt2list)
@@ -836,6 +835,7 @@ def main():
 				if mergedlfnbase == '/store/himc':
 					newsitelist.remove('T1_UK_RAL')
 					newsitelist.remove('T1_IT_CNAF')
+					newsitelist.remove('T1_ES_PIC')
 				else:
 					newsitelist.remove('T2_US_Vanderbilt')
 		else:
@@ -880,8 +880,9 @@ def main():
 				setSplit(url,w,reqinfo[w]['type'],campaignconfig[reqinfo[w]['campaign']]['lumisperjob'])
 				reqinfo[w]['lumis_per_job'] = campaignconfig[reqinfo[w]['campaign']]['lumisperjob']
 		elif reqinfo[w]['type'] == 'MonteCarlo':
-			if reqinfo[w]['events_per_job'] > max_events_per_job:
-				setSplit(url,w,reqinfo[w]['type'],max_events_per_job)
+			pass
+			#if reqinfo[w]['events_per_job'] > max_events_per_job:
+				#setSplit(url,w,reqinfo[w]['type'],max_events_per_job)
 
 		# processing string and processing version
 		if acqera != 'auto':

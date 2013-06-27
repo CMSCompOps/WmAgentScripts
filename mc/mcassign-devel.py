@@ -3,6 +3,7 @@
 #TODO use reqmgr.py 
 #TODO config, add split events/job for MonteCarlo
 #TODO check for duplicated dataset names in the known requests with the same prepid
+#TODO add --use-testbed
 import urllib2,urllib, httplib, sys, re, os
 import optparse
 import time
@@ -13,12 +14,14 @@ try:
 except ImportError:
     import simplejson as json
 
-max_events_per_job = 500
+defaulteventsperlumi = 300
+max_events_per_job = 1000
+max_jobduration = 30
 extstring = '-ext'
 teams = ['mc','mc_highprio']
 t1s = {'FNAL':'T1_US_FNAL','CNAF':'T1_IT_CNAF','ASGC':'T1_TW_ASGC','IN2P3':'T1_FR_CCIN2P3','RAL':'T1_UK_RAL','PIC':'T1_ES_PIC','KIT':'T1_DE_KIT'}
 
-siteblacklist = ['T2_FR_GRIF_IRFU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_RRC_KI','T2_UK_SGrid_Bristol']
+siteblacklist = ['T2_FR_GRIF_IRFU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_RRC_KI']
 siteblacklist.extend(['T2_PL_Warsaw','T2_RU_PNPI','T2_KR_KNU','T2_UA_KIPT','T2_AT_Vienna'])
 siteblacklist.extend(['T2_IN_TIFR','T2_RU_JINR','T2_UK_SGrid_RALPP'])
 
@@ -33,8 +36,16 @@ autoapprovelist = ['T2_CH_CERN','T2_IT_Bari' ,'T2_IT_Legnaro' ,'T2_IT_Pisa' ,'T2
 cachedoverview = '/afs/cern.ch/user/s/spinoso/public/overview.cache'
 forceoverview = 0
 
-def checkdups:
-	return
+def checkdups(r):
+	global overview
+	reqs = []
+	for rr in overview:
+		if r['prepid'] not in rr['request_name'] or r['requestname'] == rr['request_name'] or r['type'] != rr['type']:
+			continue
+		rrr = getWorkflowInfo(rr['request_name'])
+		if r['prepid'] == rrr['prepid'] and rrr['status'] in ['assigned','acquired','running','running-open','running-closed','completed','closed-out','announced','aborted']:
+			reqs.append(rrr['requestname'])
+	return reqs
 
 def human(n):
         if n<1000:
@@ -111,6 +122,8 @@ def get_linkedt2s(custodialt1):
 		for dict in j['link']:
 			if dict['from'] in ['T3_US_Omaha','T3_US_Colorado'] and dict['from'] not in siteblacklist:
 				list.append(dict['from'])
+			elif dict['from'] in siteblacklist:
+				print "%s blacklisted" % dict['from']
 
 		list.sort()
 		return list
@@ -295,7 +308,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 		elif 'schema.LheInputFiles' in raw:
 			lheinputfiles = raw[raw.find("'")+1:]
 			lheinputfiles = lheinputfiles[0:lheinputfiles.find("'")]
-			if lheinputfile == 'True':
+			if lheinputfiles == 'True':
 				lheinputfiles = 1
 			else:
 				lheinputfiles = 0
@@ -429,26 +442,6 @@ def getWorkflowInfo(workflow,nodbs=0):
 		expectedevents = -1
 		expectedjobs = -1
 	
-	j = {}
-	k = {'success':'success','failure':'failure','Pending':'pending','Running':'running','cooloff':'cooloff','pending':'queued','inWMBS':'inWMBS','total_jobs':'total_jobs','local_queue':'local_queue'}
-	for r in overview:
-		if r['request_name'] == workflow:
-			break
-	if r:
-		for k1 in k.keys():
-			k2 = k[k1]
-			if k1 in r.keys():
-				j[k2] = r[k1]
-				j[k2]
-			else:
-				if k2 == 'local_queue':
-					j[k2] = ''
-				else:
-					j[k2] = 0
-	else:
-		print " getjobsummary error: No such request: %s" % workflow
-		sys.exit(1)
-	
 	conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	r1=conn.request('GET','/reqmgr/reqMgr/outputDatasetsByRequestName?requestName=' + workflow)
 	r2=conn.getresponse()
@@ -463,15 +456,17 @@ def getWorkflowInfo(workflow,nodbs=0):
 	for o in ods:
 		oel = {}
 		oel['name'] = o
-		if 1:
-			if nodbs:
-				[oe,ost] = [0,'']
-			else:
-				[oe,ost] = getdsdetail(o)
-			oel['events'] = oe
-			oel['status'] = ost
+		if nodbs:
+			[oe,ost] = [0,'']
+		else:
+			[oe,ost] = getdsdetail(o)
+		oel['events'] = oe
+		oel['status'] = ost
+		outputdataset.append(oel)
 		
-	return {'requestname':workflow,'type':typ,'status':status,'campaign':campaign,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'js':j,'outputdataset':outputdataset,'team':team,'acquisitionEra':acquisitionEra,'requestdays':requestdays,'processingVersion':processingVersion,'events_per_job':events_per_job,'lumis_per_job':lumis_per_job,'expectedjobs':expectedjobs,'cmssw':cmssw,'outputtier':outputtier,'prepmemory':prepmemory,'lheinputfiles':lheinputfiles}
+	ret = {'requestname':workflow,'type':typ,'status':status,'campaign':campaign,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'outputdataset':outputdataset,'team':team,'acquisitionEra':acquisitionEra,'requestdays':requestdays,'processingVersion':processingVersion,'events_per_job':events_per_job,'lumis_per_job':lumis_per_job,'expectedjobs':expectedjobs,'cmssw':cmssw,'outputtier':outputtier,'prepmemory':prepmemory,'lheinputfiles':lheinputfiles,'filtereff':filtereff}
+	#print ret
+	return ret
 
 def isInDBS(dataset):
 	q = "/afs/cern.ch/user/s/spinoso/public/dbssql --input='find dataset where dataset="+dataset+"*' "
@@ -511,8 +506,10 @@ def main():
 	parser = optparse.OptionParser()
 	parser.add_option('-w', '--workflow', help='workflow name',dest='workflow')
 	parser.add_option('--debug', help='add debug info',dest='debug',default=False,action="store_true")
+	parser.add_option('--devel', help='used only for development purposed',dest='devel',default=False,action="store_true")
 	parser.add_option('-l', '--workflowlist', help='workflow list in textfile',dest='list')
 	parser.add_option('-t', '--team', help='team (one of %s)' % (",".join(x for x in teams)),dest='team')
+	parser.add_option('--hightimedr', help='specifies time/ev in DIGI-RECO pass, useful for hightimedr-like requests' % (),dest='hightimedr')
 	parser.add_option('--test', action="store_true",default=True,help='test mode: don\'treally assign at the end',dest='test')
 	parser.add_option('--assign', action="store_false",default=True,help='assign mode',dest='test')
 	parser.add_option('--small', action="store_true",default=False,help='assign requests considering them small',dest='small')
@@ -661,6 +658,15 @@ def main():
 		print "\nPREPIDs: %s\n" % (",".join(reqinfo[x]['prepid'] for x in reqinfo.keys()))
 		sys.exit(0)
 			
+	if options.devel:
+		for w in list:
+                        reqinfo[w] = getWorkflowInfo(w)
+		for r in reqinfo.keys():
+			dupreqs = checkdups(reqinfo[w])
+			if dupreqs:
+				for w in dupreqs:
+					print "%s %s" % (w,reqinfo[w]['outputdataset'][0]['name'])
+		sys.exit(0)
 
 	print "Preparing requests:\n"
 	assign_data = {}
@@ -726,14 +732,6 @@ def main():
 				print '%s (%s, LHEStepZero full GEN)' % (w,reqinfo[w]['campaign'])
 				team = 'mc_highprio'
 				
-		#elif options.hi:
-		#	print '%s (%s Heavy Ion)' % (w,reqinfo[w]['campaign'])
-		#	hi = True
-		#	team = getteam(team,reqinfo[w])
-		#	softtimeout = 129600
-		#	minmergesize = 2147483648
-		#	#maxRSS = 3500000
-		#	maxRSS = 2294967
 		elif options.himem:
 			himem = True
 			print '%s (%s,%s High Memory)' % (w,reqinfo[w]['campaign'],reqinfo[w]['type'])
@@ -775,9 +773,8 @@ def main():
 			else:
 				newsitelist = []
 				newsitelist.append('T1_UK_RAL')
-				#if reqinfo[w]['priority'] < 100000:
-				if 1:
-					newsitelist.append('T1_IT_CNAF')
+				newsitelist.append('T1_IT_CNAF')
+				newsitelist.append('T1_ES_PIC')
 				if custodialt1 not in newsitelist:
 					newsitelist.append(custodialt1)
 				newsitelist.extend(linkedt2list)
@@ -785,6 +782,7 @@ def main():
 				if mergedlfnbase == '/store/himc':
 					newsitelist.remove('T1_UK_RAL')
 					newsitelist.remove('T1_IT_CNAF')
+					newsitelist.remove('T1_ES_PIC')
 				else:
 					newsitelist.remove('T2_US_Vanderbilt')
 		else:
@@ -824,13 +822,27 @@ def main():
 				elif i in sitelistsmallrequests:
 					newsitelist.append(i)
 
+		# set splitting
 		if reqinfo[w]['type'] == 'MonteCarloFromGEN' and reqinfo[w]['campaign'] in campaignconfig.keys():
 			if 'lumisperjob' in campaignconfig[reqinfo[w]['campaign']].keys():
 				setSplit(url,w,reqinfo[w]['type'],campaignconfig[reqinfo[w]['campaign']]['lumisperjob'])
 				reqinfo[w]['lumis_per_job'] = campaignconfig[reqinfo[w]['campaign']]['lumisperjob']
-		elif reqinfo[w]['type'] == 'MonteCarlo':
-			if reqinfo[w]['events_per_job'] > max_events_per_job:
-				setSplit(url,w,reqinfo[w]['type'],max_events_per_job)
+		elif reqinfo[w]['type'] == 'MonteCarlo' and options.hightimedr:
+			eventsperlumidr = max_jobduration / ( options.hightimedr * 3600 )
+			if 'timeev' in campaignconfig[reqinfo[w]['campaign']].keys():
+				timeev = campaignconfig[reqinfo[w]['campaign']]['timeev']
+			else:
+				timeev = reqinfo[w]['timeev']
+			jobduration = eventsperlumi*timeev
+			if jobduration > 30:
+				print "WARNING: job is longer than 30h if using eventsperlumi = %s" % eventsperlumi
+				eventsperlumi = int(30 / timeev)
+				print "=>Setting eventsperlumi = %s to get 30h per job" % eventsperlumi
+			if eventsperlumi > max_events_per_job:
+				print "WARNING: eventsperlumi = %s" % eventsperlumi
+				eventsperlumi = max_events_per_job
+				print "=>Setting eventsperlumi = %s" % eventsperlumi
+			setSplit(url,w,reqinfo[w]['type'],eventsperlumi)
 
 		# processing string and processing version
 		if acqera != 'auto':
