@@ -50,6 +50,10 @@ def getScenario(ps):
            pss = 'PU_S10'
         if ps == 'SimGeneral.MixingModule.mix_E7TeV_Fall2011_Reprocess_50ns_PoissonOOTPU_cfi':
            pss = 'PU_S6'
+        if ps == 'SimGeneral.MixingModule.mix_E8TeV_AVE_10_BX_25ns_300ns_spread_cfi':
+           pss = 'PU10bx25'
+        if ps == 'SimGeneral.MixingModule.mix_E8TeV_AVE_10_BX_50ns_300ns_spread_cfi':
+           pss = 'PU10bx50'
 
         return pss
 
