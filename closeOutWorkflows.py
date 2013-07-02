@@ -145,10 +145,12 @@ def closeOutRedigiWorkflows(url, workflows):
 		InputDataset=dbsTest.getInputDataSet(url, workflow)
 		datasets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
 		for dataset in datasets:
-			duplicate=dbsTest.duplicateRunLumi(dataset)
 			closeOutDataset=True
 			Percentage=PercentageCompletion(url, workflow, dataset)
 			PhedexSubscription=testOutputDataset(dataset)
+			duplicate=True
+			if PhedexSubscription!=False and Percentage>=float(0.90):
+				duplicate=dbsTest.duplicateRunLumi(dataset)
 			closeOutDataset=False
 			if Percentage>=float(0.95) and Percentage<=float(1) and PhedexSubscription and not duplicate:
 				closeOutDataset=True
@@ -195,7 +197,9 @@ def closeOutMonterCarloRequests(url, workflows):
 				if PhedexSubscription!=False:
 					site=PhedexSubscription
 					TransPercen=TransferPercentage(url, dataset, site)
-				duplicate=dbsTest.duplicateLumi(dataset)
+				duplicate=True
+				if PhedexSubscription!=False and Percentage>=float(0.90):
+					duplicate=dbsTest.duplicateLumi(dataset)
 				#if Percentage>=float(0.90) and PhedexSubscription!=False and not duplicate and TransPercen==1:
 				if Percentage>=float(0.90) and PhedexSubscription!=False and not duplicate:
 					closeOutDataset=True
@@ -211,7 +215,6 @@ def closeOutMonterCarloRequests(url, workflows):
 
 def closeOutStep0Requests(url, workflows):
 	for workflow in workflows:
-		print workflow
 		datasets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
 		closeOutWorkflow=True
 		if getRequestTeam(url, workflow)!='analysis':#If request is not in special queue
@@ -256,11 +259,10 @@ def main():
 	print '-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'
     	print '| Request                                                                          | OutputDataSet                                                                                        |%Compl|Subscr|Tran|Dupl|ClosOu|'
    	print '-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'
-	closeOutReRecoWorkflows(url, workflowsCompleted['ReReco'])	
+	#closeOutReRecoWorkflows(url, workflowsCompleted['ReReco'])	
 	closeOutRedigiWorkflows(url, workflowsCompleted['ReDigi'])
 	closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarlo'])
 	closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarloFromGEN'])
-	closeOutMonterCarloRequests(url, workflowsCompleted['LHEStepZero'])
 	closeOutStep0Requests(url, workflowsCompleted['LHEStepZero'])
 	print "MC Workflows for which couldn't find Custodial Tier1 Site"
 	if 'NoSite' in workflowsCompleted['MonteCarlo']:

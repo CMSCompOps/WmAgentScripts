@@ -37,6 +37,11 @@ def getInputDataSet(url, workflow):
     r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
     r2=conn.getresponse()
     request = json.loads(r2.read())
+    while 'exception' in request:
+        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+        r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
+        r2=conn.getresponse()
+        request = json.loads(r2.read())
     inputDataSets=request['InputDataset']
     if len(inputDataSets)<1:
         print "No InputDataSet for workflow " +workflow
@@ -215,7 +220,7 @@ def checkCorrectLumisEventGEN(dataset):
 	das_url=das_host
 	numlumis=getRunLumiCountDataset(das_url, dataset)
 	numEvents=getEventCountDataSet(das_url, dataset)
-	if numlumis>numEvents/300:
+	if numlumis>=numEvents/300:
 		return True
 	else:
 		return False
