@@ -42,6 +42,21 @@ def changeSplittingWorkflow(url, workflow, split):
     	print data
     	conn.close()
 
+def changeSplittingWorkflowStepTwo(url, workflow, split):
+        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+        RequestType=getWorkflowType(url,workflow)
+	if RequestType=='ReDigi':
+		params = {"requestName":workflow,"splittingTask" : '/'+workflow+"/StepOneProc/StepOneProcMergeRAWSIMoutput/StepTwoProc", "splittingAlgo":"LumiBased", "lumis_per_job":str(split), "timeout":"", "include_parents":"False", "files_per_job":"",'halt_job_on_file_boundaries':'True','events_per_job':''}
+	headers={"Content-type": "application/x-www-form-urlencoded",
+	    "Accept": "text/plain"}
+	encodedParams = urllib.urlencode(params)
+	conn.request("POST", "/reqmgr/view/handleSplittingPage", encodedParams, headers)
+	response = conn.getresponse()
+	print response.status, response.reason
+	data = response.read()
+	print data
+	conn.close()
+							       
 
 def main():
 	args=sys.argv[1:]
@@ -52,6 +67,9 @@ def main():
 	split=args[1]
 	url='cmsweb.cern.ch'
 	changeSplittingWorkflow(url, workflow, split)
+	if 'Summer13dr53X' in workflow:
+		print "Using twice the number of lumis for StepTwoProc: ", int(split)*2
+		changeSplittingWorkflowStepTwo(url, workflow, int(split)*2)
 	sys.exit(0);
 
 if __name__ == "__main__":
