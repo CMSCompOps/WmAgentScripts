@@ -3,8 +3,8 @@
 import urllib2,urllib, httplib, sys, re, os, json, phedexSubscription
 from xml.dom.minidom import getDOMImplementation
 from das_client import get_data
-das_host='https://das.cern.ch'
-#das_host='https://cmsweb.cern.ch'
+#das_host='https://das.cern.ch'
+das_host='https://cmsweb.cern.ch'
 #das_host='https://cmsweb-testbed.cern.ch'
 
 def getWorkflowType(url, workflow):
@@ -100,6 +100,44 @@ def duplicateLumi(dataset):
 					lumisChecked.append(lumi)
 	return False
 
+def getRunsInDataset(das_url, dataset):
+	query="run dataset="+dataset
+  	das_data = get_data(das_url,query,0,0,0)
+   	if isinstance(das_data, basestring):
+        	result = json.loads(das_data)
+	else:
+        	result = das_data
+	if result['status'] == 'fail' :
+        	print 'DAS query failed with reason:',result['reason']
+	else:
+		runs=[]
+		preresult=result['data']
+		for run in preresult:
+			runs.append(run['run'][0]['run_number'])
+		return runs
+
+def getNumberofFilesPerRun(das_url, dataset, run):
+	query="file dataset="+dataset+" run="+str(run)+" | count(file.name)"
+	das_data = get_data(das_url,query,0,0,0)
+   	if isinstance(das_data, basestring):
+        	result = json.loads(das_data)
+	else:
+        	result = das_data
+	if result['status'] == 'fail' :
+        	print 'DAS query failed with reason:',result['reason']
+	else:
+		return result['data'][0]['result']['value']
+
+#Return true if there are duplicate evnets , false otherwise
+def duplicateEventsMonteCarlo(dataset):
+	das_url=das_host
+	runs=getRunsInDataset(das_url, dataset)
+	for run in runs:
+		NumFilesRun=getNumberofFilesPerRun(das_url, dataset, run)
+		NumLumis=getRunLumiCountDatasetRun(das_url, dataset, run)
+		if NumFilesRun>NumLumis:#It means at least one lumi is split into more than one file
+			return True
+	return False
 
 #Return the number of events for a given dataset given a runlist
 def EventsRunList(das_url, dataset, runlist):
@@ -208,12 +246,31 @@ def getRunLumiCountDatasetRun(das_url, dataset, run):
 			return key['result']['value']		
 		return -1
 
-#Returns the number of lumis in a dataset and in a given runlist	
 def getRunLumiCountDatasetList(das_url,dataset, runlist):
     lumis=0
-    for run in runlist:
-        lumis=lumis+getRunLumiCountDatasetRun(das_url, dataset, run)
+    runChunks=chunks(runlist,30)
+    for runList in runChunks:
+        querry="./dbssql --limit=10000 --input='find run, count(lumi) where dataset="+dataset+" AND ("
+        for run in runList:
+            querry=querry+" run="+str(run) +" OR "
+        querry=querry+' run= '+str(runList[0]) +')'
+        querry=querry+"'| grep '[0-9]\{1,\}' | awk '{s+=$2}END{print s}'"
+        output=os.popen(querry).read()
+        if not output:
+            lumis=lumis
+        try:
+            lumis=lumis+int(output)
+        except ValueError:
+            lumis=lumis
     return lumis
+
+
+#Returns the number of lumis in a dataset and in a given runlist	
+#def getRunLumiCountDatasetList(das_url,dataset, runlist):
+ #   lumis=0
+  #  for run in runlist:
+   #     lumis=lumis+getRunLumiCountDatasetRun(das_url, dataset, run)
+    #return lumis
 
 #GEN check generator true if everything is fine, false otherwise
 def checkCorrectLumisEventGEN(dataset):

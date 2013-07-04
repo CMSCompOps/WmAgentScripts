@@ -150,7 +150,7 @@ def closeOutRedigiWorkflows(url, workflows):
 			PhedexSubscription=testOutputDataset(dataset)
 			duplicate=True
 			if PhedexSubscription!=False and Percentage>=float(0.90):
-				duplicate=dbsTest.duplicateRunLumi(dataset)
+				duplicate=dbsTest.duplicateEventsMonteCarlo(dataset)
 			closeOutDataset=False
 			if Percentage>=float(0.95) and Percentage<=float(1) and PhedexSubscription and not duplicate:
 				closeOutDataset=True
@@ -199,7 +199,7 @@ def closeOutMonterCarloRequests(url, workflows):
 					TransPercen=TransferPercentage(url, dataset, site)
 				duplicate=True
 				if PhedexSubscription!=False and Percentage>=float(0.90):
-					duplicate=dbsTest.duplicateLumi(dataset)
+					duplicate=dbsTest.duplicateEventsMonteCarlo(dataset)
 				#if Percentage>=float(0.90) and PhedexSubscription!=False and not duplicate and TransPercen==1:
 				if Percentage>=float(0.90) and PhedexSubscription!=False and not duplicate:
 					closeOutDataset=True
@@ -225,7 +225,7 @@ def closeOutStep0Requests(url, workflows):
 				if PhedexSubscription!=False:
 					site=PhedexSubscription
 					TransPercen=TransferPercentage(url, dataset, site)
-				duplicate=dbsTest.duplicateLumi(dataset)
+				duplicate=dbsTest.duplicateEventsMonteCarlo(dataset)
 				correctLumis=dbsTest.checkCorrectLumisEventGEN(dataset)
 				#if Percentage>=float(0.90) and PhedexSubscription!=False and not duplicate and TransPercen==1:
 				if Percentage>=float(0.90) and PhedexSubscription!=False and not duplicate and correctLumis:
@@ -259,7 +259,7 @@ def main():
 	print '-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'
     	print '| Request                                                                          | OutputDataSet                                                                                        |%Compl|Subscr|Tran|Dupl|ClosOu|'
    	print '-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'
-	#closeOutReRecoWorkflows(url, workflowsCompleted['ReReco'])	
+	closeOutReRecoWorkflows(url, workflowsCompleted['ReReco'])	
 	closeOutRedigiWorkflows(url, workflowsCompleted['ReDigi'])
 	closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarlo'])
 	closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarloFromGEN'])
