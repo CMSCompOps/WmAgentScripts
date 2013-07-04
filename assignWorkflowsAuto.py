@@ -26,7 +26,7 @@ def getDatasetVersion(url, workflow, era, partialProcVersion):
         for output in outputs:
            if 'None-v0' not in output:
               print 'ERROR: Problem checking output datasets: ',output
-           #   sys.exit(0)
+              sys.exit(0)
            bits = output.split('/')
            lastbit = bits[len(bits)-1]
            outputCheck = re.sub(r'None-v0', era+'-'+partialProcVersion+'*', output)
@@ -274,7 +274,7 @@ def main():
            useX = 1
 
         # Valid Tier-1 sites
-        sites = ['T1_DE_KIT', 'T1_FR_CCIN2P3', 'T1_IT_CNAF', 'T1_ES_PIC', 'T1_TW_ASGC', 'T1_UK_RAL', 'T1_US_FNAL']
+        sites = ['T1_DE_KIT', 'T1_FR_CCIN2P3', 'T1_IT_CNAF', 'T1_ES_PIC', 'T1_TW_ASGC', 'T1_UK_RAL', 'T1_US_FNAL', 'HLT']
 
         if options.filename:
            f=open(filename,'r')
@@ -323,6 +323,13 @@ def main():
                  siteCust = siteUse
               else:
                  siteCust = options.siteCust
+           if siteUse == 'T1_UK_RAL':
+              siteUse =  ['T1_UK_RAL', 'T1_UK_RAL_Disk']
+              if not options.siteCust:
+                 siteCust = 'T1_UK_RAL'
+           if options.site == 'HLT':
+              siteUse = ['T2_CH_CERN_AI', 'T2_CH_CERN_HLT']
+              team = 'hlt'
 
            # Extract required part of global tag
            gtRaw = getGlobalTag(url, workflow)
@@ -489,7 +496,7 @@ def main():
               print 'ERROR: lfn is not defined'
               sys.exit(0)
 
-           if siteUse not in sites and options.site != 'T2_US':
+           if siteUse not in sites and options.site != 'T2_US' and siteUse != ['T1_UK_RAL', 'T1_UK_RAL_Disk'] and siteUse != ['T2_CH_CERN_AI', 'T2_CH_CERN_HLT']:
               print 'ERROR: invalid site'
               sys.exit(0)
 
