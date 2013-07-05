@@ -236,7 +236,7 @@ def main():
 	parser.add_option('-f', '--filename', help='Filename',dest='filename')
 	parser.add_option('-w', '--workflow', help='Workflow',dest='userWorkflow')
 	parser.add_option('-t', '--team', help='Type of Requests',dest='team')
-	parser.add_option('-s', '--site', help='Force workflow to run at this site',dest='site')
+	parser.add_option('-s', '--site', help='Force workflow to run at this site. For HLT/AI just put use HLT.',dest='site')
 	parser.add_option('-c', '--custodial', help='Custodial site',dest='siteCust')
 	parser.add_option('-p', '--procstring', help='Process String',dest='inprocstring')
 	parser.add_option('-m', '--procversion', help='Process Version',dest='inprocversion')
