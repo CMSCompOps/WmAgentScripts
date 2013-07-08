@@ -582,6 +582,7 @@ def main():
                            help = "Increase the level of verbosity for debug")
     val, _ = myOptParser.parse_args()
 
+    logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
     if val.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
     else:
