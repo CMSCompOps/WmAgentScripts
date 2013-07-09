@@ -152,7 +152,7 @@ def closeOutRedigiWorkflows(url, workflows):
 			if PhedexSubscription!=False and Percentage>=float(0.90):
 				duplicate=dbsTest.duplicateEventsMonteCarlo(dataset)
 			closeOutDataset=False
-			if Percentage>=float(0.95) and Percentage<=float(1) and PhedexSubscription and not duplicate:
+			if Percentage>=float(0.95) and PhedexSubscription and not duplicate:
 				closeOutDataset=True
 			else:
 		 		closeOutDataset=False

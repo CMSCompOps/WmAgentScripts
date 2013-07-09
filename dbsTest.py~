@@ -136,7 +136,8 @@ def duplicateEventsMonteCarlo(dataset):
 	for run in runs:
 		NumFilesRun=getNumberofFilesPerRun(das_url, dataset, run)
 		NumLumis=getRunLumiCountDatasetRun(das_url, dataset, run)
-		if NumFilesRun>NumLumis:#It means at least one lumi is split into more than one file
+		print NumFilesRun, NumLumis
+		if NumLumis>NumFilesRun:#It means at least one lumi is split into more than one file
 			return True
 	return False
 
@@ -247,30 +248,36 @@ def getRunLumiCountDatasetRun(das_url, dataset, run):
 			return key['result']['value']		
 		return -1
 
-#def getRunLumiCountDatasetList(das_url,dataset, runlist):
-#    lumis=0
- #   runChunks=chunks(runlist,30)
-  #  for runList in runChunks:
-   #     querry="./dbssql --limit=10000 --input='find run, count(lumi) where dataset="+dataset+" AND ("
-    #    for run in runList:
-      #      querry=querry+" run="+str(run) +" OR "
-     #   querry=querry+' run= '+str(runList[0]) +')'
-     #   querry=querry+"'| grep '[0-9]\{1,\}' | awk '{s+=$2}END{print s}'"
-     #   output=os.popen(querry).read()
-     #   if not output:
-     #       lumis=lumis
-     #   try:
-     #       lumis=lumis+int(output)
-     #   except ValueError:
-     #      lumis=lumis
-#    return lumis
+def getRunLumiCountDatasetList(das_url,dataset, runlist):
+    lumis=0
+    runChunks=chunks(runlist,30)
+    for runList in runChunks:
+        querry="./dbssql --limit=10000 --input='find run, count(lumi) where dataset="+dataset+" AND ("
+        for run in runList:
+            querry=querry+" run="+str(run) +" OR "
+        querry=querry+' run= '+str(runList[0]) +')'
+        querry=querry+"'| grep '[0-9]\{1,\}' | awk '{s+=$2}END{print s}'"
+        output=os.popen(querry).read()
+        if not output:
+            lumis=lumis
+        try:
+            lumis=lumis+int(output)
+        except ValueError:
+           lumis=lumis
+    return lumis
 
+def getRunLumiCountDatasetListDAS(das_url,dataset, runlist):
+    lumis=0
+    runChunks=chunks(runlist,30)
+    for runList in runChunks:
+	print lumis
+	lumis=lumis+getRunLumiCountDatasetList2(das_url,dataset, runList)
+    return lumis
 
 #Returns the number of lumis in a dataset and in a given runlist	
 def getRunLumiCountDatasetList2(das_url,dataset, runlist):
     lumis=0
     query="summary dataset="+dataset+" run in "+str(runlist)+ " | grep summary.nlumis"
-    print query
     das_data = get_data(das_url,query,0,0,0)
     if isinstance(das_data, basestring):
        	result = json.loads(das_data)
@@ -282,12 +289,12 @@ def getRunLumiCountDatasetList2(das_url,dataset, runlist):
 	print result
 	if len(result['data'])==0:#dataset not yet registered in DBS
 		return 0
-	preresult=result['data']
+	preresult=result['data'][0]
 	for key in preresult:
-		if 'result' in key:
-			return key['result']['value']		
+		if 'summary' in key:
+			return preresult['summary'][0]['nlumis']		
 	return -1
-
+	
 
 #GEN check generator true if everything is fine, false otherwise
 def checkCorrectLumisEventGEN(dataset):
@@ -432,7 +439,7 @@ def getInputEvents(url, workflow):
         if len(BlockBlacklist)>0:
             return getRunLumiCountDataset(inputDataSet)-getRunLumiCountDatasetBlockList(inputDataSet,BlockBlacklist)
         if len(runWhitelist)>0:
-            return getRunLumiCountDatasetList(das_host, inputDataSet, runWhitelist)
+            return getRunLumiCountDatasetListDAS(das_host, inputDataSet, runWhitelist)
         else:
             return getRunLumiCountDataset(inputDataSet)
     events=getEventCountDataSet(das_host, inputDataSet)
