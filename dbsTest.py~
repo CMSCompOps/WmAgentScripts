@@ -4,8 +4,9 @@ import urllib2,urllib, httplib, sys, re, os, json, phedexSubscription
 from xml.dom.minidom import getDOMImplementation
 from das_client import get_data
 #das_host='https://das.cern.ch'
-das_host='https://cmsweb.cern.ch'
-#das_host='https://cmsweb-testbed.cern.ch'
+#das_host='https://cmsweb.cern.ch'
+das_host='https://cmsweb-testbed.cern.ch'
+#das_host='https://das-dbs3.cern.ch'
 
 def getWorkflowType(url, workflow):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -246,31 +247,47 @@ def getRunLumiCountDatasetRun(das_url, dataset, run):
 			return key['result']['value']		
 		return -1
 
-def getRunLumiCountDatasetList(das_url,dataset, runlist):
-    lumis=0
-    runChunks=chunks(runlist,30)
-    for runList in runChunks:
-        querry="./dbssql --limit=10000 --input='find run, count(lumi) where dataset="+dataset+" AND ("
-        for run in runList:
-            querry=querry+" run="+str(run) +" OR "
-        querry=querry+' run= '+str(runList[0]) +')'
-        querry=querry+"'| grep '[0-9]\{1,\}' | awk '{s+=$2}END{print s}'"
-        output=os.popen(querry).read()
-        if not output:
-            lumis=lumis
-        try:
-            lumis=lumis+int(output)
-        except ValueError:
-            lumis=lumis
-    return lumis
+#def getRunLumiCountDatasetList(das_url,dataset, runlist):
+#    lumis=0
+ #   runChunks=chunks(runlist,30)
+  #  for runList in runChunks:
+   #     querry="./dbssql --limit=10000 --input='find run, count(lumi) where dataset="+dataset+" AND ("
+    #    for run in runList:
+      #      querry=querry+" run="+str(run) +" OR "
+     #   querry=querry+' run= '+str(runList[0]) +')'
+     #   querry=querry+"'| grep '[0-9]\{1,\}' | awk '{s+=$2}END{print s}'"
+     #   output=os.popen(querry).read()
+     #   if not output:
+     #       lumis=lumis
+     #   try:
+     #       lumis=lumis+int(output)
+     #   except ValueError:
+     #      lumis=lumis
+#    return lumis
 
 
 #Returns the number of lumis in a dataset and in a given runlist	
-#def getRunLumiCountDatasetList(das_url,dataset, runlist):
- #   lumis=0
-  #  for run in runlist:
-   #     lumis=lumis+getRunLumiCountDatasetRun(das_url, dataset, run)
-    #return lumis
+def getRunLumiCountDatasetList2(das_url,dataset, runlist):
+    lumis=0
+    query="summary dataset="+dataset+" run in "+str(runlist)+ " | grep summary.nlumis"
+    print query
+    das_data = get_data(das_url,query,0,0,0)
+    if isinstance(das_data, basestring):
+       	result = json.loads(das_data)
+    else:
+       	result = das_data
+    if result['status'] == 'fail' :
+        print 'DAS query failed with reason:',result['reason']
+    else:
+	print result
+	if len(result['data'])==0:#dataset not yet registered in DBS
+		return 0
+	preresult=result['data']
+	for key in preresult:
+		if 'result' in key:
+			return key['result']['value']		
+	return -1
+
 
 #GEN check generator true if everything is fine, false otherwise
 def checkCorrectLumisEventGEN(dataset):
