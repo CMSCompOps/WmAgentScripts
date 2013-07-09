@@ -150,7 +150,7 @@ def closeOutRedigiWorkflows(url, workflows):
 			PhedexSubscription=testOutputDataset(dataset)
 			duplicate=True
 			if PhedexSubscription!=False and Percentage>=float(0.90):
-				duplicate=dbsTest.duplicateEventsMonteCarlo(dataset)
+				duplicate=dbsTest.duplicateRunLumi(dataset)
 			closeOutDataset=False
 			if Percentage>=float(0.95) and PhedexSubscription and not duplicate:
 				closeOutDataset=True
@@ -199,7 +199,7 @@ def closeOutMonterCarloRequests(url, workflows):
 					TransPercen=TransferPercentage(url, dataset, site)
 				duplicate=True
 				if PhedexSubscription!=False and Percentage>=float(0.90):
-					duplicate=dbsTest.duplicateEventsMonteCarlo(dataset)
+					duplicate=dbsTest.duplicateLumi(dataset)
 				#if Percentage>=float(0.90) and PhedexSubscription!=False and not duplicate and TransPercen==1:
 				if Percentage>=float(0.90) and PhedexSubscription!=False and not duplicate:
 					closeOutDataset=True

@@ -136,7 +136,6 @@ def duplicateEventsMonteCarlo(dataset):
 	for run in runs:
 		NumFilesRun=getNumberofFilesPerRun(das_url, dataset, run)
 		NumLumis=getRunLumiCountDatasetRun(das_url, dataset, run)
-		print NumFilesRun, NumLumis
 		if NumLumis>NumFilesRun:#It means at least one lumi is split into more than one file
 			return True
 	return False
@@ -270,7 +269,6 @@ def getRunLumiCountDatasetListDAS(das_url,dataset, runlist):
     lumis=0
     runChunks=chunks(runlist,30)
     for runList in runChunks:
-	print lumis
 	lumis=lumis+getRunLumiCountDatasetList2(das_url,dataset, runList)
     return lumis
 
@@ -286,7 +284,6 @@ def getRunLumiCountDatasetList2(das_url,dataset, runlist):
     if result['status'] == 'fail' :
         print 'DAS query failed with reason:',result['reason']
     else:
-	print result
 	if len(result['data'])==0:#dataset not yet registered in DBS
 		return 0
 	preresult=result['data'][0]
