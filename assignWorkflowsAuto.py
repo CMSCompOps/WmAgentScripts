@@ -54,6 +54,8 @@ def getScenario(ps):
            pss = 'PU10bx25'
         if ps == 'SimGeneral.MixingModule.mix_E8TeV_AVE_10_BX_50ns_300ns_spread_cfi':
            pss = 'PU10bx50'
+        if ps == 'SimGeneral.MixingModule.mix_2011_FinalDist_OOTPU_cfi':
+           pss = 'PU_S13'	
 
         return pss
 
@@ -395,6 +397,10 @@ def main():
 
            if 'Summer13dr53X' in workflow:
               era = 'Summer13dr53X'
+              lfn = '/store/mc'
+
+           if 'Summer11dr53X' in workflow:
+              era = 'Summer11dr53X'
               lfn = '/store/mc'
 
            if 'Fall11_HLTMuonia' in workflow:

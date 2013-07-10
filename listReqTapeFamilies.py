@@ -67,6 +67,10 @@ def main():
            if 'Summer13dr53X' in prepID:
               ods = ['GEN-SIM-RECO', 'AODSIM', 'DQM']
               era = 'Summer13dr53X'
+           if 'Summer11dr53X' in prepID:
+              #ods = ['GEN-SIM-RECO', 'AODSIM', 'DQM']
+              era = 'Summer11dr53X'
+					       
            if 'Fall11_R' in prepID or 'Fall11_HLTMuonia' in prepID:
               ods = ['GEN-RAW', 'GEN-SIM-RECO', 'AODSIM', 'DQM']
               era = 'Fall11'
