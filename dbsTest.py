@@ -76,9 +76,11 @@ def duplicateRunLumi(dataset):
 					RunlumisChecked[run].append(lumi)
     return False
 
-def duplicateLumi(dataset):
-    lumisChecked=[]
+def duplicateLumi(dataset, run = None):
+    lumisChecked=set()
     query="file lumi dataset="+dataset
+    if run is not None:
+        query += " run=%s" % run
     das_data = get_data(das_host,query,0,0,0)
     if isinstance(das_data, basestring):
         result = json.loads(das_data)
@@ -91,14 +93,12 @@ def duplicateLumi(dataset):
 	for filename in preresult:
 		newLumis=filename['lumi'][0]['number']
 		for lumiRange in newLumis:
-			newlumiRange=[lumiRange[0]]
-			if lumiRange[0]<lumiRange[1]:
-				newlumiRange=range(lumiRange[0], lumiRange[1])
+			newlumiRange=range(lumiRange[0], lumiRange[1] + 1)
 			for lumi in newlumiRange:
 				if lumi in lumisChecked:
 					return True
 				else:
-					lumisChecked.append(lumi)
+					lumisChecked.add(lumi)
 	return False
 
 def getRunsInDataset(das_url, dataset):
@@ -131,14 +131,12 @@ def getNumberofFilesPerRun(das_url, dataset, run):
 
 #Return true if there are duplicate evnets , false otherwise
 def duplicateEventsMonteCarlo(dataset):
-	das_url=das_host
-	runs=getRunsInDataset(das_url, dataset)
-	for run in runs:
-		NumFilesRun=getNumberofFilesPerRun(das_url, dataset, run)
-		NumLumis=getRunLumiCountDatasetRun(das_url, dataset, run)
-		if NumLumis>NumFilesRun:#It means at least one lumi is split into more than one file
-			return True
-	return False
+    das_url=das_host
+    runs=getRunsInDataset(das_url, dataset)
+    for run in runs:
+        if duplicateLumi(dataset, run):
+            return True
+    return False
 
 #Return the number of events for a given dataset given a runlist
 def EventsRunList(das_url, dataset, runlist):
