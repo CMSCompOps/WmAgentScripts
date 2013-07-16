@@ -185,7 +185,6 @@ def getRequestTeam(url, workflow):
 
 def closeOutMonterCarloRequests(url, workflows):
 	for workflow in workflows:
-		print workflow
 		datasets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
 		closeOutWorkflow=True
 		if getRequestTeam(url, workflow)!='analysis':#If request is not in special queue
@@ -225,7 +224,7 @@ def closeOutStep0Requests(url, workflows):
 				if PhedexSubscription!=False:
 					site=PhedexSubscription
 					TransPercen=TransferPercentage(url, dataset, site)
-				duplicate=dbsTest.duplicateEventsMonteCarlo(dataset)
+				duplicate=dbsTest.duplicateLumi(dataset)
 				correctLumis=dbsTest.checkCorrectLumisEventGEN(dataset)
 				#if Percentage>=float(0.90) and PhedexSubscription!=False and not duplicate and TransPercen==1:
 				if Percentage>=float(0.90) and PhedexSubscription!=False and not duplicate and correctLumis:
