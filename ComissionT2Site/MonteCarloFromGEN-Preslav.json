@@ -1,0 +1,67 @@
+{ 
+"createRequest":
+	{		 
+		"CMSSWVersion": "CMSSW_5_1_3",
+		"GlobalTag": "START50_V13::All",
+		"Campaign": "Campaign-OVERRIDE-ME",
+		"RequestString": "RequestString-OVERRIDE-ME",
+		"RequestPriority": 1000,
+		"FilterEfficiency": 0.28,
+		"ScramArch": "slc5_amd64_gcc462",
+		"RequestType": "MonteCarloFromGEN",		
+		"ConfigCacheID": "ab954d9a1856afd1f980173d4e87430a",
+		"ConfigCacheUrl": "https://cmsweb-testbed.cern.ch/couchdb",
+		"PrepID": "MCTEST-LHE-0001",
+		"Group": "DATAOPS",
+		"TotalTime": 28800,
+		"RunWhitelist": [],
+        "TimePerEvent": 60,
+        "Memory": 2000,
+        "SizePerEvent": 5000,
+        "InputDataset": "/QCD_HT-1000ToInf_TuneZ2star_8TeV-madgraph-pythia6/Summer12-START50_V13-v1/GEN",
+        "RunBlacklist": [],
+        "BlockWhitelist": ["/QCD_HT-1000ToInf_TuneZ2star_8TeV-madgraph-pythia6/Summer12-START50_V13-v1/GEN#fafbeefe-5ef2-4b41-8ed5-1c21e578e3e1"],
+        "BlockBlacklist": [],
+        "OpenRunningTimeout" : 0
+	}, 
+
+"changeSplitting":
+    {
+        "MonteCarloFromGEN" :
+            {
+                "SplittingAlgo" : "LumiBased",
+                "lumis_per_job" : 1,
+                "include_parents" : "False",
+                "halt_job_on_file_boundaries" : "True"
+             }
+    },
+
+"assignRequest":
+	{
+		"SiteWhitelist": "SiteWhitelist-OVERRIDE-ME",
+		"SiteBlacklist": [],
+		"MergedLFNBase": "/store/mc",
+		"UnmergedLFNBase": "/store/unmerged",
+		"MinMergeSize": 2147483648,
+		"MaxMergeSize": 4294967296,
+		"MaxMergeEvents": 50000,
+		"AcquisitionEra": "AcquisitionEra-OVERRIDE-ME",
+		"ProcessingVersion": 1,
+		"ProcessingString" : "ProcessingString-OVERRIDE-ME",
+		"maxRSS": 2411724,
+		"maxVSize": 4294967296,
+		"SoftTimeout": 129600,
+		"GracePeriod": 300,
+		"dashboard": "test",
+		"Team": "testbed-t1",
+        "CustodialSites": [],
+        "NonCustodialSites": [],
+        "AutoApproveSubscriptionSites": [],
+        "SubscriptionPriority": "Low",
+        "CustodialSubType" : "Move",
+        "BlockCloseMaxWaitTime" : 66400,
+        "BlockCloseMaxFiles" : 500,
+        "BlockCloseMaxEvents" : 25000000,
+        "BlockCloseMaxSize" : 5000000000000
+	}
+}
