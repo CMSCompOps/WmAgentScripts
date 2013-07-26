@@ -465,6 +465,16 @@ def main():
               lfn = '/store/mc'
               specialName = campaign + '_'
 
+           if campaign == 'UpgradePhase1Age5H_DR61SLHCx':
+              era = 'Summer13'
+              lfn = '/store/mc'
+              specialName = campaign + '_'
+
+           if campaign == 'HiFall11_DR44X':
+              era = 'HiFall11'
+              lfn = '/store/himc'
+              specialName = campaign + '_'
+
            # Construct processed dataset version
            if pileupScenario != '':
               pileupScenario = pileupScenario+'_' 
@@ -517,7 +527,7 @@ def main():
                  print 'Skipping workflow ',workflow
            else:
               if restrict == 'None' or restrict == siteUse:
-                 print 'Would assign ',workflow,' with ','Acquisition Era:',era,'ProcessingString:',procstring,'ProcessingVersion:',procversion,'lfn:',lfn,'Site(s):',siteUse,'Custodial Site:',siteCust,'team:',team,'maxmergeevents:',maxmergeevents
+                 print 'Would assign ',workflow,' with ','Acquisition Era:',era,'ProcessingString:',procstring,'ProcessingVersion:',procversion,'lfn:',lfn,'Site(s):',siteUse,'Custodial Site:',siteCust,'team:',team,'maxmergeevents:',maxmergeevents,'maxRSS:',maxRSS
               else:
                  print 'Would skip workflow ',workflow
 
