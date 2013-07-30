@@ -207,26 +207,6 @@ def getRunsDataset(das_url, dataset):
 				runList.append(key['run'][0]['run_number'])
 	return runList
 
-# Get the number of unique lumis in a dataset
-def getRunLumiCountDataset(das_url, dataset):
-	lumis=0
-	query="summary dataset="+dataset+" | grep summary.nlumis"
-	das_data = get_data(das_url,query,0,0,0)
-	if isinstance(das_data, basestring):
-        	result = json.loads(das_data)
-	else:
-        	result = das_data
-	if result['status'] == 'fail' :
-        	print 'DAS query failed with reason:',result['reason']
-	else:
-		if len(result['data'])==0:#dataset not yet registered in DBS
-			return 0
-		preresult=result['data'][0]
-		for key in preresult:
-		    if 'summary' in key:
-			return preresult['summary'][0]['nlumis']		
-		return -1
-
 #Returns the number of lumis in a given run for a dataset using DAS.
 def getRunLumiCountDatasetRun(das_url, dataset, run):
 	lumis=0
