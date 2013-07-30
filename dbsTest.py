@@ -227,23 +227,6 @@ def getRunLumiCountDatasetRun(das_url, dataset, run):
 			return key['result']['value']		
 		return -1
 
-def getRunLumiCountDatasetList(das_url,dataset, runlist):
-    lumis=0
-    runChunks=chunks(runlist,30)
-    for runList in runChunks:
-        querry="./dbssql --limit=10000 --input='find run, count(lumi) where dataset="+dataset+" AND ("
-        for run in runList:
-            querry=querry+" run="+str(run) +" OR "
-        querry=querry+' run= '+str(runList[0]) +')'
-        querry=querry+"'| grep '[0-9]\{1,\}' | awk '{s+=$2}END{print s}'"
-        output=os.popen(querry).read()
-        if not output:
-            lumis=lumis
-        try:
-            lumis=lumis+int(output)
-        except ValueError:
-           lumis=lumis
-    return lumis
 
 def getRunLumiCountDatasetListDAS(das_url,dataset, runlist):
     lumis=0
@@ -356,7 +339,7 @@ def handleTaskChain(request):
         if len(blockBlacklist)>0:
             return getRunLumiCountDataset(das_host,inputDataSet)-getRunLumiCountDatasetBlockList(das_host, inputDataSet,blockBlacklist)
         if len(runWhitelist)>0:
-            return getRunLumiCountDatasetList(das_host, inputDataSet, runWhitelist)
+            return getRunLumiCountDatasetListDAS(das_host, inputDataSet, runWhitelist)
         else:
             return getRunLumiCountDataset(das_host,inputDataSet)
 
