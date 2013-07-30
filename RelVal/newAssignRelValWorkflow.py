@@ -2,7 +2,7 @@
 import urllib2,urllib, httplib, sys, re, os
 import json
 import optparse
-from das_client import get_data
+#from das_client import get_data
 das_host='https://cmsweb.cern.ch'
 
 
@@ -44,7 +44,11 @@ def assignRequest(url,workflow,team,site,era,procstr,procver,activity,lfn):
       #        "AutoApproveSubscriptionSites": ['T1_US_FNAL'],
       #        "SubscriptionPriority": "Medium",
       #        "CustodialSubType" : "Replica",
-              "SoftTimeout" : 160000,
+              "BlockCloseMaxWaitTime" : 28800,
+              "BlockCloseMaxFiles" : 500,
+              "BlockCloseMaxEvents" : 20000000,
+              "BlockCloseMaxSize" : 5000000000000,
+              "SoftTimeout" : 129600,
               "GracePeriod" : 1000,
               "checkbox"+workflow: "checked"}
     # Once the AcqEra is a dict, I have to make it a json objet 

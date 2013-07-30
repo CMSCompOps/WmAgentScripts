@@ -51,7 +51,6 @@ def getEventsRun(url, dataset, run):
 
 def getEventCountDataSet(dataset):
     output=os.popen("./dbssql --input='find dataset,sum(block.numevents) where dataset="+dataset+"'"+ "|awk '{print $2}' | grep '[0-9]\{1,\}'").read()
-    print output
     try:
         int(output)
         return int(output)
@@ -71,7 +70,7 @@ def getRunLumiCountDatasetList(dataset, runlist):
     lumis=0
     runChunks=chunks(runlist,30)
     for runList in runChunks:
-        querry="./dbssql --limit=10000 --input='find run, count(lumi) where dataset="+dataset+" AND ("
+        querry="./dbssql --limit=100000 --input='find run, count(lumi) where dataset="+dataset+" AND ("
         for run in runList:
             querry=querry+" run="+str(run) +" OR "
         querry=querry+' run= '+str(runList[0]) +')'

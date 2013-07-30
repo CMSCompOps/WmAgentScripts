@@ -61,8 +61,8 @@ def setStatusDBS3(url3, dataset3, newStatus, files):
             sys.exit(1)
         print "Files will be set to:",file_status,"in DBS3"
         files = dbsapi.listFiles(dataset=dataset3)
-        for f in files:
-            dbsapi.updateFileStatus(logical_file_name=f['logical_file_name'], is_file_valid=file_status)
+        for this_file in files:
+            dbsapi.updateFileStatus(logical_file_names=this_file['logical_file_name'],is_file_valid=file_status)
 
 
 def main():
@@ -87,8 +87,8 @@ def main():
         sys.exit(1)
 
     setStatusDBS2('https://cmsdbsprod.cern.ch:8443/cms_dbs_prod_global_writer/servlet/DBSServlet', opts.dataset, opts.status, opts.files)
-    setStatusDBS3('https://dbs3-testbed.cern.ch/dbs/prod/global/DBSWriter', opts.dataset, opts.status, opts.files)
-    #setStatusDBS3('https://cmsweb-testbed.cern.ch/dbs/prod/global/DBSWriter', opts.dataset, opts.status, opts.files)
+    #setStatusDBS3('https://dbs3-testbed.cern.ch/dbs/prod/global/DBSWriter', opts.dataset, opts.status, opts.files)
+    setStatusDBS3('https://cmsweb-testbed.cern.ch/dbs/prod/global/DBSWriter', opts.dataset, opts.status, opts.files)
 
     print "Done"
     sys.exit(0)

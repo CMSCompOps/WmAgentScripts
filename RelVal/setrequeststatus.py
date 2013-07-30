@@ -37,7 +37,7 @@ def getStatus(url, workflow):
 def main():
     args=sys.argv[1:]
     if not len(args)==2:
-        print "usage: python ../RelVal/setrequeststatus.py <inputFile_containing_a_list_of_workflows> <new_status>"
+        print "usage: python2.6 setrequeststatus.py <text_file_with_the_workflow_names> <newStatus>"
         sys.exit(0)
     inputFile = args[0]
     newstatus = args[1]

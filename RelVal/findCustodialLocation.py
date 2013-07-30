@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 
 import urllib2,urllib, httplib, sys, re, os, json, time, math, dbsTest, locale
-import optparse, closeOutWorkflows
+#import optparse, closeOutWorkflows
+import optparse, closeOutTaskChainWorkflows
 from xml.dom.minidom import getDOMImplementation
 
 def getInputDataset(url, workflow):
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
 	r2=conn.getresponse()
-	request = json.read(r2.read())
+	data=r2.read()
+	request = json.loads(data)
 	if 'InputDataset' in request.keys():
 		return request['InputDataset']
 	else:
@@ -18,7 +20,8 @@ def findCustodialLocation(url, dataset):
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset='+dataset)
 	r2=conn.getresponse()
-	result = json.read(r2.read())
+	data=r2.read()
+	result = json.loads(data)
 	request=result['phedex']
 	if 'block' not in request.keys():
 		return "No Site"

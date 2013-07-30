@@ -58,12 +58,12 @@ def retrieveSchema(workflowName):
         elif value != None:
             schema[key] = value
 #    print "Retrieved schema:\n", schema
-    schema['Requestor'] = 'amaltaro'
+    schema['Requestor'] = 'anlevin'
     schema['Group'] = 'DATAOPS'
 #    schema['Task1']['SplittingArguments'] = {'lumis_per_job': 5}
 #    schema['Memory'] = 1394
 #    schema['Task1']['KeepOutput'] = True
-#    schema['RequestString'] = 'TEST_Andrew_T2_CH_CERN'
+#    schema['RequestString'] = 'TEST_DELETE_THIS_'
 #    schema['BlockWhitelist'] = ['/MinimumBias/Run2012D-HLTPhysics-Tier1PromptSkim-v1/RAW-RECO#ce668e80-26a2-11e2-80e7-00155dffff9d']
 #    schema['Task1']['BlockBlacklist'] = ['/DoubleMu/Run2011A-ZMu-08Nov2011-v1/RAW-RECO#93c53d22-25b2-11e1-8c62-003048f02c8a']
 #    schema['Task1']['RunWhitelist'] = [208307]
