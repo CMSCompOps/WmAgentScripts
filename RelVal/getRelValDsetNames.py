@@ -3,14 +3,10 @@
 import urllib2,urllib, httplib, sys, re, os, phedexSubscription
 import json
 from xml.dom.minidom import getDOMImplementation
+sys.path.append("..")
+import dbsTest
 
-def getEventCountDataSet(dataset):
-    output=os.popen("./dbssql --input='find dataset,sum(block.numevents) where dataset="+dataset+"'"+ "|awk '{print $2}' | grep '[0-9]\{1,\}'").read()
-    try:
-        int(output)
-        return int(output)
-    except ValueError:
-            return -1
+
 
 def main():
     args=sys.argv[1:]
@@ -29,7 +25,7 @@ def main():
         #inputEvents=getInputEvents(url, workflow)
         #print inputEvents
         for dataset in outputDataSets:
-            outputEvents=getEventCountDataSet(dataset)
+            outputEvents=dbsTest.getEventCountDataSet("https://cmsweb.cern.ch",dataset)
     #        print dataset+" match: "+str(outputEvents/float(inputEvents)*100) +"%"
             print dataset+"\t\t"+str(outputEvents)
 

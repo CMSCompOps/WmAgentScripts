@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 import json
-import urllib2,urllib, httplib, sys, re, os, \.\./dbsTest phedexSubscription
+import urllib2,urllib, httplib, sys, re, os, phedexSubscription
 from xml.dom.minidom import getDOMImplementation
-
+sys.path.append("..")
+import dbsTest
 
 def closeOutTaskChainWorkflows(url, workflow):
     #for workflow in workflows:
