@@ -182,6 +182,12 @@ def getConfig(url, cacheID):
         return config
 
 def assignRequest(url ,workflow ,team ,site ,era, procversion, procstring, activity, lfn, maxmergeevents, maxRSS, maxVSize, useX, siteCust):
+
+    if "Upgrade" in workflow:
+       softTimeout = 159600
+    else:
+       softTimeout = 129600
+
     params = {"action": "Assign",
               "Team"+team: "checked",
               "SiteWhitelist": site,
@@ -192,7 +198,7 @@ def assignRequest(url ,workflow ,team ,site ,era, procversion, procstring, activ
               "MaxMergeSize": 4294967296,
               "CustodialSites": siteCust,
               "Priority" : "Normal",
-              "SoftTimeout": 129600,
+              "SoftTimeout": softTimeout,
               "GracePeriod": 300,
               "MaxMergeEvents": maxmergeevents,
 	      "maxRSS": maxRSS,
