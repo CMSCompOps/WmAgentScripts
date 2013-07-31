@@ -95,8 +95,19 @@ def checkJobCountsAgent(requestName):
                                                                        WHERE wmbs_workflow.name = '%s'""" % requestName))
     print "There are %d subscriptions for this workflow, %d are incomplete." % (len(totalSubs), len(unfinishedSubs))
     if len(unfinishedSubs) != 0:
-        print "It appears no jobs have been created for some unfinished subscriptions, check the health of the JobCreator or contact a developer."
-    print "This workflow has all subscriptions as finished, the TaskArchiver should be eating through it now. This can take time though."
+        for sub in unfinishedSubs:
+            subId = sub['id']
+            availableFiles = formatter.formatDict(myThread.dbi.processData("""SELECT COUNT(wmbs_sub_files_available.fileid) AS count
+                                                                               FROM wmbs_sub_files_available
+                                                                               WHERE wmbs_sub_files_available.subscription = %s""" % subId))
+            acquiredFiles = formatter.formatDict(myThread.dbi.processData("""SELECT COUNT(wmbs_sub_files_acquired.fileid) AS count
+                                                                               FROM wmbs_sub_files_acquired
+                                                                               WHERE wmbs_sub_files_acquired.subscription = %s""" % subId))
+            print "There are %s files available and %s files acquired in the subscription %s. If the JobCreator is up, more jobs will appear soon." % (availableFiles[0]['count'],
+                                                                                                                                                       acquiredFiles[0]['count'],
+                                                                                                                                                       subId)
+    else:
+        print "This workflow has all subscriptions as finished, the TaskArchiver should be eating through it now. This can take time though."
     return
 
 def main():
