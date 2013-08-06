@@ -145,13 +145,12 @@ def closeOutRedigiWorkflows(url, workflows):
 		InputDataset=dbsTest.getInputDataSet(url, workflow)
 		datasets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
 		for dataset in datasets:
-			closeOutDataset=True
+			closeOutDataset=False
 			Percentage=PercentageCompletion(url, workflow, dataset)
 			PhedexSubscription=testOutputDataset(dataset)
 			duplicate=True
-			if PhedexSubscription!=False and Percentage>=float(0.90):
+			if PhedexSubscription!=False and Percentage>=float(0.95):
 				duplicate=dbsTest.duplicateRunLumi(dataset)
-			closeOutDataset=False
 			if Percentage>=float(0.95) and PhedexSubscription and not duplicate:
 				closeOutDataset=True
 			else:
@@ -189,6 +188,9 @@ def closeOutMonterCarloRequests(url, workflows):
 		closeOutWorkflow=True
 		if getRequestTeam(url, workflow)!='analysis':#If request is not in special queue
 			for dataset in datasets:
+				ClosePercentage=0.95
+				if 'SMS' in dataset:
+					ClosePercentage=1
 				closeOutDataset=True
 				Percentage=PercentageCompletion(url, workflow, dataset)
 				PhedexSubscription=CustodialMoveSubscriptionCreated(dataset)
@@ -197,10 +199,9 @@ def closeOutMonterCarloRequests(url, workflows):
 					site=PhedexSubscription
 					TransPercen=TransferPercentage(url, dataset, site)
 				duplicate=True
-				if PhedexSubscription!=False and Percentage>=float(0.90):
+				if PhedexSubscription!=False and Percentage>=float(ClosePercentage):
 					duplicate=dbsTest.duplicateLumi(dataset)
-				#if Percentage>=float(0.90) and PhedexSubscription!=False and not duplicate and TransPercen==1:
-				if Percentage>=float(0.90) and PhedexSubscription!=False and not duplicate:
+				if Percentage>=float(ClosePercentage) and PhedexSubscription!=False and not duplicate:
 					closeOutDataset=True
 				else:
 		 			closeOutDataset=False

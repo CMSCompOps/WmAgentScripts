@@ -111,10 +111,9 @@ if __name__ == "__main__":
     #print "Going to attempt to resubmit %s..." % sys.argv[1]
     schema = retrieveSchema(sys.argv[1], user, group)
     #print schema
-    Site=closeOutWorkflows.findCustodial('cmsweb.cern.ch',sys.argv[1] )
     newWorkflow=submitWorkflow(schema)
     approveRequest('cmsweb.cern.ch',newWorkflow)
-    print 'Cloned workflow:',newWorkflow, ' '+Site
+    print 'Cloned workflow:',newWorkflow
     newPriority=getPriorityWorkflow('cmsweb.cern.ch',sys.argv[1])
     if  newPriority>2: 
 	changePriorityWorkflow.changePriorityWorkflow('cmsweb.cern.ch', newWorkflow, newPriority)
