@@ -188,7 +188,7 @@ def closeOutMonterCarloRequests(url, workflows):
 		closeOutWorkflow=True
 		if getRequestTeam(url, workflow)!='analysis':#If request is not in special queue
 			for dataset in datasets:
-				ClosePercentage=0.95
+				ClosePercentage=0.93
 				if 'SMS' in dataset:
 					ClosePercentage=1
 				closeOutDataset=True
@@ -199,13 +199,13 @@ def closeOutMonterCarloRequests(url, workflows):
 					site=PhedexSubscription
 					TransPercen=TransferPercentage(url, dataset, site)
 				duplicate=True
-				if PhedexSubscription!=False and Percentage>=float(ClosePercentage):
+				if PhedexSubscription!=False and Percentage>=float(0.9):
 					duplicate=dbsTest.duplicateLumi(dataset)
 				if Percentage>=float(ClosePercentage) and PhedexSubscription!=False and not duplicate:
 					closeOutDataset=True
 				else:
 		 			closeOutDataset=False
-					closeOutWorkflow=closeOutWorkflow and closeOutDataset
+				closeOutWorkflow=closeOutWorkflow and closeOutDataset
 				print '| %80s | %100s | %4s | %5s| %3s | %5s|%5s| ' % (workflow, dataset,str(int(Percentage*100)), str(PhedexSubscription), str(int(TransPercen*100)), duplicate, closeOutDataset)
 			if closeOutWorkflow:
 				phedexSubscription.closeOutWorkflow(url, workflow)
