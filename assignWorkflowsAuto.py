@@ -481,6 +481,11 @@ def main():
               lfn = '/store/mc'
               specialName = campaign + '_'
 
+           if campaign == 'UpgradePhase1Age3K_DR61SLHCx':
+              era = 'Summer13'
+              lfn = '/store/mc'
+              specialName = campaign + '_'
+
            if campaign == 'HiFall11_DR44X':
               era = 'HiFall11'
               lfn = '/store/himc'
