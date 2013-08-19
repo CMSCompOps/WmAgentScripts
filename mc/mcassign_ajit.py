@@ -16,7 +16,7 @@ except ImportError:
 max_events_per_job = 500
 extstring = '-ext'
 teams = ['mc','mc_highprio']
-t1s = {'FNAL':'T1_US_FNAL','CNAF':'T1_IT_CNAF','IN2P3':'T1_FR_CCIN2P3','RAL':'T1_UK_RAL','PIC':'T1_ES_PIC','KIT':'T1_DE_KIT'}
+t1s = {'FNAL':'T1_US_FNAL','CNAF':'T1_IT_CNAF','ASGC':'T1_TW_ASGC','IN2P3':'T1_FR_CCIN2P3','RAL':'T1_UK_RAL','PIC':'T1_ES_PIC','KIT':'T1_DE_KIT'}
 
 siteblacklist = ['T2_FR_GRIF_IRFU','T2_PK_NCP','T2_PT_LIP_Lisbon','T2_RU_RRC_KI']
 siteblacklist.extend(['T2_PL_Warsaw','T2_RU_PNPI','T2_KR_KNU','T2_UA_KIPT','T2_AT_Vienna'])
@@ -570,12 +570,12 @@ def main():
 	parser.add_option('--hi', action="store_true",default=False,help='heavy ion request (add Vanderbilt to the whitelist, use /store/himc)',dest='hi')
 	parser.add_option('--himem', action="store_true",default=False,help='high memory request (use sites allowing 3GB/job, increase maxRSS)',dest='himem')
 	parser.add_option('-e','--extension', action="store_true",default=False,help='extension (add -ext to the processing string)',dest='ext')
-	parser.add_option('--nosites', action="store_true",default=False,help='use empty whitelist',dest='nosites')
 	parser.add_option('-c', '--custodialt1', help='Custodial T1',dest='custodialt1')
 	parser.add_option('--tapefamilies', help='Tape Families',dest='tapefamilies')
 	parser.add_option('-s', '--sites', help='Single site or comma-separated list (i.e. T1_US_FNAL,T2_FR_CCIN2P3,T2_DE_DESY)',dest='sites')
 	parser.add_option('-a', '--acqera', help='<AcquisitionEra> in <AcquisitionEra>-<ProcString>-v<ProcVer>',dest='acqera')
 	parser.add_option('-p', '--processingstring', help='<ProcString> in <AcquisitionEra>-<ProcString>-v<ProcVer>, default=GlobalTag-vX',dest='processingstring')
+	parser.add_option('-x', '--specialprocstringextn', help='<ProcString> in <AcquisitionEra>-<ProcString>-v<ProcVer>, default=GlobalTag-vX',dest='specialprocstringextn')
 	parser.add_option('-v', '--processingversion', help='<ProcVer> in <AcquisitionEra>-<ProcString>-v<ProcVer>), default=1',dest='processingversion')
 	(options,args) = parser.parse_args()
 
@@ -607,9 +607,7 @@ def main():
 				sys.exit(1)
 	else:
 		custodialt1 = ''
-	if options.nosites:
-		sites = []
-	elif options.sites:
+	if options.sites:
 		sites = options.sites
 	else:
 		sites = 'auto'
@@ -622,6 +620,11 @@ def main():
 		processingstring = options.processingstring
 	else:
 		processingstring = 'auto'
+
+	if options.specialprocstringextn:
+		specialprocstringextn = options.specialprocstringextn
+	else:
+		specialprocstringextn = ''
 		
 	reqinfo = {}
 
@@ -780,17 +783,25 @@ def main():
 				print '%s (%s, LHEStepZero full GEN)' % (w,reqinfo[w]['campaign'])
 				team = 'mc_highprio'
 				
+		#elif options.hi:
+		#	print '%s (%s Heavy Ion)' % (w,reqinfo[w]['campaign'])
+		#	hi = True
+		#	team = getteam(team,reqinfo[w])
+		#	softtimeout = 129600
+		#	minmergesize = 2147483648
+		#	#maxRSS = 3500000
+		#	maxRSS = 2294967
 		elif options.himem:
 			himem = True
 			print '%s (%s High Memory)' % (w,reqinfo[w]['campaign'])
 			team = getteam(team,reqinfo[w])
-			softtimeout = 159600
+			softtimeout = 129600
 			minmergesize = 2147483648
 			maxRSS = 3500000
 		else:
 			print '%s (%s)' % (w,reqinfo[w]['campaign'])
 			team = getteam(team,reqinfo[w])
-			softtimeout = 159600
+			softtimeout = 129600
 			minmergesize = 2147483648
 			maxRSS = 2294967
 
@@ -823,7 +834,6 @@ def main():
 				newsitelist.append('T1_UK_RAL')
 				newsitelist.append('T1_IT_CNAF')
 				newsitelist.append('T1_ES_PIC')
-				newsitelist.append('T1_TW_ASGC')
 				if custodialt1 not in newsitelist:
 					newsitelist.append(custodialt1)
 				newsitelist.extend(linkedt2list)
@@ -836,15 +846,12 @@ def main():
 					newsitelist.remove('T2_US_Vanderbilt')
 		else:
 			# explicit sitelist, no guesses
-			if sites:
-				newsitelist = sites.split(',')
-				for i in newsitelist:
-					if 'T2_' in i:
-						if not i in linkedt2list:
-							print "%s has no PhEDEx uplink to %s" % (i,custodialt1)
-							sys.exit(1)
-			else:
-				newsitelist = []
+			newsitelist = sites.split(',')
+			for i in newsitelist:
+				if 'T2_' in i:
+					if not i in linkedt2list:
+						print "%s has no PhEDEx uplink to %s" % (i,custodialt1)
+						sys.exit(1)
 
 		"""
 		if options.hi:
@@ -916,6 +923,8 @@ def main():
 				newprocessingstring = reqinfo[w]['globaltag']
 		
 		newprocessingstring = "%s%s" % (newprocessingstring,ext)
+                if options.specialprocstringextn:
+                    newprocessingstring = "%s-%s" % (newprocessingstring,specialprocstringextn)
 				
 		dataset = '/%s/%s-%s-v%s/%s' % (reqinfo[w]['primaryds'],newacqera,newprocessingstring,processingversion,reqinfo[w]['outputtier'])
 		if isInDBS(dataset):

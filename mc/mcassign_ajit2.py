@@ -677,6 +677,8 @@ def main():
 			else:
 				acqera = campaignconfig[reqinfo[w]['campaign']]['acqera']
 				print "[Detected acquisition era: %s]" % (acqera)
+                                print "[Detected campaign tyep : %s]" % reqinfo[w]['campaign']
+
 		print "\n----------------------------------------------------------------\n"
 		print "\nCustodial LFNs for %s %s (%s)\n" % (" ".join(x for x in campaigns),batch,custodialt1)
 		print "Dear admins,\n\nplease create the tape families below[*], needed for MC production.\n\n"
@@ -693,7 +695,10 @@ def main():
 			if 'tiers' in campaignconfig[reqinfo[w]['campaign']].keys():	
 				tiers = campaignconfig[reqinfo[w]['campaign']]['tiers']
 			else:
-				tiers = ['GEN-SIM','GEN-SIM-RECO','DQM','AODSIM']
+                            if 'Upgrade' in reqinfo[w]['campaign']:
+                                tiers = ['GEN-SIM','GEN-SIM-RECO','DQM','AODSIM']
+                            else:
+				tiers = ['GEN-SIM']
 
 			for tier in tiers:
 				a = "/store/%s/%s/%s/%s" % (tfpath,acqera,reqinfo[w]['primaryds'],tier)

@@ -495,6 +495,7 @@ def main():
 		sys.exit(1)
 
 	reqinfo = {}
+	print
 	for w in list:
 		reqinfo[w] = getWorkflowInfo(w)
 		if reqinfo[w]['type'] != 'MonteCarlo':
@@ -518,6 +519,7 @@ def main():
 			print "Setting events_per_job=%s, we'll get %s events/job in the GEN-SIM (filtereff=%s)" % (events_per_job,edr,feff)
 			setSplit(url,w,reqinfo[w]['type'],events_per_job)
 	
+	print
 	sys.exit(0)
 
 if __name__ == "__main__":
