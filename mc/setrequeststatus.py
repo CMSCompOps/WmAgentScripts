@@ -28,7 +28,6 @@ def setStatus(workflowname,newstatus):
     response = conn.getresponse()
     print response.status, response.reason
     data = response.read()
-    #print data
     conn.close()
 
 def getStatus(workflow):
