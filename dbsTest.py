@@ -4,8 +4,8 @@ import urllib2,urllib, httplib, sys, re, os, json, phedexSubscription
 from xml.dom.minidom import getDOMImplementation
 from das_client import get_data
 #das_host='https://das.cern.ch'
-das_host='https://cmsweb.cern.ch'
-#das_host='https://cmsweb-testbed.cern.ch'
+#das_host='https://cmsweb.cern.ch'
+das_host='https://cmsweb-testbed.cern.ch'
 #das_host='https://das-dbs3.cern.ch'
 
 def getWorkflowType(url, workflow):

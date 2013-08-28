@@ -188,7 +188,7 @@ def closeOutMonterCarloRequests(url, workflows):
 		closeOutWorkflow=True
 		if getRequestTeam(url, workflow)!='analysis':#If request is not in special queue
 			for dataset in datasets:
-				ClosePercentage=0.93
+				ClosePercentage=0.90
 				if 'SMS' in dataset:
 					ClosePercentage=1
 				closeOutDataset=True

@@ -211,7 +211,8 @@ def createConnection(url):
 	key = "/afs/cern.ch/user/e/efajardo/private/grid_cert_priv.pem"
         cert = "/afs/cern.ch/user/e/efajardo/private/grid_cert_pub.pem"
 	#conn = httplib.HTTPSConnection(url, key_file=key, cert_file=cert)
-	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+	#conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_CERT'), key_file = os.getenv('X509_USER_KEY'))
 	#r1=conn.request("GET",'/phedex/datasvc/json/prod/auth')
 	#r1=conn.request("GET",'	/phedex/datasvc/json/prod/secmod')
 	#r1=conn.request("GET",'/phedex/datasvc/json/prod/headers')
@@ -223,7 +224,7 @@ def createConnection(url):
 
 # Create the parameters of the request
 def createParams(site, datasetXML, comments):
-	params = urllib.urlencode({ "node" : site+"_MSS","data" : datasetXML, "group": "DataOps", "priority":'normal', "custodial":"y","request_only":"y" ,"move":"y","no_mail":"n", "comments":comments})
+	params = urllib.urlencode({ "node" : site+"_MSS","data" : datasetXML, "group": "DataOps", "priority":'normal', "custodial":"y","request_only":"n" ,"move":"n","no_mail":"n", "comments":comments})
 	return params
 
 def makeCustodialMoveRequest(url, site,datasets, comments):
@@ -250,19 +251,21 @@ def main():
 	site=args[0]
 	filename=args[1]
 	comments=args[2]
-	workflows=workflownamesfromFile(filename)
-	outputdatasets=datasetforWorkfows(workflows)
+	url='cmsweb.cern.ch'
+	#workflows=workflownamesfromFile(filename)
+	#outputdatasets=datasetforWorkfows(workflows)
+	outputdatasets=workflownamesfromFile(filename)
 	dataXML=createXML(outputdatasets)
 	params=createParams(site, dataXML, "Custodial Subscription for "+comments)	
-	conn=createConnection()
+	conn=createConnection(url)
 	conn.request("POST", "/phedex/datasvc/xml/prod/subscribe", params)
 	response = conn.getresponse()	
 	print response.status, response.reason
         print response.read()
-	testWorkflows(workflows)
-	for workflow in workflows:
-		print workflow + " closed-out"
-		closeOutWorkflow(workflow)
+	#testWorkflows(workflows)
+	#for workflow in workflows:
+	#	print workflow + " closed-out"
+	#	closeOutWorkflow(workflow)
 	sys.exit(0);
 
 if __name__ == "__main__":
