@@ -248,16 +248,16 @@ def getRunLumiCountDataset(das_url, dataset):
                 return -1
 
 
-
+#Returns the number of lumis in a dataset and in a given runlist
 def getRunLumiCountDatasetListDAS(das_url,dataset, runlist):
     lumis=0
     runChunks=chunks(runlist,30)
     for runList in runChunks:
-	lumis=lumis+getRunLumiCountDatasetList2(das_url,dataset, runList)
+	lumis=lumis+getRunLumiCountDatasetListLimited(das_url,dataset, runList)
     return lumis
 
-#Returns the number of lumis in a dataset and in a given runlist	
-def getRunLumiCountDatasetList2(das_url,dataset, runlist):
+#Returns the number of lumis in a dataset and in a given runlist but with a limit of 30 runs	
+def getRunLumiCountDatasetListLimited(das_url,dataset, runlist):
     lumis=0
     query="summary dataset="+dataset+" run in "+str(runlist)+ " | grep summary.nlumis"
     das_data = get_data(das_url,query,0,0,0)
