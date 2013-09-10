@@ -14,10 +14,14 @@ def getOveralls():
     url="cmsweb.cern.ch"
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), 
                                      key_file = os.getenv('X509_USER_PROXY'))
-    conn.request("GET", "/couchdb/wmstats/_design/WMStats/_view/requestByStatusAndType?stale=update_after")
+    conn.request("GET", 
+                 "/couchdb/wmstats/_design/WMStats/_view/requestByStatusAndType?stale=update_after")
     response = conn.getresponse()
     data = response.read()
     
+#    Connection must be closed
+    conn.close()
+        
 #    Extract the workflow name, status and type
     myString=data.decode("utf-8")
     myDict=json.loads(myString)
@@ -35,7 +39,11 @@ def getOveralls():
             i=1
 
 #    Look for the total amount of each workflow status
+
+#    var is intended to look into the dictionary (wDict) an pop the type and status
+#    of the first workflow (0), then var=var+1 step foward to the next workflow.
     var=0
+    
     new=[]
     apr=[]
     asg=[]
@@ -46,6 +54,7 @@ def getOveralls():
     fail=[]
     com=[]
     csd=[]
+    rjc=[]
     while var<len(wDict):
         wtype=wDict[var].pop()
         wstatus=wDict[var].pop()
@@ -99,45 +108,89 @@ def getOveralls():
             if wtype=="TaskChain":
                 csd.append(wtype)
             var=var+1
+        elif wstatus=="rejected":
+            rjc.append(wstatus)
+            if wtype=="TaskChain":
+                rjc.append(wtype)
+            var=var+1
         else:
             var=var+1
-    result=[["Workflow Status","Production","TaskChain"]]
+            
+    sumworkflows=[["Workflow Status","Production","TaskChain"]]
     
-    result.append(["new",new.count("new"),new.count("TaskChain")])
-    result.append(["assignment-approved",apr.count("assignment-approved"),apr.count("TaskChain")])
-    result.append(["assigned",asg.count("assigned"),asg.count("TaskChain")])
-    result.append(["acquired",acq.count("acquired"),acq.count("TaskChain")])
-    result.append(["running-open",runop.count("running-open"),runop.count("TaskChain")])
-    result.append(["running-closed",runcl.count("running-closed"),runcl.count("TaskChain")])
-    result.append(["aborted",abt.count("aborted"),abt.count("TaskChain")])
-    result.append(["failed",fail.count("failed"),fail.count("TaskChain")])
-    result.append(["completed",com.count("completed"),com.count("TaskChain")])
-    result.append(["closed-out",csd.count("closed-out"),csd.count("TaskChain")])
+    sumworkflows.append(["new",
+                   new.count("new"),new.count("TaskChain")])
+    sumworkflows.append(["assignment-approved",
+                   apr.count("assignment-approved"),apr.count("TaskChain")])
+    sumworkflows.append(["assigned",
+                   asg.count("assigned"),asg.count("TaskChain")])
+    sumworkflows.append(["acquired",
+                   acq.count("acquired"),acq.count("TaskChain")])
+    sumworkflows.append(["running-open",
+                   runop.count("running-open"),runop.count("TaskChain")])
+    sumworkflows.append(["running-closed",
+                   runcl.count("running-closed"),runcl.count("TaskChain")])
+    sumworkflows.append(["aborted",
+                   abt.count("aborted"),abt.count("TaskChain")])
+    sumworkflows.append(["failed",
+                   fail.count("failed"),fail.count("TaskChain")])
+    sumworkflows.append(["completed",
+                   com.count("completed"),com.count("TaskChain")])
+    sumworkflows.append(["closed-out",
+                   csd.count("closed-out"),csd.count("TaskChain")])
+    sumworkflows.append(["rejected",
+                   rjc.count("rejected"),rjc.count("TaskChain")])
     
-#    Print the results
-    print("%20s %15s %15s" %( result[0][0], result[0][1], result[0][2] ) )
-    print("%20s %15s %15s" %( "--------------------", "---------------" , "---------------" ) )
-    print("%20s %15s %15s" %( result[1][0], result[1][1]-result[1][2], result[1][2] ) )
-    print("%20s %15s %15s" %( result[2][0], result[2][1]-result[2][2], result[2][2] ) )
-    print("%20s %15s %15s" %( result[3][0], result[3][1]-result[3][2], result[3][2] ) )
-    print("%20s %15s %15s" %( result[4][0], result[4][1]-result[4][2], result[4][2] ) )
-    print("%20s %15s %15s" %( result[5][0], result[5][1]-result[5][2], result[5][2] ) )
-    print("%20s %15s %15s" %( result[6][0], result[6][1]-result[6][2], result[6][2] ) )
-    print("%20s %15s %15s" %( result[7][0], result[7][1]-result[7][2], result[7][2] ) )
-    print("%20s %15s %15s" %( result[8][0], result[8][1]-result[8][2], result[8][2] ) )
-    print("%20s %15s %15s" %( result[9][0], result[9][1]-result[9][2], result[9][2] ) )
-    print("%20s %15s %15s" %( result[10][0], result[10][1]-result[10][2], result[10][2] ) )
+#    Print the results in a table
+    print("%20s %15s %15s" %( sumworkflows[0][0],
+                               sumworkflows[0][1], sumworkflows[0][2] ) )
+    print("%20s %15s %15s" %( "--------------------",
+                               "---------------" , "---------------" ) )
+    print("%20s %15s %15s" %( sumworkflows[1][0],
+                               sumworkflows[1][1]-sumworkflows[1][2], 
+                               sumworkflows[1][2] ) )
+    print("%20s %15s %15s" %( sumworkflows[2][0],
+                               sumworkflows[2][1]-sumworkflows[2][2], 
+                               sumworkflows[2][2] ) )
+    print("%20s %15s %15s" %( sumworkflows[3][0],
+                               sumworkflows[3][1]-sumworkflows[3][2], 
+                               sumworkflows[3][2] ) )
+    print("%20s %15s %15s" %( sumworkflows[4][0],
+                               sumworkflows[4][1]-sumworkflows[4][2], 
+                               sumworkflows[4][2] ) )
+    print("%20s %15s %15s" %( sumworkflows[5][0],
+                               sumworkflows[5][1]-sumworkflows[5][2], 
+                               sumworkflows[5][2] ) )
+    print("%20s %15s %15s" %( sumworkflows[6][0],
+                               sumworkflows[6][1]-sumworkflows[6][2], 
+                               sumworkflows[6][2] ) )
+    print("%20s %15s %15s" %( sumworkflows[7][0],
+                               sumworkflows[7][1]-sumworkflows[7][2], 
+                               sumworkflows[7][2] ) )
+    print("%20s %15s %15s" %( sumworkflows[8][0],
+                               sumworkflows[8][1]-sumworkflows[8][2], 
+                               sumworkflows[8][2] ) )
+    print("%20s %15s %15s" %( sumworkflows[9][0],
+                               sumworkflows[9][1]-sumworkflows[9][2], 
+                               sumworkflows[9][2] ) )
+    print("%20s %15s %15s" %( sumworkflows[10][0],
+                               sumworkflows[10][1]-sumworkflows[10][2], 
+                               sumworkflows[10][2] ) )
+    print("%20s %15s %15s" %( sumworkflows[11][0],
+                               sumworkflows[11][1]-sumworkflows[11][2], 
+                               sumworkflows[11][2] ) )
     print("%20s %15s %15s" %( "", "__________" , "__________" ) )
     
-#    Overalls 
-    ov1=sum([result[1][1],result[2][1],result[3][1],result[4][1],result[5][1],
-             result[6][1],result[7][1],result[8][1],result[9][1],result[10][1]])
-    ov2=sum([result[1][2],result[2][2],result[3][2],result[4][2],result[5][2],
-             result[6][2],result[7][2],result[8][2],result[9][2],result[10][2]])
+#    Workflows overalls
+    ov1=sum([sumworkflows[1][1],sumworkflows[2][1],sumworkflows[3][1],
+             sumworkflows[4][1],sumworkflows[5][1],
+             sumworkflows[6][1],sumworkflows[7][1],sumworkflows[8][1],
+             sumworkflows[9][1],sumworkflows[10][1],sumworkflows[11][1]])
+    ov2=sum([sumworkflows[1][2],sumworkflows[2][2],sumworkflows[3][2],
+             sumworkflows[4][2],sumworkflows[5][2],
+             sumworkflows[6][2],sumworkflows[7][2],sumworkflows[8][2],
+             sumworkflows[9][2],sumworkflows[10][2],sumworkflows[11][2]])
     print("%20s %15s %15s" %( "Overall", ov1 - ov2 , ov2 ) )
-
-#    Connection must be closed before finishing
-    conn.close()
 
 def main():
     getOveralls()
