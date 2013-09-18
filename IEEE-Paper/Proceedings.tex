@@ -38,7 +38,13 @@ Grid, Distributed Computing, MonteCarlo Simulation
 \section{Introduction}
 From 2009 to 2013, the Compact Muon Soleniod (CMS) one of the four detectors at the LHC collected data from proton-proton collisions. One of the main tasks of the CMS computing is to process this data as quickly and reliable as possible, as well as producing the Monte Carlo (MC) simulations needed for the end-user analysis. The task was designed to be performed using the resources described in the MONARC project \cite{Aderholz2000}. Those resources were organized and distributed in a hierachical way around the globe \cite{Bonacorsi2011}.
 
-At the top of hierarchy lies the Tier-0, a unique facility located at CERN. According to the CMS Computing model it is responsible for storing a cold archival copy of the RAW files that are out of the CMS Online Data Acquisition and trigger system. Additionally it is responsible for the repacking and prompy reconstruction of data, classificatom pf data into Primary Datasets (PDs) acoording to their physics conent and disribution of these PDs amond sites at the next Tier level (Tier-1).
+At the top of hierarchy lies the Tier-0, a unique facility located at CERN. According to the CMS Computing model it is responsible for storing a cold archival copy of the RAW files that are out of the CMS Online Data Acquisition and trigger system. Additionally it is responsible for the repacking and prompy reconstruction of data, classification of data into Primary Datasets (PDs) acoording to their physics conent and disribution of these PDs amond sites at the next Tier level (Tier-1).
+
+There are seven Tier-1 sites located in France (IN2p3), Germany (KIT), Italy (CNAF), Spain (PIC), Taiwan (ASGC), the United Kingdom (RAL) and the United States (Fermilab). Each Tier-1 has a custodiality of some of the RAW data PDs transfered from the Tier-0, and keeps some of those samples in disk for frequuent access (hot copy). Then the Tier-1 sites are then used to re-reconstruct (ReReco) their custodial PDs. Another task planned for the Tier-1s was to run the redigitization (ReDigi) and ReReco of their custodial MC samples. 
+
+
+
+\section{Evolution of the Computing Model}
 
 
 \section{Different kind of workflows}
