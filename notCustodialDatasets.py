@@ -77,7 +77,7 @@ def dataSetCustodialiySubscribedSomewhereElse(url, dataset, node):
 
 def getBlocksProducedLastWeek(url):
 	BlocksWeek=[]
-	oneWeekTime=time.time()-7*24*60*60
+	oneWeekTime=time.time()-2*7*24*60*60
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	r1=conn.request("GET",'/phedex/datasvc/json/prod/data?create_since='+str(oneWeekTime)+'&dataset=/*/*/GEN-SIM&level=block')
 	r2=conn.getresponse()
