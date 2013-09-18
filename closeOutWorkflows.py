@@ -141,6 +141,7 @@ def closeOutReRecoWorkflows(url, workflows):
 
 def closeOutRedigiWorkflows(url, workflows):
 	for workflow in workflows:
+		#print workflow
 		closeOutWorkflow=True
 		InputDataset=dbsTest.getInputDataSet(url, workflow)
 		datasets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
@@ -215,6 +216,7 @@ def closeOutMonterCarloRequests(url, workflows):
 
 def closeOutStep0Requests(url, workflows):
 	for workflow in workflows:
+		#print workflow
 		datasets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
 		closeOutWorkflow=True
 		if getRequestTeam(url, workflow)!='analysis':#If request is not in special queue
@@ -227,7 +229,7 @@ def closeOutStep0Requests(url, workflows):
 					TransPercen=TransferPercentage(url, dataset, site)
 				duplicate=dbsTest.duplicateLumi(dataset)
 				correctLumis=dbsTest.checkCorrectLumisEventGEN(dataset)
-				if Percentage>=float(0.90) and PhedexSubscription!=False and not duplicate and correctLumis:
+				if Percentage>=float(0.95) and PhedexSubscription!=False and not duplicate and correctLumis:
 					closeOutDataset=True
 				else:
 		 			closeOutDataset=False
