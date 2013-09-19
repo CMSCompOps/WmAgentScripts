@@ -56,12 +56,12 @@ def main():
 
            # Set defaults & era
            lfn = '/store/mc'
-           era = 'Summer12_DR53X'       
+           era = 'NONE'       
 
            if 'Summer12_DR52X' in prepID:
               ods = ['GEN-SIM-RECO', 'AODSIM', 'DQM']
               era = 'Summer12'
-           if 'Summer12_DR53X' in prepID:
+           if 'Summer12_DR53X' in prepID or 'Summer12DR53X' in prepID:
               ods = ['GEN-SIM-RECO', 'AODSIM', 'DQM']
               era = 'Summer12_DR53X'
            if 'Summer13dr53X' in prepID:
@@ -71,7 +71,7 @@ def main():
               #ods = ['GEN-SIM-RECO', 'AODSIM', 'DQM']
               era = 'Summer11dr53X'
 					       
-           if 'Fall11_R' in prepID or 'Fall11_HLTMuonia' in prepID:
+           if 'Fall11_R' in prepID or 'Fall11_HLTMuonia' in prepID or 'Fall11R' in prepID:
               ods = ['GEN-RAW', 'GEN-SIM-RECO', 'AODSIM', 'DQM']
               era = 'Fall11'
            if 'LowPU2010_DR' in prepID:
@@ -83,6 +83,10 @@ def main():
               ods = ['GEN-SIM-RECO', 'AODSIM', 'DQM']
               era = 'HiWinter13'
               lfn = '/store/himc'
+
+           if 'HiFall11DR44' in prepID:
+               era = 'HiFall11'
+               lfn = '/store/himc'
 
            if 'UpgradePhase' in workflow and 'DR61SLHCx' in workflow:
               era = 'Summer13'
