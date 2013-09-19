@@ -74,8 +74,20 @@ def retrieveSchema(workflowName, user, group ):
 	    schema['Requestor']=user
 	elif key=='Group':
 	    schema['Group']=group
-	#elif key=='ProdJobSplitArgs':
- 	#    schema['ProdJobSplitArgs']={'events_per_job': 500000, 'events_per_lumi': 300, 'lheInputFiles': True}
+	elif key=='SkimConfigs' and not value:
+	    continue
+	elif key =='RequestorDN':
+	    continue
+	elif key=='DataPileup' and not value:
+	    continue
+	elif key=='MCPileup' and not value:
+	    continue
+	elif key=='StepTwoOutputModuleName' and not value:
+	    continue
+	elif key=='SizePerEvent':
+	    schema['SizePerEvent']=1
+	#elif not value:
+         #   continue
 	elif value != None:
             schema[key] = value
     return schema
