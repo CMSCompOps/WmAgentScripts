@@ -407,29 +407,33 @@ def getInputEvents(url, workflow):
             return 0
     if requestType == 'TaskChain':
         return handleTaskChain(request)
-
-    BlockWhitelist=request['BlockWhitelist']
-    BlockBlacklist=request['BlockBlacklist']
-    inputDataSet=request['InputDataset']
+    #In case some parameters miss in the request like blockwhitelist, blockblack list and so on or it was injected as a string.
+    BlockWhitelist=[]
+    BlockBlacklist=[]
     runWhitelist=[]
-    if 'RunWhitelist' in request:
-	runWhitelist=request['RunWhitelist']
+    runBlacklist=[]
+    for listitem in ["RunWhitelist", "RunBlacklist", "BlockWhitelist",
+                           "BlockBlacklist"]:
+	if listitem in request:
+		if request[listitem]=='[]':
+			request[listitem]=[]
+    inputDataSet=request['InputDataset']
     if requestType=='ReReco':
-        if len(BlockWhitelist)>0:
-            return getRunLumiCountDatasetBlockList(inputDataSet,BlockWhitelist)
-        if len(BlockBlacklist)>0:
-            return getRunLumiCountDataset(inputDataSet)-getRunLumiCountDatasetBlockList(inputDataSet,BlockBlacklist)
+        if len(request['BlockWhitelist'])>0:
+            return getRunLumiCountDatasetBlockList(das_host, request['InputDataset'],request['BlockWhitelist'])
+        if len(request['BlockBlacklist'])>0:
+            return getRunLumiCountDataset(request['InputDataset'])-getRunLumiCountDatasetBlockList(request['InputDataset'],request['BlockBlacklist'])
         if len(runWhitelist)>0:
-            return getRunLumiCountDatasetListDAS(das_host, inputDataSet, runWhitelist)
+            return getRunLumiCountDatasetListDAS(das_host, request['InputDataset'], request['RunWhitelist'])
         else:
-            return getRunLumiCountDataset(inputDataSet)
-    events=getEventCountDataSet(das_host, inputDataSet)
+            return getRunLumiCountDataset(das_host, request['InputDataset'])
+    events=getEventCountDataSet(das_host, request['InputDataset'])
     if len(BlockBlacklist)>0:
-        events=events-EventsBlockList(inputDataSet, BlockBlacklist)
+        events=events-EventsBlockList(request['InputDataset'], request['BlockBlacklist'])
     if len(runWhitelist)>0:
-        events=EventsRunList(das_host, inputDataSet, runWhitelist)
+        events=EventsRunList(das_host, request['InputDataset'], request['RunWhitelist'])
     if len(BlockWhitelist)>0:
-        events=EventsBlockList(das_host, inputDataSet, BlockWhitelist)
+        events=EventsBlockList(das_host, request['InputDataset'], request['BlockWhitelist'])
     if 'FilterEfficiency' in request.keys():
         return float(request['FilterEfficiency'])*events
     else:

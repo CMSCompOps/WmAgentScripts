@@ -74,20 +74,12 @@ def retrieveSchema(workflowName, user, group ):
 	    schema['Requestor']=user
 	elif key=='Group':
 	    schema['Group']=group
-	elif key=='SkimConfigs' and not value:
-	    continue
-	elif key =='RequestorDN':
-	    continue
-	elif key=='DataPileup' and not value:
-	    continue
-	elif key=='MCPileup' and not value:
-	    continue
-	elif key=='StepTwoOutputModuleName' and not value:
-	    continue
 	elif key=='SizePerEvent':
 	    schema['SizePerEvent']=1
-	#elif not value:
-         #   continue
+	elif key in ["RunWhitelist", "RunBlacklist", "BlockWhitelist", "BlockBlacklist"] and not value:
+	    schema[key]=[]
+	elif not value:
+            continue
 	elif value != None:
             schema[key] = value
     return schema
@@ -96,7 +88,8 @@ def submitWorkflow(schema):
     for schemaListItem in ["RunWhitelist", "RunBlacklist", "BlockWhitelist",
                            "BlockBlacklist"]:
         if schemaListItem in schema.keys():
-            schema[schemaListItem] = str(schema[schemaListItem])
+	    continue
+            #schema[schemaListItem] = str(schema[schemaListItem])
     jsonEncodedParams = {}
     for paramKey in schema.keys():
 		jsonEncodedParams[paramKey] = json.dumps(schema[paramKey])
