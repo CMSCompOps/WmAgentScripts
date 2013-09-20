@@ -56,6 +56,11 @@ def getScenario(ps):
            pss = 'PU10bx50'
         if ps == 'SimGeneral.MixingModule.mix_2011_FinalDist_OOTPU_cfi':
            pss = 'PU_S13'	
+        if ps == 'SimGeneral.MixingModule.mix_fromDB_cfi':
+           pss = 'PU_RD1'
+        if ps == 'SimGeneral.MixingModule.mix_2012C_Profile_PoissonOOTPU_cfi':
+           pss = 'PU2012CExt'
+
 
         return pss
 
@@ -269,6 +274,7 @@ def main():
                 maxRSS = 2300000
         else:
                 maxRSS=options.maxRSS
+	maxRSSdefault = maxRSS
         maxVSize = 4100000000
         if not options.maxVSize:
                 maxVSize = 4100000000
@@ -358,7 +364,7 @@ def main():
               if pileupScenario == 'Unknown' and 'MinBias' in pileupDataset:
                  print 'ERROR: unable to determine pileup scenario'
                  sys.exit(0)
-              elif 'Fall11_R2' in workflow or 'Fall11_R4' in workflow:
+              elif 'Fall11_R2' in workflow or 'Fall11_R4' in workflow or 'Fall11R2' in workflow or 'Fall11R4' in workflow:
                  inDataSet = getInputDataSet(url, workflow)
                  matchObj = re.match(r".*Fall11-(.*)_START.*", inDataSet)
                  if matchObj:
@@ -381,8 +387,12 @@ def main():
 
            specialName = ''
 
-           #era = 'Summer12'
-           #lfn = '/store/mc'
+           era = 'Summer12'
+           lfn = '/store/mc'
+
+           #delete era and lfn so it can't reuse the ones from the previous workflow
+	   del era
+	   del lfn
 
            # Set era, lfn and campaign-dependent part of name if necessary
            if 'Summer12_DR51X' in workflow:
@@ -397,7 +407,8 @@ def main():
               era = 'Summer12_DR53X'
               lfn = '/store/mc'
 
-           if 'Fall11_R' in workflow:
+           #this is incorrect for HiFall11 workflows, but is changed further down
+           if 'Fall11_R' in workflow or 'Fall11R' in workflow:
               era = 'Fall11'
               lfn = '/store/mc'
 
@@ -486,10 +497,10 @@ def main():
               lfn = '/store/mc'
               specialName = campaign + '_'
 
-           if campaign == 'HiFall11_DR44X':
+           if campaign == 'HiFall11_DR44X' or campaign == 'HiFall11DR44':
               era = 'HiFall11'
               lfn = '/store/himc'
-              specialName = campaign + '_'
+              specialName = 'HiFall11_DR44X' + '_'
 
            # Construct processed dataset version
            if pileupScenario != '':
@@ -512,10 +523,15 @@ def main():
            else:
               procversion = options.inprocversion
 
+	   #reset maxRSS to default, so it can't reuse the custom value from a previous workflow
+	   maxRSS = maxRSSdefault
+           if 'HiFall11' in workflow and 'IN2P3' in siteUse:
+              maxRSS = 4000000
+
            # Set max number of merge events
            maxmergeevents = 50000
-           if 'Fall11_R1' in workflow:
-              maxmergeevents = 6000
+           #if 'Fall11_R1' in workflow:
+           #   maxmergeevents = 6000
            if 'DR61SLHCx' in workflow:
               maxmergeevents = 5000
 
