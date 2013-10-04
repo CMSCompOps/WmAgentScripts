@@ -81,7 +81,8 @@ for line in out.split('\n') :
     if 'sleep' in line:
         print line
         continue
-    if len(array)<8:
+    #if len(array)<8:
+    if not array[4].isdigit():
         EnteredCurrentStatus=int(array[3])
         log =array[4]
         site = array[5]
