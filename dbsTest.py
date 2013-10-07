@@ -417,10 +417,11 @@ def getInputEvents(url, workflow):
 	if listitem in request:
 		if request[listitem]=='[]':
 			request[listitem]=[]
+	else:
+		request[listitem]=[]
     inputDataSet=request['InputDataset']
     if requestType=='ReReco':
-	print 
-        if len(request['BlockWhitelist'])>0:
+	if len(request['BlockWhitelist'])>0:
             return getRunLumiCountDatasetBlockList(das_host, request['InputDataset'],request['BlockWhitelist'])
         if len(request['BlockBlacklist'])>0:
             return getRunLumiCountDataset(request['InputDataset'])-getRunLumiCountDatasetBlockList(request['InputDataset'],request['BlockBlacklist'])
