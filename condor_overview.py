@@ -1,9 +1,15 @@
 #!/usr/bin/env python
-
+"""
+Condor Overview:
+Script to summarize output from condorq
+"""
 import sys,os
 import subprocess
-
+from random import choice
 def increaseCounterInDict(dict,site,type):
+    """
+    Puts one job more on dictionary
+    """
     # print 'site',site,'type',type
     if site in dict.keys():
         dict[site][type] += 1
@@ -68,71 +74,106 @@ jobs_removereason = {}
 
 #command='condor_q -format "%i." ClusterID -format "%s " ProcId -format " %i " JobStatus  -format " %d " ServerTime-EnteredCurrentStatus -format "%s" UserLog -format " %s" DESIRED_Sites -format " %s" RemoveReason -format " %i\n" NumJobStarts'
 #command="""condor_q -format "%i." ClusterID -format "%s " ProcId -format " %i " JobStatus  -format " %d " ServerTime-JobStartDate -format "%s" UserLog -format " %s" DESIRED_Sites -format " %s" RemoveReason -format " %i\n" NumJobStarts | awk '{if ($2!= 1) print $0}'"""
-command="""condor_q -format "%i." ClusterID -format "%s " ProcId -format " %i " JobStatus  -format " %d " ServerTime -format " %d " JobStartDate -format " %d" EnteredCurrentStatus -format " %s" UserLog -format " %s" DESIRED_Sites -format " %s" RemoveReason -format " %i\n" NumJobStarts"""
+command="""condor_q -format "%i." ClusterID -format "%s " ProcId -format "%i " JobStatus  -format "%d " ServerTime -format "[%d] " JobStartDate -format "%s " UserLog -format "[%s] " MATCH_EXP_JOBGLIDEIN_CMSSite -format "%s " DESIRED_Sites -format "%i\n" NumJobStarts"""
 proc = subprocess.Popen(command, stderr = subprocess.PIPE,stdout = subprocess.PIPE, shell = True)
 out, err = proc.communicate()
 for line in out.split('\n') :
     if line == "" : continue
     array = line.split()
-    id = array[0]
-    status = int(array[1])
-    ServerTime=int(array[2])
-    JobStartDate=int(array[3])
+    i = 0
+    #clusterID.ProcId (composed ID)
+    id = array[i]; i+=1
+    #JobStatus
+    status = int(array[i]); i+=1
+    #ServerTime
+    ServerTime=int(array[i]); i+=1
+
+    #if it has the JobStartDate
+    if array[i].startswith('['):
+        #JobStartDate (delete the [])
+        JobStartDate=int(array[i][1:-1]); i+=1
+    
     if 'sleep' in line:
         print line
         continue
-    #if len(array)<8:
-    if not array[4].isdigit():
-        EnteredCurrentStatus=int(array[3])
-        log =array[4]
-        site = array[5]
-    else:
-        EnteredCurrentStatus=int(array[4])
-        log = array[5]
-        site = array[6]
+
+    #get log name
+    log = array[i]; i+=1
+    #get Workflow name from the LOG
     workflow = log.split("/JobCache/")[1].split('/')[0]
+    
+    #if it has a MATCH_EXP_JOBGLIDEIN_CMSSite
+    if array[i].startswith('['):
+        site = array[i][1:-1]; i+=1
+    else:
+        site = 'UNKNOWN'
+    
+    #site list from i to previous to -1
+    #this is to 1. Join site list, 2. remove [], then split by comma
+    sitelist = ''.join(array[i:-1]).split(',')
+
+    if site == 'UNKNOWN' and len(sitelist) == 1:
+        print sitelist
+        site = sitelist[0]
+    elif site == 'UNKNOWN' and len(sitelist) > 1:
+        site = 'MULTIPLE'
+        #pick random from whitelist
+        site = choice(sitelist)
+        
+    #get number of job restarts
     numjobstart = int(array[-1])
     removereason = "UNDEFINED"
-    if len(array) > 8: removereason = "DEFINED"    
+
+    if len(sitelist) > 1: removereason = "DEFINED"    
     type = ''
-    if log.count('Merge') > 0 :
+    #get type of WF from Log Name
+    if 'Merge' in log:
         type = 'Merge'
-    elif log.count('Cleanup') > 0 :
+    elif 'Cleanup' in log:
         type = 'Cleanup'
-    elif log.count('LogCollect') > 0 :
+    elif 'LogCollect' in log:
         type = 'LogCollect'
-    elif log.count('Production') > 0 :
+    elif 'Production' in log:
         type = 'Production'
-    elif log.count('MonteCarloFromGEN') > 0 :
-                 type = 'Production'
-    elif log.count('Processing') > 0 :
-            type = 'Processing'
+    elif 'MonteCarloFromGEN' in log:
+        type = 'Production'
+    elif 'Processing' in log:
+        type = 'Processing'
     else :
         type = 'Processing'
+
+    # IF Running
     if status == 2:
         increaseCounterInDict(overview_running,site,type)
-        # print 'overview_running',overview_running
+        # How much time has run
         time=ServerTime-JobStartDate
+
+        #if larger tan 48 hours
         if time > 172800 :
             increaseCounterInDict(overview_running48,site,type)
             fillIDWFinDict(jobs_48,site,workflow,id)
+        #if restarted more than 3 times
         if numjobstart > 3:
             increaseCounterInDict(overview_numjobstart,site,type)
-            fillIDWFinDict(jobs_numjobstart,site,workflow,id)            
+            fillIDWFinDict(jobs_numjobstart,site,workflow,id)
+    #if Pending
     elif status == 1:
         increaseCounterInDict(overview_pending,site,type)
+    # if not running or pending, and reason is DEFINED
     elif removereason == "DEFINED" :
         increaseCounterInDict(overview_removereason,site,type)
         fillIDWFinDict(jobs_removereason,site,workflow,id)
+    # if reason UNDEFINED
     else :
         increaseCounterInDict(overview_other,site,type)
         
-        
+#print results
 printDict(overview_running,'Running')
 print ""
 printDict(overview_pending,'Pending')
 print ""
-if len(overview_running48.keys()) > 0:
+
+if overview_running48:
     printDict(overview_running48,'Running > 48h')
     print ""
     sorted = jobs_48.keys()
@@ -147,7 +188,7 @@ if len(overview_running48.keys()) > 0:
         print ""
         
 print ""
-if len(overview_removereason.keys()) > 0:
+if overview_removereason:
     printDict(overview_removereason,'Removed')
     print ""
     sorted = jobs_removereason.keys()
@@ -162,7 +203,7 @@ if len(overview_removereason.keys()) > 0:
         print ""
 
 print ""
-if len(overview_numjobstart.keys()) > 0:
+if overview_numjobstart:
     printDict(overview_numjobstart,'Restarted')
     print ""
     sorted = jobs_numjobstart.keys()
