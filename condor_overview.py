@@ -99,11 +99,10 @@ def main():
 
     #condor_q command
     command="""condor_q -format "%i." ClusterID -format "%s " ProcId -format "%i " JobStatus  -format "%d " ServerTime -format "[%d] " JobStartDate -format "%s " UserLog -format "[%s] " MATCH_EXP_JOBGLIDEIN_CMSSite -format "%s " DESIRED_Sites -format "%i\n" NumJobStarts"""
-    #proc = subprocess.Popen(command, stderr = subprocess.PIPE,stdout = subprocess.PIPE, shell = True)
-    #out, err = proc.communicate()
-    out = open('out_command.txt')
+    proc = subprocess.Popen(command, stderr = subprocess.PIPE,stdout = subprocess.PIPE, shell = True)
+    out, err = proc.communicate()
     #split lines
-    for line in out:#out.split('\n') :
+    for line in out.split('\n') :
         if line == "" : continue
         array = line.split()
         i = 0
