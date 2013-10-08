@@ -4,8 +4,8 @@ import urllib2,urllib, httplib, sys, re, os, json, phedexSubscription
 from xml.dom.minidom import getDOMImplementation
 from das_client import get_data
 #das_host='https://das.cern.ch'
-#das_host='https://cmsweb.cern.ch'
-das_host='https://cmsweb-testbed.cern.ch'
+das_host='https://cmsweb.cern.ch'
+#das_host='https://cmsweb-testbed.cern.ch'
 #das_host='https://das-dbs3.cern.ch'
 
 def getWorkflowType(url, workflow):
@@ -417,14 +417,16 @@ def getInputEvents(url, workflow):
 	if listitem in request:
 		if request[listitem]=='[]':
 			request[listitem]=[]
+	else:
+		request[listitem]=[]
     inputDataSet=request['InputDataset']
     if requestType=='ReReco':
-        if len(request['BlockWhitelist'])>0:
+	if len(request['BlockWhitelist'])>0:
             return getRunLumiCountDatasetBlockList(das_host, request['InputDataset'],request['BlockWhitelist'])
         if len(request['BlockBlacklist'])>0:
             return getRunLumiCountDataset(request['InputDataset'])-getRunLumiCountDatasetBlockList(request['InputDataset'],request['BlockBlacklist'])
-        if len(runWhitelist)>0:
-            return getRunLumiCountDatasetListDAS(das_host, request['InputDataset'], request['RunWhitelist'])
+        if len(request['RunWhitelist'])>0:
+	    return getRunLumiCountDatasetListDAS(das_host, request['InputDataset'], request['RunWhitelist'])
         else:
             return getRunLumiCountDataset(das_host, request['InputDataset'])
     events=getEventCountDataSet(das_host, request['InputDataset'])
