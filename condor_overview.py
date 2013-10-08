@@ -104,7 +104,7 @@ def main():
     out, err = proc.communicate()
 
     #split lines
-    for line in out:#out.split('\n') :
+    for line in out.split('\n') :
         if line == "" : continue
         array = line.split()
         i = 0
@@ -138,7 +138,7 @@ def main():
         #site list from i to previous to -1
         #this is to 1. Join site list, 2. remove [], then split by comma
         sitelist = ''.join(array[i:-1]).split(',')
-
+        
         if site == 'UNKNOWN' and len(sitelist) == 1:
             site = sitelist[0]
         elif site == 'UNKNOWN' and len(sitelist) > 1:
