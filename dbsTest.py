@@ -408,15 +408,13 @@ def getInputEvents(url, workflow):
     if requestType == 'TaskChain':
         return handleTaskChain(request)
     #In case some parameters miss in the request like blockwhitelist, blockblack list and so on or it was injected as a string.
-    BlockWhitelist=[]
-    BlockBlacklist=[]
-    runWhitelist=[]
-    runBlacklist=[]
     for listitem in ["RunWhitelist", "RunBlacklist", "BlockWhitelist",
                            "BlockBlacklist"]:
 	if listitem in request:
 		if request[listitem]=='[]':
 			request[listitem]=[]
+		if type(request[listitem]) is not list:#if there is not a list but just one element we convert it to a list with one element.
+			request[listitem]=[request[listitem]]
 	else:
 		request[listitem]=[]
     inputDataSet=request['InputDataset']
@@ -430,11 +428,11 @@ def getInputEvents(url, workflow):
         else:
             return getRunLumiCountDataset(das_host, request['InputDataset'])
     events=getEventCountDataSet(das_host, request['InputDataset'])
-    if len(BlockBlacklist)>0:
+    if len(request['BlockBlacklist'])>0:
         events=events-EventsBlockList(request['InputDataset'], request['BlockBlacklist'])
-    if len(runWhitelist)>0:
+    if len(request['RunWhitelist'])>0:
         events=EventsRunList(das_host, request['InputDataset'], request['RunWhitelist'])
-    if len(BlockWhitelist)>0:
+    if len(request['BlockWhitelist'])>0:
         events=EventsBlockList(das_host, request['InputDataset'], request['BlockWhitelist'])
     if 'FilterEfficiency' in request.keys():
         return float(request['FilterEfficiency'])*events
