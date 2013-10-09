@@ -55,8 +55,7 @@ def printDict(dict,description):
     """
     format-prints dict contents
     """
-    sorted = dict.keys()
-    sorted.sort()
+    sortedKeys = sorted(dict.keys())
     print '----------------------------------------------------------------------------------------------------'
     print '| %20s | Processing | Production | Merge      | Cleanup    | LogCollect | Total      |' % description
     print '----------------------------------------------------------------------------------------------------'
@@ -66,7 +65,7 @@ def printDict(dict,description):
     total_cleanup = 0
     total_logcollect = 0
     total = 0
-    for site in sorted:
+    for site in sortedKeys:
         total_production += dict[site]['Production']
         total_processing += dict[site]['Processing']
         total_merge += dict[site]['Merge']
@@ -102,7 +101,6 @@ def main():
     command="""condor_q -format "%i." ClusterID -format "%s " ProcId -format "%i " JobStatus  -format "%d " ServerTime -format "[%d] " JobStartDate -format "%s " UserLog -format "[%s] " MATCH_EXP_JOBGLIDEIN_CMSSite -format "%s " DESIRED_Sites -format "%i\n" NumJobStarts"""
     proc = subprocess.Popen(command, stderr = subprocess.PIPE,stdout = subprocess.PIPE, shell = True)
     out, err = proc.communicate()
-
     #split lines
     for line in out.split('\n') :
         if line == "" : continue
@@ -202,10 +200,10 @@ def main():
     if overview_running48:
         printDict(overview_running48,'Running > 48h')
         print ""
-        sorted = jobs_48.keys().sort()
+        sortKeys = sorted(jobs_48)
         print 'Jobs that run for > 48 hours by workflow:'
         print ""
-        for site in sorted:
+        for site in sortKeys:
             print site + ':'
             print ""
             for wf in jobs_48[site].keys():
@@ -216,11 +214,10 @@ def main():
     if overview_removereason:
         printDict(overview_removereason,'Removed')
         print ""
-        sorted = jobs_removereason.keys()
-        sorted.sort()
+        sortKeys = sorted(jobs_removereason.keys())
         print 'Jobs with RemoveReason!=UNDEFINED'
         print ""
-        for site in sorted:
+        for site in sortKeys:
             print site + ':'
             print ''
             for wf in jobs_removereason[site].keys():
@@ -231,11 +228,10 @@ def main():
     if overview_numjobstart:
         printDict(overview_numjobstart,'Restarted')
         print ""
-        sorted = jobs_numjobstart.keys()
-        sorted.sort()
+        sortKeys = sorted(jobs_numjobstart.keys())
         print 'Jobs with NumJobStart > 3'
         print ""
-        for site in sorted:
+        for site in sortKeys:
             print site + ':'
             print ''
             for wf in jobs_numjobstart[site].keys():
