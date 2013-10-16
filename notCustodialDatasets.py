@@ -90,7 +90,7 @@ def getBlocksProducedLastWeek(url):
 
 def getdatasetsProducedLastWeek(url):
 	datasetsWeek=[]
-	oneWeekTime=time.time()-7*24*60*60
+	oneWeekTime=time.time()-30*24*60*60
         #oneWeekTime=time.time()-3*30*24*60*60
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	r1=conn.request("GET",'/phedex/datasvc/json/prod/data?create_since='+str(oneWeekTime)+'&dataset=/*/*/*SIM&level=block')

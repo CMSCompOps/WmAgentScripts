@@ -82,6 +82,10 @@ def retrieveSchema(workflowName, user, group ):
             continue
 	elif value != None:
             schema[key] = value
+    if 'LumisPerJob' not in schema and schema['RequestType']=='MonteCarlo':
+	schema['LumisPerJob']=300
+    if 'EventsPerJob' not in schema and schema['RequestType']=='MonteCarlo':
+	schema['EventsPerJob']=120000
     return schema
 
 def submitWorkflow(schema):
