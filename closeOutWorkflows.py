@@ -59,6 +59,19 @@ def getOverviewRequest():
         requests = json.loads(r2.read())
 	return requests
 
+def getOverviewRequestsWMStats(url):
+	conn = httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
+                                     key_file = os.getenv('X509_USER_PROXY'))
+	conn.request("GET",
+                 "/couchdb/wmstats/_design/WMStats/_view/requestByStatusAndType?stale=update_after")
+	response = conn.getresponse()
+	data = response.read()
+	conn.close()
+	myString=data.decode('utf-8')
+	workflows=json.loads(myString)['rows']
+	return workflows
+
+
 #Returns a list with the custodial sites for a request
 def findCustodial(url, requestname):
 	custodialSites=[]
@@ -80,16 +93,21 @@ def findCustodial(url, requestname):
 def classifyCompletedRequests(url, requests):
 	workflows={'ReDigi':[],'MonteCarloFromGEN':[],'MonteCarlo':[] , 'ReReco':[], 'LHEStepZero':[]}
 	for request in requests:
-	    name=request['request_name']
-	    status='NoStatus'
-	    if 'status' in request.keys():
-			status=request['status']
-            requestType='NoType'
-	    if 'type' in request.keys():
-			 requestType=request['type']
+	    name=request['id']
+	    if len(request['key'])<3:
+		print request
+		continue
+	    status=request['key'][1]
+	    requestType=request['key'][2]
 	    if status=='completed':
-		if requestType=='MonteCarloFromGEN' or requestType=='MonteCarlo' or requestType=='LHEStepZero'or requestType=='ReDigi' or requestType=='ReReco':
-			workflows[requestType].append(name)
+		if requestType=='MonteCarlo':
+			datasets=phedexSubscription.outputdatasetsWorkflow(url, name)
+			if 'GEN' in datasets[0]:
+				workflows['LHEStepZero'].append(name)
+			else:
+				workflows[requestType].append(name)
+		if requestType=='MonteCarloFromGEN' or requestType=='LHEStepZero'or requestType=='ReDigi' or requestType=='ReReco':
+				workflows[requestType].append(name)
 	return workflows
 
 def testOutputDataset(datasetName):
@@ -254,7 +272,7 @@ def PercentageCompletion(url, workflow, dataset):
 def main():
 	url='cmsweb.cern.ch'
 	print "Gathering Requests"
-	requests=getOverviewRequest()
+	requests=getOverviewRequestsWMStats(url)
 	print "Classifying Requests"
 	workflowsCompleted=classifyCompletedRequests(url, requests)
 	print '-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'
