@@ -4,8 +4,8 @@ import urllib2,urllib, httplib, sys, re, os, json, phedexSubscription
 from xml.dom.minidom import getDOMImplementation
 from das_client import get_data
 #das_host='https://das.cern.ch'
-das_host='https://cmsweb.cern.ch'
-#das_host='https://cmsweb-testbed.cern.ch'
+#das_host='https://cmsweb.cern.ch'
+das_host='https://cmsweb-testbed.cern.ch'
 #das_host='https://das-dbs3.cern.ch'
 
 def getWorkflowType(url, workflow):
@@ -177,7 +177,7 @@ def getEventCountDataSet(das_url, dataset):
     else:
         result = das_data
     if result['status'] == 'fail' :
-        print 'DAS query failed with reason:',result['reason']
+        print 'DAS query' + query+' failed with reason:',result['reason']
     else:
 	if len(result['data'])==0:#dataset not yet registered in DBS
 		return 0
@@ -300,7 +300,8 @@ def getEventsBlock(das_url, block_name):
     else:
         result = das_data
     if result['status'] == 'fail' :
-        print 'DAS query failed with reason:',result['reason']
+        print 'DAS quert ', query	
+	print 'failed with reason:',result['reason']
     else:
 	if len(result['data'])==0:#dataset not yet registered in DBS
 		return 0
@@ -413,8 +414,8 @@ def getInputEvents(url, workflow):
 	if listitem in request:
 		if request[listitem]=='[]':
 			request[listitem]=[]
-		if type(request[listitem]) is not list:#if there is not a list but just one element we convert it to a list with one element.
-			request[listitem]=[request[listitem]]
+		if type(request[listitem]) is not list:#if there is not a list but some elements it creates a list
+			request[listitem]=re.split(r",",request[listitem])
 	else:
 		request[listitem]=[]
     inputDataSet=request['InputDataset']
@@ -429,11 +430,11 @@ def getInputEvents(url, workflow):
             return getRunLumiCountDataset(das_host, request['InputDataset'])
     events=getEventCountDataSet(das_host, request['InputDataset'])
     if len(request['BlockBlacklist'])>0:
-        events=events-EventsBlockList(request['InputDataset'], request['BlockBlacklist'])
+	events=events-EventsBlockList(request['InputDataset'], request['BlockBlacklist'])
     if len(request['RunWhitelist'])>0:
-        events=EventsRunList(das_host, request['InputDataset'], request['RunWhitelist'])
+	events=EventsRunList(das_host, request['InputDataset'], request['RunWhitelist'])
     if len(request['BlockWhitelist'])>0:
-        events=EventsBlockList(das_host, request['InputDataset'], request['BlockWhitelist'])
+	events=EventsBlockList(das_host, request['InputDataset'], request['BlockWhitelist'])
     if 'FilterEfficiency' in request.keys():
         return float(request['FilterEfficiency'])*events
     else:
