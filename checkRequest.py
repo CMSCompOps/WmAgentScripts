@@ -21,6 +21,19 @@ def getRequestInfo():
     if response[1] != 200:
         raise RuntimeError("Request information was not available!")
     requestDict = response[0]
+
+    #print requestDict.get('RunWhitelist')
+    #print requestDict.get('RunBlacklist')
+
+    if not requestDict.get('RunWhitelist'):
+        requestDict['RunWhitelist'] = []
+    if not requestDict.get('RunBlacklist'):
+        requestDict['RunBlacklist'] = []
+    if not requestDict.get('BlockWhitelist'):
+        requestDict['BlockWhitelist'] = []
+    if not requestDict.get('BlockBlacklist'):
+        requestDict['BlockBlacklist'] = []
+    
     compactRequest = {'InputDataset' : requestDict['InputDataset'],
                       'RunWhitelist' : requestDict['RunWhitelist'],
                       'RunBlacklist' : requestDict['RunBlacklist'],
