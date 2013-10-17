@@ -288,7 +288,7 @@ def main():
            useX = 1
 
         # Valid Tier-1 sites
-        sites = ['T1_DE_KIT', 'T1_FR_CCIN2P3', 'T1_IT_CNAF', 'T1_ES_PIC', 'T1_TW_ASGC', 'T1_UK_RAL', 'T1_US_FNAL', 'HLT']
+        sites = ['T1_DE_KIT', 'T1_FR_CCIN2P3', 'T1_IT_CNAF', 'T1_ES_PIC', 'T1_TW_ASGC', 'T1_UK_RAL', 'T1_US_FNAL', 'HLT', 'T1_IT_CNAF_Disk']
 
         if options.filename:
            f=open(filename,'r')
@@ -341,6 +341,10 @@ def main():
               siteUse =  ['T1_UK_RAL', 'T1_UK_RAL_Disk']
               if not options.siteCust:
                  siteCust = 'T1_UK_RAL'
+           if siteUse == 'T1_IT_CNAF_Disk':
+              siteUse =  ['T1_IT_CNAF', 'T1_IT_CNAF_Disk']
+              if not options.siteCust:
+                 siteCust = 'T1_IT_CNAF'
            if options.site == 'HLT':
               siteUse = ['T2_CH_CERN_AI', 'T2_CH_CERN_HLT']
               team = 'hlt'
@@ -502,6 +506,10 @@ def main():
               lfn = '/store/himc'
               specialName = 'HiFall11_DR44X' + '_'
 
+           if campaign == 'UpgFall13d':
+              era = campaign
+              lfn = '/store/mc'
+
            # Construct processed dataset version
            if pileupScenario != '':
               pileupScenario = pileupScenario+'_' 
@@ -544,7 +552,7 @@ def main():
               print 'ERROR: lfn is not defined'
               sys.exit(0)
 
-           if siteUse not in sites and options.site != 'T2_US' and siteUse != ['T1_UK_RAL', 'T1_UK_RAL_Disk'] and siteUse != ['T2_CH_CERN_AI', 'T2_CH_CERN_HLT']:
+           if siteUse not in sites and options.site != 'T2_US' and siteUse != ['T1_UK_RAL', 'T1_UK_RAL_Disk'] and siteUse != ['T2_CH_CERN_AI', 'T2_CH_CERN_HLT'] and siteUse != ['T1_IT_CNAF', 'T1_IT_CNAF_Disk']:
               print 'ERROR: invalid site'
               sys.exit(0)
 
