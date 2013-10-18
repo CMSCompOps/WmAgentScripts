@@ -102,7 +102,8 @@ def classifyCompletedRequests(url, requests):
 	    if status=='completed':
 		if requestType=='MonteCarlo':
 			datasets=phedexSubscription.outputdatasetsWorkflow(url, name)
-			if 'GEN' in datasets[0]:
+			m=re.search('.*/GEN$',datasets[0])
+			if m:
 				workflows['LHEStepZero'].append(name)
 			else:
 				workflows[requestType].append(name)
