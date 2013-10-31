@@ -7,6 +7,7 @@ from das_client import get_data
 #das_host='https://cmsweb.cern.ch'
 das_host='https://cmsweb-testbed.cern.ch'
 #das_host='https://das-dbs3.cern.ch'
+#das_host='https://dastest.cern.ch'
 
 def getWorkflowType(url, workflow):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -143,7 +144,7 @@ def duplicateEventsMonteCarlo(dataset):
 #Return the number of events for a given dataset given a runlist
 def EventsRunList(das_url, dataset, runlist):
     events=0
-    for run in runList:
+    for run in runlist:
        events=events+getEventsRun(das_url, dataset, run)
     return events
 
