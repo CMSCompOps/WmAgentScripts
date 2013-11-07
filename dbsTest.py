@@ -177,6 +177,7 @@ def getEventCountDataSet(das_url, dataset):
         result = json.loads(das_data)
     else:
         result = das_data
+    
     if result['status'] == 'fail' :
         print 'DAS query' + query+' failed with reason:',result['reason']
     else:
@@ -186,7 +187,7 @@ def getEventCountDataSet(das_url, dataset):
 	for key in preresult:
 		if 'nevents' in key:
 			return key['nevents']		
-	return -1
+    return -1
 
 #Returns a list of runs of a dataset
 def getRunsDataset(das_url, dataset):
@@ -293,7 +294,7 @@ def checkCorrectLumisEventGEN(dataset):
 def chunks(lis, n):
     return [lis[i:i+n] for i in range(0, len(lis), n)]
 # Return the number of events in a block using DAS
-def getEventsBlock(das_url, block_name):
+def getEventsBlock(das_url, block_name): 
     query="block="+block_name+"  | grep block.nevents"
     das_data = get_data(das_url,query,0,0,0)
     if isinstance(das_data, basestring):
@@ -319,7 +320,10 @@ def EventsBlockList(das_url, dataset, blocklist):
     if len(blocklist)==0:
         return getEventCountDataSet(das_url, dataset)
     for block in blocklist:
-	events=events+getEventsBlock(das_url, block)
+        #if surrouned with "['  ...  ']"
+        if block[:2] == "['" and block[-2:] == "']":
+            block = block[2:-2]
+        events=events+getEventsBlock(das_url, block)
     return events
 
 
@@ -392,7 +396,8 @@ def getInputEvents(url, workflow):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
     r2=conn.getresponse()
-    request = json.loads(r2.read())
+    request = json.loads(r2.read())  
+    #try until no exception
     while 'exception' in request:
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
@@ -421,21 +426,22 @@ def getInputEvents(url, workflow):
 		request[listitem]=[]
     inputDataSet=request['InputDataset']
     if requestType=='ReReco':
-	if len(request['BlockWhitelist'])>0:
+        if len(request['BlockWhitelist'])>0:
             return getRunLumiCountDatasetBlockList(das_host, request['InputDataset'],request['BlockWhitelist'])
         if len(request['BlockBlacklist'])>0:
             return getRunLumiCountDataset(request['InputDataset'])-getRunLumiCountDatasetBlockList(request['InputDataset'],request['BlockBlacklist'])
         if len(request['RunWhitelist'])>0:
-	    return getRunLumiCountDatasetListDAS(das_host, request['InputDataset'], request['RunWhitelist'])
+            return getRunLumiCountDatasetListDAS(das_host, request['InputDataset'], request['RunWhitelist'])
         else:
             return getRunLumiCountDataset(das_host, request['InputDataset'])
+    
     events=getEventCountDataSet(das_host, request['InputDataset'])
     if len(request['BlockBlacklist'])>0:
-	events=events-EventsBlockList(request['InputDataset'], request['BlockBlacklist'])
+        events=events-EventsBlockList(request['InputDataset'], request['BlockBlacklist'])
     if len(request['RunWhitelist'])>0:
-	events=EventsRunList(das_host, request['InputDataset'], request['RunWhitelist'])
+        events=EventsRunList(das_host, request['InputDataset'], request['RunWhitelist'])
     if len(request['BlockWhitelist'])>0:
-	events=EventsBlockList(das_host, request['InputDataset'], request['BlockWhitelist'])
+        events=EventsBlockList(das_host, request['InputDataset'], request['BlockWhitelist'])
     if 'FilterEfficiency' in request.keys():
         return float(request['FilterEfficiency'])*events
     else:
