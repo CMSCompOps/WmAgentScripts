@@ -67,14 +67,14 @@ def duplicateRunLumi(dataset):
         run=filename['run'][0]['run_number']
         if run not in RunlumisChecked:
             RunlumisChecked[run]=[]
-            newLumis=filename['lumi'][0]['number']
-            for lumiRange in newLumis:
-                newlumiRange=range(lumiRange[0], lumiRange[1]+1)
-                for lumi in newlumiRange:
-                    if lumi in RunlumisChecked[run]:
-                        return True
-                    else:
-                        RunlumisChecked[run].append(lumi)
+        newLumis=filename['lumi'][0]['number']
+        for lumiRange in newLumis:
+            newlumiRange=range(lumiRange[0], lumiRange[1]+1)
+            for lumi in newlumiRange:
+                if lumi in RunlumisChecked[run]:
+                    return True
+                else:
+                    RunlumisChecked[run].append(lumi)
     return False
 
 def duplicateLumi(dataset):
