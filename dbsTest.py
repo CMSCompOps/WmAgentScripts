@@ -78,7 +78,12 @@ def duplicateRunLumi(dataset):
     return False
 
 def duplicateLumi(dataset):
-    lumisChecked=[]
+    """
+    checks if output dataset has a duplicate lumi
+    """
+    #registry of lumis checked, better a set
+    lumisChecked=set()
+    #get dtaset info frm das
     query="file lumi dataset="+dataset
     das_data = get_data(das_host,query,0,0,0)
     if isinstance(das_data, basestring):
@@ -89,17 +94,20 @@ def duplicateLumi(dataset):
         print 'DAS query failed with reason:',result['reason']
     else:
         preresult=result['data']
+    #check each file    
     for filename in preresult:
         newLumis=filename['lumi'][0]['number']
+        #for each file we check each lumi range.
         for lumiRange in newLumis:
             newlumiRange=[lumiRange[0]]
             if lumiRange[0]<lumiRange[1]:
                 newlumiRange=range(lumiRange[0], lumiRange[1])
+            #check each lumi, if its in the lumiset            
             for lumi in newlumiRange:
                 if lumi in lumisChecked:
                     return True
                 else:
-                    lumisChecked.append(lumi)
+                    lumisChecked.add(lumi)
     return False
 
 def getRunsInDataset(das_url, dataset):
