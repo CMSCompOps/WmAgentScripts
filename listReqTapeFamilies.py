@@ -72,7 +72,9 @@ def main():
               era = 'Summer11dr53X'
            if 'UpgFall13d' in prepID:
               era = 'UpgFall13d'
-
+           if 'Fall13dr' in prepID:
+              era = 'Fall13dr'
+	      
            if 'Fall11_R' in prepID or 'Fall11_HLTMuonia' in prepID or 'Fall11R' in prepID:
               ods = ['GEN-RAW', 'GEN-SIM-RECO', 'AODSIM', 'DQM']
               era = 'Fall11'

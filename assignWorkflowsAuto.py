@@ -60,6 +60,8 @@ def getScenario(ps):
            pss = 'PU_RD1'
         if ps == 'SimGeneral.MixingModule.mix_2012C_Profile_PoissonOOTPU_cfi':
            pss = 'PU2012CExt'
+        if ps == 'SimGeneral.MixingModule.mixNoPU_cfi':
+	   pss = 'NoPileUp'
 
 
         return pss
@@ -258,7 +260,7 @@ def main():
 	parser.add_option('-x', '--restrict', help='Only assign workflows for this site',dest='restrict')
 	parser.add_option('-r', '--rssmax', help='Max RSS',dest='maxRSS')
 	parser.add_option('-v', '--vsizemax', help='Max VMem',dest='maxVSize')
-	parser.add_option('-a', '--extension', help='Use _ext special name',action="store_true",dest='extension')
+	parser.add_option('-a', '--extension', help='Use _ext special name',dest='extension')
         parser.add_option('-o', '--xrootd', help='Read input using xrootd',action="store_true",dest='xrootd')
 	(options,args) = parser.parse_args()
 	if not options.filename and not options.userWorkflow:
@@ -288,7 +290,7 @@ def main():
            useX = 1
 
         # Valid Tier-1 sites
-        sites = ['T1_DE_KIT', 'T1_FR_CCIN2P3', 'T1_IT_CNAF', 'T1_ES_PIC', 'T1_TW_ASGC', 'T1_UK_RAL', 'T1_US_FNAL', 'HLT', 'T1_IT_CNAF_Disk']
+        sites = ['T1_DE_KIT', 'T1_FR_CCIN2P3', 'T1_IT_CNAF', 'T1_ES_PIC', 'T1_TW_ASGC', 'T1_UK_RAL', 'T1_US_FNAL', 'HLT', 'T1_IT_CNAF_Disk', 'T1_UK_RAL_Disk']
 
         if options.filename:
            f=open(filename,'r')
@@ -314,6 +316,9 @@ def main():
            if inputDatasetStatus != 'VALID' and inputDatasetStatus != 'PRODUCTION':
               print 'ERROR: Input dataset is not PRODUCTION or VALID'
               sys.exit(0)
+
+           if '-ext' in inputDataset and not options.extension:
+              print 'WARNING: Input dataset is an extension and extension option is not specified'
 
            if not siteUse or siteUse == 'None':
               # Determine site where workflow should be run
@@ -341,7 +346,7 @@ def main():
               siteUse =  ['T1_UK_RAL', 'T1_UK_RAL_Disk']
               if not options.siteCust:
                  siteCust = 'T1_UK_RAL'
-           if siteUse == 'T1_IT_CNAF_Disk':
+           if siteUse == 'T1_IT_CNAF':
               siteUse =  ['T1_IT_CNAF', 'T1_IT_CNAF_Disk']
               if not options.siteCust:
                  siteCust = 'T1_IT_CNAF'
@@ -446,15 +451,21 @@ def main():
               era = 'HiWinter13'
               lfn = '/store/himc'
 
-           if 'Winter13_DR53X' in workflow:
+           if 'Winter13' in workflow and 'DR53X' in workflow:
               era = 'HiWinter13'
               lfn = '/store/himc'
-           if 'HiWinter13_DR53X' in workflow:
+           if 'HiWinter13' in workflow and 'DR53X' in workflow:
               pileupScenario = ''  
-           if 'pAWinter13_DR53X' in workflow:
+           if 'pAWinter13' in workflow and 'DR53X' in workflow:
               pileupScenario = 'pa' # not actually the pileup scenario of course
-           if 'ppWinter13_DR53X' in workflow:
+           if 'ppWinter13' in workflow and 'DR53X' in workflow:
               pileupScenario = 'pp' # not actually the pileup scenario of course
+
+
+           if 'UpgradePhase1Age' in campaign:
+              era = 'Summer13'
+	      lfn = '/store/mc'
+              specialName = campaign + '_'
 
            if campaign == 'UpgradePhase2LB4PS_2013_DR61SLHCx':
               era = 'Summer13'
@@ -501,6 +512,12 @@ def main():
               lfn = '/store/mc'
               specialName = campaign + '_'
 
+           #change back to old campaign names for UpgradePhase1
+           if 'UpgradePhase1Age' in campaign and 'dr61SLHCx' in specialName:
+              specialName = specialName.replace("dr61SLHCx","_DR61SLHCx")
+           if 'dr61SLHCx' in specialName:
+              print 'WARNING: using new campaign name format'		   
+
            if campaign == 'HiFall11_DR44X' or campaign == 'HiFall11DR44':
               era = 'HiFall11'
               lfn = '/store/himc'
@@ -517,7 +534,7 @@ def main():
               specialName = options.specialprocstring + '_'
            extTag = ''
            if options.extension:
-              extTag = '_ext'
+              extTag = '_ext'+options.extension
 
            # ProcessingString
            if not options.inprocstring:
