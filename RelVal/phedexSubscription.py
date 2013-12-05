@@ -2,6 +2,7 @@
 import json
 import urllib2,urllib, httplib, sys, re, os
 from xml.dom.minidom import getDOMImplementation
+import optparse
 
 
 
@@ -68,9 +69,15 @@ def closeOutWorkflow(url, workflowname):
     encodedParams = urllib.urlencode(params)
     conn.request("POST", "/reqmgr/reqMgr/closeout", encodedParams, headers)
     response = conn.getresponse()	
-    #print response.status, response.reason
-    data = response.read()
-    #print data
+    if response.status != 200:
+	    print "response status: "
+	    print response.status
+	    print "response reason: "
+	    print response.reason
+	    data = response.read()
+	    print "response data: "
+	    print data
+	    print ""
     conn.close()
 
 def announceWorkflow(url, workflowname):
@@ -200,17 +207,13 @@ def outputdatasetsWorkflow(url, workflow):
 	return datasets
 #Creates the connection to phedex
 def createConnection(url):
-	key = "/afs/cern.ch/user/e/efajardo/private/grid_cert_priv.pem"
-        cert = "/afs/cern.ch/user/e/efajardo/private/grid_cert_pub.pem"
+	#key = "/afs/cern.ch/user/r/relval/.globus/amaltaro/userkey.pem"
+	#cert = "/afs/cern.ch/user/r/relval/.globus/amaltaro/usercert.pem"
+			 
 	#conn = httplib.HTTPSConnection(url, key_file=key, cert_file=cert)
-	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-	#r1=conn.request("GET",'/phedex/datasvc/json/prod/auth')
-	#r1=conn.request("GET",'	/phedex/datasvc/json/prod/secmod')
-	#r1=conn.request("GET",'/phedex/datasvc/json/prod/headers')
-	#r2=conn.getresponse()
-        #print json.read(r2.read())
+	#conn =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+	conn =  httplib.HTTPSConnection(url, cert_file = "/data/relval/WmAgentScripts/RelVal/andrew_levin_proxy", key_file = "/data/relval/WmAgentScripts/RelVal/andrew_levin_proxy");
 	conn.connect()
-    	#print "connected"
 	return conn
 
 # Create the parameters of the request
@@ -227,34 +230,44 @@ def makeCustodialMoveRequest(url, site,datasets, comments):
 	#print response.status, response.reason
         #print response.read()
 
-def makeCustodialReplicaRequest(url, site,datasets, comments):	
+def makePhedexReplicaRequest(url, site,datasets, comments, custodial):	
 	dataXML=createXML(datasets)
-	params = urllib.urlencode({ "node" : site,"data" : dataXML, "group": "DataOps", "priority":'normal', "custodial":"y","request_only":"y" ,"move":"n","no_mail":"n", "comments":comments})	
+	if custodial:
+		params = urllib.urlencode({ "node" : site,"data" : dataXML, "group": "RelVal", "priority":'normal', "custodial":"y","request_only":"y" ,"move":"n","no_mail":"n", "comments":comments})	
+	else :
+		params = urllib.urlencode({ "node" : site,"data" : dataXML, "group": "RelVal", "priority":'normal', "custodial":"n","request_only":"y" ,"move":"n","no_mail":"n", "comments":comments})
 	conn=createConnection(url)
 	conn.request("POST", "/phedex/datasvc/json/prod/subscribe", params)
-	response = conn.getresponse()	
+	response = conn.getresponse()
+        print 'Response from http call:'
+	print 'Status:',response.status
+	print 'Reason:',response.reason
+	print 'Explanation:',response.read()
+
+					
 
 
 def main():
-	args=sys.argv[1:]
+	parser = optparse.OptionParser()
+	parser.add_option('--custodial', action="store_true", help='make a custodial subscription',dest='custodial')
+	(options,args) = parser.parse_args()
+		    
 	if not len(args)==3:
-		print "usage site_name file comments"
+		print "usage <site name> <name of file with datasets to subscribe> <comments> [--custodial]"
+		sys.exit(0);
+
 	site=args[0]
 	filename=args[1]
 	comments=args[2]
-	workflows=workflownamesfromFile(filename)
-	outputdatasets=datasetforWorkfows(workflows)
-	dataXML=createXML(outputdatasets)
-	params=createParams(site, dataXML, "Custodial Subscription for "+comments)	
-	conn=createConnection()
-	conn.request("POST", "/phedex/datasvc/xml/prod/subscribe", params)
-	response = conn.getresponse()	
-	print response.status, response.reason
-        print response.read()
-	testWorkflows(workflows)
-	for workflow in workflows:
-		print workflow + " closed-out"
-		closeOutWorkflow(workflow)
+	url='cmsweb.cern.ch'
+	datasets=[]
+	f=open(filename,'r')
+	for dataset in f:
+		#This line is to remove the carrige return
+		dataset = dataset.rstrip('\n')
+		datasets.append(dataset)
+
+	makePhedexReplicaRequest(url, site, datasets, comments,options.custodial);
 	sys.exit(0);
 
 if __name__ == "__main__":
