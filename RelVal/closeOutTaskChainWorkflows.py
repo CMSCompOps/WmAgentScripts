@@ -1,9 +1,13 @@
 #!/usr/bin/env python
+import optparse
 import json
 import urllib2,urllib, httplib, sys, re, os, phedexSubscription
 from xml.dom.minidom import getDOMImplementation
 sys.path.append("..")
 import dbsTest
+import time
+
+
 
 def closeOutTaskChainWorkflows(url, workflow):
     #for workflow in workflows:
@@ -21,16 +25,19 @@ def getStatus(url, workflow):
 
 def main():
     url='cmsweb.cern.ch'
-    args=sys.argv[1:]
-    if not len(args)==1:
-        print "usage: python closeOutTaskChainWorkflows.py <inputFile_containing_a_list_of_workflows>"
-        sys.exit(0)
-    inputFile=args[0]
-    f = open(inputFile, 'r')
+    parser = optparse.OptionParser()
+    parser.add_option('--test',action="store_true", help='Nothing is closed out. Only test if the workflows are ready to be closed out.',dest='test')
+    parser.add_option('--verbose',action="store_true", help='Print out details about the number of events expected and produced.',dest='verbose')
+    (options,args) = parser.parse_args()
 
-    print '-------------------------------------------------------------------------------------------------------------------------------------'
-    print '| Request                                                                                   | Closed-out? | Current status          |'
-    print '-------------------------------------------------------------------------------------------------------------------------------------'
+    if len(args) != 1:
+        print "Usage:"
+        print "python closeOutTaskChainWorkflows.py [--test] [--verbose] <inputFile_containing_a_list_of_workflows>"
+        sys.exit(0)
+
+    inputFile=args[0]
+    
+    f = open(inputFile, 'r')
 
     closedOut = []
     nonClosedOut = []
@@ -38,28 +45,40 @@ def main():
     running = []
     for line in f:
         workflow = line.rstrip('\n')
+        print "checking workflow " + workflow
         outputDatasets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
-        inputEvents=dbsTest.getInputEvents(url, workflow)
+        inputEvents=0
+        while inputEvents==0:
+            inputEvents=dbsTest.getInputEvents(url, workflow)
+            if inputEvents==0:
+                print "failed das query"
+                time.sleep(100)
         closeOut = True
         tooMany = False
         for dataset in outputDatasets:
+            print "    checking dataset  " + dataset
             # we cannot calculate completion of ALCARECO samples
             if 'ALCARECO' in dataset:
                 continue
-            outputEvents=dbsTest.getOutputEvents(url, workflow, dataset)
-            if inputEvents!=0:
-                if outputEvents == inputEvents:
-                    pass
-                    #print dataset+" match: "+str(outputEvents/float(inputEvents)*100) +"%"
-                elif outputEvents < inputEvents :
-                    #print dataset + " it is less than 99.9999% completed, keeping it in the current status" 
-                    closeOut = False
-                elif outputEvents > inputEvents :
-                    closeOut = False
-                    tooMany = True
-                    break
-            else:
-                print "Input Events 0"
+            outputEvents=0
+            while outputEvents==0:
+                outputEvents=dbsTest.getOutputEvents(url, workflow, dataset)
+                if outputEvents==0:
+                    print "failed das query"
+                    time.sleep(100)
+
+            if options.verbose:        
+                print "        input events:  " + str(inputEvents)
+                print "        output events: " + str(outputEvents)
+                
+            if outputEvents == inputEvents:
+                pass
+            elif outputEvents < inputEvents :
+                closeOut = False
+            elif outputEvents > inputEvents :
+                closeOut = False
+                tooMany = True
+                break
 
         if closeOut:
             closedOut.append(workflow)
@@ -68,10 +87,15 @@ def main():
         if tooMany:
             tooManyEvents.append(workflow)
 
+    print '-------------------------------------------------------------------------------------------------------------------------------------'
+    print '| Request                                                                                   | Closed-out? | Current status          |'
+    print '-------------------------------------------------------------------------------------------------------------------------------------'
+
     for workflow in closedOut:
         status = getStatus(url, workflow)
         if status == 'completed':
-            closeOutTaskChainWorkflows(url, workflow)
+            if not options.test:
+                closeOutTaskChainWorkflows(url, workflow)
         else:
             pass
         print "%90s\tYES\t\t%s" % (workflow, status)
@@ -84,6 +108,12 @@ def main():
     for workflow in tooManyEvents:
         outputDatasets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
         inputEvents=dbsTest.getInputEvents(url, workflow)
+        while inputEvents==0:
+            inputEvents=dbsTest.getInputEvents(url, workflow)
+            time.sleep(1)
+        while outputEvents==0:
+            outputEvents=dbsTest.getOutputEvents(url, workflow, dataset)
+            time.sleep(1)
         for dataset in outputDatasets:
         # we cannot calculate completion of ALCARECO samples
             if 'ALCARECO' in dataset:
