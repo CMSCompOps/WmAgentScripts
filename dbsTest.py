@@ -52,6 +52,10 @@ def getInputDataSet(url, workflow):
 
 
 def duplicateRunLumi(dataset):
+    """
+    checks if output dataset has duplicate lumis
+    for every run.
+    """
     RunlumisChecked={}
     query="file run lumi dataset="+dataset
     das_data = get_data(das_host,query,0,0,0)
@@ -63,18 +67,22 @@ def duplicateRunLumi(dataset):
         print 'DAS query failed with reason:',result['reason']
     else:
         preresult=result['data'] 
+    #check ever file in dataset    
     for filename in preresult:
         run=filename['run'][0]['run_number']
+        #add run if new
         if run not in RunlumisChecked:
-            RunlumisChecked[run]=[]
+            RunlumisChecked[run]=set()
         newLumis=filename['lumi'][0]['number']
+        #check every lumi on range        
         for lumiRange in newLumis:
             newlumiRange=range(lumiRange[0], lumiRange[1]+1)
             for lumi in newlumiRange:
+                #if already checked in the same run
                 if lumi in RunlumisChecked[run]:
                     return True
                 else:
-                    RunlumisChecked[run].append(lumi)
+                    RunlumisChecked[run].add(lumi)
     return False
 
 def duplicateLumi(dataset):
