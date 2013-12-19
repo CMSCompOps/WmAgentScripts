@@ -164,7 +164,7 @@ def getPileupScenario(url, workflow):
            scenario = 'PU' + meanPileUp + 'bx' + bunchSpacing
            if meanPileUp == 'None' or bunchSpacing == 'None':
               print 'ERROR: unexpected pileup settings in config'
-	      sys.exit(0)
+              sys.exit(0)
         return scenario
 
 def getPileup(config):
