@@ -61,7 +61,7 @@ def getScenario(ps):
         if ps == 'SimGeneral.MixingModule.mix_2012C_Profile_PoissonOOTPU_cfi':
            pss = 'PU2012CExt'
         if ps == 'SimGeneral.MixingModule.mixNoPU_cfi':
-	   pss = 'NoPileUp'
+           pss = 'NoPileUp'
         if ps == 'SimGeneral.MixingModule.mix_POISSON_average_cfi':
            pss = 'PU'
 
