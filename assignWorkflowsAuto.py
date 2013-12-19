@@ -545,7 +545,7 @@ def main():
                  specialName = ''
               else:
                  print 'ERROR: unexpected special name string in workflow name'
-		 sys.exit(0)
+                 sys.exit(0)
 
            # Construct processed dataset version
            if pileupScenario != '':
