@@ -62,6 +62,8 @@ def getScenario(ps):
            pss = 'PU2012CExt'
         if ps == 'SimGeneral.MixingModule.mixNoPU_cfi':
 	   pss = 'NoPileUp'
+        if ps == 'SimGeneral.MixingModule.mix_POISSON_average_cfi':
+           pss = 'PU'
 
 
         return pss
@@ -152,12 +154,14 @@ def getGlobalTag(url, workflow):
 def getPileupScenario(url, workflow):
         cacheID = getCacheID(url, workflow)
         config = getConfig(url, cacheID)
-        [pileup,meanPileUp] = getPileup(config)
+        [pileup,meanPileUp,bunchSpacing] = getPileup(config)
         scenario = getScenario(pileup)
 	if scenario == 'PU140Bx25' and meanPileUp != 'Unknown':
 	   scenario = 'PU' + meanPileUp + 'bx25'
         if scenario == 'PU140bx25' and 'Upgrade' in workflow:
            scenario = 'PU140Bx25'
+        if scenario == 'PU' and meanPileUp != 'Unknown':
+           scenario = 'PU' + meanPileUp + 'bx' + bunchSpacing
         return scenario
 
 def getPileup(config):
@@ -170,8 +174,9 @@ def getPileup(config):
            if 'process.mix.input.nbPileupEvents.averageNumber' in line:
               meanpu = line[line.find("(")+1:line.find(")")].split('.', 1)
               vmeanpu = meanpu[0]
-
-        return [pu,vmeanpu]
+           if 'process.mix.bunchspace' in line:
+              bx = line[line.find("(")+1:line.find(")")]
+        return [pu,vmeanpu,bx]
 
 def getCacheID(url, workflow):
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -193,7 +198,7 @@ def assignRequest(url ,workflow ,team ,site ,era, procversion, procstring, activ
     if "Upgrade" in workflow:
        softTimeout = 159600
     else:
-       softTimeout = 129600
+       softTimeout = 144000
 
     params = {"action": "Assign",
               "Team"+team: "checked",
@@ -526,6 +531,21 @@ def main():
            if campaign == 'UpgFall13d':
               era = campaign
               lfn = '/store/mc'
+
+           if campaign == 'Fall13dr':
+              era = campaign
+              lfn = '/store/mc'
+              if '_castor_tsg_' in workflow:
+                 specialName = 'castor_tsg_'
+              elif '_castor_' in workflow:
+                 specialName = 'castor_'
+              elif '_tsg_' in workflow:
+                 specialName = 'tsg_'
+              elif '__' in workflow:
+                 specialName = ''
+              else:
+                 print 'ERROR: unexpected special name string in workflow name'
+		 sys.exit(0)
 
            # Construct processed dataset version
            if pileupScenario != '':
