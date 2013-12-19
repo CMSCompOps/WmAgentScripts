@@ -4,8 +4,8 @@ import urllib2,urllib, httplib, sys, re, os, json, phedexSubscription
 from xml.dom.minidom import getDOMImplementation
 from das_client import get_data
 #das_host='https://das.cern.ch'
-#das_host='https://cmsweb.cern.ch'
-das_host='https://cmsweb-testbed.cern.ch'
+das_host='https://cmsweb.cern.ch'
+#das_host='https://cmsweb-testbed.cern.ch'
 #das_host='https://das-dbs3.cern.ch'
 #das_host='https://dastest.cern.ch'
 
@@ -435,6 +435,9 @@ def getInputEvents(url, workflow):
         if listitem in request:
             if request[listitem]=='[]':
                 request[listitem]=[]
+            if request[listitem][:1] == "[" and request[listitem][-1:] == "]":
+                request[listitem] = request[listitem][1:-1]
+                request[listitem] = request[listitem].replace("'", "");
             if type(request[listitem]) is not list:#if there is not a list but some elements it creates a list
                 request[listitem]=re.split(r",",request[listitem])
         else:
