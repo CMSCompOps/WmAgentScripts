@@ -160,13 +160,17 @@ def getPileupScenario(url, workflow):
 	   scenario = 'PU' + meanPileUp + 'bx25'
         if scenario == 'PU140bx25' and 'Upgrade' in workflow:
            scenario = 'PU140Bx25'
-        if scenario == 'PU' and meanPileUp != 'Unknown':
+        if scenario == 'PU':
            scenario = 'PU' + meanPileUp + 'bx' + bunchSpacing
+	   if meanPileUp == 'None' or bunchSpacing == 'None':
+              print 'ERROR: unexpected pileup settings in config'
+	      sys.exit(0)
         return scenario
 
 def getPileup(config):
         pu = 'Unknown'
         vmeanpu = 'None'
+	bx = 'None'
         lines = config.split('\n')
         for line in lines:
            if 'process.load' and 'MixingModule' in line:
