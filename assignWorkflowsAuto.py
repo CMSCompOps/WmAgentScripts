@@ -154,10 +154,10 @@ def getGlobalTag(url, workflow):
 def getPileupScenario(url, workflow):
         cacheID = getCacheID(url, workflow)
         config = getConfig(url, cacheID)
-        [pileup,meanPileUp,bunchSpacing] = getPileup(config)
+        [pileup,meanPileUp,bunchSpacing,cmdLineOptions] = getPileup(config)
         scenario = getScenario(pileup)
-	if scenario == 'PU140Bx25' and meanPileUp != 'Unknown':
-	   scenario = 'PU' + meanPileUp + 'bx25'
+        if scenario == 'PU140Bx25' and meanPileUp != 'Unknown':
+           scenario = 'PU' + meanPileUp + 'bx25'
         if scenario == 'PU140bx25' and 'Upgrade' in workflow:
            scenario = 'PU140Bx25'
         if scenario == 'PU':
@@ -165,12 +165,16 @@ def getPileupScenario(url, workflow):
            if meanPileUp == 'None' or bunchSpacing == 'None':
               print 'ERROR: unexpected pileup settings in config'
               sys.exit(0)
+        if scenario == 'PU_RD1' and cmdLineOptions != 'None':
+           if '--runsAndWeightsForMC [(190482,0.924) , (194270,4.811), (200466,7.21), (207214,7.631)]' in cmdLineOptions:
+              scenario = 'PU_RD2'
         return scenario
 
 def getPileup(config):
         pu = 'Unknown'
         vmeanpu = 'None'
         bx = 'None'
+        cmdLineOptions = 'None'
         lines = config.split('\n')
         for line in lines:
            if 'process.load' and 'MixingModule' in line:
@@ -180,7 +184,9 @@ def getPileup(config):
               vmeanpu = meanpu[0]
            if 'process.mix.bunchspace' in line:
               bx = line[line.find("(")+1:line.find(")")]
-        return [pu,vmeanpu,bx]
+           if 'with command line options' in line:
+              cmdLineOptions = line
+        return [pu,vmeanpu,bx,cmdLineOptions]
 
 def getCacheID(url, workflow):
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
