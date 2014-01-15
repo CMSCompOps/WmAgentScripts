@@ -305,7 +305,7 @@ def main():
            useX = 1
 
         # Valid Tier-1 sites
-        sites = ['T1_DE_KIT', 'T1_FR_CCIN2P3', 'T1_IT_CNAF', 'T1_ES_PIC', 'T1_TW_ASGC', 'T1_UK_RAL', 'T1_US_FNAL', 'HLT', 'T1_IT_CNAF_Disk', 'T1_UK_RAL_Disk']
+        sites = ['T1_DE_KIT', 'T1_FR_CCIN2P3', 'T1_IT_CNAF', 'T1_ES_PIC', 'T1_TW_ASGC', 'T1_UK_RAL', 'T1_US_FNAL', 'HLT']
 
         if options.filename:
            f=open(filename,'r')
@@ -357,14 +357,6 @@ def main():
                  siteCust = siteUse
               else:
                  siteCust = options.siteCust
-           if siteUse == 'T1_UK_RAL':
-              siteUse =  ['T1_UK_RAL', 'T1_UK_RAL_Disk']
-              if not options.siteCust:
-                 siteCust = 'T1_UK_RAL'
-           if siteUse == 'T1_IT_CNAF':
-              siteUse =  ['T1_IT_CNAF', 'T1_IT_CNAF_Disk']
-              if not options.siteCust:
-                 siteCust = 'T1_IT_CNAF'
            if options.site == 'HLT':
               siteUse = ['T2_CH_CERN_AI', 'T2_CH_CERN_HLT']
               team = 'hlt'
