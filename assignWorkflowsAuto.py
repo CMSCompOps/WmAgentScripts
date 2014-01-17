@@ -1,14 +1,28 @@
 #!/usr/bin/env python
 import urllib2,urllib, httplib, sys, re, os, json
 import optparse
+from das_client import get_data
+
+das_host='https://cmsweb.cern.ch'
 
 def getStatusDataSet(dataset):
-        output=os.popen("./dbssql --input='find dataset.status where dataset="+dataset+" and dataset.status=*'"+ "|awk '{print $2}' ").read()
-        try:
-                myStatus = output[output.find("'")+1:output.find("'",output.find("'")+1)]
-                return myStatus
-        except ValueError:
-                return "Unknown"
+        query = "dataset="+dataset+" | grep dataset.status"
+        das_data = get_data(das_host,query,0,0,0)
+        myStatus = ''
+        if isinstance(das_data, basestring):
+           result = json.loads(das_data)
+        else:
+           result = das_data
+           if result['status'] == 'fail' :
+              print 'ERROR: DAS query failed with reason:',result['reason']
+              sys.exit(0)
+           else:
+              preresult = result['data'][0]['dataset']
+              for key in preresult:
+                 if 'status' in key:
+                    myStatus = key['status']
+                    return myStatus
+        return 'Unknown'
 
 def outputdatasetsWorkflow(url, workflow):
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -30,14 +44,27 @@ def getDatasetVersion(url, workflow, era, partialProcVersion):
            bits = output.split('/')
            lastbit = bits[len(bits)-1]
            outputCheck = re.sub(r'None-v0', era+'-'+partialProcVersion+'*', output)
-           output=os.popen("./dbssql --input='find dataset where dataset="+outputCheck+" and dataset.status=*' | grep "+lastbit).read()
-           lines = output.split('\n')
-           for line in lines:
-              matchObj = re.match(r".*-v(\d+)/.*", line)
-              if matchObj:
-                 currentVersionNum = int(matchObj.group(1))
-                 if versionNum <= currentVersionNum:
-                    versionNum=versionNum+1
+
+           query = "dataset dataset="+outputCheck
+           das_data = get_data(das_host,query,0,0,0)
+
+           if isinstance(das_data, basestring):
+              result = json.loads(das_data)
+           else:
+              result = das_data
+              if result['status'] == 'fail' :
+                 print 'ERROR: DAS query failed with reason:',result['reason']
+                 sys.exit(0)
+              else:
+                 preresult = result['data']
+                 for item in preresult:
+                    for key in item['dataset']:
+                       if 'name' in key:
+                          matchObj = re.match(r".*-v(\d+)/.*", key['name'])
+                          if matchObj:
+                             currentVersionNum = int(matchObj.group(1))
+                             if versionNum <= currentVersionNum:
+                                versionNum=versionNum+1
 
         return versionNum
 
