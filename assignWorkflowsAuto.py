@@ -6,7 +6,7 @@ from das_client import get_data
 das_host='https://cmsweb.cern.ch'
 
 def getStatusDataSet(dataset):
-        query = "dataset="+dataset+" | grep dataset.status"
+        query = "dataset dataset="+dataset+" | grep dataset.status"
         das_data = get_data(das_host,query,0,0,0)
         myStatus = ''
         if isinstance(das_data, basestring):
