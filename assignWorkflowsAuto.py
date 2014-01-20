@@ -45,7 +45,7 @@ def getDatasetVersion(url, workflow, era, partialProcVersion):
            lastbit = bits[len(bits)-1]
            outputCheck = re.sub(r'None-v0', era+'-'+partialProcVersion+'*', output)
 
-           query = "dataset dataset="+outputCheck
+           query = "dataset dataset="+outputCheck+" status=*"
            das_data = get_data(das_host,query,0,0,0)
 
            if isinstance(das_data, basestring):
