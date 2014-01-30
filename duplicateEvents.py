@@ -21,6 +21,10 @@ def testEventCountWorkflow(url, workflow):
             duplicate = True
             #TODO fast check
             return True
+        if duplicateLumi(dataset):
+            duplicate = True
+            #TODO fast check
+            return True
     return duplicate
 
 
@@ -61,7 +65,7 @@ for every run.
                     print filename2
                     duplicate = True
                     #TODO fast check
-                    return True
+                    #return True
                 else:
                     RunlumisChecked[run][lumi] = filename2
     if not duplicate:
@@ -96,7 +100,7 @@ checks if output dataset has a duplicate lumi
             #check each lumi, if its in the lumiset
             for lumi in newlumiRange:
                 if lumi in lumisChecked:
-                    print 'lumi ',lumi
+                    #print 'lumi ',lumi
                     return True
                 else:
                     lumisChecked.add(lumi)

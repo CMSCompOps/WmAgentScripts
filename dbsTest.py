@@ -1,4 +1,12 @@
 #!/usr/bin/env python
+"""
+    This File used to queries DBS, DAS and request manager
+    it is substitued and organized in other files.
+    Use dbs3Client.py instead.
+    @DEPRECATED
+
+"""
+
 
 import urllib2,urllib, httplib, sys, re, os, json, phedexSubscription
 from xml.dom.minidom import getDOMImplementation
@@ -483,6 +491,14 @@ def getOutputEvents(url, workflow, dataset):
     else:
         return getEventCountDataSet(das_host, dataset)
 
+
+def hasAllBlocksClosed(dataset):
+    """
+    Queries if a dataset's block are all closed, and can be used
+    as an input.
+    TODO implement
+    """
+    return True
   
 def main():
     args=sys.argv[1:]

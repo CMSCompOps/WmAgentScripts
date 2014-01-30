@@ -1,50 +1,11 @@
 #!/usr/bin/env python
 import json
-import urllib2,urllib, httplib, sys, re, os, phedexSubscription, dbsTest, duplicateEventsGen
+import urllib2,urllib, httplib, sys, re, os, phedexSubscription, dbsTest, duplicateEventsGen, shutil, time
 from xml.dom.minidom import getDOMImplementation
+import closeOutWorkflows
 
-
-def getOverviewRequest():
-	url='vocms204.cern.ch'
-	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-	r1=conn.request("GET",'/reqmgr/monitorSvc/requestmonitor')
-	r2=conn.getresponse()
-        requests = json.loads(r2.read())
-	return requests
-
-def getOverviewRequestsWMStats(url):
-	conn = httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
-                                     key_file = os.getenv('X509_USER_PROXY'))
-	conn.request("GET",
-                 "/couchdb/wmstats/_design/WMStats/_view/requestByStatusAndType?stale=update_after")
-	response = conn.getresponse()
-	data = response.read()
-	conn.close()
-	myString=data.decode('utf-8')
-	workflows=json.loads(myString)['rows']
-	return workflows
-
-
-def classifyCompletedRequests(url, requests):
-	workflows={'ReDigi':[],'MonteCarloFromGEN':[],'MonteCarlo':[] , 'ReReco':[], 'LHEStepZero':[]}
-	for request in requests:
-	    name=request['id']
-	    if len(request['key'])<3:
-		print request
-		continue
-	    status=request['key'][1]
-	    requestType=request['key'][2]
-	    if status=='completed':
-		if requestType=='MonteCarlo':
-			datasets=phedexSubscription.outputdatasetsWorkflow(url, name)
-			m=re.search('.*/GEN$',datasets[0])
-			if m:
-				workflows['LHEStepZero'].append(name)
-			else:
-				workflows[requestType].append(name)
-		if requestType=='MonteCarloFromGEN' or requestType=='LHEStepZero'or requestType=='ReDigi' or requestType=='ReReco':
-				workflows[requestType].append(name)
-	return workflows
+outputfile = '/afs/cern.ch/user/j/jbadillo/www/undealt.html'
+tempfile = '/afs/cern.ch/user/j/jbadillo/www/temp_undealt.html'
 
 def classifyRunningRequests(url, requests):
     """
@@ -60,6 +21,7 @@ def classifyRunningRequests(url, requests):
             continue
         #status
         status=request['key'][1]
+
         #add to the index
         if status in ['running-closed', 'running-open', 'assigned','acquired','assignment-approved']:
             #if it has the same request string add to a list            
@@ -70,35 +32,15 @@ def classifyRunningRequests(url, requests):
                 workflows[reqString].append(name)
     return workflows
 
-
-def classifyCompletedRequests(url, requests):
-	workflows={'ReDigi':[],'MonteCarloFromGEN':[],'MonteCarlo':[] , 'ReReco':[], 'LHEStepZero':[]}
-	for request in requests:
-	    name=request['id']
-	    if len(request['key'])<3:
-		print request
-		continue
-	    status=request['key'][1]
-	    requestType=request['key'][2]
-	    if status=='completed':
-		if requestType=='MonteCarlo':
-			datasets=phedexSubscription.outputdatasetsWorkflow(url, name)
-			m=re.search('.*/GEN$',datasets[0])
-			if m:
-				workflows['LHEStepZero'].append(name)
-			else:
-				workflows[requestType].append(name)
-		if requestType=='MonteCarloFromGEN' or requestType=='LHEStepZero'or requestType=='ReDigi' or requestType=='ReReco':
-				workflows[requestType].append(name)
-	return workflows
-
-
-def countNoDupWF(workflowsCompleted, workflowsRunning, wfType):
+def filterUndealtWorkflows(workflowsCompleted, workflowsRunning, wfType):
+    """
+    Filter's workflows that have no acdc running
+    """
     wfs = workflowsCompleted[wfType]
     result = []
     #check for everyone if it has one runnign with the same strng name
     for wf in wfs:
-        reqString = getRequestString(wf)    
+        reqString = getRequestString(wf)
         #check how many acdcs have
         #print wf
         if reqString in workflowsRunning:
@@ -109,13 +51,22 @@ def countNoDupWF(workflowsCompleted, workflowsRunning, wfType):
             result.append(wf)
     return result
 
+def writeHTMLHeader(output):
+    output.write('<html>')
+    output.write('<head>')
+    output.write('<link rel="stylesheet" type="text/css" href="style.css" />')
+    output.write('</head>')
+    output.write('<body>')
+
+
 import re
-p = re.compile(r'[a-z_]+(?:ACDC_)*([a-zA-Z0-9_\-]+)')
+p = re.compile(r'[a-z_]+(?:ACDC_|Merge_)*([a-zA-Z0-9_\-]+)')
 p2 = re.compile(r'_\d{6}_[0-9_]+')
+
 
 def getRequestString(request):
     """
-    Extracts the reques string from the request name
+    Extracts the request string from the request name
     """
     m = p2.search(request)
     if not m:
@@ -123,51 +74,73 @@ def getRequestString(request):
         return request
     s = m.group(0)    
     s = request.replace(s,'')
-    m = p.match(s)    
+    m = p.match(s)
     if not m:
         print s
         return request
     return m.group(1)
 
+
+def listWorkflows(workflows, output):
+    for wf in workflows:
+        print wf
+        output.write('<tr><td>'+wf+'</td></tr>')
+    output.write('<tr><td></td></tr>')
+
 def main():
+    output = open(tempfile,'w')
     url='cmsweb.cern.ch'
     print "Gathering Requests"
-    requests=getOverviewRequestsWMStats(url)
+    requests=closeOutWorkflows.getOverviewRequestsWMStats(url)
     print "Classifying Requests"
-    workflowsCompleted=classifyCompletedRequests(url, requests)
+    workflowsCompleted=closeOutWorkflows.classifyCompletedRequests(url, requests)
     workflowsRunning =classifyRunningRequests(url, requests)
+    writeHTMLHeader(output)
     print "Getting no duplicated requests"
-    noDupWfs = countNoDupWF(workflowsCompleted, workflowsRunning,'ReReco')
     print "Workflows that are completed, but don't have ACDC's"
+    output.write("<table border=1> <tr><th>Workflows that are completed, but don't have ACDC's</th></tr>")
+
+    undealtWFs = filterUndealtWorkflows(workflowsCompleted, workflowsRunning,'ReReco')
     print "---------------------------------------------------"
     print "ReReco's"
     print "---------------------------------------------------"
-    for wf in noDupWfs:
-        print wf
-    noDupWfs = countNoDupWF(workflowsCompleted, workflowsRunning,'ReDigi')
+    listWorkflows(undealtWFs,output)
+
+    undealtWFs = filterUndealtWorkflows(workflowsCompleted, workflowsRunning,'ReDigi')
     print "---------------------------------------------------"
     print "ReDigi's"
     print "---------------------------------------------------"
-    for wf in noDupWfs:
-        print wf
-    noDupWfs = countNoDupWF(workflowsCompleted, workflowsRunning,'MonteCarloFromGEN')
+    output.write("<tr><th>ReDigi's</th></tr>")
+    listWorkflows(undealtWFs,output)    
+
+    undealtWFs = filterUndealtWorkflows(workflowsCompleted, workflowsRunning,'MonteCarloFromGEN')
     print "---------------------------------------------------"
     print "MonteCarloFromGEN"
     print "---------------------------------------------------"
-    for wf in noDupWfs:
-        print wf
-    noDupWfs = countNoDupWF(workflowsCompleted, workflowsRunning,'MonteCarlo')
+    output.write("<tr><th>MonteCarloFromGEN</th></tr>")
+    listWorkflows(undealtWFs,output)
+
+    undealtWFs = filterUndealtWorkflows(workflowsCompleted, workflowsRunning,'MonteCarlo')
     print "---------------------------------------------------"
     print "MonteCarlo"
     print "---------------------------------------------------"
-    for wf in noDupWfs:
-        print wf
-    noDupWfs = countNoDupWF(workflowsCompleted, workflowsRunning,'LHEStepZero')
+    output.write("<tr><th>MonteCarlo</th></tr>") 
+    listWorkflows(undealtWFs,output)
+
+    undealtWFs = filterUndealtWorkflows(workflowsCompleted, workflowsRunning,'LHEStepZero')
     print "---------------------------------------------------"
     print "LHEStepZero"
     print "---------------------------------------------------"
-    for wf in noDupWfs:
-        print wf    
+    output.write("<tr><th>LHEStepZero</th></tr>") 
+    listWorkflows(undealtWFs,output)
+    
+    output.write('</table>')
+    output.write('<p>Last update: '+time.strftime("%c")+' CERN time</p>')
+    output.write('</body>')
+    output.write('</html>')
+    output.close()
+    #copy from temp file
+    shutil.copy(tempfile, outputfile)
     sys.exit(0);
 
 if __name__ == "__main__":
