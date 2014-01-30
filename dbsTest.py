@@ -494,10 +494,20 @@ def getOutputEvents(url, workflow, dataset):
 
 def hasAllBlocksClosed(dataset):
     """
-    Queries if a dataset's block are all closed, and can be used
-    as an input.
-    TODO implement
+    checks if a given dataset has all blocks closed and 
+    can be used as input
     """
+    query="block dataset="+dataset
+    das_data = get_data(das_host,query,0,0,0)['data']
+    #traverse blocks
+    for ds in das_data:                
+        #print 'block', ds['block'][0]['name']
+        for block in ds['block']:
+            #print '  is_open', block['is_open'] if 'is_open' in block else "?"
+            if 'is_open' not in block:
+                pass
+            elif block['is_open'] == 'y':
+                return False
     return True
   
 def main():
