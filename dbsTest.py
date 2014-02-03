@@ -1,4 +1,12 @@
 #!/usr/bin/env python
+"""
+    This File used to queries DBS, DAS and request manager
+    it is substitued and organized in other files.
+    Use dbs3Client.py instead.
+    @DEPRECATED
+
+"""
+
 
 import urllib2,urllib, httplib, sys, re, os, json, phedexSubscription
 from xml.dom.minidom import getDOMImplementation
@@ -377,9 +385,9 @@ def handleTaskChain(request):
             runBlacklist=request['Task1']['RunBlacklist']
 
         if len(blockWhitelist)>0:
-            return getRunLumiCountDatasetBlockList(das_host, inputDataSet,blockWhitelist)
+            return getRunLumiCountDatasetBlockList(inputDataSet,blockWhitelist)
         if len(blockBlacklist)>0:
-            return getRunLumiCountDataset(das_host,inputDataSet)-getRunLumiCountDatasetBlockList(das_host, inputDataSet,blockBlacklist)
+            return getRunLumiCountDataset(das_host,inputDataSet)-getRunLumiCountDatasetBlockList( inputDataSet,blockBlacklist)
         if len(runWhitelist)>0:
             return getRunLumiCountDatasetListDAS(das_host, inputDataSet, runWhitelist)
         else:
@@ -445,7 +453,7 @@ def getInputEvents(url, workflow):
     inputDataSet=request['InputDataset']
     if requestType=='ReReco':
         if len(request['BlockWhitelist'])>0:
-            return getRunLumiCountDatasetBlockList(das_host, request['InputDataset'],request['BlockWhitelist'])
+            return getRunLumiCountDatasetBlockList(request['InputDataset'],request['BlockWhitelist'])
         if len(request['BlockBlacklist'])>0:
             return getRunLumiCountDataset(request['InputDataset'])-getRunLumiCountDatasetBlockList(request['InputDataset'],request['BlockBlacklist'])
         if len(request['RunWhitelist'])>0:
@@ -486,7 +494,26 @@ def getOutputEvents(url, workflow, dataset):
     else:
         return getEventCountDataSet(das_host, dataset)
 
-  
+
+
+def hasAllBlocksClosed(dataset):
+    """
+    checks if a given dataset has all blocks closed and 
+    can be used as input
+    """
+    query="block dataset="+dataset
+    das_data = get_data(das_host,query,0,0,0)['data']
+    #traverse blocks
+    for ds in das_data:                
+        #print 'block', ds['block'][0]['name']
+        for block in ds['block']:
+            #print '  is_open', block['is_open'] if 'is_open' in block else "?"
+            if 'is_open' not in block:
+                pass
+            elif block['is_open'] == 'y':
+                return False
+    return True
+
 def main():
     args=sys.argv[1:]
     if not len(args)==1:
