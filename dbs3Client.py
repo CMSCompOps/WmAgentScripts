@@ -159,7 +159,7 @@ def getEventCountDataSetRunList(dataset,runList):
     # retrieve file aggregation only by the runs
     reply = dbsapi.listFileSummaries(dataset=dataset,run_num=runList)
     #a list with only the run numbers
-    return reply['num_event']
+    return reply[0]['num_event']
 
 def main():
     args=sys.argv[1:]
@@ -169,10 +169,10 @@ def main():
     workflow=args[0]
     url='cmsweb.cern.ch'
     outputDataSets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
-    runlist = [176801, 176807, 176702, 176796, 175896]
+    #runlist = [176801, 176807, 176702, 176796, 175896]
     ##inputEvents=getInputEvents(url, workflow)
     ##print " Runs", getEventCountDataSetRunList('/PhotonHad/Run2011B-v1/RAW',runlist)
-    print " Events:", getEventCountDataSet('/Neutrino_Pt-2to20_gun/Fall13-POSTLS162_V1-v4/GEN-SIM')
+    #print " Events:", getEventCountDataSet('/Neutrino_Pt-2to20_gun/Fall13-POSTLS162_V1-v4/GEN-SIM')
     for dataset in outputDataSets:
         print dataset
         print " Events:", getEventCountDataSet(dataset)
