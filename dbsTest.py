@@ -12,8 +12,8 @@ import urllib2,urllib, httplib, sys, re, os, json, phedexSubscription
 from xml.dom.minidom import getDOMImplementation
 from das_client import get_data
 #das_host='https://das.cern.ch'
-#das_host='https://cmsweb.cern.ch'
-das_host='https://cmsweb-testbed.cern.ch'
+das_host='https://cmsweb.cern.ch'
+#das_host='https://cmsweb-testbed.cern.ch'
 #das_host='https://das-dbs3.cern.ch'
 #das_host='https://dastest.cern.ch'
 
@@ -385,9 +385,9 @@ def handleTaskChain(request):
             runBlacklist=request['Task1']['RunBlacklist']
 
         if len(blockWhitelist)>0:
-            return getRunLumiCountDatasetBlockList(das_host, inputDataSet,blockWhitelist)
+            return getRunLumiCountDatasetBlockList(inputDataSet,blockWhitelist)
         if len(blockBlacklist)>0:
-            return getRunLumiCountDataset(das_host,inputDataSet)-getRunLumiCountDatasetBlockList(das_host, inputDataSet,blockBlacklist)
+            return getRunLumiCountDataset(das_host,inputDataSet)-getRunLumiCountDatasetBlockList( inputDataSet,blockBlacklist)
         if len(runWhitelist)>0:
             return getRunLumiCountDatasetListDAS(das_host, inputDataSet, runWhitelist)
         else:
@@ -443,6 +443,9 @@ def getInputEvents(url, workflow):
         if listitem in request:
             if request[listitem]=='[]':
                 request[listitem]=[]
+            if request[listitem][:1] == "[" and request[listitem][-1:] == "]":
+                request[listitem] = request[listitem][1:-1]
+                request[listitem] = request[listitem].replace("'", "");
             if type(request[listitem]) is not list:#if there is not a list but some elements it creates a list
                 request[listitem]=re.split(r",",request[listitem])
         else:
@@ -450,7 +453,7 @@ def getInputEvents(url, workflow):
     inputDataSet=request['InputDataset']
     if requestType=='ReReco':
         if len(request['BlockWhitelist'])>0:
-            return getRunLumiCountDatasetBlockList(das_host, request['InputDataset'],request['BlockWhitelist'])
+            return getRunLumiCountDatasetBlockList(request['InputDataset'],request['BlockWhitelist'])
         if len(request['BlockBlacklist'])>0:
             return getRunLumiCountDataset(request['InputDataset'])-getRunLumiCountDatasetBlockList(request['InputDataset'],request['BlockBlacklist'])
         if len(request['RunWhitelist'])>0:
@@ -492,6 +495,7 @@ def getOutputEvents(url, workflow, dataset):
         return getEventCountDataSet(das_host, dataset)
 
 
+
 def hasAllBlocksClosed(dataset):
     """
     checks if a given dataset has all blocks closed and 
@@ -509,7 +513,7 @@ def hasAllBlocksClosed(dataset):
             elif block['is_open'] == 'y':
                 return False
     return True
-  
+
 def main():
     args=sys.argv[1:]
     if not len(args)==1:
