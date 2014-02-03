@@ -87,7 +87,8 @@ def getInputEvents(url, workflow):
     for listitem in ["RunWhitelist", "RunBlacklist",
                     "BlockWhitelist", "BlockBlacklist"]:
         if listitem in request:
-            if request[listitem]=='[]':
+            #if empty
+            if request[listitem]=='[]' or request[listitem]=='':
                 request[listitem]=[]
             #if there is not a list but some elements it creates a list
             if type(request[listitem]) is not list:
@@ -102,17 +103,20 @@ def getInputEvents(url, workflow):
     if requestType=='ReReco':
         # if there is block whte list, count only the selected block
         if request['BlockWhitelist']:
-            return dbs3.getEventCountDataSetBlockList(inputDataSet,request['BlockWhitelist'])
+            events = dbs3.getEventCountDataSetBlockList(inputDataSet,request['BlockWhitelist'])
         # if there is block black list, substract them from the total
         if request['BlockBlacklist']:
-            return (dbs3.getEventCountDataSet(inputDataSet) - 
+            events = (dbs3.getEventCountDataSet(inputDataSet) - 
                     dbs3.getEventCountDataSet(inputDataSet,request['BlockBlacklist']))
+            return events
         # same if a run whitelist
         if request['RunWhitelist']:
-            return dbs3.getEventCountDataSetRunList(inputDataSet, request['RunWhitelist'])
+            events = dbs3.getEventCountDataSetRunList(inputDataSet, request['RunWhitelist'])
+            return events
         # otherwize, the full lumi count
         else:
-            return dbs3.getEventCountDataset(inputDataSet)
+            events = dbs3.getEventCountDataset(inputDataSet)
+            return events
     
     events = dbs3.getEventCountDataSet(inputDataSet)
     # if black list, subsctract them    
@@ -124,6 +128,7 @@ def getInputEvents(url, workflow):
     # if white list of blocks
     if request['BlockWhitelist']:
         events=dbs3.getEventCountDataSetBlockList(inputDataSet, request['BlockWhitelist'])
+
     if 'FilterEfficiency' in request:
         return float(request['FilterEfficiency'])*events
     else:
@@ -134,7 +139,7 @@ def getOutputEvents(url, workflow, dataset):
     Gets the output events depending on the type
     if the request
     """
-    request = getWorkflowInfo(url,workflow)
+    request = getWorkflowInfo(url, workflow)
     return dbs3.getEventCountDataSet(dataset)
 
 
