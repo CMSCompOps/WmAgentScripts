@@ -4,7 +4,13 @@ import urllib2,urllib, httplib, sys, re, os, phedexSubscription, dbsTest, duplic
 from xml.dom.minidom import getDOMImplementation
 import reqMgrClient
 
-
+"""
+    Calculates event progress percentage of a given workflow,
+    taking into account the workflow type, and comparing
+    input vs. output numbers of events.
+    Should be used instead of dbsTest.py
+   
+"""
 
 
 
