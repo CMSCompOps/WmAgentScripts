@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
     This client encapsulates several basic queries to request manager.
-
+    It should be used instead of dbsTest.py requsts.
 """
 
 
@@ -161,14 +161,14 @@ def handleTaskChain(request):
         if 'RunBlacklist' in request['Task1']:
             runBlacklist=request['Task1']['RunBlacklist']
 
-        if len(blockWhitelist)>0:
-            return getRunLumiCountDatasetBlockList(das_host, inputDataSet,blockWhitelist)
-        if len(blockBlacklist)>0:
-            return getRunLumiCountDataset(das_host,inputDataSet)-getRunLumiCountDatasetBlockList(das_host, inputDataSet,blockBlacklist)
-        if len(runWhitelist)>0:
-            return getRunLumiCountDatasetListDAS(das_host, inputDataSet, runWhitelist)
+        if blockWhitelist:
+            return dbs3Client.getEventCountDataSetBlockList(inputDataSet,blockWhitelist)
+        if blockBlacklist:
+            return dbs3Client.getEventCountDataset(inputDataSet) - dbs3Client.getEventCountDataSetBlockList(inputDataSet,blockBlacklist)
+        if runWhitelist:
+            return dbs3Client.getEventCountDataSetRunList(inputDataSet, runWhitelist)
         else:
-            return getRunLumiCountDataset(das_host,inputDataSet)
+            return dbs3Client.getEventCountDataset(inputDataSet)
 
 ### TODO: implement multi white/black list
 #        if len(blockWhitelist)>0 and len(runWhitelist)>0:

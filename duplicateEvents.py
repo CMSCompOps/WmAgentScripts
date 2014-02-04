@@ -5,6 +5,7 @@ from dbsTest import get_data
 
 
 das_url='https://cmsweb.cern.ch'
+
 def testEventCountWorkflow(url, workflow):
     inputEvents=0
     #inputEvents=inputEvents+dbsTest.getInputEvents(url, workflow)
@@ -31,9 +32,9 @@ def testEventCountWorkflow(url, workflow):
 
 def duplicateRunLumi(dataset):
     """
-checks if output dataset has duplicate lumis
-for every run.
-"""
+    checks if output dataset has duplicate lumis
+    for every run.
+    """
     RunlumisChecked={}
     duplicate=False
     query="file run lumi dataset="+dataset
