@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import json
-import urllib2,urllib, httplib, sys, re, os, phedexSubscription, dbsTest, duplicateEventsGen
-import time, shutil, closeOutWorkflows
+import urllib2,urllib, httplib, sys, re, os, phedexSubscription, dbsTest
+import time, shutil, closeOutWorkflows_leg as closeOutWorkflows
 from xml.dom.minidom import getDOMImplementation
 
 outputfile = '/afs/cern.ch/user/j/jbadillo/www/closeout.html'

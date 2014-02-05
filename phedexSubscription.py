@@ -57,6 +57,7 @@ def TestCustodialSubscriptionRequested(url, dataset, site):
 				return True
 	return False
 
+#TODO move to reqMgrClien
 def closeOutWorkflow(url, workflowname):
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	params = {"requestName" : workflowname, "cascade" : True}
@@ -68,6 +69,7 @@ def closeOutWorkflow(url, workflowname):
         conn.close()
 
 #Changes the state of a workflow to closed-out
+#TODO move to reqMgrClien
 def closeOutWorkflow2(url, workflowname):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     params = {"requestName" : workflowname,"status" : "closed-out"}
@@ -81,6 +83,7 @@ def closeOutWorkflow2(url, workflowname):
     #print data
     conn.close()
 
+#TODO move to reqMgrClien
 def announceWorkflow(url, workflowname):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     #params = {"requestName" : workflowname,"status" : "announced"}	
@@ -95,7 +98,7 @@ def announceWorkflow(url, workflowname):
     #print data
     conn.close()
 
-
+#TODO move to reqMgrClien
 def setWorkflowRunning(url, workflowname):
     print workflowname,
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -110,6 +113,7 @@ def setWorkflowRunning(url, workflowname):
     print data
     conn.close()
 
+#TODO move to reqMgrClien
 def abortWorkflow(url, workflowname):
     print workflowname,
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -193,6 +197,7 @@ def createXML(datasets):
    	return result.toprettyxml(indent="  ")
 
 #returns the output datasets for a given workfow
+#TODO move to reqMgrClien
 def outputdatasetsWorkflow(url, workflow):
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	r1=conn.request("GET",'/reqmgr/reqMgr/outputDatasetsByRequestName?requestName='+workflow)
@@ -206,6 +211,7 @@ def outputdatasetsWorkflow(url, workflow):
 	if len(datasets)==0:
 		print "No Outpudatasets for this workflow: "+workflow
 	return datasets
+
 #Creates the connection to phedex
 def createConnection(url):
 	key = "/afs/cern.ch/user/e/efajardo/private/grid_cert_priv.pem"

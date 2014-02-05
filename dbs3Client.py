@@ -25,6 +25,11 @@ def duplicateRunLumi(dataset, verbose=False):
     """
     checks if output dataset has duplicate lumis
     for every run.
+    returns true if at least one duplicate lumi was found
+    That is if there is the same lumi in the same run and
+    two different files
+    This can be used on datasets that have separate
+    runs.
     """  
     dbsapi = DbsApi(url=dbs3_url)
     duplicated = False
@@ -57,7 +62,8 @@ def duplicateRunLumi(dataset, verbose=False):
 
 def duplicateLumi(dataset, verbose=False):
     """
-    checks if output dataset has a duplicate lumi
+    checks if output dataset has duplicate lumis
+    returns true if at least one duplicate lumi was found
     """
     # initialize API to DBS3
     dbsapi = DbsApi(url=dbs3_url)
@@ -120,12 +126,20 @@ def getEventCountDataSet(dataset):
     return reply[0]['num_event']
 
 
+def getLumiCountDataSet(dataset):
+    """
+    Get the number of unique lumis in a dataset
+    """
+    # initialize API to DBS3
+    dbsapi = DbsApi(url=dbs3_url)
+    # retrieve dataset summary
+    reply = dbsapi.listFileSummaries(dataset=dataset)
+    return reply[0]['num_lumi']
 
 def hasAllBlocksClosed(dataset):
     """
     checks if a given dataset has all blocks closed
     """
-    
     # initialize API to DBS3
     dbsapi = DbsApi(url=dbs3_url)
     # retrieve dataset summary
@@ -176,6 +190,7 @@ def main():
     for dataset in outputDataSets:
         print dataset
         print " Events:", getEventCountDataSet(dataset)
+        print " Lumis:", getLumiCountDataSet(dataset)
         #print " Duplicated Lumis:", duplicateRunLumi(dataset)
         #print " Duplicated Lumis:", duplicateLumi(dataset)
         #print " Runs", getRunsDataset(dataset))

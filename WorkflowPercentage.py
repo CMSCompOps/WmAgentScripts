@@ -22,14 +22,15 @@ def percentageCompletion(url, workflow, outputDataset, verbose=False):
    
     inputEvents = reqMgrClient.getInputEvents(url, workflow)
     outputEvents = reqMgrClient.getOutputEvents(url, workflow, outputDataset)
-    if inputEvents==0:
-	    return 0    
+    if inputEvents==0 or not inputEvents:
+	    return 0
+    if not outputEvents:
+        outputEvents = 0  
     if verbose:
         print outputDataset
         print "Input events:", inputEvents
         print "Output events:", outputEvents
-    if not inputEvents:
-        inputEvents = 0
+
     percentage=100.0*outputEvents/float(inputEvents)
     return percentage
 

@@ -14,20 +14,27 @@ import dbs3Client as dbs3
 das_host='https://cmsweb-testbed.cern.ch'
 #das_host='https://das-dbs3.cern.ch'
 #das_host='https://dastest.cern.ch'
+#url pointing
+url='cmsweb.cern.ch'
 
-def getWorkflowInfo(url, workflow, retries=4):
+
+def requestManagerGet(url, request, retries=4):
     """
-    Retrieves workflow information
-    Using Request Manager
+    Queries Request Manager through a HTTP GET method
+    in every request manager query 
+    url: the instance used, usually url='cmsweb.cern.ch' 
+    request: the request suffix url
     """
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
+                                            key_file = os.getenv('X509_USER_PROXY'))
+    r1=conn.request("GET",request)
     r2=conn.getresponse()
     request = json.loads(r2.read())  
     #try until no exception
     while 'exception' in request and retries > 0:
-        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-        r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
+        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
+                                                key_file = os.getenv('X509_USER_PROXY'))
+        r1=conn.request("GET",request)
         r2=conn.getresponse()
         request = json.loads(r2.read())
         retries-=1
@@ -35,6 +42,30 @@ def getWorkflowInfo(url, workflow, retries=4):
         raise Exception('Maximum queries to req manager retried',str(request))
     return request
 
+def requestManagerPost(url, request, params, retries=4):
+    """
+    Performs some operation on request manager through
+    an HTTP POST method.
+    url: the instance used, usually url='cmsweb.cern.ch' 
+    request: the request suffix url for the POST method
+    params: a dict with the POST parameters
+    """
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
+                                    key_file = os.getenv('X509_USER_PROXY'))
+    headers={"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
+    encodedParams = urllib.urlencode(params)
+    conn.request("POST", request, encodedParams, headers)
+    response = conn.getresponse()
+    data = response.read()
+    conn.close()
+    return data
+
+def getWorkflowInfo(url, workflow):
+    """
+    Retrieves workflow information
+    """
+    request = requestManagerGet(url,'/reqmgr/reqMgr/request?requestName='+workflow)
+    return request    
 
 def getWorkflowType(url, workflow):
     request = getWorkflowInfo(url,workflow)
@@ -59,6 +90,28 @@ def getInputDataSet(url, workflow):
     else:
         return inputDataSets
 
+def outputdatasetsWorkflow(url, workflow):
+    """
+    returns the output datasets for a given workfow
+    """
+    request = getWorkflowInfo(url,workflow)
+    datasets=request['OutputDatasets']
+    if not datasets:
+        raise Exception("No Outpudatasets for this workflow: "+workflow)
+    return datasets
+
+def getRequestTeam(url, workflow):
+    """
+    Retrieves the team on which the wf is assigned
+    """
+    request = getWorkflowInfo(url,workflow)
+    if 'teams' not in request:
+        return 'NoTeam'
+    teams = request['teams']
+    if len(teams)<1:
+        return 'NoTeam'
+    else:
+        return teams[0]
 
 def getInputEvents(url, workflow):
     """
@@ -142,6 +195,46 @@ def getOutputEvents(url, workflow, dataset):
     request = getWorkflowInfo(url, workflow)
     return dbs3.getEventCountDataSet(dataset)
 
+def closeOutWorkflow(url, workflowname):
+    """
+    Closes out a workflow
+    """
+    params = {"requestName" : workflowname, "cascade" : True}
+    requestManagerPost(url,"/reqmgr/reqMgr/closeout", params)
+    
+def closeOutWorkflow2(url, workflowname):
+    """
+    Also closes out a workflow by changing the state
+    to closed-out
+    """
+    params = {"requestName" : workflowname,"status" : "closed-out"}
+    requestManagerPost(url,"/reqmgr/reqMgr/request", params)
+
+
+def announceWorkflow(url, workflowname):
+    """
+    Sets a workflow state to announced
+    """
+    params = {"requestName" : workflowname,"status" : "announced"}
+    requestManagerPost(url,"/reqmgr/reqMgr/request", params)
+
+def setWorkflowRunning(url, workflowname):
+    """
+    Sets a workflow state to running
+    """
+    print workflowname,
+    params = {"requestName" : workflowname,"status" : "running"}
+    data = requestManagerPost(url,"/reqmgr/reqMgr/request", params)
+    print data
+
+def abortWorkflow(url, workflowname):
+    """
+    Sets a workflow state to aborted
+    """
+    print workflowname,
+    params = {"requestName" : workflowname,"status" : "aborted"}
+    data = requestManagerPost(url,"/reqmgr/reqMgr/request", params)
+    print data
 
 def handleTaskChain(request):
     # Check if it's MC from scratch
@@ -191,5 +284,8 @@ def handleTaskChain(request):
 #            print "Hey, you have NO block black list but you do have run black list :-("
 #        elif len(BlockBlacklist)==0 and len(runBlacklist)==0:
 #            print "Hey, you have NO block and run black list :-("
+
+
+
 
 
