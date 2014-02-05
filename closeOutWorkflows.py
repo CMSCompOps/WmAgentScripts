@@ -209,24 +209,26 @@ def closeOutMonterCarloRequests(url, workflows):
 		if getRequestTeam(url, workflow)!='analysis':#If request is not in special queue
 			for dataset in datasets:
 				ClosePercentage=0.90
-				if 'SMS' in dataset:
-					ClosePercentage=1
+				#if 'SMS' in dataset:
+				#	ClosePercentage=1
 				closeOutDataset=True
 				Percentage=PercentageCompletion(url, workflow, dataset)
 				PhedexSubscription=CustodialMoveSubscriptionCreated(dataset)
 				TransPercen=0
+				closedBlocks=False
 				if PhedexSubscription!=False:
 					site=PhedexSubscription
 					TransPercen=TransferPercentage(url, dataset, site)
 				duplicate=True
 				if PhedexSubscription!=False and Percentage>=float(0.9):
 					duplicate=dbsTest.duplicateLumi(dataset)
+					closedBlocks = dbsTest.hasAllBlocksClosed(dataset)
 				if Percentage>=float(ClosePercentage) and PhedexSubscription!=False and not duplicate:
 					closeOutDataset=True
 				else:
 		 			closeOutDataset=False
 				closeOutWorkflow=closeOutWorkflow and closeOutDataset
-				print '| %80s | %100s | %4s | %5s| %3s | %5s|%5s| ' % (workflow, dataset,str(int(Percentage*100)), str(PhedexSubscription), str(int(TransPercen*100)), duplicate, closeOutDataset)
+				print '| %80s | %100s | %4s | %5s| %3s | %5s|%5s| %5s|' % (workflow, dataset,str(int(Percentage*100)), str(PhedexSubscription), str(int(TransPercen*100)), duplicate, closedBlocks, closeOutDataset)
 			if closeOutWorkflow:
 				phedexSubscription.closeOutWorkflow(url, workflow)
 		
@@ -253,12 +255,11 @@ def closeOutStep0Requests(url, workflows):
 				else:
 		 			closeOutDataset=False
 				closeOutWorkflow=closeOutWorkflow and closeOutDataset
-				print '| %80s | %100s | %4s | %5s| %3s | %5s|%5s| ' % (workflow, dataset,str(int(Percentage*100)), str(PhedexSubscription), str(correctLumis), duplicate, closeOutDataset)
+				print '| %80s | %100s | %4s | %5s| %3s | %5s| %5s| ' % (workflow, dataset,str(int(Percentage*100)), str(PhedexSubscription), str(correctLumis), duplicate, closeOutDataset)
 			if closeOutWorkflow:
 				phedexSubscription.closeOutWorkflow(url, workflow)
 		
 	print'-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'
-
 
 # It assumes dataset is an output dataset from the workflow
 def PercentageCompletion(url, workflow, dataset):
@@ -270,6 +271,7 @@ def PercentageCompletion(url, workflow, dataset):
 	percentage=outputEvents/float(inputEvents)
 	return percentage
 
+
 def main():
 	url='cmsweb.cern.ch'
 	print "Gathering Requests"
@@ -277,7 +279,7 @@ def main():
 	print "Classifying Requests"
 	workflowsCompleted=classifyCompletedRequests(url, requests)
 	print '-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'
-    	print '| Request                                                                          | OutputDataSet                                                                                        |%Compl|Subscr|Tran|Dupl|ClosOu|'
+    	print '| Request                                                                          | OutputDataSet                                                                                        |%Compl|Subscr|Tran|Dupl|Blocks|ClosOu|'
    	print '-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'
 	closeOutReRecoWorkflows(url, workflowsCompleted['ReReco'])	
 	closeOutRedigiWorkflows(url, workflowsCompleted['ReDigi'])
