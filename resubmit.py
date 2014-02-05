@@ -75,6 +75,9 @@ def retrieveSchema(workflowName, user, group ):
     schema["ProcessingString"] = helper.getProcessingString()
     schema["ProcessingVersion"] = helper.getProcessingVersion()+1
     schema["AcquisitionEra"] = helper.getAcquisitionEra()
+    
+    # Meged LFN should be the same as the original request
+    schema["MergedLFNBase"] = helper.getMergedLFNBase()
 	
     #for (key, value) in helper.data.request.schema.dictionary_whole_tree_().iteritems():
     for (key, value) in helper.data.request.schema.dictionary_().iteritems():
