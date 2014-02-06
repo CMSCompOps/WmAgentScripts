@@ -229,7 +229,7 @@ def percentageCompletion(url, workflow, dataset):
     taking a particular output dataset
     """
     inputEvents = reqMgrClient.getInputEvents(url, workflow)
-    outputEvents = reqMgrClient.getOutputEvents(url, workflow, outputDataset)
+    outputEvents = reqMgrClient.getOutputEvents(url, workflow, dataset)
     if inputEvents == 0:
         return 0
     if not outputEvents:

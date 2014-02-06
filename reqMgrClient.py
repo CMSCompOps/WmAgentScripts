@@ -94,10 +94,7 @@ def outputdatasetsWorkflow(url, workflow):
     """
     returns the output datasets for a given workfow
     """
-    request = getWorkflowInfo(url,workflow)
-    datasets=request['OutputDatasets']
-    if not datasets:
-        raise Exception("No Outpudatasets for this workflow: "+workflow)
+    datasets = requestManagerGet(url,'/reqmgr/reqMgr/outputDatasetsByRequestName?requestName='+workflow)
     return datasets
 
 def getRequestTeam(url, workflow):

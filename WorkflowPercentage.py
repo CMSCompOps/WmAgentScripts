@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import json
-import urllib2,urllib, httplib, sys, re, os, phedexSubscription, dbsTest, duplicateEventsGen
+import urllib2,urllib, httplib, sys, re, os
 from xml.dom.minidom import getDOMImplementation
 import reqMgrClient
 
@@ -45,7 +45,7 @@ def main():
     url='cmsweb.cern.ch'
 
     #retrieve the output datasets
-    outputDataSets=phedexSubscription.outputdatasetsWorkflow(url, workflow)    
+    outputDataSets=reqMgrClient.outputdatasetsWorkflow(url, workflow)    
 
     for dataset in outputDataSets:
         perc = percentageCompletion(url, workflow, dataset, verbose=True)
