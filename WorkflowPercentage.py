@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import json
-import urllib2,urllib, httplib, sys, re, os, phedexSubscription, dbsTest, duplicateEventsGen
+import urllib2,urllib, httplib, sys, re, os
 from xml.dom.minidom import getDOMImplementation
 import reqMgrClient
 
@@ -22,14 +22,15 @@ def percentageCompletion(url, workflow, outputDataset, verbose=False):
    
     inputEvents = reqMgrClient.getInputEvents(url, workflow)
     outputEvents = reqMgrClient.getOutputEvents(url, workflow, outputDataset)
-    if inputEvents==0:
-	    return 0    
+    if inputEvents==0 or not inputEvents:
+	    return 0
+    if not outputEvents:
+        outputEvents = 0  
     if verbose:
         print outputDataset
         print "Input events:", inputEvents
         print "Output events:", outputEvents
-    if not inputEvents:
-        inputEvents = 0
+
     percentage=100.0*outputEvents/float(inputEvents)
     return percentage
 
@@ -44,7 +45,7 @@ def main():
     url='cmsweb.cern.ch'
 
     #retrieve the output datasets
-    outputDataSets=phedexSubscription.outputdatasetsWorkflow(url, workflow)    
+    outputDataSets=reqMgrClient.outputdatasetsWorkflow(url, workflow)    
 
     for dataset in outputDataSets:
         perc = percentageCompletion(url, workflow, dataset, verbose=True)

@@ -3,6 +3,81 @@ import json
 import urllib2,urllib, httplib, sys, re, os
 from xml.dom.minidom import getDOMImplementation
 
+"""
+    Encapsulates requests to Phedex API
+    Should be usead instead of phedexSubscription
+"""
+
+
+def hasCustodialSubscription(datasetName):
+    """
+    Returns true if a given dataset has at least
+    one custodial subscription
+    """
+    url = 'https://cmsweb.cern.ch/phedex/datasvc/json/prod/Subscriptions?dataset=' + datasetName
+    result = json.loads(urllib2.urlopen(url).read())
+    datasets=result['phedex']['dataset']
+    if datasets:
+        dicts=datasets[0]
+        subscriptions=dicts['subscription']
+        #check all subscriptions
+        for subscription in subscriptions:
+            # if at least one subscription is custodial
+            if subscription['level']=='DATASET' and subscription['custodial']=='y':
+                return True
+        #if no subscription found
+        return False
+    else:
+
+        return False
+
+
+def getCustodialMoveSubscriptionSite(datasetName):
+    """
+    Returns the site for which a custodial move subscription for a dataset was created,
+    if none is found it returns False
+    """
+    url = 'https://cmsweb.cern.ch/phedex/datasvc/json/prod/subscriptions?dataset=' + datasetName
+    result = json.loads(urllib2.urlopen(url).read())
+    datasets = result['phedex']    
+    if 'dataset' not in datasets.keys():
+        return False
+    else:
+        if not result['phedex']['dataset']:
+            return False
+        #check all subscriptions
+        for subscription in result['phedex']['dataset'][0]['subscription']:
+            #if at least one is custodial
+            if subscription['custodial']=='y':
+                return subscription['node']
+        #if no subscription found
+        return False
+
+
+def getTransferPercentage(url, dataset, site):
+    """
+    Calculates a transfer percentage from given dataset
+    to a given site by counting how many blocks
+    have been completely transferred
+    """
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), 
+                                            key_file = os.getenv('X509_USER_PROXY'))
+    r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset='+dataset+'&node='+site)
+    r2=conn.getresponse()
+    result = json.loads(r2.read())
+    blocks=result['phedex']
+    #if block not present
+    if 'block' not in blocks:
+        return 0
+    if not result['phedex']['block']:
+        return 0
+    total = len(blocks['block'])
+    completed = 0
+    #count the number of blocks which transfer is complete
+    for block in blocks['block']:
+        if block['replica'][0]['complete']=='y':
+            completed += 1 
+    return float(completed)/float(total)
 
 
 def TestAcceptedSubscritpionSpecialRequest(url, dataset, site):
@@ -57,76 +132,21 @@ def TestCustodialSubscriptionRequested(url, dataset, site):
 				return True
 	return False
 
-#TODO move to reqMgrClien
-def closeOutWorkflow(url, workflowname):
+def TransferComplete(url, dataset, site):
 	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-	params = {"requestName" : workflowname, "cascade" : True}
-	headers={"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
-	encodedParams = urllib.urlencode(params)
-	conn.request("POST", "/reqmgr/reqMgr/closeout", encodedParams, headers)
-	response = conn.getresponse()
-	data = response.read()
-        conn.close()
+	r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset='+dataset+'&node='+site+'_MSS')
+	r2=conn.getresponse()
+	result = json.loads(r2.read())
+	blocks=result['phedex']
+	if 'block' not in blocks.keys():
+		return False
+	if len(result['phedex']['block'])==0:
+		return False
+	for block in blocks['block']:
+		if block['replica'][0]['complete']!='y':
+			return False
+	return True		
 
-#Changes the state of a workflow to closed-out
-#TODO move to reqMgrClien
-def closeOutWorkflow2(url, workflowname):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    params = {"requestName" : workflowname,"status" : "closed-out"}
-    headers={"Content-type": "application/x-www-form-urlencoded",
-             "Accept": "text/plain"}
-    encodedParams = urllib.urlencode(params)
-    conn.request("PUT", "/reqmgr/reqMgr/request", encodedParams, headers)
-    response = conn.getresponse()	
-    #print response.status, response.reason
-    data = response.read()
-    #print data
-    conn.close()
-
-#TODO move to reqMgrClien
-def announceWorkflow(url, workflowname):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    #params = {"requestName" : workflowname,"status" : "announced"}	
-    params = {"requestName" : workflowname,"status" : "announced"}
-    headers={"Content-type": "application/x-www-form-urlencoded",
-             "Accept": "text/plain"}
-    encodedParams = urllib.urlencode(params)
-    conn.request("PUT", "/reqmgr/reqMgr/request", encodedParams, headers)
-    response = conn.getresponse()	
-    #print response.status, response.reason
-    data = response.read()
-    #print data
-    conn.close()
-
-#TODO move to reqMgrClien
-def setWorkflowRunning(url, workflowname):
-    print workflowname,
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    params = {"requestName" : workflowname,"status" : "running"}
-    headers={"Content-type": "application/x-www-form-urlencoded",
-             "Accept": "text/plain"}
-    encodedParams = urllib.urlencode(params)
-    conn.request("PUT", "/reqmgr/reqMgr/request", encodedParams, headers)
-    response = conn.getresponse()	
-    print response.status, response.reason
-    data = response.read()
-    print data
-    conn.close()
-
-#TODO move to reqMgrClien
-def abortWorkflow(url, workflowname):
-    print workflowname,
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    params = {"requestName" : workflowname,"status" : "aborted"}
-    headers={"Content-type": "application/x-www-form-urlencoded",
-             "Accept": "text/plain"}
-    encodedParams = urllib.urlencode(params)
-    conn.request("PUT", "/reqmgr/reqMgr/request", encodedParams, headers)
-    response = conn.getresponse()	
-    print response.status, response.reason
-    data = response.read()
-    print data
-    conn.close()
 
     
 #Tests whether a dataset was subscribed to phedex
