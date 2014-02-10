@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import json
-import urllib2,urllib, httplib, sys, re, os, duplicateEventsGen
+import urllib2,urllib, httplib, sys, re, os
 from xml.dom.minidom import getDOMImplementation
 import dbs3Client, reqMgrClient, phedexClient
 
@@ -12,9 +12,11 @@ import dbs3Client, reqMgrClient, phedexClient
     - Has the expected number of events
     - Datasets are properly registered on Phedex
     - Datasets are healthy (no duplicate lumis)
+    This uses DBS3 client, reqMgrClient and phedexClient now instead of dbsTest.py
+    and phedexSubscription.py.
+    For running the previous version look for closeOutScript_leg.py
 
 """
-
 
 def getOverviewRequestsWMStats(url):
     """
@@ -68,6 +70,7 @@ def closeOutReRecoWorkflows(url, workflows):
     """
     Closeout ReReco workflows
     """
+    noSiteWorkflows = []
     for workflow in workflows:
         if 'RelVal' in workflow:
             continue
@@ -88,6 +91,11 @@ def closeOutReRecoWorkflows(url, workflows):
                 closeOutDataset = True
             else:
                 closeOutDataset = False
+            
+            #validate when percentage is ok but has not phedex subscription
+            if percentage == 1 and not phedexSubscription:
+                noSiteWorkflows.append(workflow)
+
             #if at least one dataset is not ready wf cannot be closed out
             closeOutWorkflow = closeOutWorkflow and closeOutDataset
             print '| %80s | %100s | %4s | %5s| %3s | %5s|%5s| ' % (workflow, dataset,str(int(percentage*100)),
@@ -96,11 +104,13 @@ def closeOutReRecoWorkflows(url, workflows):
         if closeOutWorkflow:
             reqMgrClient.closeOutWorkflow(url, workflow)
     print '-'*180
+    return noSiteWorkflows
 
 def closeOutRedigiWorkflows(url, workflows):
     """
     Closes out a list of redigi workflows
     """
+    noSiteWorkflows = []
     for workflow in workflows:
         closeOutWorkflow = True
         inputDataset = reqMgrClient.getInputDataSet(url, workflow)
@@ -119,25 +129,30 @@ def closeOutRedigiWorkflows(url, workflows):
                     closeOutDataset = True
                 else:
                     closeOutDataset = False
+            #validate when percentage is ok but has not phedex subscription
+            if percentage >= float(0.95) and not phedexSubscription:
+                noSiteWorkflows.append(workflow)
             #if at least one dataset is not ready wf cannot be closed out
             closeOutWorkflow = closeOutWorkflow and closeOutDataset
             print '| %80s | %100s | %4s | %5s| %3s | %5s|%5s| ' % (workflow, dataset,str(int(percentage*100)),
-                                                    str(PhedexSubscription), 100, duplicate, closeOutDataset)
+                                                    str(phedexSubscription), 100, duplicate, closeOutDataset)
         #workflow can only be closed out if all datasets are ready
         if closeOutWorkflow:
             reqMgrClient.closeOutWorkflow(url, workflow)
     print '-'*180
+    return noSiteWorkflows
 
 def closeOutMonterCarloRequests(url, workflows):
     """
     Closes either montecarlo or montecarlo from gen
     workflows
     """
+    noSiteWorkflows = []
     for workflow in workflows:
         datasets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
         closeOutWorkflow = True
         #skip montecarlos on a special queue
-        if reqMgr.getRequestTeam(url, workflow) == 'analysis':
+        if reqMgrClient.getRequestTeam(url, workflow) == 'analysis':
             continue
         for dataset in datasets:
             closePercentage = 0.95
@@ -162,25 +177,30 @@ def closeOutMonterCarloRequests(url, workflows):
                     closeOutDataset = False
             else:
                 closeOutDataset = False
+            #validate when percentage is ok but has not phedex subscription
+            if percentage >= float(closePercentage) and not phedexSubscription:
+                noSiteWorkflows.append(workflow)
             #if at least one dataset is not ready wf cannot be closed out
             closeOutWorkflow = closeOutWorkflow and closeOutDataset
             print '| %80s | %100s | %4s | %5s| %3s | %5s|%5s| %5s|' % (workflow, dataset,str(int(percentage*100)),
-                        str(PhedexSubscription), str(int(transPerc*100)), duplicate, closedBlocks, closeOutDataset)
+                        str(phedexSubscription), str(int(transPerc*100)), duplicate, closedBlocks, closeOutDataset)
         #workflow can only be closed out if all datasets are ready
         if closeOutWorkflow:
             reqMgrClient.closeOutWorkflow(url, workflow)
     #separation line
     print '-'*180
+    return noSiteWorkflows
 
 def closeOutStep0Requests(url, workflows):
     """
     Closes either montecarlo step0 requests
     """
+    noSiteWorkflows = []
     for workflow in workflows:
         datasets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
         closeOutWorkflow = True
         #skip montecarlos on a special queue
-        if reqMgr.getRequestTeam(url, workflow) == 'analysis':
+        if reqMgrClient.getRequestTeam(url, workflow) == 'analysis':
             continue
         for dataset in datasets:
             closeOutDataset = False
@@ -193,7 +213,7 @@ def closeOutStep0Requests(url, workflows):
             # if dataset has subscription and enough events we check
             # duplicates, transfer percentage, closed blocks and lumis
             if phedexSubscription and percentage >= float(0.95):
-                transPerc = TransferPercentage(url, dataset, site)
+                transPerc = phedexClient.getTransferPercentage(url, dataset, phedexSubscription)
                 duplicate = dbs3Client.duplicateLumi(dataset)
                 correctLumis = checkCorrectLumisEventGEN(dataset)
                 #TODO validate closed blocks
@@ -201,14 +221,18 @@ def closeOutStep0Requests(url, workflows):
                     closeOutDataset = True
                 else:
                     closeOutDataset = False
+            #validate when percentage is ok but has not phedex subscription
+            if percentage >= float(0.95) and not phedexSubscription:
+                noSiteWorkflows.append(workflow)
             #if at least one dataset is not ready wf cannot be closed out
             closeOutWorkflow = closeOutWorkflow and closeOutDataset
-            print '| %80s | %100s | %4s | %5s| %3s | %5s| %5s| ' % (workflow, dataset,str(int(Percentage*100)),
-                        str(PhedexSubscription), str(correctLumis), duplicate, closeOutDataset)
+            print '| %80s | %100s | %4s | %5s| %3s | %5s| %5s| ' % (workflow, dataset,str(int(percentage*100)),
+                        str(phedexSubscription), str(correctLumis), duplicate, closeOutDataset)
         #workflow can only be closed out if all datasets are ready
         if closeOutWorkflow:
             reqMgrClient.closeOutWorkflow(url, workflow)
     print '-'*180
+    return noSiteWorkflows
 
 
 def checkCorrectLumisEventGEN(dataset):
@@ -244,6 +268,8 @@ def main():
     requests = getOverviewRequestsWMStats(url)
     print "Classifying Requests"
     workflowsCompleted = classifyCompletedRequests(url, requests)
+
+    #print header
     print '-'*220
     print '| Request                                                                          | OutputDataSet                                                                                        |%Compl|Subscr|Tran|Dupl|Blocks|ClosOu|'
     print '-'*220

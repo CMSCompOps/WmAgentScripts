@@ -222,7 +222,7 @@ def closeOutMonterCarloRequests(url, workflows):
 				duplicate=True
 				if PhedexSubscription!=False and Percentage>=float(0.9):
 					duplicate=dbsTest.duplicateLumi(dataset)
-					closedBlocks = dbsTest.hasAllBlocksClosed(dataset)
+					closedBlocks = True #dbsTest.hasAllBlocksClosed(dataset)
 				if Percentage>=float(ClosePercentage) and PhedexSubscription!=False and not duplicate:
 					closeOutDataset=True
 				else:
@@ -281,11 +281,11 @@ def main():
 	print '-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'
     	print '| Request                                                                          | OutputDataSet                                                                                        |%Compl|Subscr|Tran|Dupl|Blocks|ClosOu|'
    	print '-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'
-	closeOutReRecoWorkflows(url, workflowsCompleted['ReReco'])	
-	closeOutRedigiWorkflows(url, workflowsCompleted['ReDigi'])
+	#closeOutReRecoWorkflows(url, workflowsCompleted['ReReco'])	
+	#closeOutRedigiWorkflows(url, workflowsCompleted['ReDigi'])
 	closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarlo'])
 	closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarloFromGEN'])
-	closeOutStep0Requests(url, workflowsCompleted['LHEStepZero'])
+	#closeOutStep0Requests(url, workflowsCompleted['LHEStepZero'])
 	print "MC Workflows for which couldn't find Custodial Tier1 Site"
 	if 'NoSite' in workflowsCompleted['MonteCarlo']:
 		print workflowsCompleted['MonteCarlo']['NoSite']

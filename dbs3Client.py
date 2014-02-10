@@ -8,9 +8,8 @@
 """
 
 
-import urllib2,urllib, httplib, sys, re, os, json, phedexSubscription
+import urllib2,urllib, httplib, sys, re, os, json
 from xml.dom.minidom import getDOMImplementation
-from das_client import get_data
 from dbs.apis.dbsClient import DbsApi
 
 #das_host='https://das.cern.ch'
@@ -182,7 +181,7 @@ def main():
         sys.exit(0)
     workflow=args[0]
     url='cmsweb.cern.ch'
-    outputDataSets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
+    outputDataSets=reqMgrClient.outputdatasetsWorkflow(url, workflow)
     #runlist = [176801, 176807, 176702, 176796, 175896]
     ##inputEvents=getInputEvents(url, workflow)
     ##print " Runs", getEventCountDataSetRunList('/PhotonHad/Run2011B-v1/RAW',runlist)
