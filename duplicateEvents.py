@@ -7,7 +7,7 @@
 
 import json
 import urllib2,urllib, httplib, sys, re, os
-import dbs3Client
+import dbs3Client, reqMgrClient
 
 
 def testEventCountWorkflow(url, workflow, verbose=False):
@@ -21,10 +21,11 @@ def testEventCountWorkflow(url, workflow, verbose=False):
     #check e
     for dataset in datasets:
         print 'dataset :', dataset		
-        if dbs3Client.duplicateRunLumi(dataset, verbose):
+        #if dbs3Client.duplicateRunLumi(dataset, verbose):
+        if dbs3Client.duplicateLumi(dataset, verbose):
             duplicate = True
             #fast check, one dataset duplicated
-            if not verbose
+            if not verbose:
                 print 'Has duplicated lumis'
                 return True
     return duplicate
