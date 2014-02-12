@@ -70,6 +70,7 @@ def main():
 
     usage="usage: python setDatasetStatus.py --dataset=<DATASET_NAME> --status=<STATUS> {--files}"
     parser = OptionParser(usage=usage)
+    parser.add_option('--correct_env',action="store_true",dest='correct_env')
 
     parser.add_option('-d', '--dataset', dest='dataset', default=None, help='Dataset name')
     parser.add_option('-s', '--status', dest='status', default=None, help='This will be the new status of the dataset/files')
@@ -77,6 +78,14 @@ def main():
 
     (opts, args) = parser.parse_args()
 
+    command=""
+    for arg in sys.argv:
+        command=command+arg+" "
+
+    if not opts.correct_env:
+        os.system("source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh; source /data/srv/wmagent/current/sw/slc5_amd64_gcc461/cms/dbs3-client/3.1.7b/etc/profile.d/init.sh; source /afs/cern.ch/cms/LCG/LCG-2/UI/cms_ui_env.sh; python2.6 "+command + "--correct_env")
+        sys.exit(0)
+        
     if opts.dataset == None:
         print "--dataset option must be provided"
         print usage;

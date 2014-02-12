@@ -24,7 +24,7 @@ url='cmsweb.cern.ch'
 
 workflow="franzoni_RVCMSSW_7_0_0_pre11QQH1352T_Tauola_13_PU25ns__OldTrk_131221_073717_2277"
 taskname="/franzoni_RVCMSSW_7_0_0_pre11QQH1352T_Tauola_13_PU25ns__OldTrk_131221_073717_2277/DIGIUP15_PU25/DIGIUP15_PU25MergeFEVTDEBUGHLToutput/RECOUP15_PU25"
-job_number=0
+job_number=2
 
 conn2  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 r1=conn2.request('GET','/couchdb/wmstats/_design/WMStats/_view/jobsByStatusWorkflow?startkey=["'+workflow+'","'+taskname+'","jobfailed"]&endkey=["'+workflow+'%22,%22'+taskname+'","jobfailed",{}]&stale=ok&include_docs=true&reduce=false')
@@ -38,7 +38,7 @@ print "job "+str(job_number)
 #print s2['rows'][job_number]['doc']['logArchiveLFN'].keys()[0]
 #print s2['rows'][job_number]['doc']['output'][1]['lfn']
 
-logarchive_srm=s2['rows'][job_number]['doc']['logArchiveLFN'].keys()[0]
+logarchive_srm=s2['rows'][0]['doc']['logArchiveLFN'].keys()[0]
 print logarchive_srm
 
 logarchive=logarchive_srm.split('/castor/cern.ch/cms')[1]

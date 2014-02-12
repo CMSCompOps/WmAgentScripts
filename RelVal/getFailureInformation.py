@@ -26,6 +26,10 @@ error_string2="StageOutFailure"
 error_string3="Job has been running for more than"
 error_string4="Job killed due to timeout"
 error_string5="Return code: 134"
+error_string6="FileReadError"
+error_string7="Return code: 40"
+error_string8="Return code: 137"
+error_string9="No space left on device"
 
 url='cmsweb.cern.ch'
 
@@ -64,6 +68,10 @@ for line in f:
         nfailures3 = 0
         nfailures4 = 0
         nfailures5 = 0
+        nfailures6 = 0
+        nfailures7 = 0
+        nfailures8 = 0
+        nfailures9 = 0
         nfailurestot = 0
 
         #loop over failed jobs
@@ -78,19 +86,31 @@ for line in f:
                     if error_string1 in s2['rows'][j]['doc']['errors'][k][0]['details']:
                         nfailures1=nfailures1+1
                         break
-                    if error_string2 in s2['rows'][j]['doc']['errors'][k][0]['details']:
+                    elif error_string2 in s2['rows'][j]['doc']['errors'][k][0]['details']:
                         nfailures2=nfailures2+1
                         break
-                    if error_string3 in s2['rows'][j]['doc']['errors'][k][0]['details']:
+                    elif error_string3 in s2['rows'][j]['doc']['errors'][k][0]['details']:
                         nfailures3=nfailures3+1
                         break
-                    if error_string4 in s2['rows'][j]['doc']['errors'][k][0]['details']:
+                    elif error_string4 in s2['rows'][j]['doc']['errors'][k][0]['details']:
                         nfailures4=nfailures4+1
                         break                                        
-                    if error_string5 in s2['rows'][j]['doc']['errors'][k][0]['details']:
+                    elif error_string5 in s2['rows'][j]['doc']['errors'][k][0]['details']:
                         nfailures5=nfailures5+1
+                        break
+                    elif len(s2['rows'][j]['doc']['errors'][k])>1 and error_string6 in s2['rows'][j]['doc']['errors'][k][1]['details']:
+                        nfailures6=nfailures6+1
+                        break
+                    elif error_string7 in s2['rows'][j]['doc']['errors'][k][0]['details']:
+                        nfailures7=nfailures7+1
+                        break
+                    elif error_string8 in s2['rows'][j]['doc']['errors'][k][0]['details']:
+                        nfailures8=nfailures8+1
+                        break
+                    elif error_string9 in s2['rows'][j]['doc']['errors'][k][0]['details']:
+                        nfailures9=nfailures9+1
                         break                                        
-                        
+                    
         conn3  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))   
         r31=conn3.request('GET','/couchdb/wmstats/_design/WMStats/_view/latestRequest?reduce=true&group=true&keys=[["'+workflow+'","cmssrv113.fnal.gov:9999"],["'+workflow+'","cmssrv113.fnal.gov:9999"]]&stale=ok')
         r32=conn3.getresponse()
@@ -106,7 +126,13 @@ for line in f:
         
         totaljobs=0
 
-        if len(s4['rows'][1]['doc']['tasks'][taskname]['status']) == 2:
+        if s4['rows'][1]['doc']==None:
+            print "s4['rows'][1]['doc'] equals None"
+            totaljobs=9999999999
+        elif taskname not in s4['rows'][1]['doc']['tasks']:
+            print "task "+taskname+" not found, setting total jobs to 999999999999"
+            totaljobs=9999999999
+        elif len(s4['rows'][1]['doc']['tasks'][taskname]['status']) == 2:
             if 'success' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'failure' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'exception' not in s4['rows'][1]['doc']['tasks'][taskname]['status']['failure'] or len(s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']) != 1:
                 print "problem with job status information"
                 sys.exit(0)
@@ -136,12 +162,20 @@ for line in f:
             if nfailures4 > 0:    
                 print "        failures due to "+error_string4+": "+str(nfailures4)
             if nfailures5 > 0:    
-                print "        failures due to "+error_string5+": "+str(nfailures5)            
+                print "        failures due to "+error_string5+": "+str(nfailures5)
+            if nfailures6 > 0:    
+                print "        failures due to "+error_string6+": "+str(nfailures6)
+            if nfailures7 > 0:    
+                print "        failures due to "+error_string7+": "+str(nfailures7)
+            if nfailures8 > 0:    
+                print "        failures due to "+error_string8+": "+str(nfailures8)
+            if nfailures9 > 0:    
+                print "        failures due to "+error_string9+": "+str(nfailures9)                                                                            
 
-            if nfailurestot != nfailures1+nfailures2+nfailures3+nfailures4+nfailures5:
+            if nfailurestot != nfailures1+nfailures2+nfailures3+nfailures4+nfailures5+nfailures6+nfailures7+nfailures8+nfailures9:
                 print "        missing some failures"
 
-        task_dicts.append({'task_name':taskname.split('/')[len(taskname.split('/'))-1],'nfailures1':nfailures1,'nfailures2':nfailures2,'nfailures3':nfailures3,'nfailures4':nfailures4,'nfailures5':nfailures5,'nfailurestot':nfailurestot,'totaljobs':totaljobs})    
+        task_dicts.append({'task_name':taskname.split('/')[len(taskname.split('/'))-1],'nfailures1':nfailures1,'nfailures2':nfailures2,'nfailures3':nfailures3,'nfailures4':nfailures4,'nfailures5':nfailures5,'nfailures6':nfailures6,'nfailures7':nfailures7,'nfailures8':nfailures8,'nfailures9':nfailures9,'nfailurestot':nfailurestot,'totaljobs':totaljobs})    
 
         wf_dicts.append({'wf_name':workflow,'task_dict':task_dicts})                      
         #print "         PerformanceError errors: "+ str(len(s2['rows'][j]['doc']['errors']['PerformanceError']))    
@@ -211,6 +245,7 @@ for wf in wf_dicts:
             firsttime=False
         if task['nfailures4']>0:    
             print "        "+str(task['nfailures4'])+" out of "+str(task['totaljobs'])+" " +task['task_name']+" jobs"
+
 firsttime_wf=True
 for wf in wf_dicts:
     firsttime=True
@@ -225,17 +260,108 @@ for wf in wf_dicts:
             print "    in the workflow "+wf['wf_name']
             firsttime=False
         if task['nfailures5']>0:    
-            print "        "+str(task['nfailures5'])+" out of "+str(task['totaljobs'])+" " +task['task_name']+" jobs"        
+            print "        "+str(task['nfailures5'])+" out of "+str(task['totaljobs'])+" " +task['task_name']+" jobs"
+
+firsttime_wf=True
+for wf in wf_dicts:
+    firsttime=True
+    for task in wf['task_dict']:
+        if task['nfailures6']>0 and firsttime_wf:
+            if firsttime_all:
+                print ""
+                firsttime_all=False            
+            print "there were the following failures due FileReadError"
+            firsttime_wf=False
+        if task['nfailures6']>0 and firsttime:
+            print "    in the workflow "+wf['wf_name']
+            firsttime=False
+        if task['nfailures6']>0:    
+            print "        "+str(task['nfailures6'])+" out of "+str(task['totaljobs'])+" " +task['task_name']+" jobs"
+
+firsttime_wf=True
+for wf in wf_dicts:
+    firsttime=True
+    for task in wf['task_dict']:
+        if task['nfailures7']>0 and firsttime_wf:
+            if firsttime_all:
+                print ""
+                firsttime_all=False            
+            print "there were the following failures due to return code 40"
+            firsttime_wf=False
+        if task['nfailures7']>0 and firsttime:
+            print "    in the workflow "+wf['wf_name']
+            firsttime=False
+        if task['nfailures7']>0:    
+            print "        "+str(task['nfailures7'])+" out of "+str(task['totaljobs'])+" " +task['task_name']+" jobs"                        
+
+firsttime_wf=True
+for wf in wf_dicts:
+    firsttime=True
+    for task in wf['task_dict']:
+        if task['nfailures8']>0 and firsttime_wf:
+            if firsttime_all:
+                print ""
+                firsttime_all=False            
+            print "there were the following failures due to return code 137"
+            firsttime_wf=False
+        if task['nfailures8']>0 and firsttime:
+            print "    in the workflow "+wf['wf_name']
+            firsttime=False
+        if task['nfailures8']>0:    
+            print "        "+str(task['nfailures8'])+" out of "+str(task['totaljobs'])+" " +task['task_name']+" jobs"
+
+firsttime_wf=True
+for wf in wf_dicts:
+    firsttime=True
+    for task in wf['task_dict']:
+        if task['nfailures9']>0 and firsttime_wf:
+            if firsttime_all:
+                print ""
+                firsttime_all=False            
+            print "there were the following failures due to no space left on device"
+            firsttime_wf=False
+        if task['nfailures9']>0 and firsttime:
+            print "    in the workflow "+wf['wf_name']
+            firsttime=False
+        if task['nfailures9']>0:    
+            print "        "+str(task['nfailures9'])+" out of "+str(task['totaljobs'])+" " +task['task_name']+" jobs"                                    
+
+
+firsttime_wf=True
+for wf in wf_dicts:
+    firsttime=True
+    for task in wf['task_dict']:
+        if task['nfailures2']+task['nfailures3']+task['nfailures4']>0 and firsttime_wf:
+            if firsttime_all:
+                print ""
+                firsttime_all=False            
+            print "there were the following failures due to file access problem"
+            firsttime_wf=False
+        if task['nfailures2']+task['nfailures3']+task['nfailures4']>0 and firsttime:
+            print "    in the workflow "+wf['wf_name']
+            firsttime=False
+        if task['nfailures2']+task['nfailures3']+task['nfailures4']>0:    
+            print "        "+str(task['nfailures2']+task['nfailures3']+task['nfailures4'])+" out of "+str(task['totaljobs'])+" " +task['task_name']+" jobs"
 
 firsttime_missing=True
 for wf in wf_dicts:
     for task in wf['task_dict']:
-        if task['nfailurestot'] != task['nfailures1']+task['nfailures2']+task['nfailures3']+task['nfailures4']+task['nfailures5']:
+        if task['nfailurestot'] != task['nfailures1']+task['nfailures2']+task['nfailures3']+task['nfailures4']+task['nfailures5']+task['nfailures6']+task['nfailures7']+task['nfailures8']+task['nfailures9']:
             if firsttime_missing:
                 print ""
                 print "the following failures were missed"
                 firsttime_missing=False
             print "    workflow "+wf['wf_name']
             print "        task "+task['task_name']
-            print "            "+ str(task['nfailurestot']-(task['nfailures1']+task['nfailures2']+task['nfailures3']+task['nfailures4']+task['nfailures5']))+ " out of "+str(task['nfailurestot'])+" failures were missing"
-                            
+            print "            "+ str(task['nfailurestot']-(task['nfailures1']+task['nfailures2']+task['nfailures3']+task['nfailures4']+task['nfailures5']+task['nfailures6']+task['nfailures7']+task['nfailures8']+task['nfailures9']))+ " out of "+str(task['nfailurestot'])+" failures were missing"
+
+firsttime_missing=True
+for wf in wf_dicts:
+    for task in wf['task_dict']:
+        if task['nfailurestot'] > 0 and 'CleanupUnmerged' not in task['task_name'] and 'LogCollect' not in task['task_name']:
+            if firsttime_missing:
+                print ""
+                print "there were the following failures"
+                firsttime_missing=False
+            print "    workflow "+wf['wf_name']
+            print "        "+ str(task['nfailurestot'])+" out of "+str(task['totaljobs'])+" " +task['task_name']+" jobs"
