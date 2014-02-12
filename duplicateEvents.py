@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 """
-    Valiates if a given workflow has duplicate events in its output
+    Validates if a given workflow has duplicate events in its output
     datasets. That is if a lumi is present in more than one file.
+
 """
 
 import json

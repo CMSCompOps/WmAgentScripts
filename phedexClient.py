@@ -1,12 +1,15 @@
 #!/usr/bin/env python
+"""
+    Encapsulates requests to Phedex API
+    Should be usead instead of phedexSubscription. When used
+    Directly, it creates a custodial subscription to a given
+    site for a given list of datasets
+"""
+
 import json
 import urllib2,urllib, httplib, sys, re, os
 from xml.dom.minidom import getDOMImplementation
-
-"""
-    Encapsulates requests to Phedex API
-    Should be usead instead of phedexSubscription
-"""
+import reqMgrClient
 
 
 def hasCustodialSubscription(datasetName):
@@ -28,9 +31,7 @@ def hasCustodialSubscription(datasetName):
         #if no subscription found
         return False
     else:
-
         return False
-
 
 def getCustodialMoveSubscriptionSite(datasetName):
     """
@@ -53,19 +54,35 @@ def getCustodialMoveSubscriptionSite(datasetName):
         #if no subscription found
         return False
 
-
+def phedexGet(url, request, auth=True):
+    """
+    Queries PhEDEx through a HTTPS GET method
+    using the environment certificates for authentication.
+    url: the instance used, i.e. url='cmsweb.cern.ch' 
+    request: the request suffix url
+    auth: if aouthentication needs to be used
+    """
+    if auth:
+        conn = httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_CERT'), 
+                                            key_file = os.getenv('X509_USER_KEY'))
+        r1 = conn.request("GET", request)
+        r2 = conn.getresponse()
+        result = json.loads(r2.read())
+        conn.close()
+        return result           
+    else:
+        r1 = urllib2.urlopen('https://'+url+request)
+        result = json.loads(r1.read())
+        return result
+        
 def getTransferPercentage(url, dataset, site):
     """
-    Calculates a transfer percentage from given dataset
-    to a given site by counting how many blocks
-    have been completely transferred
+    Calculates a transfer percentage (0 to 1.0)from 
+    given dataset to a given site by counting how many
+    blocks have been completely transferred.
     """
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), 
-                                            key_file = os.getenv('X509_USER_PROXY'))
-    r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset='+dataset+'&node='+site)
-    r2=conn.getresponse()
-    result = json.loads(r2.read())
-    blocks=result['phedex']
+    result = phedexGet(url, '/phedex/datasvc/json/prod/blockreplicas?dataset='+dataset+'&node='+site, False)
+    blocks = result['phedex']
     #if block not present
     if 'block' not in blocks:
         return 0
@@ -79,221 +96,203 @@ def getTransferPercentage(url, dataset, site):
             completed += 1 
     return float(completed)/float(total)
 
+def transferComplete(url, dataset, site):
+    """
+    Gets if the transfer of a given dataset to a given site
+    is completed (all blocks show completed in 'y')
+    """
+    result = phedexGet(url,'/phedex/datasvc/json/prod/blockreplicas?dataset='+dataset+'&node='+site+'_MSS')
+    blocks = result['phedex']
+    if 'block' not in blocks.keys():
+        return False
+    if len(result['phedex']['block'])==0:
+        return False
+    for block in blocks['block']:
+        if block['replica'][0]['complete']!='y':
+            return False
+    return True        
 
-def TestAcceptedSubscritpionSpecialRequest(url, dataset, site):
-	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-	r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset='+dataset+'&node='+site+'&type=xfer'+'&approval=approved')
-	r2=conn.getresponse()
-	result = json.loads(r2.read())
-	requests=result['phedex']
-	if 'request' not in requests.keys():
-		return False
-	for request in result['phedex']['request']:
-		for node in request['node']:
-			if node['node']==site and node['decision']=='approved':
-				return True
-	return False
+def testAcceptedSubscritpionSpecialRequest(url, dataset, site):
+    """
+    gets if a given dataset has an approved special subscription on
+    the given site.
+    """
+    result = phedexGet(url, ('/phedex/datasvc/json/prod/requestlist?dataset='
+                                +dataset+'&node='+site+'&type=xfer'+'&approval=approved'))
+    requests=result['phedex']
+    if 'request' not in requests.keys():
+        return False
+    for request in result['phedex']['request']:
+        for node in request['node']:
+            if node['node']==site and node['decision']=='approved':
+                return True
+    return False
 
+def testSubscritpionSpecialRequest(url, dataset, site):
+    """
+    gets if a given dataset has a special subscription on
+    the given site.
+    """
+    result = phedexGet(url, '/phedex/datasvc/json/prod/requestlist?dataset='+dataset+'&node='+site+'&type=xfer')
+    requests=result['phedex']
+    if 'request' not in requests.keys():
+        return False
+    for request in result['phedex']['request']:
+        for node in request['node']:
+            if node['name']==site:
+                return True
+    return False
 
+def testCustodialSubscriptionRequested(url, dataset, site):
+    """
+    Gets if a custodial subscription was requested for
+    the given dataset at a given site.
+    """
+    result = phedexGet(url, '/phedex/datasvc/json/prod/requestlist?dataset='+dataset+'&node='+site+'_MSS')
+    requests=result['phedex']
+    #gets dataset subscription requests
+    if 'request' not in requests.keys():
+        return False
+    #if there is a request
+    for request in result['phedex']['request']:
+        #if there are pending or aprroved request, watch the satus of them
+        if request['approval']=='pending' or request['approval']=='approved':
+            requestId = request['id']
+            result = phedexGet(url, '/phedex/datasvc/json/prod/transferrequests?request='+str(requestId))
+            if result['phedex']['request']:
+                requestSubscription = result['phedex']['request'][0]
+            else:
+                return False
+            #see if its custodial
+            if requestSubscription['custodial']=='y':
+                return True
+    return False
 
-def TestSubscritpionSpecialRequest(url, dataset, site):
-	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-	r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset='+dataset+'&node='+site+'&type=xfer')
-	r2=conn.getresponse()
-	result = json.loads(r2.read())
-	requests=result['phedex']
-	if 'request' not in requests.keys():
-		return False
-	for request in result['phedex']['request']:
-		for node in request['node']:
-			if node['name']==site:
-				return True
-	return False
-
-def TestCustodialSubscriptionRequested(url, dataset, site):
-	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-	r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset='+dataset+'&node='+site+'_MSS')
-	r2=conn.getresponse()
-	result = json.loads(r2.read())
-	requests=result['phedex']
-	if 'request' not in requests.keys():
-		return False
-	for request in result['phedex']['request']:
-		if request['approval']=='pending' or request['approval']=='approved':
-			requestId=request['id']
-			r1=conn.request("GET",'/phedex/datasvc/json/prod/transferrequests?request='+str(requestId))
-			r2=conn.getresponse()
-			result = json.loads(r2.read())
-			if len(result['phedex']['request'])>0:
-				requestSubscription=result['phedex']['request'][0]
-			else:
-				return False
-			if requestSubscription['custodial']=='y':
-				return True
-	return False
-
-def TransferComplete(url, dataset, site):
-	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-	r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset='+dataset+'&node='+site+'_MSS')
-	r2=conn.getresponse()
-	result = json.loads(r2.read())
-	blocks=result['phedex']
-	if 'block' not in blocks.keys():
-		return False
-	if len(result['phedex']['block'])==0:
-		return False
-	for block in blocks['block']:
-		if block['replica'][0]['complete']!='y':
-			return False
-	return True		
-
-
-    
-#Tests whether a dataset was subscribed to phedex
 def testOutputDataset(datasetName):
-	 url='https://cmsweb.cern.ch/phedex/datasvc/json/prod/Data?dataset=' + datasetName
-         result = json.loads(urllib2.urlopen(url))
-	 dataset=result['phedex']['dbs']
-	 if len(dataset)>0:
-		return 1
-	 else:
-		return 0
+    """
+    Tests whether a dataset was subscribed to phedex
+    """
+    url='https://cmsweb.cern.ch/phedex/datasvc/json/prod/Data?dataset=' + datasetName
+    result = json.loads(urllib2.urlopen(url))
+    dataset=result['phedex']['dbs']
+    if len(dataset)>0:
+        return True
+    else:
+        return False
 
-
-#Test whether the output datasets for a workflow were subscribed
 def testWorkflows(workflows):
-	print "Testing the subscriptions, this process may take some time"
-	for workflow in workflows:
-		print "Testing workflow: "+workflow
-		datasets=outputdatasetsWorkflow(workflow)
-		numsubscribed=len(datasets)
-		for dataset in datasets:
-			if not testOutputDataset(dataset):
-				print "Couldn't subscribe: "+ dataset
-			else:
-				numsubscribed=numsubscribed-1
-		if numsubscribed==0:
-			closeOutWorkflow(workflow)
-			print "Everything subscribed and closedout"
+    """
+    Test whether the output datasets for a workflow were subscribed
+    """
+    print "Testing the subscriptions, this process may take some time"
+    for workflow in workflows:
+        print "Testing workflow: "+workflow
+        datasets=outputdatasetsWorkflow(workflow)
+        numsubscribed=len(datasets)
+        for dataset in datasets:
+            if not testOutputDataset(dataset):
+                print "Couldn't subscribe: "+ dataset
+            else:
+                numsubscribed=numsubscribed-1
+        if numsubscribed==0:
+            closeOutWorkflow(workflow)
+            print "Everything subscribed and closedout"
 
-
-
-
-#Return a list of outputdatasets for the workflows on the given list
 def datasetforWorkfows(workflows):
-	datasets=[]
-	for workflow in workflows:
-		datasets=datasets+outputdatasetsWorkflow(workflow)
-	return datasets
+    """
+    Return a list of outputdatasets for the workflows on the given list
+    """
+    datasets = []
+    for workflow in workflows:
+        datasets = datasets + outputdatasetsWorkflow(workflow)
+    return datasets
 
-#Return a list of workflows from the given file
-def workflownamesfromFile(filename):
-	workflows=[]
-	f=open(filename,'r')
-	for workflow in f:
-		#This line is to remove the carrige return	
-		workflow = workflow.rstrip('\n')
-		workflows.append(workflow)
-	return workflows	
 
-#From a list of datasets return an XML of the datasets in the format required by Phedex
 def createXML(datasets):
-	# Create the minidom document
-	impl=getDOMImplementation()
-	doc=impl.createDocument(None, "data", None)
-	result = doc.createElement("data")
-	result.setAttribute('version', '2')
-	# Create the <dbs> base element
-	dbs = doc.createElement("dbs")
-	dbs.setAttribute("name", "https://cmsdbsprod.cern.ch:8443/cms_dbs_prod_global_writer/servlet/DBSServlet")
-	result.appendChild(dbs)	
-	#Create each of the <dataset> element			
-	for datasetname in datasets:
-		dataset=doc.createElement("dataset")
-		dataset.setAttribute("is-open","y")
-		dataset.setAttribute("is-transient","y")
-		dataset.setAttribute("name",datasetname)
-		dbs.appendChild(dataset)
-   	return result.toprettyxml(indent="  ")
+    """
+    From a list of datasets return an XML of the datasets in the format required by Phedex
+    """
+    # Create the minidom document
+    impl=getDOMImplementation()
+    doc=impl.createDocument(None, "data", None)
+    result = doc.createElement("data")
+    result.setAttribute('version', '2')
+    # Create the <dbs> base element
+    dbs = doc.createElement("dbs")
+    dbs.setAttribute("name", "https://cmsdbsprod.cern.ch:8443/cms_dbs_prod_global_writer/servlet/DBSServlet")
+    result.appendChild(dbs)    
+    #Create each of the <dataset> element            
+    for datasetname in datasets:
+        dataset=doc.createElement("dataset")
+        dataset.setAttribute("is-open","y")
+        dataset.setAttribute("is-transient","y")
+        dataset.setAttribute("name",datasetname)
+        dbs.appendChild(dataset)
+    return result.toprettyxml(indent="  ")
 
-#returns the output datasets for a given workfow
-#TODO move to reqMgrClien
-def outputdatasetsWorkflow(url, workflow):
-	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-	r1=conn.request("GET",'/reqmgr/reqMgr/outputDatasetsByRequestName?requestName='+workflow)
-	r2=conn.getresponse()
-	datasets = json.loads(r2.read())
-	while 'exception' in datasets:
-		conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-		r1=conn.request("GET",'/reqmgr/reqMgr/outputDatasetsByRequestName?requestName='+workflow)
-		r2=conn.getresponse()
-		datasets = json.loads(r2.read())
-	if len(datasets)==0:
-		print "No Outpudatasets for this workflow: "+workflow
-	return datasets
 
-#Creates the connection to phedex
-def createConnection(url):
-	key = "/afs/cern.ch/user/e/efajardo/private/grid_cert_priv.pem"
-        cert = "/afs/cern.ch/user/e/efajardo/private/grid_cert_pub.pem"
-	#conn = httplib.HTTPSConnection(url, key_file=key, cert_file=cert)
-	#conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-	conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_CERT'), key_file = os.getenv('X509_USER_KEY'))
-	#r1=conn.request("GET",'/phedex/datasvc/json/prod/auth')
-	#r1=conn.request("GET",'	/phedex/datasvc/json/prod/secmod')
-	#r1=conn.request("GET",'/phedex/datasvc/json/prod/headers')
-	#r2=conn.getresponse()
-        #print json.read(r2.read())
-	conn.connect()
-    	#print "connected"
-	return conn
 
-# Create the parameters of the request
+def phedexPost(url, request, params):
+    """
+    Queries PhEDEx through a HTTPS POST method
+    using the environment certificates for authentication.
+    url: the instance used, i.e. url='cmsweb.cern.ch' 
+    request: the request suffix url
+    params: a dictionary with the POST parameters
+    """
+    conn = httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_CERT'), 
+                                        key_file = os.getenv('X509_USER_KEY'))
+    encodedParams = urllib.urlencode(params)
+    r1 = conn.request("POST", request, encodedParams)
+    r2 = conn.getresponse()
+    result = json.loads(r2.read())
+    conn.close()
+    return result
+
 def createParams(site, datasetXML, comments):
-	params = urllib.urlencode({ "node" : site+"_MSS","data" : datasetXML, "group": "DataOps", "priority":'normal', "custodial":"y","request_only":"n" ,"move":"n","no_mail":"n", "comments":comments})
-	return params
+    """
+    Create the parameters of the request
+    """
+    params = { "node" : site+"_MSS","data" : datasetXML, "group": "DataOps",
+                "priority":'normal', "custodial":"y","request_only":"n" ,
+                "move":"n","no_mail":"n", "comments":comments}
+    return params
 
-def makeCustodialMoveRequest(url, site,datasets, comments):
-	dataXML=createXML(datasets)
-	params=createParams(site, dataXML, comments)
-	conn=createConnection(url)
-	conn.request("POST", "/phedex/datasvc/json/prod/subscribe", params)
-	response = conn.getresponse()	
-	#print response.status, response.reason
-        #print response.read()
+def makeCustodialMoveRequest(url, site, datasets, comments):
+    dataXML = createXML(datasets)
+    params = createParams(site, dataXML, comments)
+    response = phedexPost(url, "/phedex/datasvc/json/prod/subscribe", params)
+    return response
 
-def makeCustodialReplicaRequest(url, site,datasets, comments):	
-	dataXML=createXML(datasets)
-	params = urllib.urlencode({ "node" : site,"data" : dataXML, "group": "DataOps", "priority":'normal', "custodial":"y","request_only":"y" ,"move":"n","no_mail":"n", "comments":comments})	
-	conn=createConnection(url)
-	conn.request("POST", "/phedex/datasvc/json/prod/subscribe", params)
-	response = conn.getresponse()	
+def makeCustodialReplicaRequest(url, site,datasets, comments):    
+    dataXML = createXML(datasets)
+    params = { "node" : site,"data" : dataXML, "group": "DataOps", "priority":'normal',
+                 "custodial":"y","request_only":"y" ,"move":"n","no_mail":"n","comments":comments}   
+    response = phedexPost(url, "/phedex/datasvc/json/prod/subscribe", params)
+    return response
 
+def makeCustodialXML(url, datasets):
+    dataXML = createXML(datasets)
+    params = createParams(site, dataXML, "Custodial Subscription for "+comments)
+    response = phedexPost(url, "/phedex/datasvc/xml/prod/subscribe", params)
+    return response
 
 def main():
-	args=sys.argv[1:]
-	if not len(args)==3:
-		print "usage site_name file comments"
-	site=args[0]
-	filename=args[1]
-	comments=args[2]
-	url='cmsweb.cern.ch'
-	#workflows=workflownamesfromFile(filename)
-	#outputdatasets=datasetforWorkfows(workflows)
-	outputdatasets=workflownamesfromFile(filename)
-	dataXML=createXML(outputdatasets)
-	params=createParams(site, dataXML, "Custodial Subscription for "+comments)	
-	conn=createConnection(url)
-	conn.request("POST", "/phedex/datasvc/xml/prod/subscribe", params)
-	response = conn.getresponse()	
-	print response.status, response.reason
-        print response.read()
-	#testWorkflows(workflows)
-	#for workflow in workflows:
-	#	print workflow + " closed-out"
-	#	closeOutWorkflow(workflow)
-	sys.exit(0);
+    args = sys.argv[1:]
+    if not len(args)==3:
+        print "usage site_name file comments"
+    site = args[0]
+    filename = args[1]
+    comments = args[2]
+    url='cmsweb.cern.ch'
+    #reads file, striping and ignoring empty lines
+    outputdatasets = [ds.strip() for ds in open(filename).readlines() if ds.strip()]
+    makeCustodialXML(url, outputdatasets)
+    print response.status, response.reason
+    print response.read()
+    
+    sys.exit(0);
 
 if __name__ == "__main__":
-	main()
+    main()
 
