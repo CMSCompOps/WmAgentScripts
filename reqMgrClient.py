@@ -1,29 +1,24 @@
 #!/usr/bin/env python
 """
     This client encapsulates several basic queries to request manager.
-    It should be used instead of dbsTest.py requsts.
+    This uses ReqMgr rest api through HTTP
+    url parameter is normally 'cmsweb.cern.ch'
 """
 
-
-import urllib2,urllib, httplib, sys, re, os, json, phedexSubscription
+import urllib2,urllib, httplib, sys, re, os, json
 from xml.dom.minidom import getDOMImplementation
 import dbs3Client as dbs3
 
-#das_host='https://das.cern.ch'
-#das_host='https://cmsweb.cern.ch'
-das_host='https://cmsweb-testbed.cern.ch'
-#das_host='https://das-dbs3.cern.ch'
-#das_host='https://dastest.cern.ch'
-#url pointing
-url='cmsweb.cern.ch'
-
+# default headers for PUT and POST methods
+def_headers={"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
 
 def requestManagerGet(url, request, retries=4):
     """
-    Queries Request Manager through a HTTP GET method
+    Queries ReqMgr through a HTTP GET method
     in every request manager query 
-    url: the instance used, usually url='cmsweb.cern.ch' 
+    url: the instance used, i.e. url='cmsweb.cern.ch' 
     request: the request suffix url
+    retries: number of retries
     """
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
                                             key_file = os.getenv('X509_USER_PROXY'))
@@ -39,22 +34,41 @@ def requestManagerGet(url, request, retries=4):
         request = json.loads(r2.read())
         retries-=1
     if 'exception' in request:
-        raise Exception('Maximum queries to req manager retried',str(request))
+        raise Exception('Maximum queries to ReqMgr exceeded',str(request))
     return request
 
-def requestManagerPost(url, request, params, retries=4):
+def requestManagerPost(url, request, params, head = def_headers):
     """
-    Performs some operation on request manager through
+    Performs some operation on ReqMgr through
     an HTTP POST method.
-    url: the instance used, usually url='cmsweb.cern.ch' 
+    url: the instance used, i.e. url='cmsweb.cern.ch' 
     request: the request suffix url for the POST method
     params: a dict with the POST parameters
     """
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
                                     key_file = os.getenv('X509_USER_PROXY'))
-    headers={"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
+    headers = head
     encodedParams = urllib.urlencode(params)
     conn.request("POST", request, encodedParams, headers)
+    response = conn.getresponse()
+    data = response.read()
+    conn.close()
+    return data
+
+def requestManagerPut(url, request, params, head = def_headers):
+    """
+    Performs some operation on ReqMgr through
+    an HTTP PUT method.
+    url: the instance used, i.e. url='cmsweb.cern.ch' 
+    request: the request suffix url for the POST method
+    params: a dict with the PUT parameters
+    head: optional headers param. If not given it takes default value (def_headers)
+    """
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
+                                    key_file = os.getenv('X509_USER_PROXY'))
+    headers = head
+    encodedParams = urllib.urlencode(params)
+    conn.request("PUT", request, encodedParams, headers)
     response = conn.getresponse()
     data = response.read()
     conn.close()
@@ -71,6 +85,13 @@ def getWorkflowType(url, workflow):
     request = getWorkflowInfo(url,workflow)
     requestType=request['RequestType']
     return requestType
+
+def getWorkflowPriority(url, workflow):
+    request = getWorkflowInfo(url,workflow)
+    if 'RequestPriority' in request:
+        return request['RequestPriority']
+    else:    
+        return 0
 
 def getRunWhitelist(url, workflow):
     request = getWorkflowInfo(url,workflow)
@@ -191,47 +212,84 @@ def getOutputEvents(url, workflow, dataset):
     """
     request = getWorkflowInfo(url, workflow)
     return dbs3.getEventCountDataSet(dataset)
-
+    
 def closeOutWorkflow(url, workflowname):
     """
-    Closes out a workflow
-    """
-    params = {"requestName" : workflowname, "cascade" : True}
-    requestManagerPost(url,"/reqmgr/reqMgr/closeout", params)
-    
-def closeOutWorkflow2(url, workflowname):
-    """
-    Also closes out a workflow by changing the state
-    to closed-out
+    Closes out a workflow by changing the state to closed-out
+    This does not care about cascade workflows
     """
     params = {"requestName" : workflowname,"status" : "closed-out"}
-    requestManagerPost(url,"/reqmgr/reqMgr/request", params)
+    data = requestManagerPut(url,"/reqmgr/reqMgr/request", params)
+    return data
 
+def closeOutWorkflowCascade(url, workflowname):
+    """
+    Closes out a workflow, it will search for any Resubmission requests 
+    for which the given request is a parent and announce them too.
+    """
+    params = {"requestName" : workflowname, "cascade" : True}
+    data = requestManagerPost(url,"/reqmgr/reqMgr/closeout", params)
+    return data
 
 def announceWorkflow(url, workflowname):
     """
     Sets a workflow state to announced
+    This does not care about cascade workflows
     """
     params = {"requestName" : workflowname,"status" : "announced"}
-    requestManagerPost(url,"/reqmgr/reqMgr/request", params)
+    data = requestManagerPut(url,"/reqmgr/reqMgr/request", params)
+    return data
+
+def announceWorkflowCascade(url, workflowname):
+    """
+    Sets a workflow state to announced, it will search for any Resubmission requests 
+    for which the given request is a parent and announce them too.
+    """
+    params = {"requestName" : workflowname, "cascade" : True}
+    data = requestManagerPost(url,"/reqmgr/reqMgr/announce", params)
+    return data
+
+
+def setWorkflowApproved(url, workflowname):
+    """
+    Sets a workflow state to assignment-approved
+    """
+    params = {"requestName" : workflowname,"status" : "assignment-approved"}
+    data = requestManagerPut(url,"/reqmgr/reqMgr/request", params)
+    return data
 
 def setWorkflowRunning(url, workflowname):
     """
     Sets a workflow state to running
     """
-    print workflowname,
     params = {"requestName" : workflowname,"status" : "running"}
-    data = requestManagerPost(url,"/reqmgr/reqMgr/request", params)
-    print data
+    data = requestManagerPut(url,"/reqmgr/reqMgr/request", params)
+    return data
+
+def rejectWorkflow(url, workflowname):
+    """
+    Sets a workflow state to rejected
+    """
+    params = {"requestName" : workflowname,"status" : "rejected"}
+    data = requestManagerPut(url,"/reqmgr/reqMgr/request", params)
+    return data
 
 def abortWorkflow(url, workflowname):
     """
     Sets a workflow state to aborted
     """
-    print workflowname,
     params = {"requestName" : workflowname,"status" : "aborted"}
-    data = requestManagerPost(url,"/reqmgr/reqMgr/request", params)
-    print data
+    data = requestManagerPut(url,"/reqmgr/reqMgr/request", params)
+    return data
+
+def cloneWorkflow(url, workflowname):
+    """
+    This clones a request
+    """
+    headers={"Content-Length": 0}
+    params = {}
+    data = requestManagerPut(url,"/reqmgr/reqMgr/clone/", params, headers)
+    return data
 
 def handleTaskChain(request):
     # Check if it's MC from scratch
