@@ -618,7 +618,7 @@ def main():
               print 'ERROR: lfn is not defined'
               sys.exit(0)
 
-           if siteUse not in sites and options.site != 'T2_US' and siteUse != ['T1_UK_RAL', 'T1_UK_RAL_Disk'] and siteUse != ['T2_CH_CERN_AI', 'T2_CH_CERN_HLT'] and siteUse != ['T1_IT_CNAF', 'T1_IT_CNAF_Disk']:
+           if siteUse not in sites and options.site != 'T2_US' and siteUse != ['T2_CH_CERN_AI', 'T2_CH_CERN_HLT']:
               print 'ERROR: invalid site'
               sys.exit(0)
 
