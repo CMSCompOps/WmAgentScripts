@@ -33,6 +33,45 @@ def hasCustodialSubscription(datasetName):
     else:
         return False
 
+def getSubscriptionSites(datasetName):
+    """
+    Return the list of sites wich have a subscription
+    Either custodial or non custodial of a given site
+    """
+    url = 'https://cmsweb.cern.ch/phedex/datasvc/json/prod/subscriptions?dataset=' + datasetName
+    result = json.loads(urllib2.urlopen(url).read())
+    datasets = result['phedex']    
+    sites = []
+    if 'dataset' not in datasets.keys():
+        return sites
+    else:
+        if not result['phedex']['dataset']:
+            return sites
+        #check all subscriptions
+        for subscription in result['phedex']['dataset'][0]['subscription']:
+            sites.append(subscription['node'])
+        return sites
+
+
+def getBlockReplicaSites(datasetName):
+    """
+    Return the list of sites wich have any replica
+    of any block of a given dataset, either if they do have
+    subscription or not.
+    """
+    url = 'https://cmsweb.cern.ch/phedex/datasvc/json/prod/blockreplicas?dataset=' + datasetName
+    result = json.loads(urllib2.urlopen(url).read())
+    blocks = result['phedex']    
+    sites = set()
+    if 'block' not in blocks:
+        return sites
+    elif not result['phedex']['block']:
+        return sites
+    #check all subscriptions
+    for block in result['phedex']['block']:
+        sites.add(block['replica'][0]['node'])
+    return list(sites)
+
 def getCustodialMoveSubscriptionSite(datasetName):
     """
     Returns the site for which a custodial move subscription for a dataset was created,
