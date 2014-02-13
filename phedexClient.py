@@ -9,8 +9,6 @@
 import json
 import urllib2,urllib, httplib, sys, re, os
 from xml.dom.minidom import getDOMImplementation
-import reqMgrClient
-
 
 def hasCustodialSubscription(datasetName):
     """
