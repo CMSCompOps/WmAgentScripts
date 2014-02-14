@@ -3,6 +3,8 @@
 """
 This script clones a given workflow
 *args must be: workflow_name user group
+This script depends on WMCore code, so WMAgent environment
+and libraries need to be loaded before running it.
 """
 import os
 import sys
@@ -16,97 +18,109 @@ from WMCore.WMSpec.WMWorkload import WMWorkloadHelper
 
 reqmgrCouchURL = "https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache"
 
-
-"""
-Creates the cloned specs for the original request
-Updates parameters
-"""
-def retrieveSchema(workflowName, user, group ):
+def retrieveSchema(workflowName):
+    """
+    Creates the cloned specs for the original request
+    Updates parameters
+    """
     specURL = os.path.join(reqmgrCouchURL, workflowName, "spec")
     helper = WMWorkloadHelper()
     helper.load(specURL)
-    schema = {}
+    return helper
     
-    # Add AcquisitionEra, ProcessingString and increase ProcessingVersion by 1
-    schema["ProcessingString"] = helper.getProcessingString()
-    schema["ProcessingVersion"] = helper.getProcessingVersion()+1
-    schema["AcquisitionEra"] = helper.getAcquisitionEra()
-	
-    for (key, value) in helper.data.request.schema.dictionary_().iteritems():
-		if key == 'ProcConfigCacheID':
-			schema['ConfigCacheID'] = value
-		elif key=='RequestSizeEvents':
-			schema['RequestSizeEvents'] = value
-		elif key=='Requestor':
-			schema['Requestor']=user
-		elif key=='Group':
-			schema['Group']=group
-#		elif key=='SizePerEvent':
-#			schema['SizePerEvent']=1
-		elif key in ["RunWhitelist", "RunBlacklist", "BlockWhitelist", "BlockBlacklist"] and not value:
-			schema[key]=[]
-		elif not value:
-			continue
-		elif value != None:
-			schema[key] = value
-    if 'LumisPerJob' not in schema and schema['RequestType']=='MonteCarlo':
-    	schema['LumisPerJob'] = 300
-    if 'EventsPerJob' not in schema and schema['RequestType']=='MonteCarlo':
-    	schema['EventsPerJob'] = 120000
-	
-    return schema
 
-def submitWorkflow(schema):
-	"""
-	This submits a workflow into the ReqMgr
-	"""
-	jsonEncodedParams = {}
-	for paramKey in schema.keys():
-		jsonEncodedParams[paramKey] = json.dumps(schema[paramKey])
-	encodedParams = urllib.urlencode(jsonEncodedParams, False)
-	
-	headers  =  {"Content-type": "application/x-www-form-urlencoded",
-                 "Accept": "text/plain"}
-	conn  =  httplib.HTTPSConnection("cmsweb.cern.ch", cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-	conn.request("POST",  "/reqmgr/create/makeSchema", encodedParams, headers)
-	response = conn.getresponse()
-	print "Response status: %s, Response reason: %s" % (str(response.status), response.reason)
-	
-	# This print out where the resource can be found (url)
-	data = response.read()
-	print data
-	
-	details = re.search("details\/(.*)\'",data)
-	newWorkflow = details.group(1)
-	return newWorkflow
+def modifySchema(helper, user, group):
+    """
+    Adapts schema to right parameters
+    """
+    result = {}
+    # Add AcquisitionEra, ProcessingString and increase ProcessingVersion by 1
+    result["ProcessingString"] = helper.getProcessingString()
+    result["ProcessingVersion"] = helper.getProcessingVersion() + 1
+    result["AcquisitionEra"] = helper.getAcquisitionEra()
+    for (key, value) in helper.data.request.schema.dictionary_().items():
+        #previous versions of tags
+        if key == 'ProcConfigCacheID':
+            result['ConfigCacheID'] = value
+        elif key == 'RequestSizeEvents':
+            result['RequestSizeEvents'] = value
+        #requestor info
+        elif key == 'Requestor':
+            result['Requestor'] = user
+        elif key == 'Group':
+            result['Group'] = group
+        #if emtpy
+        elif key in ["RunWhitelist", "RunBlacklist", "BlockWhitelist", "BlockBlacklist"] and not value:
+            result[key]=[]
+        #skip empty entries
+        elif not value:
+            continue
+        elif value != None:
+            result[key] = value
+    
+    if 'LumisPerJob' not in result and result['RequestType']=='MonteCarlo':
+        #seek for lumis per job on helper
+        splitting = helper.listJobSplittingParametersByTask()
+        lumisPerJob = 300
+        for k, v in splitting.items():
+            if k.endswith('/Production'):
+                if 'lumis_per_job' in v:
+                    lumisPerJob = v['lumis_per_job']
+        result['LumisPerJob'] = lumisPerJob
+
+    if 'EventsPerJob' not in result and result['RequestType']=='MonteCarlo':
+        #seek for events per job on helper
+        splitting = helper.listJobSplittingParametersByTask()
+        eventsPerJob = 120000
+        for k, v in splitting.items():
+            if k.endswith('/Production'):
+                if 'events_per_job' in v:
+                    eventsPerJob = v['events_per_job']
+        result['EventsPerJob'] = eventsPerJob
+    if 'MergedLFNBase' not in result:
+        result['MergedLFNBase'] = helper.getMergedLFNBase()
+    return result
+
+
 
 """
 __Main__
 """
-if __name__ == "__main__":
+url = 'cmsweb.cern.ch'
+
+def main():
     # Check the arguements, get info from them
     if len(sys.argv) != 4:
         print "Usage:"
         print "  ./resubmit WORKFLOW_NAME USER GROUP"
         sys.exit(0)
-    user=sys.argv[2]
-    group=sys.argv[3]	
+    workflow = sys.argv[1]
+    user = sys.argv[2]
+    group = sys.argv[3]    
     
     # Get info about the workflow to be cloned
-    schema = retrieveSchema(sys.argv[1], user, group)
-    
+    helper = retrieveSchema(workflow)
+    schema = modifySchema(helper, user, group)
+
+    print 'Submitting workflow'
     # Sumbit cloned workflow to ReqMgr
-    newWorkflow = submitWorkflow(schema)
-    print 'Cloned workflow: '+newWorkflow
-    
-    # Move the request to Assignment-approved
-    data = reqMgrClient.setWorkflowApproved('cmsweb.cern.ch', newWorkflow)
-    print 'Approve request response:'
-    print data
-    
-    # Set the priority of the cloned workflow
-    newPriority = reqMgrClient.getWorkflowPriority('cmsweb.cern.ch',sys.argv[1])
-    if  newPriority>2: 
-	changePriorityWorkflow.changePriorityWorkflow('cmsweb.cern.ch', newWorkflow, newPriority)
-    
+    response = reqMgrClient.submitWorkflow(url,schema)
+    #find the workflow name in response
+    m = re.search("details\/(.*)\'",response)
+    if m:
+        newWorkflow = m.group(1)
+        print 'Cloned workflow: '+newWorkflow
+        print response
+        
+        # Move the request to Assignment-approved
+        print 'Approve request response:'
+        data = reqMgrClient.setWorkflowApproved(url, newWorkflow)
+        print data
+    else:
+        print response
     sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()
+

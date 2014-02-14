@@ -291,6 +291,18 @@ def cloneWorkflow(url, workflowname):
     data = requestManagerPut(url,"/reqmgr/reqMgr/clone/", params, headers)
     return data
 
+def submitWorkflow(url, schema):
+    """
+    This submits a workflow into the ReqMgr, can be used for cloning
+    and resubmitting workflows
+    url: the instance ued, i.e. 'cmsweb.cern.ch'
+    schema: A dictionary with the parameters needed to create
+    the workflow
+    
+    """
+    data = requestManagerPost(url,"/reqmgr/create/makeSchema", schema)
+    return data
+
 def handleTaskChain(request):
     # Check if it's MC from scratch
     if 'RequestNumEvents' in request['Task1']:
