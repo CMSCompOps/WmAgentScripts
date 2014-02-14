@@ -53,7 +53,7 @@ def closeOutReRecoWorkflowsWeb(url, workflows, output):
             
         #workflow can only be closed out if all datasets are ready
         if closeOutWorkflow:
-            reqMgrClient.closeOutWorkflow(url, workflow)
+            reqMgrClient.closeOutWorkflowCascade(url, workflow)
     print '-'*180
     return noSiteWorkflows
 
@@ -93,7 +93,7 @@ def closeOutRedigiWorkflowsWeb(url, workflows, output):
                 (workflow, dataset,str(int(percentage*100)),str(phedexSubscription), 100, duplicate, closeOutDataset))
         #workflow can only be closed out if all datasets are ready
         if closeOutWorkflow:
-            reqMgrClient.closeOutWorkflow(url, workflow)
+            reqMgrClient.closeOutWorkflowCascade(url, workflow)
     print '-'*180
     return noSiteWorkflows
 
@@ -145,7 +145,7 @@ def closeOutMonterCarloRequestsWeb(url, workflows,output):
                 str(int(transPerc*100)), duplicate, closedBlocks, closeOutDataset))
         #workflow can only be closed out if all datasets are ready
         if closeOutWorkflow:
-            reqMgrClient.closeOutWorkflow(url, workflow)
+            reqMgrClient.closeOutWorkflowCascade(url, workflow)
     #separation line
     print '-'*180
     return noSiteWorkflows
@@ -192,7 +192,7 @@ def closeOutStep0RequestsWeb(url, workflows, output):
                 (workflow, dataset,str(int(percentage*100)),str(phedexSubscription), str(correctLumis), duplicate, closeOutDataset))
         #workflow can only be closed out if all datasets are ready
         if closeOutWorkflow:
-            reqMgrClient.closeOutWorkflow(url, workflow)
+            reqMgrClient.closeOutWorkflowCascade(url, workflow)
     print '-'*180
     return noSiteWorkflows
 

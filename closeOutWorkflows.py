@@ -102,7 +102,7 @@ def closeOutReRecoWorkflows(url, workflows):
                                                     str(phedexSubscription), 100, duplicate, closeOutDataset)
         #workflow can only be closed out if all datasets are ready
         if closeOutWorkflow:
-            reqMgrClient.closeOutWorkflow(url, workflow)
+            reqMgrClient.closeOutWorkflowCascade(url, workflow)
     print '-'*180
     return noSiteWorkflows
 
@@ -122,7 +122,7 @@ def closeOutRedigiWorkflows(url, workflows):
             duplicate = None
             # if dataset has subscription and more than 95% events we check
             # duplicates
-            if phedexSubscription and percentage >= float(0.95):
+            if phedexSubscription and percentage >= float(0.95):    
                 duplicate = dbs3Client.duplicateRunLumi(dataset)
                 #if not duplicate events, dataset is ready
                 if not duplicate:
@@ -138,7 +138,7 @@ def closeOutRedigiWorkflows(url, workflows):
                                                     str(phedexSubscription), 100, duplicate, closeOutDataset)
         #workflow can only be closed out if all datasets are ready
         if closeOutWorkflow:
-            reqMgrClient.closeOutWorkflow(url, workflow)
+            reqMgrClient.closeOutWorkflowCascade(url, workflow)
     print '-'*180
     return noSiteWorkflows
 
@@ -186,7 +186,7 @@ def closeOutMonterCarloRequests(url, workflows):
                         str(phedexSubscription), str(int(transPerc*100)), duplicate, closedBlocks, closeOutDataset)
         #workflow can only be closed out if all datasets are ready
         if closeOutWorkflow:
-            reqMgrClient.closeOutWorkflow(url, workflow)
+            reqMgrClient.closeOutWorkflowCascade(url, workflow)
     #separation line
     print '-'*180
     return noSiteWorkflows
@@ -230,7 +230,7 @@ def closeOutStep0Requests(url, workflows):
                         str(phedexSubscription), str(correctLumis), duplicate, closeOutDataset)
         #workflow can only be closed out if all datasets are ready
         if closeOutWorkflow:
-            reqMgrClient.closeOutWorkflow(url, workflow)
+            reqMgrClient.closeOutWorkflowCascade(url, workflow)
     print '-'*180
     return noSiteWorkflows
 

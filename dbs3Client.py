@@ -33,14 +33,19 @@ def duplicateRunLumi(dataset, verbose=False):
     dbsapi = DbsApi(url=dbs3_url)
     duplicated = False
     #check each run
-    for run in getRunsDataset(dataset):
+    runs = getRunsDataset(dataset)
+    #if only one run in the list
+    if len(runs) == 1:
+        return duplicateLumi(dataset, verbose)
+    #else manually
+    for run in runs:
         #create a set
         lumisChecked={}
         # retrieve files for that run
-        reply = dbsapi.listFiles(dataset=dataset, run_num=run)
+        reply = dbsapi.listFiles(dataset=dataset)
         for f in reply:
             logical_file_name = f['logical_file_name']
-            reply2 = dbsapi.listFileLumis(logical_file_name=logical_file_name)
+            reply2 = dbsapi.listFileLumis(logical_file_name=logical_file_name, run_num=run)
             #retrieve lumis for each file
             lumis = reply2[0]['lumi_section_num']
             #check that each lumi is only in one file
@@ -98,7 +103,13 @@ def getRunsDataset(dataset):
     # retrieve runs
     reply = dbsapi.listRuns(dataset=dataset)
     #a list with only the run numbers
-    runs = [run['run_num'] for run in reply]
+    runs = []
+    #filter and clean
+    for run in reply:
+        if type(run['run_num']) is list:
+            runs.append(run['run_num'][0])
+        else:
+            runs.append(run['run_num'])
     return runs
 
 def getNumberofFilesPerRun(das_url, dataset, run):
