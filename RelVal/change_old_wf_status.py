@@ -5,9 +5,14 @@ import json
 import urllib2,urllib, httplib, sys, re, os
 from xml.dom.minidom import getDOMImplementation
 import optparse
+import datetime
+import calendar
+
+initialstatus='closed-out'
+finalstatus='announced'
 
 def setStatus(url, workflowname,newstatus):
-    print "Setting %s to %s" % (workflowname,newstatus)
+    #print "Setting %s to %s" % (workflowname,newstatus)
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     headers={"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
     params = {"requestName" : workflowname, "cascade" : True}
@@ -21,7 +26,7 @@ def setStatus(url, workflowname,newstatus):
         encodedParams = urllib.urlencode(params)
         conn.request("PUT", "/reqmgr/reqMgr/request", encodedParams, headers)
     response = conn.getresponse()
-    print response.status, response.reason
+    print "    response of status change request: "+str(response.status)+", "+str(response.reason)
     data = response.read()
 #    print data
     conn.close()
@@ -49,20 +54,38 @@ def main():
         sys.exit(0)
     
     #args=sys.argv[1:]
-    if not len(args)==2:
-        print "usage: python2.6 setrequeststatus.py <text_file_with_the_workflow_names> <newStatus>"
+    if not len(args)==0:
+        print "usage: python2.6 abort_reject_or_announce.py"
         sys.exit(0)
-    inputFile = args[0]
-    newstatus = args[1]
-    f = open(inputFile, 'r')
+
     url = 'cmsweb.cern.ch'
 
-    for line in f:
-        workflow = line.rstrip('\n')
-#        print "Set %s from %s to %s" % (workflow,getStatus(url, workflow),newstatus)
-        setStatus(url, workflow, newstatus)
-        print "Final status is: %s"  % getStatus(url, workflow)
-    f.close
+
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))      
+    r=conn.request('GET','/couchdb/wmstats/_design/WMStats/_view/requestByStatus?key="'+initialstatus+'"&stale=ok')
+    r=conn.getresponse()
+    data = r.read()
+    s = json.loads(data)
+
+    #print s['rows']
+    #print len(s['rows'])
+    #sys.exit(0)
+    for i in s['rows']:
+        if 'RVCMSSW' in i['id']:
+            workflow=i['id']
+            print "checking workflow " +workflow
+            conn2  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+            r2=conn.request('GET','/couchdb/wmstats/_all_docs?keys=["'+workflow+'"]&include_docs=true')
+            r2=conn.getresponse()
+            data = r2.read()
+            s = json.loads(data)
+            print s['rows'][0]['doc']['request_status'][len(s['rows'][0]['doc']['request_status'])-1]
+            if s['rows'][0]['doc']['request_status'][len(s['rows'][0]['doc']['request_status'])-1]['status'] != initialstatus:
+                continue
+            print "    in "+initialstatus+" for "+str((calendar.timegm(datetime.datetime.utcnow().utctimetuple())-s['rows'][0]['doc']['request_status'][1]['update_time'])/86400.)+" days"
+            if (calendar.timegm(datetime.datetime.utcnow().utctimetuple())-s['rows'][0]['doc']['request_status'][1]['update_time'])/86400. > 14.:
+                print "    moving workflow to "+finalstatus
+                setStatus(url, workflow, finalstatus)
 
 if __name__ == "__main__":
     main()

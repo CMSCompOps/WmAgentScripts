@@ -5,11 +5,22 @@ import json
 from xml.dom.minidom import getDOMImplementation
 sys.path.append("..")
 import dbsTest
-
-
+import optparse
 
 def main():
-    args=sys.argv[1:]
+    parser = optparse.OptionParser()
+    parser.add_option('--correct_env',action="store_true",dest='correct_env')
+    (options,args) = parser.parse_args()
+
+    command=""
+    for arg in sys.argv:
+        command=command+arg+" "
+
+    if not options.correct_env:
+        os.system("source /afs/cern.ch/project/gd/LCG-share/current_3.2/etc/profile.d/grid-env.sh; python2.6 "+command + "--correct_env")
+        sys.exit(0)
+        
+    #args=sys.argv[1:]
     if not len(args)==1:
         print "usage: python getRelValDsetNames.py <inputFile_containing_a_list_of_workflows>"
         sys.exit(0)
@@ -20,8 +31,8 @@ def main():
     for line in f:
         workflow = line.rstrip('\n')
         outputDataSets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
-    #    print "These are the output datasets:"
-    #    print outputDataSets
+        #print "These are the output datasets:"
+        #print outputDataSets
         #inputEvents=getInputEvents(url, workflow)
         #print inputEvents
         for dataset in outputDataSets:

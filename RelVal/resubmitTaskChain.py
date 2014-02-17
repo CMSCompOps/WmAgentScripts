@@ -7,7 +7,8 @@ import httplib
 import re
 import json
 from copy import deepcopy
-from WMCore.WMSpec.WMWorkload import WMWorkloadHelper
+#from WMCore.WMSpec.WMWorkload import WMWorkloadHelper
+import optparse
 
 url = "cmsweb.cern.ch"
 reqmgrCouchURL = "https://"+url+"/couchdb/reqmgr_workload_cache"
@@ -64,7 +65,7 @@ def retrieveSchema(workflowName):
             continue
         elif value != None:
             schema[key] = value
-#    print "Retrieved schema:\n", schema
+#    print "Retrieved schema:\n", schema   ### FOR DEBUG
     request = deepcopy(schema)
     request['Requestor'] = 'anlevin'
     request['Group'] = 'DATAOPS'
@@ -85,18 +86,10 @@ def retrieveSchema(workflowName):
                     del request[task]['SplittingArguments']
         x += 1
 
+    #request['Memory'] = 3900
     #del request['SiteWhitelist']        
-#    del schema['Task2']['PrimaryDataset']
-#    del schema['Task3']['PrimaryDataset']
-#    schema['Task1']['SplittingArguments'] = {'lumis_per_job': 5}
-#    schema['Memory'] = 1394
-#    schema['Task1']['KeepOutput'] = True
-#    schema['RequestString'] = 'TEST_Andrew_T2_CH_CERN'
-#    schema['BlockWhitelist'] = ['/MinimumBias/Run2012D-HLTPhysics-Tier1PromptSkim-v1/RAW-RECO#ce668e80-26a2-11e2-80e7-00155dffff9d']
-#    schema['Task1']['BlockBlacklist'] = ['/DoubleMu/Run2011A-ZMu-08Nov2011-v1/RAW-RECO#93c53d22-25b2-11e1-8c62-003048f02c8a']
-#    schema['Task1']['RunWhitelist'] = [208307]
-#    del schema['Task2']['MCPileup']
-
+    #request['RequestString'] = 'TEST_ALAN_TEST'
+    #request['Task1']['BlockWhitelist'] = ['/RelValQCD_Pt_80_170_BCtoE_8TeV/CMSSW_6_2_0_pre8-PRE_ST62_V8-v3/GEN-SIM#d99587e0-625e-11e3-ad0f-00221959e7c0','/RelValQCD_Pt_80_170_BCtoE_8TeV/CMSSW_6_2_0_pre8-PRE_ST62_V8-v3/GEN-SIM#8689de68-606d-11e3-ad0f-00221959e7c0']
     return request
 
 def submitWorkflow(schema):
@@ -108,12 +101,11 @@ def submitWorkflow(schema):
         jsonEncodedParams[paramKey] = json.dumps(schema[paramKey])
 
     encodedParams = urllib.urlencode(jsonEncodedParams, False)
-           
+
     headers  =  {"Content-type": "application/x-www-form-urlencoded",
                  "Accept": "text/plain"}
 
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-#    print "  submitting new workflow..."
     conn.request("POST",  "/reqmgr/create/makeSchema", encodedParams, headers)
     response = conn.getresponse()
     print response.status, response.reason
@@ -123,13 +115,27 @@ def submitWorkflow(schema):
     return details.group(1)
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
+    parser = optparse.OptionParser()
+    parser.add_option('--correct_env',action="store_true",dest='correct_env')
+    (options,args) = parser.parse_args()
+
+    command=""
+    for arg in sys.argv:
+        command=command+arg+" "
+
+    if not options.correct_env:
+         os.system("source /afs/cern.ch/cms/LCG/LCG-2/UI/cms_ui_env.sh; source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh; python2.6 "+command + "--correct_env")
+         sys.exit(0)
+
+    if len(args) != 1:
         print "Usage:"
         print " ./resubmitTaskChain.py WORKFLOW_NAME"
         sys.exit(0)
 
+    from WMCore.WMSpec.WMWorkload import WMWorkloadHelper    
+
     schema = retrieveSchema(sys.argv[1])
-#    print "New schema:\n", schema
+#    print "\nNew schema:\n", schema     # FOR DEBUG
 #    sys.exit(0)
     newWorkflow=submitWorkflow(schema)
     approveRequest(url,newWorkflow)

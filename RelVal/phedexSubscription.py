@@ -250,7 +250,16 @@ def makePhedexReplicaRequest(url, site,datasets, comments, custodial):
 def main():
 	parser = optparse.OptionParser()
 	parser.add_option('--custodial', action="store_true", help='make a custodial subscription',dest='custodial')
+	parser.add_option('--correct_env',action="store_true",dest='correct_env')
 	(options,args) = parser.parse_args()
+
+	command=""
+	for arg in sys.argv:
+		command=command+arg+" "
+
+	if not options.correct_env:
+		os.system("source /afs/cern.ch/project/gd/LCG-share/current_3.2/etc/profile.d/grid-env.sh; python2.6 "+command + "--correct_env")
+		sys.exit(0)
 		    
 	if not len(args)==3:
 		print "usage <site name> <name of file with datasets to subscribe> <comments> [--custodial]"
