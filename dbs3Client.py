@@ -169,9 +169,16 @@ def getEventCountDataSetBlockList(dataset,blockList):
     """
     # initialize API to DBS3
     dbsapi = DbsApi(url=dbs3_url)    
-    lumis=0
-    reply = dbsapi.listBlockSummaries(block_name=blockList)       
-    return reply[0]['num_event']
+    #reply = dbsapi.listBlockSummaries(block_name=blockList)
+    #transform from strin to list
+    if type(blockList) in (str, unicode):
+        blockList = eval(blockList)
+    total = 0
+    #get one by one block and add it so uri wont be too large
+    for block in blockList:
+        reply = dbsapi.listBlockSummaries(block_name=block)
+        total += reply[0]['num_event']
+    return total
 
 def getEventCountDataSetRunList(dataset,runList):
     """
