@@ -28,8 +28,8 @@ def percentageCompletion(url, workflow, outputDataset, verbose=False):
         outputEvents = 0  
     if verbose:
         print outputDataset
-        print "Input events:", inputEvents
-        print "Output events:", outputEvents
+        print "Input events:", int(inputEvents)
+        print "Output events:", int(outputEvents)
 
     percentage=100.0*outputEvents/float(inputEvents)
     return percentage

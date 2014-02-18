@@ -163,7 +163,7 @@ def getInputEvents(url, workflow):
                 request[listitem]=[]
             #if there is not a list but some elements it creates a list
             if type(request[listitem]) is not list:
-                request[listitem]=re.split(r",",request[listitem])
+                request[listitem]= eval(request[listitem])
         #if not, an empty list will do        
         else:
             request[listitem]=[]
