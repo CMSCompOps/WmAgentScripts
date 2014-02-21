@@ -1,70 +1,40 @@
 #!/usr/bin/env python
 import urllib2,urllib, httplib, sys, re, os, json
 import optparse
-from das_client import get_data
+import reqMgrClient
+from dbs.apis.dbsClient import DbsApi
 
-das_host='https://cmsweb.cern.ch'
+dbs3_url = r'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
 
-def getStatusDataSet(dataset):
-        query = "dataset dataset="+dataset+" | grep dataset.status"
-        das_data = get_data(das_host,query,0,0,0)
-        myStatus = ''
-        if isinstance(das_data, basestring):
-           result = json.loads(das_data)
-        else:
-           result = das_data
-           if result['status'] == 'fail' :
-              print 'ERROR: DAS query failed with reason:',result['reason']
-              sys.exit(0)
-           else:
-              preresult = result['data'][0]['dataset']
-              for key in preresult:
-                 if 'status' in key:
-                    myStatus = key['status']
-                    return myStatus
-        return 'Unknown'
+def getDatasetStatus(dataset):
+        # initialize API to DBS3
+        dbsapi = DbsApi(url=dbs3_url)
+        # retrieve dataset summary
+        reply = dbsapi.listDatasets(dataset=dataset,dataset_access_type='*',detail=True)
+        return reply[0]['dataset_access_type']
 
-def outputdatasetsWorkflow(url, workflow):
-        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-        r1=conn.request("GET",'/reqmgr/reqMgr/outputDatasetsByRequestName?requestName=' + workflow)
-        r2=conn.getresponse()
-        datasets = json.loads(r2.read())
-        if len(datasets)==0:
-                print "ERROR: No output datasets for this workflow"
-                sys.exit(0)
-        return datasets
+def getDatasets(dataset):
+       # initialize API to DBS3
+        dbsapi = DbsApi(url=dbs3_url)
+        # retrieve dataset summary
+        reply = dbsapi.listDatasets(dataset=dataset,dataset_access_type='*')
+        return reply
 
 def getDatasetVersion(url, workflow, era, partialProcVersion):
         versionNum = 1
-        outputs = outputdatasetsWorkflow(url, workflow)
+        outputs = reqMgrClient.outputdatasetsWorkflow(url, workflow)
         for output in outputs:
-           if 'None-v0' not in output:
-              print 'ERROR: Problem checking output datasets: ',output
-              sys.exit(0)
            bits = output.split('/')
-           lastbit = bits[len(bits)-1]
-           outputCheck = re.sub(r'None-v0', era+'-'+partialProcVersion+'*', output)
+           outputCheck = '/'+bits[1]+'/'+era+'-'+partialProcVersion+'*/'+bits[len(bits)-1]
 
-           query = "dataset dataset="+outputCheck+" status=*"
-           das_data = get_data(das_host,query,0,0,0)
-
-           if isinstance(das_data, basestring):
-              result = json.loads(das_data)
-           else:
-              result = das_data
-              if result['status'] == 'fail' :
-                 print 'ERROR: DAS query failed with reason:',result['reason']
-                 sys.exit(0)
-              else:
-                 preresult = result['data']
-                 for item in preresult:
-                    for key in item['dataset']:
-                       if 'name' in key:
-                          matchObj = re.match(r".*-v(\d+)/.*", key['name'])
-                          if matchObj:
-                             currentVersionNum = int(matchObj.group(1))
-                             if versionNum <= currentVersionNum:
-                                versionNum=versionNum+1
+           datasets = getDatasets(outputCheck)
+           for dataset in datasets:
+              datasetName = dataset['dataset']
+              matchObj = re.match(r".*-v(\d+)/.*", datasetName)
+              if matchObj:
+                 currentVersionNum = int(matchObj.group(1))
+                 if versionNum <= currentVersionNum:
+                    versionNum=versionNum+1
 
         return versionNum
 
@@ -127,17 +97,6 @@ def getPriority(url, workflow):
         priority = priority.strip()
         priority = re.sub(r'\'', '', priority)
         return priority
-
-def getInputDataSet(url, workflow):
-        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-        r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
-        r2=conn.getresponse()
-        request = json.loads(r2.read())
-        inputDataSets=request['InputDataset']
-        if len(inputDataSets)<1:
-                print "ERROR: No InputDataSet for workflow"
-        else:   
-                return inputDataSets
 
 def findCustodialLocation(url, dataset):
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -351,12 +310,12 @@ def main():
 
            team=options.team
 
-           inputDataset = getInputDataSet(url, workflow)
+           inputDataset = reqMgrClient.getInputDataSet(url, workflow)
 
            # Check status of input dataset
-           inputDatasetStatus = getStatusDataSet(inputDataset)
+           inputDatasetStatus = getDatasetStatus(inputDataset)
            if inputDatasetStatus != 'VALID' and inputDatasetStatus != 'PRODUCTION':
-              print 'ERROR: Input dataset is not PRODUCTION or VALID'
+              print 'ERROR: Input dataset is not PRODUCTION or VALID, value is',inputDatasetStatus
               sys.exit(0)
 
            if '-ext' in inputDataset and not options.extension:
