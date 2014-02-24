@@ -28,6 +28,8 @@ def testEventCountWorkflow(url, workflow, verbose=False):
             if not verbose:
                 print 'Has duplicated lumis'
                 return True
+    if not duplicate:
+        print "No duplicate found"
     return duplicate
 
 def main():

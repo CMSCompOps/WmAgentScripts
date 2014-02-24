@@ -95,6 +95,26 @@ def duplicateLumi(dataset, verbose=False):
                 lumisChecked[lumi] = logical_file_name
     return duplicated
 
+def getMaxLumi(dataset):
+    """
+    Gets the number of the last lumi in a given dataset
+    This is useful for appending new events to dataset
+    without collision
+    """
+    dbsapi = DbsApi(url=dbs3_url)
+    reply = dbsapi.listFiles(dataset=dataset)
+    maxl = 0
+    for f in reply:
+        logical_file_name = f['logical_file_name']
+        reply2 = dbsapi.listFileLumis(logical_file_name=logical_file_name)
+        #retrieve lumis for each file
+        lumis = reply2[0]['lumi_section_num']
+        #check max of lumi
+        lumi = max(lumis)
+        if lumi > maxl:
+            maxl = lumi
+    return maxl   
+
 def getRunsDataset(dataset):
     """
     returns a list with number of each run.
@@ -102,7 +122,7 @@ def getRunsDataset(dataset):
     dbsapi = DbsApi(url=dbs3_url)
     # retrieve runs
     reply = dbsapi.listRuns(dataset=dataset)
-    #a list with only the run numbers
+    #a list with only the run numbersT3_US_Omaha
     runs = []
     #filter and clean
     for run in reply:
@@ -155,8 +175,8 @@ def hasAllBlocksClosed(dataset):
     # retrieve dataset summary
     reply = dbsapi.listBlocks(dataset=dataset, detail=True)
     for block in reply:
-        print block['block_name']
-        print block['open_for_writing']
+        #print block['block_name']
+        #print block['open_for_writing']
         if block['open_for_writing']:
             return False
     return True
@@ -169,7 +189,6 @@ def getEventCountDataSetBlockList(dataset,blockList):
     """
     # initialize API to DBS3
     dbsapi = DbsApi(url=dbs3_url)    
-    #reply = dbsapi.listBlockSummaries(block_name=blockList)
     #transform from strin to list
     if type(blockList) in (str, unicode):
         blockList = eval(blockList)
@@ -188,9 +207,16 @@ def getEventCountDataSetRunList(dataset,runList):
     # initialize API to DBS3
     dbsapi = DbsApi(url=dbs3_url)
     # retrieve file aggregation only by the runs
-    reply = dbsapi.listFileSummaries(dataset=dataset,run_num=runList)
-    #a list with only the run numbers
-    return reply[0]['num_event']
+    #transform from strin to list
+    if type(runList) in (str, unicode):
+        runList = eval(runList)
+    total = 0
+    #get one by one run, so URI wont be too large
+    for run in runList:
+        reply = dbsapi.listFileSummaries(dataset=dataset,run_num=run)
+        if reply:
+            total += reply[0]['num_event']
+    return total
 
 def main():
     args=sys.argv[1:]
