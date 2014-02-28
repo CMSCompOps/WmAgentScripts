@@ -92,7 +92,7 @@ def main():
                era = 'HiFall11'
                lfn = '/store/himc'
 
-           if 'UpgradePhase' in workflow and 'DR61SLHCx' in workflow:
+           if 'UpgradePhase' in workflow and ('DR61SLHCx' in workflow or 'dr61SLHCx' in workflow):
               era = 'Summer13'
               lfn = '/store/mc'
 
