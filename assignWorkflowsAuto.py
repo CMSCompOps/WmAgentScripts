@@ -367,8 +367,7 @@ def main():
                  print 'ERROR: unable to determine pileup scenario'
                  sys.exit(0)
               elif 'Fall11_R2' in workflow or 'Fall11_R4' in workflow or 'Fall11R2' in workflow or 'Fall11R4' in workflow:
-                 inDataSet = getInputDataSet(url, workflow)
-                 matchObj = re.match(r".*Fall11-(.*)_START.*", inDataSet)
+                 matchObj = re.match(r".*Fall11-(.*)_START.*", inputDataset)
                  if matchObj:
                     pileupScenario = matchObj.group(1)
                  else:
