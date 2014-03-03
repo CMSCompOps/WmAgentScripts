@@ -47,7 +47,10 @@ def duplicateRunLumi(dataset, verbose=False):
             logical_file_name = f['logical_file_name']
             reply2 = dbsapi.listFileLumis(logical_file_name=logical_file_name, run_num=run)
             #retrieve lumis for each file
-            lumis = reply2[0]['lumi_section_num']
+            if reply2:
+                lumis = reply2[0]['lumi_section_num']
+            else:
+                continue
             #check that each lumi is only in one file
             for lumi in lumis:
                 if lumi in lumisChecked:
@@ -127,7 +130,7 @@ def getRunsDataset(dataset):
     #filter and clean
     for run in reply:
         if type(run['run_num']) is list:
-            runs.append(run['run_num'][0])
+            runs.extend(run['run_num'])
         else:
             runs.append(run['run_num'])
     return runs
