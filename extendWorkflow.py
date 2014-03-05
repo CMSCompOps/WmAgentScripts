@@ -53,6 +53,9 @@ def modifySchema(helper, workflow, user, group, events):
             result['Requestor'] = user
         elif key == 'Group':
             result['Group'] = group
+        #preppend EXT to recognize as an extension
+        elif key == 'RequestString':
+            result['RequestString'] = 'EXT_'+str(value)
         #if emtpy
         elif key in ["RunWhitelist", "RunBlacklist", "BlockWhitelist", "BlockBlacklist"] and not value:
             result[key]=[]

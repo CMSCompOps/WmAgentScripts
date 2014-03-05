@@ -67,7 +67,7 @@ def modifySchema(helper, user, group):
                 if 'lumis_per_job' in v:
                     lumisPerJob = v['lumis_per_job']
         result['LumisPerJob'] = lumisPerJob
-
+    #TODO do this always?
     if 'EventsPerJob' not in result and result['RequestType']=='MonteCarlo':
         #seek for events per job on helper
         splitting = helper.listJobSplittingParametersByTask()
@@ -80,6 +80,38 @@ def modifySchema(helper, user, group):
     if 'MergedLFNBase' not in result:
         result['MergedLFNBase'] = helper.getMergedLFNBase()
     return result
+
+
+def cloneWorkflow(workflow, user, group, verbose=False):
+    """
+    clones a workflow
+    """
+    # Get info about the workflow to be cloned
+    helper = retrieveSchema(workflow)
+    schema = modifySchema(helper, user, group)
+
+    print 'Submitting workflow'
+    # Sumbit cloned workflow to ReqMgr
+    response = reqMgrClient.submitWorkflow(url,schema)
+    #find the workflow name in response
+    m = re.search("details\/(.*)\'",response)
+    if m:
+        newWorkflow = m.group(1)
+        if verbose:
+            print 'Cloned workflow: '+newWorkflow
+            print response    
+
+            print 'Approve request response:'
+        # Move the request to Assignment-approved
+        data = reqMgrClient.setWorkflowApproved(url, newWorkflow)
+        if verbose:
+            print data
+        #return the name of new workflow
+        return newWorkflow
+    else:
+        if verbose:
+            print response
+        return None
 
 
 
@@ -97,27 +129,9 @@ def main():
     workflow = sys.argv[1]
     user = sys.argv[2]
     group = sys.argv[3]    
+    #Show verbose
+    cloneWorkflow(workflow, user, group, True)
     
-    # Get info about the workflow to be cloned
-    helper = retrieveSchema(workflow)
-    schema = modifySchema(helper, user, group)
-
-    print 'Submitting workflow'
-    # Sumbit cloned workflow to ReqMgr
-    response = reqMgrClient.submitWorkflow(url,schema)
-    #find the workflow name in response
-    m = re.search("details\/(.*)\'",response)
-    if m:
-        newWorkflow = m.group(1)
-        print 'Cloned workflow: '+newWorkflow
-        print response
-        
-        # Move the request to Assignment-approved
-        print 'Approve request response:'
-        data = reqMgrClient.setWorkflowApproved(url, newWorkflow)
-        print data
-    else:
-        print response
     sys.exit(0)
 
 
