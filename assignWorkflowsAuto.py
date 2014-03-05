@@ -453,6 +453,9 @@ def main():
            if 'ppWinter13' in workflow and 'DR53X' in workflow:
               pileupScenario = 'pp' # not actually the pileup scenario of course
 
+           if 'Summer11LegDR' in campaign:
+              era = 'Summer11LegDR'
+              lfn = '/store/mc'
 
            if 'UpgradePhase1Age' in campaign:
               era = 'Summer13'
