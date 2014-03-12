@@ -48,7 +48,7 @@ def closeOutReRecoWorkflowsWeb(url, workflows, output):
             print '| %80s | %100s | %4s | %5s| %3s | %5s|%5s| ' % (workflow, dataset,str(int(percentage*100)),
                                                     str(phedexSubscription), 100, duplicate, closeOutDataset)
             #web output
-            output.write('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td></td><td>%s</td></tr>'%
+            output.write('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>'%
                  (workflow, dataset,str(int(percentage*100)),str(phedexSubscription), 100, duplicate, closeOutDataset))
             
         #workflow can only be closed out if all datasets are ready
@@ -89,7 +89,7 @@ def closeOutRedigiWorkflowsWeb(url, workflows, output):
             print '| %80s | %100s | %4s | %5s| %3s | %5s|%5s| ' % (workflow, dataset,str(int(percentage*100)),
                                                     str(phedexSubscription), 100, duplicate, closeOutDataset)
             #web output
-            output.write('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td></td><td>%s</td></tr>'%
+            output.write('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>'%
                 (workflow, dataset,str(int(percentage*100)),str(phedexSubscription), 100, duplicate, closeOutDataset))
         #workflow can only be closed out if all datasets are ready
         if closeOutWorkflow:
@@ -124,8 +124,6 @@ def closeOutMonterCarloRequestsWeb(url, workflows,output):
             if phedexSubscription and percentage >= float(closePercentage):
                 transPerc = phedexClient.getTransferPercentage(url, dataset, phedexSubscription)
                 duplicate = dbs3Client.duplicateLumi(dataset)
-                closedBlocks = dbs3Client.hasAllBlocksClosed(dataset)
-                #TODO validate closed blocks
                 if not duplicate:
                     closeOutDataset = True
                 else:
@@ -137,10 +135,10 @@ def closeOutMonterCarloRequestsWeb(url, workflows,output):
                 noSiteWorkflows.append(workflow)
             #if at least one dataset is not ready wf cannot be closed out
             closeOutWorkflow = closeOutWorkflow and closeOutDataset
-            print '| %80s | %100s | %4s | %5s| %3s | %5s|%5s| %5s|' % (workflow, dataset,str(int(percentage*100)),
-                        str(phedexSubscription), str(int(transPerc*100)), duplicate, closedBlocks, closeOutDataset)
+            print '| %80s | %100s | %4s | %5s| %3s | %5s| %5s|' % (workflow, dataset,str(int(percentage*100)),
+                        str(phedexSubscription), str(int(transPerc*100)), duplicate, closeOutDataset)
             #web output
-            output.write('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>'%
+            output.write('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>'%
               (workflow, dataset,str(int(percentage*100)),str(phedexSubscription), 
                 str(int(transPerc*100)), duplicate, closedBlocks, closeOutDataset))
         #workflow can only be closed out if all datasets are ready
@@ -188,7 +186,7 @@ def closeOutStep0RequestsWeb(url, workflows, output):
             print '| %80s | %100s | %4s | %5s| %3s | %5s| %5s| ' % (workflow, dataset,str(int(percentage*100)),
                         str(phedexSubscription), str(correctLumis), duplicate, closeOutDataset)
             #web output
-            output.write('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td></td><td>%s</td></tr>'%
+            output.write('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>'%
                 (workflow, dataset,str(int(percentage*100)),str(phedexSubscription), str(correctLumis), duplicate, closeOutDataset))
         #workflow can only be closed out if all datasets are ready
         if closeOutWorkflow:
@@ -221,28 +219,28 @@ def main():
     writeHTMLHeader(output)
     #print header
     print '-'*220
-    print '| Request                                                                          | OutputDataSet                                                                                        |%Compl|Subscr|Tran|Dupl|Blocks|ClosOu|'
+    print '| Request'+(' '*74)+'| OutputDataSet'+(' '*86)+'|%Compl|Subscr|Tran|Dupl|ClosOu|'
     print '-'*220
     output.write('<table border=1> <tr><th>Request</th><th>OutputDataSet</th><th>%Compl</th>'
-                '<th>Subscr</th><th>Tran</th><th>Dupl</th><th>Blocks</th><th>ClosOu</th></tr>')
+                '<th>Subscr</th><th>Tran</th><th>Dupl</th><th>ClosOu</th></tr>')
     
-    output.write('<tr><th colspan="8">ReReco </th></tr>')
+    output.write('<tr><th colspan="7">ReReco </th></tr>')
     noSiteWorkflows = closeOutReRecoWorkflowsWeb(url, workflowsCompleted['ReReco'], output)
     workflowsCompleted['NoSite-ReReco'] = noSiteWorkflows
     
-    output.write('<tr><th colspan="8">ReDigi </th></tr>')
+    output.write('<tr><th colspan="7">ReDigi </th></tr>')
     noSiteWorkflows = closeOutRedigiWorkflowsWeb(url, workflowsCompleted['ReDigi'], output)
     workflowsCompleted['NoSite-ReDigi'] = noSiteWorkflows
     
-    output.write('<tr><th colspan="8">MonteCarlo </th></tr>')
+    output.write('<tr><th colspan="7">MonteCarlo </th></tr>')
     noSiteWorkflows = closeOutMonterCarloRequestsWeb(url, workflowsCompleted['MonteCarlo'], output)
     workflowsCompleted['NoSite-MonteCarlo'] = noSiteWorkflows
     
-    output.write('<tr><th colspan="8">MonteCarloFromGEN </th></tr>')
+    output.write('<tr><th colspan="7">MonteCarloFromGEN </th></tr>')
     noSiteWorkflows = closeOutMonterCarloRequestsWeb(url, workflowsCompleted['MonteCarloFromGEN'], output)
     workflowsCompleted['NoSite-MonteCarloFromGEN'] = noSiteWorkflows
     
-    output.write('<tr><th colspan="8">LHEStepZero </th></tr>')
+    output.write('<tr><th colspan="7">LHEStepZero </th></tr>')
     noSiteWorkflows = closeOutStep0RequestsWeb(url, workflowsCompleted['LHEStepZero'],output)
     workflowsCompleted['NoSite-LHEStepZero'] = noSiteWorkflows
     output.write('</table><br><br>')

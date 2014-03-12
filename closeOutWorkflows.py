@@ -150,6 +150,9 @@ def closeOutMonterCarloRequests(url, workflows):
     noSiteWorkflows = []
     for workflow in workflows:
         datasets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
+        #if not completed skip
+        if status != 'completed':
+            continue
         closeOutWorkflow = True
         #skip montecarlos on a special queue
         if reqMgrClient.getRequestTeam(url, workflow) == 'analysis':
@@ -169,8 +172,6 @@ def closeOutMonterCarloRequests(url, workflows):
             if phedexSubscription and percentage >= float(closePercentage):
                 transPerc = phedexClient.getTransferPercentage(url, dataset, phedexSubscription)
                 duplicate = dbs3Client.duplicateLumi(dataset)
-                closedBlocks = dbs3Client.hasAllBlocksClosed(dataset)
-                #TODO validate closed blocks
                 if not duplicate:
                     closeOutDataset = True
                 else:
@@ -182,8 +183,8 @@ def closeOutMonterCarloRequests(url, workflows):
                 noSiteWorkflows.append(workflow)
             #if at least one dataset is not ready wf cannot be closed out
             closeOutWorkflow = closeOutWorkflow and closeOutDataset
-            print '| %80s | %100s | %4s | %5s| %3s | %5s|%5s| %5s|' % (workflow, dataset,str(int(percentage*100)),
-                        str(phedexSubscription), str(int(transPerc*100)), duplicate, closedBlocks, closeOutDataset)
+            print '| %80s | %100s | %4s | %5s| %3s | %5s| %5s|' % (workflow, dataset,str(int(percentage*100)),
+                        str(phedexSubscription), str(int(transPerc*100)), duplicate, closeOutDataset)
         #workflow can only be closed out if all datasets are ready
         if closeOutWorkflow:
             reqMgrClient.closeOutWorkflowCascade(url, workflow)
@@ -198,6 +199,10 @@ def closeOutStep0Requests(url, workflows):
     noSiteWorkflows = []
     for workflow in workflows:
         datasets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
+        status = reqMgrClient.getWorkflowStatus(url, workflow)
+        #if not completed skip
+        if status != 'completed':
+            continue
         closeOutWorkflow = True
         #skip montecarlos on a special queue
         if reqMgrClient.getRequestTeam(url, workflow) == 'analysis':
@@ -261,6 +266,10 @@ def percentageCompletion(url, workflow, dataset):
     percentage = outputEvents/float(inputEvents)
     return percentage
 
+def listWorkflows(workflows):
+    for wf in workflows:
+        print wf
+    print '-'*150
 
 def main():
     url='cmsweb.cern.ch'
@@ -271,18 +280,31 @@ def main():
 
     #print header
     print '-'*220
-    print '| Request                                                                          | OutputDataSet                                                                                        |%Compl|Subscr|Tran|Dupl|Blocks|ClosOu|'
+    print '| Request'+(' '*74)+'| OutputDataSet'+(' '*86)+'|%Compl|Subscr|Tran|Dupl|ClosOu|'
     print '-'*220
-    closeOutReRecoWorkflows(url, workflowsCompleted['ReReco'])	
-    closeOutRedigiWorkflows(url, workflowsCompleted['ReDigi'])
-    closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarlo'])
-    closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarloFromGEN'])
-    closeOutStep0Requests(url, workflowsCompleted['LHEStepZero'])
+    noSiteWorkflows = closeOutReRecoWorkflows(url, workflowsCompleted['ReReco'])
+    workflowsCompleted['NoSite-ReReco'] = noSiteWorkflows
+
+    noSiteWorkflows = closeOutRedigiWorkflows(url, workflowsCompleted['ReDigi'])
+    workflowsCompleted['NoSite-ReDigi'] = noSiteWorkflows
+
+    noSiteWorkflows = closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarlo'])
+    workflowsCompleted['NoSite-MonteCarlo'] = noSiteWorkflows
+
+    noSiteWorkflows = closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarloFromGEN'])
+    workflowsCompleted['NoSite-MonteCarloFromGEN'] = noSiteWorkflows
+    
+    noSiteWorkflows = closeOutStep0Requests(url, workflowsCompleted['LHEStepZero'])
+    workflowsCompleted['NoSite-LHEStepZero'] = noSiteWorkflows
+
     print "MC Workflows for which couldn't find Custodial Tier1 Site"
-    if 'NoSite' in workflowsCompleted['MonteCarlo']:
-        print workflowsCompleted['MonteCarlo']['NoSite']
-    if 'NoSite' in workflowsCompleted['MonteCarloFromGEN']:
-        print workflowsCompleted['MonteCarloFromGEN']['NoSite']
+    
+    output.write("<table border=1> <tr><th>MC Workflows for which couldn't find Custodial Tier1 Site</th></tr>")
+    listWorkflows(workflowsCompleted['NoSite-ReReco'])
+    listWorkflows(workflowsCompleted['NoSite-ReDigi'])
+    listWorkflows(workflowsCompleted['NoSite-MonteCarlo'])
+    listWorkflows(workflowsCompleted['NoSite-MonteCarloFromGEN'])
+    listWorkflows(workflowsCompleted['NoSite-LHEStepZero'])
     sys.exit(0);
 
 if __name__ == "__main__":
