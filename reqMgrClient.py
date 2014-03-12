@@ -81,6 +81,14 @@ def getWorkflowInfo(url, workflow):
     request = requestManagerGet(url,'/reqmgr/reqMgr/request?requestName='+workflow)
     return request    
 
+def getWorkflowStatus(url, workflow):
+    """
+    Retrieves workflow status
+    """
+    request = getWorkflowInfo(url,workflow)
+    status = request['RequestStatus']
+    return status
+
 def getWorkflowType(url, workflow):
     request = getWorkflowInfo(url,workflow)
     requestType=request['RequestType']
