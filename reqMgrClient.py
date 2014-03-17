@@ -330,13 +330,13 @@ def handleTaskChain(request):
             runBlacklist=request['Task1']['RunBlacklist']
 
         if blockWhitelist:
-            return dbs3Client.getEventCountDataSetBlockList(inputDataSet,blockWhitelist)
+            return dbs3.getEventCountDataSetBlockList(inputDataSet,blockWhitelist)
         if blockBlacklist:
-            return dbs3Client.getEventCountDataset(inputDataSet) - dbs3Client.getEventCountDataSetBlockList(inputDataSet,blockBlacklist)
+            return dbs3.getEventCountDataset(inputDataSet) - dbs3.getEventCountDataSetBlockList(inputDataSet,blockBlacklist)
         if runWhitelist:
-            return dbs3Client.getEventCountDataSetRunList(inputDataSet, runWhitelist)
+            return dbs3.getEventCountDataSetRunList(inputDataSet, runWhitelist)
         else:
-            return dbs3Client.getEventCountDataset(inputDataSet)
+            return dbs3.getEventCountDataset(inputDataSet)
 
 ### TODO: implement multi white/black list
 #        if len(blockWhitelist)>0 and len(runWhitelist)>0:

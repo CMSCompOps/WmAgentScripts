@@ -60,7 +60,7 @@ def writeHTMLHeader(output):
 
 
 import re
-p = re.compile(r'[a-z_]+(?:ACDC_|Merge_)*([a-zA-Z0-9_\-]+)')
+p = re.compile(r'[a-z_]+(?:ACDC_|Merge_|EXT_)*([a-zA-Z0-9_\-]+)')
 p2 = re.compile(r'_\d{6}_[0-9_]+')
 
 
@@ -93,8 +93,8 @@ def main():
     print "Gathering Requests"
     requests=closeOutWorkflows.getOverviewRequestsWMStats(url)
     print "Classifying Requests"
-    workflowsCompleted=closeOutWorkflows.classifyCompletedRequests(url, requests)
-    workflowsRunning =classifyRunningRequests(url, requests)
+    workflowsCompleted = closeOutWorkflows.classifyCompletedRequests(url, requests)
+    workflowsRunning = classifyRunningRequests(url, requests)
     writeHTMLHeader(output)
     print "Getting no duplicated requests"
     print "Workflows that are completed, but don't have ACDC's"
