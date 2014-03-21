@@ -291,7 +291,7 @@ def main():
            useX = 1
 
         # Valid Tier-1 sites
-        sites = ['T1_DE_KIT', 'T1_FR_CCIN2P3', 'T1_IT_CNAF', 'T1_ES_PIC', 'T1_TW_ASGC', 'T1_UK_RAL', 'T1_US_FNAL', 'HLT']
+        sites = ['T1_DE_KIT', 'T1_FR_CCIN2P3', 'T1_IT_CNAF', 'T1_ES_PIC', 'T1_TW_ASGC', 'T1_UK_RAL', 'T1_US_FNAL', 'T2_CH_CERN', 'HLT']
 
         if options.filename:
            f=open(filename,'r')
@@ -344,7 +344,7 @@ def main():
               else:
                  siteCust = options.siteCust
            if options.site == 'HLT':
-              siteUse = ['T2_CH_CERN_AI', 'T2_CH_CERN_HLT']
+              siteUse = ['T2_CH_CERN_AI', 'T2_CH_CERN_HLT', 'T2_CH_CERN']
               team = 'hlt'
 
            # Extract required part of global tag
@@ -363,7 +363,7 @@ def main():
               pileupScenario = getPileupScenario(url, workflow)
               if campaign == 'Summer12_DR53X_RD':
                  pileupScenario = 'PU_RD1'
-              if pileupScenario == 'Unknown' and 'MinBias' in pileupDataset:
+              if pileupScenario == 'Unknown' and 'MinBias' in pileupDataset and 'LowPU2010DR42' not in workflow:
                  print 'ERROR: unable to determine pileup scenario'
                  sys.exit(0)
               elif 'Fall11_R2' in workflow or 'Fall11_R4' in workflow or 'Fall11R2' in workflow or 'Fall11R4' in workflow:
@@ -430,10 +430,11 @@ def main():
               era = 'Summer11'
               lfn = '/store/mc'
 
-           if 'LowPU2010_DR42' in workflow:
+           if 'LowPU2010_DR42' in workflow or 'LowPU2010DR42' in workflow:
               era = 'Summer12'
               lfn = '/store/mc'
               specialName = 'LowPU2010_DR42_'
+              pileupScenario = 'PU_S0'
 
            if 'UpgradeL1TDR_DR6X' in workflow:
               era = 'Summer12'
@@ -537,6 +538,14 @@ def main():
                  print 'ERROR: unexpected special name string in workflow name'
                  sys.exit(0)
 
+           # Handle NewG4Phys
+           if campaign == 'Summer12DR53X' and 'NewG4Phys' in workflow:
+              specialName = 'NewG4Phys_'
+
+           # Handle BS2011
+           if campaign == 'LowPU2010DR42' and 'BS2011' in workflow:
+              specialName = 'LowPU2010_DR42_BS2011_'
+
            # Construct processed dataset version
            if pileupScenario != '':
               pileupScenario = pileupScenario+'_' 
@@ -579,7 +588,7 @@ def main():
               print 'ERROR: lfn is not defined'
               sys.exit(0)
 
-           if siteUse not in sites and options.site != 'T2_US' and siteUse != ['T2_CH_CERN_AI', 'T2_CH_CERN_HLT']:
+           if siteUse not in sites and options.site != 'T2_US' and siteUse != ['T2_CH_CERN_AI', 'T2_CH_CERN_HLT', 'T2_CH_CERN']:
               print 'ERROR: invalid site'
               sys.exit(0)
 
