@@ -65,6 +65,8 @@ def main():
         sys.exit(0)
     url='cmsweb.cern.ch'
 
+    [events1,events2] = getEventsDetails('Summer12','AODSIM','LowPU2010_DR42')
+    print 'LowPU2010DR42 : VALID = ',events1,' VALID+PROD = ',events2
     [events1,events2] = getEventsDetails('Summer11dr53X','AODSIM','NA')
     print 'Summer11dr53X : VALID = ',events1,' VALID+PROD = ',events2
     [events1,events2] = getEventsDetails('Summer11LegDR','AODSIM','NA')
@@ -73,12 +75,10 @@ def main():
     print 'HiWinter13DR53X : VALID = ',events1,' VALID+PROD = ',events2
     [events1,events2] = getEventsDetails('HiWinter13','GEN-SIM-RECO','HiWinter13-pa_STARTHI53')
     print 'pAWinter13DR53X : VALID = ',events1,' VALID+PROD = ',events2
-
     [events1,events2] = getEventsDetails('Fall11','GEN-RAW','START42_V14B')
     print 'Fall11R1 : VALID = ',events1,' VALID+PROD = ',events2
     [events1,events2] = getEventsDetails('Fall11','AODSIM','START42_V14B')
     print 'Fall11R2 : VALID = ',events1,' VALID+PROD = ',events2
-
     [events1,events2] = getEventsDetails('Summer12_DR53X','AODSIM','NA')
     print 'Summer12DR53X : VALID = ',events1,' VALID+PROD = ',events2
     [events1,events2] = getEventsDetails('Fall13dr','AODSIM','NA')
