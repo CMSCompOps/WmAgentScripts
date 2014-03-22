@@ -6,6 +6,25 @@ from dbs.apis.dbsClient import DbsApi
 
 dbs3_url = r'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
 
+def TestAcceptedSubscriptionRequest(url, dataset, site):
+        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+        r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset='+dataset+'&type=xfer'+'&approval=approved')
+        r2=conn.getresponse()
+        result = json.loads(r2.read())
+        requests=result['phedex']
+        if 'request' not in requests.keys():
+                return [False, False]
+        ourNode=False
+        otherNode=False
+        for request in result['phedex']['request']:
+                for node in request['node']:
+                        if node['name']==site and node['decision']=='approved':
+                                ourNode=True
+                        elif 'Disk' in node['name'] and node['decision']=='approved':
+                                otherNode=True
+                return[ourNode, otherNode]
+        return [False, False]
+
 def getDatasetStatus(dataset):
         # initialize API to DBS3
         dbsapi = DbsApi(url=dbs3_url)
@@ -346,6 +365,19 @@ def main():
            if options.site == 'HLT':
               siteUse = ['T2_CH_CERN_AI', 'T2_CH_CERN_HLT', 'T2_CH_CERN']
               team = 'hlt'
+
+           # Check if input dataset subscribed to disk endpoint
+           if 'T2_CH_CERN' in siteUse:
+              siteSE = 'T2_CH_CERN'
+           else:
+              siteSE = siteUse + '_Disk'
+           [subscribedOurSite, subscribedOtherSite] = TestAcceptedSubscriptionRequest(url, inputDataset, siteSE)
+           if not subscribedOurSite and not options.xrootd:
+              print 'ERROR: input dataset not subscribed/approved to required Disk endpoint'
+              sys.exit(0)
+           if options.xrootd and not subscribedOtherSite:
+              print 'ERROR: input dataset not subscribed/approved to any Disk endpoint'
+              sys.exit(0)
 
            # Extract required part of global tag
            gtRaw = getGlobalTag(url, workflow)
