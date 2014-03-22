@@ -8,7 +8,7 @@ dbs3_url = r'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
 
 def TestAcceptedSubscriptionRequest(url, dataset, site):
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-        r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset='+dataset+'&type=xfer'+'&approval=approved')
+        r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset='+dataset+'&type=xfer')
         r2=conn.getresponse()
         result = json.loads(r2.read())
         requests=result['phedex']
@@ -22,8 +22,7 @@ def TestAcceptedSubscriptionRequest(url, dataset, site):
                                 ourNode=True
                         elif 'Disk' in node['name'] and node['decision']=='approved':
                                 otherNode=True
-                return[ourNode, otherNode]
-        return [False, False]
+        return[ourNode, otherNode]
 
 def getDatasetStatus(dataset):
         # initialize API to DBS3
