@@ -6,7 +6,7 @@ from dbs.apis.dbsClient import DbsApi
 
 dbs3_url = r'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
 
-def TestAcceptedSubscriptionRequest(url, dataset, site):
+def checkAcceptedSubscriptionRequest(url, dataset, site):
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset='+dataset+'&type=xfer')
         r2=conn.getresponse()
@@ -370,7 +370,7 @@ def main():
               siteSE = 'T2_CH_CERN'
            else:
               siteSE = siteUse + '_Disk'
-           [subscribedOurSite, subscribedOtherSite] = TestAcceptedSubscriptionRequest(url, inputDataset, siteSE)
+           [subscribedOurSite, subscribedOtherSite] = checkAcceptedSubscriptionRequest(url, inputDataset, siteSE)
            if not subscribedOurSite and not options.xrootd:
               print 'ERROR: input dataset not subscribed/approved to required Disk endpoint'
               sys.exit(0)
