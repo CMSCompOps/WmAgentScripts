@@ -150,9 +150,6 @@ def closeOutMonterCarloRequests(url, workflows):
     noSiteWorkflows = []
     for workflow in workflows:
         datasets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
-        #if not completed skip
-        if status != 'completed':
-            continue
         closeOutWorkflow = True
         #skip montecarlos on a special queue
         if reqMgrClient.getRequestTeam(url, workflow) == 'analysis':

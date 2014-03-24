@@ -140,7 +140,7 @@ def closeOutMonterCarloRequestsWeb(url, workflows,output):
             #web output
             output.write('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>'%
               (workflow, dataset,str(int(percentage*100)),str(phedexSubscription), 
-                str(int(transPerc*100)), duplicate, closedBlocks, closeOutDataset))
+                str(int(transPerc*100)), duplicate, closeOutDataset))
         #workflow can only be closed out if all datasets are ready
         if closeOutWorkflow:
             reqMgrClient.closeOutWorkflowCascade(url, workflow)
