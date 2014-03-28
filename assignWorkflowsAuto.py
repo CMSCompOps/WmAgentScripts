@@ -94,7 +94,8 @@ def getPileupDataset(url, workflow):
 
         for line in list:
            if 'request.schema.MCPileup' in line:
-              pileupDataset = line[line.find("[")+1:line.find("]")]
+              #pileupDataset = line[line.find("=")+1:line.find("<br/")]
+              pileupDataset = line[line.find("'")+1:line.find("'",line.find("'")+1)]
 
         return pileupDataset
 
@@ -385,12 +386,18 @@ def main():
 
            # Get campaign name
            campaign = getCampaign(url, workflow)
+
+           pileupDataset = getPileupDataset(url, workflow)
+           if pileupDataset != 'None':
+              [subscribedOurSite, subscribedOtherSite] = checkAcceptedSubscriptionRequest(url, pileupDataset, siteSE)
+              if not subscribedOurSite:
+                 print 'ERROR: pileup dataset not subscribed/approved to required Disk endpoint'
+                 sys.exit(0)            
          
            # Determine pileup scenario
            # - Fall11_R2 & Fall11_R4 don't add pileup so extract pileup scenario from input
            pileupScenario = ''
            if not options.inprocstring:
-              pileupDataset = getPileupDataset(url, workflow)
               pileupScenario = getPileupScenario(url, workflow)
               if campaign == 'Summer12_DR53X_RD':
                  pileupScenario = 'PU_RD1'
