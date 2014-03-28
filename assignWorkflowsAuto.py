@@ -371,7 +371,7 @@ def main():
            else:
               siteSE = siteUse + '_Disk'
            [subscribedOurSite, subscribedOtherSite] = checkAcceptedSubscriptionRequest(url, inputDataset, siteSE)
-           if not subscribedOurSite and not options.xrootd:
+           if not subscribedOurSite and not options.xrootd and 'Fall11R2' not in workflow:
               print 'ERROR: input dataset not subscribed/approved to required Disk endpoint'
               sys.exit(0)
            if options.xrootd and not subscribedOtherSite:
