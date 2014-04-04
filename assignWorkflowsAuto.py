@@ -79,7 +79,8 @@ def getScenario(ps):
            pss = 'NoPileUp'
         if ps == 'SimGeneral.MixingModule.mix_POISSON_average_cfi':
            pss = 'PU'
-
+        if ps == 'SimGeneral.MixingModule.mix_CSA14_50ns_PoissonOOTPU_cfi':
+           pss = 'PU_S14'
 
         return pss
 
@@ -481,6 +482,10 @@ def main():
            if 'HiWinter13' in inputDataset:
               era = 'HiWinter13'
               lfn = '/store/himc'
+     
+           if 'Spring14dr' in workflow:
+              era = 'Spring14dr'
+              lfn = '/store/mc'
 
            if 'Winter13' in workflow and 'DR53X' in workflow:
               era = 'HiWinter13'
