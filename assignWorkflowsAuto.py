@@ -486,6 +486,8 @@ def main():
            if 'Spring14dr' in workflow:
               era = 'Spring14dr'
               lfn = '/store/mc'
+              if '_castor_' in workflow:
+                 specialName = 'castor_'
 
            if 'Winter13' in workflow and 'DR53X' in workflow:
               era = 'HiWinter13'
@@ -584,6 +586,10 @@ def main():
            # Handle NewG4Phys
            if campaign == 'Summer12DR53X' and 'NewG4Phys' in workflow:
               specialName = 'NewG4Phys_'
+
+           # Handle Ext30
+           if campaign == 'Summer12DR53X' and 'Ext30' in workflow:
+              specialName = 'Ext30_'
 
            # Handle BS2011
            if campaign == 'LowPU2010DR42' and 'BS2011' in workflow:
