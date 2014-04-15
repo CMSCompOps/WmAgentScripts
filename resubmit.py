@@ -31,7 +31,8 @@ def retrieveSchema(workflowName):
 
 def modifySchema(helper, user, group):
     """
-    Adapts schema to right parameters
+    Adapts schema to right parameters.
+    If the original workflow points to DBS2, DBS3 URL is fixed instead.
     """
     result = {}
     # Add AcquisitionEra, ProcessingString and increase ProcessingVersion by 1
@@ -52,6 +53,9 @@ def modifySchema(helper, user, group):
         #if emtpy
         elif key in ["RunWhitelist", "RunBlacklist", "BlockWhitelist", "BlockBlacklist"] and not value:
             result[key]=[]
+        #replace old DBS2 URL
+        elif value == "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet":
+            result[key] = 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
         #skip empty entries
         elif not value:
             continue
