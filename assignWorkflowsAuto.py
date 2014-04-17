@@ -564,6 +564,10 @@ def main():
               lfn = '/store/himc'
               specialName = 'HiFall11_DR44X' + '_'
 
+           if campaign == 'HiFall13DR53X':
+              era = 'HiFall13DR53X'
+              lfn = '/store/himc'
+
            if campaign == 'UpgFall13d':
               era = campaign
               lfn = '/store/mc'
