@@ -1,14 +1,11 @@
 #!/usr/bin/env python
+# Generate campaign overview table for Monday Comp Ops meetings
 
 import urllib2,urllib, httplib, sys, re, os, json
 from xml.dom.minidom import getDOMImplementation
 from dbs.apis.dbsClient import DbsApi
 
-#das_host='https://das.cern.ch'
 das_host='https://cmsweb.cern.ch'
-#das_host='https://cmsweb-testbed.cern.ch'
-#das_host='https://das-dbs3.cern.ch'
-#das_host='https://dastest.cern.ch'
 dbs3_url = r'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
 
 def getEventsDetails(acquisitionEra, dataTierName, searchStr):
@@ -65,6 +62,8 @@ def main():
         sys.exit(0)
     url='cmsweb.cern.ch'
 
+    [events1,events2] = getEventsDetails('Spring14dr','AODSIM','NA')
+    print 'Spring14dr : VALID = ',events1,' VALID+PROD = ',events2
     [events1,events2] = getEventsDetails('Summer12','AODSIM','LowPU2010_DR42')
     print 'LowPU2010DR42 : VALID = ',events1,' VALID+PROD = ',events2
     [events1,events2] = getEventsDetails('Summer11dr53X','AODSIM','NA')
