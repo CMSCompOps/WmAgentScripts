@@ -78,6 +78,9 @@ def main():
               era = 'Summer11LegDR'
            if 'Spring14dr' in prepID:
               era = 'Spring14dr'
+           if 'HiFall13DR53X' in prepID:
+              era = 'HiFall13DR53X'
+              lfn = '/store/himc'
 	      
            if 'Fall11_R' in prepID or 'Fall11_HLTMuonia' in prepID or 'Fall11R' in prepID:
               ods = ['GEN-RAW', 'GEN-SIM-RECO', 'AODSIM', 'DQM']
