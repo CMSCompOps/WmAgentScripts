@@ -622,7 +622,7 @@ def main():
 
 	   #reset maxRSS to default, so it can't reuse the custom value from a previous workflow
 	   maxRSS = maxRSSdefault
-           if 'HiFall11' in workflow and 'IN2P3' in siteUse:
+           if ('HiFall11' in workflow or 'HiFall13DR53X' in workflow) and 'IN2P3' in siteUse:
               maxRSS = 4000000
 
            # Set max number of merge events
