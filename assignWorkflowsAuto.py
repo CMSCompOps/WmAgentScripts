@@ -1,39 +1,54 @@
 #!/usr/bin/env python
 import urllib2,urllib, httplib, sys, re, os, json
 import optparse
+import reqMgrClient
+from dbs.apis.dbsClient import DbsApi
 
-def getStatusDataSet(dataset):
-        output=os.popen("./dbssql --input='find dataset.status where dataset="+dataset+" and dataset.status=*'"+ "|awk '{print $2}' ").read()
-        try:
-                myStatus = output[output.find("'")+1:output.find("'",output.find("'")+1)]
-                return myStatus
-        except ValueError:
-                return "Unknown"
+dbs3_url = r'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
 
-def outputdatasetsWorkflow(url, workflow):
+def checkAcceptedSubscriptionRequest(url, dataset, site):
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-        r1=conn.request("GET",'/reqmgr/reqMgr/outputDatasetsByRequestName?requestName=' + workflow)
+        r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset='+dataset+'&type=xfer')
         r2=conn.getresponse()
-        datasets = json.read(r2.read())
-        if len(datasets)==0:
-                print "ERROR: No output datasets for this workflow"
-                sys.exit(0)
-        return datasets
+        result = json.loads(r2.read())
+        requests=result['phedex']
+        if 'request' not in requests.keys():
+                return [False, False]
+        ourNode=False
+        otherNode=False
+        for request in result['phedex']['request']:
+                for node in request['node']:
+                        if node['name']==site and node['decision']=='approved':
+                                ourNode=True
+                        elif 'Disk' in node['name'] and node['decision']=='approved':
+                                otherNode=True
+        return[ourNode, otherNode]
+
+def getDatasetStatus(dataset):
+        # initialize API to DBS3
+        dbsapi = DbsApi(url=dbs3_url)
+        # retrieve dataset summary
+        reply = dbsapi.listDatasets(dataset=dataset,dataset_access_type='*',detail=True)
+        return reply[0]['dataset_access_type']
+
+def getDatasets(dataset):
+       # initialize API to DBS3
+        dbsapi = DbsApi(url=dbs3_url)
+        # retrieve dataset summary
+        reply = dbsapi.listDatasets(dataset=dataset,dataset_access_type='*')
+        return reply
 
 def getDatasetVersion(url, workflow, era, partialProcVersion):
         versionNum = 1
-        outputs = outputdatasetsWorkflow(url, workflow)
+        outputs = reqMgrClient.outputdatasetsWorkflow(url, workflow)
         for output in outputs:
-           if 'None-v0' not in output:
-              print 'ERROR: Problem checking output datasets: ',output
-              sys.exit(0)
            bits = output.split('/')
-           lastbit = bits[len(bits)-1]
-           outputCheck = re.sub(r'None-v0', era+'-'+partialProcVersion+'*', output)
-           output=os.popen("./dbssql --input='find dataset where dataset="+outputCheck+" and dataset.status=*' | grep "+lastbit).read()
-           lines = output.split('\n')
-           for line in lines:
-              matchObj = re.match(r".*-v(\d+)/.*", line)
+           outputCheck = '/'+bits[1]+'/'+era+'-'+partialProcVersion+'*/'+bits[len(bits)-1]
+
+           datasets = getDatasets(outputCheck)
+           for dataset in datasets:
+              datasetName = dataset['dataset']
+              matchObj = re.match(r".*-v(\d+)/.*", datasetName)
               if matchObj:
                  currentVersionNum = int(matchObj.group(1))
                  if versionNum <= currentVersionNum:
@@ -64,7 +79,8 @@ def getScenario(ps):
            pss = 'NoPileUp'
         if ps == 'SimGeneral.MixingModule.mix_POISSON_average_cfi':
            pss = 'PU'
-
+        if ps == 'SimGeneral.MixingModule.mix_CSA14_50ns_PoissonOOTPU_cfi':
+           pss = 'PU_S14'
 
         return pss
 
@@ -79,7 +95,8 @@ def getPileupDataset(url, workflow):
 
         for line in list:
            if 'request.schema.MCPileup' in line:
-              pileupDataset = line[line.find("[")+1:line.find("]")]
+              #pileupDataset = line[line.find("=")+1:line.find("<br/")]
+              pileupDataset = line[line.find("'")+1:line.find("'",line.find("'")+1)]
 
         return pileupDataset
 
@@ -101,22 +118,11 @@ def getPriority(url, workflow):
         priority = re.sub(r'\'', '', priority)
         return priority
 
-def getInputDataSet(url, workflow):
-        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-        r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
-        r2=conn.getresponse()
-        request = json.read(r2.read())
-        inputDataSets=request['InputDataset']
-        if len(inputDataSets)<1:
-                print "ERROR: No InputDataSet for workflow"
-        else:   
-                return inputDataSets
-
 def findCustodialLocation(url, dataset):
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset='+dataset)
         r2=conn.getresponse()
-        result = json.read(r2.read())
+        result = json.loads(r2.read())
         request=result['phedex']
         if 'block' not in request.keys():
                 return "No Site"
@@ -131,7 +137,7 @@ def getPrepID(url, workflow):
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
         r2=conn.getresponse()
-        request = json.read(r2.read())
+        request = json.loads(r2.read())
         prepID=request['PrepID']
         return prepID
 
@@ -139,7 +145,7 @@ def getCampaign(url, workflow):
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
         r2=conn.getresponse()
-        request = json.read(r2.read())
+        request = json.loads(r2.read())
         campaign=request['Campaign']
         return campaign
 
@@ -147,17 +153,17 @@ def getGlobalTag(url, workflow):
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
         r2=conn.getresponse()
-        request = json.read(r2.read())
+        request = json.loads(r2.read())
         globalTag=request['GlobalTag']
         return globalTag
 
 def getPileupScenario(url, workflow):
         cacheID = getCacheID(url, workflow)
         config = getConfig(url, cacheID)
-        [pileup,meanPileUp,bunchSpacing] = getPileup(config)
+        [pileup,meanPileUp,bunchSpacing,cmdLineOptions] = getPileup(config)
         scenario = getScenario(pileup)
-	if scenario == 'PU140Bx25' and meanPileUp != 'Unknown':
-	   scenario = 'PU' + meanPileUp + 'bx25'
+        if scenario == 'PU140Bx25' and meanPileUp != 'Unknown':
+           scenario = 'PU' + meanPileUp + 'bx25'
         if scenario == 'PU140bx25' and 'Upgrade' in workflow:
            scenario = 'PU140Bx25'
         if scenario == 'PU':
@@ -165,12 +171,16 @@ def getPileupScenario(url, workflow):
            if meanPileUp == 'None' or bunchSpacing == 'None':
               print 'ERROR: unexpected pileup settings in config'
               sys.exit(0)
+        if scenario == 'PU_RD1' and cmdLineOptions != 'None':
+           if '--runsAndWeightsForMC [(190482,0.924) , (194270,4.811), (200466,7.21), (207214,7.631)]' in cmdLineOptions:
+              scenario = 'PU_RD2'
         return scenario
 
 def getPileup(config):
         pu = 'Unknown'
         vmeanpu = 'None'
         bx = 'None'
+        cmdLineOptions = 'None'
         lines = config.split('\n')
         for line in lines:
            if 'process.load' and 'MixingModule' in line:
@@ -180,13 +190,15 @@ def getPileup(config):
               vmeanpu = meanpu[0]
            if 'process.mix.bunchspace' in line:
               bx = line[line.find("(")+1:line.find(")")]
-        return [pu,vmeanpu,bx]
+           if 'with command line options' in line:
+              cmdLineOptions = line
+        return [pu,vmeanpu,bx,cmdLineOptions]
 
 def getCacheID(url, workflow):
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
         r2=conn.getresponse()
-        request = json.read(r2.read())
+        request = json.loads(r2.read())
         cacheID=request['StepOneConfigCacheID']
         return cacheID
 
@@ -299,7 +311,7 @@ def main():
            useX = 1
 
         # Valid Tier-1 sites
-        sites = ['T1_DE_KIT', 'T1_FR_CCIN2P3', 'T1_IT_CNAF', 'T1_ES_PIC', 'T1_TW_ASGC', 'T1_UK_RAL', 'T1_US_FNAL', 'HLT', 'T1_IT_CNAF_Disk', 'T1_UK_RAL_Disk']
+        sites = ['T1_DE_KIT', 'T1_FR_CCIN2P3', 'T1_IT_CNAF', 'T1_ES_PIC', 'T1_TW_ASGC', 'T1_UK_RAL', 'T1_US_FNAL', 'T2_CH_CERN', 'HLT']
 
         if options.filename:
            f=open(filename,'r')
@@ -318,12 +330,12 @@ def main():
 
            team=options.team
 
-           inputDataset = getInputDataSet(url, workflow)
+           inputDataset = reqMgrClient.getInputDataSet(url, workflow)
 
            # Check status of input dataset
-           inputDatasetStatus = getStatusDataSet(inputDataset)
+           inputDatasetStatus = getDatasetStatus(inputDataset)
            if inputDatasetStatus != 'VALID' and inputDatasetStatus != 'PRODUCTION':
-              print 'ERROR: Input dataset is not PRODUCTION or VALID'
+              print 'ERROR: Input dataset is not PRODUCTION or VALID, value is',inputDatasetStatus
               sys.exit(0)
 
            if '-ext' in inputDataset and not options.extension:
@@ -351,17 +363,22 @@ def main():
                  siteCust = siteUse
               else:
                  siteCust = options.siteCust
-           if siteUse == 'T1_UK_RAL':
-              siteUse =  ['T1_UK_RAL', 'T1_UK_RAL_Disk']
-              if not options.siteCust:
-                 siteCust = 'T1_UK_RAL'
-           if siteUse == 'T1_IT_CNAF':
-              siteUse =  ['T1_IT_CNAF', 'T1_IT_CNAF_Disk']
-              if not options.siteCust:
-                 siteCust = 'T1_IT_CNAF'
            if options.site == 'HLT':
-              siteUse = ['T2_CH_CERN_AI', 'T2_CH_CERN_HLT']
+              siteUse = ['T2_CH_CERN_AI', 'T2_CH_CERN_HLT', 'T2_CH_CERN']
               team = 'hlt'
+
+           # Check if input dataset subscribed to disk endpoint
+           if 'T2_CH_CERN' in siteUse:
+              siteSE = 'T2_CH_CERN'
+           else:
+              siteSE = siteUse + '_Disk'
+           [subscribedOurSite, subscribedOtherSite] = checkAcceptedSubscriptionRequest(url, inputDataset, siteSE)
+           if not subscribedOurSite and not options.xrootd and 'Fall11R2' not in workflow:
+              print 'ERROR: input dataset not subscribed/approved to required Disk endpoint'
+              sys.exit(0)
+           if options.xrootd and not subscribedOtherSite:
+              print 'ERROR: input dataset not subscribed/approved to any Disk endpoint'
+              sys.exit(0)
 
            # Extract required part of global tag
            gtRaw = getGlobalTag(url, workflow)
@@ -370,21 +387,26 @@ def main():
 
            # Get campaign name
            campaign = getCampaign(url, workflow)
+
+           pileupDataset = getPileupDataset(url, workflow)
+           if pileupDataset != 'None':
+              [subscribedOurSite, subscribedOtherSite] = checkAcceptedSubscriptionRequest(url, pileupDataset, siteSE)
+              if not subscribedOurSite:
+                 print 'ERROR: pileup dataset not subscribed/approved to required Disk endpoint'
+                 sys.exit(0)            
          
            # Determine pileup scenario
            # - Fall11_R2 & Fall11_R4 don't add pileup so extract pileup scenario from input
            pileupScenario = ''
            if not options.inprocstring:
-              pileupDataset = getPileupDataset(url, workflow)
               pileupScenario = getPileupScenario(url, workflow)
               if campaign == 'Summer12_DR53X_RD':
                  pileupScenario = 'PU_RD1'
-              if pileupScenario == 'Unknown' and 'MinBias' in pileupDataset:
+              if pileupScenario == 'Unknown' and 'MinBias' in pileupDataset and 'LowPU2010DR42' not in workflow:
                  print 'ERROR: unable to determine pileup scenario'
                  sys.exit(0)
               elif 'Fall11_R2' in workflow or 'Fall11_R4' in workflow or 'Fall11R2' in workflow or 'Fall11R4' in workflow:
-                 inDataSet = getInputDataSet(url, workflow)
-                 matchObj = re.match(r".*Fall11-(.*)_START.*", inDataSet)
+                 matchObj = re.match(r".*Fall11-(.*)_START.*", inputDataset)
                  if matchObj:
                     pileupScenario = matchObj.group(1)
                  else:
@@ -447,10 +469,11 @@ def main():
               era = 'Summer11'
               lfn = '/store/mc'
 
-           if 'LowPU2010_DR42' in workflow:
+           if 'LowPU2010_DR42' in workflow or 'LowPU2010DR42' in workflow:
               era = 'Summer12'
               lfn = '/store/mc'
               specialName = 'LowPU2010_DR42_'
+              pileupScenario = 'PU_S0'
 
            if 'UpgradeL1TDR_DR6X' in workflow:
               era = 'Summer12'
@@ -459,6 +482,12 @@ def main():
            if 'HiWinter13' in inputDataset:
               era = 'HiWinter13'
               lfn = '/store/himc'
+     
+           if 'Spring14dr' in workflow:
+              era = 'Spring14dr'
+              lfn = '/store/mc'
+              if '_castor_' in workflow:
+                 specialName = 'castor_'
 
            if 'Winter13' in workflow and 'DR53X' in workflow:
               era = 'HiWinter13'
@@ -470,6 +499,9 @@ def main():
            if 'ppWinter13' in workflow and 'DR53X' in workflow:
               pileupScenario = 'pp' # not actually the pileup scenario of course
 
+           if 'Summer11LegDR' in campaign:
+              era = 'Summer11LegDR'
+              lfn = '/store/mc'
 
            if 'UpgradePhase1Age' in campaign:
               era = 'Summer13'
@@ -532,6 +564,10 @@ def main():
               lfn = '/store/himc'
               specialName = 'HiFall11_DR44X' + '_'
 
+           if campaign == 'HiFall13DR53X':
+              era = 'HiFall13DR53X'
+              lfn = '/store/himc'
+
            if campaign == 'UpgFall13d':
               era = campaign
               lfn = '/store/mc'
@@ -550,6 +586,18 @@ def main():
               else:
                  print 'ERROR: unexpected special name string in workflow name'
                  sys.exit(0)
+
+           # Handle NewG4Phys
+           if campaign == 'Summer12DR53X' and 'NewG4Phys' in workflow:
+              specialName = 'NewG4Phys_'
+
+           # Handle Ext30
+           if campaign == 'Summer12DR53X' and 'Ext30' in workflow:
+              specialName = 'Ext30_'
+
+           # Handle BS2011
+           if campaign == 'LowPU2010DR42' and 'BS2011' in workflow:
+              specialName = 'LowPU2010_DR42_BS2011_'
 
            # Construct processed dataset version
            if pileupScenario != '':
@@ -574,7 +622,7 @@ def main():
 
 	   #reset maxRSS to default, so it can't reuse the custom value from a previous workflow
 	   maxRSS = maxRSSdefault
-           if 'HiFall11' in workflow and 'IN2P3' in siteUse:
+           if ('HiFall11' in workflow or 'HiFall13DR53X' in workflow) and 'IN2P3' in siteUse:
               maxRSS = 4000000
 
            # Set max number of merge events
@@ -593,7 +641,7 @@ def main():
               print 'ERROR: lfn is not defined'
               sys.exit(0)
 
-           if siteUse not in sites and options.site != 'T2_US' and siteUse != ['T1_UK_RAL', 'T1_UK_RAL_Disk'] and siteUse != ['T2_CH_CERN_AI', 'T2_CH_CERN_HLT'] and siteUse != ['T1_IT_CNAF', 'T1_IT_CNAF_Disk']:
+           if siteUse not in sites and options.site != 'T2_US' and siteUse != ['T2_CH_CERN_AI', 'T2_CH_CERN_HLT', 'T2_CH_CERN']:
               print 'ERROR: invalid site'
               sys.exit(0)
 
