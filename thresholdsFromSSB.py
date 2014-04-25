@@ -7,6 +7,7 @@ Pull the inforamtion from SSB.
 
 import sys,urllib,urllib2,re,time,os,traceback
 import socket,httplib
+from datetime import datetime
 try:
     import json
     print "json imported"
@@ -90,12 +91,13 @@ def thresholdsByVOName(sites):
 def main():
     #Get info about other agents
     url = "cmsweb.cern.ch"
+    print "%s: getting agent info from WMStats"%datetime.now().strftime("%Y-%m-%dh%H:%M:%S")
     conn  =  httplib.HTTPSConnection(url, cert_file = '/data/certs/servicecert.pem', key_file = '/data/certs/servicekey.pem')
     conn.request("GET",'/couchdb/wmstats/_design/WMStats/_view/agentInfo?stale=update_after')
     response = conn.getresponse()
     data = response.read()
     conn.close()
-    
+    print "%s: Info retrieved"%datetime.now().strftime("%Y-%m-%dh%H:%M:%S")
     host = socket.gethostname()
     
     teamByHost = dict()
@@ -116,9 +118,11 @@ def main():
     #global url, tierpat
     try:
         #get text from URLs
+        print "%s: Getting available slots from SSB"%datetime.now().strftime("%Y-%m-%dh%H:%M:%S")
         sites = urllib2.urlopen(url_site_status).read()
         total_tun = urllib2.urlopen(url_total_run).read()
         total_merge = urllib2.urlopen(url_max_merge).read()
+        print "%s: Avaliable slots retrieved"%datetime.now().strftime("%Y-%m-%dh%H:%M:%S")
         #compile pattern
         patt = re.compile(tierpat)
         #parse from json format to dictionary, get only 'csvdata'
@@ -143,10 +147,10 @@ def main():
                 if sitestatus in ['down','on','drain']: 
                     try:
                         setSiteThresholds(slotsForMerge[sitename], slotsBySite[sitename], sitename, factor)
-                        print 'Setting thresholds for site %s: CPUBound = %s, IOBound = %s' % (sitename,slotsBySite[sitename],slotsForMerge[sitename])
+                        print '%s: Setting thresholds for site %s: CPUBound = %s, IOBound = %s' % (sitename,slotsBySite[sitename],slotsForMerge[sitename], datetime.now().strftime("%Y-%m-%dh%H:%M:%S"))
                         continue
                     except:
-                        print 'Error: Site %s does not have information about thresholds' % sitename
+                        print '%s: Error: Site %s does not have information about thresholds' % (sitename,datetime.now().strftime("%Y-%m-%dh%H:%M:%S"))
                         continue
                 elif sitestatus == 'skip':
                     print "Skipping site %s" % sitename
@@ -158,5 +162,6 @@ def main():
 
     except Exception, e:
         print( traceback.format_exc() )
+    print "%s: finished!"%datetime.now().strftime("%Y-%m-%dh%H:%M:%S")
 if __name__ == "__main__":
         main()
