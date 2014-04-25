@@ -8,6 +8,8 @@ This replaces previous script named 'thres.py'
 """
 
 import sys,urllib,urllib2,re,time,os, traceback
+from datetime import datetime
+
 try:
     import json
     print "json imported"
@@ -18,12 +20,11 @@ except ImportError:
 
 import optparse
 import httplib
-import datetime
 import shutil
 import subprocess
 
 wmapath = "/data/srv/wmagent/current"
-#TODO test if a shorter URL works (i.e. without empty fields)
+#test if a shorter URL works (i.e. without empty fields)
 url=('http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=158'
     '&time=24&dateFrom=&dateTo=&site=&sites=all&clouds=undefined&batch=1&'
     'lastdata=1')
@@ -68,6 +69,7 @@ def main():
     #global url, tierpat
     try:
         #get text from URL
+        print "%s: getting site status from SSB"%datetime.now().strftime("%Y-%m-%dh%H:%M:%S")
         rawtext = urllib2.urlopen(url).read()
         #compile pattern
         patt = re.compile(tierpat)
@@ -76,6 +78,7 @@ def main():
             fullmap = json.read(rawtext)
         except:
             fullmap = json.loads(rawtext)
+        print "%s: Site status retrieved"%datetime.now().strftime("%Y-%m-%dh%H:%M:%S")
         #get only sites info, from value on csvdata (a list)
         cvsdata = fullmap['csvdata']
         
@@ -89,19 +92,19 @@ def main():
             if patt.match(sitename):
                 #update according to site status
                 if sitestatus == 'down': #TODO validate down status?
-                    print "%s set to down" % sitename
+                    print "%s: %s set to down" % ( datetime.now().strftime("%Y-%m-%dh%H:%M:%S"), sitename )
                     setdown(sitename)
                     continue
                 elif sitestatus == 'on':
-                    print "%s set to normal" % sitename
+                    print "%s: %s set to normal" % ( datetime.now().strftime("%Y-%m-%dh%H:%M:%S"), sitename )
                     setnormal(sitename)
                     continue
                 elif sitestatus == 'drain':
-                    print "%s set to drain" % sitename
+                    print "%s: %s set to drain" % ( datetime.now().strftime("%Y-%m-%dh%H:%M:%S"), sitename )
                     setdrain(sitename)
                     continue
                 elif sitestatus == 'skip':
-                    print "%s skipped" % sitename
+                    print "%s: %s skipped" % ( datetime.now().strftime("%Y-%m-%dh%H:%M:%S"), sitename )
                     continue
                 else:
                     print "unkwown command '%s' for site %s" % (sitestatus,sitename)
@@ -110,5 +113,7 @@ def main():
 
     except Exception, e:
         print( traceback.format_exc() )
+    print "%s: finished!"%datetime.now().strftime("%Y-%m-%dh%H:%M:%S")
+
 if __name__ == "__main__":
         main()
