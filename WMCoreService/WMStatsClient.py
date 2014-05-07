@@ -3,6 +3,8 @@ ReqMgr request handling.
 
 """
 from WMCoreService.CouchClient import CouchServer
+from WMCoreService.JsonWrapper import JSONEncoder
+import time
 
 def splitCouchServiceURL(serviceURL):
     """
@@ -41,6 +43,7 @@ class WMStatsClient(object):
     
     def getRequestByNames(self, requestNames, jobInfoFlag = False):
         data = self._getRequestByNames(requestNames, True)
+
         requestInfo = self._formatCouchData(data)
         if jobInfoFlag:
             # get request and agent info
@@ -81,6 +84,8 @@ class WMStatsClient(object):
     def _formatCouchData(self, data, key = "id"):
         result = {}
         for row in data['rows']:
+            if row.has_key('error'):
+                continue
             result[row[key]] = row["doc"]
         return result
     
@@ -133,7 +138,7 @@ class WMStatsClient(object):
         """
         for row in jobData["rows"]:
             jobInfo = requestData[row["doc"]["workflow"]]
-            jobInfo["AgentJobInfo"]  = {} 
+            jobInfo.setdefault("AgentJobInfo", {}) 
             jobInfo["AgentJobInfo"][row["doc"]["agent_url"]] = row["doc"]
     
             
@@ -182,13 +187,39 @@ class WMStatsClient(object):
         ids = [row['value']['id'] for row in result["rows"]]
         return ids
     
-    def _getAllDocsByIDs(self, ids):
+    def _getAllDocsByIDs(self, ids, include_docs = True):
         """
         keys is [id, ....]
         returns document
         """
         options = {}
-        options["include_docs"] = True
+        options["include_docs"] =  include_docs
         result = self.couchdb.allDocs(options, ids)
         
         return result
+    
+    # these should be in writer
+    def updateRequestStatus(self, request, status):
+        statusTime = {'status': status, 'update_time': int(time.time())}
+        return self.couchdb.updateDocument(request, self.couchapp, 'requestStatus',
+                    fields={'request_status': JSONEncoder().encode(statusTime)})
+        
+    def replaceRequestTransitionFromReqMgr(self, docs):
+        """
+        bulk update for request documents.
+        TODO: change to bulk update handler when it gets supported
+        """
+        
+        for doc in docs:
+            requestName = doc["RequestName"]
+            requestTransition = {}
+            requestTransition['request_status'] = []
+            for r in doc["RequestTransition"]:
+                newR = {}
+                newR['status'] = r['Status']
+                newR['update_time'] = r['UpdateTime']
+                requestTransition['request_status'].append(newR)
+
+            self.couchdb.updateDocument(requestName, 'WMStats',
+                        'generalFields',
+                        fields={'general_fields': JSONEncoder().encode(requestTransition)})
