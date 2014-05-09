@@ -23,6 +23,10 @@ def closeOutReRecoWorkflowsWeb(url, workflows, output):
             continue
         if 'TEST' in workflow:
             continue        
+        #first validate if effectively is completed
+        status = reqMgrClient.getWorkflowStatus(url, workflow)
+        if status != 'completed':
+            continue
         datasets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
         inputDataset = reqMgrClient.getInputDataSet(url, workflow)
         closeOutWorkflow = True
@@ -64,9 +68,14 @@ def closeOutRedigiWorkflowsWeb(url, workflows, output):
     """
     noSiteWorkflows = []
     for workflow in workflows:
+        #first validate if effectively is completed
+        status = reqMgrClient.getWorkflowStatus(url, workflow)
+        if status != 'completed':
+            continue
         closeOutWorkflow = True
         inputDataset = reqMgrClient.getInputDataSet(url, workflow)
         datasets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
+        
         for dataset in datasets:
             closeOutDataset = False
             percentage = percentageCompletion(url, workflow, dataset)
@@ -104,6 +113,10 @@ def closeOutMonterCarloRequestsWeb(url, workflows,output):
     """
     noSiteWorkflows = []
     for workflow in workflows:
+        #first validate if effectively is completed
+        status = reqMgrClient.getWorkflowStatus(url, workflow)
+        if status != 'completed':
+            continue
         datasets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
         closeOutWorkflow = True
         #skip montecarlos on a special queue
@@ -154,6 +167,10 @@ def closeOutStep0RequestsWeb(url, workflows, output):
     """
     noSiteWorkflows = []
     for workflow in workflows:
+        #first validate if effectively is completed
+        status = reqMgrClient.getWorkflowStatus(url, workflow)
+        if status != 'completed':
+            continue
         datasets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
         closeOutWorkflow = True
         #skip montecarlos on a special queue
@@ -231,7 +248,7 @@ def main():
     output.write('<tr><th colspan="7">ReDigi </th></tr>')
     noSiteWorkflows = closeOutRedigiWorkflowsWeb(url, workflowsCompleted['ReDigi'], output)
     workflowsCompleted['NoSite-ReDigi'] = noSiteWorkflows
-    
+
     output.write('<tr><th colspan="7">MonteCarlo </th></tr>')
     noSiteWorkflows = closeOutMonterCarloRequestsWeb(url, workflowsCompleted['MonteCarlo'], output)
     workflowsCompleted['NoSite-MonteCarlo'] = noSiteWorkflows
@@ -245,7 +262,6 @@ def main():
     workflowsCompleted['NoSite-LHEStepZero'] = noSiteWorkflows
     output.write('</table><br><br>')
     print "MC Workflows for which couldn't find Custodial Tier1 Site"
-
     output.write("<table border=1> <tr><th>MC Workflows for which couldn't find Custodial Tier1 Site</th></tr>")
     listWorkflows(workflowsCompleted['NoSite-ReReco'], output)
     listWorkflows(workflowsCompleted['NoSite-ReDigi'], output)
