@@ -75,7 +75,7 @@ def closeOutRedigiWorkflowsWeb(url, workflows, output):
         closeOutWorkflow = True
         inputDataset = reqMgrClient.getInputDataSet(url, workflow)
         datasets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
-        print workflow
+        
         for dataset in datasets:
             closeOutDataset = False
             percentage = percentageCompletion(url, workflow, dataset)
