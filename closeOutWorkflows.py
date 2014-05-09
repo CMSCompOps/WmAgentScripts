@@ -75,6 +75,10 @@ def closeOutReRecoWorkflows(url, workflows):
         if 'RelVal' in workflow:
             continue
         if 'TEST' in workflow:
+            continue
+        #first validate if effectively is completed
+        status = reqMgrClient.getWorkflowStatus(url, workflow)
+        if status != 'completed':
             continue        
         datasets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
         inputDataset = reqMgrClient.getInputDataSet(url, workflow)
@@ -112,6 +116,10 @@ def closeOutRedigiWorkflows(url, workflows):
     """
     noSiteWorkflows = []
     for workflow in workflows:
+        #first validate if effectively is completed
+        status = reqMgrClient.getWorkflowStatus(url, workflow)
+        if status != 'completed':
+            continue
         closeOutWorkflow = True
         inputDataset = reqMgrClient.getInputDataSet(url, workflow)
         datasets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
@@ -149,6 +157,10 @@ def closeOutMonterCarloRequests(url, workflows):
     """
     noSiteWorkflows = []
     for workflow in workflows:
+        #first validate if effectively is completed
+        status = reqMgrClient.getWorkflowStatus(url, workflow)
+        if status != 'completed':
+            continue
         datasets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
         closeOutWorkflow = True
         #skip montecarlos on a special queue
@@ -195,6 +207,10 @@ def closeOutStep0Requests(url, workflows):
     """
     noSiteWorkflows = []
     for workflow in workflows:
+        #first validate if effectively is completed
+        status = reqMgrClient.getWorkflowStatus(url, workflow)
+        if status != 'completed':
+            continue
         datasets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
         status = reqMgrClient.getWorkflowStatus(url, workflow)
         #if not completed skip

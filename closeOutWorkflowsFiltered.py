@@ -9,26 +9,54 @@ from closeOutWorkflows import *
     This can be usefil when workflows get stuck
 """
 
+def classifyAndFilterCompletedRequests(url, requests, filtered):
+    """
+    Sorts completed requests using the type.
+    returns a dic cointaining a list for each
+    type of workflows.
+    """
+
+     #filter only requests that are in the file
+    workflows={'ReDigi':[],'MonteCarloFromGEN':[],'MonteCarlo':[] , 'ReReco':[], 'LHEStepZero':[]}
+    for request in requests:
+        name=request['id']
+        #skip the ones that are not in the file
+        if name not in filtered:
+            continue
+        #if a wrong or weird name
+        if len(request['key'])<3:
+            print request
+            continue
+        status=request['key'][1]
+        requestType=request['key'][2]
+        #sort by type
+        if requestType=='MonteCarlo':
+            #MonteCarlo's which datasets end with /GEN
+            #are Step0
+            datasets = reqMgrClient.outputdatasetsWorkflow(url, name)
+            m = re.search('.*/GEN$', datasets[0])
+            if m:
+                workflows['LHEStepZero'].append(name)
+            else:
+                workflows[requestType].append(name)
+        elif requestType in ['MonteCarloFromGEN', 'LHEStepZero', 'ReDigi', 'ReReco']:
+            workflows[requestType].append(name)
+    return workflows
+
+
 def main():
     print "Getting requests from file"
     #get file from parameters
     wfsFile = open(sys.argv[1],'r')
-    wfsList = [wf.strip() for wf in wfsFile.readlines()]
+    wfsList = [wf.strip() for wf in wfsFile.readlines() if wf.strip()]
     url='cmsweb.cern.ch'
     print "Gathering Requests"
     requests=getOverviewRequestsWMStats(url)
     print "Classifying Requests"
-    workflowsCompleted=classifyCompletedRequests(url, requests)
-    #filter only requests that are in the file
-    workflows={'ReDigi':[],'MonteCarloFromGEN':[],'MonteCarlo':[] , 'ReReco':[], 'LHEStepZero':[]}
-    for key in workflowsCompleted:
-        for wf in workflowsCompleted[key]:
-            if wf in wfsList:
-                workflows[key].append(wf)
-    workflowsCompleted = workflows
+    workflowsCompleted=classifyAndFilterCompletedRequests(url, requests, wfsList)
     #print header    
     print '-'*220
-    print '| Request                                                                          | OutputDataSet                                                                                        |%Compl|Subscr|Tran|Dupl|Blocks|ClosOu|'
+    print '| Request'+(' '*74)+'| OutputDataSet'+(' '*86)+'|%Compl|Subscr|Tran|Dupl|ClosOu|'
     print '-'*220
     closeOutReRecoWorkflows(url, workflowsCompleted['ReReco'])    
     closeOutRedigiWorkflows(url, workflowsCompleted['ReDigi'])
