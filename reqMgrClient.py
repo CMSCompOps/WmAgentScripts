@@ -171,7 +171,13 @@ def getInputEvents(url, workflow):
                 request[listitem]=[]
             #if there is not a list but some elements it creates a list
             if type(request[listitem]) is not list:
-                request[listitem]= eval(request[listitem])
+                # if doesn't contain "[" is a single block
+                if '[' not in request[listitem]:
+                    #wrap in a list
+                    request[listitem] = [request[listitem]]
+                #else parse a list
+                else:
+                    request[listitem]= eval(request[listitem])
         #if not, an empty list will do        
         else:
             request[listitem]=[]
