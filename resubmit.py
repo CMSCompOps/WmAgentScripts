@@ -6,6 +6,7 @@ This script clones a given workflow
 This script depends on WMCore code, so WMAgent environment
 and libraries need to be loaded before running it.
 """
+import pprint
 import os
 import sys
 import urllib
@@ -39,6 +40,8 @@ def modifySchema(helper, user, group):
     result["ProcessingString"] = helper.getProcessingString()
     result["ProcessingVersion"] = helper.getProcessingVersion() + 1
     result["AcquisitionEra"] = helper.getAcquisitionEra()
+
+    pprint.pprint(helper.data.request.schema.dictionary_())
     for (key, value) in helper.data.request.schema.dictionary_().items():
         #previous versions of tags
         if key == 'ProcConfigCacheID':
@@ -56,33 +59,44 @@ def modifySchema(helper, user, group):
         #replace old DBS2 URL
         elif value == "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet":
             result[key] = 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
+        #copy the right LFN base
+        elif key == 'MergedLFNBase':
+            result['MergedLFNBase'] = helper.getMergedLFNBase()
         #skip empty entries
         elif not value:
             continue
         elif value != None:
             result[key] = value
+        #check MonteCarlo
+    if result['RequestType']=='MonteCarlo':
+        #check assigning parameters
+         if 'EventsPerJob' not in result:
+            #seek for events per job on helper
+            splitting = helper.listJobSplittingParametersByTask()
+            eventsPerJob = 120000
+            for k, v in splitting.items():
+                if k.endswith('/Production'):
+                    if 'events_per_job' in v:
+                        eventsPerJob = v['events_per_job']
+            result['EventsPerJob'] = eventsPerJob
+        #TODO events per lumi?
+    #check MonteCarloFromGen
+    elif result['RequestType']=='MonteCarloFromGEN':
+        if 'LumisPerJob' not in result:
+            #seek for lumis per job on helper
+            splitting = helper.listJobSplittingParametersByTask()
+            lumisPerJob = 300
+            for k, v in splitting.items():
+                if k.endswith('/Production'):
+                    if 'lumis_per_job' in v:
+                        lumisPerJob = v['lumis_per_job']
+            result['LumisPerJob'] = lumisPerJob
+        #TODO algorithm = lumi based?
     
-    if 'LumisPerJob' not in result and result['RequestType']=='MonteCarlo':
-        #seek for lumis per job on helper
-        splitting = helper.listJobSplittingParametersByTask()
-        lumisPerJob = 300
-        for k, v in splitting.items():
-            if k.endswith('/Production'):
-                if 'lumis_per_job' in v:
-                    lumisPerJob = v['lumis_per_job']
-        result['LumisPerJob'] = lumisPerJob
-    #TODO do this always?
-    if 'EventsPerJob' not in result and result['RequestType']=='MonteCarlo':
-        #seek for events per job on helper
-        splitting = helper.listJobSplittingParametersByTask()
-        eventsPerJob = 120000
-        for k, v in splitting.items():
-            if k.endswith('/Production'):
-                if 'events_per_job' in v:
-                    eventsPerJob = v['events_per_job']
-        result['EventsPerJob'] = eventsPerJob
+    #TODO why this doesnt replicate?    
     if 'MergedLFNBase' not in result:
         result['MergedLFNBase'] = helper.getMergedLFNBase()
+    pprint.pprint(result)
     return result
 
 
