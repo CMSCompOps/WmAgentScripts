@@ -41,7 +41,7 @@ def modifySchema(helper, user, group):
     result["ProcessingVersion"] = helper.getProcessingVersion() + 1
     result["AcquisitionEra"] = helper.getAcquisitionEra()
 
-    pprint.pprint(helper.data.request.schema.dictionary_())
+    #pprint.pprint(helper.data.request.schema.dictionary_())
     for (key, value) in helper.data.request.schema.dictionary_().items():
         #previous versions of tags
         if key == 'ProcConfigCacheID':
@@ -96,7 +96,7 @@ def modifySchema(helper, user, group):
     #TODO why this doesnt replicate?    
     if 'MergedLFNBase' not in result:
         result['MergedLFNBase'] = helper.getMergedLFNBase()
-    pprint.pprint(result)
+    #pprint.pprint(result)
     return result
 
 

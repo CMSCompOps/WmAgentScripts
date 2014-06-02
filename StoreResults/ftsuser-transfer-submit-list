@@ -1,0 +1,197 @@
+#!/bin/bash
+#
+# ftsuser tools for file transfers on cmsfts3-users:
+#     ftsuser-transfer-submit-list
+# Submits all files in a given list to FTS to transfer from EOS or dCache 
+
+# This source script will no longer be needed when we move to SL6.
+# The tools will be provided by the osg client instead.
+source /uscmst1/prod/grid/gLite_SL5.sh
+
+if [ "a$1" == "a-h" ] || [ "a$1" == "a--help" ] ; then
+  echo
+  echo "Submits all files listed in a given file to FTS to transfer from EOS or dCache."
+  echo "  If no destination is provided, the destination will match the source."
+  echo
+  echo "Usage: $0 FROMDCACHE|FROMEOS list-of-LFNs "
+  echo "  example usage: ftsuser-transfer-submit-list FROMDCACHE mylist"
+  echo "  example usage: ftsuser-transfer-submit-list FROMEOS mylist"
+  echo "    where mylist is a file containing either sourceLFNs or pairs of sourceLFN destinationLFN" 
+  echo "      example for mylist:  /resilient/catalind/A.txt /store/user/catalind/test52342.txt"
+  exit
+fi
+
+which voms-proxy-info >/dev/null 2>&1
+if [ $? -eq 1 ] ; then
+  echo "voms-proxy-info missing, exiting"
+  exit
+fi 
+
+voms-proxy-info -timeleft 2>&1 | grep valid >/dev/null
+if [ $? -eq 0 ] ; then
+  echo "You have no proxy - please retry after a valid proxy is generated"
+  exit 
+fi
+
+tml=`voms-proxy-info -timeleft`
+if [ $tml -lt 10 ]; then
+  echo "Your proxy has expired or is not valid"
+  exit
+fi
+
+tmpfile="/tmp/ftsjob-$$"
+ppath=`voms-proxy-info -path`
+echo "Using proxy at $ppath"
+voms-proxy-info -acexists cms || echo "Your proxy is not bound to CMS VO"
+
+DIRECT=$1
+if [ "a$DIRECT" != "aFROMEOS" ] && [ "a$DIRECT" != "aFROMDCACHE" ] ; then 
+  echo "Usage: $0 FROMEOS|FROMDCACHE listLFNs"
+  echo "Usage: $0 FROMDCACHE mylist"
+  echo "  where mylist looks like: /store/user/catalind/test.2 /store/user/catalind/test.22"
+  exit 1
+fi 
+
+
+# Set the source LFN
+LFNs="$2" ; 
+if [ ! -f $LFNs ] ; then 
+  echo "No such file or directory $LFNs, please provide a valid input list of LFNs"
+  exit 1
+fi 
+
+outside=`cat "$LFNs" | grep -v "^/store/user\|^/resilient" | wc -l `
+if [ $outside -gt 0 ] ; then 
+  echo "Some LFNs do not start with /store/user or /resilient, please provide a valid list of LFNs"
+  cat "$LFNs" | grep -v "^/store/user\|^/resilient"
+  exit 1
+fi 
+
+
+echo && echo
+filter="job_id\|user_dn\|job_state\|rbidden\|cred_id\|vo\|user_dn"
+USER=`/usr/bin/whoami`
+sources="" ; destinations="";
+
+all=`cat $LFNs | wc -l` ; step=0 ; inc=100 ;
+
+
+if [ "a$DIRECT" == "aFROMEOS" ] ; then
+
+
+  while [ $step -lt $all ] ; do 
+     cat >${tmpfile}_files << EOF
+    "files": [
+EOF
+    tinc=$((all-$step)); if [ $tinc -gt $inc ] ; then tinc=$inc ; fi 
+    echo -n  > ${tmpfile}_sources ; echo -n > ${tmpfile}_destinations ;
+    head -$(($step+$tinc)) "$LFNs" | tail -$tinc | while read a b ; do 
+      src="\"srm://cmseos.fnal.gov:8443/srm/v2/server?SFN=/eos/uscms$a\"" # >> ${tmpfile}_sources
+      if [ "a$b" == "a" ] ; then b=$a ; fi 
+      echo "$b" | grep "^/store/user" >/dev/null 2>&1
+      if [ $? -eq 0 ] ; then dpre="/11" ; fi
+      dst="\"srm://cmssrm.fnal.gov:8443/srm/managerv2?SFN=$dpre$b\"" # >> ${tmpfile}_destinations
+      cat >>${tmpfile}_files << EOF
+        {
+          "sources":  [ $src ],
+          "destinations":  [ $dst ],
+          "metadata": "User: $USER - job ($DIRECT): $a -> $b",
+          "checksum": "adler32:1234"
+        },
+EOF
+
+    done 
+
+  head -$(($(cat ${tmpfile}_files | wc -l) -1)) ${tmpfile}_files > ${tmpfile}_files1 ; /bin/mv ${tmpfile}_files1 ${tmpfile}_files
+  cat >>${tmpfile}_files << EOF
+        }
+      ], 
+EOF
+
+
+    cat >$tmpfile << EOF
+{
+  `cat  ${tmpfile}_files` 
+  "params": {
+    "verify_checksum": false,
+    "reuse": false,
+    "spacetoken": null,
+    "bring_online": null,
+    "copy_pin_lifetime": -1,
+    "job_metadata": null,
+    "source_spacetoken": null,
+    "overwrite": false,
+    "gridftp": null
+  }
+}
+EOF
+
+    curl --capath /etc/grid-security/certificates -E $ppath --cacert $ppath https://cmsfts3-users.fnal.gov:8446/jobs -d "`cat $tmpfile`" -H 'application/json' 2>/dev/null | grep $filter
+
+    step=$(($step+$inc))
+  done
+
+
+else
+
+
+  while [ $step -lt $all ] ; do
+    cat >${tmpfile}_files << EOF
+      "files": [
+EOF
+    tinc=$((all-$step)); if [ $tinc -gt $inc ] ; then tinc=$inc ; fi   
+    echo -n  > ${tmpfile}_sources ; echo -n > ${tmpfile}_destinations ;
+    head -$(($step+$tinc)) "$LFNs" | tail -$tinc | while read a b ; do
+      if [ "a$b" == "a" ] ; then b=$a ; fi
+      echo "$a" | grep "^/store/user" >/dev/null 2>&1
+      if [ $? -eq 0 ] ; then pre="/11" ; fi
+      src="\"srm://cmssrm.fnal.gov:8443/srm/managerv2?SFN=$pre$a\"" # >> ${tmpfile}_sources
+      dst="\"srm://cmssrmdisk.fnal.gov:8443/srm/managerv2?SFN=/dcache/uscmsdisk/$b\"" # >> ${tmpfile}_destinations
+      cat >>${tmpfile}_files << EOF
+        {
+          "sources": [ $src ],
+          "destinations": [ $dst ],
+          "metadata": "User: $USER - job ($DIRECT): $a -> $b",
+          "checksum": "adler32:1234"
+        },
+EOF
+    done
+
+  head -$(($(cat ${tmpfile}_files | wc -l) -1)) ${tmpfile}_files > ${tmpfile}_files1 ; /bin/mv ${tmpfile}_files1 ${tmpfile}_files
+  cat >>${tmpfile}_files << EOF
+        }
+      ], 
+EOF
+
+
+    cat >$tmpfile << EOF
+{
+  `cat ${tmpfile}_files` 
+  "params": {
+    "verify_checksum": false,
+    "reuse": false,
+    "spacetoken": null,
+    "bring_online": 14400,
+    "copy_pin_lifetime": 14400,
+    "job_metadata": null,
+    "source_spacetoken": null,
+    "overwrite": false,
+    "gridftp": null
+  }
+}
+EOF
+
+    curl --capath /etc/grid-security/certificates -E $ppath --cacert $ppath https://cmsfts3-users.fnal.gov:8446/jobs -d "`cat $tmpfile`" -H 'application/json' 2>/dev/null | grep $filter
+    step=$(($step+$inc))
+  done
+
+
+fi 
+
+
+rm -f $tmpfile ${tmpfile}_destinations ${tmpfile}_sources
+
+echo && echo
+
+echo "Ongoing transfers can be monitored through the web interface:"
+echo "    https://cmsfts3-users.fnal.gov:8449/fts3/ftsmon/"
