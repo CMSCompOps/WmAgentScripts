@@ -245,12 +245,12 @@ def main():
                 '<th>Subscr</th><th>Tran</th><th>Dupl</th><th>ClosOu</th></tr>')
     
     output.write('<tr><th colspan="7">ReReco </th></tr>')
-    #noSiteWorkflows = closeOutReRecoWorkflowsWeb(url, workflowsCompleted['ReReco'], output)
-    #workflowsCompleted['NoSite-ReReco'] = noSiteWorkflows
+    noSiteWorkflows = closeOutReRecoWorkflowsWeb(url, workflowsCompleted['ReReco'], output)
+    workflowsCompleted['NoSite-ReReco'] = noSiteWorkflows
     
     output.write('<tr><th colspan="7">ReDigi </th></tr>')
-    #noSiteWorkflows = closeOutRedigiWorkflowsWeb(url, workflowsCompleted['ReDigi'], output)
-    #workflowsCompleted['NoSite-ReDigi'] = noSiteWorkflows
+    noSiteWorkflows = closeOutRedigiWorkflowsWeb(url, workflowsCompleted['ReDigi'], output)
+    workflowsCompleted['NoSite-ReDigi'] = noSiteWorkflows
 
     output.write('<tr><th colspan="7">MonteCarlo </th></tr>')
     noSiteWorkflows = closeOutMonterCarloRequestsWeb(url, workflowsCompleted['MonteCarlo'], output)
@@ -266,8 +266,8 @@ def main():
     output.write('</table><br><br>')
     print "MC Workflows for which couldn't find Custodial Tier1 Site"
     output.write("<table border=1> <tr><th>MC Workflows for which couldn't find Custodial Tier1 Site</th></tr>")
-    #listWorkflows(workflowsCompleted['NoSite-ReReco'], output)
-    #listWorkflows(workflowsCompleted['NoSite-ReDigi'], output)
+    listWorkflows(workflowsCompleted['NoSite-ReReco'], output)
+    listWorkflows(workflowsCompleted['NoSite-ReDigi'], output)
     listWorkflows(workflowsCompleted['NoSite-MonteCarlo'], output)
     listWorkflows(workflowsCompleted['NoSite-MonteCarloFromGEN'], output)
     listWorkflows(workflowsCompleted['NoSite-LHEStepZero'], output)
