@@ -280,7 +280,7 @@ def main():
     #copy temporal to definitive file, avoid unavailability when running
     shutil.copy(tempfile, outputfile)  
     sys.exit(0);
-re
+
 if __name__ == "__main__":
 	main()
 
