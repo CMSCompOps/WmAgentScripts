@@ -144,7 +144,6 @@ def closeOutMonterCarloRequestsWeb(url, workflows,output):
                         transPerc = int(transPerc*100)
                     else:
                         #add to the missing-site workflows
-                        print "here!!!!", phedexReqs
                         noSiteWorkflows.append(workflow)
             #if at least one dataset is not ready wf cannot be closed out
             closeOutWorkflow = closeOutWorkflow and closeOutDataset
@@ -198,7 +197,6 @@ def closeOutStep0RequestsWeb(url, workflows, output):
                         #transPerc = int(transPerc*100)
                     else:
                         #add to the missing-site workflows
-                        print "here!"
                         noSiteWorkflows.append(workflow)
             #if at least one dataset is not ready wf cannot be closed out
             closeOutWorkflow = closeOutWorkflow and closeOutDataset
