@@ -67,7 +67,7 @@ def classifyCompletedRequests(url, requests):
     return workflows
 
 def closeOutReRecoWorkflows(url, workflows):
-   noSiteWorkflows = []
+    noSiteWorkflows = []
     for workflow in workflows:
         if 'RelVal' in workflow:
             continue
