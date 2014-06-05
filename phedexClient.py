@@ -50,7 +50,6 @@ def getSubscriptionSites(datasetName):
             sites.append(subscription['node'])
         return sites
 
-
 def getBlockReplicaSites(datasetName):
     """
     Return the list of sites wich have any replica
@@ -204,6 +203,35 @@ def testCustodialSubscriptionRequested(url, dataset, site):
             if requestSubscription['custodial']=='y':
                 return True
     return False
+
+def getCustodialSubscriptionRequestSite(datasetName):
+    """
+    Returns the site (or sites) in which the dataset has
+    a custodial subscription request, no matter if it was approved
+    or rejected.
+    Returns false if no custodial subscription request has been made for
+    the dataset
+    """
+    url = 'cmsweb.cern.ch'
+    result = phedexGet(url, '/phedex/datasvc/json/prod/requestlist?dataset='+datasetName+'&type=xfer')
+    requests=result['phedex']
+    #gets dataset subscription requests
+    if 'request' not in requests.keys():
+        return False
+    sites = []
+    #if there is a request
+    for request in result['phedex']['request']:
+        #if there are pending or aprroved request, watch the satus of them
+        if request['approval']=='pending' or request['approval']=='approved':
+            requestId = request['id']
+            result = phedexGet(url, '/phedex/datasvc/json/prod/transferrequests?request='+str(requestId))
+            #if not empty
+            if result['phedex']['request']:
+                requestSubscription = result['phedex']['request'][0]
+                #see if its custodial
+                if requestSubscription['custodial']=='y':
+                    sites.append(requestSubscription['destinations']['node'][0]['name'])
+    return sites if sites else False
 
 def testOutputDataset(datasetName):
     """
