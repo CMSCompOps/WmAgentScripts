@@ -41,7 +41,7 @@ def classifyCompletedRequests(url, requests):
     returns a dic cointaining a list for each
     type of workflows.
     """
-    workflows={'ReDigi':[],'MonteCarloFromGEN':[],'MonteCarlo':[] , 'ReReco':[], 'LHEStepZero':[]}
+    workflows={'ReDigi':[],'MonteCarloFromGEN':[],'MonteCarlo':[] , 'ReReco':[], 'LHEStepZero':[], 'StoreResults':[]}
     for request in requests:
         name=request['id']
         #if a wrong or weird name
@@ -62,7 +62,7 @@ def classifyCompletedRequests(url, requests):
                     workflows['LHEStepZero'].append(name)
                 else:
                     workflows[requestType].append(name)
-            elif requestType in ['MonteCarloFromGEN', 'LHEStepZero', 'ReDigi', 'ReReco']:
+            elif requestType in ['MonteCarloFromGEN', 'LHEStepZero', 'ReDigi', 'ReReco', 'StoreResults']:
                 workflows[requestType].append(name)
     return workflows
 
@@ -245,6 +245,41 @@ def closeOutStep0Requests(url, workflows):
     print '-'*180
     return noSiteWorkflows
 
+def closeOutStoreResultsWorkflows(url, workflows):
+    """
+    Closeout StoreResults workflows
+    """
+    noSiteWorkflows = []
+    for workflow in workflows:       
+        datasets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
+        #inputDataset = reqMgrClient.getInputDataSet(url, workflow)
+        closeOutWorkflow = True
+        #check if dataset is ready
+        for dataset in datasets:
+            duplicate = None # We dont care about this
+            percentage = percentageCompletion(url, workflow, dataset)
+            subscriptionSites = phedexClient.getSubscriptionSites(dataset)
+
+            #dataset can be closed out only with 100% of events
+            if percentage == 1 and subscriptionSites:
+                closeOutDataset = True
+            else:
+                closeOutDataset = False
+            
+            #validate when percentage is ok but has not phedex subscription
+            if percentage == 1 and not subscriptionSites:
+                noSiteWorkflows.append(workflow)
+
+            #if at least one dataset is not ready wf cannot be closed out
+            closeOutWorkflow = closeOutWorkflow and closeOutDataset
+            print '| %80s | %100s | %4s | %5s | %3s | %15s | %5s | ' % (workflow, dataset, str(int(percentage*100)),
+                                                                        duplicate, None, ', '.join(subscriptionSites), closeOutDataset)
+
+        #workflow can only be closed out if all datasets are ready
+        if closeOutWorkflow:
+            reqMgrClient.closeOutWorkflowCascade(url, workflow)
+    print '-'*180
+    return noSiteWorkflows
 
 def checkCorrectLumisEventGEN(dataset):
     """
@@ -288,8 +323,8 @@ def main():
     print '-'*220
     print '| Request'+(' '*74)+'| OutputDataSet'+(' '*86)+'|%Compl|Dupl|Tran|Subscr|ClosOu|'
     print '-'*220
-    #noSiteWorkflows = closeOutReRecoWorkflows(url, workflowsCompleted['ReReco'])
-    #workflowsCompleted['NoSite-ReReco'] = noSiteWorkflows
+    noSiteWorkflows = closeOutReRecoWorkflows(url, workflowsCompleted['ReReco'])
+    workflowsCompleted['NoSite-ReReco'] = noSiteWorkflows
 
     noSiteWorkflows = closeOutRedigiWorkflows(url, workflowsCompleted['ReDigi'])
     workflowsCompleted['NoSite-ReDigi'] = noSiteWorkflows
@@ -302,15 +337,21 @@ def main():
     
     noSiteWorkflows = closeOutStep0Requests(url, workflowsCompleted['LHEStepZero'])
     workflowsCompleted['NoSite-LHEStepZero'] = noSiteWorkflows
-
+    
+    noSiteWorkflows = closeOutStoreResultsWorkflows(url, workflowsCompleted['StoreResults'])
+    workflowsCompleted['NoSite-StoreResults'] = noSiteWorkflows
+    
     print "MC Workflows for which couldn't find Custodial Tier1 Site"
     
-    output.write("<table border=1> <tr><th>MC Workflows for which couldn't find Custodial Tier1 Site</th></tr>")
     listWorkflows(workflowsCompleted['NoSite-ReReco'])
     listWorkflows(workflowsCompleted['NoSite-ReDigi'])
     listWorkflows(workflowsCompleted['NoSite-MonteCarlo'])
     listWorkflows(workflowsCompleted['NoSite-MonteCarloFromGEN'])
     listWorkflows(workflowsCompleted['NoSite-LHEStepZero'])
+    
+    print "StoreResults Workflows for which couldn't find PhEDEx Subscription"
+    listWorkflows(workflowsCompleted['NoSite-StoreResults'])
+    
     sys.exit(0);
 
 if __name__ == "__main__":
