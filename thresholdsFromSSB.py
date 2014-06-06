@@ -147,10 +147,10 @@ def main():
                 if sitestatus in ['down','on','drain']: 
                     try:
                         setSiteThresholds(slotsForMerge[sitename], slotsBySite[sitename], sitename, factor)
-                        print '%s: Setting thresholds for site %s: CPUBound = %s, IOBound = %s' % (sitename,slotsBySite[sitename],slotsForMerge[sitename], datetime.now().strftime("%Y-%m-%dh%H:%M:%S"))
+                        print '%s: Setting thresholds for site %s: CPUBound = %s, IOBound = %s' % (datetime.now().strftime("%Y-%m-%dh%H:%M:%S"), sitename,slotsBySite[sitename],slotsForMerge[sitename])
                         continue
                     except:
-                        print '%s: Error: Site %s does not have information about thresholds' % (sitename,datetime.now().strftime("%Y-%m-%dh%H:%M:%S"))
+                        print '%s: Error: Site %s does not have information about thresholds' % (datetime.now().strftime("%Y-%m-%dh%H:%M:%S"), sitename)
                         continue
                 elif sitestatus == 'skip':
                     print "Skipping site %s" % sitename
