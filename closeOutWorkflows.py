@@ -288,8 +288,8 @@ def main():
     print '-'*220
     print '| Request'+(' '*74)+'| OutputDataSet'+(' '*86)+'|%Compl|Dupl|Tran|Subscr|ClosOu|'
     print '-'*220
-    #noSiteWorkflows = closeOutReRecoWorkflows(url, workflowsCompleted['ReReco'])
-    #workflowsCompleted['NoSite-ReReco'] = noSiteWorkflows
+    noSiteWorkflows = closeOutReRecoWorkflows(url, workflowsCompleted['ReReco'])
+    workflowsCompleted['NoSite-ReReco'] = noSiteWorkflows
 
     noSiteWorkflows = closeOutRedigiWorkflows(url, workflowsCompleted['ReDigi'])
     workflowsCompleted['NoSite-ReDigi'] = noSiteWorkflows
