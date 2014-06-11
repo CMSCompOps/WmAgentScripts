@@ -28,8 +28,8 @@ url_max_merge = 'http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?colum
 url_site_status = 'http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=158&batch=1&lastdata=1'
 
 # pending slots variables
-pending_site = 0.3 # 30%
-pending_task = 0.2 # 20%
+pending_site = 0.5 # 50%
+pending_task = 0.3 # 30%
 
 #regex to identify Tiers
 #sites are only the ones that with T0, T1, T2 or T3
