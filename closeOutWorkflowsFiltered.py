@@ -56,7 +56,7 @@ def main():
     workflowsCompleted=classifyAndFilterCompletedRequests(url, requests, wfsList)
     #print header    
     print '-'*220
-    print '| Request'+(' '*74)+'| OutputDataSet'+(' '*86)+'|%Compl|Subscr|Tran|Dupl|ClosOu|'
+    print '| Request'+(' '*74)+'| OutputDataSet'+(' '*86)+'|%Compl|Dupl|Tran|Subscr|ClosOu|'
     print '-'*220
     closeOutReRecoWorkflows(url, workflowsCompleted['ReReco'])    
     closeOutRedigiWorkflows(url, workflowsCompleted['ReDigi'])
