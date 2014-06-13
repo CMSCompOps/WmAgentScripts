@@ -284,7 +284,7 @@ def createXML(datasets):
     result.setAttribute('version', '2')
     # Create the <dbs> base element
     dbs = doc.createElement("dbs")
-    dbs.setAttribute("name", "https://cmsdbsprod.cern.ch:8443/cms_dbs_prod_global_writer/servlet/DBSServlet")
+    dbs.setAttribute("name", "https://cmsweb.cern.ch/dbs/prod/global/DBSReader")
     result.appendChild(dbs)    
     #Create each of the <dataset> element            
     for datasetname in datasets:
