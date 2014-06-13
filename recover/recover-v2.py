@@ -9,6 +9,7 @@ from WMCore.Services.PhEDEx.PhEDEx import PhEDEx
 from WMCore.Services.RequestManager.RequestManager import RequestManager
 from WMCore.Services.SiteDB.SiteDB import SiteDBJSON
 from WMCore.WMSpec.WMWorkload import WMWorkloadHelper
+from pprint import pprint
 
 import json
 import logging
@@ -219,14 +220,20 @@ def getFiles(datasetName, runBlacklist, runWhitelist, blockBlacklist,
 
     files = {}
     outputDatasetParts = datasetName.split("/")
-    datasets = dbsReader.matchProcessedDatasets(outputDatasetParts[1],
-                                                outputDatasetParts[3],
-                                                outputDatasetParts[2])
+    print "dataset",datasetName,"parts",outputDatasetParts
+    
+    #TODO debug why this check?
+    #datasets = dbsReader.matchProcessedDatasets(outputDatasetParts[1],
+    #                                            outputDatasetParts[3],
+    #                                            outputDatasetParts[2])
 
-    if len(datasets) == 0:
+    #if len(datasets) == 0:
+    #    raise RuntimeError("Dataset %s doesn't exist in given DBS instance" % datasetName)
+    try:
+        blockNames = dbsReader.listFileBlocks(datasetName)
+    except:
         raise RuntimeError("Dataset %s doesn't exist in given DBS instance" % datasetName)
-
-    blockNames = dbsReader.listFileBlocks(datasetName)
+    ###
     for blockName in blockNames:
         if blockBlacklist and blockName in blockBlacklist:
             continue
@@ -250,7 +257,11 @@ def getFiles(datasetName, runBlacklist, runWhitelist, blockBlacklist,
             for fileParent in blockFile["ParentList"]:
                 parentLFNs.append(fileParent["LogicalFileName"])
             runInfo = {}
-            for lumiSection in blockFile["LumiList"]:
+            #retrieve file's detail
+            blockFileD = dbsReader.listFilesInBlock(blockFile['Block']['Name'], lumis=True)
+        
+            #Lumis not included in file
+            for lumiSection in blockFileD[0]["LumiList"]:
                 if runBlacklist and lumiSection["RunNumber"] in runBlacklist:
                     continue
                 if runWhitelist and lumiSection["RunNumber"] not in runWhitelist:
@@ -262,8 +273,8 @@ def getFiles(datasetName, runBlacklist, runWhitelist, blockBlacklist,
                 runInfo[lumiSection["RunNumber"]].append(lumiSection["LumiSectionNumber"])
             if len(runInfo.keys()) > 0:
                 files[blockFile["LogicalFileName"]] = {"runs": runInfo,
-                                                       "events": blockFile["NumberOfEvents"],
-                                                       "size": blockFile["FileSize"],
+                                                       "events": blockFileD[0]["NumberOfEvents"],
+                                                       "size": blockFileD[0]["FileSize"],
                                                        "locations": list(blockLocations),
                                                        "parents": parentLFNs}
     return files
@@ -281,14 +292,14 @@ def diffDatasets(inputDataset, outputDataset):
         for inputRun in inputDataset[inputLFN]["runs"]:
             if inputRun not in inputRunInfo:
                 inputRunInfo[inputRun] = set()
-            inputRunInfo[inputRun].update(inputDataset[inputLFN]["runs"][inputRun])
+            inputRunInfo[inputRun].update(inputDataset[inputLFN]["runs"][inputRun][0])
 
     outputRunInfo = {}
     for outputLFN in outputDataset:
         for outputRun in outputDataset[outputLFN]["runs"]:
             if outputRun not in outputRunInfo:
                 outputRunInfo[outputRun] = set()
-            outputRunInfo[outputRun].update(outputDataset[outputLFN]["runs"][outputRun])
+            outputRunInfo[outputRun].update(outputDataset[outputLFN]["runs"][outputRun][0])
 
     diffRunInfo = {}
     for inputRun in inputRunInfo:
@@ -475,7 +486,7 @@ def defineRequests(workload, requestInfo,
             fileRuns = {}
             for run in fileInfo['runs']:
                 if run in requestObject['lumis']:
-                    for lumi in fileInfo['runs'][run]:
+                    for lumi in fileInfo['runs'][run][0]:
                         if lumi in requestObject['lumis'][run]:
                             if run not in fileRuns:
                                 fileRuns[run] = []
@@ -564,7 +575,7 @@ def main():
     myOptParser.add_option("-g", "--group", dest = "group",
                            help = "Group for the Resubmission requests")
     myOptParser.add_option("-d", "--dbsUrl", dest = "dbsUrl",
-                           default = "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet",
+                           default = "https://cmsweb.cern.ch/dbs/prod/global/DBSReader",
                            help = "URL for the DBS instance to get the dataset info (both DBS2 and DBS3 work)")
     myOptParser.add_option("-a", "--acdcUrl", dest = "acdcUrl",
                            default = "https://cmsweb.cern.ch/couchdb",
