@@ -1,10 +1,28 @@
-#!/usr/bin/env python
+#!/usr/bin/env python -u
 import urllib2,urllib, httplib, sys, re, os
 import json
 import optparse
-#from das_client import get_data
+
+
+from das_client import get_data
 das_host='https://cmsweb.cern.ch'
 
+dbs3_url = 'https://cmsweb.cern.ch'
+
+def getDBSApi():
+    """
+    Instantiate the DBS3 Client API
+    """
+    if 'testbed' in dbs3_url:
+        dbs3_url_reader = dbs3_url + '/dbs/int/global/DBSReader'
+    else:
+        dbs3_url_reader = dbs3_url + '/dbs/prod/global/DBSReader'
+        
+    #this needs to come after /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh is sourced
+    from dbs.apis.dbsClient import DbsApi
+
+    dbsApi = DbsApi(url = dbs3_url_reader)
+    return dbsApi
 
 def checkDatasetExistenceDAS(dataset):
     query="dataset dataset="+dataset+" status=*"
@@ -21,7 +39,8 @@ def checkDatasetExistenceDAS(dataset):
 	return True
 
 
-def assignRequest(url,workflow,team,site,era,procstr,procver,activity,lfn):
+def assignRequest(url,workflow,team,site,era,procstr,procver,activity,lfn,maxrss):
+
     params = {"action": "Assign",
               "Team"+team: "checked",
               "SiteWhitelist": site,
@@ -31,8 +50,8 @@ def assignRequest(url,workflow,team,site,era,procstr,procver,activity,lfn):
               "MinMergeSize": 2147483648,
               "MaxMergeSize": 4294967296,
               "MaxMergeEvents": 100000,
-              #"maxRSS": 2411724,
-              "maxRSS": 3072000,
+              #"maxRSS": 4911724,
+              "maxRSS": maxrss,
               "maxVSize": 20294967,
               "AcquisitionEra": era,
               "ProcessingString": procstr,
@@ -99,9 +118,11 @@ def main():
     parser.add_option('-l', '--lfn', help='Merged LFN base',dest='lfn')
     parser.add_option('--correct_env',action="store_true",dest='correct_env')
     parser.add_option('--special', help='Use it for special workflows. You also have to change the code according to the type of WF',dest='special')
+    parser.add_option('--high_memory', action="store_true",help='Changes the memory at which wmagent kills the jobs',dest='high_memory')
     parser.add_option('--test',action="store_true", help='Nothing is injected, only print infomation about workflow and AcqEra',dest='test')
     parser.add_option('--pu',action="store_true", help='Use it to inject PileUp workflows only',dest='pu')
     parser.add_option('--lsf',action="store_true", help='Use it to assign work to the LSF agent at CERN - vocms174, relvallsf team',dest='lsf')
+    parser.add_option('--hi',action="store_true", help='Change the lfn to /store/hirelval/ ',dest='hi')
     (options,args) = parser.parse_args()
 
     command=""
@@ -109,7 +130,7 @@ def main():
         command=command+arg+" "
 
     if not options.correct_env:
-        os.system("source /afs/cern.ch/project/gd/LCG-share/current_3.2/etc/profile.d/grid-env.sh; python2.6 "+command + "--correct_env")
+        os.system("source /afs/cern.ch/project/gd/LCG-share/current_3.2/etc/profile.d/grid-env.sh; source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh; python2.6 "+command + "--correct_env")
         sys.exit(0)
 
     data = False
@@ -120,12 +141,15 @@ def main():
         print "Usage: python assignRelValWorkflow.py -w <requestName>"
         sys.exit(0);
     workflow=options.workflow
-    team='relval'
+    team='relval_cern'
     site='T1_US_FNAL'
     procversion=1
     #procversion='v1'
     activity='relval'
-    lfn='/store/relval'
+    if options.hi:
+        lfn='/store/hirelval/'
+    else:    
+        lfn='/store/relval'
     procstring = {}
     specialStr = ''
 
@@ -148,6 +172,19 @@ def main():
     # Setting the AcquisitionEra parameter - it will be always the same for all tasks inside the request
     acqera = schema['CMSSWVersion']
 
+    # Handling the parameters given in the command line
+    if options.team:
+        team=options.team
+    if options.site:
+        site=options.site
+    if options.procversion:
+        procversion=int(options.procversion)
+    if options.activity:
+        activity=options.activity
+    if options.lfn:
+        lfn=options.lfn
+
+
     # Setting the ProcessingString values per Task 
     for key, value in schema.items():
         if type(value) is dict and key.startswith("Task"):
@@ -155,7 +192,7 @@ def main():
                 if 'ProcessingString' in value:
                     procstring[value['TaskName']] = value['ProcessingString'].replace("-","_")
                 elif 'AcquisitionEra' in value and '-' in value['AcquisitionEra']:
-                    #procstring[value['TaskName']] = value['AcquisitionEra'].split('-')[-1]
+                    #procstring[value['TaskName']] = value['AcquisitionEra'].split'-')[-1]
                     procstring[value['TaskName']] = value['AcquisitionEra'].split(schema['CMSSWVersion']+'-')[-1]
                     procstring[value['TaskName']] = procstring[value['TaskName']].replace("-","_")
                     #procstring[value['TaskName']] = 'START61_V8'
@@ -164,6 +201,23 @@ def main():
             except KeyError:
                 print "This request has no ProcessingString defined into the Tasks, aborting..."
                 sys.exit(1)
+
+            if value['KeepOutput']:
+                if 'InputDataset' in value:
+                    dset="/" + value['InputDataset'].split('/')[1] + "/" + value['AcquisitionEra'] + "-" + value['ProcessingString'] + "-v" + str(procversion)+"/*"
+                elif 'PrimaryDataset' in value:
+                    dset="/" + value['PrimaryDataset'] + "/" + value['AcquisitionEra'] + "-" + value['ProcessingString'] + "-v" + str(procversion)+"/*"
+                else:
+                    #this is normal for Tasks after Task1 
+                    #print "not checking if the output dataset of this task exists"
+                    continue
+                
+                #print "checking if the output dataset of this task exists"
+                dbsApi = getDBSApi()
+                if len(dbsApi.listDatasets(dataset = dset)) != 0:
+                    print "len(dbsApi.listDatasets(dataset = "+dset+")) > 0, exiting"
+                    sys.exit(0)
+
 
     # Adding the "PU_" string into the ProcessingString value
     if options.pu:
@@ -181,25 +235,17 @@ def main():
         for key,value in procstring.items():
             procstring[key] = value+specialStr
 
-    # Handling the parameters given in the command line
-    if options.team:
-        team=options.team
-    if options.site:
-        site=options.site
-    if options.procversion:
-        procversion=int(options.procversion)
-    if options.activity:
-        activity=options.activity
-    if options.lfn:
-        lfn=options.lfn
-
     # Changing the team name and the site whitelist in case the --lsf parameter was given   
     if options.lsf:
         team='relvallsf'
         site='T2_CH_CERN'
 
-#    site=['T2_US_Nebraska','T2_US_Florida']
+    #maxrss=2972000
+    maxrss=3072000
+    if options.high_memory:
+        maxrss=4972000
 
+    
     # If the --test argument was provided, then just print the information gathered so far and abort the assignment
     if options.test:
         print workflow, '\tAcqEra:', acqera, '\tProcStr:', procstring, '\tProcVer:', procversion, '\tTeam:',team, '\tSite:', site
@@ -207,7 +253,7 @@ def main():
 
     # Really assigning the workflow now
     print workflow, '\tAcqEra:', acqera, '\tProcStr:', procstring, '\tProcVer:', procversion, '\tTeam:',team, '\tSite:', site
-    assignRequest(url,workflow,team,site,acqera,procstring,procversion,activity,lfn)
+    assignRequest(url,workflow,team,site,acqera,procstring,procversion,activity,lfn,maxrss)
     sys.exit(0);
 
 if __name__ == "__main__":
