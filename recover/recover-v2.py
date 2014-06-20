@@ -234,6 +234,10 @@ def getFiles(datasetName, runBlacklist, runWhitelist, blockBlacklist,
     except:
         raise RuntimeError("Dataset %s doesn't exist in given DBS instance" % datasetName)
     ###
+    #TODO debug
+    print "blockNames----"
+    pprint(blockNames)
+
     for blockName in blockNames:
         if blockBlacklist and blockName in blockBlacklist:
             continue
@@ -242,7 +246,11 @@ def getFiles(datasetName, runBlacklist, runWhitelist, blockBlacklist,
 
         replicaInfo = phedexReader.getReplicaInfoForBlocks(block = blockName,
                                                            subscribed = 'y')
-        block = dbsReader.listFilesInBlockWithParents(blockName)
+        blockFiles = dbsReader.listFilesInBlock(blockName, lumis=True)
+        #TODO debug
+        print "block----"
+        pprint(blockFiles)
+
         blockLocations = set()
         if len(replicaInfo["phedex"]["block"]) > 0:
             for replica in replicaInfo["phedex"]["block"][0]["replica"]:
@@ -252,16 +260,24 @@ def getFiles(datasetName, runBlacklist, runWhitelist, blockBlacklist,
                     cmsSites = [cmsSites]
                 for cmsName in cmsSites:
                     blockLocations.update(siteDB.cmsNametoSE(cmsName))
-        for blockFile in block:
+        for blockFile in blockFiles:
             parentLFNs = []
-            for fileParent in blockFile["ParentList"]:
-                parentLFNs.append(fileParent["LogicalFileName"])
+            #TODO change
+            blockFileParents = dbsReader.listFilesInBlockWithParents(blockName)
+            #TODO debug
+            print "blockFileParents"
+            pprint(blockFileParents)
+
+            if blockFileParents and "ParentList" in blockFileParents[0]:
+                for fileParent in blockFileParents[0]["ParentList"]:
+                    parentLFNs.append(fileParent["LogicalFileName"])
+                #TODO debug                    
+                print "parentLFNs"
+                pprint(parentLFNs)
             runInfo = {}
             #retrieve file's detail
-            blockFileD = dbsReader.listFilesInBlock(blockFile['Block']['Name'], lumis=True)
-        
             #Lumis not included in file
-            for lumiSection in blockFileD[0]["LumiList"]:
+            for lumiSection in blockFile["LumiList"]:
                 if runBlacklist and lumiSection["RunNumber"] in runBlacklist:
                     continue
                 if runWhitelist and lumiSection["RunNumber"] not in runWhitelist:
@@ -273,10 +289,14 @@ def getFiles(datasetName, runBlacklist, runWhitelist, blockBlacklist,
                 runInfo[lumiSection["RunNumber"]].append(lumiSection["LumiSectionNumber"])
             if len(runInfo.keys()) > 0:
                 files[blockFile["LogicalFileName"]] = {"runs": runInfo,
-                                                       "events": blockFileD[0]["NumberOfEvents"],
-                                                       "size": blockFileD[0]["FileSize"],
+                                                       "events": blockFile["NumberOfEvents"],
+                                                       "size": blockFile["FileSize"],
                                                        "locations": list(blockLocations),
                                                        "parents": parentLFNs}
+    #TODO debug
+    print "fils-----"
+    pprint(files)
+    
     return files
 
 def diffDatasets(inputDataset, outputDataset):
@@ -287,19 +307,41 @@ def diffDatasets(inputDataset, outputDataset):
     Return a dictionary containing the run/lumis that are in the input
     but not in the output.
     """
+    
     inputRunInfo = {}
+    print "inputDataset---------------"
+    pprint(inputDataset)
     for inputLFN in inputDataset:
+        #TODO debug
+        print "runs:",inputDataset[inputLFN]["runs"]
         for inputRun in inputDataset[inputLFN]["runs"]:
+            
             if inputRun not in inputRunInfo:
-                inputRunInfo[inputRun] = set()
-            inputRunInfo[inputRun].update(inputDataset[inputLFN]["runs"][inputRun][0])
+                inputRunInfo[inputRun] = set()  
+            #TODO change
+            if type(inputDataset[inputLFN]["runs"][inputRun][0]) is list:
+                inputRunInfo[inputRun].update(inputDataset[inputLFN]["runs"][inputRun][0])
+            elif type(inputDataset[inputLFN]["runs"][inputRun]) is list:
+                inputRunInfo[inputRun].update(inputDataset[inputLFN]["runs"][inputRun])
+            else:
+                raise RuntimeError("Don't know what this is:"+str( inputDataset[inputLFN]["runs"][inputRun]))
 
     outputRunInfo = {}
     for outputLFN in outputDataset:
         for outputRun in outputDataset[outputLFN]["runs"]:
             if outputRun not in outputRunInfo:
                 outputRunInfo[outputRun] = set()
-            outputRunInfo[outputRun].update(outputDataset[outputLFN]["runs"][outputRun][0])
+            #TODO change
+            if type(outputDataset[outputLFN]["runs"][outputRun][0]) is list:
+                outputRunInfo[outputRun].update(outputDataset[outputLFN]["runs"][outputRun][0])
+            elif type(outputDataset[outputLFN]["runs"][outputRun]) is list:
+                outputRunInfo[outputRun].update(outputDataset[outputLFN]["runs"][outputRun])
+            else:
+                raise RuntimeError("Don't know what this is:"+str( outputDataset[outputLFN]["runs"][outputRun]))
+    
+    #TODO debug
+    print "input----------"
+    pprint(inputRunInfo)
 
     diffRunInfo = {}
     for inputRun in inputRunInfo:
@@ -309,7 +351,7 @@ def diffDatasets(inputDataset, outputDataset):
             diffLumis = inputRunInfo[inputRun] - outputRunInfo[inputRun]
             if diffLumis:
                 diffRunInfo[inputRun] = diffLumis
-
+    
     return diffRunInfo
 
 def buildDifferenceMap(workload, datasetInformation):
@@ -324,7 +366,11 @@ def buildDifferenceMap(workload, datasetInformation):
     differences = {}
     inputDataset = workload.listInputDatasets()[0]
     for dataset in workload.listOutputDatasets():
+        #TODO
+        print "dataset diference", inputDataset, "vs", dataset
         difference = diffDatasets(datasetInformation[inputDataset], datasetInformation[dataset])
+        #TODO
+        print "difference",  difference
         if difference:
             differences[dataset] = difference
     return differences
@@ -387,6 +433,9 @@ def defineRequests(workload, requestInfo,
     # Define an object that will hold the potential requests
     requests = []
     logging.info("Now definining the required requests...")
+    #TODO
+    print "differenceInformation"
+    print differenceInformation
     # First generate requests for the datasets with children, that way we can
     # shoot the requests with skims in single requests
     for dataset in differenceInformation.keys():
@@ -471,6 +520,9 @@ def defineRequests(workload, requestInfo,
     logging.info("About to upload ACDC records to: %s/%s" % (acdcCouchUrl, acdcCouchDb))
     # With the request objects we need to build ACDC records and
     # request JSONs
+    #TODO
+    print "requests"    
+    pprint(requests)
     for idx, requestObject in enumerate(requests):
         collectionName = '%s_%s' % (workload.name(), str(uuid.uuid1()))
         filesetName = requestObject['task']
