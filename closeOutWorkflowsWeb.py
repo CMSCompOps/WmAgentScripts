@@ -4,6 +4,7 @@ import urllib2,urllib, httplib, sys, re, os
 import time, shutil
 from closeOutWorkflows import *
 from xml.dom.minidom import getDOMImplementation
+import dbs3Client, reqMgrClient, phedexClient
 
 """
     Runs Closeout script generating the output to a Web Page.
@@ -212,6 +213,46 @@ def closeOutStep0RequestsWeb(url, workflows, output):
     print '-'*180
     return noSiteWorkflows
 
+def closeOutStoreResultsWorkflowsWeb(url, workflows):
+    """
+    Closeout StoreResults workflows
+    """
+    noSiteWorkflows = []
+    for workflow in workflows:       
+        datasets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
+        #inputDataset = reqMgrClient.getInputDataSet(url, workflow)
+        closeOutWorkflow = True
+        #check if dataset is ready
+        for dataset in datasets:
+            duplicate = None # We dont care about this
+            percentage = percentageCompletion(url, workflow, dataset)
+            subscriptionSites = phedexClient.getSubscriptionSites(dataset)
+
+            #dataset can be closed out only with 100% of events
+            if percentage == 1 and subscriptionSites:
+                closeOutDataset = True
+            else:
+                closeOutDataset = False
+            
+            #validate when percentage is ok but has not phedex subscription
+            if percentage == 1 and not subscriptionSites:
+                noSiteWorkflows.append(workflow)
+
+            #if at least one dataset is not ready wf cannot be closed out
+            closeOutWorkflow = closeOutWorkflow and closeOutDataset
+            print '| %80s | %100s | %4s | %5s | %3s | %15s | %5s | ' % (workflow, dataset, str(int(percentage*100)),
+                                                                        duplicate, None, ', '.join(subscriptionSites), closeOutDataset)
+            
+            #web output
+            output.write('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>'%
+                 (workflow, dataset,str(int(percentage*100)), duplicate, None, ', '.join(subscriptionSites), closeOutDataset))
+
+        #workflow can only be closed out if all datasets are ready
+        if closeOutWorkflow:
+            reqMgrClient.closeOutWorkflowCascade(url, workflow)
+    print '-'*180
+    return noSiteWorkflows
+
 def writeHTMLHeader(output):
     output.write('<html>')
     output.write('<head>')
@@ -261,7 +302,13 @@ def main():
     output.write('<tr><th colspan="7">LHEStepZero </th></tr>')
     noSiteWorkflows = closeOutStep0RequestsWeb(url, workflowsCompleted['LHEStepZero'],output)
     workflowsCompleted['NoSite-LHEStepZero'] = noSiteWorkflows
+    
+    output.write('<tr><th colspan="7">StoreResults </th></tr>')
+    noSiteWorkflows = closeOutStoreResultsWorkflowsWeb(url, workflowsCompleted['StoreResults'],output)
+    workflowsCompleted['NoSite-StoreResults'] = noSiteWorkflows
+    
     output.write('</table><br><br>')
+    
     print "MC Workflows for which couldn't find Custodial Tier1 Site"
     output.write("<table border=1> <tr><th>MC Workflows for which couldn't find Custodial Tier1 Site</th></tr>")
     listWorkflows(workflowsCompleted['NoSite-ReReco'], output)
@@ -269,6 +316,11 @@ def main():
     listWorkflows(workflowsCompleted['NoSite-MonteCarlo'], output)
     listWorkflows(workflowsCompleted['NoSite-MonteCarloFromGEN'], output)
     listWorkflows(workflowsCompleted['NoSite-LHEStepZero'], output)
+    output.write('</table>')
+    
+    print "StoreResults Workflows for which couldn't find PhEDEx Subscription"
+    output.write("<table border=1> <tr><th>StoreResults Workflows for which couldn't find PhEDEx Subscription</th></tr>")
+    listWorkflows(workflowsCompleted['NoSite-StoreResults'], output)
     output.write('</table>')
   
     output.write('<p>Last update: '+time.strftime("%c")+' CERN time</p>')
