@@ -55,19 +55,31 @@ def main():
     print "Classifying Requests"
     workflowsCompleted=classifyAndFilterCompletedRequests(url, requests, wfsList)
     #print header    
+    #print header
     print '-'*220
-    print '| Request'+(' '*74)+'| OutputDataSet'+(' '*86)+'|%Compl|Dupl|Tran|Subscr|ClosOu|'
+    print '| Request'+(' '*74)+'| OutputDataSet'+(' '*86)+'|%Compl|Dupl|Correct|Subscr|Tran|ClosOu|'
     print '-'*220
-    closeOutReRecoWorkflows(url, workflowsCompleted['ReReco'])    
-    closeOutRedigiWorkflows(url, workflowsCompleted['ReDigi'])
-    closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarlo'])
-    closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarloFromGEN'])
-    closeOutStep0Requests(url, workflowsCompleted['LHEStepZero'])
+    noSiteWorkflows = closeOutReRecoWorkflows(url, workflowsCompleted['ReReco'])
+    workflowsCompleted['NoSite-ReReco'] = noSiteWorkflows
+
+    noSiteWorkflows = closeOutRedigiWorkflows(url, workflowsCompleted['ReDigi'])
+    workflowsCompleted['NoSite-ReDigi'] = noSiteWorkflows
+
+    noSiteWorkflows = closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarlo'])
+    workflowsCompleted['NoSite-MonteCarlo'] = noSiteWorkflows
+
+    noSiteWorkflows = closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarloFromGEN'])
+    workflowsCompleted['NoSite-MonteCarloFromGEN'] = noSiteWorkflows
+    
+    noSiteWorkflows = closeOutStep0Requests(url, workflowsCompleted['LHEStepZero'])
+    workflowsCompleted['NoSite-LHEStepZero'] = noSiteWorkflows
+
     print "MC Workflows for which couldn't find Custodial Tier1 Site"
-    if 'NoSite' in workflowsCompleted['MonteCarlo']:
-        print workflowsCompleted['MonteCarlo']['NoSite']
-    if 'NoSite' in workflowsCompleted['MonteCarloFromGEN']:
-        print workflowsCompleted['MonteCarloFromGEN']['NoSite']
+    #listWorkflows(workflowsCompleted['NoSite-ReReco'])
+    listWorkflows(workflowsCompleted['NoSite-ReDigi'])
+    listWorkflows(workflowsCompleted['NoSite-MonteCarlo'])
+    listWorkflows(workflowsCompleted['NoSite-MonteCarloFromGEN'])
+    listWorkflows(workflowsCompleted['NoSite-LHEStepZero'])
     sys.exit(0);
 
 if __name__ == "__main__":
