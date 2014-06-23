@@ -128,6 +128,30 @@ def closeOutStep0RequestsWeb(url, workflows, output):
     print '-'*180
     return noSiteWorkflows
 
+def closeOutStoreResultsWorkflows(url, workflows):
+    """
+    Closeout StoreResults workflows
+    """
+    noSiteWorkflows = []
+    for workflow in workflows:
+        #first validate if effectively is completed
+        status = reqMgrClient.getWorkflowStatus(url, workflow)
+        if status != 'completed':
+            continue
+        #closeout workflow, checking percentage equalst 100%
+        result = validateClosingWorkflow(url, workflow, closePercentage=1.0, 
+            checkEqual=True, checkDuplicates=False, checkCustodial=False)
+        printResult(result)
+        printResultWeb(result, output)
+        #if validation successful
+        if result['closeOutWorkflow']:
+            reqMgrClient.closeOutWorkflowCascade(url, workflow)
+        #populate the list without subs
+        for (ds,info) in result['datasets'].items():
+            if not info['phedexReqs']:
+                noSiteWorkflows.append((workflow,ds))
+    print '-'*180
+    return noSiteWorkflows
 
 def printResultWeb(result, output):
     """
@@ -194,6 +218,11 @@ def main():
     output.write('<tr><th colspan="8">LHEStepZero </th></tr>')
     noSiteWorkflows = closeOutStep0RequestsWeb(url, workflowsCompleted['LHEStepZero'],output)
     workflowsCompleted['NoSite-LHEStepZero'] = noSiteWorkflows
+    
+    output.write('<tr><th colspan="8">StoreResults </th></tr>')
+    noSiteWorkflows = closeOutStoreResultsWorkflows(url, workflowsCompleted['StoreResults'])
+    workflowsCompleted['NoSite-StoreResults'] = noSiteWorkflows
+
     output.write('</table><br><br>')
 
     print "MC Workflows for which couldn't find Custodial Tier1 Site"
@@ -203,6 +232,7 @@ def main():
     listWorkflowsWeb(workflowsCompleted['NoSite-MonteCarlo'], output)
     listWorkflowsWeb(workflowsCompleted['NoSite-MonteCarloFromGEN'], output)
     listWorkflowsWeb(workflowsCompleted['NoSite-LHEStepZero'], output)
+    listWorkflowsWeb(workflowsCompleted['NoSite-StoreResults'], output)
     output.write('</table>')
   
     output.write('<p>Last update: '+time.strftime("%c")+' CERN time</p>')

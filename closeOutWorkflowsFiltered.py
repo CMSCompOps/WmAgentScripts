@@ -74,12 +74,18 @@ def main():
     noSiteWorkflows = closeOutStep0Requests(url, workflowsCompleted['LHEStepZero'])
     workflowsCompleted['NoSite-LHEStepZero'] = noSiteWorkflows
 
+    noSiteWorkflows = closeOutStoreResultsWorkflows(url, workflowsCompleted['StoreResults'])
+    workflowsCompleted['NoSite-StoreResults'] = noSiteWorkflows
+
     print "MC Workflows for which couldn't find Custodial Tier1 Site"
-    #listWorkflows(workflowsCompleted['NoSite-ReReco'])
+    listWorkflows(workflowsCompleted['NoSite-ReReco'])
     listWorkflows(workflowsCompleted['NoSite-ReDigi'])
     listWorkflows(workflowsCompleted['NoSite-MonteCarlo'])
     listWorkflows(workflowsCompleted['NoSite-MonteCarloFromGEN'])
     listWorkflows(workflowsCompleted['NoSite-LHEStepZero'])
+
+    print "StoreResults Workflows for which couldn't find PhEDEx Subscription"
+    listWorkflows(workflowsCompleted['NoSite-StoreResults'])
     sys.exit(0);
 
 if __name__ == "__main__":

@@ -41,7 +41,7 @@ def classifyCompletedRequests(url, requests):
     returns a dic cointaining a list for each
     type of workflows.
     """
-    workflows={'ReDigi':[],'MonteCarloFromGEN':[],'MonteCarlo':[] , 'ReReco':[], 'LHEStepZero':[]}
+    workflows=workflows={'ReDigi':[],'MonteCarloFromGEN':[],'MonteCarlo':[] , 'ReReco':[], 'LHEStepZero':[], 'StoreResults':[]}
     for request in requests:
         name=request['id']
         #if a wrong or weird name
@@ -62,13 +62,13 @@ def classifyCompletedRequests(url, requests):
                     workflows['LHEStepZero'].append(name)
                 else:
                     workflows[requestType].append(name)
-            elif requestType in ['MonteCarloFromGEN', 'LHEStepZero', 'ReDigi', 'ReReco']:
+            elif requestType in ['MonteCarloFromGEN', 'LHEStepZero', 'ReDigi', 'ReReco', 'StoreResults']:
                 workflows[requestType].append(name)
     return workflows
 
 
-def validateClosingWorkflow(url, workflow, closePercentage = 0.95, 
-                            checkEqual=False, checkDuplicates=True, checkLumiNumb=False):
+def validateClosingWorkflow(url, workflow, closePercentage = 0.95, checkEqual=False, 
+            checkDuplicates=True, checkLumiNumb=False, checkCustodial=True):
     """
     Validates if a workflow can be closed out, using different parameters of validation.
     returns the response as a dict.
@@ -83,7 +83,11 @@ def validateClosingWorkflow(url, workflow, closePercentage = 0.95,
     for dataset in datasets:
         closeOutDataset = False            
         percentage = percentageCompletion(url, workflow, dataset)
-        phedexReqs = phedexClient.getCustodialSubscriptionRequestSite(dataset)
+        #retrieve either custodial or all subscriptions.
+        if checkCustodial:
+            phedexReqs = phedexClient.getCustodialSubscriptionRequestSite(dataset)
+        else:
+            phedexReqs = phedexClient.getSubscriptionSites(dataset)
         duplicate = None
         correctLumis = None
         transPerc = None
@@ -248,6 +252,30 @@ def closeOutStep0Requests(url, workflows):
     print '-'*180
     return noSiteWorkflows
 
+def closeOutStoreResultsWorkflows(url, workflows):
+    """
+    Closeout StoreResults workflows
+    """
+    noSiteWorkflows = []
+    for workflow in workflows:
+        #first validate if effectively is completed
+        status = reqMgrClient.getWorkflowStatus(url, workflow)
+        if status != 'completed':
+            continue
+        #closeout workflow, checking percentage equalst 100%
+        result = validateClosingWorkflow(url, workflow, closePercentage=1.0, 
+            checkEqual=True, checkDuplicates=False, checkCustodial=False)
+        printResult(result)
+        #if validation successful
+        if result['closeOutWorkflow']:
+            reqMgrClient.closeOutWorkflowCascade(url, workflow)
+        #populate the list without subs
+        for (ds,info) in result['datasets'].items():
+            if not info['phedexReqs']:
+                noSiteWorkflows.append((workflow,ds))
+    print '-'*180
+    return noSiteWorkflows
+
 
 def checkCorrectLumisEventGEN(dataset):
     """
@@ -306,12 +334,19 @@ def main():
     noSiteWorkflows = closeOutStep0Requests(url, workflowsCompleted['LHEStepZero'])
     workflowsCompleted['NoSite-LHEStepZero'] = noSiteWorkflows
 
+    noSiteWorkflows = closeOutStoreResultsWorkflows(url, workflowsCompleted['StoreResults'])
+    workflowsCompleted['NoSite-StoreResults'] = noSiteWorkflows
+
     print "MC Workflows for which couldn't find Custodial Tier1 Site"
-    #listWorkflows(workflowsCompleted['NoSite-ReReco'])
+    listWorkflows(workflowsCompleted['NoSite-ReReco'])
     listWorkflows(workflowsCompleted['NoSite-ReDigi'])
     listWorkflows(workflowsCompleted['NoSite-MonteCarlo'])
     listWorkflows(workflowsCompleted['NoSite-MonteCarloFromGEN'])
     listWorkflows(workflowsCompleted['NoSite-LHEStepZero'])
+
+    print "StoreResults Workflows for which couldn't find PhEDEx Subscription"
+    listWorkflows(workflowsCompleted['NoSite-StoreResults'])
+
     sys.exit(0);
 
 if __name__ == "__main__":
