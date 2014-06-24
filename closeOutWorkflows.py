@@ -96,7 +96,7 @@ def validateClosingWorkflow(url, workflow, closePercentage = 0.95, checkEqual=Fa
             or (not checkEqual and percentage >= closePercentage) ):
             #if we need to check duplicates            
             if checkDuplicates:
-                duplicate = dbs3Client.duplicateLumi(dataset)         
+                duplicate = dbs3Client.duplicateRunLumi(dataset)         
             #if we need to check for correct lumi number
             if checkLumiNumb:
                 correctLumis = checkCorrectLumisEventGEN(dataset)
