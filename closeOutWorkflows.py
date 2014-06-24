@@ -91,6 +91,7 @@ def validateClosingWorkflow(url, workflow, closePercentage = 0.95, checkEqual=Fa
         duplicate = None
         correctLumis = None
         transPerc = None
+        missingSubs = False
         #Check first percentage
         if ((checkEqual and percentage == closePercentage)
             or (not checkEqual and percentage >= closePercentage) ):
@@ -113,7 +114,7 @@ def validateClosingWorkflow(url, workflow, closePercentage = 0.95, checkEqual=Fa
                         transPerc = None
                     closeOutDataset = True
                 else:
-                    result['dataset'][dataset]["missingSubs"] = True
+                    missingSubs = True
         #if at least one dataset is not ready wf cannot be closed out
         closeOutWorkflow = closeOutWorkflow and closeOutDataset
         #load results in a dict        
@@ -123,6 +124,7 @@ def validateClosingWorkflow(url, workflow, closePercentage = 0.95, checkEqual=Fa
         result['datasets'][dataset]["closeOutDataset"] = closeOutDataset
         result['datasets'][dataset]["transPerc"] = transPerc
         result['datasets'][dataset]["correctLumis"] = correctLumis
+        result['datasets'][dataset]["missingSubs"] = missingSubs
     result['closeOutWorkflow'] = closeOutWorkflow
     return result
 

@@ -226,7 +226,9 @@ def main():
     output.write('</table><br><br>')
 
     print "MC Workflows for which couldn't find Custodial Tier1 Site"
-    output.write("<table border=1> <tr><th>MC Workflows for which couldn't find Custodial Tier1 Site</th><th>Dataset</th></tr>")
+
+    output.write("<p>Workflows for which couldn't find Custodial Tier1 Site</p>")
+    output.write("<table border=1> <tr><th>Workflow</th><th>Dataset</th></tr>")
     listWorkflowsWeb(workflowsCompleted['NoSite-ReReco'], output)
     listWorkflowsWeb(workflowsCompleted['NoSite-ReDigi'], output)
     listWorkflowsWeb(workflowsCompleted['NoSite-MonteCarlo'], output)
