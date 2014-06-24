@@ -41,7 +41,7 @@ def classifyCompletedRequests(url, requests):
     returns a dic cointaining a list for each
     type of workflows.
     """
-    workflows=workflows={'ReDigi':[],'MonteCarloFromGEN':[],'MonteCarlo':[] , 'ReReco':[], 'LHEStepZero':[], 'StoreResults':[]}
+    workflows={'ReDigi':[],'MonteCarloFromGEN':[],'MonteCarlo':[] , 'ReReco':[], 'LHEStepZero':[], 'StoreResults':[]}
     for request in requests:
         name=request['id']
         #if a wrong or weird name
