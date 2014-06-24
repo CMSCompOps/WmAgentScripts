@@ -36,7 +36,7 @@ def closeOutReRecoWorkflowsWeb(url, workflows, output):
             reqMgrClient.closeOutWorkflowCascade(url, workflow)
         #populate the list without subs
         for (ds,info) in result['datasets'].items():
-            if not info['phedexReqs']:
+            if info['missingSubs']:
                 noSiteWorkflows.append((workflow,ds))
     print '-'*180
     return noSiteWorkflows
@@ -60,7 +60,7 @@ def closeOutRedigiWorkflowsWeb(url, workflows, output):
             reqMgrClient.closeOutWorkflowCascade(url, workflow)
         #populate the list without subs
         for (ds,info) in result['datasets'].items():
-            if not info['phedexReqs']:
+            if info['missingSubs']:
                 noSiteWorkflows.append((workflow,ds))
 
     print '-'*180
@@ -95,7 +95,7 @@ def closeOutMonterCarloRequestsWeb(url, workflows, output):
             reqMgrClient.closeOutWorkflowCascade(url, workflow)
         #populate the list without subs
         for (ds,info) in result['datasets'].items():
-            if not info['phedexReqs']:
+            if info['missingSubs']:
                 noSiteWorkflows.append((workflow,ds))
     #separation line
     print '-'*180
@@ -123,7 +123,7 @@ def closeOutStep0RequestsWeb(url, workflows, output):
             reqMgrClient.closeOutWorkflowCascade(url, workflow)
         #populate the list without subs
         for (ds,info) in result['datasets'].items():
-            if not info['phedexReqs']:
+            if info['missingSubs']:
                 noSiteWorkflows.append((workflow,ds))
     print '-'*180
     return noSiteWorkflows
@@ -148,7 +148,7 @@ def closeOutStoreResultsWorkflows(url, workflows):
             reqMgrClient.closeOutWorkflowCascade(url, workflow)
         #populate the list without subs
         for (ds,info) in result['datasets'].items():
-            if not info['phedexReqs']:
+            if info['missingSubs']:
                 noSiteWorkflows.append((workflow,ds))
     print '-'*180
     return noSiteWorkflows

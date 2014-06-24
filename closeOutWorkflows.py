@@ -112,6 +112,8 @@ def validateClosingWorkflow(url, workflow, closePercentage = 0.95, checkEqual=Fa
                     except:
                         transPerc = None
                     closeOutDataset = True
+                else:
+                    result['dataset'][dataset]["missingSubs"] = True
         #if at least one dataset is not ready wf cannot be closed out
         closeOutWorkflow = closeOutWorkflow and closeOutDataset
         #load results in a dict        
@@ -163,7 +165,7 @@ def closeOutReRecoWorkflows(url, workflows):
             reqMgrClient.closeOutWorkflowCascade(url, workflow)
         #populate the list without subs
         for (ds,info) in result['datasets'].items():
-            if not info['phedexReqs']:
+            if info['missingSubs']:
                 noSiteWorkflows.append((workflow,ds))
     print '-'*180
     return noSiteWorkflows
@@ -186,7 +188,7 @@ def closeOutRedigiWorkflows(url, workflows):
             reqMgrClient.closeOutWorkflowCascade(url, workflow)
         #populate the list without subs
         for (ds,info) in result['datasets'].items():
-            if not info['phedexReqs']:
+           if info['missingSubs']:
                 noSiteWorkflows.append((workflow,ds))
     print '-'*180
     return noSiteWorkflows
@@ -219,7 +221,7 @@ def closeOutMonterCarloRequests(url, workflows):
             reqMgrClient.closeOutWorkflowCascade(url, workflow)
         #populate the list without subs
         for (ds,info) in result['datasets'].items():
-            if not info['phedexReqs']:
+            if info['missingSubs']:
                 noSiteWorkflows.append((workflow,ds))
     #separation line
     print '-'*180
@@ -246,7 +248,7 @@ def closeOutStep0Requests(url, workflows):
             reqMgrClient.closeOutWorkflowCascade(url, workflow)
         #populate the list without subs
         for (ds,info) in result['datasets'].items():
-            if not info['phedexReqs']:
+            if info['missingSubs']:
                 noSiteWorkflows.append((workflow,ds))
 
     print '-'*180
@@ -271,7 +273,7 @@ def closeOutStoreResultsWorkflows(url, workflows):
             reqMgrClient.closeOutWorkflowCascade(url, workflow)
         #populate the list without subs
         for (ds,info) in result['datasets'].items():
-            if not info['phedexReqs']:
+            if info['missingSubs']:
                 noSiteWorkflows.append((workflow,ds))
     print '-'*180
     return noSiteWorkflows
