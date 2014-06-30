@@ -9,6 +9,7 @@ from WMCore.Services.PhEDEx.PhEDEx import PhEDEx
 from WMCore.Services.RequestManager.RequestManager import RequestManager
 from WMCore.Services.SiteDB.SiteDB import SiteDBJSON
 from WMCore.WMSpec.WMWorkload import WMWorkloadHelper
+from pprint import pprint
 
 import json
 import logging
@@ -219,24 +220,28 @@ def getFiles(datasetName, runBlacklist, runWhitelist, blockBlacklist,
 
     files = {}
     outputDatasetParts = datasetName.split("/")
-    datasets = dbsReader.matchProcessedDatasets(outputDatasetParts[1],
-                                                outputDatasetParts[3],
-                                                outputDatasetParts[2])
-
-    if len(datasets) == 0:
+    print "dataset",datasetName,"parts",outputDatasetParts   
+    try:
+        #retrieve list of blocks from dataset
+        blockNames = dbsReader.listFileBlocks(datasetName)
+    except:
         raise RuntimeError("Dataset %s doesn't exist in given DBS instance" % datasetName)
-
-    blockNames = dbsReader.listFileBlocks(datasetName)
+    
+    #traverse each block
     for blockName in blockNames:
+        #deal with white and black list.
         if blockBlacklist and blockName in blockBlacklist:
             continue
         if blockWhitelist and blockName not in blockWhitelist:
             continue
-
+        
+        #existing blocks in phedex
         replicaInfo = phedexReader.getReplicaInfoForBlocks(block = blockName,
                                                            subscribed = 'y')
-        block = dbsReader.listFilesInBlockWithParents(blockName)
+        blockFiles = dbsReader.listFilesInBlock(blockName, lumis=True)
+
         blockLocations = set()
+        #load block locations
         if len(replicaInfo["phedex"]["block"]) > 0:
             for replica in replicaInfo["phedex"]["block"][0]["replica"]:
                 node = replica["node"]
@@ -245,11 +250,17 @@ def getFiles(datasetName, runBlacklist, runWhitelist, blockBlacklist,
                     cmsSites = [cmsSites]
                 for cmsName in cmsSites:
                     blockLocations.update(siteDB.cmsNametoSE(cmsName))
-        for blockFile in block:
+        #for each file on the block
+        for blockFile in blockFiles:
             parentLFNs = []
-            for fileParent in blockFile["ParentList"]:
-                parentLFNs.append(fileParent["LogicalFileName"])
+            #get parent information about file
+            blockFileParents = dbsReader.listFilesInBlockWithParents(blockName)
+            #populate parent information
+            if blockFileParents and "ParentList" in blockFileParents[0]:
+                for fileParent in blockFileParents[0]["ParentList"]:
+                    parentLFNs.append(fileParent["LogicalFileName"])
             runInfo = {}
+            #Lumis not included in file
             for lumiSection in blockFile["LumiList"]:
                 if runBlacklist and lumiSection["RunNumber"] in runBlacklist:
                     continue
@@ -276,21 +287,37 @@ def diffDatasets(inputDataset, outputDataset):
     Return a dictionary containing the run/lumis that are in the input
     but not in the output.
     """
+    
     inputRunInfo = {}
+    #make a set of input run-lumis.
     for inputLFN in inputDataset:
         for inputRun in inputDataset[inputLFN]["runs"]:
             if inputRun not in inputRunInfo:
-                inputRunInfo[inputRun] = set()
-            inputRunInfo[inputRun].update(inputDataset[inputLFN]["runs"][inputRun])
+                inputRunInfo[inputRun] = set()  
+            #if type is list or [list]
+            if type(inputDataset[inputLFN]["runs"][inputRun][0]) is list:
+                inputRunInfo[inputRun].update(inputDataset[inputLFN]["runs"][inputRun][0])
+            elif type(inputDataset[inputLFN]["runs"][inputRun]) is list:
+                inputRunInfo[inputRun].update(inputDataset[inputLFN]["runs"][inputRun])
+            else:
+                raise RuntimeError("Don't know what this is:"+str( inputDataset[inputLFN]["runs"][inputRun]))
 
     outputRunInfo = {}
+    #make a set of input run-lumis. 
     for outputLFN in outputDataset:
         for outputRun in outputDataset[outputLFN]["runs"]:
             if outputRun not in outputRunInfo:
                 outputRunInfo[outputRun] = set()
-            outputRunInfo[outputRun].update(outputDataset[outputLFN]["runs"][outputRun])
-
+            #if type is list or [list]
+            if type(outputDataset[outputLFN]["runs"][outputRun][0]) is list:
+                outputRunInfo[outputRun].update(outputDataset[outputLFN]["runs"][outputRun][0])
+            elif type(outputDataset[outputLFN]["runs"][outputRun]) is list:
+                outputRunInfo[outputRun].update(outputDataset[outputLFN]["runs"][outputRun])
+            else:
+                raise RuntimeError("Don't know what this is:"+str( outputDataset[outputLFN]["runs"][outputRun]))
+    
     diffRunInfo = {}
+    #make set difference for each run
     for inputRun in inputRunInfo:
         if inputRun not in outputRunInfo:
             diffRunInfo[inputRun] = inputRunInfo[inputRun]
@@ -298,7 +325,7 @@ def diffDatasets(inputDataset, outputDataset):
             diffLumis = inputRunInfo[inputRun] - outputRunInfo[inputRun]
             if diffLumis:
                 diffRunInfo[inputRun] = diffLumis
-
+    
     return diffRunInfo
 
 def buildDifferenceMap(workload, datasetInformation):
@@ -460,6 +487,7 @@ def defineRequests(workload, requestInfo,
     logging.info("About to upload ACDC records to: %s/%s" % (acdcCouchUrl, acdcCouchDb))
     # With the request objects we need to build ACDC records and
     # request JSONs
+    pprint(requests)
     for idx, requestObject in enumerate(requests):
         collectionName = '%s_%s' % (workload.name(), str(uuid.uuid1()))
         filesetName = requestObject['task']
@@ -475,7 +503,7 @@ def defineRequests(workload, requestInfo,
             fileRuns = {}
             for run in fileInfo['runs']:
                 if run in requestObject['lumis']:
-                    for lumi in fileInfo['runs'][run]:
+                    for lumi in fileInfo['runs'][run][0]:
                         if lumi in requestObject['lumis'][run]:
                             if run not in fileRuns:
                                 fileRuns[run] = []
@@ -564,7 +592,7 @@ def main():
     myOptParser.add_option("-g", "--group", dest = "group",
                            help = "Group for the Resubmission requests")
     myOptParser.add_option("-d", "--dbsUrl", dest = "dbsUrl",
-                           default = "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet",
+                           default = "https://cmsweb.cern.ch/dbs/prod/global/DBSReader",
                            help = "URL for the DBS instance to get the dataset info (both DBS2 and DBS3 work)")
     myOptParser.add_option("-a", "--acdcUrl", dest = "acdcUrl",
                            default = "https://cmsweb.cern.ch/couchdb",
