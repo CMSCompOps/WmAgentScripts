@@ -390,7 +390,7 @@ re_true",dest='ignore')
               else:
                  siteCust = options.siteCust
            if options.site == 'HLT':
-              siteUse = ['T2_CH_CERN_AI', 'T2_CH_CERN_HLT', 'T2_CH_CERN']:
+              siteUse = ['T2_CH_CERN_AI', 'T2_CH_CERN_HLT', 'T2_CH_CERN']
               team = 'hlt'
 
            # Check if input dataset subscribed to disk endpoint
