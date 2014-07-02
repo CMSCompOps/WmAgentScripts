@@ -707,8 +707,8 @@ def main():
 
            if options.execute:
               if restrict == 'None' or restrict == siteUse:
-	             assignRequest(url, workflow, team, siteUse, era, procversion, procstring, activity, lfn, maxmergeevents, maxRSS, maxVSize, useX, siteCust)
-              if (newpriority !=0 ):
+	          assignRequest(url, workflow, team, siteUse, era, procversion, procstring, activity, lfn, maxmergeevents, maxRSS, maxVSize, useX, siteCust)
+                  if (newpriority !=0 ):
                      changePriorityWorkflow(url,workflow,newpriority)
                      print "Priority reset to %i" % newpriority
               else:
