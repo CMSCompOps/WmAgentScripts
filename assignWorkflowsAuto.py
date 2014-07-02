@@ -3,7 +3,7 @@ import urllib2,urllib, httplib, sys, re, os, json
 import optparse
 import reqMgrClient
 from dbs.apis.dbsClient import DbsApi
-from changePriorityWorkflow.py import changePriorityWorkflow
+from changePriorityWorkflow import changePriorityWorkflow
 
 dbs3_url = r'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
 
@@ -293,9 +293,8 @@ def main():
 	parser.add_option('-r', '--rssmax', help='Max RSS',dest='maxRSS')
 	parser.add_option('-v', '--vsizemax', help='Max VMem',dest='maxVSize')
 	parser.add_option('-a', '--extension', help='Use _ext special name',dest='extension')
-    parser.add_option('-o', '--xrootd', help='Read input using xrootd',action="store_true",dest='xrootd')
-    parser.add_option('-i', '--ignore', help='Ignore any errors',action="sto
-re_true",dest='ignore')
+        parser.add_option('-o', '--xrootd', help='Read input using xrootd',action="store_true",dest='xrootd')
+        parser.add_option('-i', '--ignore', help='Ignore any errors',action="store_true",dest='ignore')
 	(options,args) = parser.parse_args()
 	if not options.filename and not options.userWorkflow:
 		print "A filename or workflow is required"
@@ -709,15 +708,16 @@ re_true",dest='ignore')
            if options.execute:
               if restrict == 'None' or restrict == siteUse:
 	             assignRequest(url, workflow, team, siteUse, era, procversion, procstring, activity, lfn, maxmergeevents, maxRSS, maxVSize, useX, siteCust)
-                 if (newpriority !=0 ):
-                    changePriorityWorkflow(url,workflow,newpriority)
-                    print "Priority reset to %i" % newpriority
+              if (newpriority !=0 ):
+                     changePriorityWorkflow(url,workflow,newpriority)
+                     print "Priority reset to %i" % newpriority
               else:
-                 print 'Skipping workflow ',workflow
+                     print 'Skipping workflow ',workflow
            else:
               if restrict == 'None' or restrict == siteUse:
                  print 'Would assign ',workflow,' with ','Acquisition Era:',era,'ProcessingString:',procstring,'ProcessingVersion:',procversion,'lfn:',lfn,'Site(s):',siteUse,'Custodial Site:',siteCust,'team:',team,'maxmergeevents:',maxmergeevents,'maxRSS:',maxRSS
-                 print "Would reset priority to %i" % newpriority
+                 if (newpriority !=0 ):
+                    print "Would reset priority to %i" % newpriority
               else:
                  print 'Would skip workflow ',workflow
 
