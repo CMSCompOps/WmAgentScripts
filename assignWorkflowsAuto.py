@@ -253,9 +253,9 @@ def assignRequest(url ,workflow ,team ,site ,era, procversion, procstring, activ
               
     # we don't want to subscribe these to tape and we certainly don't want move subscriptions ripping things out of T2's.
               
-    if "Spring14miniaod" in workflow: 
-       del params["CustodialSites"] 
-       siteCust=NONE        
+    if params["CustodialSites"] == 'None' || params["CustodialSites"] == '': 
+       del params["CustodialSites"]
+       siteCust='None'        
               
 
     if useX == 1:
@@ -531,7 +531,8 @@ def main():
               specialName=getProcDSMiddlePiece(inputDataset)
               lfn = '/store/mc'
               pileupScenario = ''
-              globalTag = ''                 
+              globalTag = '' 
+              siteCust= 'None'                
 
            if 'Winter13' in workflow and 'DR53X' in workflow:
               era = 'HiWinter13'
