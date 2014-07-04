@@ -224,6 +224,9 @@ def assignRequest(url ,workflow ,team ,site ,era, procversion, procstring, activ
        softTimeout = 159600
     else:
        softTimeout = 144000
+       
+
+       
 
     params = {"action": "Assign",
               "Team"+team: "checked",
@@ -245,6 +248,15 @@ def assignRequest(url ,workflow ,team ,site ,era, procversion, procstring, activ
               "ProcessingVersion": procversion,
               "ProcessingString": procstring,
               "checkbox"+workflow: "checked"}
+              
+              
+              
+    # we don't want to subscribe these to tape and we certainly don't want move subscriptions ripping things out of T2's.
+              
+    if "Spring14miniaod" in workflow: 
+       del params["CustodialSites"] 
+       siteCust=NONE        
+              
 
     if useX == 1:
        print "- Using xrootd for input dataset"
