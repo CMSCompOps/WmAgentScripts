@@ -253,7 +253,7 @@ def assignRequest(url ,workflow ,team ,site ,era, procversion, procstring, activ
               
     # we don't want to subscribe these to tape and we certainly don't want move subscriptions ripping things out of T2's.
               
-    if params["CustodialSites"] == 'None' || params["CustodialSites"] == '': 
+    if params["CustodialSites"] == 'None' or params["CustodialSites"] == '': 
        del params["CustodialSites"]
        siteCust='None'        
               
