@@ -82,6 +82,10 @@ def getScenario(ps):
            pss = 'PU'
         if ps == 'SimGeneral.MixingModule.mix_CSA14_50ns_PoissonOOTPU_cfi':
            pss = 'PU_S14'
+        if ps == 'SimGeneral.MixingModule.mix_flat_0_10_cfi':
+           pss = 'Flat0to10'
+        if ps == 'SimGeneral.MixingModule.mix_Flat_20_50_cfi':
+           pss = 'Flat20to50'
 
         return pss
         
@@ -539,6 +543,13 @@ def main():
               pileupScenario = 'pa' # not actually the pileup scenario of course
            if 'ppWinter13' in workflow and 'DR53X' in workflow:
               pileupScenario = 'pp' # not actually the pileup scenario of course
+           if 'pAWinter13' in workflow and 'DR53X' in workflow and 'pAMixingHijing' in workflow:
+              pileupScenario = 'pa_pAMixingHijing' # not actually the pileup scenario of course
+
+           if campaign == 'Summer12ExtendedGeo14DR':
+              era = campaign
+              lfn = '/store/mc'
+
 
            if 'Summer11LegDR' in campaign:
               era = 'Summer11LegDR'
@@ -664,6 +675,16 @@ def main():
            if campaign == 'LowPU2010DR42' and 'BS2011' in workflow:
               specialName = 'LowPU2010_DR42_BS2011_'
 
+
+           if 'ppSpring2014DRX53' in workflow:
+              era = 'ppSpring2014DRX53'
+              lfn = '/store/mc'
+              if '_castor_' in workflow:
+                 specialName = 'castor_'
+
+
+
+
            # Construct processed dataset version
            if pileupScenario != '':
               pileupScenario = pileupScenario+'_' 
@@ -716,7 +737,7 @@ def main():
 
            if options.execute:
               if restrict == 'None' or restrict == siteUse:
-	          assignRequest(url, workflow, team, siteUse, era, procversion, procstring, activity, lfn, maxmergeevents, maxRSS, maxVSize, useX, siteCust)
+                  assignRequest(url, workflow, team, siteUse, era, procversion, procstring, activity, lfn, maxmergeevents, maxRSS, maxVSize, useX, siteCust)
                   if (newpriority !=0 ):
                      changePriorityWorkflow(url,workflow,newpriority)
                      print "Priority reset to %i" % newpriority

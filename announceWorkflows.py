@@ -27,7 +27,7 @@ def main():
     for workflow in workflows:
         print "Announcing workflow: " + workflow +". Look for resubmissions and announce them too"
         result=reqMgrClient.announceWorkflowCascade(url, workflow)
-        if result==None:
+        if result==None or result == 'None':
           print "Announced"
         else:
           print "ERROR NOT ANNOUNCED"
