@@ -456,11 +456,7 @@ def main():
 
            # Decide which team to use if not already defined
            if not team:
-              priority = int(getPriority(url, workflow))
-              if priority < 100000:
-                 team = 'reproc_lowprio'
-              else:
-                 team = 'reproc_highprio'
+             team = 'reproc_lowprio'
 
            specialName = ''
 
