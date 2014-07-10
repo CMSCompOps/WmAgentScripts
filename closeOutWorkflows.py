@@ -188,8 +188,13 @@ def closeOutRedigiWorkflows(url, workflows):
         status = reqMgrClient.getWorkflowStatus(url, workflow)
         if status != 'completed':
             continue
-        #check dataset health, duplicates, subscription, etc.       
-        result = validateClosingWorkflow(url, workflow, 0.95)           
+        #if miniaod
+        if 'miniaod' in workflow:
+            #we don't check for custodial subscription
+            result = validateClosingWorkflow(url, workflow, 0.95, checkPhedex=False)            
+        else:
+            #check dataset health, duplicates, subscription, etc.       
+            result = validateClosingWorkflow(url, workflow, 0.95)
         printResult(result)
         #if validation successful
         if result['closeOutWorkflow']:
@@ -249,13 +254,9 @@ def closeOutStep0Requests(url, workflows):
         if reqMgrClient.getRequestTeam(url, workflow) == 'analysis':
             continue
         
-        #if miniaod
-        if 'miniaod' in workflow:
-            #we don't check for custodial subscription
-            result = validateClosingWorkflow(url, workflow, checkLumiNumb=True, checkPhedex=False)            
-        else        
-            #check dataset health, duplicates, subscription, etc.       
-            result = validateClosingWorkflow(url, workflow, checkLumiNumb=True)
+        #check dataset health, duplicates, subscription, etc.       
+        result = validateClosingWorkflow(url, workflow, checkLumiNumb=True)
+  
         printResult(result)
         #if validation successful
         if result['closeOutWorkflow']:
