@@ -90,7 +90,7 @@ def validateClosingWorkflow(url, workflow, closePercentage = 0.95, checkEqual=Fa
         elif checkPhedex == 'any':
             phedexReqs = phedexClient.getSubscriptionSites(dataset)
         else:
-            phedexRequs = None
+            phedexReqs = None
         duplicate = None
         correctLumis = None
         transPerc = None
