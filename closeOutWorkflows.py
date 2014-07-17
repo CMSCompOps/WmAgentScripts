@@ -68,10 +68,11 @@ def classifyCompletedRequests(url, requests):
 
 
 def validateClosingWorkflow(url, workflow, closePercentage = 0.95, checkEqual=False, 
-            checkDuplicates=True, checkLumiNumb=False, checkCustodial=True):
+            checkDuplicates=True, checkLumiNumb=False, checkPhedex='custodial'):
     """
     Validates if a workflow can be closed out, using different parameters of validation.
     returns the response as a dict.
+    checkPhedex can be 'custodial', 'any' or False
     """
     #datasets
     datasets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
@@ -84,10 +85,12 @@ def validateClosingWorkflow(url, workflow, closePercentage = 0.95, checkEqual=Fa
         closeOutDataset = False            
         percentage = percentageCompletion(url, workflow, dataset)
         #retrieve either custodial or all subscriptions.
-        if checkCustodial:
+        if checkPhedex == 'custodial':
             phedexReqs = phedexClient.getCustodialSubscriptionRequestSite(dataset)
-        else:
+        elif checkPhedex == 'any':
             phedexReqs = phedexClient.getSubscriptionSites(dataset)
+        else:
+            phedexReqs = None
         duplicate = None
         correctLumis = None
         transPerc = None
@@ -106,8 +109,11 @@ def validateClosingWorkflow(url, workflow, closePercentage = 0.95, checkEqual=Fa
             # checkLumiNumb -> correct
             if (not (checkDuplicates and duplicate) and
                 not ( checkLumiNumb and not correctLumis)):
-                #check phedex request
-                if phedexReqs:
+                #if phedex check not required we can closeout
+                if not checkPhedex:
+                    closeOutDataset = True
+                #if phedex check is required and has it
+                elif checkPhedex and phedexReqs:
                     try:
                         transPerc = phedexClient.getTransferPercentage(url, dataset, phedexReqs[0])
                     except:
@@ -182,8 +188,13 @@ def closeOutRedigiWorkflows(url, workflows):
         status = reqMgrClient.getWorkflowStatus(url, workflow)
         if status != 'completed':
             continue
-        #check dataset health, duplicates, subscription, etc.       
-        result = validateClosingWorkflow(url, workflow, 0.95)           
+        #if miniaod
+        if 'miniaod' in workflow:
+            #we don't check for custodial subscription
+            result = validateClosingWorkflow(url, workflow, 0.95, checkPhedex=False)            
+        else:
+            #check dataset health, duplicates, subscription, etc.       
+            result = validateClosingWorkflow(url, workflow, 0.95)
         printResult(result)
         #if validation successful
         if result['closeOutWorkflow']:
@@ -242,8 +253,10 @@ def closeOutStep0Requests(url, workflows):
         #skip montecarlos on a special queue
         if reqMgrClient.getRequestTeam(url, workflow) == 'analysis':
             continue
+        
         #check dataset health, duplicates, subscription, etc.       
-        result = validateClosingWorkflow(url, workflow, checkLumiNumb=True)           
+        result = validateClosingWorkflow(url, workflow, checkLumiNumb=True)
+  
         printResult(result)
         #if validation successful
         if result['closeOutWorkflow']:
@@ -268,7 +281,7 @@ def closeOutStoreResultsWorkflows(url, workflows):
             continue
         #closeout workflow, checking percentage equalst 100%
         result = validateClosingWorkflow(url, workflow, closePercentage=1.0, 
-            checkEqual=True, checkDuplicates=False, checkCustodial=False)
+            checkEqual=True, checkDuplicates=False, checkPhedex='any')
         printResult(result)
         #if validation successful
         if result['closeOutWorkflow']:

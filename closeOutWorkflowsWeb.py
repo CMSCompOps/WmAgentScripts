@@ -51,8 +51,13 @@ def closeOutRedigiWorkflowsWeb(url, workflows, output):
         status = reqMgrClient.getWorkflowStatus(url, workflow)
         if status != 'completed':
             continue
-        #check dataset health, duplicates, subscription, etc.       
-        result = validateClosingWorkflow(url, workflow, 0.95)           
+        #if miniaod
+        if 'miniaod' in workflow:
+            #we don't check for custodial subscription
+            result = validateClosingWorkflow(url, workflow, 0.95, checkPhedex=False)            
+        else:
+            #check dataset health, duplicates, subscription, etc.       
+            result = validateClosingWorkflow(url, workflow, 0.95)
         printResult(result)
         printResultWeb(result, output)
         #if validation successful
@@ -140,7 +145,7 @@ def closeOutStoreResultsWorkflows(url, workflows):
             continue
         #closeout workflow, checking percentage equalst 100%
         result = validateClosingWorkflow(url, workflow, closePercentage=1.0, 
-            checkEqual=True, checkDuplicates=False, checkCustodial=False)
+            checkEqual=True, checkDuplicates=False, checkPhedex='any')
         printResult(result)
         printResultWeb(result, output)
         #if validation successful
