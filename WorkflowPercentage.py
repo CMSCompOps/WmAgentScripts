@@ -21,9 +21,8 @@ def percentageCompletion(url, workflow, outputDataset, verbose=False, checkLumis
     if checkLumis is enabled, we get lumis instead.
     """
     if checkLumis:
-        inputDataset = reqMgrClient.getInputDataSet(url, workflow)
-        inputEvents = dbs3Client.getLumiCountDataSet(inputDataset)
-        outputEvents = dbs3Client.getLumiCountDataSet(outputDataset)
+        inputEvents = reqMgrClient.getInputLumis(url, workflow)
+        outputEvents = reqMgrClient.getOutputLumis(url, workflow, outputDataset)
     else:
         inputEvents = reqMgrClient.getInputEvents(url, workflow)
         outputEvents = reqMgrClient.getOutputEvents(url, workflow, outputDataset)

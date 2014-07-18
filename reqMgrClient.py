@@ -219,6 +219,78 @@ def getInputEvents(url, workflow):
     else:
         return events
 
+
+def getInputLumis(url, workflow):
+    """
+    Gets the input lumis of a given workflow
+    depending of the kind of workflow
+    """
+    request = getWorkflowInfo(url,workflow)
+    requestType=request['RequestType']
+    #if request is montecarlo or Step0, the numer of
+    #input events is by the requsted events
+    if requestType == 'MonteCarlo' or requestType == 'LHEStepZero':
+        raise Exception("This request has no input dataset")
+    if requestType == 'TaskChain':
+        return Exception("Not implemented yet")
+
+    #if request is not montecarlo, then we need to check the size
+    #of input datasets
+    #This loops fixes the white and blacklists in the workflow
+    #information,
+    for listitem in ["RunWhitelist", "RunBlacklist",
+                    "BlockWhitelist", "BlockBlacklist"]:
+        if listitem in request:
+            #if empty
+            if request[listitem]=='[]' or request[listitem]=='':
+                request[listitem]=[]
+            #if there is not a list but some elements it creates a list
+            if type(request[listitem]) is not list:
+                # if doesn't contain "[" is a single block
+                if '[' not in request[listitem]:
+                    #wrap in a list
+                    request[listitem] = [request[listitem]]
+                #else parse a list
+                else:
+                    request[listitem]= eval(request[listitem])
+        #if not, an empty list will do        
+        else:
+            request[listitem]=[]
+
+    inputDataSet=request['InputDataset']
+    totalLumis = dbs3.getLumiCountDataSet(inputDataSet)
+    #it the request is rereco, we valiate white/black lists
+    if requestType=='ReReco':
+        # if there is block whte list, count only the selected block
+        if request['BlockWhitelist']:
+            events = dbs3.getLumiCountDataSetBlockList(inputDataSet,request['BlockWhitelist'])
+        # if there is block black list, substract them from the total
+        if request['BlockBlacklist']:
+            events = (totalLumis - 
+                    dbs3.getLumiCountDataSetBlockList(inputDataSet,request['BlockBlacklist']))
+            return events
+        # same if a run whitelist
+        if request['RunWhitelist']:
+            events = dbs3.getLumiCountDataSetRunList(inputDataSet, request['RunWhitelist'])
+            return events
+        # otherwize, the full lumi count
+        else:
+            events = totalLumis
+            return events
+    
+    # if black list, subsctract them    
+    if request['BlockBlacklist']:
+        events = totalLumis - dbs3.getLumiCountDataSetBlockList(inputDataSet, request['BlockBlacklist'])
+    # if white list, only the ones in the whitelist.
+    if request['RunWhitelist']:
+        events = totalLumis.getLumiCountDataSetRunList(inputDataSet, request['RunWhitelist'])
+    # if white list of blocks
+    if request['BlockWhitelist']:
+        events = dbs3.getLumiCountDataSetBlockList(inputDataSet, request['BlockWhitelist'])
+
+    return events
+
+
 def getOutputEvents(url, workflow, dataset):
     """
     Gets the output events depending on the type
@@ -226,6 +298,14 @@ def getOutputEvents(url, workflow, dataset):
     """
     request = getWorkflowInfo(url, workflow)
     return dbs3.getEventCountDataSet(dataset)
+
+def getOutputLumis(url, workflow, dataset):
+    """
+    Gets the output lumis depending on the type
+    if the request
+    """
+    request = getWorkflowInfo(url, workflow)
+    return dbs3.getLumiCountDataSet(dataset)
     
 def closeOutWorkflow(url, workflowname):
     """
@@ -315,6 +395,13 @@ def submitWorkflow(url, schema):
     
     """
     data = requestManagerPost(url,"/reqmgr/create/makeSchema", schema)
+    return data
+
+def setWorkflowSplitting(url, schema):
+    """
+    This sets the workflow splitting into ReqMgr
+    """
+    data = requestManagerPost(url,"/reqmgr/view/handleSplittingPage", schema)
     return data
 
 def handleTaskChain(request):
