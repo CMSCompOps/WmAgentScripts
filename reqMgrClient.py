@@ -263,32 +263,32 @@ def getInputLumis(url, workflow):
     if requestType=='ReReco':
         # if there is block whte list, count only the selected block
         if request['BlockWhitelist']:
-            events = dbs3.getLumiCountDataSetBlockList(inputDataSet,request['BlockWhitelist'])
+            lumis = dbs3.getLumiCountDataSetBlockList(inputDataSet,request['BlockWhitelist'])
         # if there is block black list, substract them from the total
         if request['BlockBlacklist']:
-            events = (totalLumis - 
+            lumis = (totalLumis - 
                     dbs3.getLumiCountDataSetBlockList(inputDataSet,request['BlockBlacklist']))
-            return events
+            return lumis
         # same if a run whitelist
         if request['RunWhitelist']:
-            events = dbs3.getLumiCountDataSetRunList(inputDataSet, request['RunWhitelist'])
-            return events
+            lumis = dbs3.getLumiCountDataSetRunList(inputDataSet, request['RunWhitelist'])
+            return lumis
         # otherwize, the full lumi count
         else:
-            events = totalLumis
-            return events
-    
+            lumis = totalLumis
+            return lumis
+    lumis = dbs3.getLumiCountDataSet(inputDataSet)
     # if black list, subsctract them    
     if request['BlockBlacklist']:
-        events = totalLumis - dbs3.getLumiCountDataSetBlockList(inputDataSet, request['BlockBlacklist'])
+        lumis = totalLumis - dbs3.getLumiCountDataSetBlockList(inputDataSet, request['BlockBlacklist'])
     # if white list, only the ones in the whitelist.
     if request['RunWhitelist']:
-        events = totalLumis.getLumiCountDataSetRunList(inputDataSet, request['RunWhitelist'])
+        lumis = totalLumis.getLumiCountDataSetRunList(inputDataSet, request['RunWhitelist'])
     # if white list of blocks
     if request['BlockWhitelist']:
-        events = dbs3.getLumiCountDataSetBlockList(inputDataSet, request['BlockWhitelist'])
+        lumis = dbs3.getLumiCountDataSetBlockList(inputDataSet, request['BlockWhitelist'])
 
-    return events
+    return lumis
 
 
 def getOutputEvents(url, workflow, dataset):
