@@ -36,6 +36,7 @@ def duplicateRunLumi(dataset, verbose=False):
     runs = getRunsDataset(dataset)
     #if only one run in the list
     if len(runs) == 1:
+        print "only one run:",runs
         return duplicateLumi(dataset, verbose)
     #else manually
     for run in runs:
@@ -98,6 +99,7 @@ def duplicateLumi(dataset, verbose=False):
                 lumisChecked[lumi] = logical_file_name
     return duplicated
 
+
 def getMaxLumi(dataset):
     """
     Gets the number of the last lumi in a given dataset
@@ -105,18 +107,19 @@ def getMaxLumi(dataset):
     without collision
     """
     dbsapi = DbsApi(url=dbs3_url)
-    reply = dbsapi.listFiles(dataset=dataset)
+    reply = dbsapi.listBlocks(dataset=dataset)
     maxl = 0
-    for f in reply:
-        logical_file_name = f['logical_file_name']
-        reply2 = dbsapi.listFileLumis(logical_file_name=logical_file_name)
+    for b in reply:
+        reply2 = dbsapi.listFileLumis(block_name=b['block_name'])
         #retrieve lumis for each file
-        lumis = reply2[0]['lumi_section_num']
-        #check max of lumi
-        lumi = max(lumis)
-        if lumi > maxl:
-            maxl = lumi
+        for f in reply2:
+            lumis = f['lumi_section_num']
+            #check max of lumi
+            lumi = max(lumis)
+            if lumi > maxl:
+                maxl = lumi
     return maxl   
+
 
 def getRunsDataset(dataset):
     """
@@ -169,6 +172,26 @@ def getLumiCountDataSet(dataset):
     reply = dbsapi.listFileSummaries(dataset=dataset)
     return reply[0]['num_lumi']
 
+
+def getLumiCountDataSetBlockList(dataset, blockList):
+    """
+    Counts and adds all the lumis for a given lists
+    blocks inside a dataset
+    """
+    # initialize API to DBS3
+    dbsapi = DbsApi(url=dbs3_url)
+    #transform from strin to list
+    if type(blockList) in (str, unicode):
+        blockList = eval(blockList)
+    total = 0
+    #get one by one block and add it so uri wont be too large
+    for block in blockList:
+        reply = dbsapi.listFileSummaries(block_name=block)
+        total += reply[0]['num_lumi']
+    return total
+    
+
+
 def hasAllBlocksClosed(dataset):
     """
     checks if a given dataset has all blocks closed
@@ -219,6 +242,25 @@ def getEventCountDataSetRunList(dataset,runList):
         reply = dbsapi.listFileSummaries(dataset=dataset,run_num=run)
         if reply:
             total += reply[0]['num_event']
+    return total
+
+def getLumiCountDataSetRunList(dataset,runList):
+    """
+    Counts and adds all the lumis for a given lists
+    of runs inside a dataset
+    """
+    # initialize API to DBS3
+    dbsapi = DbsApi(url=dbs3_url)
+    # retrieve file aggregation only by the runs
+    #transform from strin to list
+    if type(runList) in (str, unicode):
+        runList = eval(runList)
+    total = 0
+    #get one by one run, so URI wont be too large
+    for run in runList:
+        reply = dbsapi.listFileSummaries(dataset=dataset,run_num=run)
+        if reply:
+            total += reply[0]['num_lumi']
     return total
 
 def main():
