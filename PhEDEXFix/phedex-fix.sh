@@ -1,4 +1,5 @@
 #!/bin/bash
+./config/wmagent/manage execute-agent wmcoreD --shutdown --components=PhEDExInjector
 ./config/wmagent/manage mysql-prompt wmagent<querry.sql>lfns.txt
 cat lfns.txt | grep /store > lfnsgreped.txt
 #tail -n 28 install/wmagent/PhEDExInjector/ComponentLog | head -n1 > phedex.log
