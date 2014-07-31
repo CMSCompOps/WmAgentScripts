@@ -36,7 +36,8 @@ def duplicateRunLumi(dataset, verbose=False):
     runs = getRunsDataset(dataset)
     #if only one run in the list
     if len(runs) == 1:
-        print "only one run:",runs
+        if verbose:
+            print "only one run:",runs
         return duplicateLumi(dataset, verbose)
     #else manually
     for run in runs:
