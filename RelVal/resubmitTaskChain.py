@@ -88,7 +88,8 @@ def retrieveSchema(workflowName):
 
     #request['Memory'] = 3900
     #del request['SiteWhitelist']        
-    #request['RequestString'] = 'TEST_ALAN_TEST'
+    #request['RequestString'] = 'TEST_ANDREW_TEST'
+#    request['Task1']['BlockBlacklist'] = ['/DoubleMu/Run2011A-ZMu-08Nov2011-v1/RAW-RECO#93c53d22-25b2-11e1-8c62-003048f02c8a']
     #request['Task1']['BlockWhitelist'] = ['/RelValQCD_Pt_80_170_BCtoE_8TeV/CMSSW_6_2_0_pre8-PRE_ST62_V8-v3/GEN-SIM#d99587e0-625e-11e3-ad0f-00221959e7c0','/RelValQCD_Pt_80_170_BCtoE_8TeV/CMSSW_6_2_0_pre8-PRE_ST62_V8-v3/GEN-SIM#8689de68-606d-11e3-ad0f-00221959e7c0']
     return request
 
@@ -117,6 +118,7 @@ def submitWorkflow(schema):
 if __name__ == "__main__":
     parser = optparse.OptionParser()
     parser.add_option('--correct_env',action="store_true",dest='correct_env')
+    parser.add_option('--high_memory',action="store_true",dest='high_memory')
     (options,args) = parser.parse_args()
 
     command=""
@@ -124,7 +126,7 @@ if __name__ == "__main__":
         command=command+arg+" "
 
     if not options.correct_env:
-         os.system("source /afs/cern.ch/cms/LCG/LCG-2/UI/cms_ui_env.sh; source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh; python2.6 "+command + "--correct_env")
+         os.system("source /afs/cern.ch/cms/LCG/LCG-2/UI/cms_ui_env.sh; python2.6 "+command + "--correct_env")
          sys.exit(0)
 
     if len(args) != 1:
@@ -134,7 +136,12 @@ if __name__ == "__main__":
 
     from WMCore.WMSpec.WMWorkload import WMWorkloadHelper    
 
-    schema = retrieveSchema(sys.argv[1])
+    schema = retrieveSchema(args[0])
+
+    if options.high_memory:
+        schema['Memory'] = 4900
+
+    
 #    print "\nNew schema:\n", schema     # FOR DEBUG
 #    sys.exit(0)
     newWorkflow=submitWorkflow(schema)

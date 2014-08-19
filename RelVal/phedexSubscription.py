@@ -180,7 +180,7 @@ def createXML(datasets):
 	result.setAttribute('version', '2')
 	# Create the <dbs> base element
 	dbs = doc.createElement("dbs")
-	dbs.setAttribute("name", "https://cmsdbsprod.cern.ch:8443/cms_dbs_prod_global_writer/servlet/DBSServlet")
+	dbs.setAttribute("name", "https://cmsweb.cern.ch/dbs/prod/global/DBSReader")
 	result.appendChild(dbs)	
 	#Create each of the <dataset> element			
 	for datasetname in datasets:
@@ -211,8 +211,8 @@ def createConnection(url):
 	#cert = "/afs/cern.ch/user/r/relval/.globus/amaltaro/usercert.pem"
 			 
 	#conn = httplib.HTTPSConnection(url, key_file=key, cert_file=cert)
-	#conn =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-	conn =  httplib.HTTPSConnection(url, cert_file = "/data/relval/WmAgentScripts/RelVal/andrew_levin_proxy", key_file = "/data/relval/WmAgentScripts/RelVal/andrew_levin_proxy");
+	conn =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+	#conn =  httplib.HTTPSConnection(url, cert_file = "/home/relval/WmAgentScripts/RelVal/andrew_levin_proxy", key_file = "/home/relval/WmAgentScripts/RelVal/andrew_levin_proxy");
 	conn.connect()
 	return conn
 

@@ -130,7 +130,7 @@ def main():
         command=command+arg+" "
 
     if not options.correct_env:
-        os.system("source /afs/cern.ch/project/gd/LCG-share/current_3.2/etc/profile.d/grid-env.sh; source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh; python2.6 "+command + "--correct_env")
+        os.system("source /afs/cern.ch/project/gd/LCG-share/current_3.2/etc/profile.d/grid-env.sh; source /tmp/relval/sw/comp.pre/slc5_amd64_gcc461/cms/dbs3-client/3.2.1/etc/profile.d/init.sh; python2.6 "+command + "--correct_env")
         sys.exit(0)
 
     data = False
@@ -141,7 +141,7 @@ def main():
         print "Usage: python assignRelValWorkflow.py -w <requestName>"
         sys.exit(0);
     workflow=options.workflow
-    team='relval_cern'
+    team='relval'
     site='T1_US_FNAL'
     procversion=1
     #procversion='v1'
@@ -155,6 +155,10 @@ def main():
 
     ### Getting the original dictionary
     schema = getRequestDict(url,workflow)
+
+    if 'type' in schema and schema['type'] == 'HTTPError':
+        os.system('echo '+workflow+' | mail -s \"assignRelValWorkflow.py error\" andrew.m.levin@vanderbilt.edu -- -f amlevin@mit.edu')
+        sys.exit(1)
 
     ### Dropping 2010 HeavyIon workflows or assigning 2011 to CERN/LSF 
     if 'RunHI2010' in schema['RequestString']:

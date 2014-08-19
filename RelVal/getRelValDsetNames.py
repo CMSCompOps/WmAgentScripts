@@ -1,11 +1,62 @@
 #!/usr/bin/env python
 
-import urllib2,urllib, httplib, sys, re, os, phedexSubscription
+import urllib2,urllib, httplib, sys, re, os
 import json
-from xml.dom.minidom import getDOMImplementation
-sys.path.append("..")
-import dbsTest
 import optparse
+from xml.dom.minidom import getDOMImplementation
+
+
+reqmgr_url = 'cmsweb.cern.ch'
+dbs3_url = 'https://cmsweb.cern.ch'
+
+def getOutputDset(workflow):
+    """
+    Fetch list of output datasets from ReqMgr
+    Returns a list of strings
+    """
+    conn = httplib.HTTPSConnection(reqmgr_url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    r1 = conn.request("GET",'/reqmgr/reqMgr/outputDatasetsByRequestName?requestName='+workflow)
+    r2 = conn.getresponse()
+    datasets = json.loads(r2.read())
+    if len(datasets)== 0:
+        print "ERROR: No output datasets for: "+ workflow
+    return datasets
+
+def getDBSApi():
+    """
+    Instantiate the DBS3 Client API
+    """
+    if 'testbed' in dbs3_url:
+        dbs3_url_reader = dbs3_url + '/dbs/int/global/DBSReader'
+    else:
+        dbs3_url_reader = dbs3_url + '/dbs/prod/global/DBSReader'
+
+    from dbs.apis.dbsClient import DbsApi
+
+
+    #this needs to come after /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh is sourced    
+    dbsApi = DbsApi(url = dbs3_url_reader)
+    return dbsApi
+
+def getDsetSummary(dbsApi, dset):
+    """
+    Get a dataset summary containing num of events, num of files and total size
+    Returns a list of dictionary
+    """
+
+
+    summary = dbsApi.listBlockSummaries(dataset = dset)
+    return summary
+
+def getNumEvents(dbsApi, dset):
+    """
+    Get back the dataset summary and returns the num of events
+    """
+    summary = getDsetSummary(dbsApi, dset)
+    # it means the dataset was not produced
+    if summary[0]['num_file'] == 0:
+        return -1
+    return summary[0]['num_event']
 
 def main():
     parser = optparse.OptionParser()
@@ -17,28 +68,26 @@ def main():
         command=command+arg+" "
 
     if not options.correct_env:
-        os.system("source /afs/cern.ch/project/gd/LCG-share/current_3.2/etc/profile.d/grid-env.sh; python2.6 "+command + "--correct_env")
+        # source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh
+        os.system("source /afs/cern.ch/project/gd/LCG-share/current_3.2/etc/profile.d/grid-env.sh; source /tmp/relval/sw/comp.pre/slc5_amd64_gcc461/cms/dbs3-client/3.2.1/etc/profile.d/init.sh; python2.6 "+command + "--correct_env")
         sys.exit(0)
         
-    #args=sys.argv[1:]
     if not len(args)==1:
-        print "usage: python getRelValDsetNames.py <inputFile_containing_a_list_of_workflows>"
+        print "usage: python2.6 getRelValDsetNames.py <inputFile_containing_a_list_of_workflows>"
         sys.exit(0)
     inputFile=args[0]
     f = open(inputFile, 'r')
 
-    url='cmsweb.cern.ch'
+    # Instantiate the dbs3 api
+    dbsApi = getDBSApi()
+
     for line in f:
         workflow = line.rstrip('\n')
-        outputDataSets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
-        #print "These are the output datasets:"
-        #print outputDataSets
-        #inputEvents=getInputEvents(url, workflow)
-        #print inputEvents
+        outputDataSets = getOutputDset(workflow)
         for dataset in outputDataSets:
-            outputEvents=dbsTest.getEventCountDataSet("https://cmsweb.cern.ch",dataset)
-    #        print dataset+" match: "+str(outputEvents/float(inputEvents)*100) +"%"
-            print dataset+"\t\t"+str(outputEvents)
+            outEvents = getNumEvents(dbsApi, dataset)
+            #print "%-120s\t%d" % (dataset, dset_summary[0]['num_event'])
+            print "%s\t%d" % (dataset, outEvents)
 
     f.close
     sys.exit(0);

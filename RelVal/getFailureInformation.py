@@ -34,6 +34,10 @@ error_strings.append("Return code: 40")
 error_strings.append("Return code: 137")
 error_strings.append("No space left on device")
 error_strings.append("SYSTEM_PERIODIC_REMOVE")
+error_strings.append("FallbackFileOpenError")
+error_strings.append("Job has exceeded maxVSize")
+error_strings.append("The job has probably exhausted the virtual memory available to the process.")
+error_strings.append("FileOpenError")
 
 url='cmsweb.cern.ch'
 
@@ -88,14 +92,19 @@ for line in f:
                 if options.debug:
                     print "            "+k+" errors: "+str(len(s2['rows'][j]['doc']['errors'][k]))
                 if len(s2['rows'][j]['doc']['errors'][k]) > 0:
-                    for error_string in error_strings:
-                        if error_string in s2['rows'][j]['doc']['errors'][k][0]['details']:
-                            nfailures[error_string]=nfailures[error_string]+1
-                            found_error_string=True
-                            break                                        
+                    for index in range(0, len(s2['rows'][j]['doc']['errors'][k])):
+                        if found_error_string == True:
+                            continue
+                        for error_string in error_strings:
+                            if error_string in s2['rows'][j]['doc']['errors'][k][index]['details']:
+                                nfailures[error_string]=nfailures[error_string]+1
+                                found_error_string=True
+                                break
 
         conn3  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))   
-        r31=conn3.request('GET','/couchdb/wmstats/_design/WMStats/_view/latestRequest?reduce=true&group=true&keys=[["'+workflow+'","cmssrv113.fnal.gov:9999"],["'+workflow+'","vocms142.cern.ch:9999"]]&stale=ok')
+        #r31=conn3.request('GET','/couchdb/wmstats/_design/WMStats/_view/latestRequest?reduce=true&group=true&keys=[["'+workflow+'","cmssrv113.fnal.gov:9999"],["'+workflow+'","vocms142.cern.ch:9999"]]&stale=ok')
+        r31=conn3.request('GET','/couchdb/wmstats/_design/WMStats/_view/latestRequest?reduce=true&group=true&keys=[["'+workflow+'","cmsgwms-submit1.fnal.gov:9999"],["'+workflow+'","vocms142.cern.ch:9999"]]&stale=ok')
+        
         r32=conn3.getresponse()
         data3 = r32.read()
         s3 = json.loads(data3)
