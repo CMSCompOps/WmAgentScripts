@@ -34,18 +34,23 @@ def testEventCountWorkflow(url, workflow, verbose=False):
 
 def main():
     args=sys.argv[1:]
-    if not len(args)==2:
-        print "usage input_file output_file"
-    url = 'cmsweb.cern.ch'
+    verbose = False
+    if not len(args)>=2:
+        print "usage input_file output_file [options]"
+        return
 
+    if '-v' in args:
+       verbose = True
+ 
+    url = 'cmsweb.cern.ch'
     #read the file
     input_file = args[0]
     #strip carriage return, spaces and empty lines
     workflows = [wf.strip() for wf in open(input_file).readlines() if wf.strip()]
     output_file = open(args[1],'w')
-    
+    #print verbose
     for workflow in workflows:
-        if testEventCountWorkflow(url, workflow):
+        if testEventCountWorkflow(url, workflow, verbose):
             #save which workflows had duplicate lumis
             output_file.write(workflow+'\n')
     output_file.close()

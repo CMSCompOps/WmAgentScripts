@@ -8,7 +8,7 @@
 """
 
 
-import urllib2,urllib, httplib, sys, re, os, json
+import urllib2,urllib, httplib, sys, re, os, json, datetime
 from xml.dom.minidom import getDOMImplementation
 from dbs.apis.dbsClient import DbsApi
 
@@ -101,6 +101,28 @@ def duplicateLumi(dataset, verbose=False):
     return duplicated
 
 
+def getDatasetInfo(dataset):
+    """
+    Gets a summary of a dataset, returns a tuple with:
+    ( Open for writing: 1 if at least one block is open for writing,
+    creation date: the creation date of the first block,
+    last modified: the latest modification date)
+    """
+    dbsapi = DbsApi(url=dbs3_url)
+    reply = dbsapi.listBlocks(dataset=dataset, detail=True)
+    if not reply:
+        return (0,0,0)
+    #first block
+    max_last_modified = reply[0]['last_modification_date']
+    min_creation_date = reply[0]['creation_date']
+    open_for_writing = reply[0]['open_for_writing']
+    #for all the blocks, get the details
+    for block in reply:
+        max_last_modified = max(max_last_modified, block['last_modification_date'])
+        min_creation_date = min(min_creation_date, block['creation_date'])
+        open_for_writing |= block['open_for_writing']
+    return (open_for_writing, min_creation_date, max_last_modified)
+    
 def getMaxLumi(dataset):
     """
     Gets the number of the last lumi in a given dataset
@@ -264,22 +286,30 @@ def getLumiCountDataSetRunList(dataset,runList):
             total += reply[0]['num_lumi']
     return total
 
+def getDatasetSize(dataset):
+    # initialize API to DBS3
+    dbsapi = DbsApi(url=dbs3_url)
+    # retrieve file aggregation only by the runs
+    #transform from strin to list
+    reply = dbsapi.listBlockSummaries(dataset=dataset)
+    return reply[0]['file_size']
+
 def main():
     args=sys.argv[1:]
-    if not len(args)==1:
-        print "usage:dbs3Client workflow"
+    if len(args) < 1:
+        print "usage:dbs3Client dataset dataset2 ..."
         sys.exit(0)
     workflow=args[0]
     url='cmsweb.cern.ch'
-    outputDataSets=reqMgrClient.outputdatasetsWorkflow(url, workflow)
-    #runlist = [176801, 176807, 176702, 176796, 175896]
-    ##inputEvents=getInputEvents(url, workflow)
-    ##print " Runs", getEventCountDataSetRunList('/PhotonHad/Run2011B-v1/RAW',runlist)
-    #print " Events:", getEventCountDataSet('/Neutrino_Pt-2to20_gun/Fall13-POSTLS162_V1-v4/GEN-SIM')
-    for dataset in outputDataSets:
+    datasets = args
+    for dataset in datasets:
         print dataset
         print " Events:", getEventCountDataSet(dataset)
         print " Lumis:", getLumiCountDataSet(dataset)
+        info = getDatasetInfo(dataset)
+        print " Open Blocks: ", info[0]
+        print " Creation:", datetime.datetime.fromtimestamp(info[1]).strftime('%Y-%m-%d %H:%M:%S')
+        print " Last update:", datetime.datetime.fromtimestamp(info[2]).strftime('%Y-%m-%d %H:%M:%S')
         #print " Duplicated Lumis:", duplicateRunLumi(dataset)
         #print " Duplicated Lumis:", duplicateLumi(dataset)
         #print " Runs", getRunsDataset(dataset))
