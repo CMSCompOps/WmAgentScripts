@@ -32,7 +32,7 @@ echo "the workflow was found in the following directories:"
 
 for year_month in ${year_month_dirs[@]}
   do
-  echo "   "/castor/cern.ch/cms/store/logs/prod/${year}/${month}/WMAgent/${wfname}
+  echo "   "/castor/cern.ch/cms/store/logs/prod/${year_month}WMAgent/${wfname}/
 done
 
 echo "staging the tar files from castor" 
