@@ -23,7 +23,7 @@ def main():
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
                                     key_file = os.getenv('X509_USER_PROXY'))
     conn.request("GET",
-                 '/couchdb/wmdatamining/_design/WMDataMining/_view/workflow_summary',
+                 '/couchdb/wmdatamining/_design/WMDataMining/_view/storeresults_summary',
                  headers= header)
     response = conn.getresponse()
     data = response.read()
@@ -34,8 +34,8 @@ def main():
     workflows = json.loads(myString)['rows']
     
     # Create the CSV table and json File
-    filename = 'table.csv'
-    jsonFile = 'table.json'
+    filename = 'tableSR.csv'
+    jsonFile = 'tableSR.json'
     params = 'excel'
     workflows_dict = {}
     print 'INFO: Creating workflows table: ' + filename + ' with dialect: ' + params
@@ -46,6 +46,8 @@ def main():
     dbsApi = DbsApi(url = dbsUrl)
     
     for entry in workflows:
+        if 'lcontrer' in entry['id']:
+            continue
         info = entry['value']
         if info[9] and type(info[9][0]) == list:
             info[9] = [info[9][x][0] for x in xrange(0, len(info[9]))]
@@ -63,6 +65,8 @@ def main():
                           'Input Dataset' : info[8],
                           'Output Datasets' : info[9],
                           }
+        if 'archived' in workflow_dict['Status']:
+            continue
         if workflow_dict['Requested events'] == 0:
             events = 0
             datasetName = workflow_dict['Input Dataset']
