@@ -74,6 +74,30 @@ def requestManagerPut(url, request, params, head = def_headers):
     conn.close()
     return data
 
+def getWorkflowWorkload(url, workflow):
+    """
+    Gets the workflow loaded, splitted by lines.
+    """
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
+                                            key_file = os.getenv('X509_USER_PROXY'))
+    request = '/reqmgr/view/showWorkload?requestName=' + workflow
+    r1=conn.request("GET",request)
+    r2=conn.getresponse()
+    data = r2.read()
+    #try until no exception
+    while 'exception' in request and retries > 0:
+        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
+                                                key_file = os.getenv('X509_USER_PROXY'))
+        r1=conn.request("GET",request)
+        r2=conn.getresponse()
+        data = r2.read()
+        retries-=1
+    if 'exception' in request:
+        raise Exception('Maximum queries to ReqMgr exceeded',str(request))
+
+    workload = data.split('\n')
+    return workload
+
 def getWorkflowInfo(url, workflow):
     """
     Retrieves workflow information

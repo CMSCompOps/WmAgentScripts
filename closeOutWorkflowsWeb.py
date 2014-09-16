@@ -133,7 +133,7 @@ def closeOutStep0RequestsWeb(url, workflows, output):
     print '-'*180
     return noSiteWorkflows
 
-def closeOutStoreResultsWorkflows(url, workflows):
+def closeOutStoreResultsWorkflowsWeb(url, workflows, output):
     """
     Closeout StoreResults workflows
     """
@@ -225,7 +225,7 @@ def main():
     workflowsCompleted['NoSite-LHEStepZero'] = noSiteWorkflows
     
     output.write('<tr><th colspan="8">StoreResults </th></tr>') 
-    noSiteWorkflows = closeOutStoreResultsWorkflows(url, workflowsCompleted['StoreResults'])
+    noSiteWorkflows = closeOutStoreResultsWorkflowsWeb(url, workflowsCompleted['StoreResults'], output)
     workflowsCompleted['NoSite-StoreResults'] = noSiteWorkflows
 
     output.write('</table><br><br>')

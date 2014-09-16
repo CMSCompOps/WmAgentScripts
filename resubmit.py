@@ -30,7 +30,7 @@ def retrieveSchema(workflowName):
     return helper
     
 
-def modifySchema(helper, user, group):
+def modifySchema(helper, wfinfo, user, group):
     """
     Adapts schema to right parameters.
     If the original workflow points to DBS2, DBS3 URL is fixed instead.
@@ -40,8 +40,7 @@ def modifySchema(helper, user, group):
     result["ProcessingString"] = helper.getProcessingString()
     result["ProcessingVersion"] = helper.getProcessingVersion() + 1
     result["AcquisitionEra"] = helper.getAcquisitionEra()
-
-    #pprint.pprint(helper.data.request.schema.dictionary_())
+    #traverse the whole dictionary
     for (key, value) in helper.data.request.schema.dictionary_().items():
         #previous versions of tags
         if key == 'ProcConfigCacheID':
@@ -67,36 +66,40 @@ def modifySchema(helper, user, group):
             continue
         elif value != None:
             result[key] = value
-        #check MonteCarlo
+    #check MonteCarlo
     if result['RequestType']=='MonteCarlo':
         #check assigning parameters
-         if 'EventsPerJob' not in result:
-            #seek for events per job on helper
-            splitting = helper.listJobSplittingParametersByTask()
-            eventsPerJob = 120000
-            for k, v in splitting.items():
-                if k.endswith('/Production'):
-                    if 'events_per_job' in v:
-                        eventsPerJob = v['events_per_job']
-            result['EventsPerJob'] = eventsPerJob
-        #TODO events per lumi?
+        #seek for events per job on helper
+        splitting = helper.listJobSplittingParametersByTask()
+        eventsPerJob = 120000
+        eventsPerLumi = 100000
+        for k, v in splitting.items():
+            print k,":",v
+            if k.endswith('/Production'):
+                if 'events_per_job' in v:
+                    eventsPerJob = v['events_per_job']
+                elif 'events_per_lumi' in v:
+                    eventsPerLumi = v['events_per_lumi']
+        result['EventsPerJob'] = eventsPerJob
+        #result['EventsPerLumi'] = eventsPerLumi
     #check MonteCarloFromGen
     elif result['RequestType']=='MonteCarloFromGEN':
-        if 'LumisPerJob' not in result:
-            #seek for lumis per job on helper
-            splitting = helper.listJobSplittingParametersByTask()
-            lumisPerJob = 300
-            for k, v in splitting.items():
-                if k.endswith('/Production'):
-                    if 'lumis_per_job' in v:
-                        lumisPerJob = v['lumis_per_job']
-            result['LumisPerJob'] = lumisPerJob
-        #TODO algorithm = lumi based?
-    
-    #TODO why this doesnt replicate?    
+        #seek for lumis per job on helper
+        splitting = helper.listJobSplittingParametersByTask()
+        lumisPerJob = 300
+        for k, v in splitting.items():
+            if k.endswith('/Production'):
+                if 'lumis_per_job' in v:
+                    lumisPerJob = v['lumis_per_job']
+        result['LumisPerJob'] = lumisPerJob
+        #Algorithm = lumi based?
+        result["SplittingAlgo"] = "LumiBased"
+    #Merged LFN   
     if 'MergedLFNBase' not in result:
         result['MergedLFNBase'] = helper.getMergedLFNBase()
-    #pprint.pprint(result)
+    
+    #update information from reqMgr    
+    result["ProcessingString"] = wfinfo['ProcessingString']
     return result
 
 
@@ -106,11 +109,14 @@ def cloneWorkflow(workflow, user, group, verbose=False):
     """
     # Get info about the workflow to be cloned
     helper = retrieveSchema(workflow)
-    schema = modifySchema(helper, user, group)
+    # get info from reqMgr
+    wfinfo = reqMgrClient.getWorkflowInfo('cmsweb.cern.ch',workflow)
+    schema = modifySchema(helper, wfinfo, user, group)
 
     print 'Submitting workflow'
     # Sumbit cloned workflow to ReqMgr
     response = reqMgrClient.submitWorkflow(url,schema)
+    print "RESPONSE", response
     #find the workflow name in response
     m = re.search("details\/(.*)\'",response)
     if m:
@@ -120,6 +126,7 @@ def cloneWorkflow(workflow, user, group, verbose=False):
             print response    
 
             print 'Approve request response:'
+
         # Move the request to Assignment-approved
         data = reqMgrClient.setWorkflowApproved(url, newWorkflow)
         if verbose:

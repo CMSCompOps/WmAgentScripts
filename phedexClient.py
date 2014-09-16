@@ -50,11 +50,12 @@ def getSubscriptionSites(datasetName):
             sites.append(subscription['node'])
         return sites
 
-def getBlockReplicaSites(datasetName):
+def getBlockReplicaSites(datasetName, onlycomplete=False):
     """
     Return the list of sites wich have any replica
     of any block of a given dataset, either if they do have
     subscription or not.
+    if onlycomplete, it will return only the sites that have all the blocks completely transferred.
     """
     url = 'https://cmsweb.cern.ch/phedex/datasvc/json/prod/blockreplicas?dataset=' + datasetName
     result = json.loads(urllib2.urlopen(url).read())
@@ -64,9 +65,23 @@ def getBlockReplicaSites(datasetName):
         return sites
     elif not result['phedex']['block']:
         return sites
+    firstblock = True
     #check all subscriptions
     for block in result['phedex']['block']:
-        sites.add(block['replica'][0]['node'])
+        blocksites = set()
+        for r in block['replica']:
+            if r['complete'] == 'y':           
+                blocksites.add(r['node'])
+        #check for first block
+        if firstblock:
+            sites = blocksites
+            firstblock = False
+        #if we want any site, we do Union between sets
+        if not onlycomplete:
+            sites = sites | blocksites
+        #if we want only sites with all the blocks, we do intersection.
+        else:
+            sites = sites & blocksites
     return list(sites)
 
 def getCustodialMoveSubscriptionSite(datasetName):
