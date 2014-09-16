@@ -15,6 +15,12 @@ except ImportError:
 weekSet = set()
 ignoreCampaign = set(['CMSSW_7_1_0','CMSSW_7_2_0_pre4','TEST'])
 
+
+def getIndex(status):
+    l = ["assignment-approved","acquired","running-open", "running-closed", "completed", "closed-out"]
+    #print status
+    return l.index(status)
+
 def loadData(infile, jsonFile=False):
     #matrix type,weeks
     wfsByType = {}
@@ -48,8 +54,12 @@ def loadData(infile, jsonFile=False):
             #read line
             (name, status, rtype, weeks, campaign) = req.split()
             weeks = int(weeks)
-        
-        
+        #ignore anything that says "Test"
+        if 'test' in name.lower() or 'test' in campaign.lower():
+            continue
+        #ignore in closed out
+        if status == 'closed-out':
+            continue
         #ignore resubmissions:
         if rtype == 'Resubmission':
             continue
@@ -78,10 +88,12 @@ def loadData(infile, jsonFile=False):
         wfsByType[rtype][weeks] += 1
         wfsByStatus[status][weeks] += 1
         wfsByCampaign[campaign][weeks] += 1
+        #TODO for debugging
+        print name+'\t'+status+'\t'+rtype+'\t'+str(weeks)
 
     return wfsByType, wfsByStatus, wfsByCampaign
 
-def generatePlot(data, keyset, title, xlabel, ylabel, filename, ignoreSet=set()):
+def generatePlot(data, keyset, title, xlabel, ylabel, filename, sortKey=None):
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.grid(True)
@@ -90,8 +102,8 @@ def generatePlot(data, keyset, title, xlabel, ylabel, filename, ignoreSet=set())
      #sort keyset (bars)
     keyset = sorted(keyset)
     #sorted series
-    series = sorted(set(data.keys()) - ignoreSet)
-
+    series = sorted(set(data.keys()), key=sortKey)
+    series.reverse()
     #fill empty slots with 0
     information = [ [(data[t][w] if w in data[t] else 0) for w in keyset] for t in series]
 
@@ -103,7 +115,7 @@ def generatePlot(data, keyset, title, xlabel, ylabel, filename, ignoreSet=set())
     maxy = 0
     top = []
     for i in range(len(information)):
-        #the bar must be as high as the sum of the previous rows to be stacked
+        #the bar must be as high as the sum of the following?previous rows to be stacked
         bottom = [sum(information[j][w] for j in range(i)) for w in range(N)]
         bar = plt.bar(ind+width/2, information[i], width, color=cm(i*12+20), edgecolor='white', bottom=bottom)
         bars.append(bar)
@@ -118,7 +130,10 @@ def generatePlot(data, keyset, title, xlabel, ylabel, filename, ignoreSet=set())
     plt.title(title)
     plt.xticks(ind+width, keyset)
     plt.yticks(np.arange(0, maxy+1, max(maxy/5, 1)))
-    plt.legend([bar[0] for bar in bars], series, loc='upper right',prop={'size':8})
+    series.reverse()
+    barcolors = [bar[0] for bar in bars]
+    barcolors.reverse()
+    plt.legend(barcolors, series, loc='upper right',prop={'size':8})
     #plt.show()
     plt.savefig(filename)
 
@@ -142,7 +157,7 @@ def main():
         '# of requests', './www/plots/by_type.png')
     generatePlot(wfsByStatus, weekSet, 'Distribution by Status',
         'weeks old (last updated on %s)'%(now.strftime("%Y-%m-%d")),
-        '# of requests', './www/plots/by_status.png')
+        '# of requests', './www/plots/by_status.png', sortKey=getIndex)
     generatePlot(wfsByCampaign, weekSet, 'Distribution by Campaign',
         'weeks old (last updated on %s)'%(now.strftime("%Y-%m-%d"))
         ,'# of requests', './www/plots/by_campaign.png')
