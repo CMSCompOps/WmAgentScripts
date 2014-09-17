@@ -1,4 +1,4 @@
-#get all of the log files for a given workflow
+#get a specific tar.gz file given the .tar castor path name and the .tar.gz filename
 
 tarfile=$1
 targzfile=$2
