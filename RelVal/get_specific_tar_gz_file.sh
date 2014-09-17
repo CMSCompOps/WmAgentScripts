@@ -3,8 +3,6 @@
 tarfile=$1
 targzfile=$2
 
-found_log_dir=false
-
 if ! nsls $tarfile >& /dev/null
     then
     echo "tar file does not exist on castor, exiting"
