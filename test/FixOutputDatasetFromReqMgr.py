@@ -18,6 +18,13 @@ StatusForOutDS = [
     "normal-archived",
     ]
 
+def getOutputDatasetsFromSpec(baseUrl, request):
+    wh = WMWorkloadHelper()
+    reqmgrSpecUrl = "%s/reqmgr_workload_cache/%s/spec" % (baseUrl, request)
+    wh.load(reqmgrSpecUrl)
+    candidate = wh.listOutputDatasets()
+    return candidate
+    
 def printFormat(requests, desc, fileName):
     report =  "**** %s : %s ****\n" % (desc, len(requests))
     for requestName in requests:
@@ -37,48 +44,52 @@ def fixOutputDataset(wmstatsSrv, requestName, outputDSList):
     return result
 
 if __name__ == "__main__":
-    baseUrl = "https://cmsweb-testbed.cern.ch/couchdb"
+    baseUrl = "https://cmsweb.cern.ch/couchdb"
     url = "%s/wmstats" % baseUrl
-    testbedWMStats = WMStatsReader(url)
-     
-    requests = testbedWMStats.getRequestByStatus(StatusForOutDS, False)
-    requestsWithWrongOutputDS = set()
-    problemRequests = set()
-    fixedRequests = set()
-    for reqName, prop in requests.items():
-        if prop.has_key("outputdatasets"):
-            for outputDS in prop["outputdatasets"]:
-                if "None" in outputDS:
-                    requestsWithWrongOutputDS.add(reqName)
-                    
-    print("wrong output %s" % len(requestsWithWrongOutputDS))
-       
-    destWMStats = WMStatsWriter(url)
-        
-    for request in requestsWithWrongOutputDS:
-        wh = WMWorkloadHelper()
-        reqmgrSpecUrl = "%s/reqmgr_workload_cache/%s/spec" % (baseUrl, request)
-        wh.load(reqmgrSpecUrl)
-        candidate = wh.listOutputDatasets()
-        problemFlag = False
-        for canOutDS in candidate:
-            if "None" in canOutDS:
-                problemFlag = True
-                problemRequests.add(request)
-                 
-        if not problemFlag:
-            if fixOutputDataset(destWMStats, request, candidate) != "OK":
-                print("update failed: %s" % request)
-            fixedRequests.add(request)
-                 
-    print("still problem requests %s" % len(problemRequests))
     
-    printFormat(requestsWithWrongOutputDS, "Wrong output ds", "wrongOutDS.txt")
-    printFormat(fixedRequests, "fixed wrong output ds", "fixedWrongOutDS.txt")
-    printFormat(problemRequests, "Still wrong output ds", "stillWrongOutDS.txt")
-    print("all done")
-    
-    
+    outDS = getOutputDatasetsFromSpec(baseUrl, "jen_a_HIG-Fall13dr-00118_T1_FR_CCIN2P3_MSS_00112_v0_tsg_140124_051820_9802")
+    print(outDS)
+
+#     testbedWMStats = WMStatsReader(url)
+#      
+#     requests = testbedWMStats.getRequestByStatus(StatusForOutDS, False)
+#     requestsWithWrongOutputDS = set()
+#     problemRequests = set()
+#     fixedRequests = set()
+#     for reqName, prop in requests.items():
+#         if prop.has_key("outputdatasets"):
+#             for outputDS in prop["outputdatasets"]:
+#                 if "None" in outputDS:
+#                     requestsWithWrongOutputDS.add(reqName)
+#                     
+#     print("wrong output %s" % len(requestsWithWrongOutputDS))
+#        
+#     destWMStats = WMStatsWriter(url)
+#         
+#     for request in requestsWithWrongOutputDS:
+#         wh = WMWorkloadHelper()
+#         reqmgrSpecUrl = "%s/reqmgr_workload_cache/%s/spec" % (baseUrl, request)
+#         wh.load(reqmgrSpecUrl)
+#         candidate = wh.listOutputDatasets()
+#         problemFlag = False
+#         for canOutDS in candidate:
+#             if "None" in canOutDS:
+#                 problemFlag = True
+#                 problemRequests.add(request)
+#                  
+#         if not problemFlag:
+#             if fixOutputDataset(destWMStats, request, candidate) != "OK":
+#                 print("update failed: %s" % request)
+#             fixedRequests.add(request)
+#                  
+#     print("still problem requests %s" % len(problemRequests))
+#     
+#     printFormat(requestsWithWrongOutputDS, "Wrong output ds", "wrongOutDS.txt")
+#     printFormat(fixedRequests, "fixed wrong output ds", "fixedWrongOutDS.txt")
+#     printFormat(problemRequests, "Still wrong output ds", "stillWrongOutDS.txt")
+#     print("all done")
+#     
+#     
 #     reqMgrDB = CouchServer(baseUrl).connectDatabase("reqmgr_workload_cache", False)
 #     requests = reqMgrDB.allDocs({"include_docs": True})
 #     wrongOutDS = set()

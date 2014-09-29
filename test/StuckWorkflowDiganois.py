@@ -22,7 +22,7 @@ class RequestsReport(object):
                       reverse = reverse)
     
     def printFormat(self, detail = True):
-        fileName = "stuckReportForAll.txt"
+        fileName = "stuckReportForAlltestbed.txt"
         requests = self.sortByStatusTime()
         report =  "**** %s : %s ****\n" % (self.group, self.numOfRequests())
         print(report)
@@ -47,7 +47,8 @@ class RequestsReport(object):
         print(report, file = f)
         
 if __name__ == "__main__":
-    url = "https://cmsweb.cern.ch/couchdb/wmstats"
+    #url = "https://cmsweb.cern.ch/couchdb/wmstats"
+    url = "https://cmsweb-testbed.cern.ch/couchdb/wmstats"
     testbedWMStats = WMStatsClient(url)
     print("start to getting job information from %s" % url)
     print("will take a while\n")

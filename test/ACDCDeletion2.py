@@ -15,10 +15,10 @@ if __name__ == "__main__":
     testbedWMStats = WMStatsClient(url)
     #print "start to getting job information from %s" % url
     #print "will take a while\n"
-    requests = testbedWMStats.getRequestByStatus(["normal-archived", "aborted-archived", "rejected-archived", "announced", "failed", "rejected", "aborted"], jobInfoFlag = False)
+    requests = testbedWMStats.getRequestByStatus(["normal-archived", "aborted-archived", "rejected-archived", "aborted"], jobInfoFlag = False)
     requestCollection = RequestInfoCollection(requests)
     #print requests
-    filtered = requestCollection.filterRequests(isResubmission)
+    filtered = requestCollection.filterRequests(allTrue)
         
         
     #print "\n\n\n"
@@ -40,7 +40,7 @@ if __name__ == "__main__":
        
     # saftey checking for request
     for request in requests["rows"]:
-        if request['doc']['RequestStatus'] in ["announced", "failed", "rejected", "aborted", "normal-archived", "aborted-archived", "rejected-archived"]:
+        if request['doc']['RequestStatus'] in ["announced", "failed", "rejected", "aborted"]:
             safeToDelete.add(request["id"])
             report += "%s\n" % request["id"]
            
