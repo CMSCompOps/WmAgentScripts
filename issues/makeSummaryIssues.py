@@ -21,14 +21,16 @@ import zlib
 # TODO sites/pledged
 # TODO add cooloffs/failures (new page?)
 
-header = ('<html>'
-        '<head>'
-        '<meta http-equiv="Refresh" content="1800">'
-        '<link rel="stylesheet" type="text/css" href="../style.css" />'
-        '<title>%s Status - Issues</title>'
-        '<meta http-equiv="Refresh" content="1800">'
-        '</head>'
-        '<body>')
+header = ('<html>\n'
+        '<head>\n'
+        '<meta http-equiv="Refresh" content="1800">\n'
+        '<link rel="stylesheet" type="text/css" href="../style.css" />\n'
+        '<script language="javascript" type="text/javascript" src="../actb.js"></script><!-- External script -->\n'
+        '<script language="javascript" type="text/javascript" src="../tablefilter.js"></script>\n'
+        '<title>%s Status - Issues</title>\n'
+        '<meta http-equiv="Refresh" content="1800">\n'
+        '</head>\n'
+        '<body>\n')
 
 bar = ('<table><tr>'
     '<td><a href="http://cmst2.web.cern.ch/cmst2/mc/">Summary</a></td>'
@@ -44,17 +46,17 @@ bar = ('<table><tr>'
     '<td><a target="_blank" href="http://www.gridpp.rl.ac.uk/cms/reprocessingcampaigns_totals.html">Processing campaigns</a></td>'
     '<td><a target="_blank" href="https://hypernews.cern.ch/HyperNews/CMS/SECURED/edit-response.pl/datasets.html">New announcement HN</a></td>'
     '<td><a target="_blank" href="https://savannah.cern.ch/support/?group=cmscompinfrasup&func=additem">New Savannah</a></td>'
-    '</tr></table><hr>')
+    '</tr></table><hr>\n')
 
-foot = ("<hr><i>Last update: %s</i><br/>"
-        "<i>GEN-SIM Waiting room: <a target='_blank' href='http://cmst2.web.cern.ch/cmst2/mc/gen-sim-wr.json'>gen-sim-wr.json</a> (updated: %s)</i><br/><i>Acquired->Closed-out MonteCarlo* requests JSON file: <a target='_blank' href='http://cmst2.web.cern.ch/cmst2/mc/data.json'>data.json</a> (updated: %s)</i><br/><i>Pledged JSON file: <a target='_blank' href='http://cmst2.web.cern.ch/cmst2/mc/pledged.json'>pledged.json</a> (updated: %s)</i><br/><i>Assignment txt file: <a target='_blank' href='http://cmst2.web.cern.ch/cmst2/mc/assignment.txt'>"
-        "assignment.txt</a></i><br/>"
-        "</body>"
-        "</html>")
+foot = ("<hr><i>Last update: %s</i><br/>\n"
+        "<i>GEN-SIM Waiting room: <a target='_blank' href='http://cmst2.web.cern.ch/cmst2/mc/gen-sim-wr.json'>gen-sim-wr.json</a> (updated: %s)</i><br/><i>Acquired->Closed-out MonteCarlo* requests JSON file: <a target='_blank' href='http://cmst2.web.cern.ch/cmst2/mc/data.json'>data.json</a> (updated: %s)</i><br/><i>Pledged JSON file: <a target='_blank' href='http://cmst2.web.cern.ch/cmst2/mc/pledged.json'>pledged.json</a> (updated: %s)</i><br/><i>Assignment txt file: <a target='_blank' href='http://cmst2.web.cern.ch/cmst2/mc/assignment.txt'>\n"
+        "assignment.txt</a></i><br/>\n"
+        "</body>\n"
+        "</html>\n")
 
-issues_types = ['highprio','dsstuck','mostlydone','veryold','subscribe','wronglfnbase','trstuck','acdc']
+issues_types = ['highprio','dsstuck','mostlydone','veryold','subscribe','wronglfnbase','trstuck','acdc', 'unstaged']
 live_status = ['assigned','acquired','running-open','running-closed','completed']
-running_status = ['running','running-open','running-closed']
+running_status = ['acquired','running','running-open','running-closed']
 afs_base ='/afs/cern.ch/user/j/jbadillo/www/'
 reprocdir = afs_base+'reproc'
 mcdir = afs_base+'mc'
@@ -146,7 +148,7 @@ def writehtml(issues,  oldest, s, now, datajsonmtime, wrjsonmtime, dbsjsonmtime,
     f.write('<h3>Force-complete (very old that are mostly done)</h3>')
     f.write('<pre>')
     #intersection between old and mostly done
-    for i in (issues['veryold'] & issues['mostlydone']):
+    for i in sorted(issues['veryold'] & issues['mostlydone']):
         #ignore extensions
         if '_EXT_' in i:
             continue
@@ -176,36 +178,44 @@ def writehtml(issues,  oldest, s, now, datajsonmtime, wrjsonmtime, dbsjsonmtime,
     #print the ones that need check
     f.write('<h3>Check needed</h3>')
     f.write('<pre>')
-    for i in issues['wronglfnbase']:
+    for i in sorted(issues['wronglfnbase']):
         f.write('%s\n' % i)
     f.write('</pre>')
 
     #print the ones with no new events
     f.write('<h3>Datasets stuck (without new events)</h3>')
     f.write('<pre>')
-    for r in sorted(issues['dsstuck']):
-        req = irlist[r]
+    for i in sorted(issues['dsstuck']):
+        req = irlist[i]
         f.write('%s (%.2f days)\n' % (i, req['dayssame']))
     f.write('</pre>')
     
+    #print the ones with no new events
+    f.write('<h3>Input not subscribed to site</h3>')
+    f.write('<pre>')
+    for i in sorted(issues['unstaged']):
+        req = irlist[i]
+        f.write('%s (%s)\n' % (i, req['sites'][0]))
+    f.write('</pre>')
+
     #the table
-    f.write('<h3>Summary</h3>')
+    f.write('<h3>Summary</h3>\n')
     #create headers
     h = ['request','priority','reqnumevts']
     for i in issues.keys():
         h.append(i)
 
-    f.write("<table border=1>")
+    f.write("<table border=1 id='issuestable'>\n")
     f.write("<tr>")
     for i in h:
         f.write('<th>%s</th>' % i)
     f.write("</tr>")
 
     for rname, req in sorted(irlist.items()):
-        f.write("<tr onMouseOver=\"this.bgColor='#DDDDDD'\" onMouseOut=\"this.bgColor='#FFFFFF'\">")
+        f.write("<tr onMouseOver=\"this.bgColor='#DDDDDD'\" onMouseOut=\"this.bgColor='#FFFFFF'\">\n")
         for i in h:
             if i == 'request':
-                f.write('<td><a target="_blank" href="https://cmsweb.cern.ch/reqmgr/view/details/%s">%s</a></td>' % (rname,rname))
+                f.write('<td><a target="_blank" href="https://cmsweb.cern.ch/reqmgr/view/details/%s">%s</a></td>\n' % (rname,rname))
             elif i == 'priority':
                 f.write('<td align=left>%s</td>' % (human(req['priority'])))
             elif i == 'reqnumevts':
@@ -218,10 +228,20 @@ def writehtml(issues,  oldest, s, now, datajsonmtime, wrjsonmtime, dbsjsonmtime,
                     color='#00FF00'
                     stri='&nbsp;'
                 #f.write('<td align=center bgcolor=%s>&nbsp;</td>' % color)
-                f.write('<td align=center>%s</td>' % stri)
-        f.write("</tr>")
-    f.write("</table>")
-
+                f.write('<td align=center>%s</td>\n' % stri)
+        f.write("</tr>\n")
+    f.write("</table>\n")
+    #script for filtering rows
+    s = (','.join(["col_"+str(i+3)+":'select'" for i in range(len(issues_types))]))
+    f.write('<script language="javascript" type="text/javascript">\n'
+        'var issuestableFilters = {\n'
+        'col_0: "none",\n'
+        'col_1: "none",\n'
+        'col_2: "none",\n'
+        + s +
+        '};\n'
+        'setFilterGrid("issuestable",0,issuestableFilters);\n'
+        '</script>\n')
     f.write(foot%(str(now),wrjsonmtime,datajsonmtime,pledgedjsonmtime))
     f.close()
 
@@ -320,9 +340,10 @@ def makeissuessummary(s, issues, oldest, urgent_requests, types):
                 issues['subscribe'].add(r['requestname'])
             #if it's pointing to the wrong LFN
             #TODO LFN for data?
-            if (('HIN' in r['requestname'] and r['mergedLFNBase'] != '/store/himc' ) 
+            if (r['status'] in live_status and
+                (('HIN' in r['requestname'] and r['mergedLFNBase'] != '/store/himc' ) 
                 or (r['outputdatasetinfo'][0]['name'][-3:] == 'GEN' and r['mergedLFNBase'] != '/store/generator')
-                or (r['outputdatasetinfo'][0]['name'][-3:] in ['GEN-SIM','AODSIM'] and r['mergedLFNBase'] != '/store/mc')):
+                or (r['outputdatasetinfo'][0]['name'][-3:] in ['GEN-SIM','AODSIM'] and r['mergedLFNBase'] != '/store/mc'))):
                 issues['wronglfnbase'].add(r['requestname'])
             if len(r['acdc'])>1:
                 issues['acdc'].add(r['requestname'])
@@ -343,7 +364,7 @@ def makeissuessummary(s, issues, oldest, urgent_requests, types):
                 pass
                 #issues['cooloff'].add(r['requestname'])
                 #alarmlink='' % ()
-            elif r['status'] in ['running','running-open','running-closed'] and eperc >0 and (time.time() - ods['lastmodts']) > stuck_days*24*3600:
+            elif r['status'] in running_status and eperc >0 and (time.time() - ods['lastmodts']) > stuck_days*24*3600:
                 issues['dsstuck'].add(r['requestname'])
                 #alarmlink='https://cmsweb.cern.ch/das/request?view=list&limit=10&instance=cms_dbs_prod_global&input=dataset+dataset=%s*+' % ods['name']
             if eperc >=95 and not 'SMS' in r['outputdatasetinfo'][0]['name'] and 'CMSSM' not in r['outputdatasetinfo'][0]['name'] and r['status'] in ['acquired','running-open','running-closed']:
@@ -378,6 +399,19 @@ def makeissuessummary(s, issues, oldest, urgent_requests, types):
                 lastmodts = datetime.datetime.fromtimestamp(ods['lastmodts'])
                 delta = now - lastmodts
                 days.append(delta.days + delta.seconds/3600.0/24.0)
+            #acquired and unsubscribed input
+            if r['status'] == 'acquired':
+                #get one site
+                if len(r['sites']) == 1:
+                    site = r['sites'][0]
+                    nodes_avail = [str(subs['node']) for subs in r['inputdatasetinfo']['phtrinfo']]
+                    #is acquired on a site in which the input is not subscribed
+                    if( not nodes_avail
+                        or( site not in nodes_avail and
+                            site+'_Disk' not in nodes_avail)):
+                        print "unstaged"
+                        issues['unstaged'].add(r['requestname'])
+                         
         #get the min days without new events
         dayssame = min(days) if days else 0
         r['dayssame'] = dayssame

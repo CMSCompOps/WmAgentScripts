@@ -327,7 +327,7 @@ def getWorkflowInfo(workflow):
         try:
             result = json.load(urllib.urlopen(url))
         except:
-            print "Cannot get subscription status from PhEDEx"
+            print "Cannot get Requests List status from PhEDEx"
         try:
             r = result['phedex']['request']
         except:
@@ -346,14 +346,14 @@ def getWorkflowInfo(workflow):
                 phreqinfo['id'] = id
                 inputdataset['phreqinfo'].append(phreqinfo)
         
-        url = 'https://cmsweb.cern.ch/phedex/datasvc/json/prod/subscriptions?dataset=' + inputdataset['name']
+        url = 'https://cmsweb.cern.ch/phedex/datasvc/json/prod/Subscriptions?dataset=' + inputdataset['name']
         try:
-            pass
-                    #result = json.load(urllib.urlopen(url))
+            result = json.load(urllib.urlopen(url))
         except:
-            pass # print "Cannot get transfer status from PhEDEx"
+            print "Cannot get Subscriptions from PhEDEx"
         inputdataset['phtrinfo'] = []
         try:
+            print result
             rlist = result['phedex']['dataset'][0]['subscription']
             for r in rlist:
                 phtrinfo = {}
@@ -398,13 +398,13 @@ def getWorkflowInfo(workflow):
             oel['lastmodts'] = olastmodts
         
             phreqinfo = {}
-            url='https://cmsweb.cern.ch/phedex/datasvc/json/prod/RequestList?dataset=' + o
+            url='https://cmsweb.cern.ch/phedex/datasvc/json/prod/Subscriptions?dataset=' + o
             try:
                 result = json.load(urllib.urlopen(url))
             except:
                 print "Cannot get subscription status from PhEDEx"
             try:
-                r = result['phedex']['request']
+                r = result['phedex']['dataset']
             except:
                 r = None
             if r:

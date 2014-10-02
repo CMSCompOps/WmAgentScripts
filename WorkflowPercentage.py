@@ -21,22 +21,30 @@ def percentageCompletion(url, workflow, outputDataset, verbose=False, checkLumis
     if checkLumis is enabled, we get lumis instead.
     """
     if checkLumis:
-        inputEvents = reqMgrClient.getInputLumis(url, workflow)
+        try:
+            inputEvents = reqMgrClient.getInputLumis(url, workflow)
+        except:
+            #no input dataset
+            inputEvents = 0        
         outputEvents = reqMgrClient.getOutputLumis(url, workflow, outputDataset)
     else:
         inputEvents = reqMgrClient.getInputEvents(url, workflow)
         outputEvents = reqMgrClient.getOutputEvents(url, workflow, outputDataset)
-    if inputEvents==0 or not inputEvents:
-	    return 0
+
     if not outputEvents:
         outputEvents = 0  
+    if not inputEvents:
+        inputEvents = 0
+    try:
+        inputEvents = int(inputEvents)
+    except:
+        inputEvents = 0
     if verbose:
-
         print outputDataset
         print "Input", "lumis:" if checkLumis else "events:", int(inputEvents)
         print "Output", "lumis:" if checkLumis else "events:", int(outputEvents)
 
-    percentage=100.0*outputEvents/float(inputEvents)
+    percentage = 100.0*outputEvents/float(inputEvents) if inputEvents > 0 else 0.0
     return percentage
 
     

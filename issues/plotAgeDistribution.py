@@ -57,6 +57,9 @@ def loadData(infile, jsonFile=False):
         #ignore anything that says "Test"
         if 'test' in name.lower() or 'test' in campaign.lower():
             continue
+        #ignore anything that says "backfill"
+        if 'backfill' in name.lower() or 'backfill' in campaign.lower():
+            continue
         #ignore in closed out
         if status == 'closed-out':
             continue

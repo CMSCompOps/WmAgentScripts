@@ -16,9 +16,11 @@ import sys
 import os
 from dbs.apis.dbsClient import DbsApi
 
+DEFAULT_PROD_DBS3 = 'https://cmsweb.cern.ch/dbs/prod/global/DBSWriter'
+
 def get_command_line_options():
     parser = OptionParser(usage='%prog --dataset=</specify/dataset/path> --status=<newStatus> --url=<DBS_Instance_URL> + optional options')
-    parser.add_option("-u", "--url", dest="url", help="DBS Instance url", metavar="DBS_Instance_URL")
+    parser.add_option("-u", "--url", dest="url", help="DBS Instance url", metavar="DBS_Instance_URL", default=DEFAULT_PROD_DBS3)
     parser.add_option("-r", "--recursive", dest="recursive", help="Invalidate all children datasets,too?", metavar="True/False")
     parser.add_option("-d", "--dataset", dest="dataset", help="Dataset to change status", metavar="/specify/dataset/path")
     parser.add_option("-s", "--status", dest="new_status", help="New status of the dataset", metavar="newStatus")

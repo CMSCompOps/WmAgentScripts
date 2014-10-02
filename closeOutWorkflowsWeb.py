@@ -13,6 +13,21 @@ from xml.dom.minidom import getDOMImplementation
 outputfile = '/afs/cern.ch/user/j/jbadillo/www/closeout.html'
 tempfile = '/afs/cern.ch/user/j/jbadillo/www/temp.html'
 
+head = ('<html>\n'
+        '<head>\n'
+        '<link rel="stylesheet" type="text/css" href="style.css" />\n'
+        '<script language="javascript" type="text/javascript" src="actb.js"></script><!-- External script -->\n'
+        '<script language="javascript" type="text/javascript" src="tablefilter.js"></script>\n'
+        '<title>Closeout script Output</title>'
+        '</head>\n'
+        '<body>\n'
+        '<h2>Close-out Script Summary</h2>\n'
+        '<hr></hr>')
+
+foot = ('<p>Last update: %s CERN time</p>\n'
+        '</body>\n'
+        '</html>')
+
 def closeOutReRecoWorkflowsWeb(url, workflows, output):
     """
     closes rereco workflows
@@ -163,7 +178,7 @@ def printResultWeb(result, output):
     Prints the result of analysing a workflow in web output
     """
     for dsname, ds in result['datasets'].items():
-        output.write('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>' % 
+        output.write('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n' % 
            (result["name"], dsname,
             "%.1f"%(ds["percentage"]*100),
             "?" if ds["duplicate"] is None else ds["duplicate"],
@@ -172,15 +187,28 @@ def printResultWeb(result, output):
             "?" if ds["transPerc"] is None else str(int(ds["transPerc"]*100)),
             ds["closeOutDataset"]))
 
+def printTableHeaderWeb(title, output):
+    output.write('<h3>%s</h3>'%title)
+    output.write('<table border=1 id="%s" width="100%%">\n'%title)
+    #output.write('<tr><th colspan="8">%s</th></tr>\n'%title)
+    output.write('<tr><th>Request</th><th>OutputDataSet</th><th>%Compl</th>\n'
+                '<th>Dupl</th><th>CorrectLumis</th><th>Subscr</th><th>Tran</th><th>ClosOu</th></tr>\n')
 
-
-def writeHTMLHeader(output):
-    output.write('<html>')
-    output.write('<head>')
-    output.write('<link rel="stylesheet" type="text/css" href="style.css" />')
-    output.write('</head>')
-    output.write('<body>')
-
+def printTableFooterWeb(title, output):
+    output.write('</table><br><br>')
+    output.write('<script language="javascript" type="text/javascript">\n'
+        'var tableF = {\n'
+        'col_0: "none",\n'
+        'col_1: "none",\n'
+        'col_2: "none",\n'
+        'col_3: "select",\n'
+        'col_4: "none",\n'
+        'col_5: "select",\n'
+        'col_6: "none",\n'
+        'col_7: "select",\n'
+        '};\n'+
+        'setFilterGrid("%s",0,tableF);\n'%title+
+        '</script>\n')
 
 def listWorkflowsWeb(workflows, output):
     listWorkflows(workflows)
@@ -196,43 +224,46 @@ def main():
     print "Classifying Requests"
     workflowsCompleted=classifyCompletedRequests(url, requests)
     #header
-    writeHTMLHeader(output)
+    output.write(head)
     #print header
     print '-'*220
     print '| Request'+(' '*74)+'| OutputDataSet'+(' '*86)+'|%Compl|Dupl|Tran|Subscr|ClosOu|'
     print '-'*220
-    output.write('<table border=1> <tr><th>Request</th><th>OutputDataSet</th><th>%Compl</th>'
-                '<th>Dupl</th><th>CorrectLumis</th><th>Subscr</th><th>Tran</th><th>ClosOu</th></tr>')
-    
-    output.write('<tr><th colspan="8">ReReco </th></tr>')
+
+    printTableHeaderWeb('ReReco', output)
     noSiteWorkflows = closeOutReRecoWorkflowsWeb(url, workflowsCompleted['ReReco'], output)
     workflowsCompleted['NoSite-ReReco'] = noSiteWorkflows
-    
-    output.write('<tr><th colspan="8">ReDigi </th></tr>')
+    printTableFooterWeb('ReReco', output)
+
+    printTableHeaderWeb('ReDigi', output)
     noSiteWorkflows = closeOutRedigiWorkflowsWeb(url, workflowsCompleted['ReDigi'], output)
     workflowsCompleted['NoSite-ReDigi'] = noSiteWorkflows
+    printTableFooterWeb('ReDigi', output)
 
-    output.write('<tr><th colspan="8">MonteCarlo </th></tr>')
+    printTableHeaderWeb('MonteCarlo', output)
     noSiteWorkflows = closeOutMonterCarloRequestsWeb(url, workflowsCompleted['MonteCarlo'], output)
     workflowsCompleted['NoSite-MonteCarlo'] = noSiteWorkflows
+    printTableFooterWeb('MonteCarlo', output)
     
-    output.write('<tr><th colspan="8">MonteCarloFromGEN </th></tr>')
+    printTableHeaderWeb('MonteCarloFromGEN', output)
     noSiteWorkflows = closeOutMonterCarloRequestsWeb(url, workflowsCompleted['MonteCarloFromGEN'], output)
     workflowsCompleted['NoSite-MonteCarloFromGEN'] = noSiteWorkflows
+    printTableFooterWeb('MonteCarloFromGEN', output)
     
-    output.write('<tr><th colspan="8">LHEStepZero </th></tr>')
+    printTableHeaderWeb('LHEStepZero', output)
     noSiteWorkflows = closeOutStep0RequestsWeb(url, workflowsCompleted['LHEStepZero'],output)
     workflowsCompleted['NoSite-LHEStepZero'] = noSiteWorkflows
-    
-    output.write('<tr><th colspan="8">StoreResults </th></tr>') 
+    printTableFooterWeb('LHEStepZero', output)
+
+    printTableHeaderWeb('StoreResults', output)
     noSiteWorkflows = closeOutStoreResultsWorkflowsWeb(url, workflowsCompleted['StoreResults'], output)
     workflowsCompleted['NoSite-StoreResults'] = noSiteWorkflows
-
-    output.write('</table><br><br>')
+    printTableFooterWeb('StoreResults', output)
 
     print "MC Workflows for which couldn't find Custodial Tier1 Site"
 
-    output.write("<p>Workflows for which couldn't find Custodial Tier1 Site</p>")
+    output.write("<hr></hr>"
+                "<h3>Workflows for which couldn't find Custodial Tier1 Site</h3>")
     output.write("<table border=1> <tr><th>Workflow</th><th>Dataset</th></tr>")
     listWorkflowsWeb(workflowsCompleted['NoSite-ReReco'], output)
     listWorkflowsWeb(workflowsCompleted['NoSite-ReDigi'], output)
@@ -241,10 +272,7 @@ def main():
     listWorkflowsWeb(workflowsCompleted['NoSite-LHEStepZero'], output)
     listWorkflowsWeb(workflowsCompleted['NoSite-StoreResults'], output)
     output.write('</table>')
-  
-    output.write('<p>Last update: '+time.strftime("%c")+' CERN time</p>')
-    output.write('</body>')
-    output.write('</html>')
+    output.write(foot%time.strftime("%c"))
     output.close()
     #copy temporal to definitive file, avoid unavailability when running
     shutil.copy(tempfile, outputfile)  
