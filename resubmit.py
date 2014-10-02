@@ -7,7 +7,7 @@ This script depends on WMCore code, so WMAgent environment
 and libraries need to be loaded before running it.
 """
 import pprint
-import os
+import os, datetime
 import sys
 import urllib
 import httplib
@@ -30,17 +30,14 @@ def retrieveSchema(workflowName):
     return helper
     
 
-def modifySchema(helper, wfinfo, user, group):
+def modifySchema(helper, user, group, backfill=False):
     """
     Adapts schema to right parameters.
     If the original workflow points to DBS2, DBS3 URL is fixed instead.
+    if backfill is True, modifies RequestString, ProcessingString, AcquisitionEra
+    and Campaign to say Backfill, and restarts requestDate.
     """
     result = {}
-    # Add AcquisitionEra, ProcessingString and increase ProcessingVersion by 1
-    result["ProcessingString"] = helper.getProcessingString()
-    result["ProcessingVersion"] = helper.getProcessingVersion() + 1
-    result["AcquisitionEra"] = helper.getAcquisitionEra()
-    #traverse the whole dictionary
     for (key, value) in helper.data.request.schema.dictionary_().items():
         #previous versions of tags
         if key == 'ProcConfigCacheID':
@@ -61,6 +58,10 @@ def modifySchema(helper, wfinfo, user, group):
         #copy the right LFN base
         elif key == 'MergedLFNBase':
             result['MergedLFNBase'] = helper.getMergedLFNBase()
+        #TODO deleting timeout so they will move to running-close as soon as they can
+        #elif key == 'OpenRunningTimeout':
+            #delete entry
+        #    continue
         #skip empty entries
         elif not value:
             continue
@@ -99,24 +100,44 @@ def modifySchema(helper, wfinfo, user, group):
         result['MergedLFNBase'] = helper.getMergedLFNBase()
     
     #update information from reqMgr    
-    result["ProcessingString"] = wfinfo['ProcessingString']
+    # Add AcquisitionEra, ProcessingString and increase ProcessingVersion by 1
+    result["ProcessingString"] = helper.getProcessingString()
+    result["ProcessingVersion"] = helper.getProcessingVersion() + 1
+    result["AcquisitionEra"] = helper.getAcquisitionEra()
+
+    #modify for backfill
+    if backfill:
+        #Modify ProcessingString, AcquisitionEra, Campaign and Request string (if they don't
+        #have the word 'backfill' in it
+        result["ProcessingString"] = "BACKFILL"
+        if "backfill" not in result["AcquisitionEra"].lower():
+            result["AcquisitionEra"] = helper.getAcquisitionEra()+"Backfill"
+        if "backfill" not in result["Campaign"].lower():
+            result["Campaign"] = result["Campaign"]+"-Backfill"
+        if "backfill" not in result["RequestString"].lower():
+            #Word backfill in the middle of the request strin
+            parts = result["RequestString"].split('-')
+            result["RequestString"] = '-'.join(parts[:2]+["Backfill"]+parts[2:])
+        #reset the request date
+        now = datetime.datetime.utcnow()
+        result["RequestDate"] = [now.year, now.month, now.day, now.hour, now.minute]
     return result
 
 
-def cloneWorkflow(workflow, user, group, verbose=False):
+def cloneWorkflow(workflow, user, group, verbose=False, backfill=False):
     """
     clones a workflow
     """
     # Get info about the workflow to be cloned
     helper = retrieveSchema(workflow)
     # get info from reqMgr
-    wfinfo = reqMgrClient.getWorkflowInfo('cmsweb.cern.ch',workflow)
-    schema = modifySchema(helper, wfinfo, user, group)
+    schema = modifySchema(helper, user, group, backfill)
 
     print 'Submitting workflow'
     # Sumbit cloned workflow to ReqMgr
     response = reqMgrClient.submitWorkflow(url,schema)
     print "RESPONSE", response
+
     #find the workflow name in response
     m = re.search("details\/(.*)\'",response)
     if m:
@@ -126,6 +147,12 @@ def cloneWorkflow(workflow, user, group, verbose=False):
             print response    
 
             print 'Approve request response:'
+        #TODO only for debug
+        #response = reqMgrClient.setWorkflowSplitting(url, schema)
+        #print "RESPONSE", response
+        #schema['requestName'] = requestName
+        #schema['splittingTask'] = '/%s/%s' % (requestName, taskName)
+        #schema['splittingAlgo'] = splittingAlgo
 
         # Move the request to Assignment-approved
         data = reqMgrClient.setWorkflowApproved(url, newWorkflow)
@@ -147,15 +174,17 @@ url = 'cmsweb.cern.ch'
 
 def main():
     # Check the arguements, get info from them
-    if len(sys.argv) != 4:
+    if len(sys.argv) != 4 and len(sys.argv) != 5:
         print "Usage:"
-        print "  ./resubmit WORKFLOW_NAME USER GROUP"
+        print "  ./resubmit WORKFLOW_NAME USER GROUP [-b]"
         sys.exit(0)
+    #backfill option
+    backfill = (len(sys.argv) == 5 and sys.argv[4] == '-b')
     workflow = sys.argv[1]
     user = sys.argv[2]
     group = sys.argv[3]    
     #Show verbose
-    cloneWorkflow(workflow, user, group, True)
+    cloneWorkflow(workflow, user, group, True, backfill)
     
     sys.exit(0)
 
