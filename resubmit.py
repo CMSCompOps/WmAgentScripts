@@ -102,8 +102,12 @@ def modifySchema(helper, user, group, backfill=False):
     #update information from reqMgr    
     # Add AcquisitionEra, ProcessingString and increase ProcessingVersion by 1
     result["ProcessingString"] = helper.getProcessingString()
-    result["ProcessingVersion"] = helper.getProcessingVersion() + 1
     result["AcquisitionEra"] = helper.getAcquisitionEra()
+    #try to parse processing version as an integer, if don't, assign 2.
+    try:
+        result["ProcessingVersion"] = int(helper.getProcessingVersion()) + 1
+    except ValueError:
+        result["ProcessingVersion"] = 2
 
     #modify for backfill
     if backfill:
@@ -118,6 +122,9 @@ def modifySchema(helper, user, group, backfill=False):
             #Word backfill in the middle of the request strin
             parts = result["RequestString"].split('-')
             result["RequestString"] = '-'.join(parts[:2]+["Backfill"]+parts[2:])
+        if "PrepID" in result:
+            #delete entry
+            del result["PrepID"]
         #reset the request date
         now = datetime.datetime.utcnow()
         result["RequestDate"] = [now.year, now.month, now.day, now.hour, now.minute]
