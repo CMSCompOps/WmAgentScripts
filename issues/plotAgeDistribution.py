@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random, sys
 from datetime import datetime
+from pprint import pprint
 try:
     import json
 except ImportError:
@@ -97,6 +98,9 @@ def loadData(infile, jsonFile=False):
     return wfsByType, wfsByStatus, wfsByCampaign
 
 def generatePlot(data, keyset, title, xlabel, ylabel, filename, sortKey=None):
+    #TODO for debugging
+    pprint(data)
+
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.grid(True)

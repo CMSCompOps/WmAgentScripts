@@ -281,7 +281,7 @@ def getWorkflowInfo(workflow):
     if 'RequestSizeEvents' in s:
         reqevts = s['RequestSizeEvents']
     elif 'RequestNumEvents' in s:
-        reqevts = 0
+        reqevts = s['RequestNumEvents']
     
     inputdataset = {}
     if 'InputDatasets' in s and s['InputDatasets']:
@@ -398,26 +398,29 @@ def getWorkflowInfo(workflow):
             oel['lastmodts'] = olastmodts
         
             phreqinfo = {}
-            url='https://cmsweb.cern.ch/phedex/datasvc/json/prod/Subscriptions?dataset=' + o
+            url='https://cmsweb.cern.ch/phedex/datasvc/json/prod/requestlist?dataset=' + o
             try:
                 result = json.load(urllib.urlopen(url))
             except:
-                print "Cannot get subscription status from PhEDEx"
+                print "Cannot get request subscription status from PhEDEx"
             try:
-                r = result['phedex']['dataset']
+                r = result['phedex']['request']
             except:
                 r = None
             if r:
-                for i in range(0,len(r)):
-                    approval = r[i]['approval']
-                    requested_by = r[i]['requested_by']
-                    custodialsite = r[i]['node'][0]['name']
-                    id = r[i]['id']
-                    if '_MSS' in custodialsite:
-                        phreqinfo['custodialsite'] = custodialsite
-                        phreqinfo['requested_by'] = requested_by
-                        phreqinfo['approval'] = approval
-                        phreqinfo['id'] = id
+                try:
+                    for i in range(0,len(r)):
+                        approval = r[i]['approval']
+                        requested_by = r[i]['requested_by']
+                        custodialsite = r[i]['node'][0]['name']
+                        id = r[i]['id']
+                        if '_MSS' in custodialsite:
+                            phreqinfo['custodialsite'] = custodialsite
+                            phreqinfo['requested_by'] = requested_by
+                            phreqinfo['approval'] = approval
+                            phreqinfo['id'] = id
+                except:
+                    print "Error getting subscription status from Phedex"
                 oel['phreqinfo'] = phreqinfo
         
             phtrinfo = {}
