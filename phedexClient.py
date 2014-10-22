@@ -10,6 +10,7 @@ import json
 import urllib2,urllib, httplib, sys, re, os
 from xml.dom.minidom import getDOMImplementation
 
+
 def hasCustodialSubscription(datasetName):
     """
     Returns true if a given dataset has at least
@@ -125,6 +126,21 @@ def phedexGet(url, request, auth=True):
         r1 = urllib2.urlopen('https://'+url+request)
         result = json.loads(r1.read())
         return result
+
+def getFileCountDataset(url, dataset):
+    """
+    Returns the number of files registered in phedex
+    """
+    result = phedexGet(url, '/phedex/datasvc/json/prod/blockreplicas?dataset='+dataset, auth=False)
+    if 'block' not in result['phedex']:
+        return 0
+    elif not result['phedex']['block']:
+        return 0
+    files = 0
+    #check all blocks
+    for block in result['phedex']['block']:
+        files += block['files']
+    return files
         
 def getTransferPercentage(url, dataset, site):
     """

@@ -12,6 +12,194 @@ import dbs3Client as dbs3
 # default headers for PUT and POST methods
 def_headers={"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
 
+class Workflow:
+    """
+    Wraps all information available on ReqMgr
+    To avoid querying the same stuff multiple times
+    This is useful for closeout script
+    """
+    def __init__(self, name, url='cmsweb.cern.ch'):
+        """
+        Initialization
+        """
+        self.name = name
+        self.url = url
+        #from the workflow Info
+        self.info = getWorkflowInfo(url, name)
+        self.status = self.info['RequestStatus']
+        self.type = self.info['RequestType']
+        if 'SubRequestType' in self.info:
+            self.subType = self.info['SubRequestType']
+        else:
+            self.subType = None
+        self.outputDatasets = outputdatasetsWorkflow(url, name)
+        if 'teams' in self.info and len(self.info['teams']) > 0 :
+            self.team = self.info['teams'][0]
+        else:
+            self.team = 'NoTeam'
+        if 'FilterEfficiency' in self.info:
+            self.filterEfficiency = float(self.info['FilterEfficiency'])
+        self.outEvents = {}
+
+
+    def getInputEvents(self):
+        """
+        Gets the inputs events of a given workflow
+        depending of the kind of workflow
+        """
+        raise Exception("Not implemented")
+    
+    def getOutputEvents(self, ds):
+        """
+        gets the output events on one of the output datasets
+        """
+        #We store the events to avoid checking them twice
+        if ds not in self.outEvents:
+            events = dbs3.getEventCountDataSet(ds)
+            self.outEvents[ds] = events
+        else:
+            events = self.outEvents[ds]
+        return events
+
+    def percentageCompletion(self, ds):
+        """
+        Calculates Percentage of completion for a given workflow
+        taking a particular output dataset
+        """
+        inputEvents = self.getInputEvents()
+        outputEvents = self.getOutputEvents(ds)
+        
+        if inputEvents == 0:
+            return 0
+        if not outputEvents:
+            return 0
+        perc = outputEvents/float(inputEvents)
+        return perc
+        
+    def __getattr__(self, value):
+        """
+        To behave like a dictionary
+        """
+        return self.info[value]
+
+class MonteCarlo(Workflow):
+    def __init__(self, name, url='cmsweb.cern.ch'):
+        Workflow.__init__(self, name, url)
+
+    def getInputEvents(self):
+        #if request is montecarlo or Step0, the numer of
+        #input events is by the requsted events
+        if self.type == 'MonteCarlo' or self.type == 'LHEStepZero':
+            if 'RequestNumEvents' in self.info and self.info['RequestNumEvents']>0:
+                    return self.info['RequestNumEvents']
+            elif 'RequestSizeEvents' in self.info:
+                return self.info['RequestSizeEvents']
+            else:
+                return 0
+        else:
+            raise Exception("Workflow with wrong type")
+
+class StepZero(Workflow):
+    def __init__(self, name, url='cmsweb.cern.ch'):
+        Workflow.__init__(self, name, url)
+
+    def getInputEvents(self):
+        #if request is montecarlo or Step0, the numer of
+        #input events is by the requsted events
+        if self.type == 'MonteCarlo' or self.type == 'LHEStepZero':
+            if 'RequestNumEvents' in self.info and self.info['RequestNumEvents']>0:
+                    return self.info['RequestNumEvents']
+            elif 'RequestSizeEvents' in self.info:
+                return self.info['RequestSizeEvents']
+            else:
+                return 0
+        else:
+            raise Exception("Workflow with wrong type")
+
+class WorkflowWithInput(Workflow):
+    
+    inputlists = ["RunWhitelist", "RunBlacklist", "BlockWhitelist"
+                , "BlockBlacklist"]
+    
+    def __init__(self, name, url='cmsweb.cern.ch'):
+        Workflow.__init__(self, name, url)
+        if 'InputDataset'in self.info and len(self.info['InputDataset']) > 0:
+            self.inputDataset = self.info['InputDataset']
+        else:
+            raise Exception("This workflow has no input %s"%name)
+        self.inputEvents = None
+        #fix lists
+        for li in self.inputlists:
+            #if empty list or no list
+            if li not in self.info or self.info[li]=='[]' or self.info[li]=='':
+                self.info[li] = []
+            #if there is not a list but some elements it creates a list
+            if type(self.info[li]) is not list:
+                #single element
+                if '[' not in self.info[li]:
+                    self.info[li] = [self.info[li]]
+                #parse a list
+                else:
+                    self.info[li]= eval(self.info[li])
+            #if not, an empty list will do        
+            else:
+                self.info[li]=[]
+    
+    def percentageCompletion(self, ds):
+        """
+        Corrects with filter efficiency
+        """
+        perc = Workflow.percentageCompletion(self, ds)
+        if 'FilterEfficiency' in self.info:
+            perc /= self.filterEfficiency
+        return perc
+
+    def getInputEvents(self):
+        """
+        if request has input, then we need to check its size
+        """
+        #to avoid quering it twice
+        if self.inputEvents:
+            return self.inputEvents
+    
+        events = dbs3.getEventCountDataSet(self.inputDataset)
+        #take into account first block lists
+        if self.info['BlockWhitelist']:
+            events = dbs3.getEventCountDataSetBlockList(self.inputDataset, self.info['BlockWhitelist'])
+        elif self.info['BlockWhitelist']:
+            #substract black blocks
+            self.info -= dbs3.getEventCountDataSetBlockList(self.inputDataset, self.info['BlockWhitelist'])
+        elif self.info['RunWhitelist']:
+            events = dbs3.getEventCountDataSetRunList(self.inputDataset, self.info['RunWhitelist'])
+        elif self.info['RunBlacklist']:
+            #substract black runs
+            events -= dbs3.getEventCountDataSetRunList(self.inputDataset, self.info['RunBlacklist'])
+        self.inputEvents = events
+        return events    
+
+class MonteCarloFromGen(WorkflowWithInput):
+    def __init__(self, name, url='cmsweb.cern.ch'):
+        WorkflowWithInput.__init__(self, name, url)
+
+class ReReco(WorkflowWithInput):
+    def __init__(self, name, url='cmsweb.cern.ch'):
+        WorkflowWithInput.__init__(self, name, url)
+        
+class ReDigi(WorkflowWithInput):
+    def __init__(self, name, url='cmsweb.cern.ch'):
+        WorkflowWithInput.__init__(self, name, url)
+
+class StoreResults(WorkflowWithInput):
+    def __init__(self, name, url='cmsweb.cern.ch'):
+        WorkflowWithInput.__init__(self, name, url)
+
+class TaskChain(Workflow):
+    def __init__(self, name, url='cmsweb.cern.ch'):
+        Workflow.__init__(self, name, url)
+    
+    def getInputEvents(self):
+        return getInputEventsTaskChain(self.info)
+
 def requestManagerGet(url, request, retries=4):
     """
     Queries ReqMgr through a HTTP GET method
@@ -115,8 +303,16 @@ def getWorkflowStatus(url, workflow):
 
 def getWorkflowType(url, workflow):
     request = getWorkflowInfo(url,workflow)
-    requestType=request['RequestType']
+    requestType = request['RequestType']
     return requestType
+
+def getWorkflowSubType(url, workflow):
+    request = getWorkflowInfo(url,workflow)
+    if 'SubRequestType' in request:
+        requestSubType=request['SubRequestType']
+        return requestSubType
+    else:
+        return None
 
 def getWorkflowPriority(url, workflow):
     request = getWorkflowInfo(url,workflow)
@@ -139,7 +335,8 @@ def getInputDataSet(url, workflow):
     request = getWorkflowInfo(url,workflow)
     inputDataSets=request['InputDataset']
     if len(inputDataSets)<1:
-        print "No InputDataSet for workflow " +workflow
+        #print "No InputDataSet for workflow " +workflow
+        return None
     else:
         return inputDataSets
 
@@ -181,7 +378,7 @@ def getInputEvents(url, workflow):
         else:
             return 0
     if requestType == 'TaskChain':
-        return handleTaskChain(request)
+        return getInputEventsTaskChain(request)
 
     #if request is not montecarlo, then we need to check the size
     #of input datasets
@@ -238,10 +435,11 @@ def getInputEvents(url, workflow):
     if request['BlockWhitelist']:
         events=dbs3.getEventCountDataSetBlockList(inputDataSet, request['BlockWhitelist'])
 
-    if 'FilterEfficiency' in request:
-        return float(request['FilterEfficiency'])*events
-    else:
-        return events
+    #TODO delete FilterEfficiency from here. TEST
+    #if 'FilterEfficiency' in request:
+    #return float(request['FilterEfficiency'])*events
+    #else:
+    return events
 
 
 def getInputLumis(url, workflow):
@@ -315,18 +513,55 @@ def getInputLumis(url, workflow):
     return lumis
 
 
+def retrieveSchema(workflowName):
+    """
+    Creates the cloned specs for the original request
+    Updates parameters
+    """
+    from WMCore.WMSpec.WMWorkload import WMWorkloadHelper
+    reqmgrCouchURL = "https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache"
+
+    specURL = os.path.join(reqmgrCouchURL, workflowName, "spec")
+    helper = WMWorkloadHelper()
+    helper.load(specURL)
+    return helper
+
 def getOutputEvents(url, workflow, dataset):
     """
     Gets the output events depending on the type
-    if the request
+    of the request
     """
     request = getWorkflowInfo(url, workflow)
     return dbs3.getEventCountDataSet(dataset)
 
+def getFilterEfficiency(url, workflow, task=None):
+    """
+    Gets the filter efficiency of a given request.
+    It can be used for the filter efficiency inside a given
+    Task. Returns None if the request has no filter efficiency.
+    """
+    request = getWorkflowInfo(url, workflow)
+    if request["RequestType"] == "TaskChain":
+        #get the task with the given input dataset
+        if task in request:
+            if 'FilterEfficiency' in request[task]:
+                filterEff = float(request[task]['FilterEfficiency'])
+            else:
+                filterEff = None
+            return filterEff
+        #if not found
+        return None
+    else:
+        if 'FilterEfficiency' in request:
+            return float(request['FilterEfficiency'])
+        else:
+            return None
+
+
 def getOutputLumis(url, workflow, dataset):
     """
     Gets the output lumis depending on the type
-    if the request
+    of the request
     """
     request = getWorkflowInfo(url, workflow)
     return dbs3.getLumiCountDataSet(dataset)
@@ -428,12 +663,17 @@ def setWorkflowSplitting(url, schema):
     data = requestManagerPost(url,"/reqmgr/view/handleSplittingPage", schema)
     return data
 
-def handleTaskChain(request):
-    # Check if it's MC from scratch
+def getInputEventsTaskChain(request):
+    """
+    Calculates input events for a taskchain based on the
+    TaskChain properties and subtype
+    """
+    #TODO filter by subtype
+    #if it's MC from scratch, it has a set number of requested events
     if 'RequestNumEvents' in request['Task1']:
         if request['Task1']['RequestNumEvents'] is not None:
             return request['Task1']['RequestNumEvents']
-
+    #if it has an input dataset
     blockWhitelist = blockBlacklist = runWhitelist = runBlacklist = []
     if 'InputDataset' in request['Task1']:
         inputDataSet=request['Task1']['InputDataset']
@@ -454,7 +694,7 @@ def handleTaskChain(request):
             return dbs3.getEventCountDataSetRunList(inputDataSet, runWhitelist)
         else:
             return dbs3.getEventCountDataset(inputDataSet)
-
+    #TODO what if intermediate steps have filter efficiency?
 ### TODO: implement multi white/black list
 #        if len(blockWhitelist)>0 and len(runWhitelist)>0:
 #            print "Hey, you have block and run white list :-D"
