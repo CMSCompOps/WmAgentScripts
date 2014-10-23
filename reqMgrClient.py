@@ -63,12 +63,11 @@ class Workflow:
 
     def percentageCompletion(self, ds):
         """
-        Calculates Percentage of completion for a given workflow
+        Calculates Percentage of events produced for a given workflow
         taking a particular output dataset
         """
         inputEvents = self.getInputEvents()
         outputEvents = self.getOutputEvents(ds)
-        
         if inputEvents == 0:
             return 0
         if not outputEvents:
@@ -83,6 +82,9 @@ class Workflow:
         return self.info[value]
 
 class MonteCarlo(Workflow):
+    """
+    MonteCarlo from scratch (no dataset input needed).
+    """
     def __init__(self, name, url='cmsweb.cern.ch'):
         Workflow.__init__(self, name, url)
 
@@ -100,6 +102,9 @@ class MonteCarlo(Workflow):
             raise Exception("Workflow with wrong type")
 
 class StepZero(Workflow):
+    """
+    Step0 MonteCarlo, no dataset input needed either.
+    """
     def __init__(self, name, url='cmsweb.cern.ch'):
         Workflow.__init__(self, name, url)
 
@@ -117,7 +122,9 @@ class StepZero(Workflow):
             raise Exception("Workflow with wrong type")
 
 class WorkflowWithInput(Workflow):
-    
+    """
+    That needs at least one input dataset
+    """
     inputlists = ["RunWhitelist", "RunBlacklist", "BlockWhitelist"
                 , "BlockBlacklist"]
     
@@ -156,7 +163,7 @@ class WorkflowWithInput(Workflow):
 
     def getInputEvents(self):
         """
-        if request has input, then we need to check its size
+        Size of the input, taking white/blacklists into account
         """
         #to avoid quering it twice
         if self.inputEvents:
@@ -178,27 +185,54 @@ class WorkflowWithInput(Workflow):
         return events    
 
 class MonteCarloFromGen(WorkflowWithInput):
+    """
+    Montecarlo using a GEN dataset as input
+    """
     def __init__(self, name, url='cmsweb.cern.ch'):
         WorkflowWithInput.__init__(self, name, url)
 
 class ReReco(WorkflowWithInput):
+    """
+    """
     def __init__(self, name, url='cmsweb.cern.ch'):
         WorkflowWithInput.__init__(self, name, url)
         
 class ReDigi(WorkflowWithInput):
+    """
+    Using a GEN-SIM dataset as input
+    """
     def __init__(self, name, url='cmsweb.cern.ch'):
         WorkflowWithInput.__init__(self, name, url)
 
 class StoreResults(WorkflowWithInput):
+    """
+    Uses a user dataset as input
+    """
     def __init__(self, name, url='cmsweb.cern.ch'):
         WorkflowWithInput.__init__(self, name, url)
 
 class TaskChain(Workflow):
+    """
+    Chained workflow. several steps
+    """
     def __init__(self, name, url='cmsweb.cern.ch'):
         Workflow.__init__(self, name, url)
     
     def getInputEvents(self):
         return getInputEventsTaskChain(self.info)
+
+    def getFilterEfficiency(self, task):
+        """
+        Filter efficiency of a given task
+        """
+        if task in request:
+            if 'FilterEfficiency' in request[task]:
+                filterEff = float(request[task]['FilterEfficiency'])
+            else:
+                filterEff = None
+            return filterEff
+        #if not found
+        return None
 
 def requestManagerGet(url, request, retries=4):
     """

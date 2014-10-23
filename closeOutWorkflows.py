@@ -173,14 +173,14 @@ def closeOutReRecoWorkflows(url, workflows):
     closes rereco workflows
     """
     noSiteWorkflows = []
-    for workflow in workflows:
-        if 'RelVal' in workflow:
+    for wf in workflows:
+        if 'RelVal' in wf:
             continue
-        if 'TEST' in workflow:
+        if 'TEST' in wf:
             continue        
         #first validate if effectively is completed
-        status = reqMgrClient.getWorkflowStatus(url, workflow)
-        if status != 'completed':
+        workflow = reqMgrClient.ReReco(wf)
+        if workflow.status != 'completed':
             continue
         #closeout workflow, checking percentage equalst 100%
         result = validateClosingWorkflow(url, workflow, closePercentage=1.0, 
@@ -188,11 +188,11 @@ def closeOutReRecoWorkflows(url, workflows):
         printResult(result)
         #if validation successful
         if result['closeOutWorkflow']:
-            reqMgrClient.closeOutWorkflowCascade(url, workflow)
+            reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
         #populate the list without subs
         for (ds,info) in result['datasets'].items():
             if info['missingSubs']:
-                noSiteWorkflows.append((workflow,ds))
+                noSiteWorkflows.append((workflow.name,ds))
     print '-'*180
     return noSiteWorkflows
 
@@ -201,13 +201,13 @@ def closeOutRedigiWorkflows(url, workflows):
     Closes Redigi workflows
     """
     noSiteWorkflows = []
-    for workflow in workflows:
+    for wf in workflows:
         #first validate if effectively is completed
-        status = reqMgrClient.getWorkflowStatus(url, workflow)
-        if status != 'completed':
+        workflow = reqMgrClient.ReDigi(wf)
+        if workflow.status != 'completed':
             continue
         #if miniaod
-        if 'miniaod' in workflow:
+        if 'miniaod' in workflow.name:
             #we don't check for custodial subscription
             result = validateClosingWorkflow(url, workflow, 0.95, checkPhedex=False)            
         else:
@@ -216,31 +216,35 @@ def closeOutRedigiWorkflows(url, workflows):
         printResult(result)
         #if validation successful
         if result['closeOutWorkflow']:
-            reqMgrClient.closeOutWorkflowCascade(url, workflow)
+            reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
         #populate the list without subs
         for (ds,info) in result['datasets'].items():
            if info['missingSubs']:
-                noSiteWorkflows.append((workflow,ds))
+                noSiteWorkflows.append((workflow.name,ds))
     print '-'*180
     return noSiteWorkflows
 
-def closeOutMonterCarloRequests(url, workflows):
+def closeOutMonterCarloRequests(url, workflows, fromGen):
     """
     Closes either montecarlo or montecarlo from gen
     workflows
     """
     noSiteWorkflows = []
-    for workflow in workflows:
-        #first validate if effectively is completed
-        status = reqMgrClient.getWorkflowStatus(url, workflow)
-        if status != 'completed':
+    for wf in workflows:
+        #get all info from ReqMgr
+        if not fromGen:  
+            workflow = reqMgrClient.MonteCarlo(wf, url)
+        else:
+            workflow = reqMgrClient.MonteCarloFromGen(wf, url)
+        #validate if complete
+        if workflow.status != 'completed':
             continue
         #skip montecarlos on a special queue
-        if reqMgrClient.getRequestTeam(url, workflow) == 'analysis':
+        if workflow.team == 'analysis':
             continue
         datasets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
         # validation for SMS montecarlos
-        if 'SMS' in datasets[0]:
+        if 'SMS' in workflow.outputDatasets[0]:
             closePercentage= 1.00
         else:
             closePercentage = 0.95
@@ -249,11 +253,11 @@ def closeOutMonterCarloRequests(url, workflows):
         printResult(result)
         #if validation successful
         if result['closeOutWorkflow']:
-            reqMgrClient.closeOutWorkflowCascade(url, workflow)
+            reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
         #populate the list without subs
         for (ds,info) in result['datasets'].items():
             if info['missingSubs']:
-                noSiteWorkflows.append((workflow,ds))
+                noSiteWorkflows.append((workflow.name,ds))
     #separation line
     print '-'*180
     return noSiteWorkflows
@@ -263,26 +267,26 @@ def closeOutStep0Requests(url, workflows):
     Closes either montecarlo step0 requests
     """
     noSiteWorkflows = []
-    for workflow in workflows:
+    for wf in workflows:
+        #info from reqMgr
+        workflow = reqMgrClient.StepZero(wf, url)
         #first validate if effectively is completed
-        status = reqMgrClient.getWorkflowStatus(url, workflow)
-        if status != 'completed':
+        if workflow.status != 'completed':
             continue
         #skip montecarlos on a special queue
-        if reqMgrClient.getRequestTeam(url, workflow) == 'analysis':
+        if workflow.team == 'analysis':
             continue
-        
         #check dataset health, duplicates, subscription, etc.       
         result = validateClosingWorkflow(url, workflow, checkLumiNumb=True)
   
         printResult(result)
         #if validation successful
         if result['closeOutWorkflow']:
-            reqMgrClient.closeOutWorkflowCascade(url, workflow)
+            reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
         #populate the list without subs
         for (ds,info) in result['datasets'].items():
             if info['missingSubs']:
-                noSiteWorkflows.append((workflow,ds))
+                noSiteWorkflows.append((workflow.name,ds))
 
     print '-'*180
     return noSiteWorkflows
@@ -292,10 +296,11 @@ def closeOutStoreResultsWorkflows(url, workflows):
     Closeout StoreResults workflows
     """
     noSiteWorkflows = []
-    for workflow in workflows:
+    for wf in workflows:
+        #info from reqMgr            
+        workflow = reqMgrClient.StoreResults(url, wf)
         #first validate if effectively is completed
-        status = reqMgrClient.getWorkflowStatus(url, workflow)
-        if status != 'completed':
+        if workflow.status != 'completed':
             continue
         #closeout workflow, checking percentage equalst 100%
         result = validateClosingWorkflow(url, workflow, closePercentage=1.0, 
@@ -303,11 +308,11 @@ def closeOutStoreResultsWorkflows(url, workflows):
         printResult(result)
         #if validation successful
         if result['closeOutWorkflow']:
-            reqMgrClient.closeOutWorkflowCascade(url, workflow)
+            reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
         #populate the list without subs
         for (ds,info) in result['datasets'].items():
             if info['missingSubs']:
-                noSiteWorkflows.append((workflow,ds))
+                noSiteWorkflows.append((workflow.name,ds))
     print '-'*180
     return noSiteWorkflows
 
@@ -316,23 +321,23 @@ def closeOutTaskChain(url, workflows):
     Closeout taskchained workflows
     """
     noSiteWorkflows = []
-    for workflow in workflows:
+    for wf in workflows:
         #first validate if effectively is completed
-        status = reqMgrClient.getWorkflowStatus(url, workflow)
-        if status != 'completed':
+        workflow = reqMgrClient.TaskChain(url, wf)
+        if workflow.status != 'completed':
             continue
         #closeout workflow, checking percentage equalst 100%
         result = validateClosingTaskChain(url, workflow)   
         printResult(result)
         #if validation successful
         if result['closeOutWorkflow']:
-            reqMgrClient.closeOutWorkflowCascade(url, workflow)
+            reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
         #populate the list without subs
         for (ds,info) in result['datasets'].items():
             if info['missingSubs']:
-                noSiteWorkflows.append((workflow,ds))
+                noSiteWorkflows.append((workflow.name,ds))
     print '-'*180
-    return noSiteWorkflows   
+    return noSiteWorkflows 
 
 
 def validateClosingTaskChain(url, workflow):
@@ -341,15 +346,14 @@ def validateClosingTaskChain(url, workflow):
     Taking step/filter efficiency into account.
     test with pdmvserv_task_SUS-Summer12WMLHE-00004__v1_T_141003_120119_9755
     """
-    inputEvents = reqMgrClient.getInputEvents(url, workflow)
-    datasets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
+    inputEvents = workflow.getInputEvents()
     
     #if subtype doesn't come with the request, we decide based on dataset names
     fromGen = False
-    if not re.match('.*/GEN$', datasets[0]):
+    if not re.match('.*/GEN$', workflow.outputDatasets[0]):
         fromGen = False
-    elif (re.match('.*/GEN$', datasets[0])
-        and re.match('.*/GEN-SIM$', datasets[1])):
+    elif (re.match('.*/GEN$', workflow.outputDatasets[0])
+        and re.match('.*/GEN-SIM$', workflow.outputDatasets[1])):
         fromGen = True
 
     #task-chain 1 (without filterEff)
@@ -360,14 +364,14 @@ def validateClosingTaskChain(url, workflow):
     #task-chain 2 GEN, GEN-SIM, GEN-SIM-RAW, AODSIM, DQM
     else:
         #GEN and GEN-SIM
-        result = {'name':workflow, 'datasets': {}}
-        result['datasets'] = dict( (ds,{}) for ds in datasets)
+        result = {'name':workflow.name, 'datasets': {}}
+        result['datasets'] = dict( (ds,{}) for ds in workflow.outputDatasets)
         closeOutWorkflow = True
         i = 1
-        for dataset in datasets:
+        for dataset in workflow.outputDatasets:
             #percentage
-            outputEvents = reqMgrClient.getOutputEvents(url, workflow, dataset)
-            filterEff = reqMgrClient.getFilterEfficiency(url, workflow, 'Task%d'%i)
+            outputEvents = workflow.getOutputEvents(dataset)
+            filterEff = workflow.getFilterEfficiency('Task%d'%i)
             #GEN and GEN-SIM
             if 1 <= i <= 2:
                 #decrease filter eff
@@ -381,6 +385,11 @@ def validateClosingTaskChain(url, workflow):
             correctLumis = None
             transPerc = None
             missingSubs = False
+            #TODO test
+            dbsFiles = dbs3Client.getFileCountDataset(dataset)
+            phdFiles = phedexClient.getFileCountDataset(url,dataset)
+            equalFiles = (dbsFiles == phdFiles)
+
             #Check first percentage
             if percentage >= 0.95:
                 #if we need to check duplicates            
@@ -394,7 +403,8 @@ def validateClosingTaskChain(url, workflow):
                             transPerc = phedexClient.getTransferPercentage(url, dataset, phedexReqs[0])
                         except:
                             transPerc = None
-                        closeOutDataset = True
+                        #last check if files are equal
+                        closeOutDataset = equalFiles
                     else:
                         missingSubs = True
             #if at least one dataset is not ready wf cannot be closed out
@@ -407,6 +417,8 @@ def validateClosingTaskChain(url, workflow):
             result['datasets'][dataset]["transPerc"] = transPerc
             result['datasets'][dataset]["correctLumis"] = correctLumis
             result['datasets'][dataset]["missingSubs"] = missingSubs
+            result['datasets'][dataset]["dbsFiles"] = dbsFiles
+            result['datasets'][dataset]["phedexFiles"] = phdFiles
             i += 1
         result['closeOutWorkflow'] = closeOutWorkflow
         return result
@@ -461,10 +473,10 @@ def main():
     noSiteWorkflows = closeOutRedigiWorkflows(url, workflowsCompleted['ReDigi'])
     workflowsCompleted['NoSite-ReDigi'] = noSiteWorkflows
 
-    noSiteWorkflows = closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarlo'])
+    noSiteWorkflows = closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarlo'], fromGen=False)
     workflowsCompleted['NoSite-MonteCarlo'] = noSiteWorkflows
 
-    noSiteWorkflows = closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarloFromGEN'])
+    noSiteWorkflows = closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarloFromGEN'], fromGen=True)
     workflowsCompleted['NoSite-MonteCarloFromGEN'] = noSiteWorkflows
 
     noSiteWorkflows = closeOutTaskChain(url, workflowsCompleted['TaskChain'])

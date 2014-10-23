@@ -132,7 +132,7 @@ def closeOutStep0RequestsWeb(url, workflows, output):
     noSiteWorkflows = []
     for wf in workflows:
         #info from reqMgr
-        workflow = reqMgrClient.MonteCarlo(wf, url)
+        workflow = reqMgrClient.StepZero(wf, url)
         #first validate if effectively is completed
         if workflow.status != 'completed':
             continue
@@ -159,9 +159,10 @@ def closeOutStoreResultsWorkflowsWeb(url, workflows, output):
     """
     noSiteWorkflows = []
     for wf in workflows:
+        #info from reqMgr            
+        workflow = reqMgrClient.StoreResults(url, wf)
         #first validate if effectively is completed
-        workflow = StoreResults(url, wf)
-        if workflow.status != 'completed':
+        if status != 'completed':
             continue
         #closeout workflow, checking percentage equalst 100%
         result = validateClosingWorkflow(url, workflow, closePercentage=1.0, 
@@ -184,9 +185,9 @@ def closeOutTaskChainWeb(url, workflows, output):
     Closeout taskchained workflows
     """
     noSiteWorkflows = []
-    for workflow in workflows:
+    for wf in workflows:
         #first validate if effectively is completed
-        status = reqMgrClient.getWorkflowStatus(url, workflow)
+        status = reqMgrClient.TaskChain(url, wf)
         if status != 'completed':
             continue
         #closeout workflow, checking percentage equalst 100%
@@ -195,11 +196,11 @@ def closeOutTaskChainWeb(url, workflows, output):
         printResultWeb(result, output)
         #if validation successful
         if result['closeOutWorkflow']:
-            reqMgrClient.closeOutWorkflowCascade(url, workflow)
+            reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
         #populate the list without subs
         for (ds,info) in result['datasets'].items():
             if info['missingSubs']:
-                noSiteWorkflows.append((workflow,ds))
+                noSiteWorkflows.append((workflow.name,ds))
     print '-'*180
     return noSiteWorkflows 
 
@@ -254,6 +255,7 @@ def listWorkflowsWeb(workflows, output):
 def main():
     output = open(tempfile,'w')
     url='cmsweb.cern.ch'
+    printTableHeaderWeb('ReReco', output)
     print "Gathering Requests"
     requests=getOverviewRequestsWMStats(url)
     print "Classifying Requests"
