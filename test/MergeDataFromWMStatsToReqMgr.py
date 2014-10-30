@@ -30,7 +30,7 @@ if __name__ == "__main__":
     reqMgrUrl = "%s/couchdb/reqmgr_workload_cache" % baseUrl
     
     testbedWMStats = WMStatsReader(wmstatsUrl)
-    testbedReqMgr = ReqMgrReader(reqMgrUrl)
+    testbedReqMgr = ReqMgrReader(reqMgrUrl, couchapp = "ReqMgr")
     
     args = {}
     args["endpoint"] = "%s/reqmgr/rest" % baseUrl
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     print (testbedWMStats.dbName)
     misMatchRequests = []
     wierdMisMatch = {}
-    limit = 500
+    limit = 1000
     updateCount = 0
     totalScanned = 0
     for status in StatusForOutDS:
@@ -63,14 +63,19 @@ if __name__ == "__main__":
                         try:
                             reqMgr.reportRequestStatus(value["RequestName"], status)
                             updateCount += 1
+                            print(updateCount)
                         except:
                             print("Update failed: %s %s: %s" % (value["RequestName"], value["RequestStatus"], status))
                     else:
                     
                         if value["RequestStatus"] == "aborted" and status == "aborted-archived":
-                            reqMgr.reportRequestStatus(value["RequestName"], "aborted-completed")
-                            reqMgr.reportRequestStatus(value["RequestName"], "aborted-archived")
-                            updateCount += 1
+                            try:
+                                reqMgr.reportRequestStatus(value["RequestName"], "aborted-completed")
+                                reqMgr.reportRequestStatus(value["RequestName"], "aborted-archived")
+                                updateCount += 1
+                                print(updateCount)
+                            except:
+                                print("Very wrong: %s %s: %s" % (value["RequestName"],  value["RequestStatus"], status))
 #                         elif value["RequestStatus"] == None and status == "aborted-archived":
 #                             reqMgr.reportRequestStatus(value["RequestName"], "aborted")
 #                             reqMgr.reportRequestStatus(value["RequestName"], "aborted-completed")

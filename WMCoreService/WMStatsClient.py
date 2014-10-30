@@ -137,7 +137,11 @@ class WMStatsClient(object):
            "type":"agent_request"}}
         """
         for row in jobData["rows"]:
-            jobInfo = requestData[row["doc"]["workflow"]]
+            try:
+                jobInfo = requestData[row["doc"]["workflow"]]
+            except Exception, ex:
+                print "Something wrong %s:\n %s" % (row["doc"]["workflow"], str(ex))
+                continue
             jobInfo.setdefault("AgentJobInfo", {}) 
             jobInfo["AgentJobInfo"][row["doc"]["agent_url"]] = row["doc"]
     
