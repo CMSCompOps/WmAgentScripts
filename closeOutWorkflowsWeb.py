@@ -160,7 +160,7 @@ def closeOutStoreResultsWorkflowsWeb(url, workflows, output):
     noSiteWorkflows = []
     for wf in workflows:
         #info from reqMgr            
-        workflow = reqMgrClient.StoreResults(url, wf)
+        workflow = reqMgrClient.StoreResults(wf, url)
         #first validate if effectively is completed
         if status != 'completed':
             continue
@@ -187,10 +187,9 @@ def closeOutTaskChainWeb(url, workflows, output):
     noSiteWorkflows = []
     for wf in workflows:
         #first validate if effectively is completed
-        status = reqMgrClient.TaskChain(url, wf)
-        if status != 'completed':
+        workflow = reqMgrClient.TaskChain(wf, url)
+        if workflow.status != 'completed':
             continue
-        #closeout workflow, checking percentage equalst 100%
         result = validateClosingTaskChain(url, workflow)   
         printResult(result)
         printResultWeb(result, output)
@@ -202,7 +201,7 @@ def closeOutTaskChainWeb(url, workflows, output):
             if info['missingSubs']:
                 noSiteWorkflows.append((workflow.name,ds))
     print '-'*180
-    return noSiteWorkflows 
+    return noSiteWorkflows
 
 def printResultWeb(result, output):
     """
@@ -249,17 +248,16 @@ def printTableFooterWeb(title, output):
 def listWorkflowsWeb(workflows, output):
     listWorkflows(workflows)
     for (wf,ds) in workflows:
-        output.write('<tr><td>%s</td><td>%s</td></tr>'%(wf,ds))
-    output.write('<tr><td></td></tr>')
+        output.write('<tr><td>%s</td><td>%s</td></tr>\n'%(wf,ds))
+    output.write('<tr><td></td></tr>\n')
 
 def main():
     output = open(tempfile,'w')
-    url='cmsweb.cern.ch'
-    printTableHeaderWeb('ReReco', output)
+    url = 'cmsweb.cern.ch'
     print "Gathering Requests"
-    requests=getOverviewRequestsWMStats(url)
+    requests = getOverviewRequestsWMStats(url)
     print "Classifying Requests"
-    workflowsCompleted=classifyCompletedRequests(url, requests)
+    workflowsCompleted = classifyCompletedRequests(url, requests)
     #header
     output.write(head)
     #print header
@@ -311,6 +309,7 @@ def main():
     listWorkflowsWeb(workflowsCompleted['NoSite-ReDigi'], output)
     listWorkflowsWeb(workflowsCompleted['NoSite-MonteCarlo'], output)
     listWorkflowsWeb(workflowsCompleted['NoSite-MonteCarloFromGEN'], output)
+    listWorkflowsWeb(workflowsCompleted['NoSite-TaskChain'], output)
     listWorkflowsWeb(workflowsCompleted['NoSite-LHEStepZero'], output)
     listWorkflowsWeb(workflowsCompleted['NoSite-StoreResults'], output)
     output.write('</table>')

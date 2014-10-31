@@ -225,9 +225,9 @@ class TaskChain(Workflow):
         """
         Filter efficiency of a given task
         """
-        if task in request:
-            if 'FilterEfficiency' in request[task]:
-                filterEff = float(request[task]['FilterEfficiency'])
+        if task in self.info:
+            if 'FilterEfficiency' in self.info[task]:
+                filterEff = float(self.info[task]['FilterEfficiency'])
             else:
                 filterEff = None
             return filterEff

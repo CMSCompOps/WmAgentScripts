@@ -102,6 +102,7 @@ def modifySchema(helper, user, group, backfill=False):
     if backfill:
         #Modify ProcessingString, AcquisitionEra, Campaign and Request string (if they don't
         #have the word 'backfill' in it
+        result["RequestNumEvents"] = 10000000
         result["ProcessingString"] = "BACKFILL"
         if "backfill" not in result["AcquisitionEra"].lower():
             result["AcquisitionEra"] = helper.getAcquisitionEra()+"Backfill"

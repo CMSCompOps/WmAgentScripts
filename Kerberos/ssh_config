@@ -1,0 +1,54 @@
+##
+## SSH configuration page for accessing CERN and FERMILAB CMS machines
+##
+
+### General config
+Host *.cern.ch *.fnal.gov
+  GSSAPIAuthentication yes
+  GSSAPIDelegateCredentials yes
+  PubkeyAuthentication yes
+  ForwardAgent yes
+
+### CERN config
+Host lxvoadm*.cern.ch lxplus*.cern.ch
+  PreferredAuthentications gssapi-with-mic,gssapi,password
+  ProxyCommand none
+  # GSSAPITrustDNS yes
+
+### vocms
+Host vocms*
+  # LocalCommand sudo -u cmst1 /bin/bashs --init-file ~cmst1/.bashrc
+  # GSSAPITrustDNS yes
+
+### for cmssrvs (agent machines)
+Host cmssrv*.fnal.gov, cmsgwms-submit*.fnal.gov
+  User cmsdataops
+  #GSSAPITrustDNS yes
+
+### for cmslpc (access points)
+Host cmslpc*.fnal.gov
+  PreferredAuthentications gssapi-with-mic,gssapi,password
+  ProxyCommand none
+  #GSSAPITrustDNS yes
+  User USER
+
+### FNAL config
+Host *.fnal.gov
+  #GSSAPITrustDNS no
+  ProxyCommand proxy-ssh cmslpc-sl6.fnal.gov /usr/bin/nc %h %p
+  User USER
+  #GSSAPITrustDNS yes
+
+Host *
+  IdentitiesOnly yes
+  ServerAliveInterval 5
+  ServerAliveCountMax 6
+  ControlPersist 15
+  ControlMaster auto
+  ControlPath ~/.ssh/link-%r@%h.%p
+  GSSAPIRenewalForcesRekey yes
+  GSSAPITrustDNS yes
+  ForwardX11 no
+  # ForwardX11 yes
+  # ForwardX11Trusted yes
+  Protocol 2

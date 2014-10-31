@@ -298,7 +298,7 @@ def closeOutStoreResultsWorkflows(url, workflows):
     noSiteWorkflows = []
     for wf in workflows:
         #info from reqMgr            
-        workflow = reqMgrClient.StoreResults(url, wf)
+        workflow = reqMgrClient.StoreResults(wf, url)
         #first validate if effectively is completed
         if workflow.status != 'completed':
             continue
@@ -323,10 +323,9 @@ def closeOutTaskChain(url, workflows):
     noSiteWorkflows = []
     for wf in workflows:
         #first validate if effectively is completed
-        workflow = reqMgrClient.TaskChain(url, wf)
+        workflow = reqMgrClient.TaskChain(wf, url)
         if workflow.status != 'completed':
             continue
-        #closeout workflow, checking percentage equalst 100%
         result = validateClosingTaskChain(url, workflow)   
         printResult(result)
         #if validation successful
@@ -369,6 +368,7 @@ def validateClosingTaskChain(url, workflow):
         closeOutWorkflow = True
         i = 1
         for dataset in workflow.outputDatasets:
+            closeOutDataset = False
             #percentage
             outputEvents = workflow.getOutputEvents(dataset)
             filterEff = workflow.getFilterEfficiency('Task%d'%i)
@@ -379,12 +379,13 @@ def validateClosingTaskChain(url, workflow):
             #percentage
             percentage = outputEvents/float(inputEvents) if inputEvents > 0 else 0.0
             #phedex request
-            phedexReqs = phedexClient.getSubscriptionSites(dataset)
+            phedexReqs = phedexClient.getCustodialSubscriptionRequestSite(dataset)
             #all validations
             duplicate = None
             correctLumis = None
             transPerc = None
             missingSubs = False
+            
             #TODO test
             dbsFiles = dbs3Client.getFileCountDataset(dataset)
             phdFiles = phedexClient.getFileCountDataset(url,dataset)
