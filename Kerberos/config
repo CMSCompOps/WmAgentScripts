@@ -13,7 +13,7 @@ Host lxvoadm*.cern.ch lxplus*.cern.ch cmslpc*.fnal.gov
   PreferredAuthentications gssapi-with-mic,gssapi,password
   ProxyCommand none
   # GSSAPITrustDNS yes
-  User jbadillo
+  User YOUR_USER
 
 Host lxvoadm*.cern.ch
   DynamicForward 47170
@@ -34,7 +34,7 @@ Host *.cern.ch
 # Agents
 Host vocms*.cern.ch
   DynamicForward 47171
-  User jbadillo
+  User YOUR_USER
 
 Host *.fnal.gov
   GSSAPITrustDNS no
