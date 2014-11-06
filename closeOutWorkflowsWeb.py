@@ -33,14 +33,15 @@ def closeOutReRecoWorkflowsWeb(url, workflows, output):
     closes rereco workflows
     """
     noSiteWorkflows = []
-    for workflow in workflows:
-        if 'RelVal' in workflow:
+    for wf in workflows:
+        if 'RelVal' in wf:
             continue
-        if 'TEST' in workflow:
-            continue        
+        if 'TEST' in wf:
+            continue
+        
         #first validate if effectively is completed
-        status = reqMgrClient.getWorkflowStatus(url, workflow)
-        if status != 'completed':
+        workflow = reqMgrClient.ReReco(wf)
+        if workflow.status != 'completed':
             continue
         #closeout workflow, checking percentage equalst 100%
         result = validateClosingWorkflow(url, workflow, closePercentage=1.0, 
@@ -48,11 +49,11 @@ def closeOutReRecoWorkflowsWeb(url, workflows, output):
         printResult(result)
         printResultWeb(result, output)
         if result['closeOutWorkflow']:
-            reqMgrClient.closeOutWorkflowCascade(url, workflow)
+            reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
         #populate the list without subs
         for (ds,info) in result['datasets'].items():
             if info['missingSubs']:
-                noSiteWorkflows.append((workflow,ds))
+                noSiteWorkflows.append((workflow.name, ds))
     print '-'*180
     return noSiteWorkflows
 
@@ -61,13 +62,13 @@ def closeOutRedigiWorkflowsWeb(url, workflows, output):
     Closes Redigi workflows
     """
     noSiteWorkflows = []
-    for workflow in workflows:
+    for wf in workflows:
         #first validate if effectively is completed
-        status = reqMgrClient.getWorkflowStatus(url, workflow)
-        if status != 'completed':
+        workflow = reqMgrClient.ReDigi(wf)
+        if workflow.status != 'completed':
             continue
         #if miniaod
-        if 'miniaod' in workflow:
+        if 'miniaod' in workflow.name:
             #we don't check for custodial subscription
             result = validateClosingWorkflow(url, workflow, 0.95, checkPhedex=False)            
         else:
@@ -77,32 +78,35 @@ def closeOutRedigiWorkflowsWeb(url, workflows, output):
         printResultWeb(result, output)
         #if validation successful
         if result['closeOutWorkflow']:
-            reqMgrClient.closeOutWorkflowCascade(url, workflow)
+            reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
         #populate the list without subs
         for (ds,info) in result['datasets'].items():
             if info['missingSubs']:
-                noSiteWorkflows.append((workflow,ds))
+                noSiteWorkflows.append((workflow.name, ds))
 
     print '-'*180
     return noSiteWorkflows
 
-def closeOutMonterCarloRequestsWeb(url, workflows, output):
+def closeOutMonterCarloRequestsWeb(url, workflows, output, fromGen):
     """
     Closes either montecarlo or montecarlo from gen
     workflows
     """
     noSiteWorkflows = []
-    for workflow in workflows:
-        #first validate if effectively is completed
-        status = reqMgrClient.getWorkflowStatus(url, workflow)
-        if status != 'completed':
+    for wf in workflows:
+        #get all info from ReqMgr
+        if not fromGen:  
+            workflow = reqMgrClient.MonteCarlo(wf, url)
+        else:
+            workflow = reqMgrClient.MonteCarloFromGen(wf, url)
+        #validate if complete
+        if workflow.status != 'completed':
             continue
         #skip montecarlos on a special queue
-        if reqMgrClient.getRequestTeam(url, workflow) == 'analysis':
+        if workflow.team == 'analysis':
             continue
-        datasets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
         # validation for SMS montecarlos
-        if 'SMS' in datasets[0]:
+        if 'SMS' in workflow.outputDatasets[0]:
             closePercentage= 1.00
         else:
             closePercentage = 0.95
@@ -112,11 +116,11 @@ def closeOutMonterCarloRequestsWeb(url, workflows, output):
         printResultWeb(result, output)
         #if validation successful
         if result['closeOutWorkflow']:
-            reqMgrClient.closeOutWorkflowCascade(url, workflow)
+            reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
         #populate the list without subs
         for (ds,info) in result['datasets'].items():
             if info['missingSubs']:
-                noSiteWorkflows.append((workflow,ds))
+                noSiteWorkflows.append((workflow.name,ds))
     #separation line
     print '-'*180
     return noSiteWorkflows
@@ -126,13 +130,14 @@ def closeOutStep0RequestsWeb(url, workflows, output):
     Closes either montecarlo step0 requests
     """
     noSiteWorkflows = []
-    for workflow in workflows:
+    for wf in workflows:
+        #info from reqMgr
+        workflow = reqMgrClient.StepZero(wf, url)
         #first validate if effectively is completed
-        status = reqMgrClient.getWorkflowStatus(url, workflow)
-        if status != 'completed':
+        if workflow.status != 'completed':
             continue
         #skip montecarlos on a special queue
-        if reqMgrClient.getRequestTeam(url, workflow) == 'analysis':
+        if workflow.team == 'analysis':
             continue
         #check dataset health, duplicates, subscription, etc.       
         result = validateClosingWorkflow(url, workflow, checkLumiNumb=True)           
@@ -140,11 +145,11 @@ def closeOutStep0RequestsWeb(url, workflows, output):
         printResultWeb(result, output)
         #if validation successful
         if result['closeOutWorkflow']:
-            reqMgrClient.closeOutWorkflowCascade(url, workflow)
+            reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
         #populate the list without subs
         for (ds,info) in result['datasets'].items():
             if info['missingSubs']:
-                noSiteWorkflows.append((workflow,ds))
+                noSiteWorkflows.append((workflow.name,ds))
     print '-'*180
     return noSiteWorkflows
 
@@ -153,9 +158,10 @@ def closeOutStoreResultsWorkflowsWeb(url, workflows, output):
     Closeout StoreResults workflows
     """
     noSiteWorkflows = []
-    for workflow in workflows:
+    for wf in workflows:
+        #info from reqMgr            
+        workflow = reqMgrClient.StoreResults(wf, url)
         #first validate if effectively is completed
-        status = reqMgrClient.getWorkflowStatus(url, workflow)
         if status != 'completed':
             continue
         #closeout workflow, checking percentage equalst 100%
@@ -165,11 +171,35 @@ def closeOutStoreResultsWorkflowsWeb(url, workflows, output):
         printResultWeb(result, output)
         #if validation successful
         if result['closeOutWorkflow']:
-            reqMgrClient.closeOutWorkflowCascade(url, workflow)
+            reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
         #populate the list without subs
         for (ds,info) in result['datasets'].items():
             if info['missingSubs']:
-                noSiteWorkflows.append((workflow,ds))
+                noSiteWorkflows.append((workflow.name,ds))
+    print '-'*180
+    return noSiteWorkflows
+
+
+def closeOutTaskChainWeb(url, workflows, output):
+    """
+    Closeout taskchained workflows
+    """
+    noSiteWorkflows = []
+    for wf in workflows:
+        #first validate if effectively is completed
+        workflow = reqMgrClient.TaskChain(wf, url)
+        if workflow.status != 'completed':
+            continue
+        result = validateClosingTaskChain(url, workflow)   
+        printResult(result)
+        printResultWeb(result, output)
+        #if validation successful
+        if result['closeOutWorkflow']:
+            reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
+        #populate the list without subs
+        for (ds,info) in result['datasets'].items():
+            if info['missingSubs']:
+                noSiteWorkflows.append((workflow.name,ds))
     print '-'*180
     return noSiteWorkflows
 
@@ -178,24 +208,27 @@ def printResultWeb(result, output):
     Prints the result of analysing a workflow in web output
     """
     for dsname, ds in result['datasets'].items():
-        output.write('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n' % 
-           (result["name"], dsname,
+        row = '<tr>'+('<td>%s</td>'*10)+'</tr>\n'
+        output.write( row % (result["name"], dsname,
             "%.1f"%(ds["percentage"]*100),
             "?" if ds["duplicate"] is None else ds["duplicate"],
             "?" if ds["correctLumis"] is None else ds["correctLumis"],
             ','.join(ds["phedexReqs"]) if ds["phedexReqs"] else str(ds["phedexReqs"]),
             "?" if ds["transPerc"] is None else str(int(ds["transPerc"]*100)),
+            "/?/" if "dbsFiles" not in ds else str(ds["dbsFiles"]),
+            "?" if "phedexFiles" not in ds else str(ds["phedexFiles"]),
             ds["closeOutDataset"]))
 
 def printTableHeaderWeb(title, output):
     output.write('<h3>%s</h3>'%title)
     output.write('<table border=1 id="%s" width="100%%">\n'%title)
     #output.write('<tr><th colspan="8">%s</th></tr>\n'%title)
-    output.write('<tr><th>Request</th><th>OutputDataSet</th><th>%Compl</th>\n'
-                '<th>Dupl</th><th>CorrectLumis</th><th>Subscr</th><th>Tran</th><th>ClosOu</th></tr>\n')
+    output.write('<tr><th>Request</th><th>OutputDataSet</th><th>%Compl</th>'
+                '<th>Dupl</th><th>CorrectLumis</th><th>Subscr</th><th>Tran</th>'
+                '<th>dbsF</th><th>phdF</th><th>ClosOu</th></tr>\n')
 
 def printTableFooterWeb(title, output):
-    output.write('</table><br><br>')
+    output.write('</table>')
     output.write('<script language="javascript" type="text/javascript">\n'
         'var tableF = {\n'
         'col_0: "none",\n'
@@ -205,7 +238,9 @@ def printTableFooterWeb(title, output):
         'col_4: "none",\n'
         'col_5: "select",\n'
         'col_6: "none",\n'
-        'col_7: "select",\n'
+        'col_7: "none",\n'
+        'col_8: "none",\n'
+        'col_9: "select",\n'
         '};\n'+
         'setFilterGrid("%s",0,tableF);\n'%title+
         '</script>\n')
@@ -213,16 +248,16 @@ def printTableFooterWeb(title, output):
 def listWorkflowsWeb(workflows, output):
     listWorkflows(workflows)
     for (wf,ds) in workflows:
-        output.write('<tr><td>%s</td><td>%s</td></tr>'%(wf,ds))
-    output.write('<tr><td></td></tr>')
+        output.write('<tr><td>%s</td><td>%s</td></tr>\n'%(wf,ds))
+    output.write('<tr><td></td></tr>\n')
 
 def main():
     output = open(tempfile,'w')
-    url='cmsweb.cern.ch'
+    url = 'cmsweb.cern.ch'
     print "Gathering Requests"
-    requests=getOverviewRequestsWMStats(url)
+    requests = getOverviewRequestsWMStats(url)
     print "Classifying Requests"
-    workflowsCompleted=classifyCompletedRequests(url, requests)
+    workflowsCompleted = classifyCompletedRequests(url, requests)
     #header
     output.write(head)
     #print header
@@ -241,15 +276,20 @@ def main():
     printTableFooterWeb('ReDigi', output)
 
     printTableHeaderWeb('MonteCarlo', output)
-    noSiteWorkflows = closeOutMonterCarloRequestsWeb(url, workflowsCompleted['MonteCarlo'], output)
+    noSiteWorkflows = closeOutMonterCarloRequestsWeb(url, workflowsCompleted['MonteCarlo'], output, fromGen=False)
     workflowsCompleted['NoSite-MonteCarlo'] = noSiteWorkflows
     printTableFooterWeb('MonteCarlo', output)
     
     printTableHeaderWeb('MonteCarloFromGEN', output)
-    noSiteWorkflows = closeOutMonterCarloRequestsWeb(url, workflowsCompleted['MonteCarloFromGEN'], output)
+    noSiteWorkflows = closeOutMonterCarloRequestsWeb(url, workflowsCompleted['MonteCarloFromGEN'], output, fromGen=True)
     workflowsCompleted['NoSite-MonteCarloFromGEN'] = noSiteWorkflows
     printTableFooterWeb('MonteCarloFromGEN', output)
     
+    printTableHeaderWeb('TaskChain', output)
+    noSiteWorkflows = closeOutTaskChainWeb(url, workflowsCompleted['TaskChain'], output)
+    workflowsCompleted['NoSite-TaskChain'] = noSiteWorkflows
+    printTableFooterWeb('TaskChain', output)
+
     printTableHeaderWeb('LHEStepZero', output)
     noSiteWorkflows = closeOutStep0RequestsWeb(url, workflowsCompleted['LHEStepZero'],output)
     workflowsCompleted['NoSite-LHEStepZero'] = noSiteWorkflows
@@ -269,6 +309,7 @@ def main():
     listWorkflowsWeb(workflowsCompleted['NoSite-ReDigi'], output)
     listWorkflowsWeb(workflowsCompleted['NoSite-MonteCarlo'], output)
     listWorkflowsWeb(workflowsCompleted['NoSite-MonteCarloFromGEN'], output)
+    listWorkflowsWeb(workflowsCompleted['NoSite-TaskChain'], output)
     listWorkflowsWeb(workflowsCompleted['NoSite-LHEStepZero'], output)
     listWorkflowsWeb(workflowsCompleted['NoSite-StoreResults'], output)
     output.write('</table>')

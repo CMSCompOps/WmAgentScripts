@@ -19,17 +19,6 @@ from WMCore.WMSpec.WMWorkload import WMWorkloadHelper
 
 reqmgrCouchURL = "https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache"
 
-def retrieveSchema(workflowName):
-    """
-    Creates the cloned specs for the original request
-    Updates parameters
-    """
-    specURL = os.path.join(reqmgrCouchURL, workflowName, "spec")
-    helper = WMWorkloadHelper()
-    helper.load(specURL)
-    return helper
-    
-
 def modifySchema(helper, user, group, backfill=False):
     """
     Adapts schema to right parameters.
@@ -113,6 +102,7 @@ def modifySchema(helper, user, group, backfill=False):
     if backfill:
         #Modify ProcessingString, AcquisitionEra, Campaign and Request string (if they don't
         #have the word 'backfill' in it
+        result["RequestNumEvents"] = 10000000
         result["ProcessingString"] = "BACKFILL"
         if "backfill" not in result["AcquisitionEra"].lower():
             result["AcquisitionEra"] = helper.getAcquisitionEra()+"Backfill"
@@ -136,7 +126,7 @@ def cloneWorkflow(workflow, user, group, verbose=False, backfill=False):
     clones a workflow
     """
     # Get info about the workflow to be cloned
-    helper = retrieveSchema(workflow)
+    helper = reqMgrClient.retrieveSchema(workflow)
     # get info from reqMgr
     schema = modifySchema(helper, user, group, backfill)
 
@@ -171,7 +161,6 @@ def cloneWorkflow(workflow, user, group, verbose=False, backfill=False):
         if verbose:
             print response
         return None
-
 
 
 """

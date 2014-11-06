@@ -173,6 +173,19 @@ def getNumberofFilesPerRun(das_url, dataset, run):
     return len(reply)
 
 
+def getFileCountDataset(dataset):
+    """
+    Returns the number of files registered in DBS3
+    """
+     # initialize API to DBS3
+    dbsapi = DbsApi(url=dbs3_url)
+
+    # retrieve file list
+    reply = dbsapi.listFiles(dataset=dataset)
+    return len(reply)
+
+
+
 def getEventCountDataSet(dataset):
     """
     Returns the number of events in a dataset using DBS3
