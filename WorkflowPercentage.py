@@ -166,27 +166,34 @@ def main():
                         help="Show detailed info")
     parser.add_option("-l","--lumis",action="store_true", dest="checkLumis", default=False,
                         help="Show lumis instead of events")
+    parser.add_option("-f","--file", dest="fileName", default=None,
+                        help="Input file")
     (options, args) = parser.parse_args()
-    if len(args) != 1:
-        parser.error("Provide the workflow name")
+    if len(args) != 1 and options.fileName is None:
+        parser.error("Provide the workflow name or a file")
         sys.exit(1)
-
-    workflow=args[0]
-    wfType = reqMgrClient.getWorkflowType(url, workflow)
-    #by tyoe
-    if wfType != 'TaskChain':
-        #retrieve the output datasets
-        outputDataSets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
-        
-        #two step monte carlos (GEN and GEN-SIM)
-        if wfType == 'MonteCarlo' and len(outputDataSets) == 2:
-            percentageCompletion2StepMC(url, workflow, options.verbose, options.checkLumis)
-        elif wfType == 'MonteCarloFromGEN':
-            percentageCompletion(url, workflow, options.verbose, options.checkLumis, checkFilter=True)
-        else:
-            percentageCompletion(url, workflow, options.verbose, options.checkLumis)
+    if options.fileName is None:
+        workflows = [args[0]]
     else:
-        percentageCompletionTaskChain(url, workflow)
+        workflows = [l.strip() for l in open(options.fileName) if l.strip()]
+
+    for workflow in workflows:
+        print workflow
+        wfType = reqMgrClient.getWorkflowType(url, workflow)
+        #by tyoe
+        if wfType != 'TaskChain':
+            #retrieve the output datasets
+            outputDataSets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
+            
+            #two step monte carlos (GEN and GEN-SIM)
+            if wfType == 'MonteCarlo' and len(outputDataSets) == 2:
+                percentageCompletion2StepMC(url, workflow, options.verbose, options.checkLumis)
+            elif wfType == 'MonteCarloFromGEN':
+                percentageCompletion(url, workflow, options.verbose, options.checkLumis, checkFilter=True)
+            else:
+                percentageCompletion(url, workflow, options.verbose, options.checkLumis)
+        else:
+            percentageCompletionTaskChain(url, workflow)
 
 if __name__ == "__main__":
     main()

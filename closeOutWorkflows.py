@@ -242,7 +242,6 @@ def closeOutMonterCarloRequests(url, workflows, fromGen):
         #skip montecarlos on a special queue
         if workflow.team == 'analysis':
             continue
-        datasets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
         # validation for SMS montecarlos
         if 'SMS' in workflow.outputDatasets[0]:
             closePercentage= 1.00
@@ -261,6 +260,7 @@ def closeOutMonterCarloRequests(url, workflows, fromGen):
     #separation line
     print '-'*180
     return noSiteWorkflows
+
 
 def closeOutStep0Requests(url, workflows):
     """
