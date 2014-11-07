@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import cPickle
 import os
 import sys
 import urllib
@@ -47,10 +48,20 @@ def approveRequest(url,workflow):
 def retrieveSchema(workflowName):
     specURL = os.path.join(reqmgrCouchURL, workflowName, "spec")
     helper = WMWorkloadHelper()
-    helper.load(specURL)
+    print specURL
+
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    r1=conn.request('GET','/couchdb/reqmgr_workload_cache/'+workflowName+'/spec')
+
+    r2=conn.getresponse()
+
+    mystring=r2.read()
+    
+    data=cPickle.loads(mystring)
+
     schema = {}
 #    for (key, value) in helper.data.request.schema.dictionary_().iteritems():
-    for (key, value) in helper.data.request.schema.dictionary_whole_tree_().iteritems():
+    for (key, value) in data.request.schema.dictionary_whole_tree_().iteritems():
         if key == 'ProdConfigCacheID':
             schema['ConfigCacheID'] = value
         elif key=='ProcConfigCacheID':
@@ -126,7 +137,7 @@ if __name__ == "__main__":
         command=command+arg+" "
 
     if not options.correct_env:
-         os.system("source /afs/cern.ch/cms/LCG/LCG-2/UI/cms_ui_env.sh; python2.6 "+command + "--correct_env")
+         os.system("source /afs/cern.ch/cms/LCG/LCG-2/UI/cms_ui_env.sh; source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh; python2.6 "+command + "--correct_env")
          sys.exit(0)
 
     if len(args) != 1:
@@ -142,8 +153,8 @@ if __name__ == "__main__":
         schema['Memory'] = 4900
 
     
-#    print "\nNew schema:\n", schema     # FOR DEBUG
-#    sys.exit(0)
+    #print "\nNew schema:\n", schema     # FOR DEBUG
+    #sys.exit(0)
     newWorkflow=submitWorkflow(schema)
     approveRequest(url,newWorkflow)
     sys.exit(0)
