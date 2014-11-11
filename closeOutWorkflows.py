@@ -58,13 +58,17 @@ def classifyCompletedRequests(url, requests):
             if requestType=='MonteCarlo':
                 #MonteCarlo's which datasets end with /GEN
                 #are Step0
-                datasets = reqMgrClient.outputdatasetsWorkflow(url, name)
-                m = re.search('.*/GEN$', datasets[0])
-                if m:
-                    workflows['LHEStepZero'].append(name)
-                else:
-                    workflows[requestType].append(name)
-                #TODO identify MonteCarlo with two output
+                try:
+                    datasets = reqMgrClient.outputdatasetsWorkflow(url, name)
+                    m = re.search('.*/GEN$', datasets[0])
+                    if m:
+                        workflows['LHEStepZero'].append(name)
+                    else:
+                        workflows[requestType].append(name)
+                    #TODO identify MonteCarlo with two output
+                except Exception as e:
+                    print "Error on wf", name
+                    continue
             elif requestType=='TaskChain':
                 #only taskchains with MC or ReDigi subType
                 subType = reqMgrClient.getWorkflowSubType(url, name)
@@ -110,7 +114,8 @@ def validateClosingWorkflow(url, workflow, closePercentage = 0.95, checkEqual=Fa
         equalFiles = (dbsFiles == phdFiles)
         #Check first percentage
         if ((checkEqual and percentage == closePercentage)
-            or (not checkEqual and percentage >= closePercentage) ):
+            or (not checkEqual and percentage >= closePercentage)
+            or dataset.endswith("DQMIO") ): #DQMIO are exceptions (have 0 events)
             #if we need to check duplicates
             if checkDuplicates:
                 duplicate = dbs3Client.duplicateRunLumi(dataset)         
@@ -209,7 +214,7 @@ def closeOutRedigiWorkflows(url, workflows):
         #if miniaod
         if 'miniaod' in workflow.name:
             #we don't check for custodial subscription
-            result = validateClosingWorkflow(url, workflow, 0.95, checkPhedex=False)            
+            result = validateClosingWorkflow(url, workflow, 0.95, checkPhedex=False)        
         else:
             #check dataset health, duplicates, subscription, etc.       
             result = validateClosingWorkflow(url, workflow, 0.95)
@@ -257,6 +262,7 @@ def closeOutMonterCarloRequests(url, workflows, fromGen):
         for (ds,info) in result['datasets'].items():
             if info['missingSubs']:
                 noSiteWorkflows.append((workflow.name,ds))
+            
     #separation line
     print '-'*180
     return noSiteWorkflows
