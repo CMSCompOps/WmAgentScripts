@@ -40,7 +40,7 @@ def getOutputDatasetPrepID():
                     problemDS.setdefault(outDS, set())
                     problemDS[outDS].add(result[outDS])
                     problemDS[outDS].add(prepID)
-            elif prepID != None:
+            elif prepID != None or prepID != 'None':
                 result[outDS] = prepID
             else:
                 print "%s has None PrepID" % outDS
