@@ -175,7 +175,7 @@ def closeOutStoreResultsWorkflowsWeb(url, workflows, output):
         #info from reqMgr            
         workflow = reqMgrClient.StoreResults(wf, url)
         #first validate if effectively is completed
-        if status != 'completed':
+        if workflow.status != 'completed':
             continue
         #closeout workflow, checking percentage equalst 100%
         result = validateClosingWorkflow(url, workflow, closePercentage=1.0, 
