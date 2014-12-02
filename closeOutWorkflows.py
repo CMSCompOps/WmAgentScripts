@@ -44,8 +44,25 @@ def classifyCompletedRequests(url, requests):
     """
     workflows={'ReDigi':[],'MonteCarloFromGEN':[],'MonteCarlo':[] , 'ReReco':[], 'LHEStepZero':[], 'StoreResults':[],
                 'TaskChain':[]}
+
+    #TODO debug
+    #workflows not found
+    #pdmvserv_HIG-Summer12DR53X-01991_T1_US_FNAL_MSS_00212_v0__140502_155516_4571
+    #pdmvserv_HIG-2019GEMUpg14DR-00021_00041_v0_age1k_PU140bx25_140709_191435_3571
+    #pdmvserv_EXO-Phys14DR-00112_00055_v0__141114_162206_186
+    
+    l = ['pdmvserv_HIG-Summer12DR53X-01991_T1_US_FNAL_MSS_00212_v0__140502_155516_4571',     
+        'pdmvserv_HIG-2019GEMUpg14DR-00021_00041_v0_age1k_PU140bx25_140709_191435_3571',
+        'pdmvserv_EXO-Phys14DR-00112_00055_v0__141114_162206_186']
+
     for request in requests:
         name=request['id']
+
+        #TODO debug
+        if name in l:
+            print l,"found"
+            print request        
+
         #if a wrong or weird name
         if len(request['key'])<3:
             print request
