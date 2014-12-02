@@ -62,19 +62,6 @@ def closeOutRedigiWorkflowsWeb(url, workflows, output):
     Closes Redigi workflows
     """
     noSiteWorkflows = []
-    #TODO debug
-    #workflows not found
-    #pdmvserv_HIG-Summer12DR53X-01991_T1_US_FNAL_MSS_00212_v0__140502_155516_4571
-    #pdmvserv_HIG-2019GEMUpg14DR-00021_00041_v0_age1k_PU140bx25_140709_191435_3571
-    #pdmvserv_EXO-Phys14DR-00112_00055_v0__141114_162206_186
-    
-    l = ['pdmvserv_HIG-Summer12DR53X-01991_T1_US_FNAL_MSS_00212_v0__140502_155516_4571',     
-        'pdmvserv_HIG-2019GEMUpg14DR-00021_00041_v0_age1k_PU140bx25_140709_191435_3571',
-        'pdmvserv_EXO-Phys14DR-00112_00055_v0__141114_162206_186']
-    for wf in l:
-        if l in workflows:
-            print "%s in list "%l    
-    sys.exit(0)
     for wf in workflows:
         #first validate if effectively is completed
         workflow = reqMgrClient.ReDigi(wf)
