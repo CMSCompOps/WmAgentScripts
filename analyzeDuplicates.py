@@ -69,7 +69,7 @@ def main():
     print 'total events %s'%total
     print 'invalidated files %s'%len(files)
     print 'invalidated events %s'%invalid
-    print '%s%%'%(float(total-invalid)/invalid*100.0)
+    print '%s%%'%(float(total-invalid)/total*100.0)
 
 
 if __name__ == '__main__':
