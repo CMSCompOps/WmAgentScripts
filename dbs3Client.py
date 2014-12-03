@@ -274,7 +274,7 @@ def getEventCountDataSetFileList(dataset,fileList):
     total = 0
     #get one by one block and add it so uri wont be too large
     for f in fileList:
-        reply = dbsapi.listFiles(logical_file_name=f)
+        reply = dbsapi.listFiles(logical_file_name=f, detail=True)
         total += reply[0]['event_count']
     return total
 
