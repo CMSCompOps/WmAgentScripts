@@ -66,9 +66,9 @@ def main():
     files = deleteMaxDegreeFirst(graph)
     total = dbs.getEventCountDataSet(dataset)
     invalid = dbs.getEventCountDataSetFileList(dataset, files)
-    print 'total events'+total
-    print 'invalidated files'+len(files)
-    print 'invalidated events'+invalid
+    print 'total events %s'%total
+    print 'invalidated files %s'%len(files)
+    print 'invalidated events %s'%invalid
     print '%s%%'%(float(total-invalid)/invalid*100.0)
 
 
