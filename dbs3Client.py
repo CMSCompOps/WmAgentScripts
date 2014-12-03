@@ -261,6 +261,24 @@ def getEventCountDataSetBlockList(dataset,blockList):
         total += reply[0]['num_event']
     return total
 
+def getEventCountDataSetFileList(dataset,fileList):
+    """
+    Counts and adds all the events for a given lists
+    blocks inside a dataset
+    """
+    # initialize API to DBS3
+    dbsapi = DbsApi(url=dbs3_url)    
+    #transform from strin to list
+    if type(fileList) in (str, unicode):
+        fileList = eval(fileList)
+    total = 0
+    #get one by one block and add it so uri wont be too large
+    for f in fileList:
+        reply = dbsapi.listFiles(logical_file_name=f)
+        total += reply[0]['event_count']
+    return total
+
+
 def getEventCountDataSetRunList(dataset,runList):
     """
     Counts and adds all the events for a given lists

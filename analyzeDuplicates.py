@@ -3,7 +3,7 @@ Analyzes duplicate dump files and calculates the minimum file
 set for invalidating
 """
 import sys
-
+import dbs3Client as dbs
 
 def buildGraph(lines):
     
@@ -60,11 +60,12 @@ def deleteMaxDegreeFirst(graph):
     return files
 
 def main():
+    dataset = '/MinBias_TuneZ2star_14TeV-pythia6/TP2023HGCALGS-DES23_62_V1-v1/GEN-SIM'
     lines = [l.strip() for l in open(sys.argv[1])]
     graph = buildGraph(lines)
     files = deleteMaxDegreeFirst(graph)
-    for f in files:
-        print f
+    total = dbs.getEventCountDataSet(dataset)
+    invalid = dbs.getEventCountDataSetFileList(dataset, filelist)
 
 if __name__ == '__main__':
     main()
