@@ -45,6 +45,7 @@ def duplicateRunLumi(dataset, verbose=False):
         lumisChecked={}
         # retrieve files for that run
         reply = dbsapi.listFiles(dataset=dataset)
+        #TODO check only valid files
         for f in reply:
             logical_file_name = f['logical_file_name']
             reply2 = dbsapi.listFileLumis(logical_file_name=logical_file_name, run_num=run)
@@ -80,8 +81,11 @@ def duplicateLumi(dataset, verbose=False):
     lumisChecked={}
     # retrieve files
     reply = dbsapi.listFiles(dataset=dataset)
+    #TODO check only valid files
     for f in reply:
         logical_file_name = f['logical_file_name']
+        print f
+        sys.exit(0)
         reply2 = dbsapi.listFileLumis(logical_file_name=logical_file_name)
         #retrieve lumis for each file
         lumis = reply2[0]['lumi_section_num']
