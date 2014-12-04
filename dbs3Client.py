@@ -80,7 +80,7 @@ def duplicateLumi(dataset, verbose=False):
     duplicated = False
     lumisChecked={}
     # retrieve files
-    reply = dbsapi.listFiles(dataset=dataset)
+    reply = dbsapi.listFiles(dataset=dataset, detail=True)
     #TODO check only valid files
     for f in reply:
         logical_file_name = f['logical_file_name']
