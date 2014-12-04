@@ -29,7 +29,7 @@ Host *cvs*.cern.ch *svn*.cern.ch
 
 Host *.cern.ch
   # GSSAPITrustDNS no
-  ProxyCommand proxy-ssh lxvoadm5.cern.ch /usr/bin/nc %h %p
+  ProxyCommand proxy-ssh lxplus.cern.ch /usr/bin/nc %h %p
 
 # Agents
 Host vocms*.cern.ch
