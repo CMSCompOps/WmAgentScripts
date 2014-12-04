@@ -62,8 +62,8 @@ reprocdir = afs_base+'reproc'
 mcdir = afs_base+'mc'
 
 #TODO calculate based on load
-stuck_days = 5
-old_days = 10
+stuck_days = 3
+old_days = 7
 
 
 def human(n):
@@ -261,6 +261,9 @@ def makeissuessummary(s, issues, oldest, urgent_requests, types):
     #   for priority in getpriorities(s,'','',[status]):
     for r in s:
         if r['type'] not in types:
+            continue
+        #TODO ignore Dave's tests
+        if 'dmason' in r['requestname']:
             continue
         #calculate splitting
         if r['type'] == 'MonteCarlo':
