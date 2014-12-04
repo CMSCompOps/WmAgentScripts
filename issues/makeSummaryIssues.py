@@ -407,7 +407,10 @@ def makeissuessummary(s, issues, oldest, urgent_requests, types):
                 #get one site
                 if len(r['sites']) == 1:
                     site = r['sites'][0]
-                    nodes_avail = [str(subs['node']) for subs in r['inputdatasetinfo']['phtrinfo']]
+                    if 'phtrinfo' in r['inputdatasetinfo']:
+                        nodes_avail = [str(subs['node']) for subs in r['inputdatasetinfo']['phtrinfo']]
+                    else:
+                        nodes_avail = []
                     #is acquired on a site in which the input is not subscribed
                     if( not nodes_avail
                         or( site not in nodes_avail and
