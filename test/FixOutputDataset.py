@@ -54,11 +54,13 @@ def getOutputDSFromSpec(request):
     return candidate
 
 def updateOutputDataset(reqMgrDB, limit, skip):
-    requests = reqMgrDB.getRequestByStatus(["normal-archived"], True, limit, skip)
-    #requests = reqMgrDB.getRequestByStatus(StatusForOutDS, True, 1)
+    requests = reqMgrDB.getRequestByStatus(["normal-archived", "rejected-archived", "aborted-archived"], True, limit, skip)
+    #requests = reqMgrDB.getRequestByStatus(StatusForOutDS, True, limit, skip)
     #requests = reqMgrDB.getRequestByNames(["amaltaro_RVCMSSW_7_0_0_pre11TTbar_140128_155743_8106"])
     wrongOutDS = set()
     missingOutDS = set()
+    if type(requests) == list and len(requests) == 0:
+        return 0
     for key, value in requests.items():
         reqName = key
         if value.has_key("OutputDatasets"):

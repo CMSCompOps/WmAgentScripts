@@ -71,8 +71,8 @@ if __name__ == "__main__":
             
     f1 = open("alreadyDeleted.txt", "w")
     f2 = open("deleted.txt", "w")
-    print(reportD, file = f1)
-    print(reportND, file = f2)        
+    print(reportND, file = f1)
+    print(reportD, file = f2)        
     print("total deleted: request: %s doc: %s" % (deletedReq, total))
     print("done")
     
