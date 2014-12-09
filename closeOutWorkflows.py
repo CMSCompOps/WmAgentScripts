@@ -94,13 +94,20 @@ def validateClosingWorkflow(url, workflow, closePercentage = 0.95, checkEqual=Fa
     #TODO validate here if workflow is MonteCarlo from GEN with two output
     for dataset in workflow.outputDatasets:
         closeOutDataset = False
-        percentage = workflow.percentageCompletion(dataset)
+        try:
+            percentage = workflow.percentageCompletion(dataset)
+        except Exception:
+            print 'Error getting information from DBS', workflow, dataset
         #retrieve either custodial or all subscriptions.
-        if checkPhedex == 'custodial':
-            phedexReqs = phedexClient.getCustodialSubscriptionRequestSite(dataset)
-        elif checkPhedex == 'any':
-            phedexReqs = phedexClient.getSubscriptionSites(dataset)
-        else:
+        try:
+            if checkPhedex == 'custodial':
+                phedexReqs = phedexClient.getCustodialSubscriptionRequestSite(dataset)
+            elif checkPhedex == 'any':
+                phedexReqs = phedexClient.getSubscriptionSites(dataset)
+            else:
+                phedexReqs = None
+        except Exception:
+            print 'Error getting phedex info,: ', dataset
             phedexReqs = None
         duplicate = None
         correctLumis = None
