@@ -177,18 +177,15 @@ def main():
     else:
         workflows = [l.strip() for l in open(options.fileName) if l.strip()]
 
-    for workflow in workflows:
-        print workflow
-        wfType = reqMgrClient.getWorkflowType(url, workflow)
+    for wf in workflows:
+        print wf
+        workflow = reqMgrClient.Workflow(wf, url)        
         #by tyoe
-        if wfType != 'TaskChain':
-            #retrieve the output datasets
-            outputDataSets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
-            
+        if workflow.type != 'TaskChain':
             #two step monte carlos (GEN and GEN-SIM)
-            if wfType == 'MonteCarlo' and len(outputDataSets) == 2:
+            if workflow.type == 'MonteCarlo' and len(workflow.outputDatasets) == 2:
                 percentageCompletion2StepMC(url, workflow, options.verbose, options.checkLumis)
-            elif wfType == 'MonteCarloFromGEN':
+            elif workflow.type == 'MonteCarloFromGEN':
                 percentageCompletion(url, workflow, options.verbose, options.checkLumis, checkFilter=True)
             else:
                 percentageCompletion(url, workflow, options.verbose, options.checkLumis)
