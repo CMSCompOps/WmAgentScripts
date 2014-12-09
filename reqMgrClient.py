@@ -26,6 +26,7 @@ class Workflow:
         self.url = url
         #from the workflow Info
         self.info = getWorkflowInfo(url, name)
+        self.cache = getWorkloadCache(url, name)
         self.status = self.info['RequestStatus']
         self.type = self.info['RequestType']
         if 'SubRequestType' in self.info:
@@ -168,7 +169,7 @@ class WorkflowWithInput(Workflow):
         #to avoid quering it twice
         if self.inputEvents:
             return self.inputEvents
-    
+        
         events = dbs3.getEventCountDataSet(self.inputDataset)
         #take into account first block lists
         if self.info['BlockWhitelist']:
@@ -325,7 +326,14 @@ def getWorkflowInfo(url, workflow):
     Retrieves workflow information
     """
     request = requestManagerGet(url,'/reqmgr/reqMgr/request?requestName='+workflow)
-    return request    
+    return request
+
+def getWorkloadCache(url, workflow):
+    """
+    Retrieves the ReqMgr Workfload Cache
+    """
+    request = requestManagerGet(url, '/couchdb/reqmgr_workload_cache/'+workflow)
+    return request
 
 def getWorkflowStatus(url, workflow):
     """
