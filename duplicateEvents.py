@@ -22,7 +22,7 @@ def testEventCountWorkflow(url, workflow, verbose=False):
     for dataset in datasets:
         print 'dataset :', dataset		
         #if dbs3Client.duplicateLumi(dataset, verbose):
-        if dbs3Client.duplicateRunLumi(dataset, verbose):
+        if dbs3Client.duplicateRunLumi(dataset, verbose, skipInvalid=True):
             duplicate = True
             #fast check, one dataset duplicated
             if not verbose:

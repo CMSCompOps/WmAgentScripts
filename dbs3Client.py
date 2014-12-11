@@ -20,7 +20,7 @@ das_host='https://cmsweb.cern.ch'
 dbs3_url = r'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
 
 
-def duplicateRunLumi(dataset, verbose=False):
+def duplicateRunLumi(dataset, verbose=False, skipInvalid=False):
     """
     checks if output dataset has duplicate lumis
     for every run.
@@ -29,6 +29,8 @@ def duplicateRunLumi(dataset, verbose=False):
     two different files
     This can be used on datasets that have separate
     runs.
+    Verbose: if true prints details
+    skipInvalid: if true skips invalid files, by default is False because is faster
     """  
     dbsapi = DbsApi(url=dbs3_url)
     duplicated = False
@@ -38,14 +40,17 @@ def duplicateRunLumi(dataset, verbose=False):
     if len(runs) == 1:
         if verbose:
             print "only one run:",runs
-        return duplicateLumi(dataset, verbose)
+        return duplicateLumi(dataset, verbose, skipInvalid)
     #else manually
     for run in runs:
         #create a set
         lumisChecked={}
         # retrieve files for that run
-        reply = dbsapi.listFiles(dataset=dataset)
+        reply = dbsapi.listFiles(dataset=dataset, detail=skipInvalid)
         for f in reply:
+            #skip invalid files
+            if skipInvalid and f['is_file_valid'] != 1 :
+                continue
             logical_file_name = f['logical_file_name']
             reply2 = dbsapi.listFileLumis(logical_file_name=logical_file_name, run_num=run)
             #retrieve lumis for each file
@@ -69,19 +74,24 @@ def duplicateRunLumi(dataset, verbose=False):
 
     return duplicated
 
-def duplicateLumi(dataset, verbose=False):
+def duplicateLumi(dataset, verbose=False, skipInvalid=False):
     """
     checks if output dataset has duplicate lumis
     returns true if at least one duplicate lumi was found
-    """
+    Verbose: if true prints details
+    skipInvalid: if true skips invalid files, by default is False because is faster
+   """
     # initialize API to DBS3
     dbsapi = DbsApi(url=dbs3_url)
     duplicated = False
     lumisChecked={}
     # retrieve files
-    reply = dbsapi.listFiles(dataset=dataset)
+    reply = dbsapi.listFiles(dataset=dataset, detail=skipInvalid)
     for f in reply:
         logical_file_name = f['logical_file_name']
+        #skip invalid files
+        if skipInvalid and f['is_file_valid'] != 1 :
+            continue
         reply2 = dbsapi.listFileLumis(logical_file_name=logical_file_name)
         #retrieve lumis for each file
         lumis = reply2[0]['lumi_section_num']
@@ -260,6 +270,24 @@ def getEventCountDataSetBlockList(dataset,blockList):
         reply = dbsapi.listBlockSummaries(block_name=block)
         total += reply[0]['num_event']
     return total
+
+def getEventCountDataSetFileList(dataset,fileList):
+    """
+    Counts and adds all the events for a given lists
+    blocks inside a dataset
+    """
+    # initialize API to DBS3
+    dbsapi = DbsApi(url=dbs3_url)    
+    #transform from strin to list
+    if type(fileList) in (str, unicode):
+        fileList = eval(fileList)
+    total = 0
+    #get one by one block and add it so uri wont be too large
+    for f in fileList:
+        reply = dbsapi.listFiles(logical_file_name=f, detail=True)
+        total += reply[0]['event_count']
+    return total
+
 
 def getEventCountDataSetRunList(dataset,runList):
     """

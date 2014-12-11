@@ -62,8 +62,8 @@ reprocdir = afs_base+'reproc'
 mcdir = afs_base+'mc'
 
 #TODO calculate based on load
-stuck_days = 5
-old_days = 10
+stuck_days = 3
+old_days = 7
 
 
 def human(n):
@@ -262,6 +262,9 @@ def makeissuessummary(s, issues, oldest, urgent_requests, types):
     for r in s:
         if r['type'] not in types:
             continue
+        #TODO ignore Dave's tests
+        if 'dmason' in r['requestname']:
+            continue
         #calculate splitting
         if r['type'] == 'MonteCarlo':
             split = r['events_per_job']
@@ -404,7 +407,10 @@ def makeissuessummary(s, issues, oldest, urgent_requests, types):
                 #get one site
                 if len(r['sites']) == 1:
                     site = r['sites'][0]
-                    nodes_avail = [str(subs['node']) for subs in r['inputdatasetinfo']['phtrinfo']]
+                    if 'phtrinfo' in r['inputdatasetinfo']:
+                        nodes_avail = [str(subs['node']) for subs in r['inputdatasetinfo']['phtrinfo']]
+                    else:
+                        nodes_avail = []
                     #is acquired on a site in which the input is not subscribed
                     if( not nodes_avail
                         or( site not in nodes_avail and

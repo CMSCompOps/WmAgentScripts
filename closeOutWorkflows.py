@@ -94,13 +94,21 @@ def validateClosingWorkflow(url, workflow, closePercentage = 0.95, checkEqual=Fa
     #TODO validate here if workflow is MonteCarlo from GEN with two output
     for dataset in workflow.outputDatasets:
         closeOutDataset = False
-        percentage = workflow.percentageCompletion(dataset)
+        try:
+            percentage = workflow.percentageCompletion(dataset)
+        except Exception:
+            print 'Error getting information from DBS', workflow, dataset
+            percentage = 0.0
         #retrieve either custodial or all subscriptions.
-        if checkPhedex == 'custodial':
-            phedexReqs = phedexClient.getCustodialSubscriptionRequestSite(dataset)
-        elif checkPhedex == 'any':
-            phedexReqs = phedexClient.getSubscriptionSites(dataset)
-        else:
+        try:
+            if checkPhedex == 'custodial':
+                phedexReqs = phedexClient.getCustodialSubscriptionRequestSite(dataset)
+            elif checkPhedex == 'any':
+                phedexReqs = phedexClient.getSubscriptionSites(dataset)
+            else:
+                phedexReqs = None
+        except Exception:
+            print 'Error getting phedex info,: ', dataset
             phedexReqs = None
         duplicate = None
         correctLumis = None
@@ -118,7 +126,10 @@ def validateClosingWorkflow(url, workflow, closePercentage = 0.95, checkEqual=Fa
             or dataset.endswith("DQMIO") ): #DQMIO are exceptions (have 0 events)
             #if we need to check duplicates
             if checkDuplicates:
-                duplicate = dbs3Client.duplicateRunLumi(dataset)         
+                try:
+                    duplicate = dbs3Client.duplicateRunLumi(dataset)
+                except Exception:
+                    print "Error in checking duplicate lumis for", dataset
             #if we need to check for correct lumi number
             if checkLumiNumb:
                 correctLumis = checkCorrectLumisEventGEN(dataset)
