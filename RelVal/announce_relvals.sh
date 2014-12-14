@@ -54,10 +54,10 @@ echo \$dsets_tmp_fnal
 echo $dsets_tmp_fnal
 echo \$dsets_tmp_cern
 echo $dsets_tmp_cern
-python2.6 phedexSubscription.py T2_CH_CERN $dsets_tmp_cern \"relval datasets\"
+python2.6 phedexSubscription.py T2_CH_CERN $dsets_tmp_cern \"relval datasets\" --autoapprove
 #python2.6 phedexSubscription.py T1_US_FNAL_MSS $dsets_tmp_fnal \"relval datasets\" --custodial
 python2.6 phedexSubscription.py T1_US_FNAL_Disk $dsets_tmp_fnal_disk \"relval datasets\"
-python2.6 phedexSubscription.py T0_CH_CERN_MSS  $dsets_tmp_fnal \"relval datasets\" --custodial
+python2.6 phedexSubscription.py T0_CH_CERN_MSS  $dsets_tmp_fnal \"relval datasets\" --custodial --autoapprove
 echo ""
 echo "------> finished making phedex subscriptions"
 
@@ -84,7 +84,7 @@ echo "HN request:"
 echo "$hnreq"
 echo ""
 echo "Best regards,"
-echo "Andrew and Alan" 
+echo "Andrew" 
 echo ""
 echo "------> finished writing announcement e-mail"
 
@@ -95,6 +95,6 @@ echo ""
 
 echo "------> setting workflows to announced"
 echo ""
-#python2.6 setrequeststatus.py $wf_names_file announced
+python2.6 setrequeststatus.py $wf_names_file announced
 echo ""
 echo "------> finished setting workflows to announced"
