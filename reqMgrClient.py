@@ -26,7 +26,7 @@ class Workflow:
         self.url = url
         #from the workflow Info
         self.info = getWorkflowInfo(url, name)
-        self.cache = getgetWorkloadCache(url, name)
+        self.cache = getWorkloadCache(url, name)
         self.status = self.info['RequestStatus']
         self.type = self.info['RequestType']
         if 'SubRequestType' in self.info:
