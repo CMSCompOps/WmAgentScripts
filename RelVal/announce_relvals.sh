@@ -95,6 +95,6 @@ echo ""
 
 echo "------> setting workflows to announced"
 echo ""
-python2.6 setrequeststatus.py $wf_names_file announced
+python2.6 setrequeststatus.py $wf_names_file closed-out
 echo ""
 echo "------> finished setting workflows to announced"
