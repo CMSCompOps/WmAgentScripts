@@ -21,28 +21,25 @@ def percentageCompletion(url, workflow, verbose=False, checkLumis=False, checkFi
     #input events/lumis
     try:
         if checkLumis:
-            inputEvents = int(reqMgrClient.getInputLumis(url, workflow))
+            inputEvents = workflow.getInputEvents()
         else:
-            inputEvents = int(reqMgrClient.getInputEvents(url, workflow))
+            inputEvents = workflow.getInputLumis()
     except:
         #no input dataset
         inputEvents = 0        
     
     #filter Efficiency (only for events)
-    if checkFilter and not checkLumis:
-        filterEff = reqMgrClient.getFilterEfficiency(url, workflow)
-        if not filterEff:
-            filterEff = 1.0    
+    if checkFilter and not checkLumis and workflow.filterEfficiency:
+        filterEff = workflow.filterEfficiency
     else:
         filterEff = 1.0
     #datasets
-    outputDataSets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
-    for dataset in outputDataSets:
+    for dataset in workflow.outputDatasets:
         #output events/lumis
         if checkLumis:
-            outputEvents = reqMgrClient.getOutputLumis(url, workflow, dataset)
+            outputEvents = workflow.getOutputLumis(dataset)
         else:
-            outputEvents = reqMgrClient.getOutputEvents(url, workflow, dataset)
+            outputEvents = workflow.getOutputEvents(dataset)
         if not outputEvents:
             outputEvents = 0
         #calculate percentage
@@ -165,7 +162,7 @@ def percentageCompletionTaskChain(url, workflow, verbose=False, checkLumis=False
                 inputEvents *= filterEff
                 percentage = 100.0*outputEvents/float(inputEvents) if inputEvents > 0 else 0.0
                 if verbose:
-                    print "Output %s:"%("lumis" if checkLumis else "events"), int(outputEvents), "(%.2f%%)"%
+                    print "Output %s:"%("lumis" if checkLumis else "events"), int(outputEvents), "(%.2f%%)"%percentage
             #GEN dataset with lumis
             elif i == 1 and checkLumis:
                 if verbose:
@@ -176,7 +173,7 @@ def percentageCompletionTaskChain(url, workflow, verbose=False, checkLumis=False
             else:
                 percentage = 100.0*outputEvents/float(inputEvents) if inputEvents > 0 else 0.0
                 if verbose:
-                    print "Output %s:"%("lumis" if checkLumis else "events"), int(outputEvents), "(%.2f%%)"%
+                    print "Output %s:"%("lumis" if checkLumis else "events"), int(outputEvents), "(%.2f%%)"%percentage
             if not verbose:
                 print dataset, "%s%%"%percentage
             i += 1
@@ -208,13 +205,13 @@ def main():
         if workflow.type != 'TaskChain':
             #two step monte carlos (GEN and GEN-SIM)
             if workflow.type == 'MonteCarlo' and len(workflow.outputDatasets) == 2:
-                percentageCompletion2StepMC(url, workflow.name, options.verbose, options.checkLumis)
+                percentageCompletion2StepMC(url, workflow, options.verbose, options.checkLumis)
             elif workflow.type == 'MonteCarloFromGEN':
-                percentageCompletion(url, workflow.name, options.verbose, options.checkLumis, checkFilter=True)
+                percentageCompletion(url, workflow, options.verbose, options.checkLumis, checkFilter=True)
             else:
-                percentageCompletion(url, workflow.name, options.verbose, options.checkLumis)
+                percentageCompletion(url, workflow, options.verbose, options.checkLumis)
         else:
-            percentageCompletionTaskChain(url, workflow.name, options.verbose, options.checkLumis)
+            percentageCompletionTaskChain(url, workflow, options.verbose, options.checkLumis)
 
 if __name__ == "__main__":
     main()
