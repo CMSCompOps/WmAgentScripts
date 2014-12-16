@@ -21,9 +21,9 @@ def percentageCompletion(url, workflow, verbose=False, checkLumis=False, checkFi
     #input events/lumis
     try:
         if checkLumis:
-            inputEvents = workflow.getInputEvents()
-        else:
             inputEvents = workflow.getInputLumis()
+        else:
+            inputEvents = workflow.getInputEvents()
     except:
         #no input dataset
         inputEvents = 0        
