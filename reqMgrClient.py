@@ -72,7 +72,7 @@ class Workflow:
             events = self.outEvents[ds]
         return events
 
-    def getOutputEvents(self, ds):
+    def getOutputLumis(self, ds):
         """
         Gets the numer of lumis in an output dataset
         """
