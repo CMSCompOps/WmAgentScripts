@@ -65,32 +65,29 @@ def percentageCompletion2StepMC(url, workflow, verbose=False, checkLumis=False):
     #input events/lumis
     try:
         if checkLumis:
-            inputEvents = int(reqMgrClient.getInputLumis(url, workflow))
+            inputEvents = workflow.getInputLumis()
         else:
-            inputEvents = int(reqMgrClient.getInputEvents(url, workflow))
+            inputEvents = workflow.getInputEvents()
     except:
         #no input dataset
         inputEvents = 0
     
     #filter Efficiency (only for events)
-    if not checkLumis:
-        filterEff = reqMgrClient.getFilterEfficiency(url, workflow)
-        if not filterEff:
-            filterEff = 1.0    
+    if not checkLumis and workflow.filterEfficiency:
+        filterEff = workflow.filterEfficiency
     else:
         filterEff = 1.0
 
-    outputDataSets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
     #set the GEN first
-    if re.match('.*/GEN$', outputDataSets[1]):
-        outputDataSets = [outputDataSets[1],outputDataSets[0]]
+    if re.match('.*/GEN$', workflow.outputDatasets[1]):
+        workflow.outputDatasets = [workflow.outputDatasets[1],workflow.outputDatasets[0]]
     #output events/lumis
     if checkLumis:
-        outputEvents = [reqMgrClient.getOutputLumis(url, workflow, outputDataSets[0]),
-                        reqMgrClient.getOutputLumis(url, workflow, outputDataSets[1])]
+        outputEvents = [ workflow.getOutputEvents(workflow.outputDatasets[0]),
+                        workflow.getOutputEvents(workflow.outputDatasets[1])]
     else:
-        outputEvents = [reqMgrClient.getOutputEvents(url, workflow, outputDataSets[0]),
-                        reqMgrClient.getOutputEvents(url, workflow, outputDataSets[1])]
+        outputEvents = [ workflow.getOutputLumis(workflow.outputDatasets[0]),
+                        workflow.getOutputLumis(workflow.outputDatasets[1])]
     if not inputEvents:
         perc = [100.0,100.0*outputEvents[1]/outputEvents[0]]
     else:
@@ -99,14 +96,14 @@ def percentageCompletion2StepMC(url, workflow, verbose=False, checkLumis=False):
     #print results
     if verbose:
         print "Input %s: %d"%("lumis" if checkLumis else "events", int(inputEvents))
-        print outputDataSets[0]
+        print workflow.outputDatasets[0]
         print "Output %s: %d (%s%%)"%("lumis" if checkLumis else "events", int(outputEvents[0]), perc[0])
-        print outputDataSets[1]
+        print workflow.outputDatasets[1]
         print ("Output %s: %d (%s%%)"%("lumis" if checkLumis else "events", int(outputEvents[1]), perc[1])+
               ('(filter=%s)'%filterEff if not checkLumis else ''))
     else:
-        print outputDataSets[0], "%s%%"%perc[0]
-        print outputDataSets[1], "%s%%"%perc[1]
+        print workflow.outputDatasets[0], "%s%%"%perc[0]
+        print workflow.outputDatasets[1], "%s%%"%perc[1]
 
 def percentageCompletionTaskChain(url, workflow, verbose=False, checkLumis=False):
     """
@@ -114,31 +111,29 @@ def percentageCompletionTaskChain(url, workflow, verbose=False, checkLumis=False
     Taking step/filter efficiency into account.
     pdmvserv_task_SUS-Summer12WMLHE-00004__v1_T_141003_120119_9755
     """
-    if not checkLumis:
-        inputEvents = reqMgrClient.getInputEvents(url, workflow)
+    workflow = TaskChain(workflow.name)
+    if checkLumis:
+        inputEvents = workflow.getInputLumis()
     else:
-        inputEvents = 0
-
-    outputDataSets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
-    
+        inputEvents = workflow.getInputEvents()
     print "Input events:", int(inputEvents)
     i = 1
 
     #if subtype doesn't come with the request, we decide based on dataset names
     fromGen = False
-    if not re.match('.*/GEN$', outputDataSets[0]):
+    if not re.match('.*/GEN$', workflow.outputDatasets[0]):
         fromGen = False
-    elif (re.match('.*/GEN$', outputDataSets[0])
-        and re.match('.*/GEN-SIM$', outputDataSets[1])):
+    elif (re.match('.*/GEN$', workflow.outputDatasets[0])
+        and re.match('.*/GEN-SIM$', workflow.outputDatasets[1])):
         fromGen = True
 
     #task-chain 1 (without filterEff)
     if not fromGen:
-        for dataset in outputDataSets:
+        for dataset in workflow.outputDatasets:
             if not checkLumis:
-                outputEvents = reqMgrClient.getOutputEvents(url, workflow, dataset)
+                outputEvents = workflow.getOutputEvents(dataset)
             else:
-                outputEvents = reqMgrClient.getOutputLumis(url, workflow, dataset)
+                outputEvents = workflow.getOutputLumis(dataset)
             percentage = 100.0*outputEvents/float(inputEvents) if inputEvents > 0 else 0.0
             if verbose:
                 print dataset
@@ -148,16 +143,16 @@ def percentageCompletionTaskChain(url, workflow, verbose=False, checkLumis=False
     #task-chain 2 GEN, GEN-SIM, GEN-SIM-RAW, AODSIM, DQM
     else:
         i = 1
-        for dataset in outputDataSets:
+        for dataset in workflow.outputDatasets:
             if verbose:
                 print dataset
             if not checkLumis:
-                outputEvents = reqMgrClient.getOutputEvents(url, workflow, dataset)
+                outputEvents = workflow.getOutputEvents(dataset)
             else:
-                outputEvents = reqMgrClient.getOutputLumis(url, workflow, dataset)
+                outputEvents = workflow.getOutputLumis(dataset)
             #GEN and GEN-SIM
             if 1<= i <= 2 and not checkLumis: 
-                filterEff = reqMgrClient.getFilterEfficiency(url, workflow, 'Task%d'%i)
+                filterEff = workflow.getFilterEfficiency('Task%d'%i)
                 #decrease filter eff
                 inputEvents *= filterEff
                 percentage = 100.0*outputEvents/float(inputEvents) if inputEvents > 0 else 0.0
