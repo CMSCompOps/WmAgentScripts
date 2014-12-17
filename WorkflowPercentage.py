@@ -111,7 +111,7 @@ def percentageCompletionTaskChain(url, workflow, verbose=False, checkLumis=False
     Taking step/filter efficiency into account.
     pdmvserv_task_SUS-Summer12WMLHE-00004__v1_T_141003_120119_9755
     """
-    workflow = TaskChain(workflow.name)
+    workflow = reqMgrClient.TaskChain(workflow.name)
     if checkLumis:
         inputEvents = workflow.getInputLumis()
     else:
