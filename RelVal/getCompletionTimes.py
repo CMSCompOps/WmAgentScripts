@@ -33,6 +33,7 @@ for line in f:
     r2=conn.getresponse()
     data = r2.read()
     s = json.loads(data)
+    print str(s['rows'][0]['doc']['request_status'][4])
     print str(s['rows'][0]['doc']['request_status'][6]['update_time'] - s['rows'][0]['doc']['request_status'][4]['update_time']) +" "+ workflow
 
 sys.exit(0)

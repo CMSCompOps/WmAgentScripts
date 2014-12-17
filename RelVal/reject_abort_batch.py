@@ -1,9 +1,10 @@
 import MySQLdb
 import sys
+import datetime
 
 batchid=sys.argv[1]
 
-dbname = "relval3"
+dbname = "relval"
 
 conn = MySQLdb.connect(host='localhost', user='relval', passwd="relval")
 
@@ -24,13 +25,6 @@ if len(workflows_rows) == 0 :
     print "no workflows with this batch id, exiting"
     sys.exit(1)
 
-print "copying the workflows and the batch to the archive databases"
+print "setting the status of the batch to reject_abort_requested"
 
-curs.execute("insert into batches_archive VALUES "+str(batches_rows[0])+";")
-
-for workflow_row in workflows_rows:
-    curs.execute("insert into workflows_archive VALUES "+str(workflow_row)+";")
-
-print "deleting the workflows and the batch from the original databases"
-curs.execute("delete from workflows where batch_id = \""+ batchid+"\";")
-curs.execute("delete from batches where batch_id = \""+ batchid+"\";")
+curs.execute("update batches set status=\"reject_abort_requested\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where batch_id = "+str(batchid) +";")

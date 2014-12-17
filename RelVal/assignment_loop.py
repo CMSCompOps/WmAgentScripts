@@ -2,9 +2,9 @@ import MySQLdb
 import sys
 import os
 import time
+import datetime
 
-dbname = "relval3"
-
+dbname = "relval"
 
 while True:
 
@@ -31,9 +31,10 @@ while True:
         print batch[5]
         print batch[6]
         print batch[7]
+        print batch[8]
         print ""
 
-        if not batch[5]:
+        if batch[7] == "approved":
             
             print "assigning workflows in batch "+str(batch[0])
             
@@ -42,10 +43,10 @@ while True:
             
             for wf in wfs:
                 print wf[0]
-                os.system("python2.6 assignRelValWorkflow.py -w "+wf[0] +" -s "+batch[6]+" -p "+str(batch[7]))
+                os.system("python2.6 assignRelValWorkflow.py -w "+wf[0] +" -s "+batch[5]+" -p "+str(batch[6]))
                 time.sleep(30)
 
 
-            curs.execute("update batches set assigned=1 where batch_id = "+str(batch[0]) +";")    
+            curs.execute("update batches set status=\"assigned\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where batch_id = "+str(batch[0]) +";")    
 
     time.sleep(100)

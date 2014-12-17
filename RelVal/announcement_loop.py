@@ -23,7 +23,7 @@ if not options.correct_env:
     
 url='cmsweb.cern.ch'
 
-dbname = "relval3"
+dbname = "relval"
 
 conn = MySQLdb.connect(host='localhost', user='relval', passwd='relval')
 
@@ -46,6 +46,7 @@ for batch in batches:
     print batch[5]
     print batch[6]
     print batch[7]
+    print batch[8]
 
     curs.execute("select workflow_name from workflows where batch_id = \""+ str(batch[0])+"\";")
     wfs=curs.fetchall()
@@ -59,6 +60,11 @@ for batch in batches:
         r1=conn.request('GET','/couchdb/wmstats/_all_docs?keys=["'+wf[0]+'"]&include_docs=true')
         r2=conn.getresponse()
         data = r2.read()
+        if r2.status != 200:
+            os.system('echo \"r2.status != 400\" | mail -s \"announcement_loop.py error 1\" andrew.m.levin@vanderbilt.edu -- -f amlevin@mit.edu')
+            print "problem connecting to wmstats, exiting"
+            print r2.status
+            sys.exit(0)
         s = json.loads(data)
 
 
@@ -78,10 +84,9 @@ for batch in batches:
     if n_workflows != n_completed:
         continue
 
-    #if batch[0] != 47:
-    #    continue
+#    if batch[0] != 111:
+#        continue
 
-    #need to make sure all of the blocks are closed
     if (calendar.timegm(datetime.datetime.utcnow().utctimetuple()) - max_completion_time)/60.0/60.0 < 0.01:
         continue
 
@@ -119,20 +124,22 @@ for batch in batches:
     os.system("echo \"HN request:\" >> brm/announcement_email.txt")
     os.system("echo \""+batch[1]+"\" >> brm/announcement_email.txt")
     os.system("echo \"\" >> brm/announcement_email.txt")
-    os.system("cat brm/failure_information.txt >> brm/announcement_email.txt")
-    os.system("echo \"\" >> brm/announcement_email.txt")
+    if int(os.popen("cat brm/failure_information.txt | wc -l").read().rstrip()) > 0:
+        os.system("cat brm/failure_information.txt >> brm/announcement_email.txt")
+        os.system("echo \"\" >> brm/announcement_email.txt")
     os.system("echo \"Best regards,\" >> brm/announcement_email.txt")
-    os.system("echo \"Andrew and Alan\" >> brm/announcement_email.txt")
+    os.system("echo \"Andrew\" >> brm/announcement_email.txt")
 
-    os.popen("cat brm/announce_relvals_log.txt | mail -s \""+ batch[3] +"\" andrew.m.levin@vanderbilt.edu -- -f amlevin@mit.edu");
+    os.popen("cat brm/announce_relvals_log.txt | mail -s \""+ batch[3] +"\" amlevin@mit.edu -- -f amlevin@mit.edu");
 
     if options.send_to_hn:
         os.popen("cat brm/announcement_email.txt | mail -s \""+ batch[3] +"\" hn-cms-relval@cern.ch -- -f amlevin@mit.edu");
     else:    
         os.popen("cat brm/announcement_email.txt | mail -s \""+ batch[3] +"\" andrew.m.levin@vanderbilt.edu -- -f amlevin@mit.edu");
 
-
     print "copying the workflows and the batch to the archive databases"    
+
+    curs.execute("update batches set status=\"announced\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where batch_id = "+str(batch[0]) +";")
 
     curs.execute("select * from workflows where batch_id = \""+ str(batch[0])+"\";")
     workflows_rows=curs.fetchall()
@@ -140,7 +147,8 @@ for batch in batches:
     curs.execute("select * from batches where batch_id = \""+ str(batch[0])+"\";")
     batches_rows=curs.fetchall()
 
-    curs.execute("insert into batches_archive VALUES "+str(batches_rows[0])+";")
+    #cannot just do batches_rows[0] since the current_status_start_time is not formatted correctly
+    curs.execute("insert into batches_archive VALUES "+str(tuple(str(entry) for entry in batches_rows[0]))+";")
 
     for workflow_row in workflows_rows:
         curs.execute("insert into workflows_archive VALUES "+str(workflow_row)+";")

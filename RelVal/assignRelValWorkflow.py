@@ -84,6 +84,7 @@ def assignRequest(url,workflow,team,site,era,procstr,procver,activity,lfn,maxrss
     conn.request("POST",  "/reqmgr/assign/handleAssignmentPage", encodedParams, headers)
     response = conn.getresponse()
     if response.status != 200:
+        os.system('echo '+workflow+' | mail -s \"assignRelValWorkflow.py error 1\" andrew.m.levin@vanderbilt.edu -- -f amlevin@mit.edu')
         print 'could not assign request with following parameters:'
         for item in params.keys():
             print item + ": " + str(params[item])
@@ -141,7 +142,7 @@ def main():
         print "Usage: python assignRelValWorkflow.py -w <requestName>"
         sys.exit(0);
     workflow=options.workflow
-    team='relval'
+    team='relval_cern'
     site='T1_US_FNAL'
     procversion=1
     #procversion='v1'
@@ -157,7 +158,7 @@ def main():
     schema = getRequestDict(url,workflow)
 
     if 'type' in schema and schema['type'] == 'HTTPError':
-        os.system('echo '+workflow+' | mail -s \"assignRelValWorkflow.py error\" andrew.m.levin@vanderbilt.edu -- -f amlevin@mit.edu')
+        os.system('echo '+workflow+' | mail -s \"assignRelValWorkflow.py error 2\" andrew.m.levin@vanderbilt.edu -- -f amlevin@mit.edu')
         sys.exit(1)
 
     ### Dropping 2010 HeavyIon workflows or assigning 2011 to CERN/LSF 
@@ -220,8 +221,8 @@ def main():
                 dbsApi = getDBSApi()
                 if len(dbsApi.listDatasets(dataset = dset)) != 0:
                     print "len(dbsApi.listDatasets(dataset = "+dset+")) > 0, exiting"
+                    os.system('echo '+workflow+' | mail -s \"assignRelValWorkflow.py error 3\" andrew.m.levin@vanderbilt.edu -- -f amlevin@mit.edu')
                     sys.exit(0)
-
 
     # Adding the "PU_" string into the ProcessingString value
     if options.pu:

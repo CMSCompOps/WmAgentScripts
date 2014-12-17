@@ -51,6 +51,7 @@ def getEventsDataSetRunList(dbsApi, dset, runList, verb = False):
     for run in runList:
         reply = dbsApi.listFileSummaries(dataset = dset,run_num = run)
         if reply:
+            #print reply[0]['num_event']
             total += reply[0]['num_event']
 
     return total
@@ -181,6 +182,8 @@ def main():
                     elif outputEvents < inputEvents :
                         closeOut = False
                     elif outputEvents > inputEvents :
+                        #print outputEvents
+                        #print inputEvents
                         closeOut = False
                         tooMany = True
 

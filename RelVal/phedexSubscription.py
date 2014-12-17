@@ -230,7 +230,10 @@ def makeCustodialMoveRequest(url, site,datasets, comments):
 	#print response.status, response.reason
         #print response.read()
 
-def makePhedexReplicaRequest(url, site,datasets, comments, custodial):	
+def makePhedexReplicaRequest(url, site,datasets, comments, custodial, autoapprove):
+	print ""
+	print "begin making the transfer request"
+	print ""
 	dataXML=createXML(datasets)
 	if custodial:
 		params = urllib.urlencode({ "node" : site,"data" : dataXML, "group": "RelVal", "priority":'normal', "custodial":"y","request_only":"y" ,"move":"n","no_mail":"n", "comments":comments})	
@@ -242,15 +245,32 @@ def makePhedexReplicaRequest(url, site,datasets, comments, custodial):
         print 'Response from http call:'
 	print 'Status:',response.status
 	print 'Reason:',response.reason
-	print 'Explanation:',response.read()
+	response_read=response.read()
+	print 'Explanation:',response_read
+	print ""
+	print "end making the transfer request"
+	print ""
 
-					
-
+	if response.status==200 and autoapprove:
+		print ""
+		print "begin automatically approving the request"
+		print ""
+		conn2=createConnection(url)
+		params2 = urllib.urlencode({ "decision" : 'approve', "request" : json.loads(response_read)['phedex']['request_created'][0]['id'], "node": site, "comments" : 'auto-approval of relval dataset subscription'})
+		conn2.request("POST", "/phedex/datasvc/json/prod/updaterequest", params2)
+		response2=conn2.getresponse()
+		print response2.status
+		print response2.reason
+		print response2.read()
+		print ""
+		print "end automatically approving the request"
+		print ""
 
 def main():
 	parser = optparse.OptionParser()
 	parser.add_option('--custodial', action="store_true", help='make a custodial subscription',dest='custodial')
 	parser.add_option('--correct_env',action="store_true",dest='correct_env')
+	parser.add_option('--autoapprove',action="store_true",dest='autoapprove')
 	(options,args) = parser.parse_args()
 
 	command=""
@@ -276,7 +296,7 @@ def main():
 		dataset = dataset.rstrip('\n')
 		datasets.append(dataset)
 
-	makePhedexReplicaRequest(url, site, datasets, comments,options.custodial);
+	makePhedexReplicaRequest(url, site, datasets, comments,options.custodial, options.autoapprove);
 	sys.exit(0);
 
 if __name__ == "__main__":

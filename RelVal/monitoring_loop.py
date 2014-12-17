@@ -24,7 +24,7 @@ if not options.correct_env:
 url='cmsweb.cern.ch'
 
 
-dbname = "relval3"
+dbname = "relval"
 
 while True:
 
@@ -43,14 +43,14 @@ while True:
     #workflow = line.rstrip('\n')
     #curs.execute("insert into workflows set hn_req=\""+hnrequest+"\", workflow_name=\""+workflow+"\";")
 
-    curs.execute("select * from batches")
+    curs.execute("select * from batches order by batch_id")
     batches=curs.fetchall()
 
 
     for batch in batches:
         print "    batch "+str(batch[0])
         print "        hypernews request: "+str(batch[1])
-        print "        processing version: "+str(batch[7])
+        print "        processing version: "+str(batch[6])
         #print batch[1]
         #print batch[2]
         
@@ -67,13 +67,18 @@ while True:
             r2=conn.getresponse()
             data = r2.read()
             s = json.loads(data)
+            if r2.status != 200:
+                print "problem retrieving information from couchdb about "+str(wf[0])+", exiting"
+                os.system('echo '+wf[0]+' | mail -s \"monitorying.py error 1\" andrew.m.levin@vanderbilt.edu -- -f amlevin@mit.edu')
+                sys.exit(1)
+                
 
 
             #print s['rows'][0]['doc']['request_status']
             #print len(s['rows'][0]['doc']['request_status'])
 
             if 'error' in s['rows'][0] and s['rows'][0]['error'] == 'not_found':
-                os.system('echo '+wf[0]+' | mail -s \"monitoring.py error\" andrew.m.levin@vanderbilt.edu -- -f amlevin@mit.edu')
+                os.system('echo '+wf[0]+' | mail -s \"monitoring.py error 2\" andrew.m.levin@vanderbilt.edu -- -f amlevin@mit.edu')
                 continue    
             
             for status in s['rows'][0]['doc']['request_status']:
@@ -90,7 +95,7 @@ while True:
         print "        n_completed = " + str(n_completed)
 
     sys.stdout.flush()    
-    os.system("scp relval_monitor.txt relval@vocms174.cern.ch:~/webpage/")
+    os.system("cp relval_monitor.txt /afs/cern.ch/user/r/relval/webpage/relval_monitor.txt")
 
     sys.exit(0)
     time.sleep(60)
