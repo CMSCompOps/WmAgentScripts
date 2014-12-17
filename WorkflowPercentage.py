@@ -116,62 +116,34 @@ def percentageCompletionTaskChain(url, workflow, verbose=False, checkLumis=False
         inputEvents = workflow.getInputLumis()
     else:
         inputEvents = workflow.getInputEvents()
-    print "Input events:", int(inputEvents)
+    if verbose:
+        print "Input %s:"%("lumis" if checkLumis else "events"), inputEvents
     i = 1
 
-    #if subtype doesn't come with the request, we decide based on dataset names
-    fromGen = False
-    if not re.match('.*/GEN$', workflow.outputDatasets[0]):
-        fromGen = False
-    elif (re.match('.*/GEN$', workflow.outputDatasets[0])
-        and re.match('.*/GEN-SIM$', workflow.outputDatasets[1])):
-        fromGen = True
-
-    #task-chain 1 (without filterEff)
-    if not fromGen:
-        for dataset in workflow.outputDatasets:
-            if not checkLumis:
-                outputEvents = workflow.getOutputEvents(dataset)
-            else:
-                outputEvents = workflow.getOutputLumis(dataset)
+    #task-chain 1, starts with GEN, a GEN-SIM, GEN-SIM-RAW, AODSIM, DQM and so on
+    for dataset in workflow.outputDatasets:
+        if verbose:
+            print dataset
+        if not checkLumis:
+            outputEvents = workflow.getOutputEvents(dataset)
+        else:
+            outputEvents = workflow.getOutputLumis(dataset)
+        #GEN and GEN-SIM and events, we take into account filter efficiency
+        if 1<= i <= 2 and not checkLumis: 
+            filterEff = workflow.getFilterEfficiency('Task%d'%i)
+            #decrease filter eff
+            inputEvents *= filterEff
             percentage = 100.0*outputEvents/float(inputEvents) if inputEvents > 0 else 0.0
             if verbose:
-                print dataset
-                print "Output events:", int(outputEvents), "(%.2f%%)"%percentage
-            else:
-                print dataset, "%s%%"%percentage
-    #task-chain 2 GEN, GEN-SIM, GEN-SIM-RAW, AODSIM, DQM
-    else:
-        i = 1
-        for dataset in workflow.outputDatasets:
+                print "Output %s:"%("lumis" if checkLumis else "events"), int(outputEvents), "(%.2f%%)"%percentage
+        #Other datasets, or lumis, we ignore filter efficiency
+        else:
+            percentage = 100.0*outputEvents/float(inputEvents) if inputEvents > 0 else 0.0
             if verbose:
-                print dataset
-            if not checkLumis:
-                outputEvents = workflow.getOutputEvents(dataset)
-            else:
-                outputEvents = workflow.getOutputLumis(dataset)
-            #GEN and GEN-SIM
-            if 1<= i <= 2 and not checkLumis: 
-                filterEff = workflow.getFilterEfficiency('Task%d'%i)
-                #decrease filter eff
-                inputEvents *= filterEff
-                percentage = 100.0*outputEvents/float(inputEvents) if inputEvents > 0 else 0.0
-                if verbose:
-                    print "Output %s:"%("lumis" if checkLumis else "events"), int(outputEvents), "(%.2f%%)"%percentage
-            #GEN dataset with lumis
-            elif i == 1 and checkLumis:
-                if verbose:
-                    print "Output %s:"%("lumis" if checkLumis else "events"), int(outputEvents)
-                #we check the rest of datasets against the lumis on the GEN dataset
-                inputEvents = outputEvents
-            #Digi datasets
-            else:
-                percentage = 100.0*outputEvents/float(inputEvents) if inputEvents > 0 else 0.0
-                if verbose:
-                    print "Output %s:"%("lumis" if checkLumis else "events"), int(outputEvents), "(%.2f%%)"%percentage
-            if not verbose:
-                print dataset, "%s%%"%percentage
-            i += 1
+                print "Output %s:"%("lumis" if checkLumis else "events"), int(outputEvents), "(%.2f%%)"%percentage
+        if not verbose:
+            print dataset, "%s%%"%percentage
+        i += 1
 
 url = 'cmsweb.cern.ch'
 
