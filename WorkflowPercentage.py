@@ -9,6 +9,7 @@ from optparse import OptionParser
     taking into account the workflow type, and comparing
     input vs. output numbers of events.
     Should be used instead of dbsTest.py
+    TODO MC??
    
 """
 
@@ -176,7 +177,7 @@ def main():
             elif workflow.type == 'MonteCarloFromGEN':
                 percentageCompletion(url, workflow, options.verbose, options.checkLumis, checkFilter=True)
             else:
-                percentageCompletion(url, workflow, options.verbose, options.checkLumis)
+                percentageCompletion(url, workflow, options.verbose, options.checkLumis, checkFilter=True)
         else:
             percentageCompletionTaskChain(url, workflow, options.verbose, options.checkLumis)
 
