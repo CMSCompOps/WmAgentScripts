@@ -1,6 +1,6 @@
 from WMCore.Database.CMSCouch import CouchServer
-#couchUrl = "https://cmsweb.cern.ch/couchdb"
-couchUrl = "https://cmsweb-testbed.cern.ch/couchdb"
+couchUrl = "https://cmsweb.cern.ch/couchdb"
+#couchUrl = "https://cmsweb-testbed.cern.ch/couchdb"
 
 def deleteDocsByIDs(couchDB, ids):
     
@@ -23,7 +23,7 @@ for dbname in dbnames:
     couchdb = CouchServer(couchUrl).connectDatabase(dbname, False)
     options = {}
     options["stale"] = "ok"
-    options["key"] = "amaltaro_StressTest_SSDCache_PyCondor_TEST_ALAN_v4_141118_132617_8490"
+    options["key"] = "franzoni_2013APPJet_5323_141216_160701_6065"
     options["reduce"] = False
     result = couchdb.loadView("WorkQueue", "elementsByWorkflow", options)
     ids = []

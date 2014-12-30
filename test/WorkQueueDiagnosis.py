@@ -30,7 +30,7 @@ couchurl = "https://cmsweb.cern.ch/couchdb"
 dbname = "workqueue"
 inboxname = "workqueue_inbox"
 backend = WorkQueueBackend(couchurl, dbname, inboxname)
-data = backend.getInboxElements(OpenForNewData = True) 
+#data = backend.getInboxElements(OpenForNewData = True) 
 # for item in data:
 #     if (item['RequestName'] == 'fabozzi_RVCMSSW_7_2_0_pre3ADDMonoJet_d3MD3_13__CondDBv2_140731_132018_1268'):
 #     #if (item['RequestName'] == 'jbadillo_ACDC_HIG-Summer12-02187_00158_v0__140728_102627_3527'):
@@ -47,6 +47,7 @@ currentTime = time.time()
 workflowsToCloseTemp = []
 #import pdb
 #pdb.set_trace()
+#workflowsToCheck = ["franzoni_RVCMSSW_7_2_0TTbar_13_PU50ns__Phys14-TPfix-pess_141217_190520_4888"]
 for element in workflowsToCheck:
     # Easy check, close elements with no defined OpenRunningTimeout
     policy = element.get('StartPolicy', {})
@@ -60,7 +61,12 @@ for element in workflowsToCheck:
     skipElement = False
     wqdb = backend.db.name
     #backend.db.name = "reqmgr_workload_cache"
-    spec = backend.getWMSpec(element.id)
+    try:
+        spec = backend.getWMSpec(element.id)
+    except Exception, ex:
+        print "%s" % str(ex)
+        print "no spec in the backend: %s" % element.id
+        continue
     #backend.db.name = wqdb
     for topLevelTask in spec.taskIterator():
         policyName = spec.startPolicy()

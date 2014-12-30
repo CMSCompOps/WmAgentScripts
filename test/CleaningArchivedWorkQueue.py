@@ -71,11 +71,12 @@ if __name__ == "__main__":
     deleteRequests = []
     for key, value in requestsInfo.items():
         if (value["request_status"][-1]['status'].find("-archived") != -1) or \
+           (value["request_status"][-1]['status'].find("aborted-completed") != -1) or \
            (value["request_status"][-1]['status'].find("rejected") != -1):
             print key, value["request_status"][-1]['status']
-#             deleteRequests.append(key)
-    
-#    deleteWorkQueueElements(baseUrl, deleteRequests)        
+            deleteRequests.append(key)
+    print len(deleteRequests)
+    deleteWorkQueueElements(baseUrl, deleteRequests)        
 #     for item in rows:
 #         if item["doc"] == None:
 #             print item
