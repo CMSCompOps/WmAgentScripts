@@ -96,7 +96,7 @@ def validateClosingWorkflow(url, workflow, closePercentage = 0.95, checkEqual=Fa
         closeOutDataset = False
         try:
             percentage = workflow.percentageCompletion(dataset)
-        except Exception:
+        except Exception as e:
             print 'Error getting information from DBS', workflow, dataset
             percentage = 0.0
         #retrieve either custodial or all subscriptions.
@@ -116,10 +116,10 @@ def validateClosingWorkflow(url, workflow, closePercentage = 0.95, checkEqual=Fa
         missingSubs = False
         equalFiles = None
 
-        #TODO test
         dbsFiles = dbs3Client.getFileCountDataset(dataset)
         phdFiles = phedexClient.getFileCountDataset(url,dataset)
         equalFiles = (dbsFiles == phdFiles)
+
         #Check first percentage
         if ((checkEqual and percentage == closePercentage)
             or (not checkEqual and percentage >= closePercentage)

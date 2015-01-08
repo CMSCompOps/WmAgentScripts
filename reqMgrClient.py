@@ -184,29 +184,6 @@ class WorkflowWithInput(Workflow):
             perc /= self.filterEfficiency
         return perc
 
-    def getInputEvents(self):
-        """
-        Size of the input, taking white/blacklists into account
-        """
-        #to avoid quering it twice
-        if self.inputEvents:
-            return self.inputEvents
-        
-        events = dbs3.getEventCountDataSet(self.inputDataset)
-        #take into account first block lists
-        if self.info['BlockWhitelist']:
-            events = dbs3.getEventCountDataSetBlockList(self.inputDataset, self.info['BlockWhitelist'])
-        elif self.info['BlockWhitelist']:
-            #substract black blocks
-            self.info -= dbs3.getEventCountDataSetBlockList(self.inputDataset, self.info['BlockWhitelist'])
-        elif self.info['RunWhitelist']:
-            events = dbs3.getEventCountDataSetRunList(self.inputDataset, self.info['RunWhitelist'])
-        elif self.info['RunBlacklist']:
-            #substract black runs
-            events -= dbs3.getEventCountDataSetRunList(self.inputDataset, self.info['RunBlacklist'])
-        self.inputEvents = events
-        return events    
-
 class MonteCarloFromGen(WorkflowWithInput):
     """
     Montecarlo using a GEN dataset as input
