@@ -205,6 +205,8 @@ def getEventCountDataSet(dataset):
     dbsapi = DbsApi(url=dbs3_url)
     # retrieve dataset summary
     reply = dbsapi.listBlockSummaries(dataset=dataset)
+    if not reply:
+        return 0
     return reply[0]['num_event']
 
 
@@ -216,6 +218,8 @@ def getLumiCountDataSet(dataset):
     dbsapi = DbsApi(url=dbs3_url)
     # retrieve dataset summary
     reply = dbsapi.listFileSummaries(dataset=dataset)
+    if not reply:
+        return 0
     return reply[0]['num_lumi']
 
 

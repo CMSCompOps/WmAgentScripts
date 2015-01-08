@@ -41,14 +41,24 @@ class Workflow:
         if 'FilterEfficiency' in self.info:
             self.filterEfficiency = float(self.info['FilterEfficiency'])
         self.outEvents = {}
+        self.outLumis = {}
 
 
     def getInputEvents(self):
         """
         Gets the inputs events of a given workflow
-        depending of the kind of workflow
+        depending of the kind of workflow, by default gets
+        it from the workload cache.
         """
-        raise Exception("Not implemented")
+        return self.cache['TotalInputEvents']
+
+    def getInputLumis(self):
+        """
+        Gets the inputs lumis of a given workflow
+        depending of the kind of workflow, by default gets
+        it from the workload cache.
+        """
+        return self.cache['TotalInputLumis']
     
     def getOutputEvents(self, ds):
         """
@@ -61,6 +71,18 @@ class Workflow:
         else:
             events = self.outEvents[ds]
         return events
+
+    def getOutputLumis(self, ds):
+        """
+        Gets the numer of lumis in an output dataset
+        """
+        #We store the events to avoid checking them twice
+        if ds not in self.outLumis:
+            lumis = dbs3.getLumiCountDataSet(ds)
+            self.outLumis[ds] = lumis
+        else:
+            lumis = self.outLumis[ds]
+        return lumis
 
     def percentageCompletion(self, ds):
         """
@@ -406,6 +428,7 @@ def getInputEvents(url, workflow):
     """
     Gets the inputs events of a given workflow
     depending of the kind of workflow
+    TODO this can be replaced by getting the info from the workload cache
     """
     request = getWorkflowInfo(url,workflow)
     requestType=request['RequestType']
@@ -488,6 +511,7 @@ def getInputLumis(url, workflow):
     """
     Gets the input lumis of a given workflow
     depending of the kind of workflow
+    TODO this can be replaced by getting it from the workload cache
     """
     request = getWorkflowInfo(url,workflow)
     requestType=request['RequestType']
