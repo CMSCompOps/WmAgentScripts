@@ -30,7 +30,7 @@ def percentageCompletion(url, workflow, verbose=False, checkLumis=False, checkFi
         inputEvents = 0        
     
     #filter Efficiency (only for events)
-    if checkFilter and not checkLumis and 'filterEfficiency' in workflow.info:
+    if checkFilter and not checkLumis and 'FilterEfficiency' in workflow.info:
         filterEff = workflow.filterEfficiency
     else:
         filterEff = 1.0
@@ -74,7 +74,7 @@ def percentageCompletion2StepMC(url, workflow, verbose=False, checkLumis=False):
         inputEvents = 0
     
     #filter Efficiency (only for events)
-    if not checkLumis and 'filterEfficiency' in workflow.info:
+    if not checkLumis and 'FilterEfficiency' in workflow.info:
         filterEff = workflow.filterEfficiency
     else:
         filterEff = 1.0
