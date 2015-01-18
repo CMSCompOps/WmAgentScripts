@@ -35,6 +35,15 @@ for requests_row in requests_rows:
     newprocessingversion=requests_row[2]
     curs.execute("select * from workflows where batch_id = \""+ str(batchid)+"\";")
     workflows_rows=curs.fetchall()
+    curs.execute("select * from workflows_archive where batch_id = \""+ str(batchid)+"\";")
+    workflows_archive_rows=curs.fetchall()
+
+    if not ((len(workflows_rows) == 0 and len(workflows_archive_rows) > 0) or (len(workflows_rows) > 0 and len(workflows_archive_rows) == 0)):
+        print "not ((len(workflows_rows) == 0 and len(workflows_archive_rows) > 0) or (len(workflows_rows) > 0 and len(workflows_archive_rows) == 0)), exiting"
+        sys.exit(1)
+
+    if len(workflows_archive_rows) > 0:
+        workflows_rows = workflows_archive_rows
     
     print "cloning the workflows in batch "+str(batchid)
 
@@ -48,9 +57,13 @@ for requests_row in requests_rows:
 
     curs.execute("select * from batches where batch_id = \""+ str(batchid)+"\";")
     batches_rows=curs.fetchall()
-    if len(batches_rows) != 1:
+    curs.execute("select * from batches_archive where batch_id = \""+ str(batchid)+"\";")
+    batches_archive_rows=curs.fetchall()
+    if len(batches_rows) + len(batches_archive_rows) != 1:
         print "number of batches with this batch id is not equal to 1, exiting"
         sys.exit(1)
+    if len(batches_archive_rows)  == 1:
+        batches_rows = batches_archive_rows
 
     hnrequest=batches_rows[0][1]
     email_title=batches_rows[0][3]
@@ -134,3 +147,6 @@ for requests_row in requests_rows:
     for line in workflows:
         workflow = line.rstrip('\n')
         curs.execute("insert into workflows set batch_id="+str(batchid)+", workflow_name=\""+workflow+"\";")
+
+    #batchid is assigned the new batch id now    
+    curs.execute("delete from clone_reinsert_requests where batch_id="+str(requests_row[0])+";")

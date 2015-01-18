@@ -36,31 +36,31 @@ for batches_row in batches_rows:
 
     print "changing the statuses of the workflows in batch "+str(batchid)+" in the request manager"
 
-    #for workflow_row in workflows_rows:
-    #    print workflow_row[1]
-    #    workflow=workflow_row[1]
-    #    url="cmsweb.cern.ch" 
-    #    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    #    r1=conn.request('GET','/reqmgr/reqMgr/request?requestName=' + workflow)
-    #    r2=conn.getresponse()
-    #    j1 = json.loads(r2.read())
-    #    status= s['RequestStatus']
+    for workflow_row in workflows_rows:
+        print workflow_row[1]
+        workflow=workflow_row[1]
+        url="cmsweb.cern.ch" 
+        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+        r1=conn.request('GET','/reqmgr/reqMgr/request?requestName=' + workflow)
+        r2=conn.getresponse()
+        j1 = json.loads(r2.read())
+        status= j1['RequestStatus']
 
-    #    if status != "completed" and status != "assignment_approved" and status != "assigned" and status != "running-open" and status != "running-closed" and status != "acquired":
-    #        os.system('echo '+workflow+' | mail -s \"batch_rejecter_aborter.py error\" andrew.m.levin@vanderbilt.edu -- -f amlevin@mit.edu')
-    #        sys.exit(1)
-    #    
-    #    if status == "completed" or status == "assignment_approved":
-    #        newstatus="rejected"
-    #    if status == "assigned" or status == "running-open" or status == "running-closed" or status == "acquired":
-    #        newstatus="aborted"            
-    #        
-    #    headers={"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
-    #    params = {"requestName" : workflowname,"status" : newstatus}
-    #    encodedParams = urllib.urlencode(params)
-    #    conn.request("PUT", "/reqmgr/reqMgr/request", encodedParams, headers)
-    #    response = conn.getresponse()
-    #    print response.status, response.reason
+        if status != "completed" and status != "assignment-approved" and status != "assigned" and status != "running-open" and status != "running-closed" and status != "acquired":
+            os.system('echo '+workflow+' | mail -s \"batch_rejecter_aborter.py error\" andrew.m.levin@vanderbilt.edu -- -f amlevin@mit.edu')
+            sys.exit(1)
+        
+        if status == "completed" or status == "assignment-approved":
+            newstatus="rejected"
+        if status == "assigned" or status == "running-open" or status == "running-closed" or status == "acquired":
+            newstatus="aborted"            
+            
+        headers={"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
+        params = {"requestName" : workflow,"status" : newstatus}
+        encodedParams = urllib.urlencode(params)
+        conn.request("PUT", "/reqmgr/reqMgr/request", encodedParams, headers)
+        response = conn.getresponse()
+        print response.status, response.reason
     #    #curs.execute("insert into workflows_archive VALUES "+str(workflow_row)+";")
 
     print "copying the workflows and the batch to the archive databases"    

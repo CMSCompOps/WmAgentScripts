@@ -16,8 +16,10 @@ curs.execute("use "+dbname+";")
 
 curs.execute("select * from batches where batch_id = \""+ batchid+"\";")
 batches_rows=curs.fetchall()
+curs.execute("select * from batches_archive where batch_id = \""+ batchid+"\";")
+batches_archive_rows=curs.fetchall()
 
-if len(batches_rows) != 1:
+if len(batches_rows)+len(batches_archive_rows) != 1:
     print "number of batches with this batch id is not equal to 1, exiting"
     sys.exit(1)
 
