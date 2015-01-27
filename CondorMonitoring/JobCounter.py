@@ -21,18 +21,18 @@ mailingSender = 'noreply@cern.ch'
 mailingList = ['luis89@fnal.gov','dmason@fnal.gov']
 
 ## Job Collectors (Condor pools)
-collectors = ['vocms97.cern.ch', 'vocms097.cern.ch' ]
+collectors = ['vocms97.cern.ch', 'vocms097.cern.ch', 'vocms064.cern.ch' ]
 
 ## The following machines should be ignored (Crab Schedulers)
 crab_scheds = ['vocms83.cern.ch','stefanovm.cern.ch']
 
 ##The following groups should be updated according to https://twiki.cern.ch/twiki/bin/view/CMSPublic/CompOpsWorkflowTeamWmAgentRealeases
-relvalAgents = ['vocms142.cern.ch']
-testAgents = ['cmssrv94.fnal.gov', 'cmssrv101.fnal.gov', 'vocms230.cern.ch', 'vocms231.cern.ch', '_condor@vocms227.cern.ch']
+relvalAgents = ['vocms053.cern.ch']
+testAgents = ['cmssrv95.fnal.gov', 'cmssrv113.fnal.gov', 'vocms040.cern.ch', 'vocms0224.cern.ch', 'vocms0230.cern.ch']
 
 ##Job expected types
 jobTypes = ['Processing', 'Production', 'Skim', 'Harvest', 'Merge', 'LogCollect', 'Cleanup', 'RelVal', 'Express', 'Repack', 'Reco']
-backfillTypes = ['TOP', 'SMP', 'RECO', 'DIGI', 'Prod', 'MinBias']
+backfillTypes = ['TOP', 'SMP', 'RECO', 'DIGI', 'Prod', 'MinBias', 'MINIAOD', 'HLT', 'LHE', 'ZMM']
 
 ## Job counting / Condor monitoring
 baseSiteList = {} # Site list
@@ -555,7 +555,7 @@ def main():
                 body_text = 'There is a problem with one of the collectors! The monitoring script may give false information. These are the logs:\n\n'
                 body_text += err
                 body_text += '\nSee the log file in this directory for more output logs:\n\n'
-                body_text += '    /afs/cern.ch/user/c/cmst1/scratch0/MonitoringScripts/WFM_Input_DashBoard\n'
+                body_text += '    /afs/cern.ch/user/c/cmst1/CondorMonitoring\n'
                 send_mail(mailingSender,
                           mailingList,
                           '[Condor Monitoring] Condor Collector %s Error' % col,
