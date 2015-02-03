@@ -14,7 +14,7 @@ for arg in sys.argv:
     command=command+arg+" "
 
 if not options.correct_env:
-    os.system("source /afs/cern.ch/project/gd/LCG-share/current_3.2/etc/profile.d/grid-env.sh; python2.6 "+command + "--correct_env")
+    os.system("source /cvmfs/grid.cern.ch/emi-ui-3.7.3-1_sl6v2/etc/profile.d/setup-emi3-ui-example.sh; export X509_USER_PROXY=/tmp/x509up_u13536; python2.6 "+command + "--correct_env")
     sys.exit(0)
 
 dbname = "relval"
@@ -47,7 +47,7 @@ for batches_row in batches_rows:
         status= j1['RequestStatus']
 
         if status != "completed" and status != "assignment-approved" and status != "assigned" and status != "running-open" and status != "running-closed" and status != "acquired":
-            os.system('echo '+workflow+' | mail -s \"batch_rejecter_aborter.py error\" andrew.m.levin@vanderbilt.edu -- -f amlevin@mit.edu')
+            os.system('echo '+workflow+' | mail -s \"batch_rejecter_aborter.py error\" andrew.m.levin@vanderbilt.edu --')
             sys.exit(1)
         
         if status == "completed" or status == "assignment-approved":

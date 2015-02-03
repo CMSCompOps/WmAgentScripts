@@ -18,7 +18,7 @@ for arg in sys.argv:
     command=command+arg+" "
 
 if not options.correct_env:
-    os.system("source /afs/cern.ch/project/gd/LCG-share/current_3.2/etc/profile.d/grid-env.sh; python2.6 "+command + "--correct_env")
+    os.system("source /cvmfs/grid.cern.ch/emi-ui-3.7.3-1_sl6v2/etc/profile.d/setup-emi3-ui-example.sh; export X509_USER_PROXY=/tmp/x509up_u13536; python2.6 "+command + "--correct_env")
     sys.exit(0)
     
 url='cmsweb.cern.ch'
@@ -69,7 +69,7 @@ while True:
             s = json.loads(data)
             if r2.status != 200:
                 print "problem retrieving information from couchdb about "+str(wf[0])+", exiting"
-                os.system('echo '+wf[0]+' | mail -s \"monitorying.py error 1\" andrew.m.levin@vanderbilt.edu -- -f amlevin@mit.edu')
+                os.system('echo '+wf[0]+' | mail -s \"monitorying.py error 1\" andrew.m.levin@vanderbilt.edu --')
                 sys.exit(1)
                 
 
@@ -78,7 +78,7 @@ while True:
             #print len(s['rows'][0]['doc']['request_status'])
 
             if 'error' in s['rows'][0] and s['rows'][0]['error'] == 'not_found':
-                os.system('echo '+wf[0]+' | mail -s \"monitoring.py error 2\" andrew.m.levin@vanderbilt.edu -- -f amlevin@mit.edu')
+                os.system('echo '+wf[0]+' | mail -s \"monitoring.py error 2\" andrew.m.levin@vanderbilt.edu --')
                 continue    
             
             for status in s['rows'][0]['doc']['request_status']:

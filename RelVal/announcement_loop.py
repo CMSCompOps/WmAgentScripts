@@ -18,7 +18,7 @@ for arg in sys.argv:
     command=command+arg+" "
 
 if not options.correct_env:
-    os.system("source /afs/cern.ch/project/gd/LCG-share/current_3.2/etc/profile.d/grid-env.sh; python2.6 "+command + "--correct_env")
+    os.system("source /cvmfs/grid.cern.ch/emi-ui-3.7.3-1_sl6v2/etc/profile.d/setup-emi3-ui-example.sh; export X509_USER_PROXY=/tmp/x509up_u13536; python2.6 "+command + "--correct_env")
     sys.exit(0)
     
 url='cmsweb.cern.ch'
@@ -61,7 +61,7 @@ for batch in batches:
         r2=conn.getresponse()
         data = r2.read()
         if r2.status != 200:
-            os.system('echo \"r2.status != 400\" | mail -s \"announcement_loop.py error 1\" andrew.m.levin@vanderbilt.edu -- -f amlevin@mit.edu')
+            os.system('echo \"r2.status != 400\" | mail -s \"announcement_loop.py error 1\" andrew.m.levin@vanderbilt.edu --')
             print "problem connecting to wmstats, exiting"
             print r2.status
             sys.exit(0)
@@ -135,7 +135,7 @@ for batch in batches:
     if options.send_to_hn:
         os.popen("cat brm/announcement_email.txt | mail -s \""+ batch[3] +"\" hn-cms-relval@cern.ch -- -f amlevin@mit.edu");
     else:    
-        os.popen("cat brm/announcement_email.txt | mail -s \""+ batch[3] +"\" andrew.m.levin@vanderbilt.edu -- -f amlevin@mit.edu");
+        os.popen("cat brm/announcement_email.txt | mail -s \""+ batch[3] +"\" andrew.m.levin@vanderbilt.edu --");
 
     print "copying the workflows and the batch to the archive databases"    
 

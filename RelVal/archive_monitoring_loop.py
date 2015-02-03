@@ -18,7 +18,7 @@ for arg in sys.argv:
     command=command+arg+" "
 
 if not options.correct_env:
-    os.system("source /afs/cern.ch/project/gd/LCG-share/current_3.2/etc/profile.d/grid-env.sh; python2.6 "+command + "--correct_env")
+    os.system("source /cvmfs/grid.cern.ch/emi-ui-3.7.3-1_sl6v2/etc/profile.d/setup-emi3-ui-example.sh; export X509_USER_PROXY=/tmp/x509up_u13536; python2.6 "+command + "--correct_env")
     sys.exit(0)
     
 url='cmsweb.cern.ch'
@@ -55,7 +55,7 @@ while True:
         print "        announcement e-mail title = " + str(batch[3])
 
     sys.stdout.flush()    
-    os.system("scp relval_archive_monitor.txt relval@vocms174.cern.ch:~/webpage/")
+    os.system("cp relval_archive_monitor.txt /afs/cern.ch/user/r/relval//webpage/")
 
     sys.exit(0)
     time.sleep(60)

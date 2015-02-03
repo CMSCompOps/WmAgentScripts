@@ -82,7 +82,7 @@ def main():
         command=command+arg+" "
 
     if not opts.correct_env:
-        os.system("source /tmp/relval/sw/comp.pre/slc5_amd64_gcc461/cms/dbs3-client/3.2.1/etc/profile.d/init.sh; source /afs/cern.ch/cms/LCG/LCG-2/UI/cms_ui_env.sh; python2.6 "+command + "--correct_env")
+        os.system("source /tmp/relval/sw/comp.pre/slc6_amd64_gcc481/cms/dbs3-client/3.2.8a/etc/profile.d/init.sh; python2.6 "+command + "--correct_env")
         sys.exit(0)
         
     if opts.dataset == None:

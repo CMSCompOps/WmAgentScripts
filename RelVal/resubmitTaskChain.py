@@ -126,7 +126,7 @@ if __name__ == "__main__":
         command=command+arg+" "
 
     if not options.correct_env:
-         os.system("source /afs/cern.ch/cms/LCG/LCG-2/UI/cms_ui_env.sh; python2.6 "+command + "--correct_env")
+         os.system("source /cvmfs/grid.cern.ch/emi-ui-3.7.3-1_sl6v2/etc/profile.d/setup-emi3-ui-example.sh; export X509_USER_PROXY=/tmp/x509up_u13536; python2.6 "+command + "--correct_env")
          sys.exit(0)
 
     if len(args) != 1:

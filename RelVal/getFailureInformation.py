@@ -103,7 +103,7 @@ for line in f:
 
         conn3  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))   
         #r31=conn3.request('GET','/couchdb/wmstats/_design/WMStats/_view/latestRequest?reduce=true&group=true&keys=[["'+workflow+'","cmssrv113.fnal.gov:9999"],["'+workflow+'","vocms142.cern.ch:9999"]]&stale=ok')
-        r31=conn3.request('GET','/couchdb/wmstats/_design/WMStats/_view/latestRequest?reduce=true&group=true&keys=[["'+workflow+'","cmsgwms-submit1.fnal.gov:9999"],["'+workflow+'","vocms142.cern.ch:9999"]]&stale=ok')
+        r31=conn3.request('GET','/couchdb/wmstats/_design/WMStats/_view/latestRequest?reduce=true&group=true&keys=[["'+workflow+'","cmsgwms-submit1.fnal.gov:9999"],["'+workflow+'","vocms053.cern.ch:9999"]]&stale=ok')
         
         r32=conn3.getresponse()
         data3 = r32.read()

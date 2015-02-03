@@ -50,7 +50,7 @@ def main():
         command=command+arg+" "
 
     if not options.correct_env:
-        os.system("source /afs/cern.ch/project/gd/LCG-share/current_3.2/etc/profile.d/grid-env.sh; python2.6 "+command + "--correct_env")
+        os.system("source /cvmfs/grid.cern.ch/emi-ui-3.7.3-1_sl6v2/etc/profile.d/setup-emi3-ui-example.sh; export X509_USER_PROXY=/tmp/x509up_u13536; source /tmp/relval/sw/comp.pre/slc6_amd64_gcc481/cms/dbs3-client/3.2.8a/etc/profile.d/init.sh; python2.6 "+command + "--correct_env")
         sys.exit(0)
     
     #args=sys.argv[1:]

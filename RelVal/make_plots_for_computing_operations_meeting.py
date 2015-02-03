@@ -30,6 +30,9 @@ if exitcode == 0:
     print fname_wfs+" already exists, exiting"
     sys.exit(1)
 
+os.system("touch "+fname_wfs)
+os.system("touch "+fname_stats)
+
 for batch in batches:
     if batch[7]!="announced":
         if batch[7]!="not_announced":

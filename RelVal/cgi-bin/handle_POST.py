@@ -69,6 +69,6 @@ os.system("echo python2.6 insert_batch.py "+hnpost+" "+wf_names_fname+" \""+titl
 os.system("python2.6 insert_batch.py "+hnpost+" "+wf_names_fname+" \""+title+"\" "+statistics_fname+" \""+description+"\" "+procver+" "+site+";")
 
 #os.popen("cat brm/log.dat | mail -s \"[RelVal] "+ title +"\" hn-cms-hnTest@cern.ch -- -f amlevin@mit.edu");
-os.popen("echo "+description+" | mail -s \"[RelVal] "+ title +"\" andrew.m.levin@vanderbilt.edu -- -f amlevin@mit.edu");    
+os.popen("echo "+description+" | mail -s \"[RelVal] "+ title +"\" andrew.m.levin@vanderbilt.edu --");    
 
 
