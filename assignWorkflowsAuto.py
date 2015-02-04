@@ -245,10 +245,10 @@ def assignRequest(url ,workflow ,team ,site ,era, procversion, procstring, activ
               "SoftTimeout": softTimeout,
               "GracePeriod": 300,
               "MaxMergeEvents": maxmergeevents,
-	      "maxRSS": maxRSS,
-              "maxVSize": maxVSize,
+	      "MaxRSS": maxRSS,
+              "MaxVSize": maxVSize,
               "AcquisitionEra": era,
-	      "dashboard": activity,
+	      "Dashboard": activity,
               "ProcessingVersion": procversion,
               "ProcessingString": procstring,
               "checkbox"+workflow: "checked"}

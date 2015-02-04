@@ -52,9 +52,9 @@ jsonBlob = {
              "UnmergedLFNBase": "/store/unmerged",
              "AcquisitionEra": "AcquisitionEra-OVERRIDE-ME",
              "ProcessingVersion": 1,
-             "maxRSS": 2411724,
-             "maxVSize": 20411724,
-             "dashboard": "reprocessing",
+             "MaxRSS": 2411724,
+             "MaxVSize": 20411724,
+             "Dashboard": "reprocessing",
              "Team": "Team--OVERRIDE-ME"
             }
 }
