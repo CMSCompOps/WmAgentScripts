@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-
 """
 This script should be used only for MonteCarlo from scratch.
 It creates a resubmition of a MonteCarlo workflow that begins
 when the original worklfow ended.
 """
+import pprint
 import os
 import sys
 import urllib
@@ -21,27 +21,12 @@ reqmgrCouchURL = "https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache"
 DELTA_EVENTS = 1000
 DELTA_LUMIS = 200
 
-def retrieveSchema(workflowName):
-    """
-    Creates the cloned specs for the original request
-    Updates parameters
-    """
-    specURL = os.path.join(reqmgrCouchURL, workflowName, "spec")
-    helper = WMWorkloadHelper()
-    helper.load(specURL)
-    return helper
-    
-
 def modifySchema(helper, workflow, user, group, events):
     """
     Adapts schema to right parameters
     """
     result = {}
-    # Add AcquisitionEra, ProcessingString and ProcessingVersion
-    result["ProcessingString"] = helper.getProcessingString()
-    result["ProcessingVersion"] = helper.getProcessingVersion()
-    result["AcquisitionEra"] = helper.getAcquisitionEra()
-    
+    #pprint.pprint(helper.data.request.schema.dictionary_())
     for key, value in helper.data.request.schema.dictionary_().items():
         #previous versions of tags
         if key == 'ProcConfigCacheID':
@@ -53,12 +38,19 @@ def modifySchema(helper, workflow, user, group, events):
             result['Requestor'] = user
         elif key == 'Group':
             result['Group'] = group
-        #preppend EXT to recognize as an extension
-        elif key == 'RequestString':
-            result['RequestString'] = 'EXT_'+str(value)
         #if emtpy
         elif key in ["RunWhitelist", "RunBlacklist", "BlockWhitelist", "BlockBlacklist"] and not value:
             result[key]=[]
+        #replace old DBS2 URL
+        elif value == "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet":
+            result[key] = 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
+        #copy the right LFN base
+        elif key == 'MergedLFNBase':
+            result['MergedLFNBase'] = helper.getMergedLFNBase()
+        #TODO deleting timeout so they will move to running-close as soon as they can
+        #elif key == 'OpenRunningTimeout':
+            #delete entry
+        #    continue
         #skip empty entries
         elif not value:
             continue
@@ -78,11 +70,6 @@ def modifySchema(helper, workflow, user, group, events):
 
     #FirstLumi_NEW > FirstLumi + RequestNumEvents/events_per_job/filterEff
     # same for the first lumi, needs to be after the last lumi
-    """
-    result['FirstLumi'] = int(FirstLumi
-                            + math.ceil( RequestNumEvents / float(EventsPerLumi) / FilterEfficiency )
-                            + DELTA_LUMIS / FilterEfficiency )
-    """
     #get the last lumi of the dataset
     dataset = reqMgrClient.outputdatasetsWorkflow(url, workflow).pop()
     LastLumi = dbs3Client.getMaxLumi(dataset)
@@ -90,33 +77,42 @@ def modifySchema(helper, workflow, user, group, events):
     result['FirstLumi'] = LastLumi + DELTA_LUMIS
     #only the desired events    
     result['RequestNumEvents'] = events
+    
+    #prepend EXT_ to recognize as extension
+    result["RequestString"] = 'EXT_'+result["RequestString"]
 
-    if 'LumisPerJob' not in result and result['RequestType']=='MonteCarlo':
-        #seek for lumis per job on helper
-        splitting = helper.listJobSplittingParametersByTask()
-        lumisPerJob = 300
-        for k, v in splitting.items():
-            if k.endswith('/Production'):
-                if 'lumis_per_job' in v:
-                    lumisPerJob = v['lumis_per_job']
-        result['LumisPerJob'] = lumisPerJob
-
-    #TODO do this always?
-    if 'EventsPerJob' not in result and result['RequestType']=='MonteCarlo':
+    #check MonteCarlo
+    if result['RequestType']=='MonteCarlo':
+        #check assigning parameters
         #seek for events per job on helper
         splitting = helper.listJobSplittingParametersByTask()
         eventsPerJob = 120000
+        eventsPerLumi = 100000
         for k, v in splitting.items():
+            print k,":",v
             if k.endswith('/Production'):
                 if 'events_per_job' in v:
                     eventsPerJob = v['events_per_job']
+                elif 'events_per_lumi' in v:
+                    eventsPerLumi = v['events_per_lumi']
         result['EventsPerJob'] = eventsPerJob
-   
+        #result['EventsPerLumi'] = eventsPerLumi
+
+    #Merged LFN   
     if 'MergedLFNBase' not in result:
         result['MergedLFNBase'] = helper.getMergedLFNBase()
+    
+    #update information from reqMgr    
+    # Add AcquisitionEra, ProcessingString and ProcessingVersion
+    result["ProcessingString"] = helper.getProcessingString()
+    result["AcquisitionEra"] = helper.getAcquisitionEra()
+    #try to parse processing version as an integer, if don't, assign 1
+    try:
+        result["ProcessingVersion"] = int(helper.getProcessingVersion())
+    except ValueError:
+        result["ProcessingVersion"] = 1
+
     return result
-
-
 
 def getMissingEvents(workflow):
     """
@@ -147,7 +143,7 @@ def main():
         events = getMissingEvents(workflow)
 
     # Get info about the workflow to be cloned
-    helper = retrieveSchema(workflow)
+    helper = reqMgrClient.retrieveSchema(workflow)
     schema = modifySchema(helper, workflow, user, group, events)
 
     print 'Submitting workflow'

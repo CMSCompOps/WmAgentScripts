@@ -161,9 +161,9 @@ class ReqMgrInterface():
                      "MaxMergeEvents": 50000,
                      "AcquisitionEra": era,
                      "ProcessingVersion": procversion,
-                     "maxRSS": 2394967,
-                     "maxVSize": 4294967296,
-                     "dashboard": activity,
+                     "MaxRSS": 2394967,
+                     "MaxVSize": 4294967296,
+                     "Dashboard": activity,
                      "SoftTimeout":171600,
                      "GracePeriod":300,
                      "checkbox" + requestName: "checked"}

@@ -28,8 +28,8 @@ url_max_merge = 'http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?colum
 url_site_status = 'http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=158&batch=1&lastdata=1'
 
 # pending slots variables
-pending_site = 0.3 # 30%
-pending_task = 0.2 # 20%
+pending_site = 0.5 # 50%
+pending_task = 0.3 # 30%
 
 #regex to identify Tiers
 #sites are only the ones that with T0, T1, T2 or T3
@@ -147,10 +147,10 @@ def main():
                 if sitestatus in ['down','on','drain']: 
                     try:
                         setSiteThresholds(slotsForMerge[sitename], slotsBySite[sitename], sitename, factor)
-                        print '%s: Setting thresholds for site %s: CPUBound = %s, IOBound = %s' % (sitename,slotsBySite[sitename],slotsForMerge[sitename], datetime.now().strftime("%Y-%m-%dh%H:%M:%S"))
+                        print '%s: Setting thresholds for site %s: CPUBound = %s, IOBound = %s' % (datetime.now().strftime("%Y-%m-%dh%H:%M:%S"), sitename,slotsBySite[sitename],slotsForMerge[sitename])
                         continue
                     except:
-                        print '%s: Error: Site %s does not have information about thresholds' % (sitename,datetime.now().strftime("%Y-%m-%dh%H:%M:%S"))
+                        print '%s: Error: Site %s does not have information about thresholds' % (datetime.now().strftime("%Y-%m-%dh%H:%M:%S"), sitename)
                         continue
                 elif sitestatus == 'skip':
                     print "Skipping site %s" % sitename

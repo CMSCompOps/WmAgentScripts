@@ -12,10 +12,10 @@ def assignRequest(url,workflow,team,site,era,procversion, activity, lfn):
               "MinMergeSize": 2147483648,
               "MaxMergeSize": 4294967296,
               "MaxMergeEvents": 50000,
-	      "maxRSS": 4294967296,
-              "maxVSize": 4294967296,
+	      "MaxRSS": 4294967296,
+              "MaxVSize": 4294967296,
               "AcquisitionEra": era,
-	      "dashboard": activity,
+	      "Dashboard": activity,
               "ProcessingVersion": procversion,
               "checkbox"+workflow: "checked"}
 

@@ -82,9 +82,9 @@ def assignRequest(workflow, site, era, procversion, mLFN, uLFN, minSize, maxSize
               "MaxMergeEvents": maxEvents,
               "AcquisitionEra": era,
               "ProcessingVersion": procversion,
-              "dashboard": dashboard,
-              "maxRSS": 3000000000,
-              "maxVSize": 3100000000,
+              "Dashboard": dashboard,
+              "MaxRSS": 3000000000,
+              "MaxVSize": 3100000000,
               "checkbox"+workflow: "checked"}
 
     encodedParams = urllib.urlencode(params)

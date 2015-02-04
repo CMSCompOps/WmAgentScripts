@@ -26,8 +26,13 @@ def main():
     workflows = [wf.strip() for wf in open(filename).readlines() if wf.strip()]
     for workflow in workflows:
         print "Announcing workflow: " + workflow +". Look for resubmissions and announce them too"
-        reqMgrClient.announceWorkflowCascade(url, workflow)
-        print "Announced"
+        result=reqMgrClient.announceWorkflowCascade(url, workflow)
+        if result==None or result == 'None':
+          print "Announced"
+        else:
+          print "ERROR NOT ANNOUNCED"
+          print result
+          
     sys.exit(0);
 
 if __name__ == "__main__":

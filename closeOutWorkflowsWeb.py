@@ -13,137 +13,114 @@ from xml.dom.minidom import getDOMImplementation
 outputfile = '/afs/cern.ch/user/j/jbadillo/www/closeout.html'
 tempfile = '/afs/cern.ch/user/j/jbadillo/www/temp.html'
 
+head = ('<html>\n'
+        '<head>\n'
+        '<link rel="stylesheet" type="text/css" href="style.css" />\n'
+        '<script language="javascript" type="text/javascript" src="actb.js"></script><!-- External script -->\n'
+        '<script language="javascript" type="text/javascript" src="tablefilter.js"></script>\n'
+        '<title>Closeout script Output</title>'
+        '</head>\n'
+        '<body>\n'
+        '<h2>Close-out Script Summary</h2>\n'
+        '<hr></hr>')
+
+foot = ('<p>Last update: %s CERN time</p>\n'
+        '</body>\n'
+        '</html>')
+
 def closeOutReRecoWorkflowsWeb(url, workflows, output):
     """
-    Closeout ReReco workflows. Generates web output.
+    closes rereco workflows
     """
     noSiteWorkflows = []
-    for workflow in workflows:
-        if 'RelVal' in workflow:
+    for wf in workflows:
+        if 'RelVal' in wf:
             continue
-        if 'TEST' in workflow:
-            continue        
-        datasets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
-        inputDataset = reqMgrClient.getInputDataSet(url, workflow)
-        closeOutWorkflow = True
-        #check if dataset is ready
-        for dataset in datasets:
-            duplicate = False
-            closeOutDataset = True
-            percentage = percentageCompletion(url, workflow, dataset)
-            phedexSubscription = phedexClient.hasCustodialSubscription(dataset)
-            closeOutDataset = False
-            #dataset can be closed out only with 100% of events
-            if percentage == 1 and phedexSubscription and not duplicate:
-                closeOutDataset = True
-            else:
-                closeOutDataset = False
-            
-            #validate when percentage is ok but has not phedex subscription
-            if percentage == 1 and not phedexSubscription:
-                noSiteWorkflows.append(workflow)
-
-            #if at least one dataset is not ready wf cannot be closed out
-            closeOutWorkflow = closeOutWorkflow and closeOutDataset
-            print '| %80s | %100s | %4s | %5s| %3s | %5s|%5s| ' % (workflow, dataset,str(int(percentage*100)),
-                                                    str(phedexSubscription), 100, duplicate, closeOutDataset)
-            #web output
-            output.write('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>'%
-                 (workflow, dataset,str(int(percentage*100)),str(phedexSubscription), 100, duplicate, closeOutDataset))
-            
-        #workflow can only be closed out if all datasets are ready
-        if closeOutWorkflow:
-            reqMgrClient.closeOutWorkflowCascade(url, workflow)
+        if 'TEST' in wf:
+            continue
+        
+        #first validate if effectively is completed
+        workflow = reqMgrClient.ReReco(wf)
+        if workflow.status != 'completed':
+            continue
+        #closeout workflow, checking percentage equalst 100%
+        result = validateClosingWorkflow(url, workflow, closePercentage=1.0, 
+            checkEqual=True, checkDuplicates=False)
+        printResult(result)
+        printResultWeb(result, output)
+        if result['closeOutWorkflow']:
+            reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
+        #populate the list without subs
+        for (ds,info) in result['datasets'].items():
+            if info['missingSubs']:
+                noSiteWorkflows.append((workflow.name, ds))
     print '-'*180
     return noSiteWorkflows
-
 
 def closeOutRedigiWorkflowsWeb(url, workflows, output):
     """
-    Closes out a list of redigi workflows. generates web output
+    Closes Redigi workflows
     """
     noSiteWorkflows = []
-    for workflow in workflows:
-        closeOutWorkflow = True
-        inputDataset = reqMgrClient.getInputDataSet(url, workflow)
-        datasets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
-        for dataset in datasets:
-            closeOutDataset = False
-            percentage = percentageCompletion(url, workflow, dataset)
-            phedexSubscription = phedexClient.hasCustodialSubscription(dataset)
-            duplicate = None
-            # if dataset has subscription and more than 95% events we check
-            # duplicates
-            if phedexSubscription and percentage >= float(0.95):
-                duplicate = dbs3Client.duplicateRunLumi(dataset)
-                #if not duplicate events, dataset is ready
-                if not duplicate:
-                    closeOutDataset = True
-                else:
-                    closeOutDataset = False
-            #validate when percentage is ok but has not phedex subscription
-            if percentage >= float(0.95) and not phedexSubscription:
-                noSiteWorkflows.append(workflow)
-            #if at least one dataset is not ready wf cannot be closed out
-            closeOutWorkflow = closeOutWorkflow and closeOutDataset
-            print '| %80s | %100s | %4s | %5s| %3s | %5s|%5s| ' % (workflow, dataset,str(int(percentage*100)),
-                                                    str(phedexSubscription), 100, duplicate, closeOutDataset)
-            #web output
-            output.write('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>'%
-                (workflow, dataset,str(int(percentage*100)),str(phedexSubscription), 100, duplicate, closeOutDataset))
-        #workflow can only be closed out if all datasets are ready
-        if closeOutWorkflow:
-            reqMgrClient.closeOutWorkflowCascade(url, workflow)
+    for wf in workflows:
+        #first validate if effectively is completed
+        workflow = reqMgrClient.ReDigi(wf)
+        if workflow.status != 'completed':
+            continue
+        #if miniaod
+        if 'miniaod' in workflow.name:
+            #we don't check for custodial subscription
+            result = validateClosingWorkflow(url, workflow, 0.95, checkPhedex=False)            
+        else:
+            #check dataset health, duplicates, subscription, etc.       
+            result = validateClosingWorkflow(url, workflow, 0.95)
+        printResult(result)
+        printResultWeb(result, output)
+        #if validation successful
+        if result['closeOutWorkflow']:
+            reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
+        #populate the list without subs
+        for (ds,info) in result['datasets'].items():
+            if info['missingSubs']:
+                noSiteWorkflows.append((workflow.name, ds))
+
     print '-'*180
     return noSiteWorkflows
 
-def closeOutMonterCarloRequestsWeb(url, workflows,output):
+def closeOutMonterCarloRequestsWeb(url, workflows, output, fromGen):
     """
     Closes either montecarlo or montecarlo from gen
     workflows
     """
     noSiteWorkflows = []
-    for workflow in workflows:
-        datasets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
-        closeOutWorkflow = True
-        #skip montecarlos on a special queue
-        if reqMgrClient.getRequestTeam(url, workflow) == 'analysis':
+    for wf in workflows:
+        #get all info from ReqMgr
+        if not fromGen:  
+            workflow = reqMgrClient.MonteCarlo(wf, url)
+        else:
+            workflow = reqMgrClient.MonteCarloFromGen(wf, url)
+        #validate if complete
+        if workflow.status != 'completed':
             continue
-        for dataset in datasets:
+        #skip montecarlos on a special queue
+        if workflow.team == 'analysis':
+            continue
+        # validation for SMS montecarlos
+        if 'SMS' in workflow.outputDatasets[0]:
+            closePercentage= 1.00
+        else:
             closePercentage = 0.95
-            # validation for SMS montecarlos
-            if 'SMS' in dataset:
-                closePercentage= 1.00
-            percentage = percentageCompletion(url, workflow, dataset)
-            phedexSubscription = phedexClient.getCustodialMoveSubscriptionSite(dataset)
-            transPerc = 0
-            closedBlocks = None
-            duplicate = None
-            # if dataset has subscription and enough events we check
-            # duplicates, transfer percentage and closed blocks
-            if phedexSubscription and percentage >= float(closePercentage):
-                transPerc = phedexClient.getTransferPercentage(url, dataset, phedexSubscription)
-                duplicate = dbs3Client.duplicateLumi(dataset)
-                if not duplicate:
-                    closeOutDataset = True
-                else:
-                    closeOutDataset = False
-            else:
-                closeOutDataset = False
-            #validate when percentage is ok but has not phedex subscription
-            if percentage >= float(closePercentage) and not phedexSubscription:
-                noSiteWorkflows.append(workflow)
-            #if at least one dataset is not ready wf cannot be closed out
-            closeOutWorkflow = closeOutWorkflow and closeOutDataset
-            print '| %80s | %100s | %4s | %5s| %3s | %5s| %5s|' % (workflow, dataset,str(int(percentage*100)),
-                        str(phedexSubscription), str(int(transPerc*100)), duplicate, closeOutDataset)
-            #web output
-            output.write('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>'%
-              (workflow, dataset,str(int(percentage*100)),str(phedexSubscription), 
-                str(int(transPerc*100)), duplicate, closeOutDataset))
-        #workflow can only be closed out if all datasets are ready
-        if closeOutWorkflow:
-            reqMgrClient.closeOutWorkflowCascade(url, workflow)
+        #check dataset health, duplicates, subscription, etc.       
+        result = validateClosingWorkflow(url, workflow, closePercentage=closePercentage)           
+        printResult(result)
+        printResultWeb(result, output)
+        #if validation successful
+        if result['closeOutWorkflow']:
+            reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
+        #populate the list without subs
+        for (ds,info) in result['datasets'].items():
+            if info['missingSubs']:
+                noSiteWorkflows.append((workflow.name,ds))
     #separation line
     print '-'*180
     return noSiteWorkflows
@@ -153,110 +130,190 @@ def closeOutStep0RequestsWeb(url, workflows, output):
     Closes either montecarlo step0 requests
     """
     noSiteWorkflows = []
-    for workflow in workflows:
-        datasets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
-        closeOutWorkflow = True
-        #skip montecarlos on a special queue
-        if reqMgrClient.getRequestTeam(url, workflow) == 'analysis':
+    for wf in workflows:
+        #info from reqMgr
+        workflow = reqMgrClient.StepZero(wf, url)
+        #first validate if effectively is completed
+        if workflow.status != 'completed':
             continue
-        for dataset in datasets:
-            closeOutDataset = False
-            percentage = percentageCompletion(url, workflow, dataset)
-            phedexSubscription = phedexClient.getCustodialMoveSubscriptionSite(dataset)
-            transPerc = 0
-            closedBlocks = None
-            duplicate = None
-            correctLumis = None
-            # if dataset has subscription and enough events we check
-            # duplicates, transfer percentage, closed blocks and lumis
-            if phedexSubscription and percentage >= float(0.95):
-                transPerc = phedexClient.getTransferPercentage(url, dataset, phedexSubscription)
-                duplicate = dbs3Client.duplicateLumi(dataset)
-                correctLumis = checkCorrectLumisEventGEN(dataset)
-                #TODO validate closed blocks
-                if not duplicate and correctLumis:
-                    closeOutDataset = True
-                else:
-                    closeOutDataset = False
-            #validate when percentage is ok but has not phedex subscription
-            if percentage >= float(0.95) and not phedexSubscription:
-                noSiteWorkflows.append(workflow)
-            #if at least one dataset is not ready wf cannot be closed out
-            closeOutWorkflow = closeOutWorkflow and closeOutDataset
-            print '| %80s | %100s | %4s | %5s| %3s | %5s| %5s| ' % (workflow, dataset,str(int(percentage*100)),
-                        str(phedexSubscription), str(correctLumis), duplicate, closeOutDataset)
-            #web output
-            output.write('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>'%
-                (workflow, dataset,str(int(percentage*100)),str(phedexSubscription), str(correctLumis), duplicate, closeOutDataset))
-        #workflow can only be closed out if all datasets are ready
-        if closeOutWorkflow:
-            reqMgrClient.closeOutWorkflowCascade(url, workflow)
+        #skip montecarlos on a special queue
+        if workflow.team == 'analysis':
+            continue
+        #check dataset health, duplicates, subscription, etc.       
+        result = validateClosingWorkflow(url, workflow, checkLumiNumb=True)           
+        printResult(result)
+        printResultWeb(result, output)
+        #if validation successful
+        if result['closeOutWorkflow']:
+            reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
+        #populate the list without subs
+        for (ds,info) in result['datasets'].items():
+            if info['missingSubs']:
+                noSiteWorkflows.append((workflow.name,ds))
     print '-'*180
     return noSiteWorkflows
 
-def writeHTMLHeader(output):
-    output.write('<html>')
-    output.write('<head>')
-    output.write('<link rel="stylesheet" type="text/css" href="style.css" />')
-    output.write('</head>')
-    output.write('<body>')
-
-
-def listWorkflows(workflows, output):
+def closeOutStoreResultsWorkflowsWeb(url, workflows, output):
+    """
+    Closeout StoreResults workflows
+    """
+    noSiteWorkflows = []
     for wf in workflows:
-        print wf
-        output.write('<tr><td>'+wf+'</td></tr>')
-    output.write('<tr><td></td></tr>')
+        #info from reqMgr            
+        workflow = reqMgrClient.StoreResults(wf, url)
+        #first validate if effectively is completed
+        if workflow.status != 'completed':
+            continue
+        #closeout workflow, checking percentage equalst 100%
+        result = validateClosingWorkflow(url, workflow, closePercentage=1.0, 
+            checkEqual=True, checkDuplicates=False, checkPhedex='any')
+        printResult(result)
+        printResultWeb(result, output)
+        #if validation successful
+        if result['closeOutWorkflow']:
+            reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
+        #populate the list without subs
+        for (ds,info) in result['datasets'].items():
+            if info['missingSubs']:
+                noSiteWorkflows.append((workflow.name,ds))
+    print '-'*180
+    return noSiteWorkflows
+
+
+def closeOutTaskChainWeb(url, workflows, output):
+    """
+    Closeout taskchained workflows
+    """
+    noSiteWorkflows = []
+    for wf in workflows:
+        #first validate if effectively is completed
+        workflow = reqMgrClient.TaskChain(wf, url)
+        if workflow.status != 'completed':
+            continue
+        result = validateClosingTaskChain(url, workflow)   
+        printResult(result)
+        printResultWeb(result, output)
+        #if validation successful
+        if result['closeOutWorkflow']:
+            reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
+        #populate the list without subs
+        for (ds,info) in result['datasets'].items():
+            if info['missingSubs']:
+                noSiteWorkflows.append((workflow.name,ds))
+    print '-'*180
+    return noSiteWorkflows
+
+def printResultWeb(result, output):
+    """
+    Prints the result of analysing a workflow in web output
+    """
+    for dsname, ds in result['datasets'].items():
+        row = '<tr>'+('<td>%s</td>'*10)+'</tr>\n'
+        output.write( row % (result["name"], dsname,
+            "%.1f"%(ds["percentage"]*100),
+            "?" if ds["duplicate"] is None else ds["duplicate"],
+            "?" if ds["correctLumis"] is None else ds["correctLumis"],
+            ','.join(ds["phedexReqs"]) if ds["phedexReqs"] else str(ds["phedexReqs"]),
+            "?" if ds["transPerc"] is None else str(int(ds["transPerc"]*100)),
+            "/?/" if "dbsFiles" not in ds else str(ds["dbsFiles"]),
+            "?" if "phedexFiles" not in ds else str(ds["phedexFiles"]),
+            ds["closeOutDataset"]))
+
+def printTableHeaderWeb(title, output):
+    output.write('<h3>%s</h3>'%title)
+    output.write('<table border=1 id="%s" width="100%%">\n'%title)
+    #output.write('<tr><th colspan="8">%s</th></tr>\n'%title)
+    output.write('<tr><th>Request</th><th>OutputDataSet</th><th>%Compl</th>'
+                '<th>Dupl</th><th>CorrectLumis</th><th>Subscr</th><th>Tran</th>'
+                '<th>dbsF</th><th>phdF</th><th>ClosOu</th></tr>\n')
+
+def printTableFooterWeb(title, output):
+    output.write('</table>')
+    output.write('<script language="javascript" type="text/javascript">\n'
+        'var tableF = {\n'
+        'col_0: "none",\n'
+        'col_1: "none",\n'
+        'col_2: "none",\n'
+        'col_3: "select",\n'
+        'col_4: "none",\n'
+        'col_5: "select",\n'
+        'col_6: "none",\n'
+        'col_7: "none",\n'
+        'col_8: "none",\n'
+        'col_9: "select",\n'
+        '};\n'+
+        'setFilterGrid("%s",0,tableF);\n'%title+
+        '</script>\n')
+
+def listWorkflowsWeb(workflows, output):
+    listWorkflows(workflows)
+    for (wf,ds) in workflows:
+        output.write('<tr><td>%s</td><td>%s</td></tr>\n'%(wf,ds))
+    output.write('<tr><td></td></tr>\n')
 
 def main():
     output = open(tempfile,'w')
-    url='cmsweb.cern.ch'
+    url = 'cmsweb.cern.ch'
     print "Gathering Requests"
-    requests=getOverviewRequestsWMStats(url)
+    requests = getOverviewRequestsWMStats(url)
     print "Classifying Requests"
-    workflowsCompleted=classifyCompletedRequests(url, requests)
+    workflowsCompleted = classifyCompletedRequests(url, requests)
     #header
-    writeHTMLHeader(output)
+    output.write(head)
     #print header
     print '-'*220
-    print '| Request'+(' '*74)+'| OutputDataSet'+(' '*86)+'|%Compl|Subscr|Tran|Dupl|ClosOu|'
+    print '| Request'+(' '*74)+'| OutputDataSet'+(' '*86)+'|%Compl|Dupl|Tran|Subscr|ClosOu|'
     print '-'*220
-    output.write('<table border=1> <tr><th>Request</th><th>OutputDataSet</th><th>%Compl</th>'
-                '<th>Subscr</th><th>Tran</th><th>Dupl</th><th>ClosOu</th></tr>')
-    
-    output.write('<tr><th colspan="7">ReReco </th></tr>')
+
+    printTableHeaderWeb('ReReco', output)
     noSiteWorkflows = closeOutReRecoWorkflowsWeb(url, workflowsCompleted['ReReco'], output)
     workflowsCompleted['NoSite-ReReco'] = noSiteWorkflows
-    
-    output.write('<tr><th colspan="7">ReDigi </th></tr>')
+    printTableFooterWeb('ReReco', output)
+
+    printTableHeaderWeb('ReDigi', output)
     noSiteWorkflows = closeOutRedigiWorkflowsWeb(url, workflowsCompleted['ReDigi'], output)
     workflowsCompleted['NoSite-ReDigi'] = noSiteWorkflows
-    
-    output.write('<tr><th colspan="7">MonteCarlo </th></tr>')
-    noSiteWorkflows = closeOutMonterCarloRequestsWeb(url, workflowsCompleted['MonteCarlo'], output)
+    printTableFooterWeb('ReDigi', output)
+
+    printTableHeaderWeb('MonteCarlo', output)
+    noSiteWorkflows = closeOutMonterCarloRequestsWeb(url, workflowsCompleted['MonteCarlo'], output, fromGen=False)
     workflowsCompleted['NoSite-MonteCarlo'] = noSiteWorkflows
+    printTableFooterWeb('MonteCarlo', output)
     
-    output.write('<tr><th colspan="7">MonteCarloFromGEN </th></tr>')
-    noSiteWorkflows = closeOutMonterCarloRequestsWeb(url, workflowsCompleted['MonteCarloFromGEN'], output)
+    printTableHeaderWeb('MonteCarloFromGEN', output)
+    noSiteWorkflows = closeOutMonterCarloRequestsWeb(url, workflowsCompleted['MonteCarloFromGEN'], output, fromGen=True)
     workflowsCompleted['NoSite-MonteCarloFromGEN'] = noSiteWorkflows
+    printTableFooterWeb('MonteCarloFromGEN', output)
     
-    output.write('<tr><th colspan="7">LHEStepZero </th></tr>')
+    printTableHeaderWeb('TaskChain', output)
+    noSiteWorkflows = closeOutTaskChainWeb(url, workflowsCompleted['TaskChain'], output)
+    workflowsCompleted['NoSite-TaskChain'] = noSiteWorkflows
+    printTableFooterWeb('TaskChain', output)
+
+    printTableHeaderWeb('LHEStepZero', output)
     noSiteWorkflows = closeOutStep0RequestsWeb(url, workflowsCompleted['LHEStepZero'],output)
     workflowsCompleted['NoSite-LHEStepZero'] = noSiteWorkflows
-    output.write('</table><br><br>')
+    printTableFooterWeb('LHEStepZero', output)
+
+    printTableHeaderWeb('StoreResults', output)
+    noSiteWorkflows = closeOutStoreResultsWorkflowsWeb(url, workflowsCompleted['StoreResults'], output)
+    workflowsCompleted['NoSite-StoreResults'] = noSiteWorkflows
+    printTableFooterWeb('StoreResults', output)
+
     print "MC Workflows for which couldn't find Custodial Tier1 Site"
 
-    output.write("<table border=1> <tr><th>MC Workflows for which couldn't find Custodial Tier1 Site</th></tr>")
-    listWorkflows(workflowsCompleted['NoSite-ReReco'], output)
-    listWorkflows(workflowsCompleted['NoSite-ReDigi'], output)
-    listWorkflows(workflowsCompleted['NoSite-MonteCarlo'], output)
-    listWorkflows(workflowsCompleted['NoSite-MonteCarloFromGEN'], output)
-    listWorkflows(workflowsCompleted['NoSite-LHEStepZero'], output)
+    output.write("<hr></hr>"
+                "<h3>Workflows for which couldn't find Custodial Tier1 Site</h3>")
+    output.write("<table border=1> <tr><th>Workflow</th><th>Dataset</th></tr>")
+    listWorkflowsWeb(workflowsCompleted['NoSite-ReReco'], output)
+    listWorkflowsWeb(workflowsCompleted['NoSite-ReDigi'], output)
+    listWorkflowsWeb(workflowsCompleted['NoSite-MonteCarlo'], output)
+    listWorkflowsWeb(workflowsCompleted['NoSite-MonteCarloFromGEN'], output)
+    listWorkflowsWeb(workflowsCompleted['NoSite-TaskChain'], output)
+    listWorkflowsWeb(workflowsCompleted['NoSite-LHEStepZero'], output)
+    listWorkflowsWeb(workflowsCompleted['NoSite-StoreResults'], output)
     output.write('</table>')
-  
-    output.write('<p>Last update: '+time.strftime("%c")+' CERN time</p>')
-    output.write('</body>')
-    output.write('</html>')
+    output.write(foot%time.strftime("%c"))
     output.close()
     #copy temporal to definitive file, avoid unavailability when running
     shutil.copy(tempfile, outputfile)  

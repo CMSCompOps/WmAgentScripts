@@ -10,6 +10,7 @@ import json
 import urllib2,urllib, httplib, sys, re, os
 from xml.dom.minidom import getDOMImplementation
 
+
 def hasCustodialSubscription(datasetName):
     """
     Returns true if a given dataset has at least
@@ -50,12 +51,12 @@ def getSubscriptionSites(datasetName):
             sites.append(subscription['node'])
         return sites
 
-
-def getBlockReplicaSites(datasetName):
+def getBlockReplicaSites(datasetName, onlycomplete=False):
     """
     Return the list of sites wich have any replica
     of any block of a given dataset, either if they do have
     subscription or not.
+    if onlycomplete, it will return only the sites that have all the blocks completely transferred.
     """
     url = 'https://cmsweb.cern.ch/phedex/datasvc/json/prod/blockreplicas?dataset=' + datasetName
     result = json.loads(urllib2.urlopen(url).read())
@@ -65,9 +66,23 @@ def getBlockReplicaSites(datasetName):
         return sites
     elif not result['phedex']['block']:
         return sites
+    firstblock = True
     #check all subscriptions
     for block in result['phedex']['block']:
-        sites.add(block['replica'][0]['node'])
+        blocksites = set()
+        for r in block['replica']:
+            if r['complete'] == 'y':           
+                blocksites.add(r['node'])
+        #check for first block
+        if firstblock:
+            sites = blocksites
+            firstblock = False
+        #if we want any site, we do Union between sets
+        if not onlycomplete:
+            sites = sites | blocksites
+        #if we want only sites with all the blocks, we do intersection.
+        else:
+            sites = sites & blocksites
     return list(sites)
 
 def getCustodialMoveSubscriptionSite(datasetName):
@@ -111,6 +126,21 @@ def phedexGet(url, request, auth=True):
         r1 = urllib2.urlopen('https://'+url+request)
         result = json.loads(r1.read())
         return result
+
+def getFileCountDataset(url, dataset):
+    """
+    Returns the number of files registered in phedex
+    """
+    result = phedexGet(url, '/phedex/datasvc/json/prod/blockreplicas?dataset='+dataset, auth=False)
+    if 'block' not in result['phedex']:
+        return 0
+    elif not result['phedex']['block']:
+        return 0
+    files = 0
+    #check all blocks
+    for block in result['phedex']['block']:
+        files += block['files']
+    return files
         
 def getTransferPercentage(url, dataset, site):
     """
@@ -205,6 +235,35 @@ def testCustodialSubscriptionRequested(url, dataset, site):
                 return True
     return False
 
+def getCustodialSubscriptionRequestSite(datasetName):
+    """
+    Returns the site (or sites) in which the dataset has
+    a custodial subscription request, no matter if it was approved
+    or rejected.
+    Returns false if no custodial subscription request has been made for
+    the dataset
+    """
+    url = 'cmsweb.cern.ch'
+    result = phedexGet(url, '/phedex/datasvc/json/prod/requestlist?dataset='+datasetName+'&type=xfer')
+    requests=result['phedex']
+    #gets dataset subscription requests
+    if 'request' not in requests.keys():
+        return False
+    sites = []
+    #if there is a request
+    for request in result['phedex']['request']:
+        #if there are pending or aprroved request, watch the satus of them
+        if request['approval']=='pending' or request['approval']=='approved':
+            requestId = request['id']
+            result = phedexGet(url, '/phedex/datasvc/json/prod/transferrequests?request='+str(requestId))
+            #if not empty
+            if result['phedex']['request']:
+                requestSubscription = result['phedex']['request'][0]
+                #see if its custodial
+                if requestSubscription['custodial']=='y':
+                    sites.append(requestSubscription['destinations']['node'][0]['name'])
+    return sites if sites else False
+
 def testOutputDataset(datasetName):
     """
     Tests whether a dataset was subscribed to phedex
@@ -256,7 +315,7 @@ def createXML(datasets):
     result.setAttribute('version', '2')
     # Create the <dbs> base element
     dbs = doc.createElement("dbs")
-    dbs.setAttribute("name", "https://cmsdbsprod.cern.ch:8443/cms_dbs_prod_global_writer/servlet/DBSServlet")
+    dbs.setAttribute("name", "https://cmsweb.cern.ch/dbs/prod/global/DBSReader")
     result.appendChild(dbs)    
     #Create each of the <dataset> element            
     for datasetname in datasets:
