@@ -1,5 +1,5 @@
 from WMCore.Database.CMSCouch import CouchServer
-
+from pprint import pprint
 class Tier0Delete(object):
     
     def __init__(self, couchURL):
@@ -34,10 +34,15 @@ class Tier0Delete(object):
         return filteredDocs
     
     def deleteAllT0(self):
-        dbList = [self.t0Summary, self.t0Request]
-        dbList = [self.t0Summary]
+        dbList = [self.t0Summary, self.t0Request, self.t0WMStats]
         for db in dbList:
-            print self.deleteReplicatorDocs(db)
+            deleted = self.deleteReplicatorDocs(db)
+            #pprint(deleted)
+            if deleted:
+                num = len(deleted)
+            else:
+                num = 0
+            print "Data deleted from %s: %s" % (db.name, num)
         
 if __name__ == "__main__":
         
