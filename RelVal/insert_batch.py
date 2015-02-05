@@ -24,7 +24,8 @@ if len(sys.argv) != 8:
 
 dbname = "relval"
 
-conn = MySQLdb.connect(host='localhost', user='relval', passwd="relval")
+conn = MySQLdb.connect(host='dbod-altest1.cern.ch', user='relval', passwd="relval", port=5505)
+#conn = MySQLdb.connect(host='localhost', user='relval', passwd="relval")
 
 curs = conn.cursor()
 
@@ -106,8 +107,13 @@ print "creating a new batch with batch_id = "+str(batchid)
 
 curs.execute("insert into batches set batch_id="+str(batchid)+", hn_req=\""+hnrequest+"\", announcement_title=\""+email_title+"\", stats_file=\""+stats_file+"\", processing_version="+proc_ver+", site=\""+site+"\", description=\""+description+"\", status=\"inserted\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\"")
 
+
 for line in f:
      workflow = line.rstrip('\n')
      curs.execute("insert into workflows set batch_id="+str(batchid)+", workflow_name=\""+workflow+"\";")
 
+conn.commit()
 
+curs.close()
+
+conn.close()
