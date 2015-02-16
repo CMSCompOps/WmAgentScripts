@@ -22,7 +22,7 @@ def getInputDataSet(url, workflow):
 
 def getWorkflows(state):
    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-   r1=conn.request("GET",'/couchdb/wmstats/_design/WMStats/_view/requestByStatusAndType?stale=update_after')
+   r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/bystatusandtype?stale=update_after')
    r2=conn.getresponse()
    data = json.loads(r2.read())
    items = data['rows']

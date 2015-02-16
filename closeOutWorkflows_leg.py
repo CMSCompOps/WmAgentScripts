@@ -63,7 +63,7 @@ def getOverviewRequestsWMStats(url):
 	conn = httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
                                      key_file = os.getenv('X509_USER_PROXY'))
 	conn.request("GET",
-                 "/couchdb/wmstats/_design/WMStats/_view/requestByStatusAndType?stale=update_after")
+                 "/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/bystatusandtype?stale=update_after")
 	response = conn.getresponse()
 	data = response.read()
 	conn.close()
