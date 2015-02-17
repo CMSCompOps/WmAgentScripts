@@ -31,7 +31,7 @@ def downloadoverview(retries=15, sleeptime = 30):
         try:
             conn = httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'),
                     key_file = os.getenv('X509_USER_PROXY'),timeout=30)
-            conn.request("GET",'/wmstats/_design/WMStats/_view/requestByStatusAndType?stale=update_after')
+            conn.request("GET",'/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/bystatusandtype?stale=update_after')
             r2 = conn.getresponse()
             
             print "Loading JSON"
