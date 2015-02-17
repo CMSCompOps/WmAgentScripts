@@ -27,7 +27,7 @@ class Config:
 
 
 def main():
-    #url = 'cmsweb.cern.ch'
+    #url = 'https://cmsweb.cern.ch'
     url = 'https://cmsweb-testbed.cern.ch'
     if len(sys.argv) != 3:
         print "Usage:  python createSitesBackfill.py JSON_FILE SITE1,SITE2,..."
