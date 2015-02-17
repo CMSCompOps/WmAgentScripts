@@ -62,7 +62,7 @@ def main():
 
 
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))      
-    r=conn.request('GET','/couchdb/wmstats/_design/WMStats/_view/requestByStatus?key="'+initialstatus+'"&stale=ok')
+    r=conn.request('GET','/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/bystatus?key="'+initialstatus+'"&stale=ok')
     r=conn.getresponse()
     data = r.read()
     s = json.loads(data)
