@@ -28,10 +28,13 @@ overview = []
 allacdc = set()
 
 #type of requests
-rtype = ['ReDigi','MonteCarlo', 'MonteCarloFromGEN', 'Resubmission']
-rtypeb = ['ReDigi','MonteCarlo', 'MonteCarloFromGEN']
+REQ_TYPES = ['ReDigi','MonteCarlo', 'MonteCarloFromGEN']
+REQ_TYPES_2 = ['ReDigi','MonteCarlo', 'MonteCarloFromGEN', 'Resubmission']
+
 #interesting status
-rstatus = ['assignment-approved','assigned','acquired','running-open','running-closed','completed','closed-out']
+RUN_STATUS = ['assignment-approved','assigned','acquired','running-open','running-closed','completed','closed-out']
+LIVE_STATUS = ['running','running-open','running-closed','completed','closed-out','announced']
+
 #names of T1's
 t2zone = {'T1_TW_ASGC':'ASGC','T1_IT_CNAF':'CNAF','T1_DE_KIT':'KIT','T1_FR_CCIN2P3':'IN2P3',
             'T1_ES_PIC':'PIC','T1_UK_RAL':'RAL','T1_US_FNAL':'FNAL'}
@@ -50,7 +53,7 @@ def getoverview():
     s = eval(d)
     return s
 
-def getRequestsByTypeStatus(rtype,rstatus):
+def getRequestsByTypeStatus(rtype, rstatus):
     """
     Filters only the requests on the given status and type from
     the overview
@@ -97,7 +100,9 @@ def getWorkloadParameters(workflow):
     #Gets the workflow information from ReqMgr Workload
     batch = workflow.split('_')[2] #TODO fix this
     processingstring = workflow.split('_')[4] #TODO fix this
+
     list = reqMgr.getWorkflowWorkload('cmsweb.cern.ch', workflow)
+
     primaryds = ''
     cmssw = ''
     campaign = ''
@@ -227,19 +232,17 @@ def getWorkloadParameters(workflow):
             'campaign':campaign,'cmssw':cmssw,'mergedLFNBase':mergedLFNBase}
     return wlinfo
 
-
-def getrequestupdates(req):
-    updates = []
-    for u in req['RequestUpdates']:
-        #'update_time': '2014-08-22 14:45:41.871256'
-        #print u
-        date = datetime.datetime.strptime(u['update_time'], '%Y-%m-%d %H:%M:%S.%f')
-        updates.append(date)
-    if updates:
-        update = min(updates)
-        return update.strftime('%Y-%m-%d %H:%M:%S.%f')
-
-
+def getAssignmentDate(workflow):
+    data = reqMgr.getWorkloadCache('cmsweb.cern.ch', workflow)
+    ls = data['RequestTransition']
+    date = None
+    for status in ls:
+        if status['Status'] == 'assigned':
+            #time in epoch format
+            date = datetime.datetime.fromtimestamp(status['UpdateTime'])
+            #parse to '%Y-%m-%d %H:%M:%S.%f')
+            date = date.strftime('%Y-%m-%d %H:%M:%S.%f')
+    return date
 
 def getWorkflowInfo(workflow):
     """
@@ -345,7 +348,7 @@ def getWorkflowInfo(workflow):
                 phreqinfo['nodes'] = nodes
                 phreqinfo['id'] = id
                 inputdataset['phreqinfo'].append(phreqinfo)
-        
+        #TODO use phedexclient
         url = 'https://cmsweb.cern.ch/phedex/datasvc/json/prod/Subscriptions?dataset=' + inputdataset['name']
         try:
             result = json.load(urllib.urlopen(url))
@@ -482,8 +485,8 @@ def getWorkflowInfo(workflow):
     else:
         js = {}
     
-    if status in ['running','running-open','running-closed','completed','closed-out','announced']:
-        updatedate = getrequestupdates(s)
+    if status in LIVE_STATUS:
+        updatedate = getAssignmentDate(workflow)
     else:
         updatedate = None
     wlinfo.update( {'filtereff':filtereff,'type':typee,'status':status,'expectedevents':expectedevents,
@@ -508,40 +511,41 @@ def main():
     #read overview from file
     overview = getoverview()
     #read pledges from file
-    dp=open(afs_base+'/pledged.json').read()
+    dp = open(afs_base+'/pledged.json').read()
     pledged = json.loads(dp)
     
     #get acdc's and all requsts
-    list = getRequestsByTypeStatus(rtype,rstatus)
-    listb = getRequestsByTypeStatus(rtypeb,rstatus)
-    allacdc = getRequestsByTypeStatus(['Resubmission'],rstatus)
+    list = getRequestsByTypeStatus(REQ_TYPES_2, RUN_STATUS)
+    listb = getRequestsByTypeStatus(REQ_TYPES, RUN_STATUS)
+    allacdc = getRequestsByTypeStatus(['Resubmission'], RUN_STATUS)
     
-    jlist=loadJobSummary()
+    #job list
+    jlist = loadJobSummary()
     
     struct = []
-    sys.stderr.write("Number of requests in %s: %s\n" % (rstatus,len(listb)))
+    print "Number of requests in %s: %s\n" % (RUN_STATUS, len(listb))
 
     count = 1
     for workflow in list:
         try:
             #skip acdc's
             if workflow in allacdc:
-                sys.stderr.write("[skipping %s]\n" % (workflow))
+                print "[skipping %s]\n" % (workflow)
                 continue
-            sys.stderr.write("%s: %s" % (count,workflow))
+            print "%s: %s" % (count, workflow)
             count += 1
             #get info        
             wfinfo = getWorkflowInfo(workflow)
-            sys.stderr.write(" %s\n" % (wfinfo['update']))
+            print " %s\n" % (wfinfo['update'])
             struct.append(wfinfo)
-        except:
+        except Exception as e:
             print "error getting information for", workflow
 
     #write to file
-    f = open(afs_base+'data.json','w')
+    f = open(afs_base + 'data.json','w')
     f.write(json.dumps(struct, indent=4, sort_keys=True))
     f.close()
-    sys.stderr.write("[END %s]\n" % (time.time() - now))
+    print "[END %s]\n" % (time.time() - now)
 
 if __name__ == "__main__":
     main()

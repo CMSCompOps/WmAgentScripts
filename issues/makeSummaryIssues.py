@@ -255,16 +255,23 @@ def makeissuessummary(s, issues, oldest, urgent_requests, types):
     for i in issues_types:
         issues[i] = set()
     
-    highest_prio = max( getpriorities(s,None,None,live_status, types))
+    s2 = [] 
+    #filter before
+    for r in s:
+        #only selected type
+        if r['type'] not in types:
+            continue
+        #TODO Ignore Dave's and Alan's tests
+        if 'dmason' in r['requestname'] or 'TEST' in r['requestname']:
+            continue
+        s2.append(r)
+    s = s2
+
+    highest_prio = max( getpriorities(s,None,None,live_status, types)+[0])
     print "highest_prio", highest_prio
     #for status in ['assigned','acquired','running-open','running-closed','completed']:
     #   for priority in getpriorities(s,'','',[status]):
     for r in s:
-        if r['type'] not in types:
-            continue
-        #TODO ignore Dave's tests
-        if 'dmason' in r['requestname']:
-            continue
         #calculate splitting
         if r['type'] == 'MonteCarlo':
             split = r['events_per_job']
