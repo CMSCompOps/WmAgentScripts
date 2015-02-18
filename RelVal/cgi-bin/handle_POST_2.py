@@ -28,7 +28,8 @@ print batchids_approval_pairs
 
 dbname = "relval"
 
-conn = MySQLdb.connect(host='localhost', user='relval', passwd="relval")
+conn = MySQLdb.connect(host='dbod-altest1.cern.ch', user='relval', passwd="relval", port=5505)
+#conn = MySQLdb.connect(host='localhost', user='relval', passwd="relval")
 
 curs = conn.cursor()
 
@@ -44,6 +45,12 @@ for pair in batchids_approval_pairs:
         if pair[1] != "null":
             print "unknown approve command, exiting"
             sys.exit()
+
+conn.commit()
+
+curs.close()
+
+conn.close()
             
 sys.exit();
 

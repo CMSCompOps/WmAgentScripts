@@ -6,7 +6,8 @@ batchid=sys.argv[1]
 
 dbname = "relval"
 
-conn = MySQLdb.connect(host='localhost', user='relval', passwd="relval")
+conn = MySQLdb.connect(host='dbod-altest1.cern.ch', user='relval', passwd="relval", port=5505)
+#conn = MySQLdb.connect(host='localhost', user='relval', passwd="relval")
 
 curs = conn.cursor()
 
@@ -28,3 +29,5 @@ if len(workflows_rows) == 0 :
 print "setting the status of the batch to reject_abort_requested"
 
 curs.execute("update batches set status=\"reject_abort_requested\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where batch_id = "+str(batchid) +";")
+
+conn.commit()

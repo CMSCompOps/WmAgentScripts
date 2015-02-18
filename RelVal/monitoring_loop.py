@@ -32,9 +32,10 @@ while True:
     
     sys.stdout = open('relval_monitor.txt','a')
 
-    print "last update = " + str(datetime.datetime.now())
+    print "last update: " + str(datetime.datetime.now())
+    print ""
 
-    conn = MySQLdb.connect(host='localhost', user='relval', passwd='relval')
+    conn = MySQLdb.connect(host='dbod-altest1.cern.ch', user='relval', passwd="relval", port=5505)
 
     curs = conn.cursor()
     
@@ -45,14 +46,25 @@ while True:
 
     curs.execute("select * from batches order by batch_id")
     batches=curs.fetchall()
-
+    colnames = [desc[0] for desc in curs.description]
 
     for batch in batches:
-        print "    batch "+str(batch[0])
-        print "        hypernews request: "+str(batch[1])
-        print "        processing version: "+str(batch[6])
-        #print batch[1]
-        #print batch[2]
+        for name, value in zip(colnames, batch):
+            if name == "useridday":
+                useridday=value
+            elif name == "useridmonth":
+                useridmonth=value
+            elif name == "useridyear":    
+                useridyear=value
+            elif name == "useridnum":
+                useridnum=value
+
+        print "id: "+useridyear+"_"+useridmonth+"_"+useridday+"_"+str(useridnum)
+        for name, value in zip(colnames, batch):
+            if name == "batch_id" or name == "useridday" or name == "useridmonth" or name == "useridyear" or name == "useridnum":
+                continue
+            else:
+                print '    '+name.rstrip(' ')+': '+str(value)
         
         curs.execute("select workflow_name from workflows where batch_id = "+ str(batch[0])+";")
         wfs=curs.fetchall()
@@ -91,8 +103,8 @@ while True:
         #print "(calendar.timegm(datetime.datetime.utcnow().utctimetuple()) - max_completion_time)/60.0/60.0 = " + str((calendar.timegm(datetime.datetime.utcnow().utctimetuple()) - max_completion_time)/60.0/60.0)
                         
 
-        print "        n_workflows = " + str(n_workflows)
-        print "        n_completed = " + str(n_completed)
+        print "    n_workflows = " + str(n_workflows)
+        print "    n_completed = " + str(n_completed)
 
     sys.stdout.flush()    
     os.system("cp relval_monitor.txt /afs/cern.ch/user/r/relval/webpage/relval_monitor.txt")

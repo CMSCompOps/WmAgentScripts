@@ -19,7 +19,8 @@ if not options.correct_env:
 
 dbname = "relval"
 
-conn = MySQLdb.connect(host='localhost', user='relval', passwd="relval")
+conn = MySQLdb.connect(host='dbod-altest1.cern.ch', user='relval', passwd="relval", port=5505)
+#conn = MySQLdb.connect(host='localhost', user='relval', passwd="relval")
 
 curs = conn.cursor()
 
@@ -144,9 +145,14 @@ for requests_row in requests_rows:
 
     curs.execute("insert into batches set batch_id="+str(batchid)+", hn_req=\""+hnrequest+"\", announcement_title=\""+email_title+"\", stats_file=\""+stats_file+"\", processing_version="+str(proc_ver)+", site=\""+site+"\", description=\""+description+"\", status=\"inserted\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\"")
 
+    conn.commit()
+
     for line in workflows:
         workflow = line.rstrip('\n')
         curs.execute("insert into workflows set batch_id="+str(batchid)+", workflow_name=\""+workflow+"\";")
 
+
     #batchid is assigned the new batch id now    
     curs.execute("delete from clone_reinsert_requests where batch_id="+str(requests_row[0])+";")
+
+    conn.commit()

@@ -30,7 +30,7 @@ while True:
 
     print "<form action=\"http://localhost:50000/cgi-bin/handle_POST_2.py\" method=\"post\">"
 
-    conn = MySQLdb.connect(host='localhost', user='relval', passwd='relval')
+    conn = MySQLdb.connect(host='dbod-altest1.cern.ch', user='relval', passwd="relval", port=5505)
 
     curs = conn.cursor()
     
@@ -43,11 +43,25 @@ while True:
     batches=curs.fetchall()
 
     for batch in batches:
-        if batch[7] != "inserted":
+
+        colnames = [desc[0] for desc in curs.description]
+        
+        for name, value in zip(colnames, batch):
+            if name=="status":
+                status=value
+            elif name == "batch_id":
+                batchid=value;
+            elif name == "announcement_title":
+                title=value;
+            
+
+
+
+        if status != "inserted":
             continue
         print "<br>"        
-        print "batch "+str(batch[0])+": "+str(batch[1])+"<br>"
-        print "<input  name='batch"+str(batch[0])+"' value='approve' type='radio'/> approve <input  name='batch"+str(batch[0])+"' value='disapprove' type='radio'/> disapprove <input checked='checked' name='batch"+str(batch[0])+"' value='null' type='radio'/> do nothing<br/>"
+        print "batch "+str(batchid)+": "+str(title)+"<br>"
+        print "<input  name='batch"+str(batchid)+"' value='approve' type='radio'/> approve <input  name='batch"+str(batchid)+"' value='disapprove' type='radio'/> disapprove <input checked='checked' name='batch"+str(batchid)+"' value='null' type='radio'/> do nothing<br/>"
 
     print "<br>"    
     print "<input type=\"submit\" value=\"Submit\"/>"

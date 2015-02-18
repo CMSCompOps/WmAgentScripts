@@ -25,9 +25,10 @@ url='cmsweb.cern.ch'
 
 dbname = "relval"
 
-conn = MySQLdb.connect(host='localhost', user='relval', passwd='relval')
+mysqlconn = MySQLdb.connect(host='dbod-altest1.cern.ch', user='relval', passwd="relval", port=5505)
+#conn = MySQLdb.connect(host='localhost', user='relval', passwd='relval')
 
-curs = conn.cursor()
+curs = mysqlconn.cursor()
 
 curs.execute("use "+dbname+";")
 
@@ -37,16 +38,30 @@ curs.execute("use "+dbname+";")
 curs.execute("select * from batches")
 batches=curs.fetchall()
 
+colnames = [desc[0] for desc in curs.description]
+
 for batch in batches:
-    print batch[0]
-    print batch[1]
-    print batch[2]
-    print batch[3]
-    print batch[4]
-    print batch[5]
-    print batch[6]
-    print batch[7]
-    print batch[8]
+
+    for name, value in zip(colnames, batch):
+        print '    '+name.rstrip(' ')+': '+str(value)
+
+    for name, value in zip(colnames, batch):
+        if name == "useridday":
+            useridday=value
+        elif name == "useridmonth":    
+            useridmonth=value
+        elif name == "useridyear":    
+            useridyear=value
+        elif name == "useridnum":    
+            useridnum=value
+        elif name == "batch_id":
+            batchid=value
+        elif name == "description":
+            description=value
+        elif name == "announcement_title":
+            title=value
+
+    userid=useridyear+"_"+useridmonth+"_"+useridday+"_"+str(useridnum)        
 
     curs.execute("select workflow_name from workflows where batch_id = \""+ str(batch[0])+"\";")
     wfs=curs.fetchall()
@@ -84,15 +99,15 @@ for batch in batches:
     if n_workflows != n_completed:
         continue
 
-#    if batch[0] != 111:
-#        continue
+    #if batch[0] == 5:
+    #    continue
 
     if (calendar.timegm(datetime.datetime.utcnow().utctimetuple()) - max_completion_time)/60.0/60.0 < 0.01:
         continue
 
-    print batch[0]
+    print batchid
 
-    fname="brm/"+str(batch[0])+".txt"
+    fname="brm/"+str(batchid)+".txt"
     print fname
 
     #remove the file if it already exists
@@ -107,7 +122,7 @@ for batch in batches:
 
     print "finished putting workflows into a file"     
 
-    os.system("bash announce_relvals.sh "+fname+" "+batch[1]+" "+batch[4] + "| tee brm/announce_relvals_log.txt")    
+    os.system("bash announce_relvals.sh "+fname+" "+description+" "+userid + ".txt | tee brm/announce_relvals_log.txt")    
 
     #remove the announcement e-mail file if it already exists
     os.system("if [ -f brm/announcement_email.txt ]; then rm brm/announcement_email.txt; fi")
@@ -119,10 +134,10 @@ for batch in batches:
     os.system("echo \"Dear all,\" >> brm/announcement_email.txt")
     os.system("echo \"\" >> brm/announcement_email.txt")
     os.system("echo \"The following datasets are now available:\" >> brm/announcement_email.txt")
-    os.system("echo \"http://cms-project-relval.web.cern.ch/cms-project-relval/relval_stats/"+batch[4]+"\" >> brm/announcement_email.txt")
+    os.system("echo \"http://cms-project-relval.web.cern.ch/cms-project-relval/relval_stats/"+userid+".txt\" >> brm/announcement_email.txt")
     os.system("echo \"\" >> brm/announcement_email.txt")
     os.system("echo \"HN request:\" >> brm/announcement_email.txt")
-    os.system("echo \""+batch[1]+"\" >> brm/announcement_email.txt")
+    os.system("echo \""+description+"\" >> brm/announcement_email.txt")
     os.system("echo \"\" >> brm/announcement_email.txt")
     if int(os.popen("cat brm/failure_information.txt | wc -l").read().rstrip()) > 0:
         os.system("cat brm/failure_information.txt >> brm/announcement_email.txt")
@@ -130,21 +145,21 @@ for batch in batches:
     os.system("echo \"Best regards,\" >> brm/announcement_email.txt")
     os.system("echo \"Andrew\" >> brm/announcement_email.txt")
 
-    os.popen("cat brm/announce_relvals_log.txt | mail -s \""+ batch[3] +"\" amlevin@mit.edu -- -f amlevin@mit.edu");
+    os.popen("cat brm/announce_relvals_log.txt | mail -s \""+ title +"\" amlevin@mit.edu -- -f amlevin@mit.edu");
 
     if options.send_to_hn:
-        os.popen("cat brm/announcement_email.txt | mail -s \""+ batch[3] +"\" hn-cms-relval@cern.ch -- -f amlevin@mit.edu");
+        os.popen("cat brm/announcement_email.txt | mail -s \""+ title +"\" hn-cms-relval@cern.ch -- -f amlevin@mit.edu");
     else:    
-        os.popen("cat brm/announcement_email.txt | mail -s \""+ batch[3] +"\" andrew.m.levin@vanderbilt.edu --");
+        os.popen("cat brm/announcement_email.txt | mail -s \""+ title +"\" andrew.m.levin@vanderbilt.edu --");
 
     print "copying the workflows and the batch to the archive databases"    
 
-    curs.execute("update batches set status=\"announced\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where batch_id = "+str(batch[0]) +";")
+    curs.execute("update batches set status=\"announced\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where batch_id = "+str(batchid) +";")
 
-    curs.execute("select * from workflows where batch_id = \""+ str(batch[0])+"\";")
+    curs.execute("select * from workflows where batch_id = \""+ str(batchid)+"\";")
     workflows_rows=curs.fetchall()
 
-    curs.execute("select * from batches where batch_id = \""+ str(batch[0])+"\";")
+    curs.execute("select * from batches where batch_id = \""+ str(batchid)+"\";")
     batches_rows=curs.fetchall()
 
     #cannot just do batches_rows[0] since the current_status_start_time is not formatted correctly
@@ -154,8 +169,9 @@ for batch in batches:
         curs.execute("insert into workflows_archive VALUES "+str(workflow_row)+";")
 
     print "deleting the workflows and the batch from the original databases"    
-    curs.execute("delete from workflows where batch_id = \""+ str(batch[0])+"\";")
-    curs.execute("delete from batches where batch_id = \""+ str(batch[0])+"\";")
+    curs.execute("delete from workflows where batch_id = \""+ str(batchid)+"\";")
+    curs.execute("delete from batches where batch_id = \""+ str(batchid)+"\";")
 
+    mysqlconn.commit()
     
 #curs.execute("insert into batches set hn_req=\""+hnrequest+"\", announcement_title=\"myannouncementtitle\"")

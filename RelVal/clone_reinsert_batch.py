@@ -8,7 +8,8 @@ newprocessingversion=sys.argv[3]
 
 dbname = "relval"
 
-conn = MySQLdb.connect(host='localhost', user='relval', passwd="relval")
+conn = MySQLdb.connect(host='dbod-altest1.cern.ch', user='relval', passwd="relval", port=5505)
+#conn = MySQLdb.connect(host='localhost', user='relval', passwd="relval")
 
 curs = conn.cursor()
 
@@ -26,3 +27,5 @@ if len(batches_rows)+len(batches_archive_rows) != 1:
 print "inserting the request in the clone_reinsert_requets table"
 
 curs.execute("insert into clone_reinsert_requests set batch_id="+str(batchid)+", new_site=\""+newsite+"\", new_processing_version="+str(newprocessingversion)+";")
+
+conn.commit()

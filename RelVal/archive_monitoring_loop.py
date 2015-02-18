@@ -32,9 +32,13 @@ while True:
     
     sys.stdout = open('relval_archive_monitor.txt','a')
 
-    print "last update = " + str(datetime.datetime.now())
+    print "last update: " + str(datetime.datetime.now())
 
-    conn = MySQLdb.connect(host='localhost', user='relval', passwd='relval')
+    print ""
+
+    conn = MySQLdb.connect(host='dbod-altest1.cern.ch', user='relval', passwd="relval", port=5505)
+
+    #conn = MySQLdb.connect(host='localhost', user='relval', passwd='relval')
 
     curs = conn.cursor()
     
@@ -45,14 +49,20 @@ while True:
 
     curs.execute("select * from batches_archive order by batch_id")
     batches=curs.fetchall()
-
+    colnames = [desc[0] for desc in curs.description]
 
     for batch in batches:
-        print "    batch "+str(batch[0])
-        print "        hypernews request: "+str(batch[1])
-        print "        processing version: "+str(batch[6])
-        print "        status = " + str(batch[7])
-        print "        announcement e-mail title = " + str(batch[3])
+        for name, value in zip(colnames, batch):
+            if name == "batch_id":
+                print name.rstrip(' ')+': '+str(value)
+            else:
+                print '    '+name.rstrip(' ')+': '+str(value)
+
+        #print "    batch "+str(batch[0])
+        #print "        hypernews request: "+str(batch[1])
+        #print "        processing version: "+str(batch[6])
+        #print "        status = " + str(batch[7])
+        #print "        announcement e-mail title = " + str(batch[3])
 
     sys.stdout.flush()    
     os.system("cp relval_archive_monitor.txt /afs/cern.ch/user/r/relval//webpage/")

@@ -16,8 +16,6 @@ wf_status_script=`mktemp`
 
 echo "------> closing out workflows"
 echo "" 
-source /afs/cern.ch/cms/LCG/LCG-2/UI/cms_ui_env.sh
-source /afs/cern.ch/project/gd/LCG-share/current_3.2/etc/profile.d/grid-env.sh 
 python2.6 newCloseOutTaskChain.py $wf_names_file
 echo ""
 echo "------> finished closing out workflows"
@@ -36,7 +34,7 @@ echo "------> finished getting dataset names"
 echo "------> making statistics table"
 echo ""
 python2.6 makeStatisticsTable.py $dsets_stats_tmp $statistics_file_name
-scp $statistics_file_name relval@vocms174.cern.ch:~/webpage/relval_stats/$statistics_file_name
+cp $statistics_file_name /afs/cern.ch/user/r/relval/webpage/relval_stats/$statistics_file_name
 echo ""
 echo "------> finished making statistics table"
 

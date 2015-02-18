@@ -4,12 +4,13 @@ import datetime
 import calendar
 import os
 
-fname_stats = "computing_operations_meeting/15December2014_computing_meeting_report.txt"
-fname_wfs = "computing_operations_meeting/15December2014_computing_meeting_report_wfs.txt"
+fname_stats = "computing_operations_meeting/16February2015_computing_meeting_report.txt"
+fname_wfs = "computing_operations_meeting/16February2015_computing_meeting_report_wfs.txt"
 
 dbname = "relval"
 
-conn = MySQLdb.connect(host='localhost', user='relval', passwd="relval")
+conn = MySQLdb.connect(host='dbod-altest1.cern.ch', user='relval', passwd="relval", port=5505)
+#conn = MySQLdb.connect(host='localhost', user='relval', passwd="relval")
 
 curs = conn.cursor()
 
@@ -17,6 +18,8 @@ curs.execute("use "+dbname+";")
 
 curs.execute("select * from batches_archive;")
 batches=curs.fetchall()
+
+colnames = [desc[0] for desc in curs.description]
 
 exitcode=os.system("ls "+fname_stats+" >& /dev/null")
 
@@ -33,19 +36,30 @@ if exitcode == 0:
 os.system("touch "+fname_wfs)
 os.system("touch "+fname_stats)
 
+
+
 for batch in batches:
-    if batch[7]!="announced":
-        if batch[7]!="not_announced":
+
+    for name, value in zip(colnames, batch):
+        if name=="status":
+            status=value
+        elif name == "batch_id":
+            batchid=value
+        elif name == "current_status_start_time":
+            current_status_start_time=value
+
+    if status!="announced":
+        if status!="not_announced":
             print "batch has unexpected status \""+batch[7] +"\", exiting"
         continue
 
-    if calendar.timegm(batch[8].utctimetuple()) < calendar.timegm(datetime.datetime(2014,12,8,14,0,0).timetuple()):
+    if calendar.timegm(current_status_start_time.utctimetuple()) < calendar.timegm(datetime.datetime(2015,9,2,14,0,0).timetuple()):
         continue
 
-    if calendar.timegm(batch[8].utctimetuple()) > calendar.timegm(datetime.datetime(2014,12,15,14,0,0).timetuple()):
+    if calendar.timegm(current_status_start_time.utctimetuple()) > calendar.timegm(datetime.datetime(2015,16,9,14,0,0).timetuple()):
         continue    
 
-    curs.execute("select * from workflows_archive where batch_id = \""+ str(batch[0])+"\";")
+    curs.execute("select * from workflows_archive where batch_id = \""+ str(batchid)+"\";")
     workflows=curs.fetchall()
 
     for workflow in workflows:
