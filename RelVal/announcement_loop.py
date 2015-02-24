@@ -99,7 +99,7 @@ for batch in batches:
     if n_workflows != n_completed:
         continue
 
-    #if batch[0] == 5:
+    #if batch[0] != 12:
     #    continue
 
     if (calendar.timegm(datetime.datetime.utcnow().utctimetuple()) - max_completion_time)/60.0/60.0 < 0.01:
@@ -122,7 +122,10 @@ for batch in batches:
 
     print "finished putting workflows into a file"     
 
-    os.system("bash announce_relvals.sh "+fname+" "+description+" "+userid + ".txt | tee brm/announce_relvals_log.txt")    
+    #if there is a '\r' character in the body of an e-mail, it does not get sent
+    description=description.replace('\r','')
+
+    os.system("bash announce_relvals.sh "+fname+" \""+description+"\" "+userid + ".txt | tee brm/announce_relvals_log.txt")    
 
     #remove the announcement e-mail file if it already exists
     os.system("if [ -f brm/announcement_email.txt ]; then rm brm/announcement_email.txt; fi")
@@ -130,13 +133,22 @@ for batch in batches:
     os.system("if [ -f brm/failure_information.txt ]; then rm brm/failure_information.txt; fi")
 
     os.system("python2.6 getFailureInformation.py "+fname+" >> brm/failure_information.txt")
-    
+
+
     os.system("echo \"Dear all,\" >> brm/announcement_email.txt")
     os.system("echo \"\" >> brm/announcement_email.txt")
-    os.system("echo \"The following datasets are now available:\" >> brm/announcement_email.txt")
+    os.system("echo \"A batch of relval workflows has finished.\" >> brm/announcement_email.txt")
+    os.system("echo \"\" >> brm/announcement_email.txt")
+    os.system("echo \"Batch ID:\" >> brm/announcement_email.txt")
+    os.system("echo \"\" >> brm/announcement_email.txt")
+    os.system("echo \""+userid+"\" >> brm/announcement_email.txt")
+    os.system("echo \"\" >> brm/announcement_email.txt")
+    os.system("echo \"List of datasets:\" >> brm/announcement_email.txt")
+    os.system("echo \"\" >> brm/announcement_email.txt")
     os.system("echo \"http://cms-project-relval.web.cern.ch/cms-project-relval/relval_stats/"+userid+".txt\" >> brm/announcement_email.txt")
     os.system("echo \"\" >> brm/announcement_email.txt")
-    os.system("echo \"HN request:\" >> brm/announcement_email.txt")
+    os.system("echo \"Description:\" >> brm/announcement_email.txt")
+    os.system("echo \"\" >> brm/announcement_email.txt")
     os.system("echo \""+description+"\" >> brm/announcement_email.txt")
     os.system("echo \"\" >> brm/announcement_email.txt")
     if int(os.popen("cat brm/failure_information.txt | wc -l").read().rstrip()) > 0:
@@ -145,12 +157,12 @@ for batch in batches:
     os.system("echo \"Best regards,\" >> brm/announcement_email.txt")
     os.system("echo \"Andrew\" >> brm/announcement_email.txt")
 
-    os.popen("cat brm/announce_relvals_log.txt | mail -s \""+ title +"\" amlevin@mit.edu -- -f amlevin@mit.edu");
+    os.popen("cat brm/announce_relvals_log.txt | mail -s \""+ title +"\" amlevin@mit.edu");
 
     if options.send_to_hn:
         os.popen("cat brm/announcement_email.txt | mail -s \""+ title +"\" hn-cms-relval@cern.ch -- -f amlevin@mit.edu");
     else:    
-        os.popen("cat brm/announcement_email.txt | mail -s \""+ title +"\" andrew.m.levin@vanderbilt.edu --");
+        os.popen("cat brm/announcement_email.txt | mail -s \""+ title +"\" andrew.m.levin@vanderbilt.edu");
 
     print "copying the workflows and the batch to the archive databases"    
 
@@ -175,3 +187,4 @@ for batch in batches:
     mysqlconn.commit()
     
 #curs.execute("insert into batches set hn_req=\""+hnrequest+"\", announcement_title=\"myannouncementtitle\"")
+

@@ -4,8 +4,8 @@ import datetime
 import calendar
 import os
 
-fname_stats = "computing_operations_meeting/16February2015_computing_meeting_report.txt"
-fname_wfs = "computing_operations_meeting/16February2015_computing_meeting_report_wfs.txt"
+fname_stats = "computing_operations_meeting/23February2015_computing_meeting_report.txt"
+fname_wfs = "computing_operations_meeting/23February2015_computing_meeting_report_wfs.txt"
 
 dbname = "relval"
 
@@ -47,16 +47,26 @@ for batch in batches:
             batchid=value
         elif name == "current_status_start_time":
             current_status_start_time=value
+        elif name == "useridyear":
+            useridyear=value
+        elif name == "useridmonth":
+            useridmonth=value
+        elif name == "useridday":
+            useridday=value
+        elif name == "useridnum":
+            useridnum=value
 
     if status!="announced":
         if status!="not_announced":
             print "batch has unexpected status \""+batch[7] +"\", exiting"
         continue
 
-    if calendar.timegm(current_status_start_time.utctimetuple()) < calendar.timegm(datetime.datetime(2015,9,2,14,0,0).timetuple()):
+    userid=useridyear+"_"+useridmonth+"_"+useridday+"_"+str(useridnum)
+
+    if calendar.timegm(current_status_start_time.utctimetuple()) < calendar.timegm(datetime.datetime(2015,2,16,14,0,0).timetuple()):
         continue
 
-    if calendar.timegm(current_status_start_time.utctimetuple()) > calendar.timegm(datetime.datetime(2015,16,9,14,0,0).timetuple()):
+    if calendar.timegm(current_status_start_time.utctimetuple()) > calendar.timegm(datetime.datetime(2015,2,23,14,0,0).timetuple()):
         continue    
 
     curs.execute("select * from workflows_archive where batch_id = \""+ str(batchid)+"\";")
@@ -66,7 +76,7 @@ for batch in batches:
         os.system("echo "+ workflow[1]+" >> "+fname_wfs)
     
 
-    os.system("echo /afs/cern.ch/user/r/relval/webpage/relval_stats/"+batch[4]+ " >> "+fname_stats)
+    os.system("echo /afs/cern.ch/user/r/relval/webpage/relval_stats/"+userid+ ".txt >> "+fname_stats)
 
     #print (calendar.timegm(datetime.datetime.now().timetuple())-calendar.timegm(batch[8].utctimetuple()))/60/60/24
 

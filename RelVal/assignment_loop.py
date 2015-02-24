@@ -61,7 +61,7 @@ while True:
             
             for wf in wfs:
                 print wf[0]
-                #os.system("python2.6 assignRelValWorkflow.py -w "+wf[0] +" -s "+site+" -p "+str(processing_version))
+                os.system("python2.6 assignRelValWorkflow.py -w "+wf[0] +" -s "+site+" -p "+str(processing_version))
                 time.sleep(30)
 
 
@@ -72,7 +72,7 @@ while True:
             msg = MIMEMultipart()
             reply_to = []
             #send_to = ["andrew.m.levin@vanderbilt.edu"]
-            send_to = ["hn-cms-dataopsrequests@cern.ch"]
+            send_to = ["hn-cms-dataopsrequests@cern.ch","andrew.m.levin@vanderbilt.edu"]
             #send_to = ["hn-cms-hnTest@cern.ch"]
 
             msg['In-Reply-To'] = hn_message_id
