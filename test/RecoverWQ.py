@@ -1,32 +1,51 @@
 from WMCore.Database.CMSCouch import CouchServer
-#couchUrl = "https://cmsweb.cern.ch/couchdb"
-couchUrl = "https://cmsweb-testbed.cern.ch/couchdb"
+from pprint import pprint
+from WMCore.Services.ReqMgr.ReqMgr import ReqMgr
+from WMCore.Services.RequestDB.RequestDBReader import RequestDBReader
+
+couchUrl = "https://cmsweb.cern.ch/couchdb"
+#couchUrl = "https://cmsweb-testbed.cern.ch/couchdb"
 qUrl = "%s/workqueue" % couchUrl 
 queueParams = {'QueueURL': qUrl, "CouchUrl": couchUrl}
 dbname = "workqueue"
 couchdb = CouchServer(couchUrl).connectDatabase(dbname, False)
+reqMgrUrl = "https://cmsweb.cern.ch/reqmgr2"
+reqMgr = ReqMgr(reqMgrUrl)
+reqDB = RequestDBReader("%s/reqmgr_workload_cache" % couchUrl)
 ids = []
-for item in couchdb.changes(60211506)['results']:
+workflows = set()
+for item in couchdb.changes(1)['results']:
     if item.has_key('deleted') and item["deleted"]:
-        revisions = couchdb.getRevision(item["id"])
-        ids.append(item["id"])
-        for rev in revisions:
-            #print rev
-            revNum = rev["ok"]['_revisions']['start'] - 1
-            revID = rev["ok"]['_revisions']['ids'][1]
-            preRev = "%s-%s" % (revNum, revID)
-            name = rev["ok"]['_id']
-            preDoc = couchdb.document(name, preRev)
+        
+        try:
+            preDoc = couchdb.getPrevisousRevision(item["id"])
+        except Exception, ex:
+            if item["id"].find("_") != -1:
+                #pprint(reqMgr.getRequestByNames(item["id"]))
+                #print "Error: %s" % item["id"]
+                ids.append(item["id"])
+        
+        else:
             eleStr = 'WMCore.WorkQueue.DataStructs.WorkQueueElement.WorkQueueElement'
             if preDoc.has_key(eleStr):
                 lastStatus = preDoc[eleStr]['Status']
+                #print lastStatus
+                #workflows.add(preDoc[eleStr]['ParentQueueId'])
                 if lastStatus not in ['Canceled', 'Done']:
                     print lastStatus
                     print "xxx"
-                    print preDoc
+                    print preDoc[eleStr]['ParentQueueId']
                     print "ooo"
 
-
+#pprint(workflows)
+#pprint(reqMgr.getRequestByNames(ids))
+byStatus = {}
+for reqName, value in reqDB.getStatusAndTypeByRequest(ids).items():
+    byStatus.setdefault(value[0], [])
+    byStatus[value[0]].append(reqName)
+    
+pprint(byStatus)
+ 
 print "*********"
 print "All Done"
 #print couchdb.allDocs({}, ids)
