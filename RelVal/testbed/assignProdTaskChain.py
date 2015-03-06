@@ -2,6 +2,7 @@
 import urllib2,urllib, httplib, sys, re, os
 import json
 import optparse
+import dbs3Client as dbs3
 
 def assignRequest(url,workflow,team,site,era,procstr,procver,activity,lfn):
     params = {"action": "Assign",
@@ -94,12 +95,32 @@ def main():
 
     workflow=options.workflow
     team='production'
-    site=["T1_DE_KIT","T1_ES_PIC","T1_FR_CCIN2P3","T1_IT_CNAF",
-          "T1_RU_JINR","T1_UK_RAL","T1_US_FNAL","T2_CH_CERN",
-          "T2_DE_DESY","T2_DE_RWTH","T2_ES_CIEMAT","T2_FR_IPHC",
-          "T2_IT_Bari","T2_IT_Legnaro","T2_IT_Pisa","T2_IT_Rome",
-          "T2_UK_London_Brunel","T2_UK_London_IC","T2_US_Caltech","T2_US_MIT",
-          "T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida"]
+    site=["T1_DE_KIT",
+            "T1_ES_PIC",
+            "T1_FR_CCIN2P3",
+            "T1_IT_CNAF",
+            "T1_RU_JINR",
+            "T1_UK_RAL",
+            "T1_US_FNAL",
+            "T2_CH_CERN",
+            "T2_DE_DESY",
+            "T2_DE_RWTH",
+            #"T2_ES_CIEMAT",
+            "T2_FR_IPHC",
+            #"T2_IT_Bari",
+            "T2_IT_Legnaro",
+            "T2_IT_Pisa",
+            #"T2_IT_Rome",
+            "T2_UK_London_Brunel",
+            "T2_UK_London_IC",
+            "T2_US_Caltech",
+            "T2_US_Florida",
+            "T2_US_MIT",
+            "T2_US_Nebraska",
+            "T2_US_Purdue",
+            "T2_US_UCSD",
+            "T2_US_Wisconsin"
+    ]
     procversion=1
     activity='production'
     lfn='/store/mc'
@@ -138,6 +159,24 @@ def main():
         activity=options.activity
     if options.lfn:
         lfn=options.lfn
+
+    
+    #TODO check output dataset existence, and abort if they already do!
+    datasets = schema["OutputDatasets"]
+    i = 0
+    for key, value in schema.items():
+        if type(value) is dict and key.startswith("Task"):
+            if 'None' in datasets[i][0]:
+                parts = datasets[i][0].split('None-v1')
+                dataset = parts[0]+value['AcquisitionEra']+'-'+procstring[value['TaskName']]+'-v'+str(procversion)+parts[1]
+            else:
+                dataset = datasets[i][0]
+            info = dbs3.getDatasetInfo(dataset)
+            if info != (0, 0, 0):
+                print "Output dataset already exist, you need to increase version number!"
+                print dataset
+                sys.exit(0)
+            i += 1
 
     # If the --test argument was provided, then just print the information gathered so far and abort the assignment
     if options.test:
