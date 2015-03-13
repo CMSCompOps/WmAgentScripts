@@ -176,7 +176,7 @@ def main():
                 #list all datasets with same name but different version numbers
                 datasets = dbsapi.listDatasets(acquisition_era_name=value['AcquisitionEra'],
                              primary_ds_name= value['PrimaryDataset'], detail=True, dataset_access_type='*')
-                processedName = schema['Campaign']+'-'+value['ProcessingString']+"-v\\d+"
+                processedName = value['AcquisitionEra']+'-'+value['ProcessingString']+"-v\\d+"
                 #see if any of the dataset names is a match
                 for ds in datasets:
                     if re.match(processedName,ds['processed_ds_name']):
