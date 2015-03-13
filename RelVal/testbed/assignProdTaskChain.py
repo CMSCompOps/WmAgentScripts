@@ -2,7 +2,9 @@
 import urllib2,urllib, httplib, sys, re, os
 import json
 import optparse
-import dbs3Client as dbs3
+from dbs.apis.dbsClient import DbsApi
+
+dbs3_url = r'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
 
 def assignRequest(url,workflow,team,site,era,procstr,procver,activity,lfn):
     params = {"action": "Assign",
@@ -164,19 +166,30 @@ def main():
     #TODO check output dataset existence, and abort if they already do!
     datasets = schema["OutputDatasets"]
     i = 0
-    for key, value in schema.items():
-        if type(value) is dict and key.startswith("Task"):
-            if 'None' in datasets[i][0]:
-                parts = datasets[i][0].split('None-v1')
-                dataset = parts[0]+value['AcquisitionEra']+'-'+procstring[value['TaskName']]+'-v'+str(procversion)+parts[1]
-            else:
-                dataset = datasets[i][0]
-            info = dbs3.getDatasetInfo(dataset)
-            if info != (0, 0, 0):
-                print "Output dataset already exist, you need to increase version number!"
-                print dataset
-                sys.exit(0)
-            i += 1
+    if 'ACDC' not in options.workflow:
+        exist = False
+        maxv = 1
+        for key, value in schema.items():
+            if type(value) is dict and key.startswith("Task"):
+                dbsapi = DbsApi(url=dbs3_url)
+
+                #list all datasets with same name but different version numbers
+                datasets = dbsapi.listDatasets(acquisition_era_name=value['AcquisitionEra'],
+                             primary_ds_name= value['PrimaryDataset'], detail=True, dataset_access_type='*')
+                processedName = schema['Campaign']+'-'+value['ProcessingString']+"-v\\d+"
+                #see if any of the dataset names is a match
+                for ds in datasets:
+                    if re.match(processedName,ds['processed_ds_name']):
+                        print "Existing dset:", ds['dataset'], "(%s)"%ds['dataset_access_type']
+                        maxv = max(maxv, ds['processing_version'])
+                        exist = True
+                    else:
+                        pass
+                i += 1
+        #suggest max version
+        if exist and procversion <= maxv:
+            print "Some output datasets exist, its advised to assign with v ==", maxv + 1
+            sys.exit(0)
 
     # If the --test argument was provided, then just print the information gathered so far and abort the assignment
     if options.test:
