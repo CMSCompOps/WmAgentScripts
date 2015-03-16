@@ -21,7 +21,8 @@ mailingSender = 'noreply@cern.ch'
 mailingList = ['luis89@fnal.gov','dmason@fnal.gov']
 
 ## Job Collectors (Condor pools)
-collectors = ['vocms97.cern.ch', 'vocms097.cern.ch', 'vocms064.cern.ch' ]
+global_pool = ['vocms097.cern.ch']
+tier0_pool = ['vocms064.cern.ch']
 
 ## The following machines should be ignored (Crab Schedulers)
 crab_scheds = ['vocms83.cern.ch','stefanovm.cern.ch']
@@ -544,7 +545,8 @@ def main():
     initJobDictonaries() # Init running/pending dictionaries
     
     #Going through each collector and process a job list for each scheduler
-    for col in collectors:
+    all_collectors = global_pool + tier0_pool
+    for col in all_collectors:
         # Get the list of scheduler for the given collector
         schedds={}
         listcommand="condor_status -pool "+col+""" -schedd -format "%s||" Name -format "%s||" CMSGWMS_Type -format "\n" Owner"""
@@ -614,6 +616,10 @@ def main():
                 
                 if siteName(array[5]): # If job is currently running
                     siteToExtract = [array[5]]
+                
+                if col == tier0_pool[0]:
+                    if siteToExtract[0] != 'T2_CH_CERN_T0':
+                        continue
                 
                 if status == "2":
                     increaseRunning(siteToExtract[0],sched,type,cpus)
