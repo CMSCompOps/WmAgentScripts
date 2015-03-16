@@ -29,11 +29,21 @@ class Config:
 def main():
     #url = 'https://cmsweb.cern.ch'
     url = 'https://cmsweb-testbed.cern.ch'
-    if len(sys.argv) != 3:
-        print "Usage:  python createSitesBackfill.py JSON_FILE SITE1,SITE2,..."
+    #url = 'https://alan-cloud1.cern.ch'
+    if len(sys.argv) < 3:
+        print "Usage:  python createSitesBackfill.py JSON_FILE [-t TEAM] SITE1,SITE2,..."
         sys.exit(0)
+    
     jsonFile = sys.argv[1]
-    siteList = sys.argv[2].split(',')
+    
+    team = None
+    i = 2
+    if sys.argv[i] == '-t':
+        i += 1
+        team = sys.argv[i]
+        i += 1
+    siteList = sys.argv[i].split(',')
+
     #read request params
     configJson = json.load(open(jsonFile, 'r'))
     #wrap config in an object
@@ -47,13 +57,15 @@ def main():
     
     config.requestArgs["assignRequest"]["AcquisitionEra"] += "SiteBackfill"
     config.requestArgs["createRequest"]["Campaign"] += "SiteBackfill" 
-
+    
+    if team:
+        config.requestArgs["assignRequest"]["Team"] = team
 
     #create a request for each site
     for site in siteList:
         
         #setup creation stuff
-        config.requestArgs["createRequest"]["RequestString"] = reqStr+"-"+site
+        config.requestArgs["createRequest"]["RequestString"] = reqStr+"-"+site+"Backfill"
         config.requestArgs["createRequest"]["PrepID"] = None
 
         r = reqMgrClient.createRequest(config)
