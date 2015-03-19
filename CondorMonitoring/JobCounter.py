@@ -22,7 +22,7 @@ mailingList = ['luis89@fnal.gov','dmason@fnal.gov']
 
 ## Job Collectors (Condor pools)
 global_pool = ['vocms097.cern.ch']
-tier0_pool = ['vocms064.cern.ch']
+tier0_pool = ['vocms007.cern.ch']
 
 ## The following machines should be ignored (Crab Schedulers)
 crab_scheds = ['vocms83.cern.ch','stefanovm.cern.ch']
