@@ -109,7 +109,7 @@ def main():
             "T2_DE_RWTH",
             #"T2_ES_CIEMAT",
             "T2_FR_IPHC",
-            #"T2_IT_Bari",
+            "T2_IT_Bari",
             "T2_IT_Legnaro",
             "T2_IT_Pisa",
             #"T2_IT_Rome",
