@@ -4,7 +4,7 @@ Creates and assigns several backfill workflows for sites on a given lists.
 This is useful for testing site stability and debug workflow-related
 issues.
 Usage:
-    python createSitesBackfill.py JSON_FILE SITE1,SITE2,...
+    python createSitesBackfill.py [options] JSON_FILE SITE1,SITE2,...
     JSON_FILE: the json file with the request to
  
 """
@@ -13,7 +13,7 @@ import reqmgr
 import json
 from reqmgr import ReqMgrClient
 import sys
-
+from optparse import OptionParser
 
 class Config:
     def __init__(self, info):
@@ -27,28 +27,35 @@ class Config:
 
 
 def main():
-    #url = 'https://cmsweb.cern.ch'
-    url = 'https://cmsweb-testbed.cern.ch'
-    #url = 'https://alan-cloud1.cern.ch'
-    if len(sys.argv) < 3:
-        print "Usage:  python createSitesBackfill.py JSON_FILE [-t TEAM] SITE1,SITE2,..."
-        sys.exit(0)
-    
-    jsonFile = sys.argv[1]
-    
-    team = None
-    i = 2
-    if sys.argv[i] == '-t':
-        i += 1
-        team = sys.argv[i]
-        i += 1
-    siteList = sys.argv[i].split(',')
 
-    #read request params
-    configJson = json.load(open(jsonFile, 'r'))
-    #wrap config in an object
-    config = Config(configJson)
+    url = 'https://cmsweb.cern.ch'
+    testbed_url = 'https://cmsweb-testbed.cern.ch'
+    #url = 'https://alan-cloud1.cern.ch'
+
+    #Create option parser
+    usage = "usage: %prog [options] JSON_FILE SITE1,SITE2,..."
+    parser = OptionParser(usage=usage)
+
+    parser.add_option("-t","--team", dest="team", default=None,
+                        help="Team for assigning, if empty, the one on the Json file")
+    parser.add_option("--testbed",action="store_true", dest="testbed", default=False,
+                        help="Use testbed ReqMgr instead of production ReqMgr.")
+
+    (options, args) = parser.parse_args()
     
+    if len(args) != 2:
+        parser.error("Provide the JSON file and the site list")
+        sys.exit(1)
+    
+    #the input options
+    jsonFile = args[0]
+    siteList = args[1].split(',')
+    if options.testbed:
+        url = testbed_url
+
+    #read request params and wrap
+    configJson = json.load(open(jsonFile, 'r'))
+    config = Config(configJson)
     reqMgrClient = ReqMgrClient(url, config)
 
     #set up common stuff
@@ -58,8 +65,8 @@ def main():
     config.requestArgs["assignRequest"]["AcquisitionEra"] += "SiteBackfill"
     config.requestArgs["createRequest"]["Campaign"] += "SiteBackfill" 
     
-    if team:
-        config.requestArgs["assignRequest"]["Team"] = team
+    if options.team:
+        config.requestArgs["assignRequest"]["Team"] = options.team
 
     #create a request for each site
     for site in siteList:
@@ -69,7 +76,8 @@ def main():
         config.requestArgs["createRequest"]["PrepID"] = None
 
         r = reqMgrClient.createRequest(config)
-        print "Created:", r
+        print "Created:"
+        print r
         reqMgrClient.changeSplitting(config)
         print "Changed splitting"
         
@@ -78,7 +86,7 @@ def main():
         config.requestArgs["assignRequest"]["ProcessingString"] = "SITE_TEST_"+site
         #assign
         reqMgrClient.assignRequests(config)
-        print "Assigned: ", r ,"to",site
+        print "Assigned to",site
     
 
 
