@@ -2,6 +2,9 @@
 import urllib2,urllib, httplib, sys, re, os
 import json
 import optparse
+from dbs.apis.dbsClient import DbsApi
+
+dbs3_url = r'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
 
 def assignRequest(url,workflow,team,site,era,procstr,procver,activity,lfn):
     params = {"action": "Assign",
@@ -85,69 +88,40 @@ def main():
     parser.add_option('--special', help='Use it for special workflows. You also have to change the code according to the type of WF',dest='special')
     parser.add_option('--test',action="store_true", help='Nothing is injected, only print infomation about workflow and AcqEra',dest='test')
     parser.add_option('--pu',action="store_true", help='Use it to inject PileUp workflows only',dest='pu')
-    parser.add_option('--lsf',action="store_true", help='Use it to assign work to the LSF agent at CERN - vocms174, relvallsf team',dest='lsf')
     (options,args) = parser.parse_args()
 
     if not options.workflow:
         print "The workflow name is mandatory!"
-        print "Usage: python assignRelValWorkflow.py -w <requestName>"
+        print "Usage: python assignProdTaskChain.py -w <requestName>"
         sys.exit(0);
 
     workflow=options.workflow
-    team='mc'
-    site=[
-    "T1_DE_KIT", 
-    "T1_ES_PIC", 
-#    "T1_FR_CCIN2P3", 
-    "T1_IT_CNAF", 
-    "T1_RU_JINR", 
-    "T1_UK_RAL", 
-    "T1_US_FNAL", 
-    "T2_AT_Vienna", 
-#    "T2_BE_IIHE", 
-#    "T2_BE_UCL", 
-#    "T2_BR_SPRACE", 
-    "T2_CH_CERN", 
-#    "T2_CH_CSCS", 
-#    "T2_CN_Beijing", 
-#    "T2_DE_DESY", 
-#    "T2_DE_RWTH", 
-#    "T2_EE_Estonia", 
-#    "T2_ES_CIEMAT", 
-#    "T2_ES_IFCA", 
-#    "T2_FI_HIP", 
-#    "T2_FR_CCIN2P3", 
-#    "T2_FR_GRIF_IRFU", 
-#    "T2_FR_GRIF_LLR", 
-#    "T2_FR_IPHC", 
-    "T2_HU_Budapest", 
-    "T2_IT_Bari", 
-    "T2_IT_Legnaro", 
-    "T2_IT_Pisa", 
-    "T2_IT_Rome", 
-#    "T2_KR_KNU", 
-#    "T2_PL_Warsaw", 
-    "T2_PT_NCG_Lisbon", 
-#    "T2_RU_IHEP", 
-#    "T2_RU_INR", 
-#    "T2_RU_ITEP", 
-#    "T2_RU_JINR", 
-#    "T2_RU_PNPI", 
-#    "T2_RU_SINP", 
-#    "T2_TR_METU", 
-#    "T2_TW_Taiwan", 
-#    "T2_UA_KIPT", 
-#    "T2_UK_London_Brunel", 
-    "T2_UK_London_IC", 
-#    "T2_UK_SGrid_RALPP", 
-    "T2_US_Caltech", 
-    "T2_US_Florida", 
-    "T2_US_MIT", 
-    "T2_US_Nebraska", 
-    "T2_US_Purdue", 
-#    "T2_US_UCSD", 
-#    "T2_US_Vanderbilt", 
-    "T2_US_Wisconsin"
+    team='production'
+    site=["T1_DE_KIT",
+            "T1_ES_PIC",
+            "T1_FR_CCIN2P3",
+            "T1_IT_CNAF",
+            "T1_RU_JINR",
+            "T1_UK_RAL",
+            "T1_US_FNAL",
+            "T2_CH_CERN",
+            "T2_DE_DESY",
+            "T2_DE_RWTH",
+            #"T2_ES_CIEMAT",
+            "T2_FR_IPHC",
+            "T2_IT_Bari",
+            "T2_IT_Legnaro",
+            "T2_IT_Pisa",
+            #"T2_IT_Rome",
+            "T2_UK_London_Brunel",
+            "T2_UK_London_IC",
+            "T2_US_Caltech",
+            "T2_US_Florida",
+            "T2_US_MIT",
+            "T2_US_Nebraska",
+            "T2_US_Purdue",
+            "T2_US_UCSD",
+            "T2_US_Wisconsin"
     ]
     procversion=1
     activity='production'
@@ -188,10 +162,34 @@ def main():
     if options.lfn:
         lfn=options.lfn
 
-    # Changing the team name and the site whitelist in case the --lsf parameter was given   
-    if options.lsf:
-        team='relvallsf'
-        site=['T2_CH_CERN']
+    
+    #TODO check output dataset existence, and abort if they already do!
+    datasets = schema["OutputDatasets"]
+    i = 0
+    if 'ACDC' not in options.workflow:
+        exist = False
+        maxv = 1
+        for key, value in schema.items():
+            if type(value) is dict and key.startswith("Task"):
+                dbsapi = DbsApi(url=dbs3_url)
+
+                #list all datasets with same name but different version numbers
+                datasets = dbsapi.listDatasets(acquisition_era_name=value['AcquisitionEra'],
+                             primary_ds_name= value['PrimaryDataset'], detail=True, dataset_access_type='*')
+                processedName = value['AcquisitionEra']+'-'+value['ProcessingString']+"-v\\d+"
+                #see if any of the dataset names is a match
+                for ds in datasets:
+                    if re.match(processedName,ds['processed_ds_name']):
+                        print "Existing dset:", ds['dataset'], "(%s)"%ds['dataset_access_type']
+                        maxv = max(maxv, ds['processing_version'])
+                        exist = True
+                    else:
+                        pass
+                i += 1
+        #suggest max version
+        if exist and procversion <= maxv:
+            print "Some output datasets exist, its advised to assign with v ==", maxv + 1
+            sys.exit(0)
 
     # If the --test argument was provided, then just print the information gathered so far and abort the assignment
     if options.test:
