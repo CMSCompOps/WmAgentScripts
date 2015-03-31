@@ -29,11 +29,44 @@ curs.execute("use "+dbname+";")
 curs.execute("select * from clone_reinsert_requests;")
 requests_rows=curs.fetchall()
 
+colnames = [desc[0] for desc in curs.description]
+
 for requests_row in requests_rows:
     print requests_row
-    batchid=requests_row[0]
-    newsite=requests_row[1]
-    newprocessingversion=requests_row[2]
+
+    for name, value in zip(colnames, requests_row):
+        if name == "batch_id":
+            batchid=value
+        elif name == "new_site":
+            site=value
+        elif name == "new_processing_version":
+            proc_ver=value
+
+    now=datetime.datetime.now()
+
+    useridyear=now.strftime("%Y")
+    useridmonth=now.strftime("%m")
+    useridday=now.strftime("%d")
+
+    #the batch id of the new batch should be 1 more than any existing batch id
+    curs.execute("select MAX(useridnum) from batches where useridyear=\""+useridyear+"\" and useridmonth=\""+useridmonth+"\" and useridday=\""+useridday+"\";")
+    max_user_num_batches=curs.fetchall()[0][0]
+    curs.execute("select MAX(useridnum) from batches_archive where useridyear=\""+useridyear+"\" and useridmonth=\""+useridmonth+"\" and useridday=\""+useridday+"\";")
+
+    max_user_num_batches_archive=curs.fetchall()[0][0]
+
+    if max_user_num_batches == None and max_user_num_batches_archive == None:
+        usernum=0
+    elif max_user_num_batches == None and max_user_num_batches_archive != None:
+        usernum=max_user_num_batches_archive+1
+    elif max_user_num_batches != None and max_user_num_batches_archive == None:
+        usernum=max_user_num_batches+1
+    else:
+        usernum=max(max_user_num_batches,max_user_num_batches_archive)+1
+
+
+    useridnum=usernum            
+
     curs.execute("select * from workflows where batch_id = \""+ str(batchid)+"\";")
     workflows_rows=curs.fetchall()
     curs.execute("select * from workflows_archive where batch_id = \""+ str(batchid)+"\";")
@@ -56,8 +89,13 @@ for requests_row in requests_rows:
         return_string=os.popen("python2.6 resubmitTaskChain.py "+workflow).read()
         workflows.append(return_string.split(' ')[len(return_string.split(' ')) - 1].rstrip('\n'))
 
+    print "finished cloning the workflows in batch "+str(batchid)
+
     curs.execute("select * from batches where batch_id = \""+ str(batchid)+"\";")
     batches_rows=curs.fetchall()
+
+    batchescolnames = [desc[0] for desc in curs.description]
+
     curs.execute("select * from batches_archive where batch_id = \""+ str(batchid)+"\";")
     batches_archive_rows=curs.fetchall()
     if len(batches_rows) + len(batches_archive_rows) != 1:
@@ -66,19 +104,13 @@ for requests_row in requests_rows:
     if len(batches_archive_rows)  == 1:
         batches_rows = batches_archive_rows
 
-    hnrequest=batches_rows[0][1]
-    email_title=batches_rows[0][3]
-    stats_file=batches_rows[0][4]
-    description=batches_rows[0][2]
-    proc_ver=newprocessingversion
-    site=newsite
-
-    print "hnrequest = "+hnrequest
-    print "email_title = "+email_title
-    print "stats_file = "+stats_file
-    print "description = "+description
-    print "proc_ver = "+str(proc_ver)
-    print "site = "+site
+    for name, value in zip(batchescolnames, batches_rows[0]):
+        if name == "DN":
+            DN=value
+        if name == "announcement_title":
+            email_title=value
+        if name == "description":
+            description=value
 
     for line in workflows:
         workflow = line.rstrip('\n')
@@ -121,7 +153,7 @@ for requests_row in requests_rows:
 
     #check that the workflow name contains only letters, numbers, '-' and '_' 
     for workflow in workflows:
-        workflow=line.rstrip('\n')
+        workflow=workflow.rstrip('\n')
         for c in workflow:
             if c != 'a' and c != 'b' and c != 'c' and c != 'd' and c != 'e' and c != 'f' and c != 'g' and c != 'h' and c != 'i' and c != 'j' and c != 'k' and c != 'l' and c != 'm' and c != 'n' and c != 'o' and c != 'p' and c != 'q' and c != 'r' and c != 's' and c != 't' and c != 'u' and c != 'v' and c != 'w' and c != 'x' and c != 'y' and c != 'z' and c != 'A' and c != 'B' and c != 'C' and c != 'D' and c != 'E' and c != 'F' and c != 'G' and c != 'H' and c != 'I' and c != 'J' and c != 'K' and c != 'L' and c != 'M' and c != 'N' and c != 'O' and c != 'P' and c != 'Q' and c != 'R' and c != 'S' and c != 'T' and c != 'U' and c != 'V' and c != 'W' and c != 'X' and c != 'Y' and c != 'Z' and c != '0' and c != '1' and c != '2' and c != '3' and c != '4' and c != '5' and c != '6' and c != '7' and c != '8' and c != '9' and c != '_' and c != '-':
                 print "workflow "+workflow+" contains the character "+str(c)+" which is not allowed, exiting"
@@ -143,7 +175,7 @@ for requests_row in requests_rows:
                 
     print "creating a new batch with batch_id = "+str(batchid)
 
-    curs.execute("insert into batches set batch_id="+str(batchid)+", hn_req=\""+hnrequest+"\", announcement_title=\""+email_title+"\", stats_file=\""+stats_file+"\", processing_version="+str(proc_ver)+", site=\""+site+"\", description=\""+description+"\", status=\"inserted\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\"")
+    curs.execute("insert into batches set batch_id="+str(batchid)+", DN=\""+DN+"\", announcement_title=\""+email_title+"\", processing_version="+str(proc_ver)+", site=\""+site+"\", description=\""+description+"\", status=\"approved\", useridyear=\""+useridyear+"\", useridmonth=\""+useridmonth+"\", useridday=\""+useridday+"\", useridnum="+str(useridnum)+", hn_message_id=\"do_not_send_an_acknowledgement_email\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\"")
 
     conn.commit()
 

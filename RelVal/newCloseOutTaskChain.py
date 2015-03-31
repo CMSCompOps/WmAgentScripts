@@ -254,6 +254,7 @@ def main():
     print '-----------------------------------------------------------------------------------------------------------------------------------------------'
 
     for workflow in tooManyEventsOrLumis:
+        os.system('echo '+workflow+' | mail -s \"newCloseOutTaskChain.py error 1\" andrew.m.levin@vanderbilt.edu')
         print "WARNING (more lumis and/or events --> " + workflow
     f.close
     sys.exit(0)

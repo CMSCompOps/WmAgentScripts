@@ -247,6 +247,7 @@ def main():
 
     #maxrss=2972000
     maxrss=3072000
+    #maxrss=3572000
     if options.high_memory:
         maxrss=4972000
 

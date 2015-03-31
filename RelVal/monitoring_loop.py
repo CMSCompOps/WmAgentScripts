@@ -92,7 +92,7 @@ while True:
             if 'error' in s['rows'][0] and s['rows'][0]['error'] == 'not_found':
                 os.system('echo '+wf[0]+' | mail -s \"monitoring.py error 2\" andrew.m.levin@vanderbilt.edu --')
                 continue    
-            
+
             for status in s['rows'][0]['doc']['request_status']:
                 if status['status'] == "completed":
                     n_completed=n_completed+1
@@ -105,6 +105,9 @@ while True:
 
         print "    n_workflows = " + str(n_workflows)
         print "    n_completed = " + str(n_completed)
+        print ""
+        print ""
+        
 
     sys.stdout.flush()    
     os.system("cp relval_monitor.txt /afs/cern.ch/user/r/relval/webpage/relval_monitor.txt")

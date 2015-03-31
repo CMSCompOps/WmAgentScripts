@@ -69,37 +69,39 @@ while True:
 
             conn.commit()
 
-            msg = MIMEMultipart()
-            reply_to = []
-            #send_to = ["andrew.m.levin@vanderbilt.edu"]
-            send_to = ["hn-cms-dataopsrequests@cern.ch","andrew.m.levin@vanderbilt.edu"]
-            #send_to = ["hn-cms-hnTest@cern.ch"]
+            if hn_message_id != "do_not_send_an_acknowledgement_email":
 
-            msg['In-Reply-To'] = hn_message_id
-            msg['References'] = hn_message_id
+                msg = MIMEMultipart()
+                reply_to = []
+                #send_to = ["andrew.m.levin@vanderbilt.edu"]
+                send_to = ["hn-cms-dataopsrequests@cern.ch","andrew.m.levin@vanderbilt.edu"]
+                #send_to = ["hn-cms-hnTest@cern.ch"]
 
-            msg['From'] = "amlevin@mit.edu"
-            msg['reply-to'] = COMMASPACE.join(reply_to)
-            msg['To'] = COMMASPACE.join(send_to)
-            msg['Date'] = formatdate(localtime=True)
-            msg['Subject'] = title
-            msg['Message-ID'] = email.Utils.make_msgid()
+                msg['In-Reply-To'] = hn_message_id
+                msg['References'] = hn_message_id
+
+                msg['From'] = "amlevin@mit.edu"
+                msg['reply-to'] = COMMASPACE.join(reply_to)
+                msg['To'] = COMMASPACE.join(send_to)
+                msg['Date'] = formatdate(localtime=True)
+                msg['Subject'] = title
+                msg['Message-ID'] = email.Utils.make_msgid()
     
 
-            messageText="Dear all,\n"
-            messageText=messageText+"\n"
-            messageText=messageText+"This batch has been assigned.\n"
-            messageText=messageText+"\n"
-            messageText=messageText+"RelVal Batch Manager"
+                messageText="Dear all,\n"
+                messageText=messageText+"\n"
+                messageText=messageText+"This batch has been assigned.\n"
+                messageText=messageText+"\n"
+                messageText=messageText+"RelVal Batch Manager"
 
-            try:
-                msg.attach(MIMEText(messageText))
-                smtpObj = smtplib.SMTP()
-                smtpObj.connect()
-                smtpObj.sendmail("amlevin@mit.edu", send_to, msg.as_string())
-                smtpObj.close()
-            except Exception as e:
-                print "Error: unable to send email: %s" %(str(e))
+                try:
+                    msg.attach(MIMEText(messageText))
+                    smtpObj = smtplib.SMTP()
+                    smtpObj.connect()
+                    smtpObj.sendmail("amlevin@mit.edu", send_to, msg.as_string())
+                    smtpObj.close()
+                except Exception as e:
+                    print "Error: unable to send email: %s" %(str(e))
 
 
     time.sleep(100)

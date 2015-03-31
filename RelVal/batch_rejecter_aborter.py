@@ -19,10 +19,10 @@ if not options.correct_env:
 
 dbname = "relval"
 
-conn = MySQLdb.connect(host='dbod-altest1.cern.ch', user='relval', passwd="relval", port=5505)
+mysqlconn = MySQLdb.connect(host='dbod-altest1.cern.ch', user='relval', passwd="relval", port=5505)
 #conn = MySQLdb.connect(host='localhost', user='relval', passwd="relval")
 
-curs = conn.cursor()
+curs = mysqlconn.cursor()
 
 curs.execute("use "+dbname+";")
 
@@ -69,7 +69,7 @@ for batches_row in batches_rows:
     print batchid    
     curs.execute("update batches set status=\"not_announced\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where batch_id = "+str(batchid) +";")
 
-    conn.commit()
+    mysqlconn.commit()
 
     curs.execute("select * from batches where batch_id = \""+ str(batchid)+"\";")
     updated_batches_rows=curs.fetchall()
@@ -90,4 +90,4 @@ for batches_row in batches_rows:
     curs.execute("delete from workflows where batch_id = \""+ str(batchid)+"\";")
     curs.execute("delete from batches where batch_id = \""+ str(batchid)+"\";")
 
-    conn.commit()
+    mysqlconn.commit()

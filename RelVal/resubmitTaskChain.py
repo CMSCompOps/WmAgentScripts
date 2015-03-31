@@ -37,6 +37,7 @@ def approveRequest(url,workflow):
         data = response.read()
         print data
         print "Exiting!"
+        os.system('echo '+data+' | mail -s \"resubmitTaskChain.py error 2\" andrew.m.levin@vanderbilt.edu --')
         sys.exit(1)
     conn.close()
     print 'Cloned workflow:',workflow
@@ -109,9 +110,12 @@ def submitWorkflow(schema):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     conn.request("POST",  "/reqmgr/create/makeSchema", encodedParams, headers)
     response = conn.getresponse()
+
     print response.status, response.reason
     data = response.read()
     print data
+    if response.status != 303:
+        os.system('echo '+data+' | mail -s \"resubmitTaskChain.py error 1\" andrew.m.levin@vanderbilt.edu --')
     details=re.search("details\/(.*)\'",data)
     return details.group(1)
 

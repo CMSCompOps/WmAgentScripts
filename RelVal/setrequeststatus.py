@@ -62,6 +62,7 @@ def main():
 #        print "Set %s from %s to %s" % (workflow,getStatus(url, workflow),newstatus)
         setStatus(url, workflow, newstatus)
         print "Final status is: %s"  % getStatus(url, workflow)
+
     f.close
 
 if __name__ == "__main__":
