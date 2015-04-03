@@ -17,13 +17,10 @@ import math
 
 eras = ['Summer11','Summer12']
 tftiers = ['GEN-SIM','GEN-SIM-RECO','DQM','AODSIM']
-#tftiers = ['GEN-SIM','GEN-SIM-RECO','DQM','AODSIM','GEN-SIM-DIGI-RECO']
 dashost = 'https://cmsweb.cern.ch'
-reqmgrsocket='vocms204.cern.ch'
-typelist = ['MonteCarlo','MonteCarloFromGEN','ReReco','ReDigi','LHEStepZero']
+typelist = ['MonteCarlo','MonteCarloFromGEN','ReReco','ReDigi','LHEStepZero','TaskChain']
 statuslist = ['assignment-approved','acquired','running','completed','closed-out','announced']
-#cachedoverview = '/tmp/' + os.environ['USER'] + '/overview.cache'
-cachedoverview = '/afs/cern.ch/user/s/spinoso/public/overview.cache'
+cachedoverview = '/afs/cern.ch/user/c/cmst2/public/overview.cache'
 forceoverview = 0
 sum = {}
 sum['events'] = {'PRODUCTION':0,'VALID':0,'INVALID':0}
@@ -126,6 +123,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 	prepid = ''
 	globaltag = ''
 	sites = []
+	custodialsites = []
 	events_per_job = 0
 	lumis_per_job = 0
 	acquisitionEra = None
@@ -161,7 +159,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 		elif '.events_per_job' in raw:
 			a = raw.find(" =")
 			b = raw.find('<br')
-			events_per_job = int(raw[a+3:b])
+			events_per_job = int(float(raw[a+3:b]))
 		elif 'SizePerEvent' in raw:
                         a = raw.find("'")
                         if a >= 0:
@@ -171,6 +169,9 @@ def getWorkflowInfo(workflow,nodbs=0):
                                 a = raw.find(" =")
                                 b = raw.find('<br')
                                 sizeev = int(float(raw[a+3:b]))
+                elif '.custodialSites' in raw and not '[]' in raw:
+                        custodialsites = '['+raw[raw.find("[")+1:raw.find("]")]+']'
+                        custodialsites = eval(custodialsites)
 		elif 'TimePerEvent' in raw:
                         a = raw.find("'")
                         if a >= 0:
@@ -213,11 +214,6 @@ def getWorkflowInfo(workflow,nodbs=0):
 		elif 'request.schema.GlobalTag' in raw:
 			globaltag = raw[raw.find("'")+1:]
 			globaltag = globaltag[0:globaltag.find(":")]
-	custodialt1 = '?'
-	for i in sites:
-		if 'T1_' in i:
-			custodialt1 = i
-			break
 
 	conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 	r1=conn.request('GET','/reqmgr/reqMgr/request?requestName=' + workflow)
@@ -270,11 +266,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 		if nodbs:
 			[inputdataset['events'],inputdataset['status']] = [0,'']
 		else:
-			[inputdataset['events'],inputdataset['status'],inputdataset['createts'],inputdataset['lastmodts']] = getdsdetail(inputdataset['name'])
-		if nodbs:
-			inputdataset['lumicount'] = 0
-		else:
-			inputdataset['lumicount'] = dbs_get_lumicount(inputdataset['name'])
+			[inputdataset['events'],inputdataset['status'],inputdataset['createts'],inputdataset['lastmodts'],inputdataset['lumicount']] = getdsdetail(inputdataset['name'])
 		try:
 			expectedjobs = inputdataset['lumicount']/lumis_per_job
 		except:
@@ -331,7 +323,7 @@ def getWorkflowInfo(workflow,nodbs=0):
 			if nodbs:
 				[oe,ost,ocreatets,olastmodts] = [0,'',0,0]
 			else:
-				[oe,ost,ocreatets,olastmodts] = getdsdetail(o)
+				[oe,ost,ocreatets,olastmodts,lumicount] = getdsdetail(o)
 			oel['events'] = oe
 			oel['status'] = ost
 			oel['createts'] = ocreatets
@@ -395,8 +387,13 @@ def getWorkflowInfo(workflow,nodbs=0):
 			outputdataset.append(oel)
 		eventsdone = eventsdone + oe
 
+        t2zone = {'T1_TW_ASGC':'ASGC','T1_IT_CNAF':'CNAF','T1_DE_KIT':'KIT','T1_FR_CCIN2P3':'IN2P3','T1_ES_PIC':'PIC','T1_UK_RAL':'RAL','T1_US_FNAL':'FNAL'}
+        try:
+                zone = t2zone[custodialsites[0]]
+        except:
+                zone = '?'
 	remainingcpuhours = timeev*(expectedevents-eventsdone)/3600
-	return {'requestname':workflow,'filtereff':filtereff,'type':type,'campaign':campaign,'status':status,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'sizeev':sizeev,'priority':priority,'sites':sites,'custodialt1':custodialt1,'zone':getzonebyt1(custodialt1),'js':j,'outputdataset':outputdataset,'cpuhours':cpuhours,'etah':math.ceil(etah*10)/10,'remainingcpuhours':remainingcpuhours,'team':team,'acquisitionEra':acquisitionEra,'requestdays':requestdays,'processingVersion':processingVersion,'events_per_job':events_per_job,'lumis_per_job':lumis_per_job,'expectedjobs':expectedjobs,'expectedjobcpuhours':expectedjobcpuhours,'cmssw':cmssw,'expectedtotalsize':expectedtotalsize}
+	return {'requestname':workflow,'filtereff':filtereff,'type':type,'campaign':campaign,'status':status,'expectedevents':expectedevents,'inputdataset':inputdataset,'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,'sizeev':sizeev,'priority':priority,'sites':sites,'custodialsites':custodialsites,'zone':zone,'js':j,'outputdataset':outputdataset,'cpuhours':cpuhours,'etah':math.ceil(etah*10)/10,'remainingcpuhours':remainingcpuhours,'team':team,'acquisitionEra':acquisitionEra,'requestdays':requestdays,'processingVersion':processingVersion,'events_per_job':events_per_job,'lumis_per_job':lumis_per_job,'expectedjobs':expectedjobs,'expectedjobcpuhours':expectedjobcpuhours,'cmssw':cmssw,'expectedtotalsize':expectedtotalsize}
 
 def getpriorities(reqinfo):
 	priorities = []
@@ -429,7 +426,7 @@ def getoverview():
                 s = eval(d)
         return s
 
-def getnewoverview():
+def getnewoverview_DEPREC():
 	global cachedoverview
 	c = 0
 	while c < 10:
@@ -458,43 +455,71 @@ def getnewoverview():
 
 
 def getdsdetail(dataset):
-	[e,st,createts,lastmodts] = dbs_get_data(dataset)
+	#[e,st,createts,lastmodts] = das_get_data(dataset,timestamps)
+	[e,st,createts,lastmodts,lumicount] = dbs3_get_data(dataset)
 	if e == -1:
-		return [0,'',0,0]
+		return [0,'',0,0,0]
 	else:
-		return [e,st,createts,lastmodts]
+		return [e,st,createts,lastmodts,lumicount]
 
-def dbs_get_lumicount(dataset):
-	q = "/afs/cern.ch/user/s/spinoso/public/dbssql --input='find count(lumi) where dataset="+dataset+"'"
-	output=os.popen(q+ "|awk -F \"'\" '/count_lumi/{print $4}'").read()
-	ret = output.split(' ')
-	try:
-		lc = ret[0].rstrip()
-	except:
-		lc = 0
-	return int(lc)
+def das_get_data(dataset,timestamps=1):
+        q = 'python26 /afs/cern.ch/user/c/cmst2/mc/external/das_cli.py --query "dataset dataset=%s|grep dataset.status,dataset.nevents" --format=json' % dataset
+        output=os.popen(q).read()
+        output = output.rstrip()
+        if output == '' or output == '[]' or (type(output) == dict and 'status' in output.keys() and output['status']=='fail'):
+                return [0, '', 0, 0] # dataset is not in DBS
+        tmp = eval(output)
+        if tmp:
+                if 'dataset' in tmp[0].keys():
+                        for i in tmp[0]['dataset']:
+                                if i:
+                                        break
+                        events = i['nevents']
+                        status = i['status']
+        createts = 0
+        lastmodts = 0
+        if timestamps:
+                q = 'python26 /afs/cern.ch/user/c/cmst2/mc/external/das_cli.py --query "block dataset=%s | min(block.creation_time),max(block.modification_time)"|grep "(block"' % dataset
+                output=os.popen(q).read()
+                output = output.rstrip()
+                lines = output.split('\n')
+                for line in lines:
+                        if 'min' in line:
+                                createts = int(line.split('=')[1])
+                        elif 'max' in line:
+                                lastmodts = int(line.split('=')[1])
+        ret = [int(events),status,int(createts),int(lastmodts)]
+        return ret
 
-def dbs_get_data(dataset):
-	q = "/afs/cern.ch/user/s/spinoso/public/dbssql --input='find sum(block.numevents),dataset.status,dataset.createdate,max(block.moddate) where dataset="+dataset+"'"
-	output=os.popen(q+ "|grep '[0-9]\{1,\}'").read()
-	ret = output.split(' ')
+
+def dbs3_get_data(dataset):
+	q = "/afs/cern.ch/user/c/cmst2/mc/scripts/dbs3wrapper.sh /afs/cern.ch/user/c/cmst2/mc/scripts/datasetinfo.py --dataset %s --json" % dataset
+	#print q
+	output=os.popen(q).read()
+	#print ">%s<" % output
+	s = json.loads(output)
 	try:
-		e = int(ret[0])
+		e = s['num_event']
 	except:
 		e = 0
 	try:
-		st = ret[1].rstrip()
+		st = s['dataset_access_type']
 	except:
 		st = ''
 	try:
-		createts = int(ret[2])
+		createts = s['creation_date']
 	except:
 		createts = 0
 	try:
-		lastmodts = int(ret[3])
+		lastmodts = s['last_modification_date']
 	except:
 		lastmodts = 0
-	return [int(e),st,createts,lastmodts]
+	try:
+		num_lumi = s['num_lumi']
+	except:
+		num_lumi = 0
+
+	return [e,st,createts,lastmodts,num_lumi]
 
 def getacqera(r):
 	prepid = r['prepid']
@@ -506,7 +531,6 @@ def main():
 	viewchoices = ['names','all','production','dataset','run','assignment']
 	parser = optparse.OptionParser()
 	parser.add_option('-l', '--listfile', help='analyze workflows listed in textfile',dest='list')
-	parser.add_option('-f', '--force-overview-update', help='force overview update',dest='forceoverview',action="store_true")
 	parser.add_option('-m', help='print a brief report at the end',dest='mreport',action="store_true")
 	parser.add_option('-w', '--workflow', help='analyze specific workflow',dest='wf')
 	parser.add_option('-p', '--prepid', help='analyze workflow with PREPID',dest='prepid')
@@ -517,7 +541,6 @@ def main():
 	parser.add_option('--summary', help='print summary',dest='summary',action="store_true")
 	parser.add_option('--csv', help='print all information about the requests in CSV format',dest='csv',action="store_true")
 	parser.add_option('-x', '--export', help='export all information about the requests in JSON format',dest='json',action="store_true")
-	parser.add_option('-g', '--assignment', help='returns a list of asignment-approved requests for a given number of CPU hours',dest='assignment',action="store_true")
 	parser.add_option('-d', '--datasets', help='print just output datasets',dest='datasets',action="store_true")
 	parser.add_option('-b', '--no-dbs', help='don\'t contact DBS (faster)',dest='nodbs',action="store_true")
 	parser.add_option('-j', '--jobs', help='print just information useful in workflow management context',dest='jobs',action="store_true")
@@ -526,16 +549,10 @@ def main():
 
 	(options,args) = parser.parse_args()
 
-	if options.forceoverview:
-		forceoverview = 1
-	else:
-		forceoverview = 0
 	overview = getoverview()
 
 	if options.wf:
 		list = [options.wf]
-	elif options.assignment:
-		list = getRequestsByTypeStatus(['MonteCarlo','MonteCarloFromGEN','LHEStepZero'],'assignment-approved')
 	elif options.list:
 		list2 = open(options.list).read().splitlines()
 		list = []
@@ -595,7 +612,7 @@ def main():
 			addToSummary(reqinfo[w])
 			#sys.stderr.write ("%s\n" % (w))
 			for o in reqinfo[w]['outputdataset']:
-				sys.stdout.write ("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % (o['name'],o['events'],reqinfo[w]['expectedevents'],reqinfo[w]['prepid'],w,reqinfo[w]['priority'],reqinfo[w]['type'],reqinfo[w]['status'],reqinfo[w]['requestdays'],reqinfo[w]['custodialt1'],reqinfo[w]['cpuhours'],reqinfo[w]['team']))
+				sys.stdout.write ("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % (o['name'],o['events'],reqinfo[w]['expectedevents'],reqinfo[w]['prepid'],w,reqinfo[w]['priority'],reqinfo[w]['type'],reqinfo[w]['status'],reqinfo[w]['requestdays'],reqinfo[w]['custodialsites'][0],reqinfo[w]['cpuhours'],reqinfo[w]['team']))
 	elif options.tapefamilies:
 		expectedbatchsize = 0
 		print
@@ -615,31 +632,6 @@ def main():
 		print "Total expected size for GEN-SIM: %s(GB)" % expectedbatchsize
 		print 
         	#print "PREPIDs: "+" ".join(reqinfo[x]['prepid'] for x in reqinfo.keys())
-	elif options.assignment:
-		aalist = []
-		for w in list:
-			print "%s" % w
-			r = getWorkflowInfo(w,nodbs=nodbs)
-			aalist.append(r)
-		for i in range(0,len(aalist)-1):
-			for j in range(i+1,len(aalist)):
-				if aalist[i]['priority'] < aalist[j]['priority']:
-					aalist[j],aalist[i] = aalist[i],aalist[j]
-				elif aalist[i]['priority'] == aalist[j]['priority'] and aalist[i]['requestdays'] < aalist[j]['requestdays']:
-					aalist[j],aalist[i] = aalist[i],aalist[j]
-				elif aalist[i]['priority'] == aalist[j]['priority'] and aalist[i]['requestdays'] == aalist[j]['requestdays'] and aalist[i]['expectedevents'] > aalist[j]['expectedevents']:
-					aalist[j],aalist[i] = aalist[i],aalist[j]
-		acc = 0
-		i = 0
-		print
-		while (i<len(aalist)-1):
-			#print "%s %s %s %s %s" % (i,aalist[i]['requestname'],aalist[i]['priority'],aalist[i]['requestdays'],aalist[i]['expectedevents'])
-			oldacc = acc
-			acc = acc + aalist[i]['cpuhours']
-			print "%s %s prio=%s reqdays=%s evts=%s slots=%s cpuh=%s cumCPUH=%s+%s=%s" % (aalist[i]['requestname'],aalist[i]['type'],aalist[i]['priority'],aalist[i]['requestdays'],aalist[i]['expectedevents'],'?',aalist[i]['cpuhours'],oldacc,aalist[i]['cpuhours'],acc)
-			i = i + 1
-		print
-		sys.exit(0)
 	elif options.datasets:
 		for workflow in list:
 			conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -676,7 +668,7 @@ def main():
 			print "%s (%s,%s,%s at %s)" % (w,reqinfo[w]['prepid'],reqinfo[w]['type'],reqinfo[w]['status'],reqinfo[w]['zone'])
 			r = reqinfo[w]['js']
 			
-			print " ExpectedJobs: %s CPUHours: %s Jobs: Q:%s C:%s P:%s R:%s S:%s F:%s T:%s\n Priority: %s Team: %s Timeev: %s Sizeev: %s Hours/job: %s ExpectedEvts/job: %s\n FilterEff: %s %s Lumis/Job: %s GlobalTag: %s" % (reqinfo[w]['expectedjobs'],reqinfo[w]['cpuhours'],r['queued'],r['cooloff'],r['pending'],r['running'],r['success'],r['failure'],r['total_jobs'],reqinfo[w]['priority'],reqinfo[w]['team'],reqinfo[w]['timeev'],reqinfo[w]['sizeev'],reqinfo[w]['expectedjobcpuhours'],reqinfo[w]['events_per_job']*reqinfo[w]['filtereff'],reqinfo[w]['filtereff'],reqinfo[w]['cmssw'],reqinfo[w]['lumis_per_job'],reqinfo[w]['globaltag'])
+			print " Days: %s ExpectedJobs: %s CPUHours: %s Jobs: Q:%s C:%s P:%s R:%s S:%s F:%s T:%s\n Priority: %s Team: %s Timeev: %s Sizeev: %s Hours/job: %s ExpectedEvts/job: %s\n FilterEff: %s %s Lumis/Job: %s GlobalTag: %s" % (reqinfo[w]['requestdays'],reqinfo[w]['expectedjobs'],reqinfo[w]['cpuhours'],r['queued'],r['cooloff'],r['pending'],r['running'],r['success'],r['failure'],r['total_jobs'],reqinfo[w]['priority'],reqinfo[w]['team'],reqinfo[w]['timeev'],reqinfo[w]['sizeev'],reqinfo[w]['expectedjobcpuhours'],reqinfo[w]['events_per_job']*reqinfo[w]['filtereff'],reqinfo[w]['filtereff'],reqinfo[w]['cmssw'],reqinfo[w]['lumis_per_job'],reqinfo[w]['globaltag'])
 			for o in reqinfo[w]['outputdataset']:
 				try:
 					oo = 100*o['events']/reqinfo[w]['expectedevents']

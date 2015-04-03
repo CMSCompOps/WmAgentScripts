@@ -1,11 +1,103 @@
 #!/usr/bin/env python
-import urllib2,urllib, httplib, sys, re, os, json
+import urllib2, urllib, httplib, sys, re, os, time, json
 import optparse
 import reqMgrClient
+import phedexClient
 from dbs.apis.dbsClient import DbsApi
 from changePriorityWorkflow import changePriorityWorkflow
+from utils import workflowInfo
 
 dbs3_url = r'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
+
+def getCampaign(url, workflow):
+        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+        r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
+        r2=conn.getresponse()
+        request = json.loads(r2.read())
+        if 'Campaign' in request:
+           campaign=request['Campaign']
+           return campaign
+        return 'None'
+
+def getWorkflows(url):
+   conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+   r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/bystatusandtype?stale=update_after')
+   r2=conn.getresponse()
+   data = json.loads(r2.read())
+   items = data['rows']
+
+   workflows = []
+   for item in items:
+      if 'assignment-approved' in item['key'] and 'ReDigi' in item['key']:
+         workflows.append(item['key'][0])
+
+   return workflows
+
+def getReplicaFileCount(site,datasetName):
+        url = 'https://cmsweb.cern.ch/phedex/datasvc/json/prod/blockreplicas?dataset=' + datasetName+'&node='+site
+        result = json.loads(urllib2.urlopen(url).read())
+        blocks=result['phedex']['block']
+        cnt=0
+        if blocks:
+           for block in blocks:
+              if 'files' in block:
+                 cnt = cnt + int(block['files'])
+        return cnt
+
+def getFileCount(dataset):
+        # initialize API to DBS3
+        dbsapi = DbsApi(url=dbs3_url)
+        # retrieve dataset summary
+        reply = dbsapi.listBlockSummaries(dataset=dataset,detail=True)
+        cnt=0
+        for block in reply:
+           cnt = cnt + int(block['num_file'])
+        return cnt
+
+def getSizeAtSite(site, dataset):
+        actualFiles = getFileCount(dataset)
+        haveFiles = getReplicaFileCount(site, dataset)
+        if actualFiles > 0:
+           return 100.0*float(haveFiles)/float(actualFiles)
+        return 0
+
+def getSiteWithMostInput(dataset, threshold):
+        sites = phedexClient.getBlockReplicaSites(dataset)
+        for site in sites:
+           if 'MSS' not in site and 'Export' not in site and 'Buffer' not in site and 'EC2' not in site and 'CERN' not in site and (('T1' in site and 'AODSIM' not in dataset) or 'AODSIM' in dataset):
+              completion = getSizeAtSite(site, dataset)
+              if (completion == 100.0 or completion > threshold):
+                 site = site.replace('_Disk', '')
+                 return [site, completion]
+        return ['None', 0]
+
+def changeSplitting(url, workflow, eventsPerJob):
+        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+        params = {"requestName":workflow,"splittingTask" : '/'+workflow+"/StepOneProc", "splittingAlgo":"EventBased", "lumits_per_job":"", "timeout":"", "include_parents":"False", "files_per_job":"",'halt_job_on_file_boundaries':'True','events_per_job':str(eventsPerJob)}
+        headers={"Content-type": "application/x-www-form-urlencoded",
+             "Accept": "text/plain"}
+        encodedParams = urllib.urlencode(params)
+        conn.request("POST", "/reqmgr/view/handleSplittingPage", encodedParams, headers)
+        response = conn.getresponse()   
+        print response.status, response.reason
+        data = response.read()
+        print data
+        conn.close()
+        return
+
+def getLFNbase(url, dataset):
+        # initialize API to DBS3
+        dbsapi = DbsApi(url=dbs3_url)
+        # retrieve file
+        reply = dbsapi.listFiles(dataset=dataset)
+        file = reply[0]['logical_file_name']
+        # determine lfn
+        lfn = '/store/mc'
+        if '/store/himc' in file:
+           lfn = '/store/himc'
+        if '/store/data' in file:
+           lfn = '/store/data'
+        return lfn
 
 def checkAcceptedSubscriptionRequest(url, dataset, site):
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -18,11 +110,11 @@ def checkAcceptedSubscriptionRequest(url, dataset, site):
         ourNode=False
         otherNode=False
         for request in result['phedex']['request']:
-                for node in request['node']:
-                        if node['name']==site and node['decision']=='approved':
-                                ourNode=True
-                        elif 'Disk' in node['name'] and node['decision']=='approved':
-                                otherNode=True
+           for node in request['node']:
+              if node['name']==site and node['decision']=='approved':
+                 ourNode=True
+              elif 'Disk' in node['name'] and node['decision']=='approved':
+                 otherNode=True
         return[ourNode, otherNode]
 
 def getDatasetStatus(dataset):
@@ -39,12 +131,12 @@ def getDatasets(dataset):
         reply = dbsapi.listDatasets(dataset=dataset,dataset_access_type='*')
         return reply
 
-def getDatasetVersion(url, workflow, era, partialProcVersion):
+def getDatasetVersion(url, workflow, era, procstring):
         versionNum = 1
         outputs = reqMgrClient.outputdatasetsWorkflow(url, workflow)
         for output in outputs:
            bits = output.split('/')
-           outputCheck = '/'+bits[1]+'/'+era+'-'+partialProcVersion+'*/'+bits[len(bits)-1]
+           outputCheck = '/'+bits[1]+'/'+era+'-'+procstring+'*/'+bits[len(bits)-1]
 
            datasets = getDatasets(outputCheck)
            for dataset in datasets:
@@ -57,77 +149,11 @@ def getDatasetVersion(url, workflow, era, partialProcVersion):
 
         return versionNum
 
-def getScenario(ps):
-        pss = 'Unknown'
-
-        if ps == 'SimGeneral.MixingModule.mix_E8TeV_AVE_16_BX_25ns_cfi':
-           pss = 'PU140Bx25'
-        if ps == 'SimGeneral.MixingModule.mix_2012_Summer_50ns_PoissonOOTPU_cfi':
-           pss = 'PU_S10'
-        if ps == 'SimGeneral.MixingModule.mix_E7TeV_Fall2011_Reprocess_50ns_PoissonOOTPU_cfi':
-           pss = 'PU_S6'
-        if ps == 'SimGeneral.MixingModule.mix_E8TeV_AVE_10_BX_25ns_300ns_spread_cfi':
-           pss = 'PU10bx25'
-        if ps == 'SimGeneral.MixingModule.mix_E8TeV_AVE_10_BX_50ns_300ns_spread_cfi':
-           pss = 'PU10bx50'
-        if ps == 'SimGeneral.MixingModule.mix_2011_FinalDist_OOTPU_cfi':
-           pss = 'PU_S13'	
-        if ps == 'SimGeneral.MixingModule.mix_fromDB_cfi':
-           pss = 'PU_RD1'
-        if ps == 'SimGeneral.MixingModule.mix_2012C_Profile_PoissonOOTPU_cfi':
-           pss = 'PU2012CExt'
-        if ps == 'SimGeneral.MixingModule.mixNoPU_cfi':
-           pss = 'NoPileUp'
-        if ps == 'SimGeneral.MixingModule.mix_POISSON_average_cfi':
-           pss = 'PU'
-        if ps == 'SimGeneral.MixingModule.mix_CSA14_50ns_PoissonOOTPU_cfi':
-           pss = 'PU_S14'
-        if ps == 'SimGeneral.MixingModule.mix_flat_0_10_cfi':
-           pss = 'Flat0to10'
-        if ps == 'SimGeneral.MixingModule.mix_Flat_20_50_cfi':
-           pss = 'Flat20to50'
-
-        return pss
-        
-def getProcDSMiddlePiece(dataset):
-        dsPieces=dataset.split('/')
-        procdsPieces=dsPieces[2].split('-')
-        sep="-"
-        return sep.join(procdsPieces[1:len(procdsPieces)-1])
-
 def getPileupDataset(url, workflow):
-        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-        r1=conn.request("GET",'/reqmgr/view/showWorkload?requestName='+workflow)
-        r2=conn.getresponse()
-        workload=r2.read()
-        list = workload.split('\n')
-
-        pileupDataset = 'None'
-
-        for line in list:
-           if 'request.schema.MCPileup' in line:
-              #pileupDataset = line[line.find("=")+1:line.find("<br/")]
-              pileupDataset = line[line.find("'")+1:line.find("'",line.find("'")+1)]
-
-        return pileupDataset
-
+	return workflowInfo( url,workflow).getPileupDataset()
 
 def getPriority(url, workflow): 
-        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-        r1=conn.request("GET",'/reqmgr/view/showWorkload?requestName='+workflow)
-        r2=conn.getresponse()
-        workload=r2.read()
-        list = workload.split('\n')
-              
-        priority = -1 
-        
-        for line in list:
-           if 'request.schema.RequestPriority' in line:
-              priority = line[line.find("=")+1:line.find("<br/")]
-
-        priority = priority.strip()
-        priority = re.sub(r'\'', '', priority)
-        return priority
+	return workflowInfo( url,workflow).getPriority()
 
 def findCustodialLocation(url, dataset):
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -144,83 +170,17 @@ def findCustodialLocation(url, dataset):
                         return replica['node']
         return "None"
 
-def getPrepID(url, workflow):
-        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-        r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
-        r2=conn.getresponse()
-        request = json.loads(r2.read())
-        prepID=request['PrepID']
-        return prepID
+def getEra(url, workflow):
+	return workflowInfo( url, workflow).getEra()
 
-def getCampaign(url, workflow):
-        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-        r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
-        r2=conn.getresponse()
-        request = json.loads(r2.read())
-        campaign=request['Campaign']
-        return campaign
+def getCurrentStatus(url, workflow):
+	return workflowInfo( url,workflow).getCurrentStatus()
 
-def getGlobalTag(url, workflow):
-        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-        r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
-        r2=conn.getresponse()
-        request = json.loads(r2.read())
-        globalTag=request['GlobalTag']
-        return globalTag
+def getProcString(url, workflow):
+	return workflowInfo( url,workflow).getProcString()
 
-def getPileupScenario(url, workflow):
-        cacheID = getCacheID(url, workflow)
-        config = getConfig(url, cacheID)
-        [pileup,meanPileUp,bunchSpacing,cmdLineOptions] = getPileup(config)
-        scenario = getScenario(pileup)
-        if scenario == 'PU140Bx25' and meanPileUp != 'Unknown':
-           scenario = 'PU' + meanPileUp + 'bx25'
-        if scenario == 'PU140bx25' and 'Upgrade' in workflow:
-           scenario = 'PU140Bx25'
-        if scenario == 'PU140bx25' and 'Upg14' in workflow:
-           scenario = 'age1k_PU140bx25'
-        if scenario == 'PU':
-           scenario = 'PU' + meanPileUp + 'bx' + bunchSpacing
-           if meanPileUp == 'None' or bunchSpacing == 'None':
-              print 'ERROR: unexpected pileup settings in config'
-              sys.exit(0)
-        if scenario == 'PU_RD1' and cmdLineOptions != 'None':
-           if '--runsAndWeightsForMC [(190482,0.924) , (194270,4.811), (200466,7.21), (207214,7.631)]' in cmdLineOptions:
-              scenario = 'PU_RD2'
-        return scenario
-
-def getPileup(config):
-        pu = 'Unknown'
-        vmeanpu = 'None'
-        bx = 'None'
-        cmdLineOptions = 'None'
-        lines = config.split('\n')
-        for line in lines:
-           if 'process.load' and 'MixingModule' in line:
-              pu = line[line.find("'")+1:line.find("'",line.find("'")+1)]
-           if 'process.mix.input.nbPileupEvents.averageNumber' in line:
-              meanpu = line[line.find("(")+1:line.find(")")].split('.', 1)
-              vmeanpu = meanpu[0]
-           if 'process.mix.bunchspace' in line:
-              bx = line[line.find("(")+1:line.find(")")]
-           if 'with command line options' in line:
-              cmdLineOptions = line
-        return [pu,vmeanpu,bx,cmdLineOptions]
-
-def getCacheID(url, workflow):
-        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-        r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
-        r2=conn.getresponse()
-        request = json.loads(r2.read())
-        cacheID=request['StepOneConfigCacheID']
-        return cacheID
-
-def getConfig(url, cacheID):
-        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-        r1=conn.request("GET",'/couchdb/reqmgr_config_cache/'+cacheID+'/configFile')
-        r2=conn.getresponse()
-        config = r2.read()
-        return config
+def getRequestNumEvents(url, workflow):
+	return workflowInfo( url,workflow).getRequestNumEvents()
 
 def assignRequest(url ,workflow ,team ,site ,era, procversion, procstring, activity, lfn, maxmergeevents, maxRSS, maxVSize, useX, siteCust):
 
@@ -229,9 +189,6 @@ def assignRequest(url ,workflow ,team ,site ,era, procversion, procstring, activ
     else:
        softTimeout = 144000
        
-
-       
-
     params = {"action": "Assign",
               "Team"+team: "checked",
               "SiteWhitelist": site,
@@ -241,6 +198,7 @@ def assignRequest(url ,workflow ,team ,site ,era, procversion, procstring, activ
               "MinMergeSize": 2147483648,
               "MaxMergeSize": 4294967296,
               "CustodialSites": siteCust,
+	      "CustodialSubType" : 'Replica',
               "Priority" : "Normal",
               "SoftTimeout": softTimeout,
               "GracePeriod": 300,
@@ -261,7 +219,6 @@ def assignRequest(url ,workflow ,team ,site ,era, procversion, procstring, activ
        del params["CustodialSites"]
        siteCust='None'        
               
-
     if useX == 1:
        print "- Using xrootd for input dataset"
        params['useSiteListAsLocation'] = "true"
@@ -284,12 +241,10 @@ def assignRequest(url ,workflow ,team ,site ,era, procversion, procstring, activ
         data = response.read()
         print data
         print "Exiting!"
-  	sys.exit(1)
+  	return
     conn.close()
-    print 'Assigned workflow:',workflow,'to site:',site,'custodial site:',siteCust,'acquisition era:',era,'team',team,'processin string:',procstring,'processing version:',procversion,'lfn:',lfn,'maxmergeevents:',maxmergeevents,'maxRSS:',maxRSS,'maxVSize:',maxVSize
+    print 'Assigned workflow:',workflow,'to site:',site,'custodial site:',siteCust,'acquisition era:',era,'team',team,'processing string:',procstring,'processing version:',procversion,'lfn:',lfn
     return
-
-
 
 def main():
 	url='cmsweb.cern.ch'	
@@ -299,30 +254,28 @@ def main():
 	parser.add_option('-t', '--team', help='Type of Requests',dest='team')
 	parser.add_option('-s', '--site', help='Force workflow to run at this site. For HLT/AI just put use HLT.',dest='site')
 	parser.add_option('-k', '--ignore-restrictions', help='Ignore site restrictions',action="store_true",dest='ignoresite')
-	parser.add_option('-u', '--new-priority', help='Change workflow priority to #',dest='newpriority')
+        parser.add_option('-u', '--new-priority', help='Change workflow priority to #',dest='newpriority')
 	parser.add_option('-c', '--custodial', help='Custodial site',dest='siteCust')
 	parser.add_option('-p', '--procstring', help='Process String',dest='inprocstring')
 	parser.add_option('-m', '--procversion', help='Process Version',dest='inprocversion')
-	parser.add_option('-n', '--specialstring', help='Special Process String',dest='specialprocstring')
 	parser.add_option('-e', '--execute', help='Actually assign workflows',action="store_true",dest='execute')
 	parser.add_option('-x', '--restrict', help='Only assign workflows for this site',dest='restrict')
+	parser.add_option('-z', '--threshold', help='Threshold for completeness of input dataset at site',dest='threshold')
 	parser.add_option('-r', '--rssmax', help='Max RSS',dest='maxRSS')
 	parser.add_option('-v', '--vsizemax', help='Max VMem',dest='maxVSize')
-	parser.add_option('-a', '--extension', help='Use _ext special name',dest='extension')
         parser.add_option('-o', '--xrootd', help='Read input using xrootd',action="store_true",dest='xrootd')
         parser.add_option('-i', '--ignore', help='Ignore any errors',action="store_true",dest='ignore')
 	(options,args) = parser.parse_args()
-	if not options.filename and not options.userWorkflow:
-		print "A filename or workflow is required"
-		sys.exit(0)
+
 	activity='reprocessing'
+
         if not options.restrict:
                 restrict='None'
         else:
                 restrict=options.restrict
-        maxRSS = 2300000
+        maxRSS = 2800000
         if not options.maxRSS:
-                maxRSS = 2300000
+                maxRSS = 3000000
         else:
                 maxRSS=options.maxRSS
 	maxRSSdefault = maxRSS
@@ -333,11 +286,6 @@ def main():
                 maxVSize=options.maxVSize
 	filename=options.filename
 
-        if not options.xrootd:
-           useX = 0
-        else:
-           useX = 1
-           
         ignore = 0
         if options.ignore:
            ignore = 1
@@ -352,51 +300,71 @@ def main():
            newpriority=options.newpriority
 
         # Valid Tier-1 sites
-        sites = ['T1_DE_KIT', 'T1_FR_CCIN2P3', 'T1_IT_CNAF', 'T1_ES_PIC', 'T1_TW_ASGC', 'T1_UK_RAL', 'T1_US_FNAL', 'T2_CH_CERN', 'HLT']
+        sites = ['T1_DE_KIT', 'T1_FR_CCIN2P3', 'T1_IT_CNAF', 'T1_ES_PIC', 'T1_TW_ASGC', 'T1_UK_RAL', 'T1_US_FNAL', 'T1_RU_JINR', 'T2_CH_CERN', 'HLT']
+
+        # only assign workflows from these campaigns
+        valids = ['Fall11R1', 'Fall11R2', 'Fall11R4', 'Spring14dr', 'Fall13dr', 'Summer12DR53X', 'pAWinter13DR53X', 'Cosmic70DR', 'HiFall13DR53X', 'Phys14DR', 'Summer11LegDR','Fall14DR', 'Fall14DR73', 'TP2023SHCALDR', '2019GEMUpg14DR', 'HiWinter13DR53X', 'RunIWinter15DR', '2023SHCALUpg14DR']
+
+        # Tier-1s with no tape left, so use CERN instead
+        sitesNoTape = ['T1_RU_JINR']
 
         if options.filename:
-           f=open(filename,'r')
+           f = open(filename,'r')
+        elif options.userWorkflow:
+           f = [options.userWorkflow]
         else:
-           f=[options.userWorkflow]
+           f = getWorkflows(url)
+
+        workflowsNotAssignedInput = []
+        workflowsAssigned = {}
 
         for workflow in f:
            workflow = workflow.rstrip('\n')
+
+           if not options.xrootd:
+              useX = 0
+           else:
+              useX = 1
+
+           # Double check that the workflow really is in assignment-approved
+           currentStatus = getCurrentStatus(url, workflow)
+           if currentStatus != 'assignment-approved':
+              print 'NOTE: Due to workflow status (',currentStatus,') skipping',workflow
+              continue
+
+           # Only automatically assign workflows from specified campaigns
+           campaign = getCampaign(url, workflow)
+           if campaign not in valids and not options.userWorkflow and not options.filename:
+              print 'NOTE: Due to campaign skipping',workflow
+              continue
+
            siteUse=options.site
            if siteUse == 'T2_US':
               siteUse =  ['T2_US_Caltech', 'T2_US_Florida', 'T2_US_MIT', 'T2_US_Nebraska', 'T3_US_Omaha', 'T2_US_Purdue', 'T2_US_UCSD', 'T2_US_Vanderbilt', 'T2_US_Wisconsin']
               if not options.siteCust:
                  print 'ERROR: A custodial site must be specified'
-                 sys.exit(0)
+                 continue
               siteCust = options.siteCust
 
-           team=options.team
-
-           inputDataset = reqMgrClient.getInputDataSet(url, workflow)
-
            # Check status of input dataset
+           inputDataset = reqMgrClient.getInputDataSet(url, workflow)
            inputDatasetStatus = getDatasetStatus(inputDataset)
            if inputDatasetStatus != 'VALID' and inputDatasetStatus != 'PRODUCTION':
-              print 'ERROR: Input dataset is not PRODUCTION or VALID, value is',inputDatasetStatus
-              sys.exit(0)
-
-           if '-ext' in inputDataset and not options.extension:
-              print 'WARNING: Input dataset is an extension and extension option is not specified'
+              print 'ERROR: Unable to assign',workflow,' because input dataset is not PRODUCTION or VALID, value is',inputDatasetStatus
+              continue
 
            if not siteUse or siteUse == 'None':
-              # Determine site where workflow should be run
-              count=0
-              for site in sites:
-                 if site in workflow:
-                    count=count+1
-                    siteUse = site
-
-              # Find custodial location of input dataset if workflow name contains no T1 site or multiple T1 sites
-              if count==0 or count>1:
-                 siteUse = findCustodialLocation(url, inputDataset)
-                 if siteUse == 'None':
-                    print 'ERROR: No custodial site found'
-                    sys.exit(0)
-                 siteUse = siteUse[:-4]
+              # Find site to run workflow if no site specified
+              threshold = 98.0
+              if options.threshold:
+                 threshold = options.threshold
+              [siteUse,completeness] = getSiteWithMostInput(inputDataset, threshold)
+              if siteUse == 'None' or ('T1_' not in siteUse and 'T2_CH_CERN' not in siteUse and campaign != 'Spring14miniaod'):
+                 workflowsNotAssignedInput.append(workflow)
+                 continue
+              if completeness < 100.0:
+                 print 'Input dataset is < 100% complete (',completeness,') so enabling xrootd'
+                 useX = 1
      
            # Set the custodial location if necessary
            if not options.site or options.site != 'T2_US':
@@ -405,339 +373,109 @@ def main():
               else:
                  siteCust = options.siteCust
            if options.site == 'HLT':
-              siteUse = ['T2_CH_CERN_AI', 'T2_CH_CERN_HLT', 'T2_CH_CERN']
-              team = 'hlt'
+              siteUse = ['T2_CH_CERN_HLT', 'T2_CH_CERN']
+
+           # Some sites have no free space on tape, so send the data to CERN
+           if siteUse in sitesNoTape:
+              siteCust = 'T0_CH_CERN'
+
+           # Don't specify a custodial site for miniaod
+           if campaign == 'Spring14miniaod':
+              siteCust = 'None'
 
            # Check if input dataset subscribed to disk endpoint
-           if 'T2_CH_CERN' in siteUse:
-              siteSE = 'T2_CH_CERN'
-           else:
-              siteSE = siteUse + '_Disk'
+           siteSE = siteUse
+           if 'T1' in siteUse:
+              siteSE = siteSE + '_Disk'
            [subscribedOurSite, subscribedOtherSite] = checkAcceptedSubscriptionRequest(url, inputDataset, siteSE)
-           if not subscribedOurSite and not options.xrootd and 'Fall11R2' not in workflow and not ignore:
-              print 'ERROR: input dataset not subscribed/approved to required Disk endpoint'
-              sys.exit(0)
+           if not subscribedOurSite and not options.xrootd and not ignore:
+              print 'ERROR: input dataset not subscribed/approved to required Disk endpoint and xrootd option not enabled (',subscribedOurSite,subscribedOtherSite,workflow,siteSE,')'
+              workflowsNotAssignedInput.append(workflow)
+              continue
            if options.xrootd and not subscribedOtherSite and not ignore:
-              print 'ERROR: input dataset not subscribed/approved to any Disk endpoint'
-              sys.exit(0)
+              print 'ERROR: input dataset not subscribed/approved to any Disk endpoint (',subscribedOurSite,subscribedOtherSite,')'
+              continue
 
-           # Extract required part of global tag
-           gtRaw = getGlobalTag(url, workflow)
-           gtBits = gtRaw.split('::')
-           globalTag = gtBits[0]
-
-           # Get campaign name
-           campaign = getCampaign(url, workflow)
-
+           # Check if pileup dataset subscribed to disk endpoint
            pileupDataset = getPileupDataset(url, workflow)
            if pileupDataset != 'None':
               [subscribedOurSite, subscribedOtherSite] = checkAcceptedSubscriptionRequest(url, pileupDataset, siteSE)
-              if not subscribedOurSite:
-                 print 'ERROR: pileup dataset not subscribed/approved to required Disk endpoint'
-                 sys.exit(0)            
+              if not subscribedOurSite and not ignore:
+                 print 'ERROR: pileup dataset (',pileupDataset,') not subscribed/approved to required Disk endpoint',siteSE,' for workflow',workflow
+                 continue
          
-           # Determine pileup scenario
-           # - Fall11_R2 & Fall11_R4 don't add pileup so extract pileup scenario from input
-           pileupScenario = ''
-           if not options.inprocstring:
-              pileupScenario = getPileupScenario(url, workflow)
-              if campaign == 'Summer12_DR53X_RD':
-                 pileupScenario = 'PU_RD1'
-              if pileupScenario == 'Unknown' and 'MinBias' in pileupDataset and 'LowPU2010DR42' not in workflow:
-                 print 'ERROR: unable to determine pileup scenario'
-                 sys.exit(0)
-              elif 'Fall11_R2' in workflow or 'Fall11_R4' in workflow or 'Fall11R2' in workflow or 'Fall11R4' in workflow:
-                 matchObj = re.match(r".*Fall11-(.*)_START.*", inputDataset)
-                 if matchObj:
-                    pileupScenario = matchObj.group(1)
-                 else:
-                    pileupScenario == 'Unknown'
-              elif pileupScenario == 'Unknown' and 'MinBias' not in pileupDataset:
-                 pileupScenario = 'NoPileUp'
-
-              if pileupScenario == 'Unknown':
-                 pileupScenario = ''
-
            # Decide which team to use if not already defined
-           if not team:
-             team = 'reproc_lowprio'
-
-           specialName = ''
-
-           era = 'Summer12'
-           lfn = '/store/mc'
-
-           #delete era and lfn so it can't reuse the ones from the previous workflow
-	   del era
-	   del lfn
-
-           # Set era, lfn and campaign-dependent part of name if necessary
-           if 'Summer12_DR51X' in workflow:
-              era = 'Summer12'
-              lfn = '/store/mc'
-
-           if 'Summer12_DR52X' in workflow:
-              era = 'Summer12'
-              lfn = '/store/mc'
-
-           if 'Summer12_DR53X' in workflow or ('Summer12' in workflow and 'DR53X' in workflow):
-              era = 'Summer12_DR53X'
-              lfn = '/store/mc'
-
-           #this is incorrect for HiFall11 workflows, but is changed further down
-           if 'Fall11_R' in workflow or 'Fall11R' in workflow:
-              era = 'Fall11'
-              lfn = '/store/mc'
-
-           if 'Summer13dr53X' in workflow:
-              era = 'Summer13dr53X'
-              lfn = '/store/mc'
-
-           if 'Summer11dr53X' in workflow:
-              era = 'Summer11dr53X'
-              lfn = '/store/mc'
-
-           if 'Fall11_HLTMuonia' in workflow:
-              era = 'Fall11'
-              lfn = '/store/mc'
-              specialName = 'HLTMuonia_'
-
-           if 'Summer11_R' in workflow:
-              era = 'Summer11'
-              lfn = '/store/mc'
-
-           if 'LowPU2010_DR42' in workflow or 'LowPU2010DR42' in workflow:
-              era = 'Summer12'
-              lfn = '/store/mc'
-              specialName = 'LowPU2010_DR42_'
-              pileupScenario = 'PU_S0'
-
-           if 'UpgradeL1TDR_DR6X' in workflow:
-              era = 'Summer12'
-              lfn = '/store/mc'
-
-           if 'HiWinter13' in inputDataset:
-              era = 'HiWinter13'
-              lfn = '/store/himc'
-     
-           if 'Spring14dr' in workflow:
-              era = 'Spring14dr'
-              lfn = '/store/mc'
-              if '_castor_' in workflow:
-                 specialName = 'castor_'
-                 
-           if 'Spring14miniaod' in workflow:
-              era = 'Spring14miniaod'
-              specialName=getProcDSMiddlePiece(inputDataset)
-              lfn = '/store/mc'
-              pileupScenario = ''
-              globalTag = '' 
-              siteCust= 'None'                
-
-           if 'Winter13' in workflow and 'DR53X' in workflow:
-              era = 'HiWinter13'
-              lfn = '/store/himc'
-           if 'HiWinter13' in workflow and 'DR53X' in workflow:
-              pileupScenario = ''  
-           if 'pAWinter13' in workflow and 'DR53X' in workflow:
-              pileupScenario = 'pa' # not actually the pileup scenario of course
-           if 'ppWinter13' in workflow and 'DR53X' in workflow:
-              pileupScenario = 'pp' # not actually the pileup scenario of course
-           if 'pAWinter13' in workflow and 'DR53X' in workflow and 'pAMixingHijing' in workflow:
-              pileupScenario = 'pa_pAMixingHijing' # not actually the pileup scenario of course
-
-           if campaign == 'Summer12ExtendedGeo14DR':
-              era = campaign
-              lfn = '/store/mc'
-
-
-           if 'Summer11LegDR' in campaign:
-              era = 'Summer11LegDR'
-              lfn = '/store/mc'
-
-           if 'UpgradePhase1Age' in campaign:
-              era = 'Summer13'
-	      lfn = '/store/mc'
-              specialName = campaign + '_'
-
-           if campaign == 'UpgradePhase2LB4PS_2013_DR61SLHCx':
-              era = 'Summer13'
-              lfn = '/store/mc'
-              specialName = campaign + '_'
-
-           if campaign == 'UpgradePhase2BE_2013_DR61SLHCx':
-              era = 'Summer13'
-              lfn = '/store/mc'
-              specialName = campaign + '_'
-
-           if campaign == 'UpgradePhase2LB6PS_2013_DR61SLHCx':
-              era = 'Summer13'
-              lfn = '/store/mc'
-              specialName = campaign + '_'
-  
-           if campaign == 'UpgradePhase1Age0DES_DR61SLHCx':
-              era = 'Summer13'
-              lfn = '/store/mc'
-              specialName = campaign + '_'
-           
-           if campaign == 'UpgradePhase1Age0START_DR61SLHCx':
-              era = 'Summer13'
-              lfn = '/store/mc'
-              specialName = campaign + '_'
-
-           if campaign == 'UpgradePhase1Age3H_DR61SLHCx':
-              era = 'Summer13'
-              lfn = '/store/mc'
-              specialName = campaign + '_'
-
-           if campaign == 'UpgradePhase1Age5H_DR61SLHCx':
-              era = 'Summer13'
-              lfn = '/store/mc'
-              specialName = campaign + '_'
-
-           if campaign == 'UpgradePhase1Age1K_DR61SLHCx':
-              era = 'Summer13'
-              lfn = '/store/mc'
-              specialName = campaign + '_'
-
-           if campaign == 'UpgradePhase1Age3K_DR61SLHCx':
-              era = 'Summer13'
-              lfn = '/store/mc'
-              specialName = campaign + '_'
-
-           #change back to old campaign names for UpgradePhase1
-           if 'UpgradePhase1Age' in campaign and 'dr61SLHCx' in specialName:
-              specialName = specialName.replace("dr61SLHCx","_DR61SLHCx")
-           if 'dr61SLHCx' in specialName:
-              print 'WARNING: using new campaign name format'		   
-
-           if campaign == 'HiFall11_DR44X' or campaign == 'HiFall11DR44':
-              era = 'HiFall11'
-              lfn = '/store/himc'
-              specialName = 'HiFall11_DR44X' + '_'
-
-           if campaign == 'HiFall13DR53X':
-              era = 'HiFall13DR53X'
-              lfn = '/store/himc'
-
-           if campaign == 'UpgFall13d':
-              era = campaign
-              lfn = '/store/mc'
-              
-           if campaign == '2019GEMUpg14DR':
-              era = 'GEM2019Upg14DR'
-              lfn = '/store/mc'
-              if '_age1k_' in workflow:
-                 specialName = 'age1k_'
-
-           if campaign == '2023MuonUpg14DR':
-              era = 'Muon2023Upg14DR'
-              lfn = '/store/mc'
-              if '_age1k_' in workflow:
-                 specialName = 'age1k_'
-
-           if campaign == '2023TTIUpg14DR':
-              era = 'TTI2023Upg14DR'
-              lfn = '/store/mc'
-              if '_age1k_' in workflow:
-                 specialName = 'age1k_'
-
-           if campaign == '2023TTIUpg14D':
-              era = 'TTI2023Upg14D'
-              lfn = '/store/mc'
-              if '_age1k_' in workflow:
-                 specialName = 'age1k_'
-
-           if campaign == 'Fall13dr':
-              era = campaign
-              lfn = '/store/mc'
-              if '_castor_tsg_' in workflow:
-                 specialName = 'castor_tsg_'
-              elif '_castor_' in workflow:
-                 specialName = 'castor_'
-              elif '_tsg_' in workflow:
-                 specialName = 'tsg_'
-              elif '__' in workflow:
-                 specialName = ''
-              else:
-                 print 'ERROR: unexpected special name string in workflow name'
-                 sys.exit(0)
-
-           # Handle NewG4Phys
-           if campaign == 'Summer12DR53X' and 'NewG4Phys' in workflow:
-              specialName = 'NewG4Phys_'
-
-           # Handle Ext30
-           if campaign == 'Summer12DR53X' and 'Ext30' in workflow:
-              specialName = 'Ext30_'
-
-           # Handle BS2011
-           if campaign == 'LowPU2010DR42' and 'BS2011' in workflow:
-              specialName = 'LowPU2010_DR42_BS2011_'
-
-
-           if 'ppSpring2014DRX53' in workflow:
-              era = 'ppSpring2014DRX53'
-              lfn = '/store/mc'
-              if '_castor_' in workflow:
-                 specialName = 'castor_'
-
-
-
-
-           # Construct processed dataset version
-           if pileupScenario != '':
-              pileupScenario = pileupScenario+'_' 
-           if options.specialprocstring:
-              specialName = options.specialprocstring + '_'
-           extTag = ''
-           if options.extension:
-              extTag = '_ext'+options.extension
-
-           # ProcessingString
-           if not options.inprocstring:
-              procstring = specialName+pileupScenario+globalTag+extTag
+           # - currently we only use production for all workflows
+           if options.team:
+              team = options.team
            else:
-              procstring = options.inprocstring
+              team = 'production'
 
-           # ProcessingVersion
-           if not options.inprocversion:
-              procversion = getDatasetVersion(url, workflow, era, procstring)
-           else:
-              procversion = options.inprocversion
+           # Get LFN base from input dataset
+           lfn = getLFNbase(url, inputDataset)
 
-	   #reset maxRSS to default, so it can't reuse the custom value from a previous workflow
+	   # Set maxRSS
 	   maxRSS = maxRSSdefault
            if ('HiFall11' in workflow or 'HiFall13DR53X' in workflow) and 'IN2P3' in siteUse:
               maxRSS = 4000000
 
            # Set max number of merge events
            maxmergeevents = 50000
-           #if 'Fall11_R1' in workflow:
-           #   maxmergeevents = 6000
+           if 'Fall11R1' in workflow:
+              maxmergeevents = 6000
            if 'DR61SLHCx' in workflow:
               maxmergeevents = 5000
 
-           # Checks
-           if not era:
-              print 'ERROR: era is not defined'
-              sys.exit(0)
+           # Acquisition era
+           era = getCampaign(url, workflow)
 
-           if not lfn:
-              print 'ERROR: lfn is not defined'
-              sys.exit(0)
+           # Correct situations where campaign name cannot be used as acquisition era
+           if era == '2019GEMUpg14DR':
+              era = 'GEM2019Upg14DR'
+           if era == '2023SHCALUpg14DR':
+              era = 'SHCAL2023Upg14DR'
 
-           if siteUse not in sites and options.site != 'T2_US' and siteUse != ['T2_CH_CERN_AI', 'T2_CH_CERN_HLT', 'T2_CH_CERN'] and not ignoresiterestrictions:
-              print 'ERROR: invalid site'
-              sys.exit(0)
+           if era == 'None':
+              print 'ERROR: unable to get campaign for workflow', workflow
+              continue
 
-           if pileupScenario == 'Unknown':
-              print 'ERROR: unable to determine pileup scenario'
-              sys.exit(0)
+           # Processing string
+           if options.inprocstring: 
+              procstring = options.inprocstring
+           else:
+              procstring = getProcString(url, workflow)
+
+           # ProcessingVersion
+           if not options.inprocversion:
+              procversion = getDatasetVersion(url, workflow, era, procstring)
+           else:
+              procversion = options.inprocversion
+ 
+           # Handle run-dependent MC
+           if 'PU_RD' in procstring:
+              numEvents = getRequestNumEvents(url, workflow)
+              reqJobs = 500
+              if 'PU_RD2' in procstring:
+                 reqJobs = 2000
+              eventsPerJob = int(numEvents/(reqJobs*1.4))
+              if eventsPerJob < 2000:
+                 if options.execute:
+                    print 'Changing splitting to',eventsPerJob,'events per job'
+                    changeSplitting(url, workflow, eventsPerJob)
+                 else:
+                    print 'Would change splitting to',eventsPerJob,'events per job'
+
+           # Site checking
+           if siteUse not in sites and options.site != 'T2_US' and siteUse != ['T2_CH_CERN_T0', 'T2_CH_CERN_HLT', 'T2_CH_CERN'] and not ignoresiterestrictions and siteUse != ['T2_CH_CERN_HLT', 'T2_CH_CERN']:
+              if 'AODSIM' not in inputDataset:
+                 print 'ERROR: invalid site',siteUse
+                 continue
+
+           workflowsAssigned[workflow] = siteUse
 
            if options.execute:
               if restrict == 'None' or restrict == siteUse:
-                  assignRequest(url, workflow, team, siteUse, era, procversion, procstring, activity, lfn, maxmergeevents, maxRSS, maxVSize, useX, siteCust)
+	          assignRequest(url, workflow, team, siteUse, era, procversion, procstring, activity, lfn, maxmergeevents, maxRSS, maxVSize, useX, siteCust)
                   if (newpriority !=0 ):
                      changePriorityWorkflow(url,workflow,newpriority)
                      print "Priority reset to %i" % newpriority
@@ -745,11 +483,30 @@ def main():
                      print 'Skipping workflow ',workflow
            else:
               if restrict == 'None' or restrict == siteUse:
-                 print 'Would assign ',workflow,' with ','Acquisition Era:',era,'ProcessingString:',procstring,'ProcessingVersion:',procversion,'lfn:',lfn,'Site(s):',siteUse,'Custodial Site:',siteCust,'team:',team,'maxmergeevents:',maxmergeevents,'maxRSS:',maxRSS
+                 print 'Would assign ',workflow,' with ','Acquisition Era:',era,'ProcessingString:',procstring,'ProcessingVersion:',procversion,'lfn:',lfn,'Site(s):',siteUse,'Custodial Site:',siteCust,'team:',team
                  if (newpriority !=0 ):
                     print "Would reset priority to %i" % newpriority
               else:
                  print 'Would skip workflow ',workflow
+
+        print ''
+        print 'SUMMARY'
+        print ''
+
+        # List assigned workflows
+        if len(workflowsAssigned) > 0:
+           if options.execute:
+              print 'Workflows assigned:'
+           else:
+              print 'Workflows which can be assigned:'
+           for workflow in workflowsAssigned:
+              print ' ',workflow,workflowsAssigned[workflow]
+     
+        # List workflows not assigned because of input dataset
+        if len(workflowsNotAssignedInput) > 0:
+           print 'Workflows not assigned because input datasets are not complete on any site:'
+           for workflow in workflowsNotAssignedInput:
+              print ' ',workflow
 
 	sys.exit(0)
 
