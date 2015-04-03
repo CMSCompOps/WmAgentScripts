@@ -31,7 +31,6 @@ def stagor(url,specific =None, good_enough = 99.9):
         ## check on transfer completion
         checks = checkTransferStatus(url, transfer.phedexid)
 
-        print checks
         if not specific:
             for dsname in checks:
                 if not dsname in done_by_input: done_by_input[dsname]={}
