@@ -8,6 +8,7 @@
 import urllib2,urllib, httplib, sys, re, os, json
 from xml.dom.minidom import getDOMImplementation
 import dbs3Client as dbs3
+import copy
 
 # default headers for PUT and POST methods
 def_headers={"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
@@ -609,6 +610,90 @@ def getOutputLumis(url, workflow, dataset):
     request = getWorkflowInfo(url, workflow)
     return dbs3.getLumiCountDataSet(dataset)
     
+def assignWorkflow(url, workflowname, team, parameters ):
+    defaults = copy.deepcopy( assignWorkflow.defaults )
+    defaults["Team"+team] = "checked"
+    defaults["checkbox"+workflowname] = "checked"
+
+    defaults.update( parameters )
+
+    if not set(assignWorkflow.mandatories).issubset( set(parameters.keys())):
+        print "There are missing parameters"
+        print list(set(assignWorkflow.mandatories) - set(parameters.keys()))
+        return False
+
+    if not 'execute' in defaults or not defaults['execute']:
+        print json.dumps( defaults ,indent=2)
+        return False
+    else:
+        defaults.pop('execute')
+
+    jsonEncodedParams = {}
+    for paramKey in defaults.keys():
+        jsonEncodedParams[paramKey] = json.dumps(defaults[paramKey])
+    encodedParams = urllib.urlencode(jsonEncodedParams, False)
+    #encodedParams = urllib.urlencode(parameters, True)
+
+    headers  =  {"Content-type": "application/x-www-form-urlencoded",
+                 "Accept": "text/plain"}
+
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+
+    conn.request("POST",  "/reqmgr/assign/handleAssignmentPage", encodedParams, headers)
+    response = conn.getresponse()
+    if response.status != 200:
+        print 'could not assign request with following parameters:'
+        for item in defaults.keys():
+            print item + ": " + str(defaults[item])
+        print 'Response from http call:'
+        print 'Status:',response.status,'Reason:',response.reason
+        print 'Explanation:'
+        data = response.read()
+        return False
+
+    print 'Assigned workflow:',workflowname,'to site:',defaults['SiteWhitelist'],'and team',team
+    conn.close()
+    return True
+
+
+assignWorkflow.defaults= {
+        "action": "Assign",
+        "SiteBlacklist": [],
+        "UnmergedLFNBase": "/store/unmerged",
+        "MinMergeSize": 2147483648,
+        "MaxMergeSize": 4294967296,
+        "MaxMergeEvents" : 50000,
+        'BlockCloseMaxEvents' : 2000000,
+        "MaxRSS" : 3000000,
+        "MaxVSize": 4394967000,
+        "maxVSize": 4394967000,
+        "Dashboard": "production",
+        "dashboard": "production",
+        "SoftTimeout" : 159600,
+        "GracePeriod": 300,
+        "CustodialSubType" : 'Replica', ## move will screw it over ?
+        }
+assignWorkflow.mandatories = ['SiteWhitelist',
+                              'AcquisitionEra',
+                              'ProcessingVersion',
+                              'ProcessingString',
+                              'MergedLFNBase',
+                              
+                              'CustodialSites', ## make a custodial copy of the output there
+                              #'NonCustodialSites', ## auto move the output there
+                              #'AutoApproveSubscriptionSites', ##autoapprove for those
+                              
+                              #'SoftTimeout',
+                              #'BlockCloseMaxEvents',
+                              #'MinMergeSize',
+                              #'MaxMergeEvents',
+                              #'MaxRSS'
+                              ]
+
+assignWorkflow.keys = assignWorkflow.mandatories+assignWorkflow.defaults.keys()
+
+
+
 def closeOutWorkflow(url, workflowname):
     """
     Closes out a workflow by changing the state to closed-out
