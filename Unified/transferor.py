@@ -139,10 +139,7 @@ if __name__=="__main__":
 
     (options,args) = parser.parse_args()
 
-    ### force it to test for now overnight
-    options.test = True
-
     spec=None
     if len(args):
-        spec = argv[0]
+        spec = args[0]
     transferor(url,spec,options=options)
