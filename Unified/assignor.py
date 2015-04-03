@@ -93,7 +93,7 @@ def assignor(url ,specific = None, talk=True, options=None):
             for key in reqMgrClient.assignWorkflow.keys:
                 v=getattr(options,key)
                 if v!=None:
-                    if ',' in v: parameters[key] = v.split(',')
+                    if ',' in v: parameters[key] = filter(None,v.split(','))
                     else: parameters[key] = v
 
         ## take care of a few exceptions
