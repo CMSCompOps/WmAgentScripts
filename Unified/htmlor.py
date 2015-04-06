@@ -1,11 +1,18 @@
 from assignSession import *
 import time
+from utils import getWorkLoad
+import os
+import json
 
 html_doc = open('/afs/cern.ch/user/v/vlimant/public/ops/index.html','w')
 
-def wfl(wf,v=False):
+def wfl(wf,v=False,p=False,ms=False):
     wfn = wf.name
     wfs = wf.wm_status
+    pid = None
+    pids=filter(lambda seg: seg.count('-')==2, wf.name.split('_'))
+    if len(pids):
+        pid=pids[0]
     text=', '.join([
             #wfn,
             '<a href="https://cmsweb.cern.ch/reqmgr/view/details/%s">%s</a>'%(wfn,wfn),
@@ -14,6 +21,17 @@ def wfl(wf,v=False):
             '<a href="https://cmsweb.cern.ch/reqmgr/reqMgr/request?requestName=%s">wkl</a>'%wfn,
             '<a href="https://cms-pdmv.cern.ch/stats/?RN=%s">vw</a>'%wfn
             ])
+    if p:
+        wl = getWorkLoad('cmsweb.cern.ch',wfn)
+        text+=', (%s)'%(wl['RequestPriority'])
+
+    if pid:
+        if ms:
+            mcm_s = json.loads(os.popen('curl https://cms-pdmv.cern.ch/mcm/public/restapi/requests/get_status/%s --insecure'%pid).read())[pid]
+            text+=', <a href="https://cms-pdmv.cern.ch/mcm/requests?prepid=%s">mcm (%s)</a>'%(pid,mcm_s)
+        else:
+            text+=', <a href="https://cms-pdmv.cern.ch/mcm/requests?prepid=%s">mcm</a>'%(pid)
+
     if v and wfs!='acquired':
         text+='<a href="https://cms-pdmv.web.cern.ch/cms-pdmv/stats/growth/%s.gif"><img src="https://cms-pdmv.web.cern.ch/cms-pdmv/stats/growth/%s.gif" style="height:40px"></a>'%(wfn.replace('_','/'),wfn.replace('_','/'))
     return text
@@ -44,7 +62,7 @@ Last update on %s(CET), %s(GMT) <br><br>
 text=""
 count=0
 for wf in session.query(Workflow).filter(Workflow.status=='considered').all():
-    text+="<li> %s </li> \n"%wfl(wf)
+    text+="<li> %s </li> \n"%wfl(wf,p=True)
     count+=1
 text+="</ul>\n"
 html_doc.write("Worlfow next to handle (%d)<br><ul>\n"%count)
@@ -62,7 +80,7 @@ html_doc.write(text)
 text=""
 count=0
 for wf in session.query(Workflow).filter(Workflow.status=='staged').all():
-    text+="<li> %s </li> \n"%wfl(wf)
+    text+="<li> %s </li> \n"%wfl(wf,p=True)
     count+=1
 text+="</ul>\n"
 html_doc.write("Worlfow ready for assigning (%d)<br><ul>\n"%count)
@@ -98,7 +116,7 @@ html_doc.write(text)
 text=""
 count=0
 for wf in session.query(Workflow).filter(Workflow.status=='done').all():
-    text+="<li> %s </li> \n"%wfl(wf)
+    text+="<li> %s </li> \n"%wfl(wf)#,ms=True)
     count+=1
 text+="</ul>\n"
 html_doc.write("Worlfow through (%d)<br><ul>\n"%count)
