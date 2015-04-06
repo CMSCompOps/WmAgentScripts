@@ -11,6 +11,8 @@ if __name__ == "__main__":
         
     for wf in session.query(Workflow).all():
         if spec and spec not in wf.name: continue
+        if not wf.status in ['away']: continue
+
         wl = getWorkLoad('cmsweb.cern.ch', wf.name)
         wf.wm_status = wl['RequestStatus']
         if status:
