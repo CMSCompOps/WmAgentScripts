@@ -37,7 +37,9 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         outputs = wl['OutputDatasets']
         #print outputs
-        version=1
+        version=wfh.getNextVersion()
+
+        """
         for out in outputs:
             bits = out.replace('None','*').split('/')
             pattern = '/'.join(bits[:2] + ['-'.join(bits[2].split('-')[:-1]+['*'])]  + bits[-1:])
@@ -50,7 +52,8 @@ def assignor(url ,specific = None, talk=True, options=None):
                     version = max(version,int(wild.split('/')[2].split('-')[-1].replace('v','')))
                 except:
                     print "cannot parse",wild
-            
+        """
+    
         (lheinput,primary,parent,secondary) = wfh.getIO()
         sites_allowed = getSiteWhiteList( (lheinput,primary,parent,secondary) )
         sites_custodial = list(set(itertools.chain.from_iterable([findCustodialLocation(url, prim) for prim in primary])))
@@ -85,7 +88,7 @@ def assignor(url ,specific = None, talk=True, options=None):
             'AcquisitionEra' : wfh.acquisitionEra(),
             'ProcessingString' : wfh.processingString(),
             'MergedLFNBase' : '/store/mc', ## to be figured out ! from Hi shit
-            'ProcessingVersion' : 1,
+            'ProcessingVersion' : version,
             }
 
         ##parse options entered in command line if any

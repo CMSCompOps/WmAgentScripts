@@ -596,3 +596,48 @@ class workflowInfo:
         return self.request['Campaign']
 
             
+    def getNextVersion( self ):
+        ## returns 1 if nothing is in the way
+        version = 0
+        outputs = self.request['OutputDatasets']
+        #print outputs
+        era = self.acquisitionEra()
+        ps = self.processingString()
+        if self.request['RequestType'] == 'TaskChain':
+            for outs in outputs:
+                for output in outs:
+                    (_,dsn,ps,tier) = output.split('/')
+                    if ps.count('-')==2:
+                        (aera,aps,_) = ps.split('-')
+                    else:
+                        aera='*'
+                        aps='*'
+                    pattern = '/'.join(['',dsn,'-'.join([aera,aps,'v*']),tier])
+                    wilds = getDatasets( pattern )
+                    print pattern,"->",len(wilds),"match(es)"                    
+                    for wild in [wildd['dataset'] for wildd in wilds]:
+                        (_,_,mid,_) = wild.split('/')
+                        v = int(mid.split('-')[-1].replace('v',''))
+                        version = max(v,version)
+            #print "version found so far",version
+        else:
+            for outs in  outputs:
+                for output in outs:
+                    (_,dsn,ps,tier) = output.split('/')
+                    (aera,aps,_) = ps.split('-')
+                    if aera == 'None':
+                        print "no era, using ",era
+                        aera=era
+                    if aps == 'None':
+                        print "no process string, using wild char"
+                        aps='*'
+                    pattern = '/'.join(['',dsn,'-'.join([aera,aps,'v*']),tier])
+                    wilds = getDatasets( pattern )
+                    print pattern,"->",len(wilds),"match(es)"
+                    for wild in wilds:
+                        (_,_,mid,_) = wild.split('/')
+                        v = int(mid.split('-')[-1].replace('v',''))
+                        version = max(v,version)
+            #print "version found so far",version
+        return version+1
+
