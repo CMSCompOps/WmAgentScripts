@@ -114,7 +114,21 @@ class siteInfo:
         else:
             return ce
 
-def getSiteWhiteList( inputs ):
+    def pick_CE(self, sites):
+        r_weights = {}
+        for site in sites:
+            r_weights[site] = weights[site]
+
+        def weighted_choice_sub(ws):
+            rnd = random.random() * sum(ws)
+            for i, w in enumerate(ws):
+                rnd -= w
+                if rnd < 0:
+                    return i
+        return r_weights.keys()[weighted_choice_sub(r_weights)]
+
+
+def getSiteWhiteList( inputs , pickone=False):
     SI = siteInfo()
     (lheinput,primary,parent,secondary) = inputs
     sites_allowed=[]
@@ -124,8 +138,12 @@ def getSiteWhiteList( inputs ):
         sites_allowed =list(set( SI.sites_T1s + SI.sites_T2s ))
     elif primary and secondary:
         sites_allowed = list(set(SI.sites_T1s + SI.sites_with_goodIO))
+        if pickone:
+            sites_allowed = [SI.pick_CE( sites_allowed )]
     elif primary and not secondary:
         sites_allowed =list(set(SI.sites_T1s + SI.sites_T2s))
+        if pickone:
+            sites_allowed = [SI.pick_CE( sites_allowed )]
     return sites_allowed
     
 def checkTransferApproval(url, phedexid):
@@ -295,24 +313,15 @@ def distributeToSites( items, sites , n_copies, weights=None):
                 spreading[site].extend(item)
         return dict(spreading)
     else:
-        ## limit the weights to the wanted sites
-        r_weights = {}
-        for site in sites:
-            r_weights[site] = weights[site]
-
-        def weighted_choice_sub(ws):
-            rnd = random.random() * sum(ws)
-            for i, w in enumerate(ws):
-                rnd -= w
-                if rnd < 0:
-                    return i
+        ## pick the sites according to computing element plege
+        SI = siteInfo()
         for item in items:
             at=[]
             for pick in range(n_copies):
-                site =  sites[weighted_choice_sub(r_weights.values())]
+                site =  SI.pick_CE( sites )
                 drop=100
                 while (site in at)and(drop>0):
-                    site =  sites[weighted_choice_sub(r_weights.values())]
+                    site =  SI.pick_CE( sites )
                     drop-=1
                 #print site,"picked"
                 if drop<=0:
