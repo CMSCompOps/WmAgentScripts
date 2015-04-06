@@ -19,7 +19,7 @@ class Workflow(Base):
     name = Column(String(400))
     status = Column(String(30),default='considered') ## internal status
     wm_status = Column(String(30),default='assignment-approved') ## status in req manager : we might not be carrying much actually since we are between ass-approved and assigned, although announced is coming afterwards
-    fraction_for_closing = Column(Float,default=0.98)
+    fraction_for_closing = Column(Float,default=0.90)
 
 class Output(Base):
     __tablename__ = 'output'

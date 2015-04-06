@@ -83,7 +83,9 @@ def closor(url, specific=None):
 
             print "\t%60s %d/%d = %3.2f%%"%(out,lumi_count,expected_lumis,lumi_count/float(expected_lumis)*100.)
             #print wfo.fraction_for_closing, lumi_count, expected_lumis
-            all_OK.append((float(lumi_count) > float(expected_lumis*wfo.fraction_for_closing)))
+            fraction = wfo.fraction_for_closing
+            fraction = 0.05
+            all_OK.append((float(lumi_count) > float(expected_lumis*fraction)))
 
 
         ## only that status can let me go into announced
