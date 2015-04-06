@@ -15,4 +15,4 @@ if __name__ == "__main__":
     args["endpoint"] = "%s/reqmgr/rest" % baseUrl
     reqMgr = RequestManager(args)
     
-    print reqMgr.reportRequestStatus("nancy_RVCMSSW_7_1_0ProdMinBias_13_140623_141952_3832", "closed-out")
+    print reqMgr.reportRequestStatus("boudoul_RVCMSSW_6_2_0_SLHC24QQH1352T_Tauola_14TeV__HGCalV6_150312_134838_7523", "completed")
