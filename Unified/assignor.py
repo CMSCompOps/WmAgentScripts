@@ -12,7 +12,10 @@ def assignor(url ,specific = None, talk=True, options=None):
     if specific:
         wfos = session.query(Workflow).filter(Workflow.name==specific).all()
     if not wfos:
-        wfos = session.query(Workflow).filter(Workflow.status=='staged').all()
+        if specific:
+            wfos = session.query(Workflow).filter(Workflow.status=='considered').all()
+            wfos.extend( session.query(Workflow).filter(Workflow.status=='staging').all())
+        wfos.extend(session.query(Workflow).filter(Workflow.status=='staged').all())
 
     for wfo in wfos:
         if specific:
