@@ -255,16 +255,22 @@ def findCustodialLocation(url, dataset):
 
     return list(set(cust))
 
-def getDatasetPresence( url, dataset, complete='y'):
+def getDatasetPresence( url, dataset, complete='y', only_blocks=None):
     #print "presence of",dataset
     dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
     all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
     all_block_names=set([block['block_name'] for block in all_blocks])
-    full_size = sum([block['file_size'] for block in all_blocks])
+    if only_blocks:
+        all_block_names = filter( lambda b : b in only_blocks, all_block_names)
+        full_size = sum([block['file_size'] for block in all_blocks if (block['block_name'] in only_blocks)])
+        #print all_block_names
+        #print [block['block_name'] for block in all_blocks if block['block_name'] in only_blocks]
+    else:
+        full_size = sum([block['file_size'] for block in all_blocks])
     if not full_size:
         print dataset,"is nowhere"
         return {}
-
+    #print full_size
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset=%s'%(dataset))
     r2=conn.getresponse()
@@ -281,9 +287,9 @@ def getDatasetPresence( url, dataset, complete='y'):
 
     presence={}
     for (site,blocks) in locations.items():
-        site_size = sum([ block['file_size'] for block in all_blocks if block['block_name'] in blocks])
-
-        presence[site] = (blocks == all_block_names, site_size/float(full_size)*100.)
+        site_size = sum([ block['file_size'] for block in all_blocks if (block['block_name'] in blocks and block['block_name'] in all_block_names)])
+        #print site,blocks
+        presence[site] = (set(blocks).issubset(set(all_block_names)), site_size/float(full_size)*100.)
     #print json.dumps( presence , indent=2)
     return presence
 
