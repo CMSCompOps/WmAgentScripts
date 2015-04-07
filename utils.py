@@ -293,12 +293,13 @@ def getDatasetPresence( url, dataset, complete='y', only_blocks=None):
     #print json.dumps( presence , indent=2)
     return presence
 
-def getDatasetChops(dataset, chop_threshold =4., talk=False):
+def getDatasetChops(dataset, chop_threshold =500., talk=False):
     ## does a *flat* choping of the input in chunk of size less than chop threshold
     dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
     blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
     sum_all = 0
 
+    ## put everything in terms of GB
     for block in blocks:
         block['file_size'] /= 1000000000.
 
