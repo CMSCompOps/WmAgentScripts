@@ -516,7 +516,8 @@ def getWorkflows(url,status,user):
 class workflowInfo:
     def __init__(self, url, workflow ):
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-        r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
+        #r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
+        r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/'+workflow)
         r2=conn.getresponse()
         self.request = json.loads(r2.read())
         
@@ -647,40 +648,39 @@ class workflowInfo:
         era = self.acquisitionEra()
         ps = self.processingString()
         if self.request['RequestType'] == 'TaskChain':
-            for outs in outputs:
-                for output in outs:
-                    (_,dsn,ps,tier) = output.split('/')
-                    if ps.count('-')==2:
-                        (aera,aps,_) = ps.split('-')
-                    else:
-                        aera='*'
-                        aps='*'
-                    pattern = '/'.join(['',dsn,'-'.join([aera,aps,'v*']),tier])
-                    wilds = getDatasets( pattern )
-                    print pattern,"->",len(wilds),"match(es)"                    
-                    for wild in [wildd['dataset'] for wildd in wilds]:
-                        (_,_,mid,_) = wild.split('/')
-                        v = int(mid.split('-')[-1].replace('v',''))
-                        version = max(v,version)
+            for output in outputs:
+                (_,dsn,ps,tier) = output.split('/')
+                if ps.count('-')==2:
+                    (aera,aps,_) = ps.split('-')
+                else:
+                    aera='*'
+                    aps='*'
+                pattern = '/'.join(['',dsn,'-'.join([aera,aps,'v*']),tier])
+                wilds = getDatasets( pattern )
+                print pattern,"->",len(wilds),"match(es)"                    
+                for wild in [wildd['dataset'] for wildd in wilds]:
+                    (_,_,mid,_) = wild.split('/')
+                    v = int(mid.split('-')[-1].replace('v',''))
+                    version = max(v,version)
             #print "version found so far",version
         else:
-            for outs in  outputs:
-                for output in outs:
-                    (_,dsn,ps,tier) = output.split('/')
-                    (aera,aps,_) = ps.split('-')
-                    if aera == 'None':
-                        print "no era, using ",era
-                        aera=era
-                    if aps == 'None':
-                        print "no process string, using wild char"
-                        aps='*'
-                    pattern = '/'.join(['',dsn,'-'.join([aera,aps,'v*']),tier])
-                    wilds = getDatasets( pattern )
-                    print pattern,"->",len(wilds),"match(es)"
-                    for wild in wilds:
-                        (_,_,mid,_) = wild.split('/')
-                        v = int(mid.split('-')[-1].replace('v',''))
-                        version = max(v,version)
+            for output in  outputs:
+                print output
+                (_,dsn,ps,tier) = output.split('/')
+                (aera,aps,_) = ps.split('-')
+                if aera == 'None':
+                    print "no era, using ",era
+                    aera=era
+                if aps == 'None':
+                    print "no process string, using wild char"
+                    aps='*'
+                pattern = '/'.join(['',dsn,'-'.join([aera,aps,'v*']),tier])
+                wilds = getDatasets( pattern )
+                print pattern,"->",len(wilds),"match(es)"
+                for wild in wilds:
+                    (_,_,mid,_) = wild.split('/')
+                    v = int(mid.split('-')[-1].replace('v',''))
+                    version = max(v,version)
             #print "version found so far",version
         return version+1
 

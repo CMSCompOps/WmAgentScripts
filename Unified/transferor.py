@@ -35,6 +35,9 @@ def transferor(url ,specific = None, talk=True, options=None):
             sites_allowed = options.to_sites.split(',')
         else:
             sites_allowed = getSiteWhiteList( (lheinput,primary,parent,secondary) )
+        blocks = []
+        if 'BlockWhitelist' in wfh.request and wfh.request['BlockWhitelist']:
+            blocks = wfh.request['BlockWhitelist']
 
         can_go = True
         if primary:
