@@ -441,6 +441,19 @@ def approveSubscription(url, phedexid, nodes=None ):
         return True
     return result
 
+def makeDeleteRequest(url, site,datasets, comments, priority='low'):
+    dataXML = createXML(datasets)
+    params = { "node" : site,
+               "data" : dataXML,
+               "group": "DataOps",
+               "priority": priority,
+               "request_only":"y" ,
+               "delete":"y",
+               "comments":comments
+               }
+    response = phedexPost(url, "/phedex/datasvc/json/prod/subscribe", params)
+    return response
+
 def makeReplicaRequest(url, site,datasets, comments, priority='high',custodial='n'): # priority used to be normal
     dataXML = createXML(datasets)
     params = { "node" : site,"data" : dataXML, "group": "DataOps", "priority": priority,
