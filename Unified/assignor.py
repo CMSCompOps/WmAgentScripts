@@ -1,13 +1,13 @@
 from assignSession import *
 import reqMgrClient
-from utils import workflowInfo
+from utils import workflowInfo, campaignInfo
 from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation
 import optparse
 import itertools
 import time
 
 def assignor(url ,specific = None, talk=True, options=None):
-
+    CI = campaignInfo()
     wfos=[]
     if specific:
         wfos = session.query(Workflow).filter(Workflow.name==specific).all()
@@ -25,12 +25,21 @@ def assignor(url ,specific = None, talk=True, options=None):
         wfh = workflowInfo( url, wfo.name)
         wl = getWorkLoad(url, wfo.name )
 
-        
+        if not CI.go( wl['Campaign'] ):
+            print "No go for",wl['Campaign']
+            continue
+
         injection_time = time.mktime(time.strptime('.'.join(map(str,wl['RequestDate'])),"%Y.%m.%d.%H.%M.%S")) / (60.*60.)
         now = time.mktime(time.gmtime()) / (60.*60.)
         if float(now - injection_time) < 4.:
             print "It is too soon to inject", now, injection_time
             continue
+
+        #grace_period = 4 #days
+        #if float(now - injection_time) > grace_period*24.:
+        #    print "it has been",grace_period,"need to do something"
+        #    options.restrict = True
+
         #else:
         #    print now,injection_time,now - injection_time
 
@@ -43,21 +52,6 @@ def assignor(url ,specific = None, talk=True, options=None):
         #print outputs
         version=wfh.getNextVersion()
 
-        """
-        for out in outputs:
-            bits = out.replace('None','*').split('/')
-            pattern = '/'.join(bits[:2] + ['-'.join(bits[2].split('-')[:-1]+['*'])]  + bits[-1:])
-            wilds = getDatasets( pattern )
-            if wilds:
-                print "LOOK AT THIS",wilds
-                print "FOUND WITH",pattern
-            for wild in wilds:
-                try:
-                    version = max(version,int(wild.split('/')[2].split('-')[-1].replace('v','')))
-                except:
-                    print "cannot parse",wild
-        """
-    
         (lheinput,primary,parent,secondary) = wfh.getIO()
         sites_allowed = getSiteWhiteList( (lheinput,primary,parent,secondary) )
         sites_custodial = list(set(itertools.chain.from_iterable([findCustodialLocation(url, prim) for prim in primary])))
@@ -106,8 +100,9 @@ def assignor(url ,specific = None, talk=True, options=None):
         ## take care of a few exceptions
         if (wl['Memory']*1000) > 3000000:
             parameters['MaxRSS'] = 4000000
-        if wl['Campaign'].startswith('Hi'):
-            parameters['MergedLFNBase'] = '/store/himc'
+
+        ## pick up campaign specific assignment parameters
+        parameters.update( CI.parameters(wl['Campaign']) )
 
         if not options.test:
             parameters['execute'] = True

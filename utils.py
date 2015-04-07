@@ -89,6 +89,28 @@ def listSubscriptions(url, dataset):
     #print destinations
     return destinations
 
+class campaignInfo:
+    def __init__(self):
+        #this contains accessor to aggreed campaigns, with maybe specific parameters
+        self.campaigns = {
+            'Fall14DR73' : {'go':True},
+            'RunIIWinter15GS' : {'go':True},
+            'RunIIWinter15wmLHE' : {'go':True},
+            'TP2023SHCALDR' : {'go':True},
+            'HiFall13DR53X' : {'go':True, 'parameters' : {'MergedLFNBase' : '/store/himc', 'SiteWhitelist' :['T1_FR_CCIN2P3']}}
+            }
+    def go(self, c):
+        if c in self.campaigns and self.campaigns[c]['go']:
+            return True
+        else:
+            print "Not allowed to go for",c
+            return False
+    def parameters(self, c):
+        if c in self.campaigns and 'parameters' in self.campaigns[c]:
+            return self.campaigns[c]['parameters']
+        else:
+            return {}
+
 class siteInfo:
     def __init__(self):
         self.siteblacklist = ['T2_TH_CUNSTDA','T1_TW_ASGC','T2_TW_Taiwan']
