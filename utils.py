@@ -288,8 +288,9 @@ def getDatasetPresence( url, dataset, complete='y', only_blocks=None):
     presence={}
     for (site,blocks) in locations.items():
         site_size = sum([ block['file_size'] for block in all_blocks if (block['block_name'] in blocks and block['block_name'] in all_block_names)])
-        #print site,blocks
-        presence[site] = (set(blocks).issubset(set(all_block_names)), site_size/float(full_size)*100.)
+        #print site,blocks,all_block_names
+        #presence[site] = (set(blocks).issubset(set(all_block_names)), site_size/float(full_size)*100.)
+        presence[site] = (set(all_block_names).issubset(set(blocks)), site_size/float(full_size)*100.)
     #print json.dumps( presence , indent=2)
     return presence
 
