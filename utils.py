@@ -139,7 +139,7 @@ class siteInfo:
     def pick_CE(self, sites):
         r_weights = {}
         for site in sites:
-            r_weights[site] = weights[site]
+            r_weights[site] = self.cpu_pledges[site]
 
         def weighted_choice_sub(ws):
             rnd = random.random() * sum(ws)
@@ -147,7 +147,7 @@ class siteInfo:
                 rnd -= w
                 if rnd < 0:
                     return i
-        return r_weights.keys()[weighted_choice_sub(r_weights)]
+        return r_weights.keys()[weighted_choice_sub(r_weights.values())]
 
 
 def getSiteWhiteList( inputs , pickone=False):
