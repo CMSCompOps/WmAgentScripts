@@ -30,6 +30,7 @@ def assignor(url ,specific = None, talk=True, options=None):
         now = time.mktime(time.gmtime()) / (60.*60.)
         if float(now - injection_time) < 4.:
             print "It is too soon to inject", now, injection_time
+            continue
         #else:
         #    print now,injection_time,now - injection_time
 

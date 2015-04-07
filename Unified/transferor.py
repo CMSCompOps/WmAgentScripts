@@ -6,6 +6,7 @@ from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSu
 import json
 from collections import defaultdict
 import optparse
+import time
 
 def transferor(url ,specific = None, talk=True, options=None):
     if options and options.test:
@@ -22,6 +23,13 @@ def transferor(url ,specific = None, talk=True, options=None):
 
         print wfo.name,"to be transfered"
         wfh = workflowInfo( url, wfo.name)
+
+        injection_time = time.mktime(time.strptime('.'.join(map(str,wfh.request['RequestDate'])),"%Y.%m.%d.%H.%M.%S")) / (60.*60.)
+        now = time.mktime(time.gmtime()) / (60.*60.)
+        if float(now - injection_time) < 4.:
+            print "It is too soon to transfer", now, injection_time
+            continue
+
         (lheinput,primary,parent,secondary) = wfh.getIO()
         if options and options.to_sites:
             sites_allowed = options.to_sites.split(',')
@@ -98,8 +106,11 @@ def transferor(url ,specific = None, talk=True, options=None):
         if execute:
             result = makeReplicaRequest(url, site_se, items_to_transfer, 'prestaging')
         else:
-            result= {'phedex':{'request_created' : [{'id' : fake_id}]}}
+            #result= {'phedex':{'request_created' : [{'id' : fake_id}]}}
+            result= {'phedex':{'request_created' : []}}
             fake_id-=1
+
+
 
         if not result:
             print "ERROR Could not make a replica request for",site,items_to_transfer,"pre-staging"
