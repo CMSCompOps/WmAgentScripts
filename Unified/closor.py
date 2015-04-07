@@ -19,7 +19,7 @@ def closor(url, specific=None):
             wfo.wm_status = wl['RequestStatus']
             session.commit()
 
-        take_out = ['failed','aborted','rejected','rejected-archived']
+        take_out = ['failed','aborted','aborted-archived','rejected','rejected-archived']
         if wl['RequestStatus'] in take_out:
             wfo.status = 'trouble'
             wfo.wm_status = wl['RequestStatus']
