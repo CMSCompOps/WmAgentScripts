@@ -1,10 +1,12 @@
 #!/usr/bin/env python -w
 """
-updateSiteStatus.py
-Retrieves Sites status from SSB and updates WMAgent, so
-it doesn't assign jobs to sites that are down or draining,
-and assigns to sites that are on.
-This replaces previous script named 'thres.py'
+    updateSiteStatus.py
+    Retrieves Sites status from SSB and updates WMAgent, so
+    it doesn't assign jobs to sites that are down or draining,
+    and assigns to sites that are on.
+    This replaces previous script named 'thres.py'
+    WARNING: This script is deprecated since it was integrated inside
+    AgentStatusWatcher
 """
 
 import sys,urllib,urllib2,re,time,os, traceback

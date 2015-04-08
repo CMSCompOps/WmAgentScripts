@@ -18,22 +18,36 @@ class Workflow:
     To avoid querying the same stuff multiple times
     This is useful for closeout script
     """
-    def __init__(self, name, url='cmsweb.cern.ch'):
+    def __init__(self, name, url='cmsweb.cern.ch', workflow=None):
         """
         Initialization
         """
+        #true if a object for copy was provided
+        obj = (workflow is not None) and isinstance(workflow, Workflow)
+
         self.name = name
         self.url = url
         #from the workflow Info
-        self.info = getWorkflowInfo(url, name)
-        self.cache = getWorkloadCache(url, name)
+        #if workflow object was provided, deep copy, otherwise pull info
+        if obj:
+            self.info = workflow.info
+            self.cache = workflow.cache
+        else:
+            self.info = getWorkflowInfo(url, name)
+            self.cache = getWorkloadCache(url, name)
+
         self.status = self.info['RequestStatus']
         self.type = self.info['RequestType']
         if 'SubRequestType' in self.info:
             self.subType = self.info['SubRequestType']
         else:
             self.subType = None
-        self.outputDatasets = outputdatasetsWorkflow(url, name)
+        #if object was provided no need to pull the info
+        if obj:
+            self.outputDatasets = workflow.outputDatasets
+        else:
+            self.outputDatasets = outputdatasetsWorkflow(url, name)
+
         if 'teams' in self.info and len(self.info['teams']) > 0 :
             self.team = self.info['teams'][0]
         else:
@@ -50,7 +64,12 @@ class Workflow:
         depending of the kind of workflow, by default gets
         it from the workload cache.
         """
-        return self.cache['TotalInputEvents']
+        ev = 0
+        if 'TotalInputEvents' in self.cache:
+            ev = self.cache['TotalInputEvents']
+        if not ev:
+            ev = self.info['RequestNumEvents']/self.info['FilterEfficiency']
+        return ev
 
     def getInputLumis(self):
         """
@@ -108,8 +127,8 @@ class MonteCarlo(Workflow):
     """
     MonteCarlo from scratch (no dataset input needed).
     """
-    def __init__(self, name, url='cmsweb.cern.ch'):
-        Workflow.__init__(self, name, url)
+    def __init__(self, name, url='cmsweb.cern.ch', workflow=None):
+        Workflow.__init__(self, name, url, workflow)
 
     def getInputEvents(self):
         #if request is montecarlo or Step0, the numer of
@@ -128,8 +147,8 @@ class StepZero(Workflow):
     """
     Step0 MonteCarlo, no dataset input needed either.
     """
-    def __init__(self, name, url='cmsweb.cern.ch'):
-        Workflow.__init__(self, name, url)
+    def __init__(self, name, url='cmsweb.cern.ch', workflow=None):
+        Workflow.__init__(self, name, url, workflow)
 
     def getInputEvents(self):
         #if request is montecarlo or Step0, the numer of
@@ -149,9 +168,9 @@ class WorkflowWithInput(Workflow):
     That needs at least one input dataset
     """
     inputlists = ["RunWhitelist", "RunBlacklist", "BlockWhitelist"
-                , "BlockBlacklist"]
+                , "BlockBlacklist", "LumiList"]
     
-    def __init__(self, name, url='cmsweb.cern.ch'):
+    def __init__(self, name, url='cmsweb.cern.ch', workflow=None):
         Workflow.__init__(self, name, url)
         if 'InputDataset'in self.info and len(self.info['InputDataset']) > 0:
             self.inputDataset = self.info['InputDataset']
@@ -184,39 +203,57 @@ class WorkflowWithInput(Workflow):
             perc /= self.filterEfficiency
         return perc
 
+    def getInputLumis(self, checkList = False, checkInput=False):
+        """
+        Checks against lumi list
+        """
+        if not checkList and not checkInput:
+            return Workflow.getInputLumis(self)
+        if checkInput:
+            #retrieve lumis of the inpu dataset
+            return dbs3.getLumiCountDataSet(self.inputDataset)
+        if checkList:
+            runLumis = self.info['LumiList']
+            if runLumis:
+                total = 0
+                for run, lumiList in runLumis.items():
+                    total += sum(l2 - l1 + 1 for l1, l2 in lumiList)
+                return total
+            return 0
+
 class MonteCarloFromGen(WorkflowWithInput):
     """
     Montecarlo using a GEN dataset as input
     """
-    def __init__(self, name, url='cmsweb.cern.ch'):
-        WorkflowWithInput.__init__(self, name, url)
+    def __init__(self, name, url='cmsweb.cern.ch', workflow=None):
+        WorkflowWithInput.__init__(self, name, url, workflow)
 
 class ReReco(WorkflowWithInput):
     """
     """
-    def __init__(self, name, url='cmsweb.cern.ch'):
-        WorkflowWithInput.__init__(self, name, url)
+    def __init__(self, name, url='cmsweb.cern.ch', workflow=None):
+        WorkflowWithInput.__init__(self, name, url, workflow)
         
 class ReDigi(WorkflowWithInput):
     """
     Using a GEN-SIM dataset as input
     """
-    def __init__(self, name, url='cmsweb.cern.ch'):
-        WorkflowWithInput.__init__(self, name, url)
+    def __init__(self, name, url='cmsweb.cern.ch', workflow=None):
+        WorkflowWithInput.__init__(self, name, url, workflow)
 
 class StoreResults(WorkflowWithInput):
     """
     Uses a user dataset as input
     """
-    def __init__(self, name, url='cmsweb.cern.ch'):
-        WorkflowWithInput.__init__(self, name, url)
+    def __init__(self, name, url='cmsweb.cern.ch', workflow=None):
+        WorkflowWithInput.__init__(self, name, url, workflow)
 
 class TaskChain(Workflow):
     """
     Chained workflow. several steps
     """
-    def __init__(self, name, url='cmsweb.cern.ch'):
-        Workflow.__init__(self, name, url)
+    def __init__(self, name, url='cmsweb.cern.ch', workflow=None):
+        Workflow.__init__(self, name, url, workflow)
     
     def getInputEvents(self):
         return getInputEventsTaskChain(self.info)
@@ -233,6 +270,30 @@ class TaskChain(Workflow):
             return filterEff
         #if not found
         return None
+
+def createWorkflowObject(name, url='cmsweb.cern.ch'):
+    """
+    Factory method
+    Creates a Workflow object casted to the 
+    specific class to its type
+    """
+    wf = Workflow(name , url)
+    if wf.type == "MonteCarlo" and re.search('.*/GEN$', wf.outputDatasets[0]):
+        wf = StepZero(name, url, wf)
+    elif wf.type == "MonteCarlo":
+        wf = MonteCarlo(name, url, wf)
+    elif wf.type == "MonteCarloFromGEN":
+        wf = MonteCarloFromGen(name, url, wf)
+    elif wf.type == "ReDigi":
+        wf = ReDigi(name, url, wf)
+    elif wf.type == "ReReco":
+        wf = ReReco(name, url, wf)
+    elif wf.type == "StoreResults":
+        wf = StoreResults(name, url, wf)
+    elif wf.type == "TaskChain":
+        wf = TaskChain(name, url, wf)
+    return wf
+
 
 def requestManagerGet(url, request, retries=4):
     """

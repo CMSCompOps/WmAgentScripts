@@ -65,7 +65,7 @@ def deleteMaxDegreeFirst(graph):
     in two different files)
     """
     files = []
-    print "Initial files:" len(graph)
+    print "Initial files:", len(graph)
     #quadratic first
     while hasEdges(graph):
         maxv = None

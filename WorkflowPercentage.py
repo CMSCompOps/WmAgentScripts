@@ -121,7 +121,7 @@ def percentageCompletionTaskChain(url, workflow, verbose=False, checkLumis=False
         print "Input %s:"%("lumis" if checkLumis else "events"), inputEvents
     i = 1
 
-    #task-chain 1, starts with GEN, a GEN-SIM, GEN-SIM-RAW, AODSIM, DQM and so on
+    #task-chain 1, starts with GEN or LHE, a GEN-SIM, GEN-SIM-RAW, AODSIM, DQM and so on
     for dataset in workflow.outputDatasets:
         if verbose:
             print dataset
@@ -129,7 +129,7 @@ def percentageCompletionTaskChain(url, workflow, verbose=False, checkLumis=False
             outputEvents = workflow.getOutputEvents(dataset)
         else:
             outputEvents = workflow.getOutputLumis(dataset)
-        #GEN and GEN-SIM and events, we take into account filter efficiency
+        #GEN or LHE and GEN-SIM and events, we take into account filter efficiency
         if 1<= i <= 2 and not checkLumis: 
             filterEff = workflow.getFilterEfficiency('Task%d'%i)
             #decrease filter eff

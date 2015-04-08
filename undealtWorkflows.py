@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import json
-import urllib2,urllib, httplib, sys, re, os, phedexSubscription, dbsTest, duplicateEventsGen, shutil, time
+import urllib2,urllib, httplib, sys, re, os, shutil, time, reqMgrClient
 from xml.dom.minidom import getDOMImplementation
 import closeOutWorkflows
 
@@ -48,7 +48,10 @@ def filterUndealtWorkflows(workflowsCompleted, workflowsRunning, wfType):
             pass
         else:
             #print 'no acdcs running'
-            result.append(wf)
+            #retrieve status to double validate
+            status = reqMgrClient.getWorkflowStatus(url, wf)
+            if status == 'completed':
+                result.append(wf)
     return result
 
 def writeHTMLHeader(output):
