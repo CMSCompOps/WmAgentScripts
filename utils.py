@@ -677,7 +677,7 @@ class workflowInfo:
                 pattern = '/'.join(['',dsn,'-'.join([aera,aps,'v*']),tier])
                 wilds = getDatasets( pattern )
                 print pattern,"->",len(wilds),"match(es)"
-                for wild in wilds:
+                for wild in [wildd['dataset'] for wildd in wilds]:
                     (_,_,mid,_) = wild.split('/')
                     v = int(mid.split('-')[-1].replace('v',''))
                     version = max(v,version)
