@@ -24,11 +24,11 @@ def transferor(url ,specific = None, talk=True, options=None):
         print wfo.name,"to be transfered"
         wfh = workflowInfo( url, wfo.name)
 
-        injection_time = time.mktime(time.strptime('.'.join(map(str,wfh.request['RequestDate'])),"%Y.%m.%d.%H.%M.%S")) / (60.*60.)
-        now = time.mktime(time.gmtime()) / (60.*60.)
-        if float(now - injection_time) < 4.:
-            print "It is too soon to transfer", now, injection_time
-            continue
+        #injection_time = time.mktime(time.strptime('.'.join(map(str,wfh.request['RequestDate'])),"%Y.%m.%d.%H.%M.%S")) / (60.*60.)
+        #now = time.mktime(time.gmtime()) / (60.*60.)
+        #if float(now - injection_time) < 4.:
+        #    print "It is too soon to transfer", now, injection_time
+        #    continue
 
         (lheinput,primary,parent,secondary) = wfh.getIO()
         if options and options.to_sites:
