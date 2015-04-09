@@ -9,6 +9,7 @@ import urllib2,urllib, httplib, sys, re, os, json
 from xml.dom.minidom import getDOMImplementation
 import dbs3Client as dbs3
 import copy
+from utils import workflowInfo
 
 # default headers for PUT and POST methods
 def_headers={"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
@@ -637,20 +638,27 @@ def assignWorkflow(url, workflowname, team, parameters ):
                 wf = workflowInfo(url, workflowname)
                 t = wf.firstTask()
                 params = wf.getSplittings()[0]
-                params.update({"requestName":workflowname,
-                               "splittingTask" : '/%s/%s'%(workflowname,t),
-                               "events_per_job": par})
-                print setWorkflowSplitting(url, params)
-                not_commissioned
+                if par < params['events_per_job']:
+                    par = min(par, params['events_per_job'])
+                    params.update({"requestName":workflowname,
+                                   "splittingTask" : '/%s/%s'%(workflowname,t),
+                                   "events_per_job": par})
+                    print setWorkflowSplitting(url, params)
             elif aux == 'EventsPerLumi':
                 wf = workflowInfo(url, workflowname)
                 t = wf.firstTask()
                 params = wf.getSplittings()[0]
+                if str(par).startswith('x'):
+                    multiplier = float(str(par).replace('x',''))
+                    par = int(params['events_per_lumi'] * multiplier)
+                else:
+                    if 'FilterEfficiency' in wf.request and wf.request['FilterEfficiency']:
+                        par = int(par/wf.request['FilterEfficiency'])
+
                 params.update({"requestName":workflowname,
                                "splittingTask" : '/%s/%s'%(workflowname,t),
                                "events_per_lumi": par})
                 print setWorkflowSplitting(url, params)
-                not_commissioned
             elif aux == 'SplittingAlgorithm':
                 wf = workflowInfo(url, workflowname)
                 t = wf.firstTask()
@@ -667,7 +675,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
                                "splittingTask" : '/%s/%s'%(workflowname,t),
                                "lumis_per_job" : par})
                 print setWorkflowSplitting(url, params)
-                not_commissioned
+                return False ## not commissioned
             else:
                 print "No action for ",aux
 
