@@ -1,7 +1,7 @@
 from assignSession import *
 import reqMgrClient
 from utils import makeReplicaRequest
-from utils import workflowInfo, siteInfo
+from utils import workflowInfo, siteInfo, campaignInfo
 from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, getSiteWhiteList, approveSubscription
 import json
 from collections import defaultdict
@@ -15,6 +15,8 @@ def transferor(url ,specific = None, talk=True, options=None):
         execute = True
 
     SI = siteInfo()
+    CI = campaignInfo()
+
     all_transfers=defaultdict(list)
     workflow_dependencies = defaultdict(set) ## list of wf.id per input dataset
     data_to_wf = {}
@@ -31,10 +33,13 @@ def transferor(url ,specific = None, talk=True, options=None):
         #    continue
 
         (lheinput,primary,parent,secondary) = wfh.getIO()
-        if options and options.to_sites:
-            sites_allowed = options.to_sites.split(',')
+        if options and options.tosites:
+            sites_allowed = options.tosites.split(',')
         else:
             sites_allowed = getSiteWhiteList( (lheinput,primary,parent,secondary) )
+        if 'SiteWhitelist' in CI.parameters(wfh.request['Campaign']):
+            sites_allowed = CI.parameters(wfh.request['Campaign'])['SiteWhitelist']
+
         blocks = []
         if 'BlockWhitelist' in wfh.request and wfh.request['BlockWhitelist']:
             blocks = wfh.request['BlockWhitelist']
@@ -149,7 +154,7 @@ if __name__=="__main__":
     parser.add_option('-t','--test',help="Perform the test and display information",default=False,action='store_true')
     parser.add_option('-s','--stop',help="Stop ask and go",default=False,action='store_true')
     parser.add_option('-n','--nochop',help='Do no chop the input to the possible sites',default=True,dest='chop',action='store_false')
-    parser.add_option('--to_sites',help='Provide a coma separated list of sites to transfer input to',default=None)
+    parser.add_option('--tosites',help='Provide a coma separated list of sites to transfer input to',default=None)
 
     (options,args) = parser.parse_args()
 
