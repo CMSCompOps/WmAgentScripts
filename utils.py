@@ -1,10 +1,8 @@
-#! -*- encoding: utf-8 -*-
-
 import sys
 import urllib, urllib2
 import logging
 from dbs.apis.dbsClient import DbsApi
-import reqMgrClient
+#import reqMgrClient
 import httplib
 import os
 import json 
@@ -12,6 +10,7 @@ from collections import defaultdict
 import random
 from xml.dom.minidom import getDOMImplementation
 import copy 
+import pickle
 
 
 FORMAT = "%(module)s.%(funcName)s(%(lineno)s) => %(message)s (%(asctime)s)"
@@ -125,30 +124,59 @@ class siteInfo:
         self.sites_T2s = [s for s in json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/whitelist.json').read()) if s not in self.siteblacklist and 'T2' in s]
         self.sites_T1s = [s for s in json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/whitelist.json').read()) if s not in self.siteblacklist and 'T1' in s]
 
+        bare_info = json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/disktape.json').read())
+        self.storage = {}
+        self.disk = {}
+        for (item,values) in bare_info.items():
+            if 'mss' in values:
+                self.storage[values['mss']] = values['freemss']
+            if 'disk' in values:
+                self.disk[values['disk']] = values['freedisk']
+
         self.cpu_pledges = json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/pledged.json').read())
         if not set(self.sites_T2s + self.sites_T1s + self.sites_with_goodIO).issubset(set(self.cpu_pledges.keys())):
             print "There are missing sites in pledgeds"
             print list(set(self.sites_T2s + self.sites_T1s + self.sites_with_goodIO) - set(self.cpu_pledges.keys()))
         
     def CE_to_SE(self, ce):
-        if 'T1' in ce and not ce.endswith('_Disk'):
+        if ce.startswith('T1') and not ce.endswith('_Disk'):
             return ce+'_Disk'
         else:
             return ce
 
-    def pick_CE(self, sites):
+    def pick_SE(self, sites=None):
+        return self._pick(sites, self.storage)
+
+    def pick_dSE(self, sites=None):
+        return self._pick(sites, self.disk, and_fail=False)
+
+    def _pick(self, sites, from_weights, and_fail=True):
         r_weights = {}
-        for site in sites:
-            r_weights[site] = self.cpu_pledges[site]
+        if sites:
+            for site in sites:
+                if site in from_weights or and_fail:
+                    r_weights[site] = from_weights[site]
+                else:
+                    r_weights = from_weights
+                    break
+        else:
+            r_weights = from_weights
 
-        def weighted_choice_sub(ws):
-            rnd = random.random() * sum(ws)
-            for i, w in enumerate(ws):
-                rnd -= w
-                if rnd < 0:
-                    return i
-        return r_weights.keys()[weighted_choice_sub(r_weights.values())]
+        return r_weights.keys()[self._weighted_choice_sub(r_weights.values())]
 
+    def _weighted_choice_sub(self,ws):
+        rnd = random.random() * sum(ws)
+        for i, w in enumerate(ws):
+            rnd -= w
+            if rnd < 0:
+                return i
+
+    def pick_CE(self, sites):
+        #r_weights = {}
+        #for site in sites:
+        #    r_weights[site] = self.cpu_pledges[site]
+        #return r_weights.keys()[self._weighted_choice_sub(r_weights.values())]
+        return self._pick(sites, self.cpu_pledges)
 
 def getSiteWhiteList( inputs , pickone=False):
     SI = siteInfo()
@@ -156,6 +184,15 @@ def getSiteWhiteList( inputs , pickone=False):
     sites_allowed=[]
     if lheinput:
         sites_allowed = ['T2_CH_CERN'] ## and that's it
+    elif secondary:
+        sites_allowed = list(set(SI.sites_T1s + SI.sites_with_goodIO))
+    elif primary:
+        sites_allowed =list(set( SI.sites_T1s + SI.sites_T2s ))
+    
+    if pickone:
+        sites_allowed = [SI.pick_CE( sites_allowed )]
+
+    """
     elif not primary and not secondary and not parent:
         sites_allowed =list(set( SI.sites_T1s + SI.sites_T2s ))
     elif primary and secondary:
@@ -166,6 +203,8 @@ def getSiteWhiteList( inputs , pickone=False):
         sites_allowed =list(set(SI.sites_T1s + SI.sites_T2s))
         if pickone:
             sites_allowed = [SI.pick_CE( sites_allowed )]
+    elif not primary and secondary:
+    """    
     return sites_allowed
     
 def checkTransferApproval(url, phedexid):
