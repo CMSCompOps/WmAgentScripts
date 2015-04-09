@@ -59,7 +59,8 @@ def stagor(url,specific =None, good_enough = 99.9):
             print transfer.phedexid,"not finished"
             pprint.pprint( checks )
 
-    print done_by_input
+    #print done_by_input
+    print "\n----\n"
     for dsname in done_by_input:
         if all(done_by_input[dsname].values()):
             print dsname,"is everywhere we wanted"
