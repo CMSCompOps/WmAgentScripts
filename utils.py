@@ -402,6 +402,15 @@ def distributeToSites( items, sites , n_copies, weights=None):
 
         return dict(spreading)
 
+def getDatasetEventsPerLumi(dataset):
+    dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+    all_files = dbsapi.listFileSummaries( dataset = dataset )
+    try:
+        average = sum([f['num_event']/float(f['num_lumi']) for f in all_files]) / float(len(all_files))
+    except:
+        average = 100
+    return average
+                         
 def getDatasetStatus(dataset):
         # initialize API to DBS3                                                                                                                                                                                                                                                     
         dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
@@ -559,7 +568,42 @@ class workflowInfo:
         r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/'+workflow)
         r2=conn.getresponse()
         self.request = json.loads(r2.read())
+        r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/%s/spec'%workflow)
+        r2=conn.getresponse()
+        self.full_spec = pickle.loads(r2.read())
         
+    def _tasks(self):
+        return self.full_spec.tasks.tasklist
+
+    def firstTask(self):
+        return self._tasks()[0]
+
+    def checkWorkflowSplitting( self ):
+        if 'InputDataset' in self.request:
+            average = getDatasetEventsPerLumi(self.request['InputDataset'])
+            spl = self.getSplittings()[0]
+            events_per_job = spl['events_per_job']
+            algo = spl['splittingAlgo']
+            if algo == 'EventAwareLumiBased' and average > events_per_job:
+                print "This is going to fail",average,"in and requiring",events_per_job
+                return False
+        return True
+
+
+    def getSplittings(self):
+        spl =[]
+        for task in self._tasks():
+            ts = getattr(self.full_spec.tasks, task).input.splitting
+            spl.append( { "splittingAlgo" : ts.algorithm} )
+            get_those = ['events_per_lumi','events_per_job','lumis_per_job']
+            for get in get_those:
+                if hasattr(ts,get):
+                    spl[-1][get] = getattr(ts,get)
+                #else:
+                #    spl[-1][get] = None
+
+        return spl
+
     def getEra(self):
         return self.request['AcquisitionEra']
     def getCurrentStatus(self):
@@ -681,7 +725,7 @@ class workflowInfo:
             
     def getNextVersion( self ):
         ## returns 1 if nothing is in the way
-        version = 0
+        version = self.request['ProcessingVersion']-1
         outputs = self.request['OutputDatasets']
         #print outputs
         era = self.acquisitionEra()

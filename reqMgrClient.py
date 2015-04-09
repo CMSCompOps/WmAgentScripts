@@ -628,6 +628,49 @@ def assignWorkflow(url, workflowname, team, parameters ):
     else:
         defaults.pop('execute')
 
+
+    for aux in assignWorkflow.auxiliaries:
+        if aux in defaults: 
+            par = defaults.pop( aux )
+
+            if aux == 'EventsPerJob':
+                wf = workflowInfo(url, workflowname)
+                t = wf.firstTask()
+                params = wf.getSplittings()[0]
+                params.update({"requestName":workflowname,
+                               "splittingTask" : '/%s/%s'%(workflowname,t),
+                               "events_per_job": par})
+                print setWorkflowSplitting(url, params)
+                not_commissioned
+            elif aux == 'EventsPerLumi':
+                wf = workflowInfo(url, workflowname)
+                t = wf.firstTask()
+                params = wf.getSplittings()[0]
+                params.update({"requestName":workflowname,
+                               "splittingTask" : '/%s/%s'%(workflowname,t),
+                               "events_per_lumi": par})
+                print setWorkflowSplitting(url, params)
+                not_commissioned
+            elif aux == 'SplittingAlgorithm':
+                wf = workflowInfo(url, workflowname)
+                t = wf.firstTask()
+                params = wf.getSplittings()[0]
+                params.update({"requestName":workflowname,
+                               "splittingTask" : '/%s/%s'%(workflowname,t),
+                               "splittingAlgo" : par})
+                print setWorkflowSplitting(url, params)
+            elif aux == 'LumisPerJob': ## this is just for fun, we should never need that fall-back
+                wf = workflowInfo(url, workflowname)
+                t = wf.firstTask()
+                params = wf.getSplittings()[0]
+                params.update({"requestName":workflowname,
+                               "splittingTask" : '/%s/%s'%(workflowname,t),
+                               "lumis_per_job" : par})
+                print setWorkflowSplitting(url, params)
+                not_commissioned
+            else:
+                print "No action for ",aux
+
     jsonEncodedParams = {}
     for paramKey in defaults.keys():
         jsonEncodedParams[paramKey] = json.dumps(defaults[paramKey])
@@ -659,6 +702,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
 assignWorkflow.defaults= {
         "action": "Assign",
         "SiteBlacklist": [],
+        "useSiteListAsLocation" : False,
         "UnmergedLFNBase": "/store/unmerged",
         "MinMergeSize": 2147483648,
         "MaxMergeSize": 4294967296,
@@ -672,6 +716,9 @@ assignWorkflow.defaults= {
         "SoftTimeout" : 159600,
         "GracePeriod": 300,
         "CustodialSubType" : 'Replica', ## move will screw it over ?
+        'NonCustodialSites' : [],
+        "NonCustodialSubType" : 'Replica', ## that's the default, but let's be sure
+        'AutoApproveSubscriptionSites' : False,
         }
 assignWorkflow.mandatories = ['SiteWhitelist',
                               'AcquisitionEra',
@@ -680,8 +727,6 @@ assignWorkflow.mandatories = ['SiteWhitelist',
                               'MergedLFNBase',
                               
                               'CustodialSites', ## make a custodial copy of the output there
-                              #'NonCustodialSites', ## auto move the output there
-                              #'AutoApproveSubscriptionSites', ##autoapprove for those
                               
                               #'SoftTimeout',
                               #'BlockCloseMaxEvents',
@@ -689,8 +734,13 @@ assignWorkflow.mandatories = ['SiteWhitelist',
                               #'MaxMergeEvents',
                               #'MaxRSS'
                               ]
+assignWorkflow.auxiliaries = [ 'SplittingAlgorithm',
+                               'EventsPerJob',
+                               'EventsPerLumi',
+                               'LumisPerJob'
+                               ]
 
-assignWorkflow.keys = assignWorkflow.mandatories+assignWorkflow.defaults.keys()
+assignWorkflow.keys = assignWorkflow.mandatories+assignWorkflow.defaults.keys() + assignWorkflow.auxiliaries
 
 
 

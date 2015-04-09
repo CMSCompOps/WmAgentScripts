@@ -109,11 +109,10 @@ def assignor(url ,specific = None, talk=True, options=None):
         if not options.test:
             parameters['execute'] = True
 
-        ## evt/lumi
-        #if wl['Campaign'].startswith('RunII') and wl['EventsPerLumi']!=200:
-        #params = {"requestName":w,"splittingTask" : '/'+w+"/Production", "splittingAlgo":"EventBased", "events_per_lumi":events_per_lumi}
-        #    setParam(url,w,params,options.debug)
-
+        if not wfh.checkWorkflowSplitting():
+            ## needs to go to event based ? fail for now
+            print "Falling back to event splitting ?"
+            parameters['SplittingAlgorithm'] = 'EventBased'
 
         ## plain assignment here
         result = reqMgrClient.assignWorkflow(url, wfo.name, 'production', parameters)
