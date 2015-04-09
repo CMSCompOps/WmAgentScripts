@@ -32,10 +32,14 @@ def injector(url,wm_status = 'assignment-approved', set_status='considered', tal
                 #print member
                 fwl = getWorkLoad(url , member)
                 if fwl['RequestType']=='Resubmission': continue
+                
                 new_wf = session.query(Workflow).filter(Workflow.name == member).first()
                 if not new_wf:
                     print "putting",member
-                    new_wf = Workflow( name = member, status = 'away', wm_status = wl['RequestStatus'])
+                    status = 'away'
+                    if wl['RequestStatus'] in ['assignment-approved']:
+                        status = 'considered'
+                    new_wf = Workflow( name = member, status = status, wm_status = wl['RequestStatus'])
                     session.add( new_wf ) 
                     session.commit()
                 else:
@@ -46,6 +50,7 @@ def injector(url,wm_status = 'assignment-approved', set_status='considered', tal
                     o.workfow_id = new_wf.id
                     print o.datasetname,"got",new_wf.name
                     session.commit()
+
                 for tr in session.query(Transfer).all():
                     if wf.id in tr.workflows_id:
                         sw = copy.deepcopy(tr.workflows_id)
@@ -53,8 +58,9 @@ def injector(url,wm_status = 'assignment-approved', set_status='considered', tal
                         sw.append(new_wf.id)
                         tr.workflows_id = sw
                         print tr.phedexid,"got",new_wf.name
+                        new_wf.status = 'staging'
                         session.commit()
-                        break
+                        
 
         wf.status = 'forget'
         session.commit()
