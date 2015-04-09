@@ -143,6 +143,13 @@ class siteInfo:
             return ce+'_Disk'
         else:
             return ce
+    def SE_to_CE(self, se):
+        if se.endswith('_Disk'):
+            return se.replace('_Disk','')
+        elif se.endswith('_MSS'):
+            return se.replace('_MSS','')
+        else:
+            return se
 
     def pick_SE(self, sites=None):
         return self._pick(sites, self.storage)
@@ -186,7 +193,7 @@ def getSiteWhiteList( inputs , pickone=False):
         sites_allowed = ['T2_CH_CERN'] ## and that's it
     elif secondary:
         sites_allowed = list(set(SI.sites_T1s + SI.sites_with_goodIO))
-    elif primary:
+    else:#primary:
         sites_allowed =list(set( SI.sites_T1s + SI.sites_T2s ))
     
     if pickone:
@@ -345,6 +352,12 @@ def getDatasetPresence( url, dataset, complete='y', only_blocks=None):
         presence[site] = (set(all_block_names).issubset(set(blocks)), site_size/float(full_size)*100.)
     #print json.dumps( presence , indent=2)
     return presence
+
+def getDatasetSize(dataset):
+    dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+    blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
+    ## put everything in terms of GB
+    return sum([block['file_size'] / (1024.**3) for block in blocks])
 
 def getDatasetChops(dataset, chop_threshold =500., talk=False):
     ## does a *flat* choping of the input in chunk of size less than chop threshold
