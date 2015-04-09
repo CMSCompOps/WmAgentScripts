@@ -1,6 +1,6 @@
 from assignSession import *
 import reqMgrClient
-from utils import workflowInfo, campaignInfo
+from utils import workflowInfo, campaignInfo, siteInfo
 from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation
 import optparse
 import itertools
@@ -8,6 +8,7 @@ import time
 
 def assignor(url ,specific = None, talk=True, options=None):
     CI = campaignInfo()
+    SI = siteInfo()
     wfos=[]
     if specific:
         wfos = session.query(Workflow).filter(Workflow.name==specific).all()
@@ -55,11 +56,10 @@ def assignor(url ,specific = None, talk=True, options=None):
         (lheinput,primary,parent,secondary) = wfh.getIO()
         sites_allowed = getSiteWhiteList( (lheinput,primary,parent,secondary) )
         sites_custodial = list(set(itertools.chain.from_iterable([findCustodialLocation(url, prim) for prim in primary])))
+        sites_out = [SI.pick_dSE([SI.CE_to_SE(ce) for ce in sites_allowed])]
         if len(sites_custodial)==0:
-            ##need to pick one
-            print "need to pick a custodial for",wfo.name
-            #sys.exit(35)
-        
+            sites_custodial = [SI.pick_SE()]
+            print "picked",sites_custodial," as custodial for",wfo.name
 
         if len(sites_custodial)>1:
             print "more than one custodial for",wfo.name
@@ -83,6 +83,8 @@ def assignor(url ,specific = None, talk=True, options=None):
         parameters={
             'SiteWhitelist' : sites_allowed,
             'CustodialSites' : sites_custodial,
+            'NonCustodialSites' : sites_out,
+            'AutoApproveSubscriptionSites' : list(set(sites_out+sites_custodial)),
             'AcquisitionEra' : wfh.acquisitionEra(),
             'ProcessingString' : wfh.processingString(),
             'MergedLFNBase' : '/store/mc', ## to be figured out ! from Hi shit
