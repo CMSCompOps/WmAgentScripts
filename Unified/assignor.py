@@ -24,17 +24,18 @@ def assignor(url ,specific = None, talk=True, options=None):
             #if not specific in wfo.name: continue
         print wfo.name,"to be assigned"
         wfh = workflowInfo( url, wfo.name)
-        wl = getWorkLoad(url, wfo.name )
+        #wl = getWorkLoad(url, wfo.name )
 
-        if not CI.go( wl['Campaign'] ):
-            print "No go for",wl['Campaign']
+        if not CI.go( wfh.request['Campaign'] ):
+            print "No go for",wfh.request['Campaign']
             continue
 
-        injection_time = time.mktime(time.strptime('.'.join(map(str,wl['RequestDate'])),"%Y.%m.%d.%H.%M.%S")) / (60.*60.)
+        injection_time = time.mktime(time.strptime('.'.join(map(str,wfh.request['RequestDate'])),"%Y.%m.%d.%H.%M.%S")) / (60.*60.)
         now = time.mktime(time.gmtime()) / (60.*60.)
         if float(now - injection_time) < 4.:
-            print "It is too soon to inject", now, injection_time
-            continue
+            print "It is too soon to inject: %3.2fH remaining"%(now - injection_time)
+            if not options.test:
+                continue
 
         #grace_period = 4 #days
         #if float(now - injection_time) > grace_period*24.:
@@ -45,12 +46,11 @@ def assignor(url ,specific = None, talk=True, options=None):
         #    print now,injection_time,now - injection_time
 
         #print wl
-        if wl['RequestStatus'] !='assignment-approved':
-            print wfo.name,wl['RequestStatus'],"skipping"
-            continue
+        if wfh.request['RequestStatus'] !='assignment-approved':
+            print wfo.name,wfh.request['RequestStatus'],"skipping"
+            if not options.test:
+                continue
 
-        outputs = wl['OutputDatasets']
-        #print outputs
         version=wfh.getNextVersion()
 
         (lheinput,primary,parent,secondary) = wfh.getIO()
@@ -100,11 +100,11 @@ def assignor(url ,specific = None, talk=True, options=None):
                     else: parameters[key] = v
 
         ## take care of a few exceptions
-        if (wl['Memory']*1000) > 3000000:
+        if (wfh.request['Memory']*1000) > 3000000:
             parameters['MaxRSS'] = 4000000
 
         ## pick up campaign specific assignment parameters
-        parameters.update( CI.parameters(wl['Campaign']) )
+        parameters.update( CI.parameters(wfh.request['Campaign']) )
 
         if not options.test:
             parameters['execute'] = True
