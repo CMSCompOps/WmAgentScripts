@@ -11,7 +11,7 @@ import random
 from xml.dom.minidom import getDOMImplementation
 import copy 
 import pickle
-
+import itertools
 
 FORMAT = "%(module)s.%(funcName)s(%(lineno)s) => %(message)s (%(asctime)s)"
 DATEFMT = "%Y-%m-%d %H:%M:%S"
@@ -233,15 +233,28 @@ def checkTransferStatus(url, xfer_id):
     r2=conn.getresponse()
     result = json.loads(r2.read())
 
+    #print result
     completions={}
     for item in  result['phedex']['dataset']:
         completions[item['name']]={}
-        for sub in item['subscription']:
+        if 'subscription' not in item:            
+            loop_on = list(itertools.chain.from_iterable([subitem['subscription'] for subitem in item['block']]))
+        else:
+            loop_on = item['subscription']
+        for sub in loop_on:
+            if not sub['node'] in completions[item['name']]:
+                completions[item['name']][sub['node']] = []
             if sub['percent_bytes']:
-                #completions[item['name']] [sub['node']] = float(sub['percent_bytes'])
-                completions[item['name']] [sub['node']] = float(sub['percent_files'])
+                #print sub
+                #print sub['node'],sub['percent_files']
+                completions[item['name']] [sub['node']].append(float(sub['percent_files']))
             else:
-                completions[item['name']] [sub['node']] = 0.
+                completions[item['name']] [sub['node']].append(0.)
+        
+    for item in completions:
+        for site in completions[item]:
+            ## average it !
+            completions[item][site] = sum(completions[item][site]) / len(completions[item][site])
 
     #print result
     """
