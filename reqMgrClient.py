@@ -8,6 +8,8 @@
 import urllib2,urllib, httplib, sys, re, os, json
 from xml.dom.minidom import getDOMImplementation
 import dbs3Client as dbs3
+import copy
+from utils import workflowInfo
 
 # default headers for PUT and POST methods
 def_headers={"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
@@ -670,6 +672,147 @@ def getOutputLumis(url, workflow, dataset):
     request = getWorkflowInfo(url, workflow)
     return dbs3.getLumiCountDataSet(dataset)
     
+def assignWorkflow(url, workflowname, team, parameters ):
+    defaults = copy.deepcopy( assignWorkflow.defaults )
+    defaults["Team"+team] = "checked"
+    defaults["checkbox"+workflowname] = "checked"
+
+    defaults.update( parameters )
+
+    if not set(assignWorkflow.mandatories).issubset( set(parameters.keys())):
+        print "There are missing parameters"
+        print list(set(assignWorkflow.mandatories) - set(parameters.keys()))
+        return False
+
+    if not 'execute' in defaults or not defaults['execute']:
+        print json.dumps( defaults ,indent=2)
+        return False
+    else:
+        defaults.pop('execute')
+
+
+    for aux in assignWorkflow.auxiliaries:
+        if aux in defaults: 
+            par = defaults.pop( aux )
+
+            if aux == 'EventsPerJob':
+                wf = workflowInfo(url, workflowname)
+                t = wf.firstTask()
+                params = wf.getSplittings()[0]
+                if par < params['events_per_job']:
+                    par = min(par, params['events_per_job'])
+                    params.update({"requestName":workflowname,
+                                   "splittingTask" : '/%s/%s'%(workflowname,t),
+                                   "events_per_job": par})
+                    print setWorkflowSplitting(url, params)
+            elif aux == 'EventsPerLumi':
+                wf = workflowInfo(url, workflowname)
+                t = wf.firstTask()
+                params = wf.getSplittings()[0]
+                if str(par).startswith('x'):
+                    multiplier = float(str(par).replace('x',''))
+                    par = int(params['events_per_lumi'] * multiplier)
+                else:
+                    if 'FilterEfficiency' in wf.request and wf.request['FilterEfficiency']:
+                        par = int(par/wf.request['FilterEfficiency'])
+
+                params.update({"requestName":workflowname,
+                               "splittingTask" : '/%s/%s'%(workflowname,t),
+                               "events_per_lumi": par})
+                print setWorkflowSplitting(url, params)
+            elif aux == 'SplittingAlgorithm':
+                wf = workflowInfo(url, workflowname)
+                t = wf.firstTask()
+                params = wf.getSplittings()[0]
+                params.update({"requestName":workflowname,
+                               "splittingTask" : '/%s/%s'%(workflowname,t),
+                               "splittingAlgo" : par})
+                print setWorkflowSplitting(url, params)
+            elif aux == 'LumisPerJob': ## this is just for fun, we should never need that fall-back
+                wf = workflowInfo(url, workflowname)
+                t = wf.firstTask()
+                params = wf.getSplittings()[0]
+                params.update({"requestName":workflowname,
+                               "splittingTask" : '/%s/%s'%(workflowname,t),
+                               "lumis_per_job" : par})
+                print setWorkflowSplitting(url, params)
+                return False ## not commissioned
+            else:
+                print "No action for ",aux
+
+    jsonEncodedParams = {}
+    for paramKey in defaults.keys():
+        jsonEncodedParams[paramKey] = json.dumps(defaults[paramKey])
+    encodedParams = urllib.urlencode(jsonEncodedParams, False)
+    #encodedParams = urllib.urlencode(parameters, True)
+
+    headers  =  {"Content-type": "application/x-www-form-urlencoded",
+                 "Accept": "text/plain"}
+
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+
+    conn.request("POST",  "/reqmgr/assign/handleAssignmentPage", encodedParams, headers)
+    response = conn.getresponse()
+    if response.status != 200:
+        print 'could not assign request with following parameters:'
+        for item in defaults.keys():
+            print item + ": " + str(defaults[item])
+        print 'Response from http call:'
+        print 'Status:',response.status,'Reason:',response.reason
+        print 'Explanation:'
+        data = response.read()
+        return False
+
+    print 'Assigned workflow:',workflowname,'to site:',defaults['SiteWhitelist'],'and team',team
+    conn.close()
+    return True
+
+
+assignWorkflow.defaults= {
+        "action": "Assign",
+        "SiteBlacklist": [],
+        "useSiteListAsLocation" : False,
+        "UnmergedLFNBase": "/store/unmerged",
+        "MinMergeSize": 2147483648,
+        "MaxMergeSize": 4294967296,
+        "MaxMergeEvents" : 50000,
+        'BlockCloseMaxEvents' : 2000000,
+        "MaxRSS" : 3000000,
+        "MaxVSize": 4394967000,
+        "maxVSize": 4394967000,
+        "Dashboard": "production",
+        "dashboard": "production",
+        "SoftTimeout" : 159600,
+        "GracePeriod": 300,
+        "CustodialSubType" : 'Replica', ## move will screw it over ?
+        'NonCustodialSites' : [],
+        "NonCustodialSubType" : 'Replica', ## that's the default, but let's be sure
+        'AutoApproveSubscriptionSites' : False,
+        }
+assignWorkflow.mandatories = ['SiteWhitelist',
+                              'AcquisitionEra',
+                              'ProcessingVersion',
+                              'ProcessingString',
+                              'MergedLFNBase',
+                              
+                              'CustodialSites', ## make a custodial copy of the output there
+                              
+                              #'SoftTimeout',
+                              #'BlockCloseMaxEvents',
+                              #'MinMergeSize',
+                              #'MaxMergeEvents',
+                              #'MaxRSS'
+                              ]
+assignWorkflow.auxiliaries = [ 'SplittingAlgorithm',
+                               'EventsPerJob',
+                               'EventsPerLumi',
+                               'LumisPerJob'
+                               ]
+
+assignWorkflow.keys = assignWorkflow.mandatories+assignWorkflow.defaults.keys() + assignWorkflow.auxiliaries
+
+
+
 def closeOutWorkflow(url, workflowname):
     """
     Closes out a workflow by changing the state to closed-out
