@@ -1,16 +1,7 @@
 #!/usr/bin/env python
 import urllib2,urllib, httplib, sys, re, os, json
 import optparse
-from dbs.apis.dbsClient import DbsApi
-
-dbs3_url = r'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
-
-def getDatasetStatus(dataset):
-        # initialize API to DBS3
-        dbsapi = DbsApi(url=dbs3_url)
-        # retrieve dataset summary
-        reply = dbsapi.listDatasets(dataset=dataset,dataset_access_type='*',detail=True)
-        return reply[0]['dataset_access_type']
+import dbs3Client as dbs3
 
 def main():
 	url='cmsweb.cern.ch'	
@@ -31,7 +22,7 @@ def main():
 
         for dataset in f:
            dataset = dataset.rstrip('\n')
-           status = getDatasetStatus(dataset)
+           status = dbs3.getDatasetStatus(dataset)
            print dataset, status
 
 	sys.exit(0)
