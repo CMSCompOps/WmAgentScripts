@@ -56,6 +56,14 @@ def ol(out):
 
 html_doc.write("""
 <html>
+<head>
+<script type="text/javascript">
+ function showhide(id) {
+    var e = document.getElementById(id);
+    e.style.display = (e.style.display == 'block') ? 'none' : 'block';
+ }
+</script>
+</head>
 <body>
 
 Last update on %s(CET), %s(GMT) <br><br>
@@ -68,8 +76,14 @@ count=0
 for wf in session.query(Workflow).filter(Workflow.status=='considered').all():
     text+="<li> %s </li> \n"%wfl(wf,p=True)
     count+=1
-text+="</ul>\n"
-html_doc.write("Worlfow next to handle (%d)<br><ul>\n"%count)
+text+="</ul></div>\n"
+html_doc.write("""
+Worlfow next to handle (%d)
+<a href="javascript:showhide('considered')">[Click to show/hide]</a>
+<br>
+<div id="considered" style="display:none;">
+<ul>
+"""%count)
 html_doc.write(text)
 
 text=""
@@ -77,26 +91,41 @@ count=0
 for wf in session.query(Workflow).filter(Workflow.status=='staging').all():
     text+="<li> %s </li> \n"%wfl(wf)
     count+=1
-text+="</ul>\n"
-html_doc.write("Worlfow waiting in staging (%d)<br><ul>\n"%count)
+text+="</ul></div>\n"
+html_doc.write("""
+Worlfow waiting in staging (%d)
+<a href="javascript:showhide('staging')">[Click to show/hide]</a>
+<br>
+<div id="staging" style="display:none;">
+<ul>
+"""%count)
 html_doc.write(text)
 
-html_doc.write("Transfer on-going (<a href=https://transferteam.web.cern.ch/transferteam/dashboard/ target=_blank> transfer team dashboard</a>)<br><ul>\n")
-
+text=""
+count=0
 for ts in session.query(Transfer).all():
-    text="<li> %s serves</li> \n<ul>"%phl(ts.phedexid)
+    stext="<li> %s serves</li> \n<ul>"%phl(ts.phedexid)
     hide = True
     for pid in ts.workflows_id:
         w = session.query(Workflow).get(pid)
         hide &= (w.status in ['staged','away','done','forget'])
-        text+="<li> %s : %s</li>\n"%( wfl(w),w.status)
-    text+="</ul>\n"
+        stext+="<li> %s : %s</li>\n"%( wfl(w),w.status)
+    stext+="</ul>\n"
     if hide:
-        html_doc.write("<li> %s not needed anymore to start running (does not mean it went through completely)</li>"%phl(ts.phedexid))
+        #text+="<li> %s not needed anymore to start running (does not mean it went through completely)</li>"%phl(ts.phedexid)
+        pass
     else:
-        html_doc.write(text)
-
-html_doc.write("</ul>\n")
+        count+=1
+        text+=stext
+text+="</ul></div>"
+html_doc.write("""
+Transfer on-going (%d) <a href=https://transferteam.web.cern.ch/transferteam/dashboard/ target=_blank>transfer team dashboard</a>
+<a href="javascript:showhide('transfer')">[Click to show/hide]</a>
+<br>
+<div id="transfer" style="display:none;">
+<br>
+<ul>"""%count)
+html_doc.write(text)
 
 
 
@@ -105,26 +134,46 @@ count=0
 for wf in session.query(Workflow).filter(Workflow.status=='staged').all():
     text+="<li> %s </li> \n"%wfl(wf,p=True)
     count+=1
-text+="</ul>\n"
-html_doc.write("Worlfow ready for assigning (%d)<br><ul>\n"%count)
+text+="</ul></div>\n"
+html_doc.write("""Worlfow ready for assigning (%d)
+<a href="javascript:showhide('staged')">[Click to show/hide]</a>
+<br>
+<div id="staged" style="display:none;">
+<br>
+<ul>
+"""%count)
 html_doc.write(text)
 
-text=""
-count=0
+lines=[]
 for wf in session.query(Workflow).filter(Workflow.status=='away').all():
-    text+="<li> %s </li> \n"%wfl(wf,v=True)
-    count+=1
-text+="</ul>\n"
-html_doc.write("Worlfow on-going (%d) <a href=https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary target=_blank>elog</a> <a href=http://hcc-briantest.unl.edu/prodview target=_blank>queues</a><br><ul>\n"%count)
-html_doc.write(text)
+    lines.append("<li> %s </li>"%wfl(wf,v=True))
+lines.sort()
+html_doc.write("""
+Worlfow on-going (%d) <a href=https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary target=_blank>elog</a> <a href=http://hcc-briantest.unl.edu/prodview target=_blank>queues</a>
+<a href="javascript:showhide('away')">[Click to show/hide]</a>
+<br>
+<div id="away" style="display:none;">
+<br>
+<ul>
+%s
+</ul>
+</div>
+"""%(len(lines),'\n'.join(lines)))
+
 
 text=""
 count=0
 for wf in session.query(Workflow).filter(Workflow.status=='trouble').all():
     text+="<li> %s </li> \n"%wfl(wf)
     count+=1
-text+="</ul>\n"
-html_doc.write("Worlfow with issue (%d)<br><ul>\n"%count)
+text+="</ul></div>\n"
+html_doc.write("""Worlfow with issue (%d)
+<a href="javascript:showhide('trouble')">[Click to show/hide]</a>
+<br>
+<div id="trouble" style="display:none;">
+<br>
+<ul>
+"""%count)
 html_doc.write(text)
 
 text=""
@@ -132,8 +181,15 @@ count=0
 for wf in session.query(Workflow).filter(Workflow.status=='forget').all():
     text+="<li> %s </li> \n"%wfl(wf)
     count+=1
-text+="</ul>\n"
-html_doc.write("Worlfow put behind (%d)<br><ul>\n"%count)
+text+="</ul></div>\n"
+html_doc.write("""
+Worlfow put behind (%d)
+<a href="javascript:showhide('forget')">[Click to show/hide]</a>
+<br>
+<div id="forget" style="display:none;">
+<br>
+<ul>
+"""%count)
 html_doc.write(text)
 
 text=""
@@ -141,21 +197,50 @@ count=0
 for wf in session.query(Workflow).filter(Workflow.status=='done').all():
     text+="<li> %s </li> \n"%wfl(wf)#,ms=True)
     count+=1
-text+="</ul>\n"
-html_doc.write("Worlfow through (%d)<br><ul>\n"%count)
+text+="</ul></div>\n"
+html_doc.write("""
+Worlfow through (%d)
+<a href="javascript:showhide('done')">[Click to show/hide]</a>
+<br>
+<div id="done" style="display:none;">
+<br>
+<ul>
+"""%count)
 html_doc.write(text)
 
-html_doc.write("Output produced<br><ul>\n")
+text=""
+lines=[]
 now = time.mktime(time.gmtime())
 for out in session.query(Output).all():
     if  out.workflow.status == 'done':
         if (now-out.date) <= (7.*24.*60.*60.):
-            html_doc.write("<li>on week %s : %s </li>\n"%(
+            lines.append("<li>on week %s : %s </li>"%(
                     time.strftime("%W (%x %X)",time.gmtime(out.date)),
                     ol(out.datasetname),
-                    )
-                           )
-html_doc.write("</ul>\n")      
+                   )
+                         )
+lines.sort()
+
+html_doc.write("""Output produced (%d)
+<a href="javascript:showhide('output')">[Click to show/hide]</a>
+<br>
+<div id="output" style="display:none;">
+<br>
+<ul>
+%s
+</ul></div>
+"""%(len(lines),'\n'.join(lines)))
+
+html_doc.write("""Job installed
+<a href="javascript:showhide('acron')">[Click to show/hide]</a>
+<br>
+<div id="acron" style="display:none;">
+<br>
+<pre>
+%s
+</pre></div>
+"""%(os.popen('acrontab -l | grep Unified').read()))
+
 
 html_doc.write("""
 </body>
