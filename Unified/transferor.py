@@ -97,14 +97,26 @@ def transferor(url ,specific = None, talk=True, options=None):
     #print json.dumps(all_transfers)
     fake_id=-1
     wf_id_in_prestaging=set()
+
     for (site,items_to_transfer) in all_transfers.iteritems():
+        items_to_transfer = list(set(items_to_transfer))
         ## convert to storage element
         site_se = SI.CE_to_SE(site)
-        ## operate the transfer
+
+        ## massage a bit the items
+        blocks = [it for it in items_to_transfer if '#' in it]
+        datasets = [it for it in items_to_transfer if not '#' in it]
+
         print "Making a replica to",site,"(CE)",site_se,"(SE) for"
-        print "\t",len([it for it in items_to_transfer if '#' in it]),"blocks"
-        print "\t",len([it for it in items_to_transfer if not '#' in it]),"datasets"
-        print "\t",[it for it in items_to_transfer if not '#' in it]
+        print "\t",len(blocks),"blocks"
+        ## remove blocks if full dataset is send out
+        blocks = [block for block in blocks if not block.split('#')[0] in datasets]
+        print "\t",len(blocks),"needed blocks"
+        print "\t",len(datasets),"datasets"
+        print "\t",datasets
+        items_to_transfer = blocks + datasets
+
+        ## operate the transfer
         if options and options.stop:
             ## ask to move-on
             answer = raw_input('Continue with that ?')
