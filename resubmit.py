@@ -80,7 +80,7 @@ def modifySchema(helper, user, group, backfill=False):
         eventsPerJob = 120000
         eventsPerLumi = 100000
         for k, v in splitting.items():
-            print k,":",v
+            #print k,":",v
             if k.endswith('/Production'):
                 if 'events_per_job' in v:
                     eventsPerJob = v['events_per_job']
