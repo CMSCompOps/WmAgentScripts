@@ -15,6 +15,7 @@ import re
 import json
 import changePriorityWorkflow
 import reqMgrClient
+from WMCore.Wrappers import JsonWrapper
 from WMCore.WMSpec.WMWorkload import WMWorkloadHelper
 
 reqmgrCouchURL = "https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache"
@@ -47,6 +48,10 @@ def modifySchema(helper, user, group, backfill=False):
         #copy the right LFN base
         elif key == 'MergedLFNBase':
             result['MergedLFNBase'] = helper.getMergedLFNBase()
+        # convert LumiList to dict
+        elif key == 'LumiList':
+            result['LumiList'] = JsonWrapper.loads(value)
+        
         #TODO deleting timeout so they will move to running-close as soon as they can
         #elif key == 'OpenRunningTimeout':
             #delete entry
