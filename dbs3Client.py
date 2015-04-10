@@ -133,6 +133,15 @@ def getDatasetInfo(dataset):
         open_for_writing |= block['open_for_writing']
     return (open_for_writing, min_creation_date, max_last_modified)
     
+
+def getDatasetStatus(dataset):
+    """
+    Gets the dataset status (access type): VALID, INVALID, PRODUCTION, DEPRECATED
+    """
+    dbsapi = DbsApi(url=dbs3_url)
+    reply = dbsapi.listDatasets(dataset=dataset,dataset_access_type='*',detail=True)
+    return reply[0]['dataset_access_type']
+
 def getMaxLumi(dataset):
     """
     Gets the number of the last lumi in a given dataset
