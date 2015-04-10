@@ -23,7 +23,6 @@ import re
 import json
 from optparse import OptionParser
 from pprint import pprint
-
 try:
     import changePriorityWorkflow
     import reqMgrClient
@@ -63,6 +62,10 @@ def modifySchema(helper, user, group, backfill=False):
         #copy the right LFN base
         elif key == 'MergedLFNBase':
             result['MergedLFNBase'] = helper.getMergedLFNBase()
+        # convert LumiList to dict
+        elif key == 'LumiList':
+            result['LumiList'] = JsonWrapper.loads(value)
+        
         #TODO deleting timeout so they will move to running-close as soon as they can
         #elif key == 'OpenRunningTimeout':
             #delete entry
