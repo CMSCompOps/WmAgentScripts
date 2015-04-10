@@ -33,7 +33,7 @@ testAgents = ['cmssrv95.fnal.gov', 'cmssrv113.fnal.gov', 'vocms040.cern.ch', 'vo
 
 ##Job expected types
 jobTypes = ['Processing', 'Production', 'Skim', 'Harvest', 'Merge', 'LogCollect', 'Cleanup', 'RelVal', 'Express', 'Repack', 'Reco']
-backfillTypes = ['TOP', 'SMP', 'RECO', 'DIGI', 'Prod', 'MinBias', 'MINIAOD', 'HLT', 'LHE', 'ZMM']
+backfillTypes = ['TOP', 'SMP', 'RECO', 'DIGI', 'Prod', 'MinBias', 'MINIAOD', 'HLT', 'LHE', 'ZMM', 'HIG', 'B2G', 'ZTT']
 
 ## Job counting / Condor monitoring
 baseSiteList = {} # Site list
@@ -617,8 +617,16 @@ def main():
                 if siteName(array[5]): # If job is currently running
                     siteToExtract = [array[5]]
                 
-                if col == tier0_pool[0]:
-                    if siteToExtract[0] != 'T2_CH_CERN_T0':
+                # Ignore jobs to the T1s from the Tier-0 pool
+                # Avoid double accounting with the global pool
+                if col == tier0_pool[0]: 
+                    if not 'T2_CH_CERN_T0' in siteToExtract:
+                        continue
+                
+                # Ignore jobs to the T2_CH_CERN_T0 from the global pool
+                # Avoid double accounting with the Tier-0 pool
+                if col == global_pool[0]: 
+                    if 'T2_CH_CERN_T0' in siteToExtract:
                         continue
                 
                 if status == "2":
