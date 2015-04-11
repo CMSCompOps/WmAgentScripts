@@ -751,7 +751,10 @@ class workflowInfo:
             
     def getNextVersion( self ):
         ## returns 1 if nothing is in the way
-        version = self.request['ProcessingVersion']-1
+        if 'ProcessingVersion' in self.request:
+            version = max(0,self.request['ProcessingVersion']-1)
+        else:
+            version = 0
         outputs = self.request['OutputDatasets']
         #print outputs
         era = self.acquisitionEra()
@@ -777,7 +780,7 @@ class workflowInfo:
                 print output
                 (_,dsn,ps,tier) = output.split('/')
                 (aera,aps,_) = ps.split('-')
-                if aera == 'None':
+                if aera == 'None' or aera == 'FAKE':
                     print "no era, using ",era
                     aera=era
                 if aps == 'None':
