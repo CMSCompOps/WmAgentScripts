@@ -7,6 +7,7 @@ import json
 import time
 import sys
 import subprocess
+from htmlor import htmlor
 
 def closor(url, specific=None):
     dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
@@ -121,3 +122,5 @@ if __name__ == "__main__":
     if len(sys.argv)>1:
         spec=sys.argv[1]
     closor(url,spec)
+
+    htmlor()
