@@ -7,6 +7,7 @@ import json
 from collections import defaultdict
 import optparse
 import time
+from htmlor import htmlor
 
 def transferor(url ,specific = None, talk=True, options=None):
     if options and options.test:
@@ -174,3 +175,5 @@ if __name__=="__main__":
     if len(args):
         spec = args[0]
     transferor(url,spec,options=options)
+
+    htmlor()

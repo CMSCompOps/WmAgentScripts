@@ -5,6 +5,7 @@ from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets
 import optparse
 import itertools
 import time
+from htmlor import htmlor
 
 def assignor(url ,specific = None, talk=True, options=None):
     CI = campaignInfo()
@@ -154,3 +155,5 @@ if __name__=="__main__":
         spec = args[0]
 
     assignor(url,spec, options=options)
+
+    htmlor()

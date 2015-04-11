@@ -2,6 +2,7 @@ from assignSession import *
 from utils import getWorkflows, getWorkflowById, getWorkLoad
 import sys
 import copy
+from htmlor import htmlor
 
 def injector(url,wm_status = 'assignment-approved', set_status='considered', talk = False):
     workflows = getWorkflows(url, status=wm_status,user='pdmvserv')
@@ -89,4 +90,5 @@ if __name__ == "__main__":
     else:
         injector(url)
 
+    htmlor()
     
