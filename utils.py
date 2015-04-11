@@ -605,12 +605,22 @@ class workflowInfo:
         return self._tasks()[0]
 
     def checkWorkflowSplitting( self ):
+        ## this isn't functioning for taskchain BTW
         if 'InputDataset' in self.request:
             average = getDatasetEventsPerLumi(self.request['InputDataset'])
+            timing = self.request['TimePerEvent']
+  
+            ## if we can stay within 48 with one lumi. do it
+            timeout = 48 *60.*60. #self.request['OpenRunningTimeout']
+            if (average * timing) < timeout:
+                ## we are within overboard with one lumi only
+                return True
+
             spl = self.getSplittings()[0]
             events_per_job = spl['events_per_job']
             algo = spl['splittingAlgo']
             if algo == 'EventAwareLumiBased' and average > events_per_job:
+                ## need a fudge factor !!!
                 print "This is going to fail",average,"in and requiring",events_per_job
                 return False
         return True
