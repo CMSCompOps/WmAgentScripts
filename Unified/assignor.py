@@ -94,7 +94,7 @@ def assignor(url ,specific = None, talk=True, options=None):
             'SiteWhitelist' : sites_allowed,
             'CustodialSites' : sites_custodial,
             'NonCustodialSites' : sites_out,
-            'AutoApproveSubscriptionSites' : list(set(sites_out+sites_custodial)),
+            'AutoApproveSubscriptionSites' : list(set(sites_out)),
             'AcquisitionEra' : wfh.acquisitionEra(),
             'ProcessingString' : wfh.processingString(),
             'MergedLFNBase' : '/store/mc', ## to be figured out ! from Hi shit
