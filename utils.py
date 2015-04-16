@@ -600,9 +600,13 @@ def getWorkflows(url,status,user):
     return workflows
 
 class workflowInfo:
-    def __init__(self, url, workflow ):
+    def __init__(self, url, workflow,deprecated=False ):
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-        #r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
+        self.deprecated_request = {}
+        if deprecated:
+            r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
+            r2=conn.getresponse()
+            self.deprecated_request = json.loads(r2.read())
         r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/'+workflow)
         r2=conn.getresponse()
         self.request = json.loads(r2.read())
