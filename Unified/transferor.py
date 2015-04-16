@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from assignSession import *
 import reqMgrClient
 from utils import makeReplicaRequest

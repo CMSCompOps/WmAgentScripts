@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from assignSession import *
 from utils import getWorkflows, getWorkflowById, getWorkLoad
 import sys

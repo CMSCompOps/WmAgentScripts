@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from assignSession import *
 from utils import getWorkLoad
 from dbs.apis.dbsClient import DbsApi

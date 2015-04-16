@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from assignSession import *
 from utils import getWorkLoad, getDatasetPresence, makeDeleteRequest, getDatasetSize, siteInfo
 import json

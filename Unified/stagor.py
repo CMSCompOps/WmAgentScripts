@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from assignSession import *
 from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput
 import sys
