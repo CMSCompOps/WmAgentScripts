@@ -86,13 +86,14 @@ def closor(url, specific=None):
             print "\t%60s %d/%d = %3.2f%%"%(out,lumi_count,expected_lumis,lumi_count/float(expected_lumis)*100.)
             #print wfo.fraction_for_closing, lumi_count, expected_lumis
             fraction = wfo.fraction_for_closing
-            fraction = 0.05
+            fraction = 0.0
             all_OK.append((float(lumi_count) > float(expected_lumis*fraction)))
 
 
         ## only that status can let me go into announced
         if wl['RequestStatus'] in ['closed-out']: ## add force-completed ??
             print wfo.name,"to be announced"
+
             results=[]#'dummy']
             if not results:
                 results.append(reqMgrClient.announceWorkflowCascade(url, wfo.name))
