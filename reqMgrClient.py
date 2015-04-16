@@ -697,14 +697,22 @@ def assignWorkflow(url, workflowname, team, parameters ):
     conn.request("POST",  "/reqmgr/assign/handleAssignmentPage", encodedParams, headers)
     response = conn.getresponse()
     if response.status != 200:
-        print 'could not assign request with following parameters:'
-        for item in defaults.keys():
-            print item + ": " + str(defaults[item])
-        print 'Response from http call:'
-        print 'Status:',response.status,'Reason:',response.reason
-        print 'Explanation:'
-        data = response.read()
-        return False
+        ## try again
+        conn.request("POST",  "/reqmgr/assign/handleAssignmentPage", encodedParams, headers)
+        response = conn.getresponse()
+        if response.status != 200:
+            ## and again !!
+            conn.request("POST",  "/reqmgr/assign/handleAssignmentPage", encodedParams, headers)
+            response = conn.getresponse()
+            if response.status != 200:
+                print 'could not assign request with following parameters:'
+                for item in defaults.keys():
+                    print item + ": " + str(defaults[item])
+                print 'Response from http call:'
+                print 'Status:',response.status,'Reason:',response.reason
+                print 'Explanation:'
+                data = response.read()
+                return False
 
     print 'Assigned workflow:',workflowname,'to site:',defaults['SiteWhitelist'],'and team',team
     conn.close()
