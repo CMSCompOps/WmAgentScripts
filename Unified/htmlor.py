@@ -1,6 +1,6 @@
 from assignSession import *
 import time
-from utils import getWorkLoad
+from utils import getWorkLoad, campaignInfo
 import os
 import json
 
@@ -250,6 +250,22 @@ Worlfow through (%d)
 </pre></div>
 """%(os.popen('acrontab -l | grep Unified').read()))
 
+    text=""
+    count=0
+    for (c,info) in campaignInfo().campaigns.items():
+        if 'go' in info and info['go']:
+            text+="<li>%s <br> <pre>%s</pre>  </li>"%( c, json.dumps( info, indent=2))
+            count+=1
+
+    html_doc.write("""Campaign configuration
+<a href="javascript:showhide('campaign')">[Click to show/hide]</a>
+<br>
+<div id="campaign" style="display:none;">
+<br>
+<ul>
+%s
+</ul></div>
+"""%(text))
 
     html_doc.write("""
 </body>
