@@ -366,10 +366,11 @@ def validateClosingTaskChain(url, workflow):
     
     #if subtype doesn't come with the request, we decide based on dataset names
     fromGen = False
-    if not re.match('.*/GEN$', workflow.outputDatasets[0]):
+    #if no output dataset ends with GEN or LHE
+    if not re.match('.*/(GEN|LHE)$', workflow.outputDatasets[0]):
         fromGen = False
-    elif (re.match('.*/GEN$', workflow.outputDatasets[0])
-        and re.match('.*/GEN-SIM$', workflow.outputDatasets[1])):
+    elif (re.match('.*/(GEN|LHE)$', workflow.outputDatasets[0])
+        and re.match('.*/(GEN-SIM|GEN)$', workflow.outputDatasets[1])):
         fromGen = True
 
     #task-chain 1 (without filterEff)
@@ -379,7 +380,7 @@ def validateClosingTaskChain(url, workflow):
         return result
     #task-chain 2 GEN, GEN-SIM, GEN-SIM-RAW, AODSIM, DQM
     else:
-        #GEN and GEN-SIM
+        #GEN/LHE and GEN-SIM
         result = {'name':workflow.name, 'datasets': {}}
         result['datasets'] = dict( (ds,{}) for ds in workflow.outputDatasets)
         closeOutWorkflow = True
@@ -389,7 +390,7 @@ def validateClosingTaskChain(url, workflow):
             #percentage
             outputEvents = workflow.getOutputEvents(dataset)
             filterEff = workflow.getFilterEfficiency('Task%d'%i)
-            #GEN and GEN-SIM
+            #GEN/LHE and GEN-SIM
             if 1 <= i <= 2:
                 #decrease filter eff
                 inputEvents *= filterEff
@@ -496,10 +497,8 @@ def main():
 
     noSiteWorkflows = closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarloFromGEN'], fromGen=True)
     workflowsCompleted['NoSite-MonteCarloFromGEN'] = noSiteWorkflows
-
     noSiteWorkflows = closeOutTaskChain(url, workflowsCompleted['TaskChain'])
     workflowsCompleted['NoSite-TaskChain'] = noSiteWorkflows
-
     noSiteWorkflows = closeOutStep0Requests(url, workflowsCompleted['LHEStepZero'])
     workflowsCompleted['NoSite-LHEStepZero'] = noSiteWorkflows
 
@@ -516,7 +515,6 @@ def main():
 
     print "StoreResults Workflows for which couldn't find PhEDEx Subscription"
     listWorkflows(workflowsCompleted['NoSite-StoreResults'])
-
     sys.exit(0);
 
 if __name__ == "__main__":

@@ -15,12 +15,16 @@ except ImportError:
     import simplejson as json
 weekSet = set()
 ignoreCampaign = set(['CMSSW_7_1_0','CMSSW_7_2_0_pre4','TEST'])
-
+STATUS = ["assignment-approved","assigned","acquired","running-open", "running-closed", "completed", "closed-out", "announced"]
 
 def getIndex(status):
-    l = ["assignment-approved","acquired","running-open", "running-closed", "completed", "closed-out"]
-    #print status
-    return l.index(status)
+    try:
+        
+        #print status
+        return STATUS.index(status)
+    except ValueError as e:
+        print "Status:",status
+        raise e
 
 def loadData(infile, jsonFile=False):
     #matrix type,weeks
@@ -67,6 +71,9 @@ def loadData(infile, jsonFile=False):
         #ignore resubmissions:
         if rtype == 'Resubmission':
             continue
+        #ignore dave mason's tests and stefan's tests
+        if 'dmason' in name or 'piperov' in name:
+            continue
         #ignore relvals and test
         if campaign in ignoreCampaign:
             continue
@@ -83,7 +90,7 @@ def loadData(infile, jsonFile=False):
             wfsByStatus[status] = {}
         if weeks not in wfsByStatus[status]:
             wfsByStatus[status][weeks] = 0
-
+        #store results
         if campaign not in wfsByCampaign:
             wfsByCampaign[campaign] = {}
         if weeks not in wfsByCampaign[campaign]:
@@ -109,7 +116,7 @@ def generatePlot(data, keyset, title, xlabel, ylabel, filename, sortKey=None):
      #sort keyset (bars)
     keyset = sorted(keyset)
     #sorted series
-    series = sorted(set(data.keys()), key=sortKey)
+    series = sorted(data.keys(), key=sortKey)
     series.reverse()
     #fill empty slots with 0
     information = [ [(data[t][w] if w in data[t] else 0) for w in keyset] for t in series]
@@ -136,7 +143,16 @@ def generatePlot(data, keyset, title, xlabel, ylabel, filename, sortKey=None):
     plt.ylabel(ylabel)
     plt.title(title)
     plt.xticks(ind+width, keyset)
-    plt.yticks(np.arange(0, maxy+1, max(maxy/5, 1)))
+
+    if maxy < 100:
+        yspace = 10
+    elif maxy < 200:
+        yspace = 20
+    else:
+        yspace = 50
+    #ticks
+    plt.yticks(np.arange(0, maxy+1, yspace))
+
     series.reverse()
     barcolors = [bar[0] for bar in bars]
     barcolors.reverse()

@@ -1,22 +1,36 @@
 #!/usr/bin/env python
 
 """
-This script clones a given workflow
-*args must be: workflow_name user group
-This script depends on WMCore code, so WMAgent environment
-and libraries need to be loaded before running it.
+    This script clones a given workflow
+    Usage:
+        python resubmit.py [options] WORKFLOW_NAME [USER GROUP]
+    Options:
+        -b --backfill, creates a clone
+        -v --verbose, prints schemas and responses
+    USER: the user for creating the clone, if empty it will
+          use the OS user running the script
+    GROUP: the group for creating the clone, if empty it will
+          use 'DATAOPS' by default
+    This script depends on WMCore code, so WMAgent environment
+    ,libraries and voms proxy need to be loaded before running it.
 """
 import pprint
-import os, datetime
+import os, datetime, pwd
 import sys
 import urllib
 import httplib
 import re
 import json
-import changePriorityWorkflow
-import reqMgrClient
-from WMCore.Wrappers import JsonWrapper
-from WMCore.WMSpec.WMWorkload import WMWorkloadHelper
+from optparse import OptionParser
+from pprint import pprint
+try:
+    import changePriorityWorkflow
+    import reqMgrClient
+    from WMCore.WMSpec.WMWorkload import WMWorkloadHelper
+except:
+    print "WMCore libraries not loaded, run the following command:"
+    print "source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh"
+    sys.exit(0)
 
 reqmgrCouchURL = "https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache"
 
@@ -69,7 +83,7 @@ def modifySchema(helper, user, group, backfill=False):
         eventsPerJob = 120000
         eventsPerLumi = 100000
         for k, v in splitting.items():
-            print k,":",v
+            #print k,":",v
             if k.endswith('/Production'):
                 if 'events_per_job' in v:
                     eventsPerJob = v['events_per_job']
@@ -107,7 +121,6 @@ def modifySchema(helper, user, group, backfill=False):
     if backfill:
         #Modify ProcessingString, AcquisitionEra, Campaign and Request string (if they don't
         #have the word 'backfill' in it
-        result["RequestNumEvents"] = 10000000
         result["ProcessingString"] = "BACKFILL"
         if "backfill" not in result["AcquisitionEra"].lower():
             result["AcquisitionEra"] = helper.getAcquisitionEra()+"Backfill"
@@ -134,21 +147,20 @@ def cloneWorkflow(workflow, user, group, verbose=False, backfill=False):
     helper = reqMgrClient.retrieveSchema(workflow)
     # get info from reqMgr
     schema = modifySchema(helper, user, group, backfill)
-
     print 'Submitting workflow'
     # Sumbit cloned workflow to ReqMgr
     response = reqMgrClient.submitWorkflow(url,schema)
-    print "RESPONSE", response
-
+    if verbose:
+        print "RESPONSE", response
+    
     #find the workflow name in response
     m = re.search("details\/(.*)\'",response)
     if m:
         newWorkflow = m.group(1)
+        print 'Cloned workflow: '+newWorkflow
         if verbose:
-            print 'Cloned workflow: '+newWorkflow
             print response    
-
-            print 'Approve request response:'
+            print 'Approving request response:'
         #TODO only for debug
         #response = reqMgrClient.setWorkflowSplitting(url, schema)
         #print "RESPONSE", response
@@ -165,8 +177,9 @@ def cloneWorkflow(workflow, user, group, verbose=False, backfill=False):
     else:
         if verbose:
             print response
+        else:
+            print "Couldn't clone the workflow."
         return None
-
 
 """
 __Main__
@@ -174,18 +187,38 @@ __Main__
 url = 'cmsweb.cern.ch'
 
 def main():
-    # Check the arguements, get info from them
-    if len(sys.argv) != 4 and len(sys.argv) != 5:
-        print "Usage:"
-        print "  ./resubmit WORKFLOW_NAME USER GROUP [-b]"
-        sys.exit(0)
-    #backfill option
-    backfill = (len(sys.argv) == 5 and sys.argv[4] == '-b')
-    workflow = sys.argv[1]
-    user = sys.argv[2]
-    group = sys.argv[3]    
-    #Show verbose
-    cloneWorkflow(workflow, user, group, True, backfill)
+
+    #Create option parser
+    usage = "\n       python %prog [options] WORKFLOW_NAME [USER GROUP]\n"\
+            "USER: the user for creating the clone, if empty it will\n"\
+            "      use the OS user running the script\n"\
+            "GROUP: the group for creating the clone, if empty it will\n"\
+            "      use 'DATAOPS' by default"
+
+    parser = OptionParser(usage=usage)
+    parser.add_option("-b","--backfill",action="store_true", dest="backfill", default=False,
+                        help="Creates a clone for backfill test purposes.")
+    parser.add_option("-v","--verbose",action="store_true", dest="verbose", default=False,
+                        help="Prints all query information.")
+    (options, args) = parser.parse_args()
+
+    # Check the arguments, get info from them
+    if len(args) == 3:
+        user = args[2]
+        group = args[3]
+    elif len(args) == 1:
+        #get os username by default
+        uinfo = pwd.getpwuid(os.getuid())
+        user = uinfo.pw_name
+        #group by default DATAOPS
+        group = 'DATAOPS'
+    else:
+        parser.error("Provide the workflow name and/or user name and group.")
+        sys.exit(1)
+        
+    workflow = args[0]
+    
+    cloneWorkflow(workflow, user, group, options.verbose, options.backfill)
     
     sys.exit(0)
 

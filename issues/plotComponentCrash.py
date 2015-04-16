@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import random
@@ -15,7 +17,7 @@ def loadData(infile):
         #read line
         (time, agent, component) = re.split('[\\t\\n]',line)[:3]
         #trim component to 8 chars when it's too large
-        #component = component[:8]
+        component = component[:8]
         if agent not in crashByAgent:
             crashByAgent[agent] = {}
         if component not in crashByAgent[agent]:
@@ -72,10 +74,12 @@ def generatePlot(data, keyset, title, xlabel, ylabel, filename):
     plt.title(title)
     plt.xticks(ind+width, keyset)
     plt.yticks(np.arange(0,maxy+2,max(maxy/5,1)))
-    plt.legend([bar[0] for bar in bars], series, loc='upper right',prop={'size':10})
+    barcolors = [bar[0] for bar in bars]
+    barcolors.reverse()
+    plt.legend(barcolors, series, loc='best',prop={'size':8})
     #rotate labels and adjust space if too many    
-    #plt.setp( ax.xaxis.get_majorticklabels(), rotation=45, size=10 )   
-    #plt.subplots_adjust(bottom=0.2)
+    plt.setp( ax.xaxis.get_majorticklabels(), rotation=45, size=10 )   
+    plt.subplots_adjust(bottom=0.2)
 
     #plt.show()
     plt.savefig(filename)

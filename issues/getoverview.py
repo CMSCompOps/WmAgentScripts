@@ -63,8 +63,8 @@ def formatoverview(s):
         ret = {}
         ret['request_name'],ret['status'],ret['type'] = r['key']
         #ignore taskchains
-        if ret['type'] == 'TaskChain':
-            continue
+        #if ret['type'] == 'TaskChain':
+        #    continue
         #replace status
         if ret['status'] == 'aborted-archived':
             ret['status'] = 'aborted'

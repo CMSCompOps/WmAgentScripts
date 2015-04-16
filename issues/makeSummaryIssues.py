@@ -261,8 +261,8 @@ def makeissuessummary(s, issues, oldest, urgent_requests, types):
         #only selected type
         if r['type'] not in types:
             continue
-        #TODO Ignore Dave's and Alan's tests
-        if 'dmason' in r['requestname'] or 'TEST' in r['requestname']:
+        #TODO Ignore Dave's, Stefan's and Alan's tests
+        if 'dmason' in r['requestname'] or 'TEST' in r['requestname'] or 'piperov' in r['requestname']:
             continue
         s2.append(r)
     s = s2
