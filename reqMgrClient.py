@@ -738,7 +738,7 @@ assignWorkflow.defaults= {
         "CustodialSubType" : 'Replica', ## move will screw it over ?
         'NonCustodialSites' : [],
         "NonCustodialSubType" : 'Replica', ## that's the default, but let's be sure
-        'AutoApproveSubscriptionSites' : False,
+        'AutoApproveSubscriptionSites' : [],
         }
 assignWorkflow.mandatories = ['SiteWhitelist',
                               'AcquisitionEra',
