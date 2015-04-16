@@ -19,10 +19,13 @@ def htmlor():
                 '(%s)'%wfs,
                 '<a href="https://cmsweb.cern.ch/reqmgr/view/details/%s" target="_blank">dts</a>'%wfn,
                 '<a href="https://cmsweb.cern.ch/reqmgr/reqMgr/request?requestName=%s" target="_blank">wkl</a>'%wfn,
+                '<a href="https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache/%s" target="_blank">wfc</a>'%wfn,
                 '<a href="https://cmsweb.cern.ch/reqmgr/view/splitting/%s" target="_blank">spl</a>'%wfn,
                 '<a href="https://cms-pdmv.cern.ch/stats/?RN=%s" target="_blank">vw</a>'%wfn,
                 '<a href="https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=full&reverse=0&reverse=1&npp=20&subtext=%s&sall=q" target="_blank">elog</a>'%pid,
-                '<a href="http://hcc-briantest.unl.edu/prodview/%s" target="_blank">pv</a>'%wfn
+                '<a href="http://hcc-briantest.unl.edu/prodview/%s" target="_blank">pv</a>'%wfn,
+                '<a href="https://cmsweb.cern.ch/reqmgr/reqMgr/outputDatasetsByRequestName/%s" target="_blank">out</a>'%wfn,
+                '<a href="https://cmsweb.cern.ch/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s" target="_blank">perf</a>'%wfn
                 ])
         if p:
             wl = getWorkLoad('cmsweb.cern.ch',wfn)
@@ -215,8 +218,11 @@ Worlfow through (%d)
     lines=[]
     now = time.mktime(time.gmtime())
     for out in session.query(Output).all():
+        if not out.workflow: 
+            print "This is a problem with",out.datasetname
+            continue
         if  out.workflow.status == 'done':
-            if (now-out.date) <= (7.*24.*60.*60.):
+            if (now-out.date) <= (10.*24.*60.*60.):
                 lines.append("<li>on week %s : %s </li>"%(
                         time.strftime("%W (%x %X)",time.gmtime(out.date)),
                         ol(out.datasetname),
