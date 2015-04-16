@@ -53,6 +53,9 @@ def assignor(url ,specific = None, talk=True, options=None):
                 continue
 
         version=wfh.getNextVersion()
+        if not version:
+            print "cannot decide on version number"
+            continue
 
         (lheinput,primary,parent,secondary) = wfh.getIO()
         sites_allowed = getSiteWhiteList( (lheinput,primary,parent,secondary) )
