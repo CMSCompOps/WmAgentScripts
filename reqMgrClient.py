@@ -629,6 +629,10 @@ def assignWorkflow(url, workflowname, team, parameters ):
     else:
         defaults.pop('execute')
 
+    wf = workflowInfo(url, workflowname)
+    if wf.request['RequestType'] == 'ReDigi':
+        defaults['Dashboard'] = 'reprocessing'
+        defaults['dashboard'] = 'reprocessing'
 
     for aux in assignWorkflow.auxiliaries:
         if aux in defaults: 
