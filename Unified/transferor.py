@@ -30,9 +30,9 @@ def transferor(url ,specific = None, talk=True, options=None):
         print wfo.name,"to be transfered"
         wfh = workflowInfo( url, wfo.name)
 
-        #injection_time = time.mktime(time.strptime('.'.join(map(str,wfh.request['RequestDate'])),"%Y.%m.%d.%H.%M.%S")) / (60.*60.)
-        #now = time.mktime(time.gmtime()) / (60.*60.)
-        #if float(now - injection_time) < 4.:
+        #injection_time = time.mktime(time.strptime('.'.join(map(str,wfh.request['RequestDate'])),"%Y.%m.%d.%H.%M.%S")) / (60.*60.*24)
+        #now = time.mktime(time.gmtime()) / (60.*60.*24)
+        #if float(now - injection_time) < 4.: ## in days above
         #    print "It is too soon to transfer", now, injection_time
         #    continue
 
@@ -68,8 +68,8 @@ def transferor(url ,specific = None, talk=True, options=None):
                         spreading = {} 
                         for site in prim_to_distribute: spreading[site]=[prim]
                     can_go = False
-                for (site,items) in spreading.items():
-                    all_transfers[site].extend( items )
+                    for (site,items) in spreading.items():
+                        all_transfers[site].extend( items )
 
 
 
@@ -177,6 +177,7 @@ if __name__=="__main__":
     spec=None
     if len(args):
         spec = args[0]
+
     transferor(url,spec,options=options)
 
     htmlor()
