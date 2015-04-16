@@ -1,10 +1,19 @@
 """
     Analyzes duplicate dump files and calculates the minimum file
     set for invalidating
-    Usage: python analyzeDuplicates.py DATASET FILE
-    DATASET: the name of the dataset under analyzing
+    Usage: python analyzeDuplicates.py FILE
     FILE: A text file with the output of lumis from the duplicateEvents.py
     script
+    Should be in this format:
+      dataset : /DATASET_NAME
+      runs
+      lumi x is in these files
+      file 1
+      file 2
+      lumi y is in these files
+      file 3
+      file 4
+      ....
 """
 import sys
 import dbs3Client as dbs
@@ -117,6 +126,7 @@ def colorBipartiteGraph(graph):
             elif (f1red and f2red) or (f1green and f2green):
                 print "NOT BIPARTITE GRAPH"
                 raise Exception("Not a bipartite graph, cannot use this algorithm for removing")
+
             #both are colored but different
             elif f1red != f2red and f1green != f2green:
                 continue
@@ -136,8 +146,14 @@ def colorBipartiteGraph(graph):
         return list(green)
 
 def main():
-    dataset = sys.argv[1]
-    lines = [l.strip() for l in open(sys.argv[2])]
+    #dataset = sys.argv[1]
+    lines = [l.strip() for l in open(sys.argv[1])]
+    #look for datasetname
+    for i in range(3):
+        if lines[i].startswith('dataset'):
+            dataset = lines[i].replace('dataset : ','').strip()
+            break
+    print "'%s'"%dataset
     #build graph and calculate
     graph = buildGraph(lines)
     try:
