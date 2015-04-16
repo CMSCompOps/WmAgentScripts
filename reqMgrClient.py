@@ -643,7 +643,6 @@ def assignWorkflow(url, workflowname, team, parameters ):
                 t = wf.firstTask()
                 params = wf.getSplittings()[0]
                 if par < params['events_per_job']:
-                    par = min(par, params['events_per_job'])
                     params.update({"requestName":workflowname,
                                    "splittingTask" : '/%s/%s'%(workflowname,t),
                                    "events_per_job": par})
