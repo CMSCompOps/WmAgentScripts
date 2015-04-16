@@ -125,7 +125,10 @@ def assignor(url ,specific = None, talk=True, options=None):
             parameters['SplittingAlgorithm'] = 'EventBased'
 
         ## plain assignment here
-        result = reqMgrClient.assignWorkflow(url, wfo.name, 'production', parameters)
+        team='production'
+        if options and options.team:
+            team = options.team
+        result = reqMgrClient.assignWorkflow(url, wfo.name, team, parameters)
 
         # set status
         if not options.test:
@@ -145,6 +148,7 @@ if __name__=="__main__":
     #parser.add_option('-e', '--execute', help='Actually assign workflows',action="store_true",dest='execute')
     parser.add_option('-t','--test', help='Only test the assignment',action='store_true',dest='test',default=False)
     parser.add_option('-r', '--restrict', help='Only assign workflows for site with input',default=False, action="store_true",dest='restrict')
+    parser.add_option('--team',default='production')
 
     for key in reqMgrClient.assignWorkflow.keys:
         parser.add_option('--%s'%key,help="%s Parameter of request manager assignment interface"%key, default=None)
