@@ -1,13 +1,16 @@
 from assignSession import *
 import reqMgrClient
-from utils import workflowInfo, campaignInfo, siteInfo
+from utils import workflowInfo, campaignInfo, siteInfo, userLock
 from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation
 import optparse
 import itertools
 import time
 from htmlor import htmlor
+import os
 
 def assignor(url ,specific = None, talk=True, options=None):
+    if userLock('assignor'): return
+
     CI = campaignInfo()
     SI = siteInfo()
     wfos=[]

@@ -110,6 +110,14 @@ class campaignInfo:
         else:
             return {}
 
+def userLock(component):
+    lockers = ['dmytro','mcremone','vlimant']
+    for who in lockers:
+        if os.path.isfile('/afs/cern.ch/user/%s/%s/public/ops/%s.lock'%(who[0],who,component)):
+            print "disabled by",who
+            return True
+    return False
+
 class siteInfo:
     def __init__(self):
         self.siteblacklist = ['T2_TH_CUNSTDA','T1_TW_ASGC','T2_TW_Taiwan']

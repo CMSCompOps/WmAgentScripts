@@ -1,7 +1,7 @@
 from assignSession import *
 import reqMgrClient
 from utils import makeReplicaRequest
-from utils import workflowInfo, siteInfo, campaignInfo
+from utils import workflowInfo, siteInfo, campaignInfo, userLock
 from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, getSiteWhiteList, approveSubscription
 import json
 from collections import defaultdict
@@ -10,6 +10,8 @@ import time
 from htmlor import htmlor
 
 def transferor(url ,specific = None, talk=True, options=None):
+    if userLock('transferor'):   return
+
     if options and options.test:
         execute = False
     else:
