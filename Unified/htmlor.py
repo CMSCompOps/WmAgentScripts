@@ -58,8 +58,9 @@ def htmlor():
 
     
     ## start to write it
-    html_doc = open('/afs/cern.ch/user/v/vlimant/public/ops/index.html','w')
-
+    #html_doc = open('/afs/cern.ch/user/v/vlimant/public/ops/index.html','w')
+    html_doc = open('/afs/cern.ch/user/c/cmst2/www/unified/index.html','w')
+    print "Updating the status page ..." 
     html_doc.write("""
 <html>
 <head>
@@ -267,6 +268,7 @@ Worlfow through (%d)
 </ul></div>
 """%(text))
 
+    print "... done with status page."
     html_doc.write("""
 </body>
 </html>
