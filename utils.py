@@ -547,6 +547,20 @@ def getWorkflowByInput( url, dataset , details=False):
     else:
         return [item['id'] for item in items]
 
+def getWorkflowByOutput( url, dataset , details=False):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    there = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byoutputdataset?key="%s"'%(dataset)
+    if details:
+        there+='&include_docs=true'
+    r1=conn.request("GET",there)
+    r2=conn.getresponse()
+    data = json.loads(r2.read())
+    items = data['rows']
+    if details:
+        return [item['doc'] for item in items]
+    else:
+        return [item['id'] for item in items]
+
 def getWorkflowById( url, pid , details=False):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     there = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byprepid?key="%s"'%(pid)
@@ -587,7 +601,8 @@ class workflowInfo:
         r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/%s/spec'%workflow)
         r2=conn.getresponse()
         self.full_spec = pickle.loads(r2.read())
-        
+        self.url = url
+
     def _tasks(self):
         return self.full_spec.tasks.tasklist
 
@@ -775,6 +790,19 @@ class workflowInfo:
                     v = int(mid.split('-')[-1].replace('v',''))
                     version = max(v,version)
             #print "version found so far",version
+            for output in outputs:
+                (_,dsn,ps,tier) = output.split('/')
+                if ps.count('-')==2:
+                    (aera,aps,_) = ps.split('-')
+                else:
+                    print "Cannot check output in reqmgr"
+                    continue
+                predicted = '/'.join(['',dsn,'-'.join([aera,aps,'v%d'%(version+1)]),tier])
+                conflicts = getWorkflowByOutput( self.url, predicted )
+                conflicts = filter(lambda wfn : wfn!=self.request['RequestName'], conflicts)
+                if len(conflicts):
+                    print "There is an output conflict for",self.request['RequestName'],"with",conflicts
+                    return None
         else:
             for output in  outputs:
                 print output
@@ -794,5 +822,21 @@ class workflowInfo:
                     v = int(mid.split('-')[-1].replace('v',''))
                     version = max(v,version)
             #print "version found so far",version
+            for output in  outputs:
+                print output
+                (_,dsn,ps,tier) = output.split('/')
+                (aera,aps,_) = ps.split('-')
+                if aera == 'None' or aera == 'FAKE':
+                    print "no era, using ",era
+                    aera=era
+                if aps == 'None':
+                    print "no process string, cannot parse"
+                    continue
+                predicted = '/'.join(['',dsn,'-'.join([aera,aps,'v%d'%(version+1)]),tier])
+                conflicts = getWorkflowByOutput( self.url, predicted )
+                conflicts = filter(lambda wfn : wfn!=self.request['RequestName'], conflicts)
+                if len(conflicts):
+                    print "There is an output conflict for",self.request['RequestName'],"with",conflicts
+                    return None
         return version+1
 
