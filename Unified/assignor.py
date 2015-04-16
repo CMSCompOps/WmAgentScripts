@@ -74,12 +74,15 @@ def assignor(url ,specific = None, talk=True, options=None):
             sys.exit(36)
 
         sites_with_data = copy.deepcopy( sites_allowed )
+        sites_with_any_data = copy.deepcopy( sites_allowed )
         for prim in list(primary)+list(secondary):
             presence = getDatasetPresence( url, prim )
             if talk:
                 print prim,presence
             sites_with_data = [site for site in sites_with_data if any([osite.startswith(site) for osite in [psite for (psite,frac) in presence.items() if frac[1]>90.]])]
+            sites_with_any_data = [site for site in sites_with_data if any([osite.startswith(site) for osite in presence.keys()])]
         sites_with_data = list(set(sites_with_data))
+        sites_with_any_data = list(set(sites_with_any_data))
 
         if options.restrict:
             if talk:
@@ -88,10 +91,12 @@ def assignor(url ,specific = None, talk=True, options=None):
         else:
             if set(sites_with_data) != set(sites_allowed):
                 ## the data is not everywhere we wanted to run at : enable aaa
-                print "Resorting to AAA reading for",list(set(sites_allowed) - set(sites_with_data))
+                print "Sites with 90% data not matching site white list (block choping!)"
+                print "Resorting to AAA reading for",list(set(sites_allowed) - set(sites_with_data)),"?"
+                print "Site with any data",list(set(sites_allowed) - set(sites_with_any_data))
                 #options.useSiteListAsLocation = True
-                print "Not commissioned yet"
-                continue
+                #print "Not commissioned yet"
+                #continue
                 
         if not len(sites_allowed):
             print wfo.name,"cannot be assign with no matched sites"
