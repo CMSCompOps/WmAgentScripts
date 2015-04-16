@@ -193,25 +193,15 @@ def getSiteWhiteList( inputs , pickone=False):
         sites_allowed = ['T2_CH_CERN'] ## and that's it
     elif secondary:
         sites_allowed = list(set(SI.sites_T1s + SI.sites_with_goodIO))
-    else:#primary:
+    elif primary:
         sites_allowed =list(set( SI.sites_T1s + SI.sites_T2s ))
-    
+    else:
+        # input at all
+        sites_allowed =list(set( SI.sites_T2s ))
+
     if pickone:
         sites_allowed = [SI.pick_CE( sites_allowed )]
 
-    """
-    elif not primary and not secondary and not parent:
-        sites_allowed =list(set( SI.sites_T1s + SI.sites_T2s ))
-    elif primary and secondary:
-        sites_allowed = list(set(SI.sites_T1s + SI.sites_with_goodIO))
-        if pickone:
-            sites_allowed = [SI.pick_CE( sites_allowed )]
-    elif primary and not secondary:
-        sites_allowed =list(set(SI.sites_T1s + SI.sites_T2s))
-        if pickone:
-            sites_allowed = [SI.pick_CE( sites_allowed )]
-    elif not primary and secondary:
-    """    
     return sites_allowed
     
 def checkTransferApproval(url, phedexid):
