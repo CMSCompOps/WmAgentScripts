@@ -15,7 +15,7 @@ def rejector(url, specific ):
             return
         results=[]
         wl = getWorkLoad(url, wfo.name)
-        if wl['RequestStatus'] in ['assignment-approved','new']:
+        if wl['RequestStatus'] in ['assignment-approved','new','completed']:
             #results.append( reqMgrClient.rejectWorkflow(url, wfo.name))
             reqMgrClient.rejectWorkflow(url, wfo.name)
         else:
