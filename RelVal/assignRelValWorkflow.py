@@ -1,4 +1,5 @@
 #!/usr/bin/env python -u
+from xml.dom import minidom
 import urllib2,urllib, httplib, sys, re, os
 import json
 import optparse
@@ -216,6 +217,8 @@ def main():
                     #this is normal for Tasks after Task1 
                     #print "not checking if the output dataset of this task exists"
                     continue
+
+
                 
                 #print "checking if the output dataset of this task exists"
                 dbsApi = getDBSApi()
@@ -223,6 +226,61 @@ def main():
                     print "len(dbsApi.listDatasets(dataset = "+dset+")) > 0, exiting"
                     os.system('echo '+workflow+' | mail -s \"assignRelValWorkflow.py error 3\" andrew.m.levin@vanderbilt.edu --')
                     sys.exit(0)
+
+                if "T2" in site:
+                    site_disk = site
+                elif "T1" in site:
+                    site_disk = site + "_Disk"
+                else:
+                    os.system('echo '+site+' | mail -s \"assignRelValWorkflow.py error 4\" andrew.m.levin@vanderbilt.edu')
+                    print "Neither T1 nor T2 is in site name, exiting"
+                    sys.exit(1)
+
+                if 'MCPileup' in value:
+                    old_ld_library_path=os.environ['LD_LIBRARY_PATH']
+                    os.environ['LD_LIBRARY_PATH']=''
+                    isdatasetatsite=os.system("python2.6 check_if_dataset_is_at_a_site.py --dataset "+value['MCPileup']+" --site "+site_disk)
+                    os.environ['LD_LIBRARY_PATH']=old_ld_library_path
+
+                    if not isdatasetatsite:
+                        print value['MCPileup']
+                        os.system('echo '+workflow+' | mail -s \"assignRelValWorkflow.py error 6\" andrew.m.levin@vanderbilt.edu')
+                        sys.exit(1)
+
+                if 'InputDataset' in value:
+
+                    subscribed_to_disk=False
+
+                    inputdset=value['InputDataset']
+
+                    if 'RunWhitelist' in value:
+                        runwhitelist=value['RunWhitelist']
+                        blocks=dbsApi.listBlocks(dataset = inputdset, run_num = runwhitelist)
+                        for block in blocks:
+                            
+                            old_ld_library_path=os.environ['LD_LIBRARY_PATH']
+                            os.environ['LD_LIBRARY_PATH']=''
+                            isblockatsite=os.system("python2.6 check_if_block_is_at_a_site.py --block "+block['block_name']+" --site "+site_disk)
+                            os.environ['LD_LIBRARY_PATH']=old_ld_library_path
+
+                            #this block is not registered in phedex, so it cannot be subscribed to any site
+                            if not isblockatsite and block['block_name'] != "/DoubleMu/Run2011A-ZMu-08Nov2011-v1/RAW-RECO#93c53d22-25b2-11e1-8c62-003048f02c8a":
+                                os.system('echo '+workflow+' | mail -s \"assignRelValWorkflow.py error 5\" andrew.m.levin@vanderbilt.edu')
+                                sys.exit(1)
+                                
+                            #print block['block_name']
+                            #url=('https://cmsweb.cern.ch/phedex/datasvc/xml/prod/subscriptions?block='+block['block_name']).replace('#','%23')
+                            #urlinput = urllib.urlopen(url)
+                            #print url
+                            #print urlinput
+                            #xmldoc = minidom.parse(urlinput)
+                            #for phedex in  xmldoc3.childNodes:
+                            #    for dataset in phedex.childNodes:
+                            #        for block in dataset.childNodes:
+                            #            for subscription in block.childNodes:
+                            #                if subscription.attributes['node'].value == site_disk:
+                            #                    subscribed_to_disk=True
+                            #print subscribed_to_disk            
 
     # Adding the "PU_" string into the ProcessingString value
     if options.pu:

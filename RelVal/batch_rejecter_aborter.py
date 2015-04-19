@@ -46,16 +46,20 @@ for batches_row in batches_rows:
         r2=conn.getresponse()
         j1 = json.loads(r2.read())
         status= j1['RequestStatus']
-
-        if status != "completed" and status != "assignment-approved" and status != "assigned" and status != "running-open" and status != "running-closed" and status != "acquired":
-            os.system('echo '+workflow+' | mail -s \"batch_rejecter_aborter.py error\" andrew.m.levin@vanderbilt.edu --')
-            sys.exit(1)
         
-        if status == "completed" or status == "assignment-approved":
-            newstatus="rejected"
-        if status == "assigned" or status == "running-open" or status == "running-closed" or status == "acquired":
-            newstatus="aborted"            
-            
+        print status
+
+        if status == "completed" or status == "assignment-approved" or status == "assigned" or status == "running-open" or status == "running-closed" or status == "acquired":        
+            if status == "completed" or status == "assignment-approved":
+                newstatus="rejected"
+            if status == "assigned" or status == "running-open" or status == "running-closed" or status == "acquired":
+                newstatus="aborted"            
+        elif status != "aborted-archived" and status != "aborted" and status != "rejected":
+            os.system('echo '+workflow+' | mail -s \"batch_rejecter_aborter.py error 1\" andrew.m.levin@vanderbilt.edu --')
+            sys.exit(1)
+        else:
+            continue
+
         headers={"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
         params = {"requestName" : workflow,"status" : newstatus}
         encodedParams = urllib.urlencode(params)

@@ -14,7 +14,7 @@ import optparse
 import datetime
 import time
 import calendar
-import jobFailureInformation2
+import jobFailureInformation
 
 parser = optparse.OptionParser()
 parser.add_option('--correct_env',action="store_true",dest='correct_env')
@@ -50,7 +50,12 @@ while True:
 
     password=secrets_file.read().rstrip('\n')
 
-    os.system("kinit << EOF\n"+password+"\nEOF")
+    ret=os.system("kinit << EOF\n"+password+"\nEOF")
+
+    #sometimes the kerberos initialization doesn't work temporarily
+    while ret != 0:
+        ret=os.system("kinit << EOF\n"+password+"\nEOF")
+        time.sleep(60)
 
     curs.execute("select * from batches")
     batches=curs.fetchall()
@@ -101,6 +106,8 @@ while True:
                 sys.exit(0)
             s = json.loads(data)
 
+            #if wf[0] == "anlevin_RVCMSSW_7_4_0_pre9_ROOT6SingleMu2012D__1Apr_RelVal_sm2012D_150410_093809_9823":
+            #    n_completed=n_completed+1
 
             for status in s['rows'][0]['doc']['request_status']:
                 if status['status'] == "completed" or status['status'] == "force-complete":
@@ -125,7 +132,7 @@ while True:
         #if not (string.split('_')[0] == useridyear and string.split('_')[1] == useridmonth and string.split('_')[2] == useridday and string.split('_')[3] == str(useridnum)):
         #    continue
 
-        #if batch[0] != 61:
+        #if batch[0] != 119:
         #    continue
 
         if (calendar.timegm(datetime.datetime.utcnow().utctimetuple()) - max_completion_time)/60.0/60.0 < 0.01:
@@ -157,16 +164,23 @@ while True:
         dsets_tmp_fnal_disk=os.popen("mktemp").read().rstrip('\n')
         dsets_tmp_cern_alcareco=os.popen("mktemp").read().rstrip('\n')
 
-        os.system("python2.6 newCloseOutTaskChain.py "+fname)
+        os.system("python2.6 closeOutTaskChain.py "+fname)
 
         os.system("python2.6 getRelValDsetNames.py "+fname+" | grep -v \"DAS query failed\" | tee "+dsets_stats_tmp)
         os.system("python2.6 makeStatisticsTable.py "+dsets_stats_tmp+" "+userid+".txt")
 
-        os.system("cp "+userid+".txt /afs/cern.ch/user/r/relval/webpage/relval_stats/"+userid+".txt")
+        ret=os.system("cp "+userid+".txt /afs/cern.ch/user/r/relval/webpage/relval_stats/"+userid+".txt")
+
+        if ret != 0:
+            os.system('echo \"'+userid+'\" | mail -s \"announcement_loop.py error 2\" andrew.m.levin@vanderbilt.edu')
 
         os.system("cat "+dsets_stats_tmp+" | awk '{print $1}' >& "+dsets_tmp_fnal)
         os.system("grep -v '/RECO[ ]*$' "+dsets_tmp_fnal+" | grep -v 'ALCARECO[ ]*' >& "+dsets_tmp_cern)
-        os.system("grep '/GEN-SIM[ ]*$' "+dsets_tmp_fnal+" | grep -v 'ALCARECO[ ]*' >& "+dsets_tmp_fnal_disk)
+        os.system("grep '/GEN-SIM[ ]*$' "+dsets_tmp_fnal+" >& "+dsets_tmp_fnal_disk)
+        #the premixing pileup datasets are GEN-SIM-DIGI-RAW
+        os.system("grep '/GEN-SIM-DIGI-RAW[ ]*$' "+dsets_tmp_fnal+"  >> "+dsets_tmp_fnal_disk)
+        #the fastsim pileup datsets are GEN-SIM-RECO
+        os.system("grep '/GEN-SIM-RECO[ ]*$' "+dsets_tmp_fnal+"  >> "+dsets_tmp_fnal_disk)
         os.system("grep '/RelValTTbar.*/.*TkAlMinBias.*/ALCARECO' "+dsets_tmp_fnal+" >> "+dsets_tmp_cern_alcareco+" 2>&1")
         os.system("grep '/MinimumBias/.*SiStripCalMinBias.*/ALCARECO' "+dsets_tmp_fnal+" >> "+dsets_tmp_cern_alcareco+" 2>&1")
         os.system("cat "+dsets_tmp_cern_alcareco+" >> "+dsets_tmp_cern+" 2>&1")
@@ -185,7 +199,7 @@ while True:
 
         os.system("if [ -f brm/failure_information.txt ]; then rm brm/failure_information.txt; fi")
 
-        [istherefailureinformation,return_string]=jobFailureInformation2.getFailureInformation("brm/"+str(batchid)+".txt","brm/failure_information.txt")
+        [istherefailureinformation,return_string]=jobFailureInformation.getFailureInformation("brm/"+str(batchid)+".txt","brm/failure_information.txt")
 
         #sys.exit(0)
 
@@ -266,6 +280,8 @@ while True:
         print "deleting the workflows and the batch from the original databases"    
         curs.execute("delete from workflows where batch_id = \""+ str(batchid)+"\";")
         curs.execute("delete from batches where batch_id = \""+ str(batchid)+"\";")
+        curs.execute("delete from datasets where batch_id = \""+str(batchid)+"\";")
+
 
         mysqlconn.commit()
 

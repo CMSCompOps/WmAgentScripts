@@ -1,3 +1,6 @@
+import httplib
+import json
+
 import smtplib
 import email
 
@@ -16,10 +19,10 @@ dbname = "relval"
 
 while True:
     
-    conn = MySQLdb.connect(host='dbod-altest1.cern.ch', user='relval', passwd="relval", port=5505)
+    mysqlconn = MySQLdb.connect(host='dbod-altest1.cern.ch', user='relval', passwd="relval", port=5505)
     #conn = MySQLdb.connect(host='localhost', user='relval', passwd='relval')
     
-    curs = conn.cursor()
+    curs = mysqlconn.cursor()
     
     curs.execute("use "+dbname+";")
     
@@ -32,6 +35,9 @@ while True:
     colnames = [desc[0] for desc in curs.description]
     
     for batch in batches:
+
+        if batch[0] == 127:
+            continue
 
         for name, value in zip(colnames, batch):
             print name+" => "+str(value)
@@ -62,12 +68,48 @@ while True:
             for wf in wfs:
                 print wf[0]
                 os.system("python2.6 assignRelValWorkflow.py -w "+wf[0] +" -s "+site+" -p "+str(processing_version))
+
+                conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+                r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+wf[0])
+                r2=conn.getresponse()
+
+                schema = json.loads(r2.read())
+
+                for key, value in schema.items():
+                    if type(value) is dict and key.startswith("Task"):
+                        if value['KeepOutput']:
+                            if 'InputDataset' in value:
+                                dset="/" + value['InputDataset'].split('/')[1] + "/" + value['AcquisitionEra'] + "-" + value['ProcessingString'] + "-v" + str(processing_version)+"/*"
+
+                                curs.execute("select * from datasets where dset_name = \""+ dset.rstrip("*")+"\";")
+                                
+                                if len(curs.fetchall()) != 0:
+                                    os.system('echo '+wf[0]+' | mail -s \"assignment_loop.py error 1\" andrew.m.levin@vanderbilt.edu')
+                                    sys.exit(1)
+                                else:   
+                                    curs.execute("insert into datasets set dset_name=\""+dset.rstrip("*")+"\", workflow_name=\""+wf[0]+"\", batch_id="+str(batchid)+";")
+
+                                    
+                            elif 'PrimaryDataset' in value:
+                                dset="/" + value['PrimaryDataset'] + "/" + value['AcquisitionEra'] + "-" + value['ProcessingString'] + "-v" + str(processing_version)+"/*"
+
+                                curs.execute("select * from datasets where dset_name = \""+ dset.rstrip("*")+"\";")
+
+                                if len(curs.fetchall()) != 0:
+                                    os.system('echo '+wf[0]+' | mail -s \"assignment_loop.py error 2\" andrew.m.levin@vanderbilt.edu')
+                                    sys.exit(1)
+                                else:
+                                    curs.execute("insert into datasets set dset_name=\""+dset.rstrip("*")+"\", workflow_name=\""+wf[0]+"\", batch_id="+str(batchid)+";")
+
+
+                
+
                 time.sleep(30)
 
 
             curs.execute("update batches set status=\"assigned\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where batch_id = "+str(batchid) +";")    
 
-            conn.commit()
+            mysqlconn.commit()
 
             if hn_message_id != "do_not_send_an_acknowledgement_email":
 
