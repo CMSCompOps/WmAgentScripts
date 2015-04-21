@@ -220,6 +220,22 @@ Worlfow through (%d)
     html_doc.write(text)
 
     text=""
+    count=0
+    for wf in session.query(Workflow).filter(Workflow.status=='clean').all():
+        text+="<li> %s </li> \n"%wfl(wf)#,ms=True)
+        count+=1
+    text+="</ul></div>\n"
+    html_doc.write("""
+Worlfow clean for input (%d)
+<a href="javascript:showhide('clean')">[Click to show/hide]</a>
+<br>
+<div id="clean" style="display:none;">
+<br>
+<ul>
+"""%count)
+    html_doc.write(text)
+
+    text=""
     lines=[]
     now = time.mktime(time.gmtime())
     this_week = int(time.strftime("%W",time.gmtime()))
