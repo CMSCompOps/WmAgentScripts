@@ -64,10 +64,12 @@ def assignor(url ,specific = None, talk=True, options=None):
         (lheinput,primary,parent,secondary) = wfh.getIO()
         sites_allowed = getSiteWhiteList( (lheinput,primary,parent,secondary) )
         sites_custodial = list(set(itertools.chain.from_iterable([findCustodialLocation(url, prim) for prim in primary])))
+        #sites_custodial = [] ## would make much more sense
         sites_out = [SI.pick_dSE([SI.CE_to_SE(ce) for ce in sites_allowed])]
         if len(sites_custodial)==0:
-            sites_custodial = [SI.pick_SE()]
-            print "picked",sites_custodial," as custodial for",wfo.name
+            #sites_custodial = [SI.pick_SE()]
+            #print "picked",sites_custodial," as custodial for",wfo.name
+            print "No custodial, it's fine, it's covered in close-out"
 
         if len(sites_custodial)>1:
             print "more than one custodial for",wfo.name
