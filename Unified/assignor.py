@@ -75,6 +75,11 @@ def assignor(url ,specific = None, talk=True, options=None):
             print "more than one custodial for",wfo.name
             sys.exit(36)
 
+        for sec in list(secondary):
+            presence = getDatasetPresence( url, sec )
+            ## reduce the site white list to site with secondary only
+            sites_allowed = [site for site in sites_allowed if any([osite.startswith(site) for osite in [psite for (psite,frac) in presence.items() if frac[1]>90.]])]
+
         sites_with_data = copy.deepcopy( sites_allowed )
         sites_with_any_data = copy.deepcopy( sites_allowed )
         for prim in list(primary):
@@ -85,11 +90,6 @@ def assignor(url ,specific = None, talk=True, options=None):
             sites_with_any_data = [site for site in sites_with_data if any([osite.startswith(site) for osite in presence.keys()])]
         sites_with_data = list(set(sites_with_data))
         sites_with_any_data = list(set(sites_with_any_data))
-
-        for sec in list(secondary):
-            presence = getDatasetPresence( url, sec )
-            ## reduce the site white list to site with secondary only
-            sites_allowed = [site for site in sites_allowed if any([osite.startswith(site) for osite in [psite for (psite,frac) in presence.items() if frac[1]>90.]])]
 
 
         if options.restrict:
