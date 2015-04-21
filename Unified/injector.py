@@ -60,7 +60,8 @@ def injector(url,wm_status = 'assignment-approved', set_status='considered', tal
                         sw.append(new_wf.id)
                         tr.workflows_id = sw
                         print tr.phedexid,"got",new_wf.name
-                        new_wf.status = 'staging'
+                        if new_wf != 'away':
+                            new_wf.status = 'staging'
                         session.commit()
                         
 
