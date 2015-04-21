@@ -1,9 +1,8 @@
 from assignSession import *
 import sys
 import reqMgrClient
-import resubmit
 import setDatasetStatusDBS3
-from utils import getWorkLoad
+from utils import workflowInfo
 import optparse
 
 def rejector(url, specific, options=None):
@@ -16,27 +15,35 @@ def rejector(url, specific, options=None):
             print "cannot reject",spec
             return
         results=[]
-        wl = getWorkLoad(url, wfo.name)
-        if wl['RequestStatus'] in ['assignment-approved','new','completed']:
+        wfi = workflowInfo(url, wfo.name)
+        if wfi.request['RequestStatus'] in ['assignment-approved','new','completed']:
             #results.append( reqMgrClient.rejectWorkflow(url, wfo.name))
             reqMgrClient.rejectWorkflow(url, wfo.name)
         else:
             #results.append( reqMgrClient.abortWorkflow(url, wfo.name))
             reqMgrClient.abortWorkflow(url, wfo.name)
         
-        datasets = wl['OutputDatasets']
+        datasets = wfi.request['OutputDatasets']
         for dataset in datasets:
-            #oo = session.query(Output).filter(Output.datasetname==dataset).first()
-            #if oo:                oo.status = 'forget'
             results.append( setDatasetStatusDBS3.setStatusDBS3('https://cmsweb.cern.ch/dbs/prod/global/DBSWriter', dataset, 'INVALID', None) )
+
         if all(map(lambda result : result in ['None',None],results)):
             wfo.status = 'forget'
             session.commit()
             print wfo.name,"and",datasets,"are rejected"
             if options and options.clone:
-                user = os.getenv('USER')
-                group = 'DATAOPS'
-                clone = resubmit.cloneWorkflow(wfo.name, user, group)
+                schema = wfi.getSchema()
+                schema['Requestor'] = os.getenv('USER')
+                schema['Group'] = 'DATAOPS'
+                response = reqMgrClient.submitWorkflow(url, schema)
+                m = re.search("details\/(.*)\'",response)
+                if not m:
+                    print "error in cloning",wfo.name
+                    print response
+                    continue
+                newWorkflow = m.group(1)
+                data = reqMgrClient.setWorkflowApproved(url, newWorkflow)
+                print data
                 wfo.status = 'trouble'
                 session.commit()
         else:
