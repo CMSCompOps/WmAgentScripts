@@ -76,6 +76,7 @@ def closor(url, specific=None):
                 session.add( odb )
             odb.nlumis = lumi_count
             odb.nevents = event_count
+            odb.workfow_id = wfo.id
             if odb.expectedlumis < expected_lumis:
                 odb.expectedlumis = expected_lumis
             else:
