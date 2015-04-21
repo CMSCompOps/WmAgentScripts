@@ -255,7 +255,7 @@ Worlfow clean for input (%d)
                              )
     lines.sort()
 
-    html_doc.write("""Output produced <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?in_disagreement=1>disagreements</a> (%d)
+    html_doc.write("""Output produced <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?in_disagreement=1 target=_blank>disagreements</a> (%d)
 <a href="javascript:showhide('output')">[Click to show/hide]</a>
 <br>
 <div id="output" style="display:none;">
