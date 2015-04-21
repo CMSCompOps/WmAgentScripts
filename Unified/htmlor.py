@@ -22,9 +22,11 @@ def htmlor():
                 '<a href="https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache/%s" target="_blank">wfc</a>'%wfn,
                 '<a href="https://cmsweb.cern.ch/reqmgr/view/splitting/%s" target="_blank">spl</a>'%wfn,
                 '<a href="https://cms-pdmv.cern.ch/stats/?RN=%s" target="_blank">vw</a>'%wfn,
+                '<a href="https://cms-pdmv.cern.ch/stats/restapi/get_one/%s" target="_blank">vwo</a>'%wfn,
                 '<a href="https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=full&reverse=0&reverse=1&npp=20&subtext=%s&sall=q" target="_blank">elog</a>'%pid,
                 '<a href="http://hcc-briantest.unl.edu/prodview/%s" target="_blank">pv</a>'%wfn,
                 '<a href="https://cmsweb.cern.ch/reqmgr/reqMgr/outputDatasetsByRequestName/%s" target="_blank">out</a>'%wfn,
+                '<a href="http://jbadillo.web.cern.ch/jbadillo/closeout.html#%s" target="_blank">clo</a>'%wfn,
                 '<a href="https://cmsweb.cern.ch/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s" target="_blank">perf</a>'%wfn
                 ])
         if p:
@@ -37,6 +39,8 @@ def htmlor():
                 text+=', <a href="https://cms-pdmv.cern.ch/mcm/requests?prepid=%s" target="_blank">mcm (%s)</a>'%(pid,mcm_s)
             else:
                 text+=', <a href="https://cms-pdmv.cern.ch/mcm/requests?prepid=%s" target="_blank">mcm</a>'%(pid)
+                text+=', <a href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s" target="_blank">ac</a>'%(pid)
+                
 
         if v and wfs!='acquired':
             text+='<a href="https://cms-pdmv.web.cern.ch/cms-pdmv/stats/growth/%s.gif" target="_blank"><img src="https://cms-pdmv.web.cern.ch/cms-pdmv/stats/growth/%s.gif" style="height:50px"></a>'%(wfn.replace('_','/'),wfn.replace('_','/'))
@@ -85,7 +89,7 @@ Last update on %s(CET), %s(GMT) <br><br>
         count+=1
     text+="</ul></div>\n"
     html_doc.write("""
-Worlfow next to handle (%d)
+Worlfow next to handle <a href=https://cms-pdmv.cern.ch/mcm/batches?status=new&page=-1 target="_blank"> batches</a> (%d) 
 <a href="javascript:showhide('considered')">[Click to show/hide]</a>
 <br>
 <div id="considered" style="display:none;">
@@ -126,7 +130,7 @@ Worlfow waiting in staging (%d)
             text+=stext
     text+="</ul></div>"
     html_doc.write("""
-Transfer on-going (%d) <a href=https://transferteam.web.cern.ch/transferteam/dashboard/ target=_blank>transfer team dashboard</a>
+Transfer on-going (%d) <a href=https://transferteam.web.cern.ch/transferteam/dashboard/ target=_blank>dashboard</a>
 <a href="javascript:showhide('transfer')">[Click to show/hide]</a>
 <br>
 <div id="transfer" style="display:none;">
@@ -218,12 +222,16 @@ Worlfow through (%d)
     text=""
     lines=[]
     now = time.mktime(time.gmtime())
+    this_week = int(time.strftime("%W",time.gmtime()))
     for out in session.query(Output).all():
         if not out.workflow: 
             print "This is a problem with",out.datasetname
             continue
         if  out.workflow.status == 'done':
-            if (now-out.date) <= (10.*24.*60.*60.):
+            out_week = int(time.strftime("%W",time.gmtime(out.date)))
+            ##only show current week, and the previous.
+            if (this_week-out_week)<=1:
+            #if (now-out.date) <= (10.*24.*60.*60.):
                 lines.append("<li>on week %s : %s </li>"%(
                         time.strftime("%W (%x %X)",time.gmtime(out.date)),
                         ol(out.datasetname),
@@ -231,7 +239,7 @@ Worlfow through (%d)
                              )
     lines.sort()
 
-    html_doc.write("""Output produced (%d)
+    html_doc.write("""Output produced <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?in_disagreement=1>disagreements</a> (%d)
 <a href="javascript:showhide('output')">[Click to show/hide]</a>
 <br>
 <div id="output" style="display:none;">
