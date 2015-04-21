@@ -1,9 +1,11 @@
+#!/usr/bin/env python
 from assignSession import *
 import sys
 import reqMgrClient
 import setDatasetStatusDBS3
 from utils import workflowInfo
 import optparse
+import re
 
 def rejector(url, specific, options=None):
     
@@ -40,7 +42,7 @@ def rejector(url, specific, options=None):
                 if not m:
                     print "error in cloning",wfo.name
                     print response
-                    continue
+                    return 
                 newWorkflow = m.group(1)
                 data = reqMgrClient.setWorkflowApproved(url, newWorkflow)
                 print data

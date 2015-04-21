@@ -646,6 +646,14 @@ class workflowInfo:
                 return False
         return True
 
+    def getSchema(self):
+        new_schema = copy.deepcopy( self.full_spec.request.schema.dictionary_())
+        ## put in the era accordingly ## although this could be done in re-assignment
+        ## take care of the splitting specifications ## although this could be done in re-assignment
+        for (k,v) in new_schema.items():
+            if v==None:
+                new_schema.pop(k)
+        return new_schema 
 
     def getSplittings(self):
         spl =[]
