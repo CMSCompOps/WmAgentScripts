@@ -142,6 +142,11 @@ class siteInfo:
                 self.disk[values['disk']] = values['freedisk']
 
         self.cpu_pledges = json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/pledged.json').read())
+        ## ack around and put 1 CPU pledge for those with 0
+        for (s,p) in self.cpu_pledges.items(): 
+            if not p:
+                self.cpu_pledges[s] = 1
+
         if not set(self.sites_T2s + self.sites_T1s + self.sites_with_goodIO).issubset(set(self.cpu_pledges.keys())):
             print "There are missing sites in pledgeds"
             print list(set(self.sites_T2s + self.sites_T1s + self.sites_with_goodIO) - set(self.cpu_pledges.keys()))
@@ -181,12 +186,16 @@ class siteInfo:
 
     def _weighted_choice_sub(self,ws):
         rnd = random.random() * sum(ws)
+        #print ws
         for i, w in enumerate(ws):
             rnd -= w
             if rnd < 0:
                 return i
+        print "could not make a choice"
+
 
     def pick_CE(self, sites):
+        #print len(sites),"to pick from"
         #r_weights = {}
         #for site in sites:
         #    r_weights[site] = self.cpu_pledges[site]
@@ -410,21 +419,13 @@ def distributeToSites( items, sites , n_copies, weights=None):
         ## pick the sites according to computing element plege
         SI = siteInfo()
         for item in items:
-            at=[]
+            at=set()
+            #print item,"requires",n_copies,"copies to",len(sites),"sites"
             for pick in range(n_copies):
-                site =  SI.pick_CE( sites )
-                drop=100
-                while (site in at)and(drop>0):
-                    site =  SI.pick_CE( sites )
-                    drop-=1
-                #print site,"picked"
-                if drop<=0:
-                    print "had to drop an item to ditribute"
-                    return {} ## just as good as exiting
-
-                at.append(site)
-                spreading[site].extend(item)
-
+                at.add(SI.pick_CE( list(set(sites)-at)))
+            #print list(at)
+            for site in at:
+                spreading[site].extend(item)                
         return dict(spreading)
 
 def getDatasetEventsPerLumi(dataset):
