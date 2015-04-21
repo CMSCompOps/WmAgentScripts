@@ -115,8 +115,8 @@ def phedexGet(url, request, auth=True):
     auth: if aouthentication needs to be used
     """
     if auth:
-        conn = httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_CERT'), 
-                                            key_file = os.getenv('X509_USER_KEY'))
+        conn = httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), 
+                                            key_file = os.getenv('X509_USER_PROXY'))
         r1 = conn.request("GET", request)
         r2 = conn.getresponse()
         result = json.loads(r2.read())
@@ -309,8 +309,8 @@ def createXML(datasets):
     From a list of datasets return an XML of the datasets in the format required by Phedex
     """
     # Create the minidom document
-    impl=getDOMImplementation()
-    doc=impl.createDocument(None, "data", None)
+    impl = getDOMImplementation()
+    doc = impl.createDocument(None, "data", None)
     result = doc.createElement("data")
     result.setAttribute('version', '2')
     # Create the <dbs> base element
@@ -319,7 +319,7 @@ def createXML(datasets):
     result.appendChild(dbs)    
     #Create each of the <dataset> element            
     for datasetname in datasets:
-        dataset=doc.createElement("dataset")
+        dataset = doc.createElement("dataset")
         dataset.setAttribute("is-open","y")
         dataset.setAttribute("is-transient","y")
         dataset.setAttribute("name",datasetname)
@@ -336,13 +336,23 @@ def phedexPost(url, request, params):
     request: the request suffix url
     params: a dictionary with the POST parameters
     """
-    conn = httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_CERT'), 
-                                        key_file = os.getenv('X509_USER_KEY'))
+    conn = httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), 
+                                        key_file = os.getenv('X509_USER_PROXY'))
     encodedParams = urllib.urlencode(params)
-    r1 = conn.request("POST", request, encodedParams)
+    #encodedParams = json.dumps(params)
+    print '-'*120
+    print encodedParams
+    print '-'*120
+    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+
+    r1 = conn.request("POST", request, encodedParams, headers=headers)
     r2 = conn.getresponse()
-    result = json.loads(r2.read())
+    message = r2.read()
     conn.close()
+    try:
+        result = json.loads(message)
+    except:
+        return message
     return result
 
 def createParams(site, datasetXML, comments):
@@ -353,6 +363,17 @@ def createParams(site, datasetXML, comments):
                 "priority":'normal', "custodial":"y","request_only":"n" ,
                 "move":"n","no_mail":"n", "comments":comments}
     return params
+
+def makeDeletionRequest(url, site, datasets, comments):
+    """
+    Creates a deletion request
+    """
+    dataXML = createXML(datasets)
+    params = { "node":site, "data":dataXML, "level":"dataset", "rm_subscriptions":"y", 
+                 "comments":comments}
+    response = phedexPost(url, "/phedex/datasvc/json/prod/delete", params)
+    return response
+
 
 def makeCustodialMoveRequest(url, site, datasets, comments):
     dataXML = createXML(datasets)
