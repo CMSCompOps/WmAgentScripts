@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkLoad, getDatasetPresence, makeDeleteRequest, getDatasetSize, siteInfo
+from utils import getWorkLoad, getDatasetPresence, makeDeleteRequest, getDatasetSize, siteInfo, findCustodialLocation
 import json
 import time
 
 def cleanor(url, specific=None):
     delete_per_site = {}
     SI = siteInfo()
+    counts=0
     for wfo in session.query(Workflow).filter(Workflow.status == 'done').all():
         ## what was in input 
         wl = getWorkLoad(url,  wfo.name )
@@ -23,14 +24,31 @@ def cleanor(url, specific=None):
         total_size = getDatasetSize( dataset ) ## in Gb
         if (now-then) <2:
             print "workflow",wfo.name, "finished",now-then,"days ago. Too fresh to clean"
+            continue
         else:
             print "workflow",wfo.name,"has finished",now-then,"days ago."
-
+        
+        #if counts> 5:            break
+        counts+=1
         ## find any location it is at
-        presence = getDatasetPresence(url, dataset, complete=None)
+        our_presence = getDatasetPresence(url, dataset, complete=None, group="DataOps")
+
+        ## is there a custodial !!!
+        custodials = findCustodialLocation(url, dataset)
+        if not len(custodials):
+            print dataset,"has no custodial site yet, excluding from cleaning"
+            continue
+
         ## find all disks
-        to_be_cleaned = filter(lambda site : site.startswith('T2') or site.endswith('Disk') ,presence.keys())
+        to_be_cleaned = filter(lambda site : site.startswith('T2') or site.endswith('Disk') ,our_presence.keys())
+
         print to_be_cleaned,"for",total_size,"GB"
+
+        #anaops_presence = getDatasetPresence(url, dataset, complete=None, group="AnalysisOps")
+        #own_by_anaops = anaops_presence.keys()
+        #print own_by_anaops
+
+
         ## collect delete request per site
         for site in to_be_cleaned :
             if not site in delete_per_site: delete_per_site[site] = []
