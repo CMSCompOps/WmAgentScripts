@@ -41,6 +41,7 @@ def rejector(url, specific, options=None):
                     schema['ProcessingVersion']+=1
                 else:
                     schema['ProcessingVersion']=2
+                schema.pop('RequestDate')
                 response = reqMgrClient.submitWorkflow(url, schema)
                 m = re.search("details\/(.*)\'",response)
                 if not m:
