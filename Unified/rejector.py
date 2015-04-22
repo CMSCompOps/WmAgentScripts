@@ -37,6 +37,10 @@ def rejector(url, specific, options=None):
                 schema = wfi.getSchema()
                 schema['Requestor'] = os.getenv('USER')
                 schema['Group'] = 'DATAOPS'
+                if 'ProcessingVersion' in schema:
+                    schema['ProcessingVersion']+=1
+                else:
+                    schema['ProcessingVersion']=2
                 response = reqMgrClient.submitWorkflow(url, schema)
                 m = re.search("details\/(.*)\'",response)
                 if not m:
