@@ -127,8 +127,10 @@ class siteInfo:
                                   "T2_IT_Bari","T2_IT_Legnaro","T2_IT_Pisa","T2_IT_Rome",
                                   "T2_UK_London_Brunel","T2_UK_London_IC","T2_US_Caltech","T2_US_MIT",
                                   "T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida"]
-        self.sites_with_goodIO = filter(lambda s : s.startswith('T2'), self.sites_with_goodIO)
         
+        self.sites_with_goodIO = filter(lambda s : s.startswith('T2'), self.sites_with_goodIO)
+        self.sites_with_goodIO = ["T2_US_Nebraska"]
+
         self.sites_T2s = [s for s in json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/whitelist.json').read()) if s not in self.siteblacklist and 'T2' in s]
         self.sites_T1s = [s for s in json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/whitelist.json').read()) if s not in self.siteblacklist and 'T1' in s]
 
@@ -151,6 +153,9 @@ class siteInfo:
             print "There are missing sites in pledgeds"
             print list(set(self.sites_T2s + self.sites_T1s + self.sites_with_goodIO) - set(self.cpu_pledges.keys()))
         
+    def types(self):
+        return ['sites_with_goodIO','sites_T1s','sites_T2s']
+
     def CE_to_SE(self, ce):
         if ce.startswith('T1') and not ce.endswith('_Disk'):
             return ce+'_Disk'

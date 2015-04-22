@@ -1,6 +1,6 @@
 from assignSession import *
 import time
-from utils import getWorkLoad, campaignInfo
+from utils import getWorkLoad, campaignInfo, siteInfo
 import os
 import json
 
@@ -286,6 +286,39 @@ Worlfow clean for input (%d)
 <a href="javascript:showhide('campaign')">[Click to show/hide]</a>
 <br>
 <div id="campaign" style="display:none;">
+<br>
+<ul>
+%s
+</ul></div>
+"""%(text))
+
+    text=""
+    count=0
+    n_column = 4
+    SI = siteInfo()
+    for t in SI.types():
+        #text+="<li>%s<ul>"%t
+        #for site in getattr(SI,t):
+        #    text+="<li><a href=http://hcc-briantest.unl.edu/prodview/%s>%s<a/> </li>"%( site, site)
+        #    text+='<a href="http://hcc-briantest.unl.edu/prodview/%s" target="_blank"><img src="http://hcc-briantest.unl.edu/prodview/graphs/%s/daily" style="height:50px"></a>'%(site,site)
+        #text+="</ul></li>"
+        
+        text+="<li>%s<table border=1>"%t
+        c=0
+        for site in getattr(SI,t):
+            if c==0:
+                text+="<tr>"
+            text+='<td>%s<br><a href="http://hcc-briantest.unl.edu/prodview/%s" target="_blank"><img src="http://hcc-briantest.unl.edu/prodview/graphs/%s/daily" style="height:50px"></a></td>'%(site,site,site)
+            if c==n_column:
+                c=0
+            else:
+                c+=1
+        text+="</table></li>"
+
+    html_doc.write("""Site configuration
+<a href="javascript:showhide('site')">[Click to show/hide]</a>
+<br>
+<div id="site" style="display:none;">
 <br>
 <ul>
 %s
