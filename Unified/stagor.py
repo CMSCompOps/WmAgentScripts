@@ -1,9 +1,12 @@
+#!/usr/bin/env python
 from assignSession import *
 from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput
 import sys
 import itertools
 import pprint
-def stagor(url,specific =None, good_enough = 99.9):
+from htmlor import htmlor
+
+def stagor(url,specific =None):
     done_by_wf_id = {}
     done_by_input = {}
     for transfer in session.query(Transfer).all():
@@ -35,6 +38,7 @@ def stagor(url,specific =None, good_enough = 99.9):
             for dsname in checks:
                 if not dsname in done_by_input: done_by_input[dsname]={}
                 done_by_input[dsname][transfer.phedexid]=all(map(lambda i:i>good_enough, checks[dsname].values()))
+
         if checks:
             done = all(map(lambda i:i>good_enough,list(itertools.chain.from_iterable([node.values() for node in checks.values()]))))
         else:
@@ -93,3 +97,4 @@ if __name__ == "__main__":
         spec = sys.argv[1]
 
     stagor(url, spec)
+    htmlor()

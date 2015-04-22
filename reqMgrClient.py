@@ -690,6 +690,10 @@ def assignWorkflow(url, workflowname, team, parameters ):
     else:
         defaults.pop('execute')
 
+    wf = workflowInfo(url, workflowname)
+    if wf.request['RequestType'] == 'ReDigi':
+        defaults['Dashboard'] = 'reprocessing'
+        defaults['dashboard'] = 'reprocessing'
 
     for aux in assignWorkflow.auxiliaries:
         if aux in defaults: 
@@ -700,7 +704,6 @@ def assignWorkflow(url, workflowname, team, parameters ):
                 t = wf.firstTask()
                 params = wf.getSplittings()[0]
                 if par < params['events_per_job']:
-                    par = min(par, params['events_per_job'])
                     params.update({"requestName":workflowname,
                                    "splittingTask" : '/%s/%s'%(workflowname,t),
                                    "events_per_job": par})
@@ -754,14 +757,22 @@ def assignWorkflow(url, workflowname, team, parameters ):
     conn.request("POST",  "/reqmgr/assign/handleAssignmentPage", encodedParams, headers)
     response = conn.getresponse()
     if response.status != 200:
-        print 'could not assign request with following parameters:'
-        for item in defaults.keys():
-            print item + ": " + str(defaults[item])
-        print 'Response from http call:'
-        print 'Status:',response.status,'Reason:',response.reason
-        print 'Explanation:'
-        data = response.read()
-        return False
+        ## try again
+        conn.request("POST",  "/reqmgr/assign/handleAssignmentPage", encodedParams, headers)
+        response = conn.getresponse()
+        if response.status != 200:
+            ## and again !!
+            conn.request("POST",  "/reqmgr/assign/handleAssignmentPage", encodedParams, headers)
+            response = conn.getresponse()
+            if response.status != 200:
+                print 'could not assign request with following parameters:'
+                for item in defaults.keys():
+                    print item + ": " + str(defaults[item])
+                print 'Response from http call:'
+                print 'Status:',response.status,'Reason:',response.reason
+                print 'Explanation:'
+                data = response.read()
+                return False
 
     print 'Assigned workflow:',workflowname,'to site:',defaults['SiteWhitelist'],'and team',team
     conn.close()
@@ -787,7 +798,7 @@ assignWorkflow.defaults= {
         "CustodialSubType" : 'Replica', ## move will screw it over ?
         'NonCustodialSites' : [],
         "NonCustodialSubType" : 'Replica', ## that's the default, but let's be sure
-        'AutoApproveSubscriptionSites' : False,
+        'AutoApproveSubscriptionSites' : [],
         }
 assignWorkflow.mandatories = ['SiteWhitelist',
                               'AcquisitionEra',

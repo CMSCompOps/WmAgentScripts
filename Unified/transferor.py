@@ -1,14 +1,18 @@
+#!/usr/bin/env python
 from assignSession import *
 import reqMgrClient
 from utils import makeReplicaRequest
-from utils import workflowInfo, siteInfo, campaignInfo
+from utils import workflowInfo, siteInfo, campaignInfo, userLock
 from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, getSiteWhiteList, approveSubscription
 import json
 from collections import defaultdict
 import optparse
 import time
+from htmlor import htmlor
 
 def transferor(url ,specific = None, talk=True, options=None):
+    if userLock('transferor'):   return
+
     if options and options.test:
         execute = False
     else:
@@ -26,9 +30,9 @@ def transferor(url ,specific = None, talk=True, options=None):
         print wfo.name,"to be transfered"
         wfh = workflowInfo( url, wfo.name)
 
-        #injection_time = time.mktime(time.strptime('.'.join(map(str,wfh.request['RequestDate'])),"%Y.%m.%d.%H.%M.%S")) / (60.*60.)
-        #now = time.mktime(time.gmtime()) / (60.*60.)
-        #if float(now - injection_time) < 4.:
+        #injection_time = time.mktime(time.strptime('.'.join(map(str,wfh.request['RequestDate'])),"%Y.%m.%d.%H.%M.%S")) / (60.*60.*24)
+        #now = time.mktime(time.gmtime()) / (60.*60.*24)
+        #if float(now - injection_time) < 4.: ## in days above
         #    print "It is too soon to transfer", now, injection_time
         #    continue
 
@@ -59,13 +63,13 @@ def transferor(url ,specific = None, talk=True, options=None):
                 prim_to_distribute = [site for site in prim_to_distribute if not any([osite.startswith(site) for osite in prim_destination])]
                 if len(prim_to_distribute)>0: ## maybe that a parameter we can play with to limit the 
                     if not options or options.chop:
-                        spreading = distributeToSites( [[prim]]+getDatasetChops(prim), prim_to_distribute, n_copies = 3, weights=SI.cpu_pledges)
+                        spreading = distributeToSites( [[prim]]+getDatasetChops(prim), prim_to_distribute, n_copies = int(0.7*len(prim_to_distribute))+1, weights=SI.cpu_pledges)
                     else:
                         spreading = {} 
                         for site in prim_to_distribute: spreading[site]=[prim]
                     can_go = False
-                for (site,items) in spreading.items():
-                    all_transfers[site].extend( items )
+                    for (site,items) in spreading.items():
+                        all_transfers[site].extend( items )
 
 
 
@@ -173,4 +177,7 @@ if __name__=="__main__":
     spec=None
     if len(args):
         spec = args[0]
+
     transferor(url,spec,options=options)
+
+    htmlor()

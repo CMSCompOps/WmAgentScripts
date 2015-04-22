@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from assignSession import *
 from utils import getWorkLoad
 from dbs.apis.dbsClient import DbsApi
@@ -7,6 +8,7 @@ import json
 import time
 import sys
 import subprocess
+from htmlor import htmlor
 
 def closor(url, specific=None):
     dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
@@ -74,6 +76,7 @@ def closor(url, specific=None):
                 session.add( odb )
             odb.nlumis = lumi_count
             odb.nevents = event_count
+            odb.workfow_id = wfo.id
             if odb.expectedlumis < expected_lumis:
                 odb.expectedlumis = expected_lumis
             else:
@@ -84,13 +87,14 @@ def closor(url, specific=None):
             print "\t%60s %d/%d = %3.2f%%"%(out,lumi_count,expected_lumis,lumi_count/float(expected_lumis)*100.)
             #print wfo.fraction_for_closing, lumi_count, expected_lumis
             fraction = wfo.fraction_for_closing
-            fraction = 0.05
+            fraction = 0.0
             all_OK.append((float(lumi_count) > float(expected_lumis*fraction)))
 
 
         ## only that status can let me go into announced
         if wl['RequestStatus'] in ['closed-out']: ## add force-completed ??
             print wfo.name,"to be announced"
+
             results=[]#'dummy']
             if not results:
                 results.append(reqMgrClient.announceWorkflowCascade(url, wfo.name))
@@ -121,3 +125,5 @@ if __name__ == "__main__":
     if len(sys.argv)>1:
         spec=sys.argv[1]
     closor(url,spec)
+
+    htmlor()

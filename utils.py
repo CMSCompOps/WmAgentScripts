@@ -110,6 +110,14 @@ class campaignInfo:
         else:
             return {}
 
+def userLock(component):
+    lockers = ['dmytro','mcremone','vlimant']
+    for who in lockers:
+        if os.path.isfile('/afs/cern.ch/user/%s/%s/public/ops/%s.lock'%(who[0],who,component)):
+            print "disabled by",who
+            return True
+    return False
+
 class siteInfo:
     def __init__(self):
         self.siteblacklist = ['T2_TH_CUNSTDA','T1_TW_ASGC','T2_TW_Taiwan']
@@ -119,8 +127,10 @@ class siteInfo:
                                   "T2_IT_Bari","T2_IT_Legnaro","T2_IT_Pisa","T2_IT_Rome",
                                   "T2_UK_London_Brunel","T2_UK_London_IC","T2_US_Caltech","T2_US_MIT",
                                   "T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida"]
-        self.sites_with_goodIO = filter(lambda s : s.startswith('T2'), self.sites_with_goodIO)
         
+        self.sites_with_goodIO = filter(lambda s : s.startswith('T2'), self.sites_with_goodIO)
+        self.sites_with_goodIO = ["T2_US_Nebraska"]
+
         self.sites_T2s = [s for s in json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/whitelist.json').read()) if s not in self.siteblacklist and 'T2' in s]
         self.sites_T1s = [s for s in json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/whitelist.json').read()) if s not in self.siteblacklist and 'T1' in s]
 
@@ -134,10 +144,18 @@ class siteInfo:
                 self.disk[values['disk']] = values['freedisk']
 
         self.cpu_pledges = json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/pledged.json').read())
+        ## ack around and put 1 CPU pledge for those with 0
+        for (s,p) in self.cpu_pledges.items(): 
+            if not p:
+                self.cpu_pledges[s] = 1
+
         if not set(self.sites_T2s + self.sites_T1s + self.sites_with_goodIO).issubset(set(self.cpu_pledges.keys())):
             print "There are missing sites in pledgeds"
             print list(set(self.sites_T2s + self.sites_T1s + self.sites_with_goodIO) - set(self.cpu_pledges.keys()))
         
+    def types(self):
+        return ['sites_with_goodIO','sites_T1s','sites_T2s']
+
     def CE_to_SE(self, ce):
         if ce.startswith('T1') and not ce.endswith('_Disk'):
             return ce+'_Disk'
@@ -173,12 +191,16 @@ class siteInfo:
 
     def _weighted_choice_sub(self,ws):
         rnd = random.random() * sum(ws)
+        #print ws
         for i, w in enumerate(ws):
             rnd -= w
             if rnd < 0:
                 return i
+        print "could not make a choice"
+
 
     def pick_CE(self, sites):
+        #print len(sites),"to pick from"
         #r_weights = {}
         #for site in sites:
         #    r_weights[site] = self.cpu_pledges[site]
@@ -193,25 +215,15 @@ def getSiteWhiteList( inputs , pickone=False):
         sites_allowed = ['T2_CH_CERN'] ## and that's it
     elif secondary:
         sites_allowed = list(set(SI.sites_T1s + SI.sites_with_goodIO))
-    else:#primary:
+    elif primary:
         sites_allowed =list(set( SI.sites_T1s + SI.sites_T2s ))
-    
+    else:
+        # input at all
+        sites_allowed =list(set( SI.sites_T2s ))
+
     if pickone:
         sites_allowed = [SI.pick_CE( sites_allowed )]
 
-    """
-    elif not primary and not secondary and not parent:
-        sites_allowed =list(set( SI.sites_T1s + SI.sites_T2s ))
-    elif primary and secondary:
-        sites_allowed = list(set(SI.sites_T1s + SI.sites_with_goodIO))
-        if pickone:
-            sites_allowed = [SI.pick_CE( sites_allowed )]
-    elif primary and not secondary:
-        sites_allowed =list(set(SI.sites_T1s + SI.sites_T2s))
-        if pickone:
-            sites_allowed = [SI.pick_CE( sites_allowed )]
-    elif not primary and secondary:
-    """    
     return sites_allowed
     
 def checkTransferApproval(url, phedexid):
@@ -314,7 +326,7 @@ def findCustodialLocation(url, dataset):
 
     return list(set(cust))
 
-def getDatasetPresence( url, dataset, complete='y', only_blocks=None):
+def getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=None):
     #print "presence of",dataset
     dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
     all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
@@ -342,6 +354,7 @@ def getDatasetPresence( url, dataset, complete='y', only_blocks=None):
         for replica in item['replica']:
             if not 'MSS' in replica['node'] and not 'Buffer' in replica['node']:
                 if complete and not replica['complete']==complete: continue
+                if group and not replica['group']==group: continue
                 locations[replica['node']].add( item['name'] )
 
     presence={}
@@ -411,21 +424,13 @@ def distributeToSites( items, sites , n_copies, weights=None):
         ## pick the sites according to computing element plege
         SI = siteInfo()
         for item in items:
-            at=[]
+            at=set()
+            #print item,"requires",n_copies,"copies to",len(sites),"sites"
             for pick in range(n_copies):
-                site =  SI.pick_CE( sites )
-                drop=100
-                while (site in at)and(drop>0):
-                    site =  SI.pick_CE( sites )
-                    drop-=1
-                #print site,"picked"
-                if drop<=0:
-                    print "had to drop an item to ditribute"
-                    return {} ## just as good as exiting
-
-                at.append(site)
-                spreading[site].extend(item)
-
+                at.add(SI.pick_CE( list(set(sites)-at)))
+            #print list(at)
+            for site in at:
+                spreading[site].extend(item)                
         return dict(spreading)
 
 def getDatasetEventsPerLumi(dataset):
@@ -475,7 +480,7 @@ def createXML(datasets):
 
 def phedexPost(url, request, params):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    encodedParams = urllib.urlencode(params)
+    encodedParams = urllib.urlencode(params, doseq=True)
     r1 = conn.request("POST", request, encodedParams)
     r2 = conn.getresponse()
     res = r2.read()
@@ -520,13 +525,16 @@ def makeDeleteRequest(url, site,datasets, comments, priority='low'):
     dataXML = createXML(datasets)
     params = { "node" : site,
                "data" : dataXML,
-               "group": "DataOps",
-               "priority": priority,
-               "request_only":"y" ,
-               "delete":"y",
+               "level" : "dataset",
+               "rm_subscriptions":"y",
+               #"group": "DataOps",
+               #"priority": priority,
+               #"request_only":"y" ,
+               #"delete":"y",
                "comments":comments
                }
-    response = phedexPost(url, "/phedex/datasvc/json/prod/subscribe", params)
+    print site
+    response = phedexPost(url, "/phedex/datasvc/json/prod/delete", params)
     return response
 
 def makeReplicaRequest(url, site,datasets, comments, priority='high',custodial='n'): # priority used to be normal
@@ -546,6 +554,20 @@ def getWorkLoad(url, wf ):
 def getWorkflowByInput( url, dataset , details=False):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     there = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byinputdataset?key="%s"'%(dataset)
+    if details:
+        there+='&include_docs=true'
+    r1=conn.request("GET",there)
+    r2=conn.getresponse()
+    data = json.loads(r2.read())
+    items = data['rows']
+    if details:
+        return [item['doc'] for item in items]
+    else:
+        return [item['id'] for item in items]
+
+def getWorkflowByOutput( url, dataset , details=False):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    there = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byoutputdataset?key="%s"'%(dataset)
     if details:
         there+='&include_docs=true'
     r1=conn.request("GET",there)
@@ -588,16 +610,21 @@ def getWorkflows(url,status,user):
     return workflows
 
 class workflowInfo:
-    def __init__(self, url, workflow ):
+    def __init__(self, url, workflow,deprecated=False ):
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-        #r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
+        self.deprecated_request = {}
+        if deprecated:
+            r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
+            r2=conn.getresponse()
+            self.deprecated_request = json.loads(r2.read())
         r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/'+workflow)
         r2=conn.getresponse()
         self.request = json.loads(r2.read())
         r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/%s/spec'%workflow)
         r2=conn.getresponse()
         self.full_spec = pickle.loads(r2.read())
-        
+        self.url = url
+
     def _tasks(self):
         return self.full_spec.tasks.tasklist
 
@@ -605,16 +632,34 @@ class workflowInfo:
         return self._tasks()[0]
 
     def checkWorkflowSplitting( self ):
+        ## this isn't functioning for taskchain BTW
         if 'InputDataset' in self.request:
             average = getDatasetEventsPerLumi(self.request['InputDataset'])
+            timing = self.request['TimePerEvent']
+  
+            ## if we can stay within 48 with one lumi. do it
+            timeout = 48 *60.*60. #self.request['OpenRunningTimeout']
+            if (average * timing) < timeout:
+                ## we are within overboard with one lumi only
+                return True
+
             spl = self.getSplittings()[0]
             events_per_job = spl['events_per_job']
             algo = spl['splittingAlgo']
             if algo == 'EventAwareLumiBased' and average > events_per_job:
+                ## need a fudge factor !!!
                 print "This is going to fail",average,"in and requiring",events_per_job
                 return False
         return True
 
+    def getSchema(self):
+        new_schema = copy.deepcopy( self.full_spec.request.schema.dictionary_())
+        ## put in the era accordingly ## although this could be done in re-assignment
+        ## take care of the splitting specifications ## although this could be done in re-assignment
+        for (k,v) in new_schema.items():
+            if v==None:
+                new_schema.pop(k)
+        return new_schema 
 
     def getSplittings(self):
         spl =[]
@@ -751,7 +796,10 @@ class workflowInfo:
             
     def getNextVersion( self ):
         ## returns 1 if nothing is in the way
-        version = self.request['ProcessingVersion']-1
+        if 'ProcessingVersion' in self.request:
+            version = max(0,self.request['ProcessingVersion']-1)
+        else:
+            version = 0
         outputs = self.request['OutputDatasets']
         #print outputs
         era = self.acquisitionEra()
@@ -772,12 +820,25 @@ class workflowInfo:
                     v = int(mid.split('-')[-1].replace('v',''))
                     version = max(v,version)
             #print "version found so far",version
+            for output in outputs:
+                (_,dsn,ps,tier) = output.split('/')
+                if ps.count('-')==2:
+                    (aera,aps,_) = ps.split('-')
+                else:
+                    print "Cannot check output in reqmgr"
+                    continue
+                predicted = '/'.join(['',dsn,'-'.join([aera,aps,'v%d'%(version+1)]),tier])
+                conflicts = getWorkflowByOutput( self.url, predicted )
+                conflicts = filter(lambda wfn : wfn!=self.request['RequestName'], conflicts)
+                if len(conflicts):
+                    print "There is an output conflict for",self.request['RequestName'],"with",conflicts
+                    return None
         else:
             for output in  outputs:
                 print output
                 (_,dsn,ps,tier) = output.split('/')
                 (aera,aps,_) = ps.split('-')
-                if aera == 'None':
+                if aera == 'None' or aera == 'FAKE':
                     print "no era, using ",era
                     aera=era
                 if aps == 'None':
@@ -791,5 +852,21 @@ class workflowInfo:
                     v = int(mid.split('-')[-1].replace('v',''))
                     version = max(v,version)
             #print "version found so far",version
+            for output in  outputs:
+                print output
+                (_,dsn,ps,tier) = output.split('/')
+                (aera,aps,_) = ps.split('-')
+                if aera == 'None' or aera == 'FAKE':
+                    print "no era, using ",era
+                    aera=era
+                if aps == 'None':
+                    print "no process string, cannot parse"
+                    continue
+                predicted = '/'.join(['',dsn,'-'.join([aera,aps,'v%d'%(version+1)]),tier])
+                conflicts = getWorkflowByOutput( self.url, predicted )
+                conflicts = filter(lambda wfn : wfn!=self.request['RequestName'], conflicts)
+                if len(conflicts):
+                    print "There is an output conflict for",self.request['RequestName'],"with",conflicts
+                    return None
         return version+1
 

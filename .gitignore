@@ -1,0 +1,11 @@
+*~
+*.pyc
+*.db
+assignDatasetToSite.py
+*.json
+*.txt
+*.list
+Unified/dbstest.py
+Unified/sqtest.py
+Unified/mcmtest.py
+

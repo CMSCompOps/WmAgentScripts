@@ -1,12 +1,17 @@
+#!/usr/bin/env python
 from assignSession import *
 import reqMgrClient
-from utils import workflowInfo, campaignInfo, siteInfo
+from utils import workflowInfo, campaignInfo, siteInfo, userLock
 from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation
 import optparse
 import itertools
 import time
+from htmlor import htmlor
+import os
 
 def assignor(url ,specific = None, talk=True, options=None):
+    if userLock('assignor'): return
+
     CI = campaignInfo()
     SI = siteInfo()
     wfos=[]
@@ -52,26 +57,43 @@ def assignor(url ,specific = None, talk=True, options=None):
                 continue
 
         version=wfh.getNextVersion()
+        if not version:
+            if options and options.ProcessingVersion:
+                version = options.ProcessingVersion
+            else:
+                print "cannot decide on version number"
+                continue
 
         (lheinput,primary,parent,secondary) = wfh.getIO()
         sites_allowed = getSiteWhiteList( (lheinput,primary,parent,secondary) )
         sites_custodial = list(set(itertools.chain.from_iterable([findCustodialLocation(url, prim) for prim in primary])))
+        #sites_custodial = [] ## would make much more sense
         sites_out = [SI.pick_dSE([SI.CE_to_SE(ce) for ce in sites_allowed])]
         if len(sites_custodial)==0:
-            sites_custodial = [SI.pick_SE()]
-            print "picked",sites_custodial," as custodial for",wfo.name
+            #sites_custodial = [SI.pick_SE()]
+            #print "picked",sites_custodial," as custodial for",wfo.name
+            print "No custodial, it's fine, it's covered in close-out"
 
         if len(sites_custodial)>1:
             print "more than one custodial for",wfo.name
             sys.exit(36)
 
+        for sec in list(secondary):
+            presence = getDatasetPresence( url, sec )
+            ## reduce the site white list to site with secondary only
+            sites_allowed = [site for site in sites_allowed if any([osite.startswith(site) for osite in [psite for (psite,frac) in presence.items() if frac[1]>90.]])]
+
         sites_with_data = copy.deepcopy( sites_allowed )
-        for prim in list(primary)+list(secondary):
+        sites_with_any_data = copy.deepcopy( sites_allowed )
+        for prim in list(primary):
             presence = getDatasetPresence( url, prim )
             if talk:
                 print prim,presence
             sites_with_data = [site for site in sites_with_data if any([osite.startswith(site) for osite in [psite for (psite,frac) in presence.items() if frac[1]>90.]])]
+            sites_with_any_data = [site for site in sites_with_data if any([osite.startswith(site) for osite in presence.keys()])]
         sites_with_data = list(set(sites_with_data))
+        sites_with_any_data = list(set(sites_with_any_data))
+
 
         if options.restrict:
             if talk:
@@ -80,10 +102,12 @@ def assignor(url ,specific = None, talk=True, options=None):
         else:
             if set(sites_with_data) != set(sites_allowed):
                 ## the data is not everywhere we wanted to run at : enable aaa
-                print "Resorting to AAA reading for",list(set(sites_allowed) - set(sites_with_data))
+                print "Sites with 90% data not matching site white list (block choping!)"
+                print "Resorting to AAA reading for",list(set(sites_allowed) - set(sites_with_data)),"?"
+                print "Site with any data",list(set(sites_allowed) - set(sites_with_any_data))
                 #options.useSiteListAsLocation = True
-                print "Not commissioned yet"
-                continue
+                #print "Not commissioned yet"
+                #continue
                 
         if not len(sites_allowed):
             print wfo.name,"cannot be assign with no matched sites"
@@ -93,7 +117,7 @@ def assignor(url ,specific = None, talk=True, options=None):
             'SiteWhitelist' : sites_allowed,
             'CustodialSites' : sites_custodial,
             'NonCustodialSites' : sites_out,
-            'AutoApproveSubscriptionSites' : list(set(sites_out+sites_custodial)),
+            'AutoApproveSubscriptionSites' : list(set(sites_out)),
             'AcquisitionEra' : wfh.acquisitionEra(),
             'ProcessingString' : wfh.processingString(),
             'MergedLFNBase' : '/store/mc', ## to be figured out ! from Hi shit
@@ -124,7 +148,10 @@ def assignor(url ,specific = None, talk=True, options=None):
             parameters['SplittingAlgorithm'] = 'EventBased'
 
         ## plain assignment here
-        result = reqMgrClient.assignWorkflow(url, wfo.name, 'production', parameters)
+        team='production'
+        if options and options.team:
+            team = options.team
+        result = reqMgrClient.assignWorkflow(url, wfo.name, team, parameters)
 
         # set status
         if not options.test:
@@ -144,6 +171,7 @@ if __name__=="__main__":
     #parser.add_option('-e', '--execute', help='Actually assign workflows',action="store_true",dest='execute')
     parser.add_option('-t','--test', help='Only test the assignment',action='store_true',dest='test',default=False)
     parser.add_option('-r', '--restrict', help='Only assign workflows for site with input',default=False, action="store_true",dest='restrict')
+    parser.add_option('--team',default='production')
 
     for key in reqMgrClient.assignWorkflow.keys:
         parser.add_option('--%s'%key,help="%s Parameter of request manager assignment interface"%key, default=None)
@@ -154,3 +182,5 @@ if __name__=="__main__":
         spec = args[0]
 
     assignor(url,spec, options=options)
+
+    htmlor()

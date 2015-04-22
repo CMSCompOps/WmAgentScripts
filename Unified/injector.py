@@ -1,7 +1,9 @@
+#!/usr/bin/env python
 from assignSession import *
 from utils import getWorkflows, getWorkflowById, getWorkLoad
 import sys
 import copy
+from htmlor import htmlor
 
 def injector(url,wm_status = 'assignment-approved', set_status='considered', talk = False):
     workflows = getWorkflows(url, status=wm_status,user='pdmvserv')
@@ -31,25 +33,27 @@ def injector(url,wm_status = 'assignment-approved', set_status='considered', tal
             if member != wf.name:
                 #print member
                 fwl = getWorkLoad(url , member)
+                if fwl['RequestDate'] < wl['RequestDate']: continue
                 if fwl['RequestType']=='Resubmission': continue
                 
                 new_wf = session.query(Workflow).filter(Workflow.name == member).first()
                 if not new_wf:
                     print "putting",member
                     status = 'away'
-                    if wl['RequestStatus'] in ['assignment-approved']:
+                    if fwl['RequestStatus'] in ['assignment-approved']:
                         status = 'considered'
-                    new_wf = Workflow( name = member, status = status, wm_status = wl['RequestStatus'])
+                    new_wf = Workflow( name = member, status = status, wm_status = fwl['RequestStatus'])
                     session.add( new_wf ) 
                     session.commit()
                 else:
                     print new_wf.name
 
-                outs = session.query(Output).filter(Output.workfow_id == wf.id).all()
-                for o in outs:
-                    o.workfow_id = new_wf.id
-                    print o.datasetname,"got",new_wf.name
-                    session.commit()
+                # clones are never output to the same ?
+                #outs = session.query(Output).filter(Output.workfow_id == wf.id).all()
+                #for o in outs:
+                #    o.workfow_id = new_wf.id
+                #    print o.datasetname,"got",new_wf.name
+                #    session.commit()
 
                 for tr in session.query(Transfer).all():
                     if wf.id in tr.workflows_id:
@@ -58,7 +62,8 @@ def injector(url,wm_status = 'assignment-approved', set_status='considered', tal
                         sw.append(new_wf.id)
                         tr.workflows_id = sw
                         print tr.phedexid,"got",new_wf.name
-                        new_wf.status = 'staging'
+                        if new_wf != 'away':
+                            new_wf.status = 'staging'
                         session.commit()
                         
 
@@ -89,4 +94,5 @@ if __name__ == "__main__":
     else:
         injector(url)
 
+    htmlor()
     
