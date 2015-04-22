@@ -9,6 +9,12 @@ from htmlor import htmlor
 def stagor(url,specific =None):
     done_by_wf_id = {}
     done_by_input = {}
+    completion_by_input = {}
+    good_enough = 100.0
+    for wfo in session.query(Workflow).filter(Workflow.status == 'staging').all():
+        ## implement the grace period for by-passing the transfer.
+        pass
+
     for transfer in session.query(Transfer).all():
         if specific  and str(transfer.phedexid)!=str(specific): continue
 
@@ -37,10 +43,12 @@ def stagor(url,specific =None):
         if not specific:
             for dsname in checks:
                 if not dsname in done_by_input: done_by_input[dsname]={}
-                done_by_input[dsname][transfer.phedexid]=all(map(lambda i:i>good_enough, checks[dsname].values()))
-
+                if not dsname in completion_by_input: completion_by_input[dsname] = {}
+                done_by_input[dsname][transfer.phedexid]=all(map(lambda i:i>=good_enough, checks[dsname].values()))
+                completion_by_input[dsname][transfer.phedexid]=checks[dsname].values()
         if checks:
-            done = all(map(lambda i:i>good_enough,list(itertools.chain.from_iterable([node.values() for node in checks.values()]))))
+            print [node.values() for node in checks.values()]
+            done = all(map(lambda i:i>=good_enough,list(itertools.chain.from_iterable([node.values() for node in checks.values()]))))
         else:
             ## it is empty, is that a sign that all is done and away ?
             print "ERROR with the scubscriptions API"
@@ -66,6 +74,10 @@ def stagor(url,specific =None):
     #print done_by_input
     print "\n----\n"
     for dsname in done_by_input:
+        fractions = None
+        if dsname in completion_by_input:
+            fractions = itertools.chain.from_iterable([check.values() for check in completion_by_input.values()])
+            
         if all(done_by_input[dsname].values()):
             print dsname,"is everywhere we wanted"
             ## the input dataset is fully transfered, should consider setting the corresponding wf to staged
@@ -75,6 +87,29 @@ def stagor(url,specific =None):
                 wf = session.query(Workflow).filter(Workflow.name == using_it).first()
                 if wf and wf.status == 'staging':
                     print wf.name,"is with us. setting staged and move on"
+                    wf.status = 'staged'
+                    session.commit()
+        elif fractions and len(list(fractions))>1 and set(fractions)==1:
+            print dsname,"is everywhere at the same fraction"
+            continue
+            ## the input dataset is fully transfered, should consider setting the corresponding wf to staged
+            using_its = getWorkflowByInput(url, dsname)
+            #print using_its
+            for using_it in using_its:
+                wf = session.query(Workflow).filter(Workflow.name == using_it).first()
+                if wf and wf.status == 'staging':
+                    print wf.name,"is with us everywhere the same. setting staged and move on"
+                    wf.status = 'staged'
+                    session.commit()
+        elif done_by_input[dsname].values().count(True) >= int(len(done_by_input[dsname].values())*0.7+1):
+            print dsname,"is almost everywhere we wanted"
+            ## the input dataset is fully transfered, should consider setting the corresponding wf to staged
+            using_its = getWorkflowByInput(url, dsname)
+            #print using_its
+            for using_it in using_its:
+                wf = session.query(Workflow).filter(Workflow.name == using_it).first()
+                if wf and wf.status == 'staging':
+                    print wf.name,"is almost with us. setting staged and move on"
                     wf.status = 'staged'
                     session.commit()
         else:
