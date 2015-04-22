@@ -657,7 +657,7 @@ class workflowInfo:
         ## put in the era accordingly ## although this could be done in re-assignment
         ## take care of the splitting specifications ## although this could be done in re-assignment
         for (k,v) in new_schema.items():
-            if v==None:
+            if v in [None,'None']:
                 new_schema.pop(k)
         return new_schema 
 
