@@ -33,9 +33,12 @@ def injector(url,wm_status = 'assignment-approved', set_status='considered', tal
             if member != wf.name:
                 #print member
                 fwl = getWorkLoad(url , member)
+                #print member
+                #print fwl['RequestDate']
+                #print wl['RequestDate']
+
                 if fwl['RequestDate'] < wl['RequestDate']: continue
                 if fwl['RequestType']=='Resubmission': continue
-                
                 new_wf = session.query(Workflow).filter(Workflow.name == member).first()
                 if not new_wf:
                     print "putting",member
@@ -46,7 +49,8 @@ def injector(url,wm_status = 'assignment-approved', set_status='considered', tal
                     session.add( new_wf ) 
                     session.commit()
                 else:
-                    print new_wf.name
+                    if new_wf.status == 'forget': continue
+                    print "getting",new_wf.name,"as replacement of",wf.name
 
                 # clones are never output to the same ?
                 #outs = session.query(Output).filter(Output.workfow_id == wf.id).all()
