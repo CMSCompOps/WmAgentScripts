@@ -27,6 +27,7 @@ try:
     import changePriorityWorkflow
     import reqMgrClient
     from WMCore.WMSpec.WMWorkload import WMWorkloadHelper
+    from WMCore.Wrappers import JsonWrapper
 except:
     print "WMCore libraries not loaded, run the following command:"
     print "source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh"
@@ -63,18 +64,20 @@ def modifySchema(helper, user, group, backfill=False):
         elif key == 'MergedLFNBase':
             result['MergedLFNBase'] = helper.getMergedLFNBase()
         # convert LumiList to dict
-        elif key == 'LumiList':
-            result['LumiList'] = JsonWrapper.loads(value)
+        #elif key == 'LumiList':
+        #   result['LumiList'] = JsonWrapper.loads(value)
+        #   result['LumiList'] = eval(value)
         
         #TODO deleting timeout so they will move to running-close as soon as they can
         #elif key == 'OpenRunningTimeout':
             #delete entry
         #    continue
         #skip empty entries
-        elif not value:
-            continue
         elif value != None:
             result[key] = value
+        elif not value:
+            continue
+
     #check MonteCarlo
     if result['RequestType']=='MonteCarlo':
         #check assigning parameters
@@ -147,7 +150,10 @@ def cloneWorkflow(workflow, user, group, verbose=False, backfill=False):
     helper = reqMgrClient.retrieveSchema(workflow)
     # get info from reqMgr
     schema = modifySchema(helper, user, group, backfill)
+    if verbose:
+        pprint(schema)
     print 'Submitting workflow'
+
     # Sumbit cloned workflow to ReqMgr
     response = reqMgrClient.submitWorkflow(url,schema)
     if verbose:
