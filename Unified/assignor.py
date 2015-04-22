@@ -80,6 +80,7 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         for sec in list(secondary):
             presence = getDatasetPresence( url, sec )
+            print sec,presence
             ## reduce the site white list to site with secondary only
             sites_allowed = [site for site in sites_allowed if any([osite.startswith(site) for osite in [psite for (psite,frac) in presence.items() if frac[1]>90.]])]
 
@@ -145,7 +146,8 @@ def assignor(url ,specific = None, talk=True, options=None):
         if not wfh.checkWorkflowSplitting():
             ## needs to go to event based ? fail for now
             print "Falling back to event splitting ?"
-            parameters['SplittingAlgorithm'] = 'EventBased'
+            #parameters['SplittingAlgorithm'] = 'EventBased'
+            continue
 
         ## plain assignment here
         team='production'
