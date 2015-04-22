@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from assignSession import *
 import time
 from utils import getWorkLoad, campaignInfo, siteInfo
@@ -6,7 +7,7 @@ import json
 
 def htmlor():
 
-    def wfl(wf,v=False,p=False,ms=False):
+    def wfl(wf,v=False,p=False,ms=False,within=False):
         wfn = wf.name
         wfs = wf.wm_status
         pid = None
@@ -16,7 +17,7 @@ def htmlor():
         text=', '.join([
                 #wfn,
                 '<a href="https://cmsweb.cern.ch/reqmgr/view/details/%s" target="_blank">%s</a>'%(wfn,wfn),
-                '(%s)'%wfs,
+                '(%s) <br>'%wfs,
                 '<a href="https://cmsweb.cern.ch/reqmgr/view/details/%s" target="_blank">dts</a>'%wfn,
                 '<a href=https://cmsweb.cern.ch/reqmgr/view/showWorkload?requestName=%s target="_blank">wkl</a>'%wfn,
                 '<a href="https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache/%s" target="_blank">wfc</a>'%wfn,
@@ -30,6 +31,13 @@ def htmlor():
                 '<a href="http://jbadillo.web.cern.ch/jbadillo/closeout.html#%s" target="_blank">clo</a>'%wfn,
                 '<a href="https://cmsweb.cern.ch/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s" target="_blank">perf</a>'%wfn
                 ])
+        if within and (not v or wfs=='completed'):
+            wl = getWorkLoad('cmsweb.cern.ch',wfn)
+            if 'InputDataset' in wl:
+                dataset = wl['InputDataset']
+                text+=', <a href=https://cmsweb.cern.ch/das/request?input=%s target=_blank>input</a>'%dataset
+                text+=', <a href=https://cmsweb.cern.ch/phedex/prod/Data::Subscriptions#state=create_since=0;filter=%s target=_blank>sub</a>'%dataset
+
         if p:
             wl = getWorkLoad('cmsweb.cern.ch',wfn)
             text+=', (%s)'%(wl['RequestPriority'])
@@ -46,6 +54,7 @@ def htmlor():
         if v and wfs!='acquired':
             text+='<a href="https://cms-pdmv.web.cern.ch/cms-pdmv/stats/growth/%s.gif" target="_blank"><img src="https://cms-pdmv.web.cern.ch/cms-pdmv/stats/growth/%s.gif" style="height:50px"></a>'%(wfn.replace('_','/'),wfn.replace('_','/'))
             text+='<a href="http://hcc-briantest.unl.edu/prodview/%s" target="_blank"><img src="http://hcc-briantest.unl.edu/prodview/graphs/%s/daily" style="height:50px"></a>'%(wfn,wfn)
+        text+="<hr>"
         return text
 
 
@@ -78,7 +87,7 @@ def htmlor():
 </head>
 <body>
 
-Last update on %s(CET), %s(GMT) <br><br>
+Last update on %s(CET), %s(GMT), <a href=logs/ target=_blank> logs</a> <br><br>
 
 """ %(time.asctime(time.localtime()),
       time.asctime(time.gmtime())))
@@ -90,7 +99,7 @@ Last update on %s(CET), %s(GMT) <br><br>
         count+=1
     text+="</ul></div>\n"
     html_doc.write("""
-Worlfow next to handle <a href=https://cms-pdmv.cern.ch/mcm/batches?status=new&page=-1 target="_blank"> batches</a> (%d) 
+Worlfow next to handle <a href=https://cms-pdmv.cern.ch/mcm/batches?status=new&page=-1 target="_blank"> batches</a> (%d) <a href=logs/injector/last.log target=_blank>log</a>
 <a href="javascript:showhide('considered')">[Click to show/hide]</a>
 <br>
 <div id="considered" style="display:none;">
@@ -101,11 +110,11 @@ Worlfow next to handle <a href=https://cms-pdmv.cern.ch/mcm/batches?status=new&p
     text=""
     count=0
     for wf in session.query(Workflow).filter(Workflow.status=='staging').all():
-        text+="<li> %s </li> \n"%wfl(wf)
+        text+="<li> %s </li> \n"%wfl(wf,within=True)
         count+=1
     text+="</ul></div>\n"
     html_doc.write("""
-Worlfow waiting in staging (%d)
+Worlfow waiting in staging (%d) <a href=logs/transferor/last.log target=_blank> log</a>
 <a href="javascript:showhide('staging')">[Click to show/hide]</a>
 <br>
 <div id="staging" style="display:none;">
@@ -131,7 +140,7 @@ Worlfow waiting in staging (%d)
             text+=stext
     text+="</ul></div>"
     html_doc.write("""
-Transfer on-going (%d) <a href=https://transferteam.web.cern.ch/transferteam/dashboard/ target=_blank>dashboard</a>
+Transfer on-going (%d) <a href=https://transferteam.web.cern.ch/transferteam/dashboard/ target=_blank>dashboard</a> <a href=logs/transferor/last.log target=_blank>log</a>
 <a href="javascript:showhide('transfer')">[Click to show/hide]</a>
 <br>
 <div id="transfer" style="display:none;">
@@ -147,7 +156,7 @@ Transfer on-going (%d) <a href=https://transferteam.web.cern.ch/transferteam/das
         text+="<li> %s </li> \n"%wfl(wf,p=True)
         count+=1
     text+="</ul></div>\n"
-    html_doc.write("""Worlfow ready for assigning (%d)
+    html_doc.write("""Worlfow ready for assigning (%d) <a href=logs/stagor/last.log target=_blank>log</a>
 <a href="javascript:showhide('staged')">[Click to show/hide]</a>
 <br>
 <div id="staged" style="display:none;">
@@ -158,10 +167,10 @@ Transfer on-going (%d) <a href=https://transferteam.web.cern.ch/transferteam/das
 
     lines=[]
     for wf in session.query(Workflow).filter(Workflow.status=='away').all():
-        lines.append("<li> %s </li>"%wfl(wf,v=True))
+        lines.append("<li> %s </li>"%wfl(wf,v=True,within=True))
     lines.sort()
     html_doc.write("""
-Worlfow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests_in_production.php target=_blank>ongoing</a> <a href=https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary target=_blank>elog</a> <a href=http://hcc-briantest.unl.edu/prodview target=_blank>queues</a>
+Worlfow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests_in_production.php target=_blank>ongoing</a> <a href=https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary target=_blank>elog</a> <a href=http://hcc-briantest.unl.edu/prodview target=_blank>queues</a> <a href=logs/assignor/last.log target=_blank>log</a>
 <a href="javascript:showhide('away')">[Click to show/hide]</a>
 <br>
 <div id="away" style="display:none;">
@@ -211,7 +220,7 @@ Worlfow to forget (%d)
         count+=1
     text+="</ul></div>\n"
     html_doc.write("""
-Worlfow through (%d)
+Worlfow through (%d) <a href=logs/closor/last.log target=_blank>log</a>
 <a href="javascript:showhide('done')">[Click to show/hide]</a>
 <br>
 <div id="done" style="display:none;">
@@ -227,7 +236,7 @@ Worlfow through (%d)
         count+=1
     text+="</ul></div>\n"
     html_doc.write("""
-Worlfow clean for input (%d)
+Worlfow clean for input (%d) <a href=logs/cleanor/last.log target=_blank>log</a>
 <a href="javascript:showhide('clean')">[Click to show/hide]</a>
 <br>
 <div id="clean" style="display:none;">
