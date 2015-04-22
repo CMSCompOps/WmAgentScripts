@@ -39,8 +39,8 @@ def assignor(url ,specific = None, talk=True, options=None):
         now = time.mktime(time.gmtime()) / (60.*60.)
         if float(now - injection_time) < 4.:
             print "It is too soon to inject: %3.2fH remaining"%(now - injection_time)
-            if not options.test:
-                continue
+            if not options.test and not options.nograce:                continue
+                
 
         #grace_period = 4 #days
         #if float(now - injection_time) > grace_period*24.:
@@ -171,6 +171,7 @@ if __name__=="__main__":
     #parser.add_option('-e', '--execute', help='Actually assign workflows',action="store_true",dest='execute')
     parser.add_option('-t','--test', help='Only test the assignment',action='store_true',dest='test',default=False)
     parser.add_option('-r', '--restrict', help='Only assign workflows for site with input',default=False, action="store_true",dest='restrict')
+    parser.add_option('--nograce',help='Skip the grace period',default=False,action='store_true')
     parser.add_option('--team',default='production')
 
     for key in reqMgrClient.assignWorkflow.keys:
