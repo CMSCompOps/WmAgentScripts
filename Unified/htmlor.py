@@ -119,7 +119,7 @@ Worlfow waiting in staging (%d)
         hide = True
         for pid in ts.workflows_id:
             w = session.query(Workflow).get(pid)
-            hide &= (w.status in ['staged','away','done','forget'])
+            hide &= (w.status in ['staged','away','done','forget','clean'])
             stext+="<li> %s : %s</li>\n"%( wfl(w),w.status)
         stext+="</ul>\n"
         if hide:
