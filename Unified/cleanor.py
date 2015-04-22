@@ -22,7 +22,7 @@ def cleanor(url, specific=None):
         now = time.mktime(time.gmtime()) / (60*60*24.)
         then = announced_log[-1]['UpdateTime'] / (60.*60.*24.)
         total_size = getDatasetSize( dataset ) ## in Gb
-        if (now-then) <15:
+        if (now-then) <10:
             print "workflow",wfo.name, "finished",now-then,"days ago. Too fresh to clean"
             continue
         else:
@@ -73,7 +73,7 @@ def cleanor(url, specific=None):
         session.commit()
 
     open('deletes.json','w').write( json.dumps(delete_per_site,indent=2) )
-    
+
     print json.dumps(delete_per_site, indent=2)
     print "\n\n ------- \n\n"
     ## unroll the deletion per site
@@ -88,33 +88,23 @@ def cleanor(url, specific=None):
             print site,"has",size_removal,"TB of potential cleanup. no info on available."
 
         print "\t",','.join(dataset_list)
-        #result = {'phedex': {'request_created':[]}}
-        result = makeDeleteRequest(url, site, dataset_list, comments="cleanup after production")
-        ## auto-approve it
-        for phedexid in [o['id'] for o in result['phedex']['request_created']]:
+    
+    ## make a one for all deletion request to save on phedex id
+    sites = set()
+    datasets = set()
+    for site in delete_per_site:
+        datasets.update([info[0] for info in delete_per_site[site]])
+        sites.add(site)
+    
+    sites = map(str, sites)
+    datasets = map(str, datasets)
+    result = makeDeleteRequest(url ,sites ,datasets, comments="cleanup after production") 
+    for phedexid in [o['id'] for o in result['phedex']['request_created']]:
+        for site in sites:
             #approved = approveSubscription(url, phedexid, [site])
             pass
-    
-        
-    
 
         
-    """
-    for transfer in session.query(Transfer).all():
-        if specific and str(specific) != str(transfer.phedexid): continue
-        is_clean=True
-        for served_id in transfer.workflows_id:
-            served = session.query(Workflow).get(served_id)
-            if not served.status in ['forget','done']:
-                is_clean=False
-                break
-
-        if is_clean:
-            ## make the deletion request
-            print "we should clean data from",transfer.phedexid
-        else:
-            print "we still need",transfer.phedexid
-    """
 if __name__ == "__main__":
     url = 'cmsweb.cern.ch'
     spec = None

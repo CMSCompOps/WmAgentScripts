@@ -475,7 +475,7 @@ def createXML(datasets):
 
 def phedexPost(url, request, params):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    encodedParams = urllib.urlencode(params)
+    encodedParams = urllib.urlencode(params, doseq=True)
     r1 = conn.request("POST", request, encodedParams)
     r2 = conn.getresponse()
     res = r2.read()
