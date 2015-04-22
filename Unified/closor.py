@@ -25,12 +25,14 @@ def closor(url, specific=None):
         if wl['RequestStatus'] in take_out:
             wfo.status = 'trouble'
             wfo.wm_status = wl['RequestStatus']
+            print wfo.name,"is in trouble",wl['RequestStatus']
             session.commit()
             continue
 
         if wl['RequestStatus'] in  ['announced','normal-archived']:
             wfo.status = 'done'
             wfo.wm_status = wl['RequestStatus']
+            print wfo.name,"is in done"
             session.commit()
             continue
 

@@ -14,7 +14,7 @@ source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh
 
 log=/afs/cern.ch/user/c/cmst2/www/unified/logs/`echo $1 | sed 's/\.py//' | sed 's/Unified\///'`/`date +%F_%T`.log
 
-echo date > $log
+echo `date` > $log
 echo >> $log
 
 python $* >> $log

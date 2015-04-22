@@ -188,7 +188,7 @@ Worlfow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/reque
         text+="<li> %s </li> \n"%wfl(wf)
         count+=1
     text+="</ul></div>\n"
-    html_doc.write("""Worlfow with issue (%d)
+    html_doc.write("""Worlfow with issue (%d) <a href=logs/closor/last.log target=_blank>log</a>
 <a href="javascript:showhide('trouble')">[Click to show/hide]</a>
 <br>
 <div id="trouble" style="display:none;">
