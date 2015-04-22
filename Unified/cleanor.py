@@ -22,7 +22,7 @@ def cleanor(url, specific=None):
         now = time.mktime(time.gmtime()) / (60*60*24.)
         then = announced_log[-1]['UpdateTime'] / (60.*60.*24.)
         total_size = getDatasetSize( dataset ) ## in Gb
-        if (now-then) <10:
+        if (now-then) <7:
             print "workflow",wfo.name, "finished",now-then,"days ago. Too fresh to clean"
             continue
         else:
