@@ -1,17 +1,16 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import getWorkLoad
-from dbs.apis.dbsClient import DbsApi
 import reqMgrClient
 import setDatasetStatusDBS3
 import json
 import time
 import sys
 import subprocess
+from utils import getDatasetEventsAndLumis
 from htmlor import htmlor
 
 def closor(url, specific=None):
-    dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
     for wfo in session.query(Workflow).filter(Workflow.status=='away').all():
         if specific and not specific in wfo.name: continue
         ## what is the expected #lumis 
@@ -34,7 +33,7 @@ def closor(url, specific=None):
             wfo.wm_status = wl['RequestStatus']
             print wfo.name,"is in done"
             session.commit()
-            continue
+        #    continue
 
         if wl['RequestType'] == 'Resubmission':
             #session.delete( wl)
@@ -63,13 +62,7 @@ def closor(url, specific=None):
         if len(outputs): 
             print wfo.name,wl['RequestStatus']
         for out in outputs:
-            reply = dbsapi.listFileSummaries(dataset=out)
-            lumi_count = 0
-            event_count = 0
-            for f in reply:
-                lumi_count +=f['num_lumi']
-                event_count +=f['num_event']
-
+            event_count,lumi_count = getDatasetEventsAndLumis(dataset=out)
             odb = session.query(Output).filter(Output.datasetname==out).first()
             if not odb:
                 print "adding an output object",out
@@ -94,7 +87,7 @@ def closor(url, specific=None):
 
 
         ## only that status can let me go into announced
-        if wl['RequestStatus'] in ['closed-out']: ## add force-completed ??
+        if wl['RequestStatus'] in ['closed-out','normal-archived','announced']: ## add force-completed ??
             print wfo.name,"to be announced"
 
             results=[]#'dummy']
