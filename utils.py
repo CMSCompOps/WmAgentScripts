@@ -93,10 +93,28 @@ class campaignInfo:
         #this contains accessor to aggreed campaigns, with maybe specific parameters
         self.campaigns = {
             'Fall14DR73' : {'go':True},
-            'RunIIWinter15GS' : {'go':True},
-            'RunIIWinter15wmLHE' : {'go':True},
+            'RunIIWinter15GS' : {'go':True, 'parameters' : {
+                    'EventsPerLumi' : 'x2'}
+                                 },
+            'RunIIWinter15pLHE' : {'go':True, 'parameters' : {
+                    'EventsPerLumi' : 200}
+                                   },
+            'RunIIWinter15wmLHE' : {'go':True, 'parameters' : {
+                    'EventsPerLumi' : 'x2',
+                    'EventsPerJob' : 100000 }
+                                    },
+            '2019GEMUpg14DR' : {'go':True},
+            '2023SHCALUpg14DR' : {'go':True},
             'TP2023SHCALDR' : {'go':True},
-            'HiFall13DR53X' : {'go':True, 'parameters' : {'MergedLFNBase' : '/store/himc', 'SiteWhitelist' :['T1_FR_CCIN2P3']}}
+            'TP2023HGCALDR' : {'go':False},
+            'HiFall13DR53X' : {'go':False, 'parameters' : {
+                    'MergedLFNBase' : '/store/himc', 
+                    'SiteWhitelist' :['T1_FR_CCIN2P3']}},
+            'Summer11Leg' : {'go':True},
+            'Summer11LegDR' : {'go':True},
+            'Summer12pLHE' : {'go':True},
+            'Summer12' : {'go':True},
+            'Summer12DR53X' : {'go':True},
             }
     def go(self, c):
         if c in self.campaigns and self.campaigns[c]['go']:
@@ -129,7 +147,7 @@ class siteInfo:
                                   "T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida"]
         
         self.sites_with_goodIO = filter(lambda s : s.startswith('T2'), self.sites_with_goodIO)
-        self.sites_with_goodIO = ["T2_US_Nebraska"]
+        self.sites_with_goodIO = ["T2_US_Nebraska","T2_US_MIT"]
 
         self.sites_T2s = [s for s in json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/whitelist.json').read()) if s not in self.siteblacklist and 'T2' in s]
         self.sites_T1s = [s for s in json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/whitelist.json').read()) if s not in self.siteblacklist and 'T1' in s]
