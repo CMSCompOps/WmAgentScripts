@@ -181,6 +181,20 @@ Worlfow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/reque
 </div>
 """%(len(lines),'\n'.join(lines)))
 
+    text=""
+    count=0
+    for wf in session.query(Workflow).filter(Workflow.status=='assistance').all():
+        text+="<li> %s </li> \n"%wfl(wf)
+        count+=1
+    text+="</ul></div>\n"
+    html_doc.write("""Worlfow which need assistance (%d) <a href=http://jbadillo.web.cern.ch/jbadillo/closeout.html target=_blank>closeout</a> <a href=closeout.html target=_blank>assistance</a> <a href=logs/checkor/last.log target=_blank>log</a>
+<a href="javascript:showhide('assistance')">[Click to show/hide]</a>
+<br>
+<div id="assistance" style="display:none;">
+<br>
+<ul>
+"""%count)
+    html_doc.write(text)
     
     text=""
     count=0
@@ -196,6 +210,8 @@ Worlfow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/reque
 <ul>
 """%count)
     html_doc.write(text)
+
+
 
     text=""
     count=0

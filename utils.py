@@ -433,6 +433,13 @@ def distributeToSites( items, sites , n_copies, weights=None):
                 spreading[site].extend(item)                
         return dict(spreading)
 
+def getDatasetEventsAndLumis(dataset):
+    dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+    all_files = dbsapi.listFileSummaries( dataset = dataset )
+    all_events = sum([f['num_event'] for f in all_files])
+    all_lumis = sum([f['num_lumi'] for f in all_files])
+    return all_events,all_lumis
+
 def getDatasetEventsPerLumi(dataset):
     dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
     all_files = dbsapi.listFileSummaries( dataset = dataset )
@@ -593,7 +600,7 @@ def getWorkflowById( url, pid , details=False):
     else:
         return [item['id'] for item in items]
     
-def getWorkflows(url,status,user):
+def getWorkflows(url,status,user=None):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     #r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/bystatusandtype?stale=update_after')
     r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/bystatus?key="%s"'%(status))
@@ -604,7 +611,7 @@ def getWorkflows(url,status,user):
     workflows = []
     for item in items:
         wf = item['id']
-        if wf.startswith(user):
+        if (user and wf.startswith(user)) or not user:
             workflows.append(item['id'])
 
     return workflows
