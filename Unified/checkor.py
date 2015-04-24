@@ -112,6 +112,9 @@ def checkor(url, spec=None, options=None):
         events_per_lumi = {}
         for output in wfi.request['OutputDatasets']:
             events_per_lumi[output] = getDatasetEventsPerLumi( output )
+            if output.endswith('/LHE'):
+                events_per_lumi[output] = 0.
+                
 
         if any([ epl> 300. for epl in events_per_lumi.values()]):
             print wfo.name,"has big lumisections"
