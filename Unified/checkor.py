@@ -274,7 +274,7 @@ if __name__ == "__main__":
 
     checkor(url, spec, options=options)
     
-    #htmlor()
+    htmlor()
         
     html = open('/afs/cern.ch/user/c/cmst2/www/unified/assistance.html','w')
     html.write("""
