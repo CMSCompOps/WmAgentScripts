@@ -8,6 +8,7 @@ import json
 from collections import defaultdict
 import optparse
 import os
+import time
 from htmlor import htmlor
 
 class falseDB:
@@ -23,8 +24,9 @@ class falseDB:
         open('closedout.json','w').write( json.dumps( self.record , indent=2 ) )
         
         html = open('/afs/cern.ch/user/c/cmst2/www/unified/closeout.html','w')
-        html.write('<html><table border=1>')
-        html.write('<tr><th>workflow</th><th>OutputDataSet</th><th>%Compl</th><th>Dupl</th><th>CorrectLumis</th><th>Scubscr</th><th>Tran</th><th>dbsF</th><th>phdF</th><th>ClosOut</th></tr>')
+        html.write('<html>')
+        html.write('Last update on %s(CET), %s(GMT), <a href=logs/checkor/ target=_blank> logs</a> <br><br>'%(time.asctime(time.localtime()),time.asctime(time.gmtime())))
+        html.write('<table border=1><tr><th>workflow</th><th>OutputDataSet</th><th>%Compl</th><th>Dupl</th><th>CorrectLumis</th><th>Scubscr</th><th>Tran</th><th>dbsF</th><th>phdF</th><th>ClosOut</th></tr>')
 
         for wf in sorted(self.record.keys()):
             order = ['percentage','duplicate','correctLumis','missingSubs','phedexReqs','dbsFiles','phedexFiles']
@@ -278,6 +280,7 @@ if __name__ == "__main__":
     html.write("""
 <html>
 """)
+    html.write('Last update on %s(CET), %s(GMT), <a href=logs/checkor/last.log target=_blank> log</a> <br><br>'%(time.asctime(time.localtime()),time.asctime(time.gmtime())))
     fdb = falseDB()
     assist = defaultdict(list)
     for wfo in session.query(Workflow).filter(Workflow.status.startswith('assistance')).all():
