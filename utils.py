@@ -106,7 +106,8 @@ class campaignInfo:
             '2019GEMUpg14DR' : {'go':True},
             '2023SHCALUpg14DR' : {'go':True},
             'TP2023SHCALDR' : {'go':True},
-            'TP2023HGCALDR' : {'go':False},
+            'TP2023HGCALDR' : {'go':False,
+                               'fractionpass' : 0.80},
             'HiFall13DR53X' : {'go':False, 'parameters' : {
                     'MergedLFNBase' : '/store/himc', 
                     'SiteWhitelist' :['T1_FR_CCIN2P3']}},
@@ -346,7 +347,9 @@ def findCustodialLocation(url, dataset):
 
     return list(set(cust))
 
-def getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=None):
+def getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=None, vetoes=None):
+    if vetoes==None:
+        vetoes = ['MSS','Buffer']
     #print "presence of",dataset
     dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
     all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
@@ -372,7 +375,7 @@ def getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=None
     locations=defaultdict(set)
     for item in items:
         for replica in item['replica']:
-            if not 'MSS' in replica['node'] and not 'Buffer' in replica['node']:
+            if not any(replica['node'].endswith(v) for v in vetoes):
                 if complete and not replica['complete']==complete: continue
                 if group and not replica['group']==group: continue
                 locations[replica['node']].add( item['name'] )

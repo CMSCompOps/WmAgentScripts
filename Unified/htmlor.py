@@ -167,7 +167,7 @@ Transfer on-going (%d) <a href=https://transferteam.web.cern.ch/transferteam/das
 
     lines=[]
     for wf in session.query(Workflow).filter(Workflow.status=='away').all():
-        lines.append("<li> %s </li>"%wfl(wf,v=True,within=True))
+        lines.append("<li> %s </li>"%wfl(wf,v=True))
     lines.sort()
     html_doc.write("""
 Worlfow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests_in_production.php target=_blank>ongoing</a> <a href=https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary target=_blank>elog</a> <a href=http://hcc-briantest.unl.edu/prodview target=_blank>queues</a> <a href=logs/assignor/last.log target=_blank>log</a>
@@ -183,11 +183,14 @@ Worlfow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/reque
 
     text=""
     count=0
-    for wf in session.query(Workflow).filter(Workflow.status=='assistance').all():
-        text+="<li> %s </li> \n"%wfl(wf)
+    for wf in session.query(Workflow).filter(Workflow.status.startswith('assistance')).all():
+        text+="<li> %s </li> \n"%wfl(wf,v=True,within=True)
         count+=1
     text+="</ul></div>\n"
-    html_doc.write("""Worlfow which need assistance (%d) <a href=http://jbadillo.web.cern.ch/jbadillo/closeout.html target=_blank>closeout</a> <a href=closeout.html target=_blank>assistance</a> <a href=logs/checkor/last.log target=_blank>log</a>
+    html_doc.write("""Worlfow which need assistance (%d) <a href=http://jbadillo.web.cern.ch/jbadillo/closeout.html target=_blank>julian closeout</a> 
+<a href=closeout.html target=_blank>closeout</a> 
+<a href=assistance.html target=_blank>assistance</a> 
+<a href=logs/checkor/last.log target=_blank>log</a>
 <a href="javascript:showhide('assistance')">[Click to show/hide]</a>
 <br>
 <div id="assistance" style="display:none;">
