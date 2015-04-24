@@ -162,8 +162,8 @@ def checkor(url, spec=None, options=None):
                 ## pick one at random
                 custodial = SI.pick_SE()
 
-            if custodial:
-                ## register the custodial request
+            if custodial and not sub_assistance:
+                ## register the custodial request, if there are no other big issues
                 for output in out_worth_checking:
                     if not len(custodial_locations[output]):
                         custodials[custodial].append( output )
