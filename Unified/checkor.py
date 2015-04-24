@@ -136,7 +136,12 @@ def checkor(url, spec=None, options=None):
             custodial_presences[output] = [s for s in any_presence[output] if 'MSS' in s]
             custodial_locations[output] = phedexClient.getCustodialSubscriptionRequestSite(output)
 
-        if not all(map( lambda sites : len(sites)!=0, custodial_locations.values())):
+            if not custodial_locations[output]:
+                custodial_locations[output] = []
+
+        vetoed_custodial_tier = ['MINIAODSIM']
+        out_worth_checking = [out for out in custodial_locations.keys() if out.split('/')[-1] not in vetoed_custodial_tier]
+        if not all(map( lambda sites : len(sites)!=0, [custodial_locations[out] for out in out_worth_checking])):
             print wfo.name,"has not all custodial location"
             print json.dumps(custodial_locations, indent=2)
 
@@ -144,8 +149,8 @@ def checkor(url, spec=None, options=None):
             ## hook for making a custodial replica ?
             custodial = None
             ## get from other outputs
-            for (output,sites) in custodial_locations.items():
-                if len(sites): custodial = sites[0]
+            for output in out_worth_checking:
+                if len(custodial_locations[output]): custodial = custodial_locations[output][0]
             ## get from the parent
             if not custodial and 'InputDataset' in wfi.request:
                 parents_custodial = findCustodialLocation(url, wfi.request['InputDataset'])
@@ -159,9 +164,11 @@ def checkor(url, spec=None, options=None):
 
             if custodial:
                 ## register the custodial request
-                for (output,sites) in custodial_locations.items():
-                    if not len(sites):
+                for output in out_worth_checking:
+                    if not len(custodial_locations[output]):
                         custodials[custodial].append( output )
+            else:
+                print "cannot find a custodial for",wfo.name
             is_closing = False
 
         ## disk copy 
