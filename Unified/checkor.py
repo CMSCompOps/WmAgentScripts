@@ -228,16 +228,18 @@ def checkor(url, spec=None, options=None):
         if is_closing:
             ## toggle status to closed-out in request manager
             print "setting",wfo.name,"closed-out"
-            reqMgrClient.closeOutWorkflowCascade(url, wfo.name)
-            # set it from away/assistance* to close
-            wfo.status = 'close'
-            session.commit()
+            if not options.test:
+                reqMgrClient.closeOutWorkflowCascade(url, wfo.name)
+                # set it from away/assistance* to close
+                wfo.status = 'close'
+                session.commit()
         else:
             print wfo.name,"needs assistance"
             ## that means there is something that needs to be done acdc, lumi invalidation, custodial, name it
             wfo.status = 'assistance'+sub_assistance
-            print "setting",wfo.name,"to",wfo.status
-            session.commit()
+            if not options.test:
+                print "setting",wfo.name,"to",wfo.status
+                session.commit()
 
     fDB.summary()
     ## custodial requests
@@ -245,17 +247,19 @@ def checkor(url, spec=None, options=None):
     print json.dumps(custodials, indent=2)
     for site in custodials:
         print ','.join(custodials[site]),'=>',site
-        result = makeReplicaRequest(url, site, list(set(custodials[site])),"custodial copy at production close-out",custodial='y',priority='low')
-        print result
+        if not options.test:
+            result = makeReplicaRequest(url, site, list(set(custodials[site])),"custodial copy at production close-out",custodial='y',priority='low')
+            print result
 
     print "Transfers"
     print json.dumps(transfers, indent=2)
     ## replicas requests
     for site in transfers:
         print ','.join(transfers[site]),'=>',site
-        result = None
-        #result = makeReplicaRequest(url, site, list(set(transfers[site])),"copy to disk at production close-out")
-        print result
+        if not options.test:
+            result = None
+            #result = makeReplicaRequest(url, site, list(set(transfers[site])),"copy to disk at production close-out")
+            print result
 
     print "File Invalidation"
     print invalidations
