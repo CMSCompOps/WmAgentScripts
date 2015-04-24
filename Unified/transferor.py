@@ -107,6 +107,9 @@ def transferor(url ,specific = None, talk=True, options=None):
         ## convert to storage element
         site_se = SI.CE_to_SE(site)
 
+        if site in SI.sites_veto_transfer: 
+            print site,"does not want transfers"
+            continue
         ## massage a bit the items
         blocks = [it for it in items_to_transfer if '#' in it]
         datasets = [it for it in items_to_transfer if not '#' in it]
