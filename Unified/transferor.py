@@ -114,11 +114,15 @@ def transferor(url ,specific = None, talk=True, options=None):
         blocks = [it for it in items_to_transfer if '#' in it]
         datasets = [it for it in items_to_transfer if not '#' in it]
 
-        print "Making a replica to",site,"(CE)",site_se,"(SE) for"
+        if execute:
+            print "Making a replica to",site,"(CE)",site_se,"(SE) for"
+        else:
+            print "Would make a replica to",site,"(CE)",site_se,"(SE) for"
+
         print "\t",len(blocks),"blocks"
         ## remove blocks if full dataset is send out
         blocks = [block for block in blocks if not block.split('#')[0] in datasets]
-        print "\t",len(blocks),"needed blocks"
+        print "\t",len(blocks),"needed blocks for",list(set([block.split('#')[0] for block in blocks]))
         print "\t",len(datasets),"datasets"
         print "\t",datasets
         items_to_transfer = blocks + datasets
