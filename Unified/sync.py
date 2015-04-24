@@ -19,8 +19,10 @@ if __name__ == "__main__":
             wf.status = status
         elif wf.wm_status in ['assignment-approved']:
             wf.status = 'considered'
-        elif wf.wm_status in ['assigned','acquired','running-closed','running-open','completed','closed-out']:
+        elif wf.wm_status in ['assigned','acquired','running-closed','running-open','completed']:
             wf.status = 'away'
+        elif wf.wm_status in ['closed-out']:
+            wf.status = 'close'
         elif wf.wm_status in ['rejected','failed','aborted','aborted-archived','rejected-archived','failed-archived']:
             wf.status = 'trouble'
         elif wf.wm_status in ['announced','normal-arhived']:
