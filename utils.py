@@ -103,11 +103,17 @@ class campaignInfo:
                     'EventsPerLumi' : 'x2',
                     'EventsPerJob' : 100000 }
                                     },
+            'RunIISpring15Digi74' : { 'go' : True },
             '2019GEMUpg14DR' : {'go':True},
             '2023SHCALUpg14DR' : {'go':True},
-            'TP2023SHCALDR' : {'go':True},
+            'TP2023SHCALDR' : {'go':False,
+                               'fractionpass' : 0.80},
             'TP2023HGCALDR' : {'go':False,
                                'fractionpass' : 0.80},
+            'pAWinter13' : { 'go' : True, 'parameters' : {
+                    'MergedLFNBase' : '/store/himc',
+                    'SiteWhitelist' :['T1_FR_CCIN2P3']
+                    }},
             'HiFall13DR53X' : {'go':False, 'parameters' : {
                     'MergedLFNBase' : '/store/himc', 
                     'SiteWhitelist' :['T1_FR_CCIN2P3']}},
