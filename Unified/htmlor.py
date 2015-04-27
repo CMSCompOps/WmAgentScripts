@@ -138,13 +138,13 @@ Worlfow waiting in staging (%d) <a href=logs/transferor/last.log target=_blank> 
     text=""
     count=0
     for ts in session.query(Transfer).all():
-        stext="<li> %s serves</li> \n<ul>"%phl(ts.phedexid)
+        stext='<li> %s serves <a href="javascript:showhide(\'%s\')">[show/hide]</a><div id="%s" style="display:none;"></li><ul>'%( phl(ts.phedexid), ts.phedexid, ts.phedexid )
         hide = True
         for pid in ts.workflows_id:
             w = session.query(Workflow).get(pid)
             hide &= (w.status != 'staging' )
             stext+="<li> %s </li>\n"%( wfl(w,status=True))
-        stext+="</ul>\n"
+        stext+="</ul></div>\n"
         if hide:
             #text+="<li> %s not needed anymore to start running (does not mean it went through completely)</li>"%phl(ts.phedexid)
             pass
