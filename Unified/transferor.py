@@ -61,6 +61,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                 prim_destination = [site for site in subscriptions]
                 prim_to_distribute = [site for site in sites_allowed if not any([osite.startswith(site) for osite in prim_location])]
                 prim_to_distribute = [site for site in prim_to_distribute if not any([osite.startswith(site) for osite in prim_destination])]
+                prim_to_distribute = [site for site in prim_to_distribute if not site in SI.sites_veto_transfer]
                 if len(prim_to_distribute)>0: ## maybe that a parameter we can play with to limit the 
                     if not options or options.chop:
                         #spreading = distributeToSites( [[prim]]+getDatasetChops(prim), prim_to_distribute, n_copies = int(0.7*len(prim_to_distribute))+1, weights=SI.cpu_pledges)
@@ -85,6 +86,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                 sec_destination = [site for site in subscriptions] 
                 sec_to_distribute = [site for site in sites_allowed if not any([osite.startswith(site) for osite in sec_location])]
                 sec_to_distribute = [site for site in sec_to_distribute if not any([osite.startswith(site) for osite in sec_destination])]
+                sec_to_distribute = [site for site in sec_to_distribute if not site in SI.sites_veto_transfer]
                 if len( sec_to_distribute )>0:
                     for site in sec_to_distribute:
                         all_transfers[site].append( sec )
@@ -108,9 +110,13 @@ def transferor(url ,specific = None, talk=True, options=None):
         ## convert to storage element
         site_se = SI.CE_to_SE(site)
 
+        ## site that do not want input datasets
         if site in SI.sites_veto_transfer: 
             print site,"does not want transfers"
             continue
+
+        ## throttle the transfer size to T2s ? we'd be screwed by a noPU sample properly configured.
+
         ## massage a bit the items
         blocks = [it for it in items_to_transfer if '#' in it]
         datasets = [it for it in items_to_transfer if not '#' in it]
