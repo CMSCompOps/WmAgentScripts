@@ -377,7 +377,8 @@ def getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=None
         for replica in item['replica']:
             if not any(replica['node'].endswith(v) for v in vetoes):
                 if complete and not replica['complete']==complete: continue
-                if group and not replica['group']==group: continue
+                if group and not replica['group']: continue
+                if group and not replica['group'].lower()==group.lower(): continue
                 locations[replica['node']].add( item['name'] )
 
     presence={}
@@ -581,6 +582,21 @@ def getWorkLoad(url, wf ):
     data = json.loads(r2.read())
     return data
 
+def getViewByInput( url, details=False):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    there = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byinputdataset?'
+    if details:
+        there+='&include_docs=true'
+    r1=conn.request("GET",there)
+    r2=conn.getresponse()
+    data = json.loads(r2.read())
+    items = data['rows']
+    return items
+    if details:
+        return [item['doc'] for item in items]
+    else:
+        return [item['id'] for item in items]
+        
 def getWorkflowByInput( url, dataset , details=False):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     there = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byinputdataset?key="%s"'%(dataset)
