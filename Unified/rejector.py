@@ -27,7 +27,10 @@ def rejector(url, specific, options=None):
         
         datasets = wfi.request['OutputDatasets']
         for dataset in datasets:
-            results.append( setDatasetStatusDBS3.setStatusDBS3('https://cmsweb.cern.ch/dbs/prod/global/DBSWriter', dataset, 'INVALID', None) )
+            if options.keep:
+                print "keeping",dataset,"in its current status"
+            else:
+                results.append( setDatasetStatusDBS3.setStatusDBS3('https://cmsweb.cern.ch/dbs/prod/global/DBSWriter', dataset, 'INVALID', None) )
 
         if all(map(lambda result : result in ['None',None],results)):
             wfo.status = 'forget'
@@ -61,6 +64,7 @@ if __name__ == "__main__":
 
     parser = optparse.OptionParser()
     parser.add_option('-c','--clone',help="clone the workflow",default=False,action="store_true")
+    parser.add_option('-k','--keep',help="keep the outpuy in current status", default=False,action="store_true")
     (options,args) = parser.parse_args()
 
     spec=None
