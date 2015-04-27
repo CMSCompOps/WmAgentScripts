@@ -11,7 +11,9 @@ from utils import getDatasetEventsAndLumis
 from htmlor import htmlor
 
 def closor(url, specific=None):
-    for wfo in session.query(Workflow).filter(Workflow.status=='away').all():
+    ## manually closed-out workflows should get to close with checkor
+    for wfo in session.query(Workflow).filter(Workflow.status=='close').all(): 
+
         if specific and not specific in wfo.name: continue
         ## what is the expected #lumis 
         wl = getWorkLoad(url, wfo.name)

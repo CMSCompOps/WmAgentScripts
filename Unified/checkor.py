@@ -21,26 +21,42 @@ class falseDB:
     def summary(self):
         #print "writting",len(self.record),"to close out json"
         os.system('cp closedout.json closedout.json.last')
-        open('closedout.json','w').write( json.dumps( self.record , indent=2 ) )
+        #open('closedout.json','w').write( json.dumps( self.record , indent=2 ) )
         
         html = open('/afs/cern.ch/user/c/cmst2/www/unified/closeout.html','w')
         html.write('<html>')
         html.write('Last update on %s(CET), %s(GMT), <a href=logs/checkor/ target=_blank> logs</a> <br><br>'%(time.asctime(time.localtime()),time.asctime(time.gmtime())))
-        html.write('<table border=1><tr><th>workflow</th><th>OutputDataSet</th><th>%Compl</th><th>Dupl</th><th>CorrectLumis</th><th>Scubscr</th><th>Tran</th><th>dbsF</th><th>phdF</th><th>ClosOut</th></tr>')
+        html.write('<table border=1><tr><th>workflow</th><th>OutputDataSet</th><th>%Compl</th><th>acdc</th><th>Dupl</th><th>CorrectLumis</th><th>Scubscr</th><th>Tran</th><th>dbsF</th><th>phdF</th><th>ClosOut</th></tr>')
 
         for wf in sorted(self.record.keys()):
-            order = ['percentage','duplicate','correctLumis','missingSubs','phedexReqs','dbsFiles','phedexFiles']
+            wfo = session.query(Workflow).filter(Workflow.name == wf).first()
+            if not wfo: continue
+            if not (wfo.status == 'away' or wfo.status.startswith('assistance')):
+                print "Taking",wf,"out of the close-out record"
+                self.record.pop(wf)
+                continue
+            order = ['percentage','acdc','duplicate','correctLumis','missingSubs','phedexReqs','dbsFiles','phedexFiles']
             wf_and_anchor = '<a id="%s">%s</a>'%(wf,wf)
             for out in self.record[wf]['datasets']:
                 html.write('<tr>')
-                html.write('<td>%s</td>'% wf_and_anchor)
+                html.write('<td>%s <br><a href=assistance.html#%s target=_blank>%s</a></td>'% (wf_and_anchor, wf, wfo.status))
                 html.write('<td>%s</td>'% out)
                 for f in order:
-                    value = self.record[wf]['datasets'][out][f]
+                    if f in self.record[wf]['datasets'][out]:
+                        value = self.record[wf]['datasets'][out][f]
+                    else:
+                        value = "-NA-"
                     html.write('<td>%s</td>'% value)
                 html.write('<td>%s</td>'%self.record[wf]['closeOutWorkflow'])
                 html.write('</tr>')
                 wf_and_anchor = wf
+                
+
+        html.write('</table>')
+        html.write('<br>'*100) ## so that the anchor works ok
+        html.write('bottom of page</html>')
+
+        open('closedout.json','w').write( json.dumps( self.record , indent=2 ) )
 
 def checkor(url, spec=None, options=None):
     fDB = falseDB()
@@ -70,6 +86,15 @@ def checkor(url, spec=None, options=None):
         ## get info
         wfi = workflowInfo(url, wfo.name)
 
+        ## make sure the wm status is up to date.
+        wfo.wm_status = wfi.request['RequestStatus']
+        session.commit()
+        if wfo.wm_status == 'closed-out':
+            print wfo.name,"is already",wfo.wm_status
+            wfo.status = 'close'
+            ## don't go further, someone took care of this already
+            continue
+        
         sub_assistance="" # if that string is filled, there will be need for manual assistance
 
         is_closing = True
@@ -86,10 +111,13 @@ def checkor(url, spec=None, options=None):
             percent_completions[output] = 0
             if lumi_expected:
                 percent_completions[output] = lumi_count / float( lumi_expected )
-        pf = options.fractionpass
+        pf = 0.95
         if 'Campaign' in wfi.request and wfi.request['Campaign'] in CI.campaigns and 'fractionpass' in CI.campaigns[wfi.request['Campaign']]:
             pf = CI.campaigns[wfi.request['Campaign']]['fractionpass']
             print "overriding fraction to",pf,"for",wfi.request['Campaign']
+        if options.fractionpass:
+            pf = options.fractionpass
+            print "overriding fraction to",pf,"by command line"
 
         if not all([fract > pf for fract in percent_completions.values()]):
             print wfo.name,"is not completed"
@@ -97,18 +125,6 @@ def checkor(url, spec=None, options=None):
             ## hook for creating automatically ACDC ?
             sub_assistance+='-recovery'
             is_closing = False
-
-        ## duplication check
-        duplications = {}
-        for output in wfi.request['OutputDatasets']:
-            duplications[output] = dbs3Client.duplicateRunLumi( output )
-            
-        if any(duplications.values()):
-            print wfo.name,"has duplicates",
-            print json.dumps(duplications,indent=2)
-            ## hook for making file invalidation ?
-            sub_assistance+='-duplicates'
-            is_closing = False 
 
         ## correct lumi ??< 300 event per lumi
         events_per_lumi = {}
@@ -124,6 +140,20 @@ def checkor(url, spec=None, options=None):
             ## hook for rejecting the request ?
             sub_assistance+='-biglumi'
             is_closing = False 
+
+        ## anything running on acdc
+        familly = getWorkflowById(url, wfi.request['PrepID'], details=True)
+        acdc = []
+        for member in familly:
+            if member['RequestName'] == wfo.name: continue
+            if member['RequestDate'] < wfi.request['RequestDate']: continue
+            if member['RequestStatus'] in ['running-opened','running-closed','assignment-approved','assigned','acquired']:
+                print wfo.name,"still has a member running",member['RequestName']
+                acdc.append( member['RequestName'] )
+                #print json.dumps(member,indent=2)
+                ## hook for just waiting ...
+                is_closing = False
+
 
         any_presence = {}
         for output in wfi.request['OutputDatasets']:
@@ -162,7 +192,7 @@ def checkor(url, spec=None, options=None):
                 ## pick one at random
                 custodial = SI.pick_SE()
 
-            if custodial and not sub_assistance:
+            if custodial and not sub_assistance and not acdc:
                 ## register the custodial request, if there are no other big issues
                 for output in out_worth_checking:
                     if not len(custodial_locations[output]):
@@ -198,16 +228,28 @@ def checkor(url, spec=None, options=None):
             ## hook for just waiting ...
             is_closing = False
 
-        ## anything running on acdc
-        familly = getWorkflowById(url, wfi.request['PrepID'], details=True)
-        for member in familly:
-            if member['RequestName'] == wfo.name: continue
-            if member['RequestDate'] < wfi.request['RequestDate']: continue
-            if member['RequestStatus'] in ['running-opened','running-closed','assignment-approved','assigned','acquired']:
-                print wfo.name,"still has a member running",member['RequestName']
-                #print json.dumps(member,indent=2)
-                ## hook for just waiting ...
-                is_closing = False
+        ## put that heavy part at the end
+        ## duplication check
+        duplications = {}
+        if is_closing:
+            for output in wfi.request['OutputDatasets']:
+                try:
+                    duplications[output] = dbs3Client.duplicateRunLumi( output )
+                except:
+                    try:
+                        duplications[output] = dbs3Client.duplicateRunLumi( output )
+                    except:
+                        print "was not possible to get the duplicate count for",output
+                        is_closing=False
+
+            if any(duplications.values()):
+                print wfo.name,"has duplicates",
+                print json.dumps(duplications,indent=2)
+                ## hook for making file invalidation ?
+                sub_assistance+='-duplicates'
+                is_closing = False 
+
+
 
         ## for visualization later on
         if not wfo.name in fDB.record: 
@@ -222,14 +264,15 @@ def checkor(url, spec=None, options=None):
             if not output in fDB.record[wfo.name]['datasets']: fDB.record[wfo.name]['datasets'][output] = {}
             rec = fDB.record[wfo.name]['datasets'][output]
             rec['percentage'] = float('%.2f'%(percent_completions[output]*100))
-            rec['duplicate'] = duplications[output]
+            rec['duplicate'] = duplications[output] if output in duplications else 'N/A'
             rec['phedexReqs'] = float('%.2f'%any_presence[output][custodial_presences[output][0]][1]) if len(custodial_presences[output])!=0 else 'N/A'
             rec['closeOutDataset'] = is_closing
             rec['transPerc'] = float('%.2f'%any_presence[output][ disk_copies[output][0]][1]) if len(disk_copies[output])!=0 else 'N/A'
             rec['correctLumis'] = (events_per_lumi[output] <= 300)
-            rec['missingSubs'] = False if len(custodial_locations[output])==0 else ','.join(custodial_locations[output])
+            rec['missingSubs'] = False if len(custodial_locations[output])==0 else ','.join(list(set(custodial_locations[output])))
             rec['dbsFiles'] = dbs_presence[output]
             rec['phedexFiles'] = phedex_presence[output]
+            rec['acdc'] = len(acdc)
 
         ## and move on
         if is_closing:
@@ -277,7 +320,8 @@ if __name__ == "__main__":
     parser = optparse.OptionParser()
     parser.add_option('-t','--test', help='Only test the checkor', action='store_true', default=False)
     parser.add_option('-f','--fetch', help='fetch new stuff not already in assistance', action='store_true', default=False)
-    parser.add_option('--fractionpass',help='The completion fraction that is permitted', default=0.95,type='float')
+    parser.add_option('--fractionpass',help='The completion fraction that is permitted', default=0.0,type='float')
+    parser.add_option('--html',help='make the monitor page',action='store_true', default=False)
     (options,args) = parser.parse_args()
     spec=None
     if len(args)!=0:
@@ -285,7 +329,8 @@ if __name__ == "__main__":
 
     checkor(url, spec, options=options)
     
-    htmlor()
+    if options.html:
+        htmlor()
         
     html = open('/afs/cern.ch/user/c/cmst2/www/unified/assistance.html','w')
     html.write("""
@@ -315,9 +360,15 @@ Workflow in status <b> %s </b>
             for out in fdb.record[wfo.name]['datasets']:
                 html.write("""
 <tr>
-<td> %s </td><td> %s </td><td> %s </td>
+<td> <a id=%s>%s</a> </td><td> %s </td><td> <a href=closeout.html#%s>%s</a> </td>
 </tr>
-"""%( wfo.name, out, fdb.record[wfo.name]['datasets'][out]['percentage'] ))
+"""%( wfo.name,wfo.name,
+      out, 
+      wfo.name,
+      fdb.record[wfo.name]['datasets'][out]['percentage'],
+      
+      ))
         html.write("</table><br><br>")
-    html.write("</html>")    
+    html.write("<br>"*100)
+    html.write("bottom of page</html>")    
                            
