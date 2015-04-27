@@ -91,6 +91,8 @@ def listSubscriptions(url, dataset):
 class campaignInfo:
     def __init__(self):
         #this contains accessor to aggreed campaigns, with maybe specific parameters
+        self.campaigns = json.loads('/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/campaigns.json')
+        """
         self.campaigns = {
             'Fall14DR73' : {'go':True},
             'RunIIWinter15GS' : {'go':True, 'parameters' : {
@@ -123,6 +125,7 @@ class campaignInfo:
             'Summer12' : {'go':True},
             'Summer12DR53X' : {'go':True},
             }
+        """
     def go(self, c):
         if c in self.campaigns and self.campaigns[c]['go']:
             return True
