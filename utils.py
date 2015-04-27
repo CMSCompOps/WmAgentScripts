@@ -567,7 +567,7 @@ def makeDeleteRequest(url, site,datasets, comments, priority='low'):
     response = phedexPost(url, "/phedex/datasvc/json/prod/delete", params)
     return response
 
-def makeReplicaRequest(url, site,datasets, comments, priority='high',custodial='n'): # priority used to be normal
+def makeReplicaRequest(url, site,datasets, comments, priority='normal',custodial='n'): # priority used to be normal
     dataXML = createXML(datasets)
     params = { "node" : site,"data" : dataXML, "group": "DataOps", "priority": priority,
                  "custodial":custodial,"request_only":"y" ,"move":"n","no_mail":"n","comments":comments}
