@@ -91,7 +91,7 @@ def listSubscriptions(url, dataset):
 class campaignInfo:
     def __init__(self):
         #this contains accessor to aggreed campaigns, with maybe specific parameters
-        self.campaigns = json.loads('/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/campaigns.json')
+        self.campaigns = json.loads(open('/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/campaigns.json').read())
         """
         self.campaigns = {
             'Fall14DR73' : {'go':True},
