@@ -696,12 +696,13 @@ class workflowInfo:
                 return True
 
             spl = self.getSplittings()[0]
-            events_per_job = spl['events_per_job']
             algo = spl['splittingAlgo']
-            if algo == 'EventAwareLumiBased' and average > events_per_job:
-                ## need a fudge factor !!!
-                print "This is going to fail",average,"in and requiring",events_per_job
-                return False
+            if algo == 'EventAwareLumiBased':
+                events_per_job = spl['events_per_job']
+                if average > events_per_job:
+                    ## need to do something
+                    print "This is going to fail",average,"in and requiring",events_per_job
+                    return False
         return True
 
     def getSchema(self):
