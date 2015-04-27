@@ -12,6 +12,8 @@ def htmlor():
         if ongoing:
             wl = getWorkLoad('cmsweb.cern.ch',wfn)
             wf.wm_status = wl['RequestStatus']
+            if wf.wm_status in ['failed','aborted','aborted-archived','rejected','rejected-archived']:
+                wf.status = 'trouble'
             session.commit()
         wfs = wf.wm_status
         pid = None
