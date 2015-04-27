@@ -15,12 +15,16 @@ if __name__ == "__main__":
 
         wl = getWorkLoad('cmsweb.cern.ch', wf.name)
         wf.wm_status = wl['RequestStatus']
+
         if status:
             wf.status = status
         elif wf.wm_status in ['assignment-approved']:
             wf.status = 'considered'
         elif wf.wm_status in ['assigned','acquired','running-closed','running-open','completed']:
-            wf.status = 'away'
+            if not wf.status.startswith('assistance'):
+                wf.status = 'away'
+            else:
+                print wf.name,"is still in",wf.status
         elif wf.wm_status in ['closed-out']:
             wf.status = 'close'
         elif wf.wm_status in ['rejected','failed','aborted','aborted-archived','rejected-archived','failed-archived']:
