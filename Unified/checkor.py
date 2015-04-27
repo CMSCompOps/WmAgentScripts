@@ -18,6 +18,35 @@ class falseDB:
 
     #def __del__(self):
     #    pass
+    def table_header(self):
+        text = '<table border=1><thead><tr><th>workflow</th><th>OutputDataSet</th><th>%Compl</th><th>acdc</th><th>Dupl</th><th>CorrectLumis</th><th>Scubscr</th><th>Tran</th><th>dbsF</th><th>\
+phdF</th><th>ClosOut</th></tr></thead>'
+        return text
+
+    def one_line(self, wf, wfo, count):
+        if count%2:            color='lightblue'
+        else:            color='white'
+        text=""
+        ## return the corresponding html
+        order = ['percentage','acdc','duplicate','correctLumis','missingSubs','phedexReqs','dbsFiles','phedexFiles']
+        wf_and_anchor = '<a id="%s">%s</a>'%(wf,wf)
+        for out in self.record[wf]['datasets']:
+            text+='<tr bgcolor=%s>'%color
+            #text+='<td>%s <br><a href=assistance.html#%s target=_blank>%s</a></td>'% (wf_and_anchor, wf, wfo.status)
+            text+='<td>%s <br><a href=assistance.html#%s>%s</a></td>'% (wf_and_anchor, wf, wfo.status)
+
+            text+='<td>%s</td>'% out
+            for f in order:
+                if f in self.record[wf]['datasets'][out]:
+                    value = self.record[wf]['datasets'][out][f]
+                else:
+                    value = "-NA-"
+                text+='<td>%s</td>'% value
+            text+='<td>%s</td>'%self.record[wf]['closeOutWorkflow']
+            text+='</tr>'
+            wf_and_anchor = wf
+
+        return text
     def summary(self):
         #print "writting",len(self.record),"to close out json"
         os.system('cp closedout.json closedout.json.last')
@@ -26,31 +55,17 @@ class falseDB:
         html = open('/afs/cern.ch/user/c/cmst2/www/unified/closeout.html','w')
         html.write('<html>')
         html.write('Last update on %s(CET), %s(GMT), <a href=logs/checkor/ target=_blank> logs</a> <br><br>'%(time.asctime(time.localtime()),time.asctime(time.gmtime())))
-        html.write('<table border=1><tr><th>workflow</th><th>OutputDataSet</th><th>%Compl</th><th>acdc</th><th>Dupl</th><th>CorrectLumis</th><th>Scubscr</th><th>Tran</th><th>dbsF</th><th>phdF</th><th>ClosOut</th></tr>')
+        #html.write('<table border=1><tr><th>workflow</th><th>OutputDataSet</th><th>%Compl</th><th>acdc</th><th>Dupl</th><th>CorrectLumis</th><th>Scubscr</th><th>Tran</th><th>dbsF</th><th>phdF</th><th>ClosOut</th></tr>')
+        html.write( self.table_header() )
 
-        for wf in sorted(self.record.keys()):
+        for (count,wf) in enumerate(sorted(self.record.keys())):
             wfo = session.query(Workflow).filter(Workflow.name == wf).first()
             if not wfo: continue
             if not (wfo.status == 'away' or wfo.status.startswith('assistance')):
                 print "Taking",wf,"out of the close-out record"
                 self.record.pop(wf)
                 continue
-            order = ['percentage','acdc','duplicate','correctLumis','missingSubs','phedexReqs','dbsFiles','phedexFiles']
-            wf_and_anchor = '<a id="%s">%s</a>'%(wf,wf)
-            for out in self.record[wf]['datasets']:
-                html.write('<tr>')
-                html.write('<td>%s <br><a href=assistance.html#%s target=_blank>%s</a></td>'% (wf_and_anchor, wf, wfo.status))
-                html.write('<td>%s</td>'% out)
-                for f in order:
-                    if f in self.record[wf]['datasets'][out]:
-                        value = self.record[wf]['datasets'][out][f]
-                    else:
-                        value = "-NA-"
-                    html.write('<td>%s</td>'% value)
-                html.write('<td>%s</td>'%self.record[wf]['closeOutWorkflow'])
-                html.write('</tr>')
-                wf_and_anchor = wf
-                
+            html.write( self.one_line( wf, wfo , count) )
 
         html.write('</table>')
         html.write('<br>'*100) ## so that the anchor works ok
@@ -331,19 +346,28 @@ if __name__ == "__main__":
     
     if options.html:
         htmlor()
+
+    fdb = falseDB()
         
+    short_html = open('/afs/cern.ch/user/c/cmst2/www/unified/assistance_summary.html','w')
     html = open('/afs/cern.ch/user/c/cmst2/www/unified/assistance.html','w')
     html.write("""
 <html>
 """)
-    html.write('Last update on %s(CET), %s(GMT), <a href=logs/checkor/last.log target=_blank> log</a> <br><br>'%(time.asctime(time.localtime()),time.asctime(time.gmtime())))
-    fdb = falseDB()
+    short_html.write('Last update on %s(CET), %s(GMT), <a href=logs/checkor/last.log target=_blank> log</a> <br>'%(time.asctime(time.localtime()),time.asctime(time.gmtime())))
+    html.write('Last update on %s(CET), %s(GMT), <a href=logs/checkor/last.log target=_blank> log</a> <br>'%(time.asctime(time.localtime()),time.asctime(time.gmtime())))
+
+    html.write('<a href=assistance_summary.html> Summary </a> <br>')    
+    short_html.write('<a href=assistance.html> Details </a> <br>')
+
     assist = defaultdict(list)
     for wfo in session.query(Workflow).filter(Workflow.status.startswith('assistance')).all():
         assist[wfo.status].append( wfo )
-
+    
     for status in sorted(assist.keys()):
-        html.write("""
+        html.write("Workflow in status <b> %s </b>"% status)
+        html.write( fdb.table_header())
+        short_html.write("""
 Workflow in status <b> %s </b>
 <table border=1>
 <thead>
@@ -352,23 +376,30 @@ Workflow in status <b> %s </b>
 </tr>
 </thead>
 """% status )
-
-        for wfo in assist[status]:
+        
+        for (count,wfo) in enumerate(assist[status]):
+            if count%2:            color='lightblue'
+            else:            color='white'
             if not wfo.name in fdb.record: 
                 print "wtf with",wfo.name
                 continue
+            html.write( fdb.one_line( wfo.name, wfo, count))
             for out in fdb.record[wfo.name]['datasets']:
-                html.write("""
-<tr>
+                short_html.write("""
+<tr bgcolor=%s>
 <td> <a id=%s>%s</a> </td><td> %s </td><td> <a href=closeout.html#%s>%s</a> </td>
 </tr>
-"""%( wfo.name,wfo.name,
+"""%( color, 
+      wfo.name,wfo.name,
       out, 
       wfo.name,
       fdb.record[wfo.name]['datasets'][out]['percentage'],
       
       ))
         html.write("</table><br><br>")
+        short_html.write("</table><br><br>")
+    short_html.write("<br>"*100)
+    short_html.write("bottom of page</html>")    
     html.write("<br>"*100)
     html.write("bottom of page</html>")    
                            
