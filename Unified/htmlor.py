@@ -10,11 +10,15 @@ def htmlor():
     def wfl(wf,view=False,p=False,ms=False,within=False,ongoing=False,status=False,update=False):
         wfn = wf.name
         if ongoing or update:
-            wl = getWorkLoad('cmsweb.cern.ch',wfn)
-            wf.wm_status = wl['RequestStatus']
-            if wf.wm_status in ['failed','aborted','aborted-archived','rejected','rejected-archived']:
-                wf.status = 'trouble'
-            session.commit()
+            #wl = getWorkLoad('cmsweb.cern.ch',wfn)
+            #wf.wm_status = wl['RequestStatus']
+            #if wf.wm_status in ['failed','aborted','aborted-archived','rejected','rejected-archived']:
+            #    wf.status = 'trouble'
+            #elif wf.wm_status in ['closed-out']:
+            #    wf.status = 'close'
+            #session.commit()
+            ## do not update the status in the vizualisation !!!
+            pass
         wfs = wf.wm_status
         pid = None
         pids=filter(lambda seg: seg.count('-')==2, wf.name.split('_'))
