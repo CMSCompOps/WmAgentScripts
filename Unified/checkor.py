@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, makeReplicaRequest
+from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, makeReplicaRequest, status2status
 import phedexClient
 import dbs3Client
 import reqMgrClient
@@ -81,15 +81,17 @@ def checkor(url, spec=None, options=None):
 
     wfs=[]
     if options.fetch:
-        workflows = getWorkflows(url, status='completed')
-        for wf in workflows:
-            wfo = session.query(Workflow).filter(Workflow.name == wf ).first()
-            if wfo:
-                if not wfo.status in ['away','assistance']: continue
-                wfs.append(wfo )
+        #workflows = getWorkflows(url, status='completed')
+        #for wf in workflows:
+        #    wfo = session.query(Workflow).filter(Workflow.name == wf ).first()
+        #    if wfo:
+        #        if not wfo.status in ['away','assistance']: continue
+        #        wfs.append(wfo )
+        wfs.extend( session.query(Workflow).filter(Workflow.status == 'away').all() )
+        wfs.extend( session.query(Workflow).filter(Workflow.status== 'assistance').all() )
     else:
         ## than get all in need for assistance
-        wfs = session.query(Workflow).filter(Workflow.status.startswith('assistance-')).all()
+        wfs.extend( session.query(Workflow).filter(Workflow.status.startswith('assistance-')).all() )
 
 
     custodials = defaultdict(list) #sites : dataset list
@@ -105,15 +107,34 @@ def checkor(url, spec=None, options=None):
         wfi = workflowInfo(url, wfo.name)
 
         ## make sure the wm status is up to date.
+        # and send things back/forward if necessary.
         wfo.wm_status = wfi.request['RequestStatus']
-        session.commit()
         if wfo.wm_status == 'closed-out':
+            ## manually closed-out
             print wfo.name,"is already",wfo.wm_status
             wfo.status = 'close'
-            ## don't go further, someone took care of this already
+            session.commit()
+            continue
+        elif wfo.wm_status in ['failed','aborted','aborted-archived','rejected','rejected-archived']:
+            ## went into trouble
+            wfo.status = 'trouble'
+            print wfo.name,"is in trouble",wfo.wm_status
+            session.commit()
+            continue
+        elif wfo.wm_status in ['assigned','acquired']:
+            ## not worth checking yet
+            print wfo.name,"not running yet"
             session.commit()
             continue
         
+        
+        if wfo.wm_status != 'completed':
+            ## for sure move on with closeout check if in completed
+            print "no need to check on",wfo.name,"in status",wfo.wm_status
+            session.commit()
+            continue
+
+        session.commit()        
         sub_assistance="" # if that string is filled, there will be need for manual assistance
 
         is_closing = True
