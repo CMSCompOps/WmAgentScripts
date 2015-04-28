@@ -24,7 +24,7 @@ def closor(url, specific=None):
             ## manually announced ??
             wfo.status = 'done'
             wfo.wm_status = wl['RequestStatus']
-            print wfo.name,"is in done"
+            print wfo.name,"is done already",wfo.wm_status
 
         session.commit()
 
