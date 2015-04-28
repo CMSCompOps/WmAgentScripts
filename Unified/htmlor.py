@@ -7,9 +7,9 @@ import json
 
 def htmlor():
 
-    def wfl(wf,view=False,p=False,ms=False,within=False,ongoing=False,status=False):
+    def wfl(wf,view=False,p=False,ms=False,within=False,ongoing=False,status=False,update=False):
         wfn = wf.name
-        if ongoing:
+        if ongoing or update:
             wl = getWorkLoad('cmsweb.cern.ch',wfn)
             wf.wm_status = wl['RequestStatus']
             if wf.wm_status in ['failed','aborted','aborted-archived','rejected','rejected-archived']:
@@ -199,7 +199,7 @@ Worlfow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/reque
     text=""
     count=0
     for wf in session.query(Workflow).filter(Workflow.status == 'assistance').all():
-        text+="<li> %s </li> \n"%wfl(wf,view=True)
+        text+="<li> %s </li> \n"%wfl(wf,view=True,update=True)
         count+=1
     text+="</ul></div>\n"
     html_doc.write("""Worlfow that are closing (%d)
@@ -216,7 +216,7 @@ Worlfow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/reque
     text=""
     count=0
     for wf in session.query(Workflow).filter(Workflow.status.startswith('assistance-')).all():
-        text+="<li> %s </li> \n"%wfl(wf,view=True,within=True,status=True)
+        text+="<li> %s </li> \n"%wfl(wf,view=True,within=True,status=True,update=True)
         count+=1
     text+="</ul></div>\n"
     html_doc.write("""Worlfow which need assistance (%d)
