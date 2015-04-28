@@ -14,10 +14,7 @@ from htmlor import htmlor
 class falseDB:
     def __init__(self):
         self.record = json.loads(open('closedout.json').read())
-        #print "got",len(self.record),"from close out json"
 
-    #def __del__(self):
-    #    pass
     def table_header(self):
         text = '<table border=1><thead><tr><th>workflow</th><th>OutputDataSet</th><th>%Compl</th><th>acdc</th><th>Dupl</th><th>CorrectLumis</th><th>Scubscr</th><th>Tran</th><th>dbsF</th><th>\
 phdF</th><th>ClosOut</th></tr></thead>'
@@ -27,13 +24,18 @@ phdF</th><th>ClosOut</th></tr></thead>'
         if count%2:            color='lightblue'
         else:            color='white'
         text=""
+        try:
+            pid = filter(lambda b :b.count('-')==2, wf.split('_'))[0]
+        except:
+            pid ='None'
         ## return the corresponding html
         order = ['percentage','acdc','duplicate','correctLumis','missingSubs','phedexReqs','dbsFiles','phedexFiles']
         wf_and_anchor = '<a id="%s">%s</a>'%(wf,wf)
         for out in self.record[wf]['datasets']:
             text+='<tr bgcolor=%s>'%color
-            #text+='<td>%s <br><a href=assistance.html#%s target=_blank>%s</a></td>'% (wf_and_anchor, wf, wfo.status)
-            text+='<td>%s <br><a href=assistance.html#%s>%s</a></td>'% (wf_and_anchor, wf, wfo.status)
+            text+='<td>%s <br><a href=https://cmsweb.cern.ch/reqmgr/view/details/%s>dts</a>, <a href=https://cmsweb.cern.ch/reqmgr/view/splitting/%s>splt</a>, <a href=assistance.html#%s>%s</a></td>'% (wf_and_anchor,
+                                                                                                                                      wf, wf, wf,
+                                                                                                                                      wfo.status)
 
             text+='<td>%s</td>'% out
             for f in order:
@@ -41,21 +43,22 @@ phdF</th><th>ClosOut</th></tr></thead>'
                     value = self.record[wf]['datasets'][out][f]
                 else:
                     value = "-NA-"
-                text+='<td>%s</td>'% value
+                if f =='acdc':
+                    text+='<td><a href=https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byprepid?key="%s">%s</a></td>'%(pid , value)
+                else:
+                    text+='<td>%s</td>'% value
             text+='<td>%s</td>'%self.record[wf]['closeOutWorkflow']
             text+='</tr>'
             wf_and_anchor = wf
 
         return text
     def summary(self):
-        #print "writting",len(self.record),"to close out json"
         os.system('cp closedout.json closedout.json.last')
-        #open('closedout.json','w').write( json.dumps( self.record , indent=2 ) )
         
         html = open('/afs/cern.ch/user/c/cmst2/www/unified/closeout.html','w')
         html.write('<html>')
         html.write('Last update on %s(CET), %s(GMT), <a href=logs/checkor/ target=_blank> logs</a> <br><br>'%(time.asctime(time.localtime()),time.asctime(time.gmtime())))
-        #html.write('<table border=1><tr><th>workflow</th><th>OutputDataSet</th><th>%Compl</th><th>acdc</th><th>Dupl</th><th>CorrectLumis</th><th>Scubscr</th><th>Tran</th><th>dbsF</th><th>phdF</th><th>ClosOut</th></tr>')
+
         html.write( self.table_header() )
 
         for (count,wf) in enumerate(sorted(self.record.keys())):
@@ -108,6 +111,7 @@ def checkor(url, spec=None, options=None):
             print wfo.name,"is already",wfo.wm_status
             wfo.status = 'close'
             ## don't go further, someone took care of this already
+            session.commit()
             continue
         
         sub_assistance="" # if that string is filled, there will be need for manual assistance
