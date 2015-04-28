@@ -183,4 +183,5 @@ if __name__=="__main__":
 
     assignor(url,spec, options=options)
 
-    htmlor()
+    if not options.test:
+        htmlor()
