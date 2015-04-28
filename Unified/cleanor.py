@@ -9,6 +9,7 @@ def cleanor(url, specific=None):
     SI = siteInfo()
     counts=0
     for wfo in session.query(Workflow).filter(Workflow.status == 'done').all():
+        if specific and not specific in wfo.name: continue
         ## what was in input 
         wl = getWorkLoad(url,  wfo.name )
         if not 'InputDataset' in wl: continue
