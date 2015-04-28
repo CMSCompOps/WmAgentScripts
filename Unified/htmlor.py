@@ -35,7 +35,7 @@ def htmlor():
                 '<a href="https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=full&reverse=0&reverse=1&npp=20&subtext=%s&sall=q" target="_blank">elog</a>'%pid,
                 '<a href="http://hcc-briantest.unl.edu/prodview/%s" target="_blank">pv</a>'%wfn,
                 '<a href="https://cmsweb.cern.ch/reqmgr/reqMgr/outputDatasetsByRequestName/%s" target="_blank">out</a>'%wfn,
-                '<a href="http://jbadillo.web.cern.ch/jbadillo/closeout.html#%s" target="_blank">jclo</a>'%wfn,
+                #'<a href="http://jbadillo.web.cern.ch/jbadillo/closeout.html#%s" target="_blank">jclo</a>'%wfn,
                 '<a href="closeout.html#%s" target="_blank">clo</a>'%wfn,
                 '<a href="statuses.html#%s" target="_blank">st</a>'%wfn,
                 '<a href="https://cmsweb.cern.ch/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s" target="_blank">perf</a>'%wfn
@@ -102,7 +102,7 @@ def htmlor():
 </head>
 <body>
 
-Last update on %s(CET), %s(GMT), <a href=logs/ target=_blank> logs</a> <br><br>
+Last update on %s(CET), %s(GMT), <a href=logs/ target=_blank> logs</a>, <a href=logs/last.log target=_blank>last</a> <br><br>
 
 """ %(time.asctime(time.localtime()),
       time.asctime(time.gmtime())))
