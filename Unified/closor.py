@@ -12,43 +12,21 @@ from htmlor import htmlor
 
 def closor(url, specific=None):
     ## manually closed-out workflows should get to close with checkor
-    for wfo in session.query(Workflow).filter(Workflow.status=='close').all(): 
+    for wfo in session.query(Workflow).filter(Workflow.status=='close').all():
 
         if specific and not specific in wfo.name: continue
+
         ## what is the expected #lumis 
         wl = getWorkLoad(url, wfo.name)
-
-        if wfo.wm_status != wl['RequestStatus']:
-            wfo.wm_status = wl['RequestStatus']
-            session.commit()
-
-        take_out = ['failed','aborted','aborted-archived','rejected','rejected-archived']
-        if wl['RequestStatus'] in take_out:
-            wfo.status = 'trouble'
-            wfo.wm_status = wl['RequestStatus']
-            print wfo.name,"is in trouble",wl['RequestStatus']
-            session.commit()
-            continue
+        wfo.wm_status = wl['RequestStatus']
 
         if wl['RequestStatus'] in  ['announced','normal-archived']:
+            ## manually announced ??
             wfo.status = 'done'
             wfo.wm_status = wl['RequestStatus']
             print wfo.name,"is in done"
-            session.commit()
-        #    continue
 
-        if wl['RequestType'] == 'Resubmission':
-            #session.delete( wl)
-            #session.commit()
-            print wfo.name,"can be taken out"
-            wfo.status = 'forget'
-            wfo.wm_status = wl['RequestStatus']
-            session.commit()
-            continue
-
-        if wl['RequestStatus'] in ['assigned','acquired']:
-            print wfo.name,"not running yet"
-            continue
+        session.commit()
 
         if not 'TotalInputLumis' in wl:
             print wfo.name,"has not been assigned yet"
@@ -89,7 +67,7 @@ def closor(url, specific=None):
 
 
         ## only that status can let me go into announced
-        if wl['RequestStatus'] in ['closed-out','normal-archived','announced']: ## add force-completed ??
+        if wl['RequestStatus'] in ['closed-out']:
             print wfo.name,"to be announced"
 
             results=[]#'dummy']
