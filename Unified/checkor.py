@@ -16,7 +16,7 @@ class falseDB:
         self.record = json.loads(open('closedout.json').read())
 
     def table_header(self):
-        text = '<table border=1><thead><tr><th>workflow</th><th>OutputDataSet</th><th>%Compl</th><th>acdc</th><th>Dupl</th><th>CorrectLumis</th><th>Scubscr</th><th>Tran</th><th>dbsF</th><th>\
+        text = '<table border=1><thead><tr><th>workflow</th><th>OutputDataSet</th><th>%Compl</th><th>acdc</th><th>Dupl</th><th>CorrectLumis</th><th>Scubscr</th><th>Tran</th><th>dbsF</th><th>dbsIF</th><th>\
 phdF</th><th>ClosOut</th></tr></thead>'
         return text
 
@@ -29,11 +29,11 @@ phdF</th><th>ClosOut</th></tr></thead>'
         except:
             pid ='None'
         ## return the corresponding html
-        order = ['percentage','acdc','duplicate','correctLumis','missingSubs','phedexReqs','dbsFiles','phedexFiles']
+        order = ['percentage','acdc','duplicate','correctLumis','missingSubs','phedexReqs','dbsFiles','dbsInvFiles','phedexFiles']
         wf_and_anchor = '<a id="%s">%s</a>'%(wf,wf)
         for out in self.record[wf]['datasets']:
             text+='<tr bgcolor=%s>'%color
-            text+='<td>%s <br><a href=https://cmsweb.cern.ch/reqmgr/view/details/%s>dts</a>, <a href=https://cmsweb.cern.ch/reqmgr/view/splitting/%s>splt</a>, <a href=assistance.html#%s>%s</a></td>'% (wf_and_anchor,
+            text+='<td>%s<br><a href=https://cmsweb.cern.ch/reqmgr/view/details/%s>dts</a>, <a href=https://cmsweb.cern.ch/reqmgr/view/splitting/%s>splt</a>, <a href=assistance.html#%s>%s</a></td>'% (wf_and_anchor,
                                                                                                                                       wf, wf, wf,
                                                                                                                                       wfo.status)
 
@@ -253,15 +253,17 @@ def checkor(url, spec=None, options=None):
 
         ## presence in dbs
         dbs_presence = {}
+        dbs_invalid = {}
         for output in wfi.request['OutputDatasets']:
             dbs_presence[output] = dbs3Client.getFileCountDataset( output )
-        
+            dbs_invalid[output] = dbs3Client.getFileCountDataset( output, onlyInvalid=True)
+
         ## presence in phedex
         phedex_presence ={}
         for output in wfi.request['OutputDatasets']:
             phedex_presence[output] = phedexClient.getFileCountDataset(url, output )
 
-        if not all([dbs_presence[out] == phedex_presence[out] for out in wfi.request['OutputDatasets']]):
+        if not all([dbs_presence[out] == (dbs_invalid[out]+phedex_presence[out]) for out in wfi.request['OutputDatasets']]):
             print wfo.name,"has a dbs,phedex mismatch"
             print json.dumps(dbs_presence, indent=2)
             print json.dumps(phedex_presence, indent=2)
@@ -282,7 +284,7 @@ def checkor(url, spec=None, options=None):
                         print "was not possible to get the duplicate count for",output
                         is_closing=False
 
-            if any(duplications.values()):
+            if any(duplications.values()) and not options.ignoreduplicates:
                 print wfo.name,"has duplicates",
                 print json.dumps(duplications,indent=2)
                 ## hook for making file invalidation ?
@@ -311,6 +313,7 @@ def checkor(url, spec=None, options=None):
             rec['correctLumis'] = (events_per_lumi[output] <= 300)
             rec['missingSubs'] = False if len(custodial_locations[output])==0 else ','.join(list(set(custodial_locations[output])))
             rec['dbsFiles'] = dbs_presence[output]
+            rec['dbsInvFiles'] = dbs_invalid[output]
             rec['phedexFiles'] = phedex_presence[output]
             rec['acdc'] = len(acdc)
 
@@ -361,6 +364,7 @@ if __name__ == "__main__":
     parser.add_option('-t','--test', help='Only test the checkor', action='store_true', default=False)
     parser.add_option('-f','--fetch', help='fetch new stuff not already in assistance', action='store_true', default=False)
     parser.add_option('--fractionpass',help='The completion fraction that is permitted', default=0.0,type='float')
+    parser.add_option('--ignoreduplicates', help='Force ignoring lumi duplicates', default=False, action='store_true')
     parser.add_option('--html',help='make the monitor page',action='store_true', default=False)
     (options,args) = parser.parse_args()
     spec=None

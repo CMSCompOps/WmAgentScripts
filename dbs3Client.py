@@ -183,7 +183,7 @@ def getNumberofFilesPerRun(das_url, dataset, run):
     return len(reply)
 
 
-def getFileCountDataset(dataset):
+def getFileCountDataset(dataset, skipInvalid=False, onlyInvalid=False):
     """
     Returns the number of files registered in DBS3
     """
@@ -191,7 +191,11 @@ def getFileCountDataset(dataset):
     dbsapi = DbsApi(url=dbs3_url)
 
     # retrieve file list
-    reply = dbsapi.listFiles(dataset=dataset)
+    reply = dbsapi.listFiles(dataset=dataset, detail=(skipInvalid or onlyInvalid))
+    if skipInvalid:
+        reply = filter(lambda f : f['is_file_valid'] ==1, reply)
+    elif onlyInvalid:
+        reply = filter(lambda f : f['is_file_valid'] ==0, reply)
     return len(reply)
 
 

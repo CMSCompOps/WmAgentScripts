@@ -203,7 +203,7 @@ Worlfow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/reque
     text=""
     count=0
     for wf in session.query(Workflow).filter(Workflow.status == 'assistance').all():
-        text+="<li> %s </li> \n"%wfl(wf,view=True,update=True)
+        text+="<li> %s </li> \n"%wfl(wf,view=True,update=True,status=True)
         count+=1
     text+="</ul></div>\n"
     html_doc.write("""Worlfow that are closing (%d)
