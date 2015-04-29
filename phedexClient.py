@@ -338,14 +338,9 @@ def phedexPost(url, request, params):
     """
     conn = httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), 
                                         key_file = os.getenv('X509_USER_PROXY'))
-    encodedParams = urllib.urlencode(params)
+    encodedParams = urllib.urlencode(params, doseq=True)
     #encodedParams = json.dumps(params)
-    print '-'*120
-    print encodedParams
-    print '-'*120
-    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-
-    r1 = conn.request("POST", request, encodedParams, headers=headers)
+    r1 = conn.request("POST", request, encodedParams)
     r2 = conn.getresponse()
     message = r2.read()
     conn.close()
@@ -369,29 +364,41 @@ def makeDeletionRequest(url, site, datasets, comments):
     Creates a deletion request
     """
     dataXML = createXML(datasets)
-    params = { "node":site, "data":dataXML, "level":"dataset", "rm_subscriptions":"y", 
-                 "comments":comments}
+    params = {  "node":site,
+                "data":dataXML,
+                "level":"dataset",
+                "rm_subscriptions":"y", 
+                "comments":comments}
+    
     response = phedexPost(url, "/phedex/datasvc/json/prod/delete", params)
     return response
 
-
-def makeCustodialMoveRequest(url, site, datasets, comments):
+def makeMoveRequest(url, site, datasets, comments, priority='high',custodial='n'):
     dataXML = createXML(datasets)
-    params = createParams(site, dataXML, comments)
+    params = { "node" : site,
+                "data" : dataXML,
+                "group": "DataOps",
+                "priority": priority,
+                "custodial":custodial,
+                "request_only":"y",
+                "move":"n",
+                "no_mail":"n",
+                "comments":comments}
     response = phedexPost(url, "/phedex/datasvc/json/prod/subscribe", params)
     return response
 
-def makeCustodialReplicaRequest(url, site,datasets, comments):    
+def makeReplicaRequest(url, site,datasets, comments, priority='high',custodial='n'): # priority used to be normal
     dataXML = createXML(datasets)
-    params = { "node" : site,"data" : dataXML, "group": "DataOps", "priority":'normal',
-                 "custodial":"y","request_only":"y" ,"move":"n","no_mail":"n","comments":comments}   
+    params = { "node" : site,
+                "data" : dataXML,
+                "group": "DataOps",
+                "priority": priority,
+                "custodial":custodial,
+                "request_only":"y",
+                "move":"n",
+                "no_mail":"n",
+                "comments":comments}
     response = phedexPost(url, "/phedex/datasvc/json/prod/subscribe", params)
-    return response
-
-def makeCustodialXML(url, datasets):
-    dataXML = createXML(datasets)
-    params = createParams(site, dataXML, "Custodial Subscription for "+comments)
-    response = phedexPost(url, "/phedex/datasvc/xml/prod/subscribe", params)
     return response
 
 def main():

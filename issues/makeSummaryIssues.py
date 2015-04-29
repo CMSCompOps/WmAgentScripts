@@ -337,11 +337,6 @@ def makeissuessummary(s, issues, oldest, urgent_requests, types):
                             phperc = "%s" % p['perc']
                             transferred_events = int(float(ods['events']) * float(phperc) / 100)
                         break
-            subscr = 0
-            if 'phreqinfo' in ods.keys():
-                if 'id' in ods['phreqinfo'].keys():
-                    subscr = ods['phreqinfo']['id']
-
             if 'created' in js.keys() and js['created'] > 0:
                 jobperc = min(100,100*float(js['success']+js['failure'])/js['created'])
             else:
@@ -355,7 +350,7 @@ def makeissuessummary(s, issues, oldest, urgent_requests, types):
                 or (r['outputdatasetinfo'][0]['name'][-3:] == 'GEN' and r['mergedLFNBase'] != '/store/generator')
                 or (r['outputdatasetinfo'][0]['name'][-3:] in ['GEN-SIM','AODSIM'] and r['mergedLFNBase'] != '/store/mc'))):
                 issues['wronglfnbase'].add(r['requestname'])
-            if len(r['acdc'])>1:
+            if 'acdc' in r and len(r['acdc']) > 1:
                 issues['acdc'].add(r['requestname'])
                 #alarm = 'ACDC(%s)' % len(r['acdc'])
                 alarmlink='https://cmst2.web.cern.ch/cmst2/mc/requests/%s.html' % r['requestname']

@@ -15,7 +15,7 @@ except ImportError:
     import simplejson as json
 weekSet = set()
 ignoreCampaign = set(['CMSSW_7_1_0','CMSSW_7_2_0_pre4','TEST'])
-STATUS = ["assignment-approved","assigned","acquired","running-open", "running-closed", "completed", "closed-out", "announced"]
+STATUS = ["assignment-approved","assigned","acquired","running-open", "running-closed", "completed", "closed-out", "announced","failed"]
 
 def getIndex(status):
     try:
@@ -66,7 +66,7 @@ def loadData(infile, jsonFile=False):
         if 'backfill' in name.lower() or 'backfill' in campaign.lower():
             continue
         #ignore in closed out
-        if status == 'closed-out':
+        if status == 'closed-out' or status == 'normal-archived':
             continue
         #ignore resubmissions:
         if rtype == 'Resubmission':
