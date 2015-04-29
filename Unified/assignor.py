@@ -31,7 +31,7 @@ def assignor(url ,specific = None, talk=True, options=None):
         wfh = workflowInfo( url, wfo.name)
         #wl = getWorkLoad(url, wfo.name )
 
-        if not CI.go( wfh.request['Campaign'] ):
+        if not CI.go( wfh.request['Campaign'] ) and not options.go:
             print "No go for",wfh.request['Campaign']
             if not options.nograce: continue
 
@@ -171,7 +171,8 @@ if __name__=="__main__":
     parser.add_option('-t','--test', help='Only test the assignment',action='store_true',dest='test',default=False)
     parser.add_option('-r', '--restrict', help='Only assign workflows for site with input',default=False, action="store_true",dest='restrict')
     parser.add_option('--nograce',help='Skip the grace period',default=False,action='store_true')
-    parser.add_option('--team',default='production')
+    parser.add_option('--go',help="Overrides the campaign go",default=False,action='store_true')
+    parser.add_option('--team',help="Specify the agent to use",default='production')
 
     for key in reqMgrClient.assignWorkflow.keys:
         parser.add_option('--%s'%key,help="%s Parameter of request manager assignment interface"%key, default=None)
