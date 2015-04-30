@@ -143,6 +143,19 @@ def checkor(url, spec=None, options=None):
         # tuck out DQMIO/DQM
         wfi.request['OutputDatasets'] = [ out for out in wfi.request['OutputDatasets'] if not '/DQM' in out]
 
+        ## anything running on acdc
+        familly = getWorkflowById(url, wfi.request['PrepID'], details=True)
+        acdc = []
+        for member in familly:
+            if member['RequestName'] == wfo.name: continue
+            if member['RequestDate'] < wfi.request['RequestDate']: continue
+            if member['RequestStatus'] in ['running-opened','running-closed','assignment-approved','assigned','acquired']:
+                print wfo.name,"still has a member running",member['RequestName']
+                acdc.append( member['RequestName'] )
+                #print json.dumps(member,indent=2)
+                ## hook for just waiting ...
+                is_closing = False
+
         ## completion check
         percent_completions = {}
         for output in wfi.request['OutputDatasets']:
@@ -159,7 +172,7 @@ def checkor(url, spec=None, options=None):
             pf = options.fractionpass
             print "overriding fraction to",pf,"by command line"
 
-        if not all([fract > pf for fract in percent_completions.values()]):
+        if not all([fract > pf for fract in percent_completions.values()]):# and not acdc:
             print wfo.name,"is not completed"
             print json.dumps(percent_completions, indent=2)
             ## hook for creating automatically ACDC ?
@@ -180,19 +193,6 @@ def checkor(url, spec=None, options=None):
             ## hook for rejecting the request ?
             sub_assistance+='-biglumi'
             is_closing = False 
-
-        ## anything running on acdc
-        familly = getWorkflowById(url, wfi.request['PrepID'], details=True)
-        acdc = []
-        for member in familly:
-            if member['RequestName'] == wfo.name: continue
-            if member['RequestDate'] < wfi.request['RequestDate']: continue
-            if member['RequestStatus'] in ['running-opened','running-closed','assignment-approved','assigned','acquired']:
-                print wfo.name,"still has a member running",member['RequestName']
-                acdc.append( member['RequestName'] )
-                #print json.dumps(member,indent=2)
-                ## hook for just waiting ...
-                is_closing = False
 
 
         any_presence = {}
