@@ -634,6 +634,9 @@ def assignWorkflow(url, workflowname, team, parameters ):
         defaults['Dashboard'] = 'reprocessing'
         defaults['dashboard'] = 'reprocessing'
 
+    # set the maxrss watchdog to what is specified in the request
+    defaults['MaxRSS'] = wf.request['Memory']*1024+10
+
     for aux in assignWorkflow.auxiliaries:
         if aux in defaults: 
             par = defaults.pop( aux )

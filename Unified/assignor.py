@@ -130,10 +130,6 @@ def assignor(url ,specific = None, talk=True, options=None):
                     if ',' in v: parameters[key] = filter(None,v.split(','))
                     else: parameters[key] = v
 
-        ## take care of a few exceptions
-        if (wfh.request['Memory']*1000) > 3000000:
-            parameters['MaxRSS'] = 4000000
-
         ## pick up campaign specific assignment parameters
         parameters.update( CI.parameters(wfh.request['Campaign']) )
 
