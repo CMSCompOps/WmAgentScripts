@@ -91,19 +91,28 @@ def cleanor(url, specific=None):
         print "\t",','.join(dataset_list)
     
     ## make a one for all deletion request to save on phedex id
+    aggregate_deletion = False
+    auto_approve_deletion = False
     sites = set()
     datasets = set()
     for site in delete_per_site:
-        datasets.update([info[0] for info in delete_per_site[site]])
+        site_datasets = [info[0] for info in delete_per_site[site]]
+        datasets.update( site_datasets )
         sites.add(site)
-    
+        if not aggregate_deletion:
+            result = makeDeleteRequest(url ,site , site_datasets, comments="cleanup after production")
+            for phedexid in [o['id'] for o in result['phedex']['request_created']]:
+                if auto_approve_deletion:
+                    approved = approveSubscription(url, phedexid, [site])
+        
     sites = map(str, sites)
     datasets = map(str, datasets)
-    result = makeDeleteRequest(url ,sites ,datasets, comments="cleanup after production") 
-    for phedexid in [o['id'] for o in result['phedex']['request_created']]:
-        for site in sites:
-            #approved = approveSubscription(url, phedexid, [site])
-            pass
+    if aggregate_deletion:
+        result = makeDeleteRequest(url ,sites ,datasets, comments="cleanup after production") 
+        for phedexid in [o['id'] for o in result['phedex']['request_created']]:
+            for site in sites:
+                if auto_approve_deletion:
+                    approved = approveSubscription(url, phedexid, [site])
 
         
 if __name__ == "__main__":
