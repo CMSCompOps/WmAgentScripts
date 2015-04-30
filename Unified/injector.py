@@ -39,6 +39,7 @@ def injector(url,wm_status = 'assignment-approved', set_status='considered', tal
 
                 if fwl['RequestDate'] < wl['RequestDate']: continue
                 if fwl['RequestType']=='Resubmission': continue
+                if fwl['RequestStatus'] in ['None',None]: continue
                 new_wf = session.query(Workflow).filter(Workflow.name == member).first()
                 if not new_wf:
                     print "putting",member
