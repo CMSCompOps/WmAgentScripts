@@ -272,7 +272,7 @@ def checkor(url, spec=None, options=None):
             ## hook for just waiting ...
             is_closing = False
 
-        if not all([(dbs_invalid[out] < int(fraction_invalid*dbs_presence[out])) for out in wfi.request['OutputDatasets']]) and not options.ignorefiles:
+        if not all([(dbs_invalid[out] <= int(fraction_invalid*dbs_presence[out])) for out in wfi.request['OutputDatasets']]) and not options.ignorefiles:
             print wfo.name,"has a dbs invalid file level too high"
             print json.dumps(dbs_presence, indent=2)
             print json.dumps(dbs_invalid, indent=2)
