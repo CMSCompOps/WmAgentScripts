@@ -39,7 +39,6 @@ def htmlor():
                 '<a href="https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=full&reverse=0&reverse=1&npp=20&subtext=%s&sall=q" target="_blank">elog</a>'%pid,
                 '<a href="http://hcc-briantest.unl.edu/prodview/%s" target="_blank">pv</a>'%wfn,
                 '<a href="https://cmsweb.cern.ch/reqmgr/reqMgr/outputDatasetsByRequestName/%s" target="_blank">out</a>'%wfn,
-                #'<a href="http://jbadillo.web.cern.ch/jbadillo/closeout.html#%s" target="_blank">jclo</a>'%wfn,
                 '<a href="closeout.html#%s" target="_blank">clo</a>'%wfn,
                 '<a href="statuses.html#%s" target="_blank">st</a>'%wfn,
                 '<a href="https://cmsweb.cern.ch/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s" target="_blank">perf</a>'%wfn
@@ -48,8 +47,11 @@ def htmlor():
             wl = getWorkLoad('cmsweb.cern.ch',wfn)
             if 'InputDataset' in wl:
                 dataset = wl['InputDataset']
-                text+=', <a href=https://cmsweb.cern.ch/das/request?input=%s target=_blank>input</a>'%dataset
-                text+=', <a href=https://cmsweb.cern.ch/phedex/prod/Data::Subscriptions#state=create_since=0;filter=%s target=_blank>sub</a>'%dataset
+                text+=', '.join(['',
+                                 '<a href=https://cmsweb.cern.ch/das/request?input=%s target=_blank>input</a>'%dataset,
+                                 '<a href=https://cmsweb.cern.ch/phedex/prod/Data::Subscriptions#state=create_since=0;filter=%s target=_blank>sub</a>'%dataset,
+                                 '<a href=https://cmsweb.cern.ch/phedex/datasvc/xml/prod/blockreplicas?dataset=%s target=_blank>rep</a>'%dataset,
+                                 ])
 
         if p:
             wl = getWorkLoad('cmsweb.cern.ch',wfn)
