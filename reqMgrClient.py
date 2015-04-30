@@ -673,6 +673,12 @@ def assignWorkflow(url, workflowname, team, parameters ):
                 print setWorkflowSplitting(url, params)
             elif aux == 'SplittingAlgorithm':
                 wf = workflowInfo(url, workflowname)
+                ### do it for all major tasks
+                #for (t,params) in wf.getTaskAndSplittings():
+                #    params.update({"requestName":workflowname,
+                #                   "splittingTask" : '/%s/%s'%(workflowname,t),
+                #                   "splittingAlgo" : par})
+                #    setWorkflowSplitting(url, params)
                 t = wf.firstTask()
                 params = wf.getSplittings()[0]
                 params.update({"requestName":workflowname,
