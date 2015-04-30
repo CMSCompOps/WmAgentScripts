@@ -263,11 +263,22 @@ def checkor(url, spec=None, options=None):
         for output in wfi.request['OutputDatasets']:
             phedex_presence[output] = phedexClient.getFileCountDataset(url, output )
 
-        if not all([dbs_presence[out] == (dbs_invalid[out]+phedex_presence[out]) for out in wfi.request['OutputDatasets']]):
+        fraction_invalid = 0.01
+        if not all([dbs_presence[out] == (dbs_invalid[out]+phedex_presence[out]) for out in wfi.request['OutputDatasets']]) and not options.ignorefiles:
             print wfo.name,"has a dbs,phedex mismatch"
             print json.dumps(dbs_presence, indent=2)
+            print json.dumps(dbs_invalid, indent=2)
             print json.dumps(phedex_presence, indent=2)
             ## hook for just waiting ...
+            is_closing = False
+
+        if not all([(dbs_invalid[out] < int(fraction_invalid*dbs_presence[out])) for out in wfi.request['OutputDatasets']]) and not options.ignorefiles:
+            print wfo.name,"has a dbs invalid file level too high"
+            print json.dumps(dbs_presence, indent=2)
+            print json.dumps(dbs_invalid, indent=2)
+            print json.dumps(phedex_presence, indent=2)
+            ## need to be going and taking an eye
+            sub_assistance+="-invalidfiles"
             is_closing = False
 
         ## put that heavy part at the end
@@ -364,6 +375,7 @@ if __name__ == "__main__":
     parser.add_option('-t','--test', help='Only test the checkor', action='store_true', default=False)
     parser.add_option('-f','--fetch', help='fetch new stuff not already in assistance', action='store_true', default=False)
     parser.add_option('--fractionpass',help='The completion fraction that is permitted', default=0.0,type='float')
+    parser.add_option('--ignorefiles', help='Force ignoring dbs/phedex differences', action='store_true', default=False)
     parser.add_option('--ignoreduplicates', help='Force ignoring lumi duplicates', default=False, action='store_true')
     parser.add_option('--html',help='make the monitor page',action='store_true', default=False)
     (options,args) = parser.parse_args()
