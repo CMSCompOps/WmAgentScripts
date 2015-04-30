@@ -33,9 +33,9 @@ phdF</th><th>ClosOut</th></tr></thead>'
         wf_and_anchor = '<a id="%s">%s</a>'%(wf,wf)
         for out in self.record[wf]['datasets']:
             text+='<tr bgcolor=%s>'%color
-            text+='<td>%s<br><a href=https://cmsweb.cern.ch/reqmgr/view/details/%s>dts</a>, <a href=https://cmsweb.cern.ch/reqmgr/view/splitting/%s>splt</a>, <a href=assistance.html#%s>%s</a></td>'% (wf_and_anchor,
-                                                                                                                                      wf, wf, wf,
-                                                                                                                                      wfo.status)
+            text+='<td>%s<br><a href=https://cmsweb.cern.ch/reqmgr/view/details/%s>dts</a>, <a href=https://cmsweb.cern.ch/reqmgr/view/splitting/%s>splt</a>, <a href=https://cmsweb.cern.ch/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s>perf</a>, <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>ac</a>, <a href=assistance.html#%s>%s</a></td>'% (wf_and_anchor,
+                                                                                                                                                                                                                                                                                                                            wf, wf, wf,wf,pid,
+                                                                                                                                                                                                                                                                                                                            wfo.status)
 
             text+='<td>%s</td>'% out
             for f in order:
