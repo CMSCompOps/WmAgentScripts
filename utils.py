@@ -882,6 +882,7 @@ class workflowInfo:
                     (aera,aps,_) = ps.split('-')
                 else:
                     print "Cannot check output in reqmgr"
+                    print output,"is what is in the request workload"
                     continue
                 predicted = '/'.join(['',dsn,'-'.join([aera,aps,'v%d'%(version+1)]),tier])
                 conflicts = getWorkflowByOutput( self.url, predicted )
