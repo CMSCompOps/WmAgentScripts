@@ -2,7 +2,7 @@
 import json
 import urllib2,urllib, httplib, sys, re, os, random
 from xml.dom.minidom import getDOMImplementation
-import WmAgentScripts.reqMgrClient as reqMgrClient
+import reqMgrClient as reqMgrClient
 
 """
     Filters through the list of ACDC's that are in "completed" which ones
