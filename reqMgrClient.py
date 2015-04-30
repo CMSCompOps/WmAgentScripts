@@ -261,7 +261,7 @@ def requestManagerGet(url, request, retries=4):
         raise Exception('Maximum queries to ReqMgr exceeded',str(request))
     return request
 
-def requestManagerPost(url, request, params, head = def_headers):
+def requestManagerPost(url, request, params, head = def_headers, nested=False):
     """
     Performs some operation on ReqMgr through
     an HTTP POST method.
@@ -272,7 +272,13 @@ def requestManagerPost(url, request, params, head = def_headers):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
                                     key_file = os.getenv('X509_USER_PROXY'))
     headers = head
-    encodedParams = urllib.urlencode(params)
+    if nested:
+        jsonEncodedParams ={}
+        for pKey in params:
+            jsonEncodedParams[pKey] = json.dumps(params[pKey])
+        encodedParams = urllib.urlencode(jsonEncodedParams)
+    else:
+        encodedParams = urllib.urlencode(params)
     conn.request("POST", request, encodedParams, headers)
     response = conn.getresponse()
     data = response.read()
@@ -853,7 +859,7 @@ def submitWorkflow(url, schema):
     the workflow
     
     """
-    data = requestManagerPost(url,"/reqmgr/create/makeSchema", schema)
+    data = requestManagerPost(url,"/reqmgr/create/makeSchema", schema, nested=True)
     return data
 
 def setWorkflowSplitting(url, schema):
