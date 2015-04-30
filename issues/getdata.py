@@ -15,9 +15,10 @@ from xml.dom import minidom
 
 import WmAgentScripts.dbs3Client as dbs3
 import WmAgentScripts.reqMgrClient as reqMgr
+import WmAgentScripts.phedexClient as phd
 
-#from WMCoreService.WMStatsClient import WMStatsClient
-#from WMCoreService.DataStruct.RequestInfoCollection import RequestInfoCollection, RequestInfo
+from WMCoreService.WMStatsClient import WMStatsClient
+from WMCoreService.DataStruct.RequestInfoCollection import RequestInfoCollection, RequestInfo
 
 #For reading overview
 cachedoverview = '/afs/cern.ch/user/j/jbadillo/www/overview.cache'
@@ -29,7 +30,7 @@ allacdc = set()
 
 #type of requests
 REQ_TYPES = ['ReDigi','MonteCarlo', 'MonteCarloFromGEN']
-REQ_TYPES_2 = ['ReDigi','MonteCarlo', 'MonteCarloFromGEN', 'Resubmission']
+REQ_TYPES_2 = ['ReDigi','MonteCarlo', 'MonteCarloFromGEN', 'Resubmission', 'TaskChain']
 
 #interesting status
 RUN_STATUS = ['assignment-approved','assigned','acquired','running-open','running-closed','completed','closed-out']
@@ -38,6 +39,9 @@ LIVE_STATUS = ['running','running-open','running-closed','completed','closed-out
 #names of T1's
 t2zone = {'T1_TW_ASGC':'ASGC','T1_IT_CNAF':'CNAF','T1_DE_KIT':'KIT','T1_FR_CCIN2P3':'IN2P3',
             'T1_ES_PIC':'PIC','T1_UK_RAL':'RAL','T1_US_FNAL':'FNAL'}
+
+DATE_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
+wMStats = WMStatsClient("https://cmsweb.cern.ch/couchdb/wmstats")
 
 def getoverview():
     """
@@ -75,426 +79,213 @@ def getRequestsByTypeStatus(rtype, rstatus):
     return r
     
 
-def loadJobSummary():
+def getJobSummary(workflow):
     """
     Loads job summary from wmstats
     """
-    #TODO JSON job summary from WMStats view (Seangchan API)
-    """
+    #JSON job summary from WMStats view
+    jdata = {}
     try:
-        wMStats = WMStatsClient("https://cmsweb.cern.ch/couchdb/wmstats")
-        jdata = wMStats.getRequestByNames(list, jobInfoFlag = True)
+        jdata = wMStats.getRequestByNames([workflow], jobInfoFlag = True)
         requestCol = RequestInfoCollection(jdata)
-        for wf, info in requestCol.getData().items():
-            jlist[wf] = {}
-            for t,n in  info.getJobSummary().getJSONStatus().items():
-                jlist[wf][t]=n
-    except:
-        print "Cannot get job stats"
-        pass
-    #print jlist
-    """
-    return {}
+        for wf2, info in requestCol.getData().items():
+            jdata = info.getJobSummary().getJSONStatus()
 
-def getWorkloadParameters(workflow):
-    #Gets the workflow information from ReqMgr Workload
-    batch = workflow.split('_')[2] #TODO fix this
-    processingstring = workflow.split('_')[4] #TODO fix this
+    except KeyError as e:
+        print "ERROR, Cannot get job stats for", workflow
+        print e
+        
+    except Exception as e:
+        print "ERROR, Cannot get job stats for", workflow
+        print e
 
-    list = reqMgr.getWorkflowWorkload('cmsweb.cern.ch', workflow)
+    return jdata
 
-    primaryds = ''
-    cmssw = ''
-    campaign = ''
-    priority = -1
-    timeev = 0
-    sizeev = 0
-    prepid = ''
-    mergedLFNBase = ''
-    globaltag = ''
-    sites = []
-    custodialsites = []
-    blockswhitelist = []
-    events_per_job = 0
-    events_per_lumi = 0
-    max_events_per_lumi = 0
-    lumis_per_job = 0
-    acquisitionEra = None
-    processingVersion = None
-    reqdate='' 
-    requestdays = 0
-    #Parse parameters from the workload
-    for raw in list:
-        if 'acquisitionEra' in raw:
-            a = raw.find("'")
-            if a >= 0:
-                b = raw.find("'",a+1)
-                acquisitionEra = raw[a+1:b]
-            else:
-                a = raw.find(" =")
-                b = raw.find('<br')
-                acquisitionEra = raw[a+3:b]
-        elif 'primaryDataset' in raw:
-            primaryds = raw[raw.find("'")+1:]
-            primaryds = primaryds[0:primaryds.find("'")]
-        elif '.schema.Campaign' in raw:
-            campaign = raw[raw.find("'")+1:]
-            campaign = campaign[0:campaign.find("'")]
-        elif 'cmsswVersion' in raw:
-            cmssw = raw[raw.find("'")+1:]
-            cmssw = cmssw[0:cmssw.find("'")]
-        elif 'properties.mergedLFNBase' in raw:
-            mergedLFNBase = raw[raw.find("'")+1:]
-            mergedLFNBase = mergedLFNBase[0:mergedLFNBase.find("'")]
-        elif 'PrepID' in raw:
-            prepid = raw[raw.find("'")+1:]
-            prepid = prepid[0:prepid.find("'")]
-        elif 'lumis_per_job' in raw:
-            a = raw.find(" =")
-            b = raw.find('<br')
-            lumis_per_job = int(raw[a+3:b])
-        elif '.events_per_job' in raw:
-            a = raw.find(" =")
-            b = raw.find('<br')
-            events_per_job = int(raw[a+3:b])
-        elif '.events_per_lumi' in raw:
-            a = raw.find(" =")
-            b = raw.find('<br')
-            events_per_lumi = int(raw[a+3:b])
-        elif '.max_events_per_lumi' in raw:
-            a = raw.find(" =")
-            b = raw.find('<br')
-            max_events_per_lumi = int(raw[a+3:b])
-        elif 'SizePerEvent' in raw:
-            a = raw.find("'")
-            if a >= 0:
-                    b = raw.find("'",a+1)
-                    sizeev = int(raw[a+1:b])
-            else:
-                    a = raw.find(" =")
-                    b = raw.find('<br')
-                    sizeev = int(float(raw[a+3:b]))
-        elif 'TimePerEvent' in raw:
-            a = raw.find("'")
-            if a >= 0:
-                    b = raw.find("'",a+1)
-                    timeev = int(raw[a+1:b])
-            else:
-                    a = raw.find(" =")
-                    b = raw.find('<br')
-                    timeev = int(float(raw[a+3:b]))
-        elif 'request.priority' in raw:
-            a = raw.find("'")
-            if a >= 0:
-                b = raw.find("'",a+1)
-                priority = int(raw[a+1:b])
-            else:
-                a = raw.find(" =")
-                b = raw.find('<br')
-                priority = int(raw[a+3:b])
-        elif 'RequestDate' in raw:
-            reqdate = raw[raw.find("[")+1:raw.find("]")]    
-            reqdate = reqdate.replace("'","")
-            reqdate= "datetime.datetime(" + reqdate + ")"
-            reqdate= eval(reqdate)
-            requestdays = (datetime.datetime.now()-reqdate).days
-        elif 'blocks.white' in raw and not '[]' in raw:
-            blockswhitelist = '['+raw[raw.find("[")+1:raw.find("]")]+']'    
-            blockswhitelist = eval(blockswhitelist)        
-        elif '.custodialSites' in raw and not '[]' in raw:
-            custodialsites = '['+raw[raw.find("[")+1:raw.find("]")]+']'    
-            custodialsites = eval(custodialsites)        
-        elif 'sites.white' in raw and not '[]' in raw:
-            sites = '['+raw[raw.find("[")+1:raw.find("]")]+']'    
-            sites = eval(sites)        
-        elif 'processingVersion' in raw:
-            processingVersion = raw[raw.find("'")+1:]
-            processingVersion = processingVersion[0:processingVersion.find("'")]
-            a = raw.find("'")
-            if a >= 0:
-                b = raw.find("'",a+1)
-                processingVersion = raw[a+1:b]
-            else:
-                a = raw.find(" =")
-                b = raw.find('<br')
-                processingVersion = raw[a+3:b]
-        elif 'request.schema.GlobalTag' in raw:
-            globaltag = raw[raw.find("'")+1:]
-            globaltag = globaltag[0:globaltag.find(":")]
-    
-    wlinfo = {'batch':batch,'processingstring':processingstring,'requestname':workflow,
-            'primaryds':primaryds,'prepid':prepid,'globaltag':globaltag,'timeev':timeev,
-            'sizeev':sizeev,'priority':priority,'sites':sites,'custodialsites':custodialsites,
-            'acquisitionEra':acquisitionEra,'requestdays':requestdays,'reqdate':'%s' % reqdate,
-            'processingVersion':processingVersion,'blockswhitelist':blockswhitelist,
-            'events_per_job':events_per_job,'lumis_per_job':lumis_per_job,
-            'max_events_per_lumi':max_events_per_lumi,'events_per_lumi':events_per_lumi,
-            'campaign':campaign,'cmssw':cmssw,'mergedLFNBase':mergedLFNBase}
-    return wlinfo
-
-def getAssignmentDate(workflow):
-    data = reqMgr.getWorkloadCache('cmsweb.cern.ch', workflow)
-    ls = data['RequestTransition']
+def getAssignmentDate(wfObject):
+    ls = wfObject.cache['RequestTransition']
     date = None
     for status in ls:
         if status['Status'] == 'assigned':
             #time in epoch format
             date = datetime.datetime.fromtimestamp(status['UpdateTime'])
             #parse to '%Y-%m-%d %H:%M:%S.%f')
-            date = date.strftime('%Y-%m-%d %H:%M:%S.%f')
+            date = date.strftime(DATE_FORMAT)
     return date
+
+def getDatasetPhedexInfo(dataset):
+    #request for subscriptions
+    url='cmsweb.cern.ch'
+    dataset['phreqinfo'] = []
+    result = phd.phedexGet(url, '/phedex/datasvc/json/prod/requestlist?dataset='+dataset['name']+'&type=xfer')
+    if 'request' not in result['phedex']:
+        print "Cannot get Requests List status from PhEDEx"
+    else:
+        #aggregate results of all transfer requests
+        for req in result['phedex']['request']:
+            phreqinfo = {}
+            requested_by = req['requested_by']
+            phreqinfo['nodes'] = [ node['name'] for node in req['node'] ]
+            phreqinfo['id'] = req['id']
+            phreqinfo['approval'] = req['approval']
+            #tape node
+            for node in phreqinfo['nodes']:
+                if node.endswith('_MSS'):
+                    phreqinfo['custodialsite'] = node
+            
+            dataset['phreqinfo'].append(phreqinfo)
+    
+    #subscriptions
+    dataset['phtrinfo'] = []
+    
+    result = phd.phedexGet(url, '/phedex/datasvc/json/prod/subscriptions?dataset='+dataset['name'])
+    if 'dataset' not in result['phedex'] or not result['phedex']['dataset']:
+        print "Cannot get Subscriptions from PhEDEx"
+    else:
+        #aggregate results of subscription
+        for subs in result['phedex']['dataset'][0]['subscription']:
+            phtrinfo = {}
+            phtrinfo['custodial'] = subs['custodial']
+            phtrinfo['node'] = subs['node']
+            try:
+                phtrinfo['perc'] = int(float(subs['percent_files']))
+            except:
+                phtrinfo['perc'] = 0
+            phtrinfo['type'] = 'Move' if subs['move'] == 'y' else 'Replica'
+            #time of request creating and days since
+            time_create = datetime.datetime.fromtimestamp(int(subs['time_create']))
+            phtrinfo['time_create'] = time_create.strftime(DATE_FORMAT)
+            delta = time_create - datetime.datetime.now()
+            phtrinfo['time_create_days'] = delta.days
+            
+            dataset['phtrinfo'].append(phtrinfo)
 
 def getWorkflowInfo(workflow):
     """
     creates a single dictionary with all workflow information
     """
-    
-    wlinfo = getWorkloadParameters(workflow)
-    timeev = wlinfo['timeev']
-    sizeev = wlinfo['sizeev']
-    prepid = wlinfo['prepid']
-    sites = wlinfo['sites']
-    custodialsites = wlinfo['custodialsites']
-    events_per_job = wlinfo['events_per_job']
-    lumis_per_job = wlinfo['lumis_per_job']
-    blockswhitelist = wlinfo['blockswhitelist']
+    #TODO replace all with info or cache
+    wfObject = reqMgr.Workflow(workflow)
+    #wlinfo = getWorkloadParameters(workflow)
 
-    #look for correspondin acdc's
-    acdc = []
-    for a in allacdc:
-        if prepid in a:
-            acdc.append(a)
-    #check for one T1 that is in the whitelist
-    custodialt1 = '?'
-    for i in sites:
-        if 'T1_' in i:
-            custodialt1 = i
-            break
+
+    #Global stuff - common for all types of request
+    wlinfo = {    # 'batch':batch  IGNORED - not useful
+                'processingstring': wfObject.info['ProcessingString'],
+                'requestname': workflow,
+                'prepid': wfObject.info['PrepID'],
+                'globaltag': wfObject.info['GlobalTag'],
+                'timeev': wfObject.info['TimePerEvent'],
+                'sizeev': wfObject.info['SizePerEvent'],
+                'priority': wfObject.info['RequestPriority'],
+                'sites': wfObject.info['Site Whitelist'],
+                'acquisitionEra':wfObject.info['AcquisitionEra'],
+                'processingVersion': wfObject.info['ProcessingVersion'],
+                'campaign':wfObject.info['Campaign'],
+                'cmssw':wfObject.info['CMSSWVersion'],
+                'mergedLFNBase':wfObject.info['MergedLFNBase'],
+                'type' : wfObject.type,
+                'status':wfObject.status,
+            }
+    #get the following keys, or 0 by defaulr,
+    getValue = lambda data, k, dflt = 0: data[k] if k in data else dflt; 
+
+    #calculate general stuff
+    #parse and format date
+    now = datetime.datetime.now()
+    dateArr = wfObject.info['RequestDate']
+    #fill with missing zeros
+    if len(dateArr) != 6:
+        dateArr += (6-len(dateArr))*[0]
+    reqdate = datetime.datetime.strptime(
+                    "%s-%s-%s %s:%s:%s.0"%tuple(dateArr)
+                    ,  DATE_FORMAT)
+    wlinfo['reqdate'] = reqdate.strftime(DATE_FORMAT)
+    #calculate days old of the request
+    delta = now - reqdate
+    days = delta.days + delta.seconds / 3600.0 / 24.0
+    wlinfo['requestdays'] = days
+    #assignment team and date
+    if 'Assignments' in wfObject.info and wfObject.info['Assignments']:
+        wlinfo['team'] = wfObject.info['Assignments'][0]
+    else:
+        wlinfo['team'] = ''
+    wlinfo['update'] = getAssignmentDate(wfObject)
+
+    wlinfo['expectedevents'] = getValue(wfObject.cache, 'TotalInputEvents')
+    wlinfo['expectedjobs'] = getValue(wfObject.cache, 'TotalEstimatedJobs')
     
-    #retrieve reqMgr info
-    s = reqMgr.getWorkflowInfo('cmsweb.cern.ch', workflow)
+    #Job Information if available
+    wlinfo['js'] = getJobSummary(workflow)
     
-    #parse information
-    filtereff = float(s['FilterEfficiency']) if 'FilterEfficiency' in s else 1
-    team = s['Assignments'] if 'Assignments' in s else ''
-    team = team[0] if type(team) is list and team else team
-    typee = s['RequestType'] if 'RequestType' in s else ''
-    status = s['RequestStatus'] if 'RequestStatus' in s else ''
-    
-    if 'RequestSizeEvents' in s:
-        reqevts = s['RequestSizeEvents']
-    elif 'RequestNumEvents' in s:
-        reqevts = s['RequestNumEvents']
-    
+    #information about input dataset
     inputdataset = {}
-    if 'InputDatasets' in s and s['InputDatasets']:
-        inputdataset['name'] = s['InputDatasets'][0]
-
-    #TODO complete validation logic and expected run time
-    
-    if typee in ['MonteCarlo','LHEStepZero']:
-    #if reqevts > 0:
-        expectedevents = int(reqevts)
-        if events_per_job > 0 and filtereff > 0:
-            expectedjobs = int(math.ceil(expectedevents/(events_per_job*filtereff)))
-            expectedjobcpuhours = int(timeev*(events_per_job*filtereff)/3600)
-        else:
-            expectedjobs = 0
-            expectedjobcpuhours = 0
-    elif typee in ['MonteCarloFromGEN','ReReco','ReDigi']:
-        #datasets
+    wlinfo['inputdatasetinfo'] = inputdataset
+    if 'InputDatasets' in wfObject.info and wfObject.info['InputDatasets']:
+        inputdataset['name'] = wfObject.info['InputDatasets'][0]
+        
+        wlinfo['blockswhitelist'] = getValue(wfObject.info, 'BlockWhitelist', None)
+        if wlinfo['blockswhitelist']:
+            wlinfo['blockswhitelist'] = eval(wlinfo['blockswhitelist'])
+        
         inputdataset['events'] = dbs3.getEventCountDataSet(inputdataset['name'])
-        inputdataset['status'], inputdataset['createts'], inputdataset['lastmodts'] = dbs3.getDatasetInfo(inputdataset['name'])
-
-        if blockswhitelist != []:
-            inputdataset['bwevents'] = dbs3.getEventCountDataSetBlockList(inputdataset['name'],blockswhitelist)
+        dsinfo = dbs3.getDatasetInfo(inputdataset['name'])
+        inputdataset['status'], wlinfo['inputdatasetinfo']['createts'], wlinfo['inputdatasetinfo']['lastmodts'] = dsinfo
+    
+        #block events
+        if wlinfo['blockswhitelist']:
+            inputdataset['bwevents'] = dbs3.getEventCountDataSetBlockList(inputdataset['name'], wlinfo['blockswhitelist'])
         else:
             inputdataset['bwevents'] = inputdataset['events']
+        #load reqlist and subscriptions
+        getDatasetPhedexInfo(inputdataset)
 
-        if inputdataset['bwevents'] > 0 and filtereff > 0:
-            expectedevents = int(filtereff*inputdataset['bwevents'])
-        else:
-            expectedevents = 0
-        
-        if events_per_job > 0 and filtereff > 0:
-            expectedjobs = int(expectedevents/events_per_job)
-        else:
-            expectedjobs = 0
-        
-        try:
-            expectedjobcpuhours = int(lumis_per_job*timeev*inputdataset['bwevents']/inputdataset['bwlumicount']/3600)
-        except:
-            expectedjobcpuhours = 0
-        #TODO use phedexClient
-        url='https://cmsweb.cern.ch/phedex/datasvc/json/prod/RequestList?dataset=' + inputdataset['name']
-        try:
-            result = json.load(urllib.urlopen(url))
-        except:
-            print "Cannot get Requests List status from PhEDEx"
-        try:
-            r = result['phedex']['request']
-        except:
-            r = ''
+    #look for correspondin acdc's
+    wlinfo['acdc'] = []
+    if wlinfo['prepid']:
+        for a in allacdc:
+            if wlinfo['prepid'] in a:
+                wlinfo['acdc'].append(a)
 
-        inputdataset['phreqinfo'] = []
-        if r:
-            for i in range(len(r)):
-                phreqinfo = {}
-                requested_by = r[i]['requested_by']
-                nodes = []
-                for j in range(len(r[i]['node'])):
-                    nodes.append(r[i]['node'][j]['name'])
-                id = r[i]['id']
-                phreqinfo['nodes'] = nodes
-                phreqinfo['id'] = id
-                inputdataset['phreqinfo'].append(phreqinfo)
-        #TODO use phedexclient
-        url = 'https://cmsweb.cern.ch/phedex/datasvc/json/prod/Subscriptions?dataset=' + inputdataset['name']
-        try:
-            result = json.load(urllib.urlopen(url))
-        except:
-            print "Cannot get Subscriptions from PhEDEx"
-        inputdataset['phtrinfo'] = []
-        try:
-            print result
-            rlist = result['phedex']['dataset'][0]['subscription']
-            for r in rlist:
-                phtrinfo = {}
-                node = r['node']
-                custodial = r['custodial']
-                phtrinfo['node'] = node
-                try:
-                    phtrinfo['perc'] = int(float(r['percent_files']))
-                except:
-                    phtrinfo['perc'] = 0
-                inputdataset['phtrinfo'].append(phtrinfo)
-        except:
-            r = {}
-
+    if wfObject.type == 'TaskChain':
+        pass
+    #Stuff only for non-taskchain workflows
     else:
-        expectedevents = -1
-        expectedjobs = -1
-        expectedjobcpuhours = -1
-    
-    expectedtotalsize = sizeev * expectedevents / 1000000
-    conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    r1=conn.request('GET','/reqmgr/reqMgr/outputDatasetsByRequestName?requestName=' + workflow)
-    r2=conn.getresponse()
-    data = r2.read()
-    ods = json.loads(data)
-    conn.close()
-    if len(ods)==0:
-        print "No Outpudatasets for this workflow: "+workflow
-    outputdataset = []
-    eventsdone = 0
-    for o in ods:
-        oel = {}
-        oel['name'] = o
-        if status in ['running','running-open','running-closed','completed','closed-out','announced']:
-            #[oe,ost,ocreatets,olastmodts] = getdsdetail(o,timestamps=1)
-            print "-",o, "-"
-            oe = dbs3.getEventCountDataSet(o)
-            ost, ocreatets, olastmodts = dbs3.getDatasetInfo(o)
-            oel['events'] = oe
-            oel['status'] = ost
-            oel['createts'] = ocreatets
-            oel['lastmodts'] = olastmodts
+        wlinfo['primaryds'] =  wfObject.info['PrimaryDataset'],
+
+        #get custodial sites from all output
+        sites = []
+        for ds, info in wfObject.info['SubscriptionInformation'].items():
+            sites += info['CustodialSites']
+        wlinfo['custodialsites'] = sites
+        wlinfo['events_per_job'] = getValue(wfObject.info, 'EventsPerJob')
+        wlinfo['lumis_per_job'] =  getValue(wfObject.info, 'LumisPerJob')
+        wlinfo['events_per_lumi'] = getValue(wfObject.info, 'EventsPerLumi')
+        wlinfo['max_events_per_lumi'] = getValue(wfObject.info, 'max_events_per_lumi')
+        wlinfo['filtereff'] = getValue(wfObject.info, 'FilterEfficiency', 1.0)
         
-            phreqinfo = {}
-            url='https://cmsweb.cern.ch/phedex/datasvc/json/prod/requestlist?dataset=' + o
-            try:
-                result = json.load(urllib.urlopen(url))
-            except:
-                print "Cannot get request subscription status from PhEDEx"
-            try:
-                r = result['phedex']['request']
-            except:
-                r = None
-            if r:
-                try:
-                    for i in range(0,len(r)):
-                        approval = r[i]['approval']
-                        requested_by = r[i]['requested_by']
-                        custodialsite = r[i]['node'][0]['name']
-                        id = r[i]['id']
-                        if '_MSS' in custodialsite:
-                            phreqinfo['custodialsite'] = custodialsite
-                            phreqinfo['requested_by'] = requested_by
-                            phreqinfo['approval'] = approval
-                            phreqinfo['id'] = id
-                except:
-                    print "Error getting subscription status from Phedex"
-                oel['phreqinfo'] = phreqinfo
-        
-            phtrinfo = {}
-            url = 'https://cmsweb.cern.ch/phedex/datasvc/json/prod/subscriptions?dataset=' + o
-            try:
-                result = json.load(urllib.urlopen(url))
-            except:
-                print "Cannot get transfer status from PhEDEx"
-            try:
-                rlist = result['phedex']['dataset'][0]['subscription']
-            except:
-                rlist = []
-            
-            phtrinfo = {}
-            oel['phtrinfo'] = []
-            for r in rlist:
-                phtrinfo = {}
-                node = r['node']
-                custodial = r['custodial']
-                if r['move'] == 'n':
-                    phtype = 'Replica'
-                else:
-                    phtype = 'Move'
-                phtrinfo['node'] = node
-                phtrinfo['custodial'] = r['custodial']
-                phtrinfo['time_create'] = datetime.datetime.fromtimestamp(int(r['time_create'])).ctime()
-                phtrinfo['time_create_days'] = (datetime.datetime.now() - datetime.datetime.fromtimestamp(int(r['time_create']))).days
-                try:
-                    phtrinfo['perc'] = int(float(r['percent_files']))
-                except:
-                    phtrinfo['perc'] = 0
-                phtrinfo['type'] = phtype
+        #calculate cpu hours        
+        wlinfo['expectedjobcpuhours'] = wlinfo['timeev'] * wlinfo['expectedevents'] / wlinfo['filtereff']
 
-                oel['phtrinfo'].append(phtrinfo)
-            eventsdone = eventsdone + oe
-        else:
-            eventsdone = 0
-        outputdataset.append(oel)
+        #info about output datasets
+        #expectedtotalsize = sizeev * expectedevents / 1000000
+        outputdataset = []
+        wlinfo['outputdatasetinfo'] = outputdataset
+        eventsdone = 0
+        if wfObject.status in ['running','running-open','running-closed','completed','closed-out','announced']:
+            for o in wfObject.outputDatasets:
+                oel = {}
+                oel['name'] = o
+                
+                #[oe,ost,ocreatets,olastmodts] = getdsdetail(o,timestamps=1)
+                print "-",o, "-"
+                oel['events'] = wfObject.getOutputEvents(o)
+                oel['status'], oel['createts'], oel['lastmodts'] = dbs3.getDatasetInfo(o)
+                #load reqlist and subscriptions
+                getDatasetPhedexInfo(oel)
 
-    cpuhours = timeev*expectedevents/3600
-    remainingcpuhours = max(0,timeev*(expectedevents-eventsdone)/3600)
+                eventsdone = eventsdone + oel['events']
+                outputdataset.append(oel)
 
-    realremainingcpudays = 0
-    totalslots = 0
-    #pledge calculation
-    for (psite,pslots) in pledged.items():
-        if psite in sites:
-            totalslots = totalslots + pslots
-    if totalslots == 0:
-        realremainingcpudays = 0
-    else:
-        realremainingcpudays = float(remainingcpuhours) / 24 / totalslots 
-    try:
-        zone = t2zone[custodialsites[0]]
-    except:
-        zone = '?'
-    if workflow in jlist.keys():
-        js = jlist[workflow]
-    else:
-        js = {}
-    
-    if status in LIVE_STATUS:
-        updatedate = getAssignmentDate(workflow)
-    else:
-        updatedate = None
-    wlinfo.update( {'filtereff':filtereff,'type':typee,'status':status,'expectedevents':expectedevents,
-                    'inputdatasetinfo':inputdataset,'timeev':timeev,'sizeev':sizeev,'sites':sites,
-                    'zone':zone,'js':js,'outputdatasetinfo':outputdataset,'cpuhours':cpuhours,
-                    'realremainingcpudays':realremainingcpudays,'remainingcpuhours':remainingcpuhours,
-                    'team':team,'expectedjobs':expectedjobs,'expectedjobcpuhours':expectedjobcpuhours,'acdc':acdc,
-                    'update':updatedate} )
     return wlinfo
 
 def main():
@@ -510,30 +301,29 @@ def main():
     """
     #read overview from file
     overview = getoverview()
-    #read pledges from file
-    dp = open(afs_base+'/pledged.json').read()
-    pledged = json.loads(dp)
     
     #get acdc's and all requsts
-    list = getRequestsByTypeStatus(REQ_TYPES_2, RUN_STATUS)
-    listb = getRequestsByTypeStatus(REQ_TYPES, RUN_STATUS)
+    wfs = getRequestsByTypeStatus(REQ_TYPES_2, RUN_STATUS)
     allacdc = getRequestsByTypeStatus(['Resubmission'], RUN_STATUS)
     
-    #job list
-    jlist = loadJobSummary()
-    
     struct = []
-    print "Number of requests in %s: %s\n" % (RUN_STATUS, len(listb))
+    print "Number of requests in %s: %s\n" % (RUN_STATUS, len(wfs))
 
     count = 1
-    for workflow in list:
+    for workflow in wfs:
+        count += 1
         try:
             #skip acdc's
             if workflow in allacdc:
                 print "[skipping %s]\n" % (workflow)
                 continue
+            #skip relvals
+            if "RVCMSSW" in workflow:
+                print "[skipping %s]\n" % (workflow)
+                continue
+            
             print "%s: %s" % (count, workflow)
-            count += 1
+            
             #get info        
             wfinfo = getWorkflowInfo(workflow)
             print " %s\n" % (wfinfo['update'])

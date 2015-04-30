@@ -167,7 +167,7 @@ def main():
     print 'invalidated files %s'%len(files)
     print 'invalidated events %s'%invalid
     print '%s%%'%(float(total-invalid)/total*100.0)
-    for f in files:
+    for f in sorted(files):
         print f
 
 if __name__ == '__main__':

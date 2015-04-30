@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import json
-import urllib2,urllib, httplib, sys, re, os
+import urllib2,urllib, httplib, sys, re, os, random
 from xml.dom.minidom import getDOMImplementation
 import dbs3Client, reqMgrClient, phedexClient
 
@@ -17,6 +17,23 @@ import dbs3Client, reqMgrClient, phedexClient
     For running the previous version look for closeOutScript_leg.py
 
 """
+
+T1_Disk = ['T1_DE_KIT_Disk',
+            'T1_ES_PIC_Disk',
+            'T1_FR_CCIN2P3_Disk',
+            'T1_IT_CNAF_Disk',
+#            'T1_RU_JINR_Disk',
+            'T1_UK_RAL_Disk',
+            'T1_US_FNAL_Disk']
+T1_MSS = ['T0_CH_CERN_MSS',
+            'T1_DE_KIT_MSS',
+            'T1_ES_PIC_MSS',
+            'T1_FR_CCIN2P3_MSS',
+            'T1_IT_CNAF_MSS',
+#            'T1_RU_JINR_MSS',
+            'T1_UK_RAL_MSS',
+            'T1_US_FNAL_MSS']
+
 
 def getOverviewRequestsWMStats(url):
     """
@@ -45,6 +62,7 @@ def classifyCompletedRequests(url, requests):
     workflows={'ReDigi':[],'MonteCarloFromGEN':[],'MonteCarlo':[] , 'ReReco':[], 'LHEStepZero':[], 'StoreResults':[],
                 'TaskChain':[]}
     for request in requests:
+
         name=request['id']
         #if a wrong or weird name
         if len(request['key'])<3:
@@ -152,7 +170,8 @@ def validateClosingWorkflow(url, workflow, closePercentage = 0.95, checkEqual=Fa
                     #last check, that files are equal
                     closeOutDataset = equalFiles
                 else:
-                    missingSubs = True
+                    #TODO only missing subscription if equal # of files
+                    missingSubs = equalFiles
         #if at least one dataset is not ready wf cannot be closed out
         closeOutWorkflow = closeOutWorkflow and closeOutDataset
         #load results in a dict        
@@ -206,9 +225,12 @@ def closeOutReRecoWorkflows(url, workflows):
         if result['closeOutWorkflow']:
             reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
         #populate the list without subs
+        missingSubs = True
         for (ds,info) in result['datasets'].items():
-            if info['missingSubs']:
-                noSiteWorkflows.append((workflow.name,ds))
+            missingSubs &= info['missingSubs']
+        #if all missing subscriptions, subscribe all
+        if missingSubs:
+            noSiteWorkflows.append(workflow)
     print '-'*180
     return noSiteWorkflows
 
@@ -234,9 +256,12 @@ def closeOutRedigiWorkflows(url, workflows):
         if result['closeOutWorkflow']:
             reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
         #populate the list without subs
+        missingSubs = True
         for (ds,info) in result['datasets'].items():
-           if info['missingSubs']:
-                noSiteWorkflows.append((workflow.name,ds))
+            missingSubs &= info['missingSubs']
+        #if all missing subscriptions, subscribe all
+        if missingSubs:
+            noSiteWorkflows.append(workflow)
     print '-'*180
     return noSiteWorkflows
 
@@ -270,9 +295,12 @@ def closeOutMonterCarloRequests(url, workflows, fromGen):
         if result['closeOutWorkflow']:
             reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
         #populate the list without subs
+        missingSubs = True
         for (ds,info) in result['datasets'].items():
-            if info['missingSubs']:
-                noSiteWorkflows.append((workflow.name,ds))
+            missingSubs &= info['missingSubs']
+        #if all missing subscriptions, subscribe all
+        if missingSubs:
+            noSiteWorkflows.append(workflow)
             
     #separation line
     print '-'*180
@@ -301,9 +329,12 @@ def closeOutStep0Requests(url, workflows):
         if result['closeOutWorkflow']:
             reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
         #populate the list without subs
+        missingSubs = True
         for (ds,info) in result['datasets'].items():
-            if info['missingSubs']:
-                noSiteWorkflows.append((workflow.name,ds))
+            missingSubs &= info['missingSubs']
+        #if all missing subscriptions, subscribe all
+        if missingSubs:
+            noSiteWorkflows.append(workflow)
 
     print '-'*180
     return noSiteWorkflows
@@ -327,9 +358,12 @@ def closeOutStoreResultsWorkflows(url, workflows):
         if result['closeOutWorkflow']:
             reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
         #populate the list without subs
+        missingSubs = True
         for (ds,info) in result['datasets'].items():
-            if info['missingSubs']:
-                noSiteWorkflows.append((workflow.name,ds))
+            missingSubs &= info['missingSubs']
+        #if all missing subscriptions, subscribe all
+        if missingSubs:
+            noSiteWorkflows.append(workflow)
     print '-'*180
     return noSiteWorkflows
 
@@ -349,9 +383,12 @@ def closeOutTaskChain(url, workflows):
         if result['closeOutWorkflow']:
             reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
         #populate the list without subs
+        missingSubs = True
         for (ds,info) in result['datasets'].items():
-            if info['missingSubs']:
-                noSiteWorkflows.append((workflow.name,ds))
+            missingSubs &= info['missingSubs']
+        #if all missing subscriptions, subscribe all
+        if missingSubs:
+            noSiteWorkflows.append(workflow)
     print '-'*180
     return noSiteWorkflows 
 
@@ -471,9 +508,43 @@ def percentageCompletion(url, workflow, dataset):
     return perc
 
 def listWorkflows(workflows):
-    for (wf,ds) in workflows:
-        print '| %80s | %100s |'%(wf,ds)
+    for wf in workflows:
+        for ds in wf.outputDatasets:
+            print '| %80s | %100s |'%(wf.name,ds)
     print '-'*150
+
+def listSubscriptions(subs):
+    for ds, site in subs:
+       print '| %80s | %100s |'%(ds,site)
+    print '-'*150
+
+def makeSubscriptions(url, workflows):
+    result = []    
+    for wf in workflows:
+        #if the wf has input - where the input was subscribed
+        if 'InputDataset' in wf.info:
+            site = phedexClient.getCustodialSubscriptionRequestSite(wf.inputDataset)
+            if not site:
+                site_MSS = random.choice(T1_MSS)# "T1_US_FNAL_MSS
+            r = phedexClient.makeReplicaRequest(url, site_MSS, wf.outputDatasets, comments, custodial='y')
+            for ds in wf.outputDatasets:
+                result.append((ds, site_disk+', '+site_MSS))    
+        #if the workflow does not have input
+        else:
+            site_disk =random.choice(T1_Disk)# "T1_US_FNAL_Disk"
+            site_MSS = random.choice(T1_MSS)# "T1_US_FNAL_MSS"        
+            print "Making subscriptions",wf.name
+            print "To",site_disk, site_MSS
+            
+            comments = 'Output of %s'%wf.name
+            #create move to disk and replica to tape
+            #r = phedexClient.makeMoveRequest(url, site_disk, workflow.outputDatasets, comments, custodial='n')
+            r = phedexClient.makeReplicaRequest(url, site_MSS, wf.outputDatasets, comments, custodial='y')
+            #result
+            for ds in wf.outputDatasets:
+                result.append((ds, site_disk+', '+site_MSS))
+    return result
+
 
 def main():
     url='cmsweb.cern.ch'
@@ -491,17 +562,14 @@ def main():
 
     noSiteWorkflows = closeOutRedigiWorkflows(url, workflowsCompleted['ReDigi'])
     workflowsCompleted['NoSite-ReDigi'] = noSiteWorkflows
-
     noSiteWorkflows = closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarlo'], fromGen=False)
     workflowsCompleted['NoSite-MonteCarlo'] = noSiteWorkflows
-
     noSiteWorkflows = closeOutMonterCarloRequests(url, workflowsCompleted['MonteCarloFromGEN'], fromGen=True)
     workflowsCompleted['NoSite-MonteCarloFromGEN'] = noSiteWorkflows
     noSiteWorkflows = closeOutTaskChain(url, workflowsCompleted['TaskChain'])
     workflowsCompleted['NoSite-TaskChain'] = noSiteWorkflows
     noSiteWorkflows = closeOutStep0Requests(url, workflowsCompleted['LHEStepZero'])
     workflowsCompleted['NoSite-LHEStepZero'] = noSiteWorkflows
-
     noSiteWorkflows = closeOutStoreResultsWorkflows(url, workflowsCompleted['StoreResults'])
     workflowsCompleted['NoSite-StoreResults'] = noSiteWorkflows
 
@@ -515,6 +583,7 @@ def main():
 
     print "StoreResults Workflows for which couldn't find PhEDEx Subscription"
     listWorkflows(workflowsCompleted['NoSite-StoreResults'])
+
     sys.exit(0);
 
 if __name__ == "__main__":
