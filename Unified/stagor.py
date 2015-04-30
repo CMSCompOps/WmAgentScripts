@@ -47,11 +47,12 @@ def stagor(url,specific =None):
                 done_by_input[dsname][transfer.phedexid]=all(map(lambda i:i>=good_enough, checks[dsname].values()))
                 completion_by_input[dsname][transfer.phedexid]=checks[dsname].values()
         if checks:
-            print [node.values() for node in checks.values()]
+            print "Checks for",transfer.phedexid,[node.values() for node in checks.values()]
             done = all(map(lambda i:i>=good_enough,list(itertools.chain.from_iterable([node.values() for node in checks.values()]))))
         else:
             ## it is empty, is that a sign that all is done and away ?
-            print "ERROR with the scubscriptions API"
+            print "ERROR with the scubscriptions API of ",transfer.phedexid
+            print "Most likely something else is overiding the transfer request."
             done = False
 
         ## the thing above is NOT giving the right number
@@ -77,7 +78,8 @@ def stagor(url,specific =None):
         fractions = None
         if dsname in completion_by_input:
             fractions = itertools.chain.from_iterable([check.values() for check in completion_by_input.values()])
-            
+        
+        need_sites = int(len(done_by_input[dsname].values())*0.7)+1
         if all(done_by_input[dsname].values()):
             print dsname,"is everywhere we wanted"
             ## the input dataset is fully transfered, should consider setting the corresponding wf to staged
@@ -91,6 +93,7 @@ def stagor(url,specific =None):
                     session.commit()
         elif fractions and len(list(fractions))>1 and set(fractions)==1:
             print dsname,"is everywhere at the same fraction"
+            print "We do not want this in the end. we want the data we asked for"
             continue
             ## the input dataset is fully transfered, should consider setting the corresponding wf to staged
             using_its = getWorkflowByInput(url, dsname)
@@ -101,8 +104,10 @@ def stagor(url,specific =None):
                     print wf.name,"is with us everywhere the same. setting staged and move on"
                     wf.status = 'staged'
                     session.commit()
-        elif done_by_input[dsname].values().count(True) >= int(len(done_by_input[dsname].values())*0.7+1):
+        elif done_by_input[dsname].values().count(True) >= need_sites:
             print dsname,"is almost everywhere we wanted"
+            #print "We do not want this in the end. we want the data we asked for"
+            #continue
             ## the input dataset is fully transfered, should consider setting the corresponding wf to staged
             using_its = getWorkflowByInput(url, dsname)
             #print using_its
@@ -113,7 +118,9 @@ def stagor(url,specific =None):
                     wf.status = 'staged'
                     session.commit()
         else:
-            print dsname,done_by_input[dsname]
+            print dsname
+            print "\t",done_by_input[dsname]
+            print "\tneeds",need_sites
 
     for wfid in done_by_wf_id:
         #print done_by_wf_id[wfid].values()
