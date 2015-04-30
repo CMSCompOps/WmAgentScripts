@@ -108,7 +108,7 @@ def htmlor():
 </head>
 <body>
 
-Last update on %s(CET), %s(GMT), <a href=logs/ target=_blank> logs</a>, <a href=logs/last.log target=_blank>last</a> <br><br>
+Last update on %s(CET), %s(GMT), <a href=logs/ target=_blank> logs</a> <a href=logs/last.log target=_blank>last</a> <br><br>
 
 """ %(time.asctime(time.localtime()),
       time.asctime(time.gmtime())))
@@ -120,7 +120,7 @@ Last update on %s(CET), %s(GMT), <a href=logs/ target=_blank> logs</a>, <a href=
         count+=1
     text+="</ul></div>\n"
     html_doc.write("""
-Worlfow next to handle <a href=https://cms-pdmv.cern.ch/mcm/batches?status=new&page=-1 target="_blank"> batches</a> (%d) <a href=logs/injector/last.log target=_blank>log</a>
+Worlfow next to handle <a href=https://cms-pdmv.cern.ch/mcm/batches?status=new&page=-1 target="_blank"> batches</a> (%d) <a href=logs/injector/last.log target=_blank>log</a> <a href=logs/transferor/last.log target=_blank>postlog</a>
 <a href="javascript:showhide('considered')">[Click to show/hide]</a>
 <br>
 <div id="considered" style="display:none;">
@@ -135,7 +135,7 @@ Worlfow next to handle <a href=https://cms-pdmv.cern.ch/mcm/batches?status=new&p
         count+=1
     text+="</ul></div>\n"
     html_doc.write("""
-Worlfow waiting in staging (%d) <a href=logs/transferor/last.log target=_blank> log</a>
+Worlfow waiting in staging (%d) <a href=logs/transferor/last.log target=_blank>log</a> <a href=logs/stagor/last.log target=_blank>postlog</a>
 <a href="javascript:showhide('staging')">[Click to show/hide]</a>
 <br>
 <div id="staging" style="display:none;">
@@ -161,7 +161,7 @@ Worlfow waiting in staging (%d) <a href=logs/transferor/last.log target=_blank> 
             text+=stext
     text+="</ul></div>"
     html_doc.write("""
-Transfer on-going (%d) <a href=https://transferteam.web.cern.ch/transferteam/dashboard/ target=_blank>dashboard</a> <a href=logs/transferor/last.log target=_blank>log</a>
+Transfer on-going (%d) <a href=https://transferteam.web.cern.ch/transferteam/dashboard/ target=_blank>dashboard</a> <a href=logs/transferor/last.log target=_blank>log</a> <a href=logs/stagor/last.log target=_blank>postlog</a>
 <a href="javascript:showhide('transfer')">[Click to show/hide]</a>
 <br>
 <div id="transfer" style="display:none;">
@@ -177,7 +177,7 @@ Transfer on-going (%d) <a href=https://transferteam.web.cern.ch/transferteam/das
         text+="<li> %s </li> \n"%wfl(wf,p=True)
         count+=1
     text+="</ul></div>\n"
-    html_doc.write("""Worlfow ready for assigning (%d) <a href=logs/stagor/last.log target=_blank>log</a>
+    html_doc.write("""Worlfow ready for assigning (%d) <a href=logs/stagor/last.log target=_blank>log</a> <a href=logs/assignor/last.log target=_blank>postlog</a>
 <a href="javascript:showhide('staged')">[Click to show/hide]</a>
 <br>
 <div id="staged" style="display:none;">
@@ -191,7 +191,7 @@ Transfer on-going (%d) <a href=https://transferteam.web.cern.ch/transferteam/das
         lines.append("<li> %s </li>"%wfl(wf,view=True,ongoing=True))
     lines.sort()
     html_doc.write("""
-Worlfow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests_in_production.php target=_blank>ongoing</a> <a href=https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary target=_blank>elog</a> <a href=http://hcc-briantest.unl.edu/prodview target=_blank>queues</a> <a href=logs/assignor/last.log target=_blank>log</a>
+Worlfow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests_in_production.php target=_blank>ongoing</a> <a href=https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary target=_blank>elog</a> <a href=http://hcc-briantest.unl.edu/prodview target=_blank>queues</a> <a href=logs/assignor/last.log target=_blank>log</a> <a href=logs/checkor/last.log target=_blank>postlog</a>
 <a href="javascript:showhide('away')">[Click to show/hide]</a>
 <br>
 <div id="away" style="display:none;">
@@ -210,7 +210,7 @@ Worlfow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/reque
     text+="</ul></div>\n"
     html_doc.write("""Worlfow that are closing (%d)
 <a href=closeout.html target=_blank>closeout</a> 
-<a href=logs/checkor/last.log target=_blank>log</a>
+<a href=logs/checkor/last.log target=_blank>log</a> <a href=logs/closor/last.log target=_blank>postlog</a>
 <a href="javascript:showhide('closing')">[Click to show/hide]</a>
 <br>
 <div id="closing" style="display:none;">
@@ -227,7 +227,7 @@ Worlfow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/reque
     text+="</ul></div>\n"
     html_doc.write("""Worlfow which need assistance (%d)
 <a href=assistance.html target=_blank>assistance</a> 
-<a href=logs/checkor/last.log target=_blank>log</a>
+<a href=logs/checkor/last.log target=_blank>log</a> <a href=logs/closor/last.log target=_blank>postlog</a>
 <a href="javascript:showhide('assistance')">[Click to show/hide]</a>
 <br>
 <div id="assistance" style="display:none;">
@@ -243,7 +243,7 @@ Worlfow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/reque
         count+=1
     text+="</ul></div>\n"
     html_doc.write("""Worlfow ready to close (%d)
-<a href=logs/checkor/last.log target=_blank>log</a>
+<a href=logs/checkor/last.log target=_blank>log</a> <a href=logs/closor/last.log target=_blank>postlog</a>
 <a href="javascript:showhide('close')">[Click to show/hide]</a>
 <br>
 <div id="close" style="display:none;">
@@ -258,7 +258,7 @@ Worlfow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/reque
         text+="<li> %s </li> \n"%wfl(wf)
         count+=1
     text+="</ul></div>\n"
-    html_doc.write("""Worlfow with issue (%d) <a href=logs/closor/last.log target=_blank>log</a>
+    html_doc.write("""Worlfow with issue (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=logs/injector/last.log target=_blank>postlog</a>
 <a href="javascript:showhide('trouble')">[Click to show/hide]</a>
 <br>
 <div id="trouble" style="display:none;">
@@ -292,7 +292,7 @@ Worlfow to forget (%d)
         count+=1
     text+="</ul></div>\n"
     html_doc.write("""
-Worlfow through (%d) <a href=logs/closor/last.log target=_blank>log</a>
+Worlfow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=logs/cleanor/last.log target=_blank>postlog</a>
 <a href="javascript:showhide('done')">[Click to show/hide]</a>
 <br>
 <div id="done" style="display:none;">
