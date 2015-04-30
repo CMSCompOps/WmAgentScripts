@@ -4,8 +4,13 @@ from utils import getWorkflows, getWorkflowById, getWorkLoad
 import sys
 import copy
 from htmlor import htmlor
+#from invalidator import invalidator 
 
 def injector(url,wm_status = 'assignment-approved', set_status='considered', talk = False):
+
+    ## should we pass a round of invalidation to clean the workflows that are not meant to be taken ?
+    #invalidator(url)
+
     workflows = getWorkflows(url, status=wm_status,user='pdmvserv')
     existing = [wf.name for wf in session.query(Workflow).all()]
     ## browse for assignment-approved requests, browsed for ours, insert the diff
