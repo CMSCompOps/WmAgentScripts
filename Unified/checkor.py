@@ -164,6 +164,7 @@ def checkor(url, spec=None, options=None):
             percent_completions[output] = 0
             if lumi_expected:
                 percent_completions[output] = lumi_count / float( lumi_expected )
+
         pf = 0.95
         if 'Campaign' in wfi.request and wfi.request['Campaign'] in CI.campaigns and 'fractionpass' in CI.campaigns[wfi.request['Campaign']]:
             pf = CI.campaigns[wfi.request['Campaign']]['fractionpass']
@@ -179,15 +180,30 @@ def checkor(url, spec=None, options=None):
             sub_assistance+='-recovery'
             is_closing = False
 
-        ## correct lumi ??< 300 event per lumi
+        ## correct lumi < 300 event per lumi
         events_per_lumi = {}
         for output in wfi.request['OutputDatasets']:
             events_per_lumi[output] = getDatasetEventsPerLumi( output )
-            if output.endswith('/LHE'):
-                events_per_lumi[output] = 0.
-                
 
-        if any([ epl> 300. for epl in events_per_lumi.values()]):
+
+        lumi_upper_limit = {}
+        for output in wfi.request['OutputDatasets']:
+            upper_limit = 300.
+            campaign = None
+            try:
+                output.split('/')[2].split('-')[0]
+            except:
+                if 'Campaign' in wfi.request:
+                    campaign = wfi.request['Campaign']
+            if campaign in CI.campaigns and 'lumisize' in CI.campaigns[campaign]:
+                upper_limit = CI.campaigns[campaign]['lumisize']
+                print "overriding the upper lumi size to",lumi_upper_limit,"for",campaign
+            if options.lumisize:
+                upper_limit = options.lumisize
+                print "overriding the upper lumi size to",lumi_upper_limit,"by command line"
+            lumi_upper_limit[output] = upper_limit
+        
+        if any([ events_per_lumi[out] > lumi_upper_limit[out] for out in events_per_lumi]):
             print wfo.name,"has big lumisections"
             print json.dumps(events_per_lumi, indent=2)
             ## hook for rejecting the request ?
@@ -321,7 +337,7 @@ def checkor(url, spec=None, options=None):
             rec['phedexReqs'] = float('%.2f'%any_presence[output][custodial_presences[output][0]][1]) if len(custodial_presences[output])!=0 else 'N/A'
             rec['closeOutDataset'] = is_closing
             rec['transPerc'] = float('%.2f'%any_presence[output][ disk_copies[output][0]][1]) if len(disk_copies[output])!=0 else 'N/A'
-            rec['correctLumis'] = (events_per_lumi[output] <= 300)
+            rec['correctLumis'] = int(events_per_lumi[output]) if (events_per_lumi[output] > lumi_upper_limit[output]) else True
             rec['missingSubs'] = False if len(custodial_locations[output])==0 else ','.join(list(set(custodial_locations[output])))
             rec['dbsFiles'] = dbs_presence[output]
             rec['dbsInvFiles'] = dbs_invalid[output]
@@ -376,6 +392,7 @@ if __name__ == "__main__":
     parser.add_option('-f','--fetch', help='fetch new stuff not already in assistance', action='store_true', default=False)
     parser.add_option('--fractionpass',help='The completion fraction that is permitted', default=0.0,type='float')
     parser.add_option('--ignorefiles', help='Force ignoring dbs/phedex differences', action='store_true', default=False)
+    parser.add_option('--lumisize', help='Force the upper limit on lumisection', default=0, type='float')
     parser.add_option('--ignoreduplicates', help='Force ignoring lumi duplicates', default=False, action='store_true')
     parser.add_option('--html',help='make the monitor page',action='store_true', default=False)
     (options,args) = parser.parse_args()
