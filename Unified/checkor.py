@@ -191,16 +191,16 @@ def checkor(url, spec=None, options=None):
             upper_limit = 300.
             campaign = None
             try:
-                output.split('/')[2].split('-')[0]
+                campaign = output.split('/')[2].split('-')[0]
             except:
                 if 'Campaign' in wfi.request:
                     campaign = wfi.request['Campaign']
             if campaign in CI.campaigns and 'lumisize' in CI.campaigns[campaign]:
                 upper_limit = CI.campaigns[campaign]['lumisize']
-                print "overriding the upper lumi size to",lumi_upper_limit,"for",campaign
+                print "overriding the upper lumi size to",upper_limit,"for",campaign
             if options.lumisize:
                 upper_limit = options.lumisize
-                print "overriding the upper lumi size to",lumi_upper_limit,"by command line"
+                print "overriding the upper lumi size to",upper_limit,"by command line"
             lumi_upper_limit[output] = upper_limit
         
         if any([ events_per_lumi[out] > lumi_upper_limit[out] for out in events_per_lumi]):
