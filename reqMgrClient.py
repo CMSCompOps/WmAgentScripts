@@ -823,7 +823,7 @@ def setWorkflowApproved(url, workflowname):
     data = requestManagerPut(url,"/reqmgr/reqMgr/request", params)
     return data
 
-def setWorkflowFroceComplete(url, workflowname):
+def setWorkflowForceComplete(url, workflowname):
     """
     Sets a workflow state to force-complet
     """
