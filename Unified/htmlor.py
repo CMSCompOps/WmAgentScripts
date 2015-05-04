@@ -99,6 +99,7 @@ def htmlor():
     html_doc.write("""
 <html>
 <head>
+<META HTTP-EQUIV="refresh" CONTENT="900">
 <script type="text/javascript">
  function showhide(id) {
     var e = document.getElementById(id);
