@@ -423,7 +423,7 @@ if __name__ == "__main__":
         assist[wfo.status].append( wfo )
     
     for status in sorted(assist.keys()):
-        html.write("Workflow in status <b> %s </b>"% status)
+        html.write("Workflow in status <b> %s </b> (%d)"% (status, len(assist[status])))
         html.write( fdb.table_header())
         short_html.write("""
 Workflow in status <b> %s </b>
@@ -433,7 +433,7 @@ Workflow in status <b> %s </b>
 <th> workflow </th> <th> output dataset </th><th> completion </th>
 </tr>
 </thead>
-"""% status )
+"""% (status))
         
         for (count,wfo) in enumerate(assist[status]):
             if count%2:            color='lightblue'
