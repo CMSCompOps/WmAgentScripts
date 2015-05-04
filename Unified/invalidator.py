@@ -7,7 +7,7 @@ from McMClient import McMClient
 
 def invalidator(url, invalid_status='INVALID'):
     mcm = McMClient(dev=False)
-    invalids = mcm.getA('invalidations',query='status=announced',page=0)
+    invalids = mcm.getA('invalidations',query='status=new',page=0)
     for invalid in invalids:
         acknowledge= False
         if invalid['type'] == 'request':
@@ -41,7 +41,8 @@ def invalidator(url, invalid_status='INVALID'):
         if acknowledge:
             ## acknoldge invalidation in mcm, provided we can have the api
             #mcm.get('/restapi/invalidations/acknowledge/%s'%( invalid['_id'] ))
-            
+            pass
+
 if __name__ == "__main__":
     url = 'cmsweb.cern.ch'
     invalidator(url)
