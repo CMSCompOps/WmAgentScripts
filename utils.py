@@ -268,7 +268,7 @@ def checkTransferApproval(url, phedexid):
             approved[node['name']] = (node['decision']=='approved')
     return approved
 
-def checkTransferStatus(url, xfer_id):
+def checkTransferStatus(url, xfer_id, nocollapse=False):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     #r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?request=%s'%(str(xfer_id)))
     #r2=conn.getresponse()
@@ -278,7 +278,10 @@ def checkTransferStatus(url, xfer_id):
     r2=conn.getresponse()
     result = json.loads(r2.read())
     timecreate=min([r['time_create'] for r in result['phedex']['request']])
-    r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?request=%s&create_since=%d'%(str(xfer_id),timecreate))
+    subs_url = '/phedex/datasvc/json/prod/subscriptions?request=%s&create_since=%d'%(str(xfer_id),timecreate)
+    if nocollapse:
+        subs_url+='&collapse=n'
+    r1=conn.request("GET",subs_url)
     r2=conn.getresponse()
     result = json.loads(r2.read())
 

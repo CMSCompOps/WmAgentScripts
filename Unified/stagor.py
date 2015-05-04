@@ -38,7 +38,7 @@ def stagor(url,specific =None):
             continue
 
         ## check on transfer completion
-        checks = checkTransferStatus(url, transfer.phedexid)
+        checks = checkTransferStatus(url, transfer.phedexid, nocollapse=True)
 
         if not specific:
             for dsname in checks:
