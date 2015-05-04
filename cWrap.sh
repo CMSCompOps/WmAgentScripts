@@ -5,7 +5,7 @@ let oddity=week%2
 
 if ( [ "$USER" = "vlimant" ] && [ "$oddity" = "0" ] ) || ( [ "$USER" = "mcremone" ] && [ "$oddity" = "1" ] ) ; then
     echo no go for $USER on week $week
-    return
+    exit
 fi
 
 export X509_USER_PROXY=$HOME/private/personal/voms_proxy.cert
