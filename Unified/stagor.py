@@ -79,15 +79,33 @@ def stagor(url,specific =None):
         if dsname in completion_by_input:
             fractions = itertools.chain.from_iterable([check.values() for check in completion_by_input.values()])
         
+        ## the workflows in the waiting room for the dataset
+        using_its = getWorkflowByInput(url, dsname)
+        #print using_its
+        using_wfos = []
+        for using_it in using_its:
+            wf = session.query(Workflow).filter(Workflow.name == using_it).first()
+            if wf:
+                using_wfos.append( wf )
+
         need_sites = int(len(done_by_input[dsname].values())*0.7)+1
+        if all([wf.status != 'staging' for wf in using_wfos]):
+            ## not a single ds-using wf is in staging => moved on already
+            ## just forget about it
+            print "presence of",dsname,"does not matter anymore"
+            print "\t",done_by_input[dsname]
+            print "\t",[wf.status for wf in using_wfos]
+            print "\tneeds",need_sites
+            continue #??
+            
+        ## should the need_sites reduces with time ?
+        # with dataset choping, reducing that number might work as a block black-list.
+
         if all(done_by_input[dsname].values()):
             print dsname,"is everywhere we wanted"
             ## the input dataset is fully transfered, should consider setting the corresponding wf to staged
-            using_its = getWorkflowByInput(url, dsname)
-            #print using_its
-            for using_it in using_its:
-                wf = session.query(Workflow).filter(Workflow.name == using_it).first()
-                if wf and wf.status == 'staging':
+            for wf in using_wfos:
+                if wf.status == 'staging':
                     print wf.name,"is with us. setting staged and move on"
                     wf.status = 'staged'
                     session.commit()
@@ -96,11 +114,8 @@ def stagor(url,specific =None):
             print "We do not want this in the end. we want the data we asked for"
             continue
             ## the input dataset is fully transfered, should consider setting the corresponding wf to staged
-            using_its = getWorkflowByInput(url, dsname)
-            #print using_its
-            for using_it in using_its:
-                wf = session.query(Workflow).filter(Workflow.name == using_it).first()
-                if wf and wf.status == 'staging':
+            for wf in using_wfos:
+                if wf.status == 'staging':
                     print wf.name,"is with us everywhere the same. setting staged and move on"
                     wf.status = 'staged'
                     session.commit()
@@ -109,11 +124,8 @@ def stagor(url,specific =None):
             #print "We do not want this in the end. we want the data we asked for"
             #continue
             ## the input dataset is fully transfered, should consider setting the corresponding wf to staged
-            using_its = getWorkflowByInput(url, dsname)
-            #print using_its
-            for using_it in using_its:
-                wf = session.query(Workflow).filter(Workflow.name == using_it).first()
-                if wf and wf.status == 'staging':
+            for wf in using_wfos:
+                if wf.status == 'staging':
                     print wf.name,"is almost with us. setting staged and move on"
                     wf.status = 'staged'
                     session.commit()
