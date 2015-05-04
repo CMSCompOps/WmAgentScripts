@@ -7,10 +7,12 @@ import json
 import time
 import sys
 import subprocess
-from utils import getDatasetEventsAndLumis
+from utils import getDatasetEventsAndLumis, campaignInfo
 from htmlor import htmlor
 
 def closor(url, specific=None):
+    CI = campaignInfo()
+
     ## manually closed-out workflows should get to close with checkor
     for wfo in session.query(Workflow).filter(Workflow.status=='close').all():
 
@@ -76,8 +78,19 @@ def closor(url, specific=None):
                 for (io,out) in enumerate(outputs):
                     if all_OK[io]:
                         results.append(setDatasetStatusDBS3.setStatusDBS3('https://cmsweb.cern.ch/dbs/prod/global/DBSWriter', out, 'VALID' ,''))
+                        tier = out.split('/')[-1]
+                        to_DDM = (wl['RequestType'] == 'ReDigi' and not ('DQM' in tier))
+                        campaign = None
+                        try:
+                            campaign = out.split('/')[2].split('-')[0]
+                        except:
+                            if 'Campaign' in wl and wl['Campaign']:
+                                campaign = wl['Campaign']
+                        if campaign and campaign in CI.campaigns and 'toDDM' in CI.campaigns[campaign] and tier in CI.campaigns[campaign]['toDDM']:
+                            to_DDM = True
+                            
                         ## inject to DDM everything from ReDigi
-                        if wl['RequestType'] == 'ReDigi' and not ('/DQM' in out):
+                        if to_DDM:
                             print "Sending",out," to DDM"
                             subprocess.call(['python','assignDatasetToSite.py','--dataset='+out,'--exec'])
                     else:
