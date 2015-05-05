@@ -226,6 +226,14 @@ def getFailureInformation(inputfilename,outputfilename="",verbose=False,debug=Fa
                     os.system('echo '+workflow+' | mail -s \"jobFailureInformation error 2\" andrew.m.levin@vanderbilt.edu')
                     print s4['rows'][1]['doc']['tasks'][taskname]['status']
                     sys.exit(0)
+            #ignore the transition status        
+            elif len(s4['rows'][1]['doc']['tasks'][taskname]['status']) == 3:
+                if 'transition' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'success' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'failure' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'exception' not in s4['rows'][1]['doc']['tasks'][taskname]['status']['failure'] or len(s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']) != 1:
+                    print "problem with job status information 4"
+                    os.system('echo '+workflow+' | mail -s \"jobFailureInformation error 4\" andrew.m.levin@vanderbilt.edu')
+                    sys.exit(0)
+                else:
+                    totaljobs=s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']['exception']+s4['rows'][1]['doc']['tasks'][taskname]['status']['success']
             else:
                 print "problem with job status information 3"
                 os.system('echo '+workflow+' | mail -s \"jobFailureInformation error 3\" andrew.m.levin@vanderbilt.edu')
