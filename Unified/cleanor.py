@@ -44,6 +44,7 @@ def cleanor(url, specific=None):
         counts+=1
         ## find any location it is at
         our_presence = getDatasetPresence(url, dataset, complete=None, group="DataOps")
+        also_our_presence = getDatasetPresence(url, dataset, complete=None, group="")
 
         ## is there a custodial !!!
         custodials = findCustodialLocation(url, dataset)
@@ -67,12 +68,15 @@ def cleanor(url, specific=None):
 
         ## find all disks
         to_be_cleaned = filter(lambda site : site.startswith('T2') or site.endswith('Disk') ,our_presence.keys())
-
+        to_be_cleaned.extend( filter(lambda site : site.startswith('T2') or site.endswith('Disk') ,also_our_presence.keys()))
         print to_be_cleaned,"for",total_size,"GB"
 
         anaops_presence = getDatasetPresence(url, dataset, complete=None, group="AnalysisOps")
         own_by_anaops = anaops_presence.keys()
+        print "Own by analysis ops and vetoing"
         print own_by_anaops
+        ## need to black list the sites where there is a copy of analysis ops
+        to_be_cleaned = [site for site in to_be_cleaned if not site in own_by_anaops ]
 
 
         ## collect delete request per site
