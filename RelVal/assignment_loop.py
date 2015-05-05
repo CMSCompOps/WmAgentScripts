@@ -36,8 +36,6 @@ while True:
     
     for batch in batches:
 
-        if batch[0] == 127:
-            continue
 
         for name, value in zip(colnames, batch):
             print name+" => "+str(value)
@@ -54,11 +52,10 @@ while True:
             elif name == "announcement_title":
                 title=value
 
-
         #print batch
         print ""
 
-        if status == "approved":
+        if status == "input_dsets_ready":
             
             print "assigning workflows in batch "+str(batchid)
             
@@ -66,9 +63,6 @@ while True:
             wfs=curs.fetchall()
             
             for wf in wfs:
-                print wf[0]
-                os.system("python2.6 assignRelValWorkflow.py -w "+wf[0] +" -s "+site+" -p "+str(processing_version))
-
                 conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
                 r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+wf[0])
                 r2=conn.getresponse()
@@ -91,19 +85,23 @@ while True:
 
                                     
                             elif 'PrimaryDataset' in value:
-                                dset="/" + value['PrimaryDataset'] + "/" + value['AcquisitionEra'] + "-" + value['ProcessingString'] + "-v" + str(processing_version)+"/*"
 
+                                dset="/" + value['PrimaryDataset'] + "/" + value['AcquisitionEra'] + "-" + value['ProcessingString'] + "-v" + str(processing_version)+"/*"
+                                #print dset
                                 curs.execute("select * from datasets where dset_name = \""+ dset.rstrip("*")+"\";")
 
-                                if len(curs.fetchall()) != 0:
-                                    os.system('echo '+wf[0]+' | mail -s \"assignment_loop.py error 2\" andrew.m.levin@vanderbilt.edu')
+                                curs_fetchall = curs.fetchall()
+
+                                if len(curs_fetchall) != 0:
+                                    os.system('echo '+wf[0]+" "+curs_fetchall[0][1]+" "+dset+' | mail -s \"assignment_loop.py error 2\" andrew.m.levin@vanderbilt.edu')
                                     sys.exit(1)
                                 else:
                                     curs.execute("insert into datasets set dset_name=\""+dset.rstrip("*")+"\", workflow_name=\""+wf[0]+"\", batch_id="+str(batchid)+";")
 
 
-                
-
+            for wf in wfs:
+                print wf[0]
+                os.system("python2.6 assignRelValWorkflow.py -w "+wf[0] +" -s "+site+" -p "+str(processing_version))
                 time.sleep(30)
 
 

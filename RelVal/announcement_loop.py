@@ -17,7 +17,6 @@ import calendar
 import jobFailureInformation
 
 parser = optparse.OptionParser()
-parser.add_option('--correct_env',action="store_true",dest='correct_env')
 parser.add_option('--sent_to_hn',action="store_true",dest='send_to_hn')
 (options,args) = parser.parse_args()
 
@@ -25,26 +24,20 @@ command=""
 for arg in sys.argv:
     command=command+arg+" "
 
-if not options.correct_env:
-    os.system("source /cvmfs/grid.cern.ch/emi-ui-3.7.3-1_sl6v2/etc/profile.d/setup-emi3-ui-example.sh; export X509_USER_PROXY=/tmp/x509up_u13536; python2.6 "+command + "--correct_env")
-    sys.exit(0)
-    
 url='cmsweb.cern.ch'
 
 dbname = "relval"
 
-mysqlconn = MySQLdb.connect(host='dbod-altest1.cern.ch', user='relval', passwd="relval", port=5505)
-#conn = MySQLdb.connect(host='localhost', user='relval', passwd='relval')
-
-curs = mysqlconn.cursor()
-
-curs.execute("use "+dbname+";")
-
 #workflow = line.rstrip('\n')
 #curs.execute("insert into workflows set hn_req=\""+hnrequest+"\", workflow_name=\""+workflow+"\";")
 
-
 while True:
+
+    mysqlconn = MySQLdb.connect(host='dbod-altest1.cern.ch', user='relval', passwd="relval", port=5505)
+
+    curs = mysqlconn.cursor()
+
+    curs.execute("use "+dbname+";")
 
     secrets_file=open("/home/relval/secrets.txt")
 
@@ -61,8 +54,6 @@ while True:
     batches=curs.fetchall()
     
     colnames = [desc[0] for desc in curs.description]
-
-
 
     for batch in batches:
 
@@ -101,6 +92,7 @@ while True:
             data = r2.read()
             if r2.status != 200:
                 os.system('echo \"r2.status != 400\" | mail -s \"announcement_loop.py error 1\" andrew.m.levin@vanderbilt.edu --')
+                print url+'/couchdb/wmstats/_all_docs?keys=["'+wf[0]+'"]&include_docs=true'
                 print "problem connecting to wmstats, exiting"
                 print r2.status
                 sys.exit(0)
@@ -125,9 +117,7 @@ while True:
         if n_workflows != n_completed:
             continue
 
-        #string="2015_03_23_1"
-        #string="2015_03_23_3"
-        #string="2015_03_24_5"
+        #string="2015_05_02_3"
 
         #if not (string.split('_')[0] == useridyear and string.split('_')[1] == useridmonth and string.split('_')[2] == useridday and string.split('_')[3] == str(useridnum)):
         #    continue
@@ -190,9 +180,8 @@ while True:
 
         os.system("for dset in `cat "+dsets_tmp_fnal+"`; do python2.6 setDatasetStatusDBS3.py --dataset=$dset --status=VALID --files; done")
 
-        os.system("python2.6 getFailureInformation.py "+fname+" --verbose")
-
         os.system("python2.6 setrequeststatus.py "+fname+" closed-out")
+        os.system("python2.6 setrequeststatus.py "+fname+" announced")
 
         #remove the announcement e-mail file if it already exists
         os.system("if [ -f brm/announcement_email.txt ]; then rm brm/announcement_email.txt; fi")

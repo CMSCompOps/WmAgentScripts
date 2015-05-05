@@ -211,6 +211,7 @@ def getFailureInformation(inputfilename,outputfilename="",verbose=False,debug=Fa
                 totaljobs=9999999999    
             elif len(s4['rows'][1]['doc']['tasks'][taskname]['status']) == 2:
                 if 'success' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'failure' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'exception' not in s4['rows'][1]['doc']['tasks'][taskname]['status']['failure'] or len(s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']) != 1:
+                    os.system('echo '+workflow+' | mail -s \"jobFailureInformation error 1\" andrew.m.levin@vanderbilt.edu')
                     print "problem with job status information 1"
                     sys.exit(0)
                 else:
@@ -222,10 +223,12 @@ def getFailureInformation(inputfilename,outputfilename="",verbose=False,debug=Fa
                     totaljobs=s4['rows'][1]['doc']['tasks'][taskname]['status']['success']
                 else:     
                     print "problem with job status information 2"
+                    os.system('echo '+workflow+' | mail -s \"jobFailureInformation error 2\" andrew.m.levin@vanderbilt.edu')
                     print s4['rows'][1]['doc']['tasks'][taskname]['status']
                     sys.exit(0)
             else:
                 print "problem with job status information 3"
+                os.system('echo '+workflow+' | mail -s \"jobFailureInformation error 3\" andrew.m.levin@vanderbilt.edu')
                 sys.exit(0)
                 
             if nfailurestot > 0 and debug:
