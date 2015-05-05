@@ -1,18 +1,29 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkLoad, getDatasetPresence, makeDeleteRequest, getDatasetSize, siteInfo, findCustodialLocation, getWorkflowByInput
+from utils import getWorkLoad, getDatasetPresence, makeDeleteRequest, getDatasetSize, siteInfo, findCustodialLocation, getWorkflowByInput, campaignInfo
 import json
 import time
 
 def cleanor(url, specific=None):
     delete_per_site = {}
     SI = siteInfo()
+    CI = campaignInfo()
     counts=0
     for wfo in session.query(Workflow).filter(Workflow.status == 'done').all():
         if specific and not specific in wfo.name: continue
         ## what was in input 
         wl = getWorkLoad(url,  wfo.name )
-        if not 'InputDataset' in wl: continue
+        if not 'InputDataset' in wl: 
+            ## should we set status = clean ? or something even further
+            print "skipping",wfo.name,"with no input"
+            #wfo.status = 'clean'
+            #session.commit()
+            continue
+
+        if 'Campaign' in wl and wl['Campaigns'] in CI.campaigns and 'clean-in' in CI.campaigns[wl['Campaigns']] and CI.campaigns[wl['Campaigns']]['clean-in']==False:
+            print "Skipping cleaning on input for campaign",wl['Campaigns'], "as per campaign configuration"
+            continue
+            
         dataset = wl['InputDataset']
         print dataset,"in input"
         #print json.dumps(wl, indent=2)
