@@ -319,7 +319,8 @@ Worlfow clean for input (%d) <a href=logs/cleanor/last.log target=_blank>log</a>
     html_doc.write(text)
 
     text=""
-    lines=[]
+    lines_thisweek=[]
+    lines_lastweek=[]
     now = time.mktime(time.gmtime())
     this_week = int(time.strftime("%W",time.gmtime()))
     for out in session.query(Output).all():
@@ -329,14 +330,20 @@ Worlfow clean for input (%d) <a href=logs/cleanor/last.log target=_blank>log</a>
         if  out.workflow.status == 'done':
             out_week = int(time.strftime("%W",time.gmtime(out.date)))
             ##only show current week, and the previous.
-            if (this_week-out_week)<=1:
-            #if (now-out.date) <= (10.*24.*60.*60.):
-                lines.append("<li>on week %s : %s </li>"%(
+            if (this_week-out_week)==1:
+                lines_lastweek.append("<li>on week %s : %s </li>"%(
                         time.strftime("%W (%x %X)",time.gmtime(out.date)),
                         ol(out.datasetname),
                         )
                              )
-    lines.sort()
+            if (this_week-out_week)==0:
+                lines_thisweek.append("<li>on week %s : %s </li>"%(
+                        time.strftime("%W (%x %X)",time.gmtime(out.date)),
+                        ol(out.datasetname),
+                        )
+                             )
+    lines_thisweek.sort()
+    lines_lastweek.sort()
 
     html_doc.write("""Output produced <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?in_disagreement=1 target=_blank>disagreements</a> (%d)
 <a href="javascript:showhide('output')">[Click to show/hide]</a>
@@ -344,9 +351,18 @@ Worlfow clean for input (%d) <a href=logs/cleanor/last.log target=_blank>log</a>
 <div id="output" style="display:none;">
 <br>
 <ul>
+<li> Last week (%d) </li><a href="javascript:showhide('output_lastweek')">[Click to show/hide]</a><div id="output_lastweek" style="display:none;"><ul>
 %s
 </ul></div>
-"""%(len(lines),'\n'.join(lines)))
+<li> This week (%d) </li><a href="javascript:showhide('output_thisweek')">[Click to show/hide]</a><div id="output_thisweek" style="display:none;"><ul>
+%s
+</ul></div></div>
+"""%( len(lines_lastweek)+len(lines_thisweek),
+      len(lines_lastweek),
+     '\n'.join(lines_lastweek),
+      len(lines_thisweek),
+     '\n'.join(lines_thisweek))
+                   )
 
     html_doc.write("""Job installed
 <a href="javascript:showhide('acron')">[Click to show/hide]</a>
@@ -430,7 +446,9 @@ Worlfow clean for input (%d) <a href=logs/cleanor/last.log target=_blank>log</a>
         wfs[wfo.name] = (wfo.status,wfo.wm_status)
     for wfn in sorted(wfs.keys()):
         html_doc.write('<tr><td><a id="%s">%s</a></td><td>%s</td><td>%s</td></tr>'%( wfn, wfn, wfs[wfn][0],  wfs[wfn][1]))
-    html_doc.write("</table></html>")
+    html_doc.write("</table>")
+    html_doc.write("<br>"*100)
+    html_doc.write("end of page</html>")
     html_doc.close()
 
 if __name__ == "__main__":
