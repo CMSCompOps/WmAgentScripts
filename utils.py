@@ -361,7 +361,7 @@ def findCustodialLocation(url, dataset):
 
 def getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=None, vetoes=None):
     if vetoes==None:
-        vetoes = ['MSS','Buffer']
+        vetoes = ['MSS','Buffer','Export']
     #print "presence of",dataset
     dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
     all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
@@ -388,9 +388,10 @@ def getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=None
     for item in items:
         for replica in item['replica']:
             if not any(replica['node'].endswith(v) for v in vetoes):
+                if replica['group'] == None: replica['group']=""
                 if complete and not replica['complete']==complete: continue
-                if group and not replica['group']: continue
-                if group and not replica['group'].lower()==group.lower(): continue
+                #if group!=None and replica['group']==None: continue
+                if group!=None and not replica['group'].lower()==group.lower(): continue 
                 locations[replica['node']].add( item['name'] )
 
     presence={}
