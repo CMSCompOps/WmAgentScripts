@@ -88,7 +88,11 @@ def stagor(url,specific =None):
             if wf:
                 using_wfos.append( wf )
 
-        need_sites = int(len(done_by_input[dsname].values())*0.7)+1
+        #need_sites = int(len(done_by_input[dsname].values())*0.7)+1
+        need_sites = len(done_by_input[dsname].values())
+        if need_sites > 10:
+            need_sites = int(need_sites/2.)
+
         if all([wf.status != 'staging' for wf in using_wfos]):
             ## not a single ds-using wf is in staging => moved on already
             ## just forget about it
