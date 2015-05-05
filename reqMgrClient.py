@@ -660,6 +660,10 @@ def assignWorkflow(url, workflowname, team, parameters ):
                 wf = workflowInfo(url, workflowname)
                 t = wf.firstTask()
                 params = wf.getSplittings()[0]
+                if params['splittingAlgo'] != 'EventBased': 
+                    print "Ignoring changing events per lumi for",params['splittingAlgo']
+                    continue
+
                 if str(par).startswith('x'):
                     multiplier = float(str(par).replace('x',''))
                     par = int(params['events_per_lumi'] * multiplier)
