@@ -20,8 +20,8 @@ def cleanor(url, specific=None):
             #session.commit()
             continue
 
-        if 'Campaign' in wl and wl['Campaigns'] in CI.campaigns and 'clean-in' in CI.campaigns[wl['Campaigns']] and CI.campaigns[wl['Campaigns']]['clean-in']==False:
-            print "Skipping cleaning on input for campaign",wl['Campaigns'], "as per campaign configuration"
+        if 'Campaign' in wl and wl['Campaign'] in CI.campaigns and 'clean-in' in CI.campaigns[wl['Campaign']] and CI.campaigns[wl['Campaign']]['clean-in']==False:
+            print "Skipping cleaning on input for campaign",wl['Campaign'], "as per campaign configuration"
             continue
             
         dataset = wl['InputDataset']
