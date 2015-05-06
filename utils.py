@@ -82,7 +82,7 @@ def listSubscriptions(url, dataset):
             if item['type']!='xfer': continue
             #print item
             if not 'MSS' in node['name']:
-                destinations[node['name']]=(node['decision']=='approved')
+                destinations[node['name']]=(item['id'], node['decision']=='approved')
                 #print node['name'],node['decision']
                 #print node
     #print destinations
