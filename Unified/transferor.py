@@ -49,24 +49,48 @@ def transferor(url ,specific = None, talk=True, options=None):
             blocks = wfh.request['BlockWhitelist']
 
         can_go = True
+        staging=False
         if primary:
             if talk:
                 print wfo.name,'reads',', '.join(primary),'in primary'
             ## chope the primary dataset 
             for prim in primary:
+                copies_needed = int(0.35*len(sites_allowed))+1
                 workflow_dependencies[prim].add( wfo.id )
                 presence = getDatasetPresence( url, prim )
                 prim_location = [site for site,pres in presence.items() if pres[0]==True]
+                if len(prim_location) >= copies_needed:
+                    print "The output is all fully in place at",len(prim_location),"sites"
+                    continue
+                # reduce the number of copies required by existing full copies
+                copies_needed = max(0,copies_needed - len(prim_location))
                 subscriptions = listSubscriptions( url , prim )
-                prim_destination = [site for site in subscriptions]
+                prim_destination = [site for (site,(tid,decision)) in subscriptions.items() if decision and not any([site.endswith(veto) for veto in ['MSS','Export','Buffer']])]
+                ## add transfer dependencies
+                latching_on_transfers = list(set([ tid for (site,(tid,decision)) in subscriptions.items() if decision and not any([site.endswith(veto) for veto in ['MSS','Export','Buffer']])]))
+                for latching in latching_on_transfers:
+                    tfo = session.query(Transfer).filter(Transfer.phedexid == latching).first()
+                    if not tfo:
+                        tfo = Transfer( phedexid = phedexid)
+                        tfo.workflows_id = []
+                        session.add(tfo)
+                    if wfo.id not in tfo.workflows_id:
+                        tfo.workflows_id.append( wfo.id )
+                        tfo.workflows_id = copy.deepcopy( tfo.workflows_id )
+                        session.commit()
+                    staging = True
+
+                # reduce the number of copies required by the on-going full transfer : how do we bootstrap on waiting for them ??
+                copies_needed = max(0,copies_needed - len(prim_destination))
+                if copies_needed == 0:
+                    print "The output is either fully in place or getting in full somewhere with",latching_on_transfers
+                    continue
                 prim_to_distribute = [site for site in sites_allowed if not any([osite.startswith(site) for osite in prim_location])]
                 prim_to_distribute = [site for site in prim_to_distribute if not any([osite.startswith(site) for osite in prim_destination])]
                 prim_to_distribute = [site for site in prim_to_distribute if not site in SI.sites_veto_transfer]
                 if len(prim_to_distribute)>0: ## maybe that a parameter we can play with to limit the 
                     if not options or options.chop:
-                        #spreading = distributeToSites( [[prim]]+getDatasetChops(prim), prim_to_distribute, n_copies = int(0.7*len(prim_to_distribute))+1, weights=SI.cpu_pledges)
-                        #spreading = distributeToSites( getDatasetChops(prim), prim_to_distribute, n_copies = int(0.7*len(prim_to_distribute))+1, weights=SI.cpu_pledges)
-                        spreading = distributeToSites( getDatasetChops(prim), prim_to_distribute, n_copies = int(0.35*len(prim_to_distribute))+1, weights=SI.cpu_pledges)
+                        spreading = distributeToSites( getDatasetChops(prim), prim_to_distribute, n_copies = copies_needed, weights=SI.cpu_pledges)
                     else:
                         spreading = {} 
                         for site in prim_to_distribute: spreading[site]=[prim]
@@ -100,7 +124,13 @@ def transferor(url ,specific = None, talk=True, options=None):
             session.commit()
             continue
         else:
-            print wfo.name,"needs a transfer"
+            if staging:
+                print wfo.name,"latches on existing transfers"
+                wf.status = 'staging'
+                session.commit()
+                continue
+            else:
+                print wfo.name,"needs a transfer"
 
     #print json.dumps(all_transfers)
     fake_id=-1
