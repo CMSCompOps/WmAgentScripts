@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 import reqMgrClient
+from McMClient import McMClient
 from utils import workflowInfo, campaignInfo, siteInfo, userLock
 from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation
 import optparse
@@ -14,6 +15,7 @@ def assignor(url ,specific = None, talk=True, options=None):
 
     CI = campaignInfo()
     SI = siteInfo()
+    mcm = McMClient(dev=False)
     wfos=[]
     if specific:
         wfos = session.query(Workflow).filter(Workflow.name==specific).all()
@@ -29,33 +31,39 @@ def assignor(url ,specific = None, talk=True, options=None):
             #if not specific in wfo.name: continue
         print wfo.name,"to be assigned"
         wfh = workflowInfo( url, wfo.name)
-        #wl = getWorkLoad(url, wfo.name )
 
+        ## check if the batch is announced
+        announced=False
+        for b in mcm.getA('batches',query='contains=%s'% wfo.name):
+            if b['status']=='announced': 
+                announced=True 
+                break
+        if not announced:
+            print wfo.name,"does not look announced. skipping?, rejecting?, reporting?"
+            #continue
+
+        ## check if by configuration we gave it a GO
         if not CI.go( wfh.request['Campaign'] ) and not options.go:
             print "No go for",wfh.request['Campaign']
             if not options.nograce: continue
 
+        ## check on a grace period
         injection_time = time.mktime(time.strptime('.'.join(map(str,wfh.request['RequestDate'])),"%Y.%m.%d.%H.%M.%S")) / (60.*60.)
         now = time.mktime(time.gmtime()) / (60.*60.)
         if float(now - injection_time) < 4.:
             print "It is too soon to inject: %3.2fH remaining"%(now - injection_time)
-            if not options.test and not options.nograce:                continue
+            if not options.test and not options.nograce and not announced:
+                print "assignment prevented"
+                continue
                 
 
-        #grace_period = 4 #days
-        #if float(now - injection_time) > grace_period*24.:
-        #    print "it has been",grace_period,"need to do something"
-        #    options.restrict = True
-
-        #else:
-        #    print now,injection_time,now - injection_time
-
-        #print wl
+        ## check on current status for by-passed assignment
         if wfh.request['RequestStatus'] !='assignment-approved':
             print wfo.name,wfh.request['RequestStatus'],"skipping"
             if not options.test:
                 continue
 
+        ## retrieve from the schema, dbs and reqMgr what should be the next version
         version=wfh.getNextVersion()
         if not version:
             if options and options.ProcessingVersion:
@@ -182,3 +190,4 @@ if __name__=="__main__":
 
     if not options.test:
         htmlor()
+        pass
