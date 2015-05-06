@@ -87,7 +87,8 @@ def transferor(url ,specific = None, talk=True, options=None):
                     continue
                 prim_to_distribute = [site for site in sites_allowed if not any([osite.startswith(site) for osite in prim_location])]
                 prim_to_distribute = [site for site in prim_to_distribute if not any([osite.startswith(site) for osite in prim_destination])]
-                prim_to_distribute = [site for site in prim_to_distribute if not site in SI.sites_veto_transfer]
+                ## take out the ones that cannot receive transfers
+                prim_to_distribute = [site for site in prim_to_distribute if not any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
                 if len(prim_to_distribute)>0: ## maybe that a parameter we can play with to limit the 
                     if not options or options.chop:
                         spreading = distributeToSites( getDatasetChops(prim), prim_to_distribute, n_copies = copies_needed, weights=SI.cpu_pledges)
@@ -111,7 +112,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                 sec_destination = [site for site in subscriptions] 
                 sec_to_distribute = [site for site in sites_allowed if not any([osite.startswith(site) for osite in sec_location])]
                 sec_to_distribute = [site for site in sec_to_distribute if not any([osite.startswith(site) for osite in sec_destination])]
-                sec_to_distribute = [site for site in sec_to_distribute if not site in SI.sites_veto_transfer]
+                sec_to_distribute = [site for site in sec_to_distribute if not  any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
                 if len( sec_to_distribute )>0:
                     for site in sec_to_distribute:
                         all_transfers[site].append( sec )
