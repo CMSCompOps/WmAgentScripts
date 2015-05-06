@@ -76,7 +76,7 @@ if __name__ == "__main__":
     url = 'cmsweb.cern.ch'
 
     parser = optparse.OptionParser()
-    parser.add_option('-i','--invalidate',help="fetch invalidations from mcm",default=False,actio='store_true')
+    parser.add_option('-i','--invalidate',help="fetch invalidations from mcm",default=False,action='store_true')
     parser.add_option('-w','--wmstatus',help="from which status in req-mgr",default="assignment-approved")
     parser.add_option('-s','--setstatus',help="What status to set locally",default="considered")
     parser.add_option('-u','--user',help="What user to fetch workflow from",default="pdmvserv")
@@ -84,7 +84,7 @@ if __name__ == "__main__":
     
     spec = None
     if len(args)!=0:
-        spec = args[0
+        spec = args[0]
     injector(url,options,spec)
 
     htmlor()
