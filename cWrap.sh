@@ -1,5 +1,8 @@
 cd /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts
 
+#talk to mcm
+cern-get-sso-cookie -u https://cms-pdmv.cern.ch/mcm/ -o ~/private/prod-cookie.txt --krb
+
 week=`date +%W`
 let oddity=week%2
 
