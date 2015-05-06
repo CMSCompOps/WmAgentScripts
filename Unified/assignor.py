@@ -9,6 +9,7 @@ import itertools
 import time
 from htmlor import htmlor
 import os
+import json
 
 def assignor(url ,specific = None, talk=True, options=None):
     if userLock('assignor'): return
@@ -74,6 +75,7 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         (lheinput,primary,parent,secondary) = wfh.getIO()
         sites_allowed = getSiteWhiteList( (lheinput,primary,parent,secondary) )
+        print "Allowed",sites_allowed
         sites_out = [SI.pick_dSE([SI.CE_to_SE(ce) for ce in sites_allowed])]
         sites_custodial = []
         if len(sites_custodial)==0:
@@ -85,7 +87,8 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         for sec in list(secondary):
             presence = getDatasetPresence( url, sec )
-            print sec,presence
+            print sec
+            print json.dumps(presence, indent=2)
             ## reduce the site white list to site with secondary only
             sites_allowed = [site for site in sites_allowed if any([osite.startswith(site) for osite in [psite for (psite,frac) in presence.items() if frac[1]>90.]])]
 
@@ -94,7 +97,8 @@ def assignor(url ,specific = None, talk=True, options=None):
         for prim in list(primary):
             presence = getDatasetPresence( url, prim )
             if talk:
-                print prim,presence
+                print prim
+                print json.dumps(presence, indent=2)
             sites_with_data = [site for site in sites_with_data if any([osite.startswith(site) for osite in [psite for (psite,frac) in presence.items() if frac[1]>90.]])]
             sites_with_any_data = [site for site in sites_with_data if any([osite.startswith(site) for osite in presence.keys()])]
         sites_with_data = list(set(sites_with_data))
@@ -103,8 +107,10 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         if options.restrict:
             if talk:
-                print sites_allowed
+                print "Allowed",sites_allowed
             sites_allowed = sites_with_data
+            if talk:
+                print "Selected",sites_allowed
         else:
             if set(sites_with_data) != set(sites_allowed):
                 ## the data is not everywhere we wanted to run at : enable aaa
