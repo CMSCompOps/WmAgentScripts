@@ -468,9 +468,14 @@ def distributeToSites( items, sites , n_copies, weights=None):
         for item in items:
             at=set()
             #print item,"requires",n_copies,"copies to",len(sites),"sites"
-            for pick in range(n_copies):
-                at.add(SI.pick_CE( list(set(sites)-at)))
-            #print list(at)
+            if len(sites) <= n_copies:
+                #more copies than sites
+                at = set(sites)
+            else:
+                # pick at random according to weights
+                for pick in range(n_copies):
+                    at.add(SI.pick_CE( list(set(sites)-at)))
+                #print list(at)
             for site in at:
                 spreading[site].extend(item)                
         return dict(spreading)
