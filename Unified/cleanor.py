@@ -16,8 +16,8 @@ def cleanor(url, specific=None):
         if not 'InputDataset' in wl: 
             ## should we set status = clean ? or something even further
             print "skipping",wfo.name,"with no input"
-            #wfo.status = 'clean'
-            #session.commit()
+            wfo.status = 'clean'
+            session.commit()
             continue
 
         if 'Campaign' in wl and wl['Campaign'] in CI.campaigns and 'clean-in' in CI.campaigns[wl['Campaign']] and CI.campaigns[wl['Campaign']]['clean-in']==False:
