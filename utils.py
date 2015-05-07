@@ -253,8 +253,8 @@ def getSiteWhiteList( inputs , pickone=False):
     elif primary:
         sites_allowed =list(set( SI.sites_T1s + SI.sites_T2s ))
     else:
-        # input at all
-        sites_allowed =list(set( SI.sites_T2s ))
+        # no input at all
+        sites_allowed =list(set( SI.sites_T2s + SI.sites_T1s))
 
     if pickone:
         sites_allowed = [SI.pick_CE( sites_allowed )]
