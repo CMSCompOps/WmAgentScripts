@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 import reqMgrClient
+from McMClient import McMClient
 from utils import makeReplicaRequest
 from utils import workflowInfo, siteInfo, campaignInfo, userLock
 from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, getSiteWhiteList, approveSubscription
@@ -20,6 +21,7 @@ def transferor(url ,specific = None, talk=True, options=None):
 
     SI = siteInfo()
     CI = campaignInfo()
+    mcm = McMClient(dev=False)
 
     all_transfers=defaultdict(list)
     workflow_dependencies = defaultdict(set) ## list of wf.id per input dataset
@@ -30,11 +32,28 @@ def transferor(url ,specific = None, talk=True, options=None):
         print wfo.name,"to be transfered"
         wfh = workflowInfo( url, wfo.name)
 
-        #injection_time = time.mktime(time.strptime('.'.join(map(str,wfh.request['RequestDate'])),"%Y.%m.%d.%H.%M.%S")) / (60.*60.*24)
-        #now = time.mktime(time.gmtime()) / (60.*60.*24)
-        #if float(now - injection_time) < 4.: ## in days above
-        #    print "It is too soon to transfer", now, injection_time
-        #    continue
+        ## throtlle by campaign go
+        if not CI.go( wfh.request['Campaign'] ):
+            print "No go for",wfh.request['Campaign']
+            if not options.go: continue
+
+        ## check if the batch is announced
+        announced=False
+        for b in mcm.getA('batches',query='contains=%s'% wfo.name):
+            if b['status']=='announced': 
+                announced=True 
+                break
+
+        if not announced:
+            print wfo.name,"does not look announced. skipping?, rejecting?, reporting?"
+            if not options.go: continue
+
+        ## check on a grace period
+        injection_time = time.mktime(time.strptime('.'.join(map(str,wfh.request['RequestDate'])),"%Y.%m.%d.%H.%M.%S")) / (60.*60.)
+        now = time.mktime(time.gmtime()) / (60.*60.)
+        if float(now - injection_time) < 4.:
+            print "It is too soon to inject: %3.2fH remaining"%(now - injection_time)
+            if not options.go: continue
 
         (lheinput,primary,parent,secondary) = wfh.getIO()
         if options and options.tosites:
@@ -226,7 +245,7 @@ if __name__=="__main__":
     parser.add_option('-s','--stop',help="Stop ask and go",default=False,action='store_true')
     parser.add_option('-n','--nochop',help='Do no chop the input to the possible sites',default=True,dest='chop',action='store_false')
     parser.add_option('--tosites',help='Provide a coma separated list of sites to transfer input to',default=None)
-
+    parser.add_option('--go',help="Overrides no-go from campaign, announced, or grace period",default=False,action='store_true')
     (options,args) = parser.parse_args()
 
     spec=None

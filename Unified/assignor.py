@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
 import reqMgrClient
-from McMClient import McMClient
 from utils import workflowInfo, campaignInfo, siteInfo, userLock
 from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation
 import optparse
@@ -16,7 +15,7 @@ def assignor(url ,specific = None, talk=True, options=None):
 
     CI = campaignInfo()
     SI = siteInfo()
-    mcm = McMClient(dev=False)
+
     wfos=[]
     if specific:
         wfos = session.query(Workflow).filter(Workflow.name==specific).all()
@@ -33,30 +32,11 @@ def assignor(url ,specific = None, talk=True, options=None):
         print wfo.name,"to be assigned"
         wfh = workflowInfo( url, wfo.name)
 
-        ## check if the batch is announced
-        announced=False
-        for b in mcm.getA('batches',query='contains=%s'% wfo.name):
-            if b['status']=='announced': 
-                announced=True 
-                break
-        if not announced:
-            print wfo.name,"does not look announced. skipping?, rejecting?, reporting?"
-            #continue
 
         ## check if by configuration we gave it a GO
         if not CI.go( wfh.request['Campaign'] ) and not options.go:
             print "No go for",wfh.request['Campaign']
-            if not options.nograce: continue
-
-        ## check on a grace period
-        injection_time = time.mktime(time.strptime('.'.join(map(str,wfh.request['RequestDate'])),"%Y.%m.%d.%H.%M.%S")) / (60.*60.)
-        now = time.mktime(time.gmtime()) / (60.*60.)
-        if float(now - injection_time) < 4.:
-            print "It is too soon to inject: %3.2fH remaining"%(now - injection_time)
-            if not options.test and not options.nograce and not announced:
-                print "assignment prevented"
-                continue
-                
+            continue
 
         ## check on current status for by-passed assignment
         if wfh.request['RequestStatus'] !='assignment-approved':
@@ -180,7 +160,6 @@ if __name__=="__main__":
     #parser.add_option('-e', '--execute', help='Actually assign workflows',action="store_true",dest='execute')
     parser.add_option('-t','--test', help='Only test the assignment',action='store_true',dest='test',default=False)
     parser.add_option('-r', '--restrict', help='Only assign workflows for site with input',default=False, action="store_true",dest='restrict')
-    parser.add_option('--nograce',help='Skip the grace period',default=False,action='store_true')
     parser.add_option('--go',help="Overrides the campaign go",default=False,action='store_true')
     parser.add_option('--team',help="Specify the agent to use",default='production')
 
