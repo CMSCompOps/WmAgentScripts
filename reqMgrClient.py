@@ -740,7 +740,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
 assignWorkflow.defaults= {
         "action": "Assign",
         "SiteBlacklist": [],
-        "useSiteListAsLocation" : False,
+        #"useSiteListAsLocation" : False,
         "UnmergedLFNBase": "/store/unmerged",
         "MinMergeSize": 2147483648,
         "MaxMergeSize": 4294967296,
