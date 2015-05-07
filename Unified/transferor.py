@@ -56,6 +56,7 @@ def transferor(url ,specific = None, talk=True, options=None):
             ## chope the primary dataset 
             for prim in primary:
                 copies_needed = int(0.35*len(sites_allowed))+1
+                print "need",copies_needed
                 workflow_dependencies[prim].add( wfo.id )
                 presence = getDatasetPresence( url, prim )
                 prim_location = [site for site,pres in presence.items() if pres[0]==True]
@@ -64,24 +65,31 @@ def transferor(url ,specific = None, talk=True, options=None):
                     continue
                 # reduce the number of copies required by existing full copies
                 copies_needed = max(0,copies_needed - len(prim_location))
+                print "now need",copies_needed
                 subscriptions = listSubscriptions( url , prim )
-                prim_destination = [site for (site,(tid,decision)) in subscriptions.items() if decision and not any([site.endswith(veto) for veto in ['MSS','Export','Buffer']])]
+                prim_destination = list(set([site for (site,(tid,decision)) in subscriptions.items() if decision and not any([site.endswith(veto) for veto in ['MSS','Export','Buffer']])]))
+                ## need to reject from that list the ones with a full copy already: i.e the transfer corresponds to the copy in place
+                prim_destination = [site for site in prim_destination if not site in prim_location]
                 ## add transfer dependencies
                 latching_on_transfers = list(set([ tid for (site,(tid,decision)) in subscriptions.items() if decision and not any([site.endswith(veto) for veto in ['MSS','Export','Buffer']])]))
+                print latching_on_transfers
                 for latching in latching_on_transfers:
                     tfo = session.query(Transfer).filter(Transfer.phedexid == latching).first()
                     if not tfo:
-                        tfo = Transfer( phedexid = phedexid)
+                        tfo = Transfer( phedexid = latching)
                         tfo.workflows_id = []
-                        session.add(tfo)
+                        if not options.test:
+                            session.add(tfo)
                     if wfo.id not in tfo.workflows_id:
                         tfo.workflows_id.append( wfo.id )
                         tfo.workflows_id = copy.deepcopy( tfo.workflows_id )
-                        session.commit()
+                        if not options.test:
+                            session.commit()
                     staging = True
 
                 # reduce the number of copies required by the on-going full transfer : how do we bootstrap on waiting for them ??
                 copies_needed = max(0,copies_needed - len(prim_destination))
+                print "then need",copies_needed
                 if copies_needed == 0:
                     print "The output is either fully in place or getting in full somewhere with",latching_on_transfers
                     continue
@@ -127,8 +135,9 @@ def transferor(url ,specific = None, talk=True, options=None):
         else:
             if staging:
                 print wfo.name,"latches on existing transfers"
-                wf.status = 'staging'
-                session.commit()
+                wfo.status = 'staging'
+                if not options.test:
+                    session.commit()
                 continue
             else:
                 print wfo.name,"needs a transfer"
