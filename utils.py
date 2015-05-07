@@ -173,6 +173,11 @@ class siteInfo:
             if 'disk' in values:
                 self.disk[values['disk']] = values['freedisk']
 
+        for (dse,free) in self.disk.items():
+            if free<0:
+                if not dse in self.sites_veto_transfer:
+                    self.sites_veto_transfer.append( dse )
+
         self.cpu_pledges = json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/pledged.json').read())
         ## ack around and put 1 CPU pledge for those with 0
         for (s,p) in self.cpu_pledges.items(): 
