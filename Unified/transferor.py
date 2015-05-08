@@ -4,7 +4,7 @@ import reqMgrClient
 from McMClient import McMClient
 from utils import makeReplicaRequest
 from utils import workflowInfo, siteInfo, campaignInfo, userLock
-from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, getSiteWhiteList, approveSubscription
+from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, getSiteWhiteList, approveSubscription, getDatasetSize
 import json
 from collections import defaultdict
 import optparse
@@ -25,12 +25,52 @@ def transferor(url ,specific = None, talk=True, options=None):
 
     all_transfers=defaultdict(list)
     workflow_dependencies = defaultdict(set) ## list of wf.id per input dataset
-    data_to_wf = {}
+    wfs_and_wfh=[]
     for wfo in session.query(Workflow).filter(Workflow.status=='considered').all():
         if specific and not specific in wfo.name: continue
+        wfs_and_wfh.append( (wfo, workflowInfo( url, wfo.name) ) )
 
-        print wfo.name,"to be transfered"
+    input_sizes = {}
+    ## list the size of those in transfer already
+    for wfo in session.query(Workflow).filter(Workflow.status=='staging').all():
         wfh = workflowInfo( url, wfo.name)
+        (_,primary,_,_) = wfh.getIO()
+        for prim in primary: 
+            input_sizes[prim] = getDatasetSize( prim )
+    in_transfer_already = sum(input_sizes.values())
+    ## list the size of all inputs
+    for (wfo,wfh) in wfs_and_wfh:
+        (_,primary,_,_) = wfh.getIO()
+        for prim in primary:
+            input_sizes[prim] = getDatasetSize( prim )
+    grand_total =  sum(input_sizes.values()) 
+    to_transfer = grand_total  - in_transfer_already
+    grand_transfer_limit = 150000. #150TB
+    transfer_limit = grand_transfer_limit - in_transfer_already
+    print "%15.4f GB already being transfered"%in_transfer_already
+    print "%15.4f GB is the current requested transfer load"%to_transfer
+    print "%15.4f GB is the global transfer limit"%grand_transfer_limit
+    print "%15.4f GB is the available limit"%transfer_limit
+
+    #sort by priority
+    wfs_and_wfh.sort(cmp = lambda i,j : cmp(i[1].request['RequestPriority'],j[1].request['RequestPriority'] ))
+
+    needs_transfer=0 ## so that we can count'em
+    transfer_sizes={}
+    for (wfo,wfh) in wfs_and_wfh:
+        print wfh.request['RequestPriority']
+        print wfo.name,"to be transfered"
+        #wfh = workflowInfo( url, wfo.name)
+
+        (_,primary,_,_) = wfh.getIO()
+        this_load=sum([input_sizes[prim] for prim in primary])
+        if sum(transfer_sizes.values())+this_load > transfer_limit:
+            print "Transfer will go over bubget."
+            print "%15.4f GB this load"%this_load
+            print "%15.4f GB already this round"%sum(transfer_sizes.values())
+            print "%15.4f GB is the available limit"%transfer_limit
+            if not options.go: continue
+
 
         ## throtlle by campaign go
         if not CI.go( wfh.request['Campaign'] ):
@@ -45,15 +85,15 @@ def transferor(url ,specific = None, talk=True, options=None):
                 break
 
         if not announced:
-            print wfo.name,"does not look announced. skipping?, rejecting?, reporting?"
-            if not options.go: continue
+            print wfo.name,"does not look announced."# skipping?, rejecting?, reporting?"
+            #if not options.go: continue
 
         ## check on a grace period
         injection_time = time.mktime(time.strptime('.'.join(map(str,wfh.request['RequestDate'])),"%Y.%m.%d.%H.%M.%S")) / (60.*60.)
         now = time.mktime(time.gmtime()) / (60.*60.)
         if float(now - injection_time) < 4.:
             print "It is too soon to inject: %3.2fH remaining"%(now - injection_time)
-            if not options.go: continue
+            if not options.go and not announced: continue
 
         (lheinput,primary,parent,secondary) = wfh.getIO()
         if options and options.tosites:
@@ -90,7 +130,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                 ## need to reject from that list the ones with a full copy already: i.e the transfer corresponds to the copy in place
                 prim_destination = [site for site in prim_destination if not site in prim_location]
                 ## add transfer dependencies
-                latching_on_transfers = list(set([ tid for (site,(tid,decision)) in subscriptions.items() if decision and not any([site.endswith(veto) for veto in ['MSS','Export','Buffer']])]))
+                latching_on_transfers =  list(set([ tid for (site,(tid,decision)) in subscriptions.items() if decision and site in prim_destination and not any([site.endswith(veto) for veto in ['MSS','Export','Buffer']])]))
                 print latching_on_transfers
                 for latching in latching_on_transfers:
                     tfo = session.query(Transfer).filter(Transfer.phedexid == latching).first()
@@ -104,6 +144,8 @@ def transferor(url ,specific = None, talk=True, options=None):
                         tfo.workflows_id = copy.deepcopy( tfo.workflows_id )
                         if not options.test:
                             session.commit()
+                    can_go = False
+                    transfer_sizes[prim] = input_sizes[prim]
                     staging = True
 
                 # reduce the number of copies required by the on-going full transfer : how do we bootstrap on waiting for them ??
@@ -123,8 +165,10 @@ def transferor(url ,specific = None, talk=True, options=None):
                         spreading = {} 
                         for site in prim_to_distribute: spreading[site]=[prim]
                     can_go = False
+                    transfer_sizes[prim] = input_sizes[prim]
                     for (site,items) in spreading.items():
                         all_transfers[site].extend( items )
+
 
 
 
@@ -149,6 +193,7 @@ def transferor(url ,specific = None, talk=True, options=None):
         if can_go:
             print wfo.name,"should just be assigned NOW to",sites_allowed
             wfo.status = 'staged'
+            print "setting status to",wfo.status
             session.commit()
             continue
         else:
@@ -156,10 +201,12 @@ def transferor(url ,specific = None, talk=True, options=None):
                 print wfo.name,"latches on existing transfers"
                 wfo.status = 'staging'
                 if not options.test:
+                    print "setting status to",wfo.status
                     session.commit()
                 continue
             else:
                 print wfo.name,"needs a transfer"
+                needs_transfer+=1
 
     #print json.dumps(all_transfers)
     fake_id=-1
