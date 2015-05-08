@@ -328,7 +328,7 @@ Worlfow clean for input (%d) <a href=logs/cleanor/last.log target=_blank>log</a>
         if not out.workflow: 
             print "This is a problem with",out.datasetname
             continue
-        if  out.workflow.status == 'done':
+        if  out.workflow.status in ['done','clean']:
             out_week = int(time.strftime("%W",time.gmtime(out.date)))
             ##only show current week, and the previous.
             if (this_week-out_week)==1:
@@ -408,7 +408,7 @@ Worlfow clean for input (%d) <a href=logs/cleanor/last.log target=_blank>log</a>
         for site in getattr(SI,t):
             if c==0:
                 text+="<tr>"
-            text+='<td>%s<br><a href="http://hcc-briantest.unl.edu/prodview/%s" target="_blank"><img src="http://hcc-briantest.unl.edu/prodview/graphs/%s/daily" style="height:50px"></a></td>'%(site,site,site)
+            text+='<td><a href=http://dashb-ssb.cern.ch/dashboard/templates/sitePendingRunningJobs.html?site=%s>%s</a><br><a href="http://hcc-briantest.unl.edu/prodview/%s" target="_blank"><img src="http://hcc-briantest.unl.edu/prodview/graphs/%s/daily" style="height:50px"></a></td>'%(site,site,site,site)
             if c==n_column:
                 c=0
             else:
