@@ -501,7 +501,10 @@ def getDatasetStatus(dataset):
         dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
         # retrieve dataset summary                                                                                                                                                                                                                                                   
         reply = dbsapi.listDatasets(dataset=dataset,dataset_access_type='*',detail=True)
-        return reply[0]['dataset_access_type']
+        if len(reply):
+            return reply[0]['dataset_access_type']
+        else:
+            return None
 
 def getDatasets(dataset):
        # initialize API to DBS3                                                                                                                                                                                                                                                      
