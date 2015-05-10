@@ -110,7 +110,7 @@ def htmlor():
 </head>
 <body>
 
-Last update on %s(CET), %s(GMT), <a href=logs/ target=_blank> logs</a> <a href=logs/last.log target=_blank>last</a> <br><br>
+Last update on %s(CET), %s(GMT), <a href=logs/ target=_blank> logs</a> <a href=logs/last.log target=_blank>last</a> <a href=statuses.html>statuses</a> <br><br>
 
 """ %(time.asctime(time.localtime()),
       time.asctime(time.gmtime())))
