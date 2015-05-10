@@ -65,42 +65,61 @@ def assignor(url ,specific = None, talk=True, options=None):
             print "more than one custodial for",wfo.name
             sys.exit(36)
 
+        secondary_locations=None
         for sec in list(secondary):
             presence = getDatasetPresence( url, sec )
             print sec
             print json.dumps(presence, indent=2)
+            one_secondary_locations = [site for (site,frac) in presence.items() if frac[1]>90.]
+            if secondary_locations==None:
+                secondary_locations = one_secondary_locations
+            else:
+                secondary_locations = list(set(secondary_locations) and set(one_secondary_locations))
             ## reduce the site white list to site with secondary only
-            sites_allowed = [site for site in sites_allowed if any([osite.startswith(site) for osite in [psite for (psite,frac) in presence.items() if frac[1]>90.]])]
+            sites_allowed = [site for site in sites_allowed if any([osite.startswith(site) for osite in one_secondary_locations])]
+            
 
         sites_with_data = copy.deepcopy( sites_allowed )
         sites_with_any_data = copy.deepcopy( sites_allowed )
+        primary_locations = None
         for prim in list(primary):
             presence = getDatasetPresence( url, prim )
             if talk:
                 print prim
                 print json.dumps(presence, indent=2)
             sites_with_data = [site for site in sites_with_data if any([osite.startswith(site) for osite in [psite for (psite,frac) in presence.items() if frac[1]>90.]])]
-            sites_with_any_data = [site for site in sites_with_data if any([osite.startswith(site) for osite in presence.keys()])]
+            sites_with_any_data = [site for site in sites_with_any_data if any([osite.startswith(site) for osite in presence.keys()])]
+            if primary_locations==None:
+                primary_locations = presence.keys()
+            else:
+                primary_locations = list(set(primary_locations) and set(presence.keys() ))
+
         sites_with_data = list(set(sites_with_data))
         sites_with_any_data = list(set(sites_with_any_data))
 
+        opportunistic_sites=[]
+        ## opportunistic running where any piece of data is available
+        if secondary_locations and primary_locations:
+            ## intersection of both any pieces of the primary and good IO
+            #opportunistic_sites = [SI.SE_to_CE(site) for site in list((set(secondary_locations) and set(primary_locations) and set(SI.sites_with_goodIO)) - set(sites_allowed))]
+            opportunistic_sites = [SI.SE_to_CE(site) for site in list((set(secondary_locations) and set(primary_locations)) - set(sites_allowed))]
+            print "We could be running at",opportunistic_sites,"in addition"
 
         if options.restrict:
-            if talk:
-                print "Allowed",sites_allowed
-            sites_allowed = sites_with_data
-            if talk:
-                print "Selected",sites_allowed
+            print "Allowed",sites_allowed
+            sites_allowed = sites_with_any_data
+            print "Selected",sites_allowed
         else:
             if set(sites_with_data) != set(sites_allowed):
                 ## the data is not everywhere we wanted to run at : enable aaa
                 print "Sites with 90% data not matching site white list (block choping!)"
                 print "Resorting to AAA reading for",list(set(sites_allowed) - set(sites_with_data)),"?"
-                print "Site with any data",list(set(sites_allowed) - set(sites_with_any_data))
+                print "Whitelist site with any data",list(set(sites_allowed) - set(sites_with_any_data))
                 #options.useSiteListAsLocation = True
                 #print "Not commissioned yet"
                 #continue
-                
+            #print "We could be running at",opportunistic_sites,"in addition"
+            ##sites_allowed = list(set(sites_allowed+ opportunistic_sites))
         if not len(sites_allowed):
             print wfo.name,"cannot be assign with no matched sites"
             continue

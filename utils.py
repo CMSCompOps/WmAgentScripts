@@ -155,11 +155,19 @@ class siteInfo:
                                   "T2_IT_Bari","T2_IT_Legnaro","T2_IT_Pisa","T2_IT_Rome",
                                   "T2_UK_London_Brunel","T2_UK_London_IC","T2_US_Caltech","T2_US_MIT",
                                   "T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida"]
-        
+        ## only T2s in that list
         self.sites_with_goodIO = filter(lambda s : s.startswith('T2'), self.sites_with_goodIO)
-        self.sites_with_goodIO = ["T2_US_Nebraska","T2_US_MIT"]
-
-        self.sites_veto_transfer = ["T2_US_MIT"]
+        
+        
+        if True:
+            ## the old scheme
+            self.sites_with_goodIO = ["T2_US_Nebraska","T2_US_MIT"]
+            self.sites_veto_transfer = ["T2_US_MIT"]#,"T1_UK_RAL"]
+        else:
+            ## a new scheme with all 
+            allowed_T2_for_transfer = ["T2_US_Nebraska"]
+            self.sites_veto_transfer = [site for site in self.sites_with_goodIO if not site in allowed_T2_for_transfer]
+            
 
         self.sites_T2s = [s for s in json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/whitelist.json').read()) if s not in self.siteblacklist and 'T2' in s]
         self.sites_T1s = [s for s in json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/whitelist.json').read()) if s not in self.siteblacklist and 'T1' in s]
