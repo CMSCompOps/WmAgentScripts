@@ -3,12 +3,15 @@ from assignSession import *
 from utils import getWorkLoad, getDatasetPresence, makeDeleteRequest, getDatasetSize, siteInfo, findCustodialLocation, getWorkflowByInput, campaignInfo
 import json
 import time
+import random
 
 def cleanor(url, specific=None):
+
     delete_per_site = {}
     SI = siteInfo()
     CI = campaignInfo()
     counts=0
+    keep_a_copy = True
     for wfo in session.query(Workflow).filter(Workflow.status == 'done').all():
         if specific and not specific in wfo.name: continue
         ## what was in input 
@@ -63,8 +66,13 @@ def cleanor(url, specific=None):
                 print other['RequestName'],'is in status',other['RequestStatus'],'preventing from cleaning',dataset
                 conflict=True
                 break
+            if 'Campaign' in other and other['Campaign'] in CI.campaigns and 'clean-in' in CI.campaigns[other['Campaign']] and CI.campaigns[other['Campaign']]['clean-in']==False:
+                print other['RequestName'],'is in campaign',other['Campaign']
+                conflict = True
+                break
         if conflict: continue
         print "other statuses:",[other['RequestStatus'] for other in using_the_same if other['RequestName'] != wfo.name]
+
 
         ## find all disks
         to_be_cleaned = filter(lambda site : site.startswith('T2') or site.endswith('Disk') ,our_presence.keys())
@@ -78,6 +86,29 @@ def cleanor(url, specific=None):
         ## need to black list the sites where there is a copy of analysis ops
         to_be_cleaned = [site for site in to_be_cleaned if not site in own_by_anaops ]
 
+        ## keep one copy out there
+        keep_at = None
+        if keep_a_copy:
+            full_copies = [site for (site,(there,_)) in our_presence.items() if there and site.startswith('T1')]
+            full_copies.extend( [site for (site,(there,_)) in also_our_presence.items() if there and site.startswith('T1')] )
+            if not full_copies:
+                full_copies = [site for (site,(there,_)) in our_presence.items() if there and site.startswith('T2')]
+                full_copies.extend( [site for (site,(there,_)) in also_our_presence.items() if there and site.startswith('T2')] )
+
+            if full_copies:
+                keep_at = random.choice( full_copies )
+                
+            if not keep_at:
+                print "We are enable to find a place to keep a full copy. skipping"
+                continue
+            else:
+                print "Could keep a full copy at",keep_at,"skipping anyways for the moment"
+                ## keeping that copy !
+                if keep_a_copy:
+                    print "Keeping a copy at",keep_at
+                    to_be_cleaned.remove( keep_at )
+                continue ## to be removed once we are a bit more happy with this keeping a copy
+            
 
         ## collect delete request per site
         for site in to_be_cleaned :
