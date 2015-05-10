@@ -32,11 +32,14 @@ def transferor(url ,specific = None, talk=True, options=None):
 
     input_sizes = {}
     ## list the size of those in transfer already
+    in_transfer_priority=0
     for wfo in session.query(Workflow).filter(Workflow.status=='staging').all():
         wfh = workflowInfo( url, wfo.name)
         (_,primary,_,_) = wfh.getIO()
         for prim in primary: 
             input_sizes[prim] = getDatasetSize( prim )
+        in_transfer_priority = max(in_transfer_priority, wfh.request['RequestPriority'])
+
     in_transfer_already = sum(input_sizes.values())
     ## list the size of all inputs
     for (wfo,wfh) in wfs_and_wfh:
@@ -71,7 +74,10 @@ def transferor(url ,specific = None, talk=True, options=None):
             print "%15.4f GB this load"%this_load
             print "%15.4f GB already this round"%sum(transfer_sizes.values())
             print "%15.4f GB is the available limit"%transfer_limit
-            if not options.go: continue
+            if wfh.request['RequestPriority'] >= in_transfer_priority:
+                print "Higher priority sample",wfh.request['RequestPriority'],">",in_transfer_priority,"go-on"
+            else:
+                if not options.go: continue
 
 
         ## throtlle by campaign go
