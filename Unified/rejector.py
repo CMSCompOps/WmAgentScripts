@@ -45,6 +45,8 @@ def rejector(url, specific, options=None):
                 else:
                     schema['ProcessingVersion']=2
                 schema.pop('RequestDate')
+                if options.Memory:
+                    schema['Memory'] = options.Memory
                 response = reqMgrClient.submitWorkflow(url, schema)
                 m = re.search("details\/(.*)\'",response)
                 if not m:
@@ -65,6 +67,7 @@ if __name__ == "__main__":
     parser = optparse.OptionParser()
     parser.add_option('-c','--clone',help="clone the workflow",default=False,action="store_true")
     parser.add_option('-k','--keep',help="keep the outpuy in current status", default=False,action="store_true")
+    parser.add_option('--Memory',help="memory parameter of the clone", default=0, type=int)
     (options,args) = parser.parse_args()
 
     spec=None
