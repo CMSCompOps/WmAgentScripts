@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from assignSession import *
 from McMClient import McMClient
 from utils import workflowInfo
