@@ -200,22 +200,28 @@ def transferor(url ,specific = None, talk=True, options=None):
         
         ## is that possible to do something more
         if can_go:
-            print wfo.name,"should just be assigned NOW to",sites_allowed
-            wfo.status = 'staged'
+            ## no explicit transfer required this time
+            if staging:
+                ## but using existing ones
+                print wfo.name,"latches on existing transfers, and nothing else"
+                wfo.status = 'staging'
+            else:
+                print wfo.name,"should just be assigned NOW to",sites_allowed
+                wfo.status = 'staged'
             print "setting status to",wfo.status
             session.commit()
             continue
         else:
+            ## there is an explicit transfer required
             if staging:
+                ## and also using an existing one
                 print wfo.name,"latches on existing transfers"
-                wfo.status = 'staging'
                 if not options.test:
+                    wfo.status = 'staging'
                     print "setting status to",wfo.status
                     session.commit()
-                continue
-            else:
-                print wfo.name,"needs a transfer"
-                needs_transfer+=1
+            print wfo.name,"needs a transfer"
+            needs_transfer+=1
 
     #print json.dumps(all_transfers)
     fake_id=-1
