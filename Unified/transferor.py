@@ -100,7 +100,7 @@ def transferor(url ,specific = None, talk=True, options=None):
         injection_time = time.mktime(time.strptime('.'.join(map(str,wfh.request['RequestDate'])),"%Y.%m.%d.%H.%M.%S")) / (60.*60.)
         now = time.mktime(time.gmtime()) / (60.*60.)
         if float(now - injection_time) < 4.:
-            print "It is too soon to inject: %3.2fH remaining"%(now - injection_time)
+            print "It is too soon to start transfer: %3.2fH remaining"%(now - injection_time)
             if not options.go and not announced: continue
 
         (lheinput,primary,parent,secondary) = wfh.getIO()
@@ -278,6 +278,7 @@ def transferor(url ,specific = None, talk=True, options=None):
             continue
         for phedexid in [o['id'] for o in result['phedex']['request_created']]:
             new_transfer = session.query(Transfer).filter(Transfer.phedexid == phedexid).first()
+            print phedexid,"transfer created"
             if not new_transfer:
                 new_transfer = Transfer( phedexid = phedexid)
                 session.add( new_transfer )                
