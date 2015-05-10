@@ -158,9 +158,19 @@ def checkor(url, spec=None, options=None):
 
         ## completion check
         percent_completions = {}
+        event_expected,lumi_expected =  wfi.request['TotalInputEvents'],wfi.request['TotalInputLumis']
+        #print event_expected,lumi_expected
+        #if 'InputDataset' in wfi.request:
+        #    block_wl = None
+        #    event_expected,lumi_expected = getDatasetEventsAndLumis( wfi.request['InputDataset'] )
+        #    print event_expected,lumi_expected
+        #    if 'BlockWhitelist' in wfi.request:
+        #        block_wl = list(set(eval(wfi.request['BlockWhitelist'])))
+        #    event_expected,lumi_expected = getDatasetEventsAndLumis( wfi.request['InputDataset'], block_wl )
+        #    print event_expected,lumi_expected
+
         for output in wfi.request['OutputDatasets']:
             event_count,lumi_count = getDatasetEventsAndLumis(dataset=output)
-            event_expected,lumi_expected =  wfi.request['TotalInputEvents'],wfi.request['TotalInputLumis']
             percent_completions[output] = 0
             if lumi_expected:
                 percent_completions[output] = lumi_count / float( lumi_expected )

@@ -480,16 +480,22 @@ def distributeToSites( items, sites , n_copies, weights=None):
                 spreading[site].extend(item)                
         return dict(spreading)
 
-def getDatasetEventsAndLumis(dataset):
+def getDatasetEventsAndLumis(dataset, blocks=None):
     dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
-    all_files = dbsapi.listFileSummaries( dataset = dataset )
+    all_files = []
+    if blocks:
+        for b in blocks:
+            all_files.extend( dbsapi.listFileSummaries( block_name = b  , validFileOnly=1))
+    else:
+        all_files = dbsapi.listFileSummaries( dataset = dataset , validFileOnly=1)
+
     all_events = sum([f['num_event'] for f in all_files])
     all_lumis = sum([f['num_lumi'] for f in all_files])
     return all_events,all_lumis
 
 def getDatasetEventsPerLumi(dataset):
     dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
-    all_files = dbsapi.listFileSummaries( dataset = dataset )
+    all_files = dbsapi.listFileSummaries( dataset = dataset , validFileOnly=1)
     try:
         average = sum([f['num_event']/float(f['num_lumi']) for f in all_files]) / float(len(all_files))
     except:
