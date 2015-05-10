@@ -422,7 +422,7 @@ def getDatasetSize(dataset):
     ## put everything in terms of GB
     return sum([block['file_size'] / (1024.**3) for block in blocks])
 
-def getDatasetChops(dataset, chop_threshold =500., talk=False):
+def getDatasetChops(dataset, chop_threshold =1000., talk=False):
     ## does a *flat* choping of the input in chunk of size less than chop threshold
     dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
     blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
@@ -460,6 +460,7 @@ def getDatasetChops(dataset, chop_threshold =500., talk=False):
     if talk:
         print items
     ## a list of list of blocks or dataset
+    print "Choped",dataset,"in",len(items),"pieces"
     return items
 
 def distributeToSites( items, sites , n_copies, weights=None):
@@ -614,6 +615,14 @@ def makeReplicaRequest(url, site,datasets, comments, priority='normal',custodial
                  "custodial":custodial,"request_only":"y" ,"move":"n","no_mail":"n","comments":comments}
     response = phedexPost(url, "/phedex/datasvc/json/prod/subscribe", params)
     return response
+
+def updateSubscription(url, site, item, priority=None, user_group=None):
+    params = { "node" : site }
+    params['block' if '#' in item else 'dataset'] = item
+    if priority:   params['priority'] = priority
+    if user_group: params['user_group'] = user_group
+    response = phedexPost(url, "/phedex/datasvc/json/prod/updatesubscription", params) 
+    print response
 
 def getWorkLoad(url, wf ):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
