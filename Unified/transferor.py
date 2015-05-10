@@ -4,7 +4,7 @@ import reqMgrClient
 from McMClient import McMClient
 from utils import makeReplicaRequest
 from utils import workflowInfo, siteInfo, campaignInfo, userLock
-from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, getSiteWhiteList, approveSubscription, getDatasetSize
+from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, getSiteWhiteList, approveSubscription, getDatasetSize, updateSubscription
 import json
 from collections import defaultdict
 import optparse
@@ -55,6 +55,8 @@ def transferor(url ,specific = None, talk=True, options=None):
     #sort by priority
     wfs_and_wfh.sort(cmp = lambda i,j : cmp(i[1].request['RequestPriority'],j[1].request['RequestPriority'] ))
 
+    # the max priority value per dataset.
+    max_priority = defaultdict(int)
     needs_transfer=0 ## so that we can count'em
     transfer_sizes={}
     for (wfo,wfh) in wfs_and_wfh:
@@ -114,6 +116,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                 print wfo.name,'reads',', '.join(primary),'in primary'
             ## chope the primary dataset 
             for prim in primary:
+                max_priority[prim] = max(max_priority[prim],wfh.request['RequestPriority'])
                 copies_needed = int(0.35*len(sites_allowed))+1
                 print "need",copies_needed
                 workflow_dependencies[prim].add( wfo.id )
@@ -249,7 +252,14 @@ def transferor(url ,specific = None, talk=True, options=None):
                 continue
 
         if execute:
-            result = makeReplicaRequest(url, site_se, items_to_transfer, 'prestaging')
+            result = makeReplicaRequest(url, site_se, items_to_transfer, 'prestaging', priority='normal')
+            ## make use of max_priority dataset:priority to set the subscriptions priority
+            for item in items_to_transfer:
+                bds = item.split('#')[0]
+                if max_priority[bds] >= 90000:
+                    ## raise it to high priority
+                    print item,"subscription priority raised to high"
+                    updateSubscription(url, site_se, item, piority='high')
         else:
             #result= {'phedex':{'request_created' : [{'id' : fake_id}]}}
             result= {'phedex':{'request_created' : []}}
