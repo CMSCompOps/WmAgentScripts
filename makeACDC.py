@@ -55,7 +55,10 @@ def main():
     reqMgrClient = ReqMgrClient(url, config)
 
     #set up acdc stuff
-    config.requestArgs["createRequest"]["RequestString"] = "ACDC_"+wf.info["RequestString"]
+    if "ACDC" in wf.info["RequestString"]:
+        config.requestArgs["createRequest"]["RequestString"] = wf.info["RequestString"]
+    else:
+        config.requestArgs["createRequest"]["RequestString"] = "ACDC_"+ wf.info["RequestString"]
     config.requestArgs["createRequest"]["PrepID"] = wf.info["PrepID"]
     config.requestArgs["createRequest"]["RequestPriority"] = wf.info["RequestPriority"]
     config.requestArgs["createRequest"]["OriginalRequestName"] = wf.name

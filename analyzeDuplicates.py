@@ -1,3 +1,4 @@
+
 """
     Analyzes duplicate dump files and calculates the minimum file
     set for invalidating
@@ -166,7 +167,8 @@ def main():
     print 'total events %s'%total
     print 'invalidated files %s'%len(files)
     print 'invalidated events %s'%invalid
-    print '%s%%'%(float(total-invalid)/total*100.0)
+    if total:
+        print '%s%%'%(float(total-invalid)/total*100.0)
     for f in sorted(files):
         print f
 
