@@ -460,7 +460,7 @@ def getDatasetChops(dataset, chop_threshold =1000., talk=False):
     if talk:
         print items
     ## a list of list of blocks or dataset
-    print "Choped",dataset,"in",len(items),"pieces"
+    print "Choped",dataset,"of size",sum_all,"GB (",chop_threshold,"GB) in",len(items),"pieces"
     return items
 
 def distributeToSites( items, sites , n_copies, weights=None):

@@ -322,7 +322,7 @@ def checkor(url, spec=None, options=None):
                         is_closing=False
 
             if any(duplications.values()) and not options.ignoreduplicates:
-                print wfo.name,"has duplicates",
+                print wfo.name,"has duplicates"
                 print json.dumps(duplications,indent=2)
                 ## hook for making file invalidation ?
                 sub_assistance+='-duplicates'
