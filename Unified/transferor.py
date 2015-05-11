@@ -55,8 +55,8 @@ def transferor(url ,specific = None, talk=True, options=None):
     print "%15.4f GB is the global transfer limit"%grand_transfer_limit
     print "%15.4f GB is the available limit"%transfer_limit
 
-    #sort by priority
-    wfs_and_wfh.sort(cmp = lambda i,j : cmp(i[1].request['RequestPriority'],j[1].request['RequestPriority'] ))
+    #sort by priority higher first
+    wfs_and_wfh.sort(cmp = lambda i,j : cmp(i[1].request['RequestPriority'],j[1].request['RequestPriority'] ), reverse=True)
 
     # the max priority value per dataset.
     max_priority = defaultdict(int)
@@ -100,8 +100,9 @@ def transferor(url ,specific = None, talk=True, options=None):
         injection_time = time.mktime(time.strptime('.'.join(map(str,wfh.request['RequestDate'])),"%Y.%m.%d.%H.%M.%S")) / (60.*60.)
         now = time.mktime(time.gmtime()) / (60.*60.)
         if float(now - injection_time) < 4.:
-            print "It is too soon to start transfer: %3.2fH remaining"%(now - injection_time)
-            if not options.go and not announced: continue
+            if not options.go and not announced: 
+                print "It is too soon to start transfer: %3.2fH remaining"%(now - injection_time)
+                continue
 
         (lheinput,primary,parent,secondary) = wfh.getIO()
         if options and options.tosites:
