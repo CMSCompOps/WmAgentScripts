@@ -40,6 +40,8 @@ def main():
                         help="Team for assigning, if empty, the one on the Json file")
     parser.add_option("--testbed",action="store_true", dest="testbed", default=False,
                         help="Use testbed ReqMgr instead of production ReqMgr.")
+    parser.add_option("-m", "--multi",action="store_true", dest="multi", default=False,
+                        help="Assign to all sites")
 
     (options, args) = parser.parse_args()
     
@@ -69,10 +71,29 @@ def main():
         config.requestArgs["assignRequest"]["Team"] = options.team
 
     #create a request for each site
-    for site in siteList:
-        
+    if not options.multi:
+        for site in siteList:
+            
+            #setup creation stuff
+            config.requestArgs["createRequest"]["RequestString"] = reqStr+"-"+site+"Backfill"
+            config.requestArgs["createRequest"]["PrepID"] = None
+
+            r = reqMgrClient.createRequest(config)
+            print "Created:"
+            print r
+            reqMgrClient.changeSplitting(config)
+            print "Changed splitting"
+            
+            #change assignment stuff
+            config.requestArgs["assignRequest"]["SiteWhitelist"] = [site]        
+            config.requestArgs["assignRequest"]["ProcessingString"] = "SITE_TEST_"+site
+            #assign
+            reqMgrClient.assignRequests(config)
+            print "Assigned to",site
+    
+    else:
         #setup creation stuff
-        config.requestArgs["createRequest"]["RequestString"] = reqStr+"-"+site+"Backfill"
+        config.requestArgs["createRequest"]["RequestString"] = reqStr+"-SiteBackfill"
         config.requestArgs["createRequest"]["PrepID"] = None
 
         r = reqMgrClient.createRequest(config)
@@ -82,13 +103,11 @@ def main():
         print "Changed splitting"
         
         #change assignment stuff
-        config.requestArgs["assignRequest"]["SiteWhitelist"] = [site]        
-        config.requestArgs["assignRequest"]["ProcessingString"] = "SITE_TEST_"+site
+        config.requestArgs["assignRequest"]["SiteWhitelist"] = siteList
+        config.requestArgs["assignRequest"]["ProcessingString"] = "SITE_TEST"
         #assign
         reqMgrClient.assignRequests(config)
-        print "Assigned to",site
-    
-
+        print "Assigned to",siteList
 
 if __name__ == '__main__':
     main()

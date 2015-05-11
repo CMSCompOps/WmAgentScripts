@@ -36,21 +36,24 @@ def makeDeletionRequests(url, allDatasets, verbose=False):
         #add all sites for all datasets
         dsToDelete = set()
         for ds in datasets:
-            t = dbs.getDatasetStatus(ds)
-            if verbose:
-                print ds, 'is', t
-            #filter by status
-            if t == 'INVALID' or t == 'DEPRECATED':
-                dsToDelete.add(ds)
-            sites2 = phd.getBlockReplicaSites(ds, onlycomplete=False)
-            for s in sites2:
-                #ignore buffers
-                if "Buffer" in s or "Export" in s:
-                    continue
-                sites.add(s)
-            if verbose:
-                print "available in", sites
-
+            try:
+                t = dbs.getDatasetStatus(ds)
+                if verbose:
+                    print ds, 'is', t
+                #filter by status
+                if t == 'INVALID' or t == 'DEPRECATED':
+                    dsToDelete.add(ds)
+                sites2 = phd.getBlockReplicaSites(ds, onlycomplete=False)
+                for s in sites2:
+                    #ignore buffers
+                    if "Buffer" in s or "Export" in s:
+                        continue
+                    sites.add(s)
+                if verbose:
+                    print "available in", sites
+            except Exception as e:
+                print ds,e
+                
         #create a single request
         if dsToDelete and sites:
             print "About to create a deletion request for"

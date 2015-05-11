@@ -139,7 +139,7 @@ def main():
                 lastmodts = datetime.datetime.fromtimestamp(ods['lastmodts'])
                 delta = now - lastmodts
                 days.append(delta.days + delta.seconds/3600.0/24.0)
-        dayssame = min(days)
+        dayssame = min(days) if days else 0
         #TODO calculate stuckness
         relativeprio = float(r['priority'])/highest_prio
         stuckness = relativeprio*dayssame
@@ -152,6 +152,7 @@ def main():
     
     #sort by stuckness
     s = sorted( s, reverse=True, key=lambda r: r['stuckness'] if 'stuckness' in r else -1 )
+    print totaldays, reqs
     #write the output in html format
     writehtml(s, totaldays, reqs)
 

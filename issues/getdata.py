@@ -239,6 +239,27 @@ def getWorkflowInfo(workflow):
         #load reqlist and subscriptions
         getDatasetPhedexInfo(inputdataset)
 
+    #info about output datasets
+    #expectedtotalsize = sizeev * expectedevents / 1000000
+    outputdataset = []
+    wlinfo['outputdatasetinfo'] = outputdataset
+    eventsdone = 0
+    if wfObject.status in ['running','running-open','running-closed','completed','closed-out','announced']:
+        for o in wfObject.outputDatasets:
+            oel = {}
+            oel['name'] = o
+            
+            #[oe,ost,ocreatets,olastmodts] = getdsdetail(o,timestamps=1)
+            print "-",o, "-"
+            oel['events'] = wfObject.getOutputEvents(o)
+            oel['status'], oel['createts'], oel['lastmodts'] = dbs3.getDatasetInfo(o)
+            #load reqlist and subscriptions
+            getDatasetPhedexInfo(oel)
+
+            eventsdone = eventsdone + oel['events']
+            outputdataset.append(oel)
+
+
     #look for correspondin acdc's
     wlinfo['acdc'] = []
     if wlinfo['prepid']:
@@ -265,26 +286,6 @@ def getWorkflowInfo(workflow):
         
         #calculate cpu hours        
         wlinfo['expectedjobcpuhours'] = wlinfo['timeev'] * wlinfo['expectedevents'] / wlinfo['filtereff']
-
-        #info about output datasets
-        #expectedtotalsize = sizeev * expectedevents / 1000000
-        outputdataset = []
-        wlinfo['outputdatasetinfo'] = outputdataset
-        eventsdone = 0
-        if wfObject.status in ['running','running-open','running-closed','completed','closed-out','announced']:
-            for o in wfObject.outputDatasets:
-                oel = {}
-                oel['name'] = o
-                
-                #[oe,ost,ocreatets,olastmodts] = getdsdetail(o,timestamps=1)
-                print "-",o, "-"
-                oel['events'] = wfObject.getOutputEvents(o)
-                oel['status'], oel['createts'], oel['lastmodts'] = dbs3.getDatasetInfo(o)
-                #load reqlist and subscriptions
-                getDatasetPhedexInfo(oel)
-
-                eventsdone = eventsdone + oel['events']
-                outputdataset.append(oel)
 
     return wlinfo
 
