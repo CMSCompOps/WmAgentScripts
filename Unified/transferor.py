@@ -91,10 +91,9 @@ def transferor(url ,specific = None, talk=True, options=None):
             if b['status']=='announced': 
                 announced=True 
                 break
-
+                
         if not announced:
             print wfo.name,"does not look announced."# skipping?, rejecting?, reporting?"
-            #if not options.go: continue
 
         ## check on a grace period
         injection_time = time.mktime(time.strptime('.'.join(map(str,wfh.request['RequestDate'])),"%Y.%m.%d.%H.%M.%S")) / (60.*60.)
@@ -147,13 +146,14 @@ def transferor(url ,specific = None, talk=True, options=None):
                     if not tfo:
                         tfo = Transfer( phedexid = latching)
                         tfo.workflows_id = []
-                        if not options.test:
-                            session.add(tfo)
+                        session.add(tfo)
                     if wfo.id not in tfo.workflows_id:
                         tfo.workflows_id.append( wfo.id )
                         tfo.workflows_id = copy.deepcopy( tfo.workflows_id )
-                        if not options.test:
-                            session.commit()
+                    if not options.test:
+                        session.commit()
+                    else:
+                        session.flush() ## regardless of commit later on, we need to let the next wf feeding on this transfer to see it in query
                     can_go = False
                     transfer_sizes[prim] = input_sizes[prim]
                     staging = True
