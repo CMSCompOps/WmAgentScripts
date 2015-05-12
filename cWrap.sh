@@ -27,13 +27,18 @@ echo >> $log
 
 ## check cmsweb up-time
 python checkcmsweb.py >> $log || {
-## copy log to lasts
     cp $log /afs/cern.ch/user/c/cmst2/www/unified/logs/last.log
     cp $log /afs/cern.ch/user/c/cmst2/www/unified/logs/`echo $1 | sed 's/\.py//' | sed 's/Unified\///'`/last.log
     exit 
 }
+# not all are using mcm, so we should not stop from running
+#python checkmcm.py >> $log || {
+#    cp $log /afs/cern.ch/user/c/cmst2/www/unified/logs/last.log
+#    cp $log /afs/cern.ch/user/c/cmst2/www/unified/logs/`echo $1 | sed 's/\.py//' | sed 's/Unified\///'`/last.log
+#    exit 
+#}
 
-python $* >> $log
+python $* &>> $log
 
 ## copy log to lasts
 cp $log /afs/cern.ch/user/c/cmst2/www/unified/logs/`echo $1 | sed 's/\.py//' | sed 's/Unified\///'`/last.log
