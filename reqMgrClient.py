@@ -640,6 +640,14 @@ def assignWorkflow(url, workflowname, team, parameters ):
         defaults['Dashboard'] = 'reprocessing'
         defaults['dashboard'] = 'reprocessing'
 
+
+    if defaults['SiteBlacklist'] and defaults['SiteWhitelist']:
+        defaults['SiteWhitelist'] = list(set(defaults['SiteWhitelist']) - defaults['SiteBlacklist'])
+        defaults['SiteBlacklist'] = []
+        if not defaults['SiteWhitelist']:
+            print "Cannot assign with no site whitelist"
+            return False
+
     # set the maxrss watchdog to what is specified in the request
     defaults['MaxRSS'] = wf.request['Memory']*1024+10
 
