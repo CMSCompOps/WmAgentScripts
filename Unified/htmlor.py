@@ -1,24 +1,14 @@
 #!/usr/bin/env python
 from assignSession import *
 import time
-from utils import getWorkLoad, campaignInfo, siteInfo
+from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows
 import os
 import json
 
 def htmlor():
-
+    cache = getWorkflows('cmsweb.cern.ch','assignment-approved', details=True)
     def wfl(wf,view=False,p=False,ms=False,within=False,ongoing=False,status=False,update=False):
         wfn = wf.name
-        if ongoing or update:
-            #wl = getWorkLoad('cmsweb.cern.ch',wfn)
-            #wf.wm_status = wl['RequestStatus']
-            #if wf.wm_status in ['failed','aborted','aborted-archived','rejected','rejected-archived']:
-            #    wf.status = 'trouble'
-            #elif wf.wm_status in ['closed-out']:
-            #    wf.status = 'close'
-            #session.commit()
-            ## do not update the status in the vizualisation !!!
-            pass
         wfs = wf.wm_status
         pid = None
         pids=filter(lambda seg: seg.count('-')==2, wf.name.split('_'))
@@ -44,7 +34,11 @@ def htmlor():
                 '<a href="https://cmsweb.cern.ch/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s" target="_blank">perf</a>'%wfn
                 ])
         if within and (not view or wfs=='completed'):
-            wl = getWorkLoad('cmsweb.cern.ch',wfn)
+            cached = filter(lambda d : d['RequestName']==wfn, cache)
+            if cached:
+                wl = cached[0]
+            else:
+                wl = getWorkLoad('cmsweb.cern.ch',wfn)
             if 'InputDataset' in wl:
                 dataset = wl['InputDataset']
                 text+=', '.join(['',
@@ -55,8 +49,13 @@ def htmlor():
                                  ])
 
         if p:
-            wl = getWorkLoad('cmsweb.cern.ch',wfn)
+            cached = filter(lambda d : d['RequestName']==wfn, cache)
+            if cached:
+                wl = cached[0]
+            else:
+                wl = getWorkLoad('cmsweb.cern.ch',wfn)
             text+=', (%s)'%(wl['RequestPriority'])
+            pass
 
         if pid:
             if ms:
