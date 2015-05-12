@@ -9,8 +9,7 @@ import traceback
 
 class McMClient:
     def __init__(self,id='sso',debug=False,cookie=None,dev=True,int=False):
-        self.dev=dev
-        if self.dev:
+        if dev:
             self.server='cms-pdmv-dev.cern.ch/mcm/'
         else:
             if int:
@@ -31,8 +30,10 @@ class McMClient:
             if cookie:
                 self.cookieFilename = cookie
             else:
-                if self.dev:
+                if '-dev' in self.server:
                     self.cookieFilename = '%s/private/dev-cookie.txt'%(os.getenv('HOME'))
+                elif '-int' in self.server:
+                    self.cookieFilename = '%s/private/int-cookie.txt'%(os.getenv('HOME'))
                 else:
                     self.cookieFilename = '%s/private/prod-cookie.txt'%(os.getenv('HOME'))
 
