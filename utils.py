@@ -688,10 +688,12 @@ def getWorkflowById( url, pid , details=False):
     else:
         return [item['id'] for item in items]
     
-def getWorkflows(url,status,user=None):
+def getWorkflows(url,status,user=None,details=False):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    #r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/bystatusandtype?stale=update_after')
-    r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/bystatus?key="%s"'%(status))
+    go_to = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/bystatus?key="%s"'%(status)
+    if details:
+        go_to+='&include_docs=true'
+    r1=conn.request("GET",go_to)
     r2=conn.getresponse()
     data = json.loads(r2.read())
     items = data['rows']
@@ -700,24 +702,28 @@ def getWorkflows(url,status,user=None):
     for item in items:
         wf = item['id']
         if (user and wf.startswith(user)) or not user:
-            workflows.append(item['id'])
+            workflows.append(item['doc' if details else 'id'])
 
     return workflows
 
 class workflowInfo:
-    def __init__(self, url, workflow,deprecated=False ):
+    def __init__(self, url, workflow, deprecated=False, spec=True, request=None):
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         self.deprecated_request = {}
         if deprecated:
             r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
             r2=conn.getresponse()
             self.deprecated_request = json.loads(r2.read())
-        r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/'+workflow)
-        r2=conn.getresponse()
-        self.request = json.loads(r2.read())
-        r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/%s/spec'%workflow)
-        r2=conn.getresponse()
-        self.full_spec = pickle.loads(r2.read())
+        if request == None:
+            r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/'+workflow)
+            r2=conn.getresponse()
+            self.request = json.loads(r2.read())
+        else:
+            self.request = copy.deepcopy( request )
+        if spec:
+            r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/%s/spec'%workflow)
+            r2=conn.getresponse()
+            self.full_spec = pickle.loads(r2.read())
         self.url = url
 
     def _tasks(self):
