@@ -74,7 +74,7 @@ def assignor(url ,specific = None, talk=True, options=None):
             if secondary_locations==None:
                 secondary_locations = one_secondary_locations
             else:
-                secondary_locations = list(set(secondary_locations) and set(one_secondary_locations))
+                secondary_locations = list(set(secondary_locations) & set(one_secondary_locations))
             ## reduce the site white list to site with secondary only
             sites_allowed = [site for site in sites_allowed if any([osite.startswith(site) for osite in one_secondary_locations])]
             
@@ -92,7 +92,7 @@ def assignor(url ,specific = None, talk=True, options=None):
             if primary_locations==None:
                 primary_locations = presence.keys()
             else:
-                primary_locations = list(set(primary_locations) and set(presence.keys() ))
+                primary_locations = list(set(primary_locations) & set(presence.keys() ))
 
         sites_with_data = list(set(sites_with_data))
         sites_with_any_data = list(set(sites_with_any_data))
@@ -101,8 +101,8 @@ def assignor(url ,specific = None, talk=True, options=None):
         ## opportunistic running where any piece of data is available
         if secondary_locations and primary_locations:
             ## intersection of both any pieces of the primary and good IO
-            #opportunistic_sites = [SI.SE_to_CE(site) for site in list((set(secondary_locations) and set(primary_locations) and set(SI.sites_with_goodIO)) - set(sites_allowed))]
-            opportunistic_sites = [SI.SE_to_CE(site) for site in list((set(secondary_locations) and set(primary_locations)) - set(sites_allowed))]
+            #opportunistic_sites = [SI.SE_to_CE(site) for site in list((set(secondary_locations) & set(primary_locations) & set(SI.sites_with_goodIO)) - set(sites_allowed))]
+            opportunistic_sites = [SI.SE_to_CE(site) for site in list((set(secondary_locations) & set(primary_locations)) - set(sites_allowed))]
             print "We could be running at",opportunistic_sites,"in addition"
 
         if options.restrict:
