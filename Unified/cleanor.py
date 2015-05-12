@@ -11,8 +11,8 @@ def cleanor(url, specific=None):
     SI = siteInfo()
     CI = campaignInfo()
     counts=0
-    keep_a_copy = True
     for wfo in session.query(Workflow).filter(Workflow.status == 'done').all():
+        keep_a_copy = False
         if specific and not specific in wfo.name: continue
         ## what was in input 
         wl = getWorkLoad(url,  wfo.name )
@@ -87,8 +87,12 @@ def cleanor(url, specific=None):
         to_be_cleaned = [site for site in to_be_cleaned if not site in own_by_anaops ]
 
         ## keep one copy out there
-        keep_at = None
+        if 'Campaign' in wl and wl['Campaign'] in CI.campaigns and 'keep-one' in CI.campaigns[wl['Campaign']] and CI.campaigns[wl['Campaign']]['keep-one']==True:
+            print "Keeping a copy of input for",wl['Campaign']
+            keep_a_copy = True
+            
         if keep_a_copy:
+            keep_at = None
             full_copies = [site for (site,(there,_)) in our_presence.items() if there and site.startswith('T1')]
             full_copies.extend( [site for (site,(there,_)) in also_our_presence.items() if there and site.startswith('T1')] )
             if not full_copies:
@@ -99,16 +103,17 @@ def cleanor(url, specific=None):
                 keep_at = random.choice( full_copies )
                 
             if not keep_at:
-                print "We are enable to find a place to keep a full copy. skipping"
+                print "We are enable to find a place to keep a full copy of",dataset,"skipping"
                 continue
             else:
-                print "Could keep a full copy at",keep_at,"skipping anyways for the moment"
                 ## keeping that copy !
-                if keep_a_copy:
-                    print "Keeping a copy at",keep_at
-                    to_be_cleaned.remove( keep_at )
+                print "Keeping a full copy of",dataset,"at",keep_at
+                to_be_cleaned.remove( keep_at )
                 continue ## to be removed once we are a bit more happy with this keeping a copy
-            
+        else:
+            wfo.status = 'clean'
+            print "Skipping anyways for the moment"
+            continue ## to be removed once re-commissioned
 
         ## collect delete request per site
         for site in to_be_cleaned :
@@ -116,7 +121,6 @@ def cleanor(url, specific=None):
             if not dataset in [existing[0] for existing in delete_per_site[site]]:
                 delete_per_site[site].append( (dataset, total_size) )
         
-        wfo.status = 'clean'
         session.commit()
 
     open('deletes.json','w').write( json.dumps(delete_per_site,indent=2) )
@@ -146,7 +150,7 @@ def cleanor(url, specific=None):
         datasets.update( site_datasets )
         sites.add(site)
         if not aggregate_deletion:
-            result = makeDeleteRequest(url ,site , site_datasets, comments="cleanup after production")
+            result = makeDeleteRequest(url ,site , site_datasets, comments="Cleanup after production. DataOps will come and take care of approving it.")
             for phedexid in [o['id'] for o in result['phedex']['request_created']]:
                 if auto_approve_deletion:
                     approved = approveSubscription(url, phedexid, [site])
