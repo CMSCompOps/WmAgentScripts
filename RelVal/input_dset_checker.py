@@ -85,43 +85,50 @@ while True:
 
                 for key, value in schema.items():
                     if type(value) is dict and key.startswith("Task"):
-                         if 'InputDataset' in value:
-
-                             inputdset=value['InputDataset']
-                             
-                             if 'RunWhitelist' in value:
-                                 runwhitelist=value['RunWhitelist']
-                                 blocks_fname=os.popen("mktemp").read().rstrip("\n")
-                                 
-                                 os.system("source /tmp/relval/sw/comp.pre/slc6_amd64_gcc481/cms/dbs3-client/3.2.8a/etc/profile.d/init.sh; python2.6 get_list_of_blocks.py --dataset "+ inputdset  +" --runwhitelist \""+str(runwhitelist) + "\" --output_fname " + blocks_fname)
-                                 
-                                 blocks_file = open(blocks_fname,'r')
-
-                                 #blocks=dbsApi.listBlocks(dataset = inputdset, run_num = runwhitelist)
-                                 for line in blocks_file:
+                        
+                        if 'MCPileup' in value:
+                            old_ld_library_path=os.environ['LD_LIBRARY_PATH']
+                            os.environ['LD_LIBRARY_PATH']=''
+                            ismcpileupdatasetatsite=os.system("python2.6 check_if_dataset_is_at_a_site.py --dataset "+value['MCPileup']+" --site "+site_disk)
+                            os.environ['LD_LIBRARY_PATH']=old_ld_library_path
                             
-                                     block = line.rstrip('\n')
-                                     old_ld_library_path=os.environ['LD_LIBRARY_PATH']
-                                     os.environ['LD_LIBRARY_PATH']=''
-                                     isblockatsite=os.system("python2.6 check_if_block_is_at_a_site.py --block "+block+" --site "+site_disk)
-                                     os.environ['LD_LIBRARY_PATH']=old_ld_library_path
+                        if 'InputDataset' in value:
+
+                            inputdset=value['InputDataset']
+                             
+                            if 'RunWhitelist' in value:
+                                runwhitelist=value['RunWhitelist']
+                                blocks_fname=os.popen("mktemp").read().rstrip("\n")
+                                 
+                                os.system("source /tmp/relval/sw/comp.pre/slc6_amd64_gcc481/cms/dbs3-client/3.2.8a/etc/profile.d/init.sh; python2.6 get_list_of_blocks.py --dataset "+ inputdset  +" --runwhitelist \""+str(runwhitelist) + "\" --output_fname " + blocks_fname)
+                                 
+                                blocks_file = open(blocks_fname,'r')
+
+                                #blocks=dbsApi.listBlocks(dataset = inputdset, run_num = runwhitelist)
+                                for line in blocks_file:
+                            
+                                    block = line.rstrip('\n')
+                                    old_ld_library_path=os.environ['LD_LIBRARY_PATH']
+                                    os.environ['LD_LIBRARY_PATH']=''
+                                    isblockatsite=os.system("python2.6 check_if_block_is_at_a_site.py --block "+block+" --site "+site_disk)
+                                    os.environ['LD_LIBRARY_PATH']=old_ld_library_path
 
 
-                                     #this block (/DoubleMu/...) is not registered in phedex, so it cannot be subscribed to any site
-                                     if not isblockatsite and block != "/DoubleMu/Run2011A-ZMu-08Nov2011-v1/RAW-RECO#93c53d22-25b2-11e1-8c62-003048f02c8a":
-                                         all_dsets_blocks_at_site=False
+                                    #this block (/DoubleMu/...) is not registered in phedex, so it cannot be subscribed to any site
+                                    if not isblockatsite and block != "/DoubleMu/Run2011A-ZMu-08Nov2011-v1/RAW-RECO#93c53d22-25b2-11e1-8c62-003048f02c8a":
+                                        all_dsets_blocks_at_site=False
 
-                             else:   
+                            else:   
 
-                                 old_ld_library_path=os.environ['LD_LIBRARY_PATH']
-                                 os.environ['LD_LIBRARY_PATH']=''
-                                 isdatasetatsite=os.system("python2.6 check_if_dataset_is_at_a_site.py --dataset "+inputdset+" --site "+site_disk)
-                                 os.environ['LD_LIBRARY_PATH']=old_ld_library_path                                 
+                                old_ld_library_path=os.environ['LD_LIBRARY_PATH']
+                                os.environ['LD_LIBRARY_PATH']=''
+                                isdatasetatsite=os.system("python2.6 check_if_dataset_is_at_a_site.py --dataset "+inputdset+" --site "+site_disk)
+                                os.environ['LD_LIBRARY_PATH']=old_ld_library_path                                 
             
-                                 if not isdatasetatsite:
-                                     all_dsets_blocks_at_site=False
+                                if not isdatasetatsite:
+                                    all_dsets_blocks_at_site=False
 
-            if all_dsets_blocks_at_site:
+            if all_dsets_blocks_at_site and ismcpileupdatasetatsite:
                 curs.execute("update batches set status=\"input_dsets_ready\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where batch_id = "+str(batchid) +";")                    
                 mysqlconn.commit()
 
