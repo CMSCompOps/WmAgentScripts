@@ -109,7 +109,7 @@ def htmlor():
 </head>
 <body>
 
-Last update on %s(CET), %s(GMT), <a href=logs/ target=_blank> logs</a> <a href=logs/last.log target=_blank>last</a> <a href=statuses.html>statuses</a> <br><br>
+Last update on %s(CET), %s(GMT), <a href=logs/ target=_blank> logs</a> <a href=logs/last.log target=_blank>last</a> <a href=statuses.html>statuses</a> <a href=https://twiki.cern.ch/twiki/bin/view/CMSPublic/CompOpsWorkflowL3Responsibilities#Automatic_Assignment_and_Unified>what am I</a> <br><br>
 
 """ %(time.asctime(time.localtime()),
       time.asctime(time.gmtime())))
