@@ -70,7 +70,8 @@ def assignor(url ,specific = None, talk=True, options=None):
             presence = getDatasetPresence( url, sec )
             print sec
             print json.dumps(presence, indent=2)
-            one_secondary_locations = [site for (site,frac) in presence.items() if frac[1]>90.]
+            #one_secondary_locations = [site for (site,(there,frac)) in presence.items() if frac>90.]
+            one_secondary_locations = [site for (site,(there,frac)) in presence.items() if there]
             if secondary_locations==None:
                 secondary_locations = one_secondary_locations
             else:
@@ -105,6 +106,11 @@ def assignor(url ,specific = None, talk=True, options=None):
             opportunistic_sites = [SI.SE_to_CE(site) for site in list((set(secondary_locations) & set(primary_locations)) - set(sites_allowed))]
             print "We could be running at",opportunistic_sites,"in addition"
 
+        ## default back to white list to original white list with any data
+        print "Allowed",sites_allowed
+        sites_allowed = sites_with_any_data
+        print "Selected for any data",sites_allowed
+
         if options.restrict:
             print "Allowed",sites_allowed
             sites_allowed = sites_with_any_data
@@ -120,6 +126,7 @@ def assignor(url ,specific = None, talk=True, options=None):
                 #continue
             #print "We could be running at",opportunistic_sites,"in addition"
             ##sites_allowed = list(set(sites_allowed+ opportunistic_sites))
+
         if not len(sites_allowed):
             print wfo.name,"cannot be assign with no matched sites"
             continue
