@@ -159,7 +159,7 @@ class siteInfo:
         self.sites_with_goodIO = filter(lambda s : s.startswith('T2'), self.sites_with_goodIO)
         
         
-        if True:
+        if False:
             ## the old scheme
             self.sites_with_goodIO = ["T2_US_Nebraska","T2_US_MIT"]
             self.sites_veto_transfer = ["T2_US_MIT"]#,"T1_UK_RAL"]
