@@ -107,13 +107,11 @@ def cleanor(url, specific=None):
                 continue
             else:
                 ## keeping that copy !
-                print "Keeping a full copy of",dataset,"at",keep_at
+                print "Keeping a full copy of",dataset,"at",keep_at,"not setting the status further"
                 to_be_cleaned.remove( keep_at )
-                continue ## to be removed once we are a bit more happy with this keeping a copy
         else:
             wfo.status = 'clean'
             print "Skipping anyways for the moment"
-            continue ## to be removed once re-commissioned
 
         ## collect delete request per site
         for site in to_be_cleaned :
