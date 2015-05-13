@@ -26,15 +26,18 @@ phdF</th><th>ClosOut</th></tr></thead>'
         text=""
         try:
             pid = filter(lambda b :b.count('-')==2, wf.split('_'))[0]
+            tpid = 'task_'+pid if 'task' in wf else pid
         except:
             pid ='None'
+            tpid= 'None'
+            
         ## return the corresponding html
         order = ['percentage','acdc','duplicate','correctLumis','missingSubs','phedexReqs','dbsFiles','dbsInvFiles','phedexFiles']
         wf_and_anchor = '<a id="%s">%s</a>'%(wf,wf)
         for out in self.record[wf]['datasets']:
             text+='<tr bgcolor=%s>'%color
             text+='<td>%s<br><a href=https://cmsweb.cern.ch/reqmgr/view/details/%s>dts</a>, <a href=https://cmsweb.cern.ch/reqmgr/view/splitting/%s>splt</a>, <a href=https://cmsweb.cern.ch/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s>perf</a>, <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>ac</a>, <a href=assistance.html#%s>%s</a></td>'% (wf_and_anchor,
-                                                                                                                                                                                                                                                                                                                            wf, wf, wf,pid,wf,
+                                                                                                                                                                                                                                                                                                                            wf, wf, wf,tpid,wf,
                                                                                                                                                                                                                                                                                                                             wfo.status)
 
             text+='<td>%s</td>'% out
@@ -44,7 +47,7 @@ phdF</th><th>ClosOut</th></tr></thead>'
                 else:
                     value = "-NA-"
                 if f =='acdc':
-                    text+='<td><a href=https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byprepid?key="%s">%s</a></td>'%(pid , value)
+                    text+='<td><a href=https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byprepid?key="%s">%s</a></td>'%(tpid , value)
                 else:
                     text+='<td>%s</td>'% value
             text+='<td>%s</td>'%self.record[wf]['closeOutWorkflow']
@@ -149,8 +152,9 @@ def checkor(url, spec=None, options=None):
         for member in familly:
             if member['RequestName'] == wfo.name: continue
             if member['RequestDate'] < wfi.request['RequestDate']: continue
+            if member['RequestType'] != 'Resubmission': continue
             if member['RequestStatus'] in ['running-opened','running-closed','assignment-approved','assigned','acquired']:
-                print wfo.name,"still has a member running",member['RequestName']
+                print wfo.name,"still has an ACDC running",member['RequestName']
                 acdc.append( member['RequestName'] )
                 #print json.dumps(member,indent=2)
                 ## hook for just waiting ...
