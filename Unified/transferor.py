@@ -43,9 +43,12 @@ def transferor(url ,specific = None, talk=True, options=None):
     being_handled += len(session.query(Workflow).filter(Workflow.status.startswith('assistance')).all())
     max_to_handle = options.maxworkflows
     allowed_to_handle = max(0,max_to_handle - being_handled)
-    if allowed_to_handle==0:
-        print "Not allowed to run more than",max_to_handle,"at a time. Currently",being_handled
+    wf_buffer = 5
+    if allowed_to_handle<=wf_buffer: ## buffer for having several wf per transfer
+        print "Not allowed to run more than",max_to_handle,"at a time. Currently",being_handled,"and",wf_buffer,"buffer"
         #return 
+    else:
+        print being_handled,"already being handled",max_to_handle,"max allowed,",allowed_to_handle,"remaining","and",wf_buffer,"buffer"
     print "... done"
 
     all_transfers=defaultdict(list)
@@ -131,13 +134,20 @@ def transferor(url ,specific = None, talk=True, options=None):
 
         ## check if the batch is announced
         announced=False
+        is_real=False
         for b in mcm.getA('batches',query='contains=%s'% wfo.name):
+            is_real = True
             if b['status']=='announced': 
                 announced=True 
                 break
-                
+
         if not announced:
             print wfo.name,"does not look announced."# skipping?, rejecting?, reporting?"
+            
+        if not is_real:
+            print wfo.name,"does not appear to be genuine."
+            ## prevent any duplication. if the wf is not mentioned in any batch, regardless of status
+            continue
 
         ## check on a grace period
         injection_time = time.mktime(time.strptime('.'.join(map(str,wfh.request['RequestDate'])),"%Y.%m.%d.%H.%M.%S")) / (60.*60.)
@@ -173,7 +183,12 @@ def transferor(url ,specific = None, talk=True, options=None):
             ## chope the primary dataset 
             for prim in primary:
                 max_priority[prim] = max(max_priority[prim],int(wfh.request['RequestPriority']))
-                copies_needed = int(0.35*len(sites_allowed))+1
+                sites_really_allowed = [site for site in sites_allowed if not any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
+                print "Sites allowed minus the vetoed transfer"
+                print sites_really_allowed
+                copies_needed = int(0.35*len(sites_really_allowed))+1 ## should just go for a fixed number based if the white list grows that big
+                ## remove the sites that do not want transfers
+                
                 print "need",copies_needed
                 workflow_dependencies[prim].add( wfo.id )
                 presence = getDatasetPresence( url, prim )
