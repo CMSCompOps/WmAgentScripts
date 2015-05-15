@@ -318,6 +318,28 @@ Worlfow clean for input (%d) <a href=logs/cleanor/last.log target=_blank>log</a>
 """%count)
     html_doc.write(text)
 
+
+    text=""
+    count=0
+    for wf in session.query(Workflow).filter(Workflow.status.endswith('-out')).all():
+        text+="<li> %s </li> \n"%wfl(wf,status=True)
+        count+=1
+    text+="</ul></div>\n"
+    html_doc.write("""
+Worlfow clean for output (%d) <a href=logs/outcleanor/last.log target=_blank>log</a>
+<a href="javascript:showhide('cleanout')">[Click to show/hide]</a>
+<br>
+<div id="cleanout" style="display:none;">
+<br>
+<ul>
+"""%count)
+    html_doc.write(text)
+
+
+
+
+
+
     text=""
     lines_thisweek=[]
     lines_lastweek=[]
@@ -405,9 +427,11 @@ Worlfow clean for input (%d) <a href=logs/cleanor/last.log target=_blank>log</a>
         text+="<li>%s<table border=1>"%t
         c=0
         for site in getattr(SI,t):
+            cpu = SI.cpu_pledges[site] if site in SI.cpu_pledges else 'N/A'
+            disk = SI.disk[SI.CE_to_SE(site)] if SI.CE_to_SE(site) in SI.disk else 'N/A'
             if c==0:
                 text+="<tr>"
-            text+='<td><a href=http://dashb-ssb.cern.ch/dashboard/templates/sitePendingRunningJobs.html?site=%s>%s</a><br><a href="http://hcc-briantest.unl.edu/prodview/%s" target="_blank"><img src="http://hcc-briantest.unl.edu/prodview/graphs/%s/daily" style="height:50px"></a></td>'%(site,site,site,site)
+            text+='<td><a href=http://dashb-ssb.cern.ch/dashboard/templates/sitePendingRunningJobs.html?site=%s>%s</a><br><a href="http://hcc-briantest.unl.edu/prodview/%s" target="_blank"><img src="http://hcc-briantest.unl.edu/prodview/graphs/%s/daily" style="height:50px"></a><br>CPU pledge: %s<br>Disk available: %s</td>'%(site,site,site,site,cpu,disk)
             if c==n_column:
                 c=0
             else:
