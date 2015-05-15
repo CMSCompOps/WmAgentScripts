@@ -176,10 +176,10 @@ def outcleanor(url, options):
     open('keepcopies_%s.json'%stamp,'w').write( json.dumps( our_copies, indent=2))
     open('wfcleanout_%s.json'%stamp,'w').write( json.dumps( wf_cleaned, indent=2))
 
-    if (options.auto or raw_input("Satisfied ? (y will trigger status change and deletion requests)") in ['y']) and not options.test:
+    if not options.test and raw_input("Satisfied ? (y will trigger status change and deletion requests)") in ['y']:
         print "making deletion ! disabled so far"
-        #session.commit()
-        #print makeDeleteRequest(url, site, datasets, "Cleanup output after production. DataOps will take can of approving it.")
+        session.commit()
+        print makeDeleteRequest(url, site, datasets, "Cleanup output after production. DataOps will take care of approving it.")
         pass
     else:
         print "Not making the deletion and changing statuses"
