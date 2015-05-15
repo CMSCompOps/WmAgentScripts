@@ -103,6 +103,15 @@ def checkor(url, spec=None, options=None):
     SI = siteInfo()
     CI = campaignInfo()
 
+    def get_campaign(output, wfi):
+        campaign = None
+        try:
+            campaign = output.split('/')[2].split('-')[0]
+        except:
+            if 'Campaign' in wfi.request:
+                campaign = wfi.request['Campaign']
+        return campaign
+
     for wfo in wfs:
         if spec and not (spec in wfo.name): continue
 
@@ -163,33 +172,26 @@ def checkor(url, spec=None, options=None):
         ## completion check
         percent_completions = {}
         event_expected,lumi_expected =  wfi.request['TotalInputEvents'],wfi.request['TotalInputLumis']
-        #print event_expected,lumi_expected
-        #if 'InputDataset' in wfi.request:
-        #    block_wl = None
-        #    event_expected,lumi_expected = getDatasetEventsAndLumis( wfi.request['InputDataset'] )
-        #    print event_expected,lumi_expected
-        #    if 'BlockWhitelist' in wfi.request:
-        #        block_wl = list(set(eval(wfi.request['BlockWhitelist'])))
-        #    event_expected,lumi_expected = getDatasetEventsAndLumis( wfi.request['InputDataset'], block_wl )
-        #    print event_expected,lumi_expected
-
+        fractions_pass = {}
         for output in wfi.request['OutputDatasets']:
             event_count,lumi_count = getDatasetEventsAndLumis(dataset=output)
-            percent_completions[output] = 0
+            percent_completions[output] = 0.
             if lumi_expected:
                 percent_completions[output] = lumi_count / float( lumi_expected )
 
-        pf = 0.95
-        if 'Campaign' in wfi.request and wfi.request['Campaign'] in CI.campaigns and 'fractionpass' in CI.campaigns[wfi.request['Campaign']]:
-            pf = CI.campaigns[wfi.request['Campaign']]['fractionpass']
-            print "overriding fraction to",pf,"for",wfi.request['Campaign']
-        if options.fractionpass:
-            pf = options.fractionpass
-            print "overriding fraction to",pf,"by command line"
+            fractions_pass[output] = 0.95
+            c = get_campaigns(output, wfi)
+            if c in CI.campaigns and 'fractionpass' in CI.campaigns[c]:
+                fractions_pass[output] = CI.campaigns[c]['fractionpass']
+                print "overriding fraction to",fractions_pass[output],"for",output
+            if options.fractionpass:
+                fractions_pass[output] = options.fractionpass
+                print "overriding fraction to",fractions_pass[output],"by command line for",output
 
-        if not all([fract > pf for fract in percent_completions.values()]):# and not acdc:
+        if not all([percent_completions[out] > fractions_pass[out] for out in fractions]):
             print wfo.name,"is not completed"
             print json.dumps(percent_completions, indent=2)
+            print json.dumps(fractions_pass, indent=2)
             ## hook for creating automatically ACDC ?
             sub_assistance+='-recovery'
             is_closing = False
@@ -203,12 +205,7 @@ def checkor(url, spec=None, options=None):
         lumi_upper_limit = {}
         for output in wfi.request['OutputDatasets']:
             upper_limit = 300.
-            campaign = None
-            try:
-                campaign = output.split('/')[2].split('-')[0]
-            except:
-                if 'Campaign' in wfi.request:
-                    campaign = wfi.request['Campaign']
+            campaign = get_campaign(output, wfi)
             if campaign in CI.campaigns and 'lumisize' in CI.campaigns[campaign]:
                 upper_limit = CI.campaigns[campaign]['lumisize']
                 print "overriding the upper lumi size to",upper_limit,"for",campaign
