@@ -642,7 +642,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
 
 
     if defaults['SiteBlacklist'] and defaults['SiteWhitelist']:
-        defaults['SiteWhitelist'] = list(set(defaults['SiteWhitelist']) - defaults['SiteBlacklist'])
+        defaults['SiteWhitelist'] = list(set(defaults['SiteWhitelist']) - set(defaults['SiteBlacklist']))
         defaults['SiteBlacklist'] = []
         if not defaults['SiteWhitelist']:
             print "Cannot assign with no site whitelist"
