@@ -187,7 +187,7 @@ class siteInfo:
                     self.sites_veto_transfer.append( dse )
 
         self.cpu_pledges = json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/pledged.json').read())
-        ## ack around and put 1 CPU pledge for those with 0
+        ## hack around and put 1 CPU pledge for those with 0
         for (s,p) in self.cpu_pledges.items(): 
             if not p:
                 self.cpu_pledges[s] = 1
@@ -196,6 +196,76 @@ class siteInfo:
             print "There are missing sites in pledgeds"
             print list(set(self.sites_T2s + self.sites_T1s + self.sites_with_goodIO) - set(self.cpu_pledges.keys()))
         
+        ## and get SSB sync
+        self.fetch_more_info(talk=False)
+
+    def fetch_more_info(self,talk=True):
+        ## and complement information from ssb
+        columns= {
+            'prodCPU' : 159,
+            'CPUbound' : 160,
+            'FreeDisk' : 106,
+            'UsedTape' : 108,
+            'FreeTape' : 109
+            }
+        
+        all_data = {}
+        for name,column in columns.items():
+            if talk: print name,column
+            try:
+                data = json.loads(os.popen('curl -s "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=%s&batch=1&lastdata=1"'%column).read())
+                all_data[name] = data['csvdata']
+            except:
+                print "cannot get info from ssb for",name
+        _info_by_site = {}
+        for info in all_data:
+            for item in all_data[info]:
+                site = item['VOName']
+                if site.startswith('T3'): continue
+                value = item['Value']
+                if not site in _info_by_site: _info_by_site[site]={}
+                _info_by_site[site][info] = value
+        
+        if talk: print json.dumps( _info_by_site, indent =2 )
+
+        if talk: print self.disk.keys()
+        for (site,info) in _info_by_site.items():
+            if talk: print "\n\tSite:",site
+            ssite = self.CE_to_SE( site )
+            tsite = site+'_MSS'
+            if 'CPUbound' in info and site in self.cpu_pledges and info['CPUbound']:
+                if self.cpu_pledges[site] < info['CPUbound']:
+                    if talk: print site,"could use",info['CPUbound'],"instead of",self.cpu_pledges[site],"for CPU"
+                    self.cpu_pledges[site] = int(info['CPUbound'])
+                elif self.cpu_pledges[site] > 1.5* info['CPUbound']:
+                    if talk: print site,"could correct",info['CPUbound'],"instead of",self.cpu_pledges[site],"for CPU"
+                    self.cpu_pledges[site] = int(info['CPUbound'])                    
+
+            if 'FreeDisk' in info and info['FreeDisk']:
+                if site in self.disk:
+                    if self.disk[site] < info['FreeDisk']:
+                        if talk: print site,"could use",info['FreeDisk'],"instead of",self.disk[site],"for disk"
+                        self.disk[site] = int(info['FreeDisk'])
+                else:
+                    if not ssite in self.disk:
+                        if talk: print "setting",info['FreeDisk']," disk for",site
+                        self.disk[site] = int(info['FreeDisk'])
+
+            if 'FreeDisk' in info and site!=ssite and info['FreeDisk']:
+                if ssite in self.disk:
+                    if self.disk[ssite] < info['FreeDisk']:
+                        if talk: print ssite,"could use",info['FreeDisk'],"instead of",self.disk[ssite],"for disk"
+                        self.disk[ssite] = int(info['FreeDisk'])
+                else:
+                    if talk: print "setting",info['FreeDisk']," disk for",ssite
+                    self.disk[site] = int(info['FreeDisk'])
+
+            if 'FreeTape' in info and 'UsedTape' in info and tsite in self.storage and info['FreeTape']:
+                if info['UsedTape'] and self.storage[tsite] < info['FreeTape']:
+                    if talk: print tsite,"could use",info['FreeTape'],"instead of",self.storage[tsite],"for tape"
+                    self.storage[tsite] = int(info['FreeTape'])
+
+
     def types(self):
         return ['sites_with_goodIO','sites_T1s','sites_T2s','sites_veto_transfer']
 
