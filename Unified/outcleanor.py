@@ -14,8 +14,11 @@ def outcleanor(url, options):
     wf_cleaned = {}
     
     wfs = []
-    wfs.extend(session.query(Workflow).filter(Workflow.status=='clean').all())
-    wfs.extend(session.query(Workflow).filter(Workflow.status=='forget').all())
+    for fetch in options.fetch.split(','):
+        wfs.extend(session.query(Workflow).filter(Workflow.status==fetch).all())
+    #wfs.extend(session.query(Workflow).filter(Workflow.status=='clean').all())
+    #wfs.extend(session.query(Workflow).filter(Workflow.status=='forget').all())
+
     random.shuffle( wfs )
     last_answer = None
     for wfo in wfs :
@@ -143,7 +146,7 @@ def outcleanor(url, options):
                 wfo.status = wfo.status+'-out'
                 wf_cleaned[wfo.name] = wfo.status
             continue
-        elif ask() in ['q','n']:
+        elif last_answer in ['q','n']:
             break
         else:
             return 
@@ -174,10 +177,12 @@ def outcleanor(url, options):
     open('wfcleanout_%s.json'%stamp,'w').write( json.dumps( wf_cleaned, indent=2))
 
     if (options.auto or raw_input("Satisfied ? (y will trigger status change and deletion requests)") in ['y']) and not options.test:
-        print "making deletion !"
+        print "making deletion ! disabled so far"
         #session.commit()
         #print makeDeleteRequest(url, site, datasets, "Cleanup output after production. DataOps will take can of approving it.")
         pass
+    else:
+        print "Not making the deletion and changing statuses"
 
     
 if __name__ == "__main__":
@@ -187,6 +192,7 @@ if __name__ == "__main__":
     parser.add_option('-t','--test', help='Only test the cleanout',action='store_true',default=False)
     parser.add_option('-n','--number',help='Specify the amount of wf to clean',type=int, default=0)
     parser.add_option('-a','--auto',help='Do not ask confirmation',action='store_true',default=False)
+    parser.add_option('-f','--fetch',help='The coma separated list of status to fetch from',default='clean,forget')
     (options,args) = parser.parse_args()
     
     outcleanor(url, options)
