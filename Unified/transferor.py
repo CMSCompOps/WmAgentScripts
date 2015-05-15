@@ -108,6 +108,7 @@ def transferor(url ,specific = None, talk=True, options=None):
     needs_transfer=0 ## so that we can count'em
     passing_along = 0
     transfer_sizes={}
+    went_over_budget=False
     for (wfo,wfh) in wfs_and_wfh:
         print wfh.request['RequestPriority']
         print wfo.name,"to be transfered"
@@ -115,11 +116,15 @@ def transferor(url ,specific = None, talk=True, options=None):
 
         (_,primary,_,_) = wfh.getIO()
         this_load=sum([input_sizes[prim] for prim in primary])
-        if sum(transfer_sizes.values())+this_load > transfer_limit:
-            print "Transfer will go over bubget."
+        if ( this_load and (sum(transfer_sizes.values())+this_load > transfer_limit or went_over_budget ) ):
+            if went_over_budget:
+                print "Transfer has gone over bubget."
+            else
+                print "Transfer will go over bubget."
             print "%15.4f GB this load"%this_load
             print "%15.4f GB already this round"%sum(transfer_sizes.values())
             print "%15.4f GB is the available limit"%transfer_limit
+            went_over_budget=True
             if int(wfh.request['RequestPriority']) >= in_transfer_priority and min_transfer_priority!=in_transfer_priority:
                 print "Higher priority sample",wfh.request['RequestPriority'],">=",in_transfer_priority,"go-on"
             else:
@@ -339,12 +344,14 @@ def transferor(url ,specific = None, talk=True, options=None):
         if execute:
             result = makeReplicaRequest(url, site_se, items_to_transfer, 'prestaging', priority='normal')
             ## make use of max_priority dataset:priority to set the subscriptions priority
+            """
+            ## does not function
             once = True
             for item in items_to_transfer:
                 bds = item.split('#')[0]
                 if max_priority[bds] >= 90000:
                     if once:
-                        w=20
+                        w=10
                         print "waiting",w,"s before raising priority"
                         time.sleep(w)
                         once=False
@@ -352,6 +359,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                     print item,"subscription priority raised to high at",site_se
                     #print "This does not work yet properly it seems"
                     print updateSubscription(url, site_se, item, priority='high')
+            """
         else:
             #result= {'phedex':{'request_created' : [{'id' : fake_id}]}}
             result= {'phedex':{'request_created' : []}}
