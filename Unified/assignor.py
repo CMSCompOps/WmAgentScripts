@@ -80,6 +80,7 @@ def assignor(url ,specific = None, talk=True, options=None):
             sites_allowed = [site for site in sites_allowed if any([osite.startswith(site) for osite in one_secondary_locations])]
             
 
+        sites_all_data = copy.deepcopy( sites_allowed )
         sites_with_data = copy.deepcopy( sites_allowed )
         sites_with_any_data = copy.deepcopy( sites_allowed )
         primary_locations = None
@@ -88,6 +89,7 @@ def assignor(url ,specific = None, talk=True, options=None):
             if talk:
                 print prim
                 print json.dumps(presence, indent=2)
+            sites_all_data = [site for site in sites_with_data if any([osite.startswith(site) for osite in [psite for (psite,(there,frac)) in presence.items() if there]])]
             sites_with_data = [site for site in sites_with_data if any([osite.startswith(site) for osite in [psite for (psite,frac) in presence.items() if frac[1]>90.]])]
             sites_with_any_data = [site for site in sites_with_any_data if any([osite.startswith(site) for osite in presence.keys()])]
             if primary_locations==None:
@@ -105,6 +107,10 @@ def assignor(url ,specific = None, talk=True, options=None):
             #opportunistic_sites = [SI.SE_to_CE(site) for site in list((set(secondary_locations) & set(primary_locations) & set(SI.sites_with_goodIO)) - set(sites_allowed))]
             opportunistic_sites = [SI.SE_to_CE(site) for site in list((set(secondary_locations) & set(primary_locations)) - set(sites_allowed))]
             print "We could be running at",opportunistic_sites,"in addition"
+
+        if not sites_all_data:
+            print "The input dataset is not located in full at any site"
+            if not options.test and not options.go: continue ## skip skip skip
 
         ## default back to white list to original white list with any data
         print "Allowed",sites_allowed
