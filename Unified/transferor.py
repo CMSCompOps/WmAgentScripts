@@ -46,7 +46,6 @@ def transferor(url ,specific = None, talk=True, options=None):
     wf_buffer = 5
     if allowed_to_handle<=wf_buffer: ## buffer for having several wf per transfer
         print "Not allowed to run more than",max_to_handle,"at a time. Currently",being_handled,"and",wf_buffer,"buffer"
-        #return 
     else:
         print being_handled,"already being handled",max_to_handle,"max allowed,",allowed_to_handle,"remaining","and",wf_buffer,"buffer"
     print "... done"
@@ -60,7 +59,6 @@ def transferor(url ,specific = None, talk=True, options=None):
         if specific and not specific in wfo.name: continue
         cache_r =filter(lambda d:d['RequestName']==wfo.name, cache)
         if len(cache_r):
-            #print "print got cache"
             wfs_and_wfh.append( (wfo, workflowInfo( url, wfo.name, spec=False, request = cache_r[0]) ) )
         else:
             wfs_and_wfh.append( (wfo, workflowInfo( url, wfo.name, spec=False) ) )
@@ -75,7 +73,6 @@ def transferor(url ,specific = None, talk=True, options=None):
         wfh = workflowInfo( url, wfo.name, spec=False)
         (_,primary,_,_) = wfh.getIO()
         for prim in primary: 
-            #input_sizes[prim] = getDatasetSize( prim )
             input_sizes[prim] = dss.get( prim )
         in_transfer_priority = max(in_transfer_priority, int(wfh.request['RequestPriority']))
         min_transfer_priority = min(min_transfer_priority, int(wfh.request['RequestPriority']))
@@ -94,7 +91,6 @@ def transferor(url ,specific = None, talk=True, options=None):
     for (wfo,wfh) in wfs_and_wfh:
         (_,primary,_,_) = wfh.getIO()
         for prim in primary:
-            #input_sizes[prim] = getDatasetSize( prim )
             input_sizes[prim] = dss.get( prim )
     print "... done"
 
@@ -192,8 +188,11 @@ def transferor(url ,specific = None, talk=True, options=None):
                 print "Sites allowed minus the vetoed transfer"
                 print sites_really_allowed
                 copies_needed = int(0.35*len(sites_really_allowed))+1 ## should just go for a fixed number based if the white list grows that big
-                ## remove the sites that do not want transfers
-                
+                print "Would make",copies_needed,"copies"
+                if options.maxcopy>0:
+                    copies_needed = min(options.maxcopy,copies_needed)
+
+                ## remove the sites that do not want transfers                
                 print "need",copies_needed
                 workflow_dependencies[prim].add( wfo.id )
                 presence = getDatasetPresence( url, prim )
@@ -397,8 +396,9 @@ if __name__=="__main__":
     parser.add_option('-n','--nochop',help='Do no chop the input to the possible sites',default=True,dest='chop',action='store_false')
     parser.add_option('--tosites',help='Provide a coma separated list of sites to transfer input to',default=None)
     parser.add_option('--go',help="Overrides no-go from campaign, announced, or grace period",default=False,action='store_true')
-    parser.add_option('--maxtransfer',help="The limit in GB of the total size of input that can be transfered", default=60000,type=int)
+    parser.add_option('--maxtransfer',help="The limit in GB of the total size of input that can be transfered", default=80000,type=int)
     parser.add_option('--maxworkflows',help="The limit on the number of workflow we want to keep in the system at a time",default=150,type=int)
+    parser.add_option('--maxcopy',help="Specify the number of copies of the input we need", default=3,type=int)
     (options,args) = parser.parse_args()
 
     spec=None
