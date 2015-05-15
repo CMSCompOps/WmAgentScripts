@@ -16,8 +16,6 @@ def outcleanor(url, options):
     wfs = []
     for fetch in options.fetch.split(','):
         wfs.extend(session.query(Workflow).filter(Workflow.status==fetch).all())
-    #wfs.extend(session.query(Workflow).filter(Workflow.status=='clean').all())
-    #wfs.extend(session.query(Workflow).filter(Workflow.status=='forget').all())
 
     random.shuffle( wfs )
     last_answer = None
@@ -176,11 +174,10 @@ def outcleanor(url, options):
     open('keepcopies_%s.json'%stamp,'w').write( json.dumps( our_copies, indent=2))
     open('wfcleanout_%s.json'%stamp,'w').write( json.dumps( wf_cleaned, indent=2))
 
-    if not options.test and raw_input("Satisfied ? (y will trigger status change and deletion requests)") in ['y']:
+    if (not options.test) and (options.auto or raw_input("Satisfied ? (y will trigger status change and deletion requests)") in ['y']):
         print "making deletion ! disabled so far"
         session.commit()
         print makeDeleteRequest(url, site, datasets, "Cleanup output after production. DataOps will take care of approving it.")
-        pass
     else:
         print "Not making the deletion and changing statuses"
 
