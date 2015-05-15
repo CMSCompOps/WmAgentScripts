@@ -119,7 +119,7 @@ def transferor(url ,specific = None, talk=True, options=None):
         if ( this_load and (sum(transfer_sizes.values())+this_load > transfer_limit or went_over_budget ) ):
             if went_over_budget:
                 print "Transfer has gone over bubget."
-            else
+            else:
                 print "Transfer will go over bubget."
             print "%15.4f GB this load"%this_load
             print "%15.4f GB already this round"%sum(transfer_sizes.values())
@@ -174,6 +174,7 @@ def transferor(url ,specific = None, talk=True, options=None):
             sites_allowed = options.tosites.split(',')
         else:
             sites_allowed = getSiteWhiteList( (lheinput,primary,parent,secondary) )
+
         if 'SiteWhitelist' in CI.parameters(wfh.request['Campaign']):
             sites_allowed = CI.parameters(wfh.request['Campaign'])['SiteWhitelist']
 
