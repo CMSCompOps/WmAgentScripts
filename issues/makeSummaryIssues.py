@@ -292,6 +292,7 @@ def makeissuessummary(s, issues, oldest, urgent_requests, types):
         #days that the output datasets have not been modified
         days = []
         #if status == r['status'] and priority == r['priority']:
+        mostlydone = True if r['outputdatasetinfo'] else False
         for ods in r['outputdatasetinfo']:
             if len(r['custodialsites']) > 0:
                 custodialt1 = r['custodialsites'][0]
@@ -372,8 +373,11 @@ def makeissuessummary(s, issues, oldest, urgent_requests, types):
             elif r['status'] in running_status and eperc >0 and (time.time() - ods['lastmodts']) > stuck_days*24*3600:
                 issues['dsstuck'].add(r['requestname'])
                 #alarmlink='https://cmsweb.cern.ch/das/request?view=list&limit=10&instance=cms_dbs_prod_global&input=dataset+dataset=%s*+' % ods['name']
+            #all datasets ready
             if eperc >=95 and not 'SMS' in r['outputdatasetinfo'][0]['name'] and 'CMSSM' not in r['outputdatasetinfo'][0]['name'] and r['status'] in ['acquired','running-open','running-closed']:
-                issues['mostlydone'].add(r['requestname'])
+                mostlydone &= True
+            else:
+                mostlydone = False
             
             #only higher requests that are in live status
             if r['priority'] == highest_prio and r['status'] in live_status:
@@ -419,6 +423,9 @@ def makeissuessummary(s, issues, oldest, urgent_requests, types):
                             site+'_Disk' not in nodes_avail)):
                         print "unstaged"
                         issues['unstaged'].add(r['requestname'])
+        #if all datasets over 95%
+        if mostlydone:
+            issues['mostlydone'].add(r['requestname'])
                          
         #get the min days without new events
         dayssame = min(days) if days else 0
