@@ -340,13 +340,19 @@ def transferor(url ,specific = None, talk=True, options=None):
         if execute:
             result = makeReplicaRequest(url, site_se, items_to_transfer, 'prestaging', priority='normal')
             ## make use of max_priority dataset:priority to set the subscriptions priority
+            once = True
             for item in items_to_transfer:
                 bds = item.split('#')[0]
                 if max_priority[bds] >= 90000:
+                    if once:
+                        w=20
+                        print "waiting",w,"s before raising priority"
+                        time.sleep(w)
+                        once=False
                     ## raise it to high priority
                     print item,"subscription priority raised to high at",site_se
-                    print "This does not work yet properly it seems"
-                    #updateSubscription(url, site_se, item, priority='high')
+                    #print "This does not work yet properly it seems"
+                    print updateSubscription(url, site_se, item, priority='high')
         else:
             #result= {'phedex':{'request_created' : [{'id' : fake_id}]}}
             result= {'phedex':{'request_created' : []}}
