@@ -247,7 +247,16 @@ def checkor(url, spec=None, options=None):
             custodial = None
             ## get from other outputs
             for output in out_worth_checking:
-                if len(custodial_locations[output]): custodial = custodial_locations[output][0]
+                if len(custodial_locations[output]): 
+                    custodial = custodial_locations[output][0]
+            ## try to get it from campaign configuration
+            if not custodial:
+                for output in out_worth_checking:
+                    campaign = get_campaign(output, wfi)
+                    if campaing in CI.campaigns and 'custodial' in CI.campaigns[campaign]:
+                        custodial = CI.campaigns[campaign]['custodial']
+                        print "Setting custodial to",custodial,"from campaign configuration"
+                        break
             ## get from the parent
             if not custodial and 'InputDataset' in wfi.request:
                 parents_custodial = findCustodialLocation(url, wfi.request['InputDataset'])
@@ -255,7 +264,9 @@ def checkor(url, spec=None, options=None):
                     custodial = parents_custodial[0]
                 else:
                     print "the input dataset",wfi.request['InputDataset'],"does not have custodial in the first place. abort"
-            else:
+                    continue
+
+            if not custodial:
                 ## pick one at random
                 custodial = SI.pick_SE()
 
