@@ -148,7 +148,7 @@ def cleanor(url, specific=None):
         datasets.update( site_datasets )
         sites.add(site)
         if not aggregate_deletion:
-            result = makeDeleteRequest(url ,site , site_datasets, comments="Cleanup after production. DataOps will come and take care of approving it.")
+            result = makeDeleteRequest(url ,site , site_datasets, comments="Cleanup input after production. DataOps will take care of approving it.")
             for phedexid in [o['id'] for o in result['phedex']['request_created']]:
                 if auto_approve_deletion:
                     approved = approveSubscription(url, phedexid, [site])
