@@ -92,40 +92,17 @@ class campaignInfo:
     def __init__(self):
         #this contains accessor to aggreed campaigns, with maybe specific parameters
         self.campaigns = json.loads(open('/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/campaigns.json').read())
-        """
-        self.campaigns = {
-            'Fall14DR73' : {'go':True},
-            'RunIIWinter15GS' : {'go':True, 'parameters' : {
-                    'EventsPerLumi' : 'x2'}
-                                 },
-            'RunIIWinter15pLHE' : {'go':True, 'parameters' : {
-                    'EventsPerLumi' : 200}
-                                   },
-            'RunIIWinter15wmLHE' : {'go':True, 'parameters' : {
-                    'EventsPerLumi' : 'x2',
-                    'EventsPerJob' : 100000 }
-                                    },
-            'RunIISpring15Digi74' : { 'go' : True },
-            '2019GEMUpg14DR' : {'go':True},
-            '2023SHCALUpg14DR' : {'go':True},
-            'TP2023SHCALDR' : {'go':False,
-                               'fractionpass' : 0.80},
-            'TP2023HGCALDR' : {'go':False,
-                               'fractionpass' : 0.80},
-            'pAWinter13' : { 'go' : True, 'parameters' : {
-                    'MergedLFNBase' : '/store/himc',
-                    'SiteWhitelist' :['T1_FR_CCIN2P3']
-                    }},
-            'HiFall13DR53X' : {'go':False, 'parameters' : {
-                    'MergedLFNBase' : '/store/himc', 
-                    'SiteWhitelist' :['T1_FR_CCIN2P3']}},
-            'Summer11Leg' : {'go':True},
-            'Summer11LegDR' : {'go':True},
-            'Summer12pLHE' : {'go':True},
-            'Summer12' : {'go':True},
-            'Summer12DR53X' : {'go':True},
-            }
-        """
+        SI = siteInfo()
+        for c in self.campaigns:
+            if 'parameters' in self.campaigns[c]:
+                if 'SiteBlacklist' in self.campaigns[c]['parameters']:
+                    for black in copy.deepcopy(self.campaigns[c]['parameters']['SiteBlacklist']):
+                        if black.endswith('*'):
+                            self.campaigns[c]['parameters']['SiteBlacklist'].remove( black )
+                            reg = black[0:-1]
+                            self.campaigns[c]['parameters']['SiteBlacklist'].extend( [site for site in (SI.all_sites) if site.startswith(reg)] )
+                            #print self.campaigns[c]['parameters']['SiteBlacklist']
+                            
     def go(self, c):
         if c in self.campaigns and self.campaigns[c]['go']:
             return True
@@ -165,7 +142,12 @@ class siteInfo:
             self.sites_veto_transfer = ["T2_US_MIT"]#,"T1_UK_RAL"]
         else:
             ## a new scheme with all 
-            allowed_T2_for_transfer = ["T2_US_Nebraska"]
+            allowed_T2_for_transfer = ["T2_US_Nebraska","T2_US_Wisconsin","T2_US_Purdue","T2_US_Caltech"]
+            #top to add "T2_US_Caltech","T2_DE_RWTH"
+            #no MB yet "T2_CH_CERN",
+            #probable "T2_US_UCSD"
+            # at 400TB "T2_DE_DESY","T2_IT_Bari","T2_IT_Legnaro"
+            # border line "T2_UK_London_IC"
             self.sites_veto_transfer = [site for site in self.sites_with_goodIO if not site in allowed_T2_for_transfer]
             
 
@@ -192,9 +174,11 @@ class siteInfo:
             if not p:
                 self.cpu_pledges[s] = 1
 
-        if not set(self.sites_T2s + self.sites_T1s + self.sites_with_goodIO).issubset(set(self.cpu_pledges.keys())):
+        self.all_sites = list(set(self.sites_T2s + self.sites_T1s + self.sites_with_goodIO))
+
+        if not set(self.all_sites).issubset(set(self.cpu_pledges.keys())):
             print "There are missing sites in pledgeds"
-            print list(set(self.sites_T2s + self.sites_T1s + self.sites_with_goodIO) - set(self.cpu_pledges.keys()))
+            print list(set(self.all_sites) - set(self.cpu_pledges.keys()))
         
         ## and get SSB sync
         self.fetch_more_info(talk=False)
