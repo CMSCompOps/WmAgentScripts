@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import workflowInfo, getDatasetPresence, getDatasetStatus, getWorkflowByInput, getDatasetSize
+from utils import workflowInfo, getDatasetPresence, getDatasetStatus, getWorkflowByInput, getDatasetSize, makeDeleteRequest
 import optparse
 import random 
 from collections import defaultdict
@@ -174,10 +174,15 @@ def outcleanor(url, options):
     open('keepcopies_%s.json'%stamp,'w').write( json.dumps( our_copies, indent=2))
     open('wfcleanout_%s.json'%stamp,'w').write( json.dumps( wf_cleaned, indent=2))
 
+
     if (not options.test) and (options.auto or raw_input("Satisfied ? (y will trigger status change and deletion requests)") in ['y']):
-        print "making deletion ! disabled so far"
+        for (site,items) in sites_and_datasets.items():
+            datasets = [ ds for ds,_,st in items]
+            print "making deletion to",site
+            result = makeDeleteRequest(url, site, datasets, "Cleanup output after production. DataOps will take care of approving it.")
+            print result
+            ## approve it right away ?
         session.commit()
-        print makeDeleteRequest(url, site, datasets, "Cleanup output after production. DataOps will take care of approving it.")
     else:
         print "Not making the deletion and changing statuses"
 
