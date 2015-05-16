@@ -126,7 +126,7 @@ def transferor(url ,specific = None, talk=True, options=None):
             print "%15.4f GB is the available limit"%transfer_limit
             went_over_budget=True
             if int(wfh.request['RequestPriority']) >= in_transfer_priority and min_transfer_priority!=in_transfer_priority:
-                print "Higher priority sample",wfh.request['RequestPriority'],">=",in_transfer_priority,"go-on"
+                print "Higher priority sample",wfh.request['RequestPriority'],">=",in_transfer_priority,"go-on over budget"
             else:
                 if not options.go: 
                     print min_transfer_priority,"minimum priority",wfh.request['RequestPriority'],"<",in_transfer_priority,"stop"
@@ -166,8 +166,11 @@ def transferor(url ,specific = None, talk=True, options=None):
 
         passing_along += 1
         if passing_along >= allowed_to_handle:
-            print "Not allowed to pass more than",max_to_handle,"at a time. Currently",being_handled,"handled, and adding",passing_along
-            break
+            if int(wfh.request['RequestPriority']) >= in_transfer_priority and min_transfer_priority!=in_transfer_priority:
+                print "Higher priority sample",wfh.request['RequestPriority'],">=",in_transfer_priority,"go-on over",max_to_handle
+            else:
+                print "Not allowed to pass more than",max_to_handle,"at a time. Currently",being_handled,"handled, and adding",passing_along
+                break
 
         (lheinput,primary,parent,secondary) = wfh.getIO()
         if options and options.tosites:
