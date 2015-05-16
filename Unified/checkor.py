@@ -180,7 +180,7 @@ def checkor(url, spec=None, options=None):
                 percent_completions[output] = lumi_count / float( lumi_expected )
 
             fractions_pass[output] = 0.95
-            c = get_campaigns(output, wfi)
+            c = get_campaign(output, wfi)
             if c in CI.campaigns and 'fractionpass' in CI.campaigns[c]:
                 fractions_pass[output] = CI.campaigns[c]['fractionpass']
                 print "overriding fraction to",fractions_pass[output],"for",output
@@ -188,7 +188,7 @@ def checkor(url, spec=None, options=None):
                 fractions_pass[output] = options.fractionpass
                 print "overriding fraction to",fractions_pass[output],"by command line for",output
 
-        if not all([percent_completions[out] > fractions_pass[out] for out in fractions]):
+        if not all([percent_completions[out] > fractions_pass[out] for out in fractions_pass]):
             print wfo.name,"is not completed"
             print json.dumps(percent_completions, indent=2)
             print json.dumps(fractions_pass, indent=2)
@@ -253,7 +253,7 @@ def checkor(url, spec=None, options=None):
             if not custodial:
                 for output in out_worth_checking:
                     campaign = get_campaign(output, wfi)
-                    if campaing in CI.campaigns and 'custodial' in CI.campaigns[campaign]:
+                    if campaign in CI.campaigns and 'custodial' in CI.campaigns[campaign]:
                         custodial = CI.campaigns[campaign]['custodial']
                         print "Setting custodial to",custodial,"from campaign configuration"
                         break
