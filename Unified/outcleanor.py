@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import workflowInfo, getDatasetPresence, getDatasetStatus, getWorkflowByInput, getDatasetSize, makeDeleteRequest
+from utils import workflowInfo, getDatasetPresence, getDatasetStatus, getWorkflowByInput, getDatasetSize, makeDeleteRequest, listDelete, approveSubscription
 import optparse
 import random 
 from collections import defaultdict
@@ -8,6 +8,18 @@ import json
 import time
 
 def outcleanor(url, options):
+
+    if options.approve:
+        for user in ['*Vlimant']:#,'*Cremonesi']:
+            deletes = listDelete( url , user = user)
+            for (site,who,tid) in deletes:
+                if 'MSS' in site: continue### ever
+                print site,who,tid
+                print "approving deletion"
+                print approveSubscription(url, tid, nodes = [site], comments = 'Production cleaning by data ops')
+        return
+
+    
 
     sites_and_datasets = defaultdict(list)
     our_copies = defaultdict(list)
@@ -182,6 +194,13 @@ def outcleanor(url, options):
             result = makeDeleteRequest(url, site, datasets, "Cleanup output after production. DataOps will take care of approving it.")
             print result
             ## approve it right away ?
+            if 'MSS' in site: continue
+            if 'Export' in site: continue
+            if 'Buffer' in site: continue
+            for did in [item['id'] for item in result['phedex']['request_created']]:
+                print "auto-approve disabled, but ready"
+                #approveSubscription(url, did, nodes = [site], comments = 'Auto-approving production cleaning deletion')
+                pass
         session.commit()
     else:
         print "Not making the deletion and changing statuses"
@@ -195,6 +214,7 @@ if __name__ == "__main__":
     parser.add_option('-n','--number',help='Specify the amount of wf to clean',type=int, default=0)
     parser.add_option('-a','--auto',help='Do not ask confirmation',action='store_true',default=False)
     parser.add_option('-f','--fetch',help='The coma separated list of status to fetch from',default='clean,forget')
+    parser.add_option('--approve',help='Approve the previous round of deletions',default=False,action='store_true')
     (options,args) = parser.parse_args()
     
     outcleanor(url, options)

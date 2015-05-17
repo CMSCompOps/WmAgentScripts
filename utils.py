@@ -71,6 +71,20 @@ def download_file(url, params, path = None, logger = None):
         logger.error("URL called: {url}".format(url = url))
         return None
 
+def listDelete(url, user, site=None):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    there = '/phedex/datasvc/json/prod/requestlist?type=delete&approval=pending&requested_by=%s'% user
+    if site:
+        there += 'node=%s'% ','.join(site)
+    r1=conn.request("GET", there)
+
+    r2=conn.getresponse()
+    result = json.loads(r2.read())
+    items=result['phedex']['request']
+    #print json.dumps(items, indent=2)
+    
+    return list(itertools.chain.from_iterable([(subitem['name'],item['requested_by'],item['id']) for subitem in item['node'] if subitem['decision']=='pending' ] for item in items))
+
 def listSubscriptions(url, dataset):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset=%s'%(dataset))
@@ -667,7 +681,9 @@ def phedexPost(url, request, params):
     conn.close()
     return result
 
-def approveSubscription(url, phedexid, nodes=None ):
+def approveSubscription(url, phedexid, nodes=None , comments =None):
+    if comments==None:
+        comments = 'auto-approve of production prestaging'
     if not nodes:
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?request='+str(phedexid))
@@ -685,7 +701,7 @@ def approveSubscription(url, phedexid, nodes=None ):
         'decision' : 'approve',
         'request' : phedexid,
         'node' : ','.join(nodes),
-        'comments' : 'auto-approve of production prestaging'
+        'comments' : comments
         }
     
     result = phedexPost(url, "/phedex/datasvc/json/prod/updaterequest", params)
