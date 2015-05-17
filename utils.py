@@ -12,6 +12,7 @@ from xml.dom.minidom import getDOMImplementation
 import copy 
 import pickle
 import itertools
+import time
 
 FORMAT = "%(module)s.%(funcName)s(%(lineno)s) => %(message)s (%(asctime)s)"
 DATEFMT = "%Y-%m-%d %H:%M:%S"
@@ -425,6 +426,54 @@ def findCustodialLocation(url, dataset):
                     cust.append(replica['node'])
 
     return list(set(cust))
+
+def getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None, sites=None):
+    ###count how manytimes a dataset is replicated < 100%: not all blocks > 100% several copies exis
+    if vetoes==None:
+        vetoes = ['MSS','Buffer','Export']
+
+    dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+    #all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
+    #all_block_names=set([block['block_name'] for block in all_blocks])
+    files = dbsapi.listFileArray( dataset= dataset,validFileOnly=1, detail=True)
+    all_block_names = list(set([f['block_name'] for f in files]))
+    
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+
+    r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset=%s'%(dataset))
+    r2=conn.getresponse()
+    #retry since it does not look like its getting the right info in the first shot
+    #print "retry"
+    #time.sleep(2)
+    #r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset=%s'%(dataset))
+    #r2=conn.getresponse()
+
+    result = json.loads(r2.read())
+    items=result['phedex']['block']
+
+    block_counts = {}
+    #initialize
+    for block in all_block_names:
+        block_counts[block] = 0
+    
+    for item in items:
+        for replica in item['replica']:
+            if not any(replica['node'].endswith(v) for v in vetoes):
+                if replica['group'] == None: replica['group']=""
+                if complete and not replica['complete']==complete: continue
+                if group!=None and not replica['group'].lower()==group.lower(): continue 
+                if sites and not replica['node'] in sites: continue
+                block_counts[ item['name'] ] +=1
+    
+    first_order = float(len(block_counts) - block_counts.values().count(0)) / float(len(block_counts))
+    if first_order <1.:
+        print dataset,":not all",len(block_counts)," blocks are available, only",len(block_counts)-block_counts.values().count(0)
+        return first_order
+    else:
+        second_order = sum(block_counts.values())/ float(len(block_counts))
+        print dataset,":all",len(block_counts),"available",second_order,"times"
+        return second_order
+    
 
 def getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=None, vetoes=None):
     if vetoes==None:

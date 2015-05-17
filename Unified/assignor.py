@@ -2,7 +2,7 @@
 from assignSession import *
 import reqMgrClient
 from utils import workflowInfo, campaignInfo, siteInfo, userLock
-from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation
+from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction
 import optparse
 import itertools
 import time
@@ -84,11 +84,13 @@ def assignor(url ,specific = None, talk=True, options=None):
         sites_with_data = copy.deepcopy( sites_allowed )
         sites_with_any_data = copy.deepcopy( sites_allowed )
         primary_locations = None
+        available_fractions = {}
         for prim in list(primary):
             presence = getDatasetPresence( url, prim )
             if talk:
                 print prim
                 print json.dumps(presence, indent=2)
+            available_fractions[prim] =  getDatasetBlocksFraction(url, prim, sites = [SI.CE_to_SE(site) for site in sites_allowed] )
             sites_all_data = [site for site in sites_with_data if any([osite.startswith(site) for osite in [psite for (psite,(there,frac)) in presence.items() if there]])]
             sites_with_data = [site for site in sites_with_data if any([osite.startswith(site) for osite in [psite for (psite,frac) in presence.items() if frac[1]>90.]])]
             sites_with_any_data = [site for site in sites_with_any_data if any([osite.startswith(site) for osite in presence.keys()])]
@@ -108,9 +110,15 @@ def assignor(url ,specific = None, talk=True, options=None):
             opportunistic_sites = [SI.SE_to_CE(site) for site in list((set(secondary_locations) & set(primary_locations)) - set(sites_allowed))]
             print "We could be running at",opportunistic_sites,"in addition"
 
-        if not sites_all_data:
+        if available_fractions and not all([available>=1. for available in available_fractions.values()]):
             print "The input dataset is not located in full at any site"
+            print json.dumps(available_fractions)
             if not options.test and not options.go: continue ## skip skip skip
+        copies_wanted = 2.
+        if available_fractions and not all([available>=copies_wanted for available in available_fractions.values()]):
+            print "The input dataset is not available",copies_wanted,"times, only",available_fractions.values()
+            if not options.go:
+                continue
 
         ## default back to white list to original white list with any data
         print "Allowed",sites_allowed
@@ -194,7 +202,6 @@ if __name__=="__main__":
     parser.add_option('-r', '--restrict', help='Only assign workflows for site with input',default=False, action="store_true",dest='restrict')
     parser.add_option('--go',help="Overrides the campaign go",default=False,action='store_true')
     parser.add_option('--team',help="Specify the agent to use",default='production')
-
     for key in reqMgrClient.assignWorkflow.keys:
         parser.add_option('--%s'%key,help="%s Parameter of request manager assignment interface"%key, default=None)
     (options,args) = parser.parse_args()
@@ -205,6 +212,6 @@ if __name__=="__main__":
 
     assignor(url,spec, options=options)
 
-    if not options.test:
+    if not spec:
         htmlor()
         pass
