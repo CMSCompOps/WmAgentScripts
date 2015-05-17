@@ -408,8 +408,8 @@ if __name__=="__main__":
     parser.add_option('-n','--nochop',help='Do no chop the input to the possible sites',default=True,dest='chop',action='store_false')
     parser.add_option('--tosites',help='Provide a coma separated list of sites to transfer input to',default=None)
     parser.add_option('--go',help="Overrides no-go from campaign, announced, or grace period",default=False,action='store_true')
-    parser.add_option('--maxtransfer',help="The limit in GB of the total size of input that can be transfered", default=80000,type=int)
-    parser.add_option('--maxworkflows',help="The limit on the number of workflow we want to keep in the system at a time",default=150,type=int)
+    parser.add_option('--maxtransfer',help="The limit in GB of the total size of input that can be transfered", default=100000,type=int)
+    parser.add_option('--maxworkflows',help="The limit on the number of workflow we want to keep in the system at a time",default=200,type=int)
     parser.add_option('--maxcopy',help="Specify the number of copies of the input we need", default=3,type=int)
     (options,args) = parser.parse_args()
 
