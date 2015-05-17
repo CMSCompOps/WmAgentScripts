@@ -92,7 +92,7 @@ def stagor(url,specific =None):
         need_sites = len(done_by_input[dsname].values())
         if need_sites > 10:
             need_sites = int(need_sites/2.)
-
+        got = done_by_input[dsname].values().count(True)
         if all([wf.status != 'staging' for wf in using_wfos]):
             ## not a single ds-using wf is in staging => moved on already
             ## just forget about it
@@ -123,7 +123,7 @@ def stagor(url,specific =None):
                     print wf.name,"is with us everywhere the same. setting staged and move on"
                     wf.status = 'staged'
                     session.commit()
-        elif done_by_input[dsname].values().count(True) >= need_sites:
+        elif got >= need_sites:
             print dsname,"is almost everywhere we wanted"
             #print "We do not want this in the end. we want the data we asked for"
             #continue
@@ -137,6 +137,7 @@ def stagor(url,specific =None):
             print dsname
             print "\t",done_by_input[dsname]
             print "\tneeds",need_sites
+            print "\tgot",got
 
     for wfid in done_by_wf_id:
         #print done_by_wf_id[wfid].values()
