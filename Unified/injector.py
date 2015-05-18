@@ -55,6 +55,7 @@ def injector(url, options, specific):
                     if fwl['RequestStatus'] in ['assignment-approved']:
                         status = 'considered'
                     new_wf = Workflow( name = member, status = status, wm_status = fwl['RequestStatus'])
+                    wf.status = 'forget'
                     session.add( new_wf ) 
                     session.commit()
                 else:
