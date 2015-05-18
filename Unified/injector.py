@@ -29,6 +29,8 @@ def injector(url, options, specific):
 
     ## pick up replacements
     for wf in session.query(Workflow).filter(Workflow.status == 'trouble').all():
+        if specific and wf.name != specific:
+            continue
         print wf.name
         wl = getWorkLoad(url, wf.name)
         familly = getWorkflowById( url, wl['PrepID'] )
@@ -39,10 +41,13 @@ def injector(url, options, specific):
         for member in familly:
             if member != wf.name:
                 fwl = getWorkLoad(url , member)
+                if options.replace:
+                    if member != options.replace: continue
+                else:
+                    if fwl['RequestDate'] < wl['RequestDate']: continue
+                    if fwl['RequestType']=='Resubmission': continue
+                    if fwl['RequestStatus'] in ['None',None]: continue
 
-                if fwl['RequestDate'] < wl['RequestDate']: continue
-                if fwl['RequestType']=='Resubmission': continue
-                if fwl['RequestStatus'] in ['None',None]: continue
                 new_wf = session.query(Workflow).filter(Workflow.name == member).first()
                 if not new_wf:
                     print "putting",member
@@ -69,7 +74,8 @@ def injector(url, options, specific):
                         session.commit()
                         
 
-        wf.status = 'forget'
+        ## don't do that automatically
+        #wf.status = 'forget'
         session.commit()
         
 if __name__ == "__main__":
@@ -80,6 +86,7 @@ if __name__ == "__main__":
     parser.add_option('-w','--wmstatus',help="from which status in req-mgr",default="assignment-approved")
     parser.add_option('-s','--setstatus',help="What status to set locally",default="considered")
     parser.add_option('-u','--user',help="What user to fetch workflow from",default="pdmvserv")
+    parser.add_option('-r','--replace',help="the workflow name that should be used for replacement",default=None)
     (options,args) = parser.parse_args()
     
     spec = None
