@@ -157,11 +157,10 @@ class siteInfo:
             self.sites_veto_transfer = ["T2_US_MIT"]#,"T1_UK_RAL"]
         else:
             ## a new scheme with all 
-            allowed_T2_for_transfer = ["T2_US_Nebraska","T2_US_Wisconsin","T2_US_Purdue","T2_US_Caltech"]
-            #top to add "T2_US_Caltech","T2_DE_RWTH"
+            allowed_T2_for_transfer = ["T2_US_Nebraska","T2_US_Wisconsin","T2_US_Purdue","T2_US_Caltech","T2_DE_RWTH","T2_DE_DESY"]
             #no MB yet "T2_CH_CERN",
             #probable "T2_US_UCSD"
-            # at 400TB "T2_DE_DESY","T2_IT_Bari","T2_IT_Legnaro"
+            # at 400TB ""T2_IT_Bari","T2_IT_Legnaro"
             # border line "T2_UK_London_IC"
             self.sites_veto_transfer = [site for site in self.sites_with_goodIO if not site in allowed_T2_for_transfer]
             
