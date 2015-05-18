@@ -105,7 +105,7 @@ def stagor(url,specific =None):
         ## should the need_sites reduces with time ?
         # with dataset choping, reducing that number might work as a block black-list.
 
-        if all(done_by_input[dsname].values()):
+        if len(done_by_input[dsname].values()) and all(done_by_input[dsname].values()):
             print dsname,"is everywhere we wanted"
             ## the input dataset is fully transfered, should consider setting the corresponding wf to staged
             for wf in using_wfos:
