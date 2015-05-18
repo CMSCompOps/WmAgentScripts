@@ -468,8 +468,9 @@ Worlfow clean for output (%d) <a href=logs/outcleanor/last.log target=_blank>log
     wfs = {}
     for wfo in session.query(Workflow).all():
         wfs[wfo.name] = (wfo.status,wfo.wm_status)
+    open('/afs/cern.ch/user/c/cmst2/www/unified/statuses.json','w').write(json.dumps( wfs ))
     for wfn in sorted(wfs.keys()):
-        html_doc.write('<tr><td><a id="%s">%s</a></td><td>%s</td><td>%s</td></tr>'%( wfn, wfn, wfs[wfn][0],  wfs[wfn][1]))
+        html_doc.write('<tr><td><a id="%s">%s</a></td><td>%s</td><td>%s</td></tr>\n'%( wfn, wfn, wfs[wfn][0],  wfs[wfn][1]))
     html_doc.write("</table>")
     html_doc.write("<br>"*100)
     html_doc.write("end of page</html>")
