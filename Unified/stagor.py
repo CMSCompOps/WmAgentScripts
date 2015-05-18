@@ -52,7 +52,7 @@ def stagor(url,specific =None):
         else:
             ## it is empty, is that a sign that all is done and away ?
             print "ERROR with the scubscriptions API of ",transfer.phedexid
-            print "Most likely something else is overiding the transfer request."
+            print "Most likely something else is overiding the transfer request. Need to work on finding the replacement automatically, if the replacement exists"
             done = False
 
         ## the thing above is NOT giving the right number
