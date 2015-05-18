@@ -92,12 +92,25 @@ def listSubscriptions(url, dataset):
     result = json.loads(r2.read())
     items=result['phedex']['request']
     destinations ={}
+    deletes = {}
+    for item in items:
+        for node in item['node']:
+            site = node['name']
+            if item['type'] == 'delete' and node['decision'] in [ 'approved','pending']:
+                deletes[ site ] = node['time_decided']
+
     for item in items:
         for node in item['node']:
             if item['type']!='xfer': continue
+            site = node['name']            
             #print item
-            if not 'MSS' in node['name']:
-                destinations[node['name']]=(item['id'], node['decision']=='approved')
+            if not 'MSS' in site:
+                ## pending delete
+                if site in deletes and not deletes[site]: continue
+                ## delete after transfer
+                if site in deletes and deletes[site] > node['time_decided']: continue
+
+                destinations[site]=(item['id'], node['decision']=='approved')
                 #print node['name'],node['decision']
                 #print node
     #print destinations
