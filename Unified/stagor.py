@@ -1,19 +1,26 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput
+from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput, workflowInfo, getDatasetBlocksFraction
 import sys
 import itertools
 import pprint
+import optparse
 from htmlor import htmlor
 
-def stagor(url,specific =None):
+def stagor(url,specific =None, options=None):
     done_by_wf_id = {}
     done_by_input = {}
     completion_by_input = {}
     good_enough = 100.0
-    for wfo in session.query(Workflow).filter(Workflow.status == 'staging').all():
-        ## implement the grace period for by-passing the transfer.
-        pass
+    
+    if options.fast:
+        for wfo in session.query(Workflow).filter(Workflow.status == 'staging').all():
+            wfi = workflowInfo(url, wfo.name)
+            dataset = wfi.request['InputDataset']
+            available = getDatasetBlocksFraction( url , dataset )
+            if available > options.fast:
+                print "\t\t",wfo.name,"can go staged"
+        return 
 
     for transfer in session.query(Transfer).all():
         if specific  and str(transfer.phedexid)!=str(specific): continue
@@ -151,9 +158,14 @@ def stagor(url,specific =None):
 
 if __name__ == "__main__":
     url = 'cmsweb.cern.ch'
-    spec=None
-    if len(sys.argv)>1:
-        spec = sys.argv[1]
 
-    stagor(url, spec)
+    parser = optparse.OptionParser()
+    parser.add_option('-f','--fast', help='Make a quick check for available fraction',default=0.,type=float)
+    (options,args) = parser.parse_args()
+
+    spec=None
+    if len(args)!=0:
+        spec = args[0]
+
+    stagor(url, spec, options)
     htmlor()
