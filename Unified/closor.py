@@ -92,10 +92,16 @@ def closor(url, specific=None):
                         ## inject to DDM everything from ReDigi
                         if to_DDM:
                             print "Sending",out," to DDM"
-                            subprocess.call(['python','assignDatasetToSite.py','--dataset='+out,'--exec'])
+                            status = subprocess.call(['python','assignDatasetToSite.py','--dataset='+out,'--exec'])
+                            if status!=0:
+                                print "Failed DDM, retrying a second time"
+                                status = subprocess.call(['python','assignDatasetToSite.py','--dataset='+out,'--exec'])
+                                if status!=0:
+                                    results.append("Failed DDM for %s"% out)
+
                     else:
                         print wfo.name,"no stats for announcing",out
-                        results.append(None)
+                        results.append('No Stats')
             
             #print results
             if all(map(lambda result : result in ['None',None],results)):
