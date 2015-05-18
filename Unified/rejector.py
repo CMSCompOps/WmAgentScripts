@@ -44,7 +44,7 @@ def rejector(url, specific, options=None):
                     schema['ProcessingVersion']+=1
                 else:
                     schema['ProcessingVersion']=2
-                schema.pop('RequestDate')
+                ##schema.pop('RequestDate') ## ok then, let's not reset the time stamp
                 if options.Memory:
                     schema['Memory'] = options.Memory
                 response = reqMgrClient.submitWorkflow(url, schema)
