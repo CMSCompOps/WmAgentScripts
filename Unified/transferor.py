@@ -225,6 +225,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                         tfo = Transfer( phedexid = latching)
                         tfo.workflows_id = []
                         session.add(tfo)
+                            
                     if not wfo.id in tfo.workflows_id:
                         print "adding",wfo.id,"to",tfo.id,"with phedexid",latching
                         l = copy.deepcopy( tfo.workflows_id )
