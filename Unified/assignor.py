@@ -2,18 +2,20 @@
 from assignSession import *
 import reqMgrClient
 from utils import workflowInfo, campaignInfo, siteInfo, userLock
-from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation
+from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction
 import optparse
 import itertools
 import time
 from htmlor import htmlor
 import os
+import json
 
 def assignor(url ,specific = None, talk=True, options=None):
     if userLock('assignor'): return
 
     CI = campaignInfo()
     SI = siteInfo()
+
     wfos=[]
     if specific:
         wfos = session.query(Workflow).filter(Workflow.name==specific).all()
@@ -29,33 +31,20 @@ def assignor(url ,specific = None, talk=True, options=None):
             #if not specific in wfo.name: continue
         print wfo.name,"to be assigned"
         wfh = workflowInfo( url, wfo.name)
-        #wl = getWorkLoad(url, wfo.name )
 
-        if not CI.go( wfh.request['Campaign'] ):
+
+        ## check if by configuration we gave it a GO
+        if not CI.go( wfh.request['Campaign'] ) and not options.go:
             print "No go for",wfh.request['Campaign']
             continue
 
-        injection_time = time.mktime(time.strptime('.'.join(map(str,wfh.request['RequestDate'])),"%Y.%m.%d.%H.%M.%S")) / (60.*60.)
-        now = time.mktime(time.gmtime()) / (60.*60.)
-        if float(now - injection_time) < 4.:
-            print "It is too soon to inject: %3.2fH remaining"%(now - injection_time)
-            if not options.test:
-                continue
-
-        #grace_period = 4 #days
-        #if float(now - injection_time) > grace_period*24.:
-        #    print "it has been",grace_period,"need to do something"
-        #    options.restrict = True
-
-        #else:
-        #    print now,injection_time,now - injection_time
-
-        #print wl
+        ## check on current status for by-passed assignment
         if wfh.request['RequestStatus'] !='assignment-approved':
             print wfo.name,wfh.request['RequestStatus'],"skipping"
             if not options.test:
                 continue
 
+        ## retrieve from the schema, dbs and reqMgr what should be the next version
         version=wfh.getNextVersion()
         if not version:
             if options and options.ProcessingVersion:
@@ -66,49 +55,92 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         (lheinput,primary,parent,secondary) = wfh.getIO()
         sites_allowed = getSiteWhiteList( (lheinput,primary,parent,secondary) )
-        sites_custodial = list(set(itertools.chain.from_iterable([findCustodialLocation(url, prim) for prim in primary])))
-        #sites_custodial = [] ## would make much more sense
+        print "Allowed",sites_allowed
         sites_out = [SI.pick_dSE([SI.CE_to_SE(ce) for ce in sites_allowed])]
+        sites_custodial = []
         if len(sites_custodial)==0:
-            #sites_custodial = [SI.pick_SE()]
-            #print "picked",sites_custodial," as custodial for",wfo.name
             print "No custodial, it's fine, it's covered in close-out"
 
         if len(sites_custodial)>1:
             print "more than one custodial for",wfo.name
             sys.exit(36)
 
+        secondary_locations=None
         for sec in list(secondary):
             presence = getDatasetPresence( url, sec )
+            print sec
+            print json.dumps(presence, indent=2)
+            #one_secondary_locations = [site for (site,(there,frac)) in presence.items() if frac>90.]
+            one_secondary_locations = [site for (site,(there,frac)) in presence.items() if there]
+            if secondary_locations==None:
+                secondary_locations = one_secondary_locations
+            else:
+                secondary_locations = list(set(secondary_locations) & set(one_secondary_locations))
             ## reduce the site white list to site with secondary only
-            sites_allowed = [site for site in sites_allowed if any([osite.startswith(site) for osite in [psite for (psite,frac) in presence.items() if frac[1]>90.]])]
+            sites_allowed = [site for site in sites_allowed if any([osite.startswith(site) for osite in one_secondary_locations])]
+            
 
+        sites_all_data = copy.deepcopy( sites_allowed )
         sites_with_data = copy.deepcopy( sites_allowed )
         sites_with_any_data = copy.deepcopy( sites_allowed )
+        primary_locations = None
+        available_fractions = {}
         for prim in list(primary):
             presence = getDatasetPresence( url, prim )
             if talk:
-                print prim,presence
+                print prim
+                print json.dumps(presence, indent=2)
+            available_fractions[prim] =  getDatasetBlocksFraction(url, prim, sites = [SI.CE_to_SE(site) for site in sites_allowed] )
+            sites_all_data = [site for site in sites_with_data if any([osite.startswith(site) for osite in [psite for (psite,(there,frac)) in presence.items() if there]])]
             sites_with_data = [site for site in sites_with_data if any([osite.startswith(site) for osite in [psite for (psite,frac) in presence.items() if frac[1]>90.]])]
-            sites_with_any_data = [site for site in sites_with_data if any([osite.startswith(site) for osite in presence.keys()])]
+            sites_with_any_data = [site for site in sites_with_any_data if any([osite.startswith(site) for osite in presence.keys()])]
+            if primary_locations==None:
+                primary_locations = presence.keys()
+            else:
+                primary_locations = list(set(primary_locations) & set(presence.keys() ))
+
         sites_with_data = list(set(sites_with_data))
         sites_with_any_data = list(set(sites_with_any_data))
 
+        opportunistic_sites=[]
+        ## opportunistic running where any piece of data is available
+        if secondary_locations and primary_locations:
+            ## intersection of both any pieces of the primary and good IO
+            #opportunistic_sites = [SI.SE_to_CE(site) for site in list((set(secondary_locations) & set(primary_locations) & set(SI.sites_with_goodIO)) - set(sites_allowed))]
+            opportunistic_sites = [SI.SE_to_CE(site) for site in list((set(secondary_locations) & set(primary_locations)) - set(sites_allowed))]
+            print "We could be running at",opportunistic_sites,"in addition"
+
+        if available_fractions and not all([available>=1. for available in available_fractions.values()]):
+            print "The input dataset is not located in full at any site"
+            print json.dumps(available_fractions)
+            if not options.test and not options.go: continue ## skip skip skip
+        copies_wanted = 2.
+        if available_fractions and not all([available>=copies_wanted for available in available_fractions.values()]):
+            print "The input dataset is not available",copies_wanted,"times, only",available_fractions.values()
+            if not options.go:
+                continue
+
+        ## default back to white list to original white list with any data
+        print "Allowed",sites_allowed
+        sites_allowed = sites_with_any_data
+        print "Selected for any data",sites_allowed
 
         if options.restrict:
-            if talk:
-                print sites_allowed
-            sites_allowed = sites_with_data
+            print "Allowed",sites_allowed
+            sites_allowed = sites_with_any_data
+            print "Selected",sites_allowed
         else:
             if set(sites_with_data) != set(sites_allowed):
                 ## the data is not everywhere we wanted to run at : enable aaa
                 print "Sites with 90% data not matching site white list (block choping!)"
                 print "Resorting to AAA reading for",list(set(sites_allowed) - set(sites_with_data)),"?"
-                print "Site with any data",list(set(sites_allowed) - set(sites_with_any_data))
+                print "Whitelist site with any data",list(set(sites_allowed) - set(sites_with_any_data))
                 #options.useSiteListAsLocation = True
                 #print "Not commissioned yet"
                 #continue
-                
+            #print "We could be running at",opportunistic_sites,"in addition"
+            ##sites_allowed = list(set(sites_allowed+ opportunistic_sites))
+
         if not len(sites_allowed):
             print wfo.name,"cannot be assign with no matched sites"
             continue
@@ -132,10 +164,6 @@ def assignor(url ,specific = None, talk=True, options=None):
                     if ',' in v: parameters[key] = filter(None,v.split(','))
                     else: parameters[key] = v
 
-        ## take care of a few exceptions
-        if (wfh.request['Memory']*1000) > 3000000:
-            parameters['MaxRSS'] = 4000000
-
         ## pick up campaign specific assignment parameters
         parameters.update( CI.parameters(wfh.request['Campaign']) )
 
@@ -145,7 +173,8 @@ def assignor(url ,specific = None, talk=True, options=None):
         if not wfh.checkWorkflowSplitting():
             ## needs to go to event based ? fail for now
             print "Falling back to event splitting ?"
-            parameters['SplittingAlgorithm'] = 'EventBased'
+            #parameters['SplittingAlgorithm'] = 'EventBased'
+            continue
 
         ## plain assignment here
         team='production'
@@ -171,8 +200,8 @@ if __name__=="__main__":
     #parser.add_option('-e', '--execute', help='Actually assign workflows',action="store_true",dest='execute')
     parser.add_option('-t','--test', help='Only test the assignment',action='store_true',dest='test',default=False)
     parser.add_option('-r', '--restrict', help='Only assign workflows for site with input',default=False, action="store_true",dest='restrict')
-    parser.add_option('--team',default='production')
-
+    parser.add_option('--go',help="Overrides the campaign go",default=False,action='store_true')
+    parser.add_option('--team',help="Specify the agent to use",default='production')
     for key in reqMgrClient.assignWorkflow.keys:
         parser.add_option('--%s'%key,help="%s Parameter of request manager assignment interface"%key, default=None)
     (options,args) = parser.parse_args()
@@ -183,4 +212,6 @@ if __name__=="__main__":
 
     assignor(url,spec, options=options)
 
-    htmlor()
+    if not spec:
+        htmlor()
+        pass

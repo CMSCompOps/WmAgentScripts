@@ -1,51 +1,34 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import getWorkLoad
-from dbs.apis.dbsClient import DbsApi
 import reqMgrClient
 import setDatasetStatusDBS3
 import json
 import time
 import sys
 import subprocess
+from utils import getDatasetEventsAndLumis, campaignInfo
 from htmlor import htmlor
 
 def closor(url, specific=None):
-    dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
-    for wfo in session.query(Workflow).filter(Workflow.status=='away').all():
+    CI = campaignInfo()
+
+    ## manually closed-out workflows should get to close with checkor
+    for wfo in session.query(Workflow).filter(Workflow.status=='close').all():
+
         if specific and not specific in wfo.name: continue
+
         ## what is the expected #lumis 
         wl = getWorkLoad(url, wfo.name)
-
-        if wfo.wm_status != wl['RequestStatus']:
-            wfo.wm_status = wl['RequestStatus']
-            session.commit()
-
-        take_out = ['failed','aborted','aborted-archived','rejected','rejected-archived']
-        if wl['RequestStatus'] in take_out:
-            wfo.status = 'trouble'
-            wfo.wm_status = wl['RequestStatus']
-            session.commit()
-            continue
+        wfo.wm_status = wl['RequestStatus']
 
         if wl['RequestStatus'] in  ['announced','normal-archived']:
+            ## manually announced ??
             wfo.status = 'done'
             wfo.wm_status = wl['RequestStatus']
-            session.commit()
-            continue
+            print wfo.name,"is done already",wfo.wm_status
 
-        if wl['RequestType'] == 'Resubmission':
-            #session.delete( wl)
-            #session.commit()
-            print wfo.name,"can be taken out"
-            wfo.status = 'forget'
-            wfo.wm_status = wl['RequestStatus']
-            session.commit()
-            continue
-
-        if wl['RequestStatus'] in ['assigned','acquired']:
-            print wfo.name,"not running yet"
-            continue
+        session.commit()
 
         if not 'TotalInputLumis' in wl:
             print wfo.name,"has not been assigned yet"
@@ -61,13 +44,7 @@ def closor(url, specific=None):
         if len(outputs): 
             print wfo.name,wl['RequestStatus']
         for out in outputs:
-            reply = dbsapi.listFileSummaries(dataset=out)
-            lumi_count = 0
-            event_count = 0
-            for f in reply:
-                lumi_count +=f['num_lumi']
-                event_count +=f['num_event']
-
+            event_count,lumi_count = getDatasetEventsAndLumis(dataset=out)
             odb = session.query(Output).filter(Output.datasetname==out).first()
             if not odb:
                 print "adding an output object",out
@@ -92,7 +69,7 @@ def closor(url, specific=None):
 
 
         ## only that status can let me go into announced
-        if wl['RequestStatus'] in ['closed-out']: ## add force-completed ??
+        if wl['RequestStatus'] in ['closed-out']:
             print wfo.name,"to be announced"
 
             results=[]#'dummy']
@@ -101,8 +78,19 @@ def closor(url, specific=None):
                 for (io,out) in enumerate(outputs):
                     if all_OK[io]:
                         results.append(setDatasetStatusDBS3.setStatusDBS3('https://cmsweb.cern.ch/dbs/prod/global/DBSWriter', out, 'VALID' ,''))
+                        tier = out.split('/')[-1]
+                        to_DDM = (wl['RequestType'] == 'ReDigi' and not ('DQM' in tier))
+                        campaign = None
+                        try:
+                            campaign = out.split('/')[2].split('-')[0]
+                        except:
+                            if 'Campaign' in wl and wl['Campaign']:
+                                campaign = wl['Campaign']
+                        if campaign and campaign in CI.campaigns and 'toDDM' in CI.campaigns[campaign] and tier in CI.campaigns[campaign]['toDDM']:
+                            to_DDM = True
+                            
                         ## inject to DDM everything from ReDigi
-                        if wl['RequestType'] == 'ReDigi' and not ('/DQM' in out):
+                        if to_DDM:
                             print "Sending",out," to DDM"
                             subprocess.call(['python','assignDatasetToSite.py','--dataset='+out,'--exec'])
                     else:

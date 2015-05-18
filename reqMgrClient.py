@@ -322,7 +322,7 @@ def requestManagerGet(url, request, retries=4):
         raise Exception('Maximum queries to ReqMgr exceeded',str(request))
     return request
 
-def requestManagerPost(url, request, params, head = def_headers):
+def requestManagerPost(url, request, params, head = def_headers, nested=False):
     """
     Performs some operation on ReqMgr through
     an HTTP POST method.
@@ -333,7 +333,13 @@ def requestManagerPost(url, request, params, head = def_headers):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
                                     key_file = os.getenv('X509_USER_PROXY'))
     headers = head
-    encodedParams = urllib.urlencode(params)
+    if nested:
+        jsonEncodedParams ={}
+        for pKey in params:
+            jsonEncodedParams[pKey] = json.dumps(params[pKey])
+        encodedParams = urllib.urlencode(jsonEncodedParams)
+    else:
+        encodedParams = urllib.urlencode(params)
     conn.request("POST", request, encodedParams, headers)
     response = conn.getresponse()
     data = response.read()
@@ -695,6 +701,17 @@ def assignWorkflow(url, workflowname, team, parameters ):
         defaults['Dashboard'] = 'reprocessing'
         defaults['dashboard'] = 'reprocessing'
 
+
+    if defaults['SiteBlacklist'] and defaults['SiteWhitelist']:
+        defaults['SiteWhitelist'] = list(set(defaults['SiteWhitelist']) - set(defaults['SiteBlacklist']))
+        defaults['SiteBlacklist'] = []
+        if not defaults['SiteWhitelist']:
+            print "Cannot assign with no site whitelist"
+            return False
+
+    # set the maxrss watchdog to what is specified in the request
+    defaults['MaxRSS'] = wf.request['Memory']*1024+10
+
     for aux in assignWorkflow.auxiliaries:
         if aux in defaults: 
             par = defaults.pop( aux )
@@ -712,6 +729,10 @@ def assignWorkflow(url, workflowname, team, parameters ):
                 wf = workflowInfo(url, workflowname)
                 t = wf.firstTask()
                 params = wf.getSplittings()[0]
+                if params['splittingAlgo'] != 'EventBased': 
+                    print "Ignoring changing events per lumi for",params['splittingAlgo']
+                    continue
+
                 if str(par).startswith('x'):
                     multiplier = float(str(par).replace('x',''))
                     par = int(params['events_per_lumi'] * multiplier)
@@ -725,6 +746,12 @@ def assignWorkflow(url, workflowname, team, parameters ):
                 print setWorkflowSplitting(url, params)
             elif aux == 'SplittingAlgorithm':
                 wf = workflowInfo(url, workflowname)
+                ### do it for all major tasks
+                #for (t,params) in wf.getTaskAndSplittings():
+                #    params.update({"requestName":workflowname,
+                #                   "splittingTask" : '/%s/%s'%(workflowname,t),
+                #                   "splittingAlgo" : par})
+                #    setWorkflowSplitting(url, params)
                 t = wf.firstTask()
                 params = wf.getSplittings()[0]
                 params.update({"requestName":workflowname,
@@ -782,7 +809,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
 assignWorkflow.defaults= {
         "action": "Assign",
         "SiteBlacklist": [],
-        "useSiteListAsLocation" : False,
+        #"useSiteListAsLocation" : False,
         "UnmergedLFNBase": "/store/unmerged",
         "MinMergeSize": 2147483648,
         "MaxMergeSize": 4294967296,
@@ -869,6 +896,14 @@ def setWorkflowApproved(url, workflowname):
     data = requestManagerPut(url,"/reqmgr/reqMgr/request", params)
     return data
 
+def setWorkflowForceComplete(url, workflowname):
+    """
+    Sets a workflow state to force-complet
+    """
+    params = {"requestName" : workflowname,"status" : "force-complete"}
+    data = requestManagerPut(url,"/reqmgr/reqMgr/request", params)
+    return data
+
 def setWorkflowRunning(url, workflowname):
     """
     Sets a workflow state to running
@@ -911,7 +946,7 @@ def submitWorkflow(url, schema):
     the workflow
     
     """
-    data = requestManagerPost(url,"/reqmgr/create/makeSchema", schema)
+    data = requestManagerPost(url,"/reqmgr/create/makeSchema", schema, nested=True)
     return data
 
 def setWorkflowSplitting(url, schema):

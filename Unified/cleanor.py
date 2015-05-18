@@ -1,17 +1,32 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkLoad, getDatasetPresence, makeDeleteRequest, getDatasetSize, siteInfo, findCustodialLocation, getWorkflowByInput
+from utils import getWorkLoad, getDatasetPresence, makeDeleteRequest, getDatasetSize, siteInfo, findCustodialLocation, getWorkflowByInput, campaignInfo
 import json
 import time
+import random
 
 def cleanor(url, specific=None):
+
     delete_per_site = {}
     SI = siteInfo()
+    CI = campaignInfo()
     counts=0
     for wfo in session.query(Workflow).filter(Workflow.status == 'done').all():
+        keep_a_copy = False
+        if specific and not specific in wfo.name: continue
         ## what was in input 
         wl = getWorkLoad(url,  wfo.name )
-        if not 'InputDataset' in wl: continue
+        if not 'InputDataset' in wl: 
+            ## should we set status = clean ? or something even further
+            print "skipping",wfo.name,"with no input"
+            wfo.status = 'clean'
+            session.commit()
+            continue
+
+        if 'Campaign' in wl and wl['Campaign'] in CI.campaigns and 'clean-in' in CI.campaigns[wl['Campaign']] and CI.campaigns[wl['Campaign']]['clean-in']==False:
+            print "Skipping cleaning on input for campaign",wl['Campaign'], "as per campaign configuration"
+            continue
+            
         dataset = wl['InputDataset']
         print dataset,"in input"
         #print json.dumps(wl, indent=2)
@@ -22,7 +37,7 @@ def cleanor(url, specific=None):
         now = time.mktime(time.gmtime()) / (60*60*24.)
         then = announced_log[-1]['UpdateTime'] / (60.*60.*24.)
         total_size = getDatasetSize( dataset ) ## in Gb
-        if (now-then) <10:
+        if (now-then) <2:
             print "workflow",wfo.name, "finished",now-then,"days ago. Too fresh to clean"
             continue
         else:
@@ -32,6 +47,7 @@ def cleanor(url, specific=None):
         counts+=1
         ## find any location it is at
         our_presence = getDatasetPresence(url, dataset, complete=None, group="DataOps")
+        also_our_presence = getDatasetPresence(url, dataset, complete=None, group="")
 
         ## is there a custodial !!!
         custodials = findCustodialLocation(url, dataset)
@@ -50,18 +66,52 @@ def cleanor(url, specific=None):
                 print other['RequestName'],'is in status',other['RequestStatus'],'preventing from cleaning',dataset
                 conflict=True
                 break
+            if 'Campaign' in other and other['Campaign'] in CI.campaigns and 'clean-in' in CI.campaigns[other['Campaign']] and CI.campaigns[other['Campaign']]['clean-in']==False:
+                print other['RequestName'],'is in campaign',other['Campaign']
+                conflict = True
+                break
         if conflict: continue
         print "other statuses:",[other['RequestStatus'] for other in using_the_same if other['RequestName'] != wfo.name]
 
+
         ## find all disks
         to_be_cleaned = filter(lambda site : site.startswith('T2') or site.endswith('Disk') ,our_presence.keys())
-
+        to_be_cleaned.extend( filter(lambda site : site.startswith('T2') or site.endswith('Disk') ,also_our_presence.keys()))
         print to_be_cleaned,"for",total_size,"GB"
 
         anaops_presence = getDatasetPresence(url, dataset, complete=None, group="AnalysisOps")
         own_by_anaops = anaops_presence.keys()
+        print "Own by analysis ops and vetoing"
         print own_by_anaops
+        ## need to black list the sites where there is a copy of analysis ops
+        to_be_cleaned = [site for site in to_be_cleaned if not site in own_by_anaops ]
 
+        ## keep one copy out there
+        if 'Campaign' in wl and wl['Campaign'] in CI.campaigns and 'keep-one' in CI.campaigns[wl['Campaign']] and CI.campaigns[wl['Campaign']]['keep-one']==True:
+            print "Keeping a copy of input for",wl['Campaign']
+            keep_a_copy = True
+            
+        if keep_a_copy:
+            keep_at = None
+            full_copies = [site for (site,(there,_)) in our_presence.items() if there and site.startswith('T1')]
+            full_copies.extend( [site for (site,(there,_)) in also_our_presence.items() if there and site.startswith('T1')] )
+            if not full_copies:
+                full_copies = [site for (site,(there,_)) in our_presence.items() if there and site.startswith('T2')]
+                full_copies.extend( [site for (site,(there,_)) in also_our_presence.items() if there and site.startswith('T2')] )
+
+            if full_copies:
+                keep_at = random.choice( full_copies )
+                
+            if not keep_at:
+                print "We are enable to find a place to keep a full copy of",dataset,"skipping"
+                continue
+            else:
+                ## keeping that copy !
+                print "Keeping a full copy of",dataset,"at",keep_at,"not setting the status further"
+                to_be_cleaned.remove( keep_at )
+        else:
+            wfo.status = 'clean'
+            print "Skipping anyways for the moment"
 
         ## collect delete request per site
         for site in to_be_cleaned :
@@ -69,7 +119,6 @@ def cleanor(url, specific=None):
             if not dataset in [existing[0] for existing in delete_per_site[site]]:
                 delete_per_site[site].append( (dataset, total_size) )
         
-        wfo.status = 'clean'
         session.commit()
 
     open('deletes.json','w').write( json.dumps(delete_per_site,indent=2) )
@@ -90,19 +139,28 @@ def cleanor(url, specific=None):
         print "\t",','.join(dataset_list)
     
     ## make a one for all deletion request to save on phedex id
+    aggregate_deletion = False
+    auto_approve_deletion = False
     sites = set()
     datasets = set()
     for site in delete_per_site:
-        datasets.update([info[0] for info in delete_per_site[site]])
+        site_datasets = [info[0] for info in delete_per_site[site]]
+        datasets.update( site_datasets )
         sites.add(site)
-    
+        if not aggregate_deletion:
+            result = makeDeleteRequest(url ,site , site_datasets, comments="Cleanup input after production. DataOps will take care of approving it.")
+            for phedexid in [o['id'] for o in result['phedex']['request_created']]:
+                if auto_approve_deletion:
+                    approved = approveSubscription(url, phedexid, [site])
+        
     sites = map(str, sites)
     datasets = map(str, datasets)
-    result = makeDeleteRequest(url ,sites ,datasets, comments="cleanup after production") 
-    for phedexid in [o['id'] for o in result['phedex']['request_created']]:
-        for site in sites:
-            #approved = approveSubscription(url, phedexid, [site])
-            pass
+    if aggregate_deletion:
+        result = makeDeleteRequest(url ,sites ,datasets, comments="cleanup after production") 
+        for phedexid in [o['id'] for o in result['phedex']['request_created']]:
+            for site in sites:
+                if auto_approve_deletion:
+                    approved = approveSubscription(url, phedexid, [site])
 
         
 if __name__ == "__main__":

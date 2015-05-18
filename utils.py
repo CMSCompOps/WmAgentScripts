@@ -12,6 +12,7 @@ from xml.dom.minidom import getDOMImplementation
 import copy 
 import pickle
 import itertools
+import time
 
 FORMAT = "%(module)s.%(funcName)s(%(lineno)s) => %(message)s (%(asctime)s)"
 DATEFMT = "%Y-%m-%d %H:%M:%S"
@@ -70,6 +71,20 @@ def download_file(url, params, path = None, logger = None):
         logger.error("URL called: {url}".format(url = url))
         return None
 
+def listDelete(url, user, site=None):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    there = '/phedex/datasvc/json/prod/requestlist?type=delete&approval=pending&requested_by=%s'% user
+    if site:
+        there += 'node=%s'% ','.join(site)
+    r1=conn.request("GET", there)
+
+    r2=conn.getresponse()
+    result = json.loads(r2.read())
+    items=result['phedex']['request']
+    #print json.dumps(items, indent=2)
+    
+    return list(itertools.chain.from_iterable([(subitem['name'],item['requested_by'],item['id']) for subitem in item['node'] if subitem['decision']=='pending' ] for item in items))
+
 def listSubscriptions(url, dataset):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset=%s'%(dataset))
@@ -82,7 +97,7 @@ def listSubscriptions(url, dataset):
             if item['type']!='xfer': continue
             #print item
             if not 'MSS' in node['name']:
-                destinations[node['name']]=(node['decision']=='approved')
+                destinations[node['name']]=(item['id'], node['decision']=='approved')
                 #print node['name'],node['decision']
                 #print node
     #print destinations
@@ -91,13 +106,18 @@ def listSubscriptions(url, dataset):
 class campaignInfo:
     def __init__(self):
         #this contains accessor to aggreed campaigns, with maybe specific parameters
-        self.campaigns = {
-            'Fall14DR73' : {'go':True},
-            'RunIIWinter15GS' : {'go':True},
-            'RunIIWinter15wmLHE' : {'go':True},
-            'TP2023SHCALDR' : {'go':True},
-            'HiFall13DR53X' : {'go':True, 'parameters' : {'MergedLFNBase' : '/store/himc', 'SiteWhitelist' :['T1_FR_CCIN2P3']}}
-            }
+        self.campaigns = json.loads(open('/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/campaigns.json').read())
+        SI = siteInfo()
+        for c in self.campaigns:
+            if 'parameters' in self.campaigns[c]:
+                if 'SiteBlacklist' in self.campaigns[c]['parameters']:
+                    for black in copy.deepcopy(self.campaigns[c]['parameters']['SiteBlacklist']):
+                        if black.endswith('*'):
+                            self.campaigns[c]['parameters']['SiteBlacklist'].remove( black )
+                            reg = black[0:-1]
+                            self.campaigns[c]['parameters']['SiteBlacklist'].extend( [site for site in (SI.all_sites) if site.startswith(reg)] )
+                            #print self.campaigns[c]['parameters']['SiteBlacklist']
+                            
     def go(self, c):
         if c in self.campaigns and self.campaigns[c]['go']:
             return True
@@ -127,9 +147,23 @@ class siteInfo:
                                   "T2_IT_Bari","T2_IT_Legnaro","T2_IT_Pisa","T2_IT_Rome",
                                   "T2_UK_London_Brunel","T2_UK_London_IC","T2_US_Caltech","T2_US_MIT",
                                   "T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida"]
-        
+        ## only T2s in that list
         self.sites_with_goodIO = filter(lambda s : s.startswith('T2'), self.sites_with_goodIO)
-        self.sites_with_goodIO = ["T2_US_Nebraska"]
+        
+        
+        if False:
+            ## the old scheme
+            self.sites_with_goodIO = ["T2_US_Nebraska","T2_US_MIT"]
+            self.sites_veto_transfer = ["T2_US_MIT"]#,"T1_UK_RAL"]
+        else:
+            ## a new scheme with all 
+            allowed_T2_for_transfer = ["T2_US_Nebraska","T2_US_Wisconsin","T2_US_Purdue","T2_US_Caltech","T2_DE_RWTH","T2_DE_DESY"]
+            #no MB yet "T2_CH_CERN",
+            #probable "T2_US_UCSD"
+            # at 400TB ""T2_IT_Bari","T2_IT_Legnaro"
+            # border line "T2_UK_London_IC"
+            self.sites_veto_transfer = [site for site in self.sites_with_goodIO if not site in allowed_T2_for_transfer]
+            
 
         self.sites_T2s = [s for s in json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/whitelist.json').read()) if s not in self.siteblacklist and 'T2' in s]
         self.sites_T1s = [s for s in json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/whitelist.json').read()) if s not in self.siteblacklist and 'T1' in s]
@@ -143,18 +177,95 @@ class siteInfo:
             if 'disk' in values:
                 self.disk[values['disk']] = values['freedisk']
 
+        for (dse,free) in self.disk.items():
+            if free<0:
+                if not dse in self.sites_veto_transfer:
+                    self.sites_veto_transfer.append( dse )
+
         self.cpu_pledges = json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/pledged.json').read())
-        ## ack around and put 1 CPU pledge for those with 0
+        ## hack around and put 1 CPU pledge for those with 0
         for (s,p) in self.cpu_pledges.items(): 
             if not p:
                 self.cpu_pledges[s] = 1
 
-        if not set(self.sites_T2s + self.sites_T1s + self.sites_with_goodIO).issubset(set(self.cpu_pledges.keys())):
+        self.all_sites = list(set(self.sites_T2s + self.sites_T1s + self.sites_with_goodIO))
+
+        if not set(self.all_sites).issubset(set(self.cpu_pledges.keys())):
             print "There are missing sites in pledgeds"
-            print list(set(self.sites_T2s + self.sites_T1s + self.sites_with_goodIO) - set(self.cpu_pledges.keys()))
+            print list(set(self.all_sites) - set(self.cpu_pledges.keys()))
         
+        ## and get SSB sync
+        self.fetch_more_info(talk=False)
+
+    def fetch_more_info(self,talk=True):
+        ## and complement information from ssb
+        columns= {
+            'prodCPU' : 159,
+            'CPUbound' : 160,
+            'FreeDisk' : 106,
+            'UsedTape' : 108,
+            'FreeTape' : 109
+            }
+        
+        all_data = {}
+        for name,column in columns.items():
+            if talk: print name,column
+            try:
+                data = json.loads(os.popen('curl -s "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=%s&batch=1&lastdata=1"'%column).read())
+                all_data[name] = data['csvdata']
+            except:
+                print "cannot get info from ssb for",name
+        _info_by_site = {}
+        for info in all_data:
+            for item in all_data[info]:
+                site = item['VOName']
+                if site.startswith('T3'): continue
+                value = item['Value']
+                if not site in _info_by_site: _info_by_site[site]={}
+                _info_by_site[site][info] = value
+        
+        if talk: print json.dumps( _info_by_site, indent =2 )
+
+        if talk: print self.disk.keys()
+        for (site,info) in _info_by_site.items():
+            if talk: print "\n\tSite:",site
+            ssite = self.CE_to_SE( site )
+            tsite = site+'_MSS'
+            if 'CPUbound' in info and site in self.cpu_pledges and info['CPUbound']:
+                if self.cpu_pledges[site] < info['CPUbound']:
+                    if talk: print site,"could use",info['CPUbound'],"instead of",self.cpu_pledges[site],"for CPU"
+                    self.cpu_pledges[site] = int(info['CPUbound'])
+                elif self.cpu_pledges[site] > 1.5* info['CPUbound']:
+                    if talk: print site,"could correct",info['CPUbound'],"instead of",self.cpu_pledges[site],"for CPU"
+                    self.cpu_pledges[site] = int(info['CPUbound'])                    
+
+            if 'FreeDisk' in info and info['FreeDisk']:
+                if site in self.disk:
+                    if self.disk[site] < info['FreeDisk']:
+                        if talk: print site,"could use",info['FreeDisk'],"instead of",self.disk[site],"for disk"
+                        self.disk[site] = int(info['FreeDisk'])
+                else:
+                    if not ssite in self.disk:
+                        if talk: print "setting",info['FreeDisk']," disk for",site
+                        self.disk[site] = int(info['FreeDisk'])
+
+            if 'FreeDisk' in info and site!=ssite and info['FreeDisk']:
+                if ssite in self.disk:
+                    if self.disk[ssite] < info['FreeDisk']:
+                        if talk: print ssite,"could use",info['FreeDisk'],"instead of",self.disk[ssite],"for disk"
+                        self.disk[ssite] = int(info['FreeDisk'])
+                else:
+                    if talk: print "setting",info['FreeDisk']," disk for",ssite
+                    self.disk[site] = int(info['FreeDisk'])
+
+            if 'FreeTape' in info and 'UsedTape' in info and tsite in self.storage and info['FreeTape']:
+                if info['UsedTape'] and self.storage[tsite] < info['FreeTape']:
+                    if talk: print tsite,"could use",info['FreeTape'],"instead of",self.storage[tsite],"for tape"
+                    self.storage[tsite] = int(info['FreeTape'])
+
+
     def types(self):
-        return ['sites_with_goodIO','sites_T1s','sites_T2s']
+        return ['sites_with_goodIO','sites_T1s','sites_T2s','sites_veto_transfer']
 
     def CE_to_SE(self, ce):
         if ce.startswith('T1') and not ce.endswith('_Disk'):
@@ -218,8 +329,8 @@ def getSiteWhiteList( inputs , pickone=False):
     elif primary:
         sites_allowed =list(set( SI.sites_T1s + SI.sites_T2s ))
     else:
-        # input at all
-        sites_allowed =list(set( SI.sites_T2s ))
+        # no input at all
+        sites_allowed =list(set( SI.sites_T2s + SI.sites_T1s))
 
     if pickone:
         sites_allowed = [SI.pick_CE( sites_allowed )]
@@ -238,7 +349,7 @@ def checkTransferApproval(url, phedexid):
             approved[node['name']] = (node['decision']=='approved')
     return approved
 
-def checkTransferStatus(url, xfer_id):
+def checkTransferStatus(url, xfer_id, nocollapse=False):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     #r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?request=%s'%(str(xfer_id)))
     #r2=conn.getresponse()
@@ -248,7 +359,10 @@ def checkTransferStatus(url, xfer_id):
     r2=conn.getresponse()
     result = json.loads(r2.read())
     timecreate=min([r['time_create'] for r in result['phedex']['request']])
-    r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?request=%s&create_since=%d'%(str(xfer_id),timecreate))
+    subs_url = '/phedex/datasvc/json/prod/subscriptions?request=%s&create_since=%d'%(str(xfer_id),timecreate)
+    if nocollapse:
+        subs_url+='&collapse=n'
+    r1=conn.request("GET",subs_url)
     r2=conn.getresponse()
     result = json.loads(r2.read())
 
@@ -326,7 +440,57 @@ def findCustodialLocation(url, dataset):
 
     return list(set(cust))
 
-def getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=None):
+def getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None, sites=None):
+    ###count how manytimes a dataset is replicated < 100%: not all blocks > 100% several copies exis
+    if vetoes==None:
+        vetoes = ['MSS','Buffer','Export']
+
+    dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+    #all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
+    #all_block_names=set([block['block_name'] for block in all_blocks])
+    files = dbsapi.listFileArray( dataset= dataset,validFileOnly=1, detail=True)
+    all_block_names = list(set([f['block_name'] for f in files]))
+    
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+
+    r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset=%s'%(dataset))
+    r2=conn.getresponse()
+    #retry since it does not look like its getting the right info in the first shot
+    #print "retry"
+    #time.sleep(2)
+    #r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset=%s'%(dataset))
+    #r2=conn.getresponse()
+
+    result = json.loads(r2.read())
+    items=result['phedex']['block']
+
+    block_counts = {}
+    #initialize
+    for block in all_block_names:
+        block_counts[block] = 0
+    
+    for item in items:
+        for replica in item['replica']:
+            if not any(replica['node'].endswith(v) for v in vetoes):
+                if replica['group'] == None: replica['group']=""
+                if complete and not replica['complete']==complete: continue
+                if group!=None and not replica['group'].lower()==group.lower(): continue 
+                if sites and not replica['node'] in sites: continue
+                block_counts[ item['name'] ] +=1
+    
+    first_order = float(len(block_counts) - block_counts.values().count(0)) / float(len(block_counts))
+    if first_order <1.:
+        print dataset,":not all",len(block_counts)," blocks are available, only",len(block_counts)-block_counts.values().count(0)
+        return first_order
+    else:
+        second_order = sum(block_counts.values())/ float(len(block_counts))
+        print dataset,":all",len(block_counts),"available",second_order,"times"
+        return second_order
+    
+
+def getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=None, vetoes=None):
+    if vetoes==None:
+        vetoes = ['MSS','Buffer','Export']
     #print "presence of",dataset
     dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
     all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
@@ -352,9 +516,11 @@ def getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=None
     locations=defaultdict(set)
     for item in items:
         for replica in item['replica']:
-            if not 'MSS' in replica['node'] and not 'Buffer' in replica['node']:
+            if not any(replica['node'].endswith(v) for v in vetoes):
+                if replica['group'] == None: replica['group']=""
                 if complete and not replica['complete']==complete: continue
-                if group and not replica['group']==group: continue
+                #if group!=None and replica['group']==None: continue
+                if group!=None and not replica['group'].lower()==group.lower(): continue 
                 locations[replica['node']].add( item['name'] )
 
     presence={}
@@ -372,7 +538,7 @@ def getDatasetSize(dataset):
     ## put everything in terms of GB
     return sum([block['file_size'] / (1024.**3) for block in blocks])
 
-def getDatasetChops(dataset, chop_threshold =500., talk=False):
+def getDatasetChops(dataset, chop_threshold =1000., talk=False):
     ## does a *flat* choping of the input in chunk of size less than chop threshold
     dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
     blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
@@ -410,6 +576,7 @@ def getDatasetChops(dataset, chop_threshold =500., talk=False):
     if talk:
         print items
     ## a list of list of blocks or dataset
+    print "Choped",dataset,"of size",sum_all,"GB (",chop_threshold,"GB) in",len(items),"pieces"
     return items
 
 def distributeToSites( items, sites , n_copies, weights=None):
@@ -426,16 +593,34 @@ def distributeToSites( items, sites , n_copies, weights=None):
         for item in items:
             at=set()
             #print item,"requires",n_copies,"copies to",len(sites),"sites"
-            for pick in range(n_copies):
-                at.add(SI.pick_CE( list(set(sites)-at)))
-            #print list(at)
+            if len(sites) <= n_copies:
+                #more copies than sites
+                at = set(sites)
+            else:
+                # pick at random according to weights
+                for pick in range(n_copies):
+                    at.add(SI.pick_CE( list(set(sites)-at)))
+                #print list(at)
             for site in at:
                 spreading[site].extend(item)                
         return dict(spreading)
 
+def getDatasetEventsAndLumis(dataset, blocks=None):
+    dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+    all_files = []
+    if blocks:
+        for b in blocks:
+            all_files.extend( dbsapi.listFileSummaries( block_name = b  , validFileOnly=1))
+    else:
+        all_files = dbsapi.listFileSummaries( dataset = dataset , validFileOnly=1)
+
+    all_events = sum([f['num_event'] for f in all_files])
+    all_lumis = sum([f['num_lumi'] for f in all_files])
+    return all_events,all_lumis
+
 def getDatasetEventsPerLumi(dataset):
     dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
-    all_files = dbsapi.listFileSummaries( dataset = dataset )
+    all_files = dbsapi.listFileSummaries( dataset = dataset , validFileOnly=1)
     try:
         average = sum([f['num_event']/float(f['num_lumi']) for f in all_files]) / float(len(all_files))
     except:
@@ -447,7 +632,10 @@ def getDatasetStatus(dataset):
         dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
         # retrieve dataset summary                                                                                                                                                                                                                                                   
         reply = dbsapi.listDatasets(dataset=dataset,dataset_access_type='*',detail=True)
-        return reply[0]['dataset_access_type']
+        if len(reply):
+            return reply[0]['dataset_access_type']
+        else:
+            return None
 
 def getDatasets(dataset):
        # initialize API to DBS3                                                                                                                                                                                                                                                      
@@ -492,7 +680,9 @@ def phedexPost(url, request, params):
     conn.close()
     return result
 
-def approveSubscription(url, phedexid, nodes=None ):
+def approveSubscription(url, phedexid, nodes=None , comments =None):
+    if comments==None:
+        comments = 'auto-approve of production prestaging'
     if not nodes:
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?request='+str(phedexid))
@@ -510,7 +700,7 @@ def approveSubscription(url, phedexid, nodes=None ):
         'decision' : 'approve',
         'request' : phedexid,
         'node' : ','.join(nodes),
-        'comments' : 'auto-approve of production prestaging'
+        'comments' : comments
         }
     
     result = phedexPost(url, "/phedex/datasvc/json/prod/updaterequest", params)
@@ -537,12 +727,20 @@ def makeDeleteRequest(url, site,datasets, comments, priority='low'):
     response = phedexPost(url, "/phedex/datasvc/json/prod/delete", params)
     return response
 
-def makeReplicaRequest(url, site,datasets, comments, priority='high',custodial='n'): # priority used to be normal
+def makeReplicaRequest(url, site,datasets, comments, priority='normal',custodial='n'): # priority used to be normal
     dataXML = createXML(datasets)
     params = { "node" : site,"data" : dataXML, "group": "DataOps", "priority": priority,
                  "custodial":custodial,"request_only":"y" ,"move":"n","no_mail":"n","comments":comments}
     response = phedexPost(url, "/phedex/datasvc/json/prod/subscribe", params)
     return response
+
+def updateSubscription(url, site, item, priority=None, user_group=None):
+    params = { "node" : site }
+    params['block' if '#' in item else 'dataset'] = item
+    if priority:   params['priority'] = priority
+    if user_group: params['user_group'] = user_group
+    response = phedexPost(url, "/phedex/datasvc/json/prod/updatesubscription", params) 
+    print response
 
 def getWorkLoad(url, wf ):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -551,6 +749,21 @@ def getWorkLoad(url, wf ):
     data = json.loads(r2.read())
     return data
 
+def getViewByInput( url, details=False):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    there = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byinputdataset?'
+    if details:
+        there+='&include_docs=true'
+    r1=conn.request("GET",there)
+    r2=conn.getresponse()
+    data = json.loads(r2.read())
+    items = data['rows']
+    return items
+    if details:
+        return [item['doc'] for item in items]
+    else:
+        return [item['id'] for item in items]
+        
 def getWorkflowByInput( url, dataset , details=False):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     there = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byinputdataset?key="%s"'%(dataset)
@@ -593,10 +806,12 @@ def getWorkflowById( url, pid , details=False):
     else:
         return [item['id'] for item in items]
     
-def getWorkflows(url,status,user):
+def getWorkflows(url,status,user=None,details=False):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    #r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/bystatusandtype?stale=update_after')
-    r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/bystatus?key="%s"'%(status))
+    go_to = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/bystatus?key="%s"'%(status)
+    if details:
+        go_to+='&include_docs=true'
+    r1=conn.request("GET",go_to)
     r2=conn.getresponse()
     data = json.loads(r2.read())
     items = data['rows']
@@ -604,25 +819,29 @@ def getWorkflows(url,status,user):
     workflows = []
     for item in items:
         wf = item['id']
-        if wf.startswith(user):
-            workflows.append(item['id'])
+        if (user and wf.startswith(user)) or not user:
+            workflows.append(item['doc' if details else 'id'])
 
     return workflows
 
 class workflowInfo:
-    def __init__(self, url, workflow,deprecated=False ):
+    def __init__(self, url, workflow, deprecated=False, spec=True, request=None):
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         self.deprecated_request = {}
         if deprecated:
             r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
             r2=conn.getresponse()
             self.deprecated_request = json.loads(r2.read())
-        r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/'+workflow)
-        r2=conn.getresponse()
-        self.request = json.loads(r2.read())
-        r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/%s/spec'%workflow)
-        r2=conn.getresponse()
-        self.full_spec = pickle.loads(r2.read())
+        if request == None:
+            r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/'+workflow)
+            r2=conn.getresponse()
+            self.request = json.loads(r2.read())
+        else:
+            self.request = copy.deepcopy( request )
+        if spec:
+            r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/%s/spec'%workflow)
+            r2=conn.getresponse()
+            self.full_spec = pickle.loads(r2.read())
         self.url = url
 
     def _tasks(self):
@@ -644,12 +863,13 @@ class workflowInfo:
                 return True
 
             spl = self.getSplittings()[0]
-            events_per_job = spl['events_per_job']
             algo = spl['splittingAlgo']
-            if algo == 'EventAwareLumiBased' and average > events_per_job:
-                ## need a fudge factor !!!
-                print "This is going to fail",average,"in and requiring",events_per_job
-                return False
+            if algo == 'EventAwareLumiBased':
+                events_per_job = spl['events_per_job']
+                if average > events_per_job:
+                    ## need to do something
+                    print "This is going to fail",average,"in and requiring",events_per_job
+                    return False
         return True
 
     def getSchema(self):
@@ -657,7 +877,7 @@ class workflowInfo:
         ## put in the era accordingly ## although this could be done in re-assignment
         ## take care of the splitting specifications ## although this could be done in re-assignment
         for (k,v) in new_schema.items():
-            if v==None:
+            if v in [None,'None']:
                 new_schema.pop(k)
         return new_schema 
 
@@ -826,6 +1046,7 @@ class workflowInfo:
                     (aera,aps,_) = ps.split('-')
                 else:
                     print "Cannot check output in reqmgr"
+                    print output,"is what is in the request workload"
                     continue
                 predicted = '/'.join(['',dsn,'-'.join([aera,aps,'v%d'%(version+1)]),tier])
                 conflicts = getWorkflowByOutput( self.url, predicted )
