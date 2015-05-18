@@ -54,7 +54,7 @@ for batches_row in batches_rows:
                 newstatus="rejected"
             if status == "assigned" or status == "running-open" or status == "running-closed" or status == "acquired":
                 newstatus="aborted"            
-        elif status != "aborted-archived" and status != "aborted" and status != "rejected":
+        elif status != "aborted-archived" and status != "aborted" and status != "rejected" and status != "rejected-archived":
             os.system('echo '+workflow+' | mail -s \"batch_rejecter_aborter.py error 1\" andrew.m.levin@vanderbilt.edu --')
             sys.exit(1)
         else:
