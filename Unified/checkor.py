@@ -84,15 +84,10 @@ def checkor(url, spec=None, options=None):
 
     wfs=[]
     if options.fetch:
-        #workflows = getWorkflows(url, status='completed')
-        #for wf in workflows:
-        #    wfo = session.query(Workflow).filter(Workflow.name == wf ).first()
-        #    if wfo:
-        #        if not wfo.status in ['away','assistance']: continue
-        #        wfs.append(wfo )
+        ## get all in running and check
         wfs.extend( session.query(Workflow).filter(Workflow.status == 'away').all() )
         wfs.extend( session.query(Workflow).filter(Workflow.status== 'assistance').all() )
-    else:
+    if options.nofetch:
         ## than get all in need for assistance
         wfs.extend( session.query(Workflow).filter(Workflow.status.startswith('assistance-')).all() )
 
@@ -412,6 +407,7 @@ if __name__ == "__main__":
     parser = optparse.OptionParser()
     parser.add_option('-t','--test', help='Only test the checkor', action='store_true', default=False)
     parser.add_option('-f','--fetch', help='fetch new stuff not already in assistance', action='store_true', default=False)
+    parser.add_option('-n','--nofetch',help='update those in assistance',action='store_true', default=False)
     parser.add_option('--fractionpass',help='The completion fraction that is permitted', default=0.0,type='float')
     parser.add_option('--ignorefiles', help='Force ignoring dbs/phedex differences', action='store_true', default=False)
     parser.add_option('--lumisize', help='Force the upper limit on lumisection', default=0, type='float')
@@ -422,6 +418,15 @@ if __name__ == "__main__":
     if len(args)!=0:
         spec = args[0]
 
+    if options.fetch and options.nofetch:
+        print "cannot fetch and not fetch at the same time"
+        sys.exit(1)
+
+    if not options.fetch and not options.nofetch:
+        ## no argugments : default usage
+        options.fetch = True
+        options.nofetch = True
+        
     checkor(url, spec, options=options)
     
     if options.html:
