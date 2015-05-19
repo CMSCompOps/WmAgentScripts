@@ -761,6 +761,7 @@ assignWorkflow.defaults= {
         "dashboard": "production",
         "SoftTimeout" : 159600,
         "GracePeriod": 300,
+        'CustodialSites' : [], ## make a custodial copy of the output there
         "CustodialSubType" : 'Replica', ## move will screw it over ?
         'NonCustodialSites' : [],
         "NonCustodialSubType" : 'Replica', ## that's the default, but let's be sure
@@ -772,7 +773,7 @@ assignWorkflow.mandatories = ['SiteWhitelist',
                               'ProcessingString',
                               'MergedLFNBase',
                               
-                              'CustodialSites', ## make a custodial copy of the output there
+                              #'CustodialSites', ## make a custodial copy of the output there
                               
                               #'SoftTimeout',
                               #'BlockCloseMaxEvents',
