@@ -198,7 +198,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                 print "Sites allowed minus the vetoed transfer"
                 print sites_really_allowed
                 copies_needed_from_site = int(0.35*len(sites_really_allowed))+1 ## should just go for a fixed number based if the white list grows that big
-                print "Would make",copies_needed,"copies"
+                print "Would make",copies_needed_from_site,"copies from site white list"
                 if options.maxcopy>0:
                     copies_needed = min(options.maxcopy,copies_needed_from_site)
                     print "Maxed to",copies_needed
