@@ -58,7 +58,7 @@ def assignRequest(url,workflow,team,site,era,procstr,procver,activity,lfn,maxrss
               "ProcessingString": procstr,
               "ProcessingVersion": procver,
               "Dashboard": activity,
-              "useSiteListAsLocation" : "true",   ### when we want to use xrootd to readin input files
+              "useSiteListAsLocation" : True,   ### when we want to use xrootd to readin input files
       #        "CustodialSites": ['T1_US_FNAL'],
       #        "NonCustodialSites": ['T2_CH_CERN'],
       #        "AutoApproveSubscriptionSites": ['T1_US_FNAL'],
