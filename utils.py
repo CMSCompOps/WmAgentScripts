@@ -116,6 +116,19 @@ def listSubscriptions(url, dataset):
     #print destinations
     return destinations
 
+class unifiedConfiguration:
+    def __init__(self):
+        self.configs = json.loads(open('/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/unifiedConfiguration.json').read())
+        
+    def get(self, parameter):
+        if parameter in self.configs:
+            return self.configs[parameter]['value']
+        else:
+            print parameter,'is not defined in global configuration'
+            print ','.join(self.configs.keys()),'possible'
+            sys.exit(124)
+            
+
 class campaignInfo:
     def __init__(self):
         #this contains accessor to aggreed campaigns, with maybe specific parameters

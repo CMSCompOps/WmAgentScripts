@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 import time
-from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows
+from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration
 import os
 import json
 
@@ -447,6 +447,28 @@ Worlfow clean for output (%d) <a href=logs/outcleanor/last.log target=_blank>log
 %s
 </ul></div>
 """%(text))
+
+
+    UC = unifiedConfiguration()
+    text = ""
+    for param in UC.configs:
+        text +="<li>%s</li><ul>\n"% param
+        for sub in sorted(UC.configs[param].keys()):
+            text +="<li> %s : %s </li>\n"%( sub, UC.configs[param][sub] )
+        text += '</ul>\n'
+        
+    html_doc.write("""Unified configuration
+<a href="javascript:showhide('config')">[Click to show/hide]</a>
+<br>
+<div id="config" style="display:none;">
+<br>
+<ul>
+%s
+</ul></div>                                                                                                                                                                                                                                                                                                                
+"""%(text))
+
+
+
 
     print "... done with status page."
     html_doc.write("""

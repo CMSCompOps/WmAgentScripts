@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput, workflowInfo, getDatasetBlocksFraction
+from utils import unifiedConfiguration
 import sys
 import itertools
 import pprint
@@ -18,8 +19,10 @@ def stagor(url,specific =None, options=None):
             wfi = workflowInfo(url, wfo.name)
             dataset = wfi.request['InputDataset']
             available = getDatasetBlocksFraction( url , dataset )
-            if available > options.fast:
+            if available > options.goodavailability:
                 print "\t\t",wfo.name,"can go staged"
+                #wfo.status = 'staged'
+                #session.commit()
         return 
 
     for transfer in session.query(Transfer).all():
@@ -158,9 +161,10 @@ def stagor(url,specific =None, options=None):
 
 if __name__ == "__main__":
     url = 'cmsweb.cern.ch'
-
+    UC = unifiedConfiguration()
     parser = optparse.OptionParser()
-    parser.add_option('-f','--fast', help='Make a quick check for available fraction',default=0.,type=float)
+    parser.add_option('-f','--fast', help='Make a quick check for available fraction',default=False,action='store_true')
+    parser.add_option('-g','--goodavailability', help='The threshold on available fraction',default=UC.get('fast_stagor_pass_availability'),type=float)
     (options,args) = parser.parse_args()
 
     spec=None
