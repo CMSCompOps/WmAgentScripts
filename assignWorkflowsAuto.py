@@ -221,7 +221,7 @@ def assignRequest(url ,workflow ,team ,site ,era, procversion, procstring, activ
               
     if useX == 1:
        print "- Using xrootd for input dataset"
-       params['useSiteListAsLocation'] = "true"
+       params['useSiteListAsLocation'] = True
 
     encodedParams = urllib.urlencode(params, True)
 
