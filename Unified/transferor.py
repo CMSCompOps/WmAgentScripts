@@ -253,7 +253,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                 prim_to_distribute = [site for site in prim_to_distribute if not any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
                 if len(prim_to_distribute)>0: ## maybe that a parameter we can play with to limit the 
                     if not options or options.chop:
-                        spreading = distributeToSites( getDatasetChops(prim), prim_to_distribute, n_copies = copies_needed, weights=SI.cpu_pledges)
+                        spreading = distributeToSites( getDatasetChops(prim, chop_threshold = options.chopsize), prim_to_distribute, n_copies = copies_needed, weights=SI.cpu_pledges)
                     else:
                         spreading = {} 
                         for site in prim_to_distribute: spreading[site]=[prim]
@@ -408,6 +408,7 @@ if __name__=="__main__":
     parser.add_option('-t','--test',help="Perform the test and display information",default=False,action='store_true')
     parser.add_option('-s','--stop',help="Stop ask and go",default=False,action='store_true')
     parser.add_option('-n','--nochop',help='Do no chop the input to the possible sites',default=True,dest='chop',action='store_false')
+    parser.add_option('-c','--chopsize',help='The threshold for choping input dataset',default=UC.get('chopping_threshold_in_GB'),type=int)
     parser.add_option('--tosites',help='Provide a coma separated list of sites to transfer input to',default=None)
     parser.add_option('--go',help="Overrides no-go from campaign, announced, or grace period",default=False,action='store_true')
     parser.add_option('--maxtransfer',help="The limit in GB of the total size of input that can be transfered", default=UC.get('max_transfer_in_GB'),type=int)

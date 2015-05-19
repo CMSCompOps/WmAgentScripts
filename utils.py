@@ -565,6 +565,7 @@ def getDatasetSize(dataset):
     return sum([block['file_size'] / (1024.**3) for block in blocks])
 
 def getDatasetChops(dataset, chop_threshold =1000., talk=False):
+    chop_threshold = float(chop_threshold)
     ## does a *flat* choping of the input in chunk of size less than chop threshold
     dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
     blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
