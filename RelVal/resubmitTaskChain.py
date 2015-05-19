@@ -37,6 +37,7 @@ def approveRequest(url,workflow):
         data = response.read()
         print data
         print "Exiting!"
+        os.system('echo '+data+' | mail -s \"resubmitTaskChain.py error 2\" andrew.m.levin@vanderbilt.edu --')
         sys.exit(1)
     conn.close()
     print 'Cloned workflow:',workflow
@@ -88,7 +89,8 @@ def retrieveSchema(workflowName):
 
     #request['Memory'] = 3900
     #del request['SiteWhitelist']        
-    #request['RequestString'] = 'TEST_ALAN_TEST'
+    #request['RequestString'] = 'TEST_ANDREW_TEST'
+#    request['Task1']['BlockBlacklist'] = ['/DoubleMu/Run2011A-ZMu-08Nov2011-v1/RAW-RECO#93c53d22-25b2-11e1-8c62-003048f02c8a']
     #request['Task1']['BlockWhitelist'] = ['/RelValQCD_Pt_80_170_BCtoE_8TeV/CMSSW_6_2_0_pre8-PRE_ST62_V8-v3/GEN-SIM#d99587e0-625e-11e3-ad0f-00221959e7c0','/RelValQCD_Pt_80_170_BCtoE_8TeV/CMSSW_6_2_0_pre8-PRE_ST62_V8-v3/GEN-SIM#8689de68-606d-11e3-ad0f-00221959e7c0']
     return request
 
@@ -108,15 +110,19 @@ def submitWorkflow(schema):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     conn.request("POST",  "/reqmgr/create/makeSchema", encodedParams, headers)
     response = conn.getresponse()
+
     print response.status, response.reason
     data = response.read()
     print data
+    if response.status != 303:
+        os.system('echo '+data+' | mail -s \"resubmitTaskChain.py error 1\" andrew.m.levin@vanderbilt.edu --')
     details=re.search("details\/(.*)\'",data)
     return details.group(1)
 
 if __name__ == "__main__":
     parser = optparse.OptionParser()
     parser.add_option('--correct_env',action="store_true",dest='correct_env')
+    parser.add_option('--high_memory',action="store_true",dest='high_memory')
     (options,args) = parser.parse_args()
 
     command=""
@@ -124,7 +130,7 @@ if __name__ == "__main__":
         command=command+arg+" "
 
     if not options.correct_env:
-         os.system("source /afs/cern.ch/cms/LCG/LCG-2/UI/cms_ui_env.sh; source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh; python2.6 "+command + "--correct_env")
+         os.system("source /cvmfs/grid.cern.ch/emi-ui-3.7.3-1_sl6v2/etc/profile.d/setup-emi3-ui-example.sh; export X509_USER_PROXY=/tmp/x509up_u13536; python2.6 "+command + "--correct_env")
          sys.exit(0)
 
     if len(args) != 1:
@@ -134,7 +140,12 @@ if __name__ == "__main__":
 
     from WMCore.WMSpec.WMWorkload import WMWorkloadHelper    
 
-    schema = retrieveSchema(sys.argv[1])
+    schema = retrieveSchema(args[0])
+
+    if options.high_memory:
+        schema['Memory'] = 4900
+
+    
 #    print "\nNew schema:\n", schema     # FOR DEBUG
 #    sys.exit(0)
     newWorkflow=submitWorkflow(schema)

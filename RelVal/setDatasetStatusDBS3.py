@@ -62,7 +62,7 @@ def setStatusDBS3(url3, dataset3, newStatus, files):
         print "Files will be set to:",file_status,"in DBS3"
         files = dbsapi.listFiles(dataset=dataset3)
         for this_file in files:
-            dbsapi.updateFileStatus(logical_file_names=this_file['logical_file_name'],is_file_valid=file_status)
+            dbsapi.updateFileStatus(logical_file_name=this_file['logical_file_name'],is_file_valid=file_status)
 
 
 def main():
@@ -70,13 +70,21 @@ def main():
 
     usage="usage: python setDatasetStatus.py --dataset=<DATASET_NAME> --status=<STATUS> {--files}"
     parser = OptionParser(usage=usage)
-
+    parser.add_option('--correct_env',action="store_true",dest='correct_env')
     parser.add_option('-d', '--dataset', dest='dataset', default=None, help='Dataset name')
     parser.add_option('-s', '--status', dest='status', default=None, help='This will be the new status of the dataset/files')
     parser.add_option('-f', '--files', action="store_true", default=False, dest='files', help='Validate or invalidate all files in dataset')
 
     (opts, args) = parser.parse_args()
 
+    command=""
+    for arg in sys.argv:
+        command=command+arg+" "
+
+    if not opts.correct_env:
+        os.system("source /cvmfs/grid.cern.ch/emi-ui-3.7.3-1_sl6v2/etc/profile.d/setup-emi3-ui-example.sh; export X509_USER_PROXY=/tmp/x509up_u13536; source /tmp/relval/sw/comp.pre/slc6_amd64_gcc481/cms/dbs3-client/3.2.8a/etc/profile.d/init.sh; python2.6 "+command + "--correct_env")
+        sys.exit(0)
+        
     if opts.dataset == None:
         print "--dataset option must be provided"
         print usage;

@@ -1,10 +1,29 @@
-#!/usr/bin/env python
+#!/usr/bin/env python -u
+from xml.dom import minidom
 import urllib2,urllib, httplib, sys, re, os
 import json
 import optparse
-#from das_client import get_data
+
+
+from das_client import get_data
 das_host='https://cmsweb.cern.ch'
 
+dbs3_url = 'https://cmsweb.cern.ch'
+
+def getDBSApi():
+    """
+    Instantiate the DBS3 Client API
+    """
+    if 'testbed' in dbs3_url:
+        dbs3_url_reader = dbs3_url + '/dbs/int/global/DBSReader'
+    else:
+        dbs3_url_reader = dbs3_url + '/dbs/prod/global/DBSReader'
+        
+    #this needs to come after /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh is sourced
+    from dbs.apis.dbsClient import DbsApi
+
+    dbsApi = DbsApi(url = dbs3_url_reader)
+    return dbsApi
 
 def checkDatasetExistenceDAS(dataset):
     query="dataset dataset="+dataset+" status=*"
@@ -21,7 +40,8 @@ def checkDatasetExistenceDAS(dataset):
 	return True
 
 
-def assignRequest(url,workflow,team,site,era,procstr,procver,activity,lfn):
+def assignRequest(url,workflow,team,site,era,procstr,procver,activity,lfn,maxrss):
+
     params = {"action": "Assign",
               "Team"+team: "checked",
               "SiteWhitelist": site,
@@ -31,8 +51,8 @@ def assignRequest(url,workflow,team,site,era,procstr,procver,activity,lfn):
               "MinMergeSize": 2147483648,
               "MaxMergeSize": 4294967296,
               "MaxMergeEvents": 100000,
-              #"MaxRSS": 2411724,
-              "MaxRSS": 3072000,
+              #"maxRSS": 4911724,
+              "MaxRSS": maxrss,
               "MaxVSize": 20294967,
               "AcquisitionEra": era,
               "ProcessingString": procstr,
@@ -65,6 +85,7 @@ def assignRequest(url,workflow,team,site,era,procstr,procver,activity,lfn):
     conn.request("POST",  "/reqmgr/assign/handleAssignmentPage", encodedParams, headers)
     response = conn.getresponse()
     if response.status != 200:
+        os.system('echo '+workflow+' | mail -s \"assignRelValWorkflow.py error 1\" andrew.m.levin@vanderbilt.edu --')
         print 'could not assign request with following parameters:'
         for item in params.keys():
             print item + ": " + str(params[item])
@@ -99,9 +120,11 @@ def main():
     parser.add_option('-l', '--lfn', help='Merged LFN base',dest='lfn')
     parser.add_option('--correct_env',action="store_true",dest='correct_env')
     parser.add_option('--special', help='Use it for special workflows. You also have to change the code according to the type of WF',dest='special')
+    parser.add_option('--high_memory', action="store_true",help='Changes the memory at which wmagent kills the jobs',dest='high_memory')
     parser.add_option('--test',action="store_true", help='Nothing is injected, only print infomation about workflow and AcqEra',dest='test')
     parser.add_option('--pu',action="store_true", help='Use it to inject PileUp workflows only',dest='pu')
     parser.add_option('--lsf',action="store_true", help='Use it to assign work to the LSF agent at CERN - vocms174, relvallsf team',dest='lsf')
+    parser.add_option('--hi',action="store_true", help='Change the lfn to /store/hirelval/ ',dest='hi')
     (options,args) = parser.parse_args()
 
     command=""
@@ -109,7 +132,7 @@ def main():
         command=command+arg+" "
 
     if not options.correct_env:
-        os.system("source /afs/cern.ch/project/gd/LCG-share/current_3.2/etc/profile.d/grid-env.sh; python2.6 "+command + "--correct_env")
+        os.system("source /cvmfs/grid.cern.ch/emi-ui-3.7.3-1_sl6v2/etc/profile.d/setup-emi3-ui-example.sh; export X509_USER_PROXY=/tmp/x509up_u13536; source /tmp/relval/sw/comp.pre/slc6_amd64_gcc481/cms/dbs3-client/3.2.8a/etc/profile.d/init.sh; python2.6 "+command + "--correct_env")
         sys.exit(0)
 
     data = False
@@ -125,12 +148,19 @@ def main():
     procversion=1
     #procversion='v1'
     activity='relval'
-    lfn='/store/relval'
+    if options.hi:
+        lfn='/store/hirelval/'
+    else:    
+        lfn='/store/relval'
     procstring = {}
     specialStr = ''
 
     ### Getting the original dictionary
     schema = getRequestDict(url,workflow)
+
+    if 'type' in schema and schema['type'] == 'HTTPError':
+        os.system('echo '+workflow+' | mail -s \"assignRelValWorkflow.py error 2\" andrew.m.levin@vanderbilt.edu --')
+        sys.exit(1)
 
     ### Dropping 2010 HeavyIon workflows or assigning 2011 to CERN/LSF 
     if 'RunHI2010' in schema['RequestString']:
@@ -148,6 +178,19 @@ def main():
     # Setting the AcquisitionEra parameter - it will be always the same for all tasks inside the request
     acqera = schema['CMSSWVersion']
 
+    # Handling the parameters given in the command line
+    if options.team:
+        team=options.team
+    if options.site:
+        site=options.site
+    if options.procversion:
+        procversion=int(options.procversion)
+    if options.activity:
+        activity=options.activity
+    if options.lfn:
+        lfn=options.lfn
+
+
     # Setting the ProcessingString values per Task 
     for key, value in schema.items():
         if type(value) is dict and key.startswith("Task"):
@@ -155,7 +198,7 @@ def main():
                 if 'ProcessingString' in value:
                     procstring[value['TaskName']] = value['ProcessingString'].replace("-","_")
                 elif 'AcquisitionEra' in value and '-' in value['AcquisitionEra']:
-                    #procstring[value['TaskName']] = value['AcquisitionEra'].split('-')[-1]
+                    #procstring[value['TaskName']] = value['AcquisitionEra'].split'-')[-1]
                     procstring[value['TaskName']] = value['AcquisitionEra'].split(schema['CMSSWVersion']+'-')[-1]
                     procstring[value['TaskName']] = procstring[value['TaskName']].replace("-","_")
                     #procstring[value['TaskName']] = 'START61_V8'
@@ -164,6 +207,80 @@ def main():
             except KeyError:
                 print "This request has no ProcessingString defined into the Tasks, aborting..."
                 sys.exit(1)
+
+            if value['KeepOutput']:
+                if 'InputDataset' in value:
+                    dset="/" + value['InputDataset'].split('/')[1] + "/" + value['AcquisitionEra'] + "-" + value['ProcessingString'] + "-v" + str(procversion)+"/*"
+                elif 'PrimaryDataset' in value:
+                    dset="/" + value['PrimaryDataset'] + "/" + value['AcquisitionEra'] + "-" + value['ProcessingString'] + "-v" + str(procversion)+"/*"
+                else:
+                    #this is normal for Tasks after Task1 
+                    #print "not checking if the output dataset of this task exists"
+                    continue
+
+
+                
+                #print "checking if the output dataset of this task exists"
+                dbsApi = getDBSApi()
+                if len(dbsApi.listDatasets(dataset = dset)) != 0:
+                    print "len(dbsApi.listDatasets(dataset = "+dset+")) > 0, exiting"
+                    os.system('echo '+workflow+' | mail -s \"assignRelValWorkflow.py error 3\" andrew.m.levin@vanderbilt.edu --')
+                    sys.exit(0)
+
+                if "T2" in site:
+                    site_disk = site
+                elif "T1" in site:
+                    site_disk = site + "_Disk"
+                else:
+                    os.system('echo '+site+' | mail -s \"assignRelValWorkflow.py error 4\" andrew.m.levin@vanderbilt.edu')
+                    print "Neither T1 nor T2 is in site name, exiting"
+                    sys.exit(1)
+
+                if 'MCPileup' in value:
+                    old_ld_library_path=os.environ['LD_LIBRARY_PATH']
+                    os.environ['LD_LIBRARY_PATH']=''
+                    isdatasetatsite=os.system("python2.6 check_if_dataset_is_at_a_site.py --dataset "+value['MCPileup']+" --site "+site_disk)
+                    os.environ['LD_LIBRARY_PATH']=old_ld_library_path
+
+                    if not isdatasetatsite:
+                        print value['MCPileup']
+                        os.system('echo '+workflow+' | mail -s \"assignRelValWorkflow.py error 6\" andrew.m.levin@vanderbilt.edu')
+                        sys.exit(1)
+
+                if 'InputDataset' in value:
+
+                    subscribed_to_disk=False
+
+                    inputdset=value['InputDataset']
+
+                    if 'RunWhitelist' in value:
+                        runwhitelist=value['RunWhitelist']
+                        blocks=dbsApi.listBlocks(dataset = inputdset, run_num = runwhitelist)
+                        for block in blocks:
+                            
+                            old_ld_library_path=os.environ['LD_LIBRARY_PATH']
+                            os.environ['LD_LIBRARY_PATH']=''
+                            isblockatsite=os.system("python2.6 check_if_block_is_at_a_site.py --block "+block['block_name']+" --site "+site_disk)
+                            os.environ['LD_LIBRARY_PATH']=old_ld_library_path
+
+                            #this block is not registered in phedex, so it cannot be subscribed to any site
+                            if not isblockatsite and block['block_name'] != "/DoubleMu/Run2011A-ZMu-08Nov2011-v1/RAW-RECO#93c53d22-25b2-11e1-8c62-003048f02c8a":
+                                os.system('echo '+workflow+' | mail -s \"assignRelValWorkflow.py error 5\" andrew.m.levin@vanderbilt.edu')
+                                sys.exit(1)
+                                
+                            #print block['block_name']
+                            #url=('https://cmsweb.cern.ch/phedex/datasvc/xml/prod/subscriptions?block='+block['block_name']).replace('#','%23')
+                            #urlinput = urllib.urlopen(url)
+                            #print url
+                            #print urlinput
+                            #xmldoc = minidom.parse(urlinput)
+                            #for phedex in  xmldoc3.childNodes:
+                            #    for dataset in phedex.childNodes:
+                            #        for block in dataset.childNodes:
+                            #            for subscription in block.childNodes:
+                            #                if subscription.attributes['node'].value == site_disk:
+                            #                    subscribed_to_disk=True
+                            #print subscribed_to_disk            
 
     # Adding the "PU_" string into the ProcessingString value
     if options.pu:
@@ -181,25 +298,18 @@ def main():
         for key,value in procstring.items():
             procstring[key] = value+specialStr
 
-    # Handling the parameters given in the command line
-    if options.team:
-        team=options.team
-    if options.site:
-        site=options.site
-    if options.procversion:
-        procversion=int(options.procversion)
-    if options.activity:
-        activity=options.activity
-    if options.lfn:
-        lfn=options.lfn
-
     # Changing the team name and the site whitelist in case the --lsf parameter was given   
     if options.lsf:
         team='relvallsf'
         site='T2_CH_CERN'
 
-#    site=['T2_US_Nebraska','T2_US_Florida']
+    #maxrss=2972000
+    maxrss=3072000
+    #maxrss=3572000
+    if options.high_memory:
+        maxrss=4972000
 
+    
     # If the --test argument was provided, then just print the information gathered so far and abort the assignment
     if options.test:
         print workflow, '\tAcqEra:', acqera, '\tProcStr:', procstring, '\tProcVer:', procversion, '\tTeam:',team, '\tSite:', site
@@ -207,7 +317,7 @@ def main():
 
     # Really assigning the workflow now
     print workflow, '\tAcqEra:', acqera, '\tProcStr:', procstring, '\tProcVer:', procversion, '\tTeam:',team, '\tSite:', site
-    assignRequest(url,workflow,team,site,acqera,procstring,procversion,activity,lfn)
+    assignRequest(url,workflow,team,site,acqera,procstring,procversion,activity,lfn,maxrss)
     sys.exit(0);
 
 if __name__ == "__main__":
