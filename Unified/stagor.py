@@ -21,8 +21,8 @@ def stagor(url,specific =None, options=None):
             available = getDatasetBlocksFraction( url , dataset )
             if available > options.goodavailability:
                 print "\t\t",wfo.name,"can go staged"
-                #wfo.status = 'staged'
-                #session.commit()
+                wfo.status = 'staged'
+                session.commit()
         return 
 
     for transfer in session.query(Transfer).all():
