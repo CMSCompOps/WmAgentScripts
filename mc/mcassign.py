@@ -193,7 +193,7 @@ def assignMCRequest(url,workflow,team,sitelist,era,processingstring,processingve
               "Team"+team: "checked",
               "SiteWhitelist": sitelist,
               "SiteBlacklist": [],
-              "useSiteListAsLocation":"true",
+              "useSiteListAsLocation": True,
               "MergedLFNBase": mergedlfnbase,
               "UnmergedLFNBase": "/store/unmerged",
 	      "SoftTimeout": softtimeout,
