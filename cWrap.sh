@@ -40,6 +40,9 @@ python checkcmsweb.py >> $log || {
 
 python $* &>> $log
 
+echo "finished" >> $log
+echo `date` >> $log
+
 ## copy log to lasts
 cp $log /afs/cern.ch/user/c/cmst2/www/unified/logs/`echo $1 | sed 's/\.py//' | sed 's/Unified\///'`/last.log
 cp $log /afs/cern.ch/user/c/cmst2/www/unified/logs/last.log
