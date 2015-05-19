@@ -56,14 +56,15 @@ def assignor(url ,specific = None, talk=True, options=None):
         (lheinput,primary,parent,secondary) = wfh.getIO()
         sites_allowed = getSiteWhiteList( (lheinput,primary,parent,secondary) )
         print "Allowed",sites_allowed
-        sites_out = [SI.pick_dSE([SI.CE_to_SE(ce) for ce in sites_allowed])]
-        sites_custodial = []
-        if len(sites_custodial)==0:
-            print "No custodial, it's fine, it's covered in close-out"
+        #sites_out = [SI.pick_dSE([SI.CE_to_SE(ce) for ce in sites_allowed])]
 
-        if len(sites_custodial)>1:
-            print "more than one custodial for",wfo.name
-            sys.exit(36)
+        #sites_custodial = []
+        #if len(sites_custodial)==0:
+        #    print "No custodial, it's fine, it's covered in close-out"
+
+        #if len(sites_custodial)>1:
+        #    print "more than one custodial for",wfo.name
+        #    sys.exit(36)
 
         secondary_locations=None
         for sec in list(secondary):
@@ -145,9 +146,17 @@ def assignor(url ,specific = None, talk=True, options=None):
             print wfo.name,"cannot be assign with no matched sites"
             continue
 
+        t1_only = [ce for ce in sites_allowed if ce.startswith('T1')]
+        if t1_only:
+            # try to pick from T1 only first
+            sites_out = [SI.pick_dSE([SI.CE_to_SE(ce) for ce in t1_only])]
+        else:
+            # then pick any otherwise
+            sites_out = [SI.pick_dSE([SI.CE_to_SE(ce) for ce in sites_allowed])]
+
         parameters={
             'SiteWhitelist' : sites_allowed,
-            'CustodialSites' : sites_custodial,
+            #'CustodialSites' : sites_custodial,
             'NonCustodialSites' : sites_out,
             'AutoApproveSubscriptionSites' : list(set(sites_out)),
             'AcquisitionEra' : wfh.acquisitionEra(),
@@ -197,7 +206,6 @@ if __name__=="__main__":
     url = 'cmsweb.cern.ch'
 
     parser = optparse.OptionParser()
-    #parser.add_option('-e', '--execute', help='Actually assign workflows',action="store_true",dest='execute')
     parser.add_option('-t','--test', help='Only test the assignment',action='store_true',dest='test',default=False)
     parser.add_option('-r', '--restrict', help='Only assign workflows for site with input',default=False, action="store_true",dest='restrict')
     parser.add_option('--go',help="Overrides the campaign go",default=False,action='store_true')
