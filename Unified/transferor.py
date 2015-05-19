@@ -197,13 +197,18 @@ def transferor(url ,specific = None, talk=True, options=None):
                 sites_really_allowed = [site for site in sites_allowed if not any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
                 print "Sites allowed minus the vetoed transfer"
                 print sites_really_allowed
-                copies_needed = int(0.35*len(sites_really_allowed))+1 ## should just go for a fixed number based if the white list grows that big
+                copies_needed_from_site = int(0.35*len(sites_really_allowed))+1 ## should just go for a fixed number based if the white list grows that big
                 print "Would make",copies_needed,"copies"
                 if options.maxcopy>0:
-                    copies_needed = min(options.maxcopy,copies_needed)
+                    copies_needed = min(options.maxcopy,copies_needed_from_site)
+                    print "Maxed to",copies_needed
+
+                if 'Campaign' in wfh.request and wfh.request['Campaign'] in CI.campaigns and 'maxcopies' in CI.campaigns[wfh.request['Campaign']]:
+                    copies_needed_from_campaign = CI.campaigns[wfh.request['Campaign']]['maxcopies']
+                    copies_needed = min(copies_needed_from_campaign,copies_needed_from_site)
+                    print "Maxed to",copies_needed,"by campaign configuration",wfh.request['Campaign']
 
                 ## remove the sites that do not want transfers                
-                print "need",copies_needed
                 workflow_dependencies[prim].add( wfo.id )
                 presence = getDatasetPresence( url, prim )
                 prim_location = [site for site,pres in presence.items() if pres[0]==True]
