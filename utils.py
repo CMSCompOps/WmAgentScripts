@@ -216,7 +216,7 @@ class componentInfo:
                 sys.exit(128)
 
     def tell(self, c):
-        sendEmail("%s Component Down"%c,"The component is down, just annoying you with this","vlimant@cern.ch",['vlimant@cern.ch'])
+        sendEmail("[Ops] %s Component Down"%c,"The component is down, just annoying you with this","vlimant@cern.ch",['vlimant@cern.ch'])
 
 class campaignInfo:
     def __init__(self):
