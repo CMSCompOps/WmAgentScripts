@@ -153,6 +153,7 @@ def checkor(url, spec=None, options=None):
         ## anything running on acdc
         familly = getWorkflowById(url, wfi.request['PrepID'], details=True)
         acdc = []
+        acdc_inactive = []
         for member in familly:
             if member['RequestName'] == wfo.name: continue
             if member['RequestDate'] < wfi.request['RequestDate']: continue
@@ -163,7 +164,8 @@ def checkor(url, spec=None, options=None):
                 #print json.dumps(member,indent=2)
                 ## hook for just waiting ...
                 is_closing = False
-
+            else:
+                acdc_inactive.append( member['RequestName'] )
         ## completion check
         percent_completions = {}
         event_expected,lumi_expected =  wfi.request['TotalInputEvents'],wfi.request['TotalInputLumis']
@@ -319,6 +321,7 @@ def checkor(url, spec=None, options=None):
         duplications = {}
         if is_closing:
             for output in wfi.request['OutputDatasets']:
+                duplications[output] = True
                 try:
                     duplications[output] = dbs3Client.duplicateRunLumi( output )
                 except:
@@ -359,7 +362,7 @@ def checkor(url, spec=None, options=None):
             rec['dbsFiles'] = dbs_presence[output]
             rec['dbsInvFiles'] = dbs_invalid[output]
             rec['phedexFiles'] = phedex_presence[output]
-            rec['acdc'] = len(acdc)
+            rec['acdc'] = "%d / %d"%(len(acdc),len(acdc+acdc_inactive))
 
         ## and move on
         if is_closing:
