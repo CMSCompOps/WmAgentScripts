@@ -634,6 +634,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
         return False
     else:
         defaults.pop('execute')
+        print json.dumps( defaults ,indent=2)
 
     wf = workflowInfo(url, workflowname)
     if wf.request['RequestType'] == 'ReDigi':
