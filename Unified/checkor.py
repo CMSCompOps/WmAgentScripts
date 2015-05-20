@@ -395,7 +395,7 @@ def checkor(url, spec=None, options=None):
                 for case in messages:
                     if case in new_status:
                         text+= "\n"+messages[case]+"\n"
-                text += "You are invited to check, while this is being taken case of.\n"
+                text += "You are invited to check, while this is being taken care of.\n"
                 text += "This is an automated message."
                 print "Sending notification back to requestor"
                 print text
