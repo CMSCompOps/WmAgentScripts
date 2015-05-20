@@ -198,9 +198,10 @@ def outcleanor(url, options):
             if 'Export' in site: continue
             if 'Buffer' in site: continue
             for did in [item['id'] for item in result['phedex']['request_created']]:
-                print "auto-approve disabled, but ready"
-                #approveSubscription(url, did, nodes = [site], comments = 'Auto-approving production cleaning deletion')
-                pass
+                if not any([v in site for v in ['MSS','Export','Buffer'] ]):
+                    print "auto-approving to",site,"?"
+                    #approveSubscription(url, did, nodes = [site], comments = 'Production cleaning by data ops, auto-approved')
+                    pass
         session.commit()
     else:
         print "Not making the deletion and changing statuses"

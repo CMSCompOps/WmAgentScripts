@@ -111,7 +111,6 @@ def cleanor(url, specific=None):
                 to_be_cleaned.remove( keep_at )
         else:
             wfo.status = 'clean'
-            print "Skipping anyways for the moment"
 
         ## collect delete request per site
         for site in to_be_cleaned :
@@ -139,29 +138,16 @@ def cleanor(url, specific=None):
         print "\t",','.join(dataset_list)
     
     ## make a one for all deletion request to save on phedex id
-    aggregate_deletion = False
-    auto_approve_deletion = False
-    sites = set()
-    datasets = set()
     for site in delete_per_site:
         site_datasets = [info[0] for info in delete_per_site[site]]
-        datasets.update( site_datasets )
-        sites.add(site)
         if not aggregate_deletion:
             result = makeDeleteRequest(url ,site , site_datasets, comments="Cleanup input after production. DataOps will take care of approving it.")
+            print result
             for phedexid in [o['id'] for o in result['phedex']['request_created']]:
-                if auto_approve_deletion:
-                    approved = approveSubscription(url, phedexid, [site])
-        
-    sites = map(str, sites)
-    datasets = map(str, datasets)
-    if aggregate_deletion:
-        result = makeDeleteRequest(url ,sites ,datasets, comments="cleanup after production") 
-        for phedexid in [o['id'] for o in result['phedex']['request_created']]:
-            for site in sites:
-                if auto_approve_deletion:
-                    approved = approveSubscription(url, phedexid, [site])
-
+                if not any([v in site for v in ['MSS','Export','Buffer'] ]):
+                    print "auto-approving to",site,"?"
+                    #approved = approveSubscription(url, phedexid, nodes = [site], comments = 'Production cleaning by data ops, auto-approved')
+                    pass
         
 if __name__ == "__main__":
     url = 'cmsweb.cern.ch'
