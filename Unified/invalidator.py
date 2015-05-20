@@ -46,7 +46,7 @@ def invalidator(url, invalid_status='INVALID'):
 
         if acknowledge:
             ## acknoldge invalidation in mcm, provided we can have the api
-            print print "acknowledgment to mcm"
+            print "acknowledgment to mcm"
             mcm.get('/restapi/invalidations/acknowledge/%s'%( invalid['_id'] ))
 
 if __name__ == "__main__":
