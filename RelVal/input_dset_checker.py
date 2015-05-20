@@ -83,10 +83,15 @@ while True:
 
                 schema = json.loads(r2.read())
 
+                isthereanmcpileupdataset=False
+
                 for key, value in schema.items():
                     if type(value) is dict and key.startswith("Task"):
+
+                        
                         
                         if 'MCPileup' in value:
+                            isthereanmcpileupdataset=True
                             old_ld_library_path=os.environ['LD_LIBRARY_PATH']
                             os.environ['LD_LIBRARY_PATH']=''
                             ismcpileupdatasetatsite=os.system("python2.6 check_if_dataset_is_at_a_site.py --dataset "+value['MCPileup']+" --site "+site_disk)
@@ -128,7 +133,7 @@ while True:
                                 if not isdatasetatsite:
                                     all_dsets_blocks_at_site=False
 
-            if all_dsets_blocks_at_site and ismcpileupdatasetatsite:
+            if all_dsets_blocks_at_site and (not isthereanmcpileupdataset or ismcpileupdatasetatsite):
                 curs.execute("update batches set status=\"input_dsets_ready\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where batch_id = "+str(batchid) +";")                    
                 mysqlconn.commit()
 
