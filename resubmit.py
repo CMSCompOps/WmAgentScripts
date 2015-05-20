@@ -82,7 +82,11 @@ def modifySchema(helper, user, group, backfill=False):
     if result['RequestType']=='MonteCarlo':
         #check assigning parameters
         #seek for events per job on helper
-        splitting = helper.listJobSplittingParametersByTask()
+        try:
+            splitting = helper.listJobSplittingParametersByTask()
+        except AttributeError:
+            splitting = {}
+        
         eventsPerJob = 120000
         eventsPerLumi = 100000
         for k, v in splitting.items():

@@ -8,12 +8,9 @@ Usage:
     JSON_FILE: the json file with the request to
  
 """
-
-import reqmgr
-import json
-from reqmgr import ReqMgrClient
-import sys
+import logging, json, sys
 from optparse import OptionParser
+from reqmgr import ReqMgrClient
 
 class Config:
     def __init__(self, info):
