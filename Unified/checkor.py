@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, makeReplicaRequest
+from utils import componentInfo
 import phedexClient
 import dbs3Client
 import reqMgrClient
@@ -82,6 +83,8 @@ phdF</th><th>ClosOut</th></tr></thead>'
 
 def checkor(url, spec=None, options=None):
     fDB = falseDB()
+
+    up = componentInfo(mcm=True)
 
     wfs=[]
     if options.fetch:
@@ -203,7 +206,7 @@ def checkor(url, spec=None, options=None):
 
         lumi_upper_limit = {}
         for output in wfi.request['OutputDatasets']:
-            upper_limit = 300.
+            upper_limit = 301.
             campaign = get_campaign(output, wfi)
             if campaign in CI.campaigns and 'lumisize' in CI.campaigns[campaign]:
                 upper_limit = CI.campaigns[campaign]['lumisize']

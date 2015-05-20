@@ -4,9 +4,10 @@ from McMClient import McMClient
 from utils import workflowInfo
 import reqMgrClient
 import setDatasetStatusDBS3
-
+from utils import componentInfo
 
 def invalidator(url, invalid_status='INVALID'):
+    up = componentInfo(mcm=True)
     mcm = McMClient(dev=False)
     invalids = mcm.getA('invalidations',query='status=new')
     print len(invalids),"Object to be invalidated"

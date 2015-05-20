@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, getWorkflowById, getWorkLoad
+from utils import getWorkflows, getWorkflowById, getWorkLoad, componentInfo
 import sys
 import copy
 from htmlor import htmlor
@@ -8,6 +8,8 @@ from invalidator import invalidator
 import optparse
 
 def injector(url, options, specific):
+
+    up = componentInfo()
 
     ## passing a round of invalidation of what needs to be invalidated
     if options.invalidate:

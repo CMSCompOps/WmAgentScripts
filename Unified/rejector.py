@@ -4,11 +4,14 @@ import sys
 import reqMgrClient
 import setDatasetStatusDBS3
 from utils import workflowInfo
+from utils import componentInfo
 import optparse
 import re
 
 def rejector(url, specific, options=None):
-    
+
+    up = componentInfo()
+
     if specific.startswith('/'):
         pass
     else:

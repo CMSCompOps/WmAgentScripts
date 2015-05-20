@@ -127,7 +127,53 @@ class unifiedConfiguration:
             print parameter,'is not defined in global configuration'
             print ','.join(self.configs.keys()),'possible'
             sys.exit(124)
-            
+
+class componentInfo:
+    def __init__(self, block=True, mcm=False):
+        self.status ={
+            'reqmgr' : False,
+            'mcm' : False,
+            'dbs' : False,
+            'phedex' : False
+            }
+        try:
+            print "checking reqmgr"
+            wfi = workflowInfo('cmsweb.cern.ch','pdmvserv_task_B2G-RunIIWinter15wmLHE-00067__v1_T_150505_082426_497')
+            self.status['reqmgr'] = True
+        except:
+            print "cmsweb.cern.ch unreachable"
+            if block:
+                sys.exit(123)
+
+        from McMClient import McMClient
+
+        if mcm:
+            try:
+                print "checking mcm"
+                test = mcm.getA('requests',page=0)
+                if not test: 
+                    print "mcm corrupted"
+                    if block: 
+                        sys.exit(124)
+                self.status['mcm'] = True
+            except:
+                print "mcm unreachable"
+                if block:
+                    sys.exit(125)
+        
+        try:
+            print "checking dbs"
+            dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+            blocks = dbsapi.listBlockSummaries( dataset = '/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM', detail=True)
+            if not blocks:
+                print "dbs corrupted"
+                if block:
+                    sys.exit(126)
+        except:
+            print "dbs unreachable"
+            if block:
+                sys.exit(127)
+
 
 class campaignInfo:
     def __init__(self):

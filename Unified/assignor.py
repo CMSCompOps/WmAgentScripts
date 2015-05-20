@@ -3,6 +3,7 @@ from assignSession import *
 import reqMgrClient
 from utils import workflowInfo, campaignInfo, siteInfo, userLock
 from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction
+from utils import componentInfo
 import optparse
 import itertools
 import time
@@ -12,6 +13,8 @@ import json
 
 def assignor(url ,specific = None, talk=True, options=None):
     if userLock('assignor'): return
+
+    up = componentInfo()
 
     CI = campaignInfo()
     SI = siteInfo()
@@ -153,7 +156,7 @@ def assignor(url ,specific = None, talk=True, options=None):
             'AutoApproveSubscriptionSites' : list(set(sites_out)),
             'AcquisitionEra' : wfh.acquisitionEra(),
             'ProcessingString' : wfh.processingString(),
-            'MergedLFNBase' : '/store/mc', ## to be figured out ! from Hi shit
+            'MergedLFNBase' : '/store/mc', ## to be figured out
             'ProcessingVersion' : version,
             }
 

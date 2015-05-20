@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import getWorkLoad
+from utils import componentInfo
 import reqMgrClient
 import setDatasetStatusDBS3
 import json
@@ -11,6 +12,8 @@ from utils import getDatasetEventsAndLumis, campaignInfo
 from htmlor import htmlor
 
 def closor(url, specific=None):
+    up = componentInfo()
+
     CI = campaignInfo()
 
     ## manually closed-out workflows should get to close with checkor

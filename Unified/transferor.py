@@ -4,7 +4,7 @@ import reqMgrClient
 from McMClient import McMClient
 from utils import makeReplicaRequest
 from utils import workflowInfo, siteInfo, campaignInfo, userLock
-from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, getSiteWhiteList, approveSubscription, getDatasetSize, updateSubscription, getWorkflows
+from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, getSiteWhiteList, approveSubscription, getDatasetSize, updateSubscription, getWorkflows, componentInfo
 from utils import unifiedConfiguration
 import json
 from collections import defaultdict
@@ -27,6 +27,8 @@ class DSS:
 
 def transferor(url ,specific = None, talk=True, options=None):
     if userLock('transferor'):   return
+    
+    up = componentInfo(mcm=True)
 
     if options and options.test:
         execute = False

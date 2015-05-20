@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput, workflowInfo, getDatasetBlocksFraction
-from utils import unifiedConfiguration
+from utils import unifiedConfiguration, componentInfo
 import sys
 import itertools
 import pprint
@@ -9,6 +9,9 @@ import optparse
 from htmlor import htmlor
 
 def stagor(url,specific =None, options=None):
+    
+    up = componentInfo()
+
     done_by_wf_id = {}
     done_by_input = {}
     completion_by_input = {}
