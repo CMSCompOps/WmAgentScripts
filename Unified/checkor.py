@@ -9,6 +9,7 @@ from collections import defaultdict
 import optparse
 import os
 import time
+from McMClient import McMClient
 from htmlor import htmlor
 
 class falseDB:
@@ -97,6 +98,7 @@ def checkor(url, spec=None, options=None):
     invalidations = [] #a list of files
     SI = siteInfo()
     CI = campaignInfo()
+    mcm = McMClient(dev=False)
 
     def get_campaign(output, wfi):
         campaign = None
@@ -376,7 +378,38 @@ def checkor(url, spec=None, options=None):
         else:
             print wfo.name,"needs assistance"
             ## that means there is something that needs to be done acdc, lumi invalidation, custodial, name it
-            wfo.status = 'assistance'+sub_assistance
+            new_status = 'assistance'+sub_assistance
+            
+            if sub_assistance and wfo.status != new_status and 'PrepID' in wfi.request:
+                pid = wfi.request['PrepID']
+                ## notify
+                messages= {
+                    'recovery' : 'Samples completed with missing lumi count:\n %s '%( '\n'.join(['%.2f %% complete for %s'%(percent_completions[output]*100, output) for output in wfi.request['OutputDatasets'] ] ) ),
+                    'biglumi' : 'Samples completed with large luminosity blocks:\n %s '%('\n'.join(['%d > %d for %s'%(events_per_lumi[output], lumi_upper_limit[output], output) for output in wfi.request['OutputDatasets'] if (events_per_lumi[output] > lumi_upper_limit[output])])),
+                    'duplicate' : 'Samples completed with duplicated luminosity blocks:\n %s'%( '\n'.join(['%s'%output for output in wfi.request['OutputDatasets'] if output in duplications and duplications[output] ] ) ),
+                    }
+                text ="The request %s (%s) is facing issue in production.\n" %( pid, wfo.name )
+                for case in messages:
+                    if case in new_status:
+                        text+= "\n"+messages[case]+"\n"
+                text += "You are invited to check, while this is being taken case of.\n"
+                text += "This is an automated message."
+                print "Sending notification back to requestor"
+                print text
+                batches = mcm.getA('batches',query='contains=%s&status=announced'%pid)
+                if len(batches):
+                    ## go notify the batch
+                    bid = batches[-1]['prepid']
+                    print "batch nofication to",bid
+                    mcm.put('/restapi/batches/notify', { "notes" : text, "prepid" : bid})
+
+
+                ## go notify the request
+                print "request notification to",pid
+                mcm.put('/restapi/requests/notify',{ "message" : text, "prepids" : [pid] })
+
+                
+            wfo.status = new_status
             if not options.test:
                 print "setting",wfo.name,"to",wfo.status
                 session.commit()
