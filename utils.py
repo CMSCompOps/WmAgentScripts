@@ -272,8 +272,8 @@ class siteInfo:
                         self.disk[site] = int(info['FreeDisk'])
                 else:
                     if not ssite in self.disk:
-                        if talk: print "setting",info['FreeDisk']," disk for",site
-                        self.disk[site] = int(info['FreeDisk'])
+                        if talk: print "setting",info['FreeDisk']," disk for",ssite
+                        self.disk[ssite] = int(info['FreeDisk'])
 
             if 'FreeDisk' in info and site!=ssite and info['FreeDisk']:
                 if ssite in self.disk:
@@ -282,7 +282,7 @@ class siteInfo:
                         self.disk[ssite] = int(info['FreeDisk'])
                 else:
                     if talk: print "setting",info['FreeDisk']," disk for",ssite
-                    self.disk[site] = int(info['FreeDisk'])
+                    self.disk[ssite] = int(info['FreeDisk'])
 
             if 'FreeTape' in info and 'UsedTape' in info and tsite in self.storage and info['FreeTape']:
                 if info['UsedTape'] and self.storage[tsite] < info['FreeTape']:
@@ -310,7 +310,7 @@ class siteInfo:
         return self._pick(sites, self.storage)
 
     def pick_dSE(self, sites=None):
-        return self._pick(sites, self.disk, and_fail=False)
+        return self._pick(sites, self.disk, and_fail=True)
 
     def _pick(self, sites, from_weights, and_fail=True):
         r_weights = {}
