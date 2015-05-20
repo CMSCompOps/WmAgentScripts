@@ -70,11 +70,14 @@ def transferor(url ,specific = None, talk=True, options=None):
     in_transfer_priority=0
     min_transfer_priority=100000000
     print "getting all wf in staging ..."
+    counted=[]
     for wfo in session.query(Workflow).filter(Workflow.status=='staging').all():
         wfh = workflowInfo( url, wfo.name, spec=False)
         (_,primary,_,_) = wfh.getIO()
-        for prim in primary: 
+        for prim in primary:  
+            if prim in counted: continue
             input_sizes[prim] = dss.get( prim )
+            counted.append( prim )
         in_transfer_priority = max(in_transfer_priority, int(wfh.request['RequestPriority']))
         min_transfer_priority = min(min_transfer_priority, int(wfh.request['RequestPriority']))
     print "... done"
