@@ -14,9 +14,35 @@ import pickle
 import itertools
 import time
 
+import smtplib
+from email.MIMEMultipart import MIMEMultipart
+from email.MIMEText import MIMEText
+from email.Utils import COMMASPACE, formatdate
+from email.utils import make_msgid
+
+
 FORMAT = "%(module)s.%(funcName)s(%(lineno)s) => %(message)s (%(asctime)s)"
 DATEFMT = "%Y-%m-%d %H:%M:%S"
 logging.basicConfig(format = FORMAT, datefmt = DATEFMT, level=logging.DEBUG)
+
+
+def sendEmail( subject, text, sender, destination ):
+    print subject
+    print text
+    print sender
+    print destination
+    
+    msg = MIMEMultipart()
+    msg['From'] = sender
+    msg['To'] = COMMASPACE.join( destination )
+    msg['Date'] = formatdate(localtime=True)
+    new_msg_ID = make_msgid()  
+    msg['Subject'] = subject
+    msg.attach(MIMEText(text))
+    smtpObj = smtplib.SMTP()
+    smtpObj.connect()
+    smtpObj.sendmail(sender, destination, msg.as_string())
+    smtpObj.quit()
 
 
 def url_encode_params(params = {}):
@@ -141,6 +167,7 @@ class componentInfo:
             wfi = workflowInfo('cmsweb.cern.ch','pdmvserv_task_B2G-RunIIWinter15wmLHE-00067__v1_T_150505_082426_497')
             self.status['reqmgr'] = True
         except:
+            self.tell('reqmgr')
             print "cmsweb.cern.ch unreachable"
             if block:
                 sys.exit(123)
@@ -152,11 +179,13 @@ class componentInfo:
                 print "checking mcm"
                 test = mcm.getA('requests',page=0)
                 if not test: 
+                    self.tell('mcm')
                     print "mcm corrupted"
                     if block: 
                         sys.exit(124)
                 self.status['mcm'] = True
             except:
+                self.tell('mcm')
                 print "mcm unreachable"
                 if block:
                     sys.exit(125)
@@ -166,14 +195,27 @@ class componentInfo:
             dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
             blocks = dbsapi.listBlockSummaries( dataset = '/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM', detail=True)
             if not blocks:
+                self.tell('dbs')
                 print "dbs corrupted"
                 if block:
                     sys.exit(126)
         except:
+            self.tell('dbs')
             print "dbs unreachable"
             if block:
                 sys.exit(127)
 
+        try:
+            print "checking phedex"
+            cust = findCustodialLocation('cmsweb.cern.ch','/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM')
+            
+        except:
+            self.tell('phedex')
+            if block:
+                sys.exit(128)
+
+    def tell(self, c):
+        sendEmail("%s Component Down"%c,"The component is down, just annoying you with this","vlimant@cern.ch",['vlimant@cern.ch'])
 
 class campaignInfo:
     def __init__(self):
