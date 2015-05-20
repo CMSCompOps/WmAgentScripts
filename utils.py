@@ -176,8 +176,9 @@ class componentInfo:
 
         if mcm:
             try:
+                mcmC = McMClient(dev=False)
                 print "checking mcm"
-                test = mcm.getA('requests',page=0)
+                test = mcmC.getA('requests',page=0)
                 if not test: 
                     self.tell('mcm')
                     print "mcm corrupted"
