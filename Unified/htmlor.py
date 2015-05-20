@@ -367,7 +367,7 @@ Worflow clean for output (%d) <a href=logs/outcleanor/last.log target=_blank>log
     lines_thisweek.sort()
     lines_lastweek.sort()
 
-    html_doc.write("""Output produced <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?in_disagreement=1 target=_blank>disagreements</a> (%d)
+    html_doc.write("""Output produced (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?in_disagreement=1 target=_blank>disagreements</a>
 <a href="javascript:showhide('output')">[Click to show/hide]</a>
 <br>
 <div id="output" style="display:none;">
