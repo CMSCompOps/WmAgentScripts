@@ -180,7 +180,7 @@ def createXML(datasets):
 	result.setAttribute('version', '2')
 	# Create the <dbs> base element
 	dbs = doc.createElement("dbs")
-	dbs.setAttribute("name", "https://cmsdbsprod.cern.ch:8443/cms_dbs_prod_global_writer/servlet/DBSServlet")
+	dbs.setAttribute("name", "https://cmsweb.cern.ch/dbs/prod/global/DBSReader")
 	result.appendChild(dbs)	
 	#Create each of the <dataset> element			
 	for datasetname in datasets:
@@ -211,8 +211,8 @@ def createConnection(url):
 	#cert = "/afs/cern.ch/user/r/relval/.globus/amaltaro/usercert.pem"
 			 
 	#conn = httplib.HTTPSConnection(url, key_file=key, cert_file=cert)
-	#conn =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-	conn =  httplib.HTTPSConnection(url, cert_file = "/data/relval/WmAgentScripts/RelVal/andrew_levin_proxy", key_file = "/data/relval/WmAgentScripts/RelVal/andrew_levin_proxy");
+	conn =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+	#conn =  httplib.HTTPSConnection(url, cert_file = "/home/relval/WmAgentScripts/RelVal/andrew_levin_proxy", key_file = "/home/relval/WmAgentScripts/RelVal/andrew_levin_proxy");
 	conn.connect()
 	return conn
 
@@ -230,7 +230,10 @@ def makeCustodialMoveRequest(url, site,datasets, comments):
 	#print response.status, response.reason
         #print response.read()
 
-def makePhedexReplicaRequest(url, site,datasets, comments, custodial):	
+def makePhedexReplicaRequest(url, site,datasets, comments, custodial, autoapprove):
+	print ""
+	print "begin making the transfer request"
+	print ""
 	dataXML=createXML(datasets)
 	if custodial:
 		params = urllib.urlencode({ "node" : site,"data" : dataXML, "group": "RelVal", "priority":'normal', "custodial":"y","request_only":"y" ,"move":"n","no_mail":"n", "comments":comments})	
@@ -242,15 +245,32 @@ def makePhedexReplicaRequest(url, site,datasets, comments, custodial):
         print 'Response from http call:'
 	print 'Status:',response.status
 	print 'Reason:',response.reason
-	print 'Explanation:',response.read()
+	response_read=response.read()
+	print 'Explanation:',response_read
+	print ""
+	print "end making the transfer request"
+	print ""
 
-					
-
+	if response.status==200 and autoapprove:
+		print ""
+		print "begin automatically approving the request"
+		print ""
+		conn2=createConnection(url)
+		params2 = urllib.urlencode({ "decision" : 'approve', "request" : json.loads(response_read)['phedex']['request_created'][0]['id'], "node": site, "comments" : 'auto-approval of relval dataset subscription'})
+		conn2.request("POST", "/phedex/datasvc/json/prod/updaterequest", params2)
+		response2=conn2.getresponse()
+		print response2.status
+		print response2.reason
+		print response2.read()
+		print ""
+		print "end automatically approving the request"
+		print ""
 
 def main():
 	parser = optparse.OptionParser()
 	parser.add_option('--custodial', action="store_true", help='make a custodial subscription',dest='custodial')
 	parser.add_option('--correct_env',action="store_true",dest='correct_env')
+	parser.add_option('--autoapprove',action="store_true",dest='autoapprove')
 	(options,args) = parser.parse_args()
 
 	command=""
@@ -258,7 +278,7 @@ def main():
 		command=command+arg+" "
 
 	if not options.correct_env:
-		os.system("source /afs/cern.ch/project/gd/LCG-share/current_3.2/etc/profile.d/grid-env.sh; python2.6 "+command + "--correct_env")
+		os.system("source /cvmfs/grid.cern.ch/emi-ui-3.7.3-1_sl6v2/etc/profile.d/setup-emi3-ui-example.sh; export X509_USER_PROXY=/tmp/x509up_u13536; python2.6 "+command + "--correct_env")
 		sys.exit(0)
 		    
 	if not len(args)==3:
@@ -276,7 +296,7 @@ def main():
 		dataset = dataset.rstrip('\n')
 		datasets.append(dataset)
 
-	makePhedexReplicaRequest(url, site, datasets, comments,options.custodial);
+	makePhedexReplicaRequest(url, site, datasets, comments,options.custodial, options.autoapprove);
 	sys.exit(0);
 
 if __name__ == "__main__":
