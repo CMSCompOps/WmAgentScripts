@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput, workflowInfo, getDatasetBlocksFraction
-from utils import unifiedConfiguration, componentInfo
+from utils import unifiedConfiguration, componentInfo, sendEmail
 import sys
 import itertools
 import pprint
@@ -28,6 +28,13 @@ def stagor(url,specific =None, options=None):
                 session.commit()
         return 
 
+    for wfo in session.query(Workflow).filter(Workflow.status == 'staging').all():
+        wfi = workflowInfo(url, wfo.name)
+        dataset = wfi.request['InputDataset']
+        done_by_input[dataset] = {}
+        completion_by_input[dataset] = {}
+        print wfo.name,"needs",dataset
+
     for transfer in session.query(Transfer).all():
         if specific  and str(transfer.phedexid)!=str(specific): continue
 
@@ -36,8 +43,8 @@ def stagor(url,specific =None, options=None):
             tr_wf = session.query(Workflow).get(wfid)
             if tr_wf: 
                 if tr_wf.status == 'staging':
+                    print "\t",transfer.phedexid,"is staging for",tr_wf.name
                     skip=False
-                    break
 
         if skip: continue
         if transfer.phedexid<0: continue
@@ -100,6 +107,16 @@ def stagor(url,specific =None, options=None):
             wf = session.query(Workflow).filter(Workflow.name == using_it).first()
             if wf:
                 using_wfos.append( wf )
+        
+        if not len(done_by_input[dsname]):
+            print "For dataset",dsname,"there are no transfer report. That's an issue."
+            for wf in using_wfos:
+                if wf.status == 'staging':
+                    print "sending",wf.name,"back to considered"
+                    wf.status = 'considered'
+                    session.commit()
+                    sendEmail( "send back to considered","%s was send back and might be trouble"% wf.name,'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
+            continue
 
         #need_sites = int(len(done_by_input[dsname].values())*0.7)+1
         need_sites = len(done_by_input[dsname].values())
