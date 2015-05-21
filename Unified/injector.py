@@ -59,11 +59,10 @@ def injector(url, options, specific):
                     new_wf = Workflow( name = member, status = status, wm_status = fwl['RequestStatus'])
                     wf.status = 'forget'
                     session.add( new_wf ) 
-                    session.commit()
                 else:
                     if new_wf.status == 'forget': continue
                     print "getting",new_wf.name,"as replacement of",wf.name
-
+                    wf.status = 'forget'
 
                 for tr in session.query(Transfer).all():
                     if wf.id in tr.workflows_id:
