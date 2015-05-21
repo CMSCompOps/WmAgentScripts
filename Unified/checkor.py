@@ -325,7 +325,9 @@ def checkor(url, spec=None, options=None):
         ## duplication check
         duplications = {}
         if is_closing:
+            print "starting duplicate checker for",wfo.name
             for output in wfi.request['OutputDatasets']:
+                print "\tchecking",output
                 duplications[output] = True
                 try:
                     duplications[output] = dbs3Client.duplicateRunLumi( output )
