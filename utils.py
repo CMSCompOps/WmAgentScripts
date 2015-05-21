@@ -166,9 +166,10 @@ class componentInfo:
             print "checking reqmgr"
             wfi = workflowInfo('cmsweb.cern.ch','pdmvserv_task_B2G-RunIIWinter15wmLHE-00067__v1_T_150505_082426_497')
             self.status['reqmgr'] = True
-        except:
+        except Exception as e:
             self.tell('reqmgr')
             print "cmsweb.cern.ch unreachable"
+            print str(e)
             if block:
                 sys.exit(123)
 
@@ -185,9 +186,10 @@ class componentInfo:
                     if block: 
                         sys.exit(124)
                 self.status['mcm'] = True
-            except:
+            except Exception as e:
                 self.tell('mcm')
                 print "mcm unreachable"
+                print str(e)
                 if block:
                     sys.exit(125)
         
@@ -200,9 +202,10 @@ class componentInfo:
                 print "dbs corrupted"
                 if block:
                     sys.exit(126)
-        except:
+        except Exception as e:
             self.tell('dbs')
             print "dbs unreachable"
+            print str(e)
             if block:
                 sys.exit(127)
 
@@ -210,13 +213,15 @@ class componentInfo:
             print "checking phedex"
             cust = findCustodialLocation('cmsweb.cern.ch','/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM')
             
-        except:
+        except Exception as e:
             self.tell('phedex')
+            print "phedex unreachable"
+            print str(e)
             if block:
                 sys.exit(128)
 
     def tell(self, c):
-        sendEmail("[Ops] %s Component Down"%c,"The component is down, just annoying you with this","vlimant@cern.ch",['vlimant@cern.ch'])
+        sendEmail("[Ops] %s Component Down"%c,"The component is down, just annoying you with this","vlimant@cern.ch",['vlimant@cern.ch','matteoc@fnal.gov'])
 
 class campaignInfo:
     def __init__(self):
