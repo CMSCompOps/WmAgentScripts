@@ -15,7 +15,8 @@ echo $USER >> $log
 echo the week $week oddity is $oddity >> $log
 echo module `echo $1 | sed 's/\.py//' | sed 's/Unified\///'`>> $log 
 
-source /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/credentials.sh &>> $log
+#done in a separate, less frequent cron
+#source /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/credentials.sh &>> $log
 
 source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh
 
