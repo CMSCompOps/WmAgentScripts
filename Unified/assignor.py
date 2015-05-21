@@ -3,7 +3,7 @@ from assignSession import *
 import reqMgrClient
 from utils import workflowInfo, campaignInfo, siteInfo, userLock
 from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction
-from utils import componentInfo
+from utils import componentInfo, sendEmail
 import optparse
 import itertools
 import time
@@ -106,13 +106,16 @@ def assignor(url ,specific = None, talk=True, options=None):
             print "We could be running at",opportunistic_sites,"in addition"
 
         if available_fractions and not all([available>=1. for available in available_fractions.values()]):
-            print "The input dataset is not located in full at any site"
+            print "The input dataset is not located in full over sites"
             print json.dumps(available_fractions)
-            if not options.test and not options.go: continue ## skip skip skip
+            if not options.test and not options.go:
+                sendEmail( "cannot be assigned","%s is not full over sites \n %s"%(wfo.name,json.dumps(available_fractions)),'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
+                continue ## skip skip skip
         copies_wanted = 2.
         if available_fractions and not all([available>=copies_wanted for available in available_fractions.values()]):
             print "The input dataset is not available",copies_wanted,"times, only",available_fractions.values()
             if not options.go:
+                sendEmail( "cannot be assigned","%s is not sufficiently available \n %s"%(wfo.name,json.dumps(available_fractions)),'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
                 continue
 
         ## default back to white list to original white list with any data
@@ -138,6 +141,7 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         if not len(sites_allowed):
             print wfo.name,"cannot be assign with no matched sites"
+            sendEmail( "cannot be assigned","%s has no whitelist"%(wfo.name),'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
             continue
 
         t1_only = [ce for ce in sites_allowed if ce.startswith('T1')]
