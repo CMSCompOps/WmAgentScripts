@@ -18,6 +18,8 @@ echo module `echo $1 | sed 's/\.py//' | sed 's/Unified\///'`>> $log
 #done in a separate, less frequent cron
 #source /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/credentials.sh &>> $log
 
+export X509_USER_PROXY=$HOME/private/personal/voms_proxy.cert
+
 source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh
 
 echo >> $log
