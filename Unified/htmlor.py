@@ -27,7 +27,7 @@ def htmlor():
                 '<a href="https://cms-pdmv.cern.ch/stats/?RN=%s" target="_blank">vw</a>'%wfn,
                 '<a href="https://cms-pdmv.cern.ch/stats/restapi/get_one/%s" target="_blank">vwo</a>'%wfn,
                 '<a href="https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=full&reverse=0&reverse=1&npp=20&subtext=%s&sall=q" target="_blank">elog</a>'%pid,
-                '<a href="http://hcc-briantest.unl.edu/prodview/%s" target="_blank">pv</a>'%wfn,
+                '<a href="http://gwmsmon.cern.ch/prodview/%s" target="_blank">pv</a>'%wfn,
                 '<a href="https://cmsweb.cern.ch/reqmgr/reqMgr/outputDatasetsByRequestName/%s" target="_blank">out</a>'%wfn,
                 '<a href="closeout.html#%s" target="_blank">clo</a>'%wfn,
                 '<a href="statuses.html#%s" target="_blank">st</a>'%wfn,
@@ -74,7 +74,7 @@ def htmlor():
         if view and wfs!='acquired':
             text+='<a href="https://cms-pdmv.web.cern.ch/cms-pdmv/stats/growth/%s.gif" target="_blank"><img src="https://cms-pdmv.web.cern.ch/cms-pdmv/stats/growth/%s.gif" style="height:50px"></a>'%(wfn.replace('_','/'),wfn.replace('_','/'))
         if ongoing:
-            text+='<a href="http://hcc-briantest.unl.edu/prodview/%s" target="_blank"><img src="http://hcc-briantest.unl.edu/prodview/graphs/%s/daily" style="height:50px"></a>'%(wfn,wfn)
+            text+='<a href="http://gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="http://gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:50px"></a>'%(wfn,wfn)
         text+="<hr>"
         return text
 
@@ -192,7 +192,7 @@ Transfer on-going (%d) <a href=https://transferteam.web.cern.ch/transferteam/das
         lines.append("<li> %s </li>"%wfl(wf,view=True,ongoing=True))
     lines.sort()
     html_doc.write("""
-Worflow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests_in_production.php target=_blank>ongoing</a> <a href=https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary target=_blank>elog</a> <a href=http://hcc-briantest.unl.edu/prodview target=_blank>queues</a> <a href=logs/assignor/last.log target=_blank>log</a> <a href=logs/checkor/last.log target=_blank>postlog</a>
+Worflow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests_in_production.php target=_blank>ongoing</a> <a href=https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary target=_blank>elog</a> <a href=http://gwmsmon.cern.ch/prodview target=_blank>queues</a> <a href=logs/assignor/last.log target=_blank>log</a> <a href=logs/checkor/last.log target=_blank>postlog</a>
 <a href="javascript:showhide('away')">[Click to show/hide]</a>
 <br>
 <div id="away" style="display:none;">
@@ -420,8 +420,8 @@ Worflow clean for output (%d) <a href=logs/outcleanor/last.log target=_blank>log
     for t in SI.types():
         #text+="<li>%s<ul>"%t
         #for site in getattr(SI,t):
-        #    text+="<li><a href=http://hcc-briantest.unl.edu/prodview/%s>%s<a/> </li>"%( site, site)
-        #    text+='<a href="http://hcc-briantest.unl.edu/prodview/%s" target="_blank"><img src="http://hcc-briantest.unl.edu/prodview/graphs/%s/daily" style="height:50px"></a>'%(site,site)
+        #    text+="<li><a href=http://gwmsmon.cern.ch/prodview/%s>%s<a/> </li>"%( site, site)
+        #    text+='<a href="http://gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="http://gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:50px"></a>'%(site,site)
         #text+="</ul></li>"
         
         text+="<li>%s<table border=1>"%t
@@ -431,7 +431,7 @@ Worflow clean for output (%d) <a href=logs/outcleanor/last.log target=_blank>log
             disk = SI.disk[SI.CE_to_SE(site)] if SI.CE_to_SE(site) in SI.disk else 'N/A'
             if c==0:
                 text+="<tr>"
-            text+='<td><a href=http://dashb-ssb.cern.ch/dashboard/templates/sitePendingRunningJobs.html?site=%s>%s</a><br><a href="http://hcc-briantest.unl.edu/prodview/%s" target="_blank"><img src="http://hcc-briantest.unl.edu/prodview/graphs/%s/daily" style="height:50px"></a><br>CPU pledge: %s<br>Disk available: %s</td>'%(site,site,site,site,cpu,disk)
+            text+='<td><a href=http://dashb-ssb.cern.ch/dashboard/templates/sitePendingRunningJobs.html?site=%s>%s</a><br><a href="http://gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="http://gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:50px"></a><br>CPU pledge: %s<br>Disk available: %s</td>'%(site,site,site,site,cpu,disk)
             if c==n_column:
                 c=0
             else:
