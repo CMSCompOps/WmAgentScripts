@@ -11,6 +11,7 @@ from collections import defaultdict
 import optparse
 import time
 from htmlor import htmlor
+from utils import sendEmail
 
 class DSS:
     def __init__(self):
@@ -18,6 +19,7 @@ class DSS:
     
     def get(self, dataset ):
         if not dataset in self.db:
+            print "fetching size of",dataset
             self.db[dataset] = getDatasetSize( dataset )
         return self.db[dataset]
 
@@ -68,6 +70,8 @@ def transferor(url ,specific = None, talk=True, options=None):
     print "... done"
 
     input_sizes = {}
+    input_cput = {}
+    input_st = {}
     ## list the size of those in transfer already
     in_transfer_priority=0
     min_transfer_priority=100000000
@@ -75,6 +79,8 @@ def transferor(url ,specific = None, talk=True, options=None):
     for wfo in session.query(Workflow).filter(Workflow.status=='staging').all():
         wfh = workflowInfo( url, wfo.name, spec=False)
         (_,primary,_,_) = wfh.getIO()
+        input_cput[wfo.name] = wfh.getComputingTime()
+        input_st[wfo.name] = wfh.getSystemTime()
         for prim in primary:  
             input_sizes[prim] = dss.get( prim )
         in_transfer_priority = max(in_transfer_priority, int(wfh.request['RequestPriority']))
@@ -83,8 +89,8 @@ def transferor(url ,specific = None, talk=True, options=None):
     print "Max priority in transfer already",in_transfer_priority
     print "Min priority in transfer already",min_transfer_priority
     in_transfer_already = sum(input_sizes.values())
-
-
+    cput_in_transfer_already = sum(input_cput.values())
+    st_in_transfer_already = sum(input_st.values())
     #sort by priority higher first
     wfs_and_wfh.sort(cmp = lambda i,j : cmp(int(i[1].request['RequestPriority']),int(j[1].request['RequestPriority']) ), reverse=True)
 
@@ -93,9 +99,23 @@ def transferor(url ,specific = None, talk=True, options=None):
     print "getting all input sizes ..."
     for (wfo,wfh) in wfs_and_wfh:
         (_,primary,_,_) = wfh.getIO()
+        input_cput[wfo.name] = wfh.getComputingTime()
+        input_st[wfo.name] = wfh.getSystemTime()
         for prim in primary:
             input_sizes[prim] = dss.get( prim )
     print "... done"
+
+    cput_grand_total = sum(input_cput.values())
+    cput_to_transfer = cput_grand_total - cput_in_transfer_already
+    st_grand_total = sum(input_st.values())
+    st_to_transfer = st_grand_total - st_in_transfer_already
+    print "%15.4f [CPU h] worth already in transfer"%cput_in_transfer_already
+    print "%15.4f [CPU h] worth is the current requested transfer load"%cput_to_transfer
+    print "%15.4f [h] worth of absolute system time in transfer"%( cput_in_transfer_already / SI.availableSlots())
+    print "%15.4f [h] worth of absolute system time is the current requested transfer load"%( cput_to_transfer / SI.availableSlots())
+    print "%15.4f [h] worth of theoritical system time in transfer"%( st_in_transfer_already )
+    print "%15.4f [h] worth of theoritical system time is the current requested transfer load"%( st_to_transfer )
+
 
     grand_total =  sum(input_sizes.values()) 
     to_transfer = grand_total  - in_transfer_already
@@ -183,6 +203,11 @@ def transferor(url ,specific = None, talk=True, options=None):
 
         if 'SiteWhitelist' in CI.parameters(wfh.request['Campaign']):
             sites_allowed = CI.parameters(wfh.request['Campaign'])['SiteWhitelist']
+
+        if len(secondary)==0 and len(primary)==0 and len(parent)==0 and lheinput==False:
+            ## pure mc 
+            sendEmail("work for SDSC", "There is work for SDSC : %s"%(wfo.name),'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
+
 
         blocks = []
         if 'BlockWhitelist' in wfh.request and wfh.request['BlockWhitelist']:

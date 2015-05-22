@@ -317,6 +317,13 @@ class siteInfo:
         ## and get SSB sync
         self.fetch_more_info(talk=False)
 
+    def availableSlots(self, sites=None):
+        s=0
+        for site in self.cpu_pledges:
+            if sites and not site in sites: continue
+            s+=self.cpu_pledges[site]
+        return s
+
     def fetch_more_info(self,talk=True):
         ## and complement information from ssb
         columns= {
@@ -978,6 +985,51 @@ class workflowInfo:
     def firstTask(self):
         return self._tasks()[0]
 
+    def getComputingTime(self,unit='h'):
+        cput = 0
+        if 'InputDataset' in self.request:
+            ds = self.request['InputDataset']
+            if 'BlockWhitelist' in self.request and self.request['BlockWhitelist']:
+                (ne,_) = getDatasetEventsAndLumis( ds , eval(self.request['BlockWhitelist']) )
+            else:
+                (ne,_) = getDatasetEventsAndLumis( ds )
+            tpe = self.request['TimePerEvent']
+            
+            cput = ne * tpe
+        elif self.request['RequestType'] == 'TaskChain':
+            print "not implemented yet"
+        else:
+            ne = float(self.request['RequestNumEvents'])
+            tpe = self.request['TimePerEvent']
+            
+            cput = ne * tpe
+
+        if unit=='m':
+            cput = cput / (60.)
+        if unit=='h':
+            cput = cput / (60.*60.)
+        if unit=='d':
+            cput = cput / (60.*60.*24.)
+        return cput
+    
+    def availableSlots(self):
+        av = 0
+        SI = siteInfo()
+        if 'SiteWhitelist' in self.request:
+            return SI.availableSlots( self.request['SiteWhitelist'] )
+        else:
+            allowed = getSiteWhiteList( self.getIO() )
+            return SI.availableSlots( allowed )
+
+    def getSystemTime(self):
+        ct = self.getComputingTime()
+        resource = self.availableSlots()
+        if resource:
+            return ct / resource
+        else:
+            print "cannot compute system time for",self.request['RequestName']
+            return 0
+
     def checkWorkflowSplitting( self ):
         ## this isn't functioning for taskchain BTW
         if 'InputDataset' in self.request:
@@ -1056,7 +1108,7 @@ class workflowInfo:
             for task in lwl_t:
                 lwl.extend(eval(lwl_t[task]))
         else:
-            if 'BlockWhitelist' in self.request:
+            if 'LumiWhitelist' in self.request:
                 lwl.extend(eval(self.request['LumiWhitelist']))
         return lwl
 
