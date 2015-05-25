@@ -998,7 +998,8 @@ class workflowInfo:
             
             cput = ne * tpe
         elif self.request['RequestType'] == 'TaskChain':
-            print "not implemented yet"
+            #print "not implemented yet"
+            pass
         else:
             ne = float(self.request['RequestNumEvents'])
             tpe = self.request['TimePerEvent']
