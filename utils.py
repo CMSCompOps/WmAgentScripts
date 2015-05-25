@@ -111,7 +111,7 @@ def listDelete(url, user, site=None):
     
     return list(itertools.chain.from_iterable([(subitem['name'],item['requested_by'],item['id']) for subitem in item['node'] if subitem['decision']=='pending' ] for item in items))
 
-def listSubscriptions(url, dataset):
+def listSubscriptions(url, dataset, within_sites=None):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset=%s'%(dataset))
     r2=conn.getresponse()
@@ -129,6 +129,7 @@ def listSubscriptions(url, dataset):
         for node in item['node']:
             if item['type']!='xfer': continue
             site = node['name']            
+            if within_sites and not site in within_sites: continue
             #print item
             if not 'MSS' in site:
                 ## pending delete

@@ -245,7 +245,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                 # reduce the number of copies required by existing full copies
                 copies_needed = max(0,copies_needed - len(prim_location))
                 print "now need",copies_needed
-                subscriptions = listSubscriptions( url , prim )
+                subscriptions = listSubscriptions( url , prim , sites_allowed )
                 prim_destination = list(set([site for (site,(tid,decision)) in subscriptions.items() if decision and not any([site.endswith(veto) for veto in ['MSS','Export','Buffer']])]))
                 ## need to reject from that list the ones with a full copy already: i.e the transfer corresponds to the copy in place
                 prim_destination = [site for site in prim_destination if not site in prim_location]
