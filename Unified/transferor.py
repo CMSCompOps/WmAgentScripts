@@ -206,8 +206,8 @@ def transferor(url ,specific = None, talk=True, options=None):
 
         if len(secondary)==0 and len(primary)==0 and len(parent)==0 and lheinput==False:
             ## pure mc 
-            sendEmail("work for SDSC", "There is work for SDSC : %s"%(wfo.name),'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
-
+            #sendEmail("work for SDSC", "There is work for SDSC : %s"%(wfo.name),'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
+            pass
 
         blocks = []
         if 'BlockWhitelist' in wfh.request and wfh.request['BlockWhitelist']:
