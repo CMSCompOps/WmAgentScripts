@@ -616,7 +616,7 @@ def getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None
         return second_order
     
 
-def getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=None, vetoes=None):
+def getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=None, vetoes=None, within_sites=None):
     if vetoes==None:
         vetoes = ['MSS','Buffer','Export']
     #print "presence of",dataset
@@ -645,6 +645,7 @@ def getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=None
     for item in items:
         for replica in item['replica']:
             if not any(replica['node'].endswith(v) for v in vetoes):
+                if within_sites and not replica['node'] in within_sites: continue
                 if replica['group'] == None: replica['group']=""
                 if complete and not replica['complete']==complete: continue
                 #if group!=None and replica['group']==None: continue

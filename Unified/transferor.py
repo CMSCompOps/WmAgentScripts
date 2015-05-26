@@ -204,6 +204,7 @@ def transferor(url ,specific = None, talk=True, options=None):
         if 'SiteWhitelist' in CI.parameters(wfh.request['Campaign']):
             sites_allowed = CI.parameters(wfh.request['Campaign'])['SiteWhitelist']
 
+
         if len(secondary)==0 and len(primary)==0 and len(parent)==0 and lheinput==False:
             ## pure mc 
             #sendEmail("work for SDSC", "There is work for SDSC : %s"%(wfo.name),'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
@@ -221,7 +222,7 @@ def transferor(url ,specific = None, talk=True, options=None):
             ## chope the primary dataset 
             for prim in primary:
                 max_priority[prim] = max(max_priority[prim],int(wfh.request['RequestPriority']))
-                sites_really_allowed = [site for site in sites_allowed if not any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
+                sites_really_allowed = [SI.CE_to_SE(site) for site in sites_allowed if not any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
                 print "Sites allowed minus the vetoed transfer"
                 print sites_really_allowed
                 copies_needed_from_site = int(0.35*len(sites_really_allowed))+1 ## should just go for a fixed number based if the white list grows that big
@@ -237,7 +238,7 @@ def transferor(url ,specific = None, talk=True, options=None):
 
                 ## remove the sites that do not want transfers                
                 workflow_dependencies[prim].add( wfo.id )
-                presence = getDatasetPresence( url, prim )
+                presence = getDatasetPresence( url, prim , within_sites = [SI.CE_to_SE(site) for site in sites_allowed])
                 prim_location = [site for site,pres in presence.items() if pres[0]==True]
                 if len(prim_location) >= copies_needed:
                     print "The output is all fully in place at",len(prim_location),"sites"
