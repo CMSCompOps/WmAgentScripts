@@ -199,7 +199,8 @@ url = 'cmsweb.cern.ch'
 def main():
 
     #Create option parser
-    usage = "\n       python %prog [options] WORKFLOW_NAME [USER GROUP]\n"\
+    usage = "\n       python %prog [options] [WORKFLOW_NAME] [USER GROUP]\n"\   
+            "WORKFLOW_NAME: if the list file is provided this should be empty"
             "USER: the user for creating the clone, if empty it will\n"\
             "      use the OS user running the script\n"\
             "GROUP: the group for creating the clone, if empty it will\n"\
@@ -210,25 +211,35 @@ def main():
                         help="Creates a clone for backfill test purposes.")
     parser.add_option("-v","--verbose",action="store_true", dest="verbose", default=False,
                         help="Prints all query information.")
+    parser.add_option("-v","--verbose",action="store_true", dest="verbose", default=False,
+                        help="Prints all query information.")
+    parser.add_option('-f', '--file', help='Text file with a list of workflows',dest='team')
     (options, args) = parser.parse_args()
 
     # Check the arguments, get info from them
-    if len(args) == 3:
-        user = args[2]
-        group = args[3]
-    elif len(args) == 1:
-        #get os username by default
-        uinfo = pwd.getpwuid(os.getuid())
-        user = uinfo.pw_name
-        #group by default DATAOPS
-        group = 'DATAOPS'
+    if options.file:
+        wfs = [l.strip() for l in open(options.file) if l.strip()]
+        if len(args) == 2:
+            user = args[0]
+            group = args[1]
     else:
-        parser.error("Provide the workflow name and/or user name and group.")
-        sys.exit(1)
-        
-    workflow = args[0]
+        if len(args) == 3:
+            user = args[1]
+            group = args[2]
+        elif len(args) == 1:
+            #get os username by default
+            uinfo = pwd.getpwuid(os.getuid())
+            user = uinfo.pw_name
+            #group by default DATAOPS
+            group = 'DATAOPS'
+        else:
+            parser.error("Provide the workflow of a file of workflows")
+            sys.exit(1)
+        #name of workflow
+        wfs = [args[0]]
     
-    cloneWorkflow(workflow, user, group, options.verbose, options.backfill)
+    for wf in wfs:
+        cloneWorkflow(workflow, user, group, options.verbose, options.backfill)
     
     sys.exit(0)
 

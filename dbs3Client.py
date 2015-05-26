@@ -142,6 +142,30 @@ def getDatasetStatus(dataset):
     reply = dbsapi.listDatasets(dataset=dataset,dataset_access_type='*',detail=True)
     return reply[0]['dataset_access_type']
 
+
+def setDatasetStatus(dataset, newStatus):
+    """
+    Updates the dataset status (access type): VALID, INVALID, PRODUCTION, DEPRECATED
+    """
+    dbsapi = DbsApi(url=dbs3_url)
+    dbsapi.updateDatasetType(dataset=dataset3, dataset_access_type=newStatus)
+
+    #Propagate status to files
+    if files:
+        if newStatus in ['DELETED', 'DEPRECATED', 'INVALID']:
+            file_status = 0
+        elif newStatus in ['PRODUCTION', 'VALID']:
+            file_status = 1
+        else:
+            print "Sorry, I don't know this state and you cannot set files to %s" % newStatus
+            print "Only the dataset was changed. Quitting the program!"
+            return
+        
+        print "Files will be set to:",file_status,"in DBS3"
+        files = dbsapi.listFiles(dataset=dataset3)
+        for this_file in files:
+            dbsapi.updateFileStatus(logical_file_name=this_file['logical_file_name'], is_file_valid=file_status)
+
 def getMaxLumi(dataset):
     """
     Gets the number of the last lumi in a given dataset
