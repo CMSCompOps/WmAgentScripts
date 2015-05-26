@@ -210,7 +210,10 @@ def getFailureInformation(inputfilename,outputfilename="",verbose=False,debug=Fa
                     print "missing the number of failed and successful jobs in task, setting total jobs to 999999999999"
                 totaljobs=9999999999    
             elif len(s4['rows'][1]['doc']['tasks'][taskname]['status']) == 2:
-                if 'success' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'failure' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'exception' not in s4['rows'][1]['doc']['tasks'][taskname]['status']['failure'] or len(s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']) != 1:
+                if 'transition' in s4['rows'][1]['doc']['tasks'][taskname]['status'] and 'success' in s4['rows'][1]['doc']['tasks'][taskname]['status']:
+                    totaljobs=s4['rows'][1]['doc']['tasks'][taskname]['status']['success']
+
+                elif 'success' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'failure' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'exception' not in s4['rows'][1]['doc']['tasks'][taskname]['status']['failure'] or len(s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']) != 1:
                     os.system('echo '+workflow+' | mail -s \"jobFailureInformation error 1\" andrew.m.levin@vanderbilt.edu')
                     print "problem with job status information 1"
                     sys.exit(0)
