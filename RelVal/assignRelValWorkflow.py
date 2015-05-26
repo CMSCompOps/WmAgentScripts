@@ -120,7 +120,6 @@ def main():
     parser.add_option('-l', '--lfn', help='Merged LFN base',dest='lfn')
     parser.add_option('--correct_env',action="store_true",dest='correct_env')
     parser.add_option('--special', help='Use it for special workflows. You also have to change the code according to the type of WF',dest='special')
-    parser.add_option('--high_memory', action="store_true",help='Changes the memory at which wmagent kills the jobs',dest='high_memory')
     parser.add_option('--test',action="store_true", help='Nothing is injected, only print infomation about workflow and AcqEra',dest='test')
     parser.add_option('--pu',action="store_true", help='Use it to inject PileUp workflows only',dest='pu')
     parser.add_option('--lsf',action="store_true", help='Use it to assign work to the LSF agent at CERN - vocms174, relvallsf team',dest='lsf')
@@ -132,7 +131,7 @@ def main():
         command=command+arg+" "
 
     if not options.correct_env:
-        os.system("source /cvmfs/grid.cern.ch/emi-ui-3.7.3-1_sl6v2/etc/profile.d/setup-emi3-ui-example.sh; export X509_USER_PROXY=/tmp/x509up_u13536; source /tmp/relval/sw/comp.pre/slc6_amd64_gcc481/cms/dbs3-client/3.2.8a/etc/profile.d/init.sh; python2.6 "+command + "--correct_env")
+        os.system("source /cvmfs/grid.cern.ch/emi-ui-3.7.3-1_sl6v2/etc/profile.d/setup-emi3-ui-example.sh; export X509_USER_PROXY=/tmp/x509up_u13536; source /tmp/relval/sw/comp.pre/slc6_amd64_gcc481/cms/dbs3-client/3.2.10/etc/profile.d/init.sh; python2.6 "+command + "--correct_env")
         sys.exit(0)
 
     data = False
@@ -190,10 +189,20 @@ def main():
     if options.lfn:
         lfn=options.lfn
 
+    for key, value in schema.items():
+        if key == "Memory":
+            max_memory = int(value)
 
     # Setting the ProcessingString values per Task 
     for key, value in schema.items():
         if type(value) is dict and key.startswith("Task"):
+
+            if "Memory" in value:
+                if "max_memory" not in vars():
+                    max_memory = int(value["Memory"])
+                elif value["Memory"] > max_memory:
+                    max_memory = int(value["Memory"])
+
             try:
                 if 'ProcessingString' in value:
                     procstring[value['TaskName']] = value['ProcessingString'].replace("-","_")
@@ -304,11 +313,15 @@ def main():
         site='T2_CH_CERN'
 
     #maxrss=2972000
-    maxrss=3072000
+    #maxrss=3072000
     #maxrss=3572000
-    if options.high_memory:
-        maxrss=4972000
+    #if options.high_memory:
+    #    maxrss=4972000
 
+    #kill the job a little bit before it goes over the threshold    
+    maxrss=max_memory*1024-0.1*1024*1000
+
+    print max_memory
     
     # If the --test argument was provided, then just print the information gathered so far and abort the assignment
     if options.test:

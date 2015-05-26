@@ -39,16 +39,16 @@ while True:
 
     curs.execute("use "+dbname+";")
 
-    secrets_file=open("/home/relval/secrets.txt")
+    #secrets_file=open("/home/relval/secrets.txt")
 
-    password=secrets_file.read().rstrip('\n')
+    #password=secrets_file.read().rstrip('\n')
 
-    ret=os.system("kinit << EOF\n"+password+"\nEOF")
+    #ret=os.system("kinit << EOF\n"+password+"\nEOF")
 
     #sometimes the kerberos initialization doesn't work temporarily
-    while ret != 0:
-        ret=os.system("kinit << EOF\n"+password+"\nEOF")
-        time.sleep(60)
+    #while ret != 0:
+    #    ret=os.system("kinit << EOF\n"+password+"\nEOF")
+    #    time.sleep(60)
 
     curs.execute("select * from batches")
     batches=curs.fetchall()
