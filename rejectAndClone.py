@@ -24,15 +24,15 @@ def main():
     Read the text file, for each workflow try:
     First abort it, then clone it.
     """
-    usage = "\n       python %prog [options] [WORKFLOW_NAME] [USER GROUP]\n"\   
-            "WORKFLOW_NAME: if the list file is provided this should be empty"
+    usage = "\n       python %prog [options] [WORKFLOW_NAME] [USER GROUP]\n"\
+            "WORKFLOW_NAME: if the list file is provided this should be empty\n"\
             "USER: the user for creating the clone, if empty it will\n"\
             "      use the OS user running the script\n"\
             "GROUP: the group for creating the clone, if empty it will\n"\
             "      use 'DATAOPS' by default"
 
-    parser = optparse.OptionParser(usage=usage)
-    parser.add_option('-f', '--file', help='Text file of workflows to Abort and Clone',dest='file')
+    parser = OptionParser(usage=usage)
+    parser.add_option('-f', '--file', help='Text file of workflows to Reject and Clone', dest='file')
     (options, args) = parser.parse_args()
     
     # Check the arguments, get info from them

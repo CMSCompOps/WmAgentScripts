@@ -14,16 +14,13 @@ from optparse import OptionParser
 url = 'cmsweb.cern.ch'
 url_tb =  'cmsweb-testbed.cern.ch'
 
-
-
-
 def makeDeletionRequests(url, allDatasets, verbose=False):
     """
     make a single deletion request per bunch of datasets
     Filtering only the INVALID or DEPRECATED ones
     """
     
-    size = 20
+    size = 30
     deletionRequests = []
     #delete duplicates
     allDatasets = list(set(allDatasets))
@@ -62,9 +59,8 @@ def makeDeletionRequests(url, allDatasets, verbose=False):
             print '\n'.join(sites)
             r = phd.makeDeletionRequest(url, list(sites), dsToDelete, "Invalid data, can be deleted")
             if ("phedex" in r and 
-                    "request_created" in r["phedex"] and
-                    "id" in r["phedex"]["request_created"]):
-                reqid = r["phedex"]["request_created"]["id"]
+                    "request_created" in r["phedex"]):
+                reqid = r["phedex"]["request_created"][0]["id"]
                 deletionRequests.append(reqid)
                 if verbose:
                     print "Request created:", reqid

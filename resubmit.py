@@ -199,8 +199,8 @@ url = 'cmsweb.cern.ch'
 def main():
 
     #Create option parser
-    usage = "\n       python %prog [options] [WORKFLOW_NAME] [USER GROUP]\n"\   
-            "WORKFLOW_NAME: if the list file is provided this should be empty"
+    usage = "\n       python %prog [options] [WORKFLOW_NAME] [USER GROUP]\n"\
+            "WORKFLOW_NAME: if the list file is provided this should be empty\n"\
             "USER: the user for creating the clone, if empty it will\n"\
             "      use the OS user running the script\n"\
             "GROUP: the group for creating the clone, if empty it will\n"\
@@ -211,9 +211,7 @@ def main():
                         help="Creates a clone for backfill test purposes.")
     parser.add_option("-v","--verbose",action="store_true", dest="verbose", default=False,
                         help="Prints all query information.")
-    parser.add_option("-v","--verbose",action="store_true", dest="verbose", default=False,
-                        help="Prints all query information.")
-    parser.add_option('-f', '--file', help='Text file with a list of workflows',dest='team')
+    parser.add_option('-f', '--file', help='Text file with a list of workflows', dest='file')
     (options, args) = parser.parse_args()
 
     # Check the arguments, get info from them
