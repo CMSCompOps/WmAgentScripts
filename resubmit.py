@@ -214,8 +214,8 @@ def main():
 
     # Check the arguments, get info from them
     if len(args) == 3:
-        user = args[2]
-        group = args[3]
+        user = args[1]
+        group = args[2]
     elif len(args) == 1:
         #get os username by default
         uinfo = pwd.getpwuid(os.getuid())
