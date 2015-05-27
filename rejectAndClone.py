@@ -10,15 +10,17 @@
         input arg: Text file with list of workflows.
 """
 
-import urllib2,urllib, httplib, sys, re, os
+import urllib2,urllib, httplib, sys, re, os, pwd
 try:
     import json
 except:
     import simplejson as json
-import reqMgrClient
+import resubmit, reqMgrClient
 import dbs3Client as dbs3
 from optparse import OptionParser
 
+
+url = 'cmsweb.cern.ch'
 def main():
     """
     Read the text file, for each workflow try:
@@ -41,6 +43,12 @@ def main():
         if len(args) == 2:
             user = args[0]
             group = args[1]
+        elif len(args) == 0:
+            #get os username by default
+            uinfo = pwd.getpwuid(os.getuid())
+            user = uinfo.pw_name
+            #group by default DATAOPS
+            group = 'DATAOPS
     else:
         if len(args) == 3:
             user = args[1]
@@ -63,14 +71,13 @@ def main():
         reqMgrClient.rejectWorkflow(url, wf)
         #invalidates datasets
         print "Invalidating datasets"
-        datasets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
-        for dataset in datasets:
-            print dataset
-            dbs3.setDatasetStatus(dataset, 'INVALID')
+        datasets = reqMgrClient.outputdatasetsWorkflow(url, wf)
+        for ds in datasets:
+            print ds
+            dbs3.setDatasetStatus(ds, 'INVALID', files=True)
 
         #clone workflow
-        clone = resubmit.cloneWorkflow(workflow, user, group)
-        print "Cloned workflow: ",   clone
+        clone = resubmit.cloneWorkflow(wf, user, group)
     sys.exit(0);
 
 if __name__ == "__main__":
