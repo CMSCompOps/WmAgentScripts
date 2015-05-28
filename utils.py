@@ -456,8 +456,9 @@ class siteInfo:
         #return r_weights.keys()[self._weighted_choice_sub(r_weights.values())]
         return self._pick(sites, self.cpu_pledges)
 
+global_SI = siteInfo()
 def getSiteWhiteList( inputs , pickone=False):
-    SI = siteInfo()
+    SI = global_SI
     (lheinput,primary,parent,secondary) = inputs
     sites_allowed=[]
     if lheinput:
@@ -1027,7 +1028,7 @@ class workflowInfo:
     
     def availableSlots(self):
         av = 0
-        SI = siteInfo()
+        SI = global_SI
         if 'SiteWhitelist' in self.request:
             return SI.availableSlots( self.request['SiteWhitelist'] )
         else:
