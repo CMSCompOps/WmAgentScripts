@@ -251,6 +251,8 @@ def transferor(url ,specific = None, talk=True, options=None):
         if 'SiteWhitelist' in CI.parameters(wfh.request['Campaign']):
             sites_allowed = CI.parameters(wfh.request['Campaign'])['SiteWhitelist']
 
+        if 'SiteBlacklist' in CI.parameters(wfh.request['Campaign']):
+            sites_allowed = list(set(sites_allowed) - set(CI.parameters(wfh.request['Campaign'])['SiteBlacklist']))
 
         if len(secondary)==0 and len(primary)==0 and len(parent)==0 and lheinput==False:
             ## pure mc 
