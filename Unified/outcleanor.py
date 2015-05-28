@@ -130,7 +130,11 @@ def outcleanor(url, options):
                     if not len(full_copies):
                         print "we do not own a full copy of",dataset,status,wfo.status,".skip"
                         continue
-                    stay_there = random.choice( full_copies ) #at a place own by ops
+                    t1_full_copies = [ site for site in full_copies if site.startswith('T1')]
+                    if t1_full_copies:
+                        stay_there = random.choice( t1_full_copies ) #at a place own by ops
+                    else:
+                        stay_there = random.choice( full_copies ) #at a place own by ops
                     print "Where we keep a full copy", stay_there
                     to_be_cleaned.remove( stay_there )
                     our_copies[stay_there].append( dataset )
