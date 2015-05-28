@@ -4,9 +4,18 @@ import time
 from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration
 import os
 import json
+from collections import defaultdict
 
 def htmlor():
     cache = getWorkflows('cmsweb.cern.ch','assignment-approved', details=True)
+    def getWL( wfn ):
+        cached = filter(lambda d : d['RequestName']==wfn, cache)
+        if cached:
+            wl = cached[0]
+        else:
+            wl = getWorkLoad('cmsweb.cern.ch',wfn)
+        return wl
+
     def wfl(wf,view=False,p=False,ms=False,within=False,ongoing=False,status=False,update=False):
         wfn = wf.name
         wfs = wf.wm_status
@@ -34,11 +43,8 @@ def htmlor():
                 '<a href="https://cmsweb.cern.ch/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s" target="_blank">perf</a>'%wfn
                 ])
         if within and (not view or wfs=='completed'):
-            cached = filter(lambda d : d['RequestName']==wfn, cache)
-            if cached:
-                wl = cached[0]
-            else:
-                wl = getWorkLoad('cmsweb.cern.ch',wfn)
+            wl = getWL( wfn )
+
             if 'InputDataset' in wl:
                 dataset = wl['InputDataset']
                 text+=', '.join(['',
@@ -116,33 +122,77 @@ Last update on %s(CET), %s(GMT), <a href=logs/ target=_blank>logs</a> <a href=lo
 
     text=""
     count=0
+    count_by_campaign=defaultdict(lambda : defaultdict(int))
     for wf in session.query(Workflow).filter(Workflow.status=='considered').all():
+        wl = getWL( wf.name )
+        count_by_campaign[wl['Campaign']][int(wl['RequestPriority'])]+=1
         text+="<li> %s </li> \n"%wfl(wf,p=True)
         count+=1
-    text+="</ul></div>\n"
+    text_by_c=""
+    for c in count_by_campaign:
+        text_by_c+="<li> %s (%d) : "%( c, sum(count_by_campaign[c].values()) )
+        for p in sorted(count_by_campaign[c].keys()):
+            text_by_c+="%d (%d), "%(p,count_by_campaign[c][p])
+        text_by_c+="</li>"
+
     html_doc.write("""
 Worflow next to handle (%d) <a href=https://cms-pdmv.cern.ch/mcm/batches?status=new&page=-1 target="_blank"> batches</a> <a href=logs/injector/last.log target=_blank>log</a> <a href=logs/transferor/last.log target=_blank>postlog</a>
 <a href="javascript:showhide('considered')">[Click to show/hide]</a>
 <br>
 <div id="considered" style="display:none;">
 <ul>
-"""%count)
-    html_doc.write(text)
+<li> By workflow (%d) </li><a href="javascript:showhide('considered_bywf')">[Click to show/hide]</a><div id="considered_bywf" style="display:none;">
+ <ul>
+ %s
+ </ul></div>
+<li> By campaigns (%d) </li><a href="javascript:showhide('considered_bycamp')">[Click to show/hide]</a><div id="considered_bycamp" style="display:none;">
+ <ul>
+ %s
+ </ul></div>
+</ul>
+</div>
+"""%(count,
+     count, text,
+     len(count_by_campaign), text_by_c))
+                   
 
     text=""
     count=0
+    count_by_campaign=defaultdict(lambda : defaultdict(int))
     for wf in session.query(Workflow).filter(Workflow.status=='staging').all():
+        wl = getWL( wf.name )
+        count_by_campaign[wl['Campaign']][int(wl['RequestPriority'])]+=1
         text+="<li> %s </li> \n"%wfl(wf,within=True)
         count+=1
-    text+="</ul></div>\n"
+
+    text_by_c=""
+    for c in count_by_campaign:
+        text_by_c+="<li> %s (%d) : "%( c, sum(count_by_campaign[c].values()) )
+        for p in sorted(count_by_campaign[c].keys()):
+            text_by_c+="%d (%d), "%(p,count_by_campaign[c][p])
+        text_by_c+="</li>"
+
+
     html_doc.write("""
 Worflow waiting in staging (%d) <a href=logs/transferor/last.log target=_blank>log</a> <a href=logs/stagor/last.log target=_blank>postlog</a>
 <a href="javascript:showhide('staging')">[Click to show/hide]</a>
 <br>
 <div id="staging" style="display:none;">
 <ul>
-"""%count)
-    html_doc.write(text)
+<li> By workflow (%d) </li><a href="javascript:showhide('staging_bywf')">[Click to show/hide]</a><div id="staging_bywf" style="display:none;">                                                                                                                                                                       
+ <ul>            
+ %s
+ </ul></div>
+<li> By campaigns (%d) </li><a href="javascript:showhide('staging_bycamp')">[Click to show/hide]</a><div id="staging_bycamp" style="display:none;">                                                                                                                                                                  
+ <ul>                                                                                                                                                                                                                                                                                                                      
+ %s                                                                                                                                                                                                                                                                                                                        
+ </ul></div>                                                                                                                                                                                                                                                                                                               
+</ul>      
+</div>
+"""%(count, 
+     count, text,
+     len(count_by_campaign), text_by_c))
+
 
     text=""
     count=0
@@ -174,18 +224,39 @@ Transfer on-going (%d) <a href=https://transferteam.web.cern.ch/transferteam/das
 
     text=""
     count=0
+    count_by_campaign=defaultdict(lambda : defaultdict(int))
     for wf in session.query(Workflow).filter(Workflow.status=='staged').all():
+        wl = getWL( wf.name )
+        count_by_campaign[wl['Campaign']][int(wl['RequestPriority'])]+=1
         text+="<li> %s </li> \n"%wfl(wf,p=True)
         count+=1
-    text+="</ul></div>\n"
+    text_by_c=""
+    for c in count_by_campaign:
+        text_by_c+="<li> %s (%d) : "%( c, sum(count_by_campaign[c].values()) )
+        for p in sorted(count_by_campaign[c].keys()):
+            text_by_c+="%d (%d), "%(p,count_by_campaign[c][p])
+        text_by_c+="</li>"
+
     html_doc.write("""Worflow ready for assigning (%d) <a href=logs/stagor/last.log target=_blank>log</a> <a href=logs/assignor/last.log target=_blank>postlog</a>
 <a href="javascript:showhide('staged')">[Click to show/hide]</a>
 <br>
 <div id="staged" style="display:none;">
 <br>
 <ul>
-"""%count)
-    html_doc.write(text)
+<li> By workflow (%d) </li><a href="javascript:showhide('staged_bywf')">[Click to show/hide]</a><div id="staged_bywf" style="display:none;">                                                                                                                                                                             
+ <ul>                                                                                                                                                                                                                                                                                                                      
+ %s                                                                                                                                                                                                                                                                                                                        
+ </ul></div>                                                                                                                                                                                                                                                                                                               
+<li> By campaigns (%d) </li><a href="javascript:showhide('staged_bycamp')">[Click to show/hide]</a><div id="staged_bycamp" style="display:none;">                                                                                                                                                                        
+ <ul>                                                                                                                                                                                                                                                                                                                      
+ %s                                                                                                                                                                                                                                                                                                                        
+ </ul></div>
+</ul>
+</div>
+"""%(count, 
+     count, text,
+     len(count_by_campaign), text_by_c))
+
 
     lines=[]
     for wf in session.query(Workflow).filter(Workflow.status=='away').all():
