@@ -821,7 +821,7 @@ def phedexPost(url, request, params):
     conn.close()
     return result
 
-def approveSubscription(url, phedexid, nodes=None , comments =None):
+def approveSubscription(url, phedexid, nodes=None , comments =None, decision = 'approve'):
     if comments==None:
         comments = 'auto-approve of production prestaging'
     if not nodes:
@@ -838,7 +838,7 @@ def approveSubscription(url, phedexid, nodes=None , comments =None):
         nodes = list(nodes)
 
     params = {
-        'decision' : 'approve',
+        'decision' : decision,
         'request' : phedexid,
         'node' : ','.join(nodes),
         'comments' : comments
