@@ -278,7 +278,8 @@ class siteInfo:
             self.sites_veto_transfer = ["T2_US_MIT"]#,"T1_UK_RAL"]
         else:
             ## a new scheme with all 
-            allowed_T2_for_transfer = ["T2_US_Nebraska","T2_US_Wisconsin","T2_US_Purdue","T2_US_Caltech","T2_DE_RWTH","T2_DE_DESY", "T2_US_Florida", "T2_IT_Legnaro", "T2_CH_CERN", "T2_UK_London_IC", "T2_IT_Pisa"]
+            #self.sites_with_goodIO.remove("T2_US_UCSD")
+            allowed_T2_for_transfer = ["T2_US_Nebraska","T2_US_Wisconsin","T2_US_Purdue","T2_US_Caltech","T2_DE_RWTH","T2_DE_DESY", "T2_US_Florida", "T2_IT_Legnaro", "T2_CH_CERN", "T2_UK_London_IC", "T2_IT_Pisa", "T2_US_UCSD"]
             #no MB yet "T2_CH_CERN",
             #probable "T2_US_UCSD"
             # at 400TB ""T2_IT_Bari","T2_IT_Legnaro"
@@ -297,6 +298,7 @@ class siteInfo:
                 self.storage[values['mss']] = values['freemss']
             if 'disk' in values:
                 self.disk[values['disk']] = values['freedisk']
+        self.disk['T2_US_UCSD'] = 100
 
         for (dse,free) in self.disk.items():
             if free<0:
@@ -318,6 +320,14 @@ class siteInfo:
         ## and get SSB sync
         self.fetch_more_info(talk=False)
 
+
+    def usage(self,site):
+        try:
+            info = json.loads( os.popen('curl -s "http://dashb-cms-job.cern.ch/dashboard/request.py/jobsummary-plot-or-table2?site=%s&check=submitted&sortby=activity&prettyprint"' % site ).read() )
+            return info
+        except:
+            return {}
+        
     def availableSlots(self, sites=None):
         s=0
         for site in self.cpu_pledges:
