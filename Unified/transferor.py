@@ -45,14 +45,25 @@ def transferor(url ,specific = None, talk=True, options=None):
     print "counting all being handled..."
     being_handled = len(session.query(Workflow).filter(Workflow.status == 'away').all())
     being_handled += len(session.query(Workflow).filter(Workflow.status.startswith('stag')).all())
+    being_transfered = len(session.query(Workflow).filter(Workflow.status == 'staging').all())
     being_handled += len(session.query(Workflow).filter(Workflow.status.startswith('assistance')).all())
+
     max_to_handle = options.maxworkflows
+    max_to_transfer = options.maxstaging
+
     allowed_to_handle = max(0,max_to_handle - being_handled)
+    allowed_to_transfer = max(0,max_to_transfer - being_transfered)
     wf_buffer = 5
     if allowed_to_handle<=wf_buffer: ## buffer for having several wf per transfer
         print "Not allowed to run more than",max_to_handle,"at a time. Currently",being_handled,"and",wf_buffer,"buffer"
     else:
         print being_handled,"already being handled",max_to_handle,"max allowed,",allowed_to_handle,"remaining","and",wf_buffer,"buffer"
+
+    if allowed_to_transfer <= wf_buffer:
+        print "Not allowed to transfer more than",max_to_transfer,"at a time. Currently",being_transfered,"and",wf_buffer,"buffer"
+    else:
+        print being_transfered,"already being transfered",max_to_transfer,"max allowed,",allowed_to_transfer,"remaining","and",wf_buffer,"buffer"
+
     print "... done"
 
     all_transfers=defaultdict(list)
@@ -61,6 +72,7 @@ def transferor(url ,specific = None, talk=True, options=None):
     print "getting all wf to consider ..."
     cache = getWorkflows(url, 'assignment-approved', details=True)
     for wfo in session.query(Workflow).filter(Workflow.status=='considered').all():
+        print "\t",wfo.name
         if specific and not specific in wfo.name: continue
         cache_r =filter(lambda d:d['RequestName']==wfo.name, cache)
         if len(cache_r):
@@ -69,6 +81,7 @@ def transferor(url ,specific = None, talk=True, options=None):
             wfs_and_wfh.append( (wfo, workflowInfo( url, wfo.name, spec=False) ) )
     print "... done"
 
+    transfers_per_sites = defaultdict(int)
     input_sizes = {}
     input_cput = {}
     input_st = {}
@@ -78,29 +91,36 @@ def transferor(url ,specific = None, talk=True, options=None):
     print "getting all wf in staging ..."
     for wfo in session.query(Workflow).filter(Workflow.status=='staging').all():
         wfh = workflowInfo( url, wfo.name, spec=False)
-        (_,primary,_,_) = wfh.getIO()
-        input_cput[wfo.name] = wfh.getComputingTime()
-        input_st[wfo.name] = wfh.getSystemTime()
+        (lheinput,primary,parent,secondary) = wfh.getIO()
+        sites_allowed = getSiteWhiteList( (lheinput,primary,parent,secondary) )
+        for site in sites_allowed: ## we should get the actual transfer destination instead of the full white list
+            transfers_per_sites[site] += 1 
+        #input_cput[wfo.name] = wfh.getComputingTime()
+        #input_st[wfo.name] = wfh.getSystemTime()
         for prim in primary:  
             input_sizes[prim] = dss.get( prim )
+            print "\t",wfo.name,"needs",input_sizes[prim],"GB"
         in_transfer_priority = max(in_transfer_priority, int(wfh.request['RequestPriority']))
         min_transfer_priority = min(min_transfer_priority, int(wfh.request['RequestPriority']))
+
     print "... done"
     print "Max priority in transfer already",in_transfer_priority
     print "Min priority in transfer already",min_transfer_priority
+    print "transfers per sites"
+    print json.dumps( transfers_per_sites, indent=2)
     in_transfer_already = sum(input_sizes.values())
     cput_in_transfer_already = sum(input_cput.values())
     st_in_transfer_already = sum(input_st.values())
     #sort by priority higher first
     wfs_and_wfh.sort(cmp = lambda i,j : cmp(int(i[1].request['RequestPriority']),int(j[1].request['RequestPriority']) ), reverse=True)
-
+    
 
     ## list the size of all inputs
     print "getting all input sizes ..."
     for (wfo,wfh) in wfs_and_wfh:
         (_,primary,_,_) = wfh.getIO()
-        input_cput[wfo.name] = wfh.getComputingTime()
-        input_st[wfo.name] = wfh.getSystemTime()
+        #input_cput[wfo.name] = wfh.getComputingTime()
+        #input_st[wfo.name] = wfh.getSystemTime()
         for prim in primary:
             input_sizes[prim] = dss.get( prim )
     print "... done"
@@ -126,6 +146,9 @@ def transferor(url ,specific = None, talk=True, options=None):
     print "%15.4f GB is the global transfer limit"%grand_transfer_limit
     print "%15.4f GB is the available limit"%transfer_limit
 
+
+    max_staging_per_site = options.maxstagingpersite
+                    
     # the max priority value per dataset.
     max_priority = defaultdict(int)
     needs_transfer=0 ## so that we can count'em
@@ -187,13 +210,20 @@ def transferor(url ,specific = None, talk=True, options=None):
                 continue
 
 
-        passing_along += 1
         if passing_along >= allowed_to_handle:
             if int(wfh.request['RequestPriority']) >= in_transfer_priority and min_transfer_priority!=in_transfer_priority:
                 print "Higher priority sample",wfh.request['RequestPriority'],">=",in_transfer_priority,"go-on over",max_to_handle
             else:
                 print "Not allowed to pass more than",max_to_handle,"at a time. Currently",being_handled,"handled, and adding",passing_along
-                break
+                if not options.go: break
+
+        if this_load and needs_transfer >= allowed_to_transfer:
+            if int(wfh.request['RequestPriority']) >= in_transfer_priority and min_transfer_priority!=in_transfer_priority:
+                print "Higher priority sample",wfh.request['RequestPriority'],">=",in_transfer_priority,"go-on over",max_to_transfer
+            else:
+                print "Not allowed to transfer more than",max_to_transfer,"at a time. Currently",being_transfered,"transfering, and adding",needs_transfer
+                if not options.go: continue
+
 
         (lheinput,primary,parent,secondary) = wfh.getIO()
         if options and options.tosites:
@@ -216,16 +246,17 @@ def transferor(url ,specific = None, talk=True, options=None):
 
         can_go = True
         staging=False
+        allowed=True
         if primary:
             if talk:
                 print wfo.name,'reads',', '.join(primary),'in primary'
             ## chope the primary dataset 
             for prim in primary:
                 max_priority[prim] = max(max_priority[prim],int(wfh.request['RequestPriority']))
-                sites_really_allowed = [SI.CE_to_SE(site) for site in sites_allowed if not any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
+                sites_allowed = [site for site in sites_allowed if not any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
                 print "Sites allowed minus the vetoed transfer"
-                print sites_really_allowed
-                copies_needed_from_site = int(0.35*len(sites_really_allowed))+1 ## should just go for a fixed number based if the white list grows that big
+                print sites_allowed
+                copies_needed_from_site = int(0.35*len(sites_allowed))+1 ## should just go for a fixed number based if the white list grows that big
                 print "Would make",copies_needed_from_site,"copies from site white list"
                 if options.maxcopy>0:
                     copies_needed = min(options.maxcopy,copies_needed_from_site)
@@ -253,6 +284,28 @@ def transferor(url ,specific = None, talk=True, options=None):
                 ## add transfer dependencies
                 latching_on_transfers =  list(set([ tid for (site,(tid,decision)) in subscriptions.items() if decision and site in prim_destination and not any([site.endswith(veto) for veto in ['MSS','Export','Buffer']])]))
                 print latching_on_transfers
+
+                ## figure out where all this is going to go
+                prim_to_distribute = [site for site in sites_allowed if not any([osite.startswith(site) for osite in prim_location])]
+                prim_to_distribute = [site for site in prim_to_distribute if not any([osite.startswith(site) for osite in prim_destination])]
+                ## take out the ones that cannot receive transfers
+                prim_to_distribute = [site for site in prim_to_distribute if not any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
+
+                if any([transfers_per_sites[site] < max_staging_per_site for site in prim_to_distribute]):
+                    ## means there is openings let me go
+                    print "There are transfer slots available:",[(site,transfers_per_sites[site]) for site in prim_to_distribute]
+                    for site in sites_allowed:
+                        #increment accross the board, regardless of real destination: could be changed
+                        transfers_per_sites[site] += 1
+                else:
+                    if int(wfh.request['RequestPriority']) >= in_transfer_priority and min_transfer_priority!=in_transfer_priority:
+                        print "Higher priority sample",wfh.request['RequestPriority'],">=",in_transfer_priority,"go-on over transfer slots available"
+                    else:
+                        print "Not allowed to transfer more than",max_staging_per_site," per site at a time. Going overboard for",[site for site in prim_to_distribute if transfers_per_sites[site]>=max_staging_per_site]
+                        if not options.go:
+                            allowed = False
+                            break
+
                 for latching in latching_on_transfers:
                     tfo = session.query(Transfer).filter(Transfer.phedexid == latching).first()
                     if not tfo:
@@ -280,10 +333,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                     print "The output is either fully in place or getting in full somewhere with",latching_on_transfers
                     can_go = True
                     continue
-                prim_to_distribute = [site for site in sites_allowed if not any([osite.startswith(site) for osite in prim_location])]
-                prim_to_distribute = [site for site in prim_to_distribute if not any([osite.startswith(site) for osite in prim_destination])]
-                ## take out the ones that cannot receive transfers
-                prim_to_distribute = [site for site in prim_to_distribute if not any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
+
                 if len(prim_to_distribute)>0: ## maybe that a parameter we can play with to limit the 
                     if not options or options.chop:
                         spreading = distributeToSites( getDatasetChops(prim, chop_threshold = options.chopsize), prim_to_distribute, n_copies = copies_needed, weights=SI.cpu_pledges)
@@ -295,7 +345,9 @@ def transferor(url ,specific = None, talk=True, options=None):
                     for (site,items) in spreading.items():
                         all_transfers[site].extend( items )
 
-
+        if not allowed:
+            print "Not allowed to move on with",wfo.name
+            continue
 
 
         if secondary:
@@ -322,9 +374,11 @@ def transferor(url ,specific = None, talk=True, options=None):
                 ## but using existing ones
                 print wfo.name,"latches on existing transfers, and nothing else"
                 wfo.status = 'staging'
+                needs_transfer+=1
             else:
                 print wfo.name,"should just be assigned NOW to",sites_allowed
                 wfo.status = 'staged'
+                passing_along+=1
             print "setting status to",wfo.status
             session.commit()
             continue
@@ -446,6 +500,8 @@ if __name__=="__main__":
     parser.add_option('--go',help="Overrides no-go from campaign, announced, or grace period",default=False,action='store_true')
     parser.add_option('--maxtransfer',help="The limit in GB of the total size of input that can be transfered", default=UC.get('max_transfer_in_GB'),type=int)
     parser.add_option('--maxworkflows',help="The limit on the number of workflow we want to keep in the system at a time",default=UC.get('max_handled_workflows'),type=int)
+    parser.add_option('--maxstaging',help="The limit on the number of workflow we want to keep in staging at a time",default=UC.get('max_staging_workflows'),type=int)
+    parser.add_option('--maxstagingpersite',help="The limit on the number of workflow we want to keep in staging at a time per site",default=UC.get('max_staging_workflows_per_site'),type=int)
     parser.add_option('--maxcopy',help="Specify the number of copies of the input we need", default=3,type=int)
     (options,args) = parser.parse_args()
 
