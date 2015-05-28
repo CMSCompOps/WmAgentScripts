@@ -6,6 +6,7 @@ from utils import makeReplicaRequest
 from utils import workflowInfo, siteInfo, campaignInfo, userLock
 from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, getSiteWhiteList, approveSubscription, getDatasetSize, updateSubscription, getWorkflows, componentInfo
 from utils import unifiedConfiguration
+from utils import lockInfo
 import json
 from collections import defaultdict
 import optparse
@@ -39,6 +40,7 @@ def transferor(url ,specific = None, talk=True, options=None):
 
     SI = siteInfo()
     CI = campaignInfo()
+    LI = lockInfo()
     mcm = McMClient(dev=False)
     dss = DSS()
 
@@ -472,6 +474,9 @@ def transferor(url ,specific = None, talk=True, options=None):
                     #print "This does not work yet properly it seems"
                     print updateSubscription(url, site_se, item, priority='high')
             """
+            #for item in list(set([it.split('#')[0] for it in items_to_transfer])):
+            for item in items_to_transfer:
+                LI.lock( item, site_se, 'pre-staging')
         else:
             #result= {'phedex':{'request_created' : [{'id' : fake_id}]}}
             result= {'phedex':{'request_created' : []}}

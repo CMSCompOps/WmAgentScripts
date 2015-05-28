@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import getWorkLoad, getDatasetPresence, makeDeleteRequest, getDatasetSize, siteInfo, findCustodialLocation, getWorkflowByInput, campaignInfo
+from utils import lockInfo
 import json
 import time
 import random
@@ -10,6 +11,8 @@ def cleanor(url, specific=None):
     delete_per_site = {}
     SI = siteInfo()
     CI = campaignInfo()
+    LI = lockInfo()
+
     counts=0
     for wfo in session.query(Workflow).filter(Workflow.status == 'done').all():
         keep_a_copy = False
@@ -137,11 +140,14 @@ def cleanor(url, specific=None):
 
         print "\t",','.join(dataset_list)
     
-    ## make a one for all deletion request to save on phedex id
+    ## make deletion requests
     for site in delete_per_site:
         site_datasets = [info[0] for info in delete_per_site[site]]
-        if not aggregate_deletion:
+        if True:
             result = makeDeleteRequest(url ,site , site_datasets, comments="Cleanup input after production. DataOps will take care of approving it.")
+            for item in site_datasets:
+                LI.release( item, site, 'cleanup of input after production')
+
             print result
             for phedexid in [o['id'] for o in result['phedex']['request_created']]:
                 if not any([v in site for v in ['MSS','Export','Buffer'] ]):

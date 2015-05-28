@@ -4,6 +4,7 @@ import reqMgrClient
 from utils import workflowInfo, campaignInfo, siteInfo, userLock
 from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction
 from utils import componentInfo, sendEmail
+from utils import lockInfo
 import optparse
 import itertools
 import time
@@ -18,6 +19,7 @@ def assignor(url ,specific = None, talk=True, options=None):
 
     CI = campaignInfo()
     SI = siteInfo()
+    LI = lockInfo()
 
     wfos=[]
     if specific:
@@ -196,6 +198,17 @@ def assignor(url ,specific = None, talk=True, options=None):
         if options and options.team:
             team = options.team
         result = reqMgrClient.assignWorkflow(url, wfo.name, team, parameters)
+
+
+        try:
+            ## refetch information and lock output
+            new_wfi = workflowInfo( url, wfo.name)
+            for site in [SI.CE_to_SE(site) for site in sites_allowed]:
+                for output in new_wfi.request['OutputDatasets']:
+                    LI.lock( output, site, 'dataset in production')
+        except Exception as e:
+            print "fail in locking output"
+            print str(e)
 
         # set status
         if not options.test:

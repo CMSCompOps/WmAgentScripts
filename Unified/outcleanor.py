@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import workflowInfo, getDatasetPresence, getDatasetStatus, getWorkflowByInput, getDatasetSize, makeDeleteRequest, listDelete, approveSubscription
+from utils import lockInfo
 import optparse
 import random 
 from collections import defaultdict
@@ -8,6 +9,8 @@ import json
 import time
 
 def outcleanor(url, options):
+
+    LI = lockInfo()
 
     if options.approve:
         for user in ['*Vlimant']:#,'*Cremonesi']:
@@ -192,6 +195,8 @@ def outcleanor(url, options):
             datasets = [ ds for ds,_,st in items]
             print "making deletion to",site
             result = makeDeleteRequest(url, site, datasets, "Cleanup output after production. DataOps will take care of approving it.")
+            for item in datasets:
+                LI.release( item, site, 'cleanup of output after production')
             print result
             ## approve it right away ?
             if 'MSS' in site: continue

@@ -143,6 +143,104 @@ def listSubscriptions(url, dataset, within_sites=None):
     #print destinations
     return destinations
 
+import dataLock
+
+class lockInfo:
+    def __init__(self):
+        pass
+
+    def __del__(self):
+        #self.clean()
+        jdump = {}
+        for l in dataLock.locksession.query(dataLock.Lock).all():
+            site= l.site
+            if not site in jdump: jdump[site] = {}
+            jdump[site][l.item] = { 
+                'lock' : l.lock,
+                'time' : l.time,
+                'date' : time.asctime( time.gmtime(l.time) ),
+                'reason' : l.reason
+                }
+            
+        open('/afs/cern.ch/user/c/cmst2/www/unified/datalocks.json','w').write( json.dumps( jdump , indent=2))
+
+    def _lock(self, item, site, reason):
+        now = time.mktime(time.gmtime())
+        l = dataLock.locksession.query(dataLock.Lock).filter(dataLock.Lock.site == site).filter(dataLock.Lock.item == item).first()
+        if not l:
+            l = dataLock.Lock(lock=False)
+            l.site = site
+            l.item = item
+            l.is_block = '#' in item
+            dataLock.locksession.add ( l )
+        if l.lock:
+            print l.item,item,"already locked at",site
+        
+        ## overwrite the lock 
+        l.reason = reason
+        l.time = now
+        l.lock = True
+        dataLock.locksession.commit()
+
+    def lock(self, item, site, reason):
+        try:
+            self._lock( item, site, reason)
+        except Exception as e:
+            ## to be removed once we have a fully functional lock db
+            print "could not lock",item,"at",site
+            print str(e)
+            
+    def _release(self, item, site, reason='releasing'):
+        now = time.mktime(time.gmtime())
+        l = dataLock.locksession.query(dataLock.Lock).filter(dataLock.Lock.site==site).filter(dataLock.Lock.item==item).first()
+        if not l:
+            print item,"was not locked at",site
+            l = dataLock.Lock(lock=False)
+            l.site = site
+            l.item = item
+            l.is_block = '#' in item
+            dataLock.locksession.add ( l )
+        else:
+            print l.item,item
+        l.time = now
+        l.reason = reason
+        l.lock = False
+        dataLock.locksession.commit()
+
+
+    def release(self, item, site, reason='releasing'):
+        try:
+            self._release(item, site, reason)
+        except Exception as e:
+            print "could not unlock",item,"at",site
+            print str(e)
+
+    def tell(self, comment):
+        print "---",comment,"---"
+        for l in dataLock.locksession.query(dataLock.Lock).all():
+            print l.item,l.site,l.lock
+        print "------"+"-"*len(comment)
+
+    def clean(self):
+        print "start cleaning lock info"
+        ## go and remove all blocks for which the dataset is specified
+        # if the dataset is locked, nothing matters for blocks -> remove
+        # if the dataset is unlocked, it means we don't want to keep anything of it -> remove
+        for l in dataLock.locksession.query(dataLock.Lock).filter(dataLock.Lock.lock==True).filter(dataLock.Lock.is_block==False).all():
+            site = l.site
+            item = l.item
+            ## get all the blocks at that site, for that dataset, under the same condition
+            for block in dataLock.locksession.query(dataLock.Lock).filter(dataLock.Lock.site==site).filter(dataLock.Lock.item.startswith(item)).filter(dataLock.Lock.is_block==True).all():
+                print "removing lock item for",block.item,"at",site,"due to the presence of overriding dataset information"
+                dataLock.locksession.delete( block )
+            dataLock.locksession.commit()
+
+        ## go and remove all items that have 'lock':False
+        for l in dataLock.locksession.query(dataLock.Lock).filter(dataLock.Lock.lock==False).all():
+            print "removing lock=false for",l.item,"at",l.site
+            dataLock.locksession.delete( l )            
+        dataLock.locksession.commit()
+
 class unifiedConfiguration:
     def __init__(self):
         self.configs = json.loads(open('/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/unifiedConfiguration.json').read())
