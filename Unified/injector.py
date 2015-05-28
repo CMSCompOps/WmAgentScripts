@@ -11,10 +11,6 @@ def injector(url, options, specific):
 
     up = componentInfo()
 
-    ## passing a round of invalidation of what needs to be invalidated
-    if options.invalidate:
-        invalidator(url)
-
     workflows = getWorkflows(url, status=options.wmstatus,user=options.user)
     existing = [wf.name for wf in session.query(Workflow).all()]
     ## browse for assignment-approved requests, browsed for ours, insert the diff
@@ -27,6 +23,10 @@ def injector(url, options, specific):
 
 
     existing = [wf.name for wf in session.query(Workflow).all()]
+
+    ## passing a round of invalidation of what needs to be invalidated
+    if options.invalidate:
+        invalidator(url)
 
 
     ## pick up replacements
@@ -72,6 +72,7 @@ def injector(url, options, specific):
                         tr.workflows_id = sw
                         print tr.phedexid,"got",new_wf.name
                         if new_wf.status != 'away':
+                            print "\t setting it staging"
                             new_wf.status = 'staging'
                         session.commit()
                         
@@ -79,6 +80,7 @@ def injector(url, options, specific):
         ## don't do that automatically
         #wf.status = 'forget'
         session.commit()
+
         
 if __name__ == "__main__":
     url = 'cmsweb.cern.ch'
