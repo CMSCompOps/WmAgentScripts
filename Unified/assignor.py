@@ -60,6 +60,12 @@ def assignor(url ,specific = None, talk=True, options=None):
         sites_allowed = getSiteWhiteList( (lheinput,primary,parent,secondary) )
         print "Allowed",sites_allowed
 
+        if 'SiteWhitelist' in CI.parameters(wfh.request['Campaign']):
+            sites_allowed = CI.parameters(wfh.request['Campaign'])['SiteWhitelist']
+
+        if 'SiteBlacklist' in CI.parameters(wfh.request['Campaign']):
+            sites_allowed = list(set(sites_allowed) - set(CI.parameters(wfh.request['Campaign'])['SiteBlacklist']))
+
         secondary_locations=None
         for sec in list(secondary):
             presence = getDatasetPresence( url, sec )
@@ -111,6 +117,7 @@ def assignor(url ,specific = None, talk=True, options=None):
             if not options.test and not options.go:
                 sendEmail( "cannot be assigned","%s is not full over sites \n %s"%(wfo.name,json.dumps(available_fractions)),'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
                 continue ## skip skip skip
+
         copies_wanted = 2.
         if available_fractions and not all([available>=copies_wanted for available in available_fractions.values()]):
             print "The input dataset is not available",copies_wanted,"times, only",available_fractions.values()
