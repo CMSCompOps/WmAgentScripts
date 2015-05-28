@@ -5,6 +5,7 @@ from utils import workflowInfo
 import reqMgrClient
 import setDatasetStatusDBS3
 from utils import componentInfo
+from collections import defaultdict
 
 def invalidator(url, invalid_status='INVALID'):
     up = componentInfo(mcm=True)
@@ -22,23 +23,24 @@ def invalidator(url, invalid_status='INVALID'):
             wfo = session.query(Workflow).filter(Workflow.name == wfn).first()
             if wfo:
                 ## set forget of that thing (although checkor will recover from it)
+                print "setting the status of",wfo.status,"to forget"
                 wfo.status = 'forget'
                 session.commit()
             else:
                 ## do not go on like this, do not acknoledge it
                 print wfn,"is set to be rejected, but we do not know about it yet"
-                continue
+                #continue
             wfi = workflowInfo(url, wfn)
             success = "not rejected"
+            ## to do, we should find a way to reject the workflow and any related acdc
             if wfi.request['RequestStatus'] in ['assignment-approved','new','completed']:
                 success = reqMgrClient.rejectWorkflow(url, wfn)
-                pass
             else:
                 success = reqMgrClient.abortWorkflow(url, wfn)
-                pass
             print success
             acknowledge= True
             text = "The workflow %s (%s) was rejected due to invalidation in McM" % ( wfn, pid )
+            pid = wfn ##so that the batch id is taken as the one containing the workflow name
         elif invalid['type'] == 'dataset':
             dataset = invalid['object']
 
@@ -61,7 +63,9 @@ def invalidator(url, invalid_status='INVALID'):
             ## acknoldge invalidation in mcm, provided we can have the api
             print "acknowledgment to mcm"
             mcm.get('/restapi/invalidations/acknowledge/%s'%( invalid['_id'] ))
-            batches = mcm.getA('batches',query='contains=%s'%pid)
+            batches = []
+            batches.extend(mcm.getA('batches',query='contains=%s'%pid))
+            batches = filter(lambda b : b['status'] in ['announced','done','reset'], batches)
             if len(batches):
                 bid = batches[-1]['prepid']
                 print "batch nofication to",bid
