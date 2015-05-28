@@ -185,13 +185,30 @@ def transferor(url ,specific = None, talk=True, options=None):
             if not options.go: continue
 
         ## check if the batch is announced
-        announced=False
-        is_real=False
-        for b in mcm.getA('batches',query='contains=%s'% wfo.name):
-            is_real = True
-            if b['status']=='announced': 
-                announced=True 
-                break
+
+        def check_mcm(wfn):
+            announced=False
+            is_real=False
+            if not wfn.startswith('pdmvserv'):
+                is_real = True
+            try:
+                for b in mcm.getA('batches',query='contains=%s'% wfo.name):
+                    is_real = True
+                    if b['status']=='announced': 
+                        announced=True 
+                        break
+            except:
+                try:
+                    for b in mcm.getA('batches',query='contains=%s'% wfo.name):
+                        is_real = True
+                        if b['status']=='announced': 
+                            announced=True 
+                            break
+                except:
+                    print "could not get mcm batch announcement, assuming not real"
+            return announced,is_real
+
+        announced,is_real = check_mcm( wfo.name )
 
         if not announced:
             print wfo.name,"does not look announced."# skipping?, rejecting?, reporting?"
