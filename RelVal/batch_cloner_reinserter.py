@@ -6,16 +6,16 @@ import json
 import urllib2,urllib, httplib, sys, re, os
 
 parser = optparse.OptionParser()
-parser.add_option('--correct_env',action="store_true",dest='correct_env')
+#parser.add_option('--correct_env',action="store_true",dest='correct_env')
 (options,args) = parser.parse_args()
 
-command=""
-for arg in sys.argv:
-    command=command+arg+" "
+#command=""
+#for arg in sys.argv:
+#    command=command+arg+" "
 
-if not options.correct_env:
-    os.system("source /cvmfs/grid.cern.ch/emi-ui-3.7.3-1_sl6v2/etc/profile.d/setup-emi3-ui-example.sh; export X509_USER_PROXY=/tmp/x509up_u13536; python2.6 "+command + "--correct_env")
-    sys.exit(0)
+#if not options.correct_env:
+#    os.system("source /cvmfs/grid.cern.ch/emi-ui-3.7.3-1_sl6v2/etc/profile.d/setup-emi3-ui-example.sh; export X509_USER_PROXY=/tmp/x509up_u13536; python2.6 "+command + "--correct_env")
+#    sys.exit(0)
 
 dbname = "relval"
 
@@ -86,7 +86,8 @@ for requests_row in requests_rows:
     for workflow_row in workflows_rows:
         #print workflow_row
         workflow=workflow_row[1]
-        return_string=os.popen("python2.6 resubmitTaskChain.py "+workflow).read()
+        return_string=os.popen("python2.6 resubmit.py "+workflow + " anlevin DATAOPS").read()
+        print return_string
         workflows.append(return_string.split(' ')[len(return_string.split(' ')) - 1].rstrip('\n'))
 
     print "finished cloning the workflows in batch "+str(batchid)
@@ -111,6 +112,16 @@ for requests_row in requests_rows:
             email_title=value
         if name == "description":
             description=value
+        if name == "useridyear":
+            olduseridyear=value
+        if name == "useridmonth":
+            olduseridmonth=value
+        if name == "useridday":
+            olduseridday=value
+        if name == "useridnum":
+            olduseridnum=value
+
+    olduserid=olduseridyear+"_"+olduseridmonth+"_"+olduseridday+"_"+str(olduseridnum)
 
     for line in workflows:
         workflow = line.rstrip('\n')
@@ -175,14 +186,16 @@ for requests_row in requests_rows:
                 
     print "creating a new batch with batch_id = "+str(batchid)
 
+    description = description.rstrip('\n')+"\n\n(clone of batch "+olduserid+")"
+
     curs.execute("insert into batches set batch_id="+str(batchid)+", DN=\""+DN+"\", announcement_title=\""+email_title+"\", processing_version="+str(proc_ver)+", site=\""+site+"\", description=\""+description+"\", status=\"approved\", useridyear=\""+useridyear+"\", useridmonth=\""+useridmonth+"\", useridday=\""+useridday+"\", useridnum="+str(useridnum)+", hn_message_id=\"do_not_send_an_acknowledgement_email\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\"")
+
 
     conn.commit()
 
     for line in workflows:
         workflow = line.rstrip('\n')
         curs.execute("insert into workflows set batch_id="+str(batchid)+", workflow_name=\""+workflow+"\";")
-
 
     #batchid is assigned the new batch id now    
     curs.execute("delete from clone_reinsert_requests where batch_id="+str(requests_row[0])+";")

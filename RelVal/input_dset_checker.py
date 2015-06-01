@@ -1,12 +1,14 @@
 import httplib
 import json
-
+import phedexClient
 
 import MySQLdb
 import sys
 import os
 import time
 import datetime
+
+import utils
 
 dbname = "relval"
 
@@ -15,7 +17,7 @@ count= 0
 
 while True:
 
-    mysqlconn = MySQLdb.connect(host='dbod-altest1.cern.ch', user='relval', passwd="relval", port=5505)
+    mysqlconn = MySQLdb.connect(host='dbod-cmsrv1.cern.ch', user='relval', passwd="relval", port=5506)
     #conn = MySQLdb.connect(host='localhost', user='relval', passwd='relval')
     
     curs = mysqlconn.cursor()
@@ -31,6 +33,9 @@ while True:
     colnames = [desc[0] for desc in curs.description]
     
     for batch in batches:
+
+        #if batch[0] != 21:
+        #    continue
 
         blocks_dsets_to_transfer=[]
         blocks_not_at_site=[]
@@ -105,7 +110,7 @@ while True:
                                 runwhitelist=value['RunWhitelist']
                                 blocks_fname=os.popen("mktemp").read().rstrip("\n")
                                  
-                                os.system("source /tmp/relval/sw/comp.pre/slc6_amd64_gcc481/cms/dbs3-client/3.2.8a/etc/profile.d/init.sh; python2.6 get_list_of_blocks.py --dataset "+ inputdset  +" --runwhitelist \""+str(runwhitelist) + "\" --output_fname " + blocks_fname)
+                                os.system("python2.6 get_list_of_blocks.py --dataset "+ inputdset  +" --runwhitelist \""+str(runwhitelist) + "\" --output_fname " + blocks_fname)
                                  
                                 blocks_file = open(blocks_fname,'r')
 
@@ -176,7 +181,7 @@ while True:
 
                                  blocks_fname=os.popen("mktemp").read().rstrip("\n")
                                  
-                                 os.system("source /tmp/relval/sw/comp.pre/slc6_amd64_gcc481/cms/dbs3-client/3.2.8a/etc/profile.d/init.sh; python2.6 get_list_of_blocks.py --dataset "+ inputdset  +" --runwhitelist \""+str(runwhitelist) + "\" --output_fname " + blocks_fname)
+                                 os.system("python2.6 get_list_of_blocks.py --dataset "+ inputdset  +" --runwhitelist \""+str(runwhitelist) + "\" --output_fname " + blocks_fname)
                                  
                                  blocks_file = open(blocks_fname,'r')
 
@@ -214,12 +219,20 @@ while True:
                 tmp_fname=os.popen("mktemp").read().rstrip("\n")
                 tmp_file=open(tmp_fname,'w')
 
-                for block in blocks_dsets_to_transfer:
-                    print >> tmp_file,  block
+                result=utils.makeReplicaRequest("cmsweb.cern.ch", site_disk, blocks_dsets_to_transfer, "relval datasets")
 
-                tmp_file.close()
+                phedexid = result['phedex']['request_created'][0]['id']
 
-                os.system("python2.6 phedexSubscription.py "+site_disk+" "+tmp_fname+" \\\"relval datasets\\\" --autoapprove")
+                utils.approveSubscription("cmsweb.cern.ch",phedexid)
+
+                #for block in blocks_dsets_to_transfer:
+                #    print >> tmp_file,  block
+
+                #tmp_file.close()
+
+
+
+                #os.system("python2.6 phedexSubscription.py "+site_disk+" "+tmp_fname+" \\\"relval datasets\\\" --autoapprove")
 
                 curs.execute("update batches set status=\"waiting_for_transfer\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where batch_id = "+str(batchid) +";")    
                 mysqlconn.commit()

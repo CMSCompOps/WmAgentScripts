@@ -1,3 +1,5 @@
+import reqMgrClient
+
 import httplib
 import json
 
@@ -18,8 +20,8 @@ import datetime
 dbname = "relval"
 
 while True:
-    
-    mysqlconn = MySQLdb.connect(host='dbod-altest1.cern.ch', user='relval', passwd="relval", port=5505)
+
+    mysqlconn = MySQLdb.connect(host='dbod-cmsrv1.cern.ch', user='relval', passwd="relval", port=5506)
     #conn = MySQLdb.connect(host='localhost', user='relval', passwd='relval')
     
     curs = mysqlconn.cursor()
@@ -35,8 +37,6 @@ while True:
     colnames = [desc[0] for desc in curs.description]
     
     for batch in batches:
-
-
         for name, value in zip(colnames, batch):
             print name+" => "+str(value)
             if name=="status":
@@ -51,6 +51,9 @@ while True:
                 hn_message_id=value
             elif name == "announcement_title":
                 title=value
+
+        #if batch[0] != 21:
+        #    continue
 
         #print batch
         print ""
@@ -71,7 +74,7 @@ while True:
 
                 for key, value in schema.items():
                     if type(value) is dict and key.startswith("Task"):
-                        if value['KeepOutput']:
+                        if ('KeepOutput' in value and value['KeepOutput']) or 'KeepOutput' not in value:
                             if 'InputDataset' in value:
                                 dset="/" + value['InputDataset'].split('/')[1] + "/" + value['AcquisitionEra'] + "-" + value['ProcessingString'] + "-v" + str(processing_version)+"/*"
 
@@ -99,9 +102,48 @@ while True:
                                     curs.execute("insert into datasets set dset_name=\""+dset.rstrip("*")+"\", workflow_name=\""+wf[0]+"\", batch_id="+str(batchid)+";")
 
 
-            for wf in wfs:
                 print wf[0]
-                os.system("python2.6 assignRelValWorkflow.py -w "+wf[0] +" -s "+site+" -p "+str(processing_version))
+
+                procstring = {}
+
+                acqera = schema['CMSSWVersion']
+
+                for key, value in schema.items():
+                    if type(value) is dict and key.startswith("Task"):
+                        if 'ProcessingString' in value:
+                            procstring[value['TaskName']] = value['ProcessingString'].replace("-","_")
+                        if 'AcquisitionEra' in value:
+                            if '-' in value['AcquisitionEra']:
+                                os.system('echo '+wf[0]+' | mail -s \"assignment_loop.py error 3\" andrew.m.levin@vanderbilt.edu')
+                                sys.exit(1)
+
+                params = {
+                'SiteWhitelist' : site,
+                'SiteBlacklist' : [],
+                'MergedLFNBase' : '/store/relval',
+                'useSiteListAsLocation' : True,
+                'CustodialSites' : [], 
+                'ProcessingVersion' : int(processing_version),
+                'ProcessingString' : procstring,
+                'Dashboard': 'relval',
+                'dashboard': 'relval',
+                'AcquisitionEra': acqera,
+                'BlockCloseMaxWaitTime' : 28800,
+                "SoftTimeout" : 129600,
+                "MaxRSS" : 3072000,
+                "MaxVSize": 4394967000,
+                "maxVSize": 4394967000
+                }
+
+                params['execute'] = True
+
+                result=reqMgrClient.assignWorkflow("cmsweb.cern.ch", wf[0], "relval", params)
+
+                if result != True:
+                    os.system('echo '+wf[0]+' | mail -s \"assignment_loop.py error 4\" andrew.m.levin@vanderbilt.edu')
+                    sys.exit(0)
+
+                #os.system("python2.6 assignRelValWorkflow.py -w "+wf[0] +" -s "+site+" -p "+str(processing_version))
                 time.sleep(30)
 
 

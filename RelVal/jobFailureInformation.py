@@ -53,19 +53,19 @@ error_strings.append("FileOpenError")
 
 url='cmsweb.cern.ch'
 
-def getFailureInformation(inputfilename,outputfilename="",verbose=False,debug=False):
+def getFailureInformation(wf_list,outputfilename="",verbose=False,debug=False):
 
     if outputfilename!="":
         of = open(outputfilename,'w')
 
-    inf = open(inputfilename, 'r')
+    #inf = open(inputfilename, 'r')
     
     wf_dicts = []
     
     #loop over workflows
-    for line in inf:
+    for workflow in wf_list:
 
-        workflow = line.rstrip('\n')
+        #workflow = line.rstrip('\n')
         if verbose or debug:
             print "checking workflow " + workflow
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))

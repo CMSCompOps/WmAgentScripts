@@ -70,23 +70,23 @@ def main():
 
     usage="usage: python setDatasetStatus.py --dataset=<DATASET_NAME> --status=<STATUS> {--files}"
     parser = OptionParser(usage=usage)
-    parser.add_option('--correct_env',action="store_true",dest='correct_env')
-    parser.add_option('-d', '--dataset', dest='dataset', default=None, help='Dataset name')
+    #parser.add_option('--correct_env',action="store_true",dest='correct_env')
+    parser.add_option('-d', '--datasets', dest='dsets', default=None, help='file with the list of dataset names')
     parser.add_option('-s', '--status', dest='status', default=None, help='This will be the new status of the dataset/files')
     parser.add_option('-f', '--files', action="store_true", default=False, dest='files', help='Validate or invalidate all files in dataset')
 
     (opts, args) = parser.parse_args()
 
-    command=""
-    for arg in sys.argv:
-        command=command+arg+" "
+    #command=""
+    #for arg in sys.argv:
+    #    command=command+arg+" "
 
-    if not opts.correct_env:
-        os.system("source /cvmfs/grid.cern.ch/emi-ui-3.7.3-1_sl6v2/etc/profile.d/setup-emi3-ui-example.sh; export X509_USER_PROXY=/tmp/x509up_u13536; source /tmp/relval/sw/comp.pre/slc6_amd64_gcc481/cms/dbs3-client/3.2.10/etc/profile.d/init.sh; python2.6 "+command + "--correct_env")
-        sys.exit(0)
+    #if not opts.correct_env:
+    #    os.system("source /cvmfs/grid.cern.ch/emi-ui-3.7.3-1_sl6v2/etc/profile.d/setup-emi3-ui-example.sh; export X509_USER_PROXY=/tmp/x509up_u13536; source /tmp/relval/sw/comp.pre/slc6_amd64_gcc481/cms/dbs3-client/3.2.10/etc/profile.d/init.sh; python2.6 "+command + "--correct_env")
+    #    sys.exit(0)
         
-    if opts.dataset == None:
-        print "--dataset option must be provided"
+    if opts.dsets == None:
+        print "--datasets option must be provided"
         print usage;
         sys.exit(1)
     if opts.status == None:
@@ -96,7 +96,12 @@ def main():
 
     #setStatusDBS2('https://cmsdbsprod.cern.ch:8443/cms_dbs_prod_global_writer/servlet/DBSServlet', opts.dataset, opts.status, opts.files)
     #setStatusDBS3('https://dbs3-testbed.cern.ch/dbs/prod/global/DBSWriter', opts.dataset, opts.status, opts.files)
-    setStatusDBS3('https://cmsweb.cern.ch/dbs/prod/global/DBSWriter', opts.dataset, opts.status, opts.files)
+
+    f = open(opts.dsets, 'r')    
+
+    for line in f:
+        dset=line.strip('\n')
+        setStatusDBS3('https://cmsweb.cern.ch/dbs/prod/global/DBSWriter', dset, opts.status, opts.files)
 
     print "Done"
     sys.exit(0)

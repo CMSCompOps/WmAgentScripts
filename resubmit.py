@@ -43,7 +43,7 @@ def modifySchema(helper, user, group, backfill=False):
     and Campaign to say Backfill, and restarts requestDate.
     """
     result = {}
-    for (key, value) in helper.data.request.schema.dictionary_().items():
+    for (key, value) in helper.data.request.schema.dictionary_whole_tree_().items():
         #previous versions of tags
         if key == 'ProcConfigCacheID':
             result['ConfigCacheID'] = value
@@ -110,20 +110,7 @@ def modifySchema(helper, user, group, backfill=False):
         result['LumisPerJob'] = lumisPerJob
         #Algorithm = lumi based?
         result["SplittingAlgo"] = "LumiBased"
-    #Merged LFN   
-    if 'MergedLFNBase' not in result:
-        result['MergedLFNBase'] = helper.getMergedLFNBase()
     
-    #update information from reqMgr    
-    # Add AcquisitionEra, ProcessingString and increase ProcessingVersion by 1
-    result["ProcessingString"] = helper.getProcessingString()
-    result["AcquisitionEra"] = helper.getAcquisitionEra()
-    #try to parse processing version as an integer, if don't, assign 2.
-    try:
-        result["ProcessingVersion"] = int(helper.getProcessingVersion()) + 1
-    except ValueError:
-        result["ProcessingVersion"] = 2
-
     #modify for backfill
     if backfill:
         #Modify ProcessingString, AcquisitionEra, Campaign and Request string (if they don't
@@ -143,6 +130,9 @@ def modifySchema(helper, user, group, backfill=False):
         #reset the request date
         now = datetime.datetime.utcnow()
         result["RequestDate"] = [now.year, now.month, now.day, now.hour, now.minute]
+
+    #result['Memory'] = 3000
+        
     return result
 
 

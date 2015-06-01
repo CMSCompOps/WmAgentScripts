@@ -82,7 +82,7 @@ def main():
         command=command+arg+" "
 
     if not options.correct_env:
-        os.system("source /cvmfs/grid.cern.ch/emi-ui-3.7.3-1_sl6v2/etc/profile.d/setup-emi3-ui-example.sh; export X509_USER_PROXY=/tmp/x509up_u13536; source /tmp/relval/sw/comp.pre/slc6_amd64_gcc481/cms/dbs3-client/3.2.8a/etc/profile.d/init.sh; python2.6 "+command + "--correct_env")
+        os.system("source /cvmfs/grid.cern.ch/emi-ui-3.7.3-1_sl6v2/etc/profile.d/setup-emi3-ui-example.sh; export X509_USER_PROXY=/tmp/x509up_u13536; source /tmp/relval/sw/comp.pre/slc6_amd64_gcc481/cms/dbs3-client/3.2.10/etc/profile.d/init.sh; python2.6 "+command + "--correct_env")
         sys.exit(0)
             
 
@@ -94,6 +94,8 @@ def main():
     inputFile=args[0]
     f = open(inputFile, 'r')
 
+def close_out_wf_list(wf_list):
+
     closedOut = []
     nonClosedOut = []
     tooManyEventsOrLumis = []
@@ -101,10 +103,10 @@ def main():
 
     dbsApi = getRelValDsetNames.getDBSApi()
 
-    for line in f:
-        workflow = line.rstrip('\n')
-        if options.verbose:
-            print "checking workflow " + workflow
+    for workflow in wf_list:
+        #workflow = line.rstrip('\n')
+        #if options.verbose:
+        #    print "checking workflow " + workflow
         schema = getRequestJson(workflow)
         if schema['RequestType'] != 'TaskChain':
             print "workflow type is not TaskChain, exiting"
@@ -128,10 +130,10 @@ def main():
             for dataset in outputDatasets:
                 outputEvents = 0
 
-                outputEvents = getOutputEvents(dbsApi, dataset, verb = options.verbose)
-                if options.verbose:
-                    successRate = outputEvents/float(inputEvents)
-                    print "  %-110s\t%d\t%.1f%%" % (dataset, outputEvents, successRate*100)
+                outputEvents = getOutputEvents(dbsApi, dataset, verb = False)
+                #if options.verbose:
+                #    successRate = outputEvents/float(inputEvents)
+                #    print "  %-110s\t%d\t%.1f%%" % (dataset, outputEvents, successRate*100)
 
                 if outputEvents == -10:
                     continue
@@ -163,17 +165,17 @@ def main():
 #                if options.verbose:
 #                    print "DEBUG: InputDset %s and runList is %r" % (inputDset, runList)
 
-                inputEvents = getEventsDataSetRunList(dbsApi, inputDset, runList, verb = options.verbose)
+                inputEvents = getEventsDataSetRunList(dbsApi, inputDset, runList, verb = False)
 #                if options.verbose:
 #                    print "DEBUG: InputDset %s and %d events" % (inputDset, inputEvents)
 
                 for dataset in outputDatasets:
                     outputEvents = 0
 
-                    outputEvents = getOutputEvents(dbsApi, dataset, verb = options.verbose)
-                    if options.verbose:
-                        successRate = outputEvents/float(inputEvents)
-                        print "  %-110s\t%d\t%.1f%%" % (dataset, outputEvents, successRate*100)
+                    outputEvents = getOutputEvents(dbsApi, dataset, verb = False)
+                    #if options.verbose:
+                    #    successRate = outputEvents/float(inputEvents)
+                    #    print "  %-110s\t%d\t%.1f%%" % (dataset, outputEvents, successRate*100)
 
                     if outputEvents == -10:
                         continue
@@ -212,10 +214,10 @@ def main():
                 for dataset in outputDatasets:
                     outputEvents = 0
 
-                    outputEvents = getOutputEvents(dbsApi, dataset, verb = options.verbose)
-                    if options.verbose:
-                        successRate = outputEvents/float(inputEvents)
-                        print "  %-110s\t%d\t%.1f%%" % (dataset, outputEvents, successRate*100)
+                    outputEvents = getOutputEvents(dbsApi, dataset)
+                    #if options.verbose:
+                    #    successRate = outputEvents/float(inputEvents)
+                    #    print "  %-110s\t%d\t%.1f%%" % (dataset, outputEvents, successRate*100)
                 
                     if outputEvents == -10:
                         continue
@@ -240,7 +242,7 @@ def main():
 
     for workflow in closedOut:
         status = getRequestStatus(workflow)
-        if status == 'completed' and not options.test:
+        if status == 'completed':
             setRequestStatus(workflow)
             status = 'closed-out'
         else:
@@ -254,10 +256,10 @@ def main():
     print '-----------------------------------------------------------------------------------------------------------------------------------------------'
 
     for workflow in tooManyEventsOrLumis:
-        os.system('echo '+workflow+' | mail -s \"newCloseOutTaskChain.py error 1\" andrew.m.levin@vanderbilt.edu')
+        os.system('echo '+workflow+' | mail -s \"closeOutTaskChain.py error 1\" andrew.m.levin@vanderbilt.edu')
         print "WARNING (more lumis and/or events --> " + workflow
-    f.close
-    sys.exit(0)
+    #f.close
+    #sys.exit(0)
 
 if __name__ == "__main__":
     main()

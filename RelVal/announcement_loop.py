@@ -1,3 +1,5 @@
+import reqMgrClient
+
 import smtplib
 import email
 
@@ -5,7 +7,7 @@ from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
 from email.Utils import COMMASPACE, formatdate
 
-import MySQLdb #the dbs3 environment makes it impossible to import MySQLdb, so we need to put scripts that use the dbs3 environment in separate files and call those files with os.system("python2.6")
+import MySQLdb 
 import sys
 import os
 import httplib
@@ -15,6 +17,14 @@ import datetime
 import time
 import calendar
 import jobFailureInformation
+
+import utils
+
+import closeOutTaskChain
+import getRelValDsetNames
+import makeStatisticsTable
+
+import setDatasetStatusDBS3
 
 parser = optparse.OptionParser()
 parser.add_option('--sent_to_hn',action="store_true",dest='send_to_hn')
@@ -33,7 +43,7 @@ dbname = "relval"
 
 while True:
 
-    mysqlconn = MySQLdb.connect(host='dbod-altest1.cern.ch', user='relval', passwd="relval", port=5505)
+    mysqlconn = MySQLdb.connect(host='dbod-cmsrv1.cern.ch', user='relval', passwd="relval", port=5506)
 
     curs = mysqlconn.cursor()
 
@@ -117,16 +127,16 @@ while True:
         if n_workflows != n_completed:
             continue
 
-        #string="2015_05_02_3"
+        #string="2015_05_31_2"
 
         #if not (string.split('_')[0] == useridyear and string.split('_')[1] == useridmonth and string.split('_')[2] == useridday and string.split('_')[3] == str(useridnum)):
         #    continue
 
-        #if batch[0] != 119:
+        #if batch[0] != 222:
         #    continue
 
-        if (calendar.timegm(datetime.datetime.utcnow().utctimetuple()) - max_completion_time)/60.0/60.0 < 0.01:
-            continue
+        #if (calendar.timegm(datetime.datetime.utcnow().utctimetuple()) - max_completion_time)/60.0/60.0 < 0.01:
+        #    continue
 
         print batchid
 
@@ -137,11 +147,15 @@ while True:
         os.system("if [ -f "+fname+" ]; then rm "+fname+"; fi")
 
         print "putting workflows into a file"
+
+        wf_list = []
         
         for wf in wfs:
             print wf[0]
 
-            os.system("echo "+wf[0]+" >> "+fname)
+            wf_list.append(wf[0])
+
+            #os.system("echo "+wf[0]+" >> "+fname)
 
         print "finished putting workflows into a file"     
 
@@ -154,49 +168,106 @@ while True:
         dsets_tmp_fnal_disk=os.popen("mktemp").read().rstrip('\n')
         dsets_tmp_cern_alcareco=os.popen("mktemp").read().rstrip('\n')
 
-        os.system("python2.6 closeOutTaskChain.py "+fname)
+        closeOutTaskChain.close_out_wf_list(wf_list)
 
-        os.system("python2.6 getRelValDsetNames.py "+fname+" | grep -v \"DAS query failed\" | tee "+dsets_stats_tmp)
-        os.system("python2.6 makeStatisticsTable.py "+dsets_stats_tmp+" "+userid+".txt")
+        #os.system("python2.6 closeOutTaskChain.py "+fname)
+
+        dset_nevents_list=getRelValDsetNames.getDsetNamesAndNevents(wf_list)
+
+        makeStatisticsTable.makeStatisticsTable(dset_nevents_list, userid+".txt")
+
+        #os.system("python2.6 getRelValDsetNames.py "+fname+" | grep -v \"DAS query failed\" | tee "+dsets_stats_tmp)
+        #os.system("python2.6 makeStatisticsTable.py "+dsets_stats_tmp+" "+userid+".txt")
 
         ret=os.system("cp "+userid+".txt /afs/cern.ch/user/r/relval/webpage/relval_stats/"+userid+".txt")
 
         if ret != 0:
             os.system('echo \"'+userid+'\" | mail -s \"announcement_loop.py error 2\" andrew.m.levin@vanderbilt.edu')
 
-        os.system("cat "+dsets_stats_tmp+" | awk '{print $1}' >& "+dsets_tmp_fnal)
-        os.system("grep -v '/RECO[ ]*$' "+dsets_tmp_fnal+" | grep -v 'ALCARECO[ ]*' >& "+dsets_tmp_cern)
-        os.system("grep '/GEN-SIM[ ]*$' "+dsets_tmp_fnal+" >& "+dsets_tmp_fnal_disk)
+
+        dsets_list = []    
+        dsets_fnal_disk_list = []
+        dsets_cern_disk_list = []
+
+        for dset_nevents in dset_nevents_list:
+            dsets_list.append(dset_nevents[0])
+            
+
+        for dset in dsets_list:
+
+            #print dset.split('/')
+
+            if dset.split('/')[3] != "RECO" and dset.split('/')[3] != "ALCARECO":
+                dsets_cern_disk_list.append(dset)
+
+            if dset.split('/')[3] == "GEN-SIM":
+                dsets_fnal_disk_list.append(dset)
+
+            if dset.split('/')[3] == "GEN-SIM-DIGI-RAW":
+                dsets_fnal_disk_list.append(dset)
+
+            if dset.split('/')[3]  == "GEN-SIM-RECO":
+                dsets_fnal_disk_list.append(dset)
+
+            if "RelValTTBar" in dset.split('/')[1] and "TkAlMinBias" in dset.split('/')[2] and dset.split('/')[3] != "ALCARECO":
+                dsets_cern_disk_list.append(dset)
+
+            if "MinimumBias" in dset.split('/')[1] and "SiStripCalMinBias" in dset.split('/')[2] and dset.split('/')[3] != "ALCARECO":
+                dsets_cern_disk_list.append(dset)
+
+        #os.system("cat "+dsets_stats_tmp+" | awk '{print $1}' >& "+dsets_tmp_fnal)
+        #os.system("grep -v '/RECO[ ]*$' "+dsets_tmp_fnal+" | grep -v 'ALCARECO[ ]*' >& "+dsets_tmp_cern)
+        #os.system("grep '/GEN-SIM[ ]*$' "+dsets_tmp_fnal+" >& "+dsets_tmp_fnal_disk)
         #the premixing pileup datasets are GEN-SIM-DIGI-RAW
-        os.system("grep '/GEN-SIM-DIGI-RAW[ ]*$' "+dsets_tmp_fnal+"  >> "+dsets_tmp_fnal_disk)
+        #os.system("grep '/GEN-SIM-DIGI-RAW[ ]*$' "+dsets_tmp_fnal+"  >> "+dsets_tmp_fnal_disk)
         #the fastsim pileup datsets are GEN-SIM-RECO
-        os.system("grep '/GEN-SIM-RECO[ ]*$' "+dsets_tmp_fnal+"  >> "+dsets_tmp_fnal_disk)
-        os.system("grep '/RelValTTbar.*/.*TkAlMinBias.*/ALCARECO' "+dsets_tmp_fnal+" >> "+dsets_tmp_cern_alcareco+" 2>&1")
-        os.system("grep '/MinimumBias/.*SiStripCalMinBias.*/ALCARECO' "+dsets_tmp_fnal+" >> "+dsets_tmp_cern_alcareco+" 2>&1")
-        os.system("cat "+dsets_tmp_cern_alcareco+" >> "+dsets_tmp_cern+" 2>&1")
-        os.system("python2.6 phedexSubscription.py T2_CH_CERN "+dsets_tmp_cern+" \\\"relval datasets\\\" --autoapprove")
-        os.system("python2.6 phedexSubscription.py T1_US_FNAL_Disk "+dsets_tmp_fnal_disk+" \\\"relval datasets\\\"")
-        os.system("python2.6 phedexSubscription.py T0_CH_CERN_MSS  "+dsets_tmp_fnal+" \\\"relval datasets\\\" --custodial --autoapprove")
+        #os.system("grep '/GEN-SIM-RECO[ ]*$' "+dsets_tmp_fnal+"  >> "+dsets_tmp_fnal_disk)
+        #os.system("grep '/RelValTTbar.*/.*TkAlMinBias.*/ALCARECO' "+dsets_tmp_fnal+" >> "+dsets_tmp_cern_alcareco+" 2>&1")
+        #os.system("grep '/MinimumBias/.*SiStripCalMinBias.*/ALCARECO' "+dsets_tmp_fnal+" >> "+dsets_tmp_cern_alcareco+" 2>&1")
+        #os.system("cat "+dsets_tmp_cern_alcareco+" >> "+dsets_tmp_cern+" 2>&1")
 
-        os.system("for dset in `cat "+dsets_tmp_fnal+"`; do python2.6 setDatasetStatusDBS3.py --dataset=$dset --status=VALID --files; done")
+        result=utils.makeReplicaRequest("cmsweb.cern.ch", "T2_CH_CERN", dsets_cern_disk_list, "relval datasets")
+        if result != None:
+            phedexid = result['phedex']['request_created'][0]['id']
+            utils.approveSubscription("cmsweb.cern.ch",phedexid)
 
-        os.system("python2.6 setrequeststatus.py "+fname+" closed-out")
-        os.system("python2.6 setrequeststatus.py "+fname+" announced")
+        result=utils.makeReplicaRequest("cmsweb.cern.ch", "T0_CH_CERN_MSS", dsets_list, "relval datasets")
+        if result != None:
+            phedexid = result['phedex']['request_created'][0]['id']
+            utils.approveSubscription("cmsweb.cern.ch",phedexid)
+
+        result=utils.makeReplicaRequest("cmsweb.cern.ch", "T1_US_FNAL_Disk", dsets_fnal_disk_list, "relval datasets")
+        #phedexid = result['phedex']['request_created'][0]['id']
+        #utils.approveSubscription("cmsweb.cern.ch",phedexid)
+
+        #os.system("python2.6 phedexSubscription.py T2_CH_CERN "+dsets_tmp_cern+" \\\"relval datasets\\\" --autoapprove")
+        #os.system("python2.6 phedexSubscription.py T1_US_FNAL_Disk "+dsets_tmp_fnal_disk+" \\\"relval datasets\\\"")
+        #os.system("python2.6 phedexSubscription.py T0_CH_CERN_MSS  "+dsets_tmp_fnal+" \\\"relval datasets\\\" --custodial --autoapprove")
+
+        for dset in dsets_list:
+            setDatasetStatusDBS3.setStatusDBS3("https://cmsweb.cern.ch/dbs/prod/global/DBSWriter", dset, "VALID", True)
+
+        #os.system("for dset in `cat "+dsets_tmp_fnal+"`; do python2.6 setDatasetStatusDBS3.py --dataset=$dset --status=VALID --files; done")
+
+        for wf in wfs:
+            reqMgrClient.closeOutWorkflow("cmsweb.cern.ch",wf)
+            reqMgrClient.announceWorkflow("cmsweb.cern.ch",wf)
+
 
         #remove the announcement e-mail file if it already exists
         os.system("if [ -f brm/announcement_email.txt ]; then rm brm/announcement_email.txt; fi")
 
         os.system("if [ -f brm/failure_information.txt ]; then rm brm/failure_information.txt; fi")
 
-        [istherefailureinformation,return_string]=jobFailureInformation.getFailureInformation("brm/"+str(batchid)+".txt","brm/failure_information.txt")
+        [istherefailureinformation,return_string]=jobFailureInformation.getFailureInformation(wf_list,"brm/failure_information.txt")
 
         #sys.exit(0)
 
         msg = MIMEMultipart()
         reply_to = []
         send_to = ["andrew.m.levin@vanderbilt.edu"]
-            #send_to = ["hn-cms-dataopsrequests@cern.ch","andrew.m.levin@vanderbilt.edu"]
-            #send_to = ["hn-cms-hnTest@cern.ch"]
+        #send_to = ["hn-cms-dataopsrequests@cern.ch","andrew.m.levin@vanderbilt.edu"]
+        #send_to = ["hn-cms-hnTest@cern.ch"]
             
         #msg['In-Reply-To'] = hn_message_id
         #msg['References'] = hn_message_id

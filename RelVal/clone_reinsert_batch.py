@@ -2,7 +2,7 @@ import MySQLdb
 import sys
 import datetime
 
-batchid=sys.argv[1]
+userid=sys.argv[1]
 newsite=sys.argv[2]
 newprocessingversion=sys.argv[3]
 
@@ -14,6 +14,34 @@ conn = MySQLdb.connect(host='dbod-altest1.cern.ch', user='relval', passwd="relva
 curs = conn.cursor()
 
 curs.execute("use "+dbname+";")
+
+useridnum=userid.split('_')[3]
+useridday=userid.split('_')[2]
+useridmonth=userid.split('_')[1]
+useridyear=userid.split('_')[0]
+
+print useridnum
+print useridday
+print useridmonth
+print useridyear
+
+curs.execute("select batch_id from batches_archive where useridnum = "+ useridnum+" and useridday = \""+ useridday + "\" and useridmonth = \"" + useridmonth + "\" and useridyear = \""+ useridyear +"\";")
+batches_archive_rows=curs.fetchall()
+curs.execute("select batch_id from batches where useridnum = "+ useridnum+" and useridday = \""+ useridday + "\" and useridmonth = \"" + useridmonth + "\" and useridyear = \""+ useridyear +"\";")
+batches_rows=curs.fetchall()
+
+print len(batches_archive_rows)
+print len(batches_rows)
+
+if len(batches_archive_rows) == 1 and len(batches_rows) == 0:
+    batchid = str(batches_archive_rows[0][0])
+elif len(batches_rows) == 1 and len(batches_archive_rows) == 0:
+    batchid = str(batches_rows[0][0])
+else:
+    print "could not find a batch with this userid or found multiple batches with this userid"
+    sys.exit(0)
+
+print batchid
 
 curs.execute("select * from batches where batch_id = \""+ batchid+"\";")
 batches_rows=curs.fetchall()
