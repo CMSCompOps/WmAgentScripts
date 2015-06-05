@@ -420,7 +420,7 @@ Worflow clean for output (%d) <a href=logs/outcleanor/last.log target=_blank>log
         if not out.workflow: 
             print "This is a problem with",out.datasetname
             continue
-        if  out.workflow.status in ['done','clean']:
+        if  out.workflow.status in ['done','clean','clean-out']:
             out_week = int(time.strftime("%W",time.gmtime(out.date)))
             ##only show current week, and the previous.
             if (this_week-out_week)==1:
