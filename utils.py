@@ -719,7 +719,9 @@ def getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None
                 if replica['group'] == None: replica['group']=""
                 if complete and not replica['complete']==complete: continue
                 if group!=None and not replica['group'].lower()==group.lower(): continue 
-                if sites and not replica['node'] in sites: continue
+                if sites and not replica['node'] in sites:
+                    #print "leaving",replica['node'],"out"
+                    continue
                 block_counts[ item['name'] ] +=1
     
     first_order = float(len(block_counts) - block_counts.values().count(0)) / float(len(block_counts))
@@ -1201,7 +1203,7 @@ class workflowInfo:
     def getProcString(self):
         return self.request['ProcessingString']
     def getRequestNumEvents(self):
-        return self.request['RequestNumEvents']
+        return int(self.request['RequestNumEvents'])
     def getPileupDataset(self):
         if 'MCPileup' in self.request:
             return self.request['MCPileup']
