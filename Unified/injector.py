@@ -52,7 +52,7 @@ def injector(url, options, specific):
 
                 new_wf = session.query(Workflow).filter(Workflow.name == member).first()
                 if not new_wf:
-                    print "putting",member
+                    print "putting",member,"as replacement of",wf.name
                     status = 'away'
                     if fwl['RequestStatus'] in ['assignment-approved']:
                         status = 'considered'
