@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput, workflowInfo, getDatasetBlocksFraction
-from utils import unifiedConfiguration, componentInfo, sendEmail
+from utils import unifiedConfiguration, componentInfo, sendEmail, getSiteWhiteList
+from utils import siteInfo, campaignInfo
 import sys
 import itertools
 import pprint
@@ -11,6 +12,8 @@ from htmlor import htmlor
 def stagor(url,specific =None, options=None):
     
     up = componentInfo()
+    SI = siteInfo()
+    CI = campaignInfo()
 
     done_by_wf_id = {}
     done_by_input = {}
@@ -19,9 +22,17 @@ def stagor(url,specific =None, options=None):
     
     if options.fast:
         for wfo in session.query(Workflow).filter(Workflow.status == 'staging').all():
+            if specific and not specific in wfo.name: continue
             wfi = workflowInfo(url, wfo.name)
+            sites_allowed = getSiteWhiteList( wfi.getIO() )
+            if 'SiteWhitelist' in CI.parameters(wfi.request['Campaign']):
+                sites_allowed = CI.parameters(wfi.request['Campaign'])['SiteWhitelist']
+            if 'SiteBlacklist' in CI.parameters(wfi.request['Campaign']):
+                sites_allowed = list(set(sites_allowed) - set(CI.parameters(wfi.request['Campaign'])['SiteBlacklist']))
             dataset = wfi.request['InputDataset']
-            available = getDatasetBlocksFraction( url , dataset )
+            se_allowed = [SI.CE_to_SE(site) for site in sites_allowed] 
+            #print se_allowed
+            available = getDatasetBlocksFraction( url , dataset , sites=se_allowed )
             if available > options.goodavailability:
                 print "\t\t",wfo.name,"can go staged"
                 wfo.status = 'staged'
