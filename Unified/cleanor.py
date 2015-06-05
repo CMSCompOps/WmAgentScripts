@@ -19,12 +19,6 @@ def cleanor(url, specific=None):
         if specific and not specific in wfo.name: continue
         ## what was in input 
         wl = getWorkLoad(url,  wfo.name )
-        if not 'InputDataset' in wl: 
-            ## should we set status = clean ? or something even further
-            print "skipping",wfo.name,"with no input"
-            wfo.status = 'clean'
-            session.commit()
-            continue
 
         if 'Campaign' in wl and wl['Campaign'] in CI.campaigns and 'clean-in' in CI.campaigns[wl['Campaign']] and CI.campaigns[wl['Campaign']]['clean-in']==False:
             print "Skipping cleaning on input for campaign",wl['Campaign'], "as per campaign configuration"
@@ -45,6 +39,13 @@ def cleanor(url, specific=None):
             continue
         else:
             print "workflow",wfo.name,"has finished",now-then,"days ago."
+
+        if not 'InputDataset' in wl: 
+            ## should we set status = clean ? or something even further
+            print "skipping",wfo.name,"with no input"
+            wfo.status = 'clean'
+            session.commit()
+            continue
         
         #if counts> 20:            break
         counts+=1
