@@ -254,7 +254,7 @@ class unifiedConfiguration:
             sys.exit(124)
 
 class componentInfo:
-    def __init__(self, block=True, mcm=False):
+    def __init__(self, block=True, mcm=False,soft=None):
         self.status ={
             'reqmgr' : False,
             'mcm' : False,
@@ -269,7 +269,7 @@ class componentInfo:
             self.tell('reqmgr')
             print "cmsweb.cern.ch unreachable"
             print str(e)
-            if block:
+            if block and not (soft and 'reqmgr' in soft):
                 sys.exit(123)
 
         from McMClient import McMClient
@@ -289,7 +289,7 @@ class componentInfo:
                 self.tell('mcm')
                 print "mcm unreachable"
                 print str(e)
-                if block:
+                if block and not (soft and 'mcm' in soft):
                     sys.exit(125)
         
         try:
@@ -305,7 +305,7 @@ class componentInfo:
             self.tell('dbs')
             print "dbs unreachable"
             print str(e)
-            if block:
+            if block and not (soft and 'dbs' in soft):
                 sys.exit(127)
 
         try:
@@ -316,7 +316,7 @@ class componentInfo:
             self.tell('phedex')
             print "phedex unreachable"
             print str(e)
-            if block:
+            if block and not (soft and 'phedex' in soft):
                 sys.exit(128)
 
     def tell(self, c):
