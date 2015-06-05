@@ -272,15 +272,21 @@ def checkor(url, spec=None, options=None):
                         print "Setting custodial to",custodial,"from campaign configuration"
                         break
             ## get from the parent
+            pick_custodial = True
             if not custodial and 'InputDataset' in wfi.request:
+                ## this is terribly dangerous to assume only 
+                ###parents_custodial = phedexClient.getCustodialSubscriptionRequestSite( wfi.request['InputDataset'])
                 parents_custodial = findCustodialLocation(url, wfi.request['InputDataset'])
                 if len(parents_custodial):
                     custodial = parents_custodial[0]
                 else:
                     print "the input dataset",wfi.request['InputDataset'],"does not have custodial in the first place. abort"
-                    continue
+                    sendEmail( "dataset has no custodial location", "Please take a look at %s in the logs of checkor"%wfi.request['InputDataset'],
+                               'vlimant@cern.ch', ['vlimant@cern.ch','matteoc@fnal.gov'])
+                    is_closing = False
+                    pick_custodial = False
 
-            if not custodial:
+            if not custodial and pick_custodial:
                 ## pick one at random
                 custodial = SI.pick_SE()
 
