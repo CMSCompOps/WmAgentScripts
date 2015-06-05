@@ -165,10 +165,10 @@ def checkor(url, spec=None, options=None):
         acdc = []
         acdc_inactive = []
         for member in familly:
+            if member['RequestType'] != 'Resubmission': continue
             if member['RequestName'] == wfo.name: continue
             if member['RequestDate'] < wfi.request['RequestDate']: continue
-            if member['RequestType'] != 'Resubmission': continue
-            if member['RequestStatus'] in ['running-opened','running-closed','assignment-approved','assigned','acquired']:
+            if member['RequestStatus'] in ['running-open','running-closed','assignment-approved','assigned','acquired']:
                 print wfo.name,"still has an ACDC running",member['RequestName']
                 acdc.append( member['RequestName'] )
                 #print json.dumps(member,indent=2)
