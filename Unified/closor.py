@@ -33,11 +33,12 @@ def closor(url, specific=None):
 
         session.commit()
 
-        if not 'TotalInputLumis' in wl:
-            print wfo.name,"has not been assigned yet"
-            continue
 
-        expected_lumis = wl['TotalInputLumis']
+        expected_lumis = 1
+        if not 'TotalInputLumis' in wl:
+            print wfo.name,"has not been assigned yet, or the database is corrupted"
+        else:
+            expected_lumis = wl['TotalInputLumis']
 
         ## what are the outputs
         outputs = wl['OutputDatasets']
