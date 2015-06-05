@@ -61,14 +61,16 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         (lheinput,primary,parent,secondary) = wfh.getIO()
         sites_allowed = getSiteWhiteList( (lheinput,primary,parent,secondary) )
-        print "Allowed",sites_allowed
 
         if 'SiteWhitelist' in CI.parameters(wfh.request['Campaign']):
             sites_allowed = CI.parameters(wfh.request['Campaign'])['SiteWhitelist']
 
         if 'SiteBlacklist' in CI.parameters(wfh.request['Campaign']):
+            print "Reducing the whitelist due to black list in campaign configuration"
+            print "Removing",CI.parameters(wfh.request['Campaign'])['SiteBlacklist']
             sites_allowed = list(set(sites_allowed) - set(CI.parameters(wfh.request['Campaign'])['SiteBlacklist']))
-
+            
+        print "Allowed",sites_allowed
         secondary_locations=None
         for sec in list(secondary):
             presence = getDatasetPresence( url, sec )
@@ -161,6 +163,7 @@ def assignor(url ,specific = None, talk=True, options=None):
         else:
             # then pick any otherwise
             sites_out = [SI.pick_dSE([SI.CE_to_SE(ce) for ce in sites_allowed])]
+
 
         print "Placing the output on", sites_out
         parameters={
