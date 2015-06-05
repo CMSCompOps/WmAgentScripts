@@ -404,7 +404,7 @@ def transferor(url ,specific = None, talk=True, options=None):
             else:
                 print wfo.name,"should just be assigned NOW to",sites_allowed
                 wfo.status = 'staged'
-                passing_along+=1
+            passing_along+=1
             print "setting status to",wfo.status
             session.commit()
             continue
@@ -419,6 +419,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                     session.commit()
             print wfo.name,"needs a transfer"
             needs_transfer+=1
+            passing_along+=1
 
     #print json.dumps(all_transfers)
     fake_id=-1
