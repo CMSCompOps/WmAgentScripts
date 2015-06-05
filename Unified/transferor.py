@@ -30,8 +30,10 @@ class DSS:
 
 def transferor(url ,specific = None, talk=True, options=None):
     if userLock('transferor'):   return
-    
-    up = componentInfo(mcm=True)
+
+    use_mcm = True
+    up = componentInfo(mcm=use_mcm, soft=['mcm'])
+    use_mcm = up.status['mcm']
 
     if options and options.test:
         execute = False
@@ -210,7 +212,10 @@ def transferor(url ,specific = None, talk=True, options=None):
                     print "could not get mcm batch announcement, assuming not real"
             return announced,is_real
 
-        announced,is_real = check_mcm( wfo.name )
+        if not use_mcm:
+            announced,is_real = False,True
+        else:
+            announced,is_real = check_mcm( wfo.name )
 
         if not announced:
             print wfo.name,"does not look announced."# skipping?, rejecting?, reporting?"
@@ -387,7 +392,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                     for site in sec_to_distribute:
                         all_transfers[site].append( sec )
                         can_go = False
-        
+
         ## is that possible to do something more
         if can_go:
             ## no explicit transfer required this time
