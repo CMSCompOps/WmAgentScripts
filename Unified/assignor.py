@@ -10,6 +10,7 @@ import itertools
 import time
 from htmlor import htmlor
 import os
+import random
 import json
 
 def assignor(url ,specific = None, talk=True, options=None):
@@ -172,6 +173,19 @@ def assignor(url ,specific = None, talk=True, options=None):
             'MergedLFNBase' : '/store/mc', ## to be figured out
             'ProcessingVersion' : version,
             }
+
+
+        ## plain assignment here
+        team='production'
+        if options and options.team:
+            team = options.team
+
+        if "T2_US_UCSD" in sites_with_data and random.random() < 0.5 and wfh.request['Campaign']=='RunIISpring15DR74' and int(wfh.getRequestNumEvents()) < 200000 and not any([out.endswith('RAW') for out in wfh.request['OutputDatasets']]):
+            ## consider SDSC
+            parameters['SiteWhitelist'] = ['T2_US_UCSD','T3_US_SDSC']
+            parameters['useSiteListAsLocation'] = True
+            team = 'allocation-based'
+            sendEmail("sending work to SDSC","%s was assigned to SDSC/UCSD"% wfo.name,'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
 
         ##parse options entered in command line if any
         if options:
