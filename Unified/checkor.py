@@ -85,7 +85,9 @@ phdF</th><th>ClosOut</th></tr></thead>'
 def checkor(url, spec=None, options=None):
     fDB = falseDB()
 
-    up = componentInfo(mcm=True)
+    use_mcm = True
+    up = componentInfo(mcm=use_mcm, soft=['mcm'])
+    use_mcm = up.status['mcm']
 
     wfs=[]
     if options.fetch:
@@ -411,17 +413,18 @@ def checkor(url, spec=None, options=None):
                 text += "This is an automated message."
                 print "Sending notification back to requestor"
                 print text
-                batches = mcm.getA('batches',query='contains=%s&status=announced'%pid)
-                if len(batches):
-                    ## go notify the batch
-                    bid = batches[-1]['prepid']
-                    print "batch nofication to",bid
-                    mcm.put('/restapi/batches/notify', { "notes" : text, "prepid" : bid})
+                if use_mcm:
+                    batches = mcm.getA('batches',query='contains=%s&status=announced'%pid)
+                    if len(batches):
+                        ## go notify the batch
+                        bid = batches[-1]['prepid']
+                        print "batch nofication to",bid
+                        mcm.put('/restapi/batches/notify', { "notes" : text, "prepid" : bid})
 
 
-                ## go notify the request
-                print "request notification to",pid
-                mcm.put('/restapi/requests/notify',{ "message" : text, "prepids" : [pid] })
+                    ## go notify the request
+                    print "request notification to",pid
+                    mcm.put('/restapi/requests/notify',{ "message" : text, "prepids" : [pid] })
 
                 
             wfo.status = new_status
