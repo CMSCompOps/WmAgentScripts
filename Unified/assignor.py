@@ -193,10 +193,18 @@ def assignor(url ,specific = None, talk=True, options=None):
             #parameters['SplittingAlgorithm'] = 'EventBased'
             continue
 
-        ## plain assignment here
-        team='production'
-        if options and options.team:
-            team = options.team
+        # Handle run-dependent MC
+        pstring = wfh.processingString()
+        if 'PU_RD' in pstring:
+            numEvents = wfh.getRequestNumEvents()
+            reqJobs = 500
+            if 'PU_RD2' in pstring:
+                reqJobs = 2000
+                eventsPerJob = int(numEvents/(reqJobs*1.4))
+                print "need to go down to",eventsPerJob,"events per job"
+                parameters['EventsPerJob'] = eventsPerJob
+
+
         result = reqMgrClient.assignWorkflow(url, wfo.name, team, parameters)
 
 
