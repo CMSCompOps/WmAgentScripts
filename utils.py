@@ -386,6 +386,12 @@ class siteInfo:
             
 
         self.sites_T2s = [s for s in json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/whitelist.json').read()) if s not in self.siteblacklist and 'T2' in s]
+        self.sites_T2s.remove("T2_TR_METU")
+        self.sites_T2s.remove("T2_UA_KIPT")
+        self.sites_T2s.remove("T2_RU_ITEP")
+        self.sites_T2s.remove("T2_RU_INR")
+        self.sites_T2s.remove("T2_PL_Warsaw")
+
         self.sites_T1s = [s for s in json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/whitelist.json').read()) if s not in self.siteblacklist and 'T1' in s]
 
         bare_info = json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/disktape.json').read())
