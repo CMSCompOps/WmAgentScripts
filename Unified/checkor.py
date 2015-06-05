@@ -12,6 +12,7 @@ import os
 import time
 from McMClient import McMClient
 from htmlor import htmlor
+from utils import sendEmail 
 
 class falseDB:
     def __init__(self):
@@ -115,6 +116,8 @@ def checkor(url, spec=None, options=None):
     for wfo in wfs:
         if spec and not (spec in wfo.name): continue
 
+        print "checking on",wfo.name
+
         ## get info
         wfi = workflowInfo(url, wfo.name)
 
@@ -173,7 +176,14 @@ def checkor(url, spec=None, options=None):
                 acdc_inactive.append( member['RequestName'] )
         ## completion check
         percent_completions = {}
-        event_expected,lumi_expected =  wfi.request['TotalInputEvents'],wfi.request['TotalInputLumis']
+#        print "let's see who is crashing", wfo.name
+#        print wfi.request['TotalInputEvents'],wfi.request['TotalInputLumis']
+        if not 'TotalInputEvents' in wfi.request:
+            event_expected,lumi_expected = 0,0
+            sendEmail("missing member of the request","TotalInputEvents is missing from the workload of %s"% wfo.name,'vlimant@cern.ch', ['vlimant@cern.ch','matteoc@fnal.gov','julian.badillo.rojas@cern.ch'])
+        else:
+            event_expected,lumi_expected =  wfi.request['TotalInputEvents'],wfi.request['TotalInputLumis']
+
         fractions_pass = {}
         for output in wfi.request['OutputDatasets']:
             event_count,lumi_count = getDatasetEventsAndLumis(dataset=output)
