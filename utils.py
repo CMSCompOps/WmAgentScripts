@@ -824,6 +824,73 @@ def getWorkflows(url,status,user=None,details=False):
 
     return workflows
 
+def getListOfBlocks(inputdset,runwhitelist):
+    dbsApi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+    blocks=dbsApi.listBlocks(dataset = inputdset, run_num = runwhitelist)
+    
+    block_list = []
+
+    for block in blocks:
+        block_list.append(block['block_name'])
+
+    return block_list
+
+def checkIfBlockIsSubscribedToASite(url,block,site):
+
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?block='+block.replace('#','%23'))
+
+    r2=conn.getresponse()
+    result = json.loads(r2.read())
+
+    assert(len(result['phedex']['dataset']) == 1)
+
+    for subscription in result['phedex']['dataset'][0]['subscription']:
+        if subscription['node'] == site:
+            return True
+
+    if 'block' in result['phedex']['dataset'][0]:    
+
+        assert(len(result['phedex']['dataset'][0]['block']) == 1)
+
+        for subscription in result['phedex']['dataset'][0]['block'][0]['subscription']:
+            if subscription['node'] == site:
+                return True
+        
+    return False            
+
+
+def checkIfDatasetIsSubscribedToASite(url,dataset,site):
+
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?dataset='+dataset)
+    r2=conn.getresponse()
+    result = json.loads(r2.read())
+
+    assert(len(result['phedex']['dataset']) == 1)
+
+    for subscription in result['phedex']['dataset'][0]['subscription']:
+        if subscription['node'] == site:
+            return True
+        
+    return False            
+
+def checkIfBlockIsAtASite(url,block,site):
+    
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicasummary?block='+block.replace('#','%23'))
+    r2=conn.getresponse()
+
+    result = json.loads(r2.read())
+
+    assert(len(result['phedex']['block']) == 1)
+
+    for replica in result['phedex']['block'][0]['replica']:
+        if replica['node'] == site:
+            return True
+
+    return False                
+
 class workflowInfo:
     def __init__(self, url, workflow, deprecated=False, spec=True, request=None):
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))

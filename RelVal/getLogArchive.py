@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import optparse
 import json
-import urllib2,urllib, httplib, sys, re, os, phedexSubscription
+import urllib2,urllib, httplib, sys, re, os
 from xml.dom.minidom import getDOMImplementation
 sys.path.append("..")
 import dbsTest

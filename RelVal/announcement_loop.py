@@ -49,17 +49,6 @@ while True:
 
     curs.execute("use "+dbname+";")
 
-    #secrets_file=open("/home/relval/secrets.txt")
-
-    #password=secrets_file.read().rstrip('\n')
-
-    #ret=os.system("kinit << EOF\n"+password+"\nEOF")
-
-    #sometimes the kerberos initialization doesn't work temporarily
-    #while ret != 0:
-    #    ret=os.system("kinit << EOF\n"+password+"\nEOF")
-    #    time.sleep(60)
-
     curs.execute("select * from batches")
     batches=curs.fetchall()
     
@@ -108,9 +97,6 @@ while True:
                 sys.exit(0)
             s = json.loads(data)
 
-            #if wf[0] == "anlevin_RVCMSSW_7_4_0_pre9_ROOT6SingleMu2012D__1Apr_RelVal_sm2012D_150410_093809_9823":
-            #    n_completed=n_completed+1
-
             for status in s['rows'][0]['doc']['request_status']:
                 if status['status'] == "completed" or status['status'] == "force-complete":
                     n_completed=n_completed+1
@@ -127,15 +113,12 @@ while True:
         if n_workflows != n_completed:
             continue
 
-        #string="2015_05_31_2"
+        #string="2015_06_04_1"
 
         #if not (string.split('_')[0] == useridyear and string.split('_')[1] == useridmonth and string.split('_')[2] == useridday and string.split('_')[3] == str(useridnum)):
         #    continue
 
         #if batch[0] != 222:
-        #    continue
-
-        #if (calendar.timegm(datetime.datetime.utcnow().utctimetuple()) - max_completion_time)/60.0/60.0 < 0.01:
         #    continue
 
         print batchid
@@ -170,14 +153,9 @@ while True:
 
         closeOutTaskChain.close_out_wf_list(wf_list)
 
-        #os.system("python2.6 closeOutTaskChain.py "+fname)
-
         dset_nevents_list=getRelValDsetNames.getDsetNamesAndNevents(wf_list)
 
         makeStatisticsTable.makeStatisticsTable(dset_nevents_list, userid+".txt")
-
-        #os.system("python2.6 getRelValDsetNames.py "+fname+" | grep -v \"DAS query failed\" | tee "+dsets_stats_tmp)
-        #os.system("python2.6 makeStatisticsTable.py "+dsets_stats_tmp+" "+userid+".txt")
 
         ret=os.system("cp "+userid+".txt /afs/cern.ch/user/r/relval/webpage/relval_stats/"+userid+".txt")
 
@@ -215,39 +193,22 @@ while True:
             if "MinimumBias" in dset.split('/')[1] and "SiStripCalMinBias" in dset.split('/')[2] and dset.split('/')[3] != "ALCARECO":
                 dsets_cern_disk_list.append(dset)
 
-        #os.system("cat "+dsets_stats_tmp+" | awk '{print $1}' >& "+dsets_tmp_fnal)
-        #os.system("grep -v '/RECO[ ]*$' "+dsets_tmp_fnal+" | grep -v 'ALCARECO[ ]*' >& "+dsets_tmp_cern)
-        #os.system("grep '/GEN-SIM[ ]*$' "+dsets_tmp_fnal+" >& "+dsets_tmp_fnal_disk)
-        #the premixing pileup datasets are GEN-SIM-DIGI-RAW
-        #os.system("grep '/GEN-SIM-DIGI-RAW[ ]*$' "+dsets_tmp_fnal+"  >> "+dsets_tmp_fnal_disk)
-        #the fastsim pileup datsets are GEN-SIM-RECO
-        #os.system("grep '/GEN-SIM-RECO[ ]*$' "+dsets_tmp_fnal+"  >> "+dsets_tmp_fnal_disk)
-        #os.system("grep '/RelValTTbar.*/.*TkAlMinBias.*/ALCARECO' "+dsets_tmp_fnal+" >> "+dsets_tmp_cern_alcareco+" 2>&1")
-        #os.system("grep '/MinimumBias/.*SiStripCalMinBias.*/ALCARECO' "+dsets_tmp_fnal+" >> "+dsets_tmp_cern_alcareco+" 2>&1")
-        #os.system("cat "+dsets_tmp_cern_alcareco+" >> "+dsets_tmp_cern+" 2>&1")
-
-        result=utils.makeReplicaRequest("cmsweb.cern.ch", "T2_CH_CERN", dsets_cern_disk_list, "relval datasets")
+        result=utils.makeReplicaRequest("cmsweb.cern.ch", "T2_CH_CERN", dsets_cern_disk_list, "relval datasets",group="RelVal")
         if result != None:
             phedexid = result['phedex']['request_created'][0]['id']
             utils.approveSubscription("cmsweb.cern.ch",phedexid)
 
-        result=utils.makeReplicaRequest("cmsweb.cern.ch", "T0_CH_CERN_MSS", dsets_list, "relval datasets")
+        result=utils.makeReplicaRequest("cmsweb.cern.ch", "T0_CH_CERN_MSS", dsets_list, "relval datasets", group = "RelVal")
         if result != None:
             phedexid = result['phedex']['request_created'][0]['id']
             utils.approveSubscription("cmsweb.cern.ch",phedexid)
 
-        result=utils.makeReplicaRequest("cmsweb.cern.ch", "T1_US_FNAL_Disk", dsets_fnal_disk_list, "relval datasets")
+        result=utils.makeReplicaRequest("cmsweb.cern.ch", "T1_US_FNAL_Disk", dsets_fnal_disk_list, "relval datasets", group = "RelVal")
         #phedexid = result['phedex']['request_created'][0]['id']
         #utils.approveSubscription("cmsweb.cern.ch",phedexid)
 
-        #os.system("python2.6 phedexSubscription.py T2_CH_CERN "+dsets_tmp_cern+" \\\"relval datasets\\\" --autoapprove")
-        #os.system("python2.6 phedexSubscription.py T1_US_FNAL_Disk "+dsets_tmp_fnal_disk+" \\\"relval datasets\\\"")
-        #os.system("python2.6 phedexSubscription.py T0_CH_CERN_MSS  "+dsets_tmp_fnal+" \\\"relval datasets\\\" --custodial --autoapprove")
-
         for dset in dsets_list:
             setDatasetStatusDBS3.setStatusDBS3("https://cmsweb.cern.ch/dbs/prod/global/DBSWriter", dset, "VALID", True)
-
-        #os.system("for dset in `cat "+dsets_tmp_fnal+"`; do python2.6 setDatasetStatusDBS3.py --dataset=$dset --status=VALID --files; done")
 
         for wf in wfs:
             reqMgrClient.closeOutWorkflow("cmsweb.cern.ch",wf)
@@ -260,8 +221,6 @@ while True:
         os.system("if [ -f brm/failure_information.txt ]; then rm brm/failure_information.txt; fi")
 
         [istherefailureinformation,return_string]=jobFailureInformation.getFailureInformation(wf_list,"brm/failure_information.txt")
-
-        #sys.exit(0)
 
         msg = MIMEMultipart()
         reply_to = []
@@ -312,15 +271,6 @@ while True:
         except Exception as e:
             print "Error: unable to send email: %s" %(str(e))
 
-        #os.popen("cat brm/announce_relvals_log.txt | mail -s \""+ title +"\" amlevin@mit.edu");
-
-        #if nfailures == 0:
-        #if False:
-        #    os.popen("cat brm/announcement_email.txt | mail -s \""+ title +"\" -r amlevin@mit.edu hn-cms-relval@cern.ch andrew.m.levin@vanderbilt.edu");
-        #    #os.popen("cat brm/announcement_email.txt | mail -s \""+ title +"\" -r amlevin@mit.edu hn-cms-hnTest@cern.ch andrew.m.levin@vanderbilt.edu");
-        #else:    
-        #    os.popen("cat brm/announcement_email.txt | mail -s \""+ title +"\" andrew.m.levin@vanderbilt.edu");
-
         print "copying the workflows and the batch to the archive databases"    
 
         curs.execute("update batches set status=\"announced\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where batch_id = "+str(batchid) +";")
@@ -347,5 +297,3 @@ while True:
 
     time.sleep(100)
     
-#curs.execute("insert into batches set hn_req=\""+hnrequest+"\", announcement_title=\"myannouncementtitle\"")
-

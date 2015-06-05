@@ -67,6 +67,9 @@ while True:
             print "Neither T1 nor T2 is in site name, exiting"
             sys.exit(1)
 
+        if site == "T2_CH_CERN_T0":
+            site_disk = "T2_CH_CERN"
+
         #print batch
         #print ""
 
@@ -93,14 +96,9 @@ while True:
                 for key, value in schema.items():
                     if type(value) is dict and key.startswith("Task"):
 
-                        
-                        
                         if 'MCPileup' in value:
                             isthereanmcpileupdataset=True
-                            old_ld_library_path=os.environ['LD_LIBRARY_PATH']
-                            os.environ['LD_LIBRARY_PATH']=''
-                            ismcpileupdatasetatsite=os.system("python2.6 check_if_dataset_is_at_a_site.py --dataset "+value['MCPileup']+" --site "+site_disk)
-                            os.environ['LD_LIBRARY_PATH']=old_ld_library_path
+                            ismcpileupdatasetatsite=utils.checkIfDatasetIsSubscribedToASite("cmsweb.cern.ch",value["MCPileup"],site_disk)
                             
                         if 'InputDataset' in value:
 
@@ -110,19 +108,13 @@ while True:
                                 runwhitelist=value['RunWhitelist']
                                 blocks_fname=os.popen("mktemp").read().rstrip("\n")
                                  
-                                os.system("python2.6 get_list_of_blocks.py --dataset "+ inputdset  +" --runwhitelist \""+str(runwhitelist) + "\" --output_fname " + blocks_fname)
-                                 
-                                blocks_file = open(blocks_fname,'r')
+                                list_of_blocks=utils.getListOfBlocks(inputdset,str(runwhitelist))
 
-                                #blocks=dbsApi.listBlocks(dataset = inputdset, run_num = runwhitelist)
-                                for line in blocks_file:
+                                for block in list_of_blocks:
                             
                                     block = line.rstrip('\n')
-                                    old_ld_library_path=os.environ['LD_LIBRARY_PATH']
-                                    os.environ['LD_LIBRARY_PATH']=''
-                                    isblockatsite=os.system("python2.6 check_if_block_is_at_a_site.py --block "+block+" --site "+site_disk)
-                                    os.environ['LD_LIBRARY_PATH']=old_ld_library_path
 
+                                    isblockatsite = utils.checkIfBlockIsAtASite("cmsweb.cern.ch",block,site_disk)
 
                                     #this block (/DoubleMu/...) is not registered in phedex, so it cannot be subscribed to any site
                                     if not isblockatsite and block != "/DoubleMu/Run2011A-ZMu-08Nov2011-v1/RAW-RECO#93c53d22-25b2-11e1-8c62-003048f02c8a":
@@ -130,11 +122,8 @@ while True:
 
                             else:   
 
-                                old_ld_library_path=os.environ['LD_LIBRARY_PATH']
-                                os.environ['LD_LIBRARY_PATH']=''
-                                isdatasetatsite=os.system("python2.6 check_if_dataset_is_at_a_site.py --dataset "+inputdset+" --site "+site_disk)
-                                os.environ['LD_LIBRARY_PATH']=old_ld_library_path                                 
-            
+                                isdatasetatsite=utils.checkIfDatasetIsSubscribedToASite("cmsweb.cern.ch",inputdset,site_disk)
+
                                 if not isdatasetatsite:
                                     all_dsets_blocks_at_site=False
 
@@ -162,10 +151,7 @@ while True:
                 for key, value in schema.items():
                     if type(value) is dict and key.startswith("Task"):
                         if 'MCPileup' in value:
-                            old_ld_library_path=os.environ['LD_LIBRARY_PATH']
-                            os.environ['LD_LIBRARY_PATH']=''
-                            isdatasetatsite=os.system("python2.6 check_if_dataset_is_at_a_site.py --dataset "+value['MCPileup']+" --site "+site_disk)
-                            os.environ['LD_LIBRARY_PATH']=old_ld_library_path
+                            isdatasetatsite=utils.checkIfDatasetIsSubscribedToASite("cmsweb.cern.ch",value['MCPileup'],site_disk)
 
                             if not isdatasetatsite:
                                 blocks_dsets_to_transfer.append(value['MCPileup'])
@@ -179,60 +165,45 @@ while True:
                              if 'RunWhitelist' in value:
                                  runwhitelist=value['RunWhitelist']
 
-                                 blocks_fname=os.popen("mktemp").read().rstrip("\n")
-                                 
-                                 os.system("python2.6 get_list_of_blocks.py --dataset "+ inputdset  +" --runwhitelist \""+str(runwhitelist) + "\" --output_fname " + blocks_fname)
-                                 
-                                 blocks_file = open(blocks_fname,'r')
+                                 list_of_blocks=utils.getListOfBlocks(inputdset,str(runwhitelist))
 
-                                 #blocks=dbsApi.listBlocks(dataset = inputdset, run_num = runwhitelist)
-                                 for line in blocks_file:
-                            
-                                     block = line.rstrip('\n')
+                                 for block in list_of_blocks:
 
-                                     old_ld_library_path=os.environ['LD_LIBRARY_PATH']
-                                     os.environ['LD_LIBRARY_PATH']=''
-                                     isblocksubscribedtosite=os.system("python2.6 check_if_block_is_subscribed_to_a_site.py --block "+block+" --site "+site_disk)
-                                     isblockatsite=os.system("python2.6 check_if_block_is_at_a_site.py --block "+block+" --site "+site_disk)
-                                     os.environ['LD_LIBRARY_PATH']=old_ld_library_path
-                                     
                                      #this block (/DoubleMu/...) is not registered in phedex, so it cannot be subscribed to any site
-                                     if not isblocksubscribedtosite and block != "/DoubleMu/Run2011A-ZMu-08Nov2011-v1/RAW-RECO#93c53d22-25b2-11e1-8c62-003048f02c8a":
+                                     if block == "/DoubleMu/Run2011A-ZMu-08Nov2011-v1/RAW-RECO#93c53d22-25b2-11e1-8c62-003048f02c8a":
+                                         continue
+
+                                     isblocksubscribedtosite=utils.checkIfBlockIsSubscribedToASite("cmsweb.cern.ch",block,site_disk)
+                                     isblockatsite=utils.checkIfBlockIsAtASite("cmsweb.cern.ch",block,site_disk)
+
+                                     if not isblocksubscribedtosite:
                                          blocks_dsets_to_transfer.append(block)
-                                     if not isblockatsite and block != "/DoubleMu/Run2011A-ZMu-08Nov2011-v1/RAW-RECO#93c53d22-25b2-11e1-8c62-003048f02c8a":
+                                     if not isblockatsite:
                                          blocks_not_at_site.append(block)
 
                              else:   
-                                 old_ld_library_path=os.environ['LD_LIBRARY_PATH']
-                                 os.environ['LD_LIBRARY_PATH']=''
-                                 isdatasetsubscribedtosite=os.system("python2.6 check_if_dataset_is_subscribed_to_a_site.py --dataset "+inputdset+" --site "+site_disk)
-                                 isdatasetatsite=os.system("python2.6 check_if_dataset_is_at_a_site.py --dataset "+inputdset+" --site "+site_disk)
-                                 os.environ['LD_LIBRARY_PATH']=old_ld_library_path                                 
-            
+                                 isdatasetsubscribedtosite=utils.checkIfDatasetIsSubscribedToASite("cmsweb.cern.ch",inputdset,site_disk)
+                                 isdatasetatsite=utils.checkIfDatasetIsSubscribedToASite("cmsweb.cern.ch",inputdset,site_disk)
+
                                  if not isdatasetsubscribedtosite:
                                      blocks_dsets_to_transfer.append(inputdset)
                                  if not isdatasetatsite:
                                      blocks_not_at_site.append(inputdset)
                                          
+
+                                     
             
             if blocks_dsets_to_transfer != []:                    
-                tmp_fname=os.popen("mktemp").read().rstrip("\n")
-                tmp_file=open(tmp_fname,'w')
+
+                print "transfering the following blocks:"
+
+                print blocks_dsets_to_transfer
 
                 result=utils.makeReplicaRequest("cmsweb.cern.ch", site_disk, blocks_dsets_to_transfer, "relval datasets")
 
                 phedexid = result['phedex']['request_created'][0]['id']
 
                 utils.approveSubscription("cmsweb.cern.ch",phedexid)
-
-                #for block in blocks_dsets_to_transfer:
-                #    print >> tmp_file,  block
-
-                #tmp_file.close()
-
-
-
-                #os.system("python2.6 phedexSubscription.py "+site_disk+" "+tmp_fname+" \\\"relval datasets\\\" --autoapprove")
 
                 curs.execute("update batches set status=\"waiting_for_transfer\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where batch_id = "+str(batchid) +";")    
                 mysqlconn.commit()

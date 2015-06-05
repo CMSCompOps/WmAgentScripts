@@ -19,18 +19,17 @@ import datetime
 
 dbname = "relval"
 
+import utils
+
+
 while True:
 
     mysqlconn = MySQLdb.connect(host='dbod-cmsrv1.cern.ch', user='relval', passwd="relval", port=5506)
-    #conn = MySQLdb.connect(host='localhost', user='relval', passwd='relval')
     
     curs = mysqlconn.cursor()
     
     curs.execute("use "+dbname+";")
     
-    #workflow = line.rstrip('\n')  
-    #curs.execute("insert into workflows set hn_req=\""+hnrequest+"\", workflow_name=\""+workflow+"\";")
-
     curs.execute("select * from batches")
     batches=curs.fetchall()
 
@@ -52,8 +51,8 @@ while True:
             elif name == "announcement_title":
                 title=value
 
-        #if batch[0] != 21:
-        #    continue
+        if batch[0] == 48:
+            continue
 
         #print batch
         print ""
@@ -79,9 +78,14 @@ while True:
                                 dset="/" + value['InputDataset'].split('/')[1] + "/" + value['AcquisitionEra'] + "-" + value['ProcessingString'] + "-v" + str(processing_version)+"/*"
 
                                 curs.execute("select * from datasets where dset_name = \""+ dset.rstrip("*")+"\";")
+
+                                dbs_dset_check=utils.getDatasets(dset)
                                 
                                 if len(curs.fetchall()) != 0:
                                     os.system('echo '+wf[0]+' | mail -s \"assignment_loop.py error 1\" andrew.m.levin@vanderbilt.edu')
+                                    sys.exit(1)
+                                elif len(dbs_dset_check) != 0:    
+                                    os.system('echo '+wf[0]+' | mail -s \"assignment_loop.py error 5\" andrew.m.levin@vanderbilt.edu')
                                     sys.exit(1)
                                 else:   
                                     curs.execute("insert into datasets set dset_name=\""+dset.rstrip("*")+"\", workflow_name=\""+wf[0]+"\", batch_id="+str(batchid)+";")
@@ -90,13 +94,17 @@ while True:
                             elif 'PrimaryDataset' in value:
 
                                 dset="/" + value['PrimaryDataset'] + "/" + value['AcquisitionEra'] + "-" + value['ProcessingString'] + "-v" + str(processing_version)+"/*"
-                                #print dset
                                 curs.execute("select * from datasets where dset_name = \""+ dset.rstrip("*")+"\";")
 
                                 curs_fetchall = curs.fetchall()
 
+                                dbs_dset_check=utils.getDatasets(dset)
+
                                 if len(curs_fetchall) != 0:
                                     os.system('echo '+wf[0]+" "+curs_fetchall[0][1]+" "+dset+' | mail -s \"assignment_loop.py error 2\" andrew.m.levin@vanderbilt.edu')
+                                    sys.exit(1)
+                                elif len(dbs_dset_check) != 0:    
+                                    os.system('echo '+wf[0]+' | mail -s \"assignment_loop.py error 5\" andrew.m.levin@vanderbilt.edu')
                                     sys.exit(1)
                                 else:
                                     curs.execute("insert into datasets set dset_name=\""+dset.rstrip("*")+"\", workflow_name=\""+wf[0]+"\", batch_id="+str(batchid)+";")
@@ -143,7 +151,6 @@ while True:
                     os.system('echo '+wf[0]+' | mail -s \"assignment_loop.py error 4\" andrew.m.levin@vanderbilt.edu')
                     sys.exit(0)
 
-                #os.system("python2.6 assignRelValWorkflow.py -w "+wf[0] +" -s "+site+" -p "+str(processing_version))
                 time.sleep(30)
 
 
