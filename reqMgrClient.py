@@ -658,7 +658,8 @@ def assignWorkflow(url, workflowname, team, parameters ):
                 if par < params['events_per_job']:
                     params.update({"requestName":workflowname,
                                    "splittingTask" : '/%s/%s'%(workflowname,t),
-                                   "events_per_job": par})
+                                   "events_per_job": par,
+                                   "splittingAlgo":"EventBased"})
                     print setWorkflowSplitting(url, params)
             elif aux == 'EventsPerLumi':
                 wf = workflowInfo(url, workflowname)
