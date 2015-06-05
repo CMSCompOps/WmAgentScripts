@@ -473,13 +473,14 @@ class siteInfo:
             if talk: print "\n\tSite:",site
             ssite = self.CE_to_SE( site )
             tsite = site+'_MSS'
-            if 'CPUbound' in info and site in self.cpu_pledges and info['CPUbound']:
-                if self.cpu_pledges[site] < info['CPUbound']:
-                    if talk: print site,"could use",info['CPUbound'],"instead of",self.cpu_pledges[site],"for CPU"
-                    self.cpu_pledges[site] = int(info['CPUbound'])
-                elif self.cpu_pledges[site] > 1.5* info['CPUbound']:
-                    if talk: print site,"could correct",info['CPUbound'],"instead of",self.cpu_pledges[site],"for CPU"
-                    self.cpu_pledges[site] = int(info['CPUbound'])                    
+            key_for_cpu ='prodCPU'
+            if key_for_cpu in info and site in self.cpu_pledges and info[key_for_cpu]:
+                if self.cpu_pledges[site] < info[key_for_cpu]:
+                    if talk: print site,"could use",info[key_for_cpu],"instead of",self.cpu_pledges[site],"for CPU"
+                    self.cpu_pledges[site] = int(info[key_for_cpu])
+                elif self.cpu_pledges[site] > 1.5* info[key_for_cpu]:
+                    if talk: print site,"could correct",info[key_for_cpu],"instead of",self.cpu_pledges[site],"for CPU"
+                    self.cpu_pledges[site] = int(info[key_for_cpu])                    
 
             if 'FreeDisk' in info and info['FreeDisk']:
                 if site in self.disk:
