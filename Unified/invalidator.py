@@ -13,9 +13,11 @@ def invalidator(url, invalid_status='INVALID'):
     invalids = mcm.getA('invalidations',query='status=announced')
     print len(invalids),"Object to be invalidated"
     text_to_batch = defaultdict(str)
+    text_to_request = defaultdict(str)
     for invalid in invalids:
         acknowledge= False
         pid = invalid['prepid']
+        batch_lookup = invalid['prepid']
         text = ""
         if invalid['type'] == 'request':
             wfn = invalid['object']
@@ -40,7 +42,7 @@ def invalidator(url, invalid_status='INVALID'):
             print success
             acknowledge= True
             text = "The workflow %s (%s) was rejected due to invalidation in McM" % ( wfn, pid )
-            pid = wfn ##so that the batch id is taken as the one containing the workflow name
+            batch_lookup = wfn ##so that the batch id is taken as the one containing the workflow name
         elif invalid['type'] == 'dataset':
             dataset = invalid['object']
 
@@ -63,18 +65,24 @@ def invalidator(url, invalid_status='INVALID'):
             ## acknoldge invalidation in mcm, provided we can have the api
             print "acknowledgment to mcm"
             mcm.get('/restapi/invalidations/acknowledge/%s'%( invalid['_id'] ))
+            # prepare the text for batches
             batches = []
-            batches.extend(mcm.getA('batches',query='contains=%s'%pid))
+            batches.extend(mcm.getA('batches',query='contains=%s'%batch_lookup))
             batches = filter(lambda b : b['status'] in ['announced','done','reset'], batches)
             if len(batches):
                 bid = batches[-1]['prepid']
                 print "batch nofication to",bid
-                text_to_batch[bid] += text+"\n"
+                text_to_batch[bid] += text+"\n\n"
+            # prepare the text for requests
+            text_to_request[pid] += text+"\n\n"
 
     for bid,text in text_to_batch.items():    
+        text += '\n This is an automated message'
         mcm.put('/restapi/batches/notify',{ "notes" : text, "prepid" : bid})
         pass
-
+    for pid,text in text_to_request.items():
+        text += '\n This is an automated message'
+        mcm.put('/restapi/requests/notify',{ "message" : text, "prepids" : [pid]})
 
 if __name__ == "__main__":
     url = 'cmsweb.cern.ch'
