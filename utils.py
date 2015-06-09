@@ -1349,12 +1349,18 @@ class workflowInfo:
                     print "Cannot check output in reqmgr"
                     print output,"is what is in the request workload"
                     continue
-                predicted = '/'.join(['',dsn,'-'.join([aera,aps,'v%d'%(version+1)]),tier])
-                conflicts = getWorkflowByOutput( self.url, predicted )
-                conflicts = filter(lambda wfn : wfn!=self.request['RequestName'], conflicts)
-                if len(conflicts):
-                    print "There is an output conflict for",self.request['RequestName'],"with",conflicts
-                    return None
+                while True:
+                    predicted = '/'.join(['',dsn,'-'.join([aera,aps,'v%d'%(version+1)]),tier])
+                    conflicts = getWorkflowByOutput( self.url, predicted )
+                    conflicts = filter(lambda wfn : wfn!=self.request['RequestName'], conflicts)
+                    if len(conflicts):
+                        print "There is an output conflict for",self.request['RequestName'],"with",conflicts
+                        #return None
+                        ## since we are not planned for pure extension and ever writing in the same dataset, go +1
+                        version += 1
+                    else:
+                        break
+
         else:
             for output in  outputs:
                 print output
@@ -1384,11 +1390,17 @@ class workflowInfo:
                 if aps == 'None':
                     print "no process string, cannot parse"
                     continue
-                predicted = '/'.join(['',dsn,'-'.join([aera,aps,'v%d'%(version+1)]),tier])
-                conflicts = getWorkflowByOutput( self.url, predicted )
-                conflicts = filter(lambda wfn : wfn!=self.request['RequestName'], conflicts)
-                if len(conflicts):
-                    print "There is an output conflict for",self.request['RequestName'],"with",conflicts
-                    return None
+                while True:
+                    predicted = '/'.join(['',dsn,'-'.join([aera,aps,'v%d'%(version+1)]),tier])
+                    conflicts = getWorkflowByOutput( self.url, predicted )
+                    conflicts = filter(lambda wfn : wfn!=self.request['RequestName'], conflicts)
+                    if len(conflicts):
+                        print "There is an output conflict for",self.request['RequestName'],"with",conflicts
+                        #return None
+                        ## since we are not planned for pure extension and ever writing in the same dataset, go +1
+                        version += 1
+                    else:
+                        break
+    
         return version+1
 
