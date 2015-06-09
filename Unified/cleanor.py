@@ -144,16 +144,20 @@ def cleanor(url, specific=None):
     ## make deletion requests
     for site in delete_per_site:
         site_datasets = [info[0] for info in delete_per_site[site]]
+        is_tape = any([v in site for v in ['MSS','Export','Buffer'] ])
+        comments="Cleanup input after production. DataOps will take care of approving it."
+        if is_tape:
+            comments="Cleanup input after production."
         if True:
-            result = makeDeleteRequest(url ,site , site_datasets, comments="Cleanup input after production. DataOps will take care of approving it.")
+            result = makeDeleteRequest(url ,site , site_datasets, comments=comments)
             for item in site_datasets:
                 LI.release( item, site, 'cleanup of input after production')
 
             print result
             for phedexid in [o['id'] for o in result['phedex']['request_created']]:
-                if not any([v in site for v in ['MSS','Export','Buffer'] ]):
+                if not is_tape:
                     print "auto-approving to",site,"?"
-                    #approved = approveSubscription(url, phedexid, nodes = [site], comments = 'Production cleaning by data ops, auto-approved')
+                    approved = approveSubscription(url, phedexid, nodes = [site], comments = 'Production cleaning by data ops, auto-approved')
                     pass
         
 if __name__ == "__main__":
