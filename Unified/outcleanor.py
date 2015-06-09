@@ -197,17 +197,18 @@ def outcleanor(url, options):
     if (not options.test) and (options.auto or raw_input("Satisfied ? (y will trigger status change and deletion requests)") in ['y']):
         for (site,items) in sites_and_datasets.items():
             datasets = [ ds for ds,_,st in items]
+            is_tape = any([v in site for v in ['MSS','Export','Buffer'] ])
+            comments="Cleanup output after production. DataOps will take care of approving it."
+            if is_tape:
+                comments="Cleanup output after production."
             print "making deletion to",site
-            result = makeDeleteRequest(url, site, datasets, "Cleanup output after production. DataOps will take care of approving it.")
+            result = makeDeleteRequest(url, site, datasets, comments=comments)
             for item in datasets:
                 LI.release( item, site, 'cleanup of output after production')
             print result
             ## approve it right away ?
-            if 'MSS' in site: continue
-            if 'Export' in site: continue
-            if 'Buffer' in site: continue
             for did in [item['id'] for item in result['phedex']['request_created']]:
-                if not any([v in site for v in ['MSS','Export','Buffer'] ]):
+                if not is_tape:
                     print "auto-approving to",site,"?"
                     #approveSubscription(url, did, nodes = [site], comments = 'Production cleaning by data ops, auto-approved')
                     pass
