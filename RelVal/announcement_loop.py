@@ -210,7 +210,7 @@ while True:
         for dset in dsets_list:
             setDatasetStatusDBS3.setStatusDBS3("https://cmsweb.cern.ch/dbs/prod/global/DBSWriter", dset, "VALID", True)
 
-        for wf in wfs:
+        for wf in wf_list:
             reqMgrClient.closeOutWorkflow("cmsweb.cern.ch",wf)
             reqMgrClient.announceWorkflow("cmsweb.cern.ch",wf)
 
