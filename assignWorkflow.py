@@ -7,7 +7,7 @@
 import urllib2,urllib, httplib, sys, re, os
 import optparse
 import reqMgrClient as rqMgr
-
+from pprint import pprint
 
 T1_SITES = [
             "T1_DE_KIT",
@@ -91,6 +91,8 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
 
 def main():
     url='cmsweb.cern.ch'
+    url_tb = 'cmsweb-testbed.cern.ch'
+    #url = url_tb
     usage = "usage: %prog [options] [WORKFLOW]"
     parser = optparse.OptionParser(usage=usage)
     parser.add_option('-t', '--team', help='Type of Requests',dest='team')
@@ -112,6 +114,8 @@ def main():
         wfs = [l.strip() for l in open(options.file) if l.strip()]
     elif len(args) == 1:
         wfs = [args[0]]
+    else:
+        parser.error("Provide the workflow name or the file")
 
     if not options.team:
         parser.error("Provide the TEAM name")
@@ -136,14 +140,15 @@ def main():
     else:
         activity='reprocessing'
     
-    #trustSiteListAsLocation = True
-    trust_site = True
+    #trustSiteListAsLocation = False
+    trust_site = False
     if options.xrootd:
         trust_site = True
 
     team=options.team
     
     for wf in wfs:
+        wf = rqMgr.Workflow(wf, url=url)
         #check options that were provided particularly
         if options.era:
             era = options.era
@@ -162,7 +167,7 @@ def main():
         else:
             procversion = wf.info['ProcessingVersion']
         procstring = wf.info['ProcessingString']
-        assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, procstring)
+        assignRequest(url, wf.name, team, sites, era, procversion, activity, lfn, procstring, trust_site)
 
     sys.exit(0);
 

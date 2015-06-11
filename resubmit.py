@@ -33,7 +33,6 @@ except:
     print "source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh"
     sys.exit(0)
 
-reqmgrCouchURL = "https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache"
 
 def modifySchema(helper, user, group, backfill=False):
     """
@@ -151,7 +150,7 @@ def cloneWorkflow(workflow, user, group, verbose=False, backfill=False):
     clones a workflow
     """
     # Get info about the workflow to be cloned
-    helper = reqMgrClient.retrieveSchema(workflow)
+    helper = reqMgrClient.retrieveSchema(workflow, reqmgrCouchURL)
     # get info from reqMgr
     schema = modifySchema(helper, user, group, backfill)
     if verbose:
@@ -195,6 +194,10 @@ def cloneWorkflow(workflow, user, group, verbose=False, backfill=False):
 __Main__
 """
 url = 'cmsweb.cern.ch'
+url_tb = 'cmsweb-testbed.cern.ch'
+#url = url_tb
+reqmgrCouchURL = "https://"+url+"/couchdb/reqmgr_workload_cache"
+
 
 def main():
 
@@ -237,7 +240,7 @@ def main():
         wfs = [args[0]]
     
     for wf in wfs:
-        cloneWorkflow(workflow, user, group, options.verbose, options.backfill)
+        cloneWorkflow(wf, user, group, options.verbose, options.backfill)
     
     sys.exit(0)
 
