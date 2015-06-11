@@ -48,7 +48,7 @@ def main():
             uinfo = pwd.getpwuid(os.getuid())
             user = uinfo.pw_name
             #group by default DATAOPS
-            group = 'DATAOPS
+            group = 'DATAOPS'
     else:
         if len(args) == 3:
             user = args[1]
