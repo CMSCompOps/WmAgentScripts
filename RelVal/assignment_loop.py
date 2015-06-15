@@ -51,8 +51,8 @@ while True:
             elif name == "announcement_title":
                 title=value
 
-        if batch[0] == 48:
-            continue
+        #if batch[0] == 48:
+        #    continue
 
         #print batch
         print ""
@@ -125,7 +125,13 @@ while True:
                                 os.system('echo '+wf[0]+' | mail -s \"assignment_loop.py error 3\" andrew.m.levin@vanderbilt.edu')
                                 sys.exit(1)
 
+                #workflows get stuck in acquired when they are assigned only to T2_CH_CERN_T0 now                
+                if site == "T2_CH_CERN_T0":
+                    site = ["T2_CH_CERN","T2_CH_CERN_T0"]
+            
+
                 params = {
+#                'SiteWhitelist' : ["T2_CH_CERN","T2_CH_CERN_T0"],
                 'SiteWhitelist' : site,
                 'SiteBlacklist' : [],
                 'MergedLFNBase' : '/store/relval',

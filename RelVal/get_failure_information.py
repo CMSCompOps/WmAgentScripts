@@ -16,6 +16,14 @@ if not options.correct_env:
     os.system("source /cvmfs/grid.cern.ch/emi-ui-3.7.3-1_sl6v2/etc/profile.d/setup-emi3-ui-example.sh; export X509_USER_PROXY=/tmp/x509up_u13536; python2.6 "+command + "--correct_env")
     sys.exit(0)
 
-[istherefailureinformation,failureinformation]=jobFailureInformation.getFailureInformation("brm/159.txt","delete_this_2.txt",False,False)
+f = open("delete_this.txt", 'r')
+
+wf_list = []
+
+for line in f:
+    wf_list.append(line.rstrip('\n'))
+
+[istherefailureinformation,failureinformation]=jobFailureInformation.getFailureInformation(wf_list,"delete_this_2.txt",False,False)
 
 print failureinformation
+
