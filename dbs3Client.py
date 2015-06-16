@@ -18,7 +18,7 @@ das_host='https://cmsweb.cern.ch'
 #das_host='https://das-dbs3.cern.ch'
 #das_host='https://dastest.cern.ch'
 dbs3_url = r'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
-
+dbs3_url_writer = r'https://cmsweb.cern.ch/dbs/prod/global/DBSWriter'
 
 def duplicateRunLumi(dataset, verbose=False, skipInvalid=False):
     """
@@ -141,6 +141,30 @@ def getDatasetStatus(dataset):
     dbsapi = DbsApi(url=dbs3_url)
     reply = dbsapi.listDatasets(dataset=dataset,dataset_access_type='*',detail=True)
     return reply[0]['dataset_access_type']
+
+
+def setDatasetStatus(dataset, newStatus, files=True):
+    """
+    Updates the dataset status (access type): VALID, INVALID, PRODUCTION, DEPRECATED
+    """
+    dbsapi = DbsApi(url=dbs3_url_writer)
+    dbsapi.updateDatasetType(dataset=dataset, dataset_access_type=newStatus)
+
+    #Propagate status to files
+    if files:
+        if newStatus in ['DELETED', 'DEPRECATED', 'INVALID']:
+            file_status = 0
+        elif newStatus in ['PRODUCTION', 'VALID']:
+            file_status = 1
+        else:
+            print "Sorry, I don't know this state and you cannot set files to %s" % newStatus
+            print "Only the dataset was changed. Quitting the program!"
+            return
+        
+        print "Files will be set to:",file_status,"in DBS3"
+        files = dbsapi.listFiles(dataset=dataset)
+        for this_file in files:
+            dbsapi.updateFileStatus(logical_file_name=this_file['logical_file_name'], is_file_valid=file_status)
 
 def getMaxLumi(dataset):
     """

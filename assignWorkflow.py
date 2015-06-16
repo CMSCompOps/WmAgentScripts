@@ -7,7 +7,7 @@
 import urllib2,urllib, httplib, sys, re, os
 import optparse
 import reqMgrClient as rqMgr
-
+from pprint import pprint
 
 T1_SITES = [
             "T1_DE_KIT",
@@ -43,7 +43,7 @@ T2_SITES = [
 
 ALL_SITES = T1_SITES + T2_SITES
 
-def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, procstring):
+def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, procstring, trust_site):
     params = {"action": "Assign",
             "Team"+team: "checked",
             "SiteWhitelist": sites,
@@ -61,6 +61,9 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
             "ProcessingString" : procstring, 
             "checkbox"+workflow: "checked"
             }
+    #add xrootd (trustSiteList)
+    if trust_site:
+        params['useSiteListAsLocation'] = True
 
     encodedParams = urllib.urlencode(params, True)
 
@@ -70,6 +73,8 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     conn.request("POST",  "/reqmgr/assign/handleAssignmentPage", encodedParams, headers)
     response = conn.getresponse()
+    
+    #failed response
     if response.status != 200:
         print 'could not assign request with following parameters:'
         for item in params.keys():
@@ -80,30 +85,37 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
         data = response.read()
         print data
         print "Exiting!"
-  	sys.exit(1)
+        return
     conn.close()
     print 'Assigned workflow:',workflow,'to site:',sites,'with processing version',procversion
-    return
 
 def main():
     url='cmsweb.cern.ch'
-    usage = "usage: %prog [options] WORKFLOW"
+    url_tb = 'cmsweb-testbed.cern.ch'
+    #url = url_tb
+    usage = "usage: %prog [options] [WORKFLOW]"
     parser = optparse.OptionParser(usage=usage)
     parser.add_option('-t', '--team', help='Type of Requests',dest='team')
     parser.add_option('-s', '--sites', help='Site List, comma separated (no spaces),\
                         or "t1" for Tier-1\'s and "t2" for Tier-2\'s',dest='sites')
     parser.add_option('-e', '--era', help='Acquistion era',dest='era')
-    parser.add_option('-p', '--procversion', help='Processing Version',dest='procversion')
-    parser.add_option('-a', '--activity', help='Dashboard Activity',dest='activity')
-    parser.add_option('-l', '--lfn', help='Merged LFN base',dest='lfn')
+    parser.add_option('-p', '--procversion', help='Processing Version, if empty it will leave the processing version\
+                        that comes by defaul in the request',dest='procversion')
+    parser.add_option('-a', '--activity', help='Dashboard Activity (reprocessing, production or test), if empty will\
+                        set reprocessing as default',dest='activity')
+    parser.add_option('-x', '--xrootd', help='Assign with trustSiteLocation=True (allows xrootd capabilities)',
+                     action='store_true', default=False, dest='xrootd')
+    parser.add_option('-l', '--lfn', help='Merged LFN base', dest='lfn')
+    parser.add_option('-f', '--file', help='Text file with a list of wokflows. If this option is used, the same settings will be\
+                        applyed to all workflows', dest='file')
     (options,args) = parser.parse_args()
     
-    if not args:
-        parser.error("Provide the TEAM name")
-        sys.exit(0);
-
-    workflow = args[0]
-    wf = rqMgr.Workflow(workflow)
+    if options.file:
+        wfs = [l.strip() for l in open(options.file) if l.strip()]
+    elif len(args) == 1:
+        wfs = [args[0]]
+    else:
+        parser.error("Provide the workflow name or the file")
 
     if not options.team:
         parser.error("Provide the TEAM name")
@@ -121,38 +133,42 @@ def main():
     else:
         sites = ALL_SITES
 
-    #check options that were provided
-    if options.era:
-        era = options.era
-    else:
-        era = wf.info['AcquisitionEra']
-
-    if options.procversion:
-        procversion = options.procversion
-    else:
-        procversion = wf.info['ProcessingVersion']
-    
     #activity reprocessing by default
     activity='reprocessing'
     if options.activity:
         activity=options.activity
     else:
         activity='reprocessing'
-    #lfn backfill by default
-    if options.lfn:
-        lfn = options.lfn
-    elif "MergedLFNBase" in wf.info:
-        lfn = wf.info['MergedLFNBase']
-    else:
-        lfn='/store/backfill/1'
     
+    #trustSiteListAsLocation = False
+    trust_site = False
+    if options.xrootd:
+        trust_site = True
+
     team=options.team
-    procstring = wf.info['ProcessingString']
+    
+    for wf in wfs:
+        wf = rqMgr.Workflow(wf, url=url)
+        #check options that were provided particularly
+        if options.era:
+            era = options.era
+        else:
+            era = wf.info['AcquisitionEra']
+        #lfn backfill by default
+        if options.lfn:
+            lfn = options.lfn
+        elif "MergedLFNBase" in wf.info:
+            lfn = wf.info['MergedLFNBase']
+        else:
+            lfn='/store/backfill/1'
+        #given or default processing version
+        if options.procversion:
+            procversion = options.procversion
+        else:
+            procversion = wf.info['ProcessingVersion']
+        procstring = wf.info['ProcessingString']
+        assignRequest(url, wf.name, team, sites, era, procversion, activity, lfn, procstring, trust_site)
 
-    print "Assigning with"
-    print team, sites, era, procversion, activity, lfn, procstring
-
-    assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, procstring)
     sys.exit(0);
 
 if __name__ == "__main__":

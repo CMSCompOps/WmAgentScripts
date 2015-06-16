@@ -50,12 +50,14 @@ def writehtml(s, t, r):
     f = open('%s/stuckness.html' % afs_base,'w')
     f.write(head)
     f.write('<h3>Stuckness Summary</h3>')
+    f.write('<table><tr><td>')
     f.write('days = %s<br>'%t)
     f.write('reqs = %s<br>'%r)
     avg = t/r
     threshold = 1.5*avg
     f.write('avg = %s<br>'%avg)
     f.write('threshold = %s<br>'%(threshold))
+    f.write('</td><td> <img src="stuckness.png"></td></tr></table>')
     h = ['request','status','priority','relativeprio','dayssame','assignedon','stuckness']
     
     f.write("<table border=1>")
@@ -66,8 +68,6 @@ def writehtml(s, t, r):
     f.write("</tr>")
     i = 1
     for req in s:
-        if req['status'] not in live_status:
-            continue
         #print only the ones over the threshold of stuckness
         if req['dayssame'] < threshold:
             continue
@@ -123,14 +123,46 @@ def main():
     old_days = 15
     oldest = {}
     
+    s2 = []
+    #filter out test stuff
+    for r in s:
+        if r['status'] not in live_status:
+            continue
+        name = r['requestname']
+        status = r['status']
+        campaign = r['campaign']
+        rtype = r['type']
+        #ignore anything that says "Test"
+        if 'test' in name.lower() or 'test' in campaign.lower():
+            continue
+        #ignore anything that says "backfill"
+        if 'backfill' in name.lower() or 'backfill' in campaign.lower():
+            continue
+        #ignore resubmissions:
+        if rtype == 'Resubmission':
+            continue
+        #ignore dave mason's tests and stefan's tests
+        if 'dmason' in name or 'piperov' in name:
+            continue
+        #ignore relvals and test
+        if 'dmason' in name or 'piperov' in name:
+            continue
+        #ignore relvals
+        if 'RVCMSSW' in name:
+            continue
+        s2.append(r)
+    s = s2
+
     highest_prio = max( getpriorities(s,None,None,live_status))
     #for status in ['assigned','acquired','running-open','running-closed','completed']:
     #   for priority in getpriorities(s,'','',[status]):
     totaldays = 0
     reqs = 0
     for r in s:
-        if r['status'] not in live_status:
-            continue
+        name = r['requestname']
+        status = r['status']
+        campaign = r['campaign']
+        rtype = r['type']
         days = []
         for ods in r['outputdatasetinfo']:
             if 'lastmodts' not in ods or not ods['lastmodts']:

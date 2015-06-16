@@ -625,13 +625,12 @@ def getInputLumis(url, workflow):
     return lumis
 
 
-def retrieveSchema(workflowName):
+def retrieveSchema(workflowName, reqmgrCouchURL = "https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache"):
     """
     Creates the cloned specs for the original request
     Updates parameters
     """
     from WMCore.WMSpec.WMWorkload import WMWorkloadHelper
-    reqmgrCouchURL = "https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache"
 
     specURL = os.path.join(reqmgrCouchURL, workflowName, "spec")
     helper = WMWorkloadHelper()

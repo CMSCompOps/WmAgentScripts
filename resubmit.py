@@ -33,7 +33,6 @@ except:
     print "source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh"
     sys.exit(0)
 
-reqmgrCouchURL = "https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache"
 
 def modifySchema(helper, user, group, backfill=False):
     """
@@ -151,7 +150,7 @@ def cloneWorkflow(workflow, user, group, verbose=False, backfill=False):
     clones a workflow
     """
     # Get info about the workflow to be cloned
-    helper = reqMgrClient.retrieveSchema(workflow)
+    helper = reqMgrClient.retrieveSchema(workflow, reqmgrCouchURL)
     # get info from reqMgr
     schema = modifySchema(helper, user, group, backfill)
     if verbose:
@@ -195,11 +194,16 @@ def cloneWorkflow(workflow, user, group, verbose=False, backfill=False):
 __Main__
 """
 url = 'cmsweb.cern.ch'
+url_tb = 'cmsweb-testbed.cern.ch'
+#url = url_tb
+reqmgrCouchURL = "https://"+url+"/couchdb/reqmgr_workload_cache"
+
 
 def main():
 
     #Create option parser
-    usage = "\n       python %prog [options] WORKFLOW_NAME [USER GROUP]\n"\
+    usage = "\n       python %prog [options] [WORKFLOW_NAME] [USER GROUP]\n"\
+            "WORKFLOW_NAME: if the list file is provided this should be empty\n"\
             "USER: the user for creating the clone, if empty it will\n"\
             "      use the OS user running the script\n"\
             "GROUP: the group for creating the clone, if empty it will\n"\
@@ -210,25 +214,33 @@ def main():
                         help="Creates a clone for backfill test purposes.")
     parser.add_option("-v","--verbose",action="store_true", dest="verbose", default=False,
                         help="Prints all query information.")
+    parser.add_option('-f', '--file', help='Text file with a list of workflows', dest='file')
     (options, args) = parser.parse_args()
 
     # Check the arguments, get info from them
-    if len(args) == 3:
-        user = args[2]
-        group = args[3]
-    elif len(args) == 1:
-        #get os username by default
-        uinfo = pwd.getpwuid(os.getuid())
-        user = uinfo.pw_name
-        #group by default DATAOPS
-        group = 'DATAOPS'
+    if options.file:
+        wfs = [l.strip() for l in open(options.file) if l.strip()]
+        if len(args) == 2:
+            user = args[0]
+            group = args[1]
     else:
-        parser.error("Provide the workflow name and/or user name and group.")
-        sys.exit(1)
-        
-    workflow = args[0]
+        if len(args) == 3:
+            user = args[1]
+            group = args[2]
+        elif len(args) == 1:
+            #get os username by default
+            uinfo = pwd.getpwuid(os.getuid())
+            user = uinfo.pw_name
+            #group by default DATAOPS
+            group = 'DATAOPS'
+        else:
+            parser.error("Provide the workflow of a file of workflows")
+            sys.exit(1)
+        #name of workflow
+        wfs = [args[0]]
     
-    cloneWorkflow(workflow, user, group, options.verbose, options.backfill)
+    for wf in wfs:
+        cloneWorkflow(wf, user, group, options.verbose, options.backfill)
     
     sys.exit(0)
 
