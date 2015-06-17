@@ -27,10 +27,10 @@ logging.basicConfig(format = FORMAT, datefmt = DATEFMT, level=logging.DEBUG)
 
 
 def sendEmail( subject, text, sender, destination ):
-    print subject
-    print text
-    print sender
-    print destination
+    #print subject
+    #print text
+    #print sender
+    #print destination
     
     msg = MIMEMultipart()
     msg['From'] = sender
@@ -118,12 +118,12 @@ def listSubscriptions(url, dataset, within_sites=None):
     result = json.loads(r2.read())
     items=result['phedex']['request']
     destinations ={}
-    deletes = {}
+    deletes = defaultdict(int)
     for item in items:
         for node in item['node']:
             site = node['name']
             if item['type'] == 'delete' and node['decision'] in [ 'approved','pending']:
-                deletes[ site ] = node['time_decided']
+                deletes[ site ] = max(deletes[ site ], node['time_decided'])
 
     for item in items:
         for node in item['node']:
@@ -135,6 +135,7 @@ def listSubscriptions(url, dataset, within_sites=None):
                 ## pending delete
                 if site in deletes and not deletes[site]: continue
                 ## delete after transfer
+                #print  node['time_decided'],site
                 if site in deletes and deletes[site] > node['time_decided']: continue
 
                 destinations[site]=(item['id'], node['decision']=='approved')
