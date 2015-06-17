@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput, workflowInfo, getDatasetBlocksFraction
+from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput, workflowInfo, getDatasetBlocksFraction, findLostBlocks
 from utils import unifiedConfiguration, componentInfo, sendEmail, getSiteWhiteList
 from utils import siteInfo, campaignInfo
+import json
 import sys
 import itertools
 import pprint
@@ -176,6 +177,12 @@ def stagor(url,specific =None, options=None):
                     session.commit()
         else:
             print dsname
+            lost = findLostBlocks(url, dsname)
+            if lost:
+                lost_names = [item['name'] for item in lost]
+                print "We have lost",len(lost),"blocks",lost_names
+                #print json.dumps( lost , indent=2 )
+                sendEmail('we have lost a few blocks', len(lost)+" in total.\nDetails \n:"+json.dumps( lost , indent=2 ), 'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
             print "\t",done_by_input[dsname]
             print "\tneeds",need_sites
             print "\tgot",got

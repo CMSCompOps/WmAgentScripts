@@ -596,6 +596,25 @@ def checkTransferApproval(url, phedexid):
             approved[node['name']] = (node['decision']=='approved')
     return approved
 
+def findLostBlocks(url, dataset):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+
+    r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?block=%s%%23*&collapse=n'% dataset)
+    r2=conn.getresponse()
+    result = json.loads(r2.read())
+    lost = []
+    for dataset in result['phedex']['dataset']:
+        for item in dataset['block']:
+            exist=0
+            for loc in item['subscription']:
+                exist = max(exist, loc['percent_bytes'])
+            if not exist:
+                #print "We have lost:",item['name']
+                #print json.dumps( item, indent=2)
+                lost.append( item )
+    return lost
+
+
 def checkTransferStatus(url, xfer_id, nocollapse=False):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     #r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?request=%s'%(str(xfer_id)))
@@ -772,6 +791,10 @@ def getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=None
                 #if group!=None and replica['group']==None: continue
                 if group!=None and not replica['group'].lower()==group.lower(): continue 
                 locations[replica['node']].add( item['name'] )
+                if item['name'] not in all_block_names:
+                    print item['name'],'not yet injected in dbs, counting anyways'
+                    all_block_names.add( item['name'] )
+                    full_size += item['bytes']
 
     presence={}
     for (site,blocks) in locations.items():
