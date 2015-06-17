@@ -37,7 +37,7 @@ def sendEmail( subject, text, sender, destination ):
     msg['To'] = COMMASPACE.join( destination )
     msg['Date'] = formatdate(localtime=True)
     new_msg_ID = make_msgid()  
-    msg['Subject'] = subject
+    msg['Subject'] = '[Ops] '+subject
     msg.attach(MIMEText(text))
     smtpObj = smtplib.SMTP()
     smtpObj.connect()
@@ -321,7 +321,7 @@ class componentInfo:
                 sys.exit(128)
 
     def tell(self, c):
-        sendEmail("[Ops] %s Component Down"%c,"The component is down, just annoying you with this","vlimant@cern.ch",['vlimant@cern.ch','matteoc@fnal.gov'])
+        sendEmail("%s Component Down"%c,"The component is down, just annoying you with this","vlimant@cern.ch",['vlimant@cern.ch','matteoc@fnal.gov'])
 
 class campaignInfo:
     def __init__(self):
