@@ -395,7 +395,7 @@ def checkor(url, spec=None, options=None):
             ## toggle status to closed-out in request manager
             print "setting",wfo.name,"closed-out"
             if not options.test:
-                reqMgrClient.closeOutWorkflowCascade(url, wfo.name)
+                print reqMgrClient.closeOutWorkflowCascade(url, wfo.name)
                 # set it from away/assistance* to close
                 wfo.status = 'close'
                 session.commit()
@@ -416,7 +416,7 @@ def checkor(url, spec=None, options=None):
                 for case in messages:
                     if case in new_status:
                         text+= "\n"+messages[case]+"\n"
-                text += "You are invited to check, while this is being taken care of.\n"
+                text += "You are invited to check, while this is being taken care of by Ops.\n"
                 text += "This is an automated message."
                 print "Sending notification back to requestor"
                 print text
