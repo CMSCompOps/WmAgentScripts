@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkLoad, getDatasetPresence, makeDeleteRequest, getDatasetSize, siteInfo, findCustodialLocation, getWorkflowByInput, campaignInfo
+from utils import getWorkLoad, getDatasetPresence, makeDeleteRequest, getDatasetSize, siteInfo, findCustodialLocation, getWorkflowByInput, campaignInfo, approveSubscription
 from utils import lockInfo
 import json
 import time
@@ -23,8 +23,11 @@ def cleanor(url, specific=None):
         if 'Campaign' in wl and wl['Campaign'] in CI.campaigns and 'clean-in' in CI.campaigns[wl['Campaign']] and CI.campaigns[wl['Campaign']]['clean-in']==False:
             print "Skipping cleaning on input for campaign",wl['Campaign'], "as per campaign configuration"
             continue
-            
-        dataset = wl['InputDataset']
+
+        dataset= 'N/A'
+        if 'InputDataset' in wl:
+            dataset = wl['InputDataset']
+
         print dataset,"in input"
         #print json.dumps(wl, indent=2)
         announced_log = filter(lambda change : change["Status"] in ["closed-out","normal-archived","announced"],wl['RequestTransition'])
@@ -33,7 +36,6 @@ def cleanor(url, specific=None):
             continue
         now = time.mktime(time.gmtime()) / (60*60*24.)
         then = announced_log[-1]['UpdateTime'] / (60.*60.*24.)
-        total_size = getDatasetSize( dataset ) ## in Gb
         if (now-then) <2:
             print "workflow",wfo.name, "finished",now-then,"days ago. Too fresh to clean"
             continue
@@ -46,7 +48,14 @@ def cleanor(url, specific=None):
             wfo.status = 'clean'
             session.commit()
             continue
-        
+
+        if 'MinBias' in dataset:
+            print "Should not clean anything using",dataset,"setting status further"
+            wfo.status = 'clean'
+            session.commit()
+            continue
+
+        total_size = getDatasetSize( dataset ) ## in Gb        
         #if counts> 20:            break
         counts+=1
         ## find any location it is at
