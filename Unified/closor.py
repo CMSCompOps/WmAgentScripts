@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import getWorkLoad
-from utils import componentInfo
+from utils import componentInfo, sendEmail 
 import reqMgrClient
 import setDatasetStatusDBS3
 import json
@@ -29,7 +29,7 @@ def closor(url, specific=None):
             ## manually announced ??
             wfo.status = 'done'
             wfo.wm_status = wl['RequestStatus']
-            print wfo.name,"is done already",wfo.wm_status
+            print wfo.name,"is announced already",wfo.wm_status
 
         session.commit()
 
@@ -78,7 +78,6 @@ def closor(url, specific=None):
 
             results=[]#'dummy']
             if not results:
-                results.append(reqMgrClient.announceWorkflowCascade(url, wfo.name))
                 for (io,out) in enumerate(outputs):
                     if all_OK[io]:
                         results.append(setDatasetStatusDBS3.setStatusDBS3('https://cmsweb.cern.ch/dbs/prod/global/DBSWriter', out, 'VALID' ,''))
@@ -102,11 +101,16 @@ def closor(url, specific=None):
                                 status = subprocess.call(['python','assignDatasetToSite.py','--dataset='+out,'--exec'])
                                 if status!=0:
                                     results.append("Failed DDM for %s"% out)
+                                    sendEmail("failed DDM injection","could not add "+out+" to DDM pool. check closor logs.",'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
 
                     else:
                         print wfo.name,"no stats for announcing",out
                         results.append('No Stats')
-            
+
+                if all(map(lambda result : result in ['None',None],results)):
+                    ## only announce if all previous are fine
+                    results.append(reqMgrClient.announceWorkflowCascade(url, wfo.name))
+                                
             #print results
             if all(map(lambda result : result in ['None',None],results)):
                 wfo.status = 'done'
