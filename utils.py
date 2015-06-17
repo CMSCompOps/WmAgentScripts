@@ -162,7 +162,8 @@ class lockInfo:
                 'date' : time.asctime( time.gmtime(l.time) ),
                 'reason' : l.reason
                 }
-            
+        now = time.mktime(time.gmtime())
+        jdump['lastupdate'] = now
         open('/afs/cern.ch/user/c/cmst2/www/unified/datalocks.json','w').write( json.dumps( jdump , indent=2))
 
     def _lock(self, item, site, reason):
