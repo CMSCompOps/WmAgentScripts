@@ -276,8 +276,8 @@ def checkor(url, spec=None, options=None):
             pick_custodial = True
             if not custodial and 'InputDataset' in wfi.request:
                 ## this is terribly dangerous to assume only 
-                ###parents_custodial = phedexClient.getCustodialSubscriptionRequestSite( wfi.request['InputDataset'])
-                parents_custodial = findCustodialLocation(url, wfi.request['InputDataset'])
+                parents_custodial = phedexClient.getCustodialSubscriptionRequestSite( wfi.request['InputDataset'])
+                ###parents_custodial = findCustodialLocation(url, wfi.request['InputDataset'])
                 if len(parents_custodial):
                     custodial = parents_custodial[0]
                 else:
