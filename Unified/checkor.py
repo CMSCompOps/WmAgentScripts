@@ -446,7 +446,7 @@ def checkor(url, spec=None, options=None):
     for site in custodials:
         print ','.join(custodials[site]),'=>',site
         if not options.test:
-            result = makeReplicaRequest(url, site, list(set(custodials[site])),"custodial copy at production close-out",custodial='y',priority='low')
+            result = makeReplicaRequest(url, site, list(set(custodials[site])),"custodial copy at production close-out",custodial='y',priority='low', approve = (site in SI.sites_auto_approve) )
             print result
 
     print "Transfers"

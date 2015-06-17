@@ -421,6 +421,8 @@ class siteInfo:
             print "There are missing sites in pledgeds"
             print list(set(self.all_sites) - set(self.cpu_pledges.keys()))
         
+        self.sites_auto_approve = ['T0_CH_CERN_MSS','T1_FR_CCIN2P3_MSS']
+
         ## and get SSB sync
         self.fetch_more_info(talk=False)
 
@@ -508,7 +510,7 @@ class siteInfo:
 
 
     def types(self):
-        return ['sites_with_goodIO','sites_T1s','sites_T2s','sites_veto_transfer']
+        return ['sites_with_goodIO','sites_T1s','sites_T2s','sites_veto_transfer','sites_auto_approve']
 
     def CE_to_SE(self, ce):
         if ce.startswith('T1') and not ce.endswith('_Disk'):
@@ -975,10 +977,11 @@ def makeDeleteRequest(url, site,datasets, comments, priority='low'):
     response = phedexPost(url, "/phedex/datasvc/json/prod/delete", params)
     return response
 
-def makeReplicaRequest(url, site,datasets, comments, priority='normal',custodial='n'): # priority used to be normal
+def makeReplicaRequest(url, site,datasets, comments, priority='normal',custodial='n',approve=False): # priority used to be normal
     dataXML = createXML(datasets)
+    r_only = "n" if approve else "y"
     params = { "node" : site,"data" : dataXML, "group": "DataOps", "priority": priority,
-                 "custodial":custodial,"request_only":"y" ,"move":"n","no_mail":"n","comments":comments}
+                 "custodial":custodial,"request_only":r_only ,"move":"n","no_mail":"n","comments":comments}
     response = phedexPost(url, "/phedex/datasvc/json/prod/subscribe", params)
     return response
 
