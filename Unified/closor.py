@@ -116,6 +116,7 @@ def closor(url, specific=None):
                 print "ERROR with ",wfo.name,"to be announced",json.dumps( results )
         else:
             print wfo.name,"not good for announcing:",wl['RequestStatus']
+                
 
 if __name__ == "__main__":
     url = 'cmsweb.cern.ch'

@@ -186,7 +186,9 @@ def transferor(url ,specific = None, talk=True, options=None):
         ## throtlle by campaign go
         if not CI.go( wfh.request['Campaign'] ):
             print "No go for",wfh.request['Campaign']
-            if not options.go: continue
+            if not options.go: 
+                sendEmail("no go for managing","No go for "+wfh.request['Campaign'],'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
+                continue
 
         ## check if the batch is announced
 
