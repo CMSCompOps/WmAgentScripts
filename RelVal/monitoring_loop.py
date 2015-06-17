@@ -28,9 +28,9 @@ dbname = "relval"
 
 while True:
 
-    os.system("if [ -f relval_monitor.txt ]; then rm relval_monitor.txt; fi")
+    os.system("if [ -f relval_monitor_most_recent_50_batches.txt ]; then rm relval_monitor_most_recent_50_batches.txt; fi")
     
-    sys.stdout = open('relval_monitor.txt','a')
+    sys.stdout = open('relval_monitor_most_recent_50_batches.txt','a')
 
     print "last update: " + str(datetime.datetime.now())
     print ""
@@ -46,10 +46,48 @@ while True:
 
     curs.execute("select * from batches order by batch_id")
     batches=curs.fetchall()
+    curs.execute("select * from batches_archive order by batch_id")
+    batches_archive=curs.fetchall()
     colnames = [desc[0] for desc in curs.description]
 
+    for batch in batches_archive:
+        if "max_batch_id" not in vars():
+            max_batch_id = batch[0]
+        if batch[0] > max_batch_id:
+            max_batch_id = batch[0]
+
     for batch in batches:
-        for name, value in zip(colnames, batch):
+        if "max_batch_id" not in vars():
+            max_batch_id = batch[0]
+        if batch[0] > max_batch_id:
+            max_batch_id = batch[0]
+
+    assert("max_batch_id" in vars() and max_batch_id > 50)        
+
+    for batch_id in range(max_batch_id - 50, max_batch_id+1):
+
+        batch_id = max_batch_id - 50 + (max_batch_id - batch_id)
+
+        curs.execute("select * from batches where batch_id = "+str(batch_id)+";")
+        batches_with_batch_id=curs.fetchall()
+        curs.execute("select * from batches_archive where batch_id = "+str(batch_id)+";")
+        batches_archive_with_batch_id=curs.fetchall()
+        curs.execute("select workflow_name from workflows_archive where batch_id = "+ str(batch_id)+";")
+        wfs_archive_with_batch_id=curs.fetchall()
+        curs.execute("select workflow_name from workflows where batch_id = "+ str(batch_id)+";")
+        wfs=curs.fetchall()
+
+
+        if len(batches_archive_with_batch_id) == 1 and len(batches_with_batch_id) == 0:
+            batches_with_batch_id=batches_archive_with_batch_id
+            wfs=wfs_archive_with_batch_id
+        elif len(batches_archive_with_batch_id) == 0 and len(batches_with_batch_id) == 0:
+            continue
+        elif not (len(batches_archive_with_batch_id) == 0 and len(batches_with_batch_id) == 1):
+            os.system('echo '+wf[0]+' | mail -s \"monitoring.py error 3\" andrew.m.levin@vanderbilt.edu --')
+            sys.exit(0)
+        
+        for name, value in zip(colnames, batches_with_batch_id[0]):
             if name == "useridday":
                 useridday=value
             elif name == "useridmonth":
@@ -65,9 +103,6 @@ while True:
                 continue
             else:
                 print '    '+name.rstrip(' ')+': '+str(value)
-        
-        curs.execute("select workflow_name from workflows where batch_id = "+ str(batch[0])+";")
-        wfs=curs.fetchall()
 
         n_workflows=0
         n_completed=0
@@ -108,9 +143,8 @@ while True:
         print ""
         print ""
         
-
     sys.stdout.flush()    
-    os.system("cp relval_monitor.txt /afs/cern.ch/user/r/relval/webpage/relval_monitor.txt")
+    os.system("cp relval_monitor_most_recent_50_batches.txt /afs/cern.ch/user/r/relval/webpage/relval_monitor_most_recent_50_batches.txt")
 
     sys.exit(0)
     time.sleep(60)
