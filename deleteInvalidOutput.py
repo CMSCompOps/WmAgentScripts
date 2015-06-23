@@ -14,50 +14,50 @@ from optparse import OptionParser
 url = 'cmsweb.cern.ch'
 url_tb =  'cmsweb-testbed.cern.ch'
 
-def makeDeletionRequests(url, allDatasets, verbose=False):
+def makeDeletionRequests(url, allDatasets, verbose=False, test=False):
     """
     make a single deletion request per bunch of datasets
     Filtering only the INVALID or DEPRECATED ones
     """
     
     size = 30
-    deletionRequests = []
+
     #delete duplicates
-    allDatasets = list(set(allDatasets))
-    while allDatasets:
-        datasets = allDatasets[:size]
-        allDatasets = allDatasets[size:]
-        
-        #get the sites
-        sites = set()
-        #add all sites for all datasets
-        dsToDelete = set()
-        for ds in datasets:
-            try:
-                t = dbs.getDatasetStatus(ds)
-                if verbose:
-                    print ds, 'is', t
-                #filter by status
-                if t == 'INVALID' or t == 'DEPRECATED':
-                    dsToDelete.add(ds)
-                sites2 = phd.getBlockReplicaSites(ds, onlycomplete=False)
-                for s in sites2:
-                    #ignore buffers
-                    if "Buffer" in s or "Export" in s:
-                        continue
-                    sites.add(s)
-                if verbose:
-                    print "available in", sites
-            except Exception as e:
-                print ds,e
-                
-        #create a single request
-        if dsToDelete and sites:
-            print "About to create a deletion request for"
-            print '\n'.join(dsToDelete)
-            print "To this sites:"
-            print '\n'.join(sites)
-            r = phd.makeDeletionRequest(url, list(sites), dsToDelete, "Invalid data, can be deleted")
+    datasets = list(set(allDatasets))
+    
+    #group datasets by sites
+    requests = {}
+    for ds in datasets:
+        try:
+            t = dbs.getDatasetStatus(ds)
+            if verbose:
+                print ds, 'is', t
+            #filter by status
+            if t != 'INVALID' and t != 'DEPRECATED':
+                continue
+            sites = phd.getBlockReplicaSites(ds, onlycomplete=False)
+            for s in sites:
+                #ignore buffers
+                if "Buffer" in s or "Export" in s:
+                    continue
+                if s not in requests:
+                    requests[s] = []
+                requests[s].append(ds)
+            if verbose:
+                print "available in", sites
+        except Exception as e:
+            print ds,e
+    
+
+    deletionRequests = []
+    #for each site
+    for s in sorted(requests.keys()):
+        datasets = requests[s]
+        print "site", s
+        print "datasets to delete"
+        print '\n'.join(datasets)
+        if not test:
+            r = phd.makeDeletionRequest(url, [s], datasets, "Invalid data, can be deleted")
             if ("phedex" in r and 
                     "request_created" in r["phedex"]):
                 reqid = r["phedex"]["request_created"][0]["id"]
@@ -75,6 +75,8 @@ def main():
                         help="Input file")
     parser.add_option("-v","--verbose",action="store_true", dest="verbose", default=False,
                         help="Show detailed info")
+    parser.add_option("--test",action="store_true", dest="test", default=False,
+                        help="Only test and console output (doesn't make the actual calls)")
     (options, args) = parser.parse_args()
 
     if len(args) != 1 and options.fileName is None:
@@ -97,7 +99,7 @@ def main():
             datasets += ds
         except:
             print wf, "skipped"
-    reqs = makeDeletionRequests(url, datasets, options.verbose)
+    reqs = makeDeletionRequests(url, datasets, options.verbose, options.test)
     print "Deletion request made:"
     print '\n'.join(reqs)
 

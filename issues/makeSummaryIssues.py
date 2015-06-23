@@ -60,10 +60,11 @@ running_status = ['acquired','running','running-open','running-closed']
 afs_base ='/afs/cern.ch/user/j/jbadillo/www/'
 reprocdir = afs_base+'reproc'
 mcdir = afs_base+'mc'
+tcdir = afs_base+'tc'
 
 #TODO calculate based on load
-stuck_days = 3
-old_days = 7
+stuck_days = 3.0
+old_days = 7.0
 
 
 def human(n):
@@ -159,9 +160,10 @@ def writehtml(issues,  oldest, s, now, datajsonmtime, wrjsonmtime, dbsjsonmtime,
     f.write('<h3>Oldest requests in the system</h3>')
     f.write('<pre>')
     if oldest:
-        days = max(oldest.keys())
-        for req in sorted(oldest[days]):
-            f.write('%s (%s days)\n' % (req, days))
+        days = sorted(oldest.keys(), reverse=True)[:3]
+        for d in days:
+            for req in sorted(oldest[d]):
+                f.write('%s (%s days)\n' % (req, d))
     f.write('</pre>')
 
     #print the highest prio ones
@@ -185,9 +187,10 @@ def writehtml(issues,  oldest, s, now, datajsonmtime, wrjsonmtime, dbsjsonmtime,
     #print the ones with no new events
     f.write('<h3>Datasets stuck (without new events)</h3>')
     f.write('<pre>')
-    for i in sorted(issues['dsstuck']):
-        req = irlist[i]
-        f.write('%s (%.2f days)\n' % (i, req['dayssame']))
+    #sort by days stuck
+    ls = [(r, irlist[r]['dayssame']) for r in issues['dsstuck']]
+    for r, d in sorted(ls, key=lambda x: -x[1]):
+        f.write('%s (%.2f days)\n' % (r, d))
     f.write('</pre>')
     
     #print the ones with no new events
@@ -262,7 +265,10 @@ def makeissuessummary(s, issues, oldest, urgent_requests, types):
         if r['type'] not in types:
             continue
         #TODO Ignore Dave's, Stefan's and Alan's tests
-        if 'dmason' in r['requestname'] or 'TEST' in r['requestname'] or 'piperov' in r['requestname']:
+        if ('dmason' in r['requestname'] or 
+            'TEST' in r['requestname'] or
+            'piperov' in r['requestname'] or 
+            'Backfill' in r['requestname']):
             continue
         s2.append(r)
     s = s2
@@ -294,7 +300,7 @@ def makeissuessummary(s, issues, oldest, urgent_requests, types):
         #if status == r['status'] and priority == r['priority']:
         mostlydone = True if r['outputdatasetinfo'] else False
         for ods in r['outputdatasetinfo']:
-            if len(r['custodialsites']) > 0:
+            if 'custodialsites' in r and r['custodialsites']:
                 custodialt1 = r['custodialsites'][0]
             etas = ''
             eta = 0
@@ -345,7 +351,10 @@ def makeissuessummary(s, issues, oldest, urgent_requests, types):
             if eperc > 20 and 'phreqinfo' in ods.keys() and ods['phreqinfo'] == {}:
                 issues['subscribe'].add(r['requestname'])
             #if it's pointing to the wrong LFN
-            #TODO LFN for data?
+
+           #TODO LFN for data?
+
+
             if (r['status'] in live_status and
                 (('HIN' in r['requestname'] and r['mergedLFNBase'] != '/store/himc' ) 
                 or (r['outputdatasetinfo'][0]['name'][-3:] == 'GEN' and r['mergedLFNBase'] != '/store/generator')
@@ -370,9 +379,6 @@ def makeissuessummary(s, issues, oldest, urgent_requests, types):
                 pass
                 #issues['cooloff'].add(r['requestname'])
                 #alarmlink='' % ()
-            elif r['status'] in running_status and eperc >0 and (time.time() - ods['lastmodts']) > stuck_days*24*3600:
-                issues['dsstuck'].add(r['requestname'])
-                #alarmlink='https://cmsweb.cern.ch/das/request?view=list&limit=10&instance=cms_dbs_prod_global&input=dataset+dataset=%s*+' % ods['name']
             #all datasets ready
             if eperc >=95 and not 'SMS' in r['outputdatasetinfo'][0]['name'] and 'CMSSM' not in r['outputdatasetinfo'][0]['name'] and r['status'] in ['acquired','running-open','running-closed']:
                 mostlydone &= True
@@ -386,11 +392,12 @@ def makeissuessummary(s, issues, oldest, urgent_requests, types):
             #get the oldest requests in the system
             if r['status'] in live_status and r['requestdays'] > old_days+int(r['expectedevents']/10000000):
                 issues['veryold'].add(r['requestname'])
-                if r['requestdays'] not in oldest.keys():
-                    oldest[r['requestdays']] = set()
-                oldest[r['requestdays']].add(r['requestname'])
+                daysold = int(r['requestdays'])
+                if daysold not in oldest.keys():
+                    oldest[daysold] = set()
+                oldest[daysold].add(r['requestname'])
                 #alarmlink = ''
-
+            
             if r['requestname'] in urgent_requests:
                 color = '#CCCCFF'
                 ##issues['urgent'].add(r['requestname'])
@@ -408,6 +415,8 @@ def makeissuessummary(s, issues, oldest, urgent_requests, types):
                 lastmodts = datetime.datetime.fromtimestamp(ods['lastmodts'])
                 delta = now - lastmodts
                 days.append(delta.days + delta.seconds/3600.0/24.0)
+                #alarmlink='https://cmsweb.cern.ch/das/request?view=list&limit=10&instance=cms_dbs_prod_global&input=dataset+dataset=%s*+' % ods['name']
+
             #acquired and unsubscribed input
             if r['status'] == 'acquired':
                 #get one site
@@ -430,6 +439,10 @@ def makeissuessummary(s, issues, oldest, urgent_requests, types):
         #get the min days without new events
         dayssame = min(days) if days else 0
         r['dayssame'] = dayssame
+        #check dataset stuck
+        if r['status'] in running_status and dayssame > stuck_days:
+            issues['dsstuck'].add(r['requestname'])
+
 
 def main():
 
@@ -480,6 +493,16 @@ def main():
     #write the output in html format
     writehtml(issuesRD, oldestRD, s, now, datajsonmtime, wrjsonmtime, dbsjsonmtime, pledgedjsonmtime, reprocdir, "ReDigi" )
 
+    #generate for TaskChains
+    #empty urgent requests
+    urgent_requestsTC = []
+    oldestTC = {}
+    issuesTC = {}
+    #process all the requests and obtain issues
+    makeissuessummary(s, issuesTC, oldestTC, urgent_requestsTC, ['TaskChain'])
+    #write the output in html format
+    writehtml(issuesTC, oldestTC, s, now, datajsonmtime, wrjsonmtime, dbsjsonmtime, pledgedjsonmtime, tcdir, "TaskChain" )
+    
 
 
     # manage acquired/running,completed,closed-out requests;purge them at every cycle
