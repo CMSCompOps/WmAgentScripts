@@ -18,7 +18,7 @@
 """
 import sys
 import dbs3Client as dbs
-
+import random
 def buildGraph(lines):
     """
     Builds an undirected graph interpretation of duplicates
@@ -72,7 +72,7 @@ def hasEdges(graph):
             return True
     return False
 
-def deleteMaxDegreeFirst(graph):
+def deleteMaxDegreeFirst(graph, events):
     """
     Removes duplication by deleting files in a greedy fashion.
     That is, removing the files with the highest degree (duplicates)
@@ -101,7 +101,35 @@ def deleteMaxDegreeFirst(graph):
     #print "End Files:",len(graph), "Invalidated:",len(graph)
     return files
 
-def colorBipartiteGraph(graph):
+def deleteSmallestVertexFirst(graph, events):
+    """
+    Removes duplication by deleting files in a greedy fashion.
+    That is, removing the files smallest files
+    first, and keep doing so until there is no edge on the graph (no lumi
+    in two different files)
+    """
+    files = []
+    print "Initial files:", len(graph)
+    #sort by number of events
+    ls = sorted(graph.keys(), key=lambda x: events[x])
+    #quadratic first
+    while hasEdges(graph):
+        #get smallest vertex
+        minv = ls.pop()  
+        #remove minv from all its adjacent vertices
+        for v in graph[minv]:
+            del graph[v][minv]
+        #remove maxv entry
+        del graph[minv]    
+        files.append(minv)
+    
+    #print "End Files:",len(graph), "Invalidated:",len(graph)
+    return files
+
+
+
+
+def colorBipartiteGraph(graph, events):
     """
     Removes duplication by identifying a bipartite graph and removing
     the smaller side
@@ -140,12 +168,25 @@ def colorBipartiteGraph(graph):
                 green.add(f1)
             elif f2green:
                 green.add(f1)
-    #TODO validate against the # of events of the files
-    if len(red) < len(green):
+    #validate against the # of events of the files
+    eventsRed = sum(events[f] for f in red)   
+    eventsGreen = sum(events[f] for f in green)   
+    if eventsRed < eventsGreen:
         return list(red)
     else:
         return list(green)
 
+def getFileEvents(dataset, files):
+    """
+    Builds a dict files-> num events
+    """
+    eventCount = {}
+    for f in files:
+        evs = dbs.getEventCountDataSetFileList(dataset, [f])
+        #evs = random.randrange(10000)
+        eventCount[f] = evs
+    return eventCount
+    
 def main():
     #dataset = sys.argv[1]
     lines = [l.strip() for l in open(sys.argv[1])]
@@ -155,12 +196,19 @@ def main():
             dataset = lines[i].replace('dataset : ','').strip()
             break
     print "'%s'"%dataset
-    #build graph and calculate
+    print "Building graph model"
     graph = buildGraph(lines)
+
+    print "Getting events per file"
+    events = getFileEvents(dataset, graph.keys())
     try:
-        files = colorBipartiteGraph(graph)
+        #first algorithm that assumes bipartition        
+        files = colorBipartiteGraph(graph, events)
     except Exception as e:
-        files = deleteMaxDegreeFirst(graph)
+        #second, algorithm
+        #files = deleteMaxDegreeFirst(graph, events)
+        files = deleteSmallestVertexFirst(graph, events)
+    
     total = dbs.getEventCountDataSet(dataset)
     invalid = dbs.getEventCountDataSetFileList(dataset, files)
 
