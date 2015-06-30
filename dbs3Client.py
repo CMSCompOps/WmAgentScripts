@@ -233,19 +233,28 @@ def getFileCountDataset(dataset, skipInvalid=False, onlyInvalid=False):
 
 
 
-def getEventCountDataSet(dataset):
+def getEventCountDataSet(dataset, skipInvalid=False):
     """
     Returns the number of events in a dataset using DBS3
-
+    If skipInvalid =True, it will count only valid files.
+    This is slower (specially on larger datasets)
     """
     # initialize API to DBS3
     dbsapi = DbsApi(url=dbs3_url)
-    # retrieve dataset summary
-    reply = dbsapi.listBlockSummaries(dataset=dataset)
-    if not reply:
-        return 0
-    return reply[0]['num_event']
-
+    # retrieve dataset summary - faster
+    if not skipInvalid:
+        reply = dbsapi.listBlockSummaries(dataset=dataset)
+        if not reply:
+            return 0
+        return reply[0]['num_event']
+    #discard invalid files (only count valid ones) - slower
+    else:
+        # retrieve file list
+        reply = dbsapi.listFiles(dataset=dataset, detail=True)
+        #sum only valid
+        total = sum(f['event_count'] for f in reply if f['is_file_valid']==1)
+        return total
+    
 
 def getLumiCountDataSet(dataset):
     """

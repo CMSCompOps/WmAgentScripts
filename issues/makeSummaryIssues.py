@@ -380,7 +380,11 @@ def makeissuessummary(s, issues, oldest, urgent_requests, types):
                 #issues['cooloff'].add(r['requestname'])
                 #alarmlink='' % ()
             #all datasets ready
-            if eperc >=95 and not 'SMS' in r['outputdatasetinfo'][0]['name'] and 'CMSSM' not in r['outputdatasetinfo'][0]['name'] and r['status'] in ['acquired','running-open','running-closed']:
+            if 'DQMIO' in ods['name']:
+                mostlydone &= True
+            elif(eperc >=95 and not 'SMS' in r['outputdatasetinfo'][0]['name'] 
+                    and 'CMSSM' not in r['outputdatasetinfo'][0]['name'] 
+                    and r['status'] in ['acquired','running-open','running-closed']):
                 mostlydone &= True
             else:
                 mostlydone = False
