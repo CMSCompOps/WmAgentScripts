@@ -21,7 +21,8 @@ mailingSender = 'noreply@cern.ch'
 mailingList = ['luis89@fnal.gov','dmason@fnal.gov']
 
 ## Job Collectors (Condor pools)
-global_pool = ['vocms097.cern.ch']
+#global_pool = ['vocms097.cern.ch']
+global_pool = ['vocms099.cern.ch']
 tier0_pool = ['vocms007.cern.ch']
 
 ## The following machines should be ignored (Crab Schedulers)
