@@ -109,6 +109,25 @@ def modifySchema(helper, user, group, backfill=False):
         result['LumisPerJob'] = lumisPerJob
         #Algorithm = lumi based?
         result["SplittingAlgo"] = "LumiBased"
+    elif result['RequestType'] == "TaskChain":
+        # Now changing the parameters according to HG1309
+        x = 1
+        #on every task
+        while x <= result['TaskChain']:
+            task = 'Task'+str(x)
+            for (key, value) in result[task].iteritems():
+                if key == "SplittingAlgorithm":
+                    result[task]['SplittingAlgo'] = value
+                    del result[task]['SplittingAlgorithm']
+                elif key == "SplittingArguments":
+                    for (k2, v2) in result[task][key].iteritems():
+                        if k2 == "lumis_per_job":
+                            result[task]["LumisPerJob"] = v2
+                        elif k2 == "events_per_job":
+                            result[task]["EventsPerJob"] = v2
+                        del result[task]['SplittingArguments']
+            x += 1
+    
     #Merged LFN   
     if 'MergedLFNBase' not in result:
         result['MergedLFNBase'] = helper.getMergedLFNBase()
