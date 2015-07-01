@@ -21,6 +21,7 @@ dbname = "relval"
 
 import utils
 
+import assignment
 
 while True:
 
@@ -29,7 +30,9 @@ while True:
     curs = mysqlconn.cursor()
     
     curs.execute("use "+dbname+";")
-    
+
+    #curs.execute("lock tables batches write, batches_archive write, workflows write, workflows_archive write, datasets write, clone_reinsert_requests write")
+
     curs.execute("select * from batches")
     batches=curs.fetchall()
 
@@ -104,52 +107,13 @@ while True:
                                     os.system('echo '+wf[0]+" "+curs_fetchall[0][1]+" "+dset+' | mail -s \"assignment_loop.py error 2\" andrew.m.levin@vanderbilt.edu')
                                     sys.exit(1)
                                 elif len(dbs_dset_check) != 0:    
-                                    os.system('echo '+wf[0]+' | mail -s \"assignment_loop.py error 5\" andrew.m.levin@vanderbilt.edu')
+                                    os.system('echo '+wf[0]+' | mail -s \"assignment_loop.py error 7\" andrew.m.levin@vanderbilt.edu')
                                     sys.exit(1)
                                 else:
                                     curs.execute("insert into datasets set dset_name=\""+dset.rstrip("*")+"\", workflow_name=\""+wf[0]+"\", batch_id="+str(batchid)+";")
 
 
-                print wf[0]
-
-                procstring = {}
-
-                acqera = schema['CMSSWVersion']
-
-                for key, value in schema.items():
-                    if type(value) is dict and key.startswith("Task"):
-                        if 'ProcessingString' in value:
-                            procstring[value['TaskName']] = value['ProcessingString'].replace("-","_")
-                        if 'AcquisitionEra' in value:
-                            if '-' in value['AcquisitionEra']:
-                                os.system('echo '+wf[0]+' | mail -s \"assignment_loop.py error 3\" andrew.m.levin@vanderbilt.edu')
-                                sys.exit(1)
-
-                #workflows get stuck in acquired when they are assigned only to T2_CH_CERN_T0 now                
-                if site == "T2_CH_CERN_T0":
-                    site = ["T2_CH_CERN","T2_CH_CERN_T0"]
-            
-
-                params = {
-#                'SiteWhitelist' : ["T2_CH_CERN","T2_CH_CERN_T0"],
-                'SiteWhitelist' : site,
-                'SiteBlacklist' : [],
-                'MergedLFNBase' : '/store/relval',
-                'useSiteListAsLocation' : True,
-                'CustodialSites' : [], 
-                'ProcessingVersion' : int(processing_version),
-                'ProcessingString' : procstring,
-                'Dashboard': 'relval',
-                'dashboard': 'relval',
-                'AcquisitionEra': acqera,
-                'BlockCloseMaxWaitTime' : 28800,
-                "SoftTimeout" : 129600,
-                "MaxRSS" : 3072000,
-                "MaxVSize": 4394967000,
-                "maxVSize": 4394967000
-                }
-
-                params['execute'] = True
+                params = assignment.make_assignment_params(schema,site,processing_version)                    
 
                 result=reqMgrClient.assignWorkflow("cmsweb.cern.ch", wf[0], "relval", params)
 
@@ -168,8 +132,8 @@ while True:
 
                 msg = MIMEMultipart()
                 reply_to = []
-                #send_to = ["andrew.m.levin@vanderbilt.edu"]
-                send_to = ["hn-cms-dataopsrequests@cern.ch","andrew.m.levin@vanderbilt.edu"]
+                send_to = ["andrew.m.levin@vanderbilt.edu"]
+                #send_to = ["hn-cms-dataopsrequests@cern.ch","andrew.m.levin@vanderbilt.edu"]
                 #send_to = ["hn-cms-hnTest@cern.ch"]
 
                 msg['In-Reply-To'] = hn_message_id
@@ -198,5 +162,7 @@ while True:
                 except Exception as e:
                     print "Error: unable to send email: %s" %(str(e))
 
+
+    #curs.execute("unlock tables")
 
     time.sleep(100)

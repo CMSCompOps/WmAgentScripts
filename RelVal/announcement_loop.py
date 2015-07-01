@@ -26,20 +26,9 @@ import makeStatisticsTable
 
 import setDatasetStatusDBS3
 
-parser = optparse.OptionParser()
-parser.add_option('--sent_to_hn',action="store_true",dest='send_to_hn')
-(options,args) = parser.parse_args()
-
-command=""
-for arg in sys.argv:
-    command=command+arg+" "
-
 url='cmsweb.cern.ch'
 
 dbname = "relval"
-
-#workflow = line.rstrip('\n')
-#curs.execute("insert into workflows set hn_req=\""+hnrequest+"\", workflow_name=\""+workflow+"\";")
 
 while True:
 
@@ -48,6 +37,8 @@ while True:
     curs = mysqlconn.cursor()
 
     curs.execute("use "+dbname+";")
+
+    #curs.execute("lock tables batches write, batches_archive write, workflows write, workflows_archive write, datasets write, clone_reinsert_requests write")
 
     curs.execute("select * from batches")
     batches=curs.fetchall()
@@ -123,12 +114,6 @@ while True:
 
         print batchid
 
-        fname="brm/"+str(batchid)+".txt"
-        print fname
-
-        #remove the file if it already exists
-        os.system("if [ -f "+fname+" ]; then rm "+fname+"; fi")
-
         print "putting workflows into a file"
 
         wf_list = []
@@ -137,8 +122,6 @@ while True:
             print wf[0]
 
             wf_list.append(wf[0])
-
-            #os.system("echo "+wf[0]+" >> "+fname)
 
         print "finished putting workflows into a file"     
 
@@ -151,7 +134,7 @@ while True:
         dsets_tmp_fnal_disk=os.popen("mktemp").read().rstrip('\n')
         dsets_tmp_cern_alcareco=os.popen("mktemp").read().rstrip('\n')
 
-        closeOutTaskChain.close_out_wf_list(wf_list)
+        #closeOutTaskChain.close_out_wf_list(wf_list)
 
         dset_nevents_list=getRelValDsetNames.getDsetNamesAndNevents(wf_list)
 
@@ -162,7 +145,6 @@ while True:
         if ret != 0:
             os.system('echo \"'+userid+'\" | mail -s \"announcement_loop.py error 2\" andrew.m.levin@vanderbilt.edu')
 
-
         dsets_list = []    
         dsets_fnal_disk_list = []
         dsets_cern_disk_list = []
@@ -170,11 +152,11 @@ while True:
         for dset_nevents in dset_nevents_list:
             dsets_list.append(dset_nevents[0])
             
-
         for dset in dsets_list:
 
             #print dset.split('/')
 
+            # we were asked to transfer some specific datasets to the cern tier 2
             if dset.split('/')[3] != "RECO" and dset.split('/')[3] != "ALCARECO":
                 dsets_cern_disk_list.append(dset)
 
@@ -214,13 +196,7 @@ while True:
             reqMgrClient.closeOutWorkflow("cmsweb.cern.ch",wf)
             reqMgrClient.announceWorkflow("cmsweb.cern.ch",wf)
 
-
-        #remove the announcement e-mail file if it already exists
-        os.system("if [ -f brm/announcement_email.txt ]; then rm brm/announcement_email.txt; fi")
-
-        os.system("if [ -f brm/failure_information.txt ]; then rm brm/failure_information.txt; fi")
-
-        [istherefailureinformation,return_string]=jobFailureInformation.getFailureInformation(wf_list,"brm/failure_information.txt")
+        [istherefailureinformation,return_string]=jobFailureInformation.getFailureInformation(wf_list)
 
         msg = MIMEMultipart()
         reply_to = []
@@ -292,8 +268,9 @@ while True:
         curs.execute("delete from batches where batch_id = \""+ str(batchid)+"\";")
         curs.execute("delete from datasets where batch_id = \""+str(batchid)+"\";")
 
-
         mysqlconn.commit()
+
+    #curs.execute("unlock tables")
 
     time.sleep(100)
     

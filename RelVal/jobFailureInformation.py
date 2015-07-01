@@ -53,13 +53,8 @@ error_strings.append("FileOpenError")
 
 url='cmsweb.cern.ch'
 
-def getFailureInformation(wf_list,outputfilename="",verbose=False,debug=False):
+def getFailureInformation(wf_list,verbose=False,debug=False):
 
-    if outputfilename!="":
-        of = open(outputfilename,'w')
-
-    #inf = open(inputfilename, 'r')
-    
     wf_dicts = []
     
     #loop over workflows
@@ -212,8 +207,9 @@ def getFailureInformation(wf_list,outputfilename="",verbose=False,debug=False):
             elif len(s4['rows'][1]['doc']['tasks'][taskname]['status']) == 2:
                 if 'transition' in s4['rows'][1]['doc']['tasks'][taskname]['status'] and 'success' in s4['rows'][1]['doc']['tasks'][taskname]['status']:
                     totaljobs=s4['rows'][1]['doc']['tasks'][taskname]['status']['success']
-
-                elif 'success' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'failure' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'exception' not in s4['rows'][1]['doc']['tasks'][taskname]['status']['failure'] or len(s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']) != 1:
+                elif 'submitted' in s4['rows'][1]['doc']['tasks'][taskname]['status'] and 'success' in s4['rows'][1]['doc']['tasks'][taskname]['status']:
+                    totaljobs=s4['rows'][1]['doc']['tasks'][taskname]['status']['success']
+                elif ('success' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'failure' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'exception' not in s4['rows'][1]['doc']['tasks'][taskname]['status']['failure'] or len(s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']) != 1):
                     os.system('echo '+workflow+' | mail -s \"jobFailureInformation error 1\" andrew.m.levin@vanderbilt.edu')
                     print "problem with job status information 1"
                     sys.exit(0)
@@ -231,7 +227,8 @@ def getFailureInformation(wf_list,outputfilename="",verbose=False,debug=False):
                     sys.exit(0)
             #ignore the transition status        
             elif len(s4['rows'][1]['doc']['tasks'][taskname]['status']) == 3:
-                if 'transition' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'success' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'failure' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'exception' not in s4['rows'][1]['doc']['tasks'][taskname]['status']['failure'] or len(s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']) != 1:
+                #due to replication issues there can still be some submitted jobs in wmstats even after the workflow moves to completed
+                if ('transition' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'success' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'failure' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'exception' not in s4['rows'][1]['doc']['tasks'][taskname]['status']['failure'] or len(s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']) != 1) and ('submitted' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'success' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'failure' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'exception' not in s4['rows'][1]['doc']['tasks'][taskname]['status']['failure'] or len(s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']) != 1): 
                     print "problem with job status information 4"
                     os.system('echo '+workflow+' | mail -s \"jobFailureInformation error 4\" andrew.m.levin@vanderbilt.edu')
                     sys.exit(0)

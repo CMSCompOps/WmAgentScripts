@@ -683,6 +683,11 @@ def assignWorkflow(url, workflowname, team, parameters ):
     defaults["Team"+team] = "checked"
     defaults["checkbox"+workflowname] = "checked"
 
+    wf = workflowInfo(url, workflowname)
+
+    # set the maxrss watchdog to what is specified in the request
+    defaults['MaxRSS'] = wf.request['Memory']*1024+10
+
     defaults.update( parameters )
 
     if not set(assignWorkflow.mandatories).issubset( set(parameters.keys())):
@@ -696,7 +701,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
     else:
         defaults.pop('execute')
 
-    wf = workflowInfo(url, workflowname)
+
     if wf.request['RequestType'] == 'ReDigi':
         defaults['Dashboard'] = 'reprocessing'
         defaults['dashboard'] = 'reprocessing'
@@ -709,8 +714,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
             print "Cannot assign with no site whitelist"
             return False
 
-    # set the maxrss watchdog to what is specified in the request
-    defaults['MaxRSS'] = wf.request['Memory']*1024+10
+
 
     for aux in assignWorkflow.auxiliaries:
         if aux in defaults: 
@@ -799,6 +803,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
                 print 'Status:',response.status,'Reason:',response.reason
                 print 'Explanation:'
                 data = response.read()
+                print data
                 return False
 
     print 'Assigned workflow:',workflowname,'to site:',defaults['SiteWhitelist'],'and team',team
