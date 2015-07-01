@@ -18,7 +18,7 @@ except ImportError:
 
 # Mailing list for notifications
 mailingSender = 'noreply@cern.ch'
-mailingList = ['luis89@fnal.gov','dmason@fnal.gov']
+mailingList = ['luis89@fnal.gov','dmason@fnal.gov','alan.malta@cern.ch']
 
 ## Job Collectors (Condor pools)
 #global_pool = ['vocms097.cern.ch']
@@ -30,7 +30,7 @@ crab_scheds = ['vocms83.cern.ch','stefanovm.cern.ch']
 
 ##The following groups should be updated according to https://twiki.cern.ch/twiki/bin/view/CMSPublic/CompOpsWorkflowTeamWmAgentRealeases
 relvalAgents = ['vocms053.cern.ch']
-testAgents = ['cmssrv95.fnal.gov', 'cmssrv113.fnal.gov', 'vocms040.cern.ch', 'vocms0224.cern.ch', 'vocms0230.cern.ch']
+testAgents = ['cmssrv113.fnal.gov', 'vocms040.cern.ch', 'vocms009.cern.ch', 'vocms0224.cern.ch', 'vocms0230.cern.ch']
 
 ##Job expected types
 jobTypes = ['Processing', 'Production', 'Skim', 'Harvest', 'Merge', 'LogCollect', 'Cleanup', 'RelVal', 'Express', 'Repack', 'Reco']
