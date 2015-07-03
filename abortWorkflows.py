@@ -6,6 +6,7 @@ This can be used when input workflows are in status: acquired or running open/cl
 """
 
 import urllib2,urllib, httplib, sys, re, os
+from optparse import OptionParser
 try:
     import json
 except:
