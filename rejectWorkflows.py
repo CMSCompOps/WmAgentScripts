@@ -6,6 +6,7 @@ This can be used when input workflows are in status: assigened or assignment-app
 """
 
 import urllib2,urllib, httplib, sys, re, os
+from optparse import OptionParser
 try:
     import json
 except:
@@ -13,22 +14,26 @@ except:
 import reqMgrClient
 
 def main():
-    """
-    Read the text file, for each workflow try:
-    First reject it, then clone it.
-    """
-    args=sys.argv[1:]
-    if not len(args)==1:
-        print "usage:rejectWorkflows file.txt"
-        sys.exit(0)
     url='cmsweb.cern.ch'
-    filename=args[0]
-    workflows = [wf.strip() for wf in open(filename).readlines() if wf.strip()]
-    for workflow in workflows:
-        print "Rejecting workflow: " + workflow
-        reqMgrClient.rejectWorkflow(url, workflow)
+    
+    #Create option parser
+    usage = "\n       python %prog [-f FILE_NAME | WORKFLOW_NAME ...]\n"
+    parser = OptionParser(usage=usage)
+    parser.add_option('-f', '--file', help='Text file with a list of workflows', dest='file')
+    (options, args) = parser.parse_args()
+    
+    if options.file:
+        wfs = [l.strip() for l in open(options.file) if l.strip()]
+    elif args:
+        wfs = args
+    else:
+        parser.error("Provide the workflow of a file of workflows")
+        sys.exit(1)
+    
+    for wf in wfs:
+        print "Rejecting workflow: " + wf
+        reqMgrClient.rejectWorkflow(url, wf)
         print "Rejected"
-    sys.exit(0);
-
+        
 if __name__ == "__main__":
     main()
