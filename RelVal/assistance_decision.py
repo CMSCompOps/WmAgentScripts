@@ -1,4 +1,9 @@
-
+#!/usr/bin/env python
+import optparse
+import json
+import urllib2,urllib, httplib, sys, re, os
+from xml.dom.minidom import getDOMImplementation
+import time
 
 assistance_exit_codes = ['8021','8028',61304]
 
