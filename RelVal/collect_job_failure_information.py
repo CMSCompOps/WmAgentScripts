@@ -3,8 +3,6 @@ import optparse
 import json
 import urllib2,urllib, httplib, sys, re, os
 from xml.dom.minidom import getDOMImplementation
-sys.path.append("..")
-import dbsTest
 import time
 
 
@@ -34,23 +32,6 @@ def provide_log_files(exitcode):
     else:
         return True
 
-error_strings=[]
-
-error_strings.append("RSS")
-error_strings.append("StageOutFailure")
-error_strings.append("Job has been running for more than")
-error_strings.append("Job killed due to timeout")
-error_strings.append("Return code: 134")
-error_strings.append("FileReadError")
-error_strings.append("Return code: 40")
-error_strings.append("Return code: 137")
-error_strings.append("No space left on device")
-error_strings.append("SYSTEM_PERIODIC_REMOVE")
-error_strings.append("FallbackFileOpenError")
-error_strings.append("Job has exceeded maxVSize")
-error_strings.append("The job has probably exhausted the virtual memory available to the process.")
-error_strings.append("FileOpenError")
-
 url='cmsweb.cern.ch'
 
 def getFailureInformation(wf_list,verbose=False,debug=False):
@@ -61,8 +42,6 @@ def getFailureInformation(wf_list,verbose=False,debug=False):
     for workflow in wf_list:
 
         #workflow = line.rstrip('\n')
-        if verbose or debug:
-            print "checking workflow " + workflow
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         r11=conn.request('GET','/couchdb/wmstats/_design/WMStats/_view/jobsByStatusWorkflow?startkey=["'+workflow+'"]&endkey=["'+workflow+'",{}]&stale=ok&reduce=true&group_level=2')
         r12=conn.getresponse()
@@ -74,8 +53,6 @@ def getFailureInformation(wf_list,verbose=False,debug=False):
             failures={}
             task_dicts = []
             taskname=s['rows'][i]['key'][1]
-            if debug:
-                print "    checking task " + taskname
     
             conn2  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
             r21=conn2.request('GET','/couchdb/wmstats/_design/WMStats/_view/jobsByStatusWorkflow?startkey=["'+workflow+'","'+taskname+'","jobfailed"]&endkey=["'+workflow+'%22,%22'+taskname+'","jobfailed",{}]&stale=ok&include_docs=true&reduce=false')
@@ -85,18 +62,11 @@ def getFailureInformation(wf_list,verbose=False,debug=False):
 
             nfailures={}
 
-            for error_string in error_strings:
-                nfailures[error_string]=0
-
             nfailurestot = 0
 
             #loop over failed jobs
             for j in range(0,len(s2['rows'])):
                 nfailurestot = nfailurestot+1
-                if debug:
-                    print "        job "+str(j)+":"
-                #make sure that we count each job once    
-                found_error_string=False     
 
                 found_job_killed_error=False
 
@@ -152,22 +122,6 @@ def getFailureInformation(wf_list,verbose=False,debug=False):
                                     failures[k['exitCode']]={'number' : 1, 'logarchivefiles' : [[mergedfilename,unmergedfilename]], 'details': k['details']}
                                 found_cmssw_step_failures=True
 
-                #sys.exit(0)
-                for k in s2['rows'][j]['doc']['errors']:
-                    if found_error_string == True:
-                        continue
-                    if debug:
-                        print "            "+k+" errors: "+str(len(s2['rows'][j]['doc']['errors'][k]))
-                    if len(s2['rows'][j]['doc']['errors'][k]) > 0:
-                        for index in range(0, len(s2['rows'][j]['doc']['errors'][k])):
-                            if found_error_string == True:
-                                continue
-                            for error_string in error_strings:
-                                if error_string in s2['rows'][j]['doc']['errors'][k][index]['details']:
-                                    nfailures[error_string]=nfailures[error_string]+1
-                                    found_error_string=True
-                                    break
-
             conn3  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))   
         #r31=conn3.request('GET','/couchdb/wmstats/_design/WMStats/_view/latestRequest?reduce=true&group=true&keys=[["'+workflow+'","cmssrv113.fnal.gov:9999"],["'+workflow+'","vocms142.cern.ch:9999"]]&stale=ok')
             r31=conn3.request('GET','/couchdb/wmstats/_design/WMStats/_view/latestRequest?reduce=true&group=true&keys=[["'+workflow+'","cmsgwms-submit1.fnal.gov:9999"],["'+workflow+'","vocms053.cern.ch:9999"]]&stale=ok')
@@ -177,8 +131,6 @@ def getFailureInformation(wf_list,verbose=False,debug=False):
             s3 = json.loads(data3)
 
             if len(s3['rows']) == 0:
-                if verbose or debug:
-                    print "length of rows vector is 0  "
                 continue
         
             wf_id=s3['rows'][0]['value']['id']
@@ -193,16 +145,10 @@ def getFailureInformation(wf_list,verbose=False,debug=False):
 
             if s4['rows'][1]['doc']==None:
                 #print s4['rows'][1]
-                if verbose or debug:
-                    print "s4['rows'][1]['doc'] equals None, setting total jobs to 999999999999"
                 totaljobs=9999999999
             elif taskname not in s4['rows'][1]['doc']['tasks']:
-                if verbose or debug:
-                    print "task "+taskname+" not found, setting total jobs to 999999999999"
                 totaljobs=9999999999
             elif 'status' not in s4['rows'][1]['doc']['tasks'][taskname]:
-                if verbose or debug:
-                    print "missing the number of failed and successful jobs in task, setting total jobs to 999999999999"
                 totaljobs=9999999999    
             elif len(s4['rows'][1]['doc']['tasks'][taskname]['status']) == 2:
                 if 'transition' in s4['rows'][1]['doc']['tasks'][taskname]['status'] and 'success' in s4['rows'][1]['doc']['tasks'][taskname]['status']:
@@ -223,7 +169,6 @@ def getFailureInformation(wf_list,verbose=False,debug=False):
                 else:     
                     print "problem with job status information 2"
                     os.system('echo '+workflow+' | mail -s \"jobFailureInformation error 2\" andrew.m.levin@vanderbilt.edu')
-                    print s4['rows'][1]['doc']['tasks'][taskname]['status']
                     sys.exit(0)
             #ignore the transition status        
             elif len(s4['rows'][1]['doc']['tasks'][taskname]['status']) == 3:
@@ -239,32 +184,9 @@ def getFailureInformation(wf_list,verbose=False,debug=False):
                 os.system('echo '+workflow+' | mail -s \"jobFailureInformation error 3\" andrew.m.levin@vanderbilt.edu')
                 sys.exit(0)
                 
-            if nfailurestot > 0 and debug:
-                print "        total jobs: "+str(totaljobs) 
-                print "        total failures: "+str(nfailurestot)
-
-
-                for error_string in error_strings:
-                    if nfailures[error_string] > 0:
-                        print "        failures due to "+error_string+": "+str(nfailures[error_string])
-
-
-                sum=0        
-                for error_string in error_strings:
-                    sum+=nfailures[error_string]
-
-                if nfailurestot != sum:
-                    print "        missing some failures"
-
             task_dicts.append({'task_name':taskname.split('/')[len(taskname.split('/'))-1], 'failures': failures, 'nfailures': nfailures,'nfailurestot':nfailurestot,'totaljobs':totaljobs})    
 
             wf_dicts.append({'wf_name':workflow,'task_dict':task_dicts})                      
-        #print "         PerformanceError errors: "+ str(len(s2['rows'][j]['doc']['errors']['PerformanceError']))    
-        #print "         stageOut1 errors: "+ str(len(s2['rows'][j]['doc']['errors']['stageOut1']))
-        #print "         cmsRun1 errors: "  + str(len(s2['rows'][j]['doc']['errors']['cmsRun1']))
-        #print "         logArch1 errors: " + str(len(s2['rows'][j]['doc']['errors']['logArch1']))
-
-        #print s2['rows'][j]['doc']['errors']['stageOut1'][0]['details']
 
     istherefailureinformation=False        
 
