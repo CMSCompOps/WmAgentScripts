@@ -33,3 +33,67 @@ def provide_log_files(exitcode):
         return True
 
 url='cmsweb.cern.ch'
+
+    mergedexitcodes=[]
+
+    for wf in wf_dicts:
+        for task in wf['task_dict']:
+            for key in task['failures'].keys():
+                if key not in mergedexitcodes:
+                    mergedexitcodes.append(key)
+
+    return_string=""
+
+    firsttime_all=True
+    for exitcode in mergedexitcodes:
+        example_log_files=None
+        firsttime_wf=True
+        for wf in wf_dicts:
+            firsttime=True
+            for task in wf['task_dict']:
+                if exitcode not in task['failures']:
+                    continue
+                
+                if firsttime_wf and 'CleanupUnmerged' not in task['task_name'] and 'LogCollect' not in task['task_name']:
+                    istherefailureinformation=True
+                    if firsttime_all and (verbose or debug):
+                        return_string=return_string+""
+                        firsttime_all=False
+                    return_string=return_string+"there were the following failures "+explain_failure(exitcode,task['failures'][exitcode])+ "\n"
+                    if example_log_files == None and len(task['failures'][exitcode]['logarchivefiles']) > 0:
+                        example_log_files=task['failures'][exitcode]['logarchivefiles'][0]
+                    firsttime_wf=False
+                if firsttime and 'CleanupUnmerged' not in task['task_name'] and 'LogCollect' not in task['task_name']:
+                    return_string=return_string+"    in the workflow "+wf['wf_name']+"\n"
+                    firsttime=False
+                if 'CleanupUnmerged' not in task['task_name'] and 'LogCollect' not in task['task_name']:    
+                    return_string=return_string+"        "+str(task['failures'][exitcode]['number'])+" out of "+str(task['totaljobs'])+" " +task['task_name']+" jobs\n"
+
+        if provide_log_files(exitcode) and not firsttime_wf and example_log_files != None and example_log_files[0] != None:            
+            return_string=return_string+"    here is an example:\n"
+
+            return_string=return_string+"        stager_get -M "+example_log_files[0]+ "; xrdcp -DIRequestTimeout 1000000000000000 root://castorcms/"+example_log_files[0]+" .; tar xpf "+example_log_files[0].split('/')[len(example_log_files[0].split('/'))-1]+" WMTaskSpace/logCollect1/"+example_log_files[1]+"; rm " +example_log_files[0].split('/')[len(example_log_files[0].split('/'))-1]+ ";\n"
+            return_string=return_string+"        eos cp "+example_log_files[0].replace('/castor/cern.ch/cms','/eos/cms')+" .; tar xpf "+example_log_files[0].split('/')[len(example_log_files[0].split('/'))-1]+ " WMTaskSpace/logCollect1/"+example_log_files[1]+"; rm " +example_log_files[0].split('/')[len(example_log_files[0].split('/'))-1]+ ";\n"
+
+    firsttime_wf=True
+    for wf in wf_dicts:
+        firsttime=True
+        for task in wf['task_dict']:
+            sum=0        
+            for exitcode in task['failures'].keys():
+                sum+=task['failures'][exitcode]['number']
+            if firsttime_wf and task['nfailurestot'] != sum and 'CleanupUnmerged' not in task['task_name'] and 'LogCollect' not in task['task_name']:
+                istherefailureinformation=True
+                if firsttime_all and (verbose or debug):
+                    print ""
+                    firsttime_all=False
+                return_string=return_string+"there were the following other failures\n"    
+                firsttime_wf=False
+            if firsttime and task['nfailurestot'] != sum and 'CleanupUnmerged' not in task['task_name'] and 'LogCollect' not in task['task_name']:
+                return_string=return_string+"    in the workflow "+wf['wf_name']+"\n"
+                firsttime=False
+            if task['nfailurestot'] != sum and 'CleanupUnmerged' not in task['task_name'] and 'LogCollect' not in task['task_name']:
+                return_string=return_string+"        "+  str(task['nfailurestot']-sum)+" out of "+str(task['totaljobs'])+" " +task['task_name']+" jobs\n"
+                failureinformation=True
+
+    return [istherefailureinformation,return_string]
