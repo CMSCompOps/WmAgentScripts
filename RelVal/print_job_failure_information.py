@@ -34,6 +34,8 @@ def provide_log_files(exitcode):
 
 url='cmsweb.cern.ch'
 
+def print_job_failure_information(job_failure_information)
+
     mergedexitcodes=[]
 
     for wf in wf_dicts:
