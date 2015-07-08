@@ -1,5 +1,7 @@
 
-import jobFailureInformation
+import collect_job_failure_information
+import print_job_failure_information
+import assistance_decision
 import optparse
 import sys
 import os
@@ -23,7 +25,12 @@ wf_list = []
 for line in f:
     wf_list.append(line.rstrip('\n'))
 
-[istherefailureinformation,failureinformation]=jobFailureInformation.getFailureInformation(wf_list,"delete_this_2.txt",False,False)
+failure_information=collect_job_failure_information.collect_job_failure_information(wf_list)
+assistance_decision=assistance_decision.assistance_decision(failure_information)
+[istherefailureinformation,failure_information_string]=print_job_failure_information.print_job_failure_information(failure_information)
 
-print failureinformation
+print "assistance_decision:"
+print assistance_decision
+
+print failure_information_string
 

@@ -30,61 +30,36 @@ while True:
     #workflow = line.rstrip('\n')
     #curs.execute("insert into workflows set hn_req=\""+hnrequest+"\", workflow_name=\""+workflow+"\";")
 
-    curs.execute("select * from batches order by batch_id")
+    curs.execute("select * from batches order by batch_creation_time")
     batches=curs.fetchall()
-    curs.execute("select * from batches_archive order by batch_id")
-    batches_archive=curs.fetchall()
     colnames = [desc[0] for desc in curs.description]
 
-    for batch in batches_archive:
-        if "max_batch_id" not in vars():
-            max_batch_id = batch[0]
-        if batch[0] > max_batch_id:
-            max_batch_id = batch[0]
+    for i in range(max(len(batches)-50,0), len(batches)):
 
-    for batch in batches:
-        if "max_batch_id" not in vars():
-            max_batch_id = batch[0]
-        if batch[0] > max_batch_id:
-            max_batch_id = batch[0]
+        batch=batches[len(batches)-1-i+max(len(batches) - 50,0)]
 
-    assert("max_batch_id" in vars() and max_batch_id > 50)        
-
-    for batch_id in range(max_batch_id - 50, max_batch_id+1):
-
-        batch_id = max_batch_id - 50 + (max_batch_id - batch_id)
-
-        curs.execute("select * from batches where batch_id = "+str(batch_id)+";")
-        batches_with_batch_id=curs.fetchall()
-        curs.execute("select * from batches_archive where batch_id = "+str(batch_id)+";")
-        batches_archive_with_batch_id=curs.fetchall()
-        curs.execute("select workflow_name from workflows_archive where batch_id = "+ str(batch_id)+";")
-        wfs_archive_with_batch_id=curs.fetchall()
-        curs.execute("select workflow_name from workflows where batch_id = "+ str(batch_id)+";")
-        wfs=curs.fetchall()
-
-        if len(batches_archive_with_batch_id) == 1 and len(batches_with_batch_id) == 0:
-            batches_with_batch_id=batches_archive_with_batch_id
-            wfs=wfs_archive_with_batch_id
-        elif len(batches_archive_with_batch_id) == 0 and len(batches_with_batch_id) == 0:
-            continue
-        elif not (len(batches_archive_with_batch_id) == 0 and len(batches_with_batch_id) == 1):
-            os.system('echo '+wf[0]+' | mail -s \"monitoring.py error 3\" andrew.m.levin@vanderbilt.edu --')
-            sys.exit(0)
-        
-        for name, value in zip(colnames, batches_with_batch_id[0]):
+        for name, value in zip(colnames, batch):
             if name == "useridday":
                 useridday=value
             elif name == "useridmonth":
                 useridmonth=value
             elif name == "useridyear":    
                 useridyear=value
+            elif name == "useridmonth":    
+                useridmonth=value
             elif name == "useridnum":
                 useridnum=value
+            elif name == "batch_version_num":
+                batch_version_num=value
 
-        print "id: "+useridyear+"_"+useridmonth+"_"+useridday+"_"+str(useridnum)
+        curs.execute("select * from batches where useridyear = "+useridyear+" and useridmonth = "+useridmonth+" and useridday = "+useridday+" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
+        batches_with_batch_id=curs.fetchall()
+        curs.execute("select workflow_name from workflows where useridyear = "+useridyear+" and useridmonth = "+useridmonth+" and useridday = "+useridday+" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
+        wfs=curs.fetchall()
+
+        print "id: "+useridyear+"_"+useridmonth+"_"+useridday+"_"+str(useridnum)+"_"+str(batch_version_num)
         for name, value in zip(colnames, batches_with_batch_id[0]):
-            if name == "batch_id" or name == "useridday" or name == "useridmonth" or name == "useridyear" or name == "useridnum":
+            if name == "useridday" or name == "useridmonth" or name == "useridyear" or name == "useridnum" or name == "hn_message_id" or name == "batch_version_num":
                 continue
             else:
                 print '    '+name.rstrip(' ')+': '+str(value)
@@ -133,5 +108,3 @@ while True:
 
     sys.exit(0)
     time.sleep(60)
-
-        

@@ -27,6 +27,9 @@ curs = conn.cursor()
 curs.execute("use "+dbname+";")
 
 curs.execute("select * from clone_reinsert_requests;")
+
+colnames = [desc[0] for desc in curs.description]
+
 requests_rows=curs.fetchall()
 
 colnames = [desc[0] for desc in curs.description]
@@ -35,51 +38,41 @@ for requests_row in requests_rows:
     print requests_row
 
     for name, value in zip(colnames, requests_row):
-        if name == "batch_id":
-            batchid=value
+        if name == "DN":
+            DN=value
+        elif name == "announcement_title":
+            email_title=value
+        elif name == "description":
+            description=value
+        elif name == "useridyear":
+            useridyear=value
+        elif name == "useridmonth":
+            useridmonth=value
+        elif name == "useridday":
+            useridday=value
+        elif name == "useridnum":
+            useridnum=value
+        elif name == "batch_version_num":
+            batch_version_num=value
         elif name == "new_site":
             site=value
         elif name == "new_processing_version":
             proc_ver=value
 
-    now=datetime.datetime.now()
-
-    useridyear=now.strftime("%Y")
-    useridmonth=now.strftime("%m")
-    useridday=now.strftime("%d")
+    assert(batch_version_num == 0)
 
     #the batch id of the new batch should be 1 more than any existing batch id
-    curs.execute("select MAX(useridnum) from batches where useridyear=\""+useridyear+"\" and useridmonth=\""+useridmonth+"\" and useridday=\""+useridday+"\";")
-    max_user_num_batches=curs.fetchall()[0][0]
-    curs.execute("select MAX(useridnum) from batches_archive where useridyear=\""+useridyear+"\" and useridmonth=\""+useridmonth+"\" and useridday=\""+useridday+"\";")
+    curs.execute("select MAX(batch_version_num) from batches where useridyear=\""+useridyear+"\" and useridmonth=\""+useridmonth+"\" and useridday=\""+useridday+"\" and useridnum = "+str(useridnum)+";")
+    max_batch_version_num=curs.fetchall()[0][0]
 
-    max_user_num_batches_archive=curs.fetchall()[0][0]
+    assert(max_batch_version_num != None)
 
-    if max_user_num_batches == None and max_user_num_batches_archive == None:
-        usernum=0
-    elif max_user_num_batches == None and max_user_num_batches_archive != None:
-        usernum=max_user_num_batches_archive+1
-    elif max_user_num_batches != None and max_user_num_batches_archive == None:
-        usernum=max_user_num_batches+1
-    else:
-        usernum=max(max_user_num_batches,max_user_num_batches_archive)+1
+    new_batch_version_num=max_batch_version_num+1
 
-
-    useridnum=usernum            
-
-    curs.execute("select * from workflows where batch_id = \""+ str(batchid)+"\";")
+    curs.execute("select * from workflows where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
     workflows_rows=curs.fetchall()
-    curs.execute("select * from workflows_archive where batch_id = \""+ str(batchid)+"\";")
-    workflows_archive_rows=curs.fetchall()
 
-    if not ((len(workflows_rows) == 0 and len(workflows_archive_rows) > 0) or (len(workflows_rows) > 0 and len(workflows_archive_rows) == 0)):
-        print "not ((len(workflows_rows) == 0 and len(workflows_archive_rows) > 0) or (len(workflows_rows) > 0 and len(workflows_archive_rows) == 0)), exiting"
-        sys.exit(1)
-
-    if len(workflows_archive_rows) > 0:
-        workflows_rows = workflows_archive_rows
-    
-    print "cloning the workflows in batch "+str(batchid)
+    assert(len(workflows_rows) > 0)
 
     workflows=[]
     
@@ -90,38 +83,10 @@ for requests_row in requests_rows:
         print return_string
         workflows.append(return_string.split(' ')[len(return_string.split(' ')) - 1].rstrip('\n'))
 
-    print "finished cloning the workflows in batch "+str(batchid)
+    assert(len(workflows) == len(workflows_rows))
 
-    curs.execute("select * from batches where batch_id = \""+ str(batchid)+"\";")
+    curs.execute("select * from batches where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
     batches_rows=curs.fetchall()
-
-    batchescolnames = [desc[0] for desc in curs.description]
-
-    curs.execute("select * from batches_archive where batch_id = \""+ str(batchid)+"\";")
-    batches_archive_rows=curs.fetchall()
-    if len(batches_rows) + len(batches_archive_rows) != 1:
-        print "number of batches with this batch id is not equal to 1, exiting"
-        sys.exit(1)
-    if len(batches_archive_rows)  == 1:
-        batches_rows = batches_archive_rows
-
-    for name, value in zip(batchescolnames, batches_rows[0]):
-        if name == "DN":
-            DN=value
-        if name == "announcement_title":
-            email_title=value
-        if name == "description":
-            description=value
-        if name == "useridyear":
-            olduseridyear=value
-        if name == "useridmonth":
-            olduseridmonth=value
-        if name == "useridday":
-            olduseridday=value
-        if name == "useridnum":
-            olduseridnum=value
-
-    olduserid=olduseridyear+"_"+olduseridmonth+"_"+olduseridday+"_"+str(olduseridnum)
 
     for line in workflows:
         workflow = line.rstrip('\n')
@@ -132,32 +97,6 @@ for requests_row in requests_rows:
         if len(curs.fetchall()) > 0:
             print "workflow "+workflow+" was already inserted into the database, exiting"
             sys.exit(1)
-
-    #the batch id of the new batch should be 1 more than any existing batch id
-    curs.execute("select MAX(batch_id) from batches;")
-    max_batchid_batches=curs.fetchall()[0][0]
-    curs.execute("select MAX(batch_id) from batches_archive;")
-    max_batchid_batches_archive=curs.fetchall()[0][0]
-
-    if max_batchid_batches == None and max_batchid_batches_archive == None:
-        batchid=0;
-    elif max_batchid_batches == None and max_batchid_batches_archive != None:
-        batchid=max_batchid_batches_archive+1
-    elif max_batchid_batches != None and max_batchid_batches_archive == None:
-        batchid=max_batchid_batches+1
-    else:     
-        batchid=max(max_batchid_batches,max_batchid_batches_archive)+1
-
-    #sanity checks to make sure this is really a new batchid
-    curs.execute("select batch_id from batches where batch_id="+ str(batchid) +";")
-    if len(curs.fetchall()) > 0:
-        print "batch_id "+str(batchid)+" was already inserted into the batches database, exiting"
-        sys.exit(1)
-
-    curs.execute("select batch_id from workflows where batch_id="+ str(batchid) +";")
-    if len(curs.fetchall()) > 0:
-        print "batch_id "+str(batchid)+" was already inserted into the workflows database, exiting"
-        sys.exit(1)     
 
     f_index=0
     g_index=0
@@ -184,20 +123,16 @@ for requests_row in requests_rows:
             g_index=g_index+1
         f_index=f_index+1
                 
-    print "creating a new batch with batch_id = "+str(batchid)
+    #description = description.rstrip('\n')+"\n\n(clone of batch "+olduserid+")"
 
-    description = description.rstrip('\n')+"\n\n(clone of batch "+olduserid+")"
-
-    curs.execute("insert into batches set batch_id="+str(batchid)+", DN=\""+DN+"\", announcement_title=\""+email_title+"\", processing_version="+str(proc_ver)+", site=\""+site+"\", description=\""+description+"\", status=\"approved\", useridyear=\""+useridyear+"\", useridmonth=\""+useridmonth+"\", useridday=\""+useridday+"\", useridnum="+str(useridnum)+", hn_message_id=\"do_not_send_an_acknowledgement_email\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\"")
-
+    curs.execute("insert into batches set DN=\""+DN+"\", announcement_title=\""+email_title+"\", processing_version="+str(proc_ver)+", site=\""+site+"\", description=\""+description+"\", status=\"approved\", useridyear=\""+useridyear+"\", useridmonth=\""+useridmonth+"\", useridday=\""+useridday+"\", useridnum="+str(useridnum)+", batch_version_num = "+str(new_batch_version_num)+", hn_message_id=\"do_not_send_an_acknowledgement_email\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\", batch_creation_time = \""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\"")
 
     conn.commit()
 
-    for line in workflows:
+    for i in range(0,len(workflows)):
         workflow = line.rstrip('\n')
-        curs.execute("insert into workflows set batch_id="+str(batchid)+", workflow_name=\""+workflow+"\";")
+        curs.execute("insert into workflows set useridyear = \""+useridyear+"\", useridmonth = \""+useridmonth+"\", useridday = \""+useridday+"\", useridnum = "+str(useridnum)+", batch_version_num = "+str(new_batch_version_num)+", workflow_name=\""+workflows[i]+"\", original_workflow_name = \""+workflows_rows[i][1]+"\";")
 
     #batchid is assigned the new batch id now    
-    curs.execute("delete from clone_reinsert_requests where batch_id="+str(requests_row[0])+";")
-
+    curs.execute("delete from clone_reinsert_requests where useridyear=\""+useridyear+"\" and useridmonth=\""+useridmonth+"\" and useridday=\""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
     conn.commit()

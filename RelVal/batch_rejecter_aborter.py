@@ -27,20 +27,35 @@ curs = mysqlconn.cursor()
 
 curs.execute("use "+dbname+";")
 
+
+
 curs.execute("select * from batches where status = \"reject_abort_requested\";")
 batches_rows=curs.fetchall()
 
+colnames = [desc[0] for desc in curs.description]
+
 for batches_row in batches_rows:
+
+    for name, value in zip(colnames, batches_row):
+        if name == "useridday":
+            useridday=value
+        elif name == "useridmonth":    
+            useridmonth=value
+        elif name == "useridyear":    
+            useridyear=value
+        elif name == "useridnum":    
+            useridnum=value
+        elif name == "batch_version_num":    
+            batch_version_num=value
+
     print batches_row
     batchid=batches_row[0]
-    curs.execute("select * from workflows where batch_id = \""+ str(batchid)+"\";")
+    curs.execute("select * from workflows where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
     workflows_rows=curs.fetchall()
 
-    print "changing the statuses of the workflows in batch "+str(batchid)+" in the request manager"
-
     for workflow_row in workflows_rows:
-        print workflow_row[1]
-        workflow=workflow_row[1]
+        print workflow_row[5]
+        workflow=workflow_row[5]
         url="cmsweb.cern.ch" 
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         r1=conn.request('GET','/reqmgr/reqMgr/request?requestName=' + workflow)
@@ -71,28 +86,9 @@ for batches_row in batches_rows:
 
     print "copying the workflows and the batch to the archive databases"    
 
-    print batchid    
-    curs.execute("update batches set status=\"not_announced\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where batch_id = "+str(batchid) +";")
+    curs.execute("update batches set status=\"killed\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
+
+    curs.execute("delete from datasets where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
 
     mysqlconn.commit()
 
-    curs.execute("select * from batches where batch_id = \""+ str(batchid)+"\";")
-    updated_batches_rows=curs.fetchall()
-    if len(updated_batches_rows) != 1:
-        print "number of batches with this batch id is not equal to 1, exiting"
-        sys.exit(1)
-        
-    curs.execute("insert into batches_archive VALUES "+str(tuple(str(entry) for entry in updated_batches_rows[0]))+";")
-
-    curs.execute("select * from workflows where batch_id = \""+ str(batchid)+"\";")
-    workflows_rows=curs.fetchall()
-
-    for workflow_row in workflows_rows:
-        curs.execute("insert into workflows_archive VALUES "+str(workflow_row)+";")
-
-    print "deleting the workflows and the batch from the original databases"    
-
-    curs.execute("delete from workflows where batch_id = \""+ str(batchid)+"\";")
-    curs.execute("delete from batches where batch_id = \""+ str(batchid)+"\";")
-
-    mysqlconn.commit()
