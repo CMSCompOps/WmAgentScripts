@@ -43,8 +43,16 @@ while True:
             print name+" => "+str(value)
             if name=="status":
                 status=value
-            elif name == "batch_id":
-                batchid=value
+            elif name == "useridyear":
+                useridyear=value
+            elif name == "useridmonth":
+                useridmonth=value
+            elif name == "useridday":
+                useridday=value
+            elif name == "useridnum":
+                useridnum=value
+            elif name == "batch_version_num":
+                batch_version_num=value
             elif name == "site":
                 site=value
             elif name == "processing_version":
@@ -62,11 +70,10 @@ while True:
 
         if status == "input_dsets_ready":
             
-            print "assigning workflows in batch "+str(batchid)
-            
-            curs.execute("select workflow_name from workflows where batch_id = "+ str(batchid)+";")
+            curs.execute("select workflow_name from workflows where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
             wfs=curs.fetchall()
-            
+
+            #first do checks to make sure the workflows do not write into an existing dataset
             for wf in wfs:
                 conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
                 r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+wf[0])
@@ -88,10 +95,10 @@ while True:
                                     os.system('echo '+wf[0]+' | mail -s \"assignment_loop.py error 1\" andrew.m.levin@vanderbilt.edu')
                                     sys.exit(1)
                                 elif len(dbs_dset_check) != 0:    
-                                    os.system('echo '+wf[0]+' | mail -s \"assignment_loop.py error 5\" andrew.m.levin@vanderbilt.edu')
+                                    os.system('echo '+wf[0]+" "+dset+' | mail -s \"assignment_loop.py error 5\" andrew.m.levin@vanderbilt.edu')
                                     sys.exit(1)
                                 else:   
-                                    curs.execute("insert into datasets set dset_name=\""+dset.rstrip("*")+"\", workflow_name=\""+wf[0]+"\", batch_id="+str(batchid)+";")
+                                    curs.execute("insert into datasets set dset_name=\""+dset.rstrip("*")+"\", workflow_name=\""+wf[0]+"\", useridyear = \""+useridyear+"\", useridmonth = \""+useridmonth+"\", useridday = \""+useridday+"\", useridnum = "+str(useridnum)+", batch_version_num = "+str(batch_version_num)+";")
 
                                     
                             elif 'PrimaryDataset' in value:
@@ -104,14 +111,21 @@ while True:
                                 dbs_dset_check=utils.getDatasets(dset)
 
                                 if len(curs_fetchall) != 0:
-                                    os.system('echo '+wf[0]+" "+curs_fetchall[0][1]+" "+dset+' | mail -s \"assignment_loop.py error 2\" andrew.m.levin@vanderbilt.edu')
+                                    os.system('echo '+wf[0]+" "+curs_fetchall[0][5]+" "+dset+' | mail -s \"assignment_loop.py error 2\" andrew.m.levin@vanderbilt.edu')
                                     sys.exit(1)
                                 elif len(dbs_dset_check) != 0:    
                                     os.system('echo '+wf[0]+' | mail -s \"assignment_loop.py error 7\" andrew.m.levin@vanderbilt.edu')
                                     sys.exit(1)
                                 else:
-                                    curs.execute("insert into datasets set dset_name=\""+dset.rstrip("*")+"\", workflow_name=\""+wf[0]+"\", batch_id="+str(batchid)+";")
+                                    curs.execute("insert into datasets set dset_name=\""+dset.rstrip("*")+"\", workflow_name=\""+wf[0]+"\", useridyear = "+useridyear+", useridmonth = "+useridmonth+", useridday = "+useridday+", useridnum = "+str(useridnum)+", batch_version_num = "+str(batch_version_num)+";")
 
+            #only assign the workflows after all of the checks are done                        
+            for wf in wfs:
+                conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+                r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+wf[0])
+                r2=conn.getresponse()
+
+                schema = json.loads(r2.read())
 
                 params = assignment.make_assignment_params(schema,site,processing_version)                    
 
@@ -121,10 +135,10 @@ while True:
                     os.system('echo '+wf[0]+' | mail -s \"assignment_loop.py error 4\" andrew.m.levin@vanderbilt.edu')
                     sys.exit(0)
 
+
                 time.sleep(30)
-
-
-            curs.execute("update batches set status=\"assigned\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where batch_id = "+str(batchid) +";")    
+                
+            curs.execute("update batches set status=\"assigned\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")    
 
             mysqlconn.commit()
 

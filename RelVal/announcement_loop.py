@@ -16,7 +16,9 @@ import optparse
 import datetime
 import time
 import calendar
-import jobFailureInformation
+import collect_job_failure_information
+import assistance_decision
+import print_job_failure_information
 
 import utils
 
@@ -59,16 +61,21 @@ while True:
                 useridyear=value
             elif name == "useridnum":    
                 useridnum=value
-            elif name == "batch_id":
-                batchid=value
+            elif name == "batch_version_num":    
+                batch_version_num=value
             elif name == "description":
                 description=value
             elif name == "announcement_title":
                 title=value
+            elif name == "status":
+                status=value
 
-        userid=useridyear+"_"+useridmonth+"_"+useridday+"_"+str(useridnum)        
+        if status != "assigned":
+            continue
 
-        curs.execute("select workflow_name from workflows where batch_id = \""+ str(batch[0])+"\";")
+        userid=useridyear+"_"+useridmonth+"_"+useridday+"_"+str(useridnum)+"_"+str(batch_version_num)
+
+        curs.execute("select workflow_name from workflows where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+ "\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num ="+str(batch_version_num)+";")
         wfs=curs.fetchall()
        
         n_workflows=0
@@ -112,7 +119,6 @@ while True:
         #if batch[0] != 222:
         #    continue
 
-        print batchid
 
         print "putting workflows into a file"
 
@@ -125,16 +131,20 @@ while True:
 
         print "finished putting workflows into a file"     
 
+        job_failure_information=collect_job_failure_information.collect_job_failure_information(wf_list)
+
+        needs_assistance = assistance_decision.assistance_decision(job_failure_information)
+
+        if needs_assistance:
+            curs.execute("update batches set status=\"assistance\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+ "\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num ="+str(batch_version_num)+";")
+            mysqlconn.commit()
+            os.system('echo \"batch_id: "+userid+"\" | mail -s \"a batch of relval workflows needs assistance\" andrew.m.levin@vanderbilt.edu')
+            continue
+
         #if there is a '\r' character in the body of an e-mail, it does not get sent
         description=description.replace('\r','')
 
-        dsets_stats_tmp=os.popen("mktemp").read().rstrip('\n')
-        dsets_tmp_cern=os.popen("mktemp").read().rstrip('\n')
-        dsets_tmp_fnal=os.popen("mktemp").read().rstrip('\n')
-        dsets_tmp_fnal_disk=os.popen("mktemp").read().rstrip('\n')
-        dsets_tmp_cern_alcareco=os.popen("mktemp").read().rstrip('\n')
-
-        #closeOutTaskChain.close_out_wf_list(wf_list)
+        closeOutTaskChain.close_out_wf_list(wf_list)
 
         dset_nevents_list=getRelValDsetNames.getDsetNamesAndNevents(wf_list)
 
@@ -196,12 +206,10 @@ while True:
             reqMgrClient.closeOutWorkflow("cmsweb.cern.ch",wf)
             reqMgrClient.announceWorkflow("cmsweb.cern.ch",wf)
 
-        [istherefailureinformation,return_string]=jobFailureInformation.getFailureInformation(wf_list)
-
         msg = MIMEMultipart()
         reply_to = []
         send_to = ["andrew.m.levin@vanderbilt.edu"]
-        #send_to = ["hn-cms-dataopsrequests@cern.ch","andrew.m.levin@vanderbilt.edu"]
+        #send_to = ["hn-cms-relval@cern.ch","andrew.m.levin@vanderbilt.edu"]
         #send_to = ["hn-cms-hnTest@cern.ch"]
             
         #msg['In-Reply-To'] = hn_message_id
@@ -222,6 +230,14 @@ while True:
         messageText=messageText+"\n"
         messageText=messageText+userid+"\n"
         messageText=messageText+"\n"
+        if batch_version_num > 0:
+            messageText=messageText+"original workflow name ==> clone name:\n"
+            messageText=messageText+"\n"
+            curs.execute("select workflow_name,original_workflow_name from workflows where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+ "\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num ="+str(batch_version_num)+";")
+            wfs=curs.fetchall()
+            for wf in wfs:
+                messageText=messageText+wf[1] + " ==> "+wf[0] + "\n"
+        messageText=messageText+"\n"        
         messageText=messageText+"List of datasets:\n"
         messageText=messageText+"\n"
         messageText=messageText+"http://cms-project-relval.web.cern.ch/cms-project-relval/relval_stats/"+userid+".txt\n"
@@ -231,6 +247,8 @@ while True:
         messageText=messageText+description.rstrip('\n')
         messageText=messageText+"\n"
         #messageText=messageText+"\n"
+        [istherefailureinformation,return_string]=print_job_failure_information.print_job_failure_information(job_failure_information)
+
         if istherefailureinformation:
             messageText=messageText+"\n"
             messageText=messageText+return_string
@@ -247,27 +265,7 @@ while True:
         except Exception as e:
             print "Error: unable to send email: %s" %(str(e))
 
-        print "copying the workflows and the batch to the archive databases"    
-
-        curs.execute("update batches set status=\"announced\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where batch_id = "+str(batchid) +";")
-
-        curs.execute("select * from workflows where batch_id = \""+ str(batchid)+"\";")
-        workflows_rows=curs.fetchall()
-    
-        curs.execute("select * from batches where batch_id = \""+ str(batchid)+"\";")
-        batches_rows=curs.fetchall()
-
-        #cannot just do batches_rows[0] since the current_status_start_time is not formatted correctly
-        curs.execute("insert into batches_archive VALUES "+str(tuple(str(entry) for entry in batches_rows[0]))+";")
-
-        for workflow_row in workflows_rows:
-            curs.execute("insert into workflows_archive VALUES "+str(workflow_row)+";")
-
-        print "deleting the workflows and the batch from the original databases"    
-        curs.execute("delete from workflows where batch_id = \""+ str(batchid)+"\";")
-        curs.execute("delete from batches where batch_id = \""+ str(batchid)+"\";")
-        curs.execute("delete from datasets where batch_id = \""+str(batchid)+"\";")
-
+        curs.execute("update batches set status=\"announced\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+ "\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num ="+str(batch_version_num)+";")
         mysqlconn.commit()
 
     #curs.execute("unlock tables")

@@ -23,7 +23,9 @@ while True:
     curs = mysqlconn.cursor()
     
     curs.execute("use "+dbname+";")
-    
+
+    #curs.execute("lock tables batches write, batches_archive write, workflows write, workflows_archive write, datasets write, clone_reinsert_requests write")
+
     #workflow = line.rstrip('\n')  
     #curs.execute("insert into workflows set hn_req=\""+hnrequest+"\", workflow_name=\""+workflow+"\";")
 
@@ -40,13 +42,20 @@ while True:
         blocks_dsets_to_transfer=[]
         blocks_not_at_site=[]
 
-
         for name, value in zip(colnames, batch):
             print name+" => "+str(value)
             if name=="status":
                 status=value
-            elif name == "batch_id":
-                batchid=value
+            elif name == "useridyear":
+                useridyear=value
+            elif name == "useridmonth":
+                useridmonth=value
+            elif name == "useridday":
+                useridday=value
+            elif name == "useridnum":
+                useridnum=value
+            elif name == "batch_version_num":
+                batch_version_num=value
             elif name == "site":
                 site=value
             elif name == "processing_version":
@@ -79,7 +88,7 @@ while True:
 
             all_dsets_blocks_at_site=True
 
-            curs.execute("select workflow_name from workflows where batch_id = "+ str(batchid)+";")
+            curs.execute("select workflow_name from workflows where useridyear = \""+ useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
             wfs=curs.fetchall()
 
             for wf in wfs:
@@ -128,14 +137,14 @@ while True:
                                     all_dsets_blocks_at_site=False
 
             if all_dsets_blocks_at_site and (not isthereanmcpileupdataset or ismcpileupdatasetatsite):
-                curs.execute("update batches set status=\"input_dsets_ready\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where batch_id = "+str(batchid) +";")                    
+                curs.execute("update batches set status=\"input_dsets_ready\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where useridyear = \""+ useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
                 mysqlconn.commit()
 
         if status == "approved":
 
-            print "checking input datasets for workflows in batch "+str(batchid)
+            #print "checking input datasets for workflows in batch "+str(batchid)
             
-            curs.execute("select workflow_name from workflows where batch_id = "+ str(batchid)+";")
+            curs.execute("select workflow_name from workflows where useridyear = \""+ useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
             wfs=curs.fetchall()
             
             for wf in wfs:
@@ -205,15 +214,17 @@ while True:
 
                 utils.approveSubscription("cmsweb.cern.ch",phedexid)
 
-                curs.execute("update batches set status=\"waiting_for_transfer\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where batch_id = "+str(batchid) +";")    
+                curs.execute("update batches set status=\"waiting_for_transfer\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where useridyear = \""+ useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
                 mysqlconn.commit()
-
             elif blocks_not_at_site != []:
                 print blocks_not_at_site
-                curs.execute("update batches set status=\"waiting_for_transfer\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where batch_id = "+str(batchid) +";")    
+                curs.execute("update batches set status=\"waiting_for_transfer\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where useridyear = \""+ useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
             else:    
-                curs.execute("update batches set status=\"input_dsets_ready\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where batch_id = "+str(batchid) +";")    
+                curs.execute("update batches set status=\"input_dsets_ready\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where useridyear = \""+ useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
                 mysqlconn.commit()
 
     count = count+1            
+
+    #curs.execute("unlock tables")
+
     time.sleep(100)
