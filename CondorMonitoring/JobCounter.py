@@ -5,6 +5,7 @@ Creates the following files: CondorMonitoring.json, CondorJobs_Workflows.json, R
 """
 
 import sys,os,re,urllib,urllib2,subprocess,time,smtplib,os
+import htcondor as condor
 from datetime import datetime
 from email.MIMEMultipart import MIMEMultipart
 from email.MIMEBase import MIMEBase
@@ -25,16 +26,12 @@ mailingList = ['luis89@fnal.gov','dmason@fnal.gov','alan.malta@cern.ch']
 global_pool = ['vocms099.cern.ch']
 tier0_pool = ['vocms007.cern.ch']
 
-## The following machines should be ignored (Crab Schedulers)
-crab_scheds = ['vocms83.cern.ch','stefanovm.cern.ch']
-
 ##The following groups should be updated according to https://twiki.cern.ch/twiki/bin/view/CMSPublic/CompOpsWorkflowTeamWmAgentRealeases
 relvalAgents = ['vocms053.cern.ch']
 testAgents = ['cmssrv113.fnal.gov', 'vocms040.cern.ch', 'vocms009.cern.ch', 'vocms0224.cern.ch', 'vocms0230.cern.ch']
 
 ##Job expected types
 jobTypes = ['Processing', 'Production', 'Skim', 'Harvest', 'Merge', 'LogCollect', 'Cleanup', 'RelVal', 'Express', 'Repack', 'Reco']
-backfillTypes = ['TOP', 'SMP', 'RECO', 'DIGI', 'Prod', 'MinBias', 'MINIAOD', 'HLT', 'LHE', 'ZMM', 'HIG', 'B2G', 'ZTT']
 
 ## Job counting / Condor monitoring
 baseSiteList = {} # Site list
@@ -210,12 +207,13 @@ def addWorkflow(workflow):
                                     'desiredSites' : set()
                                     }
 
-def jobType(id,sched,typeToExtract):
+def jobType(id,schedd,typeToExtract):
     """
     This deduces job type from given info about scheduler and taskName
+    Only intended as a backup in case job type from the classAds is not standard
     """
     type = ''
-    if sched in relvalAgents:
+    if schedd in relvalAgents:
         type = 'RelVal'
     elif 'Cleanup' in typeToExtract:
         type = 'Cleanup'
@@ -239,21 +237,12 @@ def jobType(id,sched,typeToExtract):
         type = 'Processing'
     elif 'StoreResults' in typeToExtract:
         type = 'Merge'
-    elif sched in testAgents or any(x in typeToExtract for x in backfillTypes):
+    elif schedd in testAgents:
         type = 'Processing'
     else:
         type = 'Processing'
-        jobs_failedTypeLogic[id]=dict(scheduler = sched, BaseType = typeToExtract)
+        jobs_failedTypeLogic[id]=dict(scheduler = schedd, BaseType = typeToExtract)
     return type
-
-def fixArray(array):
-    """
-    Sometimes condor return different formats. Parse all to string
-    """
-    strings_array = []
-    for entry in array:
-        strings_array.append(str(entry))
-    return strings_array
 
 def relativePending(siteToExtract):
     """
@@ -356,6 +345,7 @@ def createReports(currTime):
     1. Prints a report for the given dictionary
     2. Creates a text file to feed each column in SSB Running/Pending view
     3. Creates the output json file to feed SSB historical view
+    4. Creates workflow overview json
     """
     date = currTime.split('h')[0]
     hour = currTime.split('h')[1]
@@ -492,9 +482,14 @@ def createReports(currTime):
         jsonCounting["Sites"].append(siteInfo)
     
     #Write the output json
-    jsonfile = open(output_json,'w+')
-    jsonfile.write(json.dumps(jsonCounting,sort_keys=True, indent=9))
-    jsonfile.close()
+    jsonfileJobs = open(output_json,'w+')
+    jsonfileJobs.write(json.dumps(jsonCounting,sort_keys=True, indent=9))
+    jsonfileJobs.close()
+    
+    # Creates json file for jobs per workflow
+    jsonfileWorkflows = open(json_name_workflows,'w+')
+    jsonfileWorkflows.write(json.dumps(overview_workflows, default=set_default, sort_keys=True, indent=4))
+    jsonfileWorkflows.close()
 
 def send_mail(send_from, send_to, subject, text, files=[], server="localhost"):
     """
@@ -547,98 +542,78 @@ def main():
     
     #Going through each collector and process a job list for each scheduler
     all_collectors = global_pool + tier0_pool
-    for col in all_collectors:
-        # Get the list of scheduler for the given collector
+    for collector_name in all_collectors:
+        
+        print "INFO: Querying collector %s" % collector_name
+        
         schedds={}
-        listcommand="condor_status -pool "+col+""" -schedd -format "%s||" Name -format "%s||" CMSGWMS_Type -format "\n" Owner"""
-        proc = subprocess.Popen(listcommand, stderr = subprocess.PIPE,stdout = subprocess.PIPE, shell = True)
-        out, err = proc.communicate()
-        for line in err.split('\n') :
-            if 'Error' in line:
-                body_text = 'There is a problem with one of the collectors! The monitoring script may give false information. These are the logs:\n\n'
-                body_text += err
-                body_text += '\nSee the log file in this directory for more output logs:\n\n'
-                body_text += '    /afs/cern.ch/user/c/cmst1/CondorMonitoring\n'
-                send_mail(mailingSender,
-                          mailingList,
-                          '[Condor Monitoring] Condor Collector %s Error' % col,
-                          body_text)
-                print 'ERROR: I find a problem while getting schedulers for collector %s, I will send an email to: %s' % (col, str(mailingList))
-                break
-        for line in out.split('\n'):
-            if not line: continue # remove empty lines from split('\n')
-            schedd_info = line.split("||")
-            # schedd_info[0] is the Schedd Name
-            # schedd_info[1] is the Schedd type if available, if not it is''
-            schedds[schedd_info[0].strip()] = schedd_info[1].strip()
-                
-        print "INFO: Condor status on collector %s has been started" % col
+        
+        collector = condor.Collector( collector_name )
+        scheddAds = collector.locateAll( condor.DaemonTypes.Schedd )
+        for ad in scheddAds:
+            schedds[ad['Name']] = dict(schedd_type=ad.get('CMSGWMS_Type', ''),
+                                       schedd_ad=ad)
+        
         print "DEBUG: Schedulers ", schedds.keys()
         
-        # Get the running/pending jobs from condor for the given scheduler
-        for sched in schedds.keys():
+        for schedd_name in schedds:
             
-            # Ignore Analysis schedulers 
-            if 'crabschedd' == schedds[sched] or sched in crab_scheds or 'crab' in sched:
-                print "DEBUG: Ignoring crab scheduler ", sched
+            if schedds[schedd_name]['schedd_type'] != 'prodschedd': #Only care about production Schedds
                 continue
             
-            # Get all the jobs for the given scheduler
-            command='condor_q -pool '+col+' -name ' + sched
-            command=command+"""  -format "%i." ClusterID -format "%s||" ProcId  -format "%i||" JobStatus  -format "%s||" WMAgent_SubTaskName -format "%s||" RequestCpus -format "%s||" DESIRED_Sites -format "%s||" MATCH_EXP_JOBGLIDEIN_CMSSite -format "\n" Owner"""
-            proc = subprocess.Popen(command, stderr = subprocess.PIPE,stdout = subprocess.PIPE, shell = True)
-            out, err = proc.communicate()
-            print "INFO: Handling condor_q on collector: %s scheduler: %s" % (col, sched)
+            print "INFO: Getting jobs from collector: %s scheduler: %s" % (collector_name, schedd_name)
             
-            for line in out.split('\n'):
-                if not line: continue # remove empty lines from split('\n')
+            schedd_ad = schedds[schedd_name]['schedd_ad']
+            schedd = condor.Schedd( schedd_ad )
+            
+            jobs = schedd.xquery( 'true', ['ClusterID', 'ProcId', 'JobStatus', 
+                                           'CMS_JobType', 'WMAgent_SubTaskName',
+                                           'RequestCpus', 'DESIRED_Sites', 
+                                           'MATCH_EXP_JOBGLIDEIN_CMSSite'] )
+            
+            for job in jobs:
                 
-                array = line.split("||")
-                if len(array) < 6: 
-                    continue # ignore bad lines (incomplete info lines)
-                array = fixArray(array)
+                id = str(job['ClusterID']) + '.' + str(job['ProcId'])
+                status = int(job['JobStatus'])
+                workflow = job['WMAgent_SubTaskName'].split('/')[1]
+                task = job['WMAgent_SubTaskName'].split('/')[-1]
+                type = job['CMS_JobType']
+                cpus = int(job['RequestCpus'])
+                siteToExtract = str(job['DESIRED_Sites']).replace(' ', '').split(",")
                 
-                # array[0] ClusterID.ProcId
-                # array[1] JobStatus
-                # array[2] WMAgent_SubTaskName
-                # array[3] RequestCpus
-                # array[4] DESIRED_Sites
-                    # only when job is already running: array[5] MATCH_EXP_JOBGLIDEIN_CMSSite
-                # array[6] ''    --> nothing
-                # --> standard len(array) {6,7} depending if the job is already running in a site
-                id = array[0]
-                status = array[1]
-                workflow = array[2].split('/')[1]
-                task = array[2].split('/')[-1]
-                cpus = int(array[3])
-                siteToExtract = array[4].replace(' ', '').split(",")
                 
-                type = jobType(id,sched,task) # Deducing job type
+                if schedd_name in relvalAgents: #If RelVal job
+                    type = 'RelVal'
+                elif task == 'Reco': #If PromptReco job (Otherwise type is Processing)
+                    type = 'Reco'
+                elif type not in jobTypes: #If job type is not standard
+                    type = jobType(id,schedd_name,task)
                 
-                if siteName(array[5]): # If job is currently running
-                    siteToExtract = [array[5]]
+                siteRunning = job.get('MATCH_EXP_JOBGLIDEIN_CMSSite', '')
+                if siteName(siteRunning): # If job is currently running
+                    siteToExtract = [siteRunning]
                 
                 # Ignore jobs to the T1s from the Tier-0 pool
                 # Avoid double accounting with the global pool
-                if col == tier0_pool[0]: 
+                if collector_name == tier0_pool[0]: 
                     if not 'T2_CH_CERN_T0' in siteToExtract:
                         continue
                 
-                # Ignore jobs to the T2_CH_CERN_T0 from the global pool
+                # Ignore jobs to T2_CH_CERN_T0 from the global pool
                 # Avoid double accounting with the Tier-0 pool
-                if col == global_pool[0]: 
+                if collector_name == global_pool[0]: 
                     if 'T2_CH_CERN_T0' in siteToExtract:
                         continue
                 
-                if status == "2":
-                    increaseRunning(siteToExtract[0],sched,type,cpus)
+                if status == 2: #Running
+                    increaseRunning(siteToExtract[0],schedd_name,type,cpus)
                     increaseRunningWorkflow(workflow,siteToExtract[0],1)
-                elif status == "1":
-                    pendingCache.append([sched,type,cpus,siteToExtract])
+                elif status == 1: #Pending
+                    pendingCache.append([schedd_name,type,cpus,siteToExtract])
                     increasePendingWorkflow(workflow,siteToExtract,1)
-                else: #We don't care about jobs in another status
+                else: #Ignore jobs in another state
                     continue
-    print "INFO: Full condor status pooling is done"
+    print "INFO: Querying Schedds for this collector is done"
     
     # Get total running
     for site in jobCounting.keys():
@@ -650,7 +625,7 @@ def main():
     
     # Now process pending jobs
     for job in pendingCache:
-        schedd = job[0]
+        job_schedd = job[0]
         type = job[1]
         cpus = job[2]
         siteToExtract = []
@@ -661,12 +636,12 @@ def main():
         relative, total = relativePending(siteToExtract) # total != 0 always
         for penSite in siteToExtract:
             relative_pending = relative[penSite]/total # calculate relative pending weight
-            increasePending(penSite, schedd, type, cpus, relative_pending)
-    print "INFO: Smart pending site counting done \n"
+            increasePending(penSite, job_schedd, type, cpus, relative_pending)
+    print "INFO: Smart pending job counting is done \n"
     
     # Handling jobs that failed task extraction logic
     if jobs_failedTypeLogic != {}:      
-        body_text = 'There is a problem with the logic to deduce job type from the condor data.\n'
+        body_text = 'A job type is unknown for the JobCounter script\n'
         body_text += 'Please have a look to the following jobs:\n\n %s'% str(jobs_failedTypeLogic)
         send_mail(mailingSender,
                   mailingList,
@@ -677,10 +652,6 @@ def main():
     print 'INFO: Creating reports...'
     createReports(currTime)
     
-    # Creates json file for jobs per workflow
-    jsonfile = open(json_name_workflows,'w+')
-    jsonfile.write(json.dumps(overview_workflows, default=set_default, sort_keys=True, indent=4))
-    jsonfile.close()
     print 'INFO: The script has finished after: ', datetime.now()-starttime
     
 if __name__ == "__main__":
