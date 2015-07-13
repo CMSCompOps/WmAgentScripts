@@ -575,6 +575,11 @@ def main():
                 
                 id = str(job['ClusterID']) + '.' + str(job['ProcId'])
                 status = int(job['JobStatus'])
+                
+                if 'WMAgent_SubTaskName' not in job:
+                    print 'I found a job not coming from WMAgent: %s' % id
+                    continue
+                    
                 workflow = job['WMAgent_SubTaskName'].split('/')[1]
                 task = job['WMAgent_SubTaskName'].split('/')[-1]
                 type = job['CMS_JobType']
