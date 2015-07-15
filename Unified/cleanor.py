@@ -9,6 +9,7 @@ import random
 def cleanor(url, specific=None):
 
     delete_per_site = {}
+    do_not_autoapprove = ['T2_FR_CCIN2P3']
     SI = siteInfo()
     CI = campaignInfo()
     LI = lockInfo()
@@ -166,7 +167,7 @@ def cleanor(url, specific=None):
             for phedexid in [o['id'] for o in result['phedex']['request_created']]:
                 if not is_tape:
                     print "auto-approving to",site,"?"
-                    approved = approveSubscription(url, phedexid, nodes = [site], comments = 'Production cleaning by data ops, auto-approved')
+                    if not site in do_not_autoapprove: approved = approveSubscription(url, phedexid, nodes = [site], comments = 'Production cleaning by data ops, auto-approved')
                     pass
         
 if __name__ == "__main__":

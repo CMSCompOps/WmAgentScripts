@@ -10,6 +10,7 @@ import time
 
 def outcleanor(url, options):
 
+    do_not_autoapprove = ['T2_FR_CCIN2P3']
     LI = lockInfo()
 
     if options.approve:
@@ -19,7 +20,8 @@ def outcleanor(url, options):
                 if 'MSS' in site: continue### ever
                 print site,who,tid
                 print "approving deletion"
-                print approveSubscription(url, tid, nodes = [site], comments = 'Production cleaning by data ops')
+                if not site in do_not_autoapprove: 
+                    print approveSubscription(url, tid, nodes = [site], comments = 'Production cleaning by data ops')
         return
 
     
@@ -210,7 +212,8 @@ def outcleanor(url, options):
             for did in [item['id'] for item in result['phedex']['request_created']]:
                 if not is_tape:
                     print "auto-approving to",site,"?"
-                    #approveSubscription(url, did, nodes = [site], comments = 'Production cleaning by data ops, auto-approved')
+                    if not site in do_not_autoapprove:
+                        approveSubscription(url, did, nodes = [site], comments = 'Production cleaning by data ops, auto-approved')
                     pass
         session.commit()
     else:
