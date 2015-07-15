@@ -1271,13 +1271,13 @@ class workflowInfo:
             primary=set()
             parent=set()
             secondary=set()
-            if 'InputDataset' in self.request:  
-                primary = set([self.request['InputDataset']])
-            if primary and 'IncludeParent' in self.request and self.request['IncludeParent']:
+            if 'InputDataset' in blob:  
+                primary = set([blob['InputDataset']])
+            if primary and 'IncludeParent' in blob and blob['IncludeParent']:
                 parent = findParent( primary )
-            if 'MCPileup' in self.request:
-                secondary = set([self.request['MCPileup']])
-            if 'LheInputFiles' in self.request and self.request['LheInputFiles'] in ['True',True]:
+            if 'MCPileup' in blob:
+                secondary = set([blob['MCPileup']])
+            if 'LheInputFiles' in blob and blob['LheInputFiles'] in ['True',True]:
                 lhe=True
                 
             return (lhe,primary, parent, secondary)
