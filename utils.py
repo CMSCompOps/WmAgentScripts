@@ -792,7 +792,7 @@ def getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=None
                 #if group!=None and replica['group']==None: continue
                 if group!=None and not replica['group'].lower()==group.lower(): continue 
                 locations[replica['node']].add( item['name'] )
-                if item['name'] not in all_block_names:
+                if item['name'] not in all_block_names and not only_blocks:
                     print item['name'],'not yet injected in dbs, counting anyways'
                     all_block_names.add( item['name'] )
                     full_size += item['bytes']
