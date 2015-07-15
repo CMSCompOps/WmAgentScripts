@@ -178,11 +178,16 @@ def stagor(url,specific =None, options=None):
         else:
             print dsname
             lost = findLostBlocks(url, dsname)
-            if lost:
+            known_lost = ['/ReggeGribovPartonMC_13TeV-QGSJetII/RunIIWinter15GS-castor_MCRUN2_71_V0_ext1-v1/GEN-SIM',
+                          '/BprimeBprime_M-1300_TuneCUETP8M1_13TeV-madgraph-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM',
+                          'QCD_Pt-15to7000_TuneCUETP8M1_Flat_13TeV_pythia8/RunIIWinter15GS-magnetOff_MCRUN2_71_V1-v1/GEN-SIM',
+                          '/ReggeGribovPartonMC_13TeV-QGSJetII/RunIIWinter15GS-castor_MCRUN2_71_V0_ext1-v1/GEN-SIM',
+                          ]
+            if lost and not dsname in known_lost:
                 lost_names = [item['name'] for item in lost]
                 print "We have lost",len(lost),"blocks",lost_names
                 #print json.dumps( lost , indent=2 )
-                sendEmail('we have lost a few blocks', len(lost)+" in total.\nDetails \n:"+json.dumps( lost , indent=2 ), 'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
+                sendEmail('we have lost a few blocks', str(len(lost))+" in total.\nDetails \n:"+json.dumps( lost , indent=2 ), 'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
             print "\t",done_by_input[dsname]
             print "\tneeds",need_sites
             print "\tgot",got
