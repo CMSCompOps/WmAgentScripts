@@ -9,7 +9,9 @@ import optparse
 
 def injector(url, options, specific):
 
-    up = componentInfo()
+    use_mcm = True
+    up = componentInfo( mcm = use_mcm, soft=['mcm'] )
+    use_mcm = up.status['mcm']
 
     workflows = getWorkflows(url, status=options.wmstatus,user=options.user)
     existing = [wf.name for wf in session.query(Workflow).all()]
@@ -25,7 +27,7 @@ def injector(url, options, specific):
     existing = [wf.name for wf in session.query(Workflow).all()]
 
     ## passing a round of invalidation of what needs to be invalidated
-    if options.invalidate:
+    if use_mcm and (options.invalidate or True):
         invalidator(url)
 
 
