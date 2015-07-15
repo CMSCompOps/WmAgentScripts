@@ -35,10 +35,11 @@ def invalidator(url, invalid_status='INVALID'):
             wfi = workflowInfo(url, wfn)
             success = "not rejected"
             ## to do, we should find a way to reject the workflow and any related acdc
-            if wfi.request['RequestStatus'] in ['assignment-approved','new','completed','closed-out','announced']:
-                success = reqMgrClient.rejectWorkflow(url, wfn)
-            else:
-                success = reqMgrClient.abortWorkflow(url, wfn)
+            success = reqMgrClient.invalidateWorkflow(url, wfn, current_status = wfi.request['RequestStatus'])
+            #if wfi.request['RequestStatus'] in ['assignment-approved','new','completed','closed-out','announced']:
+            #    success = reqMgrClient.rejectWorkflow(url, wfn)
+            #else:
+            #    success = reqMgrClient.abortWorkflow(url, wfn)
             print success
             acknowledge= True
             text = "The workflow %s (%s) was rejected due to invalidation in McM" % ( wfn, pid )

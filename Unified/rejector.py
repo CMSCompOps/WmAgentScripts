@@ -21,12 +21,13 @@ def rejector(url, specific, options=None):
             return
         results=[]
         wfi = workflowInfo(url, wfo.name)
-        if wfi.request['RequestStatus'] in ['assignment-approved','new','completed']:
-            #results.append( reqMgrClient.rejectWorkflow(url, wfo.name))
-            reqMgrClient.rejectWorkflow(url, wfo.name)
-        else:
-            #results.append( reqMgrClient.abortWorkflow(url, wfo.name))
-            reqMgrClient.abortWorkflow(url, wfo.name)
+        reqMgrClient.invalidateWorkflow(url, wfo.name, current_status=wfi.request['RequestStatus'])
+        #if wfi.request['RequestStatus'] in ['assignment-approved','new','completed']:
+        #    #results.append( reqMgrClient.rejectWorkflow(url, wfo.name))
+        #    reqMgrClient.rejectWorkflow(url, wfo.name)
+        #else:
+        #    #results.append( reqMgrClient.abortWorkflow(url, wfo.name))
+        #    reqMgrClient.abortWorkflow(url, wfo.name)
         
         datasets = wfi.request['OutputDatasets']
         for dataset in datasets:

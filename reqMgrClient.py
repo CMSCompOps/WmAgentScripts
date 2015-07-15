@@ -859,6 +859,19 @@ def setWorkflowRunning(url, workflowname):
     data = requestManagerPut(url,"/reqmgr/reqMgr/request", params)
     return data
 
+def invalidateWorkflow(url, workflowname, current_status=None):
+    if not current_status:
+        print "not implemented yet to retrieve the status at that point"
+    
+    if current_status in ['assignment-approved','new','completed','closed-out','announced']:
+        return rejectWorkflow(url, workflowname)
+    elif current_status in['normal-archived']:
+        params = {"requestName" : workflowname,"status" : "rejected-archived"}
+        data = requestManagerPut(url,"/reqmgr/reqMgr/request", params)
+        return data
+    else:
+        return abortWorkflow(url, workflowname)
+
 def rejectWorkflow(url, workflowname):
     """
     Sets a workflow state to rejected
