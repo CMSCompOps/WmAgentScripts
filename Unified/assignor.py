@@ -183,12 +183,18 @@ def assignor(url ,specific = None, talk=True, options=None):
         if options and options.team:
             team = options.team
 
-        if "T2_US_UCSD" in sites_with_data and random.random() < 0.5 and wfh.request['Campaign']=='RunIISpring15DR74' and int(wfh.getRequestNumEvents()) < 200000 and not any([out.endswith('RAW') for out in wfh.request['OutputDatasets']]):
+        if "T2_US_UCSD" in sites_with_data and random.random() < -1.0 and wfh.request['Campaign']=='RunIISpring15DR74' and int(wfh.getRequestNumEvents()) < 200000 and not any([out.endswith('RAW') for out in wfh.request['OutputDatasets']]):
             ## consider SDSC
             parameters['SiteWhitelist'] = ['T2_US_UCSD','T3_US_SDSC']
             parameters['useSiteListAsLocation'] = True
             team = 'allocation-based'
             sendEmail("sending work to SDSC","%s was assigned to SDSC/UCSD"% wfo.name,'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
+            
+        if wfh.request['Campaign']=='RunIIWinter15GS' and random.random() < -1.0:
+            parameters['SiteWhitelist'] = ['T3_US_SDSC']
+            team = 'allocation-based'
+            sendEmail("sending work to SDSC","%s was assigned to SDSC"% wfo.name,'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
+        
 
         ##parse options entered in command line if any
         if options:
