@@ -405,7 +405,7 @@ def checkor(url, spec=None, options=None):
             new_status = 'assistance'+sub_assistance
             
             if sub_assistance and wfo.status != new_status and 'PrepID' in wfi.request:
-                pid = wfi.request['PrepID']
+                pid = wfi.request['PrepID'].replace('task_','')
                 ## notify
                 messages= {
                     'recovery' : 'Samples completed with missing lumi count:\n%s '%( '\n'.join(['%.2f %% complete for %s'%(percent_completions[output]*100, output) for output in wfi.request['OutputDatasets'] ] ) ),
@@ -413,14 +413,15 @@ def checkor(url, spec=None, options=None):
                     'duplicate' : 'Samples completed with duplicated luminosity blocks:\n%s'%( '\n'.join(['%s'%output for output in wfi.request['OutputDatasets'] if output in duplications and duplications[output] ] ) ),
                     }
                 text ="The request %s (%s) is facing issue in production.\n" %( pid, wfo.name )
+                content = ""
                 for case in messages:
                     if case in new_status:
-                        text+= "\n"+messages[case]+"\n"
+                        content+= "\n"+messages[case]+"\n"
+                text += content
                 text += "You are invited to check, while this is being taken care of by Ops.\n"
                 text += "This is an automated message."
                 print "Sending notification back to requestor"
-                print text
-                if use_mcm:
+                if use_mcm and content:
                     batches = mcm.getA('batches',query='contains=%s&status=announced'%pid)
                     if len(batches):
                         ## go notify the batch
