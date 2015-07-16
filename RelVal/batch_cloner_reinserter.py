@@ -40,8 +40,6 @@ for requests_row in requests_rows:
     for name, value in zip(colnames, requests_row):
         if name == "DN":
             DN=value
-        elif name == "announcement_title":
-            email_title=value
         elif name == "description":
             description=value
         elif name == "useridyear":
@@ -78,8 +76,11 @@ for requests_row in requests_rows:
     
     for workflow_row in workflows_rows:
         #print workflow_row
-        workflow=workflow_row[1]
+        workflow=workflow_row[5]
         return_string=os.popen("python2.6 resubmit.py "+workflow + " anlevin DATAOPS").read()
+        if len(return_string) == 0:
+            print "batch_cloner_reinserter.py error 1"
+            sys.exit(1)
         print return_string
         workflows.append(return_string.split(' ')[len(return_string.split(' ')) - 1].rstrip('\n'))
 
@@ -87,6 +88,18 @@ for requests_row in requests_rows:
 
     curs.execute("select * from batches where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
     batches_rows=curs.fetchall()
+
+    colnames2 = [desc[0] for desc in curs.description]
+
+    assert(len(batches_rows) == 1)
+
+    for name, value in zip(colnames2, batches_rows[0]):
+        if name == "DN":
+            DN=value
+        elif name == "description":
+            description=value
+        elif name == "announcement_title":
+            email_title=value
 
     for line in workflows:
         workflow = line.rstrip('\n')
