@@ -196,6 +196,6 @@ if __name__ == "__main__":
     	maxmergeevents = 6000
     if 'DR61SLHCx' in oldworkflow:
         maxmergeevents = 5000
-    changeSplittingWorkflow.changeSplittingWorkflow(url, newWorkflow, 1)
+    #changeSplittingWorkflow.changeSplittingWorkflow(url, newWorkflow, 1) #no longer needed now reqMgr sets smart lumi splitting with numevents = 8h/timeperevent
     assignWorkflowsAuto.assignRequest(url , newWorkflow ,team ,site ,era, procversion, procstring, activity, lfn, maxmergeevents, 2300000, 4100000000, 0, [])
     sys.exit(0)
