@@ -70,6 +70,8 @@ for requests_row in requests_rows:
     curs.execute("select * from workflows where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
     workflows_rows=curs.fetchall()
 
+    workflows_colnames = [desc[0] for desc in curs.description]
+
     assert(len(workflows_rows) > 0)
 
     workflows=[]
@@ -143,8 +145,8 @@ for requests_row in requests_rows:
     conn.commit()
 
     for i in range(0,len(workflows)):
-        workflow = line.rstrip('\n')
-        curs.execute("insert into workflows set useridyear = \""+useridyear+"\", useridmonth = \""+useridmonth+"\", useridday = \""+useridday+"\", useridnum = "+str(useridnum)+", batch_version_num = "+str(new_batch_version_num)+", workflow_name=\""+workflows[i]+"\", original_workflow_name = \""+workflows_rows[i][1]+"\";")
+        #workflow = line.rstrip('\n')
+        curs.execute("insert into workflows set useridyear = \""+useridyear+"\", useridmonth = \""+useridmonth+"\", useridday = \""+useridday+"\", useridnum = "+str(useridnum)+", batch_version_num = "+str(new_batch_version_num)+", workflow_name=\""+workflows[i]+"\", original_workflow_name = \""+dict(zip(workflows_colnames,workflows_rows[i]))['workflow_name']+"\";")
 
     #batchid is assigned the new batch id now    
     curs.execute("delete from clone_reinsert_requests where useridyear=\""+useridyear+"\" and useridmonth=\""+useridmonth+"\" and useridday=\""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
