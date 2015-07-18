@@ -69,7 +69,7 @@ while True:
         print ""
 
         if status == "input_dsets_ready":
-            
+
             curs.execute("select workflow_name from workflows where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
             wfs=curs.fetchall()
 
@@ -91,8 +91,10 @@ while True:
 
                                 dbs_dset_check=utils.getDatasets(dset)
                                 
-                                if len(curs.fetchall()) != 0:
-                                    os.system('echo '+wf[0]+' | mail -s \"assignment_loop.py error 1\" andrew.m.levin@vanderbilt.edu')
+                                curs_fetchall = curs.fetchall()
+
+                                if len(curs_fetchall) != 0:
+                                    os.system('echo '+wf[0]+" "+curs_fetchall[0][5]+" "+dset+' | mail -s \"assignment_loop.py error 1\" andrew.m.levin@vanderbilt.edu')
                                     sys.exit(1)
                                 elif len(dbs_dset_check) != 0:    
                                     os.system('echo '+wf[0]+" "+dset+' | mail -s \"assignment_loop.py error 5\" andrew.m.levin@vanderbilt.edu')
@@ -127,6 +129,10 @@ while True:
 
                 schema = json.loads(r2.read())
 
+                #hack because workflows assigned to only T2_CH_CERN_T0 never get acquired
+                if site == "T2_CH_CERN_T0":
+                    site = ["T2_CH_CERN","T2_CH_CERN_T0"]
+
                 params = assignment.make_assignment_params(schema,site,processing_version)                    
 
                 result=reqMgrClient.assignWorkflow("cmsweb.cern.ch", wf[0], "relval", params)
@@ -135,9 +141,8 @@ while True:
                     os.system('echo '+wf[0]+' | mail -s \"assignment_loop.py error 4\" andrew.m.levin@vanderbilt.edu')
                     sys.exit(0)
 
-
                 time.sleep(30)
-                
+
             curs.execute("update batches set status=\"assigned\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")    
 
             mysqlconn.commit()
@@ -179,4 +184,5 @@ while True:
 
     #curs.execute("unlock tables")
 
-    time.sleep(100)
+    #time.sleep(100)
+    sys.exit(0)
