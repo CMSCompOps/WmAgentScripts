@@ -17,13 +17,20 @@ def assistance_decision(job_failure_information):
     
     assistance=False
 
-    for wf in wf_dicts:
+    for wf in job_failure_information:
+
         firsttime=True
         for task in wf['task_dict']:
-            if 'CleanupUnmerged' not in task['task_name'] and 'LogCollect' not in task['task_name']:
+
+            if 'CleanupUnmerged' in task['task_name'] or 'LogCollect' in task['task_name']:
                 continue
+            if task['nfailurestot'] == 0:
+                continue
+
             sum = 0
+
             for exitcode in assistance_exit_codes:
+
                 if exitcode in task['failures'].keys():
                     sum+=task['failures'][exitcode]['number']
 
@@ -37,6 +44,7 @@ def assistance_decision(job_failure_information):
 
             else:
                 if float(sum) / task['nfailurestot'] > default_threshold:
-                    asssistance=True
+                    assistance=True
+
 
     return assistance
