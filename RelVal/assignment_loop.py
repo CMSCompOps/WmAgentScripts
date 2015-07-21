@@ -36,31 +36,15 @@ while True:
     curs.execute("select * from batches")
     batches=curs.fetchall()
 
-    colnames = [desc[0] for desc in curs.description]
+    batches_colnames = [desc[0] for desc in curs.description]
     
     for batch in batches:
-        for name, value in zip(colnames, batch):
+        for name, value in zip(batches_colnames, batch):
             print name+" => "+str(value)
-            if name=="status":
-                status=value
-            elif name == "useridyear":
-                useridyear=value
-            elif name == "useridmonth":
-                useridmonth=value
-            elif name == "useridday":
-                useridday=value
-            elif name == "useridnum":
-                useridnum=value
-            elif name == "batch_version_num":
-                batch_version_num=value
-            elif name == "site":
-                site=value
-            elif name == "processing_version":
-                processing_version=value
-            elif name == "hn_message_id":
-                hn_message_id=value
-            elif name == "announcement_title":
-                title=value
+
+        batch_dict=dict(zip(batches_colnames,batch))    
+
+        userid = batch_dict["useridyear"]+"_"+batch_dict["useridmonth"]+"_"+batch_dict["useridday"]+"_"+str(batch_dict["useridnum"])+"_"+str(batch_dict["batch_version_num"])
 
         #if batch[0] == 48:
         #    continue
@@ -68,9 +52,9 @@ while True:
         #print batch
         print ""
 
-        if status == "input_dsets_ready":
+        if batch_dict["status"] == "input_dsets_ready":
 
-            curs.execute("select workflow_name from workflows where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
+            curs.execute("select workflow_name from workflows where useridyear = \""+batch_dict["useridyear"]+"\" and useridmonth = \""+batch_dict["useridmonth"]+"\" and useridday = \""+batch_dict["useridday"]+"\" and useridnum = "+str(batch_dict["useridnum"])+" and batch_version_num = "+str(batch_dict["batch_version_num"])+";")
             wfs=curs.fetchall()
 
             #first do checks to make sure the workflows do not write into an existing dataset
@@ -85,7 +69,7 @@ while True:
                     if type(value) is dict and key.startswith("Task"):
                         if ('KeepOutput' in value and value['KeepOutput']) or 'KeepOutput' not in value:
                             if 'InputDataset' in value:
-                                dset="/" + value['InputDataset'].split('/')[1] + "/" + value['AcquisitionEra'] + "-" + value['ProcessingString'] + "-v" + str(processing_version)+"/*"
+                                dset="/" + value['InputDataset'].split('/')[1] + "/" + value['AcquisitionEra'] + "-" + value['ProcessingString'] + "-v" + str(batch_dict["processing_version"])+"/*"
 
                                 curs.execute("select * from datasets where dset_name = \""+ dset.rstrip("*")+"\";")
 
@@ -94,18 +78,22 @@ while True:
                                 curs_fetchall = curs.fetchall()
 
                                 if len(curs_fetchall) != 0:
-                                    os.system('echo '+wf[0]+" "+curs_fetchall[0][5]+" "+dset+' | mail -s \"assignment_loop.py error 1\" andrew.m.levin@vanderbilt.edu')
+                                    dsets_colnames = [desc[0] for desc in curs.description]
+                                    dset_dict=dict(zip(dsets_colnames,curs_fetchall[0]))    
+                                    userid_previously_inserted_dset=dset_dict["useridyear"]+"_"+dset_dict["useridmonth"]+"_"+dset_dict["useridday"]+"_"+str(dset_dict["useridnum"])+"_"+str(dset_dict["batch_version_num"])
+                                    os.system('echo \"'+userid+"\n"+wf[0]+"\n"+userid_previously_inserted_dset+"\n"+dset_dict["workflow_name"]+"\n"+dset+'\" | mail -s \"assignment_loop.py error 1\" andrew.m.levin@vanderbilt.edu')
                                     sys.exit(1)
                                 elif len(dbs_dset_check) != 0:    
-                                    os.system('echo '+wf[0]+" "+dset+' | mail -s \"assignment_loop.py error 5\" andrew.m.levin@vanderbilt.edu')
+                                    os.system('echo \"'+userid+"\n"+wf[0]+"\n"+dset+'\" | mail -s \"assignment_loop.py error 5\" andrew.m.levin@vanderbilt.edu')
                                     sys.exit(1)
                                 else:   
-                                    curs.execute("insert into datasets set dset_name=\""+dset.rstrip("*")+"\", workflow_name=\""+wf[0]+"\", useridyear = \""+useridyear+"\", useridmonth = \""+useridmonth+"\", useridday = \""+useridday+"\", useridnum = "+str(useridnum)+", batch_version_num = "+str(batch_version_num)+";")
+
+                                    curs.execute("insert into datasets set dset_name=\""+dset.rstrip("*")+"\", workflow_name=\""+wf[0]+"\", useridyear = \""+batch_dict["useridyear"]+"\", useridmonth = \""+batch_dict["useridmonth"]+"\", useridday = \""+batch_dict["useridday"]+"\", useridnum = "+str(batch_dict["useridnum"])+", batch_version_num = "+str(batch_dict["batch_version_num"])+";")
 
                                     
                             elif 'PrimaryDataset' in value:
 
-                                dset="/" + value['PrimaryDataset'] + "/" + value['AcquisitionEra'] + "-" + value['ProcessingString'] + "-v" + str(processing_version)+"/*"
+                                dset="/" + value['PrimaryDataset'] + "/" + value['AcquisitionEra'] + "-" + value['ProcessingString'] + "-v" + str(batch_dict["processing_version"])+"/*"
                                 curs.execute("select * from datasets where dset_name = \""+ dset.rstrip("*")+"\";")
 
                                 curs_fetchall = curs.fetchall()
@@ -113,13 +101,16 @@ while True:
                                 dbs_dset_check=utils.getDatasets(dset)
 
                                 if len(curs_fetchall) != 0:
-                                    os.system('echo '+wf[0]+" "+curs_fetchall[0][5]+" "+dset+' | mail -s \"assignment_loop.py error 2\" andrew.m.levin@vanderbilt.edu')
+                                    dsets_colnames = [desc[0] for desc in curs.description]
+                                    dset_dict=dict(zip(dsets_colnames,curs_fetchall[0]))    
+                                    userid_previously_inserted_dset=dset_dict["useridyear"]+"_"+dset_dict["useridmonth"]+"_"+dset_dict["useridday"]+"_"+str(dset_dict["useridnum"])+"_"+str(dset_dict["batch_version_num"])
+                                    os.system('echo \"'+userid+"\n"+wf[0]+"\n"+userid_previously_inserted_dset+"\n"+wf_dict["workflow_name"]+"\n"+dset+'\" | mail -s \"assignment_loop.py error 2\" andrew.m.levin@vanderbilt.edu')
                                     sys.exit(1)
                                 elif len(dbs_dset_check) != 0:    
-                                    os.system('echo '+wf[0]+' | mail -s \"assignment_loop.py error 7\" andrew.m.levin@vanderbilt.edu')
+                                    os.system('echo \"'+userid+"\n"+wf[0]+'\" | mail -s \"assignment_loop.py error 7\" andrew.m.levin@vanderbilt.edu')
                                     sys.exit(1)
                                 else:
-                                    curs.execute("insert into datasets set dset_name=\""+dset.rstrip("*")+"\", workflow_name=\""+wf[0]+"\", useridyear = "+useridyear+", useridmonth = "+useridmonth+", useridday = "+useridday+", useridnum = "+str(useridnum)+", batch_version_num = "+str(batch_version_num)+";")
+                                    curs.execute("insert into datasets set dset_name=\""+dset.rstrip("*")+"\", workflow_name=\""+wf[0]+"\", useridyear = "+batch_dict["useridyear"]+", useridmonth = "+batch_dict["useridmonth"]+", useridday = "+batch_dict["useridday"]+", useridnum = "+str(batch_dict["useridnum"])+", batch_version_num = "+str(batch_dict["batch_version_num"])+";")
 
             #only assign the workflows after all of the checks are done                        
             for wf in wfs:
@@ -130,10 +121,11 @@ while True:
                 schema = json.loads(r2.read())
 
                 #hack because workflows assigned to only T2_CH_CERN_T0 never get acquired
+                site = batch_dict["site"]
                 if site == "T2_CH_CERN_T0":
                     site = ["T2_CH_CERN","T2_CH_CERN_T0"]
 
-                params = assignment.make_assignment_params(schema,site,processing_version)                    
+                params = assignment.make_assignment_params(schema,site,batch_dict["processing_version"])                    
 
                 result=reqMgrClient.assignWorkflow("cmsweb.cern.ch", wf[0], "relval", params)
 
@@ -143,26 +135,26 @@ while True:
 
                 time.sleep(30)
 
-            curs.execute("update batches set status=\"assigned\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")    
+            curs.execute("update batches set status=\"assigned\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where useridyear = \""+batch_dict["useridyear"]+"\" and useridmonth = \""+batch_dict["useridmonth"]+"\" and useridday = \""+batch_dict["useridday"]+"\" and useridnum = "+str(batch_dict["useridnum"])+" and batch_version_num = "+str(batch_dict["batch_version_num"])+";")    
 
             mysqlconn.commit()
 
-            if hn_message_id != "do_not_send_an_acknowledgement_email":
+            if batch_dict["hn_message_id"] != "do_not_send_an_acknowledgement_email":
 
                 msg = MIMEMultipart()
                 reply_to = []
-                send_to = ["andrew.m.levin@vanderbilt.edu"]
+                send_to = ["andrew.m.levin@vanderbilt.edu","andrew.m.levin.filter1@gmail.com"]
                 #send_to = ["hn-cms-dataopsrequests@cern.ch","andrew.m.levin@vanderbilt.edu"]
                 #send_to = ["hn-cms-hnTest@cern.ch"]
 
-                msg['In-Reply-To'] = hn_message_id
-                msg['References'] = hn_message_id
+                msg['In-Reply-To'] = batch_dict["hn_message_id"]
+                msg['References'] = batch_dict["hn_message_id"]
 
                 msg['From'] = "amlevin@mit.edu"
                 msg['reply-to'] = COMMASPACE.join(reply_to)
                 msg['To'] = COMMASPACE.join(send_to)
                 msg['Date'] = formatdate(localtime=True)
-                msg['Subject'] = title
+                msg['Subject'] = batch_dict["announcement_title"]
                 msg['Message-ID'] = email.Utils.make_msgid()
     
 
