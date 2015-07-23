@@ -36,6 +36,8 @@ url='cmsweb.cern.ch'
 
 def print_job_failure_information(job_failure_information):
 
+    istherefailureinformation=False
+
     mergedexitcodes=[]
 
     for wf in job_failure_information:
