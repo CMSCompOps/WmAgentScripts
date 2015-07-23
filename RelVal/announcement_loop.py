@@ -138,7 +138,7 @@ while True:
         if needs_assistance:
             curs.execute("update batches set status=\"assistance\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+ "\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num ="+str(batch_version_num)+";")
             mysqlconn.commit()
-            os.system('echo \"batch_id: "+userid+"\" | mail -s \"a batch of relval workflows needs assistance\" andrew.m.levin@vanderbilt.edu')
+            os.system('echo \"batch_id: '+userid+'\" | mail -s \"a batch of relval workflows needs assistance\" andrew.m.levin@vanderbilt.edu')
             continue
 
         #if there is a '\r' character in the body of an e-mail, it does not get sent
@@ -154,13 +154,86 @@ while True:
 
         if ret != 0:
             os.system('echo \"'+userid+'\" | mail -s \"announcement_loop.py error 2\" andrew.m.levin@vanderbilt.edu')
+            sys.exit(0)
 
         dsets_list = []    
-        dsets_fnal_disk_list = []
-        dsets_cern_disk_list = []
 
         for dset_nevents in dset_nevents_list:
             dsets_list.append(dset_nevents[0])
+
+        for dset in dsets_list:
+            setDatasetStatusDBS3.setStatusDBS3("https://cmsweb.cern.ch/dbs/prod/global/DBSWriter", dset, "VALID", True)
+
+        for wf in wf_list:
+            reqMgrClient.closeOutWorkflow("cmsweb.cern.ch",wf)
+            reqMgrClient.announceWorkflow("cmsweb.cern.ch",wf)
+
+        msg = MIMEMultipart()
+        reply_to = []
+        #send_to = ["andrew.m.levin@vanderbilt.edu","andrew.m.levin.filter1@gmail.com"]
+        send_to = ["hn-cms-relval@cern.ch","andrew.m.levin@vanderbilt.edu","andrew.m.levin.filter1@gmail.com"]
+        #send_to = ["hn-cms-hnTest@cern.ch"]
+            
+        #msg['In-Reply-To'] = hn_message_id
+        #msg['References'] = hn_message_id
+            
+        msg['From'] = "amlevin@mit.edu"
+        msg['reply-to'] = COMMASPACE.join(reply_to)
+        msg['To'] = COMMASPACE.join(send_to)
+        msg['Date'] = formatdate(localtime=True)
+        msg['Subject'] = title
+        msg['Message-ID'] = email.Utils.make_msgid()
+
+        messageText="Dear all,\n"
+        messageText=messageText+"\n"
+        messageText=messageText+"A batch of relval workflows has finished.\n"
+        messageText=messageText+"\n"
+        messageText=messageText+"Batch ID:\n"
+        messageText=messageText+"\n"
+        messageText=messageText+userid+"\n"
+        if batch_version_num > 0:
+            messageText=messageText+"\n"
+            messageText=messageText+"original workflow name ==> clone name:\n"
+            messageText=messageText+"\n"
+            curs.execute("select workflow_name,original_workflow_name from workflows where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+ "\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num ="+str(batch_version_num)+";")
+            wfs=curs.fetchall()
+            for wf in wfs:
+                messageText=messageText+wf[1] + " ==> "+wf[0] + "\n"
+        messageText=messageText+"\n"        
+        messageText=messageText+"List of datasets:\n"
+        messageText=messageText+"\n"
+        messageText=messageText+"http://cms-project-relval.web.cern.ch/cms-project-relval/relval_stats/"+userid+".txt\n"
+        messageText=messageText+"\n"
+        messageText=messageText+"Description:\n"
+        messageText=messageText+"\n"
+        messageText=messageText+description.rstrip('\n')
+        messageText=messageText+"\n"
+        #messageText=messageText+"\n"
+        [istherefailureinformation,return_string]=print_job_failure_information.print_job_failure_information(job_failure_information)
+
+        if istherefailureinformation:
+            messageText=messageText+"\n"
+            messageText=messageText+return_string
+            messageText=messageText+"\n"
+        messageText=messageText+"\n"
+        messageText=messageText+"RelVal Batch Manager"
+
+        #put the announcement message into an e-mail to the relval hypernews and also in a url
+        output_file = open("/afs/cern.ch/user/r/relval/webpage/relval_announcements/"+userid+".txt", 'w')
+
+        output_file.write(messageText)
+
+        try:
+            msg.attach(MIMEText(messageText))
+            smtpObj = smtplib.SMTP()
+            smtpObj.connect()
+            smtpObj.sendmail("amlevin@mit.edu", send_to, msg.as_string())
+            smtpObj.close()
+        except Exception as e:
+            print "Error: unable to send email: %s" %(str(e))
+
+        dsets_fnal_disk_list = []
+        dsets_cern_disk_list = []
             
         for dset in dsets_list:
 
@@ -199,76 +272,10 @@ while True:
         #phedexid = result['phedex']['request_created'][0]['id']
         #utils.approveSubscription("cmsweb.cern.ch",phedexid)
 
-        for dset in dsets_list:
-            setDatasetStatusDBS3.setStatusDBS3("https://cmsweb.cern.ch/dbs/prod/global/DBSWriter", dset, "VALID", True)
-
-        for wf in wf_list:
-            reqMgrClient.closeOutWorkflow("cmsweb.cern.ch",wf)
-            reqMgrClient.announceWorkflow("cmsweb.cern.ch",wf)
-
-        msg = MIMEMultipart()
-        reply_to = []
-        send_to = ["andrew.m.levin@vanderbilt.edu"]
-        #send_to = ["hn-cms-relval@cern.ch","andrew.m.levin@vanderbilt.edu"]
-        #send_to = ["hn-cms-hnTest@cern.ch"]
-            
-        #msg['In-Reply-To'] = hn_message_id
-        #msg['References'] = hn_message_id
-            
-        msg['From'] = "amlevin@mit.edu"
-        msg['reply-to'] = COMMASPACE.join(reply_to)
-        msg['To'] = COMMASPACE.join(send_to)
-        msg['Date'] = formatdate(localtime=True)
-        msg['Subject'] = title
-        msg['Message-ID'] = email.Utils.make_msgid()
-
-        messageText="Dear all,\n"
-        messageText=messageText+"\n"
-        messageText=messageText+"A batch of relval workflows has finished.\n"
-        messageText=messageText+"\n"
-        messageText=messageText+"Batch ID:\n"
-        messageText=messageText+"\n"
-        messageText=messageText+userid+"\n"
-        messageText=messageText+"\n"
-        if batch_version_num > 0:
-            messageText=messageText+"original workflow name ==> clone name:\n"
-            messageText=messageText+"\n"
-            curs.execute("select workflow_name,original_workflow_name from workflows where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+ "\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num ="+str(batch_version_num)+";")
-            wfs=curs.fetchall()
-            for wf in wfs:
-                messageText=messageText+wf[1] + " ==> "+wf[0] + "\n"
-        messageText=messageText+"\n"        
-        messageText=messageText+"List of datasets:\n"
-        messageText=messageText+"\n"
-        messageText=messageText+"http://cms-project-relval.web.cern.ch/cms-project-relval/relval_stats/"+userid+".txt\n"
-        messageText=messageText+"\n"
-        messageText=messageText+"Description:\n"
-        messageText=messageText+"\n"
-        messageText=messageText+description.rstrip('\n')
-        messageText=messageText+"\n"
-        #messageText=messageText+"\n"
-        [istherefailureinformation,return_string]=print_job_failure_information.print_job_failure_information(job_failure_information)
-
-        if istherefailureinformation:
-            messageText=messageText+"\n"
-            messageText=messageText+return_string
-            messageText=messageText+"\n"
-        messageText=messageText+"\n"
-        messageText=messageText+"RelVal Batch Manager"
-
-        try:
-            msg.attach(MIMEText(messageText))
-            smtpObj = smtplib.SMTP()
-            smtpObj.connect()
-            smtpObj.sendmail("amlevin@mit.edu", send_to, msg.as_string())
-            smtpObj.close()
-        except Exception as e:
-            print "Error: unable to send email: %s" %(str(e))
-
         curs.execute("update batches set status=\"announced\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+ "\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num ="+str(batch_version_num)+";")
         mysqlconn.commit()
 
     #curs.execute("unlock tables")
 
-    time.sleep(100)
-    
+    #time.sleep(100)
+    sys.exit(0)
