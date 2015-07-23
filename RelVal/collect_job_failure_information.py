@@ -95,6 +95,15 @@ def collect_job_failure_information(wf_list,verbose=False,debug=False):
                                     failures[k['exitCode']]={'number' : 1, 'logarchivefiles' : [[mergedfilename,unmergedfilename]], 'details': k['details']}
                                 found_cmssw_step_failures=True
 
+                    if not found_fatal_exception and not found_cmssw_step_failures:
+                        for k in s2['rows'][j]['doc']['errors']['cmsRun1']:
+                            if k['type'] == 'SCRAMScriptFailure':
+                                if k['exitCode'] in failures.keys():
+                                    failures[k['exitCode']]['number']=failures[k['exitCode']]['number']+1
+                                else:
+                                    failures[k['exitCode']]={'number' : 1, 'logarchivefiles' : [], 'details': k['details']}
+                                found_scram_script_failure=True
+
             conn3  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))   
         #r31=conn3.request('GET','/couchdb/wmstats/_design/WMStats/_view/latestRequest?reduce=true&group=true&keys=[["'+workflow+'","cmssrv113.fnal.gov:9999"],["'+workflow+'","vocms142.cern.ch:9999"]]&stale=ok')
             r31=conn3.request('GET','/couchdb/wmstats/_design/WMStats/_view/latestRequest?reduce=true&group=true&keys=[["'+workflow+'","cmsgwms-submit1.fnal.gov:9999"],["'+workflow+'","vocms053.cern.ch:9999"]]&stale=ok')
@@ -160,6 +169,5 @@ def collect_job_failure_information(wf_list,verbose=False,debug=False):
             task_dicts.append({'task_name':taskname.split('/')[len(taskname.split('/'))-1], 'failures': failures, 'nfailures': nfailures,'nfailurestot':nfailurestot,'totaljobs':totaljobs})    
 
             wf_dicts.append({'wf_name':workflow,'task_dict':task_dicts})                      
-
 
     return wf_dicts        
