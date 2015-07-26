@@ -27,7 +27,7 @@ print useridday
 print useridmonth
 print useridyear
 
-assert(batch_version_num == 0)
+assert(batch_version_num == "0")
 
 curs.execute("select * from batches where batch_version_num = "+batch_version_num+" and useridnum = "+ useridnum+" and useridday = \""+ useridday + "\" and useridmonth = \"" + useridmonth + "\" and useridyear = \""+ useridyear +"\";")
 batches_rows=curs.fetchall()

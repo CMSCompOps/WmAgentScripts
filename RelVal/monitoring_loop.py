@@ -68,6 +68,7 @@ while True:
         n_completed=0
         max_completion_time=0
         for wf in wfs:
+
             n_workflows=n_workflows+1
             conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
             r1=conn.request('GET','/couchdb/wmstats/_all_docs?keys=["'+wf[0]+'"]&include_docs=true')
@@ -79,8 +80,6 @@ while True:
                 os.system('echo '+wf[0]+' | mail -s \"monitorying.py error 1\" andrew.m.levin@vanderbilt.edu --')
                 sys.exit(1)
                 
-
-
             #print s['rows'][0]['doc']['request_status']
             #print len(s['rows'][0]['doc']['request_status'])
 
@@ -104,7 +103,10 @@ while True:
         print ""
         
     sys.stdout.flush()    
-    os.system("cp relval_monitor_most_recent_50_batches.txt /afs/cern.ch/user/r/relval/webpage/relval_monitor_most_recent_50_batches.txt")
+    ret=os.system("cp relval_monitor_most_recent_50_batches.txt /afs/cern.ch/user/r/relval/webpage/relval_monitor_most_recent_50_batches.txt")
+
+    if ret != 0:
+        os.system('echo \"'+userid+'\" | mail -s \"monitoring_loop.py error 2\" andrew.m.levin@vanderbilt.edu')
 
     sys.exit(0)
     time.sleep(60)

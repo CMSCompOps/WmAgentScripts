@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sys
+import optparse
 
 #if len(sys.argv) != 3:
 #     print "Usage:"
@@ -51,4 +52,24 @@ def makeStatisticsTable(dsets_nevents_list,output_file_name):
 
     output_file.write(long_dash_string[1:max + 15]+ '\n')
 
+def main():
+
+    parser = optparse.OptionParser()
+    (options,args) = parser.parse_args()
+
+    if not len(args)==1:
+        print "usage: python2.6 makeStatisticsTable.py <inputFile_containing_list_of_datasets_and_number_of_events>"
+
+    dsets_nevents_list = []    
+        
+    inputFile=args[0]    
+    f = open(inputFile, 'r')
+    for line in f:
+        line = line.rstrip('\n')
+        dsets_nevents_list.append([line.split(' ')[0],line.split(' ')[1]])
+
+    makeStatisticsTable(dsets_nevents_list,"delete_this_statistics.txt")    
+
+if __name__ == "__main__":
+    main()
 

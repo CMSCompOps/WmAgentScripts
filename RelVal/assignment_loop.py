@@ -39,18 +39,14 @@ while True:
     batches_colnames = [desc[0] for desc in curs.description]
     
     for batch in batches:
-        for name, value in zip(batches_colnames, batch):
-            print name+" => "+str(value)
+        #for name, value in zip(batches_colnames, batch):
+        #    print name+" => "+str(value)
 
         batch_dict=dict(zip(batches_colnames,batch))    
 
         userid = batch_dict["useridyear"]+"_"+batch_dict["useridmonth"]+"_"+batch_dict["useridday"]+"_"+str(batch_dict["useridnum"])+"_"+str(batch_dict["batch_version_num"])
 
-        #if batch[0] == 48:
-        #    continue
-
-        #print batch
-        print ""
+        print "    userid => "+userid
 
         if batch_dict["status"] == "input_dsets_ready":
 

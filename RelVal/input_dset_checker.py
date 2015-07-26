@@ -82,7 +82,8 @@ while True:
         #print batch
         #print ""
 
-        if status == "waiting_for_transfer" and count % 10 == 0:        
+        #if status == "waiting_for_transfer" and count % 10 == 0:        
+        if status == "waiting_for_transfer":        
 
             count = 0
 
@@ -227,4 +228,5 @@ while True:
 
     #curs.execute("unlock tables")
 
-    time.sleep(100)
+    #time.sleep(100)
+    sys.exit(0)
