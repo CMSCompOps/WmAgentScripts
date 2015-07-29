@@ -10,8 +10,9 @@
     
 """
 import sys,os
-import subprocess
 from random import choice
+import htcondor
+
 def increaseCounterInDict(dict,site,type):
     """
     increases the job count for the given site
@@ -98,66 +99,47 @@ def main():
     #command="""condor_q -format "%i." ClusterID -format "%s " ProcId -format " %i " JobStatus  -format " %d " ServerTime-JobStartDate -format "%s" UserLog -format " %s" DESIRED_Sites -format " %s" RemoveReason -format " %i\n" NumJobStarts | awk '{if ($2!= 1) print $0}'"""
     #command='condor_q -format "%i." ClusterID -format "%s " ProcId -format "%i " JobStatus  -format "%d " ServerTime -format "[%d] " JobStartDate -format "%s " WMAgent_SubTaskName -format "[%s] " MATCH_EXP_JOBGLIDEIN_CMSSite -format "%s " DESIRED_Sites -format "%i\n" NumJobStarts'
 
-    #condor_q command
-    command = 'condor_q -af ClusterID ' \
-                            'ProcId ' \
-                            'JobStatus ' \
-                            'ServerTime-JobStartDate ' \
-                            'WMAgent_SubTaskName ' \
-                            'MATCH_EXP_JOBGLIDEIN_CMSSite '\
-                            'DESIRED_Sites '\
-                            'NumJobStarts'    
-
-
-    proc = subprocess.Popen(command, stderr = subprocess.PIPE,stdout = subprocess.PIPE, shell = True)
-    out, err = proc.communicate()
+    schedd = htcondor.Schedd()
+    jobs = schedd.xquery( "true", ['ClusterID',
+                            'ProcId',
+                            'JobStatus',
+                            'ServerTime',
+                            'JobStartDate',
+                            'WMAgent_SubTaskName',
+                            'MATCH_EXP_JOBGLIDEIN_CMSSite',
+                            'DESIRED_Sites',
+                            'NumJobStarts'])
     #split lines
-    for line in out.split('\n') :
-        #skip empty lines
-
-        if line == "" : continue
-
-        array = line.split(' ')
+    for job in jobs:
         #clusterID.ProcId (composed ID)
-        id = array.pop(0)
-        id += '.'
-        id += array.pop(0)
-        #JobStatus
-        status = int(array.pop(0))
+        id = "%s.%s"%(job["clusterID"],job["ProcId"])
+        #other features
+        status = job["JobStatus"]
         
         #ServerTime-JobStartDate
-        RunTime = array.pop(0)
-        if RunTime != 'undefined':
-            RunTime = int(RunTime)
+        if "JobStartDate" in job:
+            RunTime = job["JobStatus"] - job["JobStartDate"]
         
-        if 'sleep' in line:
-            print line
-            continue
-
         #get task name
-        taskname = array.pop(0)
+        taskname = job["WMAgent_SubTaskName"]
+
         #get Workflow from the taskName
         workflow = taskname.split("/")[1]
-        
-        #if it has a MATCH_EXP_JOBGLIDEIN_CMSSite
-        site = array.pop(0)
-        if site == 'undefined':
-            site = 'UNKNOWN'
-        
-        #DesiredSite list        
-        sitelist = array.pop(0).split(',')
-        #if only one site on the desiredsite
-        if site == 'UNKNOWN' and len(sitelist) == 1:
-            site = sitelist[0]
-        #if many pick random from whitelist
-        elif site == 'UNKNOWN' and len(sitelist) > 1:
-            site = choice(sitelist)
-            
-        #get number of job restarts
-        numjobstart = int(array.pop(0))
-        removereason = "UNDEFINED"
 
-        if len(sitelist) > 1: removereason = "DEFINED"    
+        #DesiredSite list
+        sitelist = job["DESIRED_Sites"].split(",")
+        #if it has a MATCH_EXP_JOBGLIDEIN_CMSSite
+        if "MATCH_EXP_JOBGLIDEIN_CMSSite" in job:
+            site = job["MATCH_EXP_JOBGLIDEIN_CMSSite"]
+        else:
+            site = choice(sitelist)   
+        
+        #get number of job restarts
+        numjobstart = job["NumJobStarts"]
+
+        removereason = "UNDEFINED"
+        if len(sitelist) > 1: removereason = "DEFINED"
+
         jobType = ''
         #the last name
         name = taskname.split("/")[-1]
