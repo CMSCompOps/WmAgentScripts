@@ -151,7 +151,9 @@ def main():
 
         ret=os.system("cp "+userid+".txt /afs/cern.ch/user/r/relval/webpage/relval_stats/"+userid+".txt")
 
-        if ret != 0:
+        if ret == 0:
+            os.system("rm "+userid+".txt")
+        else:
             os.system('echo \"'+userid+'\" | mail -s \"announcement_loop.py error 2\" andrew.m.levin@vanderbilt.edu')
             sys.exit(0)
 
