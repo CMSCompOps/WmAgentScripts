@@ -32,7 +32,7 @@ url='cmsweb.cern.ch'
 
 dbname = "relval"
 
-while True:
+def main():
 
     mysqlconn = MySQLdb.connect(host='dbod-cmsrv1.cern.ch', user='relval', passwd="relval", port=5506)
 
@@ -48,9 +48,6 @@ while True:
     colnames = [desc[0] for desc in curs.description]
 
     for batch in batches:
-
-        for name, value in zip(colnames, batch):
-            print '    '+name.rstrip(' ')+': '+str(value)
 
         for name, value in zip(colnames, batch):
             if name == "useridday":
@@ -74,6 +71,8 @@ while True:
             continue
 
         userid=useridyear+"_"+useridmonth+"_"+useridday+"_"+str(useridnum)+"_"+str(batch_version_num)
+
+        print "   userid ==> "+userid
 
         curs.execute("select workflow_name from workflows where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+ "\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num ="+str(batch_version_num)+";")
         wfs=curs.fetchall()
@@ -277,5 +276,6 @@ while True:
 
     #curs.execute("unlock tables")
 
-    #time.sleep(100)
-    sys.exit(0)
+
+if __name__ == "__main__":
+    main()

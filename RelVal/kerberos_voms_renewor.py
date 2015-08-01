@@ -1,7 +1,8 @@
 import sys
 import os
 import time
-while True:
+
+def main():
 
     secrets_file=open("/home/relval/secrets.txt")
 
@@ -23,7 +24,10 @@ while True:
     ret=os.system("voms-proxy-init -voms cms  --valid 192:00 << EOF\n"+voms_proxy_password+"\nEOF")
 
     #time.sleep(3600)
-    sys.exit(0)
+    #sys.exit(0)
     
 #curs.execute("insert into batches set hn_req=\""+hnrequest+"\", announcement_title=\"myannouncementtitle\"")
+
+if __name__ == "__main__":
+    main()
 

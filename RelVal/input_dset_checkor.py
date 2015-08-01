@@ -13,9 +13,9 @@ import utils
 dbname = "relval"
 
 #it is probably too expensive to retrieve the information from phedex every 100 seconds
-count= 0
+#count= 0
 
-while True:
+def main():
 
     mysqlconn = MySQLdb.connect(host='dbod-cmsrv1.cern.ch', user='relval', passwd="relval", port=5506)
     #conn = MySQLdb.connect(host='localhost', user='relval', passwd='relval')
@@ -43,7 +43,6 @@ while True:
         blocks_not_at_site=[]
 
         for name, value in zip(colnames, batch):
-            print name+" => "+str(value)
             if name=="status":
                 status=value
             elif name == "useridyear":
@@ -82,10 +81,15 @@ while True:
         #print batch
         #print ""
 
+        userid = useridyear+"_"+useridmonth+"_"+useridday+"_"+str(useridnum)+"_"+str(batch_version_num)    
+
         #if status == "waiting_for_transfer" and count % 10 == 0:        
+
         if status == "waiting_for_transfer":        
 
-            count = 0
+            print "    userid ==> "+str(userid)
+
+            #count = 0
 
             all_dsets_blocks_at_site=True
 
@@ -142,6 +146,8 @@ while True:
                 mysqlconn.commit()
 
         if status == "approved":
+
+            print "    userid ==> "+str(userid)
 
             #print "checking input datasets for workflows in batch "+str(batchid)
             
@@ -224,9 +230,12 @@ while True:
                 curs.execute("update batches set status=\"input_dsets_ready\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where useridyear = \""+ useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
                 mysqlconn.commit()
 
-    count = count+1            
+    #count = count+1            
 
     #curs.execute("unlock tables")
 
     #time.sleep(100)
-    sys.exit(0)
+    #sys.exit(0)
+
+if __name__ == "__main__":
+    main()

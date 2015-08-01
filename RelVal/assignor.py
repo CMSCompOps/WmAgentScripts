@@ -23,7 +23,7 @@ import utils
 
 import assignment
 
-while True:
+def main():
 
     mysqlconn = MySQLdb.connect(host='dbod-cmsrv1.cern.ch', user='relval', passwd="relval", port=5506)
     
@@ -46,9 +46,9 @@ while True:
 
         userid = batch_dict["useridyear"]+"_"+batch_dict["useridmonth"]+"_"+batch_dict["useridday"]+"_"+str(batch_dict["useridnum"])+"_"+str(batch_dict["batch_version_num"])
 
-        print "    userid => "+userid
-
         if batch_dict["status"] == "input_dsets_ready":
+
+            print "    userid => "+userid
 
             curs.execute("select workflow_name from workflows where useridyear = \""+batch_dict["useridyear"]+"\" and useridmonth = \""+batch_dict["useridmonth"]+"\" and useridday = \""+batch_dict["useridday"]+"\" and useridnum = "+str(batch_dict["useridnum"])+" and batch_version_num = "+str(batch_dict["batch_version_num"])+";")
             wfs=curs.fetchall()
@@ -173,4 +173,8 @@ while True:
     #curs.execute("unlock tables")
 
     #time.sleep(100)
-    sys.exit(0)
+    #sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()
