@@ -38,31 +38,27 @@ while True:
 
         batch=batches[len(batches)-1-i+max(len(batches) - 50,0)]
 
-        for name, value in zip(colnames, batch):
-            if name == "useridday":
-                useridday=value
-            elif name == "useridmonth":
-                useridmonth=value
-            elif name == "useridyear":    
-                useridyear=value
-            elif name == "useridmonth":    
-                useridmonth=value
-            elif name == "useridnum":
-                useridnum=value
-            elif name == "batch_version_num":
-                batch_version_num=value
+        batch_dict=dict(zip(colnames, batch))
 
-        curs.execute("select * from batches where useridyear = "+useridyear+" and useridmonth = "+useridmonth+" and useridday = "+useridday+" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
-        batches_with_batch_id=curs.fetchall()
-        curs.execute("select workflow_name from workflows where useridyear = "+useridyear+" and useridmonth = "+useridmonth+" and useridday = "+useridday+" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
+        #curs.execute("select * from batches where useridyear = "+batch_dict["useridyear"]+" and useridmonth = "+batch_dict["useridmonth"]+" and useridday = "+batch_dict["useridday"]+" and useridnum = "+str(batch_dict["useridnum"])+" and batch_version_num = "+str(batch_dict["batch_version_num"])+";")
+        #batches_with_batch_id=curs.fetchall()
+        curs.execute("select workflow_name from workflows where useridyear = "+batch_dict["useridyear"]+" and useridmonth = "+batch_dict["useridmonth"]+" and useridday = "+batch_dict["useridday"]+" and useridnum = "+str(batch_dict["useridnum"])+" and batch_version_num = "+str(batch_dict["batch_version_num"])+";")
         wfs=curs.fetchall()
 
-        print "id: "+useridyear+"_"+useridmonth+"_"+useridday+"_"+str(useridnum)+"_"+str(batch_version_num)
-        for name, value in zip(colnames, batches_with_batch_id[0]):
-            if name == "useridday" or name == "useridmonth" or name == "useridyear" or name == "useridnum" or name == "hn_message_id" or name == "batch_version_num":
-                continue
-            else:
-                print '    '+name.rstrip(' ')+': '+str(value)
+        print "id: "+batch_dict["useridyear"]+"_"+batch_dict["useridmonth"]+"_"+batch_dict["useridday"]+"_"+str(batch_dict["useridnum"])+"_"+str(batch_dict["batch_version_num"])
+        #for name, value in zip(colnames, batches_with_batch_id[0]):
+        #    if name == "useridday" or name == "useridmonth" or name == "useridyear" or name == "useridnum" or name == "hn_message_id" or name == "batch_version_num":
+        #        continue
+        #    else:
+        #        print '    '+name.rstrip(' ')+': '+str(value)
+        print '    '+"DN: "+batch_dict["DN"]
+        print '    '+"description: "+batch_dict["description"]
+        print '    '+"announcement_title: "+batch_dict["announcement_title"]
+        print '    '+"site: "+batch_dict["site"]
+        print '    '+"status: "+batch_dict["status"]
+        print '    '+"current_status_start_time: "+str(batch_dict["current_status_start_time"])
+        print '    '+"batch_creation_time: "+str(batch_dict["batch_creation_time"])
+        
 
         n_workflows=0
         n_completed=0

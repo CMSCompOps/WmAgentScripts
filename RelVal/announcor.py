@@ -45,41 +45,24 @@ def main():
     curs.execute("select * from batches")
     batches=curs.fetchall()
     
-    colnames = [desc[0] for desc in curs.description]
+    batches_colnames = [desc[0] for desc in curs.description]
 
     for batch in batches:
 
-        for name, value in zip(colnames, batch):
-            if name == "useridday":
-                useridday=value
-            elif name == "useridmonth":    
-                useridmonth=value
-            elif name == "useridyear":    
-                useridyear=value
-            elif name == "useridnum":    
-                useridnum=value
-            elif name == "batch_version_num":    
-                batch_version_num=value
-            elif name == "description":
-                description=value
-            elif name == "announcement_title":
-                title=value
-            elif name == "status":
-                status=value
+        batch_dict= dict(zip(batches_colnames, batch))
 
-        if status != "assigned":
+        if batch_dict["status"] != "assigned":
             continue
 
-        userid=useridyear+"_"+useridmonth+"_"+useridday+"_"+str(useridnum)+"_"+str(batch_version_num)
+        userid=batch_dict["useridyear"]+"_"+batch_dict["useridmonth"]+"_"+batch_dict["useridday"]+"_"+str(batch_dict["useridnum"])+"_"+str(batch_dict["batch_version_num"])
 
         print "   userid ==> "+userid
 
-        curs.execute("select workflow_name from workflows where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+ "\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num ="+str(batch_version_num)+";")
+        curs.execute("select workflow_name from workflows where useridyear = \""+batch_dict["useridyear"]+"\" and useridmonth = \""+batch_dict["useridmonth"]+ "\" and useridday = \""+batch_dict["useridday"]+"\" and useridnum = "+str(batch_dict["useridnum"])+" and batch_version_num ="+str(batch_dict["batch_version_num"])+";")
         wfs=curs.fetchall()
-       
+
         n_workflows=0
         n_completed=0
-        max_completion_time=0
         for wf in wfs:
             n_workflows=n_workflows+1
             conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -97,12 +80,8 @@ def main():
             for status in s['rows'][0]['doc']['request_status']:
                 if status['status'] == "completed" or status['status'] == "force-complete":
                     n_completed=n_completed+1
-                    if status['update_time'] > max_completion_time:
-                        max_completion_time = status['update_time']
                     break    
 
-        print "(calendar.timegm(datetime.datetime.utcnow().utctimetuple()) - max_completion_time)/60.0/60.0 = " + str((calendar.timegm(datetime.datetime.utcnow().utctimetuple()) - max_completion_time)/60.0/60.0)
-    
         print "datetime.datetime.now() = " + str(datetime.datetime.now())            
         print "n_workflows = " + str(n_workflows)
         print "n_completed = " + str(n_completed)
@@ -135,7 +114,7 @@ def main():
         needs_assistance = assistance_decision.assistance_decision(job_failure_information)
 
         if needs_assistance:
-            curs.execute("update batches set status=\"assistance\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+ "\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num ="+str(batch_version_num)+";")
+            curs.execute("update batches set status=\"assistance\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where useridyear = \""+batch_dict["useridyear"]+"\" and useridmonth = \""+batch_dict["useridmonth"]+ "\" and useridday = \""+batch_dict["useridday"]+"\" and useridnum = "+str(batch_dict["useridnum"])+" and batch_version_num ="+str(batch_dict["batch_version_num"])+";")
             mysqlconn.commit()
             os.system('echo \"batch_id: '+userid+'\" | mail -s \"a batch of relval workflows needs assistance\" andrew.m.levin@vanderbilt.edu')
             continue
@@ -182,7 +161,7 @@ def main():
         msg['reply-to'] = COMMASPACE.join(reply_to)
         msg['To'] = COMMASPACE.join(send_to)
         msg['Date'] = formatdate(localtime=True)
-        msg['Subject'] = title
+        msg['Subject'] = batch_dict["announcement_title"]
         msg['Message-ID'] = email.Utils.make_msgid()
 
         messageText="Dear all,\n"
@@ -196,10 +175,12 @@ def main():
             messageText=messageText+"\n"
             messageText=messageText+"original workflow name ==> clone name:\n"
             messageText=messageText+"\n"
-            curs.execute("select workflow_name,original_workflow_name from workflows where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+ "\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num ="+str(batch_version_num)+";")
-            wfs=curs.fetchall()
-            for wf in wfs:
-                messageText=messageText+wf[1] + " ==> "+wf[0] + "\n"
+            curs.execute("select workflow_name,original_workflow_name from workflows where useridyear = \""+batch_dict["useridyear"]+"\" and useridmonth = \""+batch_dict["useridmonth"]+ "\" and useridday = \""+batch_dict["useridday"]+"\" and useridnum = "+str(batch_dict["useridnum"])+" and batch_version_num ="+str(batch_dict["batch_version_num"])+";")
+            workflows=curs.fetchall()
+            workflows_colnames = [desc[0] for desc in curs.description]
+            for workflow in workflows:
+                workflow_dict = dict(zip(workflows_colnames,workflow))
+                messageText=messageText+workflow_dict["original_workflow_name"] + " ==> "+wf["workflow_name"] + "\n"
         messageText=messageText+"\n"        
         messageText=messageText+"List of datasets:\n"
         messageText=messageText+"\n"
@@ -273,7 +254,7 @@ def main():
         #phedexid = result['phedex']['request_created'][0]['id']
         #utils.approveSubscription("cmsweb.cern.ch",phedexid)
 
-        curs.execute("update batches set status=\"announced\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+ "\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num ="+str(batch_version_num)+";")
+        curs.execute("update batches set status=\"announced\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where useridyear = \""+batch_dict["useridyear"]+"\" and useridmonth = \""+batch_dict["useridmonth"]+ "\" and useridday = \""+batch_dict["useridday"]+"\" and useridnum = "+str(batch_dict["batchuseridnum"])+" and batch_version_num ="+str(batch_dict["batch_version_num"])+";")
         mysqlconn.commit()
 
     #curs.execute("unlock tables")

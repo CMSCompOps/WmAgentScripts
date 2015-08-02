@@ -28,7 +28,7 @@ curs.execute("use "+dbname+";")
 
 curs.execute("select * from clone_reinsert_requests;")
 
-colnames = [desc[0] for desc in curs.description]
+clone_reinsert_requests_colnames = [desc[0] for desc in curs.description]
 
 requests_rows=curs.fetchall()
 
@@ -37,37 +37,19 @@ colnames = [desc[0] for desc in curs.description]
 for requests_row in requests_rows:
     print requests_row
 
-    for name, value in zip(colnames, requests_row):
-        if name == "DN":
-            DN=value
-        elif name == "description":
-            description=value
-        elif name == "useridyear":
-            useridyear=value
-        elif name == "useridmonth":
-            useridmonth=value
-        elif name == "useridday":
-            useridday=value
-        elif name == "useridnum":
-            useridnum=value
-        elif name == "batch_version_num":
-            batch_version_num=value
-        elif name == "new_site":
-            site=value
-        elif name == "new_processing_version":
-            proc_ver=value
+    request_dict = dict(zip(clone_reinsert_requests_colnames, requests_row))
 
-    assert(batch_version_num == 0)
+    assert(request_dict["batch_version_num"] == 0)
 
     #the batch id of the new batch should be 1 more than any existing batch id
-    curs.execute("select MAX(batch_version_num) from batches where useridyear=\""+useridyear+"\" and useridmonth=\""+useridmonth+"\" and useridday=\""+useridday+"\" and useridnum = "+str(useridnum)+";")
+    curs.execute("select MAX(batch_version_num) from batches where useridyear=\""+request_dict["useridyear"]+"\" and useridmonth=\""+request_dict["useridmonth"]+"\" and useridday=\""+request_dict["useridday"]+"\" and useridnum = "+str(request_dict["useridnum"])+";")
     max_batch_version_num=curs.fetchall()[0][0]
 
     assert(max_batch_version_num != None)
 
     new_batch_version_num=max_batch_version_num+1
 
-    curs.execute("select * from workflows where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
+    curs.execute("select * from workflows where useridyear = \""+request_dict["useridyear"]+"\" and useridmonth = \""+request_dict["useridmonth"]+"\" and useridday = \""+request_dict["useridday"]+"\" and useridnum = "+str(request_dict["useridnum"])+" and batch_version_num = "+str(request_dict["batch_version_num"])+";")
     workflows_rows=curs.fetchall()
 
     workflows_colnames = [desc[0] for desc in curs.description]
@@ -77,8 +59,11 @@ for requests_row in requests_rows:
     workflows=[]
     
     for workflow_row in workflows_rows:
+
+        workflow_dict = dict(zip(workflows_colnames,workflow_row))
+
         #print workflow_row
-        workflow=workflow_row[5]
+        workflow=workflow_dict["workflow_name"]
         return_string=os.popen("python2.6 resubmit.py "+workflow + " anlevin DATAOPS").read()
         if len(return_string) == 0:
             print "batch_cloner_reinserter.py error 1"
@@ -88,20 +73,16 @@ for requests_row in requests_rows:
 
     assert(len(workflows) == len(workflows_rows))
 
-    curs.execute("select * from batches where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
+    curs.execute("select * from batches where useridyear = \""+request_dict["useridyear"]+"\" and useridmonth = \""+request_dict["useridmonth"]+"\" and useridday = \""+request_dict["useridday"]+"\" and useridnum = "+str(request_dict["useridnum"])+" and batch_version_num = "+str(request_dict["batch_version_num"])+";")
     batches_rows=curs.fetchall()
 
-    colnames2 = [desc[0] for desc in curs.description]
+    batches_colnames = [desc[0] for desc in curs.description]
 
     assert(len(batches_rows) == 1)
 
-    for name, value in zip(colnames2, batches_rows[0]):
-        if name == "DN":
-            DN=value
-        elif name == "description":
-            description=value
-        elif name == "announcement_title":
-            email_title=value
+
+
+    batch_dict=dict(zip(batches_colnames, batches_rows[0]))
 
     for line in workflows:
         workflow = line.rstrip('\n')
@@ -140,14 +121,14 @@ for requests_row in requests_rows:
                 
     #description = description.rstrip('\n')+"\n\n(clone of batch "+olduserid+")"
 
-    curs.execute("insert into batches set DN=\""+DN+"\", announcement_title=\""+email_title+"\", processing_version="+str(proc_ver)+", site=\""+site+"\", description=\""+description+"\", status=\"approved\", useridyear=\""+useridyear+"\", useridmonth=\""+useridmonth+"\", useridday=\""+useridday+"\", useridnum="+str(useridnum)+", batch_version_num = "+str(new_batch_version_num)+", hn_message_id=\"do_not_send_an_acknowledgement_email\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\", batch_creation_time = \""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\"")
+    curs.execute("insert into batches set DN=\""+batch_dict["DN"]+"\", announcement_title=\""+batch_dict["announcement_title"]+"\", processing_version="+str(request_dict["proc_ver"])+", site=\""+request_dict["site"]+"\", description=\""+batch_dict["description"]+"\", status=\"approved\", useridyear=\""+request_dict["useridyear"]+"\", useridmonth=\""+request_dict["useridmonth"]+"\", useridday=\""+request_dict["useridday"]+"\", useridnum="+str(request_dict["useridnum"])+", batch_version_num = "+str(new_batch_version_num)+", hn_message_id=\"do_not_send_an_acknowledgement_email\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\", batch_creation_time = \""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\"")
 
     conn.commit()
 
     for i in range(0,len(workflows)):
         #workflow = line.rstrip('\n')
-        curs.execute("insert into workflows set useridyear = \""+useridyear+"\", useridmonth = \""+useridmonth+"\", useridday = \""+useridday+"\", useridnum = "+str(useridnum)+", batch_version_num = "+str(new_batch_version_num)+", workflow_name=\""+workflows[i]+"\", original_workflow_name = \""+dict(zip(workflows_colnames,workflows_rows[i]))['workflow_name']+"\";")
+        curs.execute("insert into workflows set useridyear = \""+request_dict["useridyear"]+"\", useridmonth = \""+request_dict["useridmonth"]+"\", useridday = \""+request_dict["useridday"]+"\", useridnum = "+str(request_dict["useridnum"])+", batch_version_num = "+str(new_batch_version_num)+", workflow_name=\""+workflows[i]+"\", original_workflow_name = \""+dict(zip(workflows_colnames,workflows_rows[i]))['workflow_name']+"\";")
 
     #batchid is assigned the new batch id now    
-    curs.execute("delete from clone_reinsert_requests where useridyear=\""+useridyear+"\" and useridmonth=\""+useridmonth+"\" and useridday=\""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
+    curs.execute("delete from clone_reinsert_requests where useridyear=\""+request_dict["useridyear"]+"\" and useridmonth=\""+request_dict["useridmonth"]+"\" and useridday=\""+request_dict["useridday"]+"\" and useridnum = "+str(request_dict["useridnum"])+" and batch_version_num = "+str(request_dict["batch_version_num"])+";")
     conn.commit()

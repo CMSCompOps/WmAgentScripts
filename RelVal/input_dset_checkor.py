@@ -32,7 +32,7 @@ def main():
     curs.execute("select * from batches")
     batches=curs.fetchall()
 
-    colnames = [desc[0] for desc in curs.description]
+    batches_colnames = [desc[0] for desc in curs.description]
     
     for batch in batches:
 
@@ -42,29 +42,9 @@ def main():
         blocks_dsets_to_transfer=[]
         blocks_not_at_site=[]
 
-        for name, value in zip(colnames, batch):
-            if name=="status":
-                status=value
-            elif name == "useridyear":
-                useridyear=value
-            elif name == "useridmonth":
-                useridmonth=value
-            elif name == "useridday":
-                useridday=value
-            elif name == "useridnum":
-                useridnum=value
-            elif name == "batch_version_num":
-                batch_version_num=value
-            elif name == "site":
-                site=value
-            elif name == "processing_version":
-                processing_version=value
-            elif name == "hn_message_id":
-                hn_message_id=value
-            elif name == "announcement_title":
-                title=value
-            elif name == "site":
-                site=value
+        batch_dict = dict(zip(batches_colnames, batch))
+
+        site = batch_dict["site"]
 
         if "T2" in site:
             site_disk = site
@@ -81,11 +61,11 @@ def main():
         #print batch
         #print ""
 
-        userid = useridyear+"_"+useridmonth+"_"+useridday+"_"+str(useridnum)+"_"+str(batch_version_num)    
+        userid = batch_dict["useridyear"]+"_"+batch_dict["useridmonth"]+"_"+batch_dict["useridday"]+"_"+str(batch_dict["useridnum"])+"_"+str(batch_dict["batch_version_num"])    
 
         #if status == "waiting_for_transfer" and count % 10 == 0:        
 
-        if status == "waiting_for_transfer":        
+        if batch_dict["status"] == "waiting_for_transfer":        
 
             print "    userid ==> "+str(userid)
 
@@ -93,14 +73,19 @@ def main():
 
             all_dsets_blocks_at_site=True
 
-            curs.execute("select workflow_name from workflows where useridyear = \""+ useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
+            curs.execute("select workflow_name from workflows where useridyear = \""+ batch_dict["useridyear"]+"\" and useridmonth = \""+batch_dict["useridmonth"]+"\" and useridday = \""+batch_dict["useridday"]+"\" and useridnum = "+str(batch_dict["useridnum"])+" and batch_version_num = "+str(batch_dict["batch_version_num"])+";")
             wfs=curs.fetchall()
 
+            wfs_colnames = [desc[0] for desc in curs.description]
+
             for wf in wfs:
-                print wf[0]
+
+                wf_dict = dict(zip(wfs_colnames, wf))
+
+                print wf["workflow_name"]
 
                 conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-                r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+wf[0])
+                r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+wf["workflow_name"])
                 r2=conn.getresponse()
 
                 schema = json.loads(r2.read())
@@ -145,21 +130,23 @@ def main():
                 curs.execute("update batches set status=\"input_dsets_ready\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where useridyear = \""+ useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
                 mysqlconn.commit()
 
-        if status == "approved":
+        if batch_dict["status"] == "approved":
 
             print "    userid ==> "+str(userid)
 
             #print "checking input datasets for workflows in batch "+str(batchid)
             
-            curs.execute("select workflow_name from workflows where useridyear = \""+ useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
+            curs.execute("select workflow_name from workflows where useridyear = \""+ batch_dict["useridyear"]+"\" and useridmonth = \""+batch_dict["useridmonth"]+"\" and useridday = \""+batch_dict["useridday"]+"\" and useridnum = "+str(batch_dict["useridnum"])+" and batch_version_num = "+str(batch_dict["batch_version_num"])+";")
             wfs=curs.fetchall()
             
             for wf in wfs:
 
-                print wf[0]
+                wf_dict = dict(zip(wfs_colnames, wf))
+
+                print wf["workflow_name"]
 
                 conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-                r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+wf[0])
+                r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+wf["workflow_name"])
                 r2=conn.getresponse()
 
                 schema = json.loads(r2.read())
@@ -221,13 +208,13 @@ def main():
 
                 utils.approveSubscription("cmsweb.cern.ch",phedexid)
 
-                curs.execute("update batches set status=\"waiting_for_transfer\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where useridyear = \""+ useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
+                curs.execute("update batches set status=\"waiting_for_transfer\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where useridyear = \""+ batch_dict["useridyear"]+"\" and useridmonth = \""+batch_dict["useridmonth"]+"\" and useridday = \""+batch_dict["useridday"]+"\" and useridnum = "+str(batch_dict["useridnum"])+" and batch_version_num = "+str(batch_dict["batch_version_num"])+";")
                 mysqlconn.commit()
             elif blocks_not_at_site != []:
                 print blocks_not_at_site
-                curs.execute("update batches set status=\"waiting_for_transfer\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where useridyear = \""+ useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
+                curs.execute("update batches set status=\"waiting_for_transfer\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where useridyear = \""+ batch_dict["useridyear"]+"\" and useridmonth = \""+batch_dict["useridmonth"]+"\" and useridday = \""+batch_dict["useridday"]+"\" and useridnum = "+str(batch_dict["useridnum"])+" and batch_version_num = "+str(batch_dict["batch_version_num"])+";")
             else:    
-                curs.execute("update batches set status=\"input_dsets_ready\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where useridyear = \""+ useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
+                curs.execute("update batches set status=\"input_dsets_ready\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where useridyear = \""+ batch_dict["useridyear"]+"\" and useridmonth = \""+batch_dict["useridmonth"]+"\" and useridday = \""+batch_dict["useridday"]+"\" and useridnum = "+str(batch_dict["useridnum"])+" and batch_version_num = "+str(batch_dict["batch_version_num"])+";")
                 mysqlconn.commit()
 
     #count = count+1            

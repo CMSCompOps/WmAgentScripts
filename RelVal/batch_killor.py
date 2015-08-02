@@ -32,30 +32,24 @@ curs.execute("use "+dbname+";")
 curs.execute("select * from batches where status = \"reject_abort_requested\";")
 batches_rows=curs.fetchall()
 
-colnames = [desc[0] for desc in curs.description]
+batches_colnames = [desc[0] for desc in curs.description]
 
 for batches_row in batches_rows:
 
-    for name, value in zip(colnames, batches_row):
-        if name == "useridday":
-            useridday=value
-        elif name == "useridmonth":    
-            useridmonth=value
-        elif name == "useridyear":    
-            useridyear=value
-        elif name == "useridnum":    
-            useridnum=value
-        elif name == "batch_version_num":    
-            batch_version_num=value
+    batch_dict=dict(zip(batches_colnames, batches_row))
 
     print batches_row
-    batchid=batches_row[0]
-    curs.execute("select * from workflows where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
+    curs.execute("select * from workflows where useridyear = \""+batch_dict["useridyear"]+"\" and useridmonth = \""+batch_dict["useridmonth"]+"\" and useridday = \""+batch_dict["useridday"]+"\" and useridnum = "+str(batch_dict["useridnum"])+" and batch_version_num = "+str(batch_dict["batch_version_num"])+";")
     workflows_rows=curs.fetchall()
 
+    workflows_colnames = [desc[0] for desc in curs.description]
+
     for workflow_row in workflows_rows:
-        print workflow_row[5]
-        workflow=workflow_row[5]
+
+        wf_dict=dict(zip(workflows_colnames, workflow_row))
+
+        print workflow_row["workflow_name"]
+        workflow=workflow_row["workflow_name"]
         url="cmsweb.cern.ch" 
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         r1=conn.request('GET','/reqmgr/reqMgr/request?requestName=' + workflow)
@@ -63,14 +57,14 @@ for batches_row in batches_rows:
         j1 = json.loads(r2.read())
         status= j1['RequestStatus']
         
-        print status
+        print batch_dict["status"]
 
-        if status == "completed" or status == "assignment-approved" or status == "assigned" or status == "running-open" or status == "running-closed" or status == "acquired":        
-            if status == "completed" or status == "assignment-approved":
+        if batch_dict["status"] == "completed" or batch_dict["status"] == "assignment-approved" or batch_dict["status"] == "assigned" or batch_dict["status"] == "running-open" or batch_dict["status"] == "running-closed" or batch_dict["status"] == "acquired":        
+            if batch_dict["status"] == "completed" or batch_dict["status"] == "assignment-approved":
                 reqMgrClient.rejectWorkflow(url,workflow)
             if status == "assigned" or status == "running-open" or status == "running-closed" or status == "acquired":
                 reqMgrClient.abortWorkflow(url,workflow)
-        elif status != "aborted-archived" and status != "aborted" and status != "rejected" and status != "rejected-archived":
+        elif batch_dict["status"] != "aborted-archived" and batch_dict["status"] != "aborted" and batch_dict["status"] != "rejected" and batch_dict["status"] != "rejected-archived":
             os.system('echo '+workflow+' | mail -s \"batch_rejecter_aborter.py error 1\" andrew.m.levin@vanderbilt.edu --')
             sys.exit(1)
         else:
@@ -86,9 +80,9 @@ for batches_row in batches_rows:
 
     print "copying the workflows and the batch to the archive databases"    
 
-    curs.execute("update batches set status=\"killed\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
+    curs.execute("update batches set status=\"killed\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where useridyear = \""+batch_dict["useridyear"]+"\" and useridmonth = \""+batch_dict["useridmonth"]+"\" and useridday = \""+batch_dict["useridday"]+"\" and useridnum = "+str(batch_dict["useridnum"])+" and batch_version_num = "+str(batch_dict["batch_version_num"])+";")
 
-    curs.execute("delete from datasets where useridyear = \""+useridyear+"\" and useridmonth = \""+useridmonth+"\" and useridday = \""+useridday+"\" and useridnum = "+str(useridnum)+" and batch_version_num = "+str(batch_version_num)+";")
+    curs.execute("delete from datasets where useridyear = \""+batch_dict["useridyear"]+"\" and useridmonth = \""+batch_dict["useridmonth"]+"\" and useridday = \""+batch_dict["useridday"]+"\" and useridnum = "+str(batch_dict["useridnum"])+" and batch_version_num = "+str(batch_dict["batch_version_num"])+";")
 
     mysqlconn.commit()
 
