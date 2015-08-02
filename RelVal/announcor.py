@@ -177,10 +177,8 @@ def main():
             messageText=messageText+"\n"
             curs.execute("select workflow_name,original_workflow_name from workflows where useridyear = \""+batch_dict["useridyear"]+"\" and useridmonth = \""+batch_dict["useridmonth"]+ "\" and useridday = \""+batch_dict["useridday"]+"\" and useridnum = "+str(batch_dict["useridnum"])+" and batch_version_num ="+str(batch_dict["batch_version_num"])+";")
             workflows=curs.fetchall()
-            workflows_colnames = [desc[0] for desc in curs.description]
             for workflow in workflows:
-                workflow_dict = dict(zip(workflows_colnames,workflow))
-                messageText=messageText+workflow_dict["original_workflow_name"] + " ==> "+wf["workflow_name"] + "\n"
+                messageText=messageText+workflow_dict[1] + " ==> "+wf[0] + "\n"
         messageText=messageText+"\n"        
         messageText=messageText+"List of datasets:\n"
         messageText=messageText+"\n"

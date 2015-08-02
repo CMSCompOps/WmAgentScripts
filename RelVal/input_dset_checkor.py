@@ -76,16 +76,14 @@ def main():
             curs.execute("select workflow_name from workflows where useridyear = \""+ batch_dict["useridyear"]+"\" and useridmonth = \""+batch_dict["useridmonth"]+"\" and useridday = \""+batch_dict["useridday"]+"\" and useridnum = "+str(batch_dict["useridnum"])+" and batch_version_num = "+str(batch_dict["batch_version_num"])+";")
             wfs=curs.fetchall()
 
-            wfs_colnames = [desc[0] for desc in curs.description]
-
             for wf in wfs:
 
                 wf_dict = dict(zip(wfs_colnames, wf))
 
-                print wf["workflow_name"]
+                print wf[0]
 
                 conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-                r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+wf["workflow_name"])
+                r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+wf[0])
                 r2=conn.getresponse()
 
                 schema = json.loads(r2.read())
@@ -141,12 +139,10 @@ def main():
             
             for wf in wfs:
 
-                wf_dict = dict(zip(wfs_colnames, wf))
-
-                print wf["workflow_name"]
+                print wf[0]
 
                 conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-                r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+wf["workflow_name"])
+                r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+wf[0])
                 r2=conn.getresponse()
 
                 schema = json.loads(r2.read())
