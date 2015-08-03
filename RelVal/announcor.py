@@ -97,17 +97,12 @@ def main():
         #if batch[0] != 222:
         #    continue
 
-
-        print "putting workflows into a file"
-
         wf_list = []
         
         for wf in wfs:
             print wf[0]
 
             wf_list.append(wf[0])
-
-        print "finished putting workflows into a file"     
 
         job_failure_information=collect_job_failure_information.collect_job_failure_information(wf_list)
 
@@ -120,7 +115,7 @@ def main():
             continue
 
         #if there is a '\r' character in the body of an e-mail, it does not get sent
-        description=description.replace('\r','')
+        description=batch_dict["description"].replace('\r','')
 
         closeOutTaskChain.close_out_wf_list(wf_list)
 
