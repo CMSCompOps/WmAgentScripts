@@ -166,7 +166,7 @@ def main():
         messageText=messageText+"Batch ID:\n"
         messageText=messageText+"\n"
         messageText=messageText+userid+"\n"
-        if batch_version_num > 0:
+        if batch_dict["batch_version_num"] > 0:
             messageText=messageText+"\n"
             messageText=messageText+"original workflow name ==> clone name:\n"
             messageText=messageText+"\n"
