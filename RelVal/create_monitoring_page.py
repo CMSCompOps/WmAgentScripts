@@ -12,7 +12,7 @@ url='cmsweb.cern.ch'
 
 dbname = "relval"
 
-while True:
+def main():
 
     os.system("if [ -f relval_monitor_most_recent_50_batches.txt ]; then rm relval_monitor_most_recent_50_batches.txt; fi")
     
@@ -104,5 +104,5 @@ while True:
     if ret != 0:
         os.system('echo \"'+userid+'\" | mail -s \"monitoring_loop.py error 2\" andrew.m.levin@vanderbilt.edu')
 
-    sys.exit(0)
-    time.sleep(60)
+if __name__ == "__main__":
+    main()
