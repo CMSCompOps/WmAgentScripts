@@ -79,15 +79,17 @@ class Workflow:
         depending of the kind of workflow, by default gets
         it from the workload cache.
         """
-        return self.cache['TotalInputLumis']
+        if 'TotalInputLumis' in self.cache:
+            return self.cache['TotalInputLumis']
+        return 0
     
-    def getOutputEvents(self, ds):
+    def getOutputEvents(self, ds, skipInvalid=False):
         """
         gets the output events on one of the output datasets
         """
         #We store the events to avoid checking them twice
         if ds not in self.outEvents:
-            events = dbs3.getEventCountDataSet(ds)
+            events = dbs3.getEventCountDataSet(ds, skipInvalid)
             self.outEvents[ds] = events
         else:
             events = self.outEvents[ds]
@@ -849,6 +851,13 @@ assignWorkflow.auxiliaries = [ 'SplittingAlgorithm',
 assignWorkflow.keys = assignWorkflow.mandatories+assignWorkflow.defaults.keys() + assignWorkflow.auxiliaries
 
 
+def forceCompleteWorkflow(url, workflowname):
+    """
+    Moves a workflow from running-closed to force-complete
+    """
+    params = {"requestName" : workflowname,"status" : "force-complete"}
+    data = requestManagerPut(url,"/reqmgr/reqMgr/request", params)
+    return data
 
 def closeOutWorkflow(url, workflowname):
     """
@@ -981,11 +990,11 @@ def getInputEventsTaskChain(request):
         if blockWhitelist:
             return dbs3.getEventCountDataSetBlockList(inputDataSet,blockWhitelist)
         if blockBlacklist:
-            return dbs3.getEventCountDataset(inputDataSet) - dbs3.getEventCountDataSetBlockList(inputDataSet,blockBlacklist)
+            return dbs3.getEventCountDataSet(inputDataSet) - dbs3.getEventCountDataSetBlockList(inputDataSet,blockBlacklist)
         if runWhitelist:
             return dbs3.getEventCountDataSetRunList(inputDataSet, runWhitelist)
         else:
-            return dbs3.getEventCountDataset(inputDataSet)
+            return dbs3.getEventCountDataSet(inputDataSet)
     #TODO what if intermediate steps have filter efficiency?
 ### TODO: implement multi white/black list
 #        if len(blockWhitelist)>0 and len(runWhitelist)>0:

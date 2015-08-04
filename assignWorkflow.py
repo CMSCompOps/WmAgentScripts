@@ -65,6 +65,8 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
     if trust_site:
         params['useSiteListAsLocation'] = True
 
+    # TODO try reqMgr default
+    """
     encodedParams = urllib.urlencode(params, True)
 
     headers  =  {"Content-type": "application/x-www-form-urlencoded",
@@ -88,6 +90,8 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
         return
     conn.close()
     print 'Assigned workflow:',workflow,'to site:',sites,'with processing version',procversion
+    """
+    assignWorkflow(url, workflow, team, params)
 
 def main():
     url='cmsweb.cern.ch'

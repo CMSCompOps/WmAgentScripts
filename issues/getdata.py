@@ -319,7 +319,7 @@ def main():
                 print "[skipping %s]\n" % (workflow)
                 continue
             #skip relvals
-            if "RVCMSSW" in workflow:
+            if "RVCMSSW" in workflow or "RelVal" in workflow:
                 print "[skipping %s]\n" % (workflow)
                 continue
             

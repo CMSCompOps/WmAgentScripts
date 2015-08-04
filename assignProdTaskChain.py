@@ -8,10 +8,12 @@ import os
 import json
 import optparse
 from dbs.apis.dbsClient import DbsApi
+from random import choice
+from pprint import pprint
 
 dbs3_url = r'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
 
-DEFAULT_SITES = [
+T1S = [
     "T1_DE_KIT",
     "T1_ES_PIC",
     "T1_FR_CCIN2P3",
@@ -19,25 +21,19 @@ DEFAULT_SITES = [
     "T1_RU_JINR",
     "T1_UK_RAL",
     "T1_US_FNAL",
-    #"T2_BE_UCL",
-    #"T2_CH_CSCS",
+]
+
+GOOD_SITES = T1S + [
     "T2_CH_CERN",
-    #"T2_CN_Beijing",
     "T2_DE_DESY",
-    "T2_DE_RWTH",
     "T2_ES_CIEMAT",
-    #"T2_FI_HIP",
-    #"T2_FR_CCIN2P3",
-    "T2_FR_IPHC",
+    "T2_FR_CCIN2P3",
     "T2_IT_Bari",
     "T2_IT_Legnaro",
     "T2_IT_Pisa",
     "T2_IT_Rome",
-    #"T2_RU_JINR",
-    #"T2_RU_IHEP",
-    #"T2_UA_KIPT",
     "T2_UK_London_Brunel",
-    #"T2_UK_London_IC",
+    "T2_UK_London_IC",
     "T2_US_Caltech",
     "T2_US_Florida",
     "T2_US_MIT",
@@ -47,8 +43,33 @@ DEFAULT_SITES = [
     "T2_US_Wisconsin",
 ]
 
+ALL_SITES = GOOD_SITES + [
+    "T2_BE_UCL",
+    "T2_CH_CSCS",
+    "T2_CN_Beijing",
+    "T2_DE_RWTH",
+    "T2_FI_HIP",
+    "T2_FR_IPHC",
+    "T2_RU_JINR",
+    "T2_RU_IHEP",
+    "T2_UA_KIPT",
+]
 
-def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lfn):
+
+def getRandomDiskSite(site=T1S):
+    """
+        Gets a random disk site and append _Disk
+    """
+    s = choice(site)
+    if s.startswith("T1"):
+        s += "_Disk"
+    return s
+
+
+def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lfn, replica, verbose):
+    """
+    Sends assignment request
+    """
     params = {"action": "Assign",
               "Team" + team: "checked",
               "SiteWhitelist": site,
@@ -65,12 +86,12 @@ def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lf
               "ProcessingString": procstr,
               "ProcessingVersion": procver,
               "Dashboard": activity,
-                ### when we want to use xrootd to readin input files
-              #              "useSiteListAsLocation" : True,   
+              # when we want to use xrootd to readin input files
+              #              "useSiteListAsLocation" : True,
               #              "CustodialSites": ['T1_US_FNAL'],
               #              "CustodialSubType" : "Move",
-              #              "NonCustodialSites": ['T2_CH_CERN'],
-              #              "NonCustodialSubType" : "Replica",
+              #              "NonCustodialSites": getRandomDiskSite(),
+              #             "NonCustodialSubType" : "Replica",
               #              "AutoApproveSubscriptionSites": ['T2_CH_CERN'],
               #              "SubscriptionPriority": "Normal",
               #              "BlockCloseMaxWaitTime" : 3600,
@@ -81,6 +102,16 @@ def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lf
               "SoftTimeout": 159600,
               "GracePeriod": 1000,
               "checkbox" + workflow: "checked"}
+
+    # if replica we add NonCustodial sites
+    if replica:
+        params["NonCustodialSites"] = getRandomDiskSite(),
+        params["NonCustodialSubType"] = "Replica"
+
+    if verbose:
+        pprint(params)
+
+    # TODO try reqMgr standard
     # Once the AcqEra is a dict, I have to make it a json objet
     jsonEncodedParams = {}
     for paramKey in params.keys():
@@ -96,6 +127,7 @@ def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lf
     conn.request(
         "POST",  "/reqmgr/assign/handleAssignmentPage", encodedParams, headers)
     response = conn.getresponse()
+
     if response.status != 200:
         print 'could not assign request with following parameters:'
         for item in params.keys():
@@ -131,14 +163,22 @@ def main():
         '-w', '--workflow', help='Workflow Name', dest='workflow')
     parser.add_option('-t', '--team', help='Type of Requests', dest='team')
     parser.add_option('-s', '--site', help='Site', dest='site')
-    parser.add_option(
-        '-p', '--procversion', help='Processing Version', dest='procversion')
-    parser.add_option(
-        '-a', '--activity', help='Dashboard Activity', dest='activity')
+    parser.add_option('-p', '--procversion',
+                      help='Processing Version', dest='procversion')
+    parser.add_option('-a', '--activity',
+                      help='Dashboard Activity', dest='activity')
     parser.add_option('-l', '--lfn', help='Merged LFN base', dest='lfn')
+    parser.add_option('--special',
+                      help='Use it for special workflows. You also have to change the code according to the type of WF', dest='special')
+    parser.add_option('-r', '--replica', action='store_true', dest='replica', default=False,
+                      help='Adds a _Disk Non-Custodial Replica parameter')
+    parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False,
+                      help="Prints all query information.")
+    parser.add_option("--acqera", dest="acqera",
+                      help="Overrides Acquisition Era with a single string")
+    parser.add_option("--procstr", dest="procstring",
+                      help="Overrides Processing String with a single string")
 
-    parser.add_option(
-        '--special', help='Use it for special workflows. You also have to change the code according to the type of WF', dest='special')
     parser.add_option('--test', action="store_true",
                       help='Nothing is injected, only print infomation about workflow and AcqEra', dest='test')
     parser.add_option('--pu', action="store_true",
@@ -152,14 +192,14 @@ def main():
 
     workflow = options.workflow
     team = 'production'
-    site = DEFAULT_SITES
+    site = GOOD_SITES
     procversion = 1
     activity = 'production'
     lfn = '/store/mc'
     acqera = {}
     procstring = {}
     specialStr = ''
-
+    replica = False
     # Getting the original dictionary
     schema = getRequestDict(url, workflow)
 
@@ -186,14 +226,25 @@ def main():
         team = options.team
     if options.site:
         site = options.site
+        if site == "all":
+            site = ALL_SITES
+        elif site == "t1":
+            site = T1S
     if options.procversion:
         procversion = int(options.procversion)
     if options.activity:
         activity = options.activity
     if options.lfn:
         lfn = options.lfn
+    if options.replica:
+        replica = True
+    # Override if there are new values in he
+    if options.acqera:
+        acqera = options.acqera
+    if options.procstring:
+        procstring = options.procstring
 
-    # TODO check output dataset existence, and abort if they already do!
+    # check output dataset existence, and abort if they already do!
     datasets = schema["OutputDatasets"]
     i = 0
     if 'ACDC' not in options.workflow:
@@ -234,9 +285,10 @@ def main():
         sys.exit(0)
 
     # Really assigning the workflow now
+    # TODO use values when assigning merge jobs
     print workflow, '\tAcqEra:', acqera, '\tProcStr:', procstring, '\tProcVer:', procversion, '\tTeam:', team, '\tSite:', site
-    assignRequest(
-        url, workflow, team, site, acqera, procstring, procversion, activity, lfn)
+    assignRequest(url, workflow, team, site, acqera,
+                  procstring, procversion, activity, lfn, replica, options.verbose)
     sys.exit(0)
 
 if __name__ == "__main__":
