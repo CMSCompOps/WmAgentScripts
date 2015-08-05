@@ -45,7 +45,7 @@ def cleanor(url, specific=None):
 
         if not 'InputDataset' in wl: 
             ## should we set status = clean ? or something even further
-            print "skipping",wfo.name,"with no input"
+            print "passing along",wfo.name,"with no input"
             wfo.status = 'clean'
             session.commit()
             continue
@@ -75,8 +75,7 @@ def cleanor(url, specific=None):
         for other in using_the_same:
             if other['RequestName'] == wfo.name: continue
             if other['RequestType'] == 'Resubmission': continue
-            if not other['RequestStatus'] in ['announced','normal-archived','aborted','rejected','aborted-archived','rejected-archived','closed-out','None',None]:
-            #if other['RequestStatus'] in ['running-open','running-closed','new','assignment-approved','acquired','assigned','completed']:
+            if not other['RequestStatus'] in ['announced','normal-archived','aborted','rejected','aborted-archived','aborted-completed','rejected-archived','closed-out','None',None,'new']:
                 print other['RequestName'],'is in status',other['RequestStatus'],'preventing from cleaning',dataset
                 conflict=True
                 break
