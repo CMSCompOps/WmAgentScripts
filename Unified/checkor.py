@@ -132,7 +132,7 @@ def checkor(url, spec=None, options=None):
             wfo.status = 'close'
             session.commit()
             continue
-        elif wfo.wm_status in ['failed','aborted','aborted-archived','rejected','rejected-archived']:
+        elif wfo.wm_status in ['failed','aborted','aborted-archived','rejected','rejected-archived','aborted-completed']:
             ## went into trouble
             wfo.status = 'trouble'
             print wfo.name,"is in trouble",wfo.wm_status
