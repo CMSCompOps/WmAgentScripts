@@ -9,12 +9,14 @@ import time
 import sys
 import subprocess
 from utils import getDatasetEventsAndLumis, campaignInfo
+from utils import lockInfo
 from htmlor import htmlor
 
 def closor(url, specific=None):
     up = componentInfo()
 
     CI = campaignInfo()
+    LI = lockInfo()
 
     ## manually closed-out workflows should get to close with checkor
     for wfo in session.query(Workflow).filter(Workflow.status=='close').all():
@@ -92,16 +94,22 @@ def closor(url, specific=None):
                         if campaign and campaign in CI.campaigns and 'toDDM' in CI.campaigns[campaign] and tier in CI.campaigns[campaign]['toDDM']:
                             to_DDM = True
                             
-                        ## inject to DDM everything from ReDigi
+                        ## inject to DDM when necessary
+                        passed_to_DDM=True
                         if to_DDM:
-                            print "Sending",out," to DDM"
-                            status = subprocess.call(['python','assignDatasetToSite.py','--dataset='+out,'--exec'])
+                            #print "Sending",out," to DDM"
+                            status = subprocess.call(['python','assignDatasetToSite.py','--nCopies=2','--dataset='+out,'--exec'])
                             if status!=0:
                                 print "Failed DDM, retrying a second time"
-                                status = subprocess.call(['python','assignDatasetToSite.py','--dataset='+out,'--exec'])
+                                status = subprocess.call(['python','assignDatasetToSite.py','--nCopies=2','--dataset='+out,'--exec'])
                                 if status!=0:
                                     results.append("Failed DDM for %s"% out)
                                     sendEmail("failed DDM injection","could not add "+out+" to DDM pool. check closor logs.",'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
+                                    passed_to_DDM=False
+                            if passed_to_DDM:
+                                ## make a lock release
+                                LI.release_everywhere( out, reason = 'global unlock after passing to DDM')                                
+                                pass
 
                     else:
                         print wfo.name,"no stats for announcing",out

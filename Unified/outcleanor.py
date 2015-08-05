@@ -140,8 +140,10 @@ def outcleanor(url, options):
                     print "Where we keep a full copy", stay_there
                     to_be_cleaned.remove( stay_there )
                     our_copies[stay_there].append( dataset )
+                    LI.release_except( dataset, stay_there, 'cleanup of output after production')            
                 else:
                     print "We do not want to keep a copy of ",dataset,status,wfo.status
+                    LI.release_everywhere( dataset, 'cleanup of output after production')
 
             if len(to_be_cleaned):
                 print "Where we can clean"
@@ -205,8 +207,10 @@ def outcleanor(url, options):
                 comments="Cleanup output after production."
             print "making deletion to",site
             result = makeDeleteRequest(url, site, datasets, comments=comments)
+            """
             for item in datasets:
                 LI.release( item, site, 'cleanup of output after production')
+            """
             print result
             ## approve it right away ?
             for did in [item['id'] for item in result['phedex']['request_created']]:

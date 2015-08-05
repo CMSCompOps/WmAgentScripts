@@ -203,12 +203,34 @@ class lockInfo:
             l.is_block = '#' in item
             dataLock.locksession.add ( l )
         else:
-            print l.item,item
+            pass
+            #print l.item,item
+
         l.time = now
         l.reason = reason
         l.lock = False
         dataLock.locksession.commit()
 
+    def release_except(self, item, except_site, reason='releasing'):
+        try:
+            for l in dataLock.locksession.query(dataLock.Lock).filter(dataLock.Lock.item.startswith(item)).all():
+                site = l.site
+                if not site in except_site:
+                    self._release(item, site, reason)
+                else:
+                    print "We are told to not release",item,"at site",site,"per request of",except_site
+        except Exception as e:
+            print "could not unlock",item,"everywhere but",except_site
+            print str(e)
+
+    def release_everywhere(self, item, reason='releasing'):
+        try:
+            for l in dataLock.locksession.query(dataLock.Lock).filter(dataLock.Lock.item.startswith(item)).all():
+                site = l.site
+                self._release(item, site, reason)
+        except Exception as e:
+            print "could not unlock",item,"everywhere"
+            print str(e)
 
     def release(self, item, site, reason='releasing'):
         try:
