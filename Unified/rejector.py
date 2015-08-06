@@ -44,6 +44,7 @@ def rejector(url, specific, options=None):
                 schema = wfi.getSchema()
                 schema['Requestor'] = os.getenv('USER')
                 schema['Group'] = 'DATAOPS'
+                schema['OriginalRequestName'] = wfo.name
                 if 'ProcessingVersion' in schema:
                     schema['ProcessingVersion']+=1
                 else:
