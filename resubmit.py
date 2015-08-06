@@ -172,7 +172,7 @@ def cloneWorkflow(workflow, user, group, verbose=False, backfill=False):
     helper = reqMgrClient.retrieveSchema(workflow, reqmgrCouchURL)
     # Adapt schema and add original request to it
     schema = modifySchema(helper, user, group, backfill)
-    schema['OriginalRequest'] = workflow
+    schema['OriginalRequestName'] = workflow
     if verbose:
         pprint(schema)
     print 'Submitting workflow'
