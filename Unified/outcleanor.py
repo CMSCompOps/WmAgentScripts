@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import workflowInfo, getDatasetPresence, getDatasetStatus, getWorkflowByInput, getDatasetSize, makeDeleteRequest, listDelete, approveSubscription
+from utils import lockInfo
 import optparse
 import random 
 from collections import defaultdict
@@ -9,6 +10,9 @@ import time
 
 def outcleanor(url, options):
 
+    do_not_autoapprove = ['T2_FR_CCIN2P3']
+    LI = lockInfo()
+
     if options.approve:
         for user in ['*Vlimant']:#,'*Cremonesi']:
             deletes = listDelete( url , user = user)
@@ -16,7 +20,8 @@ def outcleanor(url, options):
                 if 'MSS' in site: continue### ever
                 print site,who,tid
                 print "approving deletion"
-                print approveSubscription(url, tid, nodes = [site], comments = 'Production cleaning by data ops')
+                if not site in do_not_autoapprove: 
+                    print approveSubscription(url, tid, nodes = [site], comments = 'Production cleaning by data ops')
         return
 
     
@@ -127,12 +132,18 @@ def outcleanor(url, options):
                     if not len(full_copies):
                         print "we do not own a full copy of",dataset,status,wfo.status,".skip"
                         continue
-                    stay_there = random.choice( full_copies ) #at a place own by ops
+                    t1_full_copies = [ site for site in full_copies if site.startswith('T1')]
+                    if t1_full_copies:
+                        stay_there = random.choice( t1_full_copies ) #at a place own by ops
+                    else:
+                        stay_there = random.choice( full_copies ) #at a place own by ops
                     print "Where we keep a full copy", stay_there
                     to_be_cleaned.remove( stay_there )
                     our_copies[stay_there].append( dataset )
+                    LI.release_except( dataset, stay_there, 'cleanup of output after production')            
                 else:
                     print "We do not want to keep a copy of ",dataset,status,wfo.status
+                    LI.release_everywhere( dataset, 'cleanup of output after production')
 
             if len(to_be_cleaned):
                 print "Where we can clean"
@@ -190,17 +201,24 @@ def outcleanor(url, options):
     if (not options.test) and (options.auto or raw_input("Satisfied ? (y will trigger status change and deletion requests)") in ['y']):
         for (site,items) in sites_and_datasets.items():
             datasets = [ ds for ds,_,st in items]
+            is_tape = any([v in site for v in ['MSS','Export','Buffer'] ])
+            comments="Cleanup output after production. DataOps will take care of approving it."
+            if is_tape:
+                comments="Cleanup output after production."
             print "making deletion to",site
-            result = makeDeleteRequest(url, site, datasets, "Cleanup output after production. DataOps will take care of approving it.")
+            result = makeDeleteRequest(url, site, datasets, comments=comments)
+            """
+            for item in datasets:
+                LI.release( item, site, 'cleanup of output after production')
+            """
             print result
             ## approve it right away ?
-            if 'MSS' in site: continue
-            if 'Export' in site: continue
-            if 'Buffer' in site: continue
             for did in [item['id'] for item in result['phedex']['request_created']]:
-                print "auto-approve disabled, but ready"
-                #approveSubscription(url, did, nodes = [site], comments = 'Auto-approving production cleaning deletion')
-                pass
+                if not is_tape:
+                    print "auto-approving to",site,"?"
+                    if not site in do_not_autoapprove:
+                        approveSubscription(url, did, nodes = [site], comments = 'Production cleaning by data ops, auto-approved')
+                    pass
         session.commit()
     else:
         print "Not making the deletion and changing statuses"

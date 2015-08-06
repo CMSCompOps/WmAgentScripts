@@ -4,11 +4,14 @@ import sys
 import reqMgrClient
 import setDatasetStatusDBS3
 from utils import workflowInfo
+from utils import componentInfo
 import optparse
 import re
 
 def rejector(url, specific, options=None):
-    
+
+    up = componentInfo()
+
     if specific.startswith('/'):
         pass
     else:
@@ -18,12 +21,13 @@ def rejector(url, specific, options=None):
             return
         results=[]
         wfi = workflowInfo(url, wfo.name)
-        if wfi.request['RequestStatus'] in ['assignment-approved','new','completed']:
-            #results.append( reqMgrClient.rejectWorkflow(url, wfo.name))
-            reqMgrClient.rejectWorkflow(url, wfo.name)
-        else:
-            #results.append( reqMgrClient.abortWorkflow(url, wfo.name))
-            reqMgrClient.abortWorkflow(url, wfo.name)
+        reqMgrClient.invalidateWorkflow(url, wfo.name, current_status=wfi.request['RequestStatus'])
+        #if wfi.request['RequestStatus'] in ['assignment-approved','new','completed']:
+        #    #results.append( reqMgrClient.rejectWorkflow(url, wfo.name))
+        #    reqMgrClient.rejectWorkflow(url, wfo.name)
+        #else:
+        #    #results.append( reqMgrClient.abortWorkflow(url, wfo.name))
+        #    reqMgrClient.abortWorkflow(url, wfo.name)
         
         datasets = wfi.request['OutputDatasets']
         for dataset in datasets:
@@ -40,6 +44,7 @@ def rejector(url, specific, options=None):
                 schema = wfi.getSchema()
                 schema['Requestor'] = os.getenv('USER')
                 schema['Group'] = 'DATAOPS'
+                schema['OriginalRequestName'] = wfo.name
                 if 'ProcessingVersion' in schema:
                     schema['ProcessingVersion']+=1
                 else:

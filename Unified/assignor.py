@@ -3,18 +3,24 @@ from assignSession import *
 import reqMgrClient
 from utils import workflowInfo, campaignInfo, siteInfo, userLock
 from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction
+from utils import componentInfo, sendEmail
+from utils import lockInfo
 import optparse
 import itertools
 import time
 from htmlor import htmlor
 import os
+import random
 import json
 
 def assignor(url ,specific = None, talk=True, options=None):
     if userLock('assignor'): return
 
+    up = componentInfo()
+
     CI = campaignInfo()
     SI = siteInfo()
+    LI = lockInfo()
 
     wfos=[]
     if specific:
@@ -55,16 +61,16 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         (lheinput,primary,parent,secondary) = wfh.getIO()
         sites_allowed = getSiteWhiteList( (lheinput,primary,parent,secondary) )
+
+        if 'SiteWhitelist' in CI.parameters(wfh.request['Campaign']):
+            sites_allowed = CI.parameters(wfh.request['Campaign'])['SiteWhitelist']
+
+        if 'SiteBlacklist' in CI.parameters(wfh.request['Campaign']):
+            print "Reducing the whitelist due to black list in campaign configuration"
+            print "Removing",CI.parameters(wfh.request['Campaign'])['SiteBlacklist']
+            sites_allowed = list(set(sites_allowed) - set(CI.parameters(wfh.request['Campaign'])['SiteBlacklist']))
+            
         print "Allowed",sites_allowed
-        sites_out = [SI.pick_dSE([SI.CE_to_SE(ce) for ce in sites_allowed])]
-        sites_custodial = []
-        if len(sites_custodial)==0:
-            print "No custodial, it's fine, it's covered in close-out"
-
-        if len(sites_custodial)>1:
-            print "more than one custodial for",wfo.name
-            sys.exit(36)
-
         secondary_locations=None
         for sec in list(secondary):
             presence = getDatasetPresence( url, sec )
@@ -111,13 +117,17 @@ def assignor(url ,specific = None, talk=True, options=None):
             print "We could be running at",opportunistic_sites,"in addition"
 
         if available_fractions and not all([available>=1. for available in available_fractions.values()]):
-            print "The input dataset is not located in full at any site"
+            print "The input dataset is not located in full over sites"
             print json.dumps(available_fractions)
-            if not options.test and not options.go: continue ## skip skip skip
+            if not options.test and not options.go:
+                sendEmail( "cannot be assigned","%s is not full over sites \n %s"%(wfo.name,json.dumps(available_fractions)),'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
+                continue ## skip skip skip
+
         copies_wanted = 2.
         if available_fractions and not all([available>=copies_wanted for available in available_fractions.values()]):
             print "The input dataset is not available",copies_wanted,"times, only",available_fractions.values()
             if not options.go:
+                sendEmail( "cannot be assigned","%s is not sufficiently available \n %s"%(wfo.name,json.dumps(available_fractions)),'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
                 continue
 
         ## default back to white list to original white list with any data
@@ -143,18 +153,48 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         if not len(sites_allowed):
             print wfo.name,"cannot be assign with no matched sites"
+            sendEmail( "cannot be assigned","%s has no whitelist"%(wfo.name),'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
             continue
 
+        t1_only = [ce for ce in sites_allowed if ce.startswith('T1')]
+        if t1_only:
+            # try to pick from T1 only first
+            sites_out = [SI.pick_dSE([SI.CE_to_SE(ce) for ce in t1_only])]
+        else:
+            # then pick any otherwise
+            sites_out = [SI.pick_dSE([SI.CE_to_SE(ce) for ce in sites_allowed])]
+
+
+        print "Placing the output on", sites_out
         parameters={
             'SiteWhitelist' : sites_allowed,
-            'CustodialSites' : sites_custodial,
+            #'CustodialSites' : sites_custodial,
             'NonCustodialSites' : sites_out,
             'AutoApproveSubscriptionSites' : list(set(sites_out)),
             'AcquisitionEra' : wfh.acquisitionEra(),
             'ProcessingString' : wfh.processingString(),
-            'MergedLFNBase' : '/store/mc', ## to be figured out ! from Hi shit
+            'MergedLFNBase' : '/store/mc', ## to be figured out
             'ProcessingVersion' : version,
             }
+
+
+        ## plain assignment here
+        team='production'
+        if options and options.team:
+            team = options.team
+
+        if "T2_US_UCSD" in sites_with_data and random.random() < -1.0 and wfh.request['Campaign']=='RunIISpring15DR74' and int(wfh.getRequestNumEvents()) < 200000 and not any([out.endswith('RAW') for out in wfh.request['OutputDatasets']]):
+            ## consider SDSC
+            parameters['SiteWhitelist'] = ['T2_US_UCSD','T3_US_SDSC']
+            parameters['useSiteListAsLocation'] = True
+            team = 'allocation-based'
+            sendEmail("sending work to SDSC","%s was assigned to SDSC/UCSD"% wfo.name,'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
+            
+        if wfh.request['Campaign']=='RunIIWinter15GS' and random.random() < -1.0:
+            parameters['SiteWhitelist'] = ['T3_US_SDSC']
+            team = 'allocation-based'
+            sendEmail("sending work to SDSC","%s was assigned to SDSC"% wfo.name,'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
+        
 
         ##parse options entered in command line if any
         if options:
@@ -176,11 +216,30 @@ def assignor(url ,specific = None, talk=True, options=None):
             #parameters['SplittingAlgorithm'] = 'EventBased'
             continue
 
-        ## plain assignment here
-        team='production'
-        if options and options.team:
-            team = options.team
+        # Handle run-dependent MC
+        pstring = wfh.processingString()
+        if 'PU_RD' in pstring:
+            numEvents = wfh.getRequestNumEvents()
+            reqJobs = 500
+            if 'PU_RD2' in pstring:
+                reqJobs = 2000
+                eventsPerJob = int(numEvents/(reqJobs*1.4))
+                print "need to go down to",eventsPerJob,"events per job"
+                parameters['EventsPerJob'] = eventsPerJob
+
+
         result = reqMgrClient.assignWorkflow(url, wfo.name, team, parameters)
+
+
+        try:
+            ## refetch information and lock output
+            new_wfi = workflowInfo( url, wfo.name)
+            for site in [SI.CE_to_SE(site) for site in sites_allowed]:
+                for output in new_wfi.request['OutputDatasets']:
+                    LI.lock( output, site, 'dataset in production')
+        except Exception as e:
+            print "fail in locking output"
+            print str(e)
 
         # set status
         if not options.test:
@@ -197,7 +256,6 @@ if __name__=="__main__":
     url = 'cmsweb.cern.ch'
 
     parser = optparse.OptionParser()
-    #parser.add_option('-e', '--execute', help='Actually assign workflows',action="store_true",dest='execute')
     parser.add_option('-t','--test', help='Only test the assignment',action='store_true',dest='test',default=False)
     parser.add_option('-r', '--restrict', help='Only assign workflows for site with input',default=False, action="store_true",dest='restrict')
     parser.add_option('--go',help="Overrides the campaign go",default=False,action='store_true')

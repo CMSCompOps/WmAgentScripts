@@ -682,6 +682,11 @@ def assignWorkflow(url, workflowname, team, parameters ):
     defaults["Team"+team] = "checked"
     defaults["checkbox"+workflowname] = "checked"
 
+    wf = workflowInfo(url, workflowname)
+
+    # set the maxrss watchdog to what is specified in the request
+    defaults['MaxRSS'] = wf.request['Memory']*1024+10
+
     defaults.update( parameters )
 
     if not set(assignWorkflow.mandatories).issubset( set(parameters.keys())):
@@ -689,13 +694,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
         print list(set(assignWorkflow.mandatories) - set(parameters.keys()))
         return False
 
-    if not 'execute' in defaults or not defaults['execute']:
-        print json.dumps( defaults ,indent=2)
-        return False
-    else:
-        defaults.pop('execute')
 
-    wf = workflowInfo(url, workflowname)
     if wf.request['RequestType'] == 'ReDigi':
         defaults['Dashboard'] = 'reprocessing'
         defaults['dashboard'] = 'reprocessing'
@@ -708,9 +707,6 @@ def assignWorkflow(url, workflowname, team, parameters ):
             print "Cannot assign with no site whitelist"
             return False
 
-    # set the maxrss watchdog to what is specified in the request
-    defaults['MaxRSS'] = wf.request['Memory']*1024+10
-
     for aux in assignWorkflow.auxiliaries:
         if aux in defaults: 
             par = defaults.pop( aux )
@@ -722,7 +718,8 @@ def assignWorkflow(url, workflowname, team, parameters ):
                 if par < params['events_per_job']:
                     params.update({"requestName":workflowname,
                                    "splittingTask" : '/%s/%s'%(workflowname,t),
-                                   "events_per_job": par})
+                                   "events_per_job": par,
+                                   "splittingAlgo":"EventBased"})
                     print setWorkflowSplitting(url, params)
             elif aux == 'EventsPerLumi':
                 wf = workflowInfo(url, workflowname)
@@ -769,6 +766,16 @@ def assignWorkflow(url, workflowname, team, parameters ):
             else:
                 print "No action for ",aux
 
+    if not 'execute' in defaults or not defaults['execute']:
+        print json.dumps( defaults ,indent=2)
+        return False
+    else:
+        defaults.pop('execute')
+        print json.dumps( defaults ,indent=2)
+
+    if defaults['useSiteListAsLocation'] =='False' or defaults['useSiteListAsLocation'] == False:
+        defaults.pop('useSiteListAsLocation')
+
     jsonEncodedParams = {}
     for paramKey in defaults.keys():
         jsonEncodedParams[paramKey] = json.dumps(defaults[paramKey])
@@ -808,7 +815,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
 assignWorkflow.defaults= {
         "action": "Assign",
         "SiteBlacklist": [],
-        #"useSiteListAsLocation" : False,
+        "useSiteListAsLocation" : False,
         "UnmergedLFNBase": "/store/unmerged",
         "MinMergeSize": 2147483648,
         "MaxMergeSize": 4294967296,
@@ -821,6 +828,7 @@ assignWorkflow.defaults= {
         "dashboard": "production",
         "SoftTimeout" : 159600,
         "GracePeriod": 300,
+        'CustodialSites' : [], ## make a custodial copy of the output there
         "CustodialSubType" : 'Replica', ## move will screw it over ?
         'NonCustodialSites' : [],
         "NonCustodialSubType" : 'Replica', ## that's the default, but let's be sure
@@ -832,7 +840,7 @@ assignWorkflow.mandatories = ['SiteWhitelist',
                               'ProcessingString',
                               'MergedLFNBase',
                               
-                              'CustodialSites', ## make a custodial copy of the output there
+                              #'CustodialSites', ## make a custodial copy of the output there
                               
                               #'SoftTimeout',
                               #'BlockCloseMaxEvents',
@@ -843,7 +851,7 @@ assignWorkflow.mandatories = ['SiteWhitelist',
 assignWorkflow.auxiliaries = [ 'SplittingAlgorithm',
                                'EventsPerJob',
                                'EventsPerLumi',
-                               'LumisPerJob'
+                               'LumisPerJob',
                                ]
 
 assignWorkflow.keys = assignWorkflow.mandatories+assignWorkflow.defaults.keys() + assignWorkflow.auxiliaries
@@ -910,6 +918,19 @@ def setWorkflowRunning(url, workflowname):
     params = {"requestName" : workflowname,"status" : "running"}
     data = requestManagerPut(url,"/reqmgr/reqMgr/request", params)
     return data
+
+def invalidateWorkflow(url, workflowname, current_status=None):
+    if not current_status:
+        print "not implemented yet to retrieve the status at that point"
+    
+    if current_status in ['assignment-approved','new','completed','closed-out','announced']:
+        return rejectWorkflow(url, workflowname)
+    elif current_status in['normal-archived']:
+        params = {"requestName" : workflowname,"status" : "rejected-archived"}
+        data = requestManagerPut(url,"/reqmgr/reqMgr/request", params)
+        return data
+    else:
+        return abortWorkflow(url, workflowname)
 
 def rejectWorkflow(url, workflowname):
     """

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkLoad, getDatasetPresence, makeDeleteRequest, getDatasetSize, siteInfo, findCustodialLocation, getWorkflowByInput, campaignInfo
+from utils import getWorkLoad, getDatasetPresence, makeDeleteRequest, getDatasetSize, siteInfo, findCustodialLocation, getWorkflowByInput, campaignInfo, approveSubscription
+from utils import lockInfo
 import json
 import time
 import random
@@ -8,26 +9,26 @@ import random
 def cleanor(url, specific=None):
 
     delete_per_site = {}
+    do_not_autoapprove = ['T2_FR_CCIN2P3']
     SI = siteInfo()
     CI = campaignInfo()
+    LI = lockInfo()
+
     counts=0
     for wfo in session.query(Workflow).filter(Workflow.status == 'done').all():
         keep_a_copy = False
         if specific and not specific in wfo.name: continue
         ## what was in input 
         wl = getWorkLoad(url,  wfo.name )
-        if not 'InputDataset' in wl: 
-            ## should we set status = clean ? or something even further
-            print "skipping",wfo.name,"with no input"
-            wfo.status = 'clean'
-            session.commit()
-            continue
 
         if 'Campaign' in wl and wl['Campaign'] in CI.campaigns and 'clean-in' in CI.campaigns[wl['Campaign']] and CI.campaigns[wl['Campaign']]['clean-in']==False:
             print "Skipping cleaning on input for campaign",wl['Campaign'], "as per campaign configuration"
             continue
-            
-        dataset = wl['InputDataset']
+
+        dataset= 'N/A'
+        if 'InputDataset' in wl:
+            dataset = wl['InputDataset']
+
         print dataset,"in input"
         #print json.dumps(wl, indent=2)
         announced_log = filter(lambda change : change["Status"] in ["closed-out","normal-archived","announced"],wl['RequestTransition'])
@@ -36,13 +37,26 @@ def cleanor(url, specific=None):
             continue
         now = time.mktime(time.gmtime()) / (60*60*24.)
         then = announced_log[-1]['UpdateTime'] / (60.*60.*24.)
-        total_size = getDatasetSize( dataset ) ## in Gb
         if (now-then) <2:
             print "workflow",wfo.name, "finished",now-then,"days ago. Too fresh to clean"
             continue
         else:
             print "workflow",wfo.name,"has finished",now-then,"days ago."
-        
+
+        if not 'InputDataset' in wl: 
+            ## should we set status = clean ? or something even further
+            print "passing along",wfo.name,"with no input"
+            wfo.status = 'clean'
+            session.commit()
+            continue
+
+        if 'MinBias' in dataset:
+            print "Should not clean anything using",dataset,"setting status further"
+            wfo.status = 'clean'
+            session.commit()
+            continue
+
+        total_size = getDatasetSize( dataset ) ## in Gb        
         #if counts> 20:            break
         counts+=1
         ## find any location it is at
@@ -61,8 +75,7 @@ def cleanor(url, specific=None):
         for other in using_the_same:
             if other['RequestName'] == wfo.name: continue
             if other['RequestType'] == 'Resubmission': continue
-            if not other['RequestStatus'] in ['announced','normal-archived','aborted','rejected','aborted-archived','rejected-archived','closed-out','None',None]:
-            #if other['RequestStatus'] in ['running-open','running-closed','new','assignment-approved','acquired','assigned','completed']:
+            if not other['RequestStatus'] in ['announced','normal-archived','aborted','rejected','aborted-archived','aborted-completed','rejected-archived','closed-out','None',None,'new']:
                 print other['RequestName'],'is in status',other['RequestStatus'],'preventing from cleaning',dataset
                 conflict=True
                 break
@@ -111,7 +124,6 @@ def cleanor(url, specific=None):
                 to_be_cleaned.remove( keep_at )
         else:
             wfo.status = 'clean'
-            print "Skipping anyways for the moment"
 
         ## collect delete request per site
         for site in to_be_cleaned :
@@ -138,30 +150,24 @@ def cleanor(url, specific=None):
 
         print "\t",','.join(dataset_list)
     
-    ## make a one for all deletion request to save on phedex id
-    aggregate_deletion = False
-    auto_approve_deletion = False
-    sites = set()
-    datasets = set()
+    ## make deletion requests
     for site in delete_per_site:
         site_datasets = [info[0] for info in delete_per_site[site]]
-        datasets.update( site_datasets )
-        sites.add(site)
-        if not aggregate_deletion:
-            result = makeDeleteRequest(url ,site , site_datasets, comments="Cleanup input after production. DataOps will take care of approving it.")
-            for phedexid in [o['id'] for o in result['phedex']['request_created']]:
-                if auto_approve_deletion:
-                    approved = approveSubscription(url, phedexid, [site])
-        
-    sites = map(str, sites)
-    datasets = map(str, datasets)
-    if aggregate_deletion:
-        result = makeDeleteRequest(url ,sites ,datasets, comments="cleanup after production") 
-        for phedexid in [o['id'] for o in result['phedex']['request_created']]:
-            for site in sites:
-                if auto_approve_deletion:
-                    approved = approveSubscription(url, phedexid, [site])
+        is_tape = any([v in site for v in ['MSS','Export','Buffer'] ])
+        comments="Cleanup input after production. DataOps will take care of approving it."
+        if is_tape:
+            comments="Cleanup input after production."
+        if True:
+            result = makeDeleteRequest(url ,site , site_datasets, comments=comments)
+            for item in site_datasets:
+                LI.release( item, site, 'cleanup of input after production')
 
+            print result
+            for phedexid in [o['id'] for o in result['phedex']['request_created']]:
+                if not is_tape:
+                    print "auto-approving to",site,"?"
+                    if not site in do_not_autoapprove: approved = approveSubscription(url, phedexid, nodes = [site], comments = 'Production cleaning by data ops, auto-approved')
+                    pass
         
 if __name__ == "__main__":
     url = 'cmsweb.cern.ch'
