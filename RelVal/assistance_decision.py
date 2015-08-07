@@ -14,7 +14,7 @@ merge_threshold=0.1
 harvesting_threshold=0.5
 
 def assistance_decision(job_failure_information):
-    
+
     assistance=False
 
     for wf in job_failure_information:
@@ -35,15 +35,15 @@ def assistance_decision(job_failure_information):
                     sum+=task['failures'][exitcode]['number']
 
             if "HarvestMerged" in task['task_name']:
-                if float(sum) / task['nfailurestot'] > harvesting_threshold:
+                if float(sum) / task['totaljobs'] > harvesting_threshold:
                     assistance=True
 
             elif "Merge" in task['task_name']:
-                if float(sum) / task['nfailurestot'] > merge_threshold:
+                if float(sum) / task['totaljobs'] > merge_threshold:
                     assistance=True
 
             else:
-                if float(sum) / task['nfailurestot'] > default_threshold:
+                if float(sum) / task['totaljobs'] > default_threshold:
                     assistance=True
 
 
