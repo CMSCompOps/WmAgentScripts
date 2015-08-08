@@ -78,8 +78,6 @@ def main():
 
             for wf in wfs:
 
-                wf_dict = dict(zip(wfs_colnames, wf))
-
                 print wf[0]
 
                 conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
