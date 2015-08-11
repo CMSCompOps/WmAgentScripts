@@ -693,12 +693,49 @@ def approveSubscription(url, phedexid, nodes=None , comments =None):
         for item in items:
             for node in item['node']:
                 nodes.add(node['name'])
-        ## find out from the request itself ?
+        # find out from the request itself ?
         nodes = list(nodes)
+
+        #nodes = ["T2_CH_CERN","T1_US_FNAL_Disk","T0_CH_CERN_MSS"]
 
     params = {
         'decision' : 'approve',
         'request' : phedexid,
+#        'node' : nodes,
+        'node' : ','.join(nodes),
+        'comments' : comments
+        }
+    
+    result = phedexPost(url, "/phedex/datasvc/json/prod/updaterequest", params)
+    if not result:
+        return False
+
+    if 'already' in result:
+        return True
+    return result
+
+def disapproveSubscription(url, phedexid, nodes=None , comments =None):
+    if comments==None:
+        comments = 'auto-approve of production prestaging'
+    if not nodes:
+        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+        r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?request='+str(phedexid))
+        r2=conn.getresponse()
+        result = json.loads(r2.read())
+        items=result['phedex']['request']
+        nodes=set()
+        for item in items:
+            for node in item['node']:
+                nodes.add(node['name'])
+        # find out from the request itself ?
+        nodes = list(nodes)
+
+        #nodes = ["T2_CH_CERN","T1_US_FNAL_Disk","T0_CH_CERN_MSS"]
+
+    params = {
+        'decision' : 'disapprove',
+        'request' : phedexid,
+#        'node' : nodes,
         'node' : ','.join(nodes),
         'comments' : comments
         }
@@ -731,6 +768,13 @@ def makeReplicaRequest(url, site,datasets, comments, priority='normal',custodial
     dataXML = createXML(datasets)
     params = { "node" : site,"data" : dataXML, "group": group, "priority": priority,
                  "custodial":custodial,"request_only":"y" ,"move":"n","no_mail":"n","comments":comments}
+    response = phedexPost(url, "/phedex/datasvc/json/prod/subscribe", params)
+    return response
+
+def makeMoveRequest(url, site,datasets, comments, priority='normal',custodial='n',group="DataOps"): # priority used to be normal
+    dataXML = createXML(datasets)
+    params = { "node" : site,"data" : dataXML, "group": group, "priority": priority,
+                 "custodial":custodial,"request_only":"y" ,"move":"y","no_mail":"n","comments":comments}
     response = phedexPost(url, "/phedex/datasvc/json/prod/subscribe", params)
     return response
 
@@ -897,7 +941,9 @@ def checkIfBlockIsAtASite(url,block,site):
 
 class workflowInfo:
     def __init__(self, url, workflow, deprecated=False, spec=True, request=None):
+
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+
         self.deprecated_request = {}
         if deprecated:
             r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
@@ -912,7 +958,9 @@ class workflowInfo:
         if spec:
             r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/%s/spec'%workflow)
             r2=conn.getresponse()
+
             self.full_spec = pickle.loads(r2.read())
+
         self.url = url
 
     def _tasks(self):
