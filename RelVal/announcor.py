@@ -238,12 +238,19 @@ def main():
             phedexid = result['phedex']['request_created'][0]['id']
             utils.approveSubscription("cmsweb.cern.ch",phedexid)
 
-        result=utils.makeReplicaRequest("cmsweb.cern.ch", "T0_CH_CERN_MSS", dsets_list, "relval datasets", group = "RelVal")
+        result=utils.makeReplicaRequest("cmsweb.cern.ch", "T1_US_FNAL_Disk", dsets_fnal_disk_list, "relval datasets", group = "RelVal")
         if result != None:
             phedexid = result['phedex']['request_created'][0]['id']
             utils.approveSubscription("cmsweb.cern.ch",phedexid)
 
-        result=utils.makeReplicaRequest("cmsweb.cern.ch", "T1_US_FNAL_Disk", dsets_fnal_disk_list, "relval datasets", group = "RelVal")
+        result=utils.makeMoveRequest("cmsweb.cern.ch", "T0_CH_CERN_MSS", dsets_list, "relval datasets", group = "RelVal")
+        if result != None:
+            phedexid = result['phedex']['request_created'][0]['id']
+            #even if you disapprove the subscription at the source, it will still deleted the datasets that are at the source but not subscribed their
+            utils.disapproveSubscription("cmsweb.cern.ch",phedexid,["T2_CH_CERN"])
+            utils.disapproveSubscription("cmsweb.cern.ch",phedexid,["T1_US_FNAL_Disk"])
+            utils.approveSubscription("cmsweb.cern.ch",phedexid,["T0_CH_CERN_MSS"])
+
         #phedexid = result['phedex']['request_created'][0]['id']
         #utils.approveSubscription("cmsweb.cern.ch",phedexid)
 
