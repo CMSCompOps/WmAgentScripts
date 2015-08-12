@@ -115,7 +115,7 @@ def htmlor():
 </head>
 <body>
 
-Last update on %s(CET), %s(GMT), <a href=logs/ target=_blank>logs</a> <a href=logs/last.log target=_blank>last</a> <a href=statuses.html>statuses</a> <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/ target=_blank>prod mon</a> <a href=https://cmsweb.cern.ch/wmstats/index.html target=_blank>wmstats</a> <a href=https://twiki.cern.ch/twiki/bin/view/CMSPublic/CompOpsWorkflowL3Responsibilities#Automatic_Assignment_and_Unified>what am I</a> <br><br>
+Last update on %s(CET), %s(GMT), <a href=logs/ target=_blank>logs</a> <a href=logs/last.log target=_blank>last</a> <a href=statuses.html>statuses</a> <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/ target=_blank>prod mon</a> <a href=https://cmsweb.cern.ch/wmstats/index.html target=_blank>wmstats</a> <a href=http://t3serv001.mit.edu/~cmsprod/IntelROCCS/DetoxDataOps/SitesInfo.txt target=_blank>detox</a> <a href=https://twiki.cern.ch/twiki/bin/view/CMSPublic/CompOpsWorkflowL3Responsibilities#Automatic_Assignment_and_Unified>what am I</a> <br><br>
 
 """ %(time.asctime(time.localtime()),
       time.asctime(time.gmtime())))
@@ -348,7 +348,7 @@ Worflow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/reque
         count+=1
     text+="</ul></div>\n"
     html_doc.write("""
-Worflow to forget (%d)
+Worflow to forget (%d) <a href=logs/injector/last.log target=_blank>log</a> <a href=logs/outcleanor/last.log target=_blank>postlog</a>
 <a href="javascript:showhide('forget')">[Click to show/hide]</a>
 <br>
 <div id="forget" style="display:none;">
@@ -380,7 +380,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
         count+=1
     text+="</ul></div>\n"
     html_doc.write("""
-Worflow clean for input (%d) <a href=logs/cleanor/last.log target=_blank>log</a>
+Worflow clean for input (%d) <a href=logs/cleanor/last.log target=_blank>log</a> <a href=logs/outcleanor/last.log target=_blank>postlog</a>
 <a href="javascript:showhide('clean')">[Click to show/hide]</a>
 <br>
 <div id="clean" style="display:none;">
@@ -508,6 +508,8 @@ Worflow clean for output (%d) <a href=logs/outcleanor/last.log target=_blank>log
             else:
                 c+=1
         text+="</table></li>"
+
+    open('/afs/cern.ch/user/c/cmst2/www/unified/siteInfo.json','w').write(json.dumps(dict([(t,getattr(SI,t)) for t in SI.types()]),indent=2))
 
     html_doc.write("""Site configuration
 <a href="javascript:showhide('site')">[Click to show/hide]</a>
