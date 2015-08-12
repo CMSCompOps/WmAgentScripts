@@ -248,6 +248,7 @@ def getCustodialSubscriptionRequestSite(datasetName):
     requests=result['phedex']
     #gets dataset subscription requests
     if 'request' not in requests.keys():
+        print "no result for",datasetName,"in phedex request list"
         return False
     sites = []
     #if there is a request
