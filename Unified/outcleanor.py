@@ -13,18 +13,6 @@ def outcleanor(url, options):
     do_not_autoapprove = ['T2_FR_CCIN2P3']
     LI = lockInfo()
 
-    if options.approve:
-        for user in ['*Vlimant']:#,'*Cremonesi']:
-            deletes = listDelete( url , user = user)
-            for (site,who,tid) in deletes:
-                if 'MSS' in site: continue### ever
-                print site,who,tid
-                print "approving deletion"
-                if not site in do_not_autoapprove: 
-                    print approveSubscription(url, tid, nodes = [site], comments = 'Production cleaning by data ops')
-        return
-
-    
 
     sites_and_datasets = defaultdict(list)
     our_copies = defaultdict(list)
@@ -200,25 +188,22 @@ def outcleanor(url, options):
 
     if (not options.test) and (options.auto or raw_input("Satisfied ? (y will trigger status change and deletion requests)") in ['y']):
         for (site,items) in sites_and_datasets.items():
-            datasets = [ ds for ds,_,st in items]
-            is_tape = any([v in site for v in ['MSS','Export','Buffer'] ])
-            comments="Cleanup output after production. DataOps will take care of approving it."
-            if is_tape:
-                comments="Cleanup output after production."
-            print "making deletion to",site
-            result = makeDeleteRequest(url, site, datasets, comments=comments)
-            """
-            for item in datasets:
-                LI.release( item, site, 'cleanup of output after production')
-            """
-            print result
+            #datasets = [ ds for ds,_,st in items]
+            #is_tape = any([v in site for v in ['MSS','Export','Buffer'] ])
+            #comments="Cleanup output after production. DataOps will take care of approving it."
+            #if is_tape:
+            #    comments="Cleanup output after production."
+            #print "making deletion to",site
+            #result = makeDeleteRequest(url, site, datasets, comments=comments)
+            #print result
             ## approve it right away ?
-            for did in [item['id'] for item in result['phedex']['request_created']]:
-                if not is_tape:
-                    print "auto-approving to",site,"?"
-                    if not site in do_not_autoapprove:
-                        approveSubscription(url, did, nodes = [site], comments = 'Production cleaning by data ops, auto-approved')
-                    pass
+            #for did in [item['id'] for item in result['phedex']['request_created']]:
+            #    if not is_tape:
+            #        print "auto-approving to",site,"?"
+            #        if not site in do_not_autoapprove:
+            #            approveSubscription(url, did, nodes = [site], comments = 'Production cleaning by data ops, auto-approved')
+            #        pass
+            pass
         session.commit()
     else:
         print "Not making the deletion and changing statuses"
@@ -232,7 +217,6 @@ if __name__ == "__main__":
     parser.add_option('-n','--number',help='Specify the amount of wf to clean',type=int, default=0)
     parser.add_option('-a','--auto',help='Do not ask confirmation',action='store_true',default=False)
     parser.add_option('-f','--fetch',help='The coma separated list of status to fetch from',default='clean,forget')
-    parser.add_option('--approve',help='Approve the previous round of deletions',default=False,action='store_true')
     (options,args) = parser.parse_args()
     
     outcleanor(url, options)
