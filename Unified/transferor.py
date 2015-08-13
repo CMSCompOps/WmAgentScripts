@@ -4,7 +4,7 @@ import reqMgrClient
 from McMClient import McMClient
 from utils import makeReplicaRequest
 from utils import workflowInfo, siteInfo, campaignInfo, userLock
-from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, getSiteWhiteList, approveSubscription, getDatasetSize, updateSubscription, getWorkflows, componentInfo
+from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, getSiteWhiteList, approveSubscription, getDatasetSize, updateSubscription, getWorkflows, componentInfo, getDatasetDestinations
 from utils import unifiedConfiguration
 from utils import lockInfo
 import json
@@ -297,8 +297,13 @@ def transferor(url ,specific = None, talk=True, options=None):
 
                 ## remove the sites that do not want transfers                
                 workflow_dependencies[prim].add( wfo.id )
+
+                #####################################
+                ###### JR 3/8/15 #### deprecating this
+                """
                 presence = getDatasetPresence( url, prim , within_sites = [SI.CE_to_SE(site) for site in sites_allowed])
                 prim_location = [site for site,pres in presence.items() if pres[0]==True]
+                prim_parts = [site for site,pres in presence.items() if pres[0]==False]
                 if len(prim_location) >= copies_needed:
                     print "The output is all fully in place at",len(prim_location),"sites"
                     continue
@@ -307,11 +312,38 @@ def transferor(url ,specific = None, talk=True, options=None):
                 print "now need",copies_needed
                 subscriptions = listSubscriptions( url , prim , sites_allowed )
                 prim_destination = list(set([site for (site,(tid,decision)) in subscriptions.items() if decision and not any([site.endswith(veto) for veto in ['MSS','Export','Buffer']])]))
+                ## remove the subscription where the dataset is in parts at
+                #prim_destination = list(set([site for (site,(tid,decision)) in subscriptions.items() if decision and not any([site.endswith(veto) for veto in ['MSS','Export','Buffer']]) and not site in prim_parts]))
                 ## need to reject from that list the ones with a full copy already: i.e the transfer corresponds to the copy in place
                 prim_destination = [site for site in prim_destination if not site in prim_location]
                 ## add transfer dependencies
                 latching_on_transfers =  list(set([ tid for (site,(tid,decision)) in subscriptions.items() if decision and site in prim_destination and not any([site.endswith(veto) for veto in ['MSS','Export','Buffer']])]))
                 print latching_on_transfers
+                """
+                ###### JR 3/8/15 #### deprecating this
+                #####################################
+
+
+                ### new ways of making the whole thing
+                destinations,all_block_names = getDatasetDestinations(url, prim, within_sites = [SI.CE_to_SE(site) for site in sites_allowed])
+
+                ## get where the dataset is in full and completed
+                prim_location = [site for (site,info) in destinations.items() if info['completion']==100 and info['data_fraction']==1]
+                ## the rest is places it is going to be
+                prim_destination = [site for site in destinations.keys() if not site in prim_location]
+
+                if len(prim_location) >= copies_needed:
+                    print "The output is all fully in place at",len(prim_location),"sites"
+                    continue
+                copies_needed = max(0,copies_needed - len(prim_location))
+                print "now need",copies_needed
+                
+                copies_being_made = [ sum([info['blocks'].keys().count(block) for site,info in destinations.items() if site in prim_destination]) for block in all_block_names]
+
+                latching_on_transfers = set()
+                [latching_on_transfers.update(info['blocks'].values()) for site,info in destinations.items() if site in prim_destination]
+                latching_on_transfers = list(latching_on_transfers)
+                #print latching_on_transfers
 
                 ## figure out where all this is going to go
                 prim_to_distribute = [site for site in sites_allowed if not any([osite.startswith(site) for osite in prim_location])]
@@ -355,7 +387,8 @@ def transferor(url ,specific = None, talk=True, options=None):
                     staging = True
 
                 # reduce the number of copies required by the on-going full transfer : how do we bootstrap on waiting for them ??
-                copies_needed = max(0,copies_needed - len(prim_destination))
+                #copies_needed = max(0,copies_needed - len(prim_destination))
+                copies_needed = max(0,copies_needed - min(copies_being_made))
                 print "then need",copies_needed
                 if copies_needed == 0:
                     print "The output is either fully in place or getting in full somewhere with",latching_on_transfers
