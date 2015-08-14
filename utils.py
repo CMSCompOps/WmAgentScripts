@@ -906,12 +906,13 @@ def checkIfBlockIsSubscribedToASite(url,block,site):
 
 def checkIfDatasetIsSubscribedToASite(url,dataset,site):
 
-    print dataset
-
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?dataset='+dataset)
     r2=conn.getresponse()
     result = json.loads(r2.read())
+
+    if len(result['phedex']['dataset']) == 0:
+        return False
 
     if len(result['phedex']['dataset']) != 1:
         os.system('echo '+dataset+' | mail -s \"utils.py error 1\" andrew.m.levin@vanderbilt.edu')
