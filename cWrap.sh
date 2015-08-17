@@ -27,11 +27,11 @@ if [ $? == 0 ]; then
     echo "finished" >> $log
 else
     echo "abnormal termination" >> $log
-    mail -s "[Ops] module "$modulename" failed" vlimant@cern.ch,matteoc@fnal.gov
+    mail -s "[Ops] module "$modulename" failed" vlimant@cern.ch,matteoc@fnal.gov -a $log
 fi
 
 echo `date` >> $log
 
 ## copy log to lasts
-cp $log /afs/cern.ch/user/c/cmst2/www/unified/logs/`echo $1 | sed 's/\.py//' | sed 's/Unified\///'`/last.log
+cp $log /afs/cern.ch/user/c/cmst2/www/unified/logs/$modulename/last.log
 cp $log /afs/cern.ch/user/c/cmst2/www/unified/logs/last.log
