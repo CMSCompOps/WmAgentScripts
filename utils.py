@@ -32,6 +32,9 @@ def sendEmail( subject, text, sender, destination ):
     #print sender
     #print destination
     
+    if not destination:
+        pass
+
     msg = MIMEMultipart()
     msg['From'] = sender
     msg['To'] = COMMASPACE.join( destination )
@@ -330,9 +333,10 @@ class componentInfo:
                 if not test: 
                     self.tell('mcm')
                     print "mcm corrupted"
-                    if block: 
+                    if block and not (soft and 'mcm' in soft):
                         sys.exit(124)
-                self.status['mcm'] = True
+                else:
+                    self.status['mcm'] = True
             except Exception as e:
                 self.tell('mcm')
                 print "mcm unreachable"
@@ -347,7 +351,7 @@ class componentInfo:
             if not blocks:
                 self.tell('dbs')
                 print "dbs corrupted"
-                if block:
+                if block and not (soft and 'dbs' in soft):
                     sys.exit(126)
         except Exception as e:
             self.tell('dbs')
