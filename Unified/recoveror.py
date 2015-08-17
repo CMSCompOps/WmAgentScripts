@@ -5,6 +5,7 @@ import reqMgrClient
 import json
 import optparse
 import copy
+from collections import defaultdict
 
 def singleRecovery(url, task , initial):
     payload = {
