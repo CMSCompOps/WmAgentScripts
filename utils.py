@@ -1288,7 +1288,13 @@ class workflowInfo:
         r2=conn.getresponse()
         self.workqueue = list([d['doc'] for d in json.loads(r2.read())['rows']])
         
-
+    def getSummary(self):
+        conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+        r1=conn.request("GET",'/couchdb/workloadsummary/'+self.request['RequestName'])
+        r2=conn.getresponse()
+        
+        self.summary = json.loads(r2.read())
+        
     def _tasks(self):
         return self.full_spec.tasks.tasklist
 
