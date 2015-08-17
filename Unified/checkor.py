@@ -164,6 +164,7 @@ def checkor(url, spec=None, options=None):
         familly = getWorkflowById(url, wfi.request['PrepID'], details=True)
         acdc = []
         acdc_inactive = []
+        has_recovery_going=False
         for member in familly:
             if member['RequestType'] != 'Resubmission': continue
             if member['RequestName'] == wfo.name: continue
@@ -174,6 +175,7 @@ def checkor(url, spec=None, options=None):
                 #print json.dumps(member,indent=2)
                 ## hook for just waiting ...
                 is_closing = False
+                has_recovery_going=True
             else:
                 acdc_inactive.append( member['RequestName'] )
         ## completion check
@@ -208,7 +210,11 @@ def checkor(url, spec=None, options=None):
             print json.dumps(percent_completions, indent=2)
             print json.dumps(fractions_pass, indent=2)
             ## hook for creating automatically ACDC ?
-            sub_assistance+='-recovery'
+            if has_recovery_going:
+                sub_assistance+='-recovering'
+            else:
+                sub_assistance+='-recovery'
+
             is_closing = False
 
         ## correct lumi < 300 event per lumi
@@ -420,8 +426,9 @@ def checkor(url, spec=None, options=None):
                 text += content
                 text += "You are invited to check, while this is being taken care of by Ops.\n"
                 text += "This is an automated message."
-                print "Sending notification back to requestor"
                 if use_mcm and content:
+                    print "Sending notification back to requestor"
+                    print text
                     batches = mcm.getA('batches',query='contains=%s&status=announced'%pid)
                     if len(batches):
                         ## go notify the batch
