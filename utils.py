@@ -778,6 +778,75 @@ def getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None
         print dataset,":all",len(block_counts),"available",second_order,"times"
         return second_order
     
+def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=None, within_sites=None):
+    if vetoes==None:
+        vetoes = ['MSS','Buffer','Export']
+    #print "presence of",dataset
+    dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+    all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
+    all_block_names=set([block['block_name'] for block in all_blocks])
+    if only_blocks:
+        all_block_names = filter( lambda b : b in only_blocks, all_block_names)
+        full_size = sum([block['file_size'] for block in all_blocks if (block['block_name'] in only_blocks)])
+        #print all_block_names
+        #print [block['block_name'] for block in all_blocks if block['block_name'] in only_blocks]
+    else:
+        full_size = sum([block['file_size'] for block in all_blocks])
+
+    if not full_size:
+        print dataset,"is nowhere"
+        return {}, all_block_names
+
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?block=%s%%23*&collapse=n'%(dataset))
+    r2=conn.getresponse()
+    result = json.loads(r2.read())
+    destinations=defaultdict(set)
+
+    if not len(result['phedex']['dataset']):
+        return destinations, all_block_names
+
+    items=result['phedex']['dataset'][0]['block']
+
+    ## the final answer is site : data_fraction_subscribed
+
+    for item in items:
+        if item['name'] not in all_block_names and not only_blocks:
+            print item['name'],'not yet injected in dbs, counting anyways'
+            all_block_names.add( item['name'] )
+        for sub in item['subscription']:
+            if not any(sub['node'].endswith(v) for v in vetoes):
+                if within_sites and not sub['node'] in within_sites: continue
+                if sub['group'] == None: sub['group']=""
+                #if group!=None and replica['group']==None: continue
+                if group!=None and not sub['group'].lower()==group.lower(): continue 
+                destinations[sub['node']].add( (item['name'], int(sub['percent_bytes']), sub['request']) )
+    ## per site, a list of the blocks that are subscribed to the site
+    ## transform into data_fraction or something valuable
+            
+    for site in destinations:
+        blocks = [b[0] for b in destinations[site]]
+        blocks_and_id = dict([(b[0],b[2]) for b in destinations[site]])
+        #print blocks_and_id
+        completion = sum([b[1] for b in destinations[site]]) / float(len(destinations[site]))
+        
+        destinations[site] = { "blocks" : blocks_and_id, 
+                               #"all_blocks" : list(all_block_names),
+                               "data_fraction" : len(blocks) / float(len(all_block_names)) ,
+                               "completion" : completion,
+                               }
+
+    """
+    #print json.dumps( destinations, indent=2)
+    for site in destinations:
+        print site
+        destinations[site]['overlap'] = dict([ (other_site, len(list(set( destinations[site]['blocks']) & set( destinations[other_site]['blocks']))) / float(len(destinations[other_site]['blocks']))) for other_site in destinations.keys()])
+        #destinations[site]['overlap'].pop(site)
+
+        destinations[site]['replication'] = sum([sum([destinations[other_site]['blocks'].count(block) for block in destinations[site]['blocks'] ]) / float(len(destinations[site]['blocks'])) for other_site in destinations.keys()])
+    """
+    
+    return destinations, all_block_names
 
 def getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=None, vetoes=None, within_sites=None):
     if vetoes==None:
@@ -1050,6 +1119,21 @@ def getWorkLoad(url, wf ):
 def getViewByInput( url, details=False):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     there = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byinputdataset?'
+    if details:
+        there+='&include_docs=true'
+    r1=conn.request("GET",there)
+    r2=conn.getresponse()
+    data = json.loads(r2.read())
+    items = data['rows']
+    return items
+    if details:
+        return [item['doc'] for item in items]
+    else:
+        return [item['id'] for item in items]
+
+def getViewByOutput( url, details=False):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    there = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byoutputdataset?'
     if details:
         there+='&include_docs=true'
     r1=conn.request("GET",there)
