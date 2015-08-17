@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, getWorkflowById, getWorkLoad
+from utils import getWorkflows, getWorkflowById, getWorkLoad, componentInfo
 import sys
 import copy
 from htmlor import htmlor
@@ -9,9 +9,9 @@ import optparse
 
 def injector(url, options, specific):
 
-    ## passing a round of invalidation of what needs to be invalidated
-    if options.invalidate:
-        invalidator(url)
+    use_mcm = True
+    up = componentInfo( mcm = use_mcm, soft=['mcm'] )
+    use_mcm = up.status['mcm']
 
     workflows = getWorkflows(url, status=options.wmstatus,user=options.user)
     existing = [wf.name for wf in session.query(Workflow).all()]
@@ -25,6 +25,10 @@ def injector(url, options, specific):
 
 
     existing = [wf.name for wf in session.query(Workflow).all()]
+
+    ## passing a round of invalidation of what needs to be invalidated
+    if use_mcm and (options.invalidate or True):
+        invalidator(url)
 
 
     ## pick up replacements
@@ -50,18 +54,17 @@ def injector(url, options, specific):
 
                 new_wf = session.query(Workflow).filter(Workflow.name == member).first()
                 if not new_wf:
-                    print "putting",member
+                    print "putting",member,"as replacement of",wf.name
                     status = 'away'
                     if fwl['RequestStatus'] in ['assignment-approved']:
                         status = 'considered'
                     new_wf = Workflow( name = member, status = status, wm_status = fwl['RequestStatus'])
                     wf.status = 'forget'
                     session.add( new_wf ) 
-                    session.commit()
                 else:
                     if new_wf.status == 'forget': continue
                     print "getting",new_wf.name,"as replacement of",wf.name
-
+                    wf.status = 'forget'
 
                 for tr in session.query(Transfer).all():
                     if wf.id in tr.workflows_id:
@@ -71,6 +74,7 @@ def injector(url, options, specific):
                         tr.workflows_id = sw
                         print tr.phedexid,"got",new_wf.name
                         if new_wf.status != 'away':
+                            print "\t setting it staging"
                             new_wf.status = 'staging'
                         session.commit()
                         
@@ -78,6 +82,7 @@ def injector(url, options, specific):
         ## don't do that automatically
         #wf.status = 'forget'
         session.commit()
+
         
 if __name__ == "__main__":
     url = 'cmsweb.cern.ch'
