@@ -10,6 +10,7 @@ from xml.dom.minidom import getDOMImplementation
 import dbs3Client as dbs3
 import copy
 from utils import workflowInfo
+from pprint import pprint
 
 # default headers for PUT and POST methods
 def_headers={"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
@@ -331,6 +332,7 @@ def requestManagerPost(url, request, params, head = def_headers, nested=False):
     url: the instance used, i.e. url='cmsweb.cern.ch' 
     request: the request suffix url for the POST method
     params: a dict with the POST parameters
+    nested: deep encode a json parameters
     """
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
                                     key_file = os.getenv('X509_USER_PROXY'))
@@ -342,6 +344,7 @@ def requestManagerPost(url, request, params, head = def_headers, nested=False):
         encodedParams = urllib.urlencode(jsonEncodedParams)
     else:
         encodedParams = urllib.urlencode(params)
+
     conn.request("POST", request, encodedParams, headers)
     response = conn.getresponse()
     data = response.read()
