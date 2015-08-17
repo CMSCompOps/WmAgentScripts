@@ -700,9 +700,10 @@ def assignWorkflow(url, workflowname, team, parameters ):
                 params = wf.getSplittings()[0]
                 params.update({"requestName":workflowname,
                                "splittingTask" : '/%s/%s'%(workflowname,t),
-                               "lumis_per_job" : par})
+                               "lumis_per_job" : par,
+                               "splittingAlgo" : "LumiBased"})
                 print setWorkflowSplitting(url, params)
-                return False ## not commissioned
+                #return False ## not commissioned
             else:
                 print "No action for ",aux
 
