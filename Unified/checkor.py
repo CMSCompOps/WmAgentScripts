@@ -203,7 +203,7 @@ def checkor(url, spec=None, options=None):
                 fractions_pass[output] = options.fractionpass
                 print "overriding fraction to",fractions_pass[output],"by command line for",output
 
-        if not all([percent_completions[out] > fractions_pass[out] for out in fractions_pass]):
+        if not all([percent_completions[out] >= fractions_pass[out] for out in fractions_pass]):
             print wfo.name,"is not completed"
             print json.dumps(percent_completions, indent=2)
             print json.dumps(fractions_pass, indent=2)
