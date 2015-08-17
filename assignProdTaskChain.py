@@ -10,6 +10,7 @@ import optparse
 from dbs.apis.dbsClient import DbsApi
 from random import choice
 from pprint import pprint
+import reqMgrClient as reqMgr
 
 dbs3_url = r'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
 
@@ -44,15 +45,29 @@ GOOD_SITES = T1S + [
 ]
 
 ALL_SITES = GOOD_SITES + [
+    "T2_AT_Vienna",
+    "T2_BE_IIHE",
     "T2_BE_UCL",
+    "T2_BR_SPRACE",
     "T2_CH_CSCS",
     "T2_CN_Beijing",
     "T2_DE_RWTH",
+    "T2_EE_Estonia",
     "T2_FI_HIP",
     "T2_FR_IPHC",
+    "T2_FR_GRIF_IRFU",
+    "T2_FR_GRIF_LLR",
+    "T2_HU_Budapest",
+    "T2_KR_KNU",
+    "T2_PT_NCG_Lisbon",
     "T2_RU_JINR",
     "T2_RU_IHEP",
+    "T2_RU_PNPI",
     "T2_UA_KIPT",
+    "T2_RU_SINP",
+    "T2_UK_SGrid_RALPP",
+    "T2_US_Vanderbilt",
+
 ]
 
 
@@ -112,37 +127,11 @@ def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lf
         pprint(params)
 
     # TODO try reqMgr standard
-    # Once the AcqEra is a dict, I have to make it a json objet
-    jsonEncodedParams = {}
-    for paramKey in params.keys():
-        jsonEncodedParams[paramKey] = json.dumps(params[paramKey])
-
-    encodedParams = urllib.urlencode(jsonEncodedParams, False)
-
-    headers = {"Content-type": "application/x-www-form-urlencoded",
-               "Accept": "text/plain"}
-
-    conn = httplib.HTTPSConnection(url, cert_file=os.getenv(
-        'X509_USER_PROXY'), key_file=os.getenv('X509_USER_PROXY'))
-    conn.request(
-        "POST",  "/reqmgr/assign/handleAssignmentPage", encodedParams, headers)
-    response = conn.getresponse()
-
-    if response.status != 200:
-        print 'could not assign request with following parameters:'
-        for item in params.keys():
-            print item + ": " + str(params[item])
-        print 'Response from http call:'
-        print 'Status:', response.status, 'Reason:', response.reason
-        print 'Explanation:'
-        data = response.read()
-        print data
-        print "Exiting!"
-        sys.exit(1)
-    conn.close()
+    res = reqMgr.requestManagerPost(url, "/reqmgr/assign/handleAssignmentPage", params, nested=True)
     print 'Assigned workflow:', workflow, 'to site:', site, 'and team', team
-    return
-
+    #TODO check conditions of success
+    if verbose:
+        print res
 
 def getRequestDict(url, workflow):
     conn = httplib.HTTPSConnection(url, cert_file=os.getenv(
@@ -230,6 +219,9 @@ def main():
             site = ALL_SITES
         elif site == "t1":
             site = T1S
+        #parse sites separated by commas
+        elif "," in site:
+            site = site.split(",")  
     if options.procversion:
         procversion = int(options.procversion)
     if options.activity:
