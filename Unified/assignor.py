@@ -220,13 +220,21 @@ def assignor(url ,specific = None, talk=True, options=None):
         pstring = wfh.processingString()
         if 'PU_RD' in pstring:
             numEvents = wfh.getRequestNumEvents()
+            eventsPerLumi = [getDatasetEventsAndLumis(prim) for prim in primary]
+            eventsPerLumi = sum(eventsPerLumi)/float(len(eventsPerLumi))
             reqJobs = 500
             if 'PU_RD2' in pstring:
                 reqJobs = 2000
                 eventsPerJob = int(numEvents/(reqJobs*1.4))
-                print "need to go down to",eventsPerJob,"events per job"
-                parameters['EventsPerJob'] = eventsPerJob
-
+                lumisPerJob = int(eventsPerJob/eventsPerLumi)
+                if lumisPerJob==0:
+                    print "There is no go for assigning that request without event splitting"
+                    sendEmail("issue with event splitting for run-dependent MC","%s needs to be split by event with %s per job"%(wfo.name, eventsPerJob), 'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
+                    print "need to go down to",eventsPerJob,"events per job"
+                    parameters['EventsPerJob'] = eventsPerJob
+                else:
+                    sendEmail("setting lumi splitting for run-dependent MC","%s was assigned with %s lumis/job"%( wfo.name, lumisPerJob), 'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
+                    parameters['LumisPerJob'] = lumisPerJob
 
         result = reqMgrClient.assignWorkflow(url, wfo.name, team, parameters)
 
