@@ -151,9 +151,16 @@ class lockInfo:
         pass
 
     def __del__(self):
-        #self.clean()
+        if random.random() < 0.5:
+            print "Cleaning locks"
+            #self.clean_block()
+            self.clean_unlock()
+            print "... cleaning locks done"
+
         jdump = {}
         for l in dataLock.locksession.query(dataLock.Lock).all():
+            ## don't print lock=False ??
+            #if not l.lock: continue 
             site= l.site
             if not site in jdump: jdump[site] = {}
             jdump[site][l.item] = { 
@@ -167,6 +174,7 @@ class lockInfo:
         open('/afs/cern.ch/user/c/cmst2/www/unified/datalocks.json','w').write( json.dumps( jdump , indent=2))
 
     def _lock(self, item, site, reason):
+        print "[lock] of %s at %s because of %s"%( item, site, reason )
         now = time.mktime(time.gmtime())
         l = dataLock.locksession.query(dataLock.Lock).filter(dataLock.Lock.site == site).filter(dataLock.Lock.item == item).first()
         if not l:
@@ -193,7 +201,9 @@ class lockInfo:
             print str(e)
             
     def _release(self, item, site, reason='releasing'):
+        print "[lock release] of %s at %s because of %s" %( item, site, reason)
         now = time.mktime(time.gmtime())
+        # get the lock on the item itself
         l = dataLock.locksession.query(dataLock.Lock).filter(dataLock.Lock.site==site).filter(dataLock.Lock.item==item).first()
         if not l:
             print item,"was not locked at",site
@@ -202,21 +212,22 @@ class lockInfo:
             l.item = item
             l.is_block = '#' in item
             dataLock.locksession.add ( l )
-        else:
-            pass
-            #print l.item,item
-
-        l.time = now
-        l.reason = reason
-        l.lock = False
+            dataLock.locksession.commit()
+            
+        #then unlock all of everything starting with item (itself for block, all block for dataset)
+        for l in dataLock.locksession.query(dataLock.Lock).filter(dataLock.Lock.site==site).filter(dataLock.Lock.item.starstwith(item)).all():
+            l.time = now
+            l.reason = reason
+            l.lock = False
         dataLock.locksession.commit()
 
     def release_except(self, item, except_site, reason='releasing'):
+        print "[lock release] of %s except at %s because of %s" %( item, except_site, reason)
         try:
             for l in dataLock.locksession.query(dataLock.Lock).filter(dataLock.Lock.item.startswith(item)).all():
                 site = l.site
                 if not site in except_site:
-                    self._release(item, site, reason)
+                    self._release(l.item, site, reason)
                 else:
                     print "We are told to not release",item,"at site",site,"per request of",except_site
         except Exception as e:
@@ -224,6 +235,7 @@ class lockInfo:
             print str(e)
 
     def release_everywhere(self, item, reason='releasing'):
+        print "[lock release] of %s everywhere because of %s" % ( item, reason )
         try:
             for l in dataLock.locksession.query(dataLock.Lock).filter(dataLock.Lock.item.startswith(item)).all():
                 site = l.site
@@ -233,6 +245,7 @@ class lockInfo:
             print str(e)
 
     def release(self, item, site, reason='releasing'):
+        print "[lock release] of %s at %s because of %s" %( item, site, reason)
         try:
             self._release(item, site, reason)
         except Exception as e:
@@ -245,24 +258,35 @@ class lockInfo:
             print l.item,l.site,l.lock
         print "------"+"-"*len(comment)
 
-    def clean(self):
+    def clean_block(self, view=False):
         print "start cleaning lock info"
         ## go and remove all blocks for which the dataset is specified
         # if the dataset is locked, nothing matters for blocks -> remove
         # if the dataset is unlocked, it means we don't want to keep anything of it -> remove
+        clean_timeout=0
         for l in dataLock.locksession.query(dataLock.Lock).filter(dataLock.Lock.lock==True).filter(dataLock.Lock.is_block==False).all():
             site = l.site
             item = l.item
+            if view:  print item,"@",site
             ## get all the blocks at that site, for that dataset, under the same condition
             for block in dataLock.locksession.query(dataLock.Lock).filter(dataLock.Lock.site==site).filter(dataLock.Lock.item.startswith(item)).filter(dataLock.Lock.is_block==True).all():
                 print "removing lock item for",block.item,"at",site,"due to the presence of overriding dataset information"
                 dataLock.locksession.delete( block )
+                clean_timeout+=1
+                if view: print block.name
+                if clean_timeout> 10:                    break
             dataLock.locksession.commit()
+            if clean_timeout> 10:                break
 
+    def clean_unlock(self, view=False):
+        clean_timeout=0
         ## go and remove all items that have 'lock':False
         for l in dataLock.locksession.query(dataLock.Lock).filter(dataLock.Lock.lock==False).all():
             print "removing lock=false for",l.item,"at",l.site
             dataLock.locksession.delete( l )            
+            clean_timeout+=1
+            #if clean_timeout> 10:                break
+
         dataLock.locksession.commit()
 
 class unifiedConfiguration:
