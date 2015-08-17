@@ -418,26 +418,20 @@ class siteInfo:
         self.sites_with_goodIO = filter(lambda s : s.startswith('T2'), self.sites_with_goodIO)
         
         
-        if False:
-            ## the old scheme
-            self.sites_with_goodIO = ["T2_US_Nebraska","T2_US_MIT"]
-            self.sites_veto_transfer = ["T2_US_MIT"]#,"T1_UK_RAL"]
-        else:
-            ## a new scheme with all 
-            #self.sites_with_goodIO.remove("T2_US_UCSD")
-            allowed_T2_for_transfer = ["T2_US_Nebraska","T2_US_Wisconsin","T2_US_Purdue","T2_US_Caltech","T2_DE_RWTH","T2_DE_DESY", "T2_US_Florida", "T2_IT_Legnaro", "T2_CH_CERN", "T2_UK_London_IC", "T2_IT_Pisa", "T2_US_UCSD", "T2_IT_Rome"]
-            #no MB yet "T2_CH_CERN",
-            #probable "T2_US_UCSD"
-            # at 400TB ""T2_IT_Bari","T2_IT_Legnaro"
-            # border line "T2_UK_London_IC"
-            self.sites_veto_transfer = [site for site in self.sites_with_goodIO if not site in allowed_T2_for_transfer]
+        allowed_T2_for_transfer = ["T2_US_Nebraska","T2_US_Wisconsin","T2_US_Purdue","T2_US_Caltech","T2_DE_RWTH","T2_DE_DESY", "T2_US_Florida", "T2_IT_Legnaro", "T2_CH_CERN", "T2_UK_London_IC", "T2_IT_Pisa", "T2_US_UCSD", "T2_IT_Rome", "T2_US_MIT" ]
+        # at 400TB ""T2_IT_Bari","T2_IT_Legnaro"
+        # border line "T2_UK_London_IC"
+        self.sites_veto_transfer = [site for site in self.sites_with_goodIO if not site in allowed_T2_for_transfer]
             
 
         self.sites_T2s = [s for s in json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/whitelist.json').read()) if s not in self.siteblacklist and 'T2' in s]
+
+        ## those seem to be bad. should get the information from the dashboard to black/white list
         self.sites_T2s.remove("T2_TR_METU")
         self.sites_T2s.remove("T2_UA_KIPT")
         self.sites_T2s.remove("T2_RU_ITEP")
         self.sites_T2s.remove("T2_RU_INR")
+        self.sites_T2s.remove("T2_RU_PNPI")
         self.sites_T2s.remove("T2_PL_Warsaw")
 
         self.sites_T1s = [s for s in json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/whitelist.json').read()) if s not in self.siteblacklist and 'T1' in s]
@@ -445,12 +439,14 @@ class siteInfo:
         bare_info = json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/disktape.json').read())
         self.storage = {}
         self.disk = {}
+        self.quota = {}
         for (item,values) in bare_info.items():
             if 'mss' in values:
                 self.storage[values['mss']] = values['freemss']
             if 'disk' in values:
                 self.disk[values['disk']] = values['freedisk']
         self.disk['T2_US_UCSD'] = 100
+        self.disk['T2_EE_Estonia'] = 0
 
         for (dse,free) in self.disk.items():
             if free<0:
@@ -462,7 +458,13 @@ class siteInfo:
         for (s,p) in self.cpu_pledges.items(): 
             if not p:
                 self.cpu_pledges[s] = 1
-
+                
+            #if not s in self.disk:
+            #    ## enter a 0 for those sites
+            #    sse = self.CE_to_SE(s)
+            #    print "adding an entry for",sse
+            #    self.disk[sse] = 0
+                
         self.all_sites = list(set(self.sites_T2s + self.sites_T1s + self.sites_with_goodIO))
 
         if not set(self.all_sites).issubset(set(self.cpu_pledges.keys())):
@@ -473,7 +475,9 @@ class siteInfo:
 
         ## and get SSB sync
         self.fetch_more_info(talk=False)
-
+        
+        ## and detox info
+        self.fetch_detox_info(talk=False)
 
     def usage(self,site):
         try:
@@ -488,6 +492,29 @@ class siteInfo:
             if sites and not site in sites: continue
             s+=self.cpu_pledges[site]
         return s
+
+    def fetch_detox_info(self, talk=True):
+        ## put a retry in command line
+        info = os.popen('curl --retry 5 -s http://t3serv001.mit.edu/~cmsprod/IntelROCCS-Dev/DetoxDataOps/SitesInfo.txt').read().split('\n')
+        if len(info) < 15: 
+            print "detox info is gone"
+            return
+        pcount = 0
+        for line in info:
+            if 'Partition:' in line:
+                pcount+=1
+                if pcount==2:
+                    break
+                continue
+            if line.startswith('#'): continue
+            _,quota,taken,locked,site = line.split()
+            available = int(quota) - int(locked)
+            if available >0:
+                self.disk[site] = available
+            else:
+                self.disk[site] = 0 
+            self.quota[site] = quota
+
 
     def fetch_more_info(self,talk=True):
         ## and complement information from ssb
@@ -600,7 +627,8 @@ class siteInfo:
             rnd -= w
             if rnd < 0:
                 return i
-        print "could not make a choice"
+        print "could not make a choice from ",ws,"and",rnd
+        return None
 
 
     def pick_CE(self, sites):
@@ -1531,6 +1559,7 @@ class workflowInfo:
                     print "no process string, using wild char"
                     aps='*'
                 pattern = '/'.join(['',dsn,'-'.join([aera,aps,'v*']),tier])
+                print "looking for",pattern
                 wilds = getDatasets( pattern )
                 print pattern,"->",len(wilds),"match(es)"
                 for wild in [wildd['dataset'] for wildd in wilds]:
