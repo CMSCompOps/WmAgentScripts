@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, makeReplicaRequest
+from utils import componentInfo
 import phedexClient
 import dbs3Client
 import reqMgrClient
@@ -9,7 +10,9 @@ from collections import defaultdict
 import optparse
 import os
 import time
+from McMClient import McMClient
 from htmlor import htmlor
+from utils import sendEmail 
 
 class falseDB:
     def __init__(self):
@@ -82,17 +85,16 @@ phdF</th><th>ClosOut</th></tr></thead>'
 def checkor(url, spec=None, options=None):
     fDB = falseDB()
 
+    use_mcm = True
+    up = componentInfo(mcm=use_mcm, soft=['mcm'])
+    use_mcm = up.status['mcm']
+
     wfs=[]
     if options.fetch:
-        #workflows = getWorkflows(url, status='completed')
-        #for wf in workflows:
-        #    wfo = session.query(Workflow).filter(Workflow.name == wf ).first()
-        #    if wfo:
-        #        if not wfo.status in ['away','assistance']: continue
-        #        wfs.append(wfo )
+        ## get all in running and check
         wfs.extend( session.query(Workflow).filter(Workflow.status == 'away').all() )
         wfs.extend( session.query(Workflow).filter(Workflow.status== 'assistance').all() )
-    else:
+    if options.nofetch:
         ## than get all in need for assistance
         wfs.extend( session.query(Workflow).filter(Workflow.status.startswith('assistance-')).all() )
 
@@ -102,6 +104,7 @@ def checkor(url, spec=None, options=None):
     invalidations = [] #a list of files
     SI = siteInfo()
     CI = campaignInfo()
+    mcm = McMClient(dev=False)
 
     def get_campaign(output, wfi):
         campaign = None
@@ -115,6 +118,8 @@ def checkor(url, spec=None, options=None):
     for wfo in wfs:
         if spec and not (spec in wfo.name): continue
 
+        print "checking on",wfo.name
+
         ## get info
         wfi = workflowInfo(url, wfo.name)
 
@@ -127,7 +132,7 @@ def checkor(url, spec=None, options=None):
             wfo.status = 'close'
             session.commit()
             continue
-        elif wfo.wm_status in ['failed','aborted','aborted-archived','rejected','rejected-archived']:
+        elif wfo.wm_status in ['failed','aborted','aborted-archived','rejected','rejected-archived','aborted-completed']:
             ## went into trouble
             wfo.status = 'trouble'
             print wfo.name,"is in trouble",wfo.wm_status
@@ -158,20 +163,32 @@ def checkor(url, spec=None, options=None):
         ## anything running on acdc
         familly = getWorkflowById(url, wfi.request['PrepID'], details=True)
         acdc = []
+        acdc_inactive = []
+        has_recovery_going=False
         for member in familly:
+            if member['RequestType'] != 'Resubmission': continue
             if member['RequestName'] == wfo.name: continue
             if member['RequestDate'] < wfi.request['RequestDate']: continue
-            if member['RequestType'] != 'Resubmission': continue
-            if member['RequestStatus'] in ['running-opened','running-closed','assignment-approved','assigned','acquired']:
+            if member['RequestStatus'] in ['running-open','running-closed','assignment-approved','assigned','acquired']:
                 print wfo.name,"still has an ACDC running",member['RequestName']
                 acdc.append( member['RequestName'] )
                 #print json.dumps(member,indent=2)
                 ## hook for just waiting ...
                 is_closing = False
-
+                has_recovery_going=True
+            else:
+                acdc_inactive.append( member['RequestName'] )
         ## completion check
         percent_completions = {}
-        event_expected,lumi_expected =  wfi.request['TotalInputEvents'],wfi.request['TotalInputLumis']
+#        print "let's see who is crashing", wfo.name
+#        print wfi.request['TotalInputEvents'],wfi.request['TotalInputLumis']
+        if not 'TotalInputEvents' in wfi.request:
+            event_expected,lumi_expected = 0,0
+            if not 'recovery' in wfo.status:
+                sendEmail("missing member of the request","TotalInputEvents is missing from the workload of %s"% wfo.name,'vlimant@cern.ch', ['vlimant@cern.ch','matteoc@fnal.gov','julian.badillo.rojas@cern.ch'])
+        else:
+            event_expected,lumi_expected =  wfi.request['TotalInputEvents'],wfi.request['TotalInputLumis']
+
         fractions_pass = {}
         for output in wfi.request['OutputDatasets']:
             event_count,lumi_count = getDatasetEventsAndLumis(dataset=output)
@@ -188,12 +205,16 @@ def checkor(url, spec=None, options=None):
                 fractions_pass[output] = options.fractionpass
                 print "overriding fraction to",fractions_pass[output],"by command line for",output
 
-        if not all([percent_completions[out] > fractions_pass[out] for out in fractions_pass]):
+        if not all([percent_completions[out] >= fractions_pass[out] for out in fractions_pass]):
             print wfo.name,"is not completed"
             print json.dumps(percent_completions, indent=2)
             print json.dumps(fractions_pass, indent=2)
             ## hook for creating automatically ACDC ?
-            sub_assistance+='-recovery'
+            if has_recovery_going:
+                sub_assistance+='-recovering'
+            else:
+                sub_assistance+='-recovery'
+
             is_closing = False
 
         ## correct lumi < 300 event per lumi
@@ -204,7 +225,7 @@ def checkor(url, spec=None, options=None):
 
         lumi_upper_limit = {}
         for output in wfi.request['OutputDatasets']:
-            upper_limit = 300.
+            upper_limit = 301.
             campaign = get_campaign(output, wfi)
             if campaign in CI.campaigns and 'lumisize' in CI.campaigns[campaign]:
                 upper_limit = CI.campaigns[campaign]['lumisize']
@@ -258,15 +279,21 @@ def checkor(url, spec=None, options=None):
                         print "Setting custodial to",custodial,"from campaign configuration"
                         break
             ## get from the parent
+            pick_custodial = True
             if not custodial and 'InputDataset' in wfi.request:
-                parents_custodial = findCustodialLocation(url, wfi.request['InputDataset'])
+                ## this is terribly dangerous to assume only 
+                parents_custodial = phedexClient.getCustodialSubscriptionRequestSite( wfi.request['InputDataset'])
+                ###parents_custodial = findCustodialLocation(url, wfi.request['InputDataset'])
                 if len(parents_custodial):
                     custodial = parents_custodial[0]
                 else:
                     print "the input dataset",wfi.request['InputDataset'],"does not have custodial in the first place. abort"
-                    continue
+                    sendEmail( "dataset has no custodial location", "Please take a look at %s in the logs of checkor"%wfi.request['InputDataset'],
+                               'vlimant@cern.ch', ['vlimant@cern.ch','matteoc@fnal.gov'])
+                    is_closing = False
+                    pick_custodial = False
 
-            if not custodial:
+            if not custodial and pick_custodial:
                 ## pick one at random
                 custodial = SI.pick_SE()
 
@@ -323,7 +350,10 @@ def checkor(url, spec=None, options=None):
         ## duplication check
         duplications = {}
         if is_closing:
+            print "starting duplicate checker for",wfo.name
             for output in wfi.request['OutputDatasets']:
+                print "\tchecking",output
+                duplications[output] = True
                 try:
                     duplications[output] = dbs3Client.duplicateRunLumi( output )
                 except:
@@ -364,21 +394,55 @@ def checkor(url, spec=None, options=None):
             rec['dbsFiles'] = dbs_presence[output]
             rec['dbsInvFiles'] = dbs_invalid[output]
             rec['phedexFiles'] = phedex_presence[output]
-            rec['acdc'] = len(acdc)
+            rec['acdc'] = "%d / %d"%(len(acdc),len(acdc+acdc_inactive))
 
         ## and move on
         if is_closing:
             ## toggle status to closed-out in request manager
             print "setting",wfo.name,"closed-out"
             if not options.test:
-                reqMgrClient.closeOutWorkflowCascade(url, wfo.name)
+                print reqMgrClient.closeOutWorkflowCascade(url, wfo.name)
                 # set it from away/assistance* to close
                 wfo.status = 'close'
                 session.commit()
         else:
             print wfo.name,"needs assistance"
             ## that means there is something that needs to be done acdc, lumi invalidation, custodial, name it
-            wfo.status = 'assistance'+sub_assistance
+            new_status = 'assistance'+sub_assistance
+            
+            if sub_assistance and wfo.status != new_status and 'PrepID' in wfi.request:
+                pid = wfi.request['PrepID'].replace('task_','')
+                ## notify
+                messages= {
+                    'recovery' : 'Samples completed with missing lumi count:\n%s '%( '\n'.join(['%.2f %% complete for %s'%(percent_completions[output]*100, output) for output in wfi.request['OutputDatasets'] ] ) ),
+                    'biglumi' : 'Samples completed with large luminosity blocks:\n%s '%('\n'.join(['%d > %d for %s'%(events_per_lumi[output], lumi_upper_limit[output], output) for output in wfi.request['OutputDatasets'] if (events_per_lumi[output] > lumi_upper_limit[output])])),
+                    'duplicate' : 'Samples completed with duplicated luminosity blocks:\n%s'%( '\n'.join(['%s'%output for output in wfi.request['OutputDatasets'] if output in duplications and duplications[output] ] ) ),
+                    }
+                text ="The request %s (%s) is facing issue in production.\n" %( pid, wfo.name )
+                content = ""
+                for case in messages:
+                    if case in new_status:
+                        content+= "\n"+messages[case]+"\n"
+                text += content
+                text += "You are invited to check, while this is being taken care of by Ops.\n"
+                text += "This is an automated message."
+                if use_mcm and content:
+                    print "Sending notification back to requestor"
+                    print text
+                    batches = mcm.getA('batches',query='contains=%s&status=announced'%pid)
+                    if len(batches):
+                        ## go notify the batch
+                        bid = batches[-1]['prepid']
+                        print "batch nofication to",bid
+                        mcm.put('/restapi/batches/notify', { "notes" : text, "prepid" : bid})
+
+
+                    ## go notify the request
+                    print "request notification to",pid
+                    mcm.put('/restapi/requests/notify',{ "message" : text, "prepids" : [pid] })
+
+                
+            wfo.status = new_status
             if not options.test:
                 print "setting",wfo.name,"to",wfo.status
                 session.commit()
@@ -390,7 +454,7 @@ def checkor(url, spec=None, options=None):
     for site in custodials:
         print ','.join(custodials[site]),'=>',site
         if not options.test:
-            result = makeReplicaRequest(url, site, list(set(custodials[site])),"custodial copy at production close-out",custodial='y',priority='low')
+            result = makeReplicaRequest(url, site, list(set(custodials[site])),"custodial copy at production close-out",custodial='y',priority='low', approve = (site in SI.sites_auto_approve) )
             print result
 
     print "Transfers"
@@ -412,6 +476,7 @@ if __name__ == "__main__":
     parser = optparse.OptionParser()
     parser.add_option('-t','--test', help='Only test the checkor', action='store_true', default=False)
     parser.add_option('-f','--fetch', help='fetch new stuff not already in assistance', action='store_true', default=False)
+    parser.add_option('-n','--nofetch',help='update those in assistance',action='store_true', default=False)
     parser.add_option('--fractionpass',help='The completion fraction that is permitted', default=0.0,type='float')
     parser.add_option('--ignorefiles', help='Force ignoring dbs/phedex differences', action='store_true', default=False)
     parser.add_option('--lumisize', help='Force the upper limit on lumisection', default=0, type='float')
@@ -422,6 +487,15 @@ if __name__ == "__main__":
     if len(args)!=0:
         spec = args[0]
 
+    if options.fetch and options.nofetch:
+        print "cannot fetch and not fetch at the same time"
+        sys.exit(1)
+
+    if not options.fetch and not options.nofetch:
+        ## no argugments : default usage
+        options.fetch = True
+        options.nofetch = True
+        
     checkor(url, spec, options=options)
     
     if options.html:

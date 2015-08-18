@@ -175,13 +175,13 @@ def main():
 
     (wfsByType, wfsByStatus, wfsByCampaign) = loadData(wfsummary, jsonFile)
     now = datetime.now()
-    generatePlot(wfsByType, weekSet, 'Distribution by Type',
+    generatePlot(wfsByType, weekSet, 'Workflows by Type',
         'weeks old (last updated on %s)'%(now.strftime("%Y-%m-%d")),
         '# of requests', './www/plots/by_type.png')
-    generatePlot(wfsByStatus, weekSet, 'Distribution by Status',
+    generatePlot(wfsByStatus, weekSet, 'Workflows by Status',
         'weeks old (last updated on %s)'%(now.strftime("%Y-%m-%d")),
         '# of requests', './www/plots/by_status.png', sortKey=getIndex)
-    generatePlot(wfsByCampaign, weekSet, 'Distribution by Campaign',
+    generatePlot(wfsByCampaign, weekSet, 'Workflows by Campaign',
         'weeks old (last updated on %s)'%(now.strftime("%Y-%m-%d"))
         ,'# of requests', './www/plots/by_campaign.png')
 

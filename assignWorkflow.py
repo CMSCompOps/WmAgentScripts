@@ -59,35 +59,17 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
             "Dashboard": activity,
             "ProcessingVersion": procversion,
             "ProcessingString" : procstring, 
-            "checkbox"+workflow: "checked"
+            "checkbox"+workflow: "checked",
+            "CustodialSites" : []
             }
     #add xrootd (trustSiteList)
     if trust_site:
         params['useSiteListAsLocation'] = True
-
-    encodedParams = urllib.urlencode(params, True)
-
-    headers  =  {"Content-type": "application/x-www-form-urlencoded",
-                 "Accept": "text/plain"}
-
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    conn.request("POST",  "/reqmgr/assign/handleAssignmentPage", encodedParams, headers)
-    response = conn.getresponse()
-    
-    #failed response
-    if response.status != 200:
-        print 'could not assign request with following parameters:'
-        for item in params.keys():
-            print item + ": " + str(params[item])
-        print 'Response from http call:'
-        print 'Status:',response.status,'Reason:',response.reason
-        print 'Explanation:'
-        data = response.read()
-        print data
-        print "Exiting!"
-        return
-    conn.close()
-    print 'Assigned workflow:',workflow,'to site:',sites,'with processing version',procversion
+    res = rqMgr.requestManagerPost(url, "/reqmgr/assign/handleAssignmentPage", params, nested=True)
+    if "Assigned" in res:
+        print 'Assigned workflow:',workflow,'to site:',sites,'with processing version',procversion
+    else:
+        print res
 
 def main():
     url='cmsweb.cern.ch'
