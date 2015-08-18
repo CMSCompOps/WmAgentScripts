@@ -9,7 +9,6 @@ import urllib2,urllib, httplib, sys, re, os, json
 from xml.dom.minidom import getDOMImplementation
 import dbs3Client as dbs3
 import copy
-from utils import workflowInfo
 
 # default headers for PUT and POST methods
 def_headers={"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
@@ -622,6 +621,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
     defaults["Team"+team] = "checked"
     defaults["checkbox"+workflowname] = "checked"
 
+    from utils import workflowInfo
     wf = workflowInfo(url, workflowname)
 
     # set the maxrss watchdog to what is specified in the request
