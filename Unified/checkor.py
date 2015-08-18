@@ -185,7 +185,7 @@ def checkor(url, spec=None, options=None):
         if not 'TotalInputEvents' in wfi.request:
             event_expected,lumi_expected = 0,0
             if not 'recovery' in wfo.status:
-                sendEmail("missing member of the request","TotalInputEvents is missing from the workload of %s"% wfo.name,'vlimant@cern.ch', ['vlimant@cern.ch','matteoc@fnal.gov','julian.badillo.rojas@cern.ch'])
+                sendEmail("missing member of the request","TotalInputEvents is missing from the workload of %s"% wfo.name, destination=['julian.badillo.rojas@cern.ch'])
         else:
             event_expected,lumi_expected =  wfi.request['TotalInputEvents'],wfi.request['TotalInputLumis']
 
@@ -288,8 +288,7 @@ def checkor(url, spec=None, options=None):
                     custodial = parents_custodial[0]
                 else:
                     print "the input dataset",wfi.request['InputDataset'],"does not have custodial in the first place. abort"
-                    sendEmail( "dataset has no custodial location", "Please take a look at %s in the logs of checkor"%wfi.request['InputDataset'],
-                               'vlimant@cern.ch', ['vlimant@cern.ch','matteoc@fnal.gov'])
+                    sendEmail( "dataset has no custodial location", "Please take a look at %s in the logs of checkor"%wfi.request['InputDataset'])
                     is_closing = False
                     pick_custodial = False
 

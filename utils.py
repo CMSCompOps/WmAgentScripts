@@ -26,14 +26,18 @@ DATEFMT = "%Y-%m-%d %H:%M:%S"
 logging.basicConfig(format = FORMAT, datefmt = DATEFMT, level=logging.DEBUG)
 
 
-def sendEmail( subject, text, sender, destination ):
+def sendEmail( subject, text, sender=None, destination=None ):
     #print subject
     #print text
     #print sender
     #print destination
     
     if not destination:
-        pass
+        destination = ['vlimant@cern.ch','matteoc@fnal.gov']
+    else:
+        destination = list(set(destination+['vlimant@cern.ch','matteoc@fnal.gov']))
+    if not sender:
+        sender = 'vlimant@cern.ch'
 
     msg = MIMEMultipart()
     msg['From'] = sender
