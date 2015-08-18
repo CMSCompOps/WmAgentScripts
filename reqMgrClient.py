@@ -9,7 +9,6 @@ import urllib2,urllib, httplib, sys, re, os, json
 from xml.dom.minidom import getDOMImplementation
 import dbs3Client as dbs3
 import copy
-from utils import workflowInfo
 from pprint import pprint
 
 # default headers for PUT and POST methods
@@ -683,6 +682,8 @@ def getOutputLumis(url, workflow, dataset):
     return dbs3.getLumiCountDataSet(dataset)
     
 def assignWorkflow(url, workflowname, team, parameters ):
+    #local import so it doesn't screw with all other stuff
+    from utils import workflowInfo
     defaults = copy.deepcopy( assignWorkflow.defaults )
     defaults["Team"+team] = "checked"
     defaults["checkbox"+workflowname] = "checked"
