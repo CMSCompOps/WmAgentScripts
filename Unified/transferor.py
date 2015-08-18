@@ -264,12 +264,13 @@ def transferor(url ,specific = None, talk=True, options=None):
             sites_allowed = list(set(sites_allowed) - set(CI.parameters(wfh.request['Campaign'])['SiteBlacklist']))
 
         ## reduce right away to sites in case of memory limitation
-        if wfh.request['Memory'] > 100000000:
-            sites_allowed = list(set(sites_allowed) & set(SI.sites_HighMemory))
-
+        memory_allowed = SI.sitesByMemory( wfh.request['Memory'] )
+        if memory_allowed!=None:
+            sites_allowed = list(set(sites_allowed) & set(memory_allowed))
 
         if not sites_allowed:
             print wfo.name,"has no possible sites to run at"
+            print "available for",wfh.request['Memory'],"are",memory_allowed
             sendEmail("no possible sites","%s has no possible sites to run at"%( wfo.name ))
             continue
 

@@ -450,7 +450,7 @@ class siteInfo:
         self.quota = {}
 
         ## list here the site which can accomodate high memory requests
-        self.sites_HighMemory = []
+        self.sites_memory = {}
 
         for (item,values) in bare_info.items():
             if 'mss' in values:
@@ -491,6 +491,9 @@ class siteInfo:
         ## and detox info
         self.fetch_detox_info(talk=False)
 
+        ## and glidein info
+        self.fetch_glidein_info(talk=False)
+
     def usage(self,site):
         try:
             info = json.loads( os.popen('curl -s "http://dashb-cms-job.cern.ch/dashboard/request.py/jobsummary-plot-or-table2?site=%s&check=submitted&sortby=activity&prettyprint"' % site ).read() )
@@ -504,6 +507,28 @@ class siteInfo:
             if sites and not site in sites: continue
             s+=self.cpu_pledges[site]
         return s
+
+    def fetch_glidein_info(self, talk=True):
+        try:
+            self.sites_memory = json.loads(os.popen('curl --retry 5 -s http://cms-gwmsmon.cern.ch/scheddview/json/totals').read())
+        except:
+            self.sites_memory = {}
+
+    def sitesByMemory( self, maxMem):
+        if not self.sites_memory:
+            print "no memory information from glidein mon"
+            return None
+        allowed = set()
+        for site,slots in self.sites_memory.items():
+            if any([slot['MaxMemMB']>= maxMem for slot in slots]):
+                allowed.add(site)
+        return list(allowed)
+
+    def restrictByMemory( self, maxMem, allowed_sites):
+        allowed = self.sitesByMemory(maxMem)
+        if allowed!=None:
+            return list(set(allowed_sites) & set(allowed))
+        return allowed_sites
 
     def fetch_detox_info(self, talk=True):
         ## put a retry in command line
@@ -597,7 +622,7 @@ class siteInfo:
 
 
     def types(self):
-        return ['sites_with_goodIO','sites_T1s','sites_T2s','sites_veto_transfer','sites_auto_approve','sites_HighMemory']
+        return ['sites_with_goodIO','sites_T1s','sites_T2s','sites_veto_transfer','sites_auto_approve']
 
     def CE_to_SE(self, ce):
         if ce.startswith('T1') and not ce.endswith('_Disk'):

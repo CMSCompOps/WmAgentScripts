@@ -69,7 +69,8 @@ def assignor(url ,specific = None, talk=True, options=None):
             print "Reducing the whitelist due to black list in campaign configuration"
             print "Removing",CI.parameters(wfh.request['Campaign'])['SiteBlacklist']
             sites_allowed = list(set(sites_allowed) - set(CI.parameters(wfh.request['Campaign'])['SiteBlacklist']))
-            
+
+
         print "Allowed",sites_allowed
         secondary_locations=None
         for sec in list(secondary):
