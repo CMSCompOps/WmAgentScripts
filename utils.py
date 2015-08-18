@@ -504,13 +504,13 @@ class siteInfo:
             print "detox info is gone"
             return
         pcount = 0
+        read = False
         for line in info:
             if 'Partition:' in line:
-                pcount+=1
-                if pcount==2:
-                    break
+                read = ('DataOps' in line)
                 continue
             if line.startswith('#'): continue
+            if not read: continue
             _,quota,taken,locked,site = line.split()
             available = int(quota) - int(locked)
             if available >0:
