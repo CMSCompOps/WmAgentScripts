@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import json
-import urllib2,urllib, httplib, sys, re, os, random
-from xml.dom.minidom import getDOMImplementation
+import httplib, sys, re, os, random
 import dbs3Client, reqMgrClient, phedexClient
 
 """
@@ -515,12 +514,14 @@ def listWorkflows(workflows):
 
 def listSubscriptions(subs):
     for ds, site in subs:
-       print '| %80s | %100s |'%(ds,site)
+        print '| %80s | %100s |'%(ds,site)
     print '-'*150
 
 def makeSubscriptions(url, workflows):
     result = []    
     for wf in workflows:
+        comments = 'Output of %s'%wf.name
+        
         #if the wf has input - where the input was subscribed
         if 'InputDataset' in wf.info:
             site = phedexClient.getCustodialSubscriptionRequestSite(wf.inputDataset)
@@ -528,7 +529,7 @@ def makeSubscriptions(url, workflows):
                 site_MSS = random.choice(T1_MSS)# "T1_US_FNAL_MSS
             r = phedexClient.makeReplicaRequest(url, site_MSS, wf.outputDatasets, comments, custodial='y')
             for ds in wf.outputDatasets:
-                result.append((ds, site_disk+', '+site_MSS))    
+                result.append((ds, site_MSS))    
         #if the workflow does not have input
         else:
             site_disk =random.choice(T1_Disk)# "T1_US_FNAL_Disk"
@@ -536,7 +537,6 @@ def makeSubscriptions(url, workflows):
             print "Making subscriptions",wf.name
             print "To",site_disk, site_MSS
             
-            comments = 'Output of %s'%wf.name
             #create move to disk and replica to tape
             #r = phedexClient.makeMoveRequest(url, site_disk, workflow.outputDatasets, comments, custodial='n')
             r = phedexClient.makeReplicaRequest(url, site_MSS, wf.outputDatasets, comments, custodial='y')

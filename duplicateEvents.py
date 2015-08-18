@@ -5,16 +5,15 @@
 
 """
 
-import json
-import urllib2,urllib, httplib, sys, re, os
-import dbs3Client, reqMgrClient
+import sys
+import dbs3Client
+import reqMgrClient
 
 
 def testEventCountWorkflow(url, workflow, verbose=False):
     """
     Shows where the workflow hs duplicate events    
     """
-    inputEvents = 0
     datasets = reqMgrClient.outputdatasetsWorkflow(url, workflow)
     duplicate = False
     print 'workflow:',workflow
@@ -40,7 +39,7 @@ def main():
         return
 
     if '-v' in args:
-       verbose = True
+        verbose = True
  
     url = 'cmsweb.cern.ch'
     #read the file
@@ -57,4 +56,4 @@ def main():
     sys.exit(0);
 
 if __name__ == "__main__":
-	main()
+    main()
