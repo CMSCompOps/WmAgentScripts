@@ -448,6 +448,10 @@ class siteInfo:
         self.storage = {}
         self.disk = {}
         self.quota = {}
+
+        ## list here the site which can accomodate high memory requests
+        self.sites_HighMemory = []
+
         for (item,values) in bare_info.items():
             if 'mss' in values:
                 self.storage[values['mss']] = values['freemss']
@@ -593,7 +597,7 @@ class siteInfo:
 
 
     def types(self):
-        return ['sites_with_goodIO','sites_T1s','sites_T2s','sites_veto_transfer','sites_auto_approve']
+        return ['sites_with_goodIO','sites_T1s','sites_T2s','sites_veto_transfer','sites_auto_approve','sites_HighMemory']
 
     def CE_to_SE(self, ce):
         if ce.startswith('T1') and not ce.endswith('_Disk'):

@@ -263,10 +263,15 @@ def transferor(url ,specific = None, talk=True, options=None):
         if 'SiteBlacklist' in CI.parameters(wfh.request['Campaign']):
             sites_allowed = list(set(sites_allowed) - set(CI.parameters(wfh.request['Campaign'])['SiteBlacklist']))
 
-        if len(secondary)==0 and len(primary)==0 and len(parent)==0 and lheinput==False:
-            ## pure mc 
-            #sendEmail("work for SDSC", "There is work for SDSC : %s"%(wfo.name),'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
-            pass
+        ## reduce right away to sites in case of memory limitation
+        if wfh.request['Memory'] > 100000000:
+            sites_allowed = list(set(sites_allowed) & set(SI.sites_HighMemory))
+
+
+        if not sites_allowed:
+            print wfo.name,"has no possible sites to run at"
+            sendEmail("no possible sites","%s has no possible sites to run at"%( wfo.name ))
+            continue
 
         blocks = []
         if 'BlockWhitelist' in wfh.request and wfh.request['BlockWhitelist']:
