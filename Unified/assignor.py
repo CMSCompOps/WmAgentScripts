@@ -71,6 +71,11 @@ def assignor(url ,specific = None, talk=True, options=None):
             sites_allowed = list(set(sites_allowed) - set(CI.parameters(wfh.request['Campaign'])['SiteBlacklist']))
 
 
+        memory_allowed = SI.sitesByMemory( wfh.request['Memory'] )
+        if memory_allowed!=None:
+            print "sites allowing", wfh.request['Memory'],"are",memory_allowed
+            sites_allowed = list(set(sites_allowed) & set(memory_allowed))
+
         print "Allowed",sites_allowed
         secondary_locations=None
         for sec in list(secondary):
