@@ -379,7 +379,8 @@ def checkor(url, spec=None, options=None):
                 print "setting",wfo.name,"to",wfo.status
                 session.commit()
 
-    fDB.summary()
+    fDB.html()
+
     ## custodial requests
     print "Custodials"
     print json.dumps(custodials, indent=2)
@@ -433,7 +434,4 @@ if __name__ == "__main__":
     if options.html:
         htmlor()
 
-    fdb = closeoutInfo()
 
-    assist = defaultdict(list)
-    fdb.assistance( session.query(Workflow).filter(Workflow.status.startswith('assistance')).all() )

@@ -722,6 +722,11 @@ phdF</th><th>ClosOut</th></tr></thead>'
             wf_and_anchor = wf
 
         return text
+
+    def html(self):
+        self.summary()
+        self.assistance()
+
     def summary(self):
         os.system('cp closedout.json closedout.json.last')
         
@@ -731,7 +736,7 @@ phdF</th><th>ClosOut</th></tr></thead>'
 
         html.write( self.table_header() )
 
-        from assignSession import session
+        from assignSession import session, Workflow
         for (count,wf) in enumerate(sorted(self.record.keys())):
             wfo = session.query(Workflow).filter(Workflow.name == wf).first()
             if not wfo: continue
@@ -747,7 +752,10 @@ phdF</th><th>ClosOut</th></tr></thead>'
 
         open('closedout.json','w').write( json.dumps( self.record , indent=2 ) )
 
-    def assistance(self, wfs):
+    def assistance(self):
+        from assignSession import session, Workflow
+        wfs = session.query(Workflow).filter(Workflow.status.startswith('assistance')).all()
+
         short_html = open('/afs/cern.ch/user/c/cmst2/www/unified/assistance_summary.html','w')
         html = open('/afs/cern.ch/user/c/cmst2/www/unified/assistance.html','w')
         html.write("""
