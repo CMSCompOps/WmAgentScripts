@@ -676,6 +676,144 @@ class siteInfo:
         #return r_weights.keys()[self._weighted_choice_sub(r_weights.values())]
         return self._pick(sites, self.cpu_pledges)
 
+
+
+class closeoutInfo:
+    def __init__(self):
+        self.record = json.loads(open('closedout.json').read())
+
+    def table_header(self):
+        text = '<table border=1><thead><tr><th>workflow</th><th>OutputDataSet</th><th>%Compl</th><th>acdc</th><th>Dupl</th><th>CorrectLumis</th><th>Scubscr</th><th>Tran</th><th>dbsF</th><th>dbsIF</th><th>\
+phdF</th><th>ClosOut</th></tr></thead>'
+        return text
+
+    def one_line(self, wf, wfo, count):
+        if count%2:            color='lightblue'
+        else:            color='white'
+        text=""
+        try:
+            pid = filter(lambda b :b.count('-')==2, wf.split('_'))[0]
+            tpid = 'task_'+pid if 'task' in wf else pid
+        except:
+            pid ='None'
+            tpid= 'None'
+            
+        ## return the corresponding html
+        order = ['percentage','acdc','duplicate','correctLumis','missingSubs','phedexReqs','dbsFiles','dbsInvFiles','phedexFiles']
+        wf_and_anchor = '<a id="%s">%s</a>'%(wf,wf)
+        for out in self.record[wf]['datasets']:
+            text+='<tr bgcolor=%s>'%color
+            text+='<td>%s<br><a href=https://cmsweb.cern.ch/reqmgr/view/details/%s>dts</a>, <a href=https://cmsweb.cern.ch/reqmgr/view/splitting/%s>splt</a>, <a href=https://cmsweb.cern.ch/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s>perf</a>, <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>ac</a>, <a href=assistance.html#%s>%s</a></td>'% (wf_and_anchor,
+                                                                                                                                                                                                                                                                                                                            wf, wf, wf,tpid,wf,
+                                                                                                                                                                                                                                                                                                                            wfo.status)
+
+            text+='<td>%s</td>'% out
+            for f in order:
+                if f in self.record[wf]['datasets'][out]:
+                    value = self.record[wf]['datasets'][out][f]
+                else:
+                    value = "-NA-"
+                if f =='acdc':
+                    text+='<td><a href=https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byprepid?key="%s">%s</a></td>'%(tpid , value)
+                else:
+                    text+='<td>%s</td>'% value
+            text+='<td>%s</td>'%self.record[wf]['closeOutWorkflow']
+            text+='</tr>'
+            wf_and_anchor = wf
+
+        return text
+    def summary(self):
+        os.system('cp closedout.json closedout.json.last')
+        
+        html = open('/afs/cern.ch/user/c/cmst2/www/unified/closeout.html','w')
+        html.write('<html>')
+        html.write('Last update on %s(CET), %s(GMT), <a href=logs/checkor/ target=_blank> logs</a> <br><br>'%(time.asctime(time.localtime()),time.asctime(time.gmtime())))
+
+        html.write( self.table_header() )
+
+        from assignSession import session
+        for (count,wf) in enumerate(sorted(self.record.keys())):
+            wfo = session.query(Workflow).filter(Workflow.name == wf).first()
+            if not wfo: continue
+            if not (wfo.status == 'away' or wfo.status.startswith('assistance')):
+                print "Taking",wf,"out of the close-out record"
+                self.record.pop(wf)
+                continue
+            html.write( self.one_line( wf, wfo , count) )
+
+        html.write('</table>')
+        html.write('<br>'*100) ## so that the anchor works ok
+        html.write('bottom of page</html>')
+
+        open('closedout.json','w').write( json.dumps( self.record , indent=2 ) )
+
+    def assistance(self, wfs):
+        short_html = open('/afs/cern.ch/user/c/cmst2/www/unified/assistance_summary.html','w')
+        html = open('/afs/cern.ch/user/c/cmst2/www/unified/assistance.html','w')
+        html.write("""
+<html>
+<head>
+<META HTTP-EQUIV="refresh" CONTENT="900">
+</head>
+""")
+        short_html.write("""
+<html>
+<head>
+<META HTTP-EQUIV="refresh" CONTENT="900">
+</head>
+""")
+    
+        short_html.write('Last update on %s(CET), %s(GMT), <a href=logs/checkor/last.log target=_blank> log</a> <br>'%(time.asctime(time.localtime()),time.asctime(time.gmtime())))
+        html.write('Last update on %s(CET), %s(GMT), <a href=logs/checkor/last.log target=_blank> log</a> <br>'%(time.asctime(time.localtime()),time.asctime(time.gmtime())))
+
+        html.write('<a href=assistance_summary.html> Summary </a> <br>')    
+        short_html.write('<a href=assistance.html> Details </a> <br>')
+
+        assist = defaultdict(list)
+        for wfo in wfs:
+            assist[wfo.status].append( wfo )
+        
+
+        for status in sorted(assist.keys()):
+            html.write("Workflow in status <b> %s </b> (%d)"% (status, len(assist[status])))
+            html.write( self.table_header())
+            short_html.write("""
+Workflow in status <b> %s </b>
+<table border=1>
+<thead>
+<tr>
+<th> workflow </th> <th> output dataset </th><th> completion </th>
+</tr>
+</thead>
+"""% (status))
+            for (count,wfo) in enumerate(assist[status]):
+                if count%2:            color='lightblue'
+                else:            color='white'
+                if not wfo.name in self.record: 
+                    print "wtf with",wfo.name
+                    continue            
+                html.write( self.one_line( wfo.name, wfo, count))
+                for out in self.record[wfo.name]['datasets']:
+                    short_html.write("""
+<tr bgcolor=%s>
+<td> <a id=%s>%s</a> </td><td> %s </td><td> <a href=closeout.html#%s>%s</a> </td>
+</tr>
+"""%( color, 
+      wfo.name,wfo.name,
+      out, 
+      wfo.name,
+      self.record[wfo.name]['datasets'][out]['percentage'],
+      
+      ))
+            html.write("</table><br><br>")
+            short_html.write("</table><br><br>")
+
+        short_html.write("<br>"*100)
+        short_html.write("bottom of page</html>")    
+        html.write("<br>"*100)
+        html.write("bottom of page</html>")    
+
+
 global_SI = siteInfo()
 def getSiteWhiteList( inputs , pickone=False):
     SI = global_SI
