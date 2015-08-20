@@ -48,8 +48,8 @@ for batches_row in batches_rows:
 
         wf_dict=dict(zip(workflows_colnames, workflow_row))
 
-        print workflow_row["workflow_name"]
-        workflow=workflow_row["workflow_name"]
+        print wf_dict["workflow_name"]
+        workflow=wf_dict["workflow_name"]
         url="cmsweb.cern.ch" 
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         r1=conn.request('GET','/reqmgr/reqMgr/request?requestName=' + workflow)
@@ -57,14 +57,14 @@ for batches_row in batches_rows:
         j1 = json.loads(r2.read())
         status= j1['RequestStatus']
         
-        print batch_dict["status"]
+        print status
 
-        if batch_dict["status"] == "completed" or batch_dict["status"] == "assignment-approved" or batch_dict["status"] == "assigned" or batch_dict["status"] == "running-open" or batch_dict["status"] == "running-closed" or batch_dict["status"] == "acquired":        
-            if batch_dict["status"] == "completed" or batch_dict["status"] == "assignment-approved":
+        if status == "completed" or status == "assignment-approved" or status == "assigned" or status == "running-open" or status == "running-closed" or status == "acquired":        
+            if status == "completed" or status == "assignment-approved":
                 reqMgrClient.rejectWorkflow(url,workflow)
             if status == "assigned" or status == "running-open" or status == "running-closed" or status == "acquired":
                 reqMgrClient.abortWorkflow(url,workflow)
-        elif batch_dict["status"] != "aborted-archived" and batch_dict["status"] != "aborted" and batch_dict["status"] != "rejected" and batch_dict["status"] != "rejected-archived":
+        elif status != "aborted-archived" and status != "aborted" and status != "rejected" and status != "rejected-archived":
             os.system('echo '+workflow+' | mail -s \"batch_rejecter_aborter.py error 1\" andrew.m.levin@vanderbilt.edu --')
             sys.exit(1)
         else:
