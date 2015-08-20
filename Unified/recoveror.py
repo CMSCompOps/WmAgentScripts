@@ -9,7 +9,7 @@ from collections import defaultdict
 import re
 import os
 
-def singleRecovery(url, task , initial, do=False):
+def singleRecovery(url, task , initial, actions, do=False):
     payload = {
         "Requestor" : os.getenv('USER'),
         "Group" : 'DATAOPS',
@@ -21,6 +21,15 @@ def singleRecovery(url, task , initial, do=False):
     copy_over = ['PrepID','RequestPriority', 'TimePerEvent', 'SizePerEvent', 'Group', 'Memory', 'RequestString' ]        
     for c in copy_over:
         payload[c] = copy.deepcopy(initial[c])
+
+    if actions:
+        for action in actions:
+            if action == 'split':
+                ## mention it's taking 4 times longer to have a 4 times finer splitting
+                payload['TimePerEvent'] = 4*payload['TimePerEvent']
+            elif action == 'mem':
+                ## increase the memory requirement by 1G
+                payload['Memory'] = payload['Memory'] + 1000
 
     if payload['RequestString'].startswith('ACDC'):
         print "This is not allowed yet"
@@ -59,6 +68,8 @@ def recoveror(url,specific,options=None):
     error_codes_to_recover = {
         50664 : { "legend" : "time-out",
                   "solution" : "split" },
+        50660 : { "legend" : "memory excess",
+                  "solution" : "mem" },
         8028 : { "legend" : "read error",
                  "solution" : "recover" },
         }
@@ -68,10 +79,12 @@ def recoveror(url,specific,options=None):
         }
 
     for wfo in session.query(Workflow).filter(Workflow.status == 'assistance-recovery').all():
-        print wfo.name 
         if specific and not specific in wfo.name:continue
 
         wfi = workflowInfo(url, wfo.name, deprecated=True) ## need deprecated info for mergedlfnbase
+
+        ## need a way to verify that this is the first round of ACDC, since the second round will have to be on the ACDC themselves
+
         all_errors = None
         try:
             wfi.getSummary()
@@ -80,37 +93,45 @@ def recoveror(url,specific,options=None):
             pass
 
         print '-'*100        
+        print "Looking at",wfo.name,"for recovery options"
+        
         if not len(all_errors): 
-            print "no error for",wfo.name
+            print "\tno error for",wfo.name
+            ## should we be worried that it's recovery but without errors ?
             continue
+
         task_to_recover = defaultdict(set)
         notify_me = False
 
         for task,errors in all_errors.items():
-            print task
+            print "\tTask",task
             for name,codes in errors.items():
                 if type(codes)==int: continue
                 for errorCode,info in codes.items():
                     errorCode = int(errorCode)
-                    print "Task",task,"had",info['jobs'],"failures with error code",errorCode,"in stage",name
+                    print "\t\t",info['jobs'],"failures with error code",errorCode,"in stage",name
                     if errorCode in error_codes_to_recover and not errorCode in task_to_recover[task]:
-                        print "\twe should be able to recover that"
+                        print "\t\t\twe should be able to recover that"
                         task_to_recover[task].add( errorCode )
                     if errorCode in error_codes_to_notify and not notify_me:
-                        print "\twe should notify people on this"
+                        print "\t\t\twe should notify people on this"
                         notify_me = True
 
         if notify_me:
             print wfo.name,"to be notified (DUMMY)"
 
         if task_to_recover:
-            print wfo.name,"recovering"
+            print "Initiating recovery"
             print ', '.join(task_to_recover.keys()),"to be recovered"
 
             recovering=set()
             for task in task_to_recover:
                 print "Will be making a recovery workflow for",task
-                acdc = singleRecovery(url, task, wfi.request , do = options.do)
+
+                ## from here you can fetch known solutions, to known error codes
+                actions = [error_codes_to_recover[code]['solution'] for code in task_to_recover[task]  ]
+                acdc = singleRecovery(url, task, wfi.request , actions, do = options.do)
+
                 if not acdc:
                     if options.do:
                         if recovering:
@@ -135,23 +156,15 @@ def recoveror(url,specific,options=None):
                     'ProcessingVersion' : wfi.request['ProcessingVersion'],
                     }
                 
-                codes = task_to_recover[task]
-                ## from here you can fetch known solutions, to known error codes
-                for code in codes:
-                    solution = error_codes_to_recover[code]['solution']
-                    if solution == 'split':
-                        ## reduce the splitting adequately
-                        pass
                 if options.ass:
                     print "really doing the assignment of the ACDC",acdc
                     parameters['execute']=True
 
                 result = reqMgrClient.assignWorkflow(url, acdc, team, parameters)
-                if acdc:
-                    recovering.add( acdc )
+                recovering.add( acdc )
 
             if recovering:
-                #if all went well, set the status to -recovering ; which will create a lag in the assistance.html page
+                #if all went well, set the status to -recovering 
                 current = wfo.status 
                 current = current.replace('recovery','recovering')
                 print wfo.name,"setting the status to",current
@@ -172,4 +185,4 @@ if __name__ == '__main__':
     recoveror(url,spec,options=options)
 
     fdb = closeoutInfo()
-    fdb.assistance( session.query(Workflow).filter(Workflow.status.startswith('assistance')).all() )
+    fdb.html()
