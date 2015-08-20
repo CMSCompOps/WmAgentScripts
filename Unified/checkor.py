@@ -373,11 +373,15 @@ def checkor(url, spec=None, options=None):
                     print "request notification to",pid
                     mcm.put('/restapi/requests/notify',{ "message" : text, "prepids" : [pid] })
 
-                
-            wfo.status = new_status
-            if not options.test:
-                print "setting",wfo.name,"to",wfo.status
-                session.commit()
+            ## case where the workflow was in manual from recoveror
+            if not 'manual' in wfo.status:
+                wfo.status = new_status
+                if not options.test:
+                    print "setting",wfo.name,"to",wfo.status
+                    session.commit()
+            else:
+                print "current status is",wfo.status,"not changing to anything"
+
 
     fDB.html()
 
