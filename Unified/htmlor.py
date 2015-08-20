@@ -115,7 +115,7 @@ def htmlor():
 </head>
 <body>
 
-Last update on %s(CET), %s(GMT), <a href=logs/ target=_blank>logs</a> <a href=logs/last.log target=_blank>last</a> <a href=statuses.html>statuses</a> <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/ target=_blank>prod mon</a> <a href=https://cmsweb.cern.ch/wmstats/index.html target=_blank>wmstats</a> <a href=http://t3serv001.mit.edu/~cmsprod/IntelROCCS-Dev/DetoxDataOps/SitesInfo.txt target=_blank>detox</a> <a href=https://twiki.cern.ch/twiki/bin/view/CMSPublic/CompOpsWorkflowL3Responsibilities#Automatic_Assignment_and_Unified>what am I</a> <br><br>
+Last update on %s(CET), %s(GMT), <a href=logs/ target=_blank>logs</a> <a href=logs/last.log target=_blank>last</a> <a href=statuses.html>statuses</a> <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/ target=_blank>prod mon</a> <a href=https://cmsweb.cern.ch/wmstats/index.html target=_blank>wmstats</a> <a href=http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/SitesInfo.txt target=_blank>detox</a> <a href=https://twiki.cern.ch/twiki/bin/view/CMSPublic/CompOpsWorkflowL3Responsibilities#Automatic_Assignment_and_Unified>what am I</a> <br><br>
 
 """ %(time.asctime(time.localtime()),
       time.asctime(time.gmtime())))

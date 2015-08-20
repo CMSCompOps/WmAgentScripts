@@ -532,7 +532,7 @@ class siteInfo:
 
     def fetch_detox_info(self, talk=True):
         ## put a retry in command line
-        info = os.popen('curl --retry 5 -s http://t3serv001.mit.edu/~cmsprod/IntelROCCS/DetoxDataOps/SitesInfo.txt').read().split('\n')
+        info = os.popen('curl --retry 5 -s http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/SitesInfo.txt').read().split('\n')
         if len(info) < 15: 
             ## fall back to dev
             info = os.popen('curl --retry 5 -s http://t3serv001.mit.edu/~cmsprod/IntelROCCS-Dev/DetoxDataOps/SitesInfo.txt').read().split('\n')
