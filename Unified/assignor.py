@@ -2,7 +2,7 @@
 from assignSession import *
 import reqMgrClient
 from utils import workflowInfo, campaignInfo, siteInfo, userLock
-from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction, getDatasetEventsAndLumis
+from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction, getDatasetEventsPerLumi
 from utils import componentInfo, sendEmail
 from utils import lockInfo
 import optparse
@@ -226,7 +226,7 @@ def assignor(url ,specific = None, talk=True, options=None):
         pstring = wfh.processingString()
         if 'PU_RD' in pstring:
             numEvents = wfh.getRequestNumEvents()
-            eventsPerLumi = [getDatasetEventsAndLumis(prim) for prim in primary]
+            eventsPerLumi = [getDatasetEventsPerLumi(prim) for prim in primary]
             eventsPerLumi = sum(eventsPerLumi)/float(len(eventsPerLumi))
             reqJobs = 500
             if 'PU_RD2' in pstring:
@@ -239,9 +239,15 @@ def assignor(url ,specific = None, talk=True, options=None):
                     print "need to go down to",eventsPerJob,"events per job"
                     parameters['EventsPerJob'] = eventsPerJob
                 else:
-                    print "need to go down to",lumisPerJob,"in assignment"
-                    sendEmail("setting lumi splitting for run-dependent MC","%s was assigned with %s lumis/job"%( wfo.name, lumisPerJob))
-                    parameters['LumisPerJob'] = lumisPerJob
+                    spl = wfh.getSplittings()[0]
+                    eventsPerJobEstimated = spl['events_per_job'] if 'events_per_job' in spl else None
+                    if eventsPerJobEstimated and eventsPerJobEstimated > eventsPerJob:
+                        print "need to go down to",lumisPerJob,"in assignment"
+                        sendEmail("setting lumi splitting for run-dependent MC","%s was assigned with %s lumis/job"%( wfo.name, lumisPerJob))
+                        parameters['LumisPerJob'] = lumisPerJob
+                    else:
+                        print "the regular splitting should work for",pstring
+                        sendEmail("leaving splitting untouched for PU_RD*","please check on "+wfo.name)
 
         result = reqMgrClient.assignWorkflow(url, wfo.name, team, parameters)
 

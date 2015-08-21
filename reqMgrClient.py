@@ -694,16 +694,16 @@ def assignWorkflow(url, workflowname, team, parameters ):
                                "splittingTask" : '/%s/%s'%(workflowname,t),
                                "splittingAlgo" : par})
                 print setWorkflowSplitting(url, params)
-            elif aux == 'LumisPerJob': ## this is just for fun, we should never need that fall-back
+            elif aux == 'LumisPerJob': 
                 wf = workflowInfo(url, workflowname)
                 t = wf.firstTask()
-                params = wf.getSplittings()[0]
-                params.update({"requestName":workflowname,
-                               "splittingTask" : '/%s/%s'%(workflowname,t),
-                               "lumis_per_job" : par,
-                               "splittingAlgo" : "LumiBased"})
+                #params = wf.getSplittings()[0]
+                params = {"requestName":workflowname,
+                          "splittingTask" : '/%s/%s'%(workflowname,t),
+                          "lumis_per_job" : par,
+                          "halt_job_on_file_boundaries" : True,
+                          "splittingAlgo" : "LumiBased"}
                 print setWorkflowSplitting(url, params)
-                #return False ## not commissioned
             else:
                 print "No action for ",aux
 
