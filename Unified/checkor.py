@@ -342,7 +342,7 @@ def checkor(url, spec=None, options=None):
             ## that means there is something that needs to be done acdc, lumi invalidation, custodial, name it
             new_status = 'assistance'+sub_assistance
             
-            if sub_assistance and wfo.status != new_status and 'PrepID' in wfi.request:
+            if sub_assistance and wfo.status != new_status and 'PrepID' in wfi.request and not 'manual' in wfo.status:
                 pid = wfi.request['PrepID'].replace('task_','')
                 ## notify
                 messages= {
