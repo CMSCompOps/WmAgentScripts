@@ -69,24 +69,33 @@ def recoveror(url,specific,options=None):
     CI = campaignInfo()
 
     error_codes_to_recover = {
-        50664 : { "legend" : "time-out",
+        50664 : [{ "legend" : "time-out",
                   "solution" : "split" ,
-                  "rate" : 30 
-                  },
-        50660 : { "legend" : "memory excess",
-                  "solution" : "mem" ,
-                  "rate" : 20
-                  },
-        61104 : { "legend" : "failed submit",
-                  "solution" : "recover" ,
+                  "details" : None,
                   "rate" : 20 
-                  },
-        8028 : { "legend" : "read error",
+                  }],
+        50660 : [{ "legend" : "memory excess",
+                  "solution" : "mem" ,
+                  "details" : None,
+                  "rate" : 20
+                  }],
+        61104 : [{ "legend" : "failed submit",
+                  "solution" : "recover" ,
+                  "details" : None,
+                  "rate" : 20 
+                  }],
+        8028 : [{ "legend" : "read error",
                  "solution" : "recover" ,
+                 "details" : None,
                  "rate" : 20 
-                 },
+                 }],
+        8021 : [{ "legend" : "cmssw failure",
+                 "solution" : "recover" , 
+                 "details" : "FileReadError",
+                 "rate" : 20
+                 }],
         }
-    max_legend = max([ len(e['legend']) for e in error_codes_to_recover.values()])
+    #max_legend = max([ max([len(e['legend']) for e in cases]) for cases in error_codes_to_recover.values()])
 
     ## CMSSW failures should just be reported right away and the workflow left on the side
     error_codes_to_notify = {
@@ -100,7 +109,7 @@ def recoveror(url,specific,options=None):
     for wfo in wfs:
         if specific and not specific in wfo.name:continue
 
-        if 'manual' in wfo.status: continue
+        if not specific and 'manual' in wfo.status: continue
         
         wfi = workflowInfo(url, wfo.name, deprecated=True) ## need deprecated info for mergedlfnbase
 
@@ -119,7 +128,7 @@ def recoveror(url,specific,options=None):
         if not len(all_errors): 
             print "\tno error for",wfo.name
 
-        task_to_recover = defaultdict(set)
+        task_to_recover = defaultdict(list)
         notify_me = False
 
         recover=True
@@ -138,22 +147,38 @@ def recoveror(url,specific,options=None):
             all_codes = []
             for name, codes in errors.items():
                 if type(codes)==int: continue
-                all_codes.extend( [(int(code),info['jobs'],name,list(set([e['type'] for e in info['errors']]))) for code,info in codes.items()] )
+                all_codes.extend( [(int(code),info['jobs'],name,list(set([e['type'] for e in info['errors']])),list(set([e['details'] for e in info['errors']])) ) for code,info in codes.items()] )
 
             all_codes.sort(key=lambda i:i[1], reverse=True)
             sum_failed = sum([l[1] for l in all_codes])
 
-            for errorCode,njobs,name,types in all_codes:
-                legend = error_codes_to_recover[errorCode]['legend'] if errorCode in error_codes_to_recover else ','.join(types)
-                                  
+            for errorCode,njobs,name,types,details in all_codes:
                 rate = 100*njobs/float(sum_failed)
-                print ("\t\t %10d (%6s%%) failures with error code %10d (%"+str(max_legend)+"s) at stage %s")%(njobs, "%4.2f"%rate, errorCode, legend, name)
+                #print ("\t\t %10d (%6s%%) failures with error code %10d (%"+str(max_legend)+"s) at stage %s")%(njobs, "%4.2f"%rate, errorCode, legend, name)
+                print ("\t\t %10d (%6s%%) failures with error code %10d (%30s) at stage %s")%(njobs, "%4.2f"%rate, errorCode, ','.join(types), name)
 
-                if errorCode in error_codes_to_recover and rate > error_codes_to_recover[errorCode]['rate']:
-                    print "\t\t => we should be able to recover that",legend
-                    task_to_recover[task].add( errorCode )
+                added_in_recover=False
+                if errorCode in error_codes_to_recover:
+                    ## the error code is registered
+                    for case in error_codes_to_recover[errorCode]:
+                        match = case['details']
+                        matched = False
+                        for detail in details:
+                            if match in detail:
+                                print "Could find keyword",match,"in"
+                                print 50*"#"
+                                print detail
+                                print 50*"#"
+                                matched = True
+                                break
+                        if matched and rate > case['rate']:
+                            print "\t\t => we should be able to recover that", case['legend']
+                            task_to_recover[task].append( (code,case) )
+                            added_in_recover=True
+                        else:
+                            print "\t\t recoverable but not frequent enough, needs",case['rate']
 
-                if errorCode in error_codes_to_notify and not notify_me:
+                if errorCode in error_codes_to_notify and not notify_me and not added_in_recover:
                     print "\t\t => we should notify people on this"
                     notify_me = True
 
@@ -171,7 +196,7 @@ def recoveror(url,specific,options=None):
                 print "Will be making a recovery workflow for",task
 
                 ## from here you can fetch known solutions, to known error codes
-                actions = [error_codes_to_recover[code]['solution'] for code in task_to_recover[task]  ]
+                actions = list(set([case['solution'] for code,case in task_to_recover[task]  ]))
                 acdc = singleRecovery(url, task, wfi.request , actions, do = options.do)
 
                 if not acdc:
@@ -193,8 +218,8 @@ def recoveror(url,specific,options=None):
                 team = wfi.request['Teams'][0]
                 parameters={
                     'SiteWhitelist' : wfi.request['SiteWhitelist'],
-                    'AcquisitionEra' : wfi.request['AcquisitionEra'],
-                    'ProcessingString' :  wfi.request['ProcessingString'],
+                    'AcquisitionEra' : wfi.acquisitionEra(),
+                    'ProcessingString' :  wfi.processingString(),
                     'MergedLFNBase' : wfi.deprecated_request['MergedLFNBase'],
                     'ProcessingVersion' : wfi.request['ProcessingVersion'],
                     }
