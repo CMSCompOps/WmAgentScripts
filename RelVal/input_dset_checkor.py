@@ -196,7 +196,7 @@ def main():
 
                 print blocks_dsets_to_transfer
 
-                result=utils.makeReplicaRequest("cmsweb.cern.ch", site_disk, blocks_dsets_to_transfer, "relval datasets")
+                result=utils.makeReplicaRequest(url="cmsweb.cern.ch", site=site_disk, datasets=blocks_dsets_to_transfer, comments="relval datasets", group = "RelVal")
 
                 phedexid = result['phedex']['request_created'][0]['id']
 
