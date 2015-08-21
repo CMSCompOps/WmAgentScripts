@@ -40,7 +40,7 @@ import logging
 from optparse import OptionParser, TitledHelpFormatter
 import json
 import copy
-
+from pprint import pprint
 
 class RESTClient(object):
     """
@@ -230,11 +230,11 @@ class ReqMgrClient(RESTClient):
             splittingParams['requestName'] = requestName
             splittingParams['splittingTask'] = '/%s/%s' % (requestName, taskName)
             splittingParams['splittingAlgo'] = splittingAlgo
+            
             encodedParams = urllib.urlencode(splittingParams, True)
             logging.info("Changing splitting parameters for request '%s' and task '%s' ..." % (requestName, taskName))
             status, data = self.httpRequest("POST", "/reqmgr/view/handleSplittingPage",
                                             data=encodedParams, headers=self.textHeaders)
-
             if status != 200:
                 logging.error("Splitting change did not succeed.")
                 print data

@@ -8,7 +8,8 @@
 """
 
 
-import urllib2,urllib, httplib, sys, re, os, json, phedexSubscription
+import urllib2, urllib, httplib, sys, re, os, json
+from deprecated import phedexSubscription
 from xml.dom.minidom import getDOMImplementation
 from das_client import get_data
 #das_host='https://das.cern.ch'
@@ -521,7 +522,7 @@ def main():
         sys.exit(0)
     workflow=args[0]
     url='cmsweb.cern.ch'
-    outputDataSets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
+    outputDataSets=deprecated.phedexSubscription.outputdatasetsWorkflow(url, workflow)
     inputEvents=getInputEvents(url, workflow)
     for dataset in outputDataSets:
         outputEvents=getOutputEvents(url, workflow, dataset)

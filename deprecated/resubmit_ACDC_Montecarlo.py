@@ -10,7 +10,7 @@ import json
 import changePriorityWorkflow
 import closeOutWorkflows
 from deprecated import dbsTest
-import phedexSubscription
+from deprecated import phedexSubscription
 import pickle
 import changeSplittingWorkflow
 from deprecated import assignWorkflowsAuto
@@ -53,13 +53,13 @@ def getSplitting(requestName):
 
 
 def getFinalRequestedNumEvents(url, workflow):
-	outputDataSets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
+	outputDataSets=deprecated.phedexSubscription.outputdatasetsWorkflow(url, workflow)
 	obtainedEvents=deprecated.dbsTest.getOutputEvents(url, workflow, outputDataSets[0])
 	requestedEvents=deprecated.dbsTest.getInputEvents(url, workflow)
 	return (requestedEvents-obtainedEvents)
 
 def getMaxLumi(url, workflow):
-	outputDataSets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
+	outputDataSets=deprecated.phedexSubscription.outputdatasetsWorkflow(url, workflow)
 	dataset=outputDataSets[0]
 	output=os.popen("./dbssql --input='find run, max(lumi) where dataset="+dataset+"'| awk '{print $2}' | grep '[0-9]\{1,\}'").read()
 	try:

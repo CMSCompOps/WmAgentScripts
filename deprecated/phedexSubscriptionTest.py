@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-import urllib2, urllib, httplib, sys, re, os, json, phedexSubscription
+import urllib2, urllib, httplib, sys, re, os, json
+from deprecated import phedexSubscription
 from deprecated import dbsTest
 from xml.dom.minidom import getDOMImplementation
 
@@ -43,7 +44,7 @@ def main():
 	workflow=args[0]
 	url='cmsweb.cern.ch'
 	requestType=deprecated.dbsTest.getWorkflowType(url, workflow)
-	datasets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
+	datasets=deprecated.phedexSubscription.outputdatasetsWorkflow(url, workflow)
 	for datasetName in datasets:
 		testOutputDataset(datasetName, requestType)
 	sys.exit(0);

@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 import optparse
 import json
-import urllib2,urllib, httplib, sys, re, os, phedexSubscription
+import urllib2, urllib, httplib, sys, re, os
+from deprecated import phedexSubscription
 from xml.dom.minidom import getDOMImplementation
 sys.path.append("..")
 import time

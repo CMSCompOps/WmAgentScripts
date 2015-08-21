@@ -104,9 +104,11 @@ def get_overview(overview_running,
                  overview_pending,
                  overview_other,
                  overview_running48,
+                 overview_maxwall,
                  overview_numjobstart,
                  overview_removereason,
                  jobs_48,
+                 jobs_maxwall,
                  jobs_numjobstart,
                  jobs_removereason,
                  schedd=None):
@@ -126,7 +128,8 @@ def get_overview(overview_running,
                                   'WMAgent_SubTaskName',
                                   'MATCH_EXP_JOBGLIDEIN_CMSSite',
                                   'DESIRED_Sites',
-                                  'NumJobStarts'])
+                                  'NumJobStarts',
+                                  'MaxWallTimeMins'])
     # split lines
     for job in jobs:
         # clusterID.ProcId (composed ID)
@@ -177,6 +180,9 @@ def get_overview(overview_running,
             jobType = 'Processing'
         else:
             jobType = 'Processing'
+        
+        if 'MaxWallTimeMins' in job:
+            maxWallTimeMins = job['MaxWallTimeMins']
 
         # IF Running
         if status == 2:
@@ -192,6 +198,11 @@ def get_overview(overview_running,
         # if Pending
         elif status == 1:
             increaseCounterInDict(overview_pending, site, jobType)
+            #check maxWallTime greater than 24 hours
+            if maxWallTimeMins > 24*60:
+                increaseCounterInDict(overview_maxwall, site, jobType)
+                fillIDWFinDict(jobs_maxwall, site, workflow, jobId)
+
         # if not running or pending, and reason is DEFINED
         elif removereason == "DEFINED":
             increaseCounterInDict(overview_removereason, site, jobType)
@@ -204,9 +215,11 @@ def get_overview(overview_running,
 def print_results(overview_running,
                   overview_pending,
                   overview_running48,
+                  overview_maxwall,
                   overview_numjobstart,
                   overview_removereason,
                   jobs_48,
+                  jobs_maxwall,
                   jobs_numjobstart,
                   jobs_removereason):
     """
@@ -226,6 +239,20 @@ def print_results(overview_running,
             print site + ':'
             print ""
             for wf, jobs in jobs_48[site].items():
+                print wf, ':', ' '.join(jobs)
+            print ""
+
+    print ""
+    if overview_maxwall:
+        printDict(overview_maxwall, 'MaxWall > 24h')
+        print ""
+        sortKeys = sorted(jobs_maxwall)
+        print 'Jobs that have MaxWall > 24 hours by workflow:'
+        print ""
+        for site in sortKeys:
+            print site + ':'
+            print ""
+            for wf, jobs in jobs_maxwall[site].items():
                 print wf, ':', ' '.join(jobs)
             print ""
 
@@ -256,7 +283,7 @@ def print_results(overview_running,
             for wf, jobs in jobs_numjobstart[site].items():
                 print wf, ':', ' '.join(jobs)
             print ""
-
+    
 
 def main():
     # Data dictionaries
@@ -264,9 +291,11 @@ def main():
     overview_pending = {}
     overview_other = {}
     overview_running48 = {}
+    overview_maxwall = {}
     overview_numjobstart = {}
     overview_removereason = {}
     jobs_48 = {}
+    jobs_maxwall = {}
     jobs_numjobstart = {}
     jobs_removereason = {}
 
@@ -275,9 +304,11 @@ def main():
                  overview_pending,
                  overview_other,
                  overview_running48,
+                 overview_maxwall,
                  overview_numjobstart,
                  overview_removereason,
                  jobs_48,
+                 jobs_maxwall,
                  jobs_numjobstart,
                  jobs_removereason,
                  schedd=None)
@@ -285,9 +316,11 @@ def main():
     print_results(overview_running,
                   overview_pending,
                   overview_running48,
+                  overview_maxwall,
                   overview_numjobstart,
                   overview_removereason,
                   jobs_48,
+                  jobs_maxwall,
                   jobs_numjobstart,
                   jobs_removereason)
 

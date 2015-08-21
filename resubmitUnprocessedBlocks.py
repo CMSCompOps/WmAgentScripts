@@ -4,11 +4,6 @@ import os
 import sys
 import urllib
 import httplib
-import re
-import Priorities
-import json
-import changePriorityWorkflow
-import closeOutWorkflows
 import unprocessedBlocks
 import changeSplittingWorkflow
 

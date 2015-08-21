@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-import urllib2, urllib, httplib, sys, re, os, json, phedexSubscription
+import urllib2, urllib, httplib, sys, re, os, json
+from deprecated import phedexSubscription
 from deprecated import dbsTest
 from xml.dom.minidom import getDOMImplementation
 from das_client import get_data
@@ -17,7 +18,7 @@ def runsNotPresent(url, workflow):
     print newRunWhiteList
 
 def runNotinAllDatasets(url, run, workflow):
-    Datasets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
+    Datasets=deprecated.phedexSubscription.outputdatasetsWorkflow(url, workflow)
     InputDataset=deprecated.dbsTest.getInputDataSet(url, workflow)
     runInputDataset=runInDataset(url, run, InputDataset)
     if not runInputDataset:

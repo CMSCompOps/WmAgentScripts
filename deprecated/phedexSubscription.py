@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import json
-import urllib2,urllib, httplib, sys, re, os
+import urllib2,urllib, httplib, sys, os
 from xml.dom.minidom import getDOMImplementation
 
 """
