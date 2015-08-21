@@ -239,30 +239,34 @@ def assignor(url ,specific = None, talk=True, options=None):
                     print "need to go down to",eventsPerJob,"events per job"
                     parameters['EventsPerJob'] = eventsPerJob
                 else:
+                    print "need to go down to",lumisPerJob,"in assignment"
                     sendEmail("setting lumi splitting for run-dependent MC","%s was assigned with %s lumis/job"%( wfo.name, lumisPerJob))
                     parameters['LumisPerJob'] = lumisPerJob
 
         result = reqMgrClient.assignWorkflow(url, wfo.name, team, parameters)
 
 
-        try:
-            ## refetch information and lock output
-            new_wfi = workflowInfo( url, wfo.name)
-            for site in [SI.CE_to_SE(site) for site in sites_allowed]:
-                for output in new_wfi.request['OutputDatasets']:
-                    LI.lock( output, site, 'dataset in production')
-                if 'MCPileup' in new_wfi.request and new_wfi.request['MCPileup']:
-                    LI.lock(new_wfi.request['MCPileup'], site, 'required for mixing')
-
-        except Exception as e:
-            print "fail in locking output"
-            print str(e)
-
         # set status
         if not options.test:
             if result:
                 wfo.status = 'away'
                 session.commit()
+
+                try:
+                    ## refetch information and lock output
+                    new_wfi = workflowInfo( url, wfo.name)
+                    for site in [SI.CE_to_SE(site) for site in sites_allowed]:
+                        for output in new_wfi.request['OutputDatasets']:
+                            LI.lock( output, site, 'dataset in production')
+                    if 'MCPileup' in new_wfi.request and new_wfi.request['MCPileup']:
+                        LI.lock(new_wfi.request['MCPileup'], site, 'required for mixing')
+
+                except Exception as e:
+                    print "fail in locking output"
+                    print str(e)
+                    sendEmail("failed locking of output",str(e))
+
+
             else:
                 print "ERROR could not assign",wfo.name
         else:
