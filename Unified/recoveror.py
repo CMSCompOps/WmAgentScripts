@@ -25,13 +25,13 @@ def singleRecovery(url, task , initial, actions, do=False):
     if actions:
         for action in actions:
             if action.startswith('split'):
-                factor = int(action.split('-')[-1]) if '-' in action else 4
+                factor = int(action.split('-')[-1]) if '-' in action else 2
                 print "Changing time per event (%s) by a factor %d"%( payload['TimePerEvent'], factor)
-                ## mention it's taking 4 times longer to have a 4 times finer splitting
+                ## mention it's taking 2 times longer to have a 2 times finer splitting
                 payload['TimePerEvent'] = factor*payload['TimePerEvent']
             elif action == 'mem':
                 ## increase the memory requirement by 1G
-                payload['Memory'] = payload['Memory'] + 1000
+                payload['Memory'] += 1000
 
     if payload['RequestString'].startswith('ACDC'):
         print "This is not allowed yet"
@@ -95,6 +95,14 @@ def recoveror(url,specific,options=None):
                  "rate" : 20
                  }],
         }
+
+    error_codes_to_block = {
+        99109 : [{ "legend" : "stage-out",
+                   "solution" : "recover",
+                   "details" : None,
+                   "rate" : 20
+                   }]
+        }
     #max_legend = max([ max([len(e['legend']) for e in cases]) for cases in error_codes_to_recover.values()])
 
     ## CMSSW failures should just be reported right away and the workflow left on the side
@@ -129,7 +137,8 @@ def recoveror(url,specific,options=None):
             print "\tno error for",wfo.name
 
         task_to_recover = defaultdict(list)
-        notify_me = False
+        message_to_ops = ""
+        message_to_user = ""
 
         recover=True
         if 'LheInputFilese' in wfi.request and wfi.request['LheInputFiles']:
@@ -162,15 +171,17 @@ def recoveror(url,specific,options=None):
                     ## the error code is registered
                     for case in error_codes_to_recover[errorCode]:
                         match = case['details']
-                        matched = False
-                        for detail in details:
-                            if match in detail:
-                                print "Could find keyword",match,"in"
-                                print 50*"#"
-                                print detail
-                                print 50*"#"
-                                matched = True
-                                break
+                        matched= (match==None)
+                        if not matched:
+                            matched=False
+                            for detail in details:
+                                if match in detail:
+                                    print "[recover] Could find keyword",match,"in"
+                                    print 50*"#"
+                                    print detail
+                                    print 50*"#"
+                                    matched = True
+                                    break
                         if matched and rate > case['rate']:
                             print "\t\t => we should be able to recover that", case['legend']
                             task_to_recover[task].append( (code,case) )
@@ -178,14 +189,38 @@ def recoveror(url,specific,options=None):
                         else:
                             print "\t\t recoverable but not frequent enough, needs",case['rate']
 
-                if errorCode in error_codes_to_notify and not notify_me and not added_in_recover:
+                if errorCode in error_codes_to_block:
+                    for case in error_codes_to_block[errorCode]:
+                        match = case['details']
+                        matched= (match==None)
+                        if not matched:
+                            matched=False
+                            for detail in details:
+                                if match in detail:
+                                    print "[block] Could find keyword",match,"in"
+                                    print 50*"#"
+                                    print detail
+                                    print 50*"#"
+                                    matched = True
+                                    break
+                        if matched and rate > case['rate']:
+                            print "\t\t => that error means no ACDC on that workflow", case['legend']
+                            recover = False
+                            message_to_ops += "%s has an error %s blocking an ACDC.\n%s\n "%( wfo.name, errorCode, '#'*50 )
+                            
+                
+                if errorCode in error_codes_to_notify and not notify_user and not added_in_recover:
                     print "\t\t => we should notify people on this"
-                    notify_me = True
+                    message_to_user += "%s has an error %s in processing.\n%s\n" %( wfo.name, errorCode, '#'*50 )
 
 
 
-        if notify_me:
-            print wfo.name,"to be notified (DUMMY)"
+        if message_to_user:
+            print wfo.name,"to be notified to user(DUMMY)",message_to_user
+
+        if message_to_ops:
+            sendEmail( "notification in recoveror" , message_to_ops, destination=['julian.badillo.rojas@cern.ch'])
+
 
         if task_to_recover and recover:
             print "Initiating recovery"
@@ -255,7 +290,10 @@ if __name__ == '__main__':
     spec=None
     if len(args)!=0:
         spec = args[0]
-        
+
+    ## enable doing recovery
+    options.do = True
+
     recoveror(url,spec,options=options)
 
     fdb = closeoutInfo()
