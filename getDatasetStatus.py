@@ -10,7 +10,7 @@ import dbs3Client as dbs3
 
 def main():
     parser = optparse.OptionParser("pyton %prog [DSET1 DSET2 ... | -f FILE]")
-    parser.add_option('-f', '--file', help='Text file', dest='filename')
+    parser.add_option('-f', '--file', help='Text file', dest='file')
     (options, args) = parser.parse_args()
 
     if options.file:
@@ -21,7 +21,6 @@ def main():
         parser.error("A file name or dataset is required")
         sys.exit(0)
     for dataset in datasets:
-        dataset = dataset.rstrip('\n')
         status = dbs3.getDatasetStatus(dataset)
         print dataset, status
 
