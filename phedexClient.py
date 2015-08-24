@@ -249,21 +249,23 @@ def getCustodialSubscriptionRequestSite(datasetName):
     #gets dataset subscription requests
     if 'request' not in requests.keys():
         print "no result for",datasetName,"in phedex request list"
-        return False
+        return []
     sites = []
     #if there is a request
     for request in result['phedex']['request']:
         #if there are pending or aprroved request, watch the satus of them
-        if request['approval']=='pending' or request['approval']=='approved':
+        if request['approval'] in ['pending','approved','mixed']:
             requestId = request['id']
+            #print "check",requestId
             result = phedexGet(url, '/phedex/datasvc/json/prod/transferrequests?request='+str(requestId))
             #if not empty
             if result['phedex']['request']:
+                #print len(result['phedex']['request'])
                 requestSubscription = result['phedex']['request'][0]
                 #see if its custodial
                 if requestSubscription['custodial']=='y':
                     sites.append(requestSubscription['destinations']['node'][0]['name'])
-    return sites if sites else False
+    return sites if sites else []
 
 def testOutputDataset(datasetName):
     """
