@@ -244,8 +244,8 @@ def print_results(overview_running,
 
     print ""
     if overview_maxwall:
-        printDict(overview_maxwall, 'MaxWall > 24h')
-        print ""
+        #printDict(overview_maxwall, 'MaxWall > 24h')
+        #print ""
         sortKeys = sorted(jobs_maxwall)
         print 'Jobs that have MaxWall > 24 hours by workflow:'
         print ""
