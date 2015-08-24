@@ -5,11 +5,13 @@
     url parameter is normally 'cmsweb.cern.ch'
 """
 
-import urllib2,urllib, httplib, sys, re, os, json
-from xml.dom.minidom import getDOMImplementation
+import urllib
+import httplib
+import re
+import os
+import json
 import dbs3Client as dbs3
 import copy
-from pprint import pprint
 
 # default headers for PUT and POST methods
 def_headers={"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
@@ -369,7 +371,7 @@ def requestManagerPut(url, request, params, head = def_headers):
     conn.close()
     return data
 
-def getWorkflowWorkload(url, workflow):
+def getWorkflowWorkload(url, workflow, retries=4):
     """
     Gets the workflow loaded, splitted by lines.
     """
@@ -536,7 +538,7 @@ def getInputEvents(url, workflow):
             return events
         # otherwize, the full lumi count
         else:
-            events = dbs3.getEventCountDataset(inputDataSet)
+            events = dbs3.getEventCountDataSet(inputDataSet)
             return events
     
     events = dbs3.getEventCountDataSet(inputDataSet)
@@ -646,7 +648,7 @@ def getOutputEvents(url, workflow, dataset):
     Gets the output events depending on the type
     of the request
     """
-    request = getWorkflowInfo(url, workflow)
+    # request = getWorkflowInfo(url, workflow)
     return dbs3.getEventCountDataSet(dataset)
 
 def getFilterEfficiency(url, workflow, task=None):
@@ -678,7 +680,7 @@ def getOutputLumis(url, workflow, dataset):
     Gets the output lumis depending on the type
     of the request
     """
-    request = getWorkflowInfo(url, workflow)
+    # request = getWorkflowInfo(url, workflow)
     return dbs3.getLumiCountDataSet(dataset)
     
 def assignWorkflow(url, workflowname, team, parameters ):
@@ -688,6 +690,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
     defaults["Team"+team] = "checked"
     defaults["checkbox"+workflowname] = "checked"
 
+    from utils import workflowInfo
     wf = workflowInfo(url, workflowname)
 
     # set the maxrss watchdog to what is specified in the request
@@ -760,15 +763,16 @@ def assignWorkflow(url, workflowname, team, parameters ):
                                "splittingTask" : '/%s/%s'%(workflowname,t),
                                "splittingAlgo" : par})
                 print setWorkflowSplitting(url, params)
-            elif aux == 'LumisPerJob': ## this is just for fun, we should never need that fall-back
+            elif aux == 'LumisPerJob': 
                 wf = workflowInfo(url, workflowname)
                 t = wf.firstTask()
-                params = wf.getSplittings()[0]
-                params.update({"requestName":workflowname,
-                               "splittingTask" : '/%s/%s'%(workflowname,t),
-                               "lumis_per_job" : par})
+                #params = wf.getSplittings()[0]
+                params = {"requestName":workflowname,
+                          "splittingTask" : '/%s/%s'%(workflowname,t),
+                          "lumis_per_job" : par,
+                          "halt_job_on_file_boundaries" : True,
+                          "splittingAlgo" : "LumiBased"}
                 print setWorkflowSplitting(url, params)
-                return False ## not commissioned
             else:
                 print "No action for ",aux
 

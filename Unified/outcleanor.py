@@ -10,7 +10,7 @@ import time
 
 def outcleanor(url, options):
 
-    do_not_autoapprove = ['T2_FR_CCIN2P3']
+    do_not_autoapprove = []#'T2_FR_CCIN2P3']
     LI = lockInfo()
 
 

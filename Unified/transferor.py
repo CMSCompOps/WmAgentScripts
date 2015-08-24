@@ -187,7 +187,7 @@ def transferor(url ,specific = None, talk=True, options=None):
         if not CI.go( wfh.request['Campaign'] ):
             print "No go for",wfh.request['Campaign']
             if not options.go: 
-                sendEmail("no go for managing","No go for "+wfh.request['Campaign'],'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
+                sendEmail("no go for managing","No go for "+wfh.request['Campaign'])
                 continue
 
         ## check if the batch is announced
@@ -263,10 +263,17 @@ def transferor(url ,specific = None, talk=True, options=None):
         if 'SiteBlacklist' in CI.parameters(wfh.request['Campaign']):
             sites_allowed = list(set(sites_allowed) - set(CI.parameters(wfh.request['Campaign'])['SiteBlacklist']))
 
-        if len(secondary)==0 and len(primary)==0 and len(parent)==0 and lheinput==False:
-            ## pure mc 
-            #sendEmail("work for SDSC", "There is work for SDSC : %s"%(wfo.name),'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
-            pass
+        ## reduce right away to sites in case of memory limitation
+        memory_allowed = SI.sitesByMemory( wfh.request['Memory'] )
+        if memory_allowed!=None:
+            print "sites allowing", wfh.request['Memory'],"are",memory_allowed
+            sites_allowed = list(set(sites_allowed) & set(memory_allowed))
+
+        if not sites_allowed:
+            print wfo.name,"has no possible sites to run at"
+            print "available for",wfh.request['Memory'],"are",memory_allowed
+            sendEmail("no possible sites","%s has no possible sites to run at"%( wfo.name ))
+            continue
 
         blocks = []
         if 'BlockWhitelist' in wfh.request and wfh.request['BlockWhitelist']:
