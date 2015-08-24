@@ -104,7 +104,7 @@ def closor(url, specific=None):
                                 status = subprocess.call(['python','assignDatasetToSite.py','--nCopies=2','--dataset='+out,'--exec'])
                                 if status!=0:
                                     results.append("Failed DDM for %s"% out)
-                                    sendEmail("failed DDM injection","could not add "+out+" to DDM pool. check closor logs.",'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
+                                    sendEmail("failed DDM injection","could not add "+out+" to DDM pool. check closor logs.")
                                     passed_to_DDM=False
                             if passed_to_DDM:
                                 ## make a lock release

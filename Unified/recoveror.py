@@ -1,13 +1,18 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import workflowInfo
+from utils import workflowInfo, sendEmail, componentInfo, userLock, closeoutInfo, campaignInfo
 import reqMgrClient
 import json
 import optparse
 import copy
+from collections import defaultdict
+import re
+import os
 
-def singleRecovery(url, task , initial):
+def singleRecovery(url, task , initial, actions, do=False):
     payload = {
+        "Requestor" : os.getenv('USER'),
+        "Group" : 'DATAOPS',
         "RequestType" : "Resubmission",
         "ACDCServer" : "https://cmsweb.cern.ch/couchdb",
         "ACDCDatabase" : "acdcserver",
@@ -17,18 +22,39 @@ def singleRecovery(url, task , initial):
     for c in copy_over:
         payload[c] = copy.deepcopy(initial[c])
 
+    if actions:
+        for action in actions:
+            if action.startswith('split'):
+                factor = int(action.split('-')[-1]) if '-' in action else 2
+                print "Changing time per event (%s) by a factor %d"%( payload['TimePerEvent'], factor)
+                ## mention it's taking 2 times longer to have a 2 times finer splitting
+                payload['TimePerEvent'] = factor*payload['TimePerEvent']
+            elif action == 'mem':
+                ## increase the memory requirement by 1G
+                payload['Memory'] += 1000
+
     if payload['RequestString'].startswith('ACDC'):
         print "This is not allowed yet"
         return None
-    payload['RequestString'] += 'ACDC_'
+    payload['RequestString'] = 'ACDC_'+payload['RequestString']
     payload['InitialTaskPath'] = task 
+
+    if not do:
+        print json.dumps( payload, indent=2)
+        return None
 
     ## submit
     response = reqMgrClient.submitWorkflow(url, payload)
     m = re.search("details\/(.*)\'",response)
     if not m:
         print "Error in making ACDC for",initial["RequestName"]
-        return None
+        print response
+        response = reqMgrClient.submitWorkflow(url, payload)
+        m = re.search("details\/(.*)\'",response)
+        if not m:
+            print "Error twice in making ACDC for",initial["RequestName"]
+            print response
+            return None
     acdc = m.group(1)
     data = reqMgrClient.setWorkflowApproved(url, acdc)
     print data
@@ -37,23 +63,66 @@ def singleRecovery(url, task , initial):
     
 
 def recoveror(url,specific,options=None):
+    if userLock('recoveror'): return
+
+    up = componentInfo()
+    CI = campaignInfo()
 
     error_codes_to_recover = {
-        50664 : { "legend" : "time-out",
-                  "solution" : "split" },
-        8028 : { "legend" : "read error",
-                 "solution" : "recover" },
+        50664 : [{ "legend" : "time-out",
+                  "solution" : "split" ,
+                  "details" : None,
+                  "rate" : 20 
+                  }],
+        50660 : [{ "legend" : "memory excess",
+                  "solution" : "mem" ,
+                  "details" : None,
+                  "rate" : 20
+                  }],
+        61104 : [{ "legend" : "failed submit",
+                  "solution" : "recover" ,
+                  "details" : None,
+                  "rate" : 20 
+                  }],
+        8028 : [{ "legend" : "read error",
+                 "solution" : "recover" ,
+                 "details" : None,
+                 "rate" : 20 
+                 }],
+        8021 : [{ "legend" : "cmssw failure",
+                 "solution" : "recover" , 
+                 "details" : "FileReadError",
+                 "rate" : 20
+                 }],
         }
+
+    error_codes_to_block = {
+        99109 : [{ "legend" : "stage-out",
+                   "solution" : "recover",
+                   "details" : None,
+                   "rate" : 20
+                   }]
+        }
+    #max_legend = max([ max([len(e['legend']) for e in cases]) for cases in error_codes_to_recover.values()])
+
     ## CMSSW failures should just be reported right away and the workflow left on the side
     error_codes_to_notify = {
         8021 : { "message" : "Please take a look and come back to Ops." }
         }
 
-    for wfo in session.query(Workflow).filter(Workflow.status == 'assistance-recovery').all():
-        print wfo.name 
+    wfs = session.query(Workflow).filter(Workflow.status == 'assistance-recovery').all()
+    if specific:
+        wfs.extend( session.query(Workflow).filter(Workflow.status == 'assistance-manual').all() )
+
+    for wfo in wfs:
         if specific and not specific in wfo.name:continue
 
-        wfi = workflowInfo(url, wfo.name)
+        if not specific and 'manual' in wfo.status: continue
+        
+        wfi = workflowInfo(url, wfo.name, deprecated=True) ## need deprecated info for mergedlfnbase
+
+        ## need a way to verify that this is the first round of ACDC, since the second round will have to be on the ACDC themselves
+
         all_errors = None
         try:
             wfi.getSummary()
@@ -62,72 +131,175 @@ def recoveror(url,specific,options=None):
             pass
 
         print '-'*100        
+        print "Looking at",wfo.name,"for recovery options"
+        
         if not len(all_errors): 
-            print "no error for",wfo.name
-            continue
-        task_to_recover = defaultdict(set)
-        notify_me = False
+            print "\tno error for",wfo.name
+
+        task_to_recover = defaultdict(list)
+        message_to_ops = ""
+        message_to_user = ""
+
+        recover=True
+        if 'LheInputFilese' in wfi.request and wfi.request['LheInputFiles']:
+            ## we do not try to recover pLHE
+            recover = False
+
+        if 'Campaign' in wfi.request:
+            c = wfi.request['Campaign']
+            if c in CI.campaigns and 'recover' in CI.campaigns[c]:
+                recover=CI.campaigns[c]['recover']
 
         for task,errors in all_errors.items():
-            print task
-            for name,codes in errors.items():
+            print "\tTask",task
+            ## collect all error codes and #jobs regardless of step at which it occured
+            all_codes = []
+            for name, codes in errors.items():
                 if type(codes)==int: continue
-                for errorCode,info in codes.items():
-                    print "Task",task,"had",info['jobs'],"failures with error code",errorCode,"in stage",name
-                    if int(errorCode) in error_codes_to_recover:
-                        task_to_recover[task].add( int(errorCode) )
-                    if int(errorCode) in error_codes_to_notify:
-                        notify_me = True
+                all_codes.extend( [(int(code),info['jobs'],name,list(set([e['type'] for e in info['errors']])),list(set([e['details'] for e in info['errors']])) ) for code,info in codes.items()] )
 
-        if notify_me:
-            print wfo.name,"to be notified (DUMMY)"
+            all_codes.sort(key=lambda i:i[1], reverse=True)
+            sum_failed = sum([l[1] for l in all_codes])
 
-        if task_to_recover:
-            print wfo.name,"recovering"
+            for errorCode,njobs,name,types,details in all_codes:
+                rate = 100*njobs/float(sum_failed)
+                #print ("\t\t %10d (%6s%%) failures with error code %10d (%"+str(max_legend)+"s) at stage %s")%(njobs, "%4.2f"%rate, errorCode, legend, name)
+                print ("\t\t %10d (%6s%%) failures with error code %10d (%30s) at stage %s")%(njobs, "%4.2f"%rate, errorCode, ','.join(types), name)
+
+                added_in_recover=False
+                if errorCode in error_codes_to_recover:
+                    ## the error code is registered
+                    for case in error_codes_to_recover[errorCode]:
+                        match = case['details']
+                        matched= (match==None)
+                        if not matched:
+                            matched=False
+                            for detail in details:
+                                if match in detail:
+                                    print "[recover] Could find keyword",match,"in"
+                                    print 50*"#"
+                                    print detail
+                                    print 50*"#"
+                                    matched = True
+                                    break
+                        if matched and rate > case['rate']:
+                            print "\t\t => we should be able to recover that", case['legend']
+                            task_to_recover[task].append( (code,case) )
+                            added_in_recover=True
+                        else:
+                            print "\t\t recoverable but not frequent enough, needs",case['rate']
+
+                if errorCode in error_codes_to_block:
+                    for case in error_codes_to_block[errorCode]:
+                        match = case['details']
+                        matched= (match==None)
+                        if not matched:
+                            matched=False
+                            for detail in details:
+                                if match in detail:
+                                    print "[block] Could find keyword",match,"in"
+                                    print 50*"#"
+                                    print detail
+                                    print 50*"#"
+                                    matched = True
+                                    break
+                        if matched and rate > case['rate']:
+                            print "\t\t => that error means no ACDC on that workflow", case['legend']
+                            recover = False
+                            message_to_ops += "%s has an error %s blocking an ACDC.\n%s\n "%( wfo.name, errorCode, '#'*50 )
+                            
+                
+                if errorCode in error_codes_to_notify and not notify_user and not added_in_recover:
+                    print "\t\t => we should notify people on this"
+                    message_to_user += "%s has an error %s in processing.\n%s\n" %( wfo.name, errorCode, '#'*50 )
+
+
+
+        if message_to_user:
+            print wfo.name,"to be notified to user(DUMMY)",message_to_user
+
+        if message_to_ops:
+            sendEmail( "notification in recoveror" , message_to_ops, destination=['julian.badillo.rojas@cern.ch'])
+
+
+        if task_to_recover and recover:
+            print "Initiating recovery"
             print ', '.join(task_to_recover.keys()),"to be recovered"
 
             recovering=set()
             for task in task_to_recover:
                 print "Will be making a recovery workflow for",task
-                continue
-                acdc = singleRecovery(url, task, wfi.request )
+
+                ## from here you can fetch known solutions, to known error codes
+                actions = list(set([case['solution'] for code,case in task_to_recover[task]  ]))
+                acdc = singleRecovery(url, task, wfi.request , actions, do = options.do)
+
+                if not acdc:
+                    if options.do:
+                        if recovering:
+                            print wfo.name,"has been partially ACDCed. Needs manual attention"
+                            sendEmail( "failed ACDC partial recovery","%s has had %s/%s recoveries %s only"%( wfo.name, len(recovering), len(task_to_recover), list(recovering)))
+                            continue
+                        else:
+                            print wfo.name,"failed recovery once"
+                            break
+                    else:
+                        print "no action to take further"
+                        sendEmail("an ACDC that can be done automatically","please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details", destination=['julian.badillo.rojas@cern.ch'])
+                        continue
+                        
+                
                 ## and assign it ?
                 team = wfi.request['Teams'][0]
                 parameters={
                     'SiteWhitelist' : wfi.request['SiteWhitelist'],
-                    'AcquisitionEra' : wfi.request['AcquisitionEra'],
-                    'ProcessingString' :  wfi.request['ProcessingString'],
-                    'MergedLFNBase' : wfi.request['MergedLFNBase'],
+                    'AcquisitionEra' : wfi.acquisitionEra(),
+                    'ProcessingString' :  wfi.processingString(),
+                    'MergedLFNBase' : wfi.deprecated_request['MergedLFNBase'],
                     'ProcessingVersion' : wfi.request['ProcessingVersion'],
                     }
                 
-                codes = task_to_recover[task]
-                ## from here you can fetch known solutions, to known error codes
-                for code in codes:
-                    solution = error_codes_to_recover[code]['solution']
-                    if solution == 'split':
-                        ## reduce the splitting adequately
-                        pass
-                ###parameters['execute']=True ## to enable auto-assigning
+                if options.ass:
+                    print "really doing the assignment of the ACDC",acdc
+                    parameters['execute']=True
+                else:
+                    print "no assignment done with this ACDC",acdc
+                    sendEmail("an ACDC was done and need to be assigned", "%s needs to be assigned, please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details"%( acdc ), destination=['julian.badillo.rojas@cern.ch'])
                 result = reqMgrClient.assignWorkflow(url, acdc, team, parameters)
                 recovering.add( acdc )
 
-
             if recovering:
-                #if all went well, set the status to -recovering ; which will create a lag in the assistance.html page
+                #if all went well, set the status to -recovering 
                 current = wfo.status 
-                current.replace('recovery','recovering')
+                if options.ass:
+                    current = current.replace('recovery','recovering')
+                else:
+                    current = 'assistance-manual'
                 print wfo.name,"setting the status to",current
+                print ', '.join( recovering )
                 wfo.status = current
                 session.commit()
-
+        else:
+            ## this workflow should be handled manually at that point
+            print wfo.name,"needs manual intervention"
+            wfo.status = 'assistance-manual'
+            session.commit()
+            
 
 if __name__ == '__main__':
     url='cmsweb.cern.ch'
     parser = optparse.OptionParser()
+    parser.add_option('--do',default=False,action='store_true')
+    parser.add_option('--ass',default=False,action='store_true')
     (options,args) = parser.parse_args()
     spec=None
     if len(args)!=0:
         spec = args[0]
-        
+
+    ## enable doing recovery
+    options.do = True
+
     recoveror(url,spec,options=options)
+
+    fdb = closeoutInfo()
+    fdb.html()

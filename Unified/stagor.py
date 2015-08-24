@@ -127,7 +127,7 @@ def stagor(url,specific =None, options=None):
                     print "sending",wf.name,"back to considered"
                     wf.status = 'considered'
                     session.commit()
-                    sendEmail( "send back to considered","%s was send back and might be trouble"% wf.name,'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
+                    sendEmail( "send back to considered","%s was send back and might be trouble"% wf.name)
             continue
 
         #need_sites = int(len(done_by_input[dsname].values())*0.7)+1
@@ -187,7 +187,7 @@ def stagor(url,specific =None, options=None):
                 lost_names = [item['name'] for item in lost]
                 print "We have lost",len(lost),"blocks",lost_names
                 #print json.dumps( lost , indent=2 )
-                sendEmail('we have lost a few blocks', str(len(lost))+" in total.\nDetails \n:"+json.dumps( lost , indent=2 ), 'vlimant@cern.ch',['vlimant@cern.ch','matteoc@fnal.gov'])
+                sendEmail('we have lost a few blocks', str(len(lost))+" in total.\nDetails \n:"+json.dumps( lost , indent=2 ))
             print "\t",done_by_input[dsname]
             print "\tneeds",need_sites
             print "\tgot",got
