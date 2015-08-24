@@ -48,6 +48,13 @@ def checkor(url, spec=None, options=None):
                 campaign = wfi.request['Campaign']
         return campaign
 
+    by_passes = []
+    try:
+        by_passes.extend( json.loads(open('/afs/cern.ch/user/j/jbadillo/public/ops/bypass.json').read()))
+    except:
+        print "cannot get by-passes from Julian"
+        sendEmail("malformated by-pass information","/afs/cern.ch/user/j/jbadillo/public/ops/bypass.json is not json readable", destination=['julian.badillo.rojas@cern.ch'])
+
     for wfo in wfs:
         if spec and not (spec in wfo.name): continue
 
@@ -89,6 +96,12 @@ def checkor(url, spec=None, options=None):
 
         is_closing = True
         ## do the closed-out checks one by one
+
+        ## get it from somewhere
+        by_pass_checks = False
+        if wfo.name in by_passes:
+            print "we can bypass checks on",wfo.name
+            by_pass_checks = True
 
         # tuck out DQMIO/DQM
         wfi.request['OutputDatasets'] = [ out for out in wfi.request['OutputDatasets'] if not '/DQM' in out]
@@ -236,7 +249,7 @@ def checkor(url, spec=None, options=None):
                 ## pick one at random
                 custodial = SI.pick_SE()
 
-            if custodial and not sub_assistance and not acdc:
+            if custodial and ((not sub_assistance and not acdc) or by_pass_checks):
                 ## register the custodial request, if there are no other big issues
                 for output in out_worth_checking:
                     if not len(custodial_locations[output]):
@@ -334,6 +347,10 @@ def checkor(url, spec=None, options=None):
             rec['dbsInvFiles'] = dbs_invalid[output]
             rec['phedexFiles'] = phedex_presence[output]
             rec['acdc'] = "%d / %d"%(len(acdc),len(acdc+acdc_inactive))
+
+        if by_pass_checks:
+            ## force closing
+            is_closing = True
 
         ## and move on
         if is_closing:
