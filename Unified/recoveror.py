@@ -262,14 +262,19 @@ def recoveror(url,specific,options=None):
                 if options.ass:
                     print "really doing the assignment of the ACDC",acdc
                     parameters['execute']=True
-
+                else:
+                    print "no assignment done with this ACDC",acdc
+                    sendEmail("an ACDC was done and need to be assigned", "%s needs to be assigned, please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details"%( acdc ), destination=['julian.badillo.rojas@cern.ch'])
                 result = reqMgrClient.assignWorkflow(url, acdc, team, parameters)
                 recovering.add( acdc )
 
             if recovering:
                 #if all went well, set the status to -recovering 
                 current = wfo.status 
-                current = current.replace('recovery','recovering')
+                if options.ass:
+                    current = current.replace('recovery','recovering')
+                else:
+                    current = 'assistance-manual'
                 print wfo.name,"setting the status to",current
                 print ', '.join( recovering )
                 wfo.status = current
