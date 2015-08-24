@@ -18,7 +18,7 @@ def singleRecovery(url, task , initial, actions, do=False):
         "ACDCDatabase" : "acdcserver",
         "OriginalRequestName" : initial['RequestName']
         }
-    copy_over = ['PrepID','RequestPriority', 'TimePerEvent', 'SizePerEvent', 'Group', 'Memory', 'RequestString' ]        
+    copy_over = ['PrepID','RequestPriority', 'TimePerEvent', 'SizePerEvent', 'Memory', 'RequestString' ]        
     for c in copy_over:
         payload[c] = copy.deepcopy(initial[c])
 
