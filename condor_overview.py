@@ -104,7 +104,6 @@ def get_overview(overview_running,
                  overview_pending,
                  overview_other,
                  overview_running48,
-                 overview_maxwall,
                  overview_numjobstart,
                  overview_removereason,
                  jobs_48,
@@ -199,8 +198,7 @@ def get_overview(overview_running,
         elif status == 1:
             increaseCounterInDict(overview_pending, site, jobType)
             #check maxWallTime greater than 24 hours
-            if maxWallTimeMins > 24*60:
-                increaseCounterInDict(overview_maxwall, site, jobType)
+            if maxWallTimeMins > 42*60:
                 fillIDWFinDict(jobs_maxwall, site, workflow, jobId)
 
         # if not running or pending, and reason is DEFINED
@@ -215,7 +213,6 @@ def get_overview(overview_running,
 def print_results(overview_running,
                   overview_pending,
                   overview_running48,
-                  overview_maxwall,
                   overview_numjobstart,
                   overview_removereason,
                   jobs_48,
@@ -243,11 +240,9 @@ def print_results(overview_running,
             print ""
 
     print ""
-    if overview_maxwall:
-        #printDict(overview_maxwall, 'MaxWall > 24h')
-        #print ""
+    if jobs_maxwall:
         sortKeys = sorted(jobs_maxwall)
-        print 'Jobs that have MaxWall > 24 hours by workflow:'
+        print 'Jobs that have MaxWall > 42 hours by workflow:'
         print ""
         for site in sortKeys:
             print site + ':'
@@ -291,7 +286,6 @@ def main():
     overview_pending = {}
     overview_other = {}
     overview_running48 = {}
-    overview_maxwall = {}
     overview_numjobstart = {}
     overview_removereason = {}
     jobs_48 = {}
@@ -304,7 +298,6 @@ def main():
                  overview_pending,
                  overview_other,
                  overview_running48,
-                 overview_maxwall,
                  overview_numjobstart,
                  overview_removereason,
                  jobs_48,
@@ -316,7 +309,6 @@ def main():
     print_results(overview_running,
                   overview_pending,
                   overview_running48,
-                  overview_maxwall,
                   overview_numjobstart,
                   overview_removereason,
                   jobs_48,

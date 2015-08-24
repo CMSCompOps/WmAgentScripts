@@ -25,6 +25,7 @@ def main():
     overview_numjobstart = {}
     overview_removereason = {}
     jobs_48 = {}
+    jobs_maxwall = {}
     jobs_numjobstart = {}
     jobs_removereason = {}
     
@@ -45,6 +46,7 @@ def main():
                         overview_numjobstart,
                         overview_removereason,
                         jobs_48,
+                        jobs_maxwall,
                         jobs_numjobstart,
                         jobs_removereason,
                         ad)
@@ -55,6 +57,7 @@ def main():
                     overview_numjobstart,
                     overview_removereason,
                     jobs_48,
+                    jobs_maxwall,
                     jobs_numjobstart,
                     jobs_removereason)
 
