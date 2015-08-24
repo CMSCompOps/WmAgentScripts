@@ -98,6 +98,7 @@ def checkor(url, spec=None, options=None):
         acdc = []
         acdc_inactive = []
         has_recovery_going=False
+        had_any_recovery = False
         for member in familly:
             if member['RequestType'] != 'Resubmission': continue
             if member['RequestName'] == wfo.name: continue
@@ -111,6 +112,7 @@ def checkor(url, spec=None, options=None):
                 has_recovery_going=True
             else:
                 acdc_inactive.append( member['RequestName'] )
+                had_any_recovery = True
         ## completion check
         percent_completions = {}
 #        print "let's see who is crashing", wfo.name
@@ -145,9 +147,11 @@ def checkor(url, spec=None, options=None):
             ## hook for creating automatically ACDC ?
             if has_recovery_going:
                 sub_assistance+='-recovering'
+            elif had_any_recovery:
+                ## we want to have this looked at
+                sub_assistance+='-manual'
             else:
                 sub_assistance+='-recovery'
-
             is_closing = False
 
         ## correct lumi < 300 event per lumi
@@ -217,6 +221,9 @@ def checkor(url, spec=None, options=None):
                 ## this is terribly dangerous to assume only 
                 parents_custodial = phedexClient.getCustodialSubscriptionRequestSite( wfi.request['InputDataset'])
                 ###parents_custodial = findCustodialLocation(url, wfi.request['InputDataset'])
+                if not parents_custodial:
+                    parents_custodial = []
+
                 if len(parents_custodial):
                     custodial = parents_custodial[0]
                 else:
