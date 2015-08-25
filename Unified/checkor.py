@@ -123,6 +123,9 @@ def checkor(url, spec=None, options=None):
                 ## hook for just waiting ...
                 is_closing = False
                 has_recovery_going=True
+            elif member['RequestStatus']==None:
+                print member['RequestName'],"is not real"
+                pass
             else:
                 acdc_inactive.append( member['RequestName'] )
                 had_any_recovery = True
