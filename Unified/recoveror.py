@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import workflowInfo, sendEmail, componentInfo, userLock, closeoutInfo, campaignInfo
+from utils import workflowInfo, sendEmail, componentInfo, userLock, closeoutInfo, campaignInfo, unifiedConfiguration
 import reqMgrClient
 import json
 import optparse
@@ -24,15 +24,15 @@ def singleRecovery(url, task , initial, actions, do=False):
 
     if actions:
         for action in actions:
-            if action.startswith('split'):
-                pass
+            #if action.startswith('split'):
             #    factor = int(action.split('-')[-1]) if '-' in action else 2
             #    print "Changing time per event (%s) by a factor %d"%( payload['TimePerEvent'], factor)
             #    ## mention it's taking 2 times longer to have a 2 times finer splitting
             #    payload['TimePerEvent'] = factor*payload['TimePerEvent']
-            elif action == 'mem':
+            if action.startswith('mem'):
+                increase = int(action.split('-')[-1]) if '-' in action else 1000
                 ## increase the memory requirement by 1G
-                payload['Memory'] += 1000
+                payload['Memory'] += increase
 
     if payload['RequestString'].startswith('ACDC'):
         print "This is not allowed yet"
@@ -88,7 +88,11 @@ def recoveror(url,specific,options=None):
     up = componentInfo()
     CI = campaignInfo()
 
-    error_codes_to_recover = {
+    UC = unifiedConfiguration()
+
+    error_codes_to_recover = UC.get('error_codes_to_recover')
+    """
+    {
         50664 : [{ "legend" : "time-out",
                   "solution" : "split" ,
                   "details" : None,
@@ -114,21 +118,26 @@ def recoveror(url,specific,options=None):
                  "details" : "FileReadError",
                  "rate" : 20
                  }],
-        }
-
-    error_codes_to_block = {
+    }
+    """
+    error_codes_to_block = UC.get('error_codes_to_block')
+    """
+    {
         99109 : [{ "legend" : "stage-out",
                    "solution" : "recover",
                    "details" : None,
                    "rate" : 20
                    }]
-        }
+    }
+    """
     #max_legend = max([ max([len(e['legend']) for e in cases]) for cases in error_codes_to_recover.values()])
 
     ## CMSSW failures should just be reported right away and the workflow left on the side
-    error_codes_to_notify = {
+    error_codes_to_notify = UC.get('error_codes_to_notify')
+    """{
         8021 : { "message" : "Please take a look and come back to Ops." }
-        }
+    }
+    """
 
     wfs = session.query(Workflow).filter(Workflow.status == 'assistance-recovery').all()
     if specific:
