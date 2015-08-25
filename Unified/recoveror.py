@@ -25,10 +25,11 @@ def singleRecovery(url, task , initial, actions, do=False):
     if actions:
         for action in actions:
             if action.startswith('split'):
-                factor = int(action.split('-')[-1]) if '-' in action else 2
-                print "Changing time per event (%s) by a factor %d"%( payload['TimePerEvent'], factor)
-                ## mention it's taking 2 times longer to have a 2 times finer splitting
-                payload['TimePerEvent'] = factor*payload['TimePerEvent']
+                pass
+            #    factor = int(action.split('-')[-1]) if '-' in action else 2
+            #    print "Changing time per event (%s) by a factor %d"%( payload['TimePerEvent'], factor)
+            #    ## mention it's taking 2 times longer to have a 2 times finer splitting
+            #    payload['TimePerEvent'] = factor*payload['TimePerEvent']
             elif action == 'mem':
                 ## increase the memory requirement by 1G
                 payload['Memory'] += 1000
@@ -56,6 +57,25 @@ def singleRecovery(url, task , initial, actions, do=False):
             print response
             return None
     acdc = m.group(1)
+    
+    ## perform modifications
+    if actions:
+        for action in actions:
+            if action.startswith('split'):
+                factor = int(action.split('-')[-1]) if '-' in action else 2
+                acdcInfo = workflowInfo(url, acdc)
+                splittings = acdcInfo.getSplittings()
+                for split in splittings:
+                    for act in ['events_per_job','lumis_per_job']:
+                        if act in split:
+                            print "Changing %s (%d) by a factor %d"%( act, split[act], factor),
+                            split[act] /= factor
+                            print "to",split[act]
+                            break
+                    split['requestName'] = acdc
+                    print "changing the splitting of",acdc
+                    print reqMgrClient.setWorkflowSplitting(url, split )
+                
     data = reqMgrClient.setWorkflowApproved(url, acdc)
     print data
     return acdc
@@ -186,6 +206,7 @@ def recoveror(url,specific,options=None):
                             print "\t\t => we should be able to recover that", case['legend']
                             task_to_recover[task].append( (code,case) )
                             added_in_recover=True
+                            message_to_user = ""
                         else:
                             print "\t\t recoverable but not frequent enough, needs",case['rate']
 
@@ -207,9 +228,11 @@ def recoveror(url,specific,options=None):
                             print "\t\t => that error means no ACDC on that workflow", case['legend']
                             recover = False
                             message_to_ops += "%s has an error %s blocking an ACDC.\n%s\n "%( wfo.name, errorCode, '#'*50 )
+                            added_in_recover=False
+
                             
                 
-                if errorCode in error_codes_to_notify and not notify_user and not added_in_recover:
+                if errorCode in error_codes_to_notify and not added_in_recover:
                     print "\t\t => we should notify people on this"
                     message_to_user += "%s has an error %s in processing.\n%s\n" %( wfo.name, errorCode, '#'*50 )
 

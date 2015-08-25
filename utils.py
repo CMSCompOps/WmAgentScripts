@@ -1560,17 +1560,39 @@ class workflowInfo:
                 new_schema.pop(k)
         return new_schema 
 
+    def _taskDescending(self, node, select=None):
+        all_tasks=[]
+        if (not select):# or (select and node.taskType == select):
+            all_tasks.append( node )
+        else:
+            for (key,value) in select.items():
+                if getattr(node, key) == value:
+                    all_tasks.append( node )
+                    break
+
+        for child in node.tree.childNames:
+            ch = getattr(node.tree.children, child)
+            all_tasks.extend( self._taskDescending( ch, select) )
+        return all_tasks
+
+    def getAllTasks(self, select=None):
+        all_tasks = []
+        for task in self._tasks():
+            ts = getattr(self.full_spec.tasks, task)
+            all_tasks.extend( self._taskDescending( ts, select ) )
+        return all_tasks
+
     def getSplittings(self):
         spl =[]
-        for task in self._tasks():
-            ts = getattr(self.full_spec.tasks, task).input.splitting
-            spl.append( { "splittingAlgo" : ts.algorithm} )
-            get_those = ['events_per_lumi','events_per_job','lumis_per_job']
+        for task in self.getAllTasks(select={'taskType':'Processing'}):
+            ts = task.input.splitting
+            spl.append( { "splittingAlgo" : ts.algorithm,
+                          "splittingTask" : task.pathName,
+                          } )
+            get_those = ['events_per_lumi','events_per_job','lumis_per_job','halt_job_on_file_boundaries']
             for get in get_those:
                 if hasattr(ts,get):
                     spl[-1][get] = getattr(ts,get)
-                #else:
-                #    spl[-1][get] = None
 
         return spl
 
