@@ -208,7 +208,7 @@ def getNumberofFilesPerRun(das_url, dataset, run):
     """
     Count number of files
     """
-     # initialize API to DBS3
+    # initialize API to DBS3
     dbsapi = DbsApi(url=dbs3_url)
 
     # retrieve file list
@@ -220,7 +220,7 @@ def getFileCountDataset(dataset, skipInvalid=False, onlyInvalid=False):
     """
     Returns the number of files registered in DBS3
     """
-     # initialize API to DBS3
+    # initialize API to DBS3
     dbsapi = DbsApi(url=dbs3_url)
 
     # retrieve file list
@@ -390,8 +390,6 @@ def main():
     if len(args) < 1:
         print "usage:dbs3Client dataset dataset2 ..."
         sys.exit(0)
-    workflow=args[0]
-    url='cmsweb.cern.ch'
     datasets = args
     for dataset in datasets:
         print dataset
@@ -401,6 +399,7 @@ def main():
         print " Open Blocks: ", info[0]
         print " Creation:", datetime.datetime.fromtimestamp(info[1]).strftime('%Y-%m-%d %H:%M:%S')
         print " Last update:", datetime.datetime.fromtimestamp(info[2]).strftime('%Y-%m-%d %H:%M:%S')
+        print " Status (access type):", getDatasetStatus(dataset)
         #print " Duplicated Lumis:", duplicateRunLumi(dataset)
         #print " Duplicated Lumis:", duplicateLumi(dataset)
         #print " Runs", getRunsDataset(dataset))

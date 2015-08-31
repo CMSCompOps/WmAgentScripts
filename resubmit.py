@@ -14,19 +14,14 @@
     This script depends on WMCore code, so WMAgent environment
     ,libraries and voms proxy need to be loaded before running it.
 """
-import pprint
 import os
 import datetime
 import pwd
 import sys
-import urllib
-import httplib
 import re
-import json
 from optparse import OptionParser
 from pprint import pprint
 try:
-    import changePriorityWorkflow
     import reqMgrClient
     from WMCore.WMSpec.WMWorkload import WMWorkloadHelper
     from WMCore.Wrappers import JsonWrapper
@@ -168,7 +163,7 @@ def modifySchema(helper, user, group, backfill=False):
     return result
 
 
-def cloneWorkflow(workflow, user, group, verbose=False, backfill=False):
+def cloneWorkflow(workflow, user, group, verbose=False, backfill=False, testbed=False):
     """
     clones a workflow
     """
@@ -182,6 +177,9 @@ def cloneWorkflow(workflow, user, group, verbose=False, backfill=False):
     print 'Submitting workflow'
 
     # Sumbit cloned workflow to ReqMgr
+    if testbed:
+        url = url_tb
+    
     response = reqMgrClient.submitWorkflow(url, schema)
     if verbose:
         print "RESPONSE", response
@@ -238,6 +236,8 @@ def main():
                       help="Creates a clone for backfill test purposes.")
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False,
                       help="Prints all query information.")
+    parser.add_option("--testbed", action="store_true", dest="testbed", default=False,
+                      help="Clones the production workflow to the testbed reqmgr.")
     parser.add_option(
         '-f', '--file', help='Text file with a list of workflows', dest='file')
     (options, args) = parser.parse_args()
@@ -265,7 +265,7 @@ def main():
         wfs = [args[0]]
 
     for wf in wfs:
-        cloneWorkflow(wf, user, group, options.verbose, options.backfill)
+        cloneWorkflow(wf, user, group, options.verbose, options.backfill, options.testbed)
 
     sys.exit(0)
 

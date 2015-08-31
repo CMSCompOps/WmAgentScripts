@@ -9,7 +9,7 @@ import random
 def cleanor(url, specific=None):
 
     delete_per_site = {}
-    do_not_autoapprove = ['T2_FR_CCIN2P3']
+    do_not_autoapprove = []#'T2_FR_CCIN2P3']
     SI = siteInfo()
     CI = campaignInfo()
     LI = lockInfo()

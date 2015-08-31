@@ -13,77 +13,10 @@ import time
 from McMClient import McMClient
 from htmlor import htmlor
 from utils import sendEmail 
-
-class falseDB:
-    def __init__(self):
-        self.record = json.loads(open('closedout.json').read())
-
-    def table_header(self):
-        text = '<table border=1><thead><tr><th>workflow</th><th>OutputDataSet</th><th>%Compl</th><th>acdc</th><th>Dupl</th><th>CorrectLumis</th><th>Scubscr</th><th>Tran</th><th>dbsF</th><th>dbsIF</th><th>\
-phdF</th><th>ClosOut</th></tr></thead>'
-        return text
-
-    def one_line(self, wf, wfo, count):
-        if count%2:            color='lightblue'
-        else:            color='white'
-        text=""
-        try:
-            pid = filter(lambda b :b.count('-')==2, wf.split('_'))[0]
-            tpid = 'task_'+pid if 'task' in wf else pid
-        except:
-            pid ='None'
-            tpid= 'None'
-            
-        ## return the corresponding html
-        order = ['percentage','acdc','duplicate','correctLumis','missingSubs','phedexReqs','dbsFiles','dbsInvFiles','phedexFiles']
-        wf_and_anchor = '<a id="%s">%s</a>'%(wf,wf)
-        for out in self.record[wf]['datasets']:
-            text+='<tr bgcolor=%s>'%color
-            text+='<td>%s<br><a href=https://cmsweb.cern.ch/reqmgr/view/details/%s>dts</a>, <a href=https://cmsweb.cern.ch/reqmgr/view/splitting/%s>splt</a>, <a href=https://cmsweb.cern.ch/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s>perf</a>, <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>ac</a>, <a href=assistance.html#%s>%s</a></td>'% (wf_and_anchor,
-                                                                                                                                                                                                                                                                                                                            wf, wf, wf,tpid,wf,
-                                                                                                                                                                                                                                                                                                                            wfo.status)
-
-            text+='<td>%s</td>'% out
-            for f in order:
-                if f in self.record[wf]['datasets'][out]:
-                    value = self.record[wf]['datasets'][out][f]
-                else:
-                    value = "-NA-"
-                if f =='acdc':
-                    text+='<td><a href=https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byprepid?key="%s">%s</a></td>'%(tpid , value)
-                else:
-                    text+='<td>%s</td>'% value
-            text+='<td>%s</td>'%self.record[wf]['closeOutWorkflow']
-            text+='</tr>'
-            wf_and_anchor = wf
-
-        return text
-    def summary(self):
-        os.system('cp closedout.json closedout.json.last')
-        
-        html = open('/afs/cern.ch/user/c/cmst2/www/unified/closeout.html','w')
-        html.write('<html>')
-        html.write('Last update on %s(CET), %s(GMT), <a href=logs/checkor/ target=_blank> logs</a> <br><br>'%(time.asctime(time.localtime()),time.asctime(time.gmtime())))
-
-        html.write( self.table_header() )
-
-        for (count,wf) in enumerate(sorted(self.record.keys())):
-            wfo = session.query(Workflow).filter(Workflow.name == wf).first()
-            if not wfo: continue
-            if not (wfo.status == 'away' or wfo.status.startswith('assistance')):
-                print "Taking",wf,"out of the close-out record"
-                self.record.pop(wf)
-                continue
-            html.write( self.one_line( wf, wfo , count) )
-
-        html.write('</table>')
-        html.write('<br>'*100) ## so that the anchor works ok
-        html.write('bottom of page</html>')
-
-        open('closedout.json','w').write( json.dumps( self.record , indent=2 ) )
+from utils import closeoutInfo
 
 def checkor(url, spec=None, options=None):
-    fDB = falseDB()
+    fDB = closeoutInfo()
 
     use_mcm = True
     up = componentInfo(mcm=use_mcm, soft=['mcm'])
@@ -165,6 +98,7 @@ def checkor(url, spec=None, options=None):
         acdc = []
         acdc_inactive = []
         has_recovery_going=False
+        had_any_recovery = False
         for member in familly:
             if member['RequestType'] != 'Resubmission': continue
             if member['RequestName'] == wfo.name: continue
@@ -178,6 +112,7 @@ def checkor(url, spec=None, options=None):
                 has_recovery_going=True
             else:
                 acdc_inactive.append( member['RequestName'] )
+                had_any_recovery = True
         ## completion check
         percent_completions = {}
 #        print "let's see who is crashing", wfo.name
@@ -185,7 +120,7 @@ def checkor(url, spec=None, options=None):
         if not 'TotalInputEvents' in wfi.request:
             event_expected,lumi_expected = 0,0
             if not 'recovery' in wfo.status:
-                sendEmail("missing member of the request","TotalInputEvents is missing from the workload of %s"% wfo.name,'vlimant@cern.ch', ['vlimant@cern.ch','matteoc@fnal.gov','julian.badillo.rojas@cern.ch'])
+                sendEmail("missing member of the request","TotalInputEvents is missing from the workload of %s"% wfo.name, destination=['julian.badillo.rojas@cern.ch'])
         else:
             event_expected,lumi_expected =  wfi.request['TotalInputEvents'],wfi.request['TotalInputLumis']
 
@@ -212,9 +147,11 @@ def checkor(url, spec=None, options=None):
             ## hook for creating automatically ACDC ?
             if has_recovery_going:
                 sub_assistance+='-recovering'
+            elif had_any_recovery:
+                ## we want to have this looked at
+                sub_assistance+='-manual'
             else:
                 sub_assistance+='-recovery'
-
             is_closing = False
 
         ## correct lumi < 300 event per lumi
@@ -284,12 +221,14 @@ def checkor(url, spec=None, options=None):
                 ## this is terribly dangerous to assume only 
                 parents_custodial = phedexClient.getCustodialSubscriptionRequestSite( wfi.request['InputDataset'])
                 ###parents_custodial = findCustodialLocation(url, wfi.request['InputDataset'])
+                if not parents_custodial:
+                    parents_custodial = []
+
                 if len(parents_custodial):
                     custodial = parents_custodial[0]
                 else:
                     print "the input dataset",wfi.request['InputDataset'],"does not have custodial in the first place. abort"
-                    sendEmail( "dataset has no custodial location", "Please take a look at %s in the logs of checkor"%wfi.request['InputDataset'],
-                               'vlimant@cern.ch', ['vlimant@cern.ch','matteoc@fnal.gov'])
+                    sendEmail( "dataset has no custodial location", "Please take a look at %s in the logs of checkor"%wfi.request['InputDataset'])
                     is_closing = False
                     pick_custodial = False
 
@@ -410,7 +349,7 @@ def checkor(url, spec=None, options=None):
             ## that means there is something that needs to be done acdc, lumi invalidation, custodial, name it
             new_status = 'assistance'+sub_assistance
             
-            if sub_assistance and wfo.status != new_status and 'PrepID' in wfi.request:
+            if sub_assistance and wfo.status != new_status and 'PrepID' in wfi.request and not 'manual' in wfo.status:
                 pid = wfi.request['PrepID'].replace('task_','')
                 ## notify
                 messages= {
@@ -441,13 +380,18 @@ def checkor(url, spec=None, options=None):
                     print "request notification to",pid
                     mcm.put('/restapi/requests/notify',{ "message" : text, "prepids" : [pid] })
 
-                
-            wfo.status = new_status
-            if not options.test:
-                print "setting",wfo.name,"to",wfo.status
-                session.commit()
+            ## case where the workflow was in manual from recoveror
+            if not 'manual' in wfo.status:
+                wfo.status = new_status
+                if not options.test:
+                    print "setting",wfo.name,"to",wfo.status
+                    session.commit()
+            else:
+                print "current status is",wfo.status,"not changing to anything"
 
-    fDB.summary()
+
+    fDB.html()
+
     ## custodial requests
     print "Custodials"
     print json.dumps(custodials, indent=2)
@@ -501,59 +445,4 @@ if __name__ == "__main__":
     if options.html:
         htmlor()
 
-    fdb = falseDB()
-        
-    short_html = open('/afs/cern.ch/user/c/cmst2/www/unified/assistance_summary.html','w')
-    html = open('/afs/cern.ch/user/c/cmst2/www/unified/assistance.html','w')
-    html.write("""
-<html>
-""")
-    short_html.write('Last update on %s(CET), %s(GMT), <a href=logs/checkor/last.log target=_blank> log</a> <br>'%(time.asctime(time.localtime()),time.asctime(time.gmtime())))
-    html.write('Last update on %s(CET), %s(GMT), <a href=logs/checkor/last.log target=_blank> log</a> <br>'%(time.asctime(time.localtime()),time.asctime(time.gmtime())))
 
-    html.write('<a href=assistance_summary.html> Summary </a> <br>')    
-    short_html.write('<a href=assistance.html> Details </a> <br>')
-
-    assist = defaultdict(list)
-    for wfo in session.query(Workflow).filter(Workflow.status.startswith('assistance')).all():
-        assist[wfo.status].append( wfo )
-    
-    for status in sorted(assist.keys()):
-        html.write("Workflow in status <b> %s </b> (%d)"% (status, len(assist[status])))
-        html.write( fdb.table_header())
-        short_html.write("""
-Workflow in status <b> %s </b>
-<table border=1>
-<thead>
-<tr>
-<th> workflow </th> <th> output dataset </th><th> completion </th>
-</tr>
-</thead>
-"""% (status))
-        
-        for (count,wfo) in enumerate(assist[status]):
-            if count%2:            color='lightblue'
-            else:            color='white'
-            if not wfo.name in fdb.record: 
-                print "wtf with",wfo.name
-                continue
-            html.write( fdb.one_line( wfo.name, wfo, count))
-            for out in fdb.record[wfo.name]['datasets']:
-                short_html.write("""
-<tr bgcolor=%s>
-<td> <a id=%s>%s</a> </td><td> %s </td><td> <a href=closeout.html#%s>%s</a> </td>
-</tr>
-"""%( color, 
-      wfo.name,wfo.name,
-      out, 
-      wfo.name,
-      fdb.record[wfo.name]['datasets'][out]['percentage'],
-      
-      ))
-        html.write("</table><br><br>")
-        short_html.write("</table><br><br>")
-    short_html.write("<br>"*100)
-    short_html.write("bottom of page</html>")    
-    html.write("<br>"*100)
-    html.write("bottom of page</html>")    
-                           

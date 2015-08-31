@@ -5,15 +5,15 @@ import sys
 import urllib
 import httplib
 import re
-import Priorities
+from deprecated import Priorities
 import json
 import changePriorityWorkflow
 import closeOutWorkflows
-import dbsTest
-import phedexSubscription
+from deprecated import dbsTest
+from deprecated import phedexSubscription
 import pickle
 import changeSplittingWorkflow
-import assignWorkflowsAuto
+from deprecated import assignWorkflowsAuto
 import resubmitUnprocessedBlocks
 
 from WMCore.WMSpec.WMWorkload import WMWorkloadHelper
@@ -53,13 +53,13 @@ def getSplitting(requestName):
 
 
 def getFinalRequestedNumEvents(url, workflow):
-	outputDataSets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
-	obtainedEvents=dbsTest.getOutputEvents(url, workflow, outputDataSets[0])
-	requestedEvents=dbsTest.getInputEvents(url, workflow)
+	outputDataSets=deprecated.phedexSubscription.outputdatasetsWorkflow(url, workflow)
+	obtainedEvents=deprecated.dbsTest.getOutputEvents(url, workflow, outputDataSets[0])
+	requestedEvents=deprecated.dbsTest.getInputEvents(url, workflow)
 	return (requestedEvents-obtainedEvents)
 
 def getMaxLumi(url, workflow):
-	outputDataSets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
+	outputDataSets=deprecated.phedexSubscription.outputdatasetsWorkflow(url, workflow)
 	dataset=outputDataSets[0]
 	output=os.popen("./dbssql --input='find run, max(lumi) where dataset="+dataset+"'| awk '{print $2}' | grep '[0-9]\{1,\}'").read()
 	try:
@@ -129,7 +129,7 @@ def retrieveSchema(url, workflowName, user, group ):
         elif key=='FirstLumi':
 	   schema['FirstLumi']=getMaxLumi(url, workflowName)*2
         elif key=='FirstEvent':
-	   schema['FirstEvent']=dbsTest.getInputEvents(url, workflowName)*2
+	   schema['FirstEvent']=deprecated.dbsTest.getInputEvents(url, workflowName)*2
 	elif key=='RequestString':
 	   schema['RequestString']='ACDC_'+value
 	elif value != None:
@@ -189,5 +189,5 @@ if __name__ == "__main__":
     	maxmergeevents = 6000
     if 'DR61SLHCx' in oldworkflow:
         maxmergeevents = 5000
-    assignWorkflowsAuto.assignRequest(url , newWorkflow ,team ,site ,era, procversion, procstring, activity, lfn, maxmergeevents, 2300000, 4100000000, 0, siteCust)
+    deprecated.assignWorkflowsAuto.assignRequest(url , newWorkflow ,team ,site ,era, procversion, procstring, activity, lfn, maxmergeevents, 2300000, 4100000000, 0, siteCust)
     sys.exit(0)

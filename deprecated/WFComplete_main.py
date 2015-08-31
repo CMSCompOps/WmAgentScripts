@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import json, os, httplib, sys
-import dbsTest
+from deprecated import dbsTest
 import datetime
 import subprocess
 from string import Template,find
@@ -104,21 +104,21 @@ def getDbsProgress(options,wfs_dict,wfs_dict_skipped):
 	for wf in wfs_dict.keys():
 		wfs_dict[wf]['dbsProgress'] = []
 		try:
-			outputDataSets = dbsTest.phedexSubscription.outputdatasetsWorkflow(url, wf)
+			outputDataSets = deprecated.dbsTest.phedexSubscription.outputdatasetsWorkflow(url, wf)
 		except:
 			print "\t%s'%s' cannot be looked up in dbs, skipping.%s" % (red,wf,dfa)
 			wfs_dict_skipped[wf] = wfs_dict[wf]
                         del wfs_dict[wf]
 			continue
 		try:
-			inputEvents = dbsTest.getInputEvents(url, wf)
+			inputEvents = deprecated.dbsTest.getInputEvents(url, wf)
 		except:
 			print "\t%s'%s' cannot be looked up in dbs, skipping.%s" % (red,wf,dfa)
 			wfs_dict_skipped[wf] = wfs_dict[wf]
 			del wfs_dict[wf]
 			continue
 		for dataset in outputDataSets:
-			outputEvents = dbsTest.getEventCountDataSet(dataset)
+			outputEvents = deprecated.dbsTest.getEventCountDataSet(dataset)
 			wfs_dict[wf]['dbsProgress'].append({"dataset":dataset,"progress":str(outputEvents/float(inputEvents)*100)})
 	if options.verbose:
 		print cya+"Added dbs progress info to workflow dictionary."+dfa

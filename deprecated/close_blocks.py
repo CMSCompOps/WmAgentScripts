@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 
 #import simplejson as json
-import sys
-import re
 import urllib, httplib
-import threading
 import Queue
+import json
 
 from xml.dom.minidom import Document
 import utils
@@ -43,7 +41,7 @@ if __name__ == "__main__":
     for block in open(file).readlines():
         block = block.strip()
         #site = get_site(block)
-	site = "T1_US_FNAL_MSS"
+        site = "T1_US_FNAL_MSS"
         doc = Document()
         dt = doc.createElement("data")
         dt.setAttribute("version", "2.0")

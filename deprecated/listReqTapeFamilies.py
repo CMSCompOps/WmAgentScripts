@@ -1,6 +1,9 @@
 #!/usr/bin/env python
-
-import urllib2,urllib, httplib, sys, re, os, json, phedexSubscription
+"""
+@deprecated: No need to create tape families anymore 
+"""
+import urllib2, urllib, httplib, sys, re, os, json
+from deprecated import phedexSubscription
 from xml.dom.minidom import getDOMImplementation
 
 def findCustodialLocation(url, dataset):
@@ -48,9 +51,9 @@ def main():
 
 	filename=args[0]
 	url='cmsweb.cern.ch'
-        workflows=phedexSubscription.workflownamesfromFile(filename)
+        workflows=deprecated.phedexSubscription.workflownamesfromFile(filename)
         for workflow in workflows:
-	   outputDataSets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
+	   outputDataSets=deprecated.phedexSubscription.outputdatasetsWorkflow(url, workflow)
            prepID = getPrepID(url, workflow)
            ods = []
 

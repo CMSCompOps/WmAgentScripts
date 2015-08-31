@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import json
-import urllib2,urllib, httplib, sys, re, os, random
-from xml.dom.minidom import getDOMImplementation
+import httplib, os
 import reqMgrClient as reqMgrClient
 
 """

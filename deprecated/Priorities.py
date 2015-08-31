@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-import urllib2,urllib, httplib, sys, re, os, json, time, math, dbsTest, locale
+import urllib2, urllib, httplib, sys, re, os, json, time, math, locale
+from deprecated import dbsTest
 import optparse, closeOutWorkflows
 from xml.dom.minidom import getDOMImplementation
 
@@ -102,30 +103,34 @@ def classifyRequests(url, requests, historic, noNameSites, requestType):
 			namefound=1
 			for stat in historic[Site].keys():#stat is the status of the request in the list of requests
 				if status==stat:
-					EffectiveLumi=-999
+					EffectiveLumi=getEffectiveLumiSections(url, name, requestType)
+					if EffectiveLumi <=0:
+						EffectiveLumi=0.0000001
 					TimeEvent=getTimeEventRequest(url, name)
 					priority=getPriorityWorkflow(url, name)
-					numevents=-999
+					numevents=deprecated.dbsTest.getInputEvents(url, name)
 					checkLumi=False
 					if float(numevents/EffectiveLumi)>400:
 						checkLumi=True
 					else:
 						checkLumi=False
-					maxEvents=-999
+					maxEvents=maxEventsFileDataset(url, name)
 					historic[Site][stat].append((name,priority,numevents, TimeEvent,EffectiveLumi, checkLumi, maxEvents))
 		if namefound==0:
 			for stat in noNameSites.keys():
 				if status==stat:
-					EffectiveLumi=-999
+					EffectiveLumi=getEffectiveLumiSections(url, name, requestType)
+					if EffectiveLumi <=0:
+						EffectiveLumi=0.0000001
 					TimeEvent=getTimeEventRequest(url, name)
 					priority=getPriorityWorkflow(url, name)
-					numevents=-999
+					numevents=deprecated.dbsTest.getInputEvents(url, name)
 					checkLumi=False
 					if float(numevents/EffectiveLumi)>400:
 						checkLumi=True
 					else:
 						checkLumi=False
-					maxEvents=-999
+					maxEvents=maxEventsFileDataset(url, name)
 					noNameSites[stat].append((name,priority,numevents, TimeEvent,EffectiveLumi, checkLumi, maxEvents))
 					
 					

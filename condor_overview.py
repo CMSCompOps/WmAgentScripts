@@ -9,57 +9,66 @@
     - jobs that have restarted more than 3 times
     
 """
-import sys,os
+import sys
 from random import choice
-import htcondor
+try:
+    import htcondor
+except ImportError:
+    print "You do not have a proper environment, please source the following:"
+    print "source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh"
+    sys.exit(1)
 
-def increaseCounterInDict(dict,site,type):
+
+def increaseCounterInDict(jobDict, site, jobType):
     """
     increases the job count for the given site
-    creates the site if not in dict
+    creates the site if not in jobDict
     """
-    # print 'site',site,'type',type
-    if site in dict:
-        dict[site][type] += 1
-    else :
+    # print 'site',site,'jobType',jobType
+    if site in jobDict:
+        jobDict[site][jobType] += 1
+    else:
         tmp = {
-        'Processing': 0,
-        'Production': 0,
-        'Merge': 0,
-        'Cleanup': 0,
-        'LogCollect': 0,
+            'Processing': 0,
+            'Production': 0,
+            'Merge': 0,
+            'Cleanup': 0,
+            'LogCollect': 0,
         }
-        dict[site] = tmp
-        dict[site][type] += 1
+        jobDict[site] = tmp
+        jobDict[site][jobType] += 1
     # print 'dict',dict
 
-def fillIDinDict(dict,site,id):
+
+def fillIDinDict(jobDict, site, jobId):
     """
     creates one site on dictionary (a row)
     """
-    if site not in dict:
-        dict[site] = []
-    dict[site].append(id)
+    if site not in jobDict:
+        jobDict[site] = []
+    jobDict[site].append(jobId)
 
-def fillIDWFinDict(dict,site,workflow,id):
+
+def fillIDWFinDict(jobDict, site, workflow, jobId):
     """
     Adds one wf to dictionary
     creates row and column if not already
     """
-    if site not in dict:
-        dict[site] = {}
-    if workflow not in dict[site]:
-        dict[site][workflow] = []
-    dict[site][workflow].append(id)
+    if site not in jobDict:
+        jobDict[site] = {}
+    if workflow not in jobDict[site]:
+        jobDict[site][workflow] = []
+    jobDict[site][workflow].append(jobId)
 
-def printDict(dict,description):
+
+def printDict(jobDict, description):
     """
     format-prints dict contents
     """
-    sortedKeys = sorted(dict.keys())
-    print '----------------------------------------------------------------------------------------------------'
-    print '| %20s | Processing | Production | Merge      | Cleanup    | LogCollect | Total      |' % description
-    print '----------------------------------------------------------------------------------------------------'
+    sortedKeys = sorted(jobDict)
+    print '-' * 100
+    print '| %-20s | %-10s | %-10s | %-10s | %-10s | %-10s | %-10s |' % (description, 'Processing', 'Production', 'Merge', 'Cleanup', 'LogCollect', 'Total')
+    print '-' * 100
     total_processing = 0
     total_production = 0
     total_merge = 0
@@ -67,83 +76,95 @@ def printDict(dict,description):
     total_logcollect = 0
     total = 0
     for site in sortedKeys:
-        total_production += dict[site]['Production']
-        total_processing += dict[site]['Processing']
-        total_merge += dict[site]['Merge']
-        total_cleanup += dict[site]['Cleanup']
-        total_logcollect += dict[site]['LogCollect']
-        total += dict[site]['Processing']
-        total += dict[site]['Production']
-        total += dict[site]['Merge']
-        total += dict[site]['Cleanup']
-        total += dict[site]['LogCollect']
-        print '| %20s | %10d | %10d | %10d | %10d | %10d | %10d |' % (site,dict[site]['Processing'],dict[site]['Production'],dict[site]['Merge'],dict[site]['Cleanup'],dict[site]['LogCollect'],dict[site]['Processing']+dict[site]['Production']+dict[site]['Merge']+dict[site]['Cleanup']+dict[site]['LogCollect'])
-    print '----------------------------------------------------------------------------------------------------'
-    print '| %20s | %10d | %10d | %10d | %10d | %10d | %10d |' % ('Total',total_processing,total_production,total_merge,total_cleanup,total_logcollect,total)
-    print '----------------------------------------------------------------------------------------------------'
+        siteDict = jobDict[site]
+        total_production += siteDict['Production']
+        total_processing += siteDict['Processing']
+        total_merge += siteDict['Merge']
+        total_cleanup += siteDict['Cleanup']
+        total_logcollect += siteDict['LogCollect']
+        total += siteDict['Processing']
+        total += siteDict['Production']
+        total += siteDict['Merge']
+        total += siteDict['Cleanup']
+        total += siteDict['LogCollect']
+        total_site = siteDict['Processing'] + siteDict['Production'] + siteDict['Merge'] + siteDict['Cleanup']+siteDict['LogCollect']
+        print '| %-20s | %10d | %10d | %10d | %10d | %10d | %10d |' % (site,
+                                                                       siteDict['Processing'],
+                                                                       siteDict['Production'],
+                                                                       siteDict['Merge'],
+                                                                       siteDict['Cleanup'],
+                                                                       siteDict['LogCollect'],
+                                                                       total_site)
+    print '-' * 100
+    print '| %-20s | %10d | %10d | %10d | %10d | %10d | %10d |' % ('Total', total_processing, total_production, total_merge, total_cleanup, total_logcollect, total)
+    print '-' * 100
 
-def main():
-    #Data dictionaries
-    overview_running = {}
-    overview_pending = {}
-    overview_other = {}
-    overview_running48 = {}
-    overview_numjobstart = {}
-    overview_removereason = {}
-    jobs_48 = {}
-    jobs_numjobstart = {}
-    jobs_removereason = {}
 
-    #previous commands
-    #command='condor_q -format "%i." ClusterID -format "%s " ProcId -format " %i " JobStatus  -format " %d " ServerTime-EnteredCurrentStatus -format "%s" UserLog -format " %s" DESIRED_Sites -format " %s" RemoveReason -format " %i\n" NumJobStarts'
-    #command="""condor_q -format "%i." ClusterID -format "%s " ProcId -format " %i " JobStatus  -format " %d " ServerTime-JobStartDate -format "%s" UserLog -format " %s" DESIRED_Sites -format " %s" RemoveReason -format " %i\n" NumJobStarts | awk '{if ($2!= 1) print $0}'"""
-    #command='condor_q -format "%i." ClusterID -format "%s " ProcId -format "%i " JobStatus  -format "%d " ServerTime -format "[%d] " JobStartDate -format "%s " WMAgent_SubTaskName -format "[%s] " MATCH_EXP_JOBGLIDEIN_CMSSite -format "%s " DESIRED_Sites -format "%i\n" NumJobStarts'
+def get_overview(overview_running,
+                 overview_pending,
+                 overview_other,
+                 overview_running48,
+                 overview_numjobstart,
+                 overview_removereason,
+                 jobs_48,
+                 jobs_maxwall,
+                 jobs_numjobstart,
+                 jobs_removereason,
+                 schedd=None):
+    """
+    Gets a summary for one schedd
+    """
+    if not schedd:
+        schedd = htcondor.Schedd()
+    else:
+        schedd = htcondor.Schedd(schedd)
 
-    schedd = htcondor.Schedd()
-    jobs = schedd.xquery( "true", ['ClusterID',
-                            'ProcId',
-                            'JobStatus',
-                            'ServerTime',
-                            'JobStartDate',
-                            'WMAgent_SubTaskName',
-                            'MATCH_EXP_JOBGLIDEIN_CMSSite',
-                            'DESIRED_Sites',
-                            'NumJobStarts'])
-    #split lines
+    jobs = schedd.xquery("true", ['ClusterID',
+                                  'ProcId',
+                                  'JobStatus',
+                                  'ServerTime',
+                                  'JobStartDate',
+                                  'WMAgent_SubTaskName',
+                                  'MATCH_EXP_JOBGLIDEIN_CMSSite',
+                                  'DESIRED_Sites',
+                                  'NumJobStarts',
+                                  'MaxWallTimeMins'])
+    # split lines
     for job in jobs:
-        #clusterID.ProcId (composed ID)
-        id = "%s.%s"%(job["clusterID"],job["ProcId"])
-        #other features
+        # clusterID.ProcId (composed ID)
+        jobId = "%s.%s" % (job["clusterID"], job["ProcId"])
+        # other features
         status = job["JobStatus"]
-        
-        #ServerTime-JobStartDate
+
+        # ServerTime-JobStartDate
         if "JobStartDate" in job:
             RunTime = job["JobStatus"] - job["JobStartDate"]
-        
-        #get task name
+
+        # get task name
         taskname = job["WMAgent_SubTaskName"]
 
-        #get Workflow from the taskName
+        # get Workflow from the taskName
         workflow = taskname.split("/")[1]
 
-        #DesiredSite list
+        # DesiredSite list
         sitelist = job["DESIRED_Sites"].split(",")
-        #if it has a MATCH_EXP_JOBGLIDEIN_CMSSite
+        # if it has a MATCH_EXP_JOBGLIDEIN_CMSSite
         if "MATCH_EXP_JOBGLIDEIN_CMSSite" in job:
             site = job["MATCH_EXP_JOBGLIDEIN_CMSSite"]
         else:
-            site = choice(sitelist)   
-        
-        #get number of job restarts
+            site = choice(sitelist)
+
+        # get number of job restarts
         numjobstart = job["NumJobStarts"]
 
         removereason = "UNDEFINED"
-        if len(sitelist) > 1: removereason = "DEFINED"
+        if len(sitelist) > 1:
+            removereason = "DEFINED"
 
         jobType = ''
-        #the last name
+        # the last name
         name = taskname.split("/")[-1]
-        #get jobType of job from TaskName Name
+        # get jobType of job from TaskName Name
         if 'LogCollect' in name:
             jobType = 'LogCollect'
         elif 'Merge' in name:
@@ -156,39 +177,57 @@ def main():
             jobType = 'Production'
         elif 'Processing' in name or 'Proc' in name:
             jobType = 'Processing'
-        else :
+        else:
             jobType = 'Processing'
         
+        if 'MaxWallTimeMins' in job:
+            maxWallTimeMins = job['MaxWallTimeMins']
+
         # IF Running
         if status == 2:
             increaseCounterInDict(overview_running, site, jobType)
-            #if larger tan 48 hours
-            if RunTime > 48*3600 :
-                increaseCounterInDict(overview_running48,site,jobType)
-                fillIDWFinDict(jobs_48,site,workflow,id)
-            #if restarted more than 3 times
+            # if larger tan 48 hours
+            if RunTime > 48 * 3600:
+                increaseCounterInDict(overview_running48, site, jobType)
+                fillIDWFinDict(jobs_48, site, workflow, jobId)
+            # if restarted more than 3 times
             if numjobstart > 3:
-                increaseCounterInDict(overview_numjobstart,site,jobType)
-                fillIDWFinDict(jobs_numjobstart,site,workflow,id)
-        #if Pending
+                increaseCounterInDict(overview_numjobstart, site, jobType)
+                fillIDWFinDict(jobs_numjobstart, site, workflow, jobId)
+        # if Pending
         elif status == 1:
-            increaseCounterInDict(overview_pending,site,jobType)
-        # if not running or pending, and reason is DEFINED
-        elif removereason == "DEFINED" :
-            increaseCounterInDict(overview_removereason,site,jobType)
-            fillIDWFinDict(jobs_removereason,site,workflow,id)
-        # if reason UNDEFINED
-        else :
-            increaseCounterInDict(overview_other,site,jobType)
-            
-    #print results
-    printDict(overview_running,'Running')
-    print ""
-    printDict(overview_pending,'Pending')
-    print ""
+            increaseCounterInDict(overview_pending, site, jobType)
+            #check maxWallTime greater than 24 hours
+            if maxWallTimeMins > 42*60:
+                fillIDWFinDict(jobs_maxwall, site, workflow, jobId)
 
+        # if not running or pending, and reason is DEFINED
+        elif removereason == "DEFINED":
+            increaseCounterInDict(overview_removereason, site, jobType)
+            fillIDWFinDict(jobs_removereason, site, workflow, jobId)
+        # if reason UNDEFINED
+        else:
+            increaseCounterInDict(overview_other, site, jobType)
+
+
+def print_results(overview_running,
+                  overview_pending,
+                  overview_running48,
+                  overview_numjobstart,
+                  overview_removereason,
+                  jobs_48,
+                  jobs_maxwall,
+                  jobs_numjobstart,
+                  jobs_removereason):
+    """
+    Shows results in nice console tables
+    """
+    printDict(overview_running, 'Running')
+    print ""
+    printDict(overview_pending, 'Pending')
+    print ""
     if overview_running48:
-        printDict(overview_running48,'Running > 48h')
+        printDict(overview_running48, 'Running > 48h')
         print ""
         sortKeys = sorted(jobs_48)
         print 'Jobs that run for > 48 hours by workflow:'
@@ -196,38 +235,86 @@ def main():
         for site in sortKeys:
             print site + ':'
             print ""
-            for wf in jobs_48[site].keys():
-                print wf,':',' '.join(jobs_48[site][wf])
+            for wf, jobs in jobs_48[site].items():
+                print wf, ':', ' '.join(jobs)
             print ""
-            
+
+    print ""
+    if jobs_maxwall:
+        sortKeys = sorted(jobs_maxwall)
+        print 'Jobs that have MaxWall > 42 hours by workflow:'
+        print ""
+        for site in sortKeys:
+            print site + ':'
+            print ""
+            for wf, jobs in jobs_maxwall[site].items():
+                print wf, ':', ' '.join(jobs)
+            print ""
+
     print ""
     if overview_removereason:
-        printDict(overview_removereason,'Removed')
+        printDict(overview_removereason, 'Removed')
         print ""
-        sortKeys = sorted(jobs_removereason.keys())
+        sortKeys = sorted(jobs_removereason)
         print 'Jobs with RemoveReason!=UNDEFINED'
         print ""
         for site in sortKeys:
             print site + ':'
             print ''
-            for wf in jobs_removereason[site].keys():
-                print wf,':',' '.join(jobs_removereason[site][wf])
+            for wf, jobs in jobs_removereason[site].items():
+                print wf, ':', ' '.join(jobs)
             print ""
 
     print ""
     if overview_numjobstart:
-        printDict(overview_numjobstart,'Restarted')
+        printDict(overview_numjobstart, 'Restarted')
         print ""
-        sortKeys = sorted(jobs_numjobstart.keys())
+        sortKeys = sorted(jobs_numjobstart)
         print 'Jobs with NumJobStart > 3'
         print ""
         for site in sortKeys:
             print site + ':'
             print ''
-            for wf in jobs_numjobstart[site].keys():
-                print wf,':',' '.join(jobs_numjobstart[site][wf])
+            for wf, jobs in jobs_numjobstart[site].items():
+                print wf, ':', ' '.join(jobs)
             print ""
+    
 
+def main():
+    # Data dictionaries
+    overview_running = {}
+    overview_pending = {}
+    overview_other = {}
+    overview_running48 = {}
+    overview_numjobstart = {}
+    overview_removereason = {}
+    jobs_48 = {}
+    jobs_maxwall = {}
+    jobs_numjobstart = {}
+    jobs_removereason = {}
+
+    # fill the overview
+    get_overview(overview_running,
+                 overview_pending,
+                 overview_other,
+                 overview_running48,
+                 overview_numjobstart,
+                 overview_removereason,
+                 jobs_48,
+                 jobs_maxwall,
+                 jobs_numjobstart,
+                 jobs_removereason,
+                 schedd=None)
+
+    print_results(overview_running,
+                  overview_pending,
+                  overview_running48,
+                  overview_numjobstart,
+                  overview_removereason,
+                  jobs_48,
+                  jobs_maxwall,
+                  jobs_numjobstart,
+                  jobs_removereason)
 
 if __name__ == '__main__':
     main()

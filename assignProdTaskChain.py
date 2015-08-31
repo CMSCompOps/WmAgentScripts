@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+"""
+ Assign a task chain workflow
+"""
+
 import urllib2
 import urllib
 import httplib

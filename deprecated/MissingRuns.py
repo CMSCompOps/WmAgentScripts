@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 
-import urllib2,urllib, httplib, sys, re, os, json, dbsTest, phedexSubscription
+import urllib2, urllib, httplib, sys, re, os, json
+from deprecated import phedexSubscription
+from deprecated import dbsTest
 from xml.dom.minidom import getDOMImplementation
 from das_client import get_data
 das_host='https://cmsweb.cern.ch'
 #Return true if a run is not present in any of the output datasets of a request, false if it is present in at least one
 
 def runsNotPresent(url, workflow):
-    runWhitelist=dbsTest.getRunWhitelist(url, workflow)
+    runWhitelist=deprecated.dbsTest.getRunWhitelist(url, workflow)
     newRunWhiteList=[]
     for run in runWhitelist:
 	if not runNotinAllDatasets(url, run, workflow):
@@ -16,8 +18,8 @@ def runsNotPresent(url, workflow):
     print newRunWhiteList
 
 def runNotinAllDatasets(url, run, workflow):
-    Datasets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
-    InputDataset=dbsTest.getInputDataSet(url, workflow)
+    Datasets=deprecated.phedexSubscription.outputdatasetsWorkflow(url, workflow)
+    InputDataset=deprecated.dbsTest.getInputDataSet(url, workflow)
     runInputDataset=runInDataset(url, run, InputDataset)
     if not runInputDataset:
 	return True

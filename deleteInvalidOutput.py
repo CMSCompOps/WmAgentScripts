@@ -1,6 +1,4 @@
-import json
-import urllib2,urllib, httplib, sys, re, os
-from xml.dom.minidom import getDOMImplementation
+import sys
 import reqMgrClient as rqmgr
 import phedexClient as phd
 import dbs3Client as dbs
@@ -20,8 +18,6 @@ def makeDeletionRequests(url, allDatasets, verbose=False, test=False):
     Filtering only the INVALID or DEPRECATED ones
     """
     
-    size = 30
-
     #delete duplicates
     datasets = list(set(allDatasets))
     
@@ -88,7 +84,6 @@ def main():
         workflows = [l.strip() for l in open(options.fileName) if l.strip()]
     
     datasets = []
-    i = 0
 
     print "Getting output from workflows"
     for wf in workflows:

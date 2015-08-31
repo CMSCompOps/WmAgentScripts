@@ -1,13 +1,7 @@
 #!/usr/bin/env python
-import json
-import urllib2
-import urllib
-import httplib
 import sys
 import re
-import os
 import reqMgrClient
-import dbs3Client
 from optparse import OptionParser
 """
     Calculates event progress percentage of a given workflow,
