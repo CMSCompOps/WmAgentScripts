@@ -106,13 +106,14 @@ def main():
                                 list_of_blocks=utils.getListOfBlocks(inputdset,str(runwhitelist))
 
                                 for block in list_of_blocks:
-                            
-                                    block = line.rstrip('\n')
-
-                                    isblockatsite = utils.checkIfBlockIsAtASite("cmsweb.cern.ch",block,site_disk)
 
                                     #this block (/DoubleMu/...) is not registered in phedex, so it cannot be subscribed to any site
-                                    if not isblockatsite and block != "/DoubleMu/Run2011A-ZMu-08Nov2011-v1/RAW-RECO#93c53d22-25b2-11e1-8c62-003048f02c8a":
+                                    if block ==  "/DoubleMu/Run2011A-ZMu-08Nov2011-v1/RAW-RECO#93c53d22-25b2-11e1-8c62-003048f02c8a":
+                                        continue
+                                    
+                                    isblockatsite = utils.checkIfBlockIsAtASite("cmsweb.cern.ch",block,site_disk)
+
+                                    if not isblockatsite:
                                         all_dsets_blocks_at_site=False
 
                             else:   
