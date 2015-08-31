@@ -19,18 +19,34 @@
 import sys
 import dbs3Client as dbs
 import random
-def buildGraph(lines):
+from optparse import OptionParser
+import reqMgrClient
+
+def buildGraphs(lines):
     """
-    Builds an undirected graph interpretation of duplicates
+    Builds a dictionary that contains an undirected graph for each
+    dataset
+    dataset -> graph.
+    Each graph contains the representation of files with duplicate
+    lumis
     Vertices: Files
     Edges: (f1,f2, #l) where f1 and f2 are two files that have
     duplicated lumis, and #l is the ammount of lumis they have
     in common
     """
-    graph = {}
+    graphs = {}
+    graph = None
     i = 0
+    dataset = None
     while i < len(lines):
-        #ignore first lines
+        #dataset name
+        if lines[i].contains("dataset"):
+            dataset = lines[i].split(":")[-1].strip()
+            graph = {}
+            graph[dataset] = graph
+            i += 1
+            continue
+        #ignore o
         if( not lines[i].startswith("Lumi")
            and not lines[i].startswith("/") ):
             i += 1
@@ -53,6 +69,27 @@ def buildGraph(lines):
             graph[f2][f1] = 0
         graph[f2][f1] += 1
         i += 3
+    return graphs
+
+def buildGraph(lumis):
+    graph = {}
+    
+    for lumi, files in lumis.items():
+        #text lines with file names
+        f1 = files[0]
+        f2 = files[1]
+        #create edge (f1, f2)
+        if f1 not in graph:
+            graph[f1] = {}
+        if f2 not in graph[f1]:
+            graph[f1][f2] = 0
+        graph[f1][f2] += 1
+        #create edge (f2, f1)       
+        if f2 not in graph:
+            graph[f2] = {}
+        if f1 not in graph[f2]:
+            graph[f2][f1] = 0
+        graph[f2][f1] += 1
     return graph
 
 def getSumDegree(graph, v):
@@ -186,39 +223,70 @@ def getFileEvents(dataset, files):
         #evs = random.randrange(10000)
         eventCount[f] = evs
     return eventCount
-    
+
+
+
+url = 'cmsweb.cern.ch'
 def main():
-    #dataset = sys.argv[1]
-    lines = [l.strip() for l in open(sys.argv[1])]
-    #look for datasetname
-    for i in range(3):
-        if lines[i].startswith('dataset'):
-            dataset = lines[i].replace('dataset : ','').strip()
-            break
-    print "'%s'"%dataset
-    print "Building graph model"
-    graph = buildGraph(lines)
-
-    print "Getting events per file"
-    events = getFileEvents(dataset, graph.keys())
-    try:
-        #first algorithm that assumes bipartition        
-        files = colorBipartiteGraph(graph, events)
-    except Exception as e:
-        #second, algorithm
-        #files = deleteMaxDegreeFirst(graph, events)
-        files = deleteSmallestVertexFirst(graph, events)
     
-    total = dbs.getEventCountDataSet(dataset)
-    invalid = dbs.getEventCountDataSetFileList(dataset, files)
-
-    print 'total events %s'%total
-    print 'invalidated files %s'%len(files)
-    print 'invalidated events %s'%invalid
-    if total:
-        print '%s%%'%(float(total-invalid)/total*100.0)
-    for f in sorted(files):
-        print f
+    usage = "python %prog [OPTIONS]"
+    parser = OptionParser(usage)
+    parser.add_option("-a", "--doall",dest="doall", action="store_true" , default=False, 
+                      help="It will analyze all datasets of the workflow from the beginning. If this option is true,"\
+                        " you should provide a workflow name or a list of them in the --file option.")
+    parser.add_option("-f", "--file",dest="file", 
+                      help="Input file with the contents of duplicateEvents.py (a list of lumis and files)."\
+                      " If you are using the --doall option, it should contain a list of workflows instead")
+    
+    options, args = parser.parse_args()
+    workflows = None
+    #if we not doing all, input should be treated as list of lumis an files
+    if not options.doall and options.file:
+        lines = [l.strip() for l in open(options.file)]
+        graphs = buildGraphs(lines)
+    # if do all and input file
+    elif options.doall and options.file:
+        workflows = [l.strip() for l in open(options.file)]
+    elif options.doall and not options.file:
+        workflows = args
+    else:
+        parser.error("You should provide an input file with the output of duplicateEvents")
+    
+    # get the output datasets of the workflos and create the graph
+    if workflows:
+        datasets = []
+        for wf in workflows:
+            datasets += reqMgrClient.outputdatasetsWorkflow(url, wf);
+        
+        graphs = {}
+        #analyze each dataset
+        for dataset in datasets:
+            dup, lumis = dbs.duplicateRunLumi(dataset, verbose="dict", skipInvalid=True)
+            graphs[dataset] = buildGraph(lumis)
+            
+    
+    for dataset, graph in graphs.items():
+        #look for datasetname
+        print "Getting events per file"
+        events = getFileEvents(dataset, graph.keys())
+        try:
+            #first algorithm that assumes bipartition        
+            files = colorBipartiteGraph(graph, events)
+        except Exception as e:
+            #second, algorithm
+            #files = deleteMaxDegreeFirst(graph, events)
+            files = deleteSmallestVertexFirst(graph, events)
+        
+        total = dbs.getEventCountDataSet(dataset)
+        invalid = dbs.getEventCountDataSetFileList(dataset, files)
+    
+        print 'total events %s'%total
+        print 'invalidated files %s'%len(files)
+        print 'invalidated events %s'%invalid
+        if total:
+            print '%s%%'%(float(total-invalid)/total*100.0)
+        for f in sorted(files):
+            print f
 
 if __name__ == '__main__':
     main()

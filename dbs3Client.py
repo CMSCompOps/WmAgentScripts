@@ -78,7 +78,7 @@ def duplicateLumi(dataset, verbose=False, skipInvalid=False):
     """
     checks if output dataset has duplicate lumis
     returns true if at least one duplicate lumi was found
-    Verbose: if true prints details
+    Verbose: if true prints details, id "dict" it will return also the lumi -> files dictionary
     skipInvalid: if true skips invalid files, by default is False because is faster
    """
     # initialize API to DBS3
@@ -102,12 +102,17 @@ def duplicateLumi(dataset, verbose=False, skipInvalid=False):
                 if verbose:
                     print 'Lumi',lumi,'is in these files'
                     print logical_file_name
-                    print lumisChecked[lumi]
+                    print lumisChecked[lumi][0]
+                    #add to the list
+                    lumisChecked[lumi].append(logical_file_name)
                     duplicated = True
                 else:
                     return True
             else:
-                lumisChecked[lumi] = logical_file_name
+                lumisChecked[lumi] = [logical_file_name]
+    #return the dictionary if asked
+    if verbose and verbose == "dict":
+        return duplicated, lumisChecked
     return duplicated
 
 
