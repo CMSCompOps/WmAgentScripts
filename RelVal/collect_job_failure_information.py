@@ -161,6 +161,13 @@ def collect_job_failure_information(wf_list,verbose=False,debug=False):
                     sys.exit(0)
                 else:
                     totaljobs=s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']['exception']+s4['rows'][1]['doc']['tasks'][taskname]['status']['success']
+            elif len(s4['rows'][1]['doc']['tasks'][taskname]['status']) == 5:
+                if 'transition' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'success' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'failure' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'exception' not in s4['rows'][1]['doc']['tasks'][taskname]['status']['failure'] or len(s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']) != 1 or 'cooloff' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'transition' not in s4['rows'][1]['doc']['tasks'][taskname]['status']: 
+                    print "problem with job status information 6"
+                    os.system('echo '+workflow+' | mail -s \"jobFailureInformation error 6\" andrew.m.levin@vanderbilt.edu')
+                    sys.exit(0)
+                else:
+                    totaljobs=s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']['exception']+s4['rows'][1]['doc']['tasks'][taskname]['status']['success']
             else:
                 print "problem with job status information 3"
                 os.system('echo '+workflow+' | mail -s \"jobFailureInformation error 3\" andrew.m.levin@vanderbilt.edu')
