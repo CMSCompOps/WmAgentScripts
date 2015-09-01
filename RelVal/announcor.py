@@ -70,7 +70,7 @@ def main():
             r2=conn.getresponse()
             data = r2.read()
             if r2.status != 200:
-                os.system('echo \"r2.status != 400\" | mail -s \"announcement_loop.py error 1\" andrew.m.levin@vanderbilt.edu --')
+                os.system('echo \"r2.status != 400\" | mail -s \"announcor.py error 1\" andrew.m.levin@vanderbilt.edu --')
                 print url+'/couchdb/wmstats/_all_docs?keys=["'+wf[0]+'"]&include_docs=true'
                 print "problem connecting to wmstats, exiting"
                 print r2.status
