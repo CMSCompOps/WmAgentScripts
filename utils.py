@@ -415,74 +415,96 @@ def userLock(component):
 
 class siteInfo:
     def __init__(self):
-        self.siteblacklist = ['T2_TH_CUNSTDA','T1_TW_ASGC','T2_TW_Taiwan']
-        self.sites_with_goodIO = ["T1_DE_KIT","T1_ES_PIC","T1_FR_CCIN2P3","T1_IT_CNAF",
-                                  "T1_RU_JINR","T1_UK_RAL","T1_US_FNAL","T2_CH_CERN",
-                                  "T2_DE_DESY","T2_DE_RWTH","T2_ES_CIEMAT","T2_FR_IPHC",
-                                  "T2_IT_Bari","T2_IT_Legnaro","T2_IT_Pisa","T2_IT_Rome",
-                                  "T2_UK_London_Brunel","T2_UK_London_IC","T2_US_Caltech","T2_US_MIT",
-                                  "T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida"]
-        ## only T2s in that list
-        self.sites_with_goodIO = filter(lambda s : s.startswith('T2'), self.sites_with_goodIO)
+
+        try:
+            ## get all sites from SSB readiness
+            self.sites_ready = []
+            self.all_sites = []
+            column = 158
+            data = json.loads(os.popen('curl -s "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=%s&batch=1&lastdata=1"'%column).read())['csvdata']
+            for siteInfo in data:
+                self.all_sites.append( siteInfo['VOName'] )
+                if not siteInfo['Tier']: continue
+                if not siteInfo['Status'] == 'on': continue
+                self.sites_ready.append( siteInfo['VOName'] )
+                
+        except Exception as e:
+            print "issue with getting SSB readiness"
+            print str(e)
+
+
+
+        if self.sites_ready:
+            self.sites_T2s = [ s for s in self.sites_ready if s.startswith('T2_')]
+            self.sites_T1s = [ s for s in self.sites_ready if s.startswith('T1_')]
+            self.sites_with_goodIO = [ "T2_DE_DESY","T2_DE_RWTH","T2_ES_CIEMAT","T2_FR_IPHC",
+                                       "T2_IT_Bari","T2_IT_Legnaro","T2_IT_Pisa","T2_IT_Rome",
+                                       "T2_UK_London_Brunel","T2_UK_London_IC","T2_US_Caltech","T2_US_MIT",
+                                       "T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida"]
+            self.sites_with_goodIO = [s for s in self.sites_with_goodIO if s in self.sites_ready]
+            allowed_T2_for_transfer = ["T2_US_Nebraska","T2_US_Wisconsin","T2_US_Purdue","T2_US_Caltech","T2_DE_RWTH","T2_DE_DESY", "T2_US_Florida", "T2_IT_Legnaro", "T2_CH_CERN", "T2_UK_London_IC", "T2_IT_Pisa", "T2_US_UCSD", "T2_IT_Rome", "T2_US_MIT" ]
+            allowed_T2_for_transfer = [s for s in allowed_T2_for_transfer if s in self.sites_ready]
+            self.sites_veto_transfer = [site for site in self.sites_with_goodIO if not site in allowed_T2_for_transfer]
+
+        else:
+            ## all to be deprecated if above functions !
+            siteblacklist = ['T2_TH_CUNSTDA','T1_TW_ASGC','T2_TW_Taiwan','T2_TR_METU','T2_UA_KIPT','T2_RU_ITEP','T2_RU_INR','T2_RU_PNPI','T2_PL_Warsaw']
+            self.sites_with_goodIO = ["T1_DE_KIT","T1_ES_PIC","T1_FR_CCIN2P3","T1_IT_CNAF",
+                                      "T1_RU_JINR","T1_UK_RAL","T1_US_FNAL","T2_CH_CERN",
+                                      "T2_DE_DESY","T2_DE_RWTH","T2_ES_CIEMAT","T2_FR_IPHC",
+                                      "T2_IT_Bari","T2_IT_Legnaro","T2_IT_Pisa","T2_IT_Rome",
+                                      "T2_UK_London_Brunel","T2_UK_London_IC","T2_US_Caltech","T2_US_MIT",
+                                      "T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida"]
+            ## only T2s in that list
+            self.sites_with_goodIO = filter(lambda s : s.startswith('T2'), self.sites_with_goodIO)
         
         
-        allowed_T2_for_transfer = ["T2_US_Nebraska","T2_US_Wisconsin","T2_US_Purdue","T2_US_Caltech","T2_DE_RWTH","T2_DE_DESY", "T2_US_Florida", "T2_IT_Legnaro", "T2_CH_CERN", "T2_UK_London_IC", "T2_IT_Pisa", "T2_US_UCSD", "T2_IT_Rome", "T2_US_MIT" ]
-        # at 400TB ""T2_IT_Bari","T2_IT_Legnaro"
-        # border line "T2_UK_London_IC"
-        self.sites_veto_transfer = [site for site in self.sites_with_goodIO if not site in allowed_T2_for_transfer]
+            allowed_T2_for_transfer = ["T2_US_Nebraska","T2_US_Wisconsin","T2_US_Purdue","T2_US_Caltech","T2_DE_RWTH","T2_DE_DESY", "T2_US_Florida", "T2_IT_Legnaro", "T2_CH_CERN", "T2_UK_London_IC", "T2_IT_Pisa", "T2_US_UCSD", "T2_IT_Rome", "T2_US_MIT" ]
+            # at 400TB ""T2_IT_Bari","T2_IT_Legnaro"
+            # border line "T2_UK_London_IC"
+            self.sites_veto_transfer = [site for site in self.sites_with_goodIO if not site in allowed_T2_for_transfer]
             
+            self.sites_T2s = [s for s in json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/whitelist.json').read()) if s not in siteblacklist and 'T2' in s]
 
-        self.sites_T2s = [s for s in json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/whitelist.json').read()) if s not in self.siteblacklist and 'T2' in s]
+            self.sites_T1s = [s for s in json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/whitelist.json').read()) if s not in siteblacklist and 'T1' in s]
 
-        ## those seem to be bad. should get the information from the dashboard to black/white list
-        self.sites_T2s.remove("T2_TR_METU")
-        self.sites_T2s.remove("T2_UA_KIPT")
-        self.sites_T2s.remove("T2_RU_ITEP")
-        self.sites_T2s.remove("T2_RU_INR")
-        self.sites_T2s.remove("T2_RU_PNPI")
-        self.sites_T2s.remove("T2_PL_Warsaw")
 
-        self.sites_T1s = [s for s in json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/whitelist.json').read()) if s not in self.siteblacklist and 'T1' in s]
-
-        bare_info = json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/disktape.json').read())
-        self.storage = {}
-        self.disk = {}
-        self.quota = {}
+        self.storage = defaultdict(int)
+        self.disk = defaultdict(int)
+        self.quota = defaultdict(int)
+        self.cpu_pledges = defaultdict(int)
 
         ## list here the site which can accomodate high memory requests
         self.sites_memory = {}
 
+        ## this is still required because of MSS mainly
+        bare_info = json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/disktape.json').read())
         for (item,values) in bare_info.items():
             if 'mss' in values:
                 self.storage[values['mss']] = values['freemss']
             if 'disk' in values:
                 self.disk[values['disk']] = values['freedisk']
-        self.disk['T2_US_UCSD'] = 100
-        self.disk['T2_EE_Estonia'] = 0
 
         for (dse,free) in self.disk.items():
             if free<0:
                 if not dse in self.sites_veto_transfer:
                     self.sites_veto_transfer.append( dse )
 
-        self.cpu_pledges = json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/pledged.json').read())
-        ## hack around and put 1 CPU pledge for those with 0
-        for (s,p) in self.cpu_pledges.items(): 
-            if not p:
-                self.cpu_pledges[s] = 1
-                
-            #if not s in self.disk:
-            #    ## enter a 0 for those sites
-            #    sse = self.CE_to_SE(s)
-            #    print "adding an entry for",sse
-            #    self.disk[sse] = 0
-                
-        self.all_sites = list(set(self.sites_T2s + self.sites_T1s + self.sites_with_goodIO))
+        if self.sites_ready:
+            for s in self.all_sites:
+                ## will get it later from SSB
+                self.cpu_pledges[s]=1
+                ## will get is later from SSB
+                self.disk[ self.CE_to_SE(s)]=0
 
-        if not set(self.all_sites).issubset(set(self.cpu_pledges.keys())):
-            print "There are missing sites in pledgeds"
-            print list(set(self.all_sites) - set(self.cpu_pledges.keys()))
-        
+        else:
+            self.cpu_pledges.update(json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/pledged.json').read()))
+
+            ## hack around and put 1 CPU pledge for those with 0
+            for (s,p) in self.cpu_pledges.items(): 
+                if not p:
+                    self.cpu_pledges[s] = 1
+                
         self.sites_auto_approve = ['T0_CH_CERN_MSS','T1_FR_CCIN2P3_MSS']
 
         ## and get SSB sync
