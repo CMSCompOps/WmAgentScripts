@@ -235,9 +235,10 @@ def recoveror(url,specific,options=None):
                                     break
                         if matched and rate > case['rate']:
                             print "\t\t => that error means no ACDC on that workflow", case['legend']
-                            recover = False
-                            message_to_ops += "%s has an error %s blocking an ACDC.\n%s\n "%( wfo.name, errorCode, '#'*50 )
-                            added_in_recover=False
+                            if not options.go:
+                                message_to_ops += "%s has an error %s blocking an ACDC.\n%s\n "%( wfo.name, errorCode, '#'*50 )
+                                recover = False
+                                added_in_recover=False
 
                             
                 
@@ -321,7 +322,10 @@ def recoveror(url,specific,options=None):
 if __name__ == '__main__':
     url='cmsweb.cern.ch'
     parser = optparse.OptionParser()
-    parser.add_option('--do',default=False,action='store_true')
+    #parser.add_option('--do',default=False,action='store_true')
+    parser.add_option('--test', dest='do', default=True,action='store_false')
+    
+    parser.add_option('--go',default=False,action='store_true')
     parser.add_option('--ass',default=False,action='store_true')
     (options,args) = parser.parse_args()
     spec=None
@@ -329,7 +333,7 @@ if __name__ == '__main__':
         spec = args[0]
 
     ## enable doing recovery
-    options.do = True
+    #options.do = True
 
     recoveror(url,spec,options=options)
 
