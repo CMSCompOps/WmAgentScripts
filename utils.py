@@ -1588,7 +1588,7 @@ class workflowInfo:
             all_tasks.append( node )
         else:
             for (key,value) in select.items():
-                if getattr(node, key) == value:
+                if (type(value)==list and getattr(node,key) in value) or (type(value)!=list and getattr(node, key) == value):
                     all_tasks.append( node )
                     break
 
@@ -1606,7 +1606,7 @@ class workflowInfo:
 
     def getSplittings(self):
         spl =[]
-        for task in self.getAllTasks(select={'taskType':'Processing'}):
+        for task in self.getAllTasks(select={'taskType':['Production','Processing']}):
             ts = task.input.splitting
             spl.append( { "splittingAlgo" : ts.algorithm,
                           "splittingTask" : task.pathName,
@@ -1740,7 +1740,7 @@ class workflowInfo:
     def getNextVersion( self ):
         ## returns 1 if nothing is in the way
         if 'ProcessingVersion' in self.request:
-            version = max(0,self.request['ProcessingVersion']-1)
+            version = max(0,int(self.request['ProcessingVersion'])-1)
         else:
             version = 0
         outputs = self.request['OutputDatasets']
