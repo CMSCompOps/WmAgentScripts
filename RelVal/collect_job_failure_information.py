@@ -137,6 +137,8 @@ def collect_job_failure_information(wf_list,verbose=False,debug=False):
                     totaljobs=s4['rows'][1]['doc']['tasks'][taskname]['status']['success']
                 elif 'submitted' in s4['rows'][1]['doc']['tasks'][taskname]['status'] and 'success' in s4['rows'][1]['doc']['tasks'][taskname]['status']:
                     totaljobs=s4['rows'][1]['doc']['tasks'][taskname]['status']['success']
+                elif 'failure' in s4['rows'][1]['doc']['tasks'][taskname]['status'] and 'success' in s4['rows'][1]['doc']['tasks'][taskname]['status'] and len(s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']) == 2 and 'exception' in s4['rows'][1]['doc']['tasks'][taskname]['status']['failure'] and 'submit' in s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']:
+                    totaljobs=s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']['exception']+s4['rows'][1]['doc']['tasks'][taskname]['status']['success']+ s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']['submit']
                 elif ('success' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'failure' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'exception' not in s4['rows'][1]['doc']['tasks'][taskname]['status']['failure'] or len(s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']) != 1):
                     os.system('echo '+workflow+' | mail -s \"jobFailureInformation error 1\" andrew.m.levin@vanderbilt.edu')
                     print "problem with job status information 1"
