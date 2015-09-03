@@ -1611,10 +1611,28 @@ class workflowInfo:
             spl.append( { "splittingAlgo" : ts.algorithm,
                           "splittingTask" : task.pathName,
                           } )
-            get_those = ['events_per_lumi','events_per_job','lumis_per_job','halt_job_on_file_boundaries']
+            get_those = ['events_per_lumi','events_per_job','lumis_per_job','halt_job_on_file_boundaries','max_events_per_lumi','halt_job_on_file_boundaries_event_aware']#,'couchdDB']#,'couchURL']#,'filesetName']
+            #print ts.__dict__.keys()
+            translate = { 
+                'EventAwareLumiBased' : [('events_per_job','avg_events_per_job')]
+                }
+            include = {
+                'EventAwareLumiBased' : { 'halt_job_on_file_boundaries_event_aware' : 'True' },
+                'LumiBased' : { 'halt_job_on_file_boundaries' : 'True'}
+                }
+            if ts.algorithm in include:
+                for k,v in include[ts.algorithm].items():
+                    spl[-1][k] = v
+
             for get in get_those:
                 if hasattr(ts,get):
-                    spl[-1][get] = getattr(ts,get)
+                    set_to = get
+                    if ts.algorithm in translate:
+                        for (src,des) in translate[ts.algorithm]:
+                            if src==get:
+                                set_to = des
+                                break
+                    spl[-1][set_to] = getattr(ts,get)
 
         return spl
 
