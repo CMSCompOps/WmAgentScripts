@@ -49,11 +49,16 @@ def checkor(url, spec=None, options=None):
         return campaign
 
     by_passes = []
-    try:
-        by_passes.extend( json.loads(open('/afs/cern.ch/user/j/jbadillo/public/ops/bypass.json').read()))
-    except:
-        print "cannot get by-passes from Julian"
-        sendEmail("malformated by-pass information","/afs/cern.ch/user/j/jbadillo/public/ops/bypass.json is not json readable", destination=['julian.badillo.rojas@cern.ch'])
+    for bypassor,email in [('jbadillo','julian.badillo.rojas@cern.ch'),('vlimant','vlimant@cern.ch'),('jen_a','jen_a@fnal.gov')]:
+        bypass_file = '/afs/cern.ch/user/%s/%s/public/ops/bypass.json'%(bypassor[0],bypassor)
+        if not os.path.isfile(bypass_file):
+            print "no file",bypass_file
+            continue
+        try:
+            by_passes.extend( json.loads(open(bypass_file).read()))
+        except:
+            print "cannot get by-passes from",bypass_file,"for",bypassor
+            sendEmail("malformated by-pass information","%s is not json readable"%(bypass_file), destination=[email])
 
     for wfo in wfs:
         if spec and not (spec in wfo.name): continue
@@ -102,6 +107,11 @@ def checkor(url, spec=None, options=None):
         if wfo.name in by_passes:
             print "we can bypass checks on",wfo.name
             by_pass_checks = True
+        for bypass in by_passes:
+            if bypass in wfo.name:
+                print "we can bypass",wfo.name,"because of keyword",bypass
+                by_pass_checks = True
+                break
 
         # tuck out DQMIO/DQM
         wfi.request['OutputDatasets'] = [ out for out in wfi.request['OutputDatasets'] if not '/DQM' in out]
