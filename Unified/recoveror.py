@@ -74,6 +74,7 @@ def singleRecovery(url, task , initial, actions, do=False):
                             break
                     split['requestName'] = acdc
                     print "changing the splitting of",acdc
+                    print json.dumps( split, indent=2 )
                     print reqMgrClient.setWorkflowSplitting(url, split )
                 
     data = reqMgrClient.setWorkflowApproved(url, acdc)
@@ -90,54 +91,16 @@ def recoveror(url,specific,options=None):
 
     UC = unifiedConfiguration()
 
-    error_codes_to_recover = UC.get('error_codes_to_recover')
-    """
-    {
-        50664 : [{ "legend" : "time-out",
-                  "solution" : "split" ,
-                  "details" : None,
-                  "rate" : 20 
-                  }],
-        50660 : [{ "legend" : "memory excess",
-                  "solution" : "mem" ,
-                  "details" : None,
-                  "rate" : 20
-                  }],
-        61104 : [{ "legend" : "failed submit",
-                  "solution" : "recover" ,
-                  "details" : None,
-                  "rate" : 20 
-                  }],
-        8028 : [{ "legend" : "read error",
-                 "solution" : "recover" ,
-                 "details" : None,
-                 "rate" : 20 
-                 }],
-        8021 : [{ "legend" : "cmssw failure",
-                 "solution" : "recover" , 
-                 "details" : "FileReadError",
-                 "rate" : 20
-                 }],
-    }
-    """
-    error_codes_to_block = UC.get('error_codes_to_block')
-    """
-    {
-        99109 : [{ "legend" : "stage-out",
-                   "solution" : "recover",
-                   "details" : None,
-                   "rate" : 20
-                   }]
-    }
-    """
-    #max_legend = max([ max([len(e['legend']) for e in cases]) for cases in error_codes_to_recover.values()])
+    def make_int_keys( d ):
+        for code in d:
+            d[int(code)] = d.pop(code)
 
-    ## CMSSW failures should just be reported right away and the workflow left on the side
+    error_codes_to_recover = UC.get('error_codes_to_recover')
+    error_codes_to_block = UC.get('error_codes_to_block')
     error_codes_to_notify = UC.get('error_codes_to_notify')
-    """{
-        8021 : { "message" : "Please take a look and come back to Ops." }
-    }
-    """
+    make_int_keys( error_codes_to_recover )
+    make_int_keys( error_codes_to_block )
+    make_int_keys( error_codes_to_notify )
 
     wfs = session.query(Workflow).filter(Workflow.status == 'assistance-recovery').all()
     if specific:
