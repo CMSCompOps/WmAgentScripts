@@ -62,7 +62,6 @@ def main():
 
         n_workflows=0
         n_completed=0
-        max_completion_time=0
         for wf in wfs:
 
             n_workflows=n_workflows+1
@@ -84,15 +83,13 @@ def main():
                 continue    
 
             for status in s['rows'][0]['doc']['request_status']:
+                if status['status'] == "failed":
+                    os.system('echo '+wf[0]+' | mail -s \"create_monitoring_page.py error 3\" andrew.m.levin@vanderbilt.edu --')
+
                 if status['status'] == "completed":
                     n_completed=n_completed+1
-                    if status['update_time'] > max_completion_time:
-                        max_completion_time = status['update_time']
                     break    
                         
-        #print "(calendar.timegm(datetime.datetime.utcnow().utctimetuple()) - max_completion_time)/60.0/60.0 = " + str((calendar.timegm(datetime.datetime.utcnow().utctimetuple()) - max_completion_time)/60.0/60.0)
-                        
-
         print "    n_workflows = " + str(n_workflows)
         print "    n_completed = " + str(n_completed)
         print ""
