@@ -653,7 +653,16 @@ class siteInfo:
         if ce.startswith('T1') and not ce.endswith('_Disk'):
             return ce+'_Disk'
         else:
-            return ce
+            addHoc = {
+                'T2_CH_CERN_T0': 'T2_CH_CERN',
+                'T2_CH_CERN_HLT' : 'T2_CH_CERN',
+                'T2_CH_CERN_AI' : 'T2_CH_CERN'
+                }
+            if ce in addHoc:
+                return addHoc[ce]
+            else:
+                return ce
+
     def SE_to_CE(self, se):
         if se.endswith('_Disk'):
             return se.replace('_Disk','')
