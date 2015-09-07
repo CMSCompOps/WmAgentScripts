@@ -24,7 +24,7 @@ def assignor(url ,specific = None, talk=True, options=None):
         print "quitting because of overlapping processes"
         return 
 
-    up = componentInfo()
+    if not componentInfo().check(): return
 
     CI = campaignInfo()
     SI = siteInfo()

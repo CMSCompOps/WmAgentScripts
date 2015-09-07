@@ -33,6 +33,7 @@ def transferor(url ,specific = None, talk=True, options=None):
 
     use_mcm = True
     up = componentInfo(mcm=use_mcm, soft=['mcm'])
+    if not up.check(): return
     use_mcm = up.status['mcm']
 
     if options and options.test:

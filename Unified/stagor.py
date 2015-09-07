@@ -12,7 +12,7 @@ from htmlor import htmlor
 
 def stagor(url,specific =None, options=None):
     
-    up = componentInfo()
+    if not componentInfo().check(): return
     SI = siteInfo()
     CI = campaignInfo()
 

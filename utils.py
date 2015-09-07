@@ -310,12 +310,21 @@ class unifiedConfiguration:
 
 class componentInfo:
     def __init__(self, block=True, mcm=False,soft=None):
+        self.mcm = mcm
+        self.soft = soft
+        self.block = block
         self.status ={
             'reqmgr' : False,
             'mcm' : False,
             'dbs' : False,
             'phedex' : False
             }
+        self.code = 0
+        #if not self.check():
+        #    sys.exit( self.code)
+        
+
+    def check(self):
         try:
             print "checking reqmgr"
             wfi = workflowInfo('cmsweb.cern.ch','pdmvserv_task_B2G-RunIIWinter15wmLHE-00067__v1_T_150505_082426_497')
@@ -324,29 +333,33 @@ class componentInfo:
             self.tell('reqmgr')
             print "cmsweb.cern.ch unreachable"
             print str(e)
-            if block and not (soft and 'reqmgr' in soft):
-                sys.exit(123)
+            if self.block and not (self.soft and 'reqmgr' in self.soft):
+                self.code = 123
+                return False
 
         from McMClient import McMClient
 
-        if mcm:
+        if self.mcm:
             try:
                 mcmC = McMClient(dev=False)
                 print "checking mcm"
                 test = mcmC.getA('requests',page=0)
+                time.sleep(1)
                 if not test: 
                     self.tell('mcm')
                     print "mcm corrupted"
-                    if block and not (soft and 'mcm' in soft):
-                        sys.exit(124)
+                    if self.block and not (self.soft and 'mcm' in self.soft):
+                        self.code = 124
+                        return False
                 else:
                     self.status['mcm'] = True
             except Exception as e:
                 self.tell('mcm')
                 print "mcm unreachable"
                 print str(e)
-                if block and not (soft and 'mcm' in soft):
-                    sys.exit(125)
+                if self.block and not (self.soft and 'mcm' in self.soft):
+                    self.code = 125
+                    return False
         
         try:
             print "checking dbs"
@@ -355,14 +368,17 @@ class componentInfo:
             if not blocks:
                 self.tell('dbs')
                 print "dbs corrupted"
-                if block and not (soft and 'dbs' in soft):
-                    sys.exit(126)
+                if self.block and not (self.soft and 'dbs' in self.soft):
+                    self.code = 126
+                    return False
+
         except Exception as e:
             self.tell('dbs')
             print "dbs unreachable"
             print str(e)
-            if block and not (soft and 'dbs' in soft):
-                sys.exit(127)
+            if self.block and not (self.soft and 'dbs' in self.soft):
+                self.code = 127
+                return False
 
         try:
             print "checking phedex"
@@ -372,8 +388,11 @@ class componentInfo:
             self.tell('phedex')
             print "phedex unreachable"
             print str(e)
-            if block and not (soft and 'phedex' in soft):
-                sys.exit(128)
+            if self.block and not (self.soft and 'phedex' in self.soft):
+                self.code = 128
+                return False
+
+        return True
 
     def tell(self, c):
         sendEmail("%s Component Down"%c,"The component is down, just annoying you with this","vlimant@cern.ch",['vlimant@cern.ch','matteoc@fnal.gov'])

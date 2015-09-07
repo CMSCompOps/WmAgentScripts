@@ -11,6 +11,7 @@ def injector(url, options, specific):
 
     use_mcm = True
     up = componentInfo( mcm = use_mcm, soft=['mcm'] )
+    if not up.check(): return
     use_mcm = up.status['mcm']
 
     workflows = getWorkflows(url, status=options.wmstatus,user=options.user)

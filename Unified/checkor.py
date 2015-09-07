@@ -20,6 +20,7 @@ def checkor(url, spec=None, options=None):
 
     use_mcm = True
     up = componentInfo(mcm=use_mcm, soft=['mcm'])
+    if not up.check(): return
     use_mcm = up.status['mcm']
 
     wfs=[]

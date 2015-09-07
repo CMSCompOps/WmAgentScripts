@@ -8,8 +8,11 @@ from utils import componentInfo
 from collections import defaultdict
 
 def invalidator(url, invalid_status='INVALID'):
-    up = componentInfo(mcm=True)
+    use_mcm = True
+    up = componentInfo(mcm=use_mcm)
+    if not up.check(): return
     mcm = McMClient(dev=False)
+
     invalids = mcm.getA('invalidations',query='status=announced')
     print len(invalids),"Object to be invalidated"
     text_to_batch = defaultdict(str)

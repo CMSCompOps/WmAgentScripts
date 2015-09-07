@@ -13,7 +13,7 @@ from utils import lockInfo
 from htmlor import htmlor
 
 def closor(url, specific=None):
-    up = componentInfo()
+    if not componentInfo().check(): return
 
     CI = campaignInfo()
     LI = lockInfo()
