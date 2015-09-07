@@ -375,9 +375,9 @@ def checkor(url, spec=None, options=None):
                 wfo.status = 'close'
                 session.commit()
         else:
-            print wfo.name,"needs assistance"
             ## that means there is something that needs to be done acdc, lumi invalidation, custodial, name it
             new_status = 'assistance'+sub_assistance
+            print wfo.name,"needs assistance with",new_status
             
             if sub_assistance and wfo.status != new_status and 'PrepID' in wfi.request and not 'manual' in wfo.status:
                 pid = wfi.request['PrepID'].replace('task_','')
@@ -411,7 +411,7 @@ def checkor(url, spec=None, options=None):
                     mcm.put('/restapi/requests/notify',{ "message" : text, "prepids" : [pid] })
 
             ## case where the workflow was in manual from recoveror
-            if not 'manual' in wfo.status:
+            if not 'manual' in wfo.status or new_status!='assistance-recovery':
                 wfo.status = new_status
                 if not options.test:
                     print "setting",wfo.name,"to",wfo.status
