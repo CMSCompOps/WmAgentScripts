@@ -4,7 +4,7 @@ import reqMgrClient
 from utils import workflowInfo, campaignInfo, siteInfo, userLock
 from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction, getDatasetEventsPerLumi
 from utils import componentInfo, sendEmail
-from utils import lockInfo
+from utils import lockInfo, duplicateLock
 import optparse
 import itertools
 import time
@@ -14,15 +14,8 @@ import random
 import json
 
 def assignor(url ,specific = None, talk=True, options=None):
-    if userLock('assignor'): return
-
-    ## check that no other instances of assignor is running
-    process_check = filter(None,os.popen('ps -f -e | grep assignor.py | grep -v grep  |grep python').read().split('\n'))
-    if len(process_check)>1:
-        ## another assignor is running on the machine : stop
-        sendEmail('overlapping assignor','There are %s instances running %s'%(len(process_check), '\n'.join(process_check)))
-        print "quitting because of overlapping processes"
-        return 
+    if userLock(): return
+    if duplicateLock(): return
 
     if not componentInfo().check(): return
 

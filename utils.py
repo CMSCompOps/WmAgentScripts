@@ -424,7 +424,25 @@ class campaignInfo:
         else:
             return {}
 
-def userLock(component):
+def duplicateLock(component=None):
+    if not component:
+        ## get the caller
+        component = sys._getframe(1).f_code.co_name
+
+    ## check that no other instances of assignor is running
+    process_check = filter(None,os.popen('ps -f -e | grep %s.py | grep -v grep  |grep python'%component).read().split('\n'))
+    if len(process_check)>1:
+        ## another component is running on the machine : stop
+        sendEmail('overlapping %s'%component,'There are %s instances running %s'%(len(process_check), '\n'.join(process_check)))
+        print "quitting because of overlapping processes"
+        return True
+    return False
+
+    
+def userLock(component=None):
+    if not component:  
+        ## get the caller
+        component = sys._getframe(1).f_code.co_name        
     lockers = ['dmytro','mcremone','vlimant']
     for who in lockers:
         if os.path.isfile('/afs/cern.ch/user/%s/%s/public/ops/%s.lock'%(who[0],who,component)):
