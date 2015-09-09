@@ -963,6 +963,13 @@ def checkTransferStatus(url, xfer_id, nocollapse=False):
 
     #print result
     completions={}
+    if len(result['phedex']['dataset'])==0:
+        print "trying with an earlier date than",timecreate,"for",xfer_id
+        subs_url = '/phedex/datasvc/json/prod/subscriptions?request=%s&create_since=%d'%(str(xfer_id),0)
+        r1=conn.request("GET",subs_url)
+        r2=conn.getresponse()
+        result = json.loads(r2.read())
+
     for item in  result['phedex']['dataset']:
         completions[item['name']]={}
         if 'subscription' not in item:            
@@ -1084,12 +1091,13 @@ def getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None
         print dataset,":all",len(block_counts),"available",second_order,"times"
         return second_order
     
-def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=None, within_sites=None):
+def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=None, within_sites=None, complement=True):
     if vetoes==None:
         vetoes = ['MSS','Buffer','Export']
     #print "presence of",dataset
     dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
     all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
+    all_dbs_block_names=set([block['block_name'] for block in all_blocks])
     all_block_names=set([block['block_name'] for block in all_blocks])
     if only_blocks:
         all_block_names = filter( lambda b : b in only_blocks, all_block_names)
@@ -1130,6 +1138,43 @@ def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=N
     ## per site, a list of the blocks that are subscribed to the site
     ## transform into data_fraction or something valuable
             
+    #complement with transfer request, approved, but without subscriptions yet
+    if complement:
+        print "Complementing the destinations with request with no subscriptions"
+        r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset=%s'%dataset)
+        r2=conn.getresponse()
+        result = json.loads(r2.read())
+        items=result['phedex']['request']
+    else:
+        items=[]
+
+    for item in items:
+        phedex_id = item['id']
+        sites_destinations = [req['name'] for req in item['node'] if req['decision'] in ['approved']]
+        sites_destinations = [site for site in sites_destinations if not any(site.endswith(v) for v in vetoes)]
+        print phedex_id,sites_destinations
+        ## what are the sites for which we have missing information ?
+        sites_missing_information = [site for site in sites_destinations if site not in destinations.keys()]
+
+
+        if len(sites_missing_information)==0: continue
+
+        r3 = conn.request("GET",'/phedex/datasvc/json/prod/transferrequests?request=%s'%phedex_id)
+        r4 = conn.getresponse()
+        sub_result = json.loads(r4.read())
+        sub_items = sub_result['phedex']['request']
+        for req in sub_items:
+            for requested_dataset in req['data']['dbs']['dataset']:
+                if requested_dataset != dataset: continue
+                for site in sites_missing_information:
+                    for b in all_block_names:
+                        destinations[site].add( (b, 0, phedex_id) )
+                    
+            for b in req['data']['dbs']['block']:
+                if not b['name'] in all_block_names: continue
+                destinations[site].add((b['name'], 0, phedex_id) )
+        
+        
     for site in destinations:
         blocks = [b[0] for b in destinations[site]]
         blocks_and_id = dict([(b[0],b[2]) for b in destinations[site]])
