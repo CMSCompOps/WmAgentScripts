@@ -76,11 +76,16 @@ def htmlor():
                 text+=', <a href="assistance.html#%s" target="_blank">assist</a>'%wfn
             text+=' : %s '%(wf.status)
 
-
         if view and wfs!='acquired':
             text+='<a href="https://cms-pdmv.web.cern.ch/cms-pdmv/stats/growth/%s.gif" target="_blank"><img src="https://cms-pdmv.web.cern.ch/cms-pdmv/stats/growth/%s.gif" style="height:50px"></a>'%(wfn.replace('_','/'),wfn.replace('_','/'))
         if ongoing:
             text+='<a href="http://cms-gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="http://cms-gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:50px"></a>'%(wfn,wfn)
+
+        if ongoing:
+            date1 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(15*24*60*60)) )
+            date2 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime())
+            text+='<a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#table=Jobs&date1=%s&date2=%s&sortby=site&task=wmagent_%s">dashb</a>'%( date1, date2, wfn )
+
         text+="<hr>"
         return text
 
