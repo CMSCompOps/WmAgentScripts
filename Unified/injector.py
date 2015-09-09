@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, getWorkflowById, getWorkLoad, componentInfo
+from utils import getWorkflows, getWorkflowById, getWorkLoad, componentInfo, sendEmail
 import sys
 import copy
 from htmlor import htmlor
@@ -41,6 +41,7 @@ def injector(url, options, specific):
         familly = getWorkflowById( url, wl['PrepID'] )
         if len(familly)==1:
             print wf.name,"ERROR has no replacement"
+            sendEmail('workflow in %s with no replacement'%(wl['RequestStatus']),'%s is dangling there'%(wf.name))
             continue
         print wf.name,"has",len(familly),"familly members"
         for member in familly:
