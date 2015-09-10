@@ -222,7 +222,7 @@ class lockInfo:
             dataLock.locksession.commit()
             
         #then unlock all of everything starting with item (itself for block, all block for dataset)
-        for l in dataLock.locksession.query(dataLock.Lock).filter(dataLock.Lock.site==site).filter(dataLock.Lock.item.starstwith(item)).all():
+        for l in dataLock.locksession.query(dataLock.Lock).filter(dataLock.Lock.site==site).filter(dataLock.Lock.item.startswith(item)).all():
             l.time = now
             l.reason = reason
             l.lock = False
