@@ -73,7 +73,9 @@ def modifySchema(helper, user, group, backfill=False):
             result[key] = value
         elif not value:
             continue
-
+    # Clean requestor  DN?
+    if 'RequestorDN' in result:
+        del result['RequestorDN']
     # check MonteCarlo
     if result['RequestType'] == 'MonteCarlo':
         # check assigning parameters
@@ -175,7 +177,6 @@ def cloneWorkflow(workflow, user, group, verbose=False, backfill=False, testbed=
     if verbose:
         pprint(schema)
     print 'Submitting workflow'
-
     # Sumbit cloned workflow to ReqMgr
     if testbed:
         response = reqMgrClient.submitWorkflow(url_tb, schema)
