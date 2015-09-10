@@ -14,19 +14,14 @@
     This script depends on WMCore code, so WMAgent environment
     ,libraries and voms proxy need to be loaded before running it.
 """
-import pprint
 import os
 import datetime
 import pwd
 import sys
-import urllib
-import httplib
 import re
-import json
 from optparse import OptionParser
 from pprint import pprint
 try:
-    import changePriorityWorkflow
     import reqMgrClient
     from WMCore.WMSpec.WMWorkload import WMWorkloadHelper
     from WMCore.Wrappers import JsonWrapper
@@ -97,8 +92,8 @@ def modifySchema(helper, user, group, backfill=False):
                     eventsPerJob = v['events_per_job']
                 elif 'events_per_lumi' in v:
                     eventsPerLumi = v['events_per_lumi']
-        result['EventsPerJob'] = eventsPerJob
-        #result['EventsPerLumi'] = eventsPerLumi
+        # result['EventsPerJob'] = eventsPerJob
+        # result['EventsPerLumi'] = eventsPerLumi
     # check MonteCarloFromGen
     elif result['RequestType'] == 'MonteCarloFromGEN':
         # seek for lumis per job on helper
@@ -168,7 +163,7 @@ def modifySchema(helper, user, group, backfill=False):
     return result
 
 
-def cloneWorkflow(workflow, user, group, verbose=False, backfill=False):
+def cloneWorkflow(workflow, user, group, verbose=False, backfill=False, testbed=False):
     """
     clones a workflow
     """
@@ -182,7 +177,10 @@ def cloneWorkflow(workflow, user, group, verbose=False, backfill=False):
     print 'Submitting workflow'
 
     # Sumbit cloned workflow to ReqMgr
-    response = reqMgrClient.submitWorkflow(url, schema)
+    if testbed:
+        response = reqMgrClient.submitWorkflow(url_tb, schema)
+    else:
+        response = reqMgrClient.submitWorkflow(url, schema)
     if verbose:
         print "RESPONSE", response
 
@@ -202,7 +200,10 @@ def cloneWorkflow(workflow, user, group, verbose=False, backfill=False):
         #schema['splittingAlgo'] = splittingAlgo
 
         # Move the request to Assignment-approved
-        data = reqMgrClient.setWorkflowApproved(url, newWorkflow)
+        if testbed:
+            data = reqMgrClient.setWorkflowApproved(url_tb, newWorkflow)
+        else:
+            data = reqMgrClient.setWorkflowApproved(url, newWorkflow)
         if verbose:
             print data
         # return the name of new workflow
@@ -238,8 +239,9 @@ def main():
                       help="Creates a clone for backfill test purposes.")
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False,
                       help="Prints all query information.")
-    parser.add_option(
-        '-f', '--file', help='Text file with a list of workflows', dest='file')
+    parser.add_option('-f', '--file', help='Text file with a list of workflows', dest='file')
+    parser.add_option("--testbed", action="store_true", dest="testbed", default=False,
+                      help="Clone to testbed reqmgr insted of production")
     (options, args) = parser.parse_args()
 
     # Check the arguments, get info from them
@@ -265,7 +267,8 @@ def main():
         wfs = [args[0]]
 
     for wf in wfs:
-        cloneWorkflow(wf, user, group, options.verbose, options.backfill)
+        cloneWorkflow(
+            wf, user, group, options.verbose, options.backfill, options.testbed)
 
     sys.exit(0)
 
