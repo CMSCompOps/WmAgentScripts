@@ -509,6 +509,7 @@ class siteInfo:
         self.storage = defaultdict(int)
         self.disk = defaultdict(int)
         self.quota = defaultdict(int)
+        self.locked = defaultdict(int)
         self.cpu_pledges = defaultdict(int)
 
         ## list here the site which can accomodate high memory requests
@@ -613,7 +614,7 @@ class siteInfo:
             else:
                 self.disk[site] = 0 
             self.quota[site] = quota
-
+            self.locked[site] = locked
 
     def fetch_more_info(self,talk=True):
         ## and complement information from ssb
