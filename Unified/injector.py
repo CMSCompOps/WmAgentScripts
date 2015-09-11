@@ -6,6 +6,7 @@ import copy
 from htmlor import htmlor
 from invalidator import invalidator 
 import optparse
+import json
 
 def injector(url, options, specific):
 
@@ -41,7 +42,15 @@ def injector(url, options, specific):
         familly = getWorkflowById( url, wl['PrepID'] )
         if len(familly)==1:
             print wf.name,"ERROR has no replacement"
-            sendEmail('workflow in %s with no replacement'%(wl['RequestStatus']),'%s is dangling there'%(wf.name))
+            known = []
+            try:
+                known = json.loads(open('no_replacement.json').read())
+            except:
+                pass
+            if not wf.name in known:
+                sendEmail('workflow in %s with no replacement'%(wl['RequestStatus']),'%s is dangling there'%(wf.name))
+                known.append( wf.name )
+                open('no_replacement.json','w').write( json.dumps( known, indent=2 ))
             continue
         print wf.name,"has",len(familly),"familly members"
         for member in familly:
