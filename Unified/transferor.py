@@ -339,6 +339,7 @@ def transferor(url ,specific = None, talk=True, options=None):
 
                 ### new ways of making the whole thing
                 destinations,all_block_names = getDatasetDestinations(url, prim, within_sites = [SI.CE_to_SE(site) for site in sites_allowed])
+                print json.dumps(destinations, indent=2)
 
                 ## get where the dataset is in full and completed
                 prim_location = [site for (site,info) in destinations.items() if info['completion']==100 and info['data_fraction']==1]
