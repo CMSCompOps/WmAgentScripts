@@ -120,7 +120,7 @@ def htmlor():
 </head>
 <body>
 
-Last update on %s(CET), %s(GMT), <a href=logs/ target=_blank>logs</a> <a href=logs/last.log target=_blank>last</a> <a href=statuses.html>statuses</a> <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/ target=_blank>prod mon</a> <a href=https://cmsweb.cern.ch/wmstats/index.html target=_blank>wmstats</a> <a href=http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/SitesInfo.txt target=_blank>detox</a> <a href=https://twiki.cern.ch/twiki/bin/view/CMSPublic/CompOpsWorkflowL3Responsibilities#Automatic_Assignment_and_Unified>what am I</a> <a href=logs/addHoc/last.log>add-hoc op</a> <br><br>
+Last update on %s(CET), %s(GMT), <a href=logs/ target=_blank>logs</a> <a href=logs/last.log target=_blank>last</a> <a href=statuses.html>statuses</a> <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/ target=_blank>prod mon</a> <a href=https://cmsweb.cern.ch/wmstats/index.html target=_blank>wmstats</a> <a href=http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/SitesInfo.txt target=_blank>detox</a> <a href=locked.html>space</a> <a href=https://twiki.cern.ch/twiki/bin/view/CMSPublic/CompOpsWorkflowL3Responsibilities#Automatic_Assignment_and_Unified>what am I</a> <a href=logs/addHoc/last.log>add-hoc op</a> <br><br>
 
 """ %(time.asctime(time.localtime()),
       time.asctime(time.gmtime())))
@@ -509,6 +509,62 @@ Worflow clean for output (%d) <a href=logs/outcleanor/last.log target=_blank>log
         text+="</table></li>"
 
     open('/afs/cern.ch/user/c/cmst2/www/unified/siteInfo.json','w').write(json.dumps(dict([(t,getattr(SI,t)) for t in SI.types()]),indent=2))
+
+    chart_data = defaultdict(list)
+    for site in SI.quota:
+        chart_data[site].append("""
+var data_%s = google.visualization.arrayToDataTable([ 
+['Overall', 'Space in TB'],
+//['Quota' , %s],
+['Locked' , %s],
+['Free' , %s]
+]);
+"""%( site,
+      SI.quota[site], SI.locked[site], SI.disk[site],
+      ))
+        chart_data[site].append("""
+var chart_%s = new google.visualization.PieChart(document.getElementById('donutchart_%s'));
+chart_%s.draw(data_%s, {title: '%s', pieHole:0.4, slices:{0:{color:'red'},1:{color:'green'}}});
+"""%(site,site,site,site,site))
+        chart_data[site].append("""
+<div id="donutchart_%s" style="height: 200px;"></div>
+"""%(site))
+        
+    ## make the locked/available donut chart
+    donut_html = open('/afs/cern.ch/user/c/cmst2/www/unified/locked.html','w')
+    tables = "\n".join([info[0] for site,info in chart_data.items()])
+    draws = "\n".join([info[1] for site,info in chart_data.items()])
+    divs = "\n".join([info[2] for site,info in chart_data.items()])
+
+    
+    divs_table="<table border=0>"
+    for c,site in enumerate(sorted(chart_data.keys())):
+        if c%6==0:
+            divs_table += "<tr>"
+        divs_table += "<td>%s</td>"%(chart_data[site][2])
+    divs_table += "</table>"
+
+    donut_html.write("""
+<html>
+  <head>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+      google.load("visualization", "1", {packages:["corechart"]});
+      google.setOnLoadCallback(drawChart);
+      function drawChart() {
+%s
+
+%s
+      }
+    </script>
+  </head>
+  <body>
+%s
+  </body>
+</html>
+"""%( tables,draws,divs_table   )
+                     )
+    donut_html.close()
 
     html_doc.write("""Site configuration
 <a href="javascript:showhide('site')">[Click to show/hide]</a>
