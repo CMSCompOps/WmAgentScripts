@@ -23,7 +23,7 @@ import print_job_failure_information
 import utils
 
 import too_many_events_check
-import getRelValDsetNames
+import collect_dsets_and_nevents
 import print_dsets_and_nevents
 
 import setDatasetStatusDBS3
@@ -120,7 +120,7 @@ def main():
         for wf in wf_list:
             too_many_events_check.too_many_events_check(wf)
 
-        dset_nevents_list=getRelValDsetNames.getDsetNamesAndNevents(wf_list)
+        dset_nevents_list=collect_dsets_and_nevents.getDsetNamesAndNevents(wf_list)
 
         print_dsets_and_nevents.print_dsets_and_nevents(dset_nevents_list, userid+".txt")
 

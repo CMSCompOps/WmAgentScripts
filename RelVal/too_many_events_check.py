@@ -4,7 +4,7 @@
 import optparse, json, time
 import urllib2,urllib, httplib, sys, re, os
 from xml.dom.minidom import getDOMImplementation
-import getRelValDsetNames
+import collect_dsets_and_nevents
 
 reqmgr_url = 'cmsweb.cern.ch'
 dbs3_url = 'https://cmsweb.cern.ch'
@@ -66,7 +66,7 @@ def getOutputEvents(dbsApi, dset, verb = False):
     if '/ALCARECO' in dset or  '/DQMIO' in dset or '/DQMROOT' in dset:
         return -10
 
-    outputEvents = getRelValDsetNames.getNumEvents(dbsApi, dset)
+    outputEvents = collect_dsets_and_nevents.getNumEvents(dbsApi, dset)
 
     return outputEvents
 
@@ -78,9 +78,9 @@ def too_many_events_check(wf_name):
     if schema['RequestType'] != 'TaskChain':
         return
 
-    dbsApi = getRelValDsetNames.getDBSApi()
+    dbsApi = collect_dsets_and_nevents.getDBSApi()
 
-    outputDatasets = getRelValDsetNames.getOutputDset(wf_name)
+    outputDatasets = collect_dsets_and_nevents.getOutputDset(wf_name)
 
     # We should never hit this case
     if 'RequestNumEvents' in schema['Task1'] and 'InputDataset' in schema['Task1']:
@@ -127,7 +127,7 @@ def too_many_events_check(wf_name):
             # it means we can just go for num of events
             else:
 
-                inputEvents = getRelValDsetNames.getNumEvents(dbsApi, inputDset)
+                inputEvents = collect_dsets_and_nevents.getNumEvents(dbsApi, inputDset)
 
                 for dataset in outputDatasets:
                     outputEvents = 0
