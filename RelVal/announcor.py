@@ -22,9 +22,9 @@ import print_job_failure_information
 
 import utils
 
-import closeOutTaskChain
+import too_many_events_check
 import getRelValDsetNames
-import makeStatisticsTable
+import print_dsets_and_nevents
 
 import setDatasetStatusDBS3
 
@@ -117,11 +117,12 @@ def main():
         #if there is a '\r' character in the body of an e-mail, it does not get sent
         description=batch_dict["description"].replace('\r','')
 
-        closeOutTaskChain.close_out_wf_list(wf_list)
+        for wf in wf_list:
+            too_many_events_check.too_many_events_check(wf)
 
         dset_nevents_list=getRelValDsetNames.getDsetNamesAndNevents(wf_list)
 
-        makeStatisticsTable.makeStatisticsTable(dset_nevents_list, userid+".txt")
+        print_dsets_and_nevents.print_dsets_and_nevents(dset_nevents_list, userid+".txt")
 
         ret=os.system("cp "+userid+".txt /afs/cern.ch/user/r/relval/webpage/relval_stats/"+userid+".txt")
 
