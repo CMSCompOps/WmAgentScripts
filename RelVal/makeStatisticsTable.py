@@ -22,14 +22,14 @@ def makeStatisticsTable(dsets_nevents_list,output_file_name):
      
     for dset_nevents in dsets_nevents_list:
         if len(str(dset_nevents[1])) > 9:
-            print "ERROR: len(parts[1]) > 9"
-            exit()
+            os.system('echo '+dset_nevents[0]+' | mail -s \"makeStatisticsTable.py error 2\" andrew.m.levin@vanderbilt.edu')
+            sys.exit(1)
         found = False
         for x in L:
             if x == dset_nevents[0]:
                 found = True
                 os.system('echo '+dset_nevents[0]+' | mail -s \"makeStatisticsTable.py error 1\" andrew.m.levin@vanderbilt.edu')
-                sys.exit(0)
+                sys.exit(1)
              
         if not found:
             L.append(dset_nevents[0])
