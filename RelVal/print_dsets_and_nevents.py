@@ -3,7 +3,7 @@ import sys
 import optparse
 import os
 
-def makeStatisticsTable(dsets_nevents_list,output_file_name):
+def print_dsets_and_nevents(dsets_nevents_list,output_file_name):
 
     #get the maximum length of a dataset name
     max_dset_length = -1
@@ -22,13 +22,13 @@ def makeStatisticsTable(dsets_nevents_list,output_file_name):
      
     for dset_nevents in dsets_nevents_list:
         if len(str(dset_nevents[1])) > 9:
-            os.system('echo '+dset_nevents[0]+' | mail -s \"makeStatisticsTable.py error 2\" andrew.m.levin@vanderbilt.edu')
+            os.system('echo '+dset_nevents[0]+' | mail -s \"print_dsets_and_nevents.py error 2\" andrew.m.levin@vanderbilt.edu')
             sys.exit(1)
         found = False
         for x in L:
             if x == dset_nevents[0]:
                 found = True
-                os.system('echo '+dset_nevents[0]+' | mail -s \"makeStatisticsTable.py error 1\" andrew.m.levin@vanderbilt.edu')
+                os.system('echo '+dset_nevents[0]+' | mail -s \"print_dsets_and_nevents.py error 1\" andrew.m.levin@vanderbilt.edu')
                 sys.exit(1)
              
         if not found:
@@ -43,7 +43,7 @@ def main():
     (options,args) = parser.parse_args()
 
     if not len(args)==1:
-        print "usage: python2.6 makeStatisticsTable.py <inputFile_containing_list_of_datasets_and_number_of_events>"
+        print "usage: python2.6 print_dsets_and_nevents.py <inputFile_containing_list_of_datasets_and_number_of_events>"
 
     dsets_nevents_list = []    
         
@@ -53,7 +53,7 @@ def main():
         line = line.rstrip('\n')
         dsets_nevents_list.append([line.split(' ')[0],line.split(' ')[1]])
 
-    makeStatisticsTable(dsets_nevents_list,"delete_this_statistics.txt")    
+    print_dsets_and_nevents(dsets_nevents_list,"delete_this_statistics.txt")    
 
 if __name__ == "__main__":
     main()
