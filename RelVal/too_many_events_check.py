@@ -90,50 +90,49 @@ def too_many_events_check(wf_name):
     # Check whether it's FastSim or FullSim from scratch
     if 'RequestNumEvents' in schema['Task1']:
         inputEvents = schema['Task1']['RequestNumEvents']
+        for dataset in outputDatasets:
+            outputEvents = 0
+
+            outputEvents = getOutputEvents(dbsApi, dataset, verb = False)
+            
+            if outputEvents > inputEvents :
+                os.system('echo '+wf_name+' | mail -s \"too_many_events_check error 2\" andrew.m.levin@vanderbilt.edu')
+                sys.exit(1)
+
+
+    # Then it's either Data or MC recycling
+    elif 'InputDataset' in schema['Task1']:
+        inputDset = schema['Task1']['InputDataset']
+
+            # It's Data
+        if 'RunWhitelist' in schema['Task1']:
+
+            runList = schema['Task1']['RunWhitelist']
+
+            inputEvents = getEventsDataSetRunList(dbsApi, inputDset, runList, verb = False)
+
             for dataset in outputDatasets:
                 outputEvents = 0
 
                 outputEvents = getOutputEvents(dbsApi, dataset, verb = False)
-
                 if outputEvents > inputEvents :
-                    os.system('echo '+wf_name+' | mail -s \"too_many_events_check error 2\" andrew.m.levin@vanderbilt.edu')
+                    os.system('echo '+wf_name+' | mail -s \"too_many_events_check error 3\" andrew.m.levin@vanderbilt.edu')
                     sys.exit(1)
 
-
-        # Then it's either Data or MC recycling
-        elif 'InputDataset' in schema['Task1']:
-            inputDset = schema['Task1']['InputDataset']
-
-            # It's Data
-            if 'RunWhitelist' in schema['Task1']:
-
-                runList = schema['Task1']['RunWhitelist']
-
-                inputEvents = getEventsDataSetRunList(dbsApi, inputDset, runList, verb = False)
-
-                for dataset in outputDatasets:
-                    outputEvents = 0
-
-                    outputEvents = getOutputEvents(dbsApi, dataset, verb = False)
-                    if outputEvents > inputEvents :
-                        os.system('echo '+wf_name+' | mail -s \"too_many_events_check error 3\" andrew.m.levin@vanderbilt.edu')
-                        sys.exit(1)
-
-            elif 'BlockWhitelist' in schema['Task1']:
-                os.system('echo '+wf_name+' | mail -s \"too_many_events_check error 4\" andrew.m.levin@vanderbilt.edu')
-                sys.exit(1)
+        elif 'BlockWhitelist' in schema['Task1']:
+            os.system('echo '+wf_name+' | mail -s \"too_many_events_check error 4\" andrew.m.levin@vanderbilt.edu')
+            sys.exit(1)
 
             # Most likely MC, since there is no run whitelist
             # it means we can just go for num of events
-            else:
+        else:
+            inputEvents = collect_dsets_and_nevents.collect_dsets_and_nevents(dbsApi, inputDset)
 
-                inputEvents = collect_dsets_and_nevents.getNumEvents(dbsApi, inputDset)
+            for dataset in outputDatasets:
+                outputEvents = 0
 
-                for dataset in outputDatasets:
-                    outputEvents = 0
-
-                    outputEvents = getOutputEvents(dbsApi, dataset)
-                    if outputEvents > inputEvents :
-                        os.system('echo '+wf_name+' | mail -s \"too_many_events_check error 5\" andrew.m.levin@vanderbilt.edu')
-                        sys.exit(1)
+                outputEvents = getOutputEvents(dbsApi, dataset)
+                if outputEvents > inputEvents :
+                    os.system('echo '+wf_name+' | mail -s \"too_many_events_check error 5\" andrew.m.levin@vanderbilt.edu')
+                    sys.exit(1)
 

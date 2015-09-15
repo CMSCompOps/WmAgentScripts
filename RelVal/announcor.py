@@ -120,7 +120,7 @@ def main():
         for wf in wf_list:
             too_many_events_check.too_many_events_check(wf)
 
-        dset_nevents_list=collect_dsets_and_nevents.getDsetNamesAndNevents(wf_list)
+        dset_nevents_list=collect_dsets_and_nevents.collect_dsets_and_nevents(wf_list)
 
         print_dsets_and_nevents.print_dsets_and_nevents(dset_nevents_list, userid+".txt")
 

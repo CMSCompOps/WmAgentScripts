@@ -89,7 +89,7 @@ def main():
         wf=line.rstrip('\n')
         wf_list.append(wf)
 
-    dsets_nevents=getDsetNamesAndNevents(wf_list)    
+    dsets_nevents=collect_dsets_and_nevents(wf_list)    
     for dset_nevents in dsets_nevents:
         print dset_nevents[0] + " " + str(dset_nevents[1])
 
