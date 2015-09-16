@@ -22,6 +22,7 @@ def stagor(url,specific =None, options=None):
     good_enough = 100.0
     
     if options.fast:
+        print "doing the fast check of staged with threshold:",options.goodavailability
         for wfo in session.query(Workflow).filter(Workflow.status == 'staging').all():
             if specific and not specific in wfo.name: continue
             wfi = workflowInfo(url, wfo.name)
@@ -30,22 +31,30 @@ def stagor(url,specific =None, options=None):
                 sites_allowed = CI.parameters(wfi.request['Campaign'])['SiteWhitelist']
             if 'SiteBlacklist' in CI.parameters(wfi.request['Campaign']):
                 sites_allowed = list(set(sites_allowed) - set(CI.parameters(wfi.request['Campaign'])['SiteBlacklist']))
-            dataset = wfi.request['InputDataset']
+            _,primaries,_,secondaries = wfi.getIO()
             se_allowed = [SI.CE_to_SE(site) for site in sites_allowed] 
-            #print se_allowed
-            available = getDatasetBlocksFraction( url , dataset , sites=se_allowed )
-            if available > options.goodavailability:
+            all_check = True
+            for dataset in list(primaries):#+list(secondaries) ?
+                #print se_allowed
+                available = getDatasetBlocksFraction( url , dataset , sites=se_allowed )
+                all_check &= (available >= options.goodavailability)
+                if not all_check: break
+
+            if all_check:
                 print "\t\t",wfo.name,"can go staged"
                 wfo.status = 'staged'
                 session.commit()
+            else:
+                print "\t",wfo.name,"can wait a bit more"
         return 
 
     for wfo in session.query(Workflow).filter(Workflow.status == 'staging').all():
         wfi = workflowInfo(url, wfo.name)
-        dataset = wfi.request['InputDataset']
-        done_by_input[dataset] = {}
-        completion_by_input[dataset] = {}
-        print wfo.name,"needs",dataset
+        _,primaries,_,secondaries = wfi.getIO()
+        for dataset in list(primaries)+list(secondaries):
+            done_by_input[dataset] = {}
+            completion_by_input[dataset] = {}
+            print wfo.name,"needs",dataset
 
     for transfer in session.query(Transfer).all():
         if specific  and str(transfer.phedexid)!=str(specific): continue
