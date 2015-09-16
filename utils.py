@@ -1132,8 +1132,8 @@ def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=N
         for sub in item['subscription']:
             if not any(sub['node'].endswith(v) for v in vetoes):
                 if within_sites and not sub['node'] in within_sites: continue
-                if sub['group'] == None: sub['group']=""
-                #if group!=None and replica['group']==None: continue
+                #if sub['group'] == None: sub['group']=""
+                if sub['group'] == None: sub['group']="DataOps" ## assume "" group is dataops
                 if group!=None and not sub['group'].lower()==group.lower(): continue 
                 destinations[sub['node']].add( (item['name'], int(sub['percent_bytes']), sub['request']) )
     ## per site, a list of the blocks that are subscribed to the site
@@ -1164,6 +1164,8 @@ def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=N
         r4 = conn.getresponse()
         sub_result = json.loads(r4.read())
         sub_items = sub_result['phedex']['request']
+        ## skip if we specified group
+        if group!=None and not sub_items['group'].lower()==group.lower(): continue
         for req in sub_items:
             for requested_dataset in req['data']['dbs']['dataset']:
                 if requested_dataset != dataset: continue
@@ -1255,11 +1257,16 @@ def getDatasetSize(dataset):
     ## put everything in terms of GB
     return sum([block['file_size'] / (1024.**3) for block in blocks])
 
-def getDatasetChops(dataset, chop_threshold =1000., talk=False):
+def getDatasetChops(dataset, chop_threshold =1000., talk=False, only_blocks=None):
     chop_threshold = float(chop_threshold)
     ## does a *flat* choping of the input in chunk of size less than chop threshold
     dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
     blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
+
+    ## restrict to these blocks only
+    if only_blocks:
+        blocks = [block for block in blocks if block['block_name'] in only_blocks]
+
     sum_all = 0
 
     ## put everything in terms of GB
