@@ -40,7 +40,19 @@ def injector(url, options, specific):
         print wf.name
         wl = getWorkLoad(url, wf.name)
         familly = getWorkflowById( url, wl['PrepID'] )
-        if len(familly)==1:
+        true_familly = []
+        for member in familly:
+            if member == wf.name: continue
+            fwl = getWorkLoad(url , member)
+            if options.replace:
+                if member != options.replace: continue
+            else:
+                if fwl['RequestDate'] < wl['RequestDate']: continue
+                if fwl['RequestType']=='Resubmission': continue
+                if fwl['RequestStatus'] in ['None',None]: continue
+            true_familly.append( fwl )
+
+        if len(true_familly)==0:
             print wf.name,"ERROR has no replacement"
             known = []
             try:
@@ -53,41 +65,34 @@ def injector(url, options, specific):
                 open('no_replacement.json','w').write( json.dumps( known, indent=2 ))
             continue
         print wf.name,"has",len(familly),"familly members"
-        for member in familly:
-            if member != wf.name:
-                fwl = getWorkLoad(url , member)
-                if options.replace:
-                    if member != options.replace: continue
-                else:
-                    if fwl['RequestDate'] < wl['RequestDate']: continue
-                    if fwl['RequestType']=='Resubmission': continue
-                    if fwl['RequestStatus'] in ['None',None]: continue
+        print wf.name,"has",len(true_familly),"true familly members"
 
-                new_wf = session.query(Workflow).filter(Workflow.name == member).first()
-                if not new_wf:
-                    print "putting",member,"as replacement of",wf.name
-                    status = 'away'
-                    if fwl['RequestStatus'] in ['assignment-approved']:
-                        status = 'considered'
-                    new_wf = Workflow( name = member, status = status, wm_status = fwl['RequestStatus'])
-                    wf.status = 'forget'
-                    session.add( new_wf ) 
-                else:
-                    if new_wf.status == 'forget': continue
-                    print "getting",new_wf.name,"as replacement of",wf.name
-                    wf.status = 'forget'
+        for fwl in true_familly:
+            new_wf = session.query(Workflow).filter(Workflow.name == member).first()
+            if not new_wf:
+                print "putting",member,"as replacement of",wf.name
+                status = 'away'
+                if fwl['RequestStatus'] in ['assignment-approved']:
+                    status = 'considered'
+                new_wf = Workflow( name = member, status = status, wm_status = fwl['RequestStatus'])
+                wf.status = 'forget'
+                session.add( new_wf ) 
+            else:
+                if new_wf.status == 'forget': continue
+                print "getting",new_wf.name,"as replacement of",wf.name
+                wf.status = 'forget'
 
-                for tr in session.query(Transfer).all():
-                    if wf.id in tr.workflows_id:
-                        sw = copy.deepcopy(tr.workflows_id)
-                        sw.remove( wf.id)
-                        sw.append(new_wf.id)
-                        tr.workflows_id = sw
-                        print tr.phedexid,"got",new_wf.name
-                        if new_wf.status != 'away':
-                            print "\t setting it staging"
-                            new_wf.status = 'staging'
-                        session.commit()
+            for tr in session.query(Transfer).all():
+                if wf.id in tr.workflows_id:
+                    sw = copy.deepcopy(tr.workflows_id)
+                    sw.remove( wf.id)
+                    sw.append(new_wf.id)
+                    tr.workflows_id = sw
+                    print tr.phedexid,"got",new_wf.name
+                    if new_wf.status != 'away':
+                        print "\t setting it staging"
+                        new_wf.status = 'staging'
+                    session.commit()
                         
 
         ## don't do that automatically
