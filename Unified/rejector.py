@@ -2,8 +2,7 @@
 from assignSession import *
 import sys
 import reqMgrClient
-import setDatasetStatusDBS3
-from utils import workflowInfo
+from utils import workflowInfo, setDatasetStatus
 from utils import componentInfo
 import optparse
 import re
@@ -34,9 +33,9 @@ def rejector(url, specific, options=None):
             if options.keep:
                 print "keeping",dataset,"in its current status"
             else:
-                results.append( setDatasetStatusDBS3.setStatusDBS3('https://cmsweb.cern.ch/dbs/prod/global/DBSWriter', dataset, 'INVALID', None) )
+                results.append( setDatasetStatus(dataset, 'INVALID') )
 
-        if all(map(lambda result : result in ['None',None],results)):
+        if all(map(lambda result : result in ['None',None,True],results)):
             wfo.status = 'forget'
             session.commit()
             print wfo.name,"and",datasets,"are rejected"

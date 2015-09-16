@@ -1351,7 +1351,19 @@ def getDatasetEventsPerLumi(dataset):
     except:
         average = 100
     return average
-                         
+                    
+def setDatasetStatus(dataset, status):
+    dbswrite = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSWriter')
+
+    new_status = getDatasetStatus( dataset )
+    max_try=3
+    while new_status != status:
+        dbswrite.updateDatasetType(dataset = dataset, dataset_access_type= status)
+        new_status = getDatasetStatus( dataset )
+        max_try-=1
+        if max_try<0: return False
+    return True
+     
 def getDatasetStatus(dataset):
         # initialize API to DBS3                                                                                                                                                                                                                                                     
         dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')

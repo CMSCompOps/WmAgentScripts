@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import getWorkLoad
-from utils import componentInfo, sendEmail 
+from utils import componentInfo, sendEmail, setDatasetStatus
 import reqMgrClient
-import setDatasetStatusDBS3
 import json
 import time
 import sys
@@ -82,7 +81,7 @@ def closor(url, specific=None):
             if not results:
                 for (io,out) in enumerate(outputs):
                     if all_OK[io]:
-                        results.append(setDatasetStatusDBS3.setStatusDBS3('https://cmsweb.cern.ch/dbs/prod/global/DBSWriter', out, 'VALID' ,''))
+                        results.append(setDatasetStatus(out, 'VALID'))
                         tier = out.split('/')[-1]
                         to_DDM = (wl['RequestType'] == 'ReDigi' and not ('DQM' in tier))
                         campaign = None
@@ -115,12 +114,12 @@ def closor(url, specific=None):
                         print wfo.name,"no stats for announcing",out
                         results.append('No Stats')
 
-                if all(map(lambda result : result in ['None',None],results)):
+                if all(map(lambda result : result in ['None',None,True],results)):
                     ## only announce if all previous are fine
                     results.append(reqMgrClient.announceWorkflowCascade(url, wfo.name))
                                 
             #print results
-            if all(map(lambda result : result in ['None',None],results)):
+            if all(map(lambda result : result in ['None',None,True],results)):
                 wfo.status = 'done'
                 session.commit()
                 print wfo.name,"is announced"
