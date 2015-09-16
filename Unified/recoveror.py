@@ -258,9 +258,11 @@ def recoveror(url,specific,options=None):
                 if options.ass:
                     print "really doing the assignment of the ACDC",acdc
                     parameters['execute']=True
+                    sendEmail("an ACDC was done and WAS assigned", "%s  was assigned, please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details"%( acdc ), destination=['julian.badillo.rojas@cern.ch','jen_a@fnal.gov'])
                 else:
                     print "no assignment done with this ACDC",acdc
                     sendEmail("an ACDC was done and need to be assigned", "%s needs to be assigned, please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details"%( acdc ), destination=['julian.badillo.rojas@cern.ch','jen_a@fnal.gov'])
+
                 result = reqMgrClient.assignWorkflow(url, acdc, team, parameters)
                 recovering.add( acdc )
 
@@ -287,16 +289,14 @@ if __name__ == '__main__':
     parser = optparse.OptionParser()
     #parser.add_option('--do',default=False,action='store_true')
     parser.add_option('--test', dest='do', default=True,action='store_false')
-    
-    parser.add_option('--go',default=False,action='store_true')
-    parser.add_option('--ass',default=False,action='store_true')
+    parser.add_option('--leave',dest='ass',default=False,action='store_false')
+    parser.add_option('--go',default=False,action='store_true',help="override possible blocking conditions")
     (options,args) = parser.parse_args()
     spec=None
     if len(args)!=0:
         spec = args[0]
 
-    ## enable doing recovery
-    #options.do = True
+    if not options.do: options.ass=False
 
     recoveror(url,spec,options=options)
 
