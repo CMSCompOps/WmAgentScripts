@@ -284,7 +284,7 @@ def transferor(url ,specific = None, talk=True, options=None):
         blocks = []
         if 'BlockWhitelist' in wfh.request and wfh.request['BlockWhitelist']:
             blocks = wfh.request['BlockWhitelist']
-        if 'RunWhitelist' in wfh.request and wfh.request['RunWhiteList']:
+        if 'RunWhitelist' in wfh.request and wfh.request['RunWhitelist']:
             ## should make the block selection here
             pass
 
