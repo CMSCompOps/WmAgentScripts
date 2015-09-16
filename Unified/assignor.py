@@ -127,14 +127,30 @@ def assignor(url ,specific = None, talk=True, options=None):
             print "The input dataset is not located in full over sites"
             print json.dumps(available_fractions)
             if not options.test and not options.go:
-                sendEmail( "cannot be assigned","%s is not full over sites \n %s"%(wfo.name,json.dumps(available_fractions)))
+                known = []
+                try:
+                    known = json.loads(open('cannot_assign.json').read())
+                except:
+                    pass
+                if not wfo.name in known:
+                    sendEmail( "cannot be assigned","%s is not full over sites \n %s"%(wfo.name,json.dumps(available_fractions)))
+                    known.append( wfo.name )
+                    open('cannot_assign.json','w').write(json.dumps( known, indent=2))
                 continue ## skip skip skip
 
         copies_wanted = 2.
         if available_fractions and not all([available>=copies_wanted for available in available_fractions.values()]):
             print "The input dataset is not available",copies_wanted,"times, only",available_fractions.values()
             if not options.go:
-                sendEmail( "cannot be assigned","%s is not sufficiently available \n %s"%(wfo.name,json.dumps(available_fractions)))
+                known = []
+                try:
+                    known = json.loads(open('cannot_assign.json').read())
+                except:
+                    pass
+                if not wfo.name in known:
+                    sendEmail( "cannot be assigned","%s is not sufficiently available. Probably phedex information lagging behind. \n %s"%(wfo.name,json.dumps(available_fractions)))
+                    known.append( wfo.name )
+                    open('cannot_assign.json','w').write(json.dumps( known, indent=2))
                 continue
 
         ## default back to white list to original white list with any data
