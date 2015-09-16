@@ -126,7 +126,7 @@ def too_many_events_check(wf_name):
             # Most likely MC, since there is no run whitelist
             # it means we can just go for num of events
         else:
-            inputEvents = collect_dsets_and_nevents.collect_dsets_and_nevents(dbsApi, inputDset)
+            inputEvents = collect_dsets_and_nevents.getNumEvents(dbsApi, inputDset)
 
             for dataset in outputDatasets:
                 outputEvents = 0
