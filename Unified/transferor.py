@@ -284,6 +284,13 @@ def transferor(url ,specific = None, talk=True, options=None):
         blocks = []
         if 'BlockWhitelist' in wfh.request and wfh.request['BlockWhitelist']:
             blocks = wfh.request['BlockWhitelist']
+        if 'RunWhitelist' in wfh.request and wfh.request['RunWhiteList']:
+            ## should make the block selection here
+            pass
+
+        if 'LumiList' in wfh.request and wfh.request['LumiList']:
+            ## same, we could be doing the white list here too
+            pass
 
         can_go = True
         staging=False
@@ -338,7 +345,7 @@ def transferor(url ,specific = None, talk=True, options=None):
 
 
                 ### new ways of making the whole thing
-                destinations,all_block_names = getDatasetDestinations(url, prim, within_sites = [SI.CE_to_SE(site) for site in sites_allowed])
+                destinations,all_block_names = getDatasetDestinations(url, prim, within_sites = [SI.CE_to_SE(site) for site in sites_allowed], only_blocks=blocks)
                 print json.dumps(destinations, indent=2)
 
                 ## get where the dataset is in full and completed
@@ -411,11 +418,16 @@ def transferor(url ,specific = None, talk=True, options=None):
 
                 if len(prim_to_distribute)>0: ## maybe that a parameter we can play with to limit the 
                     if not options or options.chop:
-                        spreading = distributeToSites( getDatasetChops(prim, chop_threshold = options.chopsize), prim_to_distribute, n_copies = copies_needed, weights=SI.cpu_pledges)
+                        spreading = distributeToSites( getDatasetChops(prim, chop_threshold = options.chopsize), prim_to_distribute, n_copies = copies_needed, weights=SI.cpu_pledges, only_blocks=blocks)
                     else:
                         spreading = {} 
-                        for site in prim_to_distribute: spreading[site]=[prim]
+                        for site in prim_to_distribute: 
+                            if blocks:
+                            spreading[site]=blocks
+                        else:
+                            spreading[site]=[prim]
                     can_go = False
+                    ## this is approximate if blocks are specified
                     transfer_sizes[prim] = input_sizes[prim]
                     for (site,items) in spreading.items():
                         all_transfers[site].extend( items )
