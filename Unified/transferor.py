@@ -423,9 +423,9 @@ def transferor(url ,specific = None, talk=True, options=None):
                         spreading = {} 
                         for site in prim_to_distribute: 
                             if blocks:
-                            spreading[site]=blocks
-                        else:
-                            spreading[site]=[prim]
+                                spreading[site]=blocks
+                            else:
+                                spreading[site]=[prim]
                     can_go = False
                     ## this is approximate if blocks are specified
                     transfer_sizes[prim] = input_sizes[prim]
