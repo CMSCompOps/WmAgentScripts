@@ -68,6 +68,7 @@ def injector(url, options, specific):
         print wf.name,"has",len(true_familly),"true familly members"
 
         for fwl in true_familly:
+            member = fwl['RequestName']
             new_wf = session.query(Workflow).filter(Workflow.name == member).first()
             if not new_wf:
                 print "putting",member,"as replacement of",wf.name
