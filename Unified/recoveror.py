@@ -66,7 +66,7 @@ def singleRecovery(url, task , initial, actions, do=False):
                 acdcInfo = workflowInfo(url, acdc)
                 splittings = acdcInfo.getSplittings()
                 for split in splittings:
-                    for act in ['events_per_job','lumis_per_job']:
+                    for act in ['avg_events_per_job','events_per_job','lumis_per_job']:
                         if act in split:
                             print "Changing %s (%d) by a factor %d"%( act, split[act], factor),
                             split[act] /= factor
