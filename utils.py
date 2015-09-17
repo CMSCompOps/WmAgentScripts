@@ -1297,8 +1297,11 @@ def getDatasetChops(dataset, chop_threshold =1000., talk=False, only_blocks=None
     else:
         if talk:
             print "one big",sum_all
-        items = [[dataset]] 
-    if talk:
+        if only_blocks:
+            items = [blocks] 
+        else:
+            items = [[dataset]] 
+        if talk:
         print items
     ## a list of list of blocks or dataset
     print "Choped",dataset,"of size",sum_all,"GB (",chop_threshold,"GB) in",len(items),"pieces"
