@@ -1359,6 +1359,11 @@ def setDatasetStatus(dataset, status):
     dbswrite = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSWriter')
 
     new_status = getDatasetStatus( dataset )
+    if new_status == None:
+        ## means the dataset does not exist in the first place
+        print "setting dataset status",status,"to inexistant dataset",dataset,"considered succeeding"
+        return True
+
     max_try=3
     while new_status != status:
         dbswrite.updateDatasetType(dataset = dataset, dataset_access_type= status)
