@@ -92,7 +92,7 @@ def assignor(url ,specific = None, talk=True, options=None):
             ## reduce the site white list to site with secondary only
             sites_allowed = [site for site in sites_allowed if any([osite.startswith(site) for osite in one_secondary_locations])]
             
-
+        print "now Allowed",sites_allowed
         sites_all_data = copy.deepcopy( sites_allowed )
         sites_with_data = copy.deepcopy( sites_allowed )
         sites_with_any_data = copy.deepcopy( sites_allowed )
@@ -120,7 +120,7 @@ def assignor(url ,specific = None, talk=True, options=None):
         if secondary_locations and primary_locations:
             ## intersection of both any pieces of the primary and good IO
             #opportunistic_sites = [SI.SE_to_CE(site) for site in list((set(secondary_locations) & set(primary_locations) & set(SI.sites_with_goodIO)) - set(sites_allowed))]
-            opportunistic_sites = [SI.SE_to_CE(site) for site in list((set(secondary_locations) & set(primary_locations)) - set(sites_allowed))]
+            opportunistic_sites = [SI.SE_to_CE(site) for site in list((set(secondary_locations) & set(primary_locations)) - set([SI.CE_to_SE(site) for site in sites_allowed]))]
             print "We could be running at",opportunistic_sites,"in addition"
 
         if available_fractions and not all([available>=1. for available in available_fractions.values()]):
@@ -141,6 +141,7 @@ def assignor(url ,specific = None, talk=True, options=None):
         copies_wanted = 2.
         if available_fractions and not all([available>=copies_wanted for available in available_fractions.values()]):
             print "The input dataset is not available",copies_wanted,"times, only",available_fractions.values()
+            print json.dumps(available_fractions)
             if not options.go:
                 known = []
                 try:
