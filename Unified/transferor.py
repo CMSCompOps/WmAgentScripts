@@ -13,6 +13,7 @@ import optparse
 import time
 from htmlor import htmlor
 from utils import sendEmail
+import math
 
 class DSS:
     def __init__(self):
@@ -296,6 +297,9 @@ def transferor(url ,specific = None, talk=True, options=None):
         staging=False
         allowed=True
         if primary:
+            
+            copies_needed_from_CPUh,CPUh = wfh.getNCopies()
+
             if talk:
                 print wfo.name,'reads',', '.join(primary),'in primary'
             ## chope the primary dataset 
@@ -304,12 +308,20 @@ def transferor(url ,specific = None, talk=True, options=None):
                 sites_allowed = [site for site in sites_allowed if not any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
                 print "Sites allowed minus the vetoed transfer"
                 print sites_allowed
+
                 copies_needed_from_site = int(0.35*len(sites_allowed))+1 ## should just go for a fixed number based if the white list grows that big
                 print "Would make",copies_needed_from_site,"copies from site white list"
+                copies_needed = copies_needed_from_site
+
+                print "Would make",copies_needed_from_CPUh,"from cpu requirement",CPUh
+                copies_needed = copies_needed_from_CPUh
+
                 if options.maxcopy>0:
-                    copies_needed = min(options.maxcopy,copies_needed_from_site)
+                    copies_needed = min(options.maxcopy,copies_needed)
                     print "Maxed to",copies_needed
 
+
+                
                 if 'Campaign' in wfh.request and wfh.request['Campaign'] in CI.campaigns and 'maxcopies' in CI.campaigns[wfh.request['Campaign']]:
                     copies_needed_from_campaign = CI.campaigns[wfh.request['Campaign']]['maxcopies']
                     copies_needed = min(copies_needed_from_campaign,copies_needed_from_site)

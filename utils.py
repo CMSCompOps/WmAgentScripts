@@ -13,6 +13,7 @@ import copy
 import pickle
 import itertools
 import time
+import math 
 
 import smtplib
 from email.MIMEMultipart import MIMEMultipart
@@ -1629,7 +1630,7 @@ class workflowInfo:
         return self._tasks()[0]
 
     def getComputingTime(self,unit='h'):
-        cput = 0
+        cput = None
         if 'InputDataset' in self.request:
             ds = self.request['InputDataset']
             if 'BlockWhitelist' in self.request and self.request['BlockWhitelist']:
@@ -1648,6 +1649,9 @@ class workflowInfo:
             
             cput = ne * tpe
 
+        if cput==None:
+            return 0
+
         if unit=='m':
             cput = cput / (60.)
         if unit=='h':
@@ -1656,6 +1660,14 @@ class workflowInfo:
             cput = cput / (60.*60.*24.)
         return cput
     
+    def getNCopies(self, min_copies = 3, max_copies = 10, CPUturn = 500000, CPUh0 = 500000):
+        def sigmoid(x):      
+            return 1 / (1 + math.exp(-x)) 
+        CPUh = self.getComputingTime()
+        max_copies = 10
+        min_copies = 2
+        return  int(min_copies + (max_copies-min_copies)*sigmoid( (CPUh - CPUh0)/CPUturn)),CPUh
+
     def availableSlots(self):
         av = 0
         SI = global_SI
