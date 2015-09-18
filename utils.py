@@ -1043,7 +1043,7 @@ def findCustodialLocation(url, dataset):
 
     return list(set(cust))
 
-def getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None, sites=None):
+def getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None, sites=None, only_blocks=None):
     ###count how manytimes a dataset is replicated < 100%: not all blocks > 100% several copies exis
     if vetoes==None:
         vetoes = ['MSS','Buffer','Export']
@@ -1053,7 +1053,9 @@ def getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None
     #all_block_names=set([block['block_name'] for block in all_blocks])
     files = dbsapi.listFileArray( dataset= dataset,validFileOnly=1, detail=True)
     all_block_names = list(set([f['block_name'] for f in files]))
-    
+    if only_blocks:
+        all_block_names = [b for b in all_block_names if b in only_blocks]
+
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 
     r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset=%s'%(dataset))
@@ -1081,7 +1083,9 @@ def getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None
                 if sites and not replica['node'] in sites:
                     #print "leaving",replica['node'],"out"
                     continue
-                block_counts[ item['name'] ] +=1
+                b = item['name']
+                if not b in all_block_names: continue
+                block_counts[ b ] +=1
     
     first_order = float(len(block_counts) - block_counts.values().count(0)) / float(len(block_counts))
     if first_order <1.:
@@ -1165,8 +1169,8 @@ def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=N
         sub_result = json.loads(r4.read())
         sub_items = sub_result['phedex']['request']
         ## skip if we specified group
-        if group!=None and not sub_items['group'].lower()==group.lower(): continue
         for req in sub_items:
+            if group!=None and not req['group'].lower()==group.lower(): continue
             for requested_dataset in req['data']['dbs']['dataset']:
                 if requested_dataset != dataset: continue
                 for site in sites_missing_information:
@@ -1298,11 +1302,11 @@ def getDatasetChops(dataset, chop_threshold =1000., talk=False, only_blocks=None
         if talk:
             print "one big",sum_all
         if only_blocks:
-            items = [blocks] 
+            items = [[block['block_name'] for block in blocks]]
         else:
             items = [[dataset]] 
         if talk:
-        print items
+            print items
     ## a list of list of blocks or dataset
     print "Choped",dataset,"of size",sum_all,"GB (",chop_threshold,"GB) in",len(items),"pieces"
     return items

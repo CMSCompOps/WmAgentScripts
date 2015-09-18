@@ -71,6 +71,9 @@ def assignor(url ,specific = None, talk=True, options=None):
             print "Removing",CI.parameters(wfh.request['Campaign'])['SiteBlacklist']
             sites_allowed = list(set(sites_allowed) - set(CI.parameters(wfh.request['Campaign'])['SiteBlacklist']))
 
+        blocks = []
+        if 'BlockWhitelist' in wfh.request:
+            blocks = wfh.request['BlockWhitelist']
 
         memory_allowed = SI.sitesByMemory( wfh.request['Memory'] )
         if memory_allowed!=None:
@@ -99,11 +102,11 @@ def assignor(url ,specific = None, talk=True, options=None):
         primary_locations = None
         available_fractions = {}
         for prim in list(primary):
-            presence = getDatasetPresence( url, prim )
+            presence = getDatasetPresence( url, prim , only_blocks=blocks)
             if talk:
                 print prim
                 print json.dumps(presence, indent=2)
-            available_fractions[prim] =  getDatasetBlocksFraction(url, prim, sites = [SI.CE_to_SE(site) for site in sites_allowed] )
+            available_fractions[prim] =  getDatasetBlocksFraction(url, prim, sites = [SI.CE_to_SE(site) for site in sites_allowed] , only_blocks = blocks)
             sites_all_data = [site for site in sites_with_data if any([osite.startswith(site) for osite in [psite for (psite,(there,frac)) in presence.items() if there]])]
             sites_with_data = [site for site in sites_with_data if any([osite.startswith(site) for osite in [psite for (psite,frac) in presence.items() if frac[1]>90.]])]
             sites_with_any_data = [site for site in sites_with_any_data if any([osite.startswith(site) for osite in presence.keys()])]
