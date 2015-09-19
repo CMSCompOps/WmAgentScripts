@@ -72,9 +72,12 @@ def collect_job_failure_information(wf_list,verbose=False,debug=False):
                         failures[s2['rows'][j]['doc']['errors']['PerformanceError'][0]['exitCode']]={'number': 1, 'logarchivefiles': [[mergedfilename,unmergedfilename]], 'details': None}
 
                     found_performance_killed_error=True    
-                
+
+                found_fatal_exception=False                
+                found_cmssw_step_failures=False        
+                found_scram_script_failure=False
                 if not found_performance_killed_error and not found_job_killed_error and 'cmsRun1' in s2['rows'][j]['doc']['errors']:
-                    found_fatal_exception=False
+
                     for k in s2['rows'][j]['doc']['errors']['cmsRun1']:
                         if k['type'] == "Fatal Exception":
                             if k['exitCode'] in failures.keys():
@@ -84,7 +87,7 @@ def collect_job_failure_information(wf_list,verbose=False,debug=False):
                                 failures[k['exitCode']]={'number' : 1, 'logarchivefiles' : [[mergedfilename,unmergedfilename]], 'details' : k['details']}
                             found_fatal_exception=True
 
-                    found_cmssw_step_failures=False        
+
                     if not found_fatal_exception:
                         for k in s2['rows'][j]['doc']['errors']['cmsRun1']:
                             if k['type'] == "CMSSWStepFailure":
@@ -103,6 +106,17 @@ def collect_job_failure_information(wf_list,verbose=False,debug=False):
                                 else:
                                     failures[k['exitCode']]={'number' : 1, 'logarchivefiles' : [], 'details': k['details']}
                                 found_scram_script_failure=True
+                
+                found_upload_failure=False
+                if not found_performance_killed_error and not found_job_killed_error and not found_fatal_exception and not found_cmssw_step_failures and not found_scram_script_failure and 'upload1' in s2['rows'][j]['doc']['errors']:
+
+                    for k in s2['rows'][j]['doc']['errors']['upload1']:
+                        if k['type'] == "DQMUploadFailure":
+                            if k['exitCode'] in failures.keys():
+                                failures[k['exitCode']]['number']=failures[k['exitCode']]['number']+1
+                            else:
+                                failures[k['exitCode']]={'number' : 1, 'logarchivefiles' : [], 'details': k['details']}
+                            found_upload_failure=True
 
             conn3  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))   
         #r31=conn3.request('GET','/couchdb/wmstats/_design/WMStats/_view/latestRequest?reduce=true&group=true&keys=[["'+workflow+'","cmssrv113.fnal.gov:9999"],["'+workflow+'","vocms142.cern.ch:9999"]]&stale=ok')

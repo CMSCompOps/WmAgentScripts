@@ -19,6 +19,10 @@ def explain_failure(exitcode,failure):
         return "due to FileReadErrors"
     elif exitcode == '8028':
         return "due to FallbackFileOpenErrors"
+    elif exitcode == 61304:
+        return "due to running too long/soft kill failed"
+    elif exitcode == 60318:
+        return "due to a DQM server upload failure"
     elif failure['details'] != None and 'Adding last ten lines of CMSSW stdout:' not in failure['details']:
         return "due to \n\n"+failure['details']+"\n"
     else:    
