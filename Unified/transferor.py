@@ -494,12 +494,14 @@ def transferor(url ,specific = None, talk=True, options=None):
             needs_transfer+=1
             passing_along+=1
 
-    #print json.dumps(all_transfers)
+    print "accumulated transfers"
+    print json.dumps(all_transfers)
     fake_id=-1
     wf_id_in_prestaging=set()
 
     for (site,items_to_transfer) in all_transfers.iteritems():
         items_to_transfer = list(set(items_to_transfer))
+
         ## convert to storage element
         site_se = SI.CE_to_SE(site)
 
