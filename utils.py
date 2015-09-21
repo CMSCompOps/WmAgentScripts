@@ -1276,12 +1276,13 @@ def getDatasetChops(dataset, chop_threshold =1000., talk=False, only_blocks=None
 
     ## put everything in terms of GB
     for block in blocks:
-        block['file_size'] /= 1000000000.
+        block['file_size'] /= (1024.**3)
 
     for block in blocks:
         sum_all += block['file_size']
 
     items=[]
+    sizes=[]
     if sum_all > chop_threshold:
         items.extend( [[block['block_name']] for block in filter(lambda b : b['file_size'] > chop_threshold, blocks)] )
         small_block = filter(lambda b : b['file_size'] <= chop_threshold, blocks)
@@ -1295,6 +1296,8 @@ def getDatasetChops(dataset, chop_threshold =1000., talk=False, only_blocks=None
                 last,small_block = small_block[-1], small_block[:-1]
                 size_chunk += last['file_size']
                 items[-1].append( last['block_name'] )
+            sizes.append( size_chunk )
+
                 
             if talk:
                 print len(items[-1]),"items below thresholds",size_chunk
@@ -1306,13 +1309,14 @@ def getDatasetChops(dataset, chop_threshold =1000., talk=False, only_blocks=None
             items = [[block['block_name'] for block in blocks]]
         else:
             items = [[dataset]] 
+        sizes = [sum_all]
         if talk:
             print items
     ## a list of list of blocks or dataset
     print "Choped",dataset,"of size",sum_all,"GB (",chop_threshold,"GB) in",len(items),"pieces"
-    return items
+    return items,sizes
 
-def distributeToSites( items, sites , n_copies, weights=None):
+def distributeToSites( items, sites , n_copies, weights=None,sizes=None):
     ## assuming all items have equal size or priority of placement
     spreading = defaultdict(list)
     if not weights:
@@ -1323,8 +1327,12 @@ def distributeToSites( items, sites , n_copies, weights=None):
     else:
         ## pick the sites according to computing element plege
         SI = siteInfo()
-        for item in items:
+
+        for iitem,item in enumerate(items):
             at=set()
+            chunk_size = None
+            if sizes:
+                chunk_size = sizes[iitem]
             #print item,"requires",n_copies,"copies to",len(sites),"sites"
             if len(sites) <= n_copies:
                 #more copies than sites
@@ -1332,7 +1340,21 @@ def distributeToSites( items, sites , n_copies, weights=None):
             else:
                 # pick at random according to weights
                 for pick in range(n_copies):
-                    at.add(SI.pick_CE( list(set(sites)-at)))
+                    picked_site = SI.pick_CE( list(set(sites)-at))
+                    picked_site_se = SI.CE_to_SE( picked_site )
+                    ## check on destination free space
+                    if chunk_size:
+                        overflow=10
+                        while (self.disk[picked_site_se]*1024.)< chunk_size and overflow>0:
+                            overflow-=1
+                            picked_site = SI.pick_CE( list(set(sites)-at))
+                            picked_site_se = SI.CE_to_SE( picked_site )
+                        if overflow<0:
+                            print "We have run out of options to distribute chunks of data because of lack of space"
+                            ## should I crash ?
+                            print picked_site_se,"has",self.disk[picked_site_se]*1024.,"GB free, while trying to put an item of size", chunk_size," that is",json.dumps( item, indent=2)
+                            sendEmail('possibly going over quota','We have a potential over quota usage while distributing \n%s check transferor logs'%(json.dumps( item, indent=2)))
+                    at.add( picked_site )
                 #print list(at)
             for site in at:
                 spreading[site].extend(item)                

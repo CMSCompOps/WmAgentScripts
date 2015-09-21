@@ -430,7 +430,8 @@ def transferor(url ,specific = None, talk=True, options=None):
 
                 if len(prim_to_distribute)>0: ## maybe that a parameter we can play with to limit the 
                     if not options or options.chop:
-                        spreading = distributeToSites( getDatasetChops(prim, chop_threshold = options.chopsize, only_blocks=blocks), prim_to_distribute, n_copies = copies_needed, weights=SI.cpu_pledges)
+                        chops,sizes = getDatasetChops(prim, chop_threshold = options.chopsize, only_blocks=blocks)
+                        spreading = distributeToSites( chops, prim_to_distribute, n_copies = copies_needed, weights=SI.cpu_pledges)
                     else:
                         spreading = {} 
                         for site in prim_to_distribute: 
@@ -462,9 +463,15 @@ def transferor(url ,specific = None, talk=True, options=None):
                 sec_to_distribute = [site for site in sec_to_distribute if not any([osite.startswith(site) for osite in sec_destination])]
                 sec_to_distribute = [site for site in sec_to_distribute if not  any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
                 if len( sec_to_distribute )>0:
+                    sec_size = dss.get( sec )
                     for site in sec_to_distribute:
-                        all_transfers[site].append( sec )
-                        can_go = False
+                        site_se =SI.CE_to_SE(site)
+                        if (SI.disk[site_se]*1024.) > sec_size:
+                            all_transfers[site].append( sec )
+                            can_go = False
+                        else:
+                            print "could not send the secondary input to",site_se,"because it is too big for the available disk",SI.disk[site_se]*1024,"GB need",sec_size
+                            sendEmail('secondary input too big','%s is too big (%s) for %s (%s)'%( sec, sec_size, site_se, SI.disk[site_se]*1024))
 
         ## is that possible to do something more
         if can_go:
