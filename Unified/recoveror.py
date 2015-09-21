@@ -289,7 +289,7 @@ if __name__ == '__main__':
     parser = optparse.OptionParser()
     #parser.add_option('--do',default=False,action='store_true')
     parser.add_option('--test', dest='do', default=True,action='store_false')
-    parser.add_option('--leave',dest='ass',default=False,action='store_false')
+    parser.add_option('--leave',dest='ass',default=True,action='store_false')
     parser.add_option('--go',default=False,action='store_true',help="override possible blocking conditions")
     (options,args) = parser.parse_args()
     spec=None
