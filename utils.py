@@ -1641,8 +1641,38 @@ class workflowInfo:
             
             cput = ne * tpe
         elif self.request['RequestType'] == 'TaskChain':
-            #print "not implemented yet"
-            pass
+            print "not implemented yet"
+            itask=1
+            cput=0
+            carry_on = {}
+            while True:
+                t = 'Task%s'% itask
+                itask+=1
+                if t in self.request:
+                    #print t
+                    task = self.request[t]
+                    if 'InputDataset' in task:
+                        ds = task['InputDataset']
+                        if 'BlockWhitelist' in task and task['BlockWhitelist']:
+                            (ne,_) = getDatasetEventsAndLumis( ds, task['BlockWhitelist'] )
+                        else:
+                            (ne,_) = getDatasetEventsAndLumis( ds )
+                    elif 'InputTask' in task:
+                        ## we might have a problem with convoluted tasks, but maybe not
+                        ne = carry_on[task['InputTask']]
+                    elif 'RequestNumEvents' in task:
+                        ne = float(task['RequestNumEvents'])
+                    else:
+                        print "this is not supported, making it zero cput"
+                        ne = 0
+                    tpe =task['TimePerEvent']
+                    carry_on[task['TaskName']] = ne
+                    if 'FilterEfficiency' in task:
+                        carry_on[task['TaskName']] *= task['FilterEfficiency']
+                    cput += tpe * ne
+                    #print cput,tpe,ne
+                else:
+                    break
         else:
             ne = float(self.request['RequestNumEvents'])
             tpe = self.request['TimePerEvent']
