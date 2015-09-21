@@ -1690,12 +1690,11 @@ class workflowInfo:
             cput = cput / (60.*60.*24.)
         return cput
     
-    def getNCopies(self, min_copies = 3, max_copies = 10, CPUturn = 500000, CPUh0 = 500000):
+    def getNCopies(self, CPUh=None, min_copies = 0, max_copies = 10, CPUturn = 500000, CPUh0 = 500000):
         def sigmoid(x):      
             return 1 / (1 + math.exp(-x)) 
-        CPUh = self.getComputingTime()
-        max_copies = 10
-        min_copies = 2
+        if CPUh==None:
+            CPUh = self.getComputingTime()
         return  int(min_copies + (max_copies-min_copies)*sigmoid( (CPUh - CPUh0)/CPUturn)),CPUh
 
     def availableSlots(self):
