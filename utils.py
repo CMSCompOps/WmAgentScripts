@@ -105,6 +105,17 @@ def download_file(url, params, path = None, logger = None):
         logger.error("URL called: {url}".format(url = url))
         return None
 
+
+def check_ggus( ticket ):
+    conn  =  httplib.HTTPSConnection('ggus.eu', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    
+    r1=conn.request("GET",'?mode=ticket_info&ticket_id=%s'%ticket)
+    r2=conn.getresponse
+    
+    print r2
+    return False
+
+
 def listDelete(url, user, site=None):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     there = '/phedex/datasvc/json/prod/requestlist?type=delete&approval=pending&requested_by=%s'% user
