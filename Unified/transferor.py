@@ -433,7 +433,8 @@ def transferor(url ,specific = None, talk=True, options=None):
                 if len(prim_to_distribute)>0: ## maybe that a parameter we can play with to limit the 
                     if not options or options.chop:
                         chops,sizes = getDatasetChops(prim, chop_threshold = options.chopsize, only_blocks=blocks)
-                        spreading = distributeToSites( chops, prim_to_distribute, n_copies = copies_needed, weights=SI.cpu_pledges)
+                        spreading = distributeToSites( chops, prim_to_distribute, n_copies = copies_needed, weights=SI.cpu_pledges, sizes=sizes)
+                        transfer_sizes[prim] = sum(sizes)
                     else:
                         spreading = {} 
                         for site in prim_to_distribute: 

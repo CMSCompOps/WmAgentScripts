@@ -1386,14 +1386,14 @@ def distributeToSites( items, sites , n_copies, weights=None,sizes=None):
                     ## check on destination free space
                     if chunk_size:
                         overflow=10
-                        while (self.disk[picked_site_se]*1024.)< chunk_size and overflow>0:
+                        while (SI.disk[picked_site_se]*1024.)< chunk_size and overflow>0:
                             overflow-=1
                             picked_site = SI.pick_CE( list(set(sites)-at))
                             picked_site_se = SI.CE_to_SE( picked_site )
                         if overflow<0:
                             print "We have run out of options to distribute chunks of data because of lack of space"
                             ## should I crash ?
-                            print picked_site_se,"has",self.disk[picked_site_se]*1024.,"GB free, while trying to put an item of size", chunk_size," that is",json.dumps( item, indent=2)
+                            print picked_site_se,"has",SI.disk[picked_site_se]*1024.,"GB free, while trying to put an item of size", chunk_size," that is",json.dumps( item, indent=2)
                             sendEmail('possibly going over quota','We have a potential over quota usage while distributing \n%s check transferor logs'%(json.dumps( item, indent=2)))
                     at.add( picked_site )
                 #print list(at)
