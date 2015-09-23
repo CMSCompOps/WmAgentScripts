@@ -357,7 +357,9 @@ def transferor(url ,specific = None, talk=True, options=None):
 
 
                 ### new ways of making the whole thing
-                destinations,all_block_names = getDatasetDestinations(url, prim, within_sites = [SI.CE_to_SE(site) for site in sites_allowed], only_blocks=blocks, group='DataOps')
+                destinations,all_block_names = getDatasetDestinations(url, prim, within_sites = [SI.CE_to_SE(site) for site in sites_allowed], only_blocks=blocks )
+                #destinations,all_block_names = getDatasetDestinations(url, prim, within_sites = [SI.CE_to_SE(site) for site in sites_allowed], only_blocks=blocks, group='DataOps')
+                #anaops_destinations,anaops_all_block_names = getDatasetDestinations(url, prim, within_sites = [SI.CE_to_SE(site) for site in sites_allowed], only_blocks=blocks, group='AnalysisOps' )
                 print json.dumps(destinations, indent=2)
 
                 ## get where the dataset is in full and completed
@@ -366,7 +368,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                 prim_destination = [site for site in destinations.keys() if not site in prim_location]
 
                 if len(prim_location) >= copies_needed:
-                    print "The output is all fully in place at",len(prim_location),"sites"
+                    print "The output is all fully in place at",len(prim_location),"sites",prim_location
                     continue
                 copies_needed = max(0,copies_needed - len(prim_location))
                 print "now need",copies_needed
@@ -379,8 +381,8 @@ def transferor(url ,specific = None, talk=True, options=None):
                 #print latching_on_transfers
 
                 ## figure out where all this is going to go
-                prim_to_distribute = [site for site in sites_allowed if not any([osite.startswith(site) for osite in prim_location])]
-                prim_to_distribute = [site for site in prim_to_distribute if not any([osite.startswith(site) for osite in prim_destination])]
+                prim_to_distribute = [site for site in sites_allowed if not SI.CE_to_SE(site) in prim_location])]
+                prim_to_distribute = [site for site in prim_to_distribute if not SI_CE_to_SE(site) in prim_destination])]
                 ## take out the ones that cannot receive transfers
                 prim_to_distribute = [site for site in prim_to_distribute if not any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
 
@@ -439,9 +441,9 @@ def transferor(url ,specific = None, talk=True, options=None):
                                 spreading[site]=blocks
                             else:
                                 spreading[site]=[prim]
+                        transfer_sizes[prim] = input_sizes[prim] ## this is approximate if blocks are specified
                     can_go = False
-                    ## this is approximate if blocks are specified
-                    transfer_sizes[prim] = input_sizes[prim]
+                    print "selected CE destinations",spreading.keys()
                     for (site,items) in spreading.items():
                         all_transfers[site].extend( items )
 
@@ -502,7 +504,7 @@ def transferor(url ,specific = None, talk=True, options=None):
             passing_along+=1
 
     print "accumulated transfers"
-    print json.dumps(all_transfers)
+    print json.dumps(all_transfers, indent=2)
     fake_id=-1
     wf_id_in_prestaging=set()
 

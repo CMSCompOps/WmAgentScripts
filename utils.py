@@ -526,7 +526,11 @@ class siteInfo:
         self.quota = defaultdict(int)
         self.locked = defaultdict(int)
         self.cpu_pledges = defaultdict(int)
-
+        self.addHocStorage = {
+            'T2_CH_CERN_T0': 'T2_CH_CERN',
+            'T2_CH_CERN_HLT' : 'T2_CH_CERN',
+            'T2_CH_CERN_AI' : 'T2_CH_CERN'
+            }
         ## list here the site which can accomodate high memory requests
         self.sites_memory = {}
 
@@ -706,13 +710,9 @@ class siteInfo:
         if ce.startswith('T1') and not ce.endswith('_Disk'):
             return ce+'_Disk'
         else:
-            addHoc = {
-                'T2_CH_CERN_T0': 'T2_CH_CERN',
-                'T2_CH_CERN_HLT' : 'T2_CH_CERN',
-                'T2_CH_CERN_AI' : 'T2_CH_CERN'
-                }
-            if ce in addHoc:
-                return addHoc[ce]
+
+            if ce in self.addHocStorage:
+                return self.addHocStorage[ce]
             else:
                 return ce
 
@@ -1161,6 +1161,7 @@ def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=N
     #complement with transfer request, approved, but without subscriptions yet
     if complement:
         print "Complementing the destinations with request with no subscriptions"
+        print "we have",destinations.keys(),"for now"
         r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset=%s'%dataset)
         r2=conn.getresponse()
         result = json.loads(r2.read())
@@ -1168,13 +1169,39 @@ def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=N
     else:
         items=[]
 
+    deletes = {}
     for item in items:
         phedex_id = item['id']
-        sites_destinations = [req['name'] for req in item['node'] if req['decision'] in ['approved']]
+        if item['type']!='delete': continue
+        #if item['approval']!='approved': continue
+        for node in item['node']:
+            if node['decision'] != 'approved': continue
+            if not node['name'] in deletes or deletes[node['name']]< int(node['time_decided']):
+                ## add it if not or later delete
+                deletes[node['name']] = int(node['time_decided'])
+
+
+    times = {}
+    for item in items:
+        phedex_id = item['id']
+        if item['type']=='delete': continue
+        sites_destinations = []
+        for req in item['node']:
+            if req['name'] in deletes and int(req['time_decided'])< deletes[req['name']]:
+                ## this request is void by now
+                continue
+            if not req['decision'] in ['approved']:
+                continue
+            if req['name'] in times:
+                if int(req['time_decided']) > times[req['name']]: 
+                    ## the node was already seen as a destination with an ealier time, and no delete in between
+                    continue
+            times[req['name']] = int(req['time_decided'])
+            sites_destinations.append( req['name'] )
         sites_destinations = [site for site in sites_destinations if not any(site.endswith(v) for v in vetoes)]
-        print phedex_id,sites_destinations
         ## what are the sites for which we have missing information ?
         sites_missing_information = [site for site in sites_destinations if site not in destinations.keys()]
+        print phedex_id,sites_destinations,"fetching for missing",sites_missing_information
 
 
         if len(sites_missing_information)==0: continue
