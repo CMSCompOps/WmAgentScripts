@@ -7,6 +7,7 @@ from htmlor import htmlor
 from invalidator import invalidator 
 import optparse
 import json
+import time
 
 def injector(url, options, specific):
 
@@ -24,6 +25,7 @@ def injector(url, options, specific):
             new_wf = Workflow( name = wf , status = options.setstatus, wm_status = options.wmstatus) 
             session.add( new_wf )
             session.commit()
+            time.sleep(1)
 
 
     existing = [wf.name for wf in session.query(Workflow).all()]
