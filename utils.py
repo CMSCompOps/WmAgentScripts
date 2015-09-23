@@ -1635,9 +1635,12 @@ def getWorkflowById( url, pid , details=False):
     else:
         return [item['id'] for item in items]
     
-def getWorkflows(url,status,user=None,details=False):
+def getWorkflows(url,status,user=None,details=False,rtype=None):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    go_to = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/bystatus?key="%s"'%(status)
+    if rtype:
+        go_to = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/bystatusandtype?key=["%s","%s"]'%(status,rtype)
+    else:
+        go_to = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/bystatus?key="%s"'%(status)
     if details:
         go_to+='&include_docs=true'
     r1=conn.request("GET",go_to)
