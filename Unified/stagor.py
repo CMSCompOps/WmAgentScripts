@@ -133,16 +133,19 @@ def stagor(url,specific =None, options=None):
             print "For dataset",dsname,"there are no transfer report. That's an issue."
             for wf in using_wfos:
                 if wf.status == 'staging':
-                    print "sending",wf.name,"back to considered"
-                    wf.status = 'considered'
-                    session.commit()
-                    sendEmail( "send back to considered","%s was send back and might be trouble"% wf.name)
+                    if True:
+                        print "would send",wf.name,"back to considered"
+                        sendEmail( "subscription lagging behind","susbscriptions to get %s running are not appearing in phedex. I would have send it back to considered but that's not good."% wf.name)
+                    else:
+                        print "sending",wf.name,"back to considered"
+                        wf.status = 'considered'
+                        session.commit()
+                        sendEmail( "send back to considered","%s was send back and might be trouble"% wf.name)
             continue
 
         #need_sites = int(len(done_by_input[dsname].values())*0.7)+1
         need_sites = len(done_by_input[dsname].values())
-        if need_sites > 10:
-            need_sites = int(need_sites/2.)
+        #if need_sites > 10:            need_sites = int(need_sites/2.)
         got = done_by_input[dsname].values().count(True)
         if all([wf.status != 'staging' for wf in using_wfos]):
             ## not a single ds-using wf is in staging => moved on already
@@ -185,7 +188,7 @@ def stagor(url,specific =None, options=None):
                     wf.status = 'staged'
                     session.commit()
         else:
-            print dsname
+            print "incomplete",dsname
             lost = findLostBlocks(url, dsname)
             try:
                 known_lost = json.loads(open('lost_blocks_datasets.json').read())
