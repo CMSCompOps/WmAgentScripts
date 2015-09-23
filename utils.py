@@ -1656,6 +1656,26 @@ def getWorkflows(url,status,user=None,details=False,rtype=None):
 
     return workflows
 
+def getPrepIDs(wl):
+    pids = list()
+    if wl['RequestType'] == 'TaskChain':
+        itask=1
+        while True:
+            t = 'Task%s'% itask
+            itask+=1
+            if t in wl:
+                if 'PrepID' in wl[t]:
+                    if not wl[t]['PrepID'] in pids:
+                        pids.append( wl[t]['PrepID'] )
+            else:
+                break
+        if pids:
+            return pids
+        else:
+            return [wl['PrepID']]
+    else:
+        return [wl['PrepID']]
+
 class workflowInfo:
     def __init__(self, url, workflow, deprecated=False, spec=True, request=None):
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -1694,6 +1714,9 @@ class workflowInfo:
 
     def firstTask(self):
         return self._tasks()[0]
+
+    def getPrepIDs(self):
+        return getPrepIDs(self.request)
 
     def getComputingTime(self,unit='h'):
         cput = None

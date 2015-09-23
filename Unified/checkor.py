@@ -387,7 +387,8 @@ def checkor(url, spec=None, options=None):
             print wfo.name,"needs assistance with",new_status
             
             if sub_assistance and wfo.status != new_status and 'PrepID' in wfi.request and not 'manual' in wfo.status:
-                pid = wfi.request['PrepID'].replace('task_','')
+                pid = wfi.getPrepIDs()[0].replace('task_','')
+                #pid = wfi.request['PrepID'].replace('task_','')
                 ## notify
                 messages= {
                     'recovery' : 'Samples completed with missing lumi count:\n%s '%( '\n'.join(['%.2f %% complete for %s'%(percent_completions[output]*100, output) for output in wfi.request['OutputDatasets'] ] ) ),

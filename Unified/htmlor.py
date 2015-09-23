@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 import time
-from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration
+from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration, getPrepIDs
 import os
 import json
 from collections import defaultdict
@@ -19,10 +19,18 @@ def htmlor():
     def wfl(wf,view=False,p=False,ms=False,within=False,ongoing=False,status=False,update=False):
         wfn = wf.name
         wfs = wf.wm_status
+        wl = None
         pid = None
         pids=filter(lambda seg: seg.count('-')==2, wf.name.split('_'))
         if len(pids):
+            pids = pids[:1]
             pid=pids[0]
+            
+        if not pids:
+            wl = getWL( wf.name )
+            pids = getPrepIDs( wl )
+            pid = pids[0]
+
         text=', '.join([
                 #wfn,
                 '<a href="https://cmsweb.cern.ch/reqmgr/view/details/%s" target="_blank">%s</a>'%(wfn,wfn),
@@ -44,9 +52,13 @@ def htmlor():
                 ])
         if within and (not view or wfs=='completed'):
             wl = getWL( wfn )
-
+            dataset =None
             if 'InputDataset' in wl:
-                dataset = wl['InputDataset']
+                dataset = wl['InputDataset']                
+            if 'Task1' in wl and 'InputDataset' in wl['Task1']:
+                dataset = wl['Task1']['InputDataset']
+
+            if dataset:
                 text+=', '.join(['',
                                  '<a href=https://cmsweb.cern.ch/das/request?input=%s target=_blank>input</a>'%dataset,
                                  '<a href=https://cmsweb.cern.ch/phedex/prod/Data::Subscriptions#state=create_since=0;filter=%s target=_blank>sub</a>'%dataset,
