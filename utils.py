@@ -485,6 +485,7 @@ class siteInfo:
 
 
         if self.sites_ready:
+            self.sites_eos = [ s for s in self.sites_ready if s in ['T2_CH_CERN','T2_CH_CERN_AI','T2_CH_CERN_T0','T2_CH_CERN_HLT'] ]
             self.sites_T2s = [ s for s in self.sites_ready if s.startswith('T2_')]
             self.sites_T1s = [ s for s in self.sites_ready if s.startswith('T1_')]
             self.sites_with_goodIO = [ "T2_DE_DESY","T2_DE_RWTH","T2_ES_CIEMAT","T2_FR_IPHC",
@@ -497,6 +498,7 @@ class siteInfo:
             self.sites_veto_transfer = [site for site in self.sites_with_goodIO if not site in allowed_T2_for_transfer]
 
         else:
+            self.sites_eos = [ 'T2_CH_CERN' ]
             ## all to be deprecated if above functions !
             siteblacklist = ['T2_TH_CUNSTDA','T1_TW_ASGC','T2_TW_Taiwan','T2_TR_METU','T2_UA_KIPT','T2_RU_ITEP','T2_RU_INR','T2_RU_PNPI','T2_PL_Warsaw']
             self.sites_with_goodIO = ["T1_DE_KIT","T1_ES_PIC","T1_FR_CCIN2P3","T1_IT_CNAF",
