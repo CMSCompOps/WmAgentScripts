@@ -53,7 +53,7 @@ def transferor(url ,specific = None, talk=True, options=None):
     being_handled = len(session.query(Workflow).filter(Workflow.status == 'away').all())
     being_handled += len(session.query(Workflow).filter(Workflow.status.startswith('stag')).all())
     being_transfered = len(session.query(Workflow).filter(Workflow.status == 'staging').all())
-    being_handled += len(session.query(Workflow).filter(Workflow.status.startswith('assistance')).all())
+    being_handled += len(session.query(Workflow).filter(Workflow.status.startswith('assistance-')).all())
 
     max_to_handle = options.maxworkflows
     max_to_transfer = options.maxstaging
@@ -319,7 +319,8 @@ def transferor(url ,specific = None, talk=True, options=None):
                 if options.maxcopy>0:
                     copies_needed = min(options.maxcopy,copies_needed)
                     print "Maxed to",copies_needed
-
+                    if copies_needed_from_CPUh > options.maxcopy:
+                        sendEmail('An example of more than three copies','for %s it could have been beneficial to make %s copies'%( wfo.name, copies_needed_from_CPUh))
 
                 
                 if 'Campaign' in wfh.request and wfh.request['Campaign'] in CI.campaigns and 'maxcopies' in CI.campaigns[wfh.request['Campaign']]:
@@ -381,8 +382,8 @@ def transferor(url ,specific = None, talk=True, options=None):
                 #print latching_on_transfers
 
                 ## figure out where all this is going to go
-                prim_to_distribute = [site for site in sites_allowed if not SI.CE_to_SE(site) in prim_location])]
-                prim_to_distribute = [site for site in prim_to_distribute if not SI_CE_to_SE(site) in prim_destination])]
+                prim_to_distribute = [site for site in sites_allowed if not SI.CE_to_SE(site) in prim_location]
+                prim_to_distribute = [site for site in prim_to_distribute if not SI.CE_to_SE(site) in prim_destination]
                 ## take out the ones that cannot receive transfers
                 prim_to_distribute = [site for site in prim_to_distribute if not any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
 
