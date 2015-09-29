@@ -802,8 +802,9 @@ phdF</th><th>ClosOut</th></tr></thead>'
             pid = filter(lambda b :b.count('-')==2, wf.split('_'))[0]
             tpid = 'task_'+pid if 'task' in wf else pid
         except:
-            pid ='None'
-            tpid= 'None'
+            wl = getWorkLoad('cmsweb.cern.ch', wf)
+            pid =wl['PrepID']
+            tpid=wl['PrepID']
             
         ## return the corresponding html
         order = ['percentage','acdc','duplicate','correctLumis','missingSubs','phedexReqs','dbsFiles','dbsInvFiles','phedexFiles']
@@ -1839,7 +1840,7 @@ class workflowInfo:
             spl = self.getSplittings()[0]
             algo = spl['splittingAlgo']
             if algo == 'EventAwareLumiBased':
-                events_per_job = spl['events_per_job']
+                events_per_job = spl['avg_events_per_job']
                 if average > events_per_job:
                     ## need to do something
                     print "This is going to fail",average,"in and requiring",events_per_job
@@ -2043,6 +2044,8 @@ class workflowInfo:
                 (_,dsn,ps,tier) = output.split('/')
                 if ps.count('-')==2:
                     (aera,aps,_) = ps.split('-')
+                elif ps.count('-')==3:
+                    (aera,fn,aps,_) = ps.split('-')
                 else:
                     aera='*'
                     aps='*'
@@ -2058,6 +2061,8 @@ class workflowInfo:
                 (_,dsn,ps,tier) = output.split('/')
                 if ps.count('-')==2:
                     (aera,aps,_) = ps.split('-')
+                elif ps.count('-')==3:
+                    (aera,fn,aps,_) = ps.split('-')
                 else:
                     print "Cannot check output in reqmgr"
                     print output,"is what is in the request workload"
@@ -2078,7 +2083,15 @@ class workflowInfo:
             for output in  outputs:
                 print output
                 (_,dsn,ps,tier) = output.split('/')
-                (aera,aps,_) = ps.split('-')
+                if ps.count("-") == 2:
+                    (aera,aps,_) = ps.split('-')
+                elif ps.count("-") == 3:
+                    (aera,fn,aps,_) = ps.split('-')
+                else:
+                    ## cannot so anything
+                    print "the processing string is mal-formated",ps
+                    return None
+
                 if aera == 'None' or aera == 'FAKE':
                     print "no era, using ",era
                     aera=era
@@ -2097,7 +2110,14 @@ class workflowInfo:
             for output in  outputs:
                 print output
                 (_,dsn,ps,tier) = output.split('/')
-                (aera,aps,_) = ps.split('-')
+                if ps.count("-") == 2:
+                    (aera,aps,_) = ps.split('-')
+                elif ps.count("-") == 3:
+                    (aera,fn,aps,_) = ps.split('-')
+                else:
+                    print "the processing string is mal-formated",ps
+                    return None
+
                 if aera == 'None' or aera == 'FAKE':
                     print "no era, using ",era
                     aera=era
