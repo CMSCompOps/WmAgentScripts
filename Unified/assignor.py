@@ -121,6 +121,7 @@ def assignor(url ,specific = None, talk=True, options=None):
         sites_with_any_data = list(set(sites_with_any_data))
 
         opportunistic_sites=[]
+        down_time = False
         ## opportunistic running where any piece of data is available
         if secondary_locations and primary_locations:
             ## intersection of both any pieces of the primary and good IO
@@ -129,6 +130,7 @@ def assignor(url ,specific = None, talk=True, options=None):
             print "We could be running at",sorted(opportunistic_sites),"in addition"
             if any([osite in SI.sites_not_ready for osite in opportunistic_sites]):
                 print "One of the destination site is in downtime"
+                down_time = True
                 ## should this be send back to considered ?
                 
 
@@ -150,9 +152,12 @@ def assignor(url ,specific = None, talk=True, options=None):
         copies_wanted = 2.
         if available_fractions and not all([available>=copies_wanted for available in available_fractions.values()]):
             print "The input dataset is not available",copies_wanted,"times, only",available_fractions.values()
-            #if any([osite in SI.sites_not_ready for osite in opportunistic_sites]):
-            #    print "One of the destination site is in downtime"
-                ##send back to consider ?
+            if down_time:
+                wfo.status = 'considered'
+                session.commit()
+                print "sending back to considered because of site downtime, instead of waiting"
+                sendEmail( "cannot be assigned due to downtime","%s is not sufficiently available, due to down time of a site in the whitelist. check the assignor logs. sending back to considered"% wfo.name)
+                continue
 
             print json.dumps(available_fractions)
             if not options.go:
