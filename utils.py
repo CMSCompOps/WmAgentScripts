@@ -1437,7 +1437,12 @@ def getDatasetEventsAndLumis(dataset, blocks=None):
 
 def getDatasetEventsPerLumi(dataset):
     dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
-    all_files = dbsapi.listFileSummaries( dataset = dataset , validFileOnly=1)
+    try:
+        all_files = dbsapi.listFileSummaries( dataset = dataset , validFileOnly=1)
+    except:
+        print "We had to have a DBS listfilesummaries retry"
+        time.sleep(1)
+        all_files = dbsapi.listFileSummaries( dataset = dataset , validFileOnly=1)        
     try:
         average = sum([f['num_event']/float(f['num_lumi']) for f in all_files]) / float(len(all_files))
     except:
