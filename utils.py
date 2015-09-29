@@ -469,14 +469,17 @@ class siteInfo:
         try:
             ## get all sites from SSB readiness
             self.sites_ready = []
+            self.sites_not_ready = []
             self.all_sites = []
             column = 158
             data = json.loads(os.popen('curl -s "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=%s&batch=1&lastdata=1"'%column).read())['csvdata']
             for siteInfo in data:
                 self.all_sites.append( siteInfo['VOName'] )
                 if not siteInfo['Tier']: continue
-                if not siteInfo['Status'] == 'on': continue
-                self.sites_ready.append( siteInfo['VOName'] )
+                if siteInfo['Status'] == 'on': 
+                    self.sites_ready.append( siteInfo['VOName'] )
+                else:#if siteInfo['Status'] in ['drain']:
+                    self.sites_not_ready.append( siteInfo['VOName'] )
                 
         except Exception as e:
             print "issue with getting SSB readiness"
@@ -488,12 +491,25 @@ class siteInfo:
             self.sites_eos = [ s for s in self.sites_ready if s in ['T2_CH_CERN','T2_CH_CERN_AI','T2_CH_CERN_T0','T2_CH_CERN_HLT'] ]
             self.sites_T2s = [ s for s in self.sites_ready if s.startswith('T2_')]
             self.sites_T1s = [ s for s in self.sites_ready if s.startswith('T1_')]
-            self.sites_with_goodIO = [ "T2_DE_DESY","T2_DE_RWTH","T2_ES_CIEMAT","T2_FR_IPHC",
-                                       "T2_IT_Bari","T2_IT_Legnaro","T2_IT_Pisa","T2_IT_Rome",
-                                       "T2_UK_London_Brunel","T2_UK_London_IC","T2_US_Caltech","T2_US_MIT",
-                                       "T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida"]
+            self.sites_with_goodIO = [ "T2_DE_DESY","T2_DE_RWTH",
+                                       "T2_ES_CIEMAT",
+                                       "T2_FR_IPHC", ##"T2_FR_GRIF_IRFU",
+                                       "T2_IT_Bari", "T2_IT_Legnaro", "T2_IT_Pisa", "T2_IT_Rome",
+                                       "T2_UK_London_Brunel", "T2_UK_London_IC", "T2_UK_SGrid_RALPP",
+                                       "T2_US_Caltech","T2_US_MIT","T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida",
+                                       "T2_BE_IIHE",
+                                       "T2_EE_Estonia"
+                                       ]
             self.sites_with_goodIO = [s for s in self.sites_with_goodIO if s in self.sites_ready]
-            allowed_T2_for_transfer = ["T2_US_Nebraska","T2_US_Wisconsin","T2_US_Purdue","T2_US_Caltech","T2_DE_RWTH","T2_DE_DESY", "T2_US_Florida", "T2_IT_Legnaro", "T2_CH_CERN", "T2_UK_London_IC", "T2_IT_Pisa", "T2_US_UCSD", "T2_IT_Rome", "T2_US_MIT" ]
+            allowed_T2_for_transfer = ["T2_US_Nebraska","T2_US_Wisconsin","T2_US_Purdue","T2_US_Caltech", "T2_US_Florida", "T2_US_UCSD", "T2_US_MIT",
+                                       "T2_IT_Legnaro", "T2_IT_Pisa", "T2_IT_Rome", 
+                                       "T2_CH_CERN", 
+                                       "T2_UK_London_Brunel", "T2_UK_London_IC", ##"T2_UK_SGrid_RALPP",
+                                       "T2_DE_RWTH","T2_DE_DESY", 
+                                       ## "T2_BE_IIHE",
+                                       ## "T2_EE_Estonia",
+                                       ##"T2_FR_GRIF_IRFU",##"T2_FR_IPHC",
+                                       ]
             allowed_T2_for_transfer = [s for s in allowed_T2_for_transfer if s in self.sites_ready]
             self.sites_veto_transfer = [site for site in self.sites_with_goodIO if not site in allowed_T2_for_transfer]
 
@@ -553,6 +569,9 @@ class siteInfo:
                 self.cpu_pledges[s]=1
                 ## will get is later from SSB
                 self.disk[ self.CE_to_SE(s)]=0
+            ## add hoc for ssb sucking
+            self.cpu_pledges['T2_BE_IIHE'] = 1000
+            self.cpu_pledges['T2_UK_SGrid_RALPP'] = 1000
 
         else:
             self.cpu_pledges.update(json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/pledged.json').read()))
@@ -634,6 +653,7 @@ class siteInfo:
                 self.disk[site] = 0 
             self.quota[site] = quota
             self.locked[site] = locked
+
 
     def fetch_more_info(self,talk=True):
         ## and complement information from ssb
