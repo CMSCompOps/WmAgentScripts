@@ -63,6 +63,8 @@ def assignor(url ,specific = None, talk=True, options=None):
         (lheinput,primary,parent,secondary) = wfh.getIO()
         sites_allowed = getSiteWhiteList( (lheinput,primary,parent,secondary) )
 
+        print "Site white list",sorted(sites_allowed)
+
         if 'SiteWhitelist' in CI.parameters(wfh.request['Campaign']):
             sites_allowed = CI.parameters(wfh.request['Campaign'])['SiteWhitelist']
 
@@ -77,10 +79,10 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         memory_allowed = SI.sitesByMemory( wfh.request['Memory'] )
         if memory_allowed!=None:
-            print "sites allowing", wfh.request['Memory'],"are",memory_allowed
+            print "sites allowing", wfh.request['Memory'],"are",sorted(memory_allowed)
             sites_allowed = list(set(sites_allowed) & set(memory_allowed))
 
-        print "Allowed",sites_allowed
+        print "Allowed",sorted(sites_allowed)
         secondary_locations=None
         for sec in list(secondary):
             presence = getDatasetPresence( url, sec )
@@ -95,7 +97,7 @@ def assignor(url ,specific = None, talk=True, options=None):
             ## reduce the site white list to site with secondary only
             sites_allowed = [site for site in sites_allowed if any([osite.startswith(site) for osite in one_secondary_locations])]
             
-        print "now Allowed",sites_allowed
+        print "now Allowed",sorted(sites_allowed)
         sites_all_data = copy.deepcopy( sites_allowed )
         sites_with_data = copy.deepcopy( sites_allowed )
         sites_with_any_data = copy.deepcopy( sites_allowed )
@@ -124,7 +126,11 @@ def assignor(url ,specific = None, talk=True, options=None):
             ## intersection of both any pieces of the primary and good IO
             #opportunistic_sites = [SI.SE_to_CE(site) for site in list((set(secondary_locations) & set(primary_locations) & set(SI.sites_with_goodIO)) - set(sites_allowed))]
             opportunistic_sites = [SI.SE_to_CE(site) for site in list((set(secondary_locations) & set(primary_locations)) - set([SI.CE_to_SE(site) for site in sites_allowed]))]
-            print "We could be running at",opportunistic_sites,"in addition"
+            print "We could be running at",sorted(opportunistic_sites),"in addition"
+            if any([osite in SI.sites_not_ready for osite in opportunistic_sites]):
+                print "One of the destination site is in downtime"
+                ## should this be send back to considered ?
+                
 
         if available_fractions and not all([available>=1. for available in available_fractions.values()]):
             print "The input dataset is not located in full over sites"
@@ -144,6 +150,10 @@ def assignor(url ,specific = None, talk=True, options=None):
         copies_wanted = 2.
         if available_fractions and not all([available>=copies_wanted for available in available_fractions.values()]):
             print "The input dataset is not available",copies_wanted,"times, only",available_fractions.values()
+            #if any([osite in SI.sites_not_ready for osite in opportunistic_sites]):
+            #    print "One of the destination site is in downtime"
+                ##send back to consider ?
+
             print json.dumps(available_fractions)
             if not options.go:
                 known = []
