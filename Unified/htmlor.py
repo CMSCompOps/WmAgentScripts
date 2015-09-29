@@ -132,7 +132,7 @@ def htmlor():
 </head>
 <body>
 
-Last update on %s(CET), %s(GMT), <a href=logs/ target=_blank>logs</a> <a href=logs/last.log target=_blank>last</a> <a href=statuses.html>statuses</a> <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/ target=_blank>prod mon</a> <a href=https://cmsweb.cern.ch/wmstats/index.html target=_blank>wmstats</a> <a href=http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/SitesInfo.txt target=_blank>detox</a> <a href=locked.html>space</a> <a href=https://twiki.cern.ch/twiki/bin/view/CMSPublic/CompOpsWorkflowL3Responsibilities#Automatic_Assignment_and_Unified>what am I</a> <a href=logs/addHoc/last.log>add-hoc op</a> <br><br>
+Last update on %s(CET), %s(GMT), <a href=logs/ target=_blank>logs</a> <a href=logs/last.log target=_blank>last</a> <a href=statuses.html>statuses</a> <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/ target=_blank>prod mon</a> <a href=https://cmsweb.cern.ch/wmstats/index.html target=_blank>wmstats</a> <a href=http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/SitesInfo.txt target=_blank>detox</a> <a href=locked.html>space</a> <a href=logs/subscribor/last.log target=_blank>blocks</a> <a href=https://twiki.cern.ch/twiki/bin/view/CMSPublic/CompOpsWorkflowL3Responsibilities#Automatic_Assignment_and_Unified>what am I</a> <a href=logs/addHoc/last.log>add-hoc op</a> <br><br>
 
 """ %(time.asctime(time.localtime()),
       time.asctime(time.gmtime())))
@@ -536,8 +536,10 @@ var data_%s = google.visualization.arrayToDataTable([
       ))
         chart_data[site].append("""
 var chart_%s = new google.visualization.PieChart(document.getElementById('donutchart_%s'));
-chart_%s.draw(data_%s, {title: '%s', pieHole:0.4, slices:{0:{color:'red'},1:{color:'green'}}});
-"""%(site,site,site,site,site))
+chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'},1:{color:'green'}}});
+"""%(site,site,
+     site,site,
+     site,SI.quota[site]))
         chart_data[site].append("""
 <div id="donutchart_%s" style="height: 200px;"></div>
 """%(site))
