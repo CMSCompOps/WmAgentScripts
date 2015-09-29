@@ -1268,6 +1268,20 @@ def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=N
     """
     
     return destinations, all_block_names
+def getDatasetBlockAndSite( url, dataset, group=""):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset=%s'%(dataset))
+    r2=conn.getresponse()
+    result = json.loads(r2.read())
+    items=result['phedex']['block']
+    blocks_at_sites=defaultdict(set)
+    for item in items:
+        for replica in item['replica']:
+            if replica['group'] == None: replica['group']=""
+            if group!=None and not replica['group'].lower()==group.lower(): continue
+            blocks_at_sites[replica['node']].add( item['name'] )
+    #return dict([(site,list(blocks)) for site,blocks in blocks_at_sites.items()])
+    return dict(blocks_at_sites)
 
 def getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=None, vetoes=None, within_sites=None):
     if vetoes==None:
@@ -1566,11 +1580,12 @@ def makeDeleteRequest(url, site,datasets, comments, priority='low'):
     response = phedexPost(url, "/phedex/datasvc/json/prod/delete", params)
     return response
 
-def makeReplicaRequest(url, site,datasets, comments, priority='normal',custodial='n',approve=False): # priority used to be normal
+def makeReplicaRequest(url, site,datasets, comments, priority='normal',custodial='n',approve=False,mail=True): # priority used to be normal
     dataXML = createXML(datasets)
     r_only = "n" if approve else "y"
+    notice = "n" if mail else "y"
     params = { "node" : site,"data" : dataXML, "group": "DataOps", "priority": priority,
-                 "custodial":custodial,"request_only":r_only ,"move":"n","no_mail":"n","comments":comments}
+                 "custodial":custodial,"request_only":r_only ,"move":"n","no_mail":notice,"comments":comments}
     response = phedexPost(url, "/phedex/datasvc/json/prod/subscribe", params)
     return response
 
