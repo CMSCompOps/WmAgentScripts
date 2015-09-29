@@ -1166,9 +1166,12 @@ def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=N
     ## the final answer is site : data_fraction_subscribed
 
     for item in items:
-        if item['name'] not in all_block_names and not only_blocks:
-            print item['name'],'not yet injected in dbs, counting anyways'
-            all_block_names.add( item['name'] )
+        if item['name'] not in all_block_names:
+            if not only_blocks:
+                print item['name'],'not yet injected in dbs, counting anyways'
+                all_block_names.add( item['name'] )
+            else:
+                continue
         for sub in item['subscription']:
             if not any(sub['node'].endswith(v) for v in vetoes):
                 if within_sites and not sub['node'] in within_sites: continue
