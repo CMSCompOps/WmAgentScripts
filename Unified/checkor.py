@@ -191,9 +191,9 @@ def checkor(url, spec=None, options=None):
         for output in wfi.request['OutputDatasets']:
             upper_limit = 301.
             campaign = get_campaign(output, wfi)
-            if 'EventsPerLumi' in wfi.request and 'FilterEfficiency' in wfi.request:
-                upper_limit = 1.5*wfi.request['EventsPerLumi']*wfi.request['FilterEfficiency']
-                print "setting the upper limit of lumisize to",upper_limit,"by request configuration"
+            #if 'EventsPerLumi' in wfi.request and 'FilterEfficiency' in wfi.request:
+            #    upper_limit = 1.5*wfi.request['EventsPerLumi']*wfi.request['FilterEfficiency']
+            #    print "setting the upper limit of lumisize to",upper_limit,"by request configuration"
 
             if campaign in CI.campaigns and 'lumisize' in CI.campaigns[campaign]:
                 upper_limit = CI.campaigns[campaign]['lumisize']
