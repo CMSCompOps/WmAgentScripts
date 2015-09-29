@@ -300,11 +300,14 @@ def assignor(url ,specific = None, talk=True, options=None):
                 try:
                     ## refetch information and lock output
                     new_wfi = workflowInfo( url, wfo.name)
+                    (_,prim,_,sec) = new_wfi.getIO()
                     for site in [SI.CE_to_SE(site) for site in sites_allowed]:
                         for output in new_wfi.request['OutputDatasets']:
                             LI.lock( output, site, 'dataset in production')
-                    if 'MCPileup' in new_wfi.request and new_wfi.request['MCPileup']:
-                        LI.lock(new_wfi.request['MCPileup'], site, 'required for mixing')
+                        for primary in prim:
+                            LI.lock( primary, site, 'dataset used in input')
+                        for secondary in sec:
+                            LI.lock( secondary, site, 'required for mixing' )
 
                 except Exception as e:
                     print "fail in locking output"
