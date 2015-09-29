@@ -61,11 +61,15 @@ def checkor(url, spec=None, options=None):
             print "cannot get by-passes from",bypass_file,"for",bypassor
             sendEmail("malformated by-pass information","%s is not json readable"%(bypass_file), destination=[email])
 
+
+    total_running_time = 10.*60. # 10 minutes
+    sleep_time = max(0.5, total_running_time / len(wfs))
+
     for wfo in wfs:
         if spec and not (spec in wfo.name): continue
-
+        time.sleep( sleep_time )
         print "checking on",wfo.name
-
+                   
         ## get info
         wfi = workflowInfo(url, wfo.name)
 
