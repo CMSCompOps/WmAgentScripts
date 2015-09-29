@@ -220,7 +220,7 @@ def assignor(url ,specific = None, talk=True, options=None):
         if options and options.team:
             team = options.team
 
-        if "T2_US_UCSD" in sites_with_data and random.random() < 0.9 and wfh.request['Campaign']=='RunIISpring15DR74' and int(wfh.getRequestNumEvents()) < 200000 and not any([out.endswith('RAW') for out in wfh.request['OutputDatasets']]):
+        if "T2_US_UCSD" in sites_with_data and random.random() < -0.5 and wfh.request['Campaign']=='RunIISpring15DR74' and int(wfh.getRequestNumEvents()) < 600000 and not any([out.endswith('RAW') for out in wfh.request['OutputDatasets']]):
             ## consider SDSC
             parameters['SiteWhitelist'] = ['T2_US_UCSD','T3_US_SDSC']
             parameters['useSiteListAsLocation'] = True
