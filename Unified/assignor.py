@@ -238,10 +238,13 @@ def assignor(url ,specific = None, talk=True, options=None):
             parameters['execute'] = True
 
         if not wfh.checkWorkflowSplitting():
+            print "Falling back to event splitting."
+            parameters['SplittingAlgorithm'] = 'EventBased'
+            sendEmail("Fallback to EventBased","the workflow %s is too heavy to be processed as it is. Fallback to EventBased splitting"%wfo.name)
             ## needs to go to event based ? fail for now
-            print "Falling back to event splitting ?"
-            #parameters['SplittingAlgorithm'] = 'EventBased'
-            continue
+            #print "Falling back to event splitting ?"
+            #sendEmail("Cannot assign","the workflow %s is too heavy to be processed as it is. Could fallback to EventBased splitting"%wfo.name)
+            #continue
 
         # Handle run-dependent MC
         pstring = wfh.processingString()
