@@ -62,7 +62,7 @@ def checkor(url, spec=None, options=None):
             sendEmail("malformated by-pass information","%s is not json readable"%(bypass_file), destination=[email])
 
 
-    total_running_time = 10.*60. # 10 minutes
+    total_running_time = 5.*60. 
     sleep_time = max(0.5, total_running_time / len(wfs))
 
     for wfo in wfs:
