@@ -64,32 +64,41 @@ def main():
         n_completed=0
         for wf in wfs:
 
+            #print "andrew debug 1"
+
             n_workflows=n_workflows+1
             conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-            r1=conn.request('GET','/couchdb/wmstats/_all_docs?keys=["'+wf[0]+'"]&include_docs=true')
+
+            #print wf[0]
+
+            #print "andrew debug 2"
+
+            r1=conn.request('GET','/reqmgr2/data/request?name='+wf[0],headers={"Accept": "application/json"})
+            #r1=conn.request('GET','/reqmgr2/data/request?name=heli_RVCMSSW_7_5_3ZTT_13_PUpmx25ns__FastSim_150925_132658_5738',headers={"Accept": "application/json"})
             r2=conn.getresponse()
             data = r2.read()
+
             s = json.loads(data)
+
+            #print "andrew debug 3"
+
             if r2.status != 200:
-                print "problem retrieving information from couchdb about "+str(wf[0])+", exiting"
-                os.system('echo '+wf[0]+' | mail -s \"monitorying.py error 1\" andrew.m.levin@vanderbilt.edu --')
+                os.system('echo '+wf[0]+' | mail -s \"monitorying.py error 1\" andrew.m.levin@vanderbilt.edu')
                 sys.exit(1)
                 
             #print s['rows'][0]['doc']['request_status']
             #print len(s['rows'][0]['doc']['request_status'])
 
-            if 'error' in s['rows'][0] and s['rows'][0]['error'] == 'not_found':
-                os.system('echo '+wf[0]+' | mail -s \"monitoring.py error 2\" andrew.m.levin@vanderbilt.edu --')
-                continue    
 
-            for status in s['rows'][0]['doc']['request_status']:
-                if status['status'] == "failed":
+            for status in s['result'][0][wf[0]]['RequestTransition']:
+
+                if status['Status'] == "failed":
                     os.system('echo '+wf[0]+' | mail -s \"create_monitoring_page.py error 3\" andrew.m.levin@vanderbilt.edu --')
 
-                if status['status'] == "completed":
+                if status['Status'] == "completed":
                     n_completed=n_completed+1
                     break    
-                        
+
         print "    n_workflows = " + str(n_workflows)
         print "    n_completed = " + str(n_completed)
         print ""

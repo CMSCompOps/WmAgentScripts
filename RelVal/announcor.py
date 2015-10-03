@@ -66,19 +66,17 @@ def main():
         for wf in wfs:
             n_workflows=n_workflows+1
             conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-            r1=conn.request('GET','/couchdb/wmstats/_all_docs?keys=["'+wf[0]+'"]&include_docs=true')
+            r1=conn.request('GET','/reqmgr2/data/request?name='+wf[0],headers={"Accept": "application/json"})
+            #r1=conn.request('GET','/couchdb/wmstats/_all_docs?keys=["'+wf[0]+'"]&include_docs=true')
             r2=conn.getresponse()
             data = r2.read()
             if r2.status != 200:
-                os.system('echo \"r2.status != 400\" | mail -s \"announcor.py error 1\" andrew.m.levin@vanderbilt.edu --')
-                print url+'/couchdb/wmstats/_all_docs?keys=["'+wf[0]+'"]&include_docs=true'
-                print "problem connecting to wmstats, exiting"
-                print r2.status
+                os.system('echo \"'+wf[0]+'\" | mail -s \"announcor.py error 1\" andrew.m.levin@vanderbilt.edu --')
                 sys.exit(0)
             s = json.loads(data)
-
-            for status in s['rows'][0]['doc']['request_status']:
-                if status['status'] == "completed" or status['status'] == "force-complete":
+        
+            for status in s['result'][0][wf[0]]['RequestTransition']:
+                if status['Status'] == "completed" or status['Status'] == "force-complete":
                     n_completed=n_completed+1
                     break    
 
@@ -89,12 +87,9 @@ def main():
         if n_workflows != n_completed:
             continue
 
-        #string="2015_06_04_1"
+        #string="2015_09_30_1_0"
 
-        #if not (string.split('_')[0] == useridyear and string.split('_')[1] == useridmonth and string.split('_')[2] == useridday and string.split('_')[3] == str(useridnum)):
-        #    continue
-
-        #if batch[0] != 222:
+        #if not (string.split('_')[0] == batch_dict["useridyear"] and string.split('_')[1] == batch_dict["useridmonth"] and string.split('_')[2] == batch_dict["useridday"] and string.split('_')[3] == str(batch_dict["useridnum"]) and string.split('_')[4] == str(batch_dict["batch_version_num"])):
         #    continue
 
         wf_list = []
@@ -250,6 +245,7 @@ def main():
             #even if you disapprove the subscription at the source, it will still deleted the datasets that are at the source but not subscribed their
             utils.disapproveSubscription("cmsweb.cern.ch",phedexid,["T2_CH_CERN"])
             utils.disapproveSubscription("cmsweb.cern.ch",phedexid,["T1_US_FNAL_Disk"])
+            utils.disapproveSubscription("cmsweb.cern.ch",phedexid,["T1_FR_CCIN2P3_Disk"])
             utils.approveSubscription("cmsweb.cern.ch",phedexid,["T0_CH_CERN_MSS"])
 
         #phedexid = result['phedex']['request_created'][0]['id']
