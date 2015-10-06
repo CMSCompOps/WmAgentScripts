@@ -1,12 +1,19 @@
 #!/usr/bin/env python
 
 from condor_overview import *
-import htcondor
+try:
+    import htcondor
+except ImportError:
+    print "You do not have a proper environment, please source the following:"
+    print "source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh"
+    sys.exit(1)
+
 
 global_pool = 'vocms099.cern.ch' #"vocms97.cern.ch"
 
 # production schedd's
-schedds = ["vocms0308.cern.ch",
+schedds = ["vocms0304.cern.ch",
+           "vocms0308.cern.ch",
            "vocms0309.cern.ch",
            "vocms0310.cern.ch",
            "vocms0311cern.ch",
