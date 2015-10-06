@@ -40,14 +40,14 @@ def buildGraphs(lines):
     dataset = None
     while i < len(lines):
         #dataset name
-        if lines[i].contains("dataset"):
+        if "dataset" in lines[i]:
             dataset = lines[i].split(":")[-1].strip()
             graph = {}
-            graph[dataset] = graph
+            graphs[dataset] = graph
             i += 1
             continue
         #ignore o
-        if( not lines[i].startswith("Lumi")
+        if( "Lumi" not in lines[i]
            and not lines[i].startswith("/") ):
             i += 1
             continue
@@ -74,7 +74,8 @@ def buildGraphs(lines):
 def buildGraph(lumis):
     graph = {}
     
-    for lumi, files in lumis.items():
+    for lumi in lumis:
+        files = lumis[lumi]
         #text lines with file names
         f1 = files[0]
         f2 = files[1]
@@ -251,7 +252,7 @@ def main():
         workflows = args
     else:
         parser.error("You should provide an input file with the output of duplicateEvents")
-    
+
     # get the output datasets of the workflos and create the graph
     if workflows:
         datasets = []
@@ -262,6 +263,7 @@ def main():
         #analyze each dataset
         for dataset in datasets:
             dup, lumis = dbs.duplicateRunLumi(dataset, verbose="dict", skipInvalid=True)
+            #print lumis
             graphs[dataset] = buildGraph(lumis)
             
     
