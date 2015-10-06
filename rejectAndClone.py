@@ -10,11 +10,9 @@
         input arg: Text file with list of workflows.
 """
 
-import urllib2,urllib, httplib, sys, re, os, pwd
-try:
-    import json
-except:
-    import simplejson as json
+import sys
+import os
+import pwd
 import resubmit, reqMgrClient
 import dbs3Client as dbs3
 from optparse import OptionParser
