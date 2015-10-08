@@ -50,6 +50,7 @@ def checkor(url, spec=None, options=None):
         return campaign
 
     by_passes = []
+    holdings = []
     for bypassor,email in [('jbadillo','julian.badillo.rojas@cern.ch'),('vlimant','vlimant@cern.ch'),('jen_a','jen_a@fnal.gov')]:
         bypass_file = '/afs/cern.ch/user/%s/%s/public/ops/bypass.json'%(bypassor[0],bypassor)
         if not os.path.isfile(bypass_file):
@@ -60,6 +61,15 @@ def checkor(url, spec=None, options=None):
         except:
             print "cannot get by-passes from",bypass_file,"for",bypassor
             sendEmail("malformated by-pass information","%s is not json readable"%(bypass_file), destination=[email])
+        holding_file = '/afs/cern.ch/user/%s/%s/public/ops/onhold.json'%(bypassor[0],bypassor)
+        if not os.path.isfile(holding_file):
+            print "no file",holding_file
+            continue
+        try:
+            holdings.extend( json.loads(open(holding_file).read()))
+        except:
+            print "cannot get holdings from",holding_file,"for",bypassor
+            sendEmail("malformated by-pass information","%s is not json readable"%(holding_file), destination=[email])
 
 
     total_running_time = 5.*60. 
@@ -69,7 +79,7 @@ def checkor(url, spec=None, options=None):
         if spec and not (spec in wfo.name): continue
         time.sleep( sleep_time )
         print "checking on",wfo.name
-                   
+        
         ## get info
         wfi = workflowInfo(url, wfo.name)
 
@@ -94,6 +104,15 @@ def checkor(url, spec=None, options=None):
             session.commit()
             continue
         
+        if '-onhold' in wfo.status:
+            if wfo.name in holdings:
+                print wfo.name,"on hold"
+                continue
+        if wfo.name in holdings:
+            wfo.status = 'assistance-onhold'
+            print "setting",wfo.name,"on hold"
+            session.commit()
+            continue
         
         if wfo.wm_status != 'completed':
             ## for sure move on with closeout check if in completed
@@ -381,10 +400,16 @@ def checkor(url, spec=None, options=None):
             ## toggle status to closed-out in request manager
             print "setting",wfo.name,"closed-out"
             if not options.test:
-                print reqMgrClient.closeOutWorkflowCascade(url, wfo.name)
-                # set it from away/assistance* to close
-                wfo.status = 'close'
-                session.commit()
+                res = reqMgrClient.closeOutWorkflowCascade(url, wfo.name)
+                if res != None:
+                    print "retrying to closing out"
+                    res = reqMgrClient.closeOutWorkflowCascade(url, wfo.name)
+                    
+                if res == None:
+                    wfo.status = 'close'
+                    session.commit()
+                else:
+                    print "could not close out",wfo.name,"will try again next time"
         else:
             ## that means there is something that needs to be done acdc, lumi invalidation, custodial, name it
             new_status = 'assistance'+sub_assistance
@@ -484,7 +509,7 @@ if __name__ == "__main__":
         
     checkor(url, spec, options=options)
     
-    if options.html:
-        htmlor()
+    #if options.html:
+    htmlor()
 
 
