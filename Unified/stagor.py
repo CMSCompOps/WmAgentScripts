@@ -15,12 +15,23 @@ def stagor(url,specific =None, options=None):
     if not componentInfo().check(): return
     SI = siteInfo()
     CI = campaignInfo()
+    UC = unifiedConfiguration()
 
     done_by_wf_id = {}
     done_by_input = {}
     completion_by_input = {}
     good_enough = 100.0
     
+    lost = json.loads(open('lost_blocks_datasets.json').read())
+    still_lost = []
+    for dataset in lost:
+        l = findLostBlocks(url ,dataset)
+        if not l:
+            print dataset,"is not really lost"
+        else:
+            still_lost.append( dataset )
+    open('lost_blocks_datasets.json','w').write( json.dumps( still_lost, indent=2) )
+
     if options.fast:
         print "doing the fast check of staged with threshold:",options.goodavailability
         for wfo in session.query(Workflow).filter(Workflow.status == 'staging').all():
@@ -133,14 +144,14 @@ def stagor(url,specific =None, options=None):
             print "For dataset",dsname,"there are no transfer report. That's an issue."
             for wf in using_wfos:
                 if wf.status == 'staging':
-                    if True:
-                        print "would send",wf.name,"back to considered"
-                        sendEmail( "subscription lagging behind","susbscriptions to get %s running are not appearing in phedex. I would have send it back to considered but that's not good."% wf.name)
-                    else:
+                    if UC.get("stagor_sends_back"):
                         print "sending",wf.name,"back to considered"
                         wf.status = 'considered'
                         session.commit()
                         sendEmail( "send back to considered","%s was send back and might be trouble"% wf.name)
+                    else:
+                        print "would send",wf.name,"back to considered"
+                        sendEmail( "subscription lagging behind","susbscriptions to get %s running are not appearing in phedex. I would have send it back to considered but that's not good."% wf.name)
             continue
 
         #need_sites = int(len(done_by_input[dsname].values())*0.7)+1
