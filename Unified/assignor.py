@@ -4,7 +4,7 @@ import reqMgrClient
 from utils import workflowInfo, campaignInfo, siteInfo, userLock
 from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction, getDatasetEventsPerLumi
 from utils import componentInfo, sendEmail
-from utils import lockInfo, duplicateLock
+from utils import lockInfo, duplicateLock, notRunningBefore
 import optparse
 import itertools
 import time
@@ -16,12 +16,15 @@ import json
 def assignor(url ,specific = None, talk=True, options=None):
     if userLock(): return
     if duplicateLock(): return
-
+    #if notRunningBefore( 'stagor' ): return
     if not componentInfo().check(): return
 
     CI = campaignInfo()
     SI = siteInfo()
     LI = lockInfo()
+
+    n_assigned = 0
+    n_stalled = 0
 
     wfos=[]
     if specific:
@@ -36,20 +39,27 @@ def assignor(url ,specific = None, talk=True, options=None):
         if specific:
             if not any(map(lambda sp: sp in wfo.name,specific.split(','))): continue
             #if not specific in wfo.name: continue
-        print wfo.name,"to be assigned"
+        print "\n\n",wfo.name,"\n\tto be assigned"
         wfh = workflowInfo( url, wfo.name)
 
 
         ## check if by configuration we gave it a GO
         if not CI.go( wfh.request['Campaign'] ) and not options.go:
             print "No go for",wfh.request['Campaign']
+            n_stalled+=1
             continue
 
         ## check on current status for by-passed assignment
         if wfh.request['RequestStatus'] !='assignment-approved':
-            print wfo.name,wfh.request['RequestStatus'],"skipping"
             if not options.test:
+                print wfo.name,wfh.request['RequestStatus'],"setting away and skipping"
+                ## the module picking up from away will do what is necessary of it
+                wfo.wm_status = wfh.request['RequestStatus']
+                wfo.status = 'away'
+                session.commit()
                 continue
+            else:
+                print wfo.name,wfh.request['RequestStatus']
 
         ## retrieve from the schema, dbs and reqMgr what should be the next version
         version=wfh.getNextVersion()
@@ -58,6 +68,7 @@ def assignor(url ,specific = None, talk=True, options=None):
                 version = options.ProcessingVersion
             else:
                 print "cannot decide on version number"
+                n_stalled+=1
                 continue
 
         (lheinput,primary,parent,secondary) = wfh.getIO()
@@ -95,9 +106,10 @@ def assignor(url ,specific = None, talk=True, options=None):
             else:
                 secondary_locations = list(set(secondary_locations) & set(one_secondary_locations))
             ## reduce the site white list to site with secondary only
-            sites_allowed = [site for site in sites_allowed if any([osite.startswith(site) for osite in one_secondary_locations])]
+            #sites_allowed = [site for site in sites_allowed if any([osite.startswith(site) for osite in one_secondary_locations])]
+            sites_allowed = [site for site in sites_allowed if SI.CE_to_SE(site) in one_secondary_locations]
             
-        print "now Allowed",sorted(sites_allowed)
+        print "From secondary requirement, now Allowed",sorted(sites_allowed)
         sites_all_data = copy.deepcopy( sites_allowed )
         sites_with_data = copy.deepcopy( sites_allowed )
         sites_with_any_data = copy.deepcopy( sites_allowed )
@@ -109,9 +121,12 @@ def assignor(url ,specific = None, talk=True, options=None):
                 print prim
                 print json.dumps(presence, indent=2)
             available_fractions[prim] =  getDatasetBlocksFraction(url, prim, sites = [SI.CE_to_SE(site) for site in sites_allowed] , only_blocks = blocks)
-            sites_all_data = [site for site in sites_with_data if any([osite.startswith(site) for osite in [psite for (psite,(there,frac)) in presence.items() if there]])]
-            sites_with_data = [site for site in sites_with_data if any([osite.startswith(site) for osite in [psite for (psite,frac) in presence.items() if frac[1]>90.]])]
-            sites_with_any_data = [site for site in sites_with_any_data if any([osite.startswith(site) for osite in presence.keys()])]
+            #sites_all_data = [site for site in sites_with_data if any([osite.startswith(site) for osite in [psite for (psite,(there,frac)) in presence.items() if there]])]
+            #sites_with_data = [site for site in sites_with_data if any([osite.startswith(site) for osite in [psite for (psite,frac) in presence.items() if frac[1]>90.]])]
+            sites_all_data = [site for site in sites_with_data if SI.CE_to_SE(site) in [psite for (psite,(there,frac)) in presence.items() if there]]
+            sites_with_data = [site for site in sites_with_data if SI.CE_to_SE(site) in [psite for (psite,frac) in presence.items() if frac[1]>90.]]
+            sites_with_any_data = [site for site in sites_with_any_data if SI.CE_to_SE(site) in presence.keys()]
+            print "Holding the data but not allowed",list(set([se_site for se_site in presence.keys() if not SI.SE_to_CE(se_site) in sites_allowed]))
             if primary_locations==None:
                 primary_locations = presence.keys()
             else:
@@ -123,10 +138,15 @@ def assignor(url ,specific = None, talk=True, options=None):
         opportunistic_sites=[]
         down_time = False
         ## opportunistic running where any piece of data is available
-        if secondary_locations and primary_locations:
+        if secondary_locations or primary_locations:
             ## intersection of both any pieces of the primary and good IO
             #opportunistic_sites = [SI.SE_to_CE(site) for site in list((set(secondary_locations) & set(primary_locations) & set(SI.sites_with_goodIO)) - set(sites_allowed))]
-            opportunistic_sites = [SI.SE_to_CE(site) for site in list((set(secondary_locations) & set(primary_locations)) - set([SI.CE_to_SE(site) for site in sites_allowed]))]
+            if secondary_locations:
+                opportunistic_sites = [SI.SE_to_CE(site) for site in list((set(secondary_locations) & set(primary_locations)) - set([SI.CE_to_SE(site) for site in sites_allowed]))]
+            elif primary_locations:
+                opportunistic_sites = [SI.SE_to_CE(site) for site in list(set(primary_locations) - set([SI.CE_to_SE(site) for site in sites_allowed]))]
+            else:
+                opportunistic_sites = []
             print "We could be running at",sorted(opportunistic_sites),"in addition"
             if any([osite in SI.sites_not_ready for osite in opportunistic_sites]):
                 print "One of the destination site is in downtime"
@@ -134,6 +154,7 @@ def assignor(url ,specific = None, talk=True, options=None):
                 ## should this be send back to considered ?
                 
 
+        """
         if available_fractions and not all([available>=1. for available in available_fractions.values()]):
             print "The input dataset is not located in full over sites"
             print json.dumps(available_fractions)
@@ -147,17 +168,22 @@ def assignor(url ,specific = None, talk=True, options=None):
                     sendEmail( "cannot be assigned","%s is not full over sites \n %s"%(wfo.name,json.dumps(available_fractions)))
                     known.append( wfo.name )
                     open('cannot_assign.json','w').write(json.dumps( known, indent=2))
+                n_stalled+=1
                 continue ## skip skip skip
+        """
 
-        copies_wanted = 2.
+        ## should be 2 but for the time-being let's lower it to get things going
+        copies_wanted,cpuh = wfh.getNCopies()
+        
         if available_fractions and not all([available>=copies_wanted for available in available_fractions.values()]):
             print "The input dataset is not available",copies_wanted,"times, only",available_fractions.values()
             if down_time:
                 wfo.status = 'considered'
                 session.commit()
                 print "sending back to considered because of site downtime, instead of waiting"
-                sendEmail( "cannot be assigned due to downtime","%s is not sufficiently available, due to down time of a site in the whitelist. check the assignor logs. sending back to considered"% wfo.name)
+                sendEmail( "cannot be assigned due to downtime","%s is not sufficiently available, due to down time of a site in the whitelist. check the assignor logs. sending back to considered."% wfo.name)
                 continue
+                #pass
 
             print json.dumps(available_fractions)
             if not options.go:
@@ -170,6 +196,7 @@ def assignor(url ,specific = None, talk=True, options=None):
                     sendEmail( "cannot be assigned","%s is not sufficiently available. Probably phedex information lagging behind. \n %s"%(wfo.name,json.dumps(available_fractions)))
                     known.append( wfo.name )
                     open('cannot_assign.json','w').write(json.dumps( known, indent=2))
+                n_stalled+=1
                 continue
 
         ## default back to white list to original white list with any data
@@ -196,6 +223,7 @@ def assignor(url ,specific = None, talk=True, options=None):
         if not len(sites_allowed):
             print wfo.name,"cannot be assign with no matched sites"
             sendEmail( "cannot be assigned","%s has no whitelist"%(wfo.name))
+            n_stalled+=1
             continue
 
         t1_only = [ce for ce in sites_allowed if ce.startswith('T1')]
@@ -296,7 +324,7 @@ def assignor(url ,specific = None, talk=True, options=None):
             if result:
                 wfo.status = 'away'
                 session.commit()
-
+                n_assigned+=1
                 try:
                     ## refetch information and lock output
                     new_wfi = workflowInfo( url, wfo.name)
@@ -319,7 +347,9 @@ def assignor(url ,specific = None, talk=True, options=None):
                 print "ERROR could not assign",wfo.name
         else:
             pass
-
+    print "Assignment summary:"
+    print "Assigned",n_assigned
+    print "Stalled",n_stalled
     
 if __name__=="__main__":
     url = 'cmsweb.cern.ch'

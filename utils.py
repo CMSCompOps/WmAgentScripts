@@ -437,6 +437,22 @@ class campaignInfo:
         else:
             return {}
 
+def notRunningBefore( component, time_out = 60*5 ):
+    s = 10
+    while True:
+        if time_out<0:
+            print "Could not wait any longer for %s to finish"% component
+            return False
+        process_check = filter(None,os.popen('ps -f -e | grep %s.py | grep -v grep  |grep python'%component).read().split('\n'))
+        if len(process_check):
+            ## there is still the component running. wait
+            time.sleep(s)
+            time_out-=s
+            continue
+        break
+    return True
+
+
 def duplicateLock(component=None):
     if not component:
         ## get the caller
@@ -493,22 +509,25 @@ class siteInfo:
             self.sites_T1s = [ s for s in self.sites_ready if s.startswith('T1_')]
             self.sites_with_goodIO = [ "T2_DE_DESY","T2_DE_RWTH",
                                        "T2_ES_CIEMAT",
-                                       "T2_FR_IPHC", ##"T2_FR_GRIF_IRFU",
+                                       "T2_FR_GRIF_LLR", "T2_FR_GRIF_IRFU", "T2_FR_IPHC",
                                        "T2_IT_Bari", "T2_IT_Legnaro", "T2_IT_Pisa", "T2_IT_Rome",
                                        "T2_UK_London_Brunel", "T2_UK_London_IC", "T2_UK_SGrid_RALPP",
                                        "T2_US_Caltech","T2_US_MIT","T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida",
                                        "T2_BE_IIHE",
-                                       "T2_EE_Estonia"
+                                       "T2_EE_Estonia",
+                                       "T2_CH_CERN"
                                        ]
             self.sites_with_goodIO = [s for s in self.sites_with_goodIO if s in self.sites_ready]
-            allowed_T2_for_transfer = ["T2_US_Nebraska","T2_US_Wisconsin","T2_US_Purdue","T2_US_Caltech", "T2_US_Florida", "T2_US_UCSD", "T2_US_MIT",
-                                       "T2_IT_Legnaro", "T2_IT_Pisa", "T2_IT_Rome", 
+            allowed_T2_for_transfer = ["T2_DE_RWTH","T2_DE_DESY", 
+                                       #not inquired# "T2_ES_CIEMAT",
+                                       #no space# ##"T2_FR_GRIF_IRFU", #not inquired# ##"T2_FR_GRIF_LLR", #not inquired"## "T2_FR_IPHC",
+                                       "T2_IT_Legnaro", "T2_IT_Pisa", "T2_IT_Rome", #no space# #"T2_IT_Bari",
+                                       "T2_UK_London_Brunel", "T2_UK_London_IC", #commissioning#"T2_UK_SGrid_RALPP",
+                                       "T2_US_Nebraska","T2_US_Wisconsin","T2_US_Purdue","T2_US_Caltech", "T2_US_Florida", "T2_US_UCSD", "T2_US_MIT",
+                                       #commissioning# "T2_BE_IIHE",
+                                       #commissioning# "T2_EE_Estonia",
                                        "T2_CH_CERN", 
-                                       "T2_UK_London_Brunel", "T2_UK_London_IC", ##"T2_UK_SGrid_RALPP",
-                                       "T2_DE_RWTH","T2_DE_DESY", 
-                                       ## "T2_BE_IIHE",
-                                       ## "T2_EE_Estonia",
-                                       ##"T2_FR_GRIF_IRFU",##"T2_FR_IPHC",
+
                                        ]
             allowed_T2_for_transfer = [s for s in allowed_T2_for_transfer if s in self.sites_ready]
             self.sites_veto_transfer = [site for site in self.sites_with_goodIO if not site in allowed_T2_for_transfer]
@@ -658,6 +677,7 @@ class siteInfo:
     def fetch_more_info(self,talk=True):
         ## and complement information from ssb
         columns= {
+            'realCPU' : 136,
             'prodCPU' : 159,
             'CPUbound' : 160,
             'FreeDisk' : 106,
@@ -689,7 +709,8 @@ class siteInfo:
             if talk: print "\n\tSite:",site
             ssite = self.CE_to_SE( site )
             tsite = site+'_MSS'
-            key_for_cpu ='prodCPU'
+            #key_for_cpu ='prodCPU'
+            key_for_cpu ='CPUbound'
             if key_for_cpu in info and site in self.cpu_pledges and info[key_for_cpu]:
                 if self.cpu_pledges[site] < info[key_for_cpu]:
                     if talk: print site,"could use",info[key_for_cpu],"instead of",self.cpu_pledges[site],"for CPU"
@@ -769,7 +790,7 @@ class siteInfo:
         #print ws
         for i, w in enumerate(ws):
             rnd -= w
-            if rnd < 0:
+            if rnd <= 0:
                 return i
         print "could not make a choice from ",ws,"and",rnd
         return None
@@ -1184,10 +1205,15 @@ def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=N
             
     #complement with transfer request, approved, but without subscriptions yet
     if complement:
+        time.sleep(1)
         print "Complementing the destinations with request with no subscriptions"
         print "we have",destinations.keys(),"for now"
-        r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset=%s'%dataset)
-        r2=conn.getresponse()
+        try:
+            r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset=%s'%dataset)
+            r2=conn.getresponse()
+        except:
+            r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset=%s'%dataset)
+            r2=conn.getresponse()
         result = json.loads(r2.read())
         items=result['phedex']['request']
     else:
@@ -1211,6 +1237,7 @@ def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=N
         if item['type']=='delete': continue
         sites_destinations = []
         for req in item['node']:
+            if within_sites and not req['name'] in within_sites: continue
             if req['name'] in deletes and int(req['time_decided'])< deletes[req['name']]:
                 ## this request is void by now
                 continue
@@ -1221,6 +1248,7 @@ def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=N
                     ## the node was already seen as a destination with an ealier time, and no delete in between
                     continue
             times[req['name']] = int(req['time_decided'])
+
             sites_destinations.append( req['name'] )
         sites_destinations = [site for site in sites_destinations if not any(site.endswith(v) for v in vetoes)]
         ## what are the sites for which we have missing information ?
@@ -1271,7 +1299,18 @@ def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=N
     """
     
     return destinations, all_block_names
-def getDatasetBlockAndSite( url, dataset, group=""):
+
+def getDatasetOnGoingDeletion( url, dataset ):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    r1=conn.request("GET",'/phedex/datasvc/json/prod/deletions?dataset=%s&complete=n'%(dataset))
+    r2=conn.getresponse()
+    result = json.loads(r2.read())['phedex']
+    return result['dataset']
+    
+
+def getDatasetBlockAndSite( url, dataset, group="",vetoes=None):
+    if vetoes==None:
+        vetoes = ['MSS','Buffer','Export']
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset=%s'%(dataset))
     r2=conn.getresponse()
@@ -1282,6 +1321,7 @@ def getDatasetBlockAndSite( url, dataset, group=""):
         for replica in item['replica']:
             if replica['group'] == None: replica['group']=""
             if group!=None and not replica['group'].lower()==group.lower(): continue
+            if vetoes and replica['node'] in vetoes: continue
             blocks_at_sites[replica['node']].add( item['name'] )
     #return dict([(site,list(blocks)) for site,blocks in blocks_at_sites.items()])
     return dict(blocks_at_sites)
@@ -1447,6 +1487,7 @@ def getDatasetEventsAndLumis(dataset, blocks=None):
             all_files.extend( dbsapi.listFileSummaries( block_name = b  , validFileOnly=1))
     else:
         all_files = dbsapi.listFileSummaries( dataset = dataset , validFileOnly=1)
+    if all_files == [None]:        all_files = []
 
     all_events = sum([f['num_event'] for f in all_files])
     all_lumis = sum([f['num_lumi'] for f in all_files])
@@ -1823,12 +1864,17 @@ class workflowInfo:
             cput = cput / (60.*60.*24.)
         return cput
     
-    def getNCopies(self, CPUh=None, min_copies = 0, max_copies = 10, CPUturn = 500000, CPUh0 = 500000):
+    def getNCopies(self, CPUh=None, m = 1, M = 6, w = 50000, C0 = 100000):
         def sigmoid(x):      
             return 1 / (1 + math.exp(-x)) 
         if CPUh==None:
             CPUh = self.getComputingTime()
-        return  int(min_copies + (max_copies-min_copies)*sigmoid( (CPUh - CPUh0)/CPUturn)),CPUh
+        f = sigmoid(-C0/w)
+        D = (M-m) / (1-f)
+        O = (f*M - m)/(f-1) 
+        #print O
+        #print D
+        return int(O + D * sigmoid( (CPUh - C0)/w)), CPUh
 
     def availableSlots(self):
         av = 0

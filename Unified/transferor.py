@@ -74,6 +74,7 @@ def transferor(url ,specific = None, talk=True, options=None):
     print "... done"
 
     all_transfers=defaultdict(list)
+    needing_locks=defaultdict(list)
     workflow_dependencies = defaultdict(set) ## list of wf.id per input dataset
     wfs_and_wfh=[]
     print "getting all wf to consider ..."
@@ -162,6 +163,7 @@ def transferor(url ,specific = None, talk=True, options=None):
     passing_along = 0
     transfer_sizes={}
     went_over_budget=False
+    destination_cache = {}
     for (wfo,wfh) in wfs_and_wfh:
         print wfh.request['RequestPriority']
         print wfo.name,"to be transfered"
@@ -293,6 +295,10 @@ def transferor(url ,specific = None, talk=True, options=None):
             ## same, we could be doing the white list here too
             pass
 
+
+        if blocks:
+            print "Reading",len(blocks),"in whitelist"
+
         can_go = True
         staging=False
         allowed=True
@@ -307,7 +313,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                 max_priority[prim] = max(max_priority[prim],int(wfh.request['RequestPriority']))
                 sites_allowed = [site for site in sites_allowed if not any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
                 print "Sites allowed minus the vetoed transfer"
-                print sites_allowed
+                print sorted(sites_allowed)
 
                 copies_needed_from_site = int(0.35*len(sites_allowed))+1 ## should just go for a fixed number based if the white list grows that big
                 print "Would make",copies_needed_from_site,"copies from site white list"
@@ -317,8 +323,9 @@ def transferor(url ,specific = None, talk=True, options=None):
                 copies_needed = copies_needed_from_CPUh
 
                 if options.maxcopy>0:
-                    copies_needed = min(options.maxcopy,copies_needed)
-                    print "Maxed to",copies_needed
+                    ## stop maxing things out ??
+                    #copies_needed = min(options.maxcopy,copies_needed)
+                    #print "Maxed to",copies_needed
                     if copies_needed_from_CPUh > options.maxcopy:
                         sendEmail('An example of more than three copies','for %s it could have been beneficial to make %s copies'%( wfo.name, copies_needed_from_CPUh))
 
@@ -367,6 +374,10 @@ def transferor(url ,specific = None, talk=True, options=None):
                 prim_location = [site for (site,info) in destinations.items() if info['completion']==100 and info['data_fraction']==1]
                 ## the rest is places it is going to be
                 prim_destination = [site for site in destinations.keys() if not site in prim_location]
+                ## need to take out the transfer veto
+                prim_destination = [site for site in prim_destination if not any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
+                for dsite in prim_destination:
+                    needing_locks[dsite].append( prim )
 
                 if len(prim_location) >= copies_needed:
                     print "The output is all fully in place at",len(prim_location),"sites",prim_location
@@ -459,10 +470,29 @@ def transferor(url ,specific = None, talk=True, options=None):
                 print wfo.name,'reads',', '.join(secondary),'in secondary'
             for sec in secondary:
                 workflow_dependencies[sec].add( wfo.id )
-                presence = getDatasetPresence( url, sec )
-                sec_location = [site for site,pres in presence.items() if pres[1]>90.] ## more than 90% of the minbias at sites
-                subscriptions = listSubscriptions( url ,sec )
-                sec_destination = [site for site in subscriptions] 
+
+                if False:
+                    ## new style, failing on minbias
+                    if not sec in destination_cache:
+                        ## this is barbbaric, and does not show the correct picture on workflow by workflow with different whitelist
+                        destination_cache[sec],_ = getDatasetDestinations(url, sec, within_sites = [SI.CE_to_SE(site) for site in sites_allowed])
+                    destinations = destination_cache[sec]
+                    ## truncate location/destination to those making up for >90% of the dataset
+                    bad_destinations = [destinations.pop(site) for (site,info) in destinations.items() if info['data_fraction']<0.9]
+                    sec_location = [site for (site,info) in destinations.items() if info['completion']>=95]
+                    sec_destination = [site for site in destinations.keys() if not site in sec_location]
+                else:
+                    ## old style
+                    presence = getDatasetPresence( url, sec )
+                    sec_location = [site for site,pres in presence.items() if pres[1]>90.] ## more than 90% of the minbias at sites
+                    subscriptions = listSubscriptions( url ,sec )
+                    sec_destination = [site for site in subscriptions] 
+
+                for site in sec_location:
+                    needing_locks[site].append( sec )
+                for site in sec_destination:
+                    needing_locks[site].append( sec )
+
                 sec_to_distribute = [site for site in sites_allowed if not any([osite.startswith(site) for osite in sec_location])]
                 sec_to_distribute = [site for site in sec_to_distribute if not any([osite.startswith(site) for osite in sec_destination])]
                 sec_to_distribute = [site for site in sec_to_distribute if not  any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
@@ -475,7 +505,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                             can_go = False
                         else:
                             print "could not send the secondary input to",site_se,"because it is too big for the available disk",SI.disk[site_se]*1024,"GB need",sec_size
-                            sendEmail('secondary input too big','%s is too big (%s) for %s (%s)'%( sec, sec_size, site_se, SI.disk[site_se]*1024))
+                            #sendEmail('secondary input too big','%s is too big (%s) for %s (%s)'%( sec, sec_size, site_se, SI.disk[site_se]*1024))
 
         ## is that possible to do something more
         if can_go:
@@ -505,6 +535,12 @@ def transferor(url ,specific = None, talk=True, options=None):
             needs_transfer+=1
             passing_along+=1
 
+    print "accumulated locks of dataset in place"
+    print json.dumps(needing_locks, indent=2)
+    for site,items in needing_locks.items():
+        for item in items:
+            LI.lock( item, SI.CE_to_SE(site), 'usable input')
+        
     print "accumulated transfers"
     print json.dumps(all_transfers, indent=2)
     fake_id=-1
