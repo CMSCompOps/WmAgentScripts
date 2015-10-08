@@ -5,9 +5,12 @@ from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConf
 import os
 import json
 from collections import defaultdict
+import sys
 
-def htmlor():
+def htmlor( caller = ""):
     cache = getWorkflows('cmsweb.cern.ch','assignment-approved', details=True)
+    cache.extend( getWorkflows('cmsweb.cern.ch','running-open', details=True) )
+    cache.extend( getWorkflows('cmsweb.cern.ch','running-closed', details=True) )
     def getWL( wfn ):
         cached = filter(lambda d : d['RequestName']==wfn, cache)
         if cached:
@@ -114,11 +117,31 @@ def htmlor():
     def ol(out):
         return '<a href="https://cmsweb.cern.ch/das/request?input=%s" target="_blank"> %s</a>'%(out,out)
 
-    
+
+    def lap( comment ):
+        
+        l = time.mktime(time.gmtime())
+        spend = l-lap.start
+        lap.start =l 
+        print "Spend %d [s] for %s"%( spend, comment )
+    lap.start = time.mktime(time.gmtime())
+
     ## start to write it
     #html_doc = open('/afs/cern.ch/user/v/vlimant/public/ops/index.html','w')
     html_doc = open('/afs/cern.ch/user/c/cmst2/www/unified/index.html','w')
     print "Updating the status page ..." 
+
+    if not caller:
+        try:
+            #caller = sys._getframe(1).f_code.co_name
+            caller = sys.argv[0].split('/')[-1].replace('.py','')
+            print "caller is"
+            print caller
+        except Exception as es:
+            caller = 'none found'
+            print "not getting frame"
+            print str(es)
+
     html_doc.write("""
 <html>
 <head>
@@ -132,11 +155,14 @@ def htmlor():
 </head>
 <body>
 
-Last update on %s(CET), %s(GMT), <a href=logs/ target=_blank>logs</a> <a href=logs/last.log target=_blank>last</a> <a href=statuses.html>statuses</a> <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/ target=_blank>prod mon</a> <a href=https://cmsweb.cern.ch/wmstats/index.html target=_blank>wmstats</a> <a href=http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/SitesInfo.txt target=_blank>detox</a> <a href=locked.html>space</a> <a href=logs/subscribor/last.log target=_blank>blocks</a> <a href=https://twiki.cern.ch/twiki/bin/view/CMSPublic/CompOpsWorkflowL3Responsibilities#Automatic_Assignment_and_Unified>what am I</a> <a href=logs/addHoc/last.log>add-hoc op</a> <br><br>
+Last update on %s(CET), %s(GMT), <a href=logs/ target=_blank>logs</a> <a href=logs/last.log target=_blank>last</a> <a href=statuses.html>statuses</a> <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/ target=_blank>prod mon</a> <a href=https://cmsweb.cern.ch/wmstats/index.html target=_blank>wmstats</a> <a href=http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/SitesInfo.txt target=_blank>detox</a> <a href=locked.html>space</a> <a href=logs/subscribor/last.log target=_blank>blocks</a> <a href=https://twiki.cern.ch/twiki/bin/view/CMSPublic/CompOpsWorkflowL3Responsibilities#Automatic_Assignment_and_Unified>what am I</a> <a href=logs/addHoc/last.log>add-hoc op</a> created from <b>%s</b><br><br>
 
 """ %(time.asctime(time.localtime()),
-      time.asctime(time.gmtime())))
-
+      time.asctime(time.gmtime()),
+      caller
+      )
+                   )
+        
     text=""
     count=0
     count_by_campaign=defaultdict(lambda : defaultdict(int))
@@ -172,7 +198,7 @@ Worflow next to handle (%d) <a href=https://cms-pdmv.cern.ch/mcm/batches?status=
      count, text,
      len(count_by_campaign), text_by_c))
                    
-
+    lap( 'done with considered' )
     text=""
     count=0
     count_by_campaign=defaultdict(lambda : defaultdict(int))
@@ -210,16 +236,18 @@ Worflow waiting in staging (%d) <a href=logs/transferor/last.log target=_blank>l
      count, text,
      len(count_by_campaign), text_by_c))
 
+    lap ( 'done with staging' )
 
     text=""
     count=0
     for ts in session.query(Transfer).all():
-        stext='<li> %s serves </li><a href="javascript:showhide(\'%s\')">[show/hide]</a> <div id="%s" style="display:none;"><ul>'%( phl(ts.phedexid), ts.phedexid, ts.phedexid )
+        stext='<li> %s serves </li><a href="javascript:showhide(\'%s\')">[show/hide] relevant workflows</a> <div id="%s" style="display:none;"><ul>'%( phl(ts.phedexid), ts.phedexid, ts.phedexid )
         hide = True
         for pid in ts.workflows_id:
             w = session.query(Workflow).get(pid)
             hide &= (w.status != 'staging' )
-            stext+="<li> %s </li>\n"%( wfl(w,status=True))
+            if w.status in ['considered','staging','staged']:
+                stext+="<li> %s </li>\n"%( wfl(w,status=True))
         stext+="</ul></div>\n"
         if hide:
             #text+="<li> %s not needed anymore to start running (does not mean it went through completely)</li>"%phl(ts.phedexid)
@@ -237,7 +265,7 @@ Transfer on-going (%d) <a href=https://transferteam.web.cern.ch/transferteam/das
 <ul>"""%count)
     html_doc.write(text)
 
-
+    lap( 'done with transfers' )
 
     text=""
     count=0
@@ -274,22 +302,48 @@ Transfer on-going (%d) <a href=https://transferteam.web.cern.ch/transferteam/das
      count, text,
      len(count_by_campaign), text_by_c))
 
-
+    lap( 'done with staged' )
+    
     lines=[]
+    count_by_campaign=defaultdict(lambda : defaultdict(int))
     for wf in session.query(Workflow).filter(Workflow.status=='away').all():
+        wl = getWL( wf.name )
+        count_by_campaign[wl['Campaign']][int(wl['RequestPriority'])]+=1
         lines.append("<li> %s </li>"%wfl(wf,view=True,ongoing=True))
+    text_by_c=""
+    for c in count_by_campaign:
+        text_by_c+="<li> %s (%d) : "%( c, sum(count_by_campaign[c].values()) )
+        for p in sorted(count_by_campaign[c].keys()):
+            text_by_c+="%d (%d), "%(p,count_by_campaign[c][p])
+        text_by_c+="</li>"
+
     lines.sort()
     html_doc.write("""
 Worflow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests_in_production.php target=_blank>ongoing</a> <a href=https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary target=_blank>elog</a> <a href=http://cms-gwmsmon.cern.ch/prodview target=_blank>queues</a> <a href=logs/assignor/last.log target=_blank>log</a> <a href=logs/checkor/last.log target=_blank>postlog</a>
 <a href="javascript:showhide('away')">[Click to show/hide]</a>
 <br>
 <div id="away" style="display:none;">
-<br>
+<ul> 
+<li>By workflow (%d) </li>
+<a href="javascript:showhide('away_bywf')">[Click to show/hide]</a><div id="away_bywf" style="display:none;">
 <ul>
 %s
+</ul></div>
+<li> By campaigns (%d) </li><a href="javascript:showhide('away_bycamp')">[Click to show/hide]</a><div id="away_bycamp" style="display:none;">
+<ul>
+%s
+</ul></div>
 </ul>
 </div>
-"""%(len(lines),'\n'.join(lines)))
+"""%(len(lines),
+     len(lines),
+     '\n'.join(lines),
+     len(count_by_campaign),
+     text_by_c
+     ))
+
+
+    lap ( 'done with away' )
 
     text=""
     count=0
@@ -308,6 +362,8 @@ Worflow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/reque
 """%count)
     html_doc.write(text)
 
+    lap ( 'done with closing' )
+
     text=""
     count=0
     for wf in session.query(Workflow).filter(Workflow.status.startswith('assistance-')).all():
@@ -325,6 +381,8 @@ Worflow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/reque
 """%count)
     html_doc.write(text)
     
+    lap ( 'done with assistance' )
+
     text=""
     count=0
     for wf in session.query(Workflow).filter(Workflow.status == 'close').all():
@@ -341,6 +399,8 @@ Worflow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/reque
 """%count)
     html_doc.write(text)
 
+    lap ( 'done with annoucing' )
+
     text=""
     count=0
     for wf in session.query(Workflow).filter(Workflow.status=='trouble').all():
@@ -356,7 +416,7 @@ Worflow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/reque
 """%count)
     html_doc.write(text)
 
-
+    lap ( 'done with trouble' )
 
     text=""
     count=0
@@ -374,6 +434,8 @@ Worflow to forget (%d) <a href=logs/injector/last.log target=_blank>log</a> <a h
 """%count)
     html_doc.write(text)
 
+    lap ( 'done with forget' )
+
     text=""
     count=0
     for wf in session.query(Workflow).filter(Workflow.status=='done').all():
@@ -389,6 +451,8 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 <ul>
 """%count)
     html_doc.write(text)
+
+    lap ( 'done with done' )
 
     text=""
     count=0
@@ -406,12 +470,14 @@ Worflow clean for input (%d) <a href=logs/cleanor/last.log target=_blank>log</a>
 """%count)
     html_doc.write(text)
 
+    lap ( 'done with clean' )
 
     text=""
     count=0
     for wf in session.query(Workflow).filter(Workflow.status.endswith('-out')).all():
-        text+="<li> %s </li> \n"%wfl(wf,status=True)
+        #text+="<li> %s </li> \n"%wfl(wf,status=True)
         count+=1
+    text+="hidden"
     text+="</ul></div>\n"
     html_doc.write("""
 Worflow clean for output (%d) <a href=logs/outcleanor/last.log target=_blank>log</a>
@@ -424,7 +490,7 @@ Worflow clean for output (%d) <a href=logs/outcleanor/last.log target=_blank>log
     html_doc.write(text)
 
 
-
+    lap ( 'done with clean out' )
 
 
 
@@ -433,7 +499,8 @@ Worflow clean for output (%d) <a href=logs/outcleanor/last.log target=_blank>log
     lines_lastweek=[]
     now = time.mktime(time.gmtime())
     this_week = int(time.strftime("%W",time.gmtime()))
-    for out in session.query(Output).all():
+    start_time_two_weeks_ago = time.mktime(time.strptime("15-0-%d"%(this_week-2), "%y-%w-%W"))
+    for out in session.query(Output).filter(Output.date>=start_time_two_weeks_ago).all():
         if not out.workflow: 
             print "This is a problem with",out.datasetname
             continue
@@ -474,6 +541,9 @@ Worflow clean for output (%d) <a href=logs/outcleanor/last.log target=_blank>log
      '\n'.join(lines_thisweek))
                    )
 
+    lap ( 'done with output' )
+
+
     html_doc.write("""Job installed
 <a href="javascript:showhide('acron')">[Click to show/hide]</a>
 <br>
@@ -481,8 +551,25 @@ Worflow clean for output (%d) <a href=logs/outcleanor/last.log target=_blank>log
 <br>
 <pre>
 %s
-</pre></div>
-"""%(os.popen('acrontab -l | grep Unified').read()))
+</pre>
+"""%(os.popen('acrontab -l | grep Unified | grep -v \#').read()))
+
+
+    per_module = defaultdict(list)
+    for t in filter(None,os.popen('cat /afs/cern.ch/user/c/cmst2/www/unified/logs/*/*.time').read().split('\n')):
+        module_name,run_time,spend = t.split(':')
+        ## then do what you want with it !
+        per_module[module_name].append( int(spend) )
+
+    html_doc.write("Module running time<ul>\n")
+    for m,spends in per_module.items():
+        html_doc.write("<li>%s : last %d [s], avg %d [s]</li>\n"%( m, spends[-1], sum(spends)/float(len(spends))))
+    html_doc.write("</ul>")
+
+    html_doc.write("Last running <pre>%s</pre>"%( os.popen("tac /afs/cern.ch/user/c/cmst2/www/unified/logs/running | head -5").read() ))
+    html_doc.write("</div>\n")
+    lap ( 'done with jobs' )
+
 
     text=""
     count=0
@@ -520,7 +607,11 @@ Worflow clean for output (%d) <a href=logs/outcleanor/last.log target=_blank>log
                 c+=1
         text+="</table></li>"
 
+    lap ( 'done with campaigns' )
+
     open('/afs/cern.ch/user/c/cmst2/www/unified/siteInfo.json','w').write(json.dumps(dict([(t,getattr(SI,t)) for t in SI.types()]),indent=2))
+
+    lap ( 'done with sites json' )
 
     chart_data = defaultdict(list)
     for site in SI.quota:
@@ -543,6 +634,7 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
         chart_data[site].append("""
 <div id="donutchart_%s" style="height: 200px;"></div>
 """%(site))
+
         
     ## make the locked/available donut chart
     donut_html = open('/afs/cern.ch/user/c/cmst2/www/unified/locked.html','w')
@@ -590,6 +682,8 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
 </ul></div>
 """%(text))
 
+    lap ( 'done with space' )
+
 
     UC = unifiedConfiguration()
     text = ""
@@ -609,7 +703,7 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
 </ul></div>                                                                                                                                                                                                                                                                                                                
 """%(text))
 
-
+    lap ( 'done with configuration' )
 
 
     print "... done with status page."
