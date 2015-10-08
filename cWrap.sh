@@ -21,6 +21,8 @@ source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh
 
 echo >> $log
 
+start=`date +%s`
+echo $modulename:`date` >> /afs/cern.ch/user/c/cmst2/www/unified/logs/running
 python $* &>> $log
 
 if [ $? == 0 ]; then
@@ -30,6 +32,9 @@ else
     mail -s "[Ops] module "$modulename" failed" -a $log vlimant@cern.ch,matteoc@fnal.gov 
 fi
 
+stop=`date +%s`
+let stop=stop-start
+echo $modulename:$start:$stop > /afs/cern.ch/user/c/cmst2/www/unified/logs/$modulename/`date +%s`.time
 echo `date` >> $log
 
 ## copy log to lasts
