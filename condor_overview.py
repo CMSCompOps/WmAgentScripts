@@ -182,7 +182,8 @@ def get_overview(overview_running,
         
         if 'MaxWallTimeMins' in job:
             maxWallTimeMins = job['MaxWallTimeMins']
-
+        else:
+            maxWallTimeMins = False
         # IF Running
         if status == 2:
             increaseCounterInDict(overview_running, site, jobType)
@@ -198,9 +199,9 @@ def get_overview(overview_running,
         elif status == 1:
             increaseCounterInDict(overview_pending, site, jobType)
             #check maxWallTime greater than 24 hours
-            if maxWallTimeMins > 42*60:
+            if maxWallTimeMins and maxWallTimeMins > 42*60 or not maxWallTimeMins:
                 fillIDWFinDict(jobs_maxwall, site, workflow, jobId)
-
+                
         # if not running or pending, and reason is DEFINED
         elif removereason == "DEFINED":
             increaseCounterInDict(overview_removereason, site, jobType)

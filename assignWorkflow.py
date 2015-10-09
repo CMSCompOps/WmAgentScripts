@@ -8,6 +8,7 @@ import sys
 import optparse
 import reqMgrClient as rqMgr
 from pprint import pprint
+from random import choice
 
 T1_SITES = [
     "T1_DE_KIT",
@@ -44,7 +45,18 @@ T2_SITES = [
 ALL_SITES = T1_SITES + T2_SITES
 
 
-def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, procstring, trust_site=False, verbose=False):
+def getRandomDiskSite(site=T1_SITES):
+    """
+        Gets a random disk site and append _Disk
+    """
+    s = choice(site)
+    if s.startswith("T1"):
+        s += "_Disk"
+    return s
+
+
+def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn,
+                  procstring, trust_site=False, replica=False, verbose=False):
     params = {"action": "Assign",
               "Team" + team: "checked",
               "SiteWhitelist": sites,
@@ -66,6 +78,15 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
     # add xrootd (trustSiteList)
     if trust_site:
         params['useSiteListAsLocation'] = True
+
+    # if replica we add NonCustodial sites
+    if replica:
+        params["NonCustodialSites"] = getRandomDiskSite(),
+        params["NonCustodialSubType"] = "Replica"
+
+    if verbose:
+        pprint(params)
+
     res = rqMgr.requestManagerPost(
         url, "/reqmgr/assign/handleAssignmentPage", params, nested=True)
     if "Assigned" in res:
@@ -77,12 +98,14 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
 def main():
     url = 'cmsweb.cern.ch'
     url_tb = 'cmsweb-testbed.cern.ch'
-    
+
     usage = "usage: %prog [options] [WORKFLOW]"
     parser = optparse.OptionParser(usage=usage)
     parser.add_option('-t', '--team', help='Type of Requests', dest='team')
     parser.add_option('-s', '--sites', help='Site List, comma separated (no spaces),\
                         or "t1" for Tier-1\'s and "t2" for Tier-2\'s', dest='sites')
+    parser.add_option('-r', '--replica', action='store_true', dest='replica', default=False,
+                      help='Adds a _Disk Non-Custodial Replica parameter')
     parser.add_option('-e', '--era', help='Acquistion era', dest='era')
     parser.add_option('-p', '--procversion', help='Processing Version, if empty it will leave the processing version\
                         that comes by defaul in the request', dest='procversion')
@@ -159,8 +182,8 @@ def main():
         else:
             procversion = wf.info['ProcessingVersion']
         procstring = wf.info['ProcessingString']
-        assignRequest(url, wf.name, team, sites, era, procversion, 
-                      activity, lfn, procstring, trust_site, options.verbose)
+        assignRequest(url, wf.name, team, sites, era, procversion,
+                      activity, lfn, procstring, trust_site, options.replica, options.verbose)
 
     sys.exit(0)
 

@@ -5,13 +5,10 @@ This can be used when input workflows are in status: acquired or running open/cl
     input arg: Text file with list of workflows.
 """
 
-import urllib2,urllib, httplib, sys, re, os
+import sys
 from optparse import OptionParser
-try:
-    import json
-except:
-    import simplejson as json
 import reqMgrClient
+import dbs3Client as dbs3
 
 def main():
     url='cmsweb.cern.ch'
@@ -20,6 +17,8 @@ def main():
     usage = "\n       python %prog [-f FILE_NAME | WORKFLOW_NAME ...]\n"
     parser = OptionParser(usage=usage)
     parser.add_option('-f', '--file', help='Text file with a list of workflows', dest='file')
+    parser.add_option('-i', '--invalidate', action='store_true', default=False,
+                      help='Also invalidate output datasets on DBS', dest='invalidate')
     (options, args) = parser.parse_args()
     
     if options.file:
@@ -34,6 +33,14 @@ def main():
         print "Aborting workflow: " + wf
         reqMgrClient.abortWorkflow(url, wf)
         print "Aborted"
+
+        if options.invalidate:
+            print "Invalidating datasets"
+            datasets = reqMgrClient.outputdatasetsWorkflow(url, wf)
+            for ds in datasets:
+                print ds
+                dbs3.setDatasetStatus(ds, 'INVALID', files=True)
+
     sys.exit(0);
 
 if __name__ == "__main__":

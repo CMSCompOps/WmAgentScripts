@@ -100,9 +100,11 @@ def duplicateLumi(dataset, verbose=False, skipInvalid=False):
             if lumi in lumisChecked:
                 #if verbose print results, if not end quickly
                 if verbose:
+                    lumisChecked[lumi].append(logical_file_name)
+
                     print 'Lumi',lumi,'is in these files'
-                    print logical_file_name
                     print lumisChecked[lumi][0]
+                    print lumisChecked[lumi][1]
                     #add to the list
                     lumisChecked[lumi].append(logical_file_name)
                     duplicated = True
@@ -112,6 +114,10 @@ def duplicateLumi(dataset, verbose=False, skipInvalid=False):
                 lumisChecked[lumi] = [logical_file_name]
     #return the dictionary if asked
     if verbose and verbose == "dict":
+        #clean and leave only duplicated lumis
+        for lumi in lumisChecked.keys():
+            if len(lumisChecked[lumi]) < 2:
+                del lumisChecked[lumi]
         return duplicated, lumisChecked
     return duplicated
 
