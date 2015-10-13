@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import workflowInfo, getDatasetPresence, getDatasetStatus, getWorkflowByInput, getDatasetSize, makeDeleteRequest, listDelete, approveSubscription
-from utils import lockInfo
+from utils import workflowInfo, getDatasetPresence, getDatasetStatus, getWorkflowByInput, getDatasetSize, makeDeleteRequest, listDelete, approveSubscription, findCustodialLocation
+from utils import lockInfo, duplicateLock
 import optparse
 import random 
 from collections import defaultdict
@@ -9,6 +9,7 @@ import json
 import time
 
 def outcleanor(url, options):
+    if duplicateLock(): return 
 
     do_not_autoapprove = []#'T2_FR_CCIN2P3']
     LI = lockInfo()
@@ -33,7 +34,7 @@ def outcleanor(url, options):
         goes = {} # boolean per output
         for dataset in wfi.request['OutputDatasets']:
             goes[dataset] = False
-            keep_one_out = True
+            keep_one_out = False ## change to no copy kept, since this is DDM handled
             status = getDatasetStatus( dataset )
             print "\n\tLooking at",dataset,status,"\n"
             vetoes = None
@@ -61,6 +62,11 @@ def outcleanor(url, options):
 
             if '/DQM' in dataset:
                 keep_one_out = False
+
+            custodials = findCustodialLocation(url, dataset)
+            if not len(custodials):
+                print dataset,"has no custodial site yet, excluding from cleaning"
+                continue
 
             total_size = getDatasetSize( dataset )
             
@@ -180,10 +186,10 @@ def outcleanor(url, options):
 
     print "Workflows cleaned for output"
     print json.dumps( wf_cleaned, indent=2 )
-    stamp = time.strftime("%Y%m%d%H%M%S", time.localtime())
-    open('outcleaning_%s.json'%stamp,'w').write( json.dumps( sites_and_datasets, indent=2))
-    open('keepcopies_%s.json'%stamp,'w').write( json.dumps( our_copies, indent=2))
-    open('wfcleanout_%s.json'%stamp,'w').write( json.dumps( wf_cleaned, indent=2))
+    #stamp = time.strftime("%Y%m%d%H%M%S", time.localtime())
+    #open('outcleaning_%s.json'%stamp,'w').write( json.dumps( sites_and_datasets, indent=2))
+    #open('keepcopies_%s.json'%stamp,'w').write( json.dumps( our_copies, indent=2))
+    #open('wfcleanout_%s.json'%stamp,'w').write( json.dumps( wf_cleaned, indent=2))
 
 
     if (not options.test) and (options.auto or raw_input("Satisfied ? (y will trigger status change and deletion requests)") in ['y']):
