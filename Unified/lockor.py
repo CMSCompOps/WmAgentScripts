@@ -64,7 +64,7 @@ for dataset in already_locked-newly_locking:
     if not relock:
         ##would like to pass to *-unlock, or even destroy from local db
         for creator in creators:
-            for wfo in  session.query(Workflow).filter(Workflow.name==creator).all():
+            for wfo in  session.query(Workflow).filter(Workflow.name==creator['RequestName']).all():
                 if not 'unlock' in wfo.status:
                     wfo.status +='-unlock'
         session.commit()
