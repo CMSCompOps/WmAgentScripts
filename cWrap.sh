@@ -23,6 +23,7 @@ echo >> $log
 
 start=`date +%s`
 echo $modulename:`date` >> /afs/cern.ch/user/c/cmst2/www/unified/logs/running
+echo $modulename:`date` > /afs/cern.ch/user/c/cmst2/www/unified/logs/last_running
 python $* &>> $log
 
 if [ $? == 0 ]; then
