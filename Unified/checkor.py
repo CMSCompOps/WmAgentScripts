@@ -92,6 +92,7 @@ def checkor(url, spec=None, options=None):
             wfo.status = 'close'
             session.commit()
             continue
+
         elif wfo.wm_status in ['failed','aborted','aborted-archived','rejected','rejected-archived','aborted-completed']:
             ## went into trouble
             wfo.status = 'trouble'
@@ -405,12 +406,12 @@ def checkor(url, spec=None, options=None):
             if not options.test:
                 res = reqMgrClient.closeOutWorkflowCascade(url, wfo.name)
                 print "close out answer",res
-                if res != None:
+                if not res in ["None",None]:
                     print "retrying to closing out"
                     print res
                     res = reqMgrClient.closeOutWorkflowCascade(url, wfo.name)
                     
-                if res == None:
+                if res in [None,"None"]:
                     wfo.status = 'close'
                     session.commit()
                 else:
