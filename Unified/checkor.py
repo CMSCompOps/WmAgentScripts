@@ -250,6 +250,11 @@ def checkor(url, spec=None, options=None):
             if not custodial_locations[output]:
                 custodial_locations[output] = []
 
+        ## presence in phedex
+        phedex_presence ={}
+        for output in wfi.request['OutputDatasets']:
+            phedex_presence[output] = phedexClient.getFileCountDataset(url, output )
+
         vetoed_custodial_tier = ['MINIAODSIM']
         out_worth_checking = [out for out in custodial_locations.keys() if out.split('/')[-1] not in vetoed_custodial_tier]
         if not all(map( lambda sites : len(sites)!=0, [custodial_locations[out] for out in out_worth_checking])):
@@ -296,7 +301,10 @@ def checkor(url, spec=None, options=None):
                 ## register the custodial request, if there are no other big issues
                 for output in out_worth_checking:
                     if not len(custodial_locations[output]):
-                        custodials[custodial].append( output )
+                        if phedex_presence[output]>=1:
+                            custodials[custodial].append( output )
+                        else:
+                            print "no file in phedex for",output," not good to add to custodial requests"
             else:
                 print "cannot find a custodial for",wfo.name
             is_closing = False
@@ -317,11 +325,6 @@ def checkor(url, spec=None, options=None):
         for output in wfi.request['OutputDatasets']:
             dbs_presence[output] = dbs3Client.getFileCountDataset( output )
             dbs_invalid[output] = dbs3Client.getFileCountDataset( output, onlyInvalid=True)
-
-        ## presence in phedex
-        phedex_presence ={}
-        for output in wfi.request['OutputDatasets']:
-            phedex_presence[output] = phedexClient.getFileCountDataset(url, output )
 
         fraction_invalid = 0.01
         if not all([dbs_presence[out] == (dbs_invalid[out]+phedex_presence[out]) for out in wfi.request['OutputDatasets']]) and not options.ignorefiles:
@@ -401,8 +404,10 @@ def checkor(url, spec=None, options=None):
             print "setting",wfo.name,"closed-out"
             if not options.test:
                 res = reqMgrClient.closeOutWorkflowCascade(url, wfo.name)
+                print "close out answer",res
                 if res != None:
                     print "retrying to closing out"
+                    print res
                     res = reqMgrClient.closeOutWorkflowCascade(url, wfo.name)
                     
                 if res == None:
