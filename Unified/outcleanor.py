@@ -9,6 +9,9 @@ import json
 import time
 
 def outcleanor(url, options):
+    print "Deprecated"
+    return 
+
     if duplicateLock(): return 
 
     do_not_autoapprove = []#'T2_FR_CCIN2P3']
