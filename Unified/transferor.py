@@ -6,7 +6,7 @@ from utils import makeReplicaRequest
 from utils import workflowInfo, siteInfo, campaignInfo, userLock
 from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, getSiteWhiteList, approveSubscription, getDatasetSize, updateSubscription, getWorkflows, componentInfo, getDatasetDestinations
 from utils import unifiedConfiguration
-from utils import lockInfo, duplicateLock
+from utils import lockInfo, duplicateLock, newLockInfo
 import json
 from collections import defaultdict
 import optparse
@@ -46,6 +46,7 @@ def transferor(url ,specific = None, talk=True, options=None):
     SI = siteInfo()
     CI = campaignInfo()
     LI = lockInfo()
+    NLI = newLockInfo()
     mcm = McMClient(dev=False)
     dss = DSS()
 
@@ -261,6 +262,10 @@ def transferor(url ,specific = None, talk=True, options=None):
 
 
         (lheinput,primary,parent,secondary) = wfh.getIO()
+        for dataset in list(primary)+list(parent)+list(secondary):
+            ## lock everything flat
+            NLI.lock( dataset )
+
         if options and options.tosites:
             sites_allowed = options.tosites.split(',')
         else:

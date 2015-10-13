@@ -2,7 +2,7 @@
 from assignSession import *
 import reqMgrClient
 from utils import workflowInfo, campaignInfo, siteInfo, userLock
-from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction, getDatasetEventsPerLumi
+from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction, getDatasetEventsPerLumi, newLockInfo
 from utils import componentInfo, sendEmail
 from utils import lockInfo, duplicateLock, notRunningBefore
 import optparse
@@ -22,6 +22,7 @@ def assignor(url ,specific = None, talk=True, options=None):
     CI = campaignInfo()
     SI = siteInfo()
     LI = lockInfo()
+    NLI = newLockInfo()
 
     n_assigned = 0
     n_stalled = 0
@@ -329,6 +330,9 @@ def assignor(url ,specific = None, talk=True, options=None):
                     ## refetch information and lock output
                     new_wfi = workflowInfo( url, wfo.name)
                     (_,prim,_,sec) = new_wfi.getIO()
+                    for output in new_wfi.request['OutputDatasets']:
+                        ## lock all outputs flat
+                        NLI.lock( output )
                     for site in [SI.CE_to_SE(site) for site in sites_allowed]:
                         for output in new_wfi.request['OutputDatasets']:
                             LI.lock( output, site, 'dataset in production')

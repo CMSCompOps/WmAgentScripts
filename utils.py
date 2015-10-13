@@ -165,6 +165,34 @@ def listSubscriptions(url, dataset, within_sites=None):
 
 import dataLock
 
+class newLockInfo:
+    def __init__(self):
+        self.db = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/globallocks.json').read())
+        os.system('echo `date` > /afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.lock')
+
+    def __del__(self):
+        open('/afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.new').write(json.dumps( list(set(self.db)) ))
+        os.system('mv /afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.new /afs/cern.ch/user/c/cmst2/www/unified/globallocks.json')
+        s.system('rm -f /afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.lock')
+
+    def lock(self, dataset):
+        print "[new lock]",dataset,"to be locked"
+        # just put the 
+        if dataset in self.db:
+            print "\t",dataset,"was already locked"
+        else:
+            self.db.append(dataset)
+
+    def release(self, dataset):
+        print "[new lock] should never release datasets"
+        return
+        if not dataset in self.db:
+            print "\t",dataset,"was not locked already"
+        else:
+            self.db.remove( dataset )
+        
+
+
 class lockInfo:
     def __init__(self):
         pass
