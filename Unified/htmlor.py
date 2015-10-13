@@ -471,7 +471,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
         if not out.workflow: 
             print "This is a problem with",out.datasetname
             continue
-        if  out.workflow.status in ['done','clean','clean-out']:
+        if  out.workflow.status in ['done','clean','clean-out','clean-unlock']:
             out_week = int(time.strftime("%W",time.gmtime(out.date)))
             ##only show current week, and the previous.
             if (this_week-out_week)==1:
