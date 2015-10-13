@@ -157,8 +157,12 @@ def recoveror(url,specific,options=None):
                 rate = 100*njobs/float(sum_failed)
                 #print ("\t\t %10d (%6s%%) failures with error code %10d (%"+str(max_legend)+"s) at stage %s")%(njobs, "%4.2f"%rate, errorCode, legend, name)
                 print ("\t\t %10d (%6s%%) failures with error code %10d (%30s) at stage %s")%(njobs, "%4.2f"%rate, errorCode, ','.join(types), name)
-
+                    
                 added_in_recover=False
+
+                #if options.go:
+                # force the recovery of any task with error ?
+
                 if errorCode in error_codes_to_recover:
                     ## the error code is registered
                     for case in error_codes_to_recover[errorCode]:
