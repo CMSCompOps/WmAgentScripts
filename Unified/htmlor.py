@@ -454,43 +454,10 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 
     lap ( 'done with done' )
 
-    text=""
-    count=0
-    for wf in session.query(Workflow).filter(Workflow.status=='clean').all():
-        text+="<li> %s </li> \n"%wfl(wf)#,ms=True)
-        count+=1
-    text+="</ul></div>\n"
-    html_doc.write("""
-Worflow clean for input (%d) <a href=logs/cleanor/last.log target=_blank>log</a> <a href=logs/outcleanor/last.log target=_blank>postlog</a>
-<a href="javascript:showhide('clean')">[Click to show/hide]</a>
-<br>
-<div id="clean" style="display:none;">
-<br>
-<ul>
-"""%count)
-    html_doc.write(text)
 
-    lap ( 'done with clean' )
-
-    text=""
-    count=0
-    for wf in session.query(Workflow).filter(Workflow.status.endswith('-out')).all():
-        #text+="<li> %s </li> \n"%wfl(wf,status=True)
-        count+=1
-    text+="hidden"
-    text+="</ul></div>\n"
-    html_doc.write("""
-Worflow clean for output (%d) <a href=logs/outcleanor/last.log target=_blank>log</a>
-<a href="javascript:showhide('cleanout')">[Click to show/hide]</a>
-<br>
-<div id="cleanout" style="display:none;">
-<br>
-<ul>
-"""%count)
-    html_doc.write(text)
-
-
-    lap ( 'done with clean out' )
+    wfs = session.query(Workflow).filter(Workflow.status.endswith('-unlock')).all()
+    html_doc.write(" Workflows unlocked : %s <br>"%(len(wfs)))
+    lap ( 'done with unlocked' )
 
 
 
