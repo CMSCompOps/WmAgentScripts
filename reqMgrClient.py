@@ -872,7 +872,7 @@ def invalidateWorkflow(url, workflowname, current_status=None):
     if not current_status:
         print "not implemented yet to retrieve the status at that point"
     
-    if current_status in ['assignment-approved','new','completed','closed-out','announced']:
+    if current_status in ['assignment-approved','new','completed','closed-out','announced','failed']:
         return rejectWorkflow(url, workflowname)
     elif current_status in['normal-archived']:
         params = {"requestName" : workflowname,"status" : "rejected-archived"}
