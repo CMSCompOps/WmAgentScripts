@@ -16,7 +16,7 @@ def injector(url, options, specific):
     if not up.check(): return
     use_mcm = up.status['mcm']
 
-    workflows = getWorkflows(url, status=options.wmstatus,user=options.user)
+    workflows = getWorkflows(url, status=options.wmstatus, user=options.user)
     existing = [wf.name for wf in session.query(Workflow).all()]
     ## browse for assignment-approved requests, browsed for ours, insert the diff
     for wf in workflows:
