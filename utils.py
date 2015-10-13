@@ -108,10 +108,8 @@ def download_file(url, params, path = None, logger = None):
 
 def check_ggus( ticket ):
     conn  =  httplib.HTTPSConnection('ggus.eu', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    
-    r1=conn.request("GET",'?mode=ticket_info&ticket_id=%s'%ticket)
-    r2=conn.getresponse
-    
+    r1=conn.request("GET",'/index.php?mode=ticket_info&ticket_id=%s&writeFormat=XML'%ticket)
+    r2=conn.getresponse()
     print r2
     return False
 
