@@ -65,7 +65,8 @@ for dataset in already_locked-newly_locking:
         ##would like to pass to *-unlock, or even destroy from local db
         for creator in creators:
             for wfo in  session.query(Workflow).filter(Workflow.name==creator).all():
-                wfo.status +='-unlock'
+                if not 'unlock' in wfo.status:
+                    wfo.status +='-unlock'
         session.commit()
             
 open('/afs/cern.ch/user/c/cmst2/www/unified/globallocks.json','w').write( json.dumps( list(newly_locking), indent=2))
