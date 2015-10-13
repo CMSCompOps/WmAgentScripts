@@ -7,6 +7,9 @@ import time
 import random
 
 def cleanor(url, specific=None):
+    print "Deprecated"
+    return
+
     if duplicateLock() : return 
 
     delete_per_site = {}
