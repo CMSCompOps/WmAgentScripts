@@ -14,6 +14,7 @@ import time
 from htmlor import htmlor
 from utils import sendEmail
 import math
+import random
 
 class DSS:
     def __init__(self):
@@ -120,6 +121,8 @@ def transferor(url ,specific = None, talk=True, options=None):
     in_transfer_already = sum(input_sizes.values())
     cput_in_transfer_already = sum(input_cput.values())
     st_in_transfer_already = sum(input_st.values())
+    # shuffle first by name
+    random.shuffle( wfs_and_wfh )
     #sort by priority higher first
     wfs_and_wfh.sort(cmp = lambda i,j : cmp(int(i[1].request['RequestPriority']),int(j[1].request['RequestPriority']) ), reverse=True)
     
