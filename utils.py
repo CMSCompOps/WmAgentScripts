@@ -1890,7 +1890,7 @@ class workflowInfo:
             cput = cput / (60.*60.*24.)
         return cput
     
-    def getNCopies(self, CPUh=None, m = 1, M = 6, w = 50000, C0 = 100000):
+    def getNCopies(self, CPUh=None, m = 2, M = 6, w = 50000, C0 = 100000):
         def sigmoid(x):      
             return 1 / (1 + math.exp(-x)) 
         if CPUh==None:
