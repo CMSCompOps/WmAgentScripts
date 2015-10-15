@@ -93,8 +93,8 @@ def injector(url, options, specific):
                     tr.workflows_id = sw
                     print tr.phedexid,"got",new_wf.name
                     if new_wf.status != 'away':
-                        print "\t setting it staging"
-                        new_wf.status = 'staging'
+                        print "\t setting it considered"
+                        new_wf.status = 'considered'
                     session.commit()
                         
 
