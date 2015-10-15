@@ -1,6 +1,7 @@
 from utils import getWorkflows, findCustodialLocation, workflowInfo, getDatasetStatus, getWorkflowByOutput
 from assignSession import *
 import json
+import os
 
 url = 'cmsweb.cern.ch'
 
@@ -44,12 +45,15 @@ for dataset in already_locked-newly_locking:
     ds_status = getDatasetStatus( dataset )
     if ds_status in ['INVALID']: 
         ## don't even try to keep the lock
+        print "\tunlocking",dataset,"for bad dataset status",ds_status
         continue
+
     creators = getWorkflowByOutput( url, dataset , details=True)
     creators_status = [r['RequestStatus'] for r in creators]
-    print creators_status
+    print "Statuses of workflow that made the dataset",creators_status
     if all(status in ['aborted','rejected','aborted-archived','rejected-archived'] for status in creators_status):
         ## crap 
+        print "\tunlocking",dataset,"for bad workflow statuses"
         continue
 
     relock=False
@@ -62,11 +66,14 @@ for dataset in already_locked-newly_locking:
             newly_locking.add(dataset)
             relock = True
     if not relock:
+        print "\tunlocking",dataset
         ##would like to pass to *-unlock, or even destroy from local db
         for creator in creators:
             for wfo in  session.query(Workflow).filter(Workflow.name==creator['RequestName']).all():
                 if not 'unlock' in wfo.status:
                     wfo.status +='-unlock'
+                    print "setting",wfo.name,"to",wfo.status
         session.commit()
             
-open('/afs/cern.ch/user/c/cmst2/www/unified/globallocks.json','w').write( json.dumps( list(newly_locking), indent=2))
+open('/afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.new','w').write( json.dumps( list(newly_locking), indent=2))
+os.system('mv /afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.new /afs/cern.ch/user/c/cmst2/www/unified/globallocks.json')
