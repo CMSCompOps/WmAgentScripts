@@ -1,7 +1,8 @@
 from WMCore.WorkQueue.WorkQueueBackend import WorkQueueBackend
 import time
 from WMCore.WorkQueue.Policy.Start import startPolicy
-
+from pprint import pprint
+import datetime
 
 params = {}
 params.setdefault('SplittingMapping', {})
@@ -42,12 +43,15 @@ print backend.isAvailable()
 workflowsToCheck = backend.getInboxElements(OpenForNewData = True)
 print "workflows to check"
 print len(workflowsToCheck)
+#for wf in workflowsToCheck:
+#    pprint(wf['RequestName'])
 workflowsToClose = []
 currentTime = time.time()
 workflowsToCloseTemp = []
 #import pdb
 #pdb.set_trace()
 #workflowsToCheck = ["franzoni_RVCMSSW_7_2_0TTbar_13_PU50ns__Phys14-TPfix-pess_141217_190520_4888"]
+workflowsWithOpenBlocks = []
 for element in workflowsToCheck:
     # Easy check, close elements with no defined OpenRunningTimeout
     policy = element.get('StartPolicy', {})
@@ -77,8 +81,9 @@ for element in workflowsToCheck:
         if not policyInstance.supportsWorkAddition():
             continue
         #if policyInstance.newDataAvailable(topLevelTask, element):
-            #skipElement = True
-            #backend.updateInboxElements(element.id, TimestampFoundNewData = currentTime)
+        #    skipElement = True
+        #    workflowsWithOpenBlocks.append(element["RequestName"])
+            ### backend.updateInboxElements(element.id, TimestampFoundNewData = currentTime)
             break
     if skipElement:
         continue
@@ -91,7 +96,18 @@ for element in workflowsToCheck:
     except Exception, ex:
         print element["RequestName"]
         raise ex
+    
+    #print "newDataFoundTime %s, lastUpdate %s open Running Timeout: %s" % (newDataFoundTime, lastUpdate, openRunningTimeout)
+    timeleft = (openRunningTimeout - (currentTime - max(newDataFoundTime, lastUpdate))) / 3600
+    #print "%s time to wait %s - %s = %s" % (element["RequestName"],
+    #                            openRunningTimeout, (currentTime - max(newDataFoundTime, lastUpdate)), 
+    #                                     timeleft)
+    print "%s threshold %s, time to wait %.2f:" % (element["RequestName"], openRunningTimeout / 3600, timeleft)
+    
     if (currentTime - max(newDataFoundTime, lastUpdate)) > openRunningTimeout:
         workflowsToClose.append(element.id)
+
+print "workflows with open blocks %s" % len(workflowsWithOpenBlocks)
+pprint(workflowsWithOpenBlocks)
 print "Workflow to close"        
 print len(workflowsToClose)

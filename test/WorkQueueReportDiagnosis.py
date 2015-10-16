@@ -7,9 +7,35 @@ from WMCore.WorkQueue.WorkQueueExceptions import WorkQueueWMSpecError, WorkQueue
 from WMCore.Database.CMSCouch import CouchError
 from WMCore.Database.CouchUtils import CouchConnectionError
 from WMCore import Lexicon
+
+from WMCore.WorkQueue.WorkQueue import globalQueue
+
 import os
 import time
 import socket
+HOST = "https://cmsweb-testbed.cern.ch" 
+COUCH = "%s/couchdb" % HOST
+wmstatDBName = "wmstats"
+WEBURL = "%s/workqueue" % COUCH
+REQMGR2 = "%s/reqmgr2" % HOST
+LOG_DB_URL = "%s/wmstats_logdb" % COUCH
+LOG_REPORTER = "global_workqueue"
+reqmgrCouchDB = "reqmgr_workload_cache"
+
+queueParams = {'WMStatsCouchUrl': "%s/%s" % (COUCH, wmstatDBName)}
+queueParams['QueueURL'] = WEBURL
+queueParams['ReqMgrServiceURL'] = REQMGR2
+queueParams['RequestDBURL'] = "%s/%s" % (COUCH, reqmgrCouchDB)
+queueParams['central_logdb_url'] = LOG_DB_URL
+queueParams['log_reporter'] = LOG_REPORTER
+
+import pdb
+pdb.set
+gq = globalQueue(**queueParams)
+elements = gq.statusInbox(dictKey = "RequestName")
+
+print elements
+
 
 class WorkQueueReqMgrInterface():
     """Helper class for ReqMgr interaction"""

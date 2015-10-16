@@ -1,14 +1,18 @@
-from WMCoreService.WMStatsClient import WMStatsClient
-from WMCoreService.DataStruct.RequestInfoCollection import RequestInfoCollection
+from WMCore.Services.WMStats.WMStatsReader import WMStatsReader
+from WMCore.Services.RequestDB.RequestDBWriter import RequestDBWriter
+from WMCore.Services.WMStats.DataStruct.RequestInfoCollection import RequestInfoCollection
 
 if __name__ == "__main__":
-    url = "https://cmsweb.cern.ch/couchdb/wmstats"
-    testbedWMStats = WMStatsClient(url)
+    baseURL = "https://cmsweb-testbed.cern.ch/couchdb"
+    url = "%s/wmstats" % baseURL
+    reqDBURL = "%s/reqmgr_workload_cache" % baseURL
+    testbedWMStats = WMStatsReader(url, reqDBURL)
+    reqdbWriter = RequestDBWriter(reqDBURL)
     print "start to getting job information from %s" % url
     print "will take a while\n"
-    requests = testbedWMStats.getRequestByStatus(["aborted"], jobInfoFlag = True)
+    requests = testbedWMStats.getRequestByStatus(["aborted"], jobInfoFlag = True, legacyFormat = True)
     for requestName, requestInfo in requests.items():
-        print requestName + ":" + requestInfo['request_status'][-1]['status']
+        print requestName + ":" + requestInfo['RequestStatus']
     print len(requests)
     
     requestCollection = RequestInfoCollection(requests)
@@ -23,9 +27,9 @@ if __name__ == "__main__":
         print "\tcreated jobs: %s" % requestInfo.getJobSummary().getTotalJobs()
         if requestInfo.getJobSummary().getTotalJobs() == 0:
             print "aborted-completed"
-            print testbedWMStats.updateRequestStatus(requestName, "aborted-completed")
+            print reqdbWriter.updateRequestStatus(requestName, "aborted-completed")
             print "aborted-archived"
-            print testbedWMStats.updateRequestStatus(requestName, "aborted-archived")
+            print reqdbWriter.updateRequestStatus(requestName, "aborted-archived")
             needToArchieList.append(requestName)
         else:
             noNeedToArchieList.append(requestName)

@@ -1,0 +1,47 @@
+'''
+Created on Feb 27, 2015
+
+@author: sryu
+'''
+a = ['pdmvserv_TOP-Summer12-00304_00206_v1__150223_032934_8233',
+                    'fabozzi_RVCMSSW_7_4_0_pre7TTbar_13_PU25ns__150222_182212_9592',
+                    'pdmvserv_HIG-2019GEMUpg14DR-00077_00075_v0__150220_161402_1233',
+                    'pdmvserv_HIG-2019GEMUpg14DR-00070_00075_v0__150220_161340_5689',
+                    'pdmvserv_SMP-Summer12-00020_00207_v5__150223_032210_7555',
+                    'fabozzi_RVCMSSW_7_4_0_pre7H130GGgluonfusion_13_PU50ns__150222_182424_3981',
+                    'fabozzi_RVCMSSW_7_4_0_pre7NuGun_UP15_PU25ns__150222_182339_2176',
+                    'fabozzi_RVCMSSW_7_4_0_pre7ZEE_13_PU50ns__150222_182353_9019',
+                    'pdmvserv_SMP-Summer12-00022_00205_v2__150223_032555_6881',
+                    'dmason_MC_TEST_SDSC_Alan_v3_150212_054652_3819',
+                    'pdmvserv_HIG-TP2023SHCALDR-00017_00006_v0__150223_013215_6753',
+                    'pdmvserv_TRK-2019GEMUpg14DR-00007_00075_v0__150220_161428_5615',
+                    'pdmvserv_JME-2019GEMUpg14DR-00030_00075_v0__150220_161411_9545',
+                    'fabozzi_RVCMSSW_7_4_0_pre7QQH1352T_13_PU25ns__150222_182241_3881',
+                    'pdmvserv_HIG-2019GEMUpg14DR-00078_00075_v0__150220_161404_6136',
+                    'jen_a_ACDC_HIG-2019GEMUpg14DR-00046_00069_v0__150216_132233_9886',
+                    'fabozzi_RVCMSSW_7_4_0_pre7NuGun_UP15_PU50ns__150222_182524_230',
+                    'pdmvserv_TAU-2019GEMUpg14DR-00027_00075_v0__150220_161422_3415',
+                    'pdmvserv_JME-2019GEMUpg14DR-00031_00075_v0__150220_161414_2871',
+                    'fabozzi_RVCMSSW_7_4_0_pre7ZTT_13_PU25ns__150222_182254_6210',
+                    'fabozzi_RVCMSSW_7_4_0_pre7ZMM_13_PU50ns__150222_182509_3654',
+                    'pdmvserv_EGM-TP2023SHCALDR-00001_00005_v0__150220_091420_5498',
+                    'fabozzi_RVCMSSW_7_4_0_pre7H130GGgluonfusion_13_PU25ns__150222_182226_8692',
+                    'pdmvserv_JME-2019GEMUpg14DR-00029_00075_v0__150220_161409_336',
+                    'pdmvserv_TAU-2019GEMUpg14DR-00028_00075_v0__150220_161425_9505',
+                    'pdmvserv_TOP-Summer12-00306_00206_v1__150223_033335_9661',
+                    'pdmvserv_BTV-2019GEMUpg14DR-00014_00075_v0__150220_161309_843',
+                    'pdmvserv_EGM-2019GEMUpg14DR-00002_00072_v0__150219_140029_8138',
+                    'fabozzi_RVCMSSW_7_4_0_pre7ZMM_13_PU25ns__150222_182311_2665',
+                    'fabozzi_RVCMSSW_7_4_0_pre7TTbar_13_PU50ns__150222_182409_690',
+                    'jen_a_ACDC_HIG-2019GEMUpg14DR-00052_00069_v0__150216_131810_1013',
+                    'fabozzi_RVCMSSW_7_4_0_pre7QQH1352T_13_PU50ns__150222_182439_648',
+                    'jbadillo_HIN-HiWinter13-00066_00008_v0_nomix_150223_103840_7757',
+                    'pdmvserv_HIG-2019GEMUpg14DR-00072_00075_v0__150220_161345_5617',
+                    'pdmvserv_HIG-2019GEMUpg14DR-00071_00075_v0__150220_161343_753',
+                    'jbadillo_HIN-HiWinter13-00070_00008_v0_nomix_150223_104351_3719',
+                    'jen_a_ACDC_HIG-2019GEMUpg14DR-00047_00069_v0__150217_183821_3107',
+                    'amaltaro_MC_TEST_NERSC_Alan_2015_v2_150126_225035_3519',
+                    'fabozzi_RVCMSSW_7_4_0_pre7ZTT_13_PU50ns__150222_182454_3020',
+                    'fabozzi_RVCMSSW_7_4_0_pre7ZEE_13_PU25ns__150222_182158_1369']
+
+print len(a)

@@ -1,0 +1,1 @@
+from WMCore.WorkQueue.WorkQueue import globalQueue

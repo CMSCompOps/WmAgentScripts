@@ -1,0 +1,1 @@
+print __file__.rsplit('/', 3)

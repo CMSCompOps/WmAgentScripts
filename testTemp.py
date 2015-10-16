@@ -1,0 +1,8 @@
+'''
+Created on Feb 17, 2015
+
+@author: sryu
+'''
+a = {'/store/data/Commissioning2015/Cosmics/RAW/v1/000/232/986/00000/52E569F8-B4A7-E411-BE2E-02163E011CE9.root': [{'file_type': 'EDM', 'dataset': '/Cosmics/Commissioning2015-v1/RAW', 'Md5': 'NOTSET', 'file_size': 3464967490, 'last_modification_date': 1422566804, 'dataset_id': 10747757, 'file_type_id': 1, 'Adler32': '01db55cd', 'create_by': None, 'branch_hash_id': None, 'LumiList': [{'RunNumber': 232986, 'LumiSectionNumber': [2, 4, 18, 5, 6, 9, 10, 12, 7, 8, 3, 13, 11, 1, 14, 15, 16, 19]}], 'is_file_valid': 1, 'NumberOfEvents': 40072, 'adler32': '01db55cd', 'block_id': 13374618, 'Checksum': '1111273999', 'file_id': 112006494, 'creation_date': None, 'LogicalFileName': '/store/data/Commissioning2015/Cosmics/RAW/v1/000/232/986/00000/52E569F8-B4A7-E411-BE2E-02163E011CE9.root', 'auto_cross_section': 0.0, 'md5': 'NOTSET', 'check_sum': '1111273999', 'event_count': 40072, 'BlockName': '/Cosmics/Commissioning2015-v1/RAW#304ba6d6-a792-11e4-b321-02163e00d625', 'last_modified_by': 'tier0@vocms15.cern.ch', 'block_name': '/Cosmics/Commissioning2015-v1/RAW#304ba6d6-a792-11e4-b321-02163e00d625', 'logical_file_name': '/store/data/Commissioning2015/Cosmics/RAW/v1/000/232/986/00000/52E569F8-B4A7-E411-BE2E-02163E011CE9.root', 'FileSize': 3464967490}]}
+
+print a['/store/data/Commissioning2015/Cosmics/RECO/PromptReco-v1/000/232/986/00000/5402FF8B-2BA8-E411-9B59-02163E0124D6.root']
