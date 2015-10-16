@@ -199,7 +199,7 @@ def get_overview(overview_running,
         elif status == 1:
             increaseCounterInDict(overview_pending, site, jobType)
             #check maxWallTime greater than 24 hours
-            if maxWallTimeMins and maxWallTimeMins > 42*60 or not maxWallTimeMins:
+            if (maxWallTimeMins and maxWallTimeMins > 46*60) or not maxWallTimeMins:
                 fillIDWFinDict(jobs_maxwall, site, workflow, jobId)
                 
         # if not running or pending, and reason is DEFINED
@@ -243,7 +243,7 @@ def print_results(overview_running,
     print ""
     if jobs_maxwall:
         sortKeys = sorted(jobs_maxwall)
-        print 'Jobs that have MaxWall > 42 hours by workflow:'
+        print 'Jobs that have MaxWall > 46 hours (or empty) by workflow:'
         print ""
         for site in sortKeys:
             print site + ':'
