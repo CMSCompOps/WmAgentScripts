@@ -3,8 +3,6 @@
  Assign a task chain workflow
 """
 
-import urllib2
-import urllib
 import httplib
 import sys
 import re
