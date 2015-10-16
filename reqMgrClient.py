@@ -52,8 +52,8 @@ class Workflow:
         else:
             self.outputDatasets = outputdatasetsWorkflow(url, name)
 
-        if 'teams' in self.info and len(self.info['teams']) > 0 :
-            self.team = self.info['teams'][0]
+        if 'Teams' in self.info and len(self.info['Teams']) > 0 :
+            self.team = self.info['Teams'][0]
         else:
             self.team = 'NoTeam'
         if 'FilterEfficiency' in self.info:
@@ -325,14 +325,15 @@ def requestManagerGet(url, request, retries=4):
     """
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
                                             key_file = os.getenv('X509_USER_PROXY'))
-    r1=conn.request("GET",request)
+    headers = {"Accept": "application/json"}
+    r1=conn.request("GET",request, headers=headers)
     r2=conn.getresponse()
     request = json.loads(r2.read())  
     #try until no exception
     while 'exception' in request and retries > 0:
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
                                                 key_file = os.getenv('X509_USER_PROXY'))
-        r1=conn.request("GET",request)
+        r1=conn.request("GET",request, headers=headers)
         r2=conn.getresponse()
         request = json.loads(r2.read())
         retries-=1
@@ -366,15 +367,7 @@ def requestManagerPost(url, request, params, head = def_headers, nested=False):
     conn.close()
     return data
 
-def requestManagerPut(url, request, params, head = def_headers):
-    """
-    Performs some operation on ReqMgr through
-    an HTTP PUT method.
-    url: the instance used, i.e. url='cmsweb.cern.ch' 
-    request: the request suffix url for the POST method
-    params: a dict with the PUT parameters
-    head: optional headers param. If not given it takes default value (def_headers)
-    """
+def _put(url, request, params, head = def_headers):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
                                     key_file = os.getenv('X509_USER_PROXY'))
     headers = head
@@ -384,6 +377,42 @@ def requestManagerPut(url, request, params, head = def_headers):
     data = response.read()
     conn.close()
     return data
+
+def _convertToReqMgr2PUTRequest(request, params):
+    
+    if request ==  "/reqmgr/reqMgr/clone/":
+        cRequest = "/reqmgr2/data/request"
+        return cRequest, params
+    else:
+        cRequest = "/reqmgr2/data/request/%s" % params["requestName"]
+        cParams = {}
+        cParams["RequestStatus"] = params["status"]
+        if "cascade" in params:
+            cParams["cascade"] = params["cascade"]
+        return cRequest, cParams
+
+def requestManagerPut(url, request, params, head = def_headers):
+    """
+    Performs some operation on ReqMgr through
+    an HTTP PUT method.
+    url: the instance used, i.e. url='cmsweb.cern.ch' 
+    request: the request suffix url for the POST method
+    params: a dict with the PUT parameters
+    head: optional headers param. If not given it takes default value (def_headers)
+    """
+    try:
+        return _put(url, request, params, head)
+    except httplib.HTTPException as ex:
+        # If we get an HTTPException of 404 means reqmgr2 request
+        if ex.status == 404:
+            # try reqmgr2 call
+            print "%s : reqmgr2 request: %s" % (request, str(ex))
+            cRequest, cParams = _convertToReqMgr2PUTRequest(request, params)
+            return _put(url, cRequest, cParams, head)
+        
+        raise ex
+
+
 
 def getWorkflowWorkload(url, workflow, retries=4):
     """
@@ -413,8 +442,8 @@ def getWorkflowInfo(url, workflow):
     """
     Retrieves workflow information
     """
-    request = requestManagerGet(url,'/reqmgr/reqMgr/request?requestName='+workflow)
-    return request
+    request = requestManagerGet(url,'/reqmgr2/data/request?name='+workflow)
+    return request['result'][0][workflow]
 
 def getWorkloadCache(url, workflow):
     """
@@ -474,7 +503,21 @@ def outputdatasetsWorkflow(url, workflow):
     """
     returns the output datasets for a given workfow
     """
-    datasets = requestManagerGet(url,'/reqmgr/reqMgr/outputDatasetsByRequestName?requestName='+workflow)
+    request = requestManagerGet(url,'/reqmgr2/data/request?name='+workflow)['result'][0][workflow]
+    datasets = []
+    if "OutputDatasets" in request:
+        datasets.extend(request['OutputDatasets'])
+        
+    if "TaskChain" in request:
+        for num in range(request['TaskChain']):
+            if"OutputDatasets" in request["Task%i" % (num+1)]:
+                datasets.extend(request['OutputDatasets'])
+    
+    if "StepChain" in request:
+        for num in range(request['StepChain']):
+            if "OutputDatasets" in request["Step%i" % (num+1)]:
+                datasets.extend(request['OutputDatasets'])
+    
     return datasets
 
 def getRequestTeam(url, workflow):
@@ -482,9 +525,9 @@ def getRequestTeam(url, workflow):
     Retrieves the team on which the wf is assigned
     """
     request = getWorkflowInfo(url,workflow)
-    if 'teams' not in request:
+    if 'Teams' not in request:
         return 'NoTeam'
-    teams = request['teams']
+    teams = request['Teams']
     if len(teams)<1:
         return 'NoTeam'
     else:
