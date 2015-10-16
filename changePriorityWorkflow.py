@@ -9,8 +9,12 @@ import reqMgrClient
 url = 'cmsweb.cern.ch'
 
 def changePriorityWorkflow(url, workflow, priority):
-    params = {workflow + ":status": "", workflow + ":priority": str(priority)}
-    data = reqMgrClient.requestManagerPost(url, "/reqmgr/view/doAdmin", params)
+    if reqMgrClient.isRequestMgr2Request(url, workflow):
+        params = {"requestName": workflow, "RequestPriority": priority}
+        data = reqMgrClient.requestManagerPut(url, "", params)
+    else:
+        params = {workflow + ":status": "", workflow + ":priority": str(priority)}
+        data = reqMgrClient.requestManagerPost(url, "/reqmgr/view/doAdmin", params)
     print data
 
 def main():

@@ -16,6 +16,16 @@ import copy
 # default headers for PUT and POST methods
 def_headers={"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
 
+CERT_FILE = os.getenv('X509_USER_PROXY')
+#print CERT_FILE
+KEY_FILE = os.getenv('X509_USER_PROXY')
+#print KEY_FILE
+
+#CERT_FILE = os.getenv('X509_USER_CERT')
+#print CERT_FILE
+#KEY_FILE = os.getenv('X509_USER_KEY')
+#print KEY_FILE
+
 class Workflow:
     """
     Wraps all information available on ReqMgr
@@ -52,8 +62,8 @@ class Workflow:
         else:
             self.outputDatasets = outputdatasetsWorkflow(url, name)
 
-        if 'teams' in self.info and len(self.info['teams']) > 0 :
-            self.team = self.info['teams'][0]
+        if 'Teams' in self.info and len(self.info['Teams']) > 0 :
+            self.team = self.info['Teams'][0]
         else:
             self.team = 'NoTeam'
         if 'FilterEfficiency' in self.info:
@@ -323,16 +333,17 @@ def requestManagerGet(url, request, retries=4):
     request: the request suffix url
     retries: number of retries
     """
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
-                                            key_file = os.getenv('X509_USER_PROXY'))
-    r1=conn.request("GET",request)
+    conn  =  httplib.HTTPSConnection(url, cert_file = CERT_FILE,
+                                            key_file = KEY_FILE)
+    headers = {"Accept": "application/json"}
+    r1=conn.request("GET",request, headers=headers)
     r2=conn.getresponse()
     request = json.loads(r2.read())  
     #try until no exception
     while 'exception' in request and retries > 0:
-        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
-                                                key_file = os.getenv('X509_USER_PROXY'))
-        r1=conn.request("GET",request)
+        conn  =  httplib.HTTPSConnection(url, cert_file = CERT_FILE,
+                                                key_file = KEY_FILE)
+        r1=conn.request("GET",request, headers=headers)
         r2=conn.getresponse()
         request = json.loads(r2.read())
         retries-=1
@@ -340,7 +351,64 @@ def requestManagerGet(url, request, retries=4):
         raise Exception('Maximum queries to ReqMgr exceeded',str(request))
     return request
 
-def requestManagerPost(url, request, params, head = def_headers, nested=False):
+def reqmgr2HandleAssignmentPage(params):
+    
+    teams = []
+    for key, value in params.iteritems():
+        if isinstance(value, basestring):
+            params[key] = value.strip()
+        if key.startswith("Team"):
+            teams.append(key[4:])
+        if key.startswith("checkbox"):
+            requestName = key[8:]
+    params["RequestName"] = requestName        
+    params["Teams"] = teams
+    priority = params.get(requestName + ':priority', '')
+    if priority != '':
+        params['RequestPriority'] = priority
+    if params['action'] == 'Assign':
+        params["RequestStatus"] = "assigned"
+    elif params['action'] == 'Reject':
+        params["RequestStatus"] = "rejected"
+    return params
+
+def reqmgr2HandleSplittingPage(params):
+    reqmgr2Params = {}
+    reqmgr2Params["taskName"] = params['splittingTask']
+    reqmgr2Params["splitAlgo"] = params['splittingAlgo']
+    del params['splittingTask']
+    del params['splittingAlgo']
+    del params['requestName']
+    reqmgr2Params["splitParams"] = params
+    return [reqmgr2Params]
+    
+def _convertToRequestMgrPostCall(url, request, params):
+    header = {"Content-type": "application/json", "Accept": "application/json"}
+    if request == '/reqmgr/assign/handleAssignmentPage':
+        encodedParams = reqmgr2HandleAssignmentPage(params)
+        request = "/reqmgr2/data/request/%s" % encodedParams["RequestName"]
+        data, status = _put(url, request, encodedParams, head=header, encode=json.dumps)
+    elif request == '/reqmgr/create/makeSchema':
+        request = "/reqmgr2/data/request"
+        data, status = _post(url, request, params, head=header, encode=json.dumps)
+    elif request ==  '/reqmgr/view/handleSplittingPage':
+        request = "/reqmgr2/data/splitting/%s" % params['requestName']
+        encodedParams = reqmgr2HandleSplittingPage(params)
+        data, status = _post(url, request, encodedParams, head=header, encode=json.dumps)
+    elif request == "/reqmgr/reqMgr/closeout":
+        request = "/reqmgr/reqmgr2/data/request/%s" % params['requestName']
+        newParams = {"RequestStatus": "closed-out", "cascade": params["cascade"]}
+        data, status = _put(url, request, newParams, head=header, encode=json.dumps)
+    elif request == "/reqmgr/reqMgr/announce":
+        request = "/reqmgr/reqmgr2/data/request/%s" % params['requestName']
+        newParams = {"RequestStatus": "announced", "cascade": params["cascade"]}
+        data, status = _put(url, request, newParams, head=header, encode=json.dumps)
+    else:
+        raise Exception("no correspondonting reqmgr2 call for %s" % request)
+    return data
+    
+
+def requestManagerPost(url, request, params, head = def_headers, nested=False, reqmgr2=False):
     """
     Performs some operation on ReqMgr through
     an HTTP POST method.
@@ -349,22 +417,67 @@ def requestManagerPost(url, request, params, head = def_headers, nested=False):
     params: a dict with the POST parameters
     nested: deep encode a json parameters
     """
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
-                                    key_file = os.getenv('X509_USER_PROXY'))
-    headers = head
-    if nested:
-        jsonEncodedParams ={}
-        for pKey in params:
-            jsonEncodedParams[pKey] = json.dumps(params[pKey])
-        encodedParams = urllib.urlencode(jsonEncodedParams)
+    if reqmgr2:
+        header = {"Content-type": "application/json", "Accept": "application/json"}
+        data, status = _post(url, request, params, head=header, encode=json.dumps)
+        return data
+    
+    if "requestName" in params and isRequestMgr2Request(url, params["requestName"]):
+        data = _convertToRequestMgrPostCall(url, request, params)
     else:
-        encodedParams = urllib.urlencode(params)
+        conn  =  httplib.HTTPSConnection(url, cert_file = CERT_FILE,
+                                        key_file = KEY_FILE)
+        headers = head
+        if nested:
+            jsonEncodedParams ={}
+            for pKey in params:
+                jsonEncodedParams[pKey] = json.dumps(params[pKey])
+            encodedParams = urllib.urlencode(jsonEncodedParams)
+        else:
+            encodedParams = urllib.urlencode(params)
+    
+        conn.request("POST", request, encodedParams, headers)
+        response = conn.getresponse()
+        data = response.read()
+        conn.close()
+        if response.status == 404 :
+            data = _convertToRequestMgrPostCall(url, request, params) 
+    return data
 
-    conn.request("POST", request, encodedParams, headers)
+def _put(url, request, params, head=def_headers, encode=urllib.urlencode):
+    return _httpsRequest("PUT", url, request, params, head, encode)
+
+def _post(url, request, params, head=def_headers, encode=urllib.urlencode):
+    return _httpsRequest("POST", url, request, params, head, encode)
+
+def _httpsRequest(verb, url, request, params, head, encode):
+    conn  =  httplib.HTTPSConnection(url, cert_file = CERT_FILE,
+                                    key_file = KEY_FILE)
+    headers = head
+    encodedParams = encode(params)
+    conn.request(verb, request, encodedParams, headers)
     response = conn.getresponse()
     data = response.read()
     conn.close()
-    return data
+    return (data, response.status)
+
+def _convertToReqMgr2PUTRequest(request, params):
+    
+    if request ==  "/reqmgr/reqMgr/clone/":
+        cRequest = "/reqmgr2/data/request"
+        return cRequest, params
+    else:
+        cRequest = "/reqmgr2/data/request/%s" % params["requestName"]
+        cParams = {}
+        
+        if "status" in params:
+            cParams["RequestStatus"] = params["status"]
+        if "cascade" in params:
+            cParams["cascade"] = params["cascade"]
+        if "RequestPriority" in params:
+            cParams["RequestPriority"] = params["RequestPriority"]
+        print cParams
+        return cRequest, cParams
 
 def requestManagerPut(url, request, params, head = def_headers):
     """
@@ -375,30 +488,31 @@ def requestManagerPut(url, request, params, head = def_headers):
     params: a dict with the PUT parameters
     head: optional headers param. If not given it takes default value (def_headers)
     """
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
-                                    key_file = os.getenv('X509_USER_PROXY'))
-    headers = head
-    encodedParams = urllib.urlencode(params)
-    conn.request("PUT", request, encodedParams, headers)
-    response = conn.getresponse()
-    data = response.read()
-    conn.close()
+    
+    if "requestName" in params and isRequestMgr2Request(url, params["requestName"]):
+        print "sending reqmgr2 request" 
+        cRequest, cParams = _convertToReqMgr2PUTRequest(request, params)
+        header = {"Content-type": "application/json", "Accept": "application/json"}
+        data, status = _put(url, cRequest, cParams, header, encode=json.dumps)
+    else:
+        data, status = _put(url, request, params, head)
     return data
+
 
 def getWorkflowWorkload(url, workflow, retries=4):
     """
     Gets the workflow loaded, splitted by lines.
     """
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
-                                            key_file = os.getenv('X509_USER_PROXY'))
+    conn  =  httplib.HTTPSConnection(url, cert_file = CERT_FILE,
+                                            key_file = KEY_FILE)
     request = '/reqmgr/view/showWorkload?requestName=' + workflow
     r1=conn.request("GET",request)
     r2=conn.getresponse()
     data = r2.read()
     #try until no exception
     while 'exception' in request and retries > 0:
-        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
-                                                key_file = os.getenv('X509_USER_PROXY'))
+        conn  =  httplib.HTTPSConnection(url, cert_file = CERT_FILE,
+                                                key_file = KEY_FILE)
         r1=conn.request("GET",request)
         r2=conn.getresponse()
         data = r2.read()
@@ -413,8 +527,12 @@ def getWorkflowInfo(url, workflow):
     """
     Retrieves workflow information
     """
-    request = requestManagerGet(url,'/reqmgr/reqMgr/request?requestName='+workflow)
-    return request
+    request = requestManagerGet(url,'/reqmgr2/data/request?name='+workflow)
+    return request['result'][0][workflow]
+
+def isRequestMgr2Request(url, workflow):
+    result = getWorkflowInfo(url, workflow)
+    return result.get("ReqMgr2Only", False)
 
 def getWorkloadCache(url, workflow):
     """
@@ -474,7 +592,22 @@ def outputdatasetsWorkflow(url, workflow):
     """
     returns the output datasets for a given workfow
     """
-    datasets = requestManagerGet(url,'/reqmgr/reqMgr/outputDatasetsByRequestName?requestName='+workflow)
+    results = requestManagerGet(url,'/reqmgr2/data/request?name='+workflow)['result']
+    request = results[0][workflow]
+    datasets = []
+    if "OutputDatasets" in request:
+        datasets.extend(request['OutputDatasets'])
+        
+    if "TaskChain" in request:
+        for num in range(request['TaskChain']):
+            if"OutputDatasets" in request["Task%i" % (num+1)]:
+                datasets.extend(request['OutputDatasets'])
+    
+    if "StepChain" in request:
+        for num in range(request['StepChain']):
+            if "OutputDatasets" in request["Step%i" % (num+1)]:
+                datasets.extend(request['OutputDatasets'])
+    
     return datasets
 
 def getRequestTeam(url, workflow):
@@ -482,9 +615,9 @@ def getRequestTeam(url, workflow):
     Retrieves the team on which the wf is assigned
     """
     request = getWorkflowInfo(url,workflow)
-    if 'teams' not in request:
+    if 'Teams' not in request:
         return 'NoTeam'
-    teams = request['teams']
+    teams = request['Teams']
     if len(teams)<1:
         return 'NoTeam'
     else:
@@ -829,10 +962,11 @@ def assignWorkflow(url, workflowname, team, parameters ):
     headers  =  {"Content-type": "application/x-www-form-urlencoded",
                  "Accept": "text/plain"}
 
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn  =  httplib.HTTPSConnection(url, cert_file = CERT_FILE, key_file = KEY_FILE)
 
     conn.request("POST",  "/reqmgr/assign/handleAssignmentPage", encodedParams, headers)
     response = conn.getresponse()
+        
     if response.status != 200:
         ## try again
         conn.request("POST",  "/reqmgr/assign/handleAssignmentPage", encodedParams, headers)
@@ -1000,16 +1134,15 @@ def abortWorkflow(url, workflowname):
     data = requestManagerPut(url,"/reqmgr/reqMgr/request", params)
     return data
 
-def cloneWorkflow(url, workflowname):
+def cloneWorkflow(url, workflowname, params = {}):
     """
     This clones a request
     """
-    headers={"Content-Length": 0}
-    params = {}
-    data = requestManagerPut(url,"/reqmgr/reqMgr/clone/", params, headers)
+    params.update(OriginalRequestName = workflowname)
+    data = requestManagerPut(url,"/reqmgr/reqMgr/clone/", params)
     return data
 
-def submitWorkflow(url, schema):
+def submitWorkflow(url, schema, reqmgr2=False):
     """
     This submits a workflow into the ReqMgr, can be used for cloning
     and resubmitting workflows
@@ -1018,7 +1151,21 @@ def submitWorkflow(url, schema):
     the workflow
     
     """
-    data = requestManagerPost(url,"/reqmgr/create/makeSchema", schema, nested=True)
+    #if initially submitting reqmgr2 request flag need to be set to Frure
+    if reqmgr2:
+        data = requestManagerPost(url,"/reqmgr2/data/request", schema, nested=True, reqmgr2=reqmgr2)
+    else:
+        try:
+            data = requestManagerPost(url,"/reqmgr/create/makeSchema", schema, nested=True)
+        except httplib.HTTPException as ex:
+            # If we get an HTTPException of 404 means reqmgr2 request
+            if ex.status == 404:
+                # try reqmgr2 call
+                print "creating reqmgr2 request due to error: %s" % str(ex)
+                data = requestManagerPost(url,"/reqmgr2/data/request", schema, nested=True)
+                return data
+            
+            raise ex
     return data
 
 def setWorkflowSplitting(url, schema):
