@@ -1,0 +1,76 @@
+{
+ "stagor_sends_back": {
+   "value" : true,
+   "description": "Whether the stagor module can send workflow back to considered"
+ },
+ "fast_stagor_pass_availability": {
+   "value" : 3.0,
+   "description": "The fraction of availability above which to fast pass stagor"
+  },
+  "max_transfer_in_GB": {
+   "value" : 200000,
+   "description": "The total size of the input datasets that can be transfered at a given time"
+  },
+  "max_handled_workflows": {
+   "value" : 1200,
+   "description": "The total number of workflows that we allow to handle at a time (transfer, running, assistance)"
+  },
+  "max_staging_workflows": {
+   "value" : 130,
+   "description": "The total number of workflows that we allow to stage at a time"
+  }, 
+  "max_staging_workflows_per_site": {
+   "value" : 130,
+   "description": "The total number of workflows that we allow to stage at a time per site"
+  },
+  "chopping_threshold_in_GB": {
+  "value" : 4000,
+  "description": "The threshold before choping an input dataset in chunk of that size for spreading to sites"
+  },
+  "error_codes_to_recover": {
+  "value" : { "50664" : [ { "legend" : "time-out",
+  	           "solution" : "split-2" ,
+                   "details" : null,
+                   "rate" : 20 
+                  } ],
+        "50660" : [ { "legend" : "memory excess",
+                  "solution" : "mem-1000" ,
+                  "details" : null,
+                  "rate" : 20
+                  } ],
+        "61104" : [ { "legend" : "failed submit",
+                  "solution" : "recover" ,
+                  "details" : null,
+                  "rate" : 20 
+                  } ],
+        "8028" : [ { "legend" : "read error",
+                 "solution" : "recover" ,
+                 "details" : null,
+                 "rate" : 20 
+                 } ],
+        "8021" : [ { "legend" : "cmssw failure",
+                 "solution" : "recover" , 
+                 "details" : "FileReadError",
+                 "rate" : 20
+                 } ]
+        },
+  "description" : "The error code, threshold and rules for auto-recovery"
+  },
+  "error_codes_to_block" : {
+  "value" : 
+      {
+        "99109" : [{ "legend" : "stage-out",
+                   "solution" : "recover",
+                   "details" : null,
+                   "rate" : 20
+                   }]
+    },
+  "description" : "The error code, threshold and rules to prevent auto-recovery"
+  },
+  "error_codes_to_notify" : {
+  "value" : {
+   "8021" : { "message" : "Please take a look and come back to Ops." }
+  },
+  "description" : "The error code, threshold and rules to notify the user of an error in production"
+  }
+}

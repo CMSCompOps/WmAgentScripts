@@ -737,6 +737,10 @@ def assignWorkflow(url, workflowname, team, parameters ):
                 if params['splittingAlgo'] != 'EventBased': 
                     print "Ignoring changing events per lumi for",params['splittingAlgo']
                     continue
+                (_,prim,_,_) = wf.getIO()
+                if prim:
+                    print "Ignoring changing events per lumi for wf that take input"
+                    continue
 
                 if str(par).startswith('x'):
                     multiplier = float(str(par).replace('x',''))
@@ -762,6 +766,10 @@ def assignWorkflow(url, workflowname, team, parameters ):
                 params.update({"requestName":workflowname,
                                "splittingTask" : '/%s/%s'%(workflowname,t),
                                "splittingAlgo" : par})
+                #swap values
+                if "avg_events_per_job" in params and not "events_per_job" in params:
+                    params['events_per_job' ] = params.pop('avg_events_per_job')
+                print params
                 print setWorkflowSplitting(url, params)
             elif aux == 'LumisPerJob': 
                 wf = workflowInfo(url, workflowname)
@@ -770,7 +778,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
                 params = {"requestName":workflowname,
                           "splittingTask" : '/%s/%s'%(workflowname,t),
                           "lumis_per_job" : par,
-                          "halt_job_on_file_boundaries" : True,
+                          #"halt_job_on_file_boundaries" : True,
                           "splittingAlgo" : "LumiBased"}
                 print setWorkflowSplitting(url, params)
             else:
@@ -940,7 +948,7 @@ def invalidateWorkflow(url, workflowname, current_status=None):
     if not current_status:
         print "not implemented yet to retrieve the status at that point"
     
-    if current_status in ['assignment-approved','new','completed','closed-out','announced']:
+    if current_status in ['assignment-approved','new','completed','closed-out','announced','failed']:
         return rejectWorkflow(url, workflowname)
     elif current_status in['normal-archived']:
         params = {"requestName" : workflowname,"status" : "rejected-archived"}

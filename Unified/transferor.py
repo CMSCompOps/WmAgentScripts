@@ -6,13 +6,15 @@ from utils import makeReplicaRequest
 from utils import workflowInfo, siteInfo, campaignInfo, userLock
 from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, getSiteWhiteList, approveSubscription, getDatasetSize, updateSubscription, getWorkflows, componentInfo, getDatasetDestinations
 from utils import unifiedConfiguration
-from utils import lockInfo
+from utils import lockInfo, duplicateLock, newLockInfo
 import json
 from collections import defaultdict
 import optparse
 import time
 from htmlor import htmlor
 from utils import sendEmail
+import math
+import random
 
 class DSS:
     def __init__(self):
@@ -29,10 +31,12 @@ class DSS:
                                     
 
 def transferor(url ,specific = None, talk=True, options=None):
-    if userLock('transferor'):   return
+    if userLock():   return
+    if duplicateLock():  return
 
     use_mcm = True
     up = componentInfo(mcm=use_mcm, soft=['mcm'])
+    if not up.check(): return
     use_mcm = up.status['mcm']
 
     if options and options.test:
@@ -43,6 +47,7 @@ def transferor(url ,specific = None, talk=True, options=None):
     SI = siteInfo()
     CI = campaignInfo()
     LI = lockInfo()
+    NLI = newLockInfo()
     mcm = McMClient(dev=False)
     dss = DSS()
 
@@ -50,7 +55,7 @@ def transferor(url ,specific = None, talk=True, options=None):
     being_handled = len(session.query(Workflow).filter(Workflow.status == 'away').all())
     being_handled += len(session.query(Workflow).filter(Workflow.status.startswith('stag')).all())
     being_transfered = len(session.query(Workflow).filter(Workflow.status == 'staging').all())
-    being_handled += len(session.query(Workflow).filter(Workflow.status.startswith('assistance')).all())
+    being_handled += len(session.query(Workflow).filter(Workflow.status.startswith('assistance-')).all())
 
     max_to_handle = options.maxworkflows
     max_to_transfer = options.maxstaging
@@ -71,6 +76,7 @@ def transferor(url ,specific = None, talk=True, options=None):
     print "... done"
 
     all_transfers=defaultdict(list)
+    needing_locks=defaultdict(list)
     workflow_dependencies = defaultdict(set) ## list of wf.id per input dataset
     wfs_and_wfh=[]
     print "getting all wf to consider ..."
@@ -115,6 +121,8 @@ def transferor(url ,specific = None, talk=True, options=None):
     in_transfer_already = sum(input_sizes.values())
     cput_in_transfer_already = sum(input_cput.values())
     st_in_transfer_already = sum(input_st.values())
+    # shuffle first by name
+    random.shuffle( wfs_and_wfh )
     #sort by priority higher first
     wfs_and_wfh.sort(cmp = lambda i,j : cmp(int(i[1].request['RequestPriority']),int(j[1].request['RequestPriority']) ), reverse=True)
     
@@ -159,6 +167,7 @@ def transferor(url ,specific = None, talk=True, options=None):
     passing_along = 0
     transfer_sizes={}
     went_over_budget=False
+    destination_cache = {}
     for (wfo,wfh) in wfs_and_wfh:
         print wfh.request['RequestPriority']
         print wfo.name,"to be transfered"
@@ -237,14 +246,18 @@ def transferor(url ,specific = None, talk=True, options=None):
 
 
         if passing_along >= allowed_to_handle:
-            if int(wfh.request['RequestPriority']) >= in_transfer_priority and min_transfer_priority!=in_transfer_priority:
+            #if int(wfh.request['RequestPriority']) >= in_transfer_priority and min_transfer_priority!=in_transfer_priority:
+            if int(wfh.request['RequestPriority']) >= in_transfer_priority and int(wfh.request['RequestPriority']) !=min_transfer_priority:
+                ## higher priority, and not only this priority being transfered
                 print "Higher priority sample",wfh.request['RequestPriority'],">=",in_transfer_priority,"go-on over",max_to_handle
             else:
                 print "Not allowed to pass more than",max_to_handle,"at a time. Currently",being_handled,"handled, and adding",passing_along
                 if not options.go: break
 
         if this_load and needs_transfer >= allowed_to_transfer:
-            if int(wfh.request['RequestPriority']) >= in_transfer_priority and min_transfer_priority!=in_transfer_priority:
+            #if int(wfh.request['RequestPriority']) >= in_transfer_priority and min_transfer_priority!=in_transfer_priority:
+            if int(wfh.request['RequestPriority']) >= in_transfer_priority and int(wfh.request['RequestPriority']) !=min_transfer_priority:
+                ## higher priority, and not only this priority being transfered
                 print "Higher priority sample",wfh.request['RequestPriority'],">=",in_transfer_priority,"go-on over",max_to_transfer
             else:
                 print "Not allowed to transfer more than",max_to_transfer,"at a time. Currently",being_transfered,"transfering, and adding",needs_transfer
@@ -252,6 +265,10 @@ def transferor(url ,specific = None, talk=True, options=None):
 
 
         (lheinput,primary,parent,secondary) = wfh.getIO()
+        for dataset in list(primary)+list(parent)+list(secondary):
+            ## lock everything flat
+            NLI.lock( dataset )
+
         if options and options.tosites:
             sites_allowed = options.tosites.split(',')
         else:
@@ -278,11 +295,25 @@ def transferor(url ,specific = None, talk=True, options=None):
         blocks = []
         if 'BlockWhitelist' in wfh.request and wfh.request['BlockWhitelist']:
             blocks = wfh.request['BlockWhitelist']
+        if 'RunWhitelist' in wfh.request and wfh.request['RunWhitelist']:
+            ## should make the block selection here
+            pass
+
+        if 'LumiList' in wfh.request and wfh.request['LumiList']:
+            ## same, we could be doing the white list here too
+            pass
+
+
+        if blocks:
+            print "Reading",len(blocks),"in whitelist"
 
         can_go = True
         staging=False
         allowed=True
         if primary:
+            
+            copies_needed_from_CPUh,CPUh = wfh.getNCopies()
+
             if talk:
                 print wfo.name,'reads',', '.join(primary),'in primary'
             ## chope the primary dataset 
@@ -290,13 +321,23 @@ def transferor(url ,specific = None, talk=True, options=None):
                 max_priority[prim] = max(max_priority[prim],int(wfh.request['RequestPriority']))
                 sites_allowed = [site for site in sites_allowed if not any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
                 print "Sites allowed minus the vetoed transfer"
-                print sites_allowed
+                print sorted(sites_allowed)
+
                 copies_needed_from_site = int(0.35*len(sites_allowed))+1 ## should just go for a fixed number based if the white list grows that big
                 print "Would make",copies_needed_from_site,"copies from site white list"
-                if options.maxcopy>0:
-                    copies_needed = min(options.maxcopy,copies_needed_from_site)
-                    print "Maxed to",copies_needed
+                copies_needed = copies_needed_from_site
 
+                print "Would make",copies_needed_from_CPUh,"from cpu requirement",CPUh
+                copies_needed = copies_needed_from_CPUh
+
+                if options.maxcopy>0:
+                    ## stop maxing things out ??
+                    #copies_needed = min(options.maxcopy,copies_needed)
+                    #print "Maxed to",copies_needed
+                    if copies_needed_from_CPUh > options.maxcopy:
+                        sendEmail('An example of more than three copies','for %s it could have been beneficial to make %s copies'%( wfo.name, copies_needed_from_CPUh))
+
+                
                 if 'Campaign' in wfh.request and wfh.request['Campaign'] in CI.campaigns and 'maxcopies' in CI.campaigns[wfh.request['Campaign']]:
                     copies_needed_from_campaign = CI.campaigns[wfh.request['Campaign']]['maxcopies']
                     copies_needed = min(copies_needed_from_campaign,copies_needed_from_site)
@@ -332,15 +373,22 @@ def transferor(url ,specific = None, talk=True, options=None):
 
 
                 ### new ways of making the whole thing
-                destinations,all_block_names = getDatasetDestinations(url, prim, within_sites = [SI.CE_to_SE(site) for site in sites_allowed])
+                destinations,all_block_names = getDatasetDestinations(url, prim, within_sites = [SI.CE_to_SE(site) for site in sites_allowed], only_blocks=blocks )
+                #destinations,all_block_names = getDatasetDestinations(url, prim, within_sites = [SI.CE_to_SE(site) for site in sites_allowed], only_blocks=blocks, group='DataOps')
+                #anaops_destinations,anaops_all_block_names = getDatasetDestinations(url, prim, within_sites = [SI.CE_to_SE(site) for site in sites_allowed], only_blocks=blocks, group='AnalysisOps' )
+                print json.dumps(destinations, indent=2)
 
                 ## get where the dataset is in full and completed
                 prim_location = [site for (site,info) in destinations.items() if info['completion']==100 and info['data_fraction']==1]
                 ## the rest is places it is going to be
                 prim_destination = [site for site in destinations.keys() if not site in prim_location]
+                ## need to take out the transfer veto
+                prim_destination = [site for site in prim_destination if not any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
+                for dsite in prim_destination:
+                    needing_locks[dsite].append( prim )
 
                 if len(prim_location) >= copies_needed:
-                    print "The output is all fully in place at",len(prim_location),"sites"
+                    print "The output is all fully in place at",len(prim_location),"sites",prim_location
                     continue
                 copies_needed = max(0,copies_needed - len(prim_location))
                 print "now need",copies_needed
@@ -353,8 +401,8 @@ def transferor(url ,specific = None, talk=True, options=None):
                 #print latching_on_transfers
 
                 ## figure out where all this is going to go
-                prim_to_distribute = [site for site in sites_allowed if not any([osite.startswith(site) for osite in prim_location])]
-                prim_to_distribute = [site for site in prim_to_distribute if not any([osite.startswith(site) for osite in prim_destination])]
+                prim_to_distribute = [site for site in sites_allowed if not SI.CE_to_SE(site) in prim_location]
+                prim_to_distribute = [site for site in prim_to_distribute if not SI.CE_to_SE(site) in prim_destination]
                 ## take out the ones that cannot receive transfers
                 prim_to_distribute = [site for site in prim_to_distribute if not any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
 
@@ -404,12 +452,19 @@ def transferor(url ,specific = None, talk=True, options=None):
 
                 if len(prim_to_distribute)>0: ## maybe that a parameter we can play with to limit the 
                     if not options or options.chop:
-                        spreading = distributeToSites( getDatasetChops(prim, chop_threshold = options.chopsize), prim_to_distribute, n_copies = copies_needed, weights=SI.cpu_pledges)
+                        chops,sizes = getDatasetChops(prim, chop_threshold = options.chopsize, only_blocks=blocks)
+                        spreading = distributeToSites( chops, prim_to_distribute, n_copies = copies_needed, weights=SI.cpu_pledges, sizes=sizes)
+                        transfer_sizes[prim] = sum(sizes)
                     else:
                         spreading = {} 
-                        for site in prim_to_distribute: spreading[site]=[prim]
+                        for site in prim_to_distribute: 
+                            if blocks:
+                                spreading[site]=blocks
+                            else:
+                                spreading[site]=[prim]
+                        transfer_sizes[prim] = input_sizes[prim] ## this is approximate if blocks are specified
                     can_go = False
-                    transfer_sizes[prim] = input_sizes[prim]
+                    print "selected CE destinations",spreading.keys()
                     for (site,items) in spreading.items():
                         all_transfers[site].extend( items )
 
@@ -423,17 +478,42 @@ def transferor(url ,specific = None, talk=True, options=None):
                 print wfo.name,'reads',', '.join(secondary),'in secondary'
             for sec in secondary:
                 workflow_dependencies[sec].add( wfo.id )
-                presence = getDatasetPresence( url, sec )
-                sec_location = [site for site,pres in presence.items() if pres[1]>90.] ## more than 90% of the minbias at sites
-                subscriptions = listSubscriptions( url ,sec )
-                sec_destination = [site for site in subscriptions] 
+
+                if False:
+                    ## new style, failing on minbias
+                    if not sec in destination_cache:
+                        ## this is barbbaric, and does not show the correct picture on workflow by workflow with different whitelist
+                        destination_cache[sec],_ = getDatasetDestinations(url, sec, within_sites = [SI.CE_to_SE(site) for site in sites_allowed])
+                    destinations = destination_cache[sec]
+                    ## truncate location/destination to those making up for >90% of the dataset
+                    bad_destinations = [destinations.pop(site) for (site,info) in destinations.items() if info['data_fraction']<0.9]
+                    sec_location = [site for (site,info) in destinations.items() if info['completion']>=95]
+                    sec_destination = [site for site in destinations.keys() if not site in sec_location]
+                else:
+                    ## old style
+                    presence = getDatasetPresence( url, sec )
+                    sec_location = [site for site,pres in presence.items() if pres[1]>90.] ## more than 90% of the minbias at sites
+                    subscriptions = listSubscriptions( url ,sec )
+                    sec_destination = [site for site in subscriptions] 
+
+                for site in sec_location:
+                    needing_locks[site].append( sec )
+                for site in sec_destination:
+                    needing_locks[site].append( sec )
+
                 sec_to_distribute = [site for site in sites_allowed if not any([osite.startswith(site) for osite in sec_location])]
                 sec_to_distribute = [site for site in sec_to_distribute if not any([osite.startswith(site) for osite in sec_destination])]
                 sec_to_distribute = [site for site in sec_to_distribute if not  any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
                 if len( sec_to_distribute )>0:
+                    sec_size = dss.get( sec )
                     for site in sec_to_distribute:
-                        all_transfers[site].append( sec )
-                        can_go = False
+                        site_se =SI.CE_to_SE(site)
+                        if (SI.disk[site_se]*1024.) > sec_size:
+                            all_transfers[site].append( sec )
+                            can_go = False
+                        else:
+                            print "could not send the secondary input to",site_se,"because it is too big for the available disk",SI.disk[site_se]*1024,"GB need",sec_size
+                            #sendEmail('secondary input too big','%s is too big (%s) for %s (%s)'%( sec, sec_size, site_se, SI.disk[site_se]*1024))
 
         ## is that possible to do something more
         if can_go:
@@ -463,12 +543,20 @@ def transferor(url ,specific = None, talk=True, options=None):
             needs_transfer+=1
             passing_along+=1
 
-    #print json.dumps(all_transfers)
+    print "accumulated locks of dataset in place"
+    print json.dumps(needing_locks, indent=2)
+    for site,items in needing_locks.items():
+        for item in items:
+            LI.lock( item, SI.CE_to_SE(site), 'usable input')
+        
+    print "accumulated transfers"
+    print json.dumps(all_transfers, indent=2)
     fake_id=-1
     wf_id_in_prestaging=set()
 
     for (site,items_to_transfer) in all_transfers.iteritems():
         items_to_transfer = list(set(items_to_transfer))
+
         ## convert to storage element
         site_se = SI.CE_to_SE(site)
 

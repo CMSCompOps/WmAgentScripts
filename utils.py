@@ -13,6 +13,7 @@ import copy
 import pickle
 import itertools
 import time
+import math 
 
 import smtplib
 from email.MIMEMultipart import MIMEMultipart
@@ -104,6 +105,15 @@ def download_file(url, params, path = None, logger = None):
         logger.error("URL called: {url}".format(url = url))
         return None
 
+
+def check_ggus( ticket ):
+    conn  =  httplib.HTTPSConnection('ggus.eu', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    r1=conn.request("GET",'/index.php?mode=ticket_info&ticket_id=%s&writeFormat=XML'%ticket)
+    r2=conn.getresponse()
+    print r2
+    return False
+
+
 def listDelete(url, user, site=None):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     there = '/phedex/datasvc/json/prod/requestlist?type=delete&approval=pending&requested_by=%s'% user
@@ -153,6 +163,34 @@ def listSubscriptions(url, dataset, within_sites=None):
 
 import dataLock
 
+class newLockInfo:
+    def __init__(self):
+        self.db = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/globallocks.json').read())
+        os.system('echo `date` > /afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.lock')
+
+    def __del__(self):
+        open('/afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.new','w').write(json.dumps( list(set(self.db)) ))
+        os.system('mv /afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.new /afs/cern.ch/user/c/cmst2/www/unified/globallocks.json')
+        os.system('rm -f /afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.lock')
+
+    def lock(self, dataset):
+        print "[new lock]",dataset,"to be locked"
+        # just put the 
+        if dataset in self.db:
+            print "\t",dataset,"was already locked"
+        else:
+            self.db.append(dataset)
+
+    def release(self, dataset):
+        print "[new lock] should never release datasets"
+        return
+        if not dataset in self.db:
+            print "\t",dataset,"was not locked already"
+        else:
+            self.db.remove( dataset )
+        
+
+
 class lockInfo:
     def __init__(self):
         pass
@@ -178,7 +216,8 @@ class lockInfo:
                 }
         now = time.mktime(time.gmtime())
         jdump['lastupdate'] = now
-        open('/afs/cern.ch/user/c/cmst2/www/unified/datalocks.json','w').write( json.dumps( jdump , indent=2))
+        open('/afs/cern.ch/user/c/cmst2/www/unified/datalocks.json.new','w').write( json.dumps( jdump , indent=2))
+        os.system('mv /afs/cern.ch/user/c/cmst2/www/unified/datalocks.json.new /afs/cern.ch/user/c/cmst2/www/unified/datalocks.json')
 
     def _lock(self, item, site, reason):
         print "[lock] of %s at %s because of %s"%( item, site, reason )
@@ -222,7 +261,7 @@ class lockInfo:
             dataLock.locksession.commit()
             
         #then unlock all of everything starting with item (itself for block, all block for dataset)
-        for l in dataLock.locksession.query(dataLock.Lock).filter(dataLock.Lock.site==site).filter(dataLock.Lock.item.starstwith(item)).all():
+        for l in dataLock.locksession.query(dataLock.Lock).filter(dataLock.Lock.site==site).filter(dataLock.Lock.item.startswith(item)).all():
             l.time = now
             l.reason = reason
             l.lock = False
@@ -310,12 +349,21 @@ class unifiedConfiguration:
 
 class componentInfo:
     def __init__(self, block=True, mcm=False,soft=None):
+        self.mcm = mcm
+        self.soft = soft
+        self.block = block
         self.status ={
             'reqmgr' : False,
             'mcm' : False,
             'dbs' : False,
             'phedex' : False
             }
+        self.code = 0
+        #if not self.check():
+        #    sys.exit( self.code)
+        
+
+    def check(self):
         try:
             print "checking reqmgr"
             wfi = workflowInfo('cmsweb.cern.ch','pdmvserv_task_B2G-RunIIWinter15wmLHE-00067__v1_T_150505_082426_497')
@@ -324,29 +372,33 @@ class componentInfo:
             self.tell('reqmgr')
             print "cmsweb.cern.ch unreachable"
             print str(e)
-            if block and not (soft and 'reqmgr' in soft):
-                sys.exit(123)
+            if self.block and not (self.soft and 'reqmgr' in self.soft):
+                self.code = 123
+                return False
 
         from McMClient import McMClient
 
-        if mcm:
+        if self.mcm:
             try:
                 mcmC = McMClient(dev=False)
                 print "checking mcm"
                 test = mcmC.getA('requests',page=0)
+                time.sleep(1)
                 if not test: 
                     self.tell('mcm')
                     print "mcm corrupted"
-                    if block and not (soft and 'mcm' in soft):
-                        sys.exit(124)
+                    if self.block and not (self.soft and 'mcm' in self.soft):
+                        self.code = 124
+                        return False
                 else:
                     self.status['mcm'] = True
             except Exception as e:
                 self.tell('mcm')
                 print "mcm unreachable"
                 print str(e)
-                if block and not (soft and 'mcm' in soft):
-                    sys.exit(125)
+                if self.block and not (self.soft and 'mcm' in self.soft):
+                    self.code = 125
+                    return False
         
         try:
             print "checking dbs"
@@ -355,14 +407,17 @@ class componentInfo:
             if not blocks:
                 self.tell('dbs')
                 print "dbs corrupted"
-                if block and not (soft and 'dbs' in soft):
-                    sys.exit(126)
+                if self.block and not (self.soft and 'dbs' in self.soft):
+                    self.code = 126
+                    return False
+
         except Exception as e:
             self.tell('dbs')
             print "dbs unreachable"
             print str(e)
-            if block and not (soft and 'dbs' in soft):
-                sys.exit(127)
+            if self.block and not (self.soft and 'dbs' in self.soft):
+                self.code = 127
+                return False
 
         try:
             print "checking phedex"
@@ -372,8 +427,11 @@ class componentInfo:
             self.tell('phedex')
             print "phedex unreachable"
             print str(e)
-            if block and not (soft and 'phedex' in soft):
-                sys.exit(128)
+            if self.block and not (self.soft and 'phedex' in self.soft):
+                self.code = 128
+                return False
+
+        return True
 
     def tell(self, c):
         sendEmail("%s Component Down"%c,"The component is down, just annoying you with this","vlimant@cern.ch",['vlimant@cern.ch','matteoc@fnal.gov'])
@@ -405,7 +463,41 @@ class campaignInfo:
         else:
             return {}
 
-def userLock(component):
+def notRunningBefore( component, time_out = 60*5 ):
+    s = 10
+    while True:
+        if time_out<0:
+            print "Could not wait any longer for %s to finish"% component
+            return False
+        process_check = filter(None,os.popen('ps -f -e | grep %s.py | grep -v grep  |grep python'%component).read().split('\n'))
+        if len(process_check):
+            ## there is still the component running. wait
+            time.sleep(s)
+            time_out-=s
+            continue
+        break
+    return True
+
+
+def duplicateLock(component=None):
+    if not component:
+        ## get the caller
+        component = sys._getframe(1).f_code.co_name
+
+    ## check that no other instances of assignor is running
+    process_check = filter(None,os.popen('ps -f -e | grep %s.py | grep -v grep  |grep python'%component).read().split('\n'))
+    if len(process_check)>1:
+        ## another component is running on the machine : stop
+        sendEmail('overlapping %s'%component,'There are %s instances running %s'%(len(process_check), '\n'.join(process_check)))
+        print "quitting because of overlapping processes"
+        return True
+    return False
+
+    
+def userLock(component=None):
+    if not component:  
+        ## get the caller
+        component = sys._getframe(1).f_code.co_name        
     lockers = ['dmytro','mcremone','vlimant']
     for who in lockers:
         if os.path.isfile('/afs/cern.ch/user/%s/%s/public/ops/%s.lock'%(who[0],who,component)):
@@ -415,74 +507,125 @@ def userLock(component):
 
 class siteInfo:
     def __init__(self):
-        self.siteblacklist = ['T2_TH_CUNSTDA','T1_TW_ASGC','T2_TW_Taiwan']
-        self.sites_with_goodIO = ["T1_DE_KIT","T1_ES_PIC","T1_FR_CCIN2P3","T1_IT_CNAF",
-                                  "T1_RU_JINR","T1_UK_RAL","T1_US_FNAL","T2_CH_CERN",
-                                  "T2_DE_DESY","T2_DE_RWTH","T2_ES_CIEMAT","T2_FR_IPHC",
-                                  "T2_IT_Bari","T2_IT_Legnaro","T2_IT_Pisa","T2_IT_Rome",
-                                  "T2_UK_London_Brunel","T2_UK_London_IC","T2_US_Caltech","T2_US_MIT",
-                                  "T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida"]
-        ## only T2s in that list
-        self.sites_with_goodIO = filter(lambda s : s.startswith('T2'), self.sites_with_goodIO)
+
+        try:
+            ## get all sites from SSB readiness
+            self.sites_ready = []
+            self.sites_not_ready = []
+            self.all_sites = []
+            column = 158
+            data = json.loads(os.popen('curl -s "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=%s&batch=1&lastdata=1"'%column).read())['csvdata']
+            for siteInfo in data:
+                self.all_sites.append( siteInfo['VOName'] )
+                if not siteInfo['Tier']: continue
+                if siteInfo['Status'] == 'on': 
+                    self.sites_ready.append( siteInfo['VOName'] )
+                else:#if siteInfo['Status'] in ['drain']:
+                    self.sites_not_ready.append( siteInfo['VOName'] )
+                
+        except Exception as e:
+            print "issue with getting SSB readiness"
+            print str(e)
+
+
+
+        if self.sites_ready:
+            self.sites_eos = [ s for s in self.sites_ready if s in ['T2_CH_CERN','T2_CH_CERN_AI','T2_CH_CERN_T0','T2_CH_CERN_HLT'] ]
+            self.sites_T2s = [ s for s in self.sites_ready if s.startswith('T2_')]
+            self.sites_T1s = [ s for s in self.sites_ready if s.startswith('T1_')]
+            self.sites_with_goodIO = [ "T2_DE_DESY","T2_DE_RWTH",
+                                       "T2_ES_CIEMAT",
+                                       "T2_FR_GRIF_LLR", "T2_FR_GRIF_IRFU", "T2_FR_IPHC",
+                                       "T2_IT_Bari", "T2_IT_Legnaro", "T2_IT_Pisa", "T2_IT_Rome",
+                                       "T2_UK_London_Brunel", "T2_UK_London_IC", "T2_UK_SGrid_RALPP",
+                                       "T2_US_Caltech","T2_US_MIT","T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida",
+                                       "T2_BE_IIHE",
+                                       "T2_EE_Estonia",
+                                       "T2_CH_CERN"
+                                       ]
+            self.sites_with_goodIO = [s for s in self.sites_with_goodIO if s in self.sites_ready]
+            allowed_T2_for_transfer = ["T2_DE_RWTH","T2_DE_DESY", 
+                                       #not inquired# "T2_ES_CIEMAT",
+                                       #no space# ##"T2_FR_GRIF_IRFU", #not inquired# ##"T2_FR_GRIF_LLR", #not inquired"## "T2_FR_IPHC",
+                                       "T2_IT_Legnaro", "T2_IT_Pisa", "T2_IT_Rome", #no space# #"T2_IT_Bari",
+                                       "T2_UK_London_Brunel", "T2_UK_London_IC", #commissioning#"T2_UK_SGrid_RALPP",
+                                       "T2_US_Nebraska","T2_US_Wisconsin","T2_US_Purdue","T2_US_Caltech", "T2_US_Florida", "T2_US_UCSD", "T2_US_MIT",
+                                       #commissioning# "T2_BE_IIHE",
+                                       #commissioning# "T2_EE_Estonia",
+                                       "T2_CH_CERN", 
+
+                                       ]
+            allowed_T2_for_transfer = [s for s in allowed_T2_for_transfer if s in self.sites_ready]
+            self.sites_veto_transfer = [site for site in self.sites_with_goodIO if not site in allowed_T2_for_transfer]
+
+        else:
+            self.sites_eos = [ 'T2_CH_CERN' ]
+            ## all to be deprecated if above functions !
+            siteblacklist = ['T2_TH_CUNSTDA','T1_TW_ASGC','T2_TW_Taiwan','T2_TR_METU','T2_UA_KIPT','T2_RU_ITEP','T2_RU_INR','T2_RU_PNPI','T2_PL_Warsaw']
+            self.sites_with_goodIO = ["T1_DE_KIT","T1_ES_PIC","T1_FR_CCIN2P3","T1_IT_CNAF",
+                                      "T1_RU_JINR","T1_UK_RAL","T1_US_FNAL","T2_CH_CERN",
+                                      "T2_DE_DESY","T2_DE_RWTH","T2_ES_CIEMAT","T2_FR_IPHC",
+                                      "T2_IT_Bari","T2_IT_Legnaro","T2_IT_Pisa","T2_IT_Rome",
+                                      "T2_UK_London_Brunel","T2_UK_London_IC","T2_US_Caltech","T2_US_MIT",
+                                      "T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida"]
+            ## only T2s in that list
+            self.sites_with_goodIO = filter(lambda s : s.startswith('T2'), self.sites_with_goodIO)
         
         
-        allowed_T2_for_transfer = ["T2_US_Nebraska","T2_US_Wisconsin","T2_US_Purdue","T2_US_Caltech","T2_DE_RWTH","T2_DE_DESY", "T2_US_Florida", "T2_IT_Legnaro", "T2_CH_CERN", "T2_UK_London_IC", "T2_IT_Pisa", "T2_US_UCSD", "T2_IT_Rome", "T2_US_MIT" ]
-        # at 400TB ""T2_IT_Bari","T2_IT_Legnaro"
-        # border line "T2_UK_London_IC"
-        self.sites_veto_transfer = [site for site in self.sites_with_goodIO if not site in allowed_T2_for_transfer]
+            allowed_T2_for_transfer = ["T2_US_Nebraska","T2_US_Wisconsin","T2_US_Purdue","T2_US_Caltech","T2_DE_RWTH","T2_DE_DESY", "T2_US_Florida", "T2_IT_Legnaro", "T2_CH_CERN", "T2_UK_London_IC", "T2_IT_Pisa", "T2_US_UCSD", "T2_IT_Rome", "T2_US_MIT" ]
+            # at 400TB ""T2_IT_Bari","T2_IT_Legnaro"
+            # border line "T2_UK_London_IC"
+            self.sites_veto_transfer = [site for site in self.sites_with_goodIO if not site in allowed_T2_for_transfer]
             
+            self.sites_T2s = [s for s in json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/whitelist.json').read()) if s not in siteblacklist and 'T2' in s]
 
-        self.sites_T2s = [s for s in json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/whitelist.json').read()) if s not in self.siteblacklist and 'T2' in s]
+            self.sites_T1s = [s for s in json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/whitelist.json').read()) if s not in siteblacklist and 'T1' in s]
 
-        ## those seem to be bad. should get the information from the dashboard to black/white list
-        self.sites_T2s.remove("T2_TR_METU")
-        self.sites_T2s.remove("T2_UA_KIPT")
-        self.sites_T2s.remove("T2_RU_ITEP")
-        self.sites_T2s.remove("T2_RU_INR")
-        self.sites_T2s.remove("T2_RU_PNPI")
-        self.sites_T2s.remove("T2_PL_Warsaw")
 
-        self.sites_T1s = [s for s in json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/whitelist.json').read()) if s not in self.siteblacklist and 'T1' in s]
-
-        bare_info = json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/disktape.json').read())
-        self.storage = {}
-        self.disk = {}
-        self.quota = {}
-
+        self.storage = defaultdict(int)
+        self.disk = defaultdict(int)
+        self.quota = defaultdict(int)
+        self.locked = defaultdict(int)
+        self.cpu_pledges = defaultdict(int)
+        self.addHocStorage = {
+            'T2_CH_CERN_T0': 'T2_CH_CERN',
+            'T2_CH_CERN_HLT' : 'T2_CH_CERN',
+            'T2_CH_CERN_AI' : 'T2_CH_CERN'
+            }
         ## list here the site which can accomodate high memory requests
         self.sites_memory = {}
 
+        ## this is still required because of MSS mainly
+        bare_info = json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/disktape.json').read())
         for (item,values) in bare_info.items():
             if 'mss' in values:
                 self.storage[values['mss']] = values['freemss']
             if 'disk' in values:
                 self.disk[values['disk']] = values['freedisk']
-        self.disk['T2_US_UCSD'] = 100
-        self.disk['T2_EE_Estonia'] = 0
 
         for (dse,free) in self.disk.items():
             if free<0:
                 if not dse in self.sites_veto_transfer:
                     self.sites_veto_transfer.append( dse )
 
-        self.cpu_pledges = json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/pledged.json').read())
-        ## hack around and put 1 CPU pledge for those with 0
-        for (s,p) in self.cpu_pledges.items(): 
-            if not p:
-                self.cpu_pledges[s] = 1
-                
-            #if not s in self.disk:
-            #    ## enter a 0 for those sites
-            #    sse = self.CE_to_SE(s)
-            #    print "adding an entry for",sse
-            #    self.disk[sse] = 0
-                
-        self.all_sites = list(set(self.sites_T2s + self.sites_T1s + self.sites_with_goodIO))
+        if self.sites_ready:
+            for s in self.all_sites:
+                ## will get it later from SSB
+                self.cpu_pledges[s]=1
+                ## will get is later from SSB
+                self.disk[ self.CE_to_SE(s)]=0
+            ## add hoc for ssb sucking
+            self.cpu_pledges['T2_BE_IIHE'] = 1000
+            self.cpu_pledges['T2_UK_SGrid_RALPP'] = 1000
 
-        if not set(self.all_sites).issubset(set(self.cpu_pledges.keys())):
-            print "There are missing sites in pledgeds"
-            print list(set(self.all_sites) - set(self.cpu_pledges.keys()))
-        
+        else:
+            self.cpu_pledges.update(json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/pledged.json').read()))
+
+            ## hack around and put 1 CPU pledge for those with 0
+            for (s,p) in self.cpu_pledges.items(): 
+                if not p:
+                    self.cpu_pledges[s] = 1
+                
         self.sites_auto_approve = ['T0_CH_CERN_MSS','T1_FR_CCIN2P3_MSS']
 
         ## and get SSB sync
@@ -554,11 +697,13 @@ class siteInfo:
             else:
                 self.disk[site] = 0 
             self.quota[site] = quota
+            self.locked[site] = locked
 
 
     def fetch_more_info(self,talk=True):
         ## and complement information from ssb
         columns= {
+            'realCPU' : 136,
             'prodCPU' : 159,
             'CPUbound' : 160,
             'FreeDisk' : 106,
@@ -590,7 +735,8 @@ class siteInfo:
             if talk: print "\n\tSite:",site
             ssite = self.CE_to_SE( site )
             tsite = site+'_MSS'
-            key_for_cpu ='prodCPU'
+            #key_for_cpu ='prodCPU'
+            key_for_cpu ='CPUbound'
             if key_for_cpu in info and site in self.cpu_pledges and info[key_for_cpu]:
                 if self.cpu_pledges[site] < info[key_for_cpu]:
                     if talk: print site,"could use",info[key_for_cpu],"instead of",self.cpu_pledges[site],"for CPU"
@@ -631,7 +777,12 @@ class siteInfo:
         if ce.startswith('T1') and not ce.endswith('_Disk'):
             return ce+'_Disk'
         else:
-            return ce
+
+            if ce in self.addHocStorage:
+                return self.addHocStorage[ce]
+            else:
+                return ce
+
     def SE_to_CE(self, se):
         if se.endswith('_Disk'):
             return se.replace('_Disk','')
@@ -665,7 +816,7 @@ class siteInfo:
         #print ws
         for i, w in enumerate(ws):
             rnd -= w
-            if rnd < 0:
+            if rnd <= 0:
                 return i
         print "could not make a choice from ",ws,"and",rnd
         return None
@@ -698,8 +849,9 @@ phdF</th><th>ClosOut</th></tr></thead>'
             pid = filter(lambda b :b.count('-')==2, wf.split('_'))[0]
             tpid = 'task_'+pid if 'task' in wf else pid
         except:
-            pid ='None'
-            tpid= 'None'
+            wl = getWorkLoad('cmsweb.cern.ch', wf)
+            pid =wl['PrepID']
+            tpid=wl['PrepID']
             
         ## return the corresponding html
         order = ['percentage','acdc','duplicate','correctLumis','missingSubs','phedexReqs','dbsFiles','dbsInvFiles','phedexFiles']
@@ -895,6 +1047,13 @@ def checkTransferStatus(url, xfer_id, nocollapse=False):
 
     #print result
     completions={}
+    if len(result['phedex']['dataset'])==0:
+        print "trying with an earlier date than",timecreate,"for",xfer_id
+        subs_url = '/phedex/datasvc/json/prod/subscriptions?request=%s&create_since=%d'%(str(xfer_id),0)
+        r1=conn.request("GET",subs_url)
+        r2=conn.getresponse()
+        result = json.loads(r2.read())
+
     for item in  result['phedex']['dataset']:
         completions[item['name']]={}
         if 'subscription' not in item:            
@@ -967,7 +1126,7 @@ def findCustodialLocation(url, dataset):
 
     return list(set(cust))
 
-def getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None, sites=None):
+def getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None, sites=None, only_blocks=None):
     ###count how manytimes a dataset is replicated < 100%: not all blocks > 100% several copies exis
     if vetoes==None:
         vetoes = ['MSS','Buffer','Export']
@@ -977,7 +1136,9 @@ def getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None
     #all_block_names=set([block['block_name'] for block in all_blocks])
     files = dbsapi.listFileArray( dataset= dataset,validFileOnly=1, detail=True)
     all_block_names = list(set([f['block_name'] for f in files]))
-    
+    if only_blocks:
+        all_block_names = [b for b in all_block_names if b in only_blocks]
+
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 
     r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset=%s'%(dataset))
@@ -1005,7 +1166,9 @@ def getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None
                 if sites and not replica['node'] in sites:
                     #print "leaving",replica['node'],"out"
                     continue
-                block_counts[ item['name'] ] +=1
+                b = item['name']
+                if not b in all_block_names: continue
+                block_counts[ b ] +=1
     
     first_order = float(len(block_counts) - block_counts.values().count(0)) / float(len(block_counts))
     if first_order <1.:
@@ -1016,12 +1179,13 @@ def getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None
         print dataset,":all",len(block_counts),"available",second_order,"times"
         return second_order
     
-def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=None, within_sites=None):
+def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=None, within_sites=None, complement=True):
     if vetoes==None:
         vetoes = ['MSS','Buffer','Export']
     #print "presence of",dataset
     dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
     all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
+    all_dbs_block_names=set([block['block_name'] for block in all_blocks])
     all_block_names=set([block['block_name'] for block in all_blocks])
     if only_blocks:
         all_block_names = filter( lambda b : b in only_blocks, all_block_names)
@@ -1049,19 +1213,95 @@ def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=N
     ## the final answer is site : data_fraction_subscribed
 
     for item in items:
-        if item['name'] not in all_block_names and not only_blocks:
-            print item['name'],'not yet injected in dbs, counting anyways'
-            all_block_names.add( item['name'] )
+        if item['name'] not in all_block_names:
+            if not only_blocks:
+                print item['name'],'not yet injected in dbs, counting anyways'
+                all_block_names.add( item['name'] )
+            else:
+                continue
         for sub in item['subscription']:
             if not any(sub['node'].endswith(v) for v in vetoes):
                 if within_sites and not sub['node'] in within_sites: continue
-                if sub['group'] == None: sub['group']=""
-                #if group!=None and replica['group']==None: continue
+                #if sub['group'] == None: sub['group']=""
+                if sub['group'] == None: sub['group']="DataOps" ## assume "" group is dataops
                 if group!=None and not sub['group'].lower()==group.lower(): continue 
                 destinations[sub['node']].add( (item['name'], int(sub['percent_bytes']), sub['request']) )
     ## per site, a list of the blocks that are subscribed to the site
     ## transform into data_fraction or something valuable
             
+    #complement with transfer request, approved, but without subscriptions yet
+    if complement:
+        time.sleep(1)
+        print "Complementing the destinations with request with no subscriptions"
+        print "we have",destinations.keys(),"for now"
+        try:
+            r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset=%s'%dataset)
+            r2=conn.getresponse()
+        except:
+            r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset=%s'%dataset)
+            r2=conn.getresponse()
+        result = json.loads(r2.read())
+        items=result['phedex']['request']
+    else:
+        items=[]
+
+    deletes = {}
+    for item in items:
+        phedex_id = item['id']
+        if item['type']!='delete': continue
+        #if item['approval']!='approved': continue
+        for node in item['node']:
+            if node['decision'] != 'approved': continue
+            if not node['name'] in deletes or deletes[node['name']]< int(node['time_decided']):
+                ## add it if not or later delete
+                deletes[node['name']] = int(node['time_decided'])
+
+
+    times = {}
+    for item in items:
+        phedex_id = item['id']
+        if item['type']=='delete': continue
+        sites_destinations = []
+        for req in item['node']:
+            if within_sites and not req['name'] in within_sites: continue
+            if req['name'] in deletes and int(req['time_decided'])< deletes[req['name']]:
+                ## this request is void by now
+                continue
+            if not req['decision'] in ['approved']:
+                continue
+            if req['name'] in times:
+                if int(req['time_decided']) > times[req['name']]: 
+                    ## the node was already seen as a destination with an ealier time, and no delete in between
+                    continue
+            times[req['name']] = int(req['time_decided'])
+
+            sites_destinations.append( req['name'] )
+        sites_destinations = [site for site in sites_destinations if not any(site.endswith(v) for v in vetoes)]
+        ## what are the sites for which we have missing information ?
+        sites_missing_information = [site for site in sites_destinations if site not in destinations.keys()]
+        print phedex_id,sites_destinations,"fetching for missing",sites_missing_information
+
+
+        if len(sites_missing_information)==0: continue
+
+        r3 = conn.request("GET",'/phedex/datasvc/json/prod/transferrequests?request=%s'%phedex_id)
+        r4 = conn.getresponse()
+        sub_result = json.loads(r4.read())
+        sub_items = sub_result['phedex']['request']
+        ## skip if we specified group
+        for req in sub_items:
+            if group!=None and not req['group'].lower()==group.lower(): continue
+            for requested_dataset in req['data']['dbs']['dataset']:
+                if requested_dataset != dataset: continue
+                for site in sites_missing_information:
+                    for b in all_block_names:
+                        destinations[site].add( (b, 0, phedex_id) )
+                    
+            for b in req['data']['dbs']['block']:
+                if not b['name'] in all_block_names: continue
+                destinations[site].add((b['name'], 0, phedex_id) )
+        
+        
     for site in destinations:
         blocks = [b[0] for b in destinations[site]]
         blocks_and_id = dict([(b[0],b[2]) for b in destinations[site]])
@@ -1085,6 +1325,32 @@ def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=N
     """
     
     return destinations, all_block_names
+
+def getDatasetOnGoingDeletion( url, dataset ):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    r1=conn.request("GET",'/phedex/datasvc/json/prod/deletions?dataset=%s&complete=n'%(dataset))
+    r2=conn.getresponse()
+    result = json.loads(r2.read())['phedex']
+    return result['dataset']
+    
+
+def getDatasetBlockAndSite( url, dataset, group="",vetoes=None):
+    if vetoes==None:
+        vetoes = ['MSS','Buffer','Export']
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset=%s'%(dataset))
+    r2=conn.getresponse()
+    result = json.loads(r2.read())
+    items=result['phedex']['block']
+    blocks_at_sites=defaultdict(set)
+    for item in items:
+        for replica in item['replica']:
+            if replica['group'] == None: replica['group']=""
+            if group!=None and not replica['group'].lower()==group.lower(): continue
+            if vetoes and replica['node'] in vetoes: continue
+            blocks_at_sites[replica['node']].add( item['name'] )
+    #return dict([(site,list(blocks)) for site,blocks in blocks_at_sites.items()])
+    return dict(blocks_at_sites)
 
 def getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=None, vetoes=None, within_sites=None):
     if vetoes==None:
@@ -1141,21 +1407,27 @@ def getDatasetSize(dataset):
     ## put everything in terms of GB
     return sum([block['file_size'] / (1024.**3) for block in blocks])
 
-def getDatasetChops(dataset, chop_threshold =1000., talk=False):
+def getDatasetChops(dataset, chop_threshold =1000., talk=False, only_blocks=None):
     chop_threshold = float(chop_threshold)
     ## does a *flat* choping of the input in chunk of size less than chop threshold
     dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
     blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
+
+    ## restrict to these blocks only
+    if only_blocks:
+        blocks = [block for block in blocks if block['block_name'] in only_blocks]
+
     sum_all = 0
 
     ## put everything in terms of GB
     for block in blocks:
-        block['file_size'] /= 1000000000.
+        block['file_size'] /= (1024.**3)
 
     for block in blocks:
         sum_all += block['file_size']
 
     items=[]
+    sizes=[]
     if sum_all > chop_threshold:
         items.extend( [[block['block_name']] for block in filter(lambda b : b['file_size'] > chop_threshold, blocks)] )
         small_block = filter(lambda b : b['file_size'] <= chop_threshold, blocks)
@@ -1169,6 +1441,8 @@ def getDatasetChops(dataset, chop_threshold =1000., talk=False):
                 last,small_block = small_block[-1], small_block[:-1]
                 size_chunk += last['file_size']
                 items[-1].append( last['block_name'] )
+            sizes.append( size_chunk )
+
                 
             if talk:
                 print len(items[-1]),"items below thresholds",size_chunk
@@ -1176,14 +1450,18 @@ def getDatasetChops(dataset, chop_threshold =1000., talk=False):
     else:
         if talk:
             print "one big",sum_all
-        items = [[dataset]] 
-    if talk:
-        print items
+        if only_blocks:
+            items = [[block['block_name'] for block in blocks]]
+        else:
+            items = [[dataset]] 
+        sizes = [sum_all]
+        if talk:
+            print items
     ## a list of list of blocks or dataset
     print "Choped",dataset,"of size",sum_all,"GB (",chop_threshold,"GB) in",len(items),"pieces"
-    return items
+    return items,sizes
 
-def distributeToSites( items, sites , n_copies, weights=None):
+def distributeToSites( items, sites , n_copies, weights=None,sizes=None):
     ## assuming all items have equal size or priority of placement
     spreading = defaultdict(list)
     if not weights:
@@ -1194,8 +1472,12 @@ def distributeToSites( items, sites , n_copies, weights=None):
     else:
         ## pick the sites according to computing element plege
         SI = siteInfo()
-        for item in items:
+
+        for iitem,item in enumerate(items):
             at=set()
+            chunk_size = None
+            if sizes:
+                chunk_size = sizes[iitem]
             #print item,"requires",n_copies,"copies to",len(sites),"sites"
             if len(sites) <= n_copies:
                 #more copies than sites
@@ -1203,7 +1485,21 @@ def distributeToSites( items, sites , n_copies, weights=None):
             else:
                 # pick at random according to weights
                 for pick in range(n_copies):
-                    at.add(SI.pick_CE( list(set(sites)-at)))
+                    picked_site = SI.pick_CE( list(set(sites)-at))
+                    picked_site_se = SI.CE_to_SE( picked_site )
+                    ## check on destination free space
+                    if chunk_size:
+                        overflow=10
+                        while (SI.disk[picked_site_se]*1024.)< chunk_size and overflow>0:
+                            overflow-=1
+                            picked_site = SI.pick_CE( list(set(sites)-at))
+                            picked_site_se = SI.CE_to_SE( picked_site )
+                        if overflow<0:
+                            print "We have run out of options to distribute chunks of data because of lack of space"
+                            ## should I crash ?
+                            print picked_site_se,"has",SI.disk[picked_site_se]*1024.,"GB free, while trying to put an item of size", chunk_size," that is",json.dumps( item, indent=2)
+                            sendEmail('possibly going over quota','We have a potential over quota usage while distributing \n%s check transferor logs'%(json.dumps( item, indent=2)))
+                    at.add( picked_site )
                 #print list(at)
             for site in at:
                 spreading[site].extend(item)                
@@ -1217,6 +1513,7 @@ def getDatasetEventsAndLumis(dataset, blocks=None):
             all_files.extend( dbsapi.listFileSummaries( block_name = b  , validFileOnly=1))
     else:
         all_files = dbsapi.listFileSummaries( dataset = dataset , validFileOnly=1)
+    if all_files == [None]:        all_files = []
 
     all_events = sum([f['num_event'] for f in all_files])
     all_lumis = sum([f['num_lumi'] for f in all_files])
@@ -1224,13 +1521,35 @@ def getDatasetEventsAndLumis(dataset, blocks=None):
 
 def getDatasetEventsPerLumi(dataset):
     dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
-    all_files = dbsapi.listFileSummaries( dataset = dataset , validFileOnly=1)
+    try:
+        all_files = dbsapi.listFileSummaries( dataset = dataset , validFileOnly=1)
+    except:
+        print "We had to have a DBS listfilesummaries retry"
+        time.sleep(1)
+        all_files = dbsapi.listFileSummaries( dataset = dataset , validFileOnly=1)        
     try:
         average = sum([f['num_event']/float(f['num_lumi']) for f in all_files]) / float(len(all_files))
     except:
         average = 100
     return average
-                         
+                    
+def setDatasetStatus(dataset, status):
+    dbswrite = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSWriter')
+
+    new_status = getDatasetStatus( dataset )
+    if new_status == None:
+        ## means the dataset does not exist in the first place
+        print "setting dataset status",status,"to inexistant dataset",dataset,"considered succeeding"
+        return True
+
+    max_try=3
+    while new_status != status:
+        dbswrite.updateDatasetType(dataset = dataset, dataset_access_type= status)
+        new_status = getDatasetStatus( dataset )
+        max_try-=1
+        if max_try<0: return False
+    return True
+     
 def getDatasetStatus(dataset):
         # initialize API to DBS3                                                                                                                                                                                                                                                     
         dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
@@ -1331,11 +1650,12 @@ def makeDeleteRequest(url, site,datasets, comments, priority='low'):
     response = phedexPost(url, "/phedex/datasvc/json/prod/delete", params)
     return response
 
-def makeReplicaRequest(url, site,datasets, comments, priority='normal',custodial='n',approve=False): # priority used to be normal
+def makeReplicaRequest(url, site,datasets, comments, priority='normal',custodial='n',approve=False,mail=True): # priority used to be normal
     dataXML = createXML(datasets)
     r_only = "n" if approve else "y"
+    notice = "n" if mail else "y"
     params = { "node" : site,"data" : dataXML, "group": "DataOps", "priority": priority,
-                 "custodial":custodial,"request_only":r_only ,"move":"n","no_mail":"n","comments":comments}
+                 "custodial":custodial,"request_only":r_only ,"move":"n","no_mail":notice,"comments":comments}
     response = phedexPost(url, "/phedex/datasvc/json/prod/subscribe", params)
     return response
 
@@ -1426,9 +1746,12 @@ def getWorkflowById( url, pid , details=False):
     else:
         return [item['id'] for item in items]
     
-def getWorkflows(url,status,user=None,details=False):
+def getWorkflows(url,status,user=None,details=False,rtype=None):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    go_to = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/bystatus?key="%s"'%(status)
+    if rtype:
+        go_to = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/bystatusandtype?key=["%s","%s"]'%(status,rtype)
+    else:
+        go_to = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/bystatus?key="%s"'%(status)
     if details:
         go_to+='&include_docs=true'
     r1=conn.request("GET",go_to)
@@ -1443,6 +1766,26 @@ def getWorkflows(url,status,user=None,details=False):
             workflows.append(item['doc' if details else 'id'])
 
     return workflows
+
+def getPrepIDs(wl):
+    pids = list()
+    if wl['RequestType'] == 'TaskChain':
+        itask=1
+        while True:
+            t = 'Task%s'% itask
+            itask+=1
+            if t in wl:
+                if 'PrepID' in wl[t]:
+                    if not wl[t]['PrepID'] in pids:
+                        pids.append( wl[t]['PrepID'] )
+            else:
+                break
+        if pids:
+            return pids
+        else:
+            return [wl['PrepID']]
+    else:
+        return [wl['PrepID']]
 
 class workflowInfo:
     def __init__(self, url, workflow, deprecated=False, spec=True, request=None):
@@ -1483,8 +1826,11 @@ class workflowInfo:
     def firstTask(self):
         return self._tasks()[0]
 
+    def getPrepIDs(self):
+        return getPrepIDs(self.request)
+
     def getComputingTime(self,unit='h'):
-        cput = 0
+        cput = None
         if 'InputDataset' in self.request:
             ds = self.request['InputDataset']
             if 'BlockWhitelist' in self.request and self.request['BlockWhitelist']:
@@ -1495,13 +1841,46 @@ class workflowInfo:
             
             cput = ne * tpe
         elif self.request['RequestType'] == 'TaskChain':
-            #print "not implemented yet"
-            pass
+            print "not implemented yet"
+            itask=1
+            cput=0
+            carry_on = {}
+            while True:
+                t = 'Task%s'% itask
+                itask+=1
+                if t in self.request:
+                    #print t
+                    task = self.request[t]
+                    if 'InputDataset' in task:
+                        ds = task['InputDataset']
+                        if 'BlockWhitelist' in task and task['BlockWhitelist']:
+                            (ne,_) = getDatasetEventsAndLumis( ds, task['BlockWhitelist'] )
+                        else:
+                            (ne,_) = getDatasetEventsAndLumis( ds )
+                    elif 'InputTask' in task:
+                        ## we might have a problem with convoluted tasks, but maybe not
+                        ne = carry_on[task['InputTask']]
+                    elif 'RequestNumEvents' in task:
+                        ne = float(task['RequestNumEvents'])
+                    else:
+                        print "this is not supported, making it zero cput"
+                        ne = 0
+                    tpe =task['TimePerEvent']
+                    carry_on[task['TaskName']] = ne
+                    if 'FilterEfficiency' in task:
+                        carry_on[task['TaskName']] *= task['FilterEfficiency']
+                    cput += tpe * ne
+                    #print cput,tpe,ne
+                else:
+                    break
         else:
             ne = float(self.request['RequestNumEvents'])
             tpe = self.request['TimePerEvent']
             
             cput = ne * tpe
+
+        if cput==None:
+            return 0
 
         if unit=='m':
             cput = cput / (60.)
@@ -1511,6 +1890,18 @@ class workflowInfo:
             cput = cput / (60.*60.*24.)
         return cput
     
+    def getNCopies(self, CPUh=None, m = 2, M = 6, w = 50000, C0 = 100000):
+        def sigmoid(x):      
+            return 1 / (1 + math.exp(-x)) 
+        if CPUh==None:
+            CPUh = self.getComputingTime()
+        f = sigmoid(-C0/w)
+        D = (M-m) / (1-f)
+        O = (f*M - m)/(f-1) 
+        #print O
+        #print D
+        return int(O + D * sigmoid( (CPUh - C0)/w)), CPUh
+
     def availableSlots(self):
         av = 0
         SI = global_SI
@@ -1544,7 +1935,7 @@ class workflowInfo:
             spl = self.getSplittings()[0]
             algo = spl['splittingAlgo']
             if algo == 'EventAwareLumiBased':
-                events_per_job = spl['events_per_job']
+                events_per_job = spl['avg_events_per_job']
                 if average > events_per_job:
                     ## need to do something
                     print "This is going to fail",average,"in and requiring",events_per_job
@@ -1560,17 +1951,57 @@ class workflowInfo:
                 new_schema.pop(k)
         return new_schema 
 
+    def _taskDescending(self, node, select=None):
+        all_tasks=[]
+        if (not select):# or (select and node.taskType == select):
+            all_tasks.append( node )
+        else:
+            for (key,value) in select.items():
+                if (type(value)==list and getattr(node,key) in value) or (type(value)!=list and getattr(node, key) == value):
+                    all_tasks.append( node )
+                    break
+
+        for child in node.tree.childNames:
+            ch = getattr(node.tree.children, child)
+            all_tasks.extend( self._taskDescending( ch, select) )
+        return all_tasks
+
+    def getAllTasks(self, select=None):
+        all_tasks = []
+        for task in self._tasks():
+            ts = getattr(self.full_spec.tasks, task)
+            all_tasks.extend( self._taskDescending( ts, select ) )
+        return all_tasks
+
     def getSplittings(self):
         spl =[]
-        for task in self._tasks():
-            ts = getattr(self.full_spec.tasks, task).input.splitting
-            spl.append( { "splittingAlgo" : ts.algorithm} )
-            get_those = ['events_per_lumi','events_per_job','lumis_per_job']
+        for task in self.getAllTasks(select={'taskType':['Production','Processing']}):
+            ts = task.input.splitting
+            spl.append( { "splittingAlgo" : ts.algorithm,
+                          "splittingTask" : task.pathName,
+                          } )
+            get_those = ['events_per_lumi','events_per_job','lumis_per_job','halt_job_on_file_boundaries','max_events_per_lumi','halt_job_on_file_boundaries_event_aware']#,'couchdDB']#,'couchURL']#,'filesetName']
+            #print ts.__dict__.keys()
+            translate = { 
+                'EventAwareLumiBased' : [('events_per_job','avg_events_per_job')]
+                }
+            include = {
+                'EventAwareLumiBased' : { 'halt_job_on_file_boundaries_event_aware' : 'True' },
+                'LumiBased' : { 'halt_job_on_file_boundaries' : 'True'}
+                }
+            if ts.algorithm in include:
+                for k,v in include[ts.algorithm].items():
+                    spl[-1][k] = v
+
             for get in get_those:
                 if hasattr(ts,get):
-                    spl[-1][get] = getattr(ts,get)
-                #else:
-                #    spl[-1][get] = None
+                    set_to = get
+                    if ts.algorithm in translate:
+                        for (src,des) in translate[ts.algorithm]:
+                            if src==get:
+                                set_to = des
+                                break
+                    spl[-1][set_to] = getattr(ts,get)
 
         return spl
 
@@ -1696,7 +2127,7 @@ class workflowInfo:
     def getNextVersion( self ):
         ## returns 1 if nothing is in the way
         if 'ProcessingVersion' in self.request:
-            version = max(0,self.request['ProcessingVersion']-1)
+            version = max(0,int(self.request['ProcessingVersion'])-1)
         else:
             version = 0
         outputs = self.request['OutputDatasets']
@@ -1708,6 +2139,8 @@ class workflowInfo:
                 (_,dsn,ps,tier) = output.split('/')
                 if ps.count('-')==2:
                     (aera,aps,_) = ps.split('-')
+                elif ps.count('-')==3:
+                    (aera,fn,aps,_) = ps.split('-')
                 else:
                     aera='*'
                     aps='*'
@@ -1723,6 +2156,8 @@ class workflowInfo:
                 (_,dsn,ps,tier) = output.split('/')
                 if ps.count('-')==2:
                     (aera,aps,_) = ps.split('-')
+                elif ps.count('-')==3:
+                    (aera,fn,aps,_) = ps.split('-')
                 else:
                     print "Cannot check output in reqmgr"
                     print output,"is what is in the request workload"
@@ -1743,7 +2178,15 @@ class workflowInfo:
             for output in  outputs:
                 print output
                 (_,dsn,ps,tier) = output.split('/')
-                (aera,aps,_) = ps.split('-')
+                if ps.count("-") == 2:
+                    (aera,aps,_) = ps.split('-')
+                elif ps.count("-") == 3:
+                    (aera,fn,aps,_) = ps.split('-')
+                else:
+                    ## cannot so anything
+                    print "the processing string is mal-formated",ps
+                    return None
+
                 if aera == 'None' or aera == 'FAKE':
                     print "no era, using ",era
                     aera=era
@@ -1762,7 +2205,14 @@ class workflowInfo:
             for output in  outputs:
                 print output
                 (_,dsn,ps,tier) = output.split('/')
-                (aera,aps,_) = ps.split('-')
+                if ps.count("-") == 2:
+                    (aera,aps,_) = ps.split('-')
+                elif ps.count("-") == 3:
+                    (aera,fn,aps,_) = ps.split('-')
+                else:
+                    print "the processing string is mal-formated",ps
+                    return None
+
                 if aera == 'None' or aera == 'FAKE':
                     print "no era, using ",era
                     aera=era

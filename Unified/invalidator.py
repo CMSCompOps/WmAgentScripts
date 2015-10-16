@@ -3,13 +3,16 @@ from assignSession import *
 from McMClient import McMClient
 from utils import workflowInfo
 import reqMgrClient
-import setDatasetStatusDBS3
-from utils import componentInfo
+from utils import componentInfo, setDatasetStatus
 from collections import defaultdict
+import time
 
 def invalidator(url, invalid_status='INVALID'):
-    up = componentInfo(mcm=True)
+    use_mcm = True
+    up = componentInfo(mcm=use_mcm)
+    if not up.check(): return
     mcm = McMClient(dev=False)
+
     invalids = mcm.getA('invalidations',query='status=announced')
     print len(invalids),"Object to be invalidated"
     text_to_batch = defaultdict(str)
@@ -53,12 +56,12 @@ def invalidator(url, invalid_status='INVALID'):
             if 'FAKE-' in dataset: continue
 
             print "setting",dataset,"to",invalid_status
-            success = "not invalidated"
-            success = setDatasetStatusDBS3.setStatusDBS3('https://cmsweb.cern.ch/dbs/prod/global/DBSWriter', dataset, invalid_status, None)
-            print success
-            ## make a delete request from everywhere we can find ?
-            acknowledge= True
-            text = "The dataset %s (%s) was set INVALID due to invalidation in McM" % ( dataset, pid )
+            success = setDatasetStatus(dataset , invalid_status )
+            if success:
+                acknowledge= True
+                text = "The dataset %s (%s) was set INVALID due to invalidation in McM" % ( dataset, pid )
+            else:
+                print "invalidation of",dataset,"did not go so well"
         else:
             print "\t\t",invalid['type']," type not recognized"
 
@@ -78,10 +81,12 @@ def invalidator(url, invalid_status='INVALID'):
             text_to_request[pid] += text+"\n\n"
 
     for bid,text in text_to_batch.items():    
+        if not text: continue
         text += '\n This is an automated message'
         mcm.put('/restapi/batches/notify',{ "notes" : text, "prepid" : bid})
         pass
     for pid,text in text_to_request.items():
+        if not text: continue
         text += '\n This is an automated message'
         mcm.put('/restapi/requests/notify',{ "message" : text, "prepids" : [pid]})
 
