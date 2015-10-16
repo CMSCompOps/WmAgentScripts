@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import workflowInfo, sendEmail, componentInfo, userLock, closeoutInfo, campaignInfo
+from utils import workflowInfo, sendEmail, componentInfo, userLock, closeoutInfo, campaignInfo, unifiedConfiguration
 import reqMgrClient
 import json
 import optparse
@@ -24,14 +24,15 @@ def singleRecovery(url, task , initial, actions, do=False):
 
     if actions:
         for action in actions:
-            if action.startswith('split'):
-                factor = int(action.split('-')[-1]) if '-' in action else 2
-                print "Changing time per event (%s) by a factor %d"%( payload['TimePerEvent'], factor)
-                ## mention it's taking 2 times longer to have a 2 times finer splitting
-                payload['TimePerEvent'] = factor*payload['TimePerEvent']
-            elif action == 'mem':
+            #if action.startswith('split'):
+            #    factor = int(action.split('-')[-1]) if '-' in action else 2
+            #    print "Changing time per event (%s) by a factor %d"%( payload['TimePerEvent'], factor)
+            #    ## mention it's taking 2 times longer to have a 2 times finer splitting
+            #    payload['TimePerEvent'] = factor*payload['TimePerEvent']
+            if action.startswith('mem'):
+                increase = int(action.split('-')[-1]) if '-' in action else 1000
                 ## increase the memory requirement by 1G
-                payload['Memory'] += 1000
+                payload['Memory'] += increase
 
     if payload['RequestString'].startswith('ACDC'):
         print "This is not allowed yet"
@@ -56,6 +57,26 @@ def singleRecovery(url, task , initial, actions, do=False):
             print response
             return None
     acdc = m.group(1)
+    
+    ## perform modifications
+    if actions:
+        for action in actions:
+            if action.startswith('split'):
+                factor = int(action.split('-')[-1]) if '-' in action else 2
+                acdcInfo = workflowInfo(url, acdc)
+                splittings = acdcInfo.getSplittings()
+                for split in splittings:
+                    for act in ['avg_events_per_job','events_per_job','lumis_per_job']:
+                        if act in split:
+                            print "Changing %s (%d) by a factor %d"%( act, split[act], factor),
+                            split[act] /= factor
+                            print "to",split[act]
+                            break
+                    split['requestName'] = acdc
+                    print "changing the splitting of",acdc
+                    print json.dumps( split, indent=2 )
+                    print reqMgrClient.setWorkflowSplitting(url, split )
+                
     data = reqMgrClient.setWorkflowApproved(url, acdc)
     print data
     return acdc
@@ -68,47 +89,18 @@ def recoveror(url,specific,options=None):
     up = componentInfo()
     CI = campaignInfo()
 
-    error_codes_to_recover = {
-        50664 : [{ "legend" : "time-out",
-                  "solution" : "split" ,
-                  "details" : None,
-                  "rate" : 20 
-                  }],
-        50660 : [{ "legend" : "memory excess",
-                  "solution" : "mem" ,
-                  "details" : None,
-                  "rate" : 20
-                  }],
-        61104 : [{ "legend" : "failed submit",
-                  "solution" : "recover" ,
-                  "details" : None,
-                  "rate" : 20 
-                  }],
-        8028 : [{ "legend" : "read error",
-                 "solution" : "recover" ,
-                 "details" : None,
-                 "rate" : 20 
-                 }],
-        8021 : [{ "legend" : "cmssw failure",
-                 "solution" : "recover" , 
-                 "details" : "FileReadError",
-                 "rate" : 20
-                 }],
-        }
+    UC = unifiedConfiguration()
 
-    error_codes_to_block = {
-        99109 : [{ "legend" : "stage-out",
-                   "solution" : "recover",
-                   "details" : None,
-                   "rate" : 20
-                   }]
-        }
-    #max_legend = max([ max([len(e['legend']) for e in cases]) for cases in error_codes_to_recover.values()])
+    def make_int_keys( d ):
+        for code in d:
+            d[int(code)] = d.pop(code)
 
-    ## CMSSW failures should just be reported right away and the workflow left on the side
-    error_codes_to_notify = {
-        8021 : { "message" : "Please take a look and come back to Ops." }
-        }
+    error_codes_to_recover = UC.get('error_codes_to_recover')
+    error_codes_to_block = UC.get('error_codes_to_block')
+    error_codes_to_notify = UC.get('error_codes_to_notify')
+    make_int_keys( error_codes_to_recover )
+    make_int_keys( error_codes_to_block )
+    make_int_keys( error_codes_to_notify )
 
     wfs = session.query(Workflow).filter(Workflow.status == 'assistance-recovery').all()
     if specific:
@@ -165,8 +157,12 @@ def recoveror(url,specific,options=None):
                 rate = 100*njobs/float(sum_failed)
                 #print ("\t\t %10d (%6s%%) failures with error code %10d (%"+str(max_legend)+"s) at stage %s")%(njobs, "%4.2f"%rate, errorCode, legend, name)
                 print ("\t\t %10d (%6s%%) failures with error code %10d (%30s) at stage %s")%(njobs, "%4.2f"%rate, errorCode, ','.join(types), name)
-
+                    
                 added_in_recover=False
+
+                #if options.go:
+                # force the recovery of any task with error ?
+
                 if errorCode in error_codes_to_recover:
                     ## the error code is registered
                     for case in error_codes_to_recover[errorCode]:
@@ -186,6 +182,7 @@ def recoveror(url,specific,options=None):
                             print "\t\t => we should be able to recover that", case['legend']
                             task_to_recover[task].append( (code,case) )
                             added_in_recover=True
+                            message_to_user = ""
                         else:
                             print "\t\t recoverable but not frequent enough, needs",case['rate']
 
@@ -205,11 +202,14 @@ def recoveror(url,specific,options=None):
                                     break
                         if matched and rate > case['rate']:
                             print "\t\t => that error means no ACDC on that workflow", case['legend']
-                            recover = False
-                            message_to_ops += "%s has an error %s blocking an ACDC.\n%s\n "%( wfo.name, errorCode, '#'*50 )
+                            if not options.go:
+                                message_to_ops += "%s has an error %s blocking an ACDC.\n%s\n "%( wfo.name, errorCode, '#'*50 )
+                                recover = False
+                                added_in_recover=False
+
                             
                 
-                if errorCode in error_codes_to_notify and not notify_user and not added_in_recover:
+                if errorCode in error_codes_to_notify and not added_in_recover:
                     print "\t\t => we should notify people on this"
                     message_to_user += "%s has an error %s in processing.\n%s\n" %( wfo.name, errorCode, '#'*50 )
 
@@ -219,7 +219,7 @@ def recoveror(url,specific,options=None):
             print wfo.name,"to be notified to user(DUMMY)",message_to_user
 
         if message_to_ops:
-            sendEmail( "notification in recoveror" , message_to_ops, destination=['julian.badillo.rojas@cern.ch'])
+            sendEmail( "notification in recoveror" , message_to_ops, destination=['julian.badillo.rojas@cern.ch','jen_a@fnal.gov'])
 
 
         if task_to_recover and recover:
@@ -238,14 +238,14 @@ def recoveror(url,specific,options=None):
                     if options.do:
                         if recovering:
                             print wfo.name,"has been partially ACDCed. Needs manual attention"
-                            sendEmail( "failed ACDC partial recovery","%s has had %s/%s recoveries %s only"%( wfo.name, len(recovering), len(task_to_recover), list(recovering)))
+                            sendEmail( "failed ACDC partial recovery","%s has had %s/%s recoveries %s only"%( wfo.name, len(recovering), len(task_to_recover), list(recovering)), destination=['julian.badillo.rojas@cern.ch','jen_a@fnal.gov'])
                             continue
                         else:
                             print wfo.name,"failed recovery once"
                             break
                     else:
                         print "no action to take further"
-                        sendEmail("an ACDC that can be done automatically","please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details", destination=['julian.badillo.rojas@cern.ch'])
+                        sendEmail("an ACDC that can be done automatically","please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details", destination=['julian.badillo.rojas@cern.ch','jen_a@fnal.gov'])
                         continue
                         
                 
@@ -262,9 +262,11 @@ def recoveror(url,specific,options=None):
                 if options.ass:
                     print "really doing the assignment of the ACDC",acdc
                     parameters['execute']=True
+                    sendEmail("an ACDC was done and WAS assigned", "%s  was assigned, please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details"%( acdc ), destination=['julian.badillo.rojas@cern.ch','jen_a@fnal.gov'])
                 else:
                     print "no assignment done with this ACDC",acdc
-                    sendEmail("an ACDC was done and need to be assigned", "%s needs to be assigned, please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details"%( acdc ), destination=['julian.badillo.rojas@cern.ch'])
+                    sendEmail("an ACDC was done and need to be assigned", "%s needs to be assigned, please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details"%( acdc ), destination=['julian.badillo.rojas@cern.ch','jen_a@fnal.gov'])
+
                 result = reqMgrClient.assignWorkflow(url, acdc, team, parameters)
                 recovering.add( acdc )
 
@@ -289,15 +291,16 @@ def recoveror(url,specific,options=None):
 if __name__ == '__main__':
     url='cmsweb.cern.ch'
     parser = optparse.OptionParser()
-    parser.add_option('--do',default=False,action='store_true')
-    parser.add_option('--ass',default=False,action='store_true')
+    #parser.add_option('--do',default=False,action='store_true')
+    parser.add_option('--test', dest='do', default=True,action='store_false')
+    parser.add_option('--leave',dest='ass',default=True,action='store_false')
+    parser.add_option('--go',default=False,action='store_true',help="override possible blocking conditions")
     (options,args) = parser.parse_args()
     spec=None
     if len(args)!=0:
         spec = args[0]
 
-    ## enable doing recovery
-    options.do = True
+    if not options.do: options.ass=False
 
     recoveror(url,spec,options=options)
 

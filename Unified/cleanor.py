@@ -1,12 +1,16 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import getWorkLoad, getDatasetPresence, makeDeleteRequest, getDatasetSize, siteInfo, findCustodialLocation, getWorkflowByInput, campaignInfo, approveSubscription
-from utils import lockInfo
+from utils import lockInfo, duplicateLock
 import json
 import time
 import random
 
 def cleanor(url, specific=None):
+    print "Deprecated"
+    return
+
+    if duplicateLock() : return 
 
     delete_per_site = {}
     do_not_autoapprove = []#'T2_FR_CCIN2P3']
@@ -133,7 +137,7 @@ def cleanor(url, specific=None):
         
         session.commit()
 
-    open('deletes.json','w').write( json.dumps(delete_per_site,indent=2) )
+    #open('deletes.json','w').write( json.dumps(delete_per_site,indent=2) )
 
     print json.dumps(delete_per_site, indent=2)
     print "\n\n ------- \n\n"
