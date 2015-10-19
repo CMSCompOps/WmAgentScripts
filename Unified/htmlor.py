@@ -425,7 +425,7 @@ Worflow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/reque
         count+=1
     text+="</ul></div>\n"
     html_doc.write("""
-Worflow to forget (%d) <a href=logs/injector/last.log target=_blank>log</a> <a href=logs/outcleanor/last.log target=_blank>postlog</a>
+Worflow to forget (%d) <a href=logs/injector/last.log target=_blank>log</a> <a href=logs/lockor/last.log target=_blank>postlog</a>
 <a href="javascript:showhide('forget')">[Click to show/hide]</a>
 <br>
 <div id="forget" style="display:none;">
@@ -443,7 +443,7 @@ Worflow to forget (%d) <a href=logs/injector/last.log target=_blank>log</a> <a h
         count+=1
     text+="</ul></div>\n"
     html_doc.write("""
-Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=logs/cleanor/last.log target=_blank>postlog</a>
+Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=logs/lockor/last.log target=_blank>postlog</a>
 <a href="javascript:showhide('done')">[Click to show/hide]</a>
 <br>
 <div id="done" style="display:none;">
@@ -456,7 +456,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 
 
     wfs = session.query(Workflow).filter(Workflow.status.endswith('-unlock')).all()
-    html_doc.write(" Workflows unlocked : %s <br>"%(len(wfs)))
+    html_doc.write(" Workflows unlocked : %s <a href=logs/lockor/last.log target=_blank>log</a><br>"%(len(wfs)))
     lap ( 'done with unlocked' )
 
 
