@@ -1930,7 +1930,7 @@ def getPrepIDs(wl):
         return [wl['PrepID']]
 
 class workflowInfo:
-    def __init__(self, url, workflow, deprecated=False, spec=True, request=None):
+    def __init__(self, url, workflow, deprecated=False, spec=True, request=None,stats=False):
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         self.deprecated_request = {}
         if deprecated:
@@ -1947,6 +1947,11 @@ class workflowInfo:
             r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/%s/spec'%workflow)
             r2=conn.getresponse()
             self.full_spec = pickle.loads(r2.read())
+
+        if stats:
+            r1=conn.request("GET",'/wmstatsserver/data/request/%s'%workflow)
+            r2=conn.getresponse()
+            self.wmstats = r2.read()#json.loads(r2.read())
         self.url = url
 
     def getWorkQueue(self):
