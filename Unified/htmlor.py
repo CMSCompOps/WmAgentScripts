@@ -471,7 +471,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
         if not out.workflow: 
             print "This is a problem with",out.datasetname
             continue
-        if  out.workflow.status in ['done','clean','clean-out','clean-unlock']:
+        if  out.workflow.status in ['done-unlock','done','clean','clean-out','clean-unlock']:
             out_week = int(time.strftime("%W",time.gmtime(out.date)))
             ##only show current week, and the previous.
             if (this_week-out_week)==1:
@@ -692,9 +692,13 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
 """)
     wfs = {}
     for wfo in session.query(Workflow).all():
+        ## pass all that is unlocked and considered it gone
         wfs[wfo.name] = (wfo.status,wfo.wm_status)
+
     open('/afs/cern.ch/user/c/cmst2/www/unified/statuses.json','w').write(json.dumps( wfs ))
     for wfn in sorted(wfs.keys()):
+        ## pass all that is unlocked and considered it gone
+        if 'unlock' in wfs[wfn][0]: continue
         html_doc.write('<tr><td><a id="%s">%s</a></td><td>%s</td><td>%s</td></tr>\n'%( wfn, wfn, wfs[wfn][0],  wfs[wfn][1]))
     html_doc.write("</table>")
     html_doc.write("<br>"*100)
