@@ -1860,6 +1860,20 @@ def getWorkflowByOutput( url, dataset , details=False):
     else:
         return [item['id'] for item in items]
 
+def getWorkflowByMCPileup( url, dataset , details=False):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    there = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/bymcpileup?key="%s"'%(dataset)
+    if details:
+        there+='&include_docs=true'
+    r1=conn.request("GET",there)
+    r2=conn.getresponse()
+    data = json.loads(r2.read())
+    items = data['rows']
+    if details:
+        return [item['doc'] for item in items]
+    else:
+        return [item['id'] for item in items]
+
 def getWorkflowById( url, pid , details=False):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     there = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byprepid?key="%s"'%(pid)
