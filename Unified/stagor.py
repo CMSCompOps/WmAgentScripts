@@ -201,18 +201,19 @@ def stagor(url,specific =None, options=None):
         else:
             print "incomplete",dsname
             lost = findLostBlocks(url, dsname)
+            lost_names = [item['name'] for item in lost]
             try:
                 known_lost = json.loads(open('lost_blocks_datasets.json').read())
             except:
                 print "enable to get the known_lost from local json file"
                 known_lost = []
 
-            if lost and not dsname in known_lost:
-                lost_names = [item['name'] for item in lost]
-                ## make a deeper investigation of the block location to see whether it's really no-where no-where
-
+            if lost:
                 print "We have lost",len(lost),"blocks",lost_names
                 #print json.dumps( lost , indent=2 )
+
+            if lost and not dsname in known_lost:
+                ## make a deeper investigation of the block location to see whether it's really no-where no-where
                 sendEmail('we have lost a few blocks', str(len(lost))+" in total.\nDetails \n:"+json.dumps( lost , indent=2 ))
                 known_lost.append(dsname)
                 rr= open('lost_blocks_datasets.json','w')
