@@ -505,17 +505,139 @@ def userLock(component=None):
             return True
     return False
 
+class docCache:
+    def __init__(self):
+        self.cache = {}
+        default_expiration = 5*60+random.random()*5*60
+        self.cache['ssb_106'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration,
+            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=106&batch=1&lastdata=1"').read())['csvdata'],
+            'cachefile' : None,
+            'default' : []
+            }
+        self.cache['ssb_108'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration,
+            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=108&batch=1&lastdata=1"').read())['csvdata'],
+            'cachefile' : None,
+            'default' : []
+            }
+        self.cache['ssb_109'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration,
+            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=109&batch=1&lastdata=1"').read())['csvdata'],
+            'cachefile' : None,
+            'default' : []
+            }
+        self.cache['ssb_136'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration,
+            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=136&batch=1&lastdata=1"').read())['csvdata'],
+            'cachefile' : None,
+            'default' : []
+            }
+        self.cache['ssb_158'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration,
+            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=158&batch=1&lastdata=1"').read())['csvdata'],
+            'cachefile' : None,
+            'default' : []
+            }
+        self.cache['ssb_159'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration,
+            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=159&batch=1&lastdata=1"').read())['csvdata'],
+            'cachefile' : None,
+            'default' : []
+            }
+        self.cache['ssb_160'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration,
+            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=160&batch=1&lastdata=1"').read())['csvdata'],
+            'cachefile' : None,
+            'default' : []
+            }
+        self.cache['gwmsmon_totals'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration,
+            'getter' : lambda : json.loads(os.popen('curl --retry 5 -s http://cms-gwmsmon.cern.ch/scheddview/json/totals').read()),
+            'cachefile' : None,
+            'default' : {}
+            }
+        self.cache['gwmsmon_site_summary' ] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration,
+            'getter' : lambda : json.loads(os.popen('curl --retry 5 -s http://cms-gwmsmon.cern.ch/prodview//json/site_summary').read()),
+            'cachefile' : None,
+            'default' : {}
+            }
+        self.cache['detox_sites'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration,
+            'getter' : lambda : os.popen('curl --retry 5 -s http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/SitesInfo.txt').read().split('\n'),
+            'cachefile' : None,
+            'default' : ""
+            }
+        #create the cache files from the labels
+        for src in self.cache:
+            self.cache[src]['cachefile'] = '.'+src+'.cache.json'
+            
+
+    def get(self, label, fresh=False):
+        now = time.mktime( time.gmtime())
+        if label in self.cache:
+            try:
+                cache = self.cache[label]
+                if not cache['data']:
+                    #check the file version
+                    if os.path.isfile(cache['cachefile']):
+                        print "load",label,"from file",cache['cachefile']
+                        f_cache = json.loads(open(cache['cachefile']).read())
+                        cache['data' ] = f_cache['data']
+                        cache['timestamp' ] = f_cache['timestamp']
+                    else:
+                        print "no file cache for", label,"getting fresh"
+                        cache['data'] = cache['getter']()
+                        cache['timestamp'] = now
+                        open(cache['cachefile'],'w').write( json.dumps({'data': cache['data'], 'timestamp' : cache['timestamp']}, indent=2) )
+                    
+                ## check the time stamp
+                if cache['expiration']+cache['timestamp'] < now or fresh:
+                    print "getting fresh",label
+                    cache['data'] = cache['getter']()
+                    cache['timestamp'] = now
+                    open(cache['cachefile'],'w').write( json.dumps({'data': cache['data'], 'timestamp' : cache['timestamp']}, indent=2) )
+
+                return cache['data']
+            except Exception as e: 
+                print "failed to get",label
+                print str(e)
+                return copy.deepcopy(cache['default'])
+
+dataCache = docCache()
+
 class siteInfo:
     def __init__(self):
-
+        
         try:
             ## get all sites from SSB readiness
             self.sites_ready = []
             self.sites_not_ready = []
             self.all_sites = []
-            column = 158
-            data = json.loads(os.popen('curl -s "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=%s&batch=1&lastdata=1"'%column).read())['csvdata']
+            data = dataCache.get('ssb_158')
             for siteInfo in data:
+                #print siteInfo['Status']
                 self.all_sites.append( siteInfo['VOName'] )
                 if not siteInfo['Tier']: continue
                 if siteInfo['Status'] == 'on': 
@@ -559,6 +681,8 @@ class siteInfo:
             self.sites_veto_transfer = [site for site in self.sites_with_goodIO if not site in allowed_T2_for_transfer]
 
         else:
+            ## to be taken OUT soon
+            sendEmail('bad sites configuration','falling back to old lists')
             self.sites_eos = [ 'T2_CH_CERN' ]
             ## all to be deprecated if above functions !
             siteblacklist = ['T2_TH_CUNSTDA','T1_TW_ASGC','T2_TW_Taiwan','T2_TR_METU','T2_UA_KIPT','T2_RU_ITEP','T2_RU_INR','T2_RU_PNPI','T2_PL_Warsaw']
@@ -652,10 +776,11 @@ class siteInfo:
         return s
 
     def fetch_glidein_info(self, talk=True):
-        try:
-            self.sites_memory = json.loads(os.popen('curl --retry 5 -s http://cms-gwmsmon.cern.ch/scheddview/json/totals').read())
-        except:
-            self.sites_memory = {}
+        self.sites_memory = dataCache.get('gwmsmon_totals')
+        #try:
+        #    self.sites_memory = json.loads(os.popen('curl --retry 5 -s http://cms-gwmsmon.cern.ch/scheddview/json/totals').read())
+        #except:
+        #    self.sites_memory = {}
 
     def sitesByMemory( self, maxMem):
         if not self.sites_memory:
@@ -675,10 +800,12 @@ class siteInfo:
 
     def fetch_detox_info(self, talk=True):
         ## put a retry in command line
-        info = os.popen('curl --retry 5 -s http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/SitesInfo.txt').read().split('\n')
+        info = dataCache.get('detox_sites')
+        #info = os.popen('curl --retry 5 -s http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/SitesInfo.txt').read().split('\n')
         if len(info) < 15: 
             ## fall back to dev
-            info = os.popen('curl --retry 5 -s http://t3serv001.mit.edu/~cmsprod/IntelROCCS-Dev/DetoxDataOps/SitesInfo.txt').read().split('\n')
+            info = dataCache.get('detox_sites', fresh = True)
+            #info = os.popen('curl --retry 5 -s http://t3serv001.mit.edu/~cmsprod/IntelROCCS-Dev/DetoxDataOps/SitesInfo.txt').read().split('\n')
             if len(info) < 15:
                 print "detox info is gone"
                 return
@@ -715,8 +842,9 @@ class siteInfo:
         for name,column in columns.items():
             if talk: print name,column
             try:
-                data = json.loads(os.popen('curl -s "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=%s&batch=1&lastdata=1"'%column).read())
-                all_data[name] = data['csvdata']
+                #data = json.loads(os.popen('curl -s "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=%s&batch=1&lastdata=1"'%column).read())
+                #all_data[name] =  data['csvdata']
+                all_data[name] =  dataCache.get('ssb_%d'% column) #data['csvdata']
             except:
                 print "cannot get info from ssb for",name
         _info_by_site = {}
