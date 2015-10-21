@@ -573,11 +573,19 @@ class docCache:
             'cachefile' : None,
             'default' : {}
             }
-        self.cache['gwmsmon_site_summary' ] = {
+        self.cache['gwmsmon_prod_site_summary' ] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration,
             'getter' : lambda : json.loads(os.popen('curl --retry 5 -s http://cms-gwmsmon.cern.ch/prodview//json/site_summary').read()),
+            'cachefile' : None,
+            'default' : {}
+            }
+        self.cache['gwmsmon_site_summary' ] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration,
+            'getter' : lambda : json.loads(os.popen('curl --retry 5 -s http://cms-gwmsmon.cern.ch/totalview//json/site_summary').read()),
             'cachefile' : None,
             'default' : {}
             }
@@ -639,7 +647,7 @@ class siteInfo:
             for siteInfo in data:
                 #print siteInfo['Status']
                 self.all_sites.append( siteInfo['VOName'] )
-                if not siteInfo['Tier']: continue
+                if not siteInfo['Tier'] in [1,2]: continue
                 if siteInfo['Status'] == 'on': 
                     self.sites_ready.append( siteInfo['VOName'] )
                 else:#if siteInfo['Status'] in ['drain']:
@@ -657,23 +665,24 @@ class siteInfo:
             self.sites_T1s = [ s for s in self.sites_ready if s.startswith('T1_')]
             self.sites_with_goodIO = [ "T2_DE_DESY","T2_DE_RWTH",
                                        "T2_ES_CIEMAT",
-                                       "T2_FR_GRIF_LLR", "T2_FR_GRIF_IRFU", "T2_FR_IPHC",
+                                       "T2_FR_GRIF_LLR", "T2_FR_GRIF_IRFU", "T2_FR_IPHC","T2_FR_CCIN2P3",
                                        "T2_IT_Bari", "T2_IT_Legnaro", "T2_IT_Pisa", "T2_IT_Rome",
                                        "T2_UK_London_Brunel", "T2_UK_London_IC", "T2_UK_SGrid_RALPP",
                                        "T2_US_Caltech","T2_US_MIT","T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida",
                                        "T2_BE_IIHE",
                                        "T2_EE_Estonia",
-                                       "T2_CH_CERN"
+                                       ## to be tried out "T2_PL_Swierk"
+                                       "T2_CH_CERN","T2_CH_CERN_HLT","T2_CH_CERN_AI"
                                        ]
             self.sites_with_goodIO = [s for s in self.sites_with_goodIO if s in self.sites_ready]
             allowed_T2_for_transfer = ["T2_DE_RWTH","T2_DE_DESY", 
                                        #not inquired# "T2_ES_CIEMAT",
-                                       #no space# ##"T2_FR_GRIF_IRFU", #not inquired# ##"T2_FR_GRIF_LLR", #not inquired"## "T2_FR_IPHC",
+                                       #no space# ##"T2_FR_GRIF_IRFU", #not inquired# ##"T2_FR_GRIF_LLR", #not inquired"## "T2_FR_IPHC",##not inquired"## "T2_FR_CCIN2P3",
                                        "T2_IT_Legnaro", "T2_IT_Pisa", "T2_IT_Rome", #no space# #"T2_IT_Bari",
-                                       "T2_UK_London_Brunel", "T2_UK_London_IC", #commissioning#"T2_UK_SGrid_RALPP",
+                                       "T2_UK_London_Brunel", "T2_UK_London_IC", "T2_UK_SGrid_RALPP",
                                        "T2_US_Nebraska","T2_US_Wisconsin","T2_US_Purdue","T2_US_Caltech", "T2_US_Florida", "T2_US_UCSD", "T2_US_MIT",
-                                       #commissioning# "T2_BE_IIHE",
-                                       #commissioning# "T2_EE_Estonia",
+                                       "T2_BE_IIHE",
+                                       "T2_EE_Estonia",
                                        "T2_CH_CERN", 
 
                                        ]
@@ -739,8 +748,8 @@ class siteInfo:
                 ## will get is later from SSB
                 self.disk[ self.CE_to_SE(s)]=0
             ## add hoc for ssb sucking
-            self.cpu_pledges['T2_BE_IIHE'] = 1000
-            self.cpu_pledges['T2_UK_SGrid_RALPP'] = 1000
+            #self.cpu_pledges['T2_BE_IIHE'] = 1000
+            #self.cpu_pledges['T2_UK_SGrid_RALPP'] = 1000
 
         else:
             self.cpu_pledges.update(json.loads(open('/afs/cern.ch/user/c/cmst2/www/mc/pledged.json').read()))
@@ -777,6 +786,32 @@ class siteInfo:
 
     def fetch_glidein_info(self, talk=True):
         self.sites_memory = dataCache.get('gwmsmon_totals')
+
+        for_max_running = dataCache.get('gwmsmon_site_summary')
+        for site in self.cpu_pledges:
+            if not site in for_max_running: continue
+            new_max = for_max_running[site]['MaxWasRunning'] * 0.70 ## put a fudge factor
+            if new_max > self.cpu_pledges[site]:
+                #print "could raise",site,"from",self.cpu_pledges[site],"to",for_max_running[site]['MaxWasRunning']
+                #print "raising",site,"from",self.cpu_pledges[site],"to",new_max
+                self.cpu_pledges[site] = new_max
+        
+        for_site_pressure = dataCache.get('gwmsmon_prod_site_summary')
+        self.sites_pressure = {}
+        for site in self.sites_ready:
+            pressure = 0
+            if site in for_site_pressure:
+                m = for_site_pressure[site]['MatchingIdle']
+                r = for_site_pressure[site]['Running']
+                if not r: r = 1
+                pressure = m /float(r)
+            ## ~1 = equilibrium
+            ## < 1 : no pressure, running with low matching
+            ## > 1 : pressure, plenty of matching
+            self.sites_pressure[site] = pressure
+
+
+
         #try:
         #    self.sites_memory = json.loads(os.popen('curl --retry 5 -s http://cms-gwmsmon.cern.ch/scheddview/json/totals').read())
         #except:
@@ -824,6 +859,8 @@ class siteInfo:
             else:
                 self.disk[site] = 0 
             self.quota[site] = quota
+            if site == 'T2_IT_Bari':
+                self.quota[site] = 100
             self.locked[site] = locked
 
 
