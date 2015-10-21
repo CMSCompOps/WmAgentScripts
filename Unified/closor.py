@@ -92,15 +92,18 @@ def closor(url, specific=None):
                                 campaign = wl['Campaign']
                         if campaign and campaign in CI.campaigns and 'toDDM' in CI.campaigns[campaign] and tier in CI.campaigns[campaign]['toDDM']:
                             to_DDM = True
+                        n_copies = 2
+                        if to_DDM and campaign and campaign in CI.campaigns and 'DDMcopies' in CI.campaigns[campaign]:
+                            n_copies = CI.campaigns[campaign]['DDMcopies']
                             
                         ## inject to DDM when necessary
                         passed_to_DDM=True
                         if to_DDM:
                             #print "Sending",out," to DDM"
-                            status = subprocess.call(['python','assignDatasetToSite.py','--nCopies=2','--dataset='+out,'--exec'])
+                            status = subprocess.call(['python','assignDatasetToSite.py','--nCopies=%d'%n_copies,'--dataset='+out,'--exec'])
                             if status!=0:
                                 print "Failed DDM, retrying a second time"
-                                status = subprocess.call(['python','assignDatasetToSite.py','--nCopies=2','--dataset='+out,'--exec'])
+                                status = subprocess.call(['python','assignDatasetToSite.py','--nCopies=%d'%n_copies,'--dataset='+out,'--exec'])
                                 if status!=0:
                                     results.append("Failed DDM for %s"% out)
                                     sendEmail("failed DDM injection","could not add "+out+" to DDM pool. check closor logs.")
