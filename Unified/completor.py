@@ -18,6 +18,9 @@ def completor(url, specific):
     ## just take it in random order
     random.shuffle( wfs )
 
+    ## by workflow a list of fraction / timestamps
+    completions = json.loads( open('completions.json').read())
+    
     good_fractions = {}
     for c in CI.campaigns:
         if 'force-complete' in CI.campaigns[c]:
@@ -45,8 +48,11 @@ def completor(url, specific):
         lumi_expected = wfi.request['TotalInputLumis']
         event_expected = wfi.request['TotalInputEvents']
 
+        now = time.mktime(time.gmtime()) / (60*60*24.)
+
         percent_completions = {}
         for output in wfi.request['OutputDatasets']:
+            if not output in completions: completions[output] = { 'injected' : None, 'checkpoints' : [], 'workflow' : wfo.name}
             ## get completion fraction
             event_count,lumi_count = getDatasetEventsAndLumis(dataset=output)
             lumi_completion=0.
@@ -58,18 +64,37 @@ def completor(url, specific):
 
             #take the less optimistic
             percent_completions[output] = min( lumi_completion, event_completion )
+            completions[output]['checkpoints'].append( (now, event_completion ) )
 
         if all([percent_completions[out] >= good_fraction for out in percent_completions]):
             print "all is above",good_fraction,"for",wfo.name
             print json.dumps( percent_completions, indent=2 )
         else:
-            print "\tnot over bound",good_fraction
+            print "\t",percent_completions.values(),"not over bound",good_fraction
             #print json.dumps( percent_completions, indent=2 )
             continue
 
         if all([percent_completions[out] >= ignore_fraction for out in percent_completions]):
             print "all is done, just wait a bit"
             continue
+
+        running_log = filter(lambda change : change["Status"] in ["running-open","running-closed"],wfi.request['RequestTransition'])
+        if not running_log:
+            print wfo.name,"has no running log"
+            # cannot figure out when the thing started running
+            continue
+        then = running_log[-1]['UpdateTime'] / (60.*60.*24.)
+        delay = now - then ## in days
+
+        for output in  percent_completions:
+            completions[output]['injected'] = then
+
+        #further check on delays
+        cpuh = wfi.getComputingTime(unit='d')
+
+        ran_at = wfi.request['SiteWhitelist']
+        print "Required:",cpuh,
+        print "Time spend:",delay
 
         ## find ACDCs that might be running
         familly = getWorkflowById( url, wfi.request['PrepID'] ,details=True)
@@ -80,12 +105,14 @@ def completor(url, specific):
             ## then set force complete all members
             if member['RequestStatus'] in ['running-opened','running-closed']:
                 print "setting",member['RequestName'],"force-complete"
-                reqMgrClient.setWorkflowForceComplete(url, member['RequestName'])
+                print "NOT REALLY FORCING"
+                ##reqMgrClient.setWorkflowForceComplete(url, member['RequestName'])
 
         ## do it once only for testing
         #break
             
-            
+    open('completions.json','w').write( json.dumps( completions , indent=2))
+
 
 if __name__ == "__main__":
     url = 'cmsweb.cern.ch'
