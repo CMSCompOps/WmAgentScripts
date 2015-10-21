@@ -9,6 +9,7 @@ import sys
 
 def htmlor( caller = ""):
     cache = getWorkflows('cmsweb.cern.ch','assignment-approved', details=True)
+    cache.extend( getWorkflows('cmsweb.cern.ch','acquired', details=True) )
     cache.extend( getWorkflows('cmsweb.cern.ch','running-open', details=True) )
     cache.extend( getWorkflows('cmsweb.cern.ch','running-closed', details=True) )
     def getWL( wfn ):
@@ -559,6 +560,8 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     count=0
     n_column = 4
     SI = siteInfo()
+    date1 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(15*24*60*60)) ) ## 15 days
+    date2 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime())
     for t in SI.types():
         text+="<li>%s<table border=1>"%t
         c=0
@@ -567,7 +570,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
             disk = SI.disk[SI.CE_to_SE(site)] if SI.CE_to_SE(site) in SI.disk else 'N/A'
             if c==0:
                 text+="<tr>"
-            text+='<td><a href=http://dashb-ssb.cern.ch/dashboard/templates/sitePendingRunningJobs.html?site=%s>%s</a><br><a href="http://cms-gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="http://cms-gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:50px"></a><br>CPU pledge: %s<br>Disk available: %s</td>'%(site,site,site,site,cpu,disk)
+            text+='<td><a href=http://dashb-ssb.cern.ch/dashboard/templates/sitePendingRunningJobs.html?site=%s>%s</a><br><a href="http://cms-gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="http://cms-gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:50px"></a><br><a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=wmagent&check=submitted&sortby=activity&scale=linear&bars=20&data1=%s&date2=%s">dashb</a><br>CPU pledge: %s<br>Disk available: %s</td>'%(site,site,site,site,site,date1,date2,cpu,disk)
             if c==n_column:
                 c=0
             else:
