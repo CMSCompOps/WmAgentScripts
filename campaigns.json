@@ -68,6 +68,9 @@
     },
     "lumisize" : 300
   }, 
+  "CosmicWinter15GS" : {
+    "go": true
+  },
   "RunIISummer15GS": {
     "go": true, 
     "parameters": {
