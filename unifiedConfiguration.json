@@ -12,15 +12,15 @@
    "description": "The total size of the input datasets that can be transfered at a given time"
   },
   "max_handled_workflows": {
-   "value" : 1200,
+   "value" : 2000,
    "description": "The total number of workflows that we allow to handle at a time (transfer, running, assistance)"
   },
   "max_staging_workflows": {
-   "value" : 130,
+   "value" : 400,
    "description": "The total number of workflows that we allow to stage at a time"
   }, 
   "max_staging_workflows_per_site": {
-   "value" : 130,
+   "value" : 400,
    "description": "The total number of workflows that we allow to stage at a time per site"
   },
   "chopping_threshold_in_GB": {
