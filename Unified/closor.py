@@ -97,10 +97,11 @@ def closor(url, specific=None):
                         passed_to_DDM=True
                         if to_DDM:
                             #print "Sending",out," to DDM"
-                            status = subprocess.call(['python','assignDatasetToSite.py','--nCopies=2','--dataset='+out,'--exec'])
+                            # four copies for rereco
+                            status = subprocess.call(['python','assignDatasetToSite.py','--nCopies=4','--dataset='+out,'--exec'])
                             if status!=0:
                                 print "Failed DDM, retrying a second time"
-                                status = subprocess.call(['python','assignDatasetToSite.py','--nCopies=2','--dataset='+out,'--exec'])
+                                status = subprocess.call(['python','assignDatasetToSite.py','--nCopies=4','--dataset='+out,'--exec'])
                                 if status!=0:
                                     results.append("Failed DDM for %s"% out)
                                     sendEmail("failed DDM injection","could not add "+out+" to DDM pool. check closor logs.")

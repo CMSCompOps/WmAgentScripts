@@ -256,7 +256,8 @@ def checkor(url, spec=None, options=None):
         for output in wfi.request['OutputDatasets']:
             phedex_presence[output] = phedexClient.getFileCountDataset(url, output )
 
-        vetoed_custodial_tier = ['MINIAODSIM']
+        ## adding MINIAOD for ReReco
+        vetoed_custodial_tier = ['MINIAODSIM','MINIAOD']
         out_worth_checking = [out for out in custodial_locations.keys() if out.split('/')[-1] not in vetoed_custodial_tier]
         if not all(map( lambda sites : len(sites)!=0, [custodial_locations[out] for out in out_worth_checking])):
             print wfo.name,"has not all custodial location"

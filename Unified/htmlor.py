@@ -9,6 +9,7 @@ import sys
 
 def htmlor( caller = ""):
     cache = getWorkflows('cmsweb.cern.ch','assignment-approved', details=True)
+    cache.extend( getWorkflows('cmsweb.cern.ch','acquired', details=True) )
     cache.extend( getWorkflows('cmsweb.cern.ch','running-open', details=True) )
     cache.extend( getWorkflows('cmsweb.cern.ch','running-closed', details=True) )
     def getWL( wfn ):
@@ -425,7 +426,7 @@ Worflow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/reque
         count+=1
     text+="</ul></div>\n"
     html_doc.write("""
-Worflow to forget (%d) <a href=logs/injector/last.log target=_blank>log</a> <a href=logs/outcleanor/last.log target=_blank>postlog</a>
+Worflow to forget (%d) <a href=logs/injector/last.log target=_blank>log</a> <a href=logs/lockor/last.log target=_blank>postlog</a>
 <a href="javascript:showhide('forget')">[Click to show/hide]</a>
 <br>
 <div id="forget" style="display:none;">
@@ -443,7 +444,7 @@ Worflow to forget (%d) <a href=logs/injector/last.log target=_blank>log</a> <a h
         count+=1
     text+="</ul></div>\n"
     html_doc.write("""
-Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=logs/cleanor/last.log target=_blank>postlog</a>
+Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=logs/lockor/last.log target=_blank>postlog</a>
 <a href="javascript:showhide('done')">[Click to show/hide]</a>
 <br>
 <div id="done" style="display:none;">
@@ -456,7 +457,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 
 
     wfs = session.query(Workflow).filter(Workflow.status.endswith('-unlock')).all()
-    html_doc.write(" Workflows unlocked : %s <br>"%(len(wfs)))
+    html_doc.write(" Workflows unlocked : %s <a href=logs/lockor/last.log target=_blank>log</a><br>"%(len(wfs)))
     lap ( 'done with unlocked' )
 
 
@@ -471,7 +472,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
         if not out.workflow: 
             print "This is a problem with",out.datasetname
             continue
-        if  out.workflow.status in ['done','clean','clean-out','clean-unlock']:
+        if  out.workflow.status in ['done-unlock','done','clean','clean-out','clean-unlock']:
             out_week = int(time.strftime("%W",time.gmtime(out.date)))
             ##only show current week, and the previous.
             if (this_week-out_week)==1:
@@ -692,9 +693,13 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
 """)
     wfs = {}
     for wfo in session.query(Workflow).all():
+        ## pass all that is unlocked and considered it gone
         wfs[wfo.name] = (wfo.status,wfo.wm_status)
+
     open('/afs/cern.ch/user/c/cmst2/www/unified/statuses.json','w').write(json.dumps( wfs ))
     for wfn in sorted(wfs.keys()):
+        ## pass all that is unlocked and considered it gone
+        if 'unlock' in wfs[wfn][0]: continue
         html_doc.write('<tr><td><a id="%s">%s</a></td><td>%s</td><td>%s</td></tr>\n'%( wfn, wfn, wfs[wfn][0],  wfs[wfn][1]))
     html_doc.write("</table>")
     html_doc.write("<br>"*100)
