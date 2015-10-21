@@ -1498,6 +1498,18 @@ def getDatasetOnGoingDeletion( url, dataset ):
     result = json.loads(r2.read())['phedex']
     return result['dataset']
     
+def getDatasetBlocks( dataset, runs=None, lumis=None):
+    dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+    all_blocks = set()
+    if runs:
+        for r in runs:
+            all_blocks.update([item['block_name'] for item in dbsapi.listBlocks(run_num=r, dataset= dataset) ])
+    if lumis:
+        #needs a series of convoluted calls
+        #all_blocks.update([item['block_name'] for item in dbsapi.listBlocks( dataset = dataset )])
+        pass
+
+    return list( all_blocks )
 
 def getDatasetBlockAndSite( url, dataset, group="",vetoes=None):
     if vetoes==None:

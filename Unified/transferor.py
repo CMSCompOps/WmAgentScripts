@@ -4,7 +4,7 @@ import reqMgrClient
 from McMClient import McMClient
 from utils import makeReplicaRequest
 from utils import workflowInfo, siteInfo, campaignInfo, userLock
-from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, getSiteWhiteList, approveSubscription, getDatasetSize, updateSubscription, getWorkflows, componentInfo, getDatasetDestinations
+from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, getSiteWhiteList, approveSubscription, getDatasetSize, updateSubscription, getWorkflows, componentInfo, getDatasetDestinations, getDatasetBlocks
 from utils import unifiedConfiguration
 from utils import lockInfo, duplicateLock, newLockInfo
 import json
@@ -296,13 +296,11 @@ def transferor(url ,specific = None, talk=True, options=None):
         if 'BlockWhitelist' in wfh.request and wfh.request['BlockWhitelist']:
             blocks = wfh.request['BlockWhitelist']
         if 'RunWhitelist' in wfh.request and wfh.request['RunWhitelist']:
-            ## should make the block selection here
-            pass
-
+            ## augment with run white list
+            blocks = list(set( blocks + getDatasetBlocks( dataset, runs=wfh.request['RunWhitelist'] ) ))
         if 'LumiList' in wfh.request and wfh.request['LumiList']:
-            ## same, we could be doing the white list here too
-            pass
-
+            ## augment with the lumi white list
+            blocks = list(set( blocks + getDatasetBlocks( dataset, lumis= wfh.request['LumiList'] )
 
         if blocks:
             print "Reading",len(blocks),"in whitelist"
