@@ -1,4 +1,4 @@
-from utils import getWorkflows, findCustodialLocation, workflowInfo, getDatasetStatus, getWorkflowByOutput
+from utils import getWorkflows, findCustodialLocation, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration,
 from assignSession import *
 import json
 import os
@@ -7,7 +7,8 @@ url = 'cmsweb.cern.ch'
 
 statuses = ['assignment-approved','assigned','failed','acquired','running-open','running-closed','force-complete','completed','closed-out']
 
-tier_no_custodial = ['MINIAODSIM','DQM','DQMIO']
+UC = unifiedConfiguration()
+tier_no_custodial = UC.get('tiers_with_no_custodial')
 
 
 ## those that are already in lock

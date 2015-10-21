@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, makeReplicaRequest
-from utils import componentInfo
+from utils import componentInfo, unifiedConfiguration, userLock, duplicateLock
 import phedexClient
 import dbs3Client
 import reqMgrClient
@@ -17,7 +17,10 @@ from utils import closeoutInfo
 
 def checkor(url, spec=None, options=None):
     fDB = closeoutInfo()
+    if userLock():   return
+    if duplicateLock():  return
 
+    UC = unifiedConfiguration()
     use_mcm = True
     up = componentInfo(mcm=use_mcm, soft=['mcm'])
     if not up.check(): return
@@ -256,7 +259,7 @@ def checkor(url, spec=None, options=None):
         for output in wfi.request['OutputDatasets']:
             phedex_presence[output] = phedexClient.getFileCountDataset(url, output )
 
-        vetoed_custodial_tier = ['MINIAODSIM']
+        vetoed_custodial_tier = UC.get('tiers_with_no_custodial')
         out_worth_checking = [out for out in custodial_locations.keys() if out.split('/')[-1] not in vetoed_custodial_tier]
         if not all(map( lambda sites : len(sites)!=0, [custodial_locations[out] for out in out_worth_checking])):
             print wfo.name,"has not all custodial location"
