@@ -64,7 +64,7 @@ for requests_row in requests_rows:
 
         #print workflow_row
         workflow=workflow_dict["workflow_name"]
-        return_string=os.popen("python2.6 resubmit.py "+workflow + " anlevin DATAOPS").read()
+        return_string=os.popen("python2.6 /home/relval/WmAgentScripts/RelVal/resubmit.py "+workflow+" anlevin DATAOPS").read()
         if len(return_string) == 0:
             print "batch_cloner_reinserter.py error 1"
             sys.exit(1)
@@ -121,7 +121,7 @@ for requests_row in requests_rows:
                 
     #description = description.rstrip('\n')+"\n\n(clone of batch "+olduserid+")"
 
-    curs.execute("insert into batches set DN=\""+batch_dict["DN"]+"\", announcement_title=\""+batch_dict["announcement_title"]+"\", processing_version="+str(request_dict["proc_ver"])+", site=\""+request_dict["site"]+"\", description=\""+batch_dict["description"]+"\", status=\"approved\", useridyear=\""+request_dict["useridyear"]+"\", useridmonth=\""+request_dict["useridmonth"]+"\", useridday=\""+request_dict["useridday"]+"\", useridnum="+str(request_dict["useridnum"])+", batch_version_num = "+str(new_batch_version_num)+", hn_message_id=\"do_not_send_an_acknowledgement_email\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\", batch_creation_time = \""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\"")
+    curs.execute("insert into batches set DN=\""+batch_dict["DN"]+"\", announcement_title=\""+batch_dict["announcement_title"]+"\", processing_version="+str(request_dict["new_processing_version"])+", site=\""+request_dict["new_site"]+"\", description=\""+batch_dict["description"]+"\", status=\"approved\", useridyear=\""+request_dict["useridyear"]+"\", useridmonth=\""+request_dict["useridmonth"]+"\", useridday=\""+request_dict["useridday"]+"\", useridnum="+str(request_dict["useridnum"])+", batch_version_num = "+str(new_batch_version_num)+", hn_message_id=\"do_not_send_an_acknowledgement_email\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\", batch_creation_time = \""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\"")
 
     conn.commit()
 
