@@ -9,6 +9,11 @@ def make_assignment_params(schema,site, processing_version):
     procstring = {}
     
     maxrss = {}
+
+    if "CMSSWVersion" not in schema:
+        os.system('echo assignment.py error 7 | mail -s \"assignment.py error 7\" andrew.m.levin@vanderbilt.edu')        
+        print "CMSSWVersion not in schema"
+        sys.exit(1)
     
     acqera = schema['CMSSWVersion']
 
@@ -25,14 +30,15 @@ def make_assignment_params(schema,site, processing_version):
         if key == "Memory":
             maxrss_main = int(value)*1024
 
-    for key, value in schema.items():
-        if type(value) is dict and key.startswith("Task"):
-            if 'ProcessingString' in value:
-                procstring[value['TaskName']] = value['ProcessingString'].replace("-","_")
-                if "-" in value['ProcessingString']:
-                    os.system('echo '+schema['RequestName']+' | mail -s \"assignment.py warning 1\" andrew.m.levin@vanderbilt.edu')
+    if schema['RequestType'] == 'TaskChain':
+        for key, value in schema.items():
+            if type(value) is dict and key.startswith("Task"):
+                if 'ProcessingString' in value:
+                    procstring[value['TaskName']] = value['ProcessingString'].replace("-","_")
+                    if "-" in value['ProcessingString']:
+                        os.system('echo '+schema['RequestName']+' | mail -s \"assignment.py warning 1\" andrew.m.levin@vanderbilt.edu')
                 elif "procstring_main" in vars():
-                   procstring[value['TaskName']] = procstring_main
+                    procstring[value['TaskName']] = procstring_main
                 else:
                     os.system('echo '+schema['RequestName']+' | mail -s \"assignment.py error 6\" andrew.m.levin@vanderbilt.edu')
                     sys.exit(0)    
@@ -44,9 +50,9 @@ def make_assignment_params(schema,site, processing_version):
                     if '-' in value['AcquisitionEra']:
                         os.system('echo '+schema['RequestName']+' | mail -s \"assignment.py error 3\" andrew.m.levin@vanderbilt.edu')
                         sys.exit(1)
-
-
-    procstring = procstring_main
+    else:
+        procstring = procstring_main
+        maxrss = maxrss_main
 
     params = {
         #                'SiteWhitelist' : ["T2_CH_CERN","T2_CH_CERN_T0"],
@@ -73,9 +79,9 @@ def make_assignment_params(schema,site, processing_version):
 
 if __name__ == "__main__":
 
-    if len(sys.argv) != 4:
+    if len(sys.argv) != 5 and len(sys.argv) != 4:
         print "Usage"
-        print "assignment.py wf_name site processing_version"
+        print "assignment.py wf_name site processing_version [processing_string]"
         sys.exit(0)
 
     conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))    
@@ -83,5 +89,11 @@ if __name__ == "__main__":
     r2=conn.getresponse()
     schema = json.loads(r2.read())
 
+    print '/reqmgr/reqMgr/request?requestName='+sys.argv[1]
+
     params = make_assignment_params(schema,sys.argv[2],sys.argv[3])
+
+    if len(sys.argv) == 5:
+        params["ProcessingString"] = sys.argv[4]
+
     reqMgrClient.assignWorkflow("cmsweb.cern.ch", sys.argv[1], "relval", params)
