@@ -76,8 +76,10 @@ def print_job_failure_information(job_failure_information):
 
         if provide_log_files(exitcode) and not firsttime_wf and example_log_files != None and example_log_files[0] != None:            
             return_string=return_string+"    here is an example:\n"
-
-            return_string=return_string+"        stager_get -M "+example_log_files[0]+ ";\n        xrdcp -DIRequestTimeout 1000000000000000 root://castorcms/"+example_log_files[0]+" .;\n        tar xpf "+example_log_files[0].split('/')[len(example_log_files[0].split('/'))-1]+" WMTaskSpace/logCollect1/"+example_log_files[1]+";\n        rm " +example_log_files[0].split('/')[len(example_log_files[0].split('/'))-1]+ ";\n"
+            return_string=return_string+"        method 1 to get the log file:\n"
+            return_string=return_string+"            eos cp /eos/cms"+example_log_files[0].split('/castor/cern.ch/cms')[1]+ " .;\n            tar xpf "+example_log_files[0].split('/')[len(example_log_files[0].split('/'))-1]+" WMTaskSpace/logCollect1/"+example_log_files[1]+";\n            rm " +example_log_files[0].split('/')[len(example_log_files[0].split('/'))-1]+ ";\n"
+            return_string=return_string+"        method 2 to get the log file:\n"
+            return_string=return_string+"            stager_get -M "+example_log_files[0]+ ";\n            xrdcp -DIRequestTimeout 1000000000000000 root://castorcms/"+example_log_files[0]+" .;\n            tar xpf "+example_log_files[0].split('/')[len(example_log_files[0].split('/'))-1]+" WMTaskSpace/logCollect1/"+example_log_files[1]+";\n            rm " +example_log_files[0].split('/')[len(example_log_files[0].split('/'))-1]+ ";\n"
             #return_string=return_string+"        eos cp "+example_log_files[0].replace('/castor/cern.ch/cms','/eos/cms')+" .; tar xpf "+example_log_files[0].split('/')[len(example_log_files[0].split('/'))-1]+ " WMTaskSpace/logCollect1/"+example_log_files[1]+"; rm " +example_log_files[0].split('/')[len(example_log_files[0].split('/'))-1]+ ";\n"
 
     firsttime_wf=True
