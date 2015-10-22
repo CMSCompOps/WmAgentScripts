@@ -1,4 +1,4 @@
-from utils import getWorkflows, findCustodialLocation, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration,
+from utils import getWorkflows, findCustodialLocation, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration
 from assignSession import *
 import json
 import os

@@ -300,7 +300,7 @@ def transferor(url ,specific = None, talk=True, options=None):
             blocks = list(set( blocks + getDatasetBlocks( dataset, runs=wfh.request['RunWhitelist'] ) ))
         if 'LumiList' in wfh.request and wfh.request['LumiList']:
             ## augment with the lumi white list
-            blocks = list(set( blocks + getDatasetBlocks( dataset, lumis= wfh.request['LumiList'] )
+            blocks = list(set( blocks + getDatasetBlocks( dataset, lumis= wfh.request['LumiList'] ) ))
 
         if blocks:
             print "Reading",len(blocks),"in whitelist"

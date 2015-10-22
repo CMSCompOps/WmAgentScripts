@@ -1,4 +1,8 @@
 {
+ "tiers_with_no_custodial": {
+   "value" : ["MINIAODSIM","MINIAOD","DQM","DQMIO"],
+   "description": "The data tiers that do not go to tape"
+ },
  "stagor_sends_back": {
    "value" : true,
    "description": "Whether the stagor module can send workflow back to considered"
