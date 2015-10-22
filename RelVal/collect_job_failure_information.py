@@ -14,6 +14,8 @@ def collect_job_failure_information(wf_list,verbose=False,debug=False):
     #loop over workflows
     for workflow in wf_list:
 
+        print workflow
+
         #workflow = line.rstrip('\n')
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         r11=conn.request('GET','/couchdb/wmstats/_design/WMStats/_view/jobsByStatusWorkflow?startkey=["'+workflow+'"]&endkey=["'+workflow+'",{}]&stale=ok&reduce=true&group_level=2')
@@ -44,13 +46,17 @@ def collect_job_failure_information(wf_list,verbose=False,debug=False):
                 found_job_killed_error=False
 
                 #for logarchive jobs, for example, there should not be a logarchivelfn
+                #another example is the case where the there is a failure in the logarchive step
                 if 'logArchiveLFN' in s2['rows'][j]['doc']:
                     mergedfilename=s2['rows'][j]['doc']['logArchiveLFN'].keys()[0].split("=")[1]
+                    unmergedfilename=None
+                    for output in s2['rows'][j]['doc']['output']:
+                        if '/store/unmerged/logs/' in output['lfn']:
+                            unmergedfilename=output['lfn'].split('/')[len(output['lfn'].split('/')) - 1]
                 else:
                     mergedfilename=None
-                for output in s2['rows'][j]['doc']['output']:
-                    if '/store/unmerged/logs/' in output['lfn']:
-                        unmergedfilename=output['lfn'].split('/')[len(output['lfn'].split('/')) - 1]
+                    unmergedfilename=None
+
 
 
 
@@ -76,6 +82,7 @@ def collect_job_failure_information(wf_list,verbose=False,debug=False):
                 found_fatal_exception=False                
                 found_cmssw_step_failures=False        
                 found_scram_script_failure=False
+                found_no_output_failure=False
                 if not found_performance_killed_error and not found_job_killed_error and 'cmsRun1' in s2['rows'][j]['doc']['errors']:
 
                     for k in s2['rows'][j]['doc']['errors']['cmsRun1']:
@@ -106,9 +113,18 @@ def collect_job_failure_information(wf_list,verbose=False,debug=False):
                                 else:
                                     failures[k['exitCode']]={'number' : 1, 'logarchivefiles' : [], 'details': k['details']}
                                 found_scram_script_failure=True
+
+                    if not found_fatal_exception and not found_cmssw_step_failures and not found_scram_script_failure:
+                        for k in s2['rows'][j]['doc']['errors']['cmsRun1']:
+                            if k['type'] == 'NoOutput':
+                                if k['exitCode'] in failures.keys():
+                                    failures[k['exitCode']]['number']=failures[k['exitCode']]['number']+1
+                                else:
+                                    failures[k['exitCode']]={'number' : 1, 'logarchivefiles' : [], 'details': k['details']}
+                                found_no_output_failure=True
                 
                 found_upload_failure=False
-                if not found_performance_killed_error and not found_job_killed_error and not found_fatal_exception and not found_cmssw_step_failures and not found_scram_script_failure and 'upload1' in s2['rows'][j]['doc']['errors']:
+                if not found_performance_killed_error and not found_job_killed_error and not found_fatal_exception and not found_cmssw_step_failures and not found_scram_script_failure and not found_no_output_failure and 'upload1' in s2['rows'][j]['doc']['errors']:
 
                     for k in s2['rows'][j]['doc']['errors']['upload1']:
                         if k['type'] == "DQMUploadFailure":
