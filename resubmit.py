@@ -31,7 +31,7 @@ except:
     sys.exit(0)
 
 
-def modifySchema(helper, user, group, backfill=False):
+def modifySchema(helper, user, group, cache, backfill=False):
     """
     Adapts schema to right parameters.
     If the original workflow points to DBS2, DBS3 URL is fixed instead.
@@ -76,6 +76,10 @@ def modifySchema(helper, user, group, backfill=False):
     # Clean requestor  DN?
     if 'RequestorDN' in result:
         del result['RequestorDN']
+    # Update the request priority
+    if cache and 'RequestPriority' in cache:
+        result['RequestPriority'] = cache['RequestPriority']
+        
     # check MonteCarlo
     if result['RequestType'] == 'MonteCarlo':
         # check assigning parameters
@@ -172,7 +176,12 @@ def cloneWorkflow(workflow, user, group, verbose=False, backfill=False, testbed=
     # Get info about the workflow to be cloned
     helper = reqMgrClient.retrieveSchema(workflow, reqmgrCouchURL)
     # Adapt schema and add original request to it
-    schema = modifySchema(helper, user, group, backfill)
+    try:
+        cache = reqMgrClient.getWorkloadCache(url, workflow)
+    except:
+        cache = None
+        
+    schema = modifySchema(helper, user, group, cache, backfill)
     schema['OriginalRequestName'] = workflow
     if verbose:
         pprint(schema)
