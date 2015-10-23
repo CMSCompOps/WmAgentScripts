@@ -9,6 +9,7 @@ import itertools
 import pprint
 import optparse
 from htmlor import htmlor
+from collections import defaultdict
 
 def stagor(url,specific =None, options=None):
     
@@ -67,6 +68,9 @@ def stagor(url,specific =None, options=None):
             completion_by_input[dataset] = {}
             print wfo.name,"needs",dataset
 
+    ## this loop is very expensive and will not function at some point.
+    ## transfer objects should probably be deleted as some point
+
     for transfer in session.query(Transfer).all():
         if specific  and str(transfer.phedexid)!=str(specific): continue
 
@@ -115,7 +119,9 @@ def stagor(url,specific =None, options=None):
             if tr_wf:# and tr_wf.status == 'staging':  
                 if not tr_wf.id in done_by_wf_id: done_by_wf_id[tr_wf.id]={}
                 done_by_wf_id[tr_wf.id][transfer.phedexid]=done
-
+            ## for those that are in staging, and the destination site is in drain
+            #if not done and tr_wf.status == 'staging':
+                
 
         if done:
             ## transfer.status = 'done'
@@ -124,6 +130,7 @@ def stagor(url,specific =None, options=None):
             print transfer.phedexid,"not finished"
             pprint.pprint( checks )
 
+    missing_in_action = defaultdict(list)
     #print done_by_input
     print "\n----\n"
     for dsname in done_by_input:
@@ -223,19 +230,18 @@ def stagor(url,specific =None, options=None):
 
 
 
+            missings = [pid for (pid,d) in done_by_input[dsname].items() if d==False] 
             print "\t",done_by_input[dsname]
             print "\tneeds",need_sites
             print "\tgot",got
+            print "\tmissing",missings
+            missing_in_action[dsname].extend( missings )
 
-    for wfid in done_by_wf_id:
-        #print done_by_wf_id[wfid].values()
-        ## ask that all related transfer get into a valid state
-        if all(done_by_wf_id[wfid].values()):
-            pass
-            #tr_wf = session.query(Workflow).get(wfid)
-            #print "setting",tr_wf.name,"to staged"
-            #tr_wf.status = 'staged'
-            #session.commit()
+    open('incomplete_transfers.json','w').write( json.dumps(missing_in_action, indent=2) )
+    print "Stuck transfers and datasets"
+    print json.dumps( missing_in_action, indent=2 )
+
+
 
 if __name__ == "__main__":
     url = 'cmsweb.cern.ch'
