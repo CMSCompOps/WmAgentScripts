@@ -6,7 +6,8 @@ from utils import makeReplicaRequest
 from utils import workflowInfo, siteInfo, campaignInfo, userLock
 from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, getSiteWhiteList, approveSubscription, getDatasetSize, updateSubscription, getWorkflows, componentInfo, getDatasetDestinations, getDatasetBlocks
 from utils import unifiedConfiguration
-from utils import lockInfo, duplicateLock, newLockInfo
+#from utils import lockInfo
+from utils import duplicateLock, newLockInfo
 import json
 from collections import defaultdict
 import optparse
@@ -46,7 +47,7 @@ def transferor(url ,specific = None, talk=True, options=None):
 
     SI = siteInfo()
     CI = campaignInfo()
-    LI = lockInfo()
+    #LI = lockInfo()
     NLI = newLockInfo()
     mcm = McMClient(dev=False)
     dss = DSS()
@@ -404,7 +405,9 @@ def transferor(url ,specific = None, talk=True, options=None):
                 ## take out the ones that cannot receive transfers
                 prim_to_distribute = [site for site in prim_to_distribute if not any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
 
-                if any([transfers_per_sites[site] < max_staging_per_site for site in prim_to_distribute]):
+                print "Could be going to:",prim_to_distribute
+
+                if not prim_to_distribute or any([transfers_per_sites[site] < max_staging_per_site for site in prim_to_distribute]):
                     ## means there is openings let me go
                     print "There are transfer slots available:",[(site,transfers_per_sites[site]) for site in prim_to_distribute]
                     for site in sites_allowed:
@@ -543,9 +546,9 @@ def transferor(url ,specific = None, talk=True, options=None):
 
     print "accumulated locks of dataset in place"
     print json.dumps(needing_locks, indent=2)
-    for site,items in needing_locks.items():
-        for item in items:
-            LI.lock( item, SI.CE_to_SE(site), 'usable input')
+    #for site,items in needing_locks.items():
+    #    for item in items:
+    #        LI.lock( item, SI.CE_to_SE(site), 'usable input')
         
     print "accumulated transfers"
     print json.dumps(all_transfers, indent=2)
@@ -609,8 +612,8 @@ def transferor(url ,specific = None, talk=True, options=None):
                     print updateSubscription(url, site_se, item, priority='high')
             """
             #for item in list(set([it.split('#')[0] for it in items_to_transfer])):
-            for item in items_to_transfer:
-                LI.lock( item, site_se, 'pre-staging')
+            #for item in items_to_transfer:
+            #    LI.lock( item, site_se, 'pre-staging')
         else:
             #result= {'phedex':{'request_created' : [{'id' : fake_id}]}}
             result= {'phedex':{'request_created' : []}}

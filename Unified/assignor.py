@@ -4,7 +4,8 @@ import reqMgrClient
 from utils import workflowInfo, campaignInfo, siteInfo, userLock
 from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction, getDatasetEventsPerLumi, newLockInfo
 from utils import componentInfo, sendEmail
-from utils import lockInfo, duplicateLock, notRunningBefore
+#from utils import lockInfo
+from utils import duplicateLock, notRunningBefore
 import optparse
 import itertools
 import time
@@ -21,7 +22,7 @@ def assignor(url ,specific = None, talk=True, options=None):
 
     CI = campaignInfo()
     SI = siteInfo()
-    LI = lockInfo()
+    #LI = lockInfo()
     NLI = newLockInfo()
 
     n_assigned = 0
@@ -330,16 +331,16 @@ def assignor(url ,specific = None, talk=True, options=None):
                     ## refetch information and lock output
                     new_wfi = workflowInfo( url, wfo.name)
                     (_,prim,_,sec) = new_wfi.getIO()
-                    for output in new_wfi.request['OutputDatasets']:
+                    for secure in list(prim)+list(sec)+new_wfi.request['OutputDatasets']:
                         ## lock all outputs flat
-                        NLI.lock( output )
-                    for site in [SI.CE_to_SE(site) for site in sites_allowed]:
-                        for output in new_wfi.request['OutputDatasets']:
-                            LI.lock( output, site, 'dataset in production')
-                        for primary in prim:
-                            LI.lock( primary, site, 'dataset used in input')
-                        for secondary in sec:
-                            LI.lock( secondary, site, 'required for mixing' )
+                        NLI.lock( secure )
+                    #for site in [SI.CE_to_SE(site) for site in sites_allowed]:
+                    #    for output in new_wfi.request['OutputDatasets']:
+                    #        LI.lock( output, site, 'dataset in production')
+                    #    for primary in prim:
+                    #        LI.lock( primary, site, 'dataset used in input')
+                    #    for secondary in sec:
+                    #        LI.lock( secondary, site, 'required for mixing' )
 
                 except Exception as e:
                     print "fail in locking output"

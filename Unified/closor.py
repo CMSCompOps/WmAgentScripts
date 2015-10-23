@@ -8,14 +8,14 @@ import time
 import sys
 import subprocess
 from utils import getDatasetEventsAndLumis, campaignInfo
-from utils import lockInfo
+#from utils import lockInfo
 from htmlor import htmlor
 
 def closor(url, specific=None):
     if not componentInfo().check(): return
 
     CI = campaignInfo()
-    LI = lockInfo()
+    #LI = lockInfo()
 
     ## manually closed-out workflows should get to close with checkor
     for wfo in session.query(Workflow).filter(Workflow.status=='close').all():
@@ -108,10 +108,10 @@ def closor(url, specific=None):
                                     results.append("Failed DDM for %s"% out)
                                     sendEmail("failed DDM injection","could not add "+out+" to DDM pool. check closor logs.")
                                     passed_to_DDM=False
-                            if passed_to_DDM:
-                                ## make a lock release
-                                LI.release_everywhere( out, reason = 'global unlock after passing to DDM')                                
-                                pass
+                            #if passed_to_DDM:
+                            #    ## make a lock release
+                            #    LI.release_everywhere( out, reason = 'global unlock after passing to DDM')                                
+                            #    pass
 
                     else:
                         print wfo.name,"no stats for announcing",out
