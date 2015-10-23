@@ -179,7 +179,7 @@ def assignor(url ,specific = None, talk=True, options=None):
         
         if available_fractions and not all([available>=copies_wanted for available in available_fractions.values()]):
             print "The input dataset is not available",copies_wanted,"times, only",available_fractions.values()
-            if down_time:
+            if down_time and not options.go:
                 wfo.status = 'considered'
                 session.commit()
                 print "sending back to considered because of site downtime, instead of waiting"
