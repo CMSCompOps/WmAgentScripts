@@ -1192,6 +1192,79 @@ def findLostBlocks(url, dataset):
                 lost.append( item )
     return lost
 
+def checkTransferLag( url, xfer_id , datasets=None):
+    ## xfer_id tells us what has to go where via subscriptions
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    #r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?request=%s'%(str(xfer_id)))
+    #r2=conn.getresponse()
+    #result = json.loads(r2.read())
+    #timestamp = result['phedex']['request_timestamp']
+    r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?request='+str(xfer_id))
+    r2=conn.getresponse()
+    result = json.loads(r2.read())
+    timecreate=min([r['time_create'] for r in result['phedex']['request']])
+    subs_url = '/phedex/datasvc/json/prod/subscriptions?request=%s&create_since=%d'%(str(xfer_id),timecreate)
+    subs_url+='&collapse=n'
+    r1=conn.request("GET",subs_url)
+    r2=conn.getresponse()
+    result = json.loads(r2.read())
+
+    now = time.mktime( time.gmtime() )
+    #print result
+    stuck = defaultdict(lambda : defaultdict(lambda : defaultdict(tuple)))
+    if len(result['phedex']['dataset'])==0:
+        print "trying with an earlier date than",timecreate,"for",xfer_id
+        subs_url = '/phedex/datasvc/json/prod/subscriptions?request=%s&create_since=%d'%(str(xfer_id),0)
+        subs_url+='&collapse=n' 
+        r1=conn.request("GET",subs_url)
+        r2=conn.getresponse()
+        result = json.loads(r2.read())
+
+    for item in  result['phedex']['dataset']:
+        if 'subscription' not in item:            
+            #print "sub"
+            loop_on = list(itertools.chain.from_iterable([[(subitem['name'],i) for i in subitem['subscription']] for subitem in item['block']]))
+        else:
+            #print "no sub"
+            loop_on = [(item['name'],i) for i in item['subscription']]
+        #print loop_on
+        for item,sub in loop_on:
+            if datasets and not item in datasets: continue
+            if sub['percent_files']!=100:
+                destination = sub['node']
+                time_then = sub['time_create']
+                delay = (now - time_then)/(60.*60.*24.)
+                delay_s = (now - time_then)
+                print "\n",item,"is not complete at",destination,"since", delay ,"[d]"
+                
+                if '#' in item:
+                    item_url = '/phedex/datasvc/json/prod/blockreplicas?block=%s'%( item.replace('#','%23') )
+                else:
+                    item_url = '/phedex/datasvc/json/prod/blockreplicas?dataset=%s'%( item )
+                r1=conn.request("GET",item_url)
+                r2=conn.getresponse()    
+                item_result = json.loads(r2.read()) 
+
+                for subitem in item_result['phedex']['block']:
+                    dones = [replica['node'] for replica in subitem['replica'] if replica['complete'] == 'y']
+                    if not dones: 
+                        print "\t\t",subitem['name'],"lost"
+                        continue
+                    block_size = max([replica['bytes'] for replica in subitem['replica']])
+                    destination_size = min([replica['bytes'] for replica in subitem['replica'] if replica['node']==destination])
+                    block_size_GB = block_size / (1024.**3)
+                    destination_size_GB = destination_size / (1024.**3)
+                    ### rate
+                    rate = destination_size_GB / delay_s
+                    if destination in dones: continue
+                    if delay>7: # more than 7 days is way to much !!
+                        print subitem['name'],' of size',block_size_GB,'[GB] missing',block_size_GB-destination_size_GB,'[GB]'
+                        print '\tis complete at',dones
+                        print "\tincoming at",rate,"[GB/s]"
+                    if rate < 10:
+                        stuck[item][subitem['name']][destination] = (block_size,destination_size,rate,dones)
+                        
+    return stuck
 
 def checkTransferStatus(url, xfer_id, nocollapse=False):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
