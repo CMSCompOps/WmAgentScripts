@@ -178,6 +178,7 @@ def assignor(url ,specific = None, talk=True, options=None):
         copies_wanted,cpuh = wfh.getNCopies()
         
         if available_fractions and not all([available>=copies_wanted for available in available_fractions.values()]):
+            not_even_once = not all([available>=1. for available in available_fractions.values()])
             print "The input dataset is not available",copies_wanted,"times, only",available_fractions.values()
             if down_time and not options.go:
                 wfo.status = 'considered'
@@ -188,7 +189,7 @@ def assignor(url ,specific = None, talk=True, options=None):
                 #pass
 
             print json.dumps(available_fractions)
-            if not options.go:
+            if (options.go and not_even_once) or not options.go:
                 known = []
                 try:
                     known = json.loads(open('cannot_assign.json').read())
