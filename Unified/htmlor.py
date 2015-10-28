@@ -129,7 +129,7 @@ def htmlor( caller = ""):
 
     ## start to write it
     #html_doc = open('/afs/cern.ch/user/v/vlimant/public/ops/index.html','w')
-    html_doc = open('/afs/cern.ch/user/c/cmst2/www/unified/index.html','w')
+    html_doc = open('/afs/cern.ch/user/c/cmst2/www/unified/index.html.new','w')
     print "Updating the status page ..." 
 
     if not caller:
@@ -577,6 +577,21 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
                 c+=1
         text+="</table></li>"
 
+    text += "<li> Sites in auto-approved transfer<ul>"
+    for site in SI.sites_auto_approve:
+        text+="<li>%s"% site
+    text += "</ul></li>"
+
+    text += "<li> Sites with vetoe transfer<ul>"
+    for site in SI.sites_veto_transfer:
+        text+="<li>%s"% site
+    text += "</ul></li>"
+
+    text += "<li> Approximate Free Tape<ul>"
+    for mss in SI.storage:
+        text+="<li>%s : %d [TB]</li>"%(mss, SI.storage[mss])
+    text += "</ul></li>"
+
     lap ( 'done with campaigns' )
 
     open('/afs/cern.ch/user/c/cmst2/www/unified/siteInfo.json','w').write(json.dumps(dict([(t,getattr(SI,t)) for t in SI.types()]),indent=2))
@@ -683,6 +698,8 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
 """)
 
     html_doc.close()
+    ## and put the file in place
+    os.system('mv /afs/cern.ch/user/c/cmst2/www/unified/index.html.new /afs/cern.ch/user/c/cmst2/www/unified/index.html')
 
     html_doc = open('/afs/cern.ch/user/c/cmst2/www/unified/statuses.html','w')
     html_doc.write("""                                                                                                                                                                                                                                                                                                      <html>        
