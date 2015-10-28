@@ -241,6 +241,45 @@ def stagor(url,specific =None, options=None):
     print "Stuck transfers and datasets"
     print json.dumps( missing_in_action, indent=2 )
 
+    print "Going further and make a report of stuck transfers"
+
+    datasets_by_phid = defaultdict(set)
+    for dataset in missing_in_action:
+        for phid in missing_in_action[dataset]:
+            #print dataset,"stuck through",phid
+            datasets_by_phid[phid].add( dataset )
+
+    bad_destinations = defaultdict(list)
+    bad_sources = defaultdict(list)
+    report = ""
+    for phid,datasets in datasets_by_phid.items():
+        issues = checkTransferLag( url, phid , datasets=list(datasets) )
+        for dataset in issues:
+            for block in issues[dataset]:
+                for destination in issues[dataset][block]:
+                    (block_size,destination_size,delay,rate,dones) = issues[dataset][block][destination]
+                    if delay>7 and rate<0.0004:
+                        if len(dones)>1:
+                            ## its the destination that sucks
+                            bad_destinations[destination].append( block )
+                        else:
+                            dum=[bad_sources[d].append( block ) for d in dones]
+
+                        report += "%s is not getting to %s, out of %s faster than %f [GB/s] since %f [d]\n"%(block,destination,", ".join(dones), rate, delay)
+    print "\n"*2
+
+    ## create tickets right away ?
+    report+="bad sources "+",".join(bad_sources.keys())+"\n"
+    for site,blocks in bad_sources.items():
+        report+="\n%s:\n"%site+"\n\t".join(['']+blocks)
+    report+="bad destinations "+",".join(bad_destinations.keys())+"\n"
+    for site,blocks in bad_destinations.items():
+        report+="\n%s:\n"%site+"\n\t".join(['']+blocks)
+
+    print report
+
+    open('incomplete_transfers.log','w').write( report )
+    sendEmail('incomplete transfers', report)
 
 
 if __name__ == "__main__":
