@@ -6,6 +6,7 @@ assignDatasetToSite.py
 *.txt
 *.lock
 *.list
+*.last
 Unified/dbstest.py
 Unified/sqtest.py
 Unified/mcmtest.py
