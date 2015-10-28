@@ -414,9 +414,8 @@ def main():
     url='cmsweb.cern.ch'
     #reads file, striping and ignoring empty lines
     outputdatasets = [ds.strip() for ds in open(filename).readlines() if ds.strip()]
-    makeCustodialXML(url, outputdatasets)
-    print response.status, response.reason
-    print response.read()
+    resp = makeReplicaRequest(url, site, outputdatasets, comments)
+    print resp
     
     sys.exit(0);
 
