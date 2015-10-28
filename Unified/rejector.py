@@ -51,6 +51,8 @@ def rejector(url, specific, options=None):
                 ##schema.pop('RequestDate') ## ok then, let's not reset the time stamp
                 if options.Memory:
                     schema['Memory'] = options.Memory
+                ## update to the current priority
+                schema['RequestPriority'] = wfi.request['RequestPriority']
                 response = reqMgrClient.submitWorkflow(url, schema)
                 m = re.search("details\/(.*)\'",response)
                 if not m:
