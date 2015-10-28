@@ -5,6 +5,7 @@ assignDatasetToSite.py
 *.json
 *.txt
 *.lock
+*.log
 *.list
 *.last
 Unified/dbstest.py
