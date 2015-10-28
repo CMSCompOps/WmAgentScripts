@@ -38,7 +38,13 @@ def sendEmail( subject, text, sender=None, destination=None ):
     else:
         destination = list(set(destination+['vlimant@cern.ch','matteoc@fnal.gov']))
     if not sender:
-        sender = 'vlimant@cern.ch'
+        map_who = { 'vlimant' : 'vlimant@cern.ch',
+                    'mcremone' : 'matteoc@fnal.gov' }
+        user = os.getenv('USER')
+        if user in map_who:
+            sender = map_who[user]
+        else:
+            sender = 'vlimant@cern.ch'
 
     msg = MIMEMultipart()
     msg['From'] = sender
