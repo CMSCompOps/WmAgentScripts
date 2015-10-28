@@ -514,19 +514,28 @@ def userLock(component=None):
 class docCache:
     def __init__(self):
         self.cache = {}
-        default_expiration = 5*60+random.random()*5*60
+        def default_expiration():
+            return 20*60+random.random()*10*60
         self.cache['ssb_106'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration,
+            'expiration' : default_expiration(),
             'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=106&batch=1&lastdata=1"').read())['csvdata'],
+            'cachefile' : None,
+            'default' : []
+            }
+        self.cache['ssb_107'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration(),
+            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=107&batch=1&lastdata=1"').read())['csvdata'],
             'cachefile' : None,
             'default' : []
             }
         self.cache['ssb_108'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration,
+            'expiration' : default_expiration(),
             'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=108&batch=1&lastdata=1"').read())['csvdata'],
             'cachefile' : None,
             'default' : []
@@ -534,7 +543,7 @@ class docCache:
         self.cache['ssb_109'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration,
+            'expiration' : default_expiration(),
             'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=109&batch=1&lastdata=1"').read())['csvdata'],
             'cachefile' : None,
             'default' : []
@@ -542,7 +551,7 @@ class docCache:
         self.cache['ssb_136'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration,
+            'expiration' : default_expiration(),
             'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=136&batch=1&lastdata=1"').read())['csvdata'],
             'cachefile' : None,
             'default' : []
@@ -550,7 +559,7 @@ class docCache:
         self.cache['ssb_158'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration,
+            'expiration' : default_expiration(),
             'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=158&batch=1&lastdata=1"').read())['csvdata'],
             'cachefile' : None,
             'default' : []
@@ -558,7 +567,7 @@ class docCache:
         self.cache['ssb_159'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration,
+            'expiration' : default_expiration(),
             'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=159&batch=1&lastdata=1"').read())['csvdata'],
             'cachefile' : None,
             'default' : []
@@ -566,7 +575,7 @@ class docCache:
         self.cache['ssb_160'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration,
+            'expiration' : default_expiration(),
             'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=160&batch=1&lastdata=1"').read())['csvdata'],
             'cachefile' : None,
             'default' : []
@@ -574,7 +583,7 @@ class docCache:
         self.cache['gwmsmon_totals'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration,
+            'expiration' : default_expiration(),
             'getter' : lambda : json.loads(os.popen('curl --retry 5 -s http://cms-gwmsmon.cern.ch/scheddview/json/totals').read()),
             'cachefile' : None,
             'default' : {}
@@ -582,7 +591,7 @@ class docCache:
         self.cache['gwmsmon_prod_site_summary' ] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration,
+            'expiration' : default_expiration(),
             'getter' : lambda : json.loads(os.popen('curl --retry 5 -s http://cms-gwmsmon.cern.ch/prodview//json/site_summary').read()),
             'cachefile' : None,
             'default' : {}
@@ -590,7 +599,7 @@ class docCache:
         self.cache['gwmsmon_site_summary' ] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration,
+            'expiration' : default_expiration(),
             'getter' : lambda : json.loads(os.popen('curl --retry 5 -s http://cms-gwmsmon.cern.ch/totalview//json/site_summary').read()),
             'cachefile' : None,
             'default' : {}
@@ -598,11 +607,76 @@ class docCache:
         self.cache['detox_sites'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration,
+            'expiration' : default_expiration(),
             'getter' : lambda : os.popen('curl --retry 5 -s http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/SitesInfo.txt').read().split('\n'),
             'cachefile' : None,
             'default' : ""
             }
+        self.cache['T1_DE_KIT_MSS_usage'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration(),
+            'getter' : lambda : getNodeUsage('cmsweb.cern.ch','T1_DE_KIT_MSS'),
+            'cachefile' : None,
+            'default' : ""
+            }
+        self.cache['T1_US_FNAL_MSS_usage'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration(),
+            'getter' : lambda : getNodeUsage('cmsweb.cern.ch','T1_US_FNAL_MSS'),
+            'cachefile' : None,
+            'default' : ""
+            }
+        self.cache['T1_ES_PIC_MSS_usage'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration(),
+            'getter' : lambda : getNodeUsage('cmsweb.cern.ch','T1_ES_PIC_MSS'),
+            'cachefile' : None,
+            'default' : ""
+            }
+        self.cache['T1_UK_RAL_MSS_usage'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration(),
+            'getter' : lambda : getNodeUsage('cmsweb.cern.ch','T1_UK_RAL_MSS'),
+            'cachefile' : None,
+            'default' : ""
+            }
+        self.cache['T1_IT_CNAF_MSS_usage'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration(),
+            'getter' : lambda : getNodeUsage('cmsweb.cern.ch','T1_IT_CNAF_MSS'),
+            'cachefile' : None,
+            'default' : ""
+            }
+        self.cache['T1_FR_CCIN2P3_MSS_usage'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration(),
+            'getter' : lambda : getNodeUsage('cmsweb.cern.ch','T1_FR_CCIN2P3_MSS'),
+            'cachefile' : None,
+            'default' : ""
+            }
+        self.cache['T1_RU_JINR_MSS_usage'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration(),
+            'getter' : lambda : getNodeUsage('cmsweb.cern.ch','T1_RU_JINR_MSS'),
+            'cachefile' : None,
+            'default' : ""
+            }
+        self.cache['T0_CH_CERN_MSS_usage'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration(),
+            'getter' : lambda : getNodeUsage('cmsweb.cern.ch','T0_CH_CERN_MSS'),
+            'cachefile' : None,
+            'default' : ""
+            }
+
         #create the cache files from the labels
         for src in self.cache:
             self.cache[src]['cachefile'] = '.'+src+'.cache.json'
@@ -639,6 +713,24 @@ class docCache:
                 print str(e)
                 return copy.deepcopy(cache['default'])
 
+def getNodes(url, kind):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    r1=conn.request("GET",'/phedex/datasvc/json/prod/nodes')
+    r2=conn.getresponse()
+    result = json.loads(r2.read())
+    return [node['name'] for node in result['phedex']['node'] if node['kind']==kind]
+
+def getNodeUsage(url, node):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    r1=conn.request("GET",'/phedex/datasvc/json/prod/nodeusage?node=%s'%node)
+    r2=conn.getresponse()
+    result = json.loads(r2.read())
+    if len(result['phedex']['node']):
+        s= max([sum([node[k] for k in node.keys() if k.endswith('_node_bytes')]) for node in result['phedex']['node']])
+        return int(s / 1023.**4) #in TB
+    else:
+        return None
+
 dataCache = docCache()
 
 class siteInfo:
@@ -649,7 +741,7 @@ class siteInfo:
             self.sites_ready = []
             self.sites_not_ready = []
             self.all_sites = []
-            data = dataCache.get('ssb_158')
+            data = dataCache.get('ssb_158') ## 158 is the site readyness metric
             for siteInfo in data:
                 #print siteInfo['Status']
                 self.all_sites.append( siteInfo['VOName'] )
