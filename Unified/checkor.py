@@ -185,7 +185,7 @@ def checkor(url, spec=None, options=None):
             if lumi_expected:
                 percent_completions[output] = lumi_count / float( lumi_expected )
 
-            fractions_pass[output] = 0.95
+            fractions_pass[output] = 0.98
             c = get_campaign(output, wfi)
             if c in CI.campaigns and 'fractionpass' in CI.campaigns[c]:
                 fractions_pass[output] = CI.campaigns[c]['fractionpass']
