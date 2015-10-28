@@ -175,7 +175,7 @@ class newLockInfo:
         os.system('echo `date` > /afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.lock')
 
     def __del__(self):
-        open('/afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.new','w').write(json.dumps( list(set(self.db)) ))
+        open('/afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.new','w').write(json.dumps( list(set(self.db)) , indent=2 ))
         os.system('mv /afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.new /afs/cern.ch/user/c/cmst2/www/unified/globallocks.json')
         os.system('rm -f /afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.lock')
 
