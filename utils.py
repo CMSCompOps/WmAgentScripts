@@ -119,6 +119,48 @@ def check_ggus( ticket ):
     print r2
     return False
 
+def getSubscriptions(url, dataset):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    there = '/phedex/datasvc/json/prod/subscriptions?dataset='+dataset 
+    r1=conn.request("GET", there)
+    r2=conn.getresponse()
+    result = json.loads(r2.read())
+    items=result['phedex']
+    return items
+
+def listRequests(url, dataset, site=None):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    there = '/phedex/datasvc/json/prod/requestlist?dataset='+dataset
+    r1=conn.request("GET", there)
+    r2=conn.getresponse()
+    result = json.loads(r2.read())
+    items=result['phedex']['request']
+    res= defaultdict(list)
+    for item in items:
+        for node in item['node']:
+            if site and node['name']!=site: continue
+            if not item['id'] in res[node['name']]:
+                res[node['name']].append(item['id'])
+    for s in res:
+        res[s] = sorted(res[s])
+    return dict(res)
+
+def listCustodial(url, site='T1_*MSS'):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    there = '/phedex/datasvc/json/prod/requestlist?node=%s&decision=pending'%site
+    r1=conn.request("GET", there)
+    r2=conn.getresponse()
+    result = json.loads(r2.read())
+    items=result['phedex']['request']
+    res= defaultdict(list)
+    for item in items:
+        if item['type'] != 'xfer': continue
+        for node in item['node']:
+            if not item['id'] in res[node['name']]:
+                res[node['name']].append(item['id'])
+    for s in res:
+        res[s] = sorted(res[s])
+    return dict(res)
 
 def listDelete(url, user, site=None):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -741,15 +783,21 @@ class siteInfo:
             self.sites_ready = []
             self.sites_not_ready = []
             self.all_sites = []
+            
+            self.sites_banned = ['T2_CH_CERN_HLT','T0_CH_CERN_MSS']
+
             data = dataCache.get('ssb_158') ## 158 is the site readyness metric
             for siteInfo in data:
                 #print siteInfo['Status']
                 self.all_sites.append( siteInfo['VOName'] )
+                if siteInfo['VOName'] in self.sites_banned: continue
                 if not siteInfo['Tier'] in [1,2]: continue
                 if siteInfo['Status'] == 'on': 
                     self.sites_ready.append( siteInfo['VOName'] )
                 else:#if siteInfo['Status'] in ['drain']:
                     self.sites_not_ready.append( siteInfo['VOName'] )
+
+            
         except Exception as e:
             print "issue with getting SSB readiness"
             print str(e)
@@ -807,7 +855,9 @@ class siteInfo:
             self.disk[ self.CE_to_SE(s)]=0
 
         tapes = getNodes('cmsweb.cern.ch', 'MSS')
-        for mss in tapes:  self.storage[mss] = 0
+        for mss in tapes:
+            is mss in self.sites_banned: continue # not using these tapes for MC familly
+            self.storage[mss] = 0
 
         ## and get SSB sync
         self.fetch_ssb_info(talk=False)
