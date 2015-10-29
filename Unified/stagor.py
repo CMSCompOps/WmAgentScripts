@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput, workflowInfo, getDatasetBlocksFraction, findLostBlocks
-from utils import unifiedConfiguration, componentInfo, sendEmail, getSiteWhiteList
+from utils import unifiedConfiguration, componentInfo, sendEmail, getSiteWhiteList, checkTransferLag
 from utils import siteInfo, campaignInfo
 import json
 import sys
