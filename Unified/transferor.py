@@ -77,7 +77,6 @@ def transferor(url ,specific = None, talk=True, options=None):
     print "... done"
 
     all_transfers=defaultdict(list)
-    needing_locks=defaultdict(list)
     workflow_dependencies = defaultdict(set) ## list of wf.id per input dataset
     wfs_and_wfh=[]
     print "getting all wf to consider ..."
@@ -383,8 +382,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                 prim_destination = [site for site in destinations.keys() if not site in prim_location]
                 ## need to take out the transfer veto
                 prim_destination = [site for site in prim_destination if not any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
-                for dsite in prim_destination:
-                    needing_locks[dsite].append( prim )
+
 
                 if len(prim_location) >= copies_needed:
                     print "The output is all fully in place at",len(prim_location),"sites",prim_location
@@ -497,10 +495,6 @@ def transferor(url ,specific = None, talk=True, options=None):
                     subscriptions = listSubscriptions( url ,sec )
                     sec_destination = [site for site in subscriptions] 
 
-                for site in sec_location:
-                    needing_locks[site].append( sec )
-                for site in sec_destination:
-                    needing_locks[site].append( sec )
 
                 sec_to_distribute = [site for site in sites_allowed if not any([osite.startswith(site) for osite in sec_location])]
                 sec_to_distribute = [site for site in sec_to_distribute if not any([osite.startswith(site) for osite in sec_destination])]
@@ -544,12 +538,6 @@ def transferor(url ,specific = None, talk=True, options=None):
             needs_transfer+=1
             passing_along+=1
 
-    print "accumulated locks of dataset in place"
-    print json.dumps(needing_locks, indent=2)
-    #for site,items in needing_locks.items():
-    #    for item in items:
-    #        LI.lock( item, SI.CE_to_SE(site), 'usable input')
-        
     print "accumulated transfers"
     print json.dumps(all_transfers, indent=2)
     fake_id=-1
