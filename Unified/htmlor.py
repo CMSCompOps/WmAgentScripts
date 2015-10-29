@@ -534,7 +534,12 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
         html_doc.write("<li>%s : last %d [s], avg %d [s]</li>\n"%( m, spends[-1], sum(spends)/float(len(spends))))
     html_doc.write("</ul>")
 
-    html_doc.write("Last running <pre>%s</pre>"%( os.popen("tac /afs/cern.ch/user/c/cmst2/www/unified/logs/running | head -5").read() ))
+    html_doc.write("Last running <pre>%s</pre><br>"%( os.popen("tac /afs/cern.ch/user/c/cmst2/www/unified/logs/running | head -5").read() ))
+
+
+    html_doc.write("Order in cycle <pre>%s</pre><br>"%( '\n'.join(map(lambda l : l.split('/')[-1].replace('.py',''), filter(lambda l : not l.startswith('#') and 'Unified' in l and 'py' in l.split('/')[-1], open('/afs/cern.ch/user/v/vlimant/scratch0/ops/central_ops/WmAgentScripts/cycle.sh').read().split('\n')))) ))
+
+
     html_doc.write("</div>\n")
     lap ( 'done with jobs' )
 
@@ -578,12 +583,17 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
         text+="</table></li>"
 
     text += "<li> Sites in auto-approved transfer<ul>"
-    for site in SI.sites_auto_approve:
+    for site in sorted(SI.sites_auto_approve):
         text+="<li>%s"% site
     text += "</ul></li>"
 
     text += "<li> Sites with vetoe transfer<ul>"
-    for site in SI.sites_veto_transfer:
+    for site in sorted(SI.sites_veto_transfer):
+        text+="<li>%s"% site
+    text += "</ul></li>"
+
+    text += "<li> Sites banned from production<ul>"
+    for site in sorted(SI.sites_banned):
         text+="<li>%s"% site
     text += "</ul></li>"
 
