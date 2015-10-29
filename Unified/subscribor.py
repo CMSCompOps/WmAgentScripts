@@ -49,7 +49,7 @@ for iw,wfo in enumerate(wfs):
             print "\t\tshould not subscribe with on-going deletions",out
             continue
         for site,blocks in blocks_at_sites.items():
-            
+            if 'Buffer' in site or 'Export' in site or 'MSS' in site: continue
             all_blocks_at_sites[site].update( blocks )
         print "\t",out
         print "\t\t",len(blocks_at_sites),"sites",sorted(blocks_at_sites.keys()),"with unsubscribed blocks"
@@ -62,8 +62,7 @@ print len(all_blocks_at_sites.keys()),"sites to subscribe things at"
 for site,blocks in all_blocks_at_sites.items():
     if 'Buffer' in site or 'Export' in site or 'MSS' in site: continue
 
-    if not site in done:
-        done[site] = []
+    if not site in done: done[site] = []
     print "Would subscribe",len(blocks),"blocks to",site
     blocks = [block for block in blocks if not block in done[site]]
     print "\tSubscribe",len(blocks),"blocks to",site    
