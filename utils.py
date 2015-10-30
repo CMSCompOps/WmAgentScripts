@@ -856,7 +856,7 @@ class siteInfo:
 
         tapes = getNodes('cmsweb.cern.ch', 'MSS')
         for mss in tapes:
-            is mss in self.sites_banned: continue # not using these tapes for MC familly
+            if mss in self.sites_banned: continue # not using these tapes for MC familly
             self.storage[mss] = 0
 
         ## and get SSB sync
@@ -1454,7 +1454,10 @@ def checkTransferStatus(url, xfer_id, nocollapse=False):
     #print completions
     return completions
 
-def findCustodialLocation(url, dataset):
+def findCustodialCompletion(url, dataset):
+    return findCustodialLocation(url, dataset, True)
+
+def findCustodialLocation(url, dataset, with_completion=False):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset='+dataset)
     r2=conn.getresponse()
@@ -1467,17 +1470,26 @@ def findCustodialLocation(url, dataset):
     cust=[]
     #veto = ["T0_CH_CERN_MSS"]
     veto = []
+    blocks = set()
+    cust_blocks = set()
     for block in request['block']:
+        blocks.add( block['name'] )
         for replica in block['replica']:
             #print replica
-            if replica['custodial']=="y":
+            ## find a replica, custodial and COMPLETED !
+            if replica['custodial']=="y" and (not with_completion or replica['complete']=="y"):
                 if (replica['node'] in veto):
                     #print replica['node']
                     pass
                 else:
                     cust.append(replica['node'])
+                    cust_blocks.add( block['name'] )
 
-    return list(set(cust))
+    ## make sure all known blocks are complete at custodial
+    if with_completion and len(blocks)!=len(cust_blocks):
+        return []
+    else:
+        return list(set(cust))
 
 def getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None, sites=None, only_blocks=None):
     ###count how manytimes a dataset is replicated < 100%: not all blocks > 100% several copies exis

@@ -1,4 +1,4 @@
-from utils import getWorkflows, findCustodialLocation, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration
+from utils import getWorkflows, findCustodialCompletion, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration
 from assignSession import *
 import json
 import os
@@ -67,7 +67,7 @@ for dataset in already_locked-newly_locking:
             (_,dsn,ps,tier) = dataset.split('/')
             unlock = True
             if not tier in tier_no_custodial:
-                custodials = findCustodialLocation(url, dataset)
+                custodials = findCustodialCompletion(url, dataset)
                 if len(custodials) == 0:
                     if not ds_status: ds_status = getDatasetStatus( dataset )
                     print "Can't unlock",dataset,"because it is not custodial yet",ds_status
