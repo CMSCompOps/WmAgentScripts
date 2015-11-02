@@ -6,7 +6,8 @@ import unittest
 import reqMgrClient as reqMgr
 
 url = 'cmsweb-testbed.cern.ch'
-VALID_STATUS =  ["new","assignment-approved","assigned", "acquired", "running-open", "running-closed","rejected","aborted","completed"]
+VALID_STATUS =  ["new","assignment-approved","assigned", "acquired", "running-open", "running-closed","rejected","aborted","completed",
+                 "rejected-archived"]
 VALID_TYPES =  ["MonteCarlo", "ReDigi", "TaskChain", "MonteCarloFromGEN","StepChain"]
 #testwf = "jbadillo_Summer11-T2_IN_TIFRBackfill_151022_113935_4776"
 #testwf = "amaltaro_MonteCarloFromGEN_PNN_Oracle_19Oct2015_v1_151019_112049_1503"
