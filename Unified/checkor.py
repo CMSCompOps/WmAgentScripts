@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, makeReplicaRequest
+from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, makeReplicaRequest, global_SI, getDatasetSize
 from utils import componentInfo, unifiedConfiguration, userLock, duplicateLock
 import phedexClient
 import dbs3Client
@@ -39,7 +39,7 @@ def checkor(url, spec=None, options=None):
     custodials = defaultdict(list) #sites : dataset list
     transfers = defaultdict(list) #sites : dataset list
     invalidations = [] #a list of files
-    SI = siteInfo()
+    SI = global_SI
     CI = campaignInfo()
     mcm = McMClient(dev=False)
 
@@ -77,7 +77,7 @@ def checkor(url, spec=None, options=None):
 
     total_running_time = 5.*60. 
     sleep_time = max(0.5, total_running_time / len(wfs))
-
+    
     for wfo in wfs:
         if spec and not (spec in wfo.name): continue
         time.sleep( sleep_time )
@@ -185,7 +185,7 @@ def checkor(url, spec=None, options=None):
             if lumi_expected:
                 percent_completions[output] = lumi_count / float( lumi_expected )
 
-            fractions_pass[output] = 0.98
+            fractions_pass[output] = 0.95
             c = get_campaign(output, wfi)
             if c in CI.campaigns and 'fractionpass' in CI.campaigns[c]:
                 fractions_pass[output] = CI.campaigns[c]['fractionpass']
@@ -261,6 +261,7 @@ def checkor(url, spec=None, options=None):
 
         vetoed_custodial_tier = UC.get('tiers_with_no_custodial')
         out_worth_checking = [out for out in custodial_locations.keys() if out.split('/')[-1] not in vetoed_custodial_tier]
+        size_worth_checking = sum([getDatasetSize(out)/1023. for out in out_worth_checking ]) ## size in TBs of all outputs
         if not all(map( lambda sites : len(sites)!=0, [custodial_locations[out] for out in out_worth_checking])):
             print wfo.name,"has not all custodial location"
             print json.dumps(custodial_locations, indent=2)
@@ -272,6 +273,10 @@ def checkor(url, spec=None, options=None):
             for output in out_worth_checking:
                 if len(custodial_locations[output]): 
                     custodial = custodial_locations[output][0]
+            if custodial and float(SI.storage[custodial]) < size_worth_checking:
+                print "cannot use the other output custodial:",custodial,"because of limited space"
+                custodial = None
+
             ## try to get it from campaign configuration
             if not custodial:
                 for output in out_worth_checking:
@@ -280,6 +285,10 @@ def checkor(url, spec=None, options=None):
                         custodial = CI.campaigns[campaign]['custodial']
                         print "Setting custodial to",custodial,"from campaign configuration"
                         break
+            if custodial and float(SI.storage[custodial]) < size_worth_checking:
+                print "cannot use the unified configuration custodial:",custodial,"because of limited space"
+                custodial = None
+
             ## get from the parent
             pick_custodial = True
             if not custodial and 'InputDataset' in wfi.request:
@@ -297,11 +306,17 @@ def checkor(url, spec=None, options=None):
                     is_closing = False
                     pick_custodial = False
 
+            if custodial and float(SI.storage[custodial]) < size_worth_checking:
+                print "cannot use the parent custodial:",custodial,"because of limited space"
+                custodial = None
+
             if not custodial and pick_custodial:
                 ## pick one at random
-                custodial = SI.pick_SE()
+                custodial = SI.pick_SE(size=size_worth_checking)
 
             if custodial and ((not sub_assistance and not acdc) or by_pass_checks):
+                ## remember how much you added this round already ; this stays locally
+                SI.storage[custodial] -= size_worth_checking
                 ## register the custodial request, if there are no other big issues
                 for output in out_worth_checking:
                     if not len(custodial_locations[output]):
@@ -311,6 +326,8 @@ def checkor(url, spec=None, options=None):
                             print "no file in phedex for",output," not good to add to custodial requests"
             else:
                 print "cannot find a custodial for",wfo.name
+                sendEmail( "cannot find a custodial","cannot find a custodial for %s probably because of the total output size %d"%( wfo.name, size_worth_checking))
+
             is_closing = False
 
         ## disk copy 

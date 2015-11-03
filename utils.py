@@ -718,6 +718,14 @@ class docCache:
             'cachefile' : None,
             'default' : ""
             }
+        self.cache['mss_usage'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration(),
+            'getter' : lambda : json.loads( os.popen('curl http://cmsmonitoring.web.cern.ch/cmsmonitoring/StorageOverview/latest/StorageOverview.json').read()),
+            'cachefile' : None,
+            'default' : {}
+            }
 
         #create the cache files from the labels
         for src in self.cache:
@@ -863,11 +871,14 @@ class siteInfo:
         self.fetch_ssb_info(talk=False)
         
 
+        mss_usage = dataCache.get('mss_usage')
         for mss in self.storage:
-            used = dataCache.get(mss+'_usage')
+            #used = dataCache.get(mss+'_usage')
             #print mss,'used',used
-            if used == None: self.storage[mss] = 0
-            else:  self.storage[mss] = max(0, self.storage[mss]-used)
+            #if used == None: self.storage[mss] = 0
+            #else:  self.storage[mss] = max(0, self.storage[mss]-used)
+            if not mss in mss_usage['Tape']['Free']: self.storage[mss] = 0 
+            else: self.storage[mss]  = mss_usage['Tape']['Free'][mss]
 
         ## and detox info
         self.fetch_detox_info(talk=False)
@@ -1045,8 +1056,8 @@ class siteInfo:
             #    if info['UsedTape'] and self.storage[tsite] < info['FreeTape']:
             #        if talk: print tsite,"could use",info['FreeTape'],"instead of",self.storage[tsite],"for tape"
             #        self.storage[tsite] = int(info['FreeTape'])
-            if 'PledgeTape' in info and tsite in self.storage:
-                 self.storage[tsite] = int(info['PledgeTape'])
+            #if 'PledgeTape' in info and tsite in self.storage:
+            #     self.storage[tsite] = int(info['PledgeTape'])
 
 
     def types(self):
@@ -1070,8 +1081,11 @@ class siteInfo:
         else:
             return se
 
-    def pick_SE(self, sites=None):
-        return self._pick(sites, self.storage)
+    def pick_SE(self, sites=None, size=None): ## size needs to be in TB
+        if size:
+            return self._pick(sites, dict([(se,free) for (se,free) in self.storage.items() if free>size]))
+        else:
+            return self._pick(sites, self.storage)
 
     def pick_dSE(self, sites=None):
         return self._pick(sites, self.disk, and_fail=True)
