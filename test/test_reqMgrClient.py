@@ -1,17 +1,20 @@
 #!/usr/bin/python
 """
-    Unit tests for WmAgentScripts changes to reqmr2
+    Unit tests for WmAgentScripts/reqMgrClient.py
 """
 import unittest
+import sys
+sys.path.append("../")
 import reqMgrClient as reqMgr
 
-url = 'cmsweb-testbed.cern.ch'
 VALID_STATUS =  ["new","assignment-approved","assigned", "acquired", "running-open", "running-closed","rejected","aborted","completed",
                  "rejected-archived"]
 VALID_TYPES =  ["MonteCarlo", "ReDigi", "TaskChain", "MonteCarloFromGEN","StepChain"]
-#testwf = "jbadillo_Summer11-T2_IN_TIFRBackfill_151022_113935_4776"
+
+url = 'cmsweb-testbed.cern.ch'
+#testwf = "jbadillo_RunIIWinter15GS-001-T2_CH_CERN_T0Backfill_150527_153801_6417"
+testwf = "jbadillo_Summer11-T2_IN_TIFRBackfill_151022_113935_4776"
 #testwf = "amaltaro_MonteCarloFromGEN_PNN_Oracle_19Oct2015_v1_151019_112049_1503"
-testwf = "jbadillo_RunIIWinter15GS-001-T2_CH_CERN_T0Backfill_150527_153801_6417"
     
 # TODO load a wf with input
 

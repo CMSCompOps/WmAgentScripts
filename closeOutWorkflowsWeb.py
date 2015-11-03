@@ -31,29 +31,33 @@ def closeOutReRecoWorkflowsWeb(url, workflows, output):
     """
     noSiteWorkflows = []
     for wf in workflows:
-        if 'RelVal' in wf:
-            continue
-        if 'TEST' in wf:
-            continue
-        
-        #first validate if effectively is completed
-        workflow = reqMgrClient.ReReco(wf)
-        if workflow.status != 'completed':
-            continue
-        #closeout workflow, checking percentage equalst 100%
-        result = validateClosingWorkflow(url, workflow, closePercentage=1.0, 
-            checkEqual=True, checkDuplicates=False)
-        printResult(result)
-        printResultWeb(result, output)
-        if result['closeOutWorkflow']:
-            reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
-        #populate the list without subs
-        missingSubs = True
-        for (ds,info) in result['datasets'].items():
-            missingSubs &= info['missingSubs']
-        #if all missing subscriptions, subscribe all
-        if missingSubs:
-            noSiteWorkflows.append(workflow)
+        try:
+            if 'RelVal' in wf:
+                continue
+            if 'TEST' in wf:
+                continue
+            
+            #first validate if effectively is completed
+            workflow = reqMgrClient.ReReco(wf)
+            if workflow.status != 'completed':
+                continue
+            #closeout workflow, checking percentage equalst 100%
+            result = validateClosingWorkflow(url, workflow, closePercentage=1.0, 
+                checkEqual=True, checkDuplicates=False)
+            printResult(result)
+            printResultWeb(result, output)
+            #if result['closeOutWorkflow']:
+            # TODO 
+            #    reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
+            #populate the list without subs
+            missingSubs = True
+            for (ds,info) in result['datasets'].items():
+                missingSubs &= info['missingSubs']
+            #if all missing subscriptions, subscribe all
+            if missingSubs:
+                noSiteWorkflows.append(workflow)
+        except Exception as e:
+            print wf, e
     print '-'*180
     return noSiteWorkflows
 
@@ -270,7 +274,7 @@ def listWorkflowsWeb(workflows, output):
 def listSubscriptionsWeb(subs, output):
     listSubscriptions(subs)
     for ds, site in subs:
-       output.write('<tr><td>%s</td><td>%s</td></tr>\n'%(ds,site))
+        output.write('<tr><td>%s</td><td>%s</td></tr>\n'%(ds,site))
     output.write('<tr><td></td></tr>\n')
 
 
@@ -293,6 +297,7 @@ def main():
     workflowsCompleted['NoSite-ReReco'] = noSiteWorkflows
     printTableFooterWeb('ReReco', output)
     
+    """
     printTableHeaderWeb('ReDigi', output)
     noSiteWorkflows = closeOutRedigiWorkflowsWeb(url, workflowsCompleted['ReDigi'], output)
     workflowsCompleted['NoSite-ReDigi'] = noSiteWorkflows
@@ -322,14 +327,17 @@ def main():
     noSiteWorkflows = closeOutStoreResultsWorkflowsWeb(url, workflowsCompleted['StoreResults'], output)
     workflowsCompleted['NoSite-StoreResults'] = noSiteWorkflows
     printTableFooterWeb('StoreResults', output)
-
+    """
+    
     print "MC Workflows for which couldn't find Custodial Tier1 Site"
 
+    
     output.write("<hr></hr>"
                 "<h3>Datasets without subscriptions</h3>")
     output.write("<table border=1> <tr><th>Workfow</th><th>dataset</th></tr>")
-
+    
     listWorkflowsWeb(workflowsCompleted['NoSite-ReReco'], output)
+    """
     listWorkflowsWeb(workflowsCompleted['NoSite-ReDigi'], output)
 
     listWorkflowsWeb(workflowsCompleted['NoSite-MonteCarlo'], output)
@@ -349,6 +357,7 @@ def main():
 
     listWorkflowsWeb(workflowsCompleted['NoSite-LHEStepZero'], output)
     listWorkflowsWeb(workflowsCompleted['NoSite-StoreResults'], output)
+    """
     output.write('</table>')
     output.write(foot%time.strftime("%c"))
     output.close()
