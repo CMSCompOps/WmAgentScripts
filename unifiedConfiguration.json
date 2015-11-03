@@ -1,6 +1,6 @@
 {
  "tiers_with_no_custodial": {
-   "value" : ["MINIAODSIM","MINIAOD","DQM","DQMIO"],
+   "value" : ["DQM","DQMIO"],
    "description": "The data tiers that do not go to tape"
  },
  "stagor_sends_back": {
