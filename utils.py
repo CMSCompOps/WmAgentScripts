@@ -217,7 +217,7 @@ class newLockInfo:
         os.system('echo `date` > /afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.lock')
 
     def __del__(self):
-        open('/afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.new','w').write(json.dumps( list(set(self.db)) , indent=2 ))
+        open('/afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.new','w').write(json.dumps( sorted(list(set(self.db))) , indent=2 ))
         os.system('mv /afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.new /afs/cern.ch/user/c/cmst2/www/unified/globallocks.json')
         os.system('rm -f /afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.lock')
 
@@ -1632,6 +1632,8 @@ def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=N
         sites_destinations = []
         for req in item['node']:
             if within_sites and not req['name'] in within_sites: continue
+            if req['decision'] != 'approved' : continue
+            if not req['time_decided']: continue
             if req['name'] in deletes and int(req['time_decided'])< deletes[req['name']]:
                 ## this request is void by now
                 continue
@@ -2183,44 +2185,49 @@ def getPrepIDs(wl):
 
 class workflowInfo:
     def __init__(self, url, workflow, deprecated=False, spec=True, request=None,stats=False):
-        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+        self.url = url
+        self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         self.deprecated_request = {}
         if deprecated:
-            r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
-            r2=conn.getresponse()
+            r1=self.conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
+            r2=self.conn.getresponse()
             self.deprecated_request = json.loads(r2.read())
         if request == None:
-            r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/'+workflow)
-            r2=conn.getresponse()
+            r1=self.conn.request("GET",'/couchdb/reqmgr_workload_cache/'+workflow)
+            r2=self.conn.getresponse()
             self.request = json.loads(r2.read())
         else:
             self.request = copy.deepcopy( request )
+
+        self.full_spec=None
         if spec:
-            r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/%s/spec'%workflow)
-            r2=conn.getresponse()
-            self.full_spec = pickle.loads(r2.read())
+            self.get_spec()
 
         if stats:
-            r1=conn.request("GET",'/wmstatsserver/data/request/%s'%workflow)
-            r2=conn.getresponse()
+            r1=self.conn.request("GET",'/wmstatsserver/data/request/%s'%workflow)
+            r2=self.conn.getresponse()
             self.wmstats = r2.read()#json.loads(r2.read())
-        self.url = url
+
+    def get_spec(self):
+        if not self.full_spec:
+            r1=self.conn.request("GET",'/couchdb/reqmgr_workload_cache/%s/spec'%self.request['RequestName'])
+            r2=self.conn.getresponse()
+            self.full_spec = pickle.loads(r2.read())
+        return self.full_spec
 
     def getWorkQueue(self):
-        conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-        r1=conn.request("GET",'/couchdb/workqueue/_design/WorkQueue/_view/elementsByParent?key="%s"&include_docs=true'% self.request['RequestName'])
-        r2=conn.getresponse()
+        r1=self.conn.request("GET",'/couchdb/workqueue/_design/WorkQueue/_view/elementsByParent?key="%s"&include_docs=true'% self.request['RequestName'])
+        r2=self.conn.getresponse()
         self.workqueue = list([d['doc'] for d in json.loads(r2.read())['rows']])
         
     def getSummary(self):
-        conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-        r1=conn.request("GET",'/couchdb/workloadsummary/'+self.request['RequestName'])
-        r2=conn.getresponse()
+        r1=self.conn.request("GET",'/couchdb/workloadsummary/'+self.request['RequestName'])
+        r2=self.conn.getresponse()
         
         self.summary = json.loads(r2.read())
         
     def _tasks(self):
-        return self.full_spec.tasks.tasklist
+        return self.get_spec().tasks.tasklist
 
     def firstTask(self):
         return self._tasks()[0]
@@ -2319,7 +2326,80 @@ class workflowInfo:
             print "cannot compute system time for",self.request['RequestName']
             return 0
 
+    def getBlowupFactors(self):
+        if self.request['RequestType']=='TaskChain':
+            min_child_job_per_event=None
+            root_job_per_event=None
+            max_blow_up=0
+            splits = self.getSplittings()
+            for task in splits:
+                c_size=None
+                p_size=None
+                t=task['splittingTask']
+                for k in ['events_per_job','avg_events_per_job']:
+                    if k in task: c_size = task[k]
+                parents = filter(lambda o : t.startswith(o['splittingTask']) and t!=o['splittingTask'], splits)
+                if parents:
+                    for parent in parents:
+                        for k in ['events_per_job','avg_events_per_job']:
+                            if k in parent: p_size = parent[k]
+
+                        print parent['splittingTask'],"is parent of",t
+                        print p_size,c_size
+                        if not min_child_job_per_event or min_child_job_per_event > c_size:
+                            min_child_job_per_event = c_size
+                else:
+                    root_job_per_event = c_size
+                    
+                if c_size and p_size:
+                    blow_up = float(p_size)/ c_size
+                    print "parent jobs",p_size,"compared to my size",c_size
+                    print blow_up
+                    if blow_up > max_blow_up:
+                        max_blow_up = blow_up
+            return (min_child_job_per_event, root_job_per_event, max_blow_up)    
+        return (1.,1.,1.)
+    def getSiteWhiteList( self, pickone=False):
+        ### this is not used yet, but should replace most
+        SI = global_SI
+        (lheinput,primary,parent,secondary) = self.getIO()
+        sites_allowed=[]
+        if lheinput:
+            sites_allowed = ['T2_CH_CERN'] ## and that's it                                                                                                                                   
+        elif secondary:
+            sites_allowed = list(set(SI.sites_T1s + SI.sites_with_goodIO))
+        elif primary:
+            sites_allowed =list(set( SI.sites_T1s + SI.sites_T2s ))
+        else:
+            # no input at all
+            sites_allowed =list(set( SI.sites_T2s + SI.sites_T1s))
+
+        if pickone:
+            sites_allowed = [SI.pick_CE( sites_allowed )]
+            
+        # do further restrictions based on memory
+        # do further restrictions based on blow-up factor
+        (min_child_job_per_event, root_job_per_event, max_blow_up) = self.getBlowupFactors()
+        if max_blow_up > 5.:
+            ## then restrict to only sites with >4k slots
+            print "restricting site white list because of blow-up factor",min_child_job_per_event, root_job_per_event, max_blow_up
+            sites_allowed = [site for site in sites_allowed if SI.cpu_pledges[site] > 4000]
+
+
+        return (lheinput,primary,parent,secondary,sites_allowed)
+
     def checkWorkflowSplitting( self ):
+        if self.request['RequestType']=='TaskChain':
+            (min_child_job_per_event, root_job_per_event, max_blow_up) = self.getBlowupFactors()
+            if min_child_job_per_event and max_blow_up>2.:
+                print min_child_job_per_event,"should be the best non exploding split"
+                print "to be set instead of",root_job_per_event
+                setting_to = min_child_job_per_event*1.5
+                print "using",setting_to
+                print "Not setting anything yet, just informing about this"
+                return True
+                #return {'EventsPerJob': setting_to }
+            return True
         ## this isn't functioning for taskchain BTW
         if 'InputDataset' in self.request:
             average = getDatasetEventsPerLumi(self.request['InputDataset'])
@@ -2338,11 +2418,11 @@ class workflowInfo:
                 if average > events_per_job:
                     ## need to do something
                     print "This is going to fail",average,"in and requiring",events_per_job
-                    return False
+                    return {'SplittingAlgorithm': 'EventBased'}
         return True
 
     def getSchema(self):
-        new_schema = copy.deepcopy( self.full_spec.request.schema.dictionary_())
+        new_schema = copy.deepcopy( self.get_spec().request.schema.dictionary_())
         ## put in the era accordingly ## although this could be done in re-assignment
         ## take care of the splitting specifications ## although this could be done in re-assignment
         for (k,v) in new_schema.items():
@@ -2368,7 +2448,7 @@ class workflowInfo:
     def getAllTasks(self, select=None):
         all_tasks = []
         for task in self._tasks():
-            ts = getattr(self.full_spec.tasks, task)
+            ts = getattr(self.get_spec().tasks, task)
             all_tasks.extend( self._taskDescending( ts, select ) )
         return all_tasks
 

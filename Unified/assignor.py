@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 import reqMgrClient
-from utils import workflowInfo, campaignInfo, siteInfo, userLock
+from utils import workflowInfo, campaignInfo, siteInfo, userLock, global_SI
 from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction, getDatasetEventsPerLumi, newLockInfo
 from utils import componentInfo, sendEmail
 #from utils import lockInfo
@@ -21,7 +21,7 @@ def assignor(url ,specific = None, talk=True, options=None):
     if not componentInfo().check(): return
 
     CI = campaignInfo()
-    SI = siteInfo()
+    SI = global_SI
     #LI = lockInfo()
     NLI = newLockInfo()
 
@@ -73,8 +73,9 @@ def assignor(url ,specific = None, talk=True, options=None):
                 n_stalled+=1
                 continue
 
-        (lheinput,primary,parent,secondary) = wfh.getIO()
-        sites_allowed = getSiteWhiteList( (lheinput,primary,parent,secondary) )
+        #(lheinput,primary,parent,secondary) = wfh.getIO()
+        #sites_allowed = getSiteWhiteList( (lheinput,primary,parent,secondary) )
+        (lheinput,primary,parent,secondary, sites_allowed) = wfh.getSiteWhiteList()
 
         print "Site white list",sorted(sites_allowed)
 
@@ -283,14 +284,15 @@ def assignor(url ,specific = None, talk=True, options=None):
         if not options.test:
             parameters['execute'] = True
 
-        if not wfh.checkWorkflowSplitting():
-            print "Falling back to event splitting."
-            parameters['SplittingAlgorithm'] = 'EventBased'
-            sendEmail("Fallback to EventBased","the workflow %s is too heavy to be processed as it is. Fallback to EventBased splitting"%wfo.name)
-            ## needs to go to event based ? fail for now
-            #print "Falling back to event splitting ?"
-            #sendEmail("Cannot assign","the workflow %s is too heavy to be processed as it is. Could fallback to EventBased splitting"%wfo.name)
-            #continue
+        split_check = wfh.checkWorkflowSplitting()
+        if split_check!=True:
+            parameters.update( split_check )
+            if 'EventBased' in split_check.values():
+                print "Falling back to event splitting."
+                sendEmail("Fallback to EventBased","the workflow %s is too heavy to be processed as it is. Fallback to EventBased splitting"%wfo.name)
+            elif 'EventsPerJob' in split_check.values():
+                print "Modifying the number of job per event"
+                sendEmail("Modifying the job per events","the workflow %s is too heavy in number of jobs explosion"%wfo.name)
 
         # Handle run-dependent MC
         pstring = wfh.processingString()

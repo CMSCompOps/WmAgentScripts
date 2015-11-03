@@ -3,7 +3,7 @@ from assignSession import *
 import reqMgrClient
 from McMClient import McMClient
 from utils import makeReplicaRequest
-from utils import workflowInfo, siteInfo, campaignInfo, userLock
+from utils import workflowInfo, siteInfo, campaignInfo, userLock, global_SI
 from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, getSiteWhiteList, approveSubscription, getDatasetSize, updateSubscription, getWorkflows, componentInfo, getDatasetDestinations, getDatasetBlocks
 from utils import unifiedConfiguration
 #from utils import lockInfo
@@ -45,7 +45,7 @@ def transferor(url ,specific = None, talk=True, options=None):
     else:
         execute = True
 
-    SI = siteInfo()
+    SI = global_SI
     CI = campaignInfo()
     #LI = lockInfo()
     NLI = newLockInfo()
@@ -101,8 +101,9 @@ def transferor(url ,specific = None, talk=True, options=None):
     print "getting all wf in staging ..."
     for wfo in session.query(Workflow).filter(Workflow.status=='staging').all():
         wfh = workflowInfo( url, wfo.name, spec=False)
-        (lheinput,primary,parent,secondary) = wfh.getIO()
-        sites_allowed = getSiteWhiteList( (lheinput,primary,parent,secondary) )
+        #(lheinput,primary,parent,secondary) = wfh.getIO()
+        #sites_allowed = getSiteWhiteList( (lheinput,primary,parent,secondary) )
+        (lheinput,primary,parent,secondary,sites_allowed) = wfh.getSiteWhiteList()
         for site in sites_allowed: ## we should get the actual transfer destination instead of the full white list
             transfers_per_sites[site] += 1 
         #input_cput[wfo.name] = wfh.getComputingTime()
@@ -264,15 +265,16 @@ def transferor(url ,specific = None, talk=True, options=None):
                 if not options.go: continue
 
 
-        (lheinput,primary,parent,secondary) = wfh.getIO()
+        #(lheinput,primary,parent,secondary) = wfh.getIO()
+        (lheinput,primary,parent,secondary,sites_allowed) = wfh.getSiteWhiteList()
+        if options and options.tosites:
+            sites_allowed = options.tosites.split(',')
+        #else:
+        #    sites_allowed = getSiteWhiteList( (lheinput,primary,parent,secondary) )
+
         for dataset in list(primary)+list(parent)+list(secondary):
             ## lock everything flat
             NLI.lock( dataset )
-
-        if options and options.tosites:
-            sites_allowed = options.tosites.split(',')
-        else:
-            sites_allowed = getSiteWhiteList( (lheinput,primary,parent,secondary) )
 
         if 'SiteWhitelist' in CI.parameters(wfh.request['Campaign']):
             sites_allowed = CI.parameters(wfh.request['Campaign'])['SiteWhitelist']
