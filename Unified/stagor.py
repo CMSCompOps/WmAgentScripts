@@ -2,7 +2,7 @@
 from assignSession import *
 from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput, workflowInfo, getDatasetBlocksFraction, findLostBlocks
 from utils import unifiedConfiguration, componentInfo, sendEmail, getSiteWhiteList, checkTransferLag
-from utils import siteInfo, campaignInfo
+from utils import siteInfo, campaignInfo, global_SI
 import json
 import sys
 import itertools
@@ -14,7 +14,7 @@ from collections import defaultdict
 def stagor(url,specific =None, options=None):
     
     if not componentInfo().check(): return
-    SI = siteInfo()
+    SI = global_SI
     CI = campaignInfo()
     UC = unifiedConfiguration()
 
@@ -269,12 +269,12 @@ def stagor(url,specific =None, options=None):
     print "\n"*2
 
     ## create tickets right away ?
-    report+="bad sources "+",".join(bad_sources.keys())+"\n"
+    report+="\nbad sources "+",".join(bad_sources.keys())+"\n"
     for site,blocks in bad_sources.items():
-        report+="\n%s:\n"%site+"\n\t".join(['']+blocks)
-    report+="bad destinations "+",".join(bad_destinations.keys())+"\n"
+        report+="\n\n%s:"%site+"\n\t".join(['']+blocks)
+    report+="\nbad destinations "+",".join(bad_destinations.keys())+"\n"
     for site,blocks in bad_destinations.items():
-        report+="\n%s:\n"%site+"\n\t".join(['']+blocks)
+        report+="\n\n%s:"%site+"\n\t".join(['']+blocks)
 
     print report
 
