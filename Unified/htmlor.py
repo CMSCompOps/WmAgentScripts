@@ -537,7 +537,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     html_doc.write("Last running <pre>%s</pre><br>"%( os.popen("tac /afs/cern.ch/user/c/cmst2/www/unified/logs/running | head -5").read() ))
 
 
-    html_doc.write("Order in cycle <pre>%s</pre><br>"%( '\n'.join(map(lambda l : l.split('/')[-1].replace('.py',''), filter(lambda l : not l.startswith('#') and 'Unified' in l and 'py' in l.split('/')[-1], open('/afs/cern.ch/user/v/vlimant/scratch0/ops/central_ops/WmAgentScripts/cycle.sh').read().split('\n')))) ))
+    html_doc.write("Order in cycle <pre>%s</pre><br>"%( '\n'.join(map(lambda l : l.split('/')[-1].replace('.py',''), filter(lambda l : not l.startswith('#') and 'Unified' in l and 'py' in l.split('/')[-1], open('/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cycle.sh').read().split('\n')))) ))
 
 
     html_doc.write("</div>\n")
