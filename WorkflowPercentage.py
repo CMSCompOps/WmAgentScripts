@@ -38,7 +38,7 @@ def percentageCompletion(url, workflow, verbose=False, checkLumis=False, checkFi
     for dataset in workflow.outputDatasets:
         # output events/lumis
         if checkLumis:
-            outputEvents = workflow.getOutputLumis(dataset)
+            outputEvents = workflow.getOutputLumis(dataset, skipInvalid)
         else:
             outputEvents = workflow.getOutputEvents(dataset, skipInvalid)
         if not outputEvents:

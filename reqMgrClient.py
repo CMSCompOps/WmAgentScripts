@@ -97,13 +97,13 @@ class Workflow:
             events = self.outEvents[ds]
         return events
 
-    def getOutputLumis(self, ds):
+    def getOutputLumis(self, ds, skipInvalid=False):
         """
         Gets the numer of lumis in an output dataset
         """
         #We store the events to avoid checking them twice
         if ds not in self.outLumis:
-            lumis = dbs3.getLumiCountDataSet(ds)
+            lumis = dbs3.getLumiCountDataSet(ds, skipInvalid)
             self.outLumis[ds] = lumis
         else:
             lumis = self.outLumis[ds]
@@ -718,13 +718,13 @@ def getFilterEfficiency(url, workflow, task=None):
             return None
 
 
-def getOutputLumis(url, workflow, dataset):
+def getOutputLumis(url, workflow, dataset, skipInvalid=False):
     """
     Gets the output lumis depending on the type
     of the request
     """
     # request = getWorkflowInfo(url, workflow)
-    return dbs3.getLumiCountDataSet(dataset)
+    return dbs3.getLumiCountDataSet(dataset, skipInvalid)
     
 def assignWorkflow(url, workflowname, team, parameters ):
     #local import so it doesn't screw with all other stuff
