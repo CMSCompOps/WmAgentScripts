@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from assignSession import *
 from utils import workflowInfo, getDatasetBlockAndSite, getWorkLoad, makeReplicaRequest, sendEmail, getDatasetOnGoingDeletion
 import json
@@ -69,6 +70,6 @@ for site,blocks in all_blocks_at_sites.items():
     done[site].extend( blocks )
     if blocks:
         print makeReplicaRequest(url, site, list(blocks), "Production blocks", priority="low", approve=True,mail=False)
-        pass
+        time.sleep(1)
 
 open('myblock_done.json','w').write( json.dumps( done, indent=2 ))
