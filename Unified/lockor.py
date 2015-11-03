@@ -88,8 +88,21 @@ for dataset in already_locked-newly_locking:
         print "Error in checking unlockability. relocking",dataset
         print str(e)
         newly_locking.add(dataset)
+
+
+
+## then for all that would have been invalidated from the past, check whether you can unlock the wf based on output
+for wfo in session.query(Workflow).filter(Workflow.status=='forget').all():
+    wfi = workflowInfo(url, wfo.name)
+    if all([o not in newly_locking for o in wfi.request['OutputDatasets']]) and not 'unlock' in wfo.status:
+        wfo.status +='-unlock'
+        print "then setting",wfo.name,"to",wfo.status
+    session.commit()
+
+
+        
             
-open('/afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.new','w').write( json.dumps( list(newly_locking), indent=2))
+open('/afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.new','w').write( json.dumps( sorted(list(newly_locking)), indent=2))
 os.system('mv /afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.new /afs/cern.ch/user/c/cmst2/www/unified/globallocks.json')
 
 
