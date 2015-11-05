@@ -99,8 +99,8 @@ def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lf
               #"MaxRSS": 3772000,
               "MaxRSS": 2294967,
               "MaxVSize": 20294967,
-              "AcquisitionEra": era,
-              "ProcessingString": procstr,
+              # "AcquisitionEra": era,
+              # "ProcessingString": procstr,
               "ProcessingVersion": procver,
               "Dashboard": activity,
               # when we want to use xrootd to readin input files
