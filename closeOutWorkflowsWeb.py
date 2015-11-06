@@ -229,7 +229,7 @@ def printResultWeb(result, output):
     for dsname, ds in result['datasets'].items():
         row = '<tr><td><a name="%s">%s</a></td>'+('<td>%s</td>'*9)+'</tr>\n'
         output.write( row % (result["name"], result["name"], dsname,
-            "%.1f"%(ds["percentage"]*100),
+            "%.3f"%(ds["percentage"]*100),
             "?" if ds["duplicate"] is None else ds["duplicate"],
             "?" if ds["correctLumis"] is None else ds["correctLumis"],
             ','.join(ds["phedexReqs"]) if ds["phedexReqs"] else str(ds["phedexReqs"]),
