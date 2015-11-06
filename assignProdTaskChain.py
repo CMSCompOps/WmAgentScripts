@@ -120,6 +120,12 @@ def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lf
               "GracePeriod": 1000,
               "checkbox" + workflow: "checked"}
 
+    # if era is None, leave it out of the json
+    if era is not None:
+        params["AcquisitionEra"] = era
+    if procstr is not None:
+        params["ProcessingString"] = procstr
+
     # if replica we add NonCustodial sites
     if replica:
         params["NonCustodialSites"] = getRandomDiskSite(),
