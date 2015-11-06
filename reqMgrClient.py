@@ -52,8 +52,8 @@ class Workflow:
         else:
             self.outputDatasets = outputdatasetsWorkflow(url, name)
 
-        if 'Teams' in self.info and len(self.info['Teams']) > 0 :
-            self.team = self.info['Teams'][0]
+        if 'teams' in self.info and len(self.info['teams']) > 0 :
+            self.team = self.info['teams'][0]
         else:
             self.team = 'NoTeam'
         if 'FilterEfficiency' in self.info:
@@ -97,25 +97,25 @@ class Workflow:
             events = self.outEvents[ds]
         return events
 
-    def getOutputLumis(self, ds, skipInvalid=False):
+    def getOutputLumis(self, ds):
         """
         Gets the numer of lumis in an output dataset
         """
         #We store the events to avoid checking them twice
         if ds not in self.outLumis:
-            lumis = dbs3.getLumiCountDataSet(ds, skipInvalid)
+            lumis = dbs3.getLumiCountDataSet(ds)
             self.outLumis[ds] = lumis
         else:
             lumis = self.outLumis[ds]
         return lumis
 
-    def percentageCompletion(self, ds, skipInvalid=False):
+    def percentageCompletion(self, ds):
         """
-        Calculates Percentage of lumis produced for a given workflow
+        Calculates Percentage of events produced for a given workflow
         taking a particular output dataset
         """
-        inputEvents = self.getInputLumis()
-        outputEvents = self.getOutputLumis(ds, skipInvalid)
+        inputEvents = self.getInputEvents()
+        outputEvents = self.getOutputEvents(ds)
         if inputEvents == 0:
             return 0
         if not outputEvents:
@@ -199,22 +199,14 @@ class WorkflowWithInput(Workflow):
             #if not, an empty list will do        
             else:
                 self.info[li]=[]
-        self.inputLumisFromDset = None
     
-    def percentageCompletion(self, ds, skipInvalid=False, checkInput=False):
+    def percentageCompletion(self, ds):
         """
-        Calculates the percentage of completion based on lumis
-        if checkInput=True, the ammount of lumis is taken from the input
-        dataset (take into account the white/blacklist are not calculated
+        Corrects with filter efficiency
         """
-        
-        inputEvents = self.getInputLumis(checkInput=checkInput)
-        outputEvents = self.getOutputLumis(ds, skipInvalid)
-        if inputEvents == 0:
-            return 0
-        if not outputEvents:
-            return 0
-        perc = outputEvents/float(inputEvents)
+        perc = Workflow.percentageCompletion(self, ds)
+        if 'FilterEfficiency' in self.info:
+            perc /= self.filterEfficiency
         return perc
 
     def getInputLumis(self, checkList = False, checkInput=False):
@@ -319,15 +311,14 @@ def requestManagerGet(url, request, retries=4):
     """
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
                                             key_file = os.getenv('X509_USER_PROXY'))
-    headers = {"Accept": "application/json"}
-    r1=conn.request("GET",request, headers=headers)
+    r1=conn.request("GET",request)
     r2=conn.getresponse()
     request = json.loads(r2.read())  
     #try until no exception
     while 'exception' in request and retries > 0:
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
                                                 key_file = os.getenv('X509_USER_PROXY'))
-        r1=conn.request("GET",request, headers=headers)
+        r1=conn.request("GET",request)
         r2=conn.getresponse()
         request = json.loads(r2.read())
         retries-=1
@@ -361,30 +352,6 @@ def requestManagerPost(url, request, params, head = def_headers, nested=False):
     conn.close()
     return data
 
-def _put(url, request, params, head = def_headers):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
-                                    key_file = os.getenv('X509_USER_PROXY'))
-    headers = head
-    encodedParams = urllib.urlencode(params)
-    conn.request("PUT", request, encodedParams, headers)
-    response = conn.getresponse()
-    data = response.read()
-    conn.close()
-    return data
-
-def _convertToReqMgr2PUTRequest(request, params):
-    
-    if request ==  "/reqmgr/reqMgr/clone/":
-        cRequest = "/reqmgr2/data/request"
-        return cRequest, params
-    else:
-        cRequest = "/reqmgr2/data/request/%s" % params["requestName"]
-        cParams = {}
-        cParams["RequestStatus"] = params["status"]
-        if "cascade" in params:
-            cParams["cascade"] = params["cascade"]
-        return cRequest, cParams
-
 def requestManagerPut(url, request, params, head = def_headers):
     """
     Performs some operation on ReqMgr through
@@ -394,19 +361,15 @@ def requestManagerPut(url, request, params, head = def_headers):
     params: a dict with the PUT parameters
     head: optional headers param. If not given it takes default value (def_headers)
     """
-    try:
-        return _put(url, request, params, head)
-    except httplib.HTTPException as ex:
-        # If we get an HTTPException of 404 means reqmgr2 request
-        if ex.status == 404:
-            # try reqmgr2 call
-            print "%s : reqmgr2 request: %s" % (request, str(ex))
-            cRequest, cParams = _convertToReqMgr2PUTRequest(request, params)
-            return _put(url, cRequest, cParams, head)
-        
-        raise ex
-
-
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
+                                    key_file = os.getenv('X509_USER_PROXY'))
+    headers = head
+    encodedParams = urllib.urlencode(params)
+    conn.request("PUT", request, encodedParams, headers)
+    response = conn.getresponse()
+    data = response.read()
+    conn.close()
+    return data
 
 def getWorkflowWorkload(url, workflow, retries=4):
     """
@@ -436,8 +399,8 @@ def getWorkflowInfo(url, workflow):
     """
     Retrieves workflow information
     """
-    request = requestManagerGet(url,'/reqmgr2/data/request?name='+workflow)
-    return request['result'][0][workflow]
+    request = requestManagerGet(url,'/reqmgr/reqMgr/request?requestName='+workflow)
+    return request
 
 def getWorkloadCache(url, workflow):
     """
@@ -497,21 +460,7 @@ def outputdatasetsWorkflow(url, workflow):
     """
     returns the output datasets for a given workfow
     """
-    request = requestManagerGet(url,'/reqmgr2/data/request?name='+workflow)['result'][0][workflow]
-    datasets = []
-    if "OutputDatasets" in request:
-        datasets.extend(request['OutputDatasets'])
-        
-    if "TaskChain" in request:
-        for num in range(request['TaskChain']):
-            if"OutputDatasets" in request["Task%i" % (num+1)]:
-                datasets.extend(request['OutputDatasets'])
-    
-    if "StepChain" in request:
-        for num in range(request['StepChain']):
-            if "OutputDatasets" in request["Step%i" % (num+1)]:
-                datasets.extend(request['OutputDatasets'])
-    
+    datasets = requestManagerGet(url,'/reqmgr/reqMgr/outputDatasetsByRequestName?requestName='+workflow)
     return datasets
 
 def getRequestTeam(url, workflow):
@@ -519,9 +468,9 @@ def getRequestTeam(url, workflow):
     Retrieves the team on which the wf is assigned
     """
     request = getWorkflowInfo(url,workflow)
-    if 'Teams' not in request:
+    if 'teams' not in request:
         return 'NoTeam'
-    teams = request['Teams']
+    teams = request['teams']
     if len(teams)<1:
         return 'NoTeam'
     else:
@@ -726,13 +675,13 @@ def getFilterEfficiency(url, workflow, task=None):
             return None
 
 
-def getOutputLumis(url, workflow, dataset, skipInvalid=False):
+def getOutputLumis(url, workflow, dataset):
     """
     Gets the output lumis depending on the type
     of the request
     """
     # request = getWorkflowInfo(url, workflow)
-    return dbs3.getLumiCountDataSet(dataset, skipInvalid)
+    return dbs3.getLumiCountDataSet(dataset)
     
 def assignWorkflow(url, workflowname, team, parameters ):
     #local import so it doesn't screw with all other stuff
