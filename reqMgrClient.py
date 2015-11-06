@@ -97,25 +97,25 @@ class Workflow:
             events = self.outEvents[ds]
         return events
 
-    def getOutputLumis(self, ds):
+    def getOutputLumis(self, ds, skipInvalid=False):
         """
         Gets the numer of lumis in an output dataset
         """
         #We store the events to avoid checking them twice
         if ds not in self.outLumis:
-            lumis = dbs3.getLumiCountDataSet(ds)
+            lumis = dbs3.getLumiCountDataSet(ds, skipInvalid)
             self.outLumis[ds] = lumis
         else:
             lumis = self.outLumis[ds]
         return lumis
 
-    def percentageCompletion(self, ds):
+    def percentageCompletion(self, ds, skipInvalid=False):
         """
-        Calculates Percentage of events produced for a given workflow
+        Calculates Percentage of lumis produced for a given workflow
         taking a particular output dataset
         """
-        inputEvents = self.getInputEvents()
-        outputEvents = self.getOutputEvents(ds)
+        inputEvents = self.getInputLumis()
+        outputEvents = self.getOutputLumis(ds, skipInvalid)
         if inputEvents == 0:
             return 0
         if not outputEvents:
@@ -199,14 +199,22 @@ class WorkflowWithInput(Workflow):
             #if not, an empty list will do        
             else:
                 self.info[li]=[]
+        self.inputLumisFromDset = None
     
-    def percentageCompletion(self, ds):
+    def percentageCompletion(self, ds, skipInvalid=False, checkInput=False):
         """
-        Corrects with filter efficiency
+        Calculates the percentage of completion based on lumis
+        if checkInput=True, the ammount of lumis is taken from the input
+        dataset (take into account the white/blacklist are not calculated
         """
-        perc = Workflow.percentageCompletion(self, ds)
-        if 'FilterEfficiency' in self.info:
-            perc /= self.filterEfficiency
+        
+        inputEvents = self.getInputLumis(checkInput=checkInput)
+        outputEvents = self.getOutputLumis(ds, skipInvalid)
+        if inputEvents == 0:
+            return 0
+        if not outputEvents:
+            return 0
+        perc = outputEvents/float(inputEvents)
         return perc
 
     def getInputLumis(self, checkList = False, checkInput=False):
@@ -675,13 +683,13 @@ def getFilterEfficiency(url, workflow, task=None):
             return None
 
 
-def getOutputLumis(url, workflow, dataset):
+def getOutputLumis(url, workflow, dataset, skipInvalid=False):
     """
     Gets the output lumis depending on the type
     of the request
     """
     # request = getWorkflowInfo(url, workflow)
-    return dbs3.getLumiCountDataSet(dataset)
+    return dbs3.getLumiCountDataSet(dataset, skipInvalid)
     
 def assignWorkflow(url, workflowname, team, parameters ):
     #local import so it doesn't screw with all other stuff
