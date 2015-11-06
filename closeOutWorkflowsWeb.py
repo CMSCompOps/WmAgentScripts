@@ -46,9 +46,10 @@ def closeOutReRecoWorkflowsWeb(url, workflows, output):
                 checkEqual=True, checkDuplicates=False)
             printResult(result)
             printResultWeb(result, output)
-            #if result['closeOutWorkflow']:
-            # TODO 
-            #    reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
+            if result['closeOutWorkflow']:
+                # TODO Not closeout yet
+                pass 
+            #   reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
             #populate the list without subs
             missingSubs = True
             for (ds,info) in result['datasets'].items():
