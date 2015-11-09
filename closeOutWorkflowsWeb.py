@@ -30,6 +30,7 @@ def closeOutReRecoWorkflowsWeb(url, workflows, output):
     closes rereco workflows
     """
     noSiteWorkflows = []
+    count = 0
     for wf in workflows:
         try:
             if 'RelVal' in wf:
@@ -45,7 +46,8 @@ def closeOutReRecoWorkflowsWeb(url, workflows, output):
             result = validateClosingWorkflow(url, workflow, closePercentage=1.0, 
                 checkEqual=True, checkDuplicates=False)
             printResult(result)
-            printResultWeb(result, output)
+            printResultWeb(result, output, count % 2 == 0)
+            count += 1
             if result['closeOutWorkflow']:
                 # TODO Not closeout yet
                 pass 
@@ -223,12 +225,15 @@ def closeOutTaskChainWeb(url, workflows, output):
     print '-'*180
     return noSiteWorkflows
 
-def printResultWeb(result, output):
+def printResultWeb(result, output, even=True):
     """
     Prints the result of analysing a workflow in web output
     """
     for dsname, ds in result['datasets'].items():
-        row = '<tr><td><a name="%s">%s</a></td>'+('<td>%s</td>'*9)+'</tr>\n'
+        if not even:
+            row = '<tr><td><a name="%s">%s</a></td>'+('<td>%s</td>'*9)+'</tr>\n'
+        else:
+            row = '<tr class="even"><td><a name="%s">%s</a></td>'+('<td>%s</td>'*9)+'</tr>\n'
         output.write( row % (result["name"], result["name"], dsname,
             "%.3f"%(ds["percentage"]*100),
             "?" if ds["duplicate"] is None else ds["duplicate"],
