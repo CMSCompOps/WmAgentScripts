@@ -260,6 +260,15 @@ def main():
         if len(args) == 2:
             user = args[0]
             group = args[1]
+        elif len(args) == 0:
+            # get os username by default
+            uinfo = pwd.getpwuid(os.getuid())
+            user = uinfo.pw_name
+            # group by default DATAOPS
+            group = 'DATAOPS'
+        else:
+            parser.error("Provide the workflow of a file of workflows")
+            sys.exit(1)    
     else:
         if len(args) == 3:
             user = args[1]
