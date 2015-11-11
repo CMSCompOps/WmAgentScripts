@@ -319,7 +319,7 @@ def main():
     count = 1
     for workflow in wfs:
             count += 1
-        #try:
+        try:
             #skip acdc's
             if workflow in allacdc:
                 print "[skipping %s]\n" % (workflow)
