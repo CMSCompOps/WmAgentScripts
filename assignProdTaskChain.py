@@ -55,6 +55,7 @@ ALL_SITES = GOOD_SITES + [
     "T2_CN_Beijing",
     "T2_DE_RWTH",
     "T2_EE_Estonia",
+    "T2_ES_IFCA",
     "T2_FI_HIP",
     "T2_FR_IPHC",
     "T2_FR_GRIF_IRFU",
