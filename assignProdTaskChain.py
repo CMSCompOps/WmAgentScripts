@@ -55,6 +55,7 @@ ALL_SITES = GOOD_SITES + [
     "T2_CN_Beijing",
     "T2_DE_RWTH",
     "T2_EE_Estonia",
+    "T2_ES_IFCA",
     "T2_FI_HIP",
     "T2_FR_IPHC",
     "T2_FR_GRIF_IRFU",
@@ -99,8 +100,8 @@ def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lf
               #"MaxRSS": 3772000,
               "MaxRSS": 2294967,
               "MaxVSize": 20294967,
-              "AcquisitionEra": era,
-              "ProcessingString": procstr,
+              # "AcquisitionEra": era,
+              # "ProcessingString": procstr,
               "ProcessingVersion": procver,
               "Dashboard": activity,
               # when we want to use xrootd to readin input files
@@ -120,10 +121,17 @@ def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lf
               "GracePeriod": 1000,
               "checkbox" + workflow: "checked"}
 
+    # if era is None, leave it out of the json
+    if era is not None:
+        params["AcquisitionEra"] = era
+    if procstr is not None:
+        params["ProcessingString"] = procstr
+
     # if replica we add NonCustodial sites
     if replica:
         params["NonCustodialSites"] = getRandomDiskSite(),
         params["NonCustodialSubType"] = "Replica"
+        params['AutoApproveSubscriptionSites'] = [params["NonCustodialSites"]]
 
     if verbose:
         pprint(params)
