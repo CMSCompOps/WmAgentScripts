@@ -1,9 +1,6 @@
 #!/usr/bin/env python
-import json
-import urllib2,urllib, httplib, sys, re, os
 import time, shutil
 from closeOutWorkflows import *
-from xml.dom.minidom import getDOMImplementation
 
 """
     Runs Closeout script generating the output to a Web Page.

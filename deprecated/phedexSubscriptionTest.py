@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-import urllib2,urllib, httplib, sys, re, os, json, phedexSubscription, dbsTest
+import urllib2, urllib, httplib, sys, re, os, json
+from deprecated import phedexSubscription
+from deprecated import dbsTest
 from xml.dom.minidom import getDOMImplementation
 
 #Tests whether a dataset was subscribed to phedex
@@ -41,8 +43,8 @@ def main():
 		sys.exit(0)
 	workflow=args[0]
 	url='cmsweb.cern.ch'
-	requestType=dbsTest.getWorkflowType(url, workflow)
-	datasets=phedexSubscription.outputdatasetsWorkflow(url, workflow)
+	requestType=deprecated.dbsTest.getWorkflowType(url, workflow)
+	datasets=deprecated.phedexSubscription.outputdatasetsWorkflow(url, workflow)
 	for datasetName in datasets:
 		testOutputDataset(datasetName, requestType)
 	sys.exit(0);

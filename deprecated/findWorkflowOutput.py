@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 
-import urllib2,urllib, httplib, sys, re, os, json, time, math, dbsTest, locale, re
-import optparse, phedexSubscription
+import urllib2, urllib, httplib, sys, re, os, json, time, math, locale, re
+from deprecated import dbsTest
+import optparse
+from deprecated import phedexSubscription
 from xml.dom.minidom import getDOMImplementation
 
 def classifyRequests(requests, dataset):
 	for request in requests:
 	    name=request['request_name']
-	    outputDatasets=phedexSubscription.outputdatasetsWorkflow('cmsweb.cern.ch',name)	
+	    outputDatasets=deprecated.phedexSubscription.outputdatasetsWorkflow('cmsweb.cern.ch',name)	
 	    for out in outputDatasets:
 		if dataset in out:
 			print name

@@ -5,7 +5,7 @@ import sys
 import urllib
 import httplib
 import re
-import Priorities
+from deprecated import Priorities
 import json
 import changePriorityWorkflow
 import closeOutWorkflows

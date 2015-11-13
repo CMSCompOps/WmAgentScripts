@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, makeReplicaRequest
+from utils import componentInfo
 import phedexClient
 import dbs3Client
 import reqMgrClient
@@ -9,90 +10,25 @@ from collections import defaultdict
 import optparse
 import os
 import time
+from McMClient import McMClient
 from htmlor import htmlor
-
-class falseDB:
-    def __init__(self):
-        self.record = json.loads(open('closedout.json').read())
-
-    def table_header(self):
-        text = '<table border=1><thead><tr><th>workflow</th><th>OutputDataSet</th><th>%Compl</th><th>acdc</th><th>Dupl</th><th>CorrectLumis</th><th>Scubscr</th><th>Tran</th><th>dbsF</th><th>dbsIF</th><th>\
-phdF</th><th>ClosOut</th></tr></thead>'
-        return text
-
-    def one_line(self, wf, wfo, count):
-        if count%2:            color='lightblue'
-        else:            color='white'
-        text=""
-        try:
-            pid = filter(lambda b :b.count('-')==2, wf.split('_'))[0]
-            tpid = 'task_'+pid if 'task' in wf else pid
-        except:
-            pid ='None'
-            tpid= 'None'
-            
-        ## return the corresponding html
-        order = ['percentage','acdc','duplicate','correctLumis','missingSubs','phedexReqs','dbsFiles','dbsInvFiles','phedexFiles']
-        wf_and_anchor = '<a id="%s">%s</a>'%(wf,wf)
-        for out in self.record[wf]['datasets']:
-            text+='<tr bgcolor=%s>'%color
-            text+='<td>%s<br><a href=https://cmsweb.cern.ch/reqmgr/view/details/%s>dts</a>, <a href=https://cmsweb.cern.ch/reqmgr/view/splitting/%s>splt</a>, <a href=https://cmsweb.cern.ch/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s>perf</a>, <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>ac</a>, <a href=assistance.html#%s>%s</a></td>'% (wf_and_anchor,
-                                                                                                                                                                                                                                                                                                                            wf, wf, wf,tpid,wf,
-                                                                                                                                                                                                                                                                                                                            wfo.status)
-
-            text+='<td>%s</td>'% out
-            for f in order:
-                if f in self.record[wf]['datasets'][out]:
-                    value = self.record[wf]['datasets'][out][f]
-                else:
-                    value = "-NA-"
-                if f =='acdc':
-                    text+='<td><a href=https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byprepid?key="%s">%s</a></td>'%(tpid , value)
-                else:
-                    text+='<td>%s</td>'% value
-            text+='<td>%s</td>'%self.record[wf]['closeOutWorkflow']
-            text+='</tr>'
-            wf_and_anchor = wf
-
-        return text
-    def summary(self):
-        os.system('cp closedout.json closedout.json.last')
-        
-        html = open('/afs/cern.ch/user/c/cmst2/www/unified/closeout.html','w')
-        html.write('<html>')
-        html.write('Last update on %s(CET), %s(GMT), <a href=logs/checkor/ target=_blank> logs</a> <br><br>'%(time.asctime(time.localtime()),time.asctime(time.gmtime())))
-
-        html.write( self.table_header() )
-
-        for (count,wf) in enumerate(sorted(self.record.keys())):
-            wfo = session.query(Workflow).filter(Workflow.name == wf).first()
-            if not wfo: continue
-            if not (wfo.status == 'away' or wfo.status.startswith('assistance')):
-                print "Taking",wf,"out of the close-out record"
-                self.record.pop(wf)
-                continue
-            html.write( self.one_line( wf, wfo , count) )
-
-        html.write('</table>')
-        html.write('<br>'*100) ## so that the anchor works ok
-        html.write('bottom of page</html>')
-
-        open('closedout.json','w').write( json.dumps( self.record , indent=2 ) )
+from utils import sendEmail 
+from utils import closeoutInfo
 
 def checkor(url, spec=None, options=None):
-    fDB = falseDB()
+    fDB = closeoutInfo()
+
+    use_mcm = True
+    up = componentInfo(mcm=use_mcm, soft=['mcm'])
+    if not up.check(): return
+    use_mcm = up.status['mcm']
 
     wfs=[]
     if options.fetch:
-        #workflows = getWorkflows(url, status='completed')
-        #for wf in workflows:
-        #    wfo = session.query(Workflow).filter(Workflow.name == wf ).first()
-        #    if wfo:
-        #        if not wfo.status in ['away','assistance']: continue
-        #        wfs.append(wfo )
+        ## get all in running and check
         wfs.extend( session.query(Workflow).filter(Workflow.status == 'away').all() )
         wfs.extend( session.query(Workflow).filter(Workflow.status== 'assistance').all() )
-    else:
+    if options.nofetch:
         ## than get all in need for assistance
         wfs.extend( session.query(Workflow).filter(Workflow.status.startswith('assistance-')).all() )
 
@@ -102,6 +38,7 @@ def checkor(url, spec=None, options=None):
     invalidations = [] #a list of files
     SI = siteInfo()
     CI = campaignInfo()
+    mcm = McMClient(dev=False)
 
     def get_campaign(output, wfi):
         campaign = None
@@ -112,9 +49,37 @@ def checkor(url, spec=None, options=None):
                 campaign = wfi.request['Campaign']
         return campaign
 
+    by_passes = []
+    holdings = []
+    for bypassor,email in [('jbadillo','julian.badillo.rojas@cern.ch'),('vlimant','vlimant@cern.ch'),('jen_a','jen_a@fnal.gov')]:
+        bypass_file = '/afs/cern.ch/user/%s/%s/public/ops/bypass.json'%(bypassor[0],bypassor)
+        if not os.path.isfile(bypass_file):
+            print "no file",bypass_file
+            continue
+        try:
+            by_passes.extend( json.loads(open(bypass_file).read()))
+        except:
+            print "cannot get by-passes from",bypass_file,"for",bypassor
+            sendEmail("malformated by-pass information","%s is not json readable"%(bypass_file), destination=[email])
+        holding_file = '/afs/cern.ch/user/%s/%s/public/ops/onhold.json'%(bypassor[0],bypassor)
+        if not os.path.isfile(holding_file):
+            print "no file",holding_file
+            continue
+        try:
+            holdings.extend( json.loads(open(holding_file).read()))
+        except:
+            print "cannot get holdings from",holding_file,"for",bypassor
+            sendEmail("malformated by-pass information","%s is not json readable"%(holding_file), destination=[email])
+
+
+    total_running_time = 5.*60. 
+    sleep_time = max(0.5, total_running_time / len(wfs))
+
     for wfo in wfs:
         if spec and not (spec in wfo.name): continue
-
+        time.sleep( sleep_time )
+        print "checking on",wfo.name
+        
         ## get info
         wfi = workflowInfo(url, wfo.name)
 
@@ -127,7 +92,8 @@ def checkor(url, spec=None, options=None):
             wfo.status = 'close'
             session.commit()
             continue
-        elif wfo.wm_status in ['failed','aborted','aborted-archived','rejected','rejected-archived']:
+
+        elif wfo.wm_status in ['failed','aborted','aborted-archived','rejected','rejected-archived','aborted-completed']:
             ## went into trouble
             wfo.status = 'trouble'
             print wfo.name,"is in trouble",wfo.wm_status
@@ -139,6 +105,15 @@ def checkor(url, spec=None, options=None):
             session.commit()
             continue
         
+        if '-onhold' in wfo.status:
+            if wfo.name in holdings:
+                print wfo.name,"on hold"
+                continue
+        if wfo.name in holdings:
+            wfo.status = 'assistance-onhold'
+            print "setting",wfo.name,"on hold"
+            session.commit()
+            continue
         
         if wfo.wm_status != 'completed':
             ## for sure move on with closeout check if in completed
@@ -152,26 +127,54 @@ def checkor(url, spec=None, options=None):
         is_closing = True
         ## do the closed-out checks one by one
 
+        ## get it from somewhere
+        by_pass_checks = False
+        if wfo.name in by_passes:
+            print "we can bypass checks on",wfo.name
+            by_pass_checks = True
+        for bypass in by_passes:
+            if bypass in wfo.name:
+                print "we can bypass",wfo.name,"because of keyword",bypass
+                by_pass_checks = True
+                break
+
         # tuck out DQMIO/DQM
         wfi.request['OutputDatasets'] = [ out for out in wfi.request['OutputDatasets'] if not '/DQM' in out]
 
         ## anything running on acdc
         familly = getWorkflowById(url, wfi.request['PrepID'], details=True)
         acdc = []
+        acdc_inactive = []
+        has_recovery_going=False
+        had_any_recovery = False
         for member in familly:
+            if member['RequestType'] != 'Resubmission': continue
             if member['RequestName'] == wfo.name: continue
             if member['RequestDate'] < wfi.request['RequestDate']: continue
-            if member['RequestType'] != 'Resubmission': continue
-            if member['RequestStatus'] in ['running-opened','running-closed','assignment-approved','assigned','acquired']:
+            if member['RequestStatus'] in ['running-open','running-closed','assignment-approved','assigned','acquired']:
                 print wfo.name,"still has an ACDC running",member['RequestName']
                 acdc.append( member['RequestName'] )
                 #print json.dumps(member,indent=2)
                 ## hook for just waiting ...
                 is_closing = False
-
+                has_recovery_going=True
+            elif member['RequestStatus']==None:
+                print member['RequestName'],"is not real"
+                pass
+            else:
+                acdc_inactive.append( member['RequestName'] )
+                had_any_recovery = True
         ## completion check
         percent_completions = {}
-        event_expected,lumi_expected =  wfi.request['TotalInputEvents'],wfi.request['TotalInputLumis']
+#        print "let's see who is crashing", wfo.name
+#        print wfi.request['TotalInputEvents'],wfi.request['TotalInputLumis']
+        if not 'TotalInputEvents' in wfi.request:
+            event_expected,lumi_expected = 0,0
+            if not 'recovery' in wfo.status:
+                sendEmail("missing member of the request","TotalInputEvents is missing from the workload of %s"% wfo.name, destination=['julian.badillo.rojas@cern.ch'])
+        else:
+            event_expected,lumi_expected =  wfi.request['TotalInputEvents'],wfi.request['TotalInputLumis']
+
         fractions_pass = {}
         for output in wfi.request['OutputDatasets']:
             event_count,lumi_count = getDatasetEventsAndLumis(dataset=output)
@@ -188,12 +191,18 @@ def checkor(url, spec=None, options=None):
                 fractions_pass[output] = options.fractionpass
                 print "overriding fraction to",fractions_pass[output],"by command line for",output
 
-        if not all([percent_completions[out] > fractions_pass[out] for out in fractions_pass]):
+        if not all([percent_completions[out] >= fractions_pass[out] for out in fractions_pass]):
             print wfo.name,"is not completed"
             print json.dumps(percent_completions, indent=2)
             print json.dumps(fractions_pass, indent=2)
             ## hook for creating automatically ACDC ?
-            sub_assistance+='-recovery'
+            if has_recovery_going:
+                sub_assistance+='-recovering'
+            elif had_any_recovery:
+                ## we want to have this looked at
+                sub_assistance+='-manual'
+            else:
+                sub_assistance+='-recovery'
             is_closing = False
 
         ## correct lumi < 300 event per lumi
@@ -204,17 +213,23 @@ def checkor(url, spec=None, options=None):
 
         lumi_upper_limit = {}
         for output in wfi.request['OutputDatasets']:
-            upper_limit = 300.
+            upper_limit = 301.
             campaign = get_campaign(output, wfi)
+            #if 'EventsPerLumi' in wfi.request and 'FilterEfficiency' in wfi.request:
+            #    upper_limit = 1.5*wfi.request['EventsPerLumi']*wfi.request['FilterEfficiency']
+            #    print "setting the upper limit of lumisize to",upper_limit,"by request configuration"
+
             if campaign in CI.campaigns and 'lumisize' in CI.campaigns[campaign]:
                 upper_limit = CI.campaigns[campaign]['lumisize']
                 print "overriding the upper lumi size to",upper_limit,"for",campaign
+
             if options.lumisize:
                 upper_limit = options.lumisize
                 print "overriding the upper lumi size to",upper_limit,"by command line"
+                
             lumi_upper_limit[output] = upper_limit
         
-        if any([ events_per_lumi[out] > lumi_upper_limit[out] for out in events_per_lumi]):
+        if any([ events_per_lumi[out] >= lumi_upper_limit[out] for out in events_per_lumi]):
             print wfo.name,"has big lumisections"
             print json.dumps(events_per_lumi, indent=2)
             ## hook for rejecting the request ?
@@ -235,6 +250,11 @@ def checkor(url, spec=None, options=None):
 
             if not custodial_locations[output]:
                 custodial_locations[output] = []
+
+        ## presence in phedex
+        phedex_presence ={}
+        for output in wfi.request['OutputDatasets']:
+            phedex_presence[output] = phedexClient.getFileCountDataset(url, output )
 
         vetoed_custodial_tier = ['MINIAODSIM']
         out_worth_checking = [out for out in custodial_locations.keys() if out.split('/')[-1] not in vetoed_custodial_tier]
@@ -258,23 +278,34 @@ def checkor(url, spec=None, options=None):
                         print "Setting custodial to",custodial,"from campaign configuration"
                         break
             ## get from the parent
+            pick_custodial = True
             if not custodial and 'InputDataset' in wfi.request:
-                parents_custodial = findCustodialLocation(url, wfi.request['InputDataset'])
+                ## this is terribly dangerous to assume only 
+                parents_custodial = phedexClient.getCustodialSubscriptionRequestSite( wfi.request['InputDataset'])
+                ###parents_custodial = findCustodialLocation(url, wfi.request['InputDataset'])
+                if not parents_custodial:
+                    parents_custodial = []
+
                 if len(parents_custodial):
                     custodial = parents_custodial[0]
                 else:
                     print "the input dataset",wfi.request['InputDataset'],"does not have custodial in the first place. abort"
-                    continue
+                    sendEmail( "dataset has no custodial location", "Please take a look at %s in the logs of checkor"%wfi.request['InputDataset'])
+                    is_closing = False
+                    pick_custodial = False
 
-            if not custodial:
+            if not custodial and pick_custodial:
                 ## pick one at random
                 custodial = SI.pick_SE()
 
-            if custodial and not sub_assistance and not acdc:
+            if custodial and ((not sub_assistance and not acdc) or by_pass_checks):
                 ## register the custodial request, if there are no other big issues
                 for output in out_worth_checking:
                     if not len(custodial_locations[output]):
-                        custodials[custodial].append( output )
+                        if phedex_presence[output]>=1:
+                            custodials[custodial].append( output )
+                        else:
+                            print "no file in phedex for",output," not good to add to custodial requests"
             else:
                 print "cannot find a custodial for",wfo.name
             is_closing = False
@@ -295,11 +326,6 @@ def checkor(url, spec=None, options=None):
         for output in wfi.request['OutputDatasets']:
             dbs_presence[output] = dbs3Client.getFileCountDataset( output )
             dbs_invalid[output] = dbs3Client.getFileCountDataset( output, onlyInvalid=True)
-
-        ## presence in phedex
-        phedex_presence ={}
-        for output in wfi.request['OutputDatasets']:
-            phedex_presence[output] = phedexClient.getFileCountDataset(url, output )
 
         fraction_invalid = 0.01
         if not all([dbs_presence[out] == (dbs_invalid[out]+phedex_presence[out]) for out in wfi.request['OutputDatasets']]) and not options.ignorefiles:
@@ -323,7 +349,10 @@ def checkor(url, spec=None, options=None):
         ## duplication check
         duplications = {}
         if is_closing:
+            print "starting duplicate checker for",wfo.name
             for output in wfi.request['OutputDatasets']:
+                print "\tchecking",output
+                duplications[output] = True
                 try:
                     duplications[output] = dbs3Client.duplicateRunLumi( output )
                 except:
@@ -364,33 +393,85 @@ def checkor(url, spec=None, options=None):
             rec['dbsFiles'] = dbs_presence[output]
             rec['dbsInvFiles'] = dbs_invalid[output]
             rec['phedexFiles'] = phedex_presence[output]
-            rec['acdc'] = len(acdc)
+            rec['acdc'] = "%d / %d"%(len(acdc),len(acdc+acdc_inactive))
+
+        if by_pass_checks:
+            ## force closing
+            is_closing = True
 
         ## and move on
         if is_closing:
             ## toggle status to closed-out in request manager
             print "setting",wfo.name,"closed-out"
             if not options.test:
-                reqMgrClient.closeOutWorkflowCascade(url, wfo.name)
-                # set it from away/assistance* to close
-                wfo.status = 'close'
-                session.commit()
+                res = reqMgrClient.closeOutWorkflowCascade(url, wfo.name)
+                print "close out answer",res
+                if not res in ["None",None]:
+                    print "retrying to closing out"
+                    print res
+                    res = reqMgrClient.closeOutWorkflowCascade(url, wfo.name)
+                    
+                if res in [None,"None"]:
+                    wfo.status = 'close'
+                    session.commit()
+                else:
+                    print "could not close out",wfo.name,"will try again next time"
         else:
-            print wfo.name,"needs assistance"
             ## that means there is something that needs to be done acdc, lumi invalidation, custodial, name it
-            wfo.status = 'assistance'+sub_assistance
-            if not options.test:
-                print "setting",wfo.name,"to",wfo.status
-                session.commit()
+            new_status = 'assistance'+sub_assistance
+            print wfo.name,"needs assistance with",new_status
+            
+            if sub_assistance and wfo.status != new_status and 'PrepID' in wfi.request and not 'manual' in wfo.status:
+                pid = wfi.getPrepIDs()[0].replace('task_','')
+                #pid = wfi.request['PrepID'].replace('task_','')
+                ## notify
+                messages= {
+                    'recovery' : 'Samples completed with missing lumi count:\n%s '%( '\n'.join(['%.2f %% complete for %s'%(percent_completions[output]*100, output) for output in wfi.request['OutputDatasets'] ] ) ),
+                    'biglumi' : 'Samples completed with large luminosity blocks:\n%s '%('\n'.join(['%d > %d for %s'%(events_per_lumi[output], lumi_upper_limit[output], output) for output in wfi.request['OutputDatasets'] if (events_per_lumi[output] > lumi_upper_limit[output])])),
+                    'duplicate' : 'Samples completed with duplicated luminosity blocks:\n%s'%( '\n'.join(['%s'%output for output in wfi.request['OutputDatasets'] if output in duplications and duplications[output] ] ) ),
+                    }
+                text ="The request %s (%s) is facing issue in production.\n" %( pid, wfo.name )
+                content = ""
+                for case in messages:
+                    if case in new_status:
+                        content+= "\n"+messages[case]+"\n"
+                text += content
+                text += "You are invited to check, while this is being taken care of by Ops.\n"
+                text += "This is an automated message."
+                if use_mcm and content:
+                    print "Sending notification back to requestor"
+                    print text
+                    batches = mcm.getA('batches',query='contains=%s&status=announced'%pid)
+                    if len(batches):
+                        ## go notify the batch
+                        bid = batches[-1]['prepid']
+                        print "batch nofication to",bid
+                        mcm.put('/restapi/batches/notify', { "notes" : text, "prepid" : bid})
 
-    fDB.summary()
+
+                    ## go notify the request
+                    print "request notification to",pid
+                    mcm.put('/restapi/requests/notify',{ "message" : text, "prepids" : [pid] })
+
+            ## case where the workflow was in manual from recoveror
+            if not 'manual' in wfo.status or new_status!='assistance-recovery':
+                wfo.status = new_status
+                if not options.test:
+                    print "setting",wfo.name,"to",wfo.status
+                    session.commit()
+            else:
+                print "current status is",wfo.status,"not changing to anything"
+
+
+    fDB.html()
+
     ## custodial requests
     print "Custodials"
     print json.dumps(custodials, indent=2)
     for site in custodials:
         print ','.join(custodials[site]),'=>',site
         if not options.test:
-            result = makeReplicaRequest(url, site, list(set(custodials[site])),"custodial copy at production close-out",custodial='y',priority='low')
+            result = makeReplicaRequest(url, site, list(set(custodials[site])),"custodial copy at production close-out",custodial='y',priority='low', approve = (site in SI.sites_auto_approve) )
             print result
 
     print "Transfers"
@@ -412,6 +493,7 @@ if __name__ == "__main__":
     parser = optparse.OptionParser()
     parser.add_option('-t','--test', help='Only test the checkor', action='store_true', default=False)
     parser.add_option('-f','--fetch', help='fetch new stuff not already in assistance', action='store_true', default=False)
+    parser.add_option('-n','--nofetch',help='update those in assistance',action='store_true', default=False)
     parser.add_option('--fractionpass',help='The completion fraction that is permitted', default=0.0,type='float')
     parser.add_option('--ignorefiles', help='Force ignoring dbs/phedex differences', action='store_true', default=False)
     parser.add_option('--lumisize', help='Force the upper limit on lumisection', default=0, type='float')
@@ -422,64 +504,18 @@ if __name__ == "__main__":
     if len(args)!=0:
         spec = args[0]
 
+    if options.fetch and options.nofetch:
+        print "cannot fetch and not fetch at the same time"
+        sys.exit(1)
+
+    if not options.fetch and not options.nofetch:
+        ## no argugments : default usage
+        options.fetch = True
+        options.nofetch = True
+        
     checkor(url, spec, options=options)
     
-    if options.html:
-        htmlor()
+    #if options.html:
+    htmlor()
 
-    fdb = falseDB()
-        
-    short_html = open('/afs/cern.ch/user/c/cmst2/www/unified/assistance_summary.html','w')
-    html = open('/afs/cern.ch/user/c/cmst2/www/unified/assistance.html','w')
-    html.write("""
-<html>
-""")
-    short_html.write('Last update on %s(CET), %s(GMT), <a href=logs/checkor/last.log target=_blank> log</a> <br>'%(time.asctime(time.localtime()),time.asctime(time.gmtime())))
-    html.write('Last update on %s(CET), %s(GMT), <a href=logs/checkor/last.log target=_blank> log</a> <br>'%(time.asctime(time.localtime()),time.asctime(time.gmtime())))
 
-    html.write('<a href=assistance_summary.html> Summary </a> <br>')    
-    short_html.write('<a href=assistance.html> Details </a> <br>')
-
-    assist = defaultdict(list)
-    for wfo in session.query(Workflow).filter(Workflow.status.startswith('assistance')).all():
-        assist[wfo.status].append( wfo )
-    
-    for status in sorted(assist.keys()):
-        html.write("Workflow in status <b> %s </b> (%d)"% (status, len(assist[status])))
-        html.write( fdb.table_header())
-        short_html.write("""
-Workflow in status <b> %s </b>
-<table border=1>
-<thead>
-<tr>
-<th> workflow </th> <th> output dataset </th><th> completion </th>
-</tr>
-</thead>
-"""% (status))
-        
-        for (count,wfo) in enumerate(assist[status]):
-            if count%2:            color='lightblue'
-            else:            color='white'
-            if not wfo.name in fdb.record: 
-                print "wtf with",wfo.name
-                continue
-            html.write( fdb.one_line( wfo.name, wfo, count))
-            for out in fdb.record[wfo.name]['datasets']:
-                short_html.write("""
-<tr bgcolor=%s>
-<td> <a id=%s>%s</a> </td><td> %s </td><td> <a href=closeout.html#%s>%s</a> </td>
-</tr>
-"""%( color, 
-      wfo.name,wfo.name,
-      out, 
-      wfo.name,
-      fdb.record[wfo.name]['datasets'][out]['percentage'],
-      
-      ))
-        html.write("</table><br><br>")
-        short_html.write("</table><br><br>")
-    short_html.write("<br>"*100)
-    short_html.write("bottom of page</html>")    
-    html.write("<br>"*100)
-    html.write("bottom of page</html>")    
-                           

@@ -1,7 +1,4 @@
 #!/usr/bin/env python
-import json
-import urllib2,urllib, httplib, sys, re, os
-from xml.dom.minidom import getDOMImplementation
 from closeOutWorkflows import *
 
 """
@@ -16,7 +13,7 @@ def classifyAndFilterCompletedRequests(url, requests, filtered):
     type of workflows.
     """
 
-     #filter only requests that are in the file
+    #filter only requests that are in the file
     workflows={'ReDigi':[],'MonteCarloFromGEN':[],'MonteCarlo':[] , 'ReReco':[], 'LHEStepZero':[]}
     for request in requests:
         name=request['id']
@@ -28,6 +25,8 @@ def classifyAndFilterCompletedRequests(url, requests, filtered):
             print request
             continue
         status=request['key'][1]
+        if status != "completed":
+            continue
         requestType=request['key'][2]
         #sort by type
         if requestType=='MonteCarlo':

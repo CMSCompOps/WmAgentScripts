@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-import urllib2,urllib, httplib, sys, re, os, json, phedexSubscription
+import urllib2, urllib, httplib, sys, re, os, json
+from deprecated import phedexSubscription
 from xml.dom.minidom import getDOMImplementation
 
 def findCustodialLocation(url, dataset):
@@ -48,7 +49,7 @@ def main():
 
 	filename=args[0]
 	url='cmsweb.cern.ch'
-        workflows=phedexSubscription.workflownamesfromFile(filename)
+        workflows=deprecated.phedexSubscription.workflownamesfromFile(filename)
         for workflow in workflows:
            inputDataset = getInputDataSet(url, workflow)
 	   custodialLocation = findCustodialLocation(url, inputDataset)

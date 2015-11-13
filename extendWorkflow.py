@@ -4,16 +4,10 @@ This script should be used only for MonteCarlo from scratch.
 It creates a resubmition of a MonteCarlo workflow that begins
 when the original worklfow ended.
 """
-import pprint
-import os
 import sys
-import urllib
-import httplib
 import re
-import json
-import changePriorityWorkflow
-import reqMgrClient, dbs3Client
-import math
+import reqMgrClient
+import dbs3Client
 from WMCore.WMSpec.WMWorkload import WMWorkloadHelper
 
 reqmgrCouchURL = "https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache"

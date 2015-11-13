@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import workflowInfo, getDatasetPresence, getDatasetStatus, getWorkflowByInput, getDatasetSize, makeDeleteRequest, listDelete, approveSubscription
+from utils import workflowInfo, getDatasetPresence, getDatasetStatus, getWorkflowByInput, getDatasetSize, makeDeleteRequest, listDelete, approveSubscription, findCustodialLocation
+from utils import lockInfo, duplicateLock
 import optparse
 import random 
 from collections import defaultdict
@@ -8,18 +9,14 @@ import json
 import time
 
 def outcleanor(url, options):
+    print "Deprecated"
+    return 
 
-    if options.approve:
-        for user in ['*Vlimant']:#,'*Cremonesi']:
-            deletes = listDelete( url , user = user)
-            for (site,who,tid) in deletes:
-                if 'MSS' in site: continue### ever
-                print site,who,tid
-                print "approving deletion"
-                print approveSubscription(url, tid, nodes = [site], comments = 'Production cleaning by data ops')
-        return
+    if duplicateLock(): return 
 
-    
+    do_not_autoapprove = []#'T2_FR_CCIN2P3']
+    LI = lockInfo()
+
 
     sites_and_datasets = defaultdict(list)
     our_copies = defaultdict(list)
@@ -40,7 +37,7 @@ def outcleanor(url, options):
         goes = {} # boolean per output
         for dataset in wfi.request['OutputDatasets']:
             goes[dataset] = False
-            keep_one_out = True
+            keep_one_out = False ## change to no copy kept, since this is DDM handled
             status = getDatasetStatus( dataset )
             print "\n\tLooking at",dataset,status,"\n"
             vetoes = None
@@ -68,6 +65,11 @@ def outcleanor(url, options):
 
             if '/DQM' in dataset:
                 keep_one_out = False
+
+            custodials = findCustodialLocation(url, dataset)
+            if not len(custodials):
+                print dataset,"has no custodial site yet, excluding from cleaning"
+                continue
 
             total_size = getDatasetSize( dataset )
             
@@ -127,12 +129,18 @@ def outcleanor(url, options):
                     if not len(full_copies):
                         print "we do not own a full copy of",dataset,status,wfo.status,".skip"
                         continue
-                    stay_there = random.choice( full_copies ) #at a place own by ops
+                    t1_full_copies = [ site for site in full_copies if site.startswith('T1')]
+                    if t1_full_copies:
+                        stay_there = random.choice( t1_full_copies ) #at a place own by ops
+                    else:
+                        stay_there = random.choice( full_copies ) #at a place own by ops
                     print "Where we keep a full copy", stay_there
                     to_be_cleaned.remove( stay_there )
                     our_copies[stay_there].append( dataset )
+                    LI.release_except( dataset, stay_there, 'cleanup of output after production')            
                 else:
                     print "We do not want to keep a copy of ",dataset,status,wfo.status
+                    LI.release_everywhere( dataset, 'cleanup of output after production')
 
             if len(to_be_cleaned):
                 print "Where we can clean"
@@ -181,26 +189,30 @@ def outcleanor(url, options):
 
     print "Workflows cleaned for output"
     print json.dumps( wf_cleaned, indent=2 )
-    stamp = time.strftime("%Y%m%d%H%M%S", time.localtime())
-    open('outcleaning_%s.json'%stamp,'w').write( json.dumps( sites_and_datasets, indent=2))
-    open('keepcopies_%s.json'%stamp,'w').write( json.dumps( our_copies, indent=2))
-    open('wfcleanout_%s.json'%stamp,'w').write( json.dumps( wf_cleaned, indent=2))
+    #stamp = time.strftime("%Y%m%d%H%M%S", time.localtime())
+    #open('outcleaning_%s.json'%stamp,'w').write( json.dumps( sites_and_datasets, indent=2))
+    #open('keepcopies_%s.json'%stamp,'w').write( json.dumps( our_copies, indent=2))
+    #open('wfcleanout_%s.json'%stamp,'w').write( json.dumps( wf_cleaned, indent=2))
 
 
     if (not options.test) and (options.auto or raw_input("Satisfied ? (y will trigger status change and deletion requests)") in ['y']):
         for (site,items) in sites_and_datasets.items():
-            datasets = [ ds for ds,_,st in items]
-            print "making deletion to",site
-            result = makeDeleteRequest(url, site, datasets, "Cleanup output after production. DataOps will take care of approving it.")
-            print result
+            #datasets = [ ds for ds,_,st in items]
+            #is_tape = any([v in site for v in ['MSS','Export','Buffer'] ])
+            #comments="Cleanup output after production. DataOps will take care of approving it."
+            #if is_tape:
+            #    comments="Cleanup output after production."
+            #print "making deletion to",site
+            #result = makeDeleteRequest(url, site, datasets, comments=comments)
+            #print result
             ## approve it right away ?
-            if 'MSS' in site: continue
-            if 'Export' in site: continue
-            if 'Buffer' in site: continue
-            for did in [item['id'] for item in result['phedex']['request_created']]:
-                print "auto-approve disabled, but ready"
-                #approveSubscription(url, did, nodes = [site], comments = 'Auto-approving production cleaning deletion')
-                pass
+            #for did in [item['id'] for item in result['phedex']['request_created']]:
+            #    if not is_tape:
+            #        print "auto-approving to",site,"?"
+            #        if not site in do_not_autoapprove:
+            #            approveSubscription(url, did, nodes = [site], comments = 'Production cleaning by data ops, auto-approved')
+            #        pass
+            pass
         session.commit()
     else:
         print "Not making the deletion and changing statuses"
@@ -214,7 +226,6 @@ if __name__ == "__main__":
     parser.add_option('-n','--number',help='Specify the amount of wf to clean',type=int, default=0)
     parser.add_option('-a','--auto',help='Do not ask confirmation',action='store_true',default=False)
     parser.add_option('-f','--fetch',help='The coma separated list of status to fetch from',default='clean,forget')
-    parser.add_option('--approve',help='Approve the previous round of deletions',default=False,action='store_true')
     (options,args) = parser.parse_args()
     
     outcleanor(url, options)

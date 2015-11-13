@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-import urllib2,urllib, httplib, sys, re, os, json, time, math, dbsTest, locale
+import urllib2, urllib, httplib, sys, re, os, json, time, math, locale
+from deprecated import dbsTest
 import optparse, closeOutWorkflows
 from xml.dom.minidom import getDOMImplementation
 

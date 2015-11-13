@@ -8,7 +8,7 @@ Usage:
     JSON_FILE: the json file with the request to
  
 """
-import logging, json, sys
+import json, sys
 from optparse import OptionParser
 from reqmgr import ReqMgrClient
 

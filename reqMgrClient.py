@@ -5,11 +5,13 @@
     url parameter is normally 'cmsweb.cern.ch'
 """
 
-import urllib2,urllib, httplib, sys, re, os, json
-from xml.dom.minidom import getDOMImplementation
+import urllib
+import httplib
+import re
+import os
+import json
 import dbs3Client as dbs3
 import copy
-from utils import workflowInfo
 
 # default headers for PUT and POST methods
 def_headers={"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
@@ -79,15 +81,17 @@ class Workflow:
         depending of the kind of workflow, by default gets
         it from the workload cache.
         """
-        return self.cache['TotalInputLumis']
+        if 'TotalInputLumis' in self.cache:
+            return self.cache['TotalInputLumis']
+        return 0
     
-    def getOutputEvents(self, ds):
+    def getOutputEvents(self, ds, skipInvalid=False):
         """
         gets the output events on one of the output datasets
         """
         #We store the events to avoid checking them twice
         if ds not in self.outEvents:
-            events = dbs3.getEventCountDataSet(ds)
+            events = dbs3.getEventCountDataSet(ds, skipInvalid)
             self.outEvents[ds] = events
         else:
             events = self.outEvents[ds]
@@ -329,6 +333,7 @@ def requestManagerPost(url, request, params, head = def_headers, nested=False):
     url: the instance used, i.e. url='cmsweb.cern.ch' 
     request: the request suffix url for the POST method
     params: a dict with the POST parameters
+    nested: deep encode a json parameters
     """
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
                                     key_file = os.getenv('X509_USER_PROXY'))
@@ -340,6 +345,7 @@ def requestManagerPost(url, request, params, head = def_headers, nested=False):
         encodedParams = urllib.urlencode(jsonEncodedParams)
     else:
         encodedParams = urllib.urlencode(params)
+
     conn.request("POST", request, encodedParams, headers)
     response = conn.getresponse()
     data = response.read()
@@ -365,7 +371,7 @@ def requestManagerPut(url, request, params, head = def_headers):
     conn.close()
     return data
 
-def getWorkflowWorkload(url, workflow):
+def getWorkflowWorkload(url, workflow, retries=4):
     """
     Gets the workflow loaded, splitted by lines.
     """
@@ -532,7 +538,7 @@ def getInputEvents(url, workflow):
             return events
         # otherwize, the full lumi count
         else:
-            events = dbs3.getEventCountDataset(inputDataSet)
+            events = dbs3.getEventCountDataSet(inputDataSet)
             return events
     
     events = dbs3.getEventCountDataSet(inputDataSet)
@@ -642,7 +648,7 @@ def getOutputEvents(url, workflow, dataset):
     Gets the output events depending on the type
     of the request
     """
-    request = getWorkflowInfo(url, workflow)
+    # request = getWorkflowInfo(url, workflow)
     return dbs3.getEventCountDataSet(dataset)
 
 def getFilterEfficiency(url, workflow, task=None):
@@ -674,13 +680,21 @@ def getOutputLumis(url, workflow, dataset):
     Gets the output lumis depending on the type
     of the request
     """
-    request = getWorkflowInfo(url, workflow)
+    # request = getWorkflowInfo(url, workflow)
     return dbs3.getLumiCountDataSet(dataset)
     
 def assignWorkflow(url, workflowname, team, parameters ):
+    #local import so it doesn't screw with all other stuff
+    from utils import workflowInfo
     defaults = copy.deepcopy( assignWorkflow.defaults )
     defaults["Team"+team] = "checked"
     defaults["checkbox"+workflowname] = "checked"
+
+    from utils import workflowInfo
+    wf = workflowInfo(url, workflowname)
+
+    # set the maxrss watchdog to what is specified in the request
+    defaults['MaxRSS'] = wf.request['Memory']*1024+10
 
     defaults.update( parameters )
 
@@ -689,13 +703,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
         print list(set(assignWorkflow.mandatories) - set(parameters.keys()))
         return False
 
-    if not 'execute' in defaults or not defaults['execute']:
-        print json.dumps( defaults ,indent=2)
-        return False
-    else:
-        defaults.pop('execute')
 
-    wf = workflowInfo(url, workflowname)
     if wf.request['RequestType'] == 'ReDigi':
         defaults['Dashboard'] = 'reprocessing'
         defaults['dashboard'] = 'reprocessing'
@@ -708,9 +716,6 @@ def assignWorkflow(url, workflowname, team, parameters ):
             print "Cannot assign with no site whitelist"
             return False
 
-    # set the maxrss watchdog to what is specified in the request
-    defaults['MaxRSS'] = wf.request['Memory']*1024+10
-
     for aux in assignWorkflow.auxiliaries:
         if aux in defaults: 
             par = defaults.pop( aux )
@@ -722,7 +727,8 @@ def assignWorkflow(url, workflowname, team, parameters ):
                 if par < params['events_per_job']:
                     params.update({"requestName":workflowname,
                                    "splittingTask" : '/%s/%s'%(workflowname,t),
-                                   "events_per_job": par})
+                                   "events_per_job": par,
+                                   "splittingAlgo":"EventBased"})
                     print setWorkflowSplitting(url, params)
             elif aux == 'EventsPerLumi':
                 wf = workflowInfo(url, workflowname)
@@ -730,6 +736,10 @@ def assignWorkflow(url, workflowname, team, parameters ):
                 params = wf.getSplittings()[0]
                 if params['splittingAlgo'] != 'EventBased': 
                     print "Ignoring changing events per lumi for",params['splittingAlgo']
+                    continue
+                (_,prim,_,_) = wf.getIO()
+                if prim:
+                    print "Ignoring changing events per lumi for wf that take input"
                     continue
 
                 if str(par).startswith('x'):
@@ -756,18 +766,33 @@ def assignWorkflow(url, workflowname, team, parameters ):
                 params.update({"requestName":workflowname,
                                "splittingTask" : '/%s/%s'%(workflowname,t),
                                "splittingAlgo" : par})
+                #swap values
+                if "avg_events_per_job" in params and not "events_per_job" in params:
+                    params['events_per_job' ] = params.pop('avg_events_per_job')
+                print params
                 print setWorkflowSplitting(url, params)
-            elif aux == 'LumisPerJob': ## this is just for fun, we should never need that fall-back
+            elif aux == 'LumisPerJob': 
                 wf = workflowInfo(url, workflowname)
                 t = wf.firstTask()
-                params = wf.getSplittings()[0]
-                params.update({"requestName":workflowname,
-                               "splittingTask" : '/%s/%s'%(workflowname,t),
-                               "lumis_per_job" : par})
+                #params = wf.getSplittings()[0]
+                params = {"requestName":workflowname,
+                          "splittingTask" : '/%s/%s'%(workflowname,t),
+                          "lumis_per_job" : par,
+                          #"halt_job_on_file_boundaries" : True,
+                          "splittingAlgo" : "LumiBased"}
                 print setWorkflowSplitting(url, params)
-                return False ## not commissioned
             else:
                 print "No action for ",aux
+
+    if not 'execute' in defaults or not defaults['execute']:
+        print json.dumps( defaults ,indent=2)
+        return False
+    else:
+        defaults.pop('execute')
+        print json.dumps( defaults ,indent=2)
+
+    if defaults['useSiteListAsLocation'] =='False' or defaults['useSiteListAsLocation'] == False:
+        defaults.pop('useSiteListAsLocation')
 
     jsonEncodedParams = {}
     for paramKey in defaults.keys():
@@ -808,7 +833,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
 assignWorkflow.defaults= {
         "action": "Assign",
         "SiteBlacklist": [],
-        #"useSiteListAsLocation" : False,
+        "useSiteListAsLocation" : False,
         "UnmergedLFNBase": "/store/unmerged",
         "MinMergeSize": 2147483648,
         "MaxMergeSize": 4294967296,
@@ -821,6 +846,7 @@ assignWorkflow.defaults= {
         "dashboard": "production",
         "SoftTimeout" : 159600,
         "GracePeriod": 300,
+        'CustodialSites' : [], ## make a custodial copy of the output there
         "CustodialSubType" : 'Replica', ## move will screw it over ?
         'NonCustodialSites' : [],
         "NonCustodialSubType" : 'Replica', ## that's the default, but let's be sure
@@ -832,7 +858,7 @@ assignWorkflow.mandatories = ['SiteWhitelist',
                               'ProcessingString',
                               'MergedLFNBase',
                               
-                              'CustodialSites', ## make a custodial copy of the output there
+                              #'CustodialSites', ## make a custodial copy of the output there
                               
                               #'SoftTimeout',
                               #'BlockCloseMaxEvents',
@@ -843,12 +869,19 @@ assignWorkflow.mandatories = ['SiteWhitelist',
 assignWorkflow.auxiliaries = [ 'SplittingAlgorithm',
                                'EventsPerJob',
                                'EventsPerLumi',
-                               'LumisPerJob'
+                               'LumisPerJob',
                                ]
 
 assignWorkflow.keys = assignWorkflow.mandatories+assignWorkflow.defaults.keys() + assignWorkflow.auxiliaries
 
 
+def forceCompleteWorkflow(url, workflowname):
+    """
+    Moves a workflow from running-closed to force-complete
+    """
+    params = {"requestName" : workflowname,"status" : "force-complete"}
+    data = requestManagerPut(url,"/reqmgr/reqMgr/request", params)
+    return data
 
 def closeOutWorkflow(url, workflowname):
     """
@@ -910,6 +943,19 @@ def setWorkflowRunning(url, workflowname):
     params = {"requestName" : workflowname,"status" : "running"}
     data = requestManagerPut(url,"/reqmgr/reqMgr/request", params)
     return data
+
+def invalidateWorkflow(url, workflowname, current_status=None):
+    if not current_status:
+        print "not implemented yet to retrieve the status at that point"
+    
+    if current_status in ['assignment-approved','new','completed','closed-out','announced','failed']:
+        return rejectWorkflow(url, workflowname)
+    elif current_status in['normal-archived']:
+        params = {"requestName" : workflowname,"status" : "rejected-archived"}
+        data = requestManagerPut(url,"/reqmgr/reqMgr/request", params)
+        return data
+    else:
+        return abortWorkflow(url, workflowname)
 
 def rejectWorkflow(url, workflowname):
     """
@@ -981,11 +1027,11 @@ def getInputEventsTaskChain(request):
         if blockWhitelist:
             return dbs3.getEventCountDataSetBlockList(inputDataSet,blockWhitelist)
         if blockBlacklist:
-            return dbs3.getEventCountDataset(inputDataSet) - dbs3.getEventCountDataSetBlockList(inputDataSet,blockBlacklist)
+            return dbs3.getEventCountDataSet(inputDataSet) - dbs3.getEventCountDataSetBlockList(inputDataSet,blockBlacklist)
         if runWhitelist:
             return dbs3.getEventCountDataSetRunList(inputDataSet, runWhitelist)
         else:
-            return dbs3.getEventCountDataset(inputDataSet)
+            return dbs3.getEventCountDataSet(inputDataSet)
     #TODO what if intermediate steps have filter efficiency?
 ### TODO: implement multi white/black list
 #        if len(blockWhitelist)>0 and len(runWhitelist)>0:

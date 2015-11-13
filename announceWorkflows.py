@@ -5,33 +5,33 @@ for which the given request is a parent and announce them too.
     input arg: Text file with list of workflows.
 """
 
-import urllib2,urllib, httplib, sys, re, os
-try:
-    import json
-except:
-    import simplejson as json
+import sys
+import optparse
 import reqMgrClient
+url='cmsweb.cern.ch'
 
 def main():
-    """
-    Read the text file, for each workflow try:
-    Announce it.
-    """
-    args=sys.argv[1:]
-    if not len(args)==1:
-        print "usage:announceWorkflows file.txt"
+    
+    parser = optparse.OptionParser()
+    parser.add_option('-f', '--file', help='Text file', dest='file')
+    (options, args) = parser.parse_args()
+    
+    if options.file:
+        workflows = [wf.strip() for wf in open(options.file) if wf.strip()]
+    elif len(args) >= 1:
+        workflows = args
+    else:
+        parser.error("Provide the workflow names or a text file")
         sys.exit(0)
-    url='cmsweb.cern.ch'
-    filename=args[0]
-    workflows = [wf.strip() for wf in open(filename).readlines() if wf.strip()]
+    
     for workflow in workflows:
         print "Announcing workflow: " + workflow +". Look for resubmissions and announce them too"
         result=reqMgrClient.announceWorkflowCascade(url, workflow)
         if result==None or result == 'None':
-          print "Announced"
+            print "Announced"
         else:
-          print "ERROR NOT ANNOUNCED"
-          print result
+            print "ERROR NOT ANNOUNCED"
+            print result
           
     sys.exit(0);
 

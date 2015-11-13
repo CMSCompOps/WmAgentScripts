@@ -78,7 +78,7 @@ def duplicateLumi(dataset, verbose=False, skipInvalid=False):
     """
     checks if output dataset has duplicate lumis
     returns true if at least one duplicate lumi was found
-    Verbose: if true prints details
+    Verbose: if true prints details, id "dict" it will return also the lumi -> files dictionary
     skipInvalid: if true skips invalid files, by default is False because is faster
    """
     # initialize API to DBS3
@@ -100,14 +100,25 @@ def duplicateLumi(dataset, verbose=False, skipInvalid=False):
             if lumi in lumisChecked:
                 #if verbose print results, if not end quickly
                 if verbose:
+                    lumisChecked[lumi].append(logical_file_name)
+
                     print 'Lumi',lumi,'is in these files'
-                    print logical_file_name
-                    print lumisChecked[lumi]
+                    print lumisChecked[lumi][0]
+                    print lumisChecked[lumi][1]
+                    #add to the list
+                    lumisChecked[lumi].append(logical_file_name)
                     duplicated = True
                 else:
                     return True
             else:
-                lumisChecked[lumi] = logical_file_name
+                lumisChecked[lumi] = [logical_file_name]
+    #return the dictionary if asked
+    if verbose and verbose == "dict":
+        #clean and leave only duplicated lumis
+        for lumi in lumisChecked.keys():
+            if len(lumisChecked[lumi]) < 2:
+                del lumisChecked[lumi]
+        return duplicated, lumisChecked
     return duplicated
 
 
@@ -208,7 +219,7 @@ def getNumberofFilesPerRun(das_url, dataset, run):
     """
     Count number of files
     """
-     # initialize API to DBS3
+    # initialize API to DBS3
     dbsapi = DbsApi(url=dbs3_url)
 
     # retrieve file list
@@ -220,7 +231,7 @@ def getFileCountDataset(dataset, skipInvalid=False, onlyInvalid=False):
     """
     Returns the number of files registered in DBS3
     """
-     # initialize API to DBS3
+    # initialize API to DBS3
     dbsapi = DbsApi(url=dbs3_url)
 
     # retrieve file list
@@ -264,7 +275,7 @@ def getLumiCountDataSet(dataset):
     dbsapi = DbsApi(url=dbs3_url)
     # retrieve dataset summary
     reply = dbsapi.listFileSummaries(dataset=dataset)
-    if not reply:
+    if not reply or not reply[0]:
         return 0
     return reply[0]['num_lumi']
 
@@ -390,8 +401,6 @@ def main():
     if len(args) < 1:
         print "usage:dbs3Client dataset dataset2 ..."
         sys.exit(0)
-    workflow=args[0]
-    url='cmsweb.cern.ch'
     datasets = args
     for dataset in datasets:
         print dataset
@@ -401,6 +410,7 @@ def main():
         print " Open Blocks: ", info[0]
         print " Creation:", datetime.datetime.fromtimestamp(info[1]).strftime('%Y-%m-%d %H:%M:%S')
         print " Last update:", datetime.datetime.fromtimestamp(info[2]).strftime('%Y-%m-%d %H:%M:%S')
+        print " Status (access type):", getDatasetStatus(dataset)
         #print " Duplicated Lumis:", duplicateRunLumi(dataset)
         #print " Duplicated Lumis:", duplicateLumi(dataset)
         #print " Runs", getRunsDataset(dataset))
