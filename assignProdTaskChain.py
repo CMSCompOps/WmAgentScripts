@@ -131,6 +131,7 @@ def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lf
     if replica:
         params["NonCustodialSites"] = getRandomDiskSite(),
         params["NonCustodialSubType"] = "Replica"
+        params['AutoApproveSubscriptionSites'] = [params["NonCustodialSites"]]
 
     if verbose:
         pprint(params)

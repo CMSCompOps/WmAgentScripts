@@ -205,7 +205,7 @@ def getOutputModules(workload, initialTask = None):
     return outputModules
 
 def getFiles(datasetName, runBlacklist, runWhitelist, blockBlacklist,
-             blockWhitelist, dbsUrl):
+             blockWhitelist, dbsUrl, fakeLocation=False):
     """
     _getFiles_
 
@@ -249,7 +249,16 @@ def getFiles(datasetName, runBlacklist, runWhitelist, blockBlacklist,
                 if type(cmsSites) != list:
                     cmsSites = [cmsSites]
                 for cmsName in cmsSites:
-                    blockLocations.update(siteDB.cmsNametoSE(cmsName))
+                    se = siteDB.cmsNametoSE(cmsName)
+                    blockLocations.update(se)
+                    logging.debug("cmsName %s mapped to se %s", cmsName, se)
+                logging.debug("PhEDEx node %s, cmsSites %s, blockLocations %s", node, cmsSites, blockLocations)
+
+        # We cannot upload docs without location, so force it in case it's empty
+        if fakeLocation and not blockLocations:
+            blockLocations.update([u'cmssrmdisk.fnal.gov', u'srm-eoscms.cern.ch'])
+        logging.info("Blockname: %s\tLocations: %s", blockName, blockLocations)
+ 
         #for each file on the block
         for blockFile in blockFiles:
             parentLFNs = []
@@ -367,6 +376,7 @@ def defineRequests(workload, requestInfo,
                    acdcCouchUrl, acdcCouchDb,
                    requestor, group,
                    dbsUrl,
+                   fakeLocation,
                    datasetInformation = None):
     """
     _defineRequests_
@@ -389,7 +399,8 @@ def defineRequests(workload, requestInfo,
     if datasetInformation is None:
         datasetInformation = {}
         logging.info("Loading DBS information for the datasets...")
-        datasetInformation[inputDataset] = getFiles(inputDataset, runBlacklist, runWhitelist, blockBlacklist, blockWhitelist, dbsUrl)
+        datasetInformation[inputDataset] = getFiles(inputDataset, runBlacklist, runWhitelist,
+                                                    blockBlacklist, blockWhitelist, dbsUrl, fakeLocation=fakeLocation)
         for dataset in workload.listOutputDatasets():
             datasetInformation[dataset] = getFiles(dataset, runBlacklist, runWhitelist, blockBlacklist, blockWhitelist, dbsUrl)
         logging.info("Finished loading DBS information for the datasets...")
@@ -615,6 +626,9 @@ def main():
     myOptParser.add_option("-v", "--verbose", dest = "verbose",
                            default = False, action = "store_true",
                            help = "Increase the level of verbosity for debug")
+    myOptParser.add_option("-f", "--fake", dest = "fake",
+                           default = False, action = "store_true",
+                           help = "In case there is no block location, forces it to CERN and FNAL")
     val, _ = myOptParser.parse_args()
 
     logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
@@ -636,8 +650,8 @@ def main():
     if val.requestor is None or val.group is None:
         raise RuntimeError("Requestor and group must be specified.")
     # Define the requests
-    defineRequests(workload, requestInfo, val.acdcUrl, val.acdcServer,
-                   val.requestor, val.group, val.dbsUrl, datasetInformation)
+    defineRequests(workload, requestInfo, val.acdcUrl, val.acdcServer, val.requestor,
+                   val.group, val.dbsUrl, val.fake, datasetInformation)
 
 if __name__ == "__main__":
     sys.exit(main())

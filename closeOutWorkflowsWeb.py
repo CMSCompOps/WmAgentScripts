@@ -30,7 +30,6 @@ def closeOutReRecoWorkflowsWeb(url, workflows, output):
     closes rereco workflows
     """
     noSiteWorkflows = []
-    count = 0
     for wf in workflows:
         try:
             if 'RelVal' in wf:
@@ -46,12 +45,10 @@ def closeOutReRecoWorkflowsWeb(url, workflows, output):
             result = validateClosingWorkflow(url, workflow, closePercentage=1.0, 
                 checkEqual=True, checkDuplicates=False)
             printResult(result)
-            printResultWeb(result, output, count % 2 == 0)
-            count += 1
-            if result['closeOutWorkflow']:
-                # TODO Not closeout yet
-                pass 
-            #   reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
+            printResultWeb(result, output)
+            #if result['closeOutWorkflow']:
+            # TODO 
+            #    reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
             #populate the list without subs
             missingSubs = True
             for (ds,info) in result['datasets'].items():
@@ -225,15 +222,12 @@ def closeOutTaskChainWeb(url, workflows, output):
     print '-'*180
     return noSiteWorkflows
 
-def printResultWeb(result, output, even=True):
+def printResultWeb(result, output):
     """
     Prints the result of analysing a workflow in web output
     """
     for dsname, ds in result['datasets'].items():
-        if not even:
-            row = '<tr><td><a name="%s">%s</a></td>'+('<td>%s</td>'*9)+'</tr>\n'
-        else:
-            row = '<tr class="even"><td><a name="%s">%s</a></td>'+('<td>%s</td>'*9)+'</tr>\n'
+        row = '<tr><td><a name="%s">%s</a></td>'+('<td>%s</td>'*9)+'</tr>\n'
         output.write( row % (result["name"], result["name"], dsname,
             "%.3f"%(ds["percentage"]*100),
             "?" if ds["duplicate"] is None else ds["duplicate"],

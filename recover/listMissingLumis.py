@@ -103,10 +103,7 @@ def getMissingLumiList(workload, requestInfo, dbsUrl):
 
     # Now go through all the output datasets, creating a single request for
     # each
-    for dataset, diffedLumis in differenceInformation.items():
-        print dataset
-        pprint(diffedLumis)
-    
+    return differenceInformation
 
 def main():
     """
@@ -146,7 +143,13 @@ def main():
     workload, requestInfo = getRequestInformationAndWorkload(val.requestName, val.reqMgrUrl)
 
     # calculate lumis
-    getMissingLumiList(workload, requestInfo, val.dbsUrl)
+    diffInfo = getMissingLumiList(workload, requestInfo, val.dbsUrl)
+    for dataset, diffedLumis in diffInfo.items():
+        print "For dataset:"
+        print dataset
+        print len(diffedLumis), "missing lumis"
+        pprint(diffedLumis)
+    
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -216,20 +216,18 @@ def closeOutReRecoWorkflows(url, workflows):
         if 'RelVal' in wf:
             continue
         if 'TEST' in wf:
-            continue     
+            continue        
         #first validate if effectively is completed
         workflow = reqMgrClient.ReReco(wf)
         if workflow.status != 'completed':
             continue
         #closeout workflow, checking percentage equalst 100%
         result = validateClosingWorkflow(url, workflow, closePercentage=1.0, 
-            checkEqual=True, checkDuplicates=True)
+            checkEqual=True, checkDuplicates=False)
         printResult(result)
         #if validation successful
         if result['closeOutWorkflow']:
-            #TODO not closeout
-            pass
-            #reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
+            reqMgrClient.closeOutWorkflowCascade(url, workflow.name)
         #populate the list without subs
         missingSubs = True
         for (ds,info) in result['datasets'].items():
