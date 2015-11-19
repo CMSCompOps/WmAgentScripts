@@ -30,7 +30,7 @@ def main():
         if result == None or result == 'None':
             print "Closed out"
         else:
-            print "ERROR NOT ANNOUNCED"
+            print "ERROR NOT CLOSED OUT"
             print result
           
     sys.exit(0);

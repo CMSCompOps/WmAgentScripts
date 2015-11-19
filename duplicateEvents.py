@@ -6,11 +6,12 @@
 """
 
 import sys
+import optparse
 import dbs3Client
 import reqMgrClient
 
 
-def testEventCountWorkflow(url, workflow, verbose=False):
+def duplicateLumisWorkflow(url, workflow, verbose=False):
     """
     Shows where the workflow hs duplicate events    
     """
@@ -31,29 +32,48 @@ def testEventCountWorkflow(url, workflow, verbose=False):
         print "No duplicate found"
     return duplicate
 
-def main():
-    args=sys.argv[1:]
-    verbose = False
-    if not len(args)>=2:
-        print "usage input_file output_file [options]"
-        return
+def duplicateLumisDataset(url, dataset, verbose=False):
+    print 'dataset :', dataset        
+    #if dbs3Client.duplicateLumi(dataset, verbose):
+    if dbs3Client.duplicateRunLumi(dataset, verbose, skipInvalid=True):
+        #fast check, one dataset duplicated
+        if not verbose:
+            print 'Has duplicated lumis'
+            return True
+    else:
+        print "No duplicate found"
+    return False
 
-    if '-v' in args:
-        verbose = True
- 
+def main():
+    
+    usage = "usage: %prog [options] [WORKFLOW]"
+    parser = optparse.OptionParser(usage=usage)
+
+    parser.add_option('-f', '--file', help='Text file with a list of wokflows.', dest='file')
+    parser.add_option('-d', '--dataset', help='Analyse a given dataset instead of a workflow.', dest='dataset')
+    parser.add_option('-v', '--verbose', help='Generates a printout of duplicated lumis', dest='verbose',
+                      action='store_true', default=False)
+    options, args = parser.parse_args()
+    
     url = 'cmsweb.cern.ch'
-    #read the file
-    input_file = args[0]
-    #strip carriage return, spaces and empty lines
-    workflows = [wf.strip() for wf in open(input_file).readlines() if wf.strip()]
-    output_file = open(args[1],'w')
-    #print verbose
+   
+    if options.file:
+        workflows = [l.strip() for l in open(options.file) if l.strip()]
+    elif args:
+        workflows = args
+    elif options.dataset:
+        duplicateLumisDataset(url, options.dataset, options.verbose)
+        sys.exit(0)
+    else:
+        parser.error("Provide workflows or datasets to analyse")
+        sys.exit(0)
+    
     for workflow in workflows:
-        if testEventCountWorkflow(url, workflow, verbose):
-            #save which workflows had duplicate lumis
-            output_file.write(workflow+'\n')
-    output_file.close()
-    sys.exit(0);
+        if duplicateLumisWorkflow(url, workflow, options.verbose):
+            print workflow, "has duplicated lumis"
+        else:
+            print "No duplicate found"
+    
 
 if __name__ == "__main__":
     main()
