@@ -56,6 +56,11 @@
                  "solution" : "recover" , 
                  "details" : "FileReadError",
                  "rate" : 20
+                 } ],
+        "8001" : [ { "legend" : "lhe failure",
+                 "solution" : "split-4" , 
+                 "details" : "No lhe event found in ExternalLHEProducer::produce()",
+                 "rate" : 20
                  } ]
         },
   "description" : "The error code, threshold and rules for auto-recovery"
