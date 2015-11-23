@@ -97,6 +97,8 @@ def injector(url, options, specific):
                     if new_wf.status != 'away':
                         print "\t setting it considered"
                         new_wf.status = 'considered'
+                    if tr.phedexid<0: ## set it back to positive
+                        tr.phedexid = -tr.phedexid
                     session.commit()
                         
 

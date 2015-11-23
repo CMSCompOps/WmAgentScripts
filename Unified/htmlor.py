@@ -102,7 +102,7 @@ def htmlor( caller = ""):
             date2 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime())
             text+='<a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#table=Jobs&date1=%s&date2=%s&sortby=site&task=wmagent_%s">dashb</a>'%( date1, date2, wfn )
 
-        text+="<hr>"
+        #text+="<hr>"
         return text
 
 
@@ -239,32 +239,65 @@ Worflow waiting in staging (%d) <a href=logs/transferor/last.log target=_blank>l
 
     lap ( 'done with staging' )
 
-    text=""
+    text="<ul>"
     count=0
-    for ts in session.query(Transfer).all():
-        stext='<li> %s serves </li><a href="javascript:showhide(\'%s\')">[show/hide] relevant workflows</a> <div id="%s" style="display:none;"><ul>'%( phl(ts.phedexid), ts.phedexid, ts.phedexid )
+    transfer_per_wf = defaultdict(list)
+    for ts in session.query(Transfer).filter(Transfer.phedexid>0).all():
         hide = True
+        t_count = 0
+        stext=""
         for pid in ts.workflows_id:
             w = session.query(Workflow).get(pid)
             hide &= (w.status != 'staging' )
             if w.status in ['considered','staging','staged']:
-                stext+="<li> %s </li>\n"%( wfl(w,status=True))
-        stext+="</ul></div>\n"
+                stext += "<li> %s </li>\n"%( wfl(w,status=True))
+                transfer_per_wf[w].append( ts.phedexid )
+                t_count +=1
+        stext = '<li> %s serves %d workflows<br><a href="javascript:showhide(\'%s\')">[show/hide]</a> <div id="%s" style="display:none;"><ul>\n'%( phl(ts.phedexid), t_count, ts.phedexid, ts.phedexid ) + stext
+        
+        stext+="</ul></li>\n"
         if hide:
             #text+="<li> %s not needed anymore to start running (does not mean it went through completely)</li>"%phl(ts.phedexid)
             pass
         else:
             count+=1
             text+=stext
-    text+="</ul></div>"
+    text+="</ul>"
+    
+    text_bywf="<ul>"
+    for wf in transfer_per_wf:
+        text_bywf += "<li> %s </li>"%(wfl(wf,within=True))
+        text_bywf += '<a href=javascript:showhide("transfer_%s")>[Click to show/hide] %d transfers</a>'% (wf.name, len(transfer_per_wf[wf]))
+        text_bywf += '<div id="transfer_%s" style="display:none;">'% wf.name
+        text_bywf += "<ul>"
+        for pid in sorted(transfer_per_wf[wf]):
+            text_bywf += "<li> %s </li>"%(phl(pid))
+        text_bywf += "</ul></div><hr>"
+    text_bywf += '</ul>'
+
     html_doc.write("""
 Transfer on-going (%d) <a href=https://transferteam.web.cern.ch/transferteam/dashboard/ target=_blank>dashboard</a> <a href=logs/transferor/last.log target=_blank>log</a> <a href=logs/stagor/last.log target=_blank>postlog</a>
 <a href="javascript:showhide('transfer')">[Click to show/hide]</a>
 <br>
 <div id="transfer" style="display:none;">
-<br>
-<ul>"""%count)
-    html_doc.write(text)
+ <ul>
+  <li> By Workflow
+    <a href="javascript:showhide('transfer_bywf')">[Click to show/hide]</a>
+    <div id="transfer_bywf" style="display:none;">
+%s
+    </div>
+  </li>
+  <li> By transfer request
+    <a href="javascript:showhide('transfer_byreq')">[Click to show/hide]</a>
+    <div id="transfer_byreq" style="display:none;"> 
+%s
+    </div>
+  </li>
+ </ul>
+</div>
+"""%(count,
+     text_bywf,
+     text))
 
     lap( 'done with transfers' )
 
@@ -310,7 +343,7 @@ Transfer on-going (%d) <a href=https://transferteam.web.cern.ch/transferteam/das
     for wf in session.query(Workflow).filter(Workflow.status=='away').all():
         wl = getWL( wf.name )
         count_by_campaign[wl['Campaign']][int(wl['RequestPriority'])]+=1
-        lines.append("<li> %s </li>"%wfl(wf,view=True,ongoing=True))
+        lines.append("<li> %s <hr></li>"%wfl(wf,view=True,ongoing=True))
     text_by_c=""
     for c in count_by_campaign:
         text_by_c+="<li> %s (%d) : "%( c, sum(count_by_campaign[c].values()) )
