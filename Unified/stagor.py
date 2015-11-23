@@ -10,6 +10,7 @@ import pprint
 import optparse
 from htmlor import htmlor
 from collections import defaultdict
+import copy 
 
 def stagor(url,specific =None, options=None):
     
@@ -33,23 +34,26 @@ def stagor(url,specific =None, options=None):
             still_lost.append( dataset )
     open('lost_blocks_datasets.json','w').write( json.dumps( still_lost, indent=2) )
 
+    cached_transfer_statuses = json.loads(open('cached_transfer_statuses.json').read())
+
     if options.fast:
         print "doing the fast check of staged with threshold:",options.goodavailability
         for wfo in session.query(Workflow).filter(Workflow.status == 'staging').all():
             if specific and not specific in wfo.name: continue
             wfi = workflowInfo(url, wfo.name)
-            sites_allowed = getSiteWhiteList( wfi.getIO() )
+            (_,primaries,_,secondaries,sites_allowed) = wfi.getSiteWhiteList()
             if 'SiteWhitelist' in CI.parameters(wfi.request['Campaign']):
                 sites_allowed = CI.parameters(wfi.request['Campaign'])['SiteWhitelist']
             if 'SiteBlacklist' in CI.parameters(wfi.request['Campaign']):
                 sites_allowed = list(set(sites_allowed) - set(CI.parameters(wfi.request['Campaign'])['SiteBlacklist']))
-            _,primaries,_,secondaries = wfi.getIO()
             se_allowed = [SI.CE_to_SE(site) for site in sites_allowed] 
             all_check = True
+            n_copies = wfi.getNCopies()
             for dataset in list(primaries):#+list(secondaries) ?
                 #print se_allowed
                 available = getDatasetBlocksFraction( url , dataset , sites=se_allowed )
-                all_check &= (available >= options.goodavailability)
+                #all_check &= (available >= options.goodavailability)
+                all_check &= (available >= n_copies)
                 if not all_check: break
 
             if all_check:
@@ -62,6 +66,12 @@ def stagor(url,specific =None, options=None):
 
     for wfo in session.query(Workflow).filter(Workflow.status == 'staging').all():
         wfi = workflowInfo(url, wfo.name)
+        if wfi.request['RequestStatus'] in ['running-open','running-closed','completed']:
+            print wfo.name,"is",wfi.request['RequestStatus']
+            wfi.status='away'
+            session.commit()
+            continue
+            
         _,primaries,_,secondaries = wfi.getIO()
         for dataset in list(primaries)+list(secondaries):
             done_by_input[dataset] = {}
@@ -71,7 +81,7 @@ def stagor(url,specific =None, options=None):
     ## this loop is very expensive and will not function at some point.
     ## transfer objects should probably be deleted as some point
 
-    for transfer in session.query(Transfer).all():
+    for transfer in session.query(Transfer).filter(Transfer.phedexid>0).all():
         if specific  and str(transfer.phedexid)!=str(specific): continue
 
         skip=True
@@ -82,7 +92,11 @@ def stagor(url,specific =None, options=None):
                     print "\t",transfer.phedexid,"is staging for",tr_wf.name
                     skip=False
 
-        if skip: continue
+        if skip: 
+            print "setting",transfer.phedexid,"to negative value"
+            transfer.phedexid = -transfer.phedexid
+            session.commit()
+            continue
         if transfer.phedexid<0: continue
 
         ## check the status of transfers
@@ -94,7 +108,12 @@ def stagor(url,specific =None, options=None):
             continue
 
         ## check on transfer completion
-        checks = checkTransferStatus(url, transfer.phedexid, nocollapse=True)
+        if str(transfer.phedexid) in cached_transfer_statuses:
+            ### use a cache for transfer that already looked done
+            print "read",transfer.phedexid,"from cache"
+            checks = cached_transfer_statuses[str(transfer.phedexid)]
+        else:
+            checks = checkTransferStatus(url, transfer.phedexid, nocollapse=True)
 
         if not specific:
             for dsname in checks:
@@ -126,9 +145,12 @@ def stagor(url,specific =None, options=None):
         if done:
             ## transfer.status = 'done'
             print transfer.phedexid,"is done"
+            cached_transfer_statuses[str(transfer.phedexid)] = copy.deepcopy(checks)
         else:
             print transfer.phedexid,"not finished"
             pprint.pprint( checks )
+
+    open('cached_transfer_statuses.json','w').write( json.dumps( cached_transfer_statuses, indent=2))
 
     missing_in_action = defaultdict(list)
     #print done_by_input
@@ -279,7 +301,7 @@ def stagor(url,specific =None, options=None):
     print report
 
     open('incomplete_transfers.log','w').write( report )
-    sendEmail('incomplete transfers', report)
+    sendEmail('incomplete transfers', report,sender=None, destination=['dc.jorge10@uniandes.edu.co','aram.apyan@cern.ch','sidn@mit.edu'])
 
 
 if __name__ == "__main__":
