@@ -1,4 +1,4 @@
-from utils import getWorkflows, findCustodialCompletion, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration
+from utils import getWorkflows, findCustodialCompletion, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration, getDatasetSize
 from assignSession import *
 import json
 import os
@@ -70,7 +70,8 @@ for dataset in already_locked-newly_locking:
                 custodials = findCustodialCompletion(url, dataset)
                 if len(custodials) == 0:
                     if not ds_status: ds_status = getDatasetStatus( dataset )
-                    print "Can't unlock",dataset,"because it is not custodial yet",ds_status
+                    ds_size = getDatasetSize( dataset )
+                    print "Can't unlock",dataset," of size", ds_size,"[GB] because it is not custodial yet",ds_status
                     ## add it back for that reason
                     newly_locking.add(dataset)
                     unlock = False
