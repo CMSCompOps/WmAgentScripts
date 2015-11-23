@@ -112,10 +112,11 @@ def recoveror(url,specific,options=None):
         if not specific and 'manual' in wfo.status: continue
         
         wfi = workflowInfo(url, wfo.name, deprecated=True) ## need deprecated info for mergedlfnbase
-
+        
+        
         ## need a way to verify that this is the first round of ACDC, since the second round will have to be on the ACDC themselves
 
-        all_errors = None
+        all_errors = {}
         try:
             wfi.getSummary()
             all_errors = wfi.summary['errors']
@@ -124,17 +125,22 @@ def recoveror(url,specific,options=None):
 
         print '-'*100        
         print "Looking at",wfo.name,"for recovery options"
-        
+
+        recover=True       
+ 
         if not len(all_errors): 
             print "\tno error for",wfo.name
+            recover = False
 
         task_to_recover = defaultdict(list)
         message_to_ops = ""
         message_to_user = ""
 
-        recover=True
         if 'LheInputFilese' in wfi.request and wfi.request['LheInputFiles']:
             ## we do not try to recover pLHE
+            recover = False
+
+        if wfi.request['RequestType'] == 'TaskChain':
             recover = False
 
         if 'Campaign' in wfi.request:
