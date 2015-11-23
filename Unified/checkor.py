@@ -314,6 +314,10 @@ def checkor(url, spec=None, options=None):
                 ## pick one at random
                 custodial = SI.pick_SE(size=size_worth_checking)
 
+            if not custodial:
+                print "cannot find a custodial for",wfo.name
+                sendEmail( "cannot find a custodial","cannot find a custodial for %s probably because of the total output size %d"%( wfo.name, size_worth_checking))
+                
             if custodial and ((not sub_assistance and not acdc) or by_pass_checks):
                 ## remember how much you added this round already ; this stays locally
                 SI.storage[custodial] -= size_worth_checking
@@ -324,9 +328,6 @@ def checkor(url, spec=None, options=None):
                             custodials[custodial].append( output )
                         else:
                             print "no file in phedex for",output," not good to add to custodial requests"
-            else:
-                print "cannot find a custodial for",wfo.name
-                sendEmail( "cannot find a custodial","cannot find a custodial for %s probably because of the total output size %d"%( wfo.name, size_worth_checking))
 
             is_closing = False
 
