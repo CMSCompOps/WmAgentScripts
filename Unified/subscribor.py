@@ -64,8 +64,8 @@ for site,blocks in all_blocks_at_sites.items():
     if 'Buffer' in site or 'Export' in site or 'MSS' in site: continue
 
     if not site in done: done[site] = []
-    print "Would subscribe",len(blocks),"blocks to",site
     blocks = [block for block in blocks if not block in done[site]]
+    print "Would subscribe",len(blocks),"blocks to",site
     print "\tSubscribe",len(blocks),"blocks to",site    
     done[site].extend( blocks )
     if blocks:
