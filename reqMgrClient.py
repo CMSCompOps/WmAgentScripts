@@ -709,7 +709,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
                 params = {"requestName":workflowname,
                           "splittingTask" : '/%s/%s'%(workflowname,t),
                           "lumis_per_job" : par,
-                          #"halt_job_on_file_boundaries" : True,
+                          "halt_job_on_file_boundaries" : True,
                           "splittingAlgo" : "LumiBased"}
                 print setWorkflowSplitting(url, params)
             else:
