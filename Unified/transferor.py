@@ -174,6 +174,11 @@ def transferor(url ,specific = None, talk=True, options=None):
         print wfo.name,"to be transfered"
         #wfh = workflowInfo( url, wfo.name)
 
+        if wfh.request['RequestStatus']!='assignment-approved':
+            wfo.status = 'away'
+            print wfo.name,"in status",wfh.request['RequestStatus'],"setting away"
+            continue
+
         (_,primary,_,_) = wfh.getIO()
         this_load=sum([input_sizes[prim] for prim in primary])
         if ( this_load and (sum(transfer_sizes.values())+this_load > transfer_limit or went_over_budget ) ):
@@ -323,24 +328,25 @@ def transferor(url ,specific = None, talk=True, options=None):
                 print "Sites allowed minus the vetoed transfer"
                 print sorted(sites_allowed)
 
-                copies_needed_from_site = int(0.35*len(sites_allowed))+1 ## should just go for a fixed number based if the white list grows that big
-                print "Would make",copies_needed_from_site,"copies from site white list"
-                copies_needed = copies_needed_from_site
+                #copies_needed_from_site = int(0.35*len(sites_allowed))+1 ## should just go for a fixed number based if the white list grows that big
+                #print "Would make",copies_needed_from_site,"copies from site white list"
+                #copies_needed = copies_needed_from_site
 
                 print "Would make",copies_needed_from_CPUh,"from cpu requirement",CPUh
                 copies_needed = copies_needed_from_CPUh
 
-                if options.maxcopy>0:
+                #if options.maxcopy>0:
                     ## stop maxing things out ??
                     #copies_needed = min(options.maxcopy,copies_needed)
                     #print "Maxed to",copies_needed
-                    if copies_needed_from_CPUh > options.maxcopy:
-                        sendEmail('An example of more than three copies','for %s it could have been beneficial to make %s copies'%( wfo.name, copies_needed_from_CPUh))
+                    #if copies_needed_from_CPUh > options.maxcopy:
+                    #    sendEmail('An example of more than three copies','for %s it could have been beneficial to make %s copies'%( wfo.name, copies_needed_from_CPUh))
 
                 
                 if 'Campaign' in wfh.request and wfh.request['Campaign'] in CI.campaigns and 'maxcopies' in CI.campaigns[wfh.request['Campaign']]:
                     copies_needed_from_campaign = CI.campaigns[wfh.request['Campaign']]['maxcopies']
-                    copies_needed = min(copies_needed_from_campaign,copies_needed_from_site)
+                    copies_needed = min(copies_needed_from_campaign, copies_needed)
+                    
                     print "Maxed to",copies_needed,"by campaign configuration",wfh.request['Campaign']
 
                 ## remove the sites that do not want transfers                
@@ -390,7 +396,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                     print "The output is all fully in place at",len(prim_location),"sites",prim_location
                     continue
                 copies_needed = max(0,copies_needed - len(prim_location))
-                print "now need",copies_needed
+                print "not counting existing copies ; now need",copies_needed
                 
                 copies_being_made = [ sum([info['blocks'].keys().count(block) for site,info in destinations.items() if site in prim_destination]) for block in all_block_names]
 
@@ -406,13 +412,13 @@ def transferor(url ,specific = None, talk=True, options=None):
                 prim_to_distribute = [site for site in prim_to_distribute if not any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
 
                 print "Could be going to:",prim_to_distribute
-
+                
                 if not prim_to_distribute or any([transfers_per_sites[site] < max_staging_per_site for site in prim_to_distribute]):
                     ## means there is openings let me go
                     print "There are transfer slots available:",[(site,transfers_per_sites[site]) for site in prim_to_distribute]
-                    for site in sites_allowed:
-                        #increment accross the board, regardless of real destination: could be changed
-                        transfers_per_sites[site] += 1
+                    #for site in sites_allowed:
+                    #    #increment accross the board, regardless of real destination: could be changed
+                    #    transfers_per_sites[site] += 1
                 else:
                     if int(wfh.request['RequestPriority']) >= in_transfer_priority and min_transfer_priority!=in_transfer_priority:
                         print "Higher priority sample",wfh.request['RequestPriority'],">=",in_transfer_priority,"go-on over transfer slots available"
@@ -423,12 +429,17 @@ def transferor(url ,specific = None, talk=True, options=None):
                             break
 
                 for latching in latching_on_transfers:
-                    tfo = session.query(Transfer).filter(Transfer.phedexid == latching).first()
+                    tfo = session.query(Transfer).filter(Transfer.phedexid == int(latching)).first()
+                    if not tfo:
+                        session.query(Transfer).filter(Transfer.phedexid == -int(latching)).first()
+                        
                     if not tfo:
                         tfo = Transfer( phedexid = latching)
                         tfo.workflows_id = []
                         session.add(tfo)
-                            
+                    else:
+                        tfo.phedexid = latching ## make it positive ever
+
                     if not wfo.id in tfo.workflows_id:
                         print "adding",wfo.id,"to",tfo.id,"with phedexid",latching
                         l = copy.deepcopy( tfo.workflows_id )
@@ -445,11 +456,15 @@ def transferor(url ,specific = None, talk=True, options=None):
                 # reduce the number of copies required by the on-going full transfer : how do we bootstrap on waiting for them ??
                 #copies_needed = max(0,copies_needed - len(prim_destination))
                 copies_needed = max(0,copies_needed - min(copies_being_made))
-                print "then need",copies_needed
+                print "Not counting the copies being made ; then need",copies_needed
                 if copies_needed == 0:
                     print "The output is either fully in place or getting in full somewhere with",latching_on_transfers
                     can_go = True
                     continue
+                elif len(prim_to_distribute)==0:
+                    print "We are going to need extra copies, but no destinations seems available"
+                    prim_to_distribute = [site for site in sites_allowed if not SI.CE_to_SE(site) in prim_location]
+                    prim_to_distribute = [site for site in prim_to_distribute if not any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
 
                 if len(prim_to_distribute)>0: ## maybe that a parameter we can play with to limit the 
                     if not options or options.chop:
@@ -468,7 +483,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                     print "selected CE destinations",spreading.keys()
                     for (site,items) in spreading.items():
                         all_transfers[site].extend( items )
-
+                        transfers_per_sites[site] += 1
         if not allowed:
             print "Not allowed to move on with",wfo.name
             continue
@@ -615,11 +630,16 @@ def transferor(url ,specific = None, talk=True, options=None):
             print "ERROR Could not make a replica request for",site,items_to_transfer,"pre-staging"
             continue
         for phedexid in [o['id'] for o in result['phedex']['request_created']]:
-            new_transfer = session.query(Transfer).filter(Transfer.phedexid == phedexid).first()
+            new_transfer = session.query(Transfer).filter(Transfer.phedexid == int(phedexid)).first()
+            if not new_transfer:
+                new_transfer = session.query(Transfer).filter(Transfer.phedexid == -int(phedexid)).first()
             print phedexid,"transfer created"
             if not new_transfer:
                 new_transfer = Transfer( phedexid = phedexid)
                 session.add( new_transfer )                
+            else:
+                new_transfer.phedexid = phedexid ## make it positive again
+
             new_transfer.workflows_id = set()
             for transfering in list(set(map(lambda it : it.split('#')[0], items_to_transfer))):
                 new_transfer.workflows_id.update( workflow_dependencies[transfering] )
