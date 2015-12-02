@@ -269,9 +269,15 @@ class TaskChain(Workflow):
     def __init__(self, name, url='cmsweb.cern.ch', workflow=None):
         Workflow.__init__(self, name, url, workflow)
     
+    def getInputDataset(self):
+        task1 = self.info['Task1']
+        if 'InputDataset' in task1:
+            return task1['InputDataset']
+        return None
+    
     def getInputEvents(self):
         return getInputEventsTaskChain(self.info)
-
+    
     def getFilterEfficiency(self, task):
         """
         Filter efficiency of a given task
