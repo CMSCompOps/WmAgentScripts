@@ -51,6 +51,7 @@ ALL_SITES = GOOD_SITES + [
     "T2_BE_IIHE",
     "T2_BE_UCL",
     "T2_BR_SPRACE",
+    "T2_BR_UERJ",
     "T2_CH_CSCS",
     "T2_CN_Beijing",
     "T2_DE_RWTH",
@@ -84,7 +85,7 @@ def getRandomDiskSite(site=T1S):
     return s
 
 
-def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lfn, replica, verbose):
+def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lfn, replica, verbose, trust_site=False):
     """
     Sends assignment request
     """
@@ -120,7 +121,10 @@ def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lf
               "SoftTimeout": 159600,
               "GracePeriod": 1000,
               "checkbox" + workflow: "checked"}
-
+    # add xrootd (trustSiteList)
+    if trust_site:
+        params['useSiteListAsLocation'] = True
+        
     # if era is None, leave it out of the json
     if era is not None:
         params["AcquisitionEra"] = era
@@ -173,6 +177,8 @@ def main():
                       help='Adds a _Disk Non-Custodial Replica parameter')
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False,
                       help="Prints all query information.")
+    parser.add_option('-x', '--xrootd', help='Assign with trustSiteLocation=True (allows xrootd capabilities)',
+                      action='store_true', default=False, dest='xrootd')
     parser.add_option("--acqera", dest="acqera",
                       help="Overrides Acquisition Era with a single string")
     parser.add_option("--procstr", dest="procstring",
@@ -297,7 +303,7 @@ def main():
         # TODO use values when assigning merge jobs
         print workflow, '\tAcqEra:', acqera, '\tProcStr:', procstring, '\tProcVer:', procversion, '\tTeam:', team, '\tSite:', site
         assignRequest(url, workflow, team, site, acqera,
-                      procstring, procversion, activity, lfn, replica, options.verbose)
+                      procstring, procversion, activity, lfn, replica, options.verbose, options.xrootd)
     sys.exit(0)
 
 if __name__ == "__main__":
