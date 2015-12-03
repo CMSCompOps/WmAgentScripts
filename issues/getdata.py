@@ -169,124 +169,130 @@ def getWorkflowInfo(workflow):
 
 
     #Global stuff - common for all types of request
-    wlinfo = {    # 'batch':batch  IGNORED - not useful
-                'processingstring': wfObject.info['ProcessingString'],
+    try:
+        wlinfo = {    # 'batch':batch  IGNORED - not useful
+                #'processingstring': wfObject.info['ProcessingString'], IGNORED - not useful
                 'requestname': workflow,
                 'prepid': wfObject.info['PrepID'],
                 'globaltag': wfObject.info['GlobalTag'],
                 'timeev': wfObject.info['TimePerEvent'],
                 'sizeev': wfObject.info['SizePerEvent'],
                 'priority': wfObject.info['RequestPriority'],
-                'sites': wfObject.info['Site Whitelist'],
+                'sites': wfObject.info['SiteWhitelist'] if 'SiteWhitelist' in wfObject.info else None,
                 'acquisitionEra':wfObject.info['AcquisitionEra'],
-                'processingVersion': wfObject.info['ProcessingVersion'],
+                'processingVersion': wfObject.info['ProcessingVersion'] if 'ProcessingVersion' in wfObject.info else 0,
                 'campaign':wfObject.info['Campaign'],
                 'cmssw':wfObject.info['CMSSWVersion'],
-                'mergedLFNBase':wfObject.info['MergedLFNBase'],
+                'mergedLFNBase': wfObject.info['MergedLFNBase'] if 'MergedLFNBase' in wfObject.info else None,
                 'type' : wfObject.type,
                 'status':wfObject.status,
             }
-    #get the following keys, or 0 by defaulr,
-    getValue = lambda data, k, dflt = 0: data[k] if k in data else dflt; 
-
-    #calculate general stuff
-    #parse and format date
-    now = datetime.datetime.now()
-    dateArr = wfObject.info['RequestDate']
-    #fill with missing zeros
-    if len(dateArr) != 6:
-        dateArr += (6-len(dateArr))*[0]
-    reqdate = datetime.datetime.strptime(
-                    "%s-%s-%s %s:%s:%s.0"%tuple(dateArr)
-                    ,  DATE_FORMAT)
-    wlinfo['reqdate'] = reqdate.strftime(DATE_FORMAT)
-    #calculate days old of the request
-    delta = now - reqdate
-    days = delta.days + delta.seconds / 3600.0 / 24.0
-    wlinfo['requestdays'] = days
-    #assignment team and date
-    if 'Assignments' in wfObject.info and wfObject.info['Assignments']:
-        wlinfo['team'] = wfObject.info['Assignments'][0]
-    else:
-        wlinfo['team'] = ''
-    wlinfo['update'] = getAssignmentDate(wfObject)
-
-    wlinfo['expectedevents'] = getValue(wfObject.cache, 'TotalInputEvents')
-    wlinfo['expectedjobs'] = getValue(wfObject.cache, 'TotalEstimatedJobs')
     
-    #Job Information if available
-    wlinfo['js'] = getJobSummary(workflow)
+        #get the following keys, or 0 by defaulr,
+        getValue = lambda data, k, dflt = 0: data[k] if k in data else dflt; 
     
-    #information about input dataset
-    inputdataset = {}
-    wlinfo['inputdatasetinfo'] = inputdataset
-    if 'InputDatasets' in wfObject.info and wfObject.info['InputDatasets']:
-        inputdataset['name'] = wfObject.info['InputDatasets'][0]
-        
-        wlinfo['blockswhitelist'] = getValue(wfObject.info, 'BlockWhitelist', None)
-        if wlinfo['blockswhitelist']:
-            wlinfo['blockswhitelist'] = eval(wlinfo['blockswhitelist'])
-        
-        inputdataset['events'] = dbs3.getEventCountDataSet(inputdataset['name'])
-        dsinfo = dbs3.getDatasetInfo(inputdataset['name'])
-        inputdataset['status'], wlinfo['inputdatasetinfo']['createts'], wlinfo['inputdatasetinfo']['lastmodts'] = dsinfo
-    
-        #block events
-        if wlinfo['blockswhitelist']:
-            inputdataset['bwevents'] = dbs3.getEventCountDataSetBlockList(inputdataset['name'], wlinfo['blockswhitelist'])
+        #calculate general stuff
+        #parse and format date
+        now = datetime.datetime.now()
+        dateArr = wfObject.info['RequestDate']
+        #fill with missing zeros
+        if len(dateArr) != 6:
+            dateArr += (6-len(dateArr))*[0]
+        reqdate = datetime.datetime.strptime(
+                        "%s-%s-%s %s:%s:%s.0"%tuple(dateArr)
+                        ,  DATE_FORMAT)
+        wlinfo['reqdate'] = reqdate.strftime(DATE_FORMAT)
+        #calculate days old of the request
+        delta = now - reqdate
+        days = delta.days + delta.seconds / 3600.0 / 24.0
+        wlinfo['requestdays'] = days
+        #assignment team and date
+        if 'Assignments' in wfObject.info and wfObject.info['Assignments']:
+            wlinfo['team'] = wfObject.info['Assignments'][0]
         else:
-            inputdataset['bwevents'] = inputdataset['events']
-        #load reqlist and subscriptions
-        getDatasetPhedexInfo(inputdataset)
-
-    #info about output datasets
-    #expectedtotalsize = sizeev * expectedevents / 1000000
-    outputdataset = []
-    wlinfo['outputdatasetinfo'] = outputdataset
-    eventsdone = 0
-    if wfObject.status in ['running','running-open','running-closed','completed','closed-out','announced']:
-        for o in wfObject.outputDatasets:
-            oel = {}
-            oel['name'] = o
-            
-            #[oe,ost,ocreatets,olastmodts] = getdsdetail(o,timestamps=1)
-            print "-",o, "-"
-            oel['events'] = wfObject.getOutputEvents(o)
-            oel['status'], oel['createts'], oel['lastmodts'] = dbs3.getDatasetInfo(o)
-            #load reqlist and subscriptions
-            getDatasetPhedexInfo(oel)
-
-            eventsdone = eventsdone + oel['events']
-            outputdataset.append(oel)
-
-
-    #look for correspondin acdc's
-    wlinfo['acdc'] = []
-    if wlinfo['prepid']:
-        for a in allacdc:
-            if wlinfo['prepid'] in a:
-                wlinfo['acdc'].append(a)
-
-    if wfObject.type == 'TaskChain':
-        pass
-    #Stuff only for non-taskchain workflows
-    else:
-        wlinfo['primaryds'] =  wfObject.info['PrimaryDataset'],
-
-        #get custodial sites from all output
-        sites = []
-        for ds, info in wfObject.info['SubscriptionInformation'].items():
-            sites += info['CustodialSites']
-        wlinfo['custodialsites'] = sites
-        wlinfo['events_per_job'] = getValue(wfObject.info, 'EventsPerJob')
-        wlinfo['lumis_per_job'] =  getValue(wfObject.info, 'LumisPerJob')
-        wlinfo['events_per_lumi'] = getValue(wfObject.info, 'EventsPerLumi')
-        wlinfo['max_events_per_lumi'] = getValue(wfObject.info, 'max_events_per_lumi')
-        wlinfo['filtereff'] = getValue(wfObject.info, 'FilterEfficiency', 1.0)
+            wlinfo['team'] = ''
+        wlinfo['update'] = getAssignmentDate(wfObject)
+    
+        wlinfo['expectedevents'] = getValue(wfObject.cache, 'TotalInputEvents')
+        wlinfo['expectedjobs'] = getValue(wfObject.cache, 'TotalEstimatedJobs')
         
-        #calculate cpu hours        
-        wlinfo['expectedjobcpuhours'] = wlinfo['timeev'] * wlinfo['expectedevents'] / wlinfo['filtereff']
-
+        #Job Information if available
+        wlinfo['js'] = getJobSummary(workflow)
+        
+        #information about input dataset
+        inputdataset = {}
+        wlinfo['inputdatasetinfo'] = inputdataset
+        if 'InputDatasets' in wfObject.info and wfObject.info['InputDatasets']:
+            inputdataset['name'] = wfObject.info['InputDatasets'][0]
+            
+            wlinfo['blockswhitelist'] = getValue(wfObject.info, 'BlockWhitelist', None)
+            if wlinfo['blockswhitelist']:
+                wlinfo['blockswhitelist'] = eval(wlinfo['blockswhitelist'])
+            
+            inputdataset['events'] = dbs3.getEventCountDataSet(inputdataset['name'])
+            dsinfo = dbs3.getDatasetInfo(inputdataset['name'])
+            inputdataset['status'], wlinfo['inputdatasetinfo']['createts'], wlinfo['inputdatasetinfo']['lastmodts'] = dsinfo
+        
+            #block events
+            if wlinfo['blockswhitelist']:
+                inputdataset['bwevents'] = dbs3.getEventCountDataSetBlockList(inputdataset['name'], wlinfo['blockswhitelist'])
+            else:
+                inputdataset['bwevents'] = inputdataset['events']
+            #load reqlist and subscriptions
+            getDatasetPhedexInfo(inputdataset)
+    
+        #info about output datasets
+        #expectedtotalsize = sizeev * expectedevents / 1000000
+        outputdataset = []
+        wlinfo['outputdatasetinfo'] = outputdataset
+        eventsdone = 0
+        if wfObject.status in ['running','running-open','running-closed','completed','closed-out','announced']:
+            for o in wfObject.outputDatasets:
+                oel = {}
+                oel['name'] = o
+                
+                #[oe,ost,ocreatets,olastmodts] = getdsdetail(o,timestamps=1)
+                print "-",o, "-"
+                oel['events'] = wfObject.getOutputEvents(o)
+                oel['status'], oel['createts'], oel['lastmodts'] = dbs3.getDatasetInfo(o)
+                #load reqlist and subscriptions
+                getDatasetPhedexInfo(oel)
+    
+                eventsdone = eventsdone + oel['events']
+                outputdataset.append(oel)
+    
+    
+        #look for correspondin acdc's
+        wlinfo['acdc'] = []
+        if wlinfo['prepid']:
+            for a in allacdc:
+                if wlinfo['prepid'] in a:
+                    wlinfo['acdc'].append(a)
+    
+        if wfObject.type == 'TaskChain':
+            pass
+        #Stuff only for non-taskchain workflows
+        else:
+            wlinfo['primaryds'] =  wfObject.info['PrimaryDataset'],
+    
+            #get custodial sites from all output
+            sites = []
+            if 'SubscriptionInformation' in wfObject.info:
+                for ds, info in wfObject.info['SubscriptionInformation'].items():
+                   sites += info['CustodialSites']
+            wlinfo['custodialsites'] = sites
+            wlinfo['events_per_job'] = getValue(wfObject.info, 'EventsPerJob')
+            wlinfo['lumis_per_job'] =  getValue(wfObject.info, 'LumisPerJob')
+            wlinfo['events_per_lumi'] = getValue(wfObject.info, 'EventsPerLumi')
+            wlinfo['max_events_per_lumi'] = getValue(wfObject.info, 'max_events_per_lumi')
+            wlinfo['filtereff'] = getValue(wfObject.info, 'FilterEfficiency', 1.0)
+            
+            #calculate cpu hours        
+            wlinfo['expectedjobcpuhours'] = wlinfo['timeev'] * wlinfo['expectedevents'] / wlinfo['filtereff']
+        
+    except Exception as e:
+            print "Detail:", wfObject.info
+            raise e
     return wlinfo
 
 def main():
@@ -330,6 +336,7 @@ def main():
             print " %s\n" % (wfinfo['update'])
             struct.append(wfinfo)
         except Exception as e:
+            print e
             print "error getting information for", workflow
 
     #write to file

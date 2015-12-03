@@ -67,6 +67,11 @@ def classifyCompletedRequests(url, requests):
         if len(request['key'])<3:
             print request
             continue
+        
+        #discard RelVals
+        if 'RVCMSSW' in name:
+            continue
+        
         status=request['key'][1]
         #only completed requests
         if status=='completed':
@@ -112,7 +117,7 @@ def validateClosingWorkflow(url, workflow, closePercentage = 0.95, checkEqual=Fa
     for dataset in workflow.outputDatasets:
         closeOutDataset = False
         try:
-            percentage = workflow.percentageCompletion(dataset)
+            percentage = workflow.percentageCompletion(dataset, skipInvalid=True)
         except Exception as e:
             print 'Error getting information from DBS', workflow, dataset
             percentage = 0.0
@@ -144,7 +149,7 @@ def validateClosingWorkflow(url, workflow, closePercentage = 0.95, checkEqual=Fa
             #if we need to check duplicates
             if checkDuplicates:
                 try:
-                    duplicate = dbs3Client.duplicateRunLumi(dataset)
+                    duplicate = dbs3Client.duplicateRunLumi(dataset, skipInvalid=True)
                 except Exception:
                     print "Error in checking duplicate lumis for", dataset
             #if we need to check for correct lumi number

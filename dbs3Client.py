@@ -267,18 +267,20 @@ def getEventCountDataSet(dataset, skipInvalid=False):
         return total
     
 
-def getLumiCountDataSet(dataset):
+def getLumiCountDataSet(dataset, skipInvalid=False):
     """
     Get the number of unique lumis in a dataset
     """
     # initialize API to DBS3
     dbsapi = DbsApi(url=dbs3_url)
     # retrieve dataset summary
-    reply = dbsapi.listFileSummaries(dataset=dataset)
+    if not skipInvalid:
+        reply = dbsapi.listFileSummaries(dataset=dataset)
+    else:
+        reply = dbsapi.listFileSummaries(dataset=dataset, validFileOnly=1)
     if not reply or not reply[0]:
         return 0
     return reply[0]['num_lumi']
-
 
 def getLumiCountDataSetBlockList(dataset, blockList):
     """
