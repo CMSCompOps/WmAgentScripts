@@ -68,6 +68,7 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn,
               "MaxMergeEvents": 50000,
               "MaxRSS": 4294967296,
               "MaxVSize": 4294967296,
+              "SoftTimeout" : 159600,
               "AcquisitionEra": era,
               "Dashboard": activity,
               "ProcessingVersion": procversion,
@@ -181,6 +182,7 @@ def main():
             procversion = options.procversion
         else:
             procversion = wf.info['ProcessingVersion']
+            
         procstring = wf.info['ProcessingString']
         assignRequest(url, wf.name, team, sites, era, procversion,
                       activity, lfn, procstring, trust_site, options.replica, options.verbose)

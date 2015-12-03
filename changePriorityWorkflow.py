@@ -19,7 +19,7 @@ def main():
                       dest='file'); options, args = parser.parse_args()
 
     if options.file:
-        wfs = [l.strip() for l in open(args[1]).readlines() if l.strip()]
+        wfs = [l.strip() for l in open(options.file).readlines() if l.strip()]
     elif len(args) >= 2:
         # get workflow and priority
         wfs = args[:-1]

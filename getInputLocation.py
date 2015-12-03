@@ -63,6 +63,14 @@ def printDsLocation(ds, clean=False, anyb=False):
     size = dbsClient.getDatasetSize(ds)
     print formatSize(size)
 
+def getInputDataset(workflow):
+    if 'InputDataset' in workflow.info:
+        return workflow.info['InputDataset']
+    elif workflow.type == 'TaskChain':
+        task1 = workflow.info['Task1']
+        if 'InputDataset' in task1:
+            return task1['InputDataset']
+    return None
 
 def main():
     usage = 'python %prog [OPTIONS] [WORKFLOW]'
@@ -94,7 +102,12 @@ def main():
         else:
             print x
             workflow = reqMgrClient.Workflow(x)
-            ds = workflow.info['InputDataset']
+             
+            ds = getInputDataset(workflow)
+            if not ds:
+                print x, "Has no input dataset"
+                continue
+            
             printDsLocation(ds, options.clean, options.anyb)
             # pile ups
             if options.dataset and 'MCPileup' in workflow.info:
