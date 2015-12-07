@@ -12,7 +12,7 @@
    "description": "The fraction of availability above which to fast pass stagor"
   },
   "max_transfer_in_GB": {
-   "value" : 200000,
+   "value" : 300000,
    "description": "The total size of the input datasets that can be transfered at a given time"
   },
   "max_handled_workflows": {
