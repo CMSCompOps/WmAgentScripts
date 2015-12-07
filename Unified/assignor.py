@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 import reqMgrClient
-from utils import workflowInfo, campaignInfo, siteInfo, userLock, global_SI
+from utils import workflowInfo, campaignInfo, siteInfo, userLock, global_SI, unifiedConfiguration
 from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction, getDatasetEventsPerLumi, newLockInfo
 from utils import componentInfo, sendEmail
 #from utils import lockInfo
@@ -20,6 +20,7 @@ def assignor(url ,specific = None, talk=True, options=None):
     #if notRunningBefore( 'stagor' ): return
     if not componentInfo().check(): return
 
+    UC = unifiedConfiguration()
     CI = campaignInfo()
     SI = global_SI
     #LI = lockInfo()
@@ -189,7 +190,9 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         ## should be 2 but for the time-being let's lower it to get things going
         copies_wanted,cpuh = wfh.getNCopies()
-        
+        less_copies_than_requested = UC.get("less_copies_than_requested")
+        copies_wanted = max(1,copies_wanted-less_copies_than_requested) # take one out for the efficiency
+
         if available_fractions and not all([available>=copies_wanted for available in available_fractions.values()]):
             not_even_once = not all([available>=1. for available in available_fractions.values()])
             print "The input dataset is not available",copies_wanted,"times, only",available_fractions.values()

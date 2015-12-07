@@ -27,6 +27,10 @@
    "value" : 400,
    "description": "The total number of workflows that we allow to stage at a time per site"
   },
+  "less_copies_than_requested": {
+   "value" : 1,
+   "description": "Decrease the number of requested copies by that number, floored to 1"
+  },
   "chopping_threshold_in_GB": {
   "value" : 4000,
   "description": "The threshold before choping an input dataset in chunk of that size for spreading to sites"
