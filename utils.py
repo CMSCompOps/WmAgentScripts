@@ -111,6 +111,14 @@ def download_file(url, params, path = None, logger = None):
         logger.error("URL called: {url}".format(url = url))
         return None
 
+def GET(url, there, l=True):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    r1=conn.request("GET",there)
+    r2=conn.getresponse()
+    if l:
+        return json.loads(r2.read())
+    else:
+        return r2
 
 def check_ggus( ticket ):
     conn  =  httplib.HTTPSConnection('ggus.eu', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -394,6 +402,16 @@ class unifiedConfiguration:
             print parameter,'is not defined in global configuration'
             print ','.join(self.configs.keys()),'possible'
             sys.exit(124)
+
+def checkDownTime():
+    conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/jbadillo_BTV-RunIISpring15MiniAODv2-00011_00081_v0__151030_162715_5312')
+    r2=conn.getresponse()
+    r = r2.read()
+    if r2.status ==503:#if 'The site you requested is not unavailable' in r:
+        return True
+    else:
+        return False
 
 class componentInfo:
     def __init__(self, block=True, mcm=False,soft=None):
@@ -722,7 +740,7 @@ class docCache:
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : json.loads( os.popen('curl http://cmsmonitoring.web.cern.ch/cmsmonitoring/StorageOverview/latest/StorageOverview.json').read()),
+            'getter' : lambda : json.loads( os.popen('curl -s --retry 5 http://cmsmonitoring.web.cern.ch/cmsmonitoring/StorageOverview/latest/StorageOverview.json').read()),
             'cachefile' : None,
             'default' : {}
             }
@@ -906,6 +924,30 @@ class siteInfo:
             s+=self.cpu_pledges[site]
         return s
 
+
+    def getRemainingDatasets(self, site):
+        start_reading=False
+        datasets=[]
+        s=0
+        for line in os.popen('curl -s http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/result/%s/RemainingDatasets.txt'%site).read().split("\n"):
+            if 'DDM Partition: DataOps' in line:
+                start_reading=True
+                continue
+
+            if start_reading:
+                splt=line.split()
+                if len(splt)==5 and splt[-1].count('/')==3:
+                    (_,size,_,_,dataset) = splt
+                    size= float(size)
+                    #print dataset
+                    s+=size
+                    datasets.append( (size,dataset) )
+            if start_reading and 'DDM Partition' in line:
+                break
+
+        print s
+        return datasets
+                    
     def fetch_glidein_info(self, talk=True):
         self.sites_memory = dataCache.get('gwmsmon_totals')
 
@@ -2030,7 +2072,7 @@ def approveSubscription(url, phedexid, nodes=None , comments =None, decision = '
         return True
     return result
 
-def makeDeleteRequest(url, site,datasets, comments, priority='low'):
+def makeDeleteRequest(url, site,datasets, comments):
     dataXML = createXML(datasets)
     params = { "node" : site,
                "data" : dataXML,
@@ -2159,21 +2201,38 @@ def getWorkflowById( url, pid , details=False):
 def getWorkflows(url,status,user=None,details=False,rtype=None):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     if rtype:
-        go_to = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/bystatusandtype?key=["%s","%s"]'%(status,rtype)
+        go_to = '/reqmgr2/data/request?status=%s&request_type=%s&detail=%s'%( status, rtype , 'true' if details else 'false')
+        r1=conn.request("GET",go_to, headers={"Accept":"application/json"})
     else:
         go_to = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/bystatus?key="%s"'%(status)
-    if details:
-        go_to+='&include_docs=true'
-    r1=conn.request("GET",go_to)
+        if details:
+            go_to+='&include_docs=true'
+        r1=conn.request("GET",go_to)
+
     r2=conn.getresponse()
     data = json.loads(r2.read())
-    items = data['rows']
+    if rtype:
+        items = data['result']
+    else:
+        items = data['rows']
 
+    users=[]
+    if user:
+        users=user.split(',')
     workflows = []
     for item in items:
-        wf = item['id']
-        if (user and wf.startswith(user)) or not user:
-            workflows.append(item['doc' if details else 'id'])
+        those = item.keys()
+        if users:
+            those = filter(lambda k : any([k.startswith(u) for u in users]), those)
+        if rtype:
+            if details:
+                workflows.extend([item[k] for k in those])
+            else:
+                workflows.extend(those)
+        else:
+            wf = item['id']
+            if (users and any([wf.startswith(u) for u in users])) or not users:
+                workflows.append(item['doc' if details else 'id'])
 
     return workflows
 
@@ -2358,8 +2417,8 @@ class workflowInfo:
                         for k in ['events_per_job','avg_events_per_job']:
                             if k in parent: p_size = parent[k]
 
-                        print parent['splittingTask'],"is parent of",t
-                        print p_size,c_size
+                        #print parent['splittingTask'],"is parent of",t
+                        #print p_size,c_size
                         if not min_child_job_per_event or min_child_job_per_event > c_size:
                             min_child_job_per_event = c_size
                 else:
@@ -2367,8 +2426,8 @@ class workflowInfo:
                     
                 if c_size and p_size:
                     blow_up = float(p_size)/ c_size
-                    print "parent jobs",p_size,"compared to my size",c_size
-                    print blow_up
+                    #print "parent jobs",p_size,"compared to my size",c_size
+                    #print blow_up
                     if blow_up > max_blow_up:
                         max_blow_up = blow_up
             return (min_child_job_per_event, root_job_per_event, max_blow_up)    
