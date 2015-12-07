@@ -43,6 +43,7 @@ for status in reversed(statuses):
             newly_locking.add(dataset)
     print len(newly_locking),"locks so far"
 
+waiting_for_custodial={}
 ## check on the one left out, which would seem to get unlocked
 for dataset in already_locked-newly_locking:
     try:
@@ -74,6 +75,7 @@ for dataset in already_locked-newly_locking:
                     print "Can't unlock",dataset," of size", ds_size,"[GB] because it is not custodial yet",ds_status
                     ## add it back for that reason
                     newly_locking.add(dataset)
+                    waiting_for_custodial[dataset]=ds_size
                     unlock = False
 
         if unlock:
@@ -90,7 +92,9 @@ for dataset in already_locked-newly_locking:
         print str(e)
         newly_locking.add(dataset)
 
-
+waiting_for_custodial_sum = sum(waiting_for_custodial.values())
+print waiting_for_custodial_sum,"[GB] out there waiting for custodial"
+open('/afs/cern.ch/user/c/cmst2/www/unified/waiting_custodial.json','w').write( json.dumps( waiting_for_custodial ) )
 
 ## then for all that would have been invalidated from the past, check whether you can unlock the wf based on output
 for wfo in session.query(Workflow).filter(Workflow.status=='forget').all():
