@@ -25,6 +25,7 @@ def htmlor( caller = ""):
         wfs = wf.wm_status
         wl = None
         pid = None
+        wl_pid = None
         pids=filter(lambda seg: seg.count('-')==2, wf.name.split('_'))
         if len(pids):
             pids = pids[:1]
@@ -34,6 +35,10 @@ def htmlor( caller = ""):
             wl = getWL( wf.name )
             pids = getPrepIDs( wl )
             pid = pids[0]
+
+        wl_pid = pid
+        if 'task' in wf.name:
+            wl_pid = 'task_'+pid
 
         text=', '.join([
                 #wfn,
@@ -85,7 +90,7 @@ def htmlor( caller = ""):
                 text+=', <a href="https://cms-pdmv.cern.ch/mcm/requests?prepid=%s" target="_blank">mcm (%s)</a>'%(pid,mcm_s)
             else:
                 text+=', <a href="https://cms-pdmv.cern.ch/mcm/requests?prepid=%s" target="_blank">mcm</a>'%(pid)
-                text+=', <a href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s" target="_blank">ac</a>'%(pid)
+                text+=', <a href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s" target="_blank">ac</a>'%(wl_pid)
                 
         if status:
             if wf.status.startswith('assistance'):
