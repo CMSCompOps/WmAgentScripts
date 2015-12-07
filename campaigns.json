@@ -3,7 +3,8 @@
     "go": true
   },
   "Summer11LegDR": {
-    "go": true
+    "go": false,
+    "SiteWhitelist": [ "T1_US_FNAL", "T1_ES_PIC", "T1_FR_CCIN2P3","T1_IT_CNAF","T1_UK_RAL","T1_DE_KIT", "T2_CH_CERN"]
   }, 
   "Summer12pLHE": {
     "go": true
@@ -18,8 +19,9 @@
     "go": true
   }, 
   "Summer12DR53X": {
-    "go": true,
-    "lumisize" : 400
+    "go": false,
+    "lumisize" : 400,
+    "SiteWhitelist": [ "T1_US_FNAL", "T1_ES_PIC", "T1_FR_CCIN2P3","T1_IT_CNAF","T1_UK_RAL","T1_DE_KIT","T2_CH_CERN"]
   }, 
   "pAWinter13": {
     "go": true, 
@@ -71,6 +73,9 @@
   "CosmicWinter15GS" : {
     "go": true
   },
+  "CosmicWinter15DR" : {
+    "go": true
+  },
   "RunIISummer15GS": {
     "go": true, 
     "parameters": {
@@ -79,6 +84,9 @@
     "lumisize" : 300
   }, 
   "RunIIFall15DR75": {
+    "go": true
+  },
+  "RunIIFall15DR76": {
     "go": true
   },
   "HiWinter13": {
@@ -134,7 +142,8 @@
   }, 
   "RunIISpring15DR74": {
    "go": true,
-    "lumisize" : 400
+    "lumisize" : 400,
+    "SiteWhitelist" : [ "T1_US_FNAL", "T1_ES_PIC", "T1_FR_CCIN2P3","T1_IT_CNAF","T1_UK_RAL","T1_DE_KIT","T2_CH_CERN"]
   },
   "RunIISpring15Digi74": {
     "go": true
@@ -143,7 +152,8 @@
     "go": true
   },
   "RunIISpring15FSPremixDR": {
-    "go": true
+    "go": true,
+    "SecondaryLocation" : [ "T1_US_FNAL", "T1_ES_PIC", "T1_FR_CCIN2P3","T1_IT_CNAF","T1_RU_JINR","T1_UK_RAL","T1_DE_KIT"]
   },
   "RunIISpring15MiniAODv2": {
     "go": true,
