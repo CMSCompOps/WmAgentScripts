@@ -259,7 +259,7 @@ def stagor(url,specific =None, options=None):
             print "\tmissing",missings
             missing_in_action[dsname].extend( missings )
 
-    open('incomplete_transfers.json','w').write( json.dumps(missing_in_action, indent=2) )
+    open('/afs/cern.ch/user/c/cmst2/www/unified/incomplete_transfers.json','w').write( json.dumps(missing_in_action, indent=2) )
     print "Stuck transfers and datasets"
     print json.dumps( missing_in_action, indent=2 )
 
@@ -280,6 +280,8 @@ def stagor(url,specific =None, options=None):
             for block in issues[dataset]:
                 for destination in issues[dataset][block]:
                     (block_size,destination_size,delay,rate,dones) = issues[dataset][block][destination]
+                    ## count x_Buffer and x_MSS as one source
+                    dones = filter(lambda s : (s.endswith('Buffer') and not s.replace('Buffer','MSS').replace('Export','MSS') in dones) or (not s.endswith('Buffer')) , dones)
                     if delay>7 and rate<0.0004:
                         if len(dones)>1:
                             ## its the destination that sucks
@@ -300,7 +302,7 @@ def stagor(url,specific =None, options=None):
 
     print report
 
-    open('incomplete_transfers.log','w').write( report )
+    open('/afs/cern.ch/user/c/cmst2/www/unified/logs/incomplete_transfers.log','w').write( report )
     sendEmail('incomplete transfers', report,sender=None, destination=['dc.jorge10@uniandes.edu.co','aram.apyan@cern.ch','sidn@mit.edu'])
 
 
