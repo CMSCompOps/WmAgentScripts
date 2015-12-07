@@ -189,7 +189,8 @@ def transferor(url ,specific = None, talk=True, options=None):
             print "%15.4f GB this load"%this_load
             print "%15.4f GB already this round"%sum(transfer_sizes.values())
             print "%15.4f GB is the available limit"%transfer_limit
-            went_over_budget=True
+            if sum(transfer_sizes.values()) > transfer_limit:
+                went_over_budget = True
             if int(wfh.request['RequestPriority']) >= in_transfer_priority and min_transfer_priority!=in_transfer_priority:
                 print "Higher priority sample",wfh.request['RequestPriority'],">=",in_transfer_priority,"go-on over budget"
             else:
