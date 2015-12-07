@@ -281,7 +281,17 @@ def stagor(url,specific =None, options=None):
                 for destination in issues[dataset][block]:
                     (block_size,destination_size,delay,rate,dones) = issues[dataset][block][destination]
                     ## count x_Buffer and x_MSS as one source
-                    dones = filter(lambda s : (s.endswith('Buffer') and not s.replace('Buffer','MSS').replace('Export','MSS') in dones) or (not s.endswith('Buffer')) , dones)
+                    redones=[]
+                    for d in dones:
+                        if d.endswith('Buffer') or d.endswith('Export'):
+                            if d.replace('Buffer','MSS').replace('Export','MSS') in dones: 
+                                continue
+                            else: 
+                                redones.append( d )
+                        else:
+                            redones.append( d )
+                    dones = list(set( redones ))
+                    #dones = filter(lambda s : (s.endswith('Buffer') and not s.replace('Buffer','MSS') in dones) or (not s.endswith('Buffer')) , dones)
                     if delay>7 and rate<0.0004:
                         if len(dones)>1:
                             ## its the destination that sucks
