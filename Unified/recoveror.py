@@ -33,6 +33,9 @@ def singleRecovery(url, task , initial, actions, do=False):
                 increase = int(action.split('-')[-1]) if '-' in action else 1000
                 ## increase the memory requirement by 1G
                 payload['Memory'] += increase
+            if action.startswith('split') and initial['RequestType'] == 'MonteCarlo':
+                print "I should not be doing splitting for MonteCarlo type request"
+                return None
 
     if payload['RequestString'].startswith('ACDC'):
         print "This is not allowed yet"
@@ -140,7 +143,7 @@ def recoveror(url,specific,options=None):
             ## we do not try to recover pLHE
             recover = False
 
-        if wfi.request['RequestType'] == 'TaskChain':
+        if wfi.request['RequestType'] in  ['TaskChain','MonteCarlo']:
             recover = False
 
         if 'Campaign' in wfi.request:
