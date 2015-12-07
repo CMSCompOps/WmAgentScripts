@@ -77,7 +77,7 @@ def main():
                                     dsets_colnames = [desc[0] for desc in curs.description]
                                     dset_dict=dict(zip(dsets_colnames,curs_fetchall[0]))    
                                     userid_previously_inserted_dset=dset_dict["useridyear"]+"_"+dset_dict["useridmonth"]+"_"+dset_dict["useridday"]+"_"+str(dset_dict["useridnum"])+"_"+str(dset_dict["batch_version_num"])
-                                    os.system('echo \"'+userid+"\n"+wf[0]+"\n"+userid_previously_inserted_dset+"\n"+dset_dict["workflow_name"]+"\n"+dset+'\" | mail -s \"assignment_loop.py error 1\" andrew.m.levin@vanderbilt.edu')
+                                    os.system('echo \"'+userid+"\n"+wf[0]+"\n"+userid_previously_inserted_dset+"\n"+dset_dict["workflow_name"]+"\n"+dset+'\" | mail -s \"assignor.py error 1\" andrew.m.levin@vanderbilt.edu')
                                     sys.exit(1)
                                 elif len(dbs_dset_check) != 0:    
                                     os.system('echo \"'+userid+"\n"+wf[0]+"\n"+dset+'\" | mail -s \"assignment_loop.py error 5\" andrew.m.levin@vanderbilt.edu')
@@ -114,7 +114,13 @@ def main():
                 r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+wf[0])
                 r2=conn.getresponse()
 
+                if r2.status != 200:
+                    os.system('echo '+wf[0]+' | mail -s \"assignment_loop.py error 8\" andrew.m.levin@vanderbilt.edu')
+                    sys.exit(0)
+
                 schema = json.loads(r2.read())
+
+
 
                 #hack because workflows assigned to only T2_CH_CERN_T0 never get acquired
                 site = batch_dict["site"]
