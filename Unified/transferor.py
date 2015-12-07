@@ -281,8 +281,8 @@ def transferor(url ,specific = None, talk=True, options=None):
             ## lock everything flat
             NLI.lock( dataset )
 
-        if 'SiteWhitelist' in CI.parameters(wfh.request['Campaign']):
-            sites_allowed = CI.parameters(wfh.request['Campaign'])['SiteWhitelist']
+        if 'SiteWhitelist' in CI.campaigns[wfh.request['Campaign']]:
+            sites_allowed = list(set(sites_allowed) & set( CI.campaigns[wfh.request['Campaign']]['SiteWhitelist']))
 
         if 'SiteBlacklist' in CI.parameters(wfh.request['Campaign']):
             sites_allowed = list(set(sites_allowed) - set(CI.parameters(wfh.request['Campaign'])['SiteBlacklist']))
@@ -490,6 +490,10 @@ def transferor(url ,specific = None, talk=True, options=None):
 
 
         if secondary:
+            override_sec_destination = []
+            if 'SecondaryLocation' in CI.campaigns[wfh.request['Campaign']]:
+                override_sec_destination  = CI.campaigns[wfh.request['Campaign']]['SecondaryLocation']
+
             if talk:
                 print wfo.name,'reads',', '.join(secondary),'in secondary'
             for sec in secondary:
@@ -516,6 +520,12 @@ def transferor(url ,specific = None, talk=True, options=None):
                 sec_to_distribute = [site for site in sites_allowed if not any([osite.startswith(site) for osite in sec_location])]
                 sec_to_distribute = [site for site in sec_to_distribute if not any([osite.startswith(site) for osite in sec_destination])]
                 sec_to_distribute = [site for site in sec_to_distribute if not  any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
+                if override_sec_destination:
+                    ## intersect with where we want the PU to be
+                    not_needed_anymore = list(set(sec_to_distribute) - set(override_sec_destination))
+                    sendEmail("secondary superfluous","the dataset %s could be removed from %s"%( sec, not_needed_anymore ))
+                    sec_to_distribute = list(set(sec_to_distribute) & set(override_sec_destination))
+
                 if len( sec_to_distribute )>0:
                     sec_size = dss.get( sec )
                     for site in sec_to_distribute:
