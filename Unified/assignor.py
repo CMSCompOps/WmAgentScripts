@@ -79,8 +79,14 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         print "Site white list",sorted(sites_allowed)
 
-        if 'SiteWhitelist' in CI.parameters(wfh.request['Campaign']):
-            sites_allowed = CI.parameters(wfh.request['Campaign'])['SiteWhitelist']
+        override_sec_location = []
+        if 'SecondaryLocation' in CI.campaigns[wfh.request['Campaign']]:
+            override_sec_location = CI.campaigns[wfh.request['Campaign']]['SecondaryLocation']
+
+        if 'SiteWhitelist' in CI.campaigns[wfh.request['Campaign']]:
+            print "Would like to use the new whitelist, but will not until things went through a bit"
+            sendEmail("using a restricted site white list","for %s"%(CI.campaigns[wfh.request['Campaign']]))
+            sites_allowed = list(set(sites_allowed) & set(CI.campaigns[wfh.request['Campaign']]['SiteWhitelist']))
 
         if 'SiteBlacklist' in CI.parameters(wfh.request['Campaign']):
             print "Reducing the whitelist due to black list in campaign configuration"
@@ -99,11 +105,17 @@ def assignor(url ,specific = None, talk=True, options=None):
         print "Allowed",sorted(sites_allowed)
         secondary_locations=None
         for sec in list(secondary):
+            if override_sec_location: 
+                print "We don't care where the secondary is"
+                print "Cannot pass for now"
+                sendEmail("tempting to pass sec location check","but we cannot yet IMO")
+                #pass
+
             presence = getDatasetPresence( url, sec )
             print sec
             print json.dumps(presence, indent=2)
-            #one_secondary_locations = [site for (site,(there,frac)) in presence.items() if frac>90.]
-            one_secondary_locations = [site for (site,(there,frac)) in presence.items() if there]
+            one_secondary_locations = [site for (site,(there,frac)) in presence.items() if frac>98.]
+            #one_secondary_locations = [site for (site,(there,frac)) in presence.items() if there]
             if secondary_locations==None:
                 secondary_locations = one_secondary_locations
             else:
@@ -144,7 +156,7 @@ def assignor(url ,specific = None, talk=True, options=None):
         if secondary_locations or primary_locations:
             ## intersection of both any pieces of the primary and good IO
             #opportunistic_sites = [SI.SE_to_CE(site) for site in list((set(secondary_locations) & set(primary_locations) & set(SI.sites_with_goodIO)) - set(sites_allowed))]
-            if secondary_locations:
+            if secondary_locations and primary_locations:
                 opportunistic_sites = [SI.SE_to_CE(site) for site in list((set(secondary_locations) & set(primary_locations)) - set([SI.CE_to_SE(site) for site in sites_allowed]))]
             elif primary_locations:
                 opportunistic_sites = [SI.SE_to_CE(site) for site in list(set(primary_locations) - set([SI.CE_to_SE(site) for site in sites_allowed]))]
@@ -257,6 +269,10 @@ def assignor(url ,specific = None, talk=True, options=None):
         if options and options.team:
             team = options.team
 
+        #if wfh.request['RequestPriority'] >= 100000 and (wfh.request['TimePerEvent']*int(wfh.getRequestNumEvents()))/(8*3600.) < 10000:
+        #    team = 'highprio'
+        #    sendEmail("sending work with highprio team","%s"% wfo.name, destination=['dmytro.kovalskyi@cern.ch'])
+
         if "T2_US_UCSD" in sites_with_data and random.random() < -0.5 and wfh.request['Campaign']=='RunIISpring15DR74' and int(wfh.getRequestNumEvents()) < 600000 and not any([out.endswith('RAW') for out in wfh.request['OutputDatasets']]):
             ## consider SDSC
             parameters['SiteWhitelist'] = ['T2_US_UCSD','T3_US_SDSC']
@@ -313,6 +329,7 @@ def assignor(url ,specific = None, talk=True, options=None):
                 else:
                     spl = wfh.getSplittings()[0]
                     eventsPerJobEstimated = spl['events_per_job'] if 'events_per_job' in spl else None
+                    eventsPerJobEstimated = spl['avg_events_per_job'] if 'avg_events_per_job' in spl else None
                     if eventsPerJobEstimated and eventsPerJobEstimated > eventsPerJob:
                         print "need to go down to",lumisPerJob,"in assignment"
                         sendEmail("setting lumi splitting for run-dependent MC","%s was assigned with %s lumis/job"%( wfo.name, lumisPerJob))
