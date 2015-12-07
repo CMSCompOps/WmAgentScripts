@@ -1,9 +1,10 @@
-if [ -r cycle.lock ] ; then
+if [ -r /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cycle.lock ] ; then
     echo "cycle is locked"
+    #mail -s "[Ops] cycle is locked" vlimant@cern.ch,matteoc@fnal.gov
     exit
 fi
 
-echo `date` > cycle.lock
+echo `date` > /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cycle.lock
 ## get sso cookie and new grid proxy
 source /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/credentials.sh
 
@@ -40,7 +41,12 @@ source /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/credentials.sh
 ## unlock dataset that can be unlocked and set status along
 /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/lockor.py
 
+## the addHoc operations
+/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/addHoc.py
+
 ## and display
 /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/htmlor.py
 
-rm -f cycle.lock
+
+rm -f /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cycle.lock
+
