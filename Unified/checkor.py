@@ -175,6 +175,8 @@ def checkor(url, spec=None, options=None):
             event_expected,lumi_expected = 0,0
             if not 'recovery' in wfo.status:
                 sendEmail("missing member of the request","TotalInputEvents is missing from the workload of %s"% wfo.name, destination=['julian.badillo.rojas@cern.ch'])
+            if 'RequestNumEvents' in wfi.request:
+                event_expected = wfi.request['RequestNumEvents']
         else:
             event_expected,lumi_expected =  wfi.request['TotalInputEvents'],wfi.request['TotalInputLumis']
 
@@ -184,6 +186,8 @@ def checkor(url, spec=None, options=None):
             percent_completions[output] = 0.
             if lumi_expected:
                 percent_completions[output] = lumi_count / float( lumi_expected )
+            if event_expected:
+                percent_completions[output] = max(percent_completions[output], event_count / float( event_expected ) )
 
             fractions_pass[output] = 0.95
             c = get_campaign(output, wfi)
@@ -447,7 +451,7 @@ def checkor(url, spec=None, options=None):
                 #pid = wfi.request['PrepID'].replace('task_','')
                 ## notify
                 messages= {
-                    'recovery' : 'Samples completed with missing lumi count:\n%s '%( '\n'.join(['%.2f %% complete for %s'%(percent_completions[output]*100, output) for output in wfi.request['OutputDatasets'] ] ) ),
+                    'recovery' : 'Samples completed with missing statistics:\n%s '%( '\n'.join(['%.2f %% complete for %s'%(percent_completions[output]*100, output) for output in wfi.request['OutputDatasets'] ] ) ),
                     'biglumi' : 'Samples completed with large luminosity blocks:\n%s '%('\n'.join(['%d > %d for %s'%(events_per_lumi[output], lumi_upper_limit[output], output) for output in wfi.request['OutputDatasets'] if (events_per_lumi[output] > lumi_upper_limit[output])])),
                     'duplicate' : 'Samples completed with duplicated luminosity blocks:\n%s'%( '\n'.join(['%s'%output for output in wfi.request['OutputDatasets'] if output in duplications and duplications[output] ] ) ),
                     }
