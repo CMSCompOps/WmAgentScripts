@@ -945,7 +945,7 @@ class siteInfo:
             if start_reading and 'DDM Partition' in line:
                 break
 
-        print s
+        #print s
         return datasets
                     
     def fetch_glidein_info(self, talk=True):
@@ -1023,8 +1023,6 @@ class siteInfo:
             else:
                 self.disk[site] = 0 
             self.quota[site] = quota
-            if site == 'T2_IT_Bari':
-                self.quota[site] = 100
             self.locked[site] = locked
 
 
