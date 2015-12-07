@@ -93,7 +93,6 @@ def transferor(url ,specific = None, talk=True, options=None):
 
     transfers_per_sites = defaultdict(int)
     input_sizes = {}
-    primary_input_per_workflow_gb = defaultdict(float)
     input_cput = {}
     input_st = {}
     ## list the size of those in transfer already
@@ -112,7 +111,6 @@ def transferor(url ,specific = None, talk=True, options=None):
         for prim in primary:  
             input_sizes[prim] = dss.get( prim )
             print "\t",wfo.name,"needs",input_sizes[prim],"GB"
-            primary_input_per_workflow_gb[wfo.name] += input_sizes[prim]
         in_transfer_priority = max(in_transfer_priority, int(wfh.request['RequestPriority']))
         min_transfer_priority = min(min_transfer_priority, int(wfh.request['RequestPriority']))
 
@@ -124,22 +122,26 @@ def transferor(url ,specific = None, talk=True, options=None):
     in_transfer_already = sum(input_sizes.values())
     cput_in_transfer_already = sum(input_cput.values())
     st_in_transfer_already = sum(input_st.values())
-    # shuffle first by name
-    random.shuffle( wfs_and_wfh )
-    # Sort smallest transfers first; allows us to transfer as many as possible workflows.
-    wfs_and_wfh.sort(cmp = lambda i,j : cmp(int(primary_input_per_workflow_gb.get(i[0].name, 0)/100.), int(primary_input_per_workflow_gb.get(j[0].name, 0)/100.) ))
-    #sort by priority higher first
-    wfs_and_wfh.sort(cmp = lambda i,j : cmp(int(i[1].request['RequestPriority']),int(j[1].request['RequestPriority']) ), reverse=True)
 
     ## list the size of all inputs
+    primary_input_per_workflow_gb = defaultdict(float)
     print "getting all input sizes ..."
     for (wfo,wfh) in wfs_and_wfh:
         (_,primary,_,_) = wfh.getIO()
         #input_cput[wfo.name] = wfh.getComputingTime()
         #input_st[wfo.name] = wfh.getSystemTime()
         for prim in primary:
-            input_sizes[prim] = dss.get( prim )
+            prim_size = dss.get( prim )
+            input_sizes[prim] = prim_size
+            primary_input_per_workflow_gb[wfo.name] += prim_size
     print "... done"
+
+    # shuffle first by name
+    random.shuffle( wfs_and_wfh )
+    # Sort smallest transfers first; allows us to transfer as many as possible workflows.
+    wfs_and_wfh.sort(cmp = lambda i,j : cmp(int(primary_input_per_workflow_gb.get(i[0].name, 0)/100.), int(primary_input_per_workflow_gb.get(j[0].name, 0)/100.) ))
+    #sort by priority higher first
+    wfs_and_wfh.sort(cmp = lambda i,j : cmp(int(i[1].request['RequestPriority']),int(j[1].request['RequestPriority']) ), reverse=True)
 
     cput_grand_total = sum(input_cput.values())
     cput_to_transfer = cput_grand_total - cput_in_transfer_already
