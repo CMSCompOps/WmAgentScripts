@@ -1513,7 +1513,7 @@ def findCustodialCompletion(url, dataset):
 
 def findCustodialLocation(url, dataset, with_completion=False):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset='+dataset)
+    r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset=%s'%(dataset))
     r2=conn.getresponse()
     result = json.loads(r2.read())
     request=result['phedex']
@@ -2297,6 +2297,14 @@ class workflowInfo:
         
         self.summary = json.loads(r2.read())
         
+    def getGlideMon(self):
+        try:
+            gmon = json.loads(os.popen('curl -s http://cms-gwmsmon.cern.ch/prodview/json/%s/summary'%self.request['RequestName']).read())
+            return gmon
+        except:
+            print "cannot get glidemon info",self.request['RequestName']
+            return None
+
     def _tasks(self):
         return self.get_spec().tasks.tasklist
 
@@ -2308,6 +2316,9 @@ class workflowInfo:
 
     def getComputingTime(self,unit='h'):
         cput = None
+        ## look for it in a cache
+        
+
         if 'InputDataset' in self.request:
             ds = self.request['InputDataset']
             if 'BlockWhitelist' in self.request and self.request['BlockWhitelist']:
@@ -2516,6 +2527,9 @@ class workflowInfo:
             all_tasks.extend( self._taskDescending( ch, select) )
         return all_tasks
 
+    def getWorkTasks(self):
+        return self.getAllTasks(select={'taskType':['Production','Processing']})
+
     def getAllTasks(self, select=None):
         all_tasks = []
         for task in self._tasks():
@@ -2525,7 +2539,7 @@ class workflowInfo:
 
     def getSplittings(self):
         spl =[]
-        for task in self.getAllTasks(select={'taskType':['Production','Processing']}):
+        for task in self.getWorkTasks():
             ts = task.input.splitting
             spl.append( { "splittingAlgo" : ts.algorithm,
                           "splittingTask" : task.pathName,
