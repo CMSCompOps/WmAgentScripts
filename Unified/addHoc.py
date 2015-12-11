@@ -6,20 +6,20 @@ import sys
 
 url = 'cmsweb.cern.ch'
 
-print "nothing add-Hoc to be done"
-sys.exit(0)
+#print "nothing add-Hoc to be done"
+#sys.exit(0)
 
-for wfo in session.query(Workflow).filter(Workflow.status == 'staging').all():
-    wfi = workflowInfo(url, wfo.name )
-    if wfi.request['RequestPriority'] < 100000 : continue
-    print "forcing acquiring from staging",wfo.name
-    os.system('Unified/assignor.py --go  %s'% wfo.name)
+#for wfo in session.query(Workflow).filter(Workflow.status == 'staging').all():
+#    wfi = workflowInfo(url, wfo.name )
+#    if wfi.request['RequestPriority'] < 100000 : continue
+#    print "forcing acquiring from staging",wfo.name
+#    os.system('Unified/assignor.py --go  %s'% wfo.name)
 
-for wfo in session.query(Workflow).filter(Workflow.status == 'staged').all():
-    wfi = workflowInfo(url, wfo.name )
-    if wfi.request['RequestPriority'] < 100000 : continue
-    print "forcing acquiring from staged",wfo.name
-    os.system('Unified/assignor.py --go  %s'% wfo.name)
+#for wfo in session.query(Workflow).filter(Workflow.status == 'staged').all():
+#    wfi = workflowInfo(url, wfo.name )
+#    #if wfi.request['RequestPriority'] < 100000 : continue
+#    print "forcing acquiring from staged",wfo.name
+#    os.system('Unified/assignor.py --go  %s'% wfo.name)
 
 
 
