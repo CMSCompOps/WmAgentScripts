@@ -1541,6 +1541,24 @@ def findCustodialLocation(url, dataset, with_completion=False):
 
     ## make sure all known blocks are complete at custodial
     if with_completion and len(blocks)!=len(cust_blocks):
+        #print blocks
+        #print cust_blocks
+        print "Missing",len(blocks - cust_blocks),"blocks out of",len(blocks)
+        if len(cust_blocks)!=0:
+            print json.dumps(list(blocks - cust_blocks), indent=2)
+        r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset=%s&node=T1*MSS'%dataset)
+        r2=conn.getresponse()
+        result = json.loads(r2.read())
+        request=result['phedex']['request']
+        for nodes in request:
+            created = nodes['time_create']
+            for node in nodes['node']:
+                decided = node['time_decided']
+                print "request",nodes['id'],"to",node['name'],"is",node['decision'],
+                if decided:
+                    print "on",time.asctime( time.gmtime( decided))
+                print ". Created since",time.asctime( time.gmtime( created ))
+
         return []
     else:
         return list(set(cust))
