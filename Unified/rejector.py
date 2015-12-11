@@ -51,6 +51,12 @@ def rejector(url, specific, options=None):
                 ##schema.pop('RequestDate') ## ok then, let's not reset the time stamp
                 if options.Memory:
                     schema['Memory'] = options.Memory
+                if options.EventsPerJob:
+                    if schema['RequestType'] == 'TaskChain':
+                        schema['Task1']['EventsPerJob'] = options.EventsPerJob
+                    else:
+                        schema['EventsPerJob'] = options.EventsPerJob
+
                 ## update to the current priority
                 schema['RequestPriority'] = wfi.request['RequestPriority']
                 response = reqMgrClient.submitWorkflow(url, schema)
@@ -74,6 +80,7 @@ if __name__ == "__main__":
     parser.add_option('-c','--clone',help="clone the workflow",default=False,action="store_true")
     parser.add_option('-k','--keep',help="keep the outpuy in current status", default=False,action="store_true")
     parser.add_option('--Memory',help="memory parameter of the clone", default=0, type=int)
+    parser.add_option('--EventsPerJob', help="set the events/job on the clone", default=0, type=int)
     (options,args) = parser.parse_args()
 
     spec=None
