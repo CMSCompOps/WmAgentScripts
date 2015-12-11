@@ -143,7 +143,7 @@ def recoveror(url,specific,options=None):
             ## we do not try to recover pLHE
             recover = False
 
-        if wfi.request['RequestType'] in  ['TaskChain','MonteCarlo']:
+        if wfi.request['RequestType'] in  ['TaskChain','MonteCarlo','ReReco']:
             recover = False
 
         if 'Campaign' in wfi.request:
