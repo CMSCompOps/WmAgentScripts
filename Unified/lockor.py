@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from utils import getWorkflows, findCustodialCompletion, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration, getDatasetSize
 from assignSession import *
 import json
@@ -30,13 +31,20 @@ for status in reversed(statuses):
     print len(wfls),"in",status
     for wl in wfls:
         ## unknonw to the system
-        if not session.query(Workflow).filter(Workflow.name==wl['RequestName']).all(): 
+        known = session.query(Workflow).filter(Workflow.name==wl['RequestName']).all()
+        if not known: 
             #print wl['RequestName'],"is unknown, this is bad news" ## no it is not
             continue
+
+        if status == 'assignment-approved':
+            if all([wfo.status == 'considered' for wfo in known]):
+                ## skip those only assignment-approved / considered
+                continue
 
         wfi = workflowInfo( url,  wl['RequestName'], request = wl ,spec=False)
         (_,primaries,_,secondaries) = wfi.getIO()
         outputs = wfi.request['OutputDatasets']
+
         for dataset in list(primaries)+list(secondaries)+outputs:
             if 'FAKE' in dataset: continue
             if 'None' in dataset: continue
@@ -55,7 +63,7 @@ for dataset in already_locked-newly_locking:
             ## crap 
             print "\tunlocking",dataset,"for bad workflow statuses"
             unlock=True
-
+            
         ds_status=None
         if not unlock:
             ds_status = getDatasetStatus( dataset )
@@ -83,7 +91,7 @@ for dataset in already_locked-newly_locking:
             ##would like to pass to *-unlock, or even destroy from local db
             for creator in creators:
                 for wfo in  session.query(Workflow).filter(Workflow.name==creator['RequestName']).all():
-                    if not 'unlock' in wfo.status and not wfo.status in ['trouble','away']:
+                    if not 'unlock' in wfo.status and not wfo.status in ['trouble','away','considered']:
                         wfo.status +='-unlock'
                         print "setting",wfo.name,"to",wfo.status
             session.commit()
@@ -94,7 +102,7 @@ for dataset in already_locked-newly_locking:
 
 waiting_for_custodial_sum = sum(waiting_for_custodial.values())
 print waiting_for_custodial_sum,"[GB] out there waiting for custodial"
-open('/afs/cern.ch/user/c/cmst2/www/unified/waiting_custodial.json','w').write( json.dumps( waiting_for_custodial ) )
+open('/afs/cern.ch/user/c/cmst2/www/unified/waiting_custodial.json','w').write( json.dumps( waiting_for_custodial , indent=2) )
 
 ## then for all that would have been invalidated from the past, check whether you can unlock the wf based on output
 for wfo in session.query(Workflow).filter(Workflow.status=='forget').all():
