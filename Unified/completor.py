@@ -3,7 +3,7 @@ from assignSession import *
 import sys
 import reqMgrClient
 from utils import workflowInfo, getWorkflowById, getDatasetEventsAndLumis
-from utils import campaignInfo
+from utils import campaignInfo, sendEmail
 import json
 import random
 
@@ -43,12 +43,33 @@ def completor(url, specific):
         good_fraction = good_fractions[c]
         ignore_fraction = 2.
         
-        if not 'TotalInputEvents' in wfi.request: continue
-
-        lumi_expected = wfi.request['TotalInputLumis']
-        event_expected = wfi.request['TotalInputEvents']
+        lumi_expected = None
+        event_expected = None
+        if not 'TotalInputEvents' in wfi.request: 
+            if 'RequestNumEvents' in wfi.request:
+                event_expected = wfi.request['RequestNumEvents']
+            else:
+                continue
+        else:
+            lumi_expected = wfi.request['TotalInputLumis']
+            event_expected = wfi.request['TotalInputEvents']
 
         now = time.mktime(time.gmtime()) / (60*60*24.)
+
+        running_log = filter(lambda change : change["Status"] in ["running-open","running-closed"],wfi.request['RequestTransition'])
+        if not running_log:
+            print "\tHas no running log"
+            # cannot figure out when the thing started running
+            continue
+        then = running_log[-1]['UpdateTime'] / (60.*60.*24.)
+        delay = now - then ## in days
+
+        if delay <= 21: 
+            print "\tRunning since",delay,"[days]"
+            continue
+
+        if delay >= 14:
+            sendEmail("long lasting workflow","%s has been running for %s days"%( wfo.name, delay ))
 
         percent_completions = {}
         for output in wfi.request['OutputDatasets']:
@@ -78,14 +99,6 @@ def completor(url, specific):
             print "all is done, just wait a bit"
             continue
 
-        running_log = filter(lambda change : change["Status"] in ["running-open","running-closed"],wfi.request['RequestTransition'])
-        if not running_log:
-            print wfo.name,"has no running log"
-            # cannot figure out when the thing started running
-            continue
-        then = running_log[-1]['UpdateTime'] / (60.*60.*24.)
-        delay = now - then ## in days
-
         for output in  percent_completions:
             completions[output]['injected'] = then
 
@@ -106,6 +119,7 @@ def completor(url, specific):
             if member['RequestStatus'] in ['running-opened','running-closed']:
                 print "setting",member['RequestName'],"force-complete"
                 print "NOT REALLY FORCING"
+                sendEmail("force completing","TAGGING %s is worth force completing\n%s"%( member['RequestName'] , percent_completions))
                 ##reqMgrClient.setWorkflowForceComplete(url, member['RequestName'])
 
         ## do it once only for testing
