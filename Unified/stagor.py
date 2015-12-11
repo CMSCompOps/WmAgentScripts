@@ -190,11 +190,11 @@ def stagor(url,specific =None, options=None):
         if all([wf.status != 'staging' for wf in using_wfos]):
             ## not a single ds-using wf is in staging => moved on already
             ## just forget about it
-            print "presence of",dsname,"does not matter anymore"
-            print "\t",done_by_input[dsname]
-            print "\t",[wf.status for wf in using_wfos]
-            print "\tneeds",need_sites
-            continue #??
+            #print "presence of",dsname,"does not matter anymore"
+            #print "\t",done_by_input[dsname]
+            #print "\t",[wf.status for wf in using_wfos]
+            #print "\tneeds",need_sites
+            continue
             
         ## should the need_sites reduces with time ?
         # with dataset choping, reducing that number might work as a block black-list.
@@ -271,8 +271,8 @@ def stagor(url,specific =None, options=None):
             #print dataset,"stuck through",phid
             datasets_by_phid[phid].add( dataset )
 
-    bad_destinations = defaultdict(list)
-    bad_sources = defaultdict(list)
+    bad_destinations = defaultdict(set)
+    bad_sources = defaultdict(set)
     report = ""
     for phid,datasets in datasets_by_phid.items():
         issues = checkTransferLag( url, phid , datasets=list(datasets) )
@@ -295,9 +295,9 @@ def stagor(url,specific =None, options=None):
                     if delay>7 and rate<0.0004:
                         if len(dones)>1:
                             ## its the destination that sucks
-                            bad_destinations[destination].append( block )
+                            bad_destinations[destination].add( block )
                         else:
-                            dum=[bad_sources[d].append( block ) for d in dones]
+                            dum=[bad_sources[d].add( block ) for d in dones]
 
                         report += "%s is not getting to %s, out of %s faster than %f [GB/s] since %f [d]\n"%(block,destination,", ".join(dones), rate, delay)
     print "\n"*2
@@ -305,15 +305,15 @@ def stagor(url,specific =None, options=None):
     ## create tickets right away ?
     report+="\nbad sources "+",".join(bad_sources.keys())+"\n"
     for site,blocks in bad_sources.items():
-        report+="\n\n%s:"%site+"\n\t".join(['']+blocks)
+        report+="\n\n%s:"%site+"\n\t".join(['']+list(blocks))
     report+="\nbad destinations "+",".join(bad_destinations.keys())+"\n"
     for site,blocks in bad_destinations.items():
-        report+="\n\n%s:"%site+"\n\t".join(['']+blocks)
+        report+="\n\n%s:"%site+"\n\t".join(['']+list(blocks))
 
     print report
 
     open('/afs/cern.ch/user/c/cmst2/www/unified/logs/incomplete_transfers.log','w').write( report )
-    sendEmail('incomplete transfers', report,sender=None, destination=['dc.jorge10@uniandes.edu.co','aram.apyan@cern.ch','sidn@mit.edu'])
+    #sendEmail('incomplete transfers', report,sender=None, destination=['dc.jorge10@uniandes.edu.co','aram.apyan@cern.ch','sidn@mit.edu'])
 
 
 if __name__ == "__main__":
