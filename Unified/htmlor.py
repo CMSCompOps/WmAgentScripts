@@ -565,11 +565,28 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     for t in filter(None,os.popen('cat /afs/cern.ch/user/c/cmst2/www/unified/logs/*/*.time').read().split('\n')):
         module_name,run_time,spend = t.split(':')
         ## then do what you want with it !
+        if 'cleanor' in module_name: continue
+        
         per_module[module_name].append( int(spend) )
+
+    def display_time( sec ):
+        m, s = divmod(sec, 60)
+        h, m = divmod(m, 60)
+        dis=""
+        if h:
+            dis += "%d [h] "%h
+        if h or m:
+            dis += "%d [m] "%m
+        if h or m or s:
+            dis += "%d [s]"%s
+            
+        return dis
 
     html_doc.write("Module running time<ul>\n")
     for m,spends in per_module.items():
-        html_doc.write("<li>%s : last %d [s], avg %d [s]</li>\n"%( m, spends[-1], sum(spends)/float(len(spends))))
+        avg = sum(spends)/float(len(spends))
+        lasttime =  spends[-1]
+        html_doc.write("<li>%s : last %s, avg %s</li>\n"%( m, display_time(lasttime), display_time(avg)))
     html_doc.write("</ul>")
 
     html_doc.write("Last running <pre>%s</pre><br>"%( os.popen("tac /afs/cern.ch/user/c/cmst2/www/unified/logs/running | head -5").read() ))
