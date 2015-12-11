@@ -3,7 +3,7 @@
     "go": true
   },
   "Summer11LegDR": {
-    "go": false,
+    "go": true,
     "SiteWhitelist": [ "T1_US_FNAL", "T1_ES_PIC", "T1_FR_CCIN2P3","T1_IT_CNAF","T1_UK_RAL","T1_DE_KIT", "T2_CH_CERN"]
   }, 
   "Summer12pLHE": {
@@ -19,7 +19,7 @@
     "go": true
   }, 
   "Summer12DR53X": {
-    "go": false,
+    "go": true,
     "lumisize" : 400,
     "SiteWhitelist": [ "T1_US_FNAL", "T1_ES_PIC", "T1_FR_CCIN2P3","T1_IT_CNAF","T1_UK_RAL","T1_DE_KIT","T2_CH_CERN"]
   }, 
@@ -87,7 +87,8 @@
     "go": true
   },
   "RunIIFall15DR76": {
-    "go": true
+    "go": true,
+    "force-complete" : 0.98
   },
   "HiWinter13": {
     "go": true,
@@ -143,7 +144,8 @@
   "RunIISpring15DR74": {
    "go": true,
     "lumisize" : 400,
-    "SiteWhitelist" : [ "T1_US_FNAL", "T1_ES_PIC", "T1_FR_CCIN2P3","T1_IT_CNAF","T1_UK_RAL","T1_DE_KIT","T2_CH_CERN"]
+    "SiteWhitelist" : [ "T1_US_FNAL", "T1_ES_PIC", "T1_FR_CCIN2P3","T1_IT_CNAF","T1_UK_RAL","T1_DE_KIT","T2_CH_CERN"],
+    "force-complete" : 0.98
   },
   "RunIISpring15Digi74": {
     "go": true
