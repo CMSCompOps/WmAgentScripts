@@ -139,7 +139,7 @@ def transferor(url ,specific = None, talk=True, options=None):
     # shuffle first by name
     random.shuffle( wfs_and_wfh )
     # Sort smallest transfers first; allows us to transfer as many as possible workflows.
-    wfs_and_wfh.sort(cmp = lambda i,j : cmp(int(primary_input_per_workflow_gb.get(i[0].name, 0)/100.), int(primary_input_per_workflow_gb.get(j[0].name, 0)/100.) ))
+    wfs_and_wfh.sort(cmp = lambda i,j : cmp(int(primary_input_per_workflow_gb.get(i[0].name, 0)), int(primary_input_per_workflow_gb.get(j[0].name, 0)) ))
     #sort by priority higher first
     wfs_and_wfh.sort(cmp = lambda i,j : cmp(int(i[1].request['RequestPriority']),int(j[1].request['RequestPriority']) ), reverse=True)
 
@@ -175,9 +175,7 @@ def transferor(url ,specific = None, talk=True, options=None):
     went_over_budget=False
     destination_cache = {}
     for (wfo,wfh) in wfs_and_wfh:
-        print wfh.request['RequestPriority']
-        print wfo.name,"to be transfered"
-        #wfh = workflowInfo( url, wfo.name)
+        print wfo.name,"to be transfered with priority",wfh.request['RequestPriority']
 
         if wfh.request['RequestStatus']!='assignment-approved':
             wfo.status = 'away'
@@ -194,8 +192,8 @@ def transferor(url ,specific = None, talk=True, options=None):
             print "%15.4f GB this load"%this_load
             print "%15.4f GB already this round"%sum(transfer_sizes.values())
             print "%15.4f GB is the available limit"%transfer_limit
-            if sum(transfer_sizes.values()) > transfer_limit:
-                went_over_budget = True
+            #if sum(transfer_sizes.values()) > transfer_limit:
+            went_over_budget = True
             if int(wfh.request['RequestPriority']) >= in_transfer_priority and min_transfer_priority!=in_transfer_priority:
                 print "Higher priority sample",wfh.request['RequestPriority'],">=",in_transfer_priority,"go-on over budget"
             else:
