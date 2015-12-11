@@ -20,8 +20,11 @@ source /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/credentials.sh
 ## assign the workflow to sites
 /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/assignor.py
 
+## equalize site white list at the condor level
+/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.shUnified/equalizor.py
+
 ## force-complete wf according to rules ## tagging phase
-# heavy /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/completor.py
+/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/completor.py
 
 ## verify sanity of completed workflow and pass along
 /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/checkor.py
