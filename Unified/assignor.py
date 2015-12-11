@@ -13,6 +13,7 @@ from htmlor import htmlor
 import os
 import random
 import json
+import copy
 
 def assignor(url ,specific = None, talk=True, options=None):
     if userLock(): return
@@ -126,6 +127,9 @@ def assignor(url ,specific = None, talk=True, options=None):
             sites_allowed = [site for site in sites_allowed if SI.CE_to_SE(site) in one_secondary_locations]
             
         print "From secondary requirement, now Allowed",sorted(sites_allowed)
+
+        initial_sites_allowed = copy.deepcopy( sites_allowed ) ## keep track of this, after secondary input location restriction : that's how you want to operate it
+
         sites_all_data = copy.deepcopy( sites_allowed )
         sites_with_data = copy.deepcopy( sites_allowed )
         sites_with_any_data = copy.deepcopy( sites_allowed )
@@ -220,8 +224,12 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         ## default back to white list to original white list with any data
         print "Allowed",sites_allowed
-        sites_allowed = sites_with_any_data
-        print "Selected for any data",sites_allowed
+        if options.primary_aaa:
+            sites_allowed = initial_sites_allowed
+            options.useSiteListAsLocation = True
+        else:
+            sites_allowed = sites_with_any_data
+            print "Selected for any data",sites_allowed
 
         if options.restrict:
             print "Allowed",sites_allowed
@@ -294,8 +302,10 @@ def assignor(url ,specific = None, talk=True, options=None):
             for key in reqMgrClient.assignWorkflow.keys:
                 v=getattr(options,key)
                 if v!=None:
-                    if ',' in v: parameters[key] = filter(None,v.split(','))
-                    else: parameters[key] = v
+                    if type(v)==str and ',' in v: 
+                        parameters[key] = filter(None,v.split(','))
+                    else: 
+                        parameters[key] = v
 
         ## pick up campaign specific assignment parameters
         parameters.update( CI.parameters(wfh.request['Campaign']) )
@@ -387,6 +397,7 @@ if __name__=="__main__":
     parser.add_option('-r', '--restrict', help='Only assign workflows for site with input',default=False, action="store_true",dest='restrict')
     parser.add_option('--go',help="Overrides the campaign go",default=False,action='store_true')
     parser.add_option('--team',help="Specify the agent to use",default='production')
+    parser.add_option('--primary_aaa',help="Force to use the secondary location restriction, if any, and use the full site whitelist initially provided to run that type of wf",default=False, action='store_true')
     for key in reqMgrClient.assignWorkflow.keys:
         parser.add_option('--%s'%key,help="%s Parameter of request manager assignment interface"%key, default=None)
     (options,args) = parser.parse_args()
