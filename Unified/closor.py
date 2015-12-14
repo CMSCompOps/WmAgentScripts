@@ -84,23 +84,31 @@ def closor(url, specific=None):
                     if all_OK[io]:
                         results.append(setDatasetStatus(out, 'VALID'))
                         tier = out.split('/')[-1]
-                        to_DDM = False
-                        if wl['RequestType'] in UC.get("type_to_DDM"): to_DDM = True
-                        if tier in UC.get("tiers_no_DDM"): to_DDM = False
                         campaign = None
                         try:
                             campaign = out.split('/')[2].split('-')[0]
                         except:
                             if 'Campaign' in wl and wl['Campaign']:
                                 campaign = wl['Campaign']
+                        to_DDM = False
+                        ## campaign override
                         if campaign and campaign in CI.campaigns and 'toDDM' in CI.campaigns[campaign] and tier in CI.campaigns[campaign]['toDDM']:
                             to_DDM = True
+                        ## by typical enabling
+                        if tier in UC.get("tiers_to_DDM"):
+                            to_DDM = True
+                        ## check for unitarity
+                        if not tier in UC.get("tiers_no_DDM")+UC.get("tiers_to_DDM"):
+                            print "tier",tier,"neither TO or NO DDM for",out
+                            results.append('Not recognitized tier %s'%tier)
+                            sendEmail("failed DDM injection","could not recognize %s for injecting in DDM"% out)
+                            continue
+
                         n_copies = 2
                         if to_DDM and campaign and campaign in CI.campaigns and 'DDMcopies' in CI.campaigns[campaign]:
                             n_copies = CI.campaigns[campaign]['DDMcopies']
                             
                         ## inject to DDM when necessary
-                        passed_to_DDM=True
                         if to_DDM:
                             #print "Sending",out," to DDM"
                             status = subprocess.call(['python','assignDatasetToSite.py','--nCopies=%d'%n_copies,'--dataset='+out,'--exec'])
@@ -110,12 +118,6 @@ def closor(url, specific=None):
                                 if status!=0:
                                     results.append("Failed DDM for %s"% out)
                                     sendEmail("failed DDM injection","could not add "+out+" to DDM pool. check closor logs.")
-                                    passed_to_DDM=False
-                            #if passed_to_DDM:
-                            #    ## make a lock release
-                            #    LI.release_everywhere( out, reason = 'global unlock after passing to DDM')                                
-                            #    pass
-
                     else:
                         print wfo.name,"no stats for announcing",out
                         results.append('No Stats')

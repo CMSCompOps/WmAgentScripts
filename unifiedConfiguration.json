@@ -3,13 +3,13 @@
    "value" : ["DQM","DQMIO"],
    "description": "The data tiers that do not go to tape"
  },
- "type_to_DDM": {
-   "value" : ["ReDigi","ReReco"],
-   "description" : "The reqmgr request type for which goes to AnaOps"
- },
  "tiers_no_DDM": {
-   "value" : ["RECO","DQM","DQMIO"],
+   "value" : ["GEN-SIM","LHE","RECO","DQM","DQMIO"],
    "description": "The data tiers that do not go to AnaOps"
+ },
+ "tiers_to_DDM": {
+   "value" : ["AODSIM","MINIAODSIM","GEN-SIM-RECO","AOD","MINIAOD","ALCARECO"],
+   "description": "The data tiers that go to AnaOps"
  },
  "stagor_sends_back": {
    "value" : true,
