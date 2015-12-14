@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import getWorkLoad
-from utils import componentInfo, sendEmail, setDatasetStatus
+from utils import componentInfo, sendEmail, setDatasetStatus, unifiedConfiguration
 import reqMgrClient
 import json
 import time
@@ -14,6 +14,7 @@ from htmlor import htmlor
 def closor(url, specific=None):
     if not componentInfo().check(): return
 
+    UC = unifiedConfiguration()
     CI = campaignInfo()
     #LI = lockInfo()
 
@@ -83,7 +84,9 @@ def closor(url, specific=None):
                     if all_OK[io]:
                         results.append(setDatasetStatus(out, 'VALID'))
                         tier = out.split('/')[-1]
-                        to_DDM = (wl['RequestType'] == 'ReDigi' and not ('DQM' in tier))
+                        to_DDM = False
+                        if wl['RequestType'] in UC.get("type_to_DDM"): to_DDM = True
+                        if tier in UC.get("tiers_no_DDM"): to_DDM = False
                         campaign = None
                         try:
                             campaign = out.split('/')[2].split('-')[0]

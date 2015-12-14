@@ -3,6 +3,14 @@
    "value" : ["DQM","DQMIO"],
    "description": "The data tiers that do not go to tape"
  },
+ "type_to_DDM": {
+   "value" : ["ReDigi","ReReco"],
+   "description" : "The reqmgr request type for which goes to AnaOps"
+ },
+ "tiers_no_DDM": {
+   "value" : ["RECO","DQM","DQMIO"],
+   "description": "The data tiers that do not go to AnaOps"
+ },
  "stagor_sends_back": {
    "value" : true,
    "description": "Whether the stagor module can send workflow back to considered"
