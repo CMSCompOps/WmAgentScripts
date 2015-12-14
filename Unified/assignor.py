@@ -81,23 +81,24 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         print "Site white list",sorted(sites_allowed)
 
-        override_sec_location = []
-        if 'SecondaryLocation' in CI.campaigns[wfh.request['Campaign']]:
-            override_sec_location = CI.campaigns[wfh.request['Campaign']]['SecondaryLocation']
+        override_sec_location = CI.get(wfh.request['Campaign'], 'SecondaryLocation', [])
 
-        if 'SiteWhitelist' in CI.campaigns[wfh.request['Campaign']]:
+        c_sites_allowed = CI.get(wfh.request['Campaign'], 'SiteWhitelist' , [])
+        if c_sites_allowed:
             print "Would like to use the new whitelist, but will not until things went through a bit"
-            sendEmail("using a restricted site white list","for %s"%(CI.campaigns[wfh.request['Campaign']]))
-            sites_allowed = list(set(sites_allowed) & set(CI.campaigns[wfh.request['Campaign']]['SiteWhitelist']))
+            sendEmail("using a restricted site white list","for %s"%(c_sites_allowed))
+            sites_allowed = list(set(sites_allowed) & set(c_sites_allowed))
 
-        if 'SiteBlacklist' in CI.parameters(wfh.request['Campaign']):
+        c_black_list = CI.get(wfh.request['Campaign'], 'SiteBlacklist', [])
+        if c_black_list:
             print "Reducing the whitelist due to black list in campaign configuration"
-            print "Removing",CI.parameters(wfh.request['Campaign'])['SiteBlacklist']
-            sites_allowed = list(set(sites_allowed) - set(CI.parameters(wfh.request['Campaign'])['SiteBlacklist']))
+            print "Removing",c_black_list
+            sites_allowed = list(set(sites_allowed) - set(c_black_list))
 
         blocks = []
         if 'BlockWhitelist' in wfh.request:
             blocks = wfh.request['BlockWhitelist']
+
 
         memory_allowed = SI.sitesByMemory( wfh.request['Memory'] )
         if memory_allowed!=None:
