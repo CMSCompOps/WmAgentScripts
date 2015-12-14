@@ -2272,6 +2272,14 @@ def getPrepIDs(wl):
     else:
         return [wl['PrepID']]
 
+def getLFNbase(dataset):
+        # initialize API to DBS3
+        dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+        # retrieve file
+        reply = dbsapi.listFiles(dataset=dataset)
+        file = reply[0]['logical_file_name']
+        return '/'.join(file.split('/')[:3])
+
 class workflowInfo:
     def __init__(self, url, workflow, deprecated=False, spec=True, request=None,stats=False):
         self.url = url

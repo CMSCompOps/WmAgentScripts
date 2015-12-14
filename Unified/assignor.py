@@ -2,7 +2,7 @@
 from assignSession import *
 import reqMgrClient
 from utils import workflowInfo, campaignInfo, siteInfo, userLock, global_SI, unifiedConfiguration
-from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction, getDatasetEventsPerLumi, newLockInfo
+from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction, getDatasetEventsPerLumi, newLockInfo, getLFNbase
 from utils import componentInfo, sendEmail
 #from utils import lockInfo
 from utils import duplicateLock, notRunningBefore
@@ -135,7 +135,9 @@ def assignor(url ,specific = None, talk=True, options=None):
         sites_with_any_data = copy.deepcopy( sites_allowed )
         primary_locations = None
         available_fractions = {}
+        set_lfn = '/store/mc' ## by default
         for prim in list(primary):
+            set_lfn = getLFNbase( prim )
             presence = getDatasetPresence( url, prim , only_blocks=blocks)
             if talk:
                 print prim
@@ -270,7 +272,7 @@ def assignor(url ,specific = None, talk=True, options=None):
             'AutoApproveSubscriptionSites' : list(set(sites_out)),
             'AcquisitionEra' : wfh.acquisitionEra(),
             'ProcessingString' : wfh.processingString(),
-            'MergedLFNBase' : '/store/mc', ## to be figured out
+            'MergedLFNBase' : set_lfn,
             'ProcessingVersion' : version,
             }
 
