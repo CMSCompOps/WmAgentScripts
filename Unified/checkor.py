@@ -86,6 +86,10 @@ def checkor(url, spec=None, options=None):
         ## get info
         wfi = workflowInfo(url, wfo.name)
 
+        if not CI.go( wfi.request['Campaign'] ):
+            print "No go for",wfo.name
+            continue
+
         ## make sure the wm status is up to date.
         # and send things back/forward if necessary.
         wfo.wm_status = wfi.request['RequestStatus']
