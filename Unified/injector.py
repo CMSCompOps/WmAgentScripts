@@ -17,7 +17,7 @@ def injector(url, options, specific):
     use_mcm = up.status['mcm']
 
     workflows = getWorkflows(url, status=options.wmstatus, user=options.user)
-    #workflows.extend( getWorkflows(url, status=options.wmstatus, rtype="ReReco", user=options.user) )
+    workflows.extend( getWorkflows(url, status=options.wmstatus, user='fabozzi', rtype="ReReco")) ## regardless of users, pick up all ReReco on the table
 
     existing = [wf.name for wf in session.query(Workflow).all()]
     ## browse for assignment-approved requests, browsed for ours, insert the diff
