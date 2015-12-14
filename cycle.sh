@@ -21,7 +21,7 @@ source /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/credentials.sh
 /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/assignor.py
 
 ## equalize site white list at the condor level
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.shUnified/equalizor.py
+/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/equalizor.py
 
 ## force-complete wf according to rules ## tagging phase
 /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/completor.py
