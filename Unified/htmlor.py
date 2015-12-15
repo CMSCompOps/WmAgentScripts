@@ -654,10 +654,22 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 
     text += "<li> Approximate Free Tape<ul>"
     for mss in SI.storage:
-        text+="<li>%s : %d [TB]</li>"%(mss, SI.storage[mss])
+        waiting = 0
+        try:
+            waiting = float(os.popen("grep '%s is pending . Created since' /afs/cern.ch/user/c/cmst2/www/unified/logs/lockor/last.log  -B 3 | grep size | awk '{ sum+=$6 ; print sum }' | tail -1" % mss).readline())
+        except Exception as e:
+            print str(e)
+        oldest = ""
+        os.system('grep pending /afs/cern.ch/user/c/cmst2/www/unified/logs/lockor/last.log | sort -u > /afs/cern.ch/user/c/cmst2/www/unified/logs/pending.log')
+        try:
+            oldest = os.popen("grep '%s is pending . Created since ' /afs/cern.ch/user/c/cmst2/www/unified/logs/lockor/last.log | sort | awk '{print $10, $11, $12, $13, $14 }' | head -1"% mss).readline()
+        except Exception as e:
+            print str(e)
+        waiting /= 1024.
+        text+="<li>%s : %d [TB]. Waiting for approval %d [TB] since %s </li>"%(mss, SI.storage[mss], waiting, oldest)
     text += "</ul></li>"
 
-    lap ( 'done with campaigns' )
+    lap ( 'done with sites' )
 
     open('/afs/cern.ch/user/c/cmst2/www/unified/siteInfo.json','w').write(json.dumps(dict([(t,getattr(SI,t)) for t in SI.types()]),indent=2))
 
@@ -765,6 +777,8 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
     html_doc.close()
     ## and put the file in place
     os.system('mv /afs/cern.ch/user/c/cmst2/www/unified/index.html.new /afs/cern.ch/user/c/cmst2/www/unified/index.html')
+
+        
 
     html_doc = open('/afs/cern.ch/user/c/cmst2/www/unified/statuses.html','w')
     html_doc.write("""                                                                                                                                                                                                                                                                                                      <html>        
