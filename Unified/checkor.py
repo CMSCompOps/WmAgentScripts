@@ -180,10 +180,11 @@ def checkor(url, spec=None, options=None):
             event_expected,lumi_expected = 0,0
             if not 'recovery' in wfo.status:
                 sendEmail("missing member of the request","TotalInputEvents is missing from the workload of %s"% wfo.name, destination=['julian.badillo.rojas@cern.ch'])
-            if 'RequestNumEvents' in wfi.request:
-                event_expected = wfi.request['RequestNumEvents']
         else:
             event_expected,lumi_expected =  wfi.request['TotalInputEvents'],wfi.request['TotalInputLumis']
+
+        if 'RequestNumEvents' in wfi.request:
+            event_expected = wfi.request['RequestNumEvents']
 
         fractions_pass = {}
         for output in wfi.request['OutputDatasets']:
