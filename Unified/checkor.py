@@ -117,8 +117,8 @@ def checkor(url, spec=None, options=None):
             print "setting",wfo.name,"on hold"
             session.commit()
             continue
-        
-        if wfo.wm_status != 'completed':
+
+        if wfo.wm_status != 'completed' and not wfo.name in by_passes:
             ## for sure move on with closeout check if in completed
             print "no need to check on",wfo.name,"in status",wfo.wm_status
             session.commit()
@@ -128,7 +128,6 @@ def checkor(url, spec=None, options=None):
         sub_assistance="" # if that string is filled, there will be need for manual assistance
 
         is_closing = True
-        ## do the closed-out checks one by one
 
         ## get it from somewhere
         by_pass_checks = False
@@ -140,7 +139,7 @@ def checkor(url, spec=None, options=None):
                 print "we can bypass",wfo.name,"because of keyword",bypass
                 by_pass_checks = True
                 break
-
+        
         if not CI.go( wfi.request['Campaign'] ) and not by_pass_checks:
             print "No go for",wfo.name
             continue
@@ -184,7 +183,9 @@ def checkor(url, spec=None, options=None):
             event_expected,lumi_expected =  wfi.request['TotalInputEvents'],wfi.request['TotalInputLumis']
 
         if 'RequestNumEvents' in wfi.request:
-            event_expected = wfi.request['RequestNumEvents']
+            event_expected = int(wfi.request['RequestNumEvents'])
+        elif 'Task1' in wfi.request and 'RequestNumEvents' in wfi.request['Task1']:
+            event_expected = int(wfi.request['Task1']['RequestNumEvents'])
 
         fractions_pass = {}
         for output in wfi.request['OutputDatasets']:
