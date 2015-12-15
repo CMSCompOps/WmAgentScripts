@@ -523,6 +523,12 @@ class campaignInfo:
         else:
             print "Not allowed to go for",c
             return False
+    def get(self, c, key, default):
+        if c in self.campaigns:
+            if key in self.campaigns[c]:
+                return copy.deepcopy(self.campaigns[c][key])
+        return copy.deepcopy(default)
+
     def parameters(self, c):
         if c in self.campaigns and 'parameters' in self.campaigns[c]:
             return self.campaigns[c]['parameters']
@@ -1361,6 +1367,13 @@ def findLostBlocks(url, dataset):
     return lost
 
 def checkTransferLag( url, xfer_id , datasets=None):
+    try:
+        try_checkTransferLag( url, xfer_id , datasets)
+    except Exception as e:
+        sendEmail('fatal execption in checkTransferLag',str(e))
+        return {}
+
+def try_checkTransferLag( url, xfer_id , datasets=None):
     ## xfer_id tells us what has to go where via subscriptions
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     #r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?request=%s'%(str(xfer_id)))
@@ -1419,7 +1432,8 @@ def checkTransferLag( url, xfer_id , datasets=None):
                         print "\t\t",subitem['name'],"lost"
                         continue
                     block_size = max([replica['bytes'] for replica in subitem['replica']])
-                    destination_size = min([replica['bytes'] for replica in subitem['replica'] if replica['node']==destination])
+                    ssitems = [replica['bytes'] for replica in subitem['replica'] if replica['node']==destination]
+                    destination_size = min(ssitems) if ssitems else 0
                     block_size_GB = block_size / (1024.**3)
                     destination_size_GB = destination_size / (1024.**3)
                     ### rate
@@ -1434,13 +1448,19 @@ def checkTransferLag( url, xfer_id , datasets=None):
                         
     return stuck
 
-
 def checkTransferStatus(url, xfer_id, nocollapse=False):
+    try:
+        v = try_checkTransferStatus(url, xfer_id, nocollapse=False)
+    except Exception as e:
+        print srt(e)
+        sendEmail('fatal execption in checkTransferStatus',str(e))
+        v = {}
+    return v
+        
+
+def try_checkTransferStatus(url, xfer_id, nocollapse=False):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    #r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?request=%s'%(str(xfer_id)))
-    #r2=conn.getresponse()
-    #result = json.loads(r2.read())
-    #timestamp = result['phedex']['request_timestamp']
+
     r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?request='+str(xfer_id))
     r2=conn.getresponse()
     result = json.loads(r2.read())
@@ -1518,9 +1538,9 @@ def findCustodialLocation(url, dataset, with_completion=False):
     result = json.loads(r2.read())
     request=result['phedex']
     if 'block' not in request.keys():
-        return []
+        return [],None
     if len(request['block'])==0:
-        return []
+        return [],None
     cust=[]
     #veto = ["T0_CH_CERN_MSS"]
     veto = []
@@ -1539,17 +1559,26 @@ def findCustodialLocation(url, dataset, with_completion=False):
                     cust.append(replica['node'])
                     cust_blocks.add( block['name'] )
 
+
+
+    more_information = {"checked" : time.mktime( time.gmtime())}
     ## make sure all known blocks are complete at custodial
     if with_completion and len(blocks)!=len(cust_blocks):
         #print blocks
         #print cust_blocks
+
         print "Missing",len(blocks - cust_blocks),"blocks out of",len(blocks)
+        more_information['nblocks'] = len(blocks)
+        #more_information['blocks'] = list(blocks)
+        more_information['nmissing'] = len(blocks - cust_blocks)
+        more_information['missing'] = list(blocks - cust_blocks)
         if len(cust_blocks)!=0:
             print json.dumps(list(blocks - cust_blocks), indent=2)
         r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset=%s&node=T1*MSS'%dataset)
         r2=conn.getresponse()
         result = json.loads(r2.read())
         request=result['phedex']['request']
+        more_information['nodes']={}
         for nodes in request:
             created = nodes['time_create']
             for node in nodes['node']:
@@ -1557,11 +1586,14 @@ def findCustodialLocation(url, dataset, with_completion=False):
                 print "request",nodes['id'],"to",node['name'],"is",node['decision'],
                 if decided:
                     print "on",time.asctime( time.gmtime( decided))
+                more_information['nodes'][node['name']] = { 'id': nodes['id'], 'created' : created, 'decided' : decided}
+
+
                 print ". Created since",time.asctime( time.gmtime( created ))
 
-        return []
+        return [],more_information
     else:
-        return list(set(cust))
+        return list(set(cust)), more_information
 
 def getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None, sites=None, only_blocks=None):
     ###count how manytimes a dataset is replicated < 100%: not all blocks > 100% several copies exis
@@ -2602,7 +2634,11 @@ class workflowInfo:
     def getProcString(self):
         return self.request['ProcessingString']
     def getRequestNumEvents(self):
-        return int(self.request['RequestNumEvents'])
+        if 'RequestNumEvents' in self.request:
+            return int(self.request['RequestNumEvents'])
+        else:
+            return int(self.request['Task1']['RequestNumEvents'])
+
     def getPileupDataset(self):
         if 'MCPileup' in self.request:
             return self.request['MCPileup']
