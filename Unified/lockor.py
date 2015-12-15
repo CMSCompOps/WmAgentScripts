@@ -52,6 +52,8 @@ for status in reversed(statuses):
     print len(newly_locking),"locks so far"
 
 waiting_for_custodial={}
+stuck_custodial={}
+missing_approval_custodial={}
 ## check on the one left out, which would seem to get unlocked
 for dataset in already_locked-newly_locking:
     try:
@@ -72,19 +74,34 @@ for dataset in already_locked-newly_locking:
                 print "\tunlocking",dataset,"for bad dataset status",ds_status
                 unlock=True
 
+        
         if not unlock:
             (_,dsn,ps,tier) = dataset.split('/')
             unlock = True
             if not tier in tier_no_custodial:
-                custodials = findCustodialCompletion(url, dataset)
+                custodials,info = findCustodialCompletion(url, dataset)
+                waiting_for_custodial[dataset] = {}
+                if info: 
+                    waiting_for_custodial[dataset].update( info )
+
                 if len(custodials) == 0:
                     if not ds_status: ds_status = getDatasetStatus( dataset )
                     ds_size = getDatasetSize( dataset )
                     print "Can't unlock",dataset," of size", ds_size,"[GB] because it is not custodial yet",ds_status
                     ## add it back for that reason
                     newly_locking.add(dataset)
-                    waiting_for_custodial[dataset]=ds_size
+                    waiting_for_custodial[dataset]['size']=ds_size
                     unlock = False
+                    if info:
+                    #    if info['nmissing'] == 1 and info['nblocks']>1:
+                    #        for node,node_info in info['nodes'].items():
+                    #            if node_info['decided'] and (node_info['decided'] - info['checked'])>(7.*24*60*60):
+                    #                ## stuck tape transfer
+                    #                stuck_custodial[dataset] = {'size' : ds_size, 'since' : (node_info['decided'] - info['checked'])/(24.*60*60), 'nodes' : info['nodes']}
+                        if not node_info['decided'] and (node_info['created'] - info['checked'])>(7.*24*60*60):
+                            ## stuck in approval
+                            missing_approval_custodial[dataset] = {'size' : ds_size, 'since' : (node_info['created'] - info['checked'])/(24.*60*60), 'nodes' : info['nodes'].keys()}
+
 
         if unlock:
             print "\tunlocking",dataset
@@ -100,9 +117,11 @@ for dataset in already_locked-newly_locking:
         print str(e)
         newly_locking.add(dataset)
 
-waiting_for_custodial_sum = sum(waiting_for_custodial.values())
+waiting_for_custodial_sum = sum([info['size'] for ds,info in waiting_for_custodial.items() if 'size' in info])
 print waiting_for_custodial_sum,"[GB] out there waiting for custodial"
 open('/afs/cern.ch/user/c/cmst2/www/unified/waiting_custodial.json','w').write( json.dumps( waiting_for_custodial , indent=2) )
+open('/afs/cern.ch/user/c/cmst2/www/unified/stuck_custodial.json','w').write( json.dumps( stuck_custodial , indent=2) )
+open('/afs/cern.ch/user/c/cmst2/www/unified/missing_approval_custodial.json','w').write( json.dumps( missing_approval_custodial , indent=2) )
 
 ## then for all that would have been invalidated from the past, check whether you can unlock the wf based on output
 for wfo in session.query(Workflow).filter(Workflow.status=='forget').all():
