@@ -816,7 +816,10 @@ class siteInfo:
             self.sites_not_ready = []
             self.all_sites = []
             
-            self.sites_banned = ['T2_CH_CERN_HLT','T0_CH_CERN_MSS']
+            self.sites_banned = [
+                #'T2_CH_CERN_HLT',
+                'T0_CH_CERN_MSS'
+                ]
 
             data = dataCache.get('ssb_158') ## 158 is the site readyness metric
             for siteInfo in data:
