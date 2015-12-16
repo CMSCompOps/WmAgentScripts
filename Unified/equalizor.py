@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import workflowInfo, getWorkflows, siteInfo
+from utils import workflowInfo, getWorkflows, siteInfo, sendEmail
 import reqMgrClient
 import json
 import os
+import random
 import optparse
 from collections import defaultdict
 
@@ -25,10 +26,26 @@ def equalizor(url , specific = None):
         if not region in ['US','IT']: continue
         regions[region] = [region] 
 
+    def site_in_depletion(s):
+        if s in SI.sites_pressure:
+            (m, r, pressure) = SI.sites_pressure[s]
+            if float(m) < float(r):
+                print s,m,r,"lacking pressure"
+                return True
+            else:
+                print s,m,r,"pressure"
+                pass
+                
+        return False
+
     for site in SI.sites_ready:
         region = site.split('_')[1]
-        mapping[site] = [fb for fb in SI.sites_ready if any(['_%s_'%(reg) in fb for reg in regions[region]])and fb!=site]
+        ## fallback to the region, to site with on-going low pressure
+        mapping[site] = [fb for fb in SI.sites_ready if any([('_%s_'%(reg) in fb and fb!=site and site_in_depletion(fb))for reg in regions[region]]) ]
     
+    mapping['T2_CH_CERN'].append('T2_CH_CERN_HLT')
+
+
     for site,fallbacks in mapping.items():
         for fb in fallbacks:
             reversed_mapping[fb].append(site)
@@ -36,6 +53,8 @@ def equalizor(url , specific = None):
     ## this is the fallback mapping
     #print json.dumps( mapping, indent=2)
     #print json.dumps( reversed_mapping, indent=2)
+
+    altered_tasks = set()
 
     def running_idle( wfi , task_name):
         gmon = wfi.getGlideMon()
@@ -47,6 +66,7 @@ def equalizor(url , specific = None):
         task_name = task.pathName.split('/')[-1]
         running, idled = running_idle( wfi, task_name)
         if not idled and not running : return False, task_name, running, idled
+        if idled < 100: return False, task_name, running, idled
         if (not running and idled) or (idled / float(running) > 0.2):
             return True, task_name, running, idled
         else:
@@ -76,16 +96,17 @@ def equalizor(url , specific = None):
             tasks_and_campaigns.append( (task, getcampaign(task) ) )
 
         ## now parse this for action
-        for task,campaign in tasks_and_campaigns:
-            print task.pathName
-            print campaign
-            if campaign in [ 'RunIIWinter15wmLHE', 'RunIISummer15GS']:
+        for i_task,(task,campaign) in enumerate(tasks_and_campaigns):
+            #print task.pathName
+            #print campaign
+            if campaign in [ 'RunIIWinter15wmLHE', 'RunIISummer15GS'] and wfi.request['RequestType'] in ['TaskChain']:
                 if task.taskType == 'Processing':
                     needs, task_name, running, idled = needs_action(wfi, task)
                     if needs:
                         print task_name,"of",wfo.name,"running",running,"and pending",idled,"taking action : ReplaceSiteWhitelist"
                         set_to = wfi.request['SiteWhitelist']
-                        modifications[wfo.name][task.pathName] = { "ReplaceSiteWhitelist" : set_to ,"Running" : running, "Pending" : idled}
+                        modifications[wfo.name][task.pathName] = { "ReplaceSiteWhitelist" : set_to ,"Running" : running, "Pending" : idled, "Priority" : wfi.request['RequestPriority']}
+                        altered_tasks.add( task.pathName )
                     else:
                         print task_name,"of",wfo.name,"running",running,"and pending",idled
             if campaign == 'RunIIFall15DR76':
@@ -100,14 +121,26 @@ def equalizor(url , specific = None):
                     needs, task_name, running, idled = needs_action(wfi, task)
                     if needs:
                         ## the step with an input ought to be the digi part : make this one go anywhere
-                        modifications[wfo.name][task.pathName] = { "AddWhitelist" : augment_by , "Running" : running, "Pending" : idled}
+                        modifications[wfo.name][task.pathName] = { "AddWhitelist" : augment_by , "Running" : running, "Pending" : idled, "Priority" : wfi.request['RequestPriority']}
+                        altered_tasks.add( task.pathName )
                         print task_name,"of",wfo.name,"running",running,"and pending",idled,"taking action : AddWhitelist"
                     else:
                         print task_name,"of",wfo.name,"running",running,"and pending",idled
+            if 'T2_CH_CERN' in wfi.request['SiteWhitelist'] and i_task==0:
+                if random.random()<0.1:
+                    if task.pathName in modifications[wfo.name] and 'AddWhitelist' in modifications[wfo.name][task.pathName]:
+                        modifications[wfo.name][task.pathName]["AddWhitelist"].append( "T2_CH_CERN_HLT" )
+                        print wfo.name,"adding HLT"
+                    elif task.pathName in modifications[wfo.name] and 'ReplaceSiteWhitelist' in modifications[wfo.name][task.pathName]:
+                        modifications[wfo.name][task.pathName]["ReplaceSiteWhitelist"].append( "T2_CH_CERN_HLT" )
+                        print wfo.name,"adding HLT"
+                    else:
+                        modifications[wfo.name][task.pathName] = { "AddWhitelist" : ["T2_CH_CERN_HLT"], "Priority" : wfi.request['RequestPriority']}
+                        print wfo.name,"adding HLT"
+
+
     interface = {
-        #'mapping' : mapping, 
         'reversed_mapping' : reversed_mapping,
-        #'acting_on' : ['RunIIWinter15wmLHE'],
         'modifications' : {}
         }
     if options.augment:
@@ -115,7 +148,9 @@ def equalizor(url , specific = None):
     interface['modifications'].update( modifications )
     open('/afs/cern.ch/user/c/cmst2/www/unified/equalizor.json.new','w').write( json.dumps( interface, indent=2))
     os.system('mv /afs/cern.ch/user/c/cmst2/www/unified/equalizor.json.new /afs/cern.ch/user/c/cmst2/www/unified/equalizor.json')
-            
+    
+    sendEmail("Altering the job whitelist","The following tasks had condor rule set for overflow \n%s"%("\n".join( altered_tasks )))
+
 
 if __name__ == "__main__":
     url = 'cmsweb.cern.ch'
