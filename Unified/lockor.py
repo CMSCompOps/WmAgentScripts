@@ -93,14 +93,15 @@ for dataset in already_locked-newly_locking:
                     waiting_for_custodial[dataset]['size']=ds_size
                     unlock = False
                     if info:
-                    #    if info['nmissing'] == 1 and info['nblocks']>1:
-                    #        for node,node_info in info['nodes'].items():
-                    #            if node_info['decided'] and (node_info['decided'] - info['checked'])>(7.*24*60*60):
-                    #                ## stuck tape transfer
-                    #                stuck_custodial[dataset] = {'size' : ds_size, 'since' : (node_info['decided'] - info['checked'])/(24.*60*60), 'nodes' : info['nodes']}
-                        if not node_info['decided'] and (node_info['created'] - info['checked'])>(7.*24*60*60):
-                            ## stuck in approval
-                            missing_approval_custodial[dataset] = {'size' : ds_size, 'since' : (node_info['created'] - info['checked'])/(24.*60*60), 'nodes' : info['nodes'].keys()}
+                        if info['nmissing'] == 1 and info['nblocks']>1:
+                            for node,node_info in info['nodes'].items():
+                                if node_info['decided'] and (info['checked'] - node_info['decided'])>(7.*24*60*60):
+                                    ## stuck tape transfer
+                                    stuck_custodial[dataset] = {'size' : ds_size, 'since' : (node_info['decided'] - info['checked'])/(24.*60*60), 'nodes' : info['nodes']}
+                        for node,node_info in info['nodes'].items(): 
+                            if not node_info['decided'] and (info['checked'] - node_info['created'])>(7.*24*60*60):
+                                ## stuck in approval
+                                missing_approval_custodial[dataset] = {'size' : ds_size, 'since' : (info['checked'] - node_info['created'])/(24.*60*60), 'nodes' : info['nodes']}
 
 
         if unlock:
