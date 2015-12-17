@@ -4,6 +4,7 @@ from utils import workflowInfo, getWorkflows, siteInfo, sendEmail
 import reqMgrClient
 import json
 import os
+import time
 import random
 import optparse
 from collections import defaultdict
@@ -27,6 +28,7 @@ def equalizor(url , specific = None):
         regions[region] = [region] 
 
     def site_in_depletion(s):
+        return True
         if s in SI.sites_pressure:
             (m, r, pressure) = SI.sites_pressure[s]
             if float(m) < float(r):
@@ -51,7 +53,7 @@ def equalizor(url , specific = None):
             reversed_mapping[fb].append(site)
 
     ## this is the fallback mapping
-    #print json.dumps( mapping, indent=2)
+    print json.dumps( mapping, indent=2)
     #print json.dumps( reversed_mapping, indent=2)
 
     altered_tasks = set()
@@ -127,7 +129,7 @@ def equalizor(url , specific = None):
                     else:
                         print task_name,"of",wfo.name,"running",running,"and pending",idled
             if 'T2_CH_CERN' in wfi.request['SiteWhitelist'] and i_task==0:
-                if random.random()<0.1:
+                if random.random()<0.005:
                     if task.pathName in modifications[wfo.name] and 'AddWhitelist' in modifications[wfo.name][task.pathName]:
                         modifications[wfo.name][task.pathName]["AddWhitelist"].append( "T2_CH_CERN_HLT" )
                         print wfo.name,"adding HLT"
@@ -148,7 +150,8 @@ def equalizor(url , specific = None):
     interface['modifications'].update( modifications )
     open('/afs/cern.ch/user/c/cmst2/www/unified/equalizor.json.new','w').write( json.dumps( interface, indent=2))
     os.system('mv /afs/cern.ch/user/c/cmst2/www/unified/equalizor.json.new /afs/cern.ch/user/c/cmst2/www/unified/equalizor.json')
-    
+    os.system('cp /afs/cern.ch/user/c/cmst2/www/unified/equalizor.json /afs/cern.ch/user/c/cmst2/www/unified/logs/equalizor/equalizor.%s.json'%(time.mktime(time.gmtime())))
+    #open('/afs/cern.ch/user/c/cmst2/www/unified/logs/equalizor/equalizor.%s.json'%(time.gmtime()),'w').write( json.dumps( altered_tasks , indent=2))
     sendEmail("Altering the job whitelist","The following tasks had condor rule set for overflow \n%s"%("\n".join( altered_tasks )))
 
 
