@@ -236,7 +236,10 @@ def transferor(url ,specific = None, talk=True, options=None):
         if not use_mcm:
             announced,is_real = False,True
         else:
-            announced,is_real = check_mcm( wfo.name )
+            if wfi.request['RequestType'] in ['ReReco']:
+                announced,is_real = True,True
+            else:
+                announced,is_real = check_mcm( wfo.name )
 
         if not announced:
             print wfo.name,"does not look announced."# skipping?, rejecting?, reporting?"
@@ -292,9 +295,10 @@ def transferor(url ,specific = None, talk=True, options=None):
             sites_allowed = list(set(sites_allowed) - set(CI.parameters(wfh.request['Campaign'])['SiteBlacklist']))
 
         ## reduce right away to sites in case of memory limitation
-        memory_allowed = SI.sitesByMemory( wfh.request['Memory'] )
+        ncores = wfh.request.get('Multicore',1)
+        memory_allowed = SI.sitesByMemory( wfh.request['Memory'] , maxCore=ncores)
         if memory_allowed!=None:
-            print "sites allowing", wfh.request['Memory'],"are",memory_allowed
+            print "sites allowing", wfh.request['Memory'],"MB and",ncores,"core are",memory_allowed
             sites_allowed = list(set(sites_allowed) & set(memory_allowed))
 
         if not sites_allowed:

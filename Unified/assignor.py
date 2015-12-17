@@ -99,11 +99,12 @@ def assignor(url ,specific = None, talk=True, options=None):
         if 'BlockWhitelist' in wfh.request:
             blocks = wfh.request['BlockWhitelist']
 
-
-        memory_allowed = SI.sitesByMemory( wfh.request['Memory'] )
+        ncores = wfh.request.get('Multicore',1)
+        memory_allowed = SI.sitesByMemory( wfh.request['Memory'] , maxCore=ncores)
         if memory_allowed!=None:
-            print "sites allowing", wfh.request['Memory'],"are",sorted(memory_allowed)
+            print "sites allowing", wfh.request['Memory'],"MB and",ncores,"core are",memory_allowed
             sites_allowed = list(set(sites_allowed) & set(memory_allowed))
+        
 
         print "Allowed",sorted(sites_allowed)
         secondary_locations=None

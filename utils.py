@@ -933,7 +933,6 @@ class siteInfo:
             s+=self.cpu_pledges[site]
         return s
 
-
     def getRemainingDatasets(self, site):
         start_reading=False
         datasets=[]
@@ -973,6 +972,8 @@ class siteInfo:
         self.sites_pressure = {}
         for site in self.sites_ready:
             pressure = 0
+            m = 0
+            r = 0
             if site in for_site_pressure:
                 m = for_site_pressure[site]['MatchingIdle']
                 r = for_site_pressure[site]['Running']
@@ -981,7 +982,7 @@ class siteInfo:
             ## ~1 = equilibrium
             ## < 1 : no pressure, running with low matching
             ## > 1 : pressure, plenty of matching
-            self.sites_pressure[site] = pressure
+            self.sites_pressure[site] = (m, r, pressure)
 
 
 
@@ -990,13 +991,13 @@ class siteInfo:
         #except:
         #    self.sites_memory = {}
 
-    def sitesByMemory( self, maxMem):
+    def sitesByMemory( self, maxMem, maxCore=1):
         if not self.sites_memory:
             print "no memory information from glidein mon"
             return None
         allowed = set()
         for site,slots in self.sites_memory.items():
-            if any([slot['MaxMemMB']>= maxMem for slot in slots]):
+            if any([slot['MaxMemMB']>= maxMem and slot['MaxCpus']>=maxCore for slot in slots]):
                 allowed.add(site)
         return list(allowed)
 
