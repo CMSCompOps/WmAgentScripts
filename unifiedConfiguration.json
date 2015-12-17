@@ -4,7 +4,7 @@
    "description": "The data tiers that do not go to tape"
  },
  "tiers_no_DDM": {
-   "value" : ["GEN-SIM","LHE","RECO","DQM","DQMIO"],
+   "value" : ["GEN-SIM","LHE","GEN","RECO","DQM","DQMIO"],
    "description": "The data tiers that do not go to AnaOps"
  },
  "tiers_to_DDM": {
