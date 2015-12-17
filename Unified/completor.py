@@ -64,11 +64,10 @@ def completor(url, specific):
         then = running_log[-1]['UpdateTime'] / (60.*60.*24.)
         delay = now - then ## in days
 
-        if delay <= 21: 
-            print "\tRunning since",delay,"[days]"
-            continue
-
-        if delay >= 14:
+        (w,d) = divmod(delay, 7 )
+        print "\t"*int(w)+"Running since",delay,"[days]"
+        if delay <= 4: continue
+        if delay >= 7:
             sendEmail("long lasting workflow","%s has been running for %s days"%( wfo.name, delay ))
 
         percent_completions = {}
