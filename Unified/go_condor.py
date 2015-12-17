@@ -3,13 +3,18 @@
 import re
 import sys
 import json
+import urllib
 import classad
+import htcondor
 from collections import defaultdict
+
+if 'UNIFIED_OVERFLOW_CONFIG' not in htcondor.param:
+    sys.exit(0)
 
 SITE_RE = re.compile("T[012]_[A-Z]+_[A-Za-z0-9_]+")
 WORKFLOW_RE = re.compile("[-_A-Za-z0-9]+")
 
-config = json.load(sys.stdin)
+config = json.load(urllib.urlopen(htcondor.param['UNIFIED_OVERFLOW_CONFIG']))
 
 reversed_mapping = config['reversed_mapping']
 
