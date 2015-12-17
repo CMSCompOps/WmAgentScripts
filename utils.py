@@ -1372,10 +1372,16 @@ def findLostBlocks(url, dataset):
 
 def checkTransferLag( url, xfer_id , datasets=None):
     try:
-        try_checkTransferLag( url, xfer_id , datasets)
-    except Exception as e:
-        sendEmail('fatal execption in checkTransferLag',str(e))
-        return {}
+        v = try_checkTransferLag( url, xfer_id , datasets)
+    except:
+        try:
+            time.sleep(1)
+            v = try_checkTransferLag( url, xfer_id , datasets)
+        except Exception as e:
+            print "fatal execption in checkTransferLag\n","%s\n%s\n%s"%(xfer_id,datasets,str(e))
+            sendEmail('fatal execption in checkTransferLag',"%s\n%s\n%s"%(xfer_id,datasets,str(e)))
+            v = {}
+    return v
 
 def try_checkTransferLag( url, xfer_id , datasets=None):
     ## xfer_id tells us what has to go where via subscriptions
@@ -1455,10 +1461,14 @@ def try_checkTransferLag( url, xfer_id , datasets=None):
 def checkTransferStatus(url, xfer_id, nocollapse=False):
     try:
         v = try_checkTransferStatus(url, xfer_id, nocollapse=False)
-    except Exception as e:
-        print srt(e)
-        sendEmail('fatal execption in checkTransferStatus',str(e))
-        v = {}
+    except:
+        try:
+            time.sleep(1)
+            v = try_checkTransferStatus(url, xfer_id, nocollapse=False)
+        except Exception as e:
+            print srt(e)
+            sendEmail('fatal execption in checkTransferStatus',str(e))
+            v = {}
     return v
         
 
@@ -1843,6 +1853,13 @@ def getDatasetBlockAndSite( url, dataset, group="",vetoes=None):
     return dict(blocks_at_sites)
 
 def getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=None, vetoes=None, within_sites=None):
+    try:
+        return try_getDatasetPresence( url, dataset, complete, only_blocks, group, vetoes, within_sites)
+    except Exception as a:
+        sendEmail("fatal exception in getDatasetPresence",str(e))
+        return {}
+
+def try_getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=None, vetoes=None, within_sites=None):
     if vetoes==None:
         vetoes = ['MSS','Buffer','Export']
     #print "presence of",dataset
