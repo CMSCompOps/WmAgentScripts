@@ -24,9 +24,9 @@ for workflow, tasks in config['modifications'].items():
         anAd = classad.ClassAd()
         anAd["GridResource"] = "condor localhost localhost"
         anAd["TargetUniverse"] = 5
-        exp = 'regexp(target.WMAgent_SubTaskName, "%s")'% (taskname)
+        exp = 'regexp(target.WMAgent_SubTaskName, %s)'% classad.quote(str(taskname))
         anAd["Requirements"] = classad.ExprTree(str(exp))
-        
+
         if "ReplaceSiteWhitelist" in specs:
             anAd["Name"] = str("Site Replacement for %s"% taskname)
             anAd["eval_set_DESIRED_Sites"] = str(",".join(specs['ReplaceSiteWhitelist']))
@@ -44,7 +44,7 @@ for site in  needs_site:
     anAd["Name"] = str("Overflow rule for %s"%site)
     anAd["OverflowTasknames"] = map(str, needs_site[site])
     #anAd["OverflowSite"] = str(site)
-    exp = classad.ExprTree('regexp("%s", ExtDESIRED_Sites) && member(target.WMAgent_SubTaskName, OverflowTasknames)'%str(site))
+    exp = classad.ExprTree('regexp(%s, ExtDESIRED_Sites) && member(target.WMAgent_SubTaskName, OverflowTasknames)' % classad.quote(str(site)))
     anAd["Requirements"] = classad.ExprTree(str(exp))
     anAd["eval_set_DESIRED_Sites"] = classad.Function("strcat", str(",".join( reversed_mapping[site]+[''] )), classad.Attribute("ExtDESIRED_Sites"))
     print anAd
