@@ -64,6 +64,7 @@ def checkor(url, spec=None, options=None):
         except:
             print "cannot get by-passes from",bypass_file,"for",bypassor
             sendEmail("malformated by-pass information","%s is not json readable"%(bypass_file), destination=[email])
+        
         holding_file = '/afs/cern.ch/user/%s/%s/public/ops/onhold.json'%(bypassor[0],bypassor)
         if not os.path.isfile(holding_file):
             print "no file",holding_file
@@ -109,10 +110,11 @@ def checkor(url, spec=None, options=None):
             continue
         
         if '-onhold' in wfo.status:
-            if wfo.name in holdings:
+            if wfo.name in holdings and wfo.name not in by_passes:
                 print wfo.name,"on hold"
                 continue
-        if wfo.name in holdings:
+
+        if wfo.name in holdings and wfo.name not in by_passes:
             wfo.status = 'assistance-onhold'
             print "setting",wfo.name,"on hold"
             session.commit()
@@ -436,8 +438,12 @@ def checkor(url, spec=None, options=None):
             ## toggle status to closed-out in request manager
             print "setting",wfo.name,"closed-out"
             if not options.test:
-                res = reqMgrClient.closeOutWorkflowCascade(url, wfo.name)
-                print "close out answer",res
+                if wfo.wm_status in ['closed-out','announced','normal-archived']:
+                    print wfo.name,"is already",wfo.wm_status,"not trying to closed-out and assuming it does"
+                    res = None
+                else:
+                    res = reqMgrClient.closeOutWorkflowCascade(url, wfo.name)
+                    print "close out answer",res
                 if not res in ["None",None]:
                     print "retrying to closing out"
                     print res
