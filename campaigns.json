@@ -10,7 +10,8 @@
     "go": true
   }, 
   "Summer12WMLHE": {
-    "go": true
+    "go": true,
+    "lumisize" : 500
   }, 
   "2019GEMUpg14": {
    "go": true
@@ -88,7 +89,7 @@
   },
   "RunIIFall15DR76": {
     "go": true,
-    "force-complete" : 0.98
+    "force-complete" : 0.99
   },
   "HiWinter13": {
     "go": true,
@@ -145,7 +146,7 @@
    "go": true,
     "lumisize" : 400,
     "SiteWhitelist" : [ "T1_US_FNAL", "T1_ES_PIC", "T1_FR_CCIN2P3","T1_IT_CNAF","T1_UK_RAL","T1_DE_KIT","T2_CH_CERN"],
-    "force-complete" : 0.98
+    "force-complete" : 0.99
   },
   "RunIISpring15Digi74": {
     "go": true
@@ -159,7 +160,7 @@
   },
   "RunIISpring15MiniAODv2": {
     "go": true,
-    "force-complete" : 0.98
+    "force-complete" : 0.99
   },
   "2023SHCALUpg14DR": {
     "go": true
