@@ -274,6 +274,7 @@ def stagor(url,specific =None, options=None):
     bad_destinations = defaultdict(set)
     bad_sources = defaultdict(set)
     report = ""
+    really_stuck_dataset = set()
     for phid,datasets in datasets_by_phid.items():
         issues = checkTransferLag( url, phid , datasets=list(datasets) )
         for dataset in issues:
@@ -298,7 +299,7 @@ def stagor(url,specific =None, options=None):
                             bad_destinations[destination].add( block )
                         else:
                             dum=[bad_sources[d].add( block ) for d in dones]
-
+                        really_stuck_dataset.add( dataset )
                         report += "%s is not getting to %s, out of %s faster than %f [GB/s] since %f [d]\n"%(block,destination,", ".join(dones), rate, delay)
     print "\n"*2
 
@@ -312,6 +313,7 @@ def stagor(url,specific =None, options=None):
 
     print report
 
+    open('/afs/cern.ch/user/c/cmst2/www/unified/stuck_transfers.json','w').write( json.dumps(dict([(k,v) for (k,v) in missing_in_action.items() if k in really_stuck_dataset]), indent=2) )
     open('/afs/cern.ch/user/c/cmst2/www/unified/logs/incomplete_transfers.log','w').write( report )
     #sendEmail('incomplete transfers', report,sender=None, destination=['dc.jorge10@uniandes.edu.co','aram.apyan@cern.ch','sidn@mit.edu'])
 
