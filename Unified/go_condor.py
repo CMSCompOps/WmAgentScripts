@@ -23,6 +23,7 @@ def makeAds( config ):
             if "ReplaceSiteWhitelist" in specs:
                 anAd["Name"] = str("Site Replacement for %s"% taskname)
                 anAd["eval_set_DESIRED_Sites"] = str(",".join(specs['ReplaceSiteWhitelist']))
+                anAd['set_Rank'] = classad.ExprTree("stringlistmember(GLIDEIN_CMSSite, ExtDESIRED_Sites)")
                 print anAd
             elif "AddWhitelist" in specs:
                 for site in specs['AddWhitelist']:
@@ -42,6 +43,7 @@ def makeAds( config ):
         anAd["Requirements"] = classad.ExprTree(str(exp))
         #anAd["eval_set_DESIRED_Sites"] = classad.Function("strcat", str(",".join( reversed_mapping[site]+[''] )), classad.Attribute("ExtDESIRED_Sites"))
         anAd["eval_set_DESIRED_Sites"] = classad.Function("strcat", str(site), classad.Attribute("ExtDESIRED_Sites"))
+        anAd['set_Rank'] = classad.ExprTree("stringlistmember(GLIDEIN_CMSSite, ExtDESIRED_Sites)")
         print anAd
 
 if __name__ == "__main__":
