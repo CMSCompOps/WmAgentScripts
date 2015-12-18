@@ -38,7 +38,7 @@ def makeAds( config ):
         anAd["Name"] = str("Overflow rule to go to %s"%site)
         anAd["OverflowTasknames"] = map(str, needs_site[site])
         #exp = classad.ExprTree('regexp(%s, ExtDESIRED_Sites) && member(target.WMAgent_SubTaskName, OverflowTasknames)' % classad.quote(str(site)))
-        exprs = ['regexp(%s, ExtDESIRED_Sites)'% classad.quote(str(origin)) for origin in reversed_mapping[site]]
+        exprs = ['regexp(%s, target.ExtDESIRED_Sites)'% classad.quote(str(origin)) for origin in reversed_mapping[site]]
         exp = classad.ExprTree('member(target.WMAgent_SubTaskName, OverflowTasknames) && ( %s )' % str("||".join( exprs )))
         anAd["Requirements"] = classad.ExprTree(str(exp))
         #anAd["eval_set_DESIRED_Sites"] = classad.Function("strcat", str(",".join( reversed_mapping[site]+[''] )), classad.Attribute("ExtDESIRED_Sites"))
