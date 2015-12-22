@@ -17,7 +17,7 @@ def makeAds( config ):
             anAd = classad.ClassAd()
             anAd["GridResource"] = "condor localhost localhost"
             anAd["TargetUniverse"] = 5
-            exp = 'regexp(target.WMAgent_SubTaskName, %s)'% classad.quote(str(taskname))
+            exp = '(target.WMAgent_SubTaskName =?= %s)'% classad.quote(str(taskname))
             anAd["Requirements"] = classad.ExprTree(str(exp))
             
             if "ReplaceSiteWhitelist" in specs:
