@@ -312,7 +312,8 @@ def transferor(url ,specific = None, talk=True, options=None):
             blocks = wfh.request['BlockWhitelist']
         if 'RunWhitelist' in wfh.request and wfh.request['RunWhitelist']:
             ## augment with run white list
-            blocks = list(set( blocks + getDatasetBlocks( dataset, runs=wfh.request['RunWhitelist'] ) ))
+            for dataset in primary:
+                blocks = list(set( blocks + getDatasetBlocks( dataset, runs=wfh.request['RunWhitelist'] ) ))
         if 'LumiList' in wfh.request and wfh.request['LumiList']:
             ## augment with the lumi white list
             blocks = list(set( blocks + getDatasetBlocks( dataset, lumis= wfh.request['LumiList'] ) ))

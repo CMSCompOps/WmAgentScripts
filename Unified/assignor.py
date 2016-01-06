@@ -2,7 +2,7 @@
 from assignSession import *
 import reqMgrClient
 from utils import workflowInfo, campaignInfo, siteInfo, userLock, global_SI, unifiedConfiguration
-from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction, getDatasetEventsPerLumi, newLockInfo, getLFNbase
+from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction, getDatasetEventsPerLumi, newLockInfo, getLFNbase, getDatasetBlocks
 from utils import componentInfo, sendEmail
 #from utils import lockInfo
 from utils import duplicateLock, notRunningBefore
@@ -32,12 +32,17 @@ def assignor(url ,specific = None, talk=True, options=None):
 
     wfos=[]
     if specific:
-        wfos = session.query(Workflow).filter(Workflow.name==specific).all()
-    if not wfos:
-        if specific:
-            wfos = session.query(Workflow).filter(Workflow.status=='considered').all()
-            wfos.extend( session.query(Workflow).filter(Workflow.status=='staging').all())
-        wfos.extend(session.query(Workflow).filter(Workflow.status=='staged').all())
+        wfos.extend( session.query(Workflow).filter(Workflow.status=='considered').all())
+        wfos.extend( session.query(Workflow).filter(Workflow.status=='staging').all())
+    wfos.extend(session.query(Workflow).filter(Workflow.status=='staged').all())
+    #if specific:
+    #    #wfos = session.query(Workflow).filter(Workflow.name==specific).all()
+    #    wfos = session.query(Workflow).filter(Workflow.name.contains(specific)).all()
+    #if not wfos:
+    #    if specific:
+    #        wfos = session.query(Workflow).filter(Workflow.status=='considered').all()
+    #        wfos.extend( session.query(Workflow).filter(Workflow.status=='staging').all())
+    #    wfos.extend(session.query(Workflow).filter(Workflow.status=='staged').all())
 
     for wfo in wfos:
         if specific:
@@ -86,7 +91,7 @@ def assignor(url ,specific = None, talk=True, options=None):
         c_sites_allowed = CI.get(wfh.request['Campaign'], 'SiteWhitelist' , [])
         if c_sites_allowed:
             print "Would like to use the new whitelist, but will not until things went through a bit"
-            sendEmail("using a restricted site white list","for %s"%(c_sites_allowed))
+            #sendEmail("using a restricted site white list","for %s"%(c_sites_allowed))
             sites_allowed = list(set(sites_allowed) & set(c_sites_allowed))
 
         c_black_list = CI.get(wfh.request['Campaign'], 'SiteBlacklist', [])
@@ -98,6 +103,10 @@ def assignor(url ,specific = None, talk=True, options=None):
         blocks = []
         if 'BlockWhitelist' in wfh.request:
             blocks = wfh.request['BlockWhitelist']
+        if 'RunWhitelist' in wfh.request and wfh.request['RunWhitelist']:
+            ## augment with run white list
+            for dataset in primary:
+                blocks = list(set( blocks + getDatasetBlocks( dataset, runs=wfh.request['RunWhitelist'] ) ))
 
         ncores = wfh.request.get('Multicore',1)
         memory_allowed = SI.sitesByMemory( wfh.request['Memory'] , maxCore=ncores)
@@ -198,8 +207,13 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         ## should be 2 but for the time-being let's lower it to get things going
         copies_wanted,cpuh = wfh.getNCopies()
+        if 'Campaign' in wfh.request and wfh.request['Campaign'] in CI.campaigns and 'maxcopies' in CI.campaigns[wfh.request['Campaign']]:
+            copies_needed_from_campaign = CI.campaigns[wfh.request['Campaign']]['maxcopies']
+            copies_wanted = min(copies_needed_from_campaign, copies_wanted)
+        
         less_copies_than_requested = UC.get("less_copies_than_requested")
         copies_wanted = max(1,copies_wanted-less_copies_than_requested) # take one out for the efficiency
+        
 
         if available_fractions and not all([available>=copies_wanted for available in available_fractions.values()]):
             not_even_once = not all([available>=1. for available in available_fractions.values()])
@@ -284,21 +298,24 @@ def assignor(url ,specific = None, talk=True, options=None):
         if options and options.team:
             team = options.team
 
+        ## high priority team agent
         #if wfh.request['RequestPriority'] >= 100000 and (wfh.request['TimePerEvent']*int(wfh.getRequestNumEvents()))/(8*3600.) < 10000:
         #    team = 'highprio'
         #    sendEmail("sending work with highprio team","%s"% wfo.name, destination=['dmytro.kovalskyi@cern.ch'])
 
-        if "T2_US_UCSD" in sites_with_data and random.random() < -0.5 and wfh.request['Campaign']=='RunIISpring15DR74' and int(wfh.getRequestNumEvents()) < 600000 and not any([out.endswith('RAW') for out in wfh.request['OutputDatasets']]):
-            ## consider SDSC
-            parameters['SiteWhitelist'] = ['T2_US_UCSD','T3_US_SDSC']
-            parameters['useSiteListAsLocation'] = True
-            team = 'allocation-based'
-            sendEmail("sending work to SDSC","%s was assigned to SDSC/UCSD"% wfo.name, destination=['boj@fnal.gov'])
-            
-        if wfh.request['Campaign']=='RunIIWinter15GS' and random.random() < -1.0:
-            parameters['SiteWhitelist'] = ['T3_US_SDSC']
-            team = 'allocation-based'
-            sendEmail("sending work to SDSC","%s was assigned to SDSC"% wfo.name, destination=['boj@fnal.gov'])
+        ## SDSC redirection
+        #if "T2_US_UCSD" in sites_with_data and random.random() < -0.5 and wfh.request['Campaign']=='RunIISpring15DR74' and int(wfh.getRequestNumEvents()) < 600000 and not any([out.endswith('RAW') for out in wfh.request['OutputDatasets']]):
+        #    ## consider SDSC
+        #    parameters['SiteWhitelist'] = ['T2_US_UCSD','T3_US_SDSC']
+        #    parameters['useSiteListAsLocation'] = True
+        #    team = 'allocation-based'
+        #    sendEmail("sending work to SDSC","%s was assigned to SDSC/UCSD"% wfo.name, destination=['boj@fnal.gov'])
+        
+        ## SDSC redirection
+        #if wfh.request['Campaign']=='RunIIWinter15GS' and random.random() < -1.0:
+        #    parameters['SiteWhitelist'] = ['T3_US_SDSC']
+        #    team = 'allocation-based'
+        #    sendEmail("sending work to SDSC","%s was assigned to SDSC"% wfo.name, destination=['boj@fnal.gov'])
         
 
         ##parse options entered in command line if any
