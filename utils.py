@@ -958,7 +958,10 @@ class siteInfo:
                     
     def fetch_glidein_info(self, talk=True):
         self.sites_memory = dataCache.get('gwmsmon_totals')
-
+        for site in self.sites_memory.keys():
+            if not site in self.sites_ready:
+                self.sites_memory.pop( site )
+        
         for_max_running = dataCache.get('gwmsmon_site_summary')
         for site in self.cpu_pledges:
             if not site in for_max_running: continue
@@ -1352,13 +1355,50 @@ def checkTransferApproval(url, phedexid):
             approved[node['name']] = (node['decision']=='approved')
     return approved
 
-def findLostBlocks(url, dataset):
+def getDatasetFileFraction( dataset, files):
+    dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader') 
+    all_files = dbsapi.listFileArray( dataset= dataset,validFileOnly=1, detail=True)
+    total = 0
+    in_file = 0
+    for f in all_files:
+        total += f['event_count']
+        if f['logical_file_name'] in files:
+            in_file += f['event_count']
+    fract=0
+    if total:
+        fract=float(in_file)/float(total)
+    return fract, total, in_file
+    
+
+def getDatasetBlockFraction( dataset, blocks):
+    dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader') 
+    all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
+    total=0
+    in_block=0
+    for block in all_blocks:
+        total += block['num_event']
+        if block['block_name'] in blocks:
+            in_block += block['num_event']
+
+    fract=0
+    if total:
+        fract=float(in_block)/float(total)
+    return fract, total, in_block
+    
+
+
+def findLostBlocks(url, datasetname):
+    blocks,_ = findLostBlocksFiles(url , datasetname)
+    return blocks
+
+def findLostBlocksFiles(url, datasetname):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 
-    r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?block=%s%%23*&collapse=n'% dataset)
+    r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?block=%s%%23*&collapse=n'% datasetname)
     r2=conn.getresponse()
     result = json.loads(r2.read())
     lost = []
+    lost_files = []
     for dataset in result['phedex']['dataset']:
         for item in dataset['block']:
             exist=0
@@ -1368,7 +1408,19 @@ def findLostBlocks(url, dataset):
                 #print "We have lost:",item['name']
                 #print json.dumps( item, indent=2)
                 lost.append( item )
-    return lost
+            elif exist !=100:
+                #print "we have lost files on",item['name']
+                ## go deeper then
+                r1=conn.request("GET",'/phedex/datasvc/json/prod/filereplicas?block=%s'%(item['name'].replace('#','%23')))
+                r2=conn.getresponse() 
+                sub_result=json.loads(r2.read())
+                for block in sub_result['phedex']['block']:
+                    for ph_file in block['file']:
+                        #print ph_file
+                        if len(ph_file['replica'])==0:
+                            #print ph_file['name'],'has no replica'
+                            lost_files.append( ph_file )
+    return lost,lost_files
 
 def checkTransferLag( url, xfer_id , datasets=None):
     try:
@@ -1460,11 +1512,11 @@ def try_checkTransferLag( url, xfer_id , datasets=None):
 
 def checkTransferStatus(url, xfer_id, nocollapse=False):
     try:
-        v = try_checkTransferStatus(url, xfer_id, nocollapse=False)
+        v = try_checkTransferStatus(url, xfer_id, nocollapse)
     except:
         try:
             time.sleep(1)
-            v = try_checkTransferStatus(url, xfer_id, nocollapse=False)
+            v = try_checkTransferStatus(url, xfer_id, nocollapse)
         except Exception as e:
             print srt(e)
             sendEmail('fatal execption in checkTransferStatus',str(e))
@@ -1482,6 +1534,7 @@ def try_checkTransferStatus(url, xfer_id, nocollapse=False):
     subs_url = '/phedex/datasvc/json/prod/subscriptions?request=%s&create_since=%d'%(str(xfer_id),timecreate)
     if nocollapse:
         subs_url+='&collapse=n'
+    #print subs_url
     r1=conn.request("GET",subs_url)
     r2=conn.getresponse()
     result = json.loads(r2.read())
@@ -1491,10 +1544,13 @@ def try_checkTransferStatus(url, xfer_id, nocollapse=False):
     if len(result['phedex']['dataset'])==0:
         print "trying with an earlier date than",timecreate,"for",xfer_id
         subs_url = '/phedex/datasvc/json/prod/subscriptions?request=%s&create_since=%d'%(str(xfer_id),0)
+        if nocollapse:
+            subs_url+='&collapse=n'
         r1=conn.request("GET",subs_url)
         r2=conn.getresponse()
         result = json.loads(r2.read())
 
+    #print json.dumps( result['phedex']['dataset'] , indent=2)
     for item in  result['phedex']['dataset']:
         completions[item['name']]={}
         if 'subscription' not in item:            
@@ -1608,6 +1664,24 @@ def findCustodialLocation(url, dataset, with_completion=False):
         return [],more_information
     else:
         return list(set(cust)), more_information
+
+def getDatasetFiles(url, dataset ):
+    dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+    files = dbsapi.listFileArray( dataset= dataset,validFileOnly=1, detail=True)
+    dbs_filenames = [f['logical_file_name'] for f in files]
+    
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+
+    r1=conn.request("GET",'/phedex/datasvc/json/prod/filereplicas?dataset=%s'%(dataset))
+    r2=conn.getresponse()
+    result = json.loads(r2.read())
+    items=result['phedex']['block']
+    phedex_filenames = []
+    for block in items:
+        for f in block['file']:
+            phedex_filenames.append(f['name'])
+    
+    return dbs_filenames, phedex_filenames, list(set(dbs_filenames) - set(phedex_filenames))
 
 def getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None, sites=None, only_blocks=None):
     ###count how manytimes a dataset is replicated < 100%: not all blocks > 100% several copies exis
@@ -1834,7 +1908,7 @@ def getDatasetBlocks( dataset, runs=None, lumis=None):
 
     return list( all_blocks )
 
-def getDatasetBlockAndSite( url, dataset, group="",vetoes=None):
+def getDatasetBlockAndSite( url, dataset, group="",vetoes=None,complete=None):
     if vetoes==None:
         vetoes = ['MSS','Buffer','Export']
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -1845,9 +1919,10 @@ def getDatasetBlockAndSite( url, dataset, group="",vetoes=None):
     blocks_at_sites=defaultdict(set)
     for item in items:
         for replica in item['replica']:
+            if complete and replica['complete'] != complete: continue
             if replica['group'] == None: replica['group']=""
             if group!=None and not replica['group'].lower()==group.lower(): continue
-            if vetoes and replica['node'] in vetoes: continue
+            if vetoes and any([veto in replica['node'] for veto in vetoes]): continue
             blocks_at_sites[replica['node']].add( item['name'] )
     #return dict([(site,list(blocks)) for site,blocks in blocks_at_sites.items()])
     return dict(blocks_at_sites)
@@ -1887,7 +1962,7 @@ def try_getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=
     locations=defaultdict(set)
     for item in items:
         for replica in item['replica']:
-            if not any(replica['node'].endswith(v) for v in vetoes):
+            if not any(v in replica['node'] for v in vetoes):
                 if within_sites and not replica['node'] in within_sites: continue
                 if replica['group'] == None: replica['group']=""
                 if complete and not replica['complete']==complete: continue
@@ -2357,6 +2432,7 @@ class workflowInfo:
             r1=self.conn.request("GET",'/wmstatsserver/data/request/%s'%workflow)
             r2=self.conn.getresponse()
             self.wmstats = r2.read()#json.loads(r2.read())
+        self.workqueue = None
 
     def get_spec(self):
         if not self.full_spec:
@@ -2366,10 +2442,40 @@ class workflowInfo:
         return self.full_spec
 
     def getWorkQueue(self):
-        r1=self.conn.request("GET",'/couchdb/workqueue/_design/WorkQueue/_view/elementsByParent?key="%s"&include_docs=true'% self.request['RequestName'])
-        r2=self.conn.getresponse()
-        self.workqueue = list([d['doc'] for d in json.loads(r2.read())['rows']])
-        
+        if not self.workqueue:
+            try:
+                r1=self.conn.request("GET",'/couchdb/workqueue/_design/WorkQueue/_view/elementsByParent?key="%s"&include_docs=true'% self.request['RequestName'])
+                r2=self.conn.getresponse()
+            except:
+                try:
+                    time.sleep(1) ## time-out
+                    r1=self.conn.request("GET",'/couchdb/workqueue/_design/WorkQueue/_view/elementsByParent?key="%s"&include_docs=true'% self.request['RequestName'])
+                    r2=self.conn.getresponse()
+                except:
+                    print "failed to get work queue for",self.request['RequestName']
+                    self.workqueue = []
+                    return self.workqueue
+            self.workqueue = list([d['doc'] for d in json.loads(r2.read())['rows']])
+        return self.workqueue
+    
+    def getAgents(self):
+        wq = self.getWorkQueue()
+        wqes = [w[w['type']] for w in wq]
+        statuses = list(set([wqe['Status'] for wqe in wqes]))
+        active_agents= defaultdict(lambda :defaultdict( int ))
+        for status in statuses:
+            wq_s = [wqe for wqe in wqes if wqe['Status'] == status]
+            for wqe in wq_s: active_agents[status][wqe['ChildQueueUrl']]+=1
+        return active_agents
+
+    def getActiveAgents(self):
+        wq = self.getWorkQueue()
+        wqes = [w[w['type']] for w in wq]
+        active_agents= defaultdict(int)
+        wq_running = [wqe for wqe in wqes if wqe['Status'] == 'Running']
+        for wqe in wq_running: active_agents[wqe['ChildQueueUrl']]+=1
+        return dict( active_agents )
+
     def getSummary(self):
         r1=self.conn.request("GET",'/couchdb/workloadsummary/'+self.request['RequestName'])
         r2=self.conn.getresponse()
@@ -2457,7 +2563,8 @@ class workflowInfo:
             cput = cput / (60.*60.*24.)
         return cput
     
-    def getNCopies(self, CPUh=None, m = 2, M = 6, w = 50000, C0 = 100000):
+    #def getNCopies(self, CPUh=None, m = 2, M = 6, w = 50000, C0 = 100000):
+    def getNCopies(self, CPUh=None, m = 2, M = 3, w = 50000, C0 = 100000):
         def sigmoid(x):      
             return 1 / (1 + math.exp(-x)) 
         if CPUh==None:
@@ -2607,7 +2714,7 @@ class workflowInfo:
         return all_tasks
 
     def getWorkTasks(self):
-        return self.getAllTasks(select={'taskType':['Production','Processing']})
+        return self.getAllTasks(select={'taskType':['Production','Processing','Skim']})
 
     def getAllTasks(self, select=None):
         all_tasks = []
