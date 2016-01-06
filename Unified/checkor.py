@@ -184,7 +184,7 @@ def checkor(url, spec=None, options=None):
         else:
             event_expected,lumi_expected =  wfi.request['TotalInputEvents'],wfi.request['TotalInputLumis']
 
-        if 'RequestNumEvents' in wfi.request:
+        if 'RequestNumEvents' in wfi.request and int(wfi.request['RequestNumEvents']):
             event_expected = int(wfi.request['RequestNumEvents'])
         elif 'Task1' in wfi.request and 'RequestNumEvents' in wfi.request['Task1']:
             event_expected = int(wfi.request['Task1']['RequestNumEvents'])
@@ -196,7 +196,8 @@ def checkor(url, spec=None, options=None):
             if lumi_expected:
                 percent_completions[output] = lumi_count / float( lumi_expected )
             if event_expected:
-                percent_completions[output] = max(percent_completions[output], event_count / float( event_expected ) )
+                print "event completion", event_count, event_expected
+                percent_completions[output] = max(percent_completions[output], float(event_count) / float( event_expected ) )
 
             fractions_pass[output] = 0.95
             c = get_campaign(output, wfi)
@@ -245,7 +246,7 @@ def checkor(url, spec=None, options=None):
                 
             lumi_upper_limit[output] = upper_limit
         
-        if any([ events_per_lumi[out] >= lumi_upper_limit[out] for out in events_per_lumi]):
+        if any([ (lumi_upper_limit[out]>0 and events_per_lumi[out] >= lumi_upper_limit[out]) for out in events_per_lumi]):
             print wfo.name,"has big lumisections"
             print json.dumps(events_per_lumi, indent=2)
             ## hook for rejecting the request ?
