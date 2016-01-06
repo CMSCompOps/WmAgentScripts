@@ -26,8 +26,11 @@ def completor(url, specific):
         if 'force-complete' in CI.campaigns[c]:
             good_fractions[c] = CI.campaigns[c]['force-complete']
 
+    long_lasting = {}
+
     print "can force complete on"
     print json.dumps( good_fractions ,indent=2)
+    max_force = 5
     for wfo in wfs:
         if specific and not specific in wfo.name: continue
 
@@ -38,6 +41,9 @@ def completor(url, specific):
         wfi = workflowInfo(url, wfo.name)
 
         if not 'Campaign' in wfi.request: continue
+
+        if not wfi.request['RequestStatus'] in ['running-open','running-closed']: continue
+
         c = wfi.request['Campaign']
         if not c in good_fractions: continue
         good_fraction = good_fractions[c]
@@ -66,12 +72,16 @@ def completor(url, specific):
 
         (w,d) = divmod(delay, 7 )
         print "\t"*int(w)+"Running since",delay,"[days]"
-        if delay <= 4: continue
+        if delay <= 7: continue
         if delay >= 7:
-            sendEmail("long lasting workflow","%s has been running for %s days"%( wfo.name, delay ))
+            long_lasting[wfo.name] = { "delay" : delay }
+            pass
+
+        if delay <= 14: continue
 
         percent_completions = {}
         for output in wfi.request['OutputDatasets']:
+            if "/DQM" in output: continue ## that does not count
             if not output in completions: completions[output] = { 'injected' : None, 'checkpoints' : [], 'workflow' : wfo.name}
             ## get completion fraction
             event_count,lumi_count = getDatasetEventsAndLumis(dataset=output)
@@ -91,7 +101,16 @@ def completor(url, specific):
             print json.dumps( percent_completions, indent=2 )
         else:
             print "\t",percent_completions.values(),"not over bound",good_fraction
+            long_lasting[wfo.name].update({
+                    'completion': sum(percent_completions.values()) / len(percent_completions),
+                    'completions' : percent_completions
+                    })
+            
             #print json.dumps( percent_completions, indent=2 )
+
+            ## do something about the agents this workflow is in
+            long_lasting[wfo.name]['agents'] = wfi.getAgents()
+            print json.dumps( long_lasting[wfo.name]['agents'], indent=2)
             continue
 
         if all([percent_completions[out] >= ignore_fraction for out in percent_completions]):
@@ -116,15 +135,31 @@ def completor(url, specific):
             if member['RequestStatus'] in ['None',None]: continue
             ## then set force complete all members
             if member['RequestStatus'] in ['running-opened','running-closed']:
-                print "setting",member['RequestName'],"force-complete"
-                print "NOT REALLY FORCING"
-                sendEmail("force completing","TAGGING %s is worth force completing\n%s"%( member['RequestName'] , percent_completions))
-                ##reqMgrClient.setWorkflowForceComplete(url, member['RequestName'])
+                if max_force >0:
+                    #sendEmail("force completing","%s is worth force completing\n%s"%( member['RequestName'] , percent_completions))
+                    print "setting",member['RequestName'],"force-complete"
+                    reqMgrClient.setWorkflowForceComplete(url, member['RequestName'])
+                    max_force -=1
+                else:
+                    print "NOT REALLY FORCING",member['RequestName']
 
         ## do it once only for testing
         #break
             
     open('completions.json','w').write( json.dumps( completions , indent=2))
+    text="These have been running for long"
+    
+    open('longlasting.json','w').write( json.dumps( long_lasting, indent=2 ))
+
+    for wf,info in sorted(long_lasting.items(), key=lambda tp:tp[1]['delay'], reverse=True):
+        delay = info['delay']
+        text += "\n %s : %s days"% (wf, delay)
+        if 'completion' in info:
+            text += " %d%%"%( info['completion']*100 )
+
+    #sendEmail("long lasting workflow",text)
+    ## you can check the log
+    print text
 
 
 if __name__ == "__main__":
