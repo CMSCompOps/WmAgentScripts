@@ -43,7 +43,7 @@ def makeAds( config ):
         exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && ( %s )' % (overflow_names_escaped, str("||".join( exprs ))))
         anAd["Requirements"] = classad.ExprTree(str(exp))
         #anAd["eval_set_DESIRED_Sites"] = classad.Function("strcat", str(",".join( reversed_mapping[site]+[''] )), classad.Attribute("ExtDESIRED_Sites"))
-        anAd["eval_set_DESIRED_Sites"] = classad.Function("strcat", str(site) + ",", classad.Attribute("ExtDESIRED_Sites"))
+        anAd["eval_set_DESIRED_Sites"] = classad.Function("strcat", str(site) + ",", classad.Attribute("DESIRED_Sites"))
         anAd['set_Rank'] = classad.ExprTree("stringlistmember(GLIDEIN_CMSSite, ExtDESIRED_Sites)")
         print anAd
 
