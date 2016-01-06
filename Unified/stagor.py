@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput, workflowInfo, getDatasetBlocksFraction, findLostBlocks
+from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput, workflowInfo, getDatasetBlocksFraction, findLostBlocks, findLostBlocksFiles, getDatasetBlockFraction, getDatasetFileFraction
 from utils import unifiedConfiguration, componentInfo, sendEmail, getSiteWhiteList, checkTransferLag
 from utils import siteInfo, campaignInfo, global_SI
 import json
@@ -24,15 +24,22 @@ def stagor(url,specific =None, options=None):
     completion_by_input = {}
     good_enough = 100.0
     
-    lost = json.loads(open('lost_blocks_datasets.json').read())
-    still_lost = []
-    for dataset in lost:
-        l = findLostBlocks(url ,dataset)
-        if not l:
-            print dataset,"is not really lost"
+    lost_blocks = json.loads(open('lost_blocks_datasets.json').read())
+    lost_files = json.loads(open('lost_files_datasets.json').read())
+    still_lost_blocks = []
+    still_lost_files = []
+    for dataset in set(lost_blocks+lost_files):
+        b,f = findLostBlocksFiles(url, dataset)
+        if dataset in lost_blocks and not b:
+            print dataset,"has no really lost blocks"
         else:
-            still_lost.append( dataset )
-    open('lost_blocks_datasets.json','w').write( json.dumps( still_lost, indent=2) )
+            still_lost_blocks.append( dataset )
+        if dataset in lost_files and not f: 
+            print dataset,"has no really lost files"
+        else:
+            still_lost_files.append( dataset )
+    open('lost_blocks_datasets.json','w').write( json.dumps( still_lost_blocks, indent=2) )
+    open('lost_files_datasets.json','w').write( json.dumps( still_lost_files, indent=2) )
 
     cached_transfer_statuses = json.loads(open('cached_transfer_statuses.json').read())
 
@@ -229,25 +236,55 @@ def stagor(url,specific =None, options=None):
                     session.commit()
         else:
             print "incomplete",dsname
-            lost = findLostBlocks(url, dsname)
-            lost_names = [item['name'] for item in lost]
-            try:
-                known_lost = json.loads(open('lost_blocks_datasets.json').read())
-            except:
-                print "enable to get the known_lost from local json file"
-                known_lost = []
+            lost_blocks,lost_files = findLostBlocksFiles( url, dsname )
+            lost_block_names = [item['name'] for item in lost_blocks]
+            lost_files_names = [item['name'] for item in lost_files]
+            known_lost_blocks = json.loads(open('lost_blocks_datasets.json').read())
+            known_lost_files = json.loads(open('lost_files_datasets.json').read())
 
-            if lost:
-                print "We have lost",len(lost),"blocks",lost_names
+            if lost_blocks:
                 #print json.dumps( lost , indent=2 )
+                print "We have lost",len(lost_block_names),"blocks",lost_block_names
+                ## estimate for how much !
+                fraction_loss,_,n_missing = getDatasetBlockFraction(dsname, lost_block_names)
+                if fraction_loss > 0.05: ## 95% completion mark
+                    sendEmail('we have lost too many blocks','%s is missing %d blocks, for %d events, %f %% loss'%(dsname, len(lost_block_names), n_missing, fraction_loss))
+                    ## the workflow should be rejected !
+                    for wf in using_wfos: 
+                        if wf.status == 'staging':
+                            print wf.name,"is doomed. setting to trouble"
+                            wf.status = 'trouble'
+                            session.commit()
+                else:
+                    ## probably enough to make a ggus and remove
+                    if not dsname in known_lost_blocks:
+                        ## make a deeper investigation of the block location to see whether it's really no-where no-where
+                        #sendEmail('we have lost a few blocks', str(len(lost))+" in total.\nDetails \n:"+json.dumps( lost , indent=2 ))
+                        sendEmail('we have lost a few blocks', '%s is missing %d blocks, for %d events, %f %% loss\n%s'%(dsname, len(lost_block_names), n_missing, fraction_loss, '\n'.join( lost_block_names ) ))
+                        known_lost_blocks.append(dsname)
+                        rr= open('lost_blocks_datasets.json','w')
+                        rr.write( json.dumps( known_lost_blocks, indent=2))
+                        rr.close()
+                                  
+                if lost_files:
+                    print "We have lost",len(lost_files_names),"files",lost_files_names
+                    fraction_loss,_,n_missing = getDatasetFileFraction(dsname, lost_files_names)
+                    if fraction_loss > 0.05:
+                        sendEmail('we have lost too many files','%s is missing %d files, for %d events, %f %% loss'%(dsname, len(lost_file_names),n_missing, fraction_loss))
+                        for wf in using_wfos:
+                            if wf.status == 'staging':
+                                print wf.name,"is doomed. setting to trouble"
+                                wf.status = 'trouble'
+                                session.commit()
+                    else:
+                        ## probably enough to make a ggus and remove    
+                        if not dsname in known_lost_files:
+                            sendEmail('we have lost a few files','%s is missing %d files, for %d events, %f %% loss\n%s'%(dsname, len(lost_file_names),n_missing, fraction_loss, '\n'.join(lost_files_names)))
+                            known_lost_files.append( dsname)
+                            rr= open('lost_files_datasets.json','w')
+                            rr.write( json.dumps( known_lost_files, indent=2))
+                            rr.close()
 
-            if lost and not dsname in known_lost:
-                ## make a deeper investigation of the block location to see whether it's really no-where no-where
-                sendEmail('we have lost a few blocks', str(len(lost))+" in total.\nDetails \n:"+json.dumps( lost , indent=2 ))
-                known_lost.append(dsname)
-                rr= open('lost_blocks_datasets.json','w')
-                rr.write( json.dumps( known_lost, indent=2))
-                rr.close()
                 ## should the status be change to held-staging and pending on a ticket
 
 
