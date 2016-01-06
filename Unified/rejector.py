@@ -12,9 +12,19 @@ def rejector(url, specific, options=None):
     up = componentInfo()
 
     if specific.startswith('/'):
-        pass
-    else:
-        wfo = session.query(Workflow).filter(Workflow.name == specific).first()
+        return
+
+    wfs = session.query(Workflow).filter(Workflow.name.contains(specific)).all()
+    print len(wfs),"to reject"
+
+    if len(wfs)>1:
+        print "\n".join( [wfo.name for wfo in wfs] )
+        answer = raw_input('Reject these')
+        if not answer.lower() in ['y','yes']:
+            return
+        
+    for wfo in wfs:
+        #wfo = session.query(Workflow).filter(Workflow.name == specific).first()
         if not wfo:
             print "cannot reject",spec
             return
