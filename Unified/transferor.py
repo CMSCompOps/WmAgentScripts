@@ -139,9 +139,16 @@ def transferor(url ,specific = None, talk=True, options=None):
     # shuffle first by name
     random.shuffle( wfs_and_wfh )
     # Sort smallest transfers first; allows us to transfer as many as possible workflows.
-    wfs_and_wfh.sort(cmp = lambda i,j : cmp(int(primary_input_per_workflow_gb.get(i[0].name, 0)), int(primary_input_per_workflow_gb.get(j[0].name, 0)) ))
+    def prio_and_size( i, j):
+        if int(i[1].request['RequestPriority']) == int(j[1].request['RequestPriority']):
+            return cmp(int(primary_input_per_workflow_gb.get(j[0].name, 0)), int(primary_input_per_workflow_gb.get(i[0].name, 0)) )
+        else:
+            return cmp(int(i[1].request['RequestPriority']),int(j[1].request['RequestPriority']))
+
+    wfs_and_wfh.sort(cmp = prio_and_size, reverse=True)
+    #wfs_and_wfh.sort(cmp = lambda i,j : cmp(int(primary_input_per_workflow_gb.get(i[0].name, 0)), int(primary_input_per_workflow_gb.get(j[0].name, 0)) ))
     #sort by priority higher first
-    wfs_and_wfh.sort(cmp = lambda i,j : cmp(int(i[1].request['RequestPriority']),int(j[1].request['RequestPriority']) ), reverse=True)
+    #wfs_and_wfh.sort(cmp = lambda i,j : cmp(int(i[1].request['RequestPriority']),int(j[1].request['RequestPriority']) ), reverse=True)
 
     cput_grand_total = sum(input_cput.values())
     cput_to_transfer = cput_grand_total - cput_in_transfer_already
@@ -174,12 +181,16 @@ def transferor(url ,specific = None, talk=True, options=None):
     transfer_sizes={}
     went_over_budget=False
     destination_cache = {}
+    no_goes = set()
     for (wfo,wfh) in wfs_and_wfh:
         print wfo.name,"to be transfered with priority",wfh.request['RequestPriority']
 
         if wfh.request['RequestStatus']!='assignment-approved':
-            wfo.status = 'away'
-            print wfo.name,"in status",wfh.request['RequestStatus'],"setting away"
+            if wfh.request['RequestStatus'] in ['aborted','rejected','rejected-archived','aborted-archived']:
+                wfo.status = 'trouble' ## so that we look or a replacement
+            else:
+                wfo.status = 'away'
+            print wfo.name,"in status",wfh.request['RequestStatus'],"setting",wfo.status
             continue
 
         (_,primary,_,_) = wfh.getIO()
@@ -206,7 +217,7 @@ def transferor(url ,specific = None, talk=True, options=None):
         if not CI.go( wfh.request['Campaign'] ):
             print "No go for",wfh.request['Campaign']
             if not options.go: 
-                sendEmail("no go for managing","No go for "+wfh.request['Campaign'])
+                no_goes.add( wfh.request['Campaign'] )
                 continue
 
         ## check if the batch is announced
@@ -236,7 +247,7 @@ def transferor(url ,specific = None, talk=True, options=None):
         if not use_mcm:
             announced,is_real = False,True
         else:
-            if wfi.request['RequestType'] in ['ReReco']:
+            if wfh.request['RequestType'] in ['ReReco']:
                 announced,is_real = True,True
             else:
                 announced,is_real = check_mcm( wfo.name )
@@ -477,9 +488,16 @@ def transferor(url ,specific = None, talk=True, options=None):
 
                 if len(prim_to_distribute)>0: ## maybe that a parameter we can play with to limit the 
                     if not options or options.chop:
+                        ### hard include the tape disk andpoint ?
+                        #tapes = [site for site in  getDatasetPresence( url, prim, vetos=['T0','T2','T3','Disk']) if site.endswith('MSS')]
                         chops,sizes = getDatasetChops(prim, chop_threshold = options.chopsize, only_blocks=blocks)
                         spreading = distributeToSites( chops, prim_to_distribute, n_copies = copies_needed, weights=SI.cpu_pledges, sizes=sizes)
                         transfer_sizes[prim] = sum(sizes)
+                        if not spreading:
+                            sendEmail("cannot send to any site",prim+" cannot seem to fit anywhere")
+                            staging=False
+                            can_go = False
+                    
                     else:
                         spreading = {} 
                         for site in prim_to_distribute: 
@@ -573,6 +591,9 @@ def transferor(url ,specific = None, talk=True, options=None):
             print wfo.name,"needs a transfer"
             needs_transfer+=1
             passing_along+=1
+
+    if no_goes:
+        sendEmail("no go for managing","No go for \n"+"\n".join( no_goes ))
 
     print "accumulated transfers"
     print json.dumps(all_transfers, indent=2)
