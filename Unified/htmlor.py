@@ -8,6 +8,10 @@ from collections import defaultdict
 import sys
 
 def htmlor( caller = ""):
+    try:
+        boost = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/equalizor.json').read())['modifications']
+    except:
+        boost = {}
     cache = getWorkflows('cmsweb.cern.ch','assignment-approved', details=True)
     cache.extend( getWorkflows('cmsweb.cern.ch','acquired', details=True) )
     cache.extend( getWorkflows('cmsweb.cern.ch','running-open', details=True) )
@@ -40,9 +44,13 @@ def htmlor( caller = ""):
         if 'task' in wf.name:
             wl_pid = 'task_'+pid
 
+        
         text=', '.join([
                 #wfn,
-                '<a href="https://cmsweb.cern.ch/reqmgr/view/details/%s" target="_blank">%s</a>'%(wfn,wfn),
+                #'<a href="https://cmsweb.cern.ch/reqmgr/view/details/%s" target="_blank">%s</a> '%(wfn,wfn),
+                #'<table><tr><td>%s</td></tr></table>'%(wfn),
+                #'<span>%s</span>'%(wfn),
+                "%s "%wfn,
                 '(%s) <br>'%wfs])
         text+=', '.join([
                 '<a href="https://cmsweb.cern.ch/reqmgr/view/details/%s" target="_blank">dts</a>'%wfn,
@@ -106,6 +114,14 @@ def htmlor( caller = ""):
             date1 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(15*24*60*60)) )
             date2 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime())
             text+='<a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#table=Jobs&date1=%s&date2=%s&sortby=site&task=wmagent_%s">dashb</a>'%( date1, date2, wfn )
+
+        if ongoing and wfn in boost:
+            for task in boost[wfn]:
+                overflow = boost[wfn][task].get('ReplaceSiteWhitelist',None)
+                if not overflow:
+                    overflow = boost[wfn][task].get('AddWhitelist',None)
+                if overflow:
+                    text+=', boost (%d)'%len(overflow)
 
         #text+="<hr>"
         return text
@@ -358,7 +374,7 @@ Transfer on-going (%d) <a href=https://transferteam.web.cern.ch/transferteam/das
 
     lines.sort()
     html_doc.write("""
-Worflow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests_in_production.php target=_blank>ongoing</a> <a href=https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary target=_blank>elog</a> <a href=http://cms-gwmsmon.cern.ch/prodview target=_blank>queues</a> <a href=logs/assignor/last.log target=_blank>log</a> <a href=logs/checkor/last.log target=_blank>postlog</a>
+Worflow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests_in_production.php target=_blank>ongoing</a> <a href=https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary target=_blank>elog</a> <a href=http://cms-gwmsmon.cern.ch/prodview target=_blank>queues</a> <a href=logs/assignor/last.log target=_blank>log</a> <a href=logs/checkor/last.log target=_blank>postlog</a> <a href=logs/equalizor/last.log target=_blank>equ</a> <a href=logs/completor/last.log target=_blank>comp</a>
 <a href="javascript:showhide('away')">[Click to show/hide]</a>
 <br>
 <div id="away" style="display:none;">
@@ -505,7 +521,11 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     lines_lastweek=[]
     now = time.mktime(time.gmtime())
     this_week = int(time.strftime("%W",time.gmtime()))
-    start_time_two_weeks_ago = time.mktime(time.strptime("15-0-%d"%(this_week-2), "%y-%w-%W"))
+    start_time_two_weeks_ago = time.mktime(time.gmtime(now - (15*24*60*60))) # 14+1 days ago
+    last_week =  int(time.strftime("%W",time.gmtime(now - ( 7*24*60*60))))
+    
+    waiting_custodial = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/waiting_custodial.json').read())
+    #start_time_two_weeks_ago = time.mktime(time.strptime("15-0-%d"%(this_week-2), "%y-%w-%W"))
     for out in session.query(Output).filter(Output.date>=start_time_two_weeks_ago).all():
         if not out.workflow: 
             print "This is a problem with",out.datasetname
@@ -513,16 +533,24 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
         if  out.workflow.status in ['done-unlock','done','clean','clean-out','clean-unlock']:
             out_week = int(time.strftime("%W",time.gmtime(out.date)))
             ##only show current week, and the previous.
-            if (this_week-out_week)==1:
+            if last_week==out_week:
                 lines_lastweek.append("<li>on week %s : %s </li>"%(
                         time.strftime("%W (%x %X)",time.gmtime(out.date)),
                         ol(out.datasetname),
                         )
                              )
-            if (this_week-out_week)==0:
-                lines_thisweek.append("<li>on week %s : %s </li>"%(
+            if this_week==out_week:
+                custodial=''
+                if out.datasetname in waiting_custodial:
+                    info = waiting_custodial[out.datasetname]
+                    try:
+                        custodial=' %d [GB] going to %s on %s (%d missing)'%( info['size'], ",".join(info['nodes'].keys()), time.asctime(time.gmtime(info['checked'])), info['nmissing'])
+                    except:
+                        print info
+                lines_thisweek.append("<li>on week %s : %s %s</li>"%(
                         time.strftime("%W (%x %X)",time.gmtime(out.date)),
                         ol(out.datasetname),
+                        custodial
                         )
                              )
     lines_thisweek.sort()
@@ -694,7 +722,7 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
      site,site,
      site,SI.quota[site]))
         chart_data[site].append("""
-<div id="donutchart_%s" style="height: 200px;"></div>
+<div id="donutchart_%s" style="height: 200px;width: 300px"></div>
 """%(site))
 
         
@@ -707,7 +735,7 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
     
     divs_table="<table border=0>"
     for c,site in enumerate(sorted(chart_data.keys())):
-        if c%6==0:
+        if c%5==0:
             divs_table += "<tr>"
         divs_table += "<td>%s</td>"%(chart_data[site][2])
     divs_table += "</table>"
@@ -779,6 +807,17 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
     os.system('mv /afs/cern.ch/user/c/cmst2/www/unified/index.html.new /afs/cern.ch/user/c/cmst2/www/unified/index.html')
 
         
+    statuses = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/logs/status.json').read())
+    s_count = defaultdict(int)
+    now = time.mktime(time.gmtime())
+    for wf in session.query(Workflow).all():
+        s_count[wf.status]+=1
+    statuses[now] = dict( s_count )
+    ## remove old entries
+    for t in statuses.keys():
+        if (now-float(t)) > 7*24*60*60:
+            statuses.pop(t)
+    open('/afs/cern.ch/user/c/cmst2/www/unified/logs/status.json','w').write( json.dumps( statuses , indent=2))
 
     html_doc = open('/afs/cern.ch/user/c/cmst2/www/unified/statuses.html','w')
     html_doc.write("""                                                                                                                                                                                                                                                                                                      <html>        
