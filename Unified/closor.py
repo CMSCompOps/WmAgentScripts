@@ -105,16 +105,31 @@ def closor(url, specific=None):
                             continue
 
                         n_copies = 2
+                        destinations=[]
                         if to_DDM and campaign and campaign in CI.campaigns and 'DDMcopies' in CI.campaigns[campaign]:
-                            n_copies = CI.campaigns[campaign]['DDMcopies']
-                            
+                            ddm_instructions = CI.campaigns[campaign]['DDMcopies']
+                            if type(ddm_instructions) == int:
+                                n_copies = CI.campaigns[campaign]['DDMcopies']
+                            elif type(ddm_instructions) == dict:
+                                ## a more fancy configuration
+                                for ddmtier,indication in ddm_instructions.items():
+                                    if ddmtier==tier or ddmtier in ['*','all']:
+                                        ## this is for us
+                                        if 'N' in indication:
+                                            n_copies = indication['N']
+                                        if 'host' in indication:
+                                            destinations = indication['host']
+                                            
+                        destination_spec = ""
+                        if destinations:
+                            destination_spec = "--destination="+",".join( destinations )
                         ## inject to DDM when necessary
                         if to_DDM:
                             #print "Sending",out," to DDM"
-                            status = subprocess.call(['python','assignDatasetToSite.py','--nCopies=%d'%n_copies,'--dataset='+out,'--exec'])
+                            status = subprocess.call(['python','assignDatasetToSite.py','--nCopies=%d'%n_copies,'--dataset='+out,'--exec', destination_spec])
                             if status!=0:
                                 print "Failed DDM, retrying a second time"
-                                status = subprocess.call(['python','assignDatasetToSite.py','--nCopies=%d'%n_copies,'--dataset='+out,'--exec'])
+                                status = subprocess.call(['python','assignDatasetToSite.py','--nCopies=%d'%n_copies,'--dataset='+out,'--exec', destination_spec])
                                 if status!=0:
                                     results.append("Failed DDM for %s"% out)
                                     sendEmail("failed DDM injection","could not add "+out+" to DDM pool. check closor logs.")
