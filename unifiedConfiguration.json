@@ -1,14 +1,14 @@
 {
  "tiers_with_no_custodial": {
-   "value" : ["DQM","DQMIO"],
+   "value" : ["DQM","DQMIO","RECO"],
    "description": "The data tiers that do not go to tape"
  },
  "tiers_no_DDM": {
-   "value" : ["GEN-SIM","LHE","GEN","RECO","DQM","DQMIO"],
+   "value" : ["GEN-SIM","LHE","GEN","DQM","DQMIO"],
    "description": "The data tiers that do not go to AnaOps"
  },
  "tiers_to_DDM": {
-   "value" : ["AODSIM","MINIAODSIM","GEN-SIM-RECO","AOD","MINIAOD","ALCARECO"],
+   "value" : ["AODSIM","MINIAODSIM","GEN-SIM-RAW","GEN-SIM-RECO","GEN-SIM-RECODEBUG","AOD","RECO","MINIAOD","ALCARECO","USER","RAW-RECO"],
    "description": "The data tiers that go to AnaOps"
  },
  "stagor_sends_back": {
@@ -20,7 +20,7 @@
    "description": "The fraction of availability above which to fast pass stagor"
   },
   "max_transfer_in_GB": {
-   "value" : 300000,
+   "value" : 600000,
    "description": "The total size of the input datasets that can be transfered at a given time"
   },
   "max_handled_workflows": {
