@@ -19,23 +19,39 @@ def injector(url, options, specific):
     workflows = getWorkflows(url, status=options.wmstatus, user=options.user)
     workflows.extend( getWorkflows(url, status=options.wmstatus, user='fabozzi', rtype="ReReco")) ## regardless of users, pick up all ReReco on the table
 
-    existing = [wf.name for wf in session.query(Workflow).all()]
     ## browse for assignment-approved requests, browsed for ours, insert the diff
     for wf in workflows:
-        if wf not in existing:
+        exists = session.query(Workflow).filter(Workflow.name == wf ).first()
+        if not exists:
+            wl = getWorkLoad(url, wf)
+            ## check first that there isn't related here with something valid
+            can_add = True
+            familly = session.query(Workflow).filter(Workflow.name.contains(wl['PrepID'])).all()
+            if not familly:
+                req_familly = getWorkflowById( url, wl['PrepID'] )
+                familly = [session.query(Workflow).filter(Workflow.name == member).first() for member in req_familly]
+            for lwfo in familly:
+                if lwfo:
+                    ## we have it already
+                    if not lwfo.status in ['forget','trouble','forget-unlock','forget-out-unlock']:
+                        print "Should not put",wf,"because of",lwfo.name,lwfo.status
+                        can_add = False
+            if not can_add: continue
             print "putting",wf
             new_wf = Workflow( name = wf , status = options.setstatus, wm_status = options.wmstatus) 
             session.add( new_wf )
             session.commit()
-            time.sleep(1)
+            time.sleep(0.5)
+        else:
+            #print "already have",wf
+            pass
 
-
-    existing = [wf.name for wf in session.query(Workflow).all()]
 
     ## passing a round of invalidation of what needs to be invalidated
     if use_mcm and (options.invalidate or True):
         invalidator(url)
 
+    no_replacement = set()
 
     ## pick up replacements
     for wf in session.query(Workflow).filter(Workflow.status == 'trouble').all():
@@ -54,19 +70,12 @@ def injector(url, options, specific):
                 if fwl['RequestDate'] < wl['RequestDate']: continue
                 if fwl['RequestType']=='Resubmission': continue
                 if fwl['RequestStatus'] in ['None',None]: continue
+                if fwl['RequestStatus'] in ['rejected','rejected-archived','aborted','aborted-archived']: continue
             true_familly.append( fwl )
 
         if len(true_familly)==0:
             print wf.name,"ERROR has no replacement"
-            known = []
-            try:
-                known = json.loads(open('no_replacement.json').read())
-            except:
-                pass
-            if not wf.name in known:
-                sendEmail('workflow in %s with no replacement'%(wl['RequestStatus']),'%s is dangling there'%(wf.name))
-                known.append( wf.name )
-                open('no_replacement.json','w').write( json.dumps( known, indent=2 ))
+            no_replacement.add( wf.name )
             continue
         print wf.name,"has",len(familly),"familly members"
         print wf.name,"has",len(true_familly),"true familly members"
@@ -105,8 +114,9 @@ def injector(url, options, specific):
         ## don't do that automatically
         #wf.status = 'forget'
         session.commit()
+    if no_replacement:
+        sendEmail('workflow with no replacement','%s \n are dangling there'%( '\n'.join(no_replacement)))
 
-        
 if __name__ == "__main__":
     url = 'cmsweb.cern.ch'
 
