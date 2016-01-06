@@ -1,4 +1,60 @@
 {
+  "Run2015B": {
+    "go": true,
+    "DDMcopies": { 
+     		 "all" : { "N" : 4 },
+		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
+    },
+    "fractionpass": 1.0,
+    "lumisize" : -1,
+    "maxcopies" : 1,
+    "parameters": {
+      "useSiteListAsLocation" : true,
+      "SiteWhitelist": [ "T1_UK_RAL","T1_US_FNAL","T1_FR_CCIN2P3","T1_ES_PIC","T1_DE_KIT","T2_US_Nebraska","T2_US_Purdue","T2_DE_DESY","T1_IT_CNAF","T1_RU_JINR" ]
+    }
+  },
+  "Run2015C_25ns": {
+    "go": true,
+    "DDMcopies": { 
+     		 "all" : { "N" : 4 },
+		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
+    },
+    "fractionpass": 1.0,
+    "lumisize" : -1,
+    "maxcopies" : 1,
+    "parameters": {
+      "useSiteListAsLocation" : true,
+      "SiteWhitelist": [ "T1_UK_RAL","T1_US_FNAL","T1_FR_CCIN2P3","T1_ES_PIC","T1_DE_KIT","T2_US_Nebraska","T2_US_Purdue","T2_DE_DESY","T1_IT_CNAF","T1_RU_JINR" ]
+    }
+  },
+  "Run2015C_50ns": {
+    "go": true,
+    "DDMcopies": { 
+     		 "all" : { "N" : 4 },
+		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
+    },
+    "fractionpass": 1.0,
+    "lumisize" : -1,
+    "maxcopies" : 1,
+    "parameters": {
+      "useSiteListAsLocation" : true,
+      "SiteWhitelist": [ "T1_UK_RAL","T1_US_FNAL","T1_FR_CCIN2P3","T1_ES_PIC","T1_DE_KIT","T2_US_Nebraska","T2_US_Purdue","T2_DE_DESY","T1_IT_CNAF","T1_RU_JINR"]
+    }
+  },
+  "Run2015D": {
+    "go": true,
+    "DDMcopies": { 
+     		 "all" : { "N" : 4 },
+		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
+    },
+    "fractionpass": 1.0,
+    "lumisize" : -1,
+    "maxcopies" : 1,
+    "parameters": {
+      "useSiteListAsLocation" : true,
+      "SiteWhitelist": [ "T1_UK_RAL","T1_US_FNAL","T1_FR_CCIN2P3","T1_ES_PIC","T1_DE_KIT","T2_US_Nebraska","T2_US_Purdue","T2_DE_DESY","T1_IT_CNAF","T1_RU_JINR" ]
+    }
+  },
   "Summer11LegwmLHE": {
     "go": true
   },
@@ -47,7 +103,8 @@
       "EventsPerJob": 100000, 
       "EventsPerLumi": "x2"
     },
-    "lumisize" : 15000
+    "lumisize" : 15000,
+    "force-complete" : 0.99
   }, 
   "RunIIWinter15pLHE": {
     "go": true, 
@@ -82,7 +139,8 @@
     "parameters": {
       "EventsPerLumi": "x2"
     },
-    "lumisize" : 300
+    "lumisize" : 300,
+    "force-complete" : 0.99
   }, 
   "RunIIFall15DR75": {
     "go": true
@@ -159,6 +217,10 @@
     "SecondaryLocation" : [ "T1_US_FNAL", "T1_ES_PIC", "T1_FR_CCIN2P3","T1_IT_CNAF","T1_RU_JINR","T1_UK_RAL","T1_DE_KIT"]
   },
   "RunIISpring15MiniAODv2": {
+    "go": true,
+    "force-complete" : 0.99
+  },
+  "RunIIFall15MiniAODv2": {
     "go": true,
     "force-complete" : 0.99
   },
