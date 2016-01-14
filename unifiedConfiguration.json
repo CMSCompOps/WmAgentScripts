@@ -19,12 +19,8 @@
    "value" : 3.0,
    "description": "The fraction of availability above which to fast pass stagor"
   },
-  "max_transfer_in_GB": {
-   "value" : 600000,
-   "description": "The total size of the input datasets that can be transfered at a given time"
-  },
   "max_handled_workflows": {
-   "value" : 2000,
+   "value" : 4000,
    "description": "The total number of workflows that we allow to handle at a time (transfer, running, assistance)"
   },
   "max_staging_workflows": {
@@ -34,6 +30,18 @@
   "max_staging_workflows_per_site": {
    "value" : 400,
    "description": "The total number of workflows that we allow to stage at a time per site"
+  },
+  "max_transfer_in_GB": {
+   "value" : 500000,
+   "description": "The total size of the input datasets that can be transfered at a given time"
+  },
+  "transfer_timeout": {
+   "value" : 7,
+   "description": "Time in days after which to consider a transfer to be stuck"
+  },
+  "transfer_lowrate": {
+   "value" : 0.0004,
+   "description": "Rate in GB/s under which to consider a transfer to be stuck, after transfer_timeout days"
   },
   "less_copies_than_requested": {
    "value" : 1,
