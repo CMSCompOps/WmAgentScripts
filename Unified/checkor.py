@@ -167,7 +167,8 @@ def checkor(url, spec=None, options=None):
 
 
         # tuck out DQMIO/DQM
-        wfi.request['OutputDatasets'] = [ out for out in wfi.request['OutputDatasets'] if not '/DQM' in out]
+        tiers_no_check = []#'DQM','DQMIO']
+        wfi.request['OutputDatasets'] = [ out for out in wfi.request['OutputDatasets'] if not any([out.endswith(veto_tier) for veto_tier in tiers_no_check])]
 
         ## anything running on acdc
         familly = getWorkflowById(url, wfi.request['PrepID'], details=True)
@@ -209,6 +210,10 @@ def checkor(url, spec=None, options=None):
             event_expected = int(wfi.request['Task1']['RequestNumEvents'])
 
         fractions_pass = {}
+        over_100_pass = False
+        (lhe,prim,_,_) = wfi.getIO()
+        if lhe or prim: over_100_pass = False
+
         for output in wfi.request['OutputDatasets']:
             event_count,lumi_count = getDatasetEventsAndLumis(dataset=output)
             percent_completions[output] = 0.
@@ -223,6 +228,7 @@ def checkor(url, spec=None, options=None):
             if c in CI.campaigns and 'fractionpass' in CI.campaigns[c]:
                 fractions_pass[output] = CI.campaigns[c]['fractionpass']
                 print "overriding fraction to",fractions_pass[output],"for",output
+
             if options.fractionpass:
                 fractions_pass[output] = options.fractionpass
                 print "overriding fraction to",fractions_pass[output],"by command line for",output
@@ -239,6 +245,12 @@ def checkor(url, spec=None, options=None):
                 sub_assistance+='-manual'
             else:
                 sub_assistance+='-recovery'
+            is_closing = False
+
+        if over_100_pass and any([percent_completions[out] >100 for out in percent_completions]):
+            print wfo.name,"is over completed"
+            print json.dumps(percent_completions, indent=2)
+            sub_assistance += '-duplicates'
             is_closing = False
 
         ## correct lumi < 300 event per lumi
@@ -292,7 +304,10 @@ def checkor(url, spec=None, options=None):
         for output in wfi.request['OutputDatasets']:
             phedex_presence[output] = phedexClient.getFileCountDataset(url, output )
 
-        vetoed_custodial_tier = UC.get('tiers_with_no_custodial')
+        vetoed_custodial_tier = copy.deepcopy(UC.get('tiers_with_no_custodial'))
+        if c in CI.campaigns and 'custodial_override' in CI.campaigns[c]:
+            vetoed_custodial_tier = list(set(vetoed_custodial_tier) - set(CI.campaigns[c]['custodial_override']))
+            
         out_worth_checking = [out for out in custodial_locations.keys() if out.split('/')[-1] not in vetoed_custodial_tier]
         size_worth_checking = sum([getDatasetSize(out)/1023. for out in out_worth_checking ]) ## size in TBs of all outputs
         if not all(map( lambda sites : len(sites)!=0, [custodial_locations[out] for out in out_worth_checking])):
@@ -389,6 +404,9 @@ def checkor(url, spec=None, options=None):
             print json.dumps(dbs_invalid, indent=2)
             print json.dumps(phedex_presence, indent=2)
             ## hook for just waiting ...
+            if not any([veto in wfo.status+sub_assistance for veto in ['recovering','manual']]):
+                sub_assistance += '-filemismatch'
+
             is_closing = False
 
         if not all([(dbs_invalid[out] <= int(fraction_invalid*dbs_presence[out])) for out in wfi.request['OutputDatasets']]) and not options.ignorefiles:
@@ -435,6 +453,9 @@ def checkor(url, spec=None, options=None):
             'closeOutWorkflow' : None,
             }
         fDB.record[wfo.name]['closeOutWorkflow'] = is_closing
+        fDB.record[wfo.name]['priority'] = wfi.request['RequestPriority']
+        fDB.record[wfo.name]['prepid'] = wfi.request['PrepID']
+
         for output in wfi.request['OutputDatasets']:
             if not output in fDB.record[wfo.name]['datasets']: fDB.record[wfo.name]['datasets'][output] = {}
             rec = fDB.record[wfo.name]['datasets'][output]
