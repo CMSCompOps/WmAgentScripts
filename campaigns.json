@@ -5,6 +5,7 @@
      		 "all" : { "N" : 4 },
 		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
+    "custodial_override" : ["DQMIO"],
     "fractionpass": 1.0,
     "lumisize" : -1,
     "maxcopies" : 1,
@@ -19,6 +20,7 @@
      		 "all" : { "N" : 4 },
 		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
+    "custodial_override" : ["DQMIO"],
     "fractionpass": 1.0,
     "lumisize" : -1,
     "maxcopies" : 1,
@@ -33,6 +35,7 @@
      		 "all" : { "N" : 4 },
 		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
+    "custodial_override" : ["DQMIO"],
     "fractionpass": 1.0,
     "lumisize" : -1,
     "maxcopies" : 1,
@@ -47,6 +50,7 @@
      		 "all" : { "N" : 4 },
 		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
+    "custodial_override" : ["DQMIO"],
     "fractionpass": 1.0,
     "lumisize" : -1,
     "maxcopies" : 1,
@@ -78,7 +82,7 @@
   "Summer12DR53X": {
     "go": true,
     "lumisize" : 400,
-    "SiteWhitelist": [ "T1_US_FNAL", "T1_ES_PIC", "T1_FR_CCIN2P3","T1_IT_CNAF","T1_UK_RAL","T1_DE_KIT","T2_CH_CERN"]
+    "SiteWhitelist": [ "T1_US_FNAL", "T1_ES_PIC", "T1_FR_CCIN2P3","T1_IT_CNAF","T1_UK_RAL","T1_DE_KIT","T2_CH_CERN","T2_US_Nebraska"]
   }, 
   "pAWinter13": {
     "go": true, 
@@ -140,7 +144,8 @@
       "EventsPerLumi": "x2"
     },
     "lumisize" : 300,
-    "force-complete" : 0.99
+    "force-complete" : 0.99,
+    "maxcopies" : 1
   }, 
   "RunIIFall15DR75": {
     "go": true
@@ -203,7 +208,7 @@
   "RunIISpring15DR74": {
    "go": true,
     "lumisize" : 400,
-    "SiteWhitelist" : [ "T1_US_FNAL", "T1_ES_PIC", "T1_FR_CCIN2P3","T1_IT_CNAF","T1_UK_RAL","T1_DE_KIT","T2_CH_CERN"],
+    "SiteWhitelist" : [ "T1_US_FNAL", "T1_ES_PIC", "T1_FR_CCIN2P3","T1_IT_CNAF","T1_UK_RAL","T1_DE_KIT","T2_CH_CERN","T2_US_Nebraska"],
     "force-complete" : 0.99
   },
   "RunIISpring15Digi74": {
@@ -222,7 +227,8 @@
   },
   "RunIIFall15MiniAODv2": {
     "go": true,
-    "force-complete" : 0.99
+    "force-complete" : 0.99,
+    "maxcopies": 1
   },
   "2023SHCALUpg14DR": {
     "go": true
