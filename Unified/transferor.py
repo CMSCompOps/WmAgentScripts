@@ -99,6 +99,7 @@ def transferor(url ,specific = None, talk=True, options=None):
     in_transfer_priority=0
     min_transfer_priority=100000000
     print "getting all wf in staging ..."
+    stucks = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/stuck_transfers.json').read())
     for wfo in session.query(Workflow).filter(Workflow.status=='staging').all():
         wfh = workflowInfo( url, wfo.name, spec=False)
         #(lheinput,primary,parent,secondary) = wfh.getIO()
@@ -109,7 +110,10 @@ def transferor(url ,specific = None, talk=True, options=None):
         #input_cput[wfo.name] = wfh.getComputingTime()
         #input_st[wfo.name] = wfh.getSystemTime()
         for prim in primary:  
-            input_sizes[prim] = dss.get( prim )
+            if prim in stucks: 
+                print "\t",prim,"appears stuck, so not counting it"
+            else:
+                input_sizes[prim] = dss.get( prim )
             print "\t",wfo.name,"needs",input_sizes[prim],"GB"
         in_transfer_priority = max(in_transfer_priority, int(wfh.request['RequestPriority']))
         min_transfer_priority = min(min_transfer_priority, int(wfh.request['RequestPriority']))
@@ -131,6 +135,7 @@ def transferor(url ,specific = None, talk=True, options=None):
         #input_cput[wfo.name] = wfh.getComputingTime()
         #input_st[wfo.name] = wfh.getSystemTime()
         for prim in primary:
+            ## do not count it if it appears stalled !
             prim_size = dss.get( prim )
             input_sizes[prim] = prim_size
             primary_input_per_workflow_gb[wfo.name] += prim_size
