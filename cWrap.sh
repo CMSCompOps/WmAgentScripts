@@ -3,7 +3,7 @@ cd /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts
 week=`date +%W`
 let oddity=week%2
 
-if ( [ "$USER" = "vlimant" ] && [ "$oddity" = "0" ] ) || ( [ "$USER" = "mcremone" ] && [ "$oddity" = "1" ] ) ; then
+if ( [ "$USER" = "vlimant" ] && [ "$oddity" = "1" ] ) || ( [ "$USER" = "mcremone" ] && [ "$oddity" = "0" ] ) ; then
     echo no go for $USER on week $week
     exit
 fi
