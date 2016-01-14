@@ -15,7 +15,7 @@ def completor(url, specific):
     wfs.extend( session.query(Workflow).filter(Workflow.status == 'away').all() )
     ##wfs.extend( session.query(Workflow).filter(Workflow.status.startswith('assistance')).all() )
 
-    ## just take it in random order
+    ## just take it in random order so that not always the same is seen
     random.shuffle( wfs )
 
     ## by workflow a list of fraction / timestamps
@@ -28,13 +28,34 @@ def completor(url, specific):
 
     long_lasting = {}
 
+    overrides = {}
+    for rider,email in [('jbadillo','julian.badillo.rojas@cern.ch'),('vlimant','vlimant@cern.ch'),('jen_a','jen_a@fnal.gov'),('srimanob','srimanob@mail.cern.ch')]:
+        rider_file = '/afs/cern.ch/user/%s/%s/public/ops/forcecomplete.json'%(rider[0],rider)
+        if not os.path.isfile(rider_file):
+            print "no file",rider_file
+            continue
+        try:
+            overrides[rider] = json.loads(open( rider_file ).read() )
+        except:
+            print "cannot get force complete list from",rider
+            sendEmail("malformated force complet file","%s is not json readable"%rider_file, destination=[email])
+        
+
     print "can force complete on"
     print json.dumps( good_fractions ,indent=2)
     max_force = 5
     for wfo in wfs:
         if specific and not specific in wfo.name: continue
 
-        if not any([c in wfo.name for c in good_fractions]): continue
+        skip=False
+        if not any([c in wfo.name for c in good_fractions]): skip=True
+        for user,spec in overrides.items():
+            if wfo.name in spec:
+                print wfo.name,"should be force complete this round by request of",user
+                #skip=False ## do not do it automatically yet
+                sendEmail('force-complete requested','%s is asking for %s to be force complete'%(user,wfo.name)
+
+        if skip: continue
 
         print "looking at",wfo.name
         ## get all of the same
