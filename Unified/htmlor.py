@@ -121,7 +121,7 @@ def htmlor( caller = ""):
                 if not overflow:
                     overflow = boost[wfn][task].get('AddWhitelist',None)
                 if overflow:
-                    text+=', boost (%d)'%len(overflow)
+                    text+=',boost (<a href=equalizor.json>%d</a>)'%len(overflow)
 
         #text+="<hr>"
         return text
@@ -153,6 +153,8 @@ def htmlor( caller = ""):
     html_doc = open('/afs/cern.ch/user/c/cmst2/www/unified/index.html.new','w')
     print "Updating the status page ..." 
 
+    UC = unifiedConfiguration()
+
     if not caller:
         try:
             #caller = sys._getframe(1).f_code.co_name
@@ -177,7 +179,12 @@ def htmlor( caller = ""):
 </head>
 <body>
 
-Last update on %s(CET), %s(GMT), <a href=logs/ target=_blank>logs</a> <a href=logs/last.log target=_blank>last</a> <a href=statuses.html>statuses</a> <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/ target=_blank>prod mon</a> <a href=https://cmsweb.cern.ch/wmstats/index.html target=_blank>wmstats</a> <a href=http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/SitesInfo.txt target=_blank>detox</a> <a href=locked.html>space</a> <a href=logs/subscribor/last.log target=_blank>blocks</a> <a href=https://twiki.cern.ch/twiki/bin/view/CMSPublic/CompOpsWorkflowL3Responsibilities#Automatic_Assignment_and_Unified>what am I</a> <a href=logs/addHoc/last.log>add-hoc op</a> created from <b>%s <a href=logs/last_running>last running</a></b><br><br>
+Last update on %s(CET), %s(GMT)
+<br>
+<a href=logs/ target=_blank>logs</a> <a href=logs/last.log target=_blank>last</a> <a href=statuses.html>statuses</a> <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/ target=_blank>prod mon</a> <a href=https://cmsweb.cern.ch/wmstats/index.html target=_blank>wmstats</a> <a href=http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/SitesInfo.txt target=_blank>detox</a> <a href=locked.html>space</a> <a href=logs/subscribor/last.log target=_blank>blocks</a> <a href=logs/agents/last.log>agents</a>
+<br>
+<a href=https://twiki.cern.ch/twiki/bin/view/CMSPublic/CompOpsWorkflowL3Responsibilities#Automatic_Assignment_and_Unified>what am I</a> <a href=data.html>json interfaces</a> <a href=logs/addHoc/last.log>add-hoc op</a> created from <b>%s <a href=logs/last_running>last running</a></b> <object height=20 type="text/html" data="logs/last_running"><p>backup content</p></object>
+<br><br>
 
 """ %(time.asctime(time.localtime()),
       time.asctime(time.gmtime()),
@@ -297,7 +304,7 @@ Worflow waiting in staging (%d) <a href=logs/transferor/last.log target=_blank>l
     text_bywf += '</ul>'
 
     html_doc.write("""
-Transfer on-going (%d) <a href=https://transferteam.web.cern.ch/transferteam/dashboard/ target=_blank>dashboard</a> <a href=logs/transferor/last.log target=_blank>log</a> <a href=logs/stagor/last.log target=_blank>postlog</a>
+Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransferteam/ target=_blank>dashboard</a> <a href=logs/transferor/last.log target=_blank>log</a> <a href=logs/stagor/last.log target=_blank>postlog</a>
 <a href="javascript:showhide('transfer')">[Click to show/hide]</a>
 <br>
 <div id="transfer" style="display:none;">
@@ -419,12 +426,21 @@ Worflow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/reque
 
     lap ( 'done with closing' )
 
+    assistance_by_type = defaultdict(list)
     text=""
     count=0
     for wf in session.query(Workflow).filter(Workflow.status.startswith('assistance-')).all():
-        text+="<li> %s </li> \n"%wfl(wf,view=True,within=True,status=True,update=True)
+        assistance_by_type[wf.status].append( wf )
         count+=1
-    text+="</ul></div>\n"
+    for assistance_type in assistance_by_type:
+        text += "<li> %s (%d) <a href=\"javascript:showhide('%s')\">[Click to show/hide]</a><br><div id=\"%s\" style=\"display:none;\"><ul>"%( assistance_type,
+                                                                                                                                               len(assistance_by_type[assistance_type]),
+                                                                                                                                               assistance_type,
+                                                                                                                                               assistance_type,
+                                                                                                                                               )
+        for wf in assistance_by_type[assistance_type]:
+            text+="<li> %s <hr></li> \n"%wfl(wf,view=True,within=True,status=True,update=True)
+        text += "</ul></div></li>\n"
     html_doc.write("""Worflow which need assistance (%d)
 <a href=assistance.html target=_blank>assistance</a> 
 <a href=logs/checkor/last.log target=_blank>log</a> <a href=logs/recoveror/last.log target=_blank>postlog</a>
@@ -433,8 +449,10 @@ Worflow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/reque
 <div id="assistance" style="display:none;">
 <br>
 <ul>
-"""%count)
-    html_doc.write(text)
+%s
+</ul>
+</div>
+"""%(count, text))
     
     lap ( 'done with assistance' )
 
@@ -521,32 +539,102 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     lines_lastweek=[]
     now = time.mktime(time.gmtime())
     this_week = int(time.strftime("%W",time.gmtime()))
-    start_time_two_weeks_ago = time.mktime(time.gmtime(now - (15*24*60*60))) # 14+1 days ago
+    start_time_two_weeks_ago = time.mktime(time.gmtime(now - (20*24*60*60))) # 20
     last_week =  int(time.strftime("%W",time.gmtime(now - ( 7*24*60*60))))
-    
+
+    all_locks = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/globallocks.json').read())    
     waiting_custodial = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/waiting_custodial.json').read())
+    all_pending_approval_custodial = dict([(k,item) for k,item in waiting_custodial.items() if 'nodes' in item and not any([node['decided'] for node in item['nodes'].values()]) ])
+    n_pending_approval = len( all_pending_approval_custodial )
+    #n_pending_approval = len([item for item in waiting_custodial.values() if 'nodes' in item and not any([node['decided'] for node in item['nodes'].values() ])])
+    missing_approval_custodial = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/missing_approval_custodial.json').read())
+
+    stuck_custudial = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/stuck_custodial.json').read())
+    lagging_custudial = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/lagging_custodial.json').read())
+    if len(stuck_custudial):
+        stuck_string = ', <font color=red>%d appear to be <a href=stuck_custodial.json>stuck</a></font>'% len(stuck_custudial)
+    else:
+        stuck_string = ''
+    if len(missing_approval_custodial):
+        long_approve_string = ', <font color=red>%d more than %d days</font>'%( len(missing_approval_custodial), UC.get('transfer_timeout'))
+    else:
+        long_approve_string = ''
+    
+
+    output_within_two_weeks=session.query(Output).filter(Output.date>=start_time_two_weeks_ago).all()
+    waiting_custodial_string=""
+    waiting_custodial_strings=[]
+    for ds in waiting_custodial:
+        out = None
+        ## lots of it will be within two weeks
+        of = filter(lambda odb: odb.datasetname == ds, output_within_two_weeks)
+        if of:
+            out = of[0]
+        else:
+            out = session.query(Output).filter(Output.datasetname == ds).first()
+        if out:
+            info = waiting_custodial[out.datasetname]
+            action = 'going'
+            if out.datasetname in all_pending_approval_custodial:
+                action = '<font color=red>pending</font>'
+            try:
+                size = str(info['size'])
+            except:
+                size = "x"
+
+            destination = ",".join(info['nodes'].keys())
+            if not destination:
+                destination ='<font color=red>NO SITE</font>'
+
+            a_waiting_custodial_string = "<li>on week %s : %s %s</li>"%(
+                time.strftime("%W (%x %X)",time.gmtime(out.date)),
+                ol(out.datasetname),
+                ' %s [GB] %s to %s on %s (<a href="https://cmsweb.cern.ch/phedex/datasvc/xml/prod/requestlist?dataset=%s&node=T*MSS">%d missing</a>)'%( size, action, destination, time.asctime(time.gmtime(info['checked'])), out.datasetname, info['nmissing'])
+                )
+            waiting_custodial_strings.append( (out.date, a_waiting_custodial_string) )
+
+        waiting_custodial_strings.sort( key = lambda i:i[0] )
+        waiting_custodial_string="\n".join( [i[1] for i in waiting_custodial_strings] )
     #start_time_two_weeks_ago = time.mktime(time.strptime("15-0-%d"%(this_week-2), "%y-%w-%W"))
-    for out in session.query(Output).filter(Output.date>=start_time_two_weeks_ago).all():
+    for out in output_within_two_weeks:
         if not out.workflow: 
             print "This is a problem with",out.datasetname
             continue
         if  out.workflow.status in ['done-unlock','done','clean','clean-out','clean-unlock']:
+            custodial=''
+            if out.datasetname in waiting_custodial:
+                info = waiting_custodial[out.datasetname]
+                try:
+                    try:
+                        size = str(info['size'])
+                    except:
+                        size = "x"
+                    destination = ",".join(info['nodes'].keys())
+                    if not destination:
+                        destination ='<font color=red>NO SITE</font>'
+                    action = 'going'
+                    if out.datasetname in all_pending_approval_custodial:
+                        action = '<font color=red>pending</font>'
+
+                    
+                    custodial=' %s [GB] %s to %s on %s (<a href="https://cmsweb.cern.ch/phedex/datasvc/xml/prod/requestlist?dataset=%s&node=T*MSS">%d missing</a>)'%( size, action, destination, time.asctime(time.gmtime(info['checked'])), out.datasetname, info['nmissing'])
+                except Exception as e:
+                    #print info
+                    #print str(e)
+                    pass
+            elif out.datasetname in all_locks:
+                custodial='<font color=green>LOCKED</font>'
             out_week = int(time.strftime("%W",time.gmtime(out.date)))
             ##only show current week, and the previous.
             if last_week==out_week:
-                lines_lastweek.append("<li>on week %s : %s </li>"%(
+                lines_lastweek.append("<li>on week %s : %s %s</li>"%(
                         time.strftime("%W (%x %X)",time.gmtime(out.date)),
                         ol(out.datasetname),
+                        custodial
                         )
                              )
             if this_week==out_week:
-                custodial=''
-                if out.datasetname in waiting_custodial:
-                    info = waiting_custodial[out.datasetname]
-                    try:
-                        custodial=' %d [GB] going to %s on %s (%d missing)'%( info['size'], ",".join(info['nodes'].keys()), time.asctime(time.gmtime(info['checked'])), info['nmissing'])
-                    except:
-                        print info
+
                 lines_thisweek.append("<li>on week %s : %s %s</li>"%(
                         time.strftime("%W (%x %X)",time.gmtime(out.date)),
                         ol(out.datasetname),
@@ -562,6 +650,18 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 <div id="output" style="display:none;">
 <br>
 <ul>
+<li> %d waiting to go to tape</li>
+<ul>
+<li> %d waiting for tape approval%s</li>
+<li> %d are not completed after %d days%s</li>
+<li> Full list (%d) <a href="javascript:showhide('waiting-custodial')">[Click to show/hide]</a>
+<div id="waiting-custodial" style="display:none;">
+<ul>
+%s
+</ul>
+</div>
+</li>
+</ul>
 <li> Last week (%d) </li><a href="javascript:showhide('output_lastweek')">[Click to show/hide]</a><div id="output_lastweek" style="display:none;"><ul>
 %s
 </ul></div>
@@ -569,6 +669,10 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 %s
 </ul></div></div>
 """%( len(lines_lastweek)+len(lines_thisweek),
+      len(waiting_custodial),
+      n_pending_approval,long_approve_string,
+      len(lagging_custudial),UC.get('transfer_timeout'),stuck_string,
+      len(waiting_custodial),waiting_custodial_string,
       len(lines_lastweek),
      '\n'.join(lines_lastweek),
       len(lines_thisweek),
@@ -658,7 +762,12 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
             disk = SI.disk[SI.CE_to_SE(site)] if SI.CE_to_SE(site) in SI.disk else 'N/A'
             if c==0:
                 text+="<tr>"
-            text+='<td><a href=http://dashb-ssb.cern.ch/dashboard/templates/sitePendingRunningJobs.html?site=%s>%s</a><br><a href="http://cms-gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="http://cms-gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:50px"></a><br><a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=wmagent&check=submitted&sortby=activity&scale=linear&bars=20&data1=%s&date2=%s">dashb</a><br>CPU pledge: %s<br>Disk available: %s</td>'%(site,site,site,site,site,date1,date2,cpu,disk)
+            if not disk:
+                ht_disk = '<font color=red>Disk available: %s</font>'%disk
+            else:
+                ht_disk = 'Disk available: %s'%disk
+
+            text+='<td><a href=http://dashb-ssb.cern.ch/dashboard/templates/sitePendingRunningJobs.html?site=%s>%s</a><br><a href="http://cms-gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="http://cms-gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:50px"></a><br><a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=wmagent&check=submitted&sortby=activity&scale=linear&bars=20&data1=%s&date2=%s">dashb</a><br>CPU pledge: %s<br>%s</td>'%(site,site,site,site,site,date1,date2,cpu,ht_disk)
             if c==n_column:
                 c=0
             else:
@@ -687,6 +796,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
             waiting = float(os.popen("grep '%s is pending . Created since' /afs/cern.ch/user/c/cmst2/www/unified/logs/lockor/last.log  -B 3 | grep size | awk '{ sum+=$6 ; print sum }' | tail -1" % mss).readline())
         except Exception as e:
             print str(e)
+
         oldest = ""
         os.system('grep pending /afs/cern.ch/user/c/cmst2/www/unified/logs/lockor/last.log | sort -u > /afs/cern.ch/user/c/cmst2/www/unified/logs/pending.log')
         try:
@@ -775,7 +885,6 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
     lap ( 'done with space' )
 
 
-    UC = unifiedConfiguration()
     text = ""
     for param in UC.configs:
         text +="<li>%s</li><ul>\n"% param
@@ -807,7 +916,7 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
     os.system('mv /afs/cern.ch/user/c/cmst2/www/unified/index.html.new /afs/cern.ch/user/c/cmst2/www/unified/index.html')
 
         
-    statuses = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/logs/status.json').read())
+    statuses = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/statusmon.json').read())
     s_count = defaultdict(int)
     now = time.mktime(time.gmtime())
     for wf in session.query(Workflow).all():
@@ -817,7 +926,7 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
     for t in statuses.keys():
         if (now-float(t)) > 7*24*60*60:
             statuses.pop(t)
-    open('/afs/cern.ch/user/c/cmst2/www/unified/logs/status.json','w').write( json.dumps( statuses , indent=2))
+    open('/afs/cern.ch/user/c/cmst2/www/unified/statusmon.json','w').write( json.dumps( statuses , indent=2))
 
     html_doc = open('/afs/cern.ch/user/c/cmst2/www/unified/statuses.html','w')
     html_doc.write("""                                                                                                                                                                                                                                                                                                      <html>        
