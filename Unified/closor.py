@@ -139,7 +139,19 @@ def closor(url, specific=None):
 
                 if all(map(lambda result : result in ['None',None,True],results)):
                     ## only announce if all previous are fine
-                    results.append(reqMgrClient.announceWorkflowCascade(url, wfo.name))
+                    res = reqMgrClient.announceWorkflowCascade(url, wfo.name)
+                    if not res in ['None',None]:
+                        ## check the status again, it might well have toggled
+                        wl_bis = getWorkLoad(url, wfo.name)
+                        wfo.wm_status = wl_bis['RequestStatus']
+
+                        if wl_bis['RequestStatus'] in  ['announced','normal-archived']:
+                            res = None
+                        else:
+                            ## retry ?
+                            res = reqMgrClient.announceWorkflowCascade(url, wfo.name) 
+                            
+                    results.append( res )
                                 
             #print results
             if all(map(lambda result : result in ['None',None,True],results)):
