@@ -24,22 +24,22 @@ def stagor(url,specific =None, options=None):
     completion_by_input = {}
     good_enough = 100.0
     
-    lost_blocks = json.loads(open('lost_blocks_datasets.json').read())
-    lost_files = json.loads(open('lost_files_datasets.json').read())
-    still_lost_blocks = []
-    still_lost_files = []
-    for dataset in set(lost_blocks+lost_files):
+    lost_blocks = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/lost_blocks_datasets.json').read())
+    lost_files = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/lost_files_datasets.json').read())
+    known_lost_blocks = {}
+    known_lost_files = {}
+    for dataset in set(lost_blocks.keys()+lost_files.keys()):
         b,f = findLostBlocksFiles(url, dataset)
         if dataset in lost_blocks and not b:
             print dataset,"has no really lost blocks"
         else:
-            still_lost_blocks.append( dataset )
+            known_lost_blocks[dataset] = [i['name'] for i in b]
+
         if dataset in lost_files and not f: 
             print dataset,"has no really lost files"
         else:
-            still_lost_files.append( dataset )
-    open('lost_blocks_datasets.json','w').write( json.dumps( still_lost_blocks, indent=2) )
-    open('lost_files_datasets.json','w').write( json.dumps( still_lost_files, indent=2) )
+            known_lost_files[dataset] = [i['name'] for i in f]
+
 
     cached_transfer_statuses = json.loads(open('cached_transfer_statuses.json').read())
 
@@ -238,15 +238,13 @@ def stagor(url,specific =None, options=None):
             print "incomplete",dsname
             lost_blocks,lost_files = findLostBlocksFiles( url, dsname )
             lost_block_names = [item['name'] for item in lost_blocks]
-            lost_files_names = [item['name'] for item in lost_files]
-            known_lost_blocks = json.loads(open('lost_blocks_datasets.json').read())
-            known_lost_files = json.loads(open('lost_files_datasets.json').read())
+            lost_file_names = [item['name'] for item in lost_files]
 
             if lost_blocks:
                 #print json.dumps( lost , indent=2 )
-                print "We have lost",len(lost_block_names),"blocks",lost_block_names
                 ## estimate for how much !
                 fraction_loss,_,n_missing = getDatasetBlockFraction(dsname, lost_block_names)
+                print "We have lost",len(lost_block_names),"blocks",lost_block_names,"for %f%%"%fraction_loss
                 if fraction_loss > 0.05: ## 95% completion mark
                     sendEmail('we have lost too many blocks','%s is missing %d blocks, for %d events, %f %% loss'%(dsname, len(lost_block_names), n_missing, fraction_loss))
                     ## the workflow should be rejected !
@@ -260,30 +258,25 @@ def stagor(url,specific =None, options=None):
                     if not dsname in known_lost_blocks:
                         ## make a deeper investigation of the block location to see whether it's really no-where no-where
                         #sendEmail('we have lost a few blocks', str(len(lost))+" in total.\nDetails \n:"+json.dumps( lost , indent=2 ))
-                        sendEmail('we have lost a few blocks', '%s is missing %d blocks, for %d events, %f %% loss\n%s'%(dsname, len(lost_block_names), n_missing, fraction_loss, '\n'.join( lost_block_names ) ))
-                        known_lost_blocks.append(dsname)
-                        rr= open('lost_blocks_datasets.json','w')
-                        rr.write( json.dumps( known_lost_blocks, indent=2))
-                        rr.close()
+                        sendEmail('we have lost a few blocks', '%s is missing %d blocks, for %d events, %f %% loss\n\n%s'%(dsname, len(lost_block_names), n_missing, fraction_loss, '\n'.join( lost_block_names ) ))
+                        known_lost_blocks[dsname] = [i['name'] for i in lost_blocks]
                                   
-                if lost_files:
-                    print "We have lost",len(lost_files_names),"files",lost_files_names
-                    fraction_loss,_,n_missing = getDatasetFileFraction(dsname, lost_files_names)
-                    if fraction_loss > 0.05:
-                        sendEmail('we have lost too many files','%s is missing %d files, for %d events, %f %% loss'%(dsname, len(lost_file_names),n_missing, fraction_loss))
-                        for wf in using_wfos:
-                            if wf.status == 'staging':
-                                print wf.name,"is doomed. setting to trouble"
-                                wf.status = 'trouble'
-                                session.commit()
-                    else:
-                        ## probably enough to make a ggus and remove    
-                        if not dsname in known_lost_files:
-                            sendEmail('we have lost a few files','%s is missing %d files, for %d events, %f %% loss\n%s'%(dsname, len(lost_file_names),n_missing, fraction_loss, '\n'.join(lost_files_names)))
-                            known_lost_files.append( dsname)
-                            rr= open('lost_files_datasets.json','w')
-                            rr.write( json.dumps( known_lost_files, indent=2))
-                            rr.close()
+            if lost_files:
+                fraction_loss,_,n_missing = getDatasetFileFraction(dsname, lost_file_names)
+                print "We have lost",len(lost_file_names),"files",lost_file_names,"for %f%%"%fraction_loss
+                
+                if fraction_loss > 0.05:
+                    sendEmail('we have lost too many files','%s is missing %d files, for %d events, %f %% loss'%(dsname, len(lost_file_names),n_missing, fraction_loss))
+                    for wf in using_wfos:
+                        if wf.status == 'staging':
+                            print wf.name,"is doomed. setting to trouble"
+                            wf.status = 'trouble'
+                            session.commit()
+                else:
+                    ## probably enough to make a ggus and remove    
+                    if not dsname in known_lost_files:
+                        sendEmail('we have lost a few files','%s is missing %d files, for %d events, %f %% loss\n\n%s'%(dsname, len(lost_file_names),n_missing, fraction_loss, '\n'.join(lost_file_names)))
+                        known_lost_files[dsname] = [i['name'] for i in lost_files]
 
                 ## should the status be change to held-staging and pending on a ticket
 
@@ -295,6 +288,15 @@ def stagor(url,specific =None, options=None):
             print "\tgot",got
             print "\tmissing",missings
             missing_in_action[dsname].extend( missings )
+
+    rr= open('/afs/cern.ch/user/c/cmst2/www/unified/lost_blocks_datasets.json','w')
+    rr.write( json.dumps( known_lost_blocks, indent=2))
+    rr.close()
+
+    rr= open('/afs/cern.ch/user/c/cmst2/www/unified/lost_files_datasets.json','w')
+    rr.write( json.dumps( known_lost_files, indent=2))
+    rr.close()
+
 
     open('/afs/cern.ch/user/c/cmst2/www/unified/incomplete_transfers.json','w').write( json.dumps(missing_in_action, indent=2) )
     print "Stuck transfers and datasets"
@@ -312,6 +314,8 @@ def stagor(url,specific =None, options=None):
     bad_sources = defaultdict(set)
     report = ""
     really_stuck_dataset = set()
+    transfer_timeout = UC.get("transfer_timeout")
+    transfer_lowrate = UC.get("transfer_lowrate")
     for phid,datasets in datasets_by_phid.items():
         issues = checkTransferLag( url, phid , datasets=list(datasets) )
         for dataset in issues:
@@ -330,7 +334,7 @@ def stagor(url,specific =None, options=None):
                             redones.append( d )
                     dones = list(set( redones ))
                     #dones = filter(lambda s : (s.endswith('Buffer') and not s.replace('Buffer','MSS') in dones) or (not s.endswith('Buffer')) , dones)
-                    if delay>7 and rate<0.0004:
+                    if delay>transfer_timeout and rate<transfer_lowrate:
                         if len(dones)>1:
                             ## its the destination that sucks
                             bad_destinations[destination].add( block )
