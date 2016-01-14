@@ -11,10 +11,19 @@ def rejector(url, specific, options=None):
 
     up = componentInfo()
 
-    if specific.startswith('/'):
+    if specific and specific.startswith('/'):
         return
 
-    wfs = session.query(Workflow).filter(Workflow.name.contains(specific)).all()
+    if options.filelist:
+        wfs = []
+        for line in filter(None, open(options.filelist).read().split('\n')):
+            print line
+            wfs.extend( session.query(Workflow).filter(Workflow.name.contains(line)).all())
+    elif specific:
+        wfs = session.query(Workflow).filter(Workflow.name.contains(specific)).all()
+    else:
+        return 
+
     print len(wfs),"to reject"
 
     if len(wfs)>1:
@@ -30,6 +39,10 @@ def rejector(url, specific, options=None):
             return
         results=[]
         wfi = workflowInfo(url, wfo.name)
+        if wfi.request['RequestStatus'] in ['rejected','rejected-archived','aborted','aborted-archived']:
+            print 'already',wfi.request['RequestStatus']
+            continue
+
         reqMgrClient.invalidateWorkflow(url, wfo.name, current_status=wfi.request['RequestStatus'])
         #if wfi.request['RequestStatus'] in ['assignment-approved','new','completed']:
         #    #results.append( reqMgrClient.rejectWorkflow(url, wfo.name))
@@ -91,6 +104,7 @@ if __name__ == "__main__":
     parser.add_option('-k','--keep',help="keep the outpuy in current status", default=False,action="store_true")
     parser.add_option('--Memory',help="memory parameter of the clone", default=0, type=int)
     parser.add_option('--EventsPerJob', help="set the events/job on the clone", default=0, type=int)
+    parser.add_option('--filelist',help='a file with a list of workflows',default=None)
     (options,args) = parser.parse_args()
 
     spec=None
