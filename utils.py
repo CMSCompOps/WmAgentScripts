@@ -1184,20 +1184,21 @@ class closeoutInfo:
 
     def table_header(self):
         text = '<table border=1><thead><tr><th>workflow</th><th>OutputDataSet</th><th>%Compl</th><th>acdc</th><th>Dupl</th><th>CorrectLumis</th><th>Scubscr</th><th>Tran</th><th>dbsF</th><th>dbsIF</th><th>\
-phdF</th><th>ClosOut</th></tr></thead>'
+phdF</th><th>Priority</th></tr></thead>'
         return text
 
     def one_line(self, wf, wfo, count):
         if count%2:            color='lightblue'
         else:            color='white'
         text=""
-        try:
-            pid = filter(lambda b :b.count('-')==2, wf.split('_'))[0]
-            tpid = 'task_'+pid if 'task' in wf else pid
-        except:
-            wl = getWorkLoad('cmsweb.cern.ch', wf)
-            pid =wl['PrepID']
-            tpid=wl['PrepID']
+        tpid = self.record[wf]['prepid']
+        #try:
+        #    pid = filter(lambda b :b.count('-')==2, wf.split('_'))[0]
+        #    tpid = 'task_'+pid if 'task' in wf else pid
+        #except:
+        #    wl = getWorkLoad('cmsweb.cern.ch', wf)
+        #    pid =wl['PrepID']
+        #    tpid=wl['PrepID']
             
         ## return the corresponding html
         order = ['percentage','acdc','duplicate','correctLumis','missingSubs','phedexReqs','dbsFiles','dbsInvFiles','phedexFiles']
@@ -1209,6 +1210,7 @@ phdF</th><th>ClosOut</th></tr></thead>'
                                                                                                                                                                                                                                                                                                                             wfo.status)
 
             text+='<td>%s</td>'% out
+            lines = []
             for f in order:
                 if f in self.record[wf]['datasets'][out]:
                     value = self.record[wf]['datasets'][out][f]
@@ -1218,7 +1220,8 @@ phdF</th><th>ClosOut</th></tr></thead>'
                     text+='<td><a href=https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byprepid?key="%s">%s</a></td>'%(tpid , value)
                 else:
                     text+='<td>%s</td>'% value
-            text+='<td>%s</td>'%self.record[wf]['closeOutWorkflow']
+            #text+='<td>%s</td>'%self.record[wf]['closeOutWorkflow']
+            text+='<td>%s</td>'%self.record[wf]['priority']
             text+='</tr>'
             wf_and_anchor = wf
 
@@ -1295,15 +1298,20 @@ Workflow in status <b> %s </b>
 </tr>
 </thead>
 """% (status))
+            lines = []
+            short_lines = []
             for (count,wfo) in enumerate(assist[status]):
                 if count%2:            color='lightblue'
                 else:            color='white'
                 if not wfo.name in self.record: 
                     print "wtf with",wfo.name
-                    continue            
+                    #html.write( self.no_record( wfo.name, wfo, count))
+                    continue     
+                prio = self.record[wfo.name]['priority']
+                #lines.append( ( prio ,self.one_line( wfo.name, wfo, count) ) )
                 html.write( self.one_line( wfo.name, wfo, count))
                 for out in self.record[wfo.name]['datasets']:
-                    short_html.write("""
+                    line ="""
 <tr bgcolor=%s>
 <td> <a id=%s>%s</a> </td><td> %s </td><td> <a href=closeout.html#%s>%s</a> </td>
 </tr>
@@ -1313,7 +1321,12 @@ Workflow in status <b> %s </b>
       wfo.name,
       self.record[wfo.name]['datasets'][out]['percentage'],
       
-      ))
+      )
+
+                    #short_lines.append(line)
+                    short_html.write(line)
+
+
             html.write("</table><br><br>")
             short_html.write("</table><br><br>")
 
@@ -1385,7 +1398,24 @@ def getDatasetBlockFraction( dataset, blocks):
         fract=float(in_block)/float(total)
     return fract, total, in_block
     
-
+def findLateFiles(url, datasetname, going_to=None):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    u = '/phedex/datasvc/json/prod/filelatency?dataset=%s'% datasetname
+    if going_to:
+        u += '&to_node=%s'%going_to
+    r1=conn.request("GET",u)
+    r2=conn.getresponse()
+    result = json.loads(r2.read())
+    for block in result['phedex']['block']:
+        for destination in block['destination']:
+            #if going_to and destination['name'] != going_to: continue
+            for latency in destination['blocklatency']:
+                for flatency in latency['filelatency']:
+                    if not flatency['time_at_destination']:
+                        print flatency['lfn'],"is not coming out from",flatency["from_node"],"to",destination['name'],"since",time.asctime(time.gmtime(flatency['time_latest_attempt']))
+                        if flatency['time_on_buffer']:
+                            print "\t is on buffer, but not on tape"
+                        
 
 def findLostBlocks(url, datasetname):
     blocks,_ = findLostBlocksFiles(url , datasetname)
@@ -1409,7 +1439,7 @@ def findLostBlocksFiles(url, datasetname):
                 #print json.dumps( item, indent=2)
                 lost.append( item )
             elif exist !=100:
-                #print "we have lost files on",item['name']
+                print "we have lost files on",item['name']
                 ## go deeper then
                 r1=conn.request("GET",'/phedex/datasvc/json/prod/filereplicas?block=%s'%(item['name'].replace('#','%23')))
                 r2=conn.getresponse() 
@@ -1518,7 +1548,7 @@ def checkTransferStatus(url, xfer_id, nocollapse=False):
             time.sleep(1)
             v = try_checkTransferStatus(url, xfer_id, nocollapse)
         except Exception as e:
-            print srt(e)
+            print str(e)
             sendEmail('fatal execption in checkTransferStatus',str(e))
             v = {}
     return v
@@ -1930,7 +1960,7 @@ def getDatasetBlockAndSite( url, dataset, group="",vetoes=None,complete=None):
 def getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=None, vetoes=None, within_sites=None):
     try:
         return try_getDatasetPresence( url, dataset, complete, only_blocks, group, vetoes, within_sites)
-    except Exception as a:
+    except Exception as e:
         sendEmail("fatal exception in getDatasetPresence",str(e))
         return {}
 
