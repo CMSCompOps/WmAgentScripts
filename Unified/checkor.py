@@ -9,7 +9,9 @@ import json
 from collections import defaultdict
 import optparse
 import os
+import copy
 import time
+import random
 from McMClient import McMClient
 from htmlor import htmlor
 from utils import sendEmail 
@@ -27,11 +29,25 @@ def checkor(url, spec=None, options=None):
     use_mcm = up.status['mcm']
 
     wfs=[]
-    if options.fetch:
+    if options.new:
         ## get all in running and check
-        wfs.extend( session.query(Workflow).filter(Workflow.status == 'away').all() )
+
+        ## you want to intersect with what is completed !
+        if options.strict:
+            completed_wfi = getWorkflows(url, status='completed')
+            for wfo in session.query(Workflow).filter(Workflow.status == 'away').all():
+                if wfo.name in completed_wfi:
+                    wfs.append( wfo )
+                else:
+                    print wfo.name,"is not completed"
+        else:
+            wfs.extend( session.query(Workflow).filter(Workflow.status == 'away').all() )
+
+    if options.current:
+        ## recheck those already there, probably to just pass them along
         wfs.extend( session.query(Workflow).filter(Workflow.status== 'assistance').all() )
-    if options.nofetch:
+
+    if options.old:
         ## than get all in need for assistance
         wfs.extend( session.query(Workflow).filter(Workflow.status.startswith('assistance-')).all() )
 
@@ -52,6 +68,7 @@ def checkor(url, spec=None, options=None):
                 campaign = wfi.request['Campaign']
         return campaign
 
+    ## retrieve bypass and onhold configuration
     by_passes = []
     holdings = []
     for bypassor,email in [('jbadillo','julian.badillo.rojas@cern.ch'),('vlimant','vlimant@cern.ch'),('jen_a','jen_a@fnal.gov')]:
@@ -79,6 +96,8 @@ def checkor(url, spec=None, options=None):
     total_running_time = 5.*60. 
     sleep_time = max(0.5, total_running_time / len(wfs))
     
+    random.shuffle( wfs )
+
     for wfo in wfs:
         if spec and not (spec in wfo.name): continue
         time.sleep( sleep_time )
@@ -333,6 +352,7 @@ def checkor(url, spec=None, options=None):
                 sendEmail( "cannot find a custodial","cannot find a custodial for %s probably because of the total output size %d"%( wfo.name, size_worth_checking))
                 
             if custodial and ((not sub_assistance and not acdc) or by_pass_checks):
+                print "picked",custodial,"for tape copy"
                 ## remember how much you added this round already ; this stays locally
                 SI.storage[custodial] -= size_worth_checking
                 ## register the custodial request, if there are no other big issues
@@ -445,11 +465,20 @@ def checkor(url, spec=None, options=None):
                 else:
                     res = reqMgrClient.closeOutWorkflowCascade(url, wfo.name)
                     print "close out answer",res
+
+                if not res in ["None",None]:
+                    print "try to get the current status again"
+                    wfi_bis = workflowInfo(url, wfo.name)
+                    if wfi_bis.request['RequestStatus'] == 'closed-out':
+                        print "the request did toggle to closed-out"
+                        res = None
+                    
                 if not res in ["None",None]:
                     print "retrying to closing out"
                     print res
                     res = reqMgrClient.closeOutWorkflowCascade(url, wfo.name)
                     
+                
                 if res in [None,"None"]:
                     wfo.status = 'close'
                     session.commit()
@@ -531,8 +560,10 @@ if __name__ == "__main__":
 
     parser = optparse.OptionParser()
     parser.add_option('-t','--test', help='Only test the checkor', action='store_true', default=False)
-    parser.add_option('-f','--fetch', help='fetch new stuff not already in assistance', action='store_true', default=False)
-    parser.add_option('-n','--nofetch',help='update those in assistance',action='store_true', default=False)
+    parser.add_option('-n','--new', help='fetch from running workflows', action='store_true', default=False)
+    parser.add_option('-s','--strict', help='only checkor matter', action='store_true', default=False)
+    parser.add_option('-c','--current', help='update those in assistance', action='store_true', default=False)    
+    parser.add_option('-o','--old',help='update those in complex assistance',action='store_true', default=False)
     parser.add_option('--fractionpass',help='The completion fraction that is permitted', default=0.0,type='float')
     parser.add_option('--ignorefiles', help='Force ignoring dbs/phedex differences', action='store_true', default=False)
     parser.add_option('--lumisize', help='Force the upper limit on lumisection', default=0, type='float')
@@ -543,15 +574,10 @@ if __name__ == "__main__":
     if len(args)!=0:
         spec = args[0]
 
-    if options.fetch and options.nofetch:
-        print "cannot fetch and not fetch at the same time"
-        sys.exit(1)
+    options.new = True
+    options.current = True
+    options.old = True
 
-    if not options.fetch and not options.nofetch:
-        ## no argugments : default usage
-        options.fetch = True
-        options.nofetch = True
-        
     checkor(url, spec, options=options)
     
     #if options.html:
