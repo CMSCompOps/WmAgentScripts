@@ -44,7 +44,11 @@ def assignor(url ,specific = None, talk=True, options=None):
     #        wfos.extend( session.query(Workflow).filter(Workflow.status=='staging').all())
     #    wfos.extend(session.query(Workflow).filter(Workflow.status=='staged').all())
 
+    random.shuffle( wfos )
     for wfo in wfos:
+        if options.limit and (n_stalled+n_assigned)>options.limit:
+            break
+
         if specific:
             if not any(map(lambda sp: sp in wfo.name,specific.split(','))): continue
             #if not specific in wfo.name: continue
@@ -233,7 +237,7 @@ def assignor(url ,specific = None, talk=True, options=None):
                     known = json.loads(open('cannot_assign.json').read())
                 except:
                     pass
-                if not wfo.name in known:
+                if not wfo.name in known and not options.limit and not options.go:
                     sendEmail( "cannot be assigned","%s is not sufficiently available. Probably phedex information lagging behind. \n %s"%(wfo.name,json.dumps(available_fractions)))
                     known.append( wfo.name )
                     open('cannot_assign.json','w').write(json.dumps( known, indent=2))
@@ -419,6 +423,7 @@ if __name__=="__main__":
     parser.add_option('--go',help="Overrides the campaign go",default=False,action='store_true')
     parser.add_option('--team',help="Specify the agent to use",default='production')
     parser.add_option('--primary_aaa',help="Force to use the secondary location restriction, if any, and use the full site whitelist initially provided to run that type of wf",default=False, action='store_true')
+    parser.add_option('--limit',help="Limit the number of wf to be assigned",default=0,type='int')
     for key in reqMgrClient.assignWorkflow.keys:
         parser.add_option('--%s'%key,help="%s Parameter of request manager assignment interface"%key, default=None)
     (options,args) = parser.parse_args()
