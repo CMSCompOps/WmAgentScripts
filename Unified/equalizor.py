@@ -27,7 +27,7 @@ def equalizor(url , specific = None):
     SI = siteInfo()
     for site in SI.sites_ready:
         region = site.split('_')[1]
-        if not region in ['US','IT','DE']: continue
+        if not region in ['US','DE']: continue
         regions[region] = [region] 
 
     def site_in_depletion(s):
@@ -49,7 +49,7 @@ def equalizor(url , specific = None):
         mapping[site] = [fb for fb in SI.sites_ready if any([('_%s_'%(reg) in fb and fb!=site and site_in_depletion(fb))for reg in regions[region]]) ]
     
     #mapping['T2_CH_CERN'].append('T2_CH_CERN_HLT')
-
+    mapping['T2_IT_Legnaro'].append('T1_IT_CNAF')
 
     for site,fallbacks in mapping.items():
         for fb in fallbacks:
@@ -128,7 +128,8 @@ def equalizor(url , specific = None):
     LHE_overflow = {
         'RunIIWinter15GS' : set_to,
         'RunIISummer15GS' : set_to,
-        'Summer12' : set_to
+        'Summer12' : set_to,
+        #'RunIIFall15MiniAODv2' : set_to,
         }
 
     pending_HLT = 0
@@ -139,7 +140,11 @@ def equalizor(url , specific = None):
         pending_HLT += gmon["MatchingIdle"]
     except:
         pass
-        
+    
+    specific_task=None
+    if specific and ":" in specific:
+        specific,specific_task = specific.split(':')
+
     if specific:
         wfs = session.query(Workflow).filter(Workflow.name.contains(specific)).all()
     else:
@@ -162,16 +167,18 @@ def equalizor(url , specific = None):
         tasks_and_campaigns = []
         for task in wfi.getWorkTasks():
             tasks_and_campaigns.append( (task, getcampaign(task) ) )
-
+        
 
         ## check needs override
         needs_overide = False
         if not needs_overide and  options.augment: needs_overide=True
 
         def overide_from_agent( wfi, needs_overide):
+            bad_agents = ['http://cmssrv219.fnal.gov:5984']
+            if not bad_agents: return needs_overide
             if needs_overide: return True
             agents = wfi.getAgents()
-            bad_agents = ['http://cmssrv219.fnal.gov:5984']
+
             wqss = ['Running','Acquired']
             if any([agent in agents.get(wqs,{}).keys() for wqs,agent in itertools.product( wqss, bad_agents)]):
                 print "overriding the need for bad agent"
@@ -219,7 +226,7 @@ def equalizor(url , specific = None):
                         print task_name,"of",wfo.name,"running",running,"and pending",idled
 
             ### overflow the skims back to multi-core 
-            if campaign in ['Run2015D'] and task.taskType =='Skim':
+            if campaign in ['Run2015D','Run2015C_25ns'] and task.taskType =='Skim':
                 original_swl = wfi.request['SiteWhitelist']
                 needs, task_name, running, idled = needs_action(wfi, task)
                 if (needs or needs_overide):
