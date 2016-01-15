@@ -53,9 +53,10 @@ def completor(url, specific):
             if wfo.name in spec:
                 print wfo.name,"should be force complete this round by request of",user
                 #skip=False ## do not do it automatically yet
-                sendEmail('force-complete requested','%s is asking for %s to be force complete'%(user,wfo.name)
+                sendEmail('force-complete requested','%s is asking for %s to be force complete'%(user,wfo.name))
 
-        if skip: continue
+        if skip: 
+            continue
 
         print "looking at",wfo.name
         ## get all of the same
