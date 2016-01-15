@@ -41,7 +41,8 @@ def rejector(url, specific, options=None):
         wfi = workflowInfo(url, wfo.name)
         if wfi.request['RequestStatus'] in ['rejected','rejected-archived','aborted','aborted-archived']:
             print 'already',wfi.request['RequestStatus']
-            continue
+            if not options.clone:
+                continue
 
         reqMgrClient.invalidateWorkflow(url, wfo.name, current_status=wfi.request['RequestStatus'])
         #if wfi.request['RequestStatus'] in ['assignment-approved','new','completed']:
@@ -71,7 +72,7 @@ def rejector(url, specific, options=None):
                     schema['ProcessingVersion']+=1
                 else:
                     schema['ProcessingVersion']=2
-                ##schema.pop('RequestDate') ## ok then, let's not reset the time stamp
+                ## a few tampering of the original request
                 if options.Memory:
                     schema['Memory'] = options.Memory
                 if options.EventsPerJob:
@@ -79,6 +80,8 @@ def rejector(url, specific, options=None):
                         schema['Task1']['EventsPerJob'] = options.EventsPerJob
                     else:
                         schema['EventsPerJob'] = options.EventsPerJob
+                if options.TimePerEvent:
+                    schema['TimePerEvent'] = options.TimePerEvent
 
                 ## update to the current priority
                 schema['RequestPriority'] = wfi.request['RequestPriority']
@@ -104,6 +107,7 @@ if __name__ == "__main__":
     parser.add_option('-k','--keep',help="keep the outpuy in current status", default=False,action="store_true")
     parser.add_option('--Memory',help="memory parameter of the clone", default=0, type=int)
     parser.add_option('--EventsPerJob', help="set the events/job on the clone", default=0, type=int)
+    parser.add_option('--TimePerEvent', help="set the time/event on the clone", default=0, type=float)
     parser.add_option('--filelist',help='a file with a list of workflows',default=None)
     (options,args) = parser.parse_args()
 
