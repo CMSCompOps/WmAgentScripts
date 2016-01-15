@@ -110,11 +110,12 @@ def transferor(url ,specific = None, talk=True, options=None):
         #input_cput[wfo.name] = wfh.getComputingTime()
         #input_st[wfo.name] = wfh.getSystemTime()
         for prim in primary:  
+            ds_s = dss.get( prim )
             if prim in stucks: 
-                print "\t",prim,"appears stuck, so not counting it"
+                print "\t",prim,"appears stuck, so not counting it",ds_s,"[GB]"
             else:
-                input_sizes[prim] = dss.get( prim )
-            print "\t",wfo.name,"needs",input_sizes[prim],"GB"
+                input_sizes[prim] = ds_s
+                print "\t",wfo.name,"needs",input_sizes[prim],"[GB]"
         in_transfer_priority = max(in_transfer_priority, int(wfh.request['RequestPriority']))
         min_transfer_priority = min(min_transfer_priority, int(wfh.request['RequestPriority']))
 
