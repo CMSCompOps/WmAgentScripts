@@ -143,7 +143,7 @@ def recoveror(url,specific,options=None):
             ## we do not try to recover pLHE
             recover = False
 
-        if wfi.request['RequestType'] in  ['TaskChain','MonteCarlo','ReReco']:
+        if wfi.request['RequestType'] in  ['MonteCarlo','ReReco']:
             recover = False
 
         if 'Campaign' in wfi.request:
@@ -268,6 +268,10 @@ def recoveror(url,specific,options=None):
                     'ProcessingVersion' : wfi.request['ProcessingVersion'],
                     }
                 
+                if wfi.request['RequestType'] == 'TaskChain' and 'Merge' in task:
+                    parameters.pop( 'AcquisitionEra' )
+                    parameters.pop( 'ProcessingString' )
+
                 if options.ass:
                     print "really doing the assignment of the ACDC",acdc
                     parameters['execute']=True
