@@ -844,7 +844,9 @@ class siteInfo:
             
             self.sites_banned = [
                 #'T2_CH_CERN_HLT',
-                'T0_CH_CERN_MSS'
+                'T2_CH_CERN_AI',
+                'T0_CH_CERN_MSS',
+                #'T2_EE_Estonia'
                 ]
 
             data = dataCache.get('ssb_158') ## 158 is the site readyness metric
@@ -875,9 +877,9 @@ class siteInfo:
                                    "T2_FR_GRIF_LLR", "T2_FR_GRIF_IRFU", "T2_FR_IPHC","T2_FR_CCIN2P3",
                                    "T2_IT_Bari", "T2_IT_Legnaro", "T2_IT_Pisa", "T2_IT_Rome",
                                    "T2_UK_London_Brunel", "T2_UK_London_IC", "T2_UK_SGrid_RALPP",
-                                   "T2_US_Caltech","T2_US_MIT","T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida",
+                                   "T2_US_Caltech","T2_US_MIT","T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida","T2_US_Vanderbilt",
                                    "T2_BE_IIHE",
-                                   "T2_EE_Estonia",
+                                   #"T2_EE_Estonia",
                                    ## to be tried out "T2_PL_Swierk"
                                    "T2_CH_CERN","T2_CH_CERN_HLT","T2_CH_CERN_AI"
                                    ]
@@ -1056,6 +1058,8 @@ class siteInfo:
             if line.startswith('#'): continue
             if not read: continue
             _,quota,taken,locked,site = line.split()
+            ## bypass 
+
             available = int(quota) - int(locked)
             if available >0:
                 self.disk[site] = available
