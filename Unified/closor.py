@@ -7,7 +7,7 @@ import json
 import time
 import sys
 import subprocess
-from utils import getDatasetEventsAndLumis, campaignInfo
+from utils import getDatasetEventsAndLumis, campaignInfo, getDatasetPresence
 #from utils import lockInfo
 from htmlor import htmlor
 
@@ -45,7 +45,7 @@ def closor(url, specific=None):
         ## what are the outputs
         outputs = wl['OutputDatasets']
         ## check whether the number of lumis is as expected for each
-        all_OK = []
+        all_OK = defaultdict(lambda : False)
         #print outputs
         if len(outputs): 
             print wfo.name,wl['RequestStatus']
@@ -69,19 +69,31 @@ def closor(url, specific=None):
 
             print "\t%60s %d/%d = %3.2f%%"%(out,lumi_count,expected_lumis,lumi_count/float(expected_lumis)*100.)
             #print wfo.fraction_for_closing, lumi_count, expected_lumis
-            fraction = wfo.fraction_for_closing
-            fraction = 0.0
-            all_OK.append((float(lumi_count) > float(expected_lumis*fraction)))
+            #fraction = wfo.fraction_for_closing
+            #fraction = 0.0
+            #all_OK.append((float(lumi_count) > float(expected_lumis*fraction)))
+            all_OK[out] = True 
 
+
+        ## check for at least one full copy prior to moving on
+        for out in outputs:
+            presence = getDatasetPresence( url, out )
+            where = [site for site,info in presence.items() if info[0]]
+            if where:
+                all_OK[out] = True
+                print out,"is in full at",",".join(where)
+            else:
+                print out,"is not in full anywhere"
+                print json.dumps( presence, indent=2 )
+                all_OK[out] = False
 
         ## only that status can let me go into announced
-        if wl['RequestStatus'] in ['closed-out']:
+        if all(all_OK.values()) and wl['RequestStatus'] in ['closed-out']:
             print wfo.name,"to be announced"
-
             results=[]#'dummy']
             if not results:
-                for (io,out) in enumerate(outputs):
-                    if all_OK[io]:
+                for out in outputs:
+                    if all_OK[out]:
                         results.append(setDatasetStatus(out, 'VALID'))
                         tier = out.split('/')[-1]
                         campaign = None
