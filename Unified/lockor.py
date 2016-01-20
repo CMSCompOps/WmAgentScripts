@@ -69,10 +69,13 @@ for dataset in already_locked-newly_locking:
         unlock=False
         creators = getWorkflowByOutput( url, dataset , details=True)
         if not creators and not dataset.endswith('/RAW'):
-            ## this could be a sign of /RAW data
-            sendEmail('failing get by output','%s has not been produced by anything?'%dataset)
-            newly_locking.add(dataset)
-            continue
+            if not '-v0/' in dataset:
+                sendEmail('failing get by output','%s has not been produced by anything?'%dataset)
+                newly_locking.add(dataset)
+                continue
+            else:
+                # does not matter, cannot be an OK dataset
+                unlock=True
         creators_status = [r['RequestStatus'] for r in creators]
         print "Statuses of workflow that made the dataset",creators_status
         if all([status in ['failed','aborted','rejected','aborted-archived','rejected-archived'] for status in creators_status]):
