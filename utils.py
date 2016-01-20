@@ -2636,6 +2636,32 @@ class workflowInfo:
                     #print cput,tpe,ne
                 else:
                     break
+        elif self.request['RequestType'] == 'StepChain':
+            itask=1
+            cput=0
+            carry_on = []
+            while True:
+                t = 'Step%s'% itask
+                itask+=1
+                if t in self.request:
+                    task = self.request[t]
+                    if 'InputDataset' in task:
+                        ds = task['InputDataset']
+                        if 'BlockWhitelist' in task and task['BlockWhitelist']:
+                            (ne,_) = getDatasetEventsAndLumis( ds, task['BlockWhitelist'] )
+                        else:
+                            (ne,_) = getDatasetEventsAndLumis( ds )
+                    elif 'RequestNumEvents' in task:
+                        ne = float(task['RequestNumEvents'])
+                    else:
+                        ne = carry_on[itask-1]
+                    tpe =task['TimePerEvent']
+                    carry_on.append( ne )
+                    if 'FilterEfficiency' in task:
+                        carry_on[-1] *= task['FilterEfficiency']
+                    cput += tpe * ne
+                else:
+                    break
         else:
             ne = float(self.request['RequestNumEvents'])
             tpe = self.request['TimePerEvent']
@@ -2911,6 +2937,15 @@ class workflowInfo:
             t=1
             while 'Task%d'%t in self.request:
                 (alhe,aprimary, aparent, asecondary) = IOforTask(self.request['Task%d'%t])
+                if alhe: lhe=True
+                primary.update(aprimary)
+                parent.update(aparent)
+                secondary.update(asecondary)
+                t+=1
+        elif self.request['RequestType'] == 'StepChain':
+            t=1
+            while 'Step%d'%t in self.request:
+                (alhe,aprimary, aparent, asecondary) = IOforTask(self.request['Step%d'%t])
                 if alhe: lhe=True
                 primary.update(aprimary)
                 parent.update(aparent)
