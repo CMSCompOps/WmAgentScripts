@@ -1721,9 +1721,9 @@ def findCustodialLocation(url, dataset, with_completion=False):
     else:
         return list(set(cust)), more_information
 
-def getDatasetFiles(url, dataset ):
+def getDatasetFiles(url, dataset ,without_invalid=True ):
     dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
-    files = dbsapi.listFileArray( dataset= dataset,validFileOnly=1, detail=True)
+    files = dbsapi.listFileArray( dataset= dataset,validFileOnly=without_invalid, detail=True)
     dbs_filenames = [f['logical_file_name'] for f in files]
     
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -2043,6 +2043,11 @@ def try_getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=
     #print json.dumps( presence , indent=2)
     return presence
 
+def getDatasetBlockSize(dataset):
+    dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+    blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
+    return dict([(block['block_name'],block['file_size']/ (1024.**3)) for block in blocks ])
+
 def getDatasetSize(dataset):
     dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
     blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
@@ -2148,6 +2153,18 @@ def distributeToSites( items, sites , n_copies, weights=None,sizes=None):
         return dict(spreading)
 
 def getDatasetEventsAndLumis(dataset, blocks=None):
+    try:
+        r = try_getDatasetEventsAndLumis( dataset, blocks)
+    except:
+        try:
+            r = try_getDatasetEventsAndLumis( dataset, blocks)
+        except Exception as e:
+            sendEmail("fatal exception in getDatasetEventsAndLumis",str(e))
+            r = 0,0
+    return r
+
+
+def try_getDatasetEventsAndLumis(dataset, blocks=None):
     dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
     all_files = []
     if blocks:
@@ -2574,7 +2591,6 @@ class workflowInfo:
             
             cput = ne * tpe
         elif self.request['RequestType'] == 'TaskChain':
-            print "not implemented yet"
             itask=1
             cput=0
             carry_on = {}
