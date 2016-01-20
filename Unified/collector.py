@@ -2,13 +2,14 @@
 import optparse
 from McMClient import McMClient
 from collections import defaultdict
-from utils import newLockInfo, makeReplicaRequest, siteInfo, getDatasetDestinations, getDatasetPresence, unifiedConfiguration, getDatasetChops, distributeToSites
+from utils import newLockInfo, makeReplicaRequest, siteInfo, getDatasetDestinations, getDatasetPresence, unifiedConfiguration, getDatasetChops, distributeToSites, DSS
 import itertools
 import json 
 import random 
 
 def collector(url, specific, options):
     SI = siteInfo()
+    dss = DSS()
     #NL = newLockInfo()
     mcm = McMClient(dev=False)
     fetch_in_campaigns = ['RunIISummer15GS']
@@ -96,6 +97,7 @@ def collector(url, specific, options):
     
     ## now collect and make transfer request
     for (site,items_to_transfer) in all_transfers.iteritems():
+        print "Directing at",site
         items_to_transfer = list(set(items_to_transfer))
 
         site_se = SI.CE_to_SE(site)
@@ -103,12 +105,22 @@ def collector(url, specific, options):
         datasets = [it for it in items_to_transfer if not '#' in it]
 
         print "\t",len(blocks),"blocks"
-        ## remove blocks if full dataset is send out                                                                                                                                                      
+        ## remove blocks if full dataset is send out                                                                                                 
         blocks = [block for block in blocks if not block.split('#')[0] in datasets]
-        print "\t",len(blocks),"needed blocks for",list(set([block.split('#')[0] for block in blocks]))
+        blocks_dataset = list(set([block.split('#')[0] for block in blocks]))
+        print "\t",len(blocks),"needed blocks for",blocks_dataset
         print "\t",len(datasets),"datasets"
         print "\t",datasets
         items_to_transfer = blocks + datasets
+        total_size = 0
+        for dataset in datasets:
+            ds_size,_ = dss.get_block_size( dataset )
+            total_size += ds_size
+        for dataset in blocks_dataset:
+            _,bs_size = dss.get_block_size( dataset )
+            total_size += sum([ s for b,s in bs_size if b in blocks ])
+
+        print "For a total of",total_size,"[GB]"
 
         if options.test:
             result= {'phedex':{'request_created' : []}}

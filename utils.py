@@ -807,6 +807,32 @@ def getNodeUsage(url, node):
 
 dataCache = docCache()
 
+class DSS:
+    def __init__(self):
+        self.bdb = json.loads(open('bdss.json').read())
+
+    def _get(self, dataset ):
+        if not dataset in self.bdb:
+            print "fetching info of",dataset
+            self.bdb[dataset] = getDatasetBlockSize( dataset )
+
+    def get(self, dataset ):
+        return self.get_size( dataset )
+
+    def get_size(self, dataset):
+        self._get( dataset )
+        return sum( self.bdb[dataset].values() )
+
+    def get_block_size(self, dataset):
+        self._get( dataset )
+        return sum( self.bdb[dataset].values() ), copy.deepcopy( self.bdb[dataset] )
+
+    def __del__(self):
+        #open('dss.json','w').write( json.dumps( self.db ))
+        open('bdss.json','w').write( json.dumps( self.bdb ))
+                                    
+
+
 class siteInfo:
     def __init__(self):
         

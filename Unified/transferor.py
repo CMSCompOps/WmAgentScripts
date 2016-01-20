@@ -4,7 +4,7 @@ import reqMgrClient
 from McMClient import McMClient
 from utils import makeReplicaRequest
 from utils import workflowInfo, siteInfo, campaignInfo, userLock, global_SI
-from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, getSiteWhiteList, approveSubscription, getDatasetSize, updateSubscription, getWorkflows, componentInfo, getDatasetDestinations, getDatasetBlocks
+from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, getSiteWhiteList, approveSubscription, getDatasetSize, updateSubscription, getWorkflows, componentInfo, getDatasetDestinations, getDatasetBlocks, DSS
 from utils import unifiedConfiguration
 #from utils import lockInfo
 from utils import duplicateLock, newLockInfo
@@ -16,20 +16,6 @@ from htmlor import htmlor
 from utils import sendEmail
 import math
 import random
-
-class DSS:
-    def __init__(self):
-        self.db = json.loads(open('dss.json').read())
-    
-    def get(self, dataset ):
-        if not dataset in self.db:
-            print "fetching size of",dataset
-            self.db[dataset] = getDatasetSize( dataset )
-        return self.db[dataset]
-
-    def __del__(self):
-        open('dss.json','w').write( json.dumps( self.db ))
-                                    
 
 def transferor(url ,specific = None, talk=True, options=None):
     if userLock():   return
