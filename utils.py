@@ -2549,6 +2549,15 @@ class workflowInfo:
             for wqe in wq_s: active_agents[status][wqe['ChildQueueUrl']]+=1
         return active_agents
 
+    def getGQLocations(self):
+        wq = self.getWorkQueue()
+        wqes = [w[w['type']] for w in wq]
+        ins=defaultdict(list)
+        for wqe in wqes:
+            for i in wqe['Inputs']:
+                ins[i] = list(set(ins[i] + wqe['Inputs'][i]))
+        return ins
+
     def getActiveAgents(self):
         wq = self.getWorkQueue()
         wqes = [w[w['type']] for w in wq]
@@ -2562,7 +2571,8 @@ class workflowInfo:
         r2=self.conn.getresponse()
         
         self.summary = json.loads(r2.read())
-        
+        return self.summary
+
     def getGlideMon(self):
         try:
             gmon = json.loads(os.popen('curl -s http://cms-gwmsmon.cern.ch/prodview/json/%s/summary'%self.request['RequestName']).read())

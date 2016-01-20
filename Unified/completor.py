@@ -44,6 +44,9 @@ def completor(url, specific):
     print "can force complete on"
     print json.dumps( good_fractions ,indent=2)
     max_force = 5
+    
+    wfs_no_location_in_GQ = set()
+
     for wfo in wfs:
         if specific and not specific in wfo.name: continue
 
@@ -135,6 +138,14 @@ def completor(url, specific):
             ## do something about the agents this workflow is in
             long_lasting[wfo.name]['agents'] = wfi.getAgents()
             print json.dumps( long_lasting[wfo.name]['agents'], indent=2)
+
+            ## pick up on possible issue with global queue data location
+            locs = wfi.getGQLocations()
+            for b,loc in locs.items():
+                if not loc:
+                    print b,"has no location for GQ in",wfi.request['RequestName']
+                    ## this is severe !
+                    wfs_no_location_in_GQ.add( wfo.name )
             continue
 
         if all([percent_completions[out] >= ignore_fraction for out in percent_completions]):
@@ -180,6 +191,9 @@ def completor(url, specific):
         text += "\n %s : %s days"% (wf, delay)
         if 'completion' in info:
             text += " %d%%"%( info['completion']*100 )
+
+    if wfs_no_location_in_GQ:
+        sendEmail('workflow with no location in GQ',"there won't be able to run anytime soon\n%s"%( '\n'.join(wfs_no_location_in_GQ)))
 
     #sendEmail("long lasting workflow",text)
     ## you can check the log
