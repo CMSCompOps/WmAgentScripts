@@ -532,7 +532,7 @@ def transferor(url ,specific = None, talk=True, options=None):
             for sec in secondary:
                 workflow_dependencies[sec].add( wfo.id )
 
-                if False:
+                if True:
                     ## new style, failing on minbias
                     if not sec in destination_cache:
                         ## this is barbbaric, and does not show the correct picture on workflow by workflow with different whitelist

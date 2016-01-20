@@ -1825,9 +1825,13 @@ def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=N
         print "Complementing the destinations with request with no subscriptions"
         print "we have",destinations.keys(),"for now"
         try:
+            conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))  
             r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset=%s'%dataset)
             r2=conn.getresponse()
         except:
+            print "\twaiting a bit for retry"
+            time.sleep(1)
+            conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))  
             r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset=%s'%dataset)
             r2=conn.getresponse()
         result = json.loads(r2.read())
