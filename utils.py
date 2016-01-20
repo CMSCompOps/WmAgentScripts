@@ -2182,6 +2182,22 @@ def try_getDatasetEventsAndLumis(dataset, blocks=None):
     all_lumis = sum([f['num_lumi'] for f in all_files])
     return all_events,all_lumis
 
+def getDatasetLumis(dataset, runs=None, with_cache=False):
+    dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+    c_name= '.%s.lumis.json'%dataset.replace('/','_')
+    if os.path.isfile(c_name) and with_cache:
+        return json.loads(open(c_name).read())
+
+    all_files = dbsapi.listFiles(dataset= dataset)
+    lumi_json = defaultdict(list)
+    for f in all_files: 
+        lumi_info = dbsapi.listFileLumis(logical_file_name=f['logical_file_name'])
+        for l in lumi_info:
+            if runs and l['run_num'] not in runs: continue
+            lumi_json[l['run_num']] = list(set( l['lumi_section_num'] + lumi_json[l['run_num']]))
+    open(c_name,'w').write( json.dumps( dict(lumi_json), indent=2))
+    return dict(lumi_json)
+            
 def getDatasetEventsPerLumi(dataset):
     dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
     try:
