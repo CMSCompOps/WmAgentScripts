@@ -19,7 +19,7 @@ def completor(url, specific):
     random.shuffle( wfs )
 
     ## by workflow a list of fraction / timestamps
-    completions = json.loads( open('completions.json').read())
+    completions = json.loads( open('/afs/cern.ch/user/c/cmst2/www/unified/completions.json').read())
     
     good_fractions = {}
     for c in CI.campaigns:
@@ -62,6 +62,8 @@ def completor(url, specific):
         ## get all of the same
         wfi = workflowInfo(url, wfo.name)
 
+        priority = wfi.request['RequestPriority']
+
         if not 'Campaign' in wfi.request: continue
 
         if not wfi.request['RequestStatus'] in ['running-open','running-closed']: continue
@@ -93,7 +95,7 @@ def completor(url, specific):
         delay = now - then ## in days
 
         (w,d) = divmod(delay, 7 )
-        print "\t"*int(w)+"Running since",delay,"[days]"
+        print "\t"*int(w)+"Running since",delay,"[days] priority=",priority
         if delay <= 7: continue
         if delay >= 7:
             long_lasting[wfo.name] = { "delay" : delay }
@@ -168,10 +170,10 @@ def completor(url, specific):
         ## do it once only for testing
         #break
             
-    open('completions.json','w').write( json.dumps( completions , indent=2))
+    open('/afs/cern.ch/user/c/cmst2/www/unified/completions.json','w').write( json.dumps( completions , indent=2))
     text="These have been running for long"
     
-    open('longlasting.json','w').write( json.dumps( long_lasting, indent=2 ))
+    open('/afs/cern.ch/user/c/cmst2/www/unified/longlasting.json','w').write( json.dumps( long_lasting, indent=2 ))
 
     for wf,info in sorted(long_lasting.items(), key=lambda tp:tp[1]['delay'], reverse=True):
         delay = info['delay']
