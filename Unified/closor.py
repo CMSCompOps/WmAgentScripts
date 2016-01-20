@@ -10,6 +10,7 @@ import subprocess
 from utils import getDatasetEventsAndLumis, campaignInfo, getDatasetPresence
 #from utils import lockInfo
 from htmlor import htmlor
+from collections import defaultdict
 
 def closor(url, specific=None):
     if not componentInfo().check(): return
