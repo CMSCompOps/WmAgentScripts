@@ -92,6 +92,8 @@ def checkor(url, spec=None, options=None):
             print "cannot get holdings from",holding_file,"for",bypassor
             sendEmail("malformated by-pass information","%s is not json readable"%(holding_file), destination=[email])
 
+    pattern_fraction_pass = UC.get('pattern_fraction_pass')
+    vetoed_custodial_tier = copy.deepcopy(UC.get('tiers_with_no_custodial'))
 
     total_running_time = 5.*60. 
     sleep_time = max(0.5, total_running_time / len(wfs))
@@ -233,6 +235,12 @@ def checkor(url, spec=None, options=None):
                 fractions_pass[output] = options.fractionpass
                 print "overriding fraction to",fractions_pass[output],"by command line for",output
 
+            for key in pattern_fraction_pass:
+                if key in output:
+                    fractions_pass[output] = pattern_fraction_pass[key]
+                    print "overriding fraction to",fractions_pass[output],"by dataset key",key
+                    
+
         if not all([percent_completions[out] >= fractions_pass[out] for out in fractions_pass]):
             print wfo.name,"is not completed"
             print json.dumps(percent_completions, indent=2)
@@ -304,12 +312,12 @@ def checkor(url, spec=None, options=None):
         for output in wfi.request['OutputDatasets']:
             phedex_presence[output] = phedexClient.getFileCountDataset(url, output )
 
-        vetoed_custodial_tier = copy.deepcopy(UC.get('tiers_with_no_custodial'))
         if c in CI.campaigns and 'custodial_override' in CI.campaigns[c]:
             vetoed_custodial_tier = list(set(vetoed_custodial_tier) - set(CI.campaigns[c]['custodial_override']))
             
         out_worth_checking = [out for out in custodial_locations.keys() if out.split('/')[-1] not in vetoed_custodial_tier]
         size_worth_checking = sum([getDatasetSize(out)/1023. for out in out_worth_checking ]) ## size in TBs of all outputs
+        wait_custodial_confirmation = False
         if not all(map( lambda sites : len(sites)!=0, [custodial_locations[out] for out in out_worth_checking])):
             print wfo.name,"has not all custodial location"
             print json.dumps(custodial_locations, indent=2)
@@ -379,6 +387,7 @@ def checkor(url, spec=None, options=None):
                             print "no file in phedex for",output," not good to add to custodial requests"
 
             is_closing = False
+            wait_custodial_confirmation = True
 
         ## disk copy 
         disk_copies = {}
@@ -471,7 +480,7 @@ def checkor(url, spec=None, options=None):
             rec['phedexFiles'] = phedex_presence[output]
             rec['acdc'] = "%d / %d"%(len(acdc),len(acdc+acdc_inactive))
 
-        if by_pass_checks:
+        if by_pass_checks and not acdc and not wait_custodial_confirmation:
             ## force closing
             is_closing = True
 
