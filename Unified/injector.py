@@ -19,6 +19,7 @@ def injector(url, options, specific):
     workflows = getWorkflows(url, status=options.wmstatus, user=options.user)
     workflows.extend( getWorkflows(url, status=options.wmstatus, user='fabozzi', rtype="ReReco")) ## regardless of users, pick up all ReReco on the table
 
+    cannot_inject = set()
     ## browse for assignment-approved requests, browsed for ours, insert the diff
     for wf in workflows:
         exists = session.query(Workflow).filter(Workflow.name == wf ).first()
@@ -35,6 +36,7 @@ def injector(url, options, specific):
                     ## we have it already
                     if not lwfo.status in ['forget','trouble','forget-unlock','forget-out-unlock']:
                         print "Should not put",wf,"because of",lwfo.name,lwfo.status
+                        cannot_inject.add( wf )
                         can_add = False
             if not can_add: continue
             print "putting",wf
@@ -45,7 +47,9 @@ def injector(url, options, specific):
         else:
             #print "already have",wf
             pass
-
+    
+    if cannot_inject:
+        sendEmail('workflow duplicates','These workflow cannot be added in because of duplicates \n\n %s'%( '\n'.join(cannot_inject)))
 
     ## passing a round of invalidation of what needs to be invalidated
     if use_mcm and (options.invalidate or True):
