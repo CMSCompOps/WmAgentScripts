@@ -182,7 +182,7 @@ def checkor(url, spec=None, options=None):
             if member['RequestType'] != 'Resubmission': continue
             if member['RequestName'] == wfo.name: continue
             if member['RequestDate'] < wfi.request['RequestDate']: continue
-            if member['RequestStatus'] in ['running-open','running-closed','assignment-approved','assigned','acquired']:
+            if member['RequestStatus'] in ['running-open','running-closed','assigned','acquired']:
                 print wfo.name,"still has an ACDC running",member['RequestName']
                 acdc.append( member['RequestName'] )
                 #print json.dumps(member,indent=2)
@@ -414,6 +414,7 @@ def checkor(url, spec=None, options=None):
             print json.dumps(phedex_presence, indent=2)
             ## hook for just waiting ...
             if not any([veto in wfo.status+sub_assistance for veto in ['recovering','manual']]):
+                #getDatasetFiles can tell what are the files missing on either side
                 sub_assistance += '-filemismatch'
 
             is_closing = False
