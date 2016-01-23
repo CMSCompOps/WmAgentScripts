@@ -87,7 +87,7 @@ for dataset in already_locked-newly_locking:
         if not unlock:
             ds_status = getDatasetStatus( dataset )
 
-            if ds_status in ['INVALID']: 
+            if ds_status in ['INVALID',None]: 
                 ## don't even try to keep the lock
                 print "\tunlocking",dataset,"for bad dataset status",ds_status
                 unlock=True
