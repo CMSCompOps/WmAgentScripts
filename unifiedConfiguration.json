@@ -1,6 +1,6 @@
 {
  "pattern_fraction_pass": {
-   "value" : { "SMS" : 1.0 },
+   "value" : {},
    "description" : "overide of the completion fraction of dataset with keyword"
  },
  "tiers_with_no_custodial": {
@@ -19,10 +19,6 @@
    "value" : true,
    "description": "Whether the stagor module can send workflow back to considered"
  },
- "fast_stagor_pass_availability": {
-   "value" : 3.0,
-   "description": "The fraction of availability above which to fast pass stagor"
-  },
   "max_handled_workflows": {
    "value" : 4000,
    "description": "The total number of workflows that we allow to handle at a time (transfer, running, assistance)"
