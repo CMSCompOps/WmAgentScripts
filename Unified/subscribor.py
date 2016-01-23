@@ -10,6 +10,7 @@ url ='cmsweb.cern.ch'
 
 statuses = [
     #'away','assistance','close','done',
+    'close',
     'none'
     ]
 #randome.shuffle( statuses )

@@ -37,6 +37,7 @@ source /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/credentials.sh
 
 ## finsih subscribing output blocks
 /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/subscribor.py done
+/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/subscribor.py close
 
 ## run injector here to put back replacements if any prior to unlocking below
 /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/injector.py
