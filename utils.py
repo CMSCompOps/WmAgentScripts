@@ -650,7 +650,7 @@ class docCache:
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(os.popen('curl --retry 5 -s http://cms-gwmsmon.cern.ch/scheddview/json/totals').read()),
+            'getter' : lambda : json.loads(os.popen('curl --retry 5 -s http://cms-gwmsmon.cern.ch/poolview/json/totals').read()),
             'cachefile' : None,
             'default' : {}
             }
@@ -876,7 +876,8 @@ class siteInfo:
                                    "T2_ES_CIEMAT",
                                    "T2_FR_GRIF_LLR", "T2_FR_GRIF_IRFU", "T2_FR_IPHC","T2_FR_CCIN2P3",
                                    "T2_IT_Bari", "T2_IT_Legnaro", "T2_IT_Pisa", "T2_IT_Rome",
-                                   "T2_UK_London_Brunel", "T2_UK_London_IC", "T2_UK_SGrid_RALPP",
+                                   "T2_UK_London_Brunel", "T2_UK_London_IC", 
+                                   ##"T2_UK_SGrid_RALPP",
                                    "T2_US_Caltech","T2_US_MIT","T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida","T2_US_Vanderbilt",
                                    "T2_BE_IIHE",
                                    #"T2_EE_Estonia",
@@ -1016,11 +1017,6 @@ class siteInfo:
             self.sites_pressure[site] = (m, r, pressure)
 
 
-
-        #try:
-        #    self.sites_memory = json.loads(os.popen('curl --retry 5 -s http://cms-gwmsmon.cern.ch/scheddview/json/totals').read())
-        #except:
-        #    self.sites_memory = {}
 
     def sitesByMemory( self, maxMem, maxCore=1):
         if not self.sites_memory:
@@ -1385,7 +1381,11 @@ def getSiteWhiteList( inputs , pickone=False):
         sites_allowed = [SI.pick_CE( sites_allowed )]
 
     return sites_allowed
-    
+
+def reduceSiteWhiteList( sites_allowed, CI, SI):
+    c_sites_allowed = CI.get(wfh.request['Campaign'], 'SiteWhitelist' , [])
+
+
 def checkTransferApproval(url, phedexid):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?request='+str(phedexid))
@@ -1436,16 +1436,28 @@ def findLateFiles(url, datasetname, going_to=None):
     r1=conn.request("GET",u)
     r2=conn.getresponse()
     result = json.loads(r2.read())
+    ret = []
     for block in result['phedex']['block']:
         for destination in block['destination']:
             #if going_to and destination['name'] != going_to: continue
             for latency in destination['blocklatency']:
                 for flatency in latency['filelatency']:
                     if not flatency['time_at_destination']:
-                        print flatency['lfn'],"is not coming out from",flatency["from_node"],"to",destination['name'],"since",time.asctime(time.gmtime(flatency['time_latest_attempt']))
+                        print flatency['lfn'],"is not coming out from",flatency["from_node"],"to",destination['name'],"since", time.asctime(time.gmtime(flatency['time_first_attempt'])),"since last",time.asctime(time.gmtime(flatency['time_latest_attempt'])),"after",flatency['attempts'],"attempts"
+                        ret.append({
+                                'file' : flatency['lfn'],
+                                'from' : flatency["from_node"],
+                                'to' : destination['name'],
+                                'since' : time.asctime(time.gmtime(flatency['time_first_attempt'])),
+                                'sincetime' : flatency['time_first_attempt'],
+                                'last' : time.asctime(time.gmtime(flatency['time_latest_attempt'])),
+                                'lasttime' : flatency['time_latest_attempt'],
+                                'delay' : flatency['time_latest_attempt']-flatency['time_first_attempt'],
+                                'retries' : flatency['attempts']
+                                })
                         if flatency['time_on_buffer']:
                             print "\t is on buffer, but not on tape"
-                        
+    return ret
 
 def findLostBlocks(url, datasetname):
     blocks,_ = findLostBlocksFiles(url , datasetname)
@@ -1532,7 +1544,7 @@ def try_checkTransferLag( url, xfer_id , datasets=None):
             loop_on = [(item['name'],i) for i in item['subscription']]
         #print loop_on
         for item,sub in loop_on:
-            if datasets and not item in datasets: continue
+            if datasets and not any([item.startswith(ds) for ds in datasets]): continue
             if sub['percent_files']!=100:
                 destination = sub['node']
                 time_then = sub['time_create']
@@ -2186,16 +2198,25 @@ def getDatasetLumis(dataset, runs=None, with_cache=False):
     dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
     c_name= '.%s.lumis.json'%dataset.replace('/','_')
     if os.path.isfile(c_name) and with_cache:
-        return json.loads(open(c_name).read())
+        print "picking up from cache",c_name
+        opened = json.loads(open(c_name).read())
+        ## need to filter on the runs
+        if runs:
+            return dict([(k,v) for (k,v) in opened.items() if int(k) in runs])
+        else:
+            return opened
 
     all_files = dbsapi.listFiles(dataset= dataset)
     lumi_json = defaultdict(list)
+    full_lumi_json = defaultdict(list)
     for f in all_files: 
         lumi_info = dbsapi.listFileLumis(logical_file_name=f['logical_file_name'])
         for l in lumi_info:
-            if runs and l['run_num'] not in runs: continue
+            full_lumi_json[l['run_num']] = list(set( l['lumi_section_num'] + full_lumi_json[l['run_num']]))
+            if runs and not l['run_num'] in runs: continue
             lumi_json[l['run_num']] = list(set( l['lumi_section_num'] + lumi_json[l['run_num']]))
-    open(c_name,'w').write( json.dumps( dict(lumi_json), indent=2))
+
+    open(c_name,'w').write( json.dumps( dict(full_lumi_json), indent=2))
     return dict(lumi_json)
             
 def getDatasetEventsPerLumi(dataset):
@@ -2506,7 +2527,7 @@ def getLFNbase(dataset):
         return '/'.join(file.split('/')[:3])
 
 class workflowInfo:
-    def __init__(self, url, workflow, deprecated=False, spec=True, request=None,stats=False):
+    def __init__(self, url, workflow, deprecated=False, spec=True, request=None,stats=False, wq=False):
         self.url = url
         self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         self.deprecated_request = {}
@@ -2525,11 +2546,13 @@ class workflowInfo:
         if spec:
             self.get_spec()
 
+        self.wmstats = None
         if stats:
-            r1=self.conn.request("GET",'/wmstatsserver/data/request/%s'%workflow)
-            r2=self.conn.getresponse()
-            self.wmstats = r2.read()#json.loads(r2.read())
+            self.getWMStats()
+
         self.workqueue = None
+        if wq:
+            self.getWorkQueue()
 
     def get_spec(self):
         if not self.full_spec:
@@ -2537,6 +2560,12 @@ class workflowInfo:
             r2=self.conn.getresponse()
             self.full_spec = pickle.loads(r2.read())
         return self.full_spec
+
+    def getWMStats(self):
+        r1=self.conn.request("GET",'/wmstatsserver/data/request/%s'%self.request['RequestName'], headers={"Accept":"application/json"})
+        r2=self.conn.getresponse()
+        self.wmstats = json.loads(r2.read())['result'][0][self.request['RequestName']]
+        return self.wmstats
 
     def getWorkQueue(self):
         if not self.workqueue:
@@ -2583,9 +2612,10 @@ class workflowInfo:
         return dict( active_agents )
 
     def getSummary(self):
-        r1=self.conn.request("GET",'/couchdb/workloadsummary/'+self.request['RequestName'])
+        self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+        r1=self.conn.request("GET",'/couchdb/workloadsummary/'+self.request['RequestName'], headers={"Accept":"application/json"} )
         r2=self.conn.getresponse()
-        
+
         self.summary = json.loads(r2.read())
         return self.summary
 
@@ -2759,7 +2789,7 @@ class workflowInfo:
                         max_blow_up = blow_up
             return (min_child_job_per_event, root_job_per_event, max_blow_up)    
         return (1.,1.,1.)
-    def getSiteWhiteList( self, pickone=False):
+    def getSiteWhiteList( self, pickone=False, verbose=True):
         ### this is not used yet, but should replace most
         SI = global_SI
         (lheinput,primary,parent,secondary) = self.getIO()
@@ -2782,8 +2812,31 @@ class workflowInfo:
         (min_child_job_per_event, root_job_per_event, max_blow_up) = self.getBlowupFactors()
         if max_blow_up > 5.:
             ## then restrict to only sites with >4k slots
-            print "restricting site white list because of blow-up factor",min_child_job_per_event, root_job_per_event, max_blow_up
-            sites_allowed = [site for site in sites_allowed if SI.cpu_pledges[site] > 4000]
+            if verbose:
+                print "restricting site white list because of blow-up factor",min_child_job_per_event, root_job_per_event, max_blow_up
+            sites_allowed = list(set(sites_allowed) & set([site for site in sites_allowed if SI.cpu_pledges[site] > 4000]))
+
+
+        CI = campaignInfo()
+        c_sites_allowed = CI.get(self.request['Campaign'], 'SiteWhitelist' , [])
+        if c_sites_allowed:
+            if verbose:
+                print "Using site whitelist restriction by campaign configuration"
+            sites_allowed = list(set(sites_allowed) & set(c_sites_allowed))
+        c_black_list = CI.get(self.request['Campaign'], 'SiteBlacklist', [])
+        if c_black_list:
+            if verbose:
+                print "Reducing the whitelist due to black list in campaign configuration"
+                print "Removing",c_black_list
+            sites_allowed = list(set(sites_allowed) - set(c_black_list))
+
+        ncores = self.request.get('Multicore',1)
+        memory_allowed = SI.sitesByMemory( self.request['Memory'] , maxCore=ncores)
+        if memory_allowed!=None:
+            if verbose:
+                print "sites allowing",self.request['Memory'],"MB and",ncores,"core are",memory_allowed
+            sites_allowed = list(set(sites_allowed) & set(memory_allowed))
+            
 
 
         return (lheinput,primary,parent,secondary,sites_allowed)
