@@ -507,8 +507,12 @@ def transferor(url ,specific = None, talk=True, options=None):
                     ## new style, failing on minbias
                     if not sec in destination_cache:
                         ## this is barbbaric, and does not show the correct picture on workflow by workflow with different whitelist
-                        destination_cache[sec],_ = getDatasetDestinations(url, sec, within_sites = [SI.CE_to_SE(site) for site in sites_allowed])
-                    destinations = destination_cache[sec]
+                        destination_cache[sec],_ = getDatasetDestinations(url, sec) ## NO SITE WHITE LIST ADDED
+                        #destination_cache[sec],_ = getDatasetDestinations(url, sec, within_sites = [SI.CE_to_SE(site) for site in sites_allowed])
+
+                    ## limit to the site whitelist NOW
+                    se_allowed = [SI.CE_to_SE(site) for site in sites_allowed]
+                    destinations = dict([(k,v) for (k,v) in destination_cache[sec].items() if site in se_allowed])
                     ## truncate location/destination to those making up for >90% of the dataset
                     bad_destinations = [destinations.pop(site) for (site,info) in destinations.items() if info['data_fraction']<0.9]
                     sec_location = [site for (site,info) in destinations.items() if info['completion']>=95]
@@ -540,6 +544,8 @@ def transferor(url ,specific = None, talk=True, options=None):
                         else:
                             print "could not send the secondary input to",site_se,"because it is too big for the available disk",SI.disk[site_se]*1024,"GB need",sec_size
                             #sendEmail('secondary input too big','%s is too big (%s) for %s (%s)'%( sec, sec_size, site_se, SI.disk[site_se]*1024))
+                else:
+                    print "the secondary input does not have to be send to site"
 
         ## is that possible to do something more
         if can_go:
