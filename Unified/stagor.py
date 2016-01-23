@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput, workflowInfo, getDatasetBlocksFraction, findLostBlocks, findLostBlocksFiles, getDatasetBlockFraction, getDatasetFileFraction
+from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput, workflowInfo, getDatasetBlocksFraction, findLostBlocks, findLostBlocksFiles, getDatasetBlockFraction, getDatasetFileFraction, getDatasetPresence
 from utils import unifiedConfiguration, componentInfo, sendEmail, getSiteWhiteList, checkTransferLag
 from utils import siteInfo, campaignInfo, global_SI
 import json
@@ -42,35 +42,17 @@ def stagor(url,specific =None, options=None):
 
 
     cached_transfer_statuses = json.loads(open('cached_transfer_statuses.json').read())
+    ## pop all that are now in negative values
+    for phedexid in cached_transfer_statuses.keys():
+        transfers = session.query(Transfer).filter(Transfer.phedexid==int(phedexid)).all()
+        if not transfers:
+            print phedexid,"does not look relevant to be in cache anymore. poping"
+            print cached_transfer_statuses.pop( phedexid )
 
-    if options.fast:
-        print "doing the fast check of staged with threshold:",options.goodavailability
-        for wfo in session.query(Workflow).filter(Workflow.status == 'staging').all():
-            if specific and not specific in wfo.name: continue
-            wfi = workflowInfo(url, wfo.name)
-            (_,primaries,_,secondaries,sites_allowed) = wfi.getSiteWhiteList()
-            if 'SiteWhitelist' in CI.parameters(wfi.request['Campaign']):
-                sites_allowed = CI.parameters(wfi.request['Campaign'])['SiteWhitelist']
-            if 'SiteBlacklist' in CI.parameters(wfi.request['Campaign']):
-                sites_allowed = list(set(sites_allowed) - set(CI.parameters(wfi.request['Campaign'])['SiteBlacklist']))
-            se_allowed = [SI.CE_to_SE(site) for site in sites_allowed] 
-            all_check = True
-            n_copies = wfi.getNCopies()
-            for dataset in list(primaries):#+list(secondaries) ?
-                #print se_allowed
-                available = getDatasetBlocksFraction( url , dataset , sites=se_allowed )
-                #all_check &= (available >= options.goodavailability)
-                all_check &= (available >= n_copies)
-                if not all_check: break
 
-            if all_check:
-                print "\t\t",wfo.name,"can go staged"
-                wfo.status = 'staged'
-                session.commit()
-            else:
-                print "\t",wfo.name,"can wait a bit more"
-        return 
-
+            
+    ## collect all datasets that are needed for wf in staging, correcting the status of those that are not really in staging
+    wfois = []
     for wfo in session.query(Workflow).filter(Workflow.status == 'staging').all():
         wfi = workflowInfo(url, wfo.name)
         if wfi.request['RequestStatus'] in ['running-open','running-closed','completed']:
@@ -78,16 +60,16 @@ def stagor(url,specific =None, options=None):
             wfi.status='away'
             session.commit()
             continue
-            
+
+        wfois.append( (wfo,wfi) )            
         _,primaries,_,secondaries = wfi.getIO()
         for dataset in list(primaries)+list(secondaries):
             done_by_input[dataset] = {}
             completion_by_input[dataset] = {}
             print wfo.name,"needs",dataset
 
-    ## this loop is very expensive and will not function at some point.
-    ## transfer objects should probably be deleted as some point
-
+    ## phedexid are set negative when not relevant anymore
+    # probably there is a db schema that would allow much faster and simpler query
     for transfer in session.query(Transfer).filter(Transfer.phedexid>0).all():
         if specific  and str(transfer.phedexid)!=str(specific): continue
 
@@ -157,17 +139,94 @@ def stagor(url,specific =None, options=None):
             print transfer.phedexid,"not finished"
             pprint.pprint( checks )
 
+
+
     open('cached_transfer_statuses.json','w').write( json.dumps( cached_transfer_statuses, indent=2))
 
+    already_stuck = json.loads( open('/afs/cern.ch/user/c/cmst2/www/unified/stuck_transfers.json').read() )
     missing_in_action = defaultdict(list)
-    #print done_by_input
-    print "\n----\n"
-    for dsname in done_by_input:
-        fractions = None
-        if dsname in completion_by_input:
-            fractions = itertools.chain.from_iterable([check.values() for check in completion_by_input.values()])
-        
-        ## the workflows in the waiting room for the dataset
+
+
+    print "-"*10,"Checking on workflows in staging","-"*10
+    ## come back to workflows and check if they can go
+    available_cache = {}
+    presence_cache = {}
+    for wfo,wfi in wfois:
+        ## the site white list takes site, campaign, memory and core information
+        (_,primaries,_,secondaries,sites_allowed) = wfi.getSiteWhiteList(verbose=False)
+        se_allowed = [SI.CE_to_SE(site) for site in sites_allowed] 
+        readys={}
+        for need in list(primaries)+list(secondaries):
+            if not need in done_by_input:
+                print "no report for",need
+                readys[need] = False
+                continue
+
+            if len(done_by_input[need]) and all(done_by_input[need].values()):
+                print need,"is ready for",wfo.name
+                readys[need] = True
+            else:
+                print need,"isn't ready"
+                print json.dumps( done_by_input[need] , indent=2)
+                readys[need] = False
+
+        if readys and all(readys.values()):
+            if wfo.status == 'staging':
+                print "all needs for",wfo.name,"are fullfilled, setting staged"
+                wfo.status = 'staged'
+                session.commit()
+            else:
+                print "all needs for",wfo.name,"are fullfilled, already ",wfo.status
+                print json.dumps( readys, indent=2 )
+        else:
+            ## there is missing input let's do something more elaborated
+            for need in list(primaries)+list(secondaries):
+                if not need in available_cache:    
+                    available_cache[need]  = getDatasetBlocksFraction( url , need, sites=se_allowed )
+
+            ## compute a time since staging to filter jump starting ?                    
+            jump_ahead = False
+            # check whether the inputs is already in the stuck list ...
+            for need in list(primaries)+list(secondaries):
+                if need in already_stuck: 
+                    print need,"is stuck, so try to jump ahead"
+                    jump_ahead = True
+                    
+            if jump_ahead:
+                print "checking on availability for",wfo.name
+                copies_needed,_ = wfi.getNCopies()
+                print wfo.name,"wants",copies_needed,"copies"
+                copies_needed = max(1,copies_needed-1)
+                print wfo.name,"lowering by one unit to",copies_needed
+
+                all_check = True
+                for need in list(primaries):
+                    available = available_cache[need]
+                    print need,"is available",available,"times"
+                    all_check &= (available >= copies_needed)
+                    if not all_check: break
+
+                for need in list(secondaries):
+                    if not need in presence_cache:
+                        presence_cache[need] = getDatasetPresence( url, need , within_sites=se_allowed)
+                    presence = presence_cache[need]
+                    available = available_cache[need]
+                    all_check&= all([there for (there,frac) in presence.values()])
+
+                if all_check:    
+                    print "needs for",wfo.name,"are sufficiently fullfilled, setting staged"
+                    wfo.status = 'staged'
+                    session.commit()
+                else:
+                    print wfo.name,"has to wait a bit more",available
+            else:
+                print "not checking on availability for",wfo.name
+
+
+    print "-"*10,"Checking on non-available datasets","-"*10    
+    ## now check on those that are not fully available
+    for dsname,available in available_cache.items():
+
         using_its = getWorkflowByInput(url, dsname)
         #print using_its
         using_wfos = []
@@ -175,7 +234,7 @@ def stagor(url,specific =None, options=None):
             wf = session.query(Workflow).filter(Workflow.name == using_it).first()
             if wf:
                 using_wfos.append( wf )
-        
+
         if not len(done_by_input[dsname]):
             print "For dataset",dsname,"there are no transfer report. That's an issue."
             for wf in using_wfos:
@@ -190,51 +249,12 @@ def stagor(url,specific =None, options=None):
                         sendEmail( "subscription lagging behind","susbscriptions to get %s running are not appearing in phedex. I would have send it back to considered but that's not good."% wf.name)
             continue
 
-        #need_sites = int(len(done_by_input[dsname].values())*0.7)+1
-        need_sites = len(done_by_input[dsname].values())
-        #if need_sites > 10:            need_sites = int(need_sites/2.)
-        got = done_by_input[dsname].values().count(True)
-        if all([wf.status != 'staging' for wf in using_wfos]):
-            ## not a single ds-using wf is in staging => moved on already
-            ## just forget about it
-            #print "presence of",dsname,"does not matter anymore"
-            #print "\t",done_by_input[dsname]
-            #print "\t",[wf.status for wf in using_wfos]
-            #print "\tneeds",need_sites
-            continue
-            
-        ## should the need_sites reduces with time ?
-        # with dataset choping, reducing that number might work as a block black-list.
+        ## not compatible with checking on secondary availability
+        #if all([wf.status != 'staging' for wf in using_wfos]):
+        #    ## means despite all checks that input is not needed
+        #    continue
 
-        if len(done_by_input[dsname].values()) and all(done_by_input[dsname].values()):
-            print dsname,"is everywhere we wanted"
-            ## the input dataset is fully transfered, should consider setting the corresponding wf to staged
-            for wf in using_wfos:
-                if wf.status == 'staging':
-                    print wf.name,"is with us. setting staged and move on"
-                    wf.status = 'staged'
-                    session.commit()
-        elif fractions and len(list(fractions))>1 and set(fractions)==1:
-            print dsname,"is everywhere at the same fraction"
-            print "We do not want this in the end. we want the data we asked for"
-            continue
-            ## the input dataset is fully transfered, should consider setting the corresponding wf to staged
-            for wf in using_wfos:
-                if wf.status == 'staging':
-                    print wf.name,"is with us everywhere the same. setting staged and move on"
-                    wf.status = 'staged'
-                    session.commit()
-        elif got >= need_sites:
-            print dsname,"is almost everywhere we wanted"
-            #print "We do not want this in the end. we want the data we asked for"
-            #continue
-            ## the input dataset is fully transfered, should consider setting the corresponding wf to staged
-            for wf in using_wfos:
-                if wf.status == 'staging':
-                    print wf.name,"is almost with us. setting staged and move on"
-                    wf.status = 'staged'
-                    session.commit()
-        else:
+        if available < 1.:
             print "incomplete",dsname
             lost_blocks,lost_files = findLostBlocksFiles( url, dsname )
             lost_block_names = [item['name'] for item in lost_blocks]
@@ -256,8 +276,6 @@ def stagor(url,specific =None, options=None):
                 else:
                     ## probably enough to make a ggus and remove
                     if not dsname in known_lost_blocks:
-                        ## make a deeper investigation of the block location to see whether it's really no-where no-where
-                        #sendEmail('we have lost a few blocks', str(len(lost))+" in total.\nDetails \n:"+json.dumps( lost , indent=2 ))
                         sendEmail('we have lost a few blocks', '%s is missing %d blocks, for %d events, %f %% loss\n\n%s'%(dsname, len(lost_block_names), n_missing, fraction_loss, '\n'.join( lost_block_names ) ))
                         known_lost_blocks[dsname] = [i['name'] for i in lost_blocks]
                                   
@@ -284,10 +302,12 @@ def stagor(url,specific =None, options=None):
 
             missings = [pid for (pid,d) in done_by_input[dsname].items() if d==False] 
             print "\t",done_by_input[dsname]
-            print "\tneeds",need_sites
-            print "\tgot",got
+            print "\tneeds",len(done_by_input[dsname])
+            print "\tgot",[d for (_,d) in done_by_input[dsname].values()].count(True)
             print "\tmissing",missings
             missing_in_action[dsname].extend( missings )
+        
+
 
     rr= open('/afs/cern.ch/user/c/cmst2/www/unified/lost_blocks_datasets.json','w')
     rr.write( json.dumps( known_lost_blocks, indent=2))
@@ -363,8 +383,6 @@ if __name__ == "__main__":
     url = 'cmsweb.cern.ch'
     UC = unifiedConfiguration()
     parser = optparse.OptionParser()
-    parser.add_option('-f','--fast', help='Make a quick check for available fraction',default=False,action='store_true')
-    parser.add_option('-g','--goodavailability', help='The threshold on available fraction',default=UC.get('fast_stagor_pass_availability'),type=float)
     (options,args) = parser.parse_args()
 
     spec=None
