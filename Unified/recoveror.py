@@ -268,20 +268,24 @@ def recoveror(url,specific,options=None):
                     'ProcessingVersion' : wfi.request['ProcessingVersion'],
                     }
                 
-                if wfi.request['RequestType'] == 'TaskChain' and 'Merge' in task:
-                    parameters.pop( 'AcquisitionEra' )
-                    parameters.pop( 'ProcessingString' )
+                if wfi.request['RequestType'] == 'TaskChain' and 'Merge' in task.split('/')[-1]:
+                    parameters['AcquisitionEra'] = None
+                    parameters['ProcessingString'] = None
 
                 if options.ass:
                     print "really doing the assignment of the ACDC",acdc
                     parameters['execute']=True
-                    sendEmail("an ACDC was done and WAS assigned", "%s  was assigned, please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details"%( acdc ), destination=['julian.badillo.rojas@cern.ch','jen_a@fnal.gov'])
+                    sendEmail("an ACDC was done and WAS assigned", "%s  was assigned, please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details"%( acdc ), destination=['jen_a@fnal.gov'])
                 else:
                     print "no assignment done with this ACDC",acdc
-                    sendEmail("an ACDC was done and need to be assigned", "%s needs to be assigned, please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details"%( acdc ), destination=['julian.badillo.rojas@cern.ch','jen_a@fnal.gov'])
+                    sendEmail("an ACDC was done and need to be assigned", "%s needs to be assigned, please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details"%( acdc ), destination=['jen_a@fnal.gov'])
 
                 result = reqMgrClient.assignWorkflow(url, acdc, team, parameters)
-                recovering.add( acdc )
+                if not result:
+                    print acdc,"was not asigned"
+                    sendEmail("an ACDC was done and need to be assigned","%s needs to be assigned, please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details"%( acdc ), destination=['jen_a@fnal.gov'])
+                else:
+                    recovering.add( acdc )
 
             if recovering:
                 #if all went well, set the status to -recovering 

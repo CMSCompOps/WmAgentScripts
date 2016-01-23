@@ -632,7 +632,11 @@ def assignWorkflow(url, workflowname, team, parameters ):
     #if ('Multicore' in wf.request and wf.request['Multicore']>1):
     #    defaults['MaxRSS'] = int((wf.request['Memory']*1024+10) * 1.5 * wf.request['Multicore'])
     #    defaults['MaxVSize'] = int(10*defaults['MaxRSS'])
-        
+    
+    pop_useless = ['AcquisitionEra','ProcessingString']
+    for what in pop_useless:
+        if defaults[what] == None:
+            defaults.pop(what)
 
     if not set(assignWorkflow.mandatories).issubset( set(parameters.keys())):
         print "There are missing parameters"
