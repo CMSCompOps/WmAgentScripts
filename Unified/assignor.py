@@ -84,25 +84,12 @@ def assignor(url ,specific = None, talk=True, options=None):
                 n_stalled+=1
                 continue
 
-        #(lheinput,primary,parent,secondary) = wfh.getIO()
-        #sites_allowed = getSiteWhiteList( (lheinput,primary,parent,secondary) )
+        ## the site whitelist takes into account siteInfo, campaignInfo, memory and cores
         (lheinput,primary,parent,secondary, sites_allowed) = wfh.getSiteWhiteList()
 
         print "Site white list",sorted(sites_allowed)
 
         override_sec_location = CI.get(wfh.request['Campaign'], 'SecondaryLocation', [])
-
-        c_sites_allowed = CI.get(wfh.request['Campaign'], 'SiteWhitelist' , [])
-        if c_sites_allowed:
-            print "Would like to use the new whitelist, but will not until things went through a bit"
-            #sendEmail("using a restricted site white list","for %s"%(c_sites_allowed))
-            sites_allowed = list(set(sites_allowed) & set(c_sites_allowed))
-
-        c_black_list = CI.get(wfh.request['Campaign'], 'SiteBlacklist', [])
-        if c_black_list:
-            print "Reducing the whitelist due to black list in campaign configuration"
-            print "Removing",c_black_list
-            sites_allowed = list(set(sites_allowed) - set(c_black_list))
 
         blocks = []
         if 'BlockWhitelist' in wfh.request:
@@ -111,13 +98,6 @@ def assignor(url ,specific = None, talk=True, options=None):
             ## augment with run white list
             for dataset in primary:
                 blocks = list(set( blocks + getDatasetBlocks( dataset, runs=wfh.request['RunWhitelist'] ) ))
-
-        ncores = wfh.request.get('Multicore',1)
-        memory_allowed = SI.sitesByMemory( wfh.request['Memory'] , maxCore=ncores)
-        if memory_allowed!=None:
-            print "sites allowing", wfh.request['Memory'],"MB and",ncores,"core are",memory_allowed
-            sites_allowed = list(set(sites_allowed) & set(memory_allowed))
-        
 
         print "Allowed",sorted(sites_allowed)
         secondary_locations=None

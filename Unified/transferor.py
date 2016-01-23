@@ -280,29 +280,15 @@ def transferor(url ,specific = None, talk=True, options=None):
                 if not options.go: continue
 
 
-        #(lheinput,primary,parent,secondary) = wfh.getIO()
+        ## the site white list considers site, campaign, memory and core information
         (lheinput,primary,parent,secondary,sites_allowed) = wfh.getSiteWhiteList()
         if options and options.tosites:
             sites_allowed = options.tosites.split(',')
-        #else:
-        #    sites_allowed = getSiteWhiteList( (lheinput,primary,parent,secondary) )
+
 
         for dataset in list(primary)+list(parent)+list(secondary):
             ## lock everything flat
             NLI.lock( dataset )
-
-        if 'SiteWhitelist' in CI.campaigns[wfh.request['Campaign']]:
-            sites_allowed = list(set(sites_allowed) & set( CI.campaigns[wfh.request['Campaign']]['SiteWhitelist']))
-
-        if 'SiteBlacklist' in CI.parameters(wfh.request['Campaign']):
-            sites_allowed = list(set(sites_allowed) - set(CI.parameters(wfh.request['Campaign'])['SiteBlacklist']))
-
-        ## reduce right away to sites in case of memory limitation
-        ncores = wfh.request.get('Multicore',1)
-        memory_allowed = SI.sitesByMemory( wfh.request['Memory'] , maxCore=ncores)
-        if memory_allowed!=None:
-            print "sites allowing", wfh.request['Memory'],"MB and",ncores,"core are",memory_allowed
-            sites_allowed = list(set(sites_allowed) & set(memory_allowed))
 
         if not sites_allowed:
             print wfo.name,"has no possible sites to run at"
@@ -513,8 +499,7 @@ def transferor(url ,specific = None, talk=True, options=None):
             if 'SecondaryLocation' in CI.campaigns[wfh.request['Campaign']]:
                 override_sec_destination  = CI.campaigns[wfh.request['Campaign']]['SecondaryLocation']
 
-            if talk:
-                print wfo.name,'reads',', '.join(secondary),'in secondary'
+            print wfo.name,'reads',', '.join(secondary),'in secondary'
             for sec in secondary:
                 workflow_dependencies[sec].add( wfo.id )
 
