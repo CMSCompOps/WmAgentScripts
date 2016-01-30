@@ -40,7 +40,7 @@ def makeAds( config ):
         overflow_names_escaped = anAd.lookup('OverflowTasknames').__repr__()
         del anAd['OverflowTaskNames']
         exprs = ['regexp(%s, target.ExtDESIRED_Sites)'% classad.quote(str(origin)) for origin in reversed_mapping[site]]
-        exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && ( %s ) && (HasBeenRouted_%s =!= true)' % (overflow_names_escaped, str("||".join( exprs )), str(site)))
+        exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && ( %s ) && (target.HasBeenRouted_%s =!= true)' % (overflow_names_escaped, str("||".join( exprs )), str(site)))
         anAd["Requirements"] = classad.ExprTree(str(exp))
         anAd["copy_DESIRED_Sites"] = "Prev_DESIRED_Sites"
         anAd["eval_set_DESIRED_Sites"] = classad.Function("strcat", str(site) + ",", classad.Attribute("Prev_DESIRED_Sites"))
