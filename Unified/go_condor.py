@@ -101,3 +101,4 @@ if __name__ == "__main__":
     config = json.load(urllib.urlopen(htcondor.param['UNIFIED_OVERFLOW_CONFIG']))
     makeAds(config)
     makeSortAd()
+    makePrioCorrections()
