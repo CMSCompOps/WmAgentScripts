@@ -409,7 +409,8 @@ Worflow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/reque
 
     text=""
     count=0
-    for wf in session.query(Workflow).filter(Workflow.status == 'assistance').all():
+    #for wf in session.query(Workflow).filter(Workflow.status == 'assistance-custodial').all():
+    for wf in session.query(Workflow).filter(Workflow.status.startswith('assistance')).filter(Workflow.status.contains('custodial')).all():
         text+="<li> %s </li> \n"%wfl(wf,view=True,update=True,status=True)
         count+=1
     text+="</ul></div>\n"
