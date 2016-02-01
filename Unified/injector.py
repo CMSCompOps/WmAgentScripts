@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, getWorkflowById, getWorkLoad, componentInfo, sendEmail
+from utils import getWorkflows, getWorkflowById, getWorkLoad, componentInfo, sendEmail, workflowInfo
 import sys
 import copy
 from htmlor import htmlor
@@ -24,13 +24,28 @@ def injector(url, options, specific):
     for wf in workflows:
         exists = session.query(Workflow).filter(Workflow.name == wf ).first()
         if not exists:
-            wl = getWorkLoad(url, wf)
+            wfi = workflowInfo(url, wf)
+            #wl = getWorkLoad(url, wf)
             ## check first that there isn't related here with something valid
             can_add = True
-            familly = session.query(Workflow).filter(Workflow.name.contains(wl['PrepID'])).all()
+            ## first try at finding a match
+            familly = session.query(Workflow).filter(Workflow.name.contains(wfi.request['PrepID'])).all()
             if not familly:
-                req_familly = getWorkflowById( url, wl['PrepID'] )
-                familly = [session.query(Workflow).filter(Workflow.name == member).first() for member in req_familly]
+                #req_familly = getWorkflowById( url, wl['PrepID'])
+                #familly = [session.query(Workflow).filter(Workflow.name == member).first() for member in req_familly]
+                pids = wfi.getPrepIDs()
+                req_familly = []
+                for pid in pids:
+                    req_familly.extend( getWorkflowById( url, pid, details=True) )
+                    
+                familly = []
+                for req_member in req_familly:
+                    owfi = workflowInfo(url, req_member['RequestName'], request=req_member)
+                    other_pids = owfi.getPrepIDs()
+                    if set(pids) == set(other_pids):
+                        ## this is a real match
+                        familly.extend( session.query(Workflow).filter(Workflow.name == req_member['RequestName']).all() )
+
             for lwfo in familly:
                 if lwfo:
                     ## we have it already
