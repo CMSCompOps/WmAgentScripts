@@ -69,7 +69,8 @@ for dataset in already_locked-newly_locking:
         unlock=False
         creators = getWorkflowByOutput( url, dataset , details=True)
         if not creators and not dataset.endswith('/RAW'):
-            if not '-v0/' in dataset:
+            ds_status = getDatasetStatus( dataset )
+            if not '-v0/' in dataset and ds_status!=None:
                 sendEmail('failing get by output','%s has not been produced by anything?'%dataset)
                 newly_locking.add(dataset)
                 continue
@@ -143,7 +144,7 @@ for dataset in already_locked-newly_locking:
             ##would like to pass to *-unlock, or even destroy from local db
             for creator in creators:
                 for wfo in  session.query(Workflow).filter(Workflow.name==creator['RequestName']).all():
-                    if not 'unlock' in wfo.status and not wfo.status in ['trouble','away','considered']:
+                    if not 'unlock' in wfo.status and not any([wfo.status.startswith(key) for key in ['trouble','away','considered','assistance']]):
                         wfo.status +='-unlock'
                         print "setting",wfo.name,"to",wfo.status
             session.commit()
