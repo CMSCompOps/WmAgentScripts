@@ -148,22 +148,40 @@ def stagor(url,specific =None, options=None):
 
 
     print "-"*10,"Checking on workflows in staging","-"*10
+    #forget_about = ['/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1-v2/GEN-SIM']
+    #for what in forget_about:
+    #    if not done_by_input[what]:
+    #        done_by_input[what] = {'fake':True}
+
     ## come back to workflows and check if they can go
-    available_cache = {}
-    presence_cache = {}
+    available_cache = defaultdict(lambda : defaultdict(float))
+    presence_cache = defaultdict(dict)
     for wfo,wfi in wfois:
+        print "#"*30
         ## the site white list takes site, campaign, memory and core information
         (_,primaries,_,secondaries,sites_allowed) = wfi.getSiteWhiteList(verbose=False)
-        se_allowed = [SI.CE_to_SE(site) for site in sites_allowed] 
+        se_allowed = [SI.CE_to_SE(site) for site in sites_allowed]
+        se_allowed.sort()
+        se_allowed_key = ','.join(se_allowed)
         readys={}
         for need in list(primaries)+list(secondaries):
             if not need in done_by_input:
                 print "no report for",need
-                readys[need] = False
+                readys[need] = False      
+                ## should warn someone about this !!!
+                ## it cannot happen, by construction
+                sendEmail('missing transfer report','%s does not have a transfer report'%(need))
+                continue
+
+            if not done_by_input[need] and need in list(secondaries):
+                print "\t assuming it is OK for secondary",need,"to have no attached transfers"
+                readys[need] = True
+                done_by_input[need] = { "fake" : True }
                 continue
 
             if len(done_by_input[need]) and all(done_by_input[need].values()):
                 print need,"is ready for",wfo.name
+                print json.dumps( done_by_input[need] , indent=2)
                 readys[need] = True
             else:
                 print need,"isn't ready"
@@ -179,13 +197,18 @@ def stagor(url,specific =None, options=None):
                 print "all needs for",wfo.name,"are fullfilled, already ",wfo.status
                 print json.dumps( readys, indent=2 )
         else:
+            print "missing requirements for",wfo.name
+            copies_needed,_ = wfi.getNCopies()
+            jump_ahead = False
             ## there is missing input let's do something more elaborated
-            for need in list(primaries)+list(secondaries):
-                if not need in available_cache:    
-                    available_cache[need]  = getDatasetBlocksFraction( url , need, sites=se_allowed )
+            for need in list(primaries):#+list(secondaries):
+                if not se_allowed_key in available_cache[need]:
+                    available_cache[need][se_allowed_key]  = getDatasetBlocksFraction( url , need, sites=se_allowed )
+                    if available_cache[need][se_allowed_key] >= copies_needed:
+                        print "assuming it is OK to move on like this already for",need
+                        jump_ahead = True
 
             ## compute a time since staging to filter jump starting ?                    
-            jump_ahead = False
             # check whether the inputs is already in the stuck list ...
             for need in list(primaries)+list(secondaries):
                 if need in already_stuck: 
@@ -193,40 +216,57 @@ def stagor(url,specific =None, options=None):
                     jump_ahead = True
                     
             if jump_ahead:
-                print "checking on availability for",wfo.name
-                copies_needed,_ = wfi.getNCopies()
+                print "checking on availability for",wfo.name,"to jump ahead"
                 print wfo.name,"wants",copies_needed,"copies"
                 copies_needed = max(1,copies_needed-1)
                 print wfo.name,"lowering by one unit to",copies_needed
 
                 all_check = True
+                
+                prim_where = set()
                 for need in list(primaries):
-                    available = available_cache[need]
-                    print need,"is available",available,"times"
-                    all_check &= (available >= copies_needed)
+                    if not se_allowed_key in presence_cache[need]:
+                        presence_cache[need][se_allowed_key] = getDatasetPresence( url, need , within_sites=se_allowed)
+                    presence = presence_cache[need][se_allowed_key]
+                    prim_where.update( presence.keys() )
+                    available = available_cache[need][se_allowed_key]
+                    this_check = (available >= copies_needed)
+                    print need,"is available",available,"times:",this_check
+                    all_check &= this_check
                     if not all_check: break
 
                 for need in list(secondaries):
-                    if not need in presence_cache:
-                        presence_cache[need] = getDatasetPresence( url, need , within_sites=se_allowed)
-                    presence = presence_cache[need]
-                    available = available_cache[need]
-                    all_check&= all([there for (there,frac) in presence.values()])
+                    ## I do not want to check on the secon
+                    this_check = all(done_by_input[need].values())
+                    print need,"is all trasnfered",json.dumps(done_by_input[need], indent=2)
+                    all_check&= this_check
+                    #if not se_allowed_key in presence_cache[need]:
+                    #    presence_cache[need][se_allowed_key] = getDatasetPresence( url, need , within_sites=se_allowed)
+
+                    ## restrict to where the primary is
+                    #presence = dict([(k,v) for (k,v) in presence_cache[need][se_allowed_key].items() if k in prim_where])
+                    #this_check = all([there for (there,frac) in presence.values()])
+                    #print need,"is present at all sites:",this_check
+                    #all_check&= this_check
 
                 if all_check:    
                     print "needs for",wfo.name,"are sufficiently fullfilled, setting staged"
                     wfo.status = 'staged'
                     session.commit()
                 else:
-                    print wfo.name,"has to wait a bit more",available
+                    print wfo.name,"has to wait a bit more"
             else:
                 print "not checking on availability for",wfo.name
 
 
     print "-"*10,"Checking on non-available datasets","-"*10    
     ## now check on those that are not fully available
+    
+    for dsname in available_cache.keys():
+        ## squash the se_allowed_key key
+        available_cache[dsname] = min( available_cache[dsname].values() )
+            
     for dsname,available in available_cache.items():
-
         using_its = getWorkflowByInput(url, dsname)
         #print using_its
         using_wfos = []
@@ -256,6 +296,7 @@ def stagor(url,specific =None, options=None):
 
         if available < 1.:
             print "incomplete",dsname
+            ## there is a problem in the method below that it does not account for files stuck in T1*Buffer only
             lost_blocks,lost_files = findLostBlocksFiles( url, dsname )
             lost_block_names = [item['name'] for item in lost_blocks]
             lost_file_names = [item['name'] for item in lost_files]
@@ -303,7 +344,7 @@ def stagor(url,specific =None, options=None):
             missings = [pid for (pid,d) in done_by_input[dsname].items() if d==False] 
             print "\t",done_by_input[dsname]
             print "\tneeds",len(done_by_input[dsname])
-            print "\tgot",[d for (_,d) in done_by_input[dsname].values()].count(True)
+            print "\tgot",done_by_input[dsname].values().count(True)
             print "\tmissing",missings
             missing_in_action[dsname].extend( missings )
         
@@ -361,6 +402,7 @@ def stagor(url,specific =None, options=None):
                         else:
                             dum=[bad_sources[d].add( block ) for d in dones]
                         really_stuck_dataset.add( dataset )
+                        print "add",dataset,"to really stuck"
                         report += "%s is not getting to %s, out of %s faster than %f [GB/s] since %f [d]\n"%(block,destination,", ".join(dones), rate, delay)
     print "\n"*2
 
@@ -372,9 +414,16 @@ def stagor(url,specific =None, options=None):
     for site,blocks in bad_destinations.items():
         report+="\n\n%s:"%site+"\n\t".join(['']+list(blocks))
 
+    print '\n'*2,"Datasets really stuck"
+    print '\n'.join( really_stuck_dataset )
+
+    print '\n'*2,"report written at https://cmst2.web.cern.ch/cmst2/unified/logs/incomplete_transfers.log"
     print report
 
-    open('/afs/cern.ch/user/c/cmst2/www/unified/stuck_transfers.json','w').write( json.dumps(dict([(k,v) for (k,v) in missing_in_action.items() if k in really_stuck_dataset]), indent=2) )
+    stuck_transfers = dict([(k,v) for (k,v) in missing_in_action.items() if k in really_stuck_dataset])
+    print '\n'*2,'Stuck dataset transfers'
+    print json.dumps(stuck_transfers , indent=2)
+    open('/afs/cern.ch/user/c/cmst2/www/unified/stuck_transfers.json','w').write( json.dumps(stuck_transfers , indent=2) )
     open('/afs/cern.ch/user/c/cmst2/www/unified/logs/incomplete_transfers.log','w').write( report )
     #sendEmail('incomplete transfers', report,sender=None, destination=['dc.jorge10@uniandes.edu.co','aram.apyan@cern.ch','sidn@mit.edu'])
 
