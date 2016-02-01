@@ -27,7 +27,7 @@ def equalizor(url , specific = None):
     SI = siteInfo()
     for site in SI.sites_ready:
         region = site.split('_')[1]
-        if not region in ['US','DE']: continue
+        if not region in ['US','DE','IT']: continue
         regions[region] = [region] 
 
     def site_in_depletion(s):
@@ -49,7 +49,9 @@ def equalizor(url , specific = None):
         mapping[site] = [fb for fb in SI.sites_ready if any([('_%s_'%(reg) in fb and fb!=site and site_in_depletion(fb))for reg in regions[region]]) ]
     
     #mapping['T2_CH_CERN'].append('T2_CH_CERN_HLT')
-    mapping['T2_IT_Legnaro'].append('T1_IT_CNAF')
+    #mapping['T2_IT_Legnaro'].append('T1_IT_CNAF')
+    for reg in ['IT','DE','UK']:
+        mapping['T2_CH_CERN'].extend([fb for fb in SI.sites_ready if '_%s_'%reg in fb])
 
     for site,fallbacks in mapping.items():
         for fb in fallbacks:
@@ -63,6 +65,7 @@ def equalizor(url , specific = None):
 
     def running_idle( wfi , task_name):
         gmon = wfi.getGlideMon()
+        #print gmon
         if not gmon: return (0,0)
         if not task_name in gmon: return (0,0)
         return (gmon[task_name]['Running'], gmon[task_name]['Idle'])
@@ -124,7 +127,8 @@ def equalizor(url , specific = None):
             'max' : 20000,
             'pending' : 0}
         }
-    set_to = SI.sites_ready
+    
+    set_to = SI.sites_AAA
     LHE_overflow = {
         'RunIIWinter15GS' : set_to,
         'RunIISummer15GS' : set_to,
@@ -174,7 +178,7 @@ def equalizor(url , specific = None):
         if not needs_overide and  options.augment: needs_overide=True
 
         def overide_from_agent( wfi, needs_overide):
-            bad_agents = ['http://cmssrv219.fnal.gov:5984']
+            bad_agents = []#'http://cmssrv219.fnal.gov:5984']
             if not bad_agents: return needs_overide
             if needs_overide: return True
             agents = wfi.getAgents()
@@ -196,7 +200,10 @@ def equalizor(url , specific = None):
                 if task.taskType in ['Processing']:
                     needs, task_name, running, idled = needs_action(wfi, task)
                     needs_overide = overide_from_agent( wfi, needs_overide)
-                    if needs or needs_overide:
+                    extend_to = copy.deepcopy( LHE_overflow[campaign] )
+                    extend_to = list(set(extend_to) & set(wfi.request['SiteWhitelist'])) ## restrict to stupid-site-whitelist
+
+                    if extend_to and needs or needs_overide:
                         print "\t",task_name,"of",wfo.name,"running",running,"and pending",idled,"taking action : ReplaceSiteWhitelist"
                         modifications[wfo.name][task.pathName] = { "ReplaceSiteWhitelist" : copy.deepcopy( LHE_overflow[campaign] ) ,"Running" : running, "Pending" : idled, "Priority" : wfi.request['RequestPriority']}
                         #print json.dumps( modifications[wfo.name][task.pathName]['ReplaceSiteWhitelist']
@@ -209,12 +216,22 @@ def equalizor(url , specific = None):
             if campaign in PU_overflow:
                 ## we should add all sites that hold the secondary input if any
                 secondary_locations = list(set(PU_overflow[campaign]['sites']) & set( SI.sites_ready ))
-                ## removing the ones in the site whitelist already since they encode the primary input location
-                augment_by = list(set(secondary_locations)- set(wfi.request['SiteWhitelist']))
                 if any([task.pathName.endswith(finish) for finish in ['_0','StepOneProc']]) :
                     needs, task_name, running, idled = needs_action(wfi, task)
+                    ## removing the ones in the site whitelist already since they encode the primary input location
+                    original_site_in_use = set(wfi.request['SiteWhitelist'])
+                    ## remove the sites that have already running jobs
+                    gmon = wfi.getGlideMon()
+                    if gmon and task_name in gmon and 'Sites' in gmon[task_name]:
+                        site_in_use = set(gmon[task_name]['Sites'])
+                        ## that determines where you want to run in addition
+                        #augment_by = list((set(secondary_locations)- site_in_use))
+                        augment_by = list((set(secondary_locations)- site_in_use) & original_site_in_use) ## restrict to stupid-site-whitelist
+                    else:
+                        augment_by = original_site_in_use
+
                     needs_overide = overide_from_agent( wfi, needs_overide)
-                    if (needs or needs_overide) and PU_overflow[campaign]['pending'] < PU_overflow[campaign]['max']:
+                    if augment_by and (needs or needs_overide) and PU_overflow[campaign]['pending'] < PU_overflow[campaign]['max']:
                         PU_overflow[campaign]['pending'] += idled
                         print "raising overflow to",PU_overflow[campaign]['pending'],"for",PU_overflow[campaign]['max']
                         ## the step with an input ought to be the digi part : make this one go anywhere

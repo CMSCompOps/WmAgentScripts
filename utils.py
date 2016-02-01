@@ -846,7 +846,6 @@ class siteInfo:
                 #'T2_CH_CERN_HLT',
                 'T2_CH_CERN_AI',
                 'T0_CH_CERN_MSS',
-                #'T2_EE_Estonia'
                 ]
 
             data = dataCache.get('ssb_158') ## 158 is the site readyness metric
@@ -872,6 +871,7 @@ class siteInfo:
         self.sites_eos = [ s for s in self.sites_ready if s in ['T2_CH_CERN','T2_CH_CERN_AI','T2_CH_CERN_T0','T2_CH_CERN_HLT'] ]
         self.sites_T2s = [ s for s in self.sites_ready if s.startswith('T2_')]
         self.sites_T1s = [ s for s in self.sites_ready if s.startswith('T1_')]
+        self.sites_AAA = list(set(self.sites_ready) - set(['T2_CH_CERN_HLT']))
         self.sites_with_goodIO = [ "T2_DE_DESY","T2_DE_RWTH",
                                    "T2_ES_CIEMAT",
                                    "T2_FR_GRIF_LLR", "T2_FR_GRIF_IRFU", "T2_FR_IPHC","T2_FR_CCIN2P3",
@@ -880,23 +880,27 @@ class siteInfo:
                                    ##"T2_UK_SGrid_RALPP",
                                    "T2_US_Caltech","T2_US_MIT","T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida","T2_US_Vanderbilt",
                                    "T2_BE_IIHE",
-                                   #"T2_EE_Estonia",
-                                   ## to be tried out "T2_PL_Swierk"
+                                   "T2_EE_Estonia",
+                                   "T2_PL_Swierk",
                                    "T2_CH_CERN","T2_CH_CERN_HLT","T2_CH_CERN_AI"
                                    ]
+        #restrict to those that are actually ON
         self.sites_with_goodIO = [s for s in self.sites_with_goodIO if s in self.sites_ready]
+        ## those of the above that can be actively targetted for transfers
         allowed_T2_for_transfer = ["T2_DE_RWTH","T2_DE_DESY", 
-                                   #not inquired# "T2_ES_CIEMAT",
-                                   #no space# ##"T2_FR_GRIF_IRFU", #not inquired# ##"T2_FR_GRIF_LLR", #not inquired"## "T2_FR_IPHC",##not inquired"## "T2_FR_CCIN2P3",
-                                   "T2_IT_Legnaro", "T2_IT_Pisa", "T2_IT_Rome", "T2_IT_Bari",
-                                   "T2_UK_London_Brunel", "T2_UK_London_IC", "T2_UK_SGrid_RALPP",
-                                   "T2_US_Nebraska","T2_US_Wisconsin","T2_US_Purdue","T2_US_Caltech", "T2_US_Florida", "T2_US_UCSD", "T2_US_MIT",
-                                   "T2_BE_IIHE",
-                                   "T2_EE_Estonia",
-                                   "T2_CH_CERN", 
-                                   
-                                   ]
+                                          #not inquired# "T2_ES_CIEMAT",
+                                          #no space# ##"T2_FR_GRIF_IRFU", #not inquired# ##"T2_FR_GRIF_LLR", #not inquired"## "T2_FR_IPHC",##not inquired"## "T2_FR_CCIN2P3",
+                                          "T2_IT_Legnaro", "T2_IT_Pisa", "T2_IT_Rome", "T2_IT_Bari",
+                                          "T2_UK_London_Brunel", "T2_UK_London_IC", "T2_UK_SGrid_RALPP",
+                                          "T2_US_Nebraska","T2_US_Wisconsin","T2_US_Purdue","T2_US_Caltech", "T2_US_Florida", "T2_US_UCSD", "T2_US_MIT",
+                                          "T2_BE_IIHE",
+                                          "T2_EE_Estonia",
+                                          "T2_CH_CERN", 
+                                          ]
+        # restrict to those actually ON
         allowed_T2_for_transfer = [s for s in allowed_T2_for_transfer if s in self.sites_ready]
+
+        ## first round of determining the sites that veto transfer
         self.sites_veto_transfer = [site for site in self.sites_with_goodIO if not site in allowed_T2_for_transfer]
 
         self.storage = defaultdict(int)
@@ -933,8 +937,12 @@ class siteInfo:
             #print mss,'used',used
             #if used == None: self.storage[mss] = 0
             #else:  self.storage[mss] = max(0, self.storage[mss]-used)
-            if not mss in mss_usage['Tape']['Free']: self.storage[mss] = 0 
-            else: self.storage[mss]  = mss_usage['Tape']['Free'][mss]
+            if not mss in mss_usage['Tape']['Free']: 
+                self.storage[mss] = 0 
+            else: 
+                self.storage[mss]  = mss_usage['Tape']['Free'][mss]
+            if mss in ['T0_CH_CERN_MSS']:
+                self.storage[mss] /= 2.
 
         ## and detox info
         self.fetch_detox_info(talk=False)
@@ -1307,23 +1315,49 @@ phdF</th><th>Priority</th></tr></thead>'
         html.write('<a href=assistance_summary.html> Summary </a> <br>')    
         short_html.write('<a href=assistance.html> Details </a> <br>')
 
+
+        ## a few lines of explanation
+        explanation="""
+<br><ul>
+<li> <b>custodial</b> : one the output dataset is waiting for the subscription to tape to be made. The request has been created already.<font color=green>(Automatic)</font></li>
+<li> <b>parentcustodial</b> : the parent of the dataset is not set on tape <font color=red>(Operator)</font></li>
+<li> <b>recovering</b> : there is at least one active ACDC for the worflow <font color=orange>(Wait)</font></li>
+<li> <b>recovered</b> : there is at least one inactive ACDC for the workflow <font color=green>(Automatic)</font></li>
+<li> <b>recovery</b> : the final statistics of the sample is not passing the requirements <font color=green>(Automatic)</font> </li>
+<li> <b>over100</b> : the final statistics is over 100% <font color=red>(Operator)</font></li>
+<li> <b>biglumi</b> : the maximum size of the lumisection in one of the output has been exceeded <font color=red>(Operator)</font></li>
+<li> <b>filemismatch</b> : there is a mismatch in the number of files in DBS and Phedex <font color=red>(Operator)</font></li>
+<li> <b>duplicates</b> : duplicated lumisection have been found and need to be invalidated <font color=red>(Operator)</font></li>
+<li> <b>manual</b> : no automatic recovery was possible <font color=red>(Operator)</font></li>
+</ul><br>
+"""
+        html.write( explanation )
+        short_html.write( explanation )
+
         assist = defaultdict(list)
         for wfo in wfs:
             assist[wfo.status].append( wfo )
-        
+
+        header="<ul>"
+        for status in sorted(assist.keys()):
+            header += '<li> <a href="#%s">%s</a> in status %s</li>\n'%(status, len(assist[status]), status)
+        header+="</ul>"
+        html.write( header )
+        short_html.write( header )
+
 
         for status in sorted(assist.keys()):
-            html.write("Workflow in status <b> %s </b> (%d)"% (status, len(assist[status])))
-            html.write( self.table_header())
+            html.write("<a name=%s>Workflow in status <b> %s </b> (%d)</a>"% (status,status, len(assist[status])))
+            html.write( self.table_header() )
             short_html.write("""
-Workflow in status <b> %s </b>
+<a name="%s">Workflow in status <b> %s </b> (%d)</a>
 <table border=1>
 <thead>
 <tr>
 <th> workflow </th> <th> output dataset </th><th> completion </th>
 </tr>
 </thead>
-"""% (status))
+"""% (status,status, len(assist[status])))
             lines = []
             short_lines = []
             for (count,wfo) in enumerate(assist[status]):
@@ -1577,8 +1611,9 @@ def try_checkTransferLag( url, xfer_id , datasets=None):
                         print subitem['name'],' of size',block_size_GB,'[GB] missing',block_size_GB-destination_size_GB,'[GB]'
                         print '\tis complete at',dones
                         print "\tincoming at",rate,"[GB/s]"
-                    if rate < 10:
-                        stuck[item][subitem['name']][destination] = (block_size,destination_size,delay,rate,dones)
+                    if rate < 10.:
+                        ds = item.split('#')[0]
+                        stuck[ds][subitem['name']][destination] = (block_size,destination_size,delay,rate,dones)
                         
     return stuck
 
@@ -1753,9 +1788,20 @@ def getDatasetFiles(url, dataset ,without_invalid=True ):
         for f in block['file']:
             phedex_filenames.append(f['name'])
     
-    return dbs_filenames, phedex_filenames, list(set(dbs_filenames) - set(phedex_filenames))
+    return dbs_filenames, phedex_filenames, list(set(dbs_filenames) - set(phedex_filenames)), list(set(phedex_filenames)-set(dbs_filenames))
 
 def getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None, sites=None, only_blocks=None):
+    try:
+        r = try_getDatasetBlocksFraction(url, dataset, complete,group,vetoes,sites,only_blocks)
+    except:
+        try:
+            r = try_getDatasetBlocksFraction(url, dataset, complete,group,vetoes,sites,only_blocks)
+        except Exception as e:
+            print sendEmail("exception in getDatasetBlocksFraction",str(e))
+            r = 0.
+    return r
+
+def try_getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None, sites=None, only_blocks=None):
     ###count how manytimes a dataset is replicated < 100%: not all blocks > 100% several copies exis
     if vetoes==None:
         vetoes = ['MSS','Buffer','Export']
@@ -2515,8 +2561,10 @@ def getPrepIDs(wl):
             return pids
         else:
             return [wl['PrepID']]
-    else:
+    elif 'PrepID' in wl:
         return [wl['PrepID']]
+    else:
+        return []
 
 def getLFNbase(dataset):
         # initialize API to DBS3
