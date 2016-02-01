@@ -42,6 +42,8 @@ def rejector(url, specific, options=None):
         if wfi.request['RequestStatus'] in ['rejected','rejected-archived','aborted','aborted-archived']:
             print 'already',wfi.request['RequestStatus']
             if not options.clone:
+                wfo.status = 'forget'
+                session.commit()
                 continue
 
         reqMgrClient.invalidateWorkflow(url, wfo.name, current_status=wfi.request['RequestStatus'])
