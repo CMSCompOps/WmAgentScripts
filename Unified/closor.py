@@ -1,13 +1,119 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import componentInfo, sendEmail, setDatasetStatus, unifiedConfiguration, workflowInfo
+from utils import componentInfo, sendEmail, setDatasetStatus, unifiedConfiguration, workflowInfo, siteInfo
 import reqMgrClient
 import json
 import time
 import sys
+import os
 from utils import getDatasetEventsAndLumis, campaignInfo, getDatasetPresence, findLateFiles
 from htmlor import htmlor
 from collections import defaultdict
+import reqMgrClient
+import re
+import copy
+
+
+def spawn_harvesting(url, wfi , in_full):
+    SI = siteInfo()
+    
+    all_OK = {}
+    requests = []
+    outputs = wfi.request['OutputDatasets'] 
+    if 'EnableHarvesting' in wfi.request and wfi.request['EnableHarvesting']:
+        wfi = workflowInfo(url, wfi.request['RequestName'] ,deprecated=True)
+        dqms = [out for out in outputs if '/DQM' in out]
+        if not all([in_full[dqm_input] for dqm_input in dqms]):
+            print "will not be able to assign the harvesting: holding up"
+            for dqm_input in dqms:
+                all_OK[dqm_input] = False
+                return all_OK,requests
+
+        for dqm_input in dqms:
+            ## handle it properly
+            harvesting_schema = {
+                'Requestor': os.getenv('USER'),
+                'RequestType' : 'DQMHarvest',
+                'Group' : 'DATAOPS'
+                }
+            copy_over = ['ProcessingString',
+                         'DQMUploadUrl',
+                         'CMSSWVersion',
+                         'CouchDBName',
+                         'CouchWorkloadDBName',
+                         'CouchURL',
+                         'DbsUrl',
+                         'inputMode',
+                         'DQMConfigCacheID',
+                         'OpenRunningTimeout',
+                         'ScramArch',
+                         'CMSSWVersion',
+                         'Campaign',
+                         'Memory', #dummy
+                         'SizePerEvent', #dummy
+                         'GlobalTag', #dummy
+                         ]
+            for item in copy_over:
+                harvesting_schema[item] = copy.deepcopy(wfi.request[item])
+            harvesting_schema['InputDataset'] = dqm_input
+            harvesting_schema['TimePerEvent'] = 1
+            harvesting_schema['PrepID'] = 'Harvest-'+wfi.request['PrepID']
+            harvesting_schema['RequestString'] = 'HARVEST-'+wfi.request['RequestString']
+            harvesting_schema['DQMHarvestUnit'] = 'byRun'
+            harvesting_schema['ConfigCacheUrl'] = harvesting_schema['CouchURL'] ## uhm, how stupid is that ?
+            harvesting_schema['RequestPriority'] = wfi.request['RequestPriority']*10
+
+            response= reqMgrClient.submitWorkflow(url, harvesting_schema)
+            m = re.search("details\/(.*)\'",response)
+            if not m:
+                print "Error in making harvesting for",wfo.name
+                print "schema"
+                print json.dumps( harvesting_schema, indent = 2)
+                print "response"
+                print response
+                response = reqMgrClient.submitWorkflow(url, harvesting_schema)
+                m = re.search("details\/(.*)\'",response)
+                if not m:
+                    print "Error twice in harvesting for",wfo.name
+                    print "schema"
+                    print json.dumps( harvesting_schema, indent = 2)
+                    print "response"
+                    print response
+                    m = None
+            if m:
+                harvest_request = m.group(1)
+                requests.append( harvest_request )
+                ## should we protect for setting approved ? no, it's notified below, assignment will fail, likely
+                data = reqMgrClient.setWorkflowApproved(url, harvest_request)
+                print "created",harvest_request,"for harvesting of",dqm_input
+                ## assign it directly
+                team = wfi.request['Teams'][0]
+                parameters={
+                    'SiteWhitelist' : [SI.SE_to_CE(se) for se in wfi.request['NonCustodialSites']],
+                    'AcquisitionEra' : wfi.acquisitionEra(),
+                    'ProcessingString' : wfi.processingString(),
+                    'MergedLFNBase' : wfi.deprecated_request['MergedLFNBase'], 
+                    'ProcessingVersion' : wfi.request['ProcessingVersion'],
+                    'execute' : True
+                    }
+                if in_full[dqm_input]:
+                    print "using full copy at",in_full[dqm_input]
+                    parameters['SiteWhitelist'] = [SI.SE_to_CE(se) for se in in_full[dqm_input]]
+                else:
+                    print "cannot do anything if not having a full copy somewhere"
+                    all_OK[dqm_input]=False
+                    continue
+
+                result = reqMgrClient.assignWorkflow(url, harvest_request, team, parameters)
+                if not result:
+                    sendEmail('harvesting request created','%s was created at announcement of %s in %s, failed to assign'%(harvest_request, dqm_input, wfi.request['RequestName']), destination=[wfi.request['Requestor']+'@cern.ch'])
+                else:
+                    sendEmail('harvesting request assigned','%s was created at announcement of %s in %s, and assigned'%(harvest_request, dqm_input, wfi.request['RequestName']), destination=[wfi.request['Requestor']+'@cern.ch']) 
+
+            else:
+                print "could not make the harvesting for",wfo.name,"not announcing"
+                all_OK[dqm_input]=False                    
+    return (all_OK, requests)
 
 def closor(url, specific=None):
     if not componentInfo().check(): return
@@ -17,8 +123,16 @@ def closor(url, specific=None):
     #LI = lockInfo()
 
     all_late_files = []
+    check_fullcopy_to_announce = UC.get('check_fullcopy_to_announce')
     ## manually closed-out workflows should get to close with checkor
-    for wfo in session.query(Workflow).filter(Workflow.status=='close').all():
+    if specific:
+        wfs = session.query(Workflow).filter(Workflow.name.contains(specific)).all()
+    else:
+        wfs = session.query(Workflow).filter(Workflow.status=='close').all()
+
+    held = set()
+
+    for wfo in wfs:
 
         if specific and not specific in wfo.name: continue
 
@@ -75,12 +189,15 @@ def closor(url, specific=None):
 
 
         ## check for at least one full copy prior to moving on
+        in_full = {}
         for out in outputs:
+            in_full[out] = []
             presence = getDatasetPresence( url, out )
             where = [site for site,info in presence.items() if info[0]]
             if where:
                 all_OK[out] = True
                 print out,"is in full at",",".join(where)
+                in_full[out] = copy.deepcopy(where)
             else:
                 print out,"is not in full anywhere"
                 going_to = wfi.request['NonCustodialSites']+wfi.request['CustodialSites']
@@ -92,8 +209,104 @@ def closor(url, specific=None):
                 ## do the full stuck transfer study, missing files and shit !
                 for there in going_to:
                     late_info = findLateFiles(url, out, going_to = there )
+                    for l in late_info:
+                        l.update({"workflow":wfo.name,"dataset":out})
                     all_late_files.extend( late_info )
-                all_OK[out] = False
+                if check_fullcopy_to_announce:
+                    ## only set this false if the check is relevant
+                    all_OK[out] = False
+
+    
+        ## verify if we have to do harvesting
+        (OK, requests) = spawn_harvesting(url, wfi, in_full)
+        all_OK.update( OK )
+        """
+        if 'EnableHarvesting' in wfi.request and wfi.request['EnableHarvesting']:
+            wfi = workflowInfo(url, wfo.name ,deprecated=True)
+            dqms = [out for out in outputs if '/DQM' in out]
+            for dqm_input in dqms:
+                ## handle it properly
+                harvesting_schema = {
+                    'Requestor': os.getenv('USER'),
+                    'RequestType' : 'DQMHarvest',
+                    'Group' : 'DATAOPS'
+                    }
+                copy_over = ['ProcessingString',
+                             'DQMUploadUrl',
+                             'CMSSWVersion',
+                             'CouchDBName',
+                             'CouchWorkloadDBName',
+                             'CouchURL',
+                             'DbsUrl',
+                             'inputMode',
+                             'DQMConfigCacheID',
+                             #'ConfigCacheUrl',
+                             'OpenRunningTimeout',
+                             'ScramArch',
+                             'CMSSWVersion',
+                             'Campaign',
+                             'Memory', #dummy
+                             'SizePerEvent', #dummy
+                             'GlobalTag', #dummy
+                             ]
+                for item in copy_over:
+                    harvesting_schema[item] = copy.deepcopy(wfi.request[item])
+                harvesting_schema['InputDataset'] = dqm_input
+                harvesting_schema['TimePerEvent'] = 1
+                harvesting_schema['PrepID'] = 'Harvest-'+wfi.request['PrepID']
+                harvesting_schema['RequestString'] = 'HARVEST-'+wfi.request['RequestString']
+                harvesting_schema['DQMHarvestUnit'] = 'byRun'
+                harvesting_schema['ConfigCacheUrl'] = harvesting_schema['CouchURL'] ## uhm, how stupid is that ?
+                harvesting_schema['RequestPriority'] = wfi.request['RequestPriority']*10
+
+                response= reqMgrClient.submitWorkflow(url, harvesting_schema)
+                m = re.search("details\/(.*)\'",response)
+                if not m:
+                    print "Error in making harvesting for",wfo.name
+                    print "schema"
+                    print json.dumps( harvesting_schema, indent = 2)
+                    print "response"
+                    print response
+                    response = reqMgrClient.submitWorkflow(url, harvesting_schema)
+                    m = re.search("details\/(.*)\'",response)
+                    if not m:
+                        print "Error twice in harvesting for",wfo.name
+                        print "schema"
+                        print json.dumps( harvesting_schema, indent = 2)
+                        print "response"
+                        print response
+                        m = None
+                if m:
+                    harvest_request = m.group(1)
+                    ## should we protect for setting approved ? no, it's notified below, assignment will fail, likely
+                    data = reqMgrClient.setWorkflowApproved(url, harvest_request)
+                    print "created",harvest_request,"for harvesting of",dqm_input
+                    ## assign it directly
+                    team = wfi.request['Teams'][0]
+                    parameters={
+                        'SiteWhitelist' : [SI.SE_to_CE(se) for se in wfi.request['NonCustodialSites']],
+                        'AcquisitionEra' : wfi.acquisitionEra(),
+                        'ProcessingString' : wfi.processingString(),
+                        'MergedLFNBase' : wfi.deprecated_request['MergedLFNBase'], 
+                        'ProcessingVersion' : wfi.request['ProcessingVersion'],
+                        'execute' : True
+                        }
+                    if in_full[dqm_input]:
+                        print "using full copy at",in_full[dqm_input]
+                        parameters['SiteWhitelist'] = [SI.SE_to_CE(se) for se in in_full[dqm_input]]
+                    else:
+                        parameters['SiteWhitelist'] = wfi.request['SiteWhitelist']
+
+                    result = reqMgrClient.assignWorkflow(url, harvest_request, team, parameters)
+                    if not result:
+                        sendEmail('harvesting request created','%s was created at announcement of %s in %s, failed to assign'%(harvest_request, dqm_input, wfo.name), destination=[wfi.request['Requestor']+'@cern.ch'])
+                    else:
+                        sendEmail('harvesting request assigned','%s was created at announcement of %s in %s, and assigned'%(harvest_request, dqm_input, wfo.name), destination=[wfi.request['Requestor']+'@cern.ch']) 
+
+                else:
+                    print "could not make the harvesting for",wfo.name,"not announcing"
+                    all_OK[dqm_input]=False                    
+        """
 
         ## only that status can let me go into announced
         if all(all_OK.values()) and wfi.request['RequestStatus'] in ['closed-out']:
@@ -186,6 +399,7 @@ def closor(url, specific=None):
                 print "ERROR with ",wfo.name,"to be announced",json.dumps( results )
         else:
             print wfo.name,"not good for announcing:",wfi.request['RequestStatus']
+            held.add( wfo.name )
 
     days_late = 0.
     retries_late = 10
@@ -194,9 +408,13 @@ def closor(url, specific=None):
     really_late_files = [info for info in really_late_files if info['delay']/(60*60*24.)>=days_late]
 
     if really_late_files:
-        sendEmail('waiting for files to announce','These files are lagging for %d days and %d retries announcing dataset \n%s'%(days_late, retries_late, json.dumps( really_late_files , indent=2)))
+        subject = 'These %d files are lagging for %d days and %d retries announcing dataset \n%s'%(len(really_late_files), days_late, retries_late, json.dumps( really_late_files , indent=2) )
+        sendEmail('waiting for files to announce', subject)
+        print subject
         open('/afs/cern.ch/user/c/cmst2/www/unified/stuck_files.json','w').write( json.dumps( really_late_files , indent=2))
 
+    if held:
+        sendEmail("held from announcing","the workflows below are held up, please check the logs https://cmst2.web.cern.ch/cmst2/unified/logs/closor/last.log \n%s"%("\n".join( held )))
 
         
 if __name__ == "__main__":
@@ -206,4 +424,5 @@ if __name__ == "__main__":
         spec=sys.argv[1]
     closor(url,spec)
 
-    htmlor()
+    if not spec:
+        htmlor()
