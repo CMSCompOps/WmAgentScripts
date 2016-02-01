@@ -43,6 +43,7 @@ def collector(url, specific, options):
 
     datasets = will_be_used.keys()
     if options.limit:
+        print "Restricting to randomly picked",options.limit
         random.shuffle( datasets )
         datasets = datasets[:options.limit]
     
