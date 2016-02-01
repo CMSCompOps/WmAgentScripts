@@ -31,7 +31,7 @@ def assignor(url ,specific = None, talk=True, options=None):
     n_stalled = 0
 
     wfos=[]
-    if specific:
+    if specific or options.early:
         wfos.extend( session.query(Workflow).filter(Workflow.status=='considered').all())
         wfos.extend( session.query(Workflow).filter(Workflow.status=='staging').all())
     wfos.extend(session.query(Workflow).filter(Workflow.status=='staged').all())
@@ -87,6 +87,7 @@ def assignor(url ,specific = None, talk=True, options=None):
         ## the site whitelist takes into account siteInfo, campaignInfo, memory and cores
         (lheinput,primary,parent,secondary, sites_allowed) = wfh.getSiteWhiteList()
 
+        original_sites_allowed = copy.deepcopy( sites_allowed )
         print "Site white list",sorted(sites_allowed)
 
         override_sec_location = CI.get(wfh.request['Campaign'], 'SecondaryLocation', [])
@@ -195,14 +196,15 @@ def assignor(url ,specific = None, talk=True, options=None):
             copies_needed_from_campaign = CI.campaigns[wfh.request['Campaign']]['maxcopies']
             copies_wanted = min(copies_needed_from_campaign, copies_wanted)
         
-        less_copies_than_requested = UC.get("less_copies_than_requested")
-        copies_wanted = max(1,copies_wanted-less_copies_than_requested) # take one out for the efficiency
-        
+        if not options.early:
+            less_copies_than_requested = UC.get("less_copies_than_requested")
+            copies_wanted = max(1,copies_wanted-less_copies_than_requested) # take one out for the efficiency
+        print "needed availability fraction",copies_wanted
 
         if available_fractions and not all([available>=copies_wanted for available in available_fractions.values()]):
             not_even_once = not all([available>=1. for available in available_fractions.values()])
             print "The input dataset is not available",copies_wanted,"times, only",available_fractions.values()
-            if down_time and not options.go:
+            if down_time and not options.go and not options.early:
                 wfo.status = 'considered'
                 session.commit()
                 print "sending back to considered because of site downtime, instead of waiting"
@@ -217,7 +219,7 @@ def assignor(url ,specific = None, talk=True, options=None):
                     known = json.loads(open('cannot_assign.json').read())
                 except:
                     pass
-                if not wfo.name in known and not options.limit and not options.go:
+                if not wfo.name in known and not options.limit and not options.go and not options.early:
                     sendEmail( "cannot be assigned","%s is not sufficiently available. Probably phedex information lagging behind. \n %s"%(wfo.name,json.dumps(available_fractions)))
                     known.append( wfo.name )
                     open('cannot_assign.json','w').write(json.dumps( known, indent=2))
@@ -263,7 +265,9 @@ def assignor(url ,specific = None, talk=True, options=None):
             # then pick any otherwise
             sites_out = [SI.pick_dSE([SI.CE_to_SE(ce) for ce in sites_allowed])]
 
-
+        ## one last modification now that we know we can assign, and to make sure all ressource can be used by the request : set all ON sites to whitelist
+        sites_allowed = original_sites_allowed
+            
         print "Placing the output on", sites_out
         parameters={
             'SiteWhitelist' : sites_allowed,
@@ -296,7 +300,7 @@ def assignor(url ,specific = None, talk=True, options=None):
         #    sendEmail("sending work to SDSC","%s was assigned to SDSC/UCSD"% wfo.name, destination=['boj@fnal.gov'])
         
         ## SDSC redirection
-        #if wfh.request['Campaign']=='RunIIWinter15GS' and random.random() < -1.0:
+        #if wfh.request['Campaign']==R'unIIWinter15GS' and random.random() < -1.0:
         #    parameters['SiteWhitelist'] = ['T3_US_SDSC']
         #    team = 'allocation-based'
         #    sendEmail("sending work to SDSC","%s was assigned to SDSC"% wfo.name, destination=['boj@fnal.gov'])
@@ -400,6 +404,7 @@ if __name__=="__main__":
     parser = optparse.OptionParser()
     parser.add_option('-t','--test', help='Only test the assignment',action='store_true',dest='test',default=False)
     parser.add_option('-r', '--restrict', help='Only assign workflows for site with input',default=False, action="store_true",dest='restrict')
+    parser.add_option('-e', '--early', help='Fectch from early statuses',default=False, action="store_true")
     parser.add_option('--go',help="Overrides the campaign go",default=False,action='store_true')
     parser.add_option('--team',help="Specify the agent to use",default='production')
     parser.add_option('--primary_aaa',help="Force to use the secondary location restriction, if any, and use the full site whitelist initially provided to run that type of wf",default=False, action='store_true')
