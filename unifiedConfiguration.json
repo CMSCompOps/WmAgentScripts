@@ -5,7 +5,15 @@
  },
  "tiers_with_no_custodial": {
    "value" : ["DQM","DQMIO","RECO"],
-   "description": "The data tiers that do not go to tape"
+   "description": "The data tiers that do not go to tape. Can be overidden by custodial overide at campaign level"
+ },
+ "use_parent_custodial": {
+   "value" : true,
+   "description": "Use the location of the parent dataset for custodial copy"
+ },
+ "tiers_with_no_check": {
+   "value" : ["DQM","DQMIO"],
+   "description": "The data tiers that do not pass closeout checks. Can be overidden by custodial overide at campaign level"
  },
  "tiers_no_DDM": {
    "value" : ["GEN-SIM","LHE","GEN","DQM","DQMIO"],
@@ -14,6 +22,10 @@
  "tiers_to_DDM": {
    "value" : ["AODSIM","MINIAODSIM","GEN-SIM-RAW","GEN-SIM-RECO","GEN-SIM-RECODEBUG","AOD","RECO","MINIAOD","ALCARECO","USER","RAW-RECO"],
    "description": "The data tiers that go to AnaOps"
+ },
+ "check_fullcopy_to_announce": {
+  "value" : false,
+  "description": "Whether to check for a full copy being present prior to announcing a dataset"
  },
  "stagor_sends_back": {
    "value" : true,
@@ -40,7 +52,7 @@
    "description": "Time in days after which to consider a transfer to be stuck"
   },
   "transfer_lowrate": {
-   "value" : 0.0004,
+   "value" : 0.004,
    "description": "Rate in GB/s under which to consider a transfer to be stuck, after transfer_timeout days"
   },
   "less_copies_than_requested": {
