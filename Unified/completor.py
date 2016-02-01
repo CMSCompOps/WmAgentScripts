@@ -3,13 +3,14 @@ from assignSession import *
 import sys
 import reqMgrClient
 from utils import workflowInfo, getWorkflowById, getDatasetEventsAndLumis
-from utils import campaignInfo, sendEmail
+from utils import campaignInfo, sendEmail, siteInfo
 import json
 import random
 
 def completor(url, specific):
     
     CI = campaignInfo()
+    SI = siteInfo()
 
     wfs = []
     wfs.extend( session.query(Workflow).filter(Workflow.status == 'away').all() )
@@ -29,7 +30,7 @@ def completor(url, specific):
     long_lasting = {}
 
     overrides = {}
-    for rider,email in [('jbadillo','julian.badillo.rojas@cern.ch'),('vlimant','vlimant@cern.ch'),('jen_a','jen_a@fnal.gov'),('srimanob','srimanob@mail.cern.ch')]:
+    for rider,email in [('vlimant','vlimant@cern.ch'),('jen_a','jen_a@fnal.gov'),('srimanob','srimanob@mail.cern.ch')]:
         rider_file = '/afs/cern.ch/user/%s/%s/public/ops/forcecomplete.json'%(rider[0],rider)
         if not os.path.isfile(rider_file):
             print "no file",rider_file
@@ -69,7 +70,7 @@ def completor(url, specific):
 
         if not 'Campaign' in wfi.request: continue
 
-        if not wfi.request['RequestStatus'] in ['running-open','running-closed']: continue
+        if not wfi.request['RequestStatus'] in ['acquired','running-open','running-closed']: continue
 
         c = wfi.request['Campaign']
         if not c in good_fractions: continue
@@ -103,8 +104,6 @@ def completor(url, specific):
         if delay >= 7:
             long_lasting[wfo.name] = { "delay" : delay }
             pass
-
-        if delay <= 14: continue
 
         percent_completions = {}
         for output in wfi.request['OutputDatasets']:
@@ -146,6 +145,15 @@ def completor(url, specific):
                     print b,"has no location for GQ in",wfi.request['RequestName']
                     ## this is severe !
                     wfs_no_location_in_GQ.add( wfo.name )
+                ## check location and site white list
+                can_run = set([SI.SE_to_CE(se) for se in loc])&set(wfi.request['SiteWhitelist'])
+                if loc and not can_run:
+                    print b,"is missing site to run within the whitelist"
+                    wfs_no_location_in_GQ.add( wfo.name )
+                can_run = can_run & set(SI.sites_ready)
+                if loc and not can_run:
+                    print b,"is missing available site to run"
+                    wfs_no_location_in_GQ.add( wfo.name )
             continue
 
         if all([percent_completions[out] >= ignore_fraction for out in percent_completions]):
@@ -162,6 +170,9 @@ def completor(url, specific):
         print "Required:",cpuh,
         print "Time spend:",delay
 
+        # only really force complete after n days
+        if delay <= 14: continue
+        print "going for force-complete of",wfo.name
         ## find ACDCs that might be running
         familly = getWorkflowById( url, wfi.request['PrepID'] ,details=True)
         for member in familly:
