@@ -79,6 +79,7 @@ def transferor(url ,specific = None, talk=True, options=None):
 
     transfers_per_sites = defaultdict(int)
     input_sizes = {}
+    ignored_input_sizes = {}
     input_cput = {}
     input_st = {}
     ## list the size of those in transfer already
@@ -86,6 +87,7 @@ def transferor(url ,specific = None, talk=True, options=None):
     min_transfer_priority=100000000
     print "getting all wf in staging ..."
     stucks = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/stuck_transfers.json').read())
+    
     for wfo in session.query(Workflow).filter(Workflow.status=='staging').all():
         wfh = workflowInfo( url, wfo.name, spec=False)
         #(lheinput,primary,parent,secondary) = wfh.getIO()
@@ -99,11 +101,25 @@ def transferor(url ,specific = None, talk=True, options=None):
             ds_s = dss.get( prim )
             if prim in stucks: 
                 print "\t",prim,"appears stuck, so not counting it",ds_s,"[GB]"
+                ignored_input_sizes[prim] = ds_s
             else:
                 input_sizes[prim] = ds_s
                 print "\t",wfo.name,"needs",input_sizes[prim],"[GB]"
         in_transfer_priority = max(in_transfer_priority, int(wfh.request['RequestPriority']))
         min_transfer_priority = min(min_transfer_priority, int(wfh.request['RequestPriority']))
+
+    try:
+        print "Ignored input sizes"
+        ignored_values = list(ignored_input_sizes.items())
+        ignored_values.sort( key = lambda i : i[1] )
+        print "\n".join( map(str, ignored_values ) )
+        print "Considered input sizes"
+        considered_values = list(input_sizes.items())
+        considered_values.sort( key = lambda i : i[1] )
+        print "\n".join( map(str, considered_values) )
+    except Exception as e:
+        print "trying to print the summary of input size"
+        print str(e)
 
     print "... done"
     print "Max priority in transfer already",in_transfer_priority
@@ -187,6 +203,7 @@ def transferor(url ,specific = None, talk=True, options=None):
 
         (_,primary,_,_) = wfh.getIO()
         this_load=sum([input_sizes[prim] for prim in primary])
+        no_budget = False
         if ( this_load and (sum(transfer_sizes.values())+this_load > transfer_limit or went_over_budget ) ):
             if went_over_budget:
                 print "Transfer has gone over bubget."
@@ -202,8 +219,7 @@ def transferor(url ,specific = None, talk=True, options=None):
             else:
                 if not options.go: 
                     print min_transfer_priority,"minimum priority",wfh.request['RequestPriority'],"<",in_transfer_priority,"stop"
-                    continue
-
+                    no_budget = True
 
         ## throtlle by campaign go
         if not CI.go( wfh.request['Campaign'] ):
@@ -268,7 +284,9 @@ def transferor(url ,specific = None, talk=True, options=None):
                 print "Higher priority sample",wfh.request['RequestPriority'],">=",in_transfer_priority,"go-on over",max_to_handle
             else:
                 print "Not allowed to pass more than",max_to_handle,"at a time. Currently",being_handled,"handled, and adding",passing_along
-                if not options.go: break
+                if not options.go: 
+                    ## should not allow to jump that fence
+                    break
 
         if this_load and needs_transfer >= allowed_to_transfer:
             #if int(wfh.request['RequestPriority']) >= in_transfer_priority and min_transfer_priority!=in_transfer_priority:
@@ -277,8 +295,12 @@ def transferor(url ,specific = None, talk=True, options=None):
                 print "Higher priority sample",wfh.request['RequestPriority'],">=",in_transfer_priority,"go-on over",max_to_transfer
             else:
                 print "Not allowed to transfer more than",max_to_transfer,"at a time. Currently",being_transfered,"transfering, and adding",needs_transfer
-                if not options.go: continue
+                if not options.go: 
+                    no_budget = True
 
+
+        if no_budget:
+            continue
 
         ## the site white list considers site, campaign, memory and core information
         (lheinput,primary,parent,secondary,sites_allowed) = wfh.getSiteWhiteList()
@@ -321,6 +343,9 @@ def transferor(url ,specific = None, talk=True, options=None):
                 print wfo.name,'reads',', '.join(primary),'in primary'
             ## chope the primary dataset 
             for prim in primary:
+                ## keep track of what needs what
+                workflow_dependencies[prim].add( wfo.id )
+
                 max_priority[prim] = max(max_priority[prim],int(wfh.request['RequestPriority']))
                 sites_allowed = [site for site in sites_allowed if not any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
                 print "Sites allowed minus the vetoed transfer"
@@ -347,33 +372,6 @@ def transferor(url ,specific = None, talk=True, options=None):
                     
                     print "Maxed to",copies_needed,"by campaign configuration",wfh.request['Campaign']
 
-                ## remove the sites that do not want transfers                
-                workflow_dependencies[prim].add( wfo.id )
-
-                #####################################
-                ###### JR 3/8/15 #### deprecating this
-                """
-                presence = getDatasetPresence( url, prim , within_sites = [SI.CE_to_SE(site) for site in sites_allowed])
-                prim_location = [site for site,pres in presence.items() if pres[0]==True]
-                prim_parts = [site for site,pres in presence.items() if pres[0]==False]
-                if len(prim_location) >= copies_needed:
-                    print "The output is all fully in place at",len(prim_location),"sites"
-                    continue
-                # reduce the number of copies required by existing full copies
-                copies_needed = max(0,copies_needed - len(prim_location))
-                print "now need",copies_needed
-                subscriptions = listSubscriptions( url , prim , sites_allowed )
-                prim_destination = list(set([site for (site,(tid,decision)) in subscriptions.items() if decision and not any([site.endswith(veto) for veto in ['MSS','Export','Buffer']])]))
-                ## remove the subscription where the dataset is in parts at
-                #prim_destination = list(set([site for (site,(tid,decision)) in subscriptions.items() if decision and not any([site.endswith(veto) for veto in ['MSS','Export','Buffer']]) and not site in prim_parts]))
-                ## need to reject from that list the ones with a full copy already: i.e the transfer corresponds to the copy in place
-                prim_destination = [site for site in prim_destination if not site in prim_location]
-                ## add transfer dependencies
-                latching_on_transfers =  list(set([ tid for (site,(tid,decision)) in subscriptions.items() if decision and site in prim_destination and not any([site.endswith(veto) for veto in ['MSS','Export','Buffer']])]))
-                print latching_on_transfers
-                """
-                ###### JR 3/8/15 #### deprecating this
-                #####################################
 
 
                 ### new ways of making the whole thing
@@ -598,6 +596,7 @@ def transferor(url ,specific = None, talk=True, options=None):
 
         ## massage a bit the items
         blocks = [it for it in items_to_transfer if '#' in it]
+        block_datasets = list(set([it.split('#')[0] for it in blocks]))
         datasets = [it for it in items_to_transfer if not '#' in it]
 
         if execute:
@@ -621,29 +620,17 @@ def transferor(url ,specific = None, talk=True, options=None):
                 continue
 
         if execute:
-            result = makeReplicaRequest(url, site_se, items_to_transfer, 'prestaging', priority='normal')
-            ## make use of max_priority dataset:priority to set the subscriptions priority
-            """
-            ## does not function
-            once = True
-            for item in items_to_transfer:
-                bds = item.split('#')[0]
-                if max_priority[bds] >= 90000:
-                    if once:
-                        w=10
-                        print "waiting",w,"s before raising priority"
-                        time.sleep(w)
-                        once=False
-                    ## raise it to high priority
-                    print item,"subscription priority raised to high at",site_se
-                    #print "This does not work yet properly it seems"
-                    print updateSubscription(url, site_se, item, priority='high')
-            """
-            #for item in list(set([it.split('#')[0] for it in items_to_transfer])):
-            #for item in items_to_transfer:
-            #    LI.lock( item, site_se, 'pre-staging')
+            priority = 'normal'
+            cds = [ds for ds in datasets+block_datasets if ds in max_priority]
+            if cds:
+                ## decide on an overall priority : that's a bit too large though
+                if any([max_priority[ds]>=90000 for ds in cds]):
+                    priority = 'high'
+                elif all([max_priority[ds]<80000 for ds in cds]):
+                    priority = 'low'
+                
+            result = makeReplicaRequest(url, site_se, items_to_transfer, 'prestaging', priority=priority)
         else:
-            #result= {'phedex':{'request_created' : [{'id' : fake_id}]}}
             result= {'phedex':{'request_created' : []}}
             fake_id-=1
 
