@@ -1,0 +1,3511 @@
+**** Something very wrong : 0 ****
+*******
+
+
+
+**** completd but in different state with No jobs : 0 ****
+*******
+
+
+
+**** completd but in different state : 0 ****
+*******
+
+
+
+**** Log collect job is not created : 23 ****
+alahiff_HLTCloudTesting_130417_121355_4031 : aborted :['vocms142.cern.ch:9999'] :2013-04-19 11:35:27
+  LogCollect : DataProcessingDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeAODoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingRECOoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedRECOoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  Processing : DataProcessing
+    job info: {'paused': 0, 'failure': 5, 'running': 0, 'cooloff': 0, 'created': 61, 'sucess': 56, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingAODoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 4, 'running': 0, 'cooloff': 0, 'created': 4, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedAODoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeRECOoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+alahiff_HLTCloudTesting_130419_191131_6261 : aborted :['vocms142.cern.ch:9999'] :2013-04-20 03:23:10
+  LogCollect : DataProcessingDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeAODoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingRECOoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Processing : DataProcessing
+    job info: {'paused': 0, 'failure': 103, 'running': 0, 'cooloff': 0, 'created': 103, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingAODoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedRECOoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedAODoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeRECOoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+alahiff_HLTCloudTesting_130422_152504_378 : aborted :['vocms142.cern.ch:9999'] :2013-04-23 03:26:55
+  Cleanup : DataProcessingCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 3, 'sucess': 3, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 2, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedRECOoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 3, 'sucess': 3, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingAODoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingRECOoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Processing : DataProcessing
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 112, 'sucess': 112, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeRECOoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedAODoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 3, 'sucess': 3, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeAODoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+alahiff_HLTCloudTesting_130423_102421_186 : aborted :['vocms142.cern.ch:9999'] :2013-04-24 08:15:35
+  LogCollect : DataProcessingDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedAODoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeAODoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedRECOoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 2, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Processing : DataProcessing
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 149, 'sucess': 149, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingAODoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingRECOoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeRECOoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+alahiff_HLTCloudTesting_130429_195828_1521 : aborted :['vocms142.cern.ch:9999'] :2013-04-30 10:24:14
+  Merge : DataProcessingMergeRECOoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingRECOoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeAODoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingAODoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedAODoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  Processing : DataProcessing
+    job info: {'paused': 0, 'failure': 333, 'running': 0, 'cooloff': 0, 'created': 466, 'sucess': 133, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedRECOoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+
+
+samir_Samir4_130929_130404_8886 : aborted :['vocms224.cern.ch:9999'] :2013-10-02 07:49:23
+  LogCollect : DataProcessingRECOoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : 2011B_442p2_DataReprocessingBTagSkimMergeSKIMStreamEXOHSCP
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : 2011B_442p2_DataReprocessingBTagSkimCleanupUnmergedSKIMStreamEXOHSCP
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : 2011B_442p2_DataReprocessingBTagSkimLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedAODoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  LogCollect : 2011B_442p2_DataReprocessingBTagSkimSKIMStreamEXOHSCPMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : 2011B_442p2_DataReprocessingBTagSkimMergeSKIMStreamLogError
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Skim : 2011B_442p2_DataReprocessingBTagSkim
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeAODoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedRECOoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  LogCollect : 2011B_442p2_DataReprocessingBTagSkimSKIMStreamLogErrorMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Processing : DataProcessing
+    job info: {'paused': 0, 'failure': 2, 'running': 0, 'cooloff': 0, 'created': 3, 'sucess': 1, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeRECOoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : 2011B_442p2_DataReprocessingBTagSkimCleanupUnmergedSKIMStreamLogError
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingAODoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+samir_Samir8_IN2P3_131003_162336_1991 : aborted :['vocms224.cern.ch:9999'] :2013-10-03 10:33:15
+  Merge : 2011B_442p2_DataReprocessingBTagSkimMergeSKIMStreamLogError
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : 2011B_442p2_DataReprocessingBTagSkimSKIMStreamLogErrorMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : 2011B_442p2_DataReprocessingBTagSkimSKIMStreamEXOHSCPMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Skim : 2011B_442p2_DataReprocessingBTagSkim
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeAODoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : 2011B_442p2_DataReprocessingBTagSkimCleanupUnmergedSKIMStreamLogError
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : 2011B_442p2_DataReprocessingBTagSkimMergeSKIMStreamEXOHSCP
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedRECOoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingRECOoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Processing : DataProcessing
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedAODoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingAODoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : 2011B_442p2_DataReprocessingBTagSkimLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : 2011B_442p2_DataReprocessingBTagSkimCleanupUnmergedSKIMStreamEXOHSCP
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeRECOoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+jbadillo_BTV-Fall13-00027_00007_v0__131205_101834_2212 : completed :['vocms230.cern.ch:9999'] :2014-01-17 06:27:55
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Production : Production
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 0, 'queued': 0, 'pending': 0}
+  ProductionRAWSIMoutputMergeLogCollect : ProductionRAWSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+alahiff_HLTCloudTesting_130523_160932_723 : aborted :['vocms142.cern.ch:9999'] :2014-02-10 01:39:04
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 8, 'sucess': 8, 'queued': 0, 'pending': 0}
+  Processing : DataProcessing
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 4336, 'sucess': 4335, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedRECOoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 52, 'sucess': 52, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingRECOoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedAODoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 86, 'sucess': 86, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeRECOoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 816, 'sucess': 816, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeDQMoutput
+    job info: {'paused': 0, 'failure': 4, 'running': 0, 'cooloff': 0, 'created': 139, 'sucess': 135, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingAODoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 83, 'sucess': 83, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeAODoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 584, 'sucess': 584, 'queued': 0, 'pending': 0}
+
+
+amaltaro_700_pre11_ZJetsLNu_LHE_140630_154117_71 : completed :['cmssrv94.fnal.gov:9999'] :2014-06-30 14:46:02
+  ZJetsLNu_Tune4C_8TeV_madgraph-pythia8 : ZJetsLNu_Tune4C_8TeV_madgraph-pythia8
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollectForZJetsLNu_Tune4C_8TeV_madgraph-pythia8 : LogCollectForZJetsLNu_Tune4C_8TeV_madgraph-pythia8
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  ZJetsLNu_Tune4C_8TeV_madgraph-pythia8MergeRAWSIMoutput : ZJetsLNu_Tune4C_8TeV_madgraph-pythia8MergeRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 17, 'sucess': 17, 'queued': 0, 'pending': 0}
+  ZJetsLNu_Tune4C_8TeV_madgraph-pythia8RAWSIMoutputMergeLogCollect : ZJetsLNu_Tune4C_8TeV_madgraph-pythia8RAWSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  ZJetsLNu_Tune4C_8TeV_madgraph-pythia8CleanupUnmergedRAWSIMoutput : ZJetsLNu_Tune4C_8TeV_madgraph-pythia8CleanupUnmergedRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+
+
+amaltaro_700_pre11_H130GGgluonfusion_PU_140630_154052_5430 : completed :['cmssrv94.fnal.gov:9999'] :2014-06-30 14:47:26
+  DIGIPU1 : DIGIPU1
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollectForRECOPU1 : LogCollectForRECOPU1
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  RECOPU1MergeDQMoutputMergedEndOfRunDQMHarvestLogCollect : RECOPU1MergeDQMoutputMergedEndOfRunDQMHarvestLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  DIGIPU1CleanupUnmergedFEVTDEBUGHLToutput : DIGIPU1CleanupUnmergedFEVTDEBUGHLToutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+  RECOPU1 : RECOPU1
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 32, 'sucess': 31, 'queued': 0, 'pending': 0}
+  LogCollectForDIGIPU1 : LogCollectForDIGIPU1
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  RECOPU1MergeRECOSIMoutput : RECOPU1MergeRECOSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 5, 'sucess': 5, 'queued': 0, 'pending': 0}
+  RECOPU1CleanupUnmergedRECOSIMoutput : RECOPU1CleanupUnmergedRECOSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 3, 'sucess': 3, 'queued': 0, 'pending': 0}
+  RECOPU1DQMoutputMergeLogCollect : RECOPU1DQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  RECOPU1MergeDQMoutput : RECOPU1MergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  RECOPU1MergeDQMoutputEndOfRunDQMHarvestMerged : RECOPU1MergeDQMoutputEndOfRunDQMHarvestMerged
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  RECOPU1RECOSIMoutputMergeLogCollect : RECOPU1RECOSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  RECOPU1CleanupUnmergedDQMoutput : RECOPU1CleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+  DIGIPU1MergeFEVTDEBUGHLToutput : DIGIPU1MergeFEVTDEBUGHLToutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  DIGIPU1FEVTDEBUGHLToutputMergeLogCollect : DIGIPU1FEVTDEBUGHLToutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+
+
+amaltaro_700_pre11_PyquenZeemumuJets_PU_140630_154101_6302 : completed :['cmssrv94.fnal.gov:9999'] :2014-06-30 15:07:39
+  RECOHISt4 : RECOHISt4
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 78, 'sucess': 77, 'queued': 0, 'pending': 0}
+  Pyquen_ZeemumuJets_pt10_2760GeVRAWSIMoutputMergeLogCollect : Pyquen_ZeemumuJets_pt10_2760GeVRAWSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollectForDIGIHISt3 : LogCollectForDIGIHISt3
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+  RECOHISt4MergeDQMoutput : RECOHISt4MergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+  DIGIHISt3 : DIGIHISt3
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  DIGIHISt3MergeFEVTDEBUGHLToutput : DIGIHISt3MergeFEVTDEBUGHLToutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 4, 'sucess': 4, 'queued': 0, 'pending': 0}
+  DIGIHISt3CleanupUnmergedFEVTDEBUGHLToutput : DIGIHISt3CleanupUnmergedFEVTDEBUGHLToutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 5, 'sucess': 5, 'queued': 0, 'pending': 0}
+  RECOHISt4CleanupUnmergedDQMoutput : RECOHISt4CleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 3, 'sucess': 3, 'queued': 0, 'pending': 0}
+  LogCollectForRECOHISt4 : LogCollectForRECOHISt4
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+  Pyquen_ZeemumuJets_pt10_2760GeV : Pyquen_ZeemumuJets_pt10_2760GeV
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  RECOHISt4MergeDQMoutputMergedEndOfRunDQMHarvestLogCollect : RECOHISt4MergeDQMoutputMergedEndOfRunDQMHarvestLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+  Pyquen_ZeemumuJets_pt10_2760GeVMergeRAWSIMoutput : Pyquen_ZeemumuJets_pt10_2760GeVMergeRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  RECOHISt4DQMoutputMergeLogCollect : RECOHISt4DQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+  RECOHISt4CleanupUnmergedRECOSIMoutput : RECOHISt4CleanupUnmergedRECOSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 4, 'sucess': 4, 'queued': 0, 'pending': 0}
+  Pyquen_ZeemumuJets_pt10_2760GeVCleanupUnmergedRAWSIMoutput : Pyquen_ZeemumuJets_pt10_2760GeVCleanupUnmergedRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  RECOHISt4RECOSIMoutputMergeLogCollect : RECOHISt4RECOSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+  DIGIHISt3FEVTDEBUGHLToutputMergeLogCollect : DIGIHISt3FEVTDEBUGHLToutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+  RECOHISt4MergeDQMoutputEndOfRunDQMHarvestMerged : RECOHISt4MergeDQMoutputEndOfRunDQMHarvestMerged
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+  LogCollectForPyquen_ZeemumuJets_pt10_2760GeV : LogCollectForPyquen_ZeemumuJets_pt10_2760GeV
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  RECOHISt4MergeRECOSIMoutput : RECOHISt4MergeRECOSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 3, 'sucess': 3, 'queued': 0, 'pending': 0}
+
+
+amaltaro_700_pre11_SingleMuPt100FastSim_140630_154109_9307 : completed :['cmssrv94.fnal.gov:9999'] :2014-06-30 15:26:37
+  SingleMuPt100FSDQMoutputMergeLogCollect : SingleMuPt100FSDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  LogCollectForSingleMuPt100FS : LogCollectForSingleMuPt100FS
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  SingleMuPt100FSMergeDQMoutputEndOfRunDQMHarvestMerged : SingleMuPt100FSMergeDQMoutputEndOfRunDQMHarvestMerged
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  SingleMuPt100FSMergeFEVTDEBUGHLToutput : SingleMuPt100FSMergeFEVTDEBUGHLToutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 4, 'sucess': 4, 'queued': 0, 'pending': 0}
+  SingleMuPt100FSMergeDQMoutput : SingleMuPt100FSMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  SingleMuPt100FSMergeDQMoutputMergedEndOfRunDQMHarvestLogCollect : SingleMuPt100FSMergeDQMoutputMergedEndOfRunDQMHarvestLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  SingleMuPt100FSCleanupUnmergedDQMoutput : SingleMuPt100FSCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  SingleMuPt100FS : SingleMuPt100FS
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  SingleMuPt100FSFEVTDEBUGHLToutputMergeLogCollect : SingleMuPt100FSFEVTDEBUGHLToutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  SingleMuPt100FSCleanupUnmergedFEVTDEBUGHLToutput : SingleMuPt100FSCleanupUnmergedFEVTDEBUGHLToutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+
+
+amaltaro_700_pre11_TTbar_140630_154112_4966 : completed :['cmssrv94.fnal.gov:9999'] :2014-06-30 16:06:01
+  ALCATTMergeALCARECOStreamTkAlMinBias : ALCATTMergeALCARECOStreamTkAlMinBias
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  ALCATTALCARECOStreamEcalCalElectronMergeLogCollect : ALCATTALCARECOStreamEcalCalElectronMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  LogCollectForALCATT : LogCollectForALCATT
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  RECOMergeDQMoutputEndOfRunDQMHarvestMerged : RECOMergeDQMoutputEndOfRunDQMHarvestMerged
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  RECO : RECO
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 6, 'sucess': 6, 'queued': 0, 'pending': 0}
+  LogCollectForDIGI : LogCollectForDIGI
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  ALCATTALCARECOStreamTkAlMuonIsolatedMergeLogCollect : ALCATTALCARECOStreamTkAlMuonIsolatedMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  ALCATTALCARECOStreamMuAlOverlapsMergeLogCollect : ALCATTALCARECOStreamMuAlOverlapsMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  ALCATTMergeALCARECOStreamTkAlMuonIsolated : ALCATTMergeALCARECOStreamTkAlMuonIsolated
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  ALCATTMergeALCARECOStreamEcalCalElectron : ALCATTMergeALCARECOStreamEcalCalElectron
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  RECORECOSIMoutputMergeLogCollect : RECORECOSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  ALCATTCleanupUnmergedALCARECOStreamEcalCalElectron : ALCATTCleanupUnmergedALCARECOStreamEcalCalElectron
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  ALCATTALCARECOStreamTkAlMinBiasMergeLogCollect : ALCATTALCARECOStreamTkAlMinBiasMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  ALCATTCleanupUnmergedALCARECOStreamTkAlMinBias : ALCATTCleanupUnmergedALCARECOStreamTkAlMinBias
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  ALCATTMergeALCARECOStreamHcalCalIsoTrk : ALCATTMergeALCARECOStreamHcalCalIsoTrk
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  DIGICleanupUnmergedFEVTDEBUGHLToutput : DIGICleanupUnmergedFEVTDEBUGHLToutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  ALCATTALCARECOStreamHcalCalIsoTrkMergeLogCollect : ALCATTALCARECOStreamHcalCalIsoTrkMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  ALCATTMergeALCARECOStreamMuAlOverlaps : ALCATTMergeALCARECOStreamMuAlOverlaps
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  RECOMergeDQMoutput : RECOMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  ALCATT : ALCATT
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 10, 'sucess': 10, 'queued': 0, 'pending': 0}
+  ALCATTCleanupUnmergedALCARECOStreamTkAlMuonIsolated : ALCATTCleanupUnmergedALCARECOStreamTkAlMuonIsolated
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  RECOCleanupUnmergedDQMoutput : RECOCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  RECOMergeRECOSIMoutput : RECOMergeRECOSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+  RECOCleanupUnmergedRECOSIMoutput : RECOCleanupUnmergedRECOSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+  DIGIFEVTDEBUGHLToutputMergeLogCollect : DIGIFEVTDEBUGHLToutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  ALCATTCleanupUnmergedALCARECOStreamHcalCalIsoTrk : ALCATTCleanupUnmergedALCARECOStreamHcalCalIsoTrk
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  RECODQMoutputMergeLogCollect : RECODQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  DIGIMergeFEVTDEBUGHLToutput : DIGIMergeFEVTDEBUGHLToutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  DIGI : DIGI
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  ALCATTCleanupUnmergedALCARECOStreamMuAlOverlaps : ALCATTCleanupUnmergedALCARECOStreamMuAlOverlaps
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  LogCollectForRECO : LogCollectForRECO
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  RECOMergeDQMoutputMergedEndOfRunDQMHarvestLogCollect : RECOMergeDQMoutputMergedEndOfRunDQMHarvestLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+
+
+amaltaro_700_pre11_ProdMinBias_140630_154056_9123 : completed :['cmssrv94.fnal.gov:9999'] :2014-06-30 17:06:04
+  RECOPROD1 : RECOPROD1
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 3, 'sucess': 3, 'queued': 0, 'pending': 0}
+  RECOPROD1MergeRECOSIMoutput : RECOPROD1MergeRECOSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  ProdMinBiasCleanupUnmergedRAWSIMoutput : ProdMinBiasCleanupUnmergedRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+  RECOPROD1AODSIMoutputMergeLogCollect : RECOPROD1AODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  ProdMinBiasRAWSIMoutputMergeLogCollect : ProdMinBiasRAWSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  DIGIPROD1 : DIGIPROD1
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 3, 'sucess': 3, 'queued': 0, 'pending': 0}
+  RECOPROD1RECOSIMoutputMergeLogCollect : RECOPROD1RECOSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  ProdMinBias : ProdMinBias
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  RECOPROD1MergeAODSIMoutput : RECOPROD1MergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  RECOPROD1CleanupUnmergedRECOSIMoutput : RECOPROD1CleanupUnmergedRECOSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  ProdMinBiasMergeRAWSIMoutput : ProdMinBiasMergeRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+  DIGIPROD1MergeRAWSIMoutput : DIGIPROD1MergeRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+  DIGIPROD1RAWSIMoutputMergeLogCollect : DIGIPROD1RAWSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  LogCollectForRECOPROD1 : LogCollectForRECOPROD1
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  LogCollectForProdMinBias : LogCollectForProdMinBias
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  LogCollectForDIGIPROD1 : LogCollectForDIGIPROD1
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  RECOPROD1CleanupUnmergedAODSIMoutput : RECOPROD1CleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  DIGIPROD1CleanupUnmergedRAWSIMoutput : DIGIPROD1CleanupUnmergedRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+
+
+amaltaro_700_pre11_RunTau2012A_140630_154106_3291 : completed :['cmssrv94.fnal.gov:9999'] :2014-06-30 20:47:00
+  LogCollectForRECODreHLT : LogCollectForRECODreHLT
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 3, 'sucess': 3, 'queued': 0, 'pending': 0}
+  RECODreHLTCleanupUnmergedALCARECOStreamSiStripCalZeroBias : RECODreHLTCleanupUnmergedALCARECOStreamSiStripCalZeroBias
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 22, 'sucess': 22, 'queued': 0, 'pending': 0}
+  RECODreHLTMergeDQMoutputMergedEndOfRunDQMHarvestLogCollect : RECODreHLTMergeDQMoutputMergedEndOfRunDQMHarvestLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  RECODreHLTALCARECOStreamTkAlMinBiasMergeLogCollect : RECODreHLTALCARECOStreamTkAlMinBiasMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  RECODreHLTCleanupUnmergedALCARECOStreamSiStripCalMinBias : RECODreHLTCleanupUnmergedALCARECOStreamSiStripCalMinBias
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 21, 'sucess': 21, 'queued': 0, 'pending': 0}
+  RECODreHLTMergeALCARECOStreamSiStripCalMinBias : RECODreHLTMergeALCARECOStreamSiStripCalMinBias
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 36, 'sucess': 36, 'queued': 0, 'pending': 0}
+  RECODreHLTCleanupUnmergedRECOoutput : RECODreHLTCleanupUnmergedRECOoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 24, 'sucess': 24, 'queued': 0, 'pending': 0}
+  RECODreHLTCleanupUnmergedDQMoutput : RECODreHLTCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 22, 'sucess': 22, 'queued': 0, 'pending': 0}
+  RECODreHLTMergeRECOoutput : RECODreHLTMergeRECOoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 95, 'sucess': 95, 'queued': 0, 'pending': 0}
+  LogCollectForHLTD : LogCollectForHLTD
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  RECODreHLTCleanupUnmergedALCARECOStreamTkAlMinBias : RECODreHLTCleanupUnmergedALCARECOStreamTkAlMinBias
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 21, 'sucess': 21, 'queued': 0, 'pending': 0}
+  RECODreHLTMergeDQMoutput : RECODreHLTMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 7, 'sucess': 7, 'queued': 0, 'pending': 0}
+  RECODreHLTALCARECOStreamSiStripCalZeroBiasMergeLogCollect : RECODreHLTALCARECOStreamSiStripCalZeroBiasMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  RECODreHLTRECOoutputMergeLogCollect : RECODreHLTRECOoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  HLTD : HLTD
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  RECODreHLTMergeDQMoutputEndOfRunDQMHarvestMerged : RECODreHLTMergeDQMoutputEndOfRunDQMHarvestMerged
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  RECODreHLT : RECODreHLT
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 111, 'sucess': 111, 'queued': 0, 'pending': 0}
+  RECODreHLTALCARECOStreamSiStripCalMinBiasMergeLogCollect : RECODreHLTALCARECOStreamSiStripCalMinBiasMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  RECODreHLTDQMoutputMergeLogCollect : RECODreHLTDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  RECODreHLTMergeALCARECOStreamSiStripCalZeroBias : RECODreHLTMergeALCARECOStreamSiStripCalZeroBias
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 24, 'sucess': 24, 'queued': 0, 'pending': 0}
+  HLTDCleanupUnmergedRAWoutput : HLTDCleanupUnmergedRAWoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 74, 'sucess': 74, 'queued': 0, 'pending': 0}
+  RECODreHLTMergeALCARECOStreamTkAlMinBias : RECODreHLTMergeALCARECOStreamTkAlMinBias
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 10, 'sucess': 10, 'queued': 0, 'pending': 0}
+
+
+amaltaro_700_pre11_ZTT_PU_140630_154119_8154 : completed :['cmssrv94.fnal.gov:9999'] :2014-06-30 21:46:53
+  ZTTMergeRAWSIMoutput : ZTTMergeRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 4, 'sucess': 4, 'queued': 0, 'pending': 0}
+  DIGIPU1CleanupUnmergedFEVTDEBUGHLToutput : DIGIPU1CleanupUnmergedFEVTDEBUGHLToutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  RECOPU1MergeDQMoutputEndOfRunDQMHarvestMerged : RECOPU1MergeDQMoutputEndOfRunDQMHarvestMerged
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  DIGIPU1FEVTDEBUGHLToutputMergeLogCollect : DIGIPU1FEVTDEBUGHLToutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  RECOPU1RECOSIMoutputMergeLogCollect : RECOPU1RECOSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  RECOPU1 : RECOPU1
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 52, 'sucess': 52, 'queued': 0, 'pending': 0}
+  RECOPU1MergeDQMoutputMergedEndOfRunDQMHarvestLogCollect : RECOPU1MergeDQMoutputMergedEndOfRunDQMHarvestLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  LogCollectForRECOPU1 : LogCollectForRECOPU1
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  RECOPU1CleanupUnmergedRECOSIMoutput : RECOPU1CleanupUnmergedRECOSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+  RECOPU1MergeDQMoutput : RECOPU1MergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  ZTTRAWSIMoutputMergeLogCollect : ZTTRAWSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  ZTTCleanupUnmergedRAWSIMoutput : ZTTCleanupUnmergedRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 3, 'sucess': 3, 'queued': 0, 'pending': 0}
+  LogCollectForDIGIPU1 : LogCollectForDIGIPU1
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  ZTT : ZTT
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  RECOPU1MergeRECOSIMoutput : RECOPU1MergeRECOSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 6, 'sucess': 6, 'queued': 0, 'pending': 0}
+  LogCollectForZTT : LogCollectForZTT
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  DIGIPU1MergeFEVTDEBUGHLToutput : DIGIPU1MergeFEVTDEBUGHLToutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  DIGIPU1 : DIGIPU1
+    job info: {'paused': 0, 'failure': 2, 'running': 0, 'cooloff': 0, 'created': 16, 'sucess': 14, 'queued': 0, 'pending': 0}
+  RECOPU1CleanupUnmergedDQMoutput : RECOPU1CleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+  RECOPU1DQMoutputMergeLogCollect : RECOPU1DQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+
+
+amaltaro_700_pre11_SingleMuPt100FastSim_140724_163845_1650 : aborted :['vocms227.cern.ch:9999'] :2014-07-27 04:17:54
+  Merge : SingleMuPt100FSMergeFEVTDEBUGHLToutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+  LogCollect : SingleMuPt100FSDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  LogCollect : SingleMuPt100FSMergeDQMoutputMergedEndOfRunDQMHarvestLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : SingleMuPt100FSCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  Production : SingleMuPt100FS
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 7, 'sucess': 7, 'queued': 0, 'pending': 0}
+  Cleanup : SingleMuPt100FSCleanupUnmergedFEVTDEBUGHLToutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+  Harvesting : SingleMuPt100FSMergeDQMoutputEndOfRunDQMHarvestMerged
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : SingleMuPt100FSMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  LogCollect : SingleMuPt100FSFEVTDEBUGHLToutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollectForSingleMuPt100FS
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 1, 'queued': 0, 'pending': 0}
+
+
+amaltaro_RVCMSSW_7_0_6TTbar_13_PUpmx25ns__140724_163849_3587 : aborted :['vocms227.cern.ch:9999'] :2014-07-27 04:18:08
+  LogCollect : LogCollectForMINIAODMC50
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  Cleanup : MINIAODMC50CleanupUnmergedMINIAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  Cleanup : RECOPRMXUP15_PU25CleanupUnmergedRECOSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  Harvesting : RECOPRMXUP15_PU25MergeDQMoutputEndOfRunDQMHarvestMerged
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : DIGIPRMXUP15_PU25FEVTDEBUGHLToutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : DIGIPRMXUP15_PU25MergeFEVTDEBUGHLToutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Processing : MINIAODMC50
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  Cleanup : DIGIPRMXUP15_PU25CleanupUnmergedFEVTDEBUGHLToutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : MINIAODMC50MINIAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  Processing : RECOPRMXUP15_PU25
+    job info: {'paused': 0, 'failure': 18, 'running': 0, 'cooloff': 0, 'created': 20, 'sucess': 2, 'queued': 0, 'pending': 0}
+  Merge : RECOPRMXUP15_PU25MergeRECOSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  Processing : DIGIPRMXUP15_PU25
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 11, 'sucess': 11, 'queued': 0, 'pending': 0}
+  LogCollect : RECOPRMXUP15_PU25RECOSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollectForRECOPRMXUP15_PU25
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  Merge : RECOPRMXUP15_PU25MergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollectForDIGIPRMXUP15_PU25
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 1, 'queued': 0, 'pending': 0}
+  LogCollect : RECOPRMXUP15_PU25DQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  Cleanup : RECOPRMXUP15_PU25CleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  Merge : MINIAODMC50MergeMINIAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  LogCollect : RECOPRMXUP15_PU25MergeDQMoutputMergedEndOfRunDQMHarvestLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+amaltaro_TOP-Summer11LegwmLHE-00006_140728_142125_9306 : completed :['cmssrv94.fnal.gov:9999'] :2014-07-28 11:07:22
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  ProductionLHEoutputMergeLogCollect : ProductionLHEoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  ProductionCleanupUnmergedLHEoutput : ProductionCleanupUnmergedLHEoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  Production : Production
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  ProductionMergeLHEoutput : ProductionMergeLHEoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+
+
+amaltaro_SUS-Summer12pLHE-00144_140728_142123_189 : completed :['cmssrv94.fnal.gov:9999'] :2014-07-28 12:26:43
+  ProductionCleanupUnmergedLHEoutput : ProductionCleanupUnmergedLHEoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 3, 'sucess': 3, 'queued': 0, 'pending': 0}
+  Production : Production
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  ProductionMergeLHEoutput : ProductionMergeLHEoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 3, 'sucess': 3, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  ProductionLHEoutputMergeLogCollect : ProductionLHEoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+
+
+amaltaro_BPH-Spring14miniaod-00004_140728_151007_4877 : completed :['cmssrv94.fnal.gov:9999'] :2014-07-28 14:46:50
+  StepOneProcCleanupUnmergedMINIAODSIMoutput : StepOneProcCleanupUnmergedMINIAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  StepOneProcMINIAODSIMoutputMergeLogCollect : StepOneProcMINIAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  StepOneProcMergeMINIAODSIMoutput : StepOneProcMergeMINIAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  StepOneProc : StepOneProc
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+
+
+amaltaro_B2G-Summer12DR53X-00743_140728_151010_1286 : closed-out :['cmssrv94.fnal.gov:9999'] :2014-07-29 03:25:32
+  StepOneProcMergeDQMoutput : StepOneProcMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  StepOneProcCleanupUnmergedDQMoutput : StepOneProcCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  StepOneProcDQMoutputMergeLogCollect : StepOneProcDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  StepOneProcAODSIMoutputMergeLogCollect : StepOneProcAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  StepOneProc : StepOneProc
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  StepOneProcMergeAODSIMoutput : StepOneProcMergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  StepOneProcCleanupUnmergedAODSIMoutput : StepOneProcCleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+
+
+*******
+
+
+
+**** jobs still running : 20 ****
+alahiff_HLTCloudTesting_130421_205552_390 : aborted :['vocms142.cern.ch:9999'] :2013-04-22 01:04:33
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingRECOoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeRECOoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingAODoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Processing : DataProcessing
+    job info: {'paused': 0, 'failure': 2, 'running': 0, 'cooloff': 1, 'created': 3, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeAODoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedRECOoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedAODoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+samir_Samir_130920_111225_2446 : completed :['vocms224.cern.ch:9999'] :2013-09-26 09:25:51
+  Cleanup : 2011B_442p2_DataReprocessingBTagSkimCleanupUnmergedSKIMStreamLogError
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeDQMoutput
+    job info: {'paused': 0, 'failure': 3, 'running': 0, 'cooloff': 0, 'created': 15, 'sucess': 11, 'queued': 1, 'pending': 0}
+  LogCollect : 2011B_442p2_DataReprocessingBTagSkimLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : 2011B_442p2_DataReprocessingBTagSkimMergeSKIMStreamEXOHSCP
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  Skim : 2011B_442p2_DataReprocessingBTagSkim
+    job info: {'paused': 0, 'failure': 4, 'running': 0, 'cooloff': 0, 'created': 22, 'sucess': 5, 'queued': 4, 'pending': 9}
+  LogCollect : DataProcessingAODoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 14, 'sucess': 12, 'queued': 1, 'pending': 0}
+  Merge : 2011B_442p2_DataReprocessingBTagSkimMergeSKIMStreamLogError
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedRECOoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 16, 'sucess': 15, 'queued': 1, 'pending': 0}
+  LogCollect : DataProcessingRECOoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 14, 'sucess': 12, 'queued': 1, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 23, 'sucess': 19, 'queued': 4, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedAODoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 15, 'sucess': 14, 'queued': 1, 'pending': 0}
+  Merge : DataProcessingMergeRECOoutput
+    job info: {'paused': 0, 'failure': 5, 'running': 0, 'cooloff': 0, 'created': 27, 'sucess': 22, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 11, 'sucess': 11, 'queued': 0, 'pending': 0}
+  LogCollect : 2011B_442p2_DataReprocessingBTagSkimSKIMStreamLogErrorMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Processing : DataProcessing
+    job info: {'paused': 0, 'failure': 202, 'running': 0, 'cooloff': 0, 'created': 496, 'sucess': 294, 'queued': 0, 'pending': 0}
+  Cleanup : 2011B_442p2_DataReprocessingBTagSkimCleanupUnmergedSKIMStreamEXOHSCP
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeAODoutput
+    job info: {'paused': 0, 'failure': 3, 'running': 0, 'cooloff': 0, 'created': 21, 'sucess': 18, 'queued': 0, 'pending': 0}
+  LogCollect : 2011B_442p2_DataReprocessingBTagSkimSKIMStreamEXOHSCPMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+jbadillo_Commissioning_T1_DE_KIT_131106_111418_5531 : aborted :['vocms230.cern.ch:9999'] :2013-11-07 03:35:45
+  Cleanup : MonteCarloFromGENCleanupUnmergedRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 113, 'sucess': 110, 'queued': 3, 'pending': 0}
+  LogCollect : MonteCarloFromGENRAWSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  Production : MonteCarloFromGEN
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 5621, 'sucess': 5617, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 12, 'sucess': 12, 'queued': 0, 'pending': 0}
+  Merge : MonteCarloFromGENMergeRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 226, 'sucess': 223, 'queued': 3, 'pending': 0}
+
+
+jbadillo_BTV-Fall13-00006_00007_v0__131205_093555_8686 : completed :['vocms230.cern.ch:9999'] :2014-01-17 06:25:20
+  ProductionRAWSIMoutputMergeLogCollect : ProductionRAWSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 3, 'sucess': 3, 'queued': 0, 'pending': 0}
+  ProductionMergeRAWSIMoutput : ProductionMergeRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 249, 'sucess': 85, 'queued': 164, 'pending': 0}
+  ProductionCleanupUnmergedRAWSIMoutput : ProductionCleanupUnmergedRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 214, 'sucess': 214, 'queued': 0, 'pending': 0}
+  Production : Production
+    job info: {'paused': 0, 'failure': 17, 'running': 0, 'cooloff': 0, 'created': 9461, 'sucess': 9444, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 138, 'sucess': 138, 'queued': 0, 'pending': 0}
+
+
+jbadillo_BTV-Fall13-00027_00007_v0__131205_101817_273 : completed :['vocms230.cern.ch:9999'] :2014-01-17 06:25:40
+  ProductionCleanupUnmergedRAWSIMoutput : ProductionCleanupUnmergedRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 17, 'sucess': 16, 'queued': 1, 'pending': 0}
+  Production : Production
+    job info: {'paused': 0, 'failure': 19, 'running': 0, 'cooloff': 0, 'created': 2437, 'sucess': 2418, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  ProductionRAWSIMoutputMergeLogCollect : ProductionRAWSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  ProductionMergeRAWSIMoutput : ProductionMergeRAWSIMoutput
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 161, 'sucess': 67, 'queued': 93, 'pending': 0}
+
+
+jbadillo_BTV-Fall13-00006_00007_v0__131205_100418_7661 : completed :['vocms230.cern.ch:9999'] :2014-01-17 06:27:51
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 105, 'sucess': 105, 'queued': 0, 'pending': 0}
+  Production : Production
+    job info: {'paused': 0, 'failure': 6, 'running': 0, 'cooloff': 0, 'created': 8791, 'sucess': 8785, 'queued': 0, 'pending': 0}
+  ProductionRAWSIMoutputMergeLogCollect : ProductionRAWSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  ProductionCleanupUnmergedRAWSIMoutput : ProductionCleanupUnmergedRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 176, 'sucess': 166, 'queued': 10, 'pending': 0}
+  ProductionMergeRAWSIMoutput : ProductionMergeRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 212, 'sucess': 208, 'queued': 4, 'pending': 0}
+
+
+jbadillo_BTV-Fall13-00027_00007_v0__131205_101803_2266 : completed :['vocms230.cern.ch:9999'] :2014-01-17 06:27:59
+  Production : Production
+    job info: {'paused': 0, 'failure': 24, 'running': 0, 'cooloff': 0, 'created': 1436, 'sucess': 1412, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  ProductionCleanupUnmergedRAWSIMoutput : ProductionCleanupUnmergedRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 5, 'sucess': 5, 'queued': 0, 'pending': 0}
+  ProductionRAWSIMoutputMergeLogCollect : ProductionRAWSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  ProductionMergeRAWSIMoutput : ProductionMergeRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 80, 'sucess': 19, 'queued': 61, 'pending': 0}
+
+
+jbadillo_BTV-Fall13-00006_00007_v0__131205_101050_3069 : completed :['vocms230.cern.ch:9999'] :2014-01-17 06:28:21
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 72, 'sucess': 72, 'queued': 0, 'pending': 0}
+  Production : Production
+    job info: {'paused': 0, 'failure': 14, 'running': 0, 'cooloff': 0, 'created': 8791, 'sucess': 8777, 'queued': 0, 'pending': 0}
+  ProductionMergeRAWSIMoutput : ProductionMergeRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 195, 'sucess': 58, 'queued': 137, 'pending': 0}
+  ProductionRAWSIMoutputMergeLogCollect : ProductionRAWSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  ProductionCleanupUnmergedRAWSIMoutput : ProductionCleanupUnmergedRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 52, 'sucess': 52, 'queued': 0, 'pending': 0}
+
+
+amaltaro_Summer12_TEST_PRIORITIES_0k_131210_102831_9945 : completed :['vocms230.cern.ch:9999'] :2014-01-17 06:28:29
+  Production : Production
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 185, 'sucess': 185, 'queued': 0, 'pending': 0}
+  ProductionMergeRAWSIMoutput : ProductionMergeRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 21, 'sucess': 20, 'queued': 1, 'pending': 0}
+  ProductionCleanupUnmergedRAWSIMoutput : ProductionCleanupUnmergedRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 3, 'sucess': 3, 'queued': 0, 'pending': 0}
+  ProductionRAWSIMoutputMergeLogCollect : ProductionRAWSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+amaltaro_EGM-UpgradePhase1Age0START-00006_TEST_ALAN_131211_131542_4577 : completed :['vocms230.cern.ch:9999'] :2014-01-20 01:06:49
+  ProductionMergeRAWSIMoutput : ProductionMergeRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 40, 'sucess': 40, 'queued': 0, 'pending': 0}
+  ProductionRAWSIMoutputMergeLogCollect : ProductionRAWSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  ProductionCleanupUnmergedRAWSIMoutput : ProductionCleanupUnmergedRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 15, 'sucess': 15, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Production : Production
+    job info: {'paused': 0, 'failure': 7, 'running': 0, 'cooloff': 0, 'created': 734, 'sucess': 647, 'queued': 80, 'pending': 0}
+
+
+aperezca_multicore_MC_test_1_140123_202609_7485 : aborted :['vocms231.cern.ch:9999'] :2014-02-10 01:47:30
+  Production : Production
+    job info: {'paused': 0, 'failure': 0, 'running': 12, 'cooloff': 0, 'created': 3500, 'sucess': 3378, 'queued': 61, 'pending': 49}
+  LogCollect : ProductionRAWSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : ProductionMergeRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 28, 'sucess': 28, 'queued': 0, 'pending': 0}
+  Cleanup : ProductionCleanupUnmergedRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 65, 'sucess': 60, 'queued': 0, 'pending': 5}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 6, 'sucess': 6, 'queued': 0, 'pending': 0}
+
+
+pkonst_scaletest_MCTest_1_140117_121746_6281 : aborted :['vocms231.cern.ch:9999'] :2014-02-10 01:47:43
+  Cleanup : ProductionCleanupUnmergedRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 101, 'sucess': 101, 'queued': 0, 'pending': 0}
+  Production : Production
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 5001, 'sucess': 5001, 'queued': 0, 'pending': 0}
+  LogCollect : ProductionRAWSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 15, 'sucess': 11, 'queued': 0, 'pending': 4}
+  Merge : ProductionMergeRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 45, 'sucess': 41, 'queued': 0, 'pending': 4}
+
+
+samir_Samir8_IN2P3_131003_173356_6400 : aborted :['vocms224.cern.ch:9999'] :2014-02-10 01:50:15
+  Cleanup : 2011B_442p2_DataReprocessingBTagSkimCleanupUnmergedSKIMStreamLogError
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingAODoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingRECOoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : 2011B_442p2_DataReprocessingBTagSkimLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : 2011B_442p2_DataReprocessingBTagSkimCleanupUnmergedSKIMStreamEXOHSCP
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : 2011B_442p2_DataReprocessingBTagSkimMergeSKIMStreamEXOHSCP
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedRECOoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeRECOoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 3, 'sucess': 2, 'queued': 1, 'pending': 0}
+  Processing : DataProcessing
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 496, 'sucess': 50, 'queued': 446, 'pending': 0}
+  Merge : DataProcessingMergeAODoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 3, 'sucess': 2, 'queued': 1, 'pending': 0}
+  LogCollect : DataProcessingDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : 2011B_442p2_DataReprocessingBTagSkimMergeSKIMStreamLogError
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Skim : 2011B_442p2_DataReprocessingBTagSkim
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 0, 'queued': 0, 'pending': 2}
+  LogCollect : 2011B_442p2_DataReprocessingBTagSkimSKIMStreamEXOHSCPMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedAODoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : 2011B_442p2_DataReprocessingBTagSkimSKIMStreamLogErrorMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+samir_Samir2_130927_111013_5972 : aborted :['vocms224.cern.ch:9999'] :2014-02-10 01:50:40
+  LogCollect : 2011B_442p2_DataReprocessingBTagSkimSKIMStreamEXOHSCPMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : 2011B_442p2_DataReprocessingBTagSkimCleanupUnmergedSKIMStreamEXOHSCP
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingRECOoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 4, 'sucess': 3, 'queued': 1, 'pending': 0}
+  LogCollect : DataProcessingDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 11, 'sucess': 9, 'queued': 2, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedRECOoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 4, 'sucess': 4, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeRECOoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 4, 'sucess': 4, 'queued': 0, 'pending': 0}
+  Merge : 2011B_442p2_DataReprocessingBTagSkimMergeSKIMStreamLogError
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  Cleanup : 2011B_442p2_DataReprocessingBTagSkimCleanupUnmergedSKIMStreamLogError
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 14, 'sucess': 14, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingAODoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 11, 'sucess': 9, 'queued': 0, 'pending': 2}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 11, 'sucess': 10, 'queued': 1, 'pending': 0}
+  Skim : 2011B_442p2_DataReprocessingBTagSkim
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 2, 'created': 183, 'sucess': 10, 'queued': 83, 'pending': 88}
+  Cleanup : DataProcessingCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 13, 'sucess': 13, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeAODoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 54, 'sucess': 54, 'queued': 0, 'pending': 0}
+  LogCollect : 2011B_442p2_DataReprocessingBTagSkimLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : 2011B_442p2_DataReprocessingBTagSkimSKIMStreamLogErrorMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedAODoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 26, 'sucess': 25, 'queued': 1, 'pending': 0}
+  Processing : DataProcessing
+    job info: {'paused': 0, 'failure': 2, 'running': 0, 'cooloff': 0, 'created': 190, 'sucess': 188, 'queued': 0, 'pending': 0}
+  Merge : 2011B_442p2_DataReprocessingBTagSkimMergeSKIMStreamEXOHSCP
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+
+
+samir_Samir_130913_123216_2518 : aborted :['vocms224.cern.ch:9999'] :2014-02-10 01:50:54
+  LogCollect : DataProcessingRECOoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : 2011B_442p2_DataReprocessingBTagSkimCleanupUnmergedSKIMStreamEXOHSCP
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : 2011B_442p2_DataReprocessingBTagSkimMergeSKIMStreamEXOHSCP
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : 2011B_442p2_DataReprocessingBTagSkimMergeSKIMStreamLogError
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : 2011B_442p2_DataReprocessingBTagSkimSKIMStreamLogErrorMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeAODoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingAODoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedRECOoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Skim : 2011B_442p2_DataReprocessingBTagSkim
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeRECOoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Processing : DataProcessing
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 496, 'sucess': 0, 'queued': 396, 'pending': 100}
+  Cleanup : DataProcessingCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : 2011B_442p2_DataReprocessingBTagSkimCleanupUnmergedSKIMStreamLogError
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : 2011B_442p2_DataReprocessingBTagSkimSKIMStreamEXOHSCPMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedAODoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : 2011B_442p2_DataReprocessingBTagSkimLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+jbadillo_PICDiskTapeSepTest_140228_142249_4259 : aborted :['vocms230.cern.ch:9999'] :2014-02-28 08:09:16
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : MonteCarloFromGENCleanupUnmergedRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : MonteCarloFromGENRAWSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Production : MonteCarloFromGEN
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 12, 'sucess': 0, 'queued': 0, 'pending': 12}
+  Merge : MonteCarloFromGENMergeRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+jbalcas_MonteCarloOpport_140428_125933_3210 : completed :['vocms231.cern.ch:9999'] :2014-04-29 02:26:03
+  Production : Production
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 6, 'created': 6, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+jbalcas_MonteCarloFromGEN_140829_155328_8627 : running-closed :['vocms231.cern.ch:9999'] :2014-08-29 10:08:39
+  LogCollect : MonteCarloFromGENRAWSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : MonteCarloFromGENMergeRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Production : MonteCarloFromGEN
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 125, 'sucess': 0, 'queued': 0, 'pending': 125}
+  Cleanup : MonteCarloFromGENCleanupUnmergedRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+jbalcas_ReReco_140829_155316_3372 : running-closed :['vocms231.cern.ch:9999'] :2014-08-29 10:28:12
+  LogCollect : DataProcessingAODoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeRECOoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedAODoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeAODoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : DataProcessingMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedRECOoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : DataProcessingRECOoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Processing : DataProcessing
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 123, 'sucess': 0, 'queued': 48, 'pending': 75}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : DataProcessingCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+amaltaro_FSQ-ppSpring2014-00007_ForceCompletion_v2_140829_152450_4887 : aborted :['vocms230.cern.ch:9999'] :2014-08-29 11:54:54
+  Production : Production
+    job info: {'paused': 0, 'failure': 275, 'running': 0, 'cooloff': 0, 'created': 405, 'sucess': 0, 'queued': 130, 'pending': 0}
+
+
+*******
+
+
+
+**** completed waiting for closeout : 810 ****
+pkonst_HG1208_MCTest_T2_RU_ITEP_01_120801_133354_9776 : completed :No agent Info :2012-08-01 11:05:11
+
+
+pkonst_HG1208_RERECOSKIMTEST_01_120801_143330_3149 : completed :No agent Info :2012-08-01 14:45:16
+
+
+pkonst_HG1208_MCTest_T2_RU_ITEP_01_120801_122950_1012 : completed :No agent Info :2012-08-01 17:25:38
+
+
+pkonst_HG1208_REDIGITEST_01_120801_143614_7651 : completed :No agent Info :2012-08-01 22:45:37
+
+
+pkonst_HG1208_REDIGITEST_02_120802_111905_8308 : completed :No agent Info :2012-08-02 13:45:35
+
+
+pkonst_ACDC_HG1208_REDIGITEST_02_120802_120803_110117_6624 : completed :No agent Info :2012-08-03 13:25:19
+
+
+efajardo_T2_FR_CCIN2P3_LHETest_01_120801_154546_9844 : completed :No agent Info :2012-08-15 01:25:17
+
+
+efajardo_T2_RU_ITEP_LHETest_01_120801_132425_8980 : completed :No agent Info :2012-08-16 14:25:42
+
+
+pkonst_WMSTATS_MCTest_T1_US_FNAL_01_120828_155715_3283 : completed :No agent Info :2012-08-28 12:45:22
+
+
+pkonst_IntegrationTest_PK_01_MCTest_ManySites_120828_134042_5067 : completed :No agent Info :2012-08-28 23:05:08
+
+
+pkonst_WMSTATS_MCTest_T1_US_FNAL_01_120903_125917_4137 : completed :No agent Info :2012-09-03 12:25:32
+
+
+pkonst_WMSTATS_REDIGITEST_01_120903_141728_460 : completed :No agent Info :2012-09-03 22:05:46
+
+
+pkonst_WMSTATS_REDIGITEST_02_120904_105604_1659 : completed :No agent Info :2012-09-05 10:45:40
+
+
+efajardo_testLHE2_120905_150119_6048 : completed :No agent Info :2012-09-06 15:05:13
+
+
+pkonst_acdc_WMSTATS_REDIGITEST_02_120904_120907_102437_9079 : completed :No agent Info :2012-09-07 18:05:19
+
+
+efajardo_testLHE2_120913_165000_9616 : completed :No agent Info :2012-09-14 04:45:26
+
+
+efajardo_testLHE2_120919_113142_8143 : completed :No agent Info :2012-09-24 02:25:27
+
+
+pkonst_WMSTATS_RERECOSKIMTEST_01_120903_141646_4193 : closed-out :No agent Info :2012-09-24 05:28:04
+
+
+pkonst_HG1210_MCTest_T1_US_FNAL_01_120924_105050_1649 : completed :No agent Info :2012-09-24 06:05:34
+
+
+pkonst_HG1210_REDIGITEST_01_120924_105300_2315 : completed :No agent Info :2012-09-24 12:25:33
+
+
+pkonst_HG1210_RERECOSKIMTEST_01_120924_105212_7294 : completed :No agent Info :2012-09-24 13:05:11
+
+
+pkonst_HG1210_REDIGITEST_02_120925_103313_2028 : completed :No agent Info :2012-09-25 09:26:07
+
+
+pkonst_pkonst_HG1210_REDIGITEST_02_120925_103313_120925_173501_5694 : completed :No agent Info :2012-09-26 07:25:29
+
+
+efajardo_testLHE2_120926_163157_720 : completed :No agent Info :2012-09-28 05:25:10
+
+
+efajardo_Backfill_SCALE_COlorado_MCTest_120928_133232_9466 : closed-out :No agent Info :2012-10-01 03:42:59
+
+
+pkonst_IntegrationTest_PK_01_MCTest_T1_UK_RAL_121009_181840_8193 : completed :No agent Info :2012-10-09 13:06:04
+
+
+pkonst_IntegrationTest_PK_01_MCTest_ManySites_121009_130021_2906 : completed :No agent Info :2012-10-10 05:25:38
+
+
+pkonst_IntegrationTest_PK_01_MCTest_T2_DE_DESY_121010_110517_3460 : completed :No agent Info :2012-10-10 06:25:40
+
+
+pkonst_IntegrationTest_PK_01_MCTest_T2_EE_Estonia_121010_110551_9529 : completed :No agent Info :2012-10-10 06:45:54
+
+
+efajardo_testLHE2_121015_105837_9862 : completed :No agent Info :2012-10-16 09:05:48
+
+
+pkonst_Oracle_MCTest_T1_DE_KIT_01_121018_144603_6421 : completed :No agent Info :2012-10-18 10:05:23
+
+
+pkonst_IntegrationTest_PK_01_MCTest_T2_UK_London_Brunel_121017_131012_3510 : completed :No agent Info :2012-10-18 22:45:26
+
+
+pkonst_T1_UK_RAL_LHETest_01_121019_171004_9729 : completed :No agent Info :2012-10-22 03:26:11
+
+
+pkonst_Oracle_RERECOSKIMTEST_01_121019_111951_3430 : completed :No agent Info :2012-10-23 23:05:57
+
+
+pkonst_Oracle_REDIGITEST_01_121023_144010_5173 : completed :No agent Info :2012-10-24 03:46:03
+
+
+pkonst_Oracle_REDIGITEST_02_121024_114753_8746 : completed :No agent Info :2012-10-24 06:25:38
+
+
+pkonst_T2_EE_Estonia_LHETest_01_121011_160925_7813 : completed :No agent Info :2012-10-26 06:45:39
+
+
+pkonst_HG1211_MCTest_T1_US_FNAL_01_121026_115137_7473 : completed :No agent Info :2012-10-26 12:45:27
+
+
+pkonst_HG1211_RERECOSKIMTEST_01_121026_115427_3423 : completed :No agent Info :2012-10-26 16:46:05
+
+
+pkonst_Oracle_REDIGITEST_02_121024_114753_121024_163226_4140 : completed :No agent Info :2012-10-27 06:25:39
+
+
+pkonst_T2_DE_DESY_LHETest_01_121011_160720_5128 : completed :No agent Info :2012-10-27 21:05:16
+
+
+pkonst_HG1211_REDIGITEST_01_121026_115556_2540 : completed :No agent Info :2012-10-28 09:45:16
+
+
+pkonst_HG1211_REDIGITEST_01_121026_115556_121029_141628_5248 : completed :No agent Info :2012-10-29 19:46:02
+
+
+efajardo_Backfill_HIGHSCALE_HG1211_121029_183339_59 : completed :No agent Info :2012-10-30 23:25:46
+
+
+lenzip_testLHE-new_121106_114108_6467 : completed :No agent Info :2012-11-08 10:45:03
+
+
+pkonst_HG1212_MCTest_T1_US_FNAL_01_121128_122358_7215 : completed :No agent Info :2012-11-28 10:26:19
+
+
+pkonst_HG1212_REDIGITEST_02_121128_154057_228 : completed :No agent Info :2012-11-29 14:45:30
+
+
+pkonst_HG1212_RERECOSKIMTEST_01_121128_125930_3423 : completed :No agent Info :2012-11-29 14:45:44
+
+
+pkonst_HG1212_RERECOSKIMTEST_02_121130_110719_112 : completed :No agent Info :2012-11-30 15:25:22
+
+
+pkonst_HG1212_ACDCREDIGITEST_02_121130_110750_9294 : completed :No agent Info :2012-12-01 08:45:46
+
+
+pkonst_T1_DE_KIT_LHETest_02_121129_150127_7842 : completed :No agent Info :2012-12-02 00:05:05
+
+
+efajardo_HIGH_SCALE_TEST_121203_154334_3529 : completed :No agent Info :2012-12-03 11:06:07
+
+
+pkonst_Agent0931_MCTest_1_121204_112211_1171 : completed :No agent Info :2012-12-04 06:25:08
+
+
+vlimant_TestMC_537__121204_143012_8048 : completed :No agent Info :2012-12-04 09:45:04
+
+
+pkonst_Agent0931_RERECOSKIMTEST_1_121204_130428_6810 : completed :No agent Info :2012-12-04 13:25:22
+
+
+amaltaro_TestMC_537__121205_130044_4772 : completed :No agent Info :2012-12-05 11:45:05
+
+
+pkonst_acdc_HG1212_ACDCREDIGITEST_02_121201_163408_9859 : completed :No agent Info :2012-12-05 16:05:18
+
+
+amaltaro_TestMC_537__121207_131805_3056 : completed :No agent Info :2012-12-07 08:25:04
+
+
+pkonst_T1_DE_KIT_LHETest_03_121203_105624_4105 : completed :No agent Info :2012-12-12 06:25:54
+
+
+pkonst_T1_DE_KIT_LHETest_4_121210_164202_9924 : completed :No agent Info :2012-12-27 20:06:12
+
+
+pkonst_Agent0934_RERECOSKIMTEST_1_130115_170614_2341 : completed :No agent Info :2013-01-15 18:25:53
+
+
+pkonst_Agent0934_RERECOSKIMTEST_2_130117_120249_3512 : completed :No agent Info :2013-01-18 03:45:38
+
+
+pkonst_T1_IT_CNAF_MCTest_1_130116_160138_705 : completed :No agent Info :2013-01-18 11:45:22
+
+
+pkonst_Agent0934_RERECOSKIMTEST_3_130118_112151_631 : completed :No agent Info :2013-01-18 13:25:46
+
+
+pkonst_HG1302_MCTest_1_130124_134808_8100 : completed :No agent Info :2013-01-24 12:46:10
+
+
+pkonst_HG1302_ABORTTEST_2_130124_154537_1172 : completed :No agent Info :2013-01-25 04:45:54
+
+
+pkonst_HG1302_RERECOSKIMTEST_1_130124_134651_1862 : completed :No agent Info :2013-01-25 04:46:24
+
+
+pkonst_HG1302_MCTest_2_130125_150713_8642 : completed :No agent Info :2013-01-25 10:46:24
+
+
+pkonst_HG1302_REDIGITEST_1_130124_135239_4706 : completed :No agent Info :2013-01-25 13:25:55
+
+
+pkonst_HG1302_ACDCREDIGITEST_1_130125_113039_2998 : completed :No agent Info :2013-01-26 08:05:47
+
+
+pkonst_acdc2_HG1302_ACDCREDIGITEST_1_130125_130128_124113_4959 : completed :No agent Info :2013-01-30 14:45:04
+
+
+pkonst_HG1302_MCTest_2_130130_171657_8127 : completed :No agent Info :2013-01-31 13:05:03
+
+
+pkonst_HG1302_MCTest_3_130131_173223_8587 : closed-out :No agent Info :2013-02-25 07:45:36
+
+
+pkonst_HG1303_MCTest_1_130225_151542_6672 : completed :No agent Info :2013-02-25 10:26:19
+
+
+pkonst_HG1303_RERECOSKIMTEST_1_130225_163750_7347 : completed :No agent Info :2013-02-25 15:06:11
+
+
+pkonst_HG1303_ABORTTEST_1_130226_101005_3297 : completed :No agent Info :2013-02-26 08:45:37
+
+
+pkonst_HG1303_REDIGITEST_1_130225_152310_5858 : completed :No agent Info :2013-02-26 10:45:28
+
+
+pkonst_HG1303_ACDCREDIGITEST_1_130225_170917_8319 : completed :No agent Info :2013-02-26 10:45:34
+
+
+pkonst_T2_DE_DESY_MCTest_1_130226_172612_9986 : completed :No agent Info :2013-02-27 05:25:38
+
+
+pkonst_acdc_HG1303_ACDCREDIGITEST_1_130226_183502_4798 : completed :No agent Info :2013-02-27 16:26:20
+
+
+pkonst_HG1303_ABORTTEST_4_130301_175040_4051 : completed :No agent Info :2013-03-01 17:45:43
+
+
+pkonst_HG1303_ABORTTEST_3_130301_175018_3670 : completed :No agent Info :2013-03-01 17:45:49
+
+
+pkonst_HG1303_ACDCREDIGITEST_2_130301_174953_3016 : completed :No agent Info :2013-03-02 14:06:28
+
+
+pkonst_HG1303_ABORTTEST_5_130304_103927_3332 : completed :No agent Info :2013-03-04 12:05:11
+
+
+pkonst_HG1303_RERECOSKIMTEST_2_130307_104712_3013 : completed :No agent Info :2013-03-07 15:25:40
+
+
+pkonst_T2_FI_HIP_MCTest_1_130305_145632_4345 : completed :No agent Info :2013-03-14 04:45:10
+
+
+pkonst_Agent0950_MCTest_2_130313_155249_9289 : completed :No agent Info :2013-03-14 04:46:28
+
+
+pkonst_Agent0950_MCTest_1_130312_124858_6100 : completed :No agent Info :2013-03-14 04:46:29
+
+
+pkonst_Agent0950_LHETest_1_130314_114327_8047 : completed :No agent Info :2013-03-16 10:45:36
+
+
+pkonst_Agent0950_LHEStep0Test_1_130318_124916_7946 : completed :No agent Info :2013-03-19 15:05:48
+
+
+pkonst_T2_FI_HIP_MCTest_2_130318_120330_8549 : completed :No agent Info :2013-03-21 13:25:11
+
+
+pkonst_Agent0950_LHEStep0Test_1_130322_111356_4118 : completed :No agent Info :2013-03-22 16:45:41
+
+
+pkonst_merge_acdc_T2_FI_HIP_MCTest_2_130322_110653_8923 : completed :No agent Info :2013-03-22 17:05:05
+
+
+pkonst_T2_FI_HIP_MCTest_3_130328_105429_6121 : completed :No agent Info :2013-03-29 02:25:20
+
+
+pkonst_T2_FI_HIP_MCTest_5_130402_174157_5920 : completed :No agent Info :2013-04-02 22:45:49
+
+
+pkonst_T2_FI_HIP_MCTest_6_130403_121630_7759 : completed :No agent Info :2013-04-04 07:25:03
+
+
+pkonst_HG1304_MCTest_1_130405_142450_6976 : completed :No agent Info :2013-04-05 09:25:42
+
+
+pkonst_HG1304_LHEStep0Test_1_130405_142613_2656 : completed :No agent Info :2013-04-05 10:25:38
+
+
+pkonst_HG1304_RERECOSKIMTEST_1_130405_142712_6089 : completed :No agent Info :2013-04-05 14:45:38
+
+
+pkonst_T2_US_Florida_MCTest_2_130405_170607_4806 : completed :No agent Info :2013-04-05 18:26:00
+
+
+pkonst_HG1304_REDIGITEST_1_130405_142639_6235 : completed :No agent Info :2013-04-06 10:05:30
+
+
+efajardo_FI_HIP_alcyone_121204_141457_8171 : closed-out :No agent Info :2013-04-08 09:28:32
+
+
+pkonst_HG1304_ACDCREDIGITEST_1_130408_122219_4032 : completed :No agent Info :2013-04-09 06:25:34
+
+
+pkonst_T2_US_Florida_MCTest_3_130411_103726_9719 : completed :No agent Info :2013-04-11 06:05:04
+
+
+pkonst_Agent0958_MCTest_1_130411_131226_1593 : completed :No agent Info :2013-04-11 08:25:33
+
+
+pkonst_Agent0958_LHEStep0Test_1_130411_152642_6345 : completed :No agent Info :2013-04-11 12:05:04
+
+
+pkonst_Agent0958_RERECOSKIMTEST_1_130411_140652_2734 : completed :No agent Info :2013-04-11 12:45:54
+
+
+pkonst_Agent0958_ACDCREDIGITEST_1_130411_152738_5541 : completed :No agent Info :2013-04-12 04:05:58
+
+
+pkonst_Agent0958_REDIGITEST_1_130411_152129_8130 : completed :No agent Info :2013-04-12 04:06:06
+
+
+pkonst_ACDC_Agent0958_ACDCREDIGITEST_1_130412_112312_247 : completed :No agent Info :2013-04-12 23:45:29
+
+
+pkonst_Agent0958_REDIGITEST_2_130412_112245_8772 : completed :No agent Info :2013-04-12 23:45:31
+
+
+pkonst_Opp_MCTest_1_130412_162825_1261 : completed :No agent Info :2013-04-13 00:45:21
+
+
+pkonst_Opp_MCTest_2_130412_163514_7688 : completed :No agent Info :2013-04-14 21:25:06
+
+
+pkonst_Opp_MCTest_1_130416_125809_9357 : completed :No agent Info :2013-04-16 08:25:30
+
+
+pkonst_Opp_MCTest_2_130416_161459_2601 : completed :No agent Info :2013-04-16 11:05:15
+
+
+pkonst_Opp_LHETest_4_130418_151514_7144 : failed :No agent Info :2013-04-18 08:25:09
+
+
+pkonst_Opp_ReRecoTEST_2_130418_175216_8945 : failed :No agent Info :2013-04-18 11:05:05
+
+
+alahiff_HLTCloudTesting_130422_004427_3453 : aborted :['vocms142.cern.ch:9999'] :2013-04-22 07:04:57
+
+
+alahiff_HLTCloudTesting_130424_151458_3648 : aborted :['vocms142.cern.ch:9999'] :2013-04-24 10:19:58
+
+
+pkonst_OppEngageFNAL_MCTest_5_130426_181921_273 : completed :No agent Info :2013-04-26 14:05:39
+
+
+alahiff_HLTCloudTesting_130424_172030_3269 : aborted :['vocms142.cern.ch:9999'] :2013-04-29 13:00:20
+
+
+pkonst_OppEngageMWT2_MCTest_1_130429_100639_8593 : completed :No agent Info :2013-05-01 09:45:26
+
+
+pkonst_T2_FI_HIP_MCTest_7_130430_131458_4028 : completed :No agent Info :2013-05-02 09:45:05
+
+
+pkonst_Opp_MCTest_4_130426_112821_5177 : completed :No agent Info :2013-05-04 16:45:30
+
+
+pkonst_HG1305_MCTest_1_130508_103930_1526 : completed :No agent Info :2013-05-08 07:45:39
+
+
+pkonst_HG1305_LHEStep0Test_1_130508_103959_5414 : completed :No agent Info :2013-05-08 07:45:46
+
+
+pkonst_HG1305_RERECOSKIMTEST_1_130508_104031_6101 : completed :No agent Info :2013-05-08 10:25:21
+
+
+pkonst_HG1305_REDIGITEST_1_130508_104116_4840 : completed :No agent Info :2013-05-09 06:45:29
+
+
+pkonst_HG1305_ACDCREDIGITEST_1_130510_072404_8507 : completed :No agent Info :2013-05-11 01:45:21
+
+
+pkonst_ACDC_HG1304_ACDCREDIGITEST_1_130409_134427_3512 : closed-out :No agent Info :2013-05-13 03:53:29
+
+
+dballest_PhEDExSubscriber-0001_130513_215907_186 : completed :No agent Info :2013-05-13 16:25:13
+
+
+pkonst_ACDC_HG1305_ACDCREDIGITEST_1_130513_103214_947 : completed :No agent Info :2013-05-14 08:45:20
+
+
+pkonst_HG1305_ACDCREDIGITEST_2_130515_173401_2284 : completed :No agent Info :2013-05-16 09:05:39
+
+
+dballest_PhEDExSubscriber-0001_130516_225609_4742 : completed :['cmssrv101.fnal.gov:9999'] :2013-05-16 18:05:44
+
+
+dballest_PhEDExSubscriber-0001_130517_005130_1619 : completed :['cmssrv101.fnal.gov:9999'] :2013-05-16 19:45:30
+
+
+pkonst_ACDC_HG1305_ACDCREDIGITEST_2_130516_180454_7948 : completed :No agent Info :2013-05-21 04:45:40
+
+
+pkonst_Agent0969_MCTest_1_130527_121421_7617 : completed :No agent Info :2013-05-27 07:25:06
+
+
+pkonst_Agent0969_LHEStep0Test_1_130527_121916_3510 : completed :No agent Info :2013-05-27 08:06:05
+
+
+pkonst_Agent0969_RERECOSKIMTEST_1_130527_121753_4845 : completed :No agent Info :2013-05-29 07:25:26
+
+
+pkonst_Agent0969_REDIGITEST_1_130527_121829_8561 : completed :No agent Info :2013-05-29 07:45:34
+
+
+pkonst_T1_UK_RAL_MCTest_1_130603_112916_830 : completed :No agent Info :2013-06-04 05:05:30
+
+
+pkonst_HG1305_MCTest_1_130606_115749_6908 : completed :['cmssrv101.fnal.gov:9999'] :2013-06-06 09:06:28
+
+
+pkonst_HG1306_MCTest_1_130607_120717_2420 : completed :['cmssrv94.fnal.gov:9999'] :2013-06-07 07:47:29
+
+
+pkonst_HG1306_LHEStep0Test_1_130607_120905_7683 : completed :['cmssrv94.fnal.gov:9999'] :2013-06-07 08:06:33
+
+
+pkonst_HG1306_RERECOSKIMTEST_1_130607_120746_5481 : completed :['cmssrv94.fnal.gov:9999'] :2013-06-07 11:46:10
+
+
+pkonst_T1_UK_RAL_MCTest_2_130604_124016_2559 : completed :['vocms224.cern.ch:9999'] :2013-06-07 19:26:08
+
+
+pkonst_OppEngageMWT2_MCTest_2_130607_162840_3172 : completed :['vocms224.cern.ch:9999'] :2013-06-08 00:45:34
+
+
+pkonst_HG1306_REDIGITEST_1_130607_120829_9959 : completed :['cmssrv94.fnal.gov:9999'] :2013-06-08 20:05:58
+
+
+pkonst_T1_IT_CNAF_MCTest_1_130603_104507_7934 : completed :['vocms224.cern.ch:9999'] :2013-06-11 05:25:59
+
+
+pkonst_T1_IT_CNAF_MCTest_2_130611_105744_7349 : completed :['vocms224.cern.ch:9999'] :2013-06-11 06:25:18
+
+
+vlimant_RVCMSSW_6_2_0_pre3ZEE_130305_130451_6752 : completed :['cmssrv94.fnal.gov:9999'] :2013-06-13 13:05:17
+
+
+pkonst_T2_FI_HIP_MCTest_10_130605_183402_6319 : completed :['vocms224.cern.ch:9999'] :2013-06-14 11:46:15
+
+
+pkonst_HG1306_MCTest_2_130614_160014_6440 : completed :['cmssrv94.fnal.gov:9999'] :2013-06-14 20:46:37
+
+
+pkonst_HG1306_LHEStep0Test_2_130614_160040_4885 : completed :['cmssrv94.fnal.gov:9999'] :2013-06-14 21:45:32
+
+
+pkonst_HG1306_RERECOSKIMTEST_2_130614_160050_4400 : completed :['cmssrv94.fnal.gov:9999'] :2013-06-15 00:26:04
+
+
+pkonst_HG1306_ABORTTEST_2_130614_160128_5106 : completed :['cmssrv94.fnal.gov:9999'] :2013-06-15 00:45:47
+
+
+pkonst_HG1306_REDIGITEST_2_130614_160110_3580 : completed :['cmssrv94.fnal.gov:9999'] :2013-06-15 22:05:06
+
+
+pkonst_HG1306_ACDCREDIGITEST_2_130614_160139_9082 : completed :['cmssrv94.fnal.gov:9999'] :2013-06-15 22:05:14
+
+
+pkonst_OppBNL01_MCTest_1_130610_163724_9526 : completed :['vocms224.cern.ch:9999'] :2013-06-17 12:25:21
+
+
+pkonst_ACDC_HG1306_ACDCREDIGITEST_2_130617_094904_7998 : completed :['cmssrv94.fnal.gov:9999'] :2013-06-18 17:45:09
+
+
+amaltaro_RV620pre6_patch1_TEST_HG1306b_Alan_130617_132954_8299 : completed :['cmssrv94.fnal.gov:9999'] :2013-06-18 22:25:50
+
+
+pkonst_T2star_MCTest_2_130620_143643_1003 : completed :No agent Info :2013-06-20 11:26:17
+
+
+pkonst_CERN_MCTest_1_130620_143423_2232 : completed :No agent Info :2013-06-20 13:05:50
+
+
+pkonst_T2_FI_HIP_MCTest_11_130611_111239_3972 : completed :['vocms224.cern.ch:9999'] :2013-06-20 15:06:13
+
+
+pkonst_T2star_MCTest_4_130621_152742_7718 : completed :No agent Info :2013-06-22 15:06:16
+
+
+pkonst_T1BL_MCTest_1_130622_125720_5282 : completed :No agent Info :2013-06-23 16:26:19
+
+
+pkonst_T2star_MCTest_3_130620_203054_1665 : completed :No agent Info :2013-06-24 02:45:35
+
+
+pkonst_multisite_MCTest_1_130621_185441_2948 : completed :No agent Info :2013-06-24 04:46:19
+
+
+dballest_PreMixing_DIGIs_v1_130624_190248_2130 : completed :['cmssrv101.fnal.gov:9999'] :2013-06-24 16:25:57
+
+
+pkonst_T2_FI_HIP_MCTest_12_130618_163440_6293 : completed :['vocms224.cern.ch:9999'] :2013-06-26 13:05:52
+
+
+dballest_PreMixing_RAW_v1_130628_052843_3942 : completed :['cmssrv101.fnal.gov:9999'] :2013-06-28 02:46:04
+
+
+maxa_130627_230726_570 : failed :No agent Info :2013-06-28 12:05:16
+
+
+dballest_PreMixing_RAW_v2_130629_025502_8417 : completed :['cmssrv101.fnal.gov:9999'] :2013-06-29 01:25:20
+
+
+pkonst_multisite_LHETest_1_130621_235717_9503 : completed :No agent Info :2013-06-30 09:46:11
+
+
+amaltaro_RV620pre5_PU_TEST_HG1306_ALAN_Pyquen_GammaJet_pt20_2760GeV_130701_122426_249 : completed :No agent Info :2013-07-01 14:26:00
+
+
+pkonst_T2_DE_DESY_MCTest_1_130626_150624_3337 : completed :['vocms224.cern.ch:9999'] :2013-07-02 07:05:05
+
+
+pkonst_lcgcptest_MCTest_1_130703_113758_6466 : completed :['vocms224.cern.ch:9999'] :2013-07-03 08:25:38
+
+
+amaltaro_RV620pre8_PU_TEST_HG1307_SingleMuPt100__FastSim_130703_210217_2847 : completed :No agent Info :2013-07-03 18:06:07
+
+
+amaltaro_RV620pre8_PU_TEST_HG1307_MinBias_130703_210209_6732 : completed :No agent Info :2013-07-03 19:05:31
+
+
+amaltaro_RV620pre8_PU_TEST_HG1307_Pyquen_GammaJet_pt20_2760GeV_PU__130703_174200_2498 : completed :No agent Info :2013-07-03 19:45:36
+
+
+amaltaro_RV620pre8_PU_TEST_HG1307_TTbar_130703_210222_2177 : completed :No agent Info :2013-07-03 21:05:51
+
+
+amaltaro_RV620pre8_PU_TEST_HG1307_ProdMinBias_130703_210137_727 : completed :No agent Info :2013-07-03 21:45:55
+
+
+amaltaro_RV620pre8_PU_TEST_HG1307_ProdTTbar_130703_210143_6817 : completed :No agent Info :2013-07-03 22:25:59
+
+
+amaltaro_RV620pre8_PU_TEST_HG1307_RunTau2012A__RelVal_tau2012A_130703_210156_7939 : completed :No agent Info :2013-07-03 22:46:04
+
+
+amaltaro_RV620pre8_PU_TEST_HG1307_RunJet2012B__RelVal_jet2012B_130703_210203_1295 : completed :No agent Info :2013-07-04 04:25:49
+
+
+pkonst_HG1307_LHEStep0Test_1_130704_112834_5417 : completed :No agent Info :2013-07-04 07:05:14
+
+
+pkonst_HG1307_MCTest_1_130704_112644_6019 : completed :No agent Info :2013-07-04 07:05:49
+
+
+pkonst_HG1307_RERECOSKIMTEST_1_130704_112741_1548 : completed :No agent Info :2013-07-04 18:45:38
+
+
+pkonst_lcgcptest_MCTest_2_130704_113555_4830 : completed :['vocms224.cern.ch:9999'] :2013-07-04 19:25:39
+
+
+pkonst_HG1307_ACDCREDIGITEST_1_130704_112808_8711 : completed :No agent Info :2013-07-05 13:25:47
+
+
+amaltaro_TEST_HG1307_PD_Override_MCfGEN_Alan_130705_144001_8511 : completed :No agent Info :2013-07-05 21:25:13
+
+
+amaltaro_RV620pre6_patch1_TEST_HG1307_RunMET2012A_MultiDQM_130705_144319_6874 : completed :No agent Info :2013-07-05 22:46:02
+
+
+pkonst_ACDC_HG1307_ACDCREDIGITEST_1_130708_103846_9257 : completed :No agent Info :2013-07-09 04:06:18
+
+
+pkonst_lcgcptest_MCTest_3_130709_164650_1243 : completed :['vocms224.cern.ch:9999'] :2013-07-10 03:46:36
+
+
+pkonst_lcgcptest_MCTest_5_130715_102108_2433 : completed :['vocms224.cern.ch:9999'] :2013-07-15 07:05:05
+
+
+pkonst_lcgcptest_MCTest_6_130715_184751_1638 : completed :['vocms224.cern.ch:9999'] :2013-07-16 09:25:05
+
+
+pkonst_lcgcptest_MCTest_7_130717_165104_3495 : completed :['vocms224.cern.ch:9999'] :2013-07-17 13:05:05
+
+
+pkonst_lcgcptest_MCTest_7_130718_162938_2616 : completed :['vocms224.cern.ch:9999'] :2013-07-18 23:25:04
+
+
+pkonst_scaletest_MCTest_1_130726_181210_7895 : completed :['vocms224.cern.ch:9999'] :2013-07-30 07:05:12
+
+
+amaltaro_RV620pre5_TEST_SL5_FNAL_SingleMuPt100_130801_192032_3940 : completed :['vocms224.cern.ch:9999'] :2013-08-02 10:46:25
+
+
+amaltaro_RV620pre5slc6_TEST_SL6_FNAL_SingleMuPt100_130801_192036_9818 : completed :['vocms224.cern.ch:9999'] :2013-08-02 11:05:22
+
+
+pkonst_sitetest_MCTest_1_130801_155139_5129 : completed :['vocms224.cern.ch:9999'] :2013-08-02 11:45:21
+
+
+jartieda_Commissioning_T2_GR_Ioannina_130729_230057_8243 : failed :['cmssrv94.fnal.gov:9999'] :2013-08-08 14:53:52
+
+
+jartieda_Commissioning_T2_GR_Ioannina_130808_215601_8372 : failed :['cmssrv94.fnal.gov:9999'] :2013-08-09 13:38:24
+
+
+amaltaro_RV620pre8_TEST_HG1309_PU_ZEE_PU__130903_111124_6423 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-04 03:06:17
+
+
+amaltaro_RV620pre8_TEST_HG1309_ProdMinBias_130902_141508_7960 : closed-out :['cmssrv94.fnal.gov:9999'] :2013-09-04 03:43:03
+
+
+amaltaro_RV620pre8_TEST_HG1309_ProdTTbar_130902_141524_6558 : closed-out :['cmssrv94.fnal.gov:9999'] :2013-09-04 03:43:04
+
+
+amaltaro_RV620pre8_TEST_HG1309_RunTau2012A__RelVal_tau2012A_130902_141538_6719 : closed-out :['cmssrv94.fnal.gov:9999'] :2013-09-04 03:43:05
+
+
+amaltaro_RV620pre8_TEST_HG1309_RunJet2012B__RelVal_jet2012B_130902_141545_7402 : closed-out :['cmssrv94.fnal.gov:9999'] :2013-09-04 03:43:07
+
+
+amaltaro_RV620pre8_TEST_HG1309_MinBias_130902_141550_9699 : closed-out :['cmssrv94.fnal.gov:9999'] :2013-09-04 03:43:08
+
+
+amaltaro_RV620pre8_TEST_HG1309_TTbar_130902_141602_3280 : closed-out :['cmssrv94.fnal.gov:9999'] :2013-09-04 03:43:10
+
+
+pkonst_HG1309_MCTest_1_130904_152727_7747 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-04 10:46:14
+
+
+pkonst_HG1309_LHEStep0Test_1_130904_183816_968 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-04 13:25:20
+
+
+pkonst_HG1309_RERECOSKIMTEST_1_130904_184839_6640 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-04 17:05:05
+
+
+amaltaro_RVCMSSW_7_0_0_pre3TTbar_130904_154753_374 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-04 21:45:58
+
+
+pkonst_HG1309_REDIGITEST_1_130904_184522_5445 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-04 23:25:17
+
+
+pkonst_HG1309_LHETest_1_130904_185002_2359 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-06 07:46:08
+
+
+pkonst_HG1309_MCTest_2_130906_144136_1268 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-09 07:05:04
+
+
+pkonst_HG1309_LHEStep0Test_2_130909_114447_7682 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-09 08:06:05
+
+
+pkonst_HG1309_RERECOSKIMTEST_2_130906_143900_8737 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-09 09:25:49
+
+
+pkonst_HG1309_REDIGITEST_2_130906_141956_2398 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-10 06:45:21
+
+
+pkonst_HG1309_ACDCREDIGITEST_1_130909_154010_4818 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-10 07:05:07
+
+
+amaltaro_RV620pre8_TEST_HG1309_PU_QQH1352T_Tauola_PU__130903_113643_7767 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-10 15:06:41
+
+
+amaltaro_RV620pre8_TEST_HG1309_PU_Pyquen_GammaJet_pt20_2760GeV_PU__130903_113652_2953 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-10 18:25:06
+
+
+amaltaro_RVCMSSW_7_0_0_pre3RunJet2012B__RelVal_jet2012B_130910_114502_5292 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-10 18:25:14
+
+
+pkonst_ACDC_HG1309_ACDCREDIGITEST_1_130910_140840_2792 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-11 05:45:15
+
+
+amaltaro_Summer12pLHE_TEST_HG1309_130912_152307_7817 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-12 10:45:15
+
+
+amaltaro_Summer12pLHE_TEST_HG1309_v2_130913_092334_4327 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-13 05:05:05
+
+
+amaltaro_Summer12_GENSIM_TEST_HG1309_130913_091233_1425 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-13 23:05:53
+
+
+amaltaro_Summer12_GENSIM_TEST_HG1309_130916_163705_4149 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-16 13:05:31
+
+
+amaltaro_RVCMSSW_7_0_0_pre3QCD_Ht-100To250_TuneZ2star_8TeV_madgraph-tauola_130918_143504_6439 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-18 09:05:17
+
+
+amaltaro_RVCMSSW_7_0_0_pre3RunJet2012B__RelVal_jet2012B_130918_133843_3086 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-18 17:05:24
+
+
+pkonst_ACDC_HLTD_RVCMSSW_7_0_0_pre3RunJet2012B__RelVal_jet2012B_130919_145751_5876 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-19 09:46:10
+
+
+pkonst_ACDC_RECODreHLT_RVCMSSW_7_0_0_pre3RunJet2012B__RelVal_jet2012B_130919_145832_3192 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-19 13:05:11
+
+
+amaltaro_Summer12_CouchDB_TEST_HG1309_130919_150508_3404 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-19 14:45:37
+
+
+amaltaro_Summer12_CouchDB_TEST_HG1309_130920_115851_3973 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-23 13:26:05
+
+
+jartieda_Commissioning_T2_FR_GRIF_IRFU_130921_004122_3815 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-23 13:29:48
+
+
+amaltaro_RVCMSSW_7_0_0_pre3SingleMuPt100__FastSim_130924_111708_3786 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-24 09:45:28
+
+
+amaltaro_RVCMSSW_7_0_0_pre3SingleMuPt100__FastSim_130924_112241_8572 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-24 10:05:06
+
+
+amaltaro_RVCMSSW_7_0_0_pre3SingleMuPt100__FastSim_130924_112839_2279 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-24 10:05:13
+
+
+pkonst_functest_MCTest_1_130925_151840_9900 : completed :No agent Info :2013-09-30 06:05:32
+
+
+pkonst_Agent0979_MCTest_1_130925_160202_8353 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-30 09:46:11
+
+
+amaltaro_Summer12pLHE_TEST_Agent0979_130925_162247_3790 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-30 15:26:07
+
+
+pkonst_Agent0979_LHEStep0Test_1_130930_163908_5470 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-30 16:05:06
+
+
+pkonst_Agent0979_RERECOSKIMTEST_1_130930_163838_5274 : completed :['cmssrv94.fnal.gov:9999'] :2013-09-30 19:25:15
+
+
+amaltaro_RVCMSSW_7_0_0_pre3TTbar_131001_122133_93 : completed :['cmssrv94.fnal.gov:9999'] :2013-10-01 10:46:15
+
+
+amaltaro_RVCMSSW_7_0_0_pre3SingleMuPt100__FastSim_131001_122128_8703 : completed :['cmssrv94.fnal.gov:9999'] :2013-10-01 11:05:34
+
+
+amaltaro_RVCMSSW_7_0_0_pre3ProdMinBias_131001_122055_5632 : completed :['cmssrv94.fnal.gov:9999'] :2013-10-01 11:25:47
+
+
+amaltaro_Summer12pLHE_TEST_Agent0979_Validation_v2_131001_175421_7801 : completed :['cmssrv94.fnal.gov:9999'] :2013-10-01 14:45:28
+
+
+amaltaro_RV620pre5slc6_TEST_SL6_FNAL_SingleMuPt100_131001_165307_8199 : completed :['cmssrv94.fnal.gov:9999'] :2013-10-01 15:25:28
+
+
+amaltaro_RVCMSSW_7_0_0_pre3Pyquen_GammaJet_pt20_2760GeV_PU__131001_152925_5413 : completed :['cmssrv94.fnal.gov:9999'] :2013-10-01 15:45:06
+
+
+amaltaro_RVCMSSW_7_0_0_pre3QQH1352T_Tauola_PU__131001_152921_1384 : completed :['cmssrv94.fnal.gov:9999'] :2013-10-01 17:06:38
+
+
+pkonst_functest_MCTest_1_131001_185526_5701 : completed :No agent Info :2013-10-01 21:06:04
+
+
+amaltaro_RVCMSSW_7_0_0_pre3ZEE_PU__131001_152237_5277 : completed :['cmssrv94.fnal.gov:9999'] :2013-10-01 22:26:01
+
+
+pkonst_Agent0979_REDIGITEST_1_130930_163852_6251 : completed :['cmssrv94.fnal.gov:9999'] :2013-10-01 23:06:15
+
+
+amaltaro_Summer12_GENSIM_TEST_Agent0979_Validation_131001_174837_4938 : completed :['cmssrv94.fnal.gov:9999'] :2013-10-02 00:06:04
+
+
+amaltaro_RVCMSSW_7_0_0_pre3ProdTTbar_131001_122104_2987 : completed :['cmssrv94.fnal.gov:9999'] :2013-10-02 00:06:20
+
+
+pkonst_Agent0979_ACDCREDIGITEST_1_131001_181721_4673 : completed :['cmssrv94.fnal.gov:9999'] :2013-10-02 14:45:13
+
+
+amaltaro_Summer12pLHE_TEST_Agent0979_Validation_v3_131003_131853_9993 : completed :['cmssrv94.fnal.gov:9999'] :2013-10-03 10:05:57
+
+
+amaltaro_RVCMSSW_7_0_0_pre3MinBias_131001_122122_4898 : completed :['cmssrv94.fnal.gov:9999'] :2013-10-03 10:25:14
+
+
+amaltaro_RVCMSSW_7_0_0_pre3RunJet2012B__RelVal_jet2012B_131001_122117_3410 : completed :['cmssrv94.fnal.gov:9999'] :2013-10-03 12:45:36
+
+
+amaltaro_RVCMSSW_7_0_0_pre3RunTau2012A__RelVal_tau2012A_131001_122111_7707 : completed :['cmssrv94.fnal.gov:9999'] :2013-10-03 15:26:20
+
+
+pkonst_Agent0979_LHETest_1_131001_175441_3993 : completed :['cmssrv94.fnal.gov:9999'] :2013-10-03 21:05:16
+
+
+pkonst_ACDC_Agent0979_ACDCREDIGITEST_1_131003_083557_6543 : completed :['cmssrv94.fnal.gov:9999'] :2013-10-04 05:45:06
+
+
+amaltaro_Summer12pLHE_TEST_Agent0979_Validation_v3_131004_134315_4849 : completed :['cmssrv94.fnal.gov:9999'] :2013-10-07 07:25:19
+
+
+amaltaro_RVCMSSW_7_0_0_pre3ZEE_PU__131004_141912_2605 : completed :['cmssrv94.fnal.gov:9999'] :2013-10-07 23:45:07
+
+
+amaltaro_RV620pre5slc6_TEST_SL6_FNAL_SingleMuPt100_131008_083352_3155 : completed :['cmssrv94.fnal.gov:9999'] :2013-10-09 08:45:05
+
+
+amaltaro_Summer12pLHE_TEST_Agent0979_Validation_v3_131007_113235_5472 : completed :['vocms231.cern.ch:9999'] :2013-10-10 04:25:14
+
+
+amaltaro_RV620pre5slc6_TEST_SL6_FNAL_SingleMuPt100_131010_150812_226 : completed :['cmssrv94.fnal.gov:9999'] :2013-10-12 00:45:12
+
+
+pkonst_functest_MCTest_2_131011_140930_8915 : completed :['vocms231.cern.ch:9999'] :2013-10-12 09:05:12
+
+
+pkonst_errtest_MCTest_1_131011_144715_8856 : completed :['vocms231.cern.ch:9999'] :2013-10-14 22:25:59
+
+
+pkonst_Agent0982_MCTest_1_131018_122642_3990 : completed :['vocms230.cern.ch:9999'] :2013-10-18 07:25:36
+
+
+amaltaro_RVCMSSW_7_0_0_pre3SingleMuPt100__FastSim_131023_154254_7233 : completed :['vocms230.cern.ch:9999'] :2013-10-23 13:05:14
+
+
+pkonst_HG1310_LHEStep0Test_1_131023_180356_4258 : completed :['vocms230.cern.ch:9999'] :2013-10-23 13:06:11
+
+
+pkonst_HG1310_MCTest_1_131023_175616_7062 : completed :['vocms230.cern.ch:9999'] :2013-10-23 13:45:14
+
+
+amaltaro_RVCMSSW_7_0_0_pre3TTbar_131023_154249_863 : completed :['vocms230.cern.ch:9999'] :2013-10-23 16:05:05
+
+
+pkonst_HG1310_RERECOSKIMTEST_1_131023_180245_9274 : completed :['vocms230.cern.ch:9999'] :2013-10-23 18:25:14
+
+
+amaltaro_RVCMSSW_7_0_0_pre3RunTau2012A__RelVal_tau2012A_131023_154241_8691 : completed :['vocms230.cern.ch:9999'] :2013-10-23 19:25:04
+
+
+amaltaro_Summer12_TEST_HG1310_Validation_131023_160941_9090 : completed :['vocms230.cern.ch:9999'] :2013-10-23 22:45:04
+
+
+pkonst_T1_UF_FNAL_MCTest_1_131023_111706_521 : completed :['cmssrv60.fnal.gov:9999'] :2013-10-24 03:05:32
+
+
+pkonst_HG1310_REDIGITEST_1_131023_180232_8206 : completed :['vocms230.cern.ch:9999'] :2013-10-24 06:25:12
+
+
+pkonst_T1_US_FNAL_MCTest_2_131024_170058_3100 : completed :['cmssrv60.fnal.gov:9999'] :2013-10-24 13:05:07
+
+
+pkonst_HG1310_ACDCREDIGITEST_1_131024_151704_1110 : completed :['vocms230.cern.ch:9999'] :2013-10-25 14:45:15
+
+
+pkonst_errtest_MCTest_3_131021_114648_7037 : completed :['vocms231.cern.ch:9999'] :2013-10-27 15:05:19
+
+
+pkonst_T1_RU_JINR_MCTest_1_131028_130815_8744 : completed :['vocms230.cern.ch:9999'] :2013-10-28 09:25:05
+
+
+pkonst_T1_RU_JINR_MCTest_2_131028_181906_798 : completed :['vocms230.cern.ch:9999'] :2013-10-28 22:25:29
+
+
+pkonst_ACDC_HG1310_ACDCREDIGITEST_1_131028_103130_1610 : completed :['vocms230.cern.ch:9999'] :2013-10-29 07:05:18
+
+
+pkonst_T1_RU_JINR_REDIGITEST_1_131029_122028_6045 : completed :['vocms230.cern.ch:9999'] :2013-10-29 08:05:15
+
+
+pkonst_T1_RU_JINR_REDIGITEST_2_131029_162931_7014 : completed :['vocms230.cern.ch:9999'] :2013-10-29 12:45:23
+
+
+pkonst_T1_RU_JINR_MCTest_3_131029_113154_7960 : completed :['vocms230.cern.ch:9999'] :2013-10-29 16:25:26
+
+
+pkonst_T1_RU_JINR_MCTest_4_131030_104342_4889 : completed :['vocms230.cern.ch:9999'] :2013-10-30 14:45:12
+
+
+pkonst_T1_RU_JINR_REDIGITEST_3_131030_151802_6959 : completed :['vocms230.cern.ch:9999'] :2013-10-31 00:05:39
+
+
+pkonst_ACDC_T1_RU_JINR_REDIGITEST_3_131031_113238_5642 : completed :['vocms230.cern.ch:9999'] :2013-10-31 20:45:12
+
+
+pkonst_T1_RU_JINR_REDIGITEST_4_131101_100920_5213 : completed :['vocms230.cern.ch:9999'] :2013-11-01 18:46:14
+
+
+pkonst_ACDC_merge_T1_RU_JINR_LHETest_1_131104_112651_6049 : completed :['vocms230.cern.ch:9999'] :2013-11-04 07:26:22
+
+
+pkonst_T2_US_Florida_MCTest_1_131101_115159_9402 : completed :['vocms230.cern.ch:9999'] :2013-11-06 20:05:05
+
+
+pkonst_T2_US_Florida-cp-test_MCTest_1_131113_131510_5593 : completed :['vocms230.cern.ch:9999'] :2013-11-13 09:26:34
+
+
+amaltaro_RVCMSSW_7_0_0_pre7QCD_Ht-100To250_TuneZ2star_8TeV_madgraph-tauola_131127_141436_9414 : completed :['vocms230.cern.ch:9999'] :2013-11-27 09:46:07
+
+
+pkonst_multicore_MC_test_1_131203_131530_4183 : completed :No agent Info :2013-12-03 08:25:31
+
+
+pkonst_uitest_MCTest_1_131204_152854_9941 : completed :['vocms231.cern.ch:9999'] :2013-12-09 07:25:12
+
+
+pkonst_T1_US_FNAL_dbstest_LHETest_1_131209_114440_2892 : failed :No agent Info :2013-12-10 05:06:49
+
+
+pkonst_uitest_MCTest_2_131210_164812_3902 : completed :['vocms231.cern.ch:9999'] :2013-12-10 14:25:46
+
+
+amaltaro_Summer12_TEST_PRIORITIES_6k_131210_102148_6492 : completed :['vocms230.cern.ch:9999'] :2013-12-11 11:26:58
+
+
+amaltaro_Summer12_TEST_PRIORITIES_5k_131210_102559_7764 : completed :['vocms230.cern.ch:9999'] :2013-12-12 01:46:59
+
+
+jbadillo_BTV-Fall13-00006_00007_v0__131205_100742_8441 : completed :['vocms230.cern.ch:9999'] :2013-12-12 07:26:22
+
+
+amaltaro_Summer12_TEST_PRIORITIES_3k_131210_102718_8264 : completed :['vocms230.cern.ch:9999'] :2013-12-12 18:26:33
+
+
+aperezca_multicore_MC_test_1_131212_182426_6199 : completed :['vocms231.cern.ch:9999'] :2013-12-13 06:46:57
+
+
+amaltaro_Summer12_TEST_PRIORITIES_4k_131210_102645_5681 : completed :['vocms230.cern.ch:9999'] :2013-12-13 11:07:09
+
+
+pkonst_retrytest_MCTest_2_131212_152735_8865 : completed :['vocms231.cern.ch:9999'] :2014-01-10 14:46:07
+
+
+aperezca_multicore_MC_test_1_131217_131357_1783 : completed :['vocms231.cern.ch:9999'] :2014-01-13 06:47:29
+
+
+jbadillo_BTV-Fall13-00027_00007_v0__131205_101904_5376 : completed :['vocms230.cern.ch:9999'] :2014-01-18 09:05:34
+
+
+jbadillo_BTV-Fall13-00027_00007_v0__131205_101916_6803 : completed :['vocms230.cern.ch:9999'] :2014-01-20 07:06:46
+
+
+pkonst_Agent0988_MCTest_1_140120_152537_6231 : completed :['vocms142.cern.ch:9999'] :2014-01-20 10:47:07
+
+
+pkonst_Agent0988_LHEStep0Test_1_140120_160538_1200 : completed :['vocms142.cern.ch:9999'] :2014-01-20 11:07:57
+
+
+jbadillo_BTV-Fall13-00006_00007_v0__131205_101039_6849 : completed :['vocms230.cern.ch:9999'] :2014-01-20 13:47:15
+
+
+pkonst_Agent0988_RERECOSKIMTEST_1_140120_153247_9692 : completed :['vocms142.cern.ch:9999'] :2014-01-20 14:45:22
+
+
+amaltaro_RVCMSSW_7_0_0_pre11RunJet2012B__RelVal_jet2012B_140120_150331_7855 : failed :No agent Info :2014-01-21 10:06:10
+
+
+amaltaro_RVCMSSW_7_0_0_pre11RunTau2012A__RelVal_tau2012A_140120_150324_8415 : failed :No agent Info :2014-01-21 10:07:06
+
+
+pkonst_Agent0988_REDIGITEST_1_140120_152850_9005 : completed :['vocms142.cern.ch:9999'] :2014-01-22 05:07:32
+
+
+pkonst_Agent0988_ACDCREDIGITEST_1_140121_123602_9013 : completed :['vocms142.cern.ch:9999'] :2014-01-22 05:07:34
+
+
+pkonst_Agent0988_ReRecoTEST_1_140121_182226_9301 : failed :No agent Info :2014-01-22 11:45:54
+
+
+pkonst_Agent0988_ACDCREDIGITEST_2_140123_165509_8122 : completed :['vocms142.cern.ch:9999'] :2014-01-25 06:46:47
+
+
+jbalcas_ACDC_ReDigiWorkF_140125_191511_3850 : failed :No agent Info :2014-01-26 01:38:24
+
+
+aperezca_multicore_MC_test_1_140121_183439_9829 : completed :['vocms231.cern.ch:9999'] :2014-01-28 05:25:21
+
+
+pkonst_ACDC_Agent0988_ACDCREDIGITEST_2_140127_115822_7179 : completed :['vocms142.cern.ch:9999'] :2014-01-28 15:47:17
+
+
+pkonst_Agent0988_MCTest_2_140130_133753_7823 : completed :['vocms142.cern.ch:9999'] :2014-01-30 09:05:58
+
+
+pkonst_Agent0988_MCTest_3_140130_160606_3798 : completed :['vocms142.cern.ch:9999'] :2014-01-30 13:26:30
+
+
+amaltaro_TEST_Alan_DiskTape_KIT_140207_140522_4384 : completed :['vocms142.cern.ch:9999'] :2014-02-07 10:26:59
+
+
+pkonst_T1_RU_JINR_LHETest_5_131125_164025_3507 : aborted :['vocms230.cern.ch:9999'] :2014-02-10 01:47:55
+
+
+pkonst_T1_RU_JINR_LHETest_4_131114_134507_8334 : aborted :['vocms230.cern.ch:9999'] :2014-02-10 01:48:13
+
+
+pkonst_T1_RU_JINR_LHETest_3_131105_132817_174 : aborted :['vocms230.cern.ch:9999'] :2014-02-10 01:48:46
+
+
+pkonst_T1_RU_JINR_LHETest_2_131104_142848_8093 : aborted :['vocms230.cern.ch:9999'] :2014-02-10 01:49:05
+
+
+pkonst_ACDC_T1_RU_JINR_LHETest_1_131104_112433_929 : aborted :['vocms230.cern.ch:9999'] :2014-02-10 01:49:45
+
+
+jbadillo_ES_PICDiskTapeSepTest_140228_153613_9617 : failed :No agent Info :2014-02-28 09:24:49
+
+
+amaltaro_RVCMSSW_7_0_0_pre11QCD_Ht-250To500_TuneZ2star_8TeV_madgraph-tauola_140228_165956_8097 : completed :['vocms142.cern.ch:9999'] :2014-02-28 12:26:16
+
+
+amaltaro_RVCMSSW_7_0_0_pre11QCD_Ht-100To250_TuneZ2star_8TeV_madgraph-tauola_140228_165943_4574 : completed :['vocms142.cern.ch:9999'] :2014-02-28 13:07:23
+
+
+amaltaro_RVCMSSW_7_0_0_pre11SingleMuPt100__FastSim_140228_160110_5309 : completed :['vocms142.cern.ch:9999'] :2014-02-28 13:27:41
+
+
+amaltaro_RVCMSSW_7_0_0_pre11ProdMinBias_140228_160034_2636 : completed :['vocms142.cern.ch:9999'] :2014-02-28 15:27:34
+
+
+jbadillo_ES_PICDiskTapeSepTest_140228_162011_7284 : completed :['vocms142.cern.ch:9999'] :2014-02-28 21:26:38
+
+
+amaltaro_RVCMSSW_7_0_0_pre11ProdTTbar_140228_160041_5739 : completed :['vocms142.cern.ch:9999'] :2014-02-28 23:07:24
+
+
+jbadillo_ES_PICDiskTapeSepTest_140228_155509_9418 : failed :No agent Info :2014-03-01 09:27:15
+
+
+amaltaro_RVCMSSW_7_0_0_pre11QCD_Ht-100To250_TuneZ2star_8TeV_madgraph-tauola_140307_130636_2805 : completed :['vocms142.cern.ch:9999'] :2014-03-07 09:07:24
+
+
+pkonst_HG1403_LHEStep0Test_1_140307_172227_1823 : completed :['vocms142.cern.ch:9999'] :2014-03-07 11:47:10
+
+
+pkonst_HG1403_MCTest_1_140307_171808_7207 : completed :['vocms142.cern.ch:9999'] :2014-03-07 12:25:52
+
+
+pkonst_HG1403_RERECOSKIMTEST_1_140307_172045_8 : failed :No agent Info :2014-03-08 10:46:36
+
+
+pkonst_HG1403_LHETest_1_140307_172214_4225 : failed :No agent Info :2014-03-08 10:46:38
+
+
+pkonst_HG1403_REDIGITEST_1_140307_172131_378 : failed :No agent Info :2014-03-08 10:46:39
+
+
+amaltaro_RVCMSSW_7_0_0_pre11RunTau2012A__RelVal_tau2012A_140311_173134_6528 : completed :['vocms142.cern.ch:9999'] :2014-03-11 13:47:03
+
+
+amaltaro_RVCMSSW_7_0_0_pre11SingleMuPt100__FastSim_140311_172048_2990 : completed :['vocms142.cern.ch:9999'] :2014-03-11 15:26:31
+
+
+pkonst_HG1403_ReRecoTEST_2_140311_164539_1167 : completed :['vocms142.cern.ch:9999'] :2014-03-11 15:27:03
+
+
+amaltaro_RVCMSSW_7_0_0_pre11ProdMinBias_140311_172014_5299 : completed :['vocms142.cern.ch:9999'] :2014-03-11 16:47:25
+
+
+amaltaro_RVCMSSW_7_0_0_pre11ProdTTbar_140311_172021_134 : completed :['vocms142.cern.ch:9999'] :2014-03-11 23:07:20
+
+
+pkonst_functest_MCTest_1_140311_165126_2116 : completed :['vocms231.cern.ch:9999'] :2014-03-12 02:26:10
+
+
+pkonst_HG1403_REDIGITEST_2_140311_163846_6164 : failed :No agent Info :2014-03-12 11:06:45
+
+
+pkonst_HG1403_ACDCREDIGITEST_2_140311_164745_3988 : failed :No agent Info :2014-03-12 11:26:59
+
+
+amaltaro_RVCMSSW_7_0_0_pre11TTbar_140311_172052_6394 : failed :No agent Info :2014-03-12 12:06:21
+
+
+amaltaro_RVCMSSW_7_0_0_pre11RunTau2012A__RelVal_tau2012A_140311_172029_879 : failed :No agent Info :2014-03-12 12:07:14
+
+
+amaltaro_RVCMSSW_7_0_0_pre11MinBias_140311_172040_8481 : failed :No agent Info :2014-03-12 12:07:16
+
+
+amaltaro_RVCMSSW_7_0_0_pre11RunJet2012B__RelVal_jet2012B_140311_172035_3269 : failed :No agent Info :2014-03-12 12:07:26
+
+
+jbalcas_MonteCarloFromGEN_140312_092657_4065 : failed :No agent Info :2014-03-13 04:06:33
+
+
+pkonst_HG1403_REDIGITEST_3_140313_124907_2040 : completed :['vocms142.cern.ch:9999'] :2014-03-13 08:45:39
+
+
+pkonst_HG1403_REDIGITEST_1_140312_173024_5997 : failed :No agent Info :2014-03-13 12:05:46
+
+
+pkonst_HG1403_RERECOSKIMTEST_2_140313_171801_9363 : completed :['vocms142.cern.ch:9999'] :2014-03-13 16:07:05
+
+
+pkonst_HG1403_REDIGITEST_4_140313_181701_6620 : completed :['vocms142.cern.ch:9999'] :2014-03-13 18:46:12
+
+
+jbalcas_MonteCarloEFFe1_140315_103028_6925 : completed :['vocms142.cern.ch:9999'] :2014-03-15 06:05:05
+
+
+jbalcas_ReDigiWorkF_140315_103137_3801 : completed :['vocms142.cern.ch:9999'] :2014-03-15 06:46:52
+
+
+jbalcas_MonteCarlo_140315_103119_7955 : completed :['vocms142.cern.ch:9999'] :2014-03-15 07:05:14
+
+
+jbalcas_ReDigiWorkF_140315_122213_4571 : completed :['vocms142.cern.ch:9999'] :2014-03-15 12:46:56
+
+
+jbalcas_ReDigiWorkF_140315_230546_3364 : completed :['vocms231.cern.ch:9999'] :2014-03-16 02:45:49
+
+
+jbalcas_LHEStep0_140316_100141_2135 : completed :['vocms231.cern.ch:9999'] :2014-03-16 05:46:16
+
+
+jbalcas_MonteCarloFromGEN_140315_193332_6266 : failed :No agent Info :2014-03-16 14:06:26
+
+
+jbalcas_ACDC_ReDigiWorkF_140316_095910_2866 : completed :['vocms231.cern.ch:9999'] :2014-03-16 14:06:57
+
+
+jbalcas_ReDigiWorkF1_140317_112136_3262 : failed :No agent Info :2014-03-17 05:25:15
+
+
+jbalcas_ReRecoskim_140316_100255_3611 : completed :['vocms231.cern.ch:9999'] :2014-03-17 05:27:22
+
+
+amaltaro_RVCMSSW_7_0_0_pre11RunTau2012A__RelVal_tau2012A_140314_091852_7644 : closed-out :['vocms142.cern.ch:9999'] :2014-03-17 05:30:01
+
+
+amaltaro_RVCMSSW_7_0_0_pre11RunJet2012B__RelVal_jet2012B_140314_091858_4806 : closed-out :['vocms142.cern.ch:9999'] :2014-03-17 05:38:32
+
+
+amaltaro_RVCMSSW_7_0_0_pre11MinBias_140314_091903_1520 : closed-out :['vocms142.cern.ch:9999'] :2014-03-17 05:45:14
+
+
+amaltaro_RVCMSSW_7_0_0_pre11TTbar_140314_091908_9756 : closed-out :['vocms142.cern.ch:9999'] :2014-03-17 06:10:22
+
+
+amaltaro_RVCMSSW_7_0_0_pre11ZTT_PU__140314_101245_5549 : closed-out :['vocms142.cern.ch:9999'] :2014-03-17 06:16:00
+
+
+amaltaro_RVCMSSW_7_0_0_pre11Pyquen_ZeemumuJets_pt10_2760GeV_PU__140314_101252_6350 : closed-out :['vocms142.cern.ch:9999'] :2014-03-17 06:56:24
+
+
+amaltaro_RVCMSSW_7_0_0_pre11H130GGgluonfusion_PU__140314_114411_2748 : closed-out :['vocms142.cern.ch:9999'] :2014-03-17 06:58:10
+
+
+amaltaro_RVCMSSW_7_0_0_pre11QCD_Ht-100To250_TuneZ2star_8TeV_madgraph-tauola_140317_104708_6263 : completed :['vocms142.cern.ch:9999'] :2014-03-17 09:05:04
+
+
+amaltaro_RVCMSSW_7_0_0_pre11QCD_Ht-250To500_TuneZ2star_8TeV_madgraph-tauola_140317_104715_8086 : completed :['vocms142.cern.ch:9999'] :2014-03-17 09:25:49
+
+
+jbalcas_ReDigiWorkF1_140317_113656_2645 : completed :['vocms231.cern.ch:9999'] :2014-03-17 17:26:52
+
+
+vlimant_EXO-Summer12pLHE-00217_00087_v0_STEP0ATCERN_140319_214001_4359 : completed :['vocms142.cern.ch:9999'] :2014-03-20 06:05:37
+
+
+vlimant_SMP-Summer11LegpLHE-XXXX4_00087_v0_STEP0ATCERN_140319_225852_73 : completed :['vocms142.cern.ch:9999'] :2014-03-20 06:06:47
+
+
+vlimant_EXO-Summer12pLHE-00217_00087_v0_STEP0ATCERN_140319_213551_2946 : completed :['vocms142.cern.ch:9999'] :2014-03-20 06:06:49
+
+
+vlimant_SMP-Summer11LegpLHE-XXXX4_00087_v0_STEP0ATCERN_140319_225725_8877 : completed :['vocms142.cern.ch:9999'] :2014-03-20 06:06:51
+
+
+amaltaro_RVCMSSW_7_0_0_pre11RunJet2012B__RelVal_jet2012B_140319_114427_7393 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-20 07:05:36
+
+
+amaltaro_RVCMSSW_7_0_0_pre11TTbar_140319_114450_5607 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-20 07:05:48
+
+
+amaltaro_RVCMSSW_7_0_0_pre11MinBias_140319_114434_6389 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-20 07:06:52
+
+
+jbalcas_MonteCarloEFFb1_140320_113248_2370 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-20 07:25:44
+
+
+jbalcas_LHEStep0_140320_114028_2480 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-20 07:46:43
+
+
+jbalcas_ReDigiWorkF_140320_113930_776 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-20 07:46:47
+
+
+jbalcas_MonteCarlo_140320_114004_4435 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-20 08:07:12
+
+
+amaltaro_RVCMSSW_7_0_0_pre11QCD_Ht-100To250_TuneZ2star_8TeV_madgraph-tauola_140320_112940_8950 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-20 08:26:01
+
+
+jbalcas_ReDigiWorkF1_140320_113947_1285 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-20 08:26:56
+
+
+amaltaro_RVCMSSW_7_0_0_pre11QCD_Ht-250To500_TuneZ2star_8TeV_madgraph-tauola_140320_112950_7560 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-20 08:27:04
+
+
+jbalcas_MonteCarloEFFe1_140320_113835_7460 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-20 09:06:27
+
+
+jbalcas_ACDC_ReDigiWorkF_140320_152303_8976 : failed :No agent Info :2014-03-20 09:25:23
+
+
+jbalcas_ReDigiWorkF_140320_150617_9990 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-20 10:25:09
+
+
+jbalcas_ReDigiWorkF1_140320_150549_7101 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-20 10:47:19
+
+
+jbalcas_ReDigiWorkF_140320_163954_1911 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-20 12:45:14
+
+
+jbalcas_ReDigiWorkF1_140320_164006_4586 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-20 12:46:55
+
+
+jbalcas_ReDigiWorkF_140320_162844_9895 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-20 12:47:05
+
+
+amaltaro_RVCMSSW_7_0_0_pre11ProdTTbar_140319_114414_2054 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-20 13:25:05
+
+
+jbalcas_MonteCarloFromGEN_140320_113939_7780 : failed :No agent Info :2014-03-21 06:05:41
+
+
+pkonst_T3_AS_test_MCTest_1_140312_104823_2749 : completed :['vocms231.cern.ch:9999'] :2014-03-24 13:26:48
+
+
+amaltaro_RVCMSSW_7_0_0_pre11ProdMinBias_140319_114406_5109 : closed-out :['cmssrv94.fnal.gov:9999'] :2014-03-25 08:50:11
+
+
+amaltaro_RVCMSSW_7_0_0_pre11SingleMuPt100__FastSim_140319_114442_9397 : closed-out :['cmssrv94.fnal.gov:9999'] :2014-03-25 09:34:12
+
+
+jbalcas_MonteCarlo_140325_163519_52 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-25 13:26:55
+
+
+amaltaro_RVCMSSW_7_0_0_pre11QCD_Ht-100To250_TuneZ2star_8TeV_madgraph-tauola_140325_194339_1468 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-25 17:05:41
+
+
+jbalcas_MonteCarloEFFb1_140325_203210_1418 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-25 17:05:43
+
+
+jbalcas_MonteCarloEFFe1_140325_203221_7898 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-25 17:05:51
+
+
+jbalcas_LHEStep0_140325_203302_3742 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-25 17:26:53
+
+
+jbalcas_MonteCarlo_140325_203246_5915 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-25 19:46:53
+
+
+jbalcas_MonteCarloFromGEN_140325_203237_5381 : failed :No agent Info :2014-03-26 03:01:14
+
+
+jbalcas_ReDigiWorkF_140326_084114_717 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-26 11:07:02
+
+
+jbalcas_MonteCarlo_140326_105940_5188 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-26 16:06:56
+
+
+jbalcas_ReRecoskim_140325_203254_3688 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-27 03:25:06
+
+
+amaltaro_RVCMSSW_7_0_0_pre11QCD_Ht-100To250_TuneZ2star_8TeV_madgraph-tauola_140327_092943_201 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-27 05:45:35
+
+
+jbalcas_MonteCarloEFFb1_140327_125609_5735 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-27 08:25:43
+
+
+jbalcas_MonteCarloEFFe1_140327_125642_8566 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-27 08:47:10
+
+
+jbalcas_MonteCarlo_140327_125732_2490 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-27 09:06:08
+
+
+jbalcas_MonteCarloEFFe1_140327_140039_676 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-27 09:25:37
+
+
+jbalcas_MonteCarloEFFb1_140327_140238_3136 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-27 09:46:52
+
+
+jbalcas_LHEStep0_140327_140206_7719 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-27 10:05:54
+
+
+jbalcas_MonteCarlo_140327_140134_1968 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-27 10:07:40
+
+
+jbalcas_ACDC_ReDigiWorkF_140315_193028_121 : failed :No agent Info :2014-03-27 11:06:45
+
+
+jbalcas_MonteCarloFromGEN_140327_125711_3709 : failed :No agent Info :2014-03-27 11:06:56
+
+
+jbalcas_MonteCarloFromGEN_140327_140050_1876 : failed :No agent Info :2014-03-27 11:07:26
+
+
+jbalcas_MonteCarloFromGEN_140327_164632_610 : failed :No agent Info :2014-03-27 11:19:14
+
+
+jbalcas_LHEStep0_140327_125749_2689 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-27 11:26:57
+
+
+jbalcas_ReDigiWorkF_140326_084028_6609 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-27 22:45:49
+
+
+jbalcas_ReDigiWorkF1_140327_140142_4729 : completed :['cmssrv94.fnal.gov:9999'] :2014-03-28 04:27:06
+
+
+jbalcas_MonteCarloFromGEN_140327_171619_9502 : failed :No agent Info :2014-03-28 11:47:03
+
+
+amaltaro_RVCMSSW_7_0_0_pre11ProdMinBias_140403_160159_8301 : failed :No agent Info :2014-04-03 10:07:02
+
+
+amaltaro_RVCMSSW_7_0_0_pre11ProdTTbar_140403_160206_9050 : failed :No agent Info :2014-04-03 10:08:29
+
+
+jbalcas_MonteCarloFromGEN_140403_104224_2098 : failed :No agent Info :2014-04-04 04:05:45
+
+
+jbalcas_ReDigiWorkF_140403_161334_9940 : completed :No agent Info :2014-04-07 02:05:46
+
+
+amaltaro_RVCMSSW_7_0_0_pre11QCD_Ht-100To250_TuneZ2star_8TeV_madgraph-tauola_140403_102243_7224 : completed :No agent Info :2014-04-07 02:05:47
+
+
+jbalcas_MonteCarlo_140403_104322_5043 : completed :No agent Info :2014-04-07 02:05:51
+
+
+jbalcas_ReDigiWorkF1_140403_104331_4312 : completed :No agent Info :2014-04-07 02:06:15
+
+
+jbalcas_MonteCarloEFFe1_140403_104133_7398 : completed :No agent Info :2014-04-07 02:07:07
+
+
+jbalcas_MonteCarloEFFb1_140403_104406_8224 : completed :No agent Info :2014-04-07 02:07:09
+
+
+jbalcas_LHEStep0_140403_104348_943 : completed :No agent Info :2014-04-07 02:07:14
+
+
+jbalcas_MonteCarloEFFe1_140403_104118_8802 : completed :No agent Info :2014-04-07 02:07:16
+
+
+amaltaro_RVCMSSW_7_0_0_pre11MinBias_140403_164315_8335 : completed :No agent Info :2014-04-07 02:26:39
+
+
+amaltaro_RVCMSSW_7_0_0_pre11RunJet2012B__RelVal_jet2012B_140403_160219_4267 : completed :No agent Info :2014-04-07 02:45:05
+
+
+amaltaro_RVCMSSW_7_0_0_pre11RunTau2012A__RelVal_tau2012A_140403_160213_1276 : completed :No agent Info :2014-04-07 02:46:41
+
+
+amaltaro_RVCMSSW_7_0_0_pre11TTbar_140403_164308_9713 : completed :No agent Info :2014-04-07 02:47:04
+
+
+jbalcas_ACDC_MonteCarloEFFb1_140407_101953_9344 : completed :No agent Info :2014-04-07 06:45:40
+
+
+jbalcas_MonteCarloEFFe1_140409_103359_2886 : completed :No agent Info :2014-04-09 05:27:05
+
+
+jbalcas_MonteCarloEFFb1_140409_103535_1057 : completed :No agent Info :2014-04-09 05:27:08
+
+
+jbalcas_LHEStep0_140409_103509_5649 : completed :No agent Info :2014-04-09 06:25:53
+
+
+jbalcas_MonteCarlo_140409_103442_7970 : completed :No agent Info :2014-04-09 08:05:51
+
+
+jbalcas_MonteCarloFromGEN_140409_103424_7222 : failed :No agent Info :2014-04-09 10:05:01
+
+
+jbalcas_ReDigiWorkF1_140409_103500_3165 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-09 19:06:51
+
+
+jbalcas_MonteCarloFromGEN_140409_141112_2940 : failed :No agent Info :2014-04-10 00:40:22
+
+
+jbalcas_LHEStep0_140410_090114_6397 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-10 04:07:12
+
+
+jbalcas_MonteCarloEFFb1_140410_090029_2419 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-10 04:45:54
+
+
+amaltaro_RVCMSSW_7_0_0SingleMuPt100__FastSim_140409_121902_9311 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-10 05:07:41
+
+
+amaltaro_RVCMSSW_7_0_0TTbar_140409_121907_8054 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-10 05:46:42
+
+
+amaltaro_RVCMSSW_7_0_0QCD_Ht-250To500_TuneZ2star_8TeV_madgraph-tauola_140409_150453_540 : closed-out :['cmssrv94.fnal.gov:9999'] :2014-04-10 07:00:54
+
+
+jbalcas_ReDigiWorkF_140409_103434_7637 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-10 17:46:19
+
+
+amaltaro_RVCMSSW_7_0_0_pre11MinBias_140410_162254_5429 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-11 03:26:52
+
+
+jbalcas_ReReco_140410_130724_3817 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-11 03:26:53
+
+
+jbalcas_ReRecoskim_140410_130704_7071 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-11 03:45:05
+
+
+jbalcas_MonteCarloFromGEN_140411_140515_1807 : failed :No agent Info :2014-04-11 07:25:05
+
+
+jbalcas_MonteCarloFromGEN_140411_144234_8993 : failed :No agent Info :2014-04-11 07:45:06
+
+
+jbalcas_MonteCarloFromGEN_140410_130401_8595 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-12 09:05:41
+
+
+jbalcas_MonteCarloFromGEN_140409_170752_159 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-12 09:25:40
+
+
+jbalcas_ACDC_ReReco_140411_152732_1030 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-12 10:05:52
+
+
+jbalcas_MonteCarlo_140414_082352_4535 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-14 03:07:24
+
+
+jbalcas_MonteCarlo_140414_082439_5565 : completed :No agent Info :2014-04-14 03:08:14
+
+
+amaltaro_RVCMSSW_7_0_0_pre11RunTau2012A__RelVal_tau2012A_140411_200641_6108 : closed-out :No agent Info :2014-04-14 03:15:35
+
+
+amaltaro_RVCMSSW_7_0_0_pre11ProdMinBias_140411_200648_8392 : closed-out :No agent Info :2014-04-14 03:19:09
+
+
+amaltaro_RVCMSSW_7_0_0_pre11SingleMuPt100__FastSim_140411_203040_6560 : closed-out :No agent Info :2014-04-14 03:28:37
+
+
+amaltaro_RVCMSSW_7_0_0_pre11TTbar_140411_200715_2997 : closed-out :No agent Info :2014-04-14 03:34:06
+
+
+amaltaro_RVCMSSW_7_0_0_pre11QCD_Ht-100To250_TuneZ2star_8TeV_madgraph-tauola_140411_203127_5403 : closed-out :No agent Info :2014-04-14 03:35:44
+
+
+jbalcas_MonteCarlo_140414_083148_4275 : completed :No agent Info :2014-04-14 04:05:10
+
+
+jbalcas_MonteCarlo_140414_083219_208 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-14 04:26:44
+
+
+jbalcas_MonteCarlo_140414_071905_3996 : failed :['vocms231.cern.ch:9999'] :2014-04-14 09:17:47
+
+
+jbalcas_MonteCarlo_140414_100716_8076 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-15 01:05:53
+
+
+jbalcas_MonteCarlo_140415_073541_2384 : completed :No agent Info :2014-04-15 03:06:51
+
+
+jbalcas_MonteCarlo_140415_072403_3924 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-15 03:08:25
+
+
+jbalcas_MonteCarlo_140415_084538_3501 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-15 06:06:49
+
+
+jbalcas_MonteCarloEFFb1_140415_115910_2642 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-15 07:25:44
+
+
+jbalcas_MonteCarloEFFe1_140415_115739_5477 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-15 07:26:40
+
+
+jbalcas_MonteCarlo_140415_115828_6853 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-15 07:45:08
+
+
+amaltaro_RVCMSSW_7_0_0_pre11ProdTTbar_140415_091548_6713 : completed :No agent Info :2014-04-15 08:45:35
+
+
+jbalcas_LHEStep0_140415_115844_6971 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-15 08:45:37
+
+
+jbalcas_ReDigiWorkF_140415_115809_5974 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-16 01:46:53
+
+
+jbalcas_ReReco_140415_115755_2988 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-16 02:06:15
+
+
+jbalcas_ReRecoskim_140415_115857_7170 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-16 02:06:49
+
+
+amaltaro_EXO-chain_Summer12_flowGS2DR53-00004__v1_T_140414_113802_8381 : completed :No agent Info :2014-04-16 03:05:55
+
+
+jbalcas_MonteCarlo_140416_084943_8445 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-16 03:25:49
+
+
+amaltaro_RVCMSSW_7_0_0_pre11RunTau2012A__RelVal_tau2012A_140415_091533_9319 : closed-out :No agent Info :2014-04-16 07:03:08
+
+
+amaltaro_RVCMSSW_7_0_0_pre11ProdMinBias_140415_091541_4553 : closed-out :No agent Info :2014-04-16 07:05:02
+
+
+amaltaro_RVCMSSW_7_0_0_pre11SingleMuPt100__FastSim_140415_091554_7775 : closed-out :No agent Info :2014-04-16 07:11:37
+
+
+amaltaro_RVCMSSW_7_0_0_pre11TTbar_140415_091559_3913 : closed-out :No agent Info :2014-04-16 07:13:53
+
+
+amaltaro_RVCMSSW_7_0_0_pre11QCD_Ht-100To250_TuneZ2star_8TeV_madgraph-tauola_140415_095855_8958 : closed-out :No agent Info :2014-04-16 07:16:26
+
+
+jbalcas_ACDC_MonteCarlo_140416_100345_4257 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-16 07:26:15
+
+
+amaltaro_RVCMSSW_7_0_0_pre11ZTT_PU__140415_103148_2270 : closed-out :No agent Info :2014-04-16 07:27:31
+
+
+amaltaro_RVCMSSW_7_0_0_pre11Pyquen_ZeemumuJets_pt10_2760GeV_PU__140415_103155_7710 : closed-out :No agent Info :2014-04-16 07:29:45
+
+
+amaltaro_RVCMSSW_7_0_0_pre11H130GGgluonfusion_PU__140415_103800_5260 : closed-out :No agent Info :2014-04-16 07:32:32
+
+
+jbalcas_MonteCarlo_140416_122328_3313 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-17 06:06:00
+
+
+amaltaro_RVCMSSW_7_0_0_pre11QCD_Ht-100To250_TuneZ2star_8TeV_madgraph-tauola_140422_174133_8085 : failed :No agent Info :2014-04-22 11:45:56
+
+
+amaltaro_RVCMSSW_7_0_0_pre11QCD_Ht-100To250_TuneZ2star_8TeV_madgraph-tauola_140422_175039_7643 : failed :No agent Info :2014-04-22 11:45:58
+
+
+amaltaro_RVCMSSW_7_0_0_pre11QCD_Ht-100To250_TuneZ2star_8TeV_madgraph-tauola_140422_181354_4180 : failed :No agent Info :2014-04-22 12:46:19
+
+
+jbalcas_MonteCarloFromGEN_140428_132457_6700 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-29 17:07:16
+
+
+jbalcas_MonteCarloEFFb1_140429_084803_4581 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-30 02:05:45
+
+
+jbalcas_LHEStep0_140429_084817_346 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-30 02:06:04
+
+
+jbalcas_MonteCarloFromGEN_140429_084827_7603 : completed :['cmssrv94.fnal.gov:9999'] :2014-04-30 02:26:05
+
+
+jbalcas_MonteCarloOpport_140430_102846_1695 : completed :['vocms231.cern.ch:9999'] :2014-04-30 19:48:12
+
+
+jbalcas_MonteCarloFromGEN_140430_082912_5105 : aborted :['cmssrv94.fnal.gov:9999'] :2014-05-06 00:12:17
+
+
+jbalcas_MonteCarloOpport_140430_083040_2939 : aborted :['cmssrv94.fnal.gov:9999'] :2014-05-06 06:29:50
+
+
+jbalcas_MonteCarloOpport_140508_122749_6143 : completed :['cmssrv94.fnal.gov:9999'] :2014-05-09 07:46:10
+
+
+amaltaro_RVCMSSW_7_0_0_pre11_RunTau2012A_140519_120728_4839 : completed :['vocms230.cern.ch:9999'] :2014-05-19 23:26:14
+
+
+amaltaro_RVCMSSW_7_0_0_pre11_ProdMinBias_140520_204535_2514 : completed :['vocms230.cern.ch:9999'] :2014-05-21 00:45:33
+
+
+amaltaro_RVCMSSW_7_0_0_pre11_SingleMuPt100FastSim_140520_204619_7034 : completed :['vocms230.cern.ch:9999'] :2014-05-21 11:45:41
+
+
+amaltaro_RVCMSSW_7_0_0_pre11_PyquenZeemumuJets_PU_140520_204728_3375 : completed :['vocms230.cern.ch:9999'] :2014-05-21 11:45:52
+
+
+amaltaro_RVCMSSW_7_0_0_pre11_H130GGgluonfusion_PU_140520_204054_5682 : completed :['vocms230.cern.ch:9999'] :2014-05-21 14:25:54
+
+
+amaltaro_RVCMSSW_7_0_0_pre11_QCD_LHE_140520_204603_3012 : completed :['vocms230.cern.ch:9999'] :2014-05-21 15:25:07
+
+
+amaltaro_RVCMSSW_7_0_0_pre11_TTbar_140520_204637_1746 : completed :['vocms230.cern.ch:9999'] :2014-05-21 16:26:19
+
+
+jbalcas_ReDigiWorkF1_140521_151819_7114 : completed :['vocms230.cern.ch:9999'] :2014-05-21 23:06:32
+
+
+jbalcas_MonteCarloEFFb1_140521_151902_3845 : completed :['vocms230.cern.ch:9999'] :2014-05-22 01:25:42
+
+
+jbalcas_MonteCarloEFFe1_140521_151716_8097 : completed :['vocms230.cern.ch:9999'] :2014-05-22 02:06:53
+
+
+jbalcas_MonteCarlo_140521_151752_7948 : completed :['vocms230.cern.ch:9999'] :2014-05-22 03:45:41
+
+
+jbalcas_LHEStep0_140521_151840_4794 : completed :['vocms230.cern.ch:9999'] :2014-05-22 03:46:20
+
+
+amaltaro_RVCMSSW_7_0_0_pre11_ZTT_PU_140520_204659_6716 : completed :['vocms230.cern.ch:9999'] :2014-05-22 04:26:35
+
+
+amaltaro_RVCMSSW_7_0_0_pre11_ZJetsLNu_LHE_140522_110556_873 : completed :['vocms230.cern.ch:9999'] :2014-05-22 11:06:59
+
+
+jbalcas_ReReco_140521_151726_5896 : completed :['vocms230.cern.ch:9999'] :2014-05-23 13:26:55
+
+
+jbalcas_ReRecoskim_140521_151851_6766 : completed :['vocms230.cern.ch:9999'] :2014-05-23 14:06:37
+
+
+jbalcas_ReDigiWorkF_140521_151745_3262 : completed :['vocms230.cern.ch:9999'] :2014-05-23 22:46:48
+
+
+jbalcas_MonteCarloOpport_140513_152006_9325 : completed :['vocms231.cern.ch:9999'] :2014-05-24 21:26:10
+
+
+amaltaro_RVCMSSW_7_0_0_pre11_ZJetsLNu_LHE_140527_202849_7555 : completed :['vocms230.cern.ch:9999'] :2014-05-27 19:26:49
+
+
+amaltaro_RVCMSSW_7_0_0_pre11_PyquenZeemumuJets_PU_140527_202821_2774 : completed :['vocms230.cern.ch:9999'] :2014-05-27 21:26:43
+
+
+amaltaro_RVCMSSW_7_0_0_pre11_H130GGgluonfusion_PU_140527_202811_391 : completed :['vocms230.cern.ch:9999'] :2014-05-27 22:45:49
+
+
+amaltaro_MajoranaNeutrinoToMuE_ASGC_140528_093018_174 : aborted :No agent Info :2014-05-28 04:11:11
+
+
+amaltaro_RVCMSSW_7_0_0_pre11_ZTT_PU_140527_202855_4068 : completed :['vocms230.cern.ch:9999'] :2014-05-28 06:46:49
+
+
+amaltaro_RVCMSSW_7_0_0_pre11_ZJetsLNu_LHE_Custodial_140528_091702_3301 : completed :['vocms230.cern.ch:9999'] :2014-05-28 10:05:05
+
+
+jbalcas_MonteCarloOpport_140528_161423_2763 : completed :['vocms230.cern.ch:9999'] :2014-05-28 15:07:16
+
+
+amaltaro_MajoranaNeutrinoToMuE_ASGC_140528_110950_8977 : completed :['vocms230.cern.ch:9999'] :2014-05-28 21:46:53
+
+
+jbalcas_MonteCarlo_140601_093817_9374 : completed :['vocms230.cern.ch:9999'] :2014-06-01 04:46:58
+
+
+amaltaro_RVCMSSW_7_0_0_pre11_ProdMinBias_140527_202816_3109 : closed-out :['vocms230.cern.ch:9999'] :2014-06-02 02:09:30
+
+
+amaltaro_RVCMSSW_7_0_0_pre11_SingleMuPt100FastSim_140527_202840_8456 : closed-out :['vocms230.cern.ch:9999'] :2014-06-02 02:09:32
+
+
+amaltaro_RVCMSSW_7_0_0_pre11_TTbar_140527_202844_4746 : closed-out :['vocms230.cern.ch:9999'] :2014-06-02 02:09:33
+
+
+amaltaro_RVCMSSW_7_0_0_pre11_ZJetsLNu_LHE_140602_170730_3456 : completed :No agent Info :2014-06-03 10:25:41
+
+
+jbalcas_MonteCarloOpport_140603_160542_7564 : completed :['vocms230.cern.ch:9999'] :2014-06-04 00:45:48
+
+
+jbalcas_MonteCarloFromGEN_140528_093156_696 : aborted :No agent Info :2014-06-04 23:55:53
+
+
+jbalcas_MonteCarloFromGEN_140521_151737_1122 : aborted :No agent Info :2014-06-05 00:00:37
+
+
+jbalcas_MonteCarloFromGEN_140604_142054_7148 : aborted :No agent Info :2014-06-09 10:07:39
+
+
+jbalcas_ACDC_MajoranaNeutrinoToMuE_ASGC_140605_065906_7860 : completed :['vocms230.cern.ch:9999'] :2014-06-10 03:25:35
+
+
+jbalcas_LHEStep0_140610_103047_1636 : completed :['vocms230.cern.ch:9999'] :2014-06-10 05:26:33
+
+
+jbalcas_ReRecoskim_140609_163927_2249 : aborted :No agent Info :2014-06-10 07:33:03
+
+
+jbalcas_ReDigiWorkF1_140609_164000_9705 : aborted :No agent Info :2014-06-10 07:33:09
+
+
+jbalcas_LHEStep0_140609_164013_4812 : aborted :No agent Info :2014-06-10 07:33:12
+
+
+jbalcas_ReDigiWorkF_140610_103058_2064 : aborted :No agent Info :2014-06-10 07:33:16
+
+
+jbalcas_MonteCarloEFFe1_140610_134854_5752 : aborted :No agent Info :2014-06-10 14:50:20
+
+
+jbalcas_ReDigiWorkF1_140610_134928_1736 : aborted :No agent Info :2014-06-10 14:50:28
+
+
+jbalcas_LHEStep0_140610_134937_2401 : aborted :No agent Info :2014-06-10 14:50:32
+
+
+jbalcas_MonteCarloEFFe1_140610_215254_2032 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-06-10 17:05:41
+
+
+jbalcas_MonteCarloOpport_140610_215312_4323 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-06-10 17:46:04
+
+
+jbalcas_LHEStep0_140610_215357_1851 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-06-10 18:06:42
+
+
+jbalcas_ReDigiWorkF1_140610_215346_6812 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-06-11 18:26:45
+
+
+jbalcas_ReReco_140610_215304_3674 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-06-13 06:46:24
+
+
+jbalcas_ReRecoskim_140610_215404_8347 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-06-13 07:05:04
+
+
+jbalcas_ReDigiWorkF_140610_215319_457 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-06-13 21:07:08
+
+
+jbalcas_ACDC_ReDigiWorkF_140616_162205_9642 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-06-17 10:07:22
+
+
+jbalcas_MonteCarloOpport_140617_101048_9542 : aborted :No agent Info :2014-06-18 01:23:35
+
+
+jbalcas_ReDigiWorkF1_140617_101438_8246 : aborted :No agent Info :2014-06-18 01:23:49
+
+
+amaltaro_RVCMSSW_7_0_0_pre11_ZJetsLNu_LHE_Custodial_140618_100354_2256 : completed :['cmssrv94.fnal.gov:9999'] :2014-06-18 15:45:32
+
+
+amaltaro_EXT_MonteCarloOpport_140618_230839_4539 : completed :['cmssrv94.fnal.gov:9999'] :2014-06-18 19:07:26
+
+
+jbalcas_ACDC_EXT_MonteCarloOpport_140619_065805_987 : completed :['cmssrv94.fnal.gov:9999'] :2014-06-19 06:26:40
+
+
+jbalcas_MonteCarloOpport_140618_084909_6168 : aborted :No agent Info :2014-06-23 04:04:58
+
+
+jbalcas_ReDigiWorkF1_140618_084955_4012 : aborted :No agent Info :2014-06-23 04:05:10
+
+
+jbalcas_ReDigiWorkF1_140618_095539_4299 : aborted :No agent Info :2014-06-23 04:05:21
+
+
+jbalcas_MonteCarloOpport_140623_110328_6300 : aborted :No agent Info :2014-06-23 04:13:03
+
+
+jbalcas_MonteCarloOpport_140623_110011_5250 : completed :['vocms230.cern.ch:9999'] :2014-06-23 07:25:17
+
+
+jbalcas_ReDigiWorkF1_140623_110031_7877 : completed :['vocms230.cern.ch:9999'] :2014-06-23 16:25:58
+
+
+jbalcas_MonteCarloEFFb1_140623_110100_7888 : completed :['vocms230.cern.ch:9999'] :2014-06-23 17:25:16
+
+
+jbalcas_MonteCarloEFFe1_140623_105934_5333 : completed :['vocms230.cern.ch:9999'] :2014-06-23 17:27:04
+
+
+jbalcas_LHEStep0_140623_110043_5641 : completed :['vocms230.cern.ch:9999'] :2014-06-23 21:07:17
+
+
+jbalcas_ReReco_140623_105942_2381 : completed :['vocms230.cern.ch:9999'] :2014-06-23 21:45:49
+
+
+jbalcas_MonteCarloOpport_140623_111058_3162 : completed :['vocms230.cern.ch:9999'] :2014-06-23 21:46:56
+
+
+jbalcas_MonteCarloEFFb1_140624_104239_8131 : completed :['vocms230.cern.ch:9999'] :2014-06-24 05:46:16
+
+
+jbalcas_ACDC_ReReco_140624_095426_9715 : completed :['vocms230.cern.ch:9999'] :2014-06-24 06:25:41
+
+
+jbalcas_ReDigiWorkF_140623_110019_7529 : completed :['vocms230.cern.ch:9999'] :2014-06-24 10:25:36
+
+
+amaltaro_RVCMSSW_7_0_4ZEE_13__premixTest_140624_175937_9528 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-06-24 12:45:37
+
+
+amaltaro_RVCMSSW_7_0_0_pre11ProdMinBias_140624_175913_1965 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-06-24 13:05:42
+
+
+amaltaro_RVCMSSW_7_0_0_pre11TTbar_140624_175920_9701 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-06-24 13:06:02
+
+
+amaltaro_RVCMSSW_7_0_0_pre11RunTau2012A__RelVal_tau2012A_140624_175908_2950 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-06-24 13:26:54
+
+
+amaltaro_RVCMSSW_7_0_0_pre11H130GGgluonfusion_PU__140624_175942_1166 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-06-24 14:46:04
+
+
+amaltaro_RVCMSSW_7_0_0_pre11SingleMuPt100__FastSim_140624_175917_8976 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-06-24 14:47:32
+
+
+jbalcas_ReRecoskim_140623_110050_5978 : completed :['vocms230.cern.ch:9999'] :2014-06-25 18:26:03
+
+
+jbalcas_MonteCarloFromGEN_140623_105958_7603 : aborted :No agent Info :2014-06-27 02:04:40
+
+
+jbalcas_ACDC_RVCMSSW_7_0_4ZEE_13__premixTest_140627_090123_7364 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-06-27 03:45:42
+
+
+jbalcas_ACDC_ACDC_ACDC_RVCMSSW_7_0_4ZEE_13__premixTest_140630_085611_4722 : failed :No agent Info :2014-06-30 02:05:05
+
+
+jbalcas_ACDC_ACDC_RVCMSSW_7_0_4ZEE_13__premixTest_140630_075850_2907 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-06-30 04:05:54
+
+
+amaltaro_700_pre11_ZJetsLNu_LHE_140630_110254_6683 : completed :['vocms230.cern.ch:9999'] :2014-06-30 08:07:14
+
+
+amaltaro_700_pre11_PyquenZeemumuJets_PU_140630_110225_8197 : completed :['vocms230.cern.ch:9999'] :2014-06-30 09:45:51
+
+
+amaltaro_700_pre11_SingleMuPt100FastSim_140630_110235_8025 : completed :['vocms230.cern.ch:9999'] :2014-06-30 10:26:02
+
+
+amaltaro_700_pre11_TTbar_140630_110238_9707 : completed :['vocms230.cern.ch:9999'] :2014-06-30 10:46:23
+
+
+amaltaro_700_pre11_H130GGgluonfusion_PU_140630_110217_8973 : completed :['vocms230.cern.ch:9999'] :2014-06-30 11:27:23
+
+
+jbalcas_ACDC_ACDC_RVCMSSW_7_0_4ZEE_13__premixTest_140630_103517_7986 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-06-30 12:46:25
+
+
+amaltaro_700_pre11_ProdMinBias_140630_110221_2938 : completed :['vocms230.cern.ch:9999'] :2014-06-30 13:26:37
+
+
+amaltaro_700_pre11_TTbar_140630_203043_4242 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-06-30 15:25:06
+
+
+amaltaro_700_pre11_H130GGgluonfusion_PU_140630_203020_8835 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-06-30 15:25:55
+
+
+amaltaro_700_pre11_ZJetsLNu_LHE_140630_171101_8450 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-06-30 16:25:51
+
+
+amaltaro_700_pre11_ZTT_PU_140630_110257_3974 : completed :['vocms230.cern.ch:9999'] :2014-06-30 16:46:39
+
+
+amaltaro_700_pre11_PyquenZeemumuJets_PU_140630_203031_3223 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-06-30 17:06:51
+
+
+amaltaro_700_pre11_RunTau2012A_140630_203036_178 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-06-30 18:47:04
+
+
+amaltaro_700_pre11_RunTau2012A_140630_110231_779 : completed :['vocms230.cern.ch:9999'] :2014-06-30 19:25:45
+
+
+amaltaro_700_pre11_SingleMuPt100FastSim_140630_203040_3022 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-06-30 20:26:59
+
+
+amaltaro_700_pre11_ProdMinBias_140630_203026_1547 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-06-30 21:46:50
+
+
+amaltaro_700_pre11_ZTT_PU_140630_203052_995 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-06-30 23:06:34
+
+
+jbalcas_MonteCarloFromGEN_140702_100125_1597 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-07-02 04:47:23
+
+
+amaltaro_700_pre11_H130GGgluonfusion_PU_140630_110126_6868 : aborted :No agent Info :2014-07-02 13:25:07
+
+
+amaltaro_700_pre11_ProdMinBias_140702_203452_588 : aborted :No agent Info :2014-07-02 13:47:49
+
+
+amaltaro_MonteCarlo_HG1407_Validation_140702_175606_4024 : completed :['vocms230.cern.ch:9999'] :2014-07-02 17:07:45
+
+
+amaltaro_700_pre11_TTbar_140702_155201_7287 : completed :['vocms230.cern.ch:9999'] :2014-07-02 19:07:09
+
+
+amaltaro_700_pre11_H130GGgluonfusion_PU_140702_155502_8841 : completed :['vocms230.cern.ch:9999'] :2014-07-02 21:26:26
+
+
+amaltaro_EXT_MonteCarlo_HG1407_Validation_140703_051824_4704 : completed :['vocms230.cern.ch:9999'] :2014-07-02 23:45:50
+
+
+amaltaro_700_pre11_ProdMinBias_140702_155506_9392 : completed :['vocms230.cern.ch:9999'] :2014-07-03 00:45:44
+
+
+amaltaro_700_pre11_H130GGgluonfusion_PU_140702_200250_9553 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-07-03 04:05:47
+
+
+amaltaro_700_pre11_ZTT_PU_140702_155342_5712 : completed :['vocms230.cern.ch:9999'] :2014-07-03 05:26:33
+
+
+jbalcas_MonteCarloOpport_140703_161549_3951 : completed :['vocms230.cern.ch:9999'] :2014-07-03 12:06:31
+
+
+jbalcas_MonteCarloEFFe1_140703_161511_829 : completed :['vocms230.cern.ch:9999'] :2014-07-03 12:25:10
+
+
+jbalcas_MonteCarloEFFb1_140703_161644_8637 : completed :['vocms230.cern.ch:9999'] :2014-07-03 13:26:12
+
+
+jbalcas_LHEStep0_140703_161622_2916 : completed :['vocms230.cern.ch:9999'] :2014-07-03 14:05:56
+
+
+jbalcas_ReDigiWorkF1_140703_161614_4806 : completed :['vocms230.cern.ch:9999'] :2014-07-04 02:05:53
+
+
+jbalcas_ReReco_140703_161534_9492 : completed :['vocms230.cern.ch:9999'] :2014-07-04 08:05:55
+
+
+jbalcas_ReRecoskim_140703_161634_265 : completed :['vocms230.cern.ch:9999'] :2014-07-04 08:26:31
+
+
+jbalcas_ReDigiWorkF_140703_161602_8623 : completed :['vocms230.cern.ch:9999'] :2014-07-05 10:05:54
+
+
+jbalcas_MonteCarloFromGEN_140703_161542_1572 : aborted :No agent Info :2014-07-06 01:08:24
+
+
+jbalcas_MonteCarloFromGEN_140702_095749_3836 : aborted :No agent Info :2014-07-06 01:08:40
+
+
+jbalcas_MonteCarloOpport_140706_074056_1685 : completed :['vocms230.cern.ch:9999'] :2014-07-06 10:45:05
+
+
+amaltaro_MonteCarlo_v2_HG1407_Validation_140707_123804_3849 : completed :['vocms230.cern.ch:9999'] :2014-07-07 07:45:04
+
+
+amaltaro_EXT_MonteCarlo_HG1407_Validation_140707_122908_2958 : completed :['vocms230.cern.ch:9999'] :2014-07-07 08:26:31
+
+
+amaltaro_700_pre11_SingleMuPt100FastSim_140707_124415_5816 : completed :['vocms230.cern.ch:9999'] :2014-07-07 09:47:19
+
+
+amaltaro_700_pre11_TTbar_140707_124123_3692 : completed :['vocms230.cern.ch:9999'] :2014-07-07 10:25:05
+
+
+jbalcas_MonteCarloFromGEN_140707_162325_9836 : completed :['vocms230.cern.ch:9999'] :2014-07-07 11:06:26
+
+
+jbalcas_MonteCarloOpport_140707_162643_2221 : completed :['vocms230.cern.ch:9999'] :2014-07-07 11:26:50
+
+
+jbalcas_ReReco_140707_150512_7522 : completed :['vocms230.cern.ch:9999'] :2014-07-07 13:26:29
+
+
+jbalcas_MonteCarlo_140706_074120_8827 : completed :['vocms230.cern.ch:9999'] :2014-07-07 15:25:46
+
+
+jbalcas_MonteCarloEFFe1_140706_074039_2709 : completed :['vocms230.cern.ch:9999'] :2014-07-07 16:45:04
+
+
+jbalcas_MonteCarloEFFb1_140706_074205_2070 : completed :['vocms230.cern.ch:9999'] :2014-07-07 18:06:38
+
+
+jbalcas_LHEStep0_140706_074137_9603 : completed :['vocms230.cern.ch:9999'] :2014-07-07 18:46:55
+
+
+jbalcas_ReDigiWorkF1_140706_074127_5541 : completed :['vocms230.cern.ch:9999'] :2014-07-08 00:27:03
+
+
+jbalcas_ReDigiWorkF_140707_150535_6851 : completed :['vocms230.cern.ch:9999'] :2014-07-08 10:46:08
+
+
+jbalcas_ReDigiWorkF_140706_074104_9874 : completed :['vocms230.cern.ch:9999'] :2014-07-08 10:46:39
+
+
+amaltaro_700_pre11_PyquenZeemumuJets_PU_140708_155807_3448 : completed :['cmssrv94.fnal.gov:9999'] :2014-07-08 14:26:30
+
+
+amaltaro_700_pre11_SingleMuPt100FastSim_140708_155825_5793 : completed :['cmssrv94.fnal.gov:9999'] :2014-07-08 14:47:24
+
+
+amaltaro_700_pre11_TTbar_140708_155632_4655 : completed :['cmssrv94.fnal.gov:9999'] :2014-07-08 15:26:36
+
+
+amaltaro_RVCMSSW_7_0_6TTbar_13_PUpmx25ns__140708_162856_4773 : completed :['cmssrv94.fnal.gov:9999'] :2014-07-08 19:46:23
+
+
+jbalcas_ReRecoskim_140707_150519_1689 : completed :['vocms230.cern.ch:9999'] :2014-07-09 05:05:54
+
+
+jbalcas_ReRecoskim_140706_074157_2071 : completed :['vocms230.cern.ch:9999'] :2014-07-09 05:06:22
+
+
+jbalcas_ACDC_ReReco_140706_080924_8077 : completed :['vocms230.cern.ch:9999'] :2014-07-09 05:06:25
+
+
+jbalcas_ReReco_140706_074048_2350 : completed :['vocms230.cern.ch:9999'] :2014-07-09 05:06:27
+
+
+jbalcas_MonteCarloFromGEN_140710_105034_3533 : completed :['cmssrv94.fnal.gov:9999'] :2014-07-10 05:46:28
+
+
+jbalcas_MonteCarlo_140710_105100_7235 : completed :['cmssrv94.fnal.gov:9999'] :2014-07-10 05:46:29
+
+
+jbalcas_MonteCarloOpport_140710_105040_6851 : completed :['cmssrv94.fnal.gov:9999'] :2014-07-10 06:05:44
+
+
+jbalcas_MonteCarloEFFe1_140710_105016_6217 : completed :['cmssrv94.fnal.gov:9999'] :2014-07-10 06:05:58
+
+
+jbalcas_MonteCarloEFFb1_140710_105152_8621 : completed :['cmssrv94.fnal.gov:9999'] :2014-07-10 06:06:27
+
+
+jbalcas_LHEStep0_140710_105123_1567 : completed :['cmssrv94.fnal.gov:9999'] :2014-07-10 06:26:17
+
+
+jbalcas_ReReco_140710_105024_4387 : completed :['cmssrv94.fnal.gov:9999'] :2014-07-10 09:46:22
+
+
+jbalcas_ACDC_ReDigiWorkF1_140707_162750_3358 : aborted :No agent Info :2014-07-10 14:46:29
+
+
+jbalcas_ReDigiWorkF1_140710_105107_2008 : aborted :No agent Info :2014-07-11 02:07:33
+
+
+jbalcas_ReDigiWorkF_140710_105052_7918 : completed :['cmssrv94.fnal.gov:9999'] :2014-07-11 07:25:37
+
+
+jbalcas_ReRecoskim_140710_105140_9287 : completed :['cmssrv94.fnal.gov:9999'] :2014-07-11 09:46:28
+
+
+jbalcas_MonteCarloFromGEN_140714_082257_1060 : completed :['cmssrv94.fnal.gov:9999'] :2014-07-15 07:46:48
+
+
+jbalcas_ReDigiWorkF1_140714_082331_9938 : completed :['cmssrv94.fnal.gov:9999'] :2014-07-15 07:47:13
+
+
+jbalcas_MonteCarloOpport_140702_095057_2097 : completed :['vocms231.cern.ch:9999'] :2014-07-18 05:05:52
+
+
+amaltaro_700_pre11_ZJetsLNu_LHE_140722_152912_2863 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-07-23 05:45:48
+
+
+amaltaro_700_pre11_PyquenZeemumuJets_PU_140722_152927_59 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-07-23 11:06:51
+
+
+amaltaro_700_pre11_H130GGgluonfusion_PU_140722_152936_3897 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-07-24 08:05:43
+
+
+amaltaro_700_pre11_RunTau2012A_140722_152922_8460 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-07-24 08:05:53
+
+
+amaltaro_700_pre11_TTbar_140722_152915_5534 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-07-24 08:47:06
+
+
+amaltaro_700_pre11_ProdMinBias_140722_152931_9730 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-07-24 10:26:51
+
+
+amaltaro_700_pre11_SingleMuPt100FastSim_140722_152920_368 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-07-24 11:05:53
+
+
+amaltaro_700_pre11_ZTT_PU_140722_152906_4751 : completed :['cmsgwms-submit1.fnal.gov:9999'] :2014-07-24 17:06:44
+
+
+amaltaro_MonteCarloExtend_Alan_140725_102820_3430 : completed :['vocms230.cern.ch:9999'] :2014-07-25 05:07:23
+
+
+amaltaro_MonteCarloExtend_Alan_140725_170927_3909 : aborted :No agent Info :2014-07-25 10:35:03
+
+
+amaltaro_ObjID2012DDoubleElectron_140728_142142_4547 : closed-out :['cmssrv94.fnal.gov:9999'] :2014-07-29 03:25:13
+
+
+amaltaro_FSQ-ppSpring2014-00007_140728_142129_2488 : closed-out :['cmssrv94.fnal.gov:9999'] :2014-07-29 03:25:47
+
+
+amaltaro_FSQ-ppSpring2014-00007_140729_094816_6163 : completed :['cmssrv94.fnal.gov:9999'] :2014-07-29 05:05:40
+
+
+amaltaro_B2G-Summer12DR53X-00743_140729_100547_7821 : completed :['cmssrv94.fnal.gov:9999'] :2014-07-29 07:25:45
+
+
+amaltaro_ObjID2012DDoubleElectron_140729_101411_3131 : completed :['cmssrv94.fnal.gov:9999'] :2014-07-29 08:07:07
+
+
+amaltaro_Summer12pLHE_140729_092428_6279 : closed-out :['cmssrv94.fnal.gov:9999'] :2014-07-29 09:34:34
+
+
+amaltaro_B2G-Summer12-00736_140729_163547_4703 : completed :['cmssrv94.fnal.gov:9999'] :2014-07-29 16:26:24
+
+
+amaltaro_TOP-Summer11LegwmLHE-00006_Ext_140805_110255_121 : completed :['cmssrv94.fnal.gov:9999'] :2014-08-05 06:05:47
+
+
+amaltaro_700_pre11_RunCosmics2011A_140805_103918_5236 : completed :['cmssrv94.fnal.gov:9999'] :2014-08-05 09:05:06
+
+
+amaltaro_700_pre11_ProdMinBias_140805_095955_1516 : completed :['cmssrv94.fnal.gov:9999'] :2014-08-05 09:05:55
+
+
+jbalcas_MonteCarloOpport_140804_140457_2020 : completed :['vocms047.cern.ch:9999'] :2014-08-05 10:05:06
+
+
+amaltaro_700_pre11_ZTT_PU_140805_113932_9321 : completed :['cmssrv94.fnal.gov:9999'] :2014-08-05 10:06:50
+
+
+jbalcas_ReDigiWorkF_140804_140515_4230 : completed :['vocms047.cern.ch:9999'] :2014-08-06 18:26:35
+
+
+amaltaro_700_pre11_ProdMinBias_140804_113036_8296 : completed :No agent Info :2014-08-10 07:45:04
+
+
+amaltaro_TOP-Summer11LegwmLHE-00006_140815_174725_5704 : completed :No agent Info :2014-08-16 07:25:46
+
+
+sryu_test_MC_Files_140806_185520_5751 : completed :['vocms227.cern.ch:9999'] :2014-08-18 09:25:05
+
+
+amaltaro_task_SUS-Fall13wmLHE-00011__v1_T_140818_165423_600 : completed :No agent Info :2014-08-18 14:45:49
+
+
+amaltaro_task_SUS-Fall13wmLHE-00011__v1_T_140818_165022_6153 : completed :No agent Info :2014-08-18 16:45:08
+
+
+amaltaro_HIG-Summer12DR53X-02092_00043_v0__140818_110318_8960 : completed :No agent Info :2014-08-18 20:27:08
+
+
+amaltaro_MonteCarlo_Alan_20Aug2014_140820_104607_7072 : completed :['cmssrv94.fnal.gov:9999'] :2014-08-20 05:45:48
+
+
+jmosquer_MonteCarlo_Jmorales_25Aug2014_140820_201111_2884 : completed :['cmssrv94.fnal.gov:9999'] :2014-08-20 15:25:39
+
+
+amaltaro_task_SUS-Fall13wmLHE-00011__v1_T_140822_003000_3522 : completed :['cmssrv94.fnal.gov:9999'] :2014-08-22 01:06:41
+
+
+amaltaro_HIG-Summer12DR53X-02092_00043_v0__140822_000910_2109 : completed :['cmssrv94.fnal.gov:9999'] :2014-08-22 07:07:25
+
+
+amaltaro_MonteCarlo_Alan_22Aug2014_140822_200149_7116 : completed :['cmssrv94.fnal.gov:9999'] :2014-08-22 14:45:47
+
+
+jbalcas_MonteCarloFromGEN_140825_105703_934 : completed :['vocms230.cern.ch:9999'] :2014-08-25 08:05:21
+
+
+jbalcas_MonteCarlo_140825_105722_1860 : completed :['vocms230.cern.ch:9999'] :2014-08-25 08:05:23
+
+
+jbalcas_LHEStep0_140820_143319_8045 : completed :No agent Info :2014-08-25 08:07:16
+
+
+jbalcas_ReDigiWorkF_140820_143337_6565 : completed :No agent Info :2014-08-25 08:07:31
+
+
+jbalcas_MonteCarloOpport_140820_143312_2182 : completed :No agent Info :2014-08-25 08:07:33
+
+
+amaltaro_700_pre11_RunTau2012A_140825_102254_8783 : completed :['vocms230.cern.ch:9999'] :2014-08-25 08:25:10
+
+
+amaltaro_700_pre11_H130GGgluonfusion_PU_140825_102239_8344 : completed :['vocms230.cern.ch:9999'] :2014-08-25 08:25:18
+
+
+jbalcas_ReDigiWorkF_140825_105715_6302 : completed :['vocms230.cern.ch:9999'] :2014-08-25 08:26:17
+
+
+jbalcas_ReDigiWorkF1_140825_105727_6199 : completed :['vocms230.cern.ch:9999'] :2014-08-25 08:28:14
+
+
+amaltaro_700_pre11_ZJetsLNu_LHE_140825_102308_4982 : completed :['vocms230.cern.ch:9999'] :2014-08-25 08:28:22
+
+
+jbalcas_MonteCarloOpport_140825_105709_3406 : completed :No agent Info :2014-08-25 08:28:24
+
+
+amaltaro_700_pre11_ProdMinBias_140825_102245_1525 : completed :['vocms230.cern.ch:9999'] :2014-08-25 08:28:33
+
+
+amaltaro_700_pre11_PyquenZeemumuJets_PU_140825_102250_1531 : completed :['vocms230.cern.ch:9999'] :2014-08-25 08:28:38
+
+
+jbalcas_ReReco_140825_105655_4077 : completed :['vocms230.cern.ch:9999'] :2014-08-25 08:45:39
+
+
+jbalcas_MonteCarloEFFe1_140825_105649_2054 : completed :['vocms230.cern.ch:9999'] :2014-08-25 08:45:41
+
+
+amaltaro_700_pre11_TTbar_140825_102303_2045 : completed :No agent Info :2014-08-25 08:45:51
+
+
+amaltaro_700_pre11_SingleMuPt100FastSim_140825_102300_4065 : completed :No agent Info :2014-08-25 08:46:09
+
+
+jbalcas_ReRecoskim_140825_105747_5110 : completed :['vocms230.cern.ch:9999'] :2014-08-25 08:47:14
+
+
+jbalcas_MonteCarloEFFb1_140825_105756_8488 : completed :No agent Info :2014-08-25 08:47:16
+
+
+amaltaro_700_pre11_ZTT_PU_140825_102311_5439 : completed :['vocms230.cern.ch:9999'] :2014-08-25 08:47:24
+
+
+jbalcas_LHEStep0_140825_105740_9159 : completed :['vocms230.cern.ch:9999'] :2014-08-25 08:47:27
+
+
+amaltaro_700_pre11_RunTau2012A_v2_140825_105548_1042 : aborted :No agent Info :2014-08-25 09:56:02
+
+
+jbalcas_MonteCarlo_140825_163231_3188 : completed :['vocms230.cern.ch:9999'] :2014-08-25 11:27:17
+
+
+jbalcas_MonteCarloOpport_140825_163218_6894 : completed :['vocms230.cern.ch:9999'] :2014-08-25 12:27:15
+
+
+amaltaro_700_pre11_H130GGgluonfusion_PU_v2_140825_165343_9647 : completed :['vocms230.cern.ch:9999'] :2014-08-25 14:46:04
+
+
+jbalcas_MonteCarloEFFe1_140825_163156_4412 : completed :['vocms230.cern.ch:9999'] :2014-08-25 15:45:51
+
+
+jbalcas_MonteCarloEFFb1_140825_163304_7216 : completed :['vocms230.cern.ch:9999'] :2014-08-25 16:47:04
+
+
+jbalcas_LHEStep0_140825_163246_2491 : completed :['vocms230.cern.ch:9999'] :2014-08-25 17:07:28
+
+
+amaltaro_700_pre11_ZTT_PU_v2_140825_165352_7955 : completed :['vocms230.cern.ch:9999'] :2014-08-25 19:47:23
+
+
+amaltaro_700_pre11_PyquenZeemumuJets_PU_140825_165316_8240 : completed :['vocms230.cern.ch:9999'] :2014-08-25 20:25:52
+
+
+amaltaro_700_pre11_SingleMuPt100FastSim_140825_165326_8241 : completed :['vocms230.cern.ch:9999'] :2014-08-25 20:27:09
+
+
+amaltaro_700_pre11_TTbar_140825_165330_3027 : completed :['vocms230.cern.ch:9999'] :2014-08-25 21:27:14
+
+
+amaltaro_700_pre11_ProdMinBias_140825_165311_7843 : completed :['vocms230.cern.ch:9999'] :2014-08-25 23:45:48
+
+
+amaltaro_700_pre11_ZTT_PU_140825_165338_7066 : completed :['vocms230.cern.ch:9999'] :2014-08-26 00:07:06
+
+
+amaltaro_700_pre11_H130GGgluonfusion_PU_v2_140825_204757_2705 : completed :No agent Info :2014-08-26 01:46:57
+
+
+jbalcas_ReDigiWorkF1_140825_163237_4878 : completed :['vocms230.cern.ch:9999'] :2014-08-26 06:45:57
+
+
+amaltaro_task_SUS-Fall13wmLHE-00011__v1_T_140826_121625_9260 : completed :['cmssrv94.fnal.gov:9999'] :2014-08-26 15:05:57
+
+
+jbalcas_MonteCarloFromGEN_140825_163212_3912 : completed :['vocms230.cern.ch:9999'] :2014-08-26 15:27:06
+
+
+jbalcas_ReDigiWorkF_140825_163224_3128 : completed :['vocms230.cern.ch:9999'] :2014-08-26 18:26:38
+
+
+amaltaro_RVCMSSW_7_0_0_pre11TTbar_PU__FastSim_140204_230436_8400 : completed :['vocms227.cern.ch:9999'] :2014-08-27 05:25:04
+
+
+amaltaro_700_pre11_H130GGgluonfusion_PU_140825_165307_1275 : closed-out :['vocms230.cern.ch:9999'] :2014-08-27 06:43:56
+
+
+amaltaro_700_pre11_ZJetsLNu_LHE_140825_165335_5649 : closed-out :['vocms230.cern.ch:9999'] :2014-08-27 07:03:02
+
+
+amaltaro_700_pre11_RunTau2012A_v2_140825_165348_1658 : aborted :No agent Info :2014-08-27 07:13:49
+
+
+jbalcas_ReReco_140825_163205_2433 : completed :['vocms230.cern.ch:9999'] :2014-08-27 14:27:28
+
+
+jbalcas_ReRecoskim_140825_163255_6601 : completed :['vocms230.cern.ch:9999'] :2014-08-27 14:45:05
+
+
+amaltaro_700_pre11_RunTau2012A_v2_140827_141502_7868 : completed :['vocms230.cern.ch:9999'] :2014-08-27 15:47:21
+
+
+amaltaro_TOP-Summer11LegwmLHE-00006_v4_140828_093945_68 : completed :['vocms227.cern.ch:9999'] :2014-08-28 04:07:22
+
+
+jbalcas_MonteCarlo_140828_111838_4493 : aborted :No agent Info :2014-08-28 04:19:29
+
+
+amaltaro_B2G-Summer12-00736_v4_140828_093948_6356 : completed :['vocms227.cern.ch:9999'] :2014-08-28 07:47:23
+
+
+amaltaro_BPH-Spring14miniaod-00004_v4_140828_093951_5906 : completed :['vocms227.cern.ch:9999'] :2014-08-28 10:27:06
+
+
+amaltaro_B2G-Summer12DR53X-00743_v4_140828_093954_4011 : completed :No agent Info :2014-08-28 12:46:55
+
+
+jbalcas_ACDC_MonteCarloFromGEN_140827_144538_8609 : completed :['vocms230.cern.ch:9999'] :2014-08-28 13:05:44
+
+
+amaltaro_SUS-Summer12pLHE-00144_140828_203739_7069 : completed :['vocms230.cern.ch:9999'] :2014-08-28 17:05:59
+
+
+amaltaro_B2G-Summer12DR53X-00743_140828_203852_3319 : completed :['vocms230.cern.ch:9999'] :2014-08-28 19:05:12
+
+
+amaltaro_BPH-Spring14miniaod-00004_v5_140828_232723_3523 : completed :No agent Info :2014-08-28 20:07:23
+
+
+amaltaro_B2G-Summer12-00736_v5_140828_232717_7266 : completed :No agent Info :2014-08-28 20:26:56
+
+
+amaltaro_700_pre11_RunCosmics2011A_v4_140828_094006_6687 : completed :No agent Info :2014-08-28 21:05:45
+
+
+amaltaro_B2G-Summer12DR53X-00743_v5_140828_232740_9684 : completed :No agent Info :2014-08-28 21:46:01
+
+
+amaltaro_ObjID2012DDoubleElectron_v4_140828_093958_7990 : completed :No agent Info :2014-08-29 07:06:58
+
+
+amaltaro_700_pre11_H130GGgluonfusion_PU_140829_131657_7808 : completed :['vocms230.cern.ch:9999'] :2014-08-29 08:06:44
+
+
+amaltaro_BPH-Spring14miniaod-00004_v5_140829_131637_6886 : completed :['vocms230.cern.ch:9999'] :2014-08-29 08:08:35
+
+
+amaltaro_TOP-Summer11LegwmLHE-00006_v5_140828_232712_5231 : completed :No agent Info :2014-08-29 08:29:00
+
+
+amaltaro_MCFromGEN_BadLumiRange_v6_140829_163401_621 : failed :No agent Info :2014-08-29 09:50:00
+
+
+amaltaro_MCFromGEN_BadRunNumber_v6_140829_163749_5206 : failed :No agent Info :2014-08-29 09:50:04
+
+
+jbalcas_MonteCarloFromGEN_140829_154046_1670 : completed :['vocms230.cern.ch:9999'] :2014-08-29 09:50:52
+
+
+jbalcas_MonteCarloEFFe1_140829_154026_6156 : completed :No agent Info :2014-08-29 09:52:23
+
+
+jbalcas_ReReco_140829_154033_4567 : completed :['vocms230.cern.ch:9999'] :2014-08-29 10:07:21
+
+
+jbalcas_MonteCarloEFFe1_140829_155401_2706 : completed :No agent Info :2014-08-29 11:26:02
+
+
+amaltaro_TaskChain_LumiMask_OutsideTask_140829_161957_988 : completed :No agent Info :2014-08-29 15:25:56
+
+
+amaltaro_700_pre11_RunCosmics2011A_v5_140828_232749_1273 : completed :No agent Info :2014-08-29 15:26:57
+
+
+amaltaro_TaskChain_LumiMask_InsideTask_140829_161749_3891 : completed :No agent Info :2014-08-29 16:07:23
+
+
+jbalcas_ReReco_140829_155407_3264 : completed :No agent Info :2014-08-29 18:05:06
+
+
+amaltaro_700_pre11_ZJetsLNu_LHE_140827_162018_5949 : completed :['cmsgwms-submit2.fnal.gov:9999'] :2014-08-29 18:26:57
+
+
+amaltaro_700_pre11_ProdMinBias_140826_202039_5896 : completed :['cmsgwms-submit2.fnal.gov:9999'] :2014-08-30 01:47:05
+
+
+jbalcas_MonteCarloFromGEN_140829_155413_5001 : completed :No agent Info :2014-08-30 04:46:55
+
+
+amaltaro_ACDC_Task3_task_SUS-Fall13wmLHE-00011__v1_T_140901_043440_7553 : completed :['vocms230.cern.ch:9999'] :2014-08-31 23:07:09
+
+
+amaltaro_ACDC_Task5_task_SUS-Fall13wmLHE-00011__v1_T_140901_043459_7596 : completed :['vocms230.cern.ch:9999'] :2014-08-31 23:07:24
+
+
+amaltaro_ACDC2_Task3_task_SUS-Fall13wmLHE-00011__v1_T_140901_064245_8616 : aborted :['vocms230.cern.ch:9999'] :2014-09-01 01:42:00
+
+
+amaltaro_ACDC2_Task5_task_SUS-Fall13wmLHE-00011__v1_T_140901_084219_3447 : completed :['vocms230.cern.ch:9999'] :2014-09-01 03:27:09
+
+
+amaltaro_ACDC3_Task5_task_SUS-Fall13wmLHE-00011__v1_T_140901_121211_2208 : completed :['vocms230.cern.ch:9999'] :2014-09-01 06:26:59
+
+
+jbalcas_MonteCarloFromGEN_140901_143548_3738 : completed :['vocms047.cern.ch:9999'] :2014-09-01 08:45:36
+
+
+jbalcas_MonteCarloOpport_140901_143556_1892 : completed :['vocms047.cern.ch:9999'] :2014-09-01 08:47:10
+
+
+jbalcas_MonteCarloEFFe1_140901_143309_5370 : completed :['vocms047.cern.ch:9999'] :2014-09-01 08:47:11
+
+
+jbalcas_ReDigiWorkF_140901_143634_4510 : completed :['vocms047.cern.ch:9999'] :2014-09-01 08:47:31
+
+
+jbalcas_ReReco_140901_143537_7103 : completed :['vocms047.cern.ch:9999'] :2014-09-01 09:05:44
+
+
+amaltaro_ACDC4_Task5_task_SUS-Fall13wmLHE-00011__v1_T_140901_190407_3004 : completed :['vocms230.cern.ch:9999'] :2014-09-01 18:05:59
+
+
+amaltaro_FSQ-ppSpring2014-00007_ForceCompletion_140902_115900_6280 : completed :['cmssrv94.fnal.gov:9999'] :2014-09-02 08:50:45
+
+
+jbalcas_MonteCarloEFFe1_140902_133517_4928 : completed :['vocms047.cern.ch:9999'] :2014-09-02 09:47:24
+
+
+amaltaro_B2G-Summer12-00736_v4_vocms227_140902_164902_3527 : failed :No agent Info :2014-09-02 10:05:48
+
+
+jbalcas_MonteCarloEFFe1_140902_104139_1370 : completed :['vocms047.cern.ch:9999'] :2014-09-02 11:27:09
+
+
+jbalcas_MonteCarlo_140902_133510_8076 : completed :['vocms047.cern.ch:9999'] :2014-09-02 12:46:58
+
+
+jbalcas_MonteCarlo_140902_104030_2684 : completed :['vocms047.cern.ch:9999'] :2014-09-02 12:47:03
+
+
+jbalcas_MonteCarloFromGEN_140902_133526_4459 : completed :['vocms047.cern.ch:9999'] :2014-09-02 13:27:06
+
+
+jbalcas_MonteCarloFromGEN_140902_104216_3202 : completed :['vocms047.cern.ch:9999'] :2014-09-02 13:27:16
+
+
+amaltaro_FSQ-ppSpring2014-00007_vocms227_140902_175445_4519 : completed :['cmssrv94.fnal.gov:9999'] :2014-09-02 16:46:03
+
+
+amaltaro_RequestString-OVERRIDE-ME_140902_225758_4600 : completed :['vocms230.cern.ch:9999'] :2014-09-02 20:25:05
+
+
+amaltaro_MCFromGEN_TEST_ALAN_03Sept2014_140903_151047_5513 : aborted :['cmssrv94.fnal.gov:9999'] :2014-09-03 09:08:26
+
+
+amaltaro_MCFromGEN_TEST_ALAN_03Sept2014_v2_140903_162054_8623 : completed :No agent Info :2014-09-03 13:08:13
+
+
+amaltaro_MC_eff_TEST_ALAN_03Sept2014_140903_200020_1120 : completed :['cmsgwms-submit2.fnal.gov:9999'] :2014-09-04 07:45:52
+
+
+amaltaro_700_pre11_ZJetsLNu_LHE_140904_043319_8869 : completed :['cmsgwms-submit2.fnal.gov:9999'] :2014-09-04 08:05:46
+
+
+sryu_test_MC_Files_140904_070318_6874 : completed :['cmsgwms-submit2.fnal.gov:9999'] :2014-09-04 08:47:00
+
+
+amaltaro_MCFromGEN_TEST_ALAN_04Sept2014_v2_140904_154336_9684 : completed :['cmsgwms-submit2.fnal.gov:9999'] :2014-09-05 03:05:28
+
+
+*******
+
+
+

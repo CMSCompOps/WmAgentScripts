@@ -1,0 +1,1009 @@
+**** Something very wrong : 0 ****
+*******
+
+
+
+**** completd but in different state with No jobs : 18 ****
+pdmvserv_TOP-Summer12DR53X-00213_T1_FR_CCIN2P3_MSS_00139_v0__140127_110246_2260 : running-closed :No agent Info :2014-02-12 22:06:09
+
+
+pdmvserv_HIG-Fall11R1-01577_T1_ES_PIC_MSS_00047_v0__140221_063937_7285 : running-closed :No agent Info :2014-03-07 22:16:45
+
+
+alahiff_EWK-Summer12DR53X-00157_T1_US_FNAL_MSS_00121_v0__140314_154105_6109 : running-closed :No agent Info :2014-03-14 22:29:20
+
+
+pdmvserv_HIG-Fall11R1-01578_T1_UK_RAL_MSS_00048_v0__140224_124323_2351 : running-closed :No agent Info :2014-03-17 21:49:16
+
+
+pdmvserv_HIG-Fall11R1-01584_T1_ES_PIC_MSS_00049_v0__140228_065818_3476 : running-closed :No agent Info :2014-03-19 16:44:28
+
+
+pdmvserv_HIG-Fall11R1-01583_T1_ES_PIC_MSS_00048_v0__140224_124333_6259 : running-closed :No agent Info :2014-03-19 17:12:23
+
+
+pdmvserv_HIG-Fall11R1-01586_T1_ES_PIC_MSS_00049_v0__140228_125125_9179 : running-closed :No agent Info :2014-03-19 17:14:09
+
+
+pdmvserv_HIG-Fall11R1-01590_T1_ES_PIC_MSS_00049_v0__140228_125531_9752 : running-closed :No agent Info :2014-03-19 18:13:25
+
+
+pdmvserv_HIG-Fall11R1-01591_T1_ES_PIC_MSS_00049_v0__140228_125712_9418 : running-closed :No agent Info :2014-03-19 19:53:57
+
+
+pdmvserv_HIG-Fall11R1-01609_T1_UK_RAL_MSS_00054_v0__140307_144959_6618 : running-closed :No agent Info :2014-03-23 17:34:22
+
+
+pdmvserv_HIG-Fall11R1-01608_T1_ES_PIC_MSS_00053_v0__140306_185440_5888 : running-closed :No agent Info :2014-03-24 03:36:21
+
+
+pdmvserv_HIG-Fall11R1-01592_T1_ES_PIC_MSS_00050_v0__140303_125930_7446 : running-closed :No agent Info :2014-03-24 03:56:19
+
+
+pdmvserv_HIG-Summer12DR53X-01868_T1_DE_KIT_MSS_00163_v0__140303_125952_6504 : running-closed :No agent Info :2014-03-30 20:35:15
+
+
+pdmvserv_HIG-Summer12DR53X-01871_T1_DE_KIT_MSS_00163_v0__140303_130019_1098 : running-closed :No agent Info :2014-03-30 21:17:33
+
+
+pdmvserv_HIN-HiWinter13DR53X-00069_T1_FR_CCIN2P3_MSS_00010_v0__140228_102914_237 : running-closed :No agent Info :2014-03-31 20:26:07
+
+
+pdmvserv_HIN-HiWinter13DR53X-00070_T1_FR_CCIN2P3_MSS_00011_v0__140303_084936_8248 : running-closed :No agent Info :2014-04-04 15:47:13
+
+
+pdmvserv_SUS-Summer12FS53-00140_00043_v0__140404_121736_1971 : running-closed :No agent Info :2014-04-07 20:51:48
+
+
+jbadillo_ACDC_HIG-Summer11-01755_00027_v0__140407_162219_4630 : running-closed :No agent Info :2014-04-14 22:07:53
+
+
+*******
+
+
+
+**** completd but in different state : 21 ****
+alahiff_BTV-Fall13dr-00210_T1_US_FNAL_MSS_00084_v0_castor_tsg_140320_130743_7899 : running-closed :[u'vocms202.cern.ch:9999'] :2014-03-20 19:51:31
+
+
+pdmvserv_HIG-Summer12DR53X-01850_T1_DE_KIT_MSS_00156_v0__140221_063951_7379 : running-closed :[u'vocms202.cern.ch:9999'] :2014-04-01 21:55:43
+
+
+pdmvserv_HIN-pAWinter13DR53X-00047_T1_FR_CCIN2P3_MSS_00010_v0__140310_125718_3971 : running-closed :[u'vocms202.cern.ch:9999'] :2014-04-02 22:29:38
+
+
+pdmvserv_HIN-pAWinter13DR53X-00042_T1_FR_CCIN2P3_MSS_00009_v0__140306_185730_8166 : running-closed :[u'vocms202.cern.ch:9999', u'vocms85.cern.ch:9999'] :2014-04-06 08:13:32
+
+
+pdmvserv_HIG-Summer12DR53X-01929_T1_DE_KIT_MSS_00171_v0__140307_135418_8247 : running-closed :[u'vocms202.cern.ch:9999', u'vocms85.cern.ch:9999'] :2014-04-07 20:50:20
+
+
+pdmvserv_HIG-Spring14dr-00075_T1_FR_CCIN2P3_MSS_00017_v0__140414_100712_8120 : running-closed :[u'vocms202.cern.ch:9999', u'vocms85.cern.ch:9999'] :2014-04-24 01:53:21
+
+
+pdmvserv_JME-Spring14dr-00002_T1_FR_CCIN2P3_MSS_00022_v0__140418_162158_7885 : running-closed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999', u'vocms85.cern.ch:9999'] :2014-04-26 14:04:24
+
+
+pdmvserv_TSG-Spring14dr-00013_T1_US_FNAL_MSS_00007_v0__140411_185147_8619 : running-closed :[u'vocms202.cern.ch:9999', u'vocms85.cern.ch:9999'] :2014-04-28 23:28:12
+
+
+pdmvserv_TSG-Spring14dr-00017_T1_US_FNAL_MSS_00007_v0__140411_185157_4403 : running-closed :[u'vocms202.cern.ch:9999', u'vocms85.cern.ch:9999'] :2014-04-28 23:35:21
+
+
+pdmvserv_FSQ-Spring14dr-00035_T1_FR_CCIN2P3_MSS_00007_v0__140412_002651_2933 : running-closed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999', u'vocms85.cern.ch:9999'] :2014-04-29 21:50:31
+
+
+pdmvserv_JME-Spring14dr-00001_T1_FR_CCIN2P3_MSS_00023_v0__140418_162158_9669 : running-closed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-04-30 05:06:28
+
+
+pdmvserv_HIG-Spring14dr-00080_T1_FR_CCIN2P3_MSS_00044_v0__140429_223844_862 : running-closed :[u'vocms202.cern.ch:9999', u'vocms85.cern.ch:9999'] :2014-05-05 15:28:14
+
+
+pdmvserv_JME-Fall13dr-00014_T1_FR_CCIN2P3_MSS_00209_v0__140429_201653_9391 : running-closed :[u'vocms202.cern.ch:9999'] :2014-05-05 15:39:11
+
+
+pdmvserv_JME-Fall13dr-00013_T1_FR_CCIN2P3_MSS_00208_v0__140429_201655_4407 : running-closed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-05 18:51:39
+
+
+pdmvserv_BPH-Summer12DR53X-00160_T1_ES_PIC_MSS_00186_v0__140324_185126_4962 : running-closed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-10 05:37:57
+
+
+pdmvserv_JME-Fall13dr-00012_T1_FR_CCIN2P3_MSS_00207_v0__140429_201643_772 : running-closed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-12 20:42:18
+
+
+pdmvserv_JME-Spring14dr-00009_T1_FR_CCIN2P3_MSS_00044_v0__140429_223732_4459 : running-closed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-16 09:46:49
+
+
+pdmvserv_JME-Spring14dr-00006_T1_FR_CCIN2P3_MSS_00045_v0__140430_201721_4320 : running-closed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-16 22:15:00
+
+
+pdmvserv_HIN-pAWinter13DR53X-00040_T1_FR_CCIN2P3_MSS_00009_v0__140306_185658_2973 : failed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999', u'vocms85.cern.ch:9999'] :2014-05-22 22:58:33
+
+
+pdmvserv_JME-Spring14dr-00005_T1_US_FNAL_MSS_00006_v0__140411_185343_4074 : failed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-26 03:35:28
+
+
+pdmvserv_HIG-Spring14dr-00020_T1_US_FNAL_MSS_00006_v0__140411_185150_7431 : failed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-26 07:41:04
+
+
+*******
+
+
+
+**** Log collect job is not created : 34 ****
+pdmvserv_HIG-Summer12DR53X-01869_T1_DE_KIT_MSS_00163_v0__140303_125958_6912 : running-closed :[u'vocms202.cern.ch:9999'] :2014-03-30 23:27:32
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Processing : StepOneProc
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 15, 'sucess': 15, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 3, 'sucess': 3, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_HIG-Summer12DR53X-01865_T1_DE_KIT_MSS_00162_v0__140228_125743_1672 : running-closed :[u'vocms202.cern.ch:9999'] :2014-04-02 00:36:19
+  Merge : StepOneProcMergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 57, 'sucess': 57, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 12, 'sucess': 12, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 3, 'running': 0, 'cooloff': 0, 'created': 6, 'sucess': 3, 'queued': 0, 'pending': 0}
+  Processing : StepOneProc
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 314, 'sucess': 314, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 2, 'running': 0, 'cooloff': 0, 'created': 6, 'sucess': 4, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_HIG-Summer12DR53X-01864_T1_DE_KIT_MSS_00162_v0__140228_065956_4590 : running-closed :[u'vocms202.cern.ch:9999'] :2014-04-02 05:53:38
+  Cleanup : StepOneProcCleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 2, 'running': 0, 'cooloff': 0, 'created': 3, 'sucess': 1, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 3, 'sucess': 2, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 29, 'sucess': 28, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Processing : StepOneProc
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 160, 'sucess': 159, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 9, 'sucess': 9, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_HIG-Summer12DR53X-01861_T1_DE_KIT_MSS_00157_v0__140224_124403_4460 : running-closed :[u'vocms202.cern.ch:9999'] :2014-04-02 06:35:45
+  LogCollect : StepOneProcDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 4, 'sucess': 3, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 14, 'sucess': 14, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 4, 'sucess': 4, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 3, 'running': 0, 'cooloff': 0, 'created': 47, 'sucess': 44, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Processing : StepOneProc
+    job info: {'paused': 0, 'failure': 4, 'running': 0, 'cooloff': 0, 'created': 220, 'sucess': 216, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_HIG-Summer12DR53X-01859_T1_DE_KIT_MSS_00157_v0__140224_124349_9394 : running-closed :[u'vocms202.cern.ch:9999'] :2014-04-02 07:17:16
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Processing : StepOneProc
+    job info: {'paused': 0, 'failure': 26, 'running': 0, 'cooloff': 0, 'created': 349, 'sucess': 323, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 6, 'sucess': 6, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 2, 'running': 0, 'cooloff': 0, 'created': 58, 'sucess': 56, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 15, 'sucess': 15, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 6, 'sucess': 5, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_HIN-pAWinter13DR53X-00041_T1_FR_CCIN2P3_MSS_00009_v0__140306_185706_8929 : running-closed :[u'vocms202.cern.ch:9999', u'vocms85.cern.ch:9999'] :2014-04-04 15:45:57
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 25, 'sucess': 25, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeRECOSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 510, 'sucess': 510, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcRECOSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Processing : StepOneProc
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 12762, 'sucess': 12762, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedRECOSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 254, 'sucess': 254, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 71, 'sucess': 71, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 254, 'sucess': 254, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_HIN-pAWinter13DR53X-00039_T1_FR_CCIN2P3_MSS_00009_v0__140306_185643_7113 : running-closed :[u'vocms202.cern.ch:9999', u'vocms85.cern.ch:9999'] :2014-04-04 15:49:43
+  LogCollect : StepOneProcDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedRECOSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 280, 'sucess': 280, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeRECOSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 519, 'sucess': 519, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 27, 'sucess': 27, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 73, 'sucess': 73, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 280, 'sucess': 280, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcRECOSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Processing : StepOneProc
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 14026, 'sucess': 14026, 'queued': 0, 'pending': 0}
+
+
+jen_a_SUS-Summer11LegDR-00003_T1_US_FNAL_MSS_00010_v0__140403_232401_7346 : running-closed :[u'vocms202.cern.ch:9999', u'vocms85.cern.ch:9999'] :2014-04-16 01:30:44
+  Processing : StepOneProc
+    job info: {'paused': 0, 'failure': 2, 'running': 0, 'cooloff': 0, 'created': 1187, 'sucess': 1185, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 62, 'sucess': 62, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 23, 'sucess': 23, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 22, 'sucess': 22, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 183, 'sucess': 183, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_HIG-Fall11R1-01652_T1_US_FNAL_MSS_00061_v0__140415_065358_2543 : running-closed :[u'vocms202.cern.ch:9999', u'vocms85.cern.ch:9999'] :2014-04-20 14:08:21
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedGENRAWoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcGENRAWoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Processing : StepOneProc
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 92, 'sucess': 92, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeGENRAWoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 31, 'sucess': 31, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_HIG-Spring14dr-00076_T1_FR_CCIN2P3_MSS_00019_v0__140414_100717_3098 : running-closed :[u'vocms202.cern.ch:9999', u'vocms85.cern.ch:9999'] :2014-04-24 20:04:25
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 7, 'sucess': 7, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 24, 'sucess': 24, 'queued': 0, 'pending': 0}
+  Processing : StepOneProc
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 373, 'sucess': 373, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_MUO-Summer12-00001_00120_v0__140424_121548_5730 : running-closed :[u'vocms201.cern.ch:9999'] :2014-04-24 20:25:27
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Production : MonteCarloFromGEN
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 64500, 'sucess': 64500, 'queued': 0, 'pending': 0}
+  Cleanup : MonteCarloFromGENCleanupUnmergedRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : MonteCarloFromGENRAWSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : MonteCarloFromGENMergeRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 532, 'sucess': 532, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_TSG-Spring14dr-00036_T1_US_FNAL_MSS_00012_v0__140411_190930_249 : running-closed :[u'vocms85.cern.ch:9999'] :2014-04-26 13:55:06
+  Merge : StepOneProcMergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 15, 'sucess': 15, 'queued': 0, 'pending': 0}
+  Processing : StepOneProc
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 181, 'sucess': 181, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 3, 'sucess': 3, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_TSG-Spring14dr-00032_T1_US_FNAL_MSS_00012_v0__140411_190913_6075 : running-closed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999', u'vocms85.cern.ch:9999'] :2014-04-26 17:27:57
+  Merge : StepOneProcMergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 50, 'sucess': 50, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Processing : StepOneProc
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 565, 'sucess': 565, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 10, 'sucess': 10, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_EXO-Spring14dr-00154_T1_US_FNAL_MSS_00013_v0__140412_084247_2553 : running-closed :[u'vocms202.cern.ch:9999', u'vocms85.cern.ch:9999'] :2014-04-28 23:35:48
+  Cleanup : StepOneProcCleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 3, 'sucess': 3, 'queued': 0, 'pending': 0}
+  Processing : StepOneProc
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 24, 'sucess': 24, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_EXO-Summer12DR53X-02883_T1_US_FNAL_MSS_00202_v0__140416_190701_602 : running-closed :[u'vocms202.cern.ch:9999', u'vocms85.cern.ch:9999'] :2014-04-29 00:11:43
+  Processing : StepOneProc
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 17, 'sucess': 17, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_EXO-Summer12DR53X-02880_T1_US_FNAL_MSS_00202_v0__140416_190617_2601 : running-closed :[u'vocms202.cern.ch:9999', u'vocms85.cern.ch:9999'] :2014-04-29 00:12:57
+  Cleanup : StepOneProcCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 3, 'sucess': 3, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Processing : StepOneProc
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 20, 'sucess': 20, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_BTV-Spring14dr-00079_T1_US_FNAL_MSS_00014_v0__140412_084550_9892 : running-closed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999', u'vocms85.cern.ch:9999'] :2014-04-30 00:11:37
+  Merge : StepOneProcMergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 61, 'sucess': 61, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 3, 'running': 0, 'cooloff': 0, 'created': 12, 'sucess': 9, 'queued': 0, 'pending': 0}
+  Processing : StepOneProc
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 652, 'sucess': 652, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_BTV-Spring14dr-00087_T1_US_FNAL_MSS_00014_v0__140412_084721_5375 : running-closed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999', u'vocms85.cern.ch:9999'] :2014-04-30 00:12:43
+  Merge : StepOneProcMergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 205, 'sucess': 205, 'queued': 0, 'pending': 0}
+  Processing : StepOneProc
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2304, 'sucess': 2304, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 3, 'sucess': 3, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 44, 'sucess': 43, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_BTV-Spring14dr-00093_T1_US_FNAL_MSS_00014_v0__140412_084804_9685 : running-closed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999', u'vocms85.cern.ch:9999'] :2014-04-30 00:16:57
+  LogCollect : StepOneProcAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 108, 'sucess': 108, 'queued': 0, 'pending': 0}
+  Processing : StepOneProc
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 967, 'sucess': 967, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 18, 'sucess': 17, 'queued': 0, 'pending': 0}
+
+
+jbadillo_ACDC_HIG-Summer11-01722_00027_v0__140430_114251_4263 : running-closed :[u'vocms201.cern.ch:9999'] :2014-05-01 08:28:32
+  Production : MonteCarloFromGEN
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : MonteCarloFromGENMergeRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : MonteCarloFromGENCleanupUnmergedRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : MonteCarloFromGENRAWSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+jbadillo_ACDC_HIG-Summer12-02126_00115_v0__140430_170103_3148 : running-closed :[u'vocms201.cern.ch:9999'] :2014-05-01 08:36:43
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : MonteCarloFromGENRAWSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Production : MonteCarloFromGEN
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : MonteCarloFromGENCleanupUnmergedRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : MonteCarloFromGENMergeRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_BTV-Spring14dr-00094_T1_US_FNAL_MSS_00013_v0__140412_084805_2725 : running-closed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-02 09:26:17
+  Merge : StepOneProcMergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 123, 'sucess': 123, 'queued': 0, 'pending': 0}
+  Processing : StepOneProc
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1456, 'sucess': 1456, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 2, 'running': 0, 'cooloff': 0, 'created': 28, 'sucess': 26, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_BTV-Spring14dr-00080_T1_US_FNAL_MSS_00013_v0__140412_084553_1342 : running-closed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-02 14:48:24
+  LogCollect : StepOneProcAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Processing : StepOneProc
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 986, 'sucess': 986, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 73, 'sucess': 73, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 19, 'sucess': 18, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_BTV-Spring14dr-00088_T1_US_FNAL_MSS_00013_v0__140412_084723_6777 : running-closed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-02 19:48:42
+  Merge : StepOneProcMergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 241, 'sucess': 241, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 68, 'sucess': 67, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 6, 'sucess': 5, 'queued': 0, 'pending': 0}
+  Processing : StepOneProc
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 3442, 'sucess': 3442, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_HIG-Summer12DR53X-01978_T1_FR_CCIN2P3_MSS_00200_v0__140414_190409_1942 : running-closed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-03 16:12:44
+  Cleanup : StepOneProcCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 6, 'sucess': 6, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 63, 'sucess': 63, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 13, 'sucess': 13, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Processing : StepOneProc
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 369, 'sucess': 369, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 6, 'sucess': 6, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_HIG-Summer12DR53X-01985_T1_FR_CCIN2P3_MSS_00210_v0__140428_200752_4751 : running-closed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-12 22:30:20
+  Cleanup : StepOneProcCleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 5, 'sucess': 5, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 48, 'sucess': 48, 'queued': 0, 'pending': 0}
+  Processing : StepOneProc
+    job info: {'paused': 0, 'failure': 10, 'running': 0, 'cooloff': 0, 'created': 301, 'sucess': 291, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 12, 'sucess': 12, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 5, 'sucess': 5, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_FSQ-LowPU2010DR42-00015_T1_FR_CCIN2P3_MSS_00008_v0_BS2011_140422_190720_7470 : running-closed :[u'vocms234.cern.ch:9999'] :2014-05-12 22:36:12
+  Cleanup : StepOneProcCleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Processing : StepOneProc
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 13, 'sucess': 13, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_FSQ-LowPU2010DR42-00017_T1_FR_CCIN2P3_MSS_00010_v0_BS2011_140428_200659_3631 : running-closed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-12 22:39:30
+  LogCollect : StepOneProcAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Processing : StepOneProc
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 132, 'sucess': 131, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 15, 'sucess': 15, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_HIG-Summer12DR53X-01979_T1_US_FNAL_MSS_00200_v0__140415_065325_4411 : running-closed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-13 03:11:32
+  Cleanup : StepOneProcCleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 11, 'sucess': 11, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 98, 'sucess': 98, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 25, 'sucess': 25, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 11, 'sucess': 11, 'queued': 0, 'pending': 0}
+  Processing : StepOneProc
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 581, 'sucess': 580, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_FSQ-LowPU2010DR42-00018_T1_FR_CCIN2P3_MSS_00011_v0_BS2011_140430_200556_3247 : running-closed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-15 17:43:02
+  Processing : StepOneProc
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 441, 'sucess': 440, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 45, 'sucess': 45, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 8, 'sucess': 8, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_HIG-Summer11LegDR-00001_T1_US_FNAL_MSS_00001_v0__140304_144610_2587 : running-closed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-18 02:22:22
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 4, 'sucess': 4, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 198, 'sucess': 198, 'queued': 0, 'pending': 0}
+  Processing : StepOneProc
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2466, 'sucess': 2466, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 49, 'sucess': 49, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 91, 'sucess': 91, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 49, 'sucess': 49, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_FSQ-Spring14dr-00057_T1_US_FNAL_MSS_00026_v0_castor_140422_190748_7942 : running-closed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-21 14:38:42
+  Merge : StepOneProcMergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 89, 'sucess': 89, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Processing : StepOneProc
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1271, 'sucess': 1271, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 25, 'sucess': 25, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_SUS-Fall13wmLHE-00014_00008_v0__140416_121456_3505 : normal-archived :[u'vocms201.cern.ch:9999'] :2014-05-27 17:59:12
+  LogCollect : ProductionLHEoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : ProductionMergeLHEoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 202, 'sucess': 202, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : ProductionCleanupUnmergedLHEoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 4, 'sucess': 4, 'queued': 0, 'pending': 0}
+  Production : Production
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 400, 'sucess': 399, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_SUS-Summer12FS53-00133_00042_v0__140331_121756_2166 : aborted :[u'vocms201.cern.ch:9999'] :2014-06-03 09:18:58
+  Cleanup : MonteCarloFromGENCleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 7, 'running': 0, 'cooloff': 0, 'created': 274, 'sucess': 267, 'queued': 0, 'pending': 0}
+  Production : MonteCarloFromGEN
+    job info: {'paused': 0, 'failure': 136, 'running': 0, 'cooloff': 0, 'created': 12600, 'sucess': 12464, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 9, 'running': 0, 'cooloff': 0, 'created': 360, 'sucess': 351, 'queued': 0, 'pending': 0}
+  Merge : MonteCarloFromGENMergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 457, 'sucess': 457, 'queued': 0, 'pending': 0}
+  LogCollect : MonteCarloFromGENAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+*******
+
+
+
+**** jobs still running : 12 ****
+pdmvserv_BPH-Summer11Leg-00013_00029_v0__140326_161757_5452 : running-closed :[u'vocms201.cern.ch:9999'] :2014-03-27 12:18:38
+  Cleanup : ProductionCleanupUnmergedRAWSIMoutput
+    job info: {'paused': 0, 'failure': 15, 'running': 0, 'cooloff': 0, 'created': 636, 'sucess': 620, 'queued': 0, 'pending': 0}
+  LogCollect : ProductionRAWSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 136, 'running': 0, 'cooloff': 0, 'created': 1739, 'sucess': 1514, 'queued': 88, 'pending': 0}
+  Production : Production
+    job info: {'paused': 0, 'failure': 12265, 'running': 0, 'cooloff': 0, 'created': 49575, 'sucess': 32608, 'queued': 2, 'pending': 0}
+  Merge : ProductionMergeRAWSIMoutput
+    job info: {'paused': 0, 'failure': 88, 'running': 0, 'cooloff': 0, 'created': 2434, 'sucess': 2322, 'queued': 9, 'pending': 0}
+
+
+srimanob_ObjID2012BDoubleElectronPrio1_703_140415_202112_7784 : running-closed :[u'vocms202.cern.ch:9999', u'vocms85.cern.ch:9999'] :2014-04-16 02:13:47
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 41, 'running': 0, 'cooloff': 0, 'created': 41, 'sucess': 0, 'queued': 0, 'pending': 0}
+  DataProcessingAODoutputMergeLogCollect : DataProcessingAODoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 3, 'running': 0, 'cooloff': 0, 'created': 3, 'sucess': 0, 'queued': 0, 'pending': 0}
+  DataProcessing : DataProcessing
+    job info: {'paused': 0, 'failure': 8, 'running': 1, 'cooloff': 0, 'created': 20095, 'sucess': 20086, 'queued': 0, 'pending': 0}
+  DataProcessingDQMoutputMergeLogCollect : DataProcessingDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 0, 'queued': 0, 'pending': 0}
+  DataProcessingCleanupUnmergedAODoutput : DataProcessingCleanupUnmergedAODoutput
+    job info: {'paused': 0, 'failure': 5, 'running': 0, 'cooloff': 0, 'created': 401, 'sucess': 396, 'queued': 0, 'pending': 0}
+  DataProcessingMergeDQMoutput : DataProcessingMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 502, 'sucess': 502, 'queued': 0, 'pending': 0}
+  DataProcessingMergeAODoutput : DataProcessingMergeAODoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1358, 'sucess': 1358, 'queued': 0, 'pending': 0}
+  DataProcessingCleanupUnmergedDQMoutput : DataProcessingCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 3, 'running': 0, 'cooloff': 0, 'created': 401, 'sucess': 398, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_FSQ-Spring14dr-00038_T1_FR_CCIN2P3_MSS_00013_v0__140412_002910_9220 : running-closed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999', u'vocms85.cern.ch:9999'] :2014-04-30 02:23:05
+  Processing : StepOneProc
+    job info: {'paused': 0, 'failure': 7, 'running': 0, 'cooloff': 0, 'created': 1136, 'sucess': 1127, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 1, 'queued': 0, 'pending': 0}
+  Merge : StepOneProcMergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 81, 'sucess': 81, 'queued': 0, 'pending': 0}
+  Cleanup : StepOneProcCleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 22, 'sucess': 22, 'queued': 0, 'pending': 0}
+  LogCollect : StepOneProcAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_EWK-Summer11LegDR-00002_T1_ES_PIC_MSS_00010_v0__140326_124106_4760 : normal-archived :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-23 11:35:51
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 28, 'sucess': 28, 'queued': 0, 'pending': 0}
+  StepOneProc : StepOneProc
+    job info: {'paused': 0, 'failure': 3, 'running': 0, 'cooloff': 0, 'created': 13396, 'sucess': 13393, 'queued': 0, 'pending': 0}
+  StepOneProcCleanupUnmergedDQMoutput : StepOneProcCleanupUnmergedDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 269, 'sucess': 269, 'queued': 0, 'pending': 0}
+  StepOneProcDQMoutputMergeLogCollect : StepOneProcDQMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 2, 'sucess': 2, 'queued': 0, 'pending': 0}
+  StepOneProcAODSIMoutputMergeLogCollect : StepOneProcAODSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 4, 'sucess': 3, 'queued': 0, 'pending': 0}
+  StepOneProcMergeAODSIMoutput : StepOneProcMergeAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1536, 'sucess': 1536, 'queued': 0, 'pending': 0}
+  StepOneProcMergeDQMoutput : StepOneProcMergeDQMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 619, 'sucess': 619, 'queued': 0, 'pending': 0}
+  StepOneProcCleanupUnmergedAODSIMoutput : StepOneProcCleanupUnmergedAODSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 269, 'sucess': 269, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_HIG-Summer12-02150_00121_v0__140430_162157_3596 : aborted :[u'vocms201.cern.ch:9999'] :2014-05-30 05:19:06
+  LogCollect : MonteCarloFromGENRAWSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : MonteCarloFromGENMergeRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Production : MonteCarloFromGEN
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : MonteCarloFromGENCleanupUnmergedRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 0, 'queued': 0, 'pending': 1}
+
+
+pdmvserv_HIG-Summer12-02153_00121_v0__140430_162133_5966 : aborted :[u'vocms201.cern.ch:9999'] :2014-05-30 07:10:46
+  Merge : MonteCarloFromGENMergeRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Production : MonteCarloFromGEN
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : MonteCarloFromGENCleanupUnmergedRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 0, 'queued': 0, 'pending': 1}
+  LogCollect : MonteCarloFromGENRAWSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_HIG-Summer12-02155_00121_v0__140430_162156_8309 : aborted :[u'vocms201.cern.ch:9999'] :2014-05-30 07:10:58
+  Merge : MonteCarloFromGENMergeRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : MonteCarloFromGENRAWSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Production : MonteCarloFromGEN
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : MonteCarloFromGENCleanupUnmergedRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 0, 'queued': 0, 'pending': 1}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_HIG-Summer12-02156_00121_v0__140430_162157_978 : aborted :[u'vocms201.cern.ch:9999'] :2014-05-30 07:11:07
+  LogCollect : MonteCarloFromGENRAWSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Merge : MonteCarloFromGENMergeRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Production : MonteCarloFromGEN
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Cleanup : MonteCarloFromGENCleanupUnmergedRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1, 'sucess': 0, 'queued': 0, 'pending': 1}
+
+
+pdmvserv_HIG-Summer12-02145_00119_v0__140418_161924_9701 : completed :[u'vocms201.cern.ch:9999'] :2014-05-30 09:45:53
+  Merge : ProductionMergeRAWSIMoutput
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 120, 'sucess': 115, 'queued': 4, 'pending': 0}
+  Production : Production
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1578, 'sucess': 1578, 'queued': 0, 'pending': 0}
+  Cleanup : ProductionCleanupUnmergedRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 42, 'sucess': 42, 'queued': 0, 'pending': 0}
+  LogCollect : ProductionRAWSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 89, 'sucess': 69, 'queued': 20, 'pending': 0}
+
+
+pdmvserv_HIG-Summer12-02148_00119_v0__140418_161918_1712 : completed :[u'vocms201.cern.ch:9999'] :2014-05-30 09:47:02
+  Merge : ProductionMergeRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 62, 'sucess': 61, 'queued': 1, 'pending': 0}
+  Production : Production
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 579, 'sucess': 579, 'queued': 0, 'pending': 0}
+  Cleanup : ProductionCleanupUnmergedRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 4, 'sucess': 4, 'queued': 0, 'pending': 0}
+  LogCollect : ProductionRAWSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+
+
+pdmvserv_FSQ-ppSpring2014-00003_00003_v0_castor_140404_150335_2560 : aborted :[u'vocms201.cern.ch:9999'] :2014-06-02 07:14:59
+  Cleanup : ProductionCleanupUnmergedRAWSIMoutput
+    job info: {'paused': 0, 'failure': 9, 'running': 0, 'cooloff': 0, 'created': 3373, 'sucess': 3292, 'queued': 72, 'pending': 0}
+  LogCollect : ProductionRAWSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  Production : Production
+    job info: {'paused': 0, 'failure': 663, 'running': 0, 'cooloff': 0, 'created': 202355, 'sucess': 200214, 'queued': 0, 'pending': 0}
+  Merge : ProductionMergeRAWSIMoutput
+    job info: {'paused': 0, 'failure': 12, 'running': 0, 'cooloff': 0, 'created': 726, 'sucess': 662, 'queued': 49, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 60, 'running': 0, 'cooloff': 0, 'created': 9198, 'sucess': 7384, 'queued': 1754, 'pending': 0}
+
+
+pdmvserv_HIG-Summer12-02149_00119_v0__140418_161921_8031 : announced :[u'vocms201.cern.ch:9999'] :2014-06-03 14:49:50
+  Production : Production
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 1579, 'sucess': 1579, 'queued': 0, 'pending': 0}
+  Cleanup : ProductionCleanupUnmergedRAWSIMoutput
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 40, 'sucess': 40, 'queued': 0, 'pending': 0}
+  LogCollect : ProductionRAWSIMoutputMergeLogCollect
+    job info: {'paused': 0, 'failure': 0, 'running': 0, 'cooloff': 0, 'created': 0, 'sucess': 0, 'queued': 0, 'pending': 0}
+  LogCollect : LogCollect
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 89, 'sucess': 68, 'queued': 20, 'pending': 0}
+  Merge : ProductionMergeRAWSIMoutput
+    job info: {'paused': 0, 'failure': 1, 'running': 0, 'cooloff': 0, 'created': 132, 'sucess': 128, 'queued': 3, 'pending': 0}
+
+
+*******
+
+
+
+**** completed waiting for closeout : 56 ****
+srimanob_ObjID2012DSingleElectronPrio1_703_140415_202127_1323 : completed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-21 17:15:20
+
+
+jen_a_SUS-Summer11LegDR-00002_T1_US_FNAL_MSS_00010_v0__140423_141626_3555 : completed :[u'vocms234.cern.ch:9999'] :2014-05-21 20:06:26
+
+
+jen_a_SUS-Summer11LegDR-00002_T1_US_FNAL_MSS_00010_v0__140403_232414_3982 : completed :[u'vocms234.cern.ch:9999'] :2014-05-21 20:07:19
+
+
+jen_a_HIG-Summer12DR53X-01909_T1_DE_KIT_MSST1_US_FNAL_MSS_00177_v1__140423_141634_6336 : completed :[u'vocms234.cern.ch:9999'] :2014-05-21 20:09:38
+
+
+pdmvserv_EXO-Spring14dr-00116_T1_US_FNAL_MSS_00008_v0__140411_185729_6114 : completed :[u'vocms234.cern.ch:9999'] :2014-05-21 20:16:04
+
+
+pdmvserv_SUS-Summer12FS53-00136_00043_v0__140404_121724_1732 : aborted :No agent Info :2014-05-22 06:47:41
+
+
+pdmvserv_SUS-Summer12FS53-00149_00044_v0__140429_134309_7711 : completed :No agent Info :2014-05-22 09:11:08
+
+
+pdmvserv_EXO-Spring14dr-00193_T1_DE_KIT_MSS_00041_v0__140430_070325_529 : normal-archived :[u'vocms202.cern.ch:9999'] :2014-05-23 06:36:04
+
+
+pdmvserv_EXO-Spring14dr-00194_T1_DE_KIT_MSS_00042_v0__140430_070325_7905 : normal-archived :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-23 06:44:25
+
+
+pdmvserv_HIG-Summer12DR53X-01852_T1_DE_KIT_MSS_00156_v0__140221_064007_9122 : normal-archived :[u'vocms202.cern.ch:9999'] :2014-05-23 08:22:26
+
+
+pdmvserv_HIG-Summer12DR53X-01980_T1_FR_CCIN2P3_MSS_00200_v0__140415_065329_9886 : normal-archived :[u'vocms234.cern.ch:9999'] :2014-05-23 08:27:06
+
+
+pdmvserv_SUS-Summer12FS53-00127_00044_v0__140429_134307_6372 : normal-archived :No agent Info :2014-05-23 08:47:09
+
+
+pdmvserv_SUS-Summer12FS53-00146_00044_v0__140429_134303_4915 : normal-archived :No agent Info :2014-05-23 08:51:20
+
+
+pdmvserv_EXO-Spring14dr-00077_T1_US_FNAL_MSS_00008_v0__140411_185622_3655 : normal-archived :[u'vocms234.cern.ch:9999'] :2014-05-23 11:02:32
+
+
+pdmvserv_EXO-Spring14dr-00109_T1_US_FNAL_MSS_00008_v0__140411_185659_4873 : normal-archived :No agent Info :2014-05-23 12:31:45
+
+
+pdmvserv_EXO-Spring14dr-00130_T1_US_FNAL_MSS_00011_v0__140411_190547_7061 : normal-archived :No agent Info :2014-05-23 12:52:53
+
+
+pdmvserv_EXO-Spring14dr-00198_T1_DE_KIT_MSS_00042_v0__140430_070355_8976 : normal-archived :[u'vocms234.cern.ch:9999'] :2014-05-23 13:01:41
+
+
+jen_a_HIG-Summer12DR53X-01900_T1_DE_KIT_MSST1_US_FNAL_MSS_00177_v1__140423_141644_5381 : completed :[u'vocms234.cern.ch:9999'] :2014-05-25 01:31:37
+
+
+dmason_ACDC_HI2011legMar14_5316_140426_235911_8901 : completed :[u'vocms227.cern.ch:9999'] :2014-05-25 10:16:25
+
+
+pdmvserv_FSQ-Spring14dr-00019_T1_US_FNAL_MSS_00009_v0_castor_140411_190721_2172 : completed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-25 17:16:46
+
+
+jen_a_HIG-Summer12DR53X-01909_T1_DE_KIT_MSST1_US_FNAL_MSS_00177_v1__140403_233148_4852 : completed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-26 03:29:59
+
+
+pdmvserv_SMP-Spring14dr-00002_T1_US_FNAL_MSS_00012_v0__140411_190944_3458 : completed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-27 00:37:07
+
+
+jen_a_HIG-Summer12DR53X-01900_T1_DE_KIT_MSST1_US_FNAL_MSS_00177_v1__140403_233202_6405 : completed :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-27 03:18:10
+
+
+pdmvserv_FSQ-Spring14dr-00021_T1_US_FNAL_MSS_00009_v0_castor_140411_190656_6408 : normal-archived :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-27 08:33:37
+
+
+pdmvserv_HIG-Fall11R1-01674_T1_DE_KIT_MSS_00065_v0__140429_201116_1591 : normal-archived :[u'vocms234.cern.ch:9999'] :2014-05-27 09:00:38
+
+
+pdmvserv_HIG-Summer12DR53X-01976_T1_FR_CCIN2P3_MSS_00198_v0__140412_111002_5284 : normal-archived :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-27 09:16:32
+
+
+pdmvserv_HIG-Summer12DR53X-01977_T1_FR_CCIN2P3_MSS_00198_v0__140413_202126_9205 : normal-archived :[u'vocms234.cern.ch:9999'] :2014-05-27 09:21:10
+
+
+pdmvserv_FSQ-LowPU2010DR42-00012_T1_FR_CCIN2P3_MSS_00005_v0_BS2011_140412_110629_1129 : normal-archived :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-27 10:02:59
+
+
+jen_a_HIG-Summer12DR53X-01856_T1_US_FNAL_MSS_00157_v0__140407_201932_461 : normal-archived :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-27 10:03:38
+
+
+jen_a_HIG-Summer12DR53X-01866_T1_US_FNAL_MSS_00177_v1__140408_213430_1141 : normal-archived :[u'vocms234.cern.ch:9999'] :2014-05-27 10:07:23
+
+
+pdmvserv_FSQ-LowPU2010DR42-00013_T1_FR_CCIN2P3_MSS_00006_v0_BS2011_140414_185652_6224 : normal-archived :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-27 13:51:38
+
+
+pdmvserv_FSQ-ppSpring2014-00001_00002_v1_castor_140404_121603_9349 : normal-archived :No agent Info :2014-05-27 13:58:25
+
+
+pdmvserv_HIG-Summer11-01779_00031_v0__140418_161843_2965 : normal-archived :No agent Info :2014-05-27 14:05:56
+
+
+pdmvserv_HIG-Summer11-01780_00031_v0__140418_161846_2194 : normal-archived :No agent Info :2014-05-27 14:12:45
+
+
+pdmvserv_HIG-Summer11-01781_00031_v0__140418_161842_6835 : normal-archived :No agent Info :2014-05-27 14:24:10
+
+
+pdmvserv_HIG-Summer11-01782_00031_v0__140418_161841_4568 : normal-archived :No agent Info :2014-05-27 14:33:30
+
+
+pdmvserv_HIG-Summer11-01783_00031_v0__140418_161844_3138 : normal-archived :No agent Info :2014-05-27 14:47:47
+
+
+pdmvserv_HIG-Summer12-02157_00121_v0__140430_162157_3208 : normal-archived :No agent Info :2014-05-27 16:33:32
+
+
+pdmvserv_SUS-Summer12FS53-00137_00043_v0__140404_121728_4967 : aborted :No agent Info :2014-05-28 04:37:09
+
+
+pdmvserv_EXO-Spring14dr-00132_T1_US_FNAL_MSS_00010_v0__140411_185806_4823 : normal-archived :[u'vocms234.cern.ch:9999'] :2014-05-28 08:45:42
+
+
+pdmvserv_FSQ-Spring14dr-00022_T1_US_FNAL_MSS_00009_v0_castor_140411_190646_4137 : normal-archived :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-28 11:38:45
+
+
+pdmvserv_FSQ-Spring14dr-00025_T1_US_FNAL_MSS_00009_v0_castor_140411_190823_6652 : normal-archived :No agent Info :2014-05-28 11:49:17
+
+
+pdmvserv_HIN-pAWinter13DR53X-00049_T1_FR_CCIN2P3_MSS_00011_v0__140311_130304_2714 : normal-archived :[u'vocms202.cern.ch:9999', u'vocms85.cern.ch:9999'] :2014-05-28 15:24:51
+
+
+pdmvserv_L1T-Spring14dr-00015_T1_US_FNAL_MSS_00011_v0__140411_190814_8539 : normal-archived :[u'vocms234.cern.ch:9999'] :2014-05-28 18:25:56
+
+
+pdmvserv_L1T-Spring14dr-00020_T1_US_FNAL_MSS_00013_v0__140412_084144_9760 : normal-archived :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-28 18:31:33
+
+
+pdmvserv_HIG-Summer12-02151_00121_v0__140430_162131_4296 : aborted :No agent Info :2014-05-30 05:19:14
+
+
+pdmvserv_SUS-Fall13wmLHE-00011_00011_v0__140428_201325_4400 : aborted :No agent Info :2014-05-30 08:32:59
+
+
+pdmvserv_TOP-Summer12-00266_00121_v0__140430_162157_2078 : aborted :No agent Info :2014-05-30 08:40:54
+
+
+pdmvserv_TOP-Summer12-00268_00121_v0__140430_162158_6076 : aborted :No agent Info :2014-05-30 08:41:11
+
+
+pdmvserv_BPH-Summer11Leg-00007_00034_v2__140422_161505_7626 : completed :No agent Info :2014-05-30 09:08:24
+
+
+pdmvserv_EXO-Fall13dr-00318_T1_DE_KIT_MSS_00206_v0_tsg_140430_070103_5867 : normal-archived :[u'vocms202.cern.ch:9999', u'vocms85.cern.ch:9999'] :2014-05-31 08:19:38
+
+
+pdmvserv_EXO-Fall13dr-00324_T1_DE_KIT_MSS_00204_v0_tsg_140430_070316_653 : normal-archived :[u'vocms202.cern.ch:9999', u'vocms234.cern.ch:9999'] :2014-05-31 08:27:58
+
+
+pdmvserv_EXO-Fall13dr-00325_T1_DE_KIT_MSS_00206_v0_tsg_140430_070322_9387 : normal-archived :[u'vocms234.cern.ch:9999'] :2014-05-31 08:30:53
+
+
+pdmvserv_HIG-Summer12-02152_00121_v0__140430_162136_948 : normal-archived :No agent Info :2014-06-02 02:53:24
+
+
+pdmvserv_SUS-Summer12FS53-00148_00044_v0__140429_134312_2177 : closed-out :No agent Info :2014-06-02 03:30:43
+
+
+pdmvserv_FSQ-LowPU2010-00018_00008_v0_BS2011_140328_002021_4481 : completed :No agent Info :2014-06-03 08:52:59
+
+
+*******
+
+
+

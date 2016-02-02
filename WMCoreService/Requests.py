@@ -21,6 +21,7 @@ import tempfile
 import shutil
 import stat
 import sys
+import httplib2
 
 from WMCoreService.JsonWrapper import JSONEncoder, JSONDecoder
 from WMCoreService.JsonWrapper.JSONThunker import JSONThunker
@@ -84,7 +85,7 @@ class Requests(dict):
                         idict.get('service_name')))
             self["cachepath"] = cache_dir
             self["req_cache_path"] = os.path.join(cache_dir, '.cache')
-        self.setdefault("timeout", 600)
+        self.setdefault("timeout", 1200)
         self.setdefault("logger", logging)
 
         check_server_url(self['host'])
@@ -127,7 +128,7 @@ class Requests(dict):
     def makeRequest(self, uri=None, data={}, verb='GET',
             incoming_headers={}, encoder=True, decoder=True, contentType=None):
         """
-        Make a request to the remote database. for a given URI. The type of
+        Make a request to the remote database. for a give URI. The type of
         request will determine the action take by the server (be careful with
         DELETE!). Data should be a dictionary of {dataname: datavalue}.
 
@@ -157,6 +158,9 @@ class Requests(dict):
         #WARNING: doesn't work with deplate so only accept gzip 
         incoming_headers["accept-encoding"] = "gzip,identity"
         headers.update(incoming_headers)
+
+        # httpib2 requires absolute url
+        uri = self['host'] + uri
 
         # If you're posting an attachment, the data might not be a dict
         #   please test against ConfigCache_t if you're unsure.
@@ -193,11 +197,30 @@ class Requests(dict):
             "Data in makeRequest is %s and not encoded to a string" \
                 % type(encoded_data)
 
-        self['conn'].request(method = verb, url = uri,
+        # httplib2 will allow sockets to close on remote end without retrying
+        # try to send request - if this fails try again - should then succeed
+        try:
+            response, result = self['conn'].request(uri, method = verb,
                                     body = encoded_data, headers = headers)
-        response = self['conn'].getresponse()
-        result = response.read()
-        
+            if response.status == 408: # timeout can indicate a socket error
+                response, result = self['conn'].request(uri, method = verb,
+                                    body = encoded_data, headers = headers)
+        except (socket.error, AttributeError):
+            # AttributeError implies initial connection error - need to close
+            # & retry. httplib2 doesn't clear httplib state before next request
+            # if this is threaded this may spoil things
+            # only have one endpoint so don't need to determine which to shut
+            [conn.close() for conn in self['conn'].connections.values()]
+            self['conn'] = self._getURLOpener()
+            # ... try again... if this fails propagate error to client
+            try:
+                response, result = self['conn'].request(uri, method = verb,
+                                    body = encoded_data, headers = headers)
+            except AttributeError:
+                # socket/httplib really screwed up - nuclear option
+                self['conn'].connections = {}
+                raise socket.error, 'Error contacting: %s' \
+                        % self.getDomainName()
         if response.status >= 400:
             e = HTTPException()
             setattr(e, 'req_data', encoded_data)
@@ -214,7 +237,101 @@ class Requests(dict):
         elif decoder != False:
             result = self.decode(result)
         #TODO: maybe just return result and response...
-        return result, response.status, response.reason, False
+        return result, response.status, response.reason, response.fromcache
+    
+#     def makeRequest(self, uri=None, data={}, verb='GET',
+#             incoming_headers={}, encoder=True, decoder=True, contentType=None):
+#         """
+#         Make a request to the remote database. for a given URI. The type of
+#         request will determine the action take by the server (be careful with
+#         DELETE!). Data should be a dictionary of {dataname: datavalue}.
+# 
+#         Returns a tuple of the data from the server, decoded using the
+#         appropriate method the response status and the response reason, to be
+#         used in error handling.
+# 
+#         You can override the method to encode/decode your data by passing in an
+#         encoding/decoding function to this method. Your encoded data must end up
+#         as a string.
+# 
+#         """
+#         #TODO: User agent should be:
+#         # $client/$client_version (CMS)
+#         # $http_lib/$http_lib_version $os/$os_version ($arch)
+#         if  not contentType:
+#             contentType = self['content_type']
+#         headers = {"Content-type": contentType,
+#                "User-agent": "WMCore.Services.Requests/v001",
+#                "Accept": self['accept_type']}
+#         encoded_data = ''
+# 
+#         for key in self.additionalHeaders.keys():
+#             headers[key] = self.additionalHeaders[key]
+# 
+#         #And now overwrite any headers that have been passed into the call:
+#         #WARNING: doesn't work with deplate so only accept gzip 
+#         incoming_headers["accept-encoding"] = "gzip,identity"
+#         headers.update(incoming_headers)
+# 
+#         # If you're posting an attachment, the data might not be a dict
+#         #   please test against ConfigCache_t if you're unsure.
+#         #assert type(data) == type({}), \
+#         #        "makeRequest input data must be a dict (key/value pairs)"
+# 
+#         # There must be a better way to do this...
+#         def f():
+#             """Dummy function"""
+#             pass
+# 
+#         if verb != 'GET' and data:
+#             if type(encoder) == type(self.get) or type(encoder) == type(f):
+#                 encoded_data = encoder(data)
+#             elif encoder == False:
+#                 # Don't encode the data more than we have to
+#                 #  we don't want to URL encode the data blindly,
+#                 #  that breaks POSTing attachments... ConfigCache_t
+#                 #encoded_data = urllib.urlencode(data)
+#                 #  -- Andrew Melo 25/7/09
+#                 encoded_data = data
+#             else:
+#                 # Either the encoder is set to True or it's junk, so use
+#                 # self.encode
+#                 encoded_data = self.encode(data)
+#             headers["Content-length"] = len(encoded_data)
+#         elif verb == 'GET' and data:
+#             #encode the data as a get string
+#             uri = "%s?%s" % (uri, urllib.urlencode(data, doseq=True))
+# 
+#         headers["Content-length"] = str(len(encoded_data))
+# 
+#         assert type(encoded_data) == type('string'), \
+#             "Data in makeRequest is %s and not encoded to a string" \
+#                 % type(encoded_data)
+# 
+#         self['conn'].request(method = verb, url = uri,
+#                                     body = encoded_data, headers = headers)
+#         response = self['conn'].getresponse()
+#         result = response.read()
+#         
+#         if response.status >= 400:
+#             e = HTTPException()
+#             setattr(e, 'req_data', encoded_data)
+#             setattr(e, 'req_headers', headers)
+#             setattr(e, 'url', uri)
+#             setattr(e, 'result', result)
+#             setattr(e, 'status', response.status)
+#             setattr(e, 'reason', response.reason)
+#             setattr(e, 'headers', response)
+#             print self["host"]
+#             print e.__dict__
+#             raise e
+# 
+#         if type(decoder) == type(self.makeRequest) or type(decoder) == type(f):
+#             result = decoder(result)
+#         elif decoder != False:
+#             result = self.decode(result)
+#         #TODO: maybe just return result and response...
+#         return result, response.status, response.reason, False
 
     def encode(self, data):
         """
@@ -302,15 +419,48 @@ class Requests(dict):
                 msg = 'No certificate or key found, authentication may fail'
                 self['logger'].info(msg)
                 self['logger'].debug(str(ex))
-            
-            uri = self['endpoint_components'].netloc
-            http = HTTPSConnection(uri, key_file=key, cert_file=cert, 
-                                   timeout = self["timeout"])
-        elif self['endpoint_components'].scheme == 'http':
-            uri = self['endpoint_components'].netloc
-            http = HTTPConnection(uri, timeout = self["timeout"])
-            
+
+        try:
+            # disable validation as we don't have a single PEM with all ca's
+            http = httplib2.Http(self['req_cache_path'], self['timeout'],
+                                 disable_ssl_certificate_validation = True)
+        except TypeError:
+            # old httplib2 versions disable validation by default
+            http = httplib2.Http(self['req_cache_path'], self['timeout'])
+
+        # Domain must be just a hostname and port. self[host] is a URL currently
+        if key or cert:
+            http.add_certificate(key=key, cert=cert, domain='')
         return http
+
+#     def _getURLOpener(self):
+#         """
+#         method getting a secure (HTTPS) connection
+#         """
+#         key, cert = None, None
+#         if self['endpoint_components'].scheme == 'https':
+#             # only add certs to https requests
+#             # if we have a key/cert add to request,
+#             # if not proceed as not all https connections require them
+#             try:
+#                 key, cert = self.getKeyCert()
+#             except Exception, ex:
+#                 msg = 'No certificate or key found, authentication may fail'
+#                 self['logger'].info(msg)
+#                 self['logger'].debug(str(ex))
+#             
+#             uri = self['endpoint_components'].netloc
+#             print "****"
+#             print uri
+#             print key
+#             print cert
+#             http = HTTPSConnection(uri, key_file=key, cert_file=cert, 
+#                                    timeout = self["timeout"])
+#         elif self['endpoint_components'].scheme == 'http':
+#             uri = self['endpoint_components'].netloc
+#             http = HTTPConnection(uri, timeout = self["timeout"])
+#             
+#         return http
 
     def addBasicAuth(self, username, password):
         """Add basic auth headers to request"""

@@ -8,6 +8,7 @@ if __name__ == "__main__":
     print "will take a while\n"
     requests = testbedWMStats.getRequestByStatus(["running-closed"], jobInfoFlag = True)
     requestCollection = RequestInfoCollection(requests)
+    print requests
     result = requestCollection.getJSONData()
     print result
     print "\ntotal %s requests retrieved" % len(result)
