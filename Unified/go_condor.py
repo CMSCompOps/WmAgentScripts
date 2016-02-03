@@ -71,10 +71,11 @@ def makePrioCorrections():
     Optimize the PostJobPrio* entries for HTCondor matchmaking.
 
     This will sort jobs within the schedd along the following criteria (higher is better):
-    1) # of sites in whitelist (lower is better).
-    2) Workflow ID (lower is better).
-    3) Estimated job runtime (lower is better).
-    4) Estimated job disk requirements (lower is better).
+    1) Workflow ID (lower is better).
+    2) Step in workflow (later is better)
+    3) # of sites in whitelist (lower is better).
+    4) Estimated job runtime (lower is better).
+    5) Estimated job disk requirements (lower is better).
     """
     anAd = classad.ClassAd()
     anAd["GridResource"] = "condor localhost localhost"
@@ -83,9 +84,11 @@ def makePrioCorrections():
     anAd["Requirements"] = classad.ExprTree("(target.HasPrioCorrection isnt true)")
     anAd["set_HasPrioCorrection"] = True
     anAd["set_HasBeenRouted"] = False
+    # -1 * Number of sites in workflow.
     anAd["copy_PostJobPrio1"] = "WMAgent_PostJobPrio1"
+    # -1 * Workflow ID (newer workflows have higher numbers)
     anAd["copy_PostJobPrio2"] = "WMAgent_PostJobPrio2"
-    anAd["eval_set_JR_PostJobPrio1"] = classad.ExprTree("WMAgent_PostJobPrio1*10000000 + WMAgent_PostJobPrio2")
+    anAd["eval_set_JR_PostJobPrio1"] = classad.ExprTree("WMAgent_PostJobPrio2*100*1000 + size(WMAgent_SubTaskName)*100 + WMAgent_PostJobPrio1")
     anAd["eval_set_JR_PostJobPrio2"] = classad.ExprTree("-MaxWallTimeMins - RequestDisk/1000000")
     anAd["set_PostJobPrio1"] = classad.Attribute("JR_PostJobPrio1")
     anAd["set_PostJobPrio2"] = classad.Attribute("JR_PostJobPrio2")
