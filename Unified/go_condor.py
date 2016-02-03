@@ -43,10 +43,10 @@ def makeAds(config):
         overflow_names_escaped = anAd.lookup('OverflowTasknames').__repr__()
         del anAd['OverflowTaskNames']
         exprs = ['regexp(%s, target.ExtDESIRED_Sites)'% classad.quote(str(origin)) for origin in reversed_mapping[site]]
-        exp = classad.ExprTree('(sortStringSet(\"\") isnt error) && member(target.WMAgent_SubTaskName, %s) && ( %s ) && (target.HasBeenRouted_%s =!= true)' % (overflow_names_escaped, str("||".join( exprs )), str(site)))
+        exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && ( %s ) && (target.HasBeenRouted_%s =!= true)' % (overflow_names_escaped, str("||".join( exprs )), str(site)))
         anAd["Requirements"] = classad.ExprTree(str(exp))
         anAd["copy_DESIRED_Sites"] = "Prev_DESIRED_Sites"
-        anAd["eval_set_DESIRED_Sites"] = classad.Function("debug", classad.Function("sortStringSet", classad.Function("strcat", str(site) + ",", classad.Attribute("Prev_DESIRED_Sites"))))
+        anAd["eval_set_DESIRED_Sites"] = classad.ExprTree('ifThenElse(sortStringSet("") isnt error, sortStringSet(strcat(%s, ",", Prev_DESIRED_Sites)), strcat(%s, ",", Prev_DESIRED_Sites))' % (classad.quote(str(site)), classad.quote(str(site))))
         anAd['set_Rank'] = classad.ExprTree("stringlistmember(GLIDEIN_CMSSite, ExtDESIRED_Sites)")
         anAd['set_HasBeenRouted'] = False
         anAd['set_HasBeenRouted_%s' % str(site)] = True
