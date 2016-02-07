@@ -3,11 +3,13 @@
 import re
 import sys
 import json
+import socket
 import urllib
 import classad
 import htcondor
 from collections import defaultdict
 
+g_is_cern = socket.getfqdn().endswith("cern.ch")
 
 def makeAds(config):
     reversed_mapping = config['reversed_mapping']
@@ -23,6 +25,8 @@ def makeAds(config):
             
             if "ReplaceSiteWhitelist" in specs:
                 anAd["Name"] = str("Site Replacement for %s"% taskname)
+                if ("T2_CH_CERN_HLT" in specs['ReplaceSiteWhitelist']) and not g_is_cern:
+                    specs['ReplaceSiteWhitelist'].remove("T2_CH_CERN_HLT")
                 anAd["eval_set_DESIRED_Sites"] = str(",".join(specs['ReplaceSiteWhitelist']))
                 anAd['set_Rank'] = classad.ExprTree("stringlistmember(GLIDEIN_CMSSite, ExtDESIRED_Sites)")
                 anAd["set_HasBeenReplaced"] = True
@@ -35,6 +39,8 @@ def makeAds(config):
 
     for site in  needs_site:
         if not site in reversed_mapping: continue
+        if site == "T2_CH_CERN_HLT" and not g_is_cern:
+            continue
         anAd = classad.ClassAd()
         anAd["GridResource"] = "condor localhost localhost"
         anAd["TargetUniverse"] = 5
