@@ -13,27 +13,28 @@ try:
     import json
 except:
     import simplejson as json
-import reqMgrClient
+import resubmit, reqMgrClient
 
 def main():
     """
     Read the text file, for each workflow try:
     First reject it, then clone it.
     """
-    args=sys.argv[1:]
-    if not len(args)==1:
-        print "usage:rejectAndClone file.txt"
-        sys.exit(0)
+#     args=sys.argv[1:]
+#     if not len(args)==1:
+#         print "usage:rejectAndClone file.txt"
+#         sys.exit(0)
+#     url='cmsweb.cern.ch'
+#     filename=args[0]
+#     workflows = [wf.strip() for wf in open(filename).readlines() if wf.strip()]
+    workflows = ["sryu_B2G-RunIIFall15DR76-Backfill-00733_00334_v0__160204_071600_4367"]
     url='cmsweb.cern.ch'
-    filename=args[0]
-    workflows = [wf.strip() for wf in open(filename).readlines() if wf.strip()]
     for workflow in workflows:
         print "Rejecting workflow: " + workflow
         reqMgrClient.rejectWorkflow(url, workflow)
         print "Rejected. Now cloning workflow..."
-        data = reqMgrClient.cloneWorkflow(url, workflow)
-        response_json = json.loads(data)
-        clone = response_json.values()[0]['RequestName']
+        clone = resubmit.cloneWorkflow(workflow, "sryu", "DATAOPS")
+        print "Cloned workflow: ",   clone
         print "Cloned workflow: " + clone
     sys.exit(0);
 

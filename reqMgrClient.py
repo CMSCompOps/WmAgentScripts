@@ -242,15 +242,15 @@ def requestManagerGet(url, request, retries=4):
     request: the request suffix url
     retries: number of retries
     """
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
-                                            key_file = os.getenv('X509_USER_PROXY'))
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_CERT'),
+                                            key_file = os.getenv('X509_USER_KEY'))
     r1=conn.request("GET",request)
     r2=conn.getresponse()
     request = json.loads(r2.read())  
     #try until no exception
     while 'exception' in request and retries > 0:
-        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
-                                                key_file = os.getenv('X509_USER_PROXY'))
+        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_CERT'),
+                                                key_file = os.getenv('X509_USER_KEY'))
         r1=conn.request("GET",request)
         r2=conn.getresponse()
         request = json.loads(r2.read())
@@ -267,8 +267,8 @@ def requestManagerPost(url, request, params, head = def_headers):
     request: the request suffix url for the POST method
     params: a dict with the POST parameters
     """
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
-                                    key_file = os.getenv('X509_USER_PROXY'))
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_CERT'),
+                                    key_file = os.getenv('X509_USER_KEY'))
     headers = head
     encodedParams = urllib.urlencode(params)
     conn.request("POST", request, encodedParams, headers)
@@ -286,8 +286,8 @@ def requestManagerPut(url, request, params, head = def_headers):
     params: a dict with the PUT parameters
     head: optional headers param. If not given it takes default value (def_headers)
     """
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
-                                    key_file = os.getenv('X509_USER_PROXY'))
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_CERT'),
+                                    key_file = os.getenv('X509_USER_KEY'))
     headers = head
     encodedParams = urllib.urlencode(params)
     conn.request("PUT", request, encodedParams, headers)
@@ -300,16 +300,16 @@ def getWorkflowWorkload(url, workflow):
     """
     Gets the workflow loaded, splitted by lines.
     """
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
-                                            key_file = os.getenv('X509_USER_PROXY'))
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_CERT'),
+                                            key_file = os.getenv('X509_USER_KEY'))
     request = '/reqmgr/view/showWorkload?requestName=' + workflow
     r1=conn.request("GET",request)
     r2=conn.getresponse()
     data = r2.read()
     #try until no exception
     while 'exception' in request and retries > 0:
-        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
-                                                key_file = os.getenv('X509_USER_PROXY'))
+        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_CERT'),
+                                                key_file = os.getenv('X509_USER_KEY'))
         r1=conn.request("GET",request)
         r2=conn.getresponse()
         data = r2.read()

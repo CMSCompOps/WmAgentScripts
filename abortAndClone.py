@@ -25,16 +25,17 @@ def main():
     Read the text file, for each workflow try:
     First abort it, then clone it.
     """
-    args=sys.argv[1:]
-    if not len(args)==3:
-        print "usage:abortAndClone file.txt user group"
-        sys.exit(0)
-    filename = args[0]
-    user = args[1]
-    group = args[2]
-
-    #reading workflow list
-    workflows = [wf.strip() for wf in open(filename).readlines() if wf.strip()]
+#     args=sys.argv[1:]
+#     if not len(args)==3:
+#         print "usage:abortAndClone file.txt user group"
+#         sys.exit(0)
+#     filename = args[0]
+#     user = args[1]
+#     group = args[2]
+# 
+#     #reading workflow list
+#     workflows = [wf.strip() for wf in open(filename).readlines() if wf.strip()]
+    workflows = ["fanzago_B2G-RunIIFall15DR76-Backfill-00733_00334_v0__160129_111409_1778"]
     for workflow in workflows:
         #abort workflow
         print "Aborting workflow: " + workflow
@@ -50,7 +51,7 @@ def main():
             dbs3.setStatusDBS3(dbs3_url, dataset, 'INVALID', None)
 
         #clone workflow
-        clone = resubmit.cloneWorkflow(workflow, user, group)
+        clone = resubmit.cloneWorkflow(workflow, "sryu", "DataOps")
         print "Cloned workflow: ",   clone
     sys.exit(0);
 
