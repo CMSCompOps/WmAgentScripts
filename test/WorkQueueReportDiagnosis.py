@@ -30,7 +30,6 @@ queueParams['central_logdb_url'] = LOG_DB_URL
 queueParams['log_reporter'] = LOG_REPORTER
 
 import pdb
-pdb.set
 gq = globalQueue(**queueParams)
 elements = gq.statusInbox(dictKey = "RequestName")
 
