@@ -564,6 +564,8 @@ class componentInfo:
                 if self.block and not (self.soft and 'dbs' in self.soft):
                     self.code = 126
                     return False
+            else:
+                self.status['dbs'] = True
 
         except Exception as e:
             self.tell('dbs')
@@ -572,11 +574,10 @@ class componentInfo:
             if self.block and not (self.soft and 'dbs' in self.soft):
                 self.code = 127
                 return False
-
         try:
             print "checking phedex"
             cust = findCustodialLocation('cmsweb.cern.ch','/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM')
-            
+            self.status['phedex'] = True            
         except Exception as e:
             self.tell('phedex')
             print "phedex unreachable"
@@ -585,6 +586,8 @@ class componentInfo:
                 self.code = 128
                 return False
 
+
+        print json.dumps( self.status, indent=2)
         return True
 
     def tell(self, c):
@@ -931,9 +934,8 @@ class siteInfo:
             self.all_sites = []
             
             self.sites_banned = [
-                #'T2_CH_CERN_HLT',
                 'T2_CH_CERN_AI',
-                'T0_CH_CERN_MSS',
+                'T2_US_Vanderbilt'
                 ]
 
             data = dataCache.get('ssb_158') ## 158 is the site readyness metric
@@ -966,7 +968,7 @@ class siteInfo:
                                    "T2_IT_Bari", "T2_IT_Legnaro", "T2_IT_Pisa", "T2_IT_Rome",
                                    "T2_UK_London_Brunel", "T2_UK_London_IC", 
                                    ##"T2_UK_SGrid_RALPP",
-                                   "T2_US_Caltech","T2_US_MIT","T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida","T2_US_Vanderbilt",
+                                   "T2_US_Caltech","T2_US_MIT","T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida",#"T2_US_Vanderbilt",
                                    "T2_BE_IIHE",
                                    "T2_EE_Estonia",
                                    "T2_PL_Swierk",
@@ -1839,7 +1841,7 @@ def findCustodialLocation(url, dataset, with_completion=False):
         more_information['missing'] = list(blocks - cust_blocks)
         if len(cust_blocks)!=0:
             print json.dumps(list(blocks - cust_blocks), indent=2)
-        r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset=%s&node=T1*MSS'%dataset)
+        r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset=%s&node=T*MSS'%dataset)
         r2=conn.getresponse()
         result = json.loads(r2.read())
         request=result['phedex']['request']
@@ -2493,13 +2495,20 @@ def makeReplicaRequest(url, site,datasets, comments, priority='normal',custodial
     response = phedexPost(url, "/phedex/datasvc/json/prod/subscribe", params)
     return response
 
-def updateSubscription(url, site, item, priority=None, user_group=None):
+def updateSubscription(url, site, item, priority=None, user_group=None, suspend=None):
     params = { "node" : site }
-    params['block' if '#' in item else 'dataset'] = item
+    if '#' in item:
+        params['block'] = item.replace('#','%23')
+    else:
+        params['dataset'] = item
+        
+    #params['block' if '#' in item else 'dataset'] = item
     if priority:   params['priority'] = priority
     if user_group: params['user_group'] = user_group
+    if suspend!=None: params['suspend_until']  = suspend
     response = phedexPost(url, "/phedex/datasvc/json/prod/updatesubscription", params) 
-    print response
+    #print response
+    return response
 
 def getWorkLoad(url, wf ):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -2690,6 +2699,56 @@ class workflowInfo:
         if wq:
             self.getWorkQueue()
 
+        self.summary = None
+        self.logs = defaultdict(str)
+
+    def notifyRequestor(self, message, do_request=True, do_batch=True, mcm=None):
+        if not message: return
+        try:
+            
+            if mcm == None: 
+                from McMClient import McMClient
+                mcm = McMClient(dev=False)
+            pids = self.getPrepIDs()
+            wf_name = self.request['RequestName']
+            items_notified = set()
+            for pid in set(pids):
+                replacements = {'PREPID': pid}
+                dedicated_message = message
+                for src,dest in replacements.items():
+                    dedicated_message = dedicated_message.replace(src, dest)
+                batches = mcm.getA('batches',query='contains=%s'%wf_name)
+                batches = filter(lambda b : b['status'] in ['announced','done','reset'], batches)
+                if not batches:  
+                    batches = mcm.getA('batches',query='contains=%s'%pid)
+                    batches = filter(lambda b : b['status'] in ['announced','done','reset'], batches)  
+                if batches:
+                    bid = batches[0]['prepid']
+                    print "batch nofication to",bid 
+                    if not bid in items_notified: 
+                        mcm.put('/restapi/batches/notify', { "notes" : dedicated_message, "prepid" : bid})
+                        items_notified.add( bid )
+                if not pid in items_notified:
+                    print "request notification to",pid
+                    mcm.put('/restapi/requests/notify',{ "message" : dedicated_message, "prepids" : [pid] })
+                    items_notified.add( pid )
+        except Exception as e:
+            print "could not notify back to requestor"
+            print str(e)
+
+    def sendLog( self, subject, text, show=True):
+        if show:
+            print text ## to avoid having to duplicate it
+        self.logs[subject] += '\n'+text
+        
+    def __del__(self):
+        self.flushLog()
+
+    def flushLog(self):
+        ## flush the logs
+        for sub,text in self.logs.items():
+            sendLog(sub, text, wfi = self, show=False)
+
     def get_spec(self):
         if not self.full_spec:
             r1=self.conn.request("GET",'/couchdb/reqmgr_workload_cache/%s/spec'%self.request['RequestName'])
@@ -2748,12 +2807,91 @@ class workflowInfo:
         return dict( active_agents )
 
     def getSummary(self):
+        if self.summary:
+            return self.summary
+
         self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         r1=self.conn.request("GET",'/couchdb/workloadsummary/'+self.request['RequestName'], headers={"Accept":"application/json"} )
         r2=self.conn.getresponse()
 
         self.summary = json.loads(r2.read())
         return self.summary
+
+
+    def getErrors(self):
+        all_errors = {}
+        summary = self.getSummary()
+        if summary and 'errors' in summary:
+            all_errors = summary['errors']
+            for task,errors in all_errors.items():
+                print "\tTask",task 
+                ## filtering of tasks we do not care about
+                if 'Clean' in task: continue
+                all_codes = []
+                for name, codes in errors.items():
+                    if type(codes)==int: continue
+                    all_codes.extend( [(int(code),info['jobs'],name,list(set([e['type'] for e in info['errors']])),list(set([e['details'] for e in info['errors']])) ) for code,info in codes.items()] )
+
+                all_codes.sort(key=lambda i:i[1], reverse=True)
+                sum_failed = sum([l[1] for l in all_codes])
+                for errorCode,njobs,name,types,details in all_codes:
+                    rate = 100*njobs/float(sum_failed)
+                    #print ("\t\t %10d (%6s%%) failures with error code %10d (%"+str(max_legend)+"s) at stage %s")%(njobs, "%4.2f"%rate, errorCode, legend, name)                                                                                
+                    print ("\t\t %10d (%6s%%) failures with error code %10d (%30s) at stage %s")%(njobs, "%4.2f"%rate, errorCode, ','.join(types), name)
+                    
+                    added_in_recover=False
+                    if errorCode in error_codes_to_recover:
+                        ## the error code is registered                                                                                                                                                                                     
+                        for case in error_codes_to_recover[errorCode]:
+                            match = case['details']
+                            matched= (match==None)
+                            if not matched:
+                                matched=False
+                                for detail in details:
+                                    if match in detail:
+                                        print "[recover] Could find keyword",match,"in"
+                                        print 50*"#"
+                                        print detail
+                                        print 50*"#"
+                                        matched = True
+                                        break
+                            if matched and rate > case['rate']:
+                                print "\t\t => we should be able to recover that", case['legend']
+                                task_to_recover[task].append( (code,case) )
+                                added_in_recover=True
+                                message_to_user = ""
+                            else:
+                                print "\t\t recoverable but not frequent enough, needs",case['rate']
+
+                    if errorCode in error_codes_to_block:
+                        for case in error_codes_to_block[errorCode]:
+                            match = case['details']
+                            matched= (match==None)
+                            if not matched:
+                                matched=False
+                                for detail in details:
+                                    if match in detail:
+                                        print "[block] Could find keyword",match,"in"
+                                        print 50*"#"
+                                        print detail
+                                        print 50*"#"
+                                        matched = True
+                                        break
+                            if matched and rate > case['rate']:
+                                print "\t\t => that error means no ACDC on that workflow", case['legend']
+                                if not options.go:
+                                    message_to_ops += "%s has an error %s blocking an ACDC.\n%s\n "%( wfo.name, errorCode, '#'*50 )
+                                    recover = False
+                                    added_in_recover=False
+                                
+                    if errorCode in error_codes_to_notify and not added_in_recover:
+                        print "\t\t => we should notify people on this"
+                        message_to_user += "%s has an error %s in processing.\n%s\n" %( wfo.name, errorCode, '#'*50 )
+
+
+        else:
+            return None
+
 
     def getGlideMon(self):
         try:
@@ -2960,6 +3098,7 @@ class workflowInfo:
                 print "Using site whitelist restriction by campaign configuration"
             sites_allowed = list(set(sites_allowed) & set(c_sites_allowed))
         c_black_list = CI.get(self.request['Campaign'], 'SiteBlacklist', [])
+        c_black_list.extend( CI.parameters(self.request['Campaign']).get('SiteBlacklist', []))
         if c_black_list:
             if verbose:
                 print "Reducing the whitelist due to black list in campaign configuration"
@@ -3116,7 +3255,31 @@ class workflowInfo:
             if 'LumiWhitelist' in self.request:
                 lwl.extend(eval(self.request['LumiWhitelist']))
         return lwl
+    def getRunWhiteList(self):
+        lwl=[]
+        if self.request['RequestType'] == 'TaskChain':
+            lwl_t = self._collectintaskchain('RunWhitelist')
+            for task in lwl_t:
+                lwl.extend(eval(lwl_t[task]))
+        else:
+            if 'RunWhitelist' in self.request:
+                lwl.extend(eval(self.request['RunWhitelist']))
+        return lwl
 
+    def getBlocks(self):
+        blocks = set()
+        (_,primary,_,_) = self.getIO()
+
+        blocks.update( self.getBlockWhitelist() )
+        run_list = self.getRunWhiteList()
+        if run_list:
+            for dataset in primary:
+                blocks.update( getDatasetBlocks( dataset, runs=run_list ) )
+        lumi_list = self.getLumiWhiteList()
+        if lumi_list:
+            for dataset in primary:
+                blocks.update( getDatasetBlocks( dataset, lumis= self.request['LumiList'] ) )
+        return list( blocks )
     def getIO(self):
         lhe=False
         primary=set()
