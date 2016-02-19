@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput, workflowInfo, getDatasetBlocksFraction, findLostBlocks, findLostBlocksFiles, getDatasetBlockFraction, getDatasetFileFraction, getDatasetPresence
-from utils import unifiedConfiguration, componentInfo, sendEmail, getSiteWhiteList, checkTransferLag
+from utils import unifiedConfiguration, componentInfo, sendEmail, getSiteWhiteList, checkTransferLag, sendLog
 from utils import siteInfo, campaignInfo, global_SI
 import json
 import sys
@@ -56,17 +56,20 @@ def stagor(url,specific =None, options=None):
     for wfo in session.query(Workflow).filter(Workflow.status == 'staging').all():
         wfi = workflowInfo(url, wfo.name)
         if wfi.request['RequestStatus'] in ['running-open','running-closed','completed']:
-            print wfo.name,"is",wfi.request['RequestStatus']
+            wfi.sendLog('stagor', "is in status %s"%wfi.request['RequestStatus'])
             wfi.status='away'
             session.commit()
             continue
-
+        if not wfi.request['RequestStatus'] in ['assignment-approved']:
+            ## should be setting 'away' too
+            print wfo.name,"is",wfi.request['RequestStatus']
+            sendEmail("wrong status in staging. debug","%s is in %s, should set away."(wfo.name,wfi.request['RequestStatus']))
         wfois.append( (wfo,wfi) )            
         _,primaries,_,secondaries = wfi.getIO()
         for dataset in list(primaries)+list(secondaries):
             done_by_input[dataset] = {}
             completion_by_input[dataset] = {}
-            print wfo.name,"needs",dataset
+            wfi.sendLog('stagor', '%s needs %s'%( wfo.name, dataset))
 
     ## phedexid are set negative when not relevant anymore
     # probably there is a db schema that would allow much faster and simpler query
@@ -78,11 +81,11 @@ def stagor(url,specific =None, options=None):
             tr_wf = session.query(Workflow).get(wfid)
             if tr_wf: 
                 if tr_wf.status == 'staging':
-                    print "\t",transfer.phedexid,"is staging for",tr_wf.name
+                    sendLog('stagor',"\t%s is staging for %s"%(transfer.phedexid, tr_wf.name))
                     skip=False
 
         if skip: 
-            print "setting",transfer.phedexid,"to negative value"
+            sendLog('stagor',"setting %s to negative value"%transfer.phedexid)
             transfer.phedexid = -transfer.phedexid
             session.commit()
             continue
@@ -92,14 +95,14 @@ def stagor(url,specific =None, options=None):
         checks = checkTransferApproval(url,  transfer.phedexid)
         approved = all(checks.values())
         if not approved:
-            print transfer.phedexid,"is not yet approved"
+            sendLog('stagor', "%s is not yet approved"%transfer.phedexid)
             approveSubscription(url, transfer.phedexid)
             continue
 
         ## check on transfer completion
         if str(transfer.phedexid) in cached_transfer_statuses:
             ### use a cache for transfer that already looked done
-            print "read",transfer.phedexid,"from cache"
+            sendLog('stagor',"read %s from cache"%transfer.phedexid)
             checks = cached_transfer_statuses[str(transfer.phedexid)]
         else:
             checks = checkTransferStatus(url, transfer.phedexid, nocollapse=True)
@@ -111,7 +114,7 @@ def stagor(url,specific =None, options=None):
                 done_by_input[dsname][transfer.phedexid]=all(map(lambda i:i>=good_enough, checks[dsname].values()))
                 completion_by_input[dsname][transfer.phedexid]=checks[dsname].values()
         if checks:
-            print "Checks for",transfer.phedexid,[node.values() for node in checks.values()]
+            sendLog('stagor',"Checks for %s are %s"%( transfer.phedexid, [node.values() for node in checks.values()]))
             done = all(map(lambda i:i>=good_enough,list(itertools.chain.from_iterable([node.values() for node in checks.values()]))))
         else:
             ## it is empty, is that a sign that all is done and away ?
@@ -133,10 +136,10 @@ def stagor(url,specific =None, options=None):
 
         if done:
             ## transfer.status = 'done'
-            print transfer.phedexid,"is done"
+            sendLog('stagor',"%s is done"%transfer.phedexid)
             cached_transfer_statuses[str(transfer.phedexid)] = copy.deepcopy(checks)
         else:
-            print transfer.phedexid,"not finished"
+            sendLog('stagor',"%s is not finished %s"%(transfer.phedexid, pprint.pformat( checks )))
             pprint.pprint( checks )
 
 
@@ -166,7 +169,7 @@ def stagor(url,specific =None, options=None):
         readys={}
         for need in list(primaries)+list(secondaries):
             if not need in done_by_input:
-                print "no report for",need
+                wfi.sendLog('stagor',"missing transfer report for %s"%need)
                 readys[need] = False      
                 ## should warn someone about this !!!
                 ## it cannot happen, by construction
@@ -174,53 +177,59 @@ def stagor(url,specific =None, options=None):
                 continue
 
             if not done_by_input[need] and need in list(secondaries):
-                print "\t assuming it is OK for secondary",need,"to have no attached transfers"
+                wfi.sendLog('stagor',"assuming it is OK for secondary %s to have no attached transfers"% need)
                 readys[need] = True
                 done_by_input[need] = { "fake" : True }
                 continue
 
             if len(done_by_input[need]) and all(done_by_input[need].values()):
-                print need,"is ready for",wfo.name
+                wfi.sendLog('stagor',"%s is ready"%need)
                 print json.dumps( done_by_input[need] , indent=2)
                 readys[need] = True
             else:
-                print need,"isn't ready"
+                wfi.sendLog('stagor',"%s is not ready"%need)
                 print json.dumps( done_by_input[need] , indent=2)
                 readys[need] = False
 
         if readys and all(readys.values()):
             if wfo.status == 'staging':
-                print "all needs for",wfo.name,"are fullfilled, setting staged"
+                wfi.sendLog('stagor',"all needs are fullfilled, setting staged")
                 wfo.status = 'staged'
                 session.commit()
             else:
-                print "all needs for",wfo.name,"are fullfilled, already ",wfo.status
+                wfi.sendLog('stagor',"all needs are fullfilled, already")
                 print json.dumps( readys, indent=2 )
         else:
-            print "missing requirements for",wfo.name
+            wfi.sendLog('stagor',"missing requirements")
             copies_needed,_ = wfi.getNCopies()
             jump_ahead = False
+            re_transfer = False
             ## there is missing input let's do something more elaborated
             for need in list(primaries):#+list(secondaries):
+                if endpoint_in_downtime[need] == endpoint_incompleted[need]:
+                    #print need,"is going to an end point in downtime"
+                    wfi.sendLog('stagor',"%s has only incomplete endpoint in downtime"%need)
+                    re_transfer=True
+
                 if not se_allowed_key in available_cache[need]:
                     available_cache[need][se_allowed_key]  = getDatasetBlocksFraction( url , need, sites=se_allowed )
                     if available_cache[need][se_allowed_key] >= copies_needed:
-                        print "assuming it is OK to move on like this already for",need
+                        wfi.sendLog('stagor',"assuming it is OK to move on like this already for %s"%need)
                         jump_ahead = True
 
             ## compute a time since staging to filter jump starting ?                    
             # check whether the inputs is already in the stuck list ...
             for need in list(primaries)+list(secondaries):
                 if need in already_stuck: 
-                    print need,"is stuck, so try to jump ahead"
+                    wfi.sendLog('stagor',"%s is stuck, so try to jump ahead"%need)
                     jump_ahead = True
                     
-            if jump_ahead:
-                print "checking on availability for",wfo.name,"to jump ahead"
-                print wfo.name,"wants",copies_needed,"copies"
+            if jump_ahead or re_transfer:
+                details_text = "checking on availability for %s to jump ahead"%wfo.name
+                details_text += '\n%s wants %s copies'%(wfo.name,copies_needed)
                 copies_needed = max(1,copies_needed-1)
-                print wfo.name,"lowering by one unit to",copies_needed
-
+                details_text += '\nlowering by one unit to %s'%copies_needed
+                wfi.sendLog('stagor', details_text)
                 all_check = True
                 
                 prim_where = set()
@@ -231,14 +240,14 @@ def stagor(url,specific =None, options=None):
                     prim_where.update( presence.keys() )
                     available = available_cache[need][se_allowed_key]
                     this_check = (available >= copies_needed)
-                    print need,"is available",available,"times:",this_check
+                    wfi.sendLog('stagor', "%s is available %s times %s"%( need, available, this_check))
                     all_check &= this_check
                     if not all_check: break
 
                 for need in list(secondaries):
                     ## I do not want to check on the secon
                     this_check = all(done_by_input[need].values())
-                    print need,"is all trasnfered",json.dumps(done_by_input[need], indent=2)
+                    wfi.sendLog('stagor',"%s is all transfered %s"%(need, json.dumps(done_by_input[need], indent=2)))
                     all_check&= this_check
                     #if not se_allowed_key in presence_cache[need]:
                     #    presence_cache[need][se_allowed_key] = getDatasetPresence( url, need , within_sites=se_allowed)
@@ -250,14 +259,25 @@ def stagor(url,specific =None, options=None):
                     #all_check&= this_check
 
                 if all_check:    
-                    print "needs for",wfo.name,"are sufficiently fullfilled, setting staged"
+                    wfi.sendLog('stagor',"needs are sufficiently fullfilled, setting staged")
                     wfo.status = 'staged'
                     session.commit()
                 else:
                     print wfo.name,"has to wait a bit more"
+                    wfi.sendLog('stagor',"needs to wait a bit more")
             else:
-                print "not checking on availability for",wfo.name
+                wfi.sendLog('stagor',"not checking availability")
+            if re_transfer:
+                wfi.sendLog('stagor',"Sending back to considered because of endpoint in downtime")
+                if wfo.status == 'staging':
+                    wfo.status = 'considered'
+                    session.commit()
+                    send_back_to_considered.add( wfo.name )
 
+
+
+    if send_back_to_considered:
+        sendEmail("transfer to endpoint in downtime","sending back to considered the following workflows \n%s"%('\n'.join( send_back_to_considered)))
 
     print "-"*10,"Checking on non-available datasets","-"*10    
     ## now check on those that are not fully available

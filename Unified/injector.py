@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, getWorkflowById, getWorkLoad, componentInfo, sendEmail, workflowInfo
+from utils import getWorkflows, getWorkflowById, getWorkLoad, componentInfo, sendEmail, workflowInfo, sendLog
 import sys
 import copy
 from htmlor import htmlor
@@ -50,11 +50,12 @@ def injector(url, options, specific):
                 if lwfo:
                     ## we have it already
                     if not lwfo.status in ['forget','trouble','forget-unlock','forget-out-unlock']:
+                        sendLog('injector',"Should not put %s because of %s %s"%( wf, lwfo.name,lwfo.status ))
                         print "Should not put",wf,"because of",lwfo.name,lwfo.status
                         cannot_inject.add( wf )
                         can_add = False
             if not can_add: continue
-            print "putting",wf
+            wfi.sendLog('injector',"considering %s"%wf)
             new_wf = Workflow( name = wf , status = options.setstatus, wm_status = options.wmstatus) 
             session.add( new_wf )
             session.commit()
@@ -93,7 +94,7 @@ def injector(url, options, specific):
             true_familly.append( fwl )
 
         if len(true_familly)==0:
-            print wf.name,"ERROR has no replacement"
+            sendLog('injector','%s had no replacement'%wf.name)
             no_replacement.add( wf.name )
             continue
         print wf.name,"has",len(familly),"familly members"
@@ -103,7 +104,7 @@ def injector(url, options, specific):
             member = fwl['RequestName']
             new_wf = session.query(Workflow).filter(Workflow.name == member).first()
             if not new_wf:
-                print "putting",member,"as replacement of",wf.name
+                sendLog('injector',"putting %s as replacement of %s"%( member, wf.name))
                 status = 'away'
                 if fwl['RequestStatus'] in ['assignment-approved']:
                     status = 'considered'
@@ -112,7 +113,7 @@ def injector(url, options, specific):
                 session.add( new_wf ) 
             else:
                 if new_wf.status == 'forget': continue
-                print "getting",new_wf.name,"as replacement of",wf.name
+                sendLog('injector',"getting %s as replacement of %s"%( new_wf.name, wf.name ))
                 wf.status = 'forget'
 
             for tr in session.query(Transfer).all():

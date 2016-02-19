@@ -26,6 +26,94 @@ FORMAT = "%(module)s.%(funcName)s(%(lineno)s) => %(message)s (%(asctime)s)"
 DATEFMT = "%Y-%m-%d %H:%M:%S"
 logging.basicConfig(format = FORMAT, datefmt = DATEFMT, level=logging.DEBUG)
 
+def sendLog( subject, text , wfi = None, show=True):
+    try:
+        try_sendLog( subject, text , wfi, show)
+    except Exception as e:
+        print "failed to send log to elastic search"
+        print str(e)
+
+def searchLog( q ):
+    conn = httplib.HTTPConnection( 'cms-elastic-fe.cern.ch:9200' )
+    goodquery={
+        "query": {
+            "bool": {
+                "must": [
+                    {
+                        "wildcard": {
+                            "meta": "*%s*"%q
+                            }
+                        },
+                    #{
+                        #"term": {
+                        #    "subject": "assignor"
+                        #    }
+                    #    }
+                    ]
+                }
+            },
+        "sort": [
+            {
+                "timestamp": "asc"
+                }
+            ],
+        "_source": [
+            "text",
+            "subject",
+            "date"
+            ]
+        }
+    conn.request("POST" , '/logs/_search?size=100', json.dumps(goodquery))
+    ## not it's just a matter of sending that query to ES.
+    #lq = q.replace(':', '\:').replace('-','\\-')
+    #conn.request("GET" , '/logs/_search?q=text:%s'% lq)
+
+    response = conn.getresponse()
+    data = response.read()
+    o = json.loads( data )
+    print o['hits']['total']
+    return o['hits']['hits']
+
+def try_sendLog( subject, text , wfi = None, show=True):
+    #import pdb
+    #pdb.set_trace()
+    conn = httplib.HTTPConnection( 'cms-elastic-fe.cern.ch:9200' )    
+
+    meta_text=""
+    if wfi:
+        ## add a few markers automatically
+        meta_text += '\n\n'+'\n'.join(map(lambda i : 'id: %s'%i, wfi.getPrepIDs()))
+        _,prim,_,sec = wfi.getIO()
+        if prim:
+            meta_text += '\n\n'+'\n'.join(map(lambda i : 'in:%s'%i, prim))
+        if sec:
+            meta_text += '\n\n'+'\n'.join(map(lambda i : 'pu:%s'%i, sec))
+        out = filter(lambda d : not any([c in d for c in ['FAKE','None']]),wfi.request['OutputDatasets'])
+        if out:
+            meta_text += '\n\n'+'\n'.join(map(lambda i : 'out:%s'%i, out))
+        meta_text += '\n\n'+wfi.request['RequestName']
+
+    now_ = time.gmtime()
+    now = time.mktime( now_ )
+    now_d = time.asctime( now_ )
+    doc = {"author" : os.getenv('USER'),
+           "subject" : subject,
+           "text" : text ,
+           "meta" : meta_text,
+           "timestamp" : now,
+           "date" : now_d}
+
+    encodedParams = urllib.urlencode( doc )
+    conn.request("POST" , '/logs/log/', json.dumps(doc)) 
+    response = conn.getresponse()
+    data = response.read()
+    try:
+        res = json.loads( data ) 
+        print 'log:',res['_id'],"was created"
+    except Exception as e:
+        print "failed"
+        print str(e)
+        pass
 
 def sendEmail( subject, text, sender=None, destination=None ):
     #print subject

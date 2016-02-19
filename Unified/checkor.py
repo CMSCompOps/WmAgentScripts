@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, makeReplicaRequest, global_SI, getDatasetSize, getDatasetFiles
+from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, makeReplicaRequest, global_SI, getDatasetSize, getDatasetFiles, sendLog
 from utils import componentInfo, unifiedConfiguration, userLock, duplicateLock
 import phedexClient
 import dbs3Client
@@ -40,6 +40,7 @@ def checkor(url, spec=None, options=None):
                     wfs.append( wfo )
                 else:
                     print wfo.name,"is not completed"
+                    sendLog('checkor','%s is not completed'%( wfo.name))
         else:
             wfs.extend( session.query(Workflow).filter(Workflow.status == 'away').all() )
 
@@ -74,22 +75,22 @@ def checkor(url, spec=None, options=None):
     for bypassor,email in [('vlimant','vlimant@cern.ch'),('jen_a','jen_a@fnal.gov')]:
         bypass_file = '/afs/cern.ch/user/%s/%s/public/ops/bypass.json'%(bypassor[0],bypassor)
         if not os.path.isfile(bypass_file):
-            print "no file",bypass_file
+            #sendLog('checkor','no file %s',bypass_file)
             continue
         try:
             bypasses.extend( json.loads(open(bypass_file).read()))
         except:
-            print "cannot get by-passes from",bypass_file,"for",bypassor
+            sendLog('checkor',"cannot get by-passes from %s for %s"%(bypass_file ,bypassor))
             sendEmail("malformated by-pass information","%s is not json readable"%(bypass_file), destination=[email])
         
         holding_file = '/afs/cern.ch/user/%s/%s/public/ops/onhold.json'%(bypassor[0],bypassor)
         if not os.path.isfile(holding_file):
-            print "no file",holding_file
+            #sendLog('checkor',"no file %s"%holding_file)
             continue
         try:
             holdings.extend( json.loads(open(holding_file).read()))
         except:
-            print "cannot get holdings from",holding_file,"for",bypassor
+            sendLog('checkor',"cannot get holdings from %s for %s"%(holding_file, bypassor))
             sendEmail("malformated by-pass information","%s is not json readable"%(holding_file), destination=[email])
 
     pattern_fraction_pass = UC.get('pattern_fraction_pass')
@@ -102,17 +103,16 @@ def checkor(url, spec=None, options=None):
     for wfo in wfs:
         if spec and not (spec in wfo.name): continue
         time.sleep( sleep_time )
-        print "checking on",wfo.name,wfo.status
         
         ## get info
         wfi = workflowInfo(url, wfo.name)
-
+        wfi.sendLog('checkor',"checking on %s %s"%( wfo.name,wfo.status))
         ## make sure the wm status is up to date.
         # and send things back/forward if necessary.
         wfo.wm_status = wfi.request['RequestStatus']
         if wfo.wm_status == 'closed-out':
             ## manually closed-out
-            print wfo.name,"is already",wfo.wm_status
+            wfi.sendLog('checkor',"%s is already %s, setting close"%( wfo.name , wfo.wm_status))
             wfo.status = 'close'
             session.commit()
             continue
@@ -120,29 +120,29 @@ def checkor(url, spec=None, options=None):
         elif wfo.wm_status in ['failed','aborted','aborted-archived','rejected','rejected-archived','aborted-completed']:
             ## went into trouble
             wfo.status = 'trouble'
-            print wfo.name,"is in trouble",wfo.wm_status
+            wfi.sendLog('checkor',"%s is in trouble %s"%(wfo.name, wfo.wm_status))
             session.commit()
             continue
         elif wfo.wm_status in ['assigned','acquired']:
             ## not worth checking yet
-            print wfo.name,"not running yet"
+            wfi.sendLog('checkor',"%s is not running yet"%wfo.name)
             session.commit()
             continue
         
         if '-onhold' in wfo.status:
             if wfo.name in holdings and wfo.name not in bypasses:
-                print wfo.name,"on hold"
+                wfi.sendLog('checkor',"%s is on hold"%wfo.name)
                 continue
-
-        if wfo.name in holdings and wfo.name not in bypasses:
-            wfo.status = 'assistance-onhold'
-            print "setting",wfo.name,"on hold"
-            session.commit()
-            continue
 
         if wfo.wm_status != 'completed' and not wfo.name in bypasses:
             ## for sure move on with closeout check if in completed
-            print "no need to check on",wfo.name,"in status",wfo.wm_status
+            wfi.sendLog('checkor',"no need to check on %s in status %s"%(wfo.name, wfo.wm_status))
+            session.commit()
+            continue
+
+        if wfo.name in holdings and wfo.name not in bypasses:
+            wfo.status = 'assistance-onhold'
+            wfi.sendLog('checkor',"setting % on hold"%wfo.name)
             session.commit()
             continue
 
@@ -155,17 +155,15 @@ def checkor(url, spec=None, options=None):
 
         ## get it from somewhere
         bypass_checks = False
-        if wfo.name in bypasses:
-            print "we can bypass checks on",wfo.name
-            bypass_checks = True
         for bypass in bypasses:
             if bypass in wfo.name:
-                print "we can bypass",wfo.name,"because of keyword",bypass
+                wfi.sendLog('checkor',"we can bypass checks on %s because of keyword%s "%( wfo.name, bypass))
                 bypass_checks = True
                 break
         
         if not CI.go( wfi.request['Campaign'] ) and not bypass_checks:
             print "No go for",wfo.name
+            wfi.sendLog('checkor',"No go for %s"%wfi.request['Campaign'])
             continue
 
 
@@ -180,11 +178,13 @@ def checkor(url, spec=None, options=None):
                 ## add those that we need to check for custodial copy
                 tiers_with_no_check = list(set(tiers_with_no_check) - set(CI.campaigns[c]['custodial_override'])) ## would remove DQM from the vetoed check
 
-        print "Initial outputs:",",".join( wfi.request['OutputDatasets'] )
+        check_output_text = "Initial outputs:"+",".join(sorted(wfi.request['OutputDatasets'] ))
         wfi.request['OutputDatasets'] = [ out for out in wfi.request['OutputDatasets'] if not any([out.split('/')[-1] == veto_tier for veto_tier in tiers_with_no_check])]
-        print "Will check on:",",".join( wfi.request['OutputDatasets'] )
-        print "tiers out:",",".join( tiers_with_no_check )
-        print "tiers no custodial:",",".join( vetoed_custodial_tier )
+        check_output_text += "\nWill check on:"+",".join(sorted(wfi.request['OutputDatasets'] ))
+        check_output_text += "\ntiers out:"+",".join( sorted(tiers_with_no_check ))
+        check_output_text += "\ntiers no custodial:"+",".join( sorted(vetoed_custodial_tier) )
+
+        wfi.sendLog('checkor', check_output_text )
 
         ## anything running on acdc : getting the real prepid is not worth it
         familly = getWorkflowById(url, wfi.request['PrepID'], details=True)
@@ -233,14 +233,14 @@ def checkor(url, spec=None, options=None):
             if lumi_expected:
                 percent_completions[output] = lumi_count / float( lumi_expected )
             if event_expected:
-                print "event completion", event_count, event_expected
+                wfi.sendLog('checkor', "event completion real %s expected %s"%(event_count, event_expected ))
                 percent_completions[output] = max(percent_completions[output], float(event_count) / float( event_expected ) )
 
             fractions_pass[output] = 0.95
             c = campaigns[output]
             if c in CI.campaigns and 'fractionpass' in CI.campaigns[c]:
                 fractions_pass[output] = CI.campaigns[c]['fractionpass']
-                print "overriding fraction to",fractions_pass[output],"for",output,"by campaign requirement"
+                wfi.sendLog('checkor', "overriding fraction to %s for %s by campaign requirement"%( fractions_pass[output], output))
 
             if options.fractionpass:
                 fractions_pass[output] = options.fractionpass
@@ -441,10 +441,10 @@ def checkor(url, spec=None, options=None):
                 for out in dbs_presence:
                     _,_,missing_phedex,missing_dbs  = getDatasetFiles(url, out)
                     if missing_phedex:
-                        print "These files are missing in phedex"
+                        print "These %d files are missing in phedex"%(len(missing_phedex))
                         print "\n".join( missing_phedex )
                     if missing_dbs:
-                        print "These files are missing in dbs"
+                        print "These %d files are missing in dbs"%(len(missing_dbs))
                         print "\n".join( missing_dbs )
 
             #if not bypass_checks:
@@ -566,6 +566,7 @@ def checkor(url, spec=None, options=None):
             if 'recovery' in assistance_tags and 'recovered' in assistance_tags:
                 ## should not set -recovery to anything that add ACDC already
                 assistance_tags = assistance_tags - set(['recovery','recovered']) 
+                ## straight to manual
                 assistance_tags.add('manual')
 
 

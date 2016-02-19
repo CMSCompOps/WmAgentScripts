@@ -3,7 +3,7 @@ from assignSession import *
 import reqMgrClient
 from utils import workflowInfo, campaignInfo, siteInfo, userLock, global_SI, unifiedConfiguration
 from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction, getDatasetEventsPerLumi, newLockInfo, getLFNbase, getDatasetBlocks
-from utils import componentInfo, sendEmail
+from utils import componentInfo, sendEmail, sendLog
 #from utils import lockInfo
 from utils import duplicateLock, notRunningBefore
 import optparse
@@ -52,20 +52,21 @@ def assignor(url ,specific = None, talk=True, options=None):
         if specific:
             if not any(map(lambda sp: sp in wfo.name,specific.split(','))): continue
             #if not specific in wfo.name: continue
-        print "\n\n",wfo.name,"\n\tto be assigned"
+        print "\n\n"
         wfh = workflowInfo( url, wfo.name)
+        wfh.sendLog('assignor',"%s to be assigned"%wfo.name)
 
 
         ## check if by configuration we gave it a GO
         if not CI.go( wfh.request['Campaign'] ) and not options.go:
-            print "No go for",wfh.request['Campaign']
+            wfh.sendLog('assignor',"No go for %s"% wfh.request['Campaign'])
             n_stalled+=1
             continue
 
         ## check on current status for by-passed assignment
         if wfh.request['RequestStatus'] !='assignment-approved':
             if not options.test:
-                print wfo.name,wfh.request['RequestStatus'],"setting away and skipping"
+                wfh.sendLog('assignor',"setting %s away and skipping"%wfo.name)
                 ## the module picking up from away will do what is necessary of it
                 wfo.wm_status = wfh.request['RequestStatus']
                 wfo.status = 'away'
@@ -80,16 +81,17 @@ def assignor(url ,specific = None, talk=True, options=None):
             if options and options.ProcessingVersion:
                 version = options.ProcessingVersion
             else:
-                print "cannot decide on version number"
+                wfh.sendLog('assignor',"cannot decide on version number")
                 n_stalled+=1
+                wfo.status = 'trouble'
+                session.commit()
                 continue
 
         ## the site whitelist takes into account siteInfo, campaignInfo, memory and cores
         (lheinput,primary,parent,secondary, sites_allowed) = wfh.getSiteWhiteList()
 
         original_sites_allowed = copy.deepcopy( sites_allowed )
-        print "Site white list",sorted(sites_allowed)
-
+        wfh.sendLog('assignor',"Site white list %s"%sorted(sites_allowed))
         override_sec_location = CI.get(wfh.request['Campaign'], 'SecondaryLocation', [])
 
         blocks = []
@@ -100,7 +102,7 @@ def assignor(url ,specific = None, talk=True, options=None):
             for dataset in primary:
                 blocks = list(set( blocks + getDatasetBlocks( dataset, runs=wfh.request['RunWhitelist'] ) ))
 
-        print "Allowed",sorted(sites_allowed)
+        wfh.sendLog('assignor',"Allowed %s"%sorted(sites_allowed))
         secondary_locations=None
         for sec in list(secondary):
             if override_sec_location: 
@@ -122,7 +124,7 @@ def assignor(url ,specific = None, talk=True, options=None):
             #sites_allowed = [site for site in sites_allowed if any([osite.startswith(site) for osite in one_secondary_locations])]
             sites_allowed = [site for site in sites_allowed if SI.CE_to_SE(site) in one_secondary_locations]
             
-        print "From secondary requirement, now Allowed",sorted(sites_allowed)
+        wfh.sendLog('assignor',"From secondary requirement, now Allowed%s"%sorted(sites_allowed))
 
         initial_sites_allowed = copy.deepcopy( sites_allowed ) ## keep track of this, after secondary input location restriction : that's how you want to operate it
 
@@ -144,7 +146,7 @@ def assignor(url ,specific = None, talk=True, options=None):
             sites_all_data = [site for site in sites_with_data if SI.CE_to_SE(site) in [psite for (psite,(there,frac)) in presence.items() if there]]
             sites_with_data = [site for site in sites_with_data if SI.CE_to_SE(site) in [psite for (psite,frac) in presence.items() if frac[1]>90.]]
             sites_with_any_data = [site for site in sites_with_any_data if SI.CE_to_SE(site) in presence.keys()]
-            print "Holding the data but not allowed",list(set([se_site for se_site in presence.keys() if not SI.SE_to_CE(se_site) in sites_allowed]))
+            wfh.sendLog('assignor',"Holding the data but not allowed %s"%sorted(list(set([se_site for se_site in presence.keys() if not SI.SE_to_CE(se_site) in sites_allowed]))))
             if primary_locations==None:
                 primary_locations = presence.keys()
             else:
@@ -165,9 +167,9 @@ def assignor(url ,specific = None, talk=True, options=None):
                 opportunistic_sites = [SI.SE_to_CE(site) for site in list(set(primary_locations) - set([SI.CE_to_SE(site) for site in sites_allowed]))]
             else:
                 opportunistic_sites = []
-            print "We could be running at",sorted(opportunistic_sites),"in addition"
+            wfh.sendLog('assignor',"We could be running in addition at %s"% sorted(opportunistic_sites))
             if any([osite in SI.sites_not_ready for osite in opportunistic_sites]):
-                print "One of the destination site is in downtime"
+                wfh.sendLog('assignor',"One of the usable site is in downtime %s"%([osite in SI.sites_not_ready for osite in opportunistic_sites]))
                 down_time = True
                 ## should this be send back to considered ?
                 
@@ -199,15 +201,19 @@ def assignor(url ,specific = None, talk=True, options=None):
         if not options.early:
             less_copies_than_requested = UC.get("less_copies_than_requested")
             copies_wanted = max(1,copies_wanted-less_copies_than_requested) # take one out for the efficiency
-        print "needed availability fraction",copies_wanted
+
+
+        wfh.sendLog('assignor',"needed availability fraction %s"% copies_wanted)
+
+        ## should also check on number of sources, if large enough, we should be able to overflow most, efficiently
 
         if available_fractions and not all([available>=copies_wanted for available in available_fractions.values()]):
             not_even_once = not all([available>=1. for available in available_fractions.values()])
-            print "The input dataset is not available",copies_wanted,"times, only",available_fractions.values()
+            wfh.sendLog('assignor',"The input dataset is not available %s times, only %s"%( copies_wanted, available_fractions.values()))
             if down_time and not options.go and not options.early:
                 wfo.status = 'considered'
                 session.commit()
-                print "sending back to considered because of site downtime, instead of waiting"
+                wfh.sendLog('assignor',"sending back to considered because of site downtime, instead of waiting")
                 sendEmail( "cannot be assigned due to downtime","%s is not sufficiently available, due to down time of a site in the whitelist. check the assignor logs. sending back to considered."% wfo.name)
                 continue
                 #pass
@@ -220,10 +226,18 @@ def assignor(url ,specific = None, talk=True, options=None):
                 except:
                     pass
                 if not wfo.name in known and not options.limit and not options.go and not options.early:
-                    sendEmail( "cannot be assigned","%s is not sufficiently available. Probably phedex information lagging behind. \n %s"%(wfo.name,json.dumps(available_fractions)))
+                    wfh.sendLog('assignor',"cannot be assigned, %s is not sufficiently available.\n %s"%(wfo.name,json.dumps(available_fractions)))
+                    sendEmail( "cannot be assigned","%s is not sufficiently available.\n %s"%(wfo.name,json.dumps(available_fractions)))
                     known.append( wfo.name )
                     open('cannot_assign.json','w').write(json.dumps( known, indent=2))
                 n_stalled+=1
+                if options.early:
+                    if wfo.status == 'considered':
+                        wfh.sendLog('assignor',"setting considered-tried")
+                        wfo.status = 'considered-tried'
+                        session.commit()
+                    else:
+                        print "tried but status is",wfo.status
                 continue
 
         ## default back to white list to original white list with any data
@@ -233,7 +247,7 @@ def assignor(url ,specific = None, talk=True, options=None):
             options.useSiteListAsLocation = True
         else:
             sites_allowed = sites_with_any_data
-            print "Selected for any data",sites_allowed
+            wfh.sendLog('assignor',"Selected for any data %s"%sorted(sites_allowed))
 
         if options.restrict:
             print "Allowed",sites_allowed
@@ -252,7 +266,7 @@ def assignor(url ,specific = None, talk=True, options=None):
             ##sites_allowed = list(set(sites_allowed+ opportunistic_sites))
 
         if not len(sites_allowed):
-            print wfo.name,"cannot be assign with no matched sites"
+            wfh.sendLog('assignor',"cannot be assign with no matched sites")
             sendEmail( "cannot be assigned","%s has no whitelist"%(wfo.name))
             n_stalled+=1
             continue
@@ -264,11 +278,11 @@ def assignor(url ,specific = None, talk=True, options=None):
         else:
             # then pick any otherwise
             sites_out = [SI.pick_dSE([SI.CE_to_SE(ce) for ce in sites_allowed])]
-
-        ## one last modification now that we know we can assign, and to make sure all ressource can be used by the request : set all ON sites to whitelist
-        sites_allowed = original_sites_allowed
             
-        print "Placing the output on", sites_out
+        ## one last modification now that we know we can assign, and to make sure all ressource can be used by the request : set all ON sites to whitelist
+        ###sites_allowed = original_sites_allowed ## not needed, afterall as secondary jobs go their own ways
+            
+        wfh.sendLog('assignor',"Placing the output on %s"%sites_out)
         parameters={
             'SiteWhitelist' : sites_allowed,
             #'CustodialSites' : sites_custodial,
@@ -326,10 +340,10 @@ def assignor(url ,specific = None, talk=True, options=None):
         if split_check!=True:
             parameters.update( split_check )
             if 'EventBased' in split_check.values():
-                print "Falling back to event splitting."
+                wfh.sendLog('assignor', "Falling back to event splitting.")
                 sendEmail("Fallback to EventBased","the workflow %s is too heavy to be processed as it is. Fallback to EventBased splitting"%wfo.name)
             elif 'EventsPerJob' in split_check.values():
-                print "Modifying the number of job per event"
+                wfh.sendLog('assignor', "Modifying the number of job per event")
                 sendEmail("Modifying the job per events","the workflow %s is too heavy in number of jobs explosion"%wfo.name)
 
         # Handle run-dependent MC
@@ -344,22 +358,20 @@ def assignor(url ,specific = None, talk=True, options=None):
                 eventsPerJob = int(numEvents/(reqJobs*1.4))
                 lumisPerJob = int(eventsPerJob/eventsPerLumi)
                 if lumisPerJob==0:
-                    print "There is no go for assigning that request without event splitting"
                     sendEmail("issue with event splitting for run-dependent MC","%s needs to be split by event with %s per job"%(wfo.name, eventsPerJob))
-                    print "need to go down to",eventsPerJob,"events per job"
+                    wfh.sendLog('assignor', "%s needs to be split by event with %s per job"%(wfo.name, eventsPerJob))
                     parameters['EventsPerJob'] = eventsPerJob
                 else:
                     spl = wfh.getSplittings()[0]
                     eventsPerJobEstimated = spl['events_per_job'] if 'events_per_job' in spl else None
                     eventsPerJobEstimated = spl['avg_events_per_job'] if 'avg_events_per_job' in spl else None
                     if eventsPerJobEstimated and eventsPerJobEstimated > eventsPerJob:
-                        print "need to go down to",lumisPerJob,"in assignment"
                         sendEmail("setting lumi splitting for run-dependent MC","%s was assigned with %s lumis/job"%( wfo.name, lumisPerJob))
+                        wfh.sendLog('assignor',"%s was assigned with %s lumis/job"%( wfo.name, lumisPerJob))
                         parameters['LumisPerJob'] = lumisPerJob
                     else:
-                        print "the regular splitting should work for",pstring
                         sendEmail("leaving splitting untouched for PU_RD*","please check on "+wfo.name)
-
+                        wfh.sendLog('assignor',"leaving splitting untouched for PU_RD*, please check.")
         result = reqMgrClient.assignWorkflow(url, wfo.name, team, parameters)
 
 
@@ -386,6 +398,7 @@ def assignor(url ,specific = None, talk=True, options=None):
 
                 except Exception as e:
                     print "fail in locking output"
+                    
                     print str(e)
                     sendEmail("failed locking of output",str(e))
 
@@ -395,8 +408,7 @@ def assignor(url ,specific = None, talk=True, options=None):
         else:
             pass
     print "Assignment summary:"
-    print "Assigned",n_assigned
-    print "Stalled",n_stalled
+    sendLog('assignor',"Assigned %d Stalled %s"%(n_assigned, n_stalled))
     
 if __name__=="__main__":
     url = 'cmsweb.cern.ch'
@@ -421,4 +433,3 @@ if __name__=="__main__":
 
     if not spec:
         htmlor()
-        pass
