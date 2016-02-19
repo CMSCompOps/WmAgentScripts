@@ -2,13 +2,28 @@
 from assignSession import *
 import sys
 import reqMgrClient
-from utils import workflowInfo, getWorkflowById, getDatasetEventsAndLumis
+from utils import workflowInfo, getWorkflowById, getDatasetEventsAndLumis, componentInfo
 from utils import campaignInfo, sendEmail, siteInfo
 import json
 import random
 
+
+def forceComplete(url, wfi):
+    familly = getWorkflowById( url, wfi.request['PrepID'] ,details=True)
+    for member in familly:
+        ### if member['RequestName'] == wl['RequestName']: continue ## set himself out
+        if member['RequestDate'] < wfi.request['RequestDate']: continue
+        if member['RequestStatus'] in ['None',None]: continue
+        ## then set force complete all members
+        if member['RequestStatus'] in ['running-opened','running-closed']:
+            #sendEmail("force completing","%s is worth force completing\n%s"%( member['RequestName'] , percent_completions))
+            print "setting",member['RequestName'],"force-complete"
+            reqMgrClient.setWorkflowForceComplete(url, member['RequestName'])
+
 def completor(url, specific):
-    
+    up = componentInfo(mcm=False, soft=['mcm'])
+    if not up.check(): return
+
     CI = campaignInfo()
     SI = siteInfo()
 
@@ -44,6 +59,7 @@ def completor(url, specific):
 
     print "can force complete on"
     print json.dumps( good_fractions ,indent=2)
+    print json.dumps( overrides, indent=2)
     max_force = 5
     
     wfs_no_location_in_GQ = set()
@@ -54,11 +70,17 @@ def completor(url, specific):
         skip=False
         if not any([c in wfo.name for c in good_fractions]): skip=True
         for user,spec in overrides.items():
+            #print spec
             if wfo.name in spec:
-                print wfo.name,"should be force complete this round by request of",user
                 #skip=False ## do not do it automatically yet
                 sendEmail('force-complete requested','%s is asking for %s to be force complete'%(user,wfo.name))
-
+                wfi = workflowInfo(url, wfo.name)
+                forceComplete(url , wfi )
+                skip=True
+                wfi.notifyRequestor("The workflow %s was force completed by request of %s"%(wfo.name,user), do_batch=False)
+                wfi.sendLog('completor','%s is asking for %s to be force complete'%(user,wfo.name))
+                break
+            
         if skip: 
             continue
 
@@ -83,6 +105,7 @@ def completor(url, specific):
             if 'RequestNumEvents' in wfi.request:
                 event_expected = wfi.request['RequestNumEvents']
             else:
+                print "truncated, cannot do anything"
                 continue
         else:
             lumi_expected = wfi.request['TotalInputLumis']
@@ -174,21 +197,11 @@ def completor(url, specific):
         if delay <= 14: continue
         print "going for force-complete of",wfo.name
         ## find ACDCs that might be running
-        familly = getWorkflowById( url, wfi.request['PrepID'] ,details=True)
-        for member in familly:
-            ### if member['RequestName'] == wl['RequestName']: continue ## set himself out
-            if member['RequestDate'] < wfi.request['RequestDate']: continue
-            if member['RequestStatus'] in ['None',None]: continue
-            ## then set force complete all members
-            if member['RequestStatus'] in ['running-opened','running-closed']:
-                if max_force >0:
-                    #sendEmail("force completing","%s is worth force completing\n%s"%( member['RequestName'] , percent_completions))
-                    print "setting",member['RequestName'],"force-complete"
-                    reqMgrClient.setWorkflowForceComplete(url, member['RequestName'])
-                    max_force -=1
-                else:
-                    print "NOT REALLY FORCING",member['RequestName']
-
+        if max_force>0:
+            forceComplete(url, wfi )
+            max_force -=1
+        else:
+            print "too many completion this round"
         ## do it once only for testing
         #break
             
