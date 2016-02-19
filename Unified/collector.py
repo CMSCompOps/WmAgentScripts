@@ -2,12 +2,15 @@
 import optparse
 from McMClient import McMClient
 from collections import defaultdict
-from utils import newLockInfo, makeReplicaRequest, siteInfo, getDatasetDestinations, getDatasetPresence, unifiedConfiguration, getDatasetChops, distributeToSites, DSS
+from utils import newLockInfo, makeReplicaRequest, siteInfo, getDatasetDestinations, getDatasetPresence, unifiedConfiguration, getDatasetChops, distributeToSites, DSS, componentInfo
 import itertools
 import json 
 import random 
 
 def collector(url, specific, options):
+    up = componentInfo(mcm=False, soft=['mcm'])
+    if not up.check(): return 
+
     SI = siteInfo()
     dss = DSS()
     #NL = newLockInfo()
