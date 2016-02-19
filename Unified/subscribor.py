@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import workflowInfo, getDatasetBlockAndSite, getWorkLoad, makeReplicaRequest, sendEmail, getDatasetOnGoingDeletion
+from utils import workflowInfo, getDatasetBlockAndSite, getWorkLoad, makeReplicaRequest, sendEmail, getDatasetOnGoingDeletion, componentInfo
 import json
 from collections import defaultdict
 import random
 import sys
 
 url ='cmsweb.cern.ch'
+
+up = componentInfo(mcm=False, soft=['mcm'])
+if not up.check(): sys.exit(1)
 
 statuses = [
     #'away','assistance','close','done',
