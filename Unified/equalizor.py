@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import workflowInfo, getWorkflows, siteInfo, sendEmail
+from utils import workflowInfo, getWorkflows, siteInfo, sendEmail, componentInfo
 import reqMgrClient
 import json
 import os
@@ -11,8 +11,11 @@ from collections import defaultdict
 import random
 import copy 
 import itertools
+from htmlor import htmlor
 
-def equalizor(url , specific = None):
+def equalizor(url , specific = None, options=None):
+    up = componentInfo(mcm=False, soft=['mcm']) 
+    if not up.check(): return 
 
     if not specific:
         workflows = getWorkflows(url, status='running-closed', details=True)
@@ -48,7 +51,18 @@ def equalizor(url , specific = None):
         ## fallback to the region, to site with on-going low pressure
         mapping[site] = [fb for fb in SI.sites_ready if any([('_%s_'%(reg) in fb and fb!=site and site_in_depletion(fb))for reg in regions[region]]) ]
     
-    #mapping['T2_CH_CERN'].append('T2_CH_CERN_HLT')
+
+    use_T0 = True
+    if options.augment : use_T0 = True
+    if use_T0:
+        mapping['T2_CH_CERN'].append('T0_CH_CERN')
+    
+
+    use_HLT = True
+    if options.augment : use_HLT=True
+
+    if use_HLT:
+        mapping['T2_CH_CERN'].append('T2_CH_CERN_HLT')
     #mapping['T2_IT_Legnaro'].append('T1_IT_CNAF')
     for reg in ['IT','DE','UK']:
         mapping['T2_CH_CERN'].extend([fb for fb in SI.sites_ready if '_%s_'%reg in fb])
@@ -133,18 +147,31 @@ def equalizor(url , specific = None):
         'RunIIWinter15GS' : set_to,
         'RunIISummer15GS' : set_to,
         'Summer12' : set_to,
+        'Summer11Leg' : set_to
         #'RunIIFall15MiniAODv2' : set_to,
         }
 
     pending_HLT = 0
-    max_HLT = 8000
+    max_HLT = 60000
+    pending_T0 = 0
+    max_T0 = 60000
     try:
         gmon = json.loads(os.popen('curl -s http://cms-gwmsmon.cern.ch/prodview/json/T2_CH_CERN_HLT').read())
         pending_HLT += gmon["Running"]
         pending_HLT += gmon["MatchingIdle"]
     except:
         pass
-    
+
+    t0_special = [
+        'vlimant_BPH-RunIISummer15GS-00030_00212_v0__160129_135314_9755',
+        'pdmvserv_TSG-RunIISummer15GS-00044_00240_v0__160210_121223_8582'
+        ]
+    no_routing = [ 
+        #'vlimant_BPH-RunIISummer15GS-00030_00212_v0__160129_135314_9755',
+        #'pdmvserv_TOP-RunIIWinter15GS-00074_00187_v0__160207_162312_1992',
+                   ]
+
+    stay_within_site_whitelist = False
     specific_task=None
     if specific and ":" in specific:
         specific,specific_task = specific.split(':')
@@ -156,6 +183,9 @@ def equalizor(url , specific = None):
         
     random.shuffle( wfs )
     for wfo in wfs:
+        if wfo.name in no_routing and not options.augment:
+            continue
+
         if specific and not specific in wfo.name: 
             continue
         if specific:
@@ -201,7 +231,8 @@ def equalizor(url , specific = None):
                     needs, task_name, running, idled = needs_action(wfi, task)
                     needs_overide = overide_from_agent( wfi, needs_overide)
                     extend_to = copy.deepcopy( LHE_overflow[campaign] )
-                    extend_to = list(set(extend_to) & set(wfi.request['SiteWhitelist'])) ## restrict to stupid-site-whitelist
+                    if stay_within_site_whitelist:
+                        extend_to = list(set(extend_to) & set(wfi.request['SiteWhitelist'])) ## restrict to stupid-site-whitelist
 
                     if extend_to and needs or needs_overide:
                         print "\t",task_name,"of",wfo.name,"running",running,"and pending",idled,"taking action : ReplaceSiteWhitelist"
@@ -219,7 +250,10 @@ def equalizor(url , specific = None):
                 if any([task.pathName.endswith(finish) for finish in ['_0','StepOneProc']]) :
                     needs, task_name, running, idled = needs_action(wfi, task)
                     ## removing the ones in the site whitelist already since they encode the primary input location
-                    original_site_in_use = set(wfi.request['SiteWhitelist'])
+                    if stay_within_site_whitelist:
+                        original_site_in_use = set(wfi.request['SiteWhitelist'])
+                    else:
+                        original_site_in_use = set(secondary_locations)
                     ## remove the sites that have already running jobs
                     gmon = wfi.getGlideMon()
                     if gmon and task_name in gmon and 'Sites' in gmon[task_name]:
@@ -228,7 +262,7 @@ def equalizor(url , specific = None):
                         #augment_by = list((set(secondary_locations)- site_in_use))
                         augment_by = list((set(secondary_locations)- site_in_use) & original_site_in_use) ## restrict to stupid-site-whitelist
                     else:
-                        augment_by = original_site_in_use
+                        augment_by = list(original_site_in_use)
 
                     needs_overide = overide_from_agent( wfi, needs_overide)
                     if augment_by and (needs or needs_overide) and PU_overflow[campaign]['pending'] < PU_overflow[campaign]['max']:
@@ -253,8 +287,10 @@ def equalizor(url , specific = None):
                     print "\t",task_name,"of",wfo.name,"running",running,"and pending",idled,"taking action : AddWhitelist"
 
 
+            if options.augment:
+                print sorted(wfi.request['SiteWhitelist']),i_task,use_HLT
             ### add the HLT at partner of CERN
-            if 'T2_CH_CERN' in wfi.request['SiteWhitelist'] and i_task==0 and False:
+            if 'T2_CH_CERN' in wfi.request['SiteWhitelist'] and i_task==0 and use_HLT:
                 needs, task_name, running, idled = needs_action(wfi, task)
                 if options.augment: needs=True
                 needs = True
@@ -265,15 +301,41 @@ def equalizor(url , specific = None):
                         modifications[wfo.name][task.pathName]["AddWhitelist"].append( "T2_CH_CERN_HLT" )
                         print "\t",wfo.name,"adding addHLT up to",pending_HLT,"for",max_HLT
                         print task.pathName
-                    elif task.pathName in modifications[wfo.name] and 'ReplaceSiteWhitelist' in modifications[wfo.name][task.pathName]:
-                        modifications[wfo.name][task.pathName]["ReplaceSiteWhitelist"].append( "T2_CH_CERN_HLT" )
-                        print "\t",wfo.name,"adding replace HLT up to",pending_HLT,"for",max_HLT
+                    ## this Replace does not work at all for HLT
+                    #elif task.pathName in modifications[wfo.name] and 'ReplaceSiteWhitelist' in modifications[wfo.name][task.pathName]:
+                        #modifications[wfo.name][task.pathName]["ReplaceSiteWhitelist"].append( "T2_CH_CERN_HLT" )
+                        #print "\t",wfo.name,"adding replace HLT up to",pending_HLT,"for",max_HLT
                     else:
                         modifications[wfo.name][task.pathName] = { "AddWhitelist" : ["T2_CH_CERN_HLT"],
                                                                    "Priority" : wfi.request['RequestPriority'],
                                                                    "Running" : running,
                                                                    "Pending" : idled}
                         print "\t",wfo.name,"adding HLT up to",pending_HLT,"for",max_HLT
+                        print task.pathName
+
+            if 'T2_CH_CERN' in wfi.request['SiteWhitelist'] and i_task==0 and use_T0:
+                needs, task_name, running, idled = needs_action(wfi, task)
+                if options.augment: needs=True
+                #needs = True
+                #if not (wfo.name in t0_special) and not options.augment: needs = False
+                if not wfi.request['RequestType'] in ['MonteCarlo','MonteCarloFromGEN'] and not options.augment: needs = False
+                
+                ##needs = random.random()<0.40 remove the random, just add up to a limit
+                if (needs or needs_overide):
+                    pending_T0 += idled
+                    if task.pathName in modifications[wfo.name] and 'AddWhitelist' in modifications[wfo.name][task.pathName]:
+                        modifications[wfo.name][task.pathName]["AddWhitelist"].append( "T0_CH_CERN" )
+                        print "\t",wfo.name,"adding addT0 up to",pending_T0,"for",max_T0
+                        print task.pathName
+                    elif task.pathName in modifications[wfo.name] and 'ReplaceSiteWhitelist' in modifications[wfo.name][task.pathName]:
+                        modifications[wfo.name][task.pathName]["ReplaceSiteWhitelist"].append( "T0_CH_CERN" )
+                        print "\t",wfo.name,"adding replace T0 up to",pending_T0,"for",max_T0
+                    else:
+                        modifications[wfo.name][task.pathName] = { "AddWhitelist" : ["T0_CH_CERN"],
+                                                                   "Priority" : wfi.request['RequestPriority'],
+                                                                   "Running" : running,
+                                                                   "Pending" : idled}
+                        print "\t",wfo.name,"adding T0 up to",pending_T0,"for",max_T0
                         print task.pathName
 
 
@@ -292,5 +354,7 @@ if __name__ == "__main__":
     if len(args)!=0:
         spec = args[0]
 
-    equalizor(url, spec)
+    equalizor(url, spec, options=options)
 
+    if not spec:
+        htmlor()
