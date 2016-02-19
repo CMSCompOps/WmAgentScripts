@@ -67,7 +67,7 @@ def transferor(url ,specific = None, talk=True, options=None):
     wfs_and_wfh=[]
     print "getting all wf to consider ..."
     cache = getWorkflows(url, 'assignment-approved', details=True)
-    for wfo in session.query(Workflow).filter(Workflow.status=='considered').all():
+    for wfo in session.query(Workflow).filter(Workflow.status.startswith('considered')).all():
         print "\t",wfo.name
         if specific and not specific in wfo.name: continue
         cache_r =filter(lambda d:d['RequestName']==wfo.name, cache)
@@ -83,8 +83,8 @@ def transferor(url ,specific = None, talk=True, options=None):
     input_cput = {}
     input_st = {}
     ## list the size of those in transfer already
-    in_transfer_priority=0
-    min_transfer_priority=100000000
+    in_transfer_priority=None
+    min_transfer_priority=None
     print "getting all wf in staging ..."
     stucks = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/stuck_transfers.json').read())
     
@@ -104,9 +104,20 @@ def transferor(url ,specific = None, talk=True, options=None):
                 ignored_input_sizes[prim] = ds_s
             else:
                 input_sizes[prim] = ds_s
-                print "\t",wfo.name,"needs",input_sizes[prim],"[GB]"
-        in_transfer_priority = max(in_transfer_priority, int(wfh.request['RequestPriority']))
-        min_transfer_priority = min(min_transfer_priority, int(wfh.request['RequestPriority']))
+                sendLog('transferor', "%s needs %s [GB]"%( wfo.name, ds_s), wfi=wfh)
+        if in_transfer_priority==None:
+            in_transfer_priority = int(wfh.request['RequestPriority'])
+        else:
+            in_transfer_priority = max(in_transfer_priority, int(wfh.request['RequestPriority']))
+        if min_transfer_priority==None:
+            min_transfer_priority = int(wfh.request['RequestPriority'])
+        else:
+            min_transfer_priority = min(min_transfer_priority, int(wfh.request['RequestPriority']))
+
+    if min_transfer_priority==None or in_transfer_priority ==None:
+        print "something bad happened"
+        sendEmail("astray","no request in staging")
+        return 
 
     try:
         print "Ignored input sizes"
@@ -153,10 +164,10 @@ def transferor(url ,specific = None, talk=True, options=None):
         else:
             return cmp(int(i[1].request['RequestPriority']),int(j[1].request['RequestPriority']))
 
-    wfs_and_wfh.sort(cmp = prio_and_size, reverse=True)
+    #wfs_and_wfh.sort(cmp = prio_and_size, reverse=True)
     #wfs_and_wfh.sort(cmp = lambda i,j : cmp(int(primary_input_per_workflow_gb.get(i[0].name, 0)), int(primary_input_per_workflow_gb.get(j[0].name, 0)) ))
     #sort by priority higher first
-    #wfs_and_wfh.sort(cmp = lambda i,j : cmp(int(i[1].request['RequestPriority']),int(j[1].request['RequestPriority']) ), reverse=True)
+    wfs_and_wfh.sort(cmp = lambda i,j : cmp(int(i[1].request['RequestPriority']),int(j[1].request['RequestPriority']) ), reverse=True)
 
     cput_grand_total = sum(input_cput.values())
     cput_to_transfer = cput_grand_total - cput_in_transfer_already
@@ -426,7 +437,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                 for latching in latching_on_transfers:
                     tfo = session.query(Transfer).filter(Transfer.phedexid == int(latching)).first()
                     if not tfo:
-                        session.query(Transfer).filter(Transfer.phedexid == -int(latching)).first()
+                        tfo = session.query(Transfer).filter(Transfer.phedexid == -int(latching)).first()
                         
                     if not tfo:
                         tfo = Transfer( phedexid = latching)

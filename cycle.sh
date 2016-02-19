@@ -11,38 +11,41 @@ source /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/credentials.sh
 ## get the workflow in/back-in the system
 /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/injector.py
 
+## equalize site white list at the condor level
+/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/equalizor.py
+
 ## early assignement with all requirements included 
-#/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/assignor.py --early
+/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/assignor.py --early --limit 100
+
 
 ## verify sanity of completed workflow and pass along
 /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/checkor.py
-
 ## initiate automatic recovery
 /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/recoveror.py
 
+
 ## check on on-going data placements
 /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/stagor.py
-
+## get the workflow in/back-in the system
+/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/injector.py
 ## initiate data placements or pass wf along
 /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/transferor.py
-
 ## assign the workflow to sites
 /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/assignor.py
 
 ## equalize site white list at the condor level
-#/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/equalizor.py
-
-## force-complete wf according to rules ## tagging phase
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/completor.py
+/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/equalizor.py
 
 ## verify sanity of completed workflow and pass along
 /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/checkor.py
-
 ## initiate automatic recovery
 /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/recoveror.py
 
 ## close the wf 
 /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/closor.py
+
+## force-complete wf according to rules ## tagging phase
+/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/completor.py
 
 ## finsih subscribing output blocks
 /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/subscribor.py done
@@ -61,7 +64,7 @@ source /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/credentials.sh
 /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/htmlor.py
 
 ## pre-fetch and place datasets from McM needs
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/collector.py
+#/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/collector.py
 
 rm -f /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cycle.lock
 

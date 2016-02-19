@@ -34,6 +34,8 @@ def assignor(url ,specific = None, talk=True, options=None):
     if specific or options.early:
         wfos.extend( session.query(Workflow).filter(Workflow.status=='considered').all())
         wfos.extend( session.query(Workflow).filter(Workflow.status=='staging').all())
+    if specific:
+        wfos.extend( session.query(Workflow).filter(Workflow.status=='considered-tried').all())        
     wfos.extend(session.query(Workflow).filter(Workflow.status=='staged').all())
     #if specific:
     #    #wfos = session.query(Workflow).filter(Workflow.name==specific).all()
