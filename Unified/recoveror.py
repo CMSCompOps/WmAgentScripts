@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import workflowInfo, sendEmail, componentInfo, userLock, closeoutInfo, campaignInfo, unifiedConfiguration, siteInfo
+from utils import workflowInfo, sendEmail, componentInfo, userLock, closeoutInfo, campaignInfo, unifiedConfiguration, siteInfo, componentInfo
 import reqMgrClient
 import json
 import optparse
@@ -21,6 +21,9 @@ def singleRecovery(url, task , initial, actions, do=False):
     copy_over = ['PrepID','RequestPriority', 'TimePerEvent', 'SizePerEvent', 'Group', 'Memory', 'RequestString' ]        
     for c in copy_over:
         payload[c] = copy.deepcopy(initial[c])
+
+    #a massage ? boost the recovery over the initial wf
+    payload['RequestPriority'] *= 10
 
     if actions:
         for action in actions:
@@ -65,6 +68,8 @@ def singleRecovery(url, task , initial, actions, do=False):
     if actions:
         for action in actions:
             if action.startswith('split'):
+                print "will not try to split"
+                return None
                 factor = int(action.split('-')[-1]) if '-' in action else 2
                 acdcInfo = workflowInfo(url, acdc)
                 splittings = acdcInfo.getSplittings()
@@ -89,7 +94,9 @@ def singleRecovery(url, task , initial, actions, do=False):
 def recoveror(url,specific,options=None):
     if userLock('recoveror'): return
 
-    up = componentInfo()
+    up = componentInfo(mcm=False, soft=['mcm'])
+    if not up.check(): return
+
     CI = campaignInfo()
     SI = siteInfo()
     UC = unifiedConfiguration()
