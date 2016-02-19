@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 from assignSession import *
 import time
-from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration, getPrepIDs
+from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration, getPrepIDs, componentInfo
 import os
 import json
 from collections import defaultdict
 import sys
 
 def htmlor( caller = ""):
+    up = componentInfo(mcm=False, soft=['mcm'])
+    if not up.check(): return 
+        
     try:
         boost = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/equalizor.json').read())['modifications']
     except:
@@ -195,7 +198,7 @@ Last update on %s(CET), %s(GMT)
     text=""
     count=0
     count_by_campaign=defaultdict(lambda : defaultdict(int))
-    for wf in session.query(Workflow).filter(Workflow.status=='considered').all():
+    for wf in session.query(Workflow).filter(Workflow.status.startswith('considered')).all():
         wl = getWL( wf.name )
         count_by_campaign[wl['Campaign']][int(wl['RequestPriority'])]+=1
         text+="<li> %s </li> \n"%wfl(wf,p=True)
