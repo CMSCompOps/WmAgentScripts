@@ -2677,14 +2677,9 @@ def getLFNbase(dataset):
         return '/'.join(file.split('/')[:3])
 
 class workflowInfo:
-    def __init__(self, url, workflow, deprecated=False, spec=True, request=None,stats=False, wq=False):
+    def __init__(self, url, workflow, spec=True, request=None,stats=False, wq=False):
         self.url = url
         self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-        self.deprecated_request = {}
-        if deprecated:
-            r1=self.conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
-            r2=self.conn.getresponse()
-            self.deprecated_request = json.loads(r2.read())
         if request == None:
             r1=self.conn.request("GET",'/couchdb/reqmgr_workload_cache/'+workflow)
             r2=self.conn.getresponse()

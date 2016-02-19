@@ -21,8 +21,7 @@ def spawn_harvesting(url, wfi , in_full):
     requests = []
     outputs = wfi.request['OutputDatasets'] 
     if 'EnableHarvesting' in wfi.request and wfi.request['EnableHarvesting']:
-        ## get with the deprecated info for the lfn : to be taken out when fixed in reqmgr
-        wfi = workflowInfo(url, wfi.request['RequestName'] ,deprecated=True)
+        wfi = workflowInfo(url, wfi.request['RequestName'])
         dqms = [out for out in outputs if '/DQM' in out]
         if not all([in_full[dqm_input] for dqm_input in dqms]):
             wfi.sendLog('closor',"will not be able to assign the harvesting: holding up")
@@ -94,7 +93,7 @@ def spawn_harvesting(url, wfi , in_full):
                     'SiteWhitelist' : [SI.SE_to_CE(se) for se in wfi.request['NonCustodialSites']],
                     'AcquisitionEra' : wfi.acquisitionEra(),
                     'ProcessingString' : wfi.processingString(),
-                    'MergedLFNBase' : wfi.deprecated_request['MergedLFNBase'], 
+                    'MergedLFNBase' : wfi.request['MergedLFNBase'], 
                     'ProcessingVersion' : wfi.request['ProcessingVersion'],
                     'execute' : True
                     }

@@ -122,8 +122,7 @@ def recoveror(url,specific,options=None):
 
         if not specific and 'manual' in wfo.status: continue
         
-        wfi = workflowInfo(url, wfo.name, deprecated=True) ## need deprecated info for mergedlfnbase
-        
+        wfi = workflowInfo(url, wfo.name)
         
         ## need a way to verify that this is the first round of ACDC, since the second round will have to be on the ACDC themselves
 
@@ -273,7 +272,7 @@ def recoveror(url,specific,options=None):
                     'SiteWhitelist' : SI.sites_ready,
                     'AcquisitionEra' : wfi.acquisitionEra(),
                     'ProcessingString' :  wfi.processingString(),
-                    'MergedLFNBase' : wfi.deprecated_request['MergedLFNBase'],
+                    'MergedLFNBase' : wfi.request['MergedLFNBase'],
                     'ProcessingVersion' : wfi.request['ProcessingVersion'],
                     }
                 ## hackery for ACDC merge assignment
