@@ -71,6 +71,11 @@ def stagor(url,specific =None, options=None):
             completion_by_input[dataset] = {}
             wfi.sendLog('stagor', '%s needs %s'%( wfo.name, dataset))
 
+    endpoint_in_downtime = defaultdict(set)
+    #endpoint_completed = defaultdict(set)
+    endpoint_incompleted = defaultdict(set)
+    #endpoint = defaultdict(set)
+    send_back_to_considered = set()
     ## phedexid are set negative when not relevant anymore
     # probably there is a db schema that would allow much faster and simpler query
     for transfer in session.query(Transfer).filter(Transfer.phedexid>0).all():
@@ -141,6 +146,19 @@ def stagor(url,specific =None, options=None):
         else:
             sendLog('stagor',"%s is not finished %s"%(transfer.phedexid, pprint.pformat( checks )))
             pprint.pprint( checks )
+            ## check if the destination is in down-time
+            for ds in checks:
+                sites_incomplete = [SI.SE_to_CE(s) for s,v in checks[ds].items() if v<good_enough]
+                sites_incomplete_down = [s for s in sites_incomplete if not s in SI.sites_ready]
+                if sites_incomplete_down:
+                    sendLog('stagor',"%s are in downtime, while waiting for %s to get there"%( ",".join(sites_incomplete_down), ds))
+                #sites_complete = [SI.SE_to_CE(s) for s,v in checks[ds].items() if v>=good_enough]
+                #endpoint[ds].update( sites_complete )
+                #endpoint[ds].update( sites_incomplete )
+                #endpoint_completed[ds].update( sites_complete )
+                endpoint_incompleted[ds].update( sites_incomplete )
+                endpoint_in_downtime[ds].update( sites_incomplete_down )
+            
 
 
 
