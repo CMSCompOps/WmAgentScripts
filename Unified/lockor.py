@@ -1,23 +1,38 @@
 #!/usr/bin/env python
-from utils import getWorkflows, findCustodialCompletion, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration, getDatasetSize, sendEmail, campaignInfo
+from utils import getWorkflows, findCustodialCompletion, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration, getDatasetSize, sendEmail, campaignInfo, componentInfo
 from assignSession import *
 import json
 import os
 from collections import defaultdict
+import sys
+from McMClient import McMClient
+import time
 
 url = 'cmsweb.cern.ch'
+
+use_mcm=True
+up = componentInfo(mcm=use_mcm, soft=['mcm'])
+if not up.check():
+    sys.exit(1)
+
+use_mcm = up.status['mcm']
+mcm=None
+if use_mcm:
+    print "mcm interface is up"
+    mcm = McMClient(dev=False)
 
 statuses = ['assignment-approved','assigned','failed','acquired','running-open','running-closed','force-complete','completed','closed-out']
 
 UC = unifiedConfiguration()
 CI = campaignInfo()
 tier_no_custodial = UC.get('tiers_with_no_custodial')
+tiers_keep_on_disk = UC.get("tiers_keep_on_disk")
+
 ## can we catch the datasets that actually should go to tape ?
 custodial_override = {}
 for c in CI.campaigns:
     if 'custodial_override' in CI.campaigns[c]:
         custodial_override[c] = CI.campaigns[c]['custodial_override']
-
 
 ## those that are already in lock
 already_locked = set(json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/globallocks.json').read()))
@@ -66,9 +81,11 @@ transfer_timeout = UC.get("transfer_timeout")
 ## check on the one left out, which would seem to get unlocked
 for dataset in already_locked-newly_locking:
     try:
-        unlock=False
+        unlock = False
+        bad_ds = False
+        tier = dataset.split('/')[-1]
         creators = getWorkflowByOutput( url, dataset , details=True)
-        if not creators and not dataset.endswith('/RAW'):
+        if not creators and not tier == 'RAW':
             ds_status = getDatasetStatus( dataset )
             if not '-v0/' in dataset and ds_status!=None:
                 sendEmail('failing get by output','%s has not been produced by anything?'%dataset)
@@ -76,14 +93,16 @@ for dataset in already_locked-newly_locking:
                 continue
             else:
                 # does not matter, cannot be an OK dataset
-                unlock=True
+                unlock = True
+                bad_ds = True
         creators_status = [r['RequestStatus'] for r in creators]
         print "Statuses of workflow that made the dataset",creators_status
         if all([status in ['failed','aborted','rejected','aborted-archived','rejected-archived'] for status in creators_status]):
             ## crap 
             print "\tunlocking",dataset,"for bad workflow statuses"
-            unlock=True
-            
+            unlock = True
+            bad_ds = True
+
         ds_status=None
         if not unlock:
             ds_status = getDatasetStatus( dataset )
@@ -91,10 +110,12 @@ for dataset in already_locked-newly_locking:
             if ds_status in ['INVALID',None]: 
                 ## don't even try to keep the lock
                 print "\tunlocking",dataset,"for bad dataset status",ds_status
-                unlock=True
+                unlock = True
+                bad_ds = True
 
         
-        if not unlock:
+        if not bad_ds:
+            ## get a chance at unlocking if custodial is existing
             (_,dsn,ps,tier) = dataset.split('/')
             no_tape = (tier in tier_no_custodial)
             if no_tape:
@@ -139,6 +160,40 @@ for dataset in already_locked-newly_locking:
                         pass
                 else:
                     unlock = True
+
+        if not bad_ds and unlock and tier in tiers_keep_on_disk:
+            ## now check with mcm if possible to relock the dataset
+            if use_mcm:
+                requests_using = mcm.getA('requests',query='input_dataset=%s'%dataset)
+                pending_requests_using = filter(lambda req: req['status'] not in ['submitted','done'], requests_using)
+                if len(pending_requests_using):
+                    print "relocking",dataset,"because of",len(requests_using),"using it",",".join( [req['prepid'] for req in pending_requests_using] )
+                    unlock=False
+                elif len(requests_using):
+                    print "unlocking",dataset,"because no pending request is using it in mcm"
+                    ## no one is using it
+                    unlock=True
+                else:
+                    print "cannot unlock",dataset,"because no request seems to be using it"
+                    unlock=False                    
+            else:
+                ## relocking
+                outs = session.query(Output).filter(Output.datasetname==dataset).all()
+                now = time.mktime( time.gmtime())
+                delay_days = 30
+                delay = delay_days*24*60*60 # 30 days
+                if outs:
+                    if all([(now-odb.date) > delay for odb in outs]):
+                        unlock = True
+                        print "unlocking",dataset,"after",(now-odb.date)/24*60*60,"[days] since announcement, limit is",delay_days,"[days]"
+                    else:
+                        unlock = False
+                        print "re-locking",dataset,"because ",delay_days,"[days] expiration date is not passed, now:",now,"announced",odb.date,":",(now-odb.date)/24*60*60,"[days]"
+                else:
+                    print "re-Locking",dataset,"because of special tier needing double check"
+                    unlock=False
+        
+
         if unlock:
             print "\tunlocking",dataset
             ##would like to pass to *-unlock, or even destroy from local db
