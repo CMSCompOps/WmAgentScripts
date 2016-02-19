@@ -85,6 +85,13 @@ def rejector(url, specific, options=None):
                 if options.TimePerEvent:
                     schema['TimePerEvent'] = options.TimePerEvent
 
+                if schema['RequestType'] == 'TaskChain' and options.no_output:
+                    ntask = schema['TaskChain']
+                    for it in range(1,ntask-1):
+                        schema['Task%d'%it]['KeepOutput'] = False
+                    schema['TaskChain'] = ntask-1
+                    schema.pop('Task%d'%ntask)
+
                 ## update to the current priority
                 schema['RequestPriority'] = wfi.request['RequestPriority']
                 response = reqMgrClient.submitWorkflow(url, schema)
@@ -111,6 +118,7 @@ if __name__ == "__main__":
     parser.add_option('--EventsPerJob', help="set the events/job on the clone", default=0, type=int)
     parser.add_option('--TimePerEvent', help="set the time/event on the clone", default=0, type=float)
     parser.add_option('--filelist',help='a file with a list of workflows',default=None)
+    parser.add_option('--no_output',help='keep only the output of the last task of TaskChain',default=False,action='store_true')
     (options,args) = parser.parse_args()
 
     spec=None
