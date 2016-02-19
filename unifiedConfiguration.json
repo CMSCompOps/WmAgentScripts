@@ -8,7 +8,7 @@
    "description": "The data tiers that do not go to tape. Can be overidden by custodial overide at campaign level"
  },
  "use_parent_custodial": {
-   "value" : true,
+   "value" : false,
    "description": "Use the location of the parent dataset for custodial copy"
  },
  "tiers_with_no_check": {
@@ -22,6 +22,10 @@
  "tiers_to_DDM": {
    "value" : ["AODSIM","MINIAODSIM","GEN-SIM-RAW","GEN-SIM-RECO","GEN-SIM-RECODEBUG","AOD","RECO","MINIAOD","ALCARECO","USER","RAW-RECO"],
    "description": "The data tiers that go to AnaOps"
+ },
+ "tiers_keep_on_disk": {
+   "value" : ["LHE"],
+   "description": "the data tier not unlocked until used again"
  },
  "check_fullcopy_to_announce": {
   "value" : false,
