@@ -72,6 +72,7 @@ def checkor(url, spec=None, options=None):
     ## retrieve bypass and onhold configuration
     bypasses = []
     holdings = []
+    already_notified = json.loads(open('already_notifified.json').read())
     for bypassor,email in [('vlimant','vlimant@cern.ch'),('jen_a','jen_a@fnal.gov')]:
         bypass_file = '/afs/cern.ch/user/%s/%s/public/ops/bypass.json'%(bypassor[0],bypassor)
         if not os.path.isfile(bypass_file):
@@ -92,6 +93,19 @@ def checkor(url, spec=None, options=None):
         except:
             sendLog('checkor',"cannot get holdings from %s for %s"%(holding_file, bypassor))
             sendEmail("malformated by-pass information","%s is not json readable"%(holding_file), destination=[email])
+
+    ## once this was force-completed, you want to bypass
+    for rider,email in [('vlimant','vlimant@cern.ch'),('jen_a','jen_a@fnal.gov'),('srimanob','srimanob@mail.cern.ch')]:
+        rider_file = '/afs/cern.ch/user/%s/%s/public/ops/forcecomplete.json'%(rider[0],rider)
+        if not os.path.isfile(rider_file):
+            print "no file",rider_file
+            #sendLog('checkor',"no file %s"%rider_file)
+            continue
+        try:
+            bypasses.extend( json.loads(open( rider_file ).read() ) )
+        except:
+            sendLog('checkor',"cannot get force complete list from %s"%rider)
+            sendEmail("malformated force complet file","%s is not json readable"%rider_file, destination=[email])
 
     pattern_fraction_pass = UC.get('pattern_fraction_pass')
 
@@ -354,16 +368,9 @@ def checkor(url, spec=None, options=None):
 
             ## get from the parent
             pick_custodial = True
+            use_parent_custodial = UC.get('use_parent_custodial')
             _,prim,_,_ = wfi.getIO()
-            if not custodial and prim:
-                 ## force pick a custodial
-                if not UC.get('use_parent_custodial'):
-                    print "Picking up a site at random for custodial destination by configuration"
-                    custodial = None 
-                    pick_custodial = True
-                    break
-
-
+            if not custodial and prim and use_parent_custodial:
                 parent_dataset = prim.pop()
                 ## this is terribly dangerous to assume only 
                 parents_custodial = phedexClient.getCustodialSubscriptionRequestSite( parent_dataset )
@@ -471,10 +478,10 @@ def checkor(url, spec=None, options=None):
                 print "\tchecking",output
                 duplications[output] = True
                 try:
-                    duplications[output] = dbs3Client.duplicateRunLumi( output , skipInvalid=True)
+                    duplications[output] = dbs3Client.duplicateRunLumi( output , skipInvalid=True, verbose=True)
                 except:
                     try:
-                        duplications[output] = dbs3Client.duplicateRunLumi( output , skipInvalid=True)
+                        duplications[output] = dbs3Client.duplicateRunLumi( output , skipInvalid=True, verbose=True)
                     except:
                         print "was not possible to get the duplicate count for",output
                         is_closing=False
@@ -576,8 +583,16 @@ def checkor(url, spec=None, options=None):
             
             #########################################
             ##### notification to requester #########
-            ## trigger a notification to the requester
-            if assistance_tags and not 'manual' in existing_assistance_tags and existing_assistance_tags != assistance_tags and False:
+            go_notify=False
+            if assistance_tags and not 'manual' in existing_assistance_tags and existing_assistance_tags != assistance_tags:
+                go_notify=True
+            
+            if go_notify and wfo.name in already_notified:
+                print "double notification"
+                sendEmail('double notification','please take a look at %s'%(wfo.name))
+            elif go_notify:
+                    
+                already_notified.append( wfo.name )
                 pids = wfi.getPrepIDs() ## could be multiple requests
 
                 detailslink = 'https://cmsweb.cern.ch/reqmgr/view/details/%s'
@@ -599,33 +614,8 @@ def checkor(url, spec=None, options=None):
 
                 items_notified = set()
                 if use_mcm and content:
-                    for pid in set(pids):
-                        text ="The request %s (%s) is facing issue in production.\n" %( pid, wfo.name )
-                        text += content
-                        text += "You are invited to check, while this is being taken care of by Comp-Ops.\n"
-                        text += "This is an automated message."
-                        print "Sending notification back to requestor"
-                        print text
-                        #try first by workflow name
-                        batches = mcm.getA('batches',query='contains=%s'%wfo.name)
-                        batches = filter(lambda b : b['status'] in ['announced','done','reset'], batches)
-                        if not batches:
-                            ## then by prepid
-                            batches = mcm.getA('batches',query='contains=%s'%pid)
-                            batches = filter(lambda b : b['status'] in ['announced','done','reset'], batches)
-                            
-                        if batches:
-                            ## go notify the batch
-                            bid = batches[0]['prepid']
-                            print "batch nofication to",bid
-                            if not bid in items_notified:
-                                mcm.put('/restapi/batches/notify', { "notes" : text, "prepid" : bid})
-                                items_notified.add( bid )
-                        ## go notify the request
-                        if not pid in items_notified:
-                            print "request notification to",pid
-                            mcm.put('/restapi/requests/notify',{ "message" : text, "prepids" : [pid] })
-                            items_notified.add( pid )
+                    wfi.notifyRequestor( content , mcm = mcm)
+
             #########################################
 
 
@@ -644,8 +634,11 @@ def checkor(url, spec=None, options=None):
             else:
                 print "current status is",wfo.status,"not changing to anything"
 
+    open('already_notifified.json','w').write( json.dumps( already_notified , indent=2))
 
     fDB.html()
+    if not spec:
+        sendEmail("fresh assistance status available","Fresh status are available at https://cmst2.web.cern.ch/cmst2/unified/assistance.html",destination=['jen_a@fnal.gov'])
 
     ## custodial requests
     print "Custodials"
