@@ -1031,8 +1031,13 @@ class siteInfo:
                 self.storage[mss] = 0 
             else: 
                 self.storage[mss]  = mss_usage['Tape']['Free'][mss]
-            if mss in ['T0_CH_CERN_MSS']:
-                self.storage[mss] /= 2.
+            if mss == 'T1_US_FNAL_MSS':
+                self.storage[mss] =min(50, self.storage[mss])
+            if mss == 'T0_CH_CERN_MSS':
+                self.storage[mss] =min(2000, self.storage[mss])
+            if mss == 'T1_RU_JINR_MSS':
+                self.storage[mss] =min(100, self.storage[mss])
+                
 
         ## and detox info
         self.fetch_detox_info(talk=False)
