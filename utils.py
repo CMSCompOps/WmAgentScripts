@@ -935,7 +935,7 @@ def checkIfBlockIsAtASite(url,block,site):
     assert(len(result['phedex']['block']) == 1)
 
     for replica in result['phedex']['block'][0]['replica']:
-        if replica['node'] == site:
+        if replica['node'] == site and replica['complete'] == 'y':
             return True
 
     return False                
