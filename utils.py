@@ -2697,7 +2697,6 @@ def getWorkflows(url,status,user=None,details=False,rtype=None):
 
     return workflows
 
-<<<<<<< HEAD
 def getPrepIDs(wl):
     pids = list()
     if wl['RequestType'] == 'TaskChain':
