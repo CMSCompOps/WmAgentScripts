@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from assignSession import *
 from utils import getWorkLoad
 import sys
@@ -17,7 +18,11 @@ if __name__ == "__main__":
         wf.wm_status = wl['RequestStatus']
 
         if status:
-            wf.status = status
+            if status == 'DELETE':
+                print "removing",wf.name
+                session.delete( wf )
+            else:
+                wf.status = status
         elif wf.wm_status in ['assignment-approved']:
             wf.status = 'considered'
         elif wf.wm_status in ['assigned','acquired','running-closed','running-open','completed']:

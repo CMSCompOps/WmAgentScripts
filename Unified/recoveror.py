@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import workflowInfo, sendEmail, componentInfo, userLock, closeoutInfo, campaignInfo, unifiedConfiguration
+from utils import workflowInfo, sendEmail, componentInfo, userLock, closeoutInfo, campaignInfo, unifiedConfiguration, siteInfo, componentInfo
 import reqMgrClient
 import json
 import optparse
@@ -22,6 +22,9 @@ def singleRecovery(url, task , initial, actions, do=False):
     for c in copy_over:
         payload[c] = copy.deepcopy(initial[c])
 
+    #a massage ? boost the recovery over the initial wf
+    payload['RequestPriority'] *= 10
+
     if actions:
         for action in actions:
             #if action.startswith('split'):
@@ -33,6 +36,9 @@ def singleRecovery(url, task , initial, actions, do=False):
                 increase = int(action.split('-')[-1]) if '-' in action else 1000
                 ## increase the memory requirement by 1G
                 payload['Memory'] += increase
+            if action.startswith('split') and initial['RequestType'] == 'MonteCarlo':
+                print "I should not be doing splitting for MonteCarlo type request"
+                return None
 
     if payload['RequestString'].startswith('ACDC'):
         print "This is not allowed yet"
@@ -62,6 +68,8 @@ def singleRecovery(url, task , initial, actions, do=False):
     if actions:
         for action in actions:
             if action.startswith('split'):
+                print "will not try to split"
+                return None
                 factor = int(action.split('-')[-1]) if '-' in action else 2
                 acdcInfo = workflowInfo(url, acdc)
                 splittings = acdcInfo.getSplittings()
@@ -86,9 +94,11 @@ def singleRecovery(url, task , initial, actions, do=False):
 def recoveror(url,specific,options=None):
     if userLock('recoveror'): return
 
-    up = componentInfo()
-    CI = campaignInfo()
+    up = componentInfo(mcm=False, soft=['mcm'])
+    if not up.check(): return
 
+    CI = campaignInfo()
+    SI = siteInfo()
     UC = unifiedConfiguration()
 
     def make_int_keys( d ):
@@ -102,7 +112,8 @@ def recoveror(url,specific,options=None):
     make_int_keys( error_codes_to_block )
     make_int_keys( error_codes_to_notify )
 
-    wfs = session.query(Workflow).filter(Workflow.status == 'assistance-recovery').all()
+    #wfs = session.query(Workflow).filter(Workflow.status == 'assistance-recovery').all()
+    wfs = session.query(Workflow).filter(Workflow.status.contains('recovery')).all()
     if specific:
         wfs.extend( session.query(Workflow).filter(Workflow.status == 'assistance-manual').all() )
 
@@ -111,11 +122,11 @@ def recoveror(url,specific,options=None):
 
         if not specific and 'manual' in wfo.status: continue
         
-        wfi = workflowInfo(url, wfo.name, deprecated=True) ## need deprecated info for mergedlfnbase
-
+        wfi = workflowInfo(url, wfo.name)
+        
         ## need a way to verify that this is the first round of ACDC, since the second round will have to be on the ACDC themselves
 
-        all_errors = None
+        all_errors = {}
         try:
             wfi.getSummary()
             all_errors = wfi.summary['errors']
@@ -124,17 +135,22 @@ def recoveror(url,specific,options=None):
 
         print '-'*100        
         print "Looking at",wfo.name,"for recovery options"
-        
+
+        recover=True       
+ 
         if not len(all_errors): 
             print "\tno error for",wfo.name
+            recover = False
 
         task_to_recover = defaultdict(list)
         message_to_ops = ""
         message_to_user = ""
 
-        recover=True
         if 'LheInputFilese' in wfi.request and wfi.request['LheInputFiles']:
             ## we do not try to recover pLHE
+            recover = False
+
+        if wfi.request['RequestType'] in  ['MonteCarlo','ReReco']:
             recover = False
 
         if 'Campaign' in wfi.request:
@@ -219,7 +235,7 @@ def recoveror(url,specific,options=None):
             print wfo.name,"to be notified to user(DUMMY)",message_to_user
 
         if message_to_ops:
-            sendEmail( "notification in recoveror" , message_to_ops, destination=['julian.badillo.rojas@cern.ch','jen_a@fnal.gov'])
+            sendEmail( "notification in recoveror" , message_to_ops, destination=['jen_a@fnal.gov'])
 
 
         if task_to_recover and recover:
@@ -238,37 +254,46 @@ def recoveror(url,specific,options=None):
                     if options.do:
                         if recovering:
                             print wfo.name,"has been partially ACDCed. Needs manual attention"
-                            sendEmail( "failed ACDC partial recovery","%s has had %s/%s recoveries %s only"%( wfo.name, len(recovering), len(task_to_recover), list(recovering)), destination=['julian.badillo.rojas@cern.ch','jen_a@fnal.gov'])
+                            sendEmail( "failed ACDC partial recovery","%s has had %s/%s recoveries %s only"%( wfo.name, len(recovering), len(task_to_recover), list(recovering)), destination=['jen_a@fnal.gov'])
                             continue
                         else:
                             print wfo.name,"failed recovery once"
                             break
                     else:
                         print "no action to take further"
-                        sendEmail("an ACDC that can be done automatically","please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details", destination=['julian.badillo.rojas@cern.ch','jen_a@fnal.gov'])
+                        sendEmail("an ACDC that can be done automatically","please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details", destination=['jen_a@fnal.gov'])
                         continue
                         
                 
                 ## and assign it ?
                 team = wfi.request['Teams'][0]
                 parameters={
-                    'SiteWhitelist' : wfi.request['SiteWhitelist'],
+                    #'SiteWhitelist' : wfi.request['SiteWhitelist'],
+                    'SiteWhitelist' : SI.sites_ready,
                     'AcquisitionEra' : wfi.acquisitionEra(),
                     'ProcessingString' :  wfi.processingString(),
-                    'MergedLFNBase' : wfi.deprecated_request['MergedLFNBase'],
+                    'MergedLFNBase' : wfi.request['MergedLFNBase'],
                     'ProcessingVersion' : wfi.request['ProcessingVersion'],
                     }
-                
+                ## hackery for ACDC merge assignment
+                if wfi.request['RequestType'] == 'TaskChain' and 'Merge' in task.split('/')[-1]:
+                    parameters['AcquisitionEra'] = None
+                    parameters['ProcessingString'] = None
+
                 if options.ass:
                     print "really doing the assignment of the ACDC",acdc
                     parameters['execute']=True
-                    sendEmail("an ACDC was done and WAS assigned", "%s  was assigned, please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details"%( acdc ), destination=['julian.badillo.rojas@cern.ch','jen_a@fnal.gov'])
+                    sendEmail("an ACDC was done and WAS assigned", "%s  was assigned, please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details"%( acdc ), destination=['jen_a@fnal.gov'])
                 else:
                     print "no assignment done with this ACDC",acdc
-                    sendEmail("an ACDC was done and need to be assigned", "%s needs to be assigned, please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details"%( acdc ), destination=['julian.badillo.rojas@cern.ch','jen_a@fnal.gov'])
+                    sendEmail("an ACDC was done and need to be assigned", "%s needs to be assigned, please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details"%( acdc ), destination=['jen_a@fnal.gov'])
 
                 result = reqMgrClient.assignWorkflow(url, acdc, team, parameters)
-                recovering.add( acdc )
+                if not result:
+                    print acdc,"was not asigned"
+                    sendEmail("an ACDC was done and need to be assigned","%s needs to be assigned, please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details"%( acdc ), destination=['jen_a@fnal.gov'])
+                else:
+                    recovering.add( acdc )
 
             if recovering:
                 #if all went well, set the status to -recovering 

@@ -1,14 +1,22 @@
 #!/usr/bin/env python
 from assignSession import *
 import time
-from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration, getPrepIDs
+from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration, getPrepIDs, componentInfo
 import os
 import json
 from collections import defaultdict
 import sys
 
 def htmlor( caller = ""):
+    up = componentInfo(mcm=False, soft=['mcm'])
+    if not up.check(): return 
+        
+    try:
+        boost = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/equalizor.json').read())['modifications']
+    except:
+        boost = {}
     cache = getWorkflows('cmsweb.cern.ch','assignment-approved', details=True)
+    cache.extend( getWorkflows('cmsweb.cern.ch','acquired', details=True) )
     cache.extend( getWorkflows('cmsweb.cern.ch','running-open', details=True) )
     cache.extend( getWorkflows('cmsweb.cern.ch','running-closed', details=True) )
     def getWL( wfn ):
@@ -24,6 +32,7 @@ def htmlor( caller = ""):
         wfs = wf.wm_status
         wl = None
         pid = None
+        wl_pid = None
         pids=filter(lambda seg: seg.count('-')==2, wf.name.split('_'))
         if len(pids):
             pids = pids[:1]
@@ -34,9 +43,17 @@ def htmlor( caller = ""):
             pids = getPrepIDs( wl )
             pid = pids[0]
 
+        wl_pid = pid
+        if 'task' in wf.name:
+            wl_pid = 'task_'+pid
+
+        
         text=', '.join([
                 #wfn,
-                '<a href="https://cmsweb.cern.ch/reqmgr/view/details/%s" target="_blank">%s</a>'%(wfn,wfn),
+                #'<a href="https://cmsweb.cern.ch/reqmgr/view/details/%s" target="_blank">%s</a> '%(wfn,wfn),
+                #'<table><tr><td>%s</td></tr></table>'%(wfn),
+                #'<span>%s</span>'%(wfn),
+                "%s "%wfn,
                 '(%s) <br>'%wfs])
         text+=', '.join([
                 '<a href="https://cmsweb.cern.ch/reqmgr/view/details/%s" target="_blank">dts</a>'%wfn,
@@ -84,7 +101,7 @@ def htmlor( caller = ""):
                 text+=', <a href="https://cms-pdmv.cern.ch/mcm/requests?prepid=%s" target="_blank">mcm (%s)</a>'%(pid,mcm_s)
             else:
                 text+=', <a href="https://cms-pdmv.cern.ch/mcm/requests?prepid=%s" target="_blank">mcm</a>'%(pid)
-                text+=', <a href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s" target="_blank">ac</a>'%(pid)
+                text+=', <a href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s" target="_blank">ac</a>'%(wl_pid)
                 
         if status:
             if wf.status.startswith('assistance'):
@@ -101,7 +118,15 @@ def htmlor( caller = ""):
             date2 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime())
             text+='<a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#table=Jobs&date1=%s&date2=%s&sortby=site&task=wmagent_%s">dashb</a>'%( date1, date2, wfn )
 
-        text+="<hr>"
+        if ongoing and wfn in boost:
+            for task in boost[wfn]:
+                overflow = boost[wfn][task].get('ReplaceSiteWhitelist',None)
+                if not overflow:
+                    overflow = boost[wfn][task].get('AddWhitelist',None)
+                if overflow:
+                    text+=',boost (<a href=equalizor.json>%d</a>)'%len(overflow)
+
+        #text+="<hr>"
         return text
 
 
@@ -128,8 +153,10 @@ def htmlor( caller = ""):
 
     ## start to write it
     #html_doc = open('/afs/cern.ch/user/v/vlimant/public/ops/index.html','w')
-    html_doc = open('/afs/cern.ch/user/c/cmst2/www/unified/index.html','w')
+    html_doc = open('/afs/cern.ch/user/c/cmst2/www/unified/index.html.new','w')
     print "Updating the status page ..." 
+
+    UC = unifiedConfiguration()
 
     if not caller:
         try:
@@ -155,7 +182,12 @@ def htmlor( caller = ""):
 </head>
 <body>
 
-Last update on %s(CET), %s(GMT), <a href=logs/ target=_blank>logs</a> <a href=logs/last.log target=_blank>last</a> <a href=statuses.html>statuses</a> <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/ target=_blank>prod mon</a> <a href=https://cmsweb.cern.ch/wmstats/index.html target=_blank>wmstats</a> <a href=http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/SitesInfo.txt target=_blank>detox</a> <a href=locked.html>space</a> <a href=logs/subscribor/last.log target=_blank>blocks</a> <a href=https://twiki.cern.ch/twiki/bin/view/CMSPublic/CompOpsWorkflowL3Responsibilities#Automatic_Assignment_and_Unified>what am I</a> <a href=logs/addHoc/last.log>add-hoc op</a> created from <b>%s <a href=logs/last_running>last running</a></b><br><br>
+Last update on %s(CET), %s(GMT)
+<br>
+<a href=logs/ target=_blank>logs</a> <a href=logs/last.log target=_blank>last</a> <a href=statuses.html>statuses</a> <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/ target=_blank>prod mon</a> <a href=https://cmsweb.cern.ch/wmstats/index.html target=_blank>wmstats</a> <a href=http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/SitesInfo.txt target=_blank>detox</a> <a href=locked.html>space</a> <a href=logs/subscribor/last.log target=_blank>blocks</a> <a href=logs/agents/last.log>agents</a>
+<br>
+<a href=https://twiki.cern.ch/twiki/bin/view/CMSPublic/CompOpsWorkflowL3Responsibilities#Automatic_Assignment_and_Unified>what am I</a> <a href=data.html>json interfaces</a> <a href=logs/addHoc/last.log>add-hoc op</a> created from <b>%s <a href=logs/last_running>last running</a></b> <object height=20 type="text/html" data="logs/last_running"><p>backup content</p></object>
+<br><br>
 
 """ %(time.asctime(time.localtime()),
       time.asctime(time.gmtime()),
@@ -166,7 +198,7 @@ Last update on %s(CET), %s(GMT), <a href=logs/ target=_blank>logs</a> <a href=lo
     text=""
     count=0
     count_by_campaign=defaultdict(lambda : defaultdict(int))
-    for wf in session.query(Workflow).filter(Workflow.status=='considered').all():
+    for wf in session.query(Workflow).filter(Workflow.status.startswith('considered')).all():
         wl = getWL( wf.name )
         count_by_campaign[wl['Campaign']][int(wl['RequestPriority'])]+=1
         text+="<li> %s </li> \n"%wfl(wf,p=True)
@@ -238,32 +270,65 @@ Worflow waiting in staging (%d) <a href=logs/transferor/last.log target=_blank>l
 
     lap ( 'done with staging' )
 
-    text=""
+    text="<ul>"
     count=0
-    for ts in session.query(Transfer).all():
-        stext='<li> %s serves </li><a href="javascript:showhide(\'%s\')">[show/hide] relevant workflows</a> <div id="%s" style="display:none;"><ul>'%( phl(ts.phedexid), ts.phedexid, ts.phedexid )
+    transfer_per_wf = defaultdict(list)
+    for ts in session.query(Transfer).filter(Transfer.phedexid>0).all():
         hide = True
+        t_count = 0
+        stext=""
         for pid in ts.workflows_id:
             w = session.query(Workflow).get(pid)
             hide &= (w.status != 'staging' )
             if w.status in ['considered','staging','staged']:
-                stext+="<li> %s </li>\n"%( wfl(w,status=True))
-        stext+="</ul></div>\n"
+                stext += "<li> %s </li>\n"%( wfl(w,status=True))
+                transfer_per_wf[w].append( ts.phedexid )
+                t_count +=1
+        stext = '<li> %s serves %d workflows<br><a href="javascript:showhide(\'%s\')">[show/hide]</a> <div id="%s" style="display:none;"><ul>\n'%( phl(ts.phedexid), t_count, ts.phedexid, ts.phedexid ) + stext
+        
+        stext+="</ul></li>\n"
         if hide:
             #text+="<li> %s not needed anymore to start running (does not mean it went through completely)</li>"%phl(ts.phedexid)
             pass
         else:
             count+=1
             text+=stext
-    text+="</ul></div>"
+    text+="</ul>"
+    
+    text_bywf="<ul>"
+    for wf in transfer_per_wf:
+        text_bywf += "<li> %s </li>"%(wfl(wf,within=True))
+        text_bywf += '<a href=javascript:showhide("transfer_%s")>[Click to show/hide] %d transfers</a>'% (wf.name, len(transfer_per_wf[wf]))
+        text_bywf += '<div id="transfer_%s" style="display:none;">'% wf.name
+        text_bywf += "<ul>"
+        for pid in sorted(transfer_per_wf[wf]):
+            text_bywf += "<li> %s </li>"%(phl(pid))
+        text_bywf += "</ul></div><hr>"
+    text_bywf += '</ul>'
+
     html_doc.write("""
-Transfer on-going (%d) <a href=https://transferteam.web.cern.ch/transferteam/dashboard/ target=_blank>dashboard</a> <a href=logs/transferor/last.log target=_blank>log</a> <a href=logs/stagor/last.log target=_blank>postlog</a>
+Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransferteam/ target=_blank>dashboard</a> <a href=logs/transferor/last.log target=_blank>log</a> <a href=logs/stagor/last.log target=_blank>postlog</a>
 <a href="javascript:showhide('transfer')">[Click to show/hide]</a>
 <br>
 <div id="transfer" style="display:none;">
-<br>
-<ul>"""%count)
-    html_doc.write(text)
+ <ul>
+  <li> By Workflow
+    <a href="javascript:showhide('transfer_bywf')">[Click to show/hide]</a>
+    <div id="transfer_bywf" style="display:none;">
+%s
+    </div>
+  </li>
+  <li> By transfer request
+    <a href="javascript:showhide('transfer_byreq')">[Click to show/hide]</a>
+    <div id="transfer_byreq" style="display:none;"> 
+%s
+    </div>
+  </li>
+ </ul>
+</div>
+"""%(count,
+     text_bywf,
+     text))
 
     lap( 'done with transfers' )
 
@@ -309,7 +374,7 @@ Transfer on-going (%d) <a href=https://transferteam.web.cern.ch/transferteam/das
     for wf in session.query(Workflow).filter(Workflow.status=='away').all():
         wl = getWL( wf.name )
         count_by_campaign[wl['Campaign']][int(wl['RequestPriority'])]+=1
-        lines.append("<li> %s </li>"%wfl(wf,view=True,ongoing=True))
+        lines.append("<li> %s <hr></li>"%wfl(wf,view=True,ongoing=True))
     text_by_c=""
     for c in count_by_campaign:
         text_by_c+="<li> %s (%d) : "%( c, sum(count_by_campaign[c].values()) )
@@ -319,7 +384,7 @@ Transfer on-going (%d) <a href=https://transferteam.web.cern.ch/transferteam/das
 
     lines.sort()
     html_doc.write("""
-Worflow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests_in_production.php target=_blank>ongoing</a> <a href=https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary target=_blank>elog</a> <a href=http://cms-gwmsmon.cern.ch/prodview target=_blank>queues</a> <a href=logs/assignor/last.log target=_blank>log</a> <a href=logs/checkor/last.log target=_blank>postlog</a>
+Worflow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests_in_production.php target=_blank>ongoing</a> <a href=https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary target=_blank>elog</a> <a href=http://cms-gwmsmon.cern.ch/prodview target=_blank>queues</a> <a href=logs/assignor/last.log target=_blank>log</a> <a href=logs/checkor/last.log target=_blank>postlog</a> <a href=logs/equalizor/last.log target=_blank>equ</a> <a href=logs/completor/last.log target=_blank>comp</a>
 <a href="javascript:showhide('away')">[Click to show/hide]</a>
 <br>
 <div id="away" style="display:none;">
@@ -347,7 +412,8 @@ Worflow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/reque
 
     text=""
     count=0
-    for wf in session.query(Workflow).filter(Workflow.status == 'assistance').all():
+    #for wf in session.query(Workflow).filter(Workflow.status == 'assistance-custodial').all():
+    for wf in session.query(Workflow).filter(Workflow.status.startswith('assistance')).filter(Workflow.status.contains('custodial')).all():
         text+="<li> %s </li> \n"%wfl(wf,view=True,update=True,status=True)
         count+=1
     text+="</ul></div>\n"
@@ -364,12 +430,21 @@ Worflow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/reque
 
     lap ( 'done with closing' )
 
+    assistance_by_type = defaultdict(list)
     text=""
     count=0
     for wf in session.query(Workflow).filter(Workflow.status.startswith('assistance-')).all():
-        text+="<li> %s </li> \n"%wfl(wf,view=True,within=True,status=True,update=True)
+        assistance_by_type[wf.status].append( wf )
         count+=1
-    text+="</ul></div>\n"
+    for assistance_type in assistance_by_type:
+        text += "<li> %s (%d) <a href=\"javascript:showhide('%s')\">[Click to show/hide]</a><br><div id=\"%s\" style=\"display:none;\"><ul>"%( assistance_type,
+                                                                                                                                               len(assistance_by_type[assistance_type]),
+                                                                                                                                               assistance_type,
+                                                                                                                                               assistance_type,
+                                                                                                                                               )
+        for wf in assistance_by_type[assistance_type]:
+            text+="<li> %s <hr></li> \n"%wfl(wf,view=True,within=True,status=True,update=True)
+        text += "</ul></div></li>\n"
     html_doc.write("""Worflow which need assistance (%d)
 <a href=assistance.html target=_blank>assistance</a> 
 <a href=logs/checkor/last.log target=_blank>log</a> <a href=logs/recoveror/last.log target=_blank>postlog</a>
@@ -378,8 +453,10 @@ Worflow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/reque
 <div id="assistance" style="display:none;">
 <br>
 <ul>
-"""%count)
-    html_doc.write(text)
+%s
+</ul>
+</div>
+"""%(count, text))
     
     lap ( 'done with assistance' )
 
@@ -425,7 +502,7 @@ Worflow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/reque
         count+=1
     text+="</ul></div>\n"
     html_doc.write("""
-Worflow to forget (%d) <a href=logs/injector/last.log target=_blank>log</a> <a href=logs/outcleanor/last.log target=_blank>postlog</a>
+Worflow to forget (%d) <a href=logs/injector/last.log target=_blank>log</a> <a href=logs/lockor/last.log target=_blank>postlog</a>
 <a href="javascript:showhide('forget')">[Click to show/hide]</a>
 <br>
 <div id="forget" style="display:none;">
@@ -443,7 +520,7 @@ Worflow to forget (%d) <a href=logs/injector/last.log target=_blank>log</a> <a h
         count+=1
     text+="</ul></div>\n"
     html_doc.write("""
-Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=logs/cleanor/last.log target=_blank>postlog</a>
+Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=logs/lockor/last.log target=_blank>postlog</a>
 <a href="javascript:showhide('done')">[Click to show/hide]</a>
 <br>
 <div id="done" style="display:none;">
@@ -456,7 +533,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 
 
     wfs = session.query(Workflow).filter(Workflow.status.endswith('-unlock')).all()
-    html_doc.write(" Workflows unlocked : %s <br>"%(len(wfs)))
+    html_doc.write(" Workflows unlocked : %s <a href=logs/lockor/last.log target=_blank>log</a><br>"%(len(wfs)))
     lap ( 'done with unlocked' )
 
 
@@ -466,24 +543,106 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     lines_lastweek=[]
     now = time.mktime(time.gmtime())
     this_week = int(time.strftime("%W",time.gmtime()))
-    start_time_two_weeks_ago = time.mktime(time.strptime("15-0-%d"%(this_week-2), "%y-%w-%W"))
-    for out in session.query(Output).filter(Output.date>=start_time_two_weeks_ago).all():
+    start_time_two_weeks_ago = time.mktime(time.gmtime(now - (20*24*60*60))) # 20
+    last_week =  int(time.strftime("%W",time.gmtime(now - ( 7*24*60*60))))
+
+    all_locks = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/globallocks.json').read())    
+    waiting_custodial = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/waiting_custodial.json').read())
+    all_pending_approval_custodial = dict([(k,item) for k,item in waiting_custodial.items() if 'nodes' in item and not any([node['decided'] for node in item['nodes'].values()]) ])
+    n_pending_approval = len( all_pending_approval_custodial )
+    #n_pending_approval = len([item for item in waiting_custodial.values() if 'nodes' in item and not any([node['decided'] for node in item['nodes'].values() ])])
+    missing_approval_custodial = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/missing_approval_custodial.json').read())
+
+    stuck_custudial = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/stuck_custodial.json').read())
+    lagging_custudial = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/lagging_custodial.json').read())
+    if len(stuck_custudial):
+        stuck_string = ', <font color=red>%d appear to be <a href=stuck_custodial.json>stuck</a></font>'% len(stuck_custudial)
+    else:
+        stuck_string = ''
+    if len(missing_approval_custodial):
+        long_approve_string = ', <font color=red>%d more than %d days</font>'%( len(missing_approval_custodial), UC.get('transfer_timeout'))
+    else:
+        long_approve_string = ''
+    
+
+    output_within_two_weeks=session.query(Output).filter(Output.date>=start_time_two_weeks_ago).all()
+    waiting_custodial_string=""
+    waiting_custodial_strings=[]
+    for ds in waiting_custodial:
+        out = None
+        ## lots of it will be within two weeks
+        of = filter(lambda odb: odb.datasetname == ds, output_within_two_weeks)
+        if of:
+            out = of[0]
+        else:
+            out = session.query(Output).filter(Output.datasetname == ds).first()
+        if out:
+            info = waiting_custodial[out.datasetname]
+            action = 'going'
+            if out.datasetname in all_pending_approval_custodial:
+                action = '<font color=red>pending</font>'
+            try:
+                size = str(info['size'])
+            except:
+                size = "x"
+
+            destination = ",".join(info['nodes'].keys())
+            if not destination:
+                destination ='<font color=red>NO SITE</font>'
+
+            a_waiting_custodial_string = "<li>on week %s : %s %s</li>"%(
+                time.strftime("%W (%x %X)",time.gmtime(out.date)),
+                ol(out.datasetname),
+                ' %s [GB] %s to %s on %s (<a href="https://cmsweb.cern.ch/phedex/datasvc/xml/prod/requestlist?dataset=%s&node=T*MSS">%d missing</a>)'%( size, action, destination, time.asctime(time.gmtime(info['checked'])), out.datasetname, info['nmissing'])
+                )
+            waiting_custodial_strings.append( (out.date, a_waiting_custodial_string) )
+
+        waiting_custodial_strings.sort( key = lambda i:i[0] )
+        waiting_custodial_string="\n".join( [i[1] for i in waiting_custodial_strings] )
+    #start_time_two_weeks_ago = time.mktime(time.strptime("15-0-%d"%(this_week-2), "%y-%w-%W"))
+    for out in output_within_two_weeks:
         if not out.workflow: 
             print "This is a problem with",out.datasetname
             continue
-        if  out.workflow.status in ['done','clean','clean-out','clean-unlock']:
+        if  out.workflow.status in ['done-unlock','done','clean','clean-out','clean-unlock']:
+            custodial=''
+            if out.datasetname in waiting_custodial:
+                info = waiting_custodial[out.datasetname]
+                try:
+                    try:
+                        size = str(info['size'])
+                    except:
+                        size = "x"
+                    destination = ",".join(info['nodes'].keys())
+                    if not destination:
+                        destination ='<font color=red>NO SITE</font>'
+                    action = 'going'
+                    if out.datasetname in all_pending_approval_custodial:
+                        action = '<font color=red>pending</font>'
+
+                    
+                    custodial=' %s [GB] %s to %s on %s (<a href="https://cmsweb.cern.ch/phedex/datasvc/xml/prod/requestlist?dataset=%s&node=T*MSS">%d missing</a>)'%( size, action, destination, time.asctime(time.gmtime(info['checked'])), out.datasetname, info['nmissing'])
+                except Exception as e:
+                    #print info
+                    #print str(e)
+                    pass
+            elif out.datasetname in all_locks:
+                custodial='<font color=green>LOCKED</font>'
             out_week = int(time.strftime("%W",time.gmtime(out.date)))
             ##only show current week, and the previous.
-            if (this_week-out_week)==1:
-                lines_lastweek.append("<li>on week %s : %s </li>"%(
+            if last_week==out_week:
+                lines_lastweek.append("<li>on week %s : %s %s</li>"%(
                         time.strftime("%W (%x %X)",time.gmtime(out.date)),
                         ol(out.datasetname),
+                        custodial
                         )
                              )
-            if (this_week-out_week)==0:
-                lines_thisweek.append("<li>on week %s : %s </li>"%(
+            if this_week==out_week:
+
+                lines_thisweek.append("<li>on week %s : %s %s</li>"%(
                         time.strftime("%W (%x %X)",time.gmtime(out.date)),
                         ol(out.datasetname),
+                        custodial
                         )
                              )
     lines_thisweek.sort()
@@ -495,6 +654,18 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 <div id="output" style="display:none;">
 <br>
 <ul>
+<li> %d waiting to go to tape</li>
+<ul>
+<li> %d waiting for tape approval%s</li>
+<li> %d are not completed after %d days%s</li>
+<li> Full list (%d) <a href="javascript:showhide('waiting-custodial')">[Click to show/hide]</a>
+<div id="waiting-custodial" style="display:none;">
+<ul>
+%s
+</ul>
+</div>
+</li>
+</ul>
 <li> Last week (%d) </li><a href="javascript:showhide('output_lastweek')">[Click to show/hide]</a><div id="output_lastweek" style="display:none;"><ul>
 %s
 </ul></div>
@@ -502,6 +673,10 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 %s
 </ul></div></div>
 """%( len(lines_lastweek)+len(lines_thisweek),
+      len(waiting_custodial),
+      n_pending_approval,long_approve_string,
+      len(lagging_custudial),UC.get('transfer_timeout'),stuck_string,
+      len(waiting_custodial),waiting_custodial_string,
       len(lines_lastweek),
      '\n'.join(lines_lastweek),
       len(lines_thisweek),
@@ -526,14 +701,36 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     for t in filter(None,os.popen('cat /afs/cern.ch/user/c/cmst2/www/unified/logs/*/*.time').read().split('\n')):
         module_name,run_time,spend = t.split(':')
         ## then do what you want with it !
+        if 'cleanor' in module_name: continue
+        
         per_module[module_name].append( int(spend) )
+
+    def display_time( sec ):
+        m, s = divmod(sec, 60)
+        h, m = divmod(m, 60)
+        dis=""
+        if h:
+            dis += "%d [h] "%h
+        if h or m:
+            dis += "%d [m] "%m
+        if h or m or s:
+            dis += "%d [s]"%s
+            
+        return dis
 
     html_doc.write("Module running time<ul>\n")
     for m,spends in per_module.items():
-        html_doc.write("<li>%s : last %d [s], avg %d [s]</li>\n"%( m, spends[-1], sum(spends)/float(len(spends))))
+        avg = sum(spends)/float(len(spends))
+        lasttime =  spends[-1]
+        html_doc.write("<li>%s : last %s, avg %s</li>\n"%( m, display_time(lasttime), display_time(avg)))
     html_doc.write("</ul>")
 
-    html_doc.write("Last running <pre>%s</pre>"%( os.popen("tac /afs/cern.ch/user/c/cmst2/www/unified/logs/running | head -5").read() ))
+    html_doc.write("Last running <pre>%s</pre><br>"%( os.popen("tac /afs/cern.ch/user/c/cmst2/www/unified/logs/running | head -5").read() ))
+
+
+    html_doc.write("Order in cycle <pre>%s</pre><br>"%( '\n'.join(map(lambda l : l.split('/')[-1].replace('.py',''), filter(lambda l : not l.startswith('#') and 'Unified' in l and 'py' in l.split('/')[-1], open('/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cycle.sh').read().split('\n')))) ))
+
+
     html_doc.write("</div>\n")
     lap ( 'done with jobs' )
 
@@ -559,6 +756,8 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     count=0
     n_column = 4
     SI = siteInfo()
+    date1 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(15*24*60*60)) ) ## 15 days
+    date2 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime())
     for t in SI.types():
         text+="<li>%s<table border=1>"%t
         c=0
@@ -567,14 +766,52 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
             disk = SI.disk[SI.CE_to_SE(site)] if SI.CE_to_SE(site) in SI.disk else 'N/A'
             if c==0:
                 text+="<tr>"
-            text+='<td><a href=http://dashb-ssb.cern.ch/dashboard/templates/sitePendingRunningJobs.html?site=%s>%s</a><br><a href="http://cms-gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="http://cms-gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:50px"></a><br>CPU pledge: %s<br>Disk available: %s</td>'%(site,site,site,site,cpu,disk)
+            if not disk:
+                ht_disk = '<font color=red>Disk available: %s</font>'%disk
+            else:
+                ht_disk = 'Disk available: %s'%disk
+
+            text+='<td><a href=http://dashb-ssb.cern.ch/dashboard/templates/sitePendingRunningJobs.html?site=%s>%s</a><br><a href="http://cms-gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="http://cms-gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:50px"></a><br><a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=wmagent&check=submitted&sortby=activity&scale=linear&bars=20&data1=%s&date2=%s">dashb</a><br>CPU pledge: %s<br>%s</td>'%(site,site,site,site,site,date1,date2,cpu,ht_disk)
             if c==n_column:
                 c=0
             else:
                 c+=1
         text+="</table></li>"
 
-    lap ( 'done with campaigns' )
+    text += "<li> Sites in auto-approved transfer<ul>"
+    for site in sorted(SI.sites_auto_approve):
+        text+="<li>%s"% site
+    text += "</ul></li>"
+
+    text += "<li> Sites with vetoe transfer<ul>"
+    for site in sorted(SI.sites_veto_transfer):
+        text+="<li>%s"% site
+    text += "</ul></li>"
+
+    text += "<li> Sites banned from production<ul>"
+    for site in sorted(SI.sites_banned):
+        text+="<li>%s"% site
+    text += "</ul></li>"
+
+    text += "<li> Approximate Free Tape<ul>"
+    for mss in SI.storage:
+        waiting = 0
+        try:
+            waiting = float(os.popen("grep '%s is pending . Created since' /afs/cern.ch/user/c/cmst2/www/unified/logs/lockor/last.log  -B 3 | grep size | awk '{ sum+=$6 ; print sum }' | tail -1" % mss).readline())
+        except Exception as e:
+            print str(e)
+
+        oldest = ""
+        os.system('grep pending /afs/cern.ch/user/c/cmst2/www/unified/logs/lockor/last.log | sort -u > /afs/cern.ch/user/c/cmst2/www/unified/logs/pending.log')
+        try:
+            oldest = os.popen("grep '%s is pending . Created since ' /afs/cern.ch/user/c/cmst2/www/unified/logs/lockor/last.log | sort | awk '{print $10, $11, $12, $13, $14 }' | head -1"% mss).readline()
+        except Exception as e:
+            print str(e)
+        waiting /= 1024.
+        text+="<li>%s : %d [TB]. Waiting for approval %d [TB] since %s </li>"%(mss, SI.storage[mss], waiting, oldest)
+    text += "</ul></li>"
+
+    lap ( 'done with sites' )
 
     open('/afs/cern.ch/user/c/cmst2/www/unified/siteInfo.json','w').write(json.dumps(dict([(t,getattr(SI,t)) for t in SI.types()]),indent=2))
 
@@ -599,7 +836,7 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
      site,site,
      site,SI.quota[site]))
         chart_data[site].append("""
-<div id="donutchart_%s" style="height: 200px;"></div>
+<div id="donutchart_%s" style="height: 200px;width: 300px"></div>
 """%(site))
 
         
@@ -612,7 +849,7 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
     
     divs_table="<table border=0>"
     for c,site in enumerate(sorted(chart_data.keys())):
-        if c%6==0:
+        if c%5==0:
             divs_table += "<tr>"
         divs_table += "<td>%s</td>"%(chart_data[site][2])
     divs_table += "</table>"
@@ -652,7 +889,6 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
     lap ( 'done with space' )
 
 
-    UC = unifiedConfiguration()
     text = ""
     for param in UC.configs:
         text +="<li>%s</li><ul>\n"% param
@@ -680,6 +916,21 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
 """)
 
     html_doc.close()
+    ## and put the file in place
+    os.system('mv /afs/cern.ch/user/c/cmst2/www/unified/index.html.new /afs/cern.ch/user/c/cmst2/www/unified/index.html')
+
+        
+    statuses = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/statusmon.json').read())
+    s_count = defaultdict(int)
+    now = time.mktime(time.gmtime())
+    for wf in session.query(Workflow).all():
+        s_count[wf.status]+=1
+    statuses[now] = dict( s_count )
+    ## remove old entries
+    for t in statuses.keys():
+        if (now-float(t)) > 7*24*60*60:
+            statuses.pop(t)
+    open('/afs/cern.ch/user/c/cmst2/www/unified/statusmon.json','w').write( json.dumps( statuses , indent=2))
 
     html_doc = open('/afs/cern.ch/user/c/cmst2/www/unified/statuses.html','w')
     html_doc.write("""                                                                                                                                                                                                                                                                                                      <html>        
@@ -692,9 +943,13 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
 """)
     wfs = {}
     for wfo in session.query(Workflow).all():
+        ## pass all that is unlocked and considered it gone
         wfs[wfo.name] = (wfo.status,wfo.wm_status)
+
     open('/afs/cern.ch/user/c/cmst2/www/unified/statuses.json','w').write(json.dumps( wfs ))
     for wfn in sorted(wfs.keys()):
+        ## pass all that is unlocked and considered it gone
+        if 'unlock' in wfs[wfn][0]: continue
         html_doc.write('<tr><td><a id="%s">%s</a></td><td>%s</td><td>%s</td></tr>\n'%( wfn, wfn, wfs[wfn][0],  wfs[wfn][1]))
     html_doc.write("</table>")
     html_doc.write("<br>"*100)

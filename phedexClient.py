@@ -236,6 +236,19 @@ def testCustodialSubscriptionRequested(url, dataset, site):
     return False
 
 def getCustodialSubscriptionRequestSite(datasetName):
+    try:
+        r = try_getCustodialSubscriptionRequestSite(datasetName)
+    except:
+        try:
+            r = try_getCustodialSubscriptionRequestSite(datasetName)
+
+        except:
+            ## yes or NO ?
+            r = []
+    return r
+            
+
+def try_getCustodialSubscriptionRequestSite(datasetName):
     """
     Returns the site (or sites) in which the dataset has
     a custodial subscription request, no matter if it was approved

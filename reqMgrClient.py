@@ -709,8 +709,17 @@ def assignWorkflow(url, workflowname, team, parameters ):
 
     # set the maxrss watchdog to what is specified in the request
     defaults['MaxRSS'] = wf.request['Memory']*1024+10
-
+    
     defaults.update( parameters )
+
+    #if ('Multicore' in wf.request and wf.request['Multicore']>1):
+    #    defaults['MaxRSS'] = int((wf.request['Memory']*1024+10) * 1.5 * wf.request['Multicore'])
+    #    defaults['MaxVSize'] = int(10*defaults['MaxRSS'])
+    
+    pop_useless = ['AcquisitionEra','ProcessingString']
+    for what in pop_useless:
+        if defaults[what] == None:
+            defaults.pop(what)
 
     if not set(assignWorkflow.mandatories).issubset( set(parameters.keys())):
         print "There are missing parameters"
@@ -718,9 +727,10 @@ def assignWorkflow(url, workflowname, team, parameters ):
         return False
 
 
-    if wf.request['RequestType'] == 'ReDigi':
+    if wf.request['RequestType'] in ['ReDigi','ReReco']:
         defaults['Dashboard'] = 'reprocessing'
-        defaults['dashboard'] = 'reprocessing'
+    elif 'SubRequestType' in wf.request and wf.request['SubRequestType'] in ['ReDigi']:
+        defaults['Dashboard'] = 'reprocessing'
 
 
     if defaults['SiteBlacklist'] and defaults['SiteWhitelist']:
@@ -792,7 +802,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
                 params = {"requestName":workflowname,
                           "splittingTask" : '/%s/%s'%(workflowname,t),
                           "lumis_per_job" : par,
-                          #"halt_job_on_file_boundaries" : True,
+                          "halt_job_on_file_boundaries" : True,
                           "splittingAlgo" : "LumiBased"}
                 print setWorkflowSplitting(url, params)
             else:
@@ -857,7 +867,6 @@ assignWorkflow.defaults= {
         "MaxVSize": 4394967000,
         "maxVSize": 4394967000,
         "Dashboard": "production",
-        "dashboard": "production",
         "SoftTimeout" : 159600,
         "GracePeriod": 300,
         'CustodialSites' : [], ## make a custodial copy of the output there
@@ -865,6 +874,7 @@ assignWorkflow.defaults= {
         'NonCustodialSites' : [],
         "NonCustodialSubType" : 'Replica', ## that's the default, but let's be sure
         'AutoApproveSubscriptionSites' : [],
+        #'Multicore' : 1
         }
 assignWorkflow.mandatories = ['SiteWhitelist',
                               'AcquisitionEra',

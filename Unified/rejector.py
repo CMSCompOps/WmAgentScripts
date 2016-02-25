@@ -11,15 +11,41 @@ def rejector(url, specific, options=None):
 
     up = componentInfo()
 
-    if specific.startswith('/'):
-        pass
+    if specific and specific.startswith('/'):
+        return
+
+    if options.filelist:
+        wfs = []
+        for line in filter(None, open(options.filelist).read().split('\n')):
+            print line
+            wfs.extend( session.query(Workflow).filter(Workflow.name.contains(line)).all())
+    elif specific:
+        wfs = session.query(Workflow).filter(Workflow.name.contains(specific)).all()
     else:
-        wfo = session.query(Workflow).filter(Workflow.name == specific).first()
+        return 
+
+    print len(wfs),"to reject"
+
+    if len(wfs)>1:
+        print "\n".join( [wfo.name for wfo in wfs] )
+        answer = raw_input('Reject these')
+        if not answer.lower() in ['y','yes']:
+            return
+        
+    for wfo in wfs:
+        #wfo = session.query(Workflow).filter(Workflow.name == specific).first()
         if not wfo:
             print "cannot reject",spec
             return
         results=[]
         wfi = workflowInfo(url, wfo.name)
+        if wfi.request['RequestStatus'] in ['rejected','rejected-archived','aborted','aborted-archived']:
+            print 'already',wfi.request['RequestStatus']
+            if not options.clone:
+                wfo.status = 'forget'
+                session.commit()
+                continue
+
         reqMgrClient.invalidateWorkflow(url, wfo.name, current_status=wfi.request['RequestStatus'])
         #if wfi.request['RequestStatus'] in ['assignment-approved','new','completed']:
         #    #results.append( reqMgrClient.rejectWorkflow(url, wfo.name))
@@ -48,9 +74,26 @@ def rejector(url, specific, options=None):
                     schema['ProcessingVersion']+=1
                 else:
                     schema['ProcessingVersion']=2
-                ##schema.pop('RequestDate') ## ok then, let's not reset the time stamp
+                ## a few tampering of the original request
                 if options.Memory:
                     schema['Memory'] = options.Memory
+                if options.EventsPerJob:
+                    if schema['RequestType'] == 'TaskChain':
+                        schema['Task1']['EventsPerJob'] = options.EventsPerJob
+                    else:
+                        schema['EventsPerJob'] = options.EventsPerJob
+                if options.TimePerEvent:
+                    schema['TimePerEvent'] = options.TimePerEvent
+
+                if schema['RequestType'] == 'TaskChain' and options.no_output:
+                    ntask = schema['TaskChain']
+                    for it in range(1,ntask-1):
+                        schema['Task%d'%it]['KeepOutput'] = False
+                    schema['TaskChain'] = ntask-1
+                    schema.pop('Task%d'%ntask)
+
+                ## update to the current priority
+                schema['RequestPriority'] = wfi.request['RequestPriority']
                 response = reqMgrClient.submitWorkflow(url, schema)
                 m = re.search("details\/(.*)\'",response)
                 if not m:
@@ -72,6 +115,10 @@ if __name__ == "__main__":
     parser.add_option('-c','--clone',help="clone the workflow",default=False,action="store_true")
     parser.add_option('-k','--keep',help="keep the outpuy in current status", default=False,action="store_true")
     parser.add_option('--Memory',help="memory parameter of the clone", default=0, type=int)
+    parser.add_option('--EventsPerJob', help="set the events/job on the clone", default=0, type=int)
+    parser.add_option('--TimePerEvent', help="set the time/event on the clone", default=0, type=float)
+    parser.add_option('--filelist',help='a file with a list of workflows',default=None)
+    parser.add_option('--no_output',help='keep only the output of the last task of TaskChain',default=False,action='store_true')
     (options,args) = parser.parse_args()
 
     spec=None
