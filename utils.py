@@ -2457,12 +2457,49 @@ def approveSubscription(url, phedexid, nodes=None , comments =None, decision = '
         for item in items:
             for node in item['node']:
                 nodes.add(node['name'])
-        ## find out from the request itself ?
+        # find out from the request itself ?
         nodes = list(nodes)
+
+        #nodes = ["T2_CH_CERN","T1_US_FNAL_Disk","T0_CH_CERN_MSS"]
 
     params = {
         'decision' : decision,
         'request' : phedexid,
+#        'node' : nodes,
+        'node' : ','.join(nodes),
+        'comments' : comments
+        }
+    
+    result = phedexPost(url, "/phedex/datasvc/json/prod/updaterequest", params)
+    if not result:
+        return False
+
+    if 'already' in result:
+        return True
+    return result
+
+def disapproveSubscription(url, phedexid, nodes=None , comments =None):
+    if comments==None:
+        comments = 'auto-approve of production prestaging'
+    if not nodes:
+        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+        r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?request='+str(phedexid))
+        r2=conn.getresponse()
+        result = json.loads(r2.read())
+        items=result['phedex']['request']
+        nodes=set()
+        for item in items:
+            for node in item['node']:
+                nodes.add(node['name'])
+        # find out from the request itself ?
+        nodes = list(nodes)
+
+        #nodes = ["T2_CH_CERN","T1_US_FNAL_Disk","T0_CH_CERN_MSS"]
+
+    params = {
+        'decision' : 'disapprove',
+        'request' : phedexid,
+#        'node' : nodes,
         'node' : ','.join(nodes),
         'comments' : comments
         }
@@ -2491,12 +2528,26 @@ def makeDeleteRequest(url, site,datasets, comments):
     response = phedexPost(url, "/phedex/datasvc/json/prod/delete", params)
     return response
 
-def makeReplicaRequest(url, site,datasets, comments, priority='normal',custodial='n',approve=False,mail=True): # priority used to be normal
+def makeReplicaRequest(url, site,datasets, comments, priority='normal',custodial='n',approve=False,mail=True,group="DataOps"): # priority used to be normal
     dataXML = createXML(datasets)
     r_only = "n" if approve else "y"
     notice = "n" if mail else "y"
-    params = { "node" : site,"data" : dataXML, "group": "DataOps", "priority": priority,
+    params = { "node" : site,"data" : dataXML, "group": group, "priority": priority,
                  "custodial":custodial,"request_only":r_only ,"move":"n","no_mail":notice,"comments":comments}
+    response = phedexPost(url, "/phedex/datasvc/json/prod/subscribe", params)
+    return response
+
+def makeReplicaRequest(url, site,datasets, comments, priority='normal',custodial='n',group="DataOps"): # priority used to be normal
+    dataXML = createXML(datasets)
+    params = { "node" : site,"data" : dataXML, "group": group, "priority": priority,
+                 "custodial":custodial,"request_only":"y" ,"move":"n","no_mail":"n","comments":comments}
+    response = phedexPost(url, "/phedex/datasvc/json/prod/subscribe", params)
+    return response
+
+def makeMoveRequest(url, site,datasets, comments, priority='normal',custodial='n',group="DataOps"): # priority used to be normal
+    dataXML = createXML(datasets)
+    params = { "node" : site,"data" : dataXML, "group": group, "priority": priority,
+                 "custodial":custodial,"request_only":"y" ,"move":"y","no_mail":"n","comments":comments}
     response = phedexPost(url, "/phedex/datasvc/json/prod/subscribe", params)
     return response
 
@@ -2676,10 +2727,84 @@ def getLFNbase(dataset):
         file = reply[0]['logical_file_name']
         return '/'.join(file.split('/')[:3])
 
+
+def getListOfBlocks(inputdset,runwhitelist):
+    dbsApi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+    blocks=dbsApi.listBlocks(dataset = inputdset, run_num = runwhitelist)
+    
+    block_list = []
+
+    for block in blocks:
+        block_list.append(block['block_name'])
+
+    return block_list
+
+def checkIfBlockIsSubscribedToASite(url,block,site):
+
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?block='+block.replace('#','%23'))
+
+    r2=conn.getresponse()
+    result = json.loads(r2.read())
+
+    assert(len(result['phedex']['dataset']) == 1)
+
+    for subscription in result['phedex']['dataset'][0]['subscription']:
+        if subscription['node'] == site:
+            return True
+
+    if 'block' in result['phedex']['dataset'][0]:    
+
+        assert(len(result['phedex']['dataset'][0]['block']) == 1)
+
+        for subscription in result['phedex']['dataset'][0]['block'][0]['subscription']:
+            if subscription['node'] == site:
+                return True
+        
+    return False            
+
+
+def checkIfDatasetIsSubscribedToASite(url,dataset,site):
+
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?dataset='+dataset)
+    r2=conn.getresponse()
+    result = json.loads(r2.read())
+
+    if len(result['phedex']['dataset']) == 0:
+        return False
+
+    if len(result['phedex']['dataset']) != 1:
+        os.system('echo '+dataset+' | mail -s \"utils.py error 1\" andrew.m.levin@vanderbilt.edu')
+        sys.exit(1)
+
+    for subscription in result['phedex']['dataset'][0]['subscription']:
+        if subscription['node'] == site:
+            return True
+        
+    return False            
+
+def checkIfBlockIsAtASite(url,block,site):
+    
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicasummary?block='+block.replace('#','%23'))
+    r2=conn.getresponse()
+
+    result = json.loads(r2.read())
+
+    assert(len(result['phedex']['block']) == 1)
+
+    for replica in result['phedex']['block'][0]['replica']:
+        if replica['node'] == site and replica['complete'] == 'y':
+            return True
+
+    return False                
+
 class workflowInfo:
     def __init__(self, url, workflow, spec=True, request=None,stats=False, wq=False):
         self.url = url
         self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+
         if request == None:
             r1=self.conn.request("GET",'/couchdb/reqmgr_workload_cache/'+workflow)
             r2=self.conn.getresponse()
