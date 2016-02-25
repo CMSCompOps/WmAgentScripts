@@ -2532,7 +2532,7 @@ def makeReplicaRequest(url, site,datasets, comments, priority='normal',custodial
     dataXML = createXML(datasets)
     r_only = "n" if approve else "y"
     notice = "n" if mail else "y"
-    params = { "node" : site,"data" : dataXML, "group": "RelVal", "priority": priority,
+    params = { "node" : site,"data" : dataXML, "group": group, "priority": priority,
                  "custodial":custodial,"request_only":r_only ,"move":"n","no_mail":notice,"comments":comments}
     response = phedexPost(url, "/phedex/datasvc/json/prod/subscribe", params)
     return response
