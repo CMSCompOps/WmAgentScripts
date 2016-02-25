@@ -2551,7 +2551,7 @@ def makeMoveRequest(url, site,datasets, comments, priority='normal',custodial='n
     response = phedexPost(url, "/phedex/datasvc/json/prod/subscribe", params)
     return response
 
-def updateSubscription(url, site, item, priority=None, user_group=None):
+def updateSubscription(url, site, item, priority=None, user_group=None, suspend=None):
     params = { "node" : site }
     if '#' in item:
         params['block'] = item.replace('#','%23')
