@@ -55,7 +55,7 @@ def stagor(url,specific =None, options=None):
     wfois = []
     for wfo in session.query(Workflow).filter(Workflow.status == 'staging').all():
         wfi = workflowInfo(url, wfo.name)
-        if wfi.request['RequestStatus'] in ['running-open','running-closed','completed']:
+        if wfi.request['RequestStatus'] in ['running-open','running-closed','completed','assigned','acquired']:
             wfi.sendLog('stagor', "is in status %s"%wfi.request['RequestStatus'])
             wfi.status='away'
             session.commit()
@@ -63,7 +63,7 @@ def stagor(url,specific =None, options=None):
         if not wfi.request['RequestStatus'] in ['assignment-approved']:
             ## should be setting 'away' too
             print wfo.name,"is",wfi.request['RequestStatus']
-            sendEmail("wrong status in staging. debug","%s is in %s, should set away."(wfo.name,wfi.request['RequestStatus']))
+            sendEmail("wrong status in staging. debug","%s is in %s, should set away."%(wfo.name,wfi.request['RequestStatus']))
         wfois.append( (wfo,wfi) )            
         _,primaries,_,secondaries = wfi.getIO()
         for dataset in list(primaries)+list(secondaries):
