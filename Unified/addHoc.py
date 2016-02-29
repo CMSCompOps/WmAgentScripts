@@ -1,18 +1,23 @@
 #!/usr/bin/env python  
 from utils import workflowInfo, getWorkflows, sendEmail, componentInfo
 from assignSession import *
+import reqMgrClient
 import os
 import sys
 import json
 
 url = 'cmsweb.cern.ch'
 
-os.system('Unified/equalizor.py -a vlimant_BPH-RunIISummer15GS-00030_00212_v0__160129_135314_9755')
+## all dqmharvest completed to announced right away
+wfs = getWorkflows(url, 'completed', user=None, rtype='DQMHarvest')
+for wf in wfs: reqMgrClient.closeOutWorkflow(url, wf)
+wfs = getWorkflows(url, 'closed-out', user=None, rtype='DQMHarvest')
+for wf in wfs: reqMgrClient.announceWorkflow(url, wf)
 
 up = componentInfo(mcm=False, soft=['mcm'])                                 
 if not up.check():  
     sys.exit(1)     
-    
+
 ### catch unrunnable recoveries
 not_runable_acdc=set()
 wfs = getWorkflows(url, 'acquired', user=None, rtype='Resubmission',details=True)
