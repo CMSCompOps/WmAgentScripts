@@ -39,8 +39,8 @@ def modifySchema(helper, user, group, cache, backfill=False):
     and Campaign to say Backfill, and restarts requestDate.
     """
     result = {}
-    for (key, value) in helper.data.request.schema.dictionary_().items():
-        # previous versions of tags
+    for (key, value) in helper.data.request.schema.dictionary_whole_tree_().items():
+        #previous versions of tags
         if key == 'ProcConfigCacheID':
             result['ConfigCacheID'] = value
         elif key == 'RequestSizeEvents':
@@ -166,6 +166,9 @@ def modifySchema(helper, user, group, cache, backfill=False):
         now = datetime.datetime.utcnow()
         result["RequestDate"] = [
             now.year, now.month, now.day, now.hour, now.minute]
+
+    #result['Memory'] = 3000
+
     return result
 
 

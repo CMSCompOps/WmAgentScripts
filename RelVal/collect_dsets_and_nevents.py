@@ -58,39 +58,40 @@ def getNumEvents(dbsApi, dset):
         return -1
     return summary[0]['num_event']
 
-def main():
-    parser = optparse.OptionParser()
-    parser.add_option('--correct_env',action="store_true",dest='correct_env')
-    (options,args) = parser.parse_args()
 
-    command=""
-    for arg in sys.argv:
-        command=command+arg+" "
+def collect_dsets_and_nevents(wf_list):
 
-    if not options.correct_env:
-        # source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh
-        os.system("source /cvmfs/grid.cern.ch/emi-ui-3.7.3-1_sl6v2/etc/profile.d/setup-emi3-ui-example.sh; export X509_USER_PROXY=/tmp/x509up_u13536; source /tmp/relval/sw/comp.pre/slc6_amd64_gcc481/cms/dbs3-client/3.2.8a/etc/profile.d/init.sh; python2.6 "+command + "--correct_env")
-        sys.exit(0)
-        
-    if not len(args)==1:
-        print "usage: python2.6 getRelValDsetNames.py <inputFile_containing_a_list_of_workflows>"
-        sys.exit(0)
-    inputFile=args[0]
-    f = open(inputFile, 'r')
-
-    # Instantiate the dbs3 api
     dbsApi = getDBSApi()
 
-    for line in f:
-        workflow = line.rstrip('\n')
+    dset_list=[]
+
+    for workflow in wf_list:
         outputDataSets = getOutputDset(workflow)
         for dataset in outputDataSets:
             outEvents = getNumEvents(dbsApi, dataset)
-            #print "%-120s\t%d" % (dataset, dset_summary[0]['num_event'])
-            print "%s\t%d" % (dataset, outEvents)
+            dset_list.append((dataset, outEvents))
 
-    f.close
-    sys.exit(0);
+    return dset_list        
+
+def main():
+    parser = optparse.OptionParser()
+    (options,args) = parser.parse_args()
+
+    if not len(args)==1:
+        print "usage: python2.6 collect_dsets_and_nevents.py <inputFile_containing_a_list_of_workflows>"
+        sys.exit(0)
+
+    wf_list = []    
+
+    inputFile=args[0]
+    f = open(inputFile, 'r')
+    for line in f:
+        wf=line.rstrip('\n')
+        wf_list.append(wf)
+
+    dsets_nevents=collect_dsets_and_nevents(wf_list)    
+    for dset_nevents in dsets_nevents:
+        print dset_nevents[0] + " " + str(dset_nevents[1])
 
 if __name__ == "__main__":
     main()

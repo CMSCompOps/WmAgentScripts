@@ -705,11 +705,12 @@ def assignWorkflow(url, workflowname, team, parameters ):
     defaults["checkbox"+workflowname] = "checked"
 
     from utils import workflowInfo
+
     wf = workflowInfo(url, workflowname)
 
     # set the maxrss watchdog to what is specified in the request
     defaults['MaxRSS'] = wf.request['Memory']*1024+10
-    
+
     defaults.update( parameters )
 
     #if ('Multicore' in wf.request and wf.request['Multicore']>1):
@@ -739,6 +740,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
         if not defaults['SiteWhitelist']:
             print "Cannot assign with no site whitelist"
             return False
+
 
     for aux in assignWorkflow.auxiliaries:
         if aux in defaults: 
@@ -847,6 +849,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
                 print 'Status:',response.status,'Reason:',response.reason
                 print 'Explanation:'
                 data = response.read()
+                print data
                 return False
 
     print 'Assigned workflow:',workflowname,'to site:',defaults['SiteWhitelist'],'and team',team
