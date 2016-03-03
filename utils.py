@@ -2537,13 +2537,6 @@ def makeReplicaRequest(url, site,datasets, comments, priority='normal',custodial
     response = phedexPost(url, "/phedex/datasvc/json/prod/subscribe", params)
     return response
 
-def makeReplicaRequest(url, site,datasets, comments, priority='normal',custodial='n',group="DataOps"): # priority used to be normal
-    dataXML = createXML(datasets)
-    params = { "node" : site,"data" : dataXML, "group": group, "priority": priority,
-                 "custodial":custodial,"request_only":"y" ,"move":"n","no_mail":"n","comments":comments}
-    response = phedexPost(url, "/phedex/datasvc/json/prod/subscribe", params)
-    return response
-
 def makeMoveRequest(url, site,datasets, comments, priority='normal',custodial='n',group="DataOps"): # priority used to be normal
     dataXML = createXML(datasets)
     params = { "node" : site,"data" : dataXML, "group": group, "priority": priority,
