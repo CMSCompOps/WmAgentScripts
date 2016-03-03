@@ -36,6 +36,9 @@ def main():
     curs.execute("select * from batches")
     batches=curs.fetchall()
 
+    # headers for reqmgr2
+    headers = {"Content-type": "application/json", "Accept": "application/json"}
+
     batches_colnames = [desc[0] for desc in curs.description]
     
     for batch in batches:
@@ -56,7 +59,8 @@ def main():
             #first do checks to make sure the workflows do not write into an existing dataset
             for wf in wfs:
                 conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-                r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+wf[0])
+                urn = "/reqmgr2/data/request/%s" % wf[0]
+                r1=conn.request("GET", urn, headers=headers)
                 r2=conn.getresponse()
 
                 schema = json.loads(r2.read())
@@ -111,7 +115,8 @@ def main():
             #only assign the workflows after all of the checks are done                        
             for wf in wfs:
                 conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-                r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+wf[0])
+                urn = "/reqmgr2/data/request/%s" % wf[0]
+                r1=conn.request("GET", urn, headers=headers)
                 r2=conn.getresponse()
 
                 if r2.status != 200:
