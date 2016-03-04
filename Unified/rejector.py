@@ -3,7 +3,7 @@ from assignSession import *
 import sys
 import reqMgrClient
 from utils import workflowInfo, setDatasetStatus
-from utils import componentInfo
+from utils import componentInfo, getWorkflowById
 import optparse
 import re
 
@@ -46,15 +46,17 @@ def rejector(url, specific, options=None):
                 session.commit()
                 continue
 
+        datasets = set(wfi.request['OutputDatasets'])
         reqMgrClient.invalidateWorkflow(url, wfo.name, current_status=wfi.request['RequestStatus'])
-        #if wfi.request['RequestStatus'] in ['assignment-approved','new','completed']:
-        #    #results.append( reqMgrClient.rejectWorkflow(url, wfo.name))
-        #    reqMgrClient.rejectWorkflow(url, wfo.name)
-        #else:
-        #    #results.append( reqMgrClient.abortWorkflow(url, wfo.name))
-        #    reqMgrClient.abortWorkflow(url, wfo.name)
-        
-        datasets = wfi.request['OutputDatasets']
+        ## need to find the whole familly and reject the whole gang
+        familly = getWorkflowById( url, wfi.request['PrepID'] , details=True)
+        for fwl in familly:
+            if fwl['RequestDate'] < wfi.request['RequestDate']: continue
+            if fwl['RequestType']!='Resubmission': continue
+            print "rejecting",fwl['RequestName']
+            reqMgrClient.invalidateWorkflow(url, fwl['RequestName'], current_status=fwl['RequestStatus'])
+            datasets.update( fwl['OutputDatasets'] )
+
         for dataset in datasets:
             if options.keep:
                 print "keeping",dataset,"in its current status"
