@@ -10,9 +10,17 @@ url = 'cmsweb.cern.ch'
 
 ## all dqmharvest completed to announced right away
 wfs = getWorkflows(url, 'completed', user=None, rtype='DQMHarvest')
-for wf in wfs: reqMgrClient.closeOutWorkflow(url, wf)
+for wf in wfs: 
+    print "closing out",wf
+    reqMgrClient.closeOutWorkflow(url, wf)
 wfs = getWorkflows(url, 'closed-out', user=None, rtype='DQMHarvest')
-for wf in wfs: reqMgrClient.announceWorkflow(url, wf)
+for wf in wfs: 
+    print "announcing",wf
+    reqMgrClient.announceWorkflow(url, wf)
+
+
+#os.system('Unified/equalizor.py -a pdmvserv_task_HIG-RunIIFall15DR76-01039__v1_T_160120_002705_9423')
+#os.system('Unified/equalizor.py -a pdmvserv_SMP-Summer12DR53X-00027_00440_v0__160224_044437_5031')
 
 up = componentInfo(mcm=False, soft=['mcm'])                                 
 if not up.check():  
