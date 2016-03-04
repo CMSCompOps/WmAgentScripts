@@ -148,7 +148,7 @@ def checkor(url, spec=None, options=None):
                 wfi.sendLog('checkor',"%s is on hold"%wfo.name)
                 continue
 
-        if wfo.wm_status != 'completed' and not wfo.name in bypasses:
+        if wfo.wm_status != 'completed': #and not wfo.name in bypasses:
             ## for sure move on with closeout check if in completed
             wfi.sendLog('checkor',"no need to check on %s in status %s"%(wfo.name, wfo.wm_status))
             session.commit()
