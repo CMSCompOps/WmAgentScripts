@@ -103,13 +103,15 @@ def try_sendLog( subject, text , wfi = None, show=True):
            "timestamp" : now,
            "date" : now_d}
 
+    if show:
+        print text
     encodedParams = urllib.urlencode( doc )
     conn.request("POST" , '/logs/log/', json.dumps(doc)) 
     response = conn.getresponse()
     data = response.read()
     try:
         res = json.loads( data ) 
-        print 'log:',res['_id'],"was created"
+        #print 'log:',res['_id'],"was created"
     except Exception as e:
         print "failed"
         print str(e)
@@ -935,7 +937,9 @@ class siteInfo:
             
             self.sites_banned = [
                 'T2_CH_CERN_AI',
-                'T2_US_Vanderbilt'
+                'T2_US_Vanderbilt',
+                #'T2_RU_INR',
+                #'T2_UA_KIPT'
                 ]
 
             data = dataCache.get('ssb_158') ## 158 is the site readyness metric
@@ -986,6 +990,9 @@ class siteInfo:
                                           "T2_BE_IIHE",
                                           "T2_EE_Estonia",
                                           "T2_CH_CERN", 
+
+                                   'T2_RU_INR',
+                                   'T2_UA_KIPT'
                                           ]
         # restrict to those actually ON
         allowed_T2_for_transfer = [s for s in allowed_T2_for_transfer if s in self.sites_ready]
@@ -1031,13 +1038,14 @@ class siteInfo:
                 self.storage[mss] = 0 
             else: 
                 self.storage[mss]  = mss_usage['Tape']['Free'][mss]
-            if mss == 'T1_US_FNAL_MSS':
-                self.storage[mss] =min(50, self.storage[mss])
-            if mss == 'T0_CH_CERN_MSS':
-                self.storage[mss] =min(2000, self.storage[mss])
-            if mss == 'T1_RU_JINR_MSS':
-                self.storage[mss] =min(100, self.storage[mss])
-                
+
+            #if mss == 'T1_US_FNAL_MSS':
+            #    self.storage[mss] =min(50, self.storage[mss])
+            #if mss == 'T0_CH_CERN_MSS':
+            #    self.storage[mss] =min(2000, self.storage[mss])
+            #if mss == 'T1_RU_JINR_MSS':
+            #    self.storage[mss] =min(100, self.storage[mss])
+
 
         ## and detox info
         self.fetch_detox_info(talk=False)
