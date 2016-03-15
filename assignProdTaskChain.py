@@ -153,15 +153,6 @@ def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lf
     if verbose:
         print res
 
-def getRequestDict(url, workflow):
-    conn = httplib.HTTPSConnection(url, cert_file=os.getenv(
-        'X509_USER_PROXY'), key_file=os.getenv('X509_USER_PROXY'))
-    r1 = conn.request("GET", '/reqmgr/reqMgr/request?requestName=' + workflow)
-    r2 = conn.getresponse()
-    request = json.loads(r2.read())
-    return request
-
-
 def main():
     url = 'cmsweb.cern.ch'
     # Example: python assignWorkflow.py -w amaltaro_RVZTT_120404_163607_6269
@@ -219,7 +210,8 @@ def main():
     
     for workflow in workflows:
         # Getting the original dictionary
-        schema = getRequestDict(url, workflow)
+        result = reqMgr.requestManagerGet(url, "/reqmgr2/data/request?name=%s" % workflow)['result']
+        schema = result[0][workflow]
     
         # Setting the AcqEra and ProcStr values per Task
         for key, value in schema.items():
@@ -265,6 +257,7 @@ def main():
         if options.procstring:
             procstring = options.procstring
     
+        print schema
         # check output dataset existence, and abort if they already do!
         datasets = schema["OutputDatasets"]
         i = 0
