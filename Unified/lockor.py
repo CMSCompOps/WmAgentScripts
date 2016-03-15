@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from utils import getWorkflows, findCustodialCompletion, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration, getDatasetSize, sendEmail, campaignInfo, componentInfo
+from utils import getWorkflows, findCustodialCompletion, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration, getDatasetSize, sendEmail, campaignInfo, componentInfo, reqmgr_url, monitor_dir
 from assignSession import *
 import json
 import os
@@ -8,7 +8,7 @@ import sys
 from McMClient import McMClient
 import time
 
-url = 'cmsweb.cern.ch'
+url = reqmgr_url
 
 use_mcm=True
 up = componentInfo(mcm=use_mcm, soft=['mcm'])
@@ -35,7 +35,7 @@ for c in CI.campaigns:
         custodial_override[c] = CI.campaigns[c]['custodial_override']
 
 ## those that are already in lock
-already_locked = set(json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/globallocks.json').read()))
+already_locked = set(json.loads(open('%s/globallocks.json'%monitor_dir).read()))
 if not already_locked:
     old = json.loads(open('datalocks.json').read())
     for site,locks in old.items():
@@ -212,10 +212,10 @@ for dataset in already_locked-newly_locking:
 
 waiting_for_custodial_sum = sum([info['size'] for ds,info in waiting_for_custodial.items() if 'size' in info])
 print waiting_for_custodial_sum,"[GB] out there waiting for custodial"
-open('/afs/cern.ch/user/c/cmst2/www/unified/waiting_custodial.json','w').write( json.dumps( waiting_for_custodial , indent=2) )
-open('/afs/cern.ch/user/c/cmst2/www/unified/stuck_custodial.json','w').write( json.dumps( stuck_custodial , indent=2) )
-open('/afs/cern.ch/user/c/cmst2/www/unified/lagging_custodial.json','w').write( json.dumps( lagging_custodial , indent=2) )
-open('/afs/cern.ch/user/c/cmst2/www/unified/missing_approval_custodial.json','w').write( json.dumps( missing_approval_custodial , indent=2) )
+open('%s/waiting_custodial.json'%monitor_dir,'w').write( json.dumps( waiting_for_custodial , indent=2) )
+open('%s/stuck_custodial.json'%monitor_dir,'w').write( json.dumps( stuck_custodial , indent=2) )
+open('%s/lagging_custodial.json'%monitor_dir,'w').write( json.dumps( lagging_custodial , indent=2) )
+open('%s/missing_approval_custodial.json'%monitor_dir,'w').write( json.dumps( missing_approval_custodial , indent=2) )
 
 ## then for all that would have been invalidated from the past, check whether you can unlock the wf based on output
 for wfo in session.query(Workflow).filter(Workflow.status=='forget').all():
@@ -228,8 +228,8 @@ for wfo in session.query(Workflow).filter(Workflow.status=='forget').all():
 
         
             
-open('/afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.new','w').write( json.dumps( sorted(list(newly_locking)), indent=2))
-os.system('mv /afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.new /afs/cern.ch/user/c/cmst2/www/unified/globallocks.json')
+open('%s/globallocks.json.new'%monitor_dir,'w').write( json.dumps( sorted(list(newly_locking)), indent=2))
+os.system('mv %s/globallocks.json.new %s/globallocks.json'%(monitor_dir,monitor_dir))
 
 
 ## now settting the statuses locally right

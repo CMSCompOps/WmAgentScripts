@@ -2,7 +2,7 @@
 from assignSession import *
 import sys
 import reqMgrClient
-from utils import workflowInfo, getWorkflowById, getDatasetEventsAndLumis, componentInfo
+from utils import workflowInfo, getWorkflowById, getDatasetEventsAndLumis, componentInfo, monitor_dir, reqmgr_url
 from utils import campaignInfo, sendEmail, siteInfo
 import json
 import random
@@ -35,7 +35,7 @@ def completor(url, specific):
     random.shuffle( wfs )
 
     ## by workflow a list of fraction / timestamps
-    completions = json.loads( open('/afs/cern.ch/user/c/cmst2/www/unified/completions.json').read())
+    completions = json.loads( open('%s/completions.json'%monitor_dir).read())
     
     good_fractions = {}
     for c in CI.campaigns:
@@ -205,10 +205,10 @@ def completor(url, specific):
         ## do it once only for testing
         #break
             
-    open('/afs/cern.ch/user/c/cmst2/www/unified/completions.json','w').write( json.dumps( completions , indent=2))
+    open('%s/completions.json'%monitor_dir,'w').write( json.dumps( completions , indent=2))
     text="These have been running for long"
     
-    open('/afs/cern.ch/user/c/cmst2/www/unified/longlasting.json','w').write( json.dumps( long_lasting, indent=2 ))
+    open('%s/longlasting.json'%monitor_dir,'w').write( json.dumps( long_lasting, indent=2 ))
 
     for wf,info in sorted(long_lasting.items(), key=lambda tp:tp[1]['delay'], reverse=True):
         delay = info['delay']
@@ -225,7 +225,7 @@ def completor(url, specific):
 
 
 if __name__ == "__main__":
-    url = 'cmsweb.cern.ch'
+    url = reqmgr_url
     spec=None
     if len(sys.argv)>1:
         spec=sys.argv[1]

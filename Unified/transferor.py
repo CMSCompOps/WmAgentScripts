@@ -5,7 +5,7 @@ from McMClient import McMClient
 from utils import makeReplicaRequest
 from utils import workflowInfo, siteInfo, campaignInfo, userLock, global_SI
 from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, getSiteWhiteList, approveSubscription, getDatasetSize, updateSubscription, getWorkflows, componentInfo, getDatasetDestinations, getDatasetBlocks, DSS
-from utils import unifiedConfiguration
+from utils import unifiedConfiguration, monitor_dir, reqmgr_url
 #from utils import lockInfo
 from utils import duplicateLock, newLockInfo
 import json
@@ -86,7 +86,7 @@ def transferor(url ,specific = None, talk=True, options=None):
     in_transfer_priority=None
     min_transfer_priority=None
     print "getting all wf in staging ..."
-    stucks = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/stuck_transfers.json').read())
+    stucks = json.loads(open('%s/stuck_transfers.json'%monitor_dir).read())
     
     for wfo in session.query(Workflow).filter(Workflow.status=='staging').all():
         wfh = workflowInfo( url, wfo.name, spec=False)
@@ -690,8 +690,7 @@ def transferor(url ,specific = None, talk=True, options=None):
         session.commit()
 
 if __name__=="__main__":
-    url = 'cmsweb.cern.ch'
-    UC = unifiedConfiguration()
+    url = reqmgr_url
     parser = optparse.OptionParser()  
     parser.add_option('-t','--test',help="Perform the test and display information",default=False,action='store_true')
     parser.add_option('-s','--stop',help="Stop ask and go",default=False,action='store_true')

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import componentInfo, sendEmail, setDatasetStatus, unifiedConfiguration, workflowInfo, siteInfo, sendLog
+from utils import componentInfo, sendEmail, setDatasetStatus, unifiedConfiguration, workflowInfo, siteInfo, sendLog, reqmgr_url, monitor_dir
 import reqMgrClient
 import json
 import time
@@ -332,14 +332,14 @@ def closor(url, specific=None):
         sendEmail('waiting for files to announce', subject)
         sendLog('closor',subject)
         print subject
-        open('/afs/cern.ch/user/c/cmst2/www/unified/stuck_files.json','w').write( json.dumps( really_late_files , indent=2))
+        open('%s/stuck_files.json'%monitor_dir,'w').write( json.dumps( really_late_files , indent=2))
 
     if held:
         sendEmail("held from announcing","the workflows below are held up, please check the logs https://cmst2.web.cern.ch/cmst2/unified/logs/closor/last.log \n%s"%("\n".join( held )))
 
         
 if __name__ == "__main__":
-    url = 'cmsweb.cern.ch'
+    url = reqmgr_url
     spec=None
     if len(sys.argv)>1:
         spec=sys.argv[1]

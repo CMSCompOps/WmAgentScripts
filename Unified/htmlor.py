@@ -6,25 +6,26 @@ import os
 import json
 from collections import defaultdict
 import sys
+from utils import monitor_dir, base_dir, phedex_url, reqmgr_url
 
 def htmlor( caller = ""):
     up = componentInfo(mcm=False, soft=['mcm'])
     if not up.check(): return 
         
     try:
-        boost = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/equalizor.json').read())['modifications']
+        boost = json.loads(open('%s/equalizor.json'%monitor_dir).read())['modifications']
     except:
         boost = {}
-    cache = getWorkflows('cmsweb.cern.ch','assignment-approved', details=True)
-    cache.extend( getWorkflows('cmsweb.cern.ch','acquired', details=True) )
-    cache.extend( getWorkflows('cmsweb.cern.ch','running-open', details=True) )
-    cache.extend( getWorkflows('cmsweb.cern.ch','running-closed', details=True) )
+    cache = getWorkflows(reqmgr_url,'assignment-approved', details=True)
+    cache.extend( getWorkflows(reqmgr_url,'acquired', details=True) )
+    cache.extend( getWorkflows(reqmgr_url,'running-open', details=True) )
+    cache.extend( getWorkflows(reqmgr_url,'running-closed', details=True) )
     def getWL( wfn ):
         cached = filter(lambda d : d['RequestName']==wfn, cache)
         if cached:
             wl = cached[0]
         else:
-            wl = getWorkLoad('cmsweb.cern.ch',wfn)
+            wl = getWorkLoad(reqmgr_url,wfn)
         return wl
 
     def wfl(wf,view=False,p=False,ms=False,within=False,ongoing=False,status=False,update=False):
@@ -56,19 +57,21 @@ def htmlor( caller = ""):
                 "%s "%wfn,
                 '(%s) <br>'%wfs])
         text+=', '.join([
-                '<a href="https://cmsweb.cern.ch/reqmgr/view/details/%s" target="_blank">dts</a>'%wfn,
-                '<a href=https://cmsweb.cern.ch/reqmgr/view/showWorkload?requestName=%s target="_blank">wkl</a>'%wfn,
-                '<a href="https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache/%s" target="_blank">wfc</a>'%wfn,
-                '<a href="https://cmsweb.cern.ch/reqmgr/reqMgr/request?requestName=%s" target="_blank">dwkc</a>'%wfn,
-                '<a href="https://cmsweb.cern.ch/reqmgr/view/splitting/%s" target="_blank">spl</a>'%wfn,
+                #deprecated '<a href="https://cmsweb.cern.ch/reqmgr/view/details/%s" target="_blank">dts</a>'%wfn,
+                '<a href="https://%s/reqmgr2/fetch?rid=%s" target="_blank">dts</a>'%(reqmgr_url,wfn),
+                #TOFIX '<a href=https://cmsweb.cern.ch/reqmgr/view/showWorkload?requestName=%s target="_blank">wkl</a>'%wfn,
+                '<a href="https://%s/couchdb/reqmgr_workload_cache/%s" target="_blank">wfc</a>'%(reqmgr_url,wfn),
+                '<a href="https://%s/reqmgr2/data/request?name=%s" target="_blank">req</a>'%(reqmgr_url,wfn),
+                #'<a href="https://cmsweb.cern.ch/reqmgr/reqMgr/request?requestName=%s" target="_blank">dwkc</a>'%wfn,
+                #TOFIX '<a href="https://cmsweb.cern.ch/reqmgr/view/splitting/%s" target="_blank">spl</a>'%wfn,
                 '<a href="https://cms-pdmv.cern.ch/stats/?RN=%s" target="_blank">vw</a>'%wfn,
                 '<a href="https://cms-pdmv.cern.ch/stats/restapi/get_one/%s" target="_blank">vwo</a>'%wfn,
                 '<a href="https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=full&reverse=0&reverse=1&npp=20&subtext=%s&sall=q" target="_blank">elog</a>'%pid,
                 '<a href="http://cms-gwmsmon.cern.ch/prodview/%s" target="_blank">pv</a>'%wfn,
-                '<a href="https://cmsweb.cern.ch/reqmgr/reqMgr/outputDatasetsByRequestName/%s" target="_blank">out</a>'%wfn,
+                #deprecated '<a href="https://cmsweb.cern.ch/reqmgr/reqMgr/outputDatasetsByRequestName/%s" target="_blank">out</a>'%wfn,
                 '<a href="closeout.html#%s" target="_blank">clo</a>'%wfn,
                 '<a href="statuses.html#%s" target="_blank">st</a>'%wfn,
-                '<a href="https://cmsweb.cern.ch/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s" target="_blank">perf</a>'%wfn
+                '<a href="https://%s/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s" target="_blank">perf</a>'%(reqmgr_url,wfn)
                 ])
         if within and (not view or wfs=='completed'):
             wl = getWL( wfn )
@@ -153,7 +156,7 @@ def htmlor( caller = ""):
 
     ## start to write it
     #html_doc = open('/afs/cern.ch/user/v/vlimant/public/ops/index.html','w')
-    html_doc = open('/afs/cern.ch/user/c/cmst2/www/unified/index.html.new','w')
+    html_doc = open('%s/index.html.new'%monitor_dir,'w')
     print "Updating the status page ..." 
 
     UC = unifiedConfiguration()
@@ -184,13 +187,14 @@ def htmlor( caller = ""):
 
 Last update on %s(CET), %s(GMT)
 <br>
-<a href=logs/ target=_blank>logs</a> <a href=logs/last.log target=_blank>last</a> <a href=statuses.html>statuses</a> <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/ target=_blank>prod mon</a> <a href=https://cmsweb.cern.ch/wmstats/index.html target=_blank>wmstats</a> <a href=http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/SitesInfo.txt target=_blank>detox</a> <a href=locked.html>space</a> <a href=logs/subscribor/last.log target=_blank>blocks</a> <a href=logs/agents/last.log>agents</a>
+<a href=logs/ target=_blank>logs</a> <a href=logs/last.log target=_blank>last</a> <a href=statuses.html>statuses</a> <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/ target=_blank>prod mon</a> <a href=https://%s/wmstats/index.html target=_blank>wmstats</a> <a href=http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/SitesInfo.txt target=_blank>detox</a> <a href=locked.html>space</a> <a href=logs/subscribor/last.log target=_blank>blocks</a> <a href=logs/agents/last.log>agents</a>
 <br>
 <a href=https://twiki.cern.ch/twiki/bin/view/CMSPublic/CompOpsWorkflowL3Responsibilities#Automatic_Assignment_and_Unified>what am I</a> <a href=data.html>json interfaces</a> <a href=logs/addHoc/last.log>add-hoc op</a> created from <b>%s <a href=logs/last_running>last running</a></b> <object height=20 type="text/html" data="logs/last_running"><p>backup content</p></object>
 <br><br>
 
 """ %(time.asctime(time.localtime()),
       time.asctime(time.gmtime()),
+      reqmgr_url,
       caller
       )
                    )
@@ -201,6 +205,7 @@ Last update on %s(CET), %s(GMT)
     for wf in session.query(Workflow).filter(Workflow.status.startswith('considered')).all():
         wl = getWL( wf.name )
         count_by_campaign[wl['Campaign']][int(wl['RequestPriority'])]+=1
+        print wf.name
         text+="<li> %s </li> \n"%wfl(wf,p=True)
         count+=1
     text_by_c=""
@@ -546,15 +551,15 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     start_time_two_weeks_ago = time.mktime(time.gmtime(now - (20*24*60*60))) # 20
     last_week =  int(time.strftime("%W",time.gmtime(now - ( 7*24*60*60))))
 
-    all_locks = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/globallocks.json').read())    
-    waiting_custodial = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/waiting_custodial.json').read())
+    all_locks = json.loads(open('%s/globallocks.json'%monitor_dir).read())    
+    waiting_custodial = json.loads(open('%s/waiting_custodial.json'%monitor_dir).read())
     all_pending_approval_custodial = dict([(k,item) for k,item in waiting_custodial.items() if 'nodes' in item and not any([node['decided'] for node in item['nodes'].values()]) ])
     n_pending_approval = len( all_pending_approval_custodial )
     #n_pending_approval = len([item for item in waiting_custodial.values() if 'nodes' in item and not any([node['decided'] for node in item['nodes'].values() ])])
-    missing_approval_custodial = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/missing_approval_custodial.json').read())
+    missing_approval_custodial = json.loads(open('%s/missing_approval_custodial.json'%monitor_dir).read())
 
-    stuck_custudial = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/stuck_custodial.json').read())
-    lagging_custudial = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/lagging_custodial.json').read())
+    stuck_custudial = json.loads(open('%s/stuck_custodial.json'%monitor_dir).read())
+    lagging_custudial = json.loads(open('%s/lagging_custodial.json'%monitor_dir).read())
     if len(stuck_custudial):
         stuck_string = ', <font color=red>%d appear to be <a href=stuck_custodial.json>stuck</a></font>'% len(stuck_custudial)
     else:
@@ -698,7 +703,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 
 
     per_module = defaultdict(list)
-    for t in filter(None,os.popen('cat /afs/cern.ch/user/c/cmst2/www/unified/logs/*/*.time').read().split('\n')):
+    for t in filter(None,os.popen('cat %s/logs/*/*.time'%monitor_dir).read().split('\n')):
         module_name,run_time,spend = t.split(':')
         ## then do what you want with it !
         if 'cleanor' in module_name: continue
@@ -725,10 +730,10 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
         html_doc.write("<li>%s : last %s, avg %s</li>\n"%( m, display_time(lasttime), display_time(avg)))
     html_doc.write("</ul>")
 
-    html_doc.write("Last running <pre>%s</pre><br>"%( os.popen("tac /afs/cern.ch/user/c/cmst2/www/unified/logs/running | head -5").read() ))
+    html_doc.write("Last running <pre>%s</pre><br>"%( os.popen("tac %s/logs/running | head -5"%monitor_dir).read() ))
 
 
-    html_doc.write("Order in cycle <pre>%s</pre><br>"%( '\n'.join(map(lambda l : l.split('/')[-1].replace('.py',''), filter(lambda l : not l.startswith('#') and 'Unified' in l and 'py' in l.split('/')[-1], open('/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cycle.sh').read().split('\n')))) ))
+    html_doc.write("Order in cycle <pre>%s</pre><br>"%( '\n'.join(map(lambda l : l.split('/')[-1].replace('.py',''), filter(lambda l : not l.startswith('#') and 'Unified' in l and 'py' in l.split('/')[-1], open('%s/WmAgentScripts/cycle.sh'%base_dir).read().split('\n')))) ))
 
 
     html_doc.write("</div>\n")
@@ -797,14 +802,14 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     for mss in SI.storage:
         waiting = 0
         try:
-            waiting = float(os.popen("grep '%s is pending . Created since' /afs/cern.ch/user/c/cmst2/www/unified/logs/lockor/last.log  -B 3 | grep size | awk '{ sum+=$6 ; print sum }' | tail -1" % mss).readline())
+            waiting = float(os.popen("grep '%s is pending . Created since' %s/logs/lockor/last.log  -B 3 | grep size | awk '{ sum+=$6 ; print sum }' | tail -1" % (mss,monitor_dir)).readline())
         except Exception as e:
             print str(e)
 
         oldest = ""
-        os.system('grep pending /afs/cern.ch/user/c/cmst2/www/unified/logs/lockor/last.log | sort -u > /afs/cern.ch/user/c/cmst2/www/unified/logs/pending.log')
+        os.system('grep pending %s/logs/lockor/last.log | sort -u > %s/logs/pending.log'%(monitor_dir,monitor_dir))
         try:
-            oldest = os.popen("grep '%s is pending . Created since ' /afs/cern.ch/user/c/cmst2/www/unified/logs/lockor/last.log | sort | awk '{print $10, $11, $12, $13, $14 }' | head -1"% mss).readline()
+            oldest = os.popen("grep '%s is pending . Created since ' %s/logs/lockor/last.log | sort | awk '{print $10, $11, $12, $13, $14 }' | head -1"% (mss,monitor_dir)).readline()
         except Exception as e:
             print str(e)
         waiting /= 1024.
@@ -813,7 +818,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 
     lap ( 'done with sites' )
 
-    open('/afs/cern.ch/user/c/cmst2/www/unified/siteInfo.json','w').write(json.dumps(dict([(t,getattr(SI,t)) for t in SI.types()]),indent=2))
+    open('%s/siteInfo.json'%monitor_dir,'w').write(json.dumps(dict([(t,getattr(SI,t)) for t in SI.types()]),indent=2))
 
     lap ( 'done with sites json' )
 
@@ -841,7 +846,7 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
 
         
     ## make the locked/available donut chart
-    donut_html = open('/afs/cern.ch/user/c/cmst2/www/unified/locked.html','w')
+    donut_html = open('%s/locked.html'%monitor_dir,'w')
     tables = "\n".join([info[0] for site,info in chart_data.items()])
     draws = "\n".join([info[1] for site,info in chart_data.items()])
     divs = "\n".join([info[2] for site,info in chart_data.items()])
@@ -917,10 +922,10 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
 
     html_doc.close()
     ## and put the file in place
-    os.system('mv /afs/cern.ch/user/c/cmst2/www/unified/index.html.new /afs/cern.ch/user/c/cmst2/www/unified/index.html')
+    os.system('mv %s/index.html.new %s/index.html'%(monitor_dir,monitor_dir))
 
         
-    statuses = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/statusmon.json').read())
+    statuses = json.loads(open('%s/statusmon.json'%monitor_dir).read())
     s_count = defaultdict(int)
     now = time.mktime(time.gmtime())
     for wf in session.query(Workflow).all():
@@ -930,9 +935,9 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
     for t in statuses.keys():
         if (now-float(t)) > 7*24*60*60:
             statuses.pop(t)
-    open('/afs/cern.ch/user/c/cmst2/www/unified/statusmon.json','w').write( json.dumps( statuses , indent=2))
+    open('%s/statusmon.json'%monitor_dir,'w').write( json.dumps( statuses , indent=2))
 
-    html_doc = open('/afs/cern.ch/user/c/cmst2/www/unified/statuses.html','w')
+    html_doc = open('%s/statuses.html'%monitor_dir,'w')
     html_doc.write("""                                                                                                                                                                                                                                                                                                      <html>        
 <table border=1>
 <thead>
@@ -946,7 +951,7 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
         ## pass all that is unlocked and considered it gone
         wfs[wfo.name] = (wfo.status,wfo.wm_status)
 
-    open('/afs/cern.ch/user/c/cmst2/www/unified/statuses.json','w').write(json.dumps( wfs ))
+    open('%s/statuses.json'%monitor_dir,'w').write(json.dumps( wfs ))
     for wfn in sorted(wfs.keys()):
         ## pass all that is unlocked and considered it gone
         if 'unlock' in wfs[wfn][0]: continue

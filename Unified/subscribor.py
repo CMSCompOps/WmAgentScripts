@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import workflowInfo, getDatasetBlockAndSite, getWorkLoad, makeReplicaRequest, sendEmail, getDatasetOnGoingDeletion, componentInfo
+from utils import workflowInfo, getDatasetBlockAndSite, getWorkLoad, makeReplicaRequest, sendEmail, getDatasetOnGoingDeletion, componentInfo, reqmgr_url
 import json
 from collections import defaultdict
 import random
 import sys
 
-url ='cmsweb.cern.ch'
+url = reqmgr_url
 
 up = componentInfo(mcm=False, soft=['mcm'])
 if not up.check(): sys.exit(1)

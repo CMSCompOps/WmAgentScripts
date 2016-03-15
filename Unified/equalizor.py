@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import workflowInfo, getWorkflows, siteInfo, sendEmail, componentInfo
+from utils import workflowInfo, getWorkflows, siteInfo, sendEmail, componentInfo, monitor_dir, reqmgr_url
 import reqMgrClient
 import json
 import os
@@ -108,16 +108,16 @@ def equalizor(url , specific = None, options=None):
             return None
 
     def close( interface ):
-        open('/afs/cern.ch/user/c/cmst2/www/unified/equalizor.json.new','w').write( json.dumps( interface, indent=2))
-        os.system('mv /afs/cern.ch/user/c/cmst2/www/unified/equalizor.json.new /afs/cern.ch/user/c/cmst2/www/unified/equalizor.json')
-        os.system('cp /afs/cern.ch/user/c/cmst2/www/unified/equalizor.json /afs/cern.ch/user/c/cmst2/www/unified/logs/equalizor/equalizor.%s.json'%(time.mktime(time.gmtime())))
+        open('%s/equalizor.json.new'%monitor_dir,'w').write( json.dumps( interface, indent=2))
+        os.system('mv %s/equalizor.json.new %s/equalizor.json'%(monitor_dir,monitor_dir))
+        os.system('cp %s/equalizor.json %s/logs/equalizor/equalizor.%s.json'%(monitor_dir,monitor_dir,time.mktime(time.gmtime())))
 
     interface = {
         'reversed_mapping' : reversed_mapping,
         'modifications' : {}
         }
     if options.augment or options.remove:
-        interface['modifications'] = json.loads( open('/afs/cern.ch/user/c/cmst2/www/unified/equalizor.json').read())['modifications']
+        interface['modifications'] = json.loads( open('%s/equalizor.json'%monitor_dir).read())['modifications']
 
     if options.remove:
         if specific in interface['modifications']:
@@ -344,8 +344,7 @@ def equalizor(url , specific = None, options=None):
 
 
 if __name__ == "__main__":
-    url = 'cmsweb.cern.ch'
-
+    url = reqmgr_url
     parser = optparse.OptionParser()
     parser.add_option('-a','--augment',help='add on top of the document', default=False, action='store_true')
     parser.add_option('-r','--remove',help='remove on workflow from the document', default=False, action='store_true')
