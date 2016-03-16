@@ -48,12 +48,6 @@ def rejector(url, specific, options=None):
                 continue
 
         reqMgrClient.invalidateWorkflow(url, wfo.name, current_status=wfi.request['RequestStatus'])
-        #if wfi.request['RequestStatus'] in ['assignment-approved','new','completed']:
-        #    #results.append( reqMgrClient.rejectWorkflow(url, wfo.name))
-        #    reqMgrClient.rejectWorkflow(url, wfo.name)
-        #else:
-        #    #results.append( reqMgrClient.abortWorkflow(url, wfo.name))
-        #    reqMgrClient.abortWorkflow(url, wfo.name)
         
         datasets = wfi.request['OutputDatasets']
         for dataset in datasets:
@@ -86,6 +80,14 @@ def rejector(url, specific, options=None):
                 if options.TimePerEvent:
                     schema['TimePerEvent'] = options.TimePerEvent
 
+                if options.ProcessingString:
+                    schema['ProcessingString'] = options.ProcessingString
+                if options.AcquisitionEra:
+                    schema['AcquisitionEra'] = options.AcquisitionEra
+                    
+                if options.PrepID:
+                    schema['PrepID'] =options.PrepID
+
                 if schema['RequestType'] == 'TaskChain' and options.no_output:
                     ntask = schema['TaskChain']
                     for it in range(1,ntask-1):
@@ -95,13 +97,41 @@ def rejector(url, specific, options=None):
 
                 ## update to the current priority
                 schema['RequestPriority'] = wfi.request['RequestPriority']
-                response = reqMgrClient.submitWorkflow(url, schema)
-                m = re.search("details\/(.*)\'",response)
-                if not m:
+
+                ## drop shit on the way to reqmgr2
+                for p in ['RequestStatus',
+                          'RequestTransition',
+                          'RequestorDN',
+                          'RequestWorkflow',
+                          'OutputDatasets',
+                          'ReqMgr2Only',
+                          #'Group',
+                          'RequestDate',
+                          #'ConfigCacheUrl',
+                          'RequestName',
+                          'timeStamp',
+                          'SoftwareVersions',
+                          'CouchURL'
+                          ]:
+                    if p in schema:
+                        schema.pop( p )
+                        #pass
+                print "submitting"
+                print json.dumps( schema, indent=2 )
+                newWorkflow = reqMgrClient.submitWorkflow(url, schema)
+                if not newWorkflow:
                     print "error in cloning",wfo.name
-                    print response
+                    print json.dumps( schema, indent=2 )
                     return 
-                newWorkflow = m.group(1)
+                print newWorkflow
+                #m = re.search("details\/(.*)\'",response)
+                #if not m:
+                #    print "error in cloning",wfo.name
+                #    print response
+                #    print json.dumps( schema, indent=2 )
+                #    return 
+                #newWorkflow = m.group(1)
+
                 data = reqMgrClient.setWorkflowApproved(url, newWorkflow)
                 print data
                 wfo.status = 'trouble'
@@ -116,6 +146,9 @@ if __name__ == "__main__":
     parser.add_option('-c','--clone',help="clone the workflow",default=False,action="store_true")
     parser.add_option('-k','--keep',help="keep the outpuy in current status", default=False,action="store_true")
     parser.add_option('--Memory',help="memory parameter of the clone", default=0, type=int)
+    parser.add_option('--ProcessingString',help="change the proc string", default=None)
+    parser.add_option('--AcquisitionEra',help="change the acq era", default=None)
+    parser.add_option('--PrepID',help='change the prepid',default=None)
     parser.add_option('--EventsPerJob', help="set the events/job on the clone", default=0, type=int)
     parser.add_option('--TimePerEvent', help="set the time/event on the clone", default=0, type=float)
     parser.add_option('--filelist',help='a file with a list of workflows',default=None)

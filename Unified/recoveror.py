@@ -15,11 +15,11 @@ def singleRecovery(url, task , initial, actions, do=False):
         "Requestor" : os.getenv('USER'),
         "Group" : 'DATAOPS',
         "RequestType" : "Resubmission",
-        "ACDCServer" : "https://cmsweb.cern.ch/couchdb",
+        "ACDCServer" : initial['CouchURL'],
         "ACDCDatabase" : "acdcserver",
         "OriginalRequestName" : initial['RequestName']
         }
-    copy_over = ['PrepID','RequestPriority', 'TimePerEvent', 'SizePerEvent', 'Group', 'Memory', 'RequestString' ]        
+    copy_over = ['PrepID','RequestPriority', 'TimePerEvent', 'SizePerEvent', 'Group', 'Memory', 'RequestString' ,'CMSSWVersion']        
     for c in copy_over:
         payload[c] = copy.deepcopy(initial[c])
 
@@ -51,19 +51,16 @@ def singleRecovery(url, task , initial, actions, do=False):
         print json.dumps( payload, indent=2)
         return None
 
+    print json.dumps( payload , indent=2)
+
     ## submit
-    response = reqMgrClient.submitWorkflow(url, payload)
-    m = re.search("details\/(.*)\'",response)
-    if not m:
+    acdc = reqMgrClient.submitWorkflow(url, payload)
+    if not acdc:
         print "Error in making ACDC for",initial["RequestName"]
-        print response
-        response = reqMgrClient.submitWorkflow(url, payload)
-        m = re.search("details\/(.*)\'",response)
-        if not m:
+        acdc = reqMgrClient.submitWorkflow(url, payload)
+        if not acdc:
             print "Error twice in making ACDC for",initial["RequestName"]
-            print response
             return None
-    acdc = m.group(1)
     
     ## perform modifications
     if actions:
@@ -124,7 +121,7 @@ def recoveror(url,specific,options=None):
         if not specific and 'manual' in wfo.status: continue
         
         wfi = workflowInfo(url, wfo.name)
-        
+
         ## need a way to verify that this is the first round of ACDC, since the second round will have to be on the ACDC themselves
 
         all_errors = {}
@@ -137,7 +134,12 @@ def recoveror(url,specific,options=None):
         print '-'*100        
         print "Looking at",wfo.name,"for recovery options"
 
-        recover=True       
+        recover = True       
+
+        if not 'MergedLFNBase' in wfi.request:
+            print "fucked up"
+            sendEmail('missing lfn','%s wl cache is screwed up'%wfo.name)
+            recover = False
  
         if not len(all_errors): 
             print "\tno error for",wfo.name
