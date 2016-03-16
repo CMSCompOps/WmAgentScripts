@@ -18,7 +18,7 @@ import dbs3Client as dbs3
 from optparse import OptionParser
 
 
-url = 'cmsweb.cern.ch'
+url = 'cmsweb-testbed.cern.ch'
 def main():
     """
     Read the text file, for each workflow try:

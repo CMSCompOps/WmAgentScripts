@@ -88,12 +88,12 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn,
     if verbose:
         pprint(params)
 
-    res = rqMgr.requestManagerPost(
-        url, "/reqmgr/assign/handleAssignmentPage", params, nested=True)
-    if "Assigned" in res:
+    res = rqMgr.assignWorkflow(url, workflow, team, params)
+    
+    if res:
         print 'Assigned workflow:', workflow, 'to site:', sites, 'with processing version', procversion
     else:
-        print res
+        print 'could not assign the workflow',workflow
 
 
 def main():
