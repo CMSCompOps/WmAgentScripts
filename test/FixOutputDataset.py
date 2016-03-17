@@ -54,8 +54,8 @@ def getOutputDSFromSpec(request):
     return candidate
 
 def updateOutputDataset(reqMgrDB, limit, skip):
-    requests = reqMgrDB.getRequestByStatus(["normal-archived", "rejected-archived", "aborted-archived"], True, limit, skip)
-    #requests = reqMgrDB.getRequestByStatus(StatusForOutDS, True, limit, skip)
+    #requests = reqMgrDB.getRequestByStatus(["normal-archived", "rejected-archived", "aborted-archived"], True, limit, skip)
+    requests = reqMgrDB.getRequestByStatus(StatusForOutDS, True, limit, skip)
     #requests = reqMgrDB.getRequestByNames(["amaltaro_RVCMSSW_7_0_0_pre11TTbar_140128_155743_8106"])
     wrongOutDS = set()
     missingOutDS = set()
@@ -65,7 +65,7 @@ def updateOutputDataset(reqMgrDB, limit, skip):
         reqName = key
         if value.has_key("OutputDatasets"):
             for outputDS in value["OutputDatasets"]:
-                if "None" in outputDS:
+                if "Fake" in outputDS or "None" in outputDS:
                     #print reqName, outputDS
                     wrongOutDS.add(reqName)
                     print ("%s:%s" % (key, value["OutputDatasets"]))
@@ -84,7 +84,7 @@ def updateOutputDataset(reqMgrDB, limit, skip):
         if len(candidate) == 0:
             problemFlag = True
         for canOutDS in candidate:
-            if "None" in canOutDS:
+            if "Fake" in canOutDS or "None" in canOutDS:
                 problemFlag = True
                 problemRequests.add(request)
                 #print(canOutDS)
@@ -104,7 +104,7 @@ def updateOutputDataset(reqMgrDB, limit, skip):
         if len(candidate) == 0:
             problemFlag = True
         for canOutDS in candidate:
-            if "None" in canOutDS:
+            if "Fake" in canOutDS or "None" in canOutDS:
                 problemFlag = True
                 problemRequests.add(request)
                 #print(canOutDS)
@@ -120,7 +120,7 @@ def updateOutputDataset(reqMgrDB, limit, skip):
     return len(requests)
     
 if __name__ == "__main__":
-    baseUrl = "https://cmsweb.cern.ch/couchdb"
+    baseUrl = "https://cmsweb-testbed.cern.ch/couchdb"
 #     url = "%s/wmstats" % baseUrl
 #     testbedWMStats = WMStatsReader(url)
 #      
