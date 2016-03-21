@@ -75,7 +75,7 @@ def rejector(url, specific, options=None):
                 schema['Group'] = 'DATAOPS'
                 schema['OriginalRequestName'] = wfo.name
                 if 'ProcessingVersion' in schema:
-                    schema['ProcessingVersion']+=1
+                    schema['ProcessingVersion'] = int(schema['ProcessingVersion'])+1 ## dubious str->int conversion
                 else:
                     schema['ProcessingVersion']=2
                 ## a few tampering of the original request
