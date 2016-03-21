@@ -544,6 +544,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                     sec_to_distribute = list(set(sec_to_distribute) & set(override_sec_destination))
 
                 if len( sec_to_distribute )>0:
+                    print "secondary could go to",sorted(sec_to_distribute)
                     sec_size = dss.get( sec )
                     for site in sec_to_distribute:
                         site_se =SI.CE_to_SE(site)
@@ -642,7 +643,7 @@ def transferor(url ,specific = None, talk=True, options=None):
         if execute:
             priority = 'normal'
             cds = [ds for ds in datasets+block_datasets if ds in max_priority]
-            if cds:
+            if cds and False: ## I don't think this is working. subscription should be updated on the fly and regularly for raising the priority if needed
                 ## decide on an overall priority : that's a bit too large though
                 if any([max_priority[ds]>=90000 for ds in cds]):
                     priority = 'high'
