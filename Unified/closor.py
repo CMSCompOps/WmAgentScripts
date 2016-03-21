@@ -21,6 +21,12 @@ def spawn_harvesting(url, wfi , in_full):
     requests = []
     outputs = wfi.request['OutputDatasets'] 
     if 'EnableHarvesting' in wfi.request and wfi.request['EnableHarvesting']:
+        if not 'MergedLFNBase' in wfi.request:
+            print "fucked up"
+            sendEmail('screwed up wl cache','%s wl cache is bad'%(wfi.request['RequestName']))
+            all_OK['fake'] = False
+            return all_OK,requests
+
         wfi = workflowInfo(url, wfi.request['RequestName'])
         dqms = [out for out in outputs if '/DQM' in out]
         if not all([in_full[dqm_input] for dqm_input in dqms]):
@@ -63,25 +69,18 @@ def spawn_harvesting(url, wfi , in_full):
             harvesting_schema['ConfigCacheUrl'] = harvesting_schema['CouchURL'] ## uhm, how stupid is that ?
             harvesting_schema['RequestPriority'] = wfi.request['RequestPriority']*10
 
-            response= reqMgrClient.submitWorkflow(url, harvesting_schema)
-            m = re.search("details\/(.*)\'",response)
-            if not m:
+            harvest_request = reqMgrClient.submitWorkflow(url, harvesting_schema)
+            if not harvest_request:
                 print "Error in making harvesting for",wfo.name
                 print "schema"
                 print json.dumps( harvesting_schema, indent = 2)
-                print "response"
-                print response
-                response = reqMgrClient.submitWorkflow(url, harvesting_schema)
-                m = re.search("details\/(.*)\'",response)
-                if not m:
+                harvest_request = reqMgrClient.submitWorkflow(url, harvesting_schema)
+                if not harvest_request:
                     print "Error twice in harvesting for",wfo.name
                     print "schema"
                     print json.dumps( harvesting_schema, indent = 2)
-                    print "response"
-                    print response
-                    m = None
-            if m:
-                harvest_request = m.group(1)
+
+            if harvest_request:
                 requests.append( harvest_request )
                 ## should we protect for setting approved ? no, it's notified below, assignment will fail, likely
                 data = reqMgrClient.setWorkflowApproved(url, harvest_request)
@@ -220,6 +219,7 @@ def closor(url, specific=None):
 
     
         ## verify if we have to do harvesting
+
         (OK, requests) = spawn_harvesting(url, wfi, in_full)
         all_OK.update( OK )
 
