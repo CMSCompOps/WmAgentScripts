@@ -54,7 +54,7 @@ def searchLog( q ):
             },
         "sort": [
             {
-                "timestamp": "asc"
+                "timestamp": "desc"
                 }
             ],
         "_source": [
@@ -63,7 +63,7 @@ def searchLog( q ):
             "date"
             ]
         }
-    conn.request("POST" , '/logs/_search?size=100', json.dumps(goodquery))
+    conn.request("POST" , '/logs/_search?size=50', json.dumps(goodquery))
     ## not it's just a matter of sending that query to ES.
     #lq = q.replace(':', '\:').replace('-','\\-')
     #conn.request("GET" , '/logs/_search?q=text:%s'% lq)
