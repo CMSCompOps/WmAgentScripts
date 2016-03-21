@@ -361,7 +361,7 @@ def requestManagerGet(url, request, retries=4):
 #        raise Exception("no correspondonting reqmgr2 call for %s" % request)
 #    return data
     
-def requestManager1Post(url, request, params, head = def_headers1, nested=False):
+def requestManager1Post(url, request, params, head = def_headers1, nested=True):
     """
     Performs some operation on ReqMgr through
     an HTTP POST method.
@@ -881,7 +881,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
     if defaults['TrustSitelists'] =='False' or defaults['TrustSitelists'] == False:
         defaults.pop('TrustSitelists')
 
-    setWorkflowAssignment(url, workflowname, defaults)
+    res = setWorkflowAssignment(url, workflowname, defaults)
     print 'Assigned workflow:',workflowname,'to site:',defaults['SiteWhitelist'],'and team',team
     return True
 
@@ -1183,12 +1183,22 @@ def setWorkflowAssignment(url, workflowname, schema):
             print "old schema detected : translating. please migrate."
             schema = reqmgr1_to_2_Assignment(schema)
         data = requestManagerPut(url,"/reqmgr2/data/request/%s"%workflowname, schema)
-        print data
+        try:
+            ok = json.loads( data )['result'][workflowname]
+            return True
+        except:
+            print data
+            return False
     else:
         if not isOldSchema(schema):
             print "new schema to reqmgr1 detected : translating. please drain."
             schema = reqmgr2_to_1_Assignment(params)
         data = requestManager1Post(url, "/reqmgr/assign/handleAssignmentPage", schema)
+        if 'Assigned' in data:
+            return True
+        else:
+            print data
+            return False
     return data
 
 
