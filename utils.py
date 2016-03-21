@@ -1729,7 +1729,7 @@ def checkTransferStatus(url, xfer_id, nocollapse=False):
             v = try_checkTransferStatus(url, xfer_id, nocollapse)
         except Exception as e:
             print str(e)
-            sendEmail('fatal execption in checkTransferStatus',str(e))
+            sendEmail('fatal exception in checkTransferStatus %s'%xfer_id, str(e))
             v = {}
     return v
         
