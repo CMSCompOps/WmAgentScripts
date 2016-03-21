@@ -732,8 +732,10 @@ def assignWorkflow(url, workflowname, team, parameters ):
         defaults.pop('execute')
         print json.dumps( defaults ,indent=2)
 
-    if defaults['useSiteListAsLocation'] =='False' or defaults['useSiteListAsLocation'] == False:
-        defaults.pop('useSiteListAsLocation')
+    #if defaults['useSiteListAsLocation'] =='False' or defaults['useSiteListAsLocation'] == False:
+    #    defaults.pop('useSiteListAsLocation')
+    if defaults['TrustSitelists'] =='False' or defaults['TrustSitelists'] == False:
+        defaults.pop('TrustSitelists')
 
     jsonEncodedParams = {}
     for paramKey in defaults.keys():
@@ -774,7 +776,8 @@ def assignWorkflow(url, workflowname, team, parameters ):
 assignWorkflow.defaults= {
         "action": "Assign",
         "SiteBlacklist": [],
-        "useSiteListAsLocation" : False,
+        "TrustSitelists" : False,
+        #"useSiteListAsLocation" : False,
         "UnmergedLFNBase": "/store/unmerged",
         "MinMergeSize": 2147483648,
         "MaxMergeSize": 4294967296,
