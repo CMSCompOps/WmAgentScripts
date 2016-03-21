@@ -36,8 +36,8 @@ def singleRecovery(url, task , initial, actions, do=False):
                 increase = int(action.split('-')[-1]) if '-' in action else 1000
                 ## increase the memory requirement by 1G
                 payload['Memory'] += increase
-            if action.startswith('split') and initial['RequestType'] == 'MonteCarlo':
-                print "I should not be doing splitting for MonteCarlo type request"
+            if action.startswith('split') and initial['RequestType'] in ['MonteCarlo','TaskChain']:
+                print "I should not be doing splitting for this type of request",initial['RequestName']
                 return None
 
     if payload['RequestString'].startswith('ACDC'):
@@ -68,8 +68,6 @@ def singleRecovery(url, task , initial, actions, do=False):
     if actions:
         for action in actions:
             if action.startswith('split'):
-                print "will not try to split"
-                return None
                 factor = int(action.split('-')[-1]) if '-' in action else 2
                 acdcInfo = workflowInfo(url, acdc)
                 splittings = acdcInfo.getSplittings()
@@ -123,7 +121,7 @@ def recoveror(url,specific,options=None):
         if not specific and 'manual' in wfo.status: continue
         
         wfi = workflowInfo(url, wfo.name)
-        
+
         ## need a way to verify that this is the first round of ACDC, since the second round will have to be on the ACDC themselves
 
         all_errors = {}
@@ -136,7 +134,12 @@ def recoveror(url,specific,options=None):
         print '-'*100        
         print "Looking at",wfo.name,"for recovery options"
 
-        recover=True       
+        recover = True       
+
+        if not 'MergedLFNBase' in wfi.request:
+            print "fucked up"
+            sendEmail('missing lfn','%s wl cache is screwed up'%wfo.name)
+            recover = False
  
         if not len(all_errors): 
             print "\tno error for",wfo.name
