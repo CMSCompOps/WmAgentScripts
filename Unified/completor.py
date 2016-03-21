@@ -67,11 +67,15 @@ def completor(url, specific):
     for wfo in wfs:
         if specific and not specific in wfo.name: continue
 
+        print "looking at",wfo.name
+        ## get all of the same
+        wfi = workflowInfo(url, wfo.name)
+
         skip=False
         if not any([c in wfo.name for c in good_fractions]): skip=True
         for user,spec in overrides.items():
             #print spec
-            if wfo.name in spec:
+            if wfo.name in spec and wfi.request['RequestStatus']!='force-complete':
                 #skip=False ## do not do it automatically yet
                 sendEmail('force-complete requested','%s is asking for %s to be force complete'%(user,wfo.name))
                 wfi = workflowInfo(url, wfo.name)
@@ -83,10 +87,6 @@ def completor(url, specific):
             
         if skip: 
             continue
-
-        print "looking at",wfo.name
-        ## get all of the same
-        wfi = workflowInfo(url, wfo.name)
 
         priority = wfi.request['RequestPriority']
 
