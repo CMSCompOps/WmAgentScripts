@@ -2686,12 +2686,23 @@ def getLFNbase(dataset):
 
 class workflowInfo:
     def __init__(self, url, workflow, spec=True, request=None,stats=False, wq=False):
+        self.logs = defaultdict(str)
         self.url = url
         self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         if request == None:
-            r1=self.conn.request("GET",'/couchdb/reqmgr_workload_cache/'+workflow)
-            r2=self.conn.getresponse()
-            self.request = json.loads(r2.read())
+            try:
+                r1=self.conn.request("GET",'/couchdb/reqmgr_workload_cache/'+workflow)
+                r2=self.conn.getresponse()
+                self.request = json.loads(r2.read())
+            except:
+                try:
+                    r1=self.conn.request("GET",'/couchdb/reqmgr_workload_cache/'+workflow)
+                    r2=self.conn.getresponse()
+                    self.request = json.loads(r2.read())
+                except Exception as e:
+                    print "Failed to get workload cache for",workflow
+                    print str(e)
+                    sys.exit(34)
         else:
             self.request = copy.deepcopy( request )
 
@@ -2708,7 +2719,7 @@ class workflowInfo:
             self.getWorkQueue()
 
         self.summary = None
-        self.logs = defaultdict(str)
+
 
     def notifyRequestor(self, message, do_request=True, do_batch=True, mcm=None):
         if not message: return
@@ -2721,7 +2732,9 @@ class workflowInfo:
             wf_name = self.request['RequestName']
             items_notified = set()
             for pid in set(pids):
-                replacements = {'PREPID': pid}
+                replacements = {'PREPID': pid,
+                                'WORKFLOW' : self.request['RequestName']
+                                }
                 dedicated_message = message
                 for src,dest in replacements.items():
                     dedicated_message = dedicated_message.replace(src, dest)
@@ -3103,7 +3116,7 @@ class workflowInfo:
         c_sites_allowed = CI.get(self.request['Campaign'], 'SiteWhitelist' , [])
         if c_sites_allowed:
             if verbose:
-                print "Using site whitelist restriction by campaign configuration"
+                print "Using site whitelist restriction by campaign configuration",sorted(c_sites_allowed)
             sites_allowed = list(set(sites_allowed) & set(c_sites_allowed))
         c_black_list = CI.get(self.request['Campaign'], 'SiteBlacklist', [])
         c_black_list.extend( CI.parameters(self.request['Campaign']).get('SiteBlacklist', []))
