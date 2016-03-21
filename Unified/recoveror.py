@@ -37,8 +37,8 @@ def singleRecovery(url, task , initial, actions, do=False):
                 increase = int(action.split('-')[-1]) if '-' in action else 1000
                 ## increase the memory requirement by 1G
                 payload['Memory'] += increase
-            if action.startswith('split') and initial['RequestType'] == 'MonteCarlo':
-                print "I should not be doing splitting for MonteCarlo type request"
+            if action.startswith('split') and initial['RequestType'] in ['MonteCarlo','TaskChain']:
+                print "I should not be doing splitting for this type of request",initial['RequestName']
                 return None
 
     if payload['RequestString'].startswith('ACDC'):
@@ -66,8 +66,6 @@ def singleRecovery(url, task , initial, actions, do=False):
     if actions:
         for action in actions:
             if action.startswith('split'):
-                print "will not try to split"
-                return None
                 factor = int(action.split('-')[-1]) if '-' in action else 2
                 acdcInfo = workflowInfo(url, acdc)
                 splittings = acdcInfo.getSplittings()

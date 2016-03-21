@@ -61,7 +61,7 @@ def searchLog( q ):
             },
         "sort": [
             {
-                "timestamp": "asc"
+                "timestamp": "desc"
                 }
             ],
         "_source": [
@@ -70,7 +70,7 @@ def searchLog( q ):
             "date"
             ]
         }
-    conn.request("POST" , '/logs/_search?size=100', json.dumps(goodquery))
+    conn.request("POST" , '/logs/_search?size=50', json.dumps(goodquery))
     ## not it's just a matter of sending that query to ES.
     #lq = q.replace(':', '\:').replace('-','\\-')
     #conn.request("GET" , '/logs/_search?q=text:%s'% lq)
@@ -110,13 +110,15 @@ def try_sendLog( subject, text , wfi = None, show=True):
            "timestamp" : now,
            "date" : now_d}
 
+    if show:
+        print text
     encodedParams = urllib.urlencode( doc )
     conn.request("POST" , '/logs/log/', json.dumps(doc)) 
     response = conn.getresponse()
     data = response.read()
     try:
         res = json.loads( data ) 
-        print 'log:',res['_id'],"was created"
+        #print 'log:',res['_id'],"was created"
     except Exception as e:
         print "failed"
         print str(e)
@@ -954,7 +956,9 @@ class siteInfo:
             
             self.sites_banned = [
                 'T2_CH_CERN_AI',
-                'T2_US_Vanderbilt'
+                'T2_US_Vanderbilt',
+                #'T2_RU_INR',
+                #'T2_UA_KIPT'
                 ]
 
             data = dataCache.get('ssb_158') ## 158 is the site readyness metric
@@ -1005,6 +1009,9 @@ class siteInfo:
                                           "T2_BE_IIHE",
                                           "T2_EE_Estonia",
                                           "T2_CH_CERN", 
+
+                                   'T2_RU_INR',
+                                   'T2_UA_KIPT'
                                           ]
         # restrict to those actually ON
         allowed_T2_for_transfer = [s for s in allowed_T2_for_transfer if s in self.sites_ready]
@@ -1050,13 +1057,14 @@ class siteInfo:
                 self.storage[mss] = 0 
             else: 
                 self.storage[mss]  = mss_usage['Tape']['Free'][mss]
+
             if mss == 'T1_US_FNAL_MSS':
                 self.storage[mss] =min(50, self.storage[mss])
-            if mss == 'T0_CH_CERN_MSS':
-                self.storage[mss] =min(2000, self.storage[mss])
-            if mss == 'T1_RU_JINR_MSS':
-                self.storage[mss] =min(100, self.storage[mss])
-                
+            #if mss == 'T0_CH_CERN_MSS':
+            #    self.storage[mss] =min(2000, self.storage[mss])
+            #if mss == 'T1_RU_JINR_MSS':
+            #    self.storage[mss] =min(100, self.storage[mss])
+
 
         ## and detox info
         self.fetch_detox_info(talk=False)
@@ -1744,7 +1752,7 @@ def checkTransferStatus(url, xfer_id, nocollapse=False):
             v = try_checkTransferStatus(url, xfer_id, nocollapse)
         except Exception as e:
             print str(e)
-            sendEmail('fatal execption in checkTransferStatus',str(e))
+            sendEmail('fatal exception in checkTransferStatus %s'%xfer_id, str(e))
             v = {}
     return v
         
@@ -2679,7 +2687,11 @@ def getWorkflows(url,status,user=None,details=False,rtype=None):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     if rtype:
         go_to = '/reqmgr2/data/request?status=%s&request_type=%s&detail=%s'%( status, rtype , 'true' if details else 'false')
-        r1=conn.request("GET",go_to, headers={"Accept":"application/json"})
+        r1=conn.request("GET",go_to, headers={"Accept":"application/json"})        
+        #go_to = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/requestsbystatusandtype?key=["%s","%s"]'% ( status, rtype)
+        #if details:
+        #    go_to+='&include_docs=true'
+        #r1=conn.request("GET",go_to)
     else:
         go_to = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/bystatus?key="%s"'%(status)
         if details:
@@ -2688,21 +2700,22 @@ def getWorkflows(url,status,user=None,details=False,rtype=None):
 
     r2=conn.getresponse()
     data = json.loads(r2.read())
-    if rtype:
+    if 'result' in data:
         items = data['result']
     else:
         items = data['rows']
 
+    print len(items)
     users=[]
     if user:
         users=user.split(',')
     workflows = []
+
     for item in items:
         those = item.keys()
         if users:
-            #those = filter(lambda k : any([k.startswith(u) for u in users]), those)
-            those = filter(lambda k : any([k for u in users if u in k]), those)
-        if rtype:
+            those = filter(lambda k : any([k.startswith(u) for u in users]), those)
+        if 'result' in data:
             if details:
                 workflows.extend([item[k] for k in those])
             else:
@@ -2713,6 +2726,7 @@ def getWorkflows(url,status,user=None,details=False,rtype=None):
             if (users and any([wf for u in users if u in wf])) or not users:
                 workflows.append(item['doc' if details else 'id'])
 
+    #print len(workflows)
     return workflows
 
 def getPrepIDs(wl):
@@ -2820,12 +2834,23 @@ def checkIfBlockIsAtASite(url,block,site):
 
 class workflowInfo:
     def __init__(self, url, workflow, spec=True, request=None,stats=False, wq=False):
+        self.logs = defaultdict(str)
         self.url = url
         self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         if request == None:
-            r1=self.conn.request("GET",'/couchdb/reqmgr_workload_cache/'+workflow)
-            r2=self.conn.getresponse()
-            self.request = json.loads(r2.read())
+            try:
+                r1=self.conn.request("GET",'/couchdb/reqmgr_workload_cache/'+workflow)
+                r2=self.conn.getresponse()
+                self.request = json.loads(r2.read())
+            except:
+                try:
+                    r1=self.conn.request("GET",'/couchdb/reqmgr_workload_cache/'+workflow)
+                    r2=self.conn.getresponse()
+                    self.request = json.loads(r2.read())
+                except Exception as e:
+                    print "Failed to get workload cache for",workflow
+                    print str(e)
+                    sys.exit(34)
         else:
             self.request = copy.deepcopy( request )
 
@@ -2842,7 +2867,7 @@ class workflowInfo:
             self.getWorkQueue()
 
         self.summary = None
-        self.logs = defaultdict(str)
+
 
     def notifyRequestor(self, message, do_request=True, do_batch=True, mcm=None):
         if not message: return
@@ -2855,7 +2880,9 @@ class workflowInfo:
             wf_name = self.request['RequestName']
             items_notified = set()
             for pid in set(pids):
-                replacements = {'PREPID': pid}
+                replacements = {'PREPID': pid,
+                                'WORKFLOW' : self.request['RequestName']
+                                }
                 dedicated_message = message
                 for src,dest in replacements.items():
                     dedicated_message = dedicated_message.replace(src, dest)
@@ -3236,7 +3263,7 @@ class workflowInfo:
         c_sites_allowed = CI.get(self.request['Campaign'], 'SiteWhitelist' , [])
         if c_sites_allowed:
             if verbose:
-                print "Using site whitelist restriction by campaign configuration"
+                print "Using site whitelist restriction by campaign configuration",sorted(c_sites_allowed)
             sites_allowed = list(set(sites_allowed) & set(c_sites_allowed))
         c_black_list = CI.get(self.request['Campaign'], 'SiteBlacklist', [])
         c_black_list.extend( CI.parameters(self.request['Campaign']).get('SiteBlacklist', []))

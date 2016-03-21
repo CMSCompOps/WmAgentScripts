@@ -246,7 +246,8 @@ def assignor(url ,specific = None, talk=True, options=None):
         print "Allowed",sites_allowed
         if options.primary_aaa:
             sites_allowed = initial_sites_allowed
-            options.useSiteListAsLocation = True
+            #options.useSiteListAsLocation = True
+            options.TrustSitelists = True
         else:
             sites_allowed = sites_with_any_data
             wfh.sendLog('assignor',"Selected for any data %s"%sorted(sites_allowed))

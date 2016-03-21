@@ -1,6 +1,7 @@
 #!/usr/bin/env python  
 from utils import workflowInfo, getWorkflows, sendEmail, componentInfo, monitor_dir, reqmgr_url
 from assignSession import *
+import reqMgrClient
 import os
 import sys
 import json
@@ -8,10 +9,24 @@ import json
 url = reqmgr_url
 
 
+## all dqmharvest completed to announced right away
+wfs = getWorkflows(url, 'completed', user=None, rtype='DQMHarvest')
+for wf in wfs: 
+    print "closing out",wf
+    reqMgrClient.closeOutWorkflow(url, wf)
+wfs = getWorkflows(url, 'closed-out', user=None, rtype='DQMHarvest')
+for wf in wfs: 
+    print "announcing",wf
+    reqMgrClient.announceWorkflow(url, wf)
+
+
+#os.system('Unified/equalizor.py -a pdmvserv_task_HIG-RunIIFall15DR76-01039__v1_T_160120_002705_9423')
+#os.system('Unified/equalizor.py -a pdmvserv_SMP-Summer12DR53X-00027_00440_v0__160224_044437_5031')
+
 up = componentInfo(mcm=False, soft=['mcm'])                                 
 if not up.check():  
     sys.exit(1)     
-    
+
 ### catch unrunnable recoveries
 not_runable_acdc=set()
 wfs = getWorkflows(url, 'acquired', user=None, rtype='Resubmission',details=True)

@@ -16,7 +16,7 @@
    "description": "The data tiers that do not pass closeout checks. Can be overidden by custodial overide at campaign level"
  },
  "tiers_no_DDM": {
-   "value" : ["GEN-SIM","LHE","GEN","DQM","DQMIO"],
+   "value" : ["GEN-SIM","LHE","GEN","DQM","DQMIO","GEN-SIM-DIGI-RAW"],
    "description": "The data tiers that do not go to AnaOps"
  },
  "tiers_to_DDM": {

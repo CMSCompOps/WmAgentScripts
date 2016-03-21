@@ -155,7 +155,7 @@ def checkor(url, spec=None, options=None):
                 wfi.sendLog('checkor',"%s is on hold"%wfo.name)
                 continue
 
-        if wfo.wm_status != 'completed' and not wfo.name in bypasses:
+        if wfo.wm_status != 'completed': #and not wfo.name in bypasses:
             ## for sure move on with closeout check if in completed
             wfi.sendLog('checkor',"no need to check on %s in status %s"%(wfo.name, wfo.wm_status))
             session.commit()
@@ -163,7 +163,7 @@ def checkor(url, spec=None, options=None):
 
         if wfo.name in holdings and wfo.name not in bypasses:
             wfo.status = 'assistance-onhold'
-            wfi.sendLog('checkor',"setting % on hold"%wfo.name)
+            wfi.sendLog('checkor',"setting %s on hold"%wfo.name)
             session.commit()
             continue
 
@@ -613,14 +613,18 @@ def checkor(url, spec=None, options=None):
                     #'filemismatch': 'Samples completed with inconsistency in DBS/Phedex',
                     #'manual' :                     'Workflow completed and requires manual checks by Ops',
                     }
-
-                content = ""
+                
+                content = "The request PREPID (WORKFLOW) is facing issue in production.\n"
+                motive = False
                 for case in messages:
                     if case in assistance_tags:
                         content+= "\n"+messages[case]+"\n"
+                        motive = True
+                content += "You are invited to check, while this is being taken care of by Comp-Ops.\n"
+                content += "This is an automated message from Comp-Ops.\n"
 
                 items_notified = set()
-                if use_mcm and content:
+                if use_mcm and motive:
                     wfi.notifyRequestor( content , mcm = mcm)
 
             #########################################
