@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import workflowInfo, getWorkflows, siteInfo, sendEmail, componentInfo
+from utils import workflowInfo, getWorkflows, siteInfo, sendEmail, componentInfo, getDatasetPresence
 import reqMgrClient
 import json
 import os
@@ -54,11 +54,8 @@ def equalizor(url , specific = None, options=None):
 
     use_T0 = True
     if options.augment : use_T0 = True
-    if use_T0:
-        mapping['T2_CH_CERN'].append('T0_CH_CERN')
-    
 
-    use_HLT = True
+    use_HLT = False
     if options.augment : use_HLT=True
 
     if use_HLT:
@@ -126,7 +123,14 @@ def equalizor(url , specific = None, options=None):
             close( interface )
         return 
 
+
+    PU_locations = {}
     PU_overflow = {
+        #'RunIISpring15PrePremix' : { 
+        #    'sites' : ["T1_US_FNAL", "T1_DE_KIT" , "T1_IT_CNAF", "T1_RU_JINR" ,"T2_CH_CERN"],
+        #    'max' : 20000,
+        #    'pending' : 0
+        #    },
         'RunIIFall15DR76' : {
             'sites':['T1_ES_PIC','T2_US_Purdue','T2_UK_SGrid_RALPP','T2_BE_IIHE','T2_DE_DESY','T2_IT_Legnaro','T2_US_Caltech','T1_DE_KIT',
                      'T2_UK_London_Brunel','T2_IT_Pisa',
@@ -202,6 +206,7 @@ def equalizor(url , specific = None, options=None):
         for task in wfi.getWorkTasks():
             tasks_and_campaigns.append( (task, getcampaign(task) ) )
         
+        _,_,_,sec = wfi.getIO()
 
         ## check needs override
         needs_overide = False
@@ -245,9 +250,20 @@ def equalizor(url , specific = None, options=None):
 
             ### overflow the 76 digi-reco to the site holding the pileup
             if campaign in PU_overflow:
+
+                secondary_locations = set(SI.sites_ready)
+                for s in sec:
+                    if not s in PU_locations:
+                        presence = getDatasetPresence( url, s)
+                        #one_secondary_locations = [site for (site,(there,frac)) in presence.items() if there]
+                        one_secondary_locations = [site for (site,(there,frac)) in presence.items() if frac>98.]
+                        PU_locations[s] = one_secondary_locations
+                    print "secondary is at",sorted(PU_locations[s])
+                    secondary_locations = set(PU_locations[s]) & secondary_locations
+                    
                 ## we should add all sites that hold the secondary input if any
                 secondary_locations = list(set(PU_overflow[campaign]['sites']) & set( SI.sites_ready ))
-                if any([task.pathName.endswith(finish) for finish in ['_0','StepOneProc']]) :
+                if any([task.pathName.endswith(finish) for finish in ['_0','StepOneProc','Production']]) :
                     needs, task_name, running, idled = needs_action(wfi, task)
                     ## removing the ones in the site whitelist already since they encode the primary input location
                     if stay_within_site_whitelist:
@@ -313,8 +329,9 @@ def equalizor(url , specific = None, options=None):
                         print "\t",wfo.name,"adding HLT up to",pending_HLT,"for",max_HLT
                         print task.pathName
 
-            if 'T2_CH_CERN' in wfi.request['SiteWhitelist'] and i_task==0 and use_T0:
+            if i_task==0 and not sec and use_T0:
                 needs, task_name, running, idled = needs_action(wfi, task)
+                
                 if options.augment: needs=True
                 #needs = True
                 #if not (wfo.name in t0_special) and not options.augment: needs = False
@@ -349,6 +366,7 @@ if __name__ == "__main__":
     parser = optparse.OptionParser()
     parser.add_option('-a','--augment',help='add on top of the document', default=False, action='store_true')
     parser.add_option('-r','--remove',help='remove on workflow from the document', default=False, action='store_true')
+    #parser.add_option('--t0',help="Allow to use T0
     (options,args) = parser.parse_args()
     spec=None
     if len(args)!=0:
