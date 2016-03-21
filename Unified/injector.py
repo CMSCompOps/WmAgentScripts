@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, getWorkflowById, getWorkLoad, componentInfo, sendEmail, workflowInfo, sendLog
+from utils import getWorkflows, getWorkflowById, getWorkLoad, componentInfo, sendEmail, workflowInfo, sendLog, reqmgr_url
 import sys
 import copy
 from htmlor import htmlor
@@ -22,6 +22,7 @@ def injector(url, options, specific):
     cannot_inject = set()
     ## browse for assignment-approved requests, browsed for ours, insert the diff
     for wf in workflows:
+        if specific and not specific in wf: continue
         exists = session.query(Workflow).filter(Workflow.name == wf ).first()
         if not exists:
             wfi = workflowInfo(url, wf)
@@ -29,6 +30,7 @@ def injector(url, options, specific):
             ## check first that there isn't related here with something valid
             can_add = True
             ## first try at finding a match
+            #            print wfi.request
             familly = session.query(Workflow).filter(Workflow.name.contains(wfi.request['PrepID'])).all()
             if not familly:
                 #req_familly = getWorkflowById( url, wl['PrepID'])
@@ -39,7 +41,9 @@ def injector(url, options, specific):
                     req_familly.extend( getWorkflowById( url, pid, details=True) )
                     
                 familly = []
+                print len(req_familly),"members"
                 for req_member in req_familly:
+                    #print "member",req_member['RequestName']
                     owfi = workflowInfo(url, req_member['RequestName'], request=req_member)
                     other_pids = owfi.getPrepIDs()
                     if set(pids) == set(other_pids):
@@ -138,7 +142,7 @@ def injector(url, options, specific):
         sendEmail('workflow with no replacement','%s \n are dangling there'%( '\n'.join(no_replacement)))
 
 if __name__ == "__main__":
-    url = 'cmsweb.cern.ch'
+    url = reqmgr_url
 
     parser = optparse.OptionParser()
     parser.add_option('-i','--invalidate',help="fetch invalidations from mcm",default=False,action='store_true')

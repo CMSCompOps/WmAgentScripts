@@ -1,13 +1,12 @@
 #!/usr/bin/env python  
-from utils import workflowInfo, getWorkflows, sendEmail, componentInfo
+from utils import workflowInfo, getWorkflows, sendEmail, componentInfo, monitor_dir, reqmgr_url
 from assignSession import *
 import os
 import sys
 import json
 
-url = 'cmsweb.cern.ch'
+url = reqmgr_url
 
-os.system('Unified/equalizor.py -a vlimant_BPH-RunIISummer15GS-00030_00212_v0__160129_135314_9755')
 
 up = componentInfo(mcm=False, soft=['mcm'])                                 
 if not up.check():  
@@ -32,7 +31,7 @@ if not_runable_acdc:
     sendEmail('not runnable ACDCs','These %s ACDC cannot run \n%s'%( len(not_runable_acdc), '\n'.join(not_runable_acdc)), destination = ['jen_a@fnal.gov'])
 
 ### add the value of the delay to announcing datasets
-data = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/announce_delays.json').read())
+data = json.loads(open('%s/announce_delays.json'%monitor_dir).read())
 for wfo in session.query(Workflow).filter(Workflow.status.startswith('done')).all()[:500]:
     if wfo.name in data: continue
     wfi = workflowInfo( url, wfo.name)
@@ -50,7 +49,7 @@ for wfo in session.query(Workflow).filter(Workflow.status.startswith('done')).al
         'delay' : delay
         }
     print wfo.name,"delay",delay
-open('/afs/cern.ch/user/c/cmst2/www/unified/announce_delays.json','w').write( json.dumps(data, indent=2) )
+open('%s/announce_delays.json'%monitor_dir,'w').write( json.dumps(data, indent=2) )
 
 
 #os.system('Unified/assignor.py --go RunIIFall15MiniAODv2 --limit 50')

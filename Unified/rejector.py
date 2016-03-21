@@ -3,8 +3,9 @@ from assignSession import *
 import sys
 import reqMgrClient
 from utils import workflowInfo, setDatasetStatus
-from utils import componentInfo
+from utils import componentInfo, reqmgr_url
 import optparse
+import json
 import re
 
 def rejector(url, specific, options=None):
@@ -109,7 +110,7 @@ def rejector(url, specific, options=None):
             print "error in rejecting",wfo.name,results
 
 if __name__ == "__main__":
-    url = 'cmsweb.cern.ch'
+    url = reqmgr_url
 
     parser = optparse.OptionParser()
     parser.add_option('-c','--clone',help="clone the workflow",default=False,action="store_true")

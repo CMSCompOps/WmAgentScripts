@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, makeReplicaRequest, global_SI, getDatasetSize, getDatasetFiles, sendLog
+from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, makeReplicaRequest, global_SI, getDatasetSize, getDatasetFiles, sendLog, reqmgr_url
 from utils import componentInfo, unifiedConfiguration, userLock, duplicateLock
 import phedexClient
 import dbs3Client
@@ -72,7 +72,12 @@ def checkor(url, spec=None, options=None):
     ## retrieve bypass and onhold configuration
     bypasses = []
     holdings = []
-    already_notified = json.loads(open('already_notifified.json').read())
+    try:
+        already_notified = json.loads(open('already_notifified.json').read())
+    except:
+        print "no record of already notified workflow. starting fresh"
+        already_notified = []
+
     for bypassor,email in [('vlimant','vlimant@cern.ch'),('jen_a','jen_a@fnal.gov')]:
         bypass_file = '/afs/cern.ch/user/%s/%s/public/ops/bypass.json'%(bypassor[0],bypassor)
         if not os.path.isfile(bypass_file):
@@ -110,9 +115,11 @@ def checkor(url, spec=None, options=None):
     pattern_fraction_pass = UC.get('pattern_fraction_pass')
 
     total_running_time = 5.*60. 
-    sleep_time = max(0.5, total_running_time / len(wfs))
-    
+    sleep_time = min(max(0.5, total_running_time / len(wfs)), 10)
+
     random.shuffle( wfs )
+
+    print len(wfs),"to consider, pausing for",sleep_time
 
     for wfo in wfs:
         if spec and not (spec in wfo.name): continue
@@ -663,7 +670,7 @@ def checkor(url, spec=None, options=None):
     print invalidations
 
 if __name__ == "__main__":
-    url='cmsweb.cern.ch'
+    url = reqmgr_url
 
     parser = optparse.OptionParser()
     parser.add_option('-t','--test', help='Only test the checkor', action='store_true', default=False)

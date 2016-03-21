@@ -14,7 +14,18 @@ import dbs3Client as dbs3
 import copy
 
 # default headers for PUT and POST methods
-def_headers={"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
+def_headers={"Content-type": "application/json", "Accept": "application/json"}
+def_headers1={"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
+
+CERT_FILE = os.getenv('X509_USER_PROXY')
+#print CERT_FILE
+KEY_FILE = os.getenv('X509_USER_PROXY')
+#print KEY_FILE
+
+#CERT_FILE = os.getenv('X509_USER_CERT')
+#print CERT_FILE
+#KEY_FILE = os.getenv('X509_USER_KEY')
+#print KEY_FILE
 
 class Workflow:
     """
@@ -52,8 +63,8 @@ class Workflow:
         else:
             self.outputDatasets = outputdatasetsWorkflow(url, name)
 
-        if 'teams' in self.info and len(self.info['teams']) > 0 :
-            self.team = self.info['teams'][0]
+        if 'Teams' in self.info and len(self.info['Teams']) > 0 :
+            self.team = self.info['Teams'][0]
         else:
             self.team = 'NoTeam'
         if 'FilterEfficiency' in self.info:
@@ -323,16 +334,17 @@ def requestManagerGet(url, request, retries=4):
     request: the request suffix url
     retries: number of retries
     """
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
-                                            key_file = os.getenv('X509_USER_PROXY'))
-    r1=conn.request("GET",request)
+    conn  =  httplib.HTTPSConnection(url, cert_file = CERT_FILE,
+                                            key_file = KEY_FILE)
+    headers = {"Accept": "application/json"}
+    r1=conn.request("GET",request, headers=headers)
     r2=conn.getresponse()
     request = json.loads(r2.read())  
     #try until no exception
     while 'exception' in request and retries > 0:
-        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
-                                                key_file = os.getenv('X509_USER_PROXY'))
-        r1=conn.request("GET",request)
+        conn  =  httplib.HTTPSConnection(url, cert_file = CERT_FILE,
+                                                key_file = KEY_FILE)
+        r1=conn.request("GET",request, headers=headers)
         r2=conn.getresponse()
         request = json.loads(r2.read())
         retries-=1
@@ -340,7 +352,16 @@ def requestManagerGet(url, request, retries=4):
         raise Exception('Maximum queries to ReqMgr exceeded',str(request))
     return request
 
-def requestManagerPost(url, request, params, head = def_headers, nested=False):
+#def _convertToRequestMgrPostCall(url, request, params, head):
+#    header = {"Content-type": "application/json", "Accept": "application/json"}
+#    if request == '/reqmgr/create/makeSchema':
+#        request = "/reqmgr2/data/request"
+#        data, status = _post(url, request, params, head=header, encode=json.dumps)
+#    else:
+#        raise Exception("no correspondonting reqmgr2 call for %s" % request)
+#    return data
+    
+def requestManager1Post(url, request, params, head = def_headers1, nested=False):
     """
     Performs some operation on ReqMgr through
     an HTTP POST method.
@@ -349,9 +370,6 @@ def requestManagerPost(url, request, params, head = def_headers, nested=False):
     params: a dict with the POST parameters
     nested: deep encode a json parameters
     """
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
-                                    key_file = os.getenv('X509_USER_PROXY'))
-    headers = head
     if nested:
         jsonEncodedParams ={}
         for pKey in params:
@@ -359,12 +377,55 @@ def requestManagerPost(url, request, params, head = def_headers, nested=False):
         encodedParams = urllib.urlencode(jsonEncodedParams)
     else:
         encodedParams = urllib.urlencode(params)
+    
+    data = _post(url, request, encodedParams, head, encode=None)
+    return data
+    
+def requestManagerPost(url, request, params, head = def_headers):
+    """
+    Performs some operation on ReqMgr through
+    an HTTP POST method.
+    url: the instance used, i.e. url='cmsweb.cern.ch' 
+    request: the request suffix url for the POST method
+    params: a dict with the POST parameters
+    nested: deep encode a json parameters
+    """
+    data, status = _post(url, request, params, head, encode=json.dumps)
+    return data
 
-    conn.request("POST", request, encodedParams, headers)
+def _put(url, request, params, head=def_headers, encode=urllib.urlencode):
+    return _httpsRequest("PUT", url, request, params, head, encode)
+
+def _post(url, request, params, head=def_headers, encode=urllib.urlencode):
+    return _httpsRequest("POST", url, request, params, head, encode)
+
+def _httpsRequest(verb, url, request, params, head, encode):
+    conn  =  httplib.HTTPSConnection(url, cert_file = CERT_FILE,
+                                    key_file = KEY_FILE)
+    headers = head
+    if encode:
+        encodedParams = encode(params)
+    else:
+        encodedParams = params
+    conn.request(verb, request, encodedParams, headers)
     response = conn.getresponse()
     data = response.read()
     conn.close()
+    return (data, response.status)
+
+def requestManager1Put(url, request, params, head = def_headers1):
+    """
+    Performs some operation on ReqMgr through
+    an HTTP PUT method.
+    url: the instance used, i.e. url='cmsweb.cern.ch' 
+    request: the request suffix url for the POST method
+    params: a dict with the PUT parameters
+    head: optional headers param. If not given it takes default value (def_headers)
+    """
+    
+    data, status = _put(url, request, params, head)
     return data
+
 
 def requestManagerPut(url, request, params, head = def_headers):
     """
@@ -375,46 +436,26 @@ def requestManagerPut(url, request, params, head = def_headers):
     params: a dict with the PUT parameters
     head: optional headers param. If not given it takes default value (def_headers)
     """
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
-                                    key_file = os.getenv('X509_USER_PROXY'))
-    headers = head
-    encodedParams = urllib.urlencode(params)
-    conn.request("PUT", request, encodedParams, headers)
-    response = conn.getresponse()
-    data = response.read()
-    conn.close()
+    data, status = _put(url, request, params, head, encode=json.dumps)
     return data
 
 def getWorkflowWorkload(url, workflow, retries=4):
     """
     Gets the workflow loaded, splitted by lines.
     """
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
-                                            key_file = os.getenv('X509_USER_PROXY'))
-    request = '/reqmgr/view/showWorkload?requestName=' + workflow
-    r1=conn.request("GET",request)
-    r2=conn.getresponse()
-    data = r2.read()
-    #try until no exception
-    while 'exception' in request and retries > 0:
-        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'),
-                                                key_file = os.getenv('X509_USER_PROXY'))
-        r1=conn.request("GET",request)
-        r2=conn.getresponse()
-        data = r2.read()
-        retries-=1
-    if 'exception' in request:
-        raise Exception('Maximum queries to ReqMgr exceeded',str(request))
-
-    workload = data.split('\n')
-    return workload
+    print "getWorkflowWorkload is Deprecated"
+    return None
 
 def getWorkflowInfo(url, workflow):
     """
     Retrieves workflow information
     """
-    request = requestManagerGet(url,'/reqmgr/reqMgr/request?requestName='+workflow)
-    return request
+    request = requestManagerGet(url,'/reqmgr2/data/request?name='+workflow)
+    return request['result'][0][workflow]
+
+def isRequestMgr2Request(url, workflow):
+    result = getWorkflowInfo(url, workflow)
+    return result.get("ReqMgr2Only", False)
 
 def getWorkloadCache(url, workflow):
     """
@@ -474,7 +515,22 @@ def outputdatasetsWorkflow(url, workflow):
     """
     returns the output datasets for a given workfow
     """
-    datasets = requestManagerGet(url,'/reqmgr/reqMgr/outputDatasetsByRequestName?requestName='+workflow)
+    results = requestManagerGet(url,'/reqmgr2/data/request?name='+workflow)['result']
+    request = results[0][workflow]
+    datasets = []
+    if "OutputDatasets" in request:
+        datasets.extend(request['OutputDatasets'])
+        
+    if "TaskChain" in request:
+        for num in range(request['TaskChain']):
+            if"OutputDatasets" in request["Task%i" % (num+1)]:
+                datasets.extend(request['OutputDatasets'])
+    
+    if "StepChain" in request:
+        for num in range(request['StepChain']):
+            if "OutputDatasets" in request["Step%i" % (num+1)]:
+                datasets.extend(request['OutputDatasets'])
+    
     return datasets
 
 def getRequestTeam(url, workflow):
@@ -482,9 +538,9 @@ def getRequestTeam(url, workflow):
     Retrieves the team on which the wf is assigned
     """
     request = getWorkflowInfo(url,workflow)
-    if 'teams' not in request:
+    if 'Teams' not in request:
         return 'NoTeam'
-    teams = request['teams']
+    teams = request['Teams']
     if len(teams)<1:
         return 'NoTeam'
     else:
@@ -749,13 +805,14 @@ def assignWorkflow(url, workflowname, team, parameters ):
             if aux == 'EventsPerJob':
                 wf = workflowInfo(url, workflowname)
                 t = wf.firstTask()
+                par = int(float(par))
                 params = wf.getSplittings()[0]
                 if par < params['events_per_job']:
                     params.update({"requestName":workflowname,
                                    "splittingTask" : '/%s/%s'%(workflowname,t),
                                    "events_per_job": par,
                                    "splittingAlgo":"EventBased"})
-                    print setWorkflowSplitting(url, params)
+                    print setWorkflowSplitting(url, workflowname, params)
             elif aux == 'EventsPerLumi':
                 wf = workflowInfo(url, workflowname)
                 t = wf.firstTask()
@@ -773,12 +830,14 @@ def assignWorkflow(url, workflowname, team, parameters ):
                     par = int(params['events_per_lumi'] * multiplier)
                 else:
                     if 'FilterEfficiency' in wf.request and wf.request['FilterEfficiency']:
-                        par = int(par/wf.request['FilterEfficiency'])
+                        par = int(float(par)/wf.request['FilterEfficiency'])
+                    else:
+                        par = int(float(str(par)))
 
                 params.update({"requestName":workflowname,
                                "splittingTask" : '/%s/%s'%(workflowname,t),
                                "events_per_lumi": par})
-                print setWorkflowSplitting(url, params)
+                print setWorkflowSplitting(url, workflowname, params)
             elif aux == 'SplittingAlgorithm':
                 wf = workflowInfo(url, workflowname)
                 ### do it for all major tasks
@@ -786,7 +845,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
                 #    params.update({"requestName":workflowname,
                 #                   "splittingTask" : '/%s/%s'%(workflowname,t),
                 #                   "splittingAlgo" : par})
-                #    setWorkflowSplitting(url, params)
+                #    setWorkflowSplitting(url, workflowname, params)
                 t = wf.firstTask()
                 params = wf.getSplittings()[0]
                 params.update({"requestName":workflowname,
@@ -796,17 +855,17 @@ def assignWorkflow(url, workflowname, team, parameters ):
                 if "avg_events_per_job" in params and not "events_per_job" in params:
                     params['events_per_job' ] = params.pop('avg_events_per_job')
                 print params
-                print setWorkflowSplitting(url, params)
+                print setWorkflowSplitting(url, workflowname, params)
             elif aux == 'LumisPerJob': 
                 wf = workflowInfo(url, workflowname)
                 t = wf.firstTask()
                 #params = wf.getSplittings()[0]
                 params = {"requestName":workflowname,
                           "splittingTask" : '/%s/%s'%(workflowname,t),
-                          "lumis_per_job" : par,
+                          "lumis_per_job" : int(par),
                           "halt_job_on_file_boundaries" : True,
                           "splittingAlgo" : "LumiBased"}
-                print setWorkflowSplitting(url, params)
+                print setWorkflowSplitting(url, workflowname, params)
             else:
                 print "No action for ",aux
 
@@ -820,40 +879,8 @@ def assignWorkflow(url, workflowname, team, parameters ):
     if defaults['useSiteListAsLocation'] =='False' or defaults['useSiteListAsLocation'] == False:
         defaults.pop('useSiteListAsLocation')
 
-    jsonEncodedParams = {}
-    for paramKey in defaults.keys():
-        jsonEncodedParams[paramKey] = json.dumps(defaults[paramKey])
-    encodedParams = urllib.urlencode(jsonEncodedParams, False)
-    #encodedParams = urllib.urlencode(parameters, True)
-
-    headers  =  {"Content-type": "application/x-www-form-urlencoded",
-                 "Accept": "text/plain"}
-
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-
-    conn.request("POST",  "/reqmgr/assign/handleAssignmentPage", encodedParams, headers)
-    response = conn.getresponse()
-    if response.status != 200:
-        ## try again
-        conn.request("POST",  "/reqmgr/assign/handleAssignmentPage", encodedParams, headers)
-        response = conn.getresponse()
-        if response.status != 200:
-            ## and again !!
-            conn.request("POST",  "/reqmgr/assign/handleAssignmentPage", encodedParams, headers)
-            response = conn.getresponse()
-            if response.status != 200:
-                print 'could not assign request with following parameters:'
-                for item in defaults.keys():
-                    print item + ": " + str(defaults[item])
-                print 'Response from http call:'
-                print 'Status:',response.status,'Reason:',response.reason
-                print 'Explanation:'
-                data = response.read()
-                print data
-                return False
-
+    setWorkflowAssignment(url, workflowname, defaults)
     print 'Assigned workflow:',workflowname,'to site:',defaults['SiteWhitelist'],'and team',team
-    conn.close()
     return True
 
 
@@ -902,73 +929,97 @@ assignWorkflow.auxiliaries = [ 'SplittingAlgorithm',
 assignWorkflow.keys = assignWorkflow.mandatories+assignWorkflow.defaults.keys() + assignWorkflow.auxiliaries
 
 
+def changePriorityWorkflow(url, workflowname, priority):
+    """
+    Change the priority of a workflow
+    """
+    if isRequestMgr2Request(url, workflowname):
+        params = {"RequestPriority" : priority}
+        data = requestManagerPut(url,"/reqmgr2/data/request/%s"%workflowname, params)
+    else:
+        params = {workflowname + ":status": "", workflowname + ":priority": str(priority)}
+        data = requestManager1Post(url, "/reqmgr/view/doAdmin", params)
+
 def forceCompleteWorkflow(url, workflowname):
     """
     Moves a workflow from running-closed to force-complete
     """
-    params = {"requestName" : workflowname,"status" : "force-complete"}
-    data = requestManagerPut(url,"/reqmgr/reqMgr/request", params)
+    if isRequestMgr2Request(url, workflowname):
+        params = {"RequestStatus" : "force-complete"}  
+        data = requestManagerPut(url,"/reqmgr2/data/request/%s"%workflowname, params)
+    else:
+        params = {"requestName" : workflowname,"status" : "force-complete"}
+        data = requestManager1Put(url,"/reqmgr/reqMgr/request", params)
     return data
 
-def closeOutWorkflow(url, workflowname):
+def closeOutWorkflow(url, workflowname, cascade=False):
     """
     Closes out a workflow by changing the state to closed-out
     This does not care about cascade workflows
     """
-    params = {"requestName" : workflowname,"status" : "closed-out"}
-    data = requestManagerPut(url,"/reqmgr/reqMgr/request", params)
+    if isRequestMgr2Request(url, workflowname): 
+        params = {"RequestStatus" : "closed-out",
+                  "cascade": cascade}
+        data = requestManagerPut(url,"/reqmgr2/data/request/%s"%workflowname, params)
+    else:
+        if cascade:
+            params = {"requestName" : workflowname,"cascade" : cascade} 
+            data = requestManager1Post(url,"/reqmgr/reqMgr/closeout", params)
+        else:
+            params = {"requestName" : workflowname,"status" : "closed-out"}
+            data = requestManager1Put(url,"/reqmgr/reqMgr/request", params)
     return data
 
 def closeOutWorkflowCascade(url, workflowname):
-    """
-    Closes out a workflow, it will search for any Resubmission requests 
-    for which the given request is a parent and announce them too.
-    """
-    params = {"requestName" : workflowname, "cascade" : True}
-    data = requestManagerPost(url,"/reqmgr/reqMgr/closeout", params)
-    return data
+    return closeOutWorkflow(url, workflowname, True)
 
-def announceWorkflow(url, workflowname):
+def announceWorkflow(url, workflowname, cascade=False):
     """
     Sets a workflow state to announced
     This does not care about cascade workflows
     """
-    params = {"requestName" : workflowname,"status" : "announced"}
-    data = requestManagerPut(url,"/reqmgr/reqMgr/request", params)
+    if isRequestMgr2Request(url, workflowname): 
+        params = {"RequestStatus" : "announced",
+                  "cascade": cascade}
+        data = requestManagerPut(url,"/reqmgr2/data/request/%s"%workflowname, params)
+    else:
+        if cascade:
+            params = {"requestName" : workflowname,"cascade" : cascade}
+            data = requestManager1Post(url,"/reqmgr/reqMgr/announce", params)
+        else:
+            params = {"requestName" : workflowname,"status" : "announced"}
+            data = requestManager1Put(url,"/reqmgr/reqMgr/request", params)
     return data
 
 def announceWorkflowCascade(url, workflowname):
-    """
-    Sets a workflow state to announced, it will search for any Resubmission requests 
-    for which the given request is a parent and announce them too.
-    """
-    params = {"requestName" : workflowname, "cascade" : True}
-    data = requestManagerPost(url,"/reqmgr/reqMgr/announce", params)
-    return data
+    return announceWorkflow(url, workflowname,True)
 
 
 def setWorkflowApproved(url, workflowname):
     """
     Sets a workflow state to assignment-approved
     """
-    params = {"requestName" : workflowname,"status" : "assignment-approved"}
-    data = requestManagerPut(url,"/reqmgr/reqMgr/request", params)
+    if isRequestMgr2Request(url, workflowname):
+        params = {"RequestStatus" : "assignment-approved"}
+        data = requestManagerPut(url,"/reqmgr2/data/request/%s"%workflowname, params)
+    else:
+        params = {"requestName" : workflowname,"status" : "assignment-approved"}
+        data = requestManager1Put(url,"/reqmgr/reqMgr/request", params)
     return data
 
 def setWorkflowForceComplete(url, workflowname):
-    """
-    Sets a workflow state to force-complet
-    """
-    params = {"requestName" : workflowname,"status" : "force-complete"}
-    data = requestManagerPut(url,"/reqmgr/reqMgr/request", params)
-    return data
+    return forceCompleteWorkflow(url, workflowname)
 
 def setWorkflowRunning(url, workflowname):
     """
     Sets a workflow state to running
     """
-    params = {"requestName" : workflowname,"status" : "running"}
-    data = requestManagerPut(url,"/reqmgr/reqMgr/request", params)
+    if isRequestMgr2Request(url, workflowname):
+        params = {"RequestStatus" : "running"}
+        data = requestManagerPut(url,"/reqmgr2/data/request/%s"%workflowname, params)
+    else:
+        params = {"requestName" : workflowname,"status" : "running"}
+        data = requestManager1Put(url,"/reqmgr/reqMgr/request", params)
     return data
 
 def invalidateWorkflow(url, workflowname, current_status=None):
@@ -978,35 +1029,55 @@ def invalidateWorkflow(url, workflowname, current_status=None):
     if current_status in ['assignment-approved','new','completed','closed-out','announced','failed']:
         return rejectWorkflow(url, workflowname)
     elif current_status in['normal-archived']:
-        params = {"requestName" : workflowname,"status" : "rejected-archived"}
-        data = requestManagerPut(url,"/reqmgr/reqMgr/request", params)
-        return data
+        return rejectArchivedWorkflow(url, workflowname)
     else:
         return abortWorkflow(url, workflowname)
+
+def rejectArchivedWorkflow(url, workflowname): 
+    """ 
+    Sets a workflowin in rejected-argchived
+    """
+    if isRequestMgr2Request(url, workflowname):
+        params = {"RequestStatus" : "rejected-archived"}
+        data = requestManagerPut(url,"/reqmgr2/data/request/%s"%workflowname, params)
+    else:
+        params = {"requestName" : workflowname,"status" : "rejected-archived"}
+        data = requestManager1Put(url,"/reqmgr/reqMgr/request", params)
+    return data
 
 def rejectWorkflow(url, workflowname):
     """
     Sets a workflow state to rejected
     """
-    params = {"requestName" : workflowname,"status" : "rejected"}
-    data = requestManagerPut(url,"/reqmgr/reqMgr/request", params)
+    if isRequestMgr2Request(url, workflowname):
+        params = {"RequestStatus" : "rejected"}
+        data = requestManagerPut(url,"/reqmgr2/data/request/%s"%workflowname, params)
+    else:
+        params = {"requestName" : workflowname,"status" : "rejected"}
+        data = requestManager1Put(url,"/reqmgr/reqMgr/request", params)
     return data
 
 def abortWorkflow(url, workflowname):
     """
     Sets a workflow state to aborted
     """
-    params = {"requestName" : workflowname,"status" : "aborted"}
-    data = requestManagerPut(url,"/reqmgr/reqMgr/request", params)
+    if isRequestMgr2Request(url, workflowname):
+        params = {"RequestStatus" : "aborted"}
+        data = requestManagerPut(url,"/reqmgr2/data/request/%s"%workflowname, params)
+    else:
+        params = {"requestName" : workflowname,"status" : "aborted"}
+        data = requestManager1Put(url,"/reqmgr/reqMgr/request", params)
     return data
 
 def cloneWorkflow(url, workflowname):
     """
     This clones a request
     """
-    headers={"Content-Length": 0}
-    params = {}
-    data = requestManagerPut(url,"/reqmgr/reqMgr/clone/", params, headers)
+    if isRequestMgr2Request(url, workflowname):
+        data = requestManagerPut(url,"/reqmgr2/data/request", params)
+    else:
+        print "cloneWorkflow Does not function in reqmgr1 in this interface. please migrate."
+        data = None
     return data
 
 def submitWorkflow(url, schema):
@@ -1018,15 +1089,105 @@ def submitWorkflow(url, schema):
     the workflow
     
     """
-    data = requestManagerPost(url,"/reqmgr/create/makeSchema", schema, nested=True)
-    return data
+    data = requestManagerPost(url,"/reqmgr2/data/request", schema)
+    try:
+        newwf = json.loads(data)['result'][0]['request']
+        return newwf
+    except:
+        return None
 
-def setWorkflowSplitting(url, schema):
+def reqmgr1_to_2_Splitting(params):
+    reqmgr2Params = {}
+    reqmgr2Params["taskName"] = params['splittingTask']
+    reqmgr2Params["splitAlgo"] = params['splittingAlgo']
+    del params['splittingTask']
+    del params['splittingAlgo']
+    del params['requestName']
+    reqmgr2Params["splitParams"] = params
+    return [reqmgr2Params]
+
+def reqmgr2_to_1_Splitting(params):
+    if len(params)>1: print "cannot set multiple splitting in reqmgr1 at once : truncating. please migrate."
+    params = params[0]
+    reqmgr1Params = {}
+    reqmgr1Params["splittingTask"] = params["taskName"]
+    reqmgr1Params["splittingAlgo"] = params["splitAlgo"]
+    reqmgr1Params.update( params["splitParams"] )
+    return reqmgr1Params
+
+def setWorkflowSplitting(url, workflowname, schema):
     """
     This sets the workflow splitting into ReqMgr
     """
-    data = requestManagerPost(url,"/reqmgr/view/handleSplittingPage", schema)
+    def ifOldSchema(schema):
+        return( type(schema)!=list)
+
+    if isRequestMgr2Request(url, workflowname):
+        if ifOldSchema(schema):
+            print "old splitting format detected : translating. please migrate."
+            schema = reqmgr1_to_2_Splitting(schema)
+        data = requestManagerPost(url, "/reqmgr2/data/splitting/%s"%workflowname, schema)
+    else:
+        if not ifOldSchema(schema):
+            print "new schema to reqmgr1 detected: translating. please drain."
+            schema = reqmgr2_to_1_Splitting(schema)
+        data = requestManager1Post(url,"/reqmgr/view/handleSplittingPage", schema)
+    print data
     return data
+
+def reqmgr1_to_2_Assignment( params ):
+    teams = []
+    for key, value in params.iteritems():
+        if isinstance(value, basestring):
+            params[key] = value.strip()
+        if key.startswith("Team"):
+            teams.append(key[4:])
+        if key.startswith("checkbox"):
+            requestName = key[8:]
+    params["RequestName"] = requestName        
+    #params["Teams"] = teams
+    params["Team"] = teams[0]
+    priority = params.get(requestName + ':priority', '')
+    if priority != '':
+        params['RequestPriority'] = priority
+    if params['action'] == 'Assign':
+        params["RequestStatus"] = "assigned"
+    elif params['action'] == 'Reject':
+        params["RequestStatus"] = "rejected"
+    return params
+
+def reqmgr2_to_1_Assignment( params ):
+    params['Team'+params["Teams"][0]] = "checked"
+    params['checkbox'+params['RequestName']] = "checked"
+    priority = params.get('RequestPriority','')
+    if priority:
+        params[params['RequestName']+':priority'] = priority
+    params['action'] = 'Assign'
+    return params
+
+
+
+
+def setWorkflowAssignment(url, workflowname, schema):
+    """
+    This sets the workflow assignment into reqmgr
+    """
+    def isOldSchema(schema):
+        return any([k.startswith('checkbox') for k in schema.keys()])
+
+    if isRequestMgr2Request(url, workflowname):
+        if isOldSchema(schema):
+            print "old schema detected : translating. please migrate."
+            schema = reqmgr1_to_2_Assignment(schema)
+        data = requestManagerPut(url,"/reqmgr2/data/request/%s"%workflowname, schema)
+        print data
+    else:
+        if not isOldSchema(schema):
+            print "new schema to reqmgr1 detected : translating. please drain."
+            schema = reqmgr2_to_1_Assignment(params)
+        data = requestManager1Post(url, "/reqmgr/assign/handleAssignmentPage", schema)
+    return data
+
 
 def getInputEventsTaskChain(request):
     """

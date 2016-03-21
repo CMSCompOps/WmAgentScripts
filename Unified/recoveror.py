@@ -8,6 +8,7 @@ import copy
 from collections import defaultdict
 import re
 import os
+from utils import reqmgr_url
 
 def singleRecovery(url, task , initial, actions, do=False):
     payload = {
@@ -314,7 +315,7 @@ def recoveror(url,specific,options=None):
             
 
 if __name__ == '__main__':
-    url='cmsweb.cern.ch'
+    url=reqmgr_url
     parser = optparse.OptionParser()
     #parser.add_option('--do',default=False,action='store_true')
     parser.add_option('--test', dest='do', default=True,action='store_false')

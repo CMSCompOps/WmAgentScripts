@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 import reqMgrClient
-from utils import workflowInfo, campaignInfo, siteInfo, userLock, global_SI, unifiedConfiguration
+from utils import workflowInfo, campaignInfo, siteInfo, userLock, global_SI, unifiedConfiguration, reqmgr_url
 from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction, getDatasetEventsPerLumi, newLockInfo, getLFNbase, getDatasetBlocks
 from utils import componentInfo, sendEmail, sendLog
 #from utils import lockInfo
@@ -413,8 +413,7 @@ def assignor(url ,specific = None, talk=True, options=None):
     sendLog('assignor',"Assigned %d Stalled %s"%(n_assigned, n_stalled))
     
 if __name__=="__main__":
-    url = 'cmsweb.cern.ch'
-
+    url = reqmgr_url
     parser = optparse.OptionParser()
     parser.add_option('-t','--test', help='Only test the assignment',action='store_true',dest='test',default=False)
     parser.add_option('-r', '--restrict', help='Only assign workflows for site with input',default=False, action="store_true",dest='restrict')
