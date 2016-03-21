@@ -24,10 +24,10 @@ from email.utils import make_msgid
 dbs_url = os.getenv('UNIFIED_DBS3_READER' ,'https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
 dbs_url_writer = os.getenv('UNIFIED_DBS3_WRITER','https://cmsweb.cern.ch/dbs/prod/global/DBSWriter')
 
-phedex_url = os.getenv('UNIFIED_PHEDEX','cmsweb-testbed.cern.ch')
-reqmgr_url = os.getenv('UNIFIED_REQMGR','cmsweb-testbed.cern.ch')
-monitor_dir = os.getenv('UNIFIED_MON','/afs/cern.ch/user/c/cmst2/www/unified2/')
-base_dir =  os.getenv('UNIFIED_DIR','/afs/cern.ch/user/c/cmst2/Unified2/')
+phedex_url = os.getenv('UNIFIED_PHEDEX','cmsweb.cern.ch')
+reqmgr_url = os.getenv('UNIFIED_REQMGR','cmsweb.cern.ch')
+monitor_dir = os.getenv('UNIFIED_MON','/afs/cern.ch/user/c/cmst2/www/unified/')
+base_dir =  os.getenv('UNIFIED_DIR','/afs/cern.ch/user/c/cmst2/Unified/')
 
 FORMAT = "%(module)s.%(funcName)s(%(lineno)s) => %(message)s (%(asctime)s)"
 DATEFMT = "%Y-%m-%d %H:%M:%S"
@@ -3320,6 +3320,7 @@ class workflowInfo:
     def getSchema(self):
         #new_schema = copy.deepcopy( self.get_spec().request.schema.dictionary_())
         
+        self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         r1=self.conn.request("GET",'/reqmgr2/data/request?name=%s'%self.request['RequestName'], headers={"Accept":"application/json"} )
         r2=self.conn.getresponse()
         new_schema = copy.deepcopy( json.loads(r2.read())['result'][0][self.request['RequestName']])
