@@ -2620,7 +2620,11 @@ def getWorkflows(url,status,user=None,details=False,rtype=None):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     if rtype:
         go_to = '/reqmgr2/data/request?status=%s&request_type=%s&detail=%s'%( status, rtype , 'true' if details else 'false')
-        r1=conn.request("GET",go_to, headers={"Accept":"application/json"})
+        r1=conn.request("GET",go_to, headers={"Accept":"application/json"})        
+        #go_to = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/requestsbystatusandtype?key=["%s","%s"]'% ( status, rtype)
+        #if details:
+        #    go_to+='&include_docs=true'
+        #r1=conn.request("GET",go_to)
     else:
         go_to = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/bystatus?key="%s"'%(status)
         if details:
@@ -2629,20 +2633,22 @@ def getWorkflows(url,status,user=None,details=False,rtype=None):
 
     r2=conn.getresponse()
     data = json.loads(r2.read())
-    if rtype:
+    if 'result' in data:
         items = data['result']
     else:
         items = data['rows']
 
+    print len(items)
     users=[]
     if user:
         users=user.split(',')
     workflows = []
+
     for item in items:
         those = item.keys()
         if users:
             those = filter(lambda k : any([k.startswith(u) for u in users]), those)
-        if rtype:
+        if 'result' in data:
             if details:
                 workflows.extend([item[k] for k in those])
             else:
@@ -2652,6 +2658,7 @@ def getWorkflows(url,status,user=None,details=False,rtype=None):
             if (users and any([wf.startswith(u) for u in users])) or not users:
                 workflows.append(item['doc' if details else 'id'])
 
+    #print len(workflows)
     return workflows
 
 def getPrepIDs(wl):
