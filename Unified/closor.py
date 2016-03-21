@@ -21,6 +21,12 @@ def spawn_harvesting(url, wfi , in_full):
     requests = []
     outputs = wfi.request['OutputDatasets'] 
     if 'EnableHarvesting' in wfi.request and wfi.request['EnableHarvesting']:
+        if not 'MergedLFNBase' in wfi.request:
+            print "fucked up"
+            sendEmail('screwed up wl cache','%s wl cache is bad'%(wfi.request['RequestName']))
+            all_OK['fake'] = False
+            return all_OK,requests
+
         wfi = workflowInfo(url, wfi.request['RequestName'])
         dqms = [out for out in outputs if '/DQM' in out]
         if not all([in_full[dqm_input] for dqm_input in dqms]):
@@ -220,6 +226,7 @@ def closor(url, specific=None):
 
     
         ## verify if we have to do harvesting
+
         (OK, requests) = spawn_harvesting(url, wfi, in_full)
         all_OK.update( OK )
 
