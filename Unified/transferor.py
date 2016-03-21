@@ -691,6 +691,7 @@ def transferor(url ,specific = None, talk=True, options=None):
         session.commit()
 
 if __name__=="__main__":
+    UC = unifiedConfiguration()
     url = reqmgr_url
     parser = optparse.OptionParser()  
     parser.add_option('-t','--test',help="Perform the test and display information",default=False,action='store_true')
