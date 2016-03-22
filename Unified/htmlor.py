@@ -57,8 +57,8 @@ def htmlor( caller = ""):
                 "%s "%wfn,
                 '(%s) <br>'%wfs])
         text+=', '.join([
-                #deprecated '<a href="https://cmsweb.cern.ch/reqmgr/view/details/%s" target="_blank">dts</a>'%wfn,
                 '<a href="https://%s/reqmgr2/fetch?rid=%s" target="_blank">dts</a>'%(reqmgr_url,wfn),
+                '<a href="https://cmsweb.cern.ch/reqmgr/view/details/%s" target="_blank">dts-req1</a>'%wfn,
                 #TOFIX '<a href=https://cmsweb.cern.ch/reqmgr/view/showWorkload?requestName=%s target="_blank">wkl</a>'%wfn,
                 '<a href="https://%s/couchdb/reqmgr_workload_cache/%s" target="_blank">wfc</a>'%(reqmgr_url,wfn),
                 '<a href="https://%s/reqmgr2/data/request?name=%s" target="_blank">req</a>'%(reqmgr_url,wfn),
