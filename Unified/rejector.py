@@ -81,6 +81,9 @@ def rejector(url, specific, options=None):
                 ## a few tampering of the original request
                 if options.Memory:
                     schema['Memory'] = options.Memory
+                if options.deterministic:
+                    if schema['RequestType'] == 'TaskChain':
+                        schema['Task1']['DeterministicPileup']  = True
                 if options.EventsPerJob:
                     if schema['RequestType'] == 'TaskChain':
                         schema['Task1']['EventsPerJob'] = options.EventsPerJob
@@ -93,7 +96,8 @@ def rejector(url, specific, options=None):
                     schema['ProcessingString'] = options.ProcessingString
                 if options.AcquisitionEra:
                     schema['AcquisitionEra'] = options.AcquisitionEra
-                    
+                if options.runs:
+                    schema['RunWhitelist'] = map(int,options.runs.split(','))
                 if options.PrepID:
                     schema['PrepID'] =options.PrepID
 
@@ -162,6 +166,8 @@ if __name__ == "__main__":
     parser.add_option('--TimePerEvent', help="set the time/event on the clone", default=0, type=float)
     parser.add_option('--filelist',help='a file with a list of workflows',default=None)
     parser.add_option('--no_output',help='keep only the output of the last task of TaskChain',default=False,action='store_true')
+    parser.add_option('--deterministic',help='set the splitting to deterministic in the clone',default=False,action='store_true')
+    parser.add_option('--runs',help='set the run whitelist in the clone',default=None)
     (options,args) = parser.parse_args()
 
     spec=None
