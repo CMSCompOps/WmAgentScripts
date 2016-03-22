@@ -378,7 +378,7 @@ def requestManager1Post(url, request, params, head = def_headers1, nested=True):
     else:
         encodedParams = urllib.urlencode(params)
     
-    data = _post(url, request, encodedParams, head, encode=None)
+    data, status = _post(url, request, encodedParams, head, encode=None)
     return data
     
 def requestManagerPost(url, request, params, head = def_headers):
@@ -1083,7 +1083,7 @@ def cloneWorkflow(url, workflowname):
         data = None
     return data
 
-def submitWorkflow(url, schema):
+def submitWorkflow(url, schema, reqmgr2=False):
     """
     This submits a workflow into the ReqMgr, can be used for cloning
     and resubmitting workflows
@@ -1092,12 +1092,23 @@ def submitWorkflow(url, schema):
     the workflow
     
     """
-    data = requestManagerPost(url,"/reqmgr2/data/request", schema)
-    try:
-        newwf = json.loads(data)['result'][0]['request']
-        return newwf
-    except:
-        return None
+    if reqmgr2:
+        data = requestManagerPost(url,"/reqmgr2/data/request", schema)
+        try:
+            newwf = json.loads(data)['result'][0]['request']
+            return newwf
+        except:
+            return None
+    else:
+        data = requestManager1Post(url,"/reqmgr/create/makeSchema", schema, nested=True)
+        print data
+        m = re.search("details\/(.*)\'", data)
+        if m:
+            newWorkflow = m.group(1)
+            return newWorkflow
+        else:
+            return None
+        
 
 def reqmgr1_to_2_Splitting(params):
     reqmgr2Params = {}
