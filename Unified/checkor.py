@@ -115,7 +115,9 @@ def checkor(url, spec=None, options=None):
     pattern_fraction_pass = UC.get('pattern_fraction_pass')
 
     total_running_time = 5.*60. 
-    sleep_time = min(max(0.5, total_running_time / len(wfs)), 10)
+    sleep_time = 1
+    if len(wfs):
+        sleep_time = min(max(0.5, total_running_time / len(wfs)), 10)
 
     random.shuffle( wfs )
 

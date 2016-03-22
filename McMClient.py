@@ -1,5 +1,5 @@
 import sys,pprint,os,json
-
+import os
 import httplib
 import urllib
 import pprint
@@ -9,6 +9,7 @@ import traceback
 
 class McMClient:
     def __init__(self,id='sso',debug=False,cookie=None,dev=True,int=False):
+        if os.getenv('UNIFIED_MC') == 'dev': dev = True
         if dev:
             self.server='cms-pdmv-dev.cern.ch/mcm/'
         else:

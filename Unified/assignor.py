@@ -14,6 +14,7 @@ import os
 import random
 import json
 import copy
+import os
 
 def assignor(url ,specific = None, talk=True, options=None):
     if userLock(): return
@@ -300,6 +301,7 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         ## plain assignment here
         team='production'
+        if os.getenv('UNIFIED_TEAM'): team = os.getenv('UNIFIED_TEAM')
         if options and options.team:
             team = options.team
 
