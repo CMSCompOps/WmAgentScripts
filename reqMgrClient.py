@@ -1092,6 +1092,7 @@ def submitWorkflow(url, schema, reqmgr2=False):
     the workflow
     
     """
+    if os.getenv('UNIFIED_SUBMIT') == 'reqmgr2': reqmgr2 = True
     if reqmgr2:
         data = requestManagerPost(url,"/reqmgr2/data/request", schema)
         try:
