@@ -20,7 +20,7 @@ def spawn_harvesting(url, wfi , in_full):
     all_OK = {}
     requests = []
     outputs = wfi.request['OutputDatasets'] 
-    if 'EnableHarvesting' in wfi.request and wfi.request['EnableHarvesting']:
+    if ('EnableHarvesting' in wfi.request and wfi.request['EnableHarvesting']) or ('DQMConfigCacheID' in wfi.request and wfi.request['DQMConfigCacheID']):
         if not 'MergedLFNBase' in wfi.request:
             print "fucked up"
             sendEmail('screwed up wl cache','%s wl cache is bad'%(wfi.request['RequestName']))
