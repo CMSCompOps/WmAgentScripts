@@ -1058,8 +1058,8 @@ class siteInfo:
             else: 
                 self.storage[mss]  = mss_usage['Tape']['Free'][mss]
 
-            if mss == 'T1_US_FNAL_MSS':
-                self.storage[mss] =min(50, self.storage[mss])
+            #if mss == 'T1_US_FNAL_MSS':
+            #    self.storage[mss] =min(50, self.storage[mss])
             #if mss == 'T0_CH_CERN_MSS':
             #    self.storage[mss] =min(2000, self.storage[mss])
             #if mss == 'T1_RU_JINR_MSS':
