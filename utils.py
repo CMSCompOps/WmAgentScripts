@@ -2347,7 +2347,8 @@ def getDatasetEventsAndLumis(dataset, blocks=None):
         try:
             r = try_getDatasetEventsAndLumis( dataset, blocks)
         except Exception as e:
-            sendEmail("fatal exception in getDatasetEventsAndLumis",str(e))
+            print "fatal exception in getDatasetEventsAndLumis",dataset,blocks
+            sendEmail("fatal exception in getDatasetEventsAndLumis",str(e)+dataset)
             r = 0,0
     return r
 
