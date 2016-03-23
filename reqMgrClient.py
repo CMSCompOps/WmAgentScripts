@@ -361,7 +361,7 @@ def requestManagerGet(url, request, retries=4):
 #        raise Exception("no correspondonting reqmgr2 call for %s" % request)
 #    return data
     
-def requestManager1Post(url, request, params, head = def_headers1, nested=True):
+def requestManager1Post(url, request, params, head = def_headers1, nested=False):
     """
     Performs some operation on ReqMgr through
     an HTTP POST method.
@@ -1205,7 +1205,7 @@ def setWorkflowAssignment(url, workflowname, schema):
         if not isOldSchema(schema):
             print "new schema to reqmgr1 detected : translating. please drain."
             schema = reqmgr2_to_1_Assignment(params)
-        data = requestManager1Post(url, "/reqmgr/assign/handleAssignmentPage", schema)
+        data = requestManager1Post(url, "/reqmgr/assign/handleAssignmentPage", schema, nested=True)
         if 'Assigned' in data:
             return True
         else:
