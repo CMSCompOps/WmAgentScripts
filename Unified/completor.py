@@ -19,6 +19,9 @@ def forceComplete(url, wfi):
             #sendEmail("force completing","%s is worth force completing\n%s"%( member['RequestName'] , percent_completions))
             print "setting",member['RequestName'],"force-complete"
             reqMgrClient.setWorkflowForceComplete(url, member['RequestName'])
+        elif member['RequestStatus'] in ['acquired','assignment-approved']:
+            print "rejecting",member['RequestName']
+            reqMgrClient.invalidateWorkflow(url, member['RequestName'], current_status=member['RequestStatus'])
 
 def completor(url, specific):
     up = componentInfo(mcm=False, soft=['mcm'])
@@ -29,7 +32,7 @@ def completor(url, specific):
 
     wfs = []
     wfs.extend( session.query(Workflow).filter(Workflow.status == 'away').all() )
-    ##wfs.extend( session.query(Workflow).filter(Workflow.status.startswith('assistance')).all() )
+    wfs.extend( session.query(Workflow).filter(Workflow.status.startswith('assistance')).all() )
 
     ## just take it in random order so that not always the same is seen
     random.shuffle( wfs )
@@ -84,7 +87,9 @@ def completor(url, specific):
                 wfi.notifyRequestor("The workflow %s was force completed by request of %s"%(wfo.name,user), do_batch=False)
                 wfi.sendLog('completor','%s is asking for %s to be force complete'%(user,wfo.name))
                 break
-            
+    
+        if wfo.status.startswith('assistance'): skip = True
+
         if skip: 
             continue
 
