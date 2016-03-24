@@ -52,7 +52,7 @@ def equalizor(url , specific = None, options=None):
         mapping[site] = [fb for fb in SI.sites_ready if any([('_%s_'%(reg) in fb and fb!=site and site_in_depletion(fb))for reg in regions[region]]) ]
     
 
-    use_T0 = True
+    use_T0 = False
     if options.augment : use_T0 = True
 
     use_HLT = False
