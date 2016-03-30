@@ -422,7 +422,7 @@ if __name__=="__main__":
     parser.add_option('-r', '--restrict', help='Only assign workflows for site with input',default=False, action="store_true",dest='restrict')
     parser.add_option('-e', '--early', help='Fectch from early statuses',default=False, action="store_true")
     parser.add_option('--go',help="Overrides the campaign go",default=False,action='store_true')
-    parser.add_option('--team',help="Specify the agent to use",default='production')
+    parser.add_option('--team',help="Specify the agent to use",default=None)
     parser.add_option('--primary_aaa',help="Force to use the secondary location restriction, if any, and use the full site whitelist initially provided to run that type of wf",default=False, action='store_true')
     parser.add_option('--limit',help="Limit the number of wf to be assigned",default=0,type='int')
     for key in reqMgrClient.assignWorkflow.keys:
