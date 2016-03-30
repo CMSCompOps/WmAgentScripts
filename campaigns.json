@@ -238,9 +238,20 @@
     "force-complete" : 0.99,
     "lumisize": -1
   },
+  "RunIIFall15DR76Premix": {
+    "go": true,
+    "lumisize": -1
+  },
   "RunIISpring16DR80": {
     "go": true,
     "force-complete" : 0.99,
+    "lumisize": -1
+  },
+  "RunIISpring16wmLHEFSPremix": {
+    "go": false,
+    "parameters": {
+      "EventsPerLumi": "x2"
+    },
     "lumisize": -1
   },
   "HiWinter13": {
