@@ -78,6 +78,12 @@ def rejector(url, specific, options=None):
                     schema['ProcessingVersion'] = int(schema['ProcessingVersion'])+1 ## dubious str->int conversion
                 else:
                     schema['ProcessingVersion']=2
+                for k in schema.keys():
+                    if k.startswith('Team'):
+                        schema.pop(k)
+                    if k.startswith('checkbox'):
+                        schema.pop(k)
+
                 ## a few tampering of the original request
                 if options.Memory:
                     schema['Memory'] = options.Memory
