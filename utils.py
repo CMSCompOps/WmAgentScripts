@@ -921,7 +921,11 @@ dataCache = docCache()
 
 class DSS:
     def __init__(self):
-        self.bdb = json.loads(open('bdss.json').read())
+        try:
+            self.bdb = json.loads(open('bdss.json').read())
+        except:
+            print "bo bank of dataset size. starting fresh"
+            self.bdb = {}
 
     def _get(self, dataset ):
         if not dataset in self.bdb:
