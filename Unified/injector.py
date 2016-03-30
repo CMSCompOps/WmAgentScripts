@@ -19,6 +19,7 @@ def injector(url, options, specific):
     workflows = getWorkflows(url, status=options.wmstatus, user=options.user)
     workflows.extend( getWorkflows(url, status=options.wmstatus, user='fabozzi', rtype="ReReco")) ## regardless of users, pick up all ReReco on the table
 
+    print len(workflows),"in line"
     cannot_inject = set()
     ## browse for assignment-approved requests, browsed for ours, insert the diff
     for wf in workflows:
