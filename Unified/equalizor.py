@@ -140,6 +140,15 @@ def equalizor(url , specific = None, options=None):
                      'T1_UK_RAL','T2_US_Vanderbilt','T2_CH_CERN'],
             'max': 20000,
             'pending' : 0},
+        'RunIISpring16DR80' : {
+            'sites':['T1_ES_PIC','T2_US_Purdue','T2_UK_SGrid_RALPP','T2_BE_IIHE','T2_DE_DESY','T2_IT_Legnaro','T2_US_Caltech','T1_DE_KIT',
+                     'T2_UK_London_Brunel','T2_IT_Pisa',
+                     'T1_US_FNAL',
+                     'T2_IT_Rome','T2_US_Florida','T1_IT_CNAF','T1_RU_JINR','T2_UK_London_IC','T2_US_Nebraska','T2_FR_CCIN2P3','T2_US_UCSD','T2_ES_CIEMAT',
+                     'T1_FR_CCIN2P3','T2_US_Wisconsin','T2_US_MIT','T2_DE_RWTH',
+                     'T1_UK_RAL','T2_US_Vanderbilt','T2_CH_CERN'],
+            'max': 20000,
+            'pending' : 0},
         'RunIISpring15DR74' : {
             'sites' : ['T1_ES_PIC','T1_DE_KIT','T1_US_FNAL','T1_IT_CNAF','T1_RU_JINR','T1_FR_CCIN2P3','T1_UK_RAL','T2_CH_CERN'],
             'max' : 20000,
