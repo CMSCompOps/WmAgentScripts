@@ -1369,10 +1369,12 @@ phdF</th><th>Priority</th></tr></thead>'
         wf_and_anchor = '<a id="%s">%s</a>'%(wf,wf)
         for out in self.record[wf]['datasets']:
             text+='<tr bgcolor=%s>'%color
-            text+='<td>%s<br><a href=https://cmsweb.cern.ch/reqmgr/view/details/%s>dts</a>, <a href=https://cmsweb.cern.ch/reqmgr/view/splitting/%s>splt</a>, <a href=https://cmsweb.cern.ch/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s>perf</a>, <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>ac</a>, <a href=assistance.html#%s>%s</a></td>'% (wf_and_anchor,
-                                                                                                                                                                                                                                                                                                                            wf, wf, wf,tpid,wf,
-                                                                                                                                                                                                                                                                                                                            wfo.status)
-
+            text+='<td>%s<br><a href="https://%s/reqmgr2/fetch?rid=%s" target="_blank">dts</a> <a href=https://%s/reqmgr/view/details/%s>dts-req1</a>, <a href=https://%s/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s>perf</a>, <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>ac</a>, <a href=assistance.html#%s>%s</a></td>'% (
+                wf_and_anchor,
+                reqmgr_url,wf, reqmgr_url, wf, reqmgr_url, wf,
+                tpid,
+                wf,wfo.status)
+            
             text+='<td>%s</td>'% out
             lines = []
             for f in order:
