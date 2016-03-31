@@ -651,7 +651,9 @@ def checkor(url, spec=None, options=None):
 
     fDB.html()
     if not spec:
-        sendEmail("fresh assistance status available","Fresh status are available at https://cmst2.web.cern.ch/cmst2/unified/assistance.html",destination=['jen_a@fnal.gov'])
+        #sendEmail("fresh assistance status available","Fresh status are available at https://cmst2.web.cern.ch/cmst2/unified/assistance.html",destination=['jen_a@fnal.gov'])
+        #it's a bit annoying
+        pass
 
     ## custodial requests
     print "Custodials"
