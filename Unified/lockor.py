@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from utils import getWorkflows, findCustodialCompletion, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration, getDatasetSize, sendEmail, campaignInfo, componentInfo, reqmgr_url, monitor_dir
+from utils import getWorkflows, findCustodialCompletion, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration, getDatasetSize, sendEmail, campaignInfo, componentInfo, reqmgr_url, monitor_dir, getWorkflowByMCPileup
 from assignSession import *
 import json
 import os
@@ -28,6 +28,8 @@ CI = campaignInfo()
 tier_no_custodial = UC.get('tiers_with_no_custodial')
 tiers_keep_on_disk = UC.get("tiers_keep_on_disk")
 
+now = time.mktime( time.gmtime())
+
 ## can we catch the datasets that actually should go to tape ?
 custodial_override = {}
 for c in CI.campaigns:
@@ -46,7 +48,6 @@ if not already_locked:
     print "found",len(already_locked),"old locks"
 
 newly_locking = set()
-
 ## you want to take them in reverse order to make sure none go through a transition while you run this 
 for status in reversed(statuses):
     wfls = getWorkflows(url , status = status,details=True)
@@ -78,11 +79,29 @@ stuck_custodial={}
 lagging_custodial={}
 missing_approval_custodial={}
 transfer_timeout = UC.get("transfer_timeout")
+secondary_timeout = defaultdict(int)
 ## check on the one left out, which would seem to get unlocked
 for dataset in already_locked-newly_locking:
     try:
         unlock = False
         bad_ds = False
+
+        if not dataset in secondary_timeout:
+            ## see if it's used in secondary anywhere
+            usors = getWorkflowByMCPileup(url, dataset, details=True)
+            ## find the latest request date using that dataset in secondary
+            for usor in usors:
+                d =time.mktime(time.strptime("-".join(map(str,usor['RequestDate'])), "%Y-%m-%d-%H-%M-%S"))
+                secondary_timeout[dataset] = max(secondary_timeout[dataset],d)
+
+        if secondary_timeout[dataset]: ## different than zero
+            delay_days = 30
+            delay = delay_days*24*60*60 # 30 days     
+            if (now-secondary_timeout[dataset])>delay:
+                print "unlocking secondary input after",delay_days,"days"
+                unlock = True
+
+
         tier = dataset.split('/')[-1]
         creators = getWorkflowByOutput( url, dataset , details=True)
         if not creators and not tier == 'RAW':
@@ -96,7 +115,7 @@ for dataset in already_locked-newly_locking:
                 unlock = True
                 bad_ds = True
         creators_status = [r['RequestStatus'] for r in creators]
-        print "Statuses of workflow that made the dataset",creators_status
+        print "Statuses of workflow that made the dataset",dataset,"are",creators_status
         if all([status in ['failed','aborted','rejected','aborted-archived','rejected-archived'] for status in creators_status]):
             ## crap 
             print "\tunlocking",dataset,"for bad workflow statuses"
@@ -179,11 +198,11 @@ for dataset in already_locked-newly_locking:
             else:
                 ## relocking
                 outs = session.query(Output).filter(Output.datasetname==dataset).all()
-                now = time.mktime( time.gmtime())
                 delay_days = 30
                 delay = delay_days*24*60*60 # 30 days
                 if outs:
-                    if all([(now-odb.date) > delay for odb in outs]):
+                    odb = outs[0]
+                    if (now-odb.date) > delay: #all([(now-odb.date) > delay for odb in outs]):
                         unlock = True
                         print "unlocking",dataset,"after",(now-odb.date)/24*60*60,"[days] since announcement, limit is",delay_days,"[days]"
                     else:
