@@ -766,6 +766,14 @@ class docCache:
             'cachefile' : None,
             'default' : {}
             }
+        self.cache['mcore_ready'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration(),
+            'getter' : lambda : json.loads(open('/afs/cern.ch/user/a/aperezca/public/CMS/mcore_siteinfo.json').read()),
+            'cachefile' : None,
+            'default' : {}
+            }
         self.cache['gwmsmon_prod_site_summary' ] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
@@ -1036,6 +1044,12 @@ class siteInfo:
         ## list here the site which can accomodate high memory requests
         self.sites_memory = {}
 
+        self.sites_mcore_ready = []
+        mcore_mask = dataCache.get('mcore_ready')
+        if mcore_mask:
+            self.sites_mcore_ready = mcore_mask['sites_for_mcore']
+
+
         for s in self.all_sites:
             ## will get it later from SSB
             self.cpu_pledges[s]=1
@@ -1274,7 +1288,7 @@ class siteInfo:
 
 
     def types(self):
-        return ['sites_with_goodIO','sites_T1s','sites_T2s']#,'sites_veto_transfer']#,'sites_auto_approve']
+        return ['sites_with_goodIO','sites_T1s','sites_T2s','sites_mcore_ready']#,'sites_veto_transfer']#,'sites_auto_approve']
 
     def CE_to_SE(self, ce):
         if ce.startswith('T1') and not ce.endswith('_Disk'):
@@ -3273,7 +3287,11 @@ class workflowInfo:
         if memory_allowed!=None:
             if verbose:
                 print "sites allowing",self.request['Memory'],"MB and",ncores,"core are",memory_allowed
+            ## mask to sites ready for mcore
+            if  ncores>1:
+                memory_allowed = list(set(memory_allowed) & set(SI.sites_mcore_ready))
             sites_allowed = list(set(sites_allowed) & set(memory_allowed))
+
             
 
 
