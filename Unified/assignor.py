@@ -325,6 +325,17 @@ def assignor(url ,specific = None, talk=True, options=None):
         #    sendEmail("sending work to SDSC","%s was assigned to SDSC"% wfo.name, destination=['boj@fnal.gov'])
         
 
+        if False and 'T2_CH_CERN' in parameters['SiteWhitelist']:
+            ## add some check on 
+            ### the amount pending to HLT
+            ### the size of the request
+            ### the priority of the request (maybe not if we decide to overflow during runs)
+            parameters['SiteWhitelist'] = ['T2_CH_CERN_HLT']
+            team = 'hlt'
+            ## reduce the splitting by factor of 4, regardless of type of splitting
+            sendEmail("sending work to HLT","%s was assigned to HLT"%wfo.name)
+            
+
         ##parse options entered in command line if any
         if options:
             for key in reqMgrClient.assignWorkflow.keys:
