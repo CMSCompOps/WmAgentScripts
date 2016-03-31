@@ -123,7 +123,7 @@ def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lf
               "checkbox" + workflow: "checked"}
     # add xrootd (trustSiteList)
     if trust_site:
-        params['useSiteListAsLocation'] = True
+        params['TrustSitelists'] = True
         
     # if era is None, leave it out of the json
     if era is not None:
@@ -147,8 +147,12 @@ def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lf
         pprint(params)
 
     # TODO try reqMgr standard
-    res = reqMgr.requestManagerPost(url, "/reqmgr/assign/handleAssignmentPage", params, nested=True)
-    print 'Assigned workflow:', workflow, 'to site:', site, 'and team', team
+    params['execute'] = True
+    res = reqMgr.assignWorkflow(url, workflow, team, params)
+    if res:
+        print 'Assigned workflow:', workflow, 'to site:', site, 'and team', team
+    else:
+        print 'could not assign the workflow',workflow
     #TODO check conditions of success
     if verbose:
         print res
