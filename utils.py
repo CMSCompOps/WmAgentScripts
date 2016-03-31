@@ -770,7 +770,7 @@ class docCache:
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(open('/afs/cern.ch/user/a/aperezca/public/CMS/mcore_siteinfo.json').read()),
+            'getter' : lambda : json.loads(os.popen('curl --retry 5 -s http://cmsgwms-frontend-global.cern.ch/vofrontend/stage/mcore_siteinfo.json').read()),
             'cachefile' : None,
             'default' : {}
             }
@@ -1048,7 +1048,8 @@ class siteInfo:
         mcore_mask = dataCache.get('mcore_ready')
         if mcore_mask:
             self.sites_mcore_ready = mcore_mask['sites_for_mcore']
-
+        else:
+            sendEmail("no mcore sites","that is suspicious!")
 
         for s in self.all_sites:
             ## will get it later from SSB
