@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, makeReplicaRequest, global_SI, getDatasetSize, getDatasetFiles, sendLog, reqmgr_url
+from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, makeReplicaRequest, global_SI, getDatasetSize, getDatasetFiles, sendLog, reqmgr_url, dbs_url, dbs_url_writer
 from utils import componentInfo, unifiedConfiguration, userLock, duplicateLock
 import phedexClient
 import dbs3Client
+dbs3Client.dbs3_url = dbs_url
+dbs3Client.dbs3_url_writer = dbs_url_writer
 import reqMgrClient
 import json
 from collections import defaultdict
