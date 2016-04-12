@@ -123,13 +123,8 @@ def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lf
               "checkbox" + workflow: "checked"}
     # add xrootd (trustSiteList)
     if trust_site:
-        params['useSiteListAsLocation'] = True
-        
-    # if era is None, leave it out of the json
-    if era is not None:
-        params["AcquisitionEra"] = era
-    if procstr is not None:
-        params["ProcessingString"] = procstr
+        params['TrustSitelists'] = True
+        params['TrustPUSitelists'] = True
 
     # if era is None, leave it out of the json
     if era is not None:
@@ -146,6 +141,8 @@ def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lf
     if verbose:
         pprint(params)
 
+    #sys.exit(1)
+
     # TODO try reqMgr standard
     res = reqMgr.requestManagerPost(url, "/reqmgr/assign/handleAssignmentPage", params, nested=True)
     print 'Assigned workflow:', workflow, 'to site:', site, 'and team', team
@@ -154,12 +151,13 @@ def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lf
         print res
 
 def getRequestDict(url, workflow):
-    conn = httplib.HTTPSConnection(url, cert_file=os.getenv(
-        'X509_USER_PROXY'), key_file=os.getenv('X509_USER_PROXY'))
-    r1 = conn.request("GET", '/reqmgr/reqMgr/request?requestName=' + workflow)
+    headers = {"Accept": "application/json"}
+    conn = httplib.HTTPSConnection(url, cert_file=os.getenv('X509_USER_PROXY'), key_file=os.getenv('X509_USER_PROXY'))
+    urn = "/reqmgr2/data/request/%s" % workflow
+    conn.request("GET", urn, headers=headers)
     r2 = conn.getresponse()
-    request = json.loads(r2.read())
-    return request
+    request = json.loads(r2.read())["result"][0]
+    return request[workflow]
 
 
 def main():
@@ -220,7 +218,6 @@ def main():
     for workflow in workflows:
         # Getting the original dictionary
         schema = getRequestDict(url, workflow)
-    
         # Setting the AcqEra and ProcStr values per Task
         for key, value in schema.items():
             if type(value) is dict and key.startswith("Task"):
@@ -268,7 +265,7 @@ def main():
         # check output dataset existence, and abort if they already do!
         datasets = schema["OutputDatasets"]
         i = 0
-        if 'ACDC' not in options.workflow:
+        if schema["RequestType"] == "TaskChain":
             exist = False
             maxv = 1
             for key, value in schema.items():
@@ -294,7 +291,13 @@ def main():
             if exist and procversion <= maxv:
                 print "Some output datasets exist, its advised to assign with v ==", maxv + 1
                 sys.exit(0)
-    
+        # For resubmission of a merge task inside a taskchain workflow, we cannot provide the acqera and procstring
+        elif schema["RequestType"] == "Resubmission":
+            if "Merge" in schema["InitialTaskPath"].split("/")[-1]:
+                acqera = None
+                procstring = None
+
+
         # If the --test argument was provided, then just print the information
         # gathered so far and abort the assignment
         if options.test:
