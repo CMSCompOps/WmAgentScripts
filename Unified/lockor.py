@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from utils import getWorkflows, findCustodialCompletion, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration, getDatasetSize, sendEmail, campaignInfo, componentInfo
+from utils import getWorkflows, findCustodialCompletion, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration, getDatasetSize, sendEmail, campaignInfo, componentInfo, reqmgr_url, monitor_dir, getWorkflowByMCPileup
 from assignSession import *
 import json
 import os
@@ -8,7 +8,7 @@ import sys
 from McMClient import McMClient
 import time
 
-url = 'cmsweb.cern.ch'
+url = reqmgr_url
 
 use_mcm=True
 up = componentInfo(mcm=use_mcm, soft=['mcm'])
@@ -28,6 +28,8 @@ CI = campaignInfo()
 tier_no_custodial = UC.get('tiers_with_no_custodial')
 tiers_keep_on_disk = UC.get("tiers_keep_on_disk")
 
+now = time.mktime( time.gmtime())
+
 ## can we catch the datasets that actually should go to tape ?
 custodial_override = {}
 for c in CI.campaigns:
@@ -35,7 +37,7 @@ for c in CI.campaigns:
         custodial_override[c] = CI.campaigns[c]['custodial_override']
 
 ## those that are already in lock
-already_locked = set(json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/globallocks.json').read()))
+already_locked = set(json.loads(open('%s/globallocks.json'%monitor_dir).read()))
 if not already_locked:
     old = json.loads(open('datalocks.json').read())
     for site,locks in old.items():
@@ -46,7 +48,6 @@ if not already_locked:
     print "found",len(already_locked),"old locks"
 
 newly_locking = set()
-
 ## you want to take them in reverse order to make sure none go through a transition while you run this 
 for status in reversed(statuses):
     wfls = getWorkflows(url , status = status,details=True)
@@ -78,11 +79,29 @@ stuck_custodial={}
 lagging_custodial={}
 missing_approval_custodial={}
 transfer_timeout = UC.get("transfer_timeout")
+secondary_timeout = defaultdict(int)
 ## check on the one left out, which would seem to get unlocked
 for dataset in already_locked-newly_locking:
     try:
         unlock = False
         bad_ds = False
+
+        if not dataset in secondary_timeout:
+            ## see if it's used in secondary anywhere
+            usors = getWorkflowByMCPileup(url, dataset, details=True)
+            ## find the latest request date using that dataset in secondary
+            for usor in usors:
+                d =time.mktime(time.strptime("-".join(map(str,usor['RequestDate'])), "%Y-%m-%d-%H-%M-%S"))
+                secondary_timeout[dataset] = max(secondary_timeout[dataset],d)
+
+        if secondary_timeout[dataset]: ## different than zero
+            delay_days = 30
+            delay = delay_days*24*60*60 # 30 days     
+            if (now-secondary_timeout[dataset])>delay:
+                print "unlocking secondary input after",delay_days,"days"
+                unlock = True
+
+
         tier = dataset.split('/')[-1]
         creators = getWorkflowByOutput( url, dataset , details=True)
         if not creators and not tier == 'RAW':
@@ -96,7 +115,7 @@ for dataset in already_locked-newly_locking:
                 unlock = True
                 bad_ds = True
         creators_status = [r['RequestStatus'] for r in creators]
-        print "Statuses of workflow that made the dataset",creators_status
+        print "Statuses of workflow that made the dataset",dataset,"are",creators_status
         if all([status in ['failed','aborted','rejected','aborted-archived','rejected-archived'] for status in creators_status]):
             ## crap 
             print "\tunlocking",dataset,"for bad workflow statuses"
@@ -179,11 +198,11 @@ for dataset in already_locked-newly_locking:
             else:
                 ## relocking
                 outs = session.query(Output).filter(Output.datasetname==dataset).all()
-                now = time.mktime( time.gmtime())
                 delay_days = 30
                 delay = delay_days*24*60*60 # 30 days
                 if outs:
-                    if all([(now-odb.date) > delay for odb in outs]):
+                    odb = outs[0]
+                    if (now-odb.date) > delay: #all([(now-odb.date) > delay for odb in outs]):
                         unlock = True
                         print "unlocking",dataset,"after",(now-odb.date)/24*60*60,"[days] since announcement, limit is",delay_days,"[days]"
                     else:
@@ -199,7 +218,8 @@ for dataset in already_locked-newly_locking:
             ##would like to pass to *-unlock, or even destroy from local db
             for creator in creators:
                 for wfo in  session.query(Workflow).filter(Workflow.name==creator['RequestName']).all():
-                    if not 'unlock' in wfo.status and not any([wfo.status.startswith(key) for key in ['trouble','away','considered','assistance']]):
+                    #if not 'unlock' in wfo.status and not any([wfo.status.startswith(key) for key in ['trouble','away','considered','staging','staged','assistance']]):
+                    if not 'unlock' in wfo.status and any([wfo.status.startswith(key) for key in ['done','forget']]):
                         wfo.status +='-unlock'
                         print "setting",wfo.name,"to",wfo.status
             session.commit()
@@ -212,10 +232,10 @@ for dataset in already_locked-newly_locking:
 
 waiting_for_custodial_sum = sum([info['size'] for ds,info in waiting_for_custodial.items() if 'size' in info])
 print waiting_for_custodial_sum,"[GB] out there waiting for custodial"
-open('/afs/cern.ch/user/c/cmst2/www/unified/waiting_custodial.json','w').write( json.dumps( waiting_for_custodial , indent=2) )
-open('/afs/cern.ch/user/c/cmst2/www/unified/stuck_custodial.json','w').write( json.dumps( stuck_custodial , indent=2) )
-open('/afs/cern.ch/user/c/cmst2/www/unified/lagging_custodial.json','w').write( json.dumps( lagging_custodial , indent=2) )
-open('/afs/cern.ch/user/c/cmst2/www/unified/missing_approval_custodial.json','w').write( json.dumps( missing_approval_custodial , indent=2) )
+open('%s/waiting_custodial.json'%monitor_dir,'w').write( json.dumps( waiting_for_custodial , indent=2) )
+open('%s/stuck_custodial.json'%monitor_dir,'w').write( json.dumps( stuck_custodial , indent=2) )
+open('%s/lagging_custodial.json'%monitor_dir,'w').write( json.dumps( lagging_custodial , indent=2) )
+open('%s/missing_approval_custodial.json'%monitor_dir,'w').write( json.dumps( missing_approval_custodial , indent=2) )
 
 ## then for all that would have been invalidated from the past, check whether you can unlock the wf based on output
 for wfo in session.query(Workflow).filter(Workflow.status=='forget').all():
@@ -228,8 +248,8 @@ for wfo in session.query(Workflow).filter(Workflow.status=='forget').all():
 
         
             
-open('/afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.new','w').write( json.dumps( sorted(list(newly_locking)), indent=2))
-os.system('mv /afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.new /afs/cern.ch/user/c/cmst2/www/unified/globallocks.json')
+open('%s/globallocks.json.new'%monitor_dir,'w').write( json.dumps( sorted(list(newly_locking)), indent=2))
+os.system('mv %s/globallocks.json.new %s/globallocks.json'%(monitor_dir,monitor_dir))
 
 
 ## now settting the statuses locally right

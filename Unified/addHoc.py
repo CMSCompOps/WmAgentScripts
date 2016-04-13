@@ -1,18 +1,36 @@
 #!/usr/bin/env python  
-from utils import workflowInfo, getWorkflows, sendEmail, componentInfo
+from utils import workflowInfo, getWorkflows, sendEmail, componentInfo, monitor_dir, reqmgr_url, newLockInfo
 from assignSession import *
+import reqMgrClient
 import os
 import sys
 import json
 
-url = 'cmsweb.cern.ch'
+url = reqmgr_url
 
-os.system('Unified/equalizor.py -a vlimant_BPH-RunIISummer15GS-00030_00212_v0__160129_135314_9755')
+#nl = newLockInfo()
+#nl.lock('/Neutrino_E-10_gun/RunIISpring15PrePremix-AVE_25_BX_25ns_76X_mcRun2_asymptotic_v12-v3/GEN-SIM-DIGI-RAW')
+#nl.lock('/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIISummer15GS-MCRUN2_71_V1_ext1-v2/GEN-SIM')
+
+
+## all dqmharvest completed to announced right away
+wfs = getWorkflows(url, 'completed', user=None, rtype='DQMHarvest')
+for wf in wfs: 
+    print "closing out",wf
+    reqMgrClient.closeOutWorkflow(url, wf)
+wfs = getWorkflows(url, 'closed-out', user=None, rtype='DQMHarvest')
+for wf in wfs: 
+    print "announcing",wf
+    reqMgrClient.announceWorkflow(url, wf)
+
+
+#os.system('Unified/equalizor.py -a pdmvserv_task_HIG-RunIIFall15DR76-01039__v1_T_160120_002705_9423')
+#os.system('Unified/equalizor.py -a pdmvserv_SMP-Summer12DR53X-00027_00440_v0__160224_044437_5031')
 
 up = componentInfo(mcm=False, soft=['mcm'])                                 
 if not up.check():  
     sys.exit(1)     
-    
+
 ### catch unrunnable recoveries
 not_runable_acdc=set()
 wfs = getWorkflows(url, 'acquired', user=None, rtype='Resubmission',details=True)
@@ -32,7 +50,7 @@ if not_runable_acdc:
     sendEmail('not runnable ACDCs','These %s ACDC cannot run \n%s'%( len(not_runable_acdc), '\n'.join(not_runable_acdc)), destination = ['jen_a@fnal.gov'])
 
 ### add the value of the delay to announcing datasets
-data = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/announce_delays.json').read())
+data = json.loads(open('%s/announce_delays.json'%monitor_dir).read())
 for wfo in session.query(Workflow).filter(Workflow.status.startswith('done')).all()[:500]:
     if wfo.name in data: continue
     wfi = workflowInfo( url, wfo.name)
@@ -50,7 +68,7 @@ for wfo in session.query(Workflow).filter(Workflow.status.startswith('done')).al
         'delay' : delay
         }
     print wfo.name,"delay",delay
-open('/afs/cern.ch/user/c/cmst2/www/unified/announce_delays.json','w').write( json.dumps(data, indent=2) )
+open('%s/announce_delays.json'%monitor_dir,'w').write( json.dumps(data, indent=2) )
 
 
 #os.system('Unified/assignor.py --go RunIIFall15MiniAODv2 --limit 50')

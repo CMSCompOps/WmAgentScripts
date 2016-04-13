@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput, workflowInfo, getDatasetBlocksFraction, findLostBlocks, findLostBlocksFiles, getDatasetBlockFraction, getDatasetFileFraction, getDatasetPresence
+from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput, workflowInfo, getDatasetBlocksFraction, findLostBlocks, findLostBlocksFiles, getDatasetBlockFraction, getDatasetFileFraction, getDatasetPresence, reqmgr_url, monitor_dir
 from utils import unifiedConfiguration, componentInfo, sendEmail, getSiteWhiteList, checkTransferLag, sendLog
 from utils import siteInfo, campaignInfo, global_SI
 import json
@@ -24,8 +24,8 @@ def stagor(url,specific =None, options=None):
     completion_by_input = {}
     good_enough = 100.0
     
-    lost_blocks = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/lost_blocks_datasets.json').read())
-    lost_files = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/lost_files_datasets.json').read())
+    lost_blocks = json.loads(open('%s/lost_blocks_datasets.json'%monitor_dir).read())
+    lost_files = json.loads(open('%s/lost_files_datasets.json'%monitor_dir).read())
     known_lost_blocks = {}
     known_lost_files = {}
     for dataset in set(lost_blocks.keys()+lost_files.keys()):
@@ -40,8 +40,17 @@ def stagor(url,specific =None, options=None):
         else:
             known_lost_files[dataset] = [i['name'] for i in f]
 
+    try:
+        cached_transfer_statuses = json.loads(open('cached_transfer_statuses.json').read())
+    except:
+        print "inexisting transfer statuses. starting fresh"
+        cached_transfer_statuses = {}
+    try:
+        transfer_statuses = json.loads(open('%s/transfer_statuses.json'%monitor_dir).read())
+    except:
+        print "inexisting transfer statuses. starting fresh"
+        transfer_statuses = {}
 
-    cached_transfer_statuses = json.loads(open('cached_transfer_statuses.json').read())
     ## pop all that are now in negative values
     for phedexid in cached_transfer_statuses.keys():
         transfers = session.query(Transfer).filter(Transfer.phedexid==int(phedexid)).all()
@@ -53,9 +62,10 @@ def stagor(url,specific =None, options=None):
             
     ## collect all datasets that are needed for wf in staging, correcting the status of those that are not really in staging
     wfois = []
+    needs = defaultdict(list)
     for wfo in session.query(Workflow).filter(Workflow.status == 'staging').all():
         wfi = workflowInfo(url, wfo.name)
-        if wfi.request['RequestStatus'] in ['running-open','running-closed','completed']:
+        if wfi.request['RequestStatus'] in ['running-open','running-closed','completed','assigned','acquired']:
             wfi.sendLog('stagor', "is in status %s"%wfi.request['RequestStatus'])
             wfi.status='away'
             session.commit()
@@ -63,13 +73,16 @@ def stagor(url,specific =None, options=None):
         if not wfi.request['RequestStatus'] in ['assignment-approved']:
             ## should be setting 'away' too
             print wfo.name,"is",wfi.request['RequestStatus']
-            sendEmail("wrong status in staging. debug","%s is in %s, should set away."(wfo.name,wfi.request['RequestStatus']))
+            sendEmail("wrong status in staging. debug","%s is in %s, should set away."%(wfo.name,wfi.request['RequestStatus']))
         wfois.append( (wfo,wfi) )            
         _,primaries,_,secondaries = wfi.getIO()
         for dataset in list(primaries)+list(secondaries):
+            needs[wfo.name].append( dataset)
             done_by_input[dataset] = {}
             completion_by_input[dataset] = {}
             wfi.sendLog('stagor', '%s needs %s'%( wfo.name, dataset))
+
+    open('%s/dataset_requirements.json'%monitor_dir,'w').write( json.dumps( needs, indent=2))
 
     endpoint_in_downtime = defaultdict(set)
     #endpoint_completed = defaultdict(set)
@@ -111,6 +124,8 @@ def stagor(url,specific =None, options=None):
             checks = cached_transfer_statuses[str(transfer.phedexid)]
         else:
             checks = checkTransferStatus(url, transfer.phedexid, nocollapse=True)
+        ## just write this out
+        transfer_statuses[str(transfer.phedexid)] = copy.deepcopy(checks)
 
         if not specific:
             for dsname in checks:
@@ -161,10 +176,15 @@ def stagor(url,specific =None, options=None):
             
 
 
+    print "End point in down time"
+    #print json.dumps( endpoint_in_downtime , indent=2)
+    for ds in endpoint_in_downtime:
+        print json.dumps(list(endpoint_in_downtime[ds]), indent=2)
 
     open('cached_transfer_statuses.json','w').write( json.dumps( cached_transfer_statuses, indent=2))
+    open('%s/transfer_statuses.json'%monitor_dir,'w').write( json.dumps( transfer_statuses, indent=2))
 
-    already_stuck = json.loads( open('/afs/cern.ch/user/c/cmst2/www/unified/stuck_transfers.json').read() )
+    already_stuck = json.loads( open('%s/stuck_transfers.json'%monitor_dir).read() )
     missing_in_action = defaultdict(list)
 
 
@@ -388,16 +408,16 @@ def stagor(url,specific =None, options=None):
         
 
 
-    rr= open('/afs/cern.ch/user/c/cmst2/www/unified/lost_blocks_datasets.json','w')
+    rr= open('%s/lost_blocks_datasets.json'%monitor_dir,'w')
     rr.write( json.dumps( known_lost_blocks, indent=2))
     rr.close()
 
-    rr= open('/afs/cern.ch/user/c/cmst2/www/unified/lost_files_datasets.json','w')
+    rr= open('%s/lost_files_datasets.json'%monitor_dir,'w')
     rr.write( json.dumps( known_lost_files, indent=2))
     rr.close()
 
 
-    open('/afs/cern.ch/user/c/cmst2/www/unified/incomplete_transfers.json','w').write( json.dumps(missing_in_action, indent=2) )
+    open('%s/incomplete_transfers.json'%monitor_dir,'w').write( json.dumps(missing_in_action, indent=2) )
     print "Stuck transfers and datasets"
     print json.dumps( missing_in_action, indent=2 )
 
@@ -461,14 +481,14 @@ def stagor(url,specific =None, options=None):
     stuck_transfers = dict([(k,v) for (k,v) in missing_in_action.items() if k in really_stuck_dataset])
     print '\n'*2,'Stuck dataset transfers'
     print json.dumps(stuck_transfers , indent=2)
-    open('/afs/cern.ch/user/c/cmst2/www/unified/stuck_transfers.json','w').write( json.dumps(stuck_transfers , indent=2) )
-    open('/afs/cern.ch/user/c/cmst2/www/unified/logs/incomplete_transfers.log','w').write( report )
+    open('%s/stuck_transfers.json'%monitor_dir,'w').write( json.dumps(stuck_transfers , indent=2) )
+    open('%s/logs/incomplete_transfers.log'%monitor_dir,'w').write( report )
     #sendEmail('incomplete transfers', report,sender=None, destination=['dc.jorge10@uniandes.edu.co','aram.apyan@cern.ch','sidn@mit.edu'])
 
 
 if __name__ == "__main__":
-    url = 'cmsweb.cern.ch'
-    UC = unifiedConfiguration()
+    url = reqmgr_url
+
     parser = optparse.OptionParser()
     (options,args) = parser.parse_args()
 

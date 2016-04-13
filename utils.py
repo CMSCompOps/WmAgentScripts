@@ -21,6 +21,13 @@ from email.MIMEText import MIMEText
 from email.Utils import COMMASPACE, formatdate
 from email.utils import make_msgid
 
+dbs_url = os.getenv('UNIFIED_DBS3_READER' ,'https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+dbs_url_writer = os.getenv('UNIFIED_DBS3_WRITER','https://cmsweb.cern.ch/dbs/prod/global/DBSWriter')
+
+phedex_url = os.getenv('UNIFIED_PHEDEX','cmsweb.cern.ch')
+reqmgr_url = os.getenv('UNIFIED_REQMGR','cmsweb.cern.ch')
+monitor_dir = os.getenv('UNIFIED_MON','/afs/cern.ch/user/c/cmst2/www/unified/')
+base_dir =  os.getenv('UNIFIED_DIR','/afs/cern.ch/user/c/cmst2/Unified/')
 
 FORMAT = "%(module)s.%(funcName)s(%(lineno)s) => %(message)s (%(asctime)s)"
 DATEFMT = "%Y-%m-%d %H:%M:%S"
@@ -54,7 +61,7 @@ def searchLog( q ):
             },
         "sort": [
             {
-                "timestamp": "asc"
+                "timestamp": "desc"
                 }
             ],
         "_source": [
@@ -63,7 +70,7 @@ def searchLog( q ):
             "date"
             ]
         }
-    conn.request("POST" , '/logs/_search?size=100', json.dumps(goodquery))
+    conn.request("POST" , '/logs/_search?size=50', json.dumps(goodquery))
     ## not it's just a matter of sending that query to ES.
     #lq = q.replace(':', '\:').replace('-','\\-')
     #conn.request("GET" , '/logs/_search?q=text:%s'% lq)
@@ -103,13 +110,15 @@ def try_sendLog( subject, text , wfi = None, show=True):
            "timestamp" : now,
            "date" : now_d}
 
+    if show:
+        print text
     encodedParams = urllib.urlencode( doc )
     conn.request("POST" , '/logs/log/', json.dumps(doc)) 
     response = conn.getresponse()
     data = response.read()
     try:
         res = json.loads( data ) 
-        print 'log:',res['_id'],"was created"
+        #print 'log:',res['_id'],"was created"
     except Exception as e:
         print "failed"
         print str(e)
@@ -309,13 +318,13 @@ import dataLock
 
 class newLockInfo:
     def __init__(self):
-        self.db = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/globallocks.json').read())
-        os.system('echo `date` > /afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.lock')
+        self.db = json.loads(open('%s/globallocks.json'%monitor_dir).read())
+        os.system('echo `date` > %s/globallocks.json.lock'%monitor_dir)
 
     def __del__(self):
-        open('/afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.new','w').write(json.dumps( sorted(list(set(self.db))) , indent=2 ))
-        os.system('mv /afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.new /afs/cern.ch/user/c/cmst2/www/unified/globallocks.json')
-        os.system('rm -f /afs/cern.ch/user/c/cmst2/www/unified/globallocks.json.lock')
+        open('%s/globallocks.json.new'%monitor_dir,'w').write(json.dumps( sorted(list(set(self.db))) , indent=2 ))
+        os.system('mv %s/globallocks.json.new %s/globallocks.json'%(monitor_dir,monitor_dir))
+        os.system('rm -f %s/globallocks.json.lock'%monitor_dir)
 
     def lock(self, dataset):
         print "[new lock]",dataset,"to be locked"
@@ -360,8 +369,8 @@ class lockInfo:
                 }
         now = time.mktime(time.gmtime())
         jdump['lastupdate'] = now
-        open('/afs/cern.ch/user/c/cmst2/www/unified/datalocks.json.new','w').write( json.dumps( jdump , indent=2))
-        os.system('mv /afs/cern.ch/user/c/cmst2/www/unified/datalocks.json.new /afs/cern.ch/user/c/cmst2/www/unified/datalocks.json')
+        open('%s/datalocks.json.new'%monitor_dir,'w').write( json.dumps( jdump , indent=2))
+        os.system('mv %s/datalocks.json.new %s/datalocks.json'%(monitor_dir,monitor_dir))
 
     def _lock(self, item, site, reason):
         print "[lock] of %s at %s because of %s"%( item, site, reason )
@@ -481,7 +490,7 @@ class lockInfo:
 
 class unifiedConfiguration:
     def __init__(self):
-        self.configs = json.loads(open('/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/unifiedConfiguration.json').read())
+        self.configs = json.loads(open('%s/WmAgentScripts/unifiedConfiguration.json'%base_dir).read())
         
     def get(self, parameter):
         if parameter in self.configs:
@@ -492,7 +501,7 @@ class unifiedConfiguration:
             sys.exit(124)
 
 def checkDownTime():
-    conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn  =  httplib.HTTPSConnection(reqmgr_url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/jbadillo_BTV-RunIISpring15MiniAODv2-00011_00081_v0__151030_162715_5312')
     r2=conn.getresponse()
     r = r2.read()
@@ -520,11 +529,17 @@ class componentInfo:
     def check(self):
         try:
             print "checking reqmgr"
-            wfi = workflowInfo('cmsweb.cern.ch','pdmvserv_task_B2G-RunIIWinter15wmLHE-00067__v1_T_150505_082426_497')
+            if 'testbed' in reqmgr_url:
+                wfi = workflowInfo(reqmgr_url,'sryu_B2G-Summer12DR53X-00743_v4_v2_150126_223017_1156')
+            else:
+                wfi = workflowInfo(reqmgr_url,'pdmvserv_task_B2G-RunIIWinter15wmLHE-00067__v1_T_150505_082426_497')
+
             self.status['reqmgr'] = True
         except Exception as e:
+            import traceback
+            print traceback.format_exc()
             self.tell('reqmgr')
-            print "cmsweb.cern.ch unreachable"
+            print reqmgr_url,"unreachable"
             print str(e)
             if self.block and not (self.soft and 'reqmgr' in self.soft):
                 self.code = 123
@@ -556,8 +571,11 @@ class componentInfo:
         
         try:
             print "checking dbs"
-            dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
-            blocks = dbsapi.listBlockSummaries( dataset = '/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM', detail=True)
+            dbsapi = DbsApi(url=dbs_url)
+            if 'testbed' in dbs_url:
+                blocks = dbsapi.listBlockSummaries( dataset = '/QDTojWinc_NC_M-1200_TuneZ2star_8TeV-madgraph/Summer12pLHE-DMWM_Validation_DONOTDELETE_Alan_TEST-v1/GEN', detail=True)
+            else:
+                blocks = dbsapi.listBlockSummaries( dataset = '/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM', detail=True)
             if not blocks:
                 self.tell('dbs')
                 print "dbs corrupted"
@@ -576,7 +594,10 @@ class componentInfo:
                 return False
         try:
             print "checking phedex"
-            cust = findCustodialLocation('cmsweb.cern.ch','/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM')
+            if 'testbed' in dbs_url:
+                cust = findCustodialLocation(phedex_url,'/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM')
+            else:
+                cust = findCustodialLocation(phedex_url,'/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM')
             self.status['phedex'] = True            
         except Exception as e:
             self.tell('phedex')
@@ -596,7 +617,7 @@ class componentInfo:
 class campaignInfo:
     def __init__(self):
         #this contains accessor to aggreed campaigns, with maybe specific parameters
-        self.campaigns = json.loads(open('/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/campaigns.json').read())
+        self.campaigns = json.loads(open('%s/WmAgentScripts/campaigns.json'%base_dir).read())
         SI = siteInfo()
         for c in self.campaigns:
             if 'parameters' in self.campaigns[c]:
@@ -745,6 +766,14 @@ class docCache:
             'cachefile' : None,
             'default' : {}
             }
+        self.cache['mcore_ready'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration(),
+            'getter' : lambda : json.loads(os.popen('curl --retry 5 -s http://cmsgwms-frontend-global.cern.ch/vofrontend/stage/mcore_siteinfo.json').read()),
+            'cachefile' : None,
+            'default' : {}
+            }
         self.cache['gwmsmon_prod_site_summary' ] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
@@ -773,7 +802,7 @@ class docCache:
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : getNodeUsage('cmsweb.cern.ch','T1_DE_KIT_MSS'),
+            'getter' : lambda : getNodeUsage(phedex_url,'T1_DE_KIT_MSS'),
             'cachefile' : None,
             'default' : ""
             }
@@ -781,7 +810,7 @@ class docCache:
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : getNodeUsage('cmsweb.cern.ch','T1_US_FNAL_MSS'),
+            'getter' : lambda : getNodeUsage(phedex_url,'T1_US_FNAL_MSS'),
             'cachefile' : None,
             'default' : ""
             }
@@ -789,7 +818,7 @@ class docCache:
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : getNodeUsage('cmsweb.cern.ch','T1_ES_PIC_MSS'),
+            'getter' : lambda : getNodeUsage(phedex_url,'T1_ES_PIC_MSS'),
             'cachefile' : None,
             'default' : ""
             }
@@ -797,7 +826,7 @@ class docCache:
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : getNodeUsage('cmsweb.cern.ch','T1_UK_RAL_MSS'),
+            'getter' : lambda : getNodeUsage(phedex_url,'T1_UK_RAL_MSS'),
             'cachefile' : None,
             'default' : ""
             }
@@ -805,7 +834,7 @@ class docCache:
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : getNodeUsage('cmsweb.cern.ch','T1_IT_CNAF_MSS'),
+            'getter' : lambda : getNodeUsage(phedex_url,'T1_IT_CNAF_MSS'),
             'cachefile' : None,
             'default' : ""
             }
@@ -813,7 +842,7 @@ class docCache:
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : getNodeUsage('cmsweb.cern.ch','T1_FR_CCIN2P3_MSS'),
+            'getter' : lambda : getNodeUsage(phedex_url,'T1_FR_CCIN2P3_MSS'),
             'cachefile' : None,
             'default' : ""
             }
@@ -821,7 +850,7 @@ class docCache:
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : getNodeUsage('cmsweb.cern.ch','T1_RU_JINR_MSS'),
+            'getter' : lambda : getNodeUsage(phedex_url,'T1_RU_JINR_MSS'),
             'cachefile' : None,
             'default' : ""
             }
@@ -829,7 +858,7 @@ class docCache:
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : getNodeUsage('cmsweb.cern.ch','T0_CH_CERN_MSS'),
+            'getter' : lambda : getNodeUsage(phedex_url,'T0_CH_CERN_MSS'),
             'cachefile' : None,
             'default' : ""
             }
@@ -900,7 +929,11 @@ dataCache = docCache()
 
 class DSS:
     def __init__(self):
-        self.bdb = json.loads(open('bdss.json').read())
+        try:
+            self.bdb = json.loads(open('bdss.json').read())
+        except:
+            print "bo bank of dataset size. starting fresh"
+            self.bdb = {}
 
     def _get(self, dataset ):
         if not dataset in self.bdb:
@@ -935,15 +968,18 @@ class siteInfo:
             
             self.sites_banned = [
                 'T2_CH_CERN_AI',
-                'T2_US_Vanderbilt'
+                'T2_US_Vanderbilt',
+                'T0_CH_CERN'
+                #'T2_RU_INR',
+                #'T2_UA_KIPT'
                 ]
 
             data = dataCache.get('ssb_158') ## 158 is the site readyness metric
             for siteInfo in data:
                 #print siteInfo['Status']
+                if not siteInfo['Tier'] in [0,1,2]: continue ## ban de-facto all T3
                 self.all_sites.append( siteInfo['VOName'] )
                 if siteInfo['VOName'] in self.sites_banned: continue
-                if not siteInfo['Tier'] in [1,2]: continue
                 if siteInfo['Status'] == 'on': 
                     self.sites_ready.append( siteInfo['VOName'] )
                 else:#if siteInfo['Status'] in ['drain']:
@@ -959,9 +995,11 @@ class siteInfo:
         self.sites_auto_approve = ['T0_CH_CERN_MSS','T1_FR_CCIN2P3_MSS']
 
         self.sites_eos = [ s for s in self.sites_ready if s in ['T2_CH_CERN','T2_CH_CERN_AI','T2_CH_CERN_T0','T2_CH_CERN_HLT'] ]
+        self.sites_T3s = [ s for s in self.sites_ready if s.startswith('T3_')]
         self.sites_T2s = [ s for s in self.sites_ready if s.startswith('T2_')]
-        self.sites_T1s = [ s for s in self.sites_ready if s.startswith('T1_')]
+        self.sites_T1s = [ s for s in self.sites_ready if (s.startswith('T1_') or s.startswith('T0_'))] ## put the T0 in the T1 : who cares
         self.sites_AAA = list(set(self.sites_ready) - set(['T2_CH_CERN_HLT']))
+        ## could this be an SSB metric ?
         self.sites_with_goodIO = [ "T2_DE_DESY","T2_DE_RWTH",
                                    "T2_ES_CIEMAT",
                                    "T2_FR_GRIF_LLR", "T2_FR_GRIF_IRFU", "T2_FR_IPHC","T2_FR_CCIN2P3",
@@ -986,6 +1024,9 @@ class siteInfo:
                                           "T2_BE_IIHE",
                                           "T2_EE_Estonia",
                                           "T2_CH_CERN", 
+
+                                   'T2_RU_INR',
+                                   'T2_UA_KIPT'
                                           ]
         # restrict to those actually ON
         allowed_T2_for_transfer = [s for s in allowed_T2_for_transfer if s in self.sites_ready]
@@ -1006,13 +1047,20 @@ class siteInfo:
         ## list here the site which can accomodate high memory requests
         self.sites_memory = {}
 
+        self.sites_mcore_ready = []
+        mcore_mask = dataCache.get('mcore_ready')
+        if mcore_mask:
+            self.sites_mcore_ready = mcore_mask['sites_for_mcore']
+        else:
+            sendEmail("no mcore sites","that is suspicious!")
+
         for s in self.all_sites:
             ## will get it later from SSB
             self.cpu_pledges[s]=1
             ## will get is later from SSB
             self.disk[ self.CE_to_SE(s)]=0
 
-        tapes = getNodes('cmsweb.cern.ch', 'MSS')
+        tapes = getNodes(phedex_url, 'MSS')
         for mss in tapes:
             if mss in self.sites_banned: continue # not using these tapes for MC familly
             self.storage[mss] = 0
@@ -1031,13 +1079,14 @@ class siteInfo:
                 self.storage[mss] = 0 
             else: 
                 self.storage[mss]  = mss_usage['Tape']['Free'][mss]
-            if mss == 'T1_US_FNAL_MSS':
-                self.storage[mss] =min(50, self.storage[mss])
-            if mss == 'T0_CH_CERN_MSS':
-                self.storage[mss] =min(2000, self.storage[mss])
-            if mss == 'T1_RU_JINR_MSS':
-                self.storage[mss] =min(100, self.storage[mss])
-                
+
+            #if mss == 'T1_US_FNAL_MSS':
+            #    self.storage[mss] =min(50, self.storage[mss])
+            #if mss == 'T0_CH_CERN_MSS':
+            #    self.storage[mss] =min(2000, self.storage[mss])
+            #if mss == 'T1_RU_JINR_MSS':
+            #    self.storage[mss] =min(100, self.storage[mss])
+
 
         ## and detox info
         self.fetch_detox_info(talk=False)
@@ -1050,6 +1099,13 @@ class siteInfo:
 
         ## and glidein info
         self.fetch_glidein_info(talk=False)
+
+    def total_disk(self,what='disk'):
+        s = 0
+        for site in self.sites_ready:
+            se = self.CE_to_SE(site)
+            s += getattr(self,what).get(se,0)
+        return s
 
     def usage(self,site):
         try:
@@ -1164,8 +1220,8 @@ class siteInfo:
                 self.disk[site] = available
             else:
                 self.disk[site] = 0 
-            self.quota[site] = quota
-            self.locked[site] = locked
+            self.quota[site] = int(quota)
+            self.locked[site] = int(locked)
 
 
     def fetch_ssb_info(self,talk=True):
@@ -1243,10 +1299,10 @@ class siteInfo:
 
 
     def types(self):
-        return ['sites_with_goodIO','sites_T1s','sites_T2s']#,'sites_veto_transfer']#,'sites_auto_approve']
+        return ['sites_with_goodIO','sites_T1s','sites_T2s','sites_mcore_ready']#,'sites_veto_transfer']#,'sites_auto_approve']
 
     def CE_to_SE(self, ce):
-        if ce.startswith('T1') and not ce.endswith('_Disk'):
+        if (ce.startswith('T1') or ce.startswith('T0')) and not ce.endswith('_Disk'):
             return ce+'_Disk'
         else:
 
@@ -1309,7 +1365,11 @@ class siteInfo:
 
 class closeoutInfo:
     def __init__(self):
-        self.record = json.loads(open('closedout.json').read())
+        try:
+            self.record = json.loads(open('closedout.json').read())
+        except:
+            print "No closed-out record, starting fresh"
+            self.record = {}
 
     def table_header(self):
         text = '<table border=1><thead><tr><th>workflow</th><th>OutputDataSet</th><th>%Compl</th><th>acdc</th><th>Dupl</th><th>CorrectLumis</th><th>Scubscr</th><th>Tran</th><th>dbsF</th><th>dbsIF</th><th>\
@@ -1334,10 +1394,12 @@ phdF</th><th>Priority</th></tr></thead>'
         wf_and_anchor = '<a id="%s">%s</a>'%(wf,wf)
         for out in self.record[wf]['datasets']:
             text+='<tr bgcolor=%s>'%color
-            text+='<td>%s<br><a href=https://cmsweb.cern.ch/reqmgr/view/details/%s>dts</a>, <a href=https://cmsweb.cern.ch/reqmgr/view/splitting/%s>splt</a>, <a href=https://cmsweb.cern.ch/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s>perf</a>, <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>ac</a>, <a href=assistance.html#%s>%s</a></td>'% (wf_and_anchor,
-                                                                                                                                                                                                                                                                                                                            wf, wf, wf,tpid,wf,
-                                                                                                                                                                                                                                                                                                                            wfo.status)
-
+            text+='<td>%s<br><a href="https://%s/reqmgr2/fetch?rid=%s" target="_blank">dts</a> <a href=https://%s/reqmgr/view/details/%s>dts-req1</a>, <a href=https://%s/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s>perf</a>, <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>ac</a>, <a href=assistance.html#%s>%s</a></td>'% (
+                wf_and_anchor,
+                reqmgr_url,wf, reqmgr_url, wf, reqmgr_url, wf,
+                tpid,
+                wf,wfo.status)
+            
             text+='<td>%s</td>'% out
             lines = []
             for f in order:
@@ -1363,7 +1425,7 @@ phdF</th><th>Priority</th></tr></thead>'
     def summary(self):
         os.system('cp closedout.json closedout.json.last')
         
-        html = open('/afs/cern.ch/user/c/cmst2/www/unified/closeout.html','w')
+        html = open('%s/closeout.html'%monitor_dir,'w')
         html.write('<html>')
         html.write('Last update on %s(CET), %s(GMT), <a href=logs/checkor/ target=_blank> logs</a> <br><br>'%(time.asctime(time.localtime()),time.asctime(time.gmtime())))
 
@@ -1389,8 +1451,8 @@ phdF</th><th>Priority</th></tr></thead>'
         from assignSession import session, Workflow
         wfs = session.query(Workflow).filter(Workflow.status.startswith('assistance')).all()
 
-        short_html = open('/afs/cern.ch/user/c/cmst2/www/unified/assistance_summary.html','w')
-        html = open('/afs/cern.ch/user/c/cmst2/www/unified/assistance.html','w')
+        short_html = open('%s/assistance_summary.html'%monitor_dir,'w')
+        html = open('%s/assistance.html'%monitor_dir,'w')
         html.write("""
 <html>
 <head>
@@ -1528,7 +1590,7 @@ def checkTransferApproval(url, phedexid):
     return approved
 
 def getDatasetFileFraction( dataset, files):
-    dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader') 
+    dbsapi = DbsApi(url=dbs_url) 
     all_files = dbsapi.listFileArray( dataset= dataset,validFileOnly=1, detail=True)
     total = 0
     in_file = 0
@@ -1543,7 +1605,7 @@ def getDatasetFileFraction( dataset, files):
     
 
 def getDatasetBlockFraction( dataset, blocks):
-    dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader') 
+    dbsapi = DbsApi(url=dbs_url) 
     all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
     total=0
     in_block=0
@@ -1721,7 +1783,7 @@ def checkTransferStatus(url, xfer_id, nocollapse=False):
             v = try_checkTransferStatus(url, xfer_id, nocollapse)
         except Exception as e:
             print str(e)
-            sendEmail('fatal execption in checkTransferStatus',str(e))
+            sendEmail('fatal exception in checkTransferStatus %s'%xfer_id, str(e))
             v = {}
     return v
         
@@ -1868,7 +1930,7 @@ def findCustodialLocation(url, dataset, with_completion=False):
         return list(set(cust)), more_information
 
 def getDatasetFiles(url, dataset ,without_invalid=True ):
-    dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+    dbsapi = DbsApi(url=dbs_url)
     files = dbsapi.listFileArray( dataset= dataset,validFileOnly=without_invalid, detail=True)
     dbs_filenames = [f['logical_file_name'] for f in files]
     
@@ -1901,7 +1963,7 @@ def try_getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=
     if vetoes==None:
         vetoes = ['MSS','Buffer','Export']
 
-    dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+    dbsapi = DbsApi(url=dbs_url)
     #all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
     #all_block_names=set([block['block_name'] for block in all_blocks])
     files = dbsapi.listFileArray( dataset= dataset,validFileOnly=1, detail=True)
@@ -1956,7 +2018,7 @@ def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=N
     if vetoes==None:
         vetoes = ['MSS','Buffer','Export']
     #print "presence of",dataset
-    dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+    dbsapi = DbsApi(url=dbs_url)
     all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
     all_dbs_block_names=set([block['block_name'] for block in all_blocks])
     all_block_names=set([block['block_name'] for block in all_blocks])
@@ -2113,7 +2175,7 @@ def getDatasetOnGoingDeletion( url, dataset ):
     return result['dataset']
     
 def getDatasetBlocks( dataset, runs=None, lumis=None):
-    dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+    dbsapi = DbsApi(url=dbs_url)
     all_blocks = set()
     if runs:
         for r in runs:
@@ -2155,7 +2217,7 @@ def try_getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=
     if vetoes==None:
         vetoes = ['MSS','Buffer','Export']
     #print "presence of",dataset
-    dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+    dbsapi = DbsApi(url=dbs_url)
     all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
     all_block_names=set([block['block_name'] for block in all_blocks])
     if only_blocks:
@@ -2201,12 +2263,12 @@ def try_getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=
     return presence
 
 def getDatasetBlockSize(dataset):
-    dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+    dbsapi = DbsApi(url=dbs_url)
     blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
     return dict([(block['block_name'],block['file_size']/ (1024.**3)) for block in blocks ])
 
 def getDatasetSize(dataset):
-    dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+    dbsapi = DbsApi(url=dbs_url)
     blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
     ## put everything in terms of GB
     return sum([block['file_size'] / (1024.**3) for block in blocks])
@@ -2214,7 +2276,7 @@ def getDatasetSize(dataset):
 def getDatasetChops(dataset, chop_threshold =1000., talk=False, only_blocks=None):
     chop_threshold = float(chop_threshold)
     ## does a *flat* choping of the input in chunk of size less than chop threshold
-    dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+    dbsapi = DbsApi(url=dbs_url)
     blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
 
     ## restrict to these blocks only
@@ -2316,13 +2378,14 @@ def getDatasetEventsAndLumis(dataset, blocks=None):
         try:
             r = try_getDatasetEventsAndLumis( dataset, blocks)
         except Exception as e:
-            sendEmail("fatal exception in getDatasetEventsAndLumis",str(e))
+            print "fatal exception in getDatasetEventsAndLumis",dataset,blocks
+            sendEmail("fatal exception in getDatasetEventsAndLumis",str(e)+dataset)
             r = 0,0
     return r
 
 
 def try_getDatasetEventsAndLumis(dataset, blocks=None):
-    dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+    dbsapi = DbsApi(url=dbs_url)
     all_files = []
     if blocks:
         for b in blocks:
@@ -2336,7 +2399,7 @@ def try_getDatasetEventsAndLumis(dataset, blocks=None):
     return all_events,all_lumis
 
 def getDatasetLumis(dataset, runs=None, with_cache=False):
-    dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+    dbsapi = DbsApi(url=dbs_url)
     c_name= '.%s.lumis.json'%dataset.replace('/','_')
     if os.path.isfile(c_name) and with_cache:
         print "picking up from cache",c_name
@@ -2361,7 +2424,7 @@ def getDatasetLumis(dataset, runs=None, with_cache=False):
     return dict(lumi_json)
             
 def getDatasetEventsPerLumi(dataset):
-    dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+    dbsapi = DbsApi(url=dbs_url)
     try:
         all_files = dbsapi.listFileSummaries( dataset = dataset , validFileOnly=1)
     except:
@@ -2375,7 +2438,7 @@ def getDatasetEventsPerLumi(dataset):
     return average
                     
 def setDatasetStatus(dataset, status):
-    dbswrite = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSWriter')
+    dbswrite = DbsApi(url=dbs_url_writer)
 
     new_status = getDatasetStatus( dataset )
     if new_status == None:
@@ -2393,7 +2456,7 @@ def setDatasetStatus(dataset, status):
      
 def getDatasetStatus(dataset):
         # initialize API to DBS3                                                                                                                                                                                                                                                     
-        dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+        dbsapi = DbsApi(url=dbs_url)
         # retrieve dataset summary                                                                                                                                                                                                                                                   
         reply = dbsapi.listDatasets(dataset=dataset,dataset_access_type='*',detail=True)
         if len(reply):
@@ -2403,7 +2466,7 @@ def getDatasetStatus(dataset):
 
 def getDatasets(dataset):
        # initialize API to DBS3                                                                                                                                                                                                                                                      
-        dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+        dbsapi = DbsApi(url=dbs_url)
         # retrieve dataset summary                                                                                                                                                                                                                                                   
         reply = dbsapi.listDatasets(dataset=dataset,dataset_access_type='*')
         return reply
@@ -2419,7 +2482,7 @@ def createXML(datasets):
     result.setAttribute('version', '2')
     # Create the <dbs> base element
     dbs = doc.createElement("dbs")
-    dbs.setAttribute("name", "https://cmsweb.cern.ch/dbs/prod/global/DBSReader")
+    dbs.setAttribute("name", dbs_url)
     result.appendChild(dbs)    
     #Create each of the <dataset> element
     for datasetname in datasets:
@@ -2653,41 +2716,47 @@ def getWorkflowById( url, pid , details=False):
         return [item['id'] for item in items]
     
 def getWorkflows(url,status,user=None,details=False,rtype=None):
+    retries=10
+    while retries>0:
+        try:
+            return try_getWorkflows(url, status,user,details,rtype)
+        except:
+            print "getWorkflows retried"
+            retries-=1
+    raise Exception("getWorkflows failed 10 times")
+    
+def try_getWorkflows(url,status,user=None,details=False,rtype=None):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    if rtype:
-        go_to = '/reqmgr2/data/request?status=%s&request_type=%s&detail=%s'%( status, rtype , 'true' if details else 'false')
-        r1=conn.request("GET",go_to, headers={"Accept":"application/json"})
-    else:
-        go_to = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/bystatus?key="%s"'%(status)
-        if details:
-            go_to+='&include_docs=true'
-        r1=conn.request("GET",go_to)
 
+    go_to = '/reqmgr2/data/request?status=%s'%status
+    if rtype:
+        go_to+='&request_type=%s'%rtype
+    go_to+='&detail=%s'%('true' if details else 'false')
+    r1=conn.request("GET",go_to, headers={"Accept":"application/json"})        
     r2=conn.getresponse()
     data = json.loads(r2.read())
-    if rtype:
-        items = data['result']
-    else:
-        items = data['rows']
+    items = data['result']
 
+    print len(items),"retrieved"
     users=[]
     if user:
         users=user.split(',')
     workflows = []
+
     for item in items:
-        those = item.keys()
+        if details:
+            those = item.keys()
+        else:
+            those = item
         if users:
             those = filter(lambda k : any([k.startswith(u) for u in users]), those)
-        if rtype:
-            if details:
-                workflows.extend([item[k] for k in those])
-            else:
-                workflows.extend(those)
+        if details:
+            workflows.extend([item[k] for k in those])
         else:
-            wf = item['id']
-            if (users and any([wf.startswith(u) for u in users])) or not users:
-                workflows.append(item['doc' if details else 'id'])
+            workflows.extend(those)
 
+
+    #print len(workflows)
     return workflows
 
 def getPrepIDs(wl):
@@ -2714,7 +2783,7 @@ def getPrepIDs(wl):
 
 def getLFNbase(dataset):
         # initialize API to DBS3
-        dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+        dbsapi = DbsApi(url=dbs_url)
         # retrieve file
         reply = dbsapi.listFiles(dataset=dataset)
         file = reply[0]['logical_file_name']
@@ -2795,13 +2864,23 @@ def checkIfBlockIsAtASite(url,block,site):
 
 class workflowInfo:
     def __init__(self, url, workflow, spec=True, request=None,stats=False, wq=False):
+        self.logs = defaultdict(str)
         self.url = url
         self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-
         if request == None:
-            r1=self.conn.request("GET",'/couchdb/reqmgr_workload_cache/'+workflow)
-            r2=self.conn.getresponse()
-            self.request = json.loads(r2.read())
+            try:
+                r1=self.conn.request("GET",'/couchdb/reqmgr_workload_cache/'+workflow)
+                r2=self.conn.getresponse()
+                self.request = json.loads(r2.read())
+            except:
+                try:
+                    r1=self.conn.request("GET",'/couchdb/reqmgr_workload_cache/'+workflow)
+                    r2=self.conn.getresponse()
+                    self.request = json.loads(r2.read())
+                except Exception as e:
+                    print "Failed to get workload cache for",workflow
+                    print str(e)
+                    sys.exit(34)
         else:
             self.request = copy.deepcopy( request )
 
@@ -2818,7 +2897,7 @@ class workflowInfo:
             self.getWorkQueue()
 
         self.summary = None
-        self.logs = defaultdict(str)
+
 
     def notifyRequestor(self, message, do_request=True, do_batch=True, mcm=None):
         if not message: return
@@ -2831,7 +2910,9 @@ class workflowInfo:
             wf_name = self.request['RequestName']
             items_notified = set()
             for pid in set(pids):
-                replacements = {'PREPID': pid}
+                replacements = {'PREPID': pid,
+                                'WORKFLOW' : self.request['RequestName']
+                                }
                 dedicated_message = message
                 for src,dest in replacements.items():
                     dedicated_message = dedicated_message.replace(src, dest)
@@ -3032,11 +3113,10 @@ class workflowInfo:
         cput = None
         ## look for it in a cache
         
-
         if 'InputDataset' in self.request:
             ds = self.request['InputDataset']
             if 'BlockWhitelist' in self.request and self.request['BlockWhitelist']:
-                (ne,_) = getDatasetEventsAndLumis( ds , eval(self.request['BlockWhitelist']) )
+                (ne,_) = getDatasetEventsAndLumis( ds , self.request['BlockWhitelist'] )
             else:
                 (ne,_) = getDatasetEventsAndLumis( ds )
             tpe = self.request['TimePerEvent']
@@ -3213,7 +3293,7 @@ class workflowInfo:
         c_sites_allowed = CI.get(self.request['Campaign'], 'SiteWhitelist' , [])
         if c_sites_allowed:
             if verbose:
-                print "Using site whitelist restriction by campaign configuration"
+                print "Using site whitelist restriction by campaign configuration",sorted(c_sites_allowed)
             sites_allowed = list(set(sites_allowed) & set(c_sites_allowed))
         c_black_list = CI.get(self.request['Campaign'], 'SiteBlacklist', [])
         c_black_list.extend( CI.parameters(self.request['Campaign']).get('SiteBlacklist', []))
@@ -3223,12 +3303,17 @@ class workflowInfo:
                 print "Removing",c_black_list
             sites_allowed = list(set(sites_allowed) - set(c_black_list))
 
-        ncores = self.request.get('Multicore',1)
+        #ncores = self.request.get('Multicore',1)
+        ncores = self.getMulticore()
         memory_allowed = SI.sitesByMemory( self.request['Memory'] , maxCore=ncores)
         if memory_allowed!=None:
             if verbose:
                 print "sites allowing",self.request['Memory'],"MB and",ncores,"core are",memory_allowed
+            ## mask to sites ready for mcore
+            if  ncores>1:
+                memory_allowed = list(set(memory_allowed) & set(SI.sites_mcore_ready))
             sites_allowed = list(set(sites_allowed) & set(memory_allowed))
+
             
 
 
@@ -3268,7 +3353,13 @@ class workflowInfo:
         return True
 
     def getSchema(self):
-        new_schema = copy.deepcopy( self.get_spec().request.schema.dictionary_())
+        #new_schema = copy.deepcopy( self.get_spec().request.schema.dictionary_())
+        
+        self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+        r1=self.conn.request("GET",'/reqmgr2/data/request?name=%s'%self.request['RequestName'], headers={"Accept":"application/json"} )
+        r2=self.conn.getresponse()
+        new_schema = copy.deepcopy( json.loads(r2.read())['result'][0][self.request['RequestName']])
+
         ## put in the era accordingly ## although this could be done in re-assignment
         ## take care of the splitting specifications ## although this could be done in re-assignment
         for (k,v) in new_schema.items():
@@ -3302,6 +3393,7 @@ class workflowInfo:
         return all_tasks
 
     def getSplittings(self):
+
         spl =[]
         for task in self.getWorkTasks():
             ts = task.input.splitting
@@ -3320,7 +3412,7 @@ class workflowInfo:
             if ts.algorithm in include:
                 for k,v in include[ts.algorithm].items():
                     spl[-1][k] = v
-
+                    
             for get in get_those:
                 if hasattr(ts,get):
                     set_to = get
@@ -3333,34 +3425,82 @@ class workflowInfo:
 
         return spl
 
-    def getEra(self):
-        return self.request['AcquisitionEra']
+        ## this below is a functioning interface for retrieving the splitting from reqmgr2 used to make the call to reqmgr2 splitting change
+
+
+        r1=self.conn.request("GET",'/reqmgr2/data/splitting/%s'%self.request['RequestName'], headers={"Accept":"application/json"} )
+        r2=self.conn.getresponse()
+        translate = { 
+            #'EventAwareLumiBased' : [('events_per_job','avg_events_per_job')]
+            }
+        include = {
+            #'EventAwareLumiBased' : { 'halt_job_on_file_boundaries_event_aware' : 'True' },
+            #'LumiBased' : { 'halt_job_on_file_boundaries' : 'True'}
+            }
+        result = json.loads( r2.read() )['result']
+        splittings = []
+        for spl in result:
+            if not spl['taskType'] in ['Production','Processing','Skim'] : continue
+            splittings.append( spl )
+            ## add default value which were not returned in the first place
+            if spl['splitAlgo'] in include:
+                for k,v in include[spl['splitAlgo']].items():
+                    #splittings[-1][k] = v 
+                    pass
+            if spl['splitAlgo'] in translate:
+                for (src,des) in translate[spl['splitAlgo']]:
+                    splittings[-1][des] = splittings[-1].pop(src)
+
+            continue
+            #spl.append( { "splittingAlgo" : ts.algorithm,
+            #              "splittingTask" : task.pathName,
+            #              } )
+            #get_those = ['events_per_lumi','events_per_job','lumis_per_job','halt_job_on_file_boundaries','max_events_per_lumi','halt_job_on_file_boundaries_event_aware']#,'couchdDB']#,'couchURL']#,'filesetName']
+            
+            #if ts.algorithm in include:
+            #    for k,v in include[ts.algorithm].items():
+            #        spl[-1][k] = v
+
+            #for get in get_those:
+            #    if hasattr(ts,get):
+            #        set_to = get
+            #        if ts.algorithm in translate:
+            #            for (src,des) in translate[ts.algorithm]:
+            #                if src==get:
+            #                    set_to = des
+            #                    break
+            #        spl[-1][set_to] = getattr(ts,get)
+
+        return splittings
+
     def getCurrentStatus(self):
         return self.request['RequestStatus']
-    def getProcString(self):
-        return self.request['ProcessingString']
+
     def getRequestNumEvents(self):
         if 'RequestNumEvents' in self.request:
             return int(self.request['RequestNumEvents'])
         else:
             return int(self.request['Task1']['RequestNumEvents'])
 
-    def getPileupDataset(self):
-        if 'MCPileup' in self.request:
-            return self.request['MCPileup']
-        return None
     def getPriority(self):
         return self.request['RequestPriority']
 
+    def getMulticore(self):
+        mcores = [self.request.get('Multicore',1)]
+        if self.request['RequestType'] == 'TaskChain':
+            mcores_d = self._collectintaskchain('Multicore',default=1)
+            mcores.extend( mcores_d.values() )
+        return max(mcores)
+        
     def getBlockWhiteList(self):
         bwl=[]
         if self.request['RequestType'] == 'TaskChain':
             bwl_t = self._collectintaskchain('BlockWhitelist')
             for task in bwl_t:
-                bwl.extend(eval(bwl_t[task]))
+                bwl.extend(bwl_t[task])
         else:
             if 'BlockWhitelist' in self.request:
-                bwl.extend(eval(self.request['BlockWhitelist']))
+                bwl.extend(self.request['BlockWhitelist'])
 
         return bwl
     def getLumiWhiteList(self):
@@ -3368,20 +3508,20 @@ class workflowInfo:
         if self.request['RequestType'] == 'TaskChain':
             lwl_t = self._collectintaskchain('LumiWhitelist')
             for task in lwl_t:
-                lwl.extend(eval(lwl_t[task]))
+                lwl.extend(lwl_t[task])
         else:
             if 'LumiWhitelist' in self.request:
-                lwl.extend(eval(self.request['LumiWhitelist']))
+                lwl.extend(self.request['LumiWhitelist'])
         return lwl
     def getRunWhiteList(self):
         lwl=[]
         if self.request['RequestType'] == 'TaskChain':
             lwl_t = self._collectintaskchain('RunWhitelist')
             for task in lwl_t:
-                lwl.extend(eval(lwl_t[task]))
+                lwl.extend(lwl_t[task])
         else:
             if 'RunWhitelist' in self.request:
-                lwl.extend(eval(self.request['RunWhitelist']))
+                lwl.extend(self.request['RunWhitelist'])
         return lwl
 
     def getBlocks(self):
@@ -3442,7 +3582,7 @@ class workflowInfo:
 
         return (lhe,primary, parent, secondary)
 
-    def _collectintaskchain( self , member, func=None):
+    def _collectintaskchain( self , member, func=None,default=None):
         coll = {}
         t=1                              
         while 'Task%d'%t in self.request:
@@ -3450,7 +3590,7 @@ class workflowInfo:
                 if func:
                     coll[self.request['Task%d'%t]['TaskName']] = func(self.request['Task%d'%t][member])
                 else:
-                    coll[self.request['Task%d'%t]['TaskName']] = self.request['Task%d'%t][member]
+                    coll[self.request['Task%d'%t]['TaskName']] = self.request['Task%d'%t].get(member, default)
             t+=1
         return coll
 

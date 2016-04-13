@@ -2,7 +2,7 @@
 from assignSession import *
 import sys
 import reqMgrClient
-from utils import workflowInfo, getWorkflowById, getDatasetEventsAndLumis, componentInfo
+from utils import workflowInfo, getWorkflowById, getDatasetEventsAndLumis, componentInfo, monitor_dir, reqmgr_url
 from utils import campaignInfo, sendEmail, siteInfo
 import json
 import random
@@ -19,6 +19,9 @@ def forceComplete(url, wfi):
             #sendEmail("force completing","%s is worth force completing\n%s"%( member['RequestName'] , percent_completions))
             print "setting",member['RequestName'],"force-complete"
             reqMgrClient.setWorkflowForceComplete(url, member['RequestName'])
+        elif member['RequestStatus'] in ['acquired','assignment-approved']:
+            print "rejecting",member['RequestName']
+            reqMgrClient.invalidateWorkflow(url, member['RequestName'], current_status=member['RequestStatus'])
 
 def completor(url, specific):
     up = componentInfo(mcm=False, soft=['mcm'])
@@ -29,13 +32,13 @@ def completor(url, specific):
 
     wfs = []
     wfs.extend( session.query(Workflow).filter(Workflow.status == 'away').all() )
-    ##wfs.extend( session.query(Workflow).filter(Workflow.status.startswith('assistance')).all() )
+    wfs.extend( session.query(Workflow).filter(Workflow.status.startswith('assistance')).all() )
 
     ## just take it in random order so that not always the same is seen
     random.shuffle( wfs )
 
     ## by workflow a list of fraction / timestamps
-    completions = json.loads( open('/afs/cern.ch/user/c/cmst2/www/unified/completions.json').read())
+    completions = json.loads( open('%s/completions.json'%monitor_dir).read())
     
     good_fractions = {}
     for c in CI.campaigns:
@@ -67,11 +70,15 @@ def completor(url, specific):
     for wfo in wfs:
         if specific and not specific in wfo.name: continue
 
+        print "looking at",wfo.name
+        ## get all of the same
+        wfi = workflowInfo(url, wfo.name)
+
         skip=False
         if not any([c in wfo.name for c in good_fractions]): skip=True
         for user,spec in overrides.items():
             #print spec
-            if wfo.name in spec:
+            if wfo.name in spec and wfi.request['RequestStatus']!='force-complete':
                 #skip=False ## do not do it automatically yet
                 sendEmail('force-complete requested','%s is asking for %s to be force complete'%(user,wfo.name))
                 wfi = workflowInfo(url, wfo.name)
@@ -80,13 +87,11 @@ def completor(url, specific):
                 wfi.notifyRequestor("The workflow %s was force completed by request of %s"%(wfo.name,user), do_batch=False)
                 wfi.sendLog('completor','%s is asking for %s to be force complete'%(user,wfo.name))
                 break
-            
+    
+        if wfo.status.startswith('assistance'): skip = True
+
         if skip: 
             continue
-
-        print "looking at",wfo.name
-        ## get all of the same
-        wfi = workflowInfo(url, wfo.name)
 
         priority = wfi.request['RequestPriority']
 
@@ -205,10 +210,10 @@ def completor(url, specific):
         ## do it once only for testing
         #break
             
-    open('/afs/cern.ch/user/c/cmst2/www/unified/completions.json','w').write( json.dumps( completions , indent=2))
+    open('%s/completions.json'%monitor_dir,'w').write( json.dumps( completions , indent=2))
     text="These have been running for long"
     
-    open('/afs/cern.ch/user/c/cmst2/www/unified/longlasting.json','w').write( json.dumps( long_lasting, indent=2 ))
+    open('%s/longlasting.json'%monitor_dir,'w').write( json.dumps( long_lasting, indent=2 ))
 
     for wf,info in sorted(long_lasting.items(), key=lambda tp:tp[1]['delay'], reverse=True):
         delay = info['delay']
@@ -225,7 +230,7 @@ def completor(url, specific):
 
 
 if __name__ == "__main__":
-    url = 'cmsweb.cern.ch'
+    url = reqmgr_url
     spec=None
     if len(sys.argv)>1:
         spec=sys.argv[1]

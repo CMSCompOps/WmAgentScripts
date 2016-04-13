@@ -16,7 +16,7 @@
    "description": "The data tiers that do not pass closeout checks. Can be overidden by custodial overide at campaign level"
  },
  "tiers_no_DDM": {
-   "value" : ["GEN-SIM","LHE","GEN","DQM","DQMIO"],
+   "value" : ["GEN-SIM","LHE","GEN","DQM","DQMIO","GEN-SIM-DIGI-RAW","RAWAODSIM"],
    "description": "The data tiers that do not go to AnaOps"
  },
  "tiers_to_DDM": {
@@ -48,7 +48,7 @@
    "description": "The total number of workflows that we allow to stage at a time per site"
   },
   "max_transfer_in_GB": {
-   "value" : 500000,
+   "value" : 800000,
    "description": "The total size of the input datasets that can be transfered at a given time"
   },
   "transfer_timeout": {

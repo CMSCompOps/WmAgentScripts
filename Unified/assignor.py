@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 import reqMgrClient
-from utils import workflowInfo, campaignInfo, siteInfo, userLock, global_SI, unifiedConfiguration
+from utils import workflowInfo, campaignInfo, siteInfo, userLock, global_SI, unifiedConfiguration, reqmgr_url
 from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction, getDatasetEventsPerLumi, newLockInfo, getLFNbase, getDatasetBlocks
 from utils import componentInfo, sendEmail, sendLog
 #from utils import lockInfo
@@ -14,6 +14,7 @@ import os
 import random
 import json
 import copy
+import os
 
 def assignor(url ,specific = None, talk=True, options=None):
     if userLock(): return
@@ -246,7 +247,8 @@ def assignor(url ,specific = None, talk=True, options=None):
         print "Allowed",sites_allowed
         if options.primary_aaa:
             sites_allowed = initial_sites_allowed
-            options.useSiteListAsLocation = True
+            #options.useSiteListAsLocation = True
+            options.TrustSitelists = True
         else:
             sites_allowed = sites_with_any_data
             wfh.sendLog('assignor',"Selected for any data %s"%sorted(sites_allowed))
@@ -299,6 +301,7 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         ## plain assignment here
         team='production'
+        if os.getenv('UNIFIED_TEAM'): team = os.getenv('UNIFIED_TEAM')
         if options and options.team:
             team = options.team
 
@@ -321,6 +324,17 @@ def assignor(url ,specific = None, talk=True, options=None):
         #    team = 'allocation-based'
         #    sendEmail("sending work to SDSC","%s was assigned to SDSC"% wfo.name, destination=['boj@fnal.gov'])
         
+
+        if False and 'T2_CH_CERN' in parameters['SiteWhitelist']:
+            ## add some check on 
+            ### the amount pending to HLT
+            ### the size of the request
+            ### the priority of the request (maybe not if we decide to overflow during runs)
+            parameters['SiteWhitelist'] = ['T2_CH_CERN_HLT']
+            team = 'hlt'
+            ## reduce the splitting by factor of 4, regardless of type of splitting
+            sendEmail("sending work to HLT","%s was assigned to HLT"%wfo.name)
+            
 
         ##parse options entered in command line if any
         if options:
@@ -413,14 +427,13 @@ def assignor(url ,specific = None, talk=True, options=None):
     sendLog('assignor',"Assigned %d Stalled %s"%(n_assigned, n_stalled))
     
 if __name__=="__main__":
-    url = 'cmsweb.cern.ch'
-
+    url = reqmgr_url
     parser = optparse.OptionParser()
     parser.add_option('-t','--test', help='Only test the assignment',action='store_true',dest='test',default=False)
     parser.add_option('-r', '--restrict', help='Only assign workflows for site with input',default=False, action="store_true",dest='restrict')
     parser.add_option('-e', '--early', help='Fectch from early statuses',default=False, action="store_true")
     parser.add_option('--go',help="Overrides the campaign go",default=False,action='store_true')
-    parser.add_option('--team',help="Specify the agent to use",default='production')
+    parser.add_option('--team',help="Specify the agent to use",default=None)
     parser.add_option('--primary_aaa',help="Force to use the secondary location restriction, if any, and use the full site whitelist initially provided to run that type of wf",default=False, action='store_true')
     parser.add_option('--limit',help="Limit the number of wf to be assigned",default=0,type='int')
     for key in reqMgrClient.assignWorkflow.keys:

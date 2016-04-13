@@ -8,17 +8,18 @@ import copy
 from collections import defaultdict
 import re
 import os
+from utils import reqmgr_url
 
 def singleRecovery(url, task , initial, actions, do=False):
     payload = {
         "Requestor" : os.getenv('USER'),
         "Group" : 'DATAOPS',
         "RequestType" : "Resubmission",
-        "ACDCServer" : "https://cmsweb.cern.ch/couchdb",
+        "ACDCServer" : initial['CouchURL'],
         "ACDCDatabase" : "acdcserver",
         "OriginalRequestName" : initial['RequestName']
         }
-    copy_over = ['PrepID','RequestPriority', 'TimePerEvent', 'SizePerEvent', 'Group', 'Memory', 'RequestString' ]        
+    copy_over = ['PrepID','RequestPriority', 'TimePerEvent', 'SizePerEvent', 'Group', 'Memory', 'RequestString' ,'CMSSWVersion']        
     for c in copy_over:
         payload[c] = copy.deepcopy(initial[c])
 
@@ -36,8 +37,8 @@ def singleRecovery(url, task , initial, actions, do=False):
                 increase = int(action.split('-')[-1]) if '-' in action else 1000
                 ## increase the memory requirement by 1G
                 payload['Memory'] += increase
-            if action.startswith('split') and initial['RequestType'] == 'MonteCarlo':
-                print "I should not be doing splitting for MonteCarlo type request"
+            if action.startswith('split') and initial['RequestType'] in ['MonteCarlo','TaskChain']:
+                print "I should not be doing splitting for this type of request",initial['RequestName']
                 return None
 
     if payload['RequestString'].startswith('ACDC'):
@@ -50,26 +51,21 @@ def singleRecovery(url, task , initial, actions, do=False):
         print json.dumps( payload, indent=2)
         return None
 
+    print json.dumps( payload , indent=2)
+
     ## submit
-    response = reqMgrClient.submitWorkflow(url, payload)
-    m = re.search("details\/(.*)\'",response)
-    if not m:
+    acdc = reqMgrClient.submitWorkflow(url, payload)
+    if not acdc:
         print "Error in making ACDC for",initial["RequestName"]
-        print response
-        response = reqMgrClient.submitWorkflow(url, payload)
-        m = re.search("details\/(.*)\'",response)
-        if not m:
+        acdc = reqMgrClient.submitWorkflow(url, payload)
+        if not acdc:
             print "Error twice in making ACDC for",initial["RequestName"]
-            print response
             return None
-    acdc = m.group(1)
     
     ## perform modifications
     if actions:
         for action in actions:
             if action.startswith('split'):
-                print "will not try to split"
-                return None
                 factor = int(action.split('-')[-1]) if '-' in action else 2
                 acdcInfo = workflowInfo(url, acdc)
                 splittings = acdcInfo.getSplittings()
@@ -83,7 +79,7 @@ def singleRecovery(url, task , initial, actions, do=False):
                     split['requestName'] = acdc
                     print "changing the splitting of",acdc
                     print json.dumps( split, indent=2 )
-                    print reqMgrClient.setWorkflowSplitting(url, split )
+                    print reqMgrClient.setWorkflowSplitting(url, acdc, split )
                 
     data = reqMgrClient.setWorkflowApproved(url, acdc)
     print data
@@ -123,7 +119,7 @@ def recoveror(url,specific,options=None):
         if not specific and 'manual' in wfo.status: continue
         
         wfi = workflowInfo(url, wfo.name)
-        
+
         ## need a way to verify that this is the first round of ACDC, since the second round will have to be on the ACDC themselves
 
         all_errors = {}
@@ -136,7 +132,12 @@ def recoveror(url,specific,options=None):
         print '-'*100        
         print "Looking at",wfo.name,"for recovery options"
 
-        recover=True       
+        recover = True       
+
+        if not 'MergedLFNBase' in wfi.request:
+            print "fucked up"
+            sendEmail('missing lfn','%s wl cache is screwed up'%wfo.name)
+            recover = False
  
         if not len(all_errors): 
             print "\tno error for",wfo.name
@@ -314,7 +315,7 @@ def recoveror(url,specific,options=None):
             
 
 if __name__ == '__main__':
-    url='cmsweb.cern.ch'
+    url=reqmgr_url
     parser = optparse.OptionParser()
     #parser.add_option('--do',default=False,action='store_true')
     parser.add_option('--test', dest='do', default=True,action='store_false')

@@ -5,7 +5,7 @@ from McMClient import McMClient
 from utils import makeReplicaRequest
 from utils import workflowInfo, siteInfo, campaignInfo, userLock, global_SI
 from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, getSiteWhiteList, approveSubscription, getDatasetSize, updateSubscription, getWorkflows, componentInfo, getDatasetDestinations, getDatasetBlocks, DSS
-from utils import unifiedConfiguration
+from utils import unifiedConfiguration, monitor_dir, reqmgr_url
 #from utils import lockInfo
 from utils import duplicateLock, newLockInfo
 import json
@@ -86,7 +86,7 @@ def transferor(url ,specific = None, talk=True, options=None):
     in_transfer_priority=None
     min_transfer_priority=None
     print "getting all wf in staging ..."
-    stucks = json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/stuck_transfers.json').read())
+    stucks = json.loads(open('%s/stuck_transfers.json'%monitor_dir).read())
     
     for wfo in session.query(Workflow).filter(Workflow.status=='staging').all():
         wfh = workflowInfo( url, wfo.name, spec=False)
@@ -115,9 +115,10 @@ def transferor(url ,specific = None, talk=True, options=None):
             min_transfer_priority = min(min_transfer_priority, int(wfh.request['RequestPriority']))
 
     if min_transfer_priority==None or in_transfer_priority ==None:
-        print "something bad happened"
-        sendEmail("astray","no request in staging")
+        print "nothing is lining up for transfer"
+        sendEmail("no request in staging","no request in staging")
         return 
+        pass
 
     try:
         print "Ignored input sizes"
@@ -183,7 +184,9 @@ def transferor(url ,specific = None, talk=True, options=None):
 
     grand_total =  sum(input_sizes.values()) 
     to_transfer = grand_total  - in_transfer_already
-    grand_transfer_limit = options.maxtransfer 
+    #grand_transfer_limit = options.maxtransfer
+    grand_transfer_limit = SI.total_disk()*0.5*1024## half of the free sapce in TB->GB
+    
     transfer_limit = grand_transfer_limit - in_transfer_already
     print "%15.4f GB already being transfered"%in_transfer_already
     print "%15.4f GB is the current requested transfer load"%to_transfer
@@ -234,6 +237,7 @@ def transferor(url ,specific = None, talk=True, options=None):
         ## throtlle by campaign go
         if not CI.go( wfh.request['Campaign'] ):
             wfh.sendLog('transferor',"No go for %s"%wfh.request['Campaign'])
+            sendEmail('no go for closing','check in transferor what to do with %s'%wfh.request['Campaign'])
             if not options.go: 
                 no_goes.add( wfh.request['Campaign'] )
                 continue
@@ -544,6 +548,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                     sec_to_distribute = list(set(sec_to_distribute) & set(override_sec_destination))
 
                 if len( sec_to_distribute )>0:
+                    print "secondary could go to",sorted(sec_to_distribute)
                     sec_size = dss.get( sec )
                     for site in sec_to_distribute:
                         site_se =SI.CE_to_SE(site)
@@ -642,7 +647,7 @@ def transferor(url ,specific = None, talk=True, options=None):
         if execute:
             priority = 'normal'
             cds = [ds for ds in datasets+block_datasets if ds in max_priority]
-            if cds:
+            if cds and False: ## I don't think this is working. subscription should be updated on the fly and regularly for raising the priority if needed
                 ## decide on an overall priority : that's a bit too large though
                 if any([max_priority[ds]>=90000 for ds in cds]):
                     priority = 'high'
@@ -690,8 +695,8 @@ def transferor(url ,specific = None, talk=True, options=None):
         session.commit()
 
 if __name__=="__main__":
-    url = 'cmsweb.cern.ch'
     UC = unifiedConfiguration()
+    url = reqmgr_url
     parser = optparse.OptionParser()  
     parser.add_option('-t','--test',help="Perform the test and display information",default=False,action='store_true')
     parser.add_option('-s','--stop',help="Stop ask and go",default=False,action='store_true')
