@@ -116,8 +116,8 @@ def transferor(url ,specific = None, talk=True, options=None):
 
     if min_transfer_priority==None or in_transfer_priority ==None:
         print "nothing is lining up for transfer"
-        #sendEmail("no request in staging","no request in staging")
-        #return 
+        sendEmail("no request in staging","no request in staging")
+        return 
         pass
 
     try:
