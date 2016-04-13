@@ -79,7 +79,7 @@ def singleRecovery(url, task , initial, actions, do=False):
                     split['requestName'] = acdc
                     print "changing the splitting of",acdc
                     print json.dumps( split, indent=2 )
-                    print reqMgrClient.setWorkflowSplitting(url, split )
+                    print reqMgrClient.setWorkflowSplitting(url, acdc, split )
                 
     data = reqMgrClient.setWorkflowApproved(url, acdc)
     print data
