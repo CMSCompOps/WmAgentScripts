@@ -9,7 +9,7 @@ import traceback
 
 class McMClient:
     def __init__(self,id='sso',debug=False,cookie=None,dev=True,int=False):
-        if os.getenv('UNIFIED_MC') == 'dev': dev = True
+        if os.getenv('UNIFIED_MCM') == 'dev': dev = True
         if dev:
             self.server='cms-pdmv-dev.cern.ch/mcm/'
         else:
