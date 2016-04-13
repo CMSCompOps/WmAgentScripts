@@ -115,9 +115,10 @@ def transferor(url ,specific = None, talk=True, options=None):
             min_transfer_priority = min(min_transfer_priority, int(wfh.request['RequestPriority']))
 
     if min_transfer_priority==None or in_transfer_priority ==None:
-        print "something bad happened"
-        sendEmail("astray","no request in staging")
-        return 
+        print "nothing is lining up for transfer"
+        #sendEmail("no request in staging","no request in staging")
+        #return 
+        pass
 
     try:
         print "Ignored input sizes"
@@ -183,7 +184,9 @@ def transferor(url ,specific = None, talk=True, options=None):
 
     grand_total =  sum(input_sizes.values()) 
     to_transfer = grand_total  - in_transfer_already
-    grand_transfer_limit = options.maxtransfer 
+    #grand_transfer_limit = options.maxtransfer
+    grand_transfer_limit = SI.total_disk()*0.5*1024## half of the free sapce in TB->GB
+    
     transfer_limit = grand_transfer_limit - in_transfer_already
     print "%15.4f GB already being transfered"%in_transfer_already
     print "%15.4f GB is the current requested transfer load"%to_transfer
@@ -234,6 +237,7 @@ def transferor(url ,specific = None, talk=True, options=None):
         ## throtlle by campaign go
         if not CI.go( wfh.request['Campaign'] ):
             wfh.sendLog('transferor',"No go for %s"%wfh.request['Campaign'])
+            sendEmail('no go for closing','check in transferor what to do with %s'%wfh.request['Campaign'])
             if not options.go: 
                 no_goes.add( wfh.request['Campaign'] )
                 continue

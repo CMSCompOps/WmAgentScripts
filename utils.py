@@ -1097,6 +1097,13 @@ class siteInfo:
         ## and glidein info
         self.fetch_glidein_info(talk=False)
 
+    def total_disk(self,what='disk'):
+        s = 0
+        for site in self.sites_ready:
+            se = self.CE_to_SE(site)
+            s += getattr(self,what).get(se,0)
+        return s
+
     def usage(self,site):
         try:
             info = json.loads( os.popen('curl -s "http://dashb-cms-job.cern.ch/dashboard/request.py/jobsummary-plot-or-table2?site=%s&check=submitted&sortby=activity&prettyprint"' % site ).read() )
@@ -1210,8 +1217,8 @@ class siteInfo:
                 self.disk[site] = available
             else:
                 self.disk[site] = 0 
-            self.quota[site] = quota
-            self.locked[site] = locked
+            self.quota[site] = int(quota)
+            self.locked[site] = int(locked)
 
 
     def fetch_ssb_info(self,talk=True):
