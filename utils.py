@@ -969,6 +969,7 @@ class siteInfo:
             self.sites_banned = [
                 'T2_CH_CERN_AI',
                 'T2_US_Vanderbilt',
+                'T0_CH_CERN'
                 #'T2_RU_INR',
                 #'T2_UA_KIPT'
                 ]
@@ -976,9 +977,9 @@ class siteInfo:
             data = dataCache.get('ssb_158') ## 158 is the site readyness metric
             for siteInfo in data:
                 #print siteInfo['Status']
+                if not siteInfo['Tier'] in [0,1,2]: continue ## ban de-facto all T3
                 self.all_sites.append( siteInfo['VOName'] )
                 if siteInfo['VOName'] in self.sites_banned: continue
-                if not siteInfo['Tier'] in [1,2]: continue
                 if siteInfo['Status'] == 'on': 
                     self.sites_ready.append( siteInfo['VOName'] )
                 else:#if siteInfo['Status'] in ['drain']:
@@ -994,9 +995,11 @@ class siteInfo:
         self.sites_auto_approve = ['T0_CH_CERN_MSS','T1_FR_CCIN2P3_MSS']
 
         self.sites_eos = [ s for s in self.sites_ready if s in ['T2_CH_CERN','T2_CH_CERN_AI','T2_CH_CERN_T0','T2_CH_CERN_HLT'] ]
+        self.sites_T3s = [ s for s in self.sites_ready if s.startswith('T3_')]
         self.sites_T2s = [ s for s in self.sites_ready if s.startswith('T2_')]
-        self.sites_T1s = [ s for s in self.sites_ready if s.startswith('T1_')]
+        self.sites_T1s = [ s for s in self.sites_ready if (s.startswith('T1_') or s.startswith('T0_'))] ## put the T0 in the T1 : who cares
         self.sites_AAA = list(set(self.sites_ready) - set(['T2_CH_CERN_HLT']))
+        ## could this be an SSB metric ?
         self.sites_with_goodIO = [ "T2_DE_DESY","T2_DE_RWTH",
                                    "T2_ES_CIEMAT",
                                    "T2_FR_GRIF_LLR", "T2_FR_GRIF_IRFU", "T2_FR_IPHC","T2_FR_CCIN2P3",
@@ -1299,7 +1302,7 @@ class siteInfo:
         return ['sites_with_goodIO','sites_T1s','sites_T2s','sites_mcore_ready']#,'sites_veto_transfer']#,'sites_auto_approve']
 
     def CE_to_SE(self, ce):
-        if ce.startswith('T1') and not ce.endswith('_Disk'):
+        if (ce.startswith('T1') or ce.startswith('T0')) and not ce.endswith('_Disk'):
             return ce+'_Disk'
         else:
 
