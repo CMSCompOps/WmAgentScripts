@@ -239,16 +239,17 @@
     "lumisize": -1
   },
   "RunIIFall15DR76Premix": {
-    "go": true,
+    "go": false,
     "lumisize": -1
   },
   "RunIISpring16DR80": {
     "go": true,
+    "maxcopies": 2,
     "force-complete" : 0.99,
     "lumisize": -1
   },
   "RunIISpring16wmLHEFSPremix": {
-    "go": false,
+    "go": true,
     "parameters": {
       "EventsPerLumi": "x2"
     },
