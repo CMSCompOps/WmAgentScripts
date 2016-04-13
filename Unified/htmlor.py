@@ -205,7 +205,7 @@ Last update on %s(CET), %s(GMT)
     for wf in session.query(Workflow).filter(Workflow.status.startswith('considered')).all():
         wl = getWL( wf.name )
         count_by_campaign[wl['Campaign']][int(wl['RequestPriority'])]+=1
-        print wf.name
+        #print wf.name
         text+="<li> %s </li> \n"%wfl(wf,p=True)
         count+=1
     text_by_c=""
@@ -382,7 +382,7 @@ Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransfertea
         lines.append("<li> %s <hr></li>"%wfl(wf,view=True,ongoing=True))
     text_by_c=""
     for c in count_by_campaign:
-        text_by_c+="<li> %s (%d) : "%( c, sum(count_by_campaign[c].values()) )
+        text_by_c+="<li> %s (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/campaign.php?campaign=%s>mon</a> <a href=https://cms-pdmv.cern.ch/pmp/historical?r=%s target=_blank>pmp</a> "%( c, sum(count_by_campaign[c].values()),c,c )
         for p in sorted(count_by_campaign[c].keys()):
             text_by_c+="%d (%d), "%(p,count_by_campaign[c][p])
         text_by_c+="</li>"
