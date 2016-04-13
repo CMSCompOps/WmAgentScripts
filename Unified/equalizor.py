@@ -367,6 +367,16 @@ def equalizor(url , specific = None, options=None):
 
 
     interface['modifications'].update( modifications )
+
+
+    ## temporary core managing
+    interface['cores']={'T2_CH_CERN_HLT': {'min':4,'max':16}, 'default': {'min':1, 'max':4}}
+    #interface['max_cores']={'T2_CH_CERN_HLT': 16, 'default': 4}
+    #interface['min_cores']={'T2_CH_CERN_HLT': 4, 'default': 1}
+    #interface['resize_subtasks'] = 'RunIISpring16DR80'
+    interface['resizes'] = ['RunIISpring16DR80','NotACampaign']
+
+    ## close and save
     close( interface )
 
 
