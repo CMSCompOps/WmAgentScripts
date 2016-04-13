@@ -148,7 +148,8 @@ def equalizor(url , specific = None, options=None):
                      'T1_FR_CCIN2P3','T2_US_Wisconsin','T2_US_MIT','T2_DE_RWTH',
                      'T1_UK_RAL','T2_US_Vanderbilt','T2_CH_CERN'],
             'max': 20000,
-            'pending' : 0},
+            'pending' : 0,
+            'force' : True},
         'RunIISpring15DR74' : {
             'sites' : ['T1_ES_PIC','T1_DE_KIT','T1_US_FNAL','T1_IT_CNAF','T1_RU_JINR','T1_FR_CCIN2P3','T1_UK_RAL','T2_CH_CERN'],
             'max' : 20000,
@@ -259,7 +260,7 @@ def equalizor(url , specific = None, options=None):
 
             ### overflow the 76 digi-reco to the site holding the pileup
             if campaign in PU_overflow:
-
+                force = PU_overflow[campaign]['force'] if 'force' in PU_overflow[campaign] else False
                 secondary_locations = set(SI.sites_ready)
                 for s in sec:
                     if not s in PU_locations:
@@ -290,7 +291,7 @@ def equalizor(url , specific = None, options=None):
                         augment_by = list(original_site_in_use)
 
                     needs_overide = overide_from_agent( wfi, needs_overide)
-                    if augment_by and (needs or needs_overide) and PU_overflow[campaign]['pending'] < PU_overflow[campaign]['max']:
+                    if augment_by and (needs or needs_overide or force) and PU_overflow[campaign]['pending'] < PU_overflow[campaign]['max']:
                         PU_overflow[campaign]['pending'] += idled
                         print "raising overflow to",PU_overflow[campaign]['pending'],"for",PU_overflow[campaign]['max']
                         ## the step with an input ought to be the digi part : make this one go anywhere
