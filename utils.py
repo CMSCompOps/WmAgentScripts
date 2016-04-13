@@ -3303,7 +3303,8 @@ class workflowInfo:
                 print "Removing",c_black_list
             sites_allowed = list(set(sites_allowed) - set(c_black_list))
 
-        ncores = self.request.get('Multicore',1)
+        #ncores = self.request.get('Multicore',1)
+        ncores = self.getMulticore()
         memory_allowed = SI.sitesByMemory( self.request['Memory'] , maxCore=ncores)
         if memory_allowed!=None:
             if verbose:
@@ -3484,6 +3485,13 @@ class workflowInfo:
     def getPriority(self):
         return self.request['RequestPriority']
 
+    def getMulticore(self):
+        mcores = [self.request.get('Multicore',1)]
+        if self.request['RequestType'] == 'TaskChain':
+            mcores_d = self._collectintaskchain('Multicore',default=1)
+            mcores.extend( mcores_d.values() )
+        return max(mcores)
+        
     def getBlockWhiteList(self):
         bwl=[]
         if self.request['RequestType'] == 'TaskChain':
@@ -3574,7 +3582,7 @@ class workflowInfo:
 
         return (lhe,primary, parent, secondary)
 
-    def _collectintaskchain( self , member, func=None):
+    def _collectintaskchain( self , member, func=None,default=None):
         coll = {}
         t=1                              
         while 'Task%d'%t in self.request:
@@ -3582,7 +3590,7 @@ class workflowInfo:
                 if func:
                     coll[self.request['Task%d'%t]['TaskName']] = func(self.request['Task%d'%t][member])
                 else:
-                    coll[self.request['Task%d'%t]['TaskName']] = self.request['Task%d'%t][member]
+                    coll[self.request['Task%d'%t]['TaskName']] = self.request['Task%d'%t].get(member, default)
             t+=1
         return coll
 
