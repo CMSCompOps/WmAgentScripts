@@ -218,7 +218,8 @@ for dataset in already_locked-newly_locking:
             ##would like to pass to *-unlock, or even destroy from local db
             for creator in creators:
                 for wfo in  session.query(Workflow).filter(Workflow.name==creator['RequestName']).all():
-                    if not 'unlock' in wfo.status and not any([wfo.status.startswith(key) for key in ['trouble','away','considered','assistance']]):
+                    #if not 'unlock' in wfo.status and not any([wfo.status.startswith(key) for key in ['trouble','away','considered','staging','staged','assistance']]):
+                    if not 'unlock' in wfo.status and any([wfo.status.startswith(key) for key in ['done','forget']]):
                         wfo.status +='-unlock'
                         print "setting",wfo.name,"to",wfo.status
             session.commit()
