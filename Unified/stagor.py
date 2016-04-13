@@ -45,6 +45,11 @@ def stagor(url,specific =None, options=None):
     except:
         print "inexisting transfer statuses. starting fresh"
         cached_transfer_statuses = {}
+    try:
+        transfer_statuses = json.loads(open('%s/transfer_statuses.json'%monitor_dir).read())
+    except:
+        print "inexisting transfer statuses. starting fresh"
+        transfer_statuses = {}
 
     ## pop all that are now in negative values
     for phedexid in cached_transfer_statuses.keys():
@@ -57,6 +62,7 @@ def stagor(url,specific =None, options=None):
             
     ## collect all datasets that are needed for wf in staging, correcting the status of those that are not really in staging
     wfois = []
+    needs = defaultdict(list)
     for wfo in session.query(Workflow).filter(Workflow.status == 'staging').all():
         wfi = workflowInfo(url, wfo.name)
         if wfi.request['RequestStatus'] in ['running-open','running-closed','completed','assigned','acquired']:
@@ -71,9 +77,12 @@ def stagor(url,specific =None, options=None):
         wfois.append( (wfo,wfi) )            
         _,primaries,_,secondaries = wfi.getIO()
         for dataset in list(primaries)+list(secondaries):
+            needs[wfo.name].append( dataset)
             done_by_input[dataset] = {}
             completion_by_input[dataset] = {}
             wfi.sendLog('stagor', '%s needs %s'%( wfo.name, dataset))
+
+    open('%s/dataset_requirements.json'%monitor_dir,'w').write( json.dumps( needs, indent=2))
 
     endpoint_in_downtime = defaultdict(set)
     #endpoint_completed = defaultdict(set)
@@ -115,6 +124,8 @@ def stagor(url,specific =None, options=None):
             checks = cached_transfer_statuses[str(transfer.phedexid)]
         else:
             checks = checkTransferStatus(url, transfer.phedexid, nocollapse=True)
+        ## just write this out
+        transfer_statuses[str(transfer.phedexid)] = copy.deepcopy(checks)
 
         if not specific:
             for dsname in checks:
@@ -165,8 +176,13 @@ def stagor(url,specific =None, options=None):
             
 
 
+    print "End point in down time"
+    #print json.dumps( endpoint_in_downtime , indent=2)
+    for ds in endpoint_in_downtime:
+        print json.dumps(list(endpoint_in_downtime[ds]), indent=2)
 
     open('cached_transfer_statuses.json','w').write( json.dumps( cached_transfer_statuses, indent=2))
+    open('%s/transfer_statuses.json'%monitor_dir,'w').write( json.dumps( transfer_statuses, indent=2))
 
     already_stuck = json.loads( open('%s/stuck_transfers.json'%monitor_dir).read() )
     missing_in_action = defaultdict(list)
