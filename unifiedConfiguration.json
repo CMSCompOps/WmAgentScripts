@@ -48,7 +48,7 @@
    "description": "The total number of workflows that we allow to stage at a time per site"
   },
   "max_transfer_in_GB": {
-   "value" : 500000,
+   "value" : 800000,
    "description": "The total size of the input datasets that can be transfered at a given time"
   },
   "transfer_timeout": {
