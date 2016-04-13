@@ -2716,6 +2716,16 @@ def getWorkflowById( url, pid , details=False):
         return [item['id'] for item in items]
     
 def getWorkflows(url,status,user=None,details=False,rtype=None):
+    retries=10
+    while retries>0:
+        try:
+            return try_getWorkflows(url, status,user,details,rtype)
+        except:
+            print "getWorkflows retried"
+            retries-=1
+    raise Exception("getWorkflows failed 10 times")
+    
+def try_getWorkflows(url,status,user=None,details=False,rtype=None):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 
     go_to = '/reqmgr2/data/request?status=%s'%status
