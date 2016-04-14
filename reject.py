@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 """
+    __author__ = "Paola Rozo"
+    __version__ = "0.1"
+    __maintainer__ = "Paola Rozo"
+    __email__ = "katherine.rozo@cern.ch"
+    __status__ = "Testing"
+
     The script rejects or aborts a workflow or a set of worflows according to their status.
     The workflow can be cloned if the -c option is given
 """
@@ -28,7 +34,6 @@ def main():
     (options, args) = parser.parse_args()
 
     # Check the arguments, get info from them
-    print options.file
     if options.file:
         wfs = [l.strip() for l in open(options.file) if l.strip()]
         if len(args) == 2:
@@ -59,13 +64,13 @@ def main():
     for wf in wfs:
         workflow = reqMgrClient.Workflow(wf)
         if workflow.status == 'assigned' or workflow.status == 'assignment-approved':
-            print "Rejecting workflow: " + wf
+            print("Rejecting workflow: " + wf)
             reqMgrClient.rejectWorkflow(url, wf)
-        elif workflow.status == 'acquired' or workflow.status == 'running-open' or workflow.status == 'running-close':
-            print "Aborting workflow: " + wf
+        elif workflow.status in {'acquired','running-open','running-closed','completed','closed-out'}:
+            print("Aborting workflow: " + wf)
             reqMgrClient.abortWorkflow(url, wf)
         else:
-            print "The workflow cannot be rejected or aborted."
+            print("The workflow '"+wf+ "' with status '"+workflow.status+"' cannot be rejected or aborted.")
 
         # invalidates datasets
         print "Invalidating datasets"
@@ -76,7 +81,7 @@ def main():
 
         # clone workflow
         if options.clone:
-            print "Clonning workflow: "+ wf
+            print("Clonning workflow: "+ wf)
             cloned = resubmit.cloneWorkflow(wf, user, group)
     sys.exit(0);
 
