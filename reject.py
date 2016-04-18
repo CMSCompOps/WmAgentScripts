@@ -63,10 +63,10 @@ def main():
 
     for wf in wfs:
         workflow = reqMgrClient.Workflow(wf)
-        if workflow.status == 'assigned' or workflow.status == 'assignment-approved':
+        if workflow.status in {'assigned' , 'assignment-approved','completed','closed-out'}:
             print("Rejecting workflow: " + wf)
             reqMgrClient.rejectWorkflow(url, wf)
-        elif workflow.status in {'acquired','running-open','running-closed','completed','closed-out'}:
+        elif workflow.status in {'acquired','running-open','running-closed'}:
             print("Aborting workflow: " + wf)
             reqMgrClient.abortWorkflow(url, wf)
         else:
