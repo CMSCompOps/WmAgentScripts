@@ -19,7 +19,7 @@ except ImportError:
     print "source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh"
     sys.exit(1)
 
-global_pool = 'vocms099.cern.ch'
+global_pool = 'cmsgwms-collector-global.cern.ch'
 
 # production schedd's
 schedds = ["vocms0304.cern.ch",
