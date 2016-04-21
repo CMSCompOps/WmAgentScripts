@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 import reqMgrClient
-from utils import workflowInfo, campaignInfo, siteInfo, userLock, global_SI, unifiedConfiguration, reqmgr_url
+from utils import workflowInfo, campaignInfo, siteInfo, userLock, global_SI, unifiedConfiguration, reqmgr_url, monitor_dir
 from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction, getDatasetEventsPerLumi, newLockInfo, getLFNbase, getDatasetBlocks
 from utils import componentInfo, sendEmail, sendLog
 #from utils import lockInfo
@@ -46,6 +46,9 @@ def assignor(url ,specific = None, talk=True, options=None):
     #        wfos = session.query(Workflow).filter(Workflow.status=='considered').all()
     #        wfos.extend( session.query(Workflow).filter(Workflow.status=='staging').all())
     #    wfos.extend(session.query(Workflow).filter(Workflow.status=='staged').all())
+
+
+    dataset_endpoints = json.loads(open('%s/dataset_endpoints.json'%monitor_dir).read())
 
     random.shuffle( wfos )
     for wfo in wfos:
@@ -137,7 +140,11 @@ def assignor(url ,specific = None, talk=True, options=None):
         primary_locations = None
         available_fractions = {}
         set_lfn = '/store/mc' ## by default
+        endpoints = set()
         for prim in list(primary):
+            if prim in dataset_endpoints:
+                print "endpoints from stagor",dataset_endpoints[prim]
+                endpoints.update( dataset_endpoints[prim] )
             set_lfn = getLFNbase( prim )
             presence = getDatasetPresence( url, prim , only_blocks=blocks)
             if talk:
@@ -204,7 +211,9 @@ def assignor(url ,specific = None, talk=True, options=None):
         if not options.early:
             less_copies_than_requested = UC.get("less_copies_than_requested")
             copies_wanted = max(1,copies_wanted-less_copies_than_requested) # take one out for the efficiency
-
+        else:
+            ## find out whether there is a site in the whitelist, that is lacking jobs and reduce to 1 copy needed to get things going
+            pass
 
         wfh.sendLog('assignor',"needed availability fraction %s"% copies_wanted)
 
@@ -228,7 +237,7 @@ def assignor(url ,specific = None, talk=True, options=None):
                     known = json.loads(open('cannot_assign.json').read())
                 except:
                     pass
-                if not wfo.name in known and not options.limit and not options.go and not options.early:
+                if not wfo.name in known and not options.limit and not options.go and not options.early and not options.partial:
                     wfh.sendLog('assignor',"cannot be assigned, %s is not sufficiently available.\n %s"%(wfo.name,json.dumps(available_fractions)))
                     sendEmail( "cannot be assigned","%s is not sufficiently available.\n %s"%(wfo.name,json.dumps(available_fractions)))
                     known.append( wfo.name )
@@ -241,10 +250,13 @@ def assignor(url ,specific = None, talk=True, options=None):
                         session.commit()
                     else:
                         print "tried but status is",wfo.status
-                continue
+                if options.partial:
+                    print "Will move on with partial locations"
+                else:
+                    continue
 
         ## default back to white list to original white list with any data
-        print "Allowed",sites_allowed
+        print "Allowed",sorted(sites_allowed)
         if options.primary_aaa:
             sites_allowed = initial_sites_allowed
             #options.useSiteListAsLocation = True
@@ -268,6 +280,16 @@ def assignor(url ,specific = None, talk=True, options=None):
                 #continue
             #print "We could be running at",opportunistic_sites,"in addition"
             ##sites_allowed = list(set(sites_allowed+ opportunistic_sites))
+
+        ### check on endpoints for on-going transfers
+        if endpoints and options.partial:
+            sites_allowed = list(set(sites_allowed + [SI.SE_to_CE(s) for s in endpoints]))
+            print "with added endpoints",sorted(sites_allowed)
+            
+        #if options.partial:
+        #    continue
+
+
 
         if not len(sites_allowed):
             wfh.sendLog('assignor',"cannot be assign with no matched sites")
@@ -432,6 +454,7 @@ if __name__=="__main__":
     parser.add_option('-t','--test', help='Only test the assignment',action='store_true',dest='test',default=False)
     parser.add_option('-r', '--restrict', help='Only assign workflows for site with input',default=False, action="store_true",dest='restrict')
     parser.add_option('-e', '--early', help='Fectch from early statuses',default=False, action="store_true")
+    parser.add_option('-p', '--partial', help='Let the workflow assign to place with any part of the data, existent of being made',default=False, action="store_true")
     parser.add_option('--go',help="Overrides the campaign go",default=False,action='store_true')
     parser.add_option('--team',help="Specify the agent to use",default=None)
     parser.add_option('--primary_aaa',help="Force to use the secondary location restriction, if any, and use the full site whitelist initially provided to run that type of wf",default=False, action='store_true')

@@ -84,6 +84,7 @@ def stagor(url,specific =None, options=None):
 
     open('%s/dataset_requirements.json'%monitor_dir,'w').write( json.dumps( needs, indent=2))
 
+    dataset_endpoints = defaultdict(set)
     endpoint_in_downtime = defaultdict(set)
     #endpoint_completed = defaultdict(set)
     endpoint_incompleted = defaultdict(set)
@@ -154,6 +155,10 @@ def stagor(url,specific =None, options=None):
             #if not done and tr_wf.status == 'staging':
                 
 
+        for ds in checks:
+            for s,v in checks[ds].items():
+                dataset_endpoints[ds].add( s )
+
         if done:
             ## transfer.status = 'done'
             sendLog('stagor',"%s is done"%transfer.phedexid)
@@ -177,12 +182,14 @@ def stagor(url,specific =None, options=None):
 
 
     print "End point in down time"
-    #print json.dumps( endpoint_in_downtime , indent=2)
-    for ds in endpoint_in_downtime:
-        print json.dumps(list(endpoint_in_downtime[ds]), indent=2)
+    for k in endpoint_in_downtime: endpoint_in_downtime[k] = list(endpoint_in_downtime[k])
+    for k in dataset_endpoints: dataset_endpoints[k] = list(dataset_endpoints[k])
+    print json.dumps( endpoint_in_downtime , indent=2)
+
 
     open('cached_transfer_statuses.json','w').write( json.dumps( cached_transfer_statuses, indent=2))
     open('%s/transfer_statuses.json'%monitor_dir,'w').write( json.dumps( transfer_statuses, indent=2))
+    open('%s/dataset_endpoints.json'%monitor_dir,'w').write( json.dumps(dataset_endpoints, indent=2))
 
     already_stuck = json.loads( open('%s/stuck_transfers.json'%monitor_dir).read() )
     missing_in_action = defaultdict(list)
