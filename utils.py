@@ -3290,11 +3290,12 @@ class workflowInfo:
 
 
         CI = campaignInfo()
-        c_sites_allowed = CI.get(self.request['Campaign'], 'SiteWhitelist' , [])
-        if c_sites_allowed:
-            if verbose:
-                print "Using site whitelist restriction by campaign configuration",sorted(c_sites_allowed)
-            sites_allowed = list(set(sites_allowed) & set(c_sites_allowed))
+        for campaign in self.getCampaigns():
+            c_sites_allowed = CI.get(campaign, 'SiteWhitelist' , [])
+            if c_sites_allowed:
+                if verbose:
+                    print "Using site whitelist restriction by campaign,",campaign,"configuration",sorted(c_sites_allowed)
+                sites_allowed = list(set(sites_allowed) & set(c_sites_allowed))
         c_black_list = CI.get(self.request['Campaign'], 'SiteBlacklist', [])
         c_black_list.extend( CI.parameters(self.request['Campaign']).get('SiteBlacklist', []))
         if c_black_list:
@@ -3594,6 +3595,11 @@ class workflowInfo:
             t+=1
         return coll
 
+    def getCampaigns(self):
+        if self.request['RequestType'] == 'TaskChain':
+            return self._collectintaskchain('AcquisitionEra').values()
+        else:
+            return [self.request['Campaign']]
     def acquisitionEra( self ):
         def invertDigits( st ):
             if st[0].isdigit():
