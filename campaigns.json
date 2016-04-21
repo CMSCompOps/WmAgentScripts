@@ -246,10 +246,25 @@
     "go": true,
     "maxcopies": 2,
     "force-complete" : 0.99,
+    "force-timeout" : 7,
+    "lumisize": -1
+  },
+  "RunIISpring16MiniAODv1": {
+    "go": true,
+    "maxcopies": 1,
+    "force-complete" : 0.99,
+    "force-timeout" : 7,
     "lumisize": -1
   },
   "RunIISpring16wmLHEFSPremix": {
-    "go": true,
+    "go": false,
+    "parameters": {
+      "EventsPerLumi": "x2"
+    },
+    "lumisize": -1
+  },
+  "RunIISpring16FSPremix": {
+    "go": false,
     "parameters": {
       "EventsPerLumi": "x2"
     },
