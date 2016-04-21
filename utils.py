@@ -2751,7 +2751,7 @@ def try_getWorkflows(url,status,user=None,details=False,rtype=None):
     data = json.loads(r2.read())
     items = data['result']
 
-    print len(items),"retrieved"
+    print len(items),"retrieved",status,user,details,rtype
     users=[]
     if user:
         users=user.split(',')
@@ -2761,7 +2761,7 @@ def try_getWorkflows(url,status,user=None,details=False,rtype=None):
         if details:
             those = item.keys()
         else:
-            those = item
+            those = [item]
         if users:
             those = filter(lambda k : any([k.startswith(u) for u in users]), those)
         if details:
