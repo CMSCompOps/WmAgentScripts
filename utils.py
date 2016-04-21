@@ -969,7 +969,7 @@ class siteInfo:
             self.sites_banned = [
                 'T2_CH_CERN_AI',
                 'T2_US_Vanderbilt',
-                'T0_CH_CERN'
+                #'T0_CH_CERN'
                 #'T2_RU_INR',
                 #'T2_UA_KIPT'
                 ]
@@ -1059,6 +1059,8 @@ class siteInfo:
             self.cpu_pledges[s]=1
             ## will get is later from SSB
             self.disk[ self.CE_to_SE(s)]=0
+            if s == 'T0_CH_CERN':
+                self.disk[ self.CE_to_SE(s)]=200 ## temporary override
 
         tapes = getNodes(phedex_url, 'MSS')
         for mss in tapes:
@@ -2187,11 +2189,23 @@ def getDatasetBlocks( dataset, runs=None, lumis=None):
 
     return list( all_blocks )
 
-def getDatasetBlockAndSite( url, dataset, group="",vetoes=None,complete=None):
+def getDatasetBlockAndSite( url, dataset, group=None,vetoes=None,complete=None):
+    ret=10
+    while ret>0:
+        try:
+            return try_getDatasetBlockAndSite( url, dataset, group, vetoes, complete)
+        except:
+            print dataset,"failed"
+            ret-=1
+    return None
+def try_getDatasetBlockAndSite( url, dataset, group=None,vetoes=None,complete=None):
     if vetoes==None:
         vetoes = ['MSS','Buffer','Export']
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset=%s'%(dataset))
+    urll = '/phedex/datasvc/json/prod/blockreplicas?dataset=%s'%(dataset)
+    if complete:
+        urll += '&complete=%s'%complete
+    r1=conn.request("GET",urll)
     r2=conn.getresponse()
     result = json.loads(r2.read())
     items=result['phedex']['block']
