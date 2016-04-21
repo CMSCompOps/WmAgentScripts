@@ -186,10 +186,10 @@ def checkor(url, spec=None, options=None):
                 bypass_checks = True
                 break
         
-        if not CI.go( wfi.request['Campaign'] ) and not bypass_checks:
-            print "No go for",wfo.name
-            wfi.sendLog('checkor',"No go for %s"%wfi.request['Campaign'])
-            continue
+        #if not CI.go( wfi.request['Campaign'] ) and not bypass_checks:
+        #    print "No go for",wfo.name
+        #    wfi.sendLog('checkor',"No go for %s"%wfi.request['Campaign'])
+        #    continue
 
 
         tiers_with_no_check = copy.deepcopy(UC.get('tiers_with_no_check')) # dqm*
