@@ -37,7 +37,7 @@ def singleRecovery(url, task , initial, actions, do=False):
                 increase = int(action.split('-')[-1]) if '-' in action else 1000
                 ## increase the memory requirement by 1G
                 payload['Memory'] += increase
-            if action.startswith('split') and initial['RequestType'] in ['MonteCarlo','TaskChain']:
+            if action.startswith('split') and (initial['RequestType'] in ['MonteCarlo'] or (initial['RequestType'] in ['TaskChain'] and not 'InputDataset' in initial['Task1'])):
                 print "I should not be doing splitting for this type of request",initial['RequestName']
                 return None
 
@@ -259,7 +259,8 @@ def recoveror(url,specific,options=None):
                             continue
                         else:
                             print wfo.name,"failed recovery once"
-                            break
+                            #break
+                            continue
                     else:
                         print "no action to take further"
                         sendEmail("an ACDC that can be done automatically","please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details", destination=['jen_a@fnal.gov'])
@@ -296,6 +297,7 @@ def recoveror(url,specific,options=None):
                 else:
                     recovering.add( acdc )
 
+            current = None
             if recovering:
                 #if all went well, set the status to -recovering 
                 current = wfo.status 
@@ -303,8 +305,13 @@ def recoveror(url,specific,options=None):
                     current = current.replace('recovery','recovering')
                 else:
                     current = 'assistance-manual'
+                print 'created ACDC: '+', '.join( recovering )
+            else:
+                ## was set to be recovered, and no acdc was made
+                current = 'assistance-manual'
+
+            if current:
                 print wfo.name,"setting the status to",current
-                print ', '.join( recovering )
                 wfo.status = current
                 session.commit()
         else:
