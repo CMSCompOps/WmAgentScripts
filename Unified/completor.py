@@ -41,9 +41,12 @@ def completor(url, specific):
     completions = json.loads( open('%s/completions.json'%monitor_dir).read())
     
     good_fractions = {}
+    timeout = {}
     for c in CI.campaigns:
         if 'force-complete' in CI.campaigns[c]:
             good_fractions[c] = CI.campaigns[c]['force-complete']
+        if 'force-timeout' in CI.campaigns[c]:
+            timeout[c] = CI.campaigns[c]['force-timeout']
 
     long_lasting = {}
 
@@ -66,6 +69,8 @@ def completor(url, specific):
     max_force = 5
     
     wfs_no_location_in_GQ = set()
+
+    set_force_complete = set()
 
     for wfo in wfs:
         if specific and not specific in wfo.name: continue
@@ -128,10 +133,17 @@ def completor(url, specific):
 
         (w,d) = divmod(delay, 7 )
         print "\t"*int(w)+"Running since",delay,"[days] priority=",priority
-        if delay <= 7: continue
-        if delay >= 7:
-            long_lasting[wfo.name] = { "delay" : delay }
-            pass
+
+        monitor_delay = 7
+        allowed_delay = 14
+        if c in timeout:
+            allowed_delay = timeout[c]
+            
+        monitor_delay = min(monitor_delay, allowed_delay)
+        ### just skip if too early
+        if delay <= monitor_delay: continue
+
+        long_lasting[wfo.name] = { "delay" : delay }
 
         percent_completions = {}
         for output in wfi.request['OutputDatasets']:
@@ -198,18 +210,24 @@ def completor(url, specific):
         print "Required:",cpuh,
         print "Time spend:",delay
 
+        ##### WILL FORCE COMPLETE BELOW
         # only really force complete after n days
-        if delay <= 14: continue
+
+        if delay <= allowed_delay: continue
         print "going for force-complete of",wfo.name
         ## find ACDCs that might be running
         if max_force>0:
             forceComplete(url, wfi )
+            set_force_complete.add( wfo.name )
             max_force -=1
         else:
             print "too many completion this round"
         ## do it once only for testing
         #break
-            
+    
+    if set_force_complete:
+        sendEmail('set force-complete', 'The followings were set force-complete \n%s'%('\n'.join(set_force_complete)))
+    
     open('%s/completions.json'%monitor_dir,'w').write( json.dumps( completions , indent=2))
     text="These have been running for long"
     
