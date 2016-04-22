@@ -3196,9 +3196,10 @@ class workflowInfo:
                     break
         else:
             ne = float(self.request['RequestNumEvents'])
+            fe = float(self.request['FilterEfficiency'])
             tpe = self.request['TimePerEvent']
             
-            cput = ne * tpe
+            cput = ne/fe * tpe
 
         if cput==None:
             return 0
