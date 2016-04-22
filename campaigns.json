@@ -206,7 +206,8 @@
     "parameters": {
       "EventsPerLumi": "x2"
     },
-    "lumisize" : 300
+    "lumisize" : 300,
+    "overflow":{"LHE":{"site_list":"sites_AAA"}}
   }, 
   "CosmicWinter15GS" : {
     "go": true
@@ -215,7 +216,7 @@
     "go": true
   },
   "RunIISummer15wmLHEGS": {
-    "go": true,
+    "go": false,
     "parameters": {
       "EventsPerLumi": "x2"
     },
@@ -228,7 +229,8 @@
       "EventsPerLumi": "x2"
     },
     "lumisize" : 1000,
-    "force-complete" : 0.99
+    "force-complete" : 0.99,
+    "overflow":{"LHE":{"site_list":"sites_AAA"}}
   }, 
   "RunIIFall15DR75": {
     "go": true
@@ -236,7 +238,8 @@
   "RunIIFall15DR76": {
     "go": true,
     "force-complete" : 0.99,
-    "lumisize": -1
+    "lumisize": -1,
+    "overflow": {"PU":{"max":20000,"pending":0}}
   },
   "RunIIFall15DR76Premix": {
     "go": false,
@@ -247,7 +250,8 @@
     "maxcopies": 2,
     "force-complete" : 0.99,
     "force-timeout" : 7,
-    "lumisize": -1
+    "lumisize": -1,
+    "overflow": {"PU":{"max":20000,"pending":0,"force":false}}
   },
   "RunIISpring16MiniAODv1": {
     "go": true,
@@ -344,19 +348,22 @@
     "custodial": "T1_FR_CCIN2P3_MSS"
   },
   "Summer11Leg": {
-    "go": true
+    "go": true,
+    "overflow":{"LHE":{"site_list":"sites_AAA"}}
   }, 
   "RunIISpring15DR74": {
    "go": true,
     "lumisize" : 400,
     "SiteWhitelist" : [ "T1_US_FNAL", "T1_ES_PIC", "T1_FR_CCIN2P3","T1_IT_CNAF","T1_UK_RAL","T1_DE_KIT","T2_CH_CERN","T2_US_Nebraska"],
-    "force-complete" : 0.99
+    "force-complete" : 0.99,
+    "overflow": {"PU":{"max":20000,"pending":0}}
   },
   "RunIISpring15Digi74": {
     "go": true
   }, 
   "RunIISpring15FSPremix": {
-    "go": true
+    "go": true,
+    "overflow": {"PU":{"max":0,"pending":0}}
   },
   "RunIISpring15FSPremixDR": {
     "go": true,
@@ -386,7 +393,8 @@
     "go": true
   }, 
   "Summer12": {
-    "go": true
+    "go": true,
+    "overflow":{"LHE":{"site_list":"sites_AAA"}}
   }, 
   "Fall14DR73": {
     "go": true
