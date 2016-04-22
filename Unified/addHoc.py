@@ -32,6 +32,7 @@ if not up.check():
     sys.exit(1)     
 
 ### catch unrunnable recoveries
+report = ""
 not_runable_acdc=set()
 wfs = getWorkflows(url, 'acquired', user=None, rtype='Resubmission',details=True)
 for wf in wfs:
@@ -45,9 +46,12 @@ for wf in wfs:
             #print list(wl),"does not contain",list(where)
             print "Withlist does not contain",list(where)
             not_runable_acdc.add( wf['RequestName'] )
+            report += 'a workqueue element will not run for %s\n'%(wf['RequestName'])
+            report += 'whitelist does not contain %s\n'% list(where)
+report += '\nfruther check on https://cmst2.web.cern.ch/cmst2/unified/logs/addHoc/last.log\n'
 
 if not_runable_acdc:
-    sendEmail('not runnable ACDCs','These %s ACDC cannot run \n%s'%( len(not_runable_acdc), '\n'.join(not_runable_acdc)), destination = ['jen_a@fnal.gov'])
+    sendEmail('not runnable ACDCs','These %s ACDC cannot run \n%s\n%s'%( len(not_runable_acdc), '\n'.join(not_runable_acdc), report), destination = ['jen_a@fnal.gov','katherine.rozo@cern.ch'])
 
 ### add the value of the delay to announcing datasets
 data = json.loads(open('%s/announce_delays.json'%monitor_dir).read())
