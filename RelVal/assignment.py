@@ -84,12 +84,15 @@ if __name__ == "__main__":
         print "assignment.py wf_name site processing_version [processing_string]"
         sys.exit(0)
 
+    headers = {"Content-type": "application/json", "Accept": "application/json"}
+
     conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))    
-    r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+sys.argv[1])
+    urn = "/reqmgr2/data/request/%s" % sys.argv[1]
+    r1=conn.request("GET", urn, headers=headers)
     r2=conn.getresponse()
     schema = json.loads(r2.read())
 
-    print '/reqmgr/reqMgr/request?requestName='+sys.argv[1]
+    print urn
 
     params = make_assignment_params(schema,sys.argv[2],sys.argv[3])
 
