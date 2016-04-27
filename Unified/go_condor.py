@@ -11,7 +11,7 @@ from collections import defaultdict
 
 #g_is_cern = socket.getfqdn().endswith("cern.ch")
 
-def makeAds(config):
+def makeOverflowAds(config):
     reversed_mapping = config['reversed_mapping']
 
     needs_site = defaultdict(set)
@@ -57,7 +57,7 @@ def makeAds(config):
         print anAd
 
 
-def makeSortAd():
+def makeSortAds():
     anAd = classad.ClassAd()
     anAd["GridResource"] = "condor localhost localhost"
     anAd["TargetUniverse"] = 5
@@ -70,7 +70,7 @@ def makeSortAd():
     #print anAd
 
 
-def makePrioCorrections():
+def makePrioCorrectionsAds():
     """
     Optimize the PostJobPrio* entries for HTCondor matchmaking.
 
@@ -99,6 +99,42 @@ def makePrioCorrections():
     anAd["MaxJobs"] = 50
     print anAd
 
+def makePerformanceCorrectionsAds(configs):
+    for memory in configs['memory']:
+        wfs = configs['memory'][memory]
+        anAd = classad.ClassAd()
+        anAd["GridResource"] = "condor localhost localhost"
+        anAd["TargetUniverse"] = 5
+        anAd["Name"] = str("Set memory requirement to %s"% memory)
+        anAd["MemoryTasknames"] = map(str, wfs)
+        memory_names_escaped = anAd.lookup('MemoryTasknames').__repr__()
+        exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (target.HasBeenMemoryTuned =!= true)' %( memory_names_escaped ))
+        anAd["Requirements"] = classad.ExprTree(str(exp))
+        anAd['set_HasBeenMemoryTuned'] = True
+        anAd['set_HasBeenRouted'] = False
+        anAd['set_RequestMemory'] = int(memory)
+        print anAd
+
+    for timing in configs['time']:
+        wfs = configs['time'][timing]
+        anAd = classad.ClassAd()
+        anAd["GridResource"] = "condor localhost localhost"
+        anAd["TargetUniverse"] = 5
+        anAd["Name"] = str("Set timing requirement to %s"% timing)
+        anAd["TimeTasknames"] = map(str, wfs)
+        time_names_escaped = anAd.lookup('TimeTasknames').__repr__()
+        exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (target.HasBeenTimingTuned =!= true)' %( time_names_escaped ))
+        anAd["Requirements"] = classad.ExprTree(str(exp))
+        anAd['set_HasBeenTimingTuned'] = True
+        anAd['set_HasBeenRouted'] = False
+        anAd['set_MaxWallTimeMins'] = int(timing)
+        print anAd
+        
+def makeAds(config):
+    makeOverflowAds(config)
+    makeSortAds()
+    makePrioCorrectionsAds()
+    makePerformanceCorrectionsAds(config)    
 
 if __name__ == "__main__":
 
@@ -107,5 +143,3 @@ if __name__ == "__main__":
 
     config = json.load(urllib.urlopen(htcondor.param['UNIFIED_OVERFLOW_CONFIG']))
     makeAds(config)
-    makeSortAd()
-    makePrioCorrections()

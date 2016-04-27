@@ -88,8 +88,10 @@ def equalizor(url , specific = None, options=None):
             reversed_mapping[fb].append(site)
 
     ## this is the fallback mapping
+    print "Direct mapping : site => overflow"
     print json.dumps( mapping, indent=2)
-    #print json.dumps( reversed_mapping, indent=2)
+    print "Reverse mapping : dest <= from origin"
+    print json.dumps( reversed_mapping, indent=2)
 
     altered_tasks = set()
 
@@ -198,9 +200,17 @@ def equalizor(url , specific = None, options=None):
         wfs = session.query(Workflow).filter(Workflow.name.contains(specific)).all()
     else:
         wfs = session.query(Workflow).filter(Workflow.status == 'away').all()
+<<<<<<< HEAD
         
     no_routing = []
 
+=======
+
+    performance = {}
+
+    no_routing = [
+        ]
+>>>>>>> memory_time_setting
     random.shuffle( wfs )
     for wfo in wfs:
         if wfo.name in no_routing and not options.augment:
@@ -258,6 +268,16 @@ def equalizor(url , specific = None, options=None):
                     LHE_overflow[campaign] = copy.deepcopy( getattr(SI,site_list) )
                     
 
+            ### get the task performance, for further massaging.
+            if campaign in tune_performance:
+                print "performance",task.taskType
+                if task.taskType in ['Processing','Production']:
+                    set_memory = 2300
+                    set_time = 500
+                    ## get values from gmwsmon
+                    # massage the values : 95% percentile
+                    performance[task.pathName] = {'memory' : set_memory, 'time' : set_time}
+            
             ### rule to avoid the issue of taskchain secondary jobs being stuck at sites processing the initial step
             if campaign in LHE_overflow:
                 if task.taskType in ['Processing']:
@@ -395,12 +415,40 @@ def equalizor(url , specific = None, options=None):
     interface['modifications'].update( modifications )
 
 
-    ## temporary core managing
+
+    ###  manage the number of core and job resizing
     interface['cores']={'T2_CH_CERN_HLT': {'min':4,'max':16}, 'default': {'min':1, 'max':4}}
     #interface['max_cores']={'T2_CH_CERN_HLT': 16, 'default': 4}
     #interface['min_cores']={'T2_CH_CERN_HLT': 4, 'default': 1}
     #interface['resize_subtasks'] = 'RunIISpring16DR80'
-    interface['resizes'] = ['RunIISpring16DR80','NotACampaign']
+    interface['resizes'] = ['RunIISpring16DR80']
+
+    ### manage the modification of the memory and target time
+    interface['time'] = defaultdict(list)
+    interface['memory'] = defaultdict(list)
+
+    max_N_mem = 10
+    max_N_time = 10
+    ## discretize the memory to 10 at most values
+    mems = set([o['memory'] for t,o in performance.items()])
+    times = set([o['time'] for t,o in performance.items()])
+    if len(mems)>max_N_mem:
+        mem_step = int((max(mems) - min(mems))/ float(max_N_mem))
+        for t in performance:
+            (m,r) = divmod(performance[t]['memory'], mem_step)
+            performance[t]['memory'] = m*mem_step
+    if len(times)>max_N_time:
+        time_step = int((max(times) - min(times))/float(max_N_time))
+        for t in performance:
+            (m,r) = divmod(performance[t]['time'], time_step)
+            performance[t]['time'] = m*time_step
+
+    for t,o in performance.items():
+        interface['time'][str(o['time'])] .append( t )
+        interface['memory'][str(o['memory'])].append( t )
+
+    interface['time'] = {}
+    interface['memory'] = {}
 
 
     ## close and save
