@@ -114,6 +114,36 @@ def equalizor(url , specific = None, options=None):
             go = False
         return go, task_name, running, idled
 
+    def getPerf( task ):
+        try:
+            perf_data = json.loads(os.popen('curl -s --retry 5 http://cms-gwmsmon.cern.ch/prodview/json/history/memoryusage720/%s'%task).read())
+        except:
+            return (None,None)
+        buckets = perf_data['aggregations']["2"]['buckets']
+        s_m = sum( bucket['key']*bucket['doc_count'] for bucket in buckets)
+        w_m = sum( bucket['doc_count'] for bucket in buckets)
+        m_m = max( bucket['key'] for bucket in buckets)
+        
+        b_m = None
+        if w_m > 100:
+            b_m = m_m
+
+        try:
+            perf_data = json.loads(os.popen('curl -s --retry 5 http://cms-gwmsmon.cern.ch/prodview/json/history/runtime720/%s'%task).read())
+        except:
+            return (None,None)
+
+        buckets = perf_data['aggregations']["2"]['buckets']
+        s_t = sum( bucket['key']*bucket['doc_count'] for bucket in buckets)
+        w_t = sum( bucket['doc_count'] for bucket in buckets)
+        m_t = max( bucket['key'] for bucket in buckets)
+        
+        b_t = None
+        if w_t > 100:
+            b_t = m_t
+
+        return (b_m,b_t)
+        
     def getcampaign( task ):
         taskname = task.pathName.split('/')[-1]
         if hasattr( task, 'prepID'):
@@ -215,7 +245,10 @@ def equalizor(url , specific = None, options=None):
             if options.augment:
                 print task.pathName
                 print campaign
-                
+    
+
+            m,t = getPerf( task.pathName )
+            print "Performance %d GB %d min"%( m,t )
             overflow = CI.get(campaign,'overflow',{})
             if overflow:
                 if "PU" in overflow and not campaign in PU_overflow:
