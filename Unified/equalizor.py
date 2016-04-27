@@ -178,6 +178,7 @@ def equalizor(url , specific = None, options=None):
     PU_locations = {}
     PU_overflow = {}
     LHE_overflow = {}
+    tune_performance = []
 
     pending_HLT = 0
     max_HLT = 60000
@@ -200,17 +201,10 @@ def equalizor(url , specific = None, options=None):
         wfs = session.query(Workflow).filter(Workflow.name.contains(specific)).all()
     else:
         wfs = session.query(Workflow).filter(Workflow.status == 'away').all()
-<<<<<<< HEAD
         
-    no_routing = []
-
-=======
-
     performance = {}
-
     no_routing = [
         ]
->>>>>>> memory_time_setting
     random.shuffle( wfs )
     for wfo in wfs:
         if wfo.name in no_routing and not options.augment:
@@ -256,9 +250,11 @@ def equalizor(url , specific = None, options=None):
                 print task.pathName
                 print campaign
     
+            
+            tune = CI.get(campaign,'tune',False)
+            if tune and not campaign in tune_performance:
+                tune_performance.append( campaign )
 
-            m,t = getPerf( task.pathName )
-            print "Performance %d GB %d min"%( m,t )
             overflow = CI.get(campaign,'overflow',{})
             if overflow:
                 if "PU" in overflow and not campaign in PU_overflow:
@@ -272,11 +268,16 @@ def equalizor(url , specific = None, options=None):
             if campaign in tune_performance:
                 print "performance",task.taskType
                 if task.taskType in ['Processing','Production']:
-                    set_memory = 2300
-                    set_time = 500
+                    set_memory,set_time = getPerf( task.pathName )
+                    print "Performance %d GB %d min"%( set_memory,set_time)
+            
                     ## get values from gmwsmon
                     # massage the values : 95% percentile
-                    performance[task.pathName] = {'memory' : set_memory, 'time' : set_time}
+                    performance[task.pathName] = {}
+                    if set_memory:
+                        performance[task.pathName]['memory']=set_memory
+                    if set_time and False:
+                        performance[task.pathName]['time'] = set_time
             
             ### rule to avoid the issue of taskchain secondary jobs being stuck at sites processing the initial step
             if campaign in LHE_overflow:
@@ -430,26 +431,26 @@ def equalizor(url , specific = None, options=None):
     max_N_mem = 10
     max_N_time = 10
     ## discretize the memory to 10 at most values
-    mems = set([o['memory'] for t,o in performance.items()])
-    times = set([o['time'] for t,o in performance.items()])
+    mems = set([o['memory'] for t,o in performance.items() if 'memory' in o])
+    times = set([o['time'] for t,o in performance.items() if 'time' in o])
     if len(mems)>max_N_mem:
         mem_step = int((max(mems) - min(mems))/ float(max_N_mem))
         for t in performance:
+            if not 'memory' in performance[t]: continue
             (m,r) = divmod(performance[t]['memory'], mem_step)
-            performance[t]['memory'] = m*mem_step
+            performance[t]['memory'] = (m+1)*mem_step
     if len(times)>max_N_time:
         time_step = int((max(times) - min(times))/float(max_N_time))
         for t in performance:
+            if not 'time' in performance[t]: continue
             (m,r) = divmod(performance[t]['time'], time_step)
-            performance[t]['time'] = m*time_step
+            performance[t]['time'] = (m+1)*time_step
 
     for t,o in performance.items():
-        interface['time'][str(o['time'])] .append( t )
-        interface['memory'][str(o['memory'])].append( t )
-
-    interface['time'] = {}
-    interface['memory'] = {}
-
+        if 'time' in o:
+            interface['time'][str(o['time'])] .append( t )
+        if 'memory' in o:
+            interface['memory'][str(o['memory'])].append( t )
 
     ## close and save
     close( interface )

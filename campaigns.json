@@ -230,7 +230,8 @@
     },
     "lumisize" : 1000,
     "force-complete" : 0.99,
-    "overflow":{"LHE":{"site_list":"sites_AAA"}}
+    "overflow":{"LHE":{"site_list":"sites_AAA"}},
+    "tune" : true
   }, 
   "RunIIFall15DR75": {
     "go": true
