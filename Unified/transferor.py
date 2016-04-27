@@ -235,13 +235,16 @@ def transferor(url ,specific = None, talk=True, options=None):
                         no_budget = True
 
         ## throtlle by campaign go
+        no_go = False
         for campaign in wfh.getCampaigns():
             if not CI.go( campaign ):
                 wfh.sendLog('transferor',"No go for %s"%campaign)
                 if not options.go: 
                     no_goes.add( campaign )
-                    continue
-
+                    no_go = True
+                    break
+        if no_go:
+            continue
         ## check if the batch is announced
 
         def check_mcm(wfn):
