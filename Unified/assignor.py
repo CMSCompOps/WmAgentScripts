@@ -212,8 +212,10 @@ def assignor(url ,specific = None, talk=True, options=None):
         ## should be 2 but for the time-being let's lower it to get things going
         copies_wanted,cpuh = wfh.getNCopies()
         wfh.sendLog('assignor',"we need %s CPUh"%cpuh)
-        if cpuh>1000000:
-            sendEmail('large workflow','that wf %s has a large number of CPUh'%wfo.name,destination=['Dmytro.Kovalskyi@cern.ch'])
+        if cpuh>4000000 and not options.go:
+            sendEmail('large workflow','that wf %s has a large number of CPUh %s, not assigning, please check the logs'%(wfo.name, cpuh))#,destination=['Dmytro.Kovalskyi@cern.ch'])
+            continue
+
         if 'Campaign' in wfh.request and wfh.request['Campaign'] in CI.campaigns and 'maxcopies' in CI.campaigns[wfh.request['Campaign']]:
             copies_needed_from_campaign = CI.campaigns[wfh.request['Campaign']]['maxcopies']
             copies_wanted = min(copies_needed_from_campaign, copies_wanted)
