@@ -64,10 +64,17 @@ def assignor(url ,specific = None, talk=True, options=None):
 
 
         ## check if by configuration we gave it a GO
-        if not CI.go( wfh.request['Campaign'] ) and not options.go:
-            wfh.sendLog('assignor',"No go for %s"% wfh.request['Campaign'])
-            n_stalled+=1
+        no_go = False
+        for campaign in wfh.getCampaigns():
+            if not CI.go( campaign ):    
+                wfh.sendLog('assignor',"No go for %s"%campaign)
+                if not options.go:
+                    n_stalled+=1
+                    no_go = True
+                    break
+        if no_go:
             continue
+
 
         ## check on current status for by-passed assignment
         if wfh.request['RequestStatus'] !='assignment-approved':
