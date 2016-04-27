@@ -58,7 +58,7 @@ def equalizor(url , specific = None, options=None):
     if options.t0: use_T0 = True
     #if options.augment : use_T0 = True
 
-    use_HLT = ('T2_CH_CERN' in UC.get("site_for_overflow"))
+    use_HLT = ('T2_CH_CERN_HLT' in UC.get("site_for_overflow"))
     if options.hlt: use_HLT = True
     #if options.augment : use_HLT=True
 
@@ -73,6 +73,16 @@ def equalizor(url , specific = None, options=None):
     for reg in ['IT','DE','UK']:
         mapping['T2_CH_CERN'].extend([fb for fb in SI.sites_ready if '_%s_'%reg in fb])
 
+
+    ## add-hoc send things to caltech
+    #mapping['T2_US_UCSD'].append( 'T2_US_Caltech' )
+    #mapping['T2_US_Nebraska'].append( 'T2_US_Caltech' )
+    force_sites = []#'T2_US_Caltech','T2_US_UCSD']
+    mapping['T2_US_Nebraska'].append( 'T2_US_Wisconsin' )
+    mapping['T2_US_Caltech'].append('T2_US_Wisconsin')
+    mapping['T2_US_Purdue'].append('T2_US_Wisconsin')
+
+    ## create the reverse mapping for the condor module
     for site,fallbacks in mapping.items():
         for fb in fallbacks:
             reversed_mapping[fb].append(site)
@@ -212,7 +222,7 @@ def equalizor(url , specific = None, options=None):
                     PU_overflow[campaign] = copy.deepcopy(overflow['PU'])
                 if "LHE" in overflow and not campaign in LHE_overflow:
                     site_list = overflow['LHE']['site_list']
-                    LHE_overflow[campaign] = copy.deepcopy( getattr(si,site_list) )
+                    LHE_overflow[campaign] = copy.deepcopy( getattr(SI,site_list) )
                     
 
             ### rule to avoid the issue of taskchain secondary jobs being stuck at sites processing the initial step
@@ -223,7 +233,7 @@ def equalizor(url , specific = None, options=None):
                     extend_to = list(set(copy.deepcopy( LHE_overflow[campaign] )))
                     if stay_within_site_whitelist:
                         extend_to = list(set(extend_to) & set(wfi.request['SiteWhitelist'])) ## restrict to stupid-site-whitelist
-                    extend_to = list(set(extend_to) & set(SI.sites_ready))
+                    extend_to = list(set(extend_to) & set(SI.sites_ready + force_sites))
 
                     if extend_to and needs or needs_overide:
                         print "\t",task_name,"of",wfo.name,"running",running,"and pending",idled,"taking action : ReplaceSiteWhitelist"
@@ -238,7 +248,7 @@ def equalizor(url , specific = None, options=None):
             ### overflow the 76 digi-reco to the site holding the pileup
             if campaign in PU_overflow:
                 force = PU_overflow[campaign]['force'] if 'force' in PU_overflow[campaign] else False
-                secondary_locations = set(SI.sites_ready)
+                secondary_locations = set(SI.sites_ready + force_sites)
                 for s in sec:
                     if not s in PU_locations:
                         presence = getDatasetPresence( url, s)
@@ -279,6 +289,7 @@ def equalizor(url , specific = None, options=None):
                         altered_tasks.add( task.pathName )
                         print "\t",task_name,"of",wfo.name,"running",running,"and pending",idled,"taking action : AddWhitelist"
                         print json.dumps( augment_by, indent=2 )
+                        #print modifications[wfo.name][task.pathName]
                     else:
                         print task_name,"of",wfo.name,"running",running,"and pending",idled
 
@@ -295,6 +306,7 @@ def equalizor(url , specific = None, options=None):
 
             if options.augment:
                 print sorted(wfi.request['SiteWhitelist']),i_task,use_HLT
+
             ### add the HLT at partner of CERN
             if 'T2_CH_CERN' in wfi.request['SiteWhitelist'] and i_task in [0,1] and use_HLT:
                 needs, task_name, running, idled = needs_action(wfi, task)
@@ -356,6 +368,7 @@ def equalizor(url , specific = None, options=None):
     #interface['min_cores']={'T2_CH_CERN_HLT': 4, 'default': 1}
     #interface['resize_subtasks'] = 'RunIISpring16DR80'
     interface['resizes'] = ['RunIISpring16DR80','NotACampaign']
+
 
     ## close and save
     close( interface )
