@@ -39,8 +39,8 @@ def modifySchema(helper, user, group, cache, backfill=False):
     and Campaign to say Backfill, and restarts requestDate.
     """
     result = {}
-    for (key, value) in helper.data.request.schema.dictionary_().items():
-        # previous versions of tags
+    for (key, value) in helper.data.request.schema.dictionary_whole_tree_().items():
+        #previous versions of tags
         if key == 'ProcConfigCacheID':
             result['ConfigCacheID'] = value
         elif key == 'RequestSizeEvents':
@@ -166,10 +166,13 @@ def modifySchema(helper, user, group, cache, backfill=False):
         now = datetime.datetime.utcnow()
         result["RequestDate"] = [
             now.year, now.month, now.day, now.hour, now.minute]
+
+    #result['Memory'] = 3000
+
     return result
 
 
-def cloneWorkflow(workflow, user, group, verbose=False, backfill=False, testbed=False):
+def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=False, bwl=None):
     """
     clones a workflow
     """
@@ -185,22 +188,26 @@ def cloneWorkflow(workflow, user, group, verbose=False, backfill=False, testbed=
     schema['OriginalRequestName'] = workflow
     if verbose:
         pprint(schema)
+    
+    if bwl:
+        if 'Task1' in schema:
+            schema['Task1']['BlockWhitelist'] = bwl.split(',')
+        else:
+            schema['BlockWhitelist'] = bwl.split(',')
     print 'Submitting workflow'
     # Sumbit cloned workflow to ReqMgr
     if testbed:
-        response = reqMgrClient.submitWorkflow(url_tb, schema)
+        newWorkflow = reqMgrClient.submitWorkflow(url_tb, schema)
     else:
-        response = reqMgrClient.submitWorkflow(url, schema)
+        newWorkflow = reqMgrClient.submitWorkflow(url, schema)
     if verbose:
-        print "RESPONSE", response
+        print "RESPONSE", newWorkflow
 
     # find the workflow name in response
-    m = re.search("details\/(.*)\'", response)
-    if m:
-        newWorkflow = m.group(1)
+    if newWorkflow:
         print 'Cloned workflow: ' + newWorkflow
         if verbose:
-            print response
+            print newWorkflow
             print 'Approving request response:'
         # TODO only for debug
         #response = reqMgrClient.setWorkflowSplitting(url, schema)
@@ -220,7 +227,7 @@ def cloneWorkflow(workflow, user, group, verbose=False, backfill=False, testbed=
         return newWorkflow
     else:
         if verbose:
-            print response
+            print newWorkflow
         else:
             print "Couldn't clone the workflow."
         return None
@@ -229,7 +236,7 @@ def cloneWorkflow(workflow, user, group, verbose=False, backfill=False, testbed=
 __Main__
 """
 url = 'cmsweb.cern.ch'
-url_tb = 'cmsweb-testbed.cern.ch'
+#url_tb = 'cmsweb-testbed.cern.ch'
 #url = url_tb
 reqmgrCouchURL = "https://" + url + "/couchdb/reqmgr_workload_cache"
 
@@ -250,6 +257,7 @@ def main():
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False,
                       help="Prints all query information.")
     parser.add_option('-f', '--file', help='Text file with a list of workflows', dest='file')
+    parser.add_option('--bwl', help='The block white list to be used', dest='bwl',default=None)
     parser.add_option("--testbed", action="store_true", dest="testbed", default=False,
                       help="Clone to testbed reqmgr insted of production")
     (options, args) = parser.parse_args()
@@ -287,7 +295,7 @@ def main():
 
     for wf in wfs:
         cloneWorkflow(
-            wf, user, group, options.verbose, options.backfill, options.testbed)
+            wf, user, group, options.verbose, options.backfill, options.testbed, bwl=options.bwl)
 
     sys.exit(0)
 

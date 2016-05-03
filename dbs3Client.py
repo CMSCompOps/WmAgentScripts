@@ -235,7 +235,13 @@ def getFileCountDataset(dataset, skipInvalid=False, onlyInvalid=False):
     dbsapi = DbsApi(url=dbs3_url)
 
     # retrieve file list
-    reply = dbsapi.listFiles(dataset=dataset, detail=(skipInvalid or onlyInvalid))
+    try:
+        reply = dbsapi.listFiles(dataset=dataset, detail=(skipInvalid or onlyInvalid))
+    except:
+        try:
+            reply = dbsapi.listFiles(dataset=dataset, detail=(skipInvalid or onlyInvalid))
+        except:
+            reply = []
     if skipInvalid:
         reply = filter(lambda f : f['is_file_valid'] ==1, reply)
     elif onlyInvalid:

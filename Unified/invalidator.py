@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 from McMClient import McMClient
-from utils import workflowInfo
+from utils import workflowInfo, getWorkflowById
 import reqMgrClient
 from utils import componentInfo, setDatasetStatus
 from collections import defaultdict
@@ -39,10 +39,14 @@ def invalidator(url, invalid_status='INVALID'):
             success = "not rejected"
             ## to do, we should find a way to reject the workflow and any related acdc
             success = reqMgrClient.invalidateWorkflow(url, wfn, current_status = wfi.request['RequestStatus'])
-            #if wfi.request['RequestStatus'] in ['assignment-approved','new','completed','closed-out','announced']:
-            #    success = reqMgrClient.rejectWorkflow(url, wfn)
-            #else:
-            #    success = reqMgrClient.abortWorkflow(url, wfn)
+            ## need to find the whole familly and reject the whole gang
+            familly = getWorkflowById( url, wfi.request['PrepID'] , details=True)
+            for fwl in familly:
+                if fwl['RequestDate'] < wfi.request['RequestDate']:continue
+                if fwl['RequestType']!='Resubmission': continue
+                print "rejecting",fwl['RequestName']
+                success = reqMgrClient.invalidateWorkflow(url, fwl['RequestName'], current_status=fwl['RequestStatus'])
+
             print success
             acknowledge= True
             text = "The workflow %s (%s) was rejected due to invalidation in McM" % ( wfn, pid )
