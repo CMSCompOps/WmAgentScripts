@@ -68,3 +68,4 @@ source /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/credentials.sh
 
 rm -f /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cycle.lock
 
+/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/GQ.py
