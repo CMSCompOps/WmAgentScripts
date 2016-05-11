@@ -406,7 +406,10 @@ def equalizor(url , specific = None, options=None):
                 
                 if options.augment: needs=True
                 #needs = True
-                if not wfi.request['RequestType'] in ['MonteCarlo','MonteCarloFromGEN'] and not options.augment: needs = False
+                good_type = wfi.request['RequestType'] in ['MonteCarlo','MonteCarloFromGEN'] 
+                read_lhe = ((not 'LheInputFiles' in wfi.request) or bool(wfi.request['LheInputFiles']))
+                good_type &= not read_lhe
+                if not good_type and not options.augment: needs = False
                 
                 ##needs = random.random()<0.40 remove the random, just add up to a limit
                 if (needs or needs_overide):
