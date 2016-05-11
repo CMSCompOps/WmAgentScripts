@@ -45,11 +45,8 @@ def stagor(url,specific =None, options=None):
     except:
         print "inexisting transfer statuses. starting fresh"
         cached_transfer_statuses = {}
-    try:
-        transfer_statuses = json.loads(open('%s/transfer_statuses.json'%monitor_dir).read())
-    except:
-        print "inexisting transfer statuses. starting fresh"
-        transfer_statuses = {}
+
+    transfer_statuses = {}
 
     ## pop all that are now in negative values
     for phedexid in cached_transfer_statuses.keys():
