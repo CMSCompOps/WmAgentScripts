@@ -118,13 +118,16 @@ def equalizor(url , specific = None, options=None):
 
     def getPerf( task ):
         try:
-            perf_data = json.loads(os.popen('curl -s --retry 5 http://cms-gwmsmon.cern.ch/prodview/json/history/memoryusage720/%s'%task).read())
-        except:
+            u = 'http://cms-gwmsmon.cern.ch/prodview/json/history/memoryusage720/%s'%task
+            print u
+            perf_data = json.loads(os.popen('curl -s --retry 5 %s'%u).read())
+        except Exception as e:
+            print str(e)
             return (None,None)
         buckets = perf_data['aggregations']["2"]['buckets']
         s_m = sum( bucket['key']*bucket['doc_count'] for bucket in buckets)
         w_m = sum( bucket['doc_count'] for bucket in buckets)
-        m_m = max( bucket['key'] for bucket in buckets)
+        m_m = max( bucket['key'] for bucket in buckets) if buckets else None
         
         b_m = None
         if w_m > 100:
@@ -132,13 +135,14 @@ def equalizor(url , specific = None, options=None):
 
         try:
             perf_data = json.loads(os.popen('curl -s --retry 5 http://cms-gwmsmon.cern.ch/prodview/json/history/runtime720/%s'%task).read())
-        except:
-            return (None,None)
+        except Exception as e:
+            print str(e)
+            return (b_m,None)
 
         buckets = perf_data['aggregations']["2"]['buckets']
         s_t = sum( bucket['key']*bucket['doc_count'] for bucket in buckets)
         w_t = sum( bucket['doc_count'] for bucket in buckets)
-        m_t = max( bucket['key'] for bucket in buckets)
+        m_t = max( bucket['key'] for bucket in buckets) if buckets else None
         
         b_t = None
         if w_t > 100:
@@ -259,17 +263,19 @@ def equalizor(url , specific = None, options=None):
             if overflow:
                 if "PU" in overflow and not campaign in PU_overflow:
                     PU_overflow[campaign] = copy.deepcopy(overflow['PU'])
+                    print "adding",campaign,"to PU overflow rules"
                 if "LHE" in overflow and not campaign in LHE_overflow:
+                    print "adding",campaign,"to light input overflow rules"
                     site_list = overflow['LHE']['site_list']
                     LHE_overflow[campaign] = copy.deepcopy( getattr(SI,site_list) )
                     
 
             ### get the task performance, for further massaging.
-            if campaign in tune_performance:
-                print "performance",task.taskType
+            if campaign in tune_performance or options.tune:
+                print "performance",task.taskType,task.pathName
                 if task.taskType in ['Processing','Production']:
                     set_memory,set_time = getPerf( task.pathName )
-                    print "Performance %d GB %d min"%( set_memory,set_time)
+                    print "Performance %s GB %s min"%( set_memory,set_time)
             
                     ## get values from gmwsmon
                     # massage the values : 95% percentile
@@ -463,7 +469,7 @@ if __name__ == "__main__":
     parser.add_option('-r','--remove',help='remove on workflow from the document', default=False, action='store_true')
     parser.add_option('--t0',help="Allow to use T0", default=False, action='store_true')
     parser.add_option('--hlt',help="Allow to use HLT", default=False, action='store_true')
-
+    parser.add_option('--tune',help='Enable performance tuning', default=False, action='store_true')
     (options,args) = parser.parse_args()
     spec=None
     if len(args)!=0:
