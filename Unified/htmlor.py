@@ -382,7 +382,7 @@ Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransfertea
         lines.append("<li> %s <hr></li>"%wfl(wf,view=True,ongoing=True))
     text_by_c=""
     for c in count_by_campaign:
-        text_by_c+="<li> %s (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/campaign.php?campaign=%s>mon</a> <a href=https://cms-pdmv.cern.ch/pmp/historical?r=%s target=_blank>pmp</a> "%( c, sum(count_by_campaign[c].values()),c,c )
+        text_by_c+="<li> %s (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/campaign.php?campaign=%s>mon</a> <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?in_production=1&rsort=8&status=running&campaign=%s>top</a> <a href=https://cms-pdmv.cern.ch/pmp/historical?r=%s target=_blank>pmp</a> "%( c, sum(count_by_campaign[c].values()),c,c,c )
         for p in sorted(count_by_campaign[c].keys()):
             text_by_c+="%d (%d), "%(p,count_by_campaign[c][p])
         text_by_c+="</li>"
@@ -763,6 +763,8 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     SI = siteInfo()
     date1 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(15*24*60*60)) ) ## 15 days
     date2 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime())
+    upcoming = json.loads( open('%s/GQ.json'%monitor_dir).read())
+
     for t in SI.types():
         text+="<li>%s<table border=1>"%t
         c=0
@@ -776,7 +778,16 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
             else:
                 ht_disk = 'Disk available: %s'%disk
 
-            text+='<td><a href=http://dashb-ssb.cern.ch/dashboard/templates/sitePendingRunningJobs.html?site=%s>%s</a><br><a href="http://cms-gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="http://cms-gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:50px"></a><br><a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=wmagent&check=submitted&sortby=activity&scale=linear&bars=20&data1=%s&date2=%s">dashb</a><br>CPU pledge: %s<br>%s</td>'%(site,site,site,site,site,date1,date2,cpu,ht_disk)
+            up_com = ""
+            if site in upcoming:
+                u = sum(upcoming[site][camp] for camp in upcoming[site])
+                up_com = "<br>Jobs available  %d"% u
+                #up_com="<br><ul>"
+                #for camp in upcoming[site]:
+                #    up_com += "<li>%s : %d</li>"% (camp, upcoming[site][camp])
+                #up_com += "</ul>"
+
+            text+='<td><a href=http://dashb-ssb.cern.ch/dashboard/templates/sitePendingRunningJobs.html?site=%s>%s</a><br><a href="http://cms-gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="http://cms-gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:50px"></a><br><a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=wmagent&check=submitted&sortby=activity&scale=linear&bars=20&data1=%s&date2=%s">dashb</a><br>CPU pledge: %s<br>%s%s</td>'%(site,site,site,site,site,date1,date2,cpu,ht_disk,up_com)
             if c==n_column:
                 c=0
             else:
