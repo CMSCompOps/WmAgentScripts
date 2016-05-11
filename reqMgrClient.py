@@ -877,8 +877,12 @@ def assignWorkflow(url, workflowname, team, parameters ):
         print json.dumps( defaults ,indent=2)
 
     res = setWorkflowAssignment(url, workflowname, defaults)
-    print 'Assigned workflow:',workflowname,'to site:',defaults['SiteWhitelist'],'and team',team
-    return True
+    if res:
+        print 'Assigned workflow:',workflowname,'to site:',defaults['SiteWhitelist'],'and team',team
+        return True
+    else:
+        print "error in assigning",workflowname
+        return False
 
 
 assignWorkflow.defaults= {
