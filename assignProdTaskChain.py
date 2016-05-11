@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 """
+ +    __author__ = "Paola Rozo"
+ +    __version__ = "1.1"
+ +    __maintainer__ = "Paola Rozo"
+ +    __email__ = "katherine.rozo@cern.ch"
+ +    __status__ = "Production"
+
  Assign a task chain workflow
 """
 
@@ -13,6 +19,8 @@ from dbs.apis.dbsClient import DbsApi
 from random import choice
 from pprint import pprint
 import reqMgrClient as reqMgr
+from utils import workflowInfo
+
 
 dbs3_url = r'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
 
@@ -71,7 +79,7 @@ ALL_SITES = GOOD_SITES + [
     "T2_RU_SINP",
     "T2_UK_SGrid_RALPP",
     "T2_US_Vanderbilt",
-
+    "T0_CH_CERN",
 ]
 
 
@@ -83,7 +91,6 @@ def getRandomDiskSite(site=T1S):
     if s.startswith("T1"):
         s += "_Disk"
     return s
-
 
 def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lfn, replica, verbose, trust_site=False):
     """
@@ -124,7 +131,8 @@ def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lf
     # add xrootd (trustSiteList)
     if trust_site:
         params['TrustSitelists'] = True
-        
+        params['TrustPUSitelists'] = True
+
     # if era is None, leave it out of the json
     if era is not None:
         params["AcquisitionEra"] = era
@@ -147,24 +155,20 @@ def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lf
         pprint(params)
 
     # TODO try reqMgr standard
-    params['execute'] = True
-    res = reqMgr.assignWorkflow(url, workflow, team, params)
-    if res:
-        print 'Assigned workflow:', workflow, 'to site:', site, 'and team', team
-    else:
-        print 'could not assign the workflow',workflow
+    res = reqMgr.requestManager1Post(url, "/reqmgr/assign/handleAssignmentPage", params, nested=True)
+    print 'Assigned workflow:', workflow, 'to site:', site, 'and team', team
     #TODO check conditions of success
     if verbose:
         print res
 
 def getRequestDict(url, workflow):
-    conn = httplib.HTTPSConnection(url, cert_file=os.getenv(
-        'X509_USER_PROXY'), key_file=os.getenv('X509_USER_PROXY'))
-    r1 = conn.request("GET", '/reqmgr/reqMgr/request?requestName=' + workflow)
+    headers = {"Accept": "application/json"}
+    conn = httplib.HTTPSConnection(url, cert_file=os.getenv('X509_USER_PROXY'), key_file=os.getenv('X509_USER_PROXY'))
+    urn = "/reqmgr2/data/request/%s" % workflow
+    conn.request("GET", urn, headers=headers)
     r2 = conn.getresponse()
-    request = json.loads(r2.read())
-    return request
-
+    request = json.loads(r2.read())["result"][0]
+    return request[workflow]
 
 def main():
     url = 'cmsweb.cern.ch'
@@ -180,6 +184,8 @@ def main():
                       help='Processing Version', dest='procversion')
     parser.add_option('-a', '--activity',
                       help='Dashboard Activity', dest='activity')
+    parser.add_option('-f', '--file',
+                      help='File with Workflows', dest='file')
     parser.add_option('-l', '--lfn', help='Merged LFN base', dest='lfn')
     parser.add_option('--special',
                       help='Use it for special workflows. You also have to change the code according to the type of WF', dest='special')
@@ -210,7 +216,7 @@ def main():
             sys.exit(0)
     else:
         workflows = [options.workflow]
-        
+
     team = 'production'
     site = GOOD_SITES
     procversion = 1
@@ -220,11 +226,15 @@ def main():
     procstring = {}
     specialStr = ''
     replica = False
-    
+
     for workflow in workflows:
         # Getting the original dictionary
         schema = getRequestDict(url, workflow)
-    
+        wfInfo = workflowInfo(url, workflow)
+        # Checking is the WF is in assignment-approved, it is mandatory to be assigned
+        if (schema["RequestStatus"] != "assignment-approved"):
+            print("The worflow '" + workflow + "' you are trying to assign is not in assignment-approved")
+            sys.exit(1)
         # Setting the AcqEra and ProcStr values per Task
         for key, value in schema.items():
             if type(value) is dict and key.startswith("Task"):
@@ -235,14 +245,14 @@ def main():
                 except KeyError:
                     print "This request has no AcquisitionEra or ProcessingString defined into the Tasks, aborting..."
                     sys.exit(1)
-    
+
         # Adding the special string - in case it was provided in the command line
         if options.special:
             #specialStr = '_03Jan2013'
             specialStr = '_' + str(options.special)
             for key, value in procstring.items():
                 procstring[key] = value + specialStr
-    
+
         # Handling the parameters given in the command line
         if options.team:
             team = options.team
@@ -254,7 +264,7 @@ def main():
                 site = T1S
             #parse sites separated by commas
             elif "," in site:
-                site = site.split(",")  
+                site = site.split(",")
         if options.procversion:
             procversion = int(options.procversion)
         if options.activity:
@@ -268,17 +278,17 @@ def main():
             acqera = options.acqera
         if options.procstring:
             procstring = options.procstring
-    
+
         # check output dataset existence, and abort if they already do!
         datasets = schema["OutputDatasets"]
         i = 0
-        if 'ACDC' not in options.workflow:
+        if schema["RequestType"] == "TaskChain":
             exist = False
             maxv = 1
             for key, value in schema.items():
                 if type(value) is dict and key.startswith("Task"):
                     dbsapi = DbsApi(url=dbs3_url)
-    
+
                     # list all datasets with same name but different version
                     # numbers
                     datasets = dbsapi.listDatasets(acquisition_era_name=value['AcquisitionEra'],
@@ -298,7 +308,23 @@ def main():
             if exist and procversion <= maxv:
                 print "Some output datasets exist, its advised to assign with v ==", maxv + 1
                 sys.exit(0)
-    
+        elif schema["RequestType"] == "Resubmission":
+            # For resubmission of a merge task inside a taskchain workflow, we cannot provide the acqera and procstring
+            if "Merge" in schema["InitialTaskPath"].split("/")[-1]:
+                acqera = None
+                procstring = None
+            # For another type of task, we need to look for the acqera and procstring information inside the
+            # original workflow
+            else:
+                if not procstring:
+                    procstring = wfInfo.processingString()
+                if not acqera:
+                    acqera = wfInfo.acquisitionEra()
+        else:
+            print(
+                "The worflow '" + workflow + "' you are trying to assign is not a TaskChain, please use another resource.")
+            sys.exit(1)
+
         # If the --test argument was provided, then just print the information
         # gathered so far and abort the assignment
         if options.test:
