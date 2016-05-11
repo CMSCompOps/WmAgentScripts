@@ -258,13 +258,20 @@
     "force-complete" : 0.95,
     "force-timeout" : 7,
     "lumisize": -1,
+<<<<<<< 195fc4b33e4131fa0dba8c4b16c3d4577ac2b1c0
     "fractionpass" : 0.90,
+=======
+>>>>>>> tune option. RAWAODSIM in 2 copies
     "overflow": {"PU":{"max":20000,"pending":0,"force":false}},
     "DDMcopies": {
              "all" : { "N" : 4 },
 	     "RAWAODSIM" : { "N" : 2 }
+<<<<<<< 195fc4b33e4131fa0dba8c4b16c3d4577ac2b1c0
     },
     "secondaries" : ["/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1-v2/GEN-SIM"]
+=======
+    }
+>>>>>>> tune option. RAWAODSIM in 2 copies
   },
   "RunIISpring16MiniAODv1": {
     "go": true,
