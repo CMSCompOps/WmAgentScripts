@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 """
  +    __author__ = "Paola Rozo"
+<<<<<<< 8e946bb16ef686416f18b51971579605d186db19
  +    __version__ = "1.2"
+=======
+ +    __version__ = "1.1"
+>>>>>>> Using utils.py
  +    __maintainer__ = "Paola Rozo"
  +    __email__ = "katherine.rozo@cern.ch"
  +    __status__ = "Production"
@@ -19,7 +23,7 @@ from dbs.apis.dbsClient import DbsApi
 from random import choice
 from pprint import pprint
 import reqMgrClient as reqMgr
-#from utils import workflowInfo
+from utils import workflowInfo
 
 
 
@@ -93,6 +97,7 @@ def getRandomDiskSite(site=T1S):
         s += "_Disk"
     return s
 
+<<<<<<< 8e946bb16ef686416f18b51971579605d186db19
 <<<<<<< 9adde8a3a7022dfed2a38c10d5921e9dc4681218
 =======
 def findOriginalProcessingString(url,workflow):
@@ -107,6 +112,8 @@ def findOriginalProcessingString(url,workflow):
         return findOriginalProcessingString(url,tempSchema["OriginalRequestName"])
 
 >>>>>>> Updating the assignProdTaskChain script.
+=======
+>>>>>>> Using utils.py
 def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lfn, replica, verbose, trust_site=False):
     """
     Sends assignment request
@@ -168,7 +175,6 @@ def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lf
 
     if verbose:
         pprint(params)
-    #sys.exit(1)
 
 <<<<<<< 9adde8a3a7022dfed2a38c10d5921e9dc4681218
     res = reqMgr.requestManagerPost(url, "/reqmgr/assign/handleAssignmentPage", params)
@@ -187,6 +193,7 @@ def getRequestDict(url, workflow):
     urn = "/reqmgr2/data/request/%s" % workflow
     conn.request("GET", urn, headers=headers)
     r2 = conn.getresponse()
+<<<<<<< 8e946bb16ef686416f18b51971579605d186db19
 <<<<<<< 9adde8a3a7022dfed2a38c10d5921e9dc4681218
     request = json.loads(r2.read())["result"][0]
     return request[workflow]
@@ -196,6 +203,10 @@ def getRequestDict(url, workflow):
     return request[workflow]
     return None
 >>>>>>> Updating the assignProdTaskChain script.
+=======
+    request = json.loads(r2.read())["result"][0]
+    return request[workflow]
+>>>>>>> Using utils.py
 
 def main():
     url = 'cmsweb.cern.ch'
@@ -304,7 +315,7 @@ def main():
     for workflow in workflows:
         # Getting the original dictionary
         schema = getRequestDict(url, workflow)
-        #wfInfo = workflowInfo(url, workflow)
+        wfInfo = workflowInfo(url, workflow)
         # Checking is the WF is in assignment-approved, it is mandatory to be assigned
         if (schema["RequestStatus"] != "assignment-approved"):
             print("The worflow '" + workflow + "' you are trying to assign is not in assignment-approved")
@@ -401,6 +412,7 @@ def main():
             # For another type of task, we need to look for the acqera and procstring information inside the
             # original workflow
             else:
+<<<<<<< 8e946bb16ef686416f18b51971579605d186db19
 <<<<<<< 9adde8a3a7022dfed2a38c10d5921e9dc4681218
                 if not procstring:
                     procstring = wfInfo.info["ProcessingString"]
@@ -410,14 +422,12 @@ def main():
             print("The workflow '" + workflow + "' you are trying to assign is not a TaskChain, please use another resource.")
 =======
 
+=======
+>>>>>>> Using utils.py
                 if not procstring:
-                    if "ProcessingString" in schema:
-                        procstring = schema["ProcessingString"]
-                    else:
-                        procstring = findOriginalProcessingString(url, schema["OriginalRequestName"])
+                    procstring = wfInfo.processingString()
                 if not acqera:
-                    if "AcquisitionEra" in schema:
-                        acqera = schema["AcquisitionEra"]
+                    acqera = wfInfo.acquisitionEra()
         else:
             print(
                 "The worflow '" + workflow + "' you are trying to assign is not a TaskChain, please use another resource.")
