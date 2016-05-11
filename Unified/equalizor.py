@@ -74,13 +74,23 @@ def equalizor(url , specific = None, options=None):
         mapping['T2_CH_CERN'].extend([fb for fb in SI.sites_ready if '_%s_'%reg in fb])
 
 
-    ## add-hoc send things to caltech
-    #mapping['T2_US_UCSD'].append( 'T2_US_Caltech' )
-    #mapping['T2_US_Nebraska'].append( 'T2_US_Caltech' )
-    force_sites = []#'T2_US_Caltech','T2_US_UCSD']
-    mapping['T2_US_Nebraska'].append( 'T2_US_Wisconsin' )
-    mapping['T2_US_Caltech'].append('T2_US_Wisconsin')
-    mapping['T2_US_Purdue'].append('T2_US_Wisconsin')
+    ## make them appear as OK to use
+    force_sites = []
+
+    ## overflow CERN to underutilized T1s
+    upcoming = json.loads( open('%s/GQ.json'%monitor_dir).read())
+    for possible in SI.sites_T1s:
+        if not possible in upcoming:
+            mapping['T2_CH_CERN'].append(possible)
+
+    ## remove add-hoc sites from overflow mapping
+    prevent_sites = ['T2_US_Purdue']
+    for prevent in prevent_sites:
+        if prevent in mapping: mapping.pop( prevent )
+    for src in mapping:
+        for prevent in prevent_sites:
+            if prevent in mapping[src]:
+                mapping[src].remove( prevent )
 
     ## create the reverse mapping for the condor module
     for site,fallbacks in mapping.items():
