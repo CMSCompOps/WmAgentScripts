@@ -238,6 +238,10 @@ def recoveror(url,specific,options=None):
         if message_to_ops:
             sendEmail( "notification in recoveror" , message_to_ops, destination=['jen_a@fnal.gov'])
 
+        if len(task_to_recover) != len(all_errors):
+            print "Should not be doing partial ACDC. skipping"
+            sendEmail('recoveror','do not want to make partial acdc on %s'%wfo.name)
+            recover = False
 
         if task_to_recover and recover:
             print "Initiating recovery"
