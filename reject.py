@@ -62,15 +62,9 @@ def main():
         wfs = [args[0]]
 
     for wf in wfs:
+        # invalidates workflow
         workflow = reqMgrClient.Workflow(wf)
-        if workflow.status in {'assigned' , 'assignment-approved','completed','closed-out'}:
-            print("Rejecting workflow: " + wf)
-            reqMgrClient.rejectWorkflow(url, wf)
-        elif workflow.status in {'acquired','running-open','running-closed'}:
-            print("Aborting workflow: " + wf)
-            reqMgrClient.abortWorkflow(url, wf)
-        else:
-            print("The workflow '"+wf+ "' with status '"+workflow.status+"' cannot be rejected or aborted.")
+        reqMgrClient.invalidateWorkflow(url,wf,workflow.status)
 
         # invalidates datasets
         print "Invalidating datasets"
@@ -83,6 +77,7 @@ def main():
         if options.clone:
             print("Clonning workflow: "+ wf)
             cloned = resubmit.cloneWorkflow(wf, user, group)
+        reqMgrClient.invalidateWorkflow()
     sys.exit(0);
 
 if __name__ == "__main__":
