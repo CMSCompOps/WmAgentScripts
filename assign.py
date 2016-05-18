@@ -1,10 +1,13 @@
-# Combined assignWorkflow.py with assignProdTaskChain.py
-# April 2016
-
 #!/usr/bin/env python
+
+# Combined assignWorkflow.py with assignProdTaskChain.py
+# Author: Allie Reinsvold Hall
+# May 2016
+
 """
     Quick request assignment, useful if you want to avoid assigning by
     Web interface and reqmgr.py is too unflexible.
+
     
 """
 
@@ -18,6 +21,8 @@ from dbs.apis.dbsClient import DbsApi
 import reqMgrClient as rqMgr
 from pprint import pprint
 from random import choice
+from utils import workflowInfo, siteInfo, global_SI
+
 
 dbs3_url = r'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
 
@@ -102,6 +107,7 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
     # add xrootd (trustSiteList)
     if trust_site:
         params['TrustSitelists'] = True
+        params['TrustPUSitelists'] = True
     
     # if era is None, leave it out of the json
     if era is not None:
@@ -130,12 +136,14 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
 
 
 def getRequestDict(url, workflow):
+    headers = {"Accept": "application/json"}
     conn = httplib.HTTPSConnection(url, cert_file=os.getenv(
         'X509_USER_PROXY'), key_file=os.getenv('X509_USER_PROXY'))
-    r1 = conn.request("GET", '/reqmgr/reqMgr/request?requestName=' + workflow)
+    urn = "/reqmgr2/data/request/%s" % workflow
+    conn.request("GET", urn, headers=headers)
     r2 = conn.getresponse()
-    request = json.loads(r2.read())
-    return request
+    request = json.loads(r2.read())["result"][0]
+    return request[workflow]
 
 def main():
     url = 'cmsweb.cern.ch'
@@ -192,7 +200,7 @@ def main():
     team = 'production'
     trust_site = False
 
-    
+    SI = global_SI
     # Handling the parameters given in the command line
     # parse site list
     if options.sites:
@@ -201,7 +209,7 @@ def main():
         elif options.sites == "t2":
             sites = T2_SITES
         else:
-            sites = [site for site in options.sites.split(',')]
+            sites = SI.sites_ready
 
     if options.team:
         team = options.team
@@ -215,17 +223,18 @@ def main():
     for wf in wfs:
         # Getting the original dictionary
         schema = getRequestDict(url, wf)
-        
+        wfInfo = workflowInfo(url, workflow)
+
         wf = rqMgr.Workflow(wf, url=url)
 
-        for key, value in schema.items():
-            if key.startswith("RequestType"):
-                try:
-                    taskchain = value.startswith("TaskChain")
-                except KeyError:
-                    print "Can't find Request type for this task. Aborting..."
-                    sys.exit(1)
-        print "Taskchain? " + str(taskchain)
+        # WF must be in assignment-approved in order to be assigned
+        if (schema["RequestStatus"] != "assignment-approved"):
+            print("The worflow '" + workflow + "' you are trying to assign is not in assignment-approved")
+            sys.exit(1)
+
+        #Check to see if the workflow is a task chain or an ACDC of a taskchain
+        taskchain = (schema["RequestType"] == "TaskChain") or ((schema["RequestType"] == "Resubmission") and "task" in schema["InitialTaskPath"].split("/")[0]):
+
         if taskchain:
             # Setting the Era and ProcStr values per Task
             for key, value in schema.items():
@@ -276,10 +285,11 @@ def main():
         else:
             procversion = int(wf.info['ProcessingVersion'])
 
-        # check output dataset existence, and abort if they already do!
+        # check for output dataset existence, and abort if output datasets already exist!
+        # Don't perform this check for ACDC's
         datasets = schema["OutputDatasets"]
         i = 0
-        if 'ACDC' not in options.workflow:
+        if not (schema["RequestType"] == "Resubmission" ):
             exist = False
             maxv = 1
             for key, value in schema.items():
@@ -303,6 +313,12 @@ def main():
             if exist and procversion <= maxv:
                 print "Some output datasets exist, its advised to assign with v ==", maxv + 1
                 sys.exit(0)
+
+        else:
+            # For resubmission of a merge task inside a taskchain workflow, we cannot provide the acqera and procstring
+            if "Merge" in schema["InitialTaskPath"].split("/")[-1] and "task" in schema["InitialTaskPath"].split("/")[0]:
+                    era = None
+                    procstring = None
 
 
     # If the --test argument was provided, then just print the information
