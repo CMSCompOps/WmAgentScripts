@@ -324,7 +324,7 @@ def main():
     parser.add_option("-a", "--action", dest="action", default='clone',
                       help="There are two options clone (clone) or extend a worflow (extend) .")
     parser.add_option("-u", "--user", dest="user",
-                      help="User we are going to use")
+                      help="User we are going to use", default=None)
     parser.add_option("-g", "--group", dest="group", default='DATAOPS',
                       help="Group we are going to use.")
     parser.add_option("-b", "--backfill", action="store_true", dest="backfill", default=False,
@@ -347,18 +347,18 @@ def main():
     else:
         # name of workflow
         wfs = [args[0]]
-    if not user:
+    if not options.user:
         # get os username by default
         uinfo = pwd.getpwuid(os.getuid())
-        user = uinfo.pw_name
+        options.user = uinfo.pw_name
 
     if action == 'clone':
         for wf in wfs:
             cloneWorkflow(
-                wf, user, group, options.verbose, options.backfill, options.testbed, bwl=options.bwl)
+                wf, options.user, options.group, options.verbose, options.backfill, options.testbed, bwl=options.bwl)
     elif action == 'extend':
         for wf in wfs:
-            extendWorkflow(wf, user, group, options.verbose, options.events, options.firstlumi)
+            extendWorkflow(wf, options.user, options.group, options.verbose, options.events, options.firstlumi)
 
     sys.exit(0)
 
