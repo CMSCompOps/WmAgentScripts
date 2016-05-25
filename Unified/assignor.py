@@ -62,9 +62,12 @@ def assignor(url ,specific = None, talk=True, options=None):
         wfh = workflowInfo( url, wfo.name)
         wfh.sendLog('assignor',"%s to be assigned"%wfo.name)
 
+        ## the site whitelist takes into account siteInfo, campaignInfo, memory and cores
+        (lheinput,primary,parent,secondary, sites_allowed) = wfh.getSiteWhiteList()
 
         ## check if by configuration we gave it a GO
         no_go = False
+        allowed_secondary = set()
         for campaign in wfh.getCampaigns():
             if not CI.go( campaign ):    
                 wfh.sendLog('assignor',"No go for %s"%campaign)
@@ -72,6 +75,15 @@ def assignor(url ,specific = None, talk=True, options=None):
                     n_stalled+=1
                     no_go = True
                     break
+            if 'secondaries' in CI.campaigns[campaign]:
+                allowed_secondary.update( CI.campaigns[campaign]['secondaries'] )
+        if (secondary and allowed_secondary) and (set(secondary)&allowed_secondary!=set(secondary)):
+            wfh.sendLog('assignor','%s is not an allowed secondary'%(', '.join(set(secondary)-allowed_secondary)))
+            sendEmail('secondary not allowed','%s is not an allowed secondary'%( ', '.join(set(secondary)-allowed_secondary)))
+            if not options.go:
+                n_stalled+=1
+                no_go = True
+                
         if no_go:
             continue
 
@@ -100,8 +112,6 @@ def assignor(url ,specific = None, talk=True, options=None):
                 session.commit()
                 continue
 
-        ## the site whitelist takes into account siteInfo, campaignInfo, memory and cores
-        (lheinput,primary,parent,secondary, sites_allowed) = wfh.getSiteWhiteList()
 
         original_sites_allowed = copy.deepcopy( sites_allowed )
         wfh.sendLog('assignor',"Site white list %s"%sorted(sites_allowed))
