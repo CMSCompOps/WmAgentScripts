@@ -2896,7 +2896,7 @@ def checkIfBlockIsAtASite(url,block,site):
     return False                
 
 class workflowInfo:
-    def __init__(self, url, workflow, spec=True, request=None,stats=False, wq=False):
+    def __init__(self, url, workflow, spec=True, request=None,stats=False, wq=False, errors=False):
         self.logs = defaultdict(str)
         self.url = url
         self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -2924,6 +2924,10 @@ class workflowInfo:
         self.wmstats = None
         if stats:
             self.getWMStats()
+        
+        self.errors = None
+        if errors:
+            self.getWMErrors()
 
         self.workqueue = None
         if wq:
@@ -2988,6 +2992,14 @@ class workflowInfo:
             self.full_spec = pickle.loads(r2.read())
         return self.full_spec
 
+    def getWMErrors(self):
+        r1=self.conn.request("GET",'/couchdb/wmstats/_design/WMStats/_view/jobsByStatusWorkflow?reduce=true&group_level=10&startkey=["pdmvserv_task_HIG-RunIIWinter15wmLHE-01172__v1_T_160421_121609_3929"]&endkey=["pdmvserv_task_HIG-RunIIWinter15wmLHE-01172__v1_T_160421_121609_3929"%2C{}]&stale=update_after&_=1461760521841')
+        r2=self.conn.getresponse()
+        return None
+
+        #then navigate to 
+        #'/couchdb/wmstats/_design/WMStats/_view/jobsByStatusWorkflow?include_docs=true&reduce=false&startkey=["pdmvserv_task_HIG-RunIIWinter15wmLHE-01172__v1_T_160421_121609_3929"%2C"%2Fpdmvserv_task_HIG-RunIIWinter15wmLHE-01172__v1_T_160421_121609_3929%2FHIG-RunIIWinter15wmLHE-01172_0%2FHIG-RunIIWinter15wmLHE-01172_0MergeLHEoutput"%2C"jobfailed"%2C99109%2C"T0_CH_CERN"%2C"https%3A%2F%2Fcmsweb.cern.ch%2Fcouchdb%2Facdcserver"]&endkey=["pdmvserv_task_HIG-RunIIWinter15wmLHE-01172__v1_T_160421_121609_3929"%2C"%2Fpdmvserv_task_HIG-RunIIWinter15wmLHE-01172__v1_T_160421_121609_3929%2FHIG-RunIIWinter15wmLHE-01172_0%2FHIG-RunIIWinter15wmLHE-01172_0MergeLHEoutput"%2C"jobfailed"%2C99109%2C"T0_CH_CERN"%2C{}]&limit=10&stale=update_after&_=1461761740101'
+                             
     def getWMStats(self):
         r1=self.conn.request("GET",'/wmstatsserver/data/request/%s'%self.request['RequestName'], headers={"Accept":"application/json"})
         r2=self.conn.getresponse()
