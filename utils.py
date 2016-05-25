@@ -336,10 +336,11 @@ class newLockInfo:
 
     def release(self, dataset):
         print "[new lock] should never release datasets"
-        return
+        #return
         if not dataset in self.db:
             print "\t",dataset,"was not locked already"
         else:
+            print "taking",dataset,"out of the lock"
             self.db.remove( dataset )
         
 
