@@ -569,7 +569,7 @@ class componentInfo:
                 if self.block and not (self.soft and 'mcm' in self.soft):
                     self.code = 125
                     return False
-        
+
         try:
             print "checking dbs"
             dbsapi = DbsApi(url=dbs_url)
@@ -1232,7 +1232,8 @@ class siteInfo:
             _,quota,taken,locked,site = line.split()
             ## bypass 
 
-            available = int(quota) - int(locked)
+            ## consider quota to be 80% of what's available
+            available = int(float(quota)*0.90) - int(locked)
             if available >0:
                 self.disk[site] = available
             else:
