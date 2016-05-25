@@ -217,6 +217,9 @@
   "CosmicWinter15DR" : {
     "go": true
   },
+  "CosmicSpring16DR80" : {
+    "go": true
+  },
   "RunIISummer15wmLHEGS": {
     "go": true,
     "parameters": {
@@ -259,9 +262,21 @@
     "DDMcopies": {
              "all" : { "N" : 4 },
 	     "RAWAODSIM" : { "N" : 2 }
+<<<<<<< HEAD
     }
+=======
+    },
+    "secondaries" : ["/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1-v2/GEN-SIM"]
+>>>>>>> 538aa78a05b835f8784558ace207ac365f478c19
   },
   "RunIISpring16MiniAODv1": {
+    "go": true,
+    "maxcopies": 1,
+    "force-complete" : 0.99,
+    "force-timeout" : 7,
+    "lumisize": -1
+  },
+  "RunIISpring16MiniAODv2": {
     "go": true,
     "maxcopies": 1,
     "force-complete" : 0.99,
@@ -276,7 +291,7 @@
     "lumisize": -1
   },
   "RunIISpring16FSPremix": {
-    "go": false,
+    "go": true,
     "parameters": {
       "EventsPerLumi": "x2"
     },

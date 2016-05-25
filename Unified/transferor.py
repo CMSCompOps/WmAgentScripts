@@ -37,7 +37,9 @@ def transferor(url ,specific = None, talk=True, options=None):
     NLI = newLockInfo()
     mcm = McMClient(dev=False)
     dss = DSS()
+    #UC = unifiedConfiguration()
 
+    #allowed_secondary = UC.get('')
     print "counting all being handled..."
     being_handled = len(session.query(Workflow).filter(Workflow.status == 'away').all())
     being_handled += len(session.query(Workflow).filter(Workflow.status.startswith('stag')).all())
@@ -236,6 +238,8 @@ def transferor(url ,specific = None, talk=True, options=None):
 
         ## throtlle by campaign go
         no_go = False
+        allowed_secondary = set()
+        #override_sec_destination = {}
         for campaign in wfh.getCampaigns():
             if not CI.go( campaign ):
                 wfh.sendLog('transferor',"No go for %s"%campaign)
@@ -243,6 +247,15 @@ def transferor(url ,specific = None, talk=True, options=None):
                     no_goes.add( campaign )
                     no_go = True
                     break
+            if 'secondaries' in CI.campaigns[campaign]:
+                allowed_secondary.update( CI.campaigns[campaign]['secondaries'] )
+            #if 'SecondaryLocation' in CI.campaigns[campaign]:
+            #    override_sec_destination
+        if secondary:
+            if (secondary and allowed_secondary) and (set(secondary)&allowed_secondary!=set(secondary)):
+                wfh.sendLog('assignor','%s is not an allowed secondary'%(', '.join(set(secondary)-allowed_secondary)))
+                no_go = True
+
         if no_go:
             continue
         ## check if the batch is announced
@@ -354,6 +367,7 @@ def transferor(url ,specific = None, talk=True, options=None):
         can_go = True
         staging=False
         allowed=True
+        primary_destinations = set()
         if primary:
             
             copies_needed_from_CPUh,CPUh = wfh.getNCopies()
@@ -505,18 +519,21 @@ def transferor(url ,specific = None, talk=True, options=None):
                     for (site,items) in spreading.items():
                         all_transfers[site].extend( items )
                         transfers_per_sites[site] += 1
+                        primary_destinations.add( site ) 
         if not allowed:
             wfh.sendLog('transferor', "Not allowed to move on with")
             continue
 
 
         if secondary:
+
             override_sec_destination = []
             if 'SecondaryLocation' in CI.campaigns[wfh.request['Campaign']]:
                 override_sec_destination  = CI.campaigns[wfh.request['Campaign']]['SecondaryLocation']
 
             print wfo.name,'reads',', '.join(secondary),'in secondary'
             for sec in secondary:
+
                 workflow_dependencies[sec].add( wfo.id )
 
                 if True:
@@ -560,7 +577,8 @@ def transferor(url ,specific = None, talk=True, options=None):
                             can_go = False
                         else:
                             print "could not send the secondary input to",site_se,"because it is too big for the available disk",SI.disk[site_se]*1024,"GB need",sec_size
-                            #sendEmail('secondary input too big','%s is too big (%s) for %s (%s)'%( sec, sec_size, site_se, SI.disk[site_se]*1024))
+                            if primary_destinations and site in primary_destinations:
+                                sendEmail('secondary input too big','%s is too big (%s) for %s (%s)'%( sec, sec_size, site_se, SI.disk[site_se]*1024))
                 else:
                     print "the secondary input does not have to be send to site"
 

@@ -376,6 +376,7 @@ def stagor(url,specific =None, options=None):
                             print wf.name,"is doomed. setting to trouble"
                             wf.status = 'trouble'
                             session.commit()
+                            sendEmail('doomed workflow','%s has too much loss on the input dataset %s. please check on stagor logs https://cmst2.web.cern.ch/cmst2/unified/logs/stagor/last.log'%(wf.name, dsname))
                 else:
                     ## probably enough to make a ggus and remove
                     if not dsname in known_lost_blocks:

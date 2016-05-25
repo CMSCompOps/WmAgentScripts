@@ -336,10 +336,11 @@ class newLockInfo:
 
     def release(self, dataset):
         print "[new lock] should never release datasets"
-        return
+        #return
         if not dataset in self.db:
             print "\t",dataset,"was not locked already"
         else:
+            print "taking",dataset,"out of the lock"
             self.db.remove( dataset )
         
 
@@ -568,7 +569,7 @@ class componentInfo:
                 if self.block and not (self.soft and 'mcm' in self.soft):
                     self.code = 125
                     return False
-        
+
         try:
             print "checking dbs"
             dbsapi = DbsApi(url=dbs_url)
@@ -629,9 +630,16 @@ class campaignInfo:
                             self.campaigns[c]['parameters']['SiteBlacklist'].extend( [site for site in (SI.all_sites) if site.startswith(reg)] )
                             #print self.campaigns[c]['parameters']['SiteBlacklist']
                             
-    def go(self, c):
+    def go(self, c, s=None):
         if c in self.campaigns and self.campaigns[c]['go']:
-            return True
+            if 'labels' in self.campaigns[c]:
+                if s!=None:
+                    return (s in self.campaigns[c]['labels'])
+                else:
+                    print "Not allowed to go for",c,s
+                    return False
+            else:
+                return True
         else:
             print "Not allowed to go for",c
             return False
@@ -870,7 +878,14 @@ class docCache:
             'cachefile' : None,
             'default' : {}
             }
-
+        self.cache['hlt_cloud'] = { 
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration(),
+            'getter' : lambda : json.loads( os.popen('curl -s --retry 1 --connect-timeout 5 http://137.138.184.204/cache-manager/images/cloudStatus.json').read()),
+            'cachefile' : None,
+            'default' : {}
+            }
         #create the cache files from the labels
         for src in self.cache:
             self.cache[src]['cachefile'] = '.'+src+'.cache.json'
@@ -1217,7 +1232,8 @@ class siteInfo:
             _,quota,taken,locked,site = line.split()
             ## bypass 
 
-            available = int(quota) - int(locked)
+            ## consider quota to be 80% of what's available
+            available = int(float(quota)*0.90) - int(locked)
             if available >0:
                 self.disk[site] = available
             else:
@@ -2731,11 +2747,14 @@ def getWorkflowById( url, pid , details=False):
     
 def getWorkflows(url,status,user=None,details=False,rtype=None):
     retries=10
+    wait=2
     while retries>0:
         try:
             return try_getWorkflows(url, status,user,details,rtype)
         except:
             print "getWorkflows retried"
+            time.sleep(wait)
+            wait+=2
             retries-=1
     raise Exception("getWorkflows failed 10 times")
     
@@ -2877,7 +2896,7 @@ def checkIfBlockIsAtASite(url,block,site):
     return False                
 
 class workflowInfo:
-    def __init__(self, url, workflow, spec=True, request=None,stats=False, wq=False):
+    def __init__(self, url, workflow, spec=True, request=None,stats=False, wq=False, errors=False):
         self.logs = defaultdict(str)
         self.url = url
         self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -2905,6 +2924,10 @@ class workflowInfo:
         self.wmstats = None
         if stats:
             self.getWMStats()
+        
+        self.errors = None
+        if errors:
+            self.getWMErrors()
 
         self.workqueue = None
         if wq:
@@ -2969,6 +2992,14 @@ class workflowInfo:
             self.full_spec = pickle.loads(r2.read())
         return self.full_spec
 
+    def getWMErrors(self):
+        r1=self.conn.request("GET",'/couchdb/wmstats/_design/WMStats/_view/jobsByStatusWorkflow?reduce=true&group_level=10&startkey=["pdmvserv_task_HIG-RunIIWinter15wmLHE-01172__v1_T_160421_121609_3929"]&endkey=["pdmvserv_task_HIG-RunIIWinter15wmLHE-01172__v1_T_160421_121609_3929"%2C{}]&stale=update_after&_=1461760521841')
+        r2=self.conn.getresponse()
+        return None
+
+        #then navigate to 
+        #'/couchdb/wmstats/_design/WMStats/_view/jobsByStatusWorkflow?include_docs=true&reduce=false&startkey=["pdmvserv_task_HIG-RunIIWinter15wmLHE-01172__v1_T_160421_121609_3929"%2C"%2Fpdmvserv_task_HIG-RunIIWinter15wmLHE-01172__v1_T_160421_121609_3929%2FHIG-RunIIWinter15wmLHE-01172_0%2FHIG-RunIIWinter15wmLHE-01172_0MergeLHEoutput"%2C"jobfailed"%2C99109%2C"T0_CH_CERN"%2C"https%3A%2F%2Fcmsweb.cern.ch%2Fcouchdb%2Facdcserver"]&endkey=["pdmvserv_task_HIG-RunIIWinter15wmLHE-01172__v1_T_160421_121609_3929"%2C"%2Fpdmvserv_task_HIG-RunIIWinter15wmLHE-01172__v1_T_160421_121609_3929%2FHIG-RunIIWinter15wmLHE-01172_0%2FHIG-RunIIWinter15wmLHE-01172_0MergeLHEoutput"%2C"jobfailed"%2C99109%2C"T0_CH_CERN"%2C{}]&limit=10&stale=update_after&_=1461761740101'
+                             
     def getWMStats(self):
         r1=self.conn.request("GET",'/wmstatsserver/data/request/%s'%self.request['RequestName'], headers={"Accept":"application/json"})
         r2=self.conn.getresponse()

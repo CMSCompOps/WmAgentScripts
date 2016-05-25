@@ -4,6 +4,7 @@ import sys
 import reqMgrClient
 from utils import workflowInfo, getWorkflowById, getDatasetEventsAndLumis, componentInfo, monitor_dir, reqmgr_url
 from utils import campaignInfo, sendEmail, siteInfo
+from collections import defaultdict
 import json
 import random
 
@@ -68,7 +69,9 @@ def completor(url, specific):
     print json.dumps( overrides, indent=2)
     max_force = 5
     
-    wfs_no_location_in_GQ = set()
+    #wfs_no_location_in_GQ = set()
+    #block_locations = defaultdict(lambda : defaultdict(list))
+    #wfs_no_location_in_GQ = defaultdict(list)
 
     set_force_complete = set()
 
@@ -178,22 +181,31 @@ def completor(url, specific):
             long_lasting[wfo.name]['agents'] = wfi.getAgents()
             print json.dumps( long_lasting[wfo.name]['agents'], indent=2)
 
+            ## this is done somewhere else for more than running workflows (see GQ.py)
             ## pick up on possible issue with global queue data location
-            locs = wfi.getGQLocations()
-            for b,loc in locs.items():
-                if not loc:
-                    print b,"has no location for GQ in",wfi.request['RequestName']
-                    ## this is severe !
-                    wfs_no_location_in_GQ.add( wfo.name )
-                ## check location and site white list
-                can_run = set([SI.SE_to_CE(se) for se in loc])&set(wfi.request['SiteWhitelist'])
-                if loc and not can_run:
-                    print b,"is missing site to run within the whitelist"
-                    wfs_no_location_in_GQ.add( wfo.name )
-                can_run = can_run & set(SI.sites_ready)
-                if loc and not can_run:
-                    print b,"is missing available site to run"
-                    wfs_no_location_in_GQ.add( wfo.name )
+            #locs = wfi.getGQLocations()
+            #for b,loc in locs.items():
+            #    ds = b.split('#')[0]
+            #    if not ds in block_locations:
+            #        s_block_locations[ds] = getDatasetBlockAndSite(url, ds, complete='y')
+            #        for s in s_block_locations[ds]:
+            #            for bl in s_block_locations[ds][s]:
+            #                block_locations[ds][bl].append( s )
+            #    block_se = block_locations[ds][b]
+
+            #    if not loc:
+            #        print b,"has no location for GQ in",wfi.request['RequestName']
+            #        ## this is severe !
+            #        wfs_no_location_in_GQ.add( wfo.name )
+            #    ## check location and site white list
+            #    can_run = set([SI.SE_to_CE(se) for se in loc])&set(wfi.request['SiteWhitelist'])
+            #    if loc and not can_run:
+            #        print b,"is missing site to run within the whitelist"
+            #        wfs_no_location_in_GQ.add( wfo.name )
+            #    can_run = can_run & set(SI.sites_ready)
+            #    if loc and not can_run:
+            #        print b,"is missing available site to run"
+            #        wfs_no_location_in_GQ.add( wfo.name )
             continue
 
         if all([percent_completions[out] >= ignore_fraction for out in percent_completions]):
@@ -239,8 +251,8 @@ def completor(url, specific):
         if 'completion' in info:
             text += " %d%%"%( info['completion']*100 )
 
-    if wfs_no_location_in_GQ:
-        sendEmail('workflow with no location in GQ',"there won't be able to run anytime soon\n%s"%( '\n'.join(wfs_no_location_in_GQ)))
+    #if wfs_no_location_in_GQ:
+    #    sendEmail('workflow with no location in GQ',"there won't be able to run anytime soon\n%s"%( '\n'.join(wfs_no_location_in_GQ)))
 
     #sendEmail("long lasting workflow",text)
     ## you can check the log
