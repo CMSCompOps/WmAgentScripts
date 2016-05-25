@@ -878,7 +878,14 @@ class docCache:
             'cachefile' : None,
             'default' : {}
             }
-
+        self.cache['hlt_cloud'] = { 
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration(),
+            'getter' : lambda : json.loads( os.popen('curl -s --retry 1 --connect-timeout 5 http://137.138.184.204/cache-manager/images/cloudStatus.json').read()),
+            'cachefile' : None,
+            'default' : {}
+            }
         #create the cache files from the labels
         for src in self.cache:
             self.cache[src]['cachefile'] = '.'+src+'.cache.json'
