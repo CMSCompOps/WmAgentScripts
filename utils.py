@@ -630,9 +630,16 @@ class campaignInfo:
                             self.campaigns[c]['parameters']['SiteBlacklist'].extend( [site for site in (SI.all_sites) if site.startswith(reg)] )
                             #print self.campaigns[c]['parameters']['SiteBlacklist']
                             
-    def go(self, c):
+    def go(self, c, s=None):
         if c in self.campaigns and self.campaigns[c]['go']:
-            return True
+            if 'labels' in self.campaigns[c]:
+                if s!=None:
+                    return (s in self.campaigns[c]['labels'])
+                else:
+                    print "Not allowed to go for",c,s
+                    return False
+            else:
+                return True
         else:
             print "Not allowed to go for",c
             return False
