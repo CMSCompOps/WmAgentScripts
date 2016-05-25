@@ -2747,11 +2747,14 @@ def getWorkflowById( url, pid , details=False):
     
 def getWorkflows(url,status,user=None,details=False,rtype=None):
     retries=10
+    wait=2
     while retries>0:
         try:
             return try_getWorkflows(url, status,user,details,rtype)
         except:
             print "getWorkflows retried"
+            time.sleep(wait)
+            wait+=2
             retries-=1
     raise Exception("getWorkflows failed 10 times")
     
