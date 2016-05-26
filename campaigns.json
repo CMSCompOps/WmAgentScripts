@@ -255,9 +255,10 @@
   "RunIISpring16DR80": {
     "go": true,
     "maxcopies": 2,
-    "force-complete" : 0.99,
+    "force-complete" : 0.95,
     "force-timeout" : 7,
     "lumisize": -1,
+    "fractionpass" : 0.90,
     "overflow": {"PU":{"max":20000,"pending":0,"force":false}},
     "DDMcopies": {
              "all" : { "N" : 4 },
@@ -268,14 +269,16 @@
   "RunIISpring16MiniAODv1": {
     "go": true,
     "maxcopies": 1,
-    "force-complete" : 0.99,
+    "fractionpass" : 0.90,
+    "force-complete" : 0.95,
     "force-timeout" : 7,
     "lumisize": -1
   },
   "RunIISpring16MiniAODv2": {
     "go": true,
     "maxcopies": 1,
-    "force-complete" : 0.99,
+    "fractionpass" : 0.90,
+    "force-complete" : 0.95,
     "force-timeout" : 7,
     "lumisize": -1
   },
