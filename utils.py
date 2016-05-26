@@ -314,7 +314,7 @@ def listSubscriptions(url, dataset, within_sites=None):
     #print destinations
     return destinations
 
-import dataLock
+#import dataLock
 
 class newLockInfo:
     def __init__(self):
