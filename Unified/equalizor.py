@@ -127,6 +127,7 @@ def equalizor(url , specific = None, options=None):
         return go, task_name, running, idled
 
     def getPerf( task ):
+        task = task.split('/')[1]+'/'+task.split('/')[-1]
         try:
             u = 'http://cms-gwmsmon.cern.ch/prodview/json/history/memoryusage720/%s'%task
             print u
@@ -265,7 +266,7 @@ def equalizor(url , specific = None, options=None):
                 print campaign
     
             
-            tune = CI.get(campaign,'tune',False)
+            tune = CI.get(campaign,'tune',options.tune)
             if tune and not campaign in tune_performance:
                 tune_performance.append( campaign )
 
