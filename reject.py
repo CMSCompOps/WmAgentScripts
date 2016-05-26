@@ -40,7 +40,7 @@ def main():
             sys.exit(1)
     elif len(args) >0:
         # name of workflow
-        wfs = [args[0]]
+        workflows = [args[0]]
     else:
         parser.error("Provide the workflow of a file of workflows")
         sys.exit(1)
