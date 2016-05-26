@@ -2,7 +2,7 @@
 from assignSession import *
 import sys
 import reqMgrClient
-from utils import workflowInfo, getWorkflowById, getDatasetEventsAndLumis, componentInfo, monitor_dir, reqmgr_url
+from utils import workflowInfo, getWorkflowById, getDatasetEventsAndLumis, componentInfo, monitor_dir, reqmgr_url, unifiedConfiguration
 from utils import campaignInfo, sendEmail, siteInfo
 from collections import defaultdict
 import json
@@ -30,6 +30,7 @@ def completor(url, specific):
 
     CI = campaignInfo()
     SI = siteInfo()
+    UC = unifiedConfiguration()
 
     wfs = []
     wfs.extend( session.query(Workflow).filter(Workflow.status == 'away').all() )
@@ -67,7 +68,7 @@ def completor(url, specific):
     print "can force complete on"
     print json.dumps( good_fractions ,indent=2)
     print json.dumps( overrides, indent=2)
-    max_force = 5
+    max_force = UC.get("max_force_complete")
     
     #wfs_no_location_in_GQ = set()
     #block_locations = defaultdict(lambda : defaultdict(list))
