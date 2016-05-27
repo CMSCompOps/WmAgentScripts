@@ -1,11 +1,7 @@
 #!/usr/bin/env python
 """
  +    __author__ = "Paola Rozo"
-<<<<<<< 8e946bb16ef686416f18b51971579605d186db19
  +    __version__ = "1.2"
-=======
- +    __version__ = "1.1"
->>>>>>> Using utils.py
  +    __maintainer__ = "Paola Rozo"
  +    __email__ = "katherine.rozo@cern.ch"
  +    __status__ = "Production"
@@ -23,8 +19,6 @@ from dbs.apis.dbsClient import DbsApi
 from random import choice
 from pprint import pprint
 import reqMgrClient as reqMgr
-from utils import workflowInfo
-
 
 
 dbs3_url = r'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
@@ -97,23 +91,6 @@ def getRandomDiskSite(site=T1S):
         s += "_Disk"
     return s
 
-<<<<<<< 8e946bb16ef686416f18b51971579605d186db19
-<<<<<<< 9adde8a3a7022dfed2a38c10d5921e9dc4681218
-=======
-def findOriginalProcessingString(url,workflow):
-    tempSchema = getRequestDict(url, workflow)
-    if any("ProcessingString" in k for k,v in tempSchema.items()):
-        return tempSchema["ProcessingString"]
-    elif any(k.startswith("Task") for k,v in tempSchema.items()):
-        for k, v in tempSchema.items():
-            if k.startswith("Task"):
-                return tempSchema[k]["ProcessingString"]
-    if any("OriginalRequestName" in k for k, v in tempSchema.items()):
-        return findOriginalProcessingString(url,tempSchema["OriginalRequestName"])
-
->>>>>>> Updating the assignProdTaskChain script.
-=======
->>>>>>> Using utils.py
 def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lfn, replica, verbose, trust_site=False):
     """
     Sends assignment request
@@ -176,12 +153,7 @@ def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lf
     if verbose:
         pprint(params)
 
-<<<<<<< 9adde8a3a7022dfed2a38c10d5921e9dc4681218
     res = reqMgr.requestManagerPost(url, "/reqmgr/assign/handleAssignmentPage", params)
-=======
-    # TODO try reqMgr standard
-    res = reqMgr.requestManager1Post(url, "/reqmgr/assign/handleAssignmentPage", params, nested=True)
->>>>>>> Updating the assignProdTaskChain script.
     print 'Assigned workflow:', workflow, 'to site:', site, 'and team', team
     #TODO check conditions of success
     if verbose:
@@ -193,20 +165,8 @@ def getRequestDict(url, workflow):
     urn = "/reqmgr2/data/request/%s" % workflow
     conn.request("GET", urn, headers=headers)
     r2 = conn.getresponse()
-<<<<<<< 8e946bb16ef686416f18b51971579605d186db19
-<<<<<<< 9adde8a3a7022dfed2a38c10d5921e9dc4681218
     request = json.loads(r2.read())["result"][0]
     return request[workflow]
-=======
-    #print(r2.read())
-    request = json.loads(r2.read())["result"][0]
-    return request[workflow]
-    return None
->>>>>>> Updating the assignProdTaskChain script.
-=======
-    request = json.loads(r2.read())["result"][0]
-    return request[workflow]
->>>>>>> Using utils.py
 
 def main():
     url = 'cmsweb.cern.ch'
@@ -217,18 +177,9 @@ def main():
     parser.add_option( '-w', '--workflow', help='Workflow Name', dest='workflow')
     parser.add_option('-t', '--team', help='Type of Requests', dest='team')
     parser.add_option('-s', '--site', help='Site', dest='site')
-<<<<<<< 9adde8a3a7022dfed2a38c10d5921e9dc4681218
     parser.add_option('-p', '--procversion',help='Processing Version', dest='procversion')
     parser.add_option('-a', '--activity',help='Dashboard Activity', dest='activity')
     parser.add_option('-f', '--file',help='File with workflows', dest='file')
-=======
-    parser.add_option('-p', '--procversion',
-                      help='Processing Version', dest='procversion')
-    parser.add_option('-a', '--activity',
-                      help='Dashboard Activity', dest='activity')
-    parser.add_option('-f', '--file',
-                      help='File with Workflows', dest='file')
->>>>>>> Updating the assignProdTaskChain script.
     parser.add_option('-l', '--lfn', help='Merged LFN base', dest='lfn')
     parser.add_option('--special',
                       help='Use it for special workflows. You also have to change the code according to the type of WF', dest='special')
@@ -257,10 +208,7 @@ def main():
     else:
         workflows = [options.workflow]
 
-<<<<<<< 9adde8a3a7022dfed2a38c10d5921e9dc4681218
     # Handling the parameters given in the command line
-=======
->>>>>>> Updating the assignProdTaskChain script.
     team = 'production'
     site = GOOD_SITES
     procversion = 1
@@ -271,7 +219,6 @@ def main():
     specialStr = ''
     replica = False
 
-<<<<<<< 9adde8a3a7022dfed2a38c10d5921e9dc4681218
     if options.team:
         team = options.team
     if options.site:
@@ -311,16 +258,6 @@ def main():
         else:
             procversion = wfInfo.info["ProcessingVersion"]
 
-=======
-    for workflow in workflows:
-        # Getting the original dictionary
-        schema = getRequestDict(url, workflow)
-        wfInfo = workflowInfo(url, workflow)
-        # Checking is the WF is in assignment-approved, it is mandatory to be assigned
-        if (schema["RequestStatus"] != "assignment-approved"):
-            print("The worflow '" + workflow + "' you are trying to assign is not in assignment-approved")
-            sys.exit(1)
->>>>>>> Updating the assignProdTaskChain script.
         # Setting the AcqEra and ProcStr values per Task
         for key, value in schema.items():
             if type(value) is dict and key.startswith("Task"):
@@ -339,38 +276,8 @@ def main():
             for key, value in procstring.items():
                 procstring[key] = value + specialStr
 
-<<<<<<< 9adde8a3a7022dfed2a38c10d5921e9dc4681218
 
         # Check output dataset existence, and abort if they already do!
-=======
-        # Handling the parameters given in the command line
-        if options.team:
-            team = options.team
-        if options.site:
-            site = options.site
-            if site == "all":
-                site = ALL_SITES
-            elif site == "t1":
-                site = T1S
-            #parse sites separated by commas
-            elif "," in site:
-                site = site.split(",")
-        if options.procversion:
-            procversion = int(options.procversion)
-        if options.activity:
-            activity = options.activity
-        if options.lfn:
-            lfn = options.lfn
-        if options.replica:
-            replica = True
-        # Override if there are new values in he
-        if options.acqera:
-            acqera = options.acqera
-        if options.procstring:
-            procstring = options.procstring
-
-        # check output dataset existence, and abort if they already do!
->>>>>>> Updating the assignProdTaskChain script.
         datasets = schema["OutputDatasets"]
         i = 0
         if schema["RequestType"] == "TaskChain":
@@ -399,12 +306,8 @@ def main():
             if exist and procversion <= maxv:
                 print("Some output datasets exist, its advised to assign with v =="+ maxv + 1)
                 sys.exit(0)
-<<<<<<< 9adde8a3a7022dfed2a38c10d5921e9dc4681218
         #Checking if we are dealing with a TaskChain resubmission
         elif schema["RequestType"] == "Resubmission" and wfInfo.info["PrepID"].startswith("task"):
-=======
-        elif schema["RequestType"] == "Resubmission":
->>>>>>> Updating the assignProdTaskChain script.
             # For resubmission of a merge task inside a taskchain workflow, we cannot provide the acqera and procstring
             if "Merge" in schema["InitialTaskPath"].split("/")[-1]:
                 acqera = None
@@ -412,26 +315,12 @@ def main():
             # For another type of task, we need to look for the acqera and procstring information inside the
             # original workflow
             else:
-<<<<<<< 8e946bb16ef686416f18b51971579605d186db19
-<<<<<<< 9adde8a3a7022dfed2a38c10d5921e9dc4681218
                 if not procstring:
                     procstring = wfInfo.info["ProcessingString"]
                 if not acqera:
                     acqera = wfInfo.info["AcquisitionEra"]
         else:
             print("The workflow '" + workflow + "' you are trying to assign is not a TaskChain, please use another resource.")
-=======
-
-=======
->>>>>>> Using utils.py
-                if not procstring:
-                    procstring = wfInfo.processingString()
-                if not acqera:
-                    acqera = wfInfo.acquisitionEra()
-        else:
-            print(
-                "The worflow '" + workflow + "' you are trying to assign is not a TaskChain, please use another resource.")
->>>>>>> Updating the assignProdTaskChain script.
             sys.exit(1)
 
         # If the --test argument was provided, then just print the information
@@ -443,7 +332,7 @@ def main():
             print "LFN: %s \tTeam: %s \tSite: %s" % (lfn, team, site)
             # print '\tTeam:',team,  '\tSite:', site
             sys.exit(0)
-    
+
         # Really assigning the workflow now
         print workflow, '\tAcqEra:', acqera, '\tProcStr:', procstring, '\tProcVer:', procversion, '\tTeam:', team, '\tSite:', site
         assignRequest(url, workflow, team, site, acqera, procstring, procversion, activity, lfn, replica, options.verbose, options.xrootd)
