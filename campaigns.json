@@ -263,8 +263,12 @@
     "DDMcopies": {
              "all" : { "N" : 4 },
 	     "RAWAODSIM" : { "N" : 2 }
+<<<<<<< HEAD
+    }
+=======
     },
     "secondaries" : ["/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1-v2/GEN-SIM"]
+>>>>>>> 538aa78a05b835f8784558ace207ac365f478c19
   },
   "RunIISpring16MiniAODv1": {
     "go": true,

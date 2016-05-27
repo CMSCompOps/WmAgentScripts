@@ -327,7 +327,11 @@ def main():
     parser.add_option("-a", "--action", dest="action", default='clone',
                       help="There are two options clone (clone) or extend a worflow (extend) .")
     parser.add_option("-u", "--user", dest="user",
+<<<<<<< HEAD
+                      help="User we are going to use")
+=======
                       help="User we are going to use", default=None)
+>>>>>>> 538aa78a05b835f8784558ace207ac365f478c19
     parser.add_option("-g", "--group", dest="group", default='DATAOPS',
                       help="Group to send the workflows.")
     parser.add_option("-b", "--backfill", action="store_true", dest="backfill", default=False,
@@ -350,6 +354,19 @@ def main():
     elif len(args) > 0:
         # name of workflow
         wfs = [args[0]]
+<<<<<<< HEAD
+<<<<<<< HEAD
+    if not user:
+        # get os username by default
+        uinfo = pwd.getpwuid(os.getuid())
+        user = uinfo.pw_name
+=======
+    if not options.user:
+        # get os username by default
+        uinfo = pwd.getpwuid(os.getuid())
+        options.user = uinfo.pw_name
+>>>>>>> 538aa78a05b835f8784558ace207ac365f478c19
+=======
     else:
         parser.error("Provide the workflow of a file of workflows")
         sys.exit(1)
@@ -360,14 +377,29 @@ def main():
         user = uinfo.pw_name
     else:
         user = options.user
+>>>>>>> 9adde8a3a7022dfed2a38c10d5921e9dc4681218
 
     if options.action == 'clone':
         for wf in wfs:
             cloneWorkflow(
+<<<<<<< HEAD
+<<<<<<< HEAD
+                wf, user, group, options.verbose, options.backfill, options.testbed, bwl=options.bwl)
+    elif action == 'extend':
+        for wf in wfs:
+            extendWorkflow(wf, user, group, options.verbose, options.events, options.firstlumi)
+=======
+                wf, options.user, options.group, options.verbose, options.backfill, options.testbed, bwl=options.bwl)
+    elif action == 'extend':
+        for wf in wfs:
+            extendWorkflow(wf, options.user, options.group, options.verbose, options.events, options.firstlumi)
+>>>>>>> 538aa78a05b835f8784558ace207ac365f478c19
+=======
                 wf, user, options.group, options.verbose, options.backfill, options.testbed, bwl=options.bwl)
     elif options.action == 'extend':
         for wf in wfs:
             extendWorkflow(wf, user, options.group, options.verbose, options.events, options.firstlumi)
+>>>>>>> 9adde8a3a7022dfed2a38c10d5921e9dc4681218
 
     sys.exit(0)
 
