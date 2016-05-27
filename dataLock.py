@@ -17,10 +17,13 @@ class Lock(Base):
     time = Column(Integer)
     reason = Column(String(400))
 
-lockengine = create_engine('sqlite:///Unified/lockRecord.db')
-Base.metadata.create_all(lockengine)
+try:
+    lockengine = create_engine('sqlite:///Unified/lockRecord.db')
+    Base.metadata.create_all(lockengine)
 
-from sqlalchemy.orm import sessionmaker
-
-lDBSession = sessionmaker(bind=lockengine)
-locksession = lDBSession()
+    from sqlalchemy.orm import sessionmaker
+    
+    lDBSession = sessionmaker(bind=lockengine)
+    locksession = lDBSession()
+except:
+    print "ignoring dataLock"

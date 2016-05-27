@@ -12,6 +12,7 @@
     Usage:
         python resubmit.py [options] WORKFLOW_NAME
     Options:
+        -a --action, decides to clone or extend a workflow
         -b --backfill, creates a clone
         -v --verbose, prints schemas and responses
 
@@ -19,6 +20,7 @@
 """
 import os
 import datetime
+import dbs3Client
 import pwd
 import sys
 import re
@@ -220,7 +222,7 @@ def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=F
         else:
             schema['BlockWhitelist'] = bwl.split(',')
     print 'Submitting workflow'
-    # Sumbit cloned workflow to ReqMgr
+    # Submit cloned workflow to ReqMgr
     if testbed:
         newWorkflow = reqMgrClient.submitWorkflow(url_tb, schema)
     else:
@@ -287,7 +289,7 @@ def extendWorkflow(workflow, user, group, verbose=False, events=None, firstlumi=
     if verbose:
         pprint(schema)
     print 'Submitting workflow'
-    # Sumbit cloned workflow to ReqMgr
+    # Submit cloned workflow to ReqMgr
     response = reqMgrClient.submitWorkflow(url,schema)
     if verbose:
         print "RESPONSE", response
@@ -311,6 +313,7 @@ def extendWorkflow(workflow, user, group, verbose=False, events=None, firstlumi=
 __Main__
 """
 url = 'cmsweb.cern.ch'
+url_tb = 'cmsweb-testbed.cern.ch'
 reqmgrCouchURL = "https://" + url + "/couchdb/reqmgr_workload_cache"
 
 
@@ -330,7 +333,7 @@ def main():
                       help="User we are going to use", default=None)
 >>>>>>> 538aa78a05b835f8784558ace207ac365f478c19
     parser.add_option("-g", "--group", dest="group", default='DATAOPS',
-                      help="Group we are going to use.")
+                      help="Group to send the workflows.")
     parser.add_option("-b", "--backfill", action="store_true", dest="backfill", default=False,
                       help="Creates a clone for backfill test purposes.")
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False,
@@ -348,9 +351,10 @@ def main():
     # Check the arguments, get info from them
     if options.file:
         wfs = [l.strip() for l in open(options.file) if l.strip()]
-    else:
+    elif len(args) > 0:
         # name of workflow
         wfs = [args[0]]
+<<<<<<< HEAD
 <<<<<<< HEAD
     if not user:
         # get os username by default
@@ -362,10 +366,23 @@ def main():
         uinfo = pwd.getpwuid(os.getuid())
         options.user = uinfo.pw_name
 >>>>>>> 538aa78a05b835f8784558ace207ac365f478c19
+=======
+    else:
+        parser.error("Provide the workflow of a file of workflows")
+        sys.exit(1)
 
-    if action == 'clone':
+    if not options.user:
+        # get os username by default
+        uinfo = pwd.getpwuid(os.getuid())
+        user = uinfo.pw_name
+    else:
+        user = options.user
+>>>>>>> 9adde8a3a7022dfed2a38c10d5921e9dc4681218
+
+    if options.action == 'clone':
         for wf in wfs:
             cloneWorkflow(
+<<<<<<< HEAD
 <<<<<<< HEAD
                 wf, user, group, options.verbose, options.backfill, options.testbed, bwl=options.bwl)
     elif action == 'extend':
@@ -377,6 +394,12 @@ def main():
         for wf in wfs:
             extendWorkflow(wf, options.user, options.group, options.verbose, options.events, options.firstlumi)
 >>>>>>> 538aa78a05b835f8784558ace207ac365f478c19
+=======
+                wf, user, options.group, options.verbose, options.backfill, options.testbed, bwl=options.bwl)
+    elif options.action == 'extend':
+        for wf in wfs:
+            extendWorkflow(wf, user, options.group, options.verbose, options.events, options.firstlumi)
+>>>>>>> 9adde8a3a7022dfed2a38c10d5921e9dc4681218
 
     sys.exit(0)
 

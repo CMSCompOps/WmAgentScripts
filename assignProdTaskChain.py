@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
  +    __author__ = "Paola Rozo"
- +    __version__ = "1.1"
+ +    __version__ = "1.2"
  +    __maintainer__ = "Paola Rozo"
  +    __email__ = "katherine.rozo@cern.ch"
  +    __status__ = "Production"
@@ -19,7 +19,6 @@ from dbs.apis.dbsClient import DbsApi
 from random import choice
 from pprint import pprint
 import reqMgrClient as reqMgr
-from utils import workflowInfo
 
 
 dbs3_url = r'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
@@ -154,8 +153,7 @@ def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lf
     if verbose:
         pprint(params)
 
-    # TODO try reqMgr standard
-    res = reqMgr.requestManager1Post(url, "/reqmgr/assign/handleAssignmentPage", params, nested=True)
+    res = reqMgr.requestManagerPost(url, "/reqmgr/assign/handleAssignmentPage", params)
     print 'Assigned workflow:', workflow, 'to site:', site, 'and team', team
     #TODO check conditions of success
     if verbose:
@@ -176,16 +174,12 @@ def main():
     # -t testbed-relval -s T1_US_FNAL -e CMSSW_6_0_0_pre1_FS_TEST_WMA -p v1 -a
     # relval -l /store/backfill/1
     parser = optparse.OptionParser()
-    parser.add_option(
-        '-w', '--workflow', help='Workflow Name', dest='workflow')
+    parser.add_option( '-w', '--workflow', help='Workflow Name', dest='workflow')
     parser.add_option('-t', '--team', help='Type of Requests', dest='team')
     parser.add_option('-s', '--site', help='Site', dest='site')
-    parser.add_option('-p', '--procversion',
-                      help='Processing Version', dest='procversion')
-    parser.add_option('-a', '--activity',
-                      help='Dashboard Activity', dest='activity')
-    parser.add_option('-f', '--file',
-                      help='File with Workflows', dest='file')
+    parser.add_option('-p', '--procversion',help='Processing Version', dest='procversion')
+    parser.add_option('-a', '--activity',help='Dashboard Activity', dest='activity')
+    parser.add_option('-f', '--file',help='File with workflows', dest='file')
     parser.add_option('-l', '--lfn', help='Merged LFN base', dest='lfn')
     parser.add_option('--special',
                       help='Use it for special workflows. You also have to change the code according to the type of WF', dest='special')
@@ -195,17 +189,14 @@ def main():
                       help="Prints all query information.")
     parser.add_option('-x', '--xrootd', help='Assign with trustSiteLocation=True (allows xrootd capabilities)',
                       action='store_true', default=False, dest='xrootd')
-    parser.add_option("--acqera", dest="acqera",
-                      help="Overrides Acquisition Era with a single string")
-    parser.add_option("--procstr", dest="procstring",
-                      help="Overrides Processing String with a single string")
-
+    parser.add_option("--acqera", dest="acqera",help="Overrides Acquisition Era with a single string")
+    parser.add_option("--procstr", dest="procstring",help="Overrides Processing String with a single string")
     parser.add_option('--test', action="store_true",
                       help='Nothing is injected, only print infomation about workflow and AcqEra', dest='test')
-    parser.add_option('--pu', action="store_true",
-                      help='Use it to inject PileUp workflows only', dest='pu')
+    parser.add_option('--pu', action="store_true",help='Use it to inject PileUp workflows only', dest='pu')
     (options, args) = parser.parse_args()
 
+    # Handling the workflow to assign
     if not options.workflow:
         if args:
             workflows = args
@@ -217,6 +208,7 @@ def main():
     else:
         workflows = [options.workflow]
 
+    # Handling the parameters given in the command line
     team = 'production'
     site = GOOD_SITES
     procversion = 1
@@ -227,14 +219,45 @@ def main():
     specialStr = ''
     replica = False
 
+    if options.team:
+        team = options.team
+    if options.site:
+        site = options.site
+        if site == "all":
+            site = ALL_SITES
+        elif site == "t1":
+            site = T1S
+        # parse sites separated by commas
+        elif "," in site:
+            site = site.split(",")
+    if options.activity:
+        activity = options.activity
+    if options.lfn:
+        lfn = options.lfn
+    if options.replica:
+        replica = True
+    if options.acqera:
+        acqera = options.acqera
+    if options.procstring:
+        procstring = options.procstring
+
+    # Iterating over the set of Workflows
     for workflow in workflows:
         # Getting the original dictionary
         schema = getRequestDict(url, workflow)
-        wfInfo = workflowInfo(url, workflow)
+
         # Checking is the WF is in assignment-approved, it is mandatory to be assigned
         if (schema["RequestStatus"] != "assignment-approved"):
-            print("The worflow '" + workflow + "' you are trying to assign is not in assignment-approved")
+            print("The workflow '" + workflow + "' you are trying to assign is not in assignment-approved")
             sys.exit(1)
+
+        # Dealing with the processing version
+        wfInfo = reqMgr.Workflow(workflow, url=url)
+        if options.procversion:
+            procversion = int(options.procversion)
+        else:
+            procversion = wfInfo.info["ProcessingVersion"]
+
         # Setting the AcqEra and ProcStr values per Task
         for key, value in schema.items():
             if type(value) is dict and key.startswith("Task"):
@@ -243,7 +266,7 @@ def main():
                         'ProcessingString'].replace("-", "_")
                     acqera[value['TaskName']] = value['AcquisitionEra']
                 except KeyError:
-                    print "This request has no AcquisitionEra or ProcessingString defined into the Tasks, aborting..."
+                    print("This request has no AcquisitionEra or ProcessingString defined into the Tasks, aborting...")
                     sys.exit(1)
 
         # Adding the special string - in case it was provided in the command line
@@ -253,33 +276,8 @@ def main():
             for key, value in procstring.items():
                 procstring[key] = value + specialStr
 
-        # Handling the parameters given in the command line
-        if options.team:
-            team = options.team
-        if options.site:
-            site = options.site
-            if site == "all":
-                site = ALL_SITES
-            elif site == "t1":
-                site = T1S
-            #parse sites separated by commas
-            elif "," in site:
-                site = site.split(",")
-        if options.procversion:
-            procversion = int(options.procversion)
-        if options.activity:
-            activity = options.activity
-        if options.lfn:
-            lfn = options.lfn
-        if options.replica:
-            replica = True
-        # Override if there are new values in he
-        if options.acqera:
-            acqera = options.acqera
-        if options.procstring:
-            procstring = options.procstring
 
-        # check output dataset existence, and abort if they already do!
+        # Check output dataset existence, and abort if they already do!
         datasets = schema["OutputDatasets"]
         i = 0
         if schema["RequestType"] == "TaskChain":
@@ -306,9 +304,10 @@ def main():
                     i += 1
             # suggest max version
             if exist and procversion <= maxv:
-                print "Some output datasets exist, its advised to assign with v ==", maxv + 1
+                print("Some output datasets exist, its advised to assign with v =="+ maxv + 1)
                 sys.exit(0)
-        elif schema["RequestType"] == "Resubmission":
+        #Checking if we are dealing with a TaskChain resubmission
+        elif schema["RequestType"] == "Resubmission" and wfInfo.info["PrepID"].startswith("task"):
             # For resubmission of a merge task inside a taskchain workflow, we cannot provide the acqera and procstring
             if "Merge" in schema["InitialTaskPath"].split("/")[-1]:
                 acqera = None
@@ -317,12 +316,11 @@ def main():
             # original workflow
             else:
                 if not procstring:
-                    procstring = wfInfo.processingString()
+                    procstring = wfInfo.info["ProcessingString"]
                 if not acqera:
-                    acqera = wfInfo.acquisitionEra()
+                    acqera = wfInfo.info["AcquisitionEra"]
         else:
-            print(
-                "The worflow '" + workflow + "' you are trying to assign is not a TaskChain, please use another resource.")
+            print("The workflow '" + workflow + "' you are trying to assign is not a TaskChain, please use another resource.")
             sys.exit(1)
 
         # If the --test argument was provided, then just print the information
@@ -336,10 +334,8 @@ def main():
             sys.exit(0)
     
         # Really assigning the workflow now
-        # TODO use values when assigning merge jobs
         print workflow, '\tAcqEra:', acqera, '\tProcStr:', procstring, '\tProcVer:', procversion, '\tTeam:', team, '\tSite:', site
-        assignRequest(url, workflow, team, site, acqera,
-                      procstring, procversion, activity, lfn, replica, options.verbose, options.xrootd)
+        assignRequest(url, workflow, team, site, acqera, procstring, procversion, activity, lfn, replica, options.verbose, options.xrootd)
     sys.exit(0)
 
 if __name__ == "__main__":
