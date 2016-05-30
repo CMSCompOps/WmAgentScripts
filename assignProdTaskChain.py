@@ -332,7 +332,7 @@ def main():
             print "LFN: %s \tTeam: %s \tSite: %s" % (lfn, team, site)
             # print '\tTeam:',team,  '\tSite:', site
             sys.exit(0)
-
+    
         # Really assigning the workflow now
         print workflow, '\tAcqEra:', acqera, '\tProcStr:', procstring, '\tProcVer:', procversion, '\tTeam:', team, '\tSite:', site
         assignRequest(url, workflow, team, site, acqera, procstring, procversion, activity, lfn, replica, options.verbose, options.xrootd)

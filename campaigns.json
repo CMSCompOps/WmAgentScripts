@@ -3,8 +3,8 @@
     "go": true,
     "labels" : ["NotALabel"],
     "DDMcopies": { 
-         "all" : { "N" : 2 },
-     "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
+     		 "all" : { "N" : 2 },
+		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
     "custodial_override" : ["DQMIO"],
     "fractionpass": 1.0,
@@ -18,8 +18,8 @@
   "Commissioning2015": {
     "go": true,
     "DDMcopies": { 
-         "all" : { "N" : 4 },
-     "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
+     		 "all" : { "N" : 4 },
+		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
     "custodial_override" : ["DQMIO"],
     "fractionpass": 1.0,
@@ -33,8 +33,8 @@
   "Run2015A": {
     "go": true,
     "DDMcopies": { 
-         "all" : { "N" : 4 },
-     "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
+     		 "all" : { "N" : 4 },
+		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
     "custodial_override" : ["DQMIO"],
     "fractionpass": 1.0,
@@ -48,8 +48,8 @@
   "Run2015B": {
     "go": true,
     "DDMcopies": { 
-         "all" : { "N" : 4 },
-     "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
+     		 "all" : { "N" : 4 },
+		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
     "custodial_override" : ["DQMIO"],
     "fractionpass": 1.0,
@@ -63,8 +63,8 @@
   "Run2015C_25ns": {
     "go": true,
     "DDMcopies": { 
-         "all" : { "N" : 4 },
-     "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
+     		 "all" : { "N" : 4 },
+		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
     "custodial_override" : ["DQMIO"],
     "fractionpass": 1.0,
@@ -78,8 +78,8 @@
   "Run2015C_50ns": {
     "go": true,
     "DDMcopies": { 
-         "all" : { "N" : 4 },
-     "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
+     		 "all" : { "N" : 4 },
+		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
     "custodial_override" : ["DQMIO"],
     "fractionpass": 1.0,
@@ -93,8 +93,8 @@
   "Run2015C": {
     "go": true,
     "DDMcopies": { 
-         "all" : { "N" : 4 },
-     "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
+     		 "all" : { "N" : 4 },
+		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
     "custodial_override" : ["DQMIO"],
     "fractionpass": 1.0,
@@ -108,8 +108,8 @@
   "Run2015D": {
     "go": true,
     "DDMcopies": { 
-         "all" : { "N" : 4 },
-     "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
+     		 "all" : { "N" : 4 },
+		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
     "custodial_override" : ["DQMIO"],
     "fractionpass": 1.0,
@@ -123,8 +123,8 @@
   "Run2015E": {
     "go": true,
     "DDMcopies": { 
-         "all" : { "N" : 4 },
-     "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
+     		 "all" : { "N" : 4 },
+		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
     "custodial_override" : ["DQMIO"],
     "fractionpass": 1.0,
@@ -262,7 +262,7 @@
     "overflow": {"PU":{"max":20000,"pending":0,"force":false}},
     "DDMcopies": {
              "all" : { "N" : 4 },
-       "RAWAODSIM" : { "N" : 2 }
+	     "RAWAODSIM" : { "N" : 2 }
     },
     "secondaries" : ["/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1-v2/GEN-SIM"]
   },
@@ -314,7 +314,7 @@
   },
   "HiFall13": {
     "go" : true,
-    "parameters": { 
+    "parameters": {	
       "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue", "T2_US_Caltech", "T2_US_Florida", "T2_US_Nebraska", "T2_US_UCSD", "T2_US_Wisconsin" ],
       "MergedLFNBase": "/store/himc"
     },
@@ -322,7 +322,7 @@
   },
   "HiFall15": {
     "go" : true,
-    "parameters": { 
+    "parameters": {	
       "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue", "T2_US_Caltech", "T2_US_Florida", "T2_US_Nebraska", "T2_US_UCSD", "T2_US_Wisconsin" ],
       "MergedLFNBase": "/store/himc"
     },
@@ -330,7 +330,7 @@
   },
   "pp502Fall15wmLHEGS": {
     "go" : true,
-    "parameters": { 
+    "parameters": {	
       "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue", "T2_US_Caltech", "T2_US_Florida", "T2_US_Nebraska", "T2_US_UCSD", "T2_US_Wisconsin" ],
       "MergedLFNBase": "/store/himc"
     },
@@ -339,7 +339,7 @@
   },
   "pp502Fall15": {
     "go" : true,
-        "parameters": { 
+        "parameters": {	
       "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue", "T2_US_Caltech", "T2_US_Florida", "T2_US_Nebraska", "T2_US_UCSD", "T2_US_Wisconsin" ],
       "MergedLFNBase": "/store/himc"
     },
@@ -444,7 +444,7 @@
     "parameters": {
       "EventsPerLumi": 25
     },
-    "fractionpass": 0.9 
+    "fractionpass": 0.9	
   }, 
   "TP2023HGCALDR": {
     "go": true,
