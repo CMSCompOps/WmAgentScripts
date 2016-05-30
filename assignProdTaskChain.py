@@ -312,7 +312,6 @@ def main():
         elif schema["RequestType"] == "Resubmission" and wfInfo.info["PrepID"].startswith("task"):
             procstring = wfInfo.info["ProcessingString"]
             acqera = wfInfo.info["AcquisitionEra"]
-
         else:
             print("The workflow '" + workflow + "' you are trying to assign is not a TaskChain, please use another resource.")
             sys.exit(1)
