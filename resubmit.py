@@ -36,19 +36,11 @@ except:
     sys.exit(0)
 
 reqmgrCouchURL = "https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache"
-<<<<<<< 0bd98c30838f1bb4eabcee5d50871c9b4ed52bc3
 
 DELTA_EVENTS = 1000
 DELTA_LUMIS = 200
 
 
-=======
-
-DELTA_EVENTS = 1000
-DELTA_LUMIS = 200
-
-
->>>>>>> Merging the rejecting scripts(rejectWorkflows.py,abortWorkflows.py,rejectAndClone.py and abortAndClone.p) and the resubmiting ones (resubmit.py and extendWorflow.py)
 def modifySchema(helper, workflow, user, group, cache, events, firstLumi, backfill=False):
     """
     Adapts schema to right parameters.
@@ -297,11 +289,7 @@ def extendWorkflow(workflow, user, group, verbose=False, events=None, firstlumi=
     if verbose:
         pprint(schema)
     print 'Submitting workflow'
-<<<<<<< 0bd98c30838f1bb4eabcee5d50871c9b4ed52bc3
     # Submit cloned workflow to ReqMgr
-=======
-    # Sumbit cloned workflow to ReqMgr
->>>>>>> Merging the rejecting scripts(rejectWorkflows.py,abortWorkflows.py,rejectAndClone.py and abortAndClone.p) and the resubmiting ones (resubmit.py and extendWorflow.py)
     response = reqMgrClient.submitWorkflow(url,schema)
     if verbose:
         print "RESPONSE", response
@@ -325,10 +313,7 @@ def extendWorkflow(workflow, user, group, verbose=False, events=None, firstlumi=
 __Main__
 """
 url = 'cmsweb.cern.ch'
-<<<<<<< 0bd98c30838f1bb4eabcee5d50871c9b4ed52bc3
 url_tb = 'cmsweb-testbed.cern.ch'
-=======
->>>>>>> Merging the rejecting scripts(rejectWorkflows.py,abortWorkflows.py,rejectAndClone.py and abortAndClone.p) and the resubmiting ones (resubmit.py and extendWorflow.py)
 reqmgrCouchURL = "https://" + url + "/couchdb/reqmgr_workload_cache"
 
 
@@ -342,15 +327,9 @@ def main():
     parser.add_option("-a", "--action", dest="action", default='clone',
                       help="There are two options clone (clone) or extend a worflow (extend) .")
     parser.add_option("-u", "--user", dest="user",
-<<<<<<< 0bd98c30838f1bb4eabcee5d50871c9b4ed52bc3
                       help="User we are going to use", default=None)
     parser.add_option("-g", "--group", dest="group", default='DATAOPS',
                       help="Group to send the workflows.")
-=======
-                      help="User we are going to use")
-    parser.add_option("-g", "--group", dest="group", default='DATAOPS',
-                      help="Group we are going to use.")
->>>>>>> Merging the rejecting scripts(rejectWorkflows.py,abortWorkflows.py,rejectAndClone.py and abortAndClone.p) and the resubmiting ones (resubmit.py and extendWorflow.py)
     parser.add_option("-b", "--backfill", action="store_true", dest="backfill", default=False,
                       help="Creates a clone for backfill test purposes.")
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False,
@@ -368,7 +347,6 @@ def main():
     # Check the arguments, get info from them
     if options.file:
         wfs = [l.strip() for l in open(options.file) if l.strip()]
-<<<<<<< 0bd98c30838f1bb4eabcee5d50871c9b4ed52bc3
     elif len(args) > 0:
         # name of workflow
         wfs = [args[0]]
@@ -390,23 +368,6 @@ def main():
     elif options.action == 'extend':
         for wf in wfs:
             extendWorkflow(wf, user, options.group, options.verbose, options.events, options.firstlumi)
-=======
-    else:
-        # name of workflow
-        wfs = [args[0]]
-    if not user:
-        # get os username by default
-        uinfo = pwd.getpwuid(os.getuid())
-        user = uinfo.pw_name
-
-    if action == 'clone':
-        for wf in wfs:
-            cloneWorkflow(
-                wf, user, group, options.verbose, options.backfill, options.testbed, bwl=options.bwl)
-    elif action == 'extend':
-        for wf in wfs:
-            extendWorkflow(wf, user, group, options.verbose, options.events, options.firstlumi)
->>>>>>> Merging the rejecting scripts(rejectWorkflows.py,abortWorkflows.py,rejectAndClone.py and abortAndClone.p) and the resubmiting ones (resubmit.py and extendWorflow.py)
 
     sys.exit(0)
 
