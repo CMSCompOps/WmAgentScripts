@@ -156,7 +156,10 @@ def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lf
 
     #res = reqMgr.requestManager1Post(url, "/reqmgr/assign/handleAssignmentPage", params, nested=True)
     res = reqMgr.assignWorkflow(url, workflow, team, params)
-    print 'Assigned workflow:', workflow, 'to site:', site, 'and team', team
+    if res:
+        print 'Assigned workflow:', workflow, 'to site:', site, 'and team', team
+    else:
+        print 'The workflow:', workflow, ' was unable to be assigned to site:', site, 'and team', team
     #TODO check conditions of success
     if verbose:
         print res
