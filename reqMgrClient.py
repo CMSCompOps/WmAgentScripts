@@ -450,8 +450,20 @@ def getWorkflowInfo(url, workflow):
     """
     Retrieves workflow information
     """
-    request = requestManagerGet(url,'/reqmgr2/data/request?name='+workflow)
-    return request['result'][0][workflow]
+    return getWorkloadCache(url, workflow)
+
+def getMultiWorkflowInfo(url, workflows):
+    """
+    Retrieves workflow information
+    """
+    if isinstance(workflows, basestring):
+        workflows = [workflows]
+    result = requestManagerPost(url,'/couchdb/reqmgr_workload_cache/_all_docs?include_docs=true', {"keys": workflows})
+    resultDict = {}
+    couchResult = json.loads(result)
+    for row in couchResult['rows']:
+        resultDict[row['key']] = row['doc']
+    return resultDict
 
 def isRequestMgr2Request(url, workflow):
     result = getWorkflowInfo(url, workflow)
