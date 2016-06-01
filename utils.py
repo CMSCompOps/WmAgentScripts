@@ -2746,7 +2746,7 @@ def getWorkflowById( url, pid , details=False):
         return [item['id'] for item in items]
     
 def getWorkflows(url,status,user=None,details=False,rtype=None):
-    retries=10
+    retries=10000
     wait=2
     while retries>0:
         try:
@@ -2754,7 +2754,7 @@ def getWorkflows(url,status,user=None,details=False,rtype=None):
         except:
             print "getWorkflows retried"
             time.sleep(wait)
-            wait+=2
+            #wait+=2
             retries-=1
     raise Exception("getWorkflows failed 10 times")
     
@@ -2764,6 +2764,9 @@ def try_getWorkflows(url,status,user=None,details=False,rtype=None):
     go_to = '/reqmgr2/data/request?status=%s'%status
     if rtype:
         go_to+='&request_type=%s'%rtype
+    if user:
+        for u in user.split(','):
+            go_to+='&requestor=%s'%u
     go_to+='&detail=%s'%('true' if details else 'false')
     r1=conn.request("GET",go_to, headers={"Accept":"application/json"})        
     r2=conn.getresponse()
@@ -2771,9 +2774,6 @@ def try_getWorkflows(url,status,user=None,details=False,rtype=None):
     items = data['result']
 
     print len(items),"retrieved",status,user,details,rtype
-    users=[]
-    if user:
-        users=user.split(',')
     workflows = []
 
     for item in items:
@@ -2781,8 +2781,7 @@ def try_getWorkflows(url,status,user=None,details=False,rtype=None):
             those = item.keys()
         else:
             those = [item]
-        if users:
-            those = filter(lambda k : any([k.startswith(u) for u in users]), those)
+
         if details:
             workflows.extend([item[k] for k in those])
         else:
@@ -3596,11 +3595,11 @@ class workflowInfo:
             parent=set()
             secondary=set()
             if 'InputDataset' in blob:  
-                primary = set([blob['InputDataset']])
+                primary = set(filter(None,[blob['InputDataset']]))
             if primary and 'IncludeParent' in blob and blob['IncludeParent']:
                 parent = findParent( primary )
             if 'MCPileup' in blob:
-                secondary = set([blob['MCPileup']])
+                secondary = set(filter(None,[blob['MCPileup']]))
             if 'LheInputFiles' in blob and blob['LheInputFiles'] in ['True',True]:
                 lhe=True
                 
