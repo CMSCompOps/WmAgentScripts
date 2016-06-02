@@ -20,9 +20,11 @@ from utils import sendEmail
 from utils import closeoutInfo
 
 def checkor(url, spec=None, options=None):
-    fDB = closeoutInfo()
     if userLock():   return
     if duplicateLock():  return
+
+
+    fDB = closeoutInfo()
 
     UC = unifiedConfiguration()
     use_mcm = True
