@@ -7,7 +7,7 @@
    "value" : 5,
    "description" : "Number of workflow that can be forced complete at a time"
  },
- "max_per_round: : {
+ "max_per_round" : {
    "description" : "limitation on the number of wf to process per module",
    "value" : {
     "assignor" : null,
