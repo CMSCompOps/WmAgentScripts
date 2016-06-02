@@ -41,9 +41,13 @@ def assignor(url ,specific = None, talk=True, options=None):
 
     dataset_endpoints = json.loads(open('%s/dataset_endpoints.json'%monitor_dir).read())
 
+    max_per_round = UC.get('max_per_round').get('assignor',None)
     random.shuffle( wfos )
     for wfo in wfos:
         if options.limit and (n_stalled+n_assigned)>options.limit:
+            break
+
+        if max_per_round and (n_stalled+n_assigned)>max_per_round:
             break
 
         if specific:

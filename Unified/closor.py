@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import componentInfo, sendEmail, setDatasetStatus, unifiedConfiguration, workflowInfo, siteInfo, sendLog, reqmgr_url, monitor_dir
+from utils import componentInfo, sendEmail, setDatasetStatus, unifiedConfiguration, workflowInfo, siteInfo, sendLog, reqmgr_url, monitor_dir, duplicateLock, userLock
 import reqMgrClient
 import json
 import time
@@ -12,6 +12,7 @@ from collections import defaultdict
 import reqMgrClient
 import re
 import copy
+import random
 
 
 def spawn_harvesting(url, wfi , in_full):
@@ -118,11 +119,13 @@ def spawn_harvesting(url, wfi , in_full):
     return (all_OK, requests)
 
 def closor(url, specific=None):
+    if userLock(): return
+    if duplicateLock(): return
     if not componentInfo().check(): return
+
 
     UC = unifiedConfiguration()
     CI = campaignInfo()
-    #LI = lockInfo()
 
     all_late_files = []
     check_fullcopy_to_announce = UC.get('check_fullcopy_to_announce')
@@ -133,6 +136,11 @@ def closor(url, specific=None):
         wfs = session.query(Workflow).filter(Workflow.status=='close').all()
 
     held = set()
+
+    
+    max_per_round = UC.get('max_per_round').get('closor',None)
+    random.shuffle( wfs )    
+    if max_per_round: wfs = wfs[:max_per_round]
 
     for wfo in wfs:
 
