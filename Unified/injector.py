@@ -80,8 +80,8 @@ def injector(url, options, specific):
 
     ## pick up replacements
     for wf in session.query(Workflow).filter(Workflow.status == 'trouble').all():
-        if specific and wf.name != specific:
-            continue
+        print wf.name
+        if specific and not specific in wf.name: continue
         print wf.name
         wl = getWorkLoad(url, wf.name)
         familly = getWorkflowById( url, wl['PrepID'] )
@@ -94,7 +94,7 @@ def injector(url, options, specific):
             else:
                 if fwl['RequestDate'] < wl['RequestDate']: continue
                 if fwl['RequestType']=='Resubmission': continue
-                if fwl['RequestStatus'] in ['None',None]: continue
+                if fwl['RequestStatus'] in ['None',None,'new']: continue
                 if fwl['RequestStatus'] in ['rejected','rejected-archived','aborted','aborted-archived']: continue
             true_familly.append( fwl )
 
