@@ -284,6 +284,7 @@ Worflow waiting in staging (%d) <a href=logs/transferor/last.log target=_blank>l
         stext=""
         for pid in ts.workflows_id:
             w = session.query(Workflow).get(pid)
+            if not w: continue
             hide &= (w.status != 'staging' )
             if w.status in ['considered','staging','staged']:
                 stext += "<li> %s </li>\n"%( wfl(w,status=True))
