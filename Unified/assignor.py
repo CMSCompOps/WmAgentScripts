@@ -19,7 +19,6 @@ import os
 def assignor(url ,specific = None, talk=True, options=None):
     if userLock(): return
     if duplicateLock(): return
-    #if notRunningBefore( 'stagor' ): return
     if not componentInfo().check(): return
 
     UC = unifiedConfiguration()
@@ -38,14 +37,6 @@ def assignor(url ,specific = None, talk=True, options=None):
     if specific:
         wfos.extend( session.query(Workflow).filter(Workflow.status=='considered-tried').all())        
     wfos.extend(session.query(Workflow).filter(Workflow.status=='staged').all())
-    #if specific:
-    #    #wfos = session.query(Workflow).filter(Workflow.name==specific).all()
-    #    wfos = session.query(Workflow).filter(Workflow.name.contains(specific)).all()
-    #if not wfos:
-    #    if specific:
-    #        wfos = session.query(Workflow).filter(Workflow.status=='considered').all()
-    #        wfos.extend( session.query(Workflow).filter(Workflow.status=='staging').all())
-    #    wfos.extend(session.query(Workflow).filter(Workflow.status=='staged').all())
 
 
     dataset_endpoints = json.loads(open('%s/dataset_endpoints.json'%monitor_dir).read())
@@ -224,6 +215,7 @@ def assignor(url ,specific = None, talk=True, options=None):
         wfh.sendLog('assignor',"we need %s CPUh"%cpuh)
         if cpuh>4000000 and not options.go:
             sendEmail('large workflow','that wf %s has a large number of CPUh %s, not assigning, please check the logs'%(wfo.name, cpuh))#,destination=['Dmytro.Kovalskyi@cern.ch'])
+            wfh.sendLog('assignor',"Requiring a large number of CPUh %s, not assigning"%cpuh)
             continue
 
         if 'Campaign' in wfh.request and wfh.request['Campaign'] in CI.campaigns and 'maxcopies' in CI.campaigns[wfh.request['Campaign']]:
