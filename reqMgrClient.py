@@ -12,6 +12,7 @@ import os
 import json
 import dbs3Client as dbs3
 import copy
+import time 
 
 # default headers for PUT and POST methods
 def_headers={"Content-type": "application/json", "Accept": "application/json"}
@@ -450,8 +451,15 @@ def getWorkflowInfo(url, workflow):
     """
     Retrieves workflow information
     """
-    request = requestManagerGet(url,'/reqmgr2/data/request?name='+workflow)
-    return request['result'][0][workflow]
+    retries=10000
+    while retries:
+        try:
+            request = requestManagerGet(url,'/reqmgr2/data/request?name='+workflow)
+            return request['result'][0][workflow]
+        except:
+            time.sleep(1)
+            retries -=1
+    return None
 
 def isRequestMgr2Request(url, workflow):
     result = getWorkflowInfo(url, workflow)
