@@ -3523,7 +3523,7 @@ class workflowInfo:
         return self.request['RequestStatus']
 
     def getRequestNumEvents(self):
-        if 'RequestNumEvents' in self.request:
+        if 'RequestNumEvents' in self.request and int(self.request['RequestNumEvents']):
             return int(self.request['RequestNumEvents'])
         else:
             return int(self.request['Task1']['RequestNumEvents'])
