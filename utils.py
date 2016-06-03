@@ -33,9 +33,13 @@ FORMAT = "%(module)s.%(funcName)s(%(lineno)s) => %(message)s (%(asctime)s)"
 DATEFMT = "%Y-%m-%d %H:%M:%S"
 logging.basicConfig(format = FORMAT, datefmt = DATEFMT, level=logging.DEBUG)
 
-def sendLog( subject, text , wfi = None, show=True):
+def sendDashboard( subject, text, criticality='info', show=True):
+    ### this sends something to the dashboard ES for error, info, messages
+    pass
+    
+def sendLog( subject, text , wfi = None, show=True ,level='info'):
     try:
-        try_sendLog( subject, text , wfi, show)
+        try_sendLog( subject, text , wfi, show, level)
     except Exception as e:
         print "failed to send log to elastic search"
         print str(e)
@@ -67,7 +71,8 @@ def searchLog( q ,limit=50 ):
         "_source": [
             "text",
             "subject",
-            "date"
+            "date",
+            "meta"
             ]
         }
     conn.request("POST" , '/logs/_search?size=%d'%limit, json.dumps(goodquery))
@@ -81,12 +86,12 @@ def searchLog( q ,limit=50 ):
     print o['hits']['total']
     return o['hits']['hits']
 
-def try_sendLog( subject, text , wfi = None, show=True):
+def try_sendLog( subject, text , wfi = None, show=True, level='info'):
     #import pdb
     #pdb.set_trace()
     conn = httplib.HTTPConnection( 'cms-elastic-fe.cern.ch:9200' )    
 
-    meta_text=""
+    meta_text="level:%s\n"%level
     if wfi:
         ## add a few markers automatically
         meta_text += '\n\n'+'\n'.join(map(lambda i : 'id: %s'%i, wfi.getPrepIDs()))
@@ -1712,7 +1717,8 @@ def checkTransferLag( url, xfer_id , datasets=None):
             v = try_checkTransferLag( url, xfer_id , datasets)
         except Exception as e:
             print "fatal execption in checkTransferLag\n","%s\n%s\n%s"%(xfer_id,datasets,str(e))
-            sendEmail('fatal execption in checkTransferLag',"%s\n%s\n%s"%(xfer_id,datasets,str(e)))
+            #sendEmail('fatal execption in checkTransferLag',"%s\n%s\n%s"%(xfer_id,datasets,str(e)))
+            sendLog('checkTransferLag','fatal execption in checkTransferLag for %s\n%s\n%s'%(xfer_id,datasets,str(e)), level='critical')
             v = {}
     return v
 
@@ -1801,7 +1807,8 @@ def checkTransferStatus(url, xfer_id, nocollapse=False):
             v = try_checkTransferStatus(url, xfer_id, nocollapse)
         except Exception as e:
             print str(e)
-            sendEmail('fatal exception in checkTransferStatus %s'%xfer_id, str(e))
+            #sendEmail('fatal exception in checkTransferStatus %s'%xfer_id, str(e))
+            sendLog('checkTransferStatus','fatal exception in checkTransferStatus %s\n%s'%(xfer_id, str(e)), level='critical')
             v = {}
     return v
         
@@ -1972,7 +1979,8 @@ def getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None
         try:
             r = try_getDatasetBlocksFraction(url, dataset, complete,group,vetoes,sites,only_blocks)
         except Exception as e:
-            print sendEmail("exception in getDatasetBlocksFraction",str(e))
+            #print sendEmail("exception in getDatasetBlocksFraction",str(e))
+            sendLog('getDatasetBlocksFraction',"exception in getDatasetBlocksFraction for %s \n %s"%( dataset, str(e)), level='critical')
             r = 0.
     return r
 
@@ -2240,7 +2248,8 @@ def getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=None
     try:
         return try_getDatasetPresence( url, dataset, complete, only_blocks, group, vetoes, within_sites)
     except Exception as e:
-        sendEmail("fatal exception in getDatasetPresence",str(e))
+        #sendEmail("fatal exception in getDatasetPresence",str(e))
+        sendLog('getDatasetPresence','fatal exception in getDatasetPresence for %s\n%s'%( dataset, str(e)), level='critical')
         return {}
 
 def try_getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=None, vetoes=None, within_sites=None):
@@ -2409,7 +2418,8 @@ def getDatasetEventsAndLumis(dataset, blocks=None):
             r = try_getDatasetEventsAndLumis( dataset, blocks)
         except Exception as e:
             print "fatal exception in getDatasetEventsAndLumis",dataset,blocks
-            sendEmail("fatal exception in getDatasetEventsAndLumis",str(e)+dataset)
+            #sendEmail("fatal exception in getDatasetEventsAndLumis",str(e)+dataset)
+            sendLog('getDatasetEventsAndLumis','fatal execption in processing getDatasetEventsAndLumis for %s \n%s'%( dataset, str(e)), level='critical')
             r = 0,0
     return r
 
@@ -2982,7 +2992,7 @@ class workflowInfo:
     def flushLog(self):
         ## flush the logs
         for sub,text in self.logs.items():
-            sendLog(sub, text, wfi = self, show=False)
+            sendLog(sub, text, wfi = self, show=False, level='workflow')
 
     def get_spec(self):
         if not self.full_spec:

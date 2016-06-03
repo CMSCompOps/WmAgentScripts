@@ -3,7 +3,7 @@ from assignSession import *
 import sys
 import reqMgrClient
 from utils import workflowInfo, getWorkflowById, getDatasetEventsAndLumis, componentInfo, monitor_dir, reqmgr_url, unifiedConfiguration
-from utils import campaignInfo, sendEmail, siteInfo
+from utils import campaignInfo, sendEmail, siteInfo, sendLog
 from collections import defaultdict
 import json
 import random
@@ -167,46 +167,19 @@ def completor(url, specific):
             completions[output]['checkpoints'].append( (now, event_completion ) )
 
         if all([percent_completions[out] >= good_fraction for out in percent_completions]):
-            print "all is above",good_fraction,"for",wfo.name
-            print json.dumps( percent_completions, indent=2 )
+            wfi.sendLog('completor', "all is above %s \n%s"%( good_fraction, 
+                                                              json.dumps( percent_completions, indent=2 )
+                                                              ))
         else:
-            print "\t",percent_completions.values(),"not over bound",good_fraction
             long_lasting[wfo.name].update({
                     'completion': sum(percent_completions.values()) / len(percent_completions),
                     'completions' : percent_completions
                     })
             
-            #print json.dumps( percent_completions, indent=2 )
-
             ## do something about the agents this workflow is in
             long_lasting[wfo.name]['agents'] = wfi.getAgents()
-            print json.dumps( long_lasting[wfo.name]['agents'], indent=2)
-
-            ## this is done somewhere else for more than running workflows (see GQ.py)
-            ## pick up on possible issue with global queue data location
-            #locs = wfi.getGQLocations()
-            #for b,loc in locs.items():
-            #    ds = b.split('#')[0]
-            #    if not ds in block_locations:
-            #        s_block_locations[ds] = getDatasetBlockAndSite(url, ds, complete='y')
-            #        for s in s_block_locations[ds]:
-            #            for bl in s_block_locations[ds][s]:
-            #                block_locations[ds][bl].append( s )
-            #    block_se = block_locations[ds][b]
-
-            #    if not loc:
-            #        print b,"has no location for GQ in",wfi.request['RequestName']
-            #        ## this is severe !
-            #        wfs_no_location_in_GQ.add( wfo.name )
-            #    ## check location and site white list
-            #    can_run = set([SI.SE_to_CE(se) for se in loc])&set(wfi.request['SiteWhitelist'])
-            #    if loc and not can_run:
-            #        print b,"is missing site to run within the whitelist"
-            #        wfs_no_location_in_GQ.add( wfo.name )
-            #    can_run = can_run & set(SI.sites_ready)
-            #    if loc and not can_run:
-            #        print b,"is missing available site to run"
-            #        wfs_no_location_in_GQ.add( wfo.name )
+            wfi.sendLog('completor', "%s not over bound %s\n%s"%(percent_completions.values(), good_fraction,
+                                                                 json.dumps( long_lasting[wfo.name]['agents'], indent=2) ))
             continue
 
         if all([percent_completions[out] >= ignore_fraction for out in percent_completions]):
@@ -220,26 +193,30 @@ def completor(url, specific):
         cpuh = wfi.getComputingTime(unit='d')
 
         ran_at = wfi.request['SiteWhitelist']
-        print "Required:",cpuh,
-        print "Time spend:",delay
-
+                        
+        wfi.sendLog('completor',"Required %s, time spend %s"%( cpuh, delay))
+                    
         ##### WILL FORCE COMPLETE BELOW
         # only really force complete after n days
 
         if delay <= allowed_delay: continue
-        print "going for force-complete of",wfo.name
         ## find ACDCs that might be running
         if max_force>0:
             forceComplete(url, wfi )
             set_force_complete.add( wfo.name )
+            print "going for force-complete of",wfo.name
+            wfi.sendLog('completor','going for force completing')
+            wfi.notifyRequestor("The workflow %s was force completed for running too long"% wfo.name)
             max_force -=1
         else:
-            print "too many completion this round"
+            wfi.sendLog('completor',"too many completion this round, cannot force complete")
+
         ## do it once only for testing
         #break
     
     if set_force_complete:
-        sendEmail('set force-complete', 'The followings were set force-complete \n%s'%('\n'.join(set_force_complete)))
+        sendLog('completor','The followings were set force-complete \n%s'%('\n'.join(set_force_complete)))
+        #sendEmail('set force-complete', 'The followings were set force-complete \n%s'%('\n'.join(set_force_complete)))
     
     open('%s/completions.json'%monitor_dir,'w').write( json.dumps( completions , indent=2))
     text="These have been running for long"

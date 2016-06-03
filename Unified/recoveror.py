@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import workflowInfo, sendEmail, componentInfo, userLock, closeoutInfo, campaignInfo, unifiedConfiguration, siteInfo, componentInfo
+from utils import workflowInfo, sendEmail, componentInfo, userLock, closeoutInfo, campaignInfo, unifiedConfiguration, siteInfo, componentInfo, sendLog
 import reqMgrClient
 import json
 import optparse
@@ -240,7 +240,8 @@ def recoveror(url,specific,options=None):
 
         if len(task_to_recover) != len(all_errors):
             print "Should not be doing partial ACDC. skipping"
-            sendEmail('recoveror','do not want to make partial acdc on %s'%wfo.name)
+            #sendEmail('recoveror','do not want to make partial acdc on %s'%wfo.name)
+            sendLog('recoveror','do not want to make partial acdc on %s'%wfo.name, level='critical')
             recover = False
 
         if task_to_recover and recover:
@@ -259,7 +260,8 @@ def recoveror(url,specific,options=None):
                     if options.do:
                         if recovering:
                             print wfo.name,"has been partially ACDCed. Needs manual attention"
-                            sendEmail( "failed ACDC partial recovery","%s has had %s/%s recoveries %s only"%( wfo.name, len(recovering), len(task_to_recover), list(recovering)), destination=['jen_a@fnal.gov'])
+                            #sendEmail( "failed ACDC partial recovery","%s has had %s/%s recoveries %s only"%( wfo.name, len(recovering), len(task_to_recover), list(recovering)), destination=['jen_a@fnal.gov'])
+                            sendLog('recoveror', "%s has had %s/%s recoveries %s only"%( wfo.name, len(recovering), len(task_to_recover), list(recovering)), level='critical')
                             continue
                         else:
                             print wfo.name,"failed recovery once"
@@ -267,7 +269,8 @@ def recoveror(url,specific,options=None):
                             continue
                     else:
                         print "no action to take further"
-                        sendEmail("an ACDC that can be done automatically","please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details", destination=['jen_a@fnal.gov'])
+                        #sendEmail("an ACDC that can be done automatically","please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details", destination=['jen_a@fnal.gov'])
+                        sendLog('recoveror', "ACDC for %s can be done automatically"% wfo.name, level='critical')
                         continue
                         
                 
@@ -289,15 +292,19 @@ def recoveror(url,specific,options=None):
                 if options.ass:
                     print "really doing the assignment of the ACDC",acdc
                     parameters['execute']=True
-                    sendEmail("an ACDC was done and WAS assigned", "%s  was assigned, please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details"%( acdc ), destination=['jen_a@fnal.gov'])
+                    #sendEmail("an ACDC was done and WAS assigned", "%s  was assigned, please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details"%( acdc ), destination=['jen_a@fnal.gov'])
+                    wfi.sendLog('recoveror',"%s  was assigned for recovery"% acdc)
                 else:
                     print "no assignment done with this ACDC",acdc
-                    sendEmail("an ACDC was done and need to be assigned", "%s needs to be assigned, please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details"%( acdc ), destination=['jen_a@fnal.gov'])
+                    #sendEmail("an ACDC was done and need to be assigned", "%s needs to be assigned, please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details"%( acdc ), destination=['jen_a@fnal.gov'])
+                    sendLog('recoveror',"%s needs to be assigned"%(acdc), level='critical')
+
 
                 result = reqMgrClient.assignWorkflow(url, acdc, team, parameters)
                 if not result:
                     print acdc,"was not asigned"
-                    sendEmail("an ACDC was done and need to be assigned","%s needs to be assigned, please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details"%( acdc ), destination=['jen_a@fnal.gov'])
+                    #sendEmail("an ACDC was done and need to be assigned","%s needs to be assigned, please check https://cmst2.web.cern.ch/cmst2/unified/logs/recoveror/last.log for details"%( acdc ), destination=['jen_a@fnal.gov'])
+                    sendLog('recoveror',"%s needs to be assigned"%(acdc), level='critical')
                 else:
                     recovering.add( acdc )
 

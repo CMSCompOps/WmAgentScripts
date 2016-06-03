@@ -70,7 +70,8 @@ def injector(url, options, specific):
             pass
     
     if cannot_inject:
-        sendEmail('workflow duplicates','These workflow cannot be added in because of duplicates \n\n %s'%( '\n'.join(cannot_inject)))
+        #sendEmail('workflow duplicates','These workflow cannot be added in because of duplicates \n\n %s'%( '\n'.join(cannot_inject)))
+        sendLog('injector','These workflow cannot be added in because of duplicates \n\n %s'%( '\n'.join(cannot_inject)), level='critical')
 
     ## passing a round of invalidation of what needs to be invalidated
     if use_mcm and (options.invalidate or True):
@@ -99,13 +100,18 @@ def injector(url, options, specific):
             true_familly.append( fwl )
 
         if len(true_familly)==0:
-            sendLog('injector','%s had no replacement'%wf.name)
+            sendLog('injector','%s had no replacement'%wf.name, level='critical')
             no_replacement.add( wf.name )
             continue
         print wf.name,"has",len(familly),"familly members"
         print wf.name,"has",len(true_familly),"true familly members"
 
-        for fwl in true_familly:
+        ##we cannot have more than one of them !!! pick the last one
+        if len(true_familly)>1:
+            #sendEmail('multiple wf','please take a look at injector for %s'%wf.name)
+            sendLog('injector','Multiple wf in line, will take the last one for %s \n%s'%( wf.name, ', '.join(fwl['RequestName'] for fwl in true_familly)), level='critical')
+
+        for fwl in true_familly[-1:]:
             member = fwl['RequestName']
             new_wf = session.query(Workflow).filter(Workflow.name == member).first()
             if not new_wf:
@@ -140,7 +146,8 @@ def injector(url, options, specific):
         #wf.status = 'forget'
         session.commit()
     if no_replacement:
-        sendEmail('workflow with no replacement','%s \n are dangling there'%( '\n'.join(no_replacement)))
+        #sendEmail('workflow with no replacement','%s \n are dangling there'%( '\n'.join(no_replacement)))
+        sendLog('injector','workflow with no replacement, %s \n are dangling there'% ( '\n'.join(no_replacement)), level='critical')
 
 if __name__ == "__main__":
     url = reqmgr_url

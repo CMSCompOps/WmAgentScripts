@@ -71,7 +71,8 @@ def htmlor( caller = ""):
                 #deprecated '<a href="https://cmsweb.cern.ch/reqmgr/reqMgr/outputDatasetsByRequestName/%s" target="_blank">out</a>'%wfn,
                 '<a href="closeout.html#%s" target="_blank">clo</a>'%wfn,
                 '<a href="statuses.html#%s" target="_blank">st</a>'%wfn,
-                '<a href="https://%s/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s" target="_blank">perf</a>'%(reqmgr_url,wfn)
+                '<a href="https://%s/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s" target="_blank">perf</a>'%(reqmgr_url,wfn),
+                '<a href="http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=%s" target="_blank">history</a>'%(pid)
                 ])
         if within and (not view or wfs=='completed'):
             wl = getWL( wfn )
@@ -189,7 +190,7 @@ Last update on %s(CET), %s(GMT)
 <br>
 <a href=logs/ target=_blank>logs</a> <a href=logs/last.log target=_blank>last</a> <a href=statuses.html>statuses</a> <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/ target=_blank>prod mon</a> <a href=https://%s/wmstats/index.html target=_blank>wmstats</a> <a href=http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/SitesInfo.txt target=_blank>detox</a> <a href=locked.html>space</a> <a href=logs/subscribor/last.log target=_blank>blocks</a> <a href=logs/agents/last.log>agents</a>
 <br>
-<a href=https://twiki.cern.ch/twiki/bin/view/CMSPublic/CompOpsWorkflowL3Responsibilities#Automatic_Assignment_and_Unified>what am I</a> <a href=data.html>json interfaces</a> <a href=logs/addHoc/last.log>add-hoc op</a> created from <b>%s <a href=logs/last_running>last running</a></b> <object height=20 type="text/html" data="logs/last_running"><p>backup content</p></object>
+<a href=https://twiki.cern.ch/twiki/bin/view/CMSPublic/CompOpsWorkflowL3Responsibilities#Automatic_Assignment_and_Unified>what am I</a> <a href=data.html>json interfaces</a> <a href=logs/addHoc/last.log>add-hoc op</a> created from <b>%s <a href=logs/last_running>last running</a></b> <object height=20 type="text/html" data="logs/last_running"><p>backup content</p></object> <a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=critical target=_blank><b><font color=red>critical</b></font></a>
 <br><br>
 
 """ %(time.asctime(time.localtime()),

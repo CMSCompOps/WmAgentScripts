@@ -347,7 +347,8 @@ def transferor(url ,specific = None, talk=True, options=None):
 
         if not sites_allowed:
             wfh.sendLog('transferor',"not possible site to run at")
-            sendEmail("no possible sites","%s has no possible sites to run at"%( wfo.name ))
+            #sendEmail("no possible sites","%s has no possible sites to run at"%( wfo.name ))
+            sendLog('transferor',"%s has no possible sites to run at"%( wfo.name ),level='critical')
             continue
 
         blocks = []
@@ -380,26 +381,10 @@ def transferor(url ,specific = None, talk=True, options=None):
                 workflow_dependencies[prim].add( wfo.id )
 
                 max_priority[prim] = max(max_priority[prim],int(wfh.request['RequestPriority']))
-                #sites_allowed = [site for site in sites_allowed if not any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
-                #print "Sites allowed minus the vetoed transfer"
-                #wfh.sendLog('transferor',"Sites allowed minus the vetoed transfer %s"%sorted(sites_allowed))
-                #print sorted(sites_allowed)
-
-                #copies_needed_from_site = int(0.35*len(sites_allowed))+1 ## should just go for a fixed number based if the white list grows that big
-                #print "Would make",copies_needed_from_site,"copies from site white list"
-                #copies_needed = copies_needed_from_site
 
                 wfh.sendLog('transferor',"Would make %s  from cpu requirement %s"%( copies_needed_from_CPUh, CPUh))
                 copies_needed = copies_needed_from_CPUh
 
-                #if options.maxcopy>0:
-                    ## stop maxing things out ??
-                    #copies_needed = min(options.maxcopy,copies_needed)
-                    #print "Maxed to",copies_needed
-                    #if copies_needed_from_CPUh > options.maxcopy:
-                    #    sendEmail('An example of more than three copies','for %s it could have been beneficial to make %s copies'%( wfo.name, copies_needed_from_CPUh))
-
-                
                 if 'Campaign' in wfh.request and wfh.request['Campaign'] in CI.campaigns and 'maxcopies' in CI.campaigns[wfh.request['Campaign']]:
                     copies_needed_from_campaign = CI.campaigns[wfh.request['Campaign']]['maxcopies']
                     copies_needed = min(copies_needed_from_campaign, copies_needed)
@@ -409,16 +394,12 @@ def transferor(url ,specific = None, talk=True, options=None):
 
                 ### new ways of making the whole thing
                 destinations,all_block_names = getDatasetDestinations(url, prim, within_sites = [SI.CE_to_SE(site) for site in sites_allowed], only_blocks=blocks )
-                #destinations,all_block_names = getDatasetDestinations(url, prim, within_sites = [SI.CE_to_SE(site) for site in sites_allowed], only_blocks=blocks, group='DataOps')
-                #anaops_destinations,anaops_all_block_names = getDatasetDestinations(url, prim, within_sites = [SI.CE_to_SE(site) for site in sites_allowed], only_blocks=blocks, group='AnalysisOps' )
                 print json.dumps(destinations, indent=2)
 
                 ## get where the dataset is in full and completed
                 prim_location = [site for (site,info) in destinations.items() if info['completion']==100 and info['data_fraction']==1]
                 ## the rest is places it is going to be
                 prim_destination = [site for site in destinations.keys() if not site in prim_location]
-                ## need to take out the transfer veto
-                #prim_destination = [site for site in prim_destination if not any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
 
 
                 if len(prim_location) >= copies_needed:
@@ -501,7 +482,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                         spreading = distributeToSites( chops, prim_to_distribute, n_copies = copies_needed, weights=SI.cpu_pledges, sizes=sizes)
                         transfer_sizes[prim] = sum(sizes)
                         if not spreading:
-                            sendEmail("cannot send to any site",prim+" cannot seem to fit anywhere")
+                            sendLog('transferor','cannot send %s to any site, it cannot fit anywhere'% prim, level='critical')
                             wfh.sendLog('transferor', "cannot send to any site. %s cannot seem to fit anywhere"%(prim))
                             staging=False
                             can_go = False
@@ -564,7 +545,8 @@ def transferor(url ,specific = None, talk=True, options=None):
                 if override_sec_destination:
                     ## intersect with where we want the PU to be
                     not_needed_anymore = list(set(sec_to_distribute) - set(override_sec_destination))
-                    sendEmail("secondary superfluous","the dataset %s could be removed from %s"%( sec, not_needed_anymore ))
+                    #sendEmail("secondary superfluous","the dataset %s could be removed from %s"%( sec, not_needed_anymore ))
+                    sendLog('transferor', "the dataset %s could be removed from %s"%( sec, not_needed_anymore ))
                     sec_to_distribute = list(set(sec_to_distribute) & set(override_sec_destination))
 
                 if len( sec_to_distribute )>0:
@@ -578,7 +560,8 @@ def transferor(url ,specific = None, talk=True, options=None):
                         else:
                             print "could not send the secondary input to",site_se,"because it is too big for the available disk",SI.disk[site_se]*1024,"GB need",sec_size
                             if primary_destinations and site in primary_destinations:
-                                sendEmail('secondary input too big','%s is too big (%s) for %s (%s)'%( sec, sec_size, site_se, SI.disk[site_se]*1024))
+                                #sendEmail('secondary input too big','%s is too big (%s) for %s (%s)'%( sec, sec_size, site_se, SI.disk[site_se]*1024))
+                                sendLog('transferor', '%s is too big (%s) for %s (%s)'%( sec, sec_size, site_se, SI.disk[site_se]*1024), level='critical')
                 else:
                     print "the secondary input does not have to be send to site"
 
@@ -611,7 +594,8 @@ def transferor(url ,specific = None, talk=True, options=None):
             passing_along+=1
 
     if no_goes:
-        sendEmail("no go for managing","No go for \n"+"\n".join( no_goes ))
+        #sendEmail("no go for managing","No go for \n"+"\n".join( no_goes ))
+        sendLog('transferor', "No go for \n"+"\n".join( no_goes ), level='critical')
 
     print "accumulated transfers"
     print json.dumps(all_transfers, indent=2)

@@ -239,7 +239,8 @@ def checkor(url, spec=None, options=None):
         if not 'TotalInputEvents' in wfi.request:
             event_expected,lumi_expected = 0,0
             if not 'recovery' in wfo.status:
-                sendEmail("missing member of the request","TotalInputEvents is missing from the workload of %s"% wfo.name, destination=['jen_a@fnal.gov'])
+                #sendEmail("missing member of the request","TotalInputEvents is missing from the workload of %s"% wfo.name, destination=['jen_a@fnal.gov'])
+                sendLog('checkor',"TotalInputEvents is missing from the workload of %s"% wfo.name, level='critical')
         else:
             event_expected,lumi_expected =  wfi.request['TotalInputEvents'],wfi.request['TotalInputLumis']
 
@@ -395,7 +396,9 @@ def checkor(url, spec=None, options=None):
                     custodial = parents_custodial[0]
                 else:
                     print "the input dataset",parent_dataset,"does not have custodial in the first place. abort"
-                    sendEmail( "dataset has no custodial location", "Please take a look at %s in the logs of checkor"%parent_dataset)
+                    #sendEmail( "dataset has no custodial location", "Please take a look at %s in the logs of checkor"%parent_dataset)
+                    ## does not work for RAWOADSIM
+                    sendLog('checkor',"Please take a look at %s for missing custodial location"% parent_dataset)
                     ## cannot be bypassed, this is an issue to fix
                     is_closing = False
                     pick_custodial = False
@@ -411,8 +414,9 @@ def checkor(url, spec=None, options=None):
 
             if not custodial:
                 print "cannot find a custodial for",wfo.name
-                sendEmail( "cannot find a custodial","cannot find a custodial for %s probably because of the total output size %d"%( wfo.name, size_worth_checking))
-
+                wfi.sendLog('checkor',"cannot find a custodial for %s probably because of the total output size %d"%( wfo.name, size_worth_checking))
+                #sendEmail( "cannot find a custodial","cannot find a custodial for %s probably because of the total output size %d"%( wfo.name, size_worth_checking))
+                sendLog('checkor',"cannot find a custodial for %s probably because of the total output size %d"%( wfo.name, size_worth_checking), level='critical')
                 
             if custodial and (is_closing or bypass_checks):
                 print "picked",custodial,"for tape copy"

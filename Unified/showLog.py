@@ -4,6 +4,8 @@ import sys
 
 o = searchLog( sys.argv[1] , 1000)
 texts=set()
+print "#"*20+"meta data"+"#"*20
+print o[0]['_source']['meta']
 for i in reversed(o):
     if len(texts)>50: break
     if i['_source']['text'] in texts: continue

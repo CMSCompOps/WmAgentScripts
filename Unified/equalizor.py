@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import workflowInfo, getWorkflows, siteInfo, sendEmail, componentInfo, getDatasetPresence, monitor_dir, reqmgr_url, campaignInfo, unifiedConfiguration
+from utils import workflowInfo, getWorkflows, siteInfo, sendEmail, componentInfo, getDatasetPresence, monitor_dir, reqmgr_url, campaignInfo, unifiedConfiguration, sendLog
 import reqMgrClient
 import json
 import os
@@ -286,8 +286,8 @@ def equalizor(url , specific = None, options=None):
                 print "performance",task.taskType,task.pathName
                 if task.taskType in ['Processing','Production']:
                     set_memory,set_time = getPerf( task.pathName )
-                    print "Performance %s GB %s min"%( set_memory,set_time)
-            
+                    #print "Performance %s GB %s min"%( set_memory,set_time)
+                    wfi.sendLog('equalizor','Performance tuning to %s GB %s min'%( set_memory,set_time))
                     ## get values from gmwsmon
                     # massage the values : 95% percentile
                     performance[task.pathName] = {}
@@ -307,13 +307,18 @@ def equalizor(url , specific = None, options=None):
                     extend_to = list(set(extend_to) & set(SI.sites_ready + force_sites))
 
                     if extend_to and needs or needs_overide:
-                        print "\t",task_name,"of",wfo.name,"running",running,"and pending",idled,"taking action : ReplaceSiteWhitelist"
-                        #modifications[wfo.name][task.pathName] = { "ReplaceSiteWhitelist" : copy.deepcopy( LHE_overflow[campaign] ) ,"Running" : running, "Pending" : idled, "Priority" : wfi.request['RequestPriority']}
+
                         modifications[wfo.name][task.pathName] = { "ReplaceSiteWhitelist" : extend_to ,"Running" : running, "Pending" : idled, "Priority" : wfi.request['RequestPriority']}
-                        #print json.dumps( modifications[wfo.name][task.pathName]['ReplaceSiteWhitelist']
+                        wfi.sendLog('equalizor','%s of %s is running %d and pending %d, taking action : ReplaceSiteWhitelist \n %s'%( task_name,
+                                                                                                                                      wfo.name,
+                                                                                                                                      running,
+                                                                                                                                      idled ,
+                                                                                                                                      json.dumps( sorted(modifications[wfo.name][task.pathName]['ReplaceSiteWhitelist']))))
+
                         altered_tasks.add( task.pathName )
                     else:
-                        print task_name,"of",wfo.name,"running",running,"and pending",idled
+                        wfi.sendLog('equalizor','%s of %s is running %d and pending %d'%( task_name, wfo.name, running, idled))
+                        
 
 
             ### overflow the 76 digi-reco to the site holding the pileup
@@ -358,9 +363,9 @@ def equalizor(url , specific = None, options=None):
                         ## the step with an input ought to be the digi part : make this one go anywhere
                         modifications[wfo.name][task.pathName] = { "AddWhitelist" : augment_by , "Running" : running, "Pending" : idled, "Priority" : wfi.request['RequestPriority']}
                         altered_tasks.add( task.pathName )
-                        print "\t",task_name,"of",wfo.name,"running",running,"and pending",idled,"taking action : AddWhitelist"
-                        print json.dumps( augment_by, indent=2 )
-                        #print modifications[wfo.name][task.pathName]
+                        wfi.sendLog('equalizor','%s of %s is running %d and pending %d, taking action : AddWhitelist \n %s'%( task_name, wfo.name,
+                                                                                                                              running, idled,
+                                                                                                                              json.dumps( sorted(augment_by), indent=2 )))
                     else:
                         print task_name,"of",wfo.name,"running",running,"and pending",idled
 
@@ -372,7 +377,9 @@ def equalizor(url , specific = None, options=None):
                     modifications[wfo.name][task.pathName] = { 'AddWhitelist' : original_swl, 
                                                                "Running" : running, "Pending" : idled, "Priority" : wfi.request['RequestPriority']}
                     altered_tasks.add( task.pathName )
-                    print "\t",task_name,"of",wfo.name,"running",running,"and pending",idled,"taking action : AddWhitelist"
+                    wfi.sendLog('equalizor','%s of %s is running %d and pending %d, taking action : AddWhitelist \n %s'%( task_name, wfo.name,
+                                                                                                                              running, idled,
+                                                                                                                          json.dumps( sorted(original_swl), indent=2 )))
 
 
             if options.augment:
@@ -399,8 +406,7 @@ def equalizor(url , specific = None, options=None):
                                                                    "Priority" : wfi.request['RequestPriority'],
                                                                    "Running" : running,
                                                                    "Pending" : idled}
-                        print "\t",wfo.name,"adding HLT up to",pending_HLT,"for",max_HLT
-                        print task.pathName
+                        wfi.sendLog('equalizor','adding the HLT in whitelist of %s to %d for %d'%( task.pathName, pending_HLT, max_HLT))
 
             if i_task==0 and not sec and use_T0:
                 needs, task_name, running, idled = needs_action(wfi, task)
@@ -418,19 +424,17 @@ def equalizor(url , specific = None, options=None):
                     if task.pathName in modifications[wfo.name] and 'AddWhitelist' in modifications[wfo.name][task.pathName]:
                         if not "T0_CH_CERN" in modifications[wfo.name][task.pathName]["AddWhitelist"]:
                             modifications[wfo.name][task.pathName]["AddWhitelist"].append( "T0_CH_CERN" )
-                            print "\t",wfo.name,"adding addT0 up to",pending_T0,"for",max_T0
-                        print task.pathName
+                            wfi,sendLog('equalizor','adding the T0 for %s to %d for %d'%( task.pathName, pending_T0, max_T0))
                     elif task.pathName in modifications[wfo.name] and 'ReplaceSiteWhitelist' in modifications[wfo.name][task.pathName]:
                         if not "T0_CH_CERN" in modifications[wfo.name][task.pathName]["ReplaceSiteWhitelist"]:
                             modifications[wfo.name][task.pathName]["ReplaceSiteWhitelist"].append( "T0_CH_CERN" )
-                            print "\t",wfo.name,"adding replace T0 up to",pending_T0,"for",max_T0
+                            wfi,sendLog('equalizor','adding the T0 to replacement for %s to %d for %d'%( task.pathName, pending_T0, max_T0))
                     else:
                         modifications[wfo.name][task.pathName] = { "AddWhitelist" : ["T0_CH_CERN"],
                                                                    "Priority" : wfi.request['RequestPriority'],
                                                                    "Running" : running,
                                                                    "Pending" : idled}
-                        print "\t",wfo.name,"adding T0 up to",pending_T0,"for",max_T0
-                        print task.pathName
+                        wfi,sendLog('equalizor','adding the T0 for %s to %d for %d'%( task.pathName, pending_T0, max_T0))
 
 
     interface['modifications'].update( modifications )
@@ -439,9 +443,6 @@ def equalizor(url , specific = None, options=None):
 
     ###  manage the number of core and job resizing
     interface['cores']={'T2_CH_CERN_HLT': {'min':4,'max':16}, 'default': {'min':1, 'max':4}}
-    #interface['max_cores']={'T2_CH_CERN_HLT': 16, 'default': 4}
-    #interface['min_cores']={'T2_CH_CERN_HLT': 4, 'default': 1}
-    #interface['resize_subtasks'] = 'RunIISpring16DR80'
     interface['resizes'] = ['RunIISpring16DR80']
 
     ### manage the modification of the memory and target time
