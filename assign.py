@@ -18,7 +18,7 @@ import sys
 import json
 import optparse
 from dbs.apis.dbsClient import DbsApi
-import reqMgrClient as rqMgr
+import reqMgrClient as reqMgr
 from pprint import pprint
 from random import choice
 from utils import workflowInfo, siteInfo, global_SI
@@ -83,14 +83,13 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
               "MinMergeSize": 2147483648,
               "MaxMergeSize": 4294967296,
               "MaxMergeEvents": 50000,
-              "MaxRSS": 4294967296,
-                  # for task chains    "MaxRSS": 2294967,
               "MaxVSize": 4294967296,
                   # for task chains    "MaxVSize": 20294967,
               "SoftTimeout" : 159600,
               "Dashboard": activity,
               "ProcessingVersion": procversion,
-              "checkbox" + workflow: "checked"
+              "checkbox" + workflow: "checked",
+              "execute":True
               }
               
     if taskchain:
@@ -99,7 +98,6 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
         params["BlockCloseMaxFiles"] = 500
         params["BlockCloseMaxEvents"] = 20000000
         params["BlockCloseMaxSize"] = 5000000000000
-        params["MaxRSS"] = 2294967
         params["MaxVSize"] = 20294967
     else:
         params["CustodialSites"] = []
@@ -112,7 +110,7 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
     # if era is None, leave it out of the json
     if era is not None:
         params["AcquisitionEra"] = era
-    if procstr is not None:
+    if procstring is not None:
         params["ProcessingString"] = procstring
     
     # if replica we add NonCustodial sites
@@ -125,12 +123,11 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
     if verbose:
         pprint(params)
 
-    params['execute'] = True
-    res = rqMgr.assignWorkflow(url, workflow, team, params)
+    res = reqMgr.assignWorkflow(url, workflow, team, params)
     if res:
         print 'Assigned workflow:', workflow, 'to site:', sites, 'with processing version', procversion
     else:
-        print 'could not assign the workflow',workflow
+        print 'Could not assign workflow:', workflow, 'to site:', sites, 'with processing version', procversion
     if verbose:
         print res
 
@@ -156,7 +153,7 @@ def main():
     
     parser = optparse.OptionParser(usage=usage)
     parser.add_option('-t', '--team', help='Type of Requests', dest='team')
-    parser.add_option('-s', '--sites', help='Site List, comma separated (no spaces), or "t1" for Tier-1\'s and "t2" for Tier-2\'s', dest='sites')
+    parser.add_option('-s', '--sites', help=' "t1" for Tier-1\'s and "t2" for Tier-2\'s', dest='sites')
     parser.add_option('--special',  help='Use it for special workflows. You also have to change the code according to the type of WF', dest='special')
     parser.add_option('-r', '--replica', action='store_true', dest='replica', default=False, help='Adds a _Disk Non-Custodial Replica parameter')
     parser.add_option('-p', '--procversion', help='Processing Version, if empty it will leave the processing version that comes by default in the request', dest='procversion')
@@ -210,7 +207,8 @@ def main():
             sites = T2_SITES
         else:
             sites = SI.sites_ready
-
+    else: 
+         sites = SI.sites_ready
     if options.team:
         team = options.team
 
@@ -223,17 +221,16 @@ def main():
     for wf in wfs:
         # Getting the original dictionary
         schema = getRequestDict(url, wf)
-        wfInfo = workflowInfo(url, workflow)
 
-        wf = rqMgr.Workflow(wf, url=url)
+        wf = reqMgr.Workflow(wf, url=url)
 
         # WF must be in assignment-approved in order to be assigned
         if (schema["RequestStatus"] != "assignment-approved"):
-            print("The worflow '" + workflow + "' you are trying to assign is not in assignment-approved")
+            print("The workflow '" + wf.name + "' you are trying to assign is not in assignment-approved")
             sys.exit(1)
 
         #Check to see if the workflow is a task chain or an ACDC of a taskchain
-        taskchain = (schema["RequestType"] == "TaskChain") or ((schema["RequestType"] == "Resubmission") and "task" in schema["InitialTaskPath"].split("/")[0])
+        taskchain = (schema["RequestType"] == "TaskChain") or ((schema["RequestType"] == "Resubmission") and "task" in schema["InitialTaskPath"].split("/")[1])
         if taskchain:
             # Setting the Era and ProcStr values per Task
             for key, value in schema.items():
@@ -242,7 +239,7 @@ def main():
                         procstring[value['TaskName']] = value['ProcessingString'].replace("-", "_")
                         era[value['TaskName']] = value['AcquisitionEra']
                     except KeyError:
-                        print "This taskchain request has no AcquisitionEra or ProcessingString defined into the Tasks, aborting..."
+                        print("This taskchain request has no AcquisitionEra or ProcessingString defined into the Tasks, aborting...")
                         sys.exit(1)
 
         # Adding the special string - in case it was provided in the command line
@@ -260,16 +257,12 @@ def main():
         elif not taskchain:
             era = wf.info['AcquisitionEra']
 
-        # lfn backfill by default for workflows and /store/mc for taskchains
+        # Must use --lfn option, otherwise workflow won't be assigned
         if options.lfn:
             lfn = options.lfn
-        elif taskchain:
-            lfn = '/store/mc'
-        elif "MergedLFNBase" in wf.info:
-            lfn = wf.info['MergedLFNBase']
         else:
-            lfn = '/store/backfill/1'
-
+            print "Can't assign the workflow! Please include workflow lfn using --lfn option."
+            sys.exit(0)
         # activity production by default for taskchains, reprocessing for default by workflows
         if options.activity:
             activity = options.activity
@@ -282,9 +275,9 @@ def main():
         if options.procversion:
             procversion = int(options.procversion)
         else:
-            procversion = int(wf.info['ProcessingVersion'])
+            procversion = wf.info["ProcessingVersion"]
 
-        # check for output dataset existence, and abort if output datasets already exist!
+        # Check for output dataset existence, and abort if output datasets already exist!
         # Don't perform this check for ACDC's
         datasets = schema["OutputDatasets"]
         i = 0
@@ -292,6 +285,7 @@ def main():
             exist = False
             maxv = 1
             for key, value in schema.items():
+                print type(value), key
                 if type(value) is dict and key.startswith("Task"):
                     dbsapi = DbsApi(url=dbs3_url)
                     
@@ -299,8 +293,10 @@ def main():
                     # numbers
                     datasets = dbsapi.listDatasets(acquisition_era_name=value['AcquisitionEra'], primary_ds_name=value['PrimaryDataset'], detail=True, dataset_access_type='*')
                     processedName = value['AcquisitionEra'] + '-' + value['ProcessingString'] + "-v\\d+"
+                    print "processedName is ", processedName
                     # see if any of the dataset names is a match
                     for ds in datasets:
+                        print "Dataset name ", ds['processed_ds_name']
                         if re.match(processedName, ds['processed_ds_name']):
                             print "Existing dset:", ds['dataset'], "(%s)" % ds['dataset_access_type']
                             maxv = max(maxv, ds['processing_version'])
@@ -313,12 +309,10 @@ def main():
                 print "Some output datasets exist, its advised to assign with v ==", maxv + 1
                 sys.exit(0)
 
-        else:
-            # For resubmission of a merge task inside a taskchain workflow, we cannot provide the acqera and procstring
-            if "Merge" in schema["InitialTaskPath"].split("/")[-1] and "task" in schema["InitialTaskPath"].split("/")[0]:
-                    era = None
-                    procstring = None
-
+        #Check if we are dealing with a TAskChain resubmission
+        elif schema["RequestType"] == "Resubmission" and "task" in schema["InitialTaskPath"].split("/")[1]:
+            procstring = wf.info["ProcessingString"]
+            era = wf.info["AcquisitionEra"]
 
     # If the --test argument was provided, then just print the information
     # gathered so far and abort the assignment
@@ -326,6 +320,7 @@ def main():
             print "%s \tEra: %s \tProcStr: %s \tProcVer: %s" % (wf.name, era, procstring, procversion)
             print "LFN: %s \tTeam: %s \tSite: %s" % (lfn, team, sites)
             print "Taskchain? " + str(taskchain)
+            print "Activity:" + activity
             sys.exit(0)
         
         # Really assigning the workflow now
