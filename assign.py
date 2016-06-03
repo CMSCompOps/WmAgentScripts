@@ -285,7 +285,6 @@ def main():
             exist = False
             maxv = 1
             for key, value in schema.items():
-                print type(value), key
                 if type(value) is dict and key.startswith("Task"):
                     dbsapi = DbsApi(url=dbs3_url)
                     
@@ -293,10 +292,8 @@ def main():
                     # numbers
                     datasets = dbsapi.listDatasets(acquisition_era_name=value['AcquisitionEra'], primary_ds_name=value['PrimaryDataset'], detail=True, dataset_access_type='*')
                     processedName = value['AcquisitionEra'] + '-' + value['ProcessingString'] + "-v\\d+"
-                    print "processedName is ", processedName
                     # see if any of the dataset names is a match
                     for ds in datasets:
-                        print "Dataset name ", ds['processed_ds_name']
                         if re.match(processedName, ds['processed_ds_name']):
                             print "Existing dset:", ds['dataset'], "(%s)" % ds['dataset_access_type']
                             maxv = max(maxv, ds['processing_version'])
