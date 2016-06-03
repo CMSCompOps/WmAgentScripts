@@ -3,7 +3,7 @@ from assignSession import *
 from McMClient import McMClient
 from utils import workflowInfo, getWorkflowById
 import reqMgrClient
-from utils import componentInfo, setDatasetStatus
+from utils import componentInfo, setDatasetStatus, sendLog
 from collections import defaultdict
 import time
 
@@ -46,7 +46,7 @@ def invalidator(url, invalid_status='INVALID'):
                 if fwl['RequestType']!='Resubmission': continue
                 print "rejecting",fwl['RequestName']
                 success = reqMgrClient.invalidateWorkflow(url, fwl['RequestName'], current_status=fwl['RequestStatus'])
-
+                wfi.sendLog('invalidator',"rejection is performed from McM invalidations request")
             print success
             acknowledge= True
             text = "The workflow %s (%s) was rejected due to invalidation in McM" % ( wfn, pid )

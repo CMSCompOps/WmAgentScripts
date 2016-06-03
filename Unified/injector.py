@@ -84,7 +84,8 @@ def injector(url, options, specific):
         print wf.name
         if specific and not specific in wf.name: continue
         print wf.name
-        wl = getWorkLoad(url, wf.name)
+        wfi = workflowInfo(url, wf.name )
+        wl = wfi.request #getWorkLoad(url, wf.name)
         familly = getWorkflowById( url, wl['PrepID'] )
         true_familly = []
         for member in familly:
@@ -101,8 +102,12 @@ def injector(url, options, specific):
 
         if len(true_familly)==0:
             sendLog('injector','%s had no replacement'%wf.name, level='critical')
+            wfi.sendLog('injector','the workflow was found in trouble with no replacement')
             no_replacement.add( wf.name )
             continue
+        else:
+            wfi.sendLog('injector','the workflow was found in trouble and has a replacement')
+                    
         print wf.name,"has",len(familly),"familly members"
         print wf.name,"has",len(true_familly),"true familly members"
 
