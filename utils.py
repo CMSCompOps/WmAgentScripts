@@ -40,7 +40,7 @@ def sendLog( subject, text , wfi = None, show=True):
         print "failed to send log to elastic search"
         print str(e)
 
-def searchLog( q ):
+def searchLog( q ,limit=50 ):
     conn = httplib.HTTPConnection( 'cms-elastic-fe.cern.ch:9200' )
     goodquery={
         "query": {
@@ -70,7 +70,7 @@ def searchLog( q ):
             "date"
             ]
         }
-    conn.request("POST" , '/logs/_search?size=50', json.dumps(goodquery))
+    conn.request("POST" , '/logs/_search?size=%d'%limit, json.dumps(goodquery))
     ## not it's just a matter of sending that query to ES.
     #lq = q.replace(':', '\:').replace('-','\\-')
     #conn.request("GET" , '/logs/_search?q=text:%s'% lq)
