@@ -42,6 +42,7 @@ def assignor(url ,specific = None, talk=True, options=None):
     dataset_endpoints = json.loads(open('%s/dataset_endpoints.json'%monitor_dir).read())
 
     max_per_round = UC.get('max_per_round').get('assignor',None)
+    max_cpuh_block = UC.get('max_cpuh_block')
     random.shuffle( wfos )
     for wfo in wfos:
         if options.limit and (n_stalled+n_assigned)>options.limit:
@@ -200,7 +201,7 @@ def assignor(url ,specific = None, talk=True, options=None):
         ## should be 2 but for the time-being let's lower it to get things going
         copies_wanted,cpuh = wfh.getNCopies()
         wfh.sendLog('assignor',"we need %s CPUh"%cpuh)
-        if cpuh>4000000 and not options.go:
+        if cpuh>max_cpuh_block and not options.go:
             #sendEmail('large workflow','that wf %s has a large number of CPUh %s, not assigning, please check the logs'%(wfo.name, cpuh))#,destination=['Dmytro.Kovalskyi@cern.ch'])
             sendLog('assignor','%s requires a large numbr of CPUh %s , not assigning, please check with requester'%( wfo.name, cpuh), level='critical')
             wfh.sendLog('assignor',"Requiring a large number of CPUh %s, not assigning"%cpuh)
