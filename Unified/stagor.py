@@ -370,10 +370,10 @@ def stagor(url,specific =None, options=None):
                 #print json.dumps( lost , indent=2 )
                 ## estimate for how much !
                 fraction_loss,_,n_missing = getDatasetBlockFraction(dsname, lost_block_names)
-                print "We have lost",len(lost_block_names),"blocks",lost_block_names,"for %f%%"%fraction_loss
+                print "We have lost",len(lost_block_names),"blocks",lost_block_names,"for %f%%"%(100*fraction_loss)
                 if fraction_loss > 0.05: ## 95% completion mark
                     #sendEmail('we have lost too many blocks','%s is missing %d blocks, for %d events, %f %% loss'%(dsname, len(lost_block_names), n_missing, fraction_loss))
-                    sendLog('stagor', '%s is missing %d blocks, for %d events, %f %% loss'%(dsname, len(lost_block_names), n_missing, fraction_loss), level='critical')
+                    sendLog('stagor', '%s is missing %d blocks, for %d events, %3.2f %% loss'%(dsname, len(lost_block_names), n_missing, 100*fraction_loss), level='warning')
                     ## the workflow should be rejected !
                     for wf in using_wfos: 
                         if wf.status == 'staging':
@@ -381,7 +381,7 @@ def stagor(url,specific =None, options=None):
                             wf.status = 'trouble'
                             session.commit()
                             #sendEmail('doomed workflow','%s has too much loss on the input dataset %s. please check on stagor logs https://cmst2.web.cern.ch/cmst2/unified/logs/stagor/last.log'%(wf.name, dsname))
-                            sendLog('stagor', '%s has too much loss on the input dataset %s.'%(wf.name, dsname), level='critical')
+                            sendLog('stagor', '%s has too much loss on the input dataset %s. Missing  %d blocks, for %d events, %3.2f %% loss'%(wf.name, dsname, n_missing, 100*fraction_loss), level='critical')
                 else:
                     ## probably enough to make a ggus and remove
                     if not dsname in known_lost_blocks:
