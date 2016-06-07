@@ -343,7 +343,7 @@ def closor(url, specific=None):
     if really_late_files:
         subject = 'These %d files are lagging for %d days and %d retries announcing dataset \n%s'%(len(really_late_files), days_late, retries_late, json.dumps( really_late_files , indent=2) )
         #sendEmail('waiting for files to announce', subject)
-        sendLog('closor', subject, level='critical')
+        sendLog('closor', subject, level='warning')
         sendLog('closor',subject)
         print subject
         open('%s/stuck_files.json'%monitor_dir,'w').write( json.dumps( really_late_files , indent=2))
