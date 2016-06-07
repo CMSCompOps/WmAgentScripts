@@ -76,11 +76,11 @@ def checkor(url, spec=None, options=None):
     ## retrieve bypass and onhold configuration
     bypasses = []
     holdings = []
-    try:
-        already_notified = json.loads(open('already_notifified.json').read())
-    except:
-        print "no record of already notified workflow. starting fresh"
-        already_notified = []
+    #try:
+    #    already_notified = json.loads(open('already_notifified.json').read())
+    #except:
+    #    print "no record of already notified workflow. starting fresh"
+    #    already_notified = []
 
     for bypassor,email in [('vlimant','vlimant@cern.ch'),('jen_a','jen_a@fnal.gov')]:
         bypass_file = '/afs/cern.ch/user/%s/%s/public/ops/bypass.json'%(bypassor[0],bypassor)
@@ -606,11 +606,11 @@ def checkor(url, spec=None, options=None):
             
 
             if go_notify:
-                if wfo.name in already_notified:
-                    print "double notification"
-                    sendEmail('double notification','please take a look at %s'%(wfo.name))                    
-                else:
-                    already_notified.append( wfo.name )
+                #if wfo.name in already_notified:
+                #    print "double notification"
+                #    sendEmail('double notification','please take a look at %s'%(wfo.name))                    
+                #else:
+                #    already_notified.append( wfo.name )
                 pids = wfi.getPrepIDs() ## could be multiple requests
 
                 detailslink = 'https://cmsweb.cern.ch/reqmgr/view/details/%s'
@@ -656,7 +656,7 @@ def checkor(url, spec=None, options=None):
             else:
                 print "current status is",wfo.status,"not changing to anything"
 
-    open('already_notifified.json','w').write( json.dumps( already_notified , indent=2))
+    #open('already_notifified.json','w').write( json.dumps( already_notified , indent=2))
 
     fDB.html()
     if not spec:
