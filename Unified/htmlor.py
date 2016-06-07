@@ -188,9 +188,9 @@ def htmlor( caller = ""):
 
 Last update on %s(CET), %s(GMT)
 <br>
-<a href=logs/ target=_blank>logs</a> <a href=logs/last.log target=_blank>last</a> <a href=statuses.html>statuses</a> <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/ target=_blank>prod mon</a> <a href=https://%s/wmstats/index.html target=_blank>wmstats</a> <a href=http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/SitesInfo.txt target=_blank>detox</a> <a href=locked.html>space</a> <a href=logs/subscribor/last.log target=_blank>blocks</a> <a href=logs/agents/last.log>agents</a>
+<a href=logs/ target=_blank>logs</a> <a href=logs/last.log target=_blank>last</a> <a href=statuses.html>statuses</a> <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/ target=_blank>prod mon</a> <a href=https://%s/wmstats/index.html target=_blank>wmstats</a> <a href=http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/SitesInfo.txt target=_blank>detox</a> <a href=locked.html>space</a> <a href=outofspace.html>out of space</a> <a href=logs/subscribor/last.log target=_blank>blocks</a> <a href=logs/agents/last.log>agents</a>
 <br>
-<a href=https://twiki.cern.ch/twiki/bin/view/CMSPublic/CompOpsWorkflowL3Responsibilities#Automatic_Assignment_and_Unified>what am I</a> <a href=data.html>json interfaces</a> <a href=logs/addHoc/last.log>add-hoc op</a> created from <b>%s <a href=logs/last_running>last running</a></b> <object height=20 type="text/html" data="logs/last_running"><p>backup content</p></object> <a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=critical target=_blank><b><font color=red>critical</b></font></a>
+<a href=https://twiki.cern.ch/twiki/bin/view/CMSPublic/CompOpsWorkflowL3Responsibilities#Automatic_Assignment_and_Unified>what am I</a> <a href=data.html>json interfaces</a> <a href=logs/addHoc/last.log>add-hoc op</a> created from <b>%s <a href=logs/last_running>last running</a></b> <object height=20 type="text/html" data="logs/last_running"><p>backup content</p></object> <a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=warning target=_blank><b><font color=orange>warning</b></font></a> <a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=critical target=_blank><b><font color=red>critical</b></font></a>
 <br><br>
 
 """ %(time.asctime(time.localtime()),
@@ -383,7 +383,8 @@ Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransfertea
         count_by_campaign[wl['Campaign']][int(wl['RequestPriority'])]+=1
         lines.append("<li> %s <hr></li>"%wfl(wf,view=True,ongoing=True))
     text_by_c=""
-    for c in count_by_campaign:
+
+    for c in sorted(count_by_campaign.keys()):
         text_by_c+="<li> %s (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/campaign.php?campaign=%s>mon</a> <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?in_production=1&rsort=8&status=running&campaign=%s>top</a> <a href=https://cms-pdmv.cern.ch/pmp/historical?r=%s target=_blank>pmp</a> "%( c, sum(count_by_campaign[c].values()),c,c,c )
         for p in sorted(count_by_campaign[c].keys()):
             text_by_c+="%d (%d), "%(p,count_by_campaign[c][p])
@@ -443,7 +444,7 @@ Worflow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/reque
     for wf in session.query(Workflow).filter(Workflow.status.startswith('assistance-')).all():
         assistance_by_type[wf.status].append( wf )
         count+=1
-    for assistance_type in assistance_by_type:
+    for assistance_type in sorted(assistance_by_type.keys()):
         text += "<li> %s (%d) <a href=\"javascript:showhide('%s')\">[Click to show/hide]</a><br><div id=\"%s\" style=\"display:none;\"><ul>"%( assistance_type,
                                                                                                                                                len(assistance_by_type[assistance_type]),
                                                                                                                                                assistance_type,
@@ -789,7 +790,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
                 #    up_com += "<li>%s : %d</li>"% (camp, upcoming[site][camp])
                 #up_com += "</ul>"
 
-            text+='<td><a href=http://dashb-ssb.cern.ch/dashboard/templates/sitePendingRunningJobs.html?site=%s>%s</a><br><a href="http://cms-gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="http://cms-gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:50px"></a><br><a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=wmagent&check=submitted&sortby=activity&scale=linear&bars=20&data1=%s&date2=%s">dashb</a><br>CPU pledge: %s<br>%s%s</td>'%(site,site,site,site,site,date1,date2,cpu,ht_disk,up_com)
+            text+='<td><a href=http://dashb-ssb.cern.ch/dashboard/templates/sitePendingRunningJobs.html?site=%s>%s</a><br><a href="http://cms-gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="http://cms-gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:50px"></a><br><a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=&check=submitted&sortby=activity&scale=linear&bars=20&data1=%s&date2=%s">dashb</a><br>CPU pledge: %s<br>%s%s</td>'%(site,site,site,site,site,date1,date2,cpu,ht_disk,up_com)
             if c==n_column:
                 c=0
             else:
@@ -836,16 +837,21 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     lap ( 'done with sites json' )
 
     chart_data = defaultdict(list)
+    out_of_space = set()
+    for site in SI.quota:
+        if not SI.disk[site]: out_of_space.add(site)
+        
     for site in SI.quota:
         chart_data[site].append("""
 var data_%s = google.visualization.arrayToDataTable([ 
 ['Overall', 'Space in TB'],
 //['Quota' , %s],
 ['Locked' , %s],
-['Free' , %s]
+['Free' , %s],
+['Buffer', %s]
 ]);
 """%( site,
-      SI.quota[site], SI.locked[site], SI.disk[site],
+      SI.quota[site], SI.locked[site], SI.disk[site], SI.free_disk[site]
       ))
         chart_data[site].append("""
 var chart_%s = new google.visualization.PieChart(document.getElementById('donutchart_%s'));
@@ -857,20 +863,39 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
 <div id="donutchart_%s" style="height: 200px;width: 300px"></div>
 """%(site))
 
+
         
     ## make the locked/available donut chart
     donut_html = open('%s/locked.html'%monitor_dir,'w')
+    tight_donut_html = open('%s/outofspace.html'%monitor_dir,'w')
+
     tables = "\n".join([info[0] for site,info in chart_data.items()])
     draws = "\n".join([info[1] for site,info in chart_data.items()])
     divs = "\n".join([info[2] for site,info in chart_data.items()])
 
+    oos_tables = "\n".join([info[0] for site,info in chart_data.items() if site in out_of_space])
+    oos_draws = "\n".join([info[1] for site,info in chart_data.items() if site in out_of_space])
+    oos_divs = "\n".join([info[2] for site,info in chart_data.items() if site in out_of_space])
+
     
     divs_table="<table border=0>"
+    oos_divs_table="<table border=0>"
+    i_oos=1
     for c,site in enumerate(sorted(chart_data.keys())):
+        rem=""
+        if site in out_of_space:
+            rem = "<br><a href=remaining_%s.json>remaining datasets</a>"% site
         if c%5==0:
             divs_table += "<tr>"
-        divs_table += "<td>%s</td>"%(chart_data[site][2])
+        if i_oos%5==0:
+            oos_divs_table += "<tr>"
+
+        divs_table += "<td>%s%s</td>"%(chart_data[site][2], rem)
+        if site in out_of_space:
+            oos_divs_table += "<td>%s%s</td>"%(chart_data[site][2], rem)
+            i_oos+=1
     divs_table += "</table>"
+    oos_divs_table += "</table>"
 
     donut_html.write("""
 <html>
@@ -890,9 +915,30 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
 %s
   </body>
 </html>
-"""%( tables,draws,divs_table   )
-                     )
+"""%( tables,draws,divs_table   ))
+
+    tight_donut_html.write("""
+<html>
+  <head>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+      google.load("visualization", "1", {packages:["corechart"]});
+      google.setOnLoadCallback(drawChart);
+      function drawChart() {
+%s
+
+%s
+      }
+    </script>
+  </head>
+  <body>
+%s
+  </body>
+</html>
+"""%( oos_tables,oos_draws,oos_divs_table   ))
+                     
     donut_html.close()
+    tight_donut_html.close()
 
     html_doc.write("""Site configuration
 <a href="javascript:showhide('site')">[Click to show/hide]</a>

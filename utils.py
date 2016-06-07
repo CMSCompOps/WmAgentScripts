@@ -43,6 +43,7 @@ def sendLog( subject, text , wfi = None, show=True ,level='info'):
     except Exception as e:
         print "failed to send log to elastic search"
         print str(e)
+        sendEmail('failed logging',subject+text+str(e))
 
 def searchLog( q ,limit=50 ):
     conn = httplib.HTTPConnection( 'cms-elastic-fe.cern.ch:9200' )
@@ -1056,6 +1057,7 @@ class siteInfo:
 
         self.storage = defaultdict(int)
         self.disk = defaultdict(int)
+        self.free_disk = defaultdict(int)
         self.quota = defaultdict(int)
         self.locked = defaultdict(int)
         self.cpu_pledges = defaultdict(int)
@@ -1239,10 +1241,12 @@ class siteInfo:
 
             ## consider quota to be 80% of what's available
             available = int(float(quota)*0.90) - int(locked)
-            if available >0:
-                self.disk[site] = available
-            else:
-                self.disk[site] = 0 
+
+            self.disk[site] = available if available >0 else 0
+            ddm_free = int(float(quota)) - int(locked) - self.disk[site]
+            self.free_disk[site] = ddm_free if ddm_free>0 else 0
+            
+                            
             self.quota[site] = int(quota)
             self.locked[site] = int(locked)
 
@@ -2415,6 +2419,7 @@ def getDatasetEventsAndLumis(dataset, blocks=None):
         r = try_getDatasetEventsAndLumis( dataset, blocks)
     except:
         try:
+            time.sleep(2)
             r = try_getDatasetEventsAndLumis( dataset, blocks)
         except Exception as e:
             print "fatal exception in getDatasetEventsAndLumis",dataset,blocks
