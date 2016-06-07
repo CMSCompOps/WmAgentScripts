@@ -1111,12 +1111,8 @@ def submitWorkflow(url, schema, reqmgr2=False):
     else:
         data = requestManager1Post(url,"/reqmgr/create/makeSchema", schema, nested=True)
         print data
-        m = re.search("details\/(.*)\'", data)
-        if m:
-            newWorkflow = m.group(1)
-            return newWorkflow
-        else:
-            return None
+        newWorkflow = data.split('"')[1].split('/')[-1]
+        return newWorkflow
         
 
 def reqmgr1_to_2_Splitting(params):
