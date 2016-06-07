@@ -604,12 +604,13 @@ def checkor(url, spec=None, options=None):
             if assistance_tags and not 'manual' in existing_assistance_tags and existing_assistance_tags != assistance_tags:
                 go_notify=True
             
-            if go_notify and wfo.name in already_notified:
-                print "double notification"
-                sendEmail('double notification','please take a look at %s'%(wfo.name))
-            elif go_notify:
-                    
-                already_notified.append( wfo.name )
+
+            if go_notify:
+                if wfo.name in already_notified:
+                    print "double notification"
+                    sendEmail('double notification','please take a look at %s'%(wfo.name))                    
+                else:
+                    already_notified.append( wfo.name )
                 pids = wfi.getPrepIDs() ## could be multiple requests
 
                 detailslink = 'https://cmsweb.cern.ch/reqmgr/view/details/%s'
@@ -620,7 +621,7 @@ def checkor(url, spec=None, options=None):
                     'recovery': 'Samples completed with missing statistics:\n%s\n%s '%( '\n'.join(['%.2f %% complete for %s'%(percent_completions[output]*100, output) for output in wfi.request['OutputDatasets'] ] ), perflink ),
                     'biglumi': 'Samples completed with large luminosity blocks:\n%s\n%s '%('\n'.join(['%d > %d for %s'%(events_per_lumi[output], lumi_upper_limit[output], output) for output in wfi.request['OutputDatasets'] if (events_per_lumi[output] > lumi_upper_limit[output])]), splitlink),
                     'duplicates': 'Samples completed with duplicated luminosity blocks:\n%s\n'%( '\n'.join(['%s'%output for output in wfi.request['OutputDatasets'] if output in duplications and duplications[output] ] ) ),
-                    #'filemismatch': 'Samples completed with inconsistency in DBS/Phedex',
+                    'filemismatch': 'Samples completed with inconsistency in DBS/Phedex',
                     #'manual' :                     'Workflow completed and requires manual checks by Ops',
                     }
                 
