@@ -391,6 +391,13 @@
     "go": true,
     "SecondaryLocation" : [ "T1_US_FNAL", "T1_ES_PIC", "T1_FR_CCIN2P3","T1_IT_CNAF","T1_RU_JINR","T1_UK_RAL","T1_DE_KIT"]
   },
+  "RunIISpring16FSPremixDR": {
+    "go": true,
+    "SecondaryLocation" : [ "T1_US_FNAL", "T1_ES_PIC", "T1_FR_CCIN2P3","T1_IT_CNAF","T1_RU_JINR","T1_UK_RAL","T1_DE_KIT"],
+    "parameters": {
+         "TrustPUSitelists" : true
+    }
+  },
   "RunIISpring15PrePremix": {
     "go": true,
     "SiteWhitelist" : [ "T1_US_FNAL", "T1_DE_KIT" , "T1_IT_CNAF", "T1_RU_JINR" ,"T2_CH_CERN" ]
