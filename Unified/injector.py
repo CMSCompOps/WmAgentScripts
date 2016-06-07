@@ -71,7 +71,7 @@ def injector(url, options, specific):
     
     if cannot_inject:
         #sendEmail('workflow duplicates','These workflow cannot be added in because of duplicates \n\n %s'%( '\n'.join(cannot_inject)))
-        sendLog('injector','These workflow cannot be added in because of duplicates \n\n %s'%( '\n'.join(cannot_inject)), level='critical')
+        sendLog('injector','These workflow cannot be added in because of duplicates \n\n %s'%( '\n'.join(cannot_inject)), level='warning')
 
     ## passing a round of invalidation of what needs to be invalidated
     if use_mcm and (options.invalidate or True):
@@ -101,7 +101,7 @@ def injector(url, options, specific):
             true_familly.append( fwl )
 
         if len(true_familly)==0:
-            sendLog('injector','%s had no replacement'%wf.name, level='critical')
+            #sendLog('injector','%s had no replacement'%wf.name, level='critical')
             wfi.sendLog('injector','the workflow was found in trouble with no replacement')
             no_replacement.add( wf.name )
             continue
