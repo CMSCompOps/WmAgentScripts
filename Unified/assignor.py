@@ -71,7 +71,7 @@ def assignor(url ,specific = None, talk=True, options=None):
                     n_stalled+=1
                     no_go = True
                     break
-            if 'secondaries' in CI.campaigns[campaign]:
+            if campaign in CI.campaigns and 'secondaries' in CI.campaigns[campaign]:
                 allowed_secondary.update( CI.campaigns[campaign]['secondaries'] )
         if (secondary and allowed_secondary) and (set(secondary)&allowed_secondary!=set(secondary)):
             wfh.sendLog('assignor','%s is not an allowed secondary'%(', '.join(set(secondary)-allowed_secondary)))
