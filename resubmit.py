@@ -41,7 +41,7 @@ DELTA_EVENTS = 1000
 DELTA_LUMIS = 200
 
 
-def modifySchema(helper, workflow, user, group, cache, events, firstLumi, backfill=False):
+def modifySchema(helper, workflow, user, group, cache, events, firstLumi, backfill=False, memory=None):
     """
     Adapts schema to right parameters.
     If the original workflow points to DBS2, DBS3 URL is fixed instead.
@@ -55,6 +55,12 @@ def modifySchema(helper, workflow, user, group, cache, events, firstLumi, backfi
             result['ConfigCacheID'] = value
         elif key == 'RequestSizeEvents':
             result['RequestSizeEvents'] = value
+        #Set memory
+        elif key == 'Memory':
+            if memory != None:
+                result['Memory'] = memory
+            else:
+                result['Memory'] = value
         #requestor info
         elif key == 'Requestor':
             result['Requestor'] = user
@@ -198,7 +204,7 @@ def modifySchema(helper, workflow, user, group, cache, events, firstLumi, backfi
     return result
 
 
-def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=False, bwl=None):
+def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=False, memory=None, bwl=None):
     """
     clones a workflow
     """
@@ -210,7 +216,7 @@ def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=F
     except:
         cache = None
         
-    schema = modifySchema(helper, workflow, user, group, cache, None, None, backfill)
+    schema = modifySchema(helper, workflow, user, group, cache, None, None, backfill, memory)
 
     schema['OriginalRequestName'] = workflow
     if verbose:
@@ -332,6 +338,8 @@ def main():
                       help="Group to send the workflows.")
     parser.add_option("-b", "--backfill", action="store_true", dest="backfill", default=False,
                       help="Creates a clone for backfill test purposes.")
+    parser.add_option("-m", "--memory", dest="memory",
+                  help="Set max memory for the event. At assignment, this will be used to calculate maxRSS = memory*1024")
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False,
                       help="Prints all query information.")
     parser.add_option('-f', '--file', help='Text file with a list of workflows', dest='file')
@@ -363,8 +371,13 @@ def main():
 
     if options.action == 'clone':
         for wf in wfs:
+            workflow = reqMgrClient.Workflow(wf)
+            if options.memory:
+                memory = options.memory
+            else:
+                memory = workflow.info["Memory"]
             cloneWorkflow(
-                wf, user, options.group, options.verbose, options.backfill, options.testbed, bwl=options.bwl)
+                wf, user, options.group, options.verbose, options.backfill, options.testbed, memory,bwl=options.bwl)
     elif options.action == 'extend':
         for wf in wfs:
             extendWorkflow(wf, user, options.group, options.verbose, options.events, options.firstlumi)
