@@ -116,6 +116,10 @@ def checkor(url, spec=None, options=None):
             sendLog('checkor',"cannot get force complete list from %s"%rider)
             sendEmail("malformated force complet file","%s is not json readable"%rider_file, destination=[email])
 
+    if use_mcm:
+        mcm_force = mcm.get('/restapi/requests/forcecomplete')
+        bypasses.extend( mcm_force )
+
     pattern_fraction_pass = UC.get('pattern_fraction_pass')
 
     total_running_time = 5.*60. 
@@ -182,10 +186,17 @@ def checkor(url, spec=None, options=None):
 
         ## get it from somewhere
         bypass_checks = False
+        pids = wfi.getPrepIDs()
+        bypass_by_mcm = False
         for bypass in bypasses:
             if bypass in wfo.name:
-                wfi.sendLog('checkor',"we can bypass checks on %s because of keyword%s "%( wfo.name, bypass))
+                wfi.sendLog('checkor',"we can bypass checks on %s because of keyword %s "%( wfo.name, bypass))
                 bypass_checks = True
+                break
+            if bypass in pids:
+                wfi.sendLog('checkor',"we can bypass checks on %s because of prepid %s "%( wfo.name, bypass))
+                bypass_checks = True
+                bypass_by_mcm = True
                 break
         
         #if not CI.go( wfi.request['Campaign'] ) and not bypass_checks:
@@ -568,6 +579,10 @@ def checkor(url, spec=None, options=None):
                 if res in [None,"None"]:
                     wfo.status = 'close'
                     session.commit()
+                    if use_mcm and bypass_by_mcm:
+                        ## shoot large on all prepids
+                        for pid in pids:
+                            mcm.delete('/restapi/requests/forcecomplete/%s'%pid)
                 else:
                     print "could not close out",wfo.name,"will try again next time"
         else:
@@ -611,7 +626,6 @@ def checkor(url, spec=None, options=None):
                 #    sendEmail('double notification','please take a look at %s'%(wfo.name))                    
                 #else:
                 #    already_notified.append( wfo.name )
-                pids = wfi.getPrepIDs() ## could be multiple requests
 
                 detailslink = 'https://cmsweb.cern.ch/reqmgr/view/details/%s'
                 perflink = 'https://cmsweb.cern.ch/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s'%(wfo.name)

@@ -7,6 +7,7 @@ from utils import campaignInfo, sendEmail, siteInfo, sendLog
 from collections import defaultdict
 import json
 import random
+from McMClient import McMClient
 
 
 def forceComplete(url, wfi):
@@ -25,8 +26,12 @@ def forceComplete(url, wfi):
             reqMgrClient.invalidateWorkflow(url, member['RequestName'], current_status=member['RequestStatus'])
 
 def completor(url, specific):
-    up = componentInfo(mcm=False, soft=['mcm'])
+    use_mcm = True
+    up = componentInfo(mcm=use_mcm, soft=['mcm'])
     if not up.check(): return
+    use_mcm = up.status['mcm']
+    if use_mcm:
+        mcm = McMClient(dev=False)
 
     CI = campaignInfo()
     SI = siteInfo()
@@ -63,7 +68,12 @@ def completor(url, specific):
         except:
             print "cannot get force complete list from",rider
             sendEmail("malformated force complet file","%s is not json readable"%rider_file, destination=[email])
-        
+            
+    if use_mcm:    
+        ## add all workflow that mcm wants to get force completed
+        mcm_force = mcm.get('/restapi/requests/forcecomplete')
+        ## assuming this will be a list of actual prepids
+        overrides['mcm'] = mcm_force
 
     print "can force complete on"
     print json.dumps( good_fractions ,indent=2)
@@ -82,20 +92,25 @@ def completor(url, specific):
         print "looking at",wfo.name
         ## get all of the same
         wfi = workflowInfo(url, wfo.name)
-
+        pids = wfi.getPrepIDs()
         skip=False
         if not any([c in wfo.name for c in good_fractions]): skip=True
         for user,spec in overrides.items():
-            #print spec
-            if wfo.name in spec and wfi.request['RequestStatus']!='force-complete':
-                #skip=False ## do not do it automatically yet
-                sendEmail('force-complete requested','%s is asking for %s to be force complete'%(user,wfo.name))
-                wfi = workflowInfo(url, wfo.name)
-                forceComplete(url , wfi )
-                skip=True
-                wfi.notifyRequestor("The workflow %s was force completed by request of %s"%(wfo.name,user), do_batch=False)
-                wfi.sendLog('completor','%s is asking for %s to be force complete'%(user,wfo.name))
-                break
+
+            if wfi.request['RequestStatus']!='force-complete':
+                if any(s in wfo.name for s in spec) or (wfo.name in spec) or any(pid in spec for pid in pids) or any(s in pids for s in spec):
+                    sendEmail('force-complete requested','%s is asking for %s to be force complete'%(user,wfo.name))
+                    wfi = workflowInfo(url, wfo.name)
+                    forceComplete(url , wfi )
+                    skip=True
+                    wfi.notifyRequestor("The workflow %s was force completed by request of %s"%(wfo.name,user), do_batch=False)
+                    wfi.sendLog('completor','%s is asking for %s to be force complete'%(user,wfo.name))
+                    if user == 'mcm' and use_mcm:
+                        for pid in wfi.getPrepIDs():
+                            mcm.delete('/restapi/requests/forcecomplete/%s'%pid)
+                    #sendEmail('completor test','not force completing automatically, you have to go back to it')
+                    #skip=False
+                    break
     
         if wfo.status.startswith('assistance'): skip = True
 
