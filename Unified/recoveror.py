@@ -241,7 +241,7 @@ def recoveror(url,specific,options=None):
         if len(task_to_recover) != len(all_errors):
             print "Should not be doing partial ACDC. skipping"
             #sendEmail('recoveror','do not want to make partial acdc on %s'%wfo.name)
-            sendLog('recoveror','do not want to make partial acdc on %s'%wfo.name, level='critical')
+            sendLog('recoveror','do not want to make partial acdc on %s'%wfo.name, level='warning')
             recover = False
 
         if task_to_recover and recover:
