@@ -231,17 +231,18 @@ def main():
 
         #Check to see if the workflow is a task chain or an ACDC of a taskchain
         taskchain = (schema["RequestType"] == "TaskChain") or ((schema["RequestType"] == "Resubmission") and "task" in schema["InitialTaskPath"].split("/")[1])
+
+        #Dealing with era and proc string
         if taskchain:
             # Setting the Era and ProcStr values per Task
             for key, value in schema.items():
                 if type(value) is dict and key.startswith("Task"):
                     try:
-                        procstring[value['TaskName']] = value['ProcessingString'].replace("-", "_")
+                        procstring[value['TaskName']] = value['ProcessingString']
                         era[value['TaskName']] = value['AcquisitionEra']
                     except KeyError:
                         print("This taskchain request has no AcquisitionEra or ProcessingString defined into the Tasks, aborting...")
                         sys.exit(1)
-
         # Adding the special string - in case it was provided in the command line
         if options.special:
             specialStr = '_' + str(options.special)
@@ -256,6 +257,12 @@ def main():
             era = options.era
         elif not taskchain:
             era = wf.info['AcquisitionEra']
+        #Set era and procstring to none for merge ACDCs inside a task chain
+        if schema["RequestType"] == "Resubmission") and wfInfo.info["PrepID"].startswith("task") and "Merge" in schema["InitialTaskPath"].split("/")[-1]:
+            era = None
+            procstring = None
+
+
 
         # Must use --lfn option, otherwise workflow won't be assigned
         if options.lfn:
@@ -305,11 +312,6 @@ def main():
             if exist and procversion <= maxv:
                 print "Some output datasets exist, its advised to assign with v ==", maxv + 1
                 sys.exit(0)
-
-        #Check if we are dealing with a TAskChain resubmission
-        elif schema["RequestType"] == "Resubmission" and "task" in schema["InitialTaskPath"].split("/")[1]:
-            procstring = wf.info["ProcessingString"]
-            era = wf.info["AcquisitionEra"]
 
     # If the --test argument was provided, then just print the information
     # gathered so far and abort the assignment
