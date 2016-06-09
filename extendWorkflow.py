@@ -9,13 +9,17 @@ import re
 import reqMgrClient
 import dbs3Client
 from WMCore.WMSpec.WMWorkload import WMWorkloadHelper
+from optparse import OptionParser
+from pprint import pprint
+import pwd
+import os
 
 reqmgrCouchURL = "https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache"
 
 DELTA_EVENTS = 1000
 DELTA_LUMIS = 200
 
-def modifySchema(helper, workflow, user, group, events):
+def modifySchema(helper, workflow, user, group, events, firstLumi):
     """
     Adapts schema to right parameters
     """
@@ -46,29 +50,26 @@ def modifySchema(helper, workflow, user, group, events):
             #delete entry
         #    continue
         #skip empty entries
-        elif not value:
-            continue
         elif value != None:
             result[key] = value
-
+        elif not value:
+            continue
+    # Clean requestor  DN?
+    if 'RequestorDN' in result:
+        del result['RequestorDN']
+        
     #extend workflow so it will safely start outside of the boundary
     RequestNumEvents = int(result['RequestNumEvents'])
     FirstEvent = int(result['FirstEvent'])
-    FirstLumi = int(result['FirstLumi'])
-    EventsPerLumi = int(result['EventsPerLumi'])
-    FilterEfficiency = float(result['FilterEfficiency'])
 
     #FirstEvent_NEW > FirstEvent + RequestNumEvents
     #the fist event needs to be oustide the range
     result['FirstEvent'] = FirstEvent + RequestNumEvents + DELTA_EVENTS
 
     #FirstLumi_NEW > FirstLumi + RequestNumEvents/events_per_job/filterEff
-    # same for the first lumi, needs to be after the last lumi
-    #get the last lumi of the dataset
-    dataset = reqMgrClient.outputdatasetsWorkflow(url, workflow).pop()
-    LastLumi = dbs3Client.getMaxLumi(dataset)
+    # same for the first lumi, needs to be after the last lumi  
 
-    result['FirstLumi'] = LastLumi + DELTA_LUMIS
+    result['FirstLumi'] = firstLumi + DELTA_LUMIS
     #only the desired events    
     result['RequestNumEvents'] = events
     
@@ -79,7 +80,11 @@ def modifySchema(helper, workflow, user, group, events):
     if result['RequestType']=='MonteCarlo':
         #check assigning parameters
         #seek for events per job on helper
-        splitting = helper.listJobSplittingParametersByTask()
+        try:
+            splitting = helper.listJobSplittingParametersByTask()
+        except AttributeError:
+            splitting = {}
+        
         eventsPerJob = 120000
         eventsPerLumi = 100000
         for k, v in splitting.items():
@@ -89,8 +94,8 @@ def modifySchema(helper, workflow, user, group, events):
                     eventsPerJob = v['events_per_job']
                 elif 'events_per_lumi' in v:
                     eventsPerLumi = v['events_per_lumi']
-        result['EventsPerJob'] = eventsPerJob
-        #result['EventsPerLumi'] = eventsPerLumi
+        # result['EventsPerJob'] = eventsPerJob
+        # result['EventsPerLumi'] = eventsPerLumi
 
     #Merged LFN   
     if 'MergedLFNBase' not in result:
@@ -117,32 +122,32 @@ def getMissingEvents(workflow):
     outputEvents = reqMgrClient.getOutputEvents(url, workflow, dataset)
     return int(inputEvents) - int(outputEvents)
 
-"""
-__Main__
-"""
-url = 'cmsweb.cern.ch'
-
-def main():
-    # Check the arguements, get info from them
-    if len(sys.argv) < 4:
-        print "Usage:"
-        print "  ./resubmit WORKFLOW_NAME USER GROUP [EVENTS]"
-        sys.exit(0)
-    workflow = sys.argv[1]
-    user = sys.argv[2]
-    group = sys.argv[3]
-    if len(sys.argv) > 4:
-        events = int(sys.argv[4])
-    else:
+def extendWorkflow(workflow, user, group, verbose=False, events=None, firstlumi=None):
+    
+    if events is None:
         events = getMissingEvents(workflow)
-
+    events = int(events)
+    
+    if firstlumi is None:
+        #get the last lumi of the dataset
+        dataset = reqMgrClient.outputdatasetsWorkflow(url, workflow).pop()
+          
+        lastLumi = dbs3Client.getMaxLumi(dataset)
+        firstlumi = lastLumi
+    firstlumi = int(firstlumi)
+    
     # Get info about the workflow to be cloned
     helper = reqMgrClient.retrieveSchema(workflow)
-    schema = modifySchema(helper, workflow, user, group, events)
-
+    schema = modifySchema(helper, workflow, user, group, events, firstlumi)
+    schema['OriginalRequestName'] = workflow
+    if verbose:
+        pprint(schema)
     print 'Submitting workflow'
     # Sumbit cloned workflow to ReqMgr
     response = reqMgrClient.submitWorkflow(url,schema)
+    if verbose:
+        print "RESPONSE", response
+    
     #find the workflow name in response
     m = re.search("details\/(.*)\'",response)
     if m:
@@ -157,6 +162,66 @@ def main():
         print data
     else:
         print response
+    pass
+"""
+__Main__
+"""
+url = 'cmsweb.cern.ch'
+
+def main():
+    # Check the arguements, get info from them
+    
+    # Create option parser
+    usage = "\n       python %prog [options] [WORKFLOW_NAME] [USER GROUP]\n"\
+            "WORKFLOW_NAME: if the list file is provided this should be empty\n"\
+            "USER: the user for creating the clone, if empty it will\n"\
+            "      use the OS user running the script\n"\
+            "GROUP: the group for creating the clone, if empty it will\n"\
+            "      use 'DATAOPS' by default"
+
+    parser = OptionParser(usage=usage)
+    parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False,
+                      help="Prints all query information.")
+    parser.add_option('-f', '--file', help='Text file with a list of workflows', dest='file')
+    parser.add_option('-e', '--events', help='# of events to add', dest='events')
+    parser.add_option('-l', '--firstlumi', help='# of the first lumi', dest='firstlumi')
+    (options, args) = parser.parse_args()
+
+
+    # Check the arguments, get info from them
+    if options.file:
+        wfs = [l.strip() for l in open(options.file) if l.strip()]
+        if len(args) == 2:
+            user = args[0]
+            group = args[1]
+        elif len(args) == 0:
+            # get os username by default
+            uinfo = pwd.getpwuid(os.getuid())
+            user = uinfo.pw_name
+            # group by default DATAOPS
+            group = 'DATAOPS'
+        else:
+            parser.error("Provide the workflow of a file of workflows")
+            sys.exit(1)    
+    else:
+        if len(args) == 3:
+            user = args[1]
+            group = args[2]
+        elif len(args) == 1:
+            # get os username by default
+            uinfo = pwd.getpwuid(os.getuid())
+            user = uinfo.pw_name
+            # group by default DATAOPS
+            group = 'DATAOPS'
+        else:
+            parser.error("Provide the workflow of a file of workflows")
+            sys.exit(1)
+        # name of workflow
+        wfs = [args[0]]
+    
+    for wf in wfs:
+        extendWorkflow(wf, user, group, options.verbose, options.events, options.firstlumi)
+    
     sys.exit(0)
 
 

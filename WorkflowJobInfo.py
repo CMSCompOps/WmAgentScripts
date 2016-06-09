@@ -1,16 +1,24 @@
 from WMCoreService.WMStatsClient import WMStatsClient
 from WMCoreService.DataStruct.RequestInfoCollection import RequestInfoCollection, RequestInfo
-import sys
+from optparse import OptionParser
 
 
 url = "https://cmsweb.cern.ch/couchdb/wmstats"
 
 def main():
     #a list of workflows
-    workflows = sys.argv[1:]
-  
-    
+    usage = "python %prog [OPTIONS] WORKFLOWS"
+    parser = OptionParser(usage=usage)
+    parser.add_option('-f', '--file', help='Text file with a list of workflows', dest='file')
+    (options, args) = parser.parse_args()
+
+    if options.file:
+        workflows = [l.strip() for l in open(options.file) if l.strip()]
+    else:  
+        workflows = args
+
     wMStats = WMStatsClient(url)
+    
     print "start to getting job information from %s" % url
     #retrieve job information
     workflowsWithData = wMStats.getRequestByNames(workflows, jobInfoFlag = True)
@@ -23,7 +31,7 @@ def main():
         print wf
         #a table
         print '\n'.join( "%10s %10s"%(t,n) 
-            for t,n in  info.getJobSummary().getJSONStatus().items())
+            for t, n in  info.getJobSummary().getJSONStatus().items())
 
 
 if __name__ == "__main__":

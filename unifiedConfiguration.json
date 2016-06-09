@@ -1,27 +1,86 @@
 {
+ "site_for_overflow": {
+   "value" : ["NONO_T0_CH_CERN","T2_CH_CERN_HLT"],
+   "description" : "The sites that we set to overflow and require a specific treatment"
+ },
+ "max_cpuh_block" : {
+   "value" : 4000000,
+   "description" : "Value of CPUh above which a wf is blocked from assigning"
+ },
+ "max_force_complete" : {
+   "value" : 5,
+   "description" : "Number of workflow that can be forced complete at a time"
+ },
+ "max_per_round" : {
+   "description" : "limitation on the number of wf to process per module",
+   "value" : {
+    "assignor" : null,
+    "closor" : null
+    }
+ },
+ "pattern_fraction_pass": {
+   "value" : {},
+   "description" : "overide of the completion fraction of dataset with keyword"
+ },
+ "tiers_with_no_custodial": {
+   "value" : ["DQM","DQMIO","RECO","RAWAODSIM"],
+   "description": "The data tiers that do not go to tape. Can be overidden by custodial overide at campaign level"
+ },
+ "use_parent_custodial": {
+   "value" : false,
+   "description": "Use the location of the parent dataset for custodial copy"
+ },
+ "tiers_with_no_check": {
+   "value" : ["DQM","DQMIO"],
+   "description": "The data tiers that do not pass closeout checks. Can be overidden by custodial overide at campaign level"
+ },
+ "tiers_no_DDM": {
+   "value" : ["GEN-SIM","LHE","GEN","DQM","DQMIO","GEN-SIM-DIGI-RAW"],
+   "description": "The data tiers that do not go to AnaOps"
+ },
+ "tiers_to_DDM": {
+   "value" : ["AODSIM","MINIAODSIM","GEN-SIM-RAW","GEN-SIM-RECO","GEN-SIM-RECODEBUG","AOD","RECO","MINIAOD","ALCARECO","USER","RAW-RECO","RAWAODSIM"],
+   "description": "The data tiers that go to AnaOps"
+ },
+ "tiers_keep_on_disk": {
+   "value" : ["LHE"],
+   "description": "the data tier not unlocked until used again"
+ },
+ "check_fullcopy_to_announce": {
+  "value" : false,
+  "description": "Whether to check for a full copy being present prior to announcing a dataset"
+ },
  "stagor_sends_back": {
    "value" : true,
    "description": "Whether the stagor module can send workflow back to considered"
  },
- "fast_stagor_pass_availability": {
-   "value" : 3.0,
-   "description": "The fraction of availability above which to fast pass stagor"
-  },
-  "max_transfer_in_GB": {
-   "value" : 200000,
-   "description": "The total size of the input datasets that can be transfered at a given time"
-  },
   "max_handled_workflows": {
-   "value" : 1200,
+   "value" : 4000,
    "description": "The total number of workflows that we allow to handle at a time (transfer, running, assistance)"
   },
   "max_staging_workflows": {
-   "value" : 130,
+   "value" : 400,
    "description": "The total number of workflows that we allow to stage at a time"
   }, 
   "max_staging_workflows_per_site": {
-   "value" : 130,
+   "value" : 400,
    "description": "The total number of workflows that we allow to stage at a time per site"
+  },
+  "max_transfer_in_GB": {
+   "value" : 800000,
+   "description": "The total size of the input datasets that can be transfered at a given time"
+  },
+  "transfer_timeout": {
+   "value" : 7,
+   "description": "Time in days after which to consider a transfer to be stuck"
+  },
+  "transfer_lowrate": {
+   "value" : 0.004,
+   "description": "Rate in GB/s under which to consider a transfer to be stuck, after transfer_timeout days"
+  },
+  "less_copies_than_requested": {
+   "value" : 1,
+   "description": "Decrease the number of requested copies by that number, floored to 1"
   },
   "chopping_threshold_in_GB": {
   "value" : 4000,
@@ -51,6 +110,11 @@
         "8021" : [ { "legend" : "cmssw failure",
                  "solution" : "recover" , 
                  "details" : "FileReadError",
+                 "rate" : 20
+                 } ],
+        "8001" : [ { "legend" : "lhe failure",
+                 "solution" : "split-4" , 
+                 "details" : "No lhe event found in ExternalLHEProducer::produce()",
                  "rate" : 20
                  } ]
         },

@@ -8,18 +8,13 @@ import reqMgrClient
 
 url = 'cmsweb.cern.ch'
 
-def changePriorityWorkflow(url, workflow, priority):
-    params = {workflow + ":status": "", workflow + ":priority": str(priority)}
-    data = reqMgrClient.requestManagerPost(url, "/reqmgr/view/doAdmin", params)
-    print data
-
 def main():
     parser = optparse.OptionParser("Usage %prog [WF1 WF2 ... | -f FILE] PRIO")
     parser.add_option('-f', '--file', help='Text file',
                       dest='file'); options, args = parser.parse_args()
 
     if options.file:
-        wfs = [l.strip() for l in open(args[1]).readlines() if l.strip()]
+        wfs = [l.strip() for l in open(options.file).readlines() if l.strip()]
     elif len(args) >= 2:
         # get workflow and priority
         wfs = args[:-1]
@@ -30,7 +25,7 @@ def main():
     priority = args[-1]
     # repeat for everyone
     for wf in wfs:
-        changePriorityWorkflow(url, wf, priority)
+        reqMgrClient.changePriorityWorkflow(url, wf, priority)
     
 
 if __name__ == "__main__":

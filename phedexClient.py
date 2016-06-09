@@ -236,6 +236,19 @@ def testCustodialSubscriptionRequested(url, dataset, site):
     return False
 
 def getCustodialSubscriptionRequestSite(datasetName):
+    try:
+        r = try_getCustodialSubscriptionRequestSite(datasetName)
+    except:
+        try:
+            r = try_getCustodialSubscriptionRequestSite(datasetName)
+
+        except:
+            ## yes or NO ?
+            r = []
+    return r
+            
+
+def try_getCustodialSubscriptionRequestSite(datasetName):
     """
     Returns the site (or sites) in which the dataset has
     a custodial subscription request, no matter if it was approved
@@ -414,9 +427,8 @@ def main():
     url='cmsweb.cern.ch'
     #reads file, striping and ignoring empty lines
     outputdatasets = [ds.strip() for ds in open(filename).readlines() if ds.strip()]
-    makeCustodialXML(url, outputdatasets)
-    print response.status, response.reason
-    print response.read()
+    resp = makeReplicaRequest(url, site, outputdatasets, comments)
+    print resp
     
     sys.exit(0);
 

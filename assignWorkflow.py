@@ -68,6 +68,7 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn,
               "MaxMergeEvents": 50000,
               "MaxRSS": 4294967296,
               "MaxVSize": 4294967296,
+              "SoftTimeout" : 159600,
               "AcquisitionEra": era,
               "Dashboard": activity,
               "ProcessingVersion": procversion,
@@ -77,7 +78,7 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn,
               }
     # add xrootd (trustSiteList)
     if trust_site:
-        params['useSiteListAsLocation'] = True
+        params['TrustSitelists'] = True
 
     # if replica we add NonCustodial sites
     if replica:
@@ -87,12 +88,12 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn,
     if verbose:
         pprint(params)
 
-    res = rqMgr.requestManagerPost(
-        url, "/reqmgr/assign/handleAssignmentPage", params, nested=True)
-    if "Assigned" in res:
+    params['execute'] = True
+    res = rqMgr.assignWorkflow(url, workflow, team, params)
+    if res:
         print 'Assigned workflow:', workflow, 'to site:', sites, 'with processing version', procversion
     else:
-        print res
+        print 'could not assign the workflow',workflow
 
 
 def main():
@@ -181,6 +182,7 @@ def main():
             procversion = options.procversion
         else:
             procversion = wf.info['ProcessingVersion']
+            
         procstring = wf.info['ProcessingString']
         assignRequest(url, wf.name, team, sites, era, procversion,
                       activity, lfn, procstring, trust_site, options.replica, options.verbose)

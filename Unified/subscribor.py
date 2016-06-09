@@ -1,14 +1,19 @@
+#!/usr/bin/env python
 from assignSession import *
-from utils import workflowInfo, getDatasetBlockAndSite, getWorkLoad, makeReplicaRequest, sendEmail, getDatasetOnGoingDeletion
+from utils import workflowInfo, getDatasetBlockAndSite, getWorkLoad, makeReplicaRequest, sendEmail, getDatasetOnGoingDeletion, componentInfo, reqmgr_url
 import json
 from collections import defaultdict
 import random
 import sys
 
-url ='cmsweb.cern.ch'
+url = reqmgr_url
+
+up = componentInfo(mcm=False, soft=['mcm'])
+if not up.check(): sys.exit(1)
 
 statuses = [
     #'away','assistance','close','done',
+    'close',
     'none'
     ]
 #randome.shuffle( statuses )
@@ -49,7 +54,7 @@ for iw,wfo in enumerate(wfs):
             print "\t\tshould not subscribe with on-going deletions",out
             continue
         for site,blocks in blocks_at_sites.items():
-            
+            if 'Buffer' in site or 'Export' in site or 'MSS' in site: continue
             all_blocks_at_sites[site].update( blocks )
         print "\t",out
         print "\t\t",len(blocks_at_sites),"sites",sorted(blocks_at_sites.keys()),"with unsubscribed blocks"
@@ -62,14 +67,13 @@ print len(all_blocks_at_sites.keys()),"sites to subscribe things at"
 for site,blocks in all_blocks_at_sites.items():
     if 'Buffer' in site or 'Export' in site or 'MSS' in site: continue
 
-    if not site in done:
-        done[site] = []
-    print "Would subscribe",len(blocks),"blocks to",site
+    if not site in done: done[site] = []
     blocks = [block for block in blocks if not block in done[site]]
+    print "Would subscribe",len(blocks),"blocks to",site
     print "\tSubscribe",len(blocks),"blocks to",site    
     done[site].extend( blocks )
     if blocks:
         print makeReplicaRequest(url, site, list(blocks), "Production blocks", priority="low", approve=True,mail=False)
-        pass
+        time.sleep(1)
 
 open('myblock_done.json','w').write( json.dumps( done, indent=2 ))

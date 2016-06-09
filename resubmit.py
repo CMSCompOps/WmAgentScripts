@@ -1,21 +1,26 @@
 #!/usr/bin/env python
 
 """
-    This script clones a given workflow
+    __modified__ = "Paola Rozo"
+    __version__ = "1.1"
+    __maintainer__ = "Paola Rozo"
+    __email__ = "katherine.rozo@cern.ch"
+    __status__ = "Testing"
+
+
+    This script clones or extends a given workflow
     Usage:
-        python resubmit.py [options] WORKFLOW_NAME [USER GROUP]
+        python resubmit.py [options] WORKFLOW_NAME
     Options:
+        -a --action, decides to clone or extend a workflow
         -b --backfill, creates a clone
         -v --verbose, prints schemas and responses
-    USER: the user for creating the clone, if empty it will
-          use the OS user running the script
-    GROUP: the group for creating the clone, if empty it will
-          use 'DATAOPS' by default
-    This script depends on WMCore code, so WMAgent environment
-    ,libraries and voms proxy need to be loaded before running it.
+
+    This script depends on WMCore code, so WMAgent environment,libraries and voms proxy need to be loaded before running it.
 """
 import os
 import datetime
+import dbs3Client
 import pwd
 import sys
 import re
@@ -30,8 +35,13 @@ except:
     print "source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh"
     sys.exit(0)
 
+reqmgrCouchURL = "https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache"
 
-def modifySchema(helper, user, group, backfill=False):
+DELTA_EVENTS = 1000
+DELTA_LUMIS = 200
+
+
+def modifySchema(helper, workflow, user, group, cache, events, firstLumi, backfill=False):
     """
     Adapts schema to right parameters.
     If the original workflow points to DBS2, DBS3 URL is fixed instead.
@@ -39,35 +49,26 @@ def modifySchema(helper, user, group, backfill=False):
     and Campaign to say Backfill, and restarts requestDate.
     """
     result = {}
-    for (key, value) in helper.data.request.schema.dictionary_().items():
-        # previous versions of tags
+    for (key, value) in helper.data.request.schema.dictionary_whole_tree_().items():
+        #previous versions of tags
         if key == 'ProcConfigCacheID':
             result['ConfigCacheID'] = value
         elif key == 'RequestSizeEvents':
             result['RequestSizeEvents'] = value
-        # requestor info
+        #requestor info
         elif key == 'Requestor':
             result['Requestor'] = user
         elif key == 'Group':
             result['Group'] = group
-        # if emtpy
+        #if empty
         elif key in ["RunWhitelist", "RunBlacklist", "BlockWhitelist", "BlockBlacklist"] and not value:
             result[key] = []
-        # replace old DBS2 URL
+        #replace old DBS2 URL
         elif value == "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet":
             result[key] = 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
-        # copy the right LFN base
+        #copy the right LFN base
         elif key == 'MergedLFNBase':
             result['MergedLFNBase'] = helper.getMergedLFNBase()
-        # convert LumiList to dict
-        # elif key == 'LumiList':
-        #   result['LumiList'] = JsonWrapper.loads(value)
-        #   result['LumiList'] = eval(value)
-
-        # TODO deleting timeout so they will move to running-close as soon as they can
-        # elif key == 'OpenRunningTimeout':
-            # delete entry
-        #    continue
         # skip empty entries
         elif value != None:
             result[key] = value
@@ -76,6 +77,29 @@ def modifySchema(helper, user, group, backfill=False):
     # Clean requestor  DN?
     if 'RequestorDN' in result:
         del result['RequestorDN']
+    #if we are extending the workflow
+    if events:
+        # extend workflow so it will safely start outside of the boundary
+        RequestNumEvents = int(result['RequestNumEvents'])
+        FirstEvent = int(result['FirstEvent'])
+
+        # FirstEvent_NEW > FirstEvent + RequestNumEvents
+        # the fist event needs to be oustide the range
+        result['FirstEvent'] = FirstEvent + RequestNumEvents + DELTA_EVENTS
+
+        # FirstLumi_NEW > FirstLumi + RequestNumEvents/events_per_job/filterEff
+        # same for the first lumi, needs to be after the last lumi
+
+        result['FirstLumi'] = firstLumi + DELTA_LUMIS
+        # only the desired events
+        result['RequestNumEvents'] = events
+
+        # prepend EXT_ to recognize as extension
+        result["RequestString"] = 'EXT_' + result["RequestString"]
+    else:
+        # Update the request priority
+        if cache and 'RequestPriority' in cache:
+            result['RequestPriority'] = cache['RequestPriority']
     # check MonteCarlo
     if result['RequestType'] == 'MonteCarlo':
         # check assigning parameters
@@ -135,11 +159,17 @@ def modifySchema(helper, user, group, backfill=False):
     # Add AcquisitionEra, ProcessingString and increase ProcessingVersion by 1
     result["ProcessingString"] = helper.getProcessingString()
     result["AcquisitionEra"] = helper.getAcquisitionEra()
-    # try to parse processing version as an integer, if don't, assign 2.
-    try:
-        result["ProcessingVersion"] = int(helper.getProcessingVersion()) + 1
-    except ValueError:
-        result["ProcessingVersion"] = 2
+    # try to parse processing version as an integer, if don't, assign 1 or 2 given the case.
+    if events:
+        try:
+            result["ProcessingVersion"] = int(helper.getProcessingVersion())
+        except ValueError:
+            result["ProcessingVersion"] = 1
+    else:
+        try:
+            result["ProcessingVersion"] = int(helper.getProcessingVersion()) + 1
+        except ValueError:
+            result["ProcessingVersion"] = 2
 
     # modify for backfill
     if backfill:
@@ -162,36 +192,49 @@ def modifySchema(helper, user, group, backfill=False):
         now = datetime.datetime.utcnow()
         result["RequestDate"] = [
             now.year, now.month, now.day, now.hour, now.minute]
+
+    #result['Memory'] = 3000
+
     return result
 
 
-def cloneWorkflow(workflow, user, group, verbose=False, backfill=False, testbed=False):
+def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=False, bwl=None):
     """
     clones a workflow
     """
     # Get info about the workflow to be cloned
     helper = reqMgrClient.retrieveSchema(workflow, reqmgrCouchURL)
     # Adapt schema and add original request to it
-    schema = modifySchema(helper, user, group, backfill)
+    try:
+        cache = reqMgrClient.getWorkloadCache(url, workflow)
+    except:
+        cache = None
+        
+    schema = modifySchema(helper, workflow, user, group, cache, None, None, backfill)
+
     schema['OriginalRequestName'] = workflow
     if verbose:
         pprint(schema)
+    
+    if bwl:
+        if 'Task1' in schema:
+            schema['Task1']['BlockWhitelist'] = bwl.split(',')
+        else:
+            schema['BlockWhitelist'] = bwl.split(',')
     print 'Submitting workflow'
-    # Sumbit cloned workflow to ReqMgr
+    # Submit cloned workflow to ReqMgr
     if testbed:
-        response = reqMgrClient.submitWorkflow(url_tb, schema)
+        newWorkflow = reqMgrClient.submitWorkflow(url_tb, schema)
     else:
-        response = reqMgrClient.submitWorkflow(url, schema)
+        newWorkflow = reqMgrClient.submitWorkflow(url, schema)
     if verbose:
-        print "RESPONSE", response
+        print "RESPONSE", newWorkflow
 
     # find the workflow name in response
-    m = re.search("details\/(.*)\'", response)
-    if m:
-        newWorkflow = m.group(1)
+    if newWorkflow:
         print 'Cloned workflow: ' + newWorkflow
         if verbose:
-            print response
+            print newWorkflow
             print 'Approving request response:'
         # TODO only for debug
         #response = reqMgrClient.setWorkflowSplitting(url, schema)
@@ -211,36 +254,92 @@ def cloneWorkflow(workflow, user, group, verbose=False, backfill=False, testbed=
         return newWorkflow
     else:
         if verbose:
-            print response
+            print newWorkflow
         else:
             print "Couldn't clone the workflow."
         return None
 
+def getMissingEvents(workflow):
+    """
+    Gets the missing events for the workflow
+    """
+    inputEvents = reqMgrClient.getInputEvents(url, workflow)
+    dataset = reqMgrClient.outputdatasetsWorkflow(url, workflow).pop()
+    outputEvents = reqMgrClient.getOutputEvents(url, workflow, dataset)
+    return int(inputEvents) - int(outputEvents)
+
+def extendWorkflow(workflow, user, group, verbose=False, events=None, firstlumi=None):
+
+    if events is None:
+        events = getMissingEvents(workflow)
+    events = int(events)
+
+    if firstlumi is None:
+        #get the last lumi of the dataset
+        dataset = reqMgrClient.outputdatasetsWorkflow(url, workflow).pop()
+
+        lastLumi = dbs3Client.getMaxLumi(dataset)
+        firstlumi = lastLumi
+    firstlumi = int(firstlumi)
+
+    # Get info about the workflow to be cloned
+    helper = reqMgrClient.retrieveSchema(workflow)
+    schema = modifySchema(helper, workflow, user, group, None, events, firstlumi, None)
+    schema['OriginalRequestName'] = workflow
+    if verbose:
+        pprint(schema)
+    print 'Submitting workflow'
+    # Submit cloned workflow to ReqMgr
+    response = reqMgrClient.submitWorkflow(url,schema)
+    if verbose:
+        print "RESPONSE", response
+
+    #find the workflow name in response
+    m = re.search("details\/(.*)\'",response)
+    if m:
+        newWorkflow = m.group(1)
+        print 'Cloned workflow: '+newWorkflow
+        print 'Extended with', events, 'events'
+        print response
+
+        # Move the request to Assignment-approved
+        print 'Approve request response:'
+        data = reqMgrClient.setWorkflowApproved(url, newWorkflow)
+        print data
+    else:
+        print response
+    pass
 """
 __Main__
 """
 url = 'cmsweb.cern.ch'
 url_tb = 'cmsweb-testbed.cern.ch'
-#url = url_tb
 reqmgrCouchURL = "https://" + url + "/couchdb/reqmgr_workload_cache"
 
 
 def main():
 
     # Create option parser
-    usage = "\n       python %prog [options] [WORKFLOW_NAME] [USER GROUP]\n"\
-            "WORKFLOW_NAME: if the list file is provided this should be empty\n"\
-            "USER: the user for creating the clone, if empty it will\n"\
-            "      use the OS user running the script\n"\
-            "GROUP: the group for creating the clone, if empty it will\n"\
-            "      use 'DATAOPS' by default"
+    usage = "\n       python %prog [options] [WORKFLOW_NAME]"\
+            "WORKFLOW_NAME: if the list file is provided this should be empty\n"
 
     parser = OptionParser(usage=usage)
+    parser.add_option("-a", "--action", dest="action", default='clone',
+                      help="There are two options clone (clone) or extend a worflow (extend) .")
+    parser.add_option("-u", "--user", dest="user",
+                      help="User we are going to use", default=None)
+    parser.add_option("-g", "--group", dest="group", default='DATAOPS',
+                      help="Group to send the workflows.")
     parser.add_option("-b", "--backfill", action="store_true", dest="backfill", default=False,
                       help="Creates a clone for backfill test purposes.")
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False,
                       help="Prints all query information.")
     parser.add_option('-f', '--file', help='Text file with a list of workflows', dest='file')
+    parser.add_option('--bwl', help='The block white list to be used', dest='bwl',default=None)
+    #Extend workflow options
+    parser.add_option('-e', '--events', help='# of events to add', dest='events')
+    parser.add_option('-l', '--firstlumi', help='# of the first lumi', dest='firstlumi')
+
     parser.add_option("--testbed", action="store_true", dest="testbed", default=False,
                       help="Clone to testbed reqmgr insted of production")
     (options, args) = parser.parse_args()
@@ -248,28 +347,27 @@ def main():
     # Check the arguments, get info from them
     if options.file:
         wfs = [l.strip() for l in open(options.file) if l.strip()]
-        if len(args) == 2:
-            user = args[0]
-            group = args[1]
-    else:
-        if len(args) == 3:
-            user = args[1]
-            group = args[2]
-        elif len(args) == 1:
-            # get os username by default
-            uinfo = pwd.getpwuid(os.getuid())
-            user = uinfo.pw_name
-            # group by default DATAOPS
-            group = 'DATAOPS'
-        else:
-            parser.error("Provide the workflow of a file of workflows")
-            sys.exit(1)
+    elif len(args) > 0:
         # name of workflow
         wfs = [args[0]]
+    else:
+        parser.error("Provide the workflow of a file of workflows")
+        sys.exit(1)
 
-    for wf in wfs:
-        cloneWorkflow(
-            wf, user, group, options.verbose, options.backfill, options.testbed)
+    if not options.user:
+        # get os username by default
+        uinfo = pwd.getpwuid(os.getuid())
+        user = uinfo.pw_name
+    else:
+        user = options.user
+
+    if options.action == 'clone':
+        for wf in wfs:
+            cloneWorkflow(
+                wf, user, options.group, options.verbose, options.backfill, options.testbed, bwl=options.bwl)
+    elif options.action == 'extend':
+        for wf in wfs:
+            extendWorkflow(wf, user, options.group, options.verbose, options.events, options.firstlumi)
 
     sys.exit(0)
 
