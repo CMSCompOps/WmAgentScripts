@@ -70,7 +70,8 @@ def injector(url, options, specific):
             pass
     
     if cannot_inject:
-        sendEmail('workflow duplicates','These workflow cannot be added in because of duplicates \n\n %s'%( '\n'.join(cannot_inject)))
+        #sendEmail('workflow duplicates','These workflow cannot be added in because of duplicates \n\n %s'%( '\n'.join(cannot_inject)))
+        sendLog('injector','These workflow cannot be added in because of duplicates \n\n %s'%( '\n'.join(cannot_inject)), level='warning')
 
     ## passing a round of invalidation of what needs to be invalidated
     if use_mcm and (options.invalidate or True):
@@ -80,10 +81,11 @@ def injector(url, options, specific):
 
     ## pick up replacements
     for wf in session.query(Workflow).filter(Workflow.status == 'trouble').all():
-        if specific and wf.name != specific:
-            continue
         print wf.name
-        wl = getWorkLoad(url, wf.name)
+        if specific and not specific in wf.name: continue
+        print wf.name
+        wfi = workflowInfo(url, wf.name )
+        wl = wfi.request #getWorkLoad(url, wf.name)
         familly = getWorkflowById( url, wl['PrepID'] )
         true_familly = []
         for member in familly:
@@ -94,18 +96,27 @@ def injector(url, options, specific):
             else:
                 if fwl['RequestDate'] < wl['RequestDate']: continue
                 if fwl['RequestType']=='Resubmission': continue
-                if fwl['RequestStatus'] in ['None',None]: continue
+                if fwl['RequestStatus'] in ['None',None,'new']: continue
                 if fwl['RequestStatus'] in ['rejected','rejected-archived','aborted','aborted-archived']: continue
             true_familly.append( fwl )
 
         if len(true_familly)==0:
-            sendLog('injector','%s had no replacement'%wf.name)
+            #sendLog('injector','%s had no replacement'%wf.name, level='critical')
+            wfi.sendLog('injector','the workflow was found in trouble with no replacement')
             no_replacement.add( wf.name )
             continue
+        else:
+            wfi.sendLog('injector','the workflow was found in trouble and has a replacement')
+                    
         print wf.name,"has",len(familly),"familly members"
         print wf.name,"has",len(true_familly),"true familly members"
 
-        for fwl in true_familly:
+        ##we cannot have more than one of them !!! pick the last one
+        if len(true_familly)>1:
+            #sendEmail('multiple wf','please take a look at injector for %s'%wf.name)
+            sendLog('injector','Multiple wf in line, will take the last one for %s \n%s'%( wf.name, ', '.join(fwl['RequestName'] for fwl in true_familly)), level='critical')
+
+        for fwl in true_familly[-1:]:
             member = fwl['RequestName']
             new_wf = session.query(Workflow).filter(Workflow.name == member).first()
             if not new_wf:
@@ -140,7 +151,8 @@ def injector(url, options, specific):
         #wf.status = 'forget'
         session.commit()
     if no_replacement:
-        sendEmail('workflow with no replacement','%s \n are dangling there'%( '\n'.join(no_replacement)))
+        #sendEmail('workflow with no replacement','%s \n are dangling there'%( '\n'.join(no_replacement)))
+        sendLog('injector','workflow with no replacement, %s \n are dangling there'% ( '\n'.join(no_replacement)), level='critical')
 
 if __name__ == "__main__":
     url = reqmgr_url

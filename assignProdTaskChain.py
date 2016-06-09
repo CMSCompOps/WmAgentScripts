@@ -126,7 +126,8 @@ def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lf
               "BlockCloseMaxSize": 5000000000000,
               "SoftTimeout": 159600,
               "GracePeriod": 1000,
-              "checkbox" + workflow: "checked"}
+              "checkbox" + workflow: "checked",
+              "execute":True}
     # add xrootd (trustSiteList)
     if trust_site:
         params['TrustSitelists'] = True
@@ -153,8 +154,12 @@ def assignRequest(url, workflow, team, site, era, procstr, procver, activity, lf
     if verbose:
         pprint(params)
 
-    res = reqMgr.requestManagerPost(url, "/reqmgr/assign/handleAssignmentPage", params)
-    print 'Assigned workflow:', workflow, 'to site:', site, 'and team', team
+    #res = reqMgr.requestManager1Post(url, "/reqmgr/assign/handleAssignmentPage", params, nested=True)
+    res = reqMgr.assignWorkflow(url, workflow, team, params)
+    if res:
+        print 'Assigned workflow:', workflow, 'to site:', site, 'and team', team
+    else:
+        print 'The workflow:', workflow, ' was unable to be assigned to site:', site, 'and team', team
     #TODO check conditions of success
     if verbose:
         print res
@@ -308,17 +313,8 @@ def main():
                 sys.exit(0)
         #Checking if we are dealing with a TaskChain resubmission
         elif schema["RequestType"] == "Resubmission" and wfInfo.info["PrepID"].startswith("task"):
-            # For resubmission of a merge task inside a taskchain workflow, we cannot provide the acqera and procstring
-            if "Merge" in schema["InitialTaskPath"].split("/")[-1]:
-                acqera = None
-                procstring = None
-            # For another type of task, we need to look for the acqera and procstring information inside the
-            # original workflow
-            else:
-                if not procstring:
-                    procstring = wfInfo.info["ProcessingString"]
-                if not acqera:
-                    acqera = wfInfo.info["AcquisitionEra"]
+            procstring = wfInfo.info["ProcessingString"]
+            acqera = wfInfo.info["AcquisitionEra"]
         else:
             print("The workflow '" + workflow + "' you are trying to assign is not a TaskChain, please use another resource.")
             sys.exit(1)
@@ -332,7 +328,7 @@ def main():
             print "LFN: %s \tTeam: %s \tSite: %s" % (lfn, team, site)
             # print '\tTeam:',team,  '\tSite:', site
             sys.exit(0)
-    
+
         # Really assigning the workflow now
         print workflow, '\tAcqEra:', acqera, '\tProcStr:', procstring, '\tProcVer:', procversion, '\tTeam:', team, '\tSite:', site
         assignRequest(url, workflow, team, site, acqera, procstring, procversion, activity, lfn, replica, options.verbose, options.xrootd)

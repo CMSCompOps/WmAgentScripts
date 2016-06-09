@@ -12,6 +12,7 @@ import os
 import json
 import dbs3Client as dbs3
 import copy
+import time 
 
 # default headers for PUT and POST methods
 def_headers={"Content-type": "application/json", "Accept": "application/json"}
@@ -450,8 +451,15 @@ def getWorkflowInfo(url, workflow):
     """
     Retrieves workflow information
     """
-    request = requestManagerGet(url,'/reqmgr2/data/request?name='+workflow)
-    return request['result'][0][workflow]
+    retries=10000
+    while retries:
+        try:
+            request = requestManagerGet(url,'/reqmgr2/data/request?name='+workflow)
+            return request['result'][0][workflow]
+        except:
+            time.sleep(1)
+            retries -=1
+    return None
 
 def isRequestMgr2Request(url, workflow):
     result = getWorkflowInfo(url, workflow)
@@ -765,7 +773,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
     wf = workflowInfo(url, workflowname)
 
     # set the maxrss watchdog to what is specified in the request
-    defaults['MaxRSS'] = wf.request['Memory']*1024+10
+    defaults['MaxRSS'] = wf.request['Memory']*1024
 
     defaults.update( parameters )
 
@@ -1103,12 +1111,9 @@ def submitWorkflow(url, schema, reqmgr2=False):
     else:
         data = requestManager1Post(url,"/reqmgr/create/makeSchema", schema, nested=True)
         print data
-        m = re.search("details\/(.*)\'", data)
-        if m:
-            newWorkflow = m.group(1)
-            return newWorkflow
-        else:
-            return None
+        m = re.search('details\/(.*)\"', data)
+        newWorkflow = m.group(1) if m else None
+        return newWorkflow
         
 
 def reqmgr1_to_2_Splitting(params):

@@ -91,7 +91,7 @@ for dataset in already_locked-newly_locking:
             usors = getWorkflowByMCPileup(url, dataset, details=True)
             ## find the latest request date using that dataset in secondary
             for usor in usors:
-                d =time.mktime(time.strptime("-".join(map(str,usor['RequestDate'])), "%Y-%m-%d-%H-%M-%S"))
+                d =time.mktime(time.strptime("-".join(map(lambda n : "%02d"%n, usor['RequestDate'])), "%Y-%m-%d-%H-%M-%S"))
                 secondary_timeout[dataset] = max(secondary_timeout[dataset],d)
 
         if secondary_timeout[dataset]: ## different than zero

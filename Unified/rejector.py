@@ -4,7 +4,7 @@ import sys
 import reqMgrClient
 from utils import workflowInfo, setDatasetStatus
 from utils import componentInfo, reqmgr_url, getWorkflowById
-from utils import componentInfo, getWorkflowById
+from utils import componentInfo, getWorkflowById, sendLog
 import optparse
 import json
 import re
@@ -50,6 +50,7 @@ def rejector(url, specific, options=None):
 
         datasets = set(wfi.request['OutputDatasets'])
         reqMgrClient.invalidateWorkflow(url, wfo.name, current_status=wfi.request['RequestStatus'])
+        wfi.sendLog('rejector','invalidating the workflow by unified operator')
         ## need to find the whole familly and reject the whole gang
         familly = getWorkflowById( url, wfi.request['PrepID'] , details=True)
         for fwl in familly:

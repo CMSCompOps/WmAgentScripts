@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import componentInfo, sendEmail, setDatasetStatus, unifiedConfiguration, workflowInfo, siteInfo, sendLog, reqmgr_url, monitor_dir
+from utils import componentInfo, sendEmail, setDatasetStatus, unifiedConfiguration, workflowInfo, siteInfo, sendLog, reqmgr_url, monitor_dir, duplicateLock, userLock
 import reqMgrClient
 import json
 import time
@@ -12,6 +12,7 @@ from collections import defaultdict
 import reqMgrClient
 import re
 import copy
+import random
 
 
 def spawn_harvesting(url, wfi , in_full):
@@ -106,23 +107,28 @@ def spawn_harvesting(url, wfi , in_full):
 
                 result = reqMgrClient.assignWorkflow(url, harvest_request, team, parameters)
                 if not result:
-                    sendEmail('harvesting request created','%s was created at announcement of %s in %s, failed to assign'%(harvest_request, dqm_input, wfi.request['RequestName']), destination=[wfi.request['Requestor']+'@cern.ch'])
+                    #sendEmail('harvesting request created','%s was created at announcement of %s in %s, failed to assign'%(harvest_request, dqm_input, wfi.request['RequestName']), destination=[wfi.request['Requestor']+'@cern.ch'])
+                    wfi.sendLog('closor','%s was created at announcement of %s in %s, failed to assign'%(harvest_request, dqm_input, wfi.request['RequestName']))
+                    sendLog('closor','%s was created at announcement of %s in %s, failed to assign'%(harvest_request, dqm_input, wfi.request['RequestName']), level='critical')
                 else:
-                    sendEmail('harvesting request assigned','%s was created at announcement of %s in %s, and assigned'%(harvest_request, dqm_input, wfi.request['RequestName']), destination=[wfi.request['Requestor']+'@cern.ch']) 
+                    #sendEmail('harvesting request assigned','%s was created at announcement of %s in %s, and assigned'%(harvest_request, dqm_input, wfi.request['RequestName']), destination=[wfi.request['Requestor']+'@cern.ch']) 
                     wfi.sendLog('closor','%s was created at announcement of %s in %s, and assigned'%(harvest_request, dqm_input, wfi.request['RequestName']))
 
             else:
-                print "could not make the harvesting for",wfo.name,"not announcing"
+                #print "could not make the harvesting for",wfo.name,"not announcing"
                 wfi.sendLog('closor',"could not make the harvesting request")
+                sendLog('closor',"could not make the harvesting request for %s"% wfi.request['RequestName'], level='critical')
                 all_OK[dqm_input]=False                    
     return (all_OK, requests)
 
 def closor(url, specific=None):
+    if userLock(): return
+    if duplicateLock(): return
     if not componentInfo().check(): return
+
 
     UC = unifiedConfiguration()
     CI = campaignInfo()
-    #LI = lockInfo()
 
     all_late_files = []
     check_fullcopy_to_announce = UC.get('check_fullcopy_to_announce')
@@ -133,6 +139,11 @@ def closor(url, specific=None):
         wfs = session.query(Workflow).filter(Workflow.status=='close').all()
 
     held = set()
+
+    
+    max_per_round = UC.get('max_per_round').get('closor',None)
+    random.shuffle( wfs )    
+    if max_per_round: wfs = wfs[:max_per_round]
 
     for wfo in wfs:
 
@@ -249,7 +260,8 @@ def closor(url, specific=None):
                         if not tier in UC.get("tiers_no_DDM")+UC.get("tiers_to_DDM"):
                             print "tier",tier,"neither TO or NO DDM for",out
                             results.append('Not recognitized tier %s'%tier)
-                            sendEmail("failed DDM injection","could not recognize %s for injecting in DDM"% out)
+                            #sendEmail("failed DDM injection","could not recognize %s for injecting in DDM"% out)
+                            sendLog('closor', "could not recognize %s for injecting in DDM"% out, level='critical')
                             continue
 
                         n_copies = 2
@@ -283,7 +295,8 @@ def closor(url, specific=None):
                                 print p.read()
                                 status = p.close()    
                                 if status!=None:
-                                    sendEmail("failed DDM injection","could not add "+out+" to DDM pool. check closor logs.")
+                                    #sendEmail("failed DDM injection","could not add "+out+" to DDM pool. check closor logs.")
+                                    sendLog('closor',"could not add "+out+" to DDM pool. check closor logs.", level='critical')
                             results.append( status )
                             if status == None:
                                 wfi.sendLog('closor','%s is send to AnalysisOps DDM pool in %s copies %s'%( n_copies, out,destination_spec))
@@ -329,14 +342,15 @@ def closor(url, specific=None):
 
     if really_late_files:
         subject = 'These %d files are lagging for %d days and %d retries announcing dataset \n%s'%(len(really_late_files), days_late, retries_late, json.dumps( really_late_files , indent=2) )
-        sendEmail('waiting for files to announce', subject)
+        #sendEmail('waiting for files to announce', subject)
+        sendLog('closor', subject, level='warning')
         sendLog('closor',subject)
         print subject
         open('%s/stuck_files.json'%monitor_dir,'w').write( json.dumps( really_late_files , indent=2))
 
     if held:
-        sendEmail("held from announcing","the workflows below are held up, please check the logs https://cmst2.web.cern.ch/cmst2/unified/logs/closor/last.log \n%s"%("\n".join( held )))
-
+        #sendEmail("held from announcing","the workflows below are held up, please check the logs https://cmst2.web.cern.ch/cmst2/unified/logs/closor/last.log \n%s"%("\n".join( held )))
+        sendLog('closor',"the workflows below are held up \n%s"%("\n".join( held )), level='critical')
         
 if __name__ == "__main__":
     url = reqmgr_url

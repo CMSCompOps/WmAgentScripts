@@ -319,7 +319,8 @@ def stagor(url,specific =None, options=None):
 
 
     if send_back_to_considered:
-        sendEmail("transfer to endpoint in downtime","sending back to considered the following workflows \n%s"%('\n'.join( send_back_to_considered)))
+        #sendEmail("transfer to endpoint in downtime","sending back to considered the following workflows \n%s"%('\n'.join( send_back_to_considered)))
+        sendLog('stagor', "sending back to considered the following workflows \n%s"%('\n'.join( send_back_to_considered)), level='critical')
 
     print "-"*10,"Checking on non-available datasets","-"*10    
     ## now check on those that are not fully available
@@ -345,10 +346,12 @@ def stagor(url,specific =None, options=None):
                         print "sending",wf.name,"back to considered"
                         wf.status = 'considered'
                         session.commit()
-                        sendEmail( "send back to considered","%s was send back and might be trouble"% wf.name)
+                        #sendEmail( "send back to considered","%s was send back and might be trouble"% wf.name)
+                        sendLog('stagor', "%s was send back and might be trouble"% wf.name, level='critical')
                     else:
                         print "would send",wf.name,"back to considered"
-                        sendEmail( "subscription lagging behind","susbscriptions to get %s running are not appearing in phedex. I would have send it back to considered but that's not good."% wf.name)
+                        #sendEmail( "subscription lagging behind","susbscriptions to get %s running are not appearing in phedex. I would have send it back to considered but that's not good."% wf.name)
+                        sendLog('stagor', "susbscriptions to get %s running are not appearing in phedex. I would have send it back to considered but that's not good."% wf.name, level='critical')
             continue
 
         ## not compatible with checking on secondary availability
@@ -367,20 +370,23 @@ def stagor(url,specific =None, options=None):
                 #print json.dumps( lost , indent=2 )
                 ## estimate for how much !
                 fraction_loss,_,n_missing = getDatasetBlockFraction(dsname, lost_block_names)
-                print "We have lost",len(lost_block_names),"blocks",lost_block_names,"for %f%%"%fraction_loss
+                print "We have lost",len(lost_block_names),"blocks",lost_block_names,"for %f%%"%(100*fraction_loss)
                 if fraction_loss > 0.05: ## 95% completion mark
-                    sendEmail('we have lost too many blocks','%s is missing %d blocks, for %d events, %f %% loss'%(dsname, len(lost_block_names), n_missing, fraction_loss))
+                    #sendEmail('we have lost too many blocks','%s is missing %d blocks, for %d events, %f %% loss'%(dsname, len(lost_block_names), n_missing, fraction_loss))
+                    sendLog('stagor', '%s is missing %d blocks, for %d events, %3.2f %% loss'%(dsname, len(lost_block_names), n_missing, 100*fraction_loss), level='warning')
                     ## the workflow should be rejected !
                     for wf in using_wfos: 
                         if wf.status == 'staging':
                             print wf.name,"is doomed. setting to trouble"
                             wf.status = 'trouble'
                             session.commit()
-                            sendEmail('doomed workflow','%s has too much loss on the input dataset %s. please check on stagor logs https://cmst2.web.cern.ch/cmst2/unified/logs/stagor/last.log'%(wf.name, dsname))
+                            #sendEmail('doomed workflow','%s has too much loss on the input dataset %s. please check on stagor logs https://cmst2.web.cern.ch/cmst2/unified/logs/stagor/last.log'%(wf.name, dsname))
+                            sendLog('stagor', '%s has too much loss on the input dataset %s. Missing  %d blocks, for %d events, %3.2f %% loss'%(wf.name, dsname, n_missing, 100*fraction_loss), level='critical')
                 else:
                     ## probably enough to make a ggus and remove
                     if not dsname in known_lost_blocks:
-                        sendEmail('we have lost a few blocks', '%s is missing %d blocks, for %d events, %f %% loss\n\n%s'%(dsname, len(lost_block_names), n_missing, fraction_loss, '\n'.join( lost_block_names ) ))
+                        #sendEmail('we have lost a few blocks', '%s is missing %d blocks, for %d events, %f %% loss\n\n%s'%(dsname, len(lost_block_names), n_missing, fraction_loss, '\n'.join( lost_block_names ) ))
+                        sendLog('stagor', '%s is missing %d blocks, for %d events, %f %% loss\n\n%s'%(dsname, len(lost_block_names), n_missing, fraction_loss, '\n'.join( lost_block_names ) ), level='critical')
                         known_lost_blocks[dsname] = [i['name'] for i in lost_blocks]
                                   
             if lost_files:
@@ -388,7 +394,8 @@ def stagor(url,specific =None, options=None):
                 print "We have lost",len(lost_file_names),"files",lost_file_names,"for %f%%"%fraction_loss
                 
                 if fraction_loss > 0.05:
-                    sendEmail('we have lost too many files','%s is missing %d files, for %d events, %f %% loss'%(dsname, len(lost_file_names),n_missing, fraction_loss))
+                    #sendEmail('we have lost too many files','%s is missing %d files, for %d events, %f %% loss'%(dsname, len(lost_file_names),n_missing, fraction_loss))
+                    sendLog('stagor', '%s is missing %d files, for %d events, %f %% loss'%(dsname, len(lost_file_names),n_missing, fraction_loss), level='critical')
                     for wf in using_wfos:
                         if wf.status == 'staging':
                             print wf.name,"is doomed. setting to trouble"
@@ -397,7 +404,8 @@ def stagor(url,specific =None, options=None):
                 else:
                     ## probably enough to make a ggus and remove    
                     if not dsname in known_lost_files:
-                        sendEmail('we have lost a few files','%s is missing %d files, for %d events, %f %% loss\n\n%s'%(dsname, len(lost_file_names),n_missing, fraction_loss, '\n'.join(lost_file_names)))
+                        #sendEmail('we have lost a few files','%s is missing %d files, for %d events, %f %% loss\n\n%s'%(dsname, len(lost_file_names),n_missing, fraction_loss, '\n'.join(lost_file_names)))
+                        sendLog('stagor', '%s is missing %d files, for %d events, %f %% loss\n\n%s'%(dsname, len(lost_file_names),n_missing, fraction_loss, '\n'.join(lost_file_names)), level='critical')
                         known_lost_files[dsname] = [i['name'] for i in lost_files]
 
                 ## should the status be change to held-staging and pending on a ticket
@@ -488,7 +496,6 @@ def stagor(url,specific =None, options=None):
     print json.dumps(stuck_transfers , indent=2)
     open('%s/stuck_transfers.json'%monitor_dir,'w').write( json.dumps(stuck_transfers , indent=2) )
     open('%s/logs/incomplete_transfers.log'%monitor_dir,'w').write( report )
-    #sendEmail('incomplete transfers', report,sender=None, destination=['dc.jorge10@uniandes.edu.co','aram.apyan@cern.ch','sidn@mit.edu'])
 
 
 if __name__ == "__main__":

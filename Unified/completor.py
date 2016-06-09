@@ -3,10 +3,11 @@ from assignSession import *
 import sys
 import reqMgrClient
 from utils import workflowInfo, getWorkflowById, getDatasetEventsAndLumis, componentInfo, monitor_dir, reqmgr_url, unifiedConfiguration
-from utils import campaignInfo, sendEmail, siteInfo
+from utils import campaignInfo, sendEmail, siteInfo, sendLog
 from collections import defaultdict
 import json
 import random
+from McMClient import McMClient
 
 
 def forceComplete(url, wfi):
@@ -25,8 +26,12 @@ def forceComplete(url, wfi):
             reqMgrClient.invalidateWorkflow(url, member['RequestName'], current_status=member['RequestStatus'])
 
 def completor(url, specific):
-    up = componentInfo(mcm=False, soft=['mcm'])
+    use_mcm = True
+    up = componentInfo(mcm=use_mcm, soft=['mcm'])
     if not up.check(): return
+    use_mcm = up.status['mcm']
+    if use_mcm:
+        mcm = McMClient(dev=False)
 
     CI = campaignInfo()
     SI = siteInfo()
@@ -63,7 +68,12 @@ def completor(url, specific):
         except:
             print "cannot get force complete list from",rider
             sendEmail("malformated force complet file","%s is not json readable"%rider_file, destination=[email])
-        
+            
+    if use_mcm:    
+        ## add all workflow that mcm wants to get force completed
+        mcm_force = mcm.get('/restapi/requests/forcecomplete')
+        ## assuming this will be a list of actual prepids
+        overrides['mcm'] = mcm_force
 
     print "can force complete on"
     print json.dumps( good_fractions ,indent=2)
@@ -82,20 +92,25 @@ def completor(url, specific):
         print "looking at",wfo.name
         ## get all of the same
         wfi = workflowInfo(url, wfo.name)
-
+        pids = wfi.getPrepIDs()
         skip=False
         if not any([c in wfo.name for c in good_fractions]): skip=True
         for user,spec in overrides.items():
-            #print spec
-            if wfo.name in spec and wfi.request['RequestStatus']!='force-complete':
-                #skip=False ## do not do it automatically yet
-                sendEmail('force-complete requested','%s is asking for %s to be force complete'%(user,wfo.name))
-                wfi = workflowInfo(url, wfo.name)
-                forceComplete(url , wfi )
-                skip=True
-                wfi.notifyRequestor("The workflow %s was force completed by request of %s"%(wfo.name,user), do_batch=False)
-                wfi.sendLog('completor','%s is asking for %s to be force complete'%(user,wfo.name))
-                break
+
+            if wfi.request['RequestStatus']!='force-complete':
+                if any(s in wfo.name for s in spec) or (wfo.name in spec) or any(pid in spec for pid in pids) or any(s in pids for s in spec):
+                    sendEmail('force-complete requested','%s is asking for %s to be force complete'%(user,wfo.name))
+                    wfi = workflowInfo(url, wfo.name)
+                    forceComplete(url , wfi )
+                    skip=True
+                    wfi.notifyRequestor("The workflow %s was force completed by request of %s"%(wfo.name,user), do_batch=False)
+                    wfi.sendLog('completor','%s is asking for %s to be force complete'%(user,wfo.name))
+                    if user == 'mcm' and use_mcm:
+                        for pid in wfi.getPrepIDs():
+                            mcm.delete('/restapi/requests/forcecomplete/%s'%pid)
+                    #sendEmail('completor test','not force completing automatically, you have to go back to it')
+                    #skip=False
+                    break
     
         if wfo.status.startswith('assistance'): skip = True
 
@@ -167,46 +182,19 @@ def completor(url, specific):
             completions[output]['checkpoints'].append( (now, event_completion ) )
 
         if all([percent_completions[out] >= good_fraction for out in percent_completions]):
-            print "all is above",good_fraction,"for",wfo.name
-            print json.dumps( percent_completions, indent=2 )
+            wfi.sendLog('completor', "all is above %s \n%s"%( good_fraction, 
+                                                              json.dumps( percent_completions, indent=2 )
+                                                              ))
         else:
-            print "\t",percent_completions.values(),"not over bound",good_fraction
             long_lasting[wfo.name].update({
                     'completion': sum(percent_completions.values()) / len(percent_completions),
                     'completions' : percent_completions
                     })
             
-            #print json.dumps( percent_completions, indent=2 )
-
             ## do something about the agents this workflow is in
             long_lasting[wfo.name]['agents'] = wfi.getAgents()
-            print json.dumps( long_lasting[wfo.name]['agents'], indent=2)
-
-            ## this is done somewhere else for more than running workflows (see GQ.py)
-            ## pick up on possible issue with global queue data location
-            #locs = wfi.getGQLocations()
-            #for b,loc in locs.items():
-            #    ds = b.split('#')[0]
-            #    if not ds in block_locations:
-            #        s_block_locations[ds] = getDatasetBlockAndSite(url, ds, complete='y')
-            #        for s in s_block_locations[ds]:
-            #            for bl in s_block_locations[ds][s]:
-            #                block_locations[ds][bl].append( s )
-            #    block_se = block_locations[ds][b]
-
-            #    if not loc:
-            #        print b,"has no location for GQ in",wfi.request['RequestName']
-            #        ## this is severe !
-            #        wfs_no_location_in_GQ.add( wfo.name )
-            #    ## check location and site white list
-            #    can_run = set([SI.SE_to_CE(se) for se in loc])&set(wfi.request['SiteWhitelist'])
-            #    if loc and not can_run:
-            #        print b,"is missing site to run within the whitelist"
-            #        wfs_no_location_in_GQ.add( wfo.name )
-            #    can_run = can_run & set(SI.sites_ready)
-            #    if loc and not can_run:
-            #        print b,"is missing available site to run"
-            #        wfs_no_location_in_GQ.add( wfo.name )
+            wfi.sendLog('completor', "%s not over bound %s\n%s"%(percent_completions.values(), good_fraction,
+                                                                 json.dumps( long_lasting[wfo.name]['agents'], indent=2) ))
             continue
 
         if all([percent_completions[out] >= ignore_fraction for out in percent_completions]):
@@ -220,26 +208,30 @@ def completor(url, specific):
         cpuh = wfi.getComputingTime(unit='d')
 
         ran_at = wfi.request['SiteWhitelist']
-        print "Required:",cpuh,
-        print "Time spend:",delay
-
+                        
+        wfi.sendLog('completor',"Required %s, time spend %s"%( cpuh, delay))
+                    
         ##### WILL FORCE COMPLETE BELOW
         # only really force complete after n days
 
         if delay <= allowed_delay: continue
-        print "going for force-complete of",wfo.name
         ## find ACDCs that might be running
         if max_force>0:
             forceComplete(url, wfi )
             set_force_complete.add( wfo.name )
+            print "going for force-complete of",wfo.name
+            wfi.sendLog('completor','going for force completing')
+            wfi.notifyRequestor("The workflow %s was force completed for running too long"% wfo.name)
             max_force -=1
         else:
-            print "too many completion this round"
+            wfi.sendLog('completor',"too many completion this round, cannot force complete")
+
         ## do it once only for testing
         #break
     
     if set_force_complete:
-        sendEmail('set force-complete', 'The followings were set force-complete \n%s'%('\n'.join(set_force_complete)))
+        sendLog('completor','The followings were set force-complete \n%s'%('\n'.join(set_force_complete)))
+        #sendEmail('set force-complete', 'The followings were set force-complete \n%s'%('\n'.join(set_force_complete)))
     
     open('%s/completions.json'%monitor_dir,'w').write( json.dumps( completions , indent=2))
     text="These have been running for long"

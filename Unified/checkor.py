@@ -20,9 +20,11 @@ from utils import sendEmail
 from utils import closeoutInfo
 
 def checkor(url, spec=None, options=None):
-    fDB = closeoutInfo()
     if userLock():   return
     if duplicateLock():  return
+
+
+    fDB = closeoutInfo()
 
     UC = unifiedConfiguration()
     use_mcm = True
@@ -74,11 +76,11 @@ def checkor(url, spec=None, options=None):
     ## retrieve bypass and onhold configuration
     bypasses = []
     holdings = []
-    try:
-        already_notified = json.loads(open('already_notifified.json').read())
-    except:
-        print "no record of already notified workflow. starting fresh"
-        already_notified = []
+    #try:
+    #    already_notified = json.loads(open('already_notifified.json').read())
+    #except:
+    #    print "no record of already notified workflow. starting fresh"
+    #    already_notified = []
 
     for bypassor,email in [('vlimant','vlimant@cern.ch'),('jen_a','jen_a@fnal.gov')]:
         bypass_file = '/afs/cern.ch/user/%s/%s/public/ops/bypass.json'%(bypassor[0],bypassor)
@@ -113,6 +115,10 @@ def checkor(url, spec=None, options=None):
         except:
             sendLog('checkor',"cannot get force complete list from %s"%rider)
             sendEmail("malformated force complet file","%s is not json readable"%rider_file, destination=[email])
+
+    if use_mcm:
+        mcm_force = mcm.get('/restapi/requests/forcecomplete')
+        bypasses.extend( mcm_force )
 
     pattern_fraction_pass = UC.get('pattern_fraction_pass')
 
@@ -180,10 +186,17 @@ def checkor(url, spec=None, options=None):
 
         ## get it from somewhere
         bypass_checks = False
+        pids = wfi.getPrepIDs()
+        bypass_by_mcm = False
         for bypass in bypasses:
             if bypass in wfo.name:
-                wfi.sendLog('checkor',"we can bypass checks on %s because of keyword%s "%( wfo.name, bypass))
+                wfi.sendLog('checkor',"we can bypass checks on %s because of keyword %s "%( wfo.name, bypass))
                 bypass_checks = True
+                break
+            if bypass in pids:
+                wfi.sendLog('checkor',"we can bypass checks on %s because of prepid %s "%( wfo.name, bypass))
+                bypass_checks = True
+                bypass_by_mcm = True
                 break
         
         #if not CI.go( wfi.request['Campaign'] ) and not bypass_checks:
@@ -237,7 +250,8 @@ def checkor(url, spec=None, options=None):
         if not 'TotalInputEvents' in wfi.request:
             event_expected,lumi_expected = 0,0
             if not 'recovery' in wfo.status:
-                sendEmail("missing member of the request","TotalInputEvents is missing from the workload of %s"% wfo.name, destination=['jen_a@fnal.gov'])
+                #sendEmail("missing member of the request","TotalInputEvents is missing from the workload of %s"% wfo.name, destination=['jen_a@fnal.gov'])
+                sendLog('checkor',"TotalInputEvents is missing from the workload of %s"% wfo.name, level='critical')
         else:
             event_expected,lumi_expected =  wfi.request['TotalInputEvents'],wfi.request['TotalInputLumis']
 
@@ -393,7 +407,9 @@ def checkor(url, spec=None, options=None):
                     custodial = parents_custodial[0]
                 else:
                     print "the input dataset",parent_dataset,"does not have custodial in the first place. abort"
-                    sendEmail( "dataset has no custodial location", "Please take a look at %s in the logs of checkor"%parent_dataset)
+                    #sendEmail( "dataset has no custodial location", "Please take a look at %s in the logs of checkor"%parent_dataset)
+                    ## does not work for RAWOADSIM
+                    sendLog('checkor',"Please take a look at %s for missing custodial location"% parent_dataset)
                     ## cannot be bypassed, this is an issue to fix
                     is_closing = False
                     pick_custodial = False
@@ -409,8 +425,9 @@ def checkor(url, spec=None, options=None):
 
             if not custodial:
                 print "cannot find a custodial for",wfo.name
-                sendEmail( "cannot find a custodial","cannot find a custodial for %s probably because of the total output size %d"%( wfo.name, size_worth_checking))
-
+                wfi.sendLog('checkor',"cannot find a custodial for %s probably because of the total output size %d"%( wfo.name, size_worth_checking))
+                #sendEmail( "cannot find a custodial","cannot find a custodial for %s probably because of the total output size %d"%( wfo.name, size_worth_checking))
+                sendLog('checkor',"cannot find a custodial for %s probably because of the total output size %d"%( wfo.name, size_worth_checking), level='critical')
                 
             if custodial and (is_closing or bypass_checks):
                 print "picked",custodial,"for tape copy"
@@ -562,6 +579,10 @@ def checkor(url, spec=None, options=None):
                 if res in [None,"None"]:
                     wfo.status = 'close'
                     session.commit()
+                    if use_mcm and bypass_by_mcm:
+                        ## shoot large on all prepids
+                        for pid in pids:
+                            mcm.delete('/restapi/requests/forcecomplete/%s'%pid)
                 else:
                     print "could not close out",wfo.name,"will try again next time"
         else:
@@ -598,13 +619,13 @@ def checkor(url, spec=None, options=None):
             if assistance_tags and not 'manual' in existing_assistance_tags and existing_assistance_tags != assistance_tags:
                 go_notify=True
             
-            if go_notify and wfo.name in already_notified:
-                print "double notification"
-                sendEmail('double notification','please take a look at %s'%(wfo.name))
-            elif go_notify:
-                    
-                already_notified.append( wfo.name )
-                pids = wfi.getPrepIDs() ## could be multiple requests
+
+            if go_notify:
+                #if wfo.name in already_notified:
+                #    print "double notification"
+                #    sendEmail('double notification','please take a look at %s'%(wfo.name))                    
+                #else:
+                #    already_notified.append( wfo.name )
 
                 detailslink = 'https://cmsweb.cern.ch/reqmgr/view/details/%s'
                 perflink = 'https://cmsweb.cern.ch/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s'%(wfo.name)
@@ -614,7 +635,7 @@ def checkor(url, spec=None, options=None):
                     'recovery': 'Samples completed with missing statistics:\n%s\n%s '%( '\n'.join(['%.2f %% complete for %s'%(percent_completions[output]*100, output) for output in wfi.request['OutputDatasets'] ] ), perflink ),
                     'biglumi': 'Samples completed with large luminosity blocks:\n%s\n%s '%('\n'.join(['%d > %d for %s'%(events_per_lumi[output], lumi_upper_limit[output], output) for output in wfi.request['OutputDatasets'] if (events_per_lumi[output] > lumi_upper_limit[output])]), splitlink),
                     'duplicates': 'Samples completed with duplicated luminosity blocks:\n%s\n'%( '\n'.join(['%s'%output for output in wfi.request['OutputDatasets'] if output in duplications and duplications[output] ] ) ),
-                    #'filemismatch': 'Samples completed with inconsistency in DBS/Phedex',
+                    'filemismatch': 'Samples completed with inconsistency in DBS/Phedex',
                     #'manual' :                     'Workflow completed and requires manual checks by Ops',
                     }
                 
@@ -649,7 +670,7 @@ def checkor(url, spec=None, options=None):
             else:
                 print "current status is",wfo.status,"not changing to anything"
 
-    open('already_notifified.json','w').write( json.dumps( already_notified , indent=2))
+    #open('already_notifified.json','w').write( json.dumps( already_notified , indent=2))
 
     fDB.html()
     if not spec:

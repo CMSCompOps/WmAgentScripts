@@ -19,7 +19,6 @@ import os
 def assignor(url ,specific = None, talk=True, options=None):
     if userLock(): return
     if duplicateLock(): return
-    #if notRunningBefore( 'stagor' ): return
     if not componentInfo().check(): return
 
     UC = unifiedConfiguration()
@@ -38,21 +37,18 @@ def assignor(url ,specific = None, talk=True, options=None):
     if specific:
         wfos.extend( session.query(Workflow).filter(Workflow.status=='considered-tried').all())        
     wfos.extend(session.query(Workflow).filter(Workflow.status=='staged').all())
-    #if specific:
-    #    #wfos = session.query(Workflow).filter(Workflow.name==specific).all()
-    #    wfos = session.query(Workflow).filter(Workflow.name.contains(specific)).all()
-    #if not wfos:
-    #    if specific:
-    #        wfos = session.query(Workflow).filter(Workflow.status=='considered').all()
-    #        wfos.extend( session.query(Workflow).filter(Workflow.status=='staging').all())
-    #    wfos.extend(session.query(Workflow).filter(Workflow.status=='staged').all())
 
 
     dataset_endpoints = json.loads(open('%s/dataset_endpoints.json'%monitor_dir).read())
 
+    max_per_round = UC.get('max_per_round').get('assignor',None)
+    max_cpuh_block = UC.get('max_cpuh_block')
     random.shuffle( wfos )
     for wfo in wfos:
         if options.limit and (n_stalled+n_assigned)>options.limit:
+            break
+
+        if max_per_round and (n_stalled+n_assigned)>max_per_round:
             break
 
         if specific:
@@ -75,11 +71,12 @@ def assignor(url ,specific = None, talk=True, options=None):
                     n_stalled+=1
                     no_go = True
                     break
-            if 'secondaries' in CI.campaigns[campaign]:
+            if campaign in CI.campaigns and 'secondaries' in CI.campaigns[campaign]:
                 allowed_secondary.update( CI.campaigns[campaign]['secondaries'] )
         if (secondary and allowed_secondary) and (set(secondary)&allowed_secondary!=set(secondary)):
             wfh.sendLog('assignor','%s is not an allowed secondary'%(', '.join(set(secondary)-allowed_secondary)))
-            sendEmail('secondary not allowed','%s is not an allowed secondary'%( ', '.join(set(secondary)-allowed_secondary)))
+            #sendEmail('secondary not allowed','%s is not an allowed secondary'%( ', '.join(set(secondary)-allowed_secondary)))
+            sendLog('assignor','%s is not an allowed secondary'%(', '.join(set(secondary)-allowed_secondary)), level='critical')
             if not options.go:
                 n_stalled+=1
                 no_go = True
@@ -201,29 +198,13 @@ def assignor(url ,specific = None, talk=True, options=None):
                 ## should this be send back to considered ?
                 
 
-        """
-        if available_fractions and not all([available>=1. for available in available_fractions.values()]):
-            print "The input dataset is not located in full over sites"
-            print json.dumps(available_fractions)
-            if not options.test and not options.go:
-                known = []
-                try:
-                    known = json.loads(open('cannot_assign.json').read())
-                except:
-                    pass
-                if not wfo.name in known:
-                    sendEmail( "cannot be assigned","%s is not full over sites \n %s"%(wfo.name,json.dumps(available_fractions)))
-                    known.append( wfo.name )
-                    open('cannot_assign.json','w').write(json.dumps( known, indent=2))
-                n_stalled+=1
-                continue ## skip skip skip
-        """
-
         ## should be 2 but for the time-being let's lower it to get things going
         copies_wanted,cpuh = wfh.getNCopies()
         wfh.sendLog('assignor',"we need %s CPUh"%cpuh)
-        if cpuh>4000000 and not options.go:
-            sendEmail('large workflow','that wf %s has a large number of CPUh %s, not assigning, please check the logs'%(wfo.name, cpuh))#,destination=['Dmytro.Kovalskyi@cern.ch'])
+        if cpuh>max_cpuh_block and not options.go:
+            #sendEmail('large workflow','that wf %s has a large number of CPUh %s, not assigning, please check the logs'%(wfo.name, cpuh))#,destination=['Dmytro.Kovalskyi@cern.ch'])
+            sendLog('assignor','%s requires a large numbr of CPUh %s , not assigning, please check with requester'%( wfo.name, cpuh), level='critical')
+            wfh.sendLog('assignor',"Requiring a large number of CPUh %s, not assigning"%cpuh)
             continue
 
         if 'Campaign' in wfh.request and wfh.request['Campaign'] in CI.campaigns and 'maxcopies' in CI.campaigns[wfh.request['Campaign']]:
@@ -248,7 +229,8 @@ def assignor(url ,specific = None, talk=True, options=None):
                 wfo.status = 'considered'
                 session.commit()
                 wfh.sendLog('assignor',"sending back to considered because of site downtime, instead of waiting")
-                sendEmail( "cannot be assigned due to downtime","%s is not sufficiently available, due to down time of a site in the whitelist. check the assignor logs. sending back to considered."% wfo.name)
+                #sendEmail( "cannot be assigned due to downtime","%s is not sufficiently available, due to down time of a site in the whitelist. check the assignor logs. sending back to considered."% wfo.name)
+                sendLog('assignor','%s is not sufficiently available, due to down time of a site in the whitelist. sending back to considered.'%( wfo.name ), level='delay')
                 continue
                 #pass
 
@@ -315,7 +297,8 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         if not len(sites_allowed):
             wfh.sendLog('assignor',"cannot be assign with no matched sites")
-            sendEmail( "cannot be assigned","%s has no whitelist"%(wfo.name))
+            #sendEmail( "cannot be assigned","%s has no whitelist"%(wfo.name))
+            sendLog('assignor','%s has no whitelist'% wfo.name, level='critical')
             n_stalled+=1
             continue
 
@@ -401,10 +384,12 @@ def assignor(url ,specific = None, talk=True, options=None):
             parameters.update( split_check )
             if 'EventBased' in split_check.values():
                 wfh.sendLog('assignor', "Falling back to event splitting.")
-                sendEmail("Fallback to EventBased","the workflow %s is too heavy to be processed as it is. Fallback to EventBased splitting"%wfo.name)
+                #sendEmail("Fallback to EventBased","the workflow %s is too heavy to be processed as it is. Fallback to EventBased splitting"%wfo.name)
+                sendLog('assignor','the workflow %s is too heavy to be processed as it is. Fallback to EventBased splitting'%wfo.name, level='critical')
             elif 'EventsPerJob' in split_check.values():
                 wfh.sendLog('assignor', "Modifying the number of job per event")
-                sendEmail("Modifying the job per events","the workflow %s is too heavy in number of jobs explosion"%wfo.name)
+                #sendEmail("Modifying the job per events","the workflow %s is too heavy in number of jobs explosion"%wfo.name)
+                sendLog('assignor',"the workflow %s is too heavy in number of jobs explosion"%wfo.name, level='critical')
 
         # Handle run-dependent MC
         pstring = wfh.processingString()
@@ -418,7 +403,8 @@ def assignor(url ,specific = None, talk=True, options=None):
                 eventsPerJob = int(numEvents/(reqJobs*1.4))
                 lumisPerJob = int(eventsPerJob/eventsPerLumi)
                 if lumisPerJob==0:
-                    sendEmail("issue with event splitting for run-dependent MC","%s needs to be split by event with %s per job"%(wfo.name, eventsPerJob))
+                    #sendEmail("issue with event splitting for run-dependent MC","%s needs to be split by event with %s per job"%(wfo.name, eventsPerJob))
+                    sendLog('assignor', "%s needs to be split by event with %s per job"%(wfo.name, eventsPerJob), level='critical')
                     wfh.sendLog('assignor', "%s needs to be split by event with %s per job"%(wfo.name, eventsPerJob))
                     parameters['EventsPerJob'] = eventsPerJob
                 else:
@@ -426,11 +412,13 @@ def assignor(url ,specific = None, talk=True, options=None):
                     eventsPerJobEstimated = spl['events_per_job'] if 'events_per_job' in spl else None
                     eventsPerJobEstimated = spl['avg_events_per_job'] if 'avg_events_per_job' in spl else None
                     if eventsPerJobEstimated and eventsPerJobEstimated > eventsPerJob:
-                        sendEmail("setting lumi splitting for run-dependent MC","%s was assigned with %s lumis/job"%( wfo.name, lumisPerJob))
+                        #sendEmail("setting lumi splitting for run-dependent MC","%s was assigned with %s lumis/job"%( wfo.name, lumisPerJob))
+                        sendLog('assignor',"%s was assigned with %s lumis/job"%( wfo.name, lumisPerJob), level='critical')
                         wfh.sendLog('assignor',"%s was assigned with %s lumis/job"%( wfo.name, lumisPerJob))
                         parameters['LumisPerJob'] = lumisPerJob
                     else:
-                        sendEmail("leaving splitting untouched for PU_RD*","please check on "+wfo.name)
+                        #sendEmail("leaving splitting untouched for PU_RD*","please check on "+wfo.name)
+                        sendLog('assignor',"leaving splitting untouched for %s, please check on %s"%( pstring, wfo.name), level='critical')
                         wfh.sendLog('assignor',"leaving splitting untouched for PU_RD*, please check.")
 
 

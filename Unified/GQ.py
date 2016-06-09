@@ -76,7 +76,7 @@ for wf in wfs:
             site_with_data_and_listed = list(set(block_se) & set(swl))
             for s in site_with_data_and_listed:
                 jobs_for[s][camp] += wqe['Jobs']
-                wf_for[s][camp].add( wqe['RequestName'] )
+                wf_for[s][camp].add( wqe['RequestName']+' '+str(wqe['Priority']) )
                 agent_for[s][camp].add(wqe['ChildQueueUrl'])
 
             ## in case there is an element for which the intersection of actual location and site listed is empty
