@@ -128,6 +128,7 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
     if verbose:
         print res
 
+
 def getRequestDict(url, workflow):
     conn = httplib.HTTPSConnection(url, cert_file=os.getenv(
         'X509_USER_PROXY'), key_file=os.getenv('X509_USER_PROXY'))
@@ -196,11 +197,11 @@ def main():
     # parse site list
     if options.sites:
         if options.sites == "t1":
-            sites = SI.sites_T1s
+            sites = T1_SITES
         elif options.sites == "t2":
-            sites = SI.sites_T2s
-        else: 
-            sites = [site for site in options.sites.split(',')]
+            sites = T2_SITES
+        else:
+            sites = SI.sites_T1s + SI.sites_T2s
     else: 
         sites = SI.sites_T1s + SI.sites_T2s
     if options.team:
@@ -264,8 +265,6 @@ def main():
         # Must use --lfn option, otherwise workflow won't be assigned
         if options.lfn:
             lfn = options.lfn
-        elif "MergedLFNBase" in wf.info:
-            lfn = wf.info['MergedLFNBase']
         else:
             print "Can't assign the workflow! Please include workflow lfn using --lfn option."
             sys.exit(0)
