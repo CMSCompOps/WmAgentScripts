@@ -187,9 +187,9 @@ def main():
         wfs = [options.workflow]
 
     #Default values
-#    era = {}
+    era = {}
     procversion = 1
- #   procstring = {}
+    procstring = {}
     replica = False
     sites = ALL_SITES
     specialStr = ''
