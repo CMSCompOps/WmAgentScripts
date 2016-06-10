@@ -187,9 +187,9 @@ def main():
         wfs = [options.workflow]
 
     #Default values
-    era = {}
+#    era = {}
     procversion = 1
-    procstring = {}
+ #   procstring = {}
     replica = False
     sites = ALL_SITES
     specialStr = ''
@@ -221,7 +221,6 @@ def main():
     for wf in wfs:
         # Getting the original dictionary
         schema = getRequestDict(url, wf)
-
         wf = reqMgr.Workflow(wf, url=url)
 
         # WF must be in assignment-approved in order to be assigned
@@ -264,7 +263,7 @@ def main():
         elif not taskchain:
             era = wf.info['AcquisitionEra']
         #Set era and procstring to none for merge ACDCs inside a task chain
-        if schema["RequestType"] == "Resubmission" and wf.info["PrepID"].startswith("task") and "Merge" in schema["InitialTaskPath"].split("/")[-1]:
+        if schema["RequestType"] == "Resubmission" and wf.info["PrepID"].startswith("task") and "Merge" in schema["InitialTaskPath"].split("/")[-2]:
             era = None
             procstring = None
 
