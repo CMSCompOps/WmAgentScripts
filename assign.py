@@ -107,11 +107,8 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
         params['TrustSitelists'] = True
         params['TrustPUSitelists'] = True
     
-    # if era is None, leave it out of the json
-    if era is not None:
-        params["AcquisitionEra"] = era
-    if procstring is not None:
-        params["ProcessingString"] = procstring
+    params["AcquisitionEra"] = era
+    params["ProcessingString"] = procstring
     
     # if replica we add NonCustodial sites
     if replica:
