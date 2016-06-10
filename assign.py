@@ -206,9 +206,9 @@ def main():
         elif options.sites == "t2":
             sites = T2_SITES
         else:
-            sites = [ s for s in SI.sites_ready if  (s.startswith('T1_') or s.startswith('T2_'))]
+            sites = SI.sites_T1s + SI.sites_T2s
     else: 
-        sites = [ s for s in SI.sites_ready if  (s.startswith('T1_') or s.startswith('T2_')]
+        sites = SI.sites_T1s + SI.sites_T2s
     if options.team:
         team = options.team
 
@@ -264,7 +264,7 @@ def main():
         elif not taskchain:
             era = wf.info['AcquisitionEra']
         #Set era and procstring to none for merge ACDCs inside a task chain
-        if schema["RequestType"] == "Resubmission") and wfInfo.info["PrepID"].startswith("task") and "Merge" in schema["InitialTaskPath"].split("/")[-1]:
+        if schema["RequestType"] == "Resubmission" and wf.info["PrepID"].startswith("task") and "Merge" in schema["InitialTaskPath"].split("/")[-1]:
             era = None
             procstring = None
 
