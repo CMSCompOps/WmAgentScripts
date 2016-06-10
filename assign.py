@@ -107,11 +107,8 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
         params['TrustSitelists'] = True
         params['TrustPUSitelists'] = True
     
-    # if era is None, leave it out of the json
-    if era is not None:
-        params["AcquisitionEra"] = era
-    if procstring is not None:
-        params["ProcessingString"] = procstring
+    params["AcquisitionEra"] = era
+    params["ProcessingString"] = procstring
     
     # if replica we add NonCustodial sites
     if replica:
@@ -206,9 +203,9 @@ def main():
         elif options.sites == "t2":
             sites = T2_SITES
         else:
-            sites = SI.sites_ready
+            sites = SI.sites_T1s + SI.sites_T2s
     else: 
-         sites = SI.sites_ready
+        sites = SI.sites_T1s + SI.sites_T2s
     if options.team:
         team = options.team
 
@@ -221,7 +218,6 @@ def main():
     for wf in wfs:
         # Getting the original dictionary
         schema = getRequestDict(url, wf)
-
         wf = reqMgr.Workflow(wf, url=url)
 
         # WF must be in assignment-approved in order to be assigned
@@ -231,17 +227,24 @@ def main():
 
         #Check to see if the workflow is a task chain or an ACDC of a taskchain
         taskchain = (schema["RequestType"] == "TaskChain") or ((schema["RequestType"] == "Resubmission") and "task" in schema["InitialTaskPath"].split("/")[1])
+
+        #Dealing with era and proc string
         if taskchain:
             # Setting the Era and ProcStr values per Task
             for key, value in schema.items():
                 if type(value) is dict and key.startswith("Task"):
                     try:
-                        procstring[value['TaskName']] = value['ProcessingString'].replace("-", "_")
-                        era[value['TaskName']] = value['AcquisitionEra']
+                        if 'ProcessingString' in value:
+                            procstring[value['TaskName']] = value['ProcessingString']
+                        else:
+                            procstring[value['TaskName']] = schema['ProcessingString']
+                        if 'AcquisitionEra' in value:
+                            era[value['TaskName']] = value['AcquisitionEra']
+                        else:
+                            procstring[value['TaskName']] = schema['AcquisitionEra']
                     except KeyError:
                         print("This taskchain request has no AcquisitionEra or ProcessingString defined into the Tasks, aborting...")
                         sys.exit(1)
-
         # Adding the special string - in case it was provided in the command line
         if options.special:
             specialStr = '_' + str(options.special)
@@ -256,6 +259,10 @@ def main():
             era = options.era
         elif not taskchain:
             era = wf.info['AcquisitionEra']
+        #Set era and procstring to none for merge ACDCs inside a task chain
+        if schema["RequestType"] == "Resubmission" and wf.info["PrepID"].startswith("task") and "Merge" in schema["InitialTaskPath"].split("/")[-2]:
+            era = None
+            procstring = None
 
         # Must use --lfn option, otherwise workflow won't be assigned
         if options.lfn:
@@ -305,11 +312,6 @@ def main():
             if exist and procversion <= maxv:
                 print "Some output datasets exist, its advised to assign with v ==", maxv + 1
                 sys.exit(0)
-
-        #Check if we are dealing with a TAskChain resubmission
-        elif schema["RequestType"] == "Resubmission" and "task" in schema["InitialTaskPath"].split("/")[1]:
-            procstring = wf.info["ProcessingString"]
-            era = wf.info["AcquisitionEra"]
 
     # If the --test argument was provided, then just print the information
     # gathered so far and abort the assignment
