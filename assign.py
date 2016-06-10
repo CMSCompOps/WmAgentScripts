@@ -206,9 +206,9 @@ def main():
         elif options.sites == "t2":
             sites = T2_SITES
         else:
-            sites = SI.sites_ready
+            sites = [ s for s in SI.sites_ready if  (s.startswith('T1_') or s.startswith('T2_'))]
     else: 
-         sites = SI.sites_ready
+        sites = [ s for s in SI.sites_ready if  (s.startswith('T1_') or s.startswith('T2_')]
     if options.team:
         team = options.team
 
@@ -238,8 +238,14 @@ def main():
             for key, value in schema.items():
                 if type(value) is dict and key.startswith("Task"):
                     try:
-                        procstring[value['TaskName']] = value['ProcessingString']
-                        era[value['TaskName']] = value['AcquisitionEra']
+                        if 'ProcessingString' in value:
+                            procstring[value['TaskName']] = value['ProcessingString']
+                        else:
+                            procstring[value['TaskName']] = schema['ProcessingString']
+                        if 'AcquisitionEra' in value:
+                            era[value['TaskName']] = value['AcquisitionEra']
+                        else:
+                            procstring[value['TaskName']] = schema['AcquisitionEra']
                     except KeyError:
                         print("This taskchain request has no AcquisitionEra or ProcessingString defined into the Tasks, aborting...")
                         sys.exit(1)
@@ -261,8 +267,6 @@ def main():
         if schema["RequestType"] == "Resubmission") and wfInfo.info["PrepID"].startswith("task") and "Merge" in schema["InitialTaskPath"].split("/")[-1]:
             era = None
             procstring = None
-
-
 
         # Must use --lfn option, otherwise workflow won't be assigned
         if options.lfn:
