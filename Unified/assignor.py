@@ -63,14 +63,12 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         ## check if by configuration we gave it a GO
         no_go = False
+        if not wfh.go(log=True) and not options.go:
+            n_stalled+=1 
+            no_go = True
+
         allowed_secondary = set()
         for campaign in wfh.getCampaigns():
-            if not CI.go( campaign ):    
-                wfh.sendLog('assignor',"No go for %s"%campaign)
-                if not options.go:
-                    n_stalled+=1
-                    no_go = True
-                    break
             if campaign in CI.campaigns and 'secondaries' in CI.campaigns[campaign]:
                 allowed_secondary.update( CI.campaigns[campaign]['secondaries'] )
         if (secondary and allowed_secondary) and (set(secondary)&allowed_secondary!=set(secondary)):

@@ -640,7 +640,7 @@ class campaignInfo:
         if c in self.campaigns and self.campaigns[c]['go']:
             if 'labels' in self.campaigns[c]:
                 if s!=None:
-                    return (s in self.campaigns[c]['labels'])
+                    return (s in self.campaigns[c]['labels']) or any([l in s for l in self.campaigns[c]['labels']])
                 else:
                     print "Not allowed to go for",c,s
                     return False
@@ -3688,13 +3688,28 @@ class workflowInfo:
         else:
             return self.request['ProcessingString']
         
-    def getCampaign( self ):
-        #if self.request['RequestType'] == 'TaskChain':
-        #    return self._collectintaskchain('Campaign')
-        #else:
-        return self.request['Campaign']
 
             
+    def go(self,log=False):
+        CI = campaignInfo()
+        pss = self.processingString()
+        aes = self.acquisitionEra()
+
+        if type(pss) == dict:
+            pas = [(aes[t],pss[t]) for t in pss]
+        else:
+            pas = [(aes,pss)]
+        for campaign,label in pas:
+            if not CI.go( campaign, label):
+                if log:
+                    self.sendLog('go',"no go due to %s %s"%(campaign,label))
+                else:
+                    print "no go due to",campaign,label
+                return False
+        return True
+            
+
+
     def getNextVersion( self ):
         ## returns 1 if nothing is in the way
         if 'ProcessingVersion' in self.request:
