@@ -107,11 +107,8 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
         params['TrustSitelists'] = True
         params['TrustPUSitelists'] = True
     
-    # if era is None, leave it out of the json
-    if era is not None:
-        params["AcquisitionEra"] = era
-    if procstring is not None:
-        params["ProcessingString"] = procstring
+    params["AcquisitionEra"] = era
+    params["ProcessingString"] = procstring
     
     # if replica we add NonCustodial sites
     if replica:
@@ -133,14 +130,12 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
 
 
 def getRequestDict(url, workflow):
-    headers = {"Accept": "application/json"}
     conn = httplib.HTTPSConnection(url, cert_file=os.getenv(
         'X509_USER_PROXY'), key_file=os.getenv('X509_USER_PROXY'))
-    urn = "/reqmgr2/data/request/%s" % workflow
-    conn.request("GET", urn, headers=headers)
+    r1 = conn.request("GET", '/reqmgr/reqMgr/request?requestName=' + workflow)
     r2 = conn.getresponse()
-    request = json.loads(r2.read())["result"][0]
-    return request[workflow]
+    request = json.loads(r2.read())
+    return request
 
 def main():
     url = 'cmsweb.cern.ch'
@@ -202,16 +197,14 @@ def main():
     # parse site list
     if options.sites:
         if options.sites == "t1":
-            #            sites = T1_SITES
-            sites = [ s for s in SI.sites_ready if s.startswith('T1_')]
+            sites = SI.sites_T1s
         elif options.sites == "t2":
-            #            sites = T2_SITES
-            sites = [ s for s in SI.sites_ready if s.startswith('T2_')]
+            sites = SI.sites_T2s
         else:
-            #sites = SI.sites_ready
+#            sites = SI.sites_T1s + SI.sites_T2s
             sites = [site for site in options.sites.split(',')]
     else: 
-         sites = SI.sites_ready
+        sites = SI.sites_T1s + SI.sites_T2s
     if options.team:
         team = options.team
 
@@ -224,7 +217,6 @@ def main():
     for wf in wfs:
         # Getting the original dictionary
         schema = getRequestDict(url, wf)
-
         wf = reqMgr.Workflow(wf, url=url)
 
         # WF must be in assignment-approved in order to be assigned
@@ -234,17 +226,24 @@ def main():
 
         #Check to see if the workflow is a task chain or an ACDC of a taskchain
         taskchain = (schema["RequestType"] == "TaskChain") or ((schema["RequestType"] == "Resubmission") and "task" in schema["InitialTaskPath"].split("/")[1])
+
+        #Dealing with era and proc string
         if taskchain:
             # Setting the Era and ProcStr values per Task
             for key, value in schema.items():
                 if type(value) is dict and key.startswith("Task"):
                     try:
-                        procstring[value['TaskName']] = value['ProcessingString'].replace("-", "_")
-                        era[value['TaskName']] = value['AcquisitionEra']
+                        if 'ProcessingString' in value:
+                            procstring[value['TaskName']] = value['ProcessingString']
+                        else:
+                            procstring[value['TaskName']] = schema['ProcessingString']
+                        if 'AcquisitionEra' in value:
+                            era[value['TaskName']] = value['AcquisitionEra']
+                        else:
+                            procstring[value['TaskName']] = schema['AcquisitionEra']
                     except KeyError:
                         print("This taskchain request has no AcquisitionEra or ProcessingString defined into the Tasks, aborting...")
                         sys.exit(1)
-
         # Adding the special string - in case it was provided in the command line
         if options.special:
             specialStr = '_' + str(options.special)
@@ -259,10 +258,16 @@ def main():
             era = options.era
         elif not taskchain:
             era = wf.info['AcquisitionEra']
+        #Set era and procstring to none for merge ACDCs inside a task chain
+        if schema["RequestType"] == "Resubmission" and wf.info["PrepID"].startswith("task") and "Merge" in schema["InitialTaskPath"].split("/")[-2]:
+            era = None
+            procstring = None
 
         # Must use --lfn option, otherwise workflow won't be assigned
         if options.lfn:
             lfn = options.lfn
+        elif "MergedLFNBase" in wf.info:
+            lfn = wf.info['MergedLFNBase']
         else:
             print "Can't assign the workflow! Please include workflow lfn using --lfn option."
             sys.exit(0)
@@ -288,7 +293,6 @@ def main():
             exist = False
             maxv = 1
             for key, value in schema.items():
-                print type(value), key
                 if type(value) is dict and key.startswith("Task"):
                     dbsapi = DbsApi(url=dbs3_url)
                     
@@ -296,10 +300,8 @@ def main():
                     # numbers
                     datasets = dbsapi.listDatasets(acquisition_era_name=value['AcquisitionEra'], primary_ds_name=value['PrimaryDataset'], detail=True, dataset_access_type='*')
                     processedName = value['AcquisitionEra'] + '-' + value['ProcessingString'] + "-v\\d+"
-                    print "processedName is ", processedName
                     # see if any of the dataset names is a match
                     for ds in datasets:
-                        print "Dataset name ", ds['processed_ds_name']
                         if re.match(processedName, ds['processed_ds_name']):
                             print "Existing dset:", ds['dataset'], "(%s)" % ds['dataset_access_type']
                             maxv = max(maxv, ds['processing_version'])
@@ -311,11 +313,6 @@ def main():
             if exist and procversion <= maxv:
                 print "Some output datasets exist, its advised to assign with v ==", maxv + 1
                 sys.exit(0)
-
-        #Check if we are dealing with a TAskChain resubmission
-        elif schema["RequestType"] == "Resubmission" and "task" in schema["InitialTaskPath"].split("/")[1]:
-            procstring = wf.info["ProcessingString"]
-            era = wf.info["AcquisitionEra"]
 
     # If the --test argument was provided, then just print the information
     # gathered so far and abort the assignment
