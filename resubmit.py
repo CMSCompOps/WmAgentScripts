@@ -322,7 +322,7 @@ url = 'cmsweb.cern.ch'
 url_tb = 'cmsweb-testbed.cern.ch'
 reqmgrCouchURL = "https://" + url + "/couchdb/reqmgr_workload_cache"
 
-
+ 
 def main():
 
     # Create option parser

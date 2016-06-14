@@ -45,7 +45,7 @@ def main():
     else:
         parser.error("Provide the workflow of a file of workflows")
         sys.exit(1)
-
+ 
     if not options.user:
         # get os username by default
         uinfo = pwd.getpwuid(os.getuid())
