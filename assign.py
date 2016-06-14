@@ -130,14 +130,12 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
 
 
 def getRequestDict(url, workflow):
-    headers = {"Accept": "application/json"}
     conn = httplib.HTTPSConnection(url, cert_file=os.getenv(
         'X509_USER_PROXY'), key_file=os.getenv('X509_USER_PROXY'))
-    urn = "/reqmgr2/data/request/%s" % workflow
-    conn.request("GET", urn, headers=headers)
+    r1 = conn.request("GET", '/reqmgr/reqMgr/request?requestName=' + workflow)
     r2 = conn.getresponse()
-    request = json.loads(r2.read())["result"][0]
-    return request[workflow]
+    request = json.loads(r2.read())
+    return request
 
 def main():
     url = 'cmsweb.cern.ch'
