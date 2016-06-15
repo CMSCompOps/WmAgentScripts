@@ -350,3 +350,6 @@ if __name__ == '__main__':
 
     fdb = closeoutInfo()
     fdb.html()
+
+    from showError import parse_all
+    parse_all()
