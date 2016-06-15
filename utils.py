@@ -990,7 +990,7 @@ class siteInfo:
             self.sites_banned = [
                 'T2_CH_CERN_AI',
                 'T2_US_Vanderbilt',
-                #'T0_CH_CERN'
+                'T0_CH_CERN'
                 #'T2_RU_INR',
                 #'T2_UA_KIPT'
                 ]
@@ -1405,8 +1405,8 @@ class closeoutInfo:
             self.record = {}
 
     def table_header(self):
-        text = '<table border=1><thead><tr><th>workflow</th><th>OutputDataSet</th><th>%Compl</th><th>acdc</th><th>Dupl</th><th>CorrectLumis</th><th>Scubscr</th><th>Tran</th><th>dbsF</th><th>dbsIF</th><th>\
-phdF</th><th>Priority</th></tr></thead>'
+        text = '<table border=1><thead><tr><th>workflow</th><th>OutputDataSet</th><th>%Compl</th><th>acdc</th><th>Dupl</th><th>LSsize</th><th>Scubscr</th><th>dbsF</th><th>dbsIF</th><th>\
+phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
         return text
 
     def one_line(self, wf, wfo, count):
@@ -1414,24 +1414,23 @@ phdF</th><th>Priority</th></tr></thead>'
         else:            color='white'
         text=""
         tpid = self.record[wf]['prepid']
-        #try:
-        #    pid = filter(lambda b :b.count('-')==2, wf.split('_'))[0]
-        #    tpid = 'task_'+pid if 'task' in wf else pid
-        #except:
-        #    wl = getWorkLoad('cmsweb.cern.ch', wf)
-        #    pid =wl['PrepID']
-        #    tpid=wl['PrepID']
-            
+        pid = tpid.replace('task_','')
+
         ## return the corresponding html
-        order = ['percentage','acdc','duplicate','correctLumis','missingSubs','phedexReqs','dbsFiles','dbsInvFiles','phedexFiles']
+        order = ['percentage','acdc','duplicate','correctLumis','missingSubs','dbsFiles','dbsInvFiles','phedexFiles','updated']
         wf_and_anchor = '<a id="%s">%s</a>'%(wf,wf)
         for out in self.record[wf]['datasets']:
-            text+='<tr bgcolor=%s>'%color
-            text+='<td>%s<br><a href="https://%s/reqmgr2/fetch?rid=%s" target="_blank">dts</a> <a href=https://%s/reqmgr/view/details/%s>dts-req1</a>, <a href=https://%s/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s>perf</a>, <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>ac</a>, <a href=assistance.html#%s>%s</a></td>'% (
-                wf_and_anchor,
-                reqmgr_url,wf, reqmgr_url, wf, reqmgr_url, wf,
-                tpid,
-                wf,wfo.status)
+            text += '<tr bgcolor=%s>'%color
+            text += '<td>%s<br>'%wf_and_anchor
+            text += ', <a href="https://%s/reqmgr2/fetch?rid=%s" target="_blank">dts</a>'%(reqmgr_url, wf)
+            text += ', <a href=https://%s/reqmgr/view/details/%s>dts-req1</a>'%(reqmgr_url, wf)
+            text += ', <a href="https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=full&reverse=0&reverse=1&npp=20&subtext=%s&sall=q" target="_blank">elog</a>'%(pid)
+            text += ', <a href=https://%s/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s>perf</a>'%(reqmgr_url, wf)
+            
+            text += ', <a href="http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=%s" target="_blank">history</a>'%(pid)
+            text += ', <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>ac</a>'%(tpid)
+            text += ', <a href=report/%s>report</a>'%(wf)
+            text += ', <a href=assistance.html#%s>%s</a></td>'%(wf,wfo.status)
             
             text+='<td>%s</td>'% out
             lines = []
@@ -1499,8 +1498,10 @@ phdF</th><th>Priority</th></tr></thead>'
 </head>
 """)
     
-        short_html.write('Last update on %s(CET), %s(GMT), <a href=logs/checkor/last.log target=_blank> log</a> <a href=logs/recoveror/last.log target=_blank> postlog</a> <br>'%(time.asctime(time.localtime()),time.asctime(time.gmtime())))
-        html.write('Last update on %s(CET), %s(GMT), <a href=logs/checkor/last.log target=_blank> log</a> <a href=logs/recoveror/last.log target=_blank> postlog</a><br>'%(time.asctime(time.localtime()),time.asctime(time.gmtime())))
+        #short_html.write('Last update on %s(CET), %s(GMT), <a href=logs/checkor/last.log target=_blank> log</a> <a href=logs/recoveror/last.log target=_blank> postlog</a> <br>'%(time.asctime(time.localtime()),time.asctime(time.gmtime())))
+        #html.write('Last update on %s(CET), %s(GMT), <a href=logs/checkor/last.log target=_blank> log</a> <a href=logs/recoveror/last.log target=_blank> postlog</a><br>'%(time.asctime(time.localtime()),time.asctime(time.gmtime())))
+        short_html.write('<a href=logs/checkor/last.log target=_blank> log</a> <a href=logs/recoveror/last.log target=_blank> postlog</a> <br>')
+        html.write('<a href=logs/checkor/last.log target=_blank> log</a> <a href=logs/recoveror/last.log target=_blank> postlog</a><br>')
 
         html.write('<a href=assistance_summary.html> Summary </a> <br>')    
         short_html.write('<a href=assistance.html> Details </a> <br>')
@@ -1550,7 +1551,17 @@ phdF</th><th>Priority</th></tr></thead>'
 """% (status,status, len(assist[status])))
             lines = []
             short_lines = []
+            prio_ordered_wf = []
             for (count,wfo) in enumerate(assist[status]):
+                if not wfo.name in self.record:
+                    continue
+                prio = self.record[wfo.name]['priority']
+                prio_ordered_wf.append( (prio, wfo) )
+            ## sort by priority
+            prio_ordered_wf.sort( key = lambda item:item[0] ,reverse=True )
+            ## and use only the wfo
+            prio_ordered_wf = [ item[1] for item in prio_ordered_wf ]
+            for (count,wfo) in enumerate(prio_ordered_wf):
                 if count%2:            color='lightblue'
                 else:            color='white'
                 if not wfo.name in self.record: 
