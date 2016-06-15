@@ -3,7 +3,7 @@ from assignSession import *
 import reqMgrClient
 from McMClient import McMClient
 from utils import makeReplicaRequest
-from utils import workflowInfo, siteInfo, campaignInfo, userLock, global_SI
+from utils import workflowInfo, siteInfo, campaignInfo, userLock
 from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, getSiteWhiteList, approveSubscription, getDatasetSize, updateSubscription, getWorkflows, componentInfo, getDatasetDestinations, getDatasetBlocks, DSS
 from utils import unifiedConfiguration, monitor_dir, reqmgr_url
 #from utils import lockInfo
@@ -31,13 +31,11 @@ def transferor(url ,specific = None, talk=True, options=None):
     else:
         execute = True
 
-    SI = global_SI
+    SI = siteInfo()
     CI = campaignInfo()
-    #LI = lockInfo()
     NLI = newLockInfo()
     mcm = McMClient(dev=False)
     dss = DSS()
-    #UC = unifiedConfiguration()
 
     #allowed_secondary = UC.get('')
     print "counting all being handled..."

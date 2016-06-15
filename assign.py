@@ -21,7 +21,7 @@ from dbs.apis.dbsClient import DbsApi
 import reqMgrClient as reqMgr
 from pprint import pprint
 from random import choice
-from utils import workflowInfo, siteInfo, global_SI
+from utils import workflowInfo, siteInfo
 
 
 dbs3_url = r'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
@@ -192,7 +192,7 @@ def main():
     team = 'production'
     trust_site = False
 
-    SI = global_SI
+    SI = siteInfo()
     # Handling the parameters given in the command line
     # parse site list
     if options.sites:

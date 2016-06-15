@@ -1388,6 +1388,12 @@ class siteInfo:
         #return r_weights.keys()[self._weighted_choice_sub(r_weights.values())]
         return self._pick(sites, self.cpu_pledges)
 
+def global_SI():
+    if not global_SI.instance:
+        global_SI.instance = siteInfo()
+    return global_SI.instance
+global_SI.instance = None
+
 
 
 class closeoutInfo:
@@ -1580,9 +1586,9 @@ phdF</th><th>Priority</th></tr></thead>'
         html.write("bottom of page</html>")    
 
 
-global_SI = siteInfo()
+
 def getSiteWhiteList( inputs , pickone=False):
-    SI = global_SI
+    SI = global_SI()
     (lheinput,primary,parent,secondary) = inputs
     sites_allowed=[]
     if lheinput:
@@ -3272,7 +3278,7 @@ class workflowInfo:
 
     def availableSlots(self):
         av = 0
-        SI = global_SI
+        SI = global_SI()
         if 'SiteWhitelist' in self.request:
             return SI.availableSlots( self.request['SiteWhitelist'] )
         else:
@@ -3323,7 +3329,7 @@ class workflowInfo:
         return (1.,1.,1.)
     def getSiteWhiteList( self, pickone=False, verbose=True):
         ### this is not used yet, but should replace most
-        SI = global_SI
+        SI = global_SI()
         (lheinput,primary,parent,secondary) = self.getIO()
         sites_allowed=[]
         if lheinput:
@@ -3655,11 +3661,18 @@ class workflowInfo:
             t+=1
         return coll
 
+    def getCampaign( self ):
+        #if self.request['RequestType'] == 'TaskChain':
+        #    return self._collectintaskchain('Campaign')
+        #else:
+        return self.request['Campaign']
+
     def getCampaigns(self):
         if self.request['RequestType'] == 'TaskChain':
             return self._collectintaskchain('AcquisitionEra').values()
         else:
             return [self.request['Campaign']]
+
     def acquisitionEra( self ):
         def invertDigits( st ):
             if st[0].isdigit():
