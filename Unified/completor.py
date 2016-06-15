@@ -2,7 +2,7 @@
 from assignSession import *
 import sys
 import reqMgrClient
-from utils import workflowInfo, getWorkflowById, getDatasetEventsAndLumis, componentInfo, monitor_dir, reqmgr_url, unifiedConfiguration
+from utils import workflowInfo, getWorkflowById, forceComplete, getDatasetEventsAndLumis, componentInfo, monitor_dir, reqmgr_url, unifiedConfiguration, getForceCompletes
 from utils import campaignInfo, sendEmail, siteInfo, sendLog
 from collections import defaultdict
 import json
@@ -10,20 +10,6 @@ import random
 from McMClient import McMClient
 
 
-def forceComplete(url, wfi):
-    familly = getWorkflowById( url, wfi.request['PrepID'] ,details=True)
-    for member in familly:
-        ### if member['RequestName'] == wl['RequestName']: continue ## set himself out
-        if member['RequestDate'] < wfi.request['RequestDate']: continue
-        if member['RequestStatus'] in ['None',None]: continue
-        ## then set force complete all members
-        if member['RequestStatus'] in ['running-opened','running-closed']:
-            #sendEmail("force completing","%s is worth force completing\n%s"%( member['RequestName'] , percent_completions))
-            print "setting",member['RequestName'],"force-complete"
-            reqMgrClient.setWorkflowForceComplete(url, member['RequestName'])
-        elif member['RequestStatus'] in ['acquired','assignment-approved']:
-            print "rejecting",member['RequestName']
-            reqMgrClient.invalidateWorkflow(url, member['RequestName'], current_status=member['RequestStatus'])
 
 def completor(url, specific):
     use_mcm = True
@@ -57,18 +43,7 @@ def completor(url, specific):
 
     long_lasting = {}
 
-    overrides = {}
-    for rider,email in [('vlimant','vlimant@cern.ch'),('jen_a','jen_a@fnal.gov'),('srimanob','srimanob@mail.cern.ch')]:
-        rider_file = '/afs/cern.ch/user/%s/%s/public/ops/forcecomplete.json'%(rider[0],rider)
-        if not os.path.isfile(rider_file):
-            print "no file",rider_file
-            continue
-        try:
-            overrides[rider] = json.loads(open( rider_file ).read() )
-        except:
-            print "cannot get force complete list from",rider
-            sendEmail("malformated force complet file","%s is not json readable"%rider_file, destination=[email])
-            
+    overrides = getForceCompletes()
     if use_mcm:    
         ## add all workflow that mcm wants to get force completed
         mcm_force = mcm.get('/restapi/requests/forcecomplete')

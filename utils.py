@@ -2777,6 +2777,24 @@ def getWorkflowById( url, pid , details=False):
     else:
         return [item['id'] for item in items]
     
+
+
+def forceComplete(url, wfi):
+    import reqMgrClient
+    familly = getWorkflowById( url, wfi.request['PrepID'] ,details=True)
+    for member in familly:
+        ### if member['RequestName'] == wl['RequestName']: continue ## set himself out
+        if member['RequestDate'] < wfi.request['RequestDate']: continue
+        if member['RequestStatus'] in ['None',None]: continue
+        ## then set force complete all members
+        if member['RequestStatus'] in ['running-opened','running-closed']:
+            #sendEmail("force completing","%s is worth force completing\n%s"%( member['RequestName'] , percent_completions))
+            print "setting",member['RequestName'],"force-complete"
+            reqMgrClient.setWorkflowForceComplete(url, member['RequestName'])
+        elif member['RequestStatus'] in ['acquired','assignment-approved']:
+            print "rejecting",member['RequestName']
+            reqMgrClient.invalidateWorkflow(url, member['RequestName'], current_status=member['RequestStatus'])
+
 def getWorkflows(url,status,user=None,details=False,rtype=None):
     retries=10000
     wait=2
@@ -2926,6 +2944,22 @@ def checkIfBlockIsAtASite(url,block,site):
 
     return False                
 
+
+def getForceCompletes():
+    overrides = {}
+    for rider,email in [('vlimant','vlimant@cern.ch'),('jen_a','jen_a@fnal.gov'),('srimanob','srimanob@mail.cern.ch')]:
+        rider_file = '/afs/cern.ch/user/%s/%s/public/ops/forcecomplete.json'%(rider[0],rider)
+        if not os.path.isfile(rider_file):
+            print "no file",rider_file
+            continue
+        try:
+            overrides[rider] = json.loads(open( rider_file ).read() )
+        except:
+            print "cannot get force complete list from",rider
+            sendEmail("malformated force complet file","%s is not json readable"%rider_file, destination=[email])
+    return overrides
+
+
 class workflowInfo:
     def __init__(self, url, workflow, spec=True, request=None,stats=False, wq=False, errors=False):
         self.logs = defaultdict(str)
@@ -2959,6 +2993,8 @@ class workflowInfo:
         self.errors = None
         if errors:
             self.getWMErrors()
+
+        self.recovery_doc = None
 
         self.workqueue = None
         if wq:
@@ -3024,18 +3060,43 @@ class workflowInfo:
         return self.full_spec
 
     def getWMErrors(self):
-        r1=self.conn.request("GET",'/couchdb/wmstats/_design/WMStats/_view/jobsByStatusWorkflow?reduce=true&group_level=10&startkey=["pdmvserv_task_HIG-RunIIWinter15wmLHE-01172__v1_T_160421_121609_3929"]&endkey=["pdmvserv_task_HIG-RunIIWinter15wmLHE-01172__v1_T_160421_121609_3929"%2C{}]&stale=update_after&_=1461760521841')
+        r1=self.conn.request("GET",'/wmstatsserver/data/jobdetail/%s'%(self.request['RequestName']), headers={"Accept":"*/*"})
         r2=self.conn.getresponse()
-        return None
+        #print r2.read()
+        self.errors = json.loads(r2.read())['result'][0][self.request['RequestName']]
+        return self.errors
 
-        #then navigate to 
-        #'/couchdb/wmstats/_design/WMStats/_view/jobsByStatusWorkflow?include_docs=true&reduce=false&startkey=["pdmvserv_task_HIG-RunIIWinter15wmLHE-01172__v1_T_160421_121609_3929"%2C"%2Fpdmvserv_task_HIG-RunIIWinter15wmLHE-01172__v1_T_160421_121609_3929%2FHIG-RunIIWinter15wmLHE-01172_0%2FHIG-RunIIWinter15wmLHE-01172_0MergeLHEoutput"%2C"jobfailed"%2C99109%2C"T0_CH_CERN"%2C"https%3A%2F%2Fcmsweb.cern.ch%2Fcouchdb%2Facdcserver"]&endkey=["pdmvserv_task_HIG-RunIIWinter15wmLHE-01172__v1_T_160421_121609_3929"%2C"%2Fpdmvserv_task_HIG-RunIIWinter15wmLHE-01172__v1_T_160421_121609_3929%2FHIG-RunIIWinter15wmLHE-01172_0%2FHIG-RunIIWinter15wmLHE-01172_0MergeLHEoutput"%2C"jobfailed"%2C99109%2C"T0_CH_CERN"%2C{}]&limit=10&stale=update_after&_=1461761740101'
-                             
     def getWMStats(self):
         r1=self.conn.request("GET",'/wmstatsserver/data/request/%s'%self.request['RequestName'], headers={"Accept":"application/json"})
         r2=self.conn.getresponse()
         self.wmstats = json.loads(r2.read())['result'][0][self.request['RequestName']]
         return self.wmstats
+
+    def getRecoveryDoc(self):
+        if self.recovery_doc != None:
+            return self.recovery_doc
+        try:
+            r1=self.conn.request("GET",'/couchdb/acdcserver/_design/ACDC/_view/byCollectionName?key="%s"&include_docs=true&reduce=false'% self.request['RequestName'])
+            r2=self.conn.getresponse()
+            rows = json.loads(r2.read())['rows']
+            self.recovery_doc = [r['doc'] for r in rows]
+        except:
+            print "failed to get the acdc document for",self.request['RequestName']
+            self.recovery_doc = None
+        return self.recovery_doc
+
+    def getRecoveryInfo(self):
+        self.getRecoveryDoc()
+
+        where_to_run = defaultdict(list)
+        missing_to_run = defaultdict(int)
+        for doc in self.recovery_doc:
+            task = doc['fileset_name']
+            for f,info in doc['files'].iteritems():
+                where_to_run[task] = list(set(where_to_run[task] + info['locations']))
+                missing_to_run[task] += info['events']
+
+        return dict(where_to_run),dict(missing_to_run)
 
     def getWorkQueue(self):
         if not self.workqueue:
