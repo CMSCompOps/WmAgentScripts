@@ -341,6 +341,11 @@ def assignor(url ,specific = None, talk=True, options=None):
                     else: 
                         parameters[key] = v
 
+        if lheinput:
+            ## throttle reading LHE article 
+            wfh.sendLog('assignor', 'Setting the number of events per job to 500k max')
+            parameters['EventsPerJob'] = 500000
+
         ## pick up campaign specific assignment parameters
         parameters.update( CI.parameters(wfh.request['Campaign']) )
 
