@@ -79,7 +79,7 @@ def main():
                 mem = options.memory
             else:
                 mem = workflowInfo.info["Memory"]
-                cloned = resubmit.cloneWorkflow(workflow, user, options.group, memory=mem)
+            cloned = resubmit.cloneWorkflow(workflow, user, options.group, memory=mem)
     sys.exit(0);
 
 if __name__ == "__main__":
