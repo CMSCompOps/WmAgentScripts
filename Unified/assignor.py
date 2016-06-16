@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 import reqMgrClient
-from utils import workflowInfo, campaignInfo, siteInfo, userLock, global_SI, unifiedConfiguration, reqmgr_url, monitor_dir
+from utils import workflowInfo, campaignInfo, siteInfo, userLock, unifiedConfiguration, reqmgr_url, monitor_dir
 from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction, getDatasetEventsPerLumi, newLockInfo, getLFNbase, getDatasetBlocks
 from utils import componentInfo, sendEmail, sendLog
 #from utils import lockInfo
@@ -23,8 +23,7 @@ def assignor(url ,specific = None, talk=True, options=None):
 
     UC = unifiedConfiguration()
     CI = campaignInfo()
-    SI = global_SI
-    #LI = lockInfo()
+    SI = siteInfo()
     NLI = newLockInfo()
 
     n_assigned = 0
@@ -63,14 +62,12 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         ## check if by configuration we gave it a GO
         no_go = False
+        if not wfh.go(log=True) and not options.go:
+            n_stalled+=1 
+            no_go = True
+
         allowed_secondary = set()
         for campaign in wfh.getCampaigns():
-            if not CI.go( campaign ):    
-                wfh.sendLog('assignor',"No go for %s"%campaign)
-                if not options.go:
-                    n_stalled+=1
-                    no_go = True
-                    break
             if campaign in CI.campaigns and 'secondaries' in CI.campaigns[campaign]:
                 allowed_secondary.update( CI.campaigns[campaign]['secondaries'] )
         if (secondary and allowed_secondary) and (set(secondary)&allowed_secondary!=set(secondary)):
@@ -124,12 +121,23 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         wfh.sendLog('assignor',"Allowed %s"%sorted(sites_allowed))
         secondary_locations=None
+
+        primary_aaa = options.primary_aaa
+        if 'Campaign' in wfh.request and wfh.request['Campaign'] in CI.campaigns and 'primary_AAA' in CI.campaigns[wfh.request['Campaign']]:
+            primary_aaa = primary_aaa or CI.campaigns[wfh.request['Campaign']]['primary_AAA']
+        secondary_aaa = options.secondary_aaa
+        if 'Campaign' in wfh.request and wfh.request['Campaign'] in CI.campaigns and 'secondary_AAA' in CI.campaigns[wfh.request['Campaign']]:
+            secondary_aaa = secondary_aaa or CI.campaigns[wfh.request['Campaign']]['secondary_AAA']
+
         for sec in list(secondary):
             if override_sec_location: 
                 print "We don't care where the secondary is"
                 print "Cannot pass for now"
                 sendEmail("tempting to pass sec location check","but we cannot yet IMO")
                 #pass
+            if secondary_aaa:
+                #just continue without checking
+                continue
 
             presence = getDatasetPresence( url, sec )
             print sec
@@ -261,43 +269,26 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         ## default back to white list to original white list with any data
         print "Allowed",sorted(sites_allowed)
-        if options.primary_aaa:
+
+        if primary_aaa:
             sites_allowed = initial_sites_allowed
-            #options.useSiteListAsLocation = True
             options.TrustSitelists = True
+            wfh.sendLog('assignor',"Selected to read primary through xrootd %s"%sorted(sites_allowed))
         else:
             sites_allowed = sites_with_any_data
             wfh.sendLog('assignor',"Selected for any data %s"%sorted(sites_allowed))
 
-        if options.restrict:
-            print "Allowed",sites_allowed
-            sites_allowed = sites_with_any_data
-            print "Selected",sites_allowed
-        else:
-            if set(sites_with_data) != set(sites_allowed):
-                ## the data is not everywhere we wanted to run at : enable aaa
-                print "Sites with 90% data not matching site white list (block choping!)"
-                print "Resorting to AAA reading for",list(set(sites_allowed) - set(sites_with_data)),"?"
-                print "Whitelist site with any data",list(set(sites_allowed) - set(sites_with_any_data))
-                #options.useSiteListAsLocation = True
-                #print "Not commissioned yet"
-                #continue
-            #print "We could be running at",opportunistic_sites,"in addition"
-            ##sites_allowed = list(set(sites_allowed+ opportunistic_sites))
+        if secondary_aaa:
+            options.TrustPUSitelists = True
+            wfh.sendLog('assignor',"Reading secondary through xrootd from %s"%sorted(sites_allowed))            
 
         ### check on endpoints for on-going transfers
         if endpoints and options.partial:
             sites_allowed = list(set(sites_allowed + [SI.SE_to_CE(s) for s in endpoints]))
             print "with added endpoints",sorted(sites_allowed)
             
-        #if options.partial:
-        #    continue
-
-
-
         if not len(sites_allowed):
             wfh.sendLog('assignor',"cannot be assign with no matched sites")
-            #sendEmail( "cannot be assigned","%s has no whitelist"%(wfo.name))
             sendLog('assignor','%s has no whitelist'% wfo.name, level='critical')
             n_stalled+=1
             continue
@@ -310,13 +301,10 @@ def assignor(url ,specific = None, talk=True, options=None):
             # then pick any otherwise
             sites_out = [SI.pick_dSE([SI.CE_to_SE(ce) for ce in sites_allowed])]
             
-        ## one last modification now that we know we can assign, and to make sure all ressource can be used by the request : set all ON sites to whitelist
-        ###sites_allowed = original_sites_allowed ## not needed, afterall as secondary jobs go their own ways
             
         wfh.sendLog('assignor',"Placing the output on %s"%sites_out)
         parameters={
             'SiteWhitelist' : sites_allowed,
-            #'CustodialSites' : sites_custodial,
             'NonCustodialSites' : sites_out,
             'AutoApproveSubscriptionSites' : list(set(sites_out)),
             'AcquisitionEra' : wfh.acquisitionEra(),
@@ -331,26 +319,6 @@ def assignor(url ,specific = None, talk=True, options=None):
         if os.getenv('UNIFIED_TEAM'): team = os.getenv('UNIFIED_TEAM')
         if options and options.team:
             team = options.team
-
-        ## high priority team agent
-        #if wfh.request['RequestPriority'] >= 100000 and (wfh.request['TimePerEvent']*int(wfh.getRequestNumEvents()))/(8*3600.) < 10000:
-        #    team = 'highprio'
-        #    sendEmail("sending work with highprio team","%s"% wfo.name, destination=['dmytro.kovalskyi@cern.ch'])
-
-        ## SDSC redirection
-        #if "T2_US_UCSD" in sites_with_data and random.random() < -0.5 and wfh.request['Campaign']=='RunIISpring15DR74' and int(wfh.getRequestNumEvents()) < 600000 and not any([out.endswith('RAW') for out in wfh.request['OutputDatasets']]):
-        #    ## consider SDSC
-        #    parameters['SiteWhitelist'] = ['T2_US_UCSD','T3_US_SDSC']
-        #    parameters['useSiteListAsLocation'] = True
-        #    team = 'allocation-based'
-        #    sendEmail("sending work to SDSC","%s was assigned to SDSC/UCSD"% wfo.name, destination=['boj@fnal.gov'])
-        
-        ## SDSC redirection
-        #if wfh.request['Campaign']==R'unIIWinter15GS' and random.random() < -1.0:
-        #    parameters['SiteWhitelist'] = ['T3_US_SDSC']
-        #    team = 'allocation-based'
-        #    sendEmail("sending work to SDSC","%s was assigned to SDSC"% wfo.name, destination=['boj@fnal.gov'])
-        
 
         if False and 'T2_CH_CERN' in parameters['SiteWhitelist']:
             ## add some check on 
@@ -372,6 +340,11 @@ def assignor(url ,specific = None, talk=True, options=None):
                         parameters[key] = filter(None,v.split(','))
                     else: 
                         parameters[key] = v
+
+        if lheinput:
+            ## throttle reading LHE article 
+            wfh.sendLog('assignor', 'Setting the number of events per job to 500k max')
+            parameters['EventsPerJob'] = 500000
 
         ## pick up campaign specific assignment parameters
         parameters.update( CI.parameters(wfh.request['Campaign']) )
@@ -433,6 +406,7 @@ def assignor(url ,specific = None, talk=True, options=None):
                 wfo.status = 'away'
                 session.commit()
                 n_assigned+=1
+                wfh.sendLog('assignor',"Properly assigned\n%s"%(json.dumps( parameters, indent=2)))
                 try:
                     ## refetch information and lock output
                     new_wfi = workflowInfo( url, wfo.name)
@@ -466,12 +440,12 @@ if __name__=="__main__":
     url = reqmgr_url
     parser = optparse.OptionParser()
     parser.add_option('-t','--test', help='Only test the assignment',action='store_true',dest='test',default=False)
-    parser.add_option('-r', '--restrict', help='Only assign workflows for site with input',default=False, action="store_true",dest='restrict')
     parser.add_option('-e', '--early', help='Fectch from early statuses',default=False, action="store_true")
     parser.add_option('-p', '--partial', help='Let the workflow assign to place with any part of the data, existent of being made',default=False, action="store_true")
     parser.add_option('--go',help="Overrides the campaign go",default=False,action='store_true')
     parser.add_option('--team',help="Specify the agent to use",default=None)
     parser.add_option('--primary_aaa',help="Force to use the secondary location restriction, if any, and use the full site whitelist initially provided to run that type of wf",default=False, action='store_true')
+    parser.add_option('--secondary_aaa',help="Force to use the primary location restriction",default=False, action='store_true')
     parser.add_option('--limit',help="Limit the number of wf to be assigned",default=0,type='int')
     for key in reqMgrClient.assignWorkflow.keys:
         parser.add_option('--%s'%key,help="%s Parameter of request manager assignment interface"%key, default=None)

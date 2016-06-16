@@ -640,7 +640,7 @@ class campaignInfo:
         if c in self.campaigns and self.campaigns[c]['go']:
             if 'labels' in self.campaigns[c]:
                 if s!=None:
-                    return (s in self.campaigns[c]['labels'])
+                    return (s in self.campaigns[c]['labels']) or any([l in s for l in self.campaigns[c]['labels']])
                 else:
                     print "Not allowed to go for",c,s
                     return False
@@ -753,6 +753,14 @@ class docCache:
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
             'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=158&batch=1&lastdata=1"').read())['csvdata'],
+            'cachefile' : None,
+            'default' : []
+            }
+        self.cache['ssb_237'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration(),
+            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=237&batch=1&lastdata=1"').read())['csvdata'],
             'cachefile' : None,
             'default' : []
             }
@@ -990,19 +998,22 @@ class siteInfo:
             self.sites_banned = [
                 'T2_CH_CERN_AI',
                 'T2_US_Vanderbilt',
-                #'T0_CH_CERN'
+                'T0_CH_CERN'
                 #'T2_RU_INR',
                 #'T2_UA_KIPT'
                 ]
 
-            data = dataCache.get('ssb_158') ## 158 is the site readyness metric
+            #data = dataCache.get('ssb_158') ## 158 is the site readyness metric
+            data = dataCache.get('ssb_237') ## 237 is the site readyness metric
             for siteInfo in data:
                 #print siteInfo['Status']
                 if not siteInfo['Tier'] in [0,1,2]: continue ## ban de-facto all T3
                 self.all_sites.append( siteInfo['VOName'] )
                 if siteInfo['VOName'] in self.sites_banned: continue
-                if siteInfo['Status'] == 'on': 
+                if siteInfo['Status'] == 'enabled': 
                     self.sites_ready.append( siteInfo['VOName'] )
+                #if siteInfo['Status'] == 'on': 
+                #    self.sites_ready.append( siteInfo['VOName'] )
                 else:#if siteInfo['Status'] in ['drain']:
                     self.sites_not_ready.append( siteInfo['VOName'] )
 
@@ -1388,6 +1399,12 @@ class siteInfo:
         #return r_weights.keys()[self._weighted_choice_sub(r_weights.values())]
         return self._pick(sites, self.cpu_pledges)
 
+def global_SI():
+    if not global_SI.instance:
+        global_SI.instance = siteInfo()
+    return global_SI.instance
+global_SI.instance = None
+
 
 
 class closeoutInfo:
@@ -1399,8 +1416,8 @@ class closeoutInfo:
             self.record = {}
 
     def table_header(self):
-        text = '<table border=1><thead><tr><th>workflow</th><th>OutputDataSet</th><th>%Compl</th><th>acdc</th><th>Dupl</th><th>CorrectLumis</th><th>Scubscr</th><th>Tran</th><th>dbsF</th><th>dbsIF</th><th>\
-phdF</th><th>Priority</th></tr></thead>'
+        text = '<table border=1><thead><tr><th>workflow</th><th>OutputDataSet</th><th>%Compl</th><th>acdc</th><th>Dupl</th><th>LSsize</th><th>Scubscr</th><th>dbsF</th><th>dbsIF</th><th>\
+phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
         return text
 
     def one_line(self, wf, wfo, count):
@@ -1408,24 +1425,23 @@ phdF</th><th>Priority</th></tr></thead>'
         else:            color='white'
         text=""
         tpid = self.record[wf]['prepid']
-        #try:
-        #    pid = filter(lambda b :b.count('-')==2, wf.split('_'))[0]
-        #    tpid = 'task_'+pid if 'task' in wf else pid
-        #except:
-        #    wl = getWorkLoad('cmsweb.cern.ch', wf)
-        #    pid =wl['PrepID']
-        #    tpid=wl['PrepID']
-            
+        pid = tpid.replace('task_','')
+
         ## return the corresponding html
-        order = ['percentage','acdc','duplicate','correctLumis','missingSubs','phedexReqs','dbsFiles','dbsInvFiles','phedexFiles']
+        order = ['percentage','acdc','duplicate','correctLumis','missingSubs','dbsFiles','dbsInvFiles','phedexFiles','updated']
         wf_and_anchor = '<a id="%s">%s</a>'%(wf,wf)
         for out in self.record[wf]['datasets']:
-            text+='<tr bgcolor=%s>'%color
-            text+='<td>%s<br><a href="https://%s/reqmgr2/fetch?rid=%s" target="_blank">dts</a> <a href=https://%s/reqmgr/view/details/%s>dts-req1</a>, <a href=https://%s/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s>perf</a>, <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>ac</a>, <a href=assistance.html#%s>%s</a></td>'% (
-                wf_and_anchor,
-                reqmgr_url,wf, reqmgr_url, wf, reqmgr_url, wf,
-                tpid,
-                wf,wfo.status)
+            text += '<tr bgcolor=%s>'%color
+            text += '<td>%s<br>'%wf_and_anchor
+            text += ', <a href="https://%s/reqmgr2/fetch?rid=%s" target="_blank">dts</a>'%(reqmgr_url, wf)
+            text += ', <a href=https://%s/reqmgr/view/details/%s>dts-req1</a>'%(reqmgr_url, wf)
+            text += ', <a href="https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=full&reverse=0&reverse=1&npp=20&subtext=%s&sall=q" target="_blank">elog</a>'%(pid)
+            text += ', <a href=https://%s/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s>perf</a>'%(reqmgr_url, wf)
+            
+            text += ', <a href="http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=%s" target="_blank">history</a>'%(pid)
+            text += ', <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>ac</a>'%(tpid)
+            text += ', <a href=report/%s>report</a>'%(wf)
+            text += ', <a href=assistance.html#%s>%s</a></td>'%(wf,wfo.status)
             
             text+='<td>%s</td>'% out
             lines = []
@@ -1493,8 +1509,10 @@ phdF</th><th>Priority</th></tr></thead>'
 </head>
 """)
     
-        short_html.write('Last update on %s(CET), %s(GMT), <a href=logs/checkor/last.log target=_blank> log</a> <a href=logs/recoveror/last.log target=_blank> postlog</a> <br>'%(time.asctime(time.localtime()),time.asctime(time.gmtime())))
-        html.write('Last update on %s(CET), %s(GMT), <a href=logs/checkor/last.log target=_blank> log</a> <a href=logs/recoveror/last.log target=_blank> postlog</a><br>'%(time.asctime(time.localtime()),time.asctime(time.gmtime())))
+        #short_html.write('Last update on %s(CET), %s(GMT), <a href=logs/checkor/last.log target=_blank> log</a> <a href=logs/recoveror/last.log target=_blank> postlog</a> <br>'%(time.asctime(time.localtime()),time.asctime(time.gmtime())))
+        #html.write('Last update on %s(CET), %s(GMT), <a href=logs/checkor/last.log target=_blank> log</a> <a href=logs/recoveror/last.log target=_blank> postlog</a><br>'%(time.asctime(time.localtime()),time.asctime(time.gmtime())))
+        short_html.write('<a href=logs/checkor/last.log target=_blank> log</a> <a href=logs/recoveror/last.log target=_blank> postlog</a> <br>')
+        html.write('<a href=logs/checkor/last.log target=_blank> log</a> <a href=logs/recoveror/last.log target=_blank> postlog</a><br>')
 
         html.write('<a href=assistance_summary.html> Summary </a> <br>')    
         short_html.write('<a href=assistance.html> Details </a> <br>')
@@ -1544,7 +1562,17 @@ phdF</th><th>Priority</th></tr></thead>'
 """% (status,status, len(assist[status])))
             lines = []
             short_lines = []
+            prio_ordered_wf = []
             for (count,wfo) in enumerate(assist[status]):
+                if not wfo.name in self.record:
+                    continue
+                prio = self.record[wfo.name]['priority']
+                prio_ordered_wf.append( (prio, wfo) )
+            ## sort by priority
+            prio_ordered_wf.sort( key = lambda item:item[0] ,reverse=True )
+            ## and use only the wfo
+            prio_ordered_wf = [ item[1] for item in prio_ordered_wf ]
+            for (count,wfo) in enumerate(prio_ordered_wf):
                 if count%2:            color='lightblue'
                 else:            color='white'
                 if not wfo.name in self.record: 
@@ -1580,9 +1608,9 @@ phdF</th><th>Priority</th></tr></thead>'
         html.write("bottom of page</html>")    
 
 
-global_SI = siteInfo()
+
 def getSiteWhiteList( inputs , pickone=False):
-    SI = global_SI
+    SI = global_SI()
     (lheinput,primary,parent,secondary) = inputs
     sites_allowed=[]
     if lheinput:
@@ -2760,6 +2788,24 @@ def getWorkflowById( url, pid , details=False):
     else:
         return [item['id'] for item in items]
     
+
+
+def forceComplete(url, wfi):
+    import reqMgrClient
+    familly = getWorkflowById( url, wfi.request['PrepID'] ,details=True)
+    for member in familly:
+        ### if member['RequestName'] == wl['RequestName']: continue ## set himself out
+        if member['RequestDate'] < wfi.request['RequestDate']: continue
+        if member['RequestStatus'] in ['None',None]: continue
+        ## then set force complete all members
+        if member['RequestStatus'] in ['running-opened','running-closed']:
+            #sendEmail("force completing","%s is worth force completing\n%s"%( member['RequestName'] , percent_completions))
+            print "setting",member['RequestName'],"force-complete"
+            reqMgrClient.setWorkflowForceComplete(url, member['RequestName'])
+        elif member['RequestStatus'] in ['acquired','assignment-approved']:
+            print "rejecting",member['RequestName']
+            reqMgrClient.invalidateWorkflow(url, member['RequestName'], current_status=member['RequestStatus'])
+
 def getWorkflows(url,status,user=None,details=False,rtype=None):
     retries=10000
     wait=2
@@ -2909,6 +2955,22 @@ def checkIfBlockIsAtASite(url,block,site):
 
     return False                
 
+
+def getForceCompletes():
+    overrides = {}
+    for rider,email in [('vlimant','vlimant@cern.ch'),('jen_a','jen_a@fnal.gov'),('srimanob','srimanob@mail.cern.ch')]:
+        rider_file = '/afs/cern.ch/user/%s/%s/public/ops/forcecomplete.json'%(rider[0],rider)
+        if not os.path.isfile(rider_file):
+            print "no file",rider_file
+            continue
+        try:
+            overrides[rider] = json.loads(open( rider_file ).read() )
+        except:
+            print "cannot get force complete list from",rider
+            sendEmail("malformated force complet file","%s is not json readable"%rider_file, destination=[email])
+    return overrides
+
+
 class workflowInfo:
     def __init__(self, url, workflow, spec=True, request=None,stats=False, wq=False, errors=False):
         self.logs = defaultdict(str)
@@ -2942,6 +3004,8 @@ class workflowInfo:
         self.errors = None
         if errors:
             self.getWMErrors()
+
+        self.recovery_doc = None
 
         self.workqueue = None
         if wq:
@@ -3007,18 +3071,43 @@ class workflowInfo:
         return self.full_spec
 
     def getWMErrors(self):
-        r1=self.conn.request("GET",'/couchdb/wmstats/_design/WMStats/_view/jobsByStatusWorkflow?reduce=true&group_level=10&startkey=["pdmvserv_task_HIG-RunIIWinter15wmLHE-01172__v1_T_160421_121609_3929"]&endkey=["pdmvserv_task_HIG-RunIIWinter15wmLHE-01172__v1_T_160421_121609_3929"%2C{}]&stale=update_after&_=1461760521841')
+        r1=self.conn.request("GET",'/wmstatsserver/data/jobdetail/%s'%(self.request['RequestName']), headers={"Accept":"*/*"})
         r2=self.conn.getresponse()
-        return None
+        #print r2.read()
+        self.errors = json.loads(r2.read())['result'][0][self.request['RequestName']]
+        return self.errors
 
-        #then navigate to 
-        #'/couchdb/wmstats/_design/WMStats/_view/jobsByStatusWorkflow?include_docs=true&reduce=false&startkey=["pdmvserv_task_HIG-RunIIWinter15wmLHE-01172__v1_T_160421_121609_3929"%2C"%2Fpdmvserv_task_HIG-RunIIWinter15wmLHE-01172__v1_T_160421_121609_3929%2FHIG-RunIIWinter15wmLHE-01172_0%2FHIG-RunIIWinter15wmLHE-01172_0MergeLHEoutput"%2C"jobfailed"%2C99109%2C"T0_CH_CERN"%2C"https%3A%2F%2Fcmsweb.cern.ch%2Fcouchdb%2Facdcserver"]&endkey=["pdmvserv_task_HIG-RunIIWinter15wmLHE-01172__v1_T_160421_121609_3929"%2C"%2Fpdmvserv_task_HIG-RunIIWinter15wmLHE-01172__v1_T_160421_121609_3929%2FHIG-RunIIWinter15wmLHE-01172_0%2FHIG-RunIIWinter15wmLHE-01172_0MergeLHEoutput"%2C"jobfailed"%2C99109%2C"T0_CH_CERN"%2C{}]&limit=10&stale=update_after&_=1461761740101'
-                             
     def getWMStats(self):
         r1=self.conn.request("GET",'/wmstatsserver/data/request/%s'%self.request['RequestName'], headers={"Accept":"application/json"})
         r2=self.conn.getresponse()
         self.wmstats = json.loads(r2.read())['result'][0][self.request['RequestName']]
         return self.wmstats
+
+    def getRecoveryDoc(self):
+        if self.recovery_doc != None:
+            return self.recovery_doc
+        try:
+            r1=self.conn.request("GET",'/couchdb/acdcserver/_design/ACDC/_view/byCollectionName?key="%s"&include_docs=true&reduce=false'% self.request['RequestName'])
+            r2=self.conn.getresponse()
+            rows = json.loads(r2.read())['rows']
+            self.recovery_doc = [r['doc'] for r in rows]
+        except:
+            print "failed to get the acdc document for",self.request['RequestName']
+            self.recovery_doc = None
+        return self.recovery_doc
+
+    def getRecoveryInfo(self):
+        self.getRecoveryDoc()
+
+        where_to_run = defaultdict(list)
+        missing_to_run = defaultdict(int)
+        for doc in self.recovery_doc:
+            task = doc['fileset_name']
+            for f,info in doc['files'].iteritems():
+                where_to_run[task] = list(set(where_to_run[task] + info['locations']))
+                missing_to_run[task] += info['events']
+
+        return dict(where_to_run),dict(missing_to_run)
 
     def getWorkQueue(self):
         if not self.workqueue:
@@ -3272,7 +3361,7 @@ class workflowInfo:
 
     def availableSlots(self):
         av = 0
-        SI = global_SI
+        SI = global_SI()
         if 'SiteWhitelist' in self.request:
             return SI.availableSlots( self.request['SiteWhitelist'] )
         else:
@@ -3323,7 +3412,7 @@ class workflowInfo:
         return (1.,1.,1.)
     def getSiteWhiteList( self, pickone=False, verbose=True):
         ### this is not used yet, but should replace most
-        SI = global_SI
+        SI = global_SI()
         (lheinput,primary,parent,secondary) = self.getIO()
         sites_allowed=[]
         if lheinput:
@@ -3655,11 +3744,18 @@ class workflowInfo:
             t+=1
         return coll
 
+    def getCampaign( self ):
+        #if self.request['RequestType'] == 'TaskChain':
+        #    return self._collectintaskchain('Campaign')
+        #else:
+        return self.request['Campaign']
+
     def getCampaigns(self):
         if self.request['RequestType'] == 'TaskChain':
             return self._collectintaskchain('AcquisitionEra').values()
         else:
             return [self.request['Campaign']]
+
     def acquisitionEra( self ):
         def invertDigits( st ):
             if st[0].isdigit():
@@ -3688,13 +3784,28 @@ class workflowInfo:
         else:
             return self.request['ProcessingString']
         
-    def getCampaign( self ):
-        #if self.request['RequestType'] == 'TaskChain':
-        #    return self._collectintaskchain('Campaign')
-        #else:
-        return self.request['Campaign']
 
             
+    def go(self,log=False):
+        CI = campaignInfo()
+        pss = self.processingString()
+        aes = self.acquisitionEra()
+
+        if type(pss) == dict:
+            pas = [(aes[t],pss[t]) for t in pss]
+        else:
+            pas = [(aes,pss)]
+        for campaign,label in pas:
+            if not CI.go( campaign, label):
+                if log:
+                    self.sendLog('go',"no go due to %s %s"%(campaign,label))
+                else:
+                    print "no go due to",campaign,label
+                return False
+        return True
+            
+
+
     def getNextVersion( self ):
         ## returns 1 if nothing is in the way
         if 'ProcessingVersion' in self.request:

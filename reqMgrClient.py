@@ -1041,6 +1041,9 @@ def invalidateWorkflow(url, workflowname, current_status=None):
         return rejectWorkflow(url, workflowname)
     elif current_status in['normal-archived']:
         return rejectArchivedWorkflow(url, workflowname)
+    elif current_status in ['aborted','rejected','aborted-archived','rejected-archived']:
+        print workflowname,"already",current_status
+        return True
     else:
         return abortWorkflow(url, workflowname)
 

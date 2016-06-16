@@ -3,7 +3,7 @@ from assignSession import *
 import reqMgrClient
 from McMClient import McMClient
 from utils import makeReplicaRequest
-from utils import workflowInfo, siteInfo, campaignInfo, userLock, global_SI
+from utils import workflowInfo, siteInfo, campaignInfo, userLock
 from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, getSiteWhiteList, approveSubscription, getDatasetSize, updateSubscription, getWorkflows, componentInfo, getDatasetDestinations, getDatasetBlocks, DSS
 from utils import unifiedConfiguration, monitor_dir, reqmgr_url
 #from utils import lockInfo
@@ -31,13 +31,11 @@ def transferor(url ,specific = None, talk=True, options=None):
     else:
         execute = True
 
-    SI = global_SI
+    SI = siteInfo()
     CI = campaignInfo()
-    #LI = lockInfo()
     NLI = newLockInfo()
     mcm = McMClient(dev=False)
     dss = DSS()
-    #UC = unifiedConfiguration()
 
     #allowed_secondary = UC.get('')
     print "counting all being handled..."
@@ -238,19 +236,14 @@ def transferor(url ,specific = None, talk=True, options=None):
 
         ## throtlle by campaign go
         no_go = False
+        if not wfh.go(log=True) and not options.go:
+            no_go = True
+            no_goes.add( wfo.name )
+            
         allowed_secondary = set()
-        #override_sec_destination = {}
         for campaign in wfh.getCampaigns():
-            if not CI.go( campaign ):
-                wfh.sendLog('transferor',"No go for %s"%campaign)
-                if not options.go: 
-                    no_goes.add( campaign )
-                    no_go = True
-                    break
             if 'secondaries' in CI.campaigns[campaign]:
                 allowed_secondary.update( CI.campaigns[campaign]['secondaries'] )
-            #if 'SecondaryLocation' in CI.campaigns[campaign]:
-            #    override_sec_destination
         if secondary:
             if (secondary and allowed_secondary) and (set(secondary)&allowed_secondary!=set(secondary)):
                 wfh.sendLog('assignor','%s is not an allowed secondary'%(', '.join(set(secondary)-allowed_secondary)))
