@@ -756,6 +756,14 @@ class docCache:
             'cachefile' : None,
             'default' : []
             }
+        self.cache['ssb_237'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration(),
+            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=237&batch=1&lastdata=1"').read())['csvdata'],
+            'cachefile' : None,
+            'default' : []
+            }
         self.cache['ssb_159'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
@@ -995,14 +1003,17 @@ class siteInfo:
                 #'T2_UA_KIPT'
                 ]
 
-            data = dataCache.get('ssb_158') ## 158 is the site readyness metric
+            #data = dataCache.get('ssb_158') ## 158 is the site readyness metric
+            data = dataCache.get('ssb_237') ## 237 is the site readyness metric
             for siteInfo in data:
                 #print siteInfo['Status']
                 if not siteInfo['Tier'] in [0,1,2]: continue ## ban de-facto all T3
                 self.all_sites.append( siteInfo['VOName'] )
                 if siteInfo['VOName'] in self.sites_banned: continue
-                if siteInfo['Status'] == 'on': 
+                if siteInfo['Status'] == 'enabled': 
                     self.sites_ready.append( siteInfo['VOName'] )
+                #if siteInfo['Status'] == 'on': 
+                #    self.sites_ready.append( siteInfo['VOName'] )
                 else:#if siteInfo['Status'] in ['drain']:
                     self.sites_not_ready.append( siteInfo['VOName'] )
 
