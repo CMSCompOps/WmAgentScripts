@@ -906,7 +906,6 @@ assignWorkflow.defaults= {
         'BlockCloseMaxEvents' : 2000000,
         "MaxRSS" : 3000000,
         "MaxVSize": 4394967000,
-        "maxVSize": 4394967000,
         "Dashboard": "production",
         "SoftTimeout" : 159600,
         "GracePeriod": 300,
@@ -1088,7 +1087,7 @@ def cloneWorkflow(url, workflowname):
     This clones a request
     """
     if isRequestMgr2Request(url, workflowname):
-        data = requestManagerPut(url,"/reqmgr2/data/request", params)
+        data = requestManagerPut(url,"/reqmgr2/data/request", workflowname)
     else:
         print "cloneWorkflow Does not function in reqmgr1 in this interface. please migrate."
         data = None
@@ -1177,6 +1176,10 @@ def reqmgr1_to_2_Assignment( params ):
         params["RequestStatus"] = "assigned"
     elif params['action'] == 'Reject':
         params["RequestStatus"] = "rejected"
+
+    params.pop("action", None)
+    params.pop("Team%s" % teams[0], None)
+    params.pop("checkbox%s" % requestName, None)
     return params
 
 def reqmgr2_to_1_Assignment( params ):
@@ -1212,7 +1215,7 @@ def setWorkflowAssignment(url, workflowname, schema):
     else:
         if not isOldSchema(schema):
             print "new schema to reqmgr1 detected : translating. please drain."
-            schema = reqmgr2_to_1_Assignment(params)
+            schema = reqmgr2_to_1_Assignment(schema)
         data = requestManager1Post(url, "/reqmgr/assign/handleAssignmentPage", schema, nested=True)
         if 'Assigned' in data:
             return True
