@@ -128,7 +128,6 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
     if verbose:
         print res
 
-
 def getRequestDict(url, workflow):
     conn = httplib.HTTPSConnection(url, cert_file=os.getenv(
         'X509_USER_PROXY'), key_file=os.getenv('X509_USER_PROXY'))
@@ -197,11 +196,11 @@ def main():
     # parse site list
     if options.sites:
         if options.sites == "t1":
-            sites = T1_SITES
+            sites = SI.sites_T1s
         elif options.sites == "t2":
-            sites = T2_SITES
-        else:
-            sites = SI.sites_T1s + SI.sites_T2s
+            sites = SI.sites_T2s
+        else: 
+            sites = [site for site in options.sites.split(',')]
     else: 
         sites = SI.sites_T1s + SI.sites_T2s
     if options.team:
@@ -258,13 +257,15 @@ def main():
         elif not taskchain:
             era = wf.info['AcquisitionEra']
         #Set era and procstring to none for merge ACDCs inside a task chain
-        if schema["RequestType"] == "Resubmission" and wf.info["PrepID"].startswith("task") and "Merge" in schema["InitialTaskPath"].split("/")[-2]:
+        if schema["RequestType"] == "Resubmission" and wf.info["PrepID"].startswith("task") and "Merge" in schema["InitialTaskPath"].split("/")[-1]:
             era = None
             procstring = None
 
         # Must use --lfn option, otherwise workflow won't be assigned
         if options.lfn:
             lfn = options.lfn
+        elif "MergedLFNBase" in wf.info:
+            lfn = wf.info['MergedLFNBase']
         else:
             print "Can't assign the workflow! Please include workflow lfn using --lfn option."
             sys.exit(0)
