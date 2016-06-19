@@ -50,14 +50,31 @@ for batches_row in batches_rows:
 
         print wf_dict["workflow_name"]
         workflow=wf_dict["workflow_name"]
+
         url="cmsweb.cern.ch" 
+
+        headers = {"Content-type": "application/json", "Accept": "application/json"}
+
         conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-        r1=conn.request('GET','/reqmgr/reqMgr/request?requestName=' + workflow)
+        r1=conn.request('GET','/reqmgr2/data/request/' + workflow, headers = headers)
         r2=conn.getresponse()
         j1 = json.loads(r2.read())
+
+        if r2.status != 200:
+            os.system('echo '+workflow+' | mail -s \"batch_killor.py error 2\" andrew.m.levin@vanderbilt.edu')
+            sys.exit(1)
+
+        j1 = j1['result']
+
+        if len(j1) != 1:
+            os.system('echo '+wf[0]+' | mail -s \"batch_killor.py error 3\" andrew.m.levin@vanderbilt.edu')
+            sys.exit(1)
+
+        j1 = j1[0]
+
+        j1 = j1[workflow]
+
         status= j1['RequestStatus']
-        
-        print status
 
         if status == "completed" or status == "assignment-approved" or status == "assigned" or status == "running-open" or status == "running-closed" or status == "acquired":        
             if status == "completed" or status == "assignment-approved":
@@ -65,7 +82,7 @@ for batches_row in batches_rows:
             if status == "assigned" or status == "running-open" or status == "running-closed" or status == "acquired":
                 reqMgrClient.abortWorkflow(url,workflow)
         elif status != "aborted-archived" and status != "aborted" and status != "rejected" and status != "rejected-archived":
-            os.system('echo '+workflow+' | mail -s \"batch_rejecter_aborter.py error 1\" andrew.m.levin@vanderbilt.edu --')
+            os.system('echo '+workflow+' | mail -s \"batch_killor.py error 1\" andrew.m.levin@vanderbilt.edu --')
             sys.exit(1)
         else:
             continue
@@ -77,8 +94,6 @@ for batches_row in batches_rows:
         #response = conn.getresponse()
         #print response.status, response.reason
     #    #curs.execute("insert into workflows_archive VALUES "+str(workflow_row)+";")
-
-    print "copying the workflows and the batch to the archive databases"    
 
     curs.execute("update batches set status=\"killed\", current_status_start_time=\""+datetime.datetime.now().strftime("%y:%m:%d %H:%M:%S")+"\" where useridyear = \""+batch_dict["useridyear"]+"\" and useridmonth = \""+batch_dict["useridmonth"]+"\" and useridday = \""+batch_dict["useridday"]+"\" and useridnum = "+str(batch_dict["useridnum"])+" and batch_version_num = "+str(batch_dict["batch_version_num"])+";")
 

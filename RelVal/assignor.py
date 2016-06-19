@@ -55,17 +55,52 @@ def main():
 
             #first do checks to make sure the workflows do not write into an existing dataset
             for wf in wfs:
+
                 conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-                r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+wf[0])
+
+                headers = {"Content-type": "application/json", "Accept": "application/json"}
+
+                r1=conn.request("GET",'/reqmgr2/data/request/'+wf[0], headers = headers)
                 r2=conn.getresponse()
 
-                schema = json.loads(r2.read())
+                schema = (json.loads(r2.read()))
+
+                schema = schema['result']
+
+                if len(schema) != 1:
+                    os.system('echo '+wf[0]+' | mail -s \"assignor.py error 9\" andrew.m.levin@vanderbilt.edu')
+                    sys.exit(1)
+
+                schema = schema[0]
+
+                schema = schema[wf[0]]
+
+                #if schema['RequestTransition'][len(schema['RequestTransition'])-1]['Status'] != "assignment-approved":
+                #    continue
+
+                for key, value in schema.items():
+                    if key == "ProcessingString":
+                        procstring_main = value
+                        
 
                 for key, value in schema.items():
                     if type(value) is dict and key.startswith("Task"):
                         if ('KeepOutput' in value and value['KeepOutput']) or 'KeepOutput' not in value:
                             if 'InputDataset' in value:
-                                dset="/" + value['InputDataset'].split('/')[1] + "/" + value['AcquisitionEra'] + "-" + value['ProcessingString'] + "-v" + str(batch_dict["processing_version"])+"/*"
+
+                                if 'AcquisitionEra' not in value:
+                                    os.system('echo \"'+wf[0]+'\" | mail -s \"assignor.py error 10\" andrew.m.levin@vanderbilt.edu')
+                                    sys.exit(1)
+
+                                if 'ProcessingString' in value:
+                                    procstring = value['ProcessingString']
+                                elif "procstring_main" in vars():
+                                    procstring = procstring_main
+                                else:
+                                    os.system('echo \"'+wf[0]+'\" | mail -s \"assignor.py error 11\" andrew.m.levin@vanderbilt.edu')
+                                    sys.exit(1)
+                                    
+                                dset="/" + value['InputDataset'].split('/')[1] + "/" + value['AcquisitionEra'] + "-" + procstring + "-v" + str(batch_dict["processing_version"])+"/*"
 
                                 curs.execute("select * from datasets where dset_name = \""+ dset.rstrip("*")+"\";")
 
@@ -80,7 +115,7 @@ def main():
                                     os.system('echo \"'+userid+"\n"+wf[0]+"\n"+userid_previously_inserted_dset+"\n"+dset_dict["workflow_name"]+"\n"+dset+'\" | mail -s \"assignor.py error 1\" andrew.m.levin@vanderbilt.edu')
                                     sys.exit(1)
                                 elif len(dbs_dset_check) != 0:    
-                                    os.system('echo \"'+userid+"\n"+wf[0]+"\n"+dset+'\" | mail -s \"assignment_loop.py error 5\" andrew.m.levin@vanderbilt.edu')
+                                    os.system('echo \"'+userid+"\n"+wf[0]+"\n"+dset+'\" | mail -s \"assignor.py error 5\" andrew.m.levin@vanderbilt.edu')
                                     sys.exit(1)
                                 else:   
 
@@ -100,27 +135,47 @@ def main():
                                     dsets_colnames = [desc[0] for desc in curs.description]
                                     dset_dict=dict(zip(dsets_colnames,curs_fetchall[0]))    
                                     userid_previously_inserted_dset=dset_dict["useridyear"]+"_"+dset_dict["useridmonth"]+"_"+dset_dict["useridday"]+"_"+str(dset_dict["useridnum"])+"_"+str(dset_dict["batch_version_num"])
-                                    os.system('echo \"'+userid+"\n"+wf[0]+"\n"+userid_previously_inserted_dset+"\n"+dset_dict["workflow_name"]+"\n"+dset+'\" | mail -s \"assignment_loop.py error 2\" andrew.m.levin@vanderbilt.edu')
+                                    os.system('echo \"'+userid+"\n"+wf[0]+"\n"+userid_previously_inserted_dset+"\n"+dset_dict["workflow_name"]+"\n"+dset+'\" | mail -s \"assignor.py error 2\" andrew.m.levin@vanderbilt.edu')
                                     sys.exit(1)
                                 elif len(dbs_dset_check) != 0:    
-                                    os.system('echo \"'+userid+"\n"+wf[0]+'\" | mail -s \"assignment_loop.py error 7\" andrew.m.levin@vanderbilt.edu')
+                                    os.system('echo \"'+userid+"\n"+wf[0]+'\" | mail -s \"assignor.py error 7\" andrew.m.levin@vanderbilt.edu')
                                     sys.exit(1)
                                 else:
                                     curs.execute("insert into datasets set dset_name=\""+dset.rstrip("*")+"\", workflow_name=\""+wf[0]+"\", useridyear = "+batch_dict["useridyear"]+", useridmonth = "+batch_dict["useridmonth"]+", useridday = "+batch_dict["useridday"]+", useridnum = "+str(batch_dict["useridnum"])+", batch_version_num = "+str(batch_dict["batch_version_num"])+";")
 
             #only assign the workflows after all of the checks are done                        
             for wf in wfs:
+
                 conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-                r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+wf[0])
+
+                headers = {"Content-type": "application/json", "Accept": "application/json"}
+
+                r1=conn.request("GET",'/reqmgr2/data/request/'+wf[0], headers = headers)
                 r2=conn.getresponse()
 
                 if r2.status != 200:
-                    os.system('echo '+wf[0]+' | mail -s \"assignment_loop.py error 8\" andrew.m.levin@vanderbilt.edu')
-                    sys.exit(0)
+                    time.sleep(30)
+                    conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+                    r1=conn.request("GET",'/reqmgr2/data/request/'+wf[0], headers = headers)
+                    r2=conn.getresponse()
+                    if r2.status != 200:
+                        os.system('echo '+wf[0]+' | mail -s \"assignor.py error 8\" andrew.m.levin@vanderbilt.edu')
+                        sys.exit(0)
 
                 schema = json.loads(r2.read())
 
+                schema = schema['result']
 
+                if len(schema) != 1:
+                    os.system('echo '+wf[0]+' | mail -s \"assignor.py error 9\" andrew.m.levin@vanderbilt.edu')
+                    sys.exit(1)
+
+                schema = schema[0]
+
+                schema = schema[wf[0]]
+
+                if schema['RequestTransition'][len(schema['RequestTransition'])-1]['Status'] != "assignment-approved":
+                    continue
 
                 #hack because workflows assigned to only T2_CH_CERN_T0 never get acquired
                 site = batch_dict["site"]
@@ -132,7 +187,7 @@ def main():
                 result=reqMgrClient.assignWorkflow("cmsweb.cern.ch", wf[0], "relval", params)
 
                 if result != True:
-                    os.system('echo '+wf[0]+' | mail -s \"assignment_loop.py error 4\" andrew.m.levin@vanderbilt.edu')
+                    os.system('echo '+wf[0]+' | mail -s \"assignor.py error 4\" andrew.m.levin@vanderbilt.edu')
                     sys.exit(0)
 
                 time.sleep(30)

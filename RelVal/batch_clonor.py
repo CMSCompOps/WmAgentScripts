@@ -66,7 +66,7 @@ for requests_row in requests_rows:
         workflow=workflow_dict["workflow_name"]
         return_string=os.popen("python2.6 /home/relval/WmAgentScripts/RelVal/resubmit.py "+workflow+" anlevin DATAOPS").read()
         if len(return_string) == 0:
-            print "batch_cloner_reinserter.py error 1"
+            os.system('echo '+workflow+' | mail -s \"batch_clonor.py error 1\" andrew.m.levin@vanderbilt.edu')
             sys.exit(1)
         print return_string
         workflows.append(return_string.split(' ')[len(return_string.split(' ')) - 1].rstrip('\n'))

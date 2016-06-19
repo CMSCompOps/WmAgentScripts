@@ -14,6 +14,9 @@ def collect_job_failure_information(wf_list,verbose=False,debug=False):
     #loop over workflows
     for workflow in wf_list:
 
+        if workflow == "fabozzi_RVCMSSW_8_0_11QQH1352T_13_PU25ns__reHLT_160615_130122_5498":
+            continue
+
         print workflow
 
         #workflow = line.rstrip('\n')
@@ -28,6 +31,9 @@ def collect_job_failure_information(wf_list,verbose=False,debug=False):
             failures={}
             task_dicts = []
             taskname=s['rows'][i]['key'][1]
+
+            if "CleanupUnmerged" in taskname.split('/')[len(taskname.split('/'))-1]:
+                continue
     
             conn2  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
             r21=conn2.request('GET','/couchdb/wmstats/_design/WMStats/_view/jobsByStatusWorkflow?startkey=["'+workflow+'","'+taskname+'","jobfailed"]&endkey=["'+workflow+'%22,%22'+taskname+'","jobfailed",{}]&stale=ok&include_docs=true&reduce=false')
@@ -41,6 +47,7 @@ def collect_job_failure_information(wf_list,verbose=False,debug=False):
 
             #loop over failed jobs
             for j in range(0,len(s2['rows'])):
+
                 nfailurestot = nfailurestot+1
 
                 found_job_killed_error=False
@@ -85,6 +92,7 @@ def collect_job_failure_information(wf_list,verbose=False,debug=False):
                 found_no_output_failure=False
                 if not found_performance_killed_error and not found_job_killed_error and 'cmsRun1' in s2['rows'][j]['doc']['errors']:
 
+
                     for k in s2['rows'][j]['doc']['errors']['cmsRun1']:
                         if k['type'] == "Fatal Exception":
                             if k['exitCode'] in failures.keys():
@@ -93,7 +101,7 @@ def collect_job_failure_information(wf_list,verbose=False,debug=False):
                             else:
                                 failures[k['exitCode']]={'number' : 1, 'logarchivefiles' : [[mergedfilename,unmergedfilename]], 'details' : k['details']}
                             found_fatal_exception=True
-
+                            break #for multicore jobs, there can be a failure for each thread
 
                     if not found_fatal_exception:
                         for k in s2['rows'][j]['doc']['errors']['cmsRun1']:
@@ -104,6 +112,7 @@ def collect_job_failure_information(wf_list,verbose=False,debug=False):
                                 else:
                                     failures[k['exitCode']]={'number' : 1, 'logarchivefiles' : [[mergedfilename,unmergedfilename]], 'details': k['details']}
                                 found_cmssw_step_failures=True
+                                break #for multicore jobs, there can be a failure for each thread
 
                     if not found_fatal_exception and not found_cmssw_step_failures:
                         for k in s2['rows'][j]['doc']['errors']['cmsRun1']:
@@ -113,6 +122,7 @@ def collect_job_failure_information(wf_list,verbose=False,debug=False):
                                 else:
                                     failures[k['exitCode']]={'number' : 1, 'logarchivefiles' : [], 'details': k['details']}
                                 found_scram_script_failure=True
+                                break #for multicore jobs, there can be a failure for each thread
 
                     if not found_fatal_exception and not found_cmssw_step_failures and not found_scram_script_failure:
                         for k in s2['rows'][j]['doc']['errors']['cmsRun1']:
@@ -122,6 +132,7 @@ def collect_job_failure_information(wf_list,verbose=False,debug=False):
                                 else:
                                     failures[k['exitCode']]={'number' : 1, 'logarchivefiles' : [], 'details': k['details']}
                                 found_no_output_failure=True
+                                break #for multicore jobs, there can be a failure for each thread
                 
                 found_upload_failure=False
                 if not found_performance_killed_error and not found_job_killed_error and not found_fatal_exception and not found_cmssw_step_failures and not found_scram_script_failure and not found_no_output_failure and 'upload1' in s2['rows'][j]['doc']['errors']:
@@ -133,10 +144,11 @@ def collect_job_failure_information(wf_list,verbose=False,debug=False):
                             else:
                                 failures[k['exitCode']]={'number' : 1, 'logarchivefiles' : [], 'details': k['details']}
                             found_upload_failure=True
+                            break #for multicore jobs, there can be a failure for each thread
 
             conn3  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))   
         #r31=conn3.request('GET','/couchdb/wmstats/_design/WMStats/_view/latestRequest?reduce=true&group=true&keys=[["'+workflow+'","cmssrv113.fnal.gov:9999"],["'+workflow+'","vocms142.cern.ch:9999"]]&stale=ok')
-            r31=conn3.request('GET','/couchdb/wmstats/_design/WMStats/_view/latestRequest?reduce=true&group=true&keys=[["'+workflow+'","cmsgwms-submit1.fnal.gov:9999"],["'+workflow+'","vocms053.cern.ch:9999"]]&stale=ok')
+            r31=conn3.request('GET','/couchdb/wmstats/_design/WMStats/_view/latestRequest?reduce=true&group=true&keys=[["'+workflow+'","vocms026.cern.ch:9999"],["'+workflow+'","vocms053.cern.ch:9999"]]&stale=ok')
         
             r32=conn3.getresponse()
             data3 = r32.read()
@@ -170,8 +182,8 @@ def collect_job_failure_information(wf_list,verbose=False,debug=False):
                 elif 'failure' in s4['rows'][1]['doc']['tasks'][taskname]['status'] and 'success' in s4['rows'][1]['doc']['tasks'][taskname]['status'] and len(s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']) == 2 and 'exception' in s4['rows'][1]['doc']['tasks'][taskname]['status']['failure'] and 'submit' in s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']:
                     totaljobs=s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']['exception']+s4['rows'][1]['doc']['tasks'][taskname]['status']['success']+ s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']['submit']
                 elif ('success' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'failure' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'exception' not in s4['rows'][1]['doc']['tasks'][taskname]['status']['failure'] or len(s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']) != 1):
-                    os.system('echo '+workflow+' | mail -s \"jobFailureInformation error 1\" andrew.m.levin@vanderbilt.edu')
-                    print "problem with job status information 1"
+                    os.system('echo '+workflow+' | mail -s \"collect_job_failure_information.py error 1\" andrew.m.levin@vanderbilt.edu')
+                    print "collect_job_failure_information.py error 1"
                     sys.exit(0)
                 else:
                     totaljobs=s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']['exception']+s4['rows'][1]['doc']['tasks'][taskname]['status']['success']
@@ -181,28 +193,39 @@ def collect_job_failure_information(wf_list,verbose=False,debug=False):
                 elif 'success' in s4['rows'][1]['doc']['tasks'][taskname]['status']:
                     totaljobs=s4['rows'][1]['doc']['tasks'][taskname]['status']['success']
                 else:     
-                    print "problem with job status information 2"
-                    os.system('echo '+workflow+' | mail -s \"jobFailureInformation error 2\" andrew.m.levin@vanderbilt.edu')
+                    print "collect_job_failure_information.py error 2"
+                    os.system('echo '+workflow+' | mail -s \"collect_job_failure_information.py error 2\" andrew.m.levin@vanderbilt.edu')
                     sys.exit(0)
             #ignore the transition status        
             elif len(s4['rows'][1]['doc']['tasks'][taskname]['status']) == 3:
                 #due to replication issues there can still be some submitted jobs in wmstats even after the workflow moves to completed
                 if ('transition' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'success' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'failure' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'exception' not in s4['rows'][1]['doc']['tasks'][taskname]['status']['failure'] or len(s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']) != 1) and ('submitted' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'success' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'failure' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'exception' not in s4['rows'][1]['doc']['tasks'][taskname]['status']['failure'] or len(s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']) != 1): 
                     print "problem with job status information 4"
-                    os.system('echo '+workflow+' | mail -s \"jobFailureInformation error 4\" andrew.m.levin@vanderbilt.edu')
+                    print s4['rows'][1]['doc']['tasks'][taskname]['status']
+                    os.system('echo '+workflow+' | mail -s \"collect_job_failure_information.py error 4\" andrew.m.levin@vanderbilt.edu')
                     sys.exit(0)
                 else:
                     totaljobs=s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']['exception']+s4['rows'][1]['doc']['tasks'][taskname]['status']['success']
             elif len(s4['rows'][1]['doc']['tasks'][taskname]['status']) == 5:
                 if 'transition' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'success' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'failure' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'exception' not in s4['rows'][1]['doc']['tasks'][taskname]['status']['failure'] or len(s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']) != 1 or 'cooloff' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'transition' not in s4['rows'][1]['doc']['tasks'][taskname]['status']: 
                     print "problem with job status information 6"
-                    os.system('echo '+workflow+' | mail -s \"jobFailureInformation error 6\" andrew.m.levin@vanderbilt.edu')
+
+                    os.system('echo '+workflow+' | mail -s \"collect_job_failure_information.py error 6\" andrew.m.levin@vanderbilt.edu')
+                    sys.exit(0)
+                else:
+                    totaljobs=s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']['exception']+s4['rows'][1]['doc']['tasks'][taskname]['status']['success']
+            elif len(s4['rows'][1]['doc']['tasks'][taskname]['status']) == 4:
+                if 'transition' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'success' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'failure' not in s4['rows'][1]['doc']['tasks'][taskname]['status'] or 'exception' not in s4['rows'][1]['doc']['tasks'][taskname]['status']['failure'] or len(s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']) != 1 or 'transition' not in s4['rows'][1]['doc']['tasks'][taskname]['status']: 
+                    print "problem with job status information 7"
+                    print s4['rows'][1]['doc']['tasks'][taskname]['status']
+                    os.system('echo '+workflow+' | mail -s \"collect_job_failure_information.py error 7\" andrew.m.levin@vanderbilt.edu')
                     sys.exit(0)
                 else:
                     totaljobs=s4['rows'][1]['doc']['tasks'][taskname]['status']['failure']['exception']+s4['rows'][1]['doc']['tasks'][taskname]['status']['success']
             else:
                 print "problem with job status information 3"
-                os.system('echo '+workflow+' | mail -s \"jobFailureInformation error 3\" andrew.m.levin@vanderbilt.edu')
+                print s4['rows'][1]['doc']['tasks'][taskname]['status']
+                os.system('echo '+workflow+' | mail -s \"collect_job_failure_information.py error 3\" andrew.m.levin@vanderbilt.edu')
                 sys.exit(0)
                 
             task_dicts.append({'task_name':taskname.split('/')[len(taskname.split('/'))-1], 'failures': failures, 'nfailures': nfailures,'nfailurestot':nfailurestot,'totaljobs':totaljobs})    

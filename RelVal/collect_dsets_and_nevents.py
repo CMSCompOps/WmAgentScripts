@@ -14,10 +14,27 @@ def getOutputDset(workflow):
     Fetch list of output datasets from ReqMgr
     Returns a list of strings
     """
+
+    headers = {"Content-type": "application/json", "Accept": "application/json"}
+
     conn = httplib.HTTPSConnection(reqmgr_url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    r1 = conn.request("GET",'/reqmgr/reqMgr/outputDatasetsByRequestName?requestName='+workflow)
+    r1 = conn.request("GET",'/reqmgr2/data/request?name='+workflow, headers=headers)
     r2 = conn.getresponse()
+
+    if r2.status != 200:
+        os.system('echo \"'+workflow+'\" | mail -s \"announcor.py error 1\" andrew.m.levin@vanderbilt.edu')
+        sys.exit(1)
+
     datasets = json.loads(r2.read())
+
+    datasets = datasets['result']
+
+    datasets =datasets[0]
+
+    datasets = datasets[workflow]
+
+    datasets = datasets['OutputDatasets']
+
     if len(datasets)== 0:
         print "ERROR: No output datasets for: "+ workflow
     return datasets
