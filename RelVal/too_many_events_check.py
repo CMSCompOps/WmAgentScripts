@@ -13,28 +13,19 @@ def getRequestJson(workflow):
     """
     Fetches the request spec file from ReqMgr
     """
+    headers = {"Content-type": "application/json", "Accept": "application/json"}
+
     conn = httplib.HTTPSConnection(reqmgr_url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+workflow)
+
+    r1=conn.request('GET','/reqmgr2/data/request/' + workflow, headers=headers)
     r2=conn.getresponse()
     request = json.loads(r2.read())
-    return request
 
-def getRequestStatus(workflow):
-    conn  =  httplib.HTTPSConnection(reqmgr_url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    r1=conn.request('GET','/reqmgr/reqMgr/request?requestName=' + workflow)
-    r2=conn.getresponse()
-    s = json.loads(r2.read())
-    return s['RequestStatus']
+    if ('result' not in request) or (len(request['result']) != 1) or (workflow not in request['result'][0]):
+        os.system('echo \"'+request +'\" | mail -s \"too_many_events_check.py error 3\" andrew.m.levin@vanderbilt.edu')
+        sys.exit(1)
 
-def setRequestStatus(workflow):
-    conn  =  httplib.HTTPSConnection(reqmgr_url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    headers={"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
-    params = {"requestName" : workflow, "cascade" : True}
-    encodedParams = urllib.urlencode(params)
-    conn.request("POST", "/reqmgr/reqMgr/closeout", encodedParams, headers)
-    response = conn.getresponse()
-    data = response.read()
-    conn.close()
+    return request['result'][0][workflow]
 
 def getEventsDataSetRunList(dbsApi, dset, runList, verb = False):
     """
@@ -96,7 +87,7 @@ def too_many_events_check(wf_name):
             outputEvents = getOutputEvents(dbsApi, dataset, verb = False)
             
             if outputEvents > inputEvents :
-                os.system('echo '+wf_name+' | mail -s \"too_many_events_check error 2\" andrew.m.levin@vanderbilt.edu')
+                os.system('echo '+wf_name+' | mail -s \"too_many_events_check.py error 2\" andrew.m.levin@vanderbilt.edu')
                 sys.exit(1)
 
 
@@ -116,11 +107,11 @@ def too_many_events_check(wf_name):
 
                 outputEvents = getOutputEvents(dbsApi, dataset, verb = False)
                 if outputEvents > inputEvents :
-                    os.system('echo '+wf_name+' | mail -s \"too_many_events_check error 3\" andrew.m.levin@vanderbilt.edu')
+                    os.system('echo '+wf_name+' | mail -s \"too_many_events_check.py error 3\" andrew.m.levin@vanderbilt.edu')
                     sys.exit(1)
 
         elif 'BlockWhitelist' in schema['Task1']:
-            os.system('echo '+wf_name+' | mail -s \"too_many_events_check error 4\" andrew.m.levin@vanderbilt.edu')
+            os.system('echo '+wf_name+' | mail -s \"too_many_events_check error.py 4\" andrew.m.levin@vanderbilt.edu')
             sys.exit(1)
 
             # Most likely MC, since there is no run whitelist
@@ -133,6 +124,6 @@ def too_many_events_check(wf_name):
 
                 outputEvents = getOutputEvents(dbsApi, dataset)
                 if outputEvents > inputEvents :
-                    os.system('echo '+wf_name+' | mail -s \"too_many_events_check error 5\" andrew.m.levin@vanderbilt.edu')
+                    os.system('echo '+wf_name+' | mail -s \"too_many_events_check.py error 5\" andrew.m.levin@vanderbilt.edu')
                     sys.exit(1)
 

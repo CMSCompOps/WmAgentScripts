@@ -9,8 +9,8 @@ import optparse
 
 import calendar
 
-initialstatus='closed-out'
-finalstatus='announced'
+initialstatus='assignment-approved'
+finalstatus='rejected'
 
 def setStatus(url, workflowname,newstatus):
     #print "Setting %s to %s" % (workflowname,newstatus)
@@ -70,22 +70,35 @@ def main():
 
 
     #print s['rows']
-    #print len(s['rows'])
     #sys.exit(0)
+
+    n_rvcmssw_wfs = 0
     for i in s['rows']:
         if 'RVCMSSW' in i['id']:
+            n_rvcmssw_wfs=n_rvcmssw_wfs+1
+
+    print n_rvcmssw_wfs
+
+    count = 0
+
+    for i in s['rows']:
+        if 'RVCMSSW' in i['id']:
+            
+            print str(count)+" out of " + str(n_rvcmssw_wfs)
+            count = count+1
             workflow=i['id']
             print "checking workflow " +workflow
             conn2  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-            r2=conn.request('GET','/couchdb/wmstats/_all_docs?keys=["'+workflow+'"]&include_docs=true')
+            r2=conn.request('GET','/couchdb/reqmgr_workload_cache/_all_docs?keys=["'+workflow+'"]&include_docs=true')
             r2=conn.getresponse()
             data = r2.read()
             s = json.loads(data)
-            print s['rows'][0]['doc']['request_status'][len(s['rows'][0]['doc']['request_status'])-1]
-            if s['rows'][0]['doc']['request_status'][len(s['rows'][0]['doc']['request_status'])-1]['status'] != initialstatus:
+
+            print s['rows'][0]['doc']['RequestTransition'][len(s['rows'][0]['doc']['RequestTransition'])-1]
+            if s['rows'][0]['doc']['RequestTransition'][len(s['rows'][0]['doc']['RequestTransition'])-1]['Status'] != initialstatus:
                 continue
-            print "    in "+initialstatus+" for "+str((calendar.timegm(datetime.datetime.utcnow().utctimetuple())-s['rows'][0]['doc']['request_status'][1]['update_time'])/86400.)+" days"
-            if (calendar.timegm(datetime.datetime.utcnow().utctimetuple())-s['rows'][0]['doc']['request_status'][1]['update_time'])/86400. > 14.:
+            #print "    in "+initialstatus+" for "+str((calendar.timegm(datetime.datetime.utcnow().utctimetuple()-s['rows'][0]['doc']['RequestTransition'][len(s['rows'][0]['doc']['RequestTransition'])-1]['UpdateTime'])/86400.)+" days"
+            if (calendar.timegm(datetime.datetime.utcnow().utctimetuple())-s['rows'][0]['doc']['RequestTransition'][len(s['rows'][0]['doc']['RequestTransition'])-1]['UpdateTime'])/86400. > 14.:
                 print "    moving workflow to "+finalstatus
                 setStatus(url, workflow, finalstatus)
 
