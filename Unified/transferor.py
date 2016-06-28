@@ -247,7 +247,7 @@ def transferor(url ,specific = None, talk=True, options=None):
             
         allowed_secondary = set()
         for campaign in wfh.getCampaigns():
-            if 'secondaries' in CI.campaigns[campaign]:
+            if campaign in CI.campaigns and 'secondaries' in CI.campaigns[campaign]:
                 allowed_secondary.update( CI.campaigns[campaign]['secondaries'] )
         if secondary:
             if (secondary and allowed_secondary) and (set(secondary)&allowed_secondary!=set(secondary)):
