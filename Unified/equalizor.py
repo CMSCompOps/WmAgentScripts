@@ -278,7 +278,8 @@ def equalizor(url , specific = None, options=None):
                 if "LHE" in overflow and not campaign in LHE_overflow:
                     print "adding",campaign,"to light input overflow rules"
                     site_list = overflow['LHE']['site_list']
-                    LHE_overflow[campaign] = copy.deepcopy( getattr(SI,site_list) )
+                    if site_list:
+                        LHE_overflow[campaign] = copy.deepcopy( getattr(SI,site_list) )
                     
 
             ### get the task performance, for further massaging.

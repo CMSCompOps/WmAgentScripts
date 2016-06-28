@@ -222,7 +222,7 @@
     },
     "lumisize" : 1000,
     "force-complete" : 0.99,
-    "overflow":{"LHE":{"site_list":"sites_AAA"}},
+    "overflow":{"LHE":{"site_list":""}},
     "tune" : true
   }, 
   "RunIIFall15DR75": {
@@ -245,7 +245,7 @@
     "force-timeout" : 7,
     "lumisize": -1,
     "fractionpass" : 0.90,
-    "overflow": {"PU":{"max":20000,"pending":0,"force":false}},
+    "overflow": {"PU":{"max":0,"pending":0,"force":false}},
     "DDMcopies": {
              "all" : { "N" : 4 },
 	     "RAWAODSIM" : { "N" : 2 }
@@ -253,12 +253,12 @@
     "secondaries" : ["/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1-v2/GEN-SIM"]
   },
   "RunIISpring16reHLT80": {
-    "go": false,	  
-    "maxcopies": 2,
+    "go": true,	  
+    "maxcopies": 1,
     "force-complete" : 0.95,
     "force-timeout" : 7,
     "lumisize": -1,
-    "overflow": {"PU":{"max":20000,"pending":0,"force":false}}
+    "overflow": {"PU":{"max":0,"pending":0,"force":false}}
   },
   "RunIISpring16MiniAODv1": {
     "go": true,
@@ -391,7 +391,7 @@
     "secondary_AAA" : true
   },
   "RunIISpring15PrePremix": {
-    "go": true,
+    "go": false,
     "SiteWhitelist" : [ "T1_US_FNAL", "T1_DE_KIT" , "T1_IT_CNAF", "T1_RU_JINR" ,"T2_CH_CERN" ]
   },
   "RunIISpring15MiniAODv2": {
