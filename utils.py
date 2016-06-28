@@ -3071,11 +3071,15 @@ class workflowInfo:
         return self.full_spec
 
     def getWMErrors(self):
-        r1=self.conn.request("GET",'/wmstatsserver/data/jobdetail/%s'%(self.request['RequestName']), headers={"Accept":"*/*"})
-        r2=self.conn.getresponse()
+        try:
+            r1=self.conn.request("GET",'/wmstatsserver/data/jobdetail/%s'%(self.request['RequestName']), headers={"Accept":"*/*"})
+            r2=self.conn.getresponse()
         #print r2.read()
-        self.errors = json.loads(r2.read())['result'][0][self.request['RequestName']]
-        return self.errors
+            self.errors = json.loads(r2.read())['result'][0][self.request['RequestName']]
+            return self.errors
+        except:
+            print "Could not get wmstats errors for",self.request['RequestName']
+            return {}
 
     def getWMStats(self):
         r1=self.conn.request("GET",'/wmstatsserver/data/request/%s'%self.request['RequestName'], headers={"Accept":"application/json"})
@@ -3101,13 +3105,16 @@ class workflowInfo:
 
         where_to_run = defaultdict(list)
         missing_to_run = defaultdict(int)
+        missing_to_run_at = defaultdict(lambda : defaultdict(int))
         for doc in self.recovery_doc:
             task = doc['fileset_name']
             for f,info in doc['files'].iteritems():
                 where_to_run[task] = list(set(where_to_run[task] + info['locations']))
                 missing_to_run[task] += info['events']
+                for s in info['locations']:
+                    missing_to_run_at[task][s] += info['events']
 
-        return dict(where_to_run),dict(missing_to_run)
+        return dict(where_to_run),dict(missing_to_run),missing_to_run_at
 
     def getWorkQueue(self):
         if not self.workqueue:

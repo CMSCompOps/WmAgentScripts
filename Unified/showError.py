@@ -15,12 +15,13 @@ gogo = defaultdict(bool)
 def parse_one(wfn):
     global explanations
     wfi = workflowInfo( url , wfn)
-    where_to_run, missing_to_run = wfi.getRecoveryInfo()       
+    where_to_run, missing_to_run,missing_to_run_at = wfi.getRecoveryInfo()       
     err= wfi.getWMErrors()
 
     print "will be willing to run at"      
     print json.dumps( where_to_run , indent=2)         
     print json.dumps(missing_to_run , indent=2)        
+    print json.dumps(missing_to_run_at , indent=2)        
     
     task_error_site_count ={}
     one_explanation = defaultdict(set)
@@ -28,6 +29,9 @@ def parse_one(wfn):
 
     tasks = err.keys()
     tasks.sort()
+    if not tasks:
+        return task_error_site_count
+        
     html="<html> %s <br><hr><br>"%(tasks[0].split('/')[1])
     
     for task in tasks:  
@@ -97,6 +101,7 @@ def parse_one(wfn):
     html+='</table>'
     html+=('<br>'*30)
     html +='</html>'
+    wfi.sendLog( 'error', html, show=False)
     fn = '%s'% wfn
     open('%s/report/%s'%(monitor_dir,fn),'w').write( html )
 
