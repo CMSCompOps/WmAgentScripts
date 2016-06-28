@@ -30,6 +30,9 @@ def completor(url, specific):
     ## just take it in random order so that not always the same is seen
     random.shuffle( wfs )
 
+    max_per_round = UC.get('max_per_round').get('completor',None)
+    if max_per_round and not specific: wfs = wfs[:max_per_round]
+
     ## by workflow a list of fraction / timestamps
     completions = json.loads( open('%s/completions.json'%monitor_dir).read())
     
@@ -60,6 +63,7 @@ def completor(url, specific):
     #wfs_no_location_in_GQ = defaultdict(list)
 
     set_force_complete = set()
+
 
     for wfo in wfs:
         if specific and not specific in wfo.name: continue

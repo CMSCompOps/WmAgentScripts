@@ -204,6 +204,11 @@ def transferor(url ,specific = None, talk=True, options=None):
     went_over_budget=False
     destination_cache = {}
     no_goes = set()
+
+    max_per_round = UC.get('max_per_round').get('transferor',None)
+    if max_per_round and not spec:
+        wfs_and_wfh = wfs_and_wfh[:max_per_round]
+    
     for (wfo,wfh) in wfs_and_wfh:
         print wfo.name,"to be transfered with priority",wfh.request['RequestPriority']
 
