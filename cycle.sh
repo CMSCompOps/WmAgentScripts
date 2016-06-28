@@ -1,4 +1,8 @@
 if [ -r /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cycle.lock ] ; then
+    if [ `ps -e -f | grep Uni` == "0" ] ; then
+	echo "There isn't anything running, very suspicious"
+	mail -s "[Ops] Emergency On Cycle Lock" -a /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cycle.lock vlimant@cern.ch,matteoc@fnal.gov
+    fi
     echo "cycle is locked"
     #mail -s "[Ops] cycle is locked" vlimant@cern.ch,matteoc@fnal.gov
     exit
