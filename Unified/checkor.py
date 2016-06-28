@@ -764,7 +764,7 @@ if __name__ == "__main__":
 
     checkor(url, spec, options=options)
     
-    #if options.html:
-    htmlor()
+    if not spec or options.html:
+        htmlor()
 
 
