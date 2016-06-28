@@ -41,21 +41,17 @@ def rejector(url, specific, options=None):
             return
         results=[]
         wfi = workflowInfo(url, wfo.name)
-        if wfi.request['RequestStatus'] in ['rejected','rejected-archived','aborted','aborted-archived']:
-            print 'already',wfi.request['RequestStatus']
-            if not options.clone:
-                wfo.status = 'forget'
-                session.commit()
-                continue
 
         datasets = set(wfi.request['OutputDatasets'])
         reqMgrClient.invalidateWorkflow(url, wfo.name, current_status=wfi.request['RequestStatus'])
+
         wfi.sendLog('rejector','invalidating the workflow by unified operator')
         ## need to find the whole familly and reject the whole gang
         familly = getWorkflowById( url, wfi.request['PrepID'] , details=True)
         for fwl in familly:
             if fwl['RequestDate'] < wfi.request['RequestDate']: continue
             if fwl['RequestType']!='Resubmission': continue
+            if 'OriginalRequestName' in fwl and fwl['OriginalRequestName'] != wfi.request['RequestName']: continue
             print "rejecting",fwl['RequestName']
             reqMgrClient.invalidateWorkflow(url, fwl['RequestName'], current_status=fwl['RequestStatus'])
             datasets.update( fwl['OutputDatasets'] )
@@ -65,6 +61,13 @@ def rejector(url, specific, options=None):
                 print "keeping",dataset,"in its current status"
             else:
                 results.append( setDatasetStatus(dataset, 'INVALID') )
+
+        #if wfi.request['RequestStatus'] in ['rejected','rejected-archived','aborted','aborted-archived']:
+        #    print 'already',wfi.request['RequestStatus']
+        #    if not options.clone:
+        #        wfo.status = 'forget'
+        #        session.commit()
+        #        continue
 
         if all(map(lambda result : result in ['None',None,True],results)):
             wfo.status = 'forget'
@@ -96,6 +99,8 @@ def rejector(url, specific, options=None):
                         schema['Task1']['EventsPerJob'] = options.EventsPerJob
                     else:
                         schema['EventsPerJob'] = options.EventsPerJob
+                if options.EventAwareLumiBased:
+                    schema['SplittingAlgo'] = 'EventAwareLumiBased'
                 if options.TimePerEvent:
                     schema['TimePerEvent'] = options.TimePerEvent
 
@@ -156,6 +161,7 @@ def rejector(url, specific, options=None):
                 print data
                 wfo.status = 'trouble'
                 session.commit()
+                wfi.sendLog('rejector','Cloned into %s by unified operator'%( newWorkflow ))
         else:
             print "error in rejecting",wfo.name,results
 
@@ -170,6 +176,7 @@ if __name__ == "__main__":
     parser.add_option('--AcquisitionEra',help="change the acq era", default=None)
     parser.add_option('--PrepID',help='change the prepid',default=None)
     parser.add_option('--EventsPerJob', help="set the events/job on the clone", default=0, type=int)
+    parser.add_option('--EventAwareLumiBased', help="set the splitting algo of the clone", default=False, action='store_true')
     parser.add_option('--TimePerEvent', help="set the time/event on the clone", default=0, type=float)
     parser.add_option('--filelist',help='a file with a list of workflows',default=None)
     parser.add_option('--no_output',help='keep only the output of the last task of TaskChain',default=False,action='store_true')
