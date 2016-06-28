@@ -84,11 +84,6 @@ def completor(url, specific):
                     skip=True
                     wfi.notifyRequestor("The workflow %s was force completed by request of %s"%(wfo.name,user), do_batch=False)
                     wfi.sendLog('completor','%s is asking for %s to be force complete'%(user,wfo.name))
-                    if user == 'mcm' and use_mcm:
-                        for pid in wfi.getPrepIDs():
-                            mcm.delete('/restapi/requests/forcecomplete/%s'%pid)
-                    #sendEmail('completor test','not force completing automatically, you have to go back to it')
-                    #skip=False
                     break
     
         if wfo.status.startswith('assistance'): skip = True
