@@ -1204,8 +1204,8 @@ def setWorkflowAssignment(url, workflowname, schema):
             schema = reqmgr1_to_2_Assignment(schema)
         data = requestManagerPut(url,"/reqmgr2/data/request/%s"%workflowname, schema)
         try:
-            ok = json.loads( data )['result'][workflowname]
-            return True
+            ok = any(ro[workflowname]=='OK' for ro in json.loads( data )['result'] if workflowname in ro)
+            return ok
         except:
             print data
             return False
