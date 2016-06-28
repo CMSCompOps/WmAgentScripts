@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, getWorkflowById, getWorkLoad, componentInfo, sendEmail, workflowInfo, sendLog, reqmgr_url
+from utils import getWorkflows, getWorkflowById, getWorkLoad, componentInfo, sendEmail, workflowInfo, sendLog, reqmgr_url, getDatasetStatus
 import sys
 import copy
 from htmlor import htmlor
@@ -8,6 +8,7 @@ from invalidator import invalidator
 import optparse
 import json
 import time
+from collections import defaultdict
 
 def injector(url, options, specific):
 
@@ -21,6 +22,7 @@ def injector(url, options, specific):
 
     print len(workflows),"in line"
     cannot_inject = set()
+    status_cache = defaultdict(str)
     ## browse for assignment-approved requests, browsed for ours, insert the diff
     for wf in workflows:
         if specific and not specific in wf: continue
@@ -59,8 +61,18 @@ def injector(url, options, specific):
                         print "Should not put",wf,"because of",lwfo.name,lwfo.status
                         cannot_inject.add( wf )
                         can_add = False
+            ## add a check on validity of input datasets
+            _,prim,par,sec = wfi.getIO()
+            for d in list(prim)+list(par)+list(sec):
+                if not d in status_cache:
+                    status_cache[d] = getDatasetStatus(d)
+                if status_cache[d] != 'VALID':
+                    wfi.sendLog('injector',"One of the input is not VALID. %s : %s"%( d, status_cache[d]))
+                    sendLog('injector',"One of the input of %s is not VALID. %s : %s"%( wf, d, status_cache[d]))
+                    can_add = False
             if not can_add: continue
             wfi.sendLog('injector',"considering %s"%wf)
+
             new_wf = Workflow( name = wf , status = options.setstatus, wm_status = options.wmstatus) 
             session.add( new_wf )
             session.commit()
