@@ -84,6 +84,7 @@ def searchLog( q ,limit=50 ):
     response = conn.getresponse()
     data = response.read()
     o = json.loads( data )
+    #print o
     print o['hits']['total']
     return o['hits']['hits']
 
