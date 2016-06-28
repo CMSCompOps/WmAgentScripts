@@ -962,7 +962,7 @@ class DSS:
         try:
             self.bdb = json.loads(open('bdss.json').read())
         except:
-            print "bo bank of dataset size. starting fresh"
+            print "no bank of dataset size. starting fresh"
             self.bdb = {}
 
     def _get(self, dataset ):
@@ -982,8 +982,16 @@ class DSS:
         return sum( self.bdb[dataset].values() ), copy.deepcopy( self.bdb[dataset] )
 
     def __del__(self):
-        #open('dss.json','w').write( json.dumps( self.db ))
-        open('bdss.json','w').write( json.dumps( self.bdb ))
+        ## pop when too many entries
+        if len(self.bdb) > 1000:
+            keys = self.bdb.keys()
+            random.shuffle(keys)
+            for k in keys[:1000]:
+                self.bdb.pop(k)
+        try:
+            open('bdss.json','w').write( json.dumps( self.bdb ))
+        except:
+            print "no access to bdss.json"
                                     
 
 
