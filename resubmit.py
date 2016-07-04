@@ -319,7 +319,7 @@ def main():
         for wf in wfs:
             workflow = reqMgrClient.Workflow(wf)
             if options.memory:
-                memory = options.memory
+                memory = float(options.memory)
             else:
                 memory = workflow.info["Memory"]
             cloneWorkflow(
