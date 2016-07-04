@@ -1,6 +1,6 @@
 {
  "site_for_overflow": {
-   "value" : ["NONO_T0_CH_CERN","T2_CH_CERN_HLT"],
+   "value" : ["NONO_T0_CH_CERN","NONO_T2_CH_CERN_HLT"],
    "description" : "The sites that we set to overflow and require a specific treatment"
  },
  "max_cpuh_block" : {
@@ -14,8 +14,11 @@
  "max_per_round" : {
    "description" : "limitation on the number of wf to process per module",
    "value" : {
-    "assignor" : null,
-    "closor" : null
+    "transferor" : 200,
+    "assignor" : 200,
+    "closor" : 100,
+    "checkor" : 200,
+    "completor" : 200
     }
  },
  "pattern_fraction_pass": {
@@ -43,7 +46,7 @@
    "description": "The data tiers that go to AnaOps"
  },
  "tiers_keep_on_disk": {
-   "value" : ["LHE"],
+   "value" : ["LHE","RAWAODSIM"],
    "description": "the data tier not unlocked until used again"
  },
  "check_fullcopy_to_announce": {

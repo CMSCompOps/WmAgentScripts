@@ -2,7 +2,7 @@
 from assignSession import *
 import sys
 import reqMgrClient
-from utils import workflowInfo, getWorkflowById, getDatasetEventsAndLumis, componentInfo, monitor_dir, reqmgr_url, unifiedConfiguration
+from utils import workflowInfo, getWorkflowById, forceComplete, getDatasetEventsAndLumis, componentInfo, monitor_dir, reqmgr_url, unifiedConfiguration, getForceCompletes
 from utils import campaignInfo, sendEmail, siteInfo, sendLog
 from collections import defaultdict
 import json
@@ -10,20 +10,6 @@ import random
 from McMClient import McMClient
 
 
-def forceComplete(url, wfi):
-    familly = getWorkflowById( url, wfi.request['PrepID'] ,details=True)
-    for member in familly:
-        ### if member['RequestName'] == wl['RequestName']: continue ## set himself out
-        if member['RequestDate'] < wfi.request['RequestDate']: continue
-        if member['RequestStatus'] in ['None',None]: continue
-        ## then set force complete all members
-        if member['RequestStatus'] in ['running-opened','running-closed']:
-            #sendEmail("force completing","%s is worth force completing\n%s"%( member['RequestName'] , percent_completions))
-            print "setting",member['RequestName'],"force-complete"
-            reqMgrClient.setWorkflowForceComplete(url, member['RequestName'])
-        elif member['RequestStatus'] in ['acquired','assignment-approved']:
-            print "rejecting",member['RequestName']
-            reqMgrClient.invalidateWorkflow(url, member['RequestName'], current_status=member['RequestStatus'])
 
 def completor(url, specific):
     use_mcm = True
@@ -44,6 +30,9 @@ def completor(url, specific):
     ## just take it in random order so that not always the same is seen
     random.shuffle( wfs )
 
+    max_per_round = UC.get('max_per_round').get('completor',None)
+    if max_per_round and not specific: wfs = wfs[:max_per_round]
+
     ## by workflow a list of fraction / timestamps
     completions = json.loads( open('%s/completions.json'%monitor_dir).read())
     
@@ -57,18 +46,7 @@ def completor(url, specific):
 
     long_lasting = {}
 
-    overrides = {}
-    for rider,email in [('vlimant','vlimant@cern.ch'),('jen_a','jen_a@fnal.gov'),('srimanob','srimanob@mail.cern.ch')]:
-        rider_file = '/afs/cern.ch/user/%s/%s/public/ops/forcecomplete.json'%(rider[0],rider)
-        if not os.path.isfile(rider_file):
-            print "no file",rider_file
-            continue
-        try:
-            overrides[rider] = json.loads(open( rider_file ).read() )
-        except:
-            print "cannot get force complete list from",rider
-            sendEmail("malformated force complet file","%s is not json readable"%rider_file, destination=[email])
-            
+    overrides = getForceCompletes()
     if use_mcm:    
         ## add all workflow that mcm wants to get force completed
         mcm_force = mcm.get('/restapi/requests/forcecomplete')
@@ -85,6 +63,7 @@ def completor(url, specific):
     #wfs_no_location_in_GQ = defaultdict(list)
 
     set_force_complete = set()
+
 
     for wfo in wfs:
         if specific and not specific in wfo.name: continue
@@ -105,11 +84,6 @@ def completor(url, specific):
                     skip=True
                     wfi.notifyRequestor("The workflow %s was force completed by request of %s"%(wfo.name,user), do_batch=False)
                     wfi.sendLog('completor','%s is asking for %s to be force complete'%(user,wfo.name))
-                    if user == 'mcm' and use_mcm:
-                        for pid in wfi.getPrepIDs():
-                            mcm.delete('/restapi/requests/forcecomplete/%s'%pid)
-                    #sendEmail('completor test','not force completing automatically, you have to go back to it')
-                    #skip=False
                     break
     
         if wfo.status.startswith('assistance'): skip = True

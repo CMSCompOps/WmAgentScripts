@@ -29,6 +29,8 @@ def main():
     parser.add_option('-i', '--invalidate', help='Invalidate datasets? The default value is False',action="store_true", dest='invalidate', default=False)
     parser.add_option("-u", "--user", dest="user",help="The user for creating the clone, if empty it will use the OS user running the script")
     parser.add_option("-g", "--group", dest="group", default='DATAOPS',help="The group for creating the clone, if empty it will, use 'DATAOPS' by default")
+    parser.add_option("-m", "--memory", dest="memory", help="Set max memory for the clone. At assignment, this will be used to calculate maxRSS = memory*1024")
+
     (options, args) = parser.parse_args()
 
     # Check the arguments, get info from them
@@ -44,7 +46,7 @@ def main():
     else:
         parser.error("Provide the workflow of a file of workflows")
         sys.exit(1)
-
+ 
     if not options.user:
         # get os username by default
         uinfo = pwd.getpwuid(os.getuid())
@@ -73,7 +75,11 @@ def main():
         # clones workflow
         if options.clone:
             print("Cloning workflow: "+ workflow)
-            cloned = resubmit.cloneWorkflow(workflow, user, options.group)
+            if options.memory:
+                mem = options.memory
+            else:
+                mem = workflowInfo.info["Memory"]
+            cloned = resubmit.cloneWorkflow(workflow, user, options.group, memory=mem)
     sys.exit(0);
 
 if __name__ == "__main__":

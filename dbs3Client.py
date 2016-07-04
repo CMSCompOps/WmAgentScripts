@@ -242,10 +242,28 @@ def getFileCountDataset(dataset, skipInvalid=False, onlyInvalid=False):
             reply = dbsapi.listFiles(dataset=dataset, detail=(skipInvalid or onlyInvalid))
         except:
             reply = []
+    main_lfn=None        
+    if reply:
+        ## it's lcearly wrong to pick the first file as example
+        main_lfn = '/'.join(reply[0]['logical_file_name'].split('/')[:3])
+        #print main_lfn
+
+    #print reply
     if skipInvalid:
         reply = filter(lambda f : f['is_file_valid'] ==1, reply)
+        if main_lfn:
+            reply = filter(lambda f : f['logical_file_name'].startswith(main_lfn), reply)
+            #print "restricted"
     elif onlyInvalid:
-        reply = filter(lambda f : f['is_file_valid'] ==0, reply)
+        if main_lfn:
+            reply = filter(lambda f : f['is_file_valid'] ==0 or not f['logical_file_name'].startswith(main_lfn), reply)
+        else:
+            reply = filter(lambda f : f['is_file_valid'] ==0, reply)
+    else:
+        if main_lfn:
+            reply = filter(lambda f : f['logical_file_name'].startswith(main_lfn), reply)
+            #print "restricted"
+
     return len(reply)
 
 

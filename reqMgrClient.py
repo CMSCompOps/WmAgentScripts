@@ -1041,6 +1041,9 @@ def invalidateWorkflow(url, workflowname, current_status=None):
         return rejectWorkflow(url, workflowname)
     elif current_status in['normal-archived']:
         return rejectArchivedWorkflow(url, workflowname)
+    elif current_status in ['aborted','rejected','aborted-archived','rejected-archived']:
+        print workflowname,"already",current_status
+        return True
     else:
         return abortWorkflow(url, workflowname)
 
@@ -1201,8 +1204,8 @@ def setWorkflowAssignment(url, workflowname, schema):
             schema = reqmgr1_to_2_Assignment(schema)
         data = requestManagerPut(url,"/reqmgr2/data/request/%s"%workflowname, schema)
         try:
-            ok = json.loads( data )['result'][workflowname]
-            return True
+            ok = any(ro[workflowname]=='OK' for ro in json.loads( data )['result'] if workflowname in ro)
+            return ok
         except:
             print data
             return False

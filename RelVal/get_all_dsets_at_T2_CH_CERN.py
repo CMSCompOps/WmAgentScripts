@@ -22,23 +22,23 @@ url2 = "https://cmsweb.cern.ch/phedex/datasvc/xml/prod/blockreplicas?dataset=/*/
 webpage2 = urllib.urlopen(url2)
 xmldoc2 = minidom.parse(webpage2)
 
-#selected_group = "DataOps"
-selected_group = "IB RelVal"
+selected_group = "DataOps"
+#selected_group = "IB RelVal"
 
 for phedex in  xmldoc1.childNodes:
     for block in phedex.childNodes:
         for replica in block.childNodes:
             group = replica.attributes['group'].value
-            #if group == selected_group:
-            if group not in ["RelVal","IB RelVal","DataOps",""]:
+            if group == selected_group:
+            #if group not in ["RelVal","IB RelVal","DataOps",""]:
                 print block.attributes['name'].value
 
 for phedex in  xmldoc2.childNodes:
     for block in phedex.childNodes:
         for replica in block.childNodes:
             group = replica.attributes['group'].value
-            #if group == selected_group:
-            if group not in ["RelVal","IB RelVal","DataOps",""]:
+            if group == selected_group:
+            #if group not in ["RelVal","IB RelVal","DataOps",""]:
                 print block.attributes['name'].value
 
         #print block.attributes['name'].value

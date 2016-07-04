@@ -59,12 +59,12 @@ def make_assignment_params(schema,site, processing_version):
         'SiteWhitelist' : site,
         'SiteBlacklist' : [],
         'MergedLFNBase' : '/store/relval',
-        'useSiteListAsLocation' : True,
+        'TrustSitelists' : True,
         'CustodialSites' : [], 
         'ProcessingVersion' : int(processing_version),
         'ProcessingString' : procstring,
         'Dashboard': 'relval',
-        'dashboard': 'relval',
+#        'dashboard': 'relval',
         'AcquisitionEra': acqera,
         'BlockCloseMaxWaitTime' : 28800,
         "SoftTimeout" : 129600,
@@ -84,10 +84,22 @@ if __name__ == "__main__":
         print "assignment.py wf_name site processing_version [processing_string]"
         sys.exit(0)
 
+    headers = {"Content-type": "application/json", "Accept": "application/json"}
+
     conn  =  httplib.HTTPSConnection('cmsweb.cern.ch', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))    
-    r1=conn.request("GET",'/reqmgr/reqMgr/request?requestName='+sys.argv[1])
+    r1=conn.request("GET",'/reqmgr2/data/request/'+sys.argv[1], headers = headers)
     r2=conn.getresponse()
     schema = json.loads(r2.read())
+
+    schema = schema['result']
+    
+    if len(schema) != 1:
+        os.system('echo '+sys.argv[1]+' | mail -s \"assignment.py error 8\" andrew.m.levin@vanderbilt.edu')
+        sys.exit(1)
+
+    schema = schema[0]
+
+    schema = schema[sys.argv[1]]
 
     print '/reqmgr/reqMgr/request?requestName='+sys.argv[1]
 

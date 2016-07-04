@@ -40,8 +40,7 @@ reqmgrCouchURL = "https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache"
 DELTA_EVENTS = 1000
 DELTA_LUMIS = 200
 
-
-def modifySchema(helper, workflow, user, group, cache, events, firstLumi, backfill=False):
+def modifySchema(helper, workflow, user, group, cache, events, firstLumi, backfill=False, memory=None):
     """
     Adapts schema to right parameters.
     If the original workflow points to DBS2, DBS3 URL is fixed instead.
@@ -55,6 +54,12 @@ def modifySchema(helper, workflow, user, group, cache, events, firstLumi, backfi
             result['ConfigCacheID'] = value
         elif key == 'RequestSizeEvents':
             result['RequestSizeEvents'] = value
+        #Set memory
+        elif key == 'Memory':
+            if memory != None:
+                result['Memory'] = memory
+            else:
+                result['Memory'] = value
         #requestor info
         elif key == 'Requestor':
             result['Requestor'] = user
@@ -100,56 +105,6 @@ def modifySchema(helper, workflow, user, group, cache, events, firstLumi, backfi
         # Update the request priority
         if cache and 'RequestPriority' in cache:
             result['RequestPriority'] = cache['RequestPriority']
-    # check MonteCarlo
-    if result['RequestType'] == 'MonteCarlo':
-        # check assigning parameters
-        # seek for events per job on helper
-        try:
-            splitting = helper.listJobSplittingParametersByTask()
-        except AttributeError:
-            splitting = {}
-
-        eventsPerJob = 120000
-        eventsPerLumi = 100000
-        for k, v in splitting.items():
-            # print k,":",v
-            if k.endswith('/Production'):
-                if 'events_per_job' in v:
-                    eventsPerJob = v['events_per_job']
-                elif 'events_per_lumi' in v:
-                    eventsPerLumi = v['events_per_lumi']
-        # result['EventsPerJob'] = eventsPerJob
-        # result['EventsPerLumi'] = eventsPerLumi
-    # check MonteCarloFromGen
-    elif result['RequestType'] == 'MonteCarloFromGEN':
-        # seek for lumis per job on helper
-        splitting = helper.listJobSplittingParametersByTask()
-        lumisPerJob = 300
-        for k, v in splitting.items():
-            if k.endswith('/Production'):
-                if 'lumis_per_job' in v:
-                    lumisPerJob = v['lumis_per_job']
-        result['LumisPerJob'] = lumisPerJob
-        # Algorithm = lumi based?
-        result["SplittingAlgo"] = "LumiBased"
-    elif result['RequestType'] == "TaskChain":
-        # Now changing the parameters according to HG1309
-        x = 1
-        # on every task
-        while x <= result['TaskChain']:
-            task = 'Task' + str(x)
-            for (key, value) in result[task].iteritems():
-                if key == "SplittingAlgorithm":
-                    result[task]['SplittingAlgo'] = value
-                    del result[task]['SplittingAlgorithm']
-                elif key == "SplittingArguments":
-                    for (k2, v2) in result[task][key].iteritems():
-                        if k2 == "lumis_per_job":
-                            result[task]["LumisPerJob"] = v2
-                        elif k2 == "events_per_job":
-                            result[task]["EventsPerJob"] = v2
-                        del result[task]['SplittingArguments']
-            x += 1
 
     # Merged LFN
     if 'MergedLFNBase' not in result:
@@ -197,8 +152,7 @@ def modifySchema(helper, workflow, user, group, cache, events, firstLumi, backfi
 
     return result
 
-
-def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=False, bwl=None):
+def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=False, memory=None, bwl=None):
     """
     clones a workflow
     """
@@ -209,8 +163,8 @@ def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=F
         cache = reqMgrClient.getWorkloadCache(url, workflow)
     except:
         cache = None
-        
-    schema = modifySchema(helper, workflow, user, group, cache, None, None, backfill)
+
+    schema = modifySchema(helper, workflow, user, group, cache, None, None, backfill, memory)
 
     schema['OriginalRequestName'] = workflow
     if verbose:
@@ -316,7 +270,7 @@ url = 'cmsweb.cern.ch'
 url_tb = 'cmsweb-testbed.cern.ch'
 reqmgrCouchURL = "https://" + url + "/couchdb/reqmgr_workload_cache"
 
-
+ 
 def main():
 
     # Create option parser
@@ -339,7 +293,7 @@ def main():
     #Extend workflow options
     parser.add_option('-e', '--events', help='# of events to add', dest='events')
     parser.add_option('-l', '--firstlumi', help='# of the first lumi', dest='firstlumi')
-
+    parser.add_option("-m", "--memory", dest="memory", help="Set max memory for the event. At assignment, this will be used to calculate maxRSS = memory*1024")
     parser.add_option("--testbed", action="store_true", dest="testbed", default=False,
                       help="Clone to testbed reqmgr insted of production")
     (options, args) = parser.parse_args()
@@ -363,8 +317,13 @@ def main():
 
     if options.action == 'clone':
         for wf in wfs:
+            workflow = reqMgrClient.Workflow(wf)
+            if options.memory:
+                memory = options.memory
+            else:
+                memory = workflow.info["Memory"]
             cloneWorkflow(
-                wf, user, options.group, options.verbose, options.backfill, options.testbed, bwl=options.bwl)
+                wf, user, options.group, options.verbose, options.backfill, options.testbed, memory,bwl=options.bwl)
     elif options.action == 'extend':
         for wf in wfs:
             extendWorkflow(wf, user, options.group, options.verbose, options.events, options.firstlumi)

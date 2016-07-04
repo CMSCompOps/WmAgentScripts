@@ -29,6 +29,8 @@ failure_information=collect_job_failure_information.collect_job_failure_informat
 assistance_decision=assistance_decision.assistance_decision(failure_information)
 [istherefailureinformation,failure_information_string]=print_job_failure_information.print_job_failure_information(failure_information)
 
+#print failure_information
+
 print "assistance_decision:"
 print assistance_decision
 

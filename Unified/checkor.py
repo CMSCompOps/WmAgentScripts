@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, makeReplicaRequest, global_SI, getDatasetSize, getDatasetFiles, sendLog, reqmgr_url, dbs_url, dbs_url_writer
+from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, forceComplete, makeReplicaRequest, getDatasetSize, getDatasetFiles, sendLog, reqmgr_url, dbs_url, dbs_url_writer, getForceCompletes
 from utils import componentInfo, unifiedConfiguration, userLock, duplicateLock
 import phedexClient
 import dbs3Client
@@ -60,7 +60,7 @@ def checkor(url, spec=None, options=None):
     custodials = defaultdict(list) #sites : dataset list
     transfers = defaultdict(list) #sites : dataset list
     invalidations = [] #a list of files
-    SI = global_SI
+    SI = siteInfo()
     CI = campaignInfo()
     mcm = McMClient(dev=False)
 
@@ -75,14 +75,11 @@ def checkor(url, spec=None, options=None):
 
     ## retrieve bypass and onhold configuration
     bypasses = []
+    forcings = []
+    overrides = getForceCompletes()
     holdings = []
-    #try:
-    #    already_notified = json.loads(open('already_notifified.json').read())
-    #except:
-    #    print "no record of already notified workflow. starting fresh"
-    #    already_notified = []
 
-    for bypassor,email in [('vlimant','vlimant@cern.ch'),('jen_a','jen_a@fnal.gov')]:
+    for bypassor,email in [('vlimant','vlimant@cern.ch'),('jen_a','jen_a@fnal.gov'),('prozober','paola.katherine.rozo.bernal@cern.ch')]:
         bypass_file = '/afs/cern.ch/user/%s/%s/public/ops/bypass.json'%(bypassor[0],bypassor)
         if not os.path.isfile(bypass_file):
             #sendLog('checkor','no file %s',bypass_file)
@@ -117,8 +114,10 @@ def checkor(url, spec=None, options=None):
             sendEmail("malformated force complet file","%s is not json readable"%rider_file, destination=[email])
 
     if use_mcm:
-        mcm_force = mcm.get('/restapi/requests/forcecomplete')
-        bypasses.extend( mcm_force )
+        forcings = mcm.get('/restapi/requests/forcecomplete')
+        if forcings:
+            sendEmail('force completing mechanism','please check what checkor is doing with %s'%( ','.join(forcings)))
+
 
     pattern_fraction_pass = UC.get('pattern_fraction_pass')
 
@@ -130,6 +129,8 @@ def checkor(url, spec=None, options=None):
     random.shuffle( wfs )
 
     print len(wfs),"to consider, pausing for",sleep_time
+    max_per_round = UC.get('max_per_round').get('checkor',None)
+    if max_per_round and not spec: wfs = wfs[:max_per_round]
 
     for wfo in wfs:
         if spec and not (spec in wfo.name): continue
@@ -186,28 +187,33 @@ def checkor(url, spec=None, options=None):
 
         ## get it from somewhere
         bypass_checks = False
-        pids = wfi.getPrepIDs()
-        bypass_by_mcm = False
+
         for bypass in bypasses:
             if bypass in wfo.name:
                 wfi.sendLog('checkor',"we can bypass checks on %s because of keyword %s "%( wfo.name, bypass))
                 bypass_checks = True
                 break
-            if bypass in pids:
-                wfi.sendLog('checkor',"we can bypass checks on %s because of prepid %s "%( wfo.name, bypass))
+        pids = wfi.getPrepIDs()
+        force_by_mcm = False
+        force_by_user = False
+        for force in forcings:
+            if force in pids:
+                wfi.sendLog('checkor',"we can bypass checks and force complete %s because of prepid %s "%( wfo.name, force))
                 bypass_checks = True
-                bypass_by_mcm = True
+                force_by_mcm = True
                 break
+        for user in overrides:
+            for force in overrides[user]:
+                if force in wfo.name:
+                    wfi.sendLog('checkor',"we can bypass checks and force complete %s because of keyword %s of user %s"%( wfo.name, force, user))
+                    bypass_checks = True
+                    force_by_user = True
+                    break
         
-        #if not CI.go( wfi.request['Campaign'] ) and not bypass_checks:
-        #    print "No go for",wfo.name
-        #    wfi.sendLog('checkor',"No go for %s"%wfi.request['Campaign'])
-        #    continue
-
-
         tiers_with_no_check = copy.deepcopy(UC.get('tiers_with_no_check')) # dqm*
         vetoed_custodial_tier = copy.deepcopy(UC.get('tiers_with_no_custodial')) #dqm*, reco
         campaigns = {}
+        expected_outputs = copy.deepcopy( wfi.request['OutputDatasets'] )
         for out in wfi.request['OutputDatasets']:
             c = get_campaign(out, wfi)
             campaigns[out] = c
@@ -228,22 +234,38 @@ def checkor(url, spec=None, options=None):
         familly = getWorkflowById(url, wfi.request['PrepID'], details=True)
         acdc = []
         acdc_inactive = []
+        forced_already=False
+        acdc_bads = []
         for member in familly:
             if member['RequestType'] != 'Resubmission': continue
             if member['RequestName'] == wfo.name: continue
             if member['RequestDate'] < wfi.request['RequestDate']: continue
+            if 'OriginalRequestName' in member and member['OriginalRequestName'] != wfo.name: continue
+            if member['RequestStatus'] == None: continue
+            if not set(member['OutputDatasets']).issubset( set(expected_outputs)):
+                if not member['RequestStatus'] in ['rejected-archived','rejected','aborted','aborted-archived']:
+                    ##this is not good at all
+                    wfi.sendLog('checkor','inconsistent ACDC %s'%member['RequestName'] )
+                    acdc_bads.append( member['RequestName'] )
+                    is_closing = False
+                    assistance_tags.add('manual')
+                continue
             if member['RequestStatus'] in ['running-open','running-closed','assigned','acquired']:
                 print wfo.name,"still has an ACDC running",member['RequestName']
                 acdc.append( member['RequestName'] )
                 ## cannot be bypassed!
                 is_closing = False
                 assistance_tags.add('recovering')
-            elif member['RequestStatus']==None:
-                print member['RequestName'],"is not real"
-                pass
+                if (force_by_mcm or force_by_user) and not forced_already:
+                    wfi.sendLog('checkor','%s is being forced completed while recovering'%wfo.name)
+                    wfi.notifyRequestor("The workflow %s was force completed"% wfo.name, do_batch=False)
+                    forceComplete(url, wfi)
+                    forced_already=True
             else:
                 acdc_inactive.append( member['RequestName'] )
                 assistance_tags.add('recovered')
+        if acdc_bads:
+            sendEmail('inconsistent ACDC','for %s, ACDC %s is inconsistent, preventing from closing'%( wfo.name, ','.join(acdc_bads) ))
 
         ## completion check
         percent_completions = {}
@@ -258,7 +280,13 @@ def checkor(url, spec=None, options=None):
         if 'RequestNumEvents' in wfi.request and int(wfi.request['RequestNumEvents']):
             event_expected = int(wfi.request['RequestNumEvents'])
         elif 'Task1' in wfi.request and 'RequestNumEvents' in wfi.request['Task1']:
-            event_expected = int(wfi.request['Task1']['RequestNumEvents'])
+            event_expected = wfi.request['Task1']['RequestNumEvents']
+            for i in range(1,20):
+                if 'Task%d'%i in wfi.request:
+                    ## this is wrong ibsolute
+                    if 'FilterEfficiency' in wfi.request['Task%d'%i]:
+                        event_expected *= float(wfi.request['Task%d'%i]['FilterEfficiency'])
+            event_expected = int(event_expected)
 
         fractions_pass = {}
         over_100_pass = False
@@ -271,6 +299,7 @@ def checkor(url, spec=None, options=None):
 
             if lumi_expected:
                 percent_completions[output] = lumi_count / float( lumi_expected )
+
             if event_expected:
                 wfi.sendLog('checkor', "event completion real %s expected %s"%(event_count, event_expected ))
                 percent_completions[output] = max(percent_completions[output], float(event_count) / float( event_expected ) )
@@ -292,9 +321,16 @@ def checkor(url, spec=None, options=None):
                     
 
         if not all([percent_completions[out] >= fractions_pass[out] for out in fractions_pass]):
-            print wfo.name,"is not completed"
-            print json.dumps(percent_completions, indent=2)
-            print json.dumps(fractions_pass, indent=2)
+            possible_recoveries = wfi.getRecoveryDoc()
+            if possible_recoveries == []:
+                wfi.sendLog('checkor','%s has missing statistics \n%s \n%s, but nothing is recoverable. passing through to annoucement'%( 
+                        wfo.name, json.dumps(percent_completions, indent=2), json.dumps(fractions_pass, indent=2) ))
+                sendEmail('nothing is recoverable','%s is not completed, but has nothing to be recovered, passing along ?'%wfo.name)
+                bypass_checks = True
+            else:
+                wfi.sendLog('checkor','%s is not completed  \n%s \n%s'%( 
+                        wfo.name, json.dumps(percent_completions, indent=2), json.dumps(fractions_pass, indent=2) ))
+
             ## hook for creating automatically ACDC ?
             if not bypass_checks:
                 assistance_tags.add('recovery')
@@ -476,11 +512,11 @@ def checkor(url, spec=None, options=None):
                 for out in dbs_presence:
                     _,_,missing_phedex,missing_dbs  = getDatasetFiles(url, out)
                     if missing_phedex:
-                        print "These %d files are missing in phedex"%(len(missing_phedex))
-                        print "\n".join( missing_phedex )
+                        wfi.sendLog('checkor',"These %d files are missing in phedex\n%s"%(len(missing_phedex),
+                                    "\n".join( missing_phedex )))
                     if missing_dbs:
-                        print "These %d files are missing in dbs"%(len(missing_dbs))
-                        print "\n".join( missing_dbs )
+                        wfi.sendLog('checkor',"These %d files are missing in dbs\n%s"%(len(missing_dbs),
+                                    "\n".join( missing_dbs )))
 
             #if not bypass_checks:
             ## I don't think we can by pass this
@@ -550,6 +586,9 @@ def checkor(url, spec=None, options=None):
             rec['dbsInvFiles'] = dbs_invalid[output]
             rec['phedexFiles'] = phedex_presence[output]
             rec['acdc'] = "%d / %d"%(len(acdc),len(acdc+acdc_inactive))
+            now = time.gmtime()
+            rec['timestamp'] = time.mktime(now)
+            rec['updated'] = time.asctime(now)+' (GMT)'
 
         ## and move on
         if is_closing:
@@ -579,8 +618,8 @@ def checkor(url, spec=None, options=None):
                 if res in [None,"None"]:
                     wfo.status = 'close'
                     session.commit()
-                    if use_mcm and bypass_by_mcm:
-                        ## shoot large on all prepids
+                    if use_mcm and force_by_mcm:
+                        ## shoot large on all prepids, on closing the wf
                         for pid in pids:
                             mcm.delete('/restapi/requests/forcecomplete/%s'%pid)
                 else:
@@ -725,7 +764,7 @@ if __name__ == "__main__":
 
     checkor(url, spec, options=options)
     
-    #if options.html:
-    htmlor()
+    if not spec or options.html:
+        htmlor()
 
 
