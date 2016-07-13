@@ -76,7 +76,7 @@ def main():
         if options.clone:
             print("Cloning workflow: "+ workflow)
             if options.memory:
-                mem = options.memory
+                mem = float(options.memory)
             else:
                 mem = workflowInfo.info["Memory"]
             cloned = resubmit.cloneWorkflow(workflow, user, options.group, memory=mem)
