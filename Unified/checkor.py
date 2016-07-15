@@ -62,7 +62,7 @@ def checkor(url, spec=None, options=None):
     invalidations = [] #a list of files
     SI = siteInfo()
     CI = campaignInfo()
-    mcm = McMClient(dev=False)
+    mcm = McMClient(dev=False) if use_mcm else None
 
     def get_campaign(output, wfi):
         campaign = None
