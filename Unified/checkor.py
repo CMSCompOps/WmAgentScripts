@@ -240,7 +240,7 @@ def checkor(url, spec=None, options=None):
             if member['RequestType'] != 'Resubmission': continue
             if member['RequestName'] == wfo.name: continue
             if member['RequestDate'] < wfi.request['RequestDate']: continue
-            if 'OriginalRequestName' in member and member['OriginalRequestName'] != wfo.name: continue
+            if 'OriginalRequestName' in member and (not 'ACDC' in member['OriginalRequestName']) and member['OriginalRequestName'] != wfo.name: continue
             if member['RequestStatus'] == None: continue
             if not set(member['OutputDatasets']).issubset( set(expected_outputs)):
                 if not member['RequestStatus'] in ['rejected-archived','rejected','aborted','aborted-archived']:
@@ -536,7 +536,10 @@ def checkor(url, spec=None, options=None):
         ## put that heavy part at the end
         ## duplication check
         duplications = {}
-        if is_closing or bypass_checks:
+        for output in wfi.request['OutputDatasets']:
+            duplications[output] = "skiped"
+
+        if (is_closing or bypass_checks) and (not options.ignoreduplicates):
             print "starting duplicate checker for",wfo.name
             for output in wfi.request['OutputDatasets']:
                 print "\tchecking",output
