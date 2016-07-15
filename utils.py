@@ -1033,7 +1033,8 @@ class siteInfo:
             sendEmail('bad sites configuration','falling to get any sites')
             sys.exit(-9)
 
-        self.sites_auto_approve = ['T0_CH_CERN_MSS','T1_FR_CCIN2P3_MSS']
+        UC = unifiedConfiguration()
+        self.sites_auto_approve = UC.get('sites_auto_approve')
 
         self.sites_eos = [ s for s in self.sites_ready if s in ['T2_CH_CERN','T2_CH_CERN_AI','T2_CH_CERN_T0','T2_CH_CERN_HLT'] ]
         self.sites_T3s = [ s for s in self.sites_ready if s.startswith('T3_')]
@@ -1041,18 +1042,7 @@ class siteInfo:
         self.sites_T1s = [ s for s in self.sites_ready if (s.startswith('T1_') or s.startswith('T0_'))] ## put the T0 in the T1 : who cares
         self.sites_AAA = list(set(self.sites_ready) - set(['T2_CH_CERN_HLT']))
         ## could this be an SSB metric ?
-        self.sites_with_goodIO = [ "T2_DE_DESY","T2_DE_RWTH",
-                                   "T2_ES_CIEMAT",
-                                   "T2_FR_GRIF_LLR", "T2_FR_GRIF_IRFU", "T2_FR_IPHC","T2_FR_CCIN2P3",
-                                   "T2_IT_Bari", "T2_IT_Legnaro", "T2_IT_Pisa", "T2_IT_Rome",
-                                   "T2_UK_London_Brunel", "T2_UK_London_IC", 
-                                   ##"T2_UK_SGrid_RALPP",
-                                   "T2_US_Caltech","T2_US_MIT","T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida",#"T2_US_Vanderbilt",
-                                   "T2_BE_IIHE",
-                                   "T2_EE_Estonia",
-                                   "T2_PL_Swierk",
-                                   "T2_CH_CERN","T2_CH_CERN_HLT","T2_CH_CERN_AI"
-                                   ]
+        self.sites_with_goodIO = UC.get('sites_with_goodIO')
         #restrict to those that are actually ON
         self.sites_with_goodIO = [s for s in self.sites_with_goodIO if s in self.sites_ready]
         ## those of the above that can be actively targetted for transfers
@@ -1092,7 +1082,7 @@ class siteInfo:
         self.sites_mcore_ready = []
         mcore_mask = dataCache.get('mcore_ready')
         if mcore_mask:
-            self.sites_mcore_ready = mcore_mask['sites_for_mcore']
+            self.sites_mcore_ready = [s for s in mcore_mask['sites_for_mcore'] if s in self.sites_ready]
         else:
             sendEmail("no mcore sites","that is suspicious!")
 
@@ -1101,8 +1091,8 @@ class siteInfo:
             self.cpu_pledges[s]=1
             ## will get is later from SSB
             self.disk[ self.CE_to_SE(s)]=0
-            if s == 'T0_CH_CERN':
-                self.disk[ self.CE_to_SE(s)]=200 ## temporary override
+            #if s == 'T0_CH_CERN':
+            #    self.disk[ self.CE_to_SE(s)]=200 ## temporary override
 
         tapes = getNodes(phedex_url, 'MSS')
         for mss in tapes:
@@ -1124,12 +1114,8 @@ class siteInfo:
             else: 
                 self.storage[mss]  = mss_usage['Tape']['Free'][mss]
 
-            #if mss == 'T1_US_FNAL_MSS':
-            #    self.storage[mss] =min(50, self.storage[mss])
-            #if mss == 'T0_CH_CERN_MSS':
-            #    self.storage[mss] =min(2000, self.storage[mss])
-            #if mss == 'T1_RU_JINR_MSS':
-            #    self.storage[mss] =min(100, self.storage[mss])
+            if mss == 'T0_CH_CERN_MSS':
+                self.storage[mss] = 0
 
 
         ## and detox info
@@ -3056,8 +3042,9 @@ class workflowInfo:
                     mcm.put('/restapi/requests/notify',{ "message" : dedicated_message, "prepids" : [pid] })
                     items_notified.add( pid )
         except Exception as e:
-            print "could not notify back to requestor"
-            print str(e)
+            print "could not notify back to requestor\n%s"%str(e)
+            self.sendLog('notifyRequestor','could not notify back to requestor\n%s'%str(e))
+
 
     def sendLog( self, subject, text, show=True):
         if show:
@@ -3471,7 +3458,7 @@ class workflowInfo:
 
         #ncores = self.request.get('Multicore',1)
         ncores = self.getMulticore()
-        memory_allowed = SI.sitesByMemory( self.request['Memory'] , maxCore=ncores)
+        memory_allowed = SI.sitesByMemory( float(self.request['Memory']) , maxCore=ncores)
         if memory_allowed!=None:
             if verbose:
                 print "sites allowing",self.request['Memory'],"MB and",ncores,"core are",memory_allowed
