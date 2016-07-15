@@ -1,8 +1,9 @@
-from utils import getDatasetBlockAndSite, siteInfo, getWorkflows, workflowInfo, monitor_dir
+from utils import getDatasetBlockAndSite, siteInfo, getWorkflows, workflowInfo, monitor_dir, sendLog, sendEmail, makeReplicaRequest
 from collections import defaultdict
 import time
 import json
 import sys
+import random
 spec=None
 if len(sys.argv) >1:
     spec = sys.argv[1]
@@ -62,8 +63,8 @@ for wf in wfs:
             block_se = block_locations[ds][b] 
             ## what the global queue thinks about the block location
             wqe_se = [si.CE_to_SE(s) for s in wqe['Inputs'][b]]
-            ## where the wf is set to be run at
-            swl = [si.CE_to_SE(s) for s in wqe['SiteWhitelist']]
+            ## where the wf is set to be run at and site ready
+            swl = [si.CE_to_SE(s) for s in wqe['SiteWhitelist'] if s in si.sites_ready]
 
             ## the ones in wqe with no true locations
             #no_true_location = list(set(wqe_se)- set(block_se))
@@ -101,19 +102,36 @@ for site in sorted(jobs_for.keys()):
 #    for s in bad_blocks[b]:
 #        report += "\t %s is not actually holding it\n"%s
 
-report += "\n\nUnprocessable blocks : i.e no overlap of the site whitelist and the location\n\n"
-report += '\n'.join(unprocessable)
+unproc = "\n\nUnprocessable blocks : i.e no overlap of the site whitelist and the location\n\n"
+unproc += '\n'.join(sorted(unprocessable))
+report += unproc
+sendLog('GQ',unproc, level='critical')
+sendEmail('unprocessable blocks',"Sending a notification of this new feature until this gets understood. transfering block automatically back to  processing location. \n"+unproc)
 
+try_me = defaultdict(list)
 for wf in wfs_no_location_in_GQ:
     print wf,"has problematic blocks"
     for (el,b, swl) in wfs_no_location_in_GQ[wf]:
         print "\t%s in element %s"%( b ,el )
         sswl = [si.SE_to_CE(s) for s in swl]
+        
         print "\tshould be replicated to %s"%(','.join(sswl))
         wfi = workflowInfo(url, wf)
         copies_wanted,cpuh = wfi.getNCopies()
+        
+        go_to = si.CE_to_SE(si.pick_CE(sswl))
+        #go_to = random.choice( swl )
+
+        try_me[go_to].append( b )
         ## pick a site that should host this !
-        #go_to = si.pick_CE(sswl)
+        
+
+for site,blocks in try_me.items():
+    if True:
+        sendLog('GQ','replacing %s at %s'%( '\n,'.join(blocks), site),level='warning')
+        result = makeReplicaRequest(url, site, blocks, 'item relocation', priority='normal', approve=True, mail=False)
+    else:
+        sendLog('GQ','tempting to put %s at %s'%( '\n,'.join(blocks), site),level='critical')
 
 open('%s/GQ.json'%monitor_dir,'w').write( json.dumps( jobs_for, indent=2) )
 open('%s/GQ.txt'%monitor_dir,'w').write( report )
