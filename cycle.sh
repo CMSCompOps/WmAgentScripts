@@ -1,10 +1,11 @@
 if [ -r /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cycle.lock ] ; then
-    if [ `ps -e -f | grep Uni` == "0" ] ; then
+    
+    if [ `ps -e -f | grep Uni | grep -c -v grep` == "0" ] ; then
 	echo "There isn't anything running, very suspicious"
-	mail -s "[Ops] Emergency On Cycle Lock" -a /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cycle.lock vlimant@cern.ch,matteoc@fnal.gov
+	cat /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cycle.lock /afs/cern.ch/user/c/cmst2/www/unified/logs/last_running | mail -s "[Ops] Emergency On Cycle Lock. Unified isn't running." vlimant@cern.ch,matteoc@fnal.gov,Dmytro.Kovalskyi@cern.ch 
+	rm -f /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cycle.lock
     fi
     echo "cycle is locked"
-    #mail -s "[Ops] cycle is locked" vlimant@cern.ch,matteoc@fnal.gov
     exit
 fi
 
@@ -23,7 +24,7 @@ source /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/credentials.sh
 
 
 ## verify sanity of completed workflow and pass along
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/checkor.py
+/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/checkor.py --strict
 ## initiate automatic recovery
 /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/recoveror.py
 
