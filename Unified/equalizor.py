@@ -112,7 +112,7 @@ def equalizor(url , specific = None, options=None):
         if not task_name in gmon: return (0,0)
         return (gmon[task_name]['Running'], gmon[task_name]['Idle'])
 
-    def needs_action( wfi, task, min_idled = 100, pressure = 0.2):
+    def needs_action( wfi, task, min_idled = 100):
         task_name = task.pathName.split('/')[-1]
         running, idled = running_idle( wfi, task_name)
         go = True
@@ -120,11 +120,12 @@ def equalizor(url , specific = None, options=None):
             go = False
         if idled < 100: 
             go = False
-        if (not running and idled) or (running and (idled / float(running) > pressure)):
+        if (not running and idled) or (running and (idled / float(running) > needs_action.pressure)):
             go = True
         else:
             go = False
         return go, task_name, running, idled
+    needs_action.pressure = UC.get('overflow_pressure')
 
     def getPerf( task ):
         task = task.split('/')[1]+'/'+task.split('/')[-1]

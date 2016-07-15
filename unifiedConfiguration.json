@@ -3,6 +3,18 @@
    "value" : ["NONO_T0_CH_CERN","NONO_T2_CH_CERN_HLT"],
    "description" : "The sites that we set to overflow and require a specific treatment"
  },
+ "overflow_pressure": {
+   "value" : 1.0,
+   "description" : "The ratio pending/running over which to consider overflowing"
+ },
+ "sites_auto_approve": {
+   "value" : ["T0_CH_CERN_MSS","T1_FR_CCIN2P3_MSS"],
+   "description" : "The sites we can autoapprove tape request to"
+ },
+ "sites_with_goodIO": {
+    "value" : ["T2_DE_DESY","T2_DE_RWTH","T2_ES_CIEMAT","T2_FR_GRIF_LLR", "T2_FR_GRIF_IRFU", "T2_FR_IPHC","T2_FR_CCIN2P3","T2_IT_Bari", "T2_IT_Legnaro", "T2_IT_Pisa", "T2_IT_Rome","T2_UK_London_Brunel", "T2_UK_London_IC","T2_US_Caltech","T2_US_MIT","T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida","T2_BE_IIHE","T2_EE_Estonia","T2_PL_Swierk","T2_CH_CERN","T2_CH_CERN_HLT"],
+    "description" : "The sites identified as having good storage badnwidth"
+ },
  "max_cpuh_block" : {
    "value" : 4000000,
    "description" : "Value of CPUh above which a wf is blocked from assigning"
@@ -14,11 +26,11 @@
  "max_per_round" : {
    "description" : "limitation on the number of wf to process per module",
    "value" : {
-    "transferor" : 200,
-    "assignor" : 200,
-    "closor" : 100,
-    "checkor" : 200,
-    "completor" : 200
+    "transferor" : null,
+    "assignor" : null,
+    "closor" : 1000,
+    "checkor" : null,
+    "completor" : null
     }
  },
  "pattern_fraction_pass": {
