@@ -115,8 +115,8 @@ def checkor(url, spec=None, options=None):
 
     if use_mcm:
         forcings = mcm.get('/restapi/requests/forcecomplete')
-        if forcings:
-            sendEmail('force completing mechanism','please check what checkor is doing with %s'%( ','.join(forcings)))
+        #if forcings:
+        #    sendEmail('force completing mechanism','please check what checkor is doing with %s'%( ','.join(forcings)))
 
 
     pattern_fraction_pass = UC.get('pattern_fraction_pass')
