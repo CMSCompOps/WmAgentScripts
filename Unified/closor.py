@@ -285,21 +285,25 @@ def closor(url, specific=None):
                             destination_spec = "--destination="+",".join( destinations )
                         ## inject to DDM when necessary
                         if to_DDM:
-                            #print "Sending",out," to DDM"
-                            p = os.popen('python assignDatasetToSite.py --nCopies=%d --dataset=%s %s --exec'%(n_copies, out,destination_spec))
-                            print p.read()
+                            print "Sending",out," to DDM"
+                            p = os.popen('python assignDatasetToSite.py --nCopies=%d --dataset=%s %s --debug 0 --exec'%(n_copies, out,destination_spec))
+                            ddm_text = p.read()
+                            print ddm_text
                             status = p.close()
                             if status!=None:
-                                print "Failed DDM, retrying a second time"
-                                p = os.popen('python assignDatasetToSite.py --nCopies=%d --dataset=%s %s --exec'%(n_copies, out,destination_spec))
-                                print p.read()
+                                print "Failed DDM, retrying to send",out,"a second time"
+                                p = os.popen('python assignDatasetToSite.py --nCopies=%d --dataset=%s %s --debug 1 --exec'%(n_copies, out,destination_spec))
+
+                                ddm_text = p.read()
+                                print ddm_text
                                 status = p.close()    
                                 if status!=None:
                                     #sendEmail("failed DDM injection","could not add "+out+" to DDM pool. check closor logs.")
                                     sendLog('closor',"could not add "+out+" to DDM pool. check closor logs.", level='critical')
                             results.append( status )
                             if status == None:
-                                wfi.sendLog('closor','%s is send to AnalysisOps DDM pool in %s copies %s'%( n_copies, out,destination_spec))
+                                wfi.sendLog('closor',ddm_text)
+                                wfi.sendLog('closor','%s is send to AnalysisOps DDM pool in %s copies %s'%( out, n_copies, destination_spec))
                                                             
                     else:
                         print wfo.name,"no stats for announcing",out
