@@ -334,12 +334,12 @@ class newLockInfo:
         os.system('rm -f %s/globallocks.json.lock'%monitor_dir)
 
     def lock(self, dataset):
-        print "[new lock]",dataset,"to be locked"
         # just put the 
         if dataset in self.db:
             print "\t",dataset,"was already locked"
         else:
             self.db.append(dataset)
+        sendLog('lockInfo',"[new lock] "+dataset+" to be locked")
 
     def release(self, dataset):
         print "[new lock] should never release datasets"
