@@ -11,9 +11,16 @@ import re
 
 def rejector(url, specific, options=None):
 
+    #use_mcm = True
+    #up = componentInfo(mcm=use_mcm, soft=['mcm'])
     up = componentInfo()
+    if not up.check(): return
+    #use_mcm = up.status['mcm']
+    #mcm = McMClient(dev=False) if use_mcm else None
 
     if specific and specific.startswith('/'):
+        ## this is for a dataset
+        print setDatasetStatus(specific, 'INVALID')
         return
 
     if options.filelist:
@@ -24,6 +31,11 @@ def rejector(url, specific, options=None):
     elif specific:
         wfs = session.query(Workflow).filter(Workflow.name.contains(specific)).all()
     else:
+        wfs = session.query(Workflow).filter(Workflow.status == 'assistance-clone').all()
+        #wfs.extend( session.query(Workflow).filter(Workflow.status == 'assistance-reject').all())
+        ## be careful then on clone case by case
+        options.clone = True
+        print "not supposed to function yet"
         return 
 
     print len(wfs),"to reject"
@@ -45,7 +57,10 @@ def rejector(url, specific, options=None):
         datasets = set(wfi.request['OutputDatasets'])
         reqMgrClient.invalidateWorkflow(url, wfo.name, current_status=wfi.request['RequestStatus'])
 
-        wfi.sendLog('rejector','invalidating the workflow by unified operator')
+        comment=""
+        if options.comments: comment = ", reason: "+options.comments
+
+        wfi.sendLog('rejector','invalidating the workflow by unified operator%s'%comment)
         ## need to find the whole familly and reject the whole gang
         familly = getWorkflowById( url, wfi.request['PrepID'] , details=True)
         for fwl in familly:
@@ -62,18 +77,12 @@ def rejector(url, specific, options=None):
             else:
                 results.append( setDatasetStatus(dataset, 'INVALID') )
 
-        #if wfi.request['RequestStatus'] in ['rejected','rejected-archived','aborted','aborted-archived']:
-        #    print 'already',wfi.request['RequestStatus']
-        #    if not options.clone:
-        #        wfo.status = 'forget'
-        #        session.commit()
-        #        continue
 
         if all(map(lambda result : result in ['None',None,True],results)):
-            wfo.status = 'forget'
-            session.commit()
             print wfo.name,"and",datasets,"are rejected"
             if options and options.clone:
+                wfo.status = 'trouble'
+                session.commit()                
                 schema = wfi.getSchema()
                 schema['Requestor'] = os.getenv('USER')
                 schema['Group'] = 'DATAOPS'
@@ -149,19 +158,16 @@ def rejector(url, specific, options=None):
                     print json.dumps( schema, indent=2 )
                     return 
                 print newWorkflow
-                #m = re.search("details\/(.*)\'",response)
-                #if not m:
-                #    print "error in cloning",wfo.name
-                #    print response
-                #    print json.dumps( schema, indent=2 )
-                #    return 
-                #newWorkflow = m.group(1)
 
                 data = reqMgrClient.setWorkflowApproved(url, newWorkflow)
                 print data
-                wfo.status = 'trouble'
+                wfi.sendLog('rejector','Cloned into %s by unified operator %s'%( newWorkflow, comment ))
+                wfi.notifyRequestor('Cloned into %s by unified operator %s'%( newWorkflow, comment ),do_batch=False)
+            else:
+                wfo.status = 'forget'
+                wfi.notifyRequestor('Rejected by unified operator %s'%( comment ),do_batch=False)
                 session.commit()
-                wfi.sendLog('rejector','Cloned into %s by unified operator'%( newWorkflow ))
+
         else:
             print "error in rejecting",wfo.name,results
 
@@ -170,6 +176,7 @@ if __name__ == "__main__":
 
     parser = optparse.OptionParser()
     parser.add_option('-c','--clone',help="clone the workflow",default=False,action="store_true")
+    parser.add_option('--comments', help="Give a comment to the clone",default="")
     parser.add_option('-k','--keep',help="keep the outpuy in current status", default=False,action="store_true")
     parser.add_option('--Memory',help="memory parameter of the clone", default=0, type=int)
     parser.add_option('--ProcessingString',help="change the proc string", default=None)
