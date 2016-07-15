@@ -100,11 +100,11 @@ def transferor(url ,specific = None, talk=True, options=None):
         for prim in primary:  
             ds_s = dss.get( prim )
             if prim in stucks: 
-                sendLog('transferor', "%s appears stuck, so not counting it %s [GB]"%( prim, ds_s), wfi=wfh)
+                wfh.sendLog('transferor', "%s appears stuck, so not counting it %s [GB]"%( prim, ds_s))
                 ignored_input_sizes[prim] = ds_s
             else:
                 input_sizes[prim] = ds_s
-                sendLog('transferor', "%s needs %s [GB]"%( wfo.name, ds_s), wfi=wfh)
+                wfh.sendLog('transferor', "%s needs %s [GB]"%( wfo.name, ds_s))
         if in_transfer_priority==None:
             in_transfer_priority = int(wfh.request['RequestPriority'])
         else:
@@ -665,7 +665,7 @@ def transferor(url ,specific = None, talk=True, options=None):
 
 
         if not result:
-            print "ERROR Could not make a replica request for",site,items_to_transfer,"pre-staging"
+            sendLog('transferor','Could not make a replica request for items %s to site %s'%(items_to_transfer,site),level='critical')
             continue
         for phedexid in [o['id'] for o in result['phedex']['request_created']]:
             new_transfer = session.query(Transfer).filter(Transfer.phedexid == int(phedexid)).first()
