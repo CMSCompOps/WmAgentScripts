@@ -459,6 +459,7 @@ def getWorkflowInfo(url, workflow):
         except:
             time.sleep(1)
             retries -=1
+            print "beep"
     return None
 
 def isRequestMgr2Request(url, workflow):
@@ -773,7 +774,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
     wf = workflowInfo(url, workflowname)
 
     # set the maxrss watchdog to what is specified in the request
-    defaults['MaxRSS'] = wf.request['Memory']*1024
+    defaults['MaxRSS'] = int(wf.request['Memory'])*1024
 
     defaults.update( parameters )
 
@@ -902,7 +903,7 @@ assignWorkflow.defaults= {
         "UnmergedLFNBase": "/store/unmerged",
         "MinMergeSize": 2147483648,
         "MaxMergeSize": 4294967296,
-        "MaxMergeEvents" : 50000,
+        "MaxMergeEvents" : 200000, ## shouldn't this be set to infinite ?
         'BlockCloseMaxEvents' : 2000000,
         "MaxRSS" : 3000000,
         "MaxVSize": 4394967000,
