@@ -359,6 +359,7 @@ def assignor(url ,specific = None, talk=True, options=None):
                 wfh.sendLog('assignor', "Falling back to event splitting.")
                 #sendEmail("Fallback to EventBased","the workflow %s is too heavy to be processed as it is. Fallback to EventBased splitting"%wfo.name)
                 sendLog('assignor','the workflow %s is too heavy to be processed as it is. Fallback to EventBased splitting'%wfo.name, level='critical')
+                if not options.go:  continue
             elif 'EventsPerJob' in split_check.values():
                 wfh.sendLog('assignor', "Modifying the number of job per event")
                 #sendEmail("Modifying the job per events","the workflow %s is too heavy in number of jobs explosion"%wfo.name)
