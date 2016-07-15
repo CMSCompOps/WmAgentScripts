@@ -71,7 +71,7 @@ def main():
     usage="usage: python setDatasetStatus.py --dataset=<DATASET_NAME> --status=<STATUS> {--files}"
     parser = OptionParser(usage=usage)
     #parser.add_option('--correct_env',action="store_true",dest='correct_env')
-    parser.add_option('-d', '--datasets', dest='dsets', default=None, help='file with the list of dataset names')
+    parser.add_option('-d', '--datasets', dest='dsets', default=None, help='file with the list of dataset names, or comma separated list of dataset')
     parser.add_option('-s', '--status', dest='status', default=None, help='This will be the new status of the dataset/files')
     parser.add_option('-f', '--files', action="store_true", default=False, dest='files', help='Validate or invalidate all files in dataset')
 
@@ -97,7 +97,10 @@ def main():
     #setStatusDBS2('https://cmsdbsprod.cern.ch:8443/cms_dbs_prod_global_writer/servlet/DBSServlet', opts.dataset, opts.status, opts.files)
     #setStatusDBS3('https://dbs3-testbed.cern.ch/dbs/prod/global/DBSWriter', opts.dataset, opts.status, opts.files)
 
-    f = open(opts.dsets, 'r')    
+    try:
+        f = open(opts.dsets, 'r')    
+    except:
+        f = opts.dsets.split(',')
 
     for line in f:
         dset=line.strip('\n')
