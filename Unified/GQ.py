@@ -34,16 +34,16 @@ for wf in wfs:
     print wf['RequestName'],len(wqs),"elements"
     for wq in wqs:
         wqe = wq[wq['type']]
-        if not wqe['Status'] in ['Available', 'Acquired']: 
+        if not wqe['Status'] in ['Available', 'Acquired']:#, 'Running']: 
             #print  wqe['Status']
             continue
-        try:
-            pid = filter(lambda w : w.count('-')==2, wqe['RequestName'].split('_'))[0]
-            camp = pid.split('-')[1]
-        except: 
-            camp = None
+        camp =wfi.getCampaigns()[0]
         if not camp: continue
         #print json.dumps( wqe, indent=2)
+        if wqe['NoInputUpdate']: 
+            ## input is remote: one day we'd like to move it to disk automatically, but not now
+            print "input on aaa"
+            continue
         for b in wqe['Inputs']:
             if not '#' in b: continue
             #b is the block
@@ -57,6 +57,7 @@ for wf in wfs:
             if not b in block_locations[ds]:
                 print b,"is not to be found in phedex"
                 continue
+
             #block_ce = [si.SE_to_CE(s) for s in block_locations[ds][b]]
             #wqe_ce = [s for s in wqe['Inputs'][b]]
             ## true location of the data
@@ -105,8 +106,9 @@ for site in sorted(jobs_for.keys()):
 unproc = "\n\nUnprocessable blocks : i.e no overlap of the site whitelist and the location\n\n"
 unproc += '\n'.join(sorted(unprocessable))
 report += unproc
-sendLog('GQ',unproc, level='critical')
-sendEmail('unprocessable blocks',"Sending a notification of this new feature until this gets understood. transfering block automatically back to  processing location. \n"+unproc)
+if unprocessable:
+    sendLog('GQ',unproc, level='critical')
+    sendEmail('unprocessable blocks',"Sending a notification of this new feature until this gets understood. transfering block automatically back to  processing location. \n"+unproc)
 
 try_me = defaultdict(list)
 for wf in wfs_no_location_in_GQ:

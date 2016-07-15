@@ -354,7 +354,7 @@ Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransfertea
             text_by_c+="%d (%d), "%(p,count_by_campaign[c][p])
         text_by_c+="</li>"
 
-    html_doc.write("""Worflow ready for assigning (%d) <a href=logs/stagor/last.log target=_blank>log</a> <a href=logs/assignor/last.log target=_blank>postlog</a>
+    html_doc.write("""Worflow ready for assigning (%d) <a href=logs/stagor/last.log target=_blank>log</a> <a href=logs/assignor/last.log target=_blank>postlog</a> <a href=GQ.txt target=_blank> GQ</a>
 <a href="javascript:showhide('staged')">[Click to show/hide]</a>
 <br>
 <div id="staged" style="display:none;">
