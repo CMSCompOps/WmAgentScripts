@@ -183,7 +183,15 @@
     "custodial": "T1_FR_CCIN2P3_MSS",
     "lumisize" : 400
   },
-
+  "pPb816Summer16DR": {
+   "go": true,
+   "parameters": {
+      "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue", "T2_US_Caltech", "T2_US_Florida", "T2_US_Nebraska", "T2_US_UCSD", "T2_US_Wisconsin" ],
+      "MergedLFNBase": "/store/himc"
+    },
+    "custodial": "T1_FR_CCIN2P3_MSS",
+    "lumisize" : 400
+  },
   "RunIIWinter15wmLHE": {
     "go": true, 
     "parameters": {
@@ -270,7 +278,10 @@
              "all" : { "N" : 4 },
 	     "RAWAODSIM" : { "N" : 2 }
     },
-    "secondaries" : ["/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1-v2/GEN-SIM","/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-Realistic25ns13TeV2016Collision_MCRUN2_71_V1-v1/GEN-SIM"]
+    "secondaries" : ["/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1-v2/GEN-SIM",
+                     "/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-Realistic25ns13TeV2016Collision_MCRUN2_71_V1-v1/GEN-SIM",
+		     "/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-FTFP_BERT_MCRUN2_71_V1-v1/GEN-SIM"
+		     ]
   },
   "RunIISpring16reHLT80": {
     "go": true,	  
