@@ -25,6 +25,8 @@ jsonBlob = {
              "RequestString": "RequestString-OVERRIDE-ME",
              "RequestPriority": 9e5,
              "TimePerEvent": 10,
+             "PrepID": None,
+             "Campaign": None,
              "OriginalRequestName": "",
              "InitialTaskPath" : "",
              "ACDCServer" : "",
@@ -563,6 +565,8 @@ def defineRequests(workload, requestInfo,
         creationDict["Group"] = group
         creationDict["TimePerEvent"] = requestInfo['TimePerEvent']
         creationDict["SizePerEvent"] = requestInfo['SizePerEvent']
+        creationDict["PrepID"] = requestInfo.get('PrepID')
+        creationDict["Campaign"] = requestInfo.get('Campaign')
 
         # Assign parameters
         assignDict = jsonBlob["assignRequest"]
