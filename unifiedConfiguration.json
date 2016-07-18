@@ -4,7 +4,7 @@
    "description" : "The sites that we set to overflow and require a specific treatment"
  },
  "overflow_pressure": {
-   "value" : 1.0,
+   "value" : 0.5,
    "description" : "The ratio pending/running over which to consider overflowing"
  },
  "sites_auto_approve": {
