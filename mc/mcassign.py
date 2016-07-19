@@ -204,7 +204,6 @@ def assignMCRequest(url,workflow,team,sitelist,era,processingstring,processingve
 	      "MaxRSS": maxRSS,
 	      "maxRSS": maxRSS,
               "MaxVSize": 4394967000,
-              "maxVSize": 4394967000,
               "AcquisitionEra": era,
 	      "Dashboard": "production",
 	      "dashboard": "production",

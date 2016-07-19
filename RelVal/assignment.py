@@ -69,8 +69,7 @@ def make_assignment_params(schema,site, processing_version):
         'BlockCloseMaxWaitTime' : 28800,
         "SoftTimeout" : 129600,
         "MaxRSS" : maxrss,
-        "MaxVSize": 4394967000,
-        "maxVSize": 4394967000
+        "MaxVSize": 4394967000
         }
 
     params['execute'] = True
