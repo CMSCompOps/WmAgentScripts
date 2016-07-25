@@ -143,6 +143,17 @@ def modifySchema(helper, workflow, user, group, cache, events, firstLumi, backfi
         if "PrepID" in result:
             # delete entry
             del result["PrepID"]
+        if result["RequestType"] == 'TaskChain':
+            for key, value in helper.data.request.schema.dictionary_whole_tree_().items():
+                if type(value) is dict and key.startswith("Task"):
+                    try:
+                        if 'ProcessingString' in value:
+                            result[key]['ProcessingString'] = "BACKFILL"
+                        if 'AcquisitionEra' in value:
+                            result[key]['AcquisitionEra']= value['AcquisitionEra']+ "Backfill"
+                    except KeyError:
+                        print("This taskchain request has no AcquisitionEra or ProcessingString defined into the Tasks, aborting...")
+                        sys.exit(1)
         # reset the request date
         now = datetime.datetime.utcnow()
         result["RequestDate"] = [
