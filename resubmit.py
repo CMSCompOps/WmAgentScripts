@@ -28,8 +28,6 @@ from optparse import OptionParser
 from pprint import pprint
 try:
     import reqMgrClient
-    from WMCore.WMSpec.WMWorkload import WMWorkloadHelper
-    from WMCore.Wrappers import JsonWrapper
 except:
     print "WMCore libraries not loaded, run the following command:"
     print "source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh"
@@ -47,41 +45,35 @@ def modifySchema(helper, workflow, user, group, cache, events, firstLumi, backfi
     if backfill is True, modifies RequestString, ProcessingString, AcquisitionEra
     and Campaign to say Backfill, and restarts requestDate.
     """
+    # list of keys to be removed from the new request schema
+    paramBlacklist = ['BlockCloseMaxEvents', 'BlockCloseMaxFiles', 'BlockCloseMaxSize', 'BlockCloseMaxWaitTime',
+                      'CouchWorkloadDBName', 'CustodialGroup', 'CustodialSubType', 'Dashboard',
+                      'GracePeriod', 'HardTimeout', 'InitialPriority', 'inputMode', 'MaxMergeEvents', 'MaxMergeSize',
+                      'MaxRSS', 'MaxVSize', 'MinMergeSize', 'NonCustodialGroup', 'NonCustodialSubType',
+                      'OutputDatasets', 'ReqMgr2Only', 'RequestDate' 'RequestorDN', 'RequestName', 'RequestStatus',
+                      'RequestTransition', 'RequestWorkflow', 'SiteWhitelist', 'SoftTimeout', 'SoftwareVersions',
+                      'SubscriptionPriority', 'Team', 'timeStamp']
+
     result = {}
-    for (key, value) in helper.data.request.schema.dictionary_whole_tree_().items():
-        #previous versions of tags
-        if key == 'ProcConfigCacheID':
-            result['ConfigCacheID'] = value
-        elif key == 'RequestSizeEvents':
-            result['RequestSizeEvents'] = value
-        #Set memory
-        elif key == 'Memory':
-            if memory != None:
-                result['Memory'] = memory
-            else:
-                result['Memory'] = value
-        #requestor info
+    for key, value in helper.data.request.schema.dictionary_whole_tree_().items():
+        if key in paramBlacklist or value in ([], {}, None, ''):
+            continue
+        else:
+            result[key] = value
+
+        # Now apply the specific tweaks
+        if key == 'Memory' and memory:
+            result['Memory'] = memory
         elif key == 'Requestor':
             result['Requestor'] = user
         elif key == 'Group':
             result['Group'] = group
-        #if empty
-        elif key in ["RunWhitelist", "RunBlacklist", "BlockWhitelist", "BlockBlacklist"] and not value:
-            result[key] = []
-        #replace old DBS2 URL
-        elif value == "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet":
-            result[key] = 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
-        #copy the right LFN base
         elif key == 'MergedLFNBase':
             result['MergedLFNBase'] = helper.getMergedLFNBase()
-        # skip empty entries
-        elif value != None:
-            result[key] = value
-        elif not value:
-            continue
-    # Clean requestor  DN?
-    if 'RequestorDN' in result:
-        del result['RequestorDN']
+        # and required for cross-cloning between prod and testbed
+        elif key == 'CouchURL':
+            result['ConfigCacheUrl'] = result.pop('CouchURL')
+
     #if we are extending the workflow
     if events:
         # extend workflow so it will safely start outside of the boundary
@@ -143,6 +135,18 @@ def modifySchema(helper, workflow, user, group, cache, events, firstLumi, backfi
         if "PrepID" in result:
             # delete entry
             del result["PrepID"]
+
+        if result["RequestType"] == 'TaskChain':
+            for key, value in helper.data.request.schema.dictionary_whole_tree_().items():
+                if type(value) is dict and key.startswith("Task"):
+                    try:
+                        if 'ProcessingString' in value:
+                            result[key]['ProcessingString'] = "BACKFILL"
+                        if 'AcquisitionEra' in value:
+                            result[key]['AcquisitionEra']= value['AcquisitionEra']+ "Backfill"
+                    except KeyError:
+                        print("This taskchain request has no AcquisitionEra or ProcessingString defined into the Tasks, aborting...")
+                        sys.exit(1)
         # reset the request date
         now = datetime.datetime.utcnow()
         result["RequestDate"] = [
@@ -262,7 +266,8 @@ def extendWorkflow(workflow, user, group, verbose=False, events=None, firstlumi=
         print data
     else:
         print response
-    pass
+
+
 """
 __Main__
 """
