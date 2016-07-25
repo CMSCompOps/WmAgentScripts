@@ -25,6 +25,7 @@ def assignor(url ,specific = None, talk=True, options=None):
     CI = campaignInfo()
     SI = siteInfo()
     NLI = newLockInfo()
+    if not NLI.free() and not options.go: return
 
     n_assigned = 0
     n_stalled = 0

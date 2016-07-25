@@ -328,6 +328,14 @@ class newLockInfo:
         self.db = json.loads(open('%s/globallocks.json'%monitor_dir).read())
         os.system('echo `date` > %s/globallocks.json.lock'%monitor_dir)
 
+    def free(self):
+        r = os.popen('curl -s http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/inActionLock.txt').read()
+        if not '404 Not Found' in r:
+            sendLog('LockInfo','DDM lock is present\n%s'%(r),level='warning')
+            return False
+        else:
+            return True
+
     def __del__(self):
         open('%s/globallocks.json.new'%monitor_dir,'w').write(json.dumps( sorted(list(set(self.db))) , indent=2 ))
         os.system('mv %s/globallocks.json.new %s/globallocks.json'%(monitor_dir,monitor_dir))

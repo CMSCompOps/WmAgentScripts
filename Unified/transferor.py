@@ -34,6 +34,7 @@ def transferor(url ,specific = None, talk=True, options=None):
     SI = siteInfo()
     CI = campaignInfo()
     NLI = newLockInfo()
+    if not NLI.free(): return
     mcm = McMClient(dev=False)
     dss = DSS()
 
