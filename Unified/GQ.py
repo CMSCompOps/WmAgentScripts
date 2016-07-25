@@ -23,6 +23,11 @@ si = siteInfo()
 #bad_blocks = defaultdict( set )
 unprocessable = set()
 
+try:
+    replaced = json.loads(open('replaced_blocks.json').read())
+except:
+    replaced = []
+
 for wf in wfs:
     if spec and not spec in wf['RequestName']: continue
 
@@ -32,6 +37,7 @@ for wf in wfs:
     
     #wqes = [w[w['type']] for w in wqs]
     print wf['RequestName'],len(wqs),"elements"
+
     for wq in wqs:
         wqe = wq[wq['type']]
         if not wqe['Status'] in ['Available', 'Acquired']:#, 'Running']: 
@@ -42,20 +48,25 @@ for wf in wfs:
         #print json.dumps( wqe, indent=2)
         if wqe['NoInputUpdate']: 
             ## input is remote: one day we'd like to move it to disk automatically, but not now
-            print "input on aaa"
+            print "input on aaa for",wfi.request['RequestName']
             continue
+        ## where the wf is set to be run at and site ready
+        swl = [si.CE_to_SE(s) for s in wqe['SiteWhitelist'] if s in si.sites_ready]
+
+        not_processable = set()
         for b in wqe['Inputs']:
             if not '#' in b: continue
             #b is the block
             ds = b.split('#')[0]
             if not ds in block_locations:
-                s_block_locations[ds] = getDatasetBlockAndSite(url, ds, complete='y')
+                s_block_locations[ds] = getDatasetBlockAndSite(url, ds, complete='y', vetoes=[])
                 for s in s_block_locations[ds]:
                     for bl in s_block_locations[ds][s]:
                         block_locations[ds][bl].append( s )
 
             if not b in block_locations[ds]:
-                print b,"is not to be found in phedex"
+                print b,"is not to be found in phedex, needed be",wfi.request['RequestName']
+                ## should send a critical log
                 continue
 
             #block_ce = [si.SE_to_CE(s) for s in block_locations[ds][b]]
@@ -64,8 +75,7 @@ for wf in wfs:
             block_se = block_locations[ds][b] 
             ## what the global queue thinks about the block location
             wqe_se = [si.CE_to_SE(s) for s in wqe['Inputs'][b]]
-            ## where the wf is set to be run at and site ready
-            swl = [si.CE_to_SE(s) for s in wqe['SiteWhitelist'] if s in si.sites_ready]
+
 
             ## the ones in wqe with no true locations
             #no_true_location = list(set(wqe_se)- set(block_se))
@@ -85,6 +95,9 @@ for wf in wfs:
             if not site_with_data_and_listed:
                 wfs_no_location_in_GQ[wqe['RequestName']].append( (wq['_id'], b , swl) )
                 unprocessable.add( b )
+                not_processable.add( b )
+        if not_processable:
+            wfi.sendLog('GQ','The following blocks need to be put back on disk \n%s'%(','.join( not_processable )))
 
 report = "updated %s \n"%time.asctime(time.gmtime())
 print "="*20
@@ -129,12 +142,17 @@ for wf in wfs_no_location_in_GQ:
         
 
 for site,blocks in try_me.items():
+    blocks = list(set(blocks)-set(replaced))
     if True:
-        sendLog('GQ','replacing %s at %s'%( '\n,'.join(blocks), site),level='warning')
-        result = makeReplicaRequest(url, site, blocks, 'item relocation', priority='normal', approve=True, mail=False)
+        if blocks:
+            sendLog('GQ','replacing %s at %s'%( '\n,'.join(blocks), site),level='warning')
+            result = makeReplicaRequest(url, site, blocks, 'item relocation', priority='normal', approve=True, mail=False)
+            replaced = list(set(blocks+replaced))
     else:
         sendLog('GQ','tempting to put %s at %s'%( '\n,'.join(blocks), site),level='critical')
 
 open('%s/GQ.json'%monitor_dir,'w').write( json.dumps( jobs_for, indent=2) )
 open('%s/GQ.txt'%monitor_dir,'w').write( report )
+
+open('replaced_blocks.json','w').write( json.dumps( replaced, indent=2) )
 
