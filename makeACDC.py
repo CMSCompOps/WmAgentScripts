@@ -84,8 +84,13 @@ def main():
         parser.error("Provide the Workflow Name and the Task Name")
         sys.exit(1)
 
+    if options.memory:
+        memory = float(options.memory)
+    else:
+        memory = None
+
     for wfname in wfs:
-        r = makeACDC(url, wfname, task, options.memory)
+        r = makeACDC(url, wfname, task, memory)
         print "Created:"    
         print r
 

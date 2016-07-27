@@ -35,12 +35,12 @@ def getAcdcTasks(url, workflow):
                 tasks.add(task)
     return tasks
 
-def makeAllACDCs(url, workflow):    
+def makeAllACDCs(url, workflow,memory):
     tasks = getAcdcTasks(url, workflow)
     acdcs = []
     for task in tasks:
         print task
-        acdc = makeACDC(url, workflow, task)
+        acdc = makeACDC(url, workflow, task, memory)
         acdcs.append(acdc)
     return acdcs
 
@@ -68,12 +68,17 @@ def main():
     else:
         parser.error("Provide the Workflow Name")
         sys.exit(1)
+
+    if options.memory:
+        memory = float(options.memory)
+    else:
+        memory = None
     
     for wf in wfs:
-        acdcs = makeAllACDCs(url, wf)
+        acdcs = makeAllACDCs(url, wf, memory)
         print "created acdcs"
         print '\n'.join(acdcs)
-        
+
 if __name__ == '__main__':
     main()
 
