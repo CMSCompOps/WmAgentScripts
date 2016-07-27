@@ -136,14 +136,47 @@ def equalizor(url , specific = None, options=None):
         except Exception as e:
             print str(e)
             return (None,None)
-        buckets = perf_data['aggregations']["2"]['buckets']
+        buckets = filter(lambda i:i['key']!=0,perf_data['aggregations']["2"]['buckets'])
+        buckets.sort( key = lambda i:i['key'])
+        s=0
+        for bucket in buckets:
+            s+= bucket['doc_count']
+            bucket['cum'] = s
+        
         s_m = sum( bucket['key']*bucket['doc_count'] for bucket in buckets)
         w_m = sum( bucket['doc_count'] for bucket in buckets)
         m_m = max( bucket['key'] for bucket in buckets) if buckets else None
         
+        #90% percentile calculation
+        percentile = int(0.95 * w_m)
+        p_m = 0
+        s=0
+        for bucket in buckets:
+            p_m = bucket['key']
+            if bucket['cum'] > percentile:
+                break
+
+        p_m *= 1.1
+        print "percentile mem",p_m
+        max_count_m = None
+        max_count = 0
+        for bucket in buckets:
+            if bucket['doc_count'] > max_count:
+                max_count_m = bucket['key']
+                max_count = bucket['doc_count']
+
+        if max_count_m:
+            max_count_m *= 1.1
+        print "max count mem",max_count_m
+
         b_m = None
         if w_m > 100:
-            b_m = m_m
+            if p_m:
+                b_m = int(p_m)
+            else:
+                b_m = int(m_m) ## this is very bad if there are just a couple of outliers
+                b_m = int((s_m / float(w_m)) * 1.2)
+
 
         try:
             perf_data = json.loads(os.popen('curl -s --retry 5 http://cms-gwmsmon.cern.ch/prodview/json/history/runtime720/%s'%task).read())
