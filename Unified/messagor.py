@@ -9,7 +9,7 @@ this_week = int(time.strftime("%W",time.gmtime()))
 now = time.mktime(time.gmtime())
 start_time_two_weeks_ago = time.mktime(time.gmtime(now - (15*24*60*60))) # 14+1 days ago
 last_week = int(time.strftime("%W",time.gmtime( now - (7*24*60*60))))
-subject="Ouput Produced on Week %d"%(last_week)
+subject="Output Produced on Week %d"%(last_week)
 
 ds=defaultdict(list)
 n_produced=0
