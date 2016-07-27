@@ -1122,7 +1122,7 @@ class siteInfo:
 
 
         ## and detox info
-        self.fetch_detox_info(talk=False, buffer_level=UG.get('DDM_buffer_level')
+        self.fetch_detox_info(talk=False, buffer_level=UG.get('DDM_buffer_level'))
         
         ## transform no disks in veto transfer
         for (dse,free) in self.disk.items():
