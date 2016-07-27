@@ -248,6 +248,11 @@ def getFileCountDataset(dataset, skipInvalid=False, onlyInvalid=False):
         main_lfn = '/'.join(reply[0]['logical_file_name'].split('/')[:3])
         #print main_lfn
 
+    if main_lfn:
+        bads = filter(lambda f : not f['logical_file_name'].startswith(main_lfn), reply) 
+        if bads:
+            print "bad files"
+            print bads
     #print reply
     if skipInvalid:
         reply = filter(lambda f : f['is_file_valid'] ==1, reply)
@@ -260,9 +265,10 @@ def getFileCountDataset(dataset, skipInvalid=False, onlyInvalid=False):
         else:
             reply = filter(lambda f : f['is_file_valid'] ==0, reply)
     else:
-        if main_lfn:
-            reply = filter(lambda f : f['logical_file_name'].startswith(main_lfn), reply)
+        #if main_lfn:
+        #    reply = filter(lambda f : f['logical_file_name'].startswith(main_lfn), reply)
             #print "restricted"
+        pass
 
     return len(reply)
 
