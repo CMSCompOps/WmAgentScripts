@@ -24,6 +24,7 @@ for wf in wfs:
     reqMgrClient.announceWorkflow(url, wf)
 
 
+#os.system('Unified/assignor.py')
 #os.system('Unified/equalizor.py -a pdmvserv_task_HIG-RunIIFall15DR76-01039__v1_T_160120_002705_9423')
 #os.system('Unified/equalizor.py -a pdmvserv_SMP-Summer12DR53X-00027_00440_v0__160224_044437_5031')
 
@@ -31,7 +32,19 @@ up = componentInfo(mcm=False, soft=['mcm'])
 if not up.check():  
     sys.exit(1)     
 
+
+## 
+#for wfo in session.query(Workflow).filter(Workflow.status == 'assistance-manual').all():
+#    if not any([c in wfo.name for c in ['RunIISpring16DR80']]): continue
+#    wfi = workflowInfo(url, wfo.name)
+#    if wfi.getRequestNumEvents() < 500000:
+#        ## small workflow that needs recovery : kill-clone
+#        os.system('Unified/rejector.py --clone %s'%wfo.name)
+
 ### catch unrunnable recoveries
+
+"""
+### now in GQ.py module
 report = ""
 not_runable_acdc=set()
 wfs = getWorkflows(url, 'acquired', user=None, rtype='Resubmission',details=True)
@@ -52,7 +65,9 @@ report += '\nfruther check on https://cmst2.web.cern.ch/cmst2/unified/logs/addHo
 
 if not_runable_acdc:
     sendEmail('not runnable ACDCs','These %s ACDC cannot run \n%s\n%s'%( len(not_runable_acdc), '\n'.join(not_runable_acdc), report), destination = ['jen_a@fnal.gov','katherine.rozo@cern.ch'])
+"""
 
+"""
 ### add the value of the delay to announcing datasets
 data = json.loads(open('%s/announce_delays.json'%monitor_dir).read())
 for wfo in session.query(Workflow).filter(Workflow.status.startswith('done')).all()[:500]:
@@ -73,6 +88,7 @@ for wfo in session.query(Workflow).filter(Workflow.status.startswith('done')).al
         }
     print wfo.name,"delay",delay
 open('%s/announce_delays.json'%monitor_dir,'w').write( json.dumps(data, indent=2) )
+"""
 
 
 #os.system('Unified/assignor.py --go RunIIFall15MiniAODv2 --limit 50')
