@@ -1006,19 +1006,14 @@ class DSS:
 class siteInfo:
     def __init__(self):
         
+        UC = unifiedConfiguration()
         try:
             ## get all sites from SSB readiness
             self.sites_ready = []
             self.sites_not_ready = []
             self.all_sites = []
             
-            self.sites_banned = [
-                'T2_CH_CERN_AI',
-                'T2_US_Vanderbilt',
-                'T0_CH_CERN'
-                #'T2_RU_INR',
-                #'T2_UA_KIPT'
-                ]
+            self.sites_banned = UC.get('sites_banned')
 
             #data = dataCache.get('ssb_158') ## 158 is the site readyness metric
             data = dataCache.get('ssb_237') ## 237 is the site readyness metric
@@ -1041,7 +1036,7 @@ class siteInfo:
             sendEmail('bad sites configuration','falling to get any sites')
             sys.exit(-9)
 
-        UC = unifiedConfiguration()
+
         self.sites_auto_approve = UC.get('sites_auto_approve')
 
         self.sites_eos = [ s for s in self.sites_ready if s in ['T2_CH_CERN','T2_CH_CERN_AI','T2_CH_CERN_T0','T2_CH_CERN_HLT'] ]
@@ -1127,7 +1122,7 @@ class siteInfo:
 
 
         ## and detox info
-        self.fetch_detox_info(talk=False)
+        self.fetch_detox_info(talk=False, buffer_level=UG.get('DDM_buffer_level')
         
         ## transform no disks in veto transfer
         for (dse,free) in self.disk.items():
@@ -1231,7 +1226,7 @@ class siteInfo:
             return list(set(allowed_sites) & set(allowed))
         return allowed_sites
 
-    def fetch_detox_info(self, talk=True):
+    def fetch_detox_info(self, talk=True, buffer_level=0.8):
         ## put a retry in command line
         info = dataCache.get('detox_sites')
         #info = os.popen('curl --retry 5 -s http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/SitesInfo.txt').read().split('\n')
@@ -1254,7 +1249,7 @@ class siteInfo:
             ## bypass 
 
             ## consider quota to be 80% of what's available
-            available = int(float(quota)*0.90) - int(locked)
+            available = int(float(quota)*buffer_level) - int(locked)
 
             self.disk[site] = available if available >0 else 0
             ddm_free = int(float(quota)) - int(locked) - self.disk[site]
