@@ -777,7 +777,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
             if c==0:
                 text+="<tr>"
             if not disk:
-                ht_disk = '<font color=red>Disk available: %s</font>'%disk
+                ht_disk = '<a href=remaining_%s.html><font color=red>Disk available: %s</font></a>'%(disk,disk)
             else:
                 ht_disk = 'Disk available: %s'%disk
 
@@ -884,7 +884,7 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
     for c,site in enumerate(sorted(chart_data.keys())):
         rem=""
         if site in out_of_space:
-            rem = "<br><a href=remaining_%s.json>remaining datasets</a>"% site
+            rem = "<br><a href=remaining_%s.html>remaining datasets</a>"% site
         if c%5==0:
             divs_table += "<tr>"
         if i_oos%5==0:
