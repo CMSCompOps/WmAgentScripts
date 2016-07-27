@@ -432,6 +432,7 @@ def assignor(url ,specific = None, talk=True, options=None):
 
 
             else:
+                wfh.sendLog('assignor',"Failed to assign. Please check the logs")
                 print "ERROR could not assign",wfo.name
         else:
             pass
