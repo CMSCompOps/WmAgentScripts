@@ -83,6 +83,7 @@ secondary_timeout = defaultdict(int)
 ## check on the one left out, which would seem to get unlocked
 for dataset in already_locked-newly_locking:
     try:
+        if not dataset:continue
         unlock = False
         bad_ds = False
 
@@ -91,6 +92,7 @@ for dataset in already_locked-newly_locking:
             usors = getWorkflowByMCPileup(url, dataset, details=True)
             ## find the latest request date using that dataset in secondary
             for usor in usors:
+                if len(usor['RequestDate'])!=6:continue
                 d =time.mktime(time.strptime("-".join(map(lambda n : "%02d"%n, usor['RequestDate'])), "%Y-%m-%d-%H-%M-%S"))
                 secondary_timeout[dataset] = max(secondary_timeout[dataset],d)
 
@@ -193,8 +195,10 @@ for dataset in already_locked-newly_locking:
                     ## no one is using it
                     unlock=True
                 else:
-                    print "cannot unlock",dataset,"because no request seems to be using it"
-                    unlock=False                    
+                    #print "cannot unlock",dataset,"because no request seems to be using it"
+                    #unlock=False                    
+                    print "Unlocking",dataset,"because no request is using it in input"
+                    unlock=True
             else:
                 ## relocking
                 outs = session.query(Output).filter(Output.datasetname==dataset).all()
