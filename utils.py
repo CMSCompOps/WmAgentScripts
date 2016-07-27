@@ -138,9 +138,9 @@ def sendEmail( subject, text, sender=None, destination=None ):
     #print destination
     
     if not destination:
-        destination = ['vlimant@cern.ch','matteoc@fnal.gov']
+        destination = ['vlimant@cern.ch','matteoc@fnal.gov','areinsvo@nd.edu']
     else:
-        destination = list(set(destination+['vlimant@cern.ch','matteoc@fnal.gov']))
+        destination = list(set(destination+['vlimant@cern.ch','matteoc@fnal.gov','areinsvo@nd.edu']))
     if not sender:
         map_who = { 'vlimant' : 'vlimant@cern.ch',
                     'mcremone' : 'matteoc@fnal.gov' }
@@ -2247,6 +2247,19 @@ def getDatasetBlocks( dataset, runs=None, lumis=None):
         pass
 
     return list( all_blocks )
+
+def getUnsubscribedBlocks(url, site):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    urll = '/phedex/datasvc/json/prod/blockreplicas?node=%s&subscribed=n'%site
+    r1=conn.request("GET",urll)
+    r2=conn.getresponse()
+    result = json.loads(r2.read())
+    items=result['phedex']['block']
+    collected = set()
+    for item in items:
+        collected.add( item['name'] )
+    return list(collected)
+
 
 def getDatasetBlockAndSite( url, dataset, group=None,vetoes=None,complete=None):
     ret=10
