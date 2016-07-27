@@ -282,7 +282,7 @@ def stagor(url,specific =None, options=None):
                     prim_where.update( presence.keys() )
                     available = available_cache[need][se_allowed_key]
                     this_check = (available >= copies_needed)
-                    wfi.sendLog('stagor', "%s is available %s times %s"%( need, available, this_check))
+                    wfi.sendLog('stagor', "%s is available %s times (%s), at %s"%( need, available, this_check, se_allowed_key))
                     all_check &= this_check
                     if not all_check: break
 
