@@ -246,6 +246,7 @@ def checkor(url, spec=None, options=None):
                 if not member['RequestStatus'] in ['rejected-archived','rejected','aborted','aborted-archived']:
                     ##this is not good at all
                     wfi.sendLog('checkor','inconsistent ACDC %s'%member['RequestName'] )
+                    #sendLog('checkor','inconsistent ACDC %s'%member['RequestName'], level='critical')
                     acdc_bads.append( member['RequestName'] )
                     is_closing = False
                     assistance_tags.add('manual')
@@ -265,7 +266,8 @@ def checkor(url, spec=None, options=None):
                 acdc_inactive.append( member['RequestName'] )
                 assistance_tags.add('recovered')
         if acdc_bads:
-            sendEmail('inconsistent ACDC','for %s, ACDC %s is inconsistent, preventing from closing'%( wfo.name, ','.join(acdc_bads) ))
+            #sendEmail('inconsistent ACDC','for %s, ACDC %s is inconsistent, preventing from closing'%( wfo.name, ','.join(acdc_bads) ))
+            sendLog('checkor','For %s, ACDC %s is inconsistent, preventing from closing or will create a mess.'%( wfo.name, ','.join(acdc_bads) ), level='critical')
 
         ## completion check
         percent_completions = {}
@@ -649,7 +651,7 @@ def checkor(url, spec=None, options=None):
                 ## if active ACDC, being under threshold, filemismatch do not matter
                 assistance_tags = assistance_tags - set(['recovery','filemismatch'])
             if 'recovery' in assistance_tags and 'recovered' in assistance_tags:
-                ## should not set -recovery to anything that add ACDC already
+                ## should not set -recovery to anything that had ACDC already
                 assistance_tags = assistance_tags - set(['recovery','recovered']) 
                 ## straight to manual
                 assistance_tags.add('manual')
