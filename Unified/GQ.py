@@ -4,6 +4,7 @@ import time
 import json
 import sys
 import random
+from assignSession import *
 spec=None
 if len(sys.argv) >1:
     spec = sys.argv[1]
@@ -28,6 +29,7 @@ try:
 except:
     replaced = []
 
+not_runable_acdc=set()
 for wf in wfs:
     if spec and not spec in wf['RequestName']: continue
 
@@ -35,6 +37,12 @@ for wf in wfs:
     sitewhitelist = wfi.request['SiteWhitelist']
     wqs = wfi.getWorkQueue()
     
+    ## skip wf that unified does not know about, leaves acdc
+    wfo = session.query(Workflow).filter(Workflow.name == wf['RequestName']).first()
+    if not (wfo or wf['RequestType']=='Resubmission'): 
+        print "not knonw or not acdc"
+        continue
+
     #wqes = [w[w['type']] for w in wqs]
     print wf['RequestName'],len(wqs),"elements"
 
@@ -53,9 +61,21 @@ for wf in wfs:
         ## where the wf is set to be run at and site ready
         swl = [si.CE_to_SE(s) for s in wqe['SiteWhitelist'] if s in si.sites_ready]
 
+        if not swl:
+            print "There is no site at which the workflow can run"
+            continue
+
         not_processable = set()
         for b in wqe['Inputs']:
-            if not '#' in b: continue
+            if not '#' in b: 
+                ## this would be an ACDC document input
+                acdc_location = [si.CE_to_SE(s) for s in wqe['Inputs'][b]]
+                can_run_at = list(set(acdc_location)&set(swl))
+                if not can_run_at:
+                    print b,"is at",acdc_location,"and wf set to run from",swl
+                    not_runable_acdc.add( wf['RequestName'] )
+                    not_processable.add( b )
+                continue
             #b is the block
             ds = b.split('#')[0]
             if not ds in block_locations:
@@ -96,6 +116,7 @@ for wf in wfs:
                 wfs_no_location_in_GQ[wqe['RequestName']].append( (wq['_id'], b , swl) )
                 unprocessable.add( b )
                 not_processable.add( b )
+                print "Block",b,"is at",",".join(sorted(block_se)),"while asked to run at",",".join(sorted(swl))
         if not_processable:
             wfi.sendLog('GQ','The following blocks need to be put back on disk \n%s'%(','.join( not_processable )))
 
@@ -109,6 +130,11 @@ for site in sorted(jobs_for.keys()):
             report +="\t %s \n"%wf
     #print report
 
+if not_runable_acdc:
+    sendLog('GQ','These %s ACDC cannot run \n%s'%( len(not_runable_acdc),
+                                                   '\n'.join(not_runable_acdc)
+                                                   ),level='critical')
+    
 
 #report += '\n\n in wqe but not holding a complete block\n\n'
 #for b in bad_blocks:
@@ -121,7 +147,7 @@ unproc += '\n'.join(sorted(unprocessable))
 report += unproc
 if unprocessable:
     sendLog('GQ',unproc, level='critical')
-    sendEmail('unprocessable blocks',"Sending a notification of this new feature until this gets understood. transfering block automatically back to  processing location. \n"+unproc)
+    #sendEmail('unprocessable blocks',"Sending a notification of this new feature until this gets understood. transfering block automatically back to  processing location. \n"+unproc)
 
 try_me = defaultdict(list)
 for wf in wfs_no_location_in_GQ:
@@ -130,6 +156,10 @@ for wf in wfs_no_location_in_GQ:
         print "\t%s in element %s"%( b ,el )
         sswl = [si.SE_to_CE(s) for s in swl]
         
+        if not sswl: 
+            print "\tno site to replicate to"
+            continue
+
         print "\tshould be replicated to %s"%(','.join(sswl))
         wfi = workflowInfo(url, wf)
         copies_wanted,cpuh = wfi.getNCopies()
@@ -143,7 +173,7 @@ for wf in wfs_no_location_in_GQ:
 
 for site,blocks in try_me.items():
     blocks = list(set(blocks)-set(replaced))
-    if True:
+    if False:
         if blocks:
             sendLog('GQ','replacing %s at %s'%( '\n,'.join(blocks), site),level='warning')
             result = makeReplicaRequest(url, site, blocks, 'item relocation', priority='normal', approve=True, mail=False)
