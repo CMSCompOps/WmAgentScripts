@@ -221,7 +221,8 @@ def transferor(url ,specific = None, talk=True, options=None):
             wfh.sendLog('transferor', '%s in status %s, setting %s'%( wfo.name,wfh.request['RequestStatus'],wfo.status))
             continue
 
-        (_,primary,_,_) = wfh.getIO()
+        (lheinput,primary,parent,secondary,sites_allowed) = wfh.getSiteWhiteList()
+        #(_,primary,_,_) = wfh.getIO()
         this_load=sum([input_sizes[prim] for prim in primary])
         no_budget = False
         if ( this_load and (sum(transfer_sizes.values())+this_load > transfer_limit or went_over_budget ) ):
@@ -252,7 +253,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                 allowed_secondary.update( CI.campaigns[campaign]['secondaries'] )
         if secondary:
             if (secondary and allowed_secondary) and (set(secondary)&allowed_secondary!=set(secondary)):
-                wfh.sendLog('assignor','%s is not an allowed secondary'%(', '.join(set(secondary)-allowed_secondary)))
+                wfh.sendLog('transferor','%s is not an allowed secondary'%(', '.join(set(secondary)-allowed_secondary)))
                 no_go = True
 
         if no_go:
@@ -335,7 +336,6 @@ def transferor(url ,specific = None, talk=True, options=None):
             continue
 
         ## the site white list considers site, campaign, memory and core information
-        (lheinput,primary,parent,secondary,sites_allowed) = wfh.getSiteWhiteList()
         if options and options.tosites:
             sites_allowed = options.tosites.split(',')
 
