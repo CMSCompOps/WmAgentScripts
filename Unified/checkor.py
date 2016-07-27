@@ -325,8 +325,8 @@ def checkor(url, spec=None, options=None):
             if possible_recoveries == []:
                 wfi.sendLog('checkor','%s has missing statistics \n%s \n%s, but nothing is recoverable. passing through to annoucement'%( 
                         wfo.name, json.dumps(percent_completions, indent=2), json.dumps(fractions_pass, indent=2) ))
-                sendEmail('nothing is recoverable','%s is not completed, but has nothing to be recovered, passing along ?'%wfo.name)
-                bypass_checks = True
+                sendEmail('nothing is recoverable','%s is not completed, but has nothing to be recovered, passing along ?'%wfo.name)#,destination=['alan.malta@cern.ch'])
+                bypass_checks = False
             else:
                 wfi.sendLog('checkor','%s is not completed  \n%s \n%s'%( 
                         wfo.name, json.dumps(percent_completions, indent=2), json.dumps(fractions_pass, indent=2) ))
@@ -502,10 +502,12 @@ def checkor(url, spec=None, options=None):
 
         fraction_invalid = 0.01
         if not all([dbs_presence[out] == (dbs_invalid[out]+phedex_presence[out]) for out in wfi.request['OutputDatasets']]) and not options.ignorefiles:
-            print wfo.name,"has a dbs,phedex mismatch"
-            print json.dumps(dbs_presence, indent=2)
-            print json.dumps(dbs_invalid, indent=2)
-            print json.dumps(phedex_presence, indent=2)
+            mismatch_notice = wfo.name+" has a dbs,phedex mismatch\n"
+            mismatch_notice += "in dbs\n"+json.dumps(dbs_presence, indent=2) +"\n"
+            mismatch_notice += "invalide in dbs\n"+json.dumps(dbs_invalid, indent=2) +"\n"
+            mismatch_notice += "in phedex\n"+json.dumps(phedex_presence, indent=2) +"\n"
+
+            wfi.sendLog('checkor',mismatch_notice)
             if not 'recovering' in assistance_tags:
                 assistance_tags.add('filemismatch')
                 #print this for show and tell if no recovery on-going
@@ -554,8 +556,10 @@ def checkor(url, spec=None, options=None):
                         is_closing=False
 
             if any(duplications.values()) and not options.ignoreduplicates:
-                print wfo.name,"has duplicates"
-                print json.dumps(duplications,indent=2)
+                duplicate_notice = ""
+                duplicate_notice += "%s has duplicates\n"%wfo.name
+                duplicate_notice += json.dumps(duplications,indent=2)
+                wfi.sendLog('checkor',duplicate_notice)
                 ## hook for making file invalidation ?
                 ## it shouldn't be allowed to bypass it
                 assistance_tags.add('duplicates')
@@ -596,7 +600,7 @@ def checkor(url, spec=None, options=None):
         ## and move on
         if is_closing:
             ## toggle status to closed-out in request manager
-            print "setting",wfo.name,"closed-out"
+            wfi.sendLog('checkor',"setting %s closed-out"% wfo.name)
             if not options.test:
                 if wfo.wm_status in ['closed-out','announced','normal-archived']:
                     print wfo.name,"is already",wfo.wm_status,"not trying to closed-out and assuming it does"
@@ -707,7 +711,7 @@ def checkor(url, spec=None, options=None):
             if not 'manual' in wfo.status or new_status!='assistance-recovery':
                 wfo.status = new_status
                 if not options.test:
-                    print "setting",wfo.name,"to",wfo.status
+                    wfi.sendLog('checkor','setting %s to %s'%(wfo.name, wfo.status))
                     session.commit()
             else:
                 print "current status is",wfo.status,"not changing to anything"
