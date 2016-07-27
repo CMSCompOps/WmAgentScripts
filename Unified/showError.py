@@ -57,8 +57,11 @@ def parse_one(wfn):
                         for step in sample['errors']:
                             for report in  sample['errors'][step]:
                                 if report['type'] == 'CMSExeption': continue
-                                if int(report['exitCode']) == int(errorcode_s):
-                                    one_explanation[errorcode_s].add( report['details'] )
+                                #if int(report['exitCode']) == int(errorcode_s):
+                                one_explanation[errorcode_s].add("%s (Exit code: %s) \n%s"%(report['type'], report['exitCode'], report['details']))
+                                #one_explanation[errorcode_s].add( report['details'] )
+                                #else:
+                                #one_explanation[
         print task
         #print json.dumps( total_count, indent=2)
         #print json.dumps( explanations , indent=2)
