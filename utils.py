@@ -1246,7 +1246,11 @@ class siteInfo:
                 continue
             if line.startswith('#'): continue
             if not read: continue
-            _,quota,taken,locked,site = line.split()
+            try:
+                _,quota,taken,locked,site = line.split()
+            except:
+                sendLog('fetch_detox_info','Unable to read Detox DataOps report',level='critical')
+                break
             ## bypass 
 
             ## consider quota to be 80% of what's available
