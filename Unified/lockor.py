@@ -102,6 +102,11 @@ for dataset in already_locked-newly_locking:
             if (now-secondary_timeout[dataset])>delay:
                 print "unlocking secondary input after",delay_days,"days"
                 unlock = True
+            else:
+                print "keep a lock on secondary within",delay_days,"days"
+                unlock = False
+                newly_locking.add(dataset)
+                continue
 
 
         tier = dataset.split('/')[-1]
@@ -176,7 +181,8 @@ for dataset in already_locked-newly_locking:
                     else:
                         ## there was no information about missing blocks
                         ## last time you checked this was a lost dataset
-                        sendEmail('dataset waiting for custodial with no block','%s looks very odd'% dataset)
+                        #sendEmail('dataset waiting for custodial with no block','%s looks very odd'% dataset)
+                        sendLog('dataset waiting for custodial with no block, %s looks very odd'% dataset, level='critical')
                         #unlock = True
                         pass
                 else:
