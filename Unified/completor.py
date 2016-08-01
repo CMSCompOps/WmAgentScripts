@@ -124,9 +124,26 @@ def completor(url, specific):
         then = running_log[-1]['UpdateTime'] / (60.*60.*24.)
         delay = now - then ## in days
 
+        ## this is supposed to be the very initial request date, inherited from clones
+        try:
+            injected_on =time.mktime(time.strptime("-".join(map(lambda n : "%02d"%n, wfi.request['RequestDate'])), "%Y-%m-%d-%H-%M-%S")) / (60.*60.*24.)
+            injection_delay = now - injected_on
+        except:
+            injection_delay = None
+
+        
         (w,d) = divmod(delay, 7 )
         print "\t"*int(w)+"Running since",delay,"[days] priority=",priority
 
+        if injection_delay!=None and injection_delay > 50 and False:
+            tail_cutting_priority = 200000
+            ## bump up to 200k
+            print "Injected since",injection_delay,"[days] priority=",priority
+            if wfi.request['RequestPriority'] != tail_cutting_priority:
+                wfi.sendLog('completor','bumping priority to %d for being injected since'% tail_cutting_priority)
+                reqMgrClient.changePriorityWorkflow(url, wfo.name, tail_cutting_priority)
+
+        
         monitor_delay = 7
         allowed_delay = 14
         if c in timeout:
@@ -136,7 +153,8 @@ def completor(url, specific):
         ### just skip if too early
         if delay <= monitor_delay: continue
 
-        long_lasting[wfo.name] = { "delay" : delay }
+        long_lasting[wfo.name] = { "delay" : delay,
+                                   "injection_delay" : injection_delay }
 
         percent_completions = {}
         for output in wfi.request['OutputDatasets']:
@@ -203,6 +221,13 @@ def completor(url, specific):
         ## do it once only for testing
         #break
     
+
+        if delay >= 40:
+            print wfo.name,"has been running for",dealy,"days"
+            ## bumping up the priority?
+            
+
+
     if set_force_complete:
         sendLog('completor','The followings were set force-complete \n%s'%('\n'.join(set_force_complete)))
         #sendEmail('set force-complete', 'The followings were set force-complete \n%s'%('\n'.join(set_force_complete)))
