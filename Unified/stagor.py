@@ -328,7 +328,9 @@ def stagor(url,specific =None, options=None):
     for dsname in available_cache.keys():
         ## squash the se_allowed_key key
         available_cache[dsname] = min( available_cache[dsname].values() )
-            
+
+    really_stuck_dataset = set()
+
     for dsname,available in available_cache.items():
         using_its = getWorkflowByInput(url, dsname)
         #print using_its
@@ -373,7 +375,7 @@ def stagor(url,specific =None, options=None):
                 print "We have lost",len(lost_block_names),"blocks",lost_block_names,"for %f%%"%(100.*fraction_loss)
                 if fraction_loss > 0.05: ## 95% completion mark
                     #sendEmail('we have lost too many blocks','%s is missing %d blocks, for %d events, %f %% loss'%(dsname, len(lost_block_names), n_missing, fraction_loss))
-                    sendLog('stagor', '%s is missing %d blocks, for %d events, %3.2f %% loss'%(dsname, len(lost_block_names), n_missing, 100*fraction_loss), level='warning')
+                    sendLog('stagor', '%s is missing %d blocks, for %d events, %3.2f %% loss'%(dsname, len(lost_block_names), n_missing, 100*fraction_loss), level='critical')
                     ## the workflow should be rejected !
                     for wf in using_wfos: 
                         if wf.status == 'staging':
@@ -388,7 +390,8 @@ def stagor(url,specific =None, options=None):
                         #sendEmail('we have lost a few blocks', '%s is missing %d blocks, for %d events, %f %% loss\n\n%s'%(dsname, len(lost_block_names), n_missing, fraction_loss, '\n'.join( lost_block_names ) ))
                         sendLog('stagor', '%s is missing %d blocks, for %d events, %f %% loss\n\n%s'%(dsname, len(lost_block_names), n_missing, fraction_loss, '\n'.join( lost_block_names ) ), level='critical')
                         known_lost_blocks[dsname] = [i['name'] for i in lost_blocks]
-                                  
+                really_stuck_dataset.add( dsname )
+                  
             if lost_files:
                 fraction_loss,_,n_missing = getDatasetFileFraction(dsname, lost_file_names)
                 print "We have lost",len(lost_file_names),"files",lost_file_names,"for %f%%"%fraction_loss
@@ -445,7 +448,6 @@ def stagor(url,specific =None, options=None):
     bad_destinations = defaultdict(set)
     bad_sources = defaultdict(set)
     report = ""
-    really_stuck_dataset = set()
     transfer_timeout = UC.get("transfer_timeout")
     transfer_lowrate = UC.get("transfer_lowrate")
     for phid,datasets in datasets_by_phid.items():
