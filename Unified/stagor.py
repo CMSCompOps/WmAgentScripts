@@ -252,12 +252,22 @@ def stagor(url,specific =None, options=None):
                     #print need,"is going to an end point in downtime"
                     wfi.sendLog('stagor',"%s has only incomplete endpoint in downtime"%need)
                     re_transfer=True
-
+                
                 if not se_allowed_key in available_cache[need]:
                     available_cache[need][se_allowed_key]  = getDatasetBlocksFraction( url , need, sites=se_allowed )
                     if available_cache[need][se_allowed_key] >= copies_needed:
                         wfi.sendLog('stagor',"assuming it is OK to move on like this already for %s"%need)
                         jump_ahead = True
+                    else:
+                        wfi.sendLog('stagor',"Available %s times"% available_cache[need][se_allowed_key])
+                        missing_and_downtime = list(set(endpoint_in_downtime[need]) & set(endpoint_incompleted[need]))
+                        if missing_and_downtime:
+                            wfi.sendLog('stagor',"%s is incomplete at %s which is in downtime, trying to move along"%( ','.join(missing_and_downtime)))
+                            jump_ahead = True
+                        else:
+                            wfi.sendLog('stagor',"continue waiting for transfers")
+
+
 
             ## compute a time since staging to filter jump starting ?                    
             # check whether the inputs is already in the stuck list ...
