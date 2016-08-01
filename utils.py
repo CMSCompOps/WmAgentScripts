@@ -628,7 +628,8 @@ class componentInfo:
         return True
 
     def tell(self, c):
-        sendEmail("%s Component Down"%c,"The component is down, just annoying you with this","vlimant@cern.ch",['vlimant@cern.ch','matteoc@fnal.gov'])
+        sendLog('componentInfo',"The %s component is down"% c, level='critical')
+        #sendEmail("%s Component Down"%c,"The component is down, just annoying you with this","vlimant@cern.ch",['vlimant@cern.ch','matteoc@fnal.gov'])
 
 class campaignInfo:
     def __init__(self):
