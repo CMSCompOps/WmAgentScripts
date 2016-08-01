@@ -327,8 +327,9 @@ def checkor(url, spec=None, options=None):
             if possible_recoveries == []:
                 wfi.sendLog('checkor','%s has missing statistics \n%s \n%s, but nothing is recoverable. passing through to annoucement'%( 
                         wfo.name, json.dumps(percent_completions, indent=2), json.dumps(fractions_pass, indent=2) ))
-                sendEmail('nothing is recoverable','%s is not completed, but has nothing to be recovered, passing along ?'%wfo.name)#,destination=['alan.malta@cern.ch'])
-                bypass_checks = False
+                sendLog('checkor','%s is not completed, but has nothing to be recovered, passing along ?'%wfo.name, level='critical')
+                #sendEmail('nothing is recoverable','%s is not completed, but has nothing to be recovered, passing along ?'%wfo.name)#,destination=['alan.malta@cern.ch'])
+                ## do not bypass for now, until Alan understands why we are loosing ACDC docs bypass_checks = True
             else:
                 wfi.sendLog('checkor','%s is not completed  \n%s \n%s'%( 
                         wfo.name, json.dumps(percent_completions, indent=2), json.dumps(fractions_pass, indent=2) ))
