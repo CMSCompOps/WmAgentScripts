@@ -1,10 +1,13 @@
-from utils import getDatasetBlockAndSite, siteInfo, getWorkflows, workflowInfo, monitor_dir, sendLog, sendEmail, makeReplicaRequest
+from utils import getDatasetBlockAndSite, siteInfo, getWorkflows, workflowInfo, monitor_dir, sendLog, sendEmail, makeReplicaRequest, unifiedConfiguration
 from collections import defaultdict
 import time
 import json
 import sys
 import random
 from assignSession import *
+
+
+UC = unifiedConfiguration()
 spec=None
 if len(sys.argv) >1:
     spec = sys.argv[1]
@@ -40,7 +43,7 @@ for wf in wfs:
     ## skip wf that unified does not know about, leaves acdc
     wfo = session.query(Workflow).filter(Workflow.name == wf['RequestName']).first()
     if not (wfo or wf['RequestType']=='Resubmission'): 
-        print "not knonw or not acdc"
+        print "not knonw or not acdc : %s"%(wf['RequestName'])
         continue
 
     #wqes = [w[w['type']] for w in wqs]
@@ -62,7 +65,7 @@ for wf in wfs:
         swl = [si.CE_to_SE(s) for s in wqe['SiteWhitelist'] if s in si.sites_ready]
 
         if not swl:
-            print "There is no site at which the workflow can run"
+            print "There is no site at which the workflow can run. Was provided with %s"%( ','.join(wqe['SiteWhitelist']))
             continue
 
         not_processable = set()
@@ -173,11 +176,11 @@ for wf in wfs_no_location_in_GQ:
 
 for site,blocks in try_me.items():
     blocks = list(set(blocks)-set(replaced))
-    if False:
+    if UC.get('block_repositionning'):
         if blocks:
-            sendLog('GQ','replacing %s at %s'%( '\n,'.join(blocks), site),level='warning')
             result = makeReplicaRequest(url, site, blocks, 'item relocation', priority='normal', approve=True, mail=False)
             replaced = list(set(blocks+replaced))
+            sendLog('GQ','replacing %s at %s \n%s'%( '\n,'.join(blocks), site, result),level='warning')            
     else:
         sendLog('GQ','tempting to put %s at %s'%( '\n,'.join(blocks), site),level='critical')
 

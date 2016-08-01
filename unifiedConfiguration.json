@@ -27,8 +27,12 @@
    "value" : 4000000,
    "description" : "Value of CPUh above which a wf is blocked from assigning"
  },
+ "block_repositionning": {
+   "value" : true,
+   "description" : "Whether or not to retransfer block from WQE without location"
+ },
  "max_force_complete" : {
-   "value" : 5,
+   "value" : 10,
    "description" : "Number of workflow that can be forced complete at a time"
  },
  "max_per_round" : {
