@@ -202,7 +202,7 @@ def assignor(url ,specific = None, talk=True, options=None):
                 opportunistic_sites = []
             wfh.sendLog('assignor',"We could be running in addition at %s"% sorted(opportunistic_sites))
             if any([osite in SI.sites_not_ready for osite in opportunistic_sites]):
-                wfh.sendLog('assignor',"One of the usable site is in downtime %s"%([osite in SI.sites_not_ready for osite in opportunistic_sites]))
+                wfh.sendLog('assignor',"One of the usable site is in downtime %s"%([osite for osite in opportunistic_sites if osite in SI.sites_not_ready]))
                 down_time = True
                 ## should this be send back to considered ?
                 
