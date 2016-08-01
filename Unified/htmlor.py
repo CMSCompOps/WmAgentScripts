@@ -106,7 +106,7 @@ def htmlor( caller = ""):
             else:
                 text+=', <a href="https://cms-pdmv.cern.ch/mcm/requests?prepid=%s" target="_blank">mcm</a>'%(pid)
                 text+=', <a href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s" target="_blank">ac</a>'%(wl_pid)
-                
+        text += ', <a href="https://%s/couchdb/workqueue/_design/WorkQueue/_rewrite/elementsInfo?request=%s" target="_blank">gq</a>'%(reqmgr_url,wfn)
         if status:
             if wf.status.startswith('assistance'):
                 text+=', <a href="assistance.html#%s" target="_blank">assist</a>'%wfn
