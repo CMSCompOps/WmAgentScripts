@@ -1812,9 +1812,7 @@ def try_checkTransferLag( url, xfer_id , datasets=None):
 
                 for subitem in item_result['phedex']['block']:
                     dones = [replica['node'] for replica in subitem['replica'] if replica['complete'] == 'y']
-                    if not dones: 
-                        print "\t\t",subitem['name'],"lost"
-                        continue
+
                     block_size = max([replica['bytes'] for replica in subitem['replica']])
                     ssitems = [replica['bytes'] for replica in subitem['replica'] if replica['node']==destination]
                     destination_size = min(ssitems) if ssitems else 0
@@ -1823,6 +1821,10 @@ def try_checkTransferLag( url, xfer_id , datasets=None):
                     ### rate
                     rate = destination_size_GB / delay_s
                     if destination in dones: continue
+                    if not dones: 
+                        print "\t\t",subitem['name'],"lost"
+                        stuck[ds][subitem['name']][destination] = (block_size,destination_size,delay,rate,dones)
+                        continue
                     if delay>0: # more than 7 days is way to much !!
                         print subitem['name'],' of size',block_size_GB,'[GB] missing',block_size_GB-destination_size_GB,'[GB]'
                         print '\tis complete at',dones
@@ -2258,6 +2260,10 @@ def getUnsubscribedBlocks(url, site):
     collected = set()
     for item in items:
         collected.add( item['name'] )
+
+    s = sum([i['bytes'] for i in items])
+    print s
+         
     return list(collected)
 
 
