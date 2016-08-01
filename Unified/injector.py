@@ -181,6 +181,6 @@ if __name__ == "__main__":
     if len(args)!=0:
         spec = args[0]
     injector(url,options,spec)
-
-    htmlor()
+    if not spec:
+        htmlor()
     
