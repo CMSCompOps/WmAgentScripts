@@ -26,51 +26,19 @@ from utils import workflowInfo, siteInfo
 
 dbs3_url = r'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
 
-T1_SITES = [
-            "T1_DE_KIT",
-            "T1_ES_PIC",
-            "T1_FR_CCIN2P3",
-            "T1_IT_CNAF",
-            "T1_RU_JINR",
-            "T1_UK_RAL",
-            "T1_US_FNAL"
-            ]
 
-T2_SITES = [
-            "T2_CH_CERN",
-            "T2_DE_DESY",
-            "T2_DE_RWTH",
-            "T2_ES_CIEMAT",
-            "T2_FR_CCIN2P3",
-            "T2_FR_IPHC",
-            "T2_IT_Bari",
-            "T2_IT_Legnaro",
-            "T2_IT_Pisa",
-            "T2_IT_Rome",
-            "T2_UK_London_Brunel",
-            "T2_UK_London_IC",
-            "T2_US_Caltech",
-            "T2_US_Florida",
-            "T2_US_MIT",
-            "T2_US_Nebraska",
-            "T2_US_Purdue",
-            "T2_US_UCSD",
-            "T2_US_Wisconsin"
-            ]
-
-ALL_SITES = T1_SITES + T2_SITES
-
-
-def getRandomDiskSite(site=T1_SITES):
+def getRandomDiskSite(site=None):
     """
         Gets a random disk site and append _Disk
         """
+    if site == None:
+        site = getRandomDiskSite.T1s
     s = choice(site)
     if s.startswith("T1"):
         s += "_Disk"
     return s
 
-def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, procstring, trust_site=False, replica=False, verbose=False, taskchain=False):
+def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, procstring, trust_site=False, replica=False, verbose=False, taskchain=False, trust_secondary_site=False):
     """
     Sends assignment request
     """
@@ -105,8 +73,10 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
     # add xrootd (trustSiteList)
     if trust_site:
         params['TrustSitelists'] = True
+
+    if trust_secondary_site:
         params['TrustPUSitelists'] = True
-    
+
     params["AcquisitionEra"] = era
     params["ProcessingString"] = procstring
     
@@ -152,8 +122,10 @@ def main():
     parser.add_option('-r', '--replica', action='store_true', dest='replica', default=False, help='Adds a _Disk Non-Custodial Replica parameter')
     parser.add_option('-p', '--procversion', help='Processing Version, if empty it will leave the processing version that comes by default in the request', dest='procversion')
     parser.add_option('-a', '--activity', help='Dashboard Activity (reprocessing, production or test), if empty will set reprocessing as default', dest='activity')
-    parser.add_option('-x', '--xrootd', help='Assign with trustSiteLocation=True (allows xrootd capabilities)',
-                                        action='store_true', default=False, dest='xrootd')
+    parser.add_option('-x', '--xrootd', help='Assign with TrustSitelists=True (allows xrootd capabilities)',
+                      action='store_true', default=False, dest='xrootd')
+    parser.add_option('--secondary_xrootd', help='Assign with TrustPUSitelists=True (allows xrootd capabilities)',
+                      action='store_true', default=False, dest='secondary_xrootd')
     parser.add_option('-l', '--lfn', help='Merged LFN base', dest='lfn')
     parser.add_option('-v', '--verbose', help='Verbose', action='store_true', default=False, dest='verbose')
     parser.add_option('--testbed', help='Assign in testbed', action='store_true', default=False, dest='testbed')
@@ -185,29 +157,31 @@ def main():
     procversion = 1
     procstring = {}
     replica = False
-    sites = ALL_SITES
+    sites = []
     specialStr = ''
     taskchain = False
     team = 'production'
-    trust_site = False
 
     SI = siteInfo()
+    getRandomDiskSite.T1 = SI.sites_T1s
     # Handling the parameters given in the command line
     # parse site list
     if options.sites:
-        if options.sites == "t1":
+        if options.sites.lower() == "t1":
             sites = SI.sites_T1s
-        elif options.sites == "t2":
+        elif options.sites.lower() == "t2":
             sites = SI.sites_T2s
+        elif options.sites.lower() == "mcore":
+            sites = SI.sites_mcore_ready
+        elif hasattr(SI,options.sites):
+            sites = getattr(SI,options.sites)
         else: 
             sites = [site for site in options.sites.split(',')]
     else: 
         sites = SI.sites_T1s + SI.sites_T2s
+
     if options.team:
         team = options.team
-
-    if options.xrootd:
-        trust_site = True
 
     if options.replica:
         replica = True
@@ -323,7 +297,13 @@ def main():
         
         # Really assigning the workflow now
         print wf.name, '\tEra:', era, '\tProcStr:', procstring, '\tProcVer:', procversion, '\tTeam:', team, '\tSite:', sites
-        assignRequest(url, wf.name, team, sites, era, procversion, activity, lfn, procstring, trust_site, options.replica, options.verbose, taskchain)
+        assignRequest(url, wf.name, team, sites, era, procversion, activity, lfn, procstring, 
+                      trust_site = options.xrootd, 
+                      replica = options.replica, 
+                      verbose = options.verbose, 
+                      taskchain = taskchain, 
+                      trust_secondary_site = options.secondary_xrootd
+                      )
     
     sys.exit(0)
 
