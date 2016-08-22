@@ -67,17 +67,25 @@ def assignor(url ,specific = None, talk=True, options=None):
             n_stalled+=1 
             no_go = True
 
-        allowed_secondary = set()
+        allowed_secondary = {}
+        assign_parameters = {}
         for campaign in wfh.getCampaigns():
             if campaign in CI.campaigns and 'secondaries' in CI.campaigns[campaign]:
+                #allowed_secondary.update( CI.campaigns[campaign]['secondaries'].keys() )
                 allowed_secondary.update( CI.campaigns[campaign]['secondaries'] )
-        if (secondary and allowed_secondary) and (set(secondary)&allowed_secondary!=set(secondary)):
-            wfh.sendLog('assignor','%s is not an allowed secondary'%(', '.join(set(secondary)-allowed_secondary)))
-            #sendEmail('secondary not allowed','%s is not an allowed secondary'%( ', '.join(set(secondary)-allowed_secondary)))
-            sendLog('assignor','%s is not an allowed secondary'%(', '.join(set(secondary)-allowed_secondary)), level='critical')
-            if not options.go:
-                n_stalled+=1
-                no_go = True
+        if (secondary and allowed_secondary):
+            if (set(secondary)&set(allowed_secondary.keys())!=set(secondary)):
+                wfh.sendLog('assignor','%s is not an allowed secondary'%(', '.join(set(secondary)-set(allowed_secondary.keys()))))
+                #sendEmail('secondary not allowed','%s is not an allowed secondary'%( ', '.join(set(secondary)-allowed_secondary)))
+                sendLog('assignor','%s is not an allowed secondary'%(', '.join(set(secondary)-set(allowed_secondary.keys()))), level='critical')
+                if not options.go:
+                    n_stalled+=1
+                    no_go = True
+            ## then get whether there is something more to be done by secondary
+            for sec in secondary:
+                if sec in allowed_secondary:# and 'parameters' in allowed_secondary[sec]:
+                    #overide_parameters.update( allowed_secondary[sec]['parameters'] )
+                    assign_parameters.update( allowed_secondary[sec] )
                 
         if no_go:
             continue
@@ -124,11 +132,16 @@ def assignor(url ,specific = None, talk=True, options=None):
         secondary_locations=None
 
         primary_aaa = options.primary_aaa
-        if 'Campaign' in wfh.request and wfh.request['Campaign'] in CI.campaigns and 'primary_AAA' in CI.campaigns[wfh.request['Campaign']]:
-            primary_aaa = primary_aaa or CI.campaigns[wfh.request['Campaign']]['primary_AAA']
         secondary_aaa = options.secondary_aaa
-        if 'Campaign' in wfh.request and wfh.request['Campaign'] in CI.campaigns and 'secondary_AAA' in CI.campaigns[wfh.request['Campaign']]:
-            secondary_aaa = secondary_aaa or CI.campaigns[wfh.request['Campaign']]['secondary_AAA']
+
+        if 'Campaign' in wfh.request and wfh.request['Campaign'] in CI.campaigns:
+            assign_parameters.update( CI.campaigns[wfh.request['Campaign']] )
+
+        if 'primary_AAA' in assign_parameters:
+            primary_aaa = primary_aaa or assign_parameters['primary_AAA']
+        if 'secondary_AAA' in assign_parameters:
+            secondary_aaa = secondary_aaa or assign_parameters['secondary_AAA']
+
 
         for sec in list(secondary):
             if override_sec_location: 
@@ -273,15 +286,10 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         if primary_aaa:
             sites_allowed = initial_sites_allowed
-            options.TrustSitelists = True
             wfh.sendLog('assignor',"Selected to read primary through xrootd %s"%sorted(sites_allowed))
         else:
             sites_allowed = sites_with_any_data
             wfh.sendLog('assignor',"Selected for any data %s"%sorted(sites_allowed))
-
-        if secondary_aaa:
-            options.TrustPUSitelists = True
-            wfh.sendLog('assignor',"Reading secondary through xrootd from %s"%sorted(sites_allowed))            
 
         ### check on endpoints for on-going transfers
         if endpoints and options.partial:
@@ -314,6 +322,17 @@ def assignor(url ,specific = None, talk=True, options=None):
             'ProcessingVersion' : version,
             }
 
+        if primary_aaa:
+            parameters['TrustSitelists'] = True
+            wfh.sendLog('assignor',"Reading primary through xrootd at %s"%sorted(sites_allowed))            
+
+        if secondary_aaa:
+            parameters['TrustPUSitelists'] = True
+            wfh.sendLog('assignor',"Reading secondary through xrootd at %s"%sorted(sites_allowed))            
+
+
+        if 'parameters' in assign_parameters:
+            parameters.update( assign_parameters['parameters'] )
 
         ## plain assignment here
         team='production'
@@ -348,7 +367,8 @@ def assignor(url ,specific = None, talk=True, options=None):
             parameters['EventsPerJob'] = 500000
 
         ## pick up campaign specific assignment parameters
-        parameters.update( CI.parameters(wfh.request['Campaign']) )
+        #parameters.update( CI.parameters(wfh.request['Campaign']) )
+        parameters.update( assign_parameters.get('parameters',{}) )
 
         if not options.test:
             parameters['execute'] = True

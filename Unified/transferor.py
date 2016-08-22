@@ -115,11 +115,7 @@ def transferor(url ,specific = None, talk=True, options=None):
         else:
             min_transfer_priority = min(min_transfer_priority, int(wfh.request['RequestPriority']))
 
-    if min_transfer_priority==None or in_transfer_priority ==None:
-        print "nothing is lining up for transfer"
-        sendEmail("no request in staging","no request in staging")
-        return 
-        pass
+
 
     try:
         print "Ignored input sizes"
@@ -170,6 +166,12 @@ def transferor(url ,specific = None, talk=True, options=None):
     #wfs_and_wfh.sort(cmp = lambda i,j : cmp(int(primary_input_per_workflow_gb.get(i[0].name, 0)), int(primary_input_per_workflow_gb.get(j[0].name, 0)) ))
     #sort by priority higher first
     wfs_and_wfh.sort(cmp = lambda i,j : cmp(int(i[1].request['RequestPriority']),int(j[1].request['RequestPriority']) ), reverse=True)
+
+    if min_transfer_priority==None or in_transfer_priority ==None:
+        print "nothing is lining up for transfer"
+        sendLog("transferor","No request in staging, using first request to set priority limit")
+        min_transfer_priority = wfs_and_wfh[0][1].request['RequestPriority']
+        in_transfer_priority = wfs_and_wfh[0][1].request['RequestPriority']
 
     cput_grand_total = sum(input_cput.values())
     cput_to_transfer = cput_grand_total - cput_in_transfer_already
@@ -247,14 +249,20 @@ def transferor(url ,specific = None, talk=True, options=None):
             no_go = True
             no_goes.add( wfo.name )
             
-        allowed_secondary = set()
+        allowed_secondary = {}
+        overide_parameters = {}
         for campaign in wfh.getCampaigns():
             if campaign in CI.campaigns and 'secondaries' in CI.campaigns[campaign]:
                 allowed_secondary.update( CI.campaigns[campaign]['secondaries'] )
         if secondary:
-            if (secondary and allowed_secondary) and (set(secondary)&allowed_secondary!=set(secondary)):
-                wfh.sendLog('transferor','%s is not an allowed secondary'%(', '.join(set(secondary)-allowed_secondary)))
-                no_go = True
+            if (secondary and allowed_secondary) and (set(secondary)&set(allowed_secondary.keys())!=set(secondary)):
+                wfh.sendLog('transferor','%s is not an allowed secondary'%(', '.join(set(secondary)-set(allowed_secondary.keys()))))
+                sendLog('transferor','%s is not an allowed secondary'%(', '.join(set(secondary)-set(allowed_secondary.keys()))), level='critical')
+                if not options.go: 
+                    no_go = True
+            for sec in secondary:
+                if sec in allowed_secondary:
+                    overide_parameters.update( allowed_secondary[sec] )
 
         if no_go:
             continue
@@ -510,6 +518,8 @@ def transferor(url ,specific = None, talk=True, options=None):
             override_sec_destination = []
             if 'SecondaryLocation' in CI.campaigns[wfh.request['Campaign']]:
                 override_sec_destination  = CI.campaigns[wfh.request['Campaign']]['SecondaryLocation']
+            if 'SecondaryLocation' in overide_parameters:
+                override_sec_destination  = overide_parameters['SecondaryLocation']
 
             print wfo.name,'reads',', '.join(secondary),'in secondary'
             for sec in secondary:

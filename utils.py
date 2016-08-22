@@ -1991,6 +1991,20 @@ def findCustodialLocation(url, dataset, with_completion=False):
     else:
         return list(set(cust)), more_information
 
+def getDatasetFileLocations(url, dataset):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    r1=conn.request("GET",'/phedex/datasvc/json/prod/filereplicas?dataset=%s'%(dataset))
+    r2=conn.getresponse()
+    result = json.loads(r2.read())
+    items=result['phedex']['block']
+    locations = defaultdict(set)
+    for block in items:
+        for f in block['file']:
+            for r in f['replica']:
+                #if r['
+                locations[ f['name'] ] .add( r['node'] )
+    return dict( locations )
+
 def getDatasetFiles(url, dataset ,without_invalid=True ):
     dbsapi = DbsApi(url=dbs_url)
     files = dbsapi.listFileArray( dataset= dataset,validFileOnly=without_invalid, detail=True)
@@ -2097,16 +2111,33 @@ def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=N
         print dataset,"is nowhere"
         return {}, all_block_names
 
+
+    print len(all_block_names),"blocks"
+
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?block=%s%%23*&collapse=n'%(dataset))
-    r2=conn.getresponse()
-    result = json.loads(r2.read())
+    #if len(all_block_names)<5000: 
+    items = []
+    if not complement:
+        print "global sub query"
+        r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?block=%s%%23*&collapse=n'%(dataset))
+        r2=conn.getresponse()
+        result = json.loads(r2.read())
+        if not len(result['phedex']['dataset']):
+            return destinations, all_block_names
+
+        items=result['phedex']['dataset'][0]['block']
+        print "Got subscriptions for",dataset
+        #print "failed once, let's go block by block: too lengthy"
+        #for block in all_block_names:
+        #    print "block sub query",block
+        #    r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?block=%s&collapse=n'%(block.replace('#','%23')))
+        #    r2=conn.getresponse()
+        #    result = json.loads(r2.read())
+        #    if len(result['phedex']['dataset']):
+        #        items.extend( result['phedex']['dataset'][0]['block'] )
+        
     destinations=defaultdict(set)
 
-    if not len(result['phedex']['dataset']):
-        return destinations, all_block_names
-
-    items=result['phedex']['dataset'][0]['block']
 
     ## the final answer is site : data_fraction_subscribed
 
@@ -2196,7 +2227,9 @@ def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=N
         for req in sub_items:
             if group!=None and not req['group'].lower()==group.lower(): continue
             for requested_dataset in req['data']['dbs']['dataset']:
-                if requested_dataset != dataset: continue
+                if requested_dataset['name'] != dataset: 
+                    print requested_dataset,"not the same"
+                    continue
                 for site in sites_missing_information:
                     for b in all_block_names:
                         destinations[site].add( (b, 0, phedex_id) )
@@ -2204,6 +2237,9 @@ def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=N
             for b in req['data']['dbs']['block']:
                 if not b['name'] in all_block_names: continue
                 destinations[site].add((b['name'], 0, phedex_id) )
+        #print "added?",(site in destinations.keys())
+        if not site in destinations.keys():
+            print json.dumps(sub_items, indent=2)
         
         
     for site in destinations:
