@@ -1,19 +1,13 @@
-from utils import workflowInfo, siteInfo, monitor_dir
+from utils import workflowInfo, siteInfo, monitor_dir, global_SI
 import json
 import sys
 from collections import defaultdict
 from assignSession import *
 
-url = 'cmsweb.cern.ch'
 
-SI =siteInfo()
+def parse_one(wfn, url):
 
-explanations = defaultdict(set)
-gogo = defaultdict(bool)
-
-
-def parse_one(wfn):
-    global explanations
+    SI = global_SI()
     wfi = workflowInfo( url , wfn)
     where_to_run, missing_to_run,missing_to_run_at = wfi.getRecoveryInfo()       
     err= wfi.getWMErrors()
@@ -100,7 +94,7 @@ def parse_one(wfn):
     html += '<table border=1>'
     for code in one_explanation:
         html +='<tr><td><a name="%s">%s</a></td><td>%s</td></tr>'% ( code, code, '<br><br>'.join(one_explanation[code]).replace('\n','<br>' ))
-        explanations[code].update( one_explanation[code] )
+        #explanations[code].update( one_explanation[code] )
     html+='</table>'
     html+=('<br>'*30)
     html +='</html>'
@@ -108,13 +102,16 @@ def parse_one(wfn):
     fn = '%s'% wfn
     open('%s/report/%s'%(monitor_dir,fn),'w').write( html )
 
-    return task_error_site_count
+    return task_error_site_count, one_explanation
 
-def parse_all():
-    global explanations
+def parse_all(url):
+    explanations = defaultdict(set)
     alls={}
     for wfo in session.query(Workflow).filter(Workflow.status == 'assistance-manual').all():    
-        alls.update(parse_one( wfo.name ))
+        task_error, one_explanation = parse_one( wfo.name, url )
+        alls.update( task_error )
+        for code in one_explanation:
+            explanations[code].update( one_explanation[code] )
 
     open('%s/all_errors.json'%monitor_dir,'w').write( json.dumps(alls , indent=2 ))
 
@@ -134,13 +131,11 @@ def parse_all():
         print code
         print json.dumps( sorted(per_code[code]), indent=2)
 
-    #for code in explanations:
-    #   for category in explanations[code]:
-    #        pass
 
 if __name__=="__main__":
+    url = 'cmsweb.cern.ch'
 
     if len(sys.argv)>1:
-        parse_one(sys.argv[1])
+        parse_one(sys.argv[1], url)
     else:
-        parse_all()
+        parse_all(url)
