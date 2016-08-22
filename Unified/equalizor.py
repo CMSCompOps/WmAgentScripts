@@ -69,11 +69,19 @@ def equalizor(url , specific = None, options=None):
         mapping['T2_CH_CERN'].append('T0_CH_CERN')
         #mapping['T1_FR_CCIN2P3'].append('T0_CH_CERN')
 
-    #mapping['T2_IT_Legnaro'].append('T1_IT_CNAF')
-    for reg in ['IT','DE','UK']:
+
+    ## all europ can read from CERN
+    for reg in ['IT','DE','UK','FR']:
         mapping['T2_CH_CERN'].extend([fb for fb in SI.sites_ready if '_%s_'%reg in fb])
 
-
+    ## all europ T1 among each others
+    europ_t1 = [site for site in SI.sites_ready if site.startswith('T1') and any([reg in site for reg in ['IT','DE','UK','FR']])]
+    print europ_t1
+    for one in europ_t1:
+        for two in europ_t1:
+            if one==two: continue
+            mapping[one].append(two)
+        
     ## make them appear as OK to use
     force_sites = []
 
@@ -95,7 +103,8 @@ def equalizor(url , specific = None, options=None):
     ## create the reverse mapping for the condor module
     for site,fallbacks in mapping.items():
         for fb in fallbacks:
-            reversed_mapping[fb].append(site)
+            if not site in reversed_mapping[fb]:
+                reversed_mapping[fb].append(site)
 
     ## this is the fallback mapping
     print "Direct mapping : site => overflow"
@@ -311,10 +320,15 @@ def equalizor(url , specific = None, options=None):
                     print "adding",campaign,"to PU overflow rules"
                 if "LHE" in overflow and not campaign in LHE_overflow:
                     print "adding",campaign,"to light input overflow rules"
-                    site_list = overflow['LHE']['site_list']
+                    site_list = overflow['LHE'].get('site_list',"")
                     if site_list:
-                        LHE_overflow[campaign] = copy.deepcopy( getattr(SI,site_list) )
-                    
+                        if type(site_list)==str:
+                            if hasattr(SI,site_list):
+                                LHE_overflow[campaign] = copy.deepcopy( getattr(SI,site_list) )
+                            else:
+                                LHE_overflow[campaign] = site_list.split(',')
+                        else:
+                            LHE_overflow[campaign] = site_list
 
             ### get the task performance, for further massaging.
             if campaign in tune_performance or options.tune:
@@ -340,7 +354,7 @@ def equalizor(url , specific = None, options=None):
                     if stay_within_site_whitelist:
                         extend_to = list(set(extend_to) & set(wfi.request['SiteWhitelist'])) ## restrict to stupid-site-whitelist
                     extend_to = list(set(extend_to) & set(SI.sites_ready + force_sites))
-
+                    if not extend_to: print "Nowhere to extend to"
                     if extend_to and needs or needs_overide:
 
                         modifications[wfo.name][task.pathName] = { "ReplaceSiteWhitelist" : extend_to ,"Running" : running, "Pending" : idled, "Priority" : wfi.request['RequestPriority']}
@@ -390,6 +404,8 @@ def equalizor(url , specific = None, options=None):
                     else:
                         print "no existing running site"
                         augment_by = list(original_site_in_use)
+
+                    if not augment_by: print "Nowhere to extend to"
 
                     needs_overide = overide_from_agent( wfi, needs_overide)
                     if augment_by and (needs or needs_overide or force) and PU_overflow[campaign]['pending'] < PU_overflow[campaign]['max']:
