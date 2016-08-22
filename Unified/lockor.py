@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from utils import getWorkflows, findCustodialCompletion, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration, getDatasetSize, sendEmail, campaignInfo, componentInfo, reqmgr_url, monitor_dir, getWorkflowByMCPileup
+from utils import getWorkflows, findCustodialCompletion, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration, getDatasetSize, sendEmail, sendLog, campaignInfo, componentInfo, reqmgr_url, monitor_dir, getWorkflowByMCPileup
 from assignSession import *
 import json
 import os
@@ -114,7 +114,8 @@ for dataset in already_locked-newly_locking:
         if not creators and not tier == 'RAW':
             ds_status = getDatasetStatus( dataset )
             if not '-v0/' in dataset and ds_status!=None:
-                sendEmail('failing get by output','%s has not been produced by anything?'%dataset)
+                #sendEmail('failing get by output','%s has not been produced by anything?'%dataset)
+                sendLog('lockor','failing get by output, %s has not been produced by anything?'%dataset, level='critical')
                 newly_locking.add(dataset)
                 continue
             else:
@@ -123,7 +124,7 @@ for dataset in already_locked-newly_locking:
                 bad_ds = True
         creators_status = [r['RequestStatus'] for r in creators]
         print "Statuses of workflow that made the dataset",dataset,"are",creators_status
-        if all([status in ['failed','aborted','rejected','aborted-archived','rejected-archived'] for status in creators_status]):
+        if len(creators_status) and all([status in ['failed','aborted','rejected','aborted-archived','rejected-archived'] for status in creators_status]):
             ## crap 
             print "\tunlocking",dataset,"for bad workflow statuses"
             unlock = True
