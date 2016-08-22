@@ -11,19 +11,8 @@ url = reqmgr_url
 up = componentInfo(mcm=False, soft=['mcm'])
 if not up.check(): sys.exit(1)
 
-statuses = [
-    #'away','assistance','close','done',
-    'close',
-    'none'
-    ]
-#randome.shuffle( statuses )
-
-## pick only one and take care of it
-one_status = random.choice( statuses )
-max_wf = 800
-if len(sys.argv)>1:
-    one_status = sys.argv[1]
-    max_wf = 0
+one_status = sys.argv[1]
+max_wf = 0
 
 print "Picked status",one_status
 statuses = [one_status]
@@ -31,7 +20,12 @@ statuses = [one_status]
 
     
 wfs = []
-for status in statuses:    wfs.extend( session.query(Workflow).filter(Workflow.status==status).all() )
+for status in statuses:    
+    if status.endswith('*'):
+        wfs.extend( session.query(Workflow).filter(Workflow.status.startswith(status[:-1])).all() )
+    else:
+        wfs.extend( session.query(Workflow).filter(Workflow.status==status).all() )
+
 
 if max_wf: wfs = wfs[:max_wf]
 
@@ -61,7 +55,8 @@ for iw,wfo in enumerate(wfs):
 
 if len(all_blocks_at_sites.keys())==0 and len(wfs):
     ## no subscription to be done at this time, let me know
-    sendEmail('no unsubscribed blocks','while catching up %s does not need to be there anymore'%( one_status ))
+    #sendEmail('no unsubscribed blocks','while catching up %s does not need to be there anymore'%( one_status ))
+    pass
 
 print len(all_blocks_at_sites.keys()),"sites to subscribe things at"
 for site,blocks in all_blocks_at_sites.items():
