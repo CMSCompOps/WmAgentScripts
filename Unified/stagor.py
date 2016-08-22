@@ -265,7 +265,7 @@ def stagor(url,specific =None, options=None):
                             wfi.sendLog('stagor',"%s is incomplete at %s which is in downtime, trying to move along"%(need, ','.join(missing_and_downtime)))
                             jump_ahead = True
                         else:
-                            wfi.sendLog('stagor',"continue waiting for transfers")
+                            wfi.sendLog('stagor',"continue waiting for transfers for optimum production performance.")
 
 
 
