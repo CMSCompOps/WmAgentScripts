@@ -11,6 +11,7 @@
 import urllib2,urllib, httplib, sys, re, os, json, datetime
 from xml.dom.minidom import getDOMImplementation
 from dbs.apis.dbsClient import DbsApi
+from collections import defaultdict
 
 #das_host='https://das.cern.ch'
 das_host='https://cmsweb.cern.ch'
@@ -21,6 +22,11 @@ dbs3_url = r'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
 dbs3_url_writer = r'https://cmsweb.cern.ch/dbs/prod/global/DBSWriter'
 
 def duplicateRunLumi(dataset, verbose=False, skipInvalid=False):
+    r,_ = duplicateRunLumiFiles( dataset, verbose, skipInvalid)
+    return r
+
+
+def duplicateRunLumiFiles(dataset, verbose=False, skipInvalid=False):
     """
     checks if output dataset has duplicate lumis
     for every run.
@@ -40,41 +46,65 @@ def duplicateRunLumi(dataset, verbose=False, skipInvalid=False):
     if len(runs) == 1:
         if verbose:
             print "only one run:",runs
-        return duplicateLumi(dataset, verbose, skipInvalid)
-    #else manually
-    for run in runs:
-        #create a set
-        lumisChecked={}
-        # retrieve files for that run
-        reply = dbsapi.listFiles(dataset=dataset, detail=skipInvalid)
-        for f in reply:
-            #skip invalid files
-            if skipInvalid and f['is_file_valid'] != 1 :
-                continue
-            logical_file_name = f['logical_file_name']
-            reply2 = dbsapi.listFileLumis(logical_file_name=logical_file_name, run_num=run)
-            #retrieve lumis for each file
-            if reply2:
-                lumis = reply2[0]['lumi_section_num']
-            else:
-                continue
-            #check that each lumi is only in one file
-            for lumi in lumis:
-                if lumi in lumisChecked:
-                    #if verbose print results, if not end quickly
-                    if verbose:
-                        print 'Lumi',lumi,'in run',run,'is in these files'
-                        print logical_file_name
-                        print lumisChecked[lumi]
-                        duplicated = True
-                    else:
-                        return True
-                else:
-                    lumisChecked[lumi] = logical_file_name
+            return duplicateLumiFiles(dataset, verbose, skipInvalid)
 
-    return duplicated
+    #if verbose:        print len(runs),"runs to look at"
+    lumisChecked=defaultdict(set)
+    for irun,run in enumerate(runs):
+        #if verbose:            print "Checking run",run
+        # retrieve files for that run
+        reply = dbsapi.listFiles(dataset=dataset, detail=skipInvalid,run_num=run)
+        files = [f['logical_file_name'] for f in reply]
+        if skipInvalid:
+            files = [f['logical_file_name'] for f in reply if f['is_file_valid'] == 1]
+        #if verbose: print len(files),"files in run",run," %d/%d"%(irun+1, len(runs))
+        start = 0
+        bucket = 100
+        rreply=[]
+        ## this is really retarded ...
+        #for f in files:
+        #    rreply.extend( dbsapi.listFileLumis(logical_file_name=f, run_num=run))
+        while True:
+            these = files[start:start+bucket]
+            #print run,start,"=>",start+bucket
+            if len(these)==0: break
+            rreply.extend( dbsapi.listFileLumiArray(logical_file_name=these,run_num=run))
+            start+=bucket
+            
+        #if verbose: print len(rreply),"files with their lumi info"
+        not_found = set(files) - set([f['logical_file_name'] for f in rreply])
+        if not_found:
+            print "no lumi info for"
+            print '\n'.join( sorted(not_found))
+        #if verbose:
+        #    print len(reply),"files in the run"
+        #    print json.dumps(reply[0], indent=2)
+
+        for f in rreply:
+            lumis = f['lumi_section_num']
+            for lumi in lumis:
+                lumisChecked['%d:%d'%(run,lumi)].add( f['logical_file_name'] )
+
+
+    ## reduce to those with duplicates
+    for rl in lumisChecked.keys():
+        if len(lumisChecked[rl])<=1:
+            lumisChecked.pop( rl )
+
+    #print lumisChecked
+    lumisChecked = dict([(k,list(v)) for k,v in lumisChecked.iteritems()])
+    r = len(lumisChecked)!=0
+    return (r,lumisChecked)
 
 def duplicateLumi(dataset, verbose=False, skipInvalid=False):
+    r,l = duplicateLumiFiles(dataset, verbose, skipInvalid)
+    if verbose == "dict":
+        return (r, l)
+    else:
+        return r
+
+        
+def duplicateLumiFiles(dataset, verbose=False, skipInvalid=False):
     """
     checks if output dataset has duplicate lumis
     returns true if at least one duplicate lumi was found
@@ -84,8 +114,8 @@ def duplicateLumi(dataset, verbose=False, skipInvalid=False):
     # initialize API to DBS3
     dbsapi = DbsApi(url=dbs3_url)
     duplicated = False
-    lumisChecked={}
-    # retrieve files
+    lumisChecked=defaultdict(set)
+    run = 0 ## fake run number
     reply = dbsapi.listFiles(dataset=dataset, detail=skipInvalid)
     for f in reply:
         logical_file_name = f['logical_file_name']
@@ -97,29 +127,21 @@ def duplicateLumi(dataset, verbose=False, skipInvalid=False):
         lumis = reply2[0]['lumi_section_num']
         #check that each lumi is only in one file
         for lumi in lumis:
-            if lumi in lumisChecked:
-                #if verbose print results, if not end quickly
-                if verbose:
-                    lumisChecked[lumi].append(logical_file_name)
+            lumisChecked['%d:%d'%(run,lumi)].add( logical_file_name )
 
-                    print 'Lumi',lumi,'is in these files'
-                    print lumisChecked[lumi][0]
-                    print lumisChecked[lumi][1]
-                    #add to the list
-                    lumisChecked[lumi].append(logical_file_name)
-                    duplicated = True
-                else:
-                    return True
-            else:
-                lumisChecked[lumi] = [logical_file_name]
+    for rl in lumisChecked.keys():
+        if len(lumisChecked[rl])<=1:
+            lumisChecked.pop( rl )
+
     #return the dictionary if asked
-    if verbose and verbose == "dict":
-        #clean and leave only duplicated lumis
-        for lumi in lumisChecked.keys():
-            if len(lumisChecked[lumi]) < 2:
-                del lumisChecked[lumi]
-        return duplicated, lumisChecked
-    return duplicated
+    if verbose:
+        for rl in sorted(lumisChecked.keys()):
+            run,lumi = rl.split(':')
+            print 'Lumi',lumi,'in run',run,'is in these files'
+            print '\n'.join( lumisChecked[rl] )
+    r = len(lumisChecked)!=0
+    lumisChecked = dict([(k,list(v)) for k,v in lumisChecked.iteritems()])
+    return (r,lumisChecked)
 
 
 def getDatasetInfo(dataset):

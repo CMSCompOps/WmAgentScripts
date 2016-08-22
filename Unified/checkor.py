@@ -541,8 +541,10 @@ def checkor(url, spec=None, options=None):
         ## put that heavy part at the end
         ## duplication check
         duplications = {}
+        files_per_rl = {}
         for output in wfi.request['OutputDatasets']:
             duplications[output] = "skiped"
+            files_per_rl[output] = "skiped"
 
         if (is_closing or bypass_checks) and (not options.ignoreduplicates):
             print "starting duplicate checker for",wfo.name
@@ -550,18 +552,21 @@ def checkor(url, spec=None, options=None):
                 print "\tchecking",output
                 duplications[output] = True
                 try:
-                    duplications[output] = dbs3Client.duplicateRunLumi( output , skipInvalid=True, verbose=True)
+                    duplications[output],files_per_rl[output] = dbs3Client.duplicateRunLumiFiles( output , skipInvalid=True, verbose=True)
                 except:
                     try:
-                        duplications[output] = dbs3Client.duplicateRunLumi( output , skipInvalid=True, verbose=True)
-                    except:
-                        print "was not possible to get the duplicate count for",output
+                        duplications[output],files_per_rl[output] = dbs3Client.duplicateRunLumiFiles( output , skipInvalid=True, verbose=True)
+                    except Exception as e:
+                        wfi.sendLog('checkor','Not possible to check on duplicate lumi count on %s'%(output))
+                        sendLog('checkor','Not possible to check on duplicate lumi count on %s\n%'%(output,str(e)),level='critical')
                         is_closing=False
 
             if any(duplications.values()) and not options.ignoreduplicates:
                 duplicate_notice = ""
                 duplicate_notice += "%s has duplicates\n"%wfo.name
-                duplicate_notice += json.dumps(duplications,indent=2)
+                duplicate_notice += json.dumps( duplications,indent=2)
+                duplicate_notice += '\n'
+                duplicate_notice += json.dumps( files_per_rl, indent=2)
                 wfi.sendLog('checkor',duplicate_notice)
                 ## hook for making file invalidation ?
                 ## it shouldn't be allowed to bypass it
