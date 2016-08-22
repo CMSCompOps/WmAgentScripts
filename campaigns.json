@@ -13,7 +13,8 @@
     "SiteWhitelist": [ "T2_US_Vanderbilt"],
     "parameters": {
       "SiteWhitelist": [ "T2_US_Vanderbilt"]
-    }
+    },
+    "overflow" : {"LHE": {"site_list" : ["T2_US_Vanderbilt", "T2_US_MIT"] }}
   },
   "Commissioning2015": {
     "go": true,
@@ -133,7 +134,7 @@
   },
   "Run2016C": {
     "go": true,
-    "labels" : ["29Jul2016"],
+    "labels" : ["29Jul2016","12Aug2016"],
     "DDMcopies": { 
      		 "all" : { "N" : 4 },
 		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
@@ -146,7 +147,20 @@
   },
   "Run2016D": {
     "go": true,
-    "labels" : ["29Jul2016"],
+    "labels" : ["29Jul2016","12Aug2016"],
+    "DDMcopies": { 
+     		 "all" : { "N" : 4 },
+		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
+    },
+    "custodial_override" : ["DQMIO"],
+    "fractionpass": 1.0,
+    "lumisize" : -1,
+    "maxcopies" : 1,
+    "primary_AAA" : true
+  },
+  "Run2016E": {
+    "go": true,
+    "labels" : ["29Jul2016","12Aug2016"],
     "DDMcopies": { 
      		 "all" : { "N" : 4 },
 		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
@@ -181,8 +195,9 @@
   "Summer12DR53X": {
     "go": true,
     "lumisize" : 400,
-    "SiteWhitelist": [ "T1_FR_CCIN2P3","T1_IT_CNAF","T2_CH_CERN"]
-  }, 
+    "SiteWhitelist": [ "T1_FR_CCIN2P3","T1_IT_CNAF","T2_CH_CERN"],
+    "overflow": {"PU":{"max":10000,"pending":0}}
+  },
   "pAWinter13": {
     "go": false, 
     "parameters": {
@@ -331,6 +346,17 @@
     "force-complete" : 0.95,
     "force-timeout" : 7,
     "lumisize": -1
+  },
+  "Summer16wmLHEGENOnly14TeV": {
+    "go": true,
+    "tune" : true,
+    "lumisize": -1
+  },
+  "RunIISummer16DR80": {
+    "go": false,
+    "maxcopies": 2,
+    "lumisize": -1,
+    "overflow": {"PU":{"max":0,"pending":0,"force":false}}
   },
   "RunIISpring16wmLHEFSPremix": {
     "go": false,
