@@ -771,7 +771,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     for t in SI.types():
         text+="<li>%s<table border=1>"%t
         c=0
-        for site in getattr(SI,t):
+        for site in sorted(getattr(SI,t)):
             cpu = SI.cpu_pledges[site] if site in SI.cpu_pledges else 'N/A'
             disk = SI.disk[SI.CE_to_SE(site)] if SI.CE_to_SE(site) in SI.disk else 'N/A'
             if c==0:
@@ -784,7 +784,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
             up_com = ""
             if site in upcoming:
                 u = sum(upcoming[site][camp] for camp in upcoming[site])
-                up_com = "<br>Jobs available  %d"% u
+                up_com = "<br><a href=%s/GQ.json>Jobs available  %d</a>"%( monitor_dir,u) 
                 #up_com="<br><ul>"
                 #for camp in upcoming[site]:
                 #    up_com += "<li>%s : %d</li>"% (camp, upcoming[site][camp])

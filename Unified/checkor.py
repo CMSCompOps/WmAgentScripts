@@ -605,6 +605,15 @@ def checkor(url, spec=None, options=None):
             rec['timestamp'] = time.mktime(now)
             rec['updated'] = time.asctime(now)+' (GMT)'
 
+        ## make the lumi summary 
+        if wfi.request['RequestType'] == 'ReReco':
+            try:
+                os.system('python Unified/lumi_summary.py %s 1'%(wfi.request['PrepID']))
+                os.system('python Unified/lumi_plot.py %s'%(wfi.request['PrepID']))
+                wfi.sendLog('checkor','Lumi summary available at https://cmst2.web.cern.ch/cmst2/unified/datalumi/')
+            except Exception as e:
+                print str(e)
+            
         ## and move on
         if is_closing:
             ## toggle status to closed-out in request manager
