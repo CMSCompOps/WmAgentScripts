@@ -38,7 +38,7 @@ reqmgrCouchURL = "https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache"
 DELTA_EVENTS = 1000
 DELTA_LUMIS = 200
 
-def modifySchema(helper, workflow, user, group, cache, events, firstLumi, backfill=False, memory=None):
+def modifySchema(helper, workflow, user, group, cache, events, firstLumi, backfill=False, memory=None, timeperevent=None):
     """
     Adapts schema to right parameters.
     If the original workflow points to DBS2, DBS3 URL is fixed instead.
@@ -64,6 +64,8 @@ def modifySchema(helper, workflow, user, group, cache, events, firstLumi, backfi
         # Now apply the specific tweaks
         if key == 'Memory' and memory:
             result['Memory'] = memory
+        if key == 'TimePerEvent' and timeperevent:
+            result['TimePerEvent'] = timeperevent
         elif key == 'Requestor':
             result['Requestor'] = user
         elif key == 'Group':
@@ -155,7 +157,7 @@ def modifySchema(helper, workflow, user, group, cache, events, firstLumi, backfi
 
     return result
 
-def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=False, memory=None, bwl=None):
+def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=False, memory=None, timeperevent=None, bwl=None):
     """
     clones a workflow
     """
@@ -167,7 +169,7 @@ def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=F
     except:
         cache = None
 
-    schema = modifySchema(helper, workflow, user, group, cache, None, None, backfill, memory)
+    schema = modifySchema(helper, workflow, user, group, cache, None, None, backfill, memory, timeperevent)
 
     schema['OriginalRequestName'] = workflow
     if verbose:
@@ -178,6 +180,9 @@ def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=F
             schema['Task1']['BlockWhitelist'] = bwl.split(',')
         else:
             schema['BlockWhitelist'] = bwl.split(',')
+    ## only once
+    ####schema['CMSSWVersion'] = 'CMSSW_8_0_16'
+
     print 'Submitting workflow'
     # Submit cloned workflow to ReqMgr
     if testbed:
@@ -298,6 +303,7 @@ def main():
     parser.add_option('-e', '--events', help='# of events to add', dest='events')
     parser.add_option('-l', '--firstlumi', help='# of the first lumi', dest='firstlumi')
     parser.add_option("-m", "--memory", dest="memory", help="Set max memory for the event. At assignment, this will be used to calculate maxRSS = memory*1024")
+    parser.add_option("--TimePerEvent", help="Set the TimePerEvent on the clone")
     parser.add_option("--testbed", action="store_true", dest="testbed", default=False,
                       help="Clone to testbed reqmgr insted of production")
     (options, args) = parser.parse_args()
@@ -321,13 +327,15 @@ def main():
 
     if options.action == 'clone':
         for wf in wfs:
+            memory = None
+            timeperevent = None
             workflow = reqMgrClient.Workflow(wf)
             if options.memory:
                 memory = float(options.memory)
-            else:
-                memory = workflow.info["Memory"]
+            if options.TimePerEvent:
+                timeperevent = float(options.TimePerEvent)
             cloneWorkflow(
-                wf, user, options.group, options.verbose, options.backfill, options.testbed, memory,bwl=options.bwl)
+                wf, user, options.group, options.verbose, options.backfill, options.testbed, memory,timeperevent,bwl=options.bwl)
     elif options.action == 'extend':
         for wf in wfs:
             extendWorkflow(wf, user, options.group, options.verbose, options.events, options.firstlumi)
