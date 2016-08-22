@@ -79,7 +79,10 @@ def checkor(url, spec=None, options=None):
     overrides = getForceCompletes()
     holdings = []
 
-    for bypassor,email in [('vlimant','vlimant@cern.ch'),('jen_a','jen_a@fnal.gov'),('prozober','paola.katherine.rozo.bernal@cern.ch')]:
+    
+    actors = UG.get('allowed_bypass')
+
+    for bypassor,email in actors:
         bypass_file = '/afs/cern.ch/user/%s/%s/public/ops/bypass.json'%(bypassor[0],bypassor)
         if not os.path.isfile(bypass_file):
             #sendLog('checkor','no file %s',bypass_file)
@@ -101,7 +104,7 @@ def checkor(url, spec=None, options=None):
             sendEmail("malformated by-pass information","%s is not json readable"%(holding_file), destination=[email])
 
     ## once this was force-completed, you want to bypass
-    for rider,email in [('vlimant','vlimant@cern.ch'),('jen_a','jen_a@fnal.gov'),('srimanob','srimanob@mail.cern.ch')]:
+    for rider,email in actors:
         rider_file = '/afs/cern.ch/user/%s/%s/public/ops/forcecomplete.json'%(rider[0],rider)
         if not os.path.isfile(rider_file):
             print "no file",rider_file

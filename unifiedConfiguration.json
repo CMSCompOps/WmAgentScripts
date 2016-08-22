@@ -37,6 +37,11 @@
    "value" : true,
    "description" : "Whether or not to retransfer block from WQE without location"
  },
+ "allowed_bypass": {
+   "description" : "Who is allowed to bypass and force complete",
+   "value" : [["vlimant","vlimant@cern.ch"],
+   	     ["prozober","paola.katherine.rozo.bernal@cern.ch"]]
+ },
  "max_force_complete" : {
    "value" : 10,
    "description" : "Number of workflow that can be forced complete at a time"
