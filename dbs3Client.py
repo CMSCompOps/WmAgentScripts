@@ -22,7 +22,12 @@ dbs3_url = r'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
 dbs3_url_writer = r'https://cmsweb.cern.ch/dbs/prod/global/DBSWriter'
 
 def duplicateRunLumi(dataset, verbose=False, skipInvalid=False):
-    r,_ = duplicateRunLumiFiles( dataset, verbose, skipInvalid)
+    r,lumisChecked = duplicateRunLumiFiles( dataset, verbose, skipInvalid)
+    if verbose:
+        for rl in sorted(lumisChecked.keys()):
+            print rl,"is present in files"
+            for fn in lumisChecked[rl]:
+                print fn
     return r
 
 
@@ -46,7 +51,7 @@ def duplicateRunLumiFiles(dataset, verbose=False, skipInvalid=False):
     if len(runs) == 1:
         if verbose:
             print "only one run:",runs
-            return duplicateLumiFiles(dataset, verbose, skipInvalid)
+        return duplicateLumiFiles(dataset, verbose, skipInvalid)
 
     #if verbose:        print len(runs),"runs to look at"
     lumisChecked=defaultdict(set)
@@ -93,6 +98,7 @@ def duplicateRunLumiFiles(dataset, verbose=False, skipInvalid=False):
 
     #print lumisChecked
     lumisChecked = dict([(k,list(v)) for k,v in lumisChecked.iteritems()])
+
     r = len(lumisChecked)!=0
     return (r,lumisChecked)
 
