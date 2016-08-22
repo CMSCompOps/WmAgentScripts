@@ -1108,6 +1108,7 @@ class siteInfo:
         
 
         mss_usage = dataCache.get('mss_usage')
+        sites_space_override = UC.get('sites_space_override')
         for mss in self.storage:
             #used = dataCache.get(mss+'_usage')
             #print mss,'used',used
@@ -1118,12 +1119,12 @@ class siteInfo:
             else: 
                 self.storage[mss]  = mss_usage['Tape']['Free'][mss]
 
-            if mss == 'T0_CH_CERN_MSS':
-                self.storage[mss] = 0
+            if mss in sites_space_override:
+                self.storage[mss] = sites_space_override[mss]
 
 
         ## and detox info
-        self.fetch_detox_info(talk=False, buffer_level=UC.get('DDM_buffer_level'))
+        self.fetch_detox_info(talk=False, buffer_level=UC.get('DDM_buffer_level'), sites_space_override=sites_space_override)
         
         ## transform no disks in veto transfer
         for (dse,free) in self.disk.items():
@@ -1227,7 +1228,7 @@ class siteInfo:
             return list(set(allowed_sites) & set(allowed))
         return allowed_sites
 
-    def fetch_detox_info(self, talk=True, buffer_level=0.8):
+    def fetch_detox_info(self, talk=True, buffer_level=0.8, sites_space_override=None):
         ## put a retry in command line
         info = dataCache.get('detox_sites')
         #info = os.popen('curl --retry 5 -s http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/SitesInfo.txt').read().split('\n')
@@ -1259,7 +1260,8 @@ class siteInfo:
             self.disk[site] = available if available >0 else 0
             ddm_free = int(float(quota)) - int(locked) - self.disk[site]
             self.free_disk[site] = ddm_free if ddm_free>0 else 0
-            
+            if sites_space_override and site in sites_space_override:
+                self.free_disk[site] = sites_space_override[site]
                             
             self.quota[site] = int(quota)
             self.locked[site] = int(locked)
