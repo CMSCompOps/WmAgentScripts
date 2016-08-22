@@ -99,7 +99,18 @@ def rejector(url, specific, options=None):
 
                 ## a few tampering of the original request
                 if options.Memory:
-                    schema['Memory'] = options.Memory
+                    if schema['RequestType'] == 'TaskChain':
+                        it=1
+                        while True:
+                            t = 'Task%d'%it
+                            it+=1
+                            if t in schema:
+                                schema[t]['Memory'] = options.Memory
+                            else:
+                                break
+                    else:
+                        schema['Memory'] = options.Memory
+                                
                 if options.deterministic:
                     if schema['RequestType'] == 'TaskChain':
                         schema['Task1']['DeterministicPileup']  = True
