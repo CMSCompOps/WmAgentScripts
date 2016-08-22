@@ -8,7 +8,7 @@ from collections import defaultdict
 import json
 import random
 from McMClient import McMClient
-
+from showError import parse_one
 
 
 def completor(url, specific):
@@ -69,6 +69,13 @@ def completor(url, specific):
         if specific and not specific in wfo.name: continue
 
         print "looking at",wfo.name
+
+        try:
+            parse_one( wfo.name )
+        except Exception as e:
+            print "failed error parsing"
+            print str(e)
+
         ## get all of the same
         wfi = workflowInfo(url, wfo.name)
         pids = wfi.getPrepIDs()
