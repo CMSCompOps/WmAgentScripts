@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import workflowInfo, getDatasetBlockAndSite, getWorkLoad, makeReplicaRequest, sendEmail, getDatasetOnGoingDeletion, componentInfo, reqmgr_url
+from utils import workflowInfo, getDatasetBlockAndSite, getWorkLoad, makeReplicaRequest, sendEmail, getDatasetOnGoingDeletion, componentInfo, reqmgr_url, getWorkflows
 import json
 from collections import defaultdict
 import random
@@ -11,20 +11,22 @@ url = reqmgr_url
 up = componentInfo(mcm=False, soft=['mcm'])
 if not up.check(): sys.exit(1)
 
-one_status = sys.argv[1]
+status = sys.argv[1]
 max_wf = 0
 
-print "Picked status",one_status
-statuses = [one_status]
+print "Picked status",status
 
-
-    
 wfs = []
-for status in statuses:    
-    if status.endswith('*'):
-        wfs.extend( session.query(Workflow).filter(Workflow.status.startswith(status[:-1])).all() )
-    else:
-        wfs.extend( session.query(Workflow).filter(Workflow.status==status).all() )
+if status == 'wmagent':
+    register=['assigned','acquired','running-open','running-closed','force-complete','completed','closed-out']
+    for r in register:
+        wfs.extend( getWorkflows(url, r) )
+
+elif status.endswith('*'):
+    wfs.extend([wfo.name for wfo in  session.query(Workflow).filter(Workflow.status.startswith(status[:-1])).all() ])
+else:
+    wfs.extend([wfo.name for wfo in  session.query(Workflow).filter(Workflow.status==status).all() ])
+
 
 
 if max_wf: wfs = wfs[:max_wf]
@@ -35,11 +37,12 @@ all_blocks_at_sites = defaultdict(set)
 done = json.loads(open('myblock_done.json').read())
 
 print len(wfs),"to look the output of"
-for iw,wfo in enumerate(wfs):
-    print "%s/%s:"%(iw,len(wfs)),wfo.name
+
+for iw,wfn in enumerate(wfs):
+    print "%s/%s:"%(iw,len(wfs)),wfn
     #wfi = workflowInfo(url, wfo.name)
     #outs= wfi.request['OutputDatasets']
-    wl = getWorkLoad(url, wfo.name)
+    wl = getWorkLoad(url, wfn)
     outs= wl['OutputDatasets']
     for out in outs:
         blocks_at_sites = getDatasetBlockAndSite(url, out, group="")
