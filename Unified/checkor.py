@@ -80,7 +80,7 @@ def checkor(url, spec=None, options=None):
     holdings = []
 
     
-    actors = UG.get('allowed_bypass')
+    actors = UC.get('allowed_bypass')
 
     for bypassor,email in actors:
         bypass_file = '/afs/cern.ch/user/%s/%s/public/ops/bypass.json'%(bypassor[0],bypassor)
