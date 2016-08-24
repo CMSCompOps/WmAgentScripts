@@ -185,7 +185,7 @@ for out in errors_by_lb:
                     rs.append( identified[ecode] )
                 else:
                     rs.append( types )
-            missing_rl_with_exp[out][':'.join(map(str,ls))] = ",".join(rs)
+            missing_rl_with_exp[out][':'.join(map(str,ls))] = "|".join(rs)
 
 if missing_rl_with_exp:                
     open('ls.%s.json'%pid,'w').write( json.dumps( missing_rl_with_exp, indent=2 ))
