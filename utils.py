@@ -1446,6 +1446,8 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
             text += ', <a href="http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=%s" target="_blank">history</a>'%(pid)
             text += ', <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>ac</a>'%(tpid)
             text += ', <a href=report/%s>report</a>'%(wf)
+            if 'ReReco' in tpid:
+                text += ', <a href=https://cmst2.web.cern.ch/cmst2/unified/datalumi/lumi.%s.html>lumis</a>'%(tpid)
             text += ', <a href=assistance.html#%s>%s</a></td>'%(wf,wfo.status)
             
             text+='<td>%s</td>'% out
