@@ -29,9 +29,9 @@ for wf in wfs:
     base=wf.get('UnmergedLFNBase','/store/unmerged')
     for out in outs:
         _,dsn,ps,tier = out.split('/')
-        acq = ps.split('-')[0]
+        acq,rest = ps.split('-',1)
         print wf['RequestName'],wf['RequestStatus']
-        d = '/'.join( [ base, acq, dsn, tier] )
+        d = '/'.join( [ base, acq, dsn, tier, rest] )
         print d
         lfns[d].add( wf['RequestName'] )
     
