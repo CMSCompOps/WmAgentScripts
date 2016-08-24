@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from utils import getWorkflows, findCustodialCompletion, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration, getDatasetSize, sendEmail, sendLog, campaignInfo, componentInfo, reqmgr_url, monitor_dir, getWorkflowByMCPileup
+from utils import getWorkflows, findCustodialCompletion, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration, getDatasetSize, sendEmail, sendLog, campaignInfo, componentInfo, reqmgr_url, monitor_dir, getWorkflowByMCPileup, getDatasetPresence
 from assignSession import *
 import json
 import os
@@ -60,7 +60,7 @@ for status in reversed(statuses):
             continue
 
         if status == 'assignment-approved':
-            if all([wfo.status == 'considered' for wfo in known]):
+            if all([wfo.status.startswith('considered') for wfo in known]):
                 ## skip those only assignment-approved / considered
                 continue
 
@@ -152,7 +152,12 @@ for dataset in already_locked-newly_locking:
                         break
             if no_tape:
                 ## could add a one-full copy consistency check
-                unlock = True
+                presence = getDatasetPresence(url, dataset)
+                if any([there for _,(there,_) in presence.items()]):
+                    unlock = True
+                else:
+                    newly_locking.add(dataset)
+                    unlock = False
             else:
                 custodials,info = findCustodialCompletion(url, dataset)
                 if len(custodials) == 0:
