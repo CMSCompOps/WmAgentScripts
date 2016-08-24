@@ -81,7 +81,7 @@
    "description": "The data tiers that go to AnaOps"
  },
  "tiers_keep_on_disk": {
-   "value" : ["LHE","RAWAODSIM"],
+   "value" : ["LHE"],
    "description": "the data tier not unlocked until used again"
  },
  "check_fullcopy_to_announce": {
