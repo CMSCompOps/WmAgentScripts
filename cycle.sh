@@ -69,9 +69,10 @@ source /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/credentials.sh
 ## and display
 /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/htmlor.py
 
-## pre-fetch and place datasets from McM needs
-#/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/collector.py
+## subscribe everything that is being produced or waiting around
+/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/subscribor.py wmagent
+
+/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/GQ.py
 
 rm -f /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cycle.lock
 
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/GQ.py
