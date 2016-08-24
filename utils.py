@@ -330,7 +330,7 @@ class newLockInfo:
 
     def free(self):
         r = os.popen('curl -s http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/inActionLock.txt').read()
-        if not '404 Not Found' in r:
+        if not ('Not Found' in r):
             sendLog('LockInfo','DDM lock is present\n%s'%(r),level='warning')
             return False
         else:
