@@ -43,8 +43,8 @@ for dataset,lss in data.items():
 
 all_ls= list(all_ls)
 print len(all_ls)
-all_ls.sort( key=lambda i :i.split(':')[1])
-all_ls.sort( key=lambda i :i.split(':')[0])
+all_ls.sort( key=lambda i :int(i.split(':')[1]))
+all_ls.sort( key=lambda i :int(i.split(':')[0]))
 
 datasets = data.keys()
 datasets.sort()
