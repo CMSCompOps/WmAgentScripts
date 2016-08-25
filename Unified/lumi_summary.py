@@ -1,6 +1,6 @@
 import json
 import time
-from utils import getWorkflowById, workflowInfo, getDatasetLumis, DbsApi
+from utils import getWorkflowById, workflowInfo, getDatasetLumis, DbsApi, getWorkflowByOutput
 from collections import defaultdict
 import pickle
 import sys
@@ -30,6 +30,20 @@ missing_rl = defaultdict(list)
 errors_by_lb = defaultdict(lambda : defaultdict(set))
 dbsapi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
 ecode_ban = []#99999,139,134,92]
+
+## try to get more workflows by their outputs
+outs=set()
+for wf in wfs:
+    outs.update( wf['OutputDatasets'] )
+
+for out in outs:
+    o_wfs = getWorkflowByOutput( url , out, details=True )
+    wfns = [wf['RequestName'] for wf in wfs]
+    for o_wf in o_wfs:
+        if not o_wf['RequestName'] in wfns:
+            print "got also",o_wf['RequestName']
+            wfs.append( o_wf )
+
 for wf in wfs:
     wfi = workflowInfo( url, wf['RequestName'], request=wf)
 

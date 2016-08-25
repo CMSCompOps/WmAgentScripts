@@ -2,6 +2,7 @@ import json
 import sys
 import os
 import sys
+import time
 
 f=sys.argv[1]
 
@@ -27,12 +28,14 @@ html = open('/afs/cern.ch/user/c/cmst2/www/unified/datalumi/lumi.%s%s.html'%(f,l
 
 html.write("""
 <html>
+Updated on %s GMT<br>
+Missing lumisection summary for <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>%s</a><br> 
 <a href=json/%s> json file of content</a><br>
 <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s> request info </a><br>
 <table border=1>
 <thead>
 <tr>
-"""%( 'ls.%s.json'%f, f))
+"""%( time.asctime(time.gmtime()), f,f, 'ls.%s.json'%f, f))
 
 
 
