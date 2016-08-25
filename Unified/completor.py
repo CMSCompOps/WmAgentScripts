@@ -3,7 +3,7 @@ from assignSession import *
 import sys
 import reqMgrClient
 from utils import workflowInfo, getWorkflowById, forceComplete, getDatasetEventsAndLumis, componentInfo, monitor_dir, reqmgr_url, unifiedConfiguration, getForceCompletes
-from utils import campaignInfo, sendEmail, siteInfo, sendLog
+from utils import campaignInfo, siteInfo, sendLog
 from collections import defaultdict
 import json
 import random
@@ -85,7 +85,7 @@ def completor(url, specific):
 
             if wfi.request['RequestStatus']!='force-complete':
                 if any(s in wfo.name for s in spec) or (wfo.name in spec) or any(pid in spec for pid in pids) or any(s in pids for s in spec):
-                    sendEmail('force-complete requested','%s is asking for %s to be force complete'%(user,wfo.name))
+
                     wfi = workflowInfo(url, wfo.name)
                     forceComplete(url , wfi )
                     skip=True
@@ -237,7 +237,6 @@ def completor(url, specific):
 
     if set_force_complete:
         sendLog('completor','The followings were set force-complete \n%s'%('\n'.join(set_force_complete)))
-        #sendEmail('set force-complete', 'The followings were set force-complete \n%s'%('\n'.join(set_force_complete)))
     
     open('%s/completions.json'%monitor_dir,'w').write( json.dumps( completions , indent=2))
     text="These have been running for long"
@@ -250,11 +249,7 @@ def completor(url, specific):
         if 'completion' in info:
             text += " %d%%"%( info['completion']*100 )
 
-    #if wfs_no_location_in_GQ:
-    #    sendEmail('workflow with no location in GQ',"there won't be able to run anytime soon\n%s"%( '\n'.join(wfs_no_location_in_GQ)))
 
-    #sendEmail("long lasting workflow",text)
-    ## you can check the log
     print text
 
 
