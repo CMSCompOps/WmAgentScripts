@@ -777,7 +777,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
             if c==0:
                 text+="<tr>"
             if not disk:
-                ht_disk = '<a href=remaining_%s.html><font color=red>Disk available: %s</font></a>'%(disk,disk)
+                ht_disk = '<a href=remaining_%s.html><font color=red>Disk available: %s</font></a>'%(SI.CE_to_SE(site),disk)
             else:
                 ht_disk = 'Disk available: %s'%disk
 
