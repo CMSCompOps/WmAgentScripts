@@ -310,10 +310,10 @@
   "RunIISpring16DR80": {
     "go": true,
     "maxcopies": 2,
-    "force-complete" : 0.95,
+    "force-complete" : 0.99,
     "force-timeout" : 7,
     "lumisize": -1,
-    "fractionpass" : 0.90,
+    "fractionpass" : 0.95,
     "overflow": {"PU":{"max":20000,"pending":0,"force":false}},
     "DDMcopies": {
              "all" : { "N" : 4 },
@@ -332,7 +332,7 @@
     "overflow": {"PU":{"max":0,"pending":0,"force":false}}
   },
   "RunIISpring16MiniAODv1": {
-    "go": true,
+    "go": false,
     "maxcopies": 1,
     "fractionpass" : 0.13,
     "force-complete" : 0.95,
@@ -342,8 +342,8 @@
   "RunIISpring16MiniAODv2": {
     "go": true,
     "maxcopies": 1,
-    "fractionpass" : 0.90,
-    "force-complete" : 0.95,
+    "fractionpass" : 0.95,
+    "force-complete" : 0.99,
     "force-timeout" : 7,
     "lumisize": -1
   },
