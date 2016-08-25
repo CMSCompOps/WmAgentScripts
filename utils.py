@@ -329,12 +329,25 @@ class newLockInfo:
         os.system('echo `date` > %s/globallocks.json.lock'%monitor_dir)
 
     def free(self):
-        r = os.popen('curl -s http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/inActionLock.txt').read()
-        if not ('Not Found' in r):
-            sendLog('LockInfo','DDM lock is present\n%s'%(r),level='warning')
-            return False
-        else:
-            return True
+        started = time.mktime(time.gmtime())
+        max_wait = 50. #120*60. #2h
+        sleep_time = 30
+        locked = False
+        while True:
+            r = os.popen('curl -s http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/inActionLock.txt').read()
+            if not ('Not Found' in r):
+                sendLog('LockInfo','DDM lock is present\n%s'%(r),level='warning')
+                locked = True
+                now = time.mktime(time.gmtime())
+                if (now-stated) > max_wait: break
+                else:
+                    print "pausing"
+                    time.sleep(sleep_time)
+            else:
+                locked = False
+                break
+
+        return (not locked)
 
     def __del__(self):
         open('%s/globallocks.json.new'%monitor_dir,'w').write(json.dumps( sorted(list(set(self.db))) , indent=2 ))
