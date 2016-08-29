@@ -1201,7 +1201,8 @@ class siteInfo:
         for_max_running = dataCache.get('gwmsmon_site_summary')
         for site in self.cpu_pledges:
             if not site in for_max_running: continue
-            new_max = int(for_max_running[site]['MaxWasRunning'] * 0.70) ## put a fudge factor
+            #new_max = int(for_max_running[site]['MaxWasRunning'] * 0.70) ## put a fudge factor
+            new_max = int(for_max_running[site]['MaxWasCpusUse'] * 0.70) ## put a fudge factor
             if new_max > self.cpu_pledges[site]:
                 #print "could raise",site,"from",self.cpu_pledges[site],"to",for_max_running[site]['MaxWasRunning']
                 #print "raising",site,"from",self.cpu_pledges[site],"to",new_max
@@ -1214,16 +1215,20 @@ class siteInfo:
             m = 0
             r = 0
             if site in for_site_pressure:
-                m = for_site_pressure[site]['MatchingIdle']
-                r = for_site_pressure[site]['Running']
+                #m = for_site_pressure[site]['MatchingIdle']
+                #r = for_site_pressure[site]['Running']
+                m = for_site_pressure[site]['CpusPending']
+                r = for_site_pressure[site]['CpusInUse']
                 if not r: r = 1
                 pressure = m /float(r)
             ## ~1 = equilibrium
             ## < 1 : no pressure, running with low matching
             ## > 1 : pressure, plenty of matching
             self.sites_pressure[site] = (m, r, pressure)
-
-
+    
+    def sites_low_pressure(self, ratio):
+        sites = [site for site,(matching,running,_) in self.sites_pressure.items() if (running==0 or (matching/float(running))< ratio) and site in self.sites_ready]
+        return sites
 
     def sitesByMemory( self, maxMem, maxCore=1):
         if not self.sites_memory:

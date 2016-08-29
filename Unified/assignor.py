@@ -244,6 +244,36 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         ## should also check on number of sources, if large enough, we should be able to overflow most, efficiently
 
+        ## default back to white list to original white list with any data
+        print "Allowed",sorted(sites_allowed)
+
+        if primary_aaa:
+            sites_allowed = initial_sites_allowed
+            wfh.sendLog('assignor',"Selected to read primary through xrootd %s"%sorted(sites_allowed))
+        else:
+            sites_allowed = sites_with_any_data
+            wfh.sendLog('assignor',"Selected for any data %s"%sorted(sites_allowed))
+
+        ### check on endpoints for on-going transfers
+        if endpoints and options.partial:
+            sites_allowed = list(set(sites_allowed + [SI.SE_to_CE(s) for s in endpoints]))
+            print "with added endpoints",sorted(sites_allowed)
+            
+        if not len(sites_allowed):
+            wfh.sendLog('assignor',"cannot be assign with no matched sites")
+            sendLog('assignor','%s has no whitelist'% wfo.name, level='critical')
+            n_stalled+=1
+            continue
+
+
+        low_pressure = SI.sites_low_pressure(0.4)
+        ## if any of the site allowed is low pressure : reduce to 1 copy so that it gets started
+        allowed_and_low = sorted(set(low_pressure) & set(sites_allowed))
+        if allowed_and_low:
+            wfh.sendLog('assignor',"The workflow can run at %s under low pressure currently"%( ','.join( allowed_and_low )))
+            copies_wanted = max(1., copies_wanted-1.)
+
+
         if available_fractions and not all([available>=copies_wanted for available in available_fractions.values()]):
             not_even_once = not all([available>=1. for available in available_fractions.values()])
             wfh.sendLog('assignor',"The input dataset is not available %s times, only %s"%( copies_wanted, available_fractions.values()))
@@ -280,27 +310,6 @@ def assignor(url ,specific = None, talk=True, options=None):
                     print "Will move on with partial locations"
                 else:
                     continue
-
-        ## default back to white list to original white list with any data
-        print "Allowed",sorted(sites_allowed)
-
-        if primary_aaa:
-            sites_allowed = initial_sites_allowed
-            wfh.sendLog('assignor',"Selected to read primary through xrootd %s"%sorted(sites_allowed))
-        else:
-            sites_allowed = sites_with_any_data
-            wfh.sendLog('assignor',"Selected for any data %s"%sorted(sites_allowed))
-
-        ### check on endpoints for on-going transfers
-        if endpoints and options.partial:
-            sites_allowed = list(set(sites_allowed + [SI.SE_to_CE(s) for s in endpoints]))
-            print "with added endpoints",sorted(sites_allowed)
-            
-        if not len(sites_allowed):
-            wfh.sendLog('assignor',"cannot be assign with no matched sites")
-            sendLog('assignor','%s has no whitelist'% wfo.name, level='critical')
-            n_stalled+=1
-            continue
 
         t1_only = [ce for ce in sites_allowed if ce.startswith('T1')]
         if t1_only:
