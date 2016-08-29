@@ -339,7 +339,7 @@ class newLockInfo:
                 sendLog('LockInfo','DDM lock is present\n%s'%(r),level='warning')
                 locked = True
                 now = time.mktime(time.gmtime())
-                if (now-stated) > max_wait: break
+                if (now-started) > max_wait: break
                 else:
                     print "pausing"
                     time.sleep(sleep_time)
@@ -1191,7 +1191,7 @@ class siteInfo:
 
         #print s
         return datasets
-                    
+
     def fetch_glidein_info(self, talk=True):
         self.sites_memory = dataCache.get('gwmsmon_totals')
         for site in self.sites_memory.keys():
