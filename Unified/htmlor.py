@@ -784,7 +784,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
             up_com = ""
             if site in upcoming:
                 u = sum(upcoming[site][camp] for camp in upcoming[site])
-                up_com = "<br><a href=%s/GQ.json>Jobs available  %d</a>"%( monitor_dir,u) 
+                up_com = "<br><a href=GQ.json>Jobs available  %d</a>"%(u) 
                 #up_com="<br><ul>"
                 #for camp in upcoming[site]:
                 #    up_com += "<li>%s : %d</li>"% (camp, upcoming[site][camp])
