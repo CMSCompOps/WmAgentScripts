@@ -1,10 +1,9 @@
 {
   "HIRun2015": {
     "go": true,
-    "labels" : ["02May2016"],
+    "labels" : ["02May2016","25Aug2016"],
     "DDMcopies": { 
-     		 "all" : { "N" : 2 },
-		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
+     		 "all" : { "N" : 2 }
     },
     "custodial_override" : ["DQMIO"],
     "fractionpass": 1.0,
@@ -14,7 +13,7 @@
     "parameters": {
       "SiteWhitelist": [ "T2_US_Vanderbilt"]
     },
-    "overflow" : {"LHE": {"site_list" : ["T2_US_Vanderbilt", "T2_US_MIT"] }}
+    "custodial": "T1_FR_CCIN2P3_MSS"
   },
   "Commissioning2015": {
     "go": true,
