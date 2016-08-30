@@ -561,7 +561,7 @@ def checkor(url, spec=None, options=None):
                         duplications[output],files_per_rl[output] = dbs3Client.duplicateRunLumiFiles( output , skipInvalid=True, verbose=True)
                     except Exception as e:
                         wfi.sendLog('checkor','Not possible to check on duplicate lumi count on %s'%(output))
-                        sendLog('checkor','Not possible to check on duplicate lumi count on %s\n%'%(output,str(e)),level='critical')
+                        sendLog('checkor','Not possible to check on duplicate lumi count on %s\n%s'%(output,str(e)),level='critical')
                         is_closing=False
 
             if any(duplications.values()) and not options.ignoreduplicates:
