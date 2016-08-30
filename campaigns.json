@@ -271,7 +271,7 @@
     "go": false
   },
   "CosmicSpring16DR80" : {
-    "go": true
+    "go": false
   },
   "RunIISummer15wmLHEGS": {
     "go": true,
