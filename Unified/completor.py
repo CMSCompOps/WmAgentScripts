@@ -71,7 +71,7 @@ def completor(url, specific):
         print "looking at",wfo.name
 
         try:
-            parse_one( wfo.name )
+            parse_one(url, wfo.name )
         except Exception as e:
             print "failed error parsing"
             print str(e)

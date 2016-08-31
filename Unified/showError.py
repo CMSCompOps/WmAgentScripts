@@ -5,7 +5,7 @@ from collections import defaultdict
 from assignSession import *
 
 
-def parse_one(wfn, url):
+def parse_one(url, wfn):
 
     SI = global_SI()
     wfi = workflowInfo( url , wfn)
@@ -108,7 +108,7 @@ def parse_all(url):
     explanations = defaultdict(set)
     alls={}
     for wfo in session.query(Workflow).filter(Workflow.status == 'assistance-manual').all():    
-        task_error, one_explanation = parse_one( wfo.name, url )
+        task_error, one_explanation = parse_one( url, wfo.name)
         alls.update( task_error )
         for code in one_explanation:
             explanations[code].update( one_explanation[code] )
@@ -136,6 +136,6 @@ if __name__=="__main__":
     url = 'cmsweb.cern.ch'
 
     if len(sys.argv)>1:
-        parse_one(sys.argv[1], url)
+        parse_one(url, sys.argv[1])
     else:
         parse_all(url)
