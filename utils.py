@@ -3532,6 +3532,9 @@ class workflowInfo:
                 if verbose:
                     print "Using site whitelist restriction by campaign,",campaign,"configuration",sorted(c_sites_allowed)
                 sites_allowed = list(set(sites_allowed) & set(c_sites_allowed))
+                if not sites_allowed:
+                    sites_allowed = list(c_sites_allowed)
+
         c_black_list = CI.get(self.request['Campaign'], 'SiteBlacklist', [])
         c_black_list.extend( CI.parameters(self.request['Campaign']).get('SiteBlacklist', []))
         if c_black_list:
@@ -3836,6 +3839,12 @@ class workflowInfo:
         #    return self._collectintaskchain('Campaign')
         #else:
         return self.request['Campaign']
+
+    def getPrimaryDSN(self):
+        if self.request['RequestType'] == 'TaskChain':
+            return self._collectintaskchain('PrimaryDataset').values()
+        else:
+            return [self.request['PrimaryDataset']]
 
     def getCampaigns(self):
         if self.request['RequestType'] == 'TaskChain':
