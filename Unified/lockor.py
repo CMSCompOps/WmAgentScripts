@@ -48,15 +48,21 @@ if not already_locked:
     print "found",len(already_locked),"old locks"
 
 newly_locking = set()
+also_locking_from_reqmgr = set()
 ## you want to take them in reverse order to make sure none go through a transition while you run this 
 for status in reversed(statuses):
     wfls = getWorkflows(url , status = status,details=True)
     print len(wfls),"in",status
     for wl in wfls:
+        wfi = workflowInfo( url,  wl['RequestName'], request = wl ,spec=False)
+        (_,primaries,_,secondaries) = wfi.getIO()
+        outputs = wfi.request['OutputDatasets']
         ## unknonw to the system
         known = session.query(Workflow).filter(Workflow.name==wl['RequestName']).all()
         if not known: 
             #print wl['RequestName'],"is unknown, this is bad news" ## no it is not
+            for dataset in list(primaries)+list(secondaries)+outputs:
+                also_locking_from_reqmgr.add( dataset )
             continue
 
         if status == 'assignment-approved':
@@ -64,15 +70,17 @@ for status in reversed(statuses):
                 ## skip those only assignment-approved / considered
                 continue
 
-        wfi = workflowInfo( url,  wl['RequestName'], request = wl ,spec=False)
-        (_,primaries,_,secondaries) = wfi.getIO()
-        outputs = wfi.request['OutputDatasets']
+
 
         for dataset in list(primaries)+list(secondaries)+outputs:
             if 'FAKE' in dataset: continue
             if 'None' in dataset: continue
             newly_locking.add(dataset)
     print len(newly_locking),"locks so far"
+
+## avoid duplicates
+also_locking_from_reqmgr = also_locking_from_reqmgr - newly_locking
+print "additional lock for workflows not knonw to unified",len(also_locking_from_reqmgr)
 
 waiting_for_custodial={}
 stuck_custodial={}
@@ -111,7 +119,7 @@ for dataset in already_locked-newly_locking:
 
         tier = dataset.split('/')[-1]
         creators = getWorkflowByOutput( url, dataset , details=True)
-        if not creators and not tier == 'RAW':
+        if not creators and not tier == 'RAW' and not '-PromptReco-' in dataset:
             ds_status = getDatasetStatus( dataset )
             if not '-v0/' in dataset and ds_status!=None:
                 #sendEmail('failing get by output','%s has not been produced by anything?'%dataset)
@@ -262,7 +270,9 @@ for wfo in session.query(Workflow).filter(Workflow.status=='forget').all():
     session.commit()
 
 
-        
+### then add everything else that reqmgr knows about in a valid status
+### this is rather problematic because the locks are created and dealt recursively : i.e we assume to work on the delta between the previous locks and the new created ones. If we add those below, unified will try to unlock them at next round and create all sorts of trboules.
+### newly_locking.update( also_locking_from_reqmgr )
             
 open('%s/globallocks.json.new'%monitor_dir,'w').write( json.dumps( sorted(list(newly_locking)), indent=2))
 os.system('mv %s/globallocks.json.new %s/globallocks.json'%(monitor_dir,monitor_dir))
