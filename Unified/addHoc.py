@@ -1,12 +1,28 @@
 #!/usr/bin/env python  
-from utils import workflowInfo, getWorkflows, sendEmail, componentInfo, monitor_dir, reqmgr_url, newLockInfo
+from utils import workflowInfo, getWorkflows, sendEmail, componentInfo, monitor_dir, reqmgr_url, newLockInfo, siteInfo
 from assignSession import *
 import reqMgrClient
 import os
 import sys
 import json
+import time
 
 url = reqmgr_url
+
+
+
+
+si = siteInfo()
+m = {}
+for site in sorted(si.cpu_pledges.keys()):
+    print site, si.cpu_pledges[site], int(si.cpu_pledges[site]/2.)
+    m[site] = {"running" : si.cpu_pledges[site],
+               "pending" : int(si.cpu_pledges[site]/2.)
+               }
+n = time.gmtime()
+m["update"] = time.asctime(n)
+m["timestamp"] = time.mktime(n)
+open('/afs/cern.ch/user/c/cmst2/www/unified/thresholds.json','w').write(json.dumps( m, indent=2 ))
 
 #nl = newLockInfo()
 #nl.lock('/Neutrino_E-10_gun/RunIISpring15PrePremix-AVE_25_BX_25ns_76X_mcRun2_asymptotic_v12-v3/GEN-SIM-DIGI-RAW')
