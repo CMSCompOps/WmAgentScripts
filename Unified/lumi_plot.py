@@ -24,21 +24,6 @@ for ds in data:
 
 #if all_empty: l='.COMPLETE'
 
-html = open('/afs/cern.ch/user/c/cmst2/www/unified/datalumi/lumi.%s%s.html'%(f,l),'w')
-
-html.write("""
-<html>
-Updated on %s GMT<br>
-Missing lumisection summary for <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>%s</a><br> 
-<a href=json/%s> json file of content</a><br>
-<a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s> request info </a><br>
-<table border=1>
-<thead>
-<tr>
-"""%( time.asctime(time.gmtime()), f,f, 'ls.%s.json'%f, f))
-
-
-
 all_ls = set()
 for dataset,lss in data.items():
     #if not any([dataset.endswith(tier) for tier in ['MINIAOD','AOD','DQMIO']]): continue
@@ -46,6 +31,20 @@ for dataset,lss in data.items():
 
 all_ls= list(all_ls)
 print len(all_ls)
+html = open('/afs/cern.ch/user/c/cmst2/www/unified/datalumi/lumi.%s%s.html'%(f,l),'w')
+
+html.write("""
+<html>
+Updated on %s GMT<br>
+Missing <b>%d lumisection</b> summary for <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>%s</a>, <a href=json/%s> json file of content</a><br>
+<table border=1>
+<thead>
+<tr>
+"""%( time.asctime(time.gmtime()), len(all_ls) ,f, f, 'ls.%s.json'%f))
+
+
+
+
 all_ls.sort( key=lambda i :int(i.split(':')[1]))
 all_ls.sort( key=lambda i :int(i.split(':')[0]))
 
