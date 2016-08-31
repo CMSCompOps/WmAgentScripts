@@ -103,9 +103,16 @@ for wf in wfs:
             print "input on aaa for",wfi.request['RequestName']
             continue
 
+
+        pileup_location = None
+        for secondary in wqe['PileupData']:
+            if pileup_location == None:
+                pileup_location = wqe['PileupData'][secondary]
+            else:
+                pileup_location = list(set(pileup_location) & set(wqe['PileupData'][secondary]))
+            #print pileup_location,"secondary"
         ## wqe site whitelist in terms of SE
         swl = [si.CE_to_SE(s) for s in wl]
-
         if not swl:
             print "There is no site at which the workflow can run. Was provided with %s"%( ','.join(wqe['SiteWhitelist']))
             continue
@@ -115,6 +122,10 @@ for wf in wfs:
             if not '#' in b: 
                 ## this would be an ACDC document input
                 acdc_location = [si.CE_to_SE(s) for s in wqe['Inputs'][b]]
+                if pileup_location != None and not wqe['NoPileupUpdate']: ## meaning we have a secondary and we care about it
+                    print "intersecting with secondary",','.join(sorted(pileup_location))
+                    acdc_location = list(set(acdc_location) & set(pileup_location))
+                    
                 can_run_at = list(set(acdc_location)&set(swl))
                 if not can_run_at:
                     print b,"is at",acdc_location,"and wf set to run from",swl
