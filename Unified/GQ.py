@@ -33,6 +33,9 @@ except:
     replaced = []
 
 not_runable_acdc=set()
+agents_down = defaultdict(set)
+#wqe_by_agent = defaultdict(list)
+
 for wf in wfs:
     if spec and not spec in wf['RequestName']: continue
 
@@ -40,6 +43,8 @@ for wf in wfs:
     sitewhitelist = wfi.request['SiteWhitelist']
     wqs = wfi.getWorkQueue()
     
+    stats = wfi.getWMStats()
+
     ## skip wf that unified does not know about, leaves acdc
     wfo = session.query(Workflow).filter(Workflow.name == wf['RequestName']).first()
     if not (wfo or wf['RequestType']=='Resubmission'): 
@@ -51,6 +56,42 @@ for wf in wfs:
 
     for wq in wqs:
         wqe = wq[wq['type']]
+        if not wqe['ChildQueueUrl']:
+            agent = 'None'
+        else:
+            agent = wqe['ChildQueueUrl'].split('/')[-1].split(':')[0]
+        ## where the wf is set to be run at and site ready
+        wl = [s for s in wqe['SiteWhitelist'] if s in si.sites_ready]
+        #wqe_by_agent[agent].append( wqe )
+
+        if wqe['Status'] in ['Running']:
+            all_input_loc = set()
+            for b in wqe['Inputs']:
+                all_input_loc.update( wqe['Inputs'][b] ) ## intersection maybe ?
+
+            ## find out the numbe of jobs running on that workflow, from that agent
+            for running_agent,info in stats['AgentJobInfo'].iteritems():
+                if not agent in running_agent: continue ## look only at the agent with running blocks
+                for task,tinfo in info['tasks'].iteritems():
+                    if 'LogCollect' in task:continue
+                    if 'Cleanup' in task:continue
+                    if not 'status' in tinfo:
+                        if task in agents_down[agent]: continue
+                        print task,"stalled in the agent:",agent
+                        a_stall=False
+                        for s in all_input_loc:
+                            matching,running,_ = si.sites_pressure[s]
+                            maxcpu = si.cpu_pledges.get(s, -1)
+                            one_stall = ((running+matching) < maxcpu)
+                            print "%20s idled %10d running %10d : available %10d %s"%(s,matching,running, maxcpu,'READY' if one_stall else '')
+                            if one_stall: a_stall=True
+                        if a_stall:
+                            print json.dumps(tinfo, indent=2)
+                            agents_down[agent].add( task )
+                    else:
+                        #print task,agent,tinfo['status']
+                        pass
+
         if not wqe['Status'] in ['Available', 'Acquired']:#, 'Running']: 
             #print  wqe['Status']
             continue
@@ -61,8 +102,9 @@ for wf in wfs:
             ## input is remote: one day we'd like to move it to disk automatically, but not now
             print "input on aaa for",wfi.request['RequestName']
             continue
-        ## where the wf is set to be run at and site ready
-        swl = [si.CE_to_SE(s) for s in wqe['SiteWhitelist'] if s in si.sites_ready]
+
+        ## wqe site whitelist in terms of SE
+        swl = [si.CE_to_SE(s) for s in wl]
 
         if not swl:
             print "There is no site at which the workflow can run. Was provided with %s"%( ','.join(wqe['SiteWhitelist']))
@@ -137,7 +179,18 @@ if not_runable_acdc:
     sendLog('GQ','These %s ACDC cannot run \n%s'%( len(not_runable_acdc),
                                                    '\n'.join(not_runable_acdc)
                                                    ),level='critical')
-    
+
+#for agent in wqe_by_agent:
+    ## sort by priority
+    #work = wqe_by_agent
+    #work.sort( key= lambda i : i['Priority'], reversed=True )
+    ## now you can check whether this is activity on-going for that block
+
+
+if agents_down:
+    for agent,tasks in agents_down.iteritems():
+        if not tasks: continue
+        sendLog('GQ','These tasks look stalled in agent %s \n%s'%( agent, '\n'.join(sorted(tasks))),level='critical')
 
 #report += '\n\n in wqe but not holding a complete block\n\n'
 #for b in bad_blocks:
