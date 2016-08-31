@@ -564,7 +564,7 @@ def checkor(url, spec=None, options=None):
                         sendLog('checkor','Not possible to check on duplicate lumi count on %s\n%s'%(output,str(e)),level='critical')
                         is_closing=False
 
-            if any(duplications.values()) and not options.ignoreduplicates:
+            if is_closing and any(duplications.values()) and not options.ignoreduplicates:
                 duplicate_notice = ""
                 duplicate_notice += "%s has duplicates\n"%wfo.name
                 duplicate_notice += json.dumps( duplications,indent=2)
