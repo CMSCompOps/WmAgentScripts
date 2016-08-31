@@ -1210,7 +1210,7 @@ class siteInfo:
         
         for_site_pressure = dataCache.get('gwmsmon_prod_site_summary')
         self.sites_pressure = {}
-        for site in self.sites_ready:
+        for site in self.cpu_pledges:#sites_ready:
             pressure = 0
             m = 0
             r = 0
@@ -1219,11 +1219,10 @@ class siteInfo:
                 #r = for_site_pressure[site]['Running']
                 m = for_site_pressure[site]['CpusPending']
                 r = for_site_pressure[site]['CpusInUse']
-                if not r: r = 1
-                pressure = m /float(r)
-            ## ~1 = equilibrium
-            ## < 1 : no pressure, running with low matching
-            ## > 1 : pressure, plenty of matching
+                if r:
+                    pressure = m /float(r)
+                else:
+                    pressure = -1 ## does not matter
             self.sites_pressure[site] = (m, r, pressure)
     
     def sites_low_pressure(self, ratio):
