@@ -56,9 +56,9 @@ for wf in wfs:
     if not input_json:
         in_dataset = wf['InputDataset']
         runs = wf['RunWhitelist']
-        print ",".join(map(str,runs)),"were processed"
+        print "runs",",".join(map(str,runs)),"were processed"
         input_json = getDatasetLumis( in_dataset, runs=runs, with_cache=True)
-        print len(input_json)
+        #print len(input_json)
         for r in input_json: input_rl.extend([(int(r),l) for l in input_json[r]])
 
     ## collect the actual content of the output
