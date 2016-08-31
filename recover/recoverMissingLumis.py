@@ -241,6 +241,11 @@ def getFiles(datasetName, runBlacklist, runWhitelist, blockBlacklist,
         replicaInfo = phedexReader.getReplicaInfoForBlocks(block = blockName,
                                                            subscribed = 'y')
         blockFiles = dbsReader.listFilesInBlock(blockName, lumis=True)
+        try:
+        #    #fix when https://github.com/dmwm/WMCore/issues/7128 is fixed
+            blockFileParents = dbsReader.listFilesInBlockWithParents(blockName)
+        except:
+            blockFileParents = dbsReader.listFilesInBlock(blockName)
 
         blockLocations = set()
         #load block locations
@@ -264,13 +269,13 @@ def getFiles(datasetName, runBlacklist, runWhitelist, blockBlacklist,
         #for each file on the block
         for blockFile in blockFiles:
             parentLFNs = []
-            #get parent information about file
-            #blockFileParents = dbsReader.listFilesInBlockWithParents(blockName)
-            blockFileParents = dbsReader.listFilesInBlock(blockName)
             #populate parent information
             if blockFileParents and "ParentList" in blockFileParents[0]:
                 for fileParent in blockFileParents[0]["ParentList"]:
                     parentLFNs.append(fileParent["LogicalFileName"])
+            ## remove when https://github.com/dmwm/WMCore/issues/7128 gets fixed
+            #elif not 'RAW' in blockName:
+            #    print "no parent info"
             runInfo = {}
             #Lumis not included in file
             for lumiSection in blockFile["LumiList"]:
