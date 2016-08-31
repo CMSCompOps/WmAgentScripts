@@ -57,16 +57,30 @@ for dataset in datasets:
     html.write('<td>%s</td>\n'% dataset)
 html.write('</tr></thead>\n')
 
+cr=0
+run_switch=True
 for ls in all_ls:
-    html.write('<tr><td>%s</td>\n'%ls)
+    r=int(ls.split(':')[0])
+    l=False
+    if cr != r:
+        cr = r
+        run_switch = not run_switch
+        l=True
+
+    #bdr='style="border-top:4px solid black;"' if l else ''
+    bdr=''
+    green='green' if run_switch else 'lightgreen'
+    orange='red' if run_switch else 'pink'
+    #html.write('<tr><td %s>%s</td>\n'%('bgcolor=lightblue' if run_switch else '', ls))
+    html.write('<tr><td %s %s>%s</td>\n'%(bdr, 'bgcolor=lightblue' if run_switch else '', ls))
     for dataset in datasets:
         lss = data[dataset]
         if ls in lss:
-            html.write('<td bgcolor=orange> %s </td>\n'%lss[ls])
+            html.write('<td %s bgcolor=%s> %s </td>\n'%(bdr,orange,lss[ls]))
         else:
             #html.write('<td>&nbsp;</td>\n')
             #html.write('<td></td>\n')
-            html.write('<td bgcolor=lightblue></td>\n')
+            html.write('<td %s bgcolor=%s></td>\n'%(bdr,green))
     html.write('</tr>\n')
 
 html.write('</table></html>')
