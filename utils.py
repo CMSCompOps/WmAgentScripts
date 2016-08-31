@@ -2550,6 +2550,36 @@ def try_getDatasetEventsAndLumis(dataset, blocks=None):
     all_lumis = sum([f['num_lumi'] for f in all_files])
     return all_events,all_lumis
 
+
+def getDatasetRuns(dataset):
+    dbsapi = DbsApi(url=dbs_url)
+    reply = dbsapi.listRuns(dataset=dataset)
+    runs = []
+    for run in reply:
+        if type(run['run_num']) is list:
+            runs.extend(run['run_num'])
+        else:
+            runs.append(run['run_num'])
+    return runs
+
+def getFilesWithLumiInRun(dataset, run):
+    dbsapi = DbsApi(url=dbs_url)
+    start = time.mktime(time.gmtime())
+    reply = dbsapi.listFiles(dataset=dataset, detail=True, run_num=run)
+    #print time.mktime(time.gmtime())-start,'[s]'
+    files = [f['logical_file_name'] for f in reply if f['is_file_valid'] == 1]
+    start = 0
+    bucket = 100
+    rreply = []
+    while True:
+        these = files[start:start+bucket]
+        if len(these)==0: break
+        rreply.extend( dbsapi.listFileLumiArray(logical_file_name=these,run_num=run))
+        start+=bucket
+        #print len(rreply)
+    return rreply
+
+
 def getDatasetLumis(dataset, runs=None, with_cache=False):
     dbsapi = DbsApi(url=dbs_url)
     c_name= '.%s.lumis.json'%dataset.replace('/','_')
@@ -2562,16 +2592,23 @@ def getDatasetLumis(dataset, runs=None, with_cache=False):
         else:
             return opened
 
-    all_files = dbsapi.listFiles(dataset= dataset)
-    lumi_json = defaultdict(list)
-    full_lumi_json = defaultdict(list)
-    for f in all_files: 
-        lumi_info = dbsapi.listFileLumis(logical_file_name=f['logical_file_name'])
-        for l in lumi_info:
-            full_lumi_json[l['run_num']] = list(set( l['lumi_section_num'] + full_lumi_json[l['run_num']]))
-            if runs and not l['run_num'] in runs: continue
-            lumi_json[l['run_num']] = list(set( l['lumi_section_num'] + lumi_json[l['run_num']]))
 
+    full_lumi_json = defaultdict(set)
+    runs = getDatasetRuns( dataset )
+    print len(runs),"runs"
+    for run in runs:
+        files = getFilesWithLumiInRun( dataset, run )
+        print run,len(files),"files"
+        for f in files:
+            full_lumi_json[run].update( f['lumi_section_num'] )
+
+    ## convert
+    lumi_json = {}
+    for r in full_lumi_json: 
+        full_lumi_json[r] = list(full_lumi_json[r])
+        if runs and not r in runs: continue
+        lumi_json[r] = list(full_lumi_json[r])
+        
     open(c_name,'w').write( json.dumps( dict(full_lumi_json), indent=2))
     return dict(lumi_json)
             
