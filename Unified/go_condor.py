@@ -100,7 +100,7 @@ def makePrioCorrectionsAds():
     print anAd
 
 def makePerformanceCorrectionsAds(configs):
-    for memory in configs['memory']:
+    for memory in configs.get('memory',[]):
         wfs = configs['memory'][memory]
         anAd = classad.ClassAd()
         anAd["GridResource"] = "condor localhost localhost"
@@ -115,7 +115,7 @@ def makePerformanceCorrectionsAds(configs):
         anAd['set_RequestMemory'] = int(memory)
         print anAd
 
-    for timing in configs['time']:
+    for timing in configs.get('time',[]):
         wfs = configs['time'][timing]
         anAd = classad.ClassAd()
         anAd["GridResource"] = "condor localhost localhost"
@@ -123,7 +123,7 @@ def makePerformanceCorrectionsAds(configs):
         anAd["Name"] = str("Set timing requirement to %s"% timing)
         anAd["TimeTasknames"] = map(str, wfs)
         time_names_escaped = anAd.lookup('TimeTasknames').__repr__()
-        exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (target.HasBeenTimingTuned =!= true) && (target.MaxWallTimeMins <= %d' %( time_names_escaped, int(timing) ))
+        exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (target.HasBeenTimingTuned =!= true) && (target.MaxWallTimeMins <= %d)' %( time_names_escaped, int(timing) ))
         anAd["Requirements"] = classad.ExprTree(str(exp))
         anAd['set_HasBeenTimingTuned'] = True
         anAd['set_HasBeenRouted'] = False
