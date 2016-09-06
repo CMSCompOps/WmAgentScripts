@@ -76,10 +76,12 @@ for wf in wfs:
                     if 'LogCollect' in task:continue
                     if 'Cleanup' in task:continue
                     if not 'status' in tinfo:
+                        ## should also look for the previous step that has nothing running
                         if task in agents_down[agent]: continue
                         print task,"stalled in the agent:",agent
                         a_stall=False
                         for s in all_input_loc:
+                            if not s in si.sites_pressure: continue
                             matching,running,_ = si.sites_pressure[s]
                             maxcpu = si.cpu_pledges.get(s, -1)
                             one_stall = ((running+matching) < maxcpu)
