@@ -56,6 +56,10 @@ for dataset in datasets:
     html.write('<td>%s</td>\n'% dataset)
 html.write('</tr></thead>\n')
 
+html.write('<tr><td> Missing </td>')
+for dataset in datasets:
+    html.write('<td> total:<b>%d</b> </td>'%len( data[dataset] ))
+html.write('</tr>')
 cr=0
 run_switch=True
 for ls in all_ls:
