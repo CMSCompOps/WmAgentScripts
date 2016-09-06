@@ -1,5 +1,5 @@
 #!/usr/bin/env python  
-from utils import workflowInfo, getWorkflows, sendEmail, componentInfo, monitor_dir, reqmgr_url, newLockInfo, siteInfo
+from utils import workflowInfo, getWorkflows, sendEmail, componentInfo, monitor_dir, reqmgr_url, newLockInfo, siteInfo, sendLog
 from assignSession import *
 import reqMgrClient
 import os
@@ -38,7 +38,9 @@ wfs = getWorkflows(url, 'closed-out', user=None, rtype='DQMHarvest')
 for wf in wfs: 
     print "announcing",wf
     reqMgrClient.announceWorkflow(url, wf)
-
+wfs = getWorkflows(url, 'failed', user=None, rtype='DQMHarvest')
+if len(wfs):
+    sendLog('addHoc','There are failed Harvesting requests\n%s'%('\n'.join(sorted( wfs))),level='critical')
 
 #os.system('Unified/assignor.py')
 #os.system('Unified/equalizor.py -a pdmvserv_task_HIG-RunIIFall15DR76-01039__v1_T_160120_002705_9423')
