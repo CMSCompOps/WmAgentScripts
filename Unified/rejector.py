@@ -76,6 +76,7 @@ def rejector(url, specific, options=None):
                 print "keeping",dataset,"in its current status"
             else:
                 results.append( setDatasetStatus(dataset, 'INVALID') )
+                pass
 
 
         if all(map(lambda result : result in ['None',None,True],results)):
@@ -162,6 +163,26 @@ def rejector(url, specific, options=None):
                         schema.pop( p )
                         #pass
                 print "submitting"
+
+                if options.to_stepchain and schema['RequestType']=='TaskChain':
+                    ## transform the schema into StepChain schema
+                    schema['RequestType'] = 'StepChain'
+                    schema['StepChain'] = schema.pop('TaskChain')
+                    step=1
+                    while True:
+                        if 'Task%d'%step in schema:
+                            schema['Step%d'%step] = schema.pop('Task%d'%step)
+                            schema['Step%d'%step]['StepName'] = schema['Step%d'%step].pop('TaskName')
+                            if 'InputTask' in schema['Step%d'%step]:
+                                schema['Step%d'%step]['InputStep'] = schema['Step%d'%step].pop('InputTask')
+                            if not 'KeepOutput' in schema['Step%d'%step]:
+                                ## this is a weird translation capability. Absence of keepoutput in step means : keep the output. while in TaskChain absence means : drop
+                                schema['Step%d'%step]['KeepOutput'] = False
+                            step+=1
+                        else:
+                            break
+
+
                 print json.dumps( schema, indent=2 )
                 newWorkflow = reqMgrClient.submitWorkflow(url, schema)
                 if not newWorkflow:
@@ -200,6 +221,7 @@ if __name__ == "__main__":
     parser.add_option('--no_output',help='keep only the output of the last task of TaskChain',default=False,action='store_true')
     parser.add_option('--deterministic',help='set the splitting to deterministic in the clone',default=False,action='store_true')
     parser.add_option('--runs',help='set the run whitelist in the clone',default=None)
+    parser.add_option('--to_stepchain',help='transform a TaskChain into StepChain',default='False',action='store_true')
     (options,args) = parser.parse_args()
 
     spec=None
