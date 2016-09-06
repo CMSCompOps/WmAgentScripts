@@ -2595,10 +2595,10 @@ def getDatasetLumis(dataset, runs=None, with_cache=False):
 
     full_lumi_json = defaultdict(set)
     runs = getDatasetRuns( dataset )
-    print len(runs),"runs"
+    #print len(runs),"runs"
     for run in runs:
         files = getFilesWithLumiInRun( dataset, run )
-        print run,len(files),"files"
+        #print run,len(files),"files"
         for f in files:
             full_lumi_json[run].update( f['lumi_section_num'] )
 
@@ -2970,10 +2970,11 @@ def try_getWorkflows(url,status,user=None,details=False,rtype=None):
 
 def getPrepIDs(wl):
     pids = list()
-    if wl['RequestType'] == 'TaskChain':
+    if 'Chain' in wl['RequestType']:
+        base= wl['RequestType'].replace('Chain','')
         itask=1
         while True:
-            t = 'Task%s'% itask
+            t = '%s%d'%(base, itask)
             itask+=1
             if t in wl:
                 if 'PrepID' in wl[t]:
@@ -3394,12 +3395,13 @@ class workflowInfo:
             tpe = self.request['TimePerEvent']
             
             cput = ne * tpe
-        elif self.request['RequestType'] == 'TaskChain':
+        elif 'Chain' in self.request['RequestType']:
+            base = self.request['RequestType'].replace('Chain','')
             itask=1
             cput=0
             carry_on = {}
             while True:
-                t = 'Task%s'% itask
+                t = '%s%d'%(base, itask)
                 itask+=1
                 if t in self.request:
                     #print t
@@ -3410,46 +3412,20 @@ class workflowInfo:
                             (ne,_) = getDatasetEventsAndLumis( ds, task['BlockWhitelist'] )
                         else:
                             (ne,_) = getDatasetEventsAndLumis( ds )
-                    elif 'InputTask' in task:
+                    elif 'Input%s'%base in task:
                         ## we might have a problem with convoluted tasks, but maybe not
-                        ne = carry_on[task['InputTask']]
+                        ne = carry_on[task['Input%s'%base]]
                     elif 'RequestNumEvents' in task:
                         ne = float(task['RequestNumEvents'])
                     else:
                         print "this is not supported, making it zero cput"
                         ne = 0
                     tpe =task['TimePerEvent']
-                    carry_on[task['TaskName']] = ne
+                    carry_on[task['%sName'%base]] = ne
                     if 'FilterEfficiency' in task:
-                        carry_on[task['TaskName']] *= task['FilterEfficiency']
+                        carry_on[task['%sName'%base]] *= task['FilterEfficiency']
                     cput += tpe * ne
                     #print cput,tpe,ne
-                else:
-                    break
-        elif self.request['RequestType'] == 'StepChain':
-            itask=1
-            cput=0
-            carry_on = []
-            while True:
-                t = 'Step%s'% itask
-                itask+=1
-                if t in self.request:
-                    task = self.request[t]
-                    if 'InputDataset' in task:
-                        ds = task['InputDataset']
-                        if 'BlockWhitelist' in task and task['BlockWhitelist']:
-                            (ne,_) = getDatasetEventsAndLumis( ds, task['BlockWhitelist'] )
-                        else:
-                            (ne,_) = getDatasetEventsAndLumis( ds )
-                    elif 'RequestNumEvents' in task:
-                        ne = float(task['RequestNumEvents'])
-                    else:
-                        ne = carry_on[itask-1]
-                    tpe =task['TimePerEvent']
-                    carry_on.append( ne )
-                    if 'FilterEfficiency' in task:
-                        carry_on[-1] *= task['FilterEfficiency']
-                    cput += tpe * ne
                 else:
                     break
         else:
@@ -3502,6 +3478,7 @@ class workflowInfo:
             return 0
 
     def getBlowupFactors(self):
+        ## that does not exists for StepChain
         if self.request['RequestType']=='TaskChain':
             min_child_job_per_event=None
             root_job_per_event=None
@@ -3764,15 +3741,15 @@ class workflowInfo:
 
     def getMulticore(self):
         mcores = [self.request.get('Multicore',1)]
-        if self.request['RequestType'] == 'TaskChain':
-            mcores_d = self._collectintaskchain('Multicore',default=1)
+        if 'Chain' in self.request['RequestType']:
+            mcores_d = self._collectinchain('Multicore',default=1)
             mcores.extend( mcores_d.values() )
         return max(mcores)
         
     def getBlockWhiteList(self):
         bwl=[]
-        if self.request['RequestType'] == 'TaskChain':
-            bwl_t = self._collectintaskchain('BlockWhitelist')
+        if 'Chain' in self.request['RequestType']:
+            bwl_t = self._collectinchain('BlockWhitelist')
             for task in bwl_t:
                 bwl.extend(bwl_t[task])
         else:
@@ -3782,8 +3759,8 @@ class workflowInfo:
         return bwl
     def getLumiWhiteList(self):
         lwl=[]
-        if self.request['RequestType'] == 'TaskChain':
-            lwl_t = self._collectintaskchain('LumiWhitelist')
+        if 'Chain' in self.request['RequestType']:
+            lwl_t = self._collectinchain('LumiWhitelist')
             for task in lwl_t:
                 lwl.extend(lwl_t[task])
         else:
@@ -3792,8 +3769,8 @@ class workflowInfo:
         return lwl
     def getRunWhiteList(self):
         lwl=[]
-        if self.request['RequestType'] == 'TaskChain':
-            lwl_t = self._collectintaskchain('RunWhitelist')
+        if 'Chain' in self.request['RequestType']:
+            lwl_t = self._collectinchain('RunWhitelist')
             for task in lwl_t:
                 lwl.extend(lwl_t[task])
         else:
@@ -3836,19 +3813,11 @@ class workflowInfo:
                 
             return (lhe,primary, parent, secondary)
 
-        if self.request['RequestType'] == 'TaskChain':
+        if 'Chain' in self.request['RequestType']:
+            base = self.request['RequestType'].replace('Chain','')
             t=1
-            while 'Task%d'%t in self.request:
-                (alhe,aprimary, aparent, asecondary) = IOforTask(self.request['Task%d'%t])
-                if alhe: lhe=True
-                primary.update(aprimary)
-                parent.update(aparent)
-                secondary.update(asecondary)
-                t+=1
-        elif self.request['RequestType'] == 'StepChain':
-            t=1
-            while 'Step%d'%t in self.request:
-                (alhe,aprimary, aparent, asecondary) = IOforTask(self.request['Step%d'%t])
+            while '%s%d'%(base,t) in self.request:
+                (alhe,aprimary, aparent, asecondary) = IOforTask(self.request['%s%d'%(base,t)])
                 if alhe: lhe=True
                 primary.update(aprimary)
                 parent.update(aparent)
@@ -3859,33 +3828,38 @@ class workflowInfo:
 
         return (lhe,primary, parent, secondary)
 
-    def _collectintaskchain( self , member, func=None,default=None):
+    def _collectinchain(self, member, func=None, default=None):
+        if self.request['RequestType'] == 'StepChain':
+            return self._collectin_uhm_chain(member,func,default,base='Step')
+        elif self.request['RequestType'] == 'TaskChain':
+            return self._collectin_uhm_chain(member,func,default,base='Task')
+        else:
+            raise Exception("should not call _collectinchain on non-chain request")
+
+    def _collectin_uhm_chain( self , member, func=None,default=None, base=None):
         coll = {}
         t=1                              
-        while 'Task%d'%t in self.request:
-            if member in self.request['Task%d'%t]:
+        while '%s%d'%(base,t) in self.request:
+            if member in self.request['%s%d'%(base,t)]:
                 if func:
-                    coll[self.request['Task%d'%t]['TaskName']] = func(self.request['Task%d'%t][member])
+                    coll[self.request['%s%d'%(base,t)]['%sName'%base]] = func(self.request['%s%d'%(base,t)][member])
                 else:
-                    coll[self.request['Task%d'%t]['TaskName']] = self.request['Task%d'%t].get(member, default)
+                    coll[self.request['%s%d'%(base,t)]['%sName'%base]] = self.request['%s%d'%(base,t)].get(member, default)
             t+=1
         return coll
 
     def getCampaign( self ):
-        #if self.request['RequestType'] == 'TaskChain':
-        #    return self._collectintaskchain('Campaign')
-        #else:
         return self.request['Campaign']
 
     def getPrimaryDSN(self):
-        if self.request['RequestType'] == 'TaskChain':
-            return self._collectintaskchain('PrimaryDataset').values()
+        if 'Chain' in self.request['RequestType']:
+            return self._collectinchain('PrimaryDataset').values()
         else:
             return [self.request['PrimaryDataset']]
 
     def getCampaigns(self):
-        if self.request['RequestType'] == 'TaskChain':
-            return self._collectintaskchain('AcquisitionEra').values()
+        if 'Chain' in self.request['RequestType']:
+            return self._collectinchain('AcquisitionEra').values()
         else:
             return [self.request['Campaign']]
 
@@ -3905,15 +3879,15 @@ class workflowInfo:
                 sys.exit(34)
             return st
 
-        if self.request['RequestType'] == 'TaskChain':
-            acqEra = self._collectintaskchain('AcquisitionEra', func=invertDigits)
+        if 'Chain' in self.request['RequestType']:
+            acqEra = self._collectinchain('AcquisitionEra', func=invertDigits)
         else:
             acqEra = invertDigits(self.request['Campaign'])
         return acqEra
 
     def processingString(self):
-        if self.request['RequestType'] == 'TaskChain':
-            return self._collectintaskchain('ProcessingString')
+        if 'Chain' in self.request['RequestType']:
+            return self._collectinchain('ProcessingString')
         else:
             return self.request['ProcessingString']
         
