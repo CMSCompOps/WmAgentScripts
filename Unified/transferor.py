@@ -170,8 +170,11 @@ def transferor(url ,specific = None, talk=True, options=None):
     if min_transfer_priority==None or in_transfer_priority ==None:
         print "nothing is lining up for transfer"
         sendLog("transferor","No request in staging, using first request to set priority limit")
-        min_transfer_priority = wfs_and_wfh[0][1].request['RequestPriority']
-        in_transfer_priority = wfs_and_wfh[0][1].request['RequestPriority']
+        if len(wfs_and_wfh):
+            min_transfer_priority = wfs_and_wfh[0][1].request['RequestPriority']
+            in_transfer_priority = wfs_and_wfh[0][1].request['RequestPriority']
+        else:
+            return
 
     cput_grand_total = sum(input_cput.values())
     cput_to_transfer = cput_grand_total - cput_in_transfer_already
