@@ -17,11 +17,14 @@ if __name__ == "__main__":
     comment = options.comments
 
     if not status:
+        print "need to pass -s"
         sys.exit(0)
     if not spec:
+        print "need to pass -w"
         sys.exit(0)
 
-    for wf in session.query(Workflow).all():
+    #for wf in session.query(Workflow).all():
+    for wf in session.query(Workflow).filter(Workflow.name.contains(spec)).all():
         if spec and spec not in wf.name: continue
         #if not wf.status in ['away']: continue
 
