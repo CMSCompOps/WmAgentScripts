@@ -21,8 +21,7 @@ from utils import closeoutInfo
 
 def checkor(url, spec=None, options=None):
     if userLock():   return
-    if duplicateLock():  return
-
+    if duplicateLock() and not options.go:  return
 
     fDB = closeoutInfo()
 
@@ -740,7 +739,7 @@ def checkor(url, spec=None, options=None):
 
     fDB.html()
     if not spec:
-        #sendEmail("fresh assistance status available","Fresh status are available at https://cmst2.web.cern.ch/cmst2/unified/assistance.html",destination=['jen_a@fnal.gov'])
+        sendEmail("fresh assistance status available","Fresh status are available at https://cmst2.web.cern.ch/cmst2/unified/assistance.html",destination=['katherine.rozo@cern.ch'])
         #it's a bit annoying
         pass
 
@@ -771,6 +770,7 @@ if __name__ == "__main__":
 
     parser = optparse.OptionParser()
     parser.add_option('-t','--test', help='Only test the checkor', action='store_true', default=False)
+    parser.add_option('--go',help='Does not check on duplicate process', action='store_true', default=False)
     parser.add_option('-n','--new', help='fetch from running workflows', action='store_true', default=False)
     parser.add_option('-s','--strict', help='only checkor matter', action='store_true', default=False)
     parser.add_option('-c','--current', help='update those in assistance', action='store_true', default=False)    
