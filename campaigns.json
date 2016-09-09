@@ -356,7 +356,10 @@
   "Summer16wmLHEGENOnly14TeV": {
     "go": true,
     "tune" : true,
-    "lumisize": -1
+    "lumisize": -1,
+    "parameters" : {
+      "EventsPerJob": 50000
+    }
   },
   "RunIISummer16DR80": {
     "go": false,
