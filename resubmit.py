@@ -33,7 +33,10 @@ except:
     print "source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh"
     sys.exit(0)
 
-reqmgrCouchURL = "https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache"
+
+url = 'cmsweb.cern.ch'
+url_tb = 'cmsweb-testbed.cern.ch'
+reqmgrCouchURL = "/couchdb/reqmgr_workload_cache"
 
 DELTA_EVENTS = 1000
 DELTA_LUMIS = 200
@@ -157,15 +160,23 @@ def modifySchema(helper, workflow, user, group, cache, events, firstLumi, backfi
 
     return result
 
-def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=False, memory=None, timeperevent=None, bwl=None):
+def cloneWorkflow(workflow, user, group, testbed_origin=False,verbose=True, backfill=False, testbed=False, memory=None, timeperevent=None, bwl=None):
     """
     clones a workflow
     """
     # Get info about the workflow to be cloned
+    if testbed_origin:
+        reqmgrCouchURL = "https://" + url_tb + "/couchdb/reqmgr_workload_cache"
+    else:
+        reqmgrCouchURL = "https://" + url + "/couchdb/reqmgr_workload_cache"
+
     helper = reqMgrClient.retrieveSchema(workflow, reqmgrCouchURL)
     # Adapt schema and add original request to it
     try:
-        cache = reqMgrClient.getWorkloadCache(url, workflow)
+        if testbed_origin:
+            cache = reqMgrClient.getWorkloadCache(url_tb, workflow)
+        else:
+            cache = reqMgrClient.getWorkloadCache(url, workflow)
     except:
         cache = None
 
@@ -221,38 +232,52 @@ def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=F
             print "Couldn't clone the workflow."
         return None
 
-def getMissingEvents(workflow):
+def getMissingEvents(workflow,testbed_origin=False):
     """
     Gets the missing events for the workflow
     """
-    inputEvents = reqMgrClient.getInputEvents(url, workflow)
-    dataset = reqMgrClient.outputdatasetsWorkflow(url, workflow).pop()
-    outputEvents = reqMgrClient.getOutputEvents(url, workflow, dataset)
+    if testbed_origin:
+        inputEvents = reqMgrClient.getInputEvents(url_tb, workflow)
+        dataset = reqMgrClient.outputdatasetsWorkflow(url_tb, workflow).pop()
+        outputEvents = reqMgrClient.getOutputEvents(url_tb, workflow, dataset)
+    else:
+        inputEvents = reqMgrClient.getInputEvents(url, workflow)
+        dataset = reqMgrClient.outputdatasetsWorkflow(url, workflow).pop()
+        outputEvents = reqMgrClient.getOutputEvents(url, workflow, dataset)
     return int(inputEvents) - int(outputEvents)
 
-def extendWorkflow(workflow, user, group, verbose=False, events=None, firstlumi=None):
+def extendWorkflow(workflow, user, group, testbed_origin=False, verbose=False, events=None, firstlumi=None):
 
     if events is None:
-        events = getMissingEvents(workflow)
+        events = getMissingEvents(workflow,testbed_origin)
     events = int(events)
 
     if firstlumi is None:
         #get the last lumi of the dataset
-        dataset = reqMgrClient.outputdatasetsWorkflow(url, workflow).pop()
+        if testbed_origin:
+            dataset = reqMgrClient.outputdatasetsWorkflow(url_tb, workflow).pop()
+        else:
+            dataset = reqMgrClient.outputdatasetsWorkflow(url, workflow).pop()
 
         lastLumi = dbs3Client.getMaxLumi(dataset)
         firstlumi = lastLumi
     firstlumi = int(firstlumi)
 
     # Get info about the workflow to be cloned
-    helper = reqMgrClient.retrieveSchema(workflow)
+    if testbed_origin:
+        helper = reqMgrClient.retrieveSchema(workflow,url_tb)
+    else:
+        helper = reqMgrClient.retrieveSchema(workflow)
     schema = modifySchema(helper, workflow, user, group, None, events, firstlumi, None)
     schema['OriginalRequestName'] = workflow
     if verbose:
         pprint(schema)
     print 'Submitting workflow'
     # Submit cloned workflow to ReqMgr
-    response = reqMgrClient.submitWorkflow(url,schema)
+    if testbed:
+        response = reqMgrClient.submitWorkflow(url_tb,schema)
+    else:
+        response = reqMgrClient.submitWorkflow(url,schema)
     if verbose:
         print "RESPONSE", response
 
@@ -266,7 +291,10 @@ def extendWorkflow(workflow, user, group, verbose=False, events=None, firstlumi=
 
         # Move the request to Assignment-approved
         print 'Approve request response:'
-        data = reqMgrClient.setWorkflowApproved(url, newWorkflow)
+        if testbed:
+            data = reqMgrClient.setWorkflowApproved(url_tb, newWorkflow)
+        else:
+            data = reqMgrClient.setWorkflowApproved(url, newWorkflow) 
         print data
     else:
         print response
@@ -275,9 +303,6 @@ def extendWorkflow(workflow, user, group, verbose=False, events=None, firstlumi=
 """
 __Main__
 """
-url = 'cmsweb.cern.ch'
-url_tb = 'cmsweb-testbed.cern.ch'
-reqmgrCouchURL = "https://" + url + "/couchdb/reqmgr_workload_cache"
 
  
 def main():
@@ -304,6 +329,8 @@ def main():
     parser.add_option('-l', '--firstlumi', help='# of the first lumi', dest='firstlumi')
     parser.add_option("-m", "--memory", dest="memory", help="Set max memory for the event. At assignment, this will be used to calculate maxRSS = memory*1024")
     parser.add_option("--TimePerEvent", help="Set the TimePerEvent on the clone")
+    parser.add_option("--testbed_origin", action="store_true", dest="testbed_origin", default=False,
+                      help="Clone from testbed")
     parser.add_option("--testbed", action="store_true", dest="testbed", default=False,
                       help="Clone to testbed reqmgr insted of production")
     (options, args) = parser.parse_args()
@@ -329,16 +356,19 @@ def main():
         for wf in wfs:
             memory = None
             timeperevent = None
-            workflow = reqMgrClient.Workflow(wf)
+            if options.testbed_origin:
+                workflow = reqMgrClient.Workflow(wf,url_tb)
+            else:
+                workflow = reqMgrClient.Workflow(wf,url)
             if options.memory:
                 memory = float(options.memory)
             if options.TimePerEvent:
                 timeperevent = float(options.TimePerEvent)
             cloneWorkflow(
-                wf, user, options.group, options.verbose, options.backfill, options.testbed, memory,timeperevent,bwl=options.bwl)
+                wf, user, options.group, options.testbed_origin, options.verbose, options.backfill, options.testbed, memory,timeperevent,bwl=options.bwl)
     elif options.action == 'extend':
         for wf in wfs:
-            extendWorkflow(wf, user, options.group, options.verbose, options.events, options.firstlumi)
+            extendWorkflow(wf, user, options.group, options.testbed_origin, options.verbose, options.events, options.firstlumi)
 
     sys.exit(0)
 
