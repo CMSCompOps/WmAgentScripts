@@ -134,6 +134,8 @@ def checkor(url, spec=None, options=None):
     max_per_round = UC.get('max_per_round').get('checkor',None)
     if max_per_round and not spec: wfs = wfs[:max_per_round]
 
+    in_manual = 0
+
     for wfo in wfs:
         if spec and not (spec in wfo.name): continue
         time.sleep( sleep_time )
@@ -672,6 +674,7 @@ def checkor(url, spec=None, options=None):
                 assistance_tags = assistance_tags - set(['recovery','recovered']) 
                 ## straight to manual
                 assistance_tags.add('manual')
+                in_manual += 1
 
 
             ## that means there is something that needs to be done acdc, lumi invalidation, custodial, name it
@@ -738,7 +741,7 @@ def checkor(url, spec=None, options=None):
     #open('already_notifified.json','w').write( json.dumps( already_notified , indent=2))
 
     fDB.html()
-    if not spec:
+    if not spec and in_manual>10:
         sendEmail("fresh assistance status available","Fresh status are available at https://cmst2.web.cern.ch/cmst2/unified/assistance.html",destination=['katherine.rozo@cern.ch'])
         #it's a bit annoying
         pass
