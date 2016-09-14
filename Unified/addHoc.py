@@ -46,12 +46,46 @@ m["update"] = time.asctime(n)
 m["timestamp"] = time.mktime(n)
 open('/afs/cern.ch/user/c/cmst2/www/unified/thresholds.json','w').write(json.dumps( m, indent=2 ))
 
+### remove site from whitelist
+
+banned= ['T2_US_Vanderbilt']
+old=json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/equalizor.json').read())
+for wfn in ['vlimant_BPH-RunIISummer15GS-Backfill-00030_00212_v0__160906_122234_1944',
+            'vlimant_BPH-RunIISummer15GS-Backfill-00030_00212_v0__160907_112626_808',
+            'pdmvserv_HIG-RunIISummer15wmLHEGS-00418_00157_v0__160909_001621_321',
+            'pdmvserv_HIG-RunIISummer15wmLHEGS-00420_00157_v0__160909_001612_2018',
+            'pdmvserv_HIG-RunIISummer15wmLHEGS-00415_00157_v0__160909_001628_2566'
+            ]:
+    wfi = workflowInfo(url, wfn)
+    new_sites = sorted(list((set(wfi.request['SiteWhitelist']) - set(banned)) & set(si.sites_ready)))
+    for task in wfi.getWorkTasks():
+        if task.taskType in 'Production':
+            
+            bit={wfn : { task.pathName : {"ReplaceSiteWhitelist" : new_sites
+                                          }}}
+            print json.dumps( bit, indent=2)
+            old["modifications"].update( bit )
+open('/afs/cern.ch/user/c/cmst2/www/unified/equalizor.json','w').write( json.dumps( old, indent=2))
+
+### manually lock some dataset ### not bullet proof
 #nl = newLockInfo()
 #nl.lock('/Neutrino_E-10_gun/RunIISpring15PrePremix-AVE_25_BX_25ns_76X_mcRun2_asymptotic_v12-v3/GEN-SIM-DIGI-RAW')
 #nl.lock('/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIISummer15GS-MCRUN2_71_V1_ext1-v2/GEN-SIM')
 
 
-## all dqmharvest completed to announced right away
+### convert what we can from taskchain to stepchain ###
+wfs = session.query(Workflow).filter(Workflow.name.startswith('task_')).filter(Workflow.status in ['staging','staged','considered']).all()
+for wfo in wfs:
+    if not wfo.status in ['staging','staged','considered','considered-tried']: continue
+    wfi = workflowInfo(url, wfo.name)
+    if wfi.request['RequestType'] == 'TaskChain':
+        ## go fo the conversion
+        print "Converting",wfo.name,"into step chain ?"
+        #os.system('Unified/rejector.py --clone --to_step %s --comments "Transforming into StepChain for efficiency"'%( wfo.name))
+        #os.system('Unified/injector.py %s'% wfi.request['PrepID'])
+        pass
+
+### all dqmharvest completed to announced right away ###
 wfs = getWorkflows(url, 'completed', user=None, rtype='DQMHarvest')
 for wf in wfs: 
     print "closing out",wf
@@ -64,15 +98,13 @@ wfs = getWorkflows(url, 'failed', user=None, rtype='DQMHarvest')
 if len(wfs):
     sendLog('addHoc','There are failed Harvesting requests\n%s'%('\n'.join(sorted( wfs))),level='critical')
 
-#os.system('Unified/assignor.py')
-#os.system('Unified/equalizor.py -a pdmvserv_task_HIG-RunIIFall15DR76-01039__v1_T_160120_002705_9423')
-#os.system('Unified/equalizor.py -a pdmvserv_SMP-Summer12DR53X-00027_00440_v0__160224_044437_5031')
 
 up = componentInfo(mcm=False, soft=['mcm'])                                 
 if not up.check():  
     sys.exit(1)     
 
 
+### clone all DR80 that end up with issues ###
 ## 
 #for wfo in session.query(Workflow).filter(Workflow.status == 'assistance-manual').all():
 #    if not any([c in wfo.name for c in ['RunIISpring16DR80']]): continue
@@ -80,32 +112,6 @@ if not up.check():
 #    if wfi.getRequestNumEvents() < 500000:
 #        ## small workflow that needs recovery : kill-clone
 #        os.system('Unified/rejector.py --clone %s'%wfo.name)
-
-### catch unrunnable recoveries
-
-"""
-### now in GQ.py module
-report = ""
-not_runable_acdc=set()
-wfs = getWorkflows(url, 'acquired', user=None, rtype='Resubmission',details=True)
-for wf in wfs:
-    wfi = workflowInfo( url , wf['RequestName'], request=wf)
-    locs = wfi.getGQLocations()
-    wl = set(wfi.request['SiteWhitelist'])
-    for wqe,where in locs.items():
-        ok = wl & set(where)
-        if not ok :
-            print "WQE will not run in",wf['RequestName']
-            #print list(wl),"does not contain",list(where)
-            print "Withlist does not contain",list(where)
-            not_runable_acdc.add( wf['RequestName'] )
-            report += 'a workqueue element will not run for %s\n'%(wf['RequestName'])
-            report += 'whitelist does not contain %s\n'% list(where)
-report += '\nfruther check on https://cmst2.web.cern.ch/cmst2/unified/logs/addHoc/last.log\n'
-
-if not_runable_acdc:
-    sendEmail('not runnable ACDCs','These %s ACDC cannot run \n%s\n%s'%( len(not_runable_acdc), '\n'.join(not_runable_acdc), report), destination = ['jen_a@fnal.gov','katherine.rozo@cern.ch'])
-"""
 
 """
 ### add the value of the delay to announcing datasets
@@ -129,29 +135,6 @@ for wfo in session.query(Workflow).filter(Workflow.status.startswith('done')).al
     print wfo.name,"delay",delay
 open('%s/announce_delays.json'%monitor_dir,'w').write( json.dumps(data, indent=2) )
 """
-
-
-#os.system('Unified/assignor.py --go RunIIFall15MiniAODv2 --limit 50')
-
-#print "nothing add-Hoc to be done"
-sys.exit(0)
-
-
-"""
-os.system('Unified/equalizor.py -a pdmvserv_SUS-RunIISummer15GS-00049_00173_v0__151222_121539_4448')
-os.system('Unified/equalizor.py -a pdmvserv_SUS-RunIISummer15GS-00058_00173_v0__151222_121515_6269')
-os.system('Unified/equalizor.py -a pdmvserv_SUS-RunIIWinter15GS-00160_00183_v0__151222_121840_6707')
-os.system('Unified/equalizor.py -a  pdmvserv_HIG-RunIISummer15GS-00937_00138_v0__151117_201115_6260')
-os.system('Unified/equalizor.py -a  vlimant_HIG-RunIISummer15GS-00935_00138_v0__151223_004144_9025')
-os.system('Unified/equalizor.py -a  pdmvserv_HIG-RunIISummer15GS-00073_00169_v0__151217_161512_9524')
-os.system('Unified/equalizor.py -a  pdmvserv_EXO-RunIISummer15GS-04765_00148_v0__151204_202120_8377 ')
-os.system('Unified/equalizor.py -a  pdmvserv_EXO-RunIISummer15GS-04784_00149_v0__151204_202355_4639 ')
-os.system('Unified/equalizor.py -a vlimant_HIG-RunIISummer15GS-01015_00152_v0__151223_191655_2771 ')
-os.system('Unified/equalizor.py -a pdmvserv_SUS-RunIISummer15GS-00003_00173_v0__151222_121430_3443')
-os.system('Unified/equalizor.py -a pdmvserv_task_TSG-RunIIFall15DR76-00002__v1_T_151118_012230_2147')
-os.system('Unified/equalizor.py -a jbadillo_TOP-Summer11LegDR-00039_00062_v0__151216_131228_9019')
-"""
-
 
 #for wfo in session.query(Workflow).filter(Workflow.status == 'staging').all():
 #    wfi = workflowInfo(url, wfo.name )
