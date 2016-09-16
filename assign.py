@@ -231,9 +231,9 @@ def main():
         elif not taskchain:
             era = wf.info['AcquisitionEra']
         #Set era and procstring to none for merge ACDCs inside a task chain
-        # if schema["RequestType"] == "Resubmission" and wf.info["PrepID"].startswith("task") and "Merge" in schema["InitialTaskPath"].split("/")[-1]:
-        #     era = None
-        #     procstring = None
+        if schema["RequestType"] == "Resubmission" and wf.info["PrepID"].startswith("task") and "Merge" in schema["InitialTaskPath"].split("/")[-1]:
+            era = None
+            procstring = None
 
     
         # activity production by default for taskchains, reprocessing for default by workflows
