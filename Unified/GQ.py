@@ -1,4 +1,4 @@
-from utils import getDatasetBlockAndSite, siteInfo, getWorkflows, workflowInfo, monitor_dir, sendLog, sendEmail, makeReplicaRequest, unifiedConfiguration
+from utils import getDatasetBlockAndSite, siteInfo, getWorkflows, workflowInfo, monitor_dir, sendLog, sendEmail, makeReplicaRequest, unifiedConfiguration, getDatasetFileLocations
 from collections import defaultdict
 import time
 import json
@@ -34,8 +34,8 @@ except:
 
 not_runable_acdc=set()
 agents_down = defaultdict(set)
-#wqe_by_agent = defaultdict(list)
-
+failed_workflow = set()
+files_locations = {}
 for wf in wfs:
     if spec and not spec in wf['RequestName']: continue
 
@@ -63,6 +63,9 @@ for wf in wfs:
         ## where the wf is set to be run at and site ready
         wl = [s for s in wqe['SiteWhitelist'] if s in si.sites_ready]
         #wqe_by_agent[agent].append( wqe )
+
+        if wqe['Status'] in ['Failed']:
+            failed_workflow.add( wf['RequestName'] )
 
         if wqe['Status'] in ['Running']:
             all_input_loc = set()
@@ -121,8 +124,42 @@ for wf in wfs:
 
         not_processable = set()
         for b in wqe['Inputs']:
+            ## what the global queue thinks about the block location
+            wqe_se = [si.CE_to_SE(s) for s in wqe['Inputs'][b]]
+
             if not '#' in b: 
+                print "acdc doc input",b
                 ## this would be an ACDC document input
+                #retrieve it and check data file location ?
+                original = workflowInfo(url, wfi.request['OriginalRequestName'])
+                doc = original.getRecoveryDoc()
+                _,prim,_,sec = original.getIO()
+                in_files = set()
+
+                for rdoc in doc:
+                    in_files.update( rdoc['files'].keys() )
+                print len(in_files),"files in ACDC doc"
+                ## find all files locations if reading a dataset
+                dataset = None
+                for dataset in prim:
+                    if not dataset in files_locations:
+                        files_locations[dataset] = getDatasetFileLocations(url, dataset)
+                    print "ACDC reads",dataset
+                
+                if dataset:
+                    ### check all input file
+                    for in_file in in_files:
+                        files_se=[]
+                        if in_file in files_locations[dataset]:
+                            files_se= files_locations[dataset][in_file]
+                            site_with_data_and_listed = list(set(files_se) & set(swl))
+                            if not site_with_data_and_listed:
+                                print "File",in_file,"is at",",".join( files_se ),"while asked to run at",",".join(sorted(swl))
+                                not_processable.add( in_file )
+                            #else:                                print in_file,"checks out"
+                else:
+                    print "original workflow does not read from any dataset"
+                    
                 acdc_location = [si.CE_to_SE(s) for s in wqe['Inputs'][b]]
                 if pileup_location != None and not wqe['NoPileupUpdate']: ## meaning we have a secondary and we care about it
                     print "intersecting with secondary",','.join(sorted(pileup_location))
@@ -143,7 +180,7 @@ for wf in wfs:
                         block_locations[ds][bl].append( s )
 
             if not b in block_locations[ds]:
-                print b,"is not to be found in phedex, needed be",wfi.request['RequestName']
+                print b,"is not to be found in phedex, needed by",wfi.request['RequestName']
                 ## should send a critical log
                 continue
 
@@ -151,8 +188,6 @@ for wf in wfs:
             #wqe_ce = [s for s in wqe['Inputs'][b]]
             ## true location of the data
             block_se = block_locations[ds][b] 
-            ## what the global queue thinks about the block location
-            wqe_se = [si.CE_to_SE(s) for s in wqe['Inputs'][b]]
 
 
             ## the ones in wqe with no true locations
@@ -176,7 +211,7 @@ for wf in wfs:
                 not_processable.add( b )
                 print "Block",b,"is at",",".join(sorted(block_se)),"while asked to run at",",".join(sorted(swl))
         if not_processable:
-            wfi.sendLog('GQ','The following blocks need to be put back on disk \n%s'%(','.join( not_processable )))
+            wfi.sendLog('GQ','The following blocks/files need to be put back on disk \n%s'%(','.join( not_processable )))
 
 report = "updated %s \n"%time.asctime(time.gmtime())
 print "="*20
@@ -199,11 +234,15 @@ if not_runable_acdc:
     #work.sort( key= lambda i : i['Priority'], reversed=True )
     ## now you can check whether this is activity on-going for that block
 
+if failed_workflow:
+    sendLog('GQ','These workflows have failed wqe and will stay stuck:\n%s'%('\n'.join( failed_workflow)))
+    pass
 
 if agents_down:
     for agent,tasks in agents_down.iteritems():
         if not tasks: continue
-        sendLog('GQ','These tasks look stalled in agent %s \n%s'%( agent, '\n'.join(sorted(tasks))),level='critical')
+        #sendLog('GQ','These tasks look stalled in agent %s \n%s'%( agent, '\n'.join(sorted(tasks))),level='critical')
+        pass
 
 #report += '\n\n in wqe but not holding a complete block\n\n'
 #for b in bad_blocks:
