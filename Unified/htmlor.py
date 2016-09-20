@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 import time
-from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration, getPrepIDs, componentInfo
+from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration, getPrepIDs, componentInfo, getAllAgents
 import os
 import json
 from collections import defaultdict
@@ -971,6 +971,33 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
 """%(text))
 
     lap ( 'done with configuration' )
+
+
+    html_doc.write("""Agent Health
+<a href="javascript:showhide('agent')">[Click to show/hide]</a>
+<div id="agent" style="display:none;">
+<table border=1><thead>
+<tr><td>Agent</td><td>Running/Pending hourly</td><td>Running/Pending daily</td></tr></thead>
+""")
+    for team,agents in getAllAgents(reqmgr_url).items():
+        html_doc.write("<tr><td bgcolor=lightblue>%s</td></tr>"% team)
+        for agent in agents:
+            if agent['drain_mode'] == True: continue
+            name= agent['agent_url'].split(':')[0]
+            html_doc.write("""
+<tr><td>%s</td>
+<td><img src=http://cms-gwmsmon.cern.ch/poolview/graphs/%s/hourly></td>
+<td><img src=http://cms-gwmsmon.cern.ch/poolview/graphs/%s/daily></td>
+<td><img src=http://cms-gwmsmon.cern.ch/poolview/graphs/scheddwarning/%s/hourly></td>
+</tr>
+"""%( name,
+      name.replace('.','-'),
+      name.replace('.','-'),
+      name.replace('.','-'),
+      ))
+    html_doc.write("</table><br></div>")
+
+    lap( 'done with agents' )
 
 
     print "... done with status page."
