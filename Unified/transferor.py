@@ -267,6 +267,9 @@ def transferor(url ,specific = None, talk=True, options=None):
                 if sec in allowed_secondary:
                     overide_parameters.update( allowed_secondary[sec] )
 
+        if 'SiteWhitelist' in overide_parameters:
+            sites_allowed = list(set(sites_allowed) & set(overide_parameters['SiteWhitelist']))
+
         if no_go:
             continue
         ## check if the batch is announced
