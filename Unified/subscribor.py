@@ -34,7 +34,8 @@ if max_wf: wfs = wfs[:max_wf]
 random.shuffle( wfs )
 all_blocks_at_sites = defaultdict(set)
 
-done = json.loads(open('myblock_done.json').read())
+#done = json.loads(open('myblock_done.json').read())
+done = {}
 
 print len(wfs),"to look the output of"
 
@@ -74,4 +75,4 @@ for site,blocks in all_blocks_at_sites.items():
         print makeReplicaRequest(url, site, list(blocks), "Production blocks", priority="low", approve=True,mail=False)
         time.sleep(1)
 
-open('myblock_done.json','w').write( json.dumps( done, indent=2 ))
+#open('myblock_done.json','w').write( json.dumps( done, indent=2 ))
