@@ -60,11 +60,11 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         ## the site whitelist takes into account siteInfo, campaignInfo, memory and cores
         (lheinput,primary,parent,secondary, sites_allowed) = wfh.getSiteWhiteList()
-
+        output_tiers = list(set([o.split('/')[-1] for o in wfh.request['OutputDatasets']]))
+        
         ## check if by configuration we gave it a GO
         no_go = False
         if not wfh.go(log=True) and not options.go:
-            n_stalled+=1 
             no_go = True
 
         allowed_secondary = {}
@@ -73,13 +73,19 @@ def assignor(url ,specific = None, talk=True, options=None):
             if campaign in CI.campaigns and 'secondaries' in CI.campaigns[campaign]:
                 #allowed_secondary.update( CI.campaigns[campaign]['secondaries'].keys() )
                 allowed_secondary.update( CI.campaigns[campaign]['secondaries'] )
+            if campaign in CI.campaigns and 'banned_tier' in CI.campaigns[campaign]:
+                banned_tier = list(set(CI.campaigns[campaign]['banned_tier']) & set(output_tiers))
+                if banned_tier:
+                    no_go=True
+                    wfh.sendLog('assignor','These data tiers %s are not allowed'%(','.join( banned_tier)))
+                    sendLog('assignor','These data tiers %s are not allowed'%(','.join( banned_tier)), level='critical')
+
         if (secondary and allowed_secondary):
             if (set(secondary)&set(allowed_secondary.keys())!=set(secondary)):
                 wfh.sendLog('assignor','%s is not an allowed secondary'%(', '.join(set(secondary)-set(allowed_secondary.keys()))))
                 #sendEmail('secondary not allowed','%s is not an allowed secondary'%( ', '.join(set(secondary)-allowed_secondary)))
                 sendLog('assignor','%s is not an allowed secondary'%(', '.join(set(secondary)-set(allowed_secondary.keys()))), level='critical')
                 if not options.go:
-                    n_stalled+=1
                     no_go = True
             ## then get whether there is something more to be done by secondary
             for sec in secondary:
@@ -88,6 +94,7 @@ def assignor(url ,specific = None, talk=True, options=None):
                     assign_parameters.update( allowed_secondary[sec] )
                 
         if no_go:
+            n_stalled+=1 
             continue
 
 
