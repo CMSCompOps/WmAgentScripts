@@ -171,6 +171,8 @@ def main():
             sites = SI.sites_T1s
         elif options.sites.lower() == "t2":
             sites = SI.sites_T2s
+        elif options.sites.lower() in ["all","t1+t2","t2+t1"] :
+            sites = SI.sites_T2s+SI.sites_T1s
         elif options.sites.lower() == "mcore":
             sites = SI.sites_mcore_ready
         elif hasattr(SI,options.sites):
