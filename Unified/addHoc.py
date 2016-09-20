@@ -7,6 +7,11 @@ import sys
 import json
 import time
 
+url = reqmgr_url
+
+## protected lfn list
+os.system('python listProtectedLFN.py')
+
 ### dump the knonw thresholds
 si = siteInfo()
 m = {}
