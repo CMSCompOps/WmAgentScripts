@@ -249,6 +249,10 @@ def equalizor(url , specific = None, options=None):
     except:
         pass
 
+    restricting_to_ready = ['pdmvserv_HIG-RunIISummer15wmLHEGS-00420_00157_v0__160909_001612_2018',
+                            'pdmvserv_HIG-RunIISummer15wmLHEGS-00418_00157_v0__160909_001621_321',
+                            'pdmvserv_HIG-RunIISummer15wmLHEGS-00419_00157_v0__160909_001621_2641'
+                            ]
 
     stay_within_site_whitelist = False
     specific_task=None
@@ -284,7 +288,7 @@ def equalizor(url , specific = None, options=None):
         for task in wfi.getWorkTasks():
             tasks_and_campaigns.append( (task, getcampaign(task) ) )
         
-        _,_,_,sec = wfi.getIO()
+        _,prim,_,sec = wfi.getIO()
 
         ## check needs override
         needs_overide = False
@@ -342,9 +346,14 @@ def equalizor(url , specific = None, options=None):
                     performance[task.pathName] = {}
                     if set_memory:
                         performance[task.pathName]['memory']=set_memory
-                    if set_time and False:
+                    if set_time:
                         performance[task.pathName]['time'] = set_time
             
+            if wfo.name in restricting_to_ready:
+                if task.taskType in ['Production']:
+                    new_list = list(set(SI.sites_ready)&set(wfi.request['SiteWhitelist']))
+                    modifications[wfo.name][task.pathName] = { "ReplaceSiteWhitelist" : new_list }
+
             ### rule to avoid the issue of taskchain secondary jobs being stuck at sites processing the initial step
             if campaign in LHE_overflow:
                 if task.taskType in ['Processing']:
@@ -391,13 +400,20 @@ def equalizor(url , specific = None, options=None):
                     needs, task_name, running, idled = needs_action(wfi, task)
                     ## removing the ones in the site whitelist already since they encode the primary input location
                     if stay_within_site_whitelist:
-                        original_site_in_use = set(wfi.request['SiteWhitelist'])
+                        original_site_in_use = set(wfi.request['SiteWhitelist'] & set(secondary_locations))
                     else:
                         original_site_in_use = set(secondary_locations)
+
+                    mode = 'AddWhitelist'
+                    if not prim:
+                        print "because there isn't any input, one should be able to just replace the sitewhitelist instead of adding, with the restriction of not reaching every possible sites"
+                        mode='ReplaceSiteWhitelist'
+
                     ## remove the sites that have already running jobs
                     gmon = wfi.getGlideMon()
-                    if gmon and task_name in gmon and 'Sites' in gmon[task_name]:
+                    if gmon and task_name in gmon and 'Sites' in gmon[task_name] and mode=='AddWhitelist':
                         site_in_use = set(gmon[task_name]['Sites'])
+                        site_in_use = set([]) ## at this time I cannot find a reason to apply such limitation
                         print "removing",sorted(site_in_use)
                         ## that determines where you want to run in addition
                         augment_by = list((set(secondary_locations)- site_in_use) & original_site_in_use)
@@ -412,11 +428,12 @@ def equalizor(url , specific = None, options=None):
                         PU_overflow[campaign]['pending'] += idled
                         print "raising overflow to",PU_overflow[campaign]['pending'],"for",PU_overflow[campaign]['max']
                         ## the step with an input ought to be the digi part : make this one go anywhere
-                        modifications[wfo.name][task.pathName] = { "AddWhitelist" : augment_by , "Running" : running, "Pending" : idled, "Priority" : wfi.request['RequestPriority']}
+                        modifications[wfo.name][task.pathName] = { mode : augment_by , "Running" : running, "Pending" : idled, "Priority" : wfi.request['RequestPriority']}
                         altered_tasks.add( task.pathName )
-                        wfi.sendLog('equalizor','%s of %s is running %d and pending %d, taking action : AddWhitelist \n %s'%( task_name, wfo.name,
-                                                                                                                              running, idled,
-                                                                                                                              json.dumps( sorted(augment_by), indent=2 )))
+                        wfi.sendLog('equalizor','%s of %s is running %d and pending %d, taking action : %s \n %s'%( task_name, wfo.name,
+                                                                                                                    running, idled,
+                                                                                                                    mode,
+                                                                                                                    json.dumps( sorted(augment_by), indent=2 )))
                     else:
                         print task_name,"of",wfo.name,"running",running,"and pending",idled
 
