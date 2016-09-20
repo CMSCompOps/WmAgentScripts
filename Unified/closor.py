@@ -13,7 +13,7 @@ import reqMgrClient
 import re
 import copy
 import random
-
+import optparse
 
 def spawn_harvesting(url, wfi , in_full):
     SI = siteInfo()
@@ -121,7 +121,7 @@ def spawn_harvesting(url, wfi , in_full):
                 all_OK[dqm_input]=False                    
     return (all_OK, requests)
 
-def closor(url, specific=None):
+def closor(url, specific=None, options=None):
     if userLock(): return
     if duplicateLock(): return
     if not componentInfo().check(): return
@@ -231,8 +231,9 @@ def closor(url, specific=None):
     
         ## verify if we have to do harvesting
 
-        (OK, requests) = spawn_harvesting(url, wfi, in_full)
-        all_OK.update( OK )
+        if not options.no_harvest:
+            (OK, requests) = spawn_harvesting(url, wfi, in_full)
+            all_OK.update( OK )
 
         ## only that status can let me go into announced
         if all(all_OK.values()) and wfi.request['RequestStatus'] in ['closed-out']:
@@ -358,10 +359,15 @@ def closor(url, specific=None):
         
 if __name__ == "__main__":
     url = reqmgr_url
+    parser = optparse.OptionParser()
+    parser.add_option('--no_harvest',help='Bypass the harvesting',default=False,action='store_true')
+    (options,args) = parser.parse_args()
+
     spec=None
-    if len(sys.argv)>1:
-        spec=sys.argv[1]
-    closor(url,spec)
+    if len(args)!=0:
+        spec = args[0]
+
+    closor(url,spec, options=options)
 
     if not spec:
         htmlor()
