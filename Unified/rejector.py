@@ -163,9 +163,9 @@ def rejector(url, specific, options=None):
                         schema.pop( p )
                         #pass
                 print "submitting"
-
-                if options.to_stepchain and schema['RequestType']=='TaskChain':
+                if (options.to_stepchain and (schema['RequestType']=='TaskChain')):
                     ## transform the schema into StepChain schema
+                    print "Transforming a TaskChain into a StepChain"
                     schema['RequestType'] = 'StepChain'
                     schema['StepChain'] = schema.pop('TaskChain')
                     step=1
@@ -221,11 +221,12 @@ if __name__ == "__main__":
     parser.add_option('--no_output',help='keep only the output of the last task of TaskChain',default=False,action='store_true')
     parser.add_option('--deterministic',help='set the splitting to deterministic in the clone',default=False,action='store_true')
     parser.add_option('--runs',help='set the run whitelist in the clone',default=None)
-    parser.add_option('--to_stepchain',help='transform a TaskChain into StepChain',default='False',action='store_true')
+    parser.add_option('-s','--to_stepchain',help='transform a TaskChain into StepChain',default=False,action='store_true')
     (options,args) = parser.parse_args()
 
     spec=None
     if len(args):
         spec = args[0]
     
+
     rejector(url, spec, options)
