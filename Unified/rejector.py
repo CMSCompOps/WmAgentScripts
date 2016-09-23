@@ -157,7 +157,11 @@ def rejector(url, specific, options=None):
                           'RequestName',
                           'timeStamp',
                           'SoftwareVersions',
-                          'CouchURL'
+                          'CouchURL',
+                          'TotalInputEvents',
+                          'TotalEstimatedJobs',
+                          'TotalInputLumis',
+                          'TotalInputFiles'
                           ]:
                     if p in schema:
                         schema.pop( p )
