@@ -80,6 +80,13 @@ for wf in wfs:
     s=None
     while s==None:
         s = wfi.getSummary()
+    if 'error' in s and s['error'] == 'not_found': 
+        print s
+        continue
+
+    e=None
+    #while e==None:
+    #    e = wfi.getWMErrors()
 
     output_per_task = defaultdict(list)
     for ds in s['output']:
@@ -87,6 +94,18 @@ for wf in wfs:
             output_per_task[task].append( ds )
     #print json.dumps( output_per_task, indent =2 )
 
+    #for task in e:
+    #    if 'Cleanup' in task: continue
+    #if 'Collect' in task: continue
+    #    affected_outputs = set()
+    #    for other_task in output_per_task:
+    #        if other_task.startswith( task ):
+    #            affected_outputs.update( output_per_task[other_task] )
+    #    if not affected_outputs: continue
+    #    print task,"affects",','.join(affected_outputs)
+        
+
+    #s={}## void the following 
     if 'errors' in s:
         errors = s['errors']
         #print 
