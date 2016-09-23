@@ -174,5 +174,9 @@
    "8021" : { "message" : "Please take a look and come back to Ops." }
   },
   "description" : "The error code, threshold and rules to notify the user of an error in production"
+  },
+  "user_rereco":{
+   "description" : "The users from which we expect ReReco requests",
+   "value" : ["cerminar","fabozzi"]
   }
 }

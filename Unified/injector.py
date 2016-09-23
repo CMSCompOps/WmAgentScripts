@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, getWorkflowById, getWorkLoad, componentInfo, sendEmail, workflowInfo, sendLog, reqmgr_url, getDatasetStatus
+from utils import getWorkflows, getWorkflowById, getWorkLoad, componentInfo, sendEmail, workflowInfo, sendLog, reqmgr_url, getDatasetStatus, unifiedConfiguration
 import sys
 import copy
 from htmlor import htmlor
@@ -17,8 +17,11 @@ def injector(url, options, specific):
     if not up.check(): return
     use_mcm = up.status['mcm']
 
+    UC = unifiedConfiguration()
+
     workflows = getWorkflows(url, status=options.wmstatus, user=options.user)
-    workflows.extend( getWorkflows(url, status=options.wmstatus, user='fabozzi', rtype="ReReco")) ## regardless of users, pick up all ReReco on the table
+    for user in UG.get("user_rereco"):
+        workflows.extend( getWorkflows(url, status=options.wmstatus, user=user, rtype="ReReco")) 
 
     print len(workflows),"in line"
     cannot_inject = set()
