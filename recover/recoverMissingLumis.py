@@ -34,7 +34,7 @@ jsonBlob = {
              "RequestType": "Resubmission",
              "Requestor": "",
              "Group": "",
-             "Memory": 2300,
+             #"Memory": 2300,
              "SizePerEvent": 200,
              "CollectionName" : "",
              "IgnoredOutputModules" : []
@@ -569,6 +569,7 @@ def defineRequests(workload, requestInfo,
         creationDict["Requestor"] = requestor
         creationDict["Group"] = group
         creationDict["TimePerEvent"] = requestInfo['TimePerEvent']
+        creationDict["Memory"] = requestInfo['Memory']
         creationDict["SizePerEvent"] = requestInfo['SizePerEvent']
         creationDict["PrepID"] = requestInfo.get('PrepID')
         creationDict["Campaign"] = requestInfo.get('Campaign')
