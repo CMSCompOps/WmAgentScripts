@@ -1234,7 +1234,7 @@ class siteInfo:
                     pressure = m /float(r)
                 else:
                     pressure = -1 ## does not matter
-            self.sites_pressure[site] = (m, r, pressure)
+                    self.sites_pressure[site] = (m, r, pressure)
     
     def sites_low_pressure(self, ratio):
         sites = [site for site,(matching,running,_) in self.sites_pressure.items() if (running==0 or (matching/float(running))< ratio) and site in self.sites_ready]
@@ -2933,6 +2933,16 @@ def forceComplete(url, wfi):
             print "rejecting",member['RequestName']
             reqMgrClient.invalidateWorkflow(url, member['RequestName'], current_status=member['RequestStatus'])
 
+def getAllAgents(url):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    url = '/couchdb/wmstats/_design/WMStats/_view/agentInfo?stale=update_after'
+    r1=conn.request("GET",url)
+    r2=conn.getresponse()
+    teams = defaultdict(list)
+    for r in [i['value'] for i in json.loads( r2.read() )['rows']]:
+        teams[r['agent_team']].append( r )
+    return teams
+
 def getWorkflows(url,status,user=None,details=False,rtype=None):
     retries=10000
     wait=2
@@ -3117,7 +3127,7 @@ class workflowInfo:
                 except Exception as e:
                     print "Failed to get workload cache for",workflow
                     print str(e)
-                    sys.exit(34)
+                    raise Exception("Failed to get workload cache for %s"%workflow)
         else:
             self.request = copy.deepcopy( request )
 
@@ -3244,6 +3254,12 @@ class workflowInfo:
                     missing_to_run_at[task][s] += info['events']
 
         return dict(where_to_run),dict(missing_to_run),missing_to_run_at
+
+    
+    def getWorkQueueElements(self):
+        wq = self.getWorkQueue()
+        wqes = [w[w['type']] for w in wq]
+        return wqes
 
     def getWorkQueue(self):
         if not self.workqueue:
@@ -3815,6 +3831,7 @@ class workflowInfo:
             secondary=set()
             if 'InputDataset' in blob:  
                 primary = set(filter(None,[blob['InputDataset']]))
+            #elif 'InputDatasets' in blob: primary = set(filter(None,blob['InputDatasets']))
             if primary and 'IncludeParent' in blob and blob['IncludeParent']:
                 parent = findParent( primary )
             if 'MCPileup' in blob:
