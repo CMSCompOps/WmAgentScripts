@@ -118,9 +118,18 @@ def htmlor( caller = ""):
             text+='<a href="http://cms-gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="http://cms-gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:50px"></a>'%(wfn,wfn)
 
         if ongoing:
-            date1 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(15*24*60*60)) )
             date2 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime())
-            text+='<a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#table=Jobs&date1=%s&date2=%s&sortby=site&task=wmagent_%s">dashb</a>'%( date1, date2, wfn )
+
+            date1 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(30*24*60*60)) )
+            text+='<a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#table=Jobs&date1=%s&date2=%s&sortby=site&task=wmagent_%s"> 1m</a>'%( date1, date2, wfn )
+            date1 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(7*24*60*60)) )
+            text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#table=Jobs&date1=%s&date2=%s&sortby=site&task=wmagent_%s"> 1w</a>'%( date1, date2, wfn )
+            date1 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(1*24*60*60)) )
+            text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#table=Jobs&date1=%s&date2=%s&sortby=site&task=wmagent_%s">1d</a>'%( date1, date2, wfn )
+            date1 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(5*60*60)) )
+            text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#table=Jobs&date1=%s&date2=%s&sortby=site&task=wmagent_%s"> 5h</a>'%( date1, date2, wfn )
+            date1 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(1*60*60)) )
+            text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#table=Jobs&date1=%s&date2=%s&sortby=site&task=wmagent_%s"> 1h</a>'%( date1, date2, wfn )
 
         if ongoing and wfn in boost:
             for task in boost[wfn]:
@@ -188,9 +197,25 @@ def htmlor( caller = ""):
 
 Last update on %s(CET), %s(GMT)
 <br>
-<a href=logs/ target=_blank>logs</a> <a href=logs/last.log target=_blank>last</a> <a href=statuses.html>statuses</a> <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/ target=_blank>prod mon</a> <a href=https://%s/wmstats/index.html target=_blank>wmstats</a> <a href=http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/SitesInfo.txt target=_blank>detox</a> <a href=locked.html>space</a> <a href=outofspace.html>out of space</a> <a href=logs/subscribor/last.log target=_blank>blocks</a> <a href=logs/agents/last.log>agents</a>
+<a href=logs/ target=_blank title="Directory containing all the logs">logs</a> 
+<a href=logs/last.log target=_blank title="Log of the last module that has run">last</a>
+<a href=statuses.html title="Unified statuses">statuses</a>
+<a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/ target=_blank>prod mon</a>
+<a href=https://%s/wmstats/index.html target=_blank>wmstats</a>
+<a href=http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/SitesInfo.txt target=_blank>detox</a>
+<a href=locked.html>space</a>
+<a href=outofspace.html>out of space</a>
+<a href=logs/subscribor/last.log target=_blank>blocks</a>
+<a href=logs/agents/last.log>agents</a>
 <br>
-<a href=https://twiki.cern.ch/twiki/bin/view/CMSPublic/CompOpsWorkflowL3Responsibilities#Automatic_Assignment_and_Unified>what am I</a> <a href=data.html>json interfaces</a> <a href=logs/addHoc/last.log>add-hoc op</a> created from <b>%s <a href=logs/last_running>last running</a></b> <object height=20 type="text/html" data="logs/last_running"><p>backup content</p></object> <a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=warning target=_blank><b><font color=orange>warning</b></font></a> <a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=critical target=_blank><b><font color=red>critical</b></font></a>
+<a href=https://twiki.cern.ch/twiki/bin/view/CMSPublic/CompOpsWorkflowL3Responsibilities#Automatic_Assignment_and_Unified>what am I</a>
+<a href=data.html>json interfaces</a>
+<a href=logs/addHoc/last.log>add-hoc op</a>
+<a href=https://cmssst.web.cern.ch/cmssst/man_override/cgi/manualOverride.py/prodstatus target=_blank title="Link to a restricted page to override sites status">sites override</a>
+ created from <b>%s
+<a href=logs/last_running>last running</a></b> <object height=20 type="text/html" data="logs/last_running"><p>backup content</p></object>
+<a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=warning target=_blank><b><font color=orange>warning</b></font></a>
+<a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=critical target=_blank><b><font color=red>critical</b></font></a>
 <br><br>
 
 """ %(time.asctime(time.localtime()),
