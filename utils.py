@@ -3209,21 +3209,95 @@ class workflowInfo:
             self.full_spec = pickle.loads(r2.read())
         return self.full_spec
 
-    def getWMErrors(self):
+    def getWMErrors(self,cache=0):
         try:
+            f_cache = '/tmp/.%s.wmerror'% self.request['RequestName']
+            if cache:
+                if os.path.isfile(f_cache):
+                    d_cache = json.loads(open(f_cache).read())
+                    now = time.mktime(time.gmtime())
+                    stamp = d_cache['timestamp']
+                    if (now-stamp) < cache:
+                        print "wmerrors taken from cache",f_cache
+                        return d_cache['data']
+
             r1=self.conn.request("GET",'/wmstatsserver/data/jobdetail/%s'%(self.request['RequestName']), headers={"Accept":"*/*"})
             r2=self.conn.getresponse()
-        #print r2.read()
+
             self.errors = json.loads(r2.read())['result'][0][self.request['RequestName']]
+            open(f_cache,'w').write( json.dumps({'timestamp': time.mktime(time.gmtime()),
+                                                 'data' : self.errors}))
             return self.errors
         except:
             print "Could not get wmstats errors for",self.request['RequestName']
             return {}
 
-    def getWMStats(self):
+    def getFullPicture(self, since=1):
+        by_site = self.getDashboard(since, sortby='site')
+        picture = {}
+        for site in by_site:
+            print "dashboard for",site
+            picture[site] = self.getDashboard(since, sortby='appexitcode', site=site)
+        return picture
+
+    def getDashboard(self, since=1, **args):
+        dconn = httplib.HTTPConnection('dashb-cms-job.cern.ch')
+
+        dargs={
+            'task' : 'wmagent_%s'%self.request['RequestName'],
+            'user':'',
+            'site':'',
+            'submissiontool':'',
+            'application':'',
+            'activity':'',
+            'status':'',
+            'check':'submitted',
+            'tier':'',
+            'sortby':'site',
+            'ce':'',
+            'rb':'',
+            'grid':'',
+            'jobtype':'',
+            'submissionui':'',
+            'dataset':'',
+            'submissiontype':'',
+            'subtoolver':'',
+            'genactivity':'',
+            'outputse':'',
+            'appexitcode':'',
+            'accesstype':'',
+            'inputse':'',
+            'cores':'',
+            'date1': time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(since*24*60*60)) ),
+            'date2': time.strftime('%Y-%m-%d+%H:%M', time.gmtime())
+            }
+            
+        for key in args:
+            if key in dargs:
+                dargs[key] = args[key]
+
+        url = '/dashboard/request.py/jobsummary-plot-or-table2?'+'&'.join( [ '%s=%s'%(k,v) for k,v in dargs.items()] )
+        r1 = dconn.request('GET',url)
+        r2 = dconn.getresponse()
+        r = json.loads( r2.read())['summaries']
+        ## transform into a dict
+        return dict([(d['name'],d) for d in r])
+
+    def getWMStats(self ,cache=0):
+        f_cache = '/tmp/.%s.wmstats'% self.request['RequestName']
+        if cache:
+            if os.path.isfile(f_cache):
+                d_cache = json.loads(open(f_cache).read())
+                now = time.mktime(time.gmtime())
+                stamp = d_cache['timestamp']
+                if (now-stamp) < cache:
+                    print "wmstats taken from cache",f_cache
+                    return d_cache['data']
         r1=self.conn.request("GET",'/wmstatsserver/data/request/%s'%self.request['RequestName'], headers={"Accept":"application/json"})
         r2=self.conn.getresponse()
         self.wmstats = json.loads(r2.read())['result'][0][self.request['RequestName']]
+        open(f_cache,'w').write( json.dumps({'timestamp': time.mktime(time.gmtime()),
+                                             'data' : self.wmstats}) )
         return self.wmstats
 
     def getRecoveryDoc(self):
