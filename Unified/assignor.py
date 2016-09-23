@@ -40,6 +40,8 @@ def assignor(url ,specific = None, talk=True, options=None):
 
 
     dataset_endpoints = json.loads(open('%s/dataset_endpoints.json'%monitor_dir).read())
+    aaa_mapping = json.loads(open('%s/equalizor.json'%monitor_dir).read())['mapping']
+
 
     max_per_round = UC.get('max_per_round').get('assignor',None)
     max_cpuh_block = UC.get('max_cpuh_block')
@@ -252,10 +254,16 @@ def assignor(url ,specific = None, talk=True, options=None):
         ## should also check on number of sources, if large enough, we should be able to overflow most, efficiently
 
         ## default back to white list to original white list with any data
-        print "Allowed",sorted(sites_allowed)
+        wfh.sendLog('assignor',"Allowed sites :%s"% sorted(sites_allowed))
 
         if primary_aaa:
-            sites_allowed = initial_sites_allowed
+            ## remove the sites not reachable localy if not in having the data
+            aaa_grid = set(sites_all_data)
+            for site in sites_all_data:
+                aaa_grid.update( aaa_mapping.get(site,[]) )
+            if 'T2_CH_CERN' in sites_all_data:
+                aaa_grid.update( 'T2_CH_CERN_HLT' )
+            sites_allowed = list(set(initial_sites_allowed) & aaa_grid)
             wfh.sendLog('assignor',"Selected to read primary through xrootd %s"%sorted(sites_allowed))
         else:
             sites_allowed = sites_with_any_data
