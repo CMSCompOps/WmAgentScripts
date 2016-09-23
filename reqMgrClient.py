@@ -905,6 +905,7 @@ assignWorkflow.defaults= {
         "MaxMergeSize": 4294967296,
         "MaxMergeEvents" : 200000, ## shouldn't this be set to infinite ?
         'BlockCloseMaxEvents' : 2000000,
+        'BlockCloseMaxWaitTime' : 172800,
         "MaxRSS" : 3000000,
         "MaxVSize": 4394967000,
         "Dashboard": "production",
