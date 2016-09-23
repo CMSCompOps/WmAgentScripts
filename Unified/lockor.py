@@ -12,8 +12,7 @@ url = reqmgr_url
 
 use_mcm=True
 up = componentInfo(mcm=use_mcm, soft=['mcm'])
-if not up.check():
-    sys.exit(1)
+if not up.check(): sys.exit(0)
 
 use_mcm = up.status['mcm']
 mcm=None

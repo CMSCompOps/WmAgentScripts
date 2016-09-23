@@ -7,10 +7,10 @@ import sys
 import json
 import time
 
-url = reqmgr_url
+up = componentInfo(mcm=False, soft=['mcm'])                                 
+if not up.check(): sys.exit(0)
 
-## protected lfn list
-os.system('python listProtectedLFN.py')
+url = reqmgr_url
 
 ### dump the knonw thresholds
 si = siteInfo()
@@ -77,10 +77,6 @@ wfs = getWorkflows(url, 'failed', user=None, rtype='DQMHarvest')
 if len(wfs):
     sendLog('addHoc','There are failed Harvesting requests\n%s'%('\n'.join(sorted( wfs))),level='critical')
 
-
-up = componentInfo(mcm=False, soft=['mcm'])                                 
-if not up.check():  
-    sys.exit(1)     
 
 
 ### clone all DR80 that end up with issues ###

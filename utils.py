@@ -540,7 +540,7 @@ def checkDownTime():
         return False
 
 class componentInfo:
-    def __init__(self, block=True, mcm=False,soft=None):
+    def __init__(self, block=True, mcm=False,soft=None, keep_trying=False):
         self.mcm = mcm
         self.soft = soft
         self.block = block
@@ -551,97 +551,108 @@ class componentInfo:
             'phedex' : False
             }
         self.code = 0
-        #if not self.check():
-        #    sys.exit( self.code)
-        
+        self.keep_trying = keep_trying
 
     def check(self):
-        try:
-            print "checking reqmgr"
-            if 'testbed' in reqmgr_url:
-                wfi = workflowInfo(reqmgr_url,'sryu_B2G-Summer12DR53X-00743_v4_v2_150126_223017_1156')
-            else:
-                wfi = workflowInfo(reqmgr_url,'pdmvserv_task_B2G-RunIIWinter15wmLHE-00067__v1_T_150505_082426_497')
-
-            self.status['reqmgr'] = True
-        except Exception as e:
-            import traceback
-            print traceback.format_exc()
-            self.tell('reqmgr')
-            print reqmgr_url,"unreachable"
-            print str(e)
-            if self.block and not (self.soft and 'reqmgr' in self.soft):
-                self.code = 123
-                return False
+        while True:
+            try:
+                print "checking reqmgr"
+                if 'testbed' in reqmgr_url:
+                    wfi = workflowInfo(reqmgr_url,'sryu_B2G-Summer12DR53X-00743_v4_v2_150126_223017_1156')
+                else:
+                    wfi = workflowInfo(reqmgr_url,'pdmvserv_task_B2G-RunIIWinter15wmLHE-00067__v1_T_150505_082426_497')
+                    
+                self.status['reqmgr'] = True
+                break
+            except Exception as e:
+                self.tell('reqmgr')
+                if self.keep_trying:
+                    time.sleep(30)
+                    continue
+                import traceback
+                print traceback.format_exc()
+                print reqmgr_url,"unreachable"
+                print str(e)
+                if self.block and not (self.soft and 'reqmgr' in self.soft):
+                    self.code = 123
+                    return False
+                break
 
         from McMClient import McMClient
 
         if self.mcm:
-            try:
-                mcmC = McMClient(dev=False)
-                print "checking mcm"
-                test = mcmC.getA('requests',page=0)
-                time.sleep(1)
-                if not test: 
+            while True:
+                try:
+                    mcmC = McMClient(dev=False)
+                    print "checking mcm"
+                    test = mcmC.getA('requests',page=0)
+                    time.sleep(1)
+                    if not test:
+                        raise Exception("mcm is corrupted")
+                    else:
+                        self.status['mcm'] = True
+                        break
+                except Exception as e:
                     self.tell('mcm')
-                    print "mcm corrupted"
+                    if self.keep_trying:
+                        time.sleep(30)
+                        continue
+                    print "mcm unreachable"
+                    print str(e)
                     if self.block and not (self.soft and 'mcm' in self.soft):
-                        self.code = 124
+                        self.code = 125
                         return False
+                    break
+        while True:
+            try:
+                print "checking dbs"
+                dbsapi = DbsApi(url=dbs_url)
+                if 'testbed' in dbs_url:
+                    blocks = dbsapi.listBlockSummaries( dataset = '/QDTojWinc_NC_M-1200_TuneZ2star_8TeV-madgraph/Summer12pLHE-DMWM_Validation_DONOTDELETE_Alan_TEST-v1/GEN', detail=True)
                 else:
-                    self.status['mcm'] = True
+                    blocks = dbsapi.listBlockSummaries( dataset = '/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM', detail=True)
+                    if not blocks:
+                        raise Exception("dbs corrupted")
+                    else:
+                        self.status['dbs'] = True
+                        break
             except Exception as e:
-                self.tell('mcm')
-                print "mcm unreachable"
-                print str(e)
-                if self.block and not (self.soft and 'mcm' in self.soft):
-                    self.code = 125
-                    return False
-
-        try:
-            print "checking dbs"
-            dbsapi = DbsApi(url=dbs_url)
-            if 'testbed' in dbs_url:
-                blocks = dbsapi.listBlockSummaries( dataset = '/QDTojWinc_NC_M-1200_TuneZ2star_8TeV-madgraph/Summer12pLHE-DMWM_Validation_DONOTDELETE_Alan_TEST-v1/GEN', detail=True)
-            else:
-                blocks = dbsapi.listBlockSummaries( dataset = '/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM', detail=True)
-            if not blocks:
                 self.tell('dbs')
-                print "dbs corrupted"
+                if self.keep_trying:
+                    time.sleep(30)
+                    continue
+                print "dbs unreachable"
+                print str(e)
                 if self.block and not (self.soft and 'dbs' in self.soft):
-                    self.code = 126
+                    self.code = 127
                     return False
-            else:
-                self.status['dbs'] = True
-
-        except Exception as e:
-            self.tell('dbs')
-            print "dbs unreachable"
-            print str(e)
-            if self.block and not (self.soft and 'dbs' in self.soft):
-                self.code = 127
-                return False
-        try:
-            print "checking phedex"
-            if 'testbed' in dbs_url:
-                cust = findCustodialLocation(phedex_url,'/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM')
-            else:
-                cust = findCustodialLocation(phedex_url,'/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM')
-            self.status['phedex'] = True            
-        except Exception as e:
-            self.tell('phedex')
-            print "phedex unreachable"
-            print str(e)
-            if self.block and not (self.soft and 'phedex' in self.soft):
-                self.code = 128
-                return False
-
+                break
+        while True:
+            try:
+                print "checking phedex"
+                if 'testbed' in dbs_url:
+                    cust = findCustodialLocation(phedex_url,'/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM')
+                else:
+                    cust = findCustodialLocation(phedex_url,'/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM')
+                    self.status['phedex'] = True
+                    break
+            except Exception as e:
+                self.tell('phedex')
+                if self.keep_trying:
+                    time.sleep(30)
+                    continue
+                print "phedex unreachable"
+                print str(e)
+                if self.block and not (self.soft and 'phedex' in self.soft):
+                    self.code = 128
+                    return False
+                break
 
         print json.dumps( self.status, indent=2)
         return True
 
     def tell(self, c):
-        sendLog('componentInfo',"The %s component is down"% c, level='critical')
+        sendLog('componentInfo',"The %s component is unreachable."% c, level='critical')
         #sendEmail("%s Component Down"%c,"The component is down, just annoying you with this","vlimant@cern.ch",['vlimant@cern.ch','matteoc@fnal.gov'])
 
 class campaignInfo:

@@ -9,7 +9,7 @@ import sys
 url = reqmgr_url
 
 up = componentInfo(mcm=False, soft=['mcm'])
-if not up.check(): sys.exit(1)
+if not up.check(): sys.exit(0)
 
 status = sys.argv[1]
 max_wf = 0
