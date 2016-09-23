@@ -3352,6 +3352,32 @@ class workflowInfo:
             self.workqueue = list([d['doc'] for d in json.loads(r2.read())['rows']])
         return self.workqueue
     
+
+    def getJobs(self):
+        agents = self.getActiveAgents()  
+        agents = map(lambda s : s.split('/')[-1].split(':')[0], agents)
+
+        class agentCom:
+            def __init__(self, a):
+                self.a = a
+            def get(self, wfn):
+                print "connecing to",self.a
+                data = os.popen('ssh %s python %s/WmAgentScripts/local.py -w %s'%( self.a, base_dir, wfn)).read()
+                return json.loads( data )['rows']
+        print "Participating",','.join( agents )
+        collect={}
+        n=0
+        for agent in agents:
+            print agent
+            ac = agentCom(agent)
+            d= ac.get( self.request['RequestName'] )
+            collect[agent] = [i['value'] for i in d]
+            an = len( collect[agent] )
+            n += an
+            print an,"job(s) found in ",agent
+        print n,"job(s) found in ",len(agents),"agents"
+        return collect
+
     def getAgents(self):
         wq = self.getWorkQueue()
         wqes = [w[w['type']] for w in wq]
