@@ -121,6 +121,7 @@ def main():
         notFullyInjected = []
         for request in listOpen:
             request = request.strip()
+            print "checking on",request
             result = checkWorkQueue(request)
             for activeAgent in result['ActiveAgents']:
                 if activeAgent not in resultAgents:
