@@ -12,21 +12,9 @@ if not up.check(): sys.exit(0)
 
 url = reqmgr_url
 
-### dump the knonw thresholds
-si = siteInfo()
-m = {}
-for site in sorted(si.cpu_pledges.keys()):
-    print site, si.cpu_pledges[site], int(si.cpu_pledges[site]/2.)
-    m[site] = {"running" : si.cpu_pledges[site],
-               "pending" : int(si.cpu_pledges[site]/2.)
-               }
-n = time.gmtime()
-m["update"] = time.asctime(n)
-m["timestamp"] = time.mktime(n)
-open('/afs/cern.ch/user/c/cmst2/www/unified/thresholds.json','w').write(json.dumps( m, indent=2 ))
 
 ### remove site from whitelist
-
+"""
 banned= ['T2_US_Vanderbilt']
 old=json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/equalizor.json').read())
 for wfn in ['vlimant_BPH-RunIISummer15GS-Backfill-00030_00212_v0__160906_122234_1944',
@@ -45,6 +33,34 @@ for wfn in ['vlimant_BPH-RunIISummer15GS-Backfill-00030_00212_v0__160906_122234_
             print json.dumps( bit, indent=2)
             old["modifications"].update( bit )
 open('/afs/cern.ch/user/c/cmst2/www/unified/equalizor.json','w').write( json.dumps( old, indent=2))
+"""
+
+### add OSG like this for now
+#old=json.loads(open('/afs/cern.ch/user/c/cmst2/www/unified/equalizor.json').read())
+#for wfn in ['pdmvserv_TOP-RunIISummer15wmLHEGS-00040_00159_v0__160919_161901_6135']:
+#    wfi = workflowInfo(url, wfn)
+#    for task in wfi.getWorkTasks():
+#        if task.taskType in 'Production':        
+#            bit={wfn: { task.pathName : {"AddWhitelist" : ["T3_US_OSG"] }}}
+#            print json.dumps( bit, indent=2)
+#            old["modifications"].update( bit )
+#open('/afs/cern.ch/user/c/cmst2/www/unified/equalizor.json','w').write( json.dumps( old, indent=2))                                                                                                        
+
+## protected lfn list
+os.system('python listProtectedLFN.py')
+
+### dump the knonw thresholds
+si = siteInfo()
+m = {}
+for site in sorted(si.cpu_pledges.keys()):
+    print site, si.cpu_pledges[site], int(si.cpu_pledges[site]/2.)
+    m[site] = {"running" : si.cpu_pledges[site],
+               "pending" : int(si.cpu_pledges[site]/2.)
+               }
+n = time.gmtime()
+m["update"] = time.asctime(n)
+m["timestamp"] = time.mktime(n)
+open('/afs/cern.ch/user/c/cmst2/www/unified/thresholds.json','w').write(json.dumps( m, indent=2 ))
 
 ### manually lock some dataset ### not bullet proof
 #nl = newLockInfo()
