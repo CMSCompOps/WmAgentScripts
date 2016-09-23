@@ -53,6 +53,8 @@ def equalizor(url , specific = None, options=None):
         ## fallback to the region, to site with on-going low pressure
         mapping[site] = [fb for fb in SI.sites_ready if any([('_%s_'%(reg) in fb and fb!=site and site_in_depletion(fb))for reg in regions[region]]) ]
     
+    ## add OSG
+    mapping['T1_US_FNAL'].append('T3_US_OSG')
 
     use_T0 = ('T0_CH_CERN' in UC.get("site_for_overflow"))
     if options.t0: use_T0 = True
@@ -253,6 +255,13 @@ def equalizor(url , specific = None, options=None):
                             'pdmvserv_HIG-RunIISummer15wmLHEGS-00418_00157_v0__160909_001621_321',
                             'pdmvserv_HIG-RunIISummer15wmLHEGS-00419_00157_v0__160909_001621_2641'
                             ]
+    add_to = {'pdmvserv_TOP-RunIISummer15wmLHEGS-00040_00159_v0__160919_161901_6135' : ['T3_US_OSG'],
+              'pdmvserv_HIG-RunIISummer15wmLHEGS-00589_00160_v0__160922_162127_4804' : ['T3_US_OSG'],
+              'pdmvserv_HIG-RunIISummer15wmLHEGS-00583_00161_v0__160923_122151_6144' : ['T3_US_OSG'],
+              'pdmvserv_TOP-RunIISummer15wmLHEGS-00038_00159_v0__160919_161823_5462' : ['T3_US_OSG'],
+              #'' : ['T3_US_OSG'],
+              }
+    
 
     stay_within_site_whitelist = False
     specific_task=None
@@ -323,16 +332,17 @@ def equalizor(url , specific = None, options=None):
                     PU_overflow[campaign] = copy.deepcopy(overflow['PU'])
                     print "adding",campaign,"to PU overflow rules"
                 if "LHE" in overflow and not campaign in LHE_overflow:
-                    print "adding",campaign,"to light input overflow rules"
                     site_list = overflow['LHE'].get('site_list',"")
                     if site_list:
-                        if type(site_list)==str:
+                        if type(site_list)==list:
+                            LHE_overflow[campaign] = site_list
+                        else:
+                            print site_list
                             if hasattr(SI,site_list):
                                 LHE_overflow[campaign] = copy.deepcopy( getattr(SI,site_list) )
                             else:
                                 LHE_overflow[campaign] = site_list.split(',')
-                        else:
-                            LHE_overflow[campaign] = site_list
+                    print "adding",campaign,"to light input overflow rules",LHE_overflow[campaign]
 
             ### get the task performance, for further massaging.
             if campaign in tune_performance or options.tune:
@@ -354,16 +364,23 @@ def equalizor(url , specific = None, options=None):
                     new_list = list(set(SI.sites_ready)&set(wfi.request['SiteWhitelist']))
                     modifications[wfo.name][task.pathName] = { "ReplaceSiteWhitelist" : new_list }
 
+            if wfo.name in add_to:
+                if task.taskType in ['Production']:
+                    augment_to = add_to[wfo.name]
+                    modifications[wfo.name][task.pathName] = { "AddWhitelist" : augment_to }
+
             ### rule to avoid the issue of taskchain secondary jobs being stuck at sites processing the initial step
             if campaign in LHE_overflow:
-                if task.taskType in ['Processing']:
+                if task.taskType in ['Processing']:#,'Production']:
                     needs, task_name, running, idled = needs_action(wfi, task)
                     needs_overide = overide_from_agent( wfi, needs_overide)
                     extend_to = list(set(copy.deepcopy( LHE_overflow[campaign] )))
                     if stay_within_site_whitelist:
                         extend_to = list(set(extend_to) & set(wfi.request['SiteWhitelist'])) ## restrict to stupid-site-whitelist
                     extend_to = list(set(extend_to) & set(SI.sites_ready + force_sites))
-                    if not extend_to: print "Nowhere to extend to"
+                    if not extend_to: 
+                        print "Nowhere to extend to"
+                        continue
                     if extend_to and needs or needs_overide:
 
                         modifications[wfo.name][task.pathName] = { "ReplaceSiteWhitelist" : extend_to ,"Running" : running, "Pending" : idled, "Priority" : wfi.request['RequestPriority']}
