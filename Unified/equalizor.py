@@ -77,7 +77,7 @@ def equalizor(url , specific = None, options=None):
         mapping['T2_CH_CERN'].extend([fb for fb in SI.sites_ready if '_%s_'%reg in fb])
 
     ## all europ T1 among each others
-    europ_t1 = [site for site in SI.sites_ready if site.startswith('T1') and any([reg in site for reg in ['IT','DE','UK','FR']])]
+    europ_t1 = [site for site in SI.sites_ready if site.startswith('T1') and any([reg in site for reg in ['IT','DE','UK','FR','ES']])]
     print europ_t1
     for one in europ_t1:
         for two in europ_t1:
@@ -221,6 +221,7 @@ def equalizor(url , specific = None, options=None):
         os.system('cp %s/equalizor.json %s/logs/equalizor/equalizor.%s.json'%(monitor_dir,monitor_dir,time.mktime(time.gmtime())))
 
     interface = {
+        'mapping' : mapping,
         'reversed_mapping' : reversed_mapping,
         'modifications' : {}
         }
@@ -255,12 +256,17 @@ def equalizor(url , specific = None, options=None):
                             'pdmvserv_HIG-RunIISummer15wmLHEGS-00418_00157_v0__160909_001621_321',
                             'pdmvserv_HIG-RunIISummer15wmLHEGS-00419_00157_v0__160909_001621_2641'
                             ]
-    add_to = {'pdmvserv_TOP-RunIISummer15wmLHEGS-00040_00159_v0__160919_161901_6135' : ['T3_US_OSG'],
-              'pdmvserv_HIG-RunIISummer15wmLHEGS-00589_00160_v0__160922_162127_4804' : ['T3_US_OSG'],
-              'pdmvserv_HIG-RunIISummer15wmLHEGS-00583_00161_v0__160923_122151_6144' : ['T3_US_OSG'],
-              'pdmvserv_TOP-RunIISummer15wmLHEGS-00038_00159_v0__160919_161823_5462' : ['T3_US_OSG'],
-              #'' : ['T3_US_OSG'],
-              }
+    
+    remove_from = {
+        #'cerminar_Run2016B-v1-BTagCSV-23Sep2016_8020_160923_163224_2174' : ['T2_CH_CERN_HLT']
+        }
+    add_to = {
+        'pdmvserv_TOP-RunIISummer15wmLHEGS-00040_00159_v0__160919_161901_6135' : ['T3_US_OSG'],
+        'pdmvserv_HIG-RunIISummer15wmLHEGS-00589_00160_v0__160922_162127_4804' : ['T3_US_OSG'],
+        'pdmvserv_HIG-RunIISummer15wmLHEGS-00583_00161_v0__160923_122151_6144' : ['T3_US_OSG'],
+        'pdmvserv_TOP-RunIISummer15wmLHEGS-00038_00159_v0__160919_161823_5462' : ['T3_US_OSG'],
+        #'' : ['T3_US_OSG'],
+        }
     
 
     stay_within_site_whitelist = False
@@ -278,6 +284,7 @@ def equalizor(url , specific = None, options=None):
         ]
     random.shuffle( wfs )
     for wfo in wfs:
+        if not wfo.status in ['away']: continue
         if wfo.name in no_routing and not options.augment:
             continue
 
@@ -363,6 +370,36 @@ def equalizor(url , specific = None, options=None):
                 if task.taskType in ['Production']:
                     new_list = list(set(SI.sites_ready)&set(wfi.request['SiteWhitelist']))
                     modifications[wfo.name][task.pathName] = { "ReplaceSiteWhitelist" : new_list }
+
+            ## a temp rule to restrict to aaa neighborhood
+            if wfi.request['RequestType'] in ['ReReco']:
+                if task.taskType in ['Processing','Production']:
+                    dataset = list(prim)[0]
+                    presence = getDatasetPresence(url, dataset)
+                    in_full = [SI.SE_to_CE(site) for site,(_,there) in presence.items() if there]
+                    restrict_to = set(in_full)
+                    ## make a map of all sites in the aaa neighbourhood
+                    for site in in_full:
+                        ## add all sites we can reach
+                        restrict_to.update( mapping.get(site, []) )
+                    # limit to the original whitelist
+                    restrict_to =  restrict_to & set(wfi.request['SiteWhitelist'])
+                
+                    if restrict_to:
+                        print wfo.name,task.pathName,restrict_to
+                        print dataset,in_full
+                        modifications[wfo.name][task.pathName] = { "ReplaceSiteWhitelist" : sorted(restrict_to) }
+                    else:
+                        print "cannot restrict sites for",wfo.name
+
+            if wfo.name in remove_from and task.taskType in ['Processing','Production']:
+                remove = remove_from[wfo.name]
+                restrict_to = set(wfi.request['SiteWhitelist'])
+                intersection= set(remove)&set(restrict_to)
+                if intersection:
+                    print intersection,"is indeed in the original whitelist"
+                    restrict_to = restrict_to - set(remove)
+                    modifications[wfo.name][task.pathName] = { "ReplaceSiteWhitelist" : sorted(restrict_to)
 
             if wfo.name in add_to:
                 if task.taskType in ['Production']:
