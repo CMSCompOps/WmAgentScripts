@@ -2,7 +2,9 @@ import itertools
 import httplib
 import os
 import json
+import time
 from collections import defaultdict
+from utils import monitor_dir
 
 register=['assigned','acquired','running-open','running-closed','force-complete','completed','closed-out']
 wfs = []
@@ -34,8 +36,14 @@ for wf in wfs:
         d = '/'.join( [ base, acq, dsn, tier, rest] )
         print d
         lfns[d].add( wf['RequestName'] )
-    
-open('listProtectedLFN.txt','w').write( json.dumps( sorted(lfns.keys()), indent=2))    
+
+now = time.gmtime()
+content = { "timestamp" : time.mktime(now),
+            "date" : time.asctime(now),
+            "protected" : sorted(lfns.keys())
+            }
+#open('listProtectedLFN.txt','w').write( json.dumps( sorted(lfns.keys()), indent=2))    
+open('%s/listProtectedLFN.txt'%monitor_dir,'w').write( json.dumps( content, indent=2))    
 #print '\n'.join( sorted(lfns.keys()) )
 
 for lfn in lfns:
