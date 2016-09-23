@@ -20,7 +20,7 @@ def injector(url, options, specific):
     UC = unifiedConfiguration()
 
     workflows = getWorkflows(url, status=options.wmstatus, user=options.user)
-    for user in UG.get("user_rereco"):
+    for user in UC.get("user_rereco"):
         workflows.extend( getWorkflows(url, status=options.wmstatus, user=user, rtype="ReReco")) 
 
     print len(workflows),"in line"
