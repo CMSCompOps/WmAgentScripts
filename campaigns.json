@@ -133,7 +133,7 @@
   },
   "Run2016B": {
     "go": true,
-    "labels" : ["01Jul2016","07Jul2016","29Jul2016"],
+    "labels" : ["01Jul2016","07Jul2016","29Jul2016","23Sep2016"],
     "DDMcopies": { 
      		 "all" : { "N" : 4 },
 		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
@@ -146,7 +146,7 @@
   },
   "Run2016C": {
     "go": true,
-    "labels" : ["29Jul2016","12Aug2016"],
+    "labels" : ["29Jul2016","12Aug2016","23Sep2016"],
     "DDMcopies": { 
      		 "all" : { "N" : 4 },
 		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
@@ -292,6 +292,7 @@
       "EventsPerLumi": "x2",
       "MaxMergeEvents": 4000000
     },
+    "overflow":{"LHE":{"site_list":"sites_AAA"}},
     "force-complete" : 0.99,
     "lumisize" : -1,
     "tune" : true
@@ -493,7 +494,7 @@
   "RunIISpring15PrePremix": {
     "go": true,
     "SiteWhitelist" : [ "T1_US_FNAL", "T1_DE_KIT" , "T1_IT_CNAF", "T1_RU_JINR" ,"T2_CH_CERN" ,"T2_US_MIT", "T2_US_Nebraska" ],
-    "overflow": {"PU":{"max":20000,"pending":0}}
+    "NO_overflow": {"PU":{"max":20000,"pending":0}}
   },
   "RunIISpring15MiniAODv2": {
     "go": true,
