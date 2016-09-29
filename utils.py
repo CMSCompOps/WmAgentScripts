@@ -3211,7 +3211,7 @@ class workflowInfo:
 
     def getWMErrors(self,cache=0):
         try:
-            f_cache = '/tmp/.%s.wmerror'% self.request['RequestName']
+            f_cache = '/tmp/%s.wmerror'% self.request['RequestName']
             if cache:
                 if os.path.isfile(f_cache):
                     d_cache = json.loads(open(f_cache).read())
@@ -3219,28 +3219,43 @@ class workflowInfo:
                     stamp = d_cache['timestamp']
                     if (now-stamp) < cache:
                         print "wmerrors taken from cache",f_cache
-                        return d_cache['data']
+                        self.errors = d_cache['data']
+                        return self.errors
 
             r1=self.conn.request("GET",'/wmstatsserver/data/jobdetail/%s'%(self.request['RequestName']), headers={"Accept":"*/*"})
             r2=self.conn.getresponse()
 
             self.errors = json.loads(r2.read())['result'][0][self.request['RequestName']]
-            open(f_cache,'w').write( json.dumps({'timestamp': time.mktime(time.gmtime()),
-                                                 'data' : self.errors}))
+            try:
+                open(f_cache,'w').write( json.dumps({'timestamp': time.mktime(time.gmtime()),
+                                                     'data' : self.errors}))
+            except Exception as e:
+                print str(e)
             return self.errors
         except:
             print "Could not get wmstats errors for",self.request['RequestName']
             return {}
 
-    def getFullPicture(self, since=1):
+    def getFullPicture(self, since=1, cache=0):
         by_site = self.getDashboard(since, sortby='site')
         picture = {}
         for site in by_site:
             print "dashboard for",site
-            picture[site] = self.getDashboard(since, sortby='appexitcode', site=site)
+            picture[site] = self.getDashboard(since, cache=0, sortby='appexitcode', site=site)
         return picture
 
-    def getDashboard(self, since=1, **args):
+    def getDashboard(self, since=1, cache=0, **args):
+        f_cache = '/tmp/%s.dashb'% self.request['RequestName']
+        if cache:
+            if os.path.isfile(f_cache):
+                d_cache = json.loads(open(f_cache).read())
+                now = time.mktime(time.gmtime())
+                stamp = d_cache['timestamp']
+                if (now-stamp) < cache:
+                    print "dashb taken from cache",f_cache
+                    self.dashb = d_cache['data']
+                    return self.dashb
+
         dconn = httplib.HTTPConnection('dashb-cms-job.cern.ch')
 
         dargs={
@@ -3281,10 +3296,17 @@ class workflowInfo:
         r2 = dconn.getresponse()
         r = json.loads( r2.read())['summaries']
         ## transform into a dict
-        return dict([(d['name'],d) for d in r])
+        self.dashb = dict([(d['name'],d) for d in r])
+        try:
+            open(f_cache,'w').write( json.dumps({'timestamp': time.mktime(time.gmtime()),
+                                                 'data' : self.dashb}))
+        except Exception as e:
+            print str(e)
+            pass
+        return self.dashb
 
     def getWMStats(self ,cache=0):
-        f_cache = '/tmp/.%s.wmstats'% self.request['RequestName']
+        f_cache = '/tmp/%s.wmstats'% self.request['RequestName']
         if cache:
             if os.path.isfile(f_cache):
                 d_cache = json.loads(open(f_cache).read())
@@ -3292,12 +3314,17 @@ class workflowInfo:
                 stamp = d_cache['timestamp']
                 if (now-stamp) < cache:
                     print "wmstats taken from cache",f_cache
-                    return d_cache['data']
+                    self.wmstats = d_cache['data']
+                    return self.wmstats
         r1=self.conn.request("GET",'/wmstatsserver/data/request/%s'%self.request['RequestName'], headers={"Accept":"application/json"})
         r2=self.conn.getresponse()
         self.wmstats = json.loads(r2.read())['result'][0][self.request['RequestName']]
-        open(f_cache,'w').write( json.dumps({'timestamp': time.mktime(time.gmtime()),
-                                             'data' : self.wmstats}) )
+        try:
+            open(f_cache,'w').write( json.dumps({'timestamp': time.mktime(time.gmtime()),
+                                                 'data' : self.wmstats}) )
+        except Exception as e:
+            print str(e)
+
         return self.wmstats
 
     def getRecoveryDoc(self):
