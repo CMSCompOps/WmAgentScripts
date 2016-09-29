@@ -774,6 +774,8 @@ def assignWorkflow(url, workflowname, team, parameters ):
     wf = workflowInfo(url, workflowname)
 
     # set the maxrss watchdog to what is specified in the request
+    if 'Memory' in parameters:
+        wf.request['Memory'] = parameters['Memory']
     defaults['MaxRSS'] = int(wf.request['Memory'])*1024
 
     defaults.update( parameters )
