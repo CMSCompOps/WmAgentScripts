@@ -142,7 +142,8 @@
     "fractionpass": 1.0,
     "lumisize" : -1,
     "maxcopies" : 1,
-    "primary_AAA" : true
+    "primary_AAA" : false,
+    "overflow" : {"PRIM" : {}}
   },
   "Run2016C": {
     "go": true,
@@ -155,11 +156,12 @@
     "fractionpass": 1.0,
     "lumisize" : -1,
     "maxcopies" : 1,
-    "primary_AAA" : true
+    "primary_AAA" : false,
+    "overflow" : {"PRIM" : {}}
   },
   "Run2016D": {
     "go": true,
-    "labels" : ["29Jul2016","12Aug2016"],
+    "labels" : ["29Jul2016","12Aug2016","23Sep2016"],
     "DDMcopies": { 
      		 "all" : { "N" : 4 },
 		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
@@ -168,20 +170,54 @@
     "fractionpass": 1.0,
     "lumisize" : -1,
     "maxcopies" : 1,
-    "primary_AAA" : true
+    "primary_AAA" : false,
+    "overflow" : {"PRIM" : {}}
   },
   "Run2016E": {
     "go": true,
-    "labels" : ["29Jul2016","12Aug2016"],
+    "labels" : ["29Jul2016","12Aug2016","23Sep2016"],
     "DDMcopies": { 
      		 "all" : { "N" : 4 },
 		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
     "custodial_override" : ["DQMIO"],
+    "fractionpass": {"all":0.95, "AOD":1.0, "MINIAOD":1.0, "DQMIO":1.0},
+    "lumisize" : -1,
+    "maxcopies" : 1,
+    "primary_AAA" : false,
+    "overflow" : {"PRIM" : {}}
+  },
+  "Run2016F": {
+    "go": true,
+    "labels" : ["23Sep2016"],
+    "DDMcopies": {
+                 "all" : { "N" : 4 },
+                 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
+    },
+    "custodial_override" : ["DQMIO"],
     "fractionpass": 1.0,
     "lumisize" : -1,
     "maxcopies" : 1,
-    "primary_AAA" : true
+    "primary_AAA" : false,
+    "overflow" : {"PRIM" : {}}
+  },
+  "Run2016G": {
+    "go": true,
+    "labels" : ["23Sep2016"],
+    "DDMcopies": {
+                 "all" : { "N" : 4 },
+                 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
+    },
+    "custodial_override" : ["DQMIO"],
+    "fractionpass": 1.0,
+    "lumisize" : -1,
+    "maxcopies" : 1,
+    "primary_AAA" : false,
+    "overflow" : {"PRIM" : {}}
+  },
+  "RunIISpring16MiniAODv2": {
+    "go": true,
+    "maxcopies": 1
   },
   "Summer11LegwmLHE": {
     "go": false
@@ -326,7 +362,6 @@
     "force-complete" : 0.99,
     "force-timeout" : 7,
     "lumisize": -1,
-    "fractionpass" : 0.95,
     "overflow": {"PU":{"max":20000,"pending":0,"force":false}},
     "DDMcopies": {
              "all" : { "N" : 4 },
@@ -356,7 +391,6 @@
   "RunIISpring16MiniAODv2": {
     "go": true,
     "maxcopies": 1,
-    "fractionpass" : 0.95,
     "force-complete" : 0.99,
     "force-timeout" : 7,
     "lumisize": -1
