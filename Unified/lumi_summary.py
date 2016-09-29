@@ -121,10 +121,10 @@ for wf in wfs:
             if not affected_outputs: continue
             print task,"affects",','.join(affected_outputs)
 
-
             for etype in errors[task]:
-                #print "\t",etype
+                print "\t",etype
                 #if etype !='cmsRun1' : continue
+                if not etype in ['cmsRun1','cmsRun2','stageOut1']: continue
                 if type(errors[task][etype])!=dict: continue
                 for ecode in errors[task][etype]:
                     #if ecode != '134': continue
@@ -215,9 +215,10 @@ for out in errors_by_lb:
                 print '\t\t',task
                 #print '---\n',details,'\n---'
                 if ecode in identified:
-                    rs.append( identified[ecode] )
+                    #rs.append( (identified[ecode],ecode) )
+                    rs.append( "%s:%s"%(identified[ecode],ecode) )
                 else:
-                    rs.append( types )
+                    rs.append( "%s:%s"%(types,ecode) )
             missing_rl_with_exp[out][':'.join(map(str,ls))] = "|".join(rs)
 
 if missing_rl_with_exp:                
