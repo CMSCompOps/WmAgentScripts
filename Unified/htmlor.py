@@ -72,7 +72,7 @@ def htmlor( caller = ""):
                 '<a href="closeout.html#%s" target="_blank">clo</a>'%wfn,
                 '<a href="statuses.html#%s" target="_blank">st</a>'%wfn,
                 '<a href="https://%s/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s" target="_blank">perf</a>'%(reqmgr_url,wfn),
-                '<a href="http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=%s" target="_blank">history</a>'%(pid)
+                '<a href="http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=%s" target="_blank">history</a>'%(pid),
                 ])
         if within and (not view or wfs=='completed'):
             wl = getWL( wfn )
@@ -118,10 +118,16 @@ def htmlor( caller = ""):
             text+='<a href="http://cms-gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="http://cms-gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:50px"></a>'%(wfn,wfn)
 
         if ongoing:
+            if not os.path.isfile('%s/report/%s'%(monitor_dir,wfn)):
+                print wfn,"report absent, could be doing it"
+                #os.system('python Unified/showError.py %s'%(wfn))
+            else:
+                text += '<a href=report/%s target=_blank>report</a>'%wfn
+                
             date2 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime())
 
             date1 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(30*24*60*60)) )
-            text+='<a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#table=Jobs&date1=%s&date2=%s&sortby=site&task=wmagent_%s"> 1m</a>'%( date1, date2, wfn )
+            text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#table=Jobs&date1=%s&date2=%s&sortby=site&task=wmagent_%s"> 1m</a>'%( date1, date2, wfn )
             date1 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(7*24*60*60)) )
             text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#table=Jobs&date1=%s&date2=%s&sortby=site&task=wmagent_%s"> 1w</a>'%( date1, date2, wfn )
             date1 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(1*24*60*60)) )
@@ -198,6 +204,9 @@ def htmlor( caller = ""):
 Last update on %s(CET), %s(GMT)
 <br>
 <a href=logs/ target=_blank title="Directory containing all the logs">logs</a> 
+<a href=joblogs/ target=_blank title="Directory containing logs of jobs that failed with critical errors">job logs</a> 
+<a href=condorlogs/ target=_blank title="Directory containing condor logs of jobs ">condor logs</a> 
+<a href=report/ target=_blank title="Directory containing error reports on workflows">error reports</a> 
 <a href=logs/last.log target=_blank title="Log of the last module that has run">last</a>
 <a href=statuses.html title="Unified statuses">statuses</a>
 <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/ target=_blank>prod mon</a>
