@@ -18,6 +18,7 @@ from McMClient import McMClient
 from htmlor import htmlor
 from utils import sendEmail 
 from utils import closeoutInfo
+from showError import parse_one
 
 def checkor(url, spec=None, options=None):
     if userLock():   return
@@ -240,12 +241,14 @@ def checkor(url, spec=None, options=None):
         acdc_inactive = []
         forced_already=False
         acdc_bads = []
+        true_familly = []
         for member in familly:
             if member['RequestType'] != 'Resubmission': continue
             if member['RequestName'] == wfo.name: continue
             if member['RequestDate'] < wfi.request['RequestDate']: continue
             if 'OriginalRequestName' in member and (not 'ACDC' in member['OriginalRequestName']) and member['OriginalRequestName'] != wfo.name: continue
             if member['RequestStatus'] == None: continue
+
             if not set(member['OutputDatasets']).issubset( set(expected_outputs)):
                 if not member['RequestStatus'] in ['rejected-archived','rejected','aborted','aborted-archived']:
                     ##this is not good at all
@@ -255,6 +258,13 @@ def checkor(url, spec=None, options=None):
                     is_closing = False
                     assistance_tags.add('manual')
                 continue
+
+            true_familly.append( member['RequestName'] )
+            try:
+                parse_one(url, member['RequestName'])
+            except:
+                print "Could not make error report for",member['RequestName']
+
             if member['RequestStatus'] in ['running-open','running-closed','assigned','acquired']:
                 print wfo.name,"still has an ACDC running",member['RequestName']
                 acdc.append( member['RequestName'] )
@@ -310,10 +320,16 @@ def checkor(url, spec=None, options=None):
                 wfi.sendLog('checkor', "event completion real %s expected %s"%(event_count, event_expected ))
                 percent_completions[output] = max(percent_completions[output], float(event_count) / float( event_expected ) )
 
-            fractions_pass[output] = 0.95
+            default_pass = UC.get('default_fraction_pass')
+            fractions_pass[output] = default_pass
             c = campaigns[output]
             if c in CI.campaigns and 'fractionpass' in CI.campaigns[c]:
-                fractions_pass[output] = CI.campaigns[c]['fractionpass']
+                if type(CI.campaigns[c]['fractionpass']) == dict:
+                    tier = output.split('/')[-1]
+                    ## defined per tier
+                    fractions_pass[output] = CI.campaigns[c]['fractionpass'].get(tier, CI.campaigns[c]['fractionpass'].get('all', default_pass))
+                else:
+                    fractions_pass[output] = CI.campaigns[c]['fractionpass']
                 wfi.sendLog('checkor', "overriding fraction to %s for %s by campaign requirement"%( fractions_pass[output], output))
 
             if options.fractionpass:
@@ -606,6 +622,7 @@ def checkor(url, spec=None, options=None):
             rec['dbsInvFiles'] = dbs_invalid[output]
             rec['phedexFiles'] = phedex_presence[output]
             rec['acdc'] = "%d / %d"%(len(acdc),len(acdc+acdc_inactive))
+            rec['familly'] = true_familly
             now = time.gmtime()
             rec['timestamp'] = time.mktime(now)
             rec['updated'] = time.asctime(now)+' (GMT)'
@@ -618,7 +635,9 @@ def checkor(url, spec=None, options=None):
                 wfi.sendLog('checkor','Lumi summary available at https://cmst2.web.cern.ch/cmst2/unified/datalumi/')
             except Exception as e:
                 print str(e)
-            
+        ## make the error report
+        
+    
         ## and move on
         if is_closing:
             ## toggle status to closed-out in request manager

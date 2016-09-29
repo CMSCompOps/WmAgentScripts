@@ -1,6 +1,6 @@
 {
  "site_for_overflow": {
-   "value" : ["NONO_T0_CH_CERN","NONO_T2_CH_CERN_HLT"],
+   "value" : ["NONO_T0_CH_CERN","T2_CH_CERN_HLT"],
    "description" : "The sites that we set to overflow and require a specific treatment"
  },
  "overflow_pressure": {
@@ -56,8 +56,12 @@
     "completor" : null
     }
  },
+ "default_fraction_pass" : {
+   "value" : 0.95,
+   "description" : "completion fraction above which to announce dataset"
+ },
  "pattern_fraction_pass": {
-   "value" : {},
+   "value" : { },
    "description" : "overide of the completion fraction of dataset with keyword"
  },
  "tiers_with_no_custodial": {
