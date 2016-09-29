@@ -38,7 +38,7 @@ reqmgrCouchURL = "https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache"
 DELTA_EVENTS = 1000
 DELTA_LUMIS = 200
 
-def modifySchema(helper, workflow, user, group, cache, events, firstLumi, backfill=False, memory=None, timeperevent=None):
+def modifySchema(helper, workflow, cache, events, firstLumi, backfill=False, addon=None):
     """
     Adapts schema to right parameters.
     If the original workflow points to DBS2, DBS3 URL is fixed instead.
@@ -63,15 +63,11 @@ def modifySchema(helper, workflow, user, group, cache, events, firstLumi, backfi
             result[key] = value
 
         # Now apply the specific tweaks
-        if key == 'Memory' and memory:
-            result['Memory'] = memory
-        if key == 'TimePerEvent' and timeperevent:
-            result['TimePerEvent'] = timeperevent
-        elif key == 'Requestor':
-            result['Requestor'] = user
-        elif key == 'Group':
-            result['Group'] = group
-        elif key == 'MergedLFNBase':
+        if addon and key in addon:
+            print "Altering",key,"to value:",addon[key]
+            result[key] = addon[key]
+
+        if key == 'MergedLFNBase':
             result['MergedLFNBase'] = helper.getMergedLFNBase()
         # and required for cross-cloning between prod and testbed
         elif key == 'CouchURL':
@@ -152,13 +148,13 @@ def modifySchema(helper, workflow, user, group, cache, events, firstLumi, backfi
         # reset the request date
         now = datetime.datetime.utcnow()
         result["RequestDate"] = [
-            now.year, now.month, now.day, now.hour, now.minute]
+            now.year, now.month, now.day, now.hour, now.minute, now.second]
 
     #result['Memory'] = 3000
 
     return result
 
-def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=False, memory=None, timeperevent=None, bwl=None):
+def cloneWorkflow(workflow, verbose=True, backfill=False, testbed=False, addon=None):
     """
     clones a workflow
     """
@@ -170,19 +166,20 @@ def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=F
     except:
         cache = None
 
-    schema = modifySchema(helper, workflow, user, group, cache, None, None, backfill, memory, timeperevent)
+    schema = modifySchema(helper, workflow, cache, None, None, backfill, addon)
 
     schema['OriginalRequestName'] = workflow
     if verbose:
         pprint(schema)
     
+    bwl=addon.get('BlockWhitelist',None)
     if bwl:
         if 'Task1' in schema:
-            schema['Task1']['BlockWhitelist'] = bwl.split(',')
+            schema['Task1']['BlockWhitelist'] = bwl
         else:
-            schema['BlockWhitelist'] = bwl.split(',')
+            schema['BlockWhitelist'] = bwl
     ## only once
-    ####schema['CMSSWVersion'] = 'CMSSW_8_0_16'
+    #schema['CMSSWVersion'] = 'CMSSW_8_0_16'
 
     print 'Submitting workflow'
     # Submit cloned workflow to ReqMgr
@@ -247,7 +244,7 @@ def extendWorkflow(workflow, user, group, verbose=False, events=None, firstlumi=
 
     # Get info about the workflow to be cloned
     helper = reqMgrClient.retrieveSchema(workflow)
-    schema = modifySchema(helper, workflow, user, group, None, events, firstlumi, None)
+    schema = modifySchema(helper, workflow, None, events, firstlumi, None)
     schema['OriginalRequestName'] = workflow
     if verbose:
         pprint(schema)
@@ -299,12 +296,15 @@ def main():
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False,
                       help="Prints all query information.")
     parser.add_option('-f', '--file', help='Text file with a list of workflows', dest='file')
-    parser.add_option('--bwl', help='The block white list to be used', dest='bwl',default=None)
+    parser.add_option('--BlockWhitelist',dest='bwl', help='The block white list to be used', default=None)
+    parser.add_option("-m", "--Memory", dest="memory", help="Set max memory for the event. At assignment, this will be used to calculate maxRSS = memory*1024", type=int)
+    parser.add_option("--TimePerEvent", help="Set the TimePerEvent on the clone",type=float)
+    parser.add_option("--CMSSWVersion",help="Set the CMSSWVersion on the clone")
+    parser.add_option("--Multicore",help="Set the Memory on the clone", type=int)
     #Extend workflow options
     parser.add_option('-e', '--events', help='# of events to add', dest='events')
     parser.add_option('-l', '--firstlumi', help='# of the first lumi', dest='firstlumi')
-    parser.add_option("-m", "--memory", dest="memory", help="Set max memory for the event. At assignment, this will be used to calculate maxRSS = memory*1024")
-    parser.add_option("--TimePerEvent", help="Set the TimePerEvent on the clone")
+    
     parser.add_option("--testbed", action="store_true", dest="testbed", default=False,
                       help="Clone to testbed reqmgr insted of production")
     (options, args) = parser.parse_args()
@@ -328,15 +328,22 @@ def main():
 
     if options.action == 'clone':
         for wf in wfs:
+            addon = { "Requestor" : user, "Group" : options.group }
             memory = None
             timeperevent = None
             workflow = reqMgrClient.Workflow(wf)
             if options.memory:
-                memory = float(options.memory)
+                addon['Memory'] = options.memory
             if options.TimePerEvent:
-                timeperevent = float(options.TimePerEvent)
+                addon['TimePerEvent'] = options.TimePerEvent
+            if options.CMSSWVersion:
+                addon['CMSSWVersion'] = options.CMSSWVersion
+            if options.Multicore:
+                addon['Multicore'] = options.Multicore
+            if options.bwl:
+                addon['BlockWhiteList'] = options.bwl.split(',')
             cloneWorkflow(
-                wf, user, options.group, options.verbose, options.backfill, options.testbed, memory,timeperevent,bwl=options.bwl)
+                wf, options.verbose, options.backfill, options.testbed, addon )
     elif options.action == 'extend':
         for wf in wfs:
             extendWorkflow(wf, user, options.group, options.verbose, options.events, options.firstlumi)
