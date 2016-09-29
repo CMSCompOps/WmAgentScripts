@@ -1,5 +1,5 @@
 #!/usr/bin/env python  
-from utils import workflowInfo, getWorkflows, sendEmail, componentInfo, monitor_dir, reqmgr_url, newLockInfo, siteInfo, sendLog
+from utils import workflowInfo, getWorkflows, sendEmail, componentInfo, monitor_dir, reqmgr_url, newLockInfo, siteInfo, sendLog, getWorkflowById
 from assignSession import *
 import reqMgrClient
 import os
@@ -12,7 +12,32 @@ if not up.check(): sys.exit(0)
 
 url = reqmgr_url
 
+may_have_one=set()
+may_have_one.update([wfo.name for wfo in session.query(Workflow).filter(Workflow.status.startswith('away')).all()])
+may_have_one.update([wfo.name for wfo in session.query(Workflow).filter(Workflow.status.startswith('assistance')).all()])
 
+wfs = []
+wfs.extend( getWorkflows(url, 'running-open', details=True))
+wfs.extend( getWorkflows(url, 'running-closed', details=True))
+wfs.extend( getWorkflows(url, 'completed', details=True))
+
+may_have_one_too = set()
+for wf in wfs:
+    if wf['RequestName'] in may_have_one:
+        #print wf['RequestName'],"and familly"
+        may_have_one_too.update( getWorkflowById(url, wf['PrepID']) )
+        
+may_have_one.update( may_have_one_too )
+
+for logtype in ['report','joblogs','condorlogs']:
+    for d in filter(None,os.popen('ls -d %s/%s/*'%(monitor_dir,logtype)).read().split('\n')):
+        if not any([m in d for m in may_have_one]):
+            ## that can be removed
+            print d,"report file can be removed"
+            #os.system('rm -f %s'%d)
+        else:
+            print d,"is still in use"
+    
 ### remove site from whitelist
 """
 banned= ['T2_US_Vanderbilt']
