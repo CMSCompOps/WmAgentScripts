@@ -258,14 +258,17 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         if primary_aaa:
             ## remove the sites not reachable localy if not in having the data
-            aaa_grid = set(sites_all_data)
-            for site in sites_all_data:
-                aaa_grid.update( aaa_mapping.get(site,[]) )
-            if 'T2_CH_CERN' in sites_all_data:
-                aaa_grid.update( 'T2_CH_CERN_HLT' )
-            sites_allowed = list(set(initial_sites_allowed) & aaa_grid)
-            wfh.sendLog('assignor',"Selected to read primary through xrootd %s"%sorted(sites_allowed))
-        else:
+            if not sites_all_data:
+                wfh.sendLog('assignor',"Overiding the primary on AAA setting to Off")
+                primary_aaa=False
+            else:
+                aaa_grid = set(sites_all_data)
+                for site in list(aaa_grid):
+                    aaa_grid.update( aaa_mapping.get(site,[]) )
+                sites_allowed = list(set(initial_sites_allowed) & aaa_grid)
+                wfh.sendLog('assignor',"Selected to read primary through xrootd %s"%sorted(sites_allowed))
+                
+        if not primary_aaa:
             sites_allowed = sites_with_any_data
             wfh.sendLog('assignor',"Selected for any data %s"%sorted(sites_allowed))
 
