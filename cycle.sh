@@ -9,6 +9,11 @@ if [ -r /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cycle.lock ] ; then
     exit
 fi
 
+if [ ! -r /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/credentials.sh ] ; then
+    echo "Cannot read simple files" | mail -s "[Ops] read permission" vlimant@cern.ch,matteoc@fnal.gov
+    exit
+fi
+
 echo `date` > /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cycle.lock
 ## get sso cookie and new grid proxy
 source /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/credentials.sh
