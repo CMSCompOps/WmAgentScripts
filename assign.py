@@ -310,14 +310,21 @@ def main():
             if exist and procversion <= maxv:
                 print "Some output datasets exist, its advised to assign with v ==", maxv + 1
                 sys.exit(0)
-            
+        else:
+            ## this is a resubmission !
+            print "The taks in resubmission is:",schema['InitialTaskPath']
             ## pick up the sites from acdc
             if options.sites.lower() == 'acdc':
-                original_wf = workflowInfo(url, schema['OriginalRequestName'])
-                where_to_run, _ =  original_wf.getRecoveryInfo()
+                where_to_run, _,_ =  original_wf.getRecoveryInfo()
                 task = schema['InitialTaskPath']
-                sites = where_to_run[task]
-        ## check that the sites are all compatible
+                sites = [SI.SE_to_CE(site) for site in where_to_run[task]]
+                print "Found",sorted(sites),"as sites where to run the ACDC at, from the acdc doc of ",original_wf.request['RequestName']
+
+            ## re-assure yourself that the lfn,procversion is set correctly
+            lfn = original_wf.request['MergedLFNBase']
+            procversion = original_wf.request["ProcessingVersion"]
+
+        ## check that the sites are all compatible and up
         check_mem = schema['Memory']
         ncores = wfi.getMulticore()
         memory_allowed = SI.sitesByMemory( float(check_mem), maxCore=ncores)
