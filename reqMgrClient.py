@@ -451,6 +451,8 @@ def getWorkflowInfo(url, workflow):
     """
     Retrieves workflow information
     """
+    request = requestManagerGet(url,'/reqmgr2/data/request?name='+workflow)
+    return request['result'][0][workflow]
     retries=10000
     while retries:
         try:
