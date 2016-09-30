@@ -85,7 +85,80 @@ def singleRecovery(url, task , initial, actions, do=False):
     print data
     return acdc
 
+def new_recoveror(url, specific, options=None):
+    if userLock('recoveror'): return
+
+    up = componentInfo(mcm=False, soft=['mcm'])
+    if not up.check(): return
+
+    CI = campaignInfo()
+    SI = siteInfo()
+    UC = unifiedConfiguration()
+
+    wfs = session.query(Workflow).filter(Workflow.status.contains('recovery')).all()
+    if specific:
+        wfs.extend( session.query(Workflow).filter(Workflow.status == 'assistance-manual').all() )    
+
+    try:
+        from_operator = json.loads(os.popen('curl -s http://vocms0113.cern.ch/actions/test.json').read())
+        ## now we have a list of things that we can take action on
+    except:
+        pass
+
+
+
+
+    for wfo in wfs:
+        if specific and not specific in wfo.name:continue
+
+        if not specific and 'manual' in wfo.status: continue
+        
+        wfi = workflowInfo(url, wfo.name)
     
+        send_recovery = False ## will make all acdc
+        send_clone = False ## will make a clone
+        send_back = False ## should just reject. manual ?
+        send_manual = False ## will set in manual
+
+        where_to_run, missing_to_run = wfi.getRecoveryInfo()
+
+        task_to_recover = where_to_run.keys()
+
+        ## if the site at which the recovery could run in drain or out ?
+        for task in task_to_recover:
+            not_ready = set(where_to_run[task]) - set(SI.sites_ready)
+            if not_ready:
+                print "the following sites are not ready for the ACDC",",".join( sorted(not_ready) )
+                ## do we have a way of telling if a site is going to be out for a long time ?
+                # check on priority: high prio, restart
+                if wfi.request['RequestPriority'] >= 85000:
+                    send_clone = True
+                # check on age of the request
+                injection_time = time.mktime(time.strptime('.'.join(map(str,wfi.request['RequestDate'])),"%Y.%m.%d.%H.%M.%S")) / (60.*60.)
+                now = time.mktime(time.gmtime()) / (60.*60.)
+                if float(now - injection_time) <14.:
+                    ## less than 14 days, start over
+                    send_clone = True
+                else:
+                    send_manual = True
+
+        
+        if not send_recovery:
+            ## check on whether the stats is very low
+            pass
+
+        if send_recovery:
+            ## make acdc for all tasks
+            for task in task_to_recover:
+                actions = list(set([case['solution'] for code,case in task_to_recover[task]  ]))
+                acdc = singleRecovery(url, task, wfi.request , actions, do = True)
+        elif send_clone:
+            ## this will get it cloned
+            wfo.status = 'assistance-clone'
+            session.commit()
+        elif send_manual:
+            wfo.status = 'assistance-manual'
+
 
 def recoveror(url,specific,options=None):
     if userLock('recoveror'): return
@@ -236,7 +309,8 @@ def recoveror(url,specific,options=None):
             print wfo.name,"to be notified to user(DUMMY)",message_to_user
 
         if message_to_ops:
-            sendEmail( "notification in recoveror" , message_to_ops, destination=['jen_a@fnal.gov'])
+            #sendEmail( "notification in recoveror" , message_to_ops, destination=['jen_a@fnal.gov'])
+            sendLog('recoveror',message_to_ops,level='warning')
 
         if len(task_to_recover) != len(all_errors):
             print "Should not be doing partial ACDC. skipping"
@@ -289,6 +363,12 @@ def recoveror(url,specific,options=None):
                     parameters['AcquisitionEra'] = None
                     parameters['ProcessingString'] = None
 
+                ## xrootd setttings on primary and secondary
+                if 'TrustSitelists' in wfi.request and wfi.request['TrustSitelists']:
+                    parameters['TrustSitelists'] = True
+                if 'TrustPUSitelists' in wfi.request and wfi.request['TrustPUSitelists']:
+                    parameters['TrustPUSitelists'] = True
+
                 if options.ass:
                     print "really doing the assignment of the ACDC",acdc
                     parameters['execute']=True
@@ -335,10 +415,10 @@ def recoveror(url,specific,options=None):
 if __name__ == '__main__':
     url=reqmgr_url
     parser = optparse.OptionParser()
-    #parser.add_option('--do',default=False,action='store_true')
     parser.add_option('--test', dest='do', default=True,action='store_false')
     parser.add_option('--leave',dest='ass',default=True,action='store_false')
     parser.add_option('--go',default=False,action='store_true',help="override possible blocking conditions")
+    parser.add_option('--new',default=False,action='store_true')
     (options,args) = parser.parse_args()
     spec=None
     if len(args)!=0:
@@ -346,10 +426,13 @@ if __name__ == '__main__':
 
     if not options.do: options.ass=False
 
-    recoveror(url,spec,options=options)
+    if options.new:
+        new_recoveror(url,spec,options=options)
+    else:
+        recoveror(url,spec,options=options)        
 
     fdb = closeoutInfo()
     fdb.html()
 
     from showError import parse_all
-    parse_all()
+    parse_all(url)
