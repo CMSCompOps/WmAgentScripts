@@ -55,6 +55,7 @@ def equalizor(url , specific = None, options=None):
     
     ## add OSG
     mapping['T1_US_FNAL'].append('T3_US_OSG')
+    #mapping['T1_US_FNAL'].append('T3_US_NERSC')
 
     use_T0 = ('T0_CH_CERN' in UC.get("site_for_overflow"))
     if options.t0: use_T0 = True
