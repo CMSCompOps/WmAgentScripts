@@ -197,8 +197,17 @@ def main():
         # Getting the original dictionary
         wfi = workflowInfo( url, wfn )
         schema = wfi.request
-        #schema = getRequestDict(url, wfn)
-        #wf = reqMgr.Workflow(wfn, url=url)
+        if 'OriginalRequestName' in schema:
+            print "Original workflow is:",schema['OriginalRequestName']
+            original_wf = workflowInfo(url, schema['OriginalRequestName'])            
+        else:
+            original_wf = None
+
+        if options.sites.lower() == 'original' and original_wf:
+            sites = original_wf.request['SiteWhitelist']
+            print "Using",sorted(sites),"from the original request",original_wf.request['RequestName']
+
+        #print json.dumps( schema, indent=2 )
         wf_name = wfn
         wf_info = schema
 
@@ -208,7 +217,7 @@ def main():
             sys.exit(1)
 
         #Check to see if the workflow is a task chain or an ACDC of a taskchain
-        taskchain = (schema["RequestType"] == "TaskChain") or ((schema["RequestType"] == "Resubmission") and "task" in schema["InitialTaskPath"].split("/")[1])
+        taskchain = (schema["RequestType"] == "TaskChain") or (original_wf and original_wf.request["RequestType"] == "Resubmission")
 
         #Dealing with era and proc string
         if taskchain:
@@ -251,6 +260,8 @@ def main():
             lfn = options.lfn
         elif "MergedLFNBase" in wf_info:
             lfn = wf_info['MergedLFNBase']
+        elif original_wf and "MergedLFNBase" in original_wf.request:
+            lfn = original_wf.request['MergedLFNBase']
         else:
             print "Can't assign the workflow! Please include workflow lfn using --lfn option."
             sys.exit(0)
@@ -310,21 +321,38 @@ def main():
         check_mem = schema['Memory']
         ncores = wfi.getMulticore()
         memory_allowed = SI.sitesByMemory( float(check_mem), maxCore=ncores)
-        if not set(sites).issubset(memory_allowed):
-            print "The memory requirement",check_mem,"is too much for",sorted(set(sites) - set(memory_allowed))
+        not_ready = sorted(set(sites) & set(SI.sites_not_ready))
+        not_existing = sorted(set(sites) - set(SI.all_sites))
+        not_matching = sorted(set(sites) - set(memory_allowed) - set(not_ready)- set(not_existing))
+        
+        sites = sorted( set(sites) - set(not_matching) - set(not_existing))
+        
+        print sorted(memory_allowed),"to allow",check_mem,ncores
+        if not_ready:
+            print not_ready,"is/are not ready"
             sys.exit(0)
+        if not_matching:
+            print "The memory requirement",check_mem,"is too much for",not_matching
+            sys.exit(0)
+
 
     # If the --test argument was provided, then just print the information
     # gathered so far and abort the assignment
+        print wf_name
+        print "Era:",era
+        print "ProcStr:",procstring
+        print "ProcVer:",procversion
+        print "LFN:",lfn
+        print "Team:",team
+        print "Site:",sites
+        print "Taskchain? ", str(taskchain)
+        print "Activity:", activity
+
         if options.test:
-            print "%s \tEra: %s \tProcStr: %s \tProcVer: %s" % (wf_name, era, procstring, procversion)
-            print "LFN: %s \tTeam: %s \tSite: %s" % (lfn, team, sites)
-            print "Taskchain? " + str(taskchain)
-            print "Activity:" + activity
-            sys.exit(0)
+            continue
         
         # Really assigning the workflow now
-        print wf_name, '\tEra:', era, '\tProcStr:', procstring, '\tProcVer:', procversion, '\tTeam:', team, '\tSite:', sites
+        #print wf_name, '\tEra:', era, '\tProcStr:', procstring, '\tProcVer:', procversion, '\tTeam:', team, '\tSite:', sites
         assignRequest(url, wf_name, team, sites, era, procversion, activity, lfn, procstring, 
                       trust_site = options.xrootd, 
                       replica = options.replica, 
