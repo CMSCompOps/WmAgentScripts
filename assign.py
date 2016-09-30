@@ -237,14 +237,7 @@ def main():
             era = None
             procstring = None
 
-        # Must use --lfn option, otherwise workflow won't be assigned
-        if options.lfn:
-            lfn = options.lfn
-        elif "MergedLFNBase" in wf.info:
-            lfn = wf.info['MergedLFNBase']
-        else:
-            print "Can't assign the workflow! Please include workflow lfn using --lfn option."
-            sys.exit(0)
+    
         # activity production by default for taskchains, reprocessing for default by workflows
         if options.activity:
             activity = options.activity
@@ -253,11 +246,32 @@ def main():
         else:
             activity = 'reprocessing'
 
+        # Parameters by default, we should not be able to change them
+        # Must use --lfn option, otherwise workflow won't be assigned
+        original_wf = reqMgr.Workflow(wf.info['OriginalRequestName'], url=url)
+        if options.lfn:
+            lfn = options.lfn
+        elif "MergedLFNBase" in original_wf.info:
+            lfn = original_wf.info['MergedLFNBase']
+        else:
+            print "Can't assign the workflow! Please include workflow lfn using --lfn option."
+            sys.exit(0)
+        # given or default xrootd
+        if options.xrootd:
+            xrootd = options.xrootd
+        else:
+            xrootd = original_wf.info["TrustSitelists"]
+        # given or default secondary_xrootd
+        if options.secondary_xrootd:
+            secondary_xrootd = options.secondary_xrootd
+        else:
+            secondary_xrootd = original_wf.info["TrustPUSitelists"]
         # given or default processing version
         if options.procversion:
             procversion = int(options.procversion)
         else:
             procversion = wf.info["ProcessingVersion"]
+        # End default parameters
 
         # Check for output dataset existence, and abort if output datasets already exist!
         # Don't perform this check for ACDC's
@@ -300,12 +314,7 @@ def main():
         # Really assigning the workflow now
         print wf.name, '\tEra:', era, '\tProcStr:', procstring, '\tProcVer:', procversion, '\tTeam:', team, '\tSite:', sites
         assignRequest(url, wf.name, team, sites, era, procversion, activity, lfn, procstring, 
-                      trust_site = options.xrootd, 
-                      replica = options.replica, 
-                      verbose = options.verbose, 
-                      taskchain = taskchain, 
-                      trust_secondary_site = options.secondary_xrootd
-                      )
+                      xrootd, options.replica, options.verbose, taskchain, secondary_xrootd)
     
     sys.exit(0)
 
