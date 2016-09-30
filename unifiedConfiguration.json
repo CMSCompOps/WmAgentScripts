@@ -12,7 +12,10 @@
    "description" : "The fraction of the DDM quota we are allowed to use"
  },
  "sites_banned": {
-   "value" : ["T2_CH_CERN_AI","T2_US_Vanderbilt","T0_CH_CERN","T2_EE_Estonia"],
+   "value" : ["T2_CH_CERN_AI",
+   	      "T0_CH_CERN",
+	      "T2_US_Vanderbilt",
+	      "T2_EE_Estonia"],
    "description" : "The sites that are banned from production"
  },		 
  "sites_auto_approve": {
