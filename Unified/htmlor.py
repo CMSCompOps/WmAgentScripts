@@ -824,7 +824,14 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
                 #    up_com += "<li>%s : %d</li>"% (camp, upcoming[site][camp])
                 #up_com += "</ul>"
 
-            text+='<td><a href=http://dashb-ssb.cern.ch/dashboard/templates/sitePendingRunningJobs.html?site=%s>%s</a><br><a href="http://cms-gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="http://cms-gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:50px"></a><br><a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=&check=submitted&sortby=activity&scale=linear&bars=20&data1=%s&date2=%s">dashb</a><br>CPU pledge: %s<br>%s%s</td>'%(site,site,site,site,site,date1,date2,cpu,ht_disk,up_com)
+            text+='<td>'
+            text+='<a href=http://dashb-ssb.cern.ch/dashboard/templates/sitePendingRunningJobs.html?site=%s>%s</a><br>'%(site,site)
+            text+='<a href="http://cms-gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="http://cms-gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:50px"></a><br>'%( site,site )
+            text+='<a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=&check=submitted&sortby=activity&scale=linear&bars=20&data1=%s&date2=%s">dashb</a><br>'%( site,date1,date2 )
+            text+='<a href="https://cms-site-readiness.web.cern.ch/cms-site-readiness/SiteReadiness/HTML/SiteReadinessReport.html#%s">SAM</a><br>'%( site )
+            text+='CPU pledge: %s<br>'%(cpu)
+            text+='%s%s'%(ht_disk,up_com)
+            text+='</td>'
             if c==n_column:
                 c=0
             else:
