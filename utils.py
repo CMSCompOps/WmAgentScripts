@@ -1466,17 +1466,19 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
         for out in self.record[wf]['datasets']:
             text += '<tr bgcolor=%s>'%color
             text += '<td>%s<br>'%wf_and_anchor
-            text += ', <a href="https://%s/reqmgr2/fetch?rid=%s" target="_blank">dts</a>'%(reqmgr_url, wf)
+            text += '<a href="https://%s/reqmgr2/fetch?rid=%s" target="_blank">dts</a>'%(reqmgr_url, wf)
             text += ', <a href=https://%s/reqmgr/view/details/%s>dts-req1</a>'%(reqmgr_url, wf)
             text += ', <a href="https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=full&reverse=0&reverse=1&npp=20&subtext=%s&sall=q" target="_blank">elog</a>'%(pid)
             text += ', <a href=https://%s/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s>perf</a>'%(reqmgr_url, wf)
-            
-            text += ', <a href="http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=%s" target="_blank">history</a>'%(pid)
-            text += ', <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>ac</a>'%(tpid)
+            text += ', <a href=assistance.html#%s>%s</a>'%(wf,wfo.status)
+            text += '<br>'
+            text += '<a href="http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=%s" target="_blank">history</a>'%(pid)
+            text += ', <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>%s</a>'%(tpid,tpid)
             text += ', <a href=report/%s>report</a>'%(wf)
             if 'ReReco' in tpid:
                 text += ', <a href=https://cmst2.web.cern.ch/cmst2/unified/datalumi/lumi.%s.html>lumis</a>'%(tpid)
-            text += ', <a href=assistance.html#%s>%s</a></td>'%(wf,wfo.status)
+            text += ', <a href="https://its.cern.ch/jira/issues/?jql=text~%s AND project = CMSCOMPPR" target="_blank">JIRA</a>'%(pid)
+            text += '</td>'
             
             text+='<td>%s</td>'% out
             lines = []
