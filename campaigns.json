@@ -19,8 +19,7 @@
     "parameters": {
       "SiteWhitelist": [ "T2_US_Vanderbilt"]
     },
-    "custodial": "T1_FR_CCIN2P3_MSS",
-    "NO_overflow":{"LHE":{"site_list":["T2_US_MIT","T2_US_Vanderbilt","T2_US_Nebraska"]}}
+    "custodial": "T1_FR_CCIN2P3_MSS"
   },
   "TTI2023Upg14GS": {
     "go": true,
@@ -333,7 +332,6 @@
       "EventsPerLumi": "x2",
       "MaxMergeEvents": 4000000
     },
-    "overflow":{"LHE":{"site_list":"sites_AAA"}},
     "force-complete" : 0.99,
     "lumisize" : -1,
     "tune" : true
@@ -532,8 +530,7 @@
   },
   "RunIISpring15PrePremix": {
     "go": true,
-    "SiteWhitelist" : [ "T1_US_FNAL", "T1_DE_KIT" , "T1_IT_CNAF", "T1_RU_JINR" ,"T2_CH_CERN" ,"T2_US_MIT", "T2_US_Nebraska" ],
-    "NO_overflow": {"PU":{"max":20000,"pending":0}}
+    "SiteWhitelist" : [ "T1_US_FNAL", "T1_DE_KIT" , "T1_IT_CNAF", "T1_RU_JINR" ,"T2_CH_CERN" ,"T2_US_MIT", "T2_US_Nebraska" ]
   },
   "RunIISpring15MiniAODv2": {
     "go": true,
