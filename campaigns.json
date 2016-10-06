@@ -104,7 +104,7 @@
 		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
     "custodial_override" : ["DQMIO"],
-    "fractionpass": 1.0,
+    "fractionpass": {"all":0.95, "AOD":1.0, "MINIAOD":1.0, "DQMIO":1.0},
     "lumisize" : -1,
     "maxcopies" : 1,
     "primary_AAA" : true
@@ -117,7 +117,7 @@
 		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
     "custodial_override" : ["DQMIO"],
-    "fractionpass": 1.0,
+    "fractionpass": {"all":0.95, "AOD":1.0, "MINIAOD":1.0, "DQMIO":1.0},
     "lumisize" : -1,
     "maxcopies" : 1,
     "primary_AAA" : true
@@ -130,7 +130,7 @@
 		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
     "custodial_override" : ["DQMIO"],
-    "fractionpass": 1.0,
+    "fractionpass": {"all":0.95, "AOD":1.0, "MINIAOD":1.0, "DQMIO":1.0},
     "lumisize" : -1,
     "maxcopies" : 1,
     "primary_AAA" : true
@@ -143,7 +143,7 @@
 		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
     "custodial_override" : ["DQMIO"],
-    "fractionpass": 1.0,
+    "fractionpass": {"all":0.95, "AOD":1.0, "MINIAOD":1.0, "DQMIO":1.0},
     "lumisize" : -1,
     "maxcopies" : 1,
     "primary_AAA" : false,
@@ -157,7 +157,7 @@
 		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
     "custodial_override" : ["DQMIO"],
-    "fractionpass": 1.0,
+    "fractionpass": {"all":0.95, "AOD":1.0, "MINIAOD":1.0, "DQMIO":1.0},
     "lumisize" : -1,
     "maxcopies" : 1,
     "primary_AAA" : false,
@@ -171,7 +171,7 @@
 		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
     "custodial_override" : ["DQMIO"],
-    "fractionpass": 1.0,
+    "fractionpass": {"all":0.95, "AOD":1.0, "MINIAOD":1.0, "DQMIO":1.0},
     "lumisize" : -1,
     "maxcopies" : 1,
     "primary_AAA" : false,
@@ -199,7 +199,7 @@
                  "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
     "custodial_override" : ["DQMIO"],
-    "fractionpass": 1.0,
+    "fractionpass": {"all":0.95, "AOD":1.0, "MINIAOD":1.0, "DQMIO":1.0},
     "lumisize" : -1,
     "maxcopies" : 1,
     "primary_AAA" : false,
@@ -213,15 +213,11 @@
                  "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
     "custodial_override" : ["DQMIO"],
-    "fractionpass": 1.0,
+    "fractionpass": {"all":0.95, "AOD":1.0, "MINIAOD":1.0, "DQMIO":1.0},
     "lumisize" : -1,
     "maxcopies" : 1,
     "primary_AAA" : false,
     "overflow" : {"PRIM" : {}}
-  },
-  "RunIISpring16MiniAODv2": {
-    "go": true,
-    "maxcopies": 1
   },
   "Summer11LegwmLHE": {
     "go": false
@@ -397,6 +393,10 @@
     "force-complete" : 0.99,
     "force-timeout" : 7,
     "lumisize": -1
+  },
+  "RunIISummer16MiniAODv2": {
+    "go": true,
+    "maxcopies": 1
   },
   "Summer16wmLHEGENOnly14TeV": {
     "go": true,
