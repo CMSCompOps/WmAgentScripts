@@ -246,7 +246,8 @@ def checkor(url, spec=None, options=None):
             if member['RequestType'] != 'Resubmission': continue
             if member['RequestName'] == wfo.name: continue
             if member['RequestDate'] < wfi.request['RequestDate']: continue
-            if 'OriginalRequestName' in member and (not 'ACDC' in member['OriginalRequestName']) and member['OriginalRequestName'] != wfo.name: continue
+            if member['PrepID'] != wfi.request['PrepID'] : continue
+            #if 'OriginalRequestName' in member and (not 'ACDC' in member['OriginalRequestName']) and member['OriginalRequestName'] != wfo.name: continue
             if member['RequestStatus'] == None: continue
 
             if not set(member['OutputDatasets']).issubset( set(expected_outputs)):
@@ -630,9 +631,9 @@ def checkor(url, spec=None, options=None):
         ## make the lumi summary 
         if wfi.request['RequestType'] == 'ReReco':
             try:
-                os.system('python Unified/lumi_summary.py %s 1'%(wfi.request['PrepID']))
-                os.system('python Unified/lumi_plot.py %s'%(wfi.request['PrepID']))
-                wfi.sendLog('checkor','Lumi summary available at https://cmst2.web.cern.ch/cmst2/unified/datalumi/')
+                os.system('python Unified/lumi_summary.py %s 1 > /dev/null'%(wfi.request['PrepID']))
+                os.system('python Unified/lumi_plot.py %s > /dev/null'%(wfi.request['PrepID']))
+                wfi.sendLog('checkor','Lumi summary available at https://cmst2.web.cern.ch/cmst2/unified/datalumi/lumi.%s.html'%(wfi.request['PrepID']))
             except Exception as e:
                 print str(e)
         ## make the error report
@@ -761,7 +762,7 @@ def checkor(url, spec=None, options=None):
     #open('already_notifified.json','w').write( json.dumps( already_notified , indent=2))
 
     fDB.html()
-    if not spec and in_manual>10:
+    if not spec and in_manual!=0:
         sendEmail("fresh assistance status available","Fresh status are available at https://cmst2.web.cern.ch/cmst2/unified/assistance.html",destination=['katherine.rozo@cern.ch'])
         #it's a bit annoying
         pass
