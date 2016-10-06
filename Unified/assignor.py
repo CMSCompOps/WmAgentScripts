@@ -82,7 +82,7 @@ def assignor(url ,specific = None, talk=True, options=None):
                     wfh.sendLog('assignor','These data tiers %s are not allowed'%(','.join( banned_tier)))
                     sendLog('assignor','These data tiers %s are not allowed'%(','.join( banned_tier)), level='critical')
 
-        if (secondary and allowed_secondary):
+        if secondary:
             if (set(secondary)&set(allowed_secondary.keys())!=set(secondary)):
                 wfh.sendLog('assignor','%s is not an allowed secondary'%(', '.join(set(secondary)-set(allowed_secondary.keys()))))
                 #sendEmail('secondary not allowed','%s is not an allowed secondary'%( ', '.join(set(secondary)-allowed_secondary)))
