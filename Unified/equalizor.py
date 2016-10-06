@@ -32,7 +32,9 @@ def equalizor(url , specific = None, options=None):
     UC = unifiedConfiguration()
     for site in SI.sites_ready:
         region = site.split('_')[1]
-        if not region in ['US','DE','IT','FR']: continue
+        if not region in ['US'
+                          ,'DE','IT','FR'
+                          ]: continue
         regions[region] = [region] 
 
     def site_in_depletion(s):
@@ -55,7 +57,7 @@ def equalizor(url , specific = None, options=None):
     
     ## add OSG
     mapping['T1_US_FNAL'].append('T3_US_OSG')
-    #mapping['T1_US_FNAL'].append('T3_US_NERSC')
+    mapping['T1_US_FNAL'].append('T3_US_NERSC')
 
     use_T0 = ('T0_CH_CERN' in UC.get("site_for_overflow"))
     if options.t0: use_T0 = True
@@ -70,12 +72,12 @@ def equalizor(url , specific = None, options=None):
 
     if use_T0:
         mapping['T2_CH_CERN'].append('T0_CH_CERN')
-        #mapping['T1_FR_CCIN2P3'].append('T0_CH_CERN')
 
 
     ## all europ can read from CERN
     for reg in ['IT','DE','UK','FR']:
         mapping['T2_CH_CERN'].extend([fb for fb in SI.sites_ready if '_%s_'%reg in fb])
+        pass
 
     ## all europ T1 among each others
     europ_t1 = [site for site in SI.sites_ready if site.startswith('T1') and any([reg in site for reg in ['IT','DE','UK','FR','ES']])]
@@ -84,6 +86,7 @@ def equalizor(url , specific = None, options=None):
         for two in europ_t1:
             if one==two: continue
             mapping[one].append(two)
+            pass
         
     ## make them appear as OK to use
     force_sites = []
@@ -93,6 +96,7 @@ def equalizor(url , specific = None, options=None):
     for possible in SI.sites_T1s:
         if not possible in upcoming:
             mapping['T2_CH_CERN'].append(possible)
+            pass
 
     ## remove add-hoc sites from overflow mapping
     prevent_sites = ['T2_US_Purdue']
@@ -264,8 +268,9 @@ def equalizor(url , specific = None, options=None):
         }
 
     add_to = {
-        #'' : ['T3_US_OSG'],
-        #'' : ['T3_US_OSG'],
+        'pdmvserv_EXO-RunIISpring16MiniAODv2-05060_00552_v0__161001_151813_7925' : ['T3_US_OSG'],
+        #'cerminar_Run2016C-v2-SingleElectron-23Sep2016_8020_160923_182146_3498' : ['T3_US_NERSC'],
+        #'cerminar_Run2016C-v2-Tau-23Sep2016_8020_160923_182336_5649' : ['T3_US_NERSC'],
         }
     
 
@@ -429,8 +434,9 @@ def equalizor(url , specific = None, options=None):
 
 
             ## a temp rule to restrict to aaa neighborhood ## fully replaced with the rule above that restricts in case of extra non reachable shit
-            if wfi.request['RequestType'] in ['ReReco'] and any([key in wfo.name for key in ['Run2016B','Run2016C']]) and False:
-                if task.taskType in ['Processing','Production']:
+            if wfi.request['RequestType'] in ['ReReco'] and any([key in wfo.name for key in ['Run2016']]) and wfi.request['TrustSitelists'] and False:
+                ## already in xrootd mode.
+                if task.taskType in ['Processing']:
                     dataset = list(prim)[0]
                     presence = getDatasetPresence(url, dataset)
                     in_full = [SI.SE_to_CE(site) for site,(there,_) in presence.items() if there]
@@ -443,6 +449,7 @@ def equalizor(url , specific = None, options=None):
                     aaa_grid =  aaa_grid & set(wfi.request['SiteWhitelist']) & set(sites_allowed)
                 
                     if aaa_grid:
+                        print "Emergency restricting rule"
                         print wfo.name,task.pathName,aaa_grid
                         print dataset,in_full
                         modifications[wfo.name][task.pathName] = { "ReplaceSiteWhitelist" : sorted(aaa_grid) }
@@ -459,8 +466,9 @@ def equalizor(url , specific = None, options=None):
                     modifications[wfo.name][task.pathName] = { "ReplaceSiteWhitelist" : sorted(restrict_to) }
 
             if wfo.name in add_to:
-                if task.taskType in ['Production']:
+                if task.taskType in ['Production','Processing']:
                     augment_to = add_to[wfo.name]
+                    print "adding",sorted(augment_to),"to",wfo.name
                     modifications[wfo.name][task.pathName] = { "AddWhitelist" : augment_to }
 
             ### rule to avoid the issue of taskchain secondary jobs being stuck at sites processing the initial step
@@ -562,7 +570,8 @@ def equalizor(url , specific = None, options=None):
 
 
             if options.augment:
-                print sorted(wfi.request['SiteWhitelist']),i_task,use_HLT
+                #print "uhm ....",sorted(wfi.request['SiteWhitelist']),i_task,use_HLT
+                pass
 
             ### add the HLT at partner of CERN
             if 'T2_CH_CERN' in wfi.request['SiteWhitelist'] and i_task in [0,1] and use_HLT and not wfi.request['TrustSitelists']:
@@ -574,8 +583,8 @@ def equalizor(url , specific = None, options=None):
                     pending_HLT += idled
                     if task.pathName in modifications[wfo.name] and 'AddWhitelist' in modifications[wfo.name][task.pathName]:
                         modifications[wfo.name][task.pathName]["AddWhitelist"].append( "T2_CH_CERN_HLT" )
-                        print "\t",wfo.name,"adding addHLT up to",pending_HLT,"for",max_HLT
-                        print task.pathName
+                        wfi.sendLog('equalizor','also adding the HLT in whitelist of %s to %d for %d'%( task.pathName, pending_HLT, max_HLT))
+
                     ## this Replace does not work at all for HLT
                     #elif task.pathName in modifications[wfo.name] and 'ReplaceSiteWhitelist' in modifications[wfo.name][task.pathName]:
                         #modifications[wfo.name][task.pathName]["ReplaceSiteWhitelist"].append( "T2_CH_CERN_HLT" )
