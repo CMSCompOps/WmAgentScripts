@@ -14,6 +14,7 @@ import pickle
 import itertools
 import time
 import math 
+import hashlib
 
 import smtplib
 from email.MIMEMultipart import MIMEMultipart
@@ -1477,7 +1478,7 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
             text += ', <a href=report/%s>report</a>'%(wf)
             if 'ReReco' in tpid:
                 text += ', <a href=https://cmst2.web.cern.ch/cmst2/unified/datalumi/lumi.%s.html>lumis</a>'%(tpid)
-            text += ', <a href="https://its.cern.ch/jira/issues/?jql=text~%s AND project = CMSCOMPPR" target="_blank">JIRA</a>'%(pid)
+            text += ', <a href="https://its.cern.ch/jira/issues/?jql=text~%s AND project = CMSCOMPPR" target="_blank">jira</a>'%(pid)
             text += '</td>'
             
             text+='<td>%s</td>'% out
@@ -2595,7 +2596,7 @@ def getFilesWithLumiInRun(dataset, run):
 
 def getDatasetLumis(dataset, runs=None, with_cache=False):
     dbsapi = DbsApi(url=dbs_url)
-    c_name= '.%s.lumis.json'%dataset.replace('/','_')
+    c_name= '/tmp/.%s.lumis.json'%dataset.replace('/','_')
     if os.path.isfile(c_name) and with_cache:
         print "picking up from cache",c_name
         opened = json.loads(open(c_name).read())
@@ -3243,17 +3244,21 @@ class workflowInfo:
         picture = {}
         for site in by_site:
             print "dashboard for",site
-            picture[site] = self.getDashboard(since, cache=0, sortby='appexitcode', site=site)
+            picture[site] = self.getDashboard(since, cache=cache, sortby='appexitcode', site=site)
         return picture
 
     def getDashboard(self, since=1, cache=0, **args):
-        f_cache = '/tmp/%s.dashb'% self.request['RequestName']
+        ### how do you encode the args in the file_cache ?
+        hash = hashlib.sha224('since=%d'%(since)+str(args)).hexdigest()
+        f_cache = '/tmp/%s.%s.dashb'% (self.request['RequestName'], hash)
         if cache:
             if os.path.isfile(f_cache):
                 d_cache = json.loads(open(f_cache).read())
                 now = time.mktime(time.gmtime())
                 stamp = d_cache['timestamp']
-                if (now-stamp) < cache:
+                c_since = d_cache.get('since',0)
+                c_arg = d_cache.get('args',{})
+                if (now-stamp) < cache and since == c_since and all([ c_arg.get(k,None) == args[k] for k in args.keys() ]):
                     print "dashb taken from cache",f_cache
                     self.dashb = d_cache['data']
                     return self.dashb
@@ -3301,6 +3306,8 @@ class workflowInfo:
         self.dashb = dict([(d['name'],d) for d in r])
         try:
             open(f_cache,'w').write( json.dumps({'timestamp': time.mktime(time.gmtime()),
+                                                 'since' : since,
+                                                 'args' : args,
                                                  'data' : self.dashb}))
         except Exception as e:
             print str(e)
