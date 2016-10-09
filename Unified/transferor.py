@@ -684,7 +684,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                 elif all([max_priority[ds]<80000 for ds in cds]):
                     priority = 'low'
                 
-            result = makeReplicaRequest(url, site_se, items_to_transfer, 'prestaging', priority=priority)
+            result = makeReplicaRequest(url, site_se, items_to_transfer, 'prestaging', priority=priority, approve=True)
         else:
             result= {'phedex':{'request_created' : []}}
             fake_id-=1
@@ -713,7 +713,9 @@ def transferor(url ,specific = None, talk=True, options=None):
             session.commit()
             ## auto approve it
             if execute:
-                approved = approveSubscription(url, phedexid, [site_se])
+                #approved = approveSubscription(url, phedexid, [site_se])
+                ## it's been auto-approved above
+                pass
 
     for wfid in wf_id_in_prestaging:
         tr_wf = session.query(Workflow).get(wfid)
