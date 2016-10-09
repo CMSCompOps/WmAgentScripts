@@ -349,7 +349,8 @@
     "go": true,
     "force-complete" : 0.99,
     "lumisize": -1,
-    "overflow": {"PU":{"max":20000,"pending":0}}
+    "overflow": {"PU":{"max":20000,"pending":0}},
+    "secondaries" : {"/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1-v2/GEN-SIM":{}}
   },
   "RunIIFall15DR76Premix": {
     "go": false,
@@ -426,7 +427,8 @@
       "EventsPerLumi": "x2"
     },
     "lumisize": -1,
-    "SiteWhitelist": [ "T1_US_FNAL", "T1_IT_CNAF","T1_UK_RAL","T1_DE_KIT", "T2_CH_CERN","T2_US_Caltech","T2_US_Nebraska","T2_US_MIT"]
+    "SiteWhitelist": [ "T1_US_FNAL", "T1_IT_CNAF","T1_UK_RAL","T1_DE_KIT", "T2_CH_CERN","T2_US_Caltech","T2_US_Nebraska","T2_US_MIT"],
+    "secondaries" : { "/Neutrino_E-10_gun/RunIISpring16FSPremix-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1/GEN-SIM-DIGI-RAW":{}}
   },
   "HiWinter13": {
     "go": false,
