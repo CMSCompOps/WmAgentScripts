@@ -71,10 +71,12 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         allowed_secondary = {}
         assign_parameters = {}
+        check_secondary = False
         for campaign in wfh.getCampaigns():
             if campaign in CI.campaigns and 'secondaries' in CI.campaigns[campaign]:
-                #allowed_secondary.update( CI.campaigns[campaign]['secondaries'].keys() )
-                allowed_secondary.update( CI.campaigns[campaign]['secondaries'] )
+                if CI.campaigns[campaign]['secondaries']:
+                    allowed_secondary.update( CI.campaigns[campaign]['secondaries'] )
+                    check_secondary = True
             if campaign in CI.campaigns and 'banned_tier' in CI.campaigns[campaign]:
                 banned_tier = list(set(CI.campaigns[campaign]['banned_tier']) & set(output_tiers))
                 if banned_tier:
@@ -82,17 +84,15 @@ def assignor(url ,specific = None, talk=True, options=None):
                     wfh.sendLog('assignor','These data tiers %s are not allowed'%(','.join( banned_tier)))
                     sendLog('assignor','These data tiers %s are not allowed'%(','.join( banned_tier)), level='critical')
 
-        if secondary:
+        if secondary and check_secondary:
             if (set(secondary)&set(allowed_secondary.keys())!=set(secondary)):
                 wfh.sendLog('assignor','%s is not an allowed secondary'%(', '.join(set(secondary)-set(allowed_secondary.keys()))))
-                #sendEmail('secondary not allowed','%s is not an allowed secondary'%( ', '.join(set(secondary)-allowed_secondary)))
                 sendLog('assignor','%s is not an allowed secondary'%(', '.join(set(secondary)-set(allowed_secondary.keys()))), level='critical')
                 if not options.go:
                     no_go = True
             ## then get whether there is something more to be done by secondary
             for sec in secondary:
                 if sec in allowed_secondary:# and 'parameters' in allowed_secondary[sec]:
-                    #overide_parameters.update( allowed_secondary[sec]['parameters'] )
                     assign_parameters.update( allowed_secondary[sec] )
                 
         if no_go:

@@ -254,11 +254,21 @@ def transferor(url ,specific = None, talk=True, options=None):
             
         allowed_secondary = {}
         overide_parameters = {}
+        check_secondary = False
         for campaign in wfh.getCampaigns():
             if campaign in CI.campaigns and 'secondaries' in CI.campaigns[campaign]:
-                allowed_secondary.update( CI.campaigns[campaign]['secondaries'] )
-        if secondary:
-            if (secondary and allowed_secondary) and (set(secondary)&set(allowed_secondary.keys())!=set(secondary)):
+                if CI.campaigns[campaign]['secondaries']:
+                    allowed_secondary.update( CI.campaigns[campaign]['secondaries'] )
+                    check_secondary = True
+            if campaign in CI.campaigns and 'banned_tier' in CI.campaigns[campaign]:
+                banned_tier = list(set(CI.campaigns[campaign]['banned_tier']) & set(output_tiers))
+                if banned_tier:
+                    no_go=True
+                    wfh.sendLog('transferor','These data tiers %s are not allowed'%(','.join( banned_tier)))
+                    sendLog('transferor','These data tiers %s are not allowed in %s'%(','.join( banned_tier), wfo.name), level='critical')
+
+        if secondary and check_secondary:
+            if (set(secondary)&set(allowed_secondary.keys())!=set(secondary)):
                 wfh.sendLog('transferor','%s is not an allowed secondary'%(', '.join(set(secondary)-set(allowed_secondary.keys()))))
                 sendLog('transferor','%s is not an allowed secondary'%(', '.join(set(secondary)-set(allowed_secondary.keys()))), level='critical')
                 if not options.go: 
