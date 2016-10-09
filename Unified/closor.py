@@ -6,7 +6,7 @@ import json
 import time
 import sys
 import os
-from utils import getDatasetEventsAndLumis, campaignInfo, getDatasetPresence, findLateFiles
+from utils import getDatasetEventsAndLumis, campaignInfo, getDatasetPresence, findLateFiles, updateSubscription
 from htmlor import htmlor
 from collections import defaultdict
 import reqMgrClient
@@ -34,6 +34,11 @@ def spawn_harvesting(url, wfi , in_full):
             wfi.sendLog('closor',"will not be able to assign the harvesting: holding up")
             for dqm_input in dqms:
                 all_OK[dqm_input] = False
+                ## raise the subscription to high priority
+                sites = set(wfi.request['NonCustodialSites'])
+                for site in sites:
+                    res = updateSubscription(url, site, dqm_input, priority='high')
+                    print "increased priority",res
                 return all_OK,requests
 
         for dqm_input in dqms:
@@ -102,6 +107,7 @@ def spawn_harvesting(url, wfi , in_full):
                     parameters['SiteWhitelist'] = [SI.SE_to_CE(se) for se in in_full[dqm_input]]
                 else:
                     print "cannot do anything if not having a full copy somewhere"
+                    
                     all_OK[dqm_input]=False
                     continue
 
