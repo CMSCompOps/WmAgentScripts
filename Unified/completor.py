@@ -9,7 +9,7 @@ import json
 import random
 from McMClient import McMClient
 from showError import parse_one
-
+import random
 
 def completor(url, specific):
     use_mcm = True
@@ -70,12 +70,6 @@ def completor(url, specific):
 
         print "looking at",wfo.name
 
-        try:
-            parse_one(url, wfo.name )
-        except Exception as e:
-            print "failed error parsing"
-            print str(e)
-
         ## get all of the same
         wfi = workflowInfo(url, wfo.name)
         pids = wfi.getPrepIDs()
@@ -103,6 +97,14 @@ def completor(url, specific):
         if not 'Campaign' in wfi.request: continue
 
         if not wfi.request['RequestStatus'] in ['acquired','running-open','running-closed']: continue
+
+
+        if wfi.request['RequestStatus'] in ['running-open','running-closed'] and (random.random() < 0.01):
+            try:
+                parse_one(url, wfo.name )
+            except Exception as e:
+                print "failed error parsing"
+                print str(e)
 
         c = wfi.request['Campaign']
         if not c in good_fractions: continue
@@ -164,6 +166,7 @@ def completor(url, specific):
                                    "injection_delay" : injection_delay }
 
         percent_completions = {}
+        
         for output in wfi.request['OutputDatasets']:
             if "/DQM" in output: continue ## that does not count
             if not output in completions: completions[output] = { 'injected' : None, 'checkpoints' : [], 'workflow' : wfo.name}
@@ -177,7 +180,9 @@ def completor(url, specific):
                 event_completion = event_count / float( event_expected )
 
             #take the less optimistic
+            ## taking the max or not : to force-complete on over-pro
             percent_completions[output] = min( lumi_completion, event_completion )
+            
             completions[output]['checkpoints'].append( (now, event_completion ) )
 
         if all([percent_completions[out] >= good_fraction for out in percent_completions]):
