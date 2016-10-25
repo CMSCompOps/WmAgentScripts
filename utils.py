@@ -29,6 +29,7 @@ phedex_url = os.getenv('UNIFIED_PHEDEX','cmsweb.cern.ch')
 reqmgr_url = os.getenv('UNIFIED_REQMGR','cmsweb.cern.ch')
 monitor_dir = os.getenv('UNIFIED_MON','/afs/cern.ch/user/c/cmst2/www/unified/')
 base_dir =  os.getenv('UNIFIED_DIR','/afs/cern.ch/user/c/cmst2/Unified/')
+cache_dir = '/afs/cern.ch/work/c/cmst2/unified/cache'
 
 FORMAT = "%(module)s.%(funcName)s(%(lineno)s) => %(message)s (%(asctime)s)"
 DATEFMT = "%Y-%m-%d %H:%M:%S"
@@ -1247,6 +1248,7 @@ class siteInfo:
             return None
         allowed = set()
         for site,slots in self.sites_memory.items():
+            #for slot in slots: print site,slot['MaxMemMB'],maxMem,slot['MaxMemMB']>= maxMem,slot['MaxCpus'],maxCore,int(slot['MaxCpus'])>=int(maxCore)
             if any([slot['MaxMemMB']>= maxMem and slot['MaxCpus']>=maxCore for slot in slots]):
                 allowed.add(site)
         return list(allowed)
@@ -1468,7 +1470,8 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
             text += '<tr bgcolor=%s>'%color
             text += '<td>%s<br>'%wf_and_anchor
             text += '<a href="https://%s/reqmgr2/fetch?rid=%s" target="_blank">dts</a>'%(reqmgr_url, wf)
-            text += ', <a href=https://%s/reqmgr/view/details/%s>dts-req1</a>'%(reqmgr_url, wf)
+            ## deprecating text += ', <a href=https://%s/reqmgr/view/details/%s>dts-req1</a>'%(reqmgr_url, wf)
+            text += ', <a href="https://%s/couchdb/reqmgr_workload_cache/%s" target="_blank">wfc</a>'%(reqmgr_url, wf)
             text += ', <a href="https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=full&reverse=0&reverse=1&npp=20&subtext=%s&sall=q" target="_blank">elog</a>'%(pid)
             text += ', <a href=https://%s/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s>perf</a>'%(reqmgr_url, wf)
             text += ', <a href=assistance.html#%s>%s</a>'%(wf,wfo.status)
@@ -2384,6 +2387,7 @@ def try_getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=
     dbsapi = DbsApi(url=dbs_url)
     all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
     all_block_names=set([block['block_name'] for block in all_blocks])
+    #print sorted(all_block_names)
     if only_blocks:
         all_block_names = filter( lambda b : b in only_blocks, all_block_names)
         full_size = sum([block['file_size'] for block in all_blocks if (block['block_name'] in only_blocks)])
@@ -2403,19 +2407,29 @@ def try_getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=
 
 
     locations=defaultdict(set)
+    blocks_in_phedex = set()
     for item in items:
         for replica in item['replica']:
+            blocks_in_phedex.add( item['name'] )
             if not any(v in replica['node'] for v in vetoes):
+                #if replica['node'] == 'T2_US_Nebraska':                    print item['name']
                 if within_sites and not replica['node'] in within_sites: continue
                 if replica['group'] == None: replica['group']=""
                 if complete and not replica['complete']==complete: continue
                 #if group!=None and replica['group']==None: continue
                 if group!=None and not replica['group'].lower()==group.lower(): continue 
                 locations[replica['node']].add( item['name'] )
+                #print "\t",replica['node'],item['name']
                 if item['name'] not in all_block_names and not only_blocks:
                     print item['name'],'not yet injected in dbs, counting anyways'
                     all_block_names.add( item['name'] )
                     full_size += item['bytes']
+
+
+    if set(all_block_names) != set(blocks_in_phedex):
+        print "Mismatch in phedex/DBS blocks"
+        print sorted(set(all_block_names) - set(blocks_in_phedex))
+        print sorted(set(blocks_in_phedex) - set(all_block_names))
 
     presence={}
     for (site,blocks) in locations.items():
@@ -2423,6 +2437,12 @@ def try_getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=
         #print site,blocks,all_block_names
         #presence[site] = (set(blocks).issubset(set(all_block_names)), site_size/float(full_size)*100.)
         presence[site] = (set(all_block_names).issubset(set(blocks)), site_size/float(full_size)*100.)
+        if site =='T2_US_Nebraska' and False:
+            print site,
+            print set(all_block_names) - set(blocks)
+            print '\n'.join( sorted( all_block_names ))
+            print site
+            print '\n'.join( sorted( blocks ))
     #print json.dumps( presence , indent=2)
     return presence
 
@@ -2596,7 +2616,7 @@ def getFilesWithLumiInRun(dataset, run):
 
 def getDatasetLumis(dataset, runs=None, with_cache=False):
     dbsapi = DbsApi(url=dbs_url)
-    c_name= '/tmp/.%s.lumis.json'%dataset.replace('/','_')
+    c_name= '%s/.%s.lumis.json'%(cache_dir,dataset.replace('/','_'))
     if os.path.isfile(c_name) and with_cache:
         print "picking up from cache",c_name
         opened = json.loads(open(c_name).read())
@@ -2952,8 +2972,9 @@ def getWorkflows(url,status,user=None,details=False,rtype=None):
     while retries>0:
         try:
             return try_getWorkflows(url, status,user,details,rtype)
-        except:
+        except Exception as e:
             print "getWorkflows retried"
+            print str(e)
             time.sleep(wait)
             #wait+=2
             retries-=1
@@ -3025,7 +3046,7 @@ def getLFNbase(dataset):
 
 
 def getListOfBlocks(inputdset,runwhitelist):
-    dbsApi = DbsApi(url='https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
+    dbsApi = DbsApi(url=dbs_url)
     blocks=dbsApi.listBlocks(dataset = inputdset, run_num = runwhitelist)
     
     block_list = []
@@ -3214,7 +3235,7 @@ class workflowInfo:
 
     def getWMErrors(self,cache=0):
         try:
-            f_cache = '/tmp/%s.wmerror'% self.request['RequestName']
+            f_cache = '%s/%s.wmerror'%(cache_dir, self.request['RequestName'])
             if cache:
                 if os.path.isfile(f_cache):
                     d_cache = json.loads(open(f_cache).read())
@@ -3250,7 +3271,7 @@ class workflowInfo:
     def getDashboard(self, since=1, cache=0, **args):
         ### how do you encode the args in the file_cache ?
         hash = hashlib.sha224('since=%d'%(since)+str(args)).hexdigest()
-        f_cache = '/tmp/%s.%s.dashb'% (self.request['RequestName'], hash)
+        f_cache = '%s/%s.%s.dashb'% (cache_dir, self.request['RequestName'], hash)
         if cache:
             if os.path.isfile(f_cache):
                 d_cache = json.loads(open(f_cache).read())
@@ -3315,7 +3336,7 @@ class workflowInfo:
         return self.dashb
 
     def getWMStats(self ,cache=0):
-        f_cache = '/tmp/%s.wmstats'% self.request['RequestName']
+        f_cache = '%s/%s.wmstats'%(cache_dir, self.request['RequestName'])
         if cache:
             if os.path.isfile(f_cache):
                 d_cache = json.loads(open(f_cache).read())
@@ -3903,10 +3924,10 @@ class workflowInfo:
         return self.request['RequestPriority']
 
     def getMulticore(self):
-        mcores = [self.request.get('Multicore',1)]
+        mcores = [int(self.request.get('Multicore',1))]
         if 'Chain' in self.request['RequestType']:
             mcores_d = self._collectinchain('Multicore',default=1)
-            mcores.extend( mcores_d.values() )
+            mcores.extend( map(int, mcores_d.values() ))
         return max(mcores)
         
     def getBlockWhiteList(self):
