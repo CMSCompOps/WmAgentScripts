@@ -38,7 +38,7 @@ def getRandomDiskSite(site=None):
         s += "_Disk"
     return s
 
-def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, procstring, trust_site=False, replica=False, verbose=False, taskchain=False, trust_secondary_site=False):
+def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, procstring, trust_site=False, replica=False, verbose=False, taskchain=False, trust_secondary_site=False, memory=None):
     """
     Sends assignment request
     """
@@ -86,7 +86,8 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
         params["NonCustodialSubType"] = "Replica"
         if taskchain:
             params['AutoApproveSubscriptionSites'] = [params["NonCustodialSites"]]
-
+    if memory:
+        params["Memory"] = memory
     if verbose:
         pprint(params)
 
@@ -132,6 +133,7 @@ def main():
     parser.add_option('--test', action="store_true",help='Nothing is injected, only print infomation about workflow and Era', dest='test')
     parser.add_option('-f', '--file', help='Text file with a list of wokflows. If this option is used, the same settings will be applied to all workflows', dest='file')
     parser.add_option('-w', '--workflow', help='Workflow Name', dest='workflow')
+    parser.add_option('-m', '--memory', help='Set the Memory parameter to the workflow', dest='memory', default=None)
     parser.add_option('-e', '--era', help='Acquistion era', dest='era')
     parser.add_option("--procstr", dest="procstring", help="Overrides Processing String with a single string")
 
@@ -156,6 +158,7 @@ def main():
     era = {}
     procversion = 1
     procstring = {}
+    memory = None
     replica = False
     sites = []
     specialStr = ''
@@ -177,6 +180,8 @@ def main():
             sites = SI.sites_mcore_ready
         elif hasattr(SI,options.sites):
             sites = getattr(SI,options.sites)
+        #elif options.sites.lower() == 'acdc':
+        #    sites = []
         else: 
             sites = [site for site in options.sites.split(',')]
     else: 
@@ -188,18 +193,31 @@ def main():
     if options.replica:
         replica = True
 
-    for wf in wfs:
+    for wfn in wfs:
         # Getting the original dictionary
-        schema = getRequestDict(url, wf)
-        wf = reqMgr.Workflow(wf, url=url)
+        wfi = workflowInfo( url, wfn )
+        schema = wfi.request
+        if 'OriginalRequestName' in schema:
+            print "Original workflow is:",schema['OriginalRequestName']
+            original_wf = workflowInfo(url, schema['OriginalRequestName'])            
+        else:
+            original_wf = None
+
+        if options.sites.lower() == 'original' and original_wf:
+            sites = original_wf.request['SiteWhitelist']
+            print "Using",sorted(sites),"from the original request",original_wf.request['RequestName']
+
+        #print json.dumps( schema, indent=2 )
+        wf_name = wfn
+        wf_info = schema
 
         # WF must be in assignment-approved in order to be assigned
         if (schema["RequestStatus"] != "assignment-approved"):
-            print("The workflow '" + wf.name + "' you are trying to assign is not in assignment-approved")
+            print("The workflow '" + wf_name + "' you are trying to assign is not in assignment-approved")
             sys.exit(1)
 
         #Check to see if the workflow is a task chain or an ACDC of a taskchain
-        taskchain = (schema["RequestType"] == "TaskChain") or ((schema["RequestType"] == "Resubmission") and "task" in schema["InitialTaskPath"].split("/")[1])
+        taskchain = (schema["RequestType"] == "TaskChain") or (original_wf and original_wf.request["RequestType"] == "Resubmission")
 
         #Dealing with era and proc string
         if taskchain:
@@ -227,21 +245,23 @@ def main():
         if options.procstring:
             procstring = options.procstring
         elif not taskchain:
-            procstring = wf.info['ProcessingString']
+            procstring = wf_info['ProcessingString']
         if options.era:
             era = options.era
         elif not taskchain:
-            era = wf.info['AcquisitionEra']
+            era = wf_info['AcquisitionEra']
         #Set era and procstring to none for merge ACDCs inside a task chain
-        if schema["RequestType"] == "Resubmission" and wf.info["PrepID"].startswith("task") and "Merge" in schema["InitialTaskPath"].split("/")[-1]:
+        if schema["RequestType"] == "Resubmission" and wf_info["PrepID"].startswith("task") and "Merge" in schema["InitialTaskPath"].split("/")[-1]:
             era = None
             procstring = None
 
         # Must use --lfn option, otherwise workflow won't be assigned
         if options.lfn:
             lfn = options.lfn
-        elif "MergedLFNBase" in wf.info:
-            lfn = wf.info['MergedLFNBase']
+        elif "MergedLFNBase" in wf_info:
+            lfn = wf_info['MergedLFNBase']
+        elif original_wf and "MergedLFNBase" in original_wf.request:
+            lfn = original_wf.request['MergedLFNBase']
         else:
             print "Can't assign the workflow! Please include workflow lfn using --lfn option."
             sys.exit(0)
@@ -253,11 +273,14 @@ def main():
         else:
             activity = 'reprocessing'
 
+        if options.memory:
+            memory = options.memory
+
         # given or default processing version
         if options.procversion:
             procversion = int(options.procversion)
         else:
-            procversion = wf.info["ProcessingVersion"]
+            procversion = wf_info["ProcessingVersion"]
 
         # Check for output dataset existence, and abort if output datasets already exist!
         # Don't perform this check for ACDC's
@@ -287,24 +310,63 @@ def main():
             if exist and procversion <= maxv:
                 print "Some output datasets exist, its advised to assign with v ==", maxv + 1
                 sys.exit(0)
+        else:
+            ## this is a resubmission !
+            print "The taks in resubmission is:",schema['InitialTaskPath']
+            ## pick up the sites from acdc
+            if options.sites.lower() == 'acdc':
+                where_to_run, _,_ =  original_wf.getRecoveryInfo()
+                task = schema['InitialTaskPath']
+                sites = [SI.SE_to_CE(site) for site in where_to_run[task]]
+                print "Found",sorted(sites),"as sites where to run the ACDC at, from the acdc doc of ",original_wf.request['RequestName']
+
+            ## re-assure yourself that the lfn,procversion is set correctly
+            lfn = original_wf.request['MergedLFNBase']
+            procversion = original_wf.request["ProcessingVersion"]
+
+        ## check that the sites are all compatible and up
+        check_mem = schema['Memory']
+        ncores = wfi.getMulticore()
+        memory_allowed = SI.sitesByMemory( float(check_mem), maxCore=ncores)
+        not_ready = sorted(set(sites) & set(SI.sites_not_ready))
+        not_existing = sorted(set(sites) - set(SI.all_sites))
+        not_matching = sorted(set(sites) - set(memory_allowed) - set(not_ready)- set(not_existing))
+        
+        sites = sorted( set(sites) - set(not_matching) - set(not_existing))
+        
+        print sorted(memory_allowed),"to allow",check_mem,ncores
+        if not_ready:
+            print not_ready,"is/are not ready"
+            sys.exit(0)
+        if not_matching:
+            print "The memory requirement",check_mem,"is too much for",not_matching
+            sys.exit(0)
+
 
     # If the --test argument was provided, then just print the information
     # gathered so far and abort the assignment
+        print wf_name
+        print "Era:",era
+        print "ProcStr:",procstring
+        print "ProcVer:",procversion
+        print "LFN:",lfn
+        print "Team:",team
+        print "Site:",sites
+        print "Taskchain? ", str(taskchain)
+        print "Activity:", activity
+
         if options.test:
-            print "%s \tEra: %s \tProcStr: %s \tProcVer: %s" % (wf.name, era, procstring, procversion)
-            print "LFN: %s \tTeam: %s \tSite: %s" % (lfn, team, sites)
-            print "Taskchain? " + str(taskchain)
-            print "Activity:" + activity
-            sys.exit(0)
+            continue
         
         # Really assigning the workflow now
-        print wf.name, '\tEra:', era, '\tProcStr:', procstring, '\tProcVer:', procversion, '\tTeam:', team, '\tSite:', sites
-        assignRequest(url, wf.name, team, sites, era, procversion, activity, lfn, procstring, 
+        #print wf_name, '\tEra:', era, '\tProcStr:', procstring, '\tProcVer:', procversion, '\tTeam:', team, '\tSite:', sites
+        assignRequest(url, wf_name, team, sites, era, procversion, activity, lfn, procstring, 
                       trust_site = options.xrootd, 
                       replica = options.replica, 
                       verbose = options.verbose, 
                       taskchain = taskchain, 
-                      trust_secondary_site = options.secondary_xrootd
+                      trust_secondary_site = options.secondary_xrootd,
+                      memory=memory
                       )
     
     sys.exit(0)
