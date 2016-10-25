@@ -13,6 +13,7 @@ import json
 import dbs3Client as dbs3
 import copy
 import time 
+import optparse
 
 # default headers for PUT and POST methods
 def_headers={"Content-type": "application/json", "Accept": "application/json"}
@@ -1097,7 +1098,7 @@ def cloneWorkflow(url, workflowname):
         data = None
     return data
 
-def submitWorkflow(url, schema, reqmgr2=False):
+def submitWorkflow(url, schema, reqmgr2=False): ## single switch flip
     """
     This submits a workflow into the ReqMgr, can be used for cloning
     and resubmitting workflows
@@ -1287,3 +1288,19 @@ def getInputEventsTaskChain(request):
 
 
 
+if __name__ == "__main__":
+    usage = "usage: reqMgrClient -j <file.json>"
+    parser = optparse.OptionParser(usage=usage)
+    parser.add_option('-j','--json',help='A json file with "createRequest" or just a request schema')
+    parser.add_option('--testbed', help='Create in testbed', action='store_true', default=False, dest='testbed')
+    (options, args) = parser.parse_args()
+    
+    prod_url = 'cmsweb.cern.ch'
+    testbed_url = 'cmsweb-testbed.cern.ch'
+    url = testbed_url if options.testbed else prod_url 
+
+    schema = json.loads(open(options.json).read())
+    if "createRequest" in schema: schema = schema["createRequest"]
+    
+    print schema
+    #submitWorkflow(url, schema)
