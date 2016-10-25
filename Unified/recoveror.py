@@ -51,7 +51,9 @@ def singleRecovery(url, task , initial, actions, do=False):
         print json.dumps( payload, indent=2)
         return None
 
+    print "ACDC payload"
     print json.dumps( payload , indent=2)
+    print actions
 
     ## submit
     acdc = reqMgrClient.submitWorkflow(url, payload)
