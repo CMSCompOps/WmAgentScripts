@@ -14,11 +14,13 @@ import os
 import copy
 import time
 import random
+import math
 from McMClient import McMClient
 from htmlor import htmlor
 from utils import sendEmail 
 from utils import closeoutInfo
 from showError import parse_one
+import csv 
 
 def checkor(url, spec=None, options=None):
     if userLock():   return
@@ -136,6 +138,16 @@ def checkor(url, spec=None, options=None):
     if max_per_round and not spec: wfs = wfs[:max_per_round]
 
     in_manual = 0
+
+    ## now you have a record of what file was invalidated globally from TT
+    try:
+        TMDB_invalid = set([row[3] for row in csv.reader( os.popen('curl -s "https://docs.google.com/spreadsheets/d/11fFsDOTLTtRcI4Q3gXw0GNj4ZS8IoXMoQDC3CbOo_2o/export?format=csv"'))])
+        TMDB_invalid = map(lambda e : e.split(':')[-1], TMDB_invalid)
+        print len(TMDB_invalid),"globally invalidated files"
+    except Exception as e:
+        print "TMDB not fetched"
+        print str(e)
+        TMDB_invalid = []
 
     for wfo in wfs:
         if spec and not (spec in wfo.name): continue
@@ -328,6 +340,8 @@ def checkor(url, spec=None, options=None):
                 if type(CI.campaigns[c]['fractionpass']) == dict:
                     tier = output.split('/')[-1]
                     ## defined per tier
+                    if not tier in CI.campaigns[c]['fractionpass']:
+                        print "we should prevent it from passing IMO"
                     fractions_pass[output] = CI.campaigns[c]['fractionpass'].get(tier, CI.campaigns[c]['fractionpass'].get('all', default_pass))
                 else:
                     fractions_pass[output] = CI.campaigns[c]['fractionpass']
@@ -525,6 +539,7 @@ def checkor(url, spec=None, options=None):
             dbs_presence[output] = dbs3Client.getFileCountDataset( output )
             dbs_invalid[output] = dbs3Client.getFileCountDataset( output, onlyInvalid=True)
 
+        
         fraction_invalid = 0.01
         if not all([dbs_presence[out] == (dbs_invalid[out]+phedex_presence[out]) for out in wfi.request['OutputDatasets']]) and not options.ignorefiles:
             mismatch_notice = wfo.name+" has a dbs,phedex mismatch\n"
@@ -540,16 +555,23 @@ def checkor(url, spec=None, options=None):
                     _,_,missing_phedex,missing_dbs  = getDatasetFiles(url, out)
                     if missing_phedex:
                         wfi.sendLog('checkor',"These %d files are missing in phedex\n%s"%(len(missing_phedex),
-                                    "\n".join( missing_phedex )))
+                                                                                          "\n".join( missing_phedex )))
+                        were_invalidated = sorted(set(missing_phedex) & set(TMDB_invalid ))
+                        if were_invalidated:
+                            wfi.sendLog('checkor',"These %d files were invalidated globally\n%s"%(len(were_invalidated),
+                                                                                                  "\n".join(were_invalidated)))
                     if missing_dbs:
                         wfi.sendLog('checkor',"These %d files are missing in dbs\n%s"%(len(missing_dbs),
                                     "\n".join( missing_dbs )))
-
+                        were_invalidated = sorted(set(missing_dbs) & set(TMDB_invalid ))
+                        if were_invalidated:
+                            wfi.sendLog('checkor',"These %d files were invalidated globally\n%s"%(len(were_invalidated),
+                                                                                                  "\n".join(were_invalidated)))
             #if not bypass_checks:
             ## I don't think we can by pass this
             is_closing = False
 
-        if not all([(dbs_invalid[out] <= int(fraction_invalid*dbs_presence[out])) for out in wfi.request['OutputDatasets']]) and not options.ignorefiles:
+        if not all([(dbs_invalid[out] <= int(fraction_invalid*dbs_presence[out])) for out in wfi.request['OutputDatasets']]) and not options.ignoreinvalid:
             print wfo.name,"has a dbs invalid file level too high"
             print json.dumps(dbs_presence, indent=2)
             print json.dumps(dbs_invalid, indent=2)
@@ -612,7 +634,8 @@ def checkor(url, spec=None, options=None):
         for output in wfi.request['OutputDatasets']:
             if not output in fDB.record[wfo.name]['datasets']: fDB.record[wfo.name]['datasets'][output] = {}
             rec = fDB.record[wfo.name]['datasets'][output]
-            rec['percentage'] = float('%.2f'%(percent_completions[output]*100))
+            #rec['percentage'] = float('%.2f'%(percent_completions[output]*100))
+            rec['percentage'] = math.floor(percent_completions[output]*10000)/100.## round down
             rec['duplicate'] = duplications[output] if output in duplications else 'N/A'
             rec['phedexReqs'] = float('%.2f'%any_presence[output][custodial_presences[output][0]][1]) if len(custodial_presences[output])!=0 else 'N/A'
             rec['closeOutDataset'] = is_closing
@@ -801,6 +824,7 @@ if __name__ == "__main__":
     parser.add_option('-o','--old',help='update those in complex assistance',action='store_true', default=False)
     parser.add_option('--fractionpass',help='The completion fraction that is permitted', default=0.0,type='float')
     parser.add_option('--ignorefiles', help='Force ignoring dbs/phedex differences', action='store_true', default=False)
+    parser.add_option('--ignoreinvalid', help='Force ignoring high level of invalid files', action='store_true', default=False)
     parser.add_option('--lumisize', help='Force the upper limit on lumisection', default=0, type='float')
     parser.add_option('--ignoreduplicates', help='Force ignoring lumi duplicates', default=False, action='store_true')
     parser.add_option('--html',help='make the monitor page',action='store_true', default=False)
