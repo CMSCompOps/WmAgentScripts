@@ -30,7 +30,9 @@
   "TTI2023Upg14D": {
     "go": true,
     "SiteWhitelist": [ "T1_FR_CCIN2P3","T1_IT_CNAF","T2_CH_CERN","T1_UK_RAL","T1_ES_PIC"],
-    "secondaries" : {}
+    "secondaries" : {"/PYTHIA6_MinBias_TuneZ2star_14TeV/TTI2023Upg14GS-FLATBS15_DES23_62_V1-v1/GEN-SIM":{},
+    		     "/PYTHIA6_MinBias_TuneZ2star_14TeV/TTI2023Upg14GS-DES23_62_V1-v1/GEN-SIM" : {"SecondaryLocation" : [ "T1_US_FNAL", "T1_ES_PIC","T1_FR_CCIN2P3","T1_IT_CNAF","T1_RU_JINR","T1_UK_RAL","T1_DE_KIT","T2_US_MIT","T2_US_Nebraska","T2_US_Caltech","T2_CH_CERN"] } 
+    		     }
   },
   "Commissioning2015": {
     "go": true,
@@ -104,7 +106,7 @@
 		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
     "custodial_override" : ["DQMIO"],
-    "fractionpass": {"all":0.95, "AOD":1.0, "MINIAOD":1.0, "DQMIO":1.0},
+    "fractionpass": {"all":0.95, "AOD":1.0, "MINIAOD":1.0, "DQMIO":1.0, "USER":1.0, "RAW-RECO":1.0},
     "lumisize" : -1,
     "maxcopies" : 1,
     "primary_AAA" : true
@@ -117,7 +119,7 @@
 		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
     "custodial_override" : ["DQMIO"],
-    "fractionpass": {"all":0.95, "AOD":1.0, "MINIAOD":1.0, "DQMIO":1.0},
+    "fractionpass": {"all":0.98, "AOD":1.0, "MINIAOD":1.0, "DQMIO":1.0, "USER":1.0, "RAW-RECO":1.0},
     "lumisize" : -1,
     "maxcopies" : 1,
     "primary_AAA" : true
@@ -130,20 +132,20 @@
 		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
     "custodial_override" : ["DQMIO"],
-    "fractionpass": {"all":0.95, "AOD":1.0, "MINIAOD":1.0, "DQMIO":1.0},
+    "fractionpass": {"all":0.98, "AOD":1.0, "MINIAOD":1.0, "DQMIO":1.0, "USER":1.0, "RAW-RECO":1.0},
     "lumisize" : -1,
     "maxcopies" : 1,
     "primary_AAA" : true
   },
   "Run2016B": {
     "go": true,
-    "labels" : ["01Jul2016","07Jul2016","29Jul2016","23Sep2016"],
+    "labels" : ["01Jul2016","07Jul2016","29Jul2016","23Sep2016","10Oct2016"],
     "DDMcopies": { 
      		 "all" : { "N" : 4 },
 		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
     "custodial_override" : ["DQMIO"],
-    "fractionpass": {"all":0.95, "AOD":1.0, "MINIAOD":1.0, "DQMIO":1.0},
+    "fractionpass": {"all":0.95, "AOD":1.0, "MINIAOD":1.0, "DQMIO":1.0, "USER":1.0, "RAW-RECO":1.0},
     "lumisize" : -1,
     "maxcopies" : 1,
     "primary_AAA" : false,
@@ -157,7 +159,7 @@
 		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
     "custodial_override" : ["DQMIO"],
-    "fractionpass": {"all":0.95, "AOD":1.0, "MINIAOD":1.0, "DQMIO":1.0},
+    "fractionpass": {"all":0.95, "AOD":1.0, "MINIAOD":1.0, "DQMIO":1.0, "USER":1.0, "RAW-RECO":1.0},
     "lumisize" : -1,
     "maxcopies" : 1,
     "primary_AAA" : false,
@@ -171,7 +173,7 @@
 		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
     "custodial_override" : ["DQMIO"],
-    "fractionpass": {"all":0.95, "AOD":1.0, "MINIAOD":1.0, "DQMIO":1.0},
+    "fractionpass": {"all":0.95, "AOD":1.0, "MINIAOD":1.0, "DQMIO":1.0, "USER":1.0, "RAW-RECO":1.0},
     "lumisize" : -1,
     "maxcopies" : 1,
     "primary_AAA" : false,
@@ -185,7 +187,7 @@
 		 "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
     "custodial_override" : ["DQMIO"],
-    "fractionpass": {"all":0.95, "AOD":1.0, "MINIAOD":1.0, "DQMIO":1.0},
+    "fractionpass": {"all":0.95, "AOD":1.0, "MINIAOD":1.0, "DQMIO":1.0, "USER":1.0, "RAW-RECO":1.0},
     "lumisize" : -1,
     "maxcopies" : 1,
     "primary_AAA" : false,
@@ -199,7 +201,7 @@
                  "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
     "custodial_override" : ["DQMIO"],
-    "fractionpass": {"all":0.95, "AOD":1.0, "MINIAOD":1.0, "DQMIO":1.0},
+    "fractionpass": {"all":0.95, "AOD":1.0, "MINIAOD":1.0, "DQMIO":1.0, "USER":1.0, "RAW-RECO":1.0},
     "lumisize" : -1,
     "maxcopies" : 1,
     "primary_AAA" : false,
@@ -207,13 +209,13 @@
   },
   "Run2016G": {
     "go": true,
-    "labels" : ["23Sep2016"],
+    "labels" : ["23Sep2016","10Oct2016"],
     "DDMcopies": {
                  "all" : { "N" : 4 },
                  "RECO" : { "N" : 1, "host" : ["T1_US_FNAL_Disk"]}
     },
     "custodial_override" : ["DQMIO"],
-    "fractionpass": {"all":0.95, "AOD":1.0, "MINIAOD":1.0, "DQMIO":1.0},
+    "fractionpass": {"all":0.95, "AOD":1.0, "MINIAOD":1.0, "DQMIO":1.0, "USER":1.0, "RAW-RECO":1.0},
     "lumisize" : -1,
     "maxcopies" : 1,
     "primary_AAA" : false,
@@ -305,7 +307,7 @@
     "toDDM" : ["GEN"]
   },
   "RunIIWinter15GS": {
-    "go": false, 
+    "go": true, 
     "parameters": {
       "EventsPerLumi": "x2"
     },
