@@ -1,6 +1,6 @@
 import json
 import time
-from utils import getWorkflowById, workflowInfo, getDatasetLumis, DbsApi, getWorkflowByOutput
+from utils import getWorkflowById, workflowInfo, getDatasetLumis, DbsApi, getWorkflowByOutput, monitor_dir
 from collections import defaultdict
 import pickle
 import sys
@@ -138,11 +138,25 @@ for wf in wfs:
                         types = d['type'] 
 
 
+
                     for run,ls in errors[task][etype][ecode]['runs'].items():
-                        eruns.extend( [(int(run),l) for l in ls] )
+                        #print "JRJR",ls
+                        ils=[]
+                        for l in ls:
+                            if type(l) == list:
+                                #print l
+                                #print list(range(l[0],l[1]+1))
+                                ils.extend( range(l[0],l[1]+1) )
+                            else:
+                                ils.append( l ) 
+                        eruns.extend( [(int(run),l) for l in ils] )
                     #print "in error",len(eruns)
 
-                    affected = filter(lambda t: t[1], [(out,set(missing_rl[out])&set(eruns)) for out in affected_outputs])
+
+                    #print "JRJR",eruns
+                    #print "JRJR",set(eruns)
+                    seruns = set(eruns)
+                    affected = filter(lambda t: t[1], [(out,set(missing_rl[out])&seruns) for out in affected_outputs])
                     #print "affected",affected
                     for ds,affected_ls in affected:
                         for ls in affected_ls:
@@ -151,7 +165,10 @@ for wf in wfs:
         print "no errors for",wf['RequestName']
         #print s
 
-open('ls.%s.json'%pid,'w').write( json.dumps( missing_rl, indent=2 ))
+#try:
+#    open('/tmp/ls.%s.json'%pid,'w').write( json.dumps( missing_rl, indent=2 ))
+#except:
+#    print "Could not save the lumi json"
 
 missing_rl_with_exp = {}
 for out in missing_rl:
@@ -221,5 +238,7 @@ for out in errors_by_lb:
                     rs.append( "%s:%s"%(types,ecode) )
             missing_rl_with_exp[out][':'.join(map(str,ls))] = "|".join(rs)
 
-if missing_rl_with_exp:                
-    open('ls.%s.json'%pid,'w').write( json.dumps( missing_rl_with_exp, indent=2 ))
+#if missing_rl_with_exp:                
+## this one ism mandatory
+#open('ls.%s.json'%pid,'w').write( json.dumps( missing_rl_with_exp, indent=2 ))
+open('%s/datalumi/json/ls.%s.json'%(monitor_dir,pid),'w').write( json.dumps( missing_rl_with_exp, indent=2 ))

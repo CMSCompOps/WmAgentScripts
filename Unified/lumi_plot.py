@@ -3,13 +3,16 @@ import sys
 import os
 import sys
 import time
+from utils import monitor_dir
 
-f=sys.argv[1]
+pid=sys.argv[1]
 
 try:
-    data =json.loads(open('ls.%s.json'%f).read())
-    os.system('cp ls.%s.json /afs/cern.ch/user/c/cmst2/www/unified/datalumi/json/.'%f)
+    #data =json.loads(open('/tmp/ls.%s.json'%f).read())
+    data =json.loads(open('%s/datalumi/json/ls.%s.json'%(monitor_dir,pid)).read())
+    #os.system('cp /tmp/ls.%s.json /afs/cern.ch/user/c/cmst2/www/unified/datalumi/json/.'%f)
 except:
+    
     sys.exit(0)
 
 if not data:
@@ -31,7 +34,8 @@ for dataset,lss in data.items():
 
 all_ls= list(all_ls)
 print len(all_ls)
-html = open('/afs/cern.ch/user/c/cmst2/www/unified/datalumi/lumi.%s%s.html'%(f,l),'w')
+print "\t\tmaking HTML"
+html = open('/afs/cern.ch/user/c/cmst2/www/unified/datalumi/lumi.%s%s.html'%(pid,l),'w')
 
 html.write("""
 <html>
@@ -40,7 +44,7 @@ Missing <b>%d lumisection</b> summary for <a href=https://dmytro.web.cern.ch/dmy
 <table border=1>
 <thead>
 <tr>
-"""%( time.asctime(time.gmtime()), len(all_ls) ,f, f, 'ls.%s.json'%f))
+"""%( time.asctime(time.gmtime()), len(all_ls) ,pid, pid, 'ls.%s.json'%pid))
 
 
 
