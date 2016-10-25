@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from utils import workflowInfo, siteInfo, monitor_dir, global_SI, getDatasetPresence
 import json
 import sys
@@ -95,10 +96,12 @@ def parse_one(url, wfn, options=None):
     tasks = sorted(set(err.keys() + missing_to_run.keys()))
 
     if not tasks:
-        return task_error_site_count
+        print "no task to look at"
+        #return task_error_site_count
         
     html="<html> <center><h1>%s<br><a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>%s</a><br>"%(
-        tasks[0].split('/')[1],
+        #tasks[0].split('/')[1],
+        wfn,
         wfi.request['PrepID'],
         wfi.request['PrepID']
         )
