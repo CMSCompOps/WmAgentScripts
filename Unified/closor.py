@@ -66,7 +66,11 @@ def spawn_harvesting(url, wfi , in_full):
                          'GlobalTag', #dummy
                          ]
             for item in copy_over:
-                harvesting_schema[item] = copy.deepcopy(wfi.request[item])
+                if item in wfi.request:
+                    harvesting_schema[item] = copy.deepcopy(wfi.request[item])
+                else:
+                    print item,"is not in initial schema"
+
             harvesting_schema['InputDataset'] = dqm_input
             harvesting_schema['TimePerEvent'] = 1
             harvesting_schema['PrepID'] = 'Harvest-'+wfi.request['PrepID']
@@ -77,12 +81,12 @@ def spawn_harvesting(url, wfi , in_full):
 
             harvest_request = reqMgrClient.submitWorkflow(url, harvesting_schema)
             if not harvest_request:
-                print "Error in making harvesting for",wfo.name
+                print "Error in making harvesting for",wfi.request['RequestName']
                 print "schema"
                 print json.dumps( harvesting_schema, indent = 2)
                 harvest_request = reqMgrClient.submitWorkflow(url, harvesting_schema)
                 if not harvest_request:
-                    print "Error twice in harvesting for",wfo.name
+                    print "Error twice in harvesting for",wfi.request['RequestName']
                     print "schema"
                     print json.dumps( harvesting_schema, indent = 2)
 
@@ -361,7 +365,7 @@ def closor(url, specific=None, options=None):
 
     if held:
         #sendEmail("held from announcing","the workflows below are held up, please check the logs https://cmst2.web.cern.ch/cmst2/unified/logs/closor/last.log \n%s"%("\n".join( held )))
-        sendLog('closor',"the workflows below are held up \n%s"%("\n".join( held )), level='critical')
+        sendLog('closor',"the workflows below are held up \n%s"%("\n".join( sorted(held) )), level='critical')
         
 if __name__ == "__main__":
     url = reqmgr_url
