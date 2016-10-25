@@ -10,6 +10,7 @@ from optparse import OptionParser
 from reqmgr import ReqMgrClient
 logging.basicConfig(level=logging.WARNING)
 import reqMgrClient as rqMgr
+import json
 
 class Config:
     def __init__(self, info):
@@ -55,7 +56,9 @@ def makeACDC(url, workflow, task, memory=None):
     config.requestArgs["createRequest"]["SizePerEvent"] = wf.info["SizePerEvent"]
     config.requestArgs["createRequest"]["RequestType"] = "Resubmission"
     config.requestArgs["createRequest"]["Group"] = wf.info["Group"]
-    
+
+    print json.dumps(config.requestArgs["createRequest"] , indent=2)
+
     r = reqMgrClient.createRequest(config)
     return r
 
