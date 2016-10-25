@@ -7,6 +7,7 @@ import json
 from collections import defaultdict
 import sys
 from utils import monitor_dir, base_dir, phedex_url, reqmgr_url
+import random
 
 def htmlor( caller = ""):
     up = componentInfo(mcm=False, soft=['mcm'])
@@ -58,7 +59,7 @@ def htmlor( caller = ""):
                 '(%s) <br>'%wfs])
         text+=', '.join([
                 '<a href="https://%s/reqmgr2/fetch?rid=%s" target="_blank">dts</a>'%(reqmgr_url,wfn),
-                '<a href="https://cmsweb.cern.ch/reqmgr/view/details/%s" target="_blank">dts-req1</a>'%wfn,
+                ## deprecating '<a href="https://cmsweb.cern.ch/reqmgr/view/details/%s" target="_blank">dts-req1</a>'%wfn,
                 #TOFIX '<a href=https://cmsweb.cern.ch/reqmgr/view/showWorkload?requestName=%s target="_blank">wkl</a>'%wfn,
                 '<a href="https://%s/couchdb/reqmgr_workload_cache/%s" target="_blank">wfc</a>'%(reqmgr_url,wfn),
                 '<a href="https://%s/reqmgr2/data/request?name=%s" target="_blank">req</a>'%(reqmgr_url,wfn),
@@ -120,8 +121,12 @@ def htmlor( caller = ""):
 
         if ongoing:
             if not os.path.isfile('%s/report/%s'%(monitor_dir,wfn)):
-                print wfn,"report absent, could be doing it"
-                #os.system('python Unified/showError.py %s'%(wfn))
+                if (random.random() < 0.005):
+                    print wfn,"report absent, doing it"
+                    os.system('python Unified/showError.py -w %s'%(wfn))
+                    text += '<a href=report/%s target=_blank>report</a>'%wfn
+                else:
+                    print wfn,"report absent, could be doing it"
             else:
                 text += '<a href=report/%s target=_blank>report</a>'%wfn
                 
@@ -213,6 +218,7 @@ Last update on %s(CET), %s(GMT)
 <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/ target=_blank>prod mon</a>
 <a href=https://%s/wmstats/index.html target=_blank>wmstats</a>
 <a href=http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/SitesInfo.txt target=_blank>detox</a>
+<a href=http://t3serv012.mit.edu/dynamo/detox.php?partitionId=2 target=_blank>dynamo</a>
 <a href=locked.html>space</a>
 <a href=outofspace.html>out of space</a>
 <a href=logs/subscribor/last.log target=_blank>blocks</a>
@@ -420,9 +426,16 @@ Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransfertea
     text_by_c=""
 
     for c in sorted(count_by_campaign.keys()):
-        text_by_c+="<li> %s (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/campaign.php?campaign=%s>mon</a> <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?in_production=1&rsort=8&status=running&campaign=%s>top</a> <a href=https://cms-pdmv.cern.ch/pmp/historical?r=%s target=_blank>pmp</a> "%( c, sum(count_by_campaign[c].values()),c,c,c )
+        text_by_c+="""
+<li> %s (%d) 
+<a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/campaign.php?campaign=%s>mon</a>
+<a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?in_production=1&rsort=8&status=running&campaign=%s>top</a>
+<a href=https://cms-pdmv.cern.ch/pmp/historical?r=%s target=_blank>pmp</a> 
+"""%( c, sum(count_by_campaign[c].values()),c,c,c )
         for p in sorted(count_by_campaign[c].keys()):
             text_by_c+="%d (%d), "%(p,count_by_campaign[c][p])
+        text_by_c += '<img src=https://dmytro.web.cern.ch/dmytro/cmsprodmon/images/%s-history_nevents-limit-30.png style="height:70px">'% (c) 
+        text_by_c += '<img src=https://dmytro.web.cern.ch/dmytro/cmsprodmon/images/%s-history_requests-limit-30.png style="height:70px">'% (c) 
         text_by_c+="</li>"
 
     lines.sort()
@@ -1024,19 +1037,22 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
     for team,agents in getAllAgents(reqmgr_url).items():
         html_doc.write("<tr><td bgcolor=lightblue>%s</td></tr>"% team)
         for agent in agents:
-            if agent['drain_mode'] == True: continue
+            bgcolor=''
+            if agent['drain_mode'] == True: bgcolor = 'bgcolor=orange'
             name= agent['agent_url'].split(':')[0]
             html_doc.write("""
-<tr><td>%s</td>
+<tr><td %s>%s</td>
 <td><img src=http://cms-gwmsmon.cern.ch/poolview/graphs/%s/hourly></td>
 <td><img src=http://cms-gwmsmon.cern.ch/poolview/graphs/%s/daily></td>
 <td><img src=http://cms-gwmsmon.cern.ch/poolview/graphs/scheddwarning/%s/hourly></td>
 </tr>
-"""%( name,
-      name.replace('.','-'),
-      name.replace('.','-'),
-      name.replace('.','-'),
-      ))
+"""%( 
+                    bgcolor,
+                    name,
+                    name.replace('.','-'),
+                    name.replace('.','-'),
+                    name.replace('.','-'),
+                    ))
     html_doc.write("</table><br></div>")
 
     lap( 'done with agents' )
