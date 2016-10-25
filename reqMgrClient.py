@@ -9,6 +9,7 @@ import urllib
 import httplib
 import re
 import os
+import sys
 import json
 import dbs3Client as dbs3
 import copy
@@ -1293,6 +1294,8 @@ if __name__ == "__main__":
     parser = optparse.OptionParser(usage=usage)
     parser.add_option('-j','--json',help='A json file with "createRequest" or just a request schema')
     parser.add_option('--testbed', help='Create in testbed', action='store_true', default=False, dest='testbed')
+    parser.add_option('--test', help='Just print the schema',default=False,action='store_true')
+    parser.add_option('--no_approve',help='In case you do not want the workflow in assignment-approved right away',default=False,action='store_true')
     (options, args) = parser.parse_args()
     
     prod_url = 'cmsweb.cern.ch'
@@ -1302,5 +1305,13 @@ if __name__ == "__main__":
     schema = json.loads(open(options.json).read())
     if "createRequest" in schema: schema = schema["createRequest"]
     
-    print schema
-    #submitWorkflow(url, schema)
+    print json.dumps( schema ,indent=2)
+    if not options.test:
+        new_wf = submitWorkflow(url, schema)
+        if not new_wf:
+            print "Issue in making the request"
+            sys.exit(1)
+        print "Created:",new_wf
+        if not options.no_approve:
+            r = setWorkflowApproved(url, new_wf)
+            print r
