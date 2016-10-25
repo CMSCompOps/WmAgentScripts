@@ -34,7 +34,7 @@ for logtype in ['report','joblogs','condorlogs']:
         if not any([m in d for m in may_have_one]):
             ## that can be removed
             print d,"report file can be removed"
-            os.system('rm -f %s'%d)
+            os.system('rm -rf %s'%d)
         else:
             print d,"is still in use"
     
