@@ -255,6 +255,7 @@ def transferor(url ,specific = None, talk=True, options=None):
         allowed_secondary = {}
         overide_parameters = {}
         check_secondary = False
+        output_tiers = list(set([o.split('/')[-1] for o in wfh.request['OutputDatasets']]))
         for campaign in wfh.getCampaigns():
             if campaign in CI.campaigns and 'secondaries' in CI.campaigns[campaign]:
                 if CI.campaigns[campaign]['secondaries']:
@@ -586,7 +587,8 @@ def transferor(url ,specific = None, talk=True, options=None):
                             print "could not send the secondary input to",site_se,"because it is too big for the available disk",SI.disk[site_se]*1024,"GB need",sec_size
                             if primary_destinations and site in primary_destinations:
                                 #sendEmail('secondary input too big','%s is too big (%s) for %s (%s)'%( sec, sec_size, site_se, SI.disk[site_se]*1024))
-                                sendLog('transferor', '%s is too big (%s) for %s (%s)'%( sec, sec_size, site_se, SI.disk[site_se]*1024), level='critical')
+                                sendLog('transferor', '%s is too big (%s) for %s (%s). %s will not be able to run there.'%( sec, sec_size, site_se, SI.disk[site_se]*1024, wfo.name), level='critical')
+                                wfh.sendLog('transferor', '%s is too big (%s) for %s (%s). will not be able to run there.'%( sec, sec_size, site_se, SI.disk[site_se]*1024))
                 else:
                     print "the secondary input does not have to be send to site"
 
