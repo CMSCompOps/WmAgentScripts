@@ -330,7 +330,11 @@ def main():
         memory_allowed = SI.sitesByMemory( float(check_mem), maxCore=ncores)
         not_ready = sorted(set(sites) & set(SI.sites_not_ready))
         not_existing = sorted(set(sites) - set(SI.all_sites))
-        not_matching = sorted(set(sites) - set(memory_allowed) - set(not_ready)- set(not_existing))
+        not_matching = sorted((set(sites) - set(memory_allowed) - set(not_ready) - set(not_existing)))
+        previously_used = []
+        if schema['SiteWhitelist']: previously_used = schema['SiteWhitelist']
+        if original_wf: previously_used = original_wf.request['SiteWhitelist']
+        if previously_used: not_matching = sorted(set(not_matching) & set(previously_used))
         
         sites = sorted( set(sites) - set(not_matching) - set(not_existing))
         
