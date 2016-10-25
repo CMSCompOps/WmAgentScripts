@@ -55,10 +55,14 @@ def equalizor(url , specific = None, options=None):
         ## fallback to the region, to site with on-going low pressure
         mapping[site] = [fb for fb in SI.sites_ready if any([('_%s_'%(reg) in fb and fb!=site and site_in_depletion(fb))for reg in regions[region]]) ]
     
-    ## add OSG
-    mapping['T1_US_FNAL'].append('T3_US_OSG')
-    mapping['T1_US_FNAL'].append('T3_US_NERSC')
 
+    for site in SI.sites_ready:
+        if site.split('_')[1] == 'US': ## to all site in the US
+            ## add NERSC 
+            mapping[site].append('T3_US_NERSC')
+            ## add OSG            
+            mapping[site].append('T3_US_OSG')
+    
     use_T0 = ('T0_CH_CERN' in UC.get("site_for_overflow"))
     if options.t0: use_T0 = True
     #if options.augment : use_T0 = True
@@ -87,7 +91,11 @@ def equalizor(url , specific = None, options=None):
             if one==two: continue
             mapping[one].append(two)
             pass
-        
+
+    ## fnal can read from cnaf ?
+    mapping['T1_IT_CNAF'].append( 'T1_US_FNAL' )
+    mapping['T1_IT_CNAF'].append( 'T2_CH_CERN' )
+
     ## make them appear as OK to use
     force_sites = []
 
@@ -388,73 +396,95 @@ def equalizor(url , specific = None, options=None):
             if campaign in PRIM_overflow:
                 if task.taskType in ['Processing','Production']:
                     if not wfi.request['TrustSitelists']:
+                        dataset = list(prim)[0]
+                        all_blocks,blocks = wfi.getActiveBlocks()
+                        count_all = sum([len(v) for k,v in all_blocks.items()])
+                        
+                        presence = getDatasetPresence(url, dataset, only_blocks=blocks )
+                        in_full = [SI.SE_to_CE(site) for site,(there,_) in presence.items() if there]
                         aaa_grid= set()
+                        aaa_grid_in_full = set(in_full)
+                        for site in sorted(aaa_grid_in_full):
+                            aaa_grid_in_full.update( mapping.get(site, []) )
                         ## just add the neighbors to the existing whitelist. we could do more with block classAd
                         for site in wfi.request['SiteWhitelist']:
                             aaa_grid.update( mapping.get(site, []) )
-                        aaa_grid = aaa_grid -set(wfi.request['SiteWhitelist']) ## no need to add site already there
-                        aaa_grid = aaa_grid & set(sites_allowed) ## and restrict to site that would be allowed at all (mcore, mem)
-                        if aaa_grid:
-                            print wfo.name
-                            wfi.sendLog('equalizor','Adding in site white list %s dynamically'% sorted(aaa_grid) )
-                            modifications[wfo.name][task.pathName] = { "AddWhitelist" : sorted(aaa_grid) }
+                        aaa_grid = aaa_grid & set(sites_allowed + ['T3_US_NERSC']) ## and restrict to site that would be allowed at all (mcore, mem)
+                        aaa_grid_in_full = aaa_grid_in_full & set(sites_allowed + ['T3_US_NERSC']) ## and restrict to site that would be allowed at all (mcore, mem)
+                        gmon = wfi.getGlideMon()
+                        needs, task_name, running, idled = needs_action(wfi, task)
+                        print needs,running,idled
+                        site_in_use = set(gmon[task_name]['Sites']) if gmon and task_name in gmon and 'Sites' in gmon[task_name] else set()
+                        print dataset,"at",sorted(in_full),len(blocks),"/",count_all
+                        print "running at",sorted(site_in_use)
+                        print "set for",sorted(wfi.request['SiteWhitelist'])
+                        print "around current whitelist" ,sorted(aaa_grid)
+                        print "around where the data is now in full", sorted(aaa_grid_in_full)
+
+                        if needs and not (site_in_use & set(in_full)) and aaa_grid_in_full:
+                            print "we could be going for replace at that point"
+                            wfi.sendLog('equalizor','Replaceing site whitelie to %s dynamically'% sorted(aaa_grid_in_full))
+                            modifications[wfo.name][task.pathName] = { "ReplaceSiteWhitelist" : sorted( aaa_grid_in_full) }
+                        else:
+                            if aaa_grid:
+                                print wfo.name
+                                wfi.sendLog('equalizor','Adding in site white list %s dynamically'% sorted(aaa_grid) )
+                                if wfo.name in modifications and task.pathName in modifications[wfo.name] and 'AddWhitelist' in modifications[wfo.name][task.pathName]:
+                                    modifications[wfo.name][task.pathName]["AddWhitelist"].extend(sorted(aaa_grid))
+                                else:
+                                    modifications[wfo.name][task.pathName] = { "AddWhitelist" : sorted(aaa_grid) }
                     else:
                         ## the request is already is in xrootd mode (either too generous, or just about right with neighbors of full data)
                         dataset = list(prim)[0]
-                        presence = getDatasetPresence(url, dataset)
-                        ## in full is really the only place we can go to
+                        all_blocks,blocks = wfi.getActiveBlocks()
+                        count_all = sum([len(v) for k,v in all_blocks.items()])
+                        fraction_left = float(len(blocks))/ count_all
+                        #if fraction_left< 0.5:                            print '\n'.join( blocks )
+                        presence = getDatasetPresence(url, dataset, only_blocks=blocks )
+                        ## in full is really the only place we can go to safely, since we have no job-data matching
                         in_full = [SI.SE_to_CE(site) for site,(there,_) in presence.items() if there]
+                        gmon = wfi.getGlideMon()
+                        needs, task_name, running, idled = needs_action(wfi, task)
+                        site_in_use = set(gmon[task_name]['Sites']) if gmon and task_name in gmon and 'Sites' in gmon[task_name] else set()
+                        print needs,running,idled
+
                         aaa_grid = set(in_full)
                         for site in list(aaa_grid):
                             aaa_grid.update( mapping.get(site, []) )
 
-                        new_ones = set(in_full) - set(wfi.request['SiteWhitelist'])
+                        new_ones = set(in_full) - set(wfi.request['SiteWhitelist']) ## symptomatic of data have been repositionned
                         common = set(in_full) & set(wfi.request['SiteWhitelist'])
-                        extra_shit = set(wfi.request['SiteWhitelist']) - aaa_grid
+                        extra_shit = set(wfi.request['SiteWhitelist']) - aaa_grid ## symptomatic of too generous site-whitelist
 
-                        aaa_grid = aaa_grid & set(sites_allowed) ## restrict to site that would be allowed at all (mcore, mem)
+                        aaa_grid = aaa_grid & set(sites_allowed+ ['T3_US_NERSC']) ## restrict to site that would be allowed at all (mcore, mem)
                         new_grid = aaa_grid - set(wfi.request['SiteWhitelist'])
-                        print dataset,"is in full at",in_full
-                        print sorted(common)
-                        print sorted(new_ones)
-                        print sorted(extra_shit)## with no data and not within aaa reach
+                        print dataset,"is in full ",len(blocks),"/",count_all," at",in_full
+                        print '\n'.join( sorted(blocks) )
+                        print "running at",site_in_use
+                        print "in common of the site whitelist",sorted(common)
+                        print "site now also hosting the data",sorted(new_ones)
+                        print "site in whitelist with no data",sorted(extra_shit)## with no data and not within aaa reach
                         if new_ones:
                             ## we will be add sites 
-                            if new_grid:
+                            if needs and aaa_grid:
+                                print wfo.name,"would replace for",sorted(aaa_grid)
+                                print "but no thanks"
+                                wfi.sendLog('equalizor','Changing the site whitelist to %s dynamically'%(sorted(aaa_grid)))
+                                modifications[wfo.name][task.pathName] = { "ReplaceSiteWhitelist" : sorted(aaa_grid) }
+                            elif new_grid:
                                 print wfo.name,"would complement up to",sorted(aaa_grid)
                                 wfi.sendLog('equalizor','Adding site white list to %s dynamically'% sorted(new_grid) )
                                 modifications[wfo.name][task.pathName] = { "AddWhitelist" : sorted(new_grid) }
-                        elif extra_shit:
+                                
+                        elif len(extra_shit)>5:
                             if aaa_grid:
-                                print wfo.name,"would be restricting down to",sorted(aaa_grid)
+                                print wfo.name,"would be restricting down to",sorted(aaa_grid),"because of",sorted(extra_shit)
                                 wfi.sendLog('equalizor','Restricting the white list to %s dynamically'% sorted(aaa_grid) )
                                 modifications[wfo.name][task.pathName] = { "ReplaceSiteWhitelist" : sorted(aaa_grid) }    
                         else:
                             print wfo.name,"don't do anything"                            
 
 
-            ## a temp rule to restrict to aaa neighborhood ## fully replaced with the rule above that restricts in case of extra non reachable shit
-            if wfi.request['RequestType'] in ['ReReco'] and any([key in wfo.name for key in ['Run2016']]) and wfi.request['TrustSitelists'] and False:
-                ## already in xrootd mode.
-                if task.taskType in ['Processing']:
-                    dataset = list(prim)[0]
-                    presence = getDatasetPresence(url, dataset)
-                    in_full = [SI.SE_to_CE(site) for site,(there,_) in presence.items() if there]
-                    aaa_grid = set(in_full)
-                    ## make a map of all sites in the aaa neighbourhood
-                    for site in list(aaa_grid):
-                        ## add all sites we can reach
-                        aaa_grid.update( mapping.get(site, []) )
-                    # limit to the original whitelist
-                    aaa_grid =  aaa_grid & set(wfi.request['SiteWhitelist']) & set(sites_allowed)
-                
-                    if aaa_grid:
-                        print "Emergency restricting rule"
-                        print wfo.name,task.pathName,aaa_grid
-                        print dataset,in_full
-                        modifications[wfo.name][task.pathName] = { "ReplaceSiteWhitelist" : sorted(aaa_grid) }
-                    else:
-                        print "cannot restrict sites for",wfo.name
 
             if wfo.name in remove_from and task.taskType in ['Processing','Production']:
                 remove = remove_from[wfo.name]
@@ -469,7 +499,10 @@ def equalizor(url , specific = None, options=None):
                 if task.taskType in ['Production','Processing']:
                     augment_to = add_to[wfo.name]
                     print "adding",sorted(augment_to),"to",wfo.name
-                    modifications[wfo.name][task.pathName] = { "AddWhitelist" : augment_to }
+                    if wfo.name in modifications and task.pathName in modifications[wfo.name] and 'AddWhitelist' in modifications[wfo.name][task.pathName]:
+                        modifications[wfo.name][task.pathName]['AddWhitelist'].extend( augment_to )
+                    else:
+                        modifications[wfo.name][task.pathName] = { "AddWhitelist" : augment_to }
 
             ### rule to avoid the issue of taskchain secondary jobs being stuck at sites processing the initial step
             if campaign in LHE_overflow:
@@ -572,6 +605,18 @@ def equalizor(url , specific = None, options=None):
             if options.augment:
                 #print "uhm ....",sorted(wfi.request['SiteWhitelist']),i_task,use_HLT
                 pass
+
+            if campaign in ['RunIISummer15GS',
+                            #'RunIISummer15wmLHEGS',
+                            'Summer12'] and task.taskType in ['Production']:
+                #what are the site you want to take out. What are the jobs in whitelist, make the diff and replace
+                set_for = set(wfi.request['SiteWhitelist']) - set(['T1_IT_CNAF','T1_UK_RAL','T1_ES_PIC','T1_DE_KIT','T1_FR_CCIN2P3'])
+                print wfo.name,"going for",set_for
+                print task.pathName
+                modifications[wfo.name][task.pathName] = { "ReplaceSiteWhitelist" : sorted(set_for) }
+                
+
+
 
             ### add the HLT at partner of CERN
             if 'T2_CH_CERN' in wfi.request['SiteWhitelist'] and i_task in [0,1] and use_HLT and not wfi.request['TrustSitelists']:
