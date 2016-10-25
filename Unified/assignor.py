@@ -278,8 +278,9 @@ def assignor(url ,specific = None, talk=True, options=None):
             print "with added endpoints",sorted(sites_allowed)
             
         if not len(sites_allowed):
-            wfh.sendLog('assignor',"cannot be assign with no matched sites")
-            sendLog('assignor','%s has no whitelist'% wfo.name, level='critical')
+            if not options.early:
+                wfh.sendLog('assignor',"cannot be assign with no matched sites")
+                sendLog('assignor','%s has no whitelist'% wfo.name, level='critical')
             n_stalled+=1
             continue
 
