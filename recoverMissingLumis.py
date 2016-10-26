@@ -229,6 +229,14 @@ def getFiles(datasetName, runBlacklist, runWhitelist, blockBlacklist,
     except:
         raise RuntimeError("Dataset %s doesn't exist in given DBS instance" % datasetName)
     
+    has_parent = False
+    try:
+        parents = dbsReader.listDatasetParents( datasetName )
+        if parents: has_parent=True
+    except:
+        print "Dataset with no parent"
+        pass
+
     #traverse each block
     for blockName in blockNames:
         #deal with white and black list.
@@ -241,10 +249,13 @@ def getFiles(datasetName, runBlacklist, runWhitelist, blockBlacklist,
         replicaInfo = phedexReader.getReplicaInfoForBlocks(block = blockName,
                                                            subscribed = 'y')
         blockFiles = dbsReader.listFilesInBlock(blockName, lumis=True)
-        try:
-        #    #fix when https://github.com/dmwm/WMCore/issues/7128 is fixed
-            blockFileParents = dbsReader.listFilesInBlockWithParents(blockName)
-        except:
+        #has_parent = dbsReader.listBlockParents(blockName)
+        if has_parent:
+            try:
+                blockFileParents = dbsReader.listFilesInBlockWithParents(blockName)
+            except:
+                blockFileParents = dbsReader.listFilesInBlock(blockName)
+        else:
             blockFileParents = dbsReader.listFilesInBlock(blockName)
 
         blockLocations = set()
