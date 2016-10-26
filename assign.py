@@ -117,7 +117,7 @@ def main():
     usage = "usage: %prog [options] [WORKFLOW]"
     
     parser = optparse.OptionParser(usage=usage)
-    parser.add_option('-t', '--team', help='Type of Requests', dest='team')
+    parser.add_option('-t', '--team', help='Type of Requests', dest='team', default='production')
     parser.add_option('-s', '--sites', help=' "t1" for Tier-1\'s and "t2" for Tier-2\'s', dest='sites')
     parser.add_option('--special',  help='Use it for special workflows. You also have to change the code according to the type of WF', dest='special')
     parser.add_option('-r', '--replica', action='store_true', dest='replica', default=False, help='Adds a _Disk Non-Custodial Replica parameter')
@@ -136,7 +136,7 @@ def main():
     parser.add_option('-m', '--memory', help='Set the Memory parameter to the workflow', dest='memory', default=None)
     parser.add_option('-e', '--era', help='Acquistion era', dest='era')
     parser.add_option("--procstr", dest="procstring", help="Overrides Processing String with a single string")
-
+    parser.add_option('--checksite', default=False,action='store_true')
     (options, args) = parser.parse_args()
     
     if options.testbed:
@@ -163,7 +163,6 @@ def main():
     sites = []
     specialStr = ''
     taskchain = False
-    team = 'production'
 
     SI = siteInfo()
     getRandomDiskSite.T1 = SI.sites_T1s
@@ -186,9 +185,6 @@ def main():
             sites = [site for site in options.sites.split(',')]
     else: 
         sites = SI.sites_T1s + SI.sites_T2s
-
-    if options.team:
-        team = options.team
 
     if options.replica:
         replica = True
@@ -324,27 +320,28 @@ def main():
             lfn = original_wf.request['MergedLFNBase']
             procversion = original_wf.request["ProcessingVersion"]
 
-        ## check that the sites are all compatible and up
-        check_mem = schema['Memory']
-        ncores = wfi.getMulticore()
-        memory_allowed = SI.sitesByMemory( float(check_mem), maxCore=ncores)
-        not_ready = sorted(set(sites) & set(SI.sites_not_ready))
-        not_existing = sorted(set(sites) - set(SI.all_sites))
-        not_matching = sorted((set(sites) - set(memory_allowed) - set(not_ready) - set(not_existing)))
-        previously_used = []
-        if schema['SiteWhitelist']: previously_used = schema['SiteWhitelist']
-        if original_wf: previously_used = original_wf.request['SiteWhitelist']
-        if previously_used: not_matching = sorted(set(not_matching) & set(previously_used))
-        
-        sites = sorted( set(sites) - set(not_matching) - set(not_existing))
-        
-        print sorted(memory_allowed),"to allow",check_mem,ncores
-        if not_ready:
-            print not_ready,"is/are not ready"
-            sys.exit(0)
-        if not_matching:
-            print "The memory requirement",check_mem,"is too much for",not_matching
-            sys.exit(0)
+        if options.checksite:
+            ## check that the sites are all compatible and up
+            check_mem = schema['Memory']
+            ncores = wfi.getMulticore()
+            memory_allowed = SI.sitesByMemory( float(check_mem), maxCore=ncores)
+            not_ready = sorted(set(sites) & set(SI.sites_not_ready))
+            not_existing = sorted(set(sites) - set(SI.all_sites))
+            not_matching = sorted((set(sites) - set(memory_allowed) - set(not_ready) - set(not_existing)))
+            previously_used = []
+            if schema['SiteWhitelist']: previously_used = schema['SiteWhitelist']
+            if original_wf: previously_used = original_wf.request['SiteWhitelist']
+            if previously_used: not_matching = sorted(set(not_matching) & set(previously_used))
+            
+            sites = sorted( set(sites) - set(not_matching) - set(not_existing))
+            
+            print sorted(memory_allowed),"to allow",check_mem,ncores
+            if not_ready:
+                print not_ready,"is/are not ready"
+                sys.exit(0)
+            if not_matching:
+                print "The memory requirement",check_mem,"is too much for",not_matching
+                sys.exit(0)
 
 
     # If the --test argument was provided, then just print the information
@@ -354,7 +351,7 @@ def main():
         print "ProcStr:",procstring
         print "ProcVer:",procversion
         print "LFN:",lfn
-        print "Team:",team
+        print "Team:",options.team
         print "Site:",sites
         print "Taskchain? ", str(taskchain)
         print "Activity:", activity
@@ -364,7 +361,7 @@ def main():
         
         # Really assigning the workflow now
         #print wf_name, '\tEra:', era, '\tProcStr:', procstring, '\tProcVer:', procversion, '\tTeam:', team, '\tSite:', sites
-        assignRequest(url, wf_name, team, sites, era, procversion, activity, lfn, procstring, 
+        assignRequest(url, wf_name, options.team, sites, era, procversion, activity, lfn, procstring, 
                       trust_site = options.xrootd, 
                       replica = options.replica, 
                       verbose = options.verbose, 
