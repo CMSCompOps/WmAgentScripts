@@ -10,31 +10,16 @@ from optparse import OptionParser
 #from reqmgr import ReqMgrClient
 logging.basicConfig(level=logging.WARNING)
 import reqMgrClient
-
-#class Config:
-#    def __init__(self, info):
-#        self.requestArgs = info
-#        self.requestNames = []
-#        self.cert = None
-#        self.key = None
-#        self.assignRequests = False
-#        self.changeSplitting = False
-#        self.assignRequest = False
+from utils import workflowInfo
 
 prod_url = 'cmsweb.cern.ch'
 testbed_url = 'cmsweb-testbed.cern.ch'
 
-    
-#configJson = {"createRequest":{}}
-#config = Config(configJson)
-##reqMgrClient = ReqMgrClient(url, config)
-    
-
 from Unified.recoveror import singleRecovery
 from utils import workflowInfo
-def makeACDC(url, workflow, task, memory=None):
-    initial = workflowInfo(url, workflow)
-    task = '/%s/%s'%( workflow, task)
+def makeACDC(url, wfi, task, memory=None):
+    initial = wfi
+    #task = '/%s/%s'%( workflow, task)
     actions = []
     if memory:
         increment = initial.request['Memory'] - memory
@@ -47,42 +32,6 @@ def makeACDC(url, workflow, task, memory=None):
         print "Issue while creating the acdc for",task
         return None
 
-"""
-    #original wf info
-    wf = reqMgrClient.Workflow(workflow)
-    
-    schema = {
-        "ACDCServer" : "https://cmsweb.cern.ch/couchdb",
-        "ACDCDatabase" : "acdcserver",
-        "RequestType" : "Resubmission",
-        "Group" : "DATAOPS",
-        "OriginalRequestName" : wf.name
-        }
-
-    #set up acdc stuff
-    if "ACDC" in wf.info["RequestString"]:
-        ## should do something about counting acdc
-        schema["RequestString"] = wf.info["RequestString"]
-    else:
-        schema["RequestString"] = "ACDC_"+ wf.info["RequestString"]
-    
-    schema["PrepID"] = wf.info["PrepID"]
-    schema["RequestPriority"] = wf.info["RequestPriority"]*10
-
-    schema["InitialTaskPath"] = "/%s/%s"%(wf.name, task)
-    schema["TimePerEvent"] = wf.info["TimePerEvent"]
-    if memory:
-        schema["Memory"] = memory
-    else:
-        schema["Memory"] = wf.info["Memory"]
-    
-    schema["SizePerEvent"] = wf.info["SizePerEvent"]
-
-    
-    r = reqMgrClient.createRequest(config)
-    return r
-"""
-
 def main():
 
     #Create option parser
@@ -92,7 +41,8 @@ def main():
                         help="Text file or a list of workflows")
     parser.add_option("-t","--task",
                       help="The task to be recovered")
-
+    parser.add_option("-a","--all",
+                      help="Make acdc for all tasks to be recovered",default=False, action='store_true')
     parser.add_option("-m","--memory", dest="memory", default=None, type=float,
                         help="Memory to override the original request memory")
     parser.add_option("--testbed", default=False, action="store_true")
@@ -113,9 +63,30 @@ def main():
         sys.exit(1)
 
     for wfname in wfs:
-        r = makeACDC(url, wfname, options.task, options.memory)
-        print "Created:"    
-        print r
+        wfi = workflowInfo(url, wfname)
+        if options.task == 'all' or options.all:
+            where,how_much,how_much_where = wfi.getRecoveryInfo()
+            tasks = sorted(how_much.keys())
+            created = []
+            print tasks
+            for task in tasks:
+                r = makeACDC(url, wfi, task, options.memory) 
+                if not r: 
+                    print "Error in creating ACDC for",task,"on",wfname
+                    break
+                created.append( r )
+            if len(created)!=len(tasks):
+                print "Error in creating all required ACDCs"
+                sys.exit(1)
+            print "Created:"
+            print '\n'.join(sorted(created))
+        else:
+            r = makeACDC(url, wfi, options.task, options.memory)
+            if not r:
+                print "Error in creating ACDC"
+                sys.exit(1)
+            print "Created:" 
+            print r
 
 if __name__ == '__main__':
     main()
