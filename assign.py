@@ -223,46 +223,30 @@ def main():
         #Check to see if the workflow is a task chain or an ACDC of a taskchain
         taskchain = (schema["RequestType"] == "TaskChain") or (original_wf and original_wf.request["RequestType"] == "TaskChain")
 
-        #Dealing with era and proc string
-        if taskchain:
-            # Setting the Era and ProcStr values per Task
-            era = wfi.acquisitionEra()
-            procstring = wfi.processingString()
-            print era,procstring
-            if (not era or not procstring) or (type(era)!=dict or type(procstring)!=dict):
-                if original_wf:
-                    era = original_wf.acquisitionEra()
-                    procstring = original_wf.processingString()
-                    print "from parent:",era,procstring
-                else:
-                    print "No Task object found in a taskchain, cannot set acquisition era accordingly"
-                    sys.exit(1)
-
         # Adding the special string - in case it was provided in the command line
         if options.special:
             specialStr = '_' + str(options.special)
             for key, value in procstring.items():
                 procstring[key] = value + specialStr
+
         # Override if a value is given using the procstring command
         if options.procstring:
             procstring = options.procstring
-        elif not taskchain:
-            if original_wf:
-                procstring = original_wf.processingString()
-            else:
-                wfi.processingString()
+        elif is_resubmission:
+            procstring = original_wf.processingString()
+        else:
+            procstring = wfi.processingString()
+
         if options.era:
             era = options.era
-        elif not taskchain:
-            if original_wf:
-                era = original_wf.acquisitionEra()
-            else:
-                era = wfi.acquisitionEra()
-
-        #Set era and procstring to none for merge ACDCs inside a task chain
-        if is_resubmission and original_wf.request["RequestType"] == "TaskChain" and "Merge" in schema["InitialTaskPath"].split("/")[-1]:
-            era = None
-            procstring = None
+        elif is_resubmission:
+            era = original_wf.acquisitionEra()
+        else:
+            era = wfi.acquisitionEra()
+        #Dealing with era and proc string
+        if (not era or not procstring) or (taskchain and (type(era)!=dict or type(procstring)!=dict)):
+            print "We do not have a valid AcquisitionEra and ProcessingString"
+            sys.exit(1)
 
         # Must use --lfn option, otherwise workflow won't be assigned
         if options.lfn:
@@ -371,7 +355,7 @@ def main():
         print "Site:",sites
         print "Taskchain? ", str(taskchain)
         print "Activity:", activity
-
+        print "ACDC:", str(is_resubmission)
         if options.test:
             continue
         
