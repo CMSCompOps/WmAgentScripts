@@ -719,7 +719,11 @@ def checkor(url, spec=None, options=None):
                 ## straight to manual
                 assistance_tags.add('manual')
                 in_manual += 1
-
+            if 'recovery' in assistance_tags and 'manual' in assistance_tags:
+                ## this is likely because something bad is happening, so leave it to manual
+                assistance_tags = assistance_tags - set(['recovery'])
+                assistance_tags.add('manual')
+                in_manual += 1
 
             ## that means there is something that needs to be done acdc, lumi invalidation, custodial, name it
             print wfo.name,"needs assistance with",",".join( assistance_tags )
