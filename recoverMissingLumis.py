@@ -254,6 +254,7 @@ def getFiles(datasetName, runBlacklist, runWhitelist, blockBlacklist,
             try:
                 blockFileParents = dbsReader.listFilesInBlockWithParents(blockName)
             except:
+                print blockName,"does not appear to have a parent, even though it should. Very suspicious"
                 blockFileParents = dbsReader.listFilesInBlock(blockName)
         else:
             blockFileParents = dbsReader.listFilesInBlock(blockName)
