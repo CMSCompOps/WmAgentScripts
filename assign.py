@@ -196,6 +196,12 @@ def main():
         if 'OriginalRequestName' in schema:
             print "Original workflow is:",schema['OriginalRequestName']
             original_wf = workflowInfo(url, schema['OriginalRequestName'])            
+            ## go back as up as possible
+            while original_wf.request['RequestType'] == 'Resubmission':
+                if 'OriginalRequestName' not in original_wf.request:
+                    original_wf = None
+                    break
+                original_wf = workflowInfo(url, original_wf.request['OriginalRequestName'])
         else:
             original_wf = None
 
@@ -213,12 +219,23 @@ def main():
             sys.exit(1)
 
         #Check to see if the workflow is a task chain or an ACDC of a taskchain
-        #taskchain = (schema["RequestType"] == "TaskChain") or (original_wf and original_wf.request["RequestType"] == "TaskChain")
-        taskchain = (schema["RequestType"] == "TaskChain") or ((schema["RequestType"] == "Resubmission") and "task" in schema["InitialTaskPath"].split("/")[1])
+        taskchain = (schema["RequestType"] == "TaskChain") or (original_wf and original_wf.request["RequestType"] == "TaskChain")
 
         #Dealing with era and proc string
         if taskchain:
             # Setting the Era and ProcStr values per Task
+            era = wfi.acquisitionEra()
+            procstring = wfi.processingString()
+            print era,procstring
+            if (not era or not procstring) or (type(era)!=dict or type(procstring)!=dict):
+                if original_wf:
+                    era = original_wf.acquisitionEra()
+                    procstring = original_wf.processingString()
+                    print "from parent:",era,procstring
+                else:
+                    print "No Task object found in a taskchain, cannot set acquisition era accordingly"
+                    sys.exit(1)
+            """
             found_task = None
             for key, value in schema.items():
                 if type(value) is dict and key.startswith("Task"):
@@ -238,6 +255,7 @@ def main():
             if not found_task:
                 print "No Task object found in a taskchain, cannot set acquisition era accordingly"
                 sys.exit(1)
+            """
         # Adding the special string - in case it was provided in the command line
         if options.special:
             specialStr = '_' + str(options.special)
