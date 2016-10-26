@@ -1470,8 +1470,7 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
             text += '<tr bgcolor=%s>'%color
             text += '<td>%s<br>'%wf_and_anchor
             text += '<a href="https://%s/reqmgr2/fetch?rid=%s" target="_blank">dts</a>'%(reqmgr_url, wf)
-            ## deprecating text += ', <a href=https://%s/reqmgr/view/details/%s>dts-req1</a>'%(reqmgr_url, wf)
-            text += ', <a href="https://%s/couchdb/reqmgr_workload_cache/%s" target="_blank">wfc</a>'%(reqmgr_url, wf)
+            text += ', <a href="https://%s/reqmgr2/data/request/%s" target="_blank">wfc</a>'%(reqmgr_url, wf)
             text += ', <a href="https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=full&reverse=0&reverse=1&npp=20&subtext=%s&sall=q" target="_blank">elog</a>'%(pid)
             text += ', <a href=https://%s/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s>perf</a>'%(reqmgr_url, wf)
             text += ', <a href=assistance.html#%s>%s</a>'%(wf,wfo.status)
@@ -1492,7 +1491,7 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
                 else:
                     value = "-NA-"
                 if f =='acdc':
-                    text+='<td><a href=https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byprepid?key="%s">%s</a></td>'%(tpid , value)
+                    text+='<td><a href=https://%s/reqmgr2/data/request?prep_id=%s&detail=false>%s</a></td>'%(reqmgr_url, tpid , value)
                 else:
                     text+='<td>%s</td>'% value
             #text+='<td>%s</td>'%self.record[wf]['closeOutWorkflow']
@@ -2847,40 +2846,41 @@ def updateSubscription(url, site, item, priority=None, user_group=None, suspend=
 
 def getWorkLoad(url, wf ):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    r1 = conn.request("GET",'/couchdb/reqmgr_workload_cache/'+wf)
+    r1= conn.request("GET",'/reqmgr2/data/request/'+wf, headers={"Accept":"*/*"})
     r2=conn.getresponse()
     data = json.loads(r2.read())
-    return data
+    return data['result'][0][wf]
 
-def getViewByInput( url, details=False):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    there = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byinputdataset?'
-    if details:
-        there+='&include_docs=true'
-    r1=conn.request("GET",there)
-    r2=conn.getresponse()
-    data = json.loads(r2.read())
-    items = data['rows']
-    return items
-    if details:
-        return [item['doc'] for item in items]
-    else:
-        return [item['id'] for item in items]
 
-def getViewByOutput( url, details=False):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    there = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byoutputdataset?'
-    if details:
-        there+='&include_docs=true'
-    r1=conn.request("GET",there)
-    r2=conn.getresponse()
-    data = json.loads(r2.read())
-    items = data['rows']
-    return items
-    if details:
-        return [item['doc'] for item in items]
-    else:
-        return [item['id'] for item in items]
+#def getViewByInput( url, details=False):
+#    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+#    there = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byinputdataset?'
+#    if details:
+#        there+='&include_docs=true'
+#    r1=conn.request("GET",there)
+#    r2=conn.getresponse()
+#    data = json.loads(r2.read())
+#    items = data['rows']
+#    return items
+#    if details:
+#        return [item['doc'] for item in items]
+#    else:
+#        return [item['id'] for item in items]
+
+#def getViewByOutput( url, details=False):
+#    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+#    there = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byoutputdataset?'
+#    if details:
+#        there+='&include_docs=true'
+#    r1=conn.request("GET",there)
+#    r2=conn.getresponse()
+#    data = json.loads(r2.read())
+#    items = data['rows']
+#    return items
+#    if details:
+#        return [item['doc'] for item in items]
+#    else:
+#        return [item['id'] for item in items]
         
 def getWorkflowByInput( url, dataset , details=False):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -3140,14 +3140,20 @@ class workflowInfo:
         self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         if request == None:
             try:
-                r1=self.conn.request("GET",'/couchdb/reqmgr_workload_cache/'+workflow)
+                r1=self.conn.request("GET",'/reqmgr2/data/request/'+workflow, headers={"Accept":"*/*"})
                 r2=self.conn.getresponse()
-                self.request = json.loads(r2.read())
+                ret = json.loads(r2.read())
+                ret = ret['result'][0][workflow] ##new
+                self.request = ret
             except:
+                print "failed to get workload"
                 try:
                     r1=self.conn.request("GET",'/couchdb/reqmgr_workload_cache/'+workflow)
+                    #r1=self.conn.request("GET",'/reqmgr2/data/request/'+workflow, headers={"Accept":"*/*"}) ## new
                     r2=self.conn.getresponse()
-                    self.request = json.loads(r2.read())
+                    ret = json.loads(r2.read())
+                    #ret = ret['result'][0][workflow]## new
+                    self.request = ret
                 except Exception as e:
                     print "Failed to get workload cache for",workflow
                     print str(e)
