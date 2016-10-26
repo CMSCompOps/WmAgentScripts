@@ -67,19 +67,21 @@ def main():
         if options.task == 'all' or options.all:
             where,how_much,how_much_where = wfi.getRecoveryInfo()
             tasks = sorted(how_much.keys())
-            created = []
+            created = {}
             print tasks
             for task in tasks:
                 r = makeACDC(url, wfi, task, options.memory) 
                 if not r: 
                     print "Error in creating ACDC for",task,"on",wfname
                     break
-                created.append( r )
+                created[task] = r
             if len(created)!=len(tasks):
                 print "Error in creating all required ACDCs"
                 sys.exit(1)
             print "Created:"
-            print '\n'.join(sorted(created))
+            for task in created:
+                print created[task],"for",task
+
         else:
             r = makeACDC(url, wfi, options.task, options.memory)
             if not r:
