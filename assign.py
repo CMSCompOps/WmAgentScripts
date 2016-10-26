@@ -213,7 +213,8 @@ def main():
             sys.exit(1)
 
         #Check to see if the workflow is a task chain or an ACDC of a taskchain
-        taskchain = (schema["RequestType"] == "TaskChain") or (original_wf and original_wf.request["RequestType"] == "Resubmission")
+        #taskchain = (schema["RequestType"] == "TaskChain") or (original_wf and original_wf.request["RequestType"] == "TaskChain")
+        taskchain = (schema["RequestType"] == "TaskChain") or ((schema["RequestType"] == "Resubmission") and "task" in schema["InitialTaskPath"].split("/")[1])
 
         #Dealing with era and proc string
         if taskchain:
