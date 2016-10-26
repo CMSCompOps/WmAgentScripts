@@ -13,7 +13,8 @@ def parse_one(url, wfn, options=None):
     wfi = workflowInfo( url , wfn)
     where_to_run, missing_to_run,missing_to_run_at = wfi.getRecoveryInfo()       
     
-    _,prim,_,sec = wfi.getIO()
+    lhe,prim,_,sec = wfi.getIO()
+    no_input = (not lhe) and len(prim)==0 and len(sec)==0
 
     cache = 0
     if options:
@@ -57,12 +58,13 @@ def parse_one(url, wfn, options=None):
     #print json.dumps( status_per_task, indent=2)
     db_total_per_site = defaultdict(int) 
     db_total_per_code = defaultdict(int)
+    ## cannot do that since there is no task count in dashboard and we have to take away the submitted
     #for site in dashb:
     #    for error in dashb[site]:
     #        db_total_per_site[site] += dashb[site][error] 
     #        db_total_per_code[code] += dashb[site][error]
     
-    print "will be willing to run at"      
+    print "ACDC Information"
     print json.dumps( where_to_run , indent=2)         
     print json.dumps(missing_to_run , indent=2)        
     print json.dumps(missing_to_run_at , indent=2)        
@@ -136,8 +138,11 @@ def parse_one(url, wfn, options=None):
 """%(dash_board_h)
 
     html += '<hr><br>'
+
+    min_rank = min([task.count('/') for task in tasks])
     for task in tasks:  
-        print task
+        #print task
+        task_rank = task.count('/')
         total_per_site = defaultdict(int)
         for agent in stat['AgentJobInfo']:
             if not task in stat['AgentJobInfo'][agent]['tasks']: continue
@@ -165,7 +170,7 @@ def parse_one(url, wfn, options=None):
         if not task in err:
             print task,"has not reported error"
             err[task] = {}
-        print err[task].keys()
+        #print err[task].keys()
         
         for exittype in err[task]:
             #print "\t",err[task][exittype].keys()
@@ -173,10 +178,11 @@ def parse_one(url, wfn, options=None):
                 if errorcode_s == '0' : continue
                 #print "\t\t",err[task][exittype][errorcode_s].keys()
                 for site in err[task][exittype][errorcode_s]:
-
+                    ce = SI.SE_to_CE(site)
                     count = err[task][exittype][errorcode_s][site]['errorCount']
                     total_count[errorcode_s] += count
-                    error_site_count[errorcode_s][site] += count
+                    #error_site_count[errorcode_s][site] += count
+                    error_site_count[errorcode_s][ce] += count
                     for sample in err[task][exittype][errorcode_s][site]['samples']:
                         #print sample.keys()
                         for step in sample['errors']:
@@ -224,7 +230,7 @@ def parse_one(url, wfn, options=None):
                                             os.system('(head -%d ; echo;echo;echo "<snip>";echo;echo ; tail -%d ) < %s > %s'%(head, tail, fn, trunc))
                                             os.system('mv %s %s'%(trunc, fn))
 
-        print task
+        #print task
         #print json.dumps( total_count, indent=2)
         #print json.dumps( explanations , indent=2)
         all_sites = set()
@@ -235,6 +241,33 @@ def parse_one(url, wfn, options=None):
                 if code != '0':
                     all_codes.add( code)
 
+        ## parse the dashboard data
+        for site in total_by_site_dash:
+            ## no. cannot discriminate by task in dashboard...
+            #all_sites.add( site )
+            pass
+
+        ## parse the acdc data
+        notreported='NotReported'
+        all_missing_stats = set()
+        for site in missing_to_run_at[task]:
+            if not missing_to_run_at[task][site]: continue
+            ce = SI.SE_to_CE( site )
+            #all_sites.add( ce )
+            all_missing_stats.add( ce )
+
+            error_site_count[notreported][ce] = 0
+            all_codes.add(notreported)
+            ## no error code at that point
+            
+        all_missing_stats = all_missing_stats &set(SI.all_sites)
+        all_not_reported = all_missing_stats - all_sites 
+        #print task
+        #print "site with no report",sorted(all_not_reported)
+        #print sorted(all_sites)
+        #print sorted(all_missing_stats)
+        all_sites = all_missing_stats | all_sites
+        all_sites = all_sites & set(SI.all_sites)
         #success = total_count['0']
         #total_jobs = sum(total_count.values())
         #print total_jobs,"jobs in total,",success,"successes"
@@ -246,13 +279,17 @@ def parse_one(url, wfn, options=None):
             for code in sorted(all_codes):
                 s_per_code[code] += error_site_count[code][site]
 
-        no_error = (sum(s_per_code.values())==0)
+        #no_error = (sum(s_per_code.values())==0)
+        no_error = len(all_not_reported)!=0
+
+        if not no_error and notreported in all_codes:
+            all_codes.remove( notreported )
         missing_events = missing_to_run[task] if task in missing_to_run else 0
         html += "<b>%s</b>"%task.split('/')[-1]
         if missing_events:
-            html += " is missing <b>%s events</b>"%( missing_events )
+            html += " is missing <b>%s events</b>"%( "{:,}".format(missing_events) )
             if no_error:
-                html +="<br><b><font color=red> and has no reported error</font></b>"
+                html +="<br><b><font color=red> and has UNreported error</font></b>"
 
 
         html += "<br><table border=1><thead><tr><th>Sites/Errors</th>"
@@ -300,29 +337,43 @@ def parse_one(url, wfn, options=None):
                 0.8 : 'salmon',
                 0.9 : 'red'
                 }
-            there = max([k for k in _range.keys() if k<=frac])
+            which = [k for k in _range.keys() if k<=frac]
+            if which:
+                there = max(which)
+            else:
+                there=max(_range.keys())
             return _range[there]
 
         for site in sorted(all_sites):
-            site_in = 'Yes' if site in SI.sites_ready else 'No'
-            color = 'bgcolor=pink' if not site in SI.sites_ready else 'bgcolor=lightblue'
+            site_in = 'Yes'
+            color = 'bgcolor=lightblue'
+            if not site in SI.sites_ready:
+                color = 'bgcolor=indianred'
+                site_in ='<b>No</b>'
+                if missing_to_run_at[task][SI.CE_to_SE(site)] == 0 or min_rank == task_rank:
+                    color = 'bgcolor=aquamarine'
+                    site_in = '<b>No</b> but fine'
+
+            if not no_error:
+                site_in +=" (%s events)"%"{:,}".format(missing_to_run_at[task][SI.CE_to_SE(site)])
             html+='<tr><td %s>%s</td>'%(color,site)
             for code in sorted(all_codes):
-                if error_site_count[code][site]:
-                    er_frac = float(error_site_count[code][site])/s_per_code[code] if s_per_code[code] else 0.
-                    si_frac = float(error_site_count[code][site])/total_per_site[site] if total_per_site[site] else 0.
-                    html += '<td %s width=200>%d'%(color, error_site_count[code][site])
-                    if code in r_dashb and site in r_dashb[code]:
-                        html += ' (<b><i>%d</i></b>)'%( r_dashb[code][site] )
-
-                    html += ', <font color=%s>&uarr; %.1f%%</font>, <font color=%s>&rarr; %.1f%%</font></td>'% (
-                        palette(er_frac),100.*er_frac,
-                        palette(si_frac), 100.*si_frac
-                        )
-
-
+                if code == notreported:
+                    html += '<td %s width=200>%s events </td>' %(color, "{:,}".format(missing_to_run_at[task][SI.CE_to_SE(site)]))
                 else:
-                    html += '<td %s>0</td>'% color
+                    if error_site_count[code][site]:
+                        er_frac = float(error_site_count[code][site])/s_per_code[code] if s_per_code[code] else 0.
+                        si_frac = float(error_site_count[code][site])/total_per_site[site] if total_per_site[site] else 0.
+                        html += '<td %s width=200>%d'%(color, error_site_count[code][site])
+                        if code in r_dashb and site in r_dashb[code]:
+                            html += ' (<b><i>%d</i></b>)'%( r_dashb[code][site] )
+
+                        html += ', <font color=%s>&uarr; %.1f%%</font>, <font color=%s>&rarr; %.1f%%</font></td>'% (
+                            palette(er_frac),100.*er_frac,
+                            palette(si_frac), 100.*si_frac
+                            )
+                    else:
+                        html += '<td %s>0</td>'% color
             html += '<td bgcolor=orange>%d</td>'% total_per_site[site]
             html += '<td %s>%s</td>'% (color, site_in)
             html +='</tr>\n'
