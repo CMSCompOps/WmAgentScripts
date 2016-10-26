@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from utils import workflowInfo, siteInfo, monitor_dir, global_SI, getDatasetPresence
+from utils import workflowInfo, siteInfo, monitor_dir, base_dir, global_SI, getDatasetPresence
 import json
 import sys
 from collections import defaultdict
@@ -198,7 +198,7 @@ def parse_one(url, wfn, options=None):
                         workflow = sample['workflow']
 
                         if do_CL and errorcode_s in expose_condor_code and expose_condor_code[errorcode_s][agent]:
-                            os.system('ssh %s /afs/cern.ch/user/v/vlimant/scratch0/ops/central_ops/WmAgentScripts/bumbo.sh %s %s %s'%( agent, workflow, wmbs, errorcode_s))
+                            os.system('ssh %s %s/WmAgentScripts/Unified/exec_expose.sh %s %s %s %s %s'%( agent, base_dir, workflow, wmbs, errorcode_s, base_dir, monitor_dir))
                             expose_condor_code[errorcode_s][agent]-=1
 
                         for out in sample['output']:
