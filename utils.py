@@ -3363,6 +3363,25 @@ class workflowInfo:
 
         return self.wmstats
 
+    def getRecoveryBlocks(self):
+        doc = self.getRecoveryDoc()
+        all_files = set()    
+        for d in doc:
+            all_files.update( d['files'].keys())
+        print len(all_files),"file in recovery"
+        dbsapi = DbsApi(url=dbs_url)
+        all_blocks = set()
+        files_no_block = set()
+        files_in_block = set()
+        for f in all_files:
+            r = dbsapi.listFileArray( logical_file_name = f, detail=True)
+            if not r:
+                files_no_block.add( f)
+            else:
+                files_in_block.add( f )
+                all_blocks.update( [df['block_name'] for df in r ])
+        return all_blocks,files_in_block,files_no_block
+
     def getRecoveryDoc(self):
         if self.recovery_doc != None:
             return self.recovery_doc
@@ -3440,6 +3459,17 @@ class workflowInfo:
             print an,"job(s) found in ",agent
         print n,"job(s) found in ",len(agents),"agents"
         return collect
+
+    def getActiveBlocks(self, select=['Running','Acquired']):
+        wq = self.getWorkQueue()
+        wqes = [w[w['type']] for w in wq]
+        blocks = defaultdict(set)
+        selected = set()
+        for wqe in wqes:
+            blocks[wqe['Status']].update( wqe['Inputs'].keys() )
+        for s in select:
+            selected.update( blocks[s] )
+        return blocks,selected
 
     def getAgents(self):
         wq = self.getWorkQueue()
