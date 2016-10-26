@@ -219,6 +219,7 @@ def main():
         #Dealing with era and proc string
         if taskchain:
             # Setting the Era and ProcStr values per Task
+            found_task = None
             for key, value in schema.items():
                 if type(value) is dict and key.startswith("Task"):
                     try:
@@ -230,9 +231,13 @@ def main():
                             era[value['TaskName']] = value['AcquisitionEra']
                         else:
                             procstring[value['TaskName']] = schema['AcquisitionEra']
+                        found_task = key
                     except KeyError:
                         print("This taskchain request has no AcquisitionEra or ProcessingString defined into the Tasks, aborting...")
                         sys.exit(1)
+            if not found_task:
+                print "No Task object found in a taskchain, cannot set acquisition era accordingly"
+                sys.exit(1)
         # Adding the special string - in case it was provided in the command line
         if options.special:
             specialStr = '_' + str(options.special)
