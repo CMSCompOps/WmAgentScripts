@@ -205,6 +205,8 @@ def main():
         else:
             original_wf = None
 
+        is_resubmission = (schema['RequestType'] == 'Resubmission')
+
         if options.sites.lower() == 'original' and original_wf:
             sites = original_wf.request['SiteWhitelist']
             print "Using",sorted(sites),"from the original request",original_wf.request['RequestName']
@@ -235,27 +237,7 @@ def main():
                 else:
                     print "No Task object found in a taskchain, cannot set acquisition era accordingly"
                     sys.exit(1)
-            """
-            found_task = None
-            for key, value in schema.items():
-                if type(value) is dict and key.startswith("Task"):
-                    try:
-                        if 'ProcessingString' in value:
-                            procstring[value['TaskName']] = value['ProcessingString']
-                        else:
-                            procstring[value['TaskName']] = schema['ProcessingString']
-                        if 'AcquisitionEra' in value:
-                            era[value['TaskName']] = value['AcquisitionEra']
-                        else:
-                            procstring[value['TaskName']] = schema['AcquisitionEra']
-                        found_task = key
-                    except KeyError:
-                        print("This taskchain request has no AcquisitionEra or ProcessingString defined into the Tasks, aborting...")
-                        sys.exit(1)
-            if not found_task:
-                print "No Task object found in a taskchain, cannot set acquisition era accordingly"
-                sys.exit(1)
-            """
+
         # Adding the special string - in case it was provided in the command line
         if options.special:
             specialStr = '_' + str(options.special)
@@ -265,13 +247,20 @@ def main():
         if options.procstring:
             procstring = options.procstring
         elif not taskchain:
-            procstring = wf_info['ProcessingString']
+            if original_wf:
+                procstring = original_wf.processingString()
+            else:
+                wfi.processingString()
         if options.era:
             era = options.era
         elif not taskchain:
-            era = wf_info['AcquisitionEra']
+            if original_wf:
+                era = original_wf.acquisitionEra()
+            else:
+                era = wfi.acquisitionEra()
+
         #Set era and procstring to none for merge ACDCs inside a task chain
-        if schema["RequestType"] == "Resubmission" and wf_info["PrepID"].startswith("task") and "Merge" in schema["InitialTaskPath"].split("/")[-1]:
+        if is_resubmission and original_wf.request["RequestType"] == "TaskChain" and "Merge" in schema["InitialTaskPath"].split("/")[-1]:
             era = None
             procstring = None
 
@@ -300,13 +289,16 @@ def main():
         if options.procversion:
             procversion = int(options.procversion)
         else:
-            procversion = wf_info["ProcessingVersion"]
+            if is_resubmission:
+                procversion = original_wf.request['ProcessingVersion']
+            else:
+                procversion = wf_info["ProcessingVersion"]
 
         # Check for output dataset existence, and abort if output datasets already exist!
         # Don't perform this check for ACDC's
         datasets = schema["OutputDatasets"]
         i = 0
-        if not (schema["RequestType"] == "Resubmission" ):
+        if not is_resubmission:
             exist = False
             maxv = 1
             for key, value in schema.items():
