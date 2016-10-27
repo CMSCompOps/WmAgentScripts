@@ -73,7 +73,7 @@ def main():
             where,how_much,how_much_where = wfi.getRecoveryInfo()
             tasks = sorted(how_much.keys())
         else:
-            tasks = options.task.split(',')
+            tasks = [('/%s/%s'%(wfname,task)).replace('//','/') for task in options.task.split(',')]
 
         created = {}
         print "Workflow:",wfname
