@@ -38,7 +38,9 @@ def main():
     usage = "usage: %prog [options] [WORKFLOW] TASK"
     parser = OptionParser(usage=usage)
     parser.add_option("-f","--file", dest="file", default=None,
-                        help="Text file or a list of workflows")
+                        help="Text file with a list of workflows")
+    parser.add_option("-w","--workflow", default=None,
+                      help="Coma separated list of wf to handle")
     parser.add_option("-t","--task",
                       help="The task to be recovered")
     parser.add_option("-a","--all",
@@ -53,10 +55,13 @@ def main():
     url = testbed_url if options.testbed else prod_url
     
     wfs = None
-    try:
+    if options.file:
         wfs = [l.strip() for l in open(options.file) if l.strip()]
-    except:
-        wfs = options.file.split(',')
+    elif options.workflow:
+        wfs = options.workflow.split(',')
+    else:
+        print "Either provide a -f filelist or a -w workflow"
+        sys.exit(1)
 
     if not wfs and not options.task:
         parser.error("Provide the Workflow Name and the Task Name")
