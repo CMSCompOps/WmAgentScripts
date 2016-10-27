@@ -12,7 +12,8 @@ def parse_one(url, wfn, options=None):
     SI = global_SI()
     wfi = workflowInfo( url , wfn)
     where_to_run, missing_to_run,missing_to_run_at = wfi.getRecoveryInfo()       
-    
+    all_blocks,needed_blocks,files_in_blocks,files_notin_dbs = wfi.getRecoveryBlocks()
+
     lhe,prim,_,sec = wfi.getIO()
     no_input = (not lhe) and len(prim)==0 and len(sec)==0
 
@@ -379,6 +380,15 @@ def parse_one(url, wfn, options=None):
             html +='</tr>\n'
         html+='</table><br>'
         task_error_site_count[task] = error_site_count
+
+    html += '<hr><br>'
+    html += "<b>Blocks (%d/%d) needed for recovery</b><br>"%( len(needed_blocks), len(all_blocks))
+    for block in sorted(needed_blocks):
+        html +='%s<br>'%block
+    html += "<br><b>Files in no block</b><br>"
+    for f in sorted(files_notin_dbs):
+        html +='%s<br>'%f
+
 
     html += '<hr><br>'
     html += '<table border=1>'

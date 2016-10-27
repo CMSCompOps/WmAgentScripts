@@ -2320,7 +2320,9 @@ def getDatasetBlocks( dataset, runs=None, lumis=None):
         #needs a series of convoluted calls
         #all_blocks.update([item['block_name'] for item in dbsapi.listBlocks( dataset = dataset )])
         pass
-
+    if not runs and not lumis:
+        all_blocks.update([item['block_name'] for item in dbsapi.listBlocks(dataset= dataset) ])
+    
     return list( all_blocks )
 
 def getUnsubscribedBlocks(url, site):
@@ -3373,6 +3375,7 @@ class workflowInfo:
         all_blocks = set()
         files_no_block = set()
         files_in_block = set()
+        datasets = set()
         for f in all_files:
             r = dbsapi.listFileArray( logical_file_name = f, detail=True)
             if not r:
@@ -3380,7 +3383,12 @@ class workflowInfo:
             else:
                 files_in_block.add( f )
                 all_blocks.update( [df['block_name'] for df in r ])
-        return all_blocks,files_in_block,files_no_block
+        dataset_blocks = set()
+        for dataset in set([block.split('#')[0] for block in all_blocks]):
+            print dataset
+            dataset_blocks.update( getDatasetBlocks( dataset ) )
+                     
+        return dataset_blocks,all_blocks,files_in_block,files_no_block
 
     def getRecoveryDoc(self):
         if self.recovery_doc != None:
