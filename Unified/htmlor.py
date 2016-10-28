@@ -1039,6 +1039,7 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
         html_doc.write("<tr><td bgcolor=lightblue>%s</td></tr>"% team)
         for agent in agents:
             bgcolor=''
+            name= agent['agent_url'].split(':')[0]
             if agent['drain_mode'] == True: bgcolor = 'bgcolor=orange'
             if agent['status'] in ['error']: 
                 ## do you want to send a critical message !
@@ -1046,8 +1047,6 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
                                                                          len(agent['down_components']),
                                                                          ", ".join(agent['down_components'])), level='critical')
                 bgcolor = 'bgcolor=red'
-
-            name= agent['agent_url'].split(':')[0]
             message = "%s"%name
             for component in agent['down_components']:
                 message += '<br><b>%s</b>'%component
