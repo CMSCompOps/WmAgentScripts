@@ -49,6 +49,12 @@ def parse_one(url, wfn, options=None):
         print json.dumps(total_by_site_dash , indent=2)
 
     status_per_task = defaultdict(lambda : defaultdict(int))
+    
+    if not 'AgentJobInfo' in stat:
+        stat['AgentJobInfo'] = {}
+        #print "bad countent ?"
+        #print json.dumps(  stat,  indent=2)
+
     for agent in stat['AgentJobInfo']:
         for task in stat['AgentJobInfo'][agent]['tasks']:
             if not 'status' in stat['AgentJobInfo'][agent]['tasks'][task]: continue
@@ -59,7 +65,7 @@ def parse_one(url, wfn, options=None):
                     status_per_task[task][status] += sum( stat['AgentJobInfo'][agent]['tasks'][task]['status'][status].values())
                 else:
                     status_per_task[task][status] += stat['AgentJobInfo'][agent]['tasks'][task]['status'][status]
-                    
+
     #print json.dumps( status_per_task, indent=2)
     db_total_per_site = defaultdict(int) 
     db_total_per_code = defaultdict(int)
@@ -144,7 +150,8 @@ def parse_one(url, wfn, options=None):
 
     html += '<hr><br>'
 
-    min_rank = min([task.count('/') for task in tasks])
+    if tasks:
+        min_rank = min([task.count('/') for task in tasks])
     for task in tasks:  
         #print task
         task_rank = task.count('/')
