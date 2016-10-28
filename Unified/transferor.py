@@ -581,6 +581,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                     for site in sec_to_distribute:
                         site_se =SI.CE_to_SE(site)
                         if (SI.disk[site_se]*1024.) > sec_size:
+                            wfh.sendLog('transferor', 'Sending %s to %s'%( sec, site ))
                             all_transfers[site].append( sec )
                             can_go = False
                         else:
