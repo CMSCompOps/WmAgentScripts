@@ -1560,6 +1560,7 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
 
         ## a few lines of explanation
         explanation="""
+Updated on %s (GMT) <br>
 <br><ul>
 <li> <b>custodial</b> : one the output dataset is waiting for the subscription to tape to be made. The request has been created already.<font color=green>(Automatic)</font></li>
 <li> <b>parentcustodial</b> : the parent of the dataset is not set on tape <font color=red>(Operator)</font></li>
@@ -1572,7 +1573,7 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
 <li> <b>duplicates</b> : duplicated lumisection have been found and need to be invalidated <font color=red>(Operator)</font></li>
 <li> <b>manual</b> : no automatic recovery was possible <font color=red>(Operator)</font></li>
 </ul><br>
-"""
+"""%( time.asctime(time.gmtime()))
         html.write( explanation )
         short_html.write( explanation )
 
