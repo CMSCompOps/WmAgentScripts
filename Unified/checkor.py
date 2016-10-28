@@ -506,12 +506,14 @@ def checkor(url, spec=None, options=None):
                 
             if custodial and (is_closing or bypass_checks):
                 print "picked",custodial,"for tape copy"
+
                 ## remember how much you added this round already ; this stays locally
                 SI.storage[custodial] -= size_worth_checking
                 ## register the custodial request, if there are no other big issues
                 for output in out_worth_checking:
                     if not len(custodial_locations[output]):
                         if phedex_presence[output]>=1:
+                            wfi.sendLog('checkor','Using %s as a tape destination for %s'%(custodial, output))
                             custodials[custodial].append( output )
                             ## let's wait and see if that's needed 
                             assistance_tags.add('custodial')
