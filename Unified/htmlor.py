@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 import time
-from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration, getPrepIDs, componentInfo, getAllAgents
+from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration, getPrepIDs, componentInfo, getAllAgents, sendLog
 import os
 import json
 from collections import defaultdict
@@ -1035,11 +1035,23 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
 <tr><td>Agent</td><td>Running/Pending hourly</td><td>Running/Pending daily</td></tr></thead>
 """)
     for team,agents in getAllAgents(reqmgr_url).items():
+        if not team in ['production','relval']: continue
         html_doc.write("<tr><td bgcolor=lightblue>%s</td></tr>"% team)
         for agent in agents:
             bgcolor=''
             if agent['drain_mode'] == True: bgcolor = 'bgcolor=orange'
+            if agent['status'] in ['error']: 
+                ## do you want to send a critical message !
+                sendLog('htmlor','Agent %s with %d component down: %s'%( name,
+                                                                         len(agent['down_components']),
+                                                                         ", ".join(agent['down_components'])), level='critical')
+                bgcolor = 'bgcolor=red'
+
             name= agent['agent_url'].split(':')[0]
+            message = "%s"%name
+            for component in agent['down_components']:
+                message += '<br><b>%s</b>'%component
+
             html_doc.write("""
 <tr><td %s>%s</td>
 <td><img src=http://cms-gwmsmon.cern.ch/poolview/graphs/%s/hourly></td>
@@ -1048,7 +1060,7 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
 </tr>
 """%( 
                     bgcolor,
-                    name,
+                    message,
                     name.replace('.','-'),
                     name.replace('.','-'),
                     name.replace('.','-'),
