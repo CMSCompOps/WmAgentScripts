@@ -53,8 +53,7 @@ def singleRecovery(url, task , initial, actions, do=False):
         #print acdc_round
         #print "This is not allowed yet"
         #return None
-    initial_string.replace('ACDC_','')
-    initial_string.replace('ACDC%d_'%(acdc_round-1),'')
+    initial_string = initial_string.replace('ACDC_','').replace('ACDC%d_'%(acdc_round-1),'')
     payload['RequestString'] = 'ACDC%d_%s'%(acdc_round,initial_string)
     payload['InitialTaskPath'] = task 
 
