@@ -21,7 +21,10 @@ def singleRecovery(url, task , initial, actions, do=False):
         }
     copy_over = ['PrepID', 'Campaign', 'RequestPriority', 'TimePerEvent', 'SizePerEvent', 'Group', 'Memory', 'RequestString' ,'CMSSWVersion']        
     for c in copy_over:
-        payload[c] = copy.deepcopy(initial[c])
+        if c in initial:
+            payload[c] = copy.deepcopy(initial[c])
+        else:
+            print c,"not in the initial payload"
 
     #a massage ? boost the recovery over the initial wf
     payload['RequestPriority'] *= 10
@@ -41,10 +44,18 @@ def singleRecovery(url, task , initial, actions, do=False):
                 print "I should not be doing splitting for this type of request",initial['RequestName']
                 return None
 
-    if payload['RequestString'].startswith('ACDC'):
-        print "This is not allowed yet"
-        return None
-    payload['RequestString'] = 'ACDC_'+payload['RequestString']
+    acdc_round = 0
+    initial_string = payload['RequestString']
+    if initial_string.startswith('ACDC'):
+        if initial_string[4].isdigit():
+            acdc_round = int(initial_string[4])
+        acdc_round += 1
+        #print acdc_round
+        #print "This is not allowed yet"
+        #return None
+    initial_string.replace('ACDC_','')
+    initial_string.replace('ACDC%d_'%(acdc_round-1),'')
+    payload['RequestString'] = 'ACDC%d_%s'%(acdc_round,initial_string)
     payload['InitialTaskPath'] = task 
 
     if not do:
