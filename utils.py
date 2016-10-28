@@ -1034,6 +1034,21 @@ class siteInfo:
     def __init__(self):
         
         UC = unifiedConfiguration()
+
+        try:
+            self.sites_ready_in_agent = set()
+            agents = getAllAgents( reqmgr_url )
+            for team,agents in agents.items():
+                print team
+                if team !='production': continue
+                for agent in agents:
+                    for site,site_info in agent['WMBS_INFO']['thresholds'].iteritems():
+                        if site_info['state'] in ['Normal']:
+                            self.sites_ready_in_agent.add( site )
+        except Exception as e :
+            print e
+            pass
+
         try:
             ## get all sites from SSB readiness
             self.sites_ready = []
@@ -1049,11 +1064,13 @@ class siteInfo:
                 if not siteInfo['Tier'] in [0,1,2]: continue ## ban de-facto all T3
                 self.all_sites.append( siteInfo['VOName'] )
                 if siteInfo['VOName'] in self.sites_banned: continue
-                if siteInfo['Status'] == 'enabled': 
+                if self.sites_ready_in_agent and siteInfo['VOName'] in self.sites_ready_in_agent:
                     self.sites_ready.append( siteInfo['VOName'] )
-                #if siteInfo['Status'] == 'on': 
-                #    self.sites_ready.append( siteInfo['VOName'] )
-                else:#if siteInfo['Status'] in ['drain']:
+                elif self.sites_ready_in_agent and not siteInfo['VOName'] in self.sites_ready_in_agent:
+                    self.sites_not_ready.append( siteInfo['VOName'] )
+                elif siteInfo['Status'] == 'enabled': 
+                    self.sites_ready.append( siteInfo['VOName'] )
+                else:
                     self.sites_not_ready.append( siteInfo['VOName'] )
 
             
@@ -1062,6 +1079,7 @@ class siteInfo:
             print str(e)
             sendEmail('bad sites configuration','falling to get any sites')
             sys.exit(-9)
+
 
 
         self.sites_auto_approve = UC.get('sites_auto_approve')
@@ -1567,13 +1585,14 @@ Updated on %s (GMT) <br>
 <li> <b>recovering</b> : there is at least one active ACDC for the worflow <font color=orange>(Wait)</font></li>
 <li> <b>recovered</b> : there is at least one inactive ACDC for the workflow <font color=green>(Automatic)</font></li>
 <li> <b>recovery</b> : the final statistics of the sample is not passing the requirements <font color=green>(Automatic)</font> </li>
-<li> <b>over100</b> : the final statistics is over 100% <font color=red>(Operator)</font></li>
+<li> <b>over100</b> : the final statistics is over 100%% <font color=red>(Operator)</font></li>
 <li> <b>biglumi</b> : the maximum size of the lumisection in one of the output has been exceeded <font color=red>(Operator)</font></li>
 <li> <b>filemismatch</b> : there is a mismatch in the number of files in DBS and Phedex <font color=red>(Operator)</font></li>
 <li> <b>duplicates</b> : duplicated lumisection have been found and need to be invalidated <font color=red>(Operator)</font></li>
 <li> <b>manual</b> : no automatic recovery was possible <font color=red>(Operator)</font></li>
 </ul><br>
 """%( time.asctime(time.gmtime()))
+
         html.write( explanation )
         short_html.write( explanation )
 
