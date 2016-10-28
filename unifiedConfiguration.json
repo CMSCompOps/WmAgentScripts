@@ -24,7 +24,7 @@
  },
  "sites_space_override": {	
    "value" : { "T0_CH_CERN_MSS":0,
-               "T1_IT_CNAF_MSS":0 
+	       "T1_DE_KIT_MSS" :0
 	       },
    "description" : "Over-ride the available space at a phedex end point"
  },
