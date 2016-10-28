@@ -14,7 +14,11 @@ def parse_one(url, wfn, options=None):
     where_to_run, missing_to_run,missing_to_run_at = wfi.getRecoveryInfo()       
     all_blocks,needed_blocks,files_in_blocks,files_notin_dbs = wfi.getRecoveryBlocks()
 
-    lhe,prim,_,sec = wfi.getIO()
+    ancestor = workflowInfo( url , wfn)
+    lhe,prim,_,sec = ancestor.getIO()
+    while ancestor.request['RequestType'] == 'Resubmission':
+        ancestor = workflowInfo(url, ancestor.request['OriginalRequestName'])
+        lhe,prim,_,sec = ancestor.getIO()
     no_input = (not lhe) and len(prim)==0 and len(sec)==0
 
     cache = 0
@@ -102,8 +106,8 @@ def parse_one(url, wfn, options=None):
         print "no task to look at"
         #return task_error_site_count
         
-    html="<html> <center><h1>%s<br><a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>%s</a><br>"%(
-        #tasks[0].split('/')[1],
+    html="<html> <center><h1><a href=https://cmsweb.cern.ch/reqmgr2/fetch?rid=%s>%s</a><br><a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>%s</a><br>"%(
+        wfn,
         wfn,
         wfi.request['PrepID'],
         wfi.request['PrepID']
@@ -198,7 +202,7 @@ def parse_one(url, wfn, options=None):
                         wmbs = sample['wmbsid']
                         workflow = sample['workflow']
 
-                        if do_CL and errorcode_s in expose_condor_code and expose_condor_code[errorcode_s][agent]:
+                        if do_CL and errorcode_s in expose_condor_code and expose_condor_code[errorcode_s][agent] and 'cern' in agent:
                             os.system('ssh %s %s/WmAgentScripts/Unified/exec_expose.sh %s %s %s %s %s'%( agent, base_dir, workflow, wmbs, errorcode_s, base_dir, monitor_dir))
                             expose_condor_code[errorcode_s][agent]-=1
 
@@ -438,10 +442,16 @@ if __name__=="__main__":
     parser = optparse.OptionParser()
     parser.add_option('--no_JL',help="Do not get the job logs", action="store_true",default=False)
     parser.add_option('--no_CL',help="Do not get the condor logs", action="store_true",default=False)
+    parser.add_option('--fast',help="Retrieve from cache and no logs retrieval", action="store_true", default=False)
     parser.add_option('--cache',help="The age in second of the error report before reloading them", default=0, type=float)
     parser.add_option('--workflow','-w',help="The workflow to make the error report of",default=None)
     (options,args) = parser.parse_args()
     
+    if options.fast:
+        options.cache = 1000000
+        options.no_JL = True
+        options.no_CL = True
+
     if options.workflow:
         parse_one(url, options.workflow, options)
     else:
