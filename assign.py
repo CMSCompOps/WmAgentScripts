@@ -196,14 +196,16 @@ def main():
         if 'OriginalRequestName' in schema:
             print "Original workflow is:",schema['OriginalRequestName']
             original_wf = workflowInfo(url, schema['OriginalRequestName'])            
+            ancestor_wf = workflowInfo(url, schema['OriginalRequestName'])
             ## go back as up as possible
-            while original_wf.request['RequestType'] == 'Resubmission':
-                if 'OriginalRequestName' not in original_wf.request:
-                    original_wf = None
+            while ancestor_wf.request['RequestType'] == 'Resubmission':
+                if 'OriginalRequestName' not in ancestor_wf.request:
+                    ancestor_wf = None
                     break
-                original_wf = workflowInfo(url, original_wf.request['OriginalRequestName'])
+                ancestor_wf = workflowInfo(url, original_wf.request['OriginalRequestName'])
         else:
             original_wf = None
+            ancestor_wf = None
 
         is_resubmission = (schema['RequestType'] == 'Resubmission')
 
@@ -221,7 +223,7 @@ def main():
             sys.exit(1)
 
         #Check to see if the workflow is a task chain or an ACDC of a taskchain
-        taskchain = (schema["RequestType"] == "TaskChain") or (original_wf and original_wf.request["RequestType"] == "TaskChain")
+        taskchain = (schema["RequestType"] == "TaskChain") or (ancestor_wf and ancestor_wf.request["RequestType"] == "TaskChain")
 
         # Adding the special string - in case it was provided in the command line
         if options.special:
@@ -233,14 +235,14 @@ def main():
         if options.procstring:
             procstring = options.procstring
         elif is_resubmission:
-            procstring = original_wf.processingString()
+            procstring = ancestor_wf.processingString()
         else:
             procstring = wfi.processingString()
 
         if options.era:
             era = options.era
         elif is_resubmission:
-            era = original_wf.acquisitionEra()
+            era = ancestor_wf.acquisitionEra()
         else:
             era = wfi.acquisitionEra()
         #Dealing with era and proc string
@@ -253,8 +255,8 @@ def main():
             lfn = options.lfn
         elif "MergedLFNBase" in wf_info:
             lfn = wf_info['MergedLFNBase']
-        elif original_wf and "MergedLFNBase" in original_wf.request:
-            lfn = original_wf.request['MergedLFNBase']
+        elif ancestor_wf and "MergedLFNBase" in ancestor_wf.request:
+            lfn = ancestor_wf.request['MergedLFNBase']
         else:
             print "Can't assign the workflow! Please include workflow lfn using --lfn option."
             sys.exit(0)
@@ -274,7 +276,7 @@ def main():
             procversion = int(options.procversion)
         else:
             if is_resubmission:
-                procversion = original_wf.request['ProcessingVersion']
+                procversion = ancestor_wf.request['ProcessingVersion']
             else:
                 procversion = wf_info["ProcessingVersion"]
 
@@ -315,10 +317,6 @@ def main():
                 task = schema['InitialTaskPath']
                 sites = [SI.SE_to_CE(site) for site in where_to_run[task]]
                 print "Found",sorted(sites),"as sites where to run the ACDC at, from the acdc doc of ",original_wf.request['RequestName']
-
-            ## re-assure yourself that the lfn,procversion is set correctly
-            lfn = original_wf.request['MergedLFNBase']
-            procversion = original_wf.request["ProcessingVersion"]
 
         if options.checksite:
             ## check that the sites are all compatible and up
