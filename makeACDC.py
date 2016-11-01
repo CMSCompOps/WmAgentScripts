@@ -23,7 +23,7 @@ def makeACDC(url, wfi, task, memory=None):
     actions = []
     if memory:
         increment = initial.request['Memory'] - memory
-        actions.append( ['mem-%d'% increment] )
+        actions.append( 'mem-%d'% increment )
 
     acdc = singleRecovery(url, task, initial.request, actions, do=True)
     if acdc:
