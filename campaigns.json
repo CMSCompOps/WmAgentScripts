@@ -372,7 +372,8 @@
     "secondaries" : {"/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1-v2/GEN-SIM": {},
     		     "/Neutrino_E-10_gun/RunIISpring15PrePremix-PU2016_80X_mcRun2_asymptotic_v14-v2/GEN-SIM-DIGI-RAW":{ "SecondaryLocation" : ["T2_CH_CERN","T1_US_FNAL"], "secondary_AAA" :true }
 		     },
-    "banned_tier" : ["RAWAODSIM"]
+    "banned_tier" : ["RAWAODSIM"],
+    "tune" : true
   },
   "RunIISpring16reHLT80": {
     "go": true,	  
@@ -414,7 +415,8 @@
     "maxcopies": 2,
     "lumisize": -1,
     "overflow": {"PU":{"max":20000,"pending":0,"force":false}},
-    "secondaries" : {"/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1_ext1-v1/GEN-SIM" : { "SiteWhitelist" : ["T1_US_FNAL", "T1_DE_KIT" , "T1_IT_CNAF", "T1_RU_JINR" ,"T2_CH_CERN" ,"T2_US_MIT", "T2_US_Nebraska","T2_US_Caltech"]} }
+    "secondaries" : {"/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1_ext1-v1/GEN-SIM" : { "SiteWhitelist" : ["T1_US_FNAL", "T1_DE_KIT" , "T1_IT_CNAF", "T1_RU_JINR" ,"T2_CH_CERN" ,"T2_US_MIT", "T2_US_Nebraska","T2_US_Caltech"]} },
+    "tune" : true
   },
  "RunIISummer16FSPremix": {
     "go": true,
