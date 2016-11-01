@@ -195,14 +195,14 @@ def main():
         schema = wfi.request
         if 'OriginalRequestName' in schema:
             print "Original workflow is:",schema['OriginalRequestName']
-            original_wf = workflowInfo(url, schema['OriginalRequestName'])            
+            #original_wf = workflowInfo(url, schema['OriginalRequestName'])            
             ancestor_wf = workflowInfo(url, schema['OriginalRequestName'])
             ## go back as up as possible
             while ancestor_wf.request['RequestType'] == 'Resubmission':
                 if 'OriginalRequestName' not in ancestor_wf.request:
                     ancestor_wf = None
                     break
-                ancestor_wf = workflowInfo(url, original_wf.request['OriginalRequestName'])
+                ancestor_wf = workflowInfo(url, ancestor_wf.request['OriginalRequestName'])
         else:
             original_wf = None
             ancestor_wf = None
