@@ -1042,6 +1042,9 @@ class siteInfo:
                 print team
                 if team !='production': continue
                 for agent in agents:
+                    if agent['status'] != 'ok': 
+                        print agent['status']
+                        continue
                     for site,site_info in agent['WMBS_INFO']['thresholds'].iteritems():
                         if site_info['state'] in ['Normal']:
                             self.sites_ready_in_agent.add( site )
@@ -3167,8 +3170,9 @@ class workflowInfo:
                 ret = json.loads(r2.read())
                 ret = ret['result'][0][workflow] ##new
                 self.request = ret
-            except:
+            except Exception as e:
                 print "failed to get workload"
+                print str(e)
                 try:
                     r1=self.conn.request("GET",'/couchdb/reqmgr_workload_cache/'+workflow)
                     #r1=self.conn.request("GET",'/reqmgr2/data/request/'+workflow, headers={"Accept":"*/*"}) ## new
