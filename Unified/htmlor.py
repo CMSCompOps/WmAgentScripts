@@ -59,7 +59,7 @@ def htmlor( caller = ""):
                 '(%s) <br>'%wfs])
         text+=', '.join([
                 '<a href="https://%s/reqmgr2/fetch?rid=%s" target="_blank">dts</a>'%(reqmgr_url,wfn),
-                ## deprecating '<a href="https://cmsweb.cern.ch/reqmgr/view/details/%s" target="_blank">dts-req1</a>'%wfn,
+                '<a href="https://cmsweb.cern.ch/reqmgr/view/details/%s" target="_blank">dts-req1</a>'%wfn,
                 #TOFIX '<a href=https://cmsweb.cern.ch/reqmgr/view/showWorkload?requestName=%s target="_blank">wkl</a>'%wfn,
                 #'<a href="https://%s/couchdb/reqmgr_workload_cache/%s" target="_blank">wfc</a>'%(reqmgr_url,wfn),
                 '<a href="https://%s/reqmgr2/data/request?name=%s" target="_blank">req</a>'%(reqmgr_url,wfn),
@@ -866,6 +866,17 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     for site in sorted(SI.sites_banned):
         text+="<li>%s"% site
     text += "</ul></li>"
+
+    text += "<li> Sites not ready<ul>"
+    for site in sorted(SI.sites_not_ready):
+        text+='<li> %s <a href="https://cms-site-readiness.web.cern.ch/cms-site-readiness/SiteReadiness/HTML/SiteReadinessReport.html#%s">SAM</a><br>'%( site, site )
+    text += "</ul></li>"
+
+    text += "<li> Sites ready in agents<ul>"
+    for site in sorted(SI.sites_ready_in_agent):
+        text+='<li> %s <a href="https://cms-site-readiness.web.cern.ch/cms-site-readiness/SiteReadiness/HTML/SiteReadinessReport.html#%s">SAM</a><br>'%( site, site )
+    text += "</ul></li>"
+
 
     text += "<li> Approximate Free Tape<ul>"
     for mss in SI.storage:

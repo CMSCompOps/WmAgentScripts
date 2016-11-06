@@ -661,7 +661,8 @@ class campaignInfo:
     def __init__(self):
         #this contains accessor to aggreed campaigns, with maybe specific parameters
         self.campaigns = json.loads(open('%s/WmAgentScripts/campaigns.json'%base_dir).read())
-        SI = siteInfo()
+        #SI = siteInfo()
+        SI = global_SI()
         for c in self.campaigns:
             if 'parameters' in self.campaigns[c]:
                 if 'SiteBlacklist' in self.campaigns[c]['parameters']:
@@ -1035,8 +1036,9 @@ class siteInfo:
         
         UC = unifiedConfiguration()
 
+        self.sites_ready_in_agent = set()
+
         try:
-            self.sites_ready_in_agent = set()
             agents = getAllAgents( reqmgr_url )
             for team,agents in agents.items():
                 print team
