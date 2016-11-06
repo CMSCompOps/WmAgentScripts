@@ -86,7 +86,8 @@ def searchLog( q ,limit=50 ):
     response = conn.getresponse()
     data = response.read()
     o = json.loads( data )
-    #print o
+
+    print o
     print o['hits']['total']
     return o['hits']['hits']
 
@@ -2412,18 +2413,9 @@ def try_getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=
     #print "presence of",dataset
     dbsapi = DbsApi(url=dbs_url)
     all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
+    #print json.dumps( all_blocks, indent=2)
     all_block_names=set([block['block_name'] for block in all_blocks])
     #print sorted(all_block_names)
-    if only_blocks:
-        all_block_names = filter( lambda b : b in only_blocks, all_block_names)
-        full_size = sum([block['file_size'] for block in all_blocks if (block['block_name'] in only_blocks)])
-        #print all_block_names
-        #print [block['block_name'] for block in all_blocks if block['block_name'] in only_blocks]
-    else:
-        full_size = sum([block['file_size'] for block in all_blocks])
-    if not full_size:
-        print dataset,"is nowhere"
-        return {}
     #print full_size
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset=%s'%(dataset))
@@ -2434,6 +2426,7 @@ def try_getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=
 
     locations=defaultdict(set)
     blocks_in_phedex = set()
+    size_in_phedex = 0
     for item in items:
         for replica in item['replica']:
             blocks_in_phedex.add( item['name'] )
@@ -2449,13 +2442,43 @@ def try_getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=
                 if item['name'] not in all_block_names and not only_blocks:
                     print item['name'],'not yet injected in dbs, counting anyways'
                     all_block_names.add( item['name'] )
-                    full_size += item['bytes']
+                    size_in_phedex += item['bytes']
 
 
     if set(all_block_names) != set(blocks_in_phedex):
-        print "Mismatch in phedex/DBS blocks"
-        print sorted(set(all_block_names) - set(blocks_in_phedex))
-        print sorted(set(blocks_in_phedex) - set(all_block_names))
+        missing_in_phedex = sorted(set(all_block_names) - set(blocks_in_phedex))
+        missing_in_dbs = sorted(set(blocks_in_phedex) - set(all_block_names))
+        is_valid = False
+        for block in missing_in_phedex:
+            block_info = dbsapi.listFileSummaries( block_name = block, validFileOnly=1)
+            for bi in block_info:
+                if bi['num_file'] !=0:
+                    is_valid = True
+                    break
+            if is_valid:
+                print block,"is valid"
+                continue
+            else:
+                all_block_names.remove( block )
+        #print "Mismatch in phedex/DBS blocks"
+        missing_in_phedex = sorted(set(all_block_names) - set(blocks_in_phedex))
+        missing_in_dbs = sorted(set(blocks_in_phedex) - set(all_block_names))
+        if missing_in_phedex: print missing_in_phedex,"missing in phedex"
+        if missing_in_dbs: print missing_in_dbs,"missing in dbs"
+        
+    if only_blocks:
+        all_block_names = filter( lambda b : b in only_blocks, all_block_names)
+        full_size = sum([block['file_size'] for block in all_blocks if (block['block_name'] in only_blocks)])
+        #print all_block_name
+        #print [block['block_name'] for block in all_blocks if block['block_name'] in only_blocks]
+    else:
+        full_size = sum([block['file_size'] for block in all_blocks if block['block_name'] in all_block_names])
+    if not full_size:
+        print dataset,"is nowhere"
+        return {}
+
+    full_size = full_size+size_in_phedex
+
 
     presence={}
     for (site,blocks) in locations.items():
@@ -3262,6 +3285,7 @@ class workflowInfo:
 
     def get_spec(self):
         if not self.full_spec:
+            self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
             r1=self.conn.request("GET",'/couchdb/reqmgr_workload_cache/%s/spec'%self.request['RequestName'])
             r2=self.conn.getresponse()
             self.full_spec = pickle.loads(r2.read())
@@ -3293,6 +3317,7 @@ class workflowInfo:
             return self.errors
         except:
             print "Could not get wmstats errors for",self.request['RequestName']
+            self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
             return {}
 
     def getFullPicture(self, since=1, cache=0):
@@ -3426,6 +3451,7 @@ class workflowInfo:
             rows = json.loads(r2.read())['rows']
             self.recovery_doc = [r['doc'] for r in rows]
         except:
+            self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
             print "failed to get the acdc document for",self.request['RequestName']
             self.recovery_doc = None
         return self.recovery_doc
@@ -3463,6 +3489,7 @@ class workflowInfo:
                     r1=self.conn.request("GET",'/couchdb/workqueue/_design/WorkQueue/_view/elementsByParent?key="%s"&include_docs=true'% self.request['RequestName'])
                     r2=self.conn.getresponse()
                 except:
+                    self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
                     print "failed to get work queue for",self.request['RequestName']
                     self.workqueue = []
                     return self.workqueue
