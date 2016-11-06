@@ -93,6 +93,7 @@ def transferor(url ,specific = None, talk=True, options=None):
         wfh = workflowInfo( url, wfo.name, spec=False)
         #(lheinput,primary,parent,secondary) = wfh.getIO()
         #sites_allowed = getSiteWhiteList( (lheinput,primary,parent,secondary) )
+        print wfo.name,"staging"
         (lheinput,primary,parent,secondary,sites_allowed) = wfh.getSiteWhiteList()
         for site in sites_allowed: ## we should get the actual transfer destination instead of the full white list
             transfers_per_sites[site] += 1 
@@ -494,9 +495,11 @@ def transferor(url ,specific = None, talk=True, options=None):
                     can_go = True
                     continue
                 elif len(prim_to_distribute)==0:
-                    wfh.sendLog('transferor', "We are going to need extra copies, but no destinations seems available")
+                    wfh.sendLog('transferor', "We are going to need extra copies of %s, but no destinations seems available"%(prim))
+                    sendLog('transferor', "We are going to need extra copies of %s, but no destinations seems available"%(prim),level='critical')
                     prim_to_distribute = [site for site in sites_allowed if not SI.CE_to_SE(site) in prim_location]
                     prim_to_distribute = [site for site in prim_to_distribute if not any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
+                    
 
                 if len(prim_to_distribute)>0: ## maybe that a parameter we can play with to limit the 
                     if not options or options.chop:
@@ -525,6 +528,10 @@ def transferor(url ,specific = None, talk=True, options=None):
                         all_transfers[site].extend( items )
                         transfers_per_sites[site] += 1
                         primary_destinations.add( site ) 
+                else:
+                    can_go = False
+                    allowed = False
+
         if not allowed:
             wfh.sendLog('transferor', "Not allowed to move on with")
             continue
