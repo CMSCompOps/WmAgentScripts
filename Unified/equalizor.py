@@ -220,14 +220,18 @@ def equalizor(url , specific = None, options=None):
         return (b_m,b_t)
         
     def getcampaign( task ):
-        taskname = task.pathName.split('/')[-1]
-        if hasattr( task, 'prepID'):
-            return task.prepID.split('-')[1]
-        elif taskname.count('-')>=1:
-            return taskname.split('-')[1]
-        else:
+        try:
+            taskname = task.pathName.split('/')[-1]
+            if hasattr( task, 'prepID'):
+                return task.prepID.split('-')[1]
+            elif taskname.count('-')>=1:
+                return taskname.split('-')[1]
+            else:
+                return None
+        except Exception as e :
+            print "Inconsistent prepid very likely"
+            print str(e)
             return None
-
     def close( interface ):
         open('%s/equalizor.json.new'%monitor_dir,'w').write( json.dumps( interface, indent=2))
         os.system('mv %s/equalizor.json.new %s/equalizor.json'%(monitor_dir,monitor_dir))
