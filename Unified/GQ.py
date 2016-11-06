@@ -119,7 +119,8 @@ for wf in wfs:
         ## wqe site whitelist in terms of SE
         swl = [si.CE_to_SE(s) for s in wl]
         if not swl:
-            print "There is no site at which the workflow can run. Was provided with %s"%( ','.join(wqe['SiteWhitelist']))
+            sendLog('GQ',"There is no site at which the workflow %s can run Was provided with %s"%(wf['RequestName'], ','.join(wqe['SiteWhitelist'])), level='critical')
+            wfi.sendLog('GQ',"There is not site at which the workflow can run. Was provided with %s"%( ','.join(wqe['SiteWhitelist'])))
             continue
 
         not_processable = set()
