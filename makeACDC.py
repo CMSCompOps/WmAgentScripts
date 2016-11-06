@@ -7,95 +7,89 @@
 import logging
 import sys
 from optparse import OptionParser
-from reqmgr import ReqMgrClient
+#from reqmgr import ReqMgrClient
 logging.basicConfig(level=logging.WARNING)
-import reqMgrClient as rqMgr
-import json
+import reqMgrClient
+from utils import workflowInfo
 
-class Config:
-    def __init__(self, info):
-        self.requestArgs = info
-        self.requestNames = []
-        self.cert = None
-        self.key = None
-        self.assignRequests = False
-        self.changeSplitting = False
-        self.assignRequest = False
+prod_url = 'cmsweb.cern.ch'
+testbed_url = 'cmsweb-testbed.cern.ch'
 
-url = 'https://cmsweb.cern.ch'
-testbed_url = 'https://cmsweb-testbed.cern.ch'
-#url = 'https://alan-cloud1.cern.ch'
-    
-configJson = {"createRequest":{}}
-config = Config(configJson)
-reqMgrClient = ReqMgrClient(url, config)
-    
-def makeACDC(url, workflow, task, memory=None):
-    #original wf info
-    wf = rqMgr.Workflow(workflow)
-    
-    #set up acdc stuff
-    if "ACDC" in wf.info["RequestString"]:
-        config.requestArgs["createRequest"]["RequestString"] = wf.info["RequestString"]
-    else:
-        config.requestArgs["createRequest"]["RequestString"] = "ACDC_"+ wf.info["RequestString"]
-    
-    config.requestArgs["createRequest"]["PrepID"] = wf.info["PrepID"]
-    config.requestArgs["createRequest"]["RequestPriority"] = wf.info["RequestPriority"]
-    config.requestArgs["createRequest"]["OriginalRequestName"] = wf.name
-    config.requestArgs["createRequest"]["InitialTaskPath"] = "/%s/%s"%(wf.name, task)
-    config.requestArgs["createRequest"]["ACDCServer"] = "https://cmsweb.cern.ch/couchdb"
-    config.requestArgs["createRequest"]["ACDCDatabase"] = "acdcserver"
-    config.requestArgs["createRequest"]["TimePerEvent"] = wf.info["TimePerEvent"]
-    
+from Unified.recoveror import singleRecovery
+from utils import workflowInfo
+def makeACDC(url, wfi, task, memory=None):
+    initial = wfi
+    #task = '/%s/%s'%( workflow, task)
+    actions = []
     if memory:
-        config.requestArgs["createRequest"]["Memory"] = memory
+        increment = initial.request['Memory'] - memory
+        actions.append( 'mem-%d'% increment )
+
+    acdc = singleRecovery(url, task, initial.request, actions, do=True)
+    if acdc:
+        return acdc
     else:
-        config.requestArgs["createRequest"]["Memory"] = wf.info["Memory"]
-    
-    config.requestArgs["createRequest"]["SizePerEvent"] = wf.info["SizePerEvent"]
-    config.requestArgs["createRequest"]["RequestType"] = "Resubmission"
-    config.requestArgs["createRequest"]["Group"] = wf.info["Group"]
-
-    print json.dumps(config.requestArgs["createRequest"] , indent=2)
-
-    r = reqMgrClient.createRequest(config)
-    return r
-
+        print "Issue while creating the acdc for",task
+        return None
 
 def main():
 
     #Create option parser
-    usage = "usage: %prog [options] [WORKFLOW] TASK"
+    usage = "usage: %prog (-w workflow|-f filelist) (-t TASK|--all) [--tesbed]"
     parser = OptionParser(usage=usage)
     parser.add_option("-f","--file", dest="file", default=None,
-                        help="Text file of a list of workflows")
-    parser.add_option("-m","--memory", dest="memory", default=None,
+                        help="Text file with a list of workflows")
+    parser.add_option("-w","--workflow", default=None,
+                      help="Coma separated list of wf to handle")
+    parser.add_option("-t","--task", default=None,
+                      help="Coma separated task to be recovered")
+    parser.add_option("-a","--all",
+                      help="Make acdc for all tasks to be recovered",default=False, action='store_true')
+    parser.add_option("-m","--memory", dest="memory", default=None, type=float,
                         help="Memory to override the original request memory")
+    parser.add_option("--testbed", default=False, action="store_true")
 
     (options, args) = parser.parse_args()
+
+    global url
+    url = testbed_url if options.testbed else prod_url
     
     wfs = None
-    if len(args) == 2:
-        wfs = [args[0]]
-        task = args[1]
-    #list of files
-    elif options.file and len(args) == 1:
+    if options.file:
         wfs = [l.strip() for l in open(options.file) if l.strip()]
-        task = args[0]
+    elif options.workflow:
+        wfs = options.workflow.split(',')
     else:
-        parser.error("Provide the Workflow Name and the Task Name")
+        parser.error("Either provide a -f filelist or a -w workflow")
         sys.exit(1)
 
-    if options.memory:
-        memory = float(options.memory)
-    else:
-        memory = None
+    if (not wfs) or (not options.task and not options.all):
+        parser.error("Provide the -w Workflow Name and the -t Task Name or --all")
+        sys.exit(1)
 
     for wfname in wfs:
-        r = makeACDC(url, wfname, task, memory)
-        print "Created:"    
-        print r
+        wfi = workflowInfo(url, wfname)
+        if options.task == 'all' or options.all:
+            where,how_much,how_much_where = wfi.getRecoveryInfo()
+            tasks = sorted(how_much.keys())
+        else:
+            tasks = [('/%s/%s'%(wfname,task)).replace('//','/') for task in options.task.split(',')]
+
+        created = {}
+        print "Workflow:",wfname
+        print "Tasks:",tasks
+        for task in tasks:
+            r = makeACDC(url, wfi, task, options.memory) 
+            if not r: 
+                print "Error in creating ACDC for",task,"on",wfname
+                break
+            created[task] = r
+        if len(created)!=len(tasks):
+            print "Error in creating all required ACDCs"
+            sys.exit(1)
+        print "Created:"
+        for task in created:
+            print created[task],"for",task
 
 if __name__ == '__main__':
     main()
