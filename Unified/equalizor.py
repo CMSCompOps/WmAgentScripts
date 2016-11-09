@@ -59,9 +59,10 @@ def equalizor(url , specific = None, options=None):
     for site in SI.sites_ready:
         if site.split('_')[1] == 'US': ## to all site in the US
             ## add NERSC 
-            mapping[site].append('T3_US_NERSC')
+            #mapping[site].append('T3_US_NERSC')
             ## add OSG            
             mapping[site].append('T3_US_OSG')
+            pass
     
     use_T0 = ('T0_CH_CERN' in UC.get("site_for_overflow"))
     if options.t0: use_T0 = True
@@ -256,6 +257,7 @@ def equalizor(url , specific = None, options=None):
     PU_locations = {}
     PU_overflow = {}
     PRIM_overflow = {}
+    PREMIX_overflow = {}
     LHE_overflow = {}
     tune_performance = []
 
@@ -280,7 +282,7 @@ def equalizor(url , specific = None, options=None):
         }
 
     add_to = {
-        'pdmvserv_EXO-RunIISpring16MiniAODv2-05060_00552_v0__161001_151813_7925' : ['T3_US_OSG'],
+        #'pdmvserv_EXO-RunIISpring16MiniAODv2-05060_00552_v0__161001_151813_7925' : ['T3_US_OSG'],
         #'cerminar_Run2016C-v2-SingleElectron-23Sep2016_8020_160923_182146_3498' : ['T3_US_NERSC'],
         #'cerminar_Run2016C-v2-Tau-23Sep2016_8020_160923_182336_5649' : ['T3_US_NERSC'],
         }
@@ -359,6 +361,9 @@ def equalizor(url , specific = None, options=None):
                 if "PRIM" in overflow and not campaign in PRIM_overflow:
                     PRIM_overflow[campaign] = copy.deepcopy(overflow['PRIM'])
                     print "adding",campaign,"to PRIM overflow"
+                if "PREMIX" in overflow and not campaign in PREMIX_overflow:
+                    PREMIX_overflow[campaign] = copy.deepcopy(overflow['PREMIX'])
+                    print "adding",campaign,"to PREMIX overflow"
                 if "PU" in overflow and not campaign in PU_overflow:
                     PU_overflow[campaign] = copy.deepcopy(overflow['PU'])
                     print "adding",campaign,"to PU overflow rules"
@@ -396,10 +401,45 @@ def equalizor(url , specific = None, options=None):
                     new_list = list(set(SI.sites_ready)&set(wfi.request['SiteWhitelist']))
                     modifications[wfo.name][task.pathName] = { "ReplaceSiteWhitelist" : new_list }
 
+            if campaign in PREMIX_overflow:  # and options.augment:
+                ## figure out secondary location and neighbors
+                ## figure out primary presence and neighbors
+                ## do the intersection and add if in need.
+                needs, task_name, running, idled = needs_action(wfi, task)
+                if task.taskType in ['Processing','Production'] and needs:
+                    secondary_locations = set(SI.sites_ready + force_sites)
+                    for s in sec:
+                        if not s in PU_locations:
+                            presence = getDatasetPresence( url, s)
+                            one_secondary_locations = [site for (site,(there,frac)) in presence.items() if frac>98.]
+                            PU_locations[s] = one_secondary_locations
+                        print "secondary is at",sorted(PU_locations[s])
+                        secondary_locations = set([SI.SE_to_CE(site) for site in PU_locations[s]]) & secondary_locations
+                    aaa_sec_grid = set(secondary_locations)
+                    for site in sorted(aaa_sec_grid):
+                        aaa_sec_grid.update( mapping.get(site, []) )
+                    
+                        
+                    dataset = list(prim)[0]
+                    all_blocks,blocks = wfi.getActiveBlocks()
+                    count_all = sum([len(v) for k,v in all_blocks.items()])
+                    presence = getDatasetPresence(url, dataset, only_blocks=blocks )
+                    aaa_prim_grid = set([SI.SE_to_CE(site) for site in presence.keys()])
+                    for site in sorted(aaa_prim_grid):
+                        aaa_prim_grid.update( mapping.get(site, []) )
+
+                    ## intersect
+                    aaa_grid = aaa_sec_grid & aaa_prim_grid
+                    aaa_grid  = filter(lambda s : not s.startswith('T3'), aaa_grid)
+
+                    wfi.sendLog('equalizor','Extending site whitelist to %s'%sorted(aaa_grid))
+                    modifications[wfo.name][task.pathName]= {"AddWhitelist" : sorted(aaa_grid)}
+
             ## rule to overflow jobs on the primary input
             if campaign in PRIM_overflow:
                 if task.taskType in ['Processing','Production']:
                     if not wfi.request['TrustSitelists']:
+                        ###xrootd is OFF
                         dataset = list(prim)[0]
                         all_blocks,blocks = wfi.getActiveBlocks()
                         count_all = sum([len(v) for k,v in all_blocks.items()])
