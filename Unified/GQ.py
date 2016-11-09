@@ -44,6 +44,7 @@ for wf in wfs:
     wqs = wfi.getWorkQueue()
     
     stats = wfi.getWMStats()
+    if not 'AgentJobInfo' in stats: stats['AgentJobInfo'] = {}
 
     ## skip wf that unified does not know about, leaves acdc
     wfo = session.query(Workflow).filter(Workflow.name == wf['RequestName']).first()
