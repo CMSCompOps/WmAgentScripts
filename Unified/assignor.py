@@ -156,7 +156,7 @@ def assignor(url ,specific = None, talk=True, options=None):
             if override_sec_location: 
                 print "We don't care where the secondary is"
                 print "Cannot pass for now"
-                sendEmail("tempting to pass sec location check","but we cannot yet IMO")
+                #sendEmail("tempting to pass sec location check","but we cannot yet IMO")
                 #pass
             if secondary_aaa:
                 #just continue without checking
