@@ -33,11 +33,11 @@
     "description" : "The sites identified as having good storage badnwidth"
  },
  "max_cpuh_block" : {
-   "value" : 4000000,
+   "value" : 40000000,
    "description" : "Value of CPUh above which a wf is blocked from assigning"
  },
  "block_repositionning": {
-   "value" : true,
+   "value" : false,
    "description" : "Whether or not to retransfer block from WQE without location"
  },
  "allowed_bypass": {
