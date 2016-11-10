@@ -274,7 +274,11 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         ### check on endpoints for on-going transfers
         if endpoints and options.partial:
-            sites_allowed = list(set(sites_allowed + [SI.SE_to_CE(s) for s in endpoints]))
+            end_sites = [SI.SE_to_CE(s) for s in endpoints]
+            sites_allowed = list(set(sites_allowed + end_sites))
+            if down_time and not any(osite in SI.sites_not_ready for osite in end_sites):
+                print "Flip the status of downtime, since our destinations are good"
+                down_time = False
             print "with added endpoints",sorted(sites_allowed)
             
         if not len(sites_allowed):
@@ -295,6 +299,7 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         if available_fractions and not all([available>=copies_wanted for available in available_fractions.values()]):
             not_even_once = not all([available>=1. for available in available_fractions.values()])
+            above_good = all([available >= options.good_enough for available in available_fractions.values()])
             wfh.sendLog('assignor',"The input dataset is not available %s times, only %s"%( copies_wanted, available_fractions.values()))
             if down_time and not options.go and not options.early:
                 wfo.status = 'considered'
@@ -312,12 +317,12 @@ def assignor(url ,specific = None, talk=True, options=None):
                     known = json.loads(open('cannot_assign.json').read())
                 except:
                     pass
-                if not wfo.name in known and not options.limit and not options.go and not options.early and not options.partial:
+                if not wfo.name in known and not options.limit and not options.go and not options.early and not (options.partial and above_good):
                     wfh.sendLog('assignor',"cannot be assigned, %s is not sufficiently available.\n %s"%(wfo.name,json.dumps(available_fractions)))
                     sendEmail( "cannot be assigned","%s is not sufficiently available.\n %s"%(wfo.name,json.dumps(available_fractions)))
                     known.append( wfo.name )
                     open('cannot_assign.json','w').write(json.dumps( known, indent=2))
-                n_stalled+=1
+                
                 if options.early:
                     if wfo.status == 'considered':
                         wfh.sendLog('assignor',"setting considered-tried")
@@ -325,9 +330,10 @@ def assignor(url ,specific = None, talk=True, options=None):
                         session.commit()
                     else:
                         print "tried but status is",wfo.status
-                if options.partial:
+                if options.partial and above_good:
                     print "Will move on with partial locations"
                 else:
+                    n_stalled+=1
                     continue
 
         t1_only = [ce for ce in sites_allowed if ce.startswith('T1')]
@@ -493,6 +499,7 @@ if __name__=="__main__":
     parser.add_option('-t','--test', help='Only test the assignment',action='store_true',dest='test',default=False)
     parser.add_option('-e', '--early', help='Fectch from early statuses',default=False, action="store_true")
     parser.add_option('-p', '--partial', help='Let the workflow assign to place with any part of the data, existent of being made',default=False, action="store_true")
+    parser.add_option('--good_enough', help='Only useful with --partial option, determines whether to get the workflow started', default=0.5, type=float)
     parser.add_option('--go',help="Overrides the campaign go",default=False,action='store_true')
     parser.add_option('--team',help="Specify the agent to use",default=None)
     parser.add_option('--primary_aaa',help="Force to use the secondary location restriction, if any, and use the full site whitelist initially provided to run that type of wf",default=False, action='store_true')
