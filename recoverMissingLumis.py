@@ -6,7 +6,7 @@ from WMCore.Database.CMSCouch import Database
 from WMCore.GroupUser.User import makeUser
 from WMCore.Services.DBS.DBSReader import DBSReader
 from WMCore.Services.PhEDEx.PhEDEx import PhEDEx
-from WMCore.Services.RequestManager.RequestManager import RequestManager
+from WMCore.Services.RequestDB.RequestDBReader import RequestDBReader
 from WMCore.Services.SiteDB.SiteDB import SiteDBJSON
 from WMCore.WMSpec.WMWorkload import WMWorkloadHelper
 from pprint import pprint
@@ -376,20 +376,20 @@ def buildDifferenceMap(workload, datasetInformation):
             differences[dataset] = difference
     return differences
 
-def getRequestInformationAndWorkload(requestName, reqmgrUrl):
+def getRequestInformationAndWorkload(requestName, reqmgrUrl, centralRequestDBURL):
     """
     _getRequestInformationAndWorkload_
 
     Retrieve the request information for assignment
     and the full pickled workload.
     """
-    reqmgr = RequestManager(dict = {'endpoint' : reqmgrUrl})
-    result = reqmgr.getRequest(requestName)
-    workloadDB = Database(result['CouchWorkloadDBName'], result['CouchURL'])
+    wfDBReader = RequestDBReader(centralRequestDBURL, couchapp = "ReqMgr")
+    result = wfDBReader.getRequestByNames(requestName,True)
+    workloadDB = Database(result[requestName]['CouchWorkloadDBName'], result[requestName]['CouchURL'])
     workloadPickle = workloadDB.getAttachment(requestName, 'spec')
     spec = pickle.loads(workloadPickle)
     workload = WMWorkloadHelper(spec)
-    return workload, result
+    return workload, result[requestName]
 
 def defineRequests(workload, requestInfo,
                    acdcCouchUrl, acdcCouchDb,
@@ -588,7 +588,7 @@ def defineRequests(workload, requestInfo,
 
         # Assign parameters
         assignDict = jsonBlob["assignRequest"]
-        team = requestInfo['teams'][0]
+        team = requestInfo['Teams'][0]
         processingString = workload.getProcessingString()
         processingVersion = workload.getProcessingVersion()
         acqEra = workload.getAcquisitionEra()
@@ -641,8 +641,11 @@ def main():
                            default = "acdcserver",
                            help = "Database name for the ACDC records")
     myOptParser.add_option("-u", "--reqMgrUrl", dest = "reqMgrUrl",
-                           default = "https://cmsweb.cern.ch/reqmgr/reqMgr",
+                           default = "https://cmsweb.cern.ch/reqmgr2/data",
                            help = "URL to the request manager API")
+    myOptParser.add_option("-c", "--centralRequestDBURL", dest = "centralRequestDBURL",
+                           default = "https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache",
+                           help = "URL to the centralRequestDBURL")
     myOptParser.add_option("-j", "--json", dest = "jsonFile",
                            help = "For testing only: JSON file with the dataset information already loaded")
     myOptParser.add_option("-v", "--verbose", dest = "verbose",
@@ -662,7 +665,7 @@ def main():
     # First load the request
     if val.requestName is None:
         raise RuntimeError("Request name must be specified.")
-    workload, requestInfo = getRequestInformationAndWorkload(val.requestName, val.reqMgrUrl)
+    workload, requestInfo = getRequestInformationAndWorkload(val.requestName, val.reqMgrUrl,val.centralRequestDBURL)
     # If testing, then load the pre-fetched dataset info
     datasetInformation = None
     if val.jsonFile is not None:
