@@ -542,7 +542,7 @@ def checkor(url, spec=None, options=None):
             dbs_invalid[output] = dbs3Client.getFileCountDataset( output, onlyInvalid=True)
 
         
-        fraction_invalid = 0.01
+
         if not all([dbs_presence[out] == (dbs_invalid[out]+phedex_presence[out]) for out in wfi.request['OutputDatasets']]) and not options.ignorefiles:
             mismatch_notice = wfo.name+" has a dbs,phedex mismatch\n"
             mismatch_notice += "in dbs\n"+json.dumps(dbs_presence, indent=2) +"\n"
@@ -573,6 +573,7 @@ def checkor(url, spec=None, options=None):
             ## I don't think we can by pass this
             is_closing = False
 
+        fraction_invalid = 0.01
         if not all([(dbs_invalid[out] <= int(fraction_invalid*dbs_presence[out])) for out in wfi.request['OutputDatasets']]) and not options.ignoreinvalid:
             print wfo.name,"has a dbs invalid file level too high"
             print json.dumps(dbs_presence, indent=2)
@@ -745,8 +746,10 @@ def checkor(url, spec=None, options=None):
                 #else:
                 #    already_notified.append( wfo.name )
 
-                detailslink = 'https://cmsweb.cern.ch/reqmgr/view/details/%s'
-                perflink = 'https://cmsweb.cern.ch/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s'%(wfo.name)
+                ###detailslink = 'https://cmsweb.cern.ch/reqmgr/view/details/%s'
+                #detailslink = 'https://cmsweb.cern.ch/reqmgr2/fetch?rid=%s'%(wfo.name)
+                ###perflink = 'https://cmsweb.cern.ch/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s'%(wfo.name)
+                perflink = 'https://cmst2.web.cern.ch/cmst2/unified/report/%s'%(wfo.name)
                 splitlink = 'https://cmsweb.cern.ch/reqmgr/view/splitting/%s'%(wfo.name)
                 ## notify templates
                 messages= {
