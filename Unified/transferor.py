@@ -479,7 +479,8 @@ def transferor(url ,specific = None, talk=True, options=None):
                         l.append( wfo.id )
                         tfo.workflows_id = l
                     if not options.test:
-                        session.commit()
+                        #session.commit()
+                        pass
                     else:
                         session.flush() ## regardless of commit later on, we need to let the next wf feeding on this transfer to see it in query
                     can_go = False
@@ -491,7 +492,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                 copies_needed = max(0,copies_needed - min(copies_being_made))
                 wfh.sendLog('transferor', "Not counting the copies being made ; then need %s"% copies_needed)                    
                 if copies_needed == 0:
-                    wfh.sendLog('transferor', "The output is either fully in place or getting in full somewhere with %s"% latching_on_transfers)
+                    wfh.sendLog('transferor', "The input is either fully in place or getting in full somewhere with %s"% latching_on_transfers)
                     can_go = True
                     continue
                 elif len(prim_to_distribute)==0:
@@ -612,8 +613,8 @@ def transferor(url ,specific = None, talk=True, options=None):
                 wfh.sendLog('transferor', "should just be assigned now to %s"%sorted(sites_allowed))
                 wfo.status = 'staged'
             passing_along+=1
-            wfh.sendLog('transferor', "setting status to %s"%wfo.status)
-            session.commit()
+            wfh.sendLog('transferor', "setting %s status to %s"%(wfo.name,wfo.status))
+            #session.commit()
             continue
         else:
             ## there is an explicit transfer required
@@ -622,8 +623,8 @@ def transferor(url ,specific = None, talk=True, options=None):
                 wfh.sendLog('transferor', "latches on existing transfers")
                 if not options.test:
                     wfo.status = 'staging'
-                    wfh.sendLog('transferor', "setting status to %s"%wfo.status)
-                    session.commit()
+                    wfh.sendLog('transferor', "setting %s status to %s"%(wfo.name,wfo.status))
+                    #session.commit()
             wfh.sendLog('transferor',"needs a transfer")
             needs_transfer+=1
             passing_along+=1
@@ -720,7 +721,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                 new_transfer.workflows_id.update( workflow_dependencies[transfering] )
             new_transfer.workflows_id = list(new_transfer.workflows_id)
             wf_id_in_prestaging.update(new_transfer.workflows_id)
-            session.commit()
+            #session.commit()
             ## auto approve it
             if execute:
                 #approved = approveSubscription(url, phedexid, [site_se])
@@ -734,7 +735,10 @@ def transferor(url ,specific = None, talk=True, options=None):
                 tr_wf.status = 'staging'
                 if talk:
                     print "setting",tr_wf.name,"to staging"
-        session.commit()
+        #session.commit()
+
+    ## one big session commit at the end that everything went fine
+    session.commit()
 
 if __name__=="__main__":
     UC = unifiedConfiguration()
