@@ -48,23 +48,25 @@ def spawn_harvesting(url, wfi , in_full):
                 'RequestType' : 'DQMHarvest',
                 'Group' : 'DATAOPS'
                 }
-            copy_over = ['ProcessingString',
-                         'DQMUploadUrl',
-                         'CMSSWVersion',
-                         'CouchDBName',
-                         'CouchWorkloadDBName',
-                         'CouchURL',
-                         'DbsUrl',
-                         'inputMode',
-                         'DQMConfigCacheID',
-                         'OpenRunningTimeout',
-                         'ScramArch',
-                         'CMSSWVersion',
-                         'Campaign',
-                         'Memory', #dummy
-                         'SizePerEvent', #dummy
-                         'GlobalTag', #dummy
-                         ]
+            copy_over = [
+                'AcquisitionEra',
+                'ProcessingString',
+                'DQMUploadUrl',
+                'CMSSWVersion',
+                'CouchDBName',
+                'CouchWorkloadDBName',
+                'CouchURL',
+                'DbsUrl',
+                'inputMode',
+                'DQMConfigCacheID',
+                'OpenRunningTimeout',
+                'ScramArch',
+                'CMSSWVersion',
+                'Campaign',
+                'Memory', #dummy
+                'SizePerEvent', #dummy
+                'GlobalTag', #dummy
+                ]
             for item in copy_over:
                 if item in wfi.request:
                     harvesting_schema[item] = copy.deepcopy(wfi.request[item])
@@ -74,6 +76,10 @@ def spawn_harvesting(url, wfi , in_full):
             harvesting_schema['InputDataset'] = dqm_input
             harvesting_schema['TimePerEvent'] = 1
             harvesting_schema['PrepID'] = 'Harvest-'+wfi.request['PrepID']
+            if len(wfi.request['RequestString'])>60:
+                wfi.request['RequestString']= wfi.request['RequestString'][:60]
+                print "truncating request string",wfi.request['RequestString']
+                
             harvesting_schema['RequestString'] = 'HARVEST-'+wfi.request['RequestString']
             harvesting_schema['DQMHarvestUnit'] = 'byRun'
             harvesting_schema['ConfigCacheUrl'] = harvesting_schema['CouchURL'] ## uhm, how stupid is that ?
