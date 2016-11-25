@@ -741,6 +741,22 @@ def userLock(component=None):
             return True
     return False
 
+def genericGet( base, url, load=True, headers=None):
+    if not headers: headers={"Accept":"*/*"}
+    conn  =  httplib.HTTPSConnection( base,
+                                      #cert_file = os.getenv('X509_USER_PROXY'),
+                                      cert_file = '/data/certs/servicecert.pem',
+                                      #key_file = os.getenv('X509_USER_PROXY'),
+                                      key_file = '/data/certs/servicekey.pem',
+                                      )
+    r1=conn.request("GET",url, headers =headers)
+    r2=conn.getresponse()
+    if load:
+        result = json.loads(r2.read())    
+    else:
+        result = r2.read() 
+    return result
+
 class docCache:
     def __init__(self):
         self.cache = {}
@@ -1159,15 +1175,16 @@ class siteInfo:
 
         mss_usage = dataCache.get('mss_usage')
         sites_space_override = UC.get('sites_space_override')
+        use_field = 'Usable'
         for mss in self.storage:
             #used = dataCache.get(mss+'_usage')
             #print mss,'used',used
             #if used == None: self.storage[mss] = 0
             #else:  self.storage[mss] = max(0, self.storage[mss]-used)
-            if not mss in mss_usage['Tape']['Free']: 
+            if not mss in mss_usage['Tape'][use_field]: 
                 self.storage[mss] = 0 
             else: 
-                self.storage[mss]  = mss_usage['Tape']['Free'][mss]
+                self.storage[mss]  = mss_usage['Tape'][use_field][mss]
 
             if mss in sites_space_override:
                 self.storage[mss] = sites_space_override[mss]
@@ -1313,10 +1330,10 @@ class siteInfo:
             available = int(float(quota)*buffer_level) - int(locked)
 
             self.disk[site] = available if available >0 else 0
-            ddm_free = int(float(quota)) - int(locked) - self.disk[site]
+            ddm_free = int(float(quota) - int(locked) - self.disk[site])
             self.free_disk[site] = ddm_free if ddm_free>0 else 0
             if sites_space_override and site in sites_space_override:
-                self.free_disk[site] = sites_space_override[site]
+                self.disk[site] = sites_space_override[site]
                             
             self.quota[site] = int(quota)
             self.locked[site] = int(locked)
@@ -3016,12 +3033,12 @@ def getAllAgents(url):
         teams[r['agent_team']].append( r )
     return teams
 
-def getWorkflows(url,status,user=None,details=False,rtype=None):
+def getWorkflows(url,status,user=None,details=False,rtype=None, priority=None):
     retries=10000
     wait=2
     while retries>0:
         try:
-            return try_getWorkflows(url, status,user,details,rtype)
+            return try_getWorkflows(url, status,user,details,rtype,priority)
         except Exception as e:
             print "getWorkflows retried"
             print str(e)
@@ -3030,7 +3047,7 @@ def getWorkflows(url,status,user=None,details=False,rtype=None):
             retries-=1
     raise Exception("getWorkflows failed 10 times")
     
-def try_getWorkflows(url,status,user=None,details=False,rtype=None):
+def try_getWorkflows(url,status,user=None,details=False,rtype=None, priority=None):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 
     go_to = '/reqmgr2/data/request?status=%s'%status
@@ -3039,6 +3056,10 @@ def try_getWorkflows(url,status,user=None,details=False,rtype=None):
     if user:
         for u in user.split(','):
             go_to+='&requestor=%s'%u
+    if priority!=None:
+        print priority,"is requested"
+        go_to+='&initialpriority=%d'%priority ### does not work...
+
     go_to+='&detail=%s'%('true' if details else 'false')
     r1=conn.request("GET",go_to, headers={"Accept":"application/json"})        
     r2=conn.getresponse()
@@ -3429,7 +3450,13 @@ class workflowInfo:
         files_in_block = set()
         datasets = set()
         for f in all_files:
-            r = dbsapi.listFileArray( logical_file_name = f, detail=True)
+            try:
+                r = dbsapi.listFileArray( logical_file_name = f, detail=True)
+            except Exception as e:
+                print "dbsapi.listFileArray failed on",f
+                print str(e)
+                continue
+
             if not r:
                 files_no_block.add( f)
             else:
