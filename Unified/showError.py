@@ -98,6 +98,7 @@ def parse_one(url, wfn, options=None):
                            '50513':defaultdict(lambda : n_expose),#new
                            '8001': defaultdict(lambda : n_expose),# the usual exception in cmsRun
                            '11003': defaultdict(lambda : n_expose),# job extraction
+                           '73': defaultdict(lambda : n_expose),# job extraction
                            }
     expose_condor_code = {'99109':defaultdict(lambda : n_expose),#stageout
                           '99303':defaultdict(lambda : n_expose),#no pkl report
