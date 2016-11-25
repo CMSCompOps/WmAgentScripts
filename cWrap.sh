@@ -1,5 +1,3 @@
-
-
 cd /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts
 
 oweek=`date +%W`
