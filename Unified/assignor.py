@@ -31,12 +31,21 @@ def assignor(url ,specific = None, talk=True, options=None):
     n_stalled = 0
 
     wfos=[]
+    fetch_from = []
     if specific or options.early:
-        wfos.extend( session.query(Workflow).filter(Workflow.status=='considered').all())
-        wfos.extend( session.query(Workflow).filter(Workflow.status=='staging').all())
+        fetch_from.extend(['considered','staging'])
     if specific:
-        wfos.extend( session.query(Workflow).filter(Workflow.status=='considered-tried').all())        
-    wfos.extend(session.query(Workflow).filter(Workflow.status=='staged').all())
+        fetch_from.extend(['considered-tried'])
+    fetch_from.extend(['staged'])
+
+    if options.from_status:
+        fetch_from = options.from_status.split(',')
+        print "Overriding to read from",fetch_from
+
+
+    for status in fetch_from:
+        wfos.extend(session.query(Workflow).filter(Workflow.status==status).all())
+
 
 
     dataset_endpoints = json.loads(open('%s/dataset_endpoints.json'%monitor_dir).read())
@@ -94,12 +103,16 @@ def assignor(url ,specific = None, talk=True, options=None):
             for sec in secondary:
                 if sec in allowed_secondary:# and 'parameters' in allowed_secondary[sec]:
                     assign_parameters.update( allowed_secondary[sec] )
-                
+
+        if options.priority and int(wfh.request['RequestPriority']) < options.priority:
+            no_go = True
+
         if no_go:
             n_stalled+=1 
             continue
 
 
+            
         ## check on current status for by-passed assignment
         if wfh.request['RequestStatus'] !='assignment-approved':
             if not options.test:
@@ -505,6 +518,9 @@ if __name__=="__main__":
     parser.add_option('--primary_aaa',help="Force to use the secondary location restriction, if any, and use the full site whitelist initially provided to run that type of wf",default=False, action='store_true')
     parser.add_option('--secondary_aaa',help="Force to use the primary location restriction",default=False, action='store_true')
     parser.add_option('--limit',help="Limit the number of wf to be assigned",default=0,type='int')
+    parser.add_option('--priority',help="Lower limit on priority of wf to be assigned", default=0, type='int')
+    parser.add_option('--from_status',help="The unified status we should try to assign from", default=None)
+
     for key in reqMgrClient.assignWorkflow.keys:
         parser.add_option('--%s'%key,help="%s Parameter of request manager assignment interface"%key, default=None)
     (options,args) = parser.parse_args()
