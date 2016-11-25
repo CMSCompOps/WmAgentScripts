@@ -218,7 +218,7 @@ Last update on %s(CET), %s(GMT)
 <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/ target=_blank>prod mon</a>
 <a href=https://%s/wmstats/index.html target=_blank>wmstats</a>
 <a href=http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/SitesInfo.txt target=_blank>detox</a>
-<a href=http://t3serv012.mit.edu/dynamo/detox.php?partitionId=2 target=_blank>dynamo</a>
+<a href=http://t3serv012.mit.edu/dynamo/detoxtest.php?partitionId=2 target=_blank>dynamo</a>
 <a href=locked.html>space</a>
 <a href=outofspace.html>out of space</a>
 <a href=logs/subscribor/last.log target=_blank>blocks</a>
@@ -248,7 +248,7 @@ Last update on %s(CET), %s(GMT)
         wl = getWL( wf.name )
         count_by_campaign[wl['Campaign']][int(wl['RequestPriority'])]+=1
         #print wf.name
-        text+="<li> %s </li> \n"%wfl(wf,p=True)
+        text+="<li> %s (%d) </li> \n"%(wfl(wf,p=True), int(wl['RequestPriority']))
         count+=1
     text_by_c=""
     for c in count_by_campaign:
@@ -284,7 +284,7 @@ Worflow next to handle (%d) <a href=https://cms-pdmv.cern.ch/mcm/batches?status=
     for wf in session.query(Workflow).filter(Workflow.status=='staging').all():
         wl = getWL( wf.name )
         count_by_campaign[wl['Campaign']][int(wl['RequestPriority'])]+=1
-        text+="<li> %s </li> \n"%wfl(wf,within=True)
+        text+="<li> %s (%d)</li> \n"%(wfl(wf,within=True), int(wl['RequestPriority']))
         count+=1
 
     text_by_c=""
@@ -895,6 +895,17 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
         waiting /= 1024.
         text+="<li>%s : %d [TB]. Waiting for approval %d [TB] since %s </li>"%(mss, SI.storage[mss], waiting, oldest)
     text += "</ul></li>"
+
+
+    equalizor = json.loads(open('%s/equalizor.json'%monitor_dir).read())['reversed_mapping']
+    text += "<table border=1><thead><tr><th>Sites</th><th>Can read from</th></tr></thead>\n"
+    for site in sorted(equalizor):
+        text += '<tr><td align=middle>%s</td><td><ul>'% site
+        for src in sorted(equalizor[site]):
+            text += '<li>%s</li>'%src
+        text += '</ul></td><tr>'
+    text += '</table>'
+
 
     lap ( 'done with sites' )
 
