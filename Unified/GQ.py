@@ -101,7 +101,7 @@ for wf in wfs:
         if not wqe['Status'] in ['Available', 'Acquired']:#, 'Running']: 
             #print  wqe['Status']
             continue
-        camp =wfi.getCampaigns()[0]
+        camp =wfi.getCampaigns()[0] if len(wfi.getCampaigns()) else None
         if not camp: continue
         #print json.dumps( wqe, indent=2)
         if wqe['NoInputUpdate']: 
@@ -287,9 +287,9 @@ for site,blocks in try_me.items():
         if blocks:
             result = makeReplicaRequest(url, site, blocks, 'item relocation', priority='normal', approve=True, mail=False)
             replaced = list(set(blocks+replaced))
-            sendLog('GQ','replacing %s at %s \n%s'%( '\n,'.join(blocks), site, result),level='warning')            
+            sendLog('GQ','replacing %s at %s \n%s'%( '\n,'.join(blocks), site, result),level='warning')
     else:
-        sendLog('GQ','tempting to put %s at %s'%( '\n,'.join(blocks), site),level='critical')
+        sendLog('GQ','tempting to put %s at %s'%( '\n,'.join(blocks), site),level='warning')
 
 open('%s/GQ.json'%monitor_dir,'w').write( json.dumps( jobs_for, indent=2) )
 open('%s/GQ.txt'%monitor_dir,'w').write( report )
