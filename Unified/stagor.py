@@ -60,6 +60,7 @@ def stagor(url,specific =None, options=None):
     ## collect all datasets that are needed for wf in staging, correcting the status of those that are not really in staging
     wfois = []
     needs = defaultdict(list)
+    needs_by_priority = defaultdict(list)
     for wfo in session.query(Workflow).filter(Workflow.status == 'staging').all():
         wfi = workflowInfo(url, wfo.name)
         if wfi.request['RequestStatus'] in ['running-open','running-closed','completed','assigned','acquired']:
@@ -77,9 +78,13 @@ def stagor(url,specific =None, options=None):
             needs[wfo.name].append( dataset)
             done_by_input[dataset] = {}
             completion_by_input[dataset] = {}
+            needs_by_priority[wfi.request['RequestPriority']].append( dataset )
             wfi.sendLog('stagor', '%s needs %s'%( wfo.name, dataset))
 
     open('%s/dataset_requirements.json'%monitor_dir,'w').write( json.dumps( needs, indent=2))
+    for prio in needs_by_priority: needs_by_priority[prio] = list(set(needs_by_priority[prio]))
+    open('%s/dataset_priorities.json'%monitor_dir,'w').write( json.dumps( needs_by_priority , indent=2))
+        
 
     dataset_endpoints = defaultdict(set)
     endpoint_in_downtime = defaultdict(set)
@@ -299,7 +304,7 @@ def stagor(url,specific =None, options=None):
                 for need in list(secondaries):
                     ## I do not want to check on the secon
                     this_check = all(done_by_input[need].values())
-                    wfi.sendLog('stagor',"%s is all transfered %s"%(need, json.dumps(done_by_input[need], indent=2)))
+                    wfi.sendLog('stagor',"%s is this much transfered %s"%(need, json.dumps(done_by_input[need], indent=2)))
                     all_check&= this_check
                     #if not se_allowed_key in presence_cache[need]:
                     #    presence_cache[need][se_allowed_key] = getDatasetPresence( url, need , within_sites=se_allowed)
