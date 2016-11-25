@@ -1103,7 +1103,7 @@ def cloneWorkflow(url, workflowname):
         data = None
     return data
 
-def submitWorkflow(url, schema, reqmgr2=False): ## single switch flip
+def submitWorkflow(url, schema, reqmgr2=True): ## single switch flip
     """
     This submits a workflow into the ReqMgr, can be used for cloning
     and resubmitting workflows
@@ -1119,6 +1119,8 @@ def submitWorkflow(url, schema, reqmgr2=False): ## single switch flip
             newwf = json.loads(data)['result'][0]['request']
             return newwf
         except:
+            print "Error in making the request"
+            print data
             return None
     else:
         data = requestManager1Post(url,"/reqmgr/create/makeSchema", schema, nested=True)
