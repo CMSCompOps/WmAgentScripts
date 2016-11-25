@@ -23,8 +23,7 @@
    "description" : "The sites we can autoapprove tape request to"
  },
  "sites_space_override": {	
-   "value" : { "T0_CH_CERN_MSS":0,
-	       "T1_DE_KIT_MSS" :0
+   "value" : { "T0_CH_CERN_MSS":0
 	       },
    "description" : "Over-ride the available space at a phedex end point"
  },
@@ -80,7 +79,7 @@
    "description": "The data tiers that do not pass closeout checks. Can be overidden by custodial overide at campaign level"
  },
  "tiers_no_DDM": {
-   "value" : ["GEN-SIM","LHE","GEN","DQM","DQMIO","GEN-SIM-DIGI-RAW"],
+   "value" : ["GEN-SIM","LHE","GEN","DQM","DQMIO","GEN-SIM-DIGI-RAW","RAW"],
    "description": "The data tiers that do not go to AnaOps"
  },
  "tiers_to_DDM": {
@@ -104,11 +103,11 @@
    "description": "The total number of workflows that we allow to handle at a time (transfer, running, assistance)"
   },
   "max_staging_workflows": {
-   "value" : 400,
+   "value" : 600,
    "description": "The total number of workflows that we allow to stage at a time"
   }, 
   "max_staging_workflows_per_site": {
-   "value" : 400,
+   "value" : 600,
    "description": "The total number of workflows that we allow to stage at a time per site"
   },
   "max_transfer_in_GB": {
