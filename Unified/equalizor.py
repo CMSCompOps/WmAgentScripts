@@ -33,7 +33,8 @@ def equalizor(url , specific = None, options=None):
     for site in SI.sites_ready:
         region = site.split('_')[1]
         if not region in ['US'
-                          ,'DE','IT','FR'
+                          ,'DE','IT','FR',
+                          'ES','UK' ### latest addition
                           ]: continue
         regions[region] = [region] 
 
@@ -94,9 +95,15 @@ def equalizor(url , specific = None, options=None):
             pass
 
     ## fnal can read from cnaf ?
-    mapping['T1_IT_CNAF'].append( 'T1_US_FNAL' )
+    #mapping['T1_IT_CNAF'].append( 'T1_US_FNAL' )
+    mapping['T1_IT_CNAF'].extend( [site for site in SI.sites_ready if '_US_' in site] ) ## all US can read from CNAF
     mapping['T1_IT_CNAF'].append( 'T2_CH_CERN' )
-
+    mapping['T1_DE_KIT'].append( 'T2_CH_CERN' )
+    mapping['T2_CH_CERN'].append( 'T1_IT_CNAF' )
+    mapping['T2_CH_CERN'].append( 'T1_US_FNAL' )
+    for site in SI.sites_ready:
+        if '_US_' in site:
+            mapping[site].append('T2_CH_CERN')
     ## make them appear as OK to use
     force_sites = []
 
@@ -108,7 +115,7 @@ def equalizor(url , specific = None, options=None):
             pass
 
     ## remove add-hoc sites from overflow mapping
-    prevent_sites = ['T2_US_Purdue']
+    prevent_sites = []#'T2_US_Purdue']
     for prevent in prevent_sites:
         if prevent in mapping: mapping.pop( prevent )
     for src in mapping:
@@ -173,12 +180,12 @@ def equalizor(url , specific = None, options=None):
         m_m = max( bucket['key'] for bucket in buckets) if buckets else None
         
         #90% percentile calculation
-        percentile = int(0.95 * w_m)
+        percentile_m = int(0.90 * w_m)
         p_m = 0
         s=0
         for bucket in buckets:
             p_m = bucket['key']
-            if bucket['cum'] > percentile:
+            if bucket['cum'] > percentile_m:
                 break
 
         p_m *= 1.1
@@ -209,11 +216,38 @@ def equalizor(url , specific = None, options=None):
             print str(e)
             return (b_m,None)
 
-        buckets = perf_data['aggregations']["2"]['buckets']
+        buckets = filter(lambda i:i['key']!=0,perf_data['aggregations']["2"]['buckets'])
+        buckets.sort( key = lambda i:i['key'])
+        s=0
+        for bucket in buckets:
+            s+= bucket['doc_count']
+            bucket['cum'] = s
+        
         s_t = sum( bucket['key']*bucket['doc_count'] for bucket in buckets)
         w_t = sum( bucket['doc_count'] for bucket in buckets)
         m_t = max( bucket['key'] for bucket in buckets) if buckets else None
         
+        percentile_t = int(0.90 * w_t)
+        p_t = 0
+        for bucket in buckets:
+            p_t = bucket['key']
+            if bucket['cum'] > percentile_t:
+                break
+
+        p_t *= 1.1
+        print "percentile time",p_t
+
+        max_count_t = None
+        max_count = 0
+        for bucket in buckets:
+            if bucket['doc_count'] > max_count:
+                max_count_t = bucket['key']
+                max_count = bucket['doc_count']
+
+        if max_count_t:
+            max_count_t *= 1.1
+        print "max count time",max_count_t
+
         b_t = None
         if w_t > 100:
             b_t = m_t
@@ -391,9 +425,9 @@ def equalizor(url , specific = None, options=None):
                     # massage the values : 95% percentile
                     performance[task.pathName] = {}
                     if set_memory:
-                        performance[task.pathName]['memory']=set_memory
+                        performance[task.pathName]['memory']=min(set_memory,15000) ## max to 15GB
                     if set_time:
-                        performance[task.pathName]['time'] = set_time
+                        performance[task.pathName]['time'] = min(set_time, 1440) ## max to 24H
             
             ## rule to remove from the site whitelist site that do not look ready for unified (local banning)
             if wfo.name in restricting_to_ready:
@@ -401,11 +435,25 @@ def equalizor(url , specific = None, options=None):
                     new_list = list(set(SI.sites_ready)&set(wfi.request['SiteWhitelist']))
                     modifications[wfo.name][task.pathName] = { "ReplaceSiteWhitelist" : new_list }
 
-            if campaign in PREMIX_overflow:  # and options.augment:
+            if campaign in PREMIX_overflow:
                 ## figure out secondary location and neighbors
                 ## figure out primary presence and neighbors
                 ## do the intersection and add if in need.
-                needs, task_name, running, idled = needs_action(wfi, task)
+                #needs, task_name, running, idled = needs_action(wfi, task)
+                needs = True
+
+                ## trick to be removed once all wf are passed through the agent patch
+                assigned_log = filter(lambda change : change["Status"] in ["assigned","acquired"],wfi.request['RequestTransition'])
+                if assigned_log:
+                    then = assigned_log[0]['UpdateTime']
+                    if then < 1479481842:
+                        print "assigned too early"
+                        needs = False
+                    else:
+                        print "assigned later enough"
+                else:
+                    needs = False
+
                 if task.taskType in ['Processing','Production'] and needs:
                     secondary_locations = set(SI.sites_ready + force_sites)
                     for s in sec:
@@ -651,10 +699,15 @@ def equalizor(url , specific = None, options=None):
                 pass
 
             if campaign in ['RunIISummer15GS',
-                            #'RunIISummer15wmLHEGS',
+                            'RunIISummer15wmLHEGS',
                             'Summer12'] and task.taskType in ['Production']:
                 #what are the site you want to take out. What are the jobs in whitelist, make the diff and replace
-                set_for = set(wfi.request['SiteWhitelist']) - set(['T1_IT_CNAF','T1_UK_RAL','T1_ES_PIC','T1_DE_KIT','T1_FR_CCIN2P3'])
+                t1s = set([site for site in SI.all_sites if site.startswith('T1')])
+                #ust2s = set([site for site in SI.all_sites if site.startswith('T2_US')])
+                #ust2s = set([site for site in SI.sites_mcore_ready if site.startswith('T2_US')])
+                allmcores = set(SI.sites_mcore_ready)
+                #set_for = set(wfi.request['SiteWhitelist']) - t1s - ust2s
+                set_for = set(wfi.request['SiteWhitelist']) - allmcores
                 print wfo.name,"going for",set_for
                 print task.pathName
                 modifications[wfo.name][task.pathName] = { "ReplaceSiteWhitelist" : sorted(set_for) }
