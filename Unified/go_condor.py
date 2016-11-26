@@ -129,12 +129,25 @@ def makePerformanceCorrectionsAds(configs):
         anAd['set_HasBeenRouted'] = False
         anAd['set_MaxWallTimeMins'] = int(timing)
         print anAd
-        
+
+def makeResizeAd():
+    anAd = classad.ClassAd()
+    anAd["GridResource"] = "condor localhost localhost"
+    anAd["TargetUniverse"] = 5
+    anAd['Name'] = "Enable job resizing"
+    anAd['Requirements'] = classad.ExprTree("target.MaxCores > 1 && !target.WMACore_ResizeJob")
+    anAd['set_HasBeenRouted'] = False
+    anAd['set_WMCore_ResizeJob'] = True
+    anAd['set_RequestMemory'] = classad.ExprTree("ifThenElse(WMCore_ResizeJob && (RequestCpus == 1), 2300, OriginalMemory + 500 * ( WMCore_ResizeJob ? ( RequestCpus - OriginalCpus ) : 0 ))")
+    anAd['set_MinCores'] = 1
+    print anAd
+
 def makeAds(config):
     makeOverflowAds(config)
     makeSortAds()
     makePrioCorrectionsAds()
     makePerformanceCorrectionsAds(config)    
+    makeResizeAd()
 
 if __name__ == "__main__":
 
