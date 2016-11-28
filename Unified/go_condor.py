@@ -135,7 +135,7 @@ def makeResizeAd():
     anAd["GridResource"] = "condor localhost localhost"
     anAd["TargetUniverse"] = 5
     anAd['Name'] = "Enable job resizing"
-    anAd['Requirements'] = classad.ExprTree("target.MaxCores > 1 && !target.WMACore_ResizeJob")
+    anAd['Requirements'] = classad.ExprTree("target.MaxCores > 1 && !target.WMCore_ResizeJob")
     anAd['set_HasBeenRouted'] = False
     anAd['set_WMCore_ResizeJob'] = True
     anAd['set_RequestMemory'] = classad.ExprTree("ifThenElse(WMCore_ResizeJob && (RequestCpus == 1), 2300, OriginalMemory + 500 * ( WMCore_ResizeJob ? ( RequestCpus - OriginalCpus ) : 0 ))")
