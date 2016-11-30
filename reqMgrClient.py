@@ -778,7 +778,22 @@ def assignWorkflow(url, workflowname, team, parameters ):
     # set the maxrss watchdog to what is specified in the request
     if 'Memory' in parameters:
         wf.request['Memory'] = parameters['Memory']
-    defaults['MaxRSS'] = int(wf.request['Memory'])*1024
+
+    maxRSSs = {}
+    if wf.request['RequestType'] == 'TaskChain':
+        t_i = 1
+        while True:
+            t_s = 'Task%d'%t_i
+            if not t_s in wf.request: break
+            if 'Memory' in wf.request[t_s]:
+                maxRSSs[wf.request[t_s]['TaskName']] = int(wf.request[t_s]['Memory'])*1024
+            else:
+                #nothing partial
+                maxRSSs = {}
+    if maxRSSs:
+        defaults['MaxRSS'] = maxRSSs
+    else:
+        defaults['MaxRSS'] = int(wf.request['Memory'])*1024
 
     defaults.update( parameters )
 
