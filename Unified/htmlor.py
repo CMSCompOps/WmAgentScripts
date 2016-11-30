@@ -68,7 +68,7 @@ def htmlor( caller = ""):
                 '<a href="https://cms-pdmv.cern.ch/stats/?RN=%s" target="_blank">vw</a>'%wfn,
                 '<a href="https://cms-pdmv.cern.ch/stats/restapi/get_one/%s" target="_blank">vwo</a>'%wfn,
                 '<a href="https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=full&reverse=0&reverse=1&npp=20&subtext=%s&sall=q" target="_blank">elog</a>'%pid,
-                '<a href="http://cms-gwmsmon.cern.ch/prodview/%s" target="_blank">pv</a>'%wfn,
+                '<a href="https://cms-gwmsmon.cern.ch/prodview/%s" target="_blank">pv</a>'%wfn,
                 #deprecated '<a href="https://cmsweb.cern.ch/reqmgr/reqMgr/outputDatasetsByRequestName/%s" target="_blank">out</a>'%wfn,
                 '<a href="closeout.html#%s" target="_blank">clo</a>'%wfn,
                 '<a href="statuses.html#%s" target="_blank">st</a>'%wfn,
@@ -117,7 +117,7 @@ def htmlor( caller = ""):
         if view and wfs!='acquired':
             text+='<a href="https://cms-pdmv.web.cern.ch/cms-pdmv/stats/growth/%s.gif" target="_blank"><img src="https://cms-pdmv.web.cern.ch/cms-pdmv/stats/growth/%s.gif" style="height:50px"></a>'%(wfn.replace('_','/'),wfn.replace('_','/'))
         if ongoing:
-            text+='<a href="http://cms-gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="http://cms-gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:50px"></a>'%(wfn,wfn)
+            text+='<a href="https://cms-gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="http://cms-gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:50px"></a>'%(wfn,wfn)
 
         if ongoing:
             if not os.path.isfile('%s/report/%s'%(monitor_dir,wfn)):
@@ -440,7 +440,7 @@ Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransfertea
 
     lines.sort()
     html_doc.write("""
-Worflow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests_in_production.php target=_blank>ongoing</a> <a href=https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary target=_blank>elog</a> <a href=http://cms-gwmsmon.cern.ch/prodview target=_blank>queues</a> <a href=logs/assignor/last.log target=_blank>log</a> <a href=logs/checkor/last.log target=_blank>postlog</a> <a href=logs/equalizor/last.log target=_blank>equ</a> <a href=logs/completor/last.log target=_blank>comp</a> <a href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?in_production=1&rsort=2&older=3">lasting</a>
+Worflow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests_in_production.php target=_blank>ongoing</a> <a href=https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary target=_blank>elog</a> <a href=https://cms-gwmsmon.cern.ch/prodview target=_blank>queues</a> <a href=logs/assignor/last.log target=_blank>log</a> <a href=logs/checkor/last.log target=_blank>postlog</a> <a href=logs/equalizor/last.log target=_blank>equ</a> <a href=logs/completor/last.log target=_blank>comp</a> <a href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?in_production=1&rsort=2&older=3">lasting</a>
 <a href="javascript:showhide('away')">[Click to show/hide]</a>
 <br>
 <div id="away" style="display:none;">
@@ -840,7 +840,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 
             text+='<td>'
             text+='<a href=http://dashb-ssb.cern.ch/dashboard/templates/sitePendingRunningJobs.html?site=%s>%s</a><br>'%(site,site)
-            text+='<a href="http://cms-gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="http://cms-gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:50px"></a><br>'%( site,site )
+            text+='<a href="https://cms-gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="https://cms-gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:50px"></a><br>'%( site,site )
             text+='<a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=&check=submitted&sortby=activity&scale=linear&bars=20&data1=%s&date2=%s">dashb</a><br>'%( site,date1,date2 )
             text+='<a href="https://cms-site-readiness.web.cern.ch/cms-site-readiness/SiteReadiness/HTML/SiteReadinessReport.html#%s">SAM</a><br>'%( site )
             text+='CPU pledge: %s<br>'%(cpu)
@@ -1057,7 +1057,7 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
 <tr><td>Agent</td><td>Running/Pending hourly</td><td>Running/Pending daily</td></tr></thead>
 """)
     for team,agents in getAllAgents(reqmgr_url).items():
-        if not team in ['production','relval']: continue
+        if not team in ['production','relval','highprio']: continue
         html_doc.write("<tr><td bgcolor=lightblue>%s</td></tr>"% team)
         for agent in agents:
             bgcolor=''
@@ -1075,9 +1075,9 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
 
             html_doc.write("""
 <tr><td %s>%s</td>
-<td><img src=http://cms-gwmsmon.cern.ch/poolview/graphs/%s/hourly></td>
-<td><img src=http://cms-gwmsmon.cern.ch/poolview/graphs/%s/daily></td>
-<td><img src=http://cms-gwmsmon.cern.ch/poolview/graphs/scheddwarning/%s/hourly></td>
+<td><img src=https://cms-gwmsmon.cern.ch/poolview/graphs/%s/hourly></td>
+<td><img src=https://cms-gwmsmon.cern.ch/poolview/graphs/%s/daily></td>
+<td><img src=https://cms-gwmsmon.cern.ch/poolview/graphs/scheddwarning/%s/hourly></td>
 </tr>
 """%( 
                     bgcolor,
