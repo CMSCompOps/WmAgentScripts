@@ -3269,8 +3269,11 @@ class workflowInfo:
                                 'WORKFLOW' : self.request['RequestName']
                                 }
                 dedicated_message = message
+                add_batch ="This message concerns PREPID WORKFLOW"
                 for src,dest in replacements.items():
                     dedicated_message = dedicated_message.replace(src, dest)
+                    add_batch = add_batch.replace(src, dest)
+                    
                 batches = mcm.getA('batches',query='contains=%s'%wf_name)
                 batches = filter(lambda b : b['status'] in ['announced','done','reset'], batches)
                 if not batches:  
@@ -3280,7 +3283,7 @@ class workflowInfo:
                     bid = batches[0]['prepid']
                     print "batch nofication to",bid 
                     if not bid in items_notified: 
-                        mcm.put('/restapi/batches/notify', { "notes" : dedicated_message, "prepid" : bid})
+                        mcm.put('/restapi/batches/notify', { "notes" : dedicated_message+"\n"+add_batch, "prepid" : bid})
                         items_notified.add( bid )
                 if not pid in items_notified:
                     print "request notification to",pid
