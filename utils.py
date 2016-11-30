@@ -2665,7 +2665,7 @@ def getDatasetRuns(dataset):
 def getFilesWithLumiInRun(dataset, run):
     dbsapi = DbsApi(url=dbs_url)
     start = time.mktime(time.gmtime())
-    reply = dbsapi.listFiles(dataset=dataset, detail=True, run_num=run)
+    reply = dbsapi.listFiles(dataset=dataset, detail=True, run_num=run, validFileOnly=1)
     #print time.mktime(time.gmtime())-start,'[s]'
     files = [f['logical_file_name'] for f in reply if f['is_file_valid'] == 1]
     start = 0
@@ -2694,9 +2694,9 @@ def getDatasetLumis(dataset, runs=None, with_cache=False):
 
 
     full_lumi_json = defaultdict(set)
-    runs = getDatasetRuns( dataset )
+    d_runs = getDatasetRuns( dataset )
     #print len(runs),"runs"
-    for run in runs:
+    for run in d_runs:
         files = getFilesWithLumiInRun( dataset, run )
         #print run,len(files),"files"
         for f in files:
