@@ -60,6 +60,7 @@ for wf in wfs:
         input_json = getDatasetLumis( in_dataset, runs=runs, with_cache=True)
         #print len(input_json)
         for r in input_json: input_rl.extend([(int(r),l) for l in input_json[r]])
+        #print in_dataset,len(input_rl),"lumis processed",sorted( input_rl, key = lambda i:i[1])[-10:]
 
     ## collect the actual content of the output
     for out in wf['OutputDatasets']:
@@ -67,6 +68,7 @@ for wf in wfs:
             output_json[out] = getDatasetLumis( out, with_cache=(not fetch))
             for r in output_json[out]:
                 output_rl[out].extend([(int(r),l) for l in output_json[out][r]])
+            #print out, len(output_rl[out]),sorted(output_rl[out], key = lambda i:i[1] )[-10:]
 
     ## make a diff ?
     for out in wf['OutputDatasets']:
