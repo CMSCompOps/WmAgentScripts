@@ -942,7 +942,7 @@ class docCache:
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : json.loads( os.popen('curl -s --retry 5 http://cmsmonitoring.web.cern.ch/cmsmonitoring/StorageOverview/latest/StorageOverview.json').read()),
+            'getter' : lambda : json.loads( os.popen('curl -s --retry 5 http://cmsmonitoring.web.cern.ch/cmsmonitoring/storageoverview/latest/StorageOverview.json').read()),
             'cachefile' : None,
             'default' : {}
             }
@@ -962,8 +962,8 @@ class docCache:
     def get(self, label, fresh=False):
         now = time.mktime( time.gmtime())
         if label in self.cache:
+            cache = self.cache[label]
             try:
-                cache = self.cache[label]
                 if not cache['data']:
                     #check the file version
                     if os.path.isfile(cache['cachefile']):
@@ -986,9 +986,17 @@ class docCache:
 
                 return cache['data']
             except Exception as e: 
+                sendLog('doccache','Failed to get %s\n%s'%(label,str(e)), level='critical')
                 print "failed to get",label
                 print str(e)
-                return copy.deepcopy(cache['default'])
+                if os.path.isfile(cache['cachefile']):
+                    print "load",label,"from file",cache['cachefile']
+                    f_cache = json.loads(open(cache['cachefile']).read())
+                    cache['data' ] = f_cache['data']
+                    cache['timestamp' ] = f_cache['timestamp']
+                    return cache['data']
+                else:
+                    return copy.deepcopy(cache['default'])
 
 def getNodes(url, kind):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
