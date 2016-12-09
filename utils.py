@@ -1702,6 +1702,9 @@ Updated on %s (GMT) <br>
 
 
 def getSiteWhiteList( inputs , pickone=False):
+    print "deprecated"
+    sys.exit(-1)
+    return []
     SI = global_SI()
     (lheinput,primary,parent,secondary) = inputs
     sites_allowed=[]
@@ -2763,11 +2766,20 @@ def getDatasetStatus(dataset):
             return None
 
 def getDatasets(dataset):
-       # initialize API to DBS3                                                                                                                                                                                                                                                      
-        dbsapi = DbsApi(url=dbs_url)
-        # retrieve dataset summary                                                                                                                                                                                                                                                   
-        reply = dbsapi.listDatasets(dataset=dataset,dataset_access_type='*')
-        return reply
+    # initialize API to DBS3                                                                                                                                                                                                                                                    
+    dbsapi = DbsApi(url=dbs_url)
+    # retrieve dataset summary
+
+    ## that does not work anymore
+    #reply = dbsapi.listDatasets(dataset=dataset,dataset_access_type='*')
+    _,ds,p,t = dataset.split('/')
+    a,s,v = p.split('-')
+    reply = dbsapi.listDatasets(primary_ds_name = ds, 
+                                #acquisition_era_name = a,
+                                processed_ds_name = p,
+                                data_tier_name = t,
+                                dataset_access_type='*')
+    return reply
 
 def createXML(datasets):
     """
@@ -3850,8 +3862,13 @@ class workflowInfo:
             sites_allowed =list(set( SI.sites_T1s + SI.sites_T2s ))
         else:
             # no input at all
+            ## all site should contribute
             sites_allowed =list(set( SI.sites_T2s + SI.sites_T1s))
-
+            ### hack if we have urgency to kick gen-sim away
+            #ust2s = set([site for site in SI.sites_T2s if site.startswith('T2_US')])
+            #allmcores = set(SI.sites_mcore_ready)
+            #sites_allowed =list(set( SI.sites_T2s ) - ust2s) ## remove all US
+            #sites_allowed = list(set( SI.sites_T2s ) - allmcores) ## remove all multicore ready
         if pickone:
             sites_allowed = [SI.pick_CE( sites_allowed )]
             
@@ -3911,11 +3928,15 @@ class workflowInfo:
                 return True
                 #return {'EventsPerJob': setting_to }
             return True
+
+        ncores = self.getMulticore()
         ## this isn't functioning for taskchain BTW
         if 'InputDataset' in self.request:
             average = getDatasetEventsPerLumi(self.request['InputDataset'])
             timing = self.request['TimePerEvent']
-  
+
+            ## need to divide by the number of cores in the job
+            average /= ncores 
             ## if we can stay within 48 with one lumi. do it
             timeout = 48 *60.*60. #self.request['OpenRunningTimeout']
             if (average * timing) < timeout:
