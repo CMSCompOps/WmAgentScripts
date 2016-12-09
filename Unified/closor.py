@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import componentInfo, sendEmail, setDatasetStatus, unifiedConfiguration, workflowInfo, siteInfo, sendLog, reqmgr_url, monitor_dir, duplicateLock, userLock
+from utils import componentInfo, sendEmail, setDatasetStatus, unifiedConfiguration, workflowInfo, siteInfo, sendLog, reqmgr_url, monitor_dir, duplicateLock, userLock, global_SI
 import reqMgrClient
 import json
 import time
@@ -16,8 +16,9 @@ import random
 import optparse
 
 def spawn_harvesting(url, wfi , in_full):
-    SI = siteInfo()
-    
+    #SI = siteInfo()
+    SI = global_SI()
+
     all_OK = {}
     requests = []
     outputs = wfi.request['OutputDatasets'] 
@@ -150,14 +151,15 @@ def closor(url, specific=None, options=None):
     check_fullcopy_to_announce = UC.get('check_fullcopy_to_announce')
     ## manually closed-out workflows should get to close with checkor
     if specific:
-        wfs = session.query(Workflow).filter(Workflow.name.contains(specific)).all()
+        wfs = session.query(Workflow).filter(Workflow.status=='close').filter(Workflow.name.contains(specific)).all()
     else:
         wfs = session.query(Workflow).filter(Workflow.status=='close').all()
 
     held = set()
 
-    
+    print len(wfs),"closing"
     max_per_round = UC.get('max_per_round').get('closor',None)
+    if options.limit: max_per_round = options.limit
     random.shuffle( wfs )    
     if max_per_round: wfs = wfs[:max_per_round]
 
@@ -180,6 +182,8 @@ def closor(url, specific=None, options=None):
         expected_lumis = 1
         if not 'TotalInputLumis' in wfi.request:
             print wfo.name,"has not been assigned yet, or the database is corrupted"
+        elif wfi.request['TotalInputLumis']==0:
+            print wfo.name,"is corrupted with 0 expected lumis"
         else:
             expected_lumis = wfi.request['TotalInputLumis']
 
@@ -377,6 +381,7 @@ if __name__ == "__main__":
     url = reqmgr_url
     parser = optparse.OptionParser()
     parser.add_option('--no_harvest',help='Bypass the harvesting',default=False,action='store_true')
+    parser.add_option('--limit',help="Number of workflow to pass",default=0, type=int)
     (options,args) = parser.parse_args()
 
     spec=None
@@ -385,5 +390,5 @@ if __name__ == "__main__":
 
     closor(url,spec, options=options)
 
-    if not spec:
+    if (not spec) and (not options.limit):
         htmlor()
