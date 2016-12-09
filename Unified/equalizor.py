@@ -34,7 +34,8 @@ def equalizor(url , specific = None, options=None):
         region = site.split('_')[1]
         if not region in ['US'
                           ,'DE','IT','FR',
-                          'ES','UK' ### latest addition
+                          'ES',
+                          'UK' ### latest addition
                           ]: continue
         regions[region] = [region] 
 
@@ -60,10 +61,12 @@ def equalizor(url , specific = None, options=None):
     for site in SI.sites_ready:
         if site.split('_')[1] == 'US': ## to all site in the US
             ## add NERSC 
-            #mapping[site].append('T3_US_NERSC')
+            mapping[site].append('T3_US_NERSC')
             ## add OSG            
             mapping[site].append('T3_US_OSG')
             pass
+    mapping['T2_IT_Rome'].append('T3_US_OSG')
+    #mapping['T1_US_FNAL'].append('T3_US_NERSC')
     
     use_T0 = ('T0_CH_CERN' in UC.get("site_for_overflow"))
     if options.t0: use_T0 = True
@@ -78,10 +81,12 @@ def equalizor(url , specific = None, options=None):
 
     if use_T0:
         mapping['T2_CH_CERN'].append('T0_CH_CERN')
-
+        mapping['T1_IT_CNAF'].append('T0_CH_CERN')
+        mapping['T1_FR_CCIN2P3'].append('T0_CH_CERN')
+        mapping['T1_DE_KIT'].append('T0_CH_CERN')
 
     ## all europ can read from CERN
-    for reg in ['IT','DE','UK','FR']:
+    for reg in ['IT','DE','UK','FR','BE','ES']:
         mapping['T2_CH_CERN'].extend([fb for fb in SI.sites_ready if '_%s_'%reg in fb])
         pass
 
@@ -101,6 +106,10 @@ def equalizor(url , specific = None, options=None):
     mapping['T1_DE_KIT'].append( 'T2_CH_CERN' )
     mapping['T2_CH_CERN'].append( 'T1_IT_CNAF' )
     mapping['T2_CH_CERN'].append( 'T1_US_FNAL' )
+    #mapping['T2_UK_London_IC'].append( 'T2_CH_CERN' )
+    #mapping['T1_UK_RAL'].append( 'T2_BE_IIHE' )
+    mapping['T2_UK_London_IC'].append( 'T2_BE_IIHE' )
+    mapping['T2_UK_London_IC'].append( 'T2_FR_CCIN2P3' )
     for site in SI.sites_ready:
         if '_US_' in site:
             mapping[site].append('T2_CH_CERN')
@@ -353,6 +362,7 @@ def equalizor(url , specific = None, options=None):
         ## only running-* should get re-routed, unless done by hand
         if not wfi.request['RequestStatus'] in ['running-open','running-closed'] and not specific: continue
 
+        is_chain = (wfi.request['RequestType'] in ['TaskChain','StepChain'])
         tasks_and_campaigns = []
         for task in wfi.getWorkTasks():
             tasks_and_campaigns.append( (task, getcampaign(task) ) )
@@ -454,6 +464,11 @@ def equalizor(url , specific = None, options=None):
                 else:
                     needs = False
 
+
+                if is_chain and task.pathName.endswith('_1'):
+                    print i_task,"in chain prevents overflowing"
+                    needs = False
+
                 if task.taskType in ['Processing','Production'] and needs:
                     secondary_locations = set(SI.sites_ready + force_sites)
                     for s in sec:
@@ -467,21 +482,30 @@ def equalizor(url , specific = None, options=None):
                     for site in sorted(aaa_sec_grid):
                         aaa_sec_grid.update( mapping.get(site, []) )
                     
-                        
-                    dataset = list(prim)[0]
-                    all_blocks,blocks = wfi.getActiveBlocks()
-                    count_all = sum([len(v) for k,v in all_blocks.items()])
-                    presence = getDatasetPresence(url, dataset, only_blocks=blocks )
-                    aaa_prim_grid = set([SI.SE_to_CE(site) for site in presence.keys()])
-                    for site in sorted(aaa_prim_grid):
-                        aaa_prim_grid.update( mapping.get(site, []) )
+                    if len(prim):    
+                        dataset = list(prim)[0]
+                        all_blocks,blocks = wfi.getActiveBlocks()
+                        count_all = sum([len(v) for k,v in all_blocks.items()])
+                        presence = getDatasetPresence(url, dataset, only_blocks=blocks )
+                        aaa_prim_grid = set([SI.SE_to_CE(site) for site in presence.keys()])
+                        for site in sorted(aaa_prim_grid):
+                            aaa_prim_grid.update( mapping.get(site, []) )
 
-                    ## intersect
-                    aaa_grid = aaa_sec_grid & aaa_prim_grid
-                    aaa_grid  = filter(lambda s : not s.startswith('T3'), aaa_grid)
+                        print sorted(aaa_prim_grid),"around primary location",sorted(presence.keys())
+                        print sorted(aaa_sec_grid),"aroudn secondary location",sorted(secondary_locations)
+                        ## intersect
+                        aaa_grid = aaa_sec_grid & aaa_prim_grid
+                    else:
+                        print "premix overflow from a taskchain"
+                        ### hack hack hack
+                        #modifications[wfo.name][task.pathName]= {"ReplaceSiteWhitelist" : ['T2_CH_CERN','T1_US_FNAL']}
+                        aaa_grid = set(wfi.request['SiteWhitelist'])
 
-                    wfi.sendLog('equalizor','Extending site whitelist to %s'%sorted(aaa_grid))
-                    modifications[wfo.name][task.pathName]= {"AddWhitelist" : sorted(aaa_grid)}
+                    banned_until_you_find_a_way_to_do_this = ['T3_US_OSG']
+                    aaa_grid  = filter(lambda s : not s in banned_until_you_find_a_way_to_do_this, aaa_grid)
+                    if aaa_grid:
+                        wfi.sendLog('equalizor','Extending site whitelist to %s'%sorted(aaa_grid))
+                        modifications[wfo.name][task.pathName]= {"AddWhitelist" : sorted(aaa_grid)}
 
             ## rule to overflow jobs on the primary input
             if campaign in PRIM_overflow:
@@ -598,18 +622,25 @@ def equalizor(url , specific = None, options=None):
 
             ### rule to avoid the issue of taskchain secondary jobs being stuck at sites processing the initial step
             if campaign in LHE_overflow:
-                if task.taskType in ['Processing']:#,'Production']:
+                #if not is_chain and task.taskType in ['Processing']:
+                if task.taskType in ['Processing']:
                     needs, task_name, running, idled = needs_action(wfi, task)
                     needs_overide = overide_from_agent( wfi, needs_overide)
                     extend_to = list(set(copy.deepcopy( LHE_overflow[campaign] )))
                     if stay_within_site_whitelist:
                         extend_to = list(set(extend_to) & set(wfi.request['SiteWhitelist'])) ## restrict to stupid-site-whitelist
                     extend_to = list(set(extend_to) & set(SI.sites_ready + force_sites))
+
+                    if is_chain:
+                        print "further restricting to initially allowed sites"
+                        ## restrict to initial allowed sites
+                        extend_to = list(set(extend_to) & set(sites_allowed))
+
                     if not extend_to: 
                         print "Nowhere to extend to"
                         continue
                     if extend_to and needs or needs_overide:
-
+                        
                         modifications[wfo.name][task.pathName] = { "ReplaceSiteWhitelist" : extend_to ,"Running" : running, "Pending" : idled, "Priority" : wfi.request['RequestPriority']}
                         wfi.sendLog('equalizor','%s of %s is running %d and pending %d, taking action : ReplaceSiteWhitelist \n %s'%( task_name,
                                                                                                                                       wfo.name,
@@ -698,9 +729,10 @@ def equalizor(url , specific = None, options=None):
                 #print "uhm ....",sorted(wfi.request['SiteWhitelist']),i_task,use_HLT
                 pass
 
+            ### this is a hack when we need to kick gensim out of everything
             if campaign in ['RunIISummer15GS',
                             'RunIISummer15wmLHEGS',
-                            'Summer12'] and task.taskType in ['Production']:
+                            'Summer12'] and task.taskType in ['Production'] and False:
                 #what are the site you want to take out. What are the jobs in whitelist, make the diff and replace
                 t1s = set([site for site in SI.all_sites if site.startswith('T1')])
                 #ust2s = set([site for site in SI.all_sites if site.startswith('T2_US')])
@@ -710,7 +742,8 @@ def equalizor(url , specific = None, options=None):
                 set_for = set(wfi.request['SiteWhitelist']) - allmcores
                 print wfo.name,"going for",set_for
                 print task.pathName
-                modifications[wfo.name][task.pathName] = { "ReplaceSiteWhitelist" : sorted(set_for) }
+                if set_for:
+                    modifications[wfo.name][task.pathName] = { "ReplaceSiteWhitelist" : sorted(set_for) }
                 
 
 
