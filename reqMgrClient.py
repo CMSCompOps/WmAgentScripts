@@ -790,6 +790,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
             else:
                 #nothing partial
                 maxRSSs = {}
+            t_i+=1
     if maxRSSs:
         defaults['MaxRSS'] = maxRSSs
     else:
@@ -797,7 +798,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
 
     defaults.update( parameters )
 
-    if 'Multicore' in wf.request and (wf.request['Multicore']>1):
+    if 'Multicore' in wf.request and (wf.request['Multicore']>1) and not wf.request['RequestType']=='TaskChain':
         ## hack for multicode assignment
 
         defaults['Multicore'] = wf.request['Multicore']
@@ -996,6 +997,10 @@ def closeOutWorkflow(url, workflowname, cascade=False):
         params = {"RequestStatus" : "closed-out",
                   "cascade": cascade}
         data = requestManagerPut(url,"/reqmgr2/data/request/%s"%workflowname, params)
+        try:
+            return None if (json.loads(data)['result'][0][workflowname] == 'OK') else "Error"
+        except:
+            return "Error"
     else:
         if cascade:
             params = {"requestName" : workflowname,"cascade" : cascade} 
@@ -1181,7 +1186,7 @@ def setWorkflowSplitting(url, workflowname, schema):
             print "new schema to reqmgr1 detected: translating. please drain."
             schema = reqmgr2_to_1_Splitting(schema)
         data = requestManager1Post(url,"/reqmgr/view/handleSplittingPage", schema)
-    print data
+    #print data
     return data
 
 def reqmgr1_to_2_Assignment( params ):
