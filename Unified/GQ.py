@@ -238,7 +238,7 @@ if not_runable_acdc:
                                                    '\n'.join(not_runable_acdc)
                                                    ),level='critical')
 if stuck_all_done:
-    sendLog('GQ','These %s workflows have not toggled further to completed while all WQE are done'%( ', '.join(sorted(stuck_all_done))),
+    sendLog('GQ','These %d workflows have not toggled further to completed while all WQE are done\n%s'%( len(stuck_all_done),'\n'.join(sorted(stuck_all_done))),
             level='critical')
 
 #for agent in wqe_by_agent:
