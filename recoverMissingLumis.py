@@ -274,8 +274,13 @@ def getFiles(datasetName, runBlacklist, runWhitelist, blockBlacklist,
                 logging.debug("PhEDEx node %s, cmsSites %s, blockLocations %s", node, cmsSites, blockLocations)
 
         # We cannot upload docs without location, so force it in case it's empty
-        if fakeLocation and not blockLocations:
-            blockLocations.update([u'cmssrmdisk.fnal.gov', u'srm-eoscms.cern.ch'])
+        if not blockLocations:
+            if fakeLocation:
+                blockLocations.update([u'cmssrmdisk.fnal.gov', u'srm-eoscms.cern.ch'])
+            elif not has_parent: ## this should be the source
+                logging.info("Blockname: %s\t no location, ABORT", blockName)
+                sys.exit(1)
+        
         logging.info("Blockname: %s\tLocations: %s", blockName, blockLocations)
  
         #for each file on the block
