@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 import time
-from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration, getPrepIDs, componentInfo, getAllAgents, sendLog
+from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration, getPrepIDs, componentInfo, getAllAgents, sendLog, duplicateLock
 import os
 import json
 from collections import defaultdict
@@ -10,6 +10,8 @@ from utils import monitor_dir, base_dir, phedex_url, reqmgr_url
 import random
 
 def htmlor( caller = ""):
+    if duplicateLock(silent=True): return
+
     up = componentInfo(mcm=False, soft=['mcm'])
     if not up.check(): return 
         
@@ -116,8 +118,12 @@ def htmlor( caller = ""):
 
         if view and wfs!='acquired':
             text+='<a href="https://cms-pdmv.web.cern.ch/cms-pdmv/stats/growth/%s.gif" target="_blank"><img src="https://cms-pdmv.web.cern.ch/cms-pdmv/stats/growth/%s.gif" style="height:50px"></a>'%(wfn.replace('_','/'),wfn.replace('_','/'))
+
         if ongoing:
-            text+='<a href="https://cms-gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="http://cms-gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:50px"></a>'%(wfn,wfn)
+            #wl = getWL( wfn )            
+            #if 'running' in wl['RequestStatus']:
+            if wfs!='acquired':
+                text+='<a href="https://cms-gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="https://cms-gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:50px"></a>'%(wfn,wfn)
 
         if ongoing:
             if not os.path.isfile('%s/report/%s'%(monitor_dir,wfn)):
@@ -231,13 +237,16 @@ Last update on %s(CET), %s(GMT)
  created from <b>%s
 <a href=logs/last_running>last running</a></b> <object height=20 type="text/html" data="logs/last_running"><p>backup content</p></object>
 <a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=warning target=_blank><b><font color=orange>warning</b></font></a>
-<a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=critical target=_blank><b><font color=red>critical</b></font></a>
+<a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=critical target=_blank><b><font color=red>all critical</b></font></a>
+<br>
+%s
 <br><br>
 
 """ %(time.asctime(time.localtime()),
       time.asctime(time.gmtime()),
       reqmgr_url,
-      caller
+      caller,
+      ', '.join(['<a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=critical&module=%s&limit=100 target=_blank><b><font color=red>%s critical</b></font></a>'%(m,m) for m in ['injector','transferor','stagor','assignor','completor','GQ','equalizor','checkor','closor']])
       )
                    )
         
