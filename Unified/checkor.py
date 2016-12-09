@@ -34,30 +34,28 @@ def checkor(url, spec=None, options=None):
     if not up.check(): return
     use_mcm = up.status['mcm']
 
+    
+    runnings = session.query(Workflow).filter(Workflow.status == 'away').all()
+    standings = session.query(Workflow).filter(Workflow.status.startswith('assistance')).all()
+
+    ## intersect with what is actually in completed status in request manager now
+    all_completed = set(getWorkflows(url, 'completed' ))
+
     wfs=[]
-    if options.new:
-        ## get all in running and check
 
-        ## you want to intersect with what is completed !
-        if options.strict:
-            completed_wfi = getWorkflows(url, status='completed')
-            for wfo in session.query(Workflow).filter(Workflow.status == 'away').all():
-                if wfo.name in completed_wfi:
-                    wfs.append( wfo )
-                else:
-                    print wfo.name,"is not completed"
-                    sendLog('checkor','%s is not completed'%( wfo.name))
-        else:
-            wfs.extend( session.query(Workflow).filter(Workflow.status == 'away').all() )
+    if options.strict:
+        ## the one which were running and now have completed
+        wfs.extend( filter(lambda wfo: wfo.name in all_completed , runnings))
+    if options.update:
+        wfs.extend( filter(lambda wfo: not wfo.name in all_completed , runnings))
 
-    if options.current:
-        ## recheck those already there, probably to just pass them along
-        wfs.extend( session.query(Workflow).filter(Workflow.status== 'assistance').all() )
+    if options.clear:
+        wfs.extend( filter(lambda wfo: 'custodial' in wfo.status, standings))
+    if options.review:
+        wfs.extend( filter(lambda wfo: not 'custodial' in wfo.status, standings))
 
-    if options.old:
-        ## than get all in need for assistance
-        wfs.extend( session.query(Workflow).filter(Workflow.status.startswith('assistance-')).all() )
-
+    ## what is left out are the wf which were running and ended up aborted/failed/...
+    
 
     custodials = defaultdict(list) #sites : dataset list
     transfers = defaultdict(list) #sites : dataset list
@@ -133,10 +131,6 @@ def checkor(url, spec=None, options=None):
 
     random.shuffle( wfs )
 
-    print len(wfs),"to consider, pausing for",sleep_time
-    max_per_round = UC.get('max_per_round').get('checkor',None)
-    if max_per_round and not spec: wfs = wfs[:max_per_round]
-
     in_manual = 0
 
     ## now you have a record of what file was invalidated globally from TT
@@ -149,8 +143,17 @@ def checkor(url, spec=None, options=None):
         print str(e)
         TMDB_invalid = []
 
+
+    print len(wfs),"to consider, pausing for",sleep_time
+    max_per_round = UC.get('max_per_round').get('checkor',None)
+    if options.limit: max_per_round=options.limit
+    if max_per_round and not spec: wfs = wfs[:max_per_round]
+
+
+
     for wfo in wfs:
         if spec and not (spec in wfo.name): continue
+        
         time.sleep( sleep_time )
         
         ## get info
@@ -339,10 +342,13 @@ def checkor(url, spec=None, options=None):
             if c in CI.campaigns and 'fractionpass' in CI.campaigns[c]:
                 if type(CI.campaigns[c]['fractionpass']) == dict:
                     tier = output.split('/')[-1]
+                    priority = str(wfi.request['RequestPriority'])
                     ## defined per tier
-                    if not tier in CI.campaigns[c]['fractionpass']:
-                        print "we should prevent it from passing IMO"
-                    fractions_pass[output] = CI.campaigns[c]['fractionpass'].get(tier, CI.campaigns[c]['fractionpass'].get('all', default_pass))
+                    fractions_pass[output] = CI.campaigns[c]['fractionpass'].get('all', default_pass)
+                    if tier in CI.campaigns[c]['fractionpass']:
+                        fractions_pass[output] = CI.campaigns[c]['fractionpass'][tier]
+                    if priority in CI.campaigns[c]['fractionpass']:
+                        fractions_pass[output] = CI.campaigns[c]['fractionpass'][priority]
                 else:
                     fractions_pass[output] = CI.campaigns[c]['fractionpass']
                 wfi.sendLog('checkor', "overriding fraction to %s for %s by campaign requirement"%( fractions_pass[output], output))
@@ -827,10 +833,14 @@ if __name__ == "__main__":
     parser = optparse.OptionParser()
     parser.add_option('-t','--test', help='Only test the checkor', action='store_true', default=False)
     parser.add_option('--go',help='Does not check on duplicate process', action='store_true', default=False)
-    parser.add_option('-n','--new', help='fetch from running workflows', action='store_true', default=False)
-    parser.add_option('-s','--strict', help='only checkor matter', action='store_true', default=False)
-    parser.add_option('-c','--current', help='update those in assistance', action='store_true', default=False)    
-    parser.add_option('-o','--old',help='update those in complex assistance',action='store_true', default=False)
+
+    parser.add_option('--strict', help='Only running workflow that reached completed', action='store_true', default=False)
+    parser.add_option('--update', help='Running workflow that have not yet reached completed', action='store_true', default=False)
+
+    parser.add_option('--clear', help='Only the workflow that have reached custodial', action ='store_true', default=False)
+    parser.add_option('--review', help='Look at the workflows that have already completed and had required actions', action='store_true', default=False)
+
+    parser.add_option('--limit',help='The number of workflow to consider for checking', default=0, type=int)
     parser.add_option('--fractionpass',help='The completion fraction that is permitted', default=0.0,type='float')
     parser.add_option('--ignorefiles', help='Force ignoring dbs/phedex differences', action='store_true', default=False)
     parser.add_option('--ignoreinvalid', help='Force ignoring high level of invalid files', action='store_true', default=False)
@@ -842,9 +852,12 @@ if __name__ == "__main__":
     if len(args)!=0:
         spec = args[0]
 
-    options.new = True
-    options.current = True
-    options.old = True
+    if not options.strict and not options.update and not options.clear and not options.review:
+        options.strict=True
+        options.update=True
+        options.clear=True
+        options.review=True
+        print "no options passed, assuming we do everything"
 
     checkor(url, spec, options=options)
     
