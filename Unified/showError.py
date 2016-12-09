@@ -2,6 +2,7 @@
 from utils import workflowInfo, siteInfo, monitor_dir, base_dir, global_SI, getDatasetPresence
 import json
 import sys
+import os
 from collections import defaultdict
 from assignSession import *
 import time
@@ -36,7 +37,9 @@ def parse_one(url, wfn, options=None):
     dash_board_h = 1
     if True :#'pdmvserv_TOP-RunIISummer15wmLHEGS-00103_00183_v0__161005_165048_809' in wfn:
         ## NB get the since from when the wf has started, not a fixed value
-        dashb = wfi.getFullPicture(since=dash_board_h,cache=cache)
+        ## no dashboard until we get a better api
+        #dashb = wfi.getFullPicture(since=dash_board_h,cache=cache)
+        dashb = {}
         #print json.dumps( dashb , indent=2)
         for site,sinfo in dashb.items():
             for s_code,counts in sinfo.items():
@@ -85,11 +88,16 @@ def parse_one(url, wfn, options=None):
 
     do_JL = True
     do_CL = True
+    do_all_error_code = False
     if options: 
         do_JL = not options.no_JL
         do_CL = not options.no_CL
-        
+        do_all_error_code = options.all_errors
+
+
     n_expose = 1
+    if options:
+        n_expose = options.expose 
     expose_archive_code = {'134':defaultdict(lambda : n_expose),#seg fault
                            '139':defaultdict(lambda : n_expose),# ???
                            '99109':defaultdict(lambda : n_expose),#stageout
@@ -210,15 +218,17 @@ def parse_one(url, wfn, options=None):
                         wmbs = sample['wmbsid']
                         workflow = sample['workflow']
 
-                        if do_CL and errorcode_s in expose_condor_code and expose_condor_code[errorcode_s][agent] and 'cern' in agent:
+                        if do_CL and ((errorcode_s in expose_condor_code and expose_condor_code[errorcode_s][agent]) or do_all_error_code) and 'cern' in agent:
                             os.system('ssh %s %s/WmAgentScripts/Unified/exec_expose.sh %s %s %s %s %s'%( agent, base_dir, workflow, wmbs, errorcode_s, base_dir, monitor_dir))
-                            expose_condor_code[errorcode_s][agent]-=1
+                            if errorcode_s in expose_condor_code:
+                                expose_condor_code[errorcode_s][agent]-=1
 
                         for out in sample['output']:
                             #print out
                             if out['type'] == 'logArchive':
-                                if do_JL and errorcode_s in expose_archive_code and expose_archive_code[errorcode_s][agent]:
-                                    expose_archive_code[errorcode_s][agent]-=1
+                                if do_JL and ((errorcode_s in expose_archive_code and expose_archive_code[errorcode_s][agent]) or (do_all_error_code)):
+                                    if errorcode_s in expose_archive_code:
+                                        expose_archive_code[errorcode_s][agent]-=1
                                     os.system('mkdir -p /tmp/%s'%(os.getenv('USER')))
                                     local = '/tmp/%s/%s'%(os.getenv('USER'),out['lfn'].split('/')[-1])
                                     command = 'xrdcp root://cms-xrd-global.cern.ch/%s %s'%( out['lfn'], local)
@@ -311,9 +321,9 @@ def parse_one(url, wfn, options=None):
         #    html+='<th>%s</th>'%site
         for code in sorted(all_codes):
             html+='<th><a href="#%s">%s</a>'%(code,code)
-            if str(code) in expose_archive_code:
+            if str(code) in expose_archive_code or do_all_error_code:
                 html += ' <a href=../joblogs/%s/%s>, JL</a>'%( wfn, code )
-            if str(code) in expose_condor_code:
+            if str(code) in expose_condor_code or do_all_error_code:
                 html += ' <a href=../condorlogs/%s/%s>, CL</a>'%( wfn, code )
             html += '</th>'
 
@@ -453,6 +463,8 @@ if __name__=="__main__":
     parser.add_option('--fast',help="Retrieve from cache and no logs retrieval", action="store_true", default=False)
     parser.add_option('--cache',help="The age in second of the error report before reloading them", default=0, type=float)
     parser.add_option('--workflow','-w',help="The workflow to make the error report of",default=None)
+    parser.add_option('--expose',help="Number of logs to retrieve",default=1,type=int)
+    parser.add_option('--all_errors',help="Bypass and expose all error codes", default=False, action='store_true')
     (options,args) = parser.parse_args()
     
     if options.fast:
