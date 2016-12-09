@@ -111,7 +111,11 @@ def rejector(url, specific, options=None):
                                 break
                     else:
                         schema['Memory'] = options.Memory
-                                
+                        
+                if options.Multicore:
+                    ## to do : set it properly in taslchains
+                    schema['Multicore'] = options.Multicore
+
                 if options.deterministic:
                     if schema['RequestType'] == 'TaskChain':
                         schema['Task1']['DeterministicPileup']  = True
@@ -215,6 +219,7 @@ if __name__ == "__main__":
     parser.add_option('--comments', help="Give a comment to the clone",default="")
     parser.add_option('-k','--keep',help="keep the outpuy in current status", default=False,action="store_true")
     parser.add_option('--Memory',help="memory parameter of the clone", default=0, type=int)
+    parser.add_option('--Multicore',help="Set the number of core in the clone", default=0, type=int)
     parser.add_option('--ProcessingString',help="change the proc string", default=None)
     parser.add_option('--AcquisitionEra',help="change the acq era", default=None)
     parser.add_option('--PrepID',help='change the prepid',default=None)
