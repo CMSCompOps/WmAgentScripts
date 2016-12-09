@@ -17,6 +17,7 @@ url = 'cmsweb.cern.ch'
 wfs = getWorkflows(url, 'acquired', details=True)
 wfs.extend( getWorkflows(url, 'running-open', details=True) )
 wfs.extend( getWorkflows(url, 'running-closed', details=True) )
+
 jobs_for = defaultdict(lambda : defaultdict(int))
 wf_for = defaultdict(lambda : defaultdict(set))
 agent_for = defaultdict(lambda : defaultdict(set))
@@ -36,6 +37,8 @@ not_runable_acdc=set()
 agents_down = defaultdict(set)
 failed_workflow = set()
 files_locations = {}
+stuck_all_done = set()
+
 for wf in wfs:
     if spec and not spec in wf['RequestName']: continue
 
@@ -55,6 +58,7 @@ for wf in wfs:
     #wqes = [w[w['type']] for w in wqs]
     print wf['RequestName'],len(wqs),"elements"
 
+    all_wqe_done = True
     for wq in wqs:
         wqe = wq[wq['type']]
         if not wqe['ChildQueueUrl']:
@@ -65,6 +69,7 @@ for wf in wfs:
         wl = [s for s in wqe['SiteWhitelist'] if s in si.sites_ready]
         #wqe_by_agent[agent].append( wqe )
 
+        all_wqe_done &= (wqe['Status']=='Done')
         if wqe['Status'] in ['Failed']:
             failed_workflow.add( wf['RequestName'] )
 
@@ -214,6 +219,9 @@ for wf in wfs:
                 print "Block",b,"is at",",".join(sorted(block_se)),"while asked to run at",",".join(sorted(swl))
         if not_processable:
             wfi.sendLog('GQ','The following blocks/files need to be put back on disk \n%s'%(','.join( not_processable )))
+    if all_wqe_done:
+        stuck_all_done.add( wf['RequestName'] )
+
 
 report = "updated %s \n"%time.asctime(time.gmtime())
 print "="*20
@@ -229,6 +237,9 @@ if not_runable_acdc:
     sendLog('GQ','These %s ACDC cannot run \n%s'%( len(not_runable_acdc),
                                                    '\n'.join(not_runable_acdc)
                                                    ),level='critical')
+if stuck_all_done:
+    sendLog('GQ','These %s workflows have not toggled further to completed while all WQE are done'%( ', '.join(sorted(stuck_all_done))),
+            level='critical')
 
 #for agent in wqe_by_agent:
     ## sort by priority
