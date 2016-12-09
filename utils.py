@@ -753,6 +753,7 @@ class docCache:
     def __init__(self):
         self.cache = {}
         def default_expiration():
+            ## a random time between 20 min and 30 min.
             return 20*60+random.random()*10*60
         self.cache['ssb_106'] = {
             'data' : None,
@@ -955,15 +956,22 @@ class docCache:
         now = time.mktime( time.gmtime())
         if label in self.cache:
             cache = self.cache[label]
+            get_back = False
             try:
                 if not cache['data']:
                     #check the file version
                     if os.path.isfile(cache['cachefile']):
-                        print "load",label,"from file",cache['cachefile']
-                        f_cache = json.loads(open(cache['cachefile']).read())
-                        cache['data' ] = f_cache['data']
-                        cache['timestamp' ] = f_cache['timestamp']
-                    else:
+                        try:
+                            print "load",label,"from file",cache['cachefile']
+                            f_cache = json.loads(open(cache['cachefile']).read())
+                            cache['data' ] = f_cache['data']
+                            cache['timestamp' ] = f_cache['timestamp']
+                        except Exception as e:
+                            print "Failed to read local cache"
+                            print str(e)
+                            get_back = True
+                    else: get_back = True        
+                    if get_back:
                         print "no file cache for", label,"getting fresh"
                         cache['data'] = cache['getter']()
                         cache['timestamp'] = now
@@ -1154,7 +1162,8 @@ class siteInfo:
         if mcore_mask:
             self.sites_mcore_ready = [s for s in mcore_mask['sites_for_mcore'] if s in self.sites_ready]
         else:
-            sendEmail("no mcore sites","that is suspicious!")
+            #sendEmail("no mcore sites","that is suspicious!")
+            pass
 
         for s in self.all_sites:
             ## will get it later from SSB
