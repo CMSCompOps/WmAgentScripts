@@ -47,7 +47,7 @@ def sendLog( subject, text , wfi = None, show=True ,level='info'):
         print str(e)
         sendEmail('failed logging',subject+text+str(e))
 
-def searchLog( q ,limit=50 ):
+def searchLog( q , actor=None, limit=50 ):
     conn = httplib.HTTPConnection( 'cms-elastic-fe.cern.ch:9200' )
     goodquery={
         "query": {
@@ -78,6 +78,10 @@ def searchLog( q ,limit=50 ):
             "meta"
             ]
         }
+
+    if actor:
+        goodquery['query']['bool']['must'][0]['wildcard']['subject'] = actor
+
     conn.request("POST" , '/logs/_search?size=%d'%limit, json.dumps(goodquery))
     ## not it's just a matter of sending that query to ES.
     #lq = q.replace(':', '\:').replace('-','\\-')
