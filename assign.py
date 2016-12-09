@@ -195,7 +195,7 @@ def main():
         schema = wfi.request
         if 'OriginalRequestName' in schema:
             print "Original workflow is:",schema['OriginalRequestName']
-            #original_wf = workflowInfo(url, schema['OriginalRequestName'])            
+            original_wf = workflowInfo(url, schema['OriginalRequestName'])            
             ancestor_wf = workflowInfo(url, schema['OriginalRequestName'])
             ## go back as up as possible
             while ancestor_wf.request['RequestType'] == 'Resubmission':
@@ -218,7 +218,7 @@ def main():
         wf_info = schema
 
         # WF must be in assignment-approved in order to be assigned
-        if (schema["RequestStatus"] != "assignment-approved"):
+        if (schema["RequestStatus"] != "assignment-approved") and not options.test:
             print("The workflow '" + wf_name + "' you are trying to assign is not in assignment-approved")
             sys.exit(1)
 
@@ -315,7 +315,7 @@ def main():
             if options.sites.lower() == 'acdc':
                 where_to_run, _,_ =  original_wf.getRecoveryInfo()
                 task = schema['InitialTaskPath']
-                sites = [SI.SE_to_CE(site) for site in where_to_run[task]]
+                sites = list(set([SI.SE_to_CE(site) for site in where_to_run[task]]) & set(SI.all_sites))
                 print "Found",sorted(sites),"as sites where to run the ACDC at, from the acdc doc of ",original_wf.request['RequestName']
 
         if options.checksite:

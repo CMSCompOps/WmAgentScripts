@@ -3500,11 +3500,16 @@ class workflowInfo:
         where_to_run = defaultdict(list)
         missing_to_run = defaultdict(int)
         missing_to_run_at = defaultdict(lambda : defaultdict(int))
+        original_whitelist = self.request['SiteWhitelist']
         for doc in self.recovery_doc:
             task = doc['fileset_name']
             for f,info in doc['files'].iteritems():
-                where_to_run[task] = list(set(where_to_run[task] + info['locations']))
                 missing_to_run[task] += info['events']
+                if f.startswith('MCFakeFile'):
+                    locations = original_whitelist
+                else:
+                    locations = info['locations']
+                where_to_run[task] = list(set(where_to_run[task] + locations))
                 for s in info['locations']:
                     missing_to_run_at[task][s] += info['events']
 
