@@ -1,6 +1,7 @@
 {
  "site_for_overflow": {
-   "value" : ["NONO_T0_CH_CERN","T2_CH_CERN_HLT"],
+   "value" : ["T0_CH_CERN",
+              "NONO_T2_CH_CERN_HLT"],
    "description" : "The sites that we set to overflow and require a specific treatment"
  },
  "overflow_pressure": {
@@ -13,7 +14,7 @@
  },
  "sites_banned": {
    "value" : ["T2_CH_CERN_AI",
-   	      "T0_CH_CERN",
+      	      "NONO_T0_CH_CERN",
 	      "T2_US_Vanderbilt",
 	      "T2_EE_Estonia"],
    "description" : "The sites that are banned from production"
@@ -53,7 +54,7 @@
    "value" : {
     "transferor" : null,
     "assignor" : null,
-    "closor" : 1000,
+    "closor" : null,
     "checkor" : null,
     "completor" : null
     }
@@ -103,11 +104,11 @@
    "description": "The total number of workflows that we allow to handle at a time (transfer, running, assistance)"
   },
   "max_staging_workflows": {
-   "value" : 600,
+   "value" : 700,
    "description": "The total number of workflows that we allow to stage at a time"
   }, 
   "max_staging_workflows_per_site": {
-   "value" : 600,
+   "value" : 700,
    "description": "The total number of workflows that we allow to stage at a time per site"
   },
   "max_transfer_in_GB": {
