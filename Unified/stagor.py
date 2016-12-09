@@ -234,8 +234,7 @@ def stagor(url,specific =None, options=None):
                 print json.dumps( done_by_input[need] , indent=2)
                 readys[need] = True
             else:
-                wfi.sendLog('stagor',"%s is not ready"%need)
-                print json.dumps( done_by_input[need] , indent=2)
+                wfi.sendLog('stagor',"%s is not ready \n%s"%(need,json.dumps( done_by_input[need] , indent=2)))
                 readys[need] = False
 
         if readys and all(readys.values()):
@@ -303,6 +302,7 @@ def stagor(url,specific =None, options=None):
 
                 for need in list(secondaries):
                     ## I do not want to check on the secon
+                    ## this below does not function because the primary could be all available, and the secondary not complete at a certain site that does not matter at that point
                     this_check = all(done_by_input[need].values())
                     wfi.sendLog('stagor',"%s is this much transfered %s"%(need, json.dumps(done_by_input[need], indent=2)))
                     all_check&= this_check
