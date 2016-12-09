@@ -12,10 +12,10 @@ class Lock(Base):
     id = Column(Integer, primary_key=True)
     item = Column(String(500))
     lock = Column(Boolean)
-    #is_block = Column(Boolean)
+    is_block = Column(Boolean)
     #site = Column(String(400))
-    #time = Column(Integer)
-    #reason = Column(String(400))
+    time = Column(Integer)
+    reason = Column(String(400))
 
 try:
     lockengine = create_engine('sqlite:///Unified/lockRecord.db')

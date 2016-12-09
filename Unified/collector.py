@@ -2,7 +2,7 @@
 import optparse
 from McMClient import McMClient
 from collections import defaultdict
-from utils import newLockInfo, makeReplicaRequest, siteInfo, getDatasetDestinations, getDatasetPresence, unifiedConfiguration, getDatasetChops, distributeToSites, DSS, componentInfo
+from utils import makeReplicaRequest, siteInfo, getDatasetDestinations, getDatasetPresence, unifiedConfiguration, getDatasetChops, distributeToSites, DSS, componentInfo
 import itertools
 import json 
 import random 

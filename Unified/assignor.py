@@ -2,7 +2,7 @@
 from assignSession import *
 import reqMgrClient
 from utils import workflowInfo, campaignInfo, siteInfo, userLock, unifiedConfiguration, reqmgr_url, monitor_dir
-from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction, getDatasetEventsPerLumi, newLockInfo, getLFNbase, getDatasetBlocks
+from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction, getDatasetEventsPerLumi, getLFNbase, getDatasetBlocks, lockInfo
 from utils import componentInfo, sendEmail, sendLog
 #from utils import lockInfo
 from utils import duplicateLock, notRunningBefore
@@ -24,8 +24,10 @@ def assignor(url ,specific = None, talk=True, options=None):
     UC = unifiedConfiguration()
     CI = campaignInfo()
     SI = siteInfo()
-    NLI = newLockInfo()
-    if not NLI.free() and not options.go: return
+    #NLI = newLockInfo()
+    #if not NLI.free() and not options.go: return
+    LI = lockInfo()
+    if not LI.free() and not options.go: return
 
     n_assigned = 0
     n_stalled = 0
@@ -36,17 +38,19 @@ def assignor(url ,specific = None, talk=True, options=None):
         fetch_from.extend(['considered','staging'])
     if specific:
         fetch_from.extend(['considered-tried'])
+    
     fetch_from.extend(['staged'])
 
     if options.from_status:
         fetch_from = options.from_status.split(',')
         print "Overriding to read from",fetch_from
 
-
     for status in fetch_from:
         wfos.extend(session.query(Workflow).filter(Workflow.status==status).all())
 
-
+    ## in case of partial, go for fetching a list from json ?
+    #if options.partial and not specific:
+    #    pass
 
     dataset_endpoints = json.loads(open('%s/dataset_endpoints.json'%monitor_dir).read())
     aaa_mapping = json.loads(open('%s/equalizor.json'%monitor_dir).read())['mapping']
@@ -67,7 +71,15 @@ def assignor(url ,specific = None, talk=True, options=None):
             #if not specific in wfo.name: continue
         print "\n\n"
         wfh = workflowInfo( url, wfo.name)
-        wfh.sendLog('assignor',"%s to be assigned"%wfo.name)
+        options_text=""
+        if options.early: options_text+=", early option is ON"
+        if options.partial: 
+            options_text+=", partial option is ON"
+            options_text+=", good fraction is %.2f"%options.good_enough
+        
+
+
+        wfh.sendLog('assignor',"%s to be assigned%s"%(wfo.name, options_text))
 
         ## the site whitelist takes into account siteInfo, campaignInfo, memory and cores
         (lheinput,primary,parent,secondary, sites_allowed) = wfh.getSiteWhiteList()
@@ -289,13 +301,19 @@ def assignor(url ,specific = None, talk=True, options=None):
             wfh.sendLog('assignor',"Selected for any data %s"%sorted(sites_allowed))
 
         ### check on endpoints for on-going transfers
-        if endpoints and options.partial:
-            end_sites = [SI.SE_to_CE(s) for s in endpoints]
-            sites_allowed = list(set(sites_allowed + end_sites))
-            if down_time and not any(osite in SI.sites_not_ready for osite in end_sites):
-                print "Flip the status of downtime, since our destinations are good"
-                down_time = False
-            print "with added endpoints",sorted(sites_allowed)
+        if options.partial:
+            if endpoints:
+                end_sites = [SI.SE_to_CE(s) for s in endpoints]
+                sites_allowed = list(set(sites_allowed + end_sites))
+                if down_time and not any(osite in SI.sites_not_ready for osite in end_sites):
+                    print "Flip the status of downtime, since our destinations are good"
+                    down_time = False
+                print "with added endpoints",sorted(sites_allowed)
+            else:
+                print "Cannot do partial assignment without knowin the endpoints"
+                n_stalled+=1
+                continue
+            
             
         if not len(sites_allowed):
             if not options.early:
@@ -335,7 +353,7 @@ def assignor(url ,specific = None, talk=True, options=None):
                     pass
                 if not wfo.name in known and not options.limit and not options.go and not options.early and not (options.partial and above_good):
                     wfh.sendLog('assignor',"cannot be assigned, %s is not sufficiently available.\n %s"%(wfo.name,json.dumps(available_fractions)))
-                    sendEmail( "cannot be assigned","%s is not sufficiently available.\n %s"%(wfo.name,json.dumps(available_fractions)))
+                    #sendEmail( "cannot be assigned","%s is not sufficiently available.\n %s"%(wfo.name,json.dumps(available_fractions)))
                     known.append( wfo.name )
                     open('cannot_assign.json','w').write(json.dumps( known, indent=2))
                 
@@ -429,7 +447,7 @@ def assignor(url ,specific = None, talk=True, options=None):
             if 'EventBased' in split_check.values():
                 wfh.sendLog('assignor', "Falling back to event splitting.")
                 #sendEmail("Fallback to EventBased","the workflow %s is too heavy to be processed as it is. Fallback to EventBased splitting"%wfo.name)
-                sendLog('assignor','the workflow %s is too heavy to be processed as it is. Fallback to EventBased splitting'%wfo.name, level='critical')
+                sendLog('assignor','the workflow %s is too heavy to be processed as it is. Fallback to EventBased splitting ?'%wfo.name, level='critical')
                 if not options.go:  continue
             elif 'EventsPerJob' in split_check.values():
                 wfh.sendLog('assignor', "Modifying the number of job per event")
@@ -485,7 +503,8 @@ def assignor(url ,specific = None, talk=True, options=None):
                     (_,prim,_,sec) = new_wfi.getIO()
                     for secure in list(prim)+list(sec)+new_wfi.request['OutputDatasets']:
                         ## lock all outputs flat
-                        NLI.lock( secure )
+                        #NLI.lock( secure )
+                        LI.lock( secure, reason = 'assigning')
                     #for site in [SI.CE_to_SE(site) for site in sites_allowed]:
                     #    for output in new_wfi.request['OutputDatasets']:
                     #        LI.lock( output, site, 'dataset in production')

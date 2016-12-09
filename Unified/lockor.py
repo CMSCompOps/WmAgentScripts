@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from utils import getWorkflows, findCustodialCompletion, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration, getDatasetSize, sendEmail, sendLog, campaignInfo, componentInfo, reqmgr_url, monitor_dir, getWorkflowByMCPileup, getDatasetPresence
+from utils import getWorkflows, findCustodialCompletion, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration, getDatasetSize, sendEmail, sendLog, campaignInfo, componentInfo, reqmgr_url, monitor_dir, getWorkflowByMCPileup, getDatasetPresence, lockInfo
 from assignSession import *
 import json
 import os
@@ -7,6 +7,7 @@ from collections import defaultdict
 import sys
 from McMClient import McMClient
 import time
+from utils import lockInfo
 
 url = reqmgr_url
 
@@ -34,17 +35,6 @@ custodial_override = {}
 for c in CI.campaigns:
     if 'custodial_override' in CI.campaigns[c]:
         custodial_override[c] = CI.campaigns[c]['custodial_override']
-
-## those that are already in lock
-already_locked = set(json.loads(open('%s/globallocks.json'%monitor_dir).read()))
-if not already_locked:
-    old = json.loads(open('datalocks.json').read())
-    for site,locks in old.items():
-        if type(locks) == float: continue
-        for item,info in locks.items():
-            if info['lock']==False: continue
-            already_locked.add( item.split('#')[0] )
-    print "found",len(already_locked),"old locks"
 
 newly_locking = set()
 also_locking_from_reqmgr = set()
@@ -87,6 +77,21 @@ lagging_custodial={}
 missing_approval_custodial={}
 transfer_timeout = UC.get("transfer_timeout")
 secondary_timeout = defaultdict(int)
+
+## those that are already in lock
+#already_locked = set(json.loads(open('%s/globallocks.json'%monitor_dir).read()))
+LI = lockInfo()
+already_locked = set( LI.items() )
+
+if not already_locked:
+    old = json.loads(open('datalocks.json').read())
+    for site,locks in old.items():
+        if type(locks) == float: continue
+        for item,info in locks.items():
+            if info['lock']==False: continue
+            already_locked.add( item.split('#')[0] )
+    print "found",len(already_locked),"old locks"
+
 ## check on the one left out, which would seem to get unlocked
 for dataset in already_locked-newly_locking:
     try:
@@ -272,24 +277,13 @@ for wfo in session.query(Workflow).filter(Workflow.status=='forget').all():
 ### then add everything else that reqmgr knows about in a valid status
 ### this is rather problematic because the locks are created and dealt recursively : i.e we assume to work on the delta between the previous locks and the new created ones. If we add those below, unified will try to unlock them at next round and create all sorts of trboules.
 ### newly_locking.update( also_locking_from_reqmgr )
-            
-open('%s/globallocks.json.new'%monitor_dir,'w').write( json.dumps( sorted(list(newly_locking)), indent=2))
-os.system('mv %s/globallocks.json.new %s/globallocks.json'%(monitor_dir,monitor_dir))
+for item in newly_locking:
+    ## relock it
+    LI.lock(item)
+## release all locks which were not found necessary
+for item in LI.items():
+    if not item in newly_locking:
+        LI.release(item)
 
-
-## now settting the statuses locally right
-## this below does not function because you cannot -unlock the workflow that uses the dataset in input. 
-# so doing it by output only, as above, is enough and sufficient.
-#for dataset in unlocking:
-#    pass
-    ## if a dataset goes out of lock, you want to unlock everything about it
-    #actors = getWorkflowByOutput( url, dataset , details=True)
-    #actors.extend( getWorkflowByInput( url, dataset , details=True))
-    ## adding secondaries ???
-    #actors.extend( getWorkflowByPileup( url, dataset , details=True))
-    #for actor in actors:
-    #    for wfo in  session.query(Workflow).filter(Workflow.name==actor['RequestName']).all():
-    #        if not 'unlock' in wfo.status:
-    #            wfo.status +='-unlock'
-    #            print "setting",wfo.name,"to",wfo.status
-    #session.commit()
+#open('%s/globallocks.json.new'%monitor_dir,'w').write( json.dumps( sorted(list(newly_locking)), indent=2))
+#os.system('mv %s/globallocks.json.new %s/globallocks.json'%(monitor_dir,monitor_dir))

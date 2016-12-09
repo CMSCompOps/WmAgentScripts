@@ -6,8 +6,8 @@ from utils import makeReplicaRequest
 from utils import workflowInfo, siteInfo, campaignInfo, userLock
 from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, getSiteWhiteList, approveSubscription, getDatasetSize, updateSubscription, getWorkflows, componentInfo, getDatasetDestinations, getDatasetBlocks, DSS
 from utils import unifiedConfiguration, monitor_dir, reqmgr_url
-#from utils import lockInfo
-from utils import duplicateLock, newLockInfo
+from utils import lockInfo
+from utils import duplicateLock
 import json
 from collections import defaultdict
 import optparse
@@ -33,8 +33,11 @@ def transferor(url ,specific = None, talk=True, options=None):
 
     SI = siteInfo()
     CI = campaignInfo()
-    NLI = newLockInfo()
-    if not NLI.free(): return
+    #NLI = newLockInfo()
+    #if not NLI.free(): return
+    LI = lockInfo()
+    if not LI.free(): return
+
     mcm = McMClient(dev=False)
     dss = DSS()
 
@@ -258,6 +261,8 @@ def transferor(url ,specific = None, talk=True, options=None):
         check_secondary = False
         output_tiers = list(set([o.split('/')[-1] for o in wfh.request['OutputDatasets']]))
         for campaign in wfh.getCampaigns():
+            if campaign in CI.campaigns:
+                overide_parameters.update( CI.campaigns[campaign] )
             if campaign in CI.campaigns and 'secondaries' in CI.campaigns[campaign]:
                 if CI.campaigns[campaign]['secondaries']:
                     allowed_secondary.update( CI.campaigns[campaign]['secondaries'] )
@@ -359,7 +364,8 @@ def transferor(url ,specific = None, talk=True, options=None):
 
 
         if no_budget:
-            continue
+            break ## try this for a while to make things faster
+            #continue
 
         ## the site white list considers site, campaign, memory and core information
         if options and options.tosites:
@@ -368,7 +374,8 @@ def transferor(url ,specific = None, talk=True, options=None):
 
         for dataset in list(primary)+list(parent)+list(secondary):
             ## lock everything flat
-            NLI.lock( dataset )
+            #NLI.lock( dataset )
+            LI.lock( dataset , reason='staging' )
 
         if not sites_allowed:
             wfh.sendLog('transferor',"not possible site to run at")
@@ -545,7 +552,6 @@ def transferor(url ,specific = None, talk=True, options=None):
                 override_sec_destination  = CI.campaigns[wfh.request['Campaign']]['SecondaryLocation']
             if 'SecondaryLocation' in overide_parameters:
                 override_sec_destination  = overide_parameters['SecondaryLocation']
-
             print wfo.name,'reads',', '.join(secondary),'in secondary'
             for sec in secondary:
 

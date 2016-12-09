@@ -1,6 +1,6 @@
 import os
 import sys
-from sqlalchemy import Column, ForeignKey, Integer, String, PickleType, Float
+from sqlalchemy import Column, ForeignKey, Integer, String, PickleType, Float, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
@@ -43,6 +43,7 @@ class Transfer(Base):
     workflows_id = Column(PickleType)
     #status = Column(String(30))  ## to be added ?
 
+ 
 engine = create_engine('sqlite:///Unified/assignRecord.db')
 Base.metadata.create_all(engine)
 

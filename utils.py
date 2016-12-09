@@ -324,8 +324,7 @@ def listSubscriptions(url, dataset, within_sites=None):
     #print destinations
     return destinations
 
-#import dataLock
-
+"""
 class newLockInfo:
     def __init__(self):
         self.db = json.loads(open('%s/globallocks.json'%monitor_dir).read())
@@ -339,7 +338,7 @@ class newLockInfo:
         while True:
             r = os.popen('curl -s http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/inActionLock.txt').read()
             if not ('Not Found' in r):
-                sendLog('LockInfo','DDM lock is present\n%s'%(r),level='warning')
+                sendLog('LockInfo','%s DDM lock is present\n%s'%(time.asctime(time.gmtime()),r),level='warning')
                 locked = True
                 now = time.mktime(time.gmtime())
                 if (now-started) > max_wait: break
@@ -375,55 +374,116 @@ class newLockInfo:
             self.db.remove( dataset )
         
 
+"""
+
 
 class lockInfo:
     def __init__(self):
-        pass
+        os.system('echo `date` > %s/globallocks.json.lock'%monitor_dir)
+        self.lockfilename = 'globallocks' ## official name
+
+    def free(self):
+        started = time.mktime(time.gmtime())
+        max_wait = 50. #120*60. #2h
+        sleep_time = 30
+        locked = False
+        while True:
+            r = os.popen('curl -s http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/inActionLock.txt').read()
+            if not ('Not Found' in r):
+                sendLog('LockInfo','DDM lock is present\n%s'%(r),level='warning')
+                locked = True
+                now = time.mktime(time.gmtime())
+                if (now-started) > max_wait: break
+                else:
+                    print "pausing"
+                    time.sleep(sleep_time)
+            else:
+                locked = False
+                break
+
+        return (not locked)
 
     def __del__(self):
-        if random.random() < 0.5:
-            print "Cleaning locks"
-            #self.clean_block()
-            self.clean_unlock()
-            print "... cleaning locks done"
+        try:
+            from assignSession import session, Lock
+            out = []
+            detailed_out = {}
+            all_locks = session.query(Lock).all()
+            print len(all_locks),"existing locks"
+            for lock in all_locks:
+                if lock.lock:
+                    out.append( lock.item )
+                    detailed_out[lock.item] = { 'date' : lock.time,
+                                                'reason' : lock.reason
+                                                }
+                else:
+                    print "poping",lock.item
+                    ## let's not do that for now
+                    #session.delete( lock )
+                    #session.commit()                    
 
-        jdump = {}
-        for l in dataLock.locksession.query(dataLock.Lock).all():
-            ## don't print lock=False ??
-            #if not l.lock: continue 
-            site= l.site
-            if not site in jdump: jdump[site] = {}
-            jdump[site][l.item] = { 
-                'lock' : l.lock,
-                'time' : l.time,
-                'date' : time.asctime( time.gmtime(l.time) ),
-                'reason' : l.reason
-                }
-        now = time.mktime(time.gmtime())
-        jdump['lastupdate'] = now
-        open('%s/datalocks.json.new'%monitor_dir,'w').write( json.dumps( jdump , indent=2))
-        os.system('mv %s/datalocks.json.new %s/datalocks.json'%(monitor_dir,monitor_dir))
+            #print "writing to json"
+            print "writing",len( out ),"locks to the json interface"
+            open('%s/%s.json.new'%(monitor_dir,self.lockfilename),'w').write( json.dumps( sorted(out) , indent=2))
+            os.system('mv %s/%s.json.new %s/%s.json'%(monitor_dir,self.lockfilename,monitor_dir,self.lockfilename))
+            open('%s/%s.detailed.json.new'%(monitor_dir,self.lockfilename),'w').write( json.dumps( detailed_out , indent=2))
+            os.system('mv %s/%s.detailed.json.new %s/%s.detailed.json'%(monitor_dir,self.lockfilename,monitor_dir,self.lockfilename))
+            os.system('rm -f %s/globallocks.json.lock'%monitor_dir)
+        except Exception as e:
+            print "Failed writing locks"
+            print str(e)
+        
+    def release(self, item ):
+        try:
+            self._release(item)
+        except Exception as e:
+            print "failed to release"
+            print str(e)
+            
+    def _release(self, item ):
+        #from dataLock import locksession, Lock
+        from assignSession import session, Lock
+        l = session.query(Lock).filter(Lock.item == item).first()
+        if not l:
+            sendLog('lockInfo',"[Release] %s to be released is not locked"%item)
+        else:
+            sendLog('lockInfo',"[Release] releasing %s"%item)
+            l.lock = False
+            session.commit()
 
     def _lock(self, item, site, reason):
-        print "[lock] of %s at %s because of %s"%( item, site, reason )
-        now = time.mktime(time.gmtime())
-        l = dataLock.locksession.query(dataLock.Lock).filter(dataLock.Lock.site == site).filter(dataLock.Lock.item == item).first()
+        #from dataLock import locksession, Lock
+        from assignSession import session, Lock
+        l = session.query(Lock).filter(Lock.item == item).first()
+        do_com = False
         if not l:
-            l = dataLock.Lock(lock=False)
-            l.site = site
+            print "in lock, making a new object for",item
+            l = Lock(lock=False)
+            #l.site = site
             l.item = item
             l.is_block = '#' in item
-            dataLock.locksession.add ( l )
-        if l.lock:
-            print l.item,item,"already locked at",site
-        
+            session.add ( l )
+            do_com = True
+        else:
+            print "lock for",item,"already existing",l.lock
+        now = time.mktime(time.gmtime())
         ## overwrite the lock 
-        l.reason = reason
-        l.time = now
-        l.lock = True
-        dataLock.locksession.commit()
+        message = "[Lock] %s"%item
+        if l.lock != True:
+            
+            l.lock = True
+            do_com = True
+            message+=" being locked"
+        if reason!=l.reason:
+            l.reason = reason
+            do_com =True
+            message+=" because of %s"%reason
+        if do_com:
+            sendLog('lockInfo',message)
+            l.time = now
+            session.commit()
 
-    def lock(self, item, site, reason):
+    def lock(self, item, site='', reason='staging'):
         try:
             self._lock( item, site, reason)
         except Exception as e:
@@ -431,94 +491,21 @@ class lockInfo:
             print "could not lock",item,"at",site
             print str(e)
             
-    def _release(self, item, site, reason='releasing'):
-        print "[lock release] of %s at %s because of %s" %( item, site, reason)
-        now = time.mktime(time.gmtime())
-        # get the lock on the item itself
-        l = dataLock.locksession.query(dataLock.Lock).filter(dataLock.Lock.site==site).filter(dataLock.Lock.item==item).first()
-        if not l:
-            print item,"was not locked at",site
-            l = dataLock.Lock(lock=False)
-            l.site = site
-            l.item = item
-            l.is_block = '#' in item
-            dataLock.locksession.add ( l )
-            dataLock.locksession.commit()
-            
-        #then unlock all of everything starting with item (itself for block, all block for dataset)
-        for l in dataLock.locksession.query(dataLock.Lock).filter(dataLock.Lock.site==site).filter(dataLock.Lock.item.startswith(item)).all():
-            l.time = now
-            l.reason = reason
-            l.lock = False
-        dataLock.locksession.commit()
-
-    def release_except(self, item, except_site, reason='releasing'):
-        print "[lock release] of %s except at %s because of %s" %( item, except_site, reason)
-        try:
-            for l in dataLock.locksession.query(dataLock.Lock).filter(dataLock.Lock.item.startswith(item)).all():
-                site = l.site
-                if not site in except_site:
-                    self._release(l.item, site, reason)
-                else:
-                    print "We are told to not release",item,"at site",site,"per request of",except_site
-        except Exception as e:
-            print "could not unlock",item,"everywhere but",except_site
-            print str(e)
-
-    def release_everywhere(self, item, reason='releasing'):
-        print "[lock release] of %s everywhere because of %s" % ( item, reason )
-        try:
-            for l in dataLock.locksession.query(dataLock.Lock).filter(dataLock.Lock.item.startswith(item)).all():
-                site = l.site
-                self._release(item, site, reason)
-        except Exception as e:
-            print "could not unlock",item,"everywhere"
-            print str(e)
-
-    def release(self, item, site, reason='releasing'):
-        print "[lock release] of %s at %s because of %s" %( item, site, reason)
-        try:
-            self._release(item, site, reason)
-        except Exception as e:
-            print "could not unlock",item,"at",site
-            print str(e)
+    
+    def items(self, locked=True):
+        #from dataLock import locksession, Lock
+        from assignSession import session, Lock
+        ret = sorted([ l.item for l in session.query(Lock).all() if l.lock==locked])
+        return ret
 
     def tell(self, comment):
+        #from dataLock import locksession, Lock
+        from assignSession import session, Lock
         print "---",comment,"---"
-        for l in dataLock.locksession.query(dataLock.Lock).all():
-            print l.item,l.site,l.lock
+        for l in session.query(Lock).all():
+            print l.item,l.lock
         print "------"+"-"*len(comment)
 
-    def clean_block(self, view=False):
-        print "start cleaning lock info"
-        ## go and remove all blocks for which the dataset is specified
-        # if the dataset is locked, nothing matters for blocks -> remove
-        # if the dataset is unlocked, it means we don't want to keep anything of it -> remove
-        clean_timeout=0
-        for l in dataLock.locksession.query(dataLock.Lock).filter(dataLock.Lock.lock==True).filter(dataLock.Lock.is_block==False).all():
-            site = l.site
-            item = l.item
-            if view:  print item,"@",site
-            ## get all the blocks at that site, for that dataset, under the same condition
-            for block in dataLock.locksession.query(dataLock.Lock).filter(dataLock.Lock.site==site).filter(dataLock.Lock.item.startswith(item)).filter(dataLock.Lock.is_block==True).all():
-                print "removing lock item for",block.item,"at",site,"due to the presence of overriding dataset information"
-                dataLock.locksession.delete( block )
-                clean_timeout+=1
-                if view: print block.name
-                if clean_timeout> 10:                    break
-            dataLock.locksession.commit()
-            if clean_timeout> 10:                break
-
-    def clean_unlock(self, view=False):
-        clean_timeout=0
-        ## go and remove all items that have 'lock':False
-        for l in dataLock.locksession.query(dataLock.Lock).filter(dataLock.Lock.lock==False).all():
-            print "removing lock=false for",l.item,"at",l.site
-            dataLock.locksession.delete( l )            
-            clean_timeout+=1
-            #if clean_timeout> 10:                break
-
-        dataLock.locksession.commit()
 
 class unifiedConfiguration:
     def __init__(self):
@@ -715,7 +702,7 @@ def notRunningBefore( component, time_out = 60*5 ):
     return True
 
 
-def duplicateLock(component=None):
+def duplicateLock(component=None, silent=False):
     if not component:
         ## get the caller
         component = sys._getframe(1).f_code.co_name
@@ -724,8 +711,9 @@ def duplicateLock(component=None):
     process_check = filter(None,os.popen('ps -f -e | grep %s.py | grep -v grep  |grep python'%component).read().split('\n'))
     if len(process_check)>1:
         ## another component is running on the machine : stop
-        sendEmail('overlapping %s'%component,'There are %s instances running %s'%(len(process_check), '\n'.join(process_check)))
-        print "quitting because of overlapping processes"
+        if not silent:
+            sendEmail('overlapping %s'%component,'There are %s instances running %s'%(len(process_check), '\n'.join(process_check)))
+            print "quitting because of overlapping processes"
         return True
     return False
 
