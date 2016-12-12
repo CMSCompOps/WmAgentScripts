@@ -1,5 +1,9 @@
 #!/usr/bin/env python
-from assignSession import *
+try:
+    from assignSession import *
+except:
+    print "no DB connection"
+    
 from utils import workflowInfo, sendEmail, componentInfo, userLock, closeoutInfo, campaignInfo, unifiedConfiguration, siteInfo, componentInfo, sendLog
 import reqMgrClient
 import json
