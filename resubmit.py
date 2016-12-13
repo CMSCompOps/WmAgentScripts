@@ -107,17 +107,22 @@ def modifySchema(helper, workflow, user, group, cache, events, firstLumi, backfi
 
     # update information from reqMgr
     # Add AcquisitionEra, ProcessingString and increase ProcessingVersion by 1
-    result["ProcessingString"] = helper.getProcessingString()
-    result["AcquisitionEra"] = helper.getAcquisitionEra()
+    result["ProcessingString"] = cache['ProcessingString']
+    result["AcquisitionEra"] = cache['AcquisitionEra']
+    #result["ProcessingString"] = helper.getProcessingString()
+    #result["AcquisitionEra"] = helper.getAcquisitionEra()
+
     # try to parse processing version as an integer, if don't, assign 1 or 2 given the case.
     if events:
         try:
-            result["ProcessingVersion"] = int(helper.getProcessingVersion())
+            #result["ProcessingVersion"] = int(helper.getProcessingVersion())
+            result["ProcessingVersion"] = cache['ProcessingVersion']
         except ValueError:
             result["ProcessingVersion"] = 1
     else:
         try:
-            result["ProcessingVersion"] = int(helper.getProcessingVersion()) + 1
+            #result["ProcessingVersion"] = int(helper.getProcessingVersion()) + 1
+            result["ProcessingVersion"] = cache['ProcessingVersion'] + 1
         except ValueError:
             result["ProcessingVersion"] = 2
 
@@ -127,7 +132,7 @@ def modifySchema(helper, workflow, user, group, cache, events, firstLumi, backfi
         # have the word 'backfill' in it
         result["ProcessingString"] = "BACKFILL"
         if "backfill" not in result["AcquisitionEra"].lower():
-            result["AcquisitionEra"] = helper.getAcquisitionEra() + "Backfill"
+            result["AcquisitionEra"] = result["AcquisitionEra"] + "Backfill"
         if "backfill" not in result["Campaign"].lower():
             result["Campaign"] = result["Campaign"] + "-Backfill"
         if "backfill" not in result["RequestString"].lower():
