@@ -38,7 +38,7 @@ def getRandomDiskSite(site=None):
         s += "_Disk"
     return s
 
-def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, procstring, trust_site=False, replica=False, verbose=False, taskchain=False, trust_secondary_site=False, memory=None):
+def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, procstring, trust_site=False, replica=False, verbose=False, taskchain=False, trust_secondary_site=False, memory=None, multicore=None):
     """
     Sends assignment request
     """
@@ -57,7 +57,7 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
               "Dashboard": activity,
               "ProcessingVersion": procversion,
               "checkbox" + workflow: "checked",
-              "execute":True
+              "execute": True
               }
               
     if taskchain:
@@ -88,8 +88,11 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
             params['AutoApproveSubscriptionSites'] = [params["NonCustodialSites"]]
     if memory:
         params["Memory"] = memory
+    if multicore:
+        params["Multicore"] = multicore
     if verbose:
         pprint(params)
+        return False
 
     res = reqMgr.assignWorkflow(url, workflow, team, params)
     if res:
@@ -133,7 +136,8 @@ def main():
     parser.add_option('--test', action="store_true",help='Nothing is injected, only print infomation about workflow and Era', dest='test')
     parser.add_option('-f', '--file', help='Text file with a list of wokflows. If this option is used, the same settings will be applied to all workflows', dest='file')
     parser.add_option('-w', '--workflow', help='Workflow Name', dest='workflow')
-    parser.add_option('-m', '--memory', help='Set the Memory parameter to the workflow', dest='memory', default=None)
+    parser.add_option('-m', '--memory', help='Set the Memory parameter to the workflow', dest='memory', default=None, type=int)
+    parser.add_option('-c', '--multicore', help='Set the multicore parameter to the workfllow', dest='multicore', default=None, type=int)
     parser.add_option('-e', '--era', help='Acquistion era', dest='era')
     parser.add_option("--procstr", dest="procstring", help="Overrides Processing String with a single string")
     parser.add_option('--checksite', default=False,action='store_true')
@@ -159,6 +163,7 @@ def main():
     procversion = 1
     procstring = {}
     memory = None
+    multicore = None
     replica = False
     sites = []
     specialStr = ''
@@ -271,6 +276,9 @@ def main():
         if options.memory:
             memory = options.memory
 
+        if options.multicore:
+            multicore = options.multicore
+
         # given or default processing version
         if options.procversion:
             procversion = int(options.procversion)
@@ -320,8 +328,8 @@ def main():
 
         if options.checksite:
             ## check that the sites are all compatible and up
-            check_mem = schema['Memory']
-            ncores = wfi.getMulticore()
+            check_mem = schema['Memory'] if not memory else memory
+            ncores = wfi.getMulticore() if not multicore else multicore
             memory_allowed = SI.sitesByMemory( float(check_mem), maxCore=ncores)
             not_ready = sorted(set(sites) & set(SI.sites_not_ready))
             not_existing = sorted(set(sites) - set(SI.all_sites))
@@ -354,18 +362,18 @@ def main():
         print "Taskchain? ", str(taskchain)
         print "Activity:", activity
         print "ACDC:", str(is_resubmission)
-        if options.test:
-            continue
+        #if options.test:            continue
         
         # Really assigning the workflow now
         #print wf_name, '\tEra:', era, '\tProcStr:', procstring, '\tProcVer:', procversion, '\tTeam:', team, '\tSite:', sites
         assignRequest(url, wf_name, options.team, sites, era, procversion, activity, lfn, procstring, 
                       trust_site = options.xrootd, 
                       replica = options.replica, 
-                      verbose = options.verbose, 
+                      verbose = options.test, 
                       taskchain = taskchain, 
                       trust_secondary_site = options.secondary_xrootd,
-                      memory=memory
+                      memory=memory,
+                      multicore=multicore
                       )
     
     sys.exit(0)
