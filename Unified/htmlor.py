@@ -132,7 +132,8 @@ def htmlor( caller = ""):
                     os.system('python Unified/showError.py -w %s'%(wfn))
                     text += '<a href=report/%s target=_blank>report</a>'%wfn
                 else:
-                    print wfn,"report absent, could be doing it"
+                    #print wfn,"report absent, could be doing it"
+                    pass
             else:
                 text += '<a href=report/%s target=_blank>report</a>'%wfn
                 
@@ -213,8 +214,10 @@ def htmlor( caller = ""):
 </head>
 <body>
 
-Last update on %s(CET), %s(GMT)
 <br>
+Last update on <b>%s(CET), %s(GMT)</b>
+<br>
+<hr>
 <a href=logs/ target=_blank title="Directory containing all the logs">logs</a> 
 <a href=joblogs/ target=_blank title="Directory containing logs of jobs that failed with critical errors">job logs</a> 
 <a href=condorlogs/ target=_blank title="Directory containing condor logs of jobs ">condor logs</a> 
@@ -234,12 +237,13 @@ Last update on %s(CET), %s(GMT)
 <a href=data.html>json interfaces</a>
 <a href=logs/addHoc/last.log>add-hoc op</a>
 <a href=https://cmssst.web.cern.ch/cmssst/man_override/cgi/manualOverride.py/prodstatus target=_blank title="Link to a restricted page to override sites status">sites override</a>
- created from <b>%s
-<a href=logs/last_running>last running</a></b> <object height=20 type="text/html" data="logs/last_running"><p>backup content</p></object>
+<!-- created from <b>%s
+<a href=logs/last_running>last running</a></b> <object height=20 type="text/html" data="logs/last_running"><p>backup content</p></object>-->
 <a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=warning target=_blank><b><font color=orange>warning</b></font></a>
 <a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=critical target=_blank><b><font color=red>all critical</b></font></a>
 <br>
 %s
+<hr>
 <br><br>
 
 """ %(time.asctime(time.localtime()),
@@ -755,7 +759,10 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 <a href="javascript:showhide('acron')">[Click to show/hide]</a>
 <br>
 <div id="acron" style="display:none;">
-<br>
+<br>""")
+
+    ## dump of acrontab
+    html_doc.write("""
 <pre>
 %s
 </pre>
@@ -763,11 +770,11 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 
 
     per_module = defaultdict(list)
+    last_module = defaultdict( str )
     for t in filter(None,os.popen('cat %s/logs/*/*.time'%monitor_dir).read().split('\n')):
         module_name,run_time,spend = t.split(':')
         ## then do what you want with it !
         if 'cleanor' in module_name: continue
-        
         per_module[module_name].append( int(spend) )
 
     def display_time( sec ):
@@ -783,17 +790,28 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
             
         return dis
 
-    html_doc.write("Module running time<ul>\n")
-    for m,spends in per_module.items():
+    html_doc.write("Module running time<br>")
+    html_doc.write("<table border=1><thead><tr><th>Module</th><th>Last Ran</th><th><Last Runtime</th><th>Avg Runtime</th></tr></thead>")
+    for m in sorted(per_module.keys()):
+        last_module[m] = os.popen("tac %s/logs/running | grep %s | head -1"%(monitor_dir, m)).read()
+    for m in sorted(per_module.keys()):
+        #,spends in per_module.items():
+        spends = per_module[m]
         avg = sum(spends)/float(len(spends))
         lasttime =  spends[-1]
-        html_doc.write("<li>%s : last %s, avg %s</li>\n"%( m, display_time(lasttime), display_time(avg)))
-    html_doc.write("</ul>")
-
-    html_doc.write("Last running <pre>%s</pre><br>"%( os.popen("tac %s/logs/running | head -5"%monitor_dir).read() ))
-
-
-    html_doc.write("Order in cycle <pre>%s</pre><br>"%( '\n'.join(map(lambda l : l.split('/')[-1].replace('.py',''), filter(lambda l : not l.startswith('#') and 'Unified' in l and 'py' in l.split('/')[-1], open('%s/WmAgentScripts/cycle.sh'%base_dir).read().split('\n')))) ))
+        #html_doc.write("<li>%s : <b>last %s<b>, avg %s</li>\n"%( m, display_time(lasttime), display_time(avg)))
+        html_doc.write("""
+<tr>
+ <td width=300>%s</td>
+ <td width=300>%s</td>   
+ <td width=300>%s</td>   
+ <td width=300>%s</td>
+</tr>"""%(m, 
+          last_module[m],
+          display_time(lasttime),
+          display_time(avg)
+          ))
+    html_doc.write("</table>")
 
 
     html_doc.write("</div>\n")
@@ -821,8 +839,11 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     count=0
     n_column = 4
     SI = siteInfo()
-    date1 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(15*24*60*60)) ) ## 15 days
-    date2 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime())
+    date1m = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(30*24*60*60)) )
+    date7d = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(7*24*60*60)) )
+    date1h = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(1*60*60)) )
+    date5h = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(5*60*60)) )
+    now = time.strftime('%Y-%m-%d+%H:%M', time.gmtime())
     upcoming = json.loads( open('%s/GQ.json'%monitor_dir).read())
 
     for t in SI.types():
@@ -849,8 +870,11 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 
             text+='<td>'
             text+='<a href=http://dashb-ssb.cern.ch/dashboard/templates/sitePendingRunningJobs.html?site=%s>%s</a><br>'%(site,site)
-            text+='<a href="https://cms-gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="https://cms-gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:50px"></a><br>'%( site,site )
-            text+='<a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=&check=submitted&sortby=activity&scale=linear&bars=20&data1=%s&date2=%s">dashb</a><br>'%( site,date1,date2 )
+            text+='<a href="https://cms-gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="https://cms-gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:75px"></a><br>'%( site,site )
+            text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=&check=submitted&sortby=activity&scale=linear&bars=20&date1=%s&date2=%s">1m</a>'%( site,date1m,now )
+            text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=&check=submitted&sortby=activity&scale=linear&bars=20&date1=%s&date2=%s">1w</a>'%( site,date7d,now )
+            text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=&check=submitted&sortby=activity&scale=linear&bars=20&date1=%s&date2=%s">5h</a>'%( site,date5h,now )
+            text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=&check=submitted&sortby=activity&scale=linear&bars=20&date1=%s&date2=%s">1h</a><br>'%( site,date1h,now )
             text+='<a href="https://cms-site-readiness.web.cern.ch/cms-site-readiness/SiteReadiness/HTML/SiteReadinessReport.html#%s">SAM</a><br>'%( site )
             text+='CPU pledge: %s<br>'%(cpu)
             text+='%s%s'%(ht_disk,up_com)
