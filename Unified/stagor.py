@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput, workflowInfo, getDatasetBlocksFraction, findLostBlocks, findLostBlocksFiles, getDatasetBlockFraction, getDatasetFileFraction, getDatasetPresence, reqmgr_url, monitor_dir
+from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput, workflowInfo, getDatasetBlocksFraction, findLostBlocks, findLostBlocksFiles, getDatasetBlockFraction, getDatasetFileFraction, getDatasetPresence, reqmgr_url, monitor_dir, getAllStuckDataset
 from utils import unifiedConfiguration, componentInfo, sendEmail, getSiteWhiteList, checkTransferLag, sendLog
 from utils import siteInfo, campaignInfo
 import json
@@ -194,6 +194,8 @@ def stagor(url,specific =None, options=None):
     open('%s/dataset_endpoints.json'%monitor_dir,'w').write( json.dumps(dataset_endpoints, indent=2))
 
     already_stuck = json.loads( open('%s/stuck_transfers.json'%monitor_dir).read() )
+    already_stuck.extend( getAllStuckDataset() )
+ 
     missing_in_action = defaultdict(list)
 
 
