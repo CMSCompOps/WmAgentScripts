@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, forceComplete, makeReplicaRequest, getDatasetSize, getDatasetFiles, sendLog, reqmgr_url, dbs_url, dbs_url_writer, getForceCompletes
-from utils import componentInfo, unifiedConfiguration, userLock, duplicateLock
+from utils import componentInfo, unifiedConfiguration, userLock, duplicateLock, dataCache
 import phedexClient
 import dbs3Client
 dbs3Client.dbs3_url = dbs_url
@@ -20,7 +20,7 @@ from htmlor import htmlor
 from utils import sendEmail 
 from utils import closeoutInfo
 from showError import parse_one
-import csv 
+#import csv 
 
 def checkor(url, spec=None, options=None):
     if userLock():   return
@@ -134,14 +134,15 @@ def checkor(url, spec=None, options=None):
     in_manual = 0
 
     ## now you have a record of what file was invalidated globally from TT
-    try:
-        TMDB_invalid = set([row[3] for row in csv.reader( os.popen('curl -s "https://docs.google.com/spreadsheets/d/11fFsDOTLTtRcI4Q3gXw0GNj4ZS8IoXMoQDC3CbOo_2o/export?format=csv"'))])
-        TMDB_invalid = map(lambda e : e.split(':')[-1], TMDB_invalid)
-        print len(TMDB_invalid),"globally invalidated files"
-    except Exception as e:
-        print "TMDB not fetched"
-        print str(e)
-        TMDB_invalid = []
+    TMDB_invalid = dataCache.get('file_invalidation') 
+    #try:
+    #    TMDB_invalid = set([row[3] for row in csv.reader( os.popen('curl -s "https://docs.google.com/spreadsheets/d/11fFsDOTLTtRcI4Q3gXw0GNj4ZS8IoXMoQDC3CbOo_2o/export?format=csv"'))])
+    #    TMDB_invalid = map(lambda e : e.split(':')[-1], TMDB_invalid)
+    #    print len(TMDB_invalid),"globally invalidated files"
+    #except Exception as e:
+    #    print "TMDB not fetched"
+    #    print str(e)
+    #    TMDB_invalid = []
 
 
     print len(wfs),"to consider, pausing for",sleep_time
