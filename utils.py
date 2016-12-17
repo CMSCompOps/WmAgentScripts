@@ -3559,10 +3559,16 @@ class workflowInfo:
         return dataset_blocks,all_blocks,files_in_block,files_no_block
 
     def getRecoveryDoc(self):
+        collection_name = self.request['RequestName']
+        
+        if 'CollectionName' in self.request and self.request['CollectionName']:             
+            collection_name = self.request['CollectionName']
+            print "using collection name from schema"
+
         if self.recovery_doc != None:
             return self.recovery_doc
         try:
-            r1=self.conn.request("GET",'/couchdb/acdcserver/_design/ACDC/_view/byCollectionName?key="%s"&include_docs=true&reduce=false'% self.request['RequestName'])
+            r1=self.conn.request("GET",'/couchdb/acdcserver/_design/ACDC/_view/byCollectionName?key="%s"&include_docs=true&reduce=false'% collection_name)
             r2=self.conn.getresponse()
             rows = json.loads(r2.read())['rows']
             self.recovery_doc = [r['doc'] for r in rows]
