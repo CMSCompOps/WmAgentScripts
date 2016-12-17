@@ -17,9 +17,12 @@ def parse_one(url, wfn, options=None):
 
     ancestor = workflowInfo( url , wfn)
     lhe,prim,_,sec = ancestor.getIO()
+    high_order_acdc = 0
     while ancestor.request['RequestType'] == 'Resubmission':
         ancestor = workflowInfo(url, ancestor.request['OriginalRequestName'])
         lhe,prim,_,sec = ancestor.getIO()
+        high_order_acdc += 1
+
     no_input = (not lhe) and len(prim)==0 and len(sec)==0
 
     cache = 0
@@ -93,7 +96,9 @@ def parse_one(url, wfn, options=None):
         do_JL = not options.no_JL
         do_CL = not options.no_CL
         do_all_error_code = options.all_errors
-
+    if high_order_acdc>=1:
+        print high_order_acdc,"order request, pulling down all logs"
+        do_all_error_code = True
 
     n_expose = 1
     if options:
@@ -164,6 +169,7 @@ def parse_one(url, wfn, options=None):
     for task in tasks:  
         #print task
         task_rank = task.count('/')
+        task_short = task.split('/')[-1]
         total_per_site = defaultdict(int)
         for agent in stat['AgentJobInfo']:
             if not task in stat['AgentJobInfo'][agent]['tasks']: continue
@@ -219,7 +225,7 @@ def parse_one(url, wfn, options=None):
                         workflow = sample['workflow']
 
                         if do_CL and ((errorcode_s in expose_condor_code and expose_condor_code[errorcode_s][agent]) or do_all_error_code) and 'cern' in agent:
-                            os.system('ssh %s %s/WmAgentScripts/Unified/exec_expose.sh %s %s %s %s %s'%( agent, base_dir, workflow, wmbs, errorcode_s, base_dir, monitor_dir))
+                            os.system('ssh %s %s/WmAgentScripts/Unified/exec_expose.sh %s %s %s %s %s %s'%( agent, base_dir, workflow, wmbs, errorcode_s, base_dir, monitor_dir, task_short))
                             if errorcode_s in expose_condor_code:
                                 expose_condor_code[errorcode_s][agent]-=1
 
@@ -234,11 +240,13 @@ def parse_one(url, wfn, options=None):
                                     command = 'xrdcp root://cms-xrd-global.cern.ch/%s %s'%( out['lfn'], local)
                                     ## get the file
                                     os.system( command )
+                                    ## if this actually fail, let's get the file from eos using the new log mapping
                                     ## expose the content
                                     label=out['lfn'].split('/')[-1].split('.')[0]
-                                    m_dir = '%s/joblogs/%s/%s/%s'%(monitor_dir, 
+                                    m_dir = '%s/joblogs/%s/%s/%s/%s'%(monitor_dir, 
                                                                    wfn, 
                                                                    errorcode_s,
+                                                                   task_short,
                                                                    label)
                                     os.system('mkdir -p %s'%(m_dir))
                                     os.system('tar zxvf %s -C %s'%(local,m_dir))
@@ -322,9 +330,9 @@ def parse_one(url, wfn, options=None):
         for code in sorted(all_codes):
             html+='<th><a href="#%s">%s</a>'%(code,code)
             if str(code) in expose_archive_code or do_all_error_code:
-                html += ' <a href=../joblogs/%s/%s>, JL</a>'%( wfn, code )
+                html += ' <a href=../joblogs/%s/%s/%s>, JL</a>'%( wfn, code, task_short )
             if str(code) in expose_condor_code or do_all_error_code:
-                html += ' <a href=../condorlogs/%s/%s>, CL</a>'%( wfn, code )
+                html += ' <a href=../condorlogs/%s/%s/%s>, CL</a>'%( wfn, code, task_short )
             html += '</th>'
 
         html+='<th>Total jobs</th><th>Site Ready</th>'

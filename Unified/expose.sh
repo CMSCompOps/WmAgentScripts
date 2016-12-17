@@ -7,10 +7,11 @@ wmbsID=$2
 code=$3
 cluster=${wmbsID:0:4}
 loc=$4
+short=$5
 
 #end_dir=/afs/cern.ch/user/c/cmst1/www/JobLogs/$taskName/$cluster/$host\_$wmbsID
 #end_dir=/afs/cern.ch/user/c/cmst2/www/unified/condorlogs/$taskName/$code/$cluster/$host\_$wmbsID
-end_dir=$loc/condorlogs/$taskName/$code/$cluster/$host\_$wmbsID
+end_dir=$loc/condorlogs/$taskName/$code/$short/$cluster/$host\_$wmbsID
 echo $end_dir
 
 echo 'LISTING: ' /data/srv/wmagent/current/install/wmagent/JobCreator/JobCache/$taskName/*/job_$wmbsID/
