@@ -401,7 +401,7 @@
   "RunIISpring16MiniAODv1": {
     "go": false,
     "maxcopies": 1,
-    "fractionpass" : 0.13,
+    "fractionpass" : 0.95,
     "force-complete" : 0.95,
     "force-timeout" : 7,
     "lumisize": -1
@@ -415,8 +415,12 @@
   },
   "RunIISummer16DR80Premix":{
    "go":true,
-   "maxcopies": 2,
+   "maxcopies": 1,
    "lumisize": -1,
+   "partial_copy" : 0.95,
+   "force-complete" : 0.99,
+   "truncate-complete" : 0.95,
+   "force-timeout" : 7,
    "fractionpass" : { "90000" : 0.90 },
    "secondary_AAA": true,
    "SecondaryLocation" : ["T2_CH_CERN","T1_US_FNAL"],
@@ -444,6 +448,9 @@
     "go": true,
     "maxcopies": 2,
     "lumisize": -1,
+   "NONONO_partial_copy" : 0.98,
+   "NONONO_force-complete" : 0.99,
+   "NONONO_force-timeout" : 7,
     "overflow": {"PU":{"max":20000,"pending":0,"force":false}},
     "secondaries" : {"/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1_ext1-v1/GEN-SIM" : { "SiteWhitelist" : ["T1_US_FNAL", "T1_DE_KIT" , "T1_IT_CNAF", "T1_RU_JINR" ,"T2_CH_CERN" ,"T2_US_MIT", "T2_US_Nebraska","T2_US_Caltech"]} },
     "NO_NO_tune" : true
@@ -514,7 +521,7 @@
     "custodial": "T1_FR_CCIN2P3_MSS"
   },
   "pp502Fall15wmLHEGS": {
-    "go" : false,
+    "go" : true,
     "parameters": {	
       "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue", "T2_US_Caltech", "T2_US_Florida", "T2_US_Nebraska", "T2_US_UCSD", "T2_US_Wisconsin" ],
       "MergedLFNBase": "/store/himc"
@@ -658,5 +665,11 @@
   },
   "Upg2017Summer15DR": {
     "go": false
+  },
+  "PhaseIFall16GS" : {
+    "go" : false
+  },
+  "PhaseIIFall16GS82" : {
+    "go" : false
   }
 }
