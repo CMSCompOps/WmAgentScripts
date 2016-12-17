@@ -58,7 +58,8 @@ jsonBlob = {
              "MaxRSS": 2411724,
              "MaxVSize": 20411724,
              "Dashboard": "reprocessing",
-             "Team": "Team--OVERRIDE-ME"
+             "Team": "Team--OVERRIDE-ME",
+             "OpenRunningTimeout": 0
             }
 }
 
@@ -276,9 +277,10 @@ def getFiles(datasetName, runBlacklist, runWhitelist, blockBlacklist,
         # We cannot upload docs without location, so force it in case it's empty
         if not blockLocations:
             if fakeLocation:
+                logging.info("\t\t %s\tno location", blockName)
                 blockLocations.update([u'cmssrmdisk.fnal.gov', u'srm-eoscms.cern.ch'])
             elif not has_parent: ## this should be the source
-                logging.info("Blockname: %s\t no location, ABORT", blockName)
+                logging.info("Blockname: %s\tno location, ABORT", blockName)
                 sys.exit(1)
         
         logging.info("Blockname: %s\tLocations: %s", blockName, blockLocations)
@@ -594,11 +596,16 @@ def defineRequests(workload, requestInfo,
         # Assign parameters
         assignDict = jsonBlob["assignRequest"]
         team = requestInfo['Teams'][0]
-        processingString = workload.getProcessingString()
-        processingVersion = workload.getProcessingVersion()
-        acqEra = workload.getAcquisitionEra()
-        mergedLFNBase = workload.getMergedLFNBase()
-        unmergedLFNBase = workload.getUnmergedLFNBase()
+        processingString = requestInfo['ProcessingString']
+        processingVersion = requestInfo['ProcessingVersion']
+        acqEra = requestInfo['AcquisitionEra']
+        mergedLFNBase = requestInfo['MergedLFNBase']
+        unmergedLFNBase = requestInfo['UnmergedLFNBase']
+        #processingString = workload.getProcessingString()
+        #processingVersion = workload.getProcessingVersion()
+        #acqEra = workload.getAcquisitionEra()
+        #mergedLFNBase = workload.getMergedLFNBase()
+        #unmergedLFNBase = workload.getUnmergedLFNBase()
         topTask = workload.getTopLevelTask()[0]
         siteWhitelist = topTask.siteWhitelist()
         assignDict["SiteWhitelist"] = siteWhitelist
