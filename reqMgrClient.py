@@ -1062,19 +1062,19 @@ def setWorkflowRunning(url, workflowname):
         data = requestManager1Put(url,"/reqmgr/reqMgr/request", params)
     return data
 
-def invalidateWorkflow(url, workflowname, current_status=None):
+def invalidateWorkflow(url, workflowname, current_status=None, cascade=False):
     if not current_status:
         print "not implemented yet to retrieve the status at that point"
     
     if current_status in ['assignment-approved','new','completed','closed-out','announced','failed']:
-        return rejectWorkflow(url, workflowname)
+        return rejectWorkflow(url, workflowname, cascade)
     elif current_status in['normal-archived']:
         return rejectArchivedWorkflow(url, workflowname)
     elif current_status in ['aborted','rejected','aborted-archived','rejected-archived']:
         print workflowname,"already",current_status
         return True
     else:
-        return abortWorkflow(url, workflowname)
+        return abortWorkflow(url, workflowname, cascade)
 
 def rejectArchivedWorkflow(url, workflowname): 
     """ 
@@ -1088,24 +1088,26 @@ def rejectArchivedWorkflow(url, workflowname):
         data = requestManager1Put(url,"/reqmgr/reqMgr/request", params)
     return data
 
-def rejectWorkflow(url, workflowname):
+def rejectWorkflow(url, workflowname, cascade=False):
     """
     Sets a workflow state to rejected
     """
     if isRequestMgr2Request(url, workflowname):
         params = {"RequestStatus" : "rejected"}
+        if cascade: params.update({"cascade": cascade})
         data = requestManagerPut(url,"/reqmgr2/data/request/%s"%workflowname, params)
     else:
         params = {"requestName" : workflowname,"status" : "rejected"}
         data = requestManager1Put(url,"/reqmgr/reqMgr/request", params)
     return data
 
-def abortWorkflow(url, workflowname):
+def abortWorkflow(url, workflowname, cascade=False):
     """
     Sets a workflow state to aborted
     """
     if isRequestMgr2Request(url, workflowname):
         params = {"RequestStatus" : "aborted"}
+        if cascade: params.update({"cascade": cascade})
         data = requestManagerPut(url,"/reqmgr2/data/request/%s"%workflowname, params)
     else:
         params = {"requestName" : workflowname,"status" : "aborted"}
