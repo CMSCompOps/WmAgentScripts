@@ -2,7 +2,7 @@
 from assignSession import *
 import sys
 import reqMgrClient
-from utils import workflowInfo, getWorkflowById, forceComplete, getDatasetEventsAndLumis, componentInfo, monitor_dir, reqmgr_url, unifiedConfiguration, getForceCompletes
+from utils import workflowInfo, getWorkflowById, forceComplete, getDatasetEventsAndLumis, componentInfo, monitor_dir, reqmgr_url, unifiedConfiguration, getForceCompletes, getAllStuckDataset
 from utils import campaignInfo, siteInfo, sendLog
 from collections import defaultdict
 import json
@@ -33,14 +33,22 @@ def completor(url, specific):
     max_per_round = UC.get('max_per_round').get('completor',None)
     if max_per_round and not specific: wfs = wfs[:max_per_round]
 
+    all_stuck = set()
+    all_stuck.update( json.loads( open('%s/stuck_transfers.json'%monitor_dir).read() ))
+    all_stuck.update( getAllStuckDataset()) 
+
+
     ## by workflow a list of fraction / timestamps
     completions = json.loads( open('%s/completions.json'%monitor_dir).read())
     
     good_fractions = {}
+    truncate_fractions = {} 
     timeout = {}
     for c in CI.campaigns:
         if 'force-complete' in CI.campaigns[c]:
             good_fractions[c] = CI.campaigns[c]['force-complete']
+        if 'truncate-complete' in CI.campaigns[c]:
+            truncate_fractions[c] = CI.campaigns[c]['truncate-complete']
         if 'force-timeout' in CI.campaigns[c]:
             timeout[c] = CI.campaigns[c]['force-timeout']
 
@@ -55,6 +63,9 @@ def completor(url, specific):
 
     print "can force complete on"
     print json.dumps( good_fractions ,indent=2)
+    print "can truncate complete on"
+    print json.dumps( truncate_fractions ,indent=2)
+    print "can overide on"
     print json.dumps( overrides, indent=2)
     max_force = UC.get("max_force_complete")
     
@@ -74,7 +85,7 @@ def completor(url, specific):
         wfi = workflowInfo(url, wfo.name)
         pids = wfi.getPrepIDs()
         skip=False
-        if not any([c in wfo.name for c in good_fractions]): skip=True
+        if not any([c in wfo.name for c in good_fractions]) and not any([c in wfo.name for c in truncate_fractions]): skip=True
         for user,spec in overrides.items():
 
             if wfi.request['RequestStatus']!='force-complete':
@@ -107,8 +118,12 @@ def completor(url, specific):
                 print str(e)
 
         c = wfi.request['Campaign']
-        if not c in good_fractions: continue
-        good_fraction = good_fractions[c]
+        #if not c in good_fractions: continue
+
+        good_fraction = good_fractions.get(c,1000.)
+        truncate_fraction = truncate_fractions.get(c,1000.)
+
+        print good_fraction, truncate_fraction
         ignore_fraction = 2.
         
         lumi_expected = None
@@ -152,7 +167,10 @@ def completor(url, specific):
                 wfi.sendLog('completor','bumping priority to %d for being injected since'% tail_cutting_priority)
                 reqMgrClient.changePriorityWorkflow(url, wfo.name, tail_cutting_priority)
 
-        
+        _,prim,_,_ = wfi.getIO()
+        is_stuck = all_stuck & prim
+        if is_stuck: wfi.sendLog('completor','%s is stuck'%','.join(is_stuck))
+
         monitor_delay = 7
         allowed_delay = 14
         if c in timeout:
@@ -189,6 +207,12 @@ def completor(url, specific):
             wfi.sendLog('completor', "all is above %s \n%s"%( good_fraction, 
                                                               json.dumps( percent_completions, indent=2 )
                                                               ))
+        elif is_stuck and (all([percent_completions[out] >= truncate_fraction for out in percent_completions])):
+            wfi.sendLog('completor', "all is above %s truncation level, and the input is stuck\n%s"%( truncate_fraction,
+                                                                                                      json.dumps( percent_completions, indent=2 ) ) )
+
+            sendEmail('possible workflow for truncation','check on %s'%wfo.name)
+            continue ## because you do not want to get this one right now
         else:
             long_lasting[wfo.name].update({
                     'completion': sum(percent_completions.values()) / len(percent_completions),

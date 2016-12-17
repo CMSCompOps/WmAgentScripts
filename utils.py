@@ -931,6 +931,40 @@ class docCache:
             'cachefile' : None,
             'default' : ""
             }
+
+        self.cache['stuck_cat1'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration(),
+            'getter' : lambda : json.loads( os.popen('curl -s --retry 5 https://test-cmstransfererrors.web.cern.ch/test-CMSTransferErrors/stuck_1.json').read()),
+            'cachefile' : None,
+            'default' : {}
+            }
+        for cat in ['1','2','m1','m3','m4','m5','m6']:
+            self.cache['stuck_cat%s'%cat] = {
+                'data' : None,
+                'timestamp' : time.mktime( time.gmtime()),
+                'expiration' : default_expiration(),
+                'getter' : lambda : json.loads( os.popen('curl -s --retry 5 https://test-cmstransfererrors.web.cern.ch/test-CMSTransferErrors/stuck_%s.json'%cat).read()),
+                'cachefile' : None,
+                'default' : {}
+                }
+        def get_invalidation():
+            import csv
+            TMDB_invalid = set([row[3] for row in csv.reader( os.popen('curl -s "https://docs.google.com/spreadsheets/d/11fFsDOTLTtRcI4Q3gXw0GNj4ZS8IoXMoQDC3CbOo_2o/export?format=csv"'))])
+            TMDB_invalid = map(lambda e : e.split(':')[-1], TMDB_invalid)
+            print len(TMDB_invalid),"globally invalidated files"
+            return TMDB_invalid
+
+        self.cache['file_invalidation'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration(),
+            'getter' : get_invalidation,
+            'cachefile' : None,
+            'default' : {}
+            }
+
         self.cache['mss_usage'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
@@ -1018,6 +1052,14 @@ def getNodeUsage(url, node):
 
 dataCache = docCache()
 
+def getAllStuckDataset():
+    all_stuck = set()
+    for cat in ['1','2','m1','m3','m4','m5','m6']:
+        info = dataCache.get('stuck_cat%s'%cat)
+        all_stuck.update( info.keys() )
+    return all_stuck
+
+
 class DSS:
     def __init__(self):
         try:
@@ -1066,7 +1108,7 @@ class siteInfo:
         try:
             agents = getAllAgents( reqmgr_url )
             for team,agents in agents.items():
-                print team
+                #print team
                 if team !='production': continue
                 for agent in agents:
                     if agent['status'] != 'ok': 
@@ -1700,6 +1742,8 @@ Updated on %s (GMT) <br>
         html.write("bottom of page</html>")    
 
 
+
+        
 
 def getSiteWhiteList( inputs , pickone=False):
     print "deprecated"
@@ -2737,7 +2781,19 @@ def getDatasetEventsPerLumi(dataset):
     except:
         average = 100
     return average
-                    
+           
+def setFileStatus(file_names, validate=True):
+    dbswrite = DbsApi(url=dbs_url_writer)
+    dbsapi = DbsApi(url=dbs_url)
+    files = dbsapi.listFileArray(logical_file_name = file_names, detail=True)
+    for fn in files:
+        status = fn['is_file_valid']
+        if status != validate:
+            ## then change the status
+            print "Turning",fn['logical_file_name'],"to",validate
+            dbswrite.updateFileStatus( logical_file_name= fn['logical_file_name'], is_file_valid = int(validate) )
+
+
 def setDatasetStatus(dataset, status):
     dbswrite = DbsApi(url=dbs_url_writer)
 

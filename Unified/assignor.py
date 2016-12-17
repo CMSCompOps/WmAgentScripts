@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 from assignSession import *
 import reqMgrClient
-from utils import workflowInfo, campaignInfo, siteInfo, userLock, unifiedConfiguration, reqmgr_url, monitor_dir
-from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction, getDatasetEventsPerLumi, getLFNbase, getDatasetBlocks, lockInfo
+from utils import workflowInfo, campaignInfo, siteInfo, userLock, unifiedConfiguration, reqmgr_url, monitor_dir, global_SI
+from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction, getDatasetEventsPerLumi, getLFNbase, getDatasetBlocks, lockInfo, getAllStuckDataset
 from utils import componentInfo, sendEmail, sendLog
 #from utils import lockInfo
 from utils import duplicateLock, notRunningBefore
@@ -23,7 +23,8 @@ def assignor(url ,specific = None, talk=True, options=None):
 
     UC = unifiedConfiguration()
     CI = campaignInfo()
-    SI = siteInfo()
+    #SI = siteInfo()
+    SI = global_SI()
     #NLI = newLockInfo()
     #if not NLI.free() and not options.go: return
     LI = lockInfo()
@@ -55,11 +56,15 @@ def assignor(url ,specific = None, talk=True, options=None):
     dataset_endpoints = json.loads(open('%s/dataset_endpoints.json'%monitor_dir).read())
     aaa_mapping = json.loads(open('%s/equalizor.json'%monitor_dir).read())['mapping']
 
+    all_stuck = set()
+    all_stuck.update( json.loads( open('%s/stuck_transfers.json'%monitor_dir).read() ))
+    all_stuck.update( getAllStuckDataset()) 
 
     max_per_round = UC.get('max_per_round').get('assignor',None)
     max_cpuh_block = UC.get('max_cpuh_block')
     random.shuffle( wfos )
     for wfo in wfos:
+        
         if options.limit and (n_stalled+n_assigned)>options.limit:
             break
 
@@ -71,6 +76,10 @@ def assignor(url ,specific = None, talk=True, options=None):
             #if not specific in wfo.name: continue
         print "\n\n"
         wfh = workflowInfo( url, wfo.name)
+
+        if options.priority and int(wfh.request['RequestPriority']) < options.priority:
+            continue
+
         options_text=""
         if options.early: options_text+=", early option is ON"
         if options.partial: 
@@ -85,6 +94,11 @@ def assignor(url ,specific = None, talk=True, options=None):
         (lheinput,primary,parent,secondary, sites_allowed) = wfh.getSiteWhiteList()
         output_tiers = list(set([o.split('/')[-1] for o in wfh.request['OutputDatasets']]))
         
+        
+        is_stuck = (all_stuck & primary)
+        if is_stuck:
+            wfh.sendLog('assignor',"%s are stuck input"%(','.join( is_stuck)))
+
         ## check if by configuration we gave it a GO
         no_go = False
         if not wfh.go(log=True) and not options.go:
@@ -118,9 +132,6 @@ def assignor(url ,specific = None, talk=True, options=None):
             for sec in secondary:
                 if sec in allowed_secondary:# and 'parameters' in allowed_secondary[sec]:
                     assign_parameters.update( allowed_secondary[sec] )
-
-        if options.priority and int(wfh.request['RequestPriority']) < options.priority:
-            no_go = True
 
         if no_go:
             n_stalled+=1 
@@ -170,6 +181,7 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         primary_aaa = options.primary_aaa
         secondary_aaa = options.secondary_aaa
+        do_partial = False #options.good_enough if options.partial else 0
 
         if 'Campaign' in wfh.request and wfh.request['Campaign'] in CI.campaigns:
             assign_parameters.update( CI.campaigns[wfh.request['Campaign']] )
@@ -178,6 +190,16 @@ def assignor(url ,specific = None, talk=True, options=None):
             primary_aaa = primary_aaa or assign_parameters['primary_AAA']
         if 'secondary_AAA' in assign_parameters:
             secondary_aaa = secondary_aaa or assign_parameters['secondary_AAA']
+        if 'partial_copy' in assign_parameters:
+            ## can this only work if there is a stuck input ? maybe not
+            ## this is a number. 0 means no
+            print "Could do partial disk copy assignment"
+            if is_stuck or options.partial:
+                do_partial = assign_parameters['partial_copy']
+                wfh.sendLog('assignor',"Overiding partial copy assignment to %.2f fraction"% do_partial)
+                #sendEmail('stuck input to assignment','%s is stuck for assigning %s and going fractional'%(','.join( is_stuck), wfo.name))
+            
+        do_partial = options.good_enough if options.partial else do_partial
 
 
         for sec in list(secondary):
@@ -301,7 +323,7 @@ def assignor(url ,specific = None, talk=True, options=None):
             wfh.sendLog('assignor',"Selected for any data %s"%sorted(sites_allowed))
 
         ### check on endpoints for on-going transfers
-        if options.partial:
+        if do_partial:
             if endpoints:
                 end_sites = [SI.SE_to_CE(s) for s in endpoints]
                 sites_allowed = list(set(sites_allowed + end_sites))
@@ -333,7 +355,7 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         if available_fractions and not all([available>=copies_wanted for available in available_fractions.values()]):
             not_even_once = not all([available>=1. for available in available_fractions.values()])
-            above_good = all([available >= options.good_enough for available in available_fractions.values()])
+            above_good = all([available >= do_partial for available in available_fractions.values()])
             wfh.sendLog('assignor',"The input dataset is not available %s times, only %s"%( copies_wanted, available_fractions.values()))
             if down_time and not options.go and not options.early:
                 wfo.status = 'considered'
@@ -351,7 +373,7 @@ def assignor(url ,specific = None, talk=True, options=None):
                     known = json.loads(open('cannot_assign.json').read())
                 except:
                     pass
-                if not wfo.name in known and not options.limit and not options.go and not options.early and not (options.partial and above_good):
+                if not wfo.name in known and not options.limit and not options.go and not options.early and not (do_partial and above_good):
                     wfh.sendLog('assignor',"cannot be assigned, %s is not sufficiently available.\n %s"%(wfo.name,json.dumps(available_fractions)))
                     #sendEmail( "cannot be assigned","%s is not sufficiently available.\n %s"%(wfo.name,json.dumps(available_fractions)))
                     known.append( wfo.name )
@@ -364,7 +386,7 @@ def assignor(url ,specific = None, talk=True, options=None):
                         session.commit()
                     else:
                         print "tried but status is",wfo.status
-                if options.partial and above_good:
+                if do_partial and above_good:
                     print "Will move on with partial locations"
                 else:
                     n_stalled+=1

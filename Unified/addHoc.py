@@ -10,8 +10,8 @@ import time
 
 
 #os.system('Unified/assignor.py RunIISummer16MiniAODv2')
-os.system('Unified/assignor.py --from_status staging RunIISummer16DR80Premix')
-os.system('Unified/assignor.py --from_status staging RunIISummer16DR80-')
+#os.system('Unified/assignor.py --from_status staging RunIISummer16DR80Premix')
+#os.system('Unified/assignor.py --from_status staging RunIISummer16DR80-')
 
 up = componentInfo(mcm=False, soft=['mcm'])                                 
 if not up.check(): sys.exit(0)
