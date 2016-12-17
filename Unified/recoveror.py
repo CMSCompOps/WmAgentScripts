@@ -21,7 +21,8 @@ def singleRecovery(url, task , initial, actions, do=False):
         "RequestType" : "Resubmission",
         "ACDCServer" : initial['CouchURL'],
         "ACDCDatabase" : "acdcserver",
-        "OriginalRequestName" : initial['RequestName']
+        "OriginalRequestName" : initial['RequestName'],
+        "OpenRunningTimeout" : 0
         }
     copy_over = ['PrepID', 'Campaign', 'RequestPriority', 'TimePerEvent', 'SizePerEvent', 'Group', 'Memory', 'RequestString' ,'CMSSWVersion']        
     for c in copy_over:
