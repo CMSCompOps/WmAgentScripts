@@ -218,7 +218,7 @@ for wf in wfs:
                 not_processable.add( b )
                 print "Block",b,"is at",",".join(sorted(block_se)),"while asked to run at",",".join(sorted(swl))
         if not_processable:
-            wfi.sendLog('GQ','The following blocks/files need to be put back on disk \n%s'%(','.join( not_processable )))
+            wfi.sendLog('GQ','The following blocks/files need to be put back on disk \n%s'%('\n'.join( not_processable )))
     if all_wqe_done:
         stuck_all_done.add( wf['RequestName'] )
 
