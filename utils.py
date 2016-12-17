@@ -382,9 +382,11 @@ class newLockInfo:
 
 
 class lockInfo:
-    def __init__(self):
-        os.system('echo `date` > %s/globallocks.json.lock'%monitor_dir)
+    def __init__(self, andwrite=True):
         self.lockfilename = 'globallocks' ## official name
+        self.writeondelete = andwrite
+        if self.writeondelete:
+            os.system('echo `date` > %s/globallocks.json.lock'%monitor_dir)
 
     def free(self):
         started = time.mktime(time.gmtime())
@@ -421,18 +423,20 @@ class lockInfo:
                                                 'reason' : lock.reason
                                                 }
                 else:
-                    print "poping",lock.item
+                    #print "poping",lock.item
+                    pass
                     ## let's not do that for now
                     #session.delete( lock )
                     #session.commit()                    
 
             #print "writing to json"
-            print "writing",len( out ),"locks to the json interface"
-            open('%s/%s.json.new'%(monitor_dir,self.lockfilename),'w').write( json.dumps( sorted(out) , indent=2))
-            os.system('mv %s/%s.json.new %s/%s.json'%(monitor_dir,self.lockfilename,monitor_dir,self.lockfilename))
-            open('%s/%s.detailed.json.new'%(monitor_dir,self.lockfilename),'w').write( json.dumps( detailed_out , indent=2))
-            os.system('mv %s/%s.detailed.json.new %s/%s.detailed.json'%(monitor_dir,self.lockfilename,monitor_dir,self.lockfilename))
-            os.system('rm -f %s/globallocks.json.lock'%monitor_dir)
+            if self.writeondelete:
+                print "writing",len( out ),"locks to the json interface"
+                open('%s/%s.json.new'%(monitor_dir,self.lockfilename),'w').write( json.dumps( sorted(out) , indent=2))
+                os.system('mv %s/%s.json.new %s/%s.json'%(monitor_dir,self.lockfilename,monitor_dir,self.lockfilename))
+                open('%s/%s.detailed.json.new'%(monitor_dir,self.lockfilename),'w').write( json.dumps( detailed_out , indent=2))
+                os.system('mv %s/%s.detailed.json.new %s/%s.detailed.json'%(monitor_dir,self.lockfilename,monitor_dir,self.lockfilename))
+                os.system('rm -f %s/globallocks.json.lock'%monitor_dir)
         except Exception as e:
             print "Failed writing locks"
             print str(e)
@@ -454,6 +458,11 @@ class lockInfo:
             sendLog('lockInfo',"[Release] releasing %s"%item)
             l.lock = False
             session.commit()
+
+    def islocked( self, item):
+        from assignSession import session, Lock
+        l = session.query(Lock).filter(Lock.item == item).first()
+        return (l and l.lock)
 
     def _lock(self, item, site, reason):
         #from dataLock import locksession, Lock
