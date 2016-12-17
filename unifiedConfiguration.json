@@ -1,7 +1,7 @@
 {
  "site_for_overflow": {
    "value" : ["T0_CH_CERN",
-              "NONO_T2_CH_CERN_HLT"],
+              "T2_CH_CERN_HLT"],
    "description" : "The sites that we set to overflow and require a specific treatment"
  },
  "overflow_pressure": {
@@ -15,6 +15,7 @@
  "sites_banned": {
    "value" : ["T2_CH_CERN_AI",
       	      "NONO_T0_CH_CERN",
+	      "T2_TH_CUNSTDA",
 	      "T2_US_Vanderbilt",
 	      "T2_EE_Estonia"],
    "description" : "The sites that are banned from production"
