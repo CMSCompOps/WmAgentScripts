@@ -8,6 +8,7 @@ from utils import componentInfo, getWorkflowById, sendLog
 import optparse
 import json
 import re
+import os
 
 def rejector(url, specific, options=None):
 
@@ -66,9 +67,10 @@ def rejector(url, specific, options=None):
         for fwl in familly:
             if fwl['RequestDate'] < wfi.request['RequestDate']: continue
             if fwl['RequestType']!='Resubmission': continue
+            ## does not work on second order acd
             if 'OriginalRequestName' in fwl and fwl['OriginalRequestName'] != wfi.request['RequestName']: continue
             print "rejecting",fwl['RequestName']
-            reqMgrClient.invalidateWorkflow(url, fwl['RequestName'], current_status=fwl['RequestStatus'])
+            reqMgrClient.invalidateWorkflow(url, fwl['RequestName'], current_status=fwl['RequestStatus'], cascade=False)
             datasets.update( fwl['OutputDatasets'] )
 
         for dataset in datasets:
