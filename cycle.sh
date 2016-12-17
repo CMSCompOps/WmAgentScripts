@@ -1,5 +1,4 @@
 if [ -r /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cycle.lock ] ; then
-    
     if [ `ps -e -f | grep Uni | grep -c -v grep` == "0" ] ; then
 	echo "There isn't anything running, very suspicious"
 	sleep 30
