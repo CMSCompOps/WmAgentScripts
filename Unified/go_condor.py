@@ -141,7 +141,6 @@ def makePrioCorrectionsAds():
     anAd["eval_set_JR_PostJobPrio2"] = classad.ExprTree("-MaxWallTimeMins - RequestDisk/1000000")
     anAd["set_PostJobPrio1"] = classad.Attribute("JR_PostJobPrio1")
     anAd["set_PostJobPrio2"] = classad.Attribute("JR_PostJobPrio2")
-    anAd["MaxJobs"] = 50
     print anAd
 
 def makePerformanceCorrectionsAds(configs):
