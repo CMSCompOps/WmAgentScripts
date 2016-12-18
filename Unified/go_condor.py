@@ -6,6 +6,7 @@ import json
 import socket
 import urllib
 import classad
+import hashlib
 import htcondor
 from collections import defaultdict
 
