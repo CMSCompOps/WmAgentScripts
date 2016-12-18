@@ -93,7 +93,7 @@ def makeOverflowAds(config):
     anAd["OverflowTasknames"] = map(str, needs_site[site])
     overflow_names_escaped = anAd.lookup('OverflowTasknames').__repr__()
     del anAd['OverflowTaskNames']
-    exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (HasBeenRouter_Overflow isnt true)' % overflow_names_escaped)
+    exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (HasBeenRouted_Overflow isnt true)' % overflow_names_escaped)
     anAd["Requirements"] = classad.ExprTree(str(exp))
     anAd["eval_set_DESIRED_Sites"] = classad.ExprTree('ifThenElse(siteMapping("", []) isnt error, siteMapping(DESIRED_CMSDataLocations, %s), DESIRED_CMSDataLocations)' % str(classad.ClassAd(source_to_dests)))
     anAd['set_Rank'] = classad.ExprTree("stringlistmember(GLIDEIN_CMSSite, ExtDESIRED_Sites)")
