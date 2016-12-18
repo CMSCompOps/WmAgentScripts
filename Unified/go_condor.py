@@ -75,7 +75,7 @@ def makeOverflowAds(config):
         anAd['set_HasBeenRouted'] = False
         for site in similar_sites:
             anAd['set_HasBeenRouted_%s' % site] = True
-        print anAd
+        #print anAd
 
     source_to_dests = {}
     for dest, sources in reversed_mapping.items():
@@ -85,8 +85,7 @@ def makeOverflowAds(config):
     tmp_source_to_dests = source_to_dests
     source_to_dests = {}
     for source, dests in tmp_source_to_dests.items():
-        source_to_dests[source] = list(dests)
-    serialized_map = json.dumps(source_to_dests)
+        source_to_dests[str(source)] = list(str(i) for i in dests)
     anAd = classad.ClassAd()
     anAd["GridResource"] = "condor localhost localhost"
     anAd["TargetUniverse"] = 5
@@ -96,11 +95,11 @@ def makeOverflowAds(config):
     del anAd['OverflowTaskNames']
     exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (HasBeenRouter_Overflow isnt true)' % overflow_names_escaped)
     anAd["Requirements"] = classad.ExprTree(str(exp))
-    anAd["eval_set_DESIRED_Sites"] = classad.ExprTree('ifThenElse(siteMapping("", "{}") isnt error, siteMapping(ExtDESIRED_Sites, %s), ExtDESIRED_Sites)' % classad.quote(serialized_map))
+    anAd["eval_set_DESIRED_Sites"] = classad.ExprTree('ifThenElse(siteMapping("", []) isnt error, siteMapping(DESIRED_CMSDataLocations, %s), DESIRED_CMSDataLocations)' % str(classad.ClassAd(source_to_dests)))
     anAd['set_Rank'] = classad.ExprTree("stringlistmember(GLIDEIN_CMSSite, ExtDESIRED_Sites)")
     anAd['set_HasBeenRouted'] = False
     anAd['set_HasBeenRouted_Overflow'] = True
-    #print anAd
+    print anAd
 
 
 def makeSortAds():

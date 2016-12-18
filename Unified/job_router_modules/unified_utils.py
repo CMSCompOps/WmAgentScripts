@@ -1,6 +1,5 @@
 
 import re
-import json
 import classad
 
 _split_re = re.compile(",\s*")
@@ -14,13 +13,12 @@ def sortStringSet(in_list, state={}):
     split_list.sort()
     return ",".join(split_list)
 
-def siteMapping(in_list, in_mapping, state={}):
+_split_re = re.compile(",\s*")
+def siteMapping(in_list, source_to_dests, state={}):
     if isinstance(in_list, classad.ExprTree):
         in_list = in_list.eval(state)
     if isinstance(in_list, classad.Value):
         return classad.Value.Undefined
-
-    source_to_dests = json.loads(in_mapping)
 
     split_list = _split_re.split(in_list)
     final_set = set()
