@@ -6,17 +6,14 @@ import json
 import socket
 import urllib
 import classad
-import hashlib
 import htcondor
 from collections import defaultdict
 
 #g_is_cern = socket.getfqdn().endswith("cern.ch")
 
 def makeOverflowAds(config):
-    # Mapping from source to a list of destinations.
     reversed_mapping = config['reversed_mapping']
 
-    overflow_tasks = set()
     needs_site = defaultdict(set)
     for workflow, tasks in config['modifications'].items():
         for taskname,specs in tasks.items():
@@ -25,7 +22,7 @@ def makeOverflowAds(config):
             anAd["TargetUniverse"] = 5
             exp = '(HasBeenReplaced isnt true)  && (target.WMAgent_SubTaskName =?= %s)' % classad.quote(str(taskname))
             anAd["Requirements"] = classad.ExprTree(str(exp))
-            add_whitelist = specs.get("AddWhitelist")
+            
             if "ReplaceSiteWhitelist" in specs:
                 anAd["Name"] = str("Site Replacement for %s"% taskname)
                 #if ("T2_CH_CERN_HLT" in specs['ReplaceSiteWhitelist']) and not g_is_cern: specs['ReplaceSiteWhitelist'].remove("T2_CH_CERN_HLT")
@@ -34,73 +31,30 @@ def makeOverflowAds(config):
                 anAd["set_HasBeenReplaced"] = True
                 anAd["set_HasBeenRouted"] = False
                 print anAd
-            elif add_whitelist:
-                overflow_tasks.add(taskname)
-                for site in add_whitelist:
+            elif "AddWhitelist" in specs:
+                for site in specs['AddWhitelist']:
                     needs_site[site].add(taskname)
+ 
 
-    common_mapping = {}
-    common_origins = {}
-    for site in needs_site:
-        if not site in reversed_mapping:
-            continue
-        site = str(site)
-        origins = set(str(origin) for origin in reversed_mapping[site])
-        origins.add(site)
-        origins = list(origins)
-        origins.sort()
-        s = hashlib.sha1()
-        s.update(str(origins))
-        key = s.hexdigest()
-        common_origins[key] = origins
-        similar_sites = common_mapping.setdefault(key, set())
-        similar_sites.add(site)
-
-    for key, similar_sites in common_mapping.items():
-        origins = common_origins[key]
+    for site in  needs_site:
+        if not site in reversed_mapping: continue
+        #if site == "T2_CH_CERN_HLT" and not g_is_cern: continue
         anAd = classad.ClassAd()
         anAd["GridResource"] = "condor localhost localhost"
         anAd["TargetUniverse"] = 5
-        anAd["Name"] = str("Overflow rule to go to %s" % ", ".join(similar_sites))
+        anAd["Name"] = str("Overflow rule to go to %s"%site)
         anAd["OverflowTasknames"] = map(str, needs_site[site])
         overflow_names_escaped = anAd.lookup('OverflowTasknames').__repr__()
         del anAd['OverflowTaskNames']
-        #print "Mapping", origins
-        exprs = ['regexp(%s, target.ExtDESIRED_Sites)' % classad.quote(site) for site in origins]
-        dest_exprs = ['target.HasBeenRouted_%s =!= true' % site for site in similar_sites]
-        exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && ( %s ) && %s' % (overflow_names_escaped, str("||".join( exprs )), "&&".join(dest_exprs)))
+        exprs = ['regexp(%s, target.ExtDESIRED_Sites)'% classad.quote(str(origin)) for origin in reversed_mapping[site]]
+        exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && ( %s ) && (target.HasBeenRouted_%s =!= true)' % (overflow_names_escaped, str("||".join( exprs )), str(site)))
         anAd["Requirements"] = classad.ExprTree(str(exp))
         anAd["copy_DESIRED_Sites"] = "Prev_DESIRED_Sites"
         anAd["eval_set_DESIRED_Sites"] = classad.ExprTree('ifThenElse(sortStringSet("") isnt error, sortStringSet(strcat(%s, ",", Prev_DESIRED_Sites)), strcat(%s, ",", Prev_DESIRED_Sites))' % (classad.quote(str(site)), classad.quote(str(site))))
         anAd['set_Rank'] = classad.ExprTree("stringlistmember(GLIDEIN_CMSSite, ExtDESIRED_Sites)")
         anAd['set_HasBeenRouted'] = False
-        for site in similar_sites:
-            anAd['set_HasBeenRouted_%s' % site] = True
-        #print anAd
-
-    source_to_dests = {}
-    for dest, sources in reversed_mapping.items():
-        for source in sources:
-            dests = source_to_dests.setdefault(source, set())
-            dests.add(dest)
-    tmp_source_to_dests = source_to_dests
-    source_to_dests = {}
-    for source, dests in tmp_source_to_dests.items():
-        source_to_dests[str(source)] = list(str(i) for i in dests)
-    anAd = classad.ClassAd()
-    anAd["GridResource"] = "condor localhost localhost"
-    anAd["TargetUniverse"] = 5
-    anAd["Name"] = "Master overflow rule"
-    anAd["OverflowTasknames"] = map(str, needs_site[site])
-    overflow_names_escaped = anAd.lookup('OverflowTasknames').__repr__()
-    del anAd['OverflowTaskNames']
-    exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (HasBeenRouted_Overflow isnt true)' % overflow_names_escaped)
-    anAd["Requirements"] = classad.ExprTree(str(exp))
-    anAd["eval_set_DESIRED_Sites"] = classad.ExprTree('ifThenElse(siteMapping("", []) isnt error, siteMapping(DESIRED_CMSDataLocations, %s), DESIRED_CMSDataLocations)' % str(classad.ClassAd(source_to_dests)))
-    anAd['set_Rank'] = classad.ExprTree("stringlistmember(GLIDEIN_CMSSite, ExtDESIRED_Sites)")
-    anAd['set_HasBeenRouted'] = False
-    anAd['set_HasBeenRouted_Overflow'] = True
-    print anAd
+        anAd['set_HasBeenRouted_%s' % str(site)] = True
+        print anAd
 
 
 def makeSortAds():
@@ -142,6 +96,7 @@ def makePrioCorrectionsAds():
     anAd["eval_set_JR_PostJobPrio2"] = classad.ExprTree("-MaxWallTimeMins - RequestDisk/1000000")
     anAd["set_PostJobPrio1"] = classad.Attribute("JR_PostJobPrio1")
     anAd["set_PostJobPrio2"] = classad.Attribute("JR_PostJobPrio2")
+    anAd["MaxJobs"] = 50
     print anAd
 
 def makePerformanceCorrectionsAds(configs):
