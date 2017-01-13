@@ -38,8 +38,11 @@ for c in CI.campaigns:
 
 newly_locking = set()
 also_locking_from_reqmgr = set()
-## you want to take them in reverse order to make sure none go through a transition while you run this 
-for status in reversed(statuses):
+
+## my own list of shit to lock globally
+
+#for status in reversed(statuses):
+for status in statuses:
     wfls = getWorkflows(url , status = status,details=True)
     print len(wfls),"in",status
     for wl in wfls:
@@ -146,7 +149,7 @@ for dataset in already_locked-newly_locking:
         if not unlock:
             ds_status = getDatasetStatus( dataset )
 
-            if ds_status in ['INVALID',None]: 
+            if ds_status in ['INVALID']:#,None]: 
                 ## don't even try to keep the lock
                 print "\tunlocking",dataset,"for bad dataset status",ds_status
                 unlock = True
