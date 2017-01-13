@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from utils import workflowInfo, siteInfo, monitor_dir, base_dir, global_SI, getDatasetPresence
+from utils import workflowInfo, siteInfo, monitor_dir, base_dir, global_SI, getDatasetPresence, getDatasetBlocksFraction
 import json
 import sys
 import os
@@ -139,11 +139,17 @@ def parse_one(url, wfn, options=None):
     if prim:
         html+='Reads in primary<br>'
         for dataset in prim:
+            html +='<b>%s</b>'%dataset
+            available = getDatasetBlocksFraction(url, dataset)
+            html +='<br><br>Available %.2f (>1 more than one copy, <1 not in full on disk)<br>'% available
+            html +='<ul>'
             presence = getDatasetPresence(url, dataset)
-            html +='<b>%s</b><ul>'%dataset
+
             for site in sorted(presence.keys()):
                 html += '<li>%s : %.2f %%'%( site, presence[site][1] )
             html+='</ul><br>'
+
+            
     if sec:
         html+='Reads in secondary<br>'
         for dataset in sec:
