@@ -367,8 +367,9 @@ Worflow waiting in staging (%d) <a href=logs/transferor/last.log target=_blank>l
         text_bywf += "</ul></div><hr>"
     text_bywf += '</ul>'
 
+    stuck_transfer = json.loads(open('%s/stuck_transfers.json'%monitor_dir).read())
     html_doc.write("""
-Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransferteam/ target=_blank>dashboard</a> <a href=logs/transferor/last.log target=_blank>log</a> <a href=logs/stagor/last.log target=_blank>postlog</a> <a href=stuck_transfers.json target=_blank>stuck</a>
+Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransferteam/ target=_blank>dashboard</a> <a href=logs/transferor/last.log target=_blank>log</a> <a href=logs/stagor/last.log target=_blank>postlog</a> <a href=stuck_transfers.json target=_blank> %d stuck</a>
 <a href="javascript:showhide('transfer')">[Click to show/hide]</a>
 <br>
 <div id="transfer" style="display:none;">
@@ -388,6 +389,7 @@ Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransfertea
  </ul>
 </div>
 """%(count,
+     len( stuck_transfer ),
      text_bywf,
      text))
 
@@ -771,10 +773,14 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 
     per_module = defaultdict(list)
     last_module = defaultdict( str )
+    last_ran = defaultdict(int)
     for t in filter(None,os.popen('cat %s/logs/*/*.time'%monitor_dir).read().split('\n')):
         module_name,run_time,spend = t.split(':')
         ## then do what you want with it !
         if 'cleanor' in module_name: continue
+        if 'htmlor' in module_name: continue
+        if 'messagor' in module_name: continue
+        #if 'stagor' in module_name: continue
         per_module[module_name].append( int(spend) )
 
     def display_time( sec ):
@@ -792,8 +798,12 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 
     html_doc.write("Module running time<br>")
     html_doc.write("<table border=1><thead><tr><th>Module</th><th>Last Ran</th><th><Last Runtime</th><th>Avg Runtime</th></tr></thead>")
+    now = time.mktime(time.gmtime())
     for m in sorted(per_module.keys()):
         last_module[m] = os.popen("tac %s/logs/running | grep %s | head -1"%(monitor_dir, m)).read()
+        ## parse it to make an alert.
+        last_ran[m] = time.mktime(time.gmtime())
+
     for m in sorted(per_module.keys()):
         #,spends in per_module.items():
         spends = per_module[m]
