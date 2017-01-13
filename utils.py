@@ -868,6 +868,14 @@ class docCache:
             'cachefile' : None,
             'default' : {}
             }
+        self.cache['gwmsmon_prod_maxused' ] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration(),
+            'getter' : lambda : json.loads(os.popen('curl --retry 5 -s http://cms-gwmsmon.cern.ch/prodview//json/maxused').read()),
+            'cachefile' : None,
+            'default' : {}
+            }
         self.cache['detox_sites'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
@@ -941,20 +949,13 @@ class docCache:
             'default' : ""
             }
 
-        self.cache['stuck_cat1'] = {
-            'data' : None,
-            'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration(),
-            'getter' : lambda : json.loads( os.popen('curl -s --retry 5 https://test-cmstransfererrors.web.cern.ch/test-CMSTransferErrors/stuck_1.json').read()),
-            'cachefile' : None,
-            'default' : {}
-            }
         for cat in ['1','2','m1','m3','m4','m5','m6']:
             self.cache['stuck_cat%s'%cat] = {
                 'data' : None,
                 'timestamp' : time.mktime( time.gmtime()),
                 'expiration' : default_expiration(),
-                'getter' : lambda : json.loads( os.popen('curl -s --retry 5 https://test-cmstransfererrors.web.cern.ch/test-CMSTransferErrors/stuck_%s.json'%cat).read()),
+                #'getter' : lambda : json.loads( os.popen('curl -s --retry 5 https://test-cmstransfererrors.web.cern.ch/test-CMSTransferErrors/stuck_%s.json'%cat).read()),
+                'getter' : lambda : json.loads( os.popen('curl -s --retry 5 https://cms-stucktransfers.web.cern.ch/cms-stucktransfers/stuck_%s.json'%cat).read()),
                 'cachefile' : None,
                 'default' : {}
                 }
@@ -1313,13 +1314,14 @@ class siteInfo:
                 self.sites_memory.pop( site )
         
         for_max_running = dataCache.get('gwmsmon_site_summary')
+        for_better_max_running = dataCache.get('gwmsmon_prod_maxused')
         for site in self.cpu_pledges:
-            if not site in for_max_running: continue
-            #new_max = int(for_max_running[site]['MaxWasRunning'] * 0.70) ## put a fudge factor
-            new_max = int(for_max_running[site]['MaxWasCpusUse'] * 0.70) ## put a fudge factor
-            if new_max > self.cpu_pledges[site]:
-                #print "could raise",site,"from",self.cpu_pledges[site],"to",for_max_running[site]['MaxWasRunning']
-                #print "raising",site,"from",self.cpu_pledges[site],"to",new_max
+            new_max = self.cpu_pledges[site]
+            #if site in for_max_running: new_max = int(for_max_running[site]['MaxWasCpusUse'] * 0.70)
+            if site in for_better_max_running:
+                new_max = int(for_better_max_running[site]['sixdays'])
+
+            if new_max > self.cpu_pledges[site] or True:
                 self.cpu_pledges[site] = new_max
         
         for_site_pressure = dataCache.get('gwmsmon_prod_site_summary')
@@ -1389,6 +1391,8 @@ class siteInfo:
             ## consider quota to be 80% of what's available
             available = int(float(quota)*buffer_level) - int(locked)
 
+            #### .disk = 80%*quota - locked : so it's the effective space
+            #### .free_disk = the buffer space that there is above the 80% quota 
             self.disk[site] = available if available >0 else 0
             ddm_free = int(float(quota) - int(locked) - self.disk[site])
             self.free_disk[site] = ddm_free if ddm_free>0 else 0
