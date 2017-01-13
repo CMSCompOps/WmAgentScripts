@@ -168,7 +168,7 @@ def injector(url, options, specific):
         session.commit()
     if no_replacement:
         #sendEmail('workflow with no replacement','%s \n are dangling there'%( '\n'.join(no_replacement)))
-        sendLog('injector','workflow with no replacement, %s \n are dangling there'% ( '\n'.join(no_replacement)), level='critical')
+        sendLog('injector','workflow with no replacement\n%s \n are dangling there'% ( '\n'.join(no_replacement)), level='critical')
 
 if __name__ == "__main__":
     url = reqmgr_url
