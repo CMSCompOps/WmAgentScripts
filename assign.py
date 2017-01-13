@@ -16,6 +16,7 @@ import re
 import os
 import sys
 import json
+import copy
 import optparse
 from dbs.apis.dbsClient import DbsApi
 import reqMgrClient as reqMgr
@@ -42,34 +43,17 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
     """
     Sends assignment request
     """
-    params = {"action": "Assign",
+    params = copy.deepcopy(reqMgr.assignWorkflow.defaults)
+    params.update({
               "Team" + team: "checked",
               "SiteWhitelist": sites,
-              "SiteBlacklist": [],
               "MergedLFNBase": lfn,
-              "UnmergedLFNBase": "/store/unmerged",
-              "MinMergeSize": 2147483648,
-              "MaxMergeSize": 4294967296,
-              "MaxMergeEvents": 50000,
-              "MaxVSize": 4294967296,
-                  # for task chains    "MaxVSize": 20294967,
-              "SoftTimeout" : 159600,
               "Dashboard": activity,
               "ProcessingVersion": procversion,
               "checkbox" + workflow: "checked",
               "execute": True
-              }
-              
-    if taskchain:
-        params["GracePeriod"] = 1000
-        params["BlockCloseMaxWaitTime"] = 64800
-        params["BlockCloseMaxFiles"] = 500
-        params["BlockCloseMaxEvents"] = 20000000
-        params["BlockCloseMaxSize"] = 5000000000000
-        params["MaxVSize"] = 20294967
-    else:
-        params["CustodialSites"] = []
-
+              })
+    
     # add xrootd (trustSiteList)
     if trust_site:
         params['TrustSitelists'] = True
@@ -135,7 +119,7 @@ def main():
     parser.add_option('--testbed', help='Assign in testbed', action='store_true', default=False, dest='testbed')
     parser.add_option('--test', action="store_true",help='Nothing is injected, only print infomation about workflow and Era', dest='test')
     parser.add_option('-f', '--file', help='Text file with a list of wokflows. If this option is used, the same settings will be applied to all workflows', dest='file')
-    parser.add_option('-w', '--workflow', help='Workflow Name', dest='workflow')
+    parser.add_option('-w', '--workflow', help='Workflow Name, or coma sperated list', dest='workflow')
     parser.add_option('-m', '--memory', help='Set the Memory parameter to the workflow', dest='memory', default=None, type=int)
     parser.add_option('-c', '--multicore', help='Set the multicore parameter to the workfllow', dest='multicore', default=None, type=int)
     parser.add_option('-e', '--era', help='Acquistion era', dest='era')
@@ -156,7 +140,7 @@ def main():
             parser.error("Input a workflow name or a file to read them")
             sys.exit(0)
     else:
-        wfs = [options.workflow]
+        wfs = options.workflow.split(',')
 
     #Default values
     era = {}
