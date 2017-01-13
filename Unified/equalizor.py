@@ -65,7 +65,7 @@ def equalizor(url , specific = None, options=None):
             ## add OSG            
             mapping[site].append('T3_US_OSG')
             pass
-    mapping['T2_IT_Rome'].append('T3_US_OSG')
+    #mapping['T2_IT_Rome'].append('T3_US_OSG')
     #mapping['T1_US_FNAL'].append('T3_US_NERSC')
     
     use_T0 = ('T0_CH_CERN' in UC.get("site_for_overflow"))
@@ -430,7 +430,7 @@ def equalizor(url , specific = None, options=None):
                 if task.taskType in ['Processing','Production']:
                     set_memory,set_time = getPerf( task.pathName )
                     #print "Performance %s GB %s min"%( set_memory,set_time)
-                    wfi.sendLog('equalizor','Performance tuning to %s GB %s min'%( set_memory,set_time))
+                    wfi.sendLog('equalizor','Performance tuning to %s GB %s min for %s'%( set_memory,set_time,task.pathName.split('/')[-1] ))
                     ## get values from gmwsmon
                     # massage the values : 95% percentile
                     performance[task.pathName] = {}
@@ -449,8 +449,8 @@ def equalizor(url , specific = None, options=None):
                 ## figure out secondary location and neighbors
                 ## figure out primary presence and neighbors
                 ## do the intersection and add if in need.
-                #needs, task_name, running, idled = needs_action(wfi, task)
-                needs = True
+                needs, task_name, running, idled = needs_action(wfi, task)
+                #needs = True
 
                 ## trick to be removed once all wf are passed through the agent patch
                 assigned_log = filter(lambda change : change["Status"] in ["assigned","acquired"],wfi.request['RequestTransition'])
@@ -730,16 +730,21 @@ def equalizor(url , specific = None, options=None):
                 pass
 
             ### this is a hack when we need to kick gensim out of everything
-            if campaign in ['RunIISummer15GS',
-                            'RunIISummer15wmLHEGS',
-                            'Summer12'] and task.taskType in ['Production'] and False:
+            if campaign in [
+                #'RunIIWinter15GS',
+                #'RunIISummer15GS',
+                #'RunIISummer15wmLHEGS',
+                #'Summer12',
+                ] and task.taskType in ['Production'] and is_chain:
                 #what are the site you want to take out. What are the jobs in whitelist, make the diff and replace
                 t1s = set([site for site in SI.all_sites if site.startswith('T1')])
-                #ust2s = set([site for site in SI.all_sites if site.startswith('T2_US')])
+                ust2s = set([site for site in SI.all_sites if site.startswith('T2_US')])
                 #ust2s = set([site for site in SI.sites_mcore_ready if site.startswith('T2_US')])
                 allmcores = set(SI.sites_mcore_ready)
+                #set_for = set(wfi.request['SiteWhitelist']) - t1s
                 #set_for = set(wfi.request['SiteWhitelist']) - t1s - ust2s
-                set_for = set(wfi.request['SiteWhitelist']) - allmcores
+                #set_for = set(wfi.request['SiteWhitelist']) - allmcores
+                set_for = set(wfi.request['SiteWhitelist']) & t1s
                 print wfo.name,"going for",set_for
                 print task.pathName
                 if set_for:
@@ -761,9 +766,11 @@ def equalizor(url , specific = None, options=None):
                         wfi.sendLog('equalizor','also adding the HLT in whitelist of %s to %d for %d'%( task.pathName, pending_HLT, max_HLT))
 
                     ## this Replace does not work at all for HLT
-                    #elif task.pathName in modifications[wfo.name] and 'ReplaceSiteWhitelist' in modifications[wfo.name][task.pathName]:
+                    elif task.pathName in modifications[wfo.name] and 'ReplaceSiteWhitelist' in modifications[wfo.name][task.pathName]:
                         #modifications[wfo.name][task.pathName]["ReplaceSiteWhitelist"].append( "T2_CH_CERN_HLT" )
                         #print "\t",wfo.name,"adding replace HLT up to",pending_HLT,"for",max_HLT
+                        print "already having a site replacement, not adding the HLT for now"
+                        pass
                     else:
                         modifications[wfo.name][task.pathName] = { "AddWhitelist" : ["T2_CH_CERN_HLT"],
                                                                    "Priority" : wfi.request['RequestPriority'],
