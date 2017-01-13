@@ -3,7 +3,7 @@ from assignSession import *
 import sys
 import reqMgrClient
 from utils import workflowInfo, getWorkflowById, forceComplete, getDatasetEventsAndLumis, componentInfo, monitor_dir, reqmgr_url, unifiedConfiguration, getForceCompletes, getAllStuckDataset
-from utils import campaignInfo, siteInfo, sendLog
+from utils import campaignInfo, siteInfo, sendLog, sendEmail
 from collections import defaultdict
 import json
 import random
@@ -34,7 +34,11 @@ def completor(url, specific):
     if max_per_round and not specific: wfs = wfs[:max_per_round]
 
     all_stuck = set()
+    ## take into account what stagor was saying
     all_stuck.update( json.loads( open('%s/stuck_transfers.json'%monitor_dir).read() ))
+    ## take into account the block that needed to be repositioned recently
+    all_stuck.update( [b.split('#')[0] for b in json.loads( open('%s/missing_blocks.json'%monitor_dir).read()) ] )
+    ## take into account all stuck block and dataset from transfer team
     all_stuck.update( getAllStuckDataset()) 
 
 
@@ -123,7 +127,7 @@ def completor(url, specific):
         good_fraction = good_fractions.get(c,1000.)
         truncate_fraction = truncate_fractions.get(c,1000.)
 
-        print good_fraction, truncate_fraction
+        print "force at",good_fraction,"truncate at",truncate_fraction
         ignore_fraction = 2.
         
         lumi_expected = None
@@ -211,8 +215,8 @@ def completor(url, specific):
             wfi.sendLog('completor', "all is above %s truncation level, and the input is stuck\n%s"%( truncate_fraction,
                                                                                                       json.dumps( percent_completions, indent=2 ) ) )
 
-            sendEmail('possible workflow for truncation','check on %s'%wfo.name)
-            continue ## because you do not want to get this one right now
+            sendEmail('workflow for truncation','check on %s'%wfo.name)
+            ##continue ## because you do not want to get this one right now
         else:
             long_lasting[wfo.name].update({
                     'completion': sum(percent_completions.values()) / len(percent_completions),
@@ -221,8 +225,9 @@ def completor(url, specific):
             
             ## do something about the agents this workflow is in
             long_lasting[wfo.name]['agents'] = wfi.getAgents()
-            wfi.sendLog('completor', "%s not over bound %s\n%s"%(percent_completions.values(), good_fraction,
-                                                                 json.dumps( long_lasting[wfo.name]['agents'], indent=2) ))
+            wfi.sendLog('completor', "%s not over bound %.3f (complete) %.3f truncate \n%s"%(percent_completions.values(), 
+                                                                                             good_fraction, truncate_fraction,
+                                                                                             json.dumps( long_lasting[wfo.name]['agents'], indent=2) ))
             continue
 
         if all([percent_completions[out] >= ignore_fraction for out in percent_completions]):
