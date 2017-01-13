@@ -29,9 +29,9 @@ si = siteInfo()
 unprocessable = set()
 
 try:
-    replaced = json.loads(open('replaced_blocks.json').read())
+    replaced = set(json.loads(open('replaced_blocks.json').read()))
 except:
-    replaced = []
+    replaced = set()
 
 not_runable_acdc=set()
 agents_down = defaultdict(set)
@@ -268,9 +268,10 @@ unproc += '\n'.join(sorted(unprocessable))
 report += unproc
 if unprocessable:
     sendLog('GQ',unproc, level='critical')
+    open('%s/missing_blocks.json'%monitor_dir,'w').write( json.dumps( sorted(unprocessable), indent=2) )
     #sendEmail('unprocessable blocks',"Sending a notification of this new feature until this gets understood. transfering block automatically back to  processing location. \n"+unproc)
 
-try_me = defaultdict(list)
+try_me = defaultdict(set)
 for wf in wfs_no_location_in_GQ:
     print wf,"has problematic blocks"
     for (el,b, swl) in wfs_no_location_in_GQ[wf]:
@@ -288,16 +289,16 @@ for wf in wfs_no_location_in_GQ:
         go_to = si.CE_to_SE(si.pick_CE(sswl))
         #go_to = random.choice( swl )
 
-        try_me[go_to].append( b )
+        try_me[go_to].add( b )
         ## pick a site that should host this !
-        
+        #wfi.sendLog('GQ','Sending %s to %s'%( b, go_to))
 
 for site,blocks in try_me.items():
-    blocks = list(set(blocks)-set(replaced))
+    blocks = blocks - replaced 
     if UC.get('block_repositionning'):
         if blocks:
-            result = makeReplicaRequest(url, site, blocks, 'item relocation', priority='normal', approve=True, mail=False)
-            replaced = list(set(blocks+replaced))
+            result = makeReplicaRequest(url, site, list(blocks), 'item relocation', priority='high', approve=True, mail=False)
+            replaced.update( blocks )
             sendLog('GQ','replacing %s at %s \n%s'%( '\n,'.join(blocks), site, result),level='warning')
     else:
         sendLog('GQ','tempting to put %s at %s'%( '\n,'.join(blocks), site),level='warning')
@@ -305,5 +306,5 @@ for site,blocks in try_me.items():
 open('%s/GQ.json'%monitor_dir,'w').write( json.dumps( jobs_for, indent=2) )
 open('%s/GQ.txt'%monitor_dir,'w').write( report )
 
-open('replaced_blocks.json','w').write( json.dumps( replaced, indent=2) )
+open('replaced_blocks.json','w').write( json.dumps( sorted(replaced), indent=2) )
 
