@@ -151,24 +151,15 @@ def rejector(url, specific, options=None):
                 schema['RequestPriority'] = wfi.request['RequestPriority']
 
                 ## drop shit on the way to reqmgr2
-                for p in ['RequestStatus',
-                          'RequestTransition',
-                          'RequestorDN',
-                          'RequestWorkflow',
-                          'OutputDatasets',
-                          'ReqMgr2Only',
-                          #'Group',
-                          'RequestDate',
-                          #'ConfigCacheUrl',
-                          'RequestName',
-                          'timeStamp',
-                          'SoftwareVersions',
-                          'CouchURL',
-                          'TotalInputEvents',
-                          'TotalEstimatedJobs',
-                          'TotalInputLumis',
-                          'TotalInputFiles'
-                          ]:
+                paramBlacklist = ['BlockCloseMaxEvents', 'BlockCloseMaxFiles', 'BlockCloseMaxSize', 'BlockCloseMaxWaitTime',
+                                  'CouchWorkloadDBName', 'CustodialGroup', 'CustodialSubType', 'Dashboard',
+                                  'GracePeriod', 'HardTimeout', 'InitialPriority', 'inputMode', 'MaxMergeEvents', 'MaxMergeSize',
+                                  'MaxRSS', 'MaxVSize', 'MinMergeSize', 'NonCustodialGroup', 'NonCustodialSubType',
+                                  'OutputDatasets', 'ReqMgr2Only', 'RequestDate' 'RequestorDN', 'RequestName', 'RequestStatus',
+                                  'RequestTransition', 'RequestWorkflow', 'SiteWhitelist', 'SoftTimeout', 'SoftwareVersions',
+                                  'SubscriptionPriority', 'Team', 'timeStamp', 'TrustSitelists', 'TrustPUSitelists',
+                                  'TotalEstimatedJobs', 'TotalInputEvents', 'TotalInputLumis', 'TotalInputFiles']
+                for p in paramBlacklist:
                     if p in schema:
                         schema.pop( p )
                         #pass
