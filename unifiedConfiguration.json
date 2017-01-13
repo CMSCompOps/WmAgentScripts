@@ -14,10 +14,12 @@
  },
  "sites_banned": {
    "value" : ["T2_CH_CERN_AI",
-      	      "NONO_T0_CH_CERN",
+              "NO_T0_CH_CERN",
 	      "T2_TH_CUNSTDA",
 	      "T2_US_Vanderbilt",
-	      "T2_EE_Estonia"],
+	      "T2_EE_Estonia",
+	      "T2_UA_KIPT"
+ 	      ],
    "description" : "The sites that are banned from production"
  },		 
  "sites_auto_approve": {
@@ -25,7 +27,10 @@
    "description" : "The sites we can autoapprove tape request to"
  },
  "sites_space_override": {	
-   "value" : { "T0_CH_CERN_MSS":0
+   "value" : { "T0_CH_CERN_MSS":0,
+	       "T1_RU_JINR_Disk" : 0,
+	       "T2_DE_RWTH" : 0,
+	       "T2_BE_IIHE" : 0
 	       },
    "description" : "Over-ride the available space at a phedex end point"
  },
@@ -38,7 +43,7 @@
    "description" : "Value of CPUh above which a wf is blocked from assigning"
  },
  "block_repositionning": {
-   "value" : false,
+   "value" : true,
    "description" : "Whether or not to retransfer block from WQE without location"
  },
  "allowed_bypass": {
@@ -156,6 +161,11 @@
         "8021" : [ { "legend" : "cmssw failure",
                  "solution" : "recover" , 
                  "details" : "FileReadError",
+                 "rate" : 20
+                 } ],
+        "71305" : [ { "legend" : "long pending",
+                 "solution" : "recover" , 
+                 "details" : null,
                  "rate" : 20
                  } ],
         "8001" : [ { "legend" : "lhe failure",
