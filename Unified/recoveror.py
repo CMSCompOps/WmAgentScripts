@@ -367,9 +367,11 @@ def recoveror(url,specific,options=None):
                 
                 ## and assign it ?
                 team = wfi.request['Teams'][0]
+                #assign_to_sites = set(SI.sites_ready) ## that needs to be massaged to prevent assigning to something out.
+                assign_to_sites = set(SI.all_sites)
                 parameters={
                     #'SiteWhitelist' : wfi.request['SiteWhitelist'],
-                    'SiteWhitelist' : SI.sites_ready,
+                    'SiteWhitelist' : sorted(assign_to_sites),
                     'AcquisitionEra' : wfi.acquisitionEra(),
                     'ProcessingString' :  wfi.processingString(),
                     'MergedLFNBase' : wfi.request['MergedLFNBase'],
