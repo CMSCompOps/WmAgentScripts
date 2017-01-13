@@ -4,13 +4,8 @@ oweek=`date +%W`
 week=${oweek#0}
 let oddity=week%2
 
-if ( [ "$USER" = "vlimant" ] && [ "$oddity" = "1" ] ) || ( [ "$USER" = "mcremone" ] && [ "$oddity" = "0" ] ) ; then
+if ( [ "$USER" = "vlimant" ] && [ "$oddity" = "0" ] ) || ( [ "$USER" = "mcremone" ] && [ "$oddity" = "1" ] ) ; then
     echo no go for $USER on week $week
-    exit
-fi
-
-if [ $USER == "mcremone" ] ; then 
-    echo "Sorry Matteo, not now"
     exit
 fi
 
@@ -78,7 +73,7 @@ source /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/credentials.sh
 
 ## get this done once as it is quite slow and heavy, but we need the output json it could produce
 ### right now, that modules fucks up ...
-###/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/stagor.py
+/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/stagor.py
 ## assign the workflow to sites
 /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/assignor.py
 
