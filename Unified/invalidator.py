@@ -42,12 +42,13 @@ def invalidator(url, invalid_status='INVALID'):
             ## need to find the whole familly and reject the whole gang
             familly = getWorkflowById( url, wfi.request['PrepID'] , details=True)
             for fwl in familly:
+                ## take out all acdc
                 if fwl['RequestDate'] < wfi.request['RequestDate']:continue
                 if fwl['RequestType']!='Resubmission': continue
                 print "rejecting",fwl['RequestName']
                 success = reqMgrClient.invalidateWorkflow(url, fwl['RequestName'], current_status=fwl['RequestStatus'])
-                wfi.sendLog('invalidator',"rejection is performed from McM invalidations request")
-            print success
+                print success
+            wfi.sendLog('invalidator',"rejection is performed from McM invalidations request")
             acknowledge= True
             text = "The workflow %s (%s) was rejected due to invalidation in McM" % ( wfn, pid )
             batch_lookup = wfn ##so that the batch id is taken as the one containing the workflow name
