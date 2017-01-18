@@ -43,8 +43,8 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
     """
     Sends assignment request
     """
-    params = copy.deepcopy(reqMgr.assignWorkflow.defaults)
-    params.update({
+    #params = copy.deepcopy(reqMgr.assignWorkflow.defaults)
+    params = {
               "Team" + team: "checked",
               "SiteWhitelist": sites,
               "MergedLFNBase": lfn,
@@ -52,7 +52,7 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
               "ProcessingVersion": procversion,
               "checkbox" + workflow: "checked",
               "execute": True
-              })
+              }
     
     # add xrootd (trustSiteList)
     if trust_site:
