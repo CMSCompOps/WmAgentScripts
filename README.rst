@@ -31,7 +31,7 @@ Generate your proxy::
 
     voms-proxy-init -voms cms
 
-Type your key password and should display something like this::
+nType your key password and should display something like this::
 
     Contacting voms.cern.ch:15002 [/DC=ch/DC=cern/OU=computers/CN=voms.cern.ch] "cms"... Remote VOMS server contacted succesfully. Created proxy in /tmp/x509up_uXXXX. Your proxy is valid until Thu Oct 09 21:53:28 CEST 2014
 
@@ -85,12 +85,44 @@ reqMgrClient.py
 reqmgr.py
 ~~~~~~~~~
 
-We can show off the power of autodocumenting all of the members here, since reqmgr.py has lots of documented members.
-
 .. automodule:: WmAgentScripts.reqmgr
-   :members:
+
+.. program-output:: python ../WmAgentScripts/reqmgr.py -h
+
+Some examples:
+
+- Create a request using the file julian.json::
+
+    python WmAgentScripts/reqmgr.py -u https://cmsweb.cern.ch -i -f julian.json
+
+- Assigning an existing request in ReqMgr (jbadillo_StoreResults_51816_v1_140826_100602_3071) changing splitting according to julian.json::
+
+    python WmAgentScripts/reqmgr.py -u https://cmsweb.cern.ch -p -g -f julian.json -r jbadillo_StoreResults_51816_v1_140826_100602_3071
+
+changeSplittingWorkflow.py
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This script allows to change the splitting of a request, on a given task name
+
+.. program-output:: python ../WmAgentScripts/changeSplittingWorkflow.py -h
+
+.. Note::
+   - The TASKPATH should be the full task path in which you want to change the splitting, i.e. StepOneProc, StepOne /StepOneProcMerge, Production, etc.
+   - The TYPE is the algorithm for splitting.
+
+forceCompleteWorkflows.py
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: WmAgentScripts.forceCompleteWorkflows
+
+.. program-output:: python ../WmAgentScripts/forceCompleteWorkflows.py -h
+
+getInputLocation.py
+~~~~~~~~~~~~~~~~~~~
+
+.. program-output:: python ../WmAgentScripts/getInputLocation.py -h
 
 And So On
 ---------
 
-I don't know which of these scripts are actually still in use, so someone else should write this or at least make a list of scripts still used.
+I'm not sure how many of these scripts are actually being used, so I'll stop now.
