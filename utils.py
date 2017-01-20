@@ -3992,6 +3992,8 @@ class workflowInfo:
         return (lheinput,primary,parent,secondary,sites_allowed)
 
     def checkWorkflowSplitting( self ):
+        answer = True
+        answer_d = {}
         if self.request['RequestType']=='TaskChain':
             (min_child_job_per_event, root_job_per_event, max_blow_up) = self.getBlowupFactors()
             if min_child_job_per_event and max_blow_up>2.:
@@ -4000,9 +4002,31 @@ class workflowInfo:
                 setting_to = min_child_job_per_event*1.5
                 print "using",setting_to
                 print "Not setting anything yet, just informing about this"
-                return True
-                #return {'EventsPerJob': setting_to }
-            return True
+                answer=True
+                #answer_d.update({'EventsPerJob': setting_to })
+
+            ##check on events/lumi if relevant
+            splits = self.getSplittings()
+            events_per_lumi=None
+            max_events_per_lumi=None
+            for task in splits:
+                print task
+                if 'events_per_lumi' in task:
+                    events_per_lumi = task['events_per_lumi']
+                ## avg_events_per_job is base on 8h. we could probably put some margin
+                elif events_per_lumi and 'avg_events_per_job' in task:
+                    avg_events_per_job = (task['avg_events_per_job'] *2 )
+                    if (events_per_lumi > avg_events_per_job):
+                        print "The default splitting will not work for subsequent steps",events_per_lumi,">",avg_events_per_job
+                        if max_events_per_lumi==None or (max_events_per_lumi < avg_events_per_job):
+                            max_events_per_lumi = avg_events_per_job
+            if max_events_per_lumi:
+                print "the base splitting should be changed to", max_events_per_lumi,"per lumi"
+                sendEmail('checkWorkflowSplitting','%s had a splitting dialed down [commissionning]'%( self.request['RequestName']))
+                answer_d.update({'EventsPerLumi' : max_events_per_lumi})
+                #answer = False
+            
+            return answer_d if answer_d else answer
 
         ncores = self.getMulticore()
         ## this isn't functioning for taskchain BTW
