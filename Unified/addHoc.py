@@ -58,7 +58,7 @@ for site in sorted(si.cpu_pledges.keys()):
 n = time.gmtime()
 m["update"] = time.asctime(n)
 m["timestamp"] = time.mktime(n)
-open('/afs/cern.ch/user/c/cmst2/www/unified/thresholds.json','w').write(json.dumps( m, indent=2 ))
+open('%s/thresholds.json'%monitor_dir,'w').write(json.dumps( m, indent=2 ))
 
 ### convert what we can from taskchain to stepchain ###
 #wfs = session.query(Workflow).filter(Workflow.name.startswith('task_')).filter(Workflow.status in ['staging','staged','considered']).all()

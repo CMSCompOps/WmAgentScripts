@@ -8,9 +8,7 @@ from utils import monitor_dir
 pid=sys.argv[1]
 
 try:
-    #data =json.loads(open('/tmp/ls.%s.json'%f).read())
     data =json.loads(open('%s/datalumi/json/ls.%s.json'%(monitor_dir,pid)).read())
-    #os.system('cp /tmp/ls.%s.json /afs/cern.ch/user/c/cmst2/www/unified/datalumi/json/.'%f)
 except:
     
     sys.exit(0)
@@ -35,7 +33,7 @@ for dataset,lss in data.items():
 all_ls= list(all_ls)
 print len(all_ls)
 print "\t\tmaking HTML"
-html = open('/afs/cern.ch/user/c/cmst2/www/unified/datalumi/lumi.%s%s.html'%(pid,l),'w')
+html = open('%s/datalumi/lumi.%s%s.html'%(monitor_dir,pid,l),'w')
 
 html.write("""
 <html>
