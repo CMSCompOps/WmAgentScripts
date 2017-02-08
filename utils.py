@@ -3128,6 +3128,13 @@ def forceComplete(url, wfi):
             print "rejecting",member['RequestName']
             reqMgrClient.invalidateWorkflow(url, member['RequestName'], current_status=member['RequestStatus'])
 
+def getAgentInfo(url, agent):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    url= '/couchdb/wmstats/%s%%3A9999'%agent
+    r1=conn.request("GET",url)
+    r2=conn.getresponse()
+    return json.loads(r2.read())["WMBS_INFO"]#["sitePendCountByPrio"]
+    
 def getAllAgents(url):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     url = '/couchdb/wmstats/_design/WMStats/_view/agentInfo?stale=update_after'
