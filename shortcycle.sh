@@ -1,4 +1,7 @@
-lock_name="/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/shortcycle.lock"
+BASE_DIR=/data/unified/WmAgentScripts/
+HTML_DIR=/afs/cern.ch/user/c/cmst2/www/unified/
+
+lock_name="$BASE_DIR/shortcycle.lock"
 
 oweek=`date +%W`
 week=${oweek#0}
@@ -32,7 +35,7 @@ else
     echo "no lock file $lock_name, cycle can run"
 fi
 
-if [ ! -r /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/credentials.sh ] ; then
+if [ ! -r $BASE_DIR/credentials.sh ] ; then
     echo "Cannot read simple files" | mail -s "[Ops] read permission" vlimant@cern.ch,matteoc@fnal.gov
     exit
 fi
@@ -43,28 +46,28 @@ echo `date` >> $lock_name
 echo $$ >> $lock_name
 
 ## get sso cookie and new grid proxy
-source /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/credentials.sh
+source $BASE_DIR/credentials.sh
 
-## all these below can run as often as we want since they only read from db
+## all these belo can run as often as we want since they only read from db
 ## and for most we want them to run very often
 
 ## equalize site white list at the condor level                                                                                      
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/equalizor.py
+$BASE_DIR/cWrap.sh Unified/equalizor.py
 
 ## finsih subscribing output blocks
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/subscribor.py away
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/subscribor.py assistance*
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/subscribor.py done
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/subscribor.py close
+$BASE_DIR/cWrap.sh Unified/subscribor.py away
+$BASE_DIR/cWrap.sh Unified/subscribor.py assistance*
+$BASE_DIR/cWrap.sh Unified/subscribor.py done
+$BASE_DIR/cWrap.sh Unified/subscribor.py close
 
 ## subscribe everything that is being produced or waiting around
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/subscribor.py wmagent
+$BASE_DIR/cWrap.sh Unified/subscribor.py wmagent
 
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/GQ.py
+$BASE_DIR/cWrap.sh Unified/GQ.py
 
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/addHoc.py
+$BASE_DIR/cWrap.sh Unified/addHoc.py
 
-#/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/lockor.py
+#$BASE_DIR/cWrap.sh Unified/lockor.py
 
 rm -f $lock_name
 

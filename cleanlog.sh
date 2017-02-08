@@ -1,29 +1,32 @@
-for each in `ls /afs/cern.ch/user/c/cmst2/www/unified/logs/*/*.log` ; do
+HTML_DIR=/afs/cern.ch/user/c/cmst2/www/unified/
+CACHE_DIR=/data/unified-cache/
+
+for each in `ls $HTML_DIR/logs/*/*.log` ; do
     age=$((($(date +%s)-$(date +%s -r $each))/86400))
     if [ $age -gt 10 ] ; then
 	echo remove $each
 	rm -f $each
     fi
 done
-for each in `ls /afs/cern.ch/user/c/cmst2/www/unified/logs/*/*.time` ; do
+for each in `ls $HTML_DIR/logs/*/*.time` ; do
     age=$((($(date +%s)-$(date +%s -r $each))/86400))
     if [ $age -gt 10 ] ; then
 	echo remove $each
 	rm -f $each
     fi
 done
-for each in `ls /afs/cern.ch/user/c/cmst2/www/unified/logs/*/*.json` ; do
+for each in `ls $HTML_DIR/logs/*/*.json` ; do
     age=$((($(date +%s)-$(date +%s -r $each))/86400))
     if [ $age -gt 10 ] ; then
-	echo remove $each  maybe
-	#rm -f $each
+	echo remove $each
+	rm -f $each
     fi
 done
 
-for each in `ls /afs/cern.ch/work/c/cmst2/unified/cache/*` ; do
+for each in `ls $CACHE_DIR/*` ; do
     age=$((($(date +%s)-$(date +%s -r $each))/86400))
     if [ $age -gt 10 ] ; then
-	echo remove $each  maybe
-	#rm -f $each
+	echo remove $each
+	rm -f $each
     fi
 done

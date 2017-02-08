@@ -1,5 +1,7 @@
-## shut down unified for migration
-cd /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts
+BASE_DIR=/data/unified/WmAgentScripts/
+HTML_DIR=/afs/cern.ch/user/c/cmst2/www/unified/
+
+cd $BASE_DIR
 
 oweek=`date +%W`
 week=${oweek#0}
@@ -11,8 +13,8 @@ if ( [ "$USER" = "vlimant" ] && [ "$oddity" = "0" ] ) || ( [ "$USER" = "mcremone
 fi
 
 modulename=`echo $1 | sed 's/\.py//' | sed 's/Unified\///'`
-log=/afs/cern.ch/user/c/cmst2/www/unified/logs/$modulename/last.log
-dated_log=/afs/cern.ch/user/c/cmst2/www/unified/logs/$modulename/`date +%F_%T`.log
+log=$HTML_DIR/logs/$modulename/last.log
+dated_log=$HTML_DIR/logs/$modulename/`date +%F_%T`.log
 echo `date` > $log
 echo $USER >> $log
 echo the week $week oddity is $oddity >> $log
@@ -27,8 +29,8 @@ source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh
 echo >> $log
 
 start=`date +%s`
-echo $modulename:`date` >> /afs/cern.ch/user/c/cmst2/www/unified/logs/running
-echo $modulename:`date` > /afs/cern.ch/user/c/cmst2/www/unified/logs/last_running
+echo $modulename:`date` >> $HTML_DIR/logs/running
+echo $modulename:`date` > $HTML_DIR/logs/last_running
 python $* &>> $log
 
 if [ $? == 0 ]; then
@@ -40,10 +42,7 @@ fi
 
 stop=`date +%s`
 let stop=stop-start
-echo $modulename:$start:$stop > /afs/cern.ch/user/c/cmst2/www/unified/logs/$modulename/`date +%s`.time
+echo $modulename:$start:$stop > $HTML_DIR/logs/$modulename/`date +%s`.time
 echo `date` >> $log
 
-## copy log to final place
-#cp $log /afs/cern.ch/user/c/cmst2/www/unified/logs/$modulename/last.log
-#cp $log /afs/cern.ch/user/c/cmst2/www/unified/logs/last.log
 cp $log $dated_log

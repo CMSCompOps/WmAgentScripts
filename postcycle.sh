@@ -1,4 +1,7 @@
-lock_name="/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/postcycle.lock"
+BASE_DIR=/data/unified/WmAgentScripts/
+HTML_DIR=/afs/cern.ch/user/c/cmst2/www/unified/
+
+lock_name="$BASE_DIR/postcycle.lock"
 
 oweek=`date +%W`
 week=${oweek#0}
@@ -33,7 +36,7 @@ else
 fi
 
 
-if [ ! -r /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/credentials.sh ] ; then
+if [ ! -r $BASE_DIR/credentials.sh ] ; then
     echo "Cannot read simple files" | mail -s "[Ops] read permission" vlimant@cern.ch,matteoc@fnal.gov
     exit
 fi
@@ -43,26 +46,26 @@ echo `date` >> $lock_name
 echo $$ >> $lock_name
 
 ## get sso cookie and new grid proxy
-source /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/credentials.sh
+source $BASE_DIR/credentials.sh
 
 ## get the workflow in/out the system
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/injector.py
+$BASE_DIR/cWrap.sh Unified/injector.py
 
 ## force-complete wf according to rules ## tagging phase
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/completor.py
+$BASE_DIR/cWrap.sh Unified/completor.py
 
 ## check on the wf that have completed already
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/checkor.py --strict
+$BASE_DIR/cWrap.sh Unified/checkor.py --strict
 ## initiate automatic recovery
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/recoveror.py
+$BASE_DIR/cWrap.sh Unified/recoveror.py
 
 ## pass along everything that has custodial already and should close
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/checkor.py  --review
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/checkor.py  --clear
+$BASE_DIR/cWrap.sh Unified/checkor.py  --review
+$BASE_DIR/cWrap.sh Unified/checkor.py  --clear
 ## close the wf in closed-out
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/closor.py
+$BASE_DIR/cWrap.sh Unified/closor.py
 
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/checkor.py  --update
+$BASE_DIR/cWrap.sh Unified/checkor.py  --update
 
 rm -f $lock_name
 

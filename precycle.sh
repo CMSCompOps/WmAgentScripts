@@ -1,4 +1,7 @@
-lock_name="/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/precycle.lock"
+BASE_DIR=/data/unified/WmAgentScripts/
+HTML_DIR=/afs/cern.ch/user/c/cmst2/www/unified/
+
+lock_name="$BASE_DIR/precycle.lock"
 
 oweek=`date +%W`
 week=${oweek#0}
@@ -32,7 +35,7 @@ else
     echo "no lock file $lock_name, cycle can run"
 fi
 
-if [ ! -r /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/credentials.sh ] ; then
+if [ ! -r $BASE_DIR/credentials.sh ] ; then
     echo "Cannot read simple files" | mail -s "[Ops] read permission" vlimant@cern.ch,matteoc@fnal.gov
     exit
 fi
@@ -41,47 +44,48 @@ echo $lock_name > $lock_name
 echo `date` >> $lock_name
 echo $$ >> $lock_name
 ## get sso cookie and new grid proxy
-source /afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/credentials.sh
+source $BASE_DIR/credentials.sh
 
 ### all below should be run non concurrently because they touch the lock file at some point
 ##x
 
 ## get the workflow in/out of the system
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/injector.py
+$BASE_DIR/cWrap.sh Unified/injector.py
 ## this could replace stagor in much faster
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/assignor.py --early --limit 200
+$BASE_DIR/cWrap.sh Unified/assignor.py --early --limit 200
 
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/assignor.py RunIISummer16DR80Premix --from staging --early
+#$BASE_DIR/cWrap.sh Unified/assignor.py RunIISummer16DR80Premix --from staging --early
 
 ## get the workflow in/out the system
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/injector.py
+$BASE_DIR/cWrap.sh Unified/injector.py
 ## initiate data placements or pass wf along
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/transferor.py
+$BASE_DIR/cWrap.sh Unified/transferor.py
 ## assigned those that could have passed through directly
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/assignor.py --from_status staged
+#$BASE_DIR/cWrap.sh Unified/assignor.py --from_status staged
 
 ## get the workflow in/out of the system
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/injector.py
+#$BASE_DIR/cWrap.sh Unified/injector.py
 ## this could replace stagor in much faster
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/assignor.py --early --from_status staging
+#$BASE_DIR/cWrap.sh Unified/assignor.py --early --from_status staging
 ## get the workflow in/out the system
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/injector.py
+#$BASE_DIR/cWrap.sh Unified/injector.py
 ## initiate data placements or pass wf along
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/transferor.py
+#$BASE_DIR/cWrap.sh Unified/transferor.py
 
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/assignor.py --from_status staged
+#$BASE_DIR/cWrap.sh Unified/assignor.py --from_status staged
 
 ## get this done once as it is quite slow and heavy, but we need the output json it could produce
-### right now, that modules fucks up ...
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/stagor.py
+### right now, that modules fucks up ... too slow
+## in for timing measurements
+$BASE_DIR/cWrap.sh Unified/stagor.py
 ## assign the workflow to sites
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/assignor.py
+$BASE_DIR/cWrap.sh Unified/assignor.py
 
 ## unlock dataset that can be unlocked and set status along
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/lockor.py
+$BASE_DIR/cWrap.sh Unified/lockor.py
 
 ## addhoc operations
-/afs/cern.ch/user/c/cmst2/Unified/WmAgentScripts/cWrap.sh Unified/addHoc.py
+$BASE_DIR/cWrap.sh Unified/addHoc.py
 
 rm -f $lock_name
 
