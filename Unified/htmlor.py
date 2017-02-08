@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 import time
-from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration, getPrepIDs, componentInfo, getAllAgents, sendLog, duplicateLock
+from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration, getPrepIDs, componentInfo, getAllAgents, sendLog, duplicateLock, dataCache
 import os
 import json
 from collections import defaultdict
@@ -116,7 +116,7 @@ def htmlor( caller = ""):
                 text+=', <a href="assistance.html#%s" target="_blank">assist</a>'%wfn
             text+=' : %s '%(wf.status)
 
-        if view and wfs!='acquired':
+        if view and not wfs in ['acquired','assigned','assignment-approved']:
             text+='<a href="https://cms-pdmv.web.cern.ch/cms-pdmv/stats/growth/%s.gif" target="_blank"><img src="https://cms-pdmv.web.cern.ch/cms-pdmv/stats/growth/%s.gif" style="height:50px"></a>'%(wfn.replace('_','/'),wfn.replace('_','/'))
 
         if ongoing:
@@ -265,7 +265,7 @@ Last update on <b>%s(CET), %s(GMT)</b>
         count+=1
     text_by_c=""
     for c in count_by_campaign:
-        text_by_c+="<li> %s (%d) : "%( c, sum(count_by_campaign[c].values()) )
+        text_by_c+='<li> <a href="https://its.cern.ch/jira/issues/?jql=text~%s AND project = CMSCOMPPR">%s</a> (%d) : '%( c,c, sum(count_by_campaign[c].values()) )
         for p in sorted(count_by_campaign[c].keys()):
             text_by_c+="%d (%d), "%(p,count_by_campaign[c][p])
         text_by_c+="</li>"
@@ -671,6 +671,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
         waiting_custodial_strings.sort( key = lambda i:i[0] )
         waiting_custodial_string="\n".join( [i[1] for i in waiting_custodial_strings] )
     #start_time_two_weeks_ago = time.mktime(time.strptime("15-0-%d"%(this_week-2), "%y-%w-%W"))
+    per_day_this_week = defaultdict(int)
     for out in output_within_two_weeks:
         if not out.workflow: 
             print "This is a problem with",out.datasetname
@@ -700,6 +701,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
             elif out.datasetname in all_locks:
                 custodial='<font color=green>LOCKED</font>'
             out_week = int(time.strftime("%W",time.gmtime(out.date)))
+            out_day = int(time.strftime("%j",time.gmtime(out.date)))
             ##only show current week, and the previous.
             if last_week==out_week:
                 lines_lastweek.append("<li>on week %s : %s %s</li>"%(
@@ -709,7 +711,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
                         )
                              )
             if this_week==out_week:
-
+                per_day_this_week[out_day]+=1
                 lines_thisweek.append("<li>on week %s : %s %s</li>"%(
                         time.strftime("%W (%x %X)",time.gmtime(out.date)),
                         ol(out.datasetname),
@@ -718,6 +720,8 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
                              )
     lines_thisweek.sort()
     lines_lastweek.sort()
+
+    per_day_s = ", ".join([ "day %s (%d)"%( day, per_day_this_week[day]) for day in sorted(per_day_this_week.keys()) ])
 
     html_doc.write("""Output produced (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?in_disagreement=1 target=_blank>disagreements</a>
 <a href="javascript:showhide('output')">[Click to show/hide]</a>
@@ -740,7 +744,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 <li> Last week (%d) </li><a href="javascript:showhide('output_lastweek')">[Click to show/hide]</a><div id="output_lastweek" style="display:none;"><ul>
 %s
 </ul></div>
-<li> This week (%d) </li><a href="javascript:showhide('output_thisweek')">[Click to show/hide]</a><div id="output_thisweek" style="display:none;"><ul>
+<li> This week (%d) %s </li><a href="javascript:showhide('output_thisweek')">[Click to show/hide]</a><div id="output_thisweek" style="display:none;"><ul>
 %s
 </ul></div></div>
 """%( len(lines_lastweek)+len(lines_thisweek),
@@ -750,7 +754,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
       len(waiting_custodial),waiting_custodial_string,
       len(lines_lastweek),
      '\n'.join(lines_lastweek),
-      len(lines_thisweek),
+      len(lines_thisweek), per_day_s, 
      '\n'.join(lines_thisweek))
                    )
 
@@ -768,7 +772,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 <pre>
 %s
 </pre>
-"""%(os.popen('acrontab -l | grep Unified | grep -v \#').read()))
+"""%(os.popen('acrontab -l | grep -i unified | grep -v \#').read()))
 
 
     per_module = defaultdict(list)
@@ -851,17 +855,20 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     SI = siteInfo()
     date1m = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(30*24*60*60)) )
     date7d = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(7*24*60*60)) )
+    date1d = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(24*60*60)) )
     date1h = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(1*60*60)) )
     date5h = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(5*60*60)) )
     now = time.strftime('%Y-%m-%d+%H:%M', time.gmtime())
     upcoming = json.loads( open('%s/GQ.json'%monitor_dir).read())
 
+    for_max_running = dataCache.get('gwmsmon_prod_site_summary')
     for t in SI.types():
         text+="<li>%s<table border=1>"%t
         c=0
         for site in sorted(getattr(SI,t)):
+            site_se = SI.CE_to_SE(site)
             cpu = SI.cpu_pledges[site] if site in SI.cpu_pledges else 'N/A'
-            disk = SI.disk[SI.CE_to_SE(site)] if SI.CE_to_SE(site) in SI.disk else 'N/A'
+            disk = SI.disk[site_se] if site_se in SI.disk else 'N/A'
             if c==0:
                 text+="<tr>"
             if not disk:
@@ -870,23 +877,32 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
                 ht_disk = 'Disk available: %s'%disk
 
             up_com = ""
-            if site in upcoming:
-                u = sum(upcoming[site][camp] for camp in upcoming[site])
-                up_com = "<br><a href=GQ.json>Jobs available  %d</a>"%(u) 
-                #up_com="<br><ul>"
-                #for camp in upcoming[site]:
-                #    up_com += "<li>%s : %d</li>"% (camp, upcoming[site][camp])
-                #up_com += "</ul>"
-
+            
+            usage = for_max_running[site]['CpusInUse'] if site in for_max_running else 0
+            ht_cpu = 'CPU pledge: %s / %s'%(usage,cpu)
+            if site_se in upcoming:
+                u = sum(upcoming[site_se][camp] for camp in upcoming[site_se])
+                up_com = "<br><a href=GQ.json>Jobs available  %d</a> (av./pl.=%.2f)"%(u, (u/float(cpu) if usage else 0)) 
+                ## should there be an alarm here if a site is underdoing
+                if (usage)<(0.8*cpu) and (u > usage):
+                    ht_cpu = '<font color=red>CPU pledge: %s / %s</font>'%(usage,cpu)
+                
             text+='<td>'
-            text+='<a href=http://dashb-ssb.cern.ch/dashboard/templates/sitePendingRunningJobs.html?site=%s>%s</a><br>'%(site,site)
-            text+='<a href="https://cms-gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="https://cms-gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:75px"></a><br>'%( site,site )
+            text+='<b>%s</b><br>'%site
+            #text+='<a href=http://dashb-ssb.cern.ch/dashboard/templates/sitePendingRunningJobs.html?site=%s>%s</a><br>'%(site,site)
+            text+='<a href="https://cms-gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="https://cms-gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:75px"></a>'%( site,site )
+            text+='<img src="https://cms-gwmsmon.cern.ch/totalview/graphs/%s/fairshare/daily" style="height:75px"><br>'%(site)
+            text+='<img src="https://cms-gwmsmon.cern.ch/prodview/graphs/siteprioritysummarycpuspending/%s/daily" style="height:75px">'%(site)
+            text+='<img src="https://cms-gwmsmon.cern.ch/prodview/graphs/siteprioritysummarycpusinuse/%s/daily" style="height:75px"><br>'%(site)
+
             text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=&check=submitted&sortby=activity&scale=linear&bars=20&date1=%s&date2=%s">1m</a>'%( site,date1m,now )
             text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=&check=submitted&sortby=activity&scale=linear&bars=20&date1=%s&date2=%s">1w</a>'%( site,date7d,now )
+            text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=&check=submitted&sortby=activity&scale=linear&bars=20&date1=%s&date2=%s">1d</a>'%( site,date1d,now )
             text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=&check=submitted&sortby=activity&scale=linear&bars=20&date1=%s&date2=%s">5h</a>'%( site,date5h,now )
-            text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=&check=submitted&sortby=activity&scale=linear&bars=20&date1=%s&date2=%s">1h</a><br>'%( site,date1h,now )
-            text+='<a href="https://cms-site-readiness.web.cern.ch/cms-site-readiness/SiteReadiness/HTML/SiteReadinessReport.html#%s">SAM</a><br>'%( site )
-            text+='CPU pledge: %s<br>'%(cpu)
+            text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=&check=submitted&sortby=activity&scale=linear&bars=20&date1=%s&date2=%s">1h</a>'%( site,date1h,now )
+            text+=', <a href="https://cms-site-readiness.web.cern.ch/cms-site-readiness/SiteReadiness/HTML/SiteReadinessReport.html#%s">SAM</a><br>'%( site )
+            #text+='<a href=http://dashb-ssb.cern.ch/dashboard/templates/sitePendingRunningJobs.html?site=%s>dashb</a><br>'%(site,site)
+            text+='%s<br>'%(ht_cpu)
             text+='%s%s'%(ht_disk,up_com)
             text+='</td>'
             if c==n_column:
@@ -895,6 +911,16 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
                 c+=1
         text+="</table></li>"
 
+    text += "<li> Sites with good IO<ul>"
+    for site in sorted(SI.sites_with_goodIO):
+        text+="<li>%s"% site
+    text += "</ul></li>"
+
+    text += "<li> Sites enabled for multicore pilots<ul>"
+    for site in sorted(SI.sites_mcore_ready):
+        text+="<li>%s"% site
+    text += "</ul></li>"
+
     text += "<li> Sites in auto-approved transfer<ul>"
     for site in sorted(SI.sites_auto_approve):
         text+="<li>%s"% site
@@ -902,7 +928,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 
     text += "<li> Sites with vetoe transfer<ul>"
     for site in sorted(SI.sites_veto_transfer):
-        text+="<li>%s"% site
+        text+="<li>%s (free : %s)"% (site , SI.disk.get(site, 'N/A'))
     text += "</ul></li>"
 
     text += "<li> Sites banned from production<ul>"
@@ -952,7 +978,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 
     lap ( 'done with sites' )
 
-    open('%s/siteInfo.json'%monitor_dir,'w').write(json.dumps(dict([(t,getattr(SI,t)) for t in SI.types()]),indent=2))
+    open('%s/siteInfo.json'%monitor_dir,'w').write(json.dumps(dict([(t,getattr(SI,t)) for t in ['sites_T1s','sites_T2s','sites_with_goodIO']]),indent=2))
 
     lap ( 'done with sites json' )
 
@@ -1097,7 +1123,7 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
 <a href="javascript:showhide('agent')">[Click to show/hide]</a>
 <div id="agent" style="display:none;">
 <table border=1><thead>
-<tr><td>Agent</td><td>Running/Pending hourly</td><td>Running/Pending daily</td></tr></thead>
+<tr><td>Agent</td><td>Running/Pending hourly</td><td>Running/Pending daily</td><td>Status</td><td>Creat./Pend.</td></tr></thead>
 """)
     for team,agents in getAllAgents(reqmgr_url).items():
         if not team in ['production','relval','highprio']: continue
@@ -1105,6 +1131,7 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
         for agent in agents:
             bgcolor=''
             name= agent['agent_url'].split(':')[0]
+            short_name = name.split('.')[0]
             if agent['drain_mode'] == True: bgcolor = 'bgcolor=orange'
             if agent['status'] in ['error']: 
                 ## do you want to send a critical message !
@@ -1116,11 +1143,23 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
             for component in agent['down_components']:
                 message += '<br><b>%s</b>'%component
 
+            message += '<br><a href="https://cms-logbook.cern.ch/elog/GlideInWMS/?mode=summary&reverse=0&reverse=1&npp=20&subtext=%s">gwms elog</a>, <a href="https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary&reverse=0&reverse=1&npp=20&subtext=%s">elog</a>, <a href="https://its.cern.ch/jira/issues/?jql=text~%s AND project = CMSCOMPPR AND status != CLOSED">jira</a>'%( short_name, short_name, short_name )
+
+            pend_txt="<ul>"
+            by_site = defaultdict(int)
+            for site in agent['WMBS_INFO']['sitePendCountByPrio']:
+                by_site[site] = sum(agent['WMBS_INFO']['sitePendCountByPrio'][site].values())
+            top5 = sorted(by_site.items(), key = lambda v: v[1], reverse=True)[:5]
+            for (site,p) in top5:
+                pend_txt+="<li> %s : %s "%( site, p)
+            pend_txt+="</ul>"
+                
             html_doc.write("""
 <tr><td %s>%s</td>
 <td><img src=https://cms-gwmsmon.cern.ch/poolview/graphs/%s/hourly></td>
 <td><img src=https://cms-gwmsmon.cern.ch/poolview/graphs/%s/daily></td>
 <td><img src=https://cms-gwmsmon.cern.ch/poolview/graphs/scheddwarning/%s/hourly></td>
+<td>%s</td>
 </tr>
 """%( 
                     bgcolor,
@@ -1128,6 +1167,7 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
                     name.replace('.','-'),
                     name.replace('.','-'),
                     name.replace('.','-'),
+                    pend_txt
                     ))
     html_doc.write("</table><br></div>")
 
