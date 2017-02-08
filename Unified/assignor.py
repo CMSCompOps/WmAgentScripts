@@ -330,19 +330,19 @@ def assignor(url ,specific = None, talk=True, options=None):
                 if down_time and not any(osite in SI.sites_not_ready for osite in end_sites):
                     print "Flip the status of downtime, since our destinations are good"
                     down_time = False
-                print "with added endpoints",sorted(sites_allowed)
+                print "with added endpoints",sorted(end_sites)
             else:
                 print "Cannot do partial assignment without knowin the endpoints"
                 n_stalled+=1
                 continue
             
             
-        if not len(sites_allowed):
-            if not options.early:
-                wfh.sendLog('assignor',"cannot be assign with no matched sites")
-                sendLog('assignor','%s has no whitelist'% wfo.name, level='critical')
-            n_stalled+=1
-            continue
+        #if not len(sites_allowed):
+        #    if not options.early:
+        #        wfh.sendLog('assignor',"cannot be assign with no matched sites")
+        #        sendLog('assignor','%s has no whitelist'% wfo.name, level='critical')
+        #    n_stalled+=1
+        #    continue
 
 
         low_pressure = SI.sites_low_pressure(0.4)
@@ -363,6 +363,7 @@ def assignor(url ,specific = None, talk=True, options=None):
                 wfh.sendLog('assignor',"sending back to considered because of site downtime, instead of waiting")
                 #sendEmail( "cannot be assigned due to downtime","%s is not sufficiently available, due to down time of a site in the whitelist. check the assignor logs. sending back to considered."% wfo.name)
                 sendLog('assignor','%s is not sufficiently available, due to down time of a site in the whitelist. sending back to considered.'%( wfo.name ), level='delay')
+                n_stalled+=1
                 continue
                 #pass
 
@@ -391,6 +392,14 @@ def assignor(url ,specific = None, talk=True, options=None):
                 else:
                     n_stalled+=1
                     continue
+
+        if not len(sites_allowed):
+            if not options.early:
+                wfh.sendLog('assignor',"cannot be assign with no matched sites")
+                sendLog('assignor','%s has no whitelist'% wfo.name, level='critical')
+            n_stalled+=1
+            continue
+
 
         t1_only = [ce for ce in sites_allowed if ce.startswith('T1')]
         if t1_only:
@@ -466,15 +475,27 @@ def assignor(url ,specific = None, talk=True, options=None):
         split_check = wfh.checkWorkflowSplitting()
         if split_check!=True:
             parameters.update( split_check )
+            if 'NoGo' in split_check.values():
+                wfh.sendLog('assignor', "Failing splitting check")
+                sendLog('assignor','the workflow %s is failing the splitting check. Verify in the logs'% wfo.name, level='critical')
+                n_stalled+=1
+                continue
+
             if 'EventBased' in split_check.values():
                 wfh.sendLog('assignor', "Falling back to event splitting.")
                 #sendEmail("Fallback to EventBased","the workflow %s is too heavy to be processed as it is. Fallback to EventBased splitting"%wfo.name)
                 sendLog('assignor','the workflow %s is too heavy to be processed as it is. Fallback to EventBased splitting ?'%wfo.name, level='critical')
-                if not options.go:  continue
+                ## we have a problem here, that EventBased should never be used as a backup
+                if not options.go:  
+                    n_stalled+=1
+                    continue
+                continue ## skip all together
             elif 'EventsPerJob' in split_check.values():
-                wfh.sendLog('assignor', "Modifying the number of job per event")
+                wfh.sendLog('assignor', "Modifying the number of events per job")
                 #sendEmail("Modifying the job per events","the workflow %s is too heavy in number of jobs explosion"%wfo.name)
                 sendLog('assignor',"the workflow %s is too heavy in number of jobs explosion"%wfo.name, level='critical')
+            elif 'EventsPerLumi' in split_check.values():
+                wfh.sendLog('assignor', "Modifying the number of events per lumi to be able to process this")
 
         # Handle run-dependent MC
         pstring = wfh.processingString()
