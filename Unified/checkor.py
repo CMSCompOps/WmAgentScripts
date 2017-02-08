@@ -45,16 +45,21 @@ def checkor(url, spec=None, options=None):
 
     if options.strict:
         ## the one which were running and now have completed
+        print "strict option is on: checking workflows that freshly completed"
         wfs.extend( filter(lambda wfo: wfo.name in all_completed , runnings))
     if options.update:
+        print "update option is on: checking workflows that have not completed yet"
         wfs.extend( filter(lambda wfo: not wfo.name in all_completed , runnings))
 
     if options.clear:
+        print "clear option is on: checking workflows that are ready to toggle closed-out"
         wfs.extend( filter(lambda wfo: 'custodial' in wfo.status, standings))
     if options.review:
+        print "review option is on: checking the workflows that needed intervention"
         wfs.extend( filter(lambda wfo: not 'custodial' in wfo.status, standings))
 
     ## what is left out are the wf which were running and ended up aborted/failed/...
+
     
 
     custodials = defaultdict(list) #sites : dataset list
@@ -580,7 +585,7 @@ def checkor(url, spec=None, options=None):
             ## I don't think we can by pass this
             is_closing = False
 
-        fraction_invalid = 0.01
+        fraction_invalid = 0.20
         if not all([(dbs_invalid[out] <= int(fraction_invalid*dbs_presence[out])) for out in wfi.request['OutputDatasets']]) and not options.ignoreinvalid:
             print wfo.name,"has a dbs invalid file level too high"
             print json.dumps(dbs_presence, indent=2)
