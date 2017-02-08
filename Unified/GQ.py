@@ -1,4 +1,4 @@
-from utils import getDatasetBlockAndSite, siteInfo, getWorkflows, workflowInfo, monitor_dir, sendLog, sendEmail, makeReplicaRequest, unifiedConfiguration, getDatasetFileLocations
+from utils import getDatasetBlockAndSite, siteInfo, getWorkflows, workflowInfo, monitor_dir, sendLog, sendEmail, makeReplicaRequest, unifiedConfiguration, getDatasetFileLocations, getAgentInfo
 from collections import defaultdict
 import time
 import json
@@ -38,6 +38,7 @@ agents_down = defaultdict(set)
 failed_workflow = set()
 files_locations = {}
 stuck_all_done = set()
+heavy_duty = {}
 
 for wf in wfs:
     if spec and not spec in wf['RequestName']: continue
@@ -55,9 +56,21 @@ for wf in wfs:
         print "not knonw or not acdc : %s"%(wf['RequestName'])
         continue
 
+    ## test the heavyness
+    if 'TotalInputLumis' in wf and 'TotalEstimatedJobs' in wf and wf['TotalEstimatedJobs']:
+        heavy = (wf['TotalInputLumis'] / float(wf['TotalEstimatedJobs']))
+        ## large ratio and no intpu dataset
+        if heavy > 5000. and not 'InputDataset' in wf:
+            heavy_duty[wf['RequestName']] = { 'TotalInputLumis' : wf['TotalInputLumis'],
+                                              'TotalEstimatedJobs' : wf['TotalEstimatedJobs'],
+                                              'ratio' : heavy,
+                                              }
+
+
     #wqes = [w[w['type']] for w in wqs]
     print wf['RequestName'],len(wqs),"elements"
 
+    agent_info = {}
     all_wqe_done = True
     for wq in wqs:
         wqe = wq[wq['type']]
@@ -130,10 +143,12 @@ for wf in wfs:
             continue
 
         not_processable = set()
+
+        wqe_ce = None
         for b in wqe['Inputs']:
             ## what the global queue thinks about the block location
             wqe_se = [si.CE_to_SE(s) for s in wqe['Inputs'][b]]
-
+            
             if not '#' in b: 
                 print "acdc doc input",b
                 ## this would be an ACDC document input
@@ -217,6 +232,18 @@ for wf in wfs:
                 unprocessable.add( b )
                 not_processable.add( b )
                 print "Block",b,"is at",",".join(sorted(block_se)),"while asked to run at",",".join(sorted(swl))
+
+        #if wqe_ce == None: wqe_ce = wqe['SiteWhitelist']
+        ## check in the agent why it is not running !
+        #if agent!='None' and False:
+        #    if not agent in agent_info:
+        #        agent_info[agent] = getAgentInfo(url, agent)
+        #    pending = dict([(site,p) for site,p in agent_info[agent]['sitePendCountByPrio'].items() if site in wqe_ce])
+        #    thresholds = dict([(site,p) for site,p in agent_info[agent]['thresholds'].items() if site in wqe_ce])
+        #    print json.dumps( pending, indent=2)
+        #    print json.dumps( thresholds, indent=2)
+                
+
         if not_processable:
             wfi.sendLog('GQ','The following blocks/files need to be put back on disk \n%s'%('\n'.join( not_processable )))
     if all_wqe_done:
@@ -308,3 +335,5 @@ open('%s/GQ.txt'%monitor_dir,'w').write( report )
 
 open('replaced_blocks.json','w').write( json.dumps( sorted(replaced), indent=2) )
 
+if heavy_duty:
+    sendLog('GQ','There are some heavy duty workflows in the system, likely to cause damage\n%s\n%s'%(sorted(heavy_duty.keys()), json.dumps( heavy_duty, indent=2) ),level='critical')
