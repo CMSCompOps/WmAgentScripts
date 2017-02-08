@@ -877,7 +877,7 @@ class docCache:
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(os.popen('curl --retry 5 -s http://cms-gwmsmon.cern.ch/prodview//json/maxused').read()),
+            'getter' : lambda : json.loads(os.popen('curl --retry 5 -s http://cms-gwmsmon.cern.ch/prodview//json/maxusedcpus').read()),
             'cachefile' : None,
             'default' : {}
             }
@@ -889,6 +889,7 @@ class docCache:
             'cachefile' : None,
             'default' : ""
             }
+        """
         self.cache['T1_DE_KIT_MSS_usage'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
@@ -953,7 +954,7 @@ class docCache:
             'cachefile' : None,
             'default' : ""
             }
-
+        """
         for cat in ['1','2','m1','m3','m4','m5','m6']:
             self.cache['stuck_cat%s'%cat] = {
                 'data' : None,
@@ -1189,7 +1190,7 @@ class siteInfo:
                                           "T2_US_Nebraska","T2_US_Wisconsin","T2_US_Purdue","T2_US_Caltech", "T2_US_Florida", "T2_US_UCSD", "T2_US_MIT",
                                           "T2_BE_IIHE",
                                           "T2_EE_Estonia",
-                                          "T2_CH_CERN", 
+                                          "T2_CH_CERN", "T2_CH_CERN_HLT",
 
                                    'T2_RU_INR',
                                    'T2_UA_KIPT'
@@ -1483,7 +1484,8 @@ class siteInfo:
 
 
     def types(self):
-        return ['sites_with_goodIO','sites_T1s','sites_T2s','sites_mcore_ready']#,'sites_veto_transfer']#,'sites_auto_approve']
+        return ['sites_T1s','sites_T2s']
+        #return ['sites_with_goodIO','sites_T1s','sites_T2s','sites_mcore_ready']#,'sites_veto_transfer']#,'sites_auto_approve']
 
     def CE_to_SE(self, ce):
         if (ce.startswith('T1') or ce.startswith('T0')) and not ce.endswith('_Disk'):
