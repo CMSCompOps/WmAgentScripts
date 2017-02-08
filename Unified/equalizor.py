@@ -84,6 +84,8 @@ def equalizor(url , specific = None, options=None):
         mapping['T1_IT_CNAF'].append('T0_CH_CERN')
         mapping['T1_FR_CCIN2P3'].append('T0_CH_CERN')
         mapping['T1_DE_KIT'].append('T0_CH_CERN')
+        ## temptatively
+        mapping['T0_CH_CERN'].append( 'T2_CH_CERN' )
 
     ## all europ can read from CERN
     for reg in ['IT','DE','UK','FR','BE','ES']:
@@ -217,7 +219,8 @@ def equalizor(url , specific = None, options=None):
             else:
                 b_m = int(m_m) ## this is very bad if there are just a couple of outliers
                 b_m = int((s_m / float(w_m)) * 1.2)
-
+        else:
+            print "not enough stats for memory",w_m
 
         try:
             perf_data = json.loads(os.popen('curl -s --retry 5 http://cms-gwmsmon.cern.ch/prodview/json/history/runtime720/%s'%task).read())
@@ -260,7 +263,8 @@ def equalizor(url , specific = None, options=None):
         b_t = None
         if w_t > 100:
             b_t = m_t
-
+        else:
+            print "not enough stats for time",w_t
         return (b_m,b_t)
         
     def getcampaign( task ):
@@ -284,11 +288,15 @@ def equalizor(url , specific = None, options=None):
     interface = {
         'mapping' : mapping,
         'reversed_mapping' : reversed_mapping,
-        'modifications' : {}
+        'modifications' : {},
+        'time' : {},
+        'memory' : {}
         }
     if options.augment or options.remove:
         interface['modifications'] = json.loads( open('%s/equalizor.json'%monitor_dir).read())['modifications']
-
+        interface['memory'] = json.loads( open('%s/equalizor.json'%monitor_dir).read())['memory']
+        interface['time'] = json.loads( open('%s/equalizor.json'%monitor_dir).read())['time']
+        
     if options.remove:
         if specific in interface['modifications']:
             print "poping",specific
@@ -342,6 +350,7 @@ def equalizor(url , specific = None, options=None):
         wfs = session.query(Workflow).filter(Workflow.status == 'away').all()
         
     performance = {}
+    resizing = {}
     no_routing = [
         ]
     random.shuffle( wfs )
@@ -369,7 +378,9 @@ def equalizor(url , specific = None, options=None):
         
         
         lhe,prim,_,sec,sites_allowed = wfi.getSiteWhiteList()#getIO()
-        
+        ncores = wfi.getMulticore()
+        memory_allowed = SI.sitesByMemory( float(wfi.request['Memory']) , maxCore=ncores)
+
         if not lhe and not prim and not sec:
             ## no input at all: go for OSG!!!
             add_to[wfo.name] = ['T3_US_OSG']
@@ -395,7 +406,12 @@ def equalizor(url , specific = None, options=None):
             if options.augment:
                 print task.pathName
                 print campaign
-    
+
+            resize = CI.get(campaign,'resize',{})
+            
+            if resize and not is_chain:
+                resizing[task.pathName] = resize
+
             tune = CI.get(campaign,'tune',options.tune)
             if tune and not campaign in tune_performance:
                 tune_performance.append( campaign )
@@ -423,6 +439,8 @@ def equalizor(url , specific = None, options=None):
                             else:
                                 LHE_overflow[campaign] = site_list.split(',')
                     print "adding",campaign,"to light input overflow rules",LHE_overflow[campaign]
+
+            ### setup the resizing
 
             ### get the task performance, for further massaging.
             if campaign in tune_performance or options.tune:
@@ -670,6 +688,8 @@ def equalizor(url , specific = None, options=None):
                 ## we should add all sites that hold the secondary input if any
                 ### given that we have the secondary location available, it is not necessary to use the add-hoc list
                 ##secondary_locations = list(set(PU_overflow[campaign]['sites']) & set( SI.sites_ready ))
+                ## intersect with the sites that are allowed from the request requirement
+                secondary_locations = secondary_locations & set(memory_allowed)
 
                 if any([task.pathName.endswith(finish) for finish in ['_0','StepOneProc','Production']]) :
                     needs, task_name, running, idled = needs_action(wfi, task)
@@ -680,7 +700,7 @@ def equalizor(url , specific = None, options=None):
                         original_site_in_use = set(secondary_locations)
 
                     mode = 'AddWhitelist'
-                    if not prim:
+                    if not prim and i_task==0:
                         print "because there isn't any input, one should be able to just replace the sitewhitelist instead of adding, with the restriction of not reaching every possible sites"
                         mode='ReplaceSiteWhitelist'
 
@@ -812,36 +832,42 @@ def equalizor(url , specific = None, options=None):
 
 
     ###  manage the number of core and job resizing
-    interface['cores']={'T2_CH_CERN_HLT': {'min':4,'max':16}, 'default': {'min':1, 'max':4}}
-    interface['resizes'] = ['RunIISpring16DR80']
+    #interface['cores']={'T2_CH_CERN_HLT': {'min':4,'max':16}, 'default': {'min':1, 'max':4}}
+    #interface['resizes'] = ['RunIISpring16DR80']
+    interface['resizing'] = resizing
 
     ### manage the modification of the memory and target time
-    interface['time'] = defaultdict(list)
-    interface['memory'] = defaultdict(list)
-
-    max_N_mem = 10
-    max_N_time = 10
+    max_N_mem = 2
+    max_N_time = 4
     ## discretize the memory to 10 at most values
     mems = set([o['memory'] for t,o in performance.items() if 'memory' in o])
     times = set([o['time'] for t,o in performance.items() if 'time' in o])
     if len(mems)>max_N_mem:
         mem_step = int((max(mems) - min(mems))/ float(max_N_mem))
+        print "rebinning memory"
         for t in performance:
             if not 'memory' in performance[t]: continue
             (m,r) = divmod(performance[t]['memory'], mem_step)
             performance[t]['memory'] = (m+1)*mem_step
     if len(times)>max_N_time:
+        print "rebinning memory"
         time_step = int((max(times) - min(times))/float(max_N_time))
         for t in performance:
             if not 'time' in performance[t]: continue
             (m,r) = divmod(performance[t]['time'], time_step)
             performance[t]['time'] = (m+1)*time_step
 
+    new_times = defaultdict(list)
+    new_memories = defaultdict(list)
+
     for t,o in performance.items():
         if 'time' in o:
-            interface['time'][str(o['time'])] .append( t )
+            new_times[str(o['time'])].append( t )
         if 'memory' in o:
-            interface['memory'][str(o['memory'])].append( t )
+            new_memories[str(o['memory'])].append( t )
+
+    interface['time'].update( new_times )
+    interface['memory'].update( new_memories )
 
     ## close and save
     close( interface )
