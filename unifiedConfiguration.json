@@ -27,10 +27,7 @@
    "description" : "The sites we can autoapprove tape request to"
  },
  "sites_space_override": {	
-   "value" : { "T0_CH_CERN_MSS":0,
-	       "T1_RU_JINR_Disk" : 0,
-	       "T2_DE_RWTH" : 0,
-	       "T2_BE_IIHE" : 0
+   "value" : { "T1_RU_JINR_Disk" : 0
 	       },
    "description" : "Over-ride the available space at a phedex end point"
  },
