@@ -1868,7 +1868,15 @@ def findLostBlocks(url, datasetname):
     blocks,_ = findLostBlocksFiles(url , datasetname)
     return blocks
 
+
 def findLostBlocksFiles(url, datasetname):
+    try:
+        return try_findLostBlocksFiles(url, datasetname)
+    except:
+        sendLog('findLostBlocksFiles','fatal execption in findLostBlocksFiles for %s, assuming no lost blocks and files'% datasetname, level='critical')
+        return ([],[])
+
+def try_findLostBlocksFiles(url, datasetname):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 
     r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?block=%s%%23*&collapse=n'% datasetname)
@@ -2663,7 +2671,7 @@ def distributeToSites( items, sites , n_copies, weights=None,sizes=None):
         return dict(spreading)
     else:
         ## pick the sites according to computing element plege
-        SI = siteInfo()
+        SI = global_SI()
 
         for iitem,item in enumerate(items):
             at=set()
