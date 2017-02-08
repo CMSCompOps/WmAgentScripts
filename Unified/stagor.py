@@ -11,6 +11,7 @@ import optparse
 from htmlor import htmlor
 from collections import defaultdict
 import copy 
+import time
 
 def stagor(url,specific =None, options=None):
     
@@ -45,8 +46,27 @@ def stagor(url,specific =None, options=None):
     except:
         print "inexisting transfer statuses. starting fresh"
         cached_transfer_statuses = {}
+        return False
 
     transfer_statuses = {}
+
+
+    def time_point(label="",sub_lap=False):
+        now = time.mktime(time.gmtime())
+        nows = time.asctime(time.gmtime())
+
+        print "Time check (%s) point at : %s"%(label, nows)
+        print "Since start: %s [s]"% ( now - time_point.start)
+        if sub_lap:
+            print "Sub Lap : %s [s]"% ( now - time_point.sub_lap ) 
+            time_point.sub_lap = now
+        else:
+            print "Lap : %s [s]"% ( now - time_point.lap ) 
+            time_point.lap = now            
+            time_point.sub_lap = now
+
+    time_point.sub_lap = time_point.lap = time_point.start = time.mktime(time.gmtime())
+
 
     ## pop all that are now in negative values
     for phedexid in cached_transfer_statuses.keys():
@@ -55,8 +75,8 @@ def stagor(url,specific =None, options=None):
             print phedexid,"does not look relevant to be in cache anymore. poping"
             print cached_transfer_statuses.pop( phedexid )
 
+    time_point("Check cached transfer")
 
-            
     ## collect all datasets that are needed for wf in staging, correcting the status of those that are not really in staging
     wfois = []
     needs = defaultdict(list)
@@ -80,6 +100,8 @@ def stagor(url,specific =None, options=None):
             completion_by_input[dataset] = {}
             needs_by_priority[wfi.request['RequestPriority']].append( dataset )
             wfi.sendLog('stagor', '%s needs %s'%( wfo.name, dataset))
+
+    time_point("Check staging workflows")            
 
     open('%s/dataset_requirements.json'%monitor_dir,'w').write( json.dumps( needs, indent=2))
     for prio in needs_by_priority: needs_by_priority[prio] = list(set(needs_by_priority[prio]))
@@ -113,20 +135,33 @@ def stagor(url,specific =None, options=None):
         if transfer.phedexid<0: continue
 
         ## check the status of transfers
-        checks = checkTransferApproval(url,  transfer.phedexid)
-        approved = all(checks.values())
-        if not approved:
-            sendLog('stagor', "%s is not yet approved"%transfer.phedexid)
-            approveSubscription(url, transfer.phedexid)
-            continue
+        #checks = checkTransferApproval(url,  transfer.phedexid)
+        #approved = all(checks.values())
+        #if not approved:
+        #    sendLog('stagor', "%s is not yet approved"%transfer.phedexid)
+        #    approveSubscription(url, transfer.phedexid)
+        #    continue
 
         ## check on transfer completion
+        not_cached = False
         if str(transfer.phedexid) in cached_transfer_statuses:
             ### use a cache for transfer that already looked done
             sendLog('stagor',"read %s from cache"%transfer.phedexid)
             checks = cached_transfer_statuses[str(transfer.phedexid)]
         else:
+            ## I actually would like to avoid that all I can
+            sendLog('stagor','Performing spurious transfer check on %s'% transfer.phedexid, level='critical')
             checks = checkTransferStatus(url, transfer.phedexid, nocollapse=True)
+            if not checks:
+                ## this is going to bias quite heavily the rest of the code. we should abort here
+                sendLog('stagor','Ending stagor because of skewed input from checkTransferStatus', level='critical')
+                return False
+                pass
+            #checks = {}
+            #not_cached = True
+
+        time_point("Check transfer status %s"% transfer.phedexid, sub_lap=True)            
+
         ## just write this out
         transfer_statuses[str(transfer.phedexid)] = copy.deepcopy(checks)
 
@@ -141,8 +176,11 @@ def stagor(url,specific =None, options=None):
             done = all(map(lambda i:i>=good_enough,list(itertools.chain.from_iterable([node.values() for node in checks.values()]))))
         else:
             ## it is empty, is that a sign that all is done and away ?
-            print "ERROR with the scubscriptions API of ",transfer.phedexid
-            print "Most likely something else is overiding the transfer request. Need to work on finding the replacement automatically, if the replacement exists"
+            if not_cached:
+                print "Transfer status was not cached"
+            else:
+                print "ERROR with the scubscriptions API of ",transfer.phedexid
+                print "Most likely something else is overiding the transfer request. Need to work on finding the replacement automatically, if the replacement exists"
             done = False
 
         ## the thing above is NOT giving the right number
@@ -167,11 +205,16 @@ def stagor(url,specific =None, options=None):
             cached_transfer_statuses[str(transfer.phedexid)] = copy.deepcopy(checks)
         else:
             sendLog('stagor',"%s is not finished %s"%(transfer.phedexid, pprint.pformat( checks )))
-            pprint.pprint( checks )
+            ##pprint.pprint( checks )
             ## check if the destination is in down-time
             for ds in checks:
                 sites_incomplete = [SI.SE_to_CE(s) for s,v in checks[ds].items() if v<good_enough]
                 sites_incomplete_down = [s for s in sites_incomplete if not s in SI.sites_ready]
+                ## no space means no transfer should go there : NO, it does not work in the long run
+                #sites_incomplete_down = [SI.SE_to_CE(s) for s,v in checks[ds].items() if (v<good_enough and (SI.disk[s]==0 or (not SI.SE_to_CE(s) in SI.sites_ready)))]
+
+
+
                 if sites_incomplete_down:
                     sendLog('stagor',"%s are in downtime, while waiting for %s to get there"%( ",".join(sites_incomplete_down), ds))
                 #sites_complete = [SI.SE_to_CE(s) for s,v in checks[ds].items() if v>=good_enough]
@@ -182,18 +225,27 @@ def stagor(url,specific =None, options=None):
                 endpoint_in_downtime[ds].update( sites_incomplete_down )
             
 
+    time_point("Check on-going transfers")            
+
+
+    print "End points"
+    for k in dataset_endpoints: dataset_endpoints[k] = list(dataset_endpoints[k])
+    print json.dumps( dataset_endpoints , indent=2)
 
     print "End point in down time"
     for k in endpoint_in_downtime: endpoint_in_downtime[k] = list(endpoint_in_downtime[k])
-    for k in dataset_endpoints: dataset_endpoints[k] = list(dataset_endpoints[k])
-    print json.dumps( endpoint_in_downtime , indent=2)
+    print json.dumps( endpoint_in_downtime , indent=2)    
+
+    print "End point incomplete in down time"
+    for k in endpoint_incompleted: endpoint_incompleted[k] = list(endpoint_incompleted[k])
+    print json.dumps( endpoint_incompleted , indent=2)        
 
 
-    open('cached_transfer_statuses.json','w').write( json.dumps( cached_transfer_statuses, indent=2))
+    #open('cached_transfer_statuses.json','w').write( json.dumps( cached_transfer_statuses, indent=2))
     open('%s/transfer_statuses.json'%monitor_dir,'w').write( json.dumps( transfer_statuses, indent=2))
     open('%s/dataset_endpoints.json'%monitor_dir,'w').write( json.dumps(dataset_endpoints, indent=2))
 
-    already_stuck = json.loads( open('%s/stuck_transfers.json'%monitor_dir).read() )
+    already_stuck = json.loads( open('%s/stuck_transfers.json'%monitor_dir).read() ).keys()
     already_stuck.extend( getAllStuckDataset() )
  
     missing_in_action = defaultdict(list)
@@ -208,8 +260,11 @@ def stagor(url,specific =None, options=None):
     ## come back to workflows and check if they can go
     available_cache = defaultdict(lambda : defaultdict(float))
     presence_cache = defaultdict(dict)
+
+    time_point("Preparing for more")
     for wfo,wfi in wfois:
         print "#"*30
+        time_point("Forward checking %s"% wfo.name,sub_lap=True)
         ## the site white list takes site, campaign, memory and core information
         (_,primaries,_,secondaries,sites_allowed) = wfi.getSiteWhiteList(verbose=False)
         se_allowed = [SI.CE_to_SE(site) for site in sites_allowed]
@@ -334,6 +389,7 @@ def stagor(url,specific =None, options=None):
                     send_back_to_considered.add( wfo.name )
 
 
+    time_point("Checked affected workflows")
 
     if send_back_to_considered:
         #sendEmail("transfer to endpoint in downtime","sending back to considered the following workflows \n%s"%('\n'.join( send_back_to_considered)))
@@ -454,7 +510,6 @@ def stagor(url,specific =None, options=None):
     print "Stuck transfers and datasets"
     print json.dumps( missing_in_action, indent=2 )
 
-    print "Going further and make a report of stuck transfers"
 
     datasets_by_phid = defaultdict(set)
     for dataset in missing_in_action:
@@ -462,6 +517,27 @@ def stagor(url,specific =None, options=None):
             #print dataset,"stuck through",phid
             datasets_by_phid[phid].add( dataset )
 
+    for k in datasets_by_phid:
+        datasets_by_phid[k] = list(datasets_by_phid[k])
+
+    open('datasets_by_phid.json','w').write( json.dumps(datasets_by_phid, indent=2 ))
+
+    open('really_stuck_dataset.json','w').write( json.dumps(list(really_stuck_dataset), indent=2 ))
+    print '\n'*2,"Datasets really stuck"
+    print '\n'.join( really_stuck_dataset )
+
+    #############
+    ## not going further for what matters
+    #############
+    return 
+
+
+    print "Going further and make a report of stuck transfers"
+    
+    time_point("Ready for checking transfers further")
+
+
+    
     bad_destinations = defaultdict(set)
     bad_sources = defaultdict(set)
     report = ""
@@ -503,9 +579,6 @@ def stagor(url,specific =None, options=None):
     report+="\nbad destinations "+",".join(bad_destinations.keys())+"\n"
     for site,blocks in bad_destinations.items():
         report+="\n\n%s:"%site+"\n\t".join(['']+list(blocks))
-
-    print '\n'*2,"Datasets really stuck"
-    print '\n'.join( really_stuck_dataset )
 
     print '\n'*2,"report written at https://cmst2.web.cern.ch/cmst2/unified/logs/incomplete_transfers.log"
     print report
