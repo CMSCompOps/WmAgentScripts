@@ -84,7 +84,7 @@ def spawn_harvesting(url, wfi , in_full):
             harvesting_schema['RequestString'] = 'HARVEST-'+wfi.request['RequestString']
             harvesting_schema['DQMHarvestUnit'] = 'byRun'
             harvesting_schema['ConfigCacheUrl'] = harvesting_schema['CouchURL'] ## uhm, how stupid is that ?
-            harvesting_schema['RequestPriority'] = wfi.request['RequestPriority']*10
+            harvesting_schema['RequestPriority'] = min(wfi.request['RequestPriority']*10,999999)
 
             harvest_request = reqMgrClient.submitWorkflow(url, harvesting_schema)
             if not harvest_request:
