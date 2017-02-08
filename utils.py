@@ -4031,22 +4031,37 @@ class workflowInfo:
             splits = self.getSplittings()
             events_per_lumi=None
             max_events_per_lumi=None
+            def find_task_dict( name ):
+                i_task=1 
+                while True: 
+                    tname = 'Task%d'%i_task     
+                    i_task+=1       
+                    if not tname in self.request: break
+                    if self.request[tname]['TaskName'] == name:
+                        return copy.deepcopy( self.request[tname] )
+                return None
             for task in splits:
                 print task
                 if 'events_per_lumi' in task:
                     events_per_lumi = task['events_per_lumi']
+                        
+
                 ## avg_events_per_job is base on 8h. we could probably put some margin
                 elif events_per_lumi and 'avg_events_per_job' in task:
                     avg_events_per_job = (task['avg_events_per_job'] *2 )
+                    tname = task['splittingTask'].split('/')[-1]
+                    t = find_task_dict( tname )
+                    while t and 'InputTask' in t:
+                        t = find_task_dict( t['InputTask'] )
+                        if 'FilterEfficiency' in t:
+                            avg_events_per_job /= t['FilterEfficiency']
                     if (events_per_lumi > avg_events_per_job):
                         print "The default splitting will not work for subsequent steps",events_per_lumi,">",avg_events_per_job
                         if max_events_per_lumi==None or (max_events_per_lumi < avg_events_per_job):
                             max_events_per_lumi = avg_events_per_job
             if max_events_per_lumi:
                 print "the base splitting should be changed to", max_events_per_lumi,"per lumi"
-                sendEmail('checkWorkflowSplitting','%s had a splitting dialed down [commissionning]'%( self.request['RequestName']))
                 answer_d.update({'EventsPerLumi' : max_events_per_lumi})
-                #answer = False
             
             return answer_d if answer_d else answer
 
@@ -4057,11 +4072,12 @@ class workflowInfo:
             timing = self.request['TimePerEvent']
 
             ## need to divide by the number of cores in the job
-            average /= ncores 
+            ###average /= ncores 
             ## if we can stay within 48 with one lumi. do it
             timeout = 48 *60.*60. #self.request['OpenRunningTimeout']
             if (average * timing) < timeout:
                 ## we are within overboard with one lumi only
+                # we should set max_events_per_lumi in the request to prevent it from blowing up too in creation failures
                 return True
 
             spl = self.getSplittings()[0]
