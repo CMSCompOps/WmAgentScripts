@@ -432,6 +432,8 @@ def transferor(url ,specific = None, talk=True, options=None):
                 prim_location = [site for (site,info) in destinations.items() if info['completion']==100 and info['data_fraction']==1]
                 ## the rest is places it is going to be
                 prim_destination = [site for site in destinations.keys() if not site in prim_location]
+                ## veto the site with no current disk space
+                prim_destination = [site for site in prim_destination if SI.disk[site]]
 
 
                 if len(prim_location) >= copies_needed:
@@ -450,7 +452,11 @@ def transferor(url ,specific = None, talk=True, options=None):
                 prim_to_distribute = [site for site in sites_allowed if not SI.CE_to_SE(site) in prim_location]
                 prim_to_distribute = [site for site in prim_to_distribute if not SI.CE_to_SE(site) in prim_destination]
                 ## take out the ones that cannot receive transfers
+                potential_destinations = len(prim_to_distribute)
                 prim_to_distribute = [site for site in prim_to_distribute if not any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
+
+                ## do we want to restrict transfers if the amount of site in vetoe are too large ?
+                
 
                 wfh.sendLog('transferor',"Could be going to: %s"% sorted( prim_to_distribute))
                 if not prim_to_distribute or any([transfers_per_sites[site] < max_staging_per_site for site in prim_to_distribute]):
@@ -637,7 +643,7 @@ def transferor(url ,specific = None, talk=True, options=None):
 
     if no_goes:
         #sendEmail("no go for managing","No go for \n"+"\n".join( no_goes ))
-        sendLog('transferor', "No go for \n"+"\n".join( no_goes ), level='critical')
+        sendLog('transferor', "No go for \n"+"\n".join( sorted(no_goes) ), level='critical')
 
     print "accumulated transfers"
     print json.dumps(all_transfers, indent=2)
