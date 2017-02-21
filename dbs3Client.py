@@ -181,6 +181,10 @@ def getDatasetStatus(dataset):
     reply = dbsapi.listDatasets(dataset=dataset,dataset_access_type='*',detail=True)
     return reply[0]['dataset_access_type']
 
+def setFileStatus(files, newstatus):
+    dbsapi = DbsApi(url=dbs3_url_writer)
+    for f in files:
+        dbsapi.updateFileStatus(logical_file_name=f, is_file_valid=newstatus)
 
 def setDatasetStatus(dataset, newStatus, files=True):
     """
