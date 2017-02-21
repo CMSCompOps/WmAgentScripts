@@ -569,6 +569,11 @@
   "Upg2017Summer15DR": {
     "go": false
   },
+  "CosmicFall16PhaseIGS" : {
+    "go" : true,
+    "lumisize" : -1,
+    "fractionpass" : 0.95
+  },
   "PhaseIFall16wmLHEGS" : {
     "go" : true,
     "lumisize" : 1500,
