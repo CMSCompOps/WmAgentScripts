@@ -34,6 +34,21 @@ def checkor(url, spec=None, options=None):
     if not up.check(): return
     use_mcm = up.status['mcm']
 
+    def time_point(label="",sub_lap=False):
+        now = time.mktime(time.gmtime())
+        nows = time.asctime(time.gmtime())
+
+        print "Time check (%s) point at : %s"%(label, nows)
+        print "Since start: %s [s]"% ( now - time_point.start)
+        if sub_lap:
+            print "Sub Lap : %s [s]"% ( now - time_point.sub_lap ) 
+            time_point.sub_lap = now
+        else:
+            print "Lap : %s [s]"% ( now - time_point.lap ) 
+            time_point.lap = now            
+            time_point.sub_lap = now
+
+    time_point.sub_lap = time_point.lap = time_point.start = time.mktime(time.gmtime())
     
     runnings = session.query(Workflow).filter(Workflow.status == 'away').all()
     standings = session.query(Workflow).filter(Workflow.status.startswith('assistance')).all()
@@ -103,7 +118,9 @@ def checkor(url, spec=None, options=None):
             #sendLog('checkor',"no file %s"%holding_file)
             continue
         try:
-            holdings.extend( json.loads(open(holding_file).read()))
+            extending = json.loads(open(holding_file).read())
+            print bypassor,"is holding",extending
+            holdings.extend( extending )
         except:
             sendLog('checkor',"cannot get holdings from %s for %s"%(holding_file, bypassor))
             sendEmail("malformated by-pass information","%s is not json readable"%(holding_file), destination=[email])
@@ -162,6 +179,8 @@ def checkor(url, spec=None, options=None):
         
         time.sleep( sleep_time )
         
+        time_point("Starting with %s"% wfo.name)
+
         ## get info
         wfi = workflowInfo(url, wfo.name)
         wfi.sendLog('checkor',"checking on %s %s"%( wfo.name,wfo.status))
@@ -282,10 +301,10 @@ def checkor(url, spec=None, options=None):
                 continue
 
             true_familly.append( member['RequestName'] )
-            try:
-                parse_one(url, member['RequestName'])
-            except:
-                print "Could not make error report for",member['RequestName']
+            #try:
+            #    parse_one(url, member['RequestName'])
+            #except:
+            #    print "Could not make error report for",member['RequestName']
 
             if member['RequestStatus'] in ['running-open','running-closed','assigned','acquired']:
                 print wfo.name,"still has an ACDC running",member['RequestName']
@@ -304,6 +323,9 @@ def checkor(url, spec=None, options=None):
         if acdc_bads:
             #sendEmail('inconsistent ACDC','for %s, ACDC %s is inconsistent, preventing from closing'%( wfo.name, ','.join(acdc_bads) ))
             sendLog('checkor','For %s, ACDC %s is inconsistent, preventing from closing or will create a mess.'%( wfo.name, ','.join(acdc_bads) ), level='critical')
+
+        time_point("checked workflow familly", sub_lap=True)
+
 
         ## completion check
         percent_completions = {}
@@ -327,12 +349,18 @@ def checkor(url, spec=None, options=None):
             event_expected = int(event_expected)
 
         fractions_pass = {}
+        events_per_lumi = {}
+
         over_100_pass = False
         (lhe,prim,_,_) = wfi.getIO()
         if lhe or prim: over_100_pass = False
 
+        time_point("execpted statistics", sub_lap=True)
+
         for output in wfi.request['OutputDatasets']:
             event_count,lumi_count = getDatasetEventsAndLumis(dataset=output)
+            events_per_lumi[output] = event_count/float(lumi_count) if lumi_count else 100
+                
             percent_completions[output] = 0.
 
             if lumi_expected:
@@ -394,10 +422,11 @@ def checkor(url, spec=None, options=None):
                 assistance_tags.add('over100')
                 is_closing = False
 
+        time_point("checked output size", sub_lap=True)
+
         ## correct lumi < 300 event per lumi
-        events_per_lumi = {}
-        for output in wfi.request['OutputDatasets']:
-            events_per_lumi[output] = getDatasetEventsPerLumi( output )
+        #for output in wfi.request['OutputDatasets']:
+        #events_per_lumi[output] = getDatasetEventsPerLumi( output )
 
 
         lumi_upper_limit = {}
@@ -432,6 +461,8 @@ def checkor(url, spec=None, options=None):
         for output in wfi.request['OutputDatasets']:
             any_presence[output] = getDatasetPresence(url, output, vetoes=[])
 
+        time_point("checked dataset presence", sub_lap=True)
+
         ## custodial copy
         custodial_locations = {}
         custodial_presences = {}
@@ -442,10 +473,14 @@ def checkor(url, spec=None, options=None):
             if not custodial_locations[output]:
                 custodial_locations[output] = []
 
+        time_point("checked custodiality", sub_lap=True)
+
         ## presence in phedex
         phedex_presence ={}
         for output in wfi.request['OutputDatasets']:
             phedex_presence[output] = phedexClient.getFileCountDataset(url, output )
+
+        time_point("checked phedex count", sub_lap=True)
 
 
             
@@ -536,6 +571,8 @@ def checkor(url, spec=None, options=None):
 
             is_closing = False
 
+        time_point("determined tape location", sub_lap=True)
+
         ## disk copy 
         disk_copies = {}
         for output in wfi.request['OutputDatasets']:
@@ -554,6 +591,7 @@ def checkor(url, spec=None, options=None):
             dbs_invalid[output] = dbs3Client.getFileCountDataset( output, onlyInvalid=True)
 
         
+        time_point("dbs file count", sub_lap=True)
 
         if not all([dbs_presence[out] == (dbs_invalid[out]+phedex_presence[out]) for out in wfi.request['OutputDatasets']]) and not options.ignorefiles:
             mismatch_notice = wfo.name+" has a dbs,phedex mismatch\n"
@@ -584,6 +622,8 @@ def checkor(url, spec=None, options=None):
             #if not bypass_checks:
             ## I don't think we can by pass this
             is_closing = False
+        
+        time_point("checked file count", sub_lap=True)
 
         fraction_invalid = 0.20
         if not all([(dbs_invalid[out] <= int(fraction_invalid*dbs_presence[out])) for out in wfi.request['OutputDatasets']]) and not options.ignoreinvalid:
@@ -604,6 +644,8 @@ def checkor(url, spec=None, options=None):
         for output in wfi.request['OutputDatasets']:
             duplications[output] = "skiped"
             files_per_rl[output] = "skiped"
+
+        time_point("checked invalidation", sub_lap=True)
 
         if (is_closing or bypass_checks) and (not options.ignoreduplicates):
             print "starting duplicate checker for",wfo.name
@@ -633,6 +675,9 @@ def checkor(url, spec=None, options=None):
                 is_closing = False 
 
 
+        time_point("checked duplicates", sub_lap=True)
+
+        time_point("done with %s"%wfo.name)
 
         ## for visualization later on
         if not wfo.name in fDB.record: 
@@ -712,6 +757,14 @@ def checkor(url, spec=None, options=None):
                 else:
                     print "could not close out",wfo.name,"will try again next time"
         else:
+            if not 'custodial' in assistance_tags:
+                ## do only the report for those
+                for member in acdc+acdc_inactive+[wfo.name]:
+                    try:
+                        parse_one(url, member)
+                    except:
+                        print "Could not make error report for",member
+
             ## full known list
             #recovering # has active ACDC
             ##OUT #recovered #had inactive ACDC
