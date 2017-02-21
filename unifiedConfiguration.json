@@ -14,7 +14,7 @@
  },
  "sites_banned": {
    "value" : ["T2_CH_CERN_AI",
-              "NO_T0_CH_CERN",
+              "NONO_T0_CH_CERN",
 	      "T2_TH_CUNSTDA",
 	      "T2_US_Vanderbilt",
 	      "T2_EE_Estonia",
@@ -46,7 +46,8 @@
  "allowed_bypass": {
    "description" : "Who is allowed to bypass and force complete",
    "value" : [["vlimant","vlimant@cern.ch"],
-   	     ["prozober","paola.katherine.rozo.bernal@cern.ch"]]
+   	     ["prozober","paola.katherine.rozo.bernal@cern.ch"],
+	     ["mcremone","matteoc@fnal.gov"]]
  },
  "max_force_complete" : {
    "value" : 10,
@@ -63,7 +64,7 @@
     }
  },
  "default_fraction_pass" : {
-   "value" : 0.95,
+   "value" : 1.0,
    "description" : "completion fraction above which to announce dataset"
  },
  "pattern_fraction_pass": {
