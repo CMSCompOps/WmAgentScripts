@@ -153,22 +153,29 @@ def completor(url, specific):
         delay = now - then ## in days
 
         ## this is supposed to be the very initial request date, inherited from clones
-        try:
-            injected_on =time.mktime(time.strptime("-".join(map(lambda n : "%02d"%n, wfi.request['RequestDate'])), "%Y-%m-%d-%H-%M-%S")) / (60.*60.*24.)
+        injection_delay = None
+        original = wfi
+        if 'OriginalRequestName' in original.request:
+            ## go up the clone chain
+            original = workflowInfo(url, original.request['OriginalRequestName'])
+        injected_log = filter(lambda change : change["Status"] in ["assignment-approved"],original.request['RequestTransition'])
+        if injected_log:
+            #injected_on =time.mktime(time.strptime("-".join(map(lambda n : "%02d"%n, wfi.request['RequestDate'])), "%Y-%m-%d-%H-%M-%S")) / (60.*60.*24.)
+            injected_on = injected_log[-1]['UpdateTime'] / (60.*60.*24.)
             injection_delay = now - injected_on
-        except:
-            injection_delay = None
-
         
+
+
         (w,d) = divmod(delay, 7 )
         print "\t"*int(w)+"Running since",delay,"[days] priority=",priority
 
-        if injection_delay!=None and injection_delay > 50 and False:
-            tail_cutting_priority = 200000
-            ## bump up to 200k
-            print "Injected since",injection_delay,"[days] priority=",priority
+        injection_delay_threshold = 500 ## days
+        
+        if injection_delay!=None and injection_delay > injection_delay_threshold:
+            tail_cutting_priority = int(min(1000000, wfi.request['InitialPriority']+ (10000 * (injection_delay - injection_delay_threshold) / 7)) / 1000)*1000
             if wfi.request['RequestPriority'] != tail_cutting_priority:
-                wfi.sendLog('completor','bumping priority to %d for being injected since'% tail_cutting_priority)
+                sendLog('completor',"%s Injected since %s [days] priority=%s, increasing to %s"%(wfo.name,injection_delay,priority, tail_cutting_priority), level='critical')
+                wfi.sendLog('completor','bumping priority to %d for being injected since %s'%( tail_cutting_priority, injection_delay))
                 reqMgrClient.changePriorityWorkflow(url, wfo.name, tail_cutting_priority)
 
         _,prim,_,_ = wfi.getIO()
