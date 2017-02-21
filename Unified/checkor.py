@@ -612,6 +612,8 @@ def checkor(url, spec=None, options=None):
                         if were_invalidated:
                             wfi.sendLog('checkor',"These %d files were invalidated globally\n%s"%(len(were_invalidated),
                                                                                                   "\n".join(were_invalidated)))
+                            dbs3Client.setFileStatus( were_invalidated, newstatus=0 )
+                                
                     if missing_dbs:
                         wfi.sendLog('checkor',"These %d files are missing in dbs\n%s"%(len(missing_dbs),
                                     "\n".join( missing_dbs )))
