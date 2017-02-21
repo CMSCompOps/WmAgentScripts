@@ -55,6 +55,6 @@ class Lock(Base):
     reason = Column(String(400))
 
 
-secret = open('Unified/secret_int9r.txt','r').read().strip()
+secret = open('Unified/secret_cmsr.txt','r').read().strip()
 engine = create_engine(secret)
 Base.metadata.create_all(engine)
