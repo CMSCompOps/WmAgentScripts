@@ -1,4 +1,4 @@
-HTML_DIR=/afs/cern.ch/user/c/cmst2/www/unified/
+HTML_DIR=/var/www/html/unified/
 CACHE_DIR=/data/unified-cache/
 
 for each in `ls $HTML_DIR/logs/*/*.log` ; do

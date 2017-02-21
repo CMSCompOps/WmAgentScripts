@@ -1,5 +1,5 @@
 BASE_DIR=/data/unified/WmAgentScripts/
-HTML_DIR=/afs/cern.ch/user/c/cmst2/www/unified/
+HTML_DIR=/var/www/html/unified/
 
 lock_name="$BASE_DIR/precycle.lock"
 

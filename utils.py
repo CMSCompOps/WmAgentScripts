@@ -27,9 +27,9 @@ dbs_url_writer = os.getenv('UNIFIED_DBS3_WRITER','https://cmsweb.cern.ch/dbs/pro
 
 phedex_url = os.getenv('UNIFIED_PHEDEX','cmsweb.cern.ch')
 reqmgr_url = os.getenv('UNIFIED_REQMGR','cmsweb.cern.ch')
-monitor_dir = os.getenv('UNIFIED_MON','/afs/cern.ch/user/c/cmst2/www/unified/')
+monitor_dir = os.getenv('UNIFIED_MON','/var/www/html/unified/')
 base_dir =  os.getenv('UNIFIED_DIR','/data/unified/')
-unified_url = os.getenv('UNIFIED_URL','https://cmst2.web.cern.ch/cmst2/unified/')
+unified_url = os.getenv('UNIFIED_URL','https://vocms049.cern.ch/unified/')
 cache_dir = '/data/unified-cache/'
 
 FORMAT = "%(module)s.%(funcName)s(%(lineno)s) => %(message)s (%(asctime)s)"
@@ -526,9 +526,10 @@ class unifiedConfiguration:
         ## we need that configuration to be available always
         #self.configs = json.loads(open('%s/WmAgentScripts/unifiedConfiguration.json'%base_dir).read())
         # get it from the web maybe ?
-        os.system('cp %s/WmAgentScripts/unifiedConfiguration.json %s/unifiedConfiguration.json'%( base_dir, monitor_dir))
-        self.configs = json.loads(os.popen('curl -s %s/unifiedConfiguration.json'% unified_url).read())
-        
+        #os.system('cp %s/WmAgentScripts/unifiedConfiguration.json %s/unifiedConfiguration.json'%( base_dir, monitor_dir))
+        #self.configs = json.loads(os.popen('curl -s %s/unifiedConfiguration.json'% unified_url).read())
+        self.configs = json.loads(open('unifiedConfiguration.json').read())
+
     def get(self, parameter):
         if parameter in self.configs:
             return self.configs[parameter]['value']
