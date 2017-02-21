@@ -1592,7 +1592,7 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
             text += ', <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>%s</a>'%(tpid,tpid)
             text += ', <a href=report/%s>report</a>'%(wf)
             if 'ReReco' in tpid:
-                text += ', <a href=%s/datalumi/lumi.%s.html>lumis</a>'%(unifird_url,tpid)
+                text += ', <a href=%s/datalumi/lumi.%s.html>lumis</a>'%(unified_url,tpid)
             text += ', <a href="https://its.cern.ch/jira/issues/?jql=text~%s AND project = CMSCOMPPR" target="_blank">jira</a>'%(pid)
             text += '</td>'
             
