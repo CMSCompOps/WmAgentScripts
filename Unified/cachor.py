@@ -7,7 +7,7 @@ import sys
 url = 'cmsweb.cern.ch'
 
 def cachor(spec=None):
-    if duplicateLock('cachor', silent=True): 
+    if duplicateLock(silent=True): 
         print "currently running"
         return
     try:
