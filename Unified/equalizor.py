@@ -85,7 +85,7 @@ def equalizor(url , specific = None, options=None):
         mapping['T1_FR_CCIN2P3'].append('T0_CH_CERN')
         mapping['T1_DE_KIT'].append('T0_CH_CERN')
         ## temptatively
-        mapping['T0_CH_CERN'].append( 'T2_CH_CERN' )
+        #mapping['T0_CH_CERN'].append( 'T2_CH_CERN' )
 
     ## all europ can read from CERN
     for reg in ['IT','DE','UK','FR','BE','ES']:
@@ -170,7 +170,7 @@ def equalizor(url , specific = None, options=None):
         return go, task_name, running, idled
     needs_action.pressure = UC.get('overflow_pressure')
 
-    def getPerf( task ):
+    def getPerf( task , stats_to_go = 200):
         task = task.split('/')[1]+'/'+task.split('/')[-1]
         try:
             u = 'http://cms-gwmsmon.cern.ch/prodview/json/history/memoryusage720/%s'%task
@@ -213,7 +213,7 @@ def equalizor(url , specific = None, options=None):
         print "max count mem",max_count_m
 
         b_m = None
-        if w_m > 100:
+        if w_m > stats_to_go:
             if p_m:
                 b_m = int(p_m)
             else:
@@ -261,10 +261,11 @@ def equalizor(url , specific = None, options=None):
         print "max count time",max_count_t
 
         b_t = None
-        if w_t > 100:
+        if w_t > stats_to_go:
             b_t = m_t
         else:
             print "not enough stats for time",w_t
+
         return (b_m,b_t)
         
     def getcampaign( task ):
