@@ -61,7 +61,7 @@ def htmlor( caller = ""):
                 '(%s) <br>'%wfs])
         text+=', '.join([
                 '<a href="https://%s/reqmgr2/fetch?rid=%s" target="_blank">dts</a>'%(reqmgr_url,wfn),
-                '<a href="https://cmsweb.cern.ch/reqmgr/view/details/%s" target="_blank">dts-req1</a>'%wfn,
+                ##'<a href="https://cmsweb.cern.ch/reqmgr/view/details/%s" target="_blank">dts-req1</a>'%wfn,
                 #TOFIX '<a href=https://cmsweb.cern.ch/reqmgr/view/showWorkload?requestName=%s target="_blank">wkl</a>'%wfn,
                 #'<a href="https://%s/couchdb/reqmgr_workload_cache/%s" target="_blank">wfc</a>'%(reqmgr_url,wfn),
                 '<a href="https://%s/reqmgr2/data/request?name=%s" target="_blank">req</a>'%(reqmgr_url,wfn),
@@ -227,7 +227,7 @@ Last update on <b>%s(CET), %s(GMT)</b>
 <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/ target=_blank>prod mon</a>
 <a href=https://%s/wmstats/index.html target=_blank>wmstats</a>
 <a href=http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/SitesInfo.txt target=_blank>detox</a>
-<a href=http://t3serv012.mit.edu/dynamo/detoxtest.php?partitionId=2 target=_blank>dynamo</a>
+<a href=http://dynamo.mit.edu/dynamo/detox.php target=_blank>dynamo</a>
 <a href=locked.html>space</a>
 <a href=outofspace.html>out of space</a>
 <a href=logs/subscribor/last.log target=_blank>blocks</a>
@@ -836,7 +836,13 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     count=0
     for (c,info) in campaignInfo().campaigns.items():
         #if 'go' in info and info['go']:
-        text+="<li>%s <br> <pre>%s</pre>  </li>"%( c, json.dumps( info, indent=2))
+        text+="<li>%s"%c
+        text += '<img src=https://dmytro.web.cern.ch/dmytro/cmsprodmon/images/%s-history_nevents-limit-30.png style="height:70px">'% (c) 
+        text += '<img src=https://dmytro.web.cern.ch/dmytro/cmsprodmon/images/%s-history_requests-limit-30.png style="height:70px">'% (c) 
+        text += """
+<a href="javascript:showhide('campaign_%s')">[Click to show/hide]</a><br><div id="campaign_%s" style="display:none;">
+"""%( c, c )
+        text +=  "<br><pre>%s</pre>  </div></li>"%json.dumps( info, indent=2)
         count+=1
 
     html_doc.write("""Campaign configuration
@@ -848,6 +854,8 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 %s
 </ul></div>
 """%(text))
+
+
 
     text=""
     count=0
@@ -861,9 +869,18 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     now = time.strftime('%Y-%m-%d+%H:%M', time.gmtime())
     upcoming = json.loads( open('%s/GQ.json'%monitor_dir).read())
 
+    text +='<ul>'
+# """
+#<ul><li>Sites in use<br><a href="javascript:showhide('site_types')">[Click to show/hide]</a></li>
+#<ul>"""
     for_max_running = dataCache.get('gwmsmon_prod_site_summary')
     for t in SI.types():
-        text+="<li>%s<table border=1>"%t
+#        text+="""
+#<li>%s<a href="javascript:showhide('%s')">[Click to show/hide]</a><br>
+#<div id="%s" style="display:none;">
+#<table border=1>
+#"""%( t, t, t)
+        text +='<li>%s<div id="%s"><table border=1>'%( t, t )
         c=0
         for site in sorted(getattr(SI,t)):
             site_se = SI.CE_to_SE(site)
@@ -909,45 +926,53 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
                 c=0
             else:
                 c+=1
-        text+="</table></li>"
+        text+="</table></div></li>"
 
-    text += "<li> Sites with good IO<ul>"
+    def site_div_header(desc):
+        div_name = 'site_'+desc.replace(' ','_')
+        return """
+<li>%s <a href="javascript:showhide('%s')">[Click to show/hide]</a><br>
+<div id="%s" style="display:none;">
+<ul>
+"""%( desc, div_name, div_name)
+      
+    text += site_div_header("Sites with good IO")
     for site in sorted(SI.sites_with_goodIO):
         text+="<li>%s"% site
-    text += "</ul></li>"
+    text += "</ul></div></li>"
 
-    text += "<li> Sites enabled for multicore pilots<ul>"
+    text += site_div_header("Sites enabled for multicore pilots")
     for site in sorted(SI.sites_mcore_ready):
         text+="<li>%s"% site
-    text += "</ul></li>"
+    text += "</ul></div></li>"
 
-    text += "<li> Sites in auto-approved transfer<ul>"
+    text += site_div_header("Sites in auto-approved transfer")
     for site in sorted(SI.sites_auto_approve):
         text+="<li>%s"% site
-    text += "</ul></li>"
+    text += "</ul></div></li>"
 
-    text += "<li> Sites with vetoe transfer<ul>"
+    text += site_div_header("Sites with vetoe transfer")
     for site in sorted(SI.sites_veto_transfer):
         text+="<li>%s (free : %s)"% (site , SI.disk.get(site, 'N/A'))
-    text += "</ul></li>"
+    text += "</ul></div></li>"
 
-    text += "<li> Sites banned from production<ul>"
+    text += site_div_header("Sites banned from production")
     for site in sorted(SI.sites_banned):
         text+="<li>%s"% site
-    text += "</ul></li>"
+    text += "</ul></div></li>"
 
-    text += "<li> Sites not ready<ul>"
+    text += site_div_header("Sites not ready")
     for site in sorted(SI.sites_not_ready):
         text+='<li> %s <a href="https://cms-site-readiness.web.cern.ch/cms-site-readiness/SiteReadiness/HTML/SiteReadinessReport.html#%s">SAM</a><br>'%( site, site )
-    text += "</ul></li>"
+    text += "</ul></div></li>"
 
-    text += "<li> Sites ready in agents<ul>"
+    text += site_div_header("Sites ready in agents")
     for site in sorted(SI.sites_ready_in_agent):
         text+='<li> %s <a href="https://cms-site-readiness.web.cern.ch/cms-site-readiness/SiteReadiness/HTML/SiteReadinessReport.html#%s">SAM</a><br>'%( site, site )
-    text += "</ul></li>"
+    text += "</ul></div></li>"
 
 
-    text += "<li> Approximate Free Tape<ul>"
+    text += site_div_header("Approximate Free Tape")
     for mss in SI.storage:
         waiting = 0
         try:
@@ -963,18 +988,20 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
             print str(e)
         waiting /= 1024.
         text+="<li>%s : %d [TB]. Waiting for approval %d [TB] since %s </li>"%(mss, SI.storage[mss], waiting, oldest)
-    text += "</ul></li>"
+    text += "</ul></div></li>"
 
 
     equalizor = json.loads(open('%s/equalizor.json'%monitor_dir).read())['reversed_mapping']
-    text += "<table border=1><thead><tr><th>Sites</th><th>Can read from</th></tr></thead>\n"
+    text += site_div_header("Xrootd mapping")
+    text += "<li><table border=1><thead><tr><th>Sites</th><th>Can read from</th></tr></thead>\n"
     for site in sorted(equalizor):
         text += '<tr><td align=middle>%s</td><td><ul>'% site
         for src in sorted(equalizor[site]):
             text += '<li>%s</li>'%src
         text += '</ul></td><tr>'
-    text += '</table>'
-
+    text += '</table></li></ul></div></li>'
+    
+    text += '</ul>'
 
     lap ( 'done with sites' )
 
@@ -1086,14 +1113,14 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
     donut_html.close()
     tight_donut_html.close()
 
+
     html_doc.write("""Site configuration
 <a href="javascript:showhide('site')">[Click to show/hide]</a>
 <br>
 <div id="site" style="display:none;">
 <br>
-<ul>
 %s
-</ul></div>
+</div>
 """%(text))
 
     lap ( 'done with space' )
@@ -1122,6 +1149,11 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
     html_doc.write("""Agent Health
 <a href="javascript:showhide('agent')">[Click to show/hide]</a>
 <div id="agent" style="display:none;">
+<ul>
+<li><a href="https://its.cern.ch/jira/issues/?jql=text~drain%20AND%20project%20=%20CMSCOMPPR%20AND%20status%20!=%20CLOSED">All agents in drain JIRA<a/> </li>
+<li><a href="https://its.cern.ch/jira/issues/?jql=text~ready%20AND%20project%20=%20CMSCOMPPR%20AND%20status%20!=%20CLOSED">All agents ready JIRA<a/> </li>
+</ul>
+<br>
 <table border=1><thead>
 <tr><td>Agent</td><td>Running/Pending hourly</td><td>Running/Pending daily</td><td>Status</td><td>Creat./Pend.</td></tr></thead>
 """)
