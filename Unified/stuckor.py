@@ -1,6 +1,6 @@
 import json
 from collections import defaultdict
-from utils import unifiedConfiguration, checkTransferLag, reqmgr_url, monitor_dir, duplicateLock
+from utils import unifiedConfiguration, checkTransferLag, reqmgr_url, monitor_dir, duplicateLock, unified_url
 
 def stuckor(url = reqmgr_url):
     
@@ -56,7 +56,7 @@ def stuckor(url = reqmgr_url):
     print '\n'*2,"Datasets really stuck"
     print '\n'.join( really_stuck_dataset )
 
-    print '\n'*2,"report written at https://cmst2.web.cern.ch/cmst2/unified/logs/incomplete_transfers.log"
+    print '\n'*2,"report written at %s/logs/incomplete_transfers.log"%unified_url
     print report
 
     missing_in_action = json.loads(open('%s/incomplete_transfers.json'%monitor_dir).read())

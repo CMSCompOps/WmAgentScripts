@@ -374,7 +374,6 @@ def closor(url, specific=None, options=None):
         open('%s/stuck_files.json'%monitor_dir,'w').write( json.dumps( really_late_files , indent=2))
 
     if held:
-        #sendEmail("held from announcing","the workflows below are held up, please check the logs https://cmst2.web.cern.ch/cmst2/unified/logs/closor/last.log \n%s"%("\n".join( held )))
         sendLog('closor',"the workflows below are held up \n%s"%("\n".join( sorted(held) )), level='critical')
         
 if __name__ == "__main__":

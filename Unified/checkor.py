@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, forceComplete, makeReplicaRequest, getDatasetSize, getDatasetFiles, sendLog, reqmgr_url, dbs_url, dbs_url_writer, getForceCompletes
-from utils import componentInfo, unifiedConfiguration, userLock, duplicateLock, dataCache
+from utils import componentInfo, unifiedConfiguration, userLock, duplicateLock, dataCache, unified_url
 import phedexClient
 import dbs3Client
 dbs3Client.dbs3_url = dbs_url
@@ -716,7 +716,7 @@ def checkor(url, spec=None, options=None):
             try:
                 os.system('python Unified/lumi_summary.py %s 1 > /dev/null'%(wfi.request['PrepID']))
                 os.system('python Unified/lumi_plot.py %s > /dev/null'%(wfi.request['PrepID']))
-                wfi.sendLog('checkor','Lumi summary available at https://cmst2.web.cern.ch/cmst2/unified/datalumi/lumi.%s.html'%(wfi.request['PrepID']))
+                wfi.sendLog('checkor','Lumi summary available at %s/datalumi/lumi.%s.html'%(unified_url,wfi.request['PrepID']))
             except Exception as e:
                 print str(e)
         ## make the error report
@@ -814,7 +814,7 @@ def checkor(url, spec=None, options=None):
                 ###detailslink = 'https://cmsweb.cern.ch/reqmgr/view/details/%s'
                 #detailslink = 'https://cmsweb.cern.ch/reqmgr2/fetch?rid=%s'%(wfo.name)
                 ###perflink = 'https://cmsweb.cern.ch/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s'%(wfo.name)
-                perflink = 'https://cmst2.web.cern.ch/cmst2/unified/report/%s'%(wfo.name)
+                perflink = '%s/report/%s'%(unified_url,wfo.name)
                 splitlink = 'https://cmsweb.cern.ch/reqmgr/view/splitting/%s'%(wfo.name)
                 ## notify templates
                 messages= {
@@ -860,7 +860,7 @@ def checkor(url, spec=None, options=None):
 
     fDB.html()
     if not spec and in_manual!=0:
-        sendEmail("fresh assistance status available","Fresh status are available at https://cmst2.web.cern.ch/cmst2/unified/assistance.html",destination=['katherine.rozo@cern.ch'])
+        sendEmail("fresh assistance status available","Fresh status are available at %s/assistance.html"%unified_url,destination=['katherine.rozo@cern.ch'])
         #it's a bit annoying
         pass
 

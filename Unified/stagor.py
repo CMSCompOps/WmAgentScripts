@@ -2,7 +2,7 @@
 from assignSession import *
 from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput, workflowInfo, getDatasetBlocksFraction, findLostBlocks, findLostBlocksFiles, getDatasetBlockFraction, getDatasetFileFraction, getDatasetPresence, reqmgr_url, monitor_dir, getAllStuckDataset
 from utils import unifiedConfiguration, componentInfo, sendEmail, getSiteWhiteList, checkTransferLag, sendLog
-from utils import siteInfo, campaignInfo
+from utils import siteInfo, campaignInfo, unified_url
 import json
 import sys
 import itertools
@@ -455,7 +455,6 @@ def stagor(url,specific =None, options=None):
                             print wf.name,"is doomed. setting to trouble"
                             wf.status = 'trouble'
                             session.commit()
-                            #sendEmail('doomed workflow','%s has too much loss on the input dataset %s. please check on stagor logs https://cmst2.web.cern.ch/cmst2/unified/logs/stagor/last.log'%(wf.name, dsname))
                             sendLog('stagor', '%s has too much loss on the input dataset %s. Missing  %d blocks, for %d events, %3.2f %% loss'%(wf.name, dsname, len(lost_block_names), n_missing, 100*fraction_loss), level='critical')
                 else:
                     ## probably enough to make a ggus and remove
@@ -580,7 +579,7 @@ def stagor(url,specific =None, options=None):
     for site,blocks in bad_destinations.items():
         report+="\n\n%s:"%site+"\n\t".join(['']+list(blocks))
 
-    print '\n'*2,"report written at https://cmst2.web.cern.ch/cmst2/unified/logs/incomplete_transfers.log"
+    print '\n'*2,"report written at %s/logs/incomplete_transfers.log"%unified_url
     print report
 
     stuck_transfers = dict([(k,v) for (k,v) in missing_in_action.items() if k in really_stuck_dataset])
