@@ -14,7 +14,10 @@ def htmlor( caller = ""):
 
     up = componentInfo(mcm=False, soft=['mcm'])
     if not up.check(): return 
-        
+
+    for backup in ['statuses.json','siteInfo.json','listProtectedLFN.txt']:
+        os.system('cp %s/%s /afs/cern.ch/user/c/cmst2/www/unified/.'%(monitor_dir, backup))
+
     try:
         boost = json.loads(open('%s/equalizor.json'%monitor_dir).read())['modifications']
     except:
@@ -771,8 +774,11 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     html_doc.write("""
 <pre>
 %s
+
+%s
 </pre>
-"""%(os.popen('acrontab -l | grep -i unified | grep -v \#').read()))
+"""%(os.getenv('USER'),
+     os.popen('acrontab -l | grep -i unified | grep -v \#').read()))
 
 
     per_module = defaultdict(list)
@@ -834,9 +840,15 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 
     text=""
     count=0
-    for (c,info) in campaignInfo().campaigns.items():
+    CI = campaignInfo()
+    #for (c,info) in CI.campaigns.items():
+    for c in sorted(CI.campaigns.keys()):
+        info = CI.campaigns[c]
         #if 'go' in info and info['go']:
-        text+="<li>%s"%c
+        if 'go' in info and info['go']:
+            text+="<li><font color=green>%s</font>"%c
+        else:
+            text+="<li><font coor=red>%s</font>"%c
         text += '<img src=https://dmytro.web.cern.ch/dmytro/cmsprodmon/images/%s-history_nevents-limit-30.png style="height:70px">'% (c) 
         text += '<img src=https://dmytro.web.cern.ch/dmytro/cmsprodmon/images/%s-history_requests-limit-30.png style="height:70px">'% (c) 
         text += """
