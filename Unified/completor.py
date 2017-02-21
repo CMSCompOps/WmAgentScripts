@@ -169,11 +169,11 @@ def completor(url, specific):
         (w,d) = divmod(delay, 7 )
         print "\t"*int(w)+"Running since",delay,"[days] priority=",priority
 
-        injection_delay_threshold = 500 ## days
+        injection_delay_threshold = 50 ## days
         
-        if injection_delay!=None and injection_delay > injection_delay_threshold:
+        if injection_delay!=None and injection_delay > injection_delay_threshold and specific:
             tail_cutting_priority = int(min(1000000, wfi.request['InitialPriority']+ (10000 * (injection_delay - injection_delay_threshold) / 7)) / 1000)*1000
-            if wfi.request['RequestPriority'] != tail_cutting_priority:
+            if wfi.request['RequestPriority'] < tail_cutting_priority:
                 sendLog('completor',"%s Injected since %s [days] priority=%s, increasing to %s"%(wfo.name,injection_delay,priority, tail_cutting_priority), level='critical')
                 wfi.sendLog('completor','bumping priority to %d for being injected since %s'%( tail_cutting_priority, injection_delay))
                 reqMgrClient.changePriorityWorkflow(url, wfo.name, tail_cutting_priority)
