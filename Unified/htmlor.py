@@ -6,7 +6,7 @@ import os
 import json
 from collections import defaultdict
 import sys
-from utils import monitor_dir, base_dir, phedex_url, reqmgr_url
+from utils import monitor_dir, base_dir, phedex_url, reqmgr_url, monitor_pub_dir
 import random
 
 def htmlor( caller = ""):
@@ -15,11 +15,13 @@ def htmlor( caller = ""):
     up = componentInfo(mcm=False, soft=['mcm'])
     if not up.check(): return 
 
-    for backup in ['statuses.json','siteInfo.json','listProtectedLFN.txt']:
-        os.system('cp %s/%s /afs/cern.ch/user/c/cmst2/www/unified/.'%(monitor_dir, backup))
+    for backup in ['statuses.json','siteInfo.json','listProtectedLFN.txt','equalizor.json']:
+        print "copying",backup,"to old location"
+        os.system('cp %s/%s /afs/cern.ch/user/c/cmst2/www/unified/.'%(monitor_pub_dir, backup))
+        #os.system('cp %s/%s %s/.'%(monitor_dir, backup, monitor_pub_dir))
 
     try:
-        boost = json.loads(open('%s/equalizor.json'%monitor_dir).read())['modifications']
+        boost = json.loads(open('%s/equalizor.json'%monitor_pub_dir).read())['modifications']
     except:
         boost = {}
     cache = getWorkflows(reqmgr_url,'assignment-approved', details=True)
@@ -159,7 +161,7 @@ def htmlor( caller = ""):
                 if not overflow:
                     overflow = boost[wfn][task].get('AddWhitelist',None)
                 if overflow:
-                    text+=',boost (<a href=equalizor.json>%d</a>)'%len(overflow)
+                    text+=',boost (<a href=public/equalizor.json>%d</a>)'%len(overflow)
 
         #text+="<hr>"
         return text
@@ -253,7 +255,7 @@ Last update on <b>%s(CET), %s(GMT)</b>
       time.asctime(time.gmtime()),
       reqmgr_url,
       caller,
-      ', '.join(['<a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=critical&module=%s&limit=100 target=_blank><b><font color=red>%s critical</b></font></a>'%(m,m) for m in ['injector','transferor','stagor','assignor','completor','GQ','equalizor','checkor','closor']])
+      ', '.join(['<a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=critical&module=%s&limit=100 target=_blank><b><font color=red>%s critical</b></font></a>'%(m,m) for m in ['injector','transferor','cachor','stagor','assignor','completor','GQ','equalizor','checkor','closor']])
       )
                    )
         
@@ -620,7 +622,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     start_time_two_weeks_ago = time.mktime(time.gmtime(now - (20*24*60*60))) # 20
     last_week =  int(time.strftime("%W",time.gmtime(now - ( 7*24*60*60))))
 
-    all_locks = json.loads(open('%s/globallocks.json'%monitor_dir).read())    
+    all_locks = json.loads(open('%s/globallocks.json'%monitor_pub_dir).read())    
     waiting_custodial = json.loads(open('%s/waiting_custodial.json'%monitor_dir).read())
     all_pending_approval_custodial = dict([(k,item) for k,item in waiting_custodial.items() if 'nodes' in item and not any([node['decided'] for node in item['nodes'].values()]) ])
     n_pending_approval = len( all_pending_approval_custodial )
@@ -1003,7 +1005,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     text += "</ul></div></li>"
 
 
-    equalizor = json.loads(open('%s/equalizor.json'%monitor_dir).read())['reversed_mapping']
+    equalizor = json.loads(open('%s/equalizor.json'%monitor_pub_dir).read())['reversed_mapping']
     text += site_div_header("Xrootd mapping")
     text += "<li><table border=1><thead><tr><th>Sites</th><th>Can read from</th></tr></thead>\n"
     for site in sorted(equalizor):
@@ -1017,7 +1019,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 
     lap ( 'done with sites' )
 
-    open('%s/siteInfo.json'%monitor_dir,'w').write(json.dumps(dict([(t,getattr(SI,t)) for t in ['sites_T1s','sites_T2s','sites_with_goodIO']]),indent=2))
+    open('%s/siteInfo.json'%monitor_pub_dir,'w').write(json.dumps(dict([(t,getattr(SI,t)) for t in ['sites_T1s','sites_T2s','sites_with_goodIO']]),indent=2))
 
     lap ( 'done with sites json' )
 
@@ -1255,7 +1257,7 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
         ## pass all that is unlocked and considered it gone
         wfs[wfo.name] = (wfo.status,wfo.wm_status)
 
-    open('%s/statuses.json'%monitor_dir,'w').write(json.dumps( wfs ))
+    open('%s/statuses.json'%monitor_pub_dir,'w').write(json.dumps( wfs ))
     for wfn in sorted(wfs.keys()):
         ## pass all that is unlocked and considered it gone
         if 'unlock' in wfs[wfn][0]: continue

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from utils import workflowInfo, siteInfo, monitor_dir, base_dir, global_SI, getDatasetPresence, getDatasetBlocksFraction
+from utils import workflowInfo, siteInfo, monitor_dir, monitor_pub_dir, base_dir, global_SI, getDatasetPresence, getDatasetBlocksFraction
 import json
 import sys
 import os

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import workflowInfo, getWorkflows, siteInfo, sendEmail, componentInfo, getDatasetPresence, monitor_dir, reqmgr_url, campaignInfo, unifiedConfiguration, sendLog
+from utils import workflowInfo, getWorkflows, siteInfo, sendEmail, componentInfo, getDatasetPresence, monitor_dir, monitor_pub_dir, reqmgr_url, campaignInfo, unifiedConfiguration, sendLog
 import reqMgrClient
 import json
 import os
@@ -282,9 +282,9 @@ def equalizor(url , specific = None, options=None):
             print str(e)
             return None
     def close( interface ):
-        open('%s/equalizor.json.new'%monitor_dir,'w').write( json.dumps( interface, indent=2))
-        os.system('mv %s/equalizor.json.new %s/equalizor.json'%(monitor_dir,monitor_dir))
-        os.system('cp %s/equalizor.json %s/logs/equalizor/equalizor.%s.json'%(monitor_dir,monitor_dir,time.mktime(time.gmtime())))
+        open('%s/equalizor.json.new'%monitor_pub_dir,'w').write( json.dumps( interface, indent=2))
+        os.system('mv %s/equalizor.json.new %s/equalizor.json'%(monitor_pub_dir,monitor_pub_dir))
+        os.system('cp %s/equalizor.json %s/logs/equalizor/equalizor.%s.json'%(monitor_pub_dir,monitor_dir,time.mktime(time.gmtime())))
 
     interface = {
         'mapping' : mapping,
@@ -294,9 +294,9 @@ def equalizor(url , specific = None, options=None):
         'memory' : {}
         }
     if options.augment or options.remove:
-        interface['modifications'] = json.loads( open('%s/equalizor.json'%monitor_dir).read())['modifications']
-        interface['memory'] = json.loads( open('%s/equalizor.json'%monitor_dir).read())['memory']
-        interface['time'] = json.loads( open('%s/equalizor.json'%monitor_dir).read())['time']
+        interface['modifications'] = json.loads( open('%s/equalizor.json'%monitor_pub_dir).read())['modifications']
+        interface['memory'] = json.loads( open('%s/equalizor.json'%monitor_pub_dir).read())['memory']
+        interface['time'] = json.loads( open('%s/equalizor.json'%monitor_pub_dir).read())['time']
         
     if options.remove:
         if specific in interface['modifications']:

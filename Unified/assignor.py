@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 import reqMgrClient
-from utils import workflowInfo, campaignInfo, siteInfo, userLock, unifiedConfiguration, reqmgr_url, monitor_dir, global_SI
+from utils import workflowInfo, campaignInfo, siteInfo, userLock, unifiedConfiguration, reqmgr_url, monitor_pub_dir, monitor_dir, global_SI
 from utils import getSiteWhiteList, getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction, getDatasetEventsPerLumi, getLFNbase, getDatasetBlocks, lockInfo, getAllStuckDataset
 from utils import componentInfo, sendEmail, sendLog
 #from utils import lockInfo
@@ -54,7 +54,7 @@ def assignor(url ,specific = None, talk=True, options=None):
     #    pass
 
     dataset_endpoints = json.loads(open('%s/dataset_endpoints.json'%monitor_dir).read())
-    aaa_mapping = json.loads(open('%s/equalizor.json'%monitor_dir).read())['mapping']
+    aaa_mapping = json.loads(open('%s/equalizor.json'%monitor_pub_dir).read())['mapping']
 
     all_stuck = set()
     all_stuck.update( json.loads( open('%s/stuck_transfers.json'%monitor_dir).read() ))

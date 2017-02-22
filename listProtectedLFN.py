@@ -4,7 +4,7 @@ import os
 import json
 import time
 from collections import defaultdict
-from utils import monitor_dir
+from utils import monitor_pub_dir
 
 register=['assigned','acquired','running-open','running-closed','force-complete','completed','closed-out']
 wfs = []
@@ -43,7 +43,7 @@ content = { "timestamp" : time.mktime(now),
             "protected" : sorted(lfns.keys())
             }
 #open('listProtectedLFN.txt','w').write( json.dumps( sorted(lfns.keys()), indent=2))    
-open('%s/listProtectedLFN.txt'%monitor_dir,'w').write( json.dumps( content, indent=2))    
+open('%s/listProtectedLFN.txt'%monitor_pub_dir,'w').write( json.dumps( content, indent=2))    
 #print '\n'.join( sorted(lfns.keys()) )
 
 for lfn in lfns:

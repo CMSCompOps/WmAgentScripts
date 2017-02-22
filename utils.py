@@ -28,8 +28,10 @@ dbs_url_writer = os.getenv('UNIFIED_DBS3_WRITER','https://cmsweb.cern.ch/dbs/pro
 phedex_url = os.getenv('UNIFIED_PHEDEX','cmsweb.cern.ch')
 reqmgr_url = os.getenv('UNIFIED_REQMGR','cmsweb.cern.ch')
 monitor_dir = os.getenv('UNIFIED_MON','/var/www/html/unified/')
+monitor_pub_dir = os.getenv('UNIFIED_MON','/var/www/html/unified/public/')
 base_dir =  os.getenv('UNIFIED_DIR','/data/unified/')
 unified_url = os.getenv('UNIFIED_URL','https://vocms049.cern.ch/unified/')
+unified_pub_url = os.getenv('UNIFIED_URL','https://vocms049.cern.ch/unified/public/')
 cache_dir = '/data/unified-cache/'
 
 FORMAT = "%(module)s.%(funcName)s(%(lineno)s) => %(message)s (%(asctime)s)"
@@ -329,65 +331,12 @@ def listSubscriptions(url, dataset, within_sites=None):
     #print destinations
     return destinations
 
-"""
-class newLockInfo:
-    def __init__(self):
-        self.db = json.loads(open('%s/globallocks.json'%monitor_dir).read())
-        os.system('echo `date` > %s/globallocks.json.lock'%monitor_dir)
-
-    def free(self):
-        started = time.mktime(time.gmtime())
-        max_wait = 50. #120*60. #2h
-        sleep_time = 30
-        locked = False
-        while True:
-            r = os.popen('curl -s http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/inActionLock.txt').read()
-            if not ('Not Found' in r):
-                sendLog('LockInfo','%s DDM lock is present\n%s'%(time.asctime(time.gmtime()),r),level='warning')
-                locked = True
-                now = time.mktime(time.gmtime())
-                if (now-started) > max_wait: break
-                else:
-                    print "pausing"
-                    time.sleep(sleep_time)
-            else:
-                locked = False
-                break
-
-        return (not locked)
-
-    def __del__(self):
-        open('%s/globallocks.json.new'%monitor_dir,'w').write(json.dumps( sorted(list(set(self.db))) , indent=2 ))
-        os.system('mv %s/globallocks.json.new %s/globallocks.json'%(monitor_dir,monitor_dir))
-        os.system('rm -f %s/globallocks.json.lock'%monitor_dir)
-
-    def lock(self, dataset):
-        # just put the 
-        if dataset in self.db:
-            print "\t",dataset,"was already locked"
-        else:
-            self.db.append(dataset)
-        sendLog('lockInfo',"[new lock] "+dataset+" to be locked")
-
-    def release(self, dataset):
-        print "[new lock] should never release datasets"
-        #return
-        if not dataset in self.db:
-            print "\t",dataset,"was not locked already"
-        else:
-            print "taking",dataset,"out of the lock"
-            self.db.remove( dataset )
-        
-
-"""
-
-
 class lockInfo:
     def __init__(self, andwrite=True):
         self.lockfilename = 'globallocks' ## official name
         self.writeondelete = andwrite
         if self.writeondelete:
-            os.system('echo `date` > %s/globallocks.json.lock'%monitor_dir)
+            os.system('echo `date` > %s/globallocks.json.lock'%monitor_pub_dir)
 
     def free(self):
         started = time.mktime(time.gmtime())
@@ -433,11 +382,11 @@ class lockInfo:
             #print "writing to json"
             if self.writeondelete:
                 print "writing",len( out ),"locks to the json interface"
-                open('%s/%s.json.new'%(monitor_dir,self.lockfilename),'w').write( json.dumps( sorted(out) , indent=2))
-                os.system('mv %s/%s.json.new %s/%s.json'%(monitor_dir,self.lockfilename,monitor_dir,self.lockfilename))
-                open('%s/%s.detailed.json.new'%(monitor_dir,self.lockfilename),'w').write( json.dumps( detailed_out , indent=2))
-                os.system('mv %s/%s.detailed.json.new %s/%s.detailed.json'%(monitor_dir,self.lockfilename,monitor_dir,self.lockfilename))
-                os.system('rm -f %s/globallocks.json.lock'%monitor_dir)
+                open('%s/%s.json.new'%(monitor_pub_dir,self.lockfilename),'w').write( json.dumps( sorted(out) , indent=2))
+                os.system('mv %s/%s.json.new %s/%s.json'%(monitor_pub_dir,self.lockfilename,monitor_pub_dir,self.lockfilename))
+                open('%s/%s.detailed.json.new'%(monitor_pub_dir,self.lockfilename),'w').write( json.dumps( detailed_out , indent=2))
+                os.system('mv %s/%s.detailed.json.new %s/%s.detailed.json'%(monitor_pub_dir,self.lockfilename,monitor_pub_dir,self.lockfilename))
+                os.system('rm -f %s/globallocks.json.lock'%monitor_pub_dir)
         except Exception as e:
             print "Failed writing locks"
             print str(e)
@@ -527,7 +476,7 @@ class unifiedConfiguration:
         #self.configs = json.loads(open('%s/WmAgentScripts/unifiedConfiguration.json'%base_dir).read())
         # get it from the web maybe ?
         #os.system('cp %s/WmAgentScripts/unifiedConfiguration.json %s/unifiedConfiguration.json'%( base_dir, monitor_dir))
-        #self.configs = json.loads(os.popen('curl -s %s/unifiedConfiguration.json'% unified_url).read())
+        #self.configs = json.loads(os.popen('curl -s %s/unifiedConfiguration.json'% unified_pub_url).read())
         self.configs = json.loads(open('unifiedConfiguration.json').read())
 
     def get(self, parameter):
