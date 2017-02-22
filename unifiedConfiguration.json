@@ -49,6 +49,23 @@
    	     ["prozober","paola.katherine.rozo.bernal@cern.ch"],
 	     ["mcremone","matteoc@fnal.gov"]]
  },
+ "max_tail_priority" : {
+   "value" : 5,
+   "description" : "Number of workflow to increase the priority of at a time"
+ },
+ "injection_delay_threshold" : {
+   "value" : 50,
+   "description" : "Number of days after wich to increase the priority of a workflow"
+ },  
+ "delay_priority_increase" : {
+   "value" : 10000,
+   "description" : "Priority from original increase per week over the delay threshold"
+ },
+ "injection_delay_priority" : {
+   "value" : 70000,
+   "description" : "Priority above which we can increase the priority of a workflow after running too long"
+ },
+ 
  "max_force_complete" : {
    "value" : 10,
    "description" : "Number of workflow that can be forced complete at a time"

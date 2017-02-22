@@ -72,7 +72,12 @@ def completor(url, specific):
     print "can overide on"
     print json.dumps( overrides, indent=2)
     max_force = UC.get("max_force_complete")
-    
+    max_priority = UC.get("max_tail_priority")
+    injection_delay_threshold = UC.get("injection_delay_threshold")
+    injection_delay_priority = UC.get("injection_delay_priority")
+    delay_priority_increase = UC.get("delay_priority_increase")
+
+
     #wfs_no_location_in_GQ = set()
     #block_locations = defaultdict(lambda : defaultdict(list))
     #wfs_no_location_in_GQ = defaultdict(list)
@@ -144,13 +149,15 @@ def completor(url, specific):
 
         now = time.mktime(time.gmtime()) / (60*60*24.)
 
-        running_log = filter(lambda change : change["Status"] in ["running-open","running-closed"],wfi.request['RequestTransition'])
+        running_log = filter(lambda change : change["Status"] in ["acquired","running-open","running-closed"],wfi.request['RequestTransition'])
         if not running_log:
             print "\tHas no running log"
             # cannot figure out when the thing started running
-            continue
-        then = running_log[-1]['UpdateTime'] / (60.*60.*24.)
-        delay = now - then ## in days
+            #continue
+            delay = 0
+        else:
+            then = running_log[-1]['UpdateTime'] / (60.*60.*24.)
+            delay = now - then ## in days
 
         ## this is supposed to be the very initial request date, inherited from clones
         injection_delay = None
@@ -169,14 +176,23 @@ def completor(url, specific):
         (w,d) = divmod(delay, 7 )
         print "\t"*int(w)+"Running since",delay,"[days] priority=",priority
 
-        injection_delay_threshold = 50 ## days
-        
-        if injection_delay!=None and injection_delay > injection_delay_threshold and specific:
-            tail_cutting_priority = int(min(1000000, wfi.request['InitialPriority']+ (10000 * (injection_delay - injection_delay_threshold) / 7)) / 1000)*1000
-            if wfi.request['RequestPriority'] < tail_cutting_priority:
+        if injection_delay!=None and injection_delay > injection_delay_threshold and priority >= injection_delay_priority:
+            quantized = 1000 ## quantize to a thousand
+            #print wfi.request['InitialPriority']
+            tail_cutting_priority = wfi.request['InitialPriority']+ int((delay_priority_increase * (injection_delay - injection_delay_threshold) / 7) / quantized) * quantized
+            #print tail_cutting_priority
+            tail_cutting_priority = min(999999, tail_cutting_priority) ## never go above 1M
+            #print tail_cutting_priority
+            tail_cutting_priority = max(tail_cutting_priority, priority) ## never go below the current value
+            #print tail_cutting_priority
+            if priority < tail_cutting_priority:
                 sendLog('completor',"%s Injected since %s [days] priority=%s, increasing to %s"%(wfo.name,injection_delay,priority, tail_cutting_priority), level='critical')
                 wfi.sendLog('completor','bumping priority to %d for being injected since %s'%( tail_cutting_priority, injection_delay))
-                reqMgrClient.changePriorityWorkflow(url, wfo.name, tail_cutting_priority)
+                if max_priority:
+                    reqMgrClient.changePriorityWorkflow(url, wfo.name, tail_cutting_priority)
+                    max_priority-=1
+                else:
+                    print "Could be changing the priority to higher value, but too many already were done"
 
         _,prim,_,_ = wfi.getIO()
         is_stuck = all_stuck & prim
