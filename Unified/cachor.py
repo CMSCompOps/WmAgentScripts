@@ -1,5 +1,5 @@
 from assignSession import *
-from utils import checkTransferStatus, duplicateLock
+from utils import checkTransferStatus, duplicateLock, sendLog
 import json
 import random
 import sys
@@ -32,6 +32,7 @@ def cachor(spec=None):
             all_checks[str(transfer.phedexid)] = new_check
         else:
             print "withouth an update, we are in deep shit"
+            sendLog('cachor','Failed transfer status check on %s'% transfer.phedexid, level='critical')
         #do only one
         break
 
