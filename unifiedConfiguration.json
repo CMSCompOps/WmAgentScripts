@@ -62,7 +62,7 @@
    "description" : "Priority from original increase per week over the delay threshold"
  },
  "injection_delay_priority" : {
-   "value" : 70000,
+   "value" : 75000,
    "description" : "Priority above which we can increase the priority of a workflow after running too long"
  },
  
