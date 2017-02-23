@@ -321,6 +321,7 @@ def closor(url, specific=None, options=None):
                                 if status!=None:
                                     #sendEmail("failed DDM injection","could not add "+out+" to DDM pool. check closor logs.")
                                     sendLog('closor',"could not add "+out+" to DDM pool. check closor logs.", level='critical')
+                                    if options.force: status = True
                             results.append( status )
                             if status == None:
                                 wfi.sendLog('closor',ddm_text)
@@ -381,6 +382,7 @@ if __name__ == "__main__":
     parser = optparse.OptionParser()
     parser.add_option('--no_harvest',help='Bypass the harvesting',default=False,action='store_true')
     parser.add_option('--limit',help="Number of workflow to pass",default=0, type=int)
+    parser.add_option('--force', help="Force pushing the workflow through", default=False,action='store_true')
     (options,args) = parser.parse_args()
 
     spec=None
