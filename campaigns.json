@@ -40,7 +40,7 @@
 
   "Run2016B": {
     "go": true,
-    "labels" : ["03Feb2017","15Feb2017"],
+    "labels" : ["03Feb2017","15Feb2017","22Feb2017"],
     "fractionpass": 1.0,
     "lumisize" : -1,
     "maxcopies" : 1
@@ -61,35 +61,35 @@
   },
   "Run2016C": {
     "go": true,
-    "labels" : ["03Feb2017","15Feb2017"],
+    "labels" : ["03Feb2017","15Feb2017","22Feb2017"],
     "fractionpass": 1.0,
     "lumisize" : -1,
     "maxcopies" : 1
   },
   "Run2016D": {
     "go": true,
-    "labels" : ["03Feb2017","15Feb2017"],
+    "labels" : ["03Feb2017","15Feb2017","22Feb2017"],
     "fractionpass": 1.0,
     "lumisize" : -1,
     "maxcopies" : 1
   },
   "Run2016E": {
     "go": true,
-    "labels" : ["03Feb2017","15Feb2017"],
+    "labels" : ["03Feb2017","15Feb2017","22Feb2017"],
     "fractionpass": 1.0,
     "lumisize" : -1,
     "maxcopies" : 1
   },
   "Run2016F": {
     "go": true,
-    "labels" : ["03Feb2017","15Feb2017"],
+    "labels" : ["03Feb2017","15Feb2017","22Feb2017"],
     "fractionpass": 1.0,
     "lumisize" : -1,
     "maxcopies" : 1
   },
   "Run2016G": {
     "go": true,
-    "labels" : ["03Feb2017","15Feb2017"],
+    "labels" : ["03Feb2017","15Feb2017","22Feb2017"],
     "fractionpass": 1.0,
     "lumisize" : -1,
     "maxcopies" : 1
