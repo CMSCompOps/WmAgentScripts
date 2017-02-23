@@ -850,7 +850,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
         if 'go' in info and info['go']:
             text+="<li><font color=green>%s</font>"%c
         else:
-            text+="<li><font coor=red>%s</font>"%c
+            text+="<li><font color=red>%s</font>"%c
         text += '<img src=https://dmytro.web.cern.ch/dmytro/cmsprodmon/images/%s-history_nevents-limit-30.png style="height:70px">'% (c) 
         text += '<img src=https://dmytro.web.cern.ch/dmytro/cmsprodmon/images/%s-history_requests-limit-30.png style="height:70px">'% (c) 
         text += """
@@ -1164,8 +1164,8 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
 <a href="javascript:showhide('agent')">[Click to show/hide]</a>
 <div id="agent" style="display:none;">
 <ul>
-<li><a href="https://its.cern.ch/jira/issues/?jql=text~drain%20AND%20project%20=%20CMSCOMPPR%20AND%20status%20!=%20CLOSED">All agents in drain JIRA<a/> </li>
-<li><a href="https://its.cern.ch/jira/issues/?jql=text~ready%20AND%20project%20=%20CMSCOMPPR%20AND%20status%20!=%20CLOSED">All agents ready JIRA<a/> </li>
+<li><a href="https://its.cern.ch/jira/issues/?jql=summary~drain%20AND%20project%20=%20CMSCOMPPR%20AND%20status%20!=%20CLOSED">All agents in drain JIRA<a/> </li>
+<li><a href="https://its.cern.ch/jira/issues/?jql=summary~ready%20AND%20project%20=%20CMSCOMPPR%20AND%20status%20!=%20CLOSED">All agents ready JIRA<a/> </li>
 </ul>
 <br>
 <table border=1><thead>
