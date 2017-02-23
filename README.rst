@@ -43,12 +43,6 @@ This is a one line command for all this procedure::
 
     export X509_USER_PROXY=$(voms-proxy-init -voms cms | grep Created | cut -c18- | tr -d '.')
 
-On SL5
-~~~~~~
-
-Just kidding!
-But the Twiki I'm copying this from looks pretty old, so this README needs updating.
-
 Loading WMAgent Environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -69,60 +63,3 @@ reject.py
 ~~~~~~~~~
 
 .. program-output:: python ../WmAgentScripts/reject.py -h
-
-setCascadeStatus.py
-~~~~~~~~~~~~~~~~~~~
-
-.. program-output:: python ../WmAgentScripts/setCascadeStatus.py -h
-
-reqMgrClient.py
-~~~~~~~~~~~~~~~
-
-.. automodule:: WmAgentScripts.Unified.reqMgrClient
-
-.. program-output:: python ../WmAgentScripts/Unified/reqMgrClient.py -h
-
-reqmgr.py
-~~~~~~~~~
-
-.. automodule:: WmAgentScripts.reqmgr
-
-.. program-output:: python ../WmAgentScripts/reqmgr.py -h
-
-Some examples:
-
-- Create a request using the file julian.json::
-
-    python WmAgentScripts/reqmgr.py -u https://cmsweb.cern.ch -i -f julian.json
-
-- Assigning an existing request in ReqMgr (jbadillo_StoreResults_51816_v1_140826_100602_3071) changing splitting according to julian.json::
-
-    python WmAgentScripts/reqmgr.py -u https://cmsweb.cern.ch -p -g -f julian.json -r jbadillo_StoreResults_51816_v1_140826_100602_3071
-
-changeSplittingWorkflow.py
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This script allows to change the splitting of a request, on a given task name
-
-.. program-output:: python ../WmAgentScripts/changeSplittingWorkflow.py -h
-
-.. Note::
-   - The TASKPATH should be the full task path in which you want to change the splitting, i.e. StepOneProc, StepOne /StepOneProcMerge, Production, etc.
-   - The TYPE is the algorithm for splitting.
-
-forceCompleteWorkflows.py
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. automodule:: WmAgentScripts.forceCompleteWorkflows
-
-.. program-output:: python ../WmAgentScripts/forceCompleteWorkflows.py -h
-
-getInputLocation.py
-~~~~~~~~~~~~~~~~~~~
-
-.. program-output:: python ../WmAgentScripts/getInputLocation.py -h
-
-And So On
----------
-
-I'm not sure how many of these scripts are actually being used, so I'll stop now.
