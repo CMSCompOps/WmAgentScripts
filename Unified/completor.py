@@ -177,14 +177,16 @@ def completor(url, specific):
         print "\t"*int(w)+"Running since",delay,"[days] priority=",priority
 
         if injection_delay!=None and injection_delay > injection_delay_threshold and priority >= injection_delay_priority:
-            quantized = 1000 ## quantize to a thousand
+            quantized = 5000 ## quantize priority
             #print wfi.request['InitialPriority']
             tail_cutting_priority = wfi.request['InitialPriority']+ int((delay_priority_increase * (injection_delay - injection_delay_threshold) / 7) / quantized) * quantized
             #print tail_cutting_priority
+            tail_cutting_priority += 101 ## to signal it is from this mechanism
             tail_cutting_priority = min(999999, tail_cutting_priority) ## never go above 1M
             #print tail_cutting_priority
             tail_cutting_priority = max(tail_cutting_priority, priority) ## never go below the current value
             #print tail_cutting_priority
+            
             if priority < tail_cutting_priority:
                 sendLog('completor',"%s Injected since %s [days] priority=%s, increasing to %s"%(wfo.name,injection_delay,priority, tail_cutting_priority), level='critical')
                 wfi.sendLog('completor','bumping priority to %d for being injected since %s'%( tail_cutting_priority, injection_delay))
