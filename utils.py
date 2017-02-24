@@ -146,11 +146,13 @@ def sendEmail( subject, text, sender=None, destination=None ):
     #print text
     #print sender
     #print destination
-    
+    UC = unifiedConfiguration()
+
+    email_destination = UG.get("email_destination")
     if not destination:
-        destination = ['vlimant@cern.ch','matteoc@fnal.gov','areinsvo@nd.edu']
+        destination = email_destination
     else:
-        destination = list(set(destination+['vlimant@cern.ch','matteoc@fnal.gov','areinsvo@nd.edu']))
+        destination = list(set(destination+email_destination))
     if not sender:
         map_who = { 'vlimant' : 'vlimant@cern.ch',
                     'mcremone' : 'matteoc@fnal.gov' }

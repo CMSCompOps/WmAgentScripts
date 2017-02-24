@@ -1,4 +1,8 @@
 {
+ "email_destination" : { 
+   "value" : ["vlimant@cern.ch","matteoc@fnal.gov","areinsvo@nd.edu"],
+   "description" : "The list of people that get the emails notifications"
+ },
  "site_for_overflow": {
    "value" : ["T0_CH_CERN",
               "T2_CH_CERN_HLT"],
