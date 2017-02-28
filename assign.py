@@ -152,6 +152,8 @@ def main():
     sites = []
     specialStr = ''
     taskchain = False
+    xrootd= False
+    secondary_xrootd= False
 
     SI = siteInfo()
     getRandomDiskSite.T1 = SI.sites_T1s
@@ -272,6 +274,17 @@ def main():
             else:
                 procversion = wf_info["ProcessingVersion"]
 
+        # reading xrootd and secondary_xrootd values
+        if options.xrootd:
+            xrootd = options.xrootd
+        elif original_wf:
+            xrootd= original_wf.request["TrustSitelists"]
+
+        if options.secondary_xrootd:
+            secondary_xrootd = options.secondary_xrootd
+        elif original_wf:
+            secondary_xrootd= original_wf.request["TrustPUSitelists"]
+
         # Check for output dataset existence, and abort if output datasets already exist!
         # Don't perform this check for ACDC's
         datasets = schema["OutputDatasets"]
@@ -346,16 +359,18 @@ def main():
         print "Taskchain? ", str(taskchain)
         print "Activity:", activity
         print "ACDC:", str(is_resubmission)
+        print "Xrootd:", str(xrootd)
+        print "Secondary_xrootd:", str(secondary_xrootd)
         #if options.test:            continue
         
         # Really assigning the workflow now
         #print wf_name, '\tEra:', era, '\tProcStr:', procstring, '\tProcVer:', procversion, '\tTeam:', team, '\tSite:', sites
         assignRequest(url, wf_name, options.team, sites, era, procversion, activity, lfn, procstring, 
-                      trust_site = options.xrootd, 
+                      trust_site = xrootd, 
                       replica = options.replica, 
                       verbose = options.test, 
                       taskchain = taskchain, 
-                      trust_secondary_site = options.secondary_xrootd,
+                      trust_secondary_site = secondary_xrootd,
                       memory=memory,
                       multicore=multicore
                       )

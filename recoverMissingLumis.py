@@ -266,13 +266,14 @@ def getFiles(datasetName, runBlacklist, runWhitelist, blockBlacklist,
             for replica in replicaInfo["phedex"]["block"][0]["replica"]:
                 node = replica["node"]
                 cmsSites = siteDB.PNNtoPSN(node)
+                blockLocations.add(node.replace("_MSS","_Disk"))
                 if type(cmsSites) != list:
                     cmsSites = [cmsSites]
-                for cmsName in cmsSites:
-                    se = siteDB.cmsNametoSE(cmsName)
-                    blockLocations.update(se)
-                    logging.debug("cmsName %s mapped to se %s", cmsName, se)
-                logging.debug("PhEDEx node %s, cmsSites %s, blockLocations %s", node, cmsSites, blockLocations)
+                # for cmsName in cmsSites:
+                #     se = siteDB.cmsNametoSE(cmsName)
+                #     blockLocations.update(se)
+                #     logging.debug("cmsName %s mapped to se %s", cmsName, se)
+                logging.info("PhEDEx node %s, cmsSites %s, blockLocations %s", node, cmsSites, blockLocations)
 
         # We cannot upload docs without location, so force it in case it's empty
         if not blockLocations:
