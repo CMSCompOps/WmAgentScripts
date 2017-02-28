@@ -110,10 +110,14 @@ def main():
     parser.add_option('-r', '--replica', action='store_true', dest='replica', default=False, help='Adds a _Disk Non-Custodial Replica parameter')
     parser.add_option('-p', '--procversion', help='Processing Version, if empty it will leave the processing version that comes by default in the request', dest='procversion')
     parser.add_option('-a', '--activity', help='Dashboard Activity (reprocessing, production or test), if empty will set reprocessing as default', dest='activity')
-    parser.add_option('-x', '--xrootd', help='Assign with TrustSitelists=True (allows xrootd capabilities)',
-                      action='store_true', default=False, dest='xrootd')
+    parser.add_option( '--xrootd', help='Assign with TrustSitelists=True (allows xrootd capabilities)',
+                      action='store_true', dest='xrootd')
+    parser.add_option('--no_xrootd', help='Assign with TrustSitelists=False',
+                      action='store_false', dest='xrootd')
     parser.add_option('--secondary_xrootd', help='Assign with TrustPUSitelists=True (allows xrootd capabilities)',
-                      action='store_true', default=False, dest='secondary_xrootd')
+                      action='store_true', dest='secondary_xrootd')
+    parser.add_option('--no_secondary_xrootd', help='Assign with TrustPUSitelists=False',
+                      action='store_false', dest='secondary_xrootd')
     parser.add_option('-l', '--lfn', help='Merged LFN base', dest='lfn')
     parser.add_option('-v', '--verbose', help='Verbose', action='store_true', default=False, dest='verbose')
     parser.add_option('--testbed', help='Assign in testbed', action='store_true', default=False, dest='testbed')
@@ -275,12 +279,12 @@ def main():
                 procversion = wf_info["ProcessingVersion"]
 
         # reading xrootd and secondary_xrootd values
-        if options.xrootd:
+        if options.xrootd is not None:
             xrootd = options.xrootd
         elif original_wf:
             xrootd= original_wf.request["TrustSitelists"]
 
-        if options.secondary_xrootd:
+        if options.secondary_xrootd is not None:
             secondary_xrootd = options.secondary_xrootd
         elif original_wf:
             secondary_xrootd= original_wf.request["TrustPUSitelists"]
