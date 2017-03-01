@@ -103,7 +103,7 @@ def equalizor(url , specific = None, options=None):
 
     ## fnal can read from cnaf ?
     #mapping['T1_IT_CNAF'].append( 'T1_US_FNAL' )
-    mapping['T1_IT_CNAF'].extend( [site for site in SI.sites_ready if '_US_' in site] ) ## all US can read from CNAF
+    #mapping['T1_IT_CNAF'].extend( [site for site in SI.sites_ready if '_US_' in site] ) ## all US can read from CNAF
     mapping['T1_IT_CNAF'].append( 'T2_CH_CERN' )
     mapping['T1_DE_KIT'].append( 'T2_CH_CERN' )
     mapping['T2_CH_CERN'].append( 'T1_IT_CNAF' )
@@ -191,7 +191,8 @@ def equalizor(url , specific = None, options=None):
         m_m = max( bucket['key'] for bucket in buckets) if buckets else None
         
         #90% percentile calculation
-        percentile_m = int(0.90 * w_m)
+        memory_percentil = 90
+        percentile_m = int(90/100. * w_m)
         p_m = 0
         s=0
         for bucket in buckets:
@@ -200,7 +201,7 @@ def equalizor(url , specific = None, options=None):
                 break
 
         p_m *= 1.1
-        print "percentile mem",p_m
+        
         max_count_m = None
         max_count = 0
         for bucket in buckets:
@@ -211,6 +212,8 @@ def equalizor(url , specific = None, options=None):
         if max_count_m:
             max_count_m *= 1.1
         print "max count mem",max_count_m
+        print "max memory",m_m
+        print memory_percentil,"%percentile mem",p_m
 
         b_m = None
         if w_m > stats_to_go:
@@ -239,7 +242,8 @@ def equalizor(url , specific = None, options=None):
         w_t = sum( bucket['doc_count'] for bucket in buckets)
         m_t = max( bucket['key'] for bucket in buckets) if buckets else None
         
-        percentile_t = int(0.90 * w_t)
+        time_percentil = 95
+        percentile_t = int(time_percentil/100. * w_t)
         p_t = 0
         for bucket in buckets:
             p_t = bucket['key']
@@ -247,7 +251,6 @@ def equalizor(url , specific = None, options=None):
                 break
 
         p_t *= 1.1
-        print "percentile time",p_t
 
         max_count_t = None
         max_count = 0
@@ -258,11 +261,14 @@ def equalizor(url , specific = None, options=None):
 
         if max_count_t:
             max_count_t *= 1.1
+
         print "max count time",max_count_t
+        print "max time",m_t
+        print time_percentil,"% percentil time",p_t
 
         b_t = None
         if w_t > stats_to_go:
-            b_t = m_t
+            b_t = int(p_t)
         else:
             print "not enough stats for time",w_t
 
