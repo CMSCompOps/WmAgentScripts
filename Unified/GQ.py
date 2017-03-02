@@ -264,9 +264,14 @@ if not_runable_acdc:
     sendLog('GQ','These %s ACDC cannot run \n%s'%( len(not_runable_acdc),
                                                    '\n'.join(not_runable_acdc)
                                                    ),level='critical')
-if stuck_all_done:
-    sendLog('GQ','These %d workflows have not toggled further to completed while all WQE are done\n%s'%( len(stuck_all_done),'\n'.join(sorted(stuck_all_done))),
+
+
+old_stuck_all_done = set(json.loads(open('stuck_all_done.json').read()))
+really_stuck_all_done = old_stuck_all_done & stuck_all_done
+if really_stuck_all_done:
+    sendLog('GQ','These %d workflows have not toggled further to completed while all WQE are done\n%s'%( len(really_stuck_all_done),'\n'.join(sorted(really_stuck_all_done))),
             level='critical')
+open('stuck_all_done.json','w').write( json.dumps( sorted( stuck_all_done), indent=2))
 
 #for agent in wqe_by_agent:
     ## sort by priority
