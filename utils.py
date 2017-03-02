@@ -2886,19 +2886,48 @@ def getDatasetLumis(dataset, runs=None, with_cache=False):
     open(c_name,'w').write( json.dumps( dict(full_lumi_json), indent=2))
     return dict(lumi_json)
             
-def getDatasetEventsPerLumi(dataset):
+
+def getDatasetAllEventsPerLumi(dataset, fraction=1):
     dbsapi = DbsApi(url=dbs_url)
-    try:
-        all_files = dbsapi.listFileSummaries( dataset = dataset , validFileOnly=1)
-    except:
-        print "We had to have a DBS listfilesummaries retry"
-        time.sleep(1)
-        all_files = dbsapi.listFileSummaries( dataset = dataset , validFileOnly=1)        
-    try:
-        average = sum([f['num_event']/float(f['num_lumi']) for f in all_files]) / float(len(all_files))
-    except:
-        average = 100
-    return average
+    all_files = dbsapi.listFileArray( dataset = dataset ,detail=True)
+    if fraction!=1:
+        ## truncate if need be
+        random.shuffle( all_files )
+        all_files = all_files[:int(fraction*len(all_files)+1)]
+
+    result = []
+    final = {}
+    for f in all_files:
+        final[f['logical_file_name']] = [f['event_count'],0]
+    chunking = 900
+    for chunk in [all_files[x:x+chunking] for x in xrange(0, len(all_files), chunking)]:
+        ls = dbsapi.listFileLumiArray( logical_file_name = [f['logical_file_name'] for f in chunk])
+        for l in ls: 
+            final[l['logical_file_name']][1]+= len(l['lumi_section_num'])
+
+
+    
+    return    [a/float(b) for (a,b) in final.values()]
+
+def getDatasetEventsPerLumi(dataset):
+    all_values = getDatasetAllEventsPerLumi(dataset)
+    if all_values:
+        return sum(all_values) / float(len(all_values))
+    else:
+        return 100.
+    ## the thing below does not actually work
+    #dbsapi = DbsApi(url=dbs_url)
+    #try:
+    #    all_files = dbsapi.listFileSummaries( dataset = dataset , validFileOnly=1)
+    #except:
+    #    print "We had to have a DBS listfilesummaries retry"
+    #    time.sleep(1)
+    #    all_files = dbsapi.listFileSummaries( dataset = dataset , validFileOnly=1)        
+    #try:
+    #    average = sum([f['num_event']/float(f['num_lumi']) for f in all_files]) / float(len(all_files))
+    #except:
+    #    average = 100
+    #return average
            
 def setFileStatus(file_names, validate=True):
     dbswrite = DbsApi(url=dbs_url_writer)
