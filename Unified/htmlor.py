@@ -914,7 +914,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
             up_com = ""
             
             usage = for_max_running[site]['CpusInUse'] if site in for_max_running else 0
-            ht_cpu = 'CPU pledge: %s / %s'%(usage,cpu)
+            ht_cpu = 'CPU current/max: %s / %s'%(usage,cpu)
             if site_se in upcoming:
                 u = sum(upcoming[site_se][camp] for camp in upcoming[site_se])
                 up_com = "<br><a href=GQ.json>Jobs available  %d</a> (av./pl.=%.2f)"%(u, (u/float(cpu) if usage else 0)) 
