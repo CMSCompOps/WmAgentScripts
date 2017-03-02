@@ -67,7 +67,8 @@ $BASE_DIR/cWrap.sh Unified/GQ.py
 
 $BASE_DIR/cWrap.sh Unified/addHoc.py
 
-#$BASE_DIR/cWrap.sh Unified/lockor.py
+$BASE_DIR/cWrap.sh Unified/remainor.py parse True
+$BASE_DIR/cWrap.sh Unified/remainor.py go
 
 rm -f $lock_name
 
