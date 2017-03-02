@@ -110,10 +110,14 @@ def main():
     parser.add_option('-r', '--replica', action='store_true', dest='replica', default=False, help='Adds a _Disk Non-Custodial Replica parameter')
     parser.add_option('-p', '--procversion', help='Processing Version, if empty it will leave the processing version that comes by default in the request', dest='procversion')
     parser.add_option('-a', '--activity', help='Dashboard Activity (reprocessing, production or test), if empty will set reprocessing as default', dest='activity')
-    parser.add_option('-x', '--xrootd', help='Assign with TrustSitelists=True (allows xrootd capabilities)',
-                      action='store_true', default=False, dest='xrootd')
+    parser.add_option( '--xrootd', help='Assign with TrustSitelists=True (allows xrootd capabilities)',
+                      action='store_true', dest='xrootd')
+    parser.add_option('--no_xrootd', help='Assign with TrustSitelists=False',
+                      action='store_false', dest='xrootd')
     parser.add_option('--secondary_xrootd', help='Assign with TrustPUSitelists=True (allows xrootd capabilities)',
-                      action='store_true', default=False, dest='secondary_xrootd')
+                      action='store_true', dest='secondary_xrootd')
+    parser.add_option('--no_secondary_xrootd', help='Assign with TrustPUSitelists=False',
+                      action='store_false', dest='secondary_xrootd')
     parser.add_option('-l', '--lfn', help='Merged LFN base', dest='lfn')
     parser.add_option('-v', '--verbose', help='Verbose', action='store_true', default=False, dest='verbose')
     parser.add_option('--testbed', help='Assign in testbed', action='store_true', default=False, dest='testbed')
@@ -152,6 +156,8 @@ def main():
     sites = []
     specialStr = ''
     taskchain = False
+    xrootd= False
+    secondary_xrootd= False
 
     SI = siteInfo()
     getRandomDiskSite.T1 = SI.sites_T1s
@@ -272,6 +278,17 @@ def main():
             else:
                 procversion = wf_info["ProcessingVersion"]
 
+        # reading xrootd and secondary_xrootd values
+        if options.xrootd is not None:
+            xrootd = options.xrootd
+        elif original_wf:
+            xrootd= original_wf.request["TrustSitelists"]
+
+        if options.secondary_xrootd is not None:
+            secondary_xrootd = options.secondary_xrootd
+        elif original_wf:
+            secondary_xrootd= original_wf.request["TrustPUSitelists"]
+
         # Check for output dataset existence, and abort if output datasets already exist!
         # Don't perform this check for ACDC's
         datasets = schema["OutputDatasets"]
@@ -346,16 +363,18 @@ def main():
         print "Taskchain? ", str(taskchain)
         print "Activity:", activity
         print "ACDC:", str(is_resubmission)
+        print "Xrootd:", str(xrootd)
+        print "Secondary_xrootd:", str(secondary_xrootd)
         #if options.test:            continue
         
         # Really assigning the workflow now
         #print wf_name, '\tEra:', era, '\tProcStr:', procstring, '\tProcVer:', procversion, '\tTeam:', team, '\tSite:', sites
         assignRequest(url, wf_name, options.team, sites, era, procversion, activity, lfn, procstring, 
-                      trust_site = options.xrootd, 
+                      trust_site = xrootd, 
                       replica = options.replica, 
                       verbose = options.test, 
                       taskchain = taskchain, 
-                      trust_secondary_site = options.secondary_xrootd,
+                      trust_secondary_site = secondary_xrootd,
                       memory=memory,
                       multicore=multicore
                       )
