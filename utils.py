@@ -2208,7 +2208,120 @@ def try_getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=
         print dataset,":all",len(block_counts),"available",second_order,"times"
         return second_order
     
-def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=None, within_sites=None, complement=True):
+
+
+def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=None, within_sites=None, complement=True):
+    if vetoes==None:
+        vetoes = ['MSS','Buffer','Export']
+    #print "presence of",dataset                                                                                           
+    dbsapi = DbsApi(url=dbs_url)
+    all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
+    all_dbs_block_names=set([block['block_name'] for block in all_blocks])
+    all_block_names=set([block['block_name'] for block in all_blocks])
+    if only_blocks:
+        all_block_names = filter( lambda b : b in only_blocks, all_block_names)
+        full_size = sum([block['file_size'] for block in all_blocks if (block['block_name'] in only_blocks)])
+    else:
+        full_size = sum([block['file_size'] for block in all_blocks])
+
+    if not full_size:
+        print dataset,"is nowhere"
+        return {}, all_block_names
+
+    print len(all_block_names),"blocks"
+
+    items = None
+    while items == None:
+        try:
+            conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+            url = '/phedex/datasvc/json/prod/requestlist?dataset=%s'%dataset
+            if group:
+                url+='group=%s'%group
+            r1=conn.request("GET",url)
+            r2=conn.getresponse()
+            
+            items=json.loads(r2.read())['phedex']['request']
+        except Exception as e :
+            print "\twaiting a bit for retry"
+            print e
+            time.sleep(1)
+    
+    destinations = defaultdict(set)
+    all_destinations = set()
+    for item in items:
+        phedex_id = item['id']
+        if item['type']=='delete': continue
+        for req in item['node']:
+            if within_sites and not req['name'] in within_sites: continue
+            if vetoes and any([req['name'].endswith(v) for v in vetoes]): continue
+            if not req['time_decided']: continue
+            if not req['decision'] in ['approved']: continue
+            all_destinations.add( req['name'] )
+    #print sorted( all_destinations)
+
+    ## check first by full dataset
+    r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?dataset=%s'%(dataset))
+    r2=conn.getresponse()
+    result = json.loads(r2.read())['phedex']['dataset']
+    
+    in_full = set()
+    for ds in result:
+        for sub in ds['subscription']:
+            phedex_id = sub['request']
+            site = sub['node']
+            if sub['percent_bytes'] == 100:
+                ## it is there and in full
+                if vetoes and any([site.endswith(v) for v in vetoes]): continue
+                for b in all_block_names:
+                    destinations[site].add( (b, 100, phedex_id) )
+                in_full.add( site )
+                
+    #print sorted(all_destinations)
+    #print sorted(in_full)
+    ## then check block by block at the site not already OK.
+    for site in (all_destinations-in_full):
+        #for block in all_block_names:
+        #    r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?block=%s&node=%s'%(block, site))
+        #    r2=conn.getresponse()
+        #    result = json.loads(r2.read())
+        try:
+            url='/phedex/datasvc/json/prod/subscriptions?block=%s%%23*&node=%s&collapse=n'%(dataset, site)
+        #print "querying all block at",site,dataset,url
+            r1=conn.request("GET",url)
+            r2=conn.getresponse()
+            r = r2.read()
+        except:
+            ## addhoc to try and move forward
+            if dataset == '/Neutrino_E-10_gun/RunIISpring15PrePremix-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v2-v2/GEN-SIM-DIGI-RAW':
+                continue
+            
+        #print r
+        result = json.loads(r)['phedex']['dataset']
+        for ds in result:
+            for block in ds['block']:
+                for sub in block['subscription']:
+                    destinations[site].add( (block['name'], sub['percent_bytes'], sub['request']))
+
+        
+    #for site in destinations:
+    #    destinations[site] = list( destinations[site])
+    #print json.dumps( destinations, indent=2)
+
+    re_destinations = {}
+    for site in destinations:
+        blocks = [b[0] for b in destinations[site]]
+        blocks_and_id = dict([(b[0],b[2]) for b in destinations[site]])
+        #print blocks_and_id
+        completion = sum([b[1] for b in destinations[site]]) / float(len(destinations[site]))
+        
+        re_destinations[site] = { "blocks" : blocks_and_id, 
+                               #"all_blocks" : list(all_block_names),
+                               "data_fraction" : len(blocks) / float(len(all_block_names)) ,
+                               "completion" : completion,
+                               }
+    return re_destinations, all_block_names
+
+def getOldDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=None, within_sites=None, complement=True):
     if vetoes==None:
         vetoes = ['MSS','Buffer','Export']
     #print "presence of",dataset
@@ -2313,8 +2426,10 @@ def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=N
         if item['type']=='delete': continue
         sites_destinations = []
         for req in item['node']:
+            if req['name']=='T2_CH_CERN': print "yes to cern"
+                
             if within_sites and not req['name'] in within_sites: continue
-            if req['decision'] != 'approved' : continue
+            #if req['decision'] != 'approved' : continue
             if not req['time_decided']: continue
             if req['name'] in deletes and int(req['time_decided'])< deletes[req['name']]:
                 ## this request is void by now
@@ -2322,10 +2437,14 @@ def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=N
             if not req['decision'] in ['approved']:
                 continue
             if req['name'] in times:
+                #if req['name']=='T2_CH_CERN': print times[req['name']]
                 if int(req['time_decided']) > times[req['name']]: 
                     ## the node was already seen as a destination with an ealier time, and no delete in between
+                    if req['name']=='T2_CH_CERN': print "uhm",phedex_id
                     continue
+            if req['name']=='T2_CH_CERN': print phedex_id,"is being registered for CERN destination"
             times[req['name']] = int(req['time_decided'])
+
 
             sites_destinations.append( req['name'] )
         sites_destinations = [site for site in sites_destinations if not any(site.endswith(v) for v in vetoes)]
@@ -2333,8 +2452,8 @@ def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=N
         sites_missing_information = [site for site in sites_destinations if site not in destinations.keys()]
         print phedex_id,sites_destinations,"fetching for missing",sites_missing_information
 
-
-        if len(sites_missing_information)==0: continue
+        addhoc = (dataset == '/Neutrino_E-10_gun/RunIISpring15PrePremix-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v2-v2/GEN-SIM-DIGI-RAW')
+        if len(sites_missing_information)==0 and not addhoc: continue
 
         r3 = conn.request("GET",'/phedex/datasvc/json/prod/transferrequests?request=%s'%phedex_id)
         r4 = conn.getresponse()
@@ -2382,6 +2501,19 @@ def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=N
     """
     
     return destinations, all_block_names
+
+
+def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=None, within_sites=None, complement=True):
+    try:
+        return getBetterDatasetDestinations(url, dataset, only_blocks, group, vetoes, within_sites, complement)
+    except:
+        print "failed once"
+        sendLog('getDatasetDestinations','Failed the new implementation', level='critical')
+        try:
+            return getOldDatasetDestinations(url, dataset, only_blocks, group, vetoes, within_sites, complement)
+        except:
+            print "failed twice, and crash"
+            raise Exception("getDatasetDestinations crashed")
 
 def getDatasetOnGoingDeletion( url, dataset ):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
