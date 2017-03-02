@@ -35,6 +35,12 @@ for wf in wfs:
         
 may_have_one.update( may_have_one_too )
 
+## keep all relval reports for *ever* ...
+batches = json.loads(open('batches.json').read())
+for b,wfs in batches.items(): 
+    #for wf in wfs: wfi = workflowInfo(url, wf)
+    may_have_one.update( wfs )
+
 for logtype in ['report','joblogs','condorlogs']:
     for d in filter(None,os.popen('ls -d %s/%s/*'%(monitor_dir,logtype)).read().split('\n')):
         if not any([m in d for m in may_have_one]):

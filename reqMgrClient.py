@@ -768,8 +768,15 @@ def assignWorkflow(url, workflowname, team, parameters ):
     #local import so it doesn't screw with all other stuff
     from utils import workflowInfo
     defaults = copy.deepcopy( assignWorkflow.defaults )
-    defaults["Team"+team] = "checked"
-    defaults["checkbox"+workflowname] = "checked"
+    if 'Team' in parameters: ## this needs to go away with moving away from old assignment to new in all scripts
+        team = parameters['Team'] 
+    else:
+        parameters['Team'] = team 
+
+    #defaults["checkbox"+workflowname] = "checked"
+    #defaults["Team"+team] = "checked"
+    defaults["RequestName"] = workflowname
+    defaults["RequestStatus"] = 'assigned'
 
     from utils import workflowInfo
 
@@ -821,6 +828,8 @@ def assignWorkflow(url, workflowname, team, parameters ):
         defaults['Dashboard'] = 'reprocessing'
     elif 'SubRequestType' in wf.request and wf.request['SubRequestType'] in ['ReDigi']:
         defaults['Dashboard'] = 'reprocessing'
+    elif wf.isRelval():
+        defaults['Dashboard'] = 'relval'
 
 
     if defaults['SiteBlacklist'] and defaults['SiteWhitelist']:
@@ -919,7 +928,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
 
 
 assignWorkflow.defaults= {
-        "action": "Assign",
+        #"action": "Assign",
         "SiteBlacklist": [],
         "TrustSitelists" : False,
         "TrustPUSitelists" : False,
@@ -940,9 +949,11 @@ assignWorkflow.defaults= {
         'NonCustodialSites' : [],
         "NonCustodialSubType" : 'Replica', ## that's the default, but let's be sure
         'AutoApproveSubscriptionSites' : [],
+        'NonCustodialGroup' : 'DataOps'
         #'Multicore' : 1
         }
-assignWorkflow.mandatories = ['SiteWhitelist',
+assignWorkflow.mandatories = ['Team',
+                              'SiteWhitelist',
                               'AcquisitionEra',
                               'ProcessingVersion',
                               'ProcessingString',
@@ -1201,7 +1212,6 @@ def reqmgr1_to_2_Assignment( params ):
         if key.startswith("checkbox"):
             requestName = key[8:]
     params["RequestName"] = requestName        
-    #params["Teams"] = teams
     params["Team"] = teams[0]
     priority = params.get(requestName + ':priority', '')
     if priority != '':

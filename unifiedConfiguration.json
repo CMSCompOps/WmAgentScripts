@@ -215,5 +215,13 @@
   "user_rereco":{
    "description" : "The users from which we expect ReReco requests",
    "value" : ["cerminar","fabozzi"]
+  },
+  "user_relval":{
+   "description" : "The users from which we expect relval requests",
+   "value" : []
+  },
+  "batch_goodness":{
+   "description" : "Level below which to include a note in the batch report",
+   "value" : 90
   }
 }

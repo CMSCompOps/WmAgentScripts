@@ -85,12 +85,20 @@ def checkor(url, spec=None, options=None):
     mcm = McMClient(dev=False) if use_mcm else None
 
     def get_campaign(output, wfi):
+        ## this should be a perfect matching of output->task->campaign
         campaign = None
+        era = None
+        wf_campaign = None
+        if 'Campaign' in wfi.request:   wf_campaign = wfi.request['Campaign']
         try:
-            campaign = output.split('/')[2].split('-')[0]
+            era = output.split('/')[2].split('-')[0]
         except:
-            if 'Campaign' in wfi.request:
-                campaign = wfi.request['Campaign']
+            era = None
+            
+        if wfi.isRelval(): 
+            campaign = wf_campaign
+        else:
+            campaign = era if era else wf_campaign
         return campaign
 
     ## retrieve bypass and onhold configuration
@@ -257,11 +265,11 @@ def checkor(url, spec=None, options=None):
         
         tiers_with_no_check = copy.deepcopy(UC.get('tiers_with_no_check')) # dqm*
         vetoed_custodial_tier = copy.deepcopy(UC.get('tiers_with_no_custodial')) #dqm*, reco
-        campaigns = {}
+        campaigns = {} ## this mapping of campaign per output dataset assumes era==campaing, which is not true for relval
         expected_outputs = copy.deepcopy( wfi.request['OutputDatasets'] )
         for out in wfi.request['OutputDatasets']:
             c = get_campaign(out, wfi)
-            campaigns[out] = c
+            campaigns[out] = c 
             if c in CI.campaigns and 'custodial_override' in CI.campaigns[c]:
                 vetoed_custodial_tier = list(set(vetoed_custodial_tier) - set(CI.campaigns[c]['custodial_override']))
                 ## add those that we need to check for custodial copy
@@ -433,9 +441,6 @@ def checkor(url, spec=None, options=None):
         for output in wfi.request['OutputDatasets']:
             upper_limit = 301.
             campaign = campaigns[output]
-            #if 'EventsPerLumi' in wfi.request and 'FilterEfficiency' in wfi.request:
-            #    upper_limit = 1.5*wfi.request['EventsPerLumi']*wfi.request['FilterEfficiency']
-            #    print "setting the upper limit of lumisize to",upper_limit,"by request configuration"
 
             if campaign in CI.campaigns and 'lumisize' in CI.campaigns[campaign]:
                 upper_limit = CI.campaigns[campaign]['lumisize']
@@ -446,7 +451,7 @@ def checkor(url, spec=None, options=None):
                 print "overriding the upper lumi size to",upper_limit,"by command line"
                 
             lumi_upper_limit[output] = upper_limit
-            if wfi.request['RequestType'] in ['ReDigi']: lumi_upper_limit[output] = -1
+            if wfi.request['RequestType'] in ['ReDigi','ReReco']: lumi_upper_limit[output] = -1
         
         if any([ (lumi_upper_limit[out]>0 and events_per_lumi[out] >= lumi_upper_limit[out]) for out in events_per_lumi]):
             print wfo.name,"has big lumisections"
@@ -509,6 +514,11 @@ def checkor(url, spec=None, options=None):
                         custodial = CI.campaigns[campaign]['custodial']
                         print "Setting custodial to",custodial,"from campaign configuration"
 
+            group = None
+            if campaign in CI.campaigns and 'phedex_group' in CI.campaigns[campaign]:
+                group = CI.campaigns[campaign]['phedex_group']
+                print "using group",group,"for replica"
+
             if custodial and float(SI.storage[custodial]) < size_worth_checking:
                 print "cannot use the campaign configuration custodial:",custodial,"because of limited space"
                 custodial = None
@@ -562,6 +572,7 @@ def checkor(url, spec=None, options=None):
                         if phedex_presence[output]>=1:
                             wfi.sendLog('checkor','Using %s as a tape destination for %s'%(custodial, output))
                             custodials[custodial].append( output )
+                            if group: custodials[custodial][-1]+='@%s'%group
                             ## let's wait and see if that's needed 
                             assistance_tags.add('custodial')
                         else:
@@ -761,7 +772,7 @@ def checkor(url, spec=None, options=None):
                 else:
                     print "could not close out",wfo.name,"will try again next time"
         else:
-            if not 'custodial' in assistance_tags:
+            if not 'custodial' in assistance_tags or wfi.isRelval():
                 ## do only the report for those
                 for member in acdc+acdc_inactive+[wfo.name]:
                     try:
@@ -872,20 +883,15 @@ def checkor(url, spec=None, options=None):
     print "Custodials"
     print json.dumps(custodials, indent=2)
     for site in custodials:
-        print ','.join(custodials[site]),'=>',site
-        if not options.test:
-            result = makeReplicaRequest(url, site, list(set(custodials[site])),"custodial copy at production close-out",custodial='y',priority='low', approve = (site in SI.sites_auto_approve) )
-            print result
-
-    print "Transfers"
-    print json.dumps(transfers, indent=2)
-    ## replicas requests
-    for site in transfers:
-        print ','.join(transfers[site]),'=>',site
-        if not options.test:
-            result = None
-            #result = makeReplicaRequest(url, site, list(set(transfers[site])),"copy to disk at production close-out")
-            print result
+        items_at = defaultdict(set)
+        for i in custodials[site]:
+            item, group = i.split('@') if '@' in i else i,'DataOps'
+            items_at[group].add( item )
+        for group,items in items_at.items():
+            print ','.join(items),'=>',site,'@',group
+            if not options.test:
+                result = makeReplicaRequest(url, site, sorted(items) ,"custodial copy at production close-out",custodial='y',priority='low', approve = (site in SI.sites_auto_approve) , group=group)
+                print result
 
     print "File Invalidation"
     print invalidations

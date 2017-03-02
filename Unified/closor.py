@@ -6,7 +6,7 @@ import json
 import time
 import sys
 import os
-from utils import getDatasetEventsAndLumis, campaignInfo, getDatasetPresence, findLateFiles, updateSubscription
+from utils import getDatasetEventsAndLumis, campaignInfo, getDatasetPresence, findLateFiles, updateSubscription, makeReplicaRequest
 from htmlor import htmlor
 from collections import defaultdict
 import reqMgrClient
@@ -22,7 +22,7 @@ def spawn_harvesting(url, wfi , in_full):
     all_OK = {}
     requests = []
     outputs = wfi.request['OutputDatasets'] 
-    if ('EnableHarvesting' in wfi.request and wfi.request['EnableHarvesting']) or ('DQMConfigCacheID' in wfi.request and wfi.request['DQMConfigCacheID']):
+    if ('EnableHarvesting' in wfi.request and not wfi.request['EnableHarvesting']) and ('DQMConfigCacheID' in wfi.request and wfi.request['DQMConfigCacheID']):
         if not 'MergedLFNBase' in wfi.request:
             print "fucked up"
             sendEmail('screwed up wl cache','%s wl cache is bad'%(wfi.request['RequestName']))
@@ -163,6 +163,23 @@ def closor(url, specific=None, options=None):
     random.shuffle( wfs )    
     if max_per_round: wfs = wfs[:max_per_round]
 
+    batches = json.loads(open('batches.json').read())
+    by_batch = {}
+    batch_semaphore = defaultdict(int)
+    for bname in batches:
+        for wf in batches[bname]:
+            by_batch[wf] = bname
+
+    ## first go over everything and give it an extra go from batch
+    for wfo in wfs:
+        ## we want all the wf of the same batch to be in the close status before giving it a full go
+        if wfo.name in by_batch:
+            batch_semaphore[by_batch[wfo.name]] += 1
+            
+    batch_go = dict([(batch_name, len(batch_content)== batch_semaphore[batch_name]) for batch_name,batch_content in batches.items()])
+    batch_warnings = defaultdict(set)
+    batch_goodness = UC.get("batch_goodness")
+
     for wfo in wfs:
 
         if specific and not specific in wfo.name: continue
@@ -171,13 +188,18 @@ def closor(url, specific=None, options=None):
         wfi = workflowInfo(url, wfo.name )
         wfo.wm_status = wfi.request['RequestStatus']
 
+        has_batch_go = False
+        if wfo.name in by_batch and not batch_go[by_batch[wfo.name]]: 
+            wfi.sendLog('closor', 'Cannot close for now because the batch %s is not all close'% by_batch[wfo.name])
+            continue
+
+
         if wfi.request['RequestStatus'] in  ['announced','normal-archived']:
             ## manually announced ??
             wfo.status = 'done'
             wfo.wm_status = wfi.request['RequestStatus']
             wfi.sendLog('closor','%s is announced already : %s'%( wfo.name,wfo.wm_status))
         session.commit()
-
 
         expected_lumis = 1
         if not 'TotalInputLumis' in wfi.request:
@@ -211,12 +233,13 @@ def closor(url, specific=None, options=None):
                 expected_lumis = odb.expectedlumis
             odb.date = time.mktime(time.gmtime())
             session.commit()
+            fraction = lumi_count/float(expected_lumis)*100.
 
-            wfi.sendLog('closor',"\t%60s %d/%d = %3.2f%%"%(out,lumi_count,expected_lumis,lumi_count/float(expected_lumis)*100.))
-            #print wfo.fraction_for_closing, lumi_count, expected_lumis
-            #fraction = wfo.fraction_for_closing
-            #fraction = 0.0
-            #all_OK.append((float(lumi_count) > float(expected_lumis*fraction)))
+            completion_line = "%60s %d/%d = %3.2f%%"%(out,lumi_count,expected_lumis,fraction)
+            wfi.sendLog('closor',"\t%s"% completion_line)
+            if wfi.isRelval() and fraction < batch_goodness:
+                batch_warnings[ wfi.getCampaign()].add( completion_line )
+
             all_OK[out] = True 
 
 
@@ -261,9 +284,45 @@ def closor(url, specific=None, options=None):
             results=[]#'dummy']
             if not results:
                 for out in outputs:
+                    _,dsn,process_string,tier = out.split('/')
+                    #tier = out.split('/')[-1]
+                    #process_string = out.split(',')[-2]
+                    #dsn = out.split(',')[-3]
                     if all_OK[out]:
                         results.append(setDatasetStatus(out, 'VALID'))
-                        tier = out.split('/')[-1]
+                    if all_OK[out] and wfi.isRelval():
+                        ## make the specific relval rules and the replicas
+                        ## figure the destination(s) out
+                        destinations = set()
+                        if tier != "RECO" and tier != "ALCARECO":
+                            destinations.add('T2_CH_CERN')
+                        if tier == "GEN-SIM":
+                            destinations.add('T1_US_FNAL_Disk')
+                        if tier == "GEN-SIM-DIGI-RAW":
+                            destinations.add('T1_US_FNAL_Disk')
+                        if tier == "GEN-SIM-RECO":
+                            destinations.add('T1_US_FNAL_Disk')
+
+                        if "RelValTTBar" in dsn and "TkAlMinBias" in process_string and tier != "ALCARECO":
+                            destinations.add('T2_CH_CERN')
+
+                        if "MinimumBias" in dsn and "SiStripCalMinBias" in process_string and tier != "ALCARECO":
+                            destinations.add('T2_CH_CERN')
+                        
+                        if destinations:
+                            wfi.sendLog('closor', '%s to go to %s'%(out, ', '.join( sorted( destinations ))))
+
+                        ## call to makereplicarequest under relval => done
+                        for site in destinations:
+                            result = makeReplicaRequest(url, site, [out], 'Copy for release validation consumption', priority='high', approve=True, mail=False, group='RelVal')
+                            try:
+                                request_id =  result['phedex']['request_created'][0]['id']
+                                results.append( True )
+                            except:
+                                results.append( 'Failed relval transfer' )
+                        
+                    elif all_OK[out]:
+
                         campaign = None
                         try:
                             campaign = out.split('/')[2].split('-')[0]
@@ -274,6 +333,7 @@ def closor(url, specific=None, options=None):
                         ## campaign override
                         if campaign and campaign in CI.campaigns and 'toDDM' in CI.campaigns[campaign] and tier in CI.campaigns[campaign]['toDDM']:
                             to_DDM = True
+
                         ## by typical enabling
                         if tier in UC.get("tiers_to_DDM"):
                             to_DDM = True
@@ -304,16 +364,18 @@ def closor(url, specific=None, options=None):
                         destination_spec = ""
                         if destinations:
                             destination_spec = "--destination="+",".join( destinations )
+                        group_spec = "" ## not used yet 
+                        ### should make this a campaign configuration
                         ## inject to DDM when necessary
                         if to_DDM:
                             print "Sending",out," to DDM"
-                            p = os.popen('python assignDatasetToSite.py --nCopies=%d --dataset=%s %s --debug 0 --exec'%(n_copies, out,destination_spec))
+                            p = os.popen('python assignDatasetToSite.py --nCopies=%d --dataset=%s %s %s --debug 0 --exec'%(n_copies, out,destination_spec, group_spec))
                             ddm_text = p.read()
                             print ddm_text
                             status = p.close()
                             if status!=None:
                                 print "Failed DDM, retrying to send",out,"a second time"
-                                p = os.popen('python assignDatasetToSite.py --nCopies=%d --dataset=%s %s --debug 1 --exec'%(n_copies, out,destination_spec))
+                                p = os.popen('python assignDatasetToSite.py --nCopies=%d --dataset=%s %s %s --debug 1 --exec'%(n_copies, out,destination_spec, group_spec))
 
                                 ddm_text = p.read()
                                 print ddm_text
@@ -353,7 +415,7 @@ def closor(url, specific=None, options=None):
                 session.commit()
                 wfi.sendLog('closor',"workflow is announced")
             else:
-                print "ERROR with ",wfo.name,"to be announced",json.dumps( results )
+                wfi.sendLog('closor',"Error with %s to be announced \n%s"%( wfo.name, json.dumps( results )))
                 
         else:
             print wfo.name,"not good for announcing:",wfi.request['RequestStatus']
@@ -376,7 +438,40 @@ def closor(url, specific=None, options=None):
 
     if held:
         sendLog('closor',"the workflows below are held up \n%s"%("\n".join( sorted(held) )), level='critical')
-        
+
+    for bname,go in batch_go.items():
+        if go:
+            subject = "Release Validation Samples Batch %s"% bname
+            issues=""
+            if batch_warnings[ bname ]:
+                issues="The following datasets have outstanding completion (<%d%%) issues:\n\n"% batch_goodness
+                issues+="\n".join( sorted( batch_warnings[ bname ] ))
+                issues+="\n\n"
+            text = """
+Dear all,
+
+a batch of release validation workflows has finished.
+
+Batch ID:
+
+%s
+
+Detail of the workflows
+
+https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?campaign=%s
+
+%s 
+This is an automated message.
+"""%( bname, 
+      bname,
+      issues)
+            to = ['hn-cms-relval@cern.ch']
+            sendEmail(subject, text, to )
+            
+
+
+
+    
 if __name__ == "__main__":
     url = reqmgr_url
     parser = optparse.OptionParser()

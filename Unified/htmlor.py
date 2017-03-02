@@ -246,16 +246,20 @@ Last update on <b>%s(CET), %s(GMT)</b>
 <a href=logs/last_running>last running</a></b> <object height=20 type="text/html" data="logs/last_running"><p>backup content</p></object>-->
 <a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=warning target=_blank><b><font color=orange>warning</b></font></a>
 <a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=critical target=_blank><b><font color=red>all critical</b></font></a>
+<a href=https://its.cern.ch/jira/projects/CMSCOMPPR/issues target=_blank>JIRA</a>
 <br>
 %s
 <hr>
-<br><br>
+<a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/><img src=https://dmytro.web.cern.ch/dmytro/cmsprodmon/images/campaign-RunningCpus.png style="height:150px"></a>
+<a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/><img src=https://dmytro.web.cern.ch/dmytro/cmsprodmon/images/prioritysummarycpuspending.png style="height:150px"></a>
+<hr>
+<br>
 
 """ %(time.asctime(time.localtime()),
       time.asctime(time.gmtime()),
       reqmgr_url,
       caller,
-      ', '.join(['<a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=critical&module=%s&limit=100 target=_blank><b><font color=red>%s critical</b></font></a>'%(m,m) for m in ['injector','transferor','cachor','stagor','assignor','completor','GQ','equalizor','checkor','closor']])
+      ', '.join(['<a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=critical&module=%s&limit=100 target=_blank><b><font color=red>%s critical</b></font></a>'%(m,m) for m in ['injector','batchor','transferor','cachor','stagor','assignor','completor','GQ','equalizor','checkor','closor']])
       )
                    )
         

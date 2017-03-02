@@ -148,7 +148,7 @@ def sendEmail( subject, text, sender=None, destination=None ):
     #print destination
     UC = unifiedConfiguration()
 
-    email_destination = UG.get("email_destination")
+    email_destination = UC.get("email_destination")
     if not destination:
         destination = email_destination
     else:
@@ -619,6 +619,7 @@ class campaignInfo:
     def __init__(self):
         #this contains accessor to aggreed campaigns, with maybe specific parameters
         self.campaigns = json.loads(open('%s/WmAgentScripts/campaigns.json'%base_dir).read())
+        self.campaigns.update( json.loads(open('%s/WmAgentScripts/campaigns.relval.json'%base_dir).read()))
         #SI = siteInfo()
         SI = global_SI()
         for c in self.campaigns:
@@ -2396,6 +2397,11 @@ def getDatasetBlocks( dataset, runs=None, lumis=None):
         for r in runs:
             all_blocks.update([item['block_name'] for item in dbsapi.listBlocks(run_num=r, dataset= dataset) ])
     if lumis:
+        for run in lumis:
+            all_files = dbsapi.listFileArray( dataset = dataset, lumi_list = lumis[run], run_num=int(run), detail=True)
+            print len(all_files)
+            all_blocks.update( [f['block_name'] for f in all_files])
+                
         #needs a series of convoluted calls
         #all_blocks.update([item['block_name'] for item in dbsapi.listBlocks( dataset = dataset )])
         pass
@@ -3318,6 +3324,12 @@ class workflowInfo:
         self.summary = None
 
 
+    def isRelval(self):
+        if 'SubRequestType' in self.request and self.request['SubRequestType'] in ['RelVal']:
+            return True
+        else:
+            return False
+
     def notifyRequestor(self, message, do_request=True, do_batch=True, mcm=None):
         if not message: return
         try:
@@ -3807,7 +3819,7 @@ class workflowInfo:
                     else:
                         print "this is not supported, making it zero cput"
                         ne = 0
-                    tpe =task['TimePerEvent']
+                    tpe =task.get('TimePerEvent',1) ## harsh
                     carry_on[task['%sName'%base]] = ne
                     if 'FilterEfficiency' in task:
                         carry_on[task['%sName'%base]] *= task['FilterEfficiency']
@@ -3934,6 +3946,7 @@ class workflowInfo:
         CI = campaignInfo()
         for campaign in self.getCampaigns():
             c_sites_allowed = CI.get(campaign, 'SiteWhitelist' , [])
+            c_sites_allowed.extend(CI.parameters(campaign).get('SiteWhitelist',[]))
             if c_sites_allowed:
                 if verbose:
                     print "Using site whitelist restriction by campaign,",campaign,"configuration",sorted(c_sites_allowed)
@@ -3941,13 +3954,13 @@ class workflowInfo:
                 if not sites_allowed:
                     sites_allowed = list(c_sites_allowed)
 
-        c_black_list = CI.get(self.request['Campaign'], 'SiteBlacklist', [])
-        c_black_list.extend( CI.parameters(self.request['Campaign']).get('SiteBlacklist', []))
-        if c_black_list:
-            if verbose:
-                print "Reducing the whitelist due to black list in campaign configuration"
-                print "Removing",c_black_list
-            sites_allowed = list(set(sites_allowed) - set(c_black_list))
+            c_black_list = CI.get(campaign, 'SiteBlacklist', [])
+            c_black_list.extend( CI.parameters(campaign).get('SiteBlacklist', []))
+            if c_black_list:
+                if verbose:
+                    print "Reducing the whitelist due to black list in campaign configuration"
+                    print "Removing",c_black_list
+                sites_allowed = list(set(sites_allowed) - set(c_black_list))
 
         #ncores = self.request.get('Multicore',1)
         ncores = self.getMulticore()
@@ -4192,16 +4205,16 @@ class workflowInfo:
             if 'BlockWhitelist' in self.request:
                 bwl.extend(self.request['BlockWhitelist'])
 
-        return bwl
+        return list(set(bwl))
     def getLumiWhiteList(self):
-        lwl=[]
+        lwl={}
         if 'Chain' in self.request['RequestType']:
-            lwl_t = self._collectinchain('LumiWhitelist')
+            lwl_t = self._collectinchain('LumiList')
             for task in lwl_t:
-                lwl.extend(lwl_t[task])
+                lwl.update(lwl_t[task])
         else:
-            if 'LumiWhitelist' in self.request:
-                lwl.extend(self.request['LumiWhitelist'])
+            if 'LumiList' in self.request:
+                lwl.update(self.request['LumiList'])
         return lwl
     def getRunWhiteList(self):
         lwl=[]
@@ -4212,7 +4225,7 @@ class workflowInfo:
         else:
             if 'RunWhitelist' in self.request:
                 lwl.extend(self.request['RunWhitelist'])
-        return lwl
+        return list(set(lwl))
 
     def getBlocks(self):
         blocks = set()
@@ -4295,10 +4308,22 @@ class workflowInfo:
             return [self.request['PrimaryDataset']]
 
     def getCampaigns(self):
-        if 'Chain' in self.request['RequestType']:
-            return self._collectinchain('AcquisitionEra').values()
+        if 'Chain' in self.request['RequestType'] and not self.isRelval():
+            #try:
+            #    return self._collectinchain('Campaign').values()
+            #except:
+            return list(set(self._collectinchain('AcquisitionEra').values()))
         else:
             return [self.request['Campaign']]
+
+    def campaigns(self):
+        if 'Chain' in self.request['RequestType']:
+            if self.isRelval():
+                return self._collectinchain('Campaign')
+            else:
+                return self._collectinchain('AcquisitionEra')
+        else:
+            return self.request['Campaign']
 
     def acquisitionEra( self ):
         def invertDigits( st ):
@@ -4333,7 +4358,8 @@ class workflowInfo:
     def go(self,log=False):
         CI = campaignInfo()
         pss = self.processingString()
-        aes = self.acquisitionEra()
+        #aes = self.acquisitionEra()
+        aes = self.campaigns()
 
         if type(pss) == dict:
             pas = [(aes[t],pss[t]) for t in pss]

@@ -23,10 +23,13 @@ def injector(url, options, specific):
     workflows = getWorkflows(url, status=options.wmstatus, user=options.user)
     for user in UC.get("user_rereco"):
         workflows.extend( getWorkflows(url, status=options.wmstatus, user=user, rtype="ReReco")) 
+    for user in UC.get("user_relval"):
+        workflows.extend( getWorkflows(url, status=options.wmstatus, user=user, rtype="TaskChain")) 
 
     print len(workflows),"in line"
     cannot_inject = set()
     status_cache = defaultdict(str)
+
     ## browse for assignment-approved requests, browsed for ours, insert the diff
     for wf in workflows:
         if specific and not specific in wf: continue
@@ -85,6 +88,7 @@ def injector(url, options, specific):
             #print "already have",wf
             pass
     
+
     if cannot_inject:
         #sendEmail('workflow duplicates','These workflow cannot be added in because of duplicates \n\n %s'%( '\n'.join(cannot_inject)))
         sendLog('injector','These workflow cannot be added in because of duplicates \n\n %s'%( '\n'.join(cannot_inject)), level='warning')

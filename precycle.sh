@@ -51,8 +51,13 @@ source $BASE_DIR/credentials.sh
 
 ## get the workflow in/out of the system
 $BASE_DIR/cWrap.sh Unified/injector.py
+
+## get the batches of relval annnounced to HN
+$BASE_DIR/cWrap.sh Unified/batchor.py
+
 ## this could replace stagor in much faster
-$BASE_DIR/cWrap.sh Unified/assignor.py --early --limit 200
+## needs to put some work in stagor or not ?
+##$BASE_DIR/cWrap.sh Unified/assignor.py --early --limit 200
 
 #$BASE_DIR/cWrap.sh Unified/assignor.py RunIISummer16DR80Premix --from staging --early
 

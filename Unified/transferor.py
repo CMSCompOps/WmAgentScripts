@@ -386,16 +386,19 @@ def transferor(url ,specific = None, talk=True, options=None):
         blocks = []
         if 'BlockWhitelist' in wfh.request and wfh.request['BlockWhitelist']:
             blocks = wfh.request['BlockWhitelist']
-        if 'RunWhitelist' in wfh.request and wfh.request['RunWhitelist']:
+        rwl = wfh.getRunWhiteList()
+        if rwl:
             ## augment with run white list
             for dataset in primary:
-                blocks = list(set( blocks + getDatasetBlocks( dataset, runs=wfh.request['RunWhitelist'] ) ))
-        if 'LumiList' in wfh.request and wfh.request['LumiList']:
+                blocks = list(set( blocks + getDatasetBlocks( dataset, runs= rwl ) ))
+        lwl = wfh.getLumiWhiteList()
+        if lwl:
             ## augment with the lumi white list
-            blocks = list(set( blocks + getDatasetBlocks( dataset, lumis= wfh.request['LumiList'] ) ))
+            for dataset in primary:
+                blocks = list(set( blocks + getDatasetBlocks( dataset, lumis= lwl ) ))
 
         if blocks:
-            print "Reading",len(blocks),"in block whitelist"
+            print "Reading only",len(blocks),"blocks in input"
 
         can_go = True
         staging=False

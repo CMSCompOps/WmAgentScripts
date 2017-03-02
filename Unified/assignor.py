@@ -168,13 +168,17 @@ def assignor(url ,specific = None, talk=True, options=None):
         wfh.sendLog('assignor',"Site white list %s"%sorted(sites_allowed))
         override_sec_location = CI.get(wfh.request['Campaign'], 'SecondaryLocation', [])
 
-        blocks = []
-        if 'BlockWhitelist' in wfh.request:
-            blocks = wfh.request['BlockWhitelist']
-        if 'RunWhitelist' in wfh.request and wfh.request['RunWhitelist']:
+        blocks = wfh.getBlockWhiteList()
+        rwl = wfh.getRunWhiteList()
+        if rwl:
             ## augment with run white list
             for dataset in primary:
-                blocks = list(set( blocks + getDatasetBlocks( dataset, runs=wfh.request['RunWhitelist'] ) ))
+                blocks = list(set( blocks + getDatasetBlocks( dataset, runs=rwl ) ))
+        lwl = wfh.getLumiWhiteList()
+        if lwl:
+            ## augment with lumi white list
+            for dataset in primary:
+                blocks = list(set( blocks + getDatasetBlocks( dataset, lumis=lwl)))
 
         wfh.sendLog('assignor',"Allowed %s"%sorted(sites_allowed))
         secondary_locations=None
@@ -235,6 +239,7 @@ def assignor(url ,specific = None, talk=True, options=None):
         primary_locations = None
         available_fractions = {}
         set_lfn = '/store/mc' ## by default
+
         endpoints = set()
         for prim in list(primary):
             if prim in dataset_endpoints:
@@ -429,27 +434,13 @@ def assignor(url ,specific = None, talk=True, options=None):
             parameters['TrustPUSitelists'] = True
             wfh.sendLog('assignor',"Reading secondary through xrootd at %s"%sorted(sites_allowed))            
 
-
-        if 'parameters' in assign_parameters:
-            parameters.update( assign_parameters['parameters'] )
-
         ## plain assignment here
         team='production'
         if os.getenv('UNIFIED_TEAM'): team = os.getenv('UNIFIED_TEAM')
         if options and options.team:
             team = options.team
-
-        if False and 'T2_CH_CERN' in parameters['SiteWhitelist']:
-            ## add some check on 
-            ### the amount pending to HLT
-            ### the size of the request
-            ### the priority of the request (maybe not if we decide to overflow during runs)
-            parameters['SiteWhitelist'] = ['T2_CH_CERN_HLT']
-            team = 'hlt'
-            ## reduce the splitting by factor of 4, regardless of type of splitting
-            sendEmail("sending work to HLT","%s was assigned to HLT"%wfo.name)
-            
-
+        parameters['Team'] = team
+        
         ##parse options entered in command line if any
         if options:
             for key in reqMgrClient.assignWorkflow.keys:
@@ -466,7 +457,6 @@ def assignor(url ,specific = None, talk=True, options=None):
             parameters['EventsPerJob'] = 500000
 
         ## pick up campaign specific assignment parameters
-        #parameters.update( CI.parameters(wfh.request['Campaign']) )
         parameters.update( assign_parameters.get('parameters',{}) )
 
         if not options.test:
@@ -530,7 +520,7 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         
         
-        result = reqMgrClient.assignWorkflow(url, wfo.name, team, parameters)
+        result = reqMgrClient.assignWorkflow(url, wfo.name, None, parameters) ## team is not relevant anymore here
 
 
         # set status
