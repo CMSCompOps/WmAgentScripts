@@ -45,6 +45,7 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
     """
     #params = copy.deepcopy(reqMgr.assignWorkflow.defaults)
     params = {
+              "action" : "Assign",
               "Team" + team: "checked",
               "SiteWhitelist": sites,
               "MergedLFNBase": lfn,
