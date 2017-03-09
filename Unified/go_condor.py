@@ -80,6 +80,34 @@ def makeOverflowAds(config):
         print anAd
 
 
+def makeResizeAds(config):
+    policies = {}
+    for workflow, info in config.get('resizing', {}).items():
+        minCores = info.get("minCores", 3)
+        maxCores = info.get("maxCores", 8)
+        memoryPerThread = info.get("memoryPerThread")
+        workflows = policies.setdefault((minCores, maxCores, memoryPerThread), set())
+        workflows.add(workflow)
+    for policy, workflows in policies.items():
+        minCores, maxCores, memoryPerThread = policy
+        anAd = classad.ClassAd()
+        anAd['GridResource'] = 'condor localhost localhost'
+        anAd['TargetUniverse'] = 5
+
+        # Same trick as above to convert the set to a ClassAd list.
+        anAd["OverflowTasknames"] = map(str, workflows)
+        tasks_escaped = anAd.lookup('OverflowTasknames').__repr__()
+        del anAd['OverflowTaskNames']
+
+        anAd['Name'] = 'Resize Jobs (%d-%d cores, %d MB/thread)' % (minCores, maxCores, memoryPerThread)
+        anAd['Requirements'] = classad.ExprTree('(target.WMCore_ResizeJob is False) && member(target.WMAgent_SubTaskName, %s)' % tasks_escaped)
+        anAd['set_WMCore_ResizeJob'] = True
+        anAd['set_MinCores'] = minCores
+        anAd['set_MaxCores'] = maxCores
+        anAd['set_RequestMemory'] = classad.ExprTree('OriginalMemory + %d * ( WMCore_ResizeJob ? ( RequestCpus - OriginalCpus ) : 0 )' % memoryPerThread)
+        print anAd
+
+
 def makeSortAds():
     anAd = classad.ClassAd()
     anAd["GridResource"] = "condor localhost localhost"
@@ -157,6 +185,7 @@ def makeAds(config):
     makeSortAds()
     makePrioCorrectionsAds()
     makePerformanceCorrectionsAds(config)    
+    makeResizeAds(config)
 
 if __name__ == "__main__":
 
