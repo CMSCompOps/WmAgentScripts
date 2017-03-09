@@ -31,7 +31,7 @@ Generate your proxy::
 
     voms-proxy-init -voms cms
 
-nType your key password and should display something like this::
+Type your key password and should display something like this::
 
     Contacting voms.cern.ch:15002 [/DC=ch/DC=cern/OU=computers/CN=voms.cern.ch] "cms"... Remote VOMS server contacted succesfully. Created proxy in /tmp/x509up_uXXXX. Your proxy is valid until Thu Oct 09 21:53:28 CEST 2014
 
