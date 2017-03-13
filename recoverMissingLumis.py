@@ -264,21 +264,16 @@ def getFiles(datasetName, runBlacklist, runWhitelist, blockBlacklist,
         #load block locations
         if len(replicaInfo["phedex"]["block"]) > 0:
             for replica in replicaInfo["phedex"]["block"][0]["replica"]:
-                node = replica["node"]
-                cmsSites = siteDB.PNNtoPSN(node)
-                if type(cmsSites) != list:
-                    cmsSites = [cmsSites]
-                for cmsName in cmsSites:
-                    se = siteDB.cmsNametoSE(cmsName)
-                    blockLocations.update(se)
-                    logging.debug("cmsName %s mapped to se %s", cmsName, se)
-                logging.debug("PhEDEx node %s, cmsSites %s, blockLocations %s", node, cmsSites, blockLocations)
+                PNN = replica["node"]
+                PSNs = siteDB.PNNtoPSN(PNN)
+                blockLocations.add(PNN)
+                logging.debug("PhEDEx Node Name: %s\tPSNs: %s", PNN, PSNs)
 
         # We cannot upload docs without location, so force it in case it's empty
         if not blockLocations:
             if fakeLocation:
                 logging.info("\t\t %s\tno location", blockName)
-                blockLocations.update([u'cmssrmdisk.fnal.gov', u'srm-eoscms.cern.ch'])
+                blockLocations.update([u'T1_US_FNAL_Disk', u'T2_CH_CERN'])
             elif not has_parent: ## this should be the source
                 logging.info("Blockname: %s\tno location, ABORT", blockName)
                 sys.exit(1)
@@ -536,8 +531,6 @@ def defineRequests(workload, requestInfo,
         collection = CouchCollection(**{"url" : acdcCouchUrl,
                                       "database" : acdcCouchDb,
                                       "name" : collectionName})
-        owner = makeUser(workload.getOwner()['group'], workload.getOwner()['name'], acdcCouchUrl, acdcCouchDb)
-        collection.setOwner(owner)
         files = 0
         lumis = 0
         for lfn in datasetInformation[requestObject['input']]:
