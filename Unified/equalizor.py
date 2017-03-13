@@ -416,7 +416,8 @@ def equalizor(url , specific = None, options=None):
 
             resize = CI.get(campaign,'resize',{})
             
-            if resize and not is_chain:
+            if resize:# and not is_chain:
+                print "adding",task.pathName,"in resizing"
                 resizing[task.pathName] = resize
 
             tune = CI.get(campaign,'tune',options.tune)
