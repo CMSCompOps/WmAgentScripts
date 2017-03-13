@@ -57,7 +57,7 @@ def assignor(url ,specific = None, talk=True, options=None):
     aaa_mapping = json.loads(open('%s/equalizor.json'%monitor_pub_dir).read())['mapping']
 
     all_stuck = set()
-    all_stuck.update( json.loads( open('%s/stuck_transfers.json'%monitor_dir).read() ))
+    all_stuck.update( json.loads( open('%s/stuck_transfers.json'%monitor_pub_dir).read() ))
     all_stuck.update( getAllStuckDataset()) 
 
     max_per_round = UC.get('max_per_round').get('assignor',None)

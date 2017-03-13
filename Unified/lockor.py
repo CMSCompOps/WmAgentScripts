@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from utils import getWorkflows, findCustodialCompletion, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration, getDatasetSize, sendEmail, sendLog, campaignInfo, componentInfo, reqmgr_url, monitor_dir, getWorkflowByMCPileup, getDatasetPresence, lockInfo
+from utils import getWorkflows, findCustodialCompletion, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration, getDatasetSize, sendEmail, sendLog, campaignInfo, componentInfo, reqmgr_url, monitor_dir, monitor_pub_dir, getWorkflowByMCPileup, getDatasetPresence, lockInfo
 from assignSession import *
 import json
 import os
@@ -264,7 +264,7 @@ for dataset in already_locked-newly_locking:
 waiting_for_custodial_sum = sum([info['size'] for ds,info in waiting_for_custodial.items() if 'size' in info])
 print waiting_for_custodial_sum,"[GB] out there waiting for custodial"
 open('%s/waiting_custodial.json'%monitor_dir,'w').write( json.dumps( waiting_for_custodial , indent=2) )
-open('%s/stuck_custodial.json'%monitor_dir,'w').write( json.dumps( stuck_custodial , indent=2) )
+open('%s/stuck_custodial.json'%monitor_pub_dir,'w').write( json.dumps( stuck_custodial , indent=2) )
 open('%s/lagging_custodial.json'%monitor_dir,'w').write( json.dumps( lagging_custodial , indent=2) )
 open('%s/missing_approval_custodial.json'%monitor_dir,'w').write( json.dumps( missing_approval_custodial , indent=2) )
 

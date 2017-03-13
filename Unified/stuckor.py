@@ -1,6 +1,6 @@
 import json
 from collections import defaultdict
-from utils import unifiedConfiguration, checkTransferLag, reqmgr_url, monitor_dir, duplicateLock, unified_url
+from utils import unifiedConfiguration, checkTransferLag, reqmgr_url, monitor_dir, duplicateLock, unified_url, monitor_pub_dir
 
 def stuckor(url = reqmgr_url):
     
@@ -63,7 +63,7 @@ def stuckor(url = reqmgr_url):
     stuck_transfers = dict([(k,v) for (k,v) in missing_in_action.items() if k in really_stuck_dataset])
     print '\n'*2,'Stuck dataset transfers'
     print json.dumps(stuck_transfers , indent=2)
-    open('%s/stuck_transfers.json'%monitor_dir,'w').write( json.dumps(stuck_transfers , indent=2) )
+    open('%s/stuck_transfers.json'%monitor_pub_dir,'w').write( json.dumps(stuck_transfers , indent=2) )
     open('%s/logs/incomplete_transfers.log'%monitor_dir,'w').write( report )
 
 

@@ -376,9 +376,9 @@ Worflow waiting in staging (%d) <a href=logs/transferor/last.log target=_blank>l
         text_bywf += "</ul></div><hr>"
     text_bywf += '</ul>'
 
-    stuck_transfer = json.loads(open('%s/stuck_transfers.json'%monitor_dir).read())
+    stuck_transfer = json.loads(open('%s/stuck_transfers.json'%monitor_pub_dir).read())
     html_doc.write("""
-Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransferteam/ target=_blank>dashboard</a> <a href=logs/transferor/last.log target=_blank>log</a> <a href=logs/stagor/last.log target=_blank>postlog</a> <a href=stuck_transfers.json target=_blank> %d stuck</a>
+Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransferteam/ target=_blank>dashboard</a> <a href=logs/transferor/last.log target=_blank>log</a> <a href=logs/stagor/last.log target=_blank>postlog</a> <a href=public/stuck_transfers.json target=_blank> %d stuck</a>
 <a href="javascript:showhide('transfer')">[Click to show/hide]</a>
 <br>
 <div id="transfer" style="display:none;">
@@ -451,11 +451,12 @@ Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransfertea
 
     for c in sorted(count_by_campaign.keys()):
         text_by_c+="""
-<li> %s (%d) 
+<li> <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?campaign=%s>%s</a> <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?in_production=1&campaign=%s>(%d)</a> 
 <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/campaign.php?campaign=%s>mon</a>
 <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?in_production=1&rsort=8&status=running&campaign=%s>top</a>
 <a href=https://cms-pdmv.cern.ch/pmp/historical?r=%s target=_blank>pmp</a> 
-"""%( c, sum(count_by_campaign[c].values()),c,c,c )
+"""%( c,c,c,
+      sum(count_by_campaign[c].values()),c,c,c )
         for p in sorted(count_by_campaign[c].keys()):
             text_by_c+="%d (%d), "%(p,count_by_campaign[c][p])
         text_by_c += '<img src=https://dmytro.web.cern.ch/dmytro/cmsprodmon/images/%s-history_nevents-limit-30.png style="height:70px">'% (c) 
@@ -633,10 +634,10 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     #n_pending_approval = len([item for item in waiting_custodial.values() if 'nodes' in item and not any([node['decided'] for node in item['nodes'].values() ])])
     missing_approval_custodial = json.loads(open('%s/missing_approval_custodial.json'%monitor_dir).read())
 
-    stuck_custudial = json.loads(open('%s/stuck_custodial.json'%monitor_dir).read())
+    stuck_custudial = json.loads(open('%s/stuck_custodial.json'%monitor_pub_dir).read())
     lagging_custudial = json.loads(open('%s/lagging_custodial.json'%monitor_dir).read())
     if len(stuck_custudial):
-        stuck_string = ', <font color=red>%d appear to be <a href=stuck_custodial.json>stuck</a></font>'% len(stuck_custudial)
+        stuck_string = ', <font color=red>%d appear to be <a href=public/stuck_custodial.json>stuck</a></font>'% len(stuck_custudial)
     else:
         stuck_string = ''
     if len(missing_approval_custodial):

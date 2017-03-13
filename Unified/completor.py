@@ -2,7 +2,7 @@
 from assignSession import *
 import sys
 import reqMgrClient
-from utils import workflowInfo, getWorkflowById, forceComplete, getDatasetEventsAndLumis, componentInfo, monitor_dir, reqmgr_url, unifiedConfiguration, getForceCompletes, getAllStuckDataset
+from utils import workflowInfo, getWorkflowById, forceComplete, getDatasetEventsAndLumis, componentInfo, monitor_dir, reqmgr_url, unifiedConfiguration, getForceCompletes, getAllStuckDataset, monitor_pub_dir
 from utils import campaignInfo, siteInfo, sendLog, sendEmail
 from collections import defaultdict
 import json
@@ -35,7 +35,7 @@ def completor(url, specific):
 
     all_stuck = set()
     ## take into account what stagor was saying
-    all_stuck.update( json.loads( open('%s/stuck_transfers.json'%monitor_dir).read() ))
+    all_stuck.update( json.loads( open('%s/stuck_transfers.json'%monitor_pub_dir).read() ))
     ## take into account the block that needed to be repositioned recently
     all_stuck.update( [b.split('#')[0] for b in json.loads( open('%s/missing_blocks.json'%monitor_dir).read()) ] )
     ## take into account all stuck block and dataset from transfer team

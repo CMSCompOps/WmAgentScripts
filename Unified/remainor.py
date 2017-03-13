@@ -1,7 +1,7 @@
 import os
 import json
 #import numpy as np
-from utils import siteInfo, getWorkflowByInput, getWorkflowByOutput, getWorkflowByMCPileup, monitor_dir
+from utils import siteInfo, getWorkflowByInput, getWorkflowByOutput, getWorkflowByMCPileup, monitor_dir, monitor_pub_dir
 import sys
 import time
 import random 
@@ -16,9 +16,9 @@ if sys.argv[1] == 'parse':
     force = False
     if len(sys.argv)>2:
         force = bool(sys.argv[2])
-    locks = json.loads(open('%s/globallocks.json'%monitor_dir).read())
+    locks = json.loads(open('%s/globallocks.json'%monitor_pub_dir).read())
     waiting = json.loads(open('%s/waiting_custodial.json'%monitor_dir).read())
-    stuck = json.loads(open('%s/stuck_custodial.json'%monitor_dir).read())
+    stuck = json.loads(open('%s/stuck_custodial.json'%monitor_pub_dir).read())
     missing = json.loads(open('%s/missing_approval_custodial.json'%monitor_dir).read())
 
     si = siteInfo()
