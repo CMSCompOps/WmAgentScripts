@@ -23,7 +23,7 @@ def injector(url, options, specific):
     workflows = getWorkflows(url, status=options.wmstatus, user=options.user)
     for user in UC.get("user_rereco"):
         workflows.extend( getWorkflows(url, status=options.wmstatus, user=user, rtype="ReReco")) 
-    for user in UC.get("user_relval"):
+    for user in (options.user_relval.split(',') if options.user_relval else UC.get("user_relval")) :
         workflows.extend( getWorkflows(url, status=options.wmstatus, user=user, rtype="TaskChain")) 
 
     print len(workflows),"in line"
@@ -183,6 +183,7 @@ if __name__ == "__main__":
     parser.add_option('-s','--setstatus',help="What status to set locally",default="considered")
     parser.add_option('-u','--user',help="What user to fetch workflow from",default="pdmvserv")
     parser.add_option('-r','--replace',help="the workflow name that should be used for replacement",default=None)
+    parser.add_option('--user_relval',help="The user that can inject workflows for relvals", default=None)
     (options,args) = parser.parse_args()
     
     spec = None

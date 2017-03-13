@@ -218,7 +218,7 @@
   },
   "user_relval":{
    "description" : "The users from which we expect relval requests",
-   "value" : []
+   "value" : ["fabozzi"]
   },
   "batch_goodness":{
    "description" : "Level below which to include a note in the batch report",

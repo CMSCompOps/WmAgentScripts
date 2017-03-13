@@ -3486,7 +3486,7 @@ class workflowInfo:
 
 
     def isRelval(self):
-        if 'SubRequestType' in self.request and self.request['SubRequestType'] in ['RelVal']:
+        if 'SubRequestType' in self.request and 'RelVal' in self.request['SubRequestType']:
             return True
         else:
             return False

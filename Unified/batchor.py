@@ -1,23 +1,32 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, sendEmail, sendLog
+from utils import getWorkflows, sendEmail, sendLog, monitor_pub_dir, unifiedConfiguration
 from collections import defaultdict
 import copy
 import json
 import os
-
+import random
 
 def batchor( url ):
+    UC = unifiedConfiguration()
     ## get all workflows in assignment-approved with SubRequestType = relval
-    wfs = getWorkflows(url, 'assignment-approved', details=True, user='fabozzi')
-    wfs = filter( lambda r :r['SubRequestType'] == 'RelVal' if 'SubRequestType' in r else False, wfs)
+    all_wfs = []
+    for user in UC.get("user_relval"):
+        all_wfs = getWorkflows(url, 'assignment-approved', details=True, user=user, rtype='TaskChain')
 
+    wfs = filter( lambda r :r['SubRequestType'] == 'RelVal' if 'SubRequestType' in r else False, all_wfs)
+    ## need a special treatment for those
+    hi_wfs = filter( lambda r :r['SubRequestType'] == 'HIRelVal' if 'SubRequestType' in r else False, all_wfs)
 
     by_campaign = defaultdict(set)
+    by_hi_campaign = defaultdict(set)
     for wf in wfs:
-        print wf['RequestName'], wf['Campaign']
+        print "Relval:",wf['RequestName'], wf['Campaign']
         by_campaign[wf['Campaign']].add( wf['RequestName'] )
-
+    for wf in hi_wfs:
+        print "HI Relval:",wf['RequestName'], wf['Campaign']
+        by_hi_campaign[wf['Campaign']].add( wf['RequestName'] )
+        
     default_setup = {
         "go" :True,
         "parameters" : {
@@ -29,20 +38,35 @@ def batchor( url ):
         "custodial" : "T1_US_FNAL_MSS",
         "phedex_group" : "RelVal",
         "lumisize" : -1,
-        "fractionpass" : 0.0
+        "fractionpass" : 0.0,
+        "maxcopies" : 1
         }
+    default_hi_setup = {}
+    default_hi_setup.update( default_setup )
+    hi_site = random.choice(["T1_DE_KIT","T1_FR_CCIN2P3"])
+    default_hi_setup["parameters"].update({
+        "SiteWhitelist": [ hi_site ],
+        })
+
     add_on = {}
     batches = json.loads( open('batches.json').read() )
     for campaign in by_campaign:
         ## get a bunch of information
         setup  = copy.deepcopy( default_setup )
-        ## rule HI to something special
-        ## warn about the secondary setting ?
         add_on[campaign] = setup
+        sendLog('batchor','Adding the relval campaigns %s with parameters \n%s'%( campaign, json.dumps( setup, indent=2)),level='critical')
         if not campaign in batches: batches[campaign] = []
-        batches[campaign].extend(copy.deepcopy( by_campaign[campaign] ))
+        batches[campaign] = list(set(list(copy.deepcopy( by_campaign[campaign] )) + batches[campaign] ))
+    for campaign in by_hi_campaign:
+        ## get a bunch of information
+        setup  = copy.deepcopy( default_hi_setup )
+        add_on[campaign] = setup
+        sendLog('batchor','Adding the HI relval campaigns %s with parameters \n%s'%( campaign, json.dumps( setup, indent=2)),level='critical')
+        if not campaign in batches: batches[campaign] = []
+        batches[campaign] = list(set(list(copy.deepcopy( by_hi_campaign[campaign] )) + batches[campaign] ))
         
-    open('batches.json','w').write( json.dumps( batches ) )
+    
+    open('batches.json','w').write( json.dumps( batches , indent=2 ) )
 
     ## open the campaign configuration 
     campaigns = json.loads( open('campaigns.relval.json').read() )

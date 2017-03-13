@@ -176,7 +176,7 @@ def closor(url, specific=None, options=None):
         if wfo.name in by_batch:
             batch_semaphore[by_batch[wfo.name]] += 1
             
-    batch_go = dict([(batch_name, len(batch_content)== batch_semaphore[batch_name]) for batch_name,batch_content in batches.items()])
+    batch_go = dict([(batch_name, len(batch_content) and len(batch_content)== batch_semaphore[batch_name]) for batch_name,batch_content in batches.items()])
     batch_warnings = defaultdict(set)
     batch_goodness = UC.get("batch_goodness")
 
@@ -466,7 +466,7 @@ This is an automated message.
       bname,
       issues)
             to = ['hn-cms-relval@cern.ch']
-            sendEmail(subject, text, to )
+            sendEmail(subject, text, destination=to )
             
 
 
