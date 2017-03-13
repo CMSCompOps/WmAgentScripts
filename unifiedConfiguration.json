@@ -100,6 +100,10 @@
    "value" : false,
    "description": "Use the location of the parent dataset for custodial copy"
  },
+ "tape_size_limit" : {
+   "value" : 200,
+   "description" : "Size over which to prevent transfer to tape automatically"
+ },
  "tiers_with_no_check": {
    "value" : ["DQM","DQMIO"],
    "description": "The data tiers that do not pass closeout checks. Can be overidden by custodial overide at campaign level"

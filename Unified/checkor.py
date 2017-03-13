@@ -526,6 +526,8 @@ def checkor(url, spec=None, options=None):
             ## get from the parent
             pick_custodial = True
             use_parent_custodial = UC.get('use_parent_custodial')
+            tape_size_limit = options.tape_size_limit if options.tape_size_limit else UC.get("tape_size_limit")
+                
             _,prim,_,_ = wfi.getIO()
             if not custodial and prim and use_parent_custodial:
                 parent_dataset = prim.pop()
@@ -555,10 +557,14 @@ def checkor(url, spec=None, options=None):
                 ## pick one at random
                 custodial = SI.pick_SE(size=size_worth_checking)
 
+
+            if custodial and size_worth_checking > tape_size_limit:
+                print wfi.sendLog('checkor',"The total output size (%s TB) is too large for the limit set (%s TB)"%( size_worth_checking, tape_size_limit))
+                custodial = None
+
             if not custodial:
                 print "cannot find a custodial for",wfo.name
                 wfi.sendLog('checkor',"cannot find a custodial for %s probably because of the total output size %d"%( wfo.name, size_worth_checking))
-                #sendEmail( "cannot find a custodial","cannot find a custodial for %s probably because of the total output size %d"%( wfo.name, size_worth_checking))
                 sendLog('checkor',"cannot find a custodial for %s probably because of the total output size %d"%( wfo.name, size_worth_checking), level='critical')
                 
             if custodial and (is_closing or bypass_checks):
@@ -885,7 +891,7 @@ def checkor(url, spec=None, options=None):
     for site in custodials:
         items_at = defaultdict(set)
         for i in custodials[site]:
-            item, group = i.split('@') if '@' in i else i,'DataOps'
+            item, group = i.split('@') if '@' in i else (i,'DataOps')
             items_at[group].add( item )
         for group,items in items_at.items():
             print ','.join(items),'=>',site,'@',group
@@ -915,6 +921,7 @@ if __name__ == "__main__":
     parser.add_option('--ignoreinvalid', help='Force ignoring high level of invalid files', action='store_true', default=False)
     parser.add_option('--lumisize', help='Force the upper limit on lumisection', default=0, type='float')
     parser.add_option('--ignoreduplicates', help='Force ignoring lumi duplicates', default=False, action='store_true')
+    parser.add_option('--tape_size_limit', help='The limit in size of all outputs',default=0,type=int)
     parser.add_option('--html',help='make the monitor page',action='store_true', default=False)
     (options,args) = parser.parse_args()
     spec=None
