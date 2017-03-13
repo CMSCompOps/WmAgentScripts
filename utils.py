@@ -2290,10 +2290,12 @@ def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, ve
             r1=conn.request("GET",url)
             r2=conn.getresponse()
             r = r2.read()
-        except:
+        except Exception as e :
             ## addhoc to try and move forward
             if dataset == '/Neutrino_E-10_gun/RunIISpring15PrePremix-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v2-v2/GEN-SIM-DIGI-RAW':
                 continue
+            else:
+                raise Exception(e)
             
         #print r
         result = json.loads(r)['phedex']['dataset']
@@ -2530,7 +2532,11 @@ def getDatasetBlocks( dataset, runs=None, lumis=None):
             all_blocks.update([item['block_name'] for item in dbsapi.listBlocks(run_num=r, dataset= dataset) ])
     if lumis:
         for run in lumis:
-            all_files = dbsapi.listFileArray( dataset = dataset, lumi_list = lumis[run], run_num=int(run), detail=True)
+            try:
+                all_files = dbsapi.listFileArray( dataset = dataset, lumi_list = lumis[run], run_num=int(run), detail=True)
+            except Exception as e:
+                print "Exception in listFileArray",str(e)
+                all_files = []
             print len(all_files)
             all_blocks.update( [f['block_name'] for f in all_files])
                 
