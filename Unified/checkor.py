@@ -265,6 +265,7 @@ def checkor(url, spec=None, options=None):
         
         tiers_with_no_check = copy.deepcopy(UC.get('tiers_with_no_check')) # dqm*
         vetoed_custodial_tier = copy.deepcopy(UC.get('tiers_with_no_custodial')) #dqm*, reco
+        to_ddm_tier = copy.deepcopy(UC.get('tiers_to_DDM'))
         campaigns = {} ## this mapping of campaign per output dataset assumes era==campaing, which is not true for relval
         expected_outputs = copy.deepcopy( wfi.request['OutputDatasets'] )
         for out in wfi.request['OutputDatasets']:
@@ -491,6 +492,7 @@ def checkor(url, spec=None, options=None):
             
         out_worth_checking = [out for out in custodial_locations.keys() if out.split('/')[-1] not in vetoed_custodial_tier]
         size_worth_checking = sum([getDatasetSize(out)/1023. for out in out_worth_checking ]) ## size in TBs of all outputs
+        size_worht_going_to_ddm = sum([getDatasetSize(out)/1023. for out in out_worth_checking if out.split('/')[-1] in to_ddm_tier ]) ## size in TBs of all outputs
         if not all(map( lambda sites : len(sites)!=0, [custodial_locations[out] for out in out_worth_checking])):
             print wfo.name,"has not all custodial location"
             print json.dumps(custodial_locations, indent=2)
@@ -558,7 +560,7 @@ def checkor(url, spec=None, options=None):
                 custodial = SI.pick_SE(size=size_worth_checking)
 
 
-            if custodial and size_worth_checking > tape_size_limit:
+            if custodial and size_worht_going_to_ddm > tape_size_limit:
                 print wfi.sendLog('checkor',"The total output size (%s TB) is too large for the limit set (%s TB)"%( size_worth_checking, tape_size_limit))
                 custodial = None
 
