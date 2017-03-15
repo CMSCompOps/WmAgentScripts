@@ -85,7 +85,7 @@ def equalizor(url , specific = None, options=None):
         mapping['T1_FR_CCIN2P3'].append('T0_CH_CERN')
         mapping['T1_DE_KIT'].append('T0_CH_CERN')
         ## temptatively
-        #mapping['T0_CH_CERN'].append( 'T2_CH_CERN' )
+        mapping['T0_CH_CERN'].append( 'T2_CH_CERN' )
 
     ## all europ can read from CERN
     for reg in ['IT','DE','UK','FR','BE','ES']:
@@ -388,7 +388,7 @@ def equalizor(url , specific = None, options=None):
         ncores = wfi.getMulticore()
         memory_allowed = SI.sitesByMemory( float(wfi.request['Memory']) , maxCore=ncores)
 
-        if not lhe and not prim and not sec:
+        if not lhe and not prim and not sec and not wfi.isRelval():
             ## no input at all: go for OSG!!!
             add_to[wfo.name] = ['T3_US_OSG']
 
@@ -478,19 +478,6 @@ def equalizor(url , specific = None, options=None):
                 needs, task_name, running, idled = needs_action(wfi, task)
                 #needs = True
 
-                ## trick to be removed once all wf are passed through the agent patch
-                assigned_log = filter(lambda change : change["Status"] in ["assigned","acquired"],wfi.request['RequestTransition'])
-                if assigned_log:
-                    then = assigned_log[0]['UpdateTime']
-                    if then < 1479481842:
-                        print "assigned too early"
-                        needs = False
-                    else:
-                        print "assigned later enough"
-                else:
-                    needs = False
-
-
                 if is_chain and task.pathName.endswith('_1'):
                     print i_task,"in chain prevents overflowing"
                     needs = False
@@ -508,6 +495,7 @@ def equalizor(url , specific = None, options=None):
                     for site in sorted(aaa_sec_grid):
                         aaa_sec_grid.update( mapping.get(site, []) )
                     
+                    print len(prim)
                     if len(prim):    
                         dataset = list(prim)[0]
                         all_blocks,blocks = wfi.getActiveBlocks()
@@ -525,7 +513,8 @@ def equalizor(url , specific = None, options=None):
                         print "premix overflow from a taskchain"
                         ### hack hack hack
                         #modifications[wfo.name][task.pathName]= {"ReplaceSiteWhitelist" : ['T2_CH_CERN','T1_US_FNAL']}
-                        aaa_grid = set(wfi.request['SiteWhitelist'])
+                        aaa_grid = set(memory_allowed) & aaa_sec_grid
+                        #aaa_grid = set(wfi.request['SiteWhitelist'])
 
                     banned_until_you_find_a_way_to_do_this = ['T3_US_OSG']
                     aaa_grid  = filter(lambda s : not s in banned_until_you_find_a_way_to_do_this, aaa_grid)
