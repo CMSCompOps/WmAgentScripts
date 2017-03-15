@@ -942,7 +942,7 @@ assignWorkflow.defaults= {
         "MaxRSS" : 3000000,
         "MaxVSize": 4394967000,
         "Dashboard": "production",
-        "SoftTimeout" : 159600,
+        "SoftTimeout" : 159600, ## 44H watchdog, regardless of the requested time ...
         "GracePeriod": 300,
         'CustodialSites' : [], ## make a custodial copy of the output there
         "CustodialSubType" : 'Replica', ## move will screw it over ?
