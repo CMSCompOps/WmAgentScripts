@@ -863,72 +863,6 @@ class docCache:
             'cachefile' : None,
             'default' : ""
             }
-        """
-        self.cache['T1_DE_KIT_MSS_usage'] = {
-            'data' : None,
-            'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration(),
-            'getter' : lambda : getNodeUsage(phedex_url,'T1_DE_KIT_MSS'),
-            'cachefile' : None,
-            'default' : ""
-            }
-        self.cache['T1_US_FNAL_MSS_usage'] = {
-            'data' : None,
-            'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration(),
-            'getter' : lambda : getNodeUsage(phedex_url,'T1_US_FNAL_MSS'),
-            'cachefile' : None,
-            'default' : ""
-            }
-        self.cache['T1_ES_PIC_MSS_usage'] = {
-            'data' : None,
-            'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration(),
-            'getter' : lambda : getNodeUsage(phedex_url,'T1_ES_PIC_MSS'),
-            'cachefile' : None,
-            'default' : ""
-            }
-        self.cache['T1_UK_RAL_MSS_usage'] = {
-            'data' : None,
-            'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration(),
-            'getter' : lambda : getNodeUsage(phedex_url,'T1_UK_RAL_MSS'),
-            'cachefile' : None,
-            'default' : ""
-            }
-        self.cache['T1_IT_CNAF_MSS_usage'] = {
-            'data' : None,
-            'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration(),
-            'getter' : lambda : getNodeUsage(phedex_url,'T1_IT_CNAF_MSS'),
-            'cachefile' : None,
-            'default' : ""
-            }
-        self.cache['T1_FR_CCIN2P3_MSS_usage'] = {
-            'data' : None,
-            'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration(),
-            'getter' : lambda : getNodeUsage(phedex_url,'T1_FR_CCIN2P3_MSS'),
-            'cachefile' : None,
-            'default' : ""
-            }
-        self.cache['T1_RU_JINR_MSS_usage'] = {
-            'data' : None,
-            'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration(),
-            'getter' : lambda : getNodeUsage(phedex_url,'T1_RU_JINR_MSS'),
-            'cachefile' : None,
-            'default' : ""
-            }
-        self.cache['T0_CH_CERN_MSS_usage'] = {
-            'data' : None,
-            'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration(),
-            'getter' : lambda : getNodeUsage(phedex_url,'T0_CH_CERN_MSS'),
-            'cachefile' : None,
-            'default' : ""
-            }
-        """
         for cat in ['1','2','m1','m3','m4','m5','m6']:
             self.cache['stuck_cat%s'%cat] = {
                 'data' : None,
@@ -1039,6 +973,38 @@ def getNodeUsage(url, node):
         return int(s / 1023.**4) #in TB
     else:
         return None
+
+def getNodeQueue(url, node):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    r1=conn.request("GET",'/phedex/datasvc/json/prod/nodeusage?node=%s'%node)
+    r2=conn.getresponse()
+    result = json.loads(r2.read())
+    if len(result['phedex']['node']):
+        s= sum([node['miss_bytes'] for node in result['phedex']['node']])
+        return int(s / 1023.**4) #in TB
+    else:
+        return None
+
+def getNodesQueue(url):
+    ret = defaultdict(int)
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    r1=conn.request("GET",'/phedex/datasvc/json/prod/nodeusagehistory')
+    r2=conn.getresponse()
+    result = json.loads(r2.read())
+
+    for node in result['phedex']['node']:
+        for usage in node['usage']:
+            ret[node['name']] += int(usage['miss_bytes'] / 1023.**4) #in TB
+
+    return ret
+    r1=conn.request("GET",'/phedex/datasvc/json/prod/nodeusage')
+    r2=conn.getresponse()
+    result = json.loads(r2.read())
+
+    for node in result['phedex']['node']:
+        ret[node['name']] += int(node['miss_bytes'] / 1023.**4) #in TB
+    return ret
+
 
 dataCache = docCache()
 
