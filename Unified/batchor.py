@@ -41,12 +41,7 @@ def batchor( url ):
         "fractionpass" : 0.0,
         "maxcopies" : 1
         }
-    default_hi_setup = {}
-    default_hi_setup.update( default_setup )
-    hi_site = random.choice(["T1_DE_KIT","T1_FR_CCIN2P3"])
-    default_hi_setup["parameters"].update({
-        "SiteWhitelist": [ hi_site ],
-        })
+    default_hi_setup = copy.deepcopy( default_setup )
 
     add_on = {}
     batches = json.loads( open('batches.json').read() )
@@ -60,6 +55,9 @@ def batchor( url ):
     for campaign in by_hi_campaign:
         ## get a bunch of information
         setup  = copy.deepcopy( default_hi_setup )
+        hi_site = random.choice(["T1_DE_KIT","T1_FR_CCIN2P3"])
+        setup["parameters"]["SiteWhitelist"]=[ hi_site ]
+
         add_on[campaign] = setup
         sendLog('batchor','Adding the HI relval campaigns %s with parameters \n%s'%( campaign, json.dumps( setup, indent=2)),level='critical')
         if not campaign in batches: batches[campaign] = []
