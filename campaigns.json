@@ -352,8 +352,12 @@
    "NONONO_force-complete" : 0.99,
    "NONONO_force-timeout" : 7,
     "overflow": {"PU":{"max":20000,"pending":0,"force":false}},
-    "secondaries" : {"/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1_ext1-v1/GEN-SIM" : { "SiteWhitelist" : ["T1_US_FNAL", "T2_CH_CERN", "T2_US_Nebraska"]},
-    "/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-Realistic25ns13TeV2016Collision_MCRUN2_71_V1-v1/GEN-SIM" : {} 
+    "secondaries" : {
+             "/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1_ext1-v1/GEN-SIM" : { "SiteWhitelist" : ["T1_US_FNAL", "T2_CH_CERN", "T2_US_Nebraska"]},
+             "/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-Realistic25ns13TeV2016Collision_MCRUN2_71_V1-v1/GEN-SIM" : {},
+	     "/Min_Bias_13TeV_pythia8_TuneCUETP8M2/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM" : {},
+	     "/Min_Bias_13TeV_pythia8_TuneCUETP8M4/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM" : {},
+	     "/Min_Bias_13TeV_pythia8_TuneCUETP8M3/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM" : {}
     },
     "NO_NO_tune" : true
   },
@@ -598,6 +602,7 @@
     "go" : true,
     "lumisize" : -1,
     "fractionpass" : 0.95,
+    "resize" : { "minCores":3, "maxCores":10, "memoryPerThread": 1000},
     "maxcopies": 1,
     "secondaries": {}, 
     "tune" : false,
