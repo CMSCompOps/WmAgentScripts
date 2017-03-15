@@ -1267,7 +1267,7 @@ class siteInfo:
             if site in for_better_max_running:
                 new_max = int(for_better_max_running[site]['sixdays'])
 
-            if new_max > self.cpu_pledges[site] or True:
+            if new_max: #new_max > self.cpu_pledges[site] or True:
                 self.cpu_pledges[site] = new_max
         
         for_site_pressure = dataCache.get('gwmsmon_prod_site_summary')
