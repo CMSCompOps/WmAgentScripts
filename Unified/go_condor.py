@@ -162,7 +162,7 @@ def makePerformanceCorrectionsAds(configs):
         anAd["Requirements"] = classad.ExprTree(str(exp))
         anAd['set_HasBeenMemoryTuned'] = True
         anAd['set_HasBeenRouted'] = False
-        anAd['set_RequestMemory'] = int(memory)
+        anAd['set_OriginalMemory'] = int(memory)
         print anAd
 
     for timing in configs.get('time',[]):
@@ -177,7 +177,7 @@ def makePerformanceCorrectionsAds(configs):
         anAd["Requirements"] = classad.ExprTree(str(exp))
         anAd['set_HasBeenTimingTuned'] = True
         anAd['set_HasBeenRouted'] = False
-        anAd['set_MaxWallTimeMins'] = int(timing)
+        anAd['set_OriginalMaxWallTimeMins'] = int(timing)
         print anAd
         
 def makeAds(config):
