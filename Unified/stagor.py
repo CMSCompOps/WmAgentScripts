@@ -374,7 +374,7 @@ def stagor(url,specific =None, options=None):
                     #print need,"is present at all sites:",this_check
                     #all_check&= this_check
 
-                if all_check:    
+                if all_check and not re_transfer:    
                     wfi.sendLog('stagor',"needs are sufficiently fullfilled, setting staged")
                     wfo.status = 'staged'
                     session.commit()
@@ -383,6 +383,7 @@ def stagor(url,specific =None, options=None):
                     wfi.sendLog('stagor',"needs to wait a bit more")
             else:
                 wfi.sendLog('stagor',"not checking availability")
+
             if re_transfer:
                 wfi.sendLog('stagor',"Sending back to considered because of endpoint in downtime")
                 if wfo.status == 'staging':
