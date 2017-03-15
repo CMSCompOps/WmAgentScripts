@@ -508,12 +508,33 @@ class componentInfo:
             'reqmgr' : False,
             'mcm' : False,
             'dbs' : False,
-            'phedex' : False
+            'phedex' : False,
+            'cmsr' : False
             }
         self.code = 0
         self.keep_trying = keep_trying
 
     def check(self):
+        while True:
+            try:
+                print "checking cmsr"
+                from assignSession import session, Workflow
+                all_info = session.query(Workflow).filter(Workflow.name.contains('1')).all()
+                break
+            except Exception as e:
+                self.tell('cmsr')
+                if self.keep_trying:
+                    time.sleep(30)
+                    continue
+                import traceback
+                print traceback.format_exc()
+                print "cmsr database is unreachable"
+                print str(e)
+                if self.block and not (self.soft and 'cmsr' in self.soft):
+                    self.code = 121
+                    return False
+                break
+                
         while True:
             try:
                 print "checking reqmgr"
