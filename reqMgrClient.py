@@ -916,6 +916,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
         return False
     else:
         defaults.pop('execute')
+        print "These are the parameters to be used"
         print json.dumps( defaults ,indent=2)
 
     res = setWorkflowAssignment(url, workflowname, defaults)
@@ -1208,7 +1209,7 @@ def reqmgr1_to_2_Assignment( params ):
         if isinstance(value, basestring):
             params[key] = value.strip()
         if key.startswith("Team"):
-            teams.append(key[4:])
+            if key[4:]: teams.append(key[4:])
         if key.startswith("checkbox"):
             requestName = key[8:]
     params["RequestName"] = requestName        
