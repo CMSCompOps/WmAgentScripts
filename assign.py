@@ -45,13 +45,13 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
     """
     #params = copy.deepcopy(reqMgr.assignWorkflow.defaults)
     params = {
-              "action" : "Assign",
-              "Team" + team: "checked",
+              ##"action" : "Assign",
+              ##"Team" + team: "checked",
               "SiteWhitelist": sites,
               "MergedLFNBase": lfn,
               "Dashboard": activity,
               "ProcessingVersion": procversion,
-              "checkbox" + workflow: "checked",
+              ##"checkbox" + workflow: "checked",
               "execute": True
               }
     
@@ -75,9 +75,11 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
         params["Memory"] = memory
     if multicore:
         params["Multicore"] = multicore
+
     if verbose:
-        pprint(params)
-        return False
+        #pprint(params)
+        params['execute'] = False
+        #return False
 
     res = reqMgr.assignWorkflow(url, workflow, team, params)
     if res:
