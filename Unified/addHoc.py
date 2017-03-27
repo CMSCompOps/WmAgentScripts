@@ -18,6 +18,20 @@ if not up.check(): sys.exit(0)
 
 url = reqmgr_url
 
+
+
+wfs = getWorkflows(url, 'assigned', details=True)
+
+now = time.mktime( time.gmtime())
+for wf in wfs:
+    assigned_log = filter(lambda change : change["Status"] in ["assigned"],wf['RequestTransition'])
+    if assigned_log:
+        then = assigned_log[-1]['UpdateTime']
+        since = (now-then)/float(1*24*60*60.)
+        if since>1.:
+            print "workflow",wf['RequestName'],"is assigned since",then," that is",since,"days"
+            sendLog('GQ','The workflow %s has been assigned for %.2f days'%(wf['RequestName'], since), level='critical')
+
 may_have_one=set()
 may_have_one.update([wfo.name for wfo in session.query(Workflow).filter(Workflow.status.startswith('away')).all()])
 may_have_one.update([wfo.name for wfo in session.query(Workflow).filter(Workflow.status.startswith('assistance')).all()])
