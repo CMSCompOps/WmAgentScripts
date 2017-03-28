@@ -70,5 +70,7 @@ $BASE_DIR/cWrap.sh Unified/addHoc.py
 $BASE_DIR/cWrap.sh Unified/remainor.py parse True
 $BASE_DIR/cWrap.sh Unified/remainor.py go
 
+$BASE_DIR/cWrap.sh Unified/showError.py --many 
+
 rm -f $lock_name
 
