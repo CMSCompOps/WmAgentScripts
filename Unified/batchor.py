@@ -12,7 +12,7 @@ def batchor( url ):
     ## get all workflows in assignment-approved with SubRequestType = relval
     all_wfs = []
     for user in UC.get("user_relval"):
-        all_wfs = getWorkflows(url, 'assignment-approved', details=True, user=user, rtype='TaskChain')
+        all_wfs.extend( getWorkflows(url, 'assignment-approved', details=True, user=user, rtype='TaskChain') )
 
     wfs = filter( lambda r :r['SubRequestType'] == 'RelVal' if 'SubRequestType' in r else False, all_wfs)
     ## need a special treatment for those
