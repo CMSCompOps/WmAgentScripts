@@ -1,5 +1,7 @@
 #!/usr/bin/env python  
 from utils import workflowInfo, getWorkflows, sendEmail, componentInfo, monitor_dir, reqmgr_url, siteInfo, sendLog, getWorkflowById
+monitor_eos_dir = "/afs/cern.ch/user/c/cmst2/www/unified/"
+
 from assignSession import *
 import reqMgrClient
 import os
@@ -56,7 +58,8 @@ for b,wfs in batches.items():
     may_have_one.update( wfs )
 
 for logtype in ['report','joblogs','condorlogs']:
-    for d in filter(None,os.popen('ls -d %s/%s/*'%(monitor_dir,logtype)).read().split('\n')):
+    #for d in filter(None,os.popen('ls -d %s/%s/*'%(monitor_dir,logtype)).read().split('\n')):
+    for d in filter(None,os.popen('ls -d %s/%s/*'%(monitor_eos_dir,logtype)).read().split('\n')):
         if not any([m in d for m in may_have_one]):
             ## that can be removed
             print d,"report file can be removed"
