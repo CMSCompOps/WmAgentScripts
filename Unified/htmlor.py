@@ -442,11 +442,15 @@ Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransfertea
     lap( 'done with staged' )
     
     lines=[]
+    batches = json.loads(open('batches.json','r').read())
+    relvals = []
+    for b in batches: relvals.extend( batches[b] )
     count_by_campaign=defaultdict(lambda : defaultdict(int))
     for wf in session.query(Workflow).filter(Workflow.status=='away').all():
         wl = getWL( wf.name )
         count_by_campaign[wl['Campaign']][int(wl['RequestPriority'])]+=1
-        lines.append("<li> %s <hr></li>"%wfl(wf,view=True,ongoing=True))
+        color = 'orange' if wf.name in relvals else 'black'
+        lines.append("<li> <font color=%s>%s</font> <hr></li>"%(color,wfl(wf,view=True,ongoing=True)))
     text_by_c=""
 
     for c in sorted(count_by_campaign.keys()):
@@ -893,6 +897,9 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 #<ul><li>Sites in use<br><a href="javascript:showhide('site_types')">[Click to show/hide]</a></li>
 #<ul>"""
     for_max_running = dataCache.get('gwmsmon_prod_site_summary')
+    upcoming_by_site = defaultdict( lambda : defaultdict(int))
+    available_ratios = defaultdict(float)
+    upcoming_ratios = defaultdict(float)
     for t in SI.types():
 #        text+="""
 #<li>%s<a href="javascript:showhide('%s')">[Click to show/hide]</a><br>
@@ -901,6 +908,14 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 #"""%( t, t, t)
         text +='<li>%s<div id="%s"><table border=1>'%( t, t )
         c=0
+
+        for team,agents in getAllAgents(reqmgr_url).items():
+            for agent in agents:
+                if not 'WMBS_INFO' in agent: continue
+                if not 'sitePendCountByPrio' in agent['WMBS_INFO']: continue
+                for site in agent['WMBS_INFO']['sitePendCountByPrio']:
+                    upcoming_by_site[team][site] += sum(agent['WMBS_INFO']['sitePendCountByPrio'][site].values())
+        
         for site in sorted(getattr(SI,t)):
             site_se = SI.CE_to_SE(site)
             cpu = SI.cpu_pledges[site] if site in SI.cpu_pledges else 'N/A'
@@ -918,11 +933,16 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
             ht_cpu = 'CPU current/max: %s / %s'%(usage,cpu)
             if site_se in upcoming:
                 u = sum(upcoming[site_se][camp] for camp in upcoming[site_se])
-                up_com = "<br><a href=GQ.json>Jobs available  %d</a> (av./pl.=%.2f)"%(u, (u/float(cpu) if usage else 0)) 
+                up_com += "<br><a href=GQ.json>Jobs available  %d</a> (av./pl.=%.2f)"%(u, (u/float(cpu) if usage else 0)) 
+                if usage: available_ratios[site] = u / float(cpu)
                 ## should there be an alarm here if a site is underdoing
                 if (usage)<(0.8*cpu) and (u > usage):
-                    ht_cpu = '<font color=red>CPU pledge: %s / %s</font>'%(usage,cpu)
-                
+                    ht_cpu = '<font color=red>%s</font>'%(ht_cpu)
+            for team in ['production','relval']:
+                if site in upcoming_by_site[team]:
+                    if upcoming_by_site[team][site]:
+                        if usage: upcoming_ratios[site] = upcoming_by_site[team][site] / float(cpu)
+                        up_com +='<br>%s jobs upcoming %d'%(team, upcoming_by_site[team][site])
             text+='<td>'
             text+='<b>%s</b><br>'%site
             #text+='<a href=http://dashb-ssb.cern.ch/dashboard/templates/sitePendingRunningJobs.html?site=%s>%s</a><br>'%(site,site)
@@ -947,6 +967,24 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
                 c+=1
         text+="</table></div></li>"
 
+
+    def outliers( val_d , trunc=0.9, N=3):
+        sub_vals = filter( lambda v :v< trunc*max(val_d.values()), val_d.values())
+        outl = {}
+        if sub_vals:
+            avg = sum(sub_vals) / len(sub_vals)
+            std = (sum([(x-avg)**2 for x in sub_vals]) / len(sub_vals))**0.5
+            print avg,std
+            outl = dict([(k,v) for (k,v) in val_d.items() if v> (avg+N*std)] )
+        return outl
+
+    print "These are the possible outliers"
+    print available_ratios
+    print outliers( available_ratios )
+    print upcoming_ratios
+    outlier_upcoming =  outliers( upcoming_ratios )
+    if outlier_upcoming:
+        sendLog('GQ','There is an inbalance of upcoming work at %s'%(', '.join(["%s (%.3f)"%(site,outlier_upcoming[site]) for site in sorted(outlier_upcoming)])),level='critical')
     def site_div_header(desc):
         div_name = 'site_'+desc.replace(' ','_')
         return """
@@ -1200,6 +1238,7 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
             by_site = defaultdict(int)
             for site in agent['WMBS_INFO']['sitePendCountByPrio']:
                 by_site[site] = sum(agent['WMBS_INFO']['sitePendCountByPrio'][site].values())
+
             top5 = sorted(by_site.items(), key = lambda v: v[1], reverse=True)[:5]
             for (site,p) in top5:
                 pend_txt+="<li> %s : %s "%( site, p)
