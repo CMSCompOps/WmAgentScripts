@@ -31,6 +31,12 @@ def rejector(url, specific, options=None):
             wfs.extend( session.query(Workflow).filter(Workflow.name.contains(line)).all())
     elif specific:
         wfs = session.query(Workflow).filter(Workflow.name.contains(specific)).all()
+        if not wfs:
+            batches = json.loads(open('batches.json').read())
+            for bname in batches:
+                if specific == bname:
+                    for wf in batches[bname]:
+                        wfs.append( session.query(Workflow).filter(Workflow.name == wf).first())
     else:
         wfs = session.query(Workflow).filter(Workflow.status == 'assistance-clone').all()
         #wfs.extend( session.query(Workflow).filter(Workflow.status == 'assistance-reject').all())
