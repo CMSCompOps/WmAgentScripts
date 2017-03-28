@@ -64,7 +64,8 @@ def injector(url, options, specific):
                 if lwfo:
                     ## we have it already
                     if not lwfo.status in ['forget','trouble','forget-unlock','forget-out-unlock']:
-                        sendLog('injector',"Should not put %s because of %s %s"%( wf, lwfo.name,lwfo.status ))
+                        wfi.sendLog('injector',"Should not put %s because of %s %s"%( wf, lwfo.name,lwfo.status ))
+                        sendLog('injector',"Should not put %s because of %s %s"%( wf, lwfo.name,lwfo.status ), level='critical')
                         print "Should not put",wf,"because of",lwfo.name,lwfo.status
                         cannot_inject.add( wf )
                         can_add = False
@@ -75,7 +76,7 @@ def injector(url, options, specific):
                     status_cache[d] = getDatasetStatus(d)
                 if status_cache[d] != 'VALID':
                     wfi.sendLog('injector',"One of the input is not VALID. %s : %s"%( d, status_cache[d]))
-                    sendLog('injector',"One of the input of %s is not VALID. %s : %s"%( wf, d, status_cache[d]))
+                    sendLog('injector',"One of the input of %s is not VALID. %s : %s"%( wf, d, status_cache[d]), level='critical')
                     can_add = False
             if not can_add: continue
             wfi.sendLog('injector',"considering %s"%wf)
