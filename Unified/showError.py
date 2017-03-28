@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 from utils import workflowInfo, siteInfo, monitor_dir, monitor_pub_dir, base_dir, global_SI, getDatasetPresence, getDatasetBlocksFraction
+base_eos_dir = "/afs/cern.ch/user/c/cmst2/Unified/"
+monitor_eos_dir = "/afs/cern.ch/user/c/cmst2/www/unified/"
+url_eos = "https://cmst2.web.cern.ch/cmst2/unified/"
+
 import json
 import sys
 import os
@@ -7,6 +11,7 @@ from collections import defaultdict
 from assignSession import *
 import time
 import optparse
+import random
 
 def parse_one(url, wfn, options=None):
 
@@ -232,7 +237,8 @@ def parse_one(url, wfn, options=None):
                         workflow = sample['workflow']
 
                         if do_CL and ((errorcode_s in expose_condor_code and expose_condor_code[errorcode_s][agent]) or do_all_error_code) and 'cern' in agent:
-                            os.system('ssh %s %s/WmAgentScripts/Unified/exec_expose.sh %s %s %s %s %s %s'%( agent, base_dir, workflow, wmbs, errorcode_s, base_dir, monitor_dir, task_short))
+                            #os.system('ssh %s %s/WmAgentScripts/Unified/exec_expose.sh %s %s %s %s %s %s'%( agent, base_dir, workflow, wmbs, errorcode_s, base_dir, monitor_dir, task_short))
+                            os.system('ssh %s %s/WmAgentScripts/Unified/exec_expose.sh %s %s %s %s %s %s'%( agent, base_eos_dir, workflow, wmbs, errorcode_s, base_eos_dir, monitor_eos_dir, task_short))
                             if errorcode_s in expose_condor_code:
                                 expose_condor_code[errorcode_s][agent]-=1
 
@@ -250,7 +256,7 @@ def parse_one(url, wfn, options=None):
                                     ## if this actually fail, let's get the file from eos using the new log mapping
                                     ## expose the content
                                     label=out['lfn'].split('/')[-1].split('.')[0]
-                                    m_dir = '%s/joblogs/%s/%s/%s/%s'%(monitor_dir, 
+                                    m_dir = '%s/joblogs/%s/%s/%s/%s'%(monitor_eos_dir, 
                                                                    wfn, 
                                                                    errorcode_s,
                                                                    task_short,
@@ -266,7 +272,7 @@ def parse_one(url, wfn, options=None):
                                             #print trunc
                                             head = tail = 1000
                                             os.system('(head -%d ; echo;echo;echo "<snip>";echo;echo ; tail -%d ) < %s > %s'%(head, tail, fn, trunc))
-                                            os.system('mv %s %s'%(trunc, fn))
+                                            os.system('mv %s %s.trunc'%(trunc, fn))
 
         #print task
         #print json.dumps( total_count, indent=2)
@@ -337,9 +343,9 @@ def parse_one(url, wfn, options=None):
         for code in sorted(all_codes):
             html+='<th><a href="#%s">%s</a>'%(code,code)
             if str(code) in expose_archive_code or do_all_error_code:
-                html += ' <a href=../joblogs/%s/%s/%s>, JL</a>'%( wfn, code, task_short )
+                html += ' <a href=%s/joblogs/%s/%s/%s>, JL</a>'%( url_eos, wfn, code, task_short )
             if str(code) in expose_condor_code or do_all_error_code:
-                html += ' <a href=../condorlogs/%s/%s/%s>, CL</a>'%( wfn, code, task_short )
+                html += ' <a href=%s/condorlogs/%s/%s/%s>, CL</a>'%( url_eos, wfn, code, task_short )
             html += '</th>'
 
         html+='<th>Total jobs</th><th>Site Ready</th>'
@@ -441,6 +447,15 @@ def parse_one(url, wfn, options=None):
 
     return task_error_site_count, one_explanation
 
+def parse_many(url, options):
+    wfos = []
+    wfos.extend(session.query(Workflow).filter(Workflow.status == 'away').all())
+    wfos.extend(session.query(Workflow).filter(Workflow.status.startswith('assistance')).all())
+    random.shuffle( wfos ) 
+    for wfo in wfos:
+        parse_one( url, wfo.name, options)
+        
+        
 def parse_all(url, options=None):
     explanations = defaultdict(set)
     alls={}
@@ -476,6 +491,7 @@ if __name__=="__main__":
     parser.add_option('--no_JL',help="Do not get the job logs", action="store_true",default=False)
     parser.add_option('--no_CL',help="Do not get the condor logs", action="store_true",default=False)
     parser.add_option('--fast',help="Retrieve from cache and no logs retrieval", action="store_true", default=False)
+    parser.add_option('--many',help="Retrieve for all ongoing and needing help", action="store_true", default=False)
     parser.add_option('--cache',help="The age in second of the error report before reloading them", default=0, type=float)
     parser.add_option('--workflow','-w',help="The workflow to make the error report of",default=None)
     parser.add_option('--expose',help="Number of logs to retrieve",default=1,type=int)
@@ -489,5 +505,7 @@ if __name__=="__main__":
 
     if options.workflow:
         parse_one(url, options.workflow, options)
+    elif options.many:
+        parse_many(url, options)
     else:
         parse_all(url, options)
