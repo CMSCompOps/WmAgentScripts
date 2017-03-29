@@ -57,14 +57,16 @@ def htmlor( caller = ""):
             wl_pid = 'task_'+pid
 
         
-        text=', '.join([
+        text = "<div>%s</div> "%wfn
+        #text=', '.join([
                 #wfn,
                 #'<a href="https://cmsweb.cern.ch/reqmgr/view/details/%s" target="_blank">%s</a> '%(wfn,wfn),
                 #'<table><tr><td>%s</td></tr></table>'%(wfn),
                 #'<span>%s</span>'%(wfn),
-                "%s "%wfn,
-                '(%s) <br>'%wfs])
+                #"<div>%s</div> "%wfn,
+                #'(%s)'%wfs])
         text+=', '.join([
+                '(%s)'%wfs,
                 '<a href="https://%s/reqmgr2/fetch?rid=%s" target="_blank">dts</a>'%(reqmgr_url,wfn),
                 ##'<a href="https://cmsweb.cern.ch/reqmgr/view/details/%s" target="_blank">dts-req1</a>'%wfn,
                 #TOFIX '<a href=https://cmsweb.cern.ch/reqmgr/view/showWorkload?requestName=%s target="_blank">wkl</a>'%wfn,
