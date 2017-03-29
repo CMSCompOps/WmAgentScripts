@@ -266,13 +266,14 @@ def parse_one(url, wfn, options=None):
                                     ## truncate the content ??
                                     for fn in os.popen('find %s -type f'%(m_dir)).read().split('\n'):
                                         if not fn: continue
+                                        if not fn.endswith('log'): continue
                                         if any([p in fn for p in ['stdout.log']]):
                                             trunc = '/tmp/%s/%s'%(os.getenv('USER'), label)
                                             #print fn
                                             #print trunc
                                             head = tail = 1000
                                             os.system('(head -%d ; echo;echo;echo "<snip>";echo;echo ; tail -%d ) < %s > %s'%(head, tail, fn, trunc))
-                                            os.system('mv %s %s.trunc'%(trunc, fn))
+                                            os.system('mv %s %s.trunc.txt'%(trunc, fn))
 
         #print task
         #print json.dumps( total_count, indent=2)
