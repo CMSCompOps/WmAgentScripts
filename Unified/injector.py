@@ -100,6 +100,10 @@ def injector(url, options, specific):
 
     no_replacement = set()
 
+    #print "getting all transfers"
+    #all_transfers=session.query(Transfer).all()
+    #print "go!"
+
     ## pick up replacements
     for wf in session.query(Workflow).filter(Workflow.status == 'trouble').all():
         print wf.name
@@ -153,20 +157,17 @@ def injector(url, options, specific):
                 sendLog('injector',"getting %s as replacement of %s"%( new_wf.name, wf.name ))
                 wf.status = 'forget'
 
-            for tr in session.query(Transfer).all():
-                if wf.id in tr.workflows_id:
-                    sw = copy.deepcopy(tr.workflows_id)
-                    sw.remove( wf.id)
-                    sw.append(new_wf.id)
-                    tr.workflows_id = sw
-                    print tr.phedexid,"got",new_wf.name
-                    if new_wf.status != 'away':
-                        print "\t setting it considered"
-                        new_wf.status = 'considered'
-                    if tr.phedexid<0: ## set it back to positive
-                        tr.phedexid = -tr.phedexid
-                    session.commit()
-                        
+            for tr in session.query(TransferImp).filter( TransferImp.workflow_id == wf.id).all():
+                ## get all transfer working for the old workflow
+                existing = session.query(TransferImp).filter( TransferImp.phedexid == tr.phedexid).filter( TransferImp.workflow_id == new_wf.id).all()
+                tr.active = False ## disable the old one
+                if not existing:
+                    ## create the transfer object for the new dependency
+                    tri = TransferImp( phedexid = tr.phedexid,
+                                       workflow = new_wf)
+                    session.add( tri )
+                session.commit()
+
 
         ## don't do that automatically
         #wf.status = 'forget'

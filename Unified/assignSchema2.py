@@ -44,6 +44,14 @@ class Transfer(Base):
     workflows_id = Column(PickleType)
     #status = Column(String(30))  ## to be added ?
 
+class TransferImp(Base):
+    __tablename__ = 'transferimp'
+    id = Column(Integer, Sequence('transferimp_id_seq'), primary_key=True)
+    phedexid = Column(Integer)
+    workflow_id = Column(Integer,ForeignKey('workflow.id'))
+    workflow = relationship(Workflow)
+    active = Column(Boolean, default=True)
+
 class Lock(Base):
     __tablename__ = 'lock'
     id = Column(Integer, Sequence('lock_id_seq'), primary_key=True)

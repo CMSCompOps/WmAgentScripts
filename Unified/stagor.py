@@ -68,9 +68,9 @@ def stagor(url,specific =None, options=None):
     time_point.sub_lap = time_point.lap = time_point.start = time.mktime(time.gmtime())
 
 
-    ## pop all that are now in negative values
+    ## pop all that are now in inactive
     for phedexid in cached_transfer_statuses.keys():
-        transfers = session.query(Transfer).filter(Transfer.phedexid==int(phedexid)).all()
+        transfers = session.query(TransferImp).filter(TransferImp.phedexid==int(phedexid)).filter(TransferImp.active==True).all()
         if not transfers:
             print phedexid,"does not look relevant to be in cache anymore. poping"
             print cached_transfer_statuses.pop( phedexid )
@@ -114,44 +114,38 @@ def stagor(url,specific =None, options=None):
     endpoint_incompleted = defaultdict(set)
     #endpoint = defaultdict(set)
     send_back_to_considered = set()
-    ## phedexid are set negative when not relevant anymore
-    # probably there is a db schema that would allow much faster and simpler query
-    for transfer in session.query(Transfer).filter(Transfer.phedexid>0).all():
-        if specific  and str(transfer.phedexid)!=str(specific): continue
 
-        skip=True
-        for wfid in transfer.workflows_id:
-            tr_wf = session.query(Workflow).get(wfid)
-            if tr_wf: 
-                if tr_wf.status == 'staging':
-                    sendLog('stagor',"\t%s is staging for %s"%(transfer.phedexid, tr_wf.name))
-                    skip=False
 
-        if skip: 
-            sendLog('stagor',"setting %s to negative value"%transfer.phedexid)
-            transfer.phedexid = -transfer.phedexid
-            session.commit()
-            continue
-        if transfer.phedexid<0: continue
+    ## first check if anything is inactive
+    all_actives = set([transfer.phedexid for transfer in session.query(TransferImp).filter(TransferImp.active).all()])
+    for active_phedexid in all_actives:
+        skip = True
+        transfers_phedexid = session.query(TransferImp).filter(TransferImp.phedexid == active_phedexid).all()
+        for imp in transfers_phedexid:
+            if imp.workflow.status == 'staging':
+                skip =False
+                sendLog('stagor',"\t%s is staging for %s"%(imp.phedexid, imp.workflow.name))
+        if skip:
+            sendLog('stagor',"setting %s inactive" % active_phedexid)
+            for imp in transfers_phedexid:
+                imp.active = False
+        session.commit()
 
-        ## check the status of transfers
-        #checks = checkTransferApproval(url,  transfer.phedexid)
-        #approved = all(checks.values())
-        #if not approved:
-        #    sendLog('stagor', "%s is not yet approved"%transfer.phedexid)
-        #    approveSubscription(url, transfer.phedexid)
-        #    continue
+    all_actives = sorted(set([transfer.phedexid for transfer in session.query(TransferImp).filter(TransferImp.active).all()]))
+    for phedexid in all_actives:
+
+        if specific: continue
 
         ## check on transfer completion
         not_cached = False
-        if str(transfer.phedexid) in cached_transfer_statuses:
+        if str(phedexid) in cached_transfer_statuses:
             ### use a cache for transfer that already looked done
-            sendLog('stagor',"read %s from cache"%transfer.phedexid)
-            checks = cached_transfer_statuses[str(transfer.phedexid)]
+            sendLog('stagor',"read %s from cache"%phedexid)
+            checks = cached_transfer_statuses[str(phedexid)]
         else:
             ## I actually would like to avoid that all I can
-            sendLog('stagor','Performing spurious transfer check on %s'% transfer.phedexid, level='critical')
-            checks = checkTransferStatus(url, transfer.phedexid, nocollapse=True)
+            sendLog('stagor','Performing spurious transfer check on %s'% phedexid, level='critical')
+            checks = checkTransferStatus(url, phedexid, nocollapse=True)
             if not checks:
                 ## this is going to bias quite heavily the rest of the code. we should abort here
                 sendLog('stagor','Ending stagor because of skewed input from checkTransferStatus', level='critical')
@@ -162,51 +156,48 @@ def stagor(url,specific =None, options=None):
             #checks = {}
             #not_cached = True
 
-        time_point("Check transfer status %s"% transfer.phedexid, sub_lap=True)            
+        time_point("Check transfer status %s"% phedexid, sub_lap=True)            
 
         ## just write this out
-        transfer_statuses[str(transfer.phedexid)] = copy.deepcopy(checks)
+        transfer_statuses[str(phedexid)] = copy.deepcopy(checks)
 
         if not specific:
             for dsname in checks:
                 if not dsname in done_by_input: done_by_input[dsname]={}
                 if not dsname in completion_by_input: completion_by_input[dsname] = {}
-                done_by_input[dsname][transfer.phedexid]=all(map(lambda i:i>=good_enough, checks[dsname].values()))
-                completion_by_input[dsname][transfer.phedexid]=checks[dsname].values()
+                done_by_input[dsname][phedexid]=all(map(lambda i:i>=good_enough, checks[dsname].values()))
+                completion_by_input[dsname][phedexid]=checks[dsname].values()
         if checks:
-            sendLog('stagor',"Checks for %s are %s"%( transfer.phedexid, [node.values() for node in checks.values()]))
+            sendLog('stagor',"Checks for %s are %s"%( phedexid, [node.values() for node in checks.values()]))
             done = all(map(lambda i:i>=good_enough,list(itertools.chain.from_iterable([node.values() for node in checks.values()]))))
         else:
             ## it is empty, is that a sign that all is done and away ?
             if not_cached:
                 print "Transfer status was not cached"
             else:
-                print "ERROR with the scubscriptions API of ",transfer.phedexid
+                print "ERROR with the scubscriptions API of ",phedexid
                 print "Most likely something else is overiding the transfer request. Need to work on finding the replacement automatically, if the replacement exists"
             done = False
 
-        ## the thing above is NOT giving the right number
-        #done = False
-
-        for wfid in transfer.workflows_id:
-            tr_wf = session.query(Workflow).get(wfid)
+        transfers_phedexid = session.query(TransferImp).filter(TransferImp.phedexid == phedexid).all()
+        for imp in transfers_phedexid:
+            tr_wf = imp.workflow
             if tr_wf:# and tr_wf.status == 'staging':  
                 if not tr_wf.id in done_by_wf_id: done_by_wf_id[tr_wf.id]={}
-                done_by_wf_id[tr_wf.id][transfer.phedexid]=done
-            ## for those that are in staging, and the destination site is in drain
-            #if not done and tr_wf.status == 'staging':
-                
+                done_by_wf_id[tr_wf.id][phedexid]=done
+            if done:
+                imp.active = False
+                session.commit()
 
         for ds in checks:
             for s,v in checks[ds].items():
                 dataset_endpoints[ds].add( s )
 
         if done:
-            ## transfer.status = 'done'
-            sendLog('stagor',"%s is done"%transfer.phedexid)
-            cached_transfer_statuses[str(transfer.phedexid)] = copy.deepcopy(checks)
+            sendLog('stagor',"%s is done"%phedexid)
+            cached_transfer_statuses[str(phedexid)] = copy.deepcopy(checks)
         else:
-            sendLog('stagor',"%s is not finished %s"%(transfer.phedexid, pprint.pformat( checks )))
+            sendLog('stagor',"%s is not finished %s"%(phedexid, pprint.pformat( checks )))
             ##pprint.pprint( checks )
             ## check if the destination is in down-time
             for ds in checks:

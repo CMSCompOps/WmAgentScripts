@@ -478,27 +478,23 @@ def transferor(url ,specific = None, talk=True, options=None):
                             break
 
                 for latching in latching_on_transfers:
-                    tfo = session.query(Transfer).filter(Transfer.phedexid == int(latching)).first()
-                    if not tfo:
-                        tfo = session.query(Transfer).filter(Transfer.phedexid == -int(latching)).first()
-                        
-                    if not tfo:
-                        tfo = Transfer( phedexid = latching)
-                        tfo.workflows_id = []
-                        session.add(tfo)
-                    else:
-                        tfo.phedexid = latching ## make it positive ever
 
-                    if not wfo.id in tfo.workflows_id:
-                        print "adding",wfo.id,"to",tfo.id,"with phedexid",latching
-                        l = copy.deepcopy( tfo.workflows_id )
-                        l.append( wfo.id )
-                        tfo.workflows_id = l
-                    if not options.test:
-                        #session.commit()
-                        pass
+                    existings = session.query(TransferImp).filter( TransferImp.phedexid == int(latching)).filter( TransferImp.workflow_id == wfo.id ).all()
+                    if not existings:
+                        tri = TransferImp( phedexid = int(latching),
+                                           workflow = wfo )
+                        print "adding",wfo.id,"with phedexid",latching
+                        session.add( tri )
                     else:
-                        session.flush() ## regardless of commit later on, we need to let the next wf feeding on this transfer to see it in query
+                        for existing in existings:
+                            existing.active = True
+
+                    session.flush()
+                    #if not options.test:
+                    #    #session.commit()
+                    #    pass
+                    #else:
+                    #    session.flush() ## regardless of commit later on, we need to let the next wf feeding on this transfer to see it in query
                     can_go = False
                     transfer_sizes[prim] = input_sizes[prim]
                     staging = True
@@ -721,27 +717,20 @@ def transferor(url ,specific = None, talk=True, options=None):
             sendLog('transferor','Could not make a replica request for items %s to site %s'%(items_to_transfer,site),level='critical')
             continue
         for phedexid in [o['id'] for o in result['phedex']['request_created']]:
-            new_transfer = session.query(Transfer).filter(Transfer.phedexid == int(phedexid)).first()
-            if not new_transfer:
-                new_transfer = session.query(Transfer).filter(Transfer.phedexid == -int(phedexid)).first()
             print phedexid,"transfer created"
-            if not new_transfer:
-                new_transfer = Transfer( phedexid = phedexid)
-                session.add( new_transfer )                
-            else:
-                new_transfer.phedexid = phedexid ## make it positive again
-
-            new_transfer.workflows_id = set()
             for transfering in list(set(map(lambda it : it.split('#')[0], items_to_transfer))):
-                new_transfer.workflows_id.update( workflow_dependencies[transfering] )
-            new_transfer.workflows_id = list(new_transfer.workflows_id)
-            wf_id_in_prestaging.update(new_transfer.workflows_id)
+                wfid = workflow_dependencies[transfering]
+                new_transfer = session.query(TransferImp).filter(TransferImp.phedexid == int(phedexid)).filter( TransferImp.workflow_id == wfid ).first()
+                if not new_transfer:
+                    new_transfer = TransferImp( phedexid = phedexid,
+                                                workflow = session.query(Workflow).get( wfid ))
+                    session.add( new_transfer )
+                else:
+                    new_transfer.active = True
+                    
+
+                wf_id_in_prestaging.update(new_transfer.workflow_id)
             #session.commit()
-            ## auto approve it
-            if execute:
-                #approved = approveSubscription(url, phedexid, [site_se])
-                ## it's been auto-approved above
-                pass
 
     for wfid in wf_id_in_prestaging:
         tr_wf = session.query(Workflow).get(wfid)

@@ -342,19 +342,34 @@ Worflow waiting in staging (%d) <a href=logs/transferor/last.log target=_blank>l
     text="<ul>"
     count=0
     transfer_per_wf = defaultdict(list)
-    for ts in session.query(Transfer).filter(Transfer.phedexid>0).all():
+    all_active = sorted(set([ts.phedexid for ts in session.query(TransferImp).filter(TransferImp.active == True).all()]))
+    #for ts in session.query(TransferImp).filter(TransferImp.active == True).all():
+    #for ts in session.query(Transfer).filter(Transfer.phedexid>0).all():
+    for phedexid in all_active:
         hide = True
         t_count = 0
         stext=""
-        for pid in ts.workflows_id:
-            w = session.query(Workflow).get(pid)
+        for imp in session.query(TransferImp).filter(TransferImp.phedexid == phedexid).all():
+            w = imp.workflow
             if not w: continue
             hide &= (w.status != 'staging' )
             if w.status in ['considered','staging','staged']:
                 stext += "<li> %s </li>\n"%( wfl(w,status=True))
                 transfer_per_wf[w].append( ts.phedexid )
                 t_count +=1
-        stext = '<li> %s serves %d workflows<br><a href="javascript:showhide(\'%s\')">[show/hide]</a> <div id="%s" style="display:none;"><ul>\n'%( phl(ts.phedexid), t_count, ts.phedexid, ts.phedexid ) + stext
+        stext = '<li> %s serves %d workflows<br><a href="javascript:showhide(\'%s\')">[show/hide]</a> <div id="%s" style="display:none;"><ul>\n'%( phl(phedexid),
+                                                                                                                                                   t_count,
+                                                                                                                                                   phedexid,
+                                                                                                                                                   phedexid) + stext
+        #for pid in ts.workflows_id:
+        #    w = session.query(Workflow).get(pid)
+        #    if not w: continue
+        #    hide &= (w.status != 'staging' )
+        #    if w.status in ['considered','staging','staged']:
+        #        stext += "<li> %s </li>\n"%( wfl(w,status=True))
+        #        transfer_per_wf[w].append( ts.phedexid )
+        #        t_count +=1
+        #stext = '<li> %s serves %d workflows<br><a href="javascript:showhide(\'%s\')">[show/hide]</a> <div id="%s" style="display:none;"><ul>\n'%( phl(ts.phedexid), t_count, ts.phedexid, ts.phedexid ) + stext
         
         stext+="</ul></li>\n"
         if hide:
@@ -984,7 +999,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     print upcoming_ratios
     outlier_upcoming =  outliers( upcoming_ratios )
     if outlier_upcoming:
-        sendLog('GQ','There is an inbalance of upcoming work at %s'%(', '.join(["%s (%.3f)"%(site,outlier_upcoming[site]) for site in sorted(outlier_upcoming)])),level='critical')
+        sendLog('GQ','There is an inbalance of upcoming work at %s'%(', '.join([site for site in sorted(outlier_upcoming.keys())])),level='critical')
     def site_div_header(desc):
         div_name = 'site_'+desc.replace(' ','_')
         return """
