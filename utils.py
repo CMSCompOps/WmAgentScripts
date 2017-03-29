@@ -2232,6 +2232,20 @@ def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, ve
             print "\twaiting a bit for retry"
             print e
             time.sleep(1)
+
+
+    deletes = {}
+    now = time.mktime(time.gmtime())
+    for item in items:
+        phedex_id = item['id']
+        if item['type']!='delete': continue
+        #if item['approval']!='approved': continue
+        for node in item['node']:
+            stamp = int(node['time_decided']) if node['time_decided'] else now
+            #if node['decision'] != 'approved': continue ## a delete is a delete
+            if not node['name'] in deletes or deletes[node['name']]< stamp:
+                ## add it if not or later delete
+                deletes[node['name']] = stamp
     
     destinations = defaultdict(set)
     all_destinations = set()
@@ -2243,10 +2257,15 @@ def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, ve
             if vetoes and any([req['name'].endswith(v) for v in vetoes]): continue
             if not req['time_decided']: continue
             if not req['decision'] in ['approved']: continue
+
+            if req['name'] in deletes and int(req['time_decided'])< deletes[req['name']]:
+                continue
+
             all_destinations.add( req['name'] )
     #print sorted( all_destinations)
 
     ## check first by full dataset
+    print "getting all d-sub for dataset",dataset
     r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?dataset=%s'%(dataset))
     r2=conn.getresponse()
     result = json.loads(r2.read())['phedex']['dataset']
@@ -2256,21 +2275,23 @@ def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, ve
         for sub in ds['subscription']:
             phedex_id = sub['request']
             site = sub['node']
-            if sub['percent_bytes'] == 100:
+            if True:
                 ## it is there and in full
                 if vetoes and any([site.endswith(v) for v in vetoes]): continue
                 for b in all_block_names:
-                    destinations[site].add( (b, 100, phedex_id) )
+                    destinations[site].add( (b, sub['percent_bytes'], phedex_id) )
                 in_full.add( site )
                 
     #print sorted(all_destinations)
     #print sorted(in_full)
     ## then check block by block at the site not already OK.
     for site in (all_destinations-in_full):
+        if not site.startswith('T'): continue
         #for block in all_block_names:
         #    r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?block=%s&node=%s'%(block, site))
         #    r2=conn.getresponse()
         #    result = json.loads(r2.read())
+        print "getting all b-sub for dataset",dataset,'@',site
         try:
             url='/phedex/datasvc/json/prod/subscriptions?block=%s%%23*&node=%s&collapse=n'%(dataset, site)
         #print "querying all block at",site,dataset,url
@@ -2495,8 +2516,9 @@ def getOldDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoe
 def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=None, within_sites=None, complement=True):
     try:
         return getBetterDatasetDestinations(url, dataset, only_blocks, group, vetoes, within_sites, complement)
-    except:
+    except Exception as e:
         print "failed once"
+        print str(e)
         sendLog('getDatasetDestinations','Failed the new implementation', level='critical')
         try:
             return getOldDatasetDestinations(url, dataset, only_blocks, group, vetoes, within_sites, complement)
