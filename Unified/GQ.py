@@ -116,7 +116,7 @@ for wf in wfs:
                         #print task,agent,tinfo['status']
                         pass
 
-        if not wqe['Status'] in ['Available', 'Acquired']:#, 'Running']: 
+        if not wqe['Status'] in ['Available', 'Acquired']:#,'Running']: 
             #print  wqe['Status']
             continue
         camp =wfi.getCampaigns()[0] if len(wfi.getCampaigns()) else None
