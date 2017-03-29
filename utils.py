@@ -2275,12 +2275,12 @@ def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, ve
         for sub in ds['subscription']:
             phedex_id = sub['request']
             site = sub['node']
-            if True:
-                ## it is there and in full
-                if vetoes and any([site.endswith(v) for v in vetoes]): continue
-                for b in all_block_names:
-                    destinations[site].add( (b, sub['percent_bytes'], phedex_id) )
-                in_full.add( site )
+            if within_sites and not site in within_sites: continue
+            ## it is there and in full
+            if vetoes and any([site.endswith(v) for v in vetoes]): continue
+            for b in all_block_names:
+                destinations[site].add( (b, sub['percent_bytes'], phedex_id) )
+            in_full.add( site )
                 
     #print sorted(all_destinations)
     #print sorted(in_full)
