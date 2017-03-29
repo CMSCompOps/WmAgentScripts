@@ -35,7 +35,8 @@ def equalizor(url , specific = None, options=None):
         if not region in ['US'
                           ,'DE','IT','FR',
                           'ES',
-                          'UK' ### latest addition
+                          'UK',
+                          'RU'### latest addition
                           ]: continue
         regions[region] = [region] 
 
@@ -84,8 +85,8 @@ def equalizor(url , specific = None, options=None):
         mapping['T1_IT_CNAF'].append('T0_CH_CERN')
         mapping['T1_FR_CCIN2P3'].append('T0_CH_CERN')
         mapping['T1_DE_KIT'].append('T0_CH_CERN')
-        ## temptatively
-        mapping['T0_CH_CERN'].append( 'T2_CH_CERN' )
+    ## temptatively
+    mapping['T0_CH_CERN'].append( 'T2_CH_CERN' )
 
     ## all europ can read from CERN
     for reg in ['IT','DE','UK','FR','BE','ES']:
@@ -93,7 +94,7 @@ def equalizor(url , specific = None, options=None):
         pass
 
     ## all europ T1 among each others
-    europ_t1 = [site for site in SI.sites_ready if site.startswith('T1') and any([reg in site for reg in ['IT','DE','UK','FR','ES']])]
+    europ_t1 = [site for site in SI.sites_ready if site.startswith('T1') and any([reg in site for reg in ['IT','DE','UK','FR','ES','RU']])]
     print europ_t1
     for one in europ_t1:
         for two in europ_t1:
