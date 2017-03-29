@@ -167,16 +167,20 @@ def closor(url, specific=None, options=None):
     by_batch = {}
     batch_semaphore = defaultdict(int)
     for bname in batches:
-        for wf in batches[bname]:
-            by_batch[wf] = bname
+        for pid in batches[bname]:
+            ## temporary check for adding prepid in batches
+            by_batch[pid] = bname
 
     ## first go over everything and give it an extra go from batch
     for wfo in wfs:
+        wfi = workflowInfo(url, wfo.name )
         ## we want all the wf of the same batch to be in the close status before giving it a full go
-        if wfo.name in by_batch:
-            batch_semaphore[by_batch[wfo.name]] += 1
-            
+        pid = wfi.request['PrepID']
+        if pid in by_batch:
+            batch_semaphore[by_batch[pid]] += 1
+
     batch_go = dict([(batch_name, len(batch_content) and len(batch_content)== batch_semaphore[batch_name]) for batch_name,batch_content in batches.items()])
+
     batch_warnings = defaultdict(set)
     batch_goodness = UC.get("batch_goodness")
 
@@ -189,8 +193,9 @@ def closor(url, specific=None, options=None):
         wfo.wm_status = wfi.request['RequestStatus']
 
         has_batch_go = False
-        if wfo.name in by_batch and not batch_go[by_batch[wfo.name]]: 
-            wfi.sendLog('closor', 'Cannot close for now because the batch %s is not all close'% by_batch[wfo.name])
+        prepid = wfi.request['PrepID']
+        if prepid in by_batch and not batch_go[by_batch[prepid]]: 
+            wfi.sendLog('closor', 'Cannot close for now because the batch %s is not all close'% by_batch[prepid])
             continue
 
 
@@ -439,6 +444,8 @@ def closor(url, specific=None, options=None):
     if held:
         sendLog('closor',"the workflows below are held up \n%s"%("\n".join( sorted(held) )), level='critical')
 
+
+    batches = json.loads(open('batches.json').read())
     for bname,go in batch_go.items():
         if go:
             subject = "Release Validation Samples Batch %s"% bname
@@ -467,7 +474,9 @@ This is an automated message.
       issues)
             to = ['hn-cms-relval@cern.ch']
             sendEmail(subject, text, destination=to )
-            
+            batches.pop( bname )
+    ## pop the done batches
+    ###open('batches.json','w').write( json.dumps( batches, indent=2))         
 
 
 

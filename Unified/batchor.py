@@ -22,10 +22,14 @@ def batchor( url ):
     by_hi_campaign = defaultdict(set)
     for wf in wfs:
         print "Relval:",wf['RequestName'], wf['Campaign']
-        by_campaign[wf['Campaign']].add( wf['RequestName'] )
+        #by_campaign[wf['Campaign']].add( wf['RequestName'] )
+        by_campaign[wf['Campaign']].add( wf['PrepID'] )
+
+
     for wf in hi_wfs:
         print "HI Relval:",wf['RequestName'], wf['Campaign']
-        by_hi_campaign[wf['Campaign']].add( wf['RequestName'] )
+        #by_hi_campaign[wf['Campaign']].add( wf['RequestName'] )
+        by_hi_campaign[wf['Campaign']].add( wf['PrepID'] )
         
     default_setup = {
         "go" :True,
@@ -48,10 +52,13 @@ def batchor( url ):
     for campaign in by_campaign:
         ## get a bunch of information
         setup  = copy.deepcopy( default_setup )
+
+        if 'cc7' in campaign: setup["parameters"]["SiteWhitelist"] = ["T2_US_Nebraska"]
         add_on[campaign] = setup
         sendLog('batchor','Adding the relval campaigns %s with parameters \n%s'%( campaign, json.dumps( setup, indent=2)),level='critical')
         if not campaign in batches: batches[campaign] = []
         batches[campaign] = list(set(list(copy.deepcopy( by_campaign[campaign] )) + batches[campaign] ))
+
     for campaign in by_hi_campaign:
         ## get a bunch of information
         setup  = copy.deepcopy( default_hi_setup )
@@ -74,8 +81,6 @@ def batchor( url ):
     for new_campaign in list(set(add_on.keys())-set(campaigns.keys())):
         ## this is new, and can be announced as such
         print new_campaign,"is new stuff"
-        workflows = by_campaign[new_campaign]
-        requester = list(set([wf.split('_')[0] for wf in workflows]))
         subject = "Request of RelVal samples batch %s"% new_campaign
         text="""Dear all, 
 A new batch of relval workflows was requested.
@@ -84,18 +89,12 @@ Batch ID:
 
 %s
 
-Requestor:
-
-%s
-
 Details of the workflows:
 
 https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?campaign=%s
 
 This is an automated message"""%( new_campaign, 
-                                  ', '.join(requester),
                                   new_campaign,
-                                  #'\n'.join( sorted(workflows) ) 
                                   )
 
 
