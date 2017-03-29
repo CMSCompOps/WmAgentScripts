@@ -229,7 +229,7 @@ def assignor(url ,specific = None, talk=True, options=None):
             #sites_allowed = [site for site in sites_allowed if any([osite.startswith(site) for osite in one_secondary_locations])]
             sites_allowed = [site for site in sites_allowed if SI.CE_to_SE(site) in one_secondary_locations]
             
-        wfh.sendLog('assignor',"From secondary requirement, now Allowed%s"%sorted(sites_allowed))
+        wfh.sendLog('assignor',"From/after secondary requirement, now Allowed%s"%sorted(sites_allowed))
 
         initial_sites_allowed = copy.deepcopy( sites_allowed ) ## keep track of this, after secondary input location restriction : that's how you want to operate it
 
@@ -251,11 +251,17 @@ def assignor(url ,specific = None, talk=True, options=None):
                 print prim
                 print json.dumps(presence, indent=2)
             available_fractions[prim] =  getDatasetBlocksFraction(url, prim, sites = [SI.CE_to_SE(site) for site in sites_allowed] , only_blocks = blocks)
-            #sites_all_data = [site for site in sites_with_data if any([osite.startswith(site) for osite in [psite for (psite,(there,frac)) in presence.items() if there]])]
-            #sites_with_data = [site for site in sites_with_data if any([osite.startswith(site) for osite in [psite for (psite,frac) in presence.items() if frac[1]>90.]])]
+            if primary_aaa:
+                available_fractions[prim] =  getDatasetBlocksFraction(url, prim, only_blocks = blocks)
+
             sites_all_data = [site for site in sites_with_data if SI.CE_to_SE(site) in [psite for (psite,(there,frac)) in presence.items() if there]]
+            if primary_aaa:
+                sites_all_data = list(set([SI.SE_to_CE(psite) for (psite,(there,frac)) in presence.items() if there]))
             sites_with_data = [site for site in sites_with_data if SI.CE_to_SE(site) in [psite for (psite,frac) in presence.items() if frac[1]>90.]]
             sites_with_any_data = [site for site in sites_with_any_data if SI.CE_to_SE(site) in presence.keys()]
+            if primary_aaa:
+                sites_with_any_data = list(set([SI.SE_to_CE(psite) for psite in presence.keys()]))
+
             wfh.sendLog('assignor',"Holding the data but not allowed %s"%sorted(list(set([se_site for se_site in presence.keys() if not SI.SE_to_CE(se_site) in sites_allowed]))))
             if primary_locations==None:
                 primary_locations = presence.keys()
