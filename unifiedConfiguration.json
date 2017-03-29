@@ -4,7 +4,7 @@
    "description" : "The list of people that get the emails notifications"
  },
  "site_for_overflow": {
-   "value" : ["T0_CH_CERN",
+   "value" : ["nono_T0_CH_CERN",
               "T2_CH_CERN_HLT"],
    "description" : "The sites that we set to overflow and require a specific treatment"
  },
@@ -222,7 +222,7 @@
   },
   "user_relval":{
    "description" : "The users from which we expect relval requests",
-   "value" : ["fabozzi"]
+   "value" : ["fabozzi","nwickram","bsutar","rverma"]
   },
   "batch_goodness":{
    "description" : "Level below which to include a note in the batch report",
