@@ -863,6 +863,22 @@ class docCache:
             'cachefile' : None,
             'default' : ""
             }
+        self.cache['site_queues'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration(),
+            'getter' : lambda : getNodesQueue('cmsweb-testbed.cern.ch'),
+            'cachefile' : None,
+            'default' : ""
+            }
+        self.cache['phedex_nodes'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration(),
+            'getter' : lambda : getNodesId('cmsweb.cern.ch'),
+            'cachefile' : None,
+            'default' : ""
+            }
         for cat in ['1','2','m1','m3','m4','m5','m6']:
             self.cache['stuck_cat%s'%cat] = {
                 'data' : None,
@@ -976,14 +992,17 @@ def getNodeUsage(url, node):
 
 def getNodeQueue(url, node):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    r1=conn.request("GET",'/phedex/datasvc/json/prod/nodeusage?node=%s'%node)
+    r1=conn.request("GET",'/phedex/datasvc/json/prod/nodeusagehistory?node=%s'%node)
     r2=conn.getresponse()
     result = json.loads(r2.read())
+    print result
+    missing = 0
     if len(result['phedex']['node']):
-        s= sum([node['miss_bytes'] for node in result['phedex']['node']])
-        return int(s / 1023.**4) #in TB
-    else:
-        return None
+        for node in result['phedex']['node']:    
+            for usage in node['usage']:
+                missing += int(usage['miss_bytes'] / 1023.**4) #in TB
+        return missing
+    return None
 
 def getNodesQueue(url):
     ret = defaultdict(int)
@@ -1084,6 +1103,10 @@ class siteInfo:
             self.all_sites = []
             
             self.sites_banned = UC.get('sites_banned')
+            
+            sites_full = json.loads(open('sites_full.json').read())
+            ### ban or not things that have a lot more upcoming than normal
+            self.sites_banned.extend ( sites_full )
 
             #data = dataCache.get('ssb_158') ## 158 is the site readyness metric
             data = dataCache.get('ssb_237') ## 237 is the site readyness metric
@@ -1116,6 +1139,12 @@ class siteInfo:
         self.sites_T3s = [ s for s in self.sites_ready if s.startswith('T3_')]
         self.sites_T2s = [ s for s in self.sites_ready if s.startswith('T2_')]
         self.sites_T1s = [ s for s in self.sites_ready if (s.startswith('T1_') or s.startswith('T0_'))] ## put the T0 in the T1 : who cares
+
+        self.sites_T3s_all = [ s for s in self.all_sites if s.startswith('T3_')]
+        self.sites_T2s_all = [ s for s in self.all_sites if s.startswith('T2_')]
+        self.sites_T1s_all = [ s for s in self.all_sites if s.startswith('T1_') or s.startswith('T0_')]
+        self.sites_T0s_all = [ s for s in self.all_sites if s.startswith('T0_')]
+
         self.sites_AAA = list(set(self.sites_ready) - set(['T2_CH_CERN_HLT']))
         ## could this be an SSB metric ?
         self.sites_with_goodIO = UC.get('sites_with_goodIO')
@@ -1143,6 +1172,7 @@ class siteInfo:
 
         self.storage = defaultdict(int)
         self.disk = defaultdict(int)
+        self.queue = defaultdict(int)
         self.free_disk = defaultdict(int)
         self.quota = defaultdict(int)
         self.locked = defaultdict(int)
@@ -1197,6 +1227,7 @@ class siteInfo:
                 self.storage[mss] = sites_space_override[mss]
 
 
+        self.fetch_queue_info()
         ## and detox info
         self.fetch_detox_info(talk=False, buffer_level=UC.get('DDM_buffer_level'), sites_space_override=sites_space_override)
         
@@ -1308,6 +1339,11 @@ class siteInfo:
             return list(set(allowed_sites) & set(allowed))
         return allowed_sites
 
+    def fetch_queue_info(self):
+        self.queue = dataCache.get('site_queues')
+        #for (k,v) in dataCache.get('site_queues').items():
+        #    self.queue[k] = v
+        
     def fetch_detox_info(self, talk=True, buffer_level=0.8, sites_space_override=None):
         ## put a retry in command line
         info = dataCache.get('detox_sites')
@@ -1334,8 +1370,12 @@ class siteInfo:
                 break
             ## bypass 
 
+            if 'MSS' in site: continue
+            queued = self.queue.get(site,0)
+            #print site,self.queue.get(site,0)
             ## consider quota to be 80% of what's available
-            available = int(float(quota)*buffer_level) - int(locked)
+            queued_used = 0
+            available = int(float(quota)*buffer_level) - int(locked) - int(queued_used)
 
             #### .disk = 80%*quota - locked : so it's the effective space
             #### .free_disk = the buffer space that there is above the 80% quota 
@@ -1954,6 +1994,16 @@ def checkTransferStatus(url, xfer_id, nocollapse=False):
     return v
         
 
+def getNodesId(url):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    r1=conn.request("GET",'/phedex/datasvc/json/prod/nodes?')
+    r2=conn.getresponse()
+    result = json.loads(r2.read())
+    nodes = {}
+    for node in result['phedex']['node']:
+        nodes[node['name']] = node['id']
+    return nodes
+
 def try_checkTransferStatus(url, xfer_id, nocollapse=False):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 
@@ -1961,7 +2011,9 @@ def try_checkTransferStatus(url, xfer_id, nocollapse=False):
     r2=conn.getresponse()
     result = json.loads(r2.read())
     timecreate=min([r['time_create'] for r in result['phedex']['request']])
-    subs_url = '/phedex/datasvc/json/prod/subscriptions?request=%s&create_since=%d'%(str(xfer_id),timecreate)
+    phedex_nodes = dataCache.get('phedex_nodes')
+    my_nodes = [ phedex_nodes[n['name']] for n in result['phedex']['request'][0]['node']]
+    subs_url = '/phedex/datasvc/json/prod/subscriptions?request=%s&create_since=%d&%s'%(str(xfer_id),timecreate, '&'.join(['node=%s'%n for n in my_nodes]))
     if nocollapse:
         subs_url+='&collapse=n'
     #print subs_url
@@ -1973,7 +2025,7 @@ def try_checkTransferStatus(url, xfer_id, nocollapse=False):
     completions={}
     if len(result['phedex']['dataset'])==0:
         print "trying with an earlier date than",timecreate,"for",xfer_id
-        subs_url = '/phedex/datasvc/json/prod/subscriptions?request=%s&create_since=%d'%(str(xfer_id),0)
+        subs_url = '/phedex/datasvc/json/prod/subscriptions?request=%s&create_since=%d&%s'%(str(xfer_id),0, '&'.join(['node=%s'%n for n in my_nodes]))
         if nocollapse:
             subs_url+='&collapse=n'
         r1=conn.request("GET",subs_url)
