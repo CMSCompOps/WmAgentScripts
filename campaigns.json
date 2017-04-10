@@ -139,7 +139,8 @@
     "overflow": {"PU":{"max":10000,"pending":0}}
   },
   "pAWinter13": {
-    "go": false, 
+    "go": true, 
+    "fractionpass" : 0.95,
     "parameters": {
       "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue", "T2_US_Caltech", "T2_US_Florida", "T2_US_Nebraska", "T2_US_UCSD", "T2_US_Wisconsin" ],
       "MergedLFNBase": "/store/himc"
@@ -156,19 +157,55 @@
     "lumisize" : 400
   },
   "PhaseISpring17GS" : {
-   "go" : false,
+   "go" : true,
    "lumisize" : 1500,
    "fractionpass" : 0.95,
    "tune" : true
   },
   "PhaseISpring17wmLHEGS" : {
+   "go" : true,
+   "lumisize" : 1500,
+   "fractionpass" : 0.95,
+   "tune" : true
+  },
+  "PhaseISpring17DR" : {
+   "go" : true,
+   "lumisize" : 1500,
+   "maxcopies": 1,
+   "fractionpass" : 0.95,
+   "tune" : true,
+   "secondaries" : { "/MinBias_TuneCUETP8M1_13TeV-pythia8/PhaseISpring17GS-90X_upgrade2017_realistic_v20-v1/GEN-SIM" : {} }
+  },
+  "PhaseISpring17MiniAOD" : {
+   "go" : true,
+   "lumisize" : 1500,
+   "maxcopies": 1,
+   "fractionpass" : 0.95,
+   "tune" : true
+  },
+  "PhaseIISpring17GS" : {
    "go" : false,
    "lumisize" : 1500,
    "fractionpass" : 0.95,
    "tune" : true
   },
+  "PhaseIISpring17wmLHEGS" : {
+   "go" : false,
+   "lumisize" : 1500,
+   "fractionpass" : 0.95,
+   "tune" : true
+  },
+  "PhaseIISpring17D" : {
+   "go" : false,
+   "lumisize" : 1500,
+   "maxcopies": 1,
+   "fractionpass" : 0.95,
+   "tune" : true,
+   "secondaries" : {}
+  },
   "pPb816Spring16GS": {
    "go": true,
+   "fractionpass" : 0.95,
    "parameters": {
       "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue", "T2_US_Caltech", "T2_US_Florida", "T2_US_Nebraska", "T2_US_UCSD", "T2_US_Wisconsin" ],
       "MergedLFNBase": "/store/himc"
@@ -178,6 +215,7 @@
   },
   "pPb816Summer16DR": {
    "go": true,
+   "fractionpass" : 0.95,
    "parameters": {
       "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue", "T2_US_Caltech", "T2_US_Florida", "T2_US_Nebraska", "T2_US_UCSD", "T2_US_Wisconsin" ],
       "MergedLFNBase": "/store/himc"
@@ -205,6 +243,7 @@
   },
   "RunIIWinter15wmLHE": {
     "go": true, 
+    "fractionpass" : 0.95,
     "parameters": {
       "EventsPerJob": 100000, 
       "EventsPerLumi": "x2"
@@ -296,7 +335,7 @@
 		     },
     "SiteWhitelist": [ "T1_US_FNAL","T2_US_Purdue","T2_US_Wisconsin","T2_US_UCSD","T2_US_Vanderbilt","T2_US_Florida","T2_US_Caltech","T2_US_Nebraska","T2_US_MIT"],
     "banned_tier" : ["RAWAODSIM"],
-    "NO_tune" : true
+    "tune" : true
   },
   "RunIISpring16reHLT80": {
     "go": true,	  
@@ -334,7 +373,7 @@
    "NO_NO_fractionpass" : { "90000" : 0.90 },
    "secondary_AAA": true,
    "SecondaryLocation" : ["T2_CH_CERN","T1_US_FNAL"],
-   "NO_tune": true,
+   "tune": true,
    "resize" : { "minCores":3, "maxCores":10, "memoryPerThread": 500},
    "secondaries" : { "/Neutrino_E-10_gun/RunIISpring15PrePremix-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v2-v2/GEN-SIM-DIGI-RAW":{}},
    "overflow" : { "PREMIX" : {} }
@@ -375,7 +414,7 @@
 	     "/Min_Bias_13TeV_pythia8_TuneCUETP8M4/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM" : {},
 	     "/Min_Bias_13TeV_pythia8_TuneCUETP8M3/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM" : {}
     },
-    "NO_NO_tune" : true
+    "NO_tune" : true
   },
   "RunIIHighPUTrainsDR": {
     "go": true,
@@ -532,6 +571,7 @@
   },
   "RunIIFall15MiniAODv2": {
     "go": true,
+    "fractionpass" : 0.95,
     "force-complete" : 0.99,
     "maxcopies": 1,
     "lumisize" : -1
@@ -624,9 +664,10 @@
     "lumisize" : -1,
     "fractionpass" : 0.95,
     "resize" : { "minCores":3, "maxCores":10, "memoryPerThread": 500},
+    "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue" ],
     "maxcopies": 1,
     "secondaries": {}, 
-    "tune" : false,
+    "tune" : true,
     "overflow": {"PU":{"max":10000,"pending":0}}
   },
   "PhaseIFall16MiniAOD" : {
@@ -653,7 +694,7 @@
     "lumisize" : -1,
     "fractionpass" : 0.95,
     "force-complete" : 0.99,
-    "tune" : false,
+    "tune" : true,
     "resize" : { "minCores":3, "maxCores":8, "memoryPerThread": 1000},
     "overflow": {"PU":{"max":20000,"pending":0,"force":false}},
     "secondaries" : { "/MinBias_TuneCUETP8M1_14TeV-pythia8/PhaseIIFall16GS82-90X_upgrade2023_realistic_v1-v1/GEN-SIM" : {} }
