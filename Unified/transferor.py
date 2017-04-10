@@ -570,23 +570,27 @@ def transferor(url ,specific = None, talk=True, options=None):
                         #destination_cache[sec],_ = getDatasetDestinations(url, sec, within_sites = [SI.CE_to_SE(site) for site in sites_allowed])
 
                     ## limit to the site whitelist NOW
-                    se_allowed = [SI.CE_to_SE(site) for site in sites_allowed]
+                    se_allowed = set([SI.CE_to_SE(site) for site in sites_allowed])
                     destinations = dict([(k,v) for (k,v) in destination_cache[sec].items() if site in se_allowed])
                     ## truncate location/destination to those making up for >90% of the dataset
                     bad_destinations = [destinations.pop(site) for (site,info) in destinations.items() if info['data_fraction']<0.9]
                     sec_location = [site for (site,info) in destinations.items() if info['completion']>=95]
-                    sec_destination = [site for site in destinations.keys() if not site in sec_location]
+                    sec_destination = [site for site in destinations.keys() if not site in sec_location] ## this is in SE
                 else:
                     ## old style
                     presence = getDatasetPresence( url, sec )
                     sec_location = [site for site,pres in presence.items() if pres[1]>90.] ## more than 90% of the minbias at sites
                     subscriptions = listSubscriptions( url ,sec )
                     sec_destination = [site for site in subscriptions] 
+                    
+                
+                #sec_to_distribute = [site for site in sites_allowed if not any([osite.startswith(site) for osite in sec_location])]
+                sec_to_distribute = [site for site in sites_allowed if not SI.CE_to_SE(site) in sec_location]
+                #sec_to_distribute = [site for site in sec_to_distribute if not any([osite.startswith(site) for osite in sec_destination])]
+                sec_to_distribute = [site for site in sec_to_distribute if not SI.CE_to_SE(site) in sec_destination]
+                #sec_to_distribute = [site for site in sec_to_distribute if not  any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
+                sec_to_distribute = [site for site in sec_to_distribute if not  SI.CE_to_SE(site) in SI.sites_veto_transfer]
 
-
-                sec_to_distribute = [site for site in sites_allowed if not any([osite.startswith(site) for osite in sec_location])]
-                sec_to_distribute = [site for site in sec_to_distribute if not any([osite.startswith(site) for osite in sec_destination])]
-                sec_to_distribute = [site for site in sec_to_distribute if not  any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
                 if override_sec_destination:
                     ## intersect with where we want the PU to be
                     not_needed_anymore = list(set(sec_to_distribute) - set(override_sec_destination))
@@ -719,17 +723,17 @@ def transferor(url ,specific = None, talk=True, options=None):
         for phedexid in [o['id'] for o in result['phedex']['request_created']]:
             print phedexid,"transfer created"
             for transfering in list(set(map(lambda it : it.split('#')[0], items_to_transfer))):
-                wfid = workflow_dependencies[transfering]
-                new_transfer = session.query(TransferImp).filter(TransferImp.phedexid == int(phedexid)).filter( TransferImp.workflow_id == wfid ).first()
-                if not new_transfer:
-                    new_transfer = TransferImp( phedexid = phedexid,
-                                                workflow = session.query(Workflow).get( wfid ))
-                    session.add( new_transfer )
-                else:
-                    new_transfer.active = True
+                for wfid in workflow_dependencies[transfering]:
+                    new_transfer = session.query(TransferImp).filter(TransferImp.phedexid == int(phedexid)).filter( TransferImp.workflow_id == wfid ).first()
+                    if not new_transfer:
+                        new_transfer = TransferImp( phedexid = phedexid,
+                                                    workflow = session.query(Workflow).get( wfid ))
+                        session.add( new_transfer )
+                    else:
+                        new_transfer.active = True
                     
 
-                wf_id_in_prestaging.update(new_transfer.workflow_id)
+                    wf_id_in_prestaging.add( wfid )
             #session.commit()
 
     for wfid in wf_id_in_prestaging:
