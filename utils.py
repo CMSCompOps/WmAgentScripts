@@ -1104,9 +1104,12 @@ class siteInfo:
             
             self.sites_banned = UC.get('sites_banned')
             
-            sites_full = json.loads(open('sites_full.json').read())
-            ### ban or not things that have a lot more upcoming than normal
-            self.sites_banned.extend ( sites_full )
+            try:
+                sites_full = json.loads(open('sites_full.json').read())
+                ### ban or not things that have a lot more upcoming than normal
+                self.sites_banned.extend ( sites_full )
+            except:
+                pass
 
             #data = dataCache.get('ssb_158') ## 158 is the site readyness metric
             data = dataCache.get('ssb_237') ## 237 is the site readyness metric
