@@ -16,6 +16,13 @@ def cachor(spec=None):
     except:
         all_checks = {}
 
+    ## pop all that are now in inactive
+    for phedexid in all_checks.keys():
+        transfers = session.query(TransferImp).filter(TransferImp.phedexid==int(phedexid)).filter(TransferImp.active==True).all()
+        if not transfers:
+            print phedexid,"does not look relevant to be in cache anymore. poping"
+            print all_checks.pop( phedexid )
+
     #all_transfers = [transfer for transfer in session.query(Transfer).filter(Transfer.phedexid>0).all()]
     all_transfers = list(set([imp.phedexid for imp in session.query(TransferImp).filter(TransferImp.active==True).all()]))
     random.shuffle( all_transfers )

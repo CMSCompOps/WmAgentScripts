@@ -68,13 +68,6 @@ def stagor(url,specific =None, options=None):
     time_point.sub_lap = time_point.lap = time_point.start = time.mktime(time.gmtime())
 
 
-    ## pop all that are now in inactive
-    for phedexid in cached_transfer_statuses.keys():
-        transfers = session.query(TransferImp).filter(TransferImp.phedexid==int(phedexid)).filter(TransferImp.active==True).all()
-        if not transfers:
-            print phedexid,"does not look relevant to be in cache anymore. poping"
-            print cached_transfer_statuses.pop( phedexid )
-
     time_point("Check cached transfer")
 
     ## collect all datasets that are needed for wf in staging, correcting the status of those that are not really in staging
