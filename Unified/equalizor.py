@@ -30,7 +30,9 @@ def equalizor(url , specific = None, options=None):
     SI = siteInfo()
     CI = campaignInfo()
     UC = unifiedConfiguration()
-    for site in SI.sites_ready:
+    
+    sites_to_consider = SI.all_sites
+    for site in sites_to_consider:
         region = site.split('_')[1]
         if not region in ['US'
                           ,'DE','IT','FR',
@@ -53,13 +55,13 @@ def equalizor(url , specific = None, options=None):
                 
         return False
 
-    for site in SI.sites_ready:
+    for site in sites_to_consider:
         region = site.split('_')[1]
         ## fallback to the region, to site with on-going low pressure
-        mapping[site] = [fb for fb in SI.sites_ready if any([('_%s_'%(reg) in fb and fb!=site and site_in_depletion(fb))for reg in regions[region]]) ]
+        mapping[site] = [fb for fb in sites_to_consider if any([('_%s_'%(reg) in fb and fb!=site and site_in_depletion(fb))for reg in regions[region]]) ]
     
 
-    for site in SI.sites_ready:
+    for site in sites_to_consider:
         if site.split('_')[1] == 'US': ## to all site in the US
             ## add NERSC 
             mapping[site].append('T3_US_NERSC')
@@ -90,11 +92,11 @@ def equalizor(url , specific = None, options=None):
 
     ## all europ can read from CERN
     for reg in ['IT','DE','UK','FR','BE','ES']:
-        mapping['T2_CH_CERN'].extend([fb for fb in SI.sites_ready if '_%s_'%reg in fb])
+        mapping['T2_CH_CERN'].extend([fb for fb in sites_to_consider if '_%s_'%reg in fb])
         pass
 
     ## all europ T1 among each others
-    europ_t1 = [site for site in SI.sites_ready if site.startswith('T1') and any([reg in site for reg in ['IT','DE','UK','FR','ES','RU']])]
+    europ_t1 = [site for site in sites_to_consider if site.startswith('T1') and any([reg in site for reg in ['IT','DE','UK','FR','ES','RU']])]
     print europ_t1
     for one in europ_t1:
         for two in europ_t1:
@@ -113,7 +115,7 @@ def equalizor(url , specific = None, options=None):
     #mapping['T1_UK_RAL'].append( 'T2_BE_IIHE' )
     mapping['T2_UK_London_IC'].append( 'T2_BE_IIHE' )
     mapping['T2_UK_London_IC'].append( 'T2_FR_CCIN2P3' )
-    for site in SI.sites_ready:
+    for site in sites_to_consider:
         if '_US_' in site:
             mapping[site].append('T2_CH_CERN')
     ## make them appear as OK to use
@@ -171,8 +173,77 @@ def equalizor(url , specific = None, options=None):
         return go, task_name, running, idled
     needs_action.pressure = UC.get('overflow_pressure')
 
-    def getPerf( task , stats_to_go = 200):
+    def getPerf( task , stats_to_go = 400, original_ncore=1):
         task = task.split('/')[1]+'/'+task.split('/')[-1]
+        try:
+            u = 'http://cms-gwmsmon.cern.ch/prodview/json/history/memorycpu720/%s'%task
+            print u
+            perf_data = json.loads(os.popen('curl -s --retry 5 %s'%u).read())
+        except Exception as e:
+            print str(e)
+            return (None,None)
+        binned_memory = defaultdict( lambda : defaultdict(float))
+        buckets = filter(lambda i:i['key']!=0,perf_data['aggregations']["2"]["buckets"])
+        for bucket in buckets:
+            sub_buckets = filter(lambda i:i['key']!=0, bucket["3"]["buckets"])
+            for sub_bucket in sub_buckets:
+                binned_memory[int(sub_bucket["key"])][int(bucket["key"])] += sub_bucket["doc_count"]
+
+        memory_percentil = 90
+
+        def weighted_percentile( values , bins , percentile):
+            ## values are the count
+            ## bins are the memory values
+            cumsum = [ sum(values[:i+1]) for i in range(len(values)) ] 
+            above = (cumsum[-1]*percentile/100.)
+            index = 0
+            for i in range(len(cumsum)): 
+                if cumsum[i]>above: 
+                    index=i
+                    break
+            if index==0: return bins[index]
+            else:
+                ## do the linear interpolation to the previous bin
+                x1=bins[index-1]
+                x2=bins[index]
+                y1=cumsum[index-1]
+                y2=cumsum[index]
+                #interp = y1+(y2-y1)/(x2-x1)*(above-x1)
+                interp = x1+(x2-x1)/(y2-y1)*(above-y1)
+                return interp
+                
+        ## now you have the binned memory binned_memory[cores][mem] = population
+        #print json.dumps( binned_memory , indent=2 )
+        percentiles = defaultdict(float)
+        
+        for core_count in binned_memory:
+            bins = sorted(binned_memory[core_count].keys())
+            values = [binned_memory[core_count][k] for k in bins]
+            if sum(values) < stats_to_go: continue
+            #print core_count
+            #print bins
+            #print values
+            if values:
+                percentiles[core_count] = weighted_percentile( values, bins, memory_percentil)
+
+        ## do the fit per core
+        #print json.dumps( percentiles , indent=2 )
+
+        slopes = []
+        #print original_ncore
+        #print percentiles
+        baseline = percentiles[original_ncore] if original_ncore in percentiles else None
+        if baseline:
+            for ncore,v in percentiles.items():
+                if ncore == original_ncore: continue
+                s = (v-baseline) / float((ncore - original_ncore))
+                slopes.append( s )
+            baseline = int(baseline)
+        slope = max(0,int(sum(slopes) / len(slopes))) if slopes else None
+        print "From multiple memory points",baseline,slope
+
+        b_m = None
+        """
         try:
             u = 'http://cms-gwmsmon.cern.ch/prodview/json/history/memoryusage720/%s'%task
             print u
@@ -192,8 +263,7 @@ def equalizor(url , specific = None, options=None):
         m_m = max( bucket['key'] for bucket in buckets) if buckets else None
         
         #90% percentile calculation
-        memory_percentil = 90
-        percentile_m = int(90/100. * w_m)
+        percentile_m = int(memory_percentil/100. * w_m)
         p_m = 0
         s=0
         for bucket in buckets:
@@ -216,7 +286,7 @@ def equalizor(url , specific = None, options=None):
         print "max memory",m_m
         print memory_percentil,"%percentile mem",p_m
 
-        b_m = None
+
         if w_m > stats_to_go:
             if p_m:
                 b_m = int(p_m)
@@ -225,6 +295,7 @@ def equalizor(url , specific = None, options=None):
                 b_m = int((s_m / float(w_m)) * 1.2)
         else:
             print "not enough stats for memory",w_m
+        """
 
         try:
             perf_data = json.loads(os.popen('curl -s --retry 5 http://cms-gwmsmon.cern.ch/prodview/json/history/runtime720/%s'%task).read())
@@ -273,7 +344,8 @@ def equalizor(url , specific = None, options=None):
         else:
             print "not enough stats for time",w_t
 
-        return (b_m,b_t)
+        if baseline: b_m = baseline
+        return (b_m,slope,b_t)
         
     def getcampaign( task ):
         try:
@@ -298,12 +370,14 @@ def equalizor(url , specific = None, options=None):
         'reversed_mapping' : reversed_mapping,
         'modifications' : {},
         'time' : {},
-        'memory' : {}
+        'memory' : {},
+        'slope' : {}
         }
     if options.augment or options.remove:
         interface['modifications'] = json.loads( open('%s/equalizor.json'%monitor_pub_dir).read())['modifications']
         interface['memory'] = json.loads( open('%s/equalizor.json'%monitor_pub_dir).read())['memory']
         interface['time'] = json.loads( open('%s/equalizor.json'%monitor_pub_dir).read())['time']
+        interface['slope'] = json.loads( open('%s/equalizor.json'%monitor_pub_dir).read())['slope']
         
     if options.remove:
         if specific in interface['modifications']:
@@ -331,9 +405,7 @@ def equalizor(url , specific = None, options=None):
     except:
         pass
 
-    restricting_to_ready = ['pdmvserv_HIG-RunIISummer15wmLHEGS-00420_00157_v0__160909_001612_2018',
-                            'pdmvserv_HIG-RunIISummer15wmLHEGS-00418_00157_v0__160909_001621_321',
-                            'pdmvserv_HIG-RunIISummer15wmLHEGS-00419_00157_v0__160909_001621_2641'
+    restricting_to_ready = [
                             ]
     
     remove_from = {
@@ -409,6 +481,7 @@ def equalizor(url , specific = None, options=None):
                 needs_overide = True
             return needs_overide
 
+        mcore = wfi.getMulticore()
         ## now parse this for action
         for i_task,(task,campaign) in enumerate(tasks_and_campaigns):
             if options.augment:
@@ -419,7 +492,7 @@ def equalizor(url , specific = None, options=None):
             
             if resize:# and not is_chain:
                 print "adding",task.pathName,"in resizing"
-                resizing[task.pathName] = resize
+                resizing[task.pathName] = copy.deepcopy(resize)
 
             tune = CI.get(campaign,'tune',options.tune)
             if tune and not campaign in tune_performance:
@@ -449,18 +522,21 @@ def equalizor(url , specific = None, options=None):
                                 LHE_overflow[campaign] = site_list.split(',')
                     print "adding",campaign,"to light input overflow rules",LHE_overflow[campaign]
 
-            ### setup the resizing
 
             ### get the task performance, for further massaging.
             if campaign in tune_performance or options.tune:
                 print "performance",task.taskType,task.pathName
                 if task.taskType in ['Processing','Production']:
-                    set_memory,set_time = getPerf( task.pathName )
+                    set_memory,set_slope,set_time = getPerf( task.pathName , original_ncore = mcore)
                     #print "Performance %s GB %s min"%( set_memory,set_time)
                     wfi.sendLog('equalizor','Performance tuning to %s GB %s min for %s'%( set_memory,set_time,task.pathName.split('/')[-1] ))
                     ## get values from gmwsmon
                     # massage the values : 95% percentile
                     performance[task.pathName] = {}
+                    if set_slope:
+                        performance[task.pathName]['slope']=set_slope
+                        if task.pathName in resizing and "memoryPerThread" in resizing[task.pathName]:
+                            resizing[task.pathName]["memoryPerThread"] = set_slope
                     if set_memory:
                         performance[task.pathName]['memory']=min(set_memory,15000) ## max to 15GB
                     if set_time:
@@ -478,8 +554,9 @@ def equalizor(url , specific = None, options=None):
                 ## do the intersection and add if in need.
                 needs, task_name, running, idled = needs_action(wfi, task)
                 #needs = True
-
-                if is_chain and task.pathName.endswith('_1'):
+                if options.augment:
+                    print "/t",task.pathName
+                if is_chain and task.pathName.endswith('_1') and not options.augment:
                     print i_task,"in chain prevents overflowing"
                     needs = False
 
@@ -689,7 +766,11 @@ def equalizor(url , specific = None, options=None):
                 ## intersect with the sites that are allowed from the request requirement
                 secondary_locations = secondary_locations & set(memory_allowed)
 
-                if any([task.pathName.endswith(finish) for finish in ['_0','StepOneProc','Production']]) :
+                ends = ['_0','StepOneProc','Production', 
+                        '_1' ## overflow the reco too
+                        ]
+                if options.augment: ends.append('_1')
+                if any([task.pathName.endswith(finish) for finish in ends]) :
                     needs, task_name, running, idled = needs_action(wfi, task)
                     ## removing the ones in the site whitelist already since they encode the primary input location
                     if stay_within_site_whitelist:
@@ -835,11 +916,13 @@ def equalizor(url , specific = None, options=None):
     interface['resizing'] = resizing
 
     ### manage the modification of the memory and target time
-    max_N_mem = 2
+    max_N_mem = 4
     max_N_time = 4
-    ## discretize the memory to 10 at most values
+    max_N_slope = 4
+    ## discretize the memory to N at most values
     mems = set([o['memory'] for t,o in performance.items() if 'memory' in o])
     times = set([o['time'] for t,o in performance.items() if 'time' in o])
+    slopes = set([o['slope'] for t,o in performance.items() if 'slope' in o])
     if len(mems)>max_N_mem:
         mem_step = int((max(mems) - min(mems))/ float(max_N_mem))
         print "rebinning memory"
@@ -854,18 +937,29 @@ def equalizor(url , specific = None, options=None):
             if not 'time' in performance[t]: continue
             (m,r) = divmod(performance[t]['time'], time_step)
             performance[t]['time'] = (m+1)*time_step
+    if len(slopes)>max_N_slope:
+        slope_step = int((max(slopes) - min(slopes))/ float(max_N_slope))
+        print "rebinning slopes"
+        for t in performance:
+            if not 'slope' in performance[t]: continue
+            (m,r) = divmod(performance[t]['slope'], slope_step)
+            performance[t]['slope'] = (m+1)*slope_step
 
     new_times = defaultdict(list)
     new_memories = defaultdict(list)
+    new_slopes = defaultdict(list)
 
     for t,o in performance.items():
         if 'time' in o:
             new_times[str(o['time'])].append( t )
         if 'memory' in o:
             new_memories[str(o['memory'])].append( t )
+        if 'slope' in o:
+            new_slopes[str(o['slope'])].append( t )
 
     interface['time'].update( new_times )
     interface['memory'].update( new_memories )
+    interface['slope'].update( new_slopes )
 
     ## close and save
     close( interface )
