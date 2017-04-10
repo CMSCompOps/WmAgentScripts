@@ -3250,11 +3250,12 @@ def forceComplete(url, wfi):
     import reqMgrClient
     familly = getWorkflowById( url, wfi.request['PrepID'] ,details=True)
     for member in familly:
+        print "considering",member['RequestName'],"as force complete"
         ### if member['RequestName'] == wl['RequestName']: continue ## set himself out
         if member['RequestDate'] < wfi.request['RequestDate']: continue
         if member['RequestStatus'] in ['None',None]: continue
         ## then set force complete all members
-        if member['RequestStatus'] in ['running-opened','running-closed']:
+        if member['RequestStatus'] in ['running-open','running-closed']:
             #sendEmail("force completing","%s is worth force completing\n%s"%( member['RequestName'] , percent_completions))
             print "setting",member['RequestName'],"force-complete"
             reqMgrClient.setWorkflowForceComplete(url, member['RequestName'])
