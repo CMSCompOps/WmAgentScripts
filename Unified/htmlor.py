@@ -917,7 +917,21 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     upcoming_by_site = defaultdict( lambda : defaultdict(int))
     available_ratios = defaultdict(float)
     upcoming_ratios = defaultdict(float)
-    for t in SI.types():
+
+    for team,agents in getAllAgents(reqmgr_url).items():
+        for agent in agents:
+            if not 'WMBS_INFO' in agent: continue
+            if not 'sitePendCountByPrio' in agent['WMBS_INFO']: continue
+            for site in agent['WMBS_INFO']['sitePendCountByPrio']:
+                a = sum(agent['WMBS_INFO']['sitePendCountByPrio'][site].values())
+                #print site,team,a
+                #print a
+                #print agent['WMBS_INFO']['sitePendCountByPrio'][site]
+                if a: upcoming_by_site[team][site] += a
+        
+
+
+    for t in ['sites_T1s_all','sites_T2s_all']:
 #        text+="""
 #<li>%s<a href="javascript:showhide('%s')">[Click to show/hide]</a><br>
 #<div id="%s" style="display:none;">
@@ -926,13 +940,6 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
         text +='<li>%s<div id="%s"><table border=1>'%( t, t )
         c=0
 
-        for team,agents in getAllAgents(reqmgr_url).items():
-            for agent in agents:
-                if not 'WMBS_INFO' in agent: continue
-                if not 'sitePendCountByPrio' in agent['WMBS_INFO']: continue
-                for site in agent['WMBS_INFO']['sitePendCountByPrio']:
-                    upcoming_by_site[team][site] += sum(agent['WMBS_INFO']['sitePendCountByPrio'][site].values())
-        
         for site in sorted(getattr(SI,t)):
             site_se = SI.CE_to_SE(site)
             cpu = SI.cpu_pledges[site] if site in SI.cpu_pledges else 'N/A'
@@ -955,13 +962,19 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
                 ## should there be an alarm here if a site is underdoing
                 if (usage)<(0.8*cpu) and (u > usage):
                     ht_cpu = '<font color=red>%s</font>'%(ht_cpu)
+
             for team in ['production','relval']:
                 if site in upcoming_by_site[team]:
                     if upcoming_by_site[team][site]:
-                        if usage: upcoming_ratios[site] = upcoming_by_site[team][site] / float(cpu)
+                        den = max(float(cpu),float(usage))
+                        if usage and team=='production' and upcoming_by_site[team][site] > den: 
+                            upcoming_ratios[site] = upcoming_by_site[team][site] / den
                         up_com +='<br>%s jobs upcoming %d'%(team, upcoming_by_site[team][site])
             text+='<td>'
-            text+='<b>%s</b><br>'%site
+            if site in SI.sites_ready:
+                text+= '<b>%s</b><br>'%site
+            else:
+                text+= '<font color=red><b>%s</b></font><br>'%site                
             #text+='<a href=http://dashb-ssb.cern.ch/dashboard/templates/sitePendingRunningJobs.html?site=%s>%s</a><br>'%(site,site)
             text+='<a href="https://cms-gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="https://cms-gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:75px"></a>'%( site,site )
             text+='<img src="https://cms-gwmsmon.cern.ch/totalview/graphs/%s/fairshare/daily" style="height:75px"><br>'%(site)
@@ -985,23 +998,26 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
         text+="</table></div></li>"
 
 
-    def outliers( val_d , trunc=0.9, N=3):
+    def outliers( val_d , trunc=0.9, N=4):
         sub_vals = filter( lambda v :v< trunc*max(val_d.values()), val_d.values())
         outl = {}
         if sub_vals:
             avg = sum(sub_vals) / len(sub_vals)
             std = (sum([(x-avg)**2 for x in sub_vals]) / len(sub_vals))**0.5
-            print avg,std
-            outl = dict([(k,v) for (k,v) in val_d.items() if v> (avg+N*std)] )
+            upper = (avg+N*std)
+            print avg,std,upper
+            outl = dict([(k,v) for (k,v) in val_d.items() if v> upper] )
         return outl
 
     print "These are the possible outliers"
     print available_ratios
-    print outliers( available_ratios )
-    print upcoming_ratios
+    print json.dumps(upcoming_ratios, indent=2)
     outlier_upcoming =  outliers( upcoming_ratios )
+    print outlier_upcoming
     if outlier_upcoming:
         sendLog('GQ','There is an inbalance of upcoming work at %s'%(', '.join([site for site in sorted(outlier_upcoming.keys())])),level='critical')
+        open('sites_full.json','w').write( json.dumps( outlier_upcoming.keys() ))
+        
     def site_div_header(desc):
         div_name = 'site_'+desc.replace(' ','_')
         return """
@@ -1095,14 +1111,19 @@ var data_%s = google.visualization.arrayToDataTable([
 //['Quota' , %s],
 ['Locked' , %s],
 ['Free' , %s],
-['Buffer', %s]
+['Buffer', %s],
+['Queue', %s]
 ]);
 """%( site,
-      SI.quota[site], SI.locked[site], SI.disk[site], SI.free_disk[site]
+      SI.quota[site],
+      SI.locked[site],
+      SI.disk[site],
+      SI.free_disk[site],
+      SI.queue[site] if site in SI.queue else 0
       ))
         chart_data[site].append("""
 var chart_%s = new google.visualization.PieChart(document.getElementById('donutchart_%s'));
-chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'},1:{color:'green'}}});
+chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'},1:{color:'green'},2:{color:'orange'},3:{color:'blue'}}});
 """%(site,site,
      site,site,
      site,SI.quota[site]))
