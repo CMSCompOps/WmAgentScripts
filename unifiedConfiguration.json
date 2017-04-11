@@ -222,7 +222,7 @@
   },
   "user_relval":{
    "description" : "The users from which we expect relval requests",
-   "value" : ["fabozzi","nwickram","bsutar","rverma"]
+   "value" : ["fabozzi","nwickram","bsutar","rverma","prebello","NONO_piperov"]
   },
   "batch_goodness":{
    "description" : "Level below which to include a note in the batch report",
