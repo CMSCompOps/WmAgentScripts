@@ -141,10 +141,10 @@ def stagor(url,specific =None, options=None):
             checks = checkTransferStatus(url, phedexid, nocollapse=True)
             if not checks:
                 ## this is going to bias quite heavily the rest of the code. we should abort here
-                sendLog('stagor','Ending stagor because of skewed input from checkTransferStatus', level='critical')
-                #sendLog('stagor','Stagor has got a skewed input from checkTransferStatus', level='critical')
-                #checks = {}
-                return False
+                #sendLog('stagor','Ending stagor because of skewed input from checkTransferStatus', level='critical')
+                #return False
+                sendLog('stagor','Stagor has got a skewed input from checkTransferStatus', level='critical')
+                checks = {}
                 pass
             #checks = {}
             #not_cached = True
