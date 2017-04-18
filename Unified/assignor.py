@@ -106,7 +106,7 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         allowed_secondary = {}
         assign_parameters = {}
-        check_secondary = False
+        check_secondary = True
         for campaign in wfh.getCampaigns():
             if campaign in CI.campaigns:
                 assign_parameters.update( CI.campaigns[campaign] )
