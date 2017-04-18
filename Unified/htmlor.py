@@ -341,12 +341,10 @@ Worflow waiting in staging (%d) <a href=logs/transferor/last.log target=_blank>l
 
     lap ( 'done with staging' )
 
-    text="<ul>"
+    text_bytr="<ul>"
     count=0
     transfer_per_wf = defaultdict(list)
     all_active = sorted(set([ts.phedexid for ts in session.query(TransferImp).filter(TransferImp.active == True).all()]))
-    #for ts in session.query(TransferImp).filter(TransferImp.active == True).all():
-    #for ts in session.query(Transfer).filter(Transfer.phedexid>0).all():
     for phedexid in all_active:
         hide = True
         t_count = 0
@@ -357,22 +355,13 @@ Worflow waiting in staging (%d) <a href=logs/transferor/last.log target=_blank>l
             hide &= (w.status != 'staging' )
             if w.status in ['considered','staging','staged']:
                 stext += "<li> %s </li>\n"%( wfl(w,status=True))
-                transfer_per_wf[w].append( ts.phedexid )
+                transfer_per_wf[w].append( imp.phedexid )
                 t_count +=1
         stext = '<li> %s serves %d workflows<br><a href="javascript:showhide(\'%s\')">[show/hide]</a> <div id="%s" style="display:none;"><ul>\n'%( phl(phedexid),
                                                                                                                                                    t_count,
                                                                                                                                                    phedexid,
                                                                                                                                                    phedexid) + stext
-        #for pid in ts.workflows_id:
-        #    w = session.query(Workflow).get(pid)
-        #    if not w: continue
-        #    hide &= (w.status != 'staging' )
-        #    if w.status in ['considered','staging','staged']:
-        #        stext += "<li> %s </li>\n"%( wfl(w,status=True))
-        #        transfer_per_wf[w].append( ts.phedexid )
-        #        t_count +=1
-        #stext = '<li> %s serves %d workflows<br><a href="javascript:showhide(\'%s\')">[show/hide]</a> <div id="%s" style="display:none;"><ul>\n'%( phl(ts.phedexid), t_count, ts.phedexid, ts.phedexid ) + stext
-        
+
         stext+="</ul></li>\n"
         if hide:
             #text+="<li> %s not needed anymore to start running (does not mean it went through completely)</li>"%phl(ts.phedexid)
@@ -380,7 +369,7 @@ Worflow waiting in staging (%d) <a href=logs/transferor/last.log target=_blank>l
         else:
             count+=1
             text+=stext
-    text+="</ul>"
+    text_bytr+="</ul>"
     
     text_bywf="<ul>"
     for wf in transfer_per_wf:
@@ -417,7 +406,7 @@ Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransfertea
 """%(count,
      len( stuck_transfer ),
      text_bywf,
-     text))
+     text_bytr))
 
     lap( 'done with transfers' )
 
@@ -1241,12 +1230,14 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
     lap ( 'done with configuration' )
 
 
+
     html_doc.write("""Agent Health
 <a href="javascript:showhide('agent')">[Click to show/hide]</a>
 <div id="agent" style="display:none;">
 <ul>
 <li><a href="https://its.cern.ch/jira/issues/?jql=summary~drain%20AND%20project%20=%20CMSCOMPPR%20AND%20status%20!=%20CLOSED">All agents in drain JIRA<a/> </li>
 <li><a href="https://its.cern.ch/jira/issues/?jql=summary~ready%20AND%20project%20=%20CMSCOMPPR%20AND%20status%20!=%20CLOSED">All agents ready JIRA<a/> </li>
+<li><a href="https://trello.com/b/4np6TByB/production-wmagent-status">Agents status board<a/></li>
 </ul>
 <br>
 <table border=1><thead>
