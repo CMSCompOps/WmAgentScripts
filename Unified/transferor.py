@@ -336,7 +336,7 @@ def transferor(url ,specific = None, talk=True, options=None):
         now = time.mktime(time.gmtime()) / (60.*60.)
         if float(now - injection_time) < 4.:
             if not options.go and not announced: 
-                wfh.sendLog('transferor', "It is too soon to start transfer: %3.2fH remaining"%(now - injection_time))
+                wfh.sendLog('transferor', "It is too soon to start transfer: %3.2fH since injection"%(now - injection_time))
                 continue
 
 
@@ -456,7 +456,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                 prim_to_distribute = [site for site in prim_to_distribute if not SI.CE_to_SE(site) in prim_destination]
                 ## take out the ones that cannot receive transfers
                 potential_destinations = len(prim_to_distribute)
-                prim_to_distribute = [site for site in prim_to_distribute if not any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
+                prim_to_distribute = [site for site in prim_to_distribute if not SI.CE_to_SE(site) in SI.sites_veto_transfer]
 
                 ## do we want to restrict transfers if the amount of site in vetoe are too large ?
                 
@@ -511,7 +511,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                     wfh.sendLog('transferor', "We are going to need extra copies of %s, but no destinations seems available"%(prim))
                     sendLog('transferor', "We are going to need extra copies of %s, but no destinations seems available"%(prim),level='critical')
                     prim_to_distribute = [site for site in sites_allowed if not SI.CE_to_SE(site) in prim_location]
-                    prim_to_distribute = [site for site in prim_to_distribute if not any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
+                    prim_to_distribute = [site for site in prim_to_distribute if not SI.CE_to_SE(site) in SI.sites_veto_transfer]
                     
 
                 if len(prim_to_distribute)>0: ## maybe that a parameter we can play with to limit the 
@@ -520,6 +520,14 @@ def transferor(url ,specific = None, talk=True, options=None):
                         #tapes = [site for site in  getDatasetPresence( url, prim, vetos=['T0','T2','T3','Disk']) if site.endswith('MSS')]
                         chops,sizes = getDatasetChops(prim, chop_threshold = options.chopsize, only_blocks=blocks)
                         spreading = distributeToSites( chops, prim_to_distribute, n_copies = copies_needed, weights=SI.cpu_pledges, sizes=sizes)
+                        ## prune the blocks/destination that are already in the making, so that subscription don't overlap
+                        for site in spreading:
+                            for block in list(spreading[site]):
+                                if site in destinations and block in destinations[site]['blocks'].keys():
+                                    ## prune it
+                                    spreading[site].remove( block )
+
+
                         transfer_sizes[prim] = sum(sizes)
                         if not spreading:
                             sendLog('transferor','cannot send %s to any site, it cannot fit anywhere'% prim, level='critical')
