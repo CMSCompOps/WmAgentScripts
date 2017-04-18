@@ -764,7 +764,8 @@ def equalizor(url , specific = None, options=None):
                 ### given that we have the secondary location available, it is not necessary to use the add-hoc list
                 ##secondary_locations = list(set(PU_overflow[campaign]['sites']) & set( SI.sites_ready ))
                 ## intersect with the sites that are allowed from the request requirement
-                secondary_locations = secondary_locations & set(memory_allowed)
+                #secondary_locations = secondary_locations & set(memory_allowed)
+                secondary_locations = secondary_locations & set(sites_allowed)
 
                 ends = ['_0','StepOneProc','Production', 
                         '_1' ## overflow the reco too
