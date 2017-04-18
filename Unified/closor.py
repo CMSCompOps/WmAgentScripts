@@ -150,10 +150,11 @@ def closor(url, specific=None, options=None):
     all_late_files = []
     check_fullcopy_to_announce = UC.get('check_fullcopy_to_announce')
     ## manually closed-out workflows should get to close with checkor
-    if specific:
-        wfs = session.query(Workflow).filter(Workflow.status=='close').filter(Workflow.name.contains(specific)).all()
-    else:
-        wfs = session.query(Workflow).filter(Workflow.status=='close').all()
+    #if specific:
+    #    wfs = session.query(Workflow).filter(Workflow.status=='close').filter(Workflow.name.contains(specific)).all()
+    #else:
+    #wfs = session.query(Workflow).filter(Workflow.status=='close').all()     
+    wfs = session.query(Workflow).filter(Workflow.status=='close').all()
 
     held = set()
 
@@ -199,7 +200,7 @@ def closor(url, specific=None, options=None):
             continue
 
 
-        if wfi.request['RequestStatus'] in  ['announced','normal-archived']:
+        if wfi.request['RequestStatus'] in  ['announced','normal-archived'] and not options.force:
             ## manually announced ??
             wfo.status = 'done'
             wfo.wm_status = wfi.request['RequestStatus']
@@ -218,6 +219,7 @@ def closor(url, specific=None, options=None):
         outputs = wfi.request['OutputDatasets']
         ## check whether the number of lumis is as expected for each
         all_OK = defaultdict(lambda : False)
+        stats = defaultdict(int)
         #print outputs
         if len(outputs): 
             print wfo.name,wfi.request['RequestStatus']
@@ -244,7 +246,7 @@ def closor(url, specific=None, options=None):
             wfi.sendLog('closor',"\t%s"% completion_line)
             if wfi.isRelval() and fraction < batch_goodness:
                 batch_warnings[ wfi.getCampaign()].add( completion_line )
-
+            stats[out] = lumi_count
             all_OK[out] = True 
 
 
@@ -284,11 +286,13 @@ def closor(url, specific=None, options=None):
             all_OK.update( OK )
 
         ## only that status can let me go into announced
-        if all(all_OK.values()) and wfi.request['RequestStatus'] in ['closed-out']:
+        if all(all_OK.values()) and ((wfi.request['RequestStatus'] in ['closed-out']) or options.force):
             print wfo.name,"to be announced"
             results=[]#'dummy']
             if not results:
                 for out in outputs:
+                    if out in stats and not stats[out]: 
+                        continue
                     _,dsn,process_string,tier = out.split('/')
                     #tier = out.split('/')[-1]
                     #process_string = out.split(',')[-2]

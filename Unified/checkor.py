@@ -366,10 +366,10 @@ def checkor(url, spec=None, options=None):
 
         time_point("execpted statistics", sub_lap=True)
 
+
         for output in wfi.request['OutputDatasets']:
             event_count,lumi_count = getDatasetEventsAndLumis(dataset=output)
             events_per_lumi[output] = event_count/float(lumi_count) if lumi_count else 100
-                
             percent_completions[output] = 0.
 
             if lumi_expected:
@@ -405,8 +405,10 @@ def checkor(url, spec=None, options=None):
                     fractions_pass[output] = pattern_fraction_pass[key]
                     print "overriding fraction to",fractions_pass[output],"by dataset key",key
                     
+        pass_stats_check = dict([(out, bypass_checks or (percent_completions[out] >= fractions_pass[out])) for out in fractions_pass ])
 
-        if not all([percent_completions[out] >= fractions_pass[out] for out in fractions_pass]):
+        #if not all([percent_completions[out] >= fractions_pass[out] for out in fractions_pass]):
+        if not all(pass_stats_check.values()):
             possible_recoveries = wfi.getRecoveryDoc()
             if possible_recoveries == []:
                 wfi.sendLog('checkor','%s has missing statistics \n%s \n%s, but nothing is recoverable. passing through to annoucement'%( 
@@ -568,13 +570,18 @@ def checkor(url, spec=None, options=None):
                 print "cannot find a custodial for",wfo.name
                 wfi.sendLog('checkor',"cannot find a custodial for %s probably because of the total output size %d"%( wfo.name, size_worth_checking))
                 sendLog('checkor',"cannot find a custodial for %s probably because of the total output size %d"%( wfo.name, size_worth_checking), level='critical')
+
+            picked_a_tape = custodial and (is_closing or bypass_checks)
+            #cannot be bypassed
+            is_closing = False
                 
-            if custodial and (is_closing or bypass_checks):
+            if picked_a_tape:
                 print "picked",custodial,"for tape copy"
 
                 ## remember how much you added this round already ; this stays locally
                 SI.storage[custodial] -= size_worth_checking
                 ## register the custodial request, if there are no other big issues
+                holding = []
                 for output in out_worth_checking:
                     if not len(custodial_locations[output]):
                         if phedex_presence[output]>=1:
@@ -583,12 +590,16 @@ def checkor(url, spec=None, options=None):
                             if group: custodials[custodial][-1]+='@%s'%group
                             ## let's wait and see if that's needed 
                             assistance_tags.add('custodial')
+                            holding.append( output )
+                        elif output in pass_stats_check and pass_stats_check[output]:
+                                ## there is no file in phedex, but the actual stats check is OK, meaning we are good to let this pass along. the dbs/phedex check will pick this up anyways otherwise
+                            wfi.sendLog('checkor','No file in phedex for %s, but statistics check passed'%output)
                         else:
-                            print "no file in phedex for",output," not good to add to custodial requests"
-            #cannot be bypassed
-
-
-            is_closing = False
+                            ## does not look good
+                            wfi.sendLog('checkor','No file in phedex for %s, not good to add to custodial requests'%output)
+                            holding.append( output )
+                if not holding:
+                    is_closing = True
 
         time_point("determined tape location", sub_lap=True)
 
