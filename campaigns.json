@@ -174,6 +174,7 @@
    "maxcopies": 1,
    "fractionpass" : 0.95,
    "tune" : true,
+   "SiteBlacklist": [ "T1_US_FNAL" ],
    "overflow": {"PU":{"max":20000,"pending":0}},
    "secondaries" : { "/MinBias_TuneCUETP8M1_13TeV-pythia8/PhaseISpring17GS-90X_upgrade2017_realistic_v20-v1/GEN-SIM" : {} }
   },
@@ -185,19 +186,19 @@
    "tune" : true
   },
   "PhaseIISpring17GS" : {
-   "go" : false,
+   "go" : true,
    "lumisize" : 1500,
    "fractionpass" : 0.95,
    "tune" : true
   },
   "PhaseIISpring17wmLHEGS" : {
-   "go" : false,
+   "go" : true,
    "lumisize" : 1500,
    "fractionpass" : 0.95,
    "tune" : true
   },
   "PhaseIISpring17D" : {
-   "go" : false,
+   "go" : true,
    "lumisize" : 1500,
    "maxcopies": 1,
    "fractionpass" : 0.95,
@@ -225,7 +226,8 @@
     "lumisize" : 400
   },
   "pPb502Winter16DR" : {
-   "go": false,    
+   "go": true,    
+   "fractionpass" : 0.95,
    "custodial": "T1_FR_CCIN2P3_MSS", 
    "parameters": {    
       "MergedLFNBase": "/store/himc", 
