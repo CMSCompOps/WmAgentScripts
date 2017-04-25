@@ -173,15 +173,55 @@ def equalizor(url , specific = None, options=None):
         return go, task_name, running, idled
     needs_action.pressure = UC.get('overflow_pressure')
 
-    def getPerf( task , stats_to_go = 400, original_ncore=1):
+    def getPerf( task , stats_to_go = 100, original_ncore=1):
         task = task.split('/')[1]+'/'+task.split('/')[-1]
+
+        failed_out = (None,None,None,None)
         try:
-            u = 'http://cms-gwmsmon.cern.ch/prodview/json/history/memorycpu720/%s'%task
+            u = 'http://cms-gwmsmon.cern.ch/prodview/json/historynew/highio720/%s'%task
+            print u
+            io_data = json.loads(os.popen('curl -s --retry 5 %s'%u).read())
+        except Exception as e:
+            print "No good io data"
+            print str(e)
+            return failed_out
+
+        read_need = None
+        binned_io = defaultdict( lambda : defaultdict(float))
+        inputGB = None
+        denom = 'CoreHr' # 'ReadTimeHrs'
+        if io_data["aggregations"]["2"]["buckets"]:
+            inputGB=io_data["aggregations"]["2"]["buckets"][0].get('InputGB',{}).get('value',None)
+            buckets = io_data["aggregations"]["2"]["buckets"][0].get('RequestCpus',{}).get('buckets',[])
+            for bucket in buckets:
+                ncore = bucket['key']
+                igb = bucket.get('InputGB',{}).get('value',0)
+                rth = bucket.get('ReadTimeHrs',{}).get('value',0)
+                ch = bucket.get('CoreHr',{}).get('value',0)
+                ## do the math
+                d = bucket.get(denom,{}).get('value',0)
+                print ncore,"read",igb,"spend",rth,"reading",ch,"running"
+                if d:
+                    binned_io[ncore] = (igb *1024.*1024.) / (d*60*60) ## MB/s
+
+        if binned_io:
+            if denom == 'CoreHr':
+                per_core_io = [ v for k,v in binned_io.items()]
+            else:
+                per_core_io = [ v/k for k,v in binned_io.items()]                
+            per_core_io = max( per_core_io )
+            #per_core_io = sum( per_core_io ) / float(len(per_core_io))
+            print binned_io
+            read_need = int(per_core_io)
+
+
+        try:
+            u = 'http://cms-gwmsmon.cern.ch/prodview/json/historynew/memorycpu720/%s'%task
             print u
             perf_data = json.loads(os.popen('curl -s --retry 5 %s'%u).read())
         except Exception as e:
             print str(e)
-            return (None,None)
+            return failed_out
         binned_memory = defaultdict( lambda : defaultdict(float))
         buckets = filter(lambda i:i['key']!=0,perf_data['aggregations']["2"]["buckets"])
         for bucket in buckets:
@@ -219,7 +259,9 @@ def equalizor(url , specific = None, options=None):
         for core_count in binned_memory:
             bins = sorted(binned_memory[core_count].keys())
             values = [binned_memory[core_count][k] for k in bins]
-            if sum(values) < stats_to_go: continue
+            if sum(values) < stats_to_go: 
+                print "not enough stats to go for core-binned mem usage",sum(values),"<",stats_to_go,"at cores=",core_count
+                continue
             #print core_count
             #print bins
             #print values
@@ -243,109 +285,32 @@ def equalizor(url , specific = None, options=None):
         print "From multiple memory points",baseline,slope
 
         b_m = None
-        """
-        try:
-            u = 'http://cms-gwmsmon.cern.ch/prodview/json/history/memoryusage720/%s'%task
-            print u
-            perf_data = json.loads(os.popen('curl -s --retry 5 %s'%u).read())
-        except Exception as e:
-            print str(e)
-            return (None,None)
-        buckets = filter(lambda i:i['key']!=0,perf_data['aggregations']["2"]['buckets'])
-        buckets.sort( key = lambda i:i['key'])
-        s=0
-        for bucket in buckets:
-            s+= bucket['doc_count']
-            bucket['cum'] = s
-        
-        s_m = sum( bucket['key']*bucket['doc_count'] for bucket in buckets)
-        w_m = sum( bucket['doc_count'] for bucket in buckets)
-        m_m = max( bucket['key'] for bucket in buckets) if buckets else None
-        
-        #90% percentile calculation
-        percentile_m = int(memory_percentil/100. * w_m)
-        p_m = 0
-        s=0
-        for bucket in buckets:
-            p_m = bucket['key']
-            if bucket['cum'] > percentile_m:
-                break
-
-        p_m *= 1.1
-        
-        max_count_m = None
-        max_count = 0
-        for bucket in buckets:
-            if bucket['doc_count'] > max_count:
-                max_count_m = bucket['key']
-                max_count = bucket['doc_count']
-
-        if max_count_m:
-            max_count_m *= 1.1
-        print "max count mem",max_count_m
-        print "max memory",m_m
-        print memory_percentil,"%percentile mem",p_m
+        if baseline: b_m = baseline
 
 
-        if w_m > stats_to_go:
-            if p_m:
-                b_m = int(p_m)
-            else:
-                b_m = int(m_m) ## this is very bad if there are just a couple of outliers
-                b_m = int((s_m / float(w_m)) * 1.2)
-        else:
-            print "not enough stats for memory",w_m
-        """
-
-        try:
-            perf_data = json.loads(os.popen('curl -s --retry 5 http://cms-gwmsmon.cern.ch/prodview/json/history/runtime720/%s'%task).read())
-        except Exception as e:
-            print str(e)
-            return (b_m,None)
-
-        buckets = filter(lambda i:i['key']!=0,perf_data['aggregations']["2"]['buckets'])
-        buckets.sort( key = lambda i:i['key'])
-        s=0
-        for bucket in buckets:
-            s+= bucket['doc_count']
-            bucket['cum'] = s
-        
-        s_t = sum( bucket['key']*bucket['doc_count'] for bucket in buckets)
-        w_t = sum( bucket['doc_count'] for bucket in buckets)
-        m_t = max( bucket['key'] for bucket in buckets) if buckets else None
-        
         time_percentil = 95
-        percentile_t = int(time_percentil/100. * w_t)
-        p_t = 0
-        for bucket in buckets:
-            p_t = bucket['key']
-            if bucket['cum'] > percentile_t:
-                break
-
-        p_t *= 1.1
-
-        max_count_t = None
-        max_count = 0
-        for bucket in buckets:
-            if bucket['doc_count'] > max_count:
-                max_count_t = bucket['key']
-                max_count = bucket['doc_count']
-
-        if max_count_t:
-            max_count_t *= 1.1
-
-        print "max count time",max_count_t
-        print "max time",m_t
-        print time_percentil,"% percentil time",p_t
-
+        try:
+            u = 'http://cms-gwmsmon.cern.ch/prodview/json/historynew/percentileruntime720/%s'%task
+            print u
+            percentile_data = json.loads(os.popen('curl -s --retry 5 %s'%u).read())
+        except Exception as e:
+            print str(e)
+            return failed_out
+        
+        p_t = percentile_data['aggregations']["2"]["values"].get("%.1f"%time_percentil,None) ## convert in mins
+        if p_t=="NaN":p_t=None
+        if p_t: p_t*=60.
+        w_t = percentile_data["hits"]["total"]
+        
         b_t = None
-        if w_t > stats_to_go:
+        if w_t > stats_to_go and p_t:
             b_t = int(p_t)
         else:
-            print "not enough stats for time",w_t
+            print "not enough stats for time",w_t,"<",stats_to_go,"value is",p_t
 
-        if baseline: b_m = baseline
-        return (b_m,slope,b_t)
+
+
+        return (b_m,slope,b_t, read_need)
         
     def getcampaign( task ):
         try:
@@ -371,13 +336,16 @@ def equalizor(url , specific = None, options=None):
         'modifications' : {},
         'time' : {},
         'memory' : {},
-        'slope' : {}
+        'slope' : {},
+        'read' : {}
         }
     if options.augment or options.remove:
-        interface['modifications'] = json.loads( open('%s/equalizor.json'%monitor_pub_dir).read())['modifications']
-        interface['memory'] = json.loads( open('%s/equalizor.json'%monitor_pub_dir).read())['memory']
-        interface['time'] = json.loads( open('%s/equalizor.json'%monitor_pub_dir).read())['time']
-        interface['slope'] = json.loads( open('%s/equalizor.json'%monitor_pub_dir).read())['slope']
+        previous = json.loads( open('%s/equalizor.json'%monitor_pub_dir).read())
+        interface['modifications'] = previous.get('modifications',{})
+        interface['memory'] = previous.get('memory',{})
+        interface['time'] = previous.get('time',{})
+        interface['slope'] = previous.get('slope', {})
+        interface['read'] = previous.get('read',{})
         
     if options.remove:
         if specific in interface['modifications']:
@@ -481,9 +449,9 @@ def equalizor(url , specific = None, options=None):
                 needs_overide = True
             return needs_overide
 
-        mcore = wfi.getMulticore()
         ## now parse this for action
         for i_task,(task,campaign) in enumerate(tasks_and_campaigns):
+            taskname = task.pathName.split('/')[-1]
             if options.augment:
                 print task.pathName
                 print campaign
@@ -527,9 +495,10 @@ def equalizor(url , specific = None, options=None):
             if campaign in tune_performance or options.tune:
                 print "performance",task.taskType,task.pathName
                 if task.taskType in ['Processing','Production']:
-                    set_memory,set_slope,set_time = getPerf( task.pathName , original_ncore = mcore)
+                    mcore = wfi.getCorePerTask( taskname )
+                    set_memory,set_slope,set_time,set_io = getPerf( task.pathName , original_ncore = mcore)
                     #print "Performance %s GB %s min"%( set_memory,set_time)
-                    wfi.sendLog('equalizor','Performance tuning to %s GB %s min for %s'%( set_memory,set_time,task.pathName.split('/')[-1] ))
+                    wfi.sendLog('equalizor','Performance tuning to %s GB %s min for %s'%( set_memory,set_time,taskname ))
                     ## get values from gmwsmon
                     # massage the values : 95% percentile
                     performance[task.pathName] = {}
@@ -541,6 +510,8 @@ def equalizor(url , specific = None, options=None):
                         performance[task.pathName]['memory']=min(set_memory,15000) ## max to 15GB
                     if set_time:
                         performance[task.pathName]['time'] = min(set_time, 1440) ## max to 24H
+                    if set_io:
+                        performance[task.pathName]['read'] = set_io
             
             ## rule to remove from the site whitelist site that do not look ready for unified (local banning)
             if wfo.name in restricting_to_ready:
@@ -917,13 +888,15 @@ def equalizor(url , specific = None, options=None):
     interface['resizing'] = resizing
 
     ### manage the modification of the memory and target time
-    max_N_mem = 4
-    max_N_time = 4
-    max_N_slope = 4
+    max_N_mem = 10
+    max_N_time = 10
+    max_N_slope = 10
+    max_N_read = 10
     ## discretize the memory to N at most values
     mems = set([o['memory'] for t,o in performance.items() if 'memory' in o])
     times = set([o['time'] for t,o in performance.items() if 'time' in o])
     slopes = set([o['slope'] for t,o in performance.items() if 'slope' in o])
+    reads = set([o['read'] for t,o in performance.items() if 'read' in o])
     if len(mems)>max_N_mem:
         mem_step = int((max(mems) - min(mems))/ float(max_N_mem))
         print "rebinning memory"
@@ -946,9 +919,18 @@ def equalizor(url , specific = None, options=None):
             (m,r) = divmod(performance[t]['slope'], slope_step)
             performance[t]['slope'] = (m+1)*slope_step
 
+    if len(reads)>max_N_read:
+        read_step = int((max(reads) - min(reads))/ float(max_N_read))
+        print "rebinning reads"
+        for t in performance:
+            if not 'read' in performance[t]: continue
+            (m,r) = divmod(performance[t]['read'], read_step)
+            performance[t]['read'] = (m+1)*read_step
+
     new_times = defaultdict(list)
     new_memories = defaultdict(list)
     new_slopes = defaultdict(list)
+    new_reads = defaultdict(list)
 
     for t,o in performance.items():
         if 'time' in o:
@@ -957,10 +939,13 @@ def equalizor(url , specific = None, options=None):
             new_memories[str(o['memory'])].append( t )
         if 'slope' in o:
             new_slopes[str(o['slope'])].append( t )
+        if 'read' in o:
+            new_reads[str(o['read'])].append( t )
 
     interface['time'].update( new_times )
     interface['memory'].update( new_memories )
     interface['slope'].update( new_slopes )
+    interface['read'].update( new_reads )
 
     ## close and save
     close( interface )
