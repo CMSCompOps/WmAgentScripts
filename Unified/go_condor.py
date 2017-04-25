@@ -10,12 +10,29 @@ import hashlib
 import htcondor
 from collections import defaultdict
 
+
+def makeReadAds(config):
+    for needs, tasks in config.get('read',{}).items():
+        anAd = classad.ClassAd()
+        anAd["GridResource"] = "condor localhost localhost"
+        anAd["TargetUniverse"] = 5
+        anAd["JobRouterTasknames"] = map(str, tasks)
+        task_names_escaped = anAd.lookup('JobRouterTasknames').__repr__()
+        del anAd["JobRouterTasknames"]
+
+        exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (HasBeenReadTuned isnt true)' % task_names_escaped)
+        anAd["Requirements"] = classad.ExprTree(str(exp))
+        anAd["set_HasBeenRouted"] = False
+        anAd["set_HasBeenReadTuned"] = True
+        anAd["set_EstimatedInputRateKBs"] = int(float(needs))
+        print anAd
+
 def makeOverflowAds(config):
     # Mapping from source to a list of destinations.
     reversed_mapping = config['reversed_mapping']
 
     overflow_tasks = {}
-    for workflow, tasks in config['modifications'].items():
+    for workflow, tasks in config.get('modifications',{}).items():
         for taskname,specs in tasks.items():
             anAd = classad.ClassAd()
             anAd["GridResource"] = "condor localhost localhost"
@@ -150,8 +167,9 @@ def makePrioCorrectionsAds():
     print anAd
 
 def makePerformanceCorrectionsAds(configs):
-    for memory in configs.get('memory',[]):
-        wfs = configs['memory'][memory]
+    m_config = configs.get('memory',{})
+    for memory in m_config:
+        wfs = m_config[memory]
         anAd = classad.ClassAd()
         anAd["GridResource"] = "condor localhost localhost"
         anAd["TargetUniverse"] = 5
@@ -165,8 +183,9 @@ def makePerformanceCorrectionsAds(configs):
         anAd['set_OriginalMemory'] = int(memory)
         print anAd
 
-    for timing in configs.get('time',[]):
-        wfs = configs['time'][timing]
+    t_config = configs.get('time',{})
+    for timing in t_config:
+        wfs = t_config[timing]
         anAd = classad.ClassAd()
         anAd["GridResource"] = "condor localhost localhost"
         anAd["TargetUniverse"] = 5
@@ -186,6 +205,7 @@ def makeAds(config):
     makePrioCorrectionsAds()
     makePerformanceCorrectionsAds(config)    
     makeResizeAds(config)
+    makeReadAds(config)
 
 if __name__ == "__main__":
 
