@@ -385,7 +385,9 @@ def equalizor(url , specific = None, options=None):
         #'cerminar_Run2016C-v2-SingleElectron-23Sep2016_8020_160923_182146_3498' : ['T3_US_NERSC'],
         #'cerminar_Run2016C-v2-Tau-23Sep2016_8020_160923_182336_5649' : ['T3_US_NERSC'],
         }
-    
+
+    perf_per_config = defaultdict(dict)
+    for k,v in json.loads(open('perf_per_config.json').read()).items(): perf_per_config[k] = v
 
     stay_within_site_whitelist = False
     specific_task=None
@@ -449,6 +451,7 @@ def equalizor(url , specific = None, options=None):
                 needs_overide = True
             return needs_overide
 
+        configcache = wfi.getConfigCacheID()
         ## now parse this for action
         for i_task,(task,campaign) in enumerate(tasks_and_campaigns):
             taskname = task.pathName.split('/')[-1]
@@ -506,12 +509,16 @@ def equalizor(url , specific = None, options=None):
                         performance[task.pathName]['slope']=set_slope
                         if task.pathName in resizing and "memoryPerThread" in resizing[task.pathName]:
                             resizing[task.pathName]["memoryPerThread"] = set_slope
+                        perf_per_config[configcache.get( taskname , 'N/A')]['slope'] = set_slope
                     if set_memory:
                         performance[task.pathName]['memory']=min(set_memory,15000) ## max to 15GB
+                        perf_per_config[configcache.get( taskname , 'N/A')]['memory'] = set_memory
                     if set_time:
                         performance[task.pathName]['time'] = min(set_time, 1440) ## max to 24H
+                        perf_per_config[configcache.get( taskname , 'N/A')]['time'] = set_time
                     if set_io:
                         performance[task.pathName]['read'] = set_io
+                        perf_per_config[configcache.get( taskname , 'N/A')]['read'] = set_io
             
             ## rule to remove from the site whitelist site that do not look ready for unified (local banning)
             if wfo.name in restricting_to_ready:
@@ -949,6 +956,8 @@ def equalizor(url , specific = None, options=None):
 
     ## close and save
     close( interface )
+
+    open('perf_per_config.json','w').write( json.dumps( perf_per_config, indent=2))
 
 
 if __name__ == "__main__":

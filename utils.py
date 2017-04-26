@@ -3243,6 +3243,19 @@ def getWorkLoad(url, wf ):
 #    else:
 #        return [item['id'] for item in items]
         
+def getConfigurationFile(url , cacheid):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    there = '/couchdb/reqmgr_config_cache/%s/configFile'% cacheid
+    r1=conn.request("GET",there)
+    r2=conn.getresponse()
+    return r2.read()
+    
+def getConfigurationLine(url, cacheid, token="# with command line"):
+    cfg = getConfigurationFile(url, cacheid)
+    for line in cfg.split('\n'):
+        if line.startswith(token): return line
+    return None
+    
 def getWorkflowByInput( url, dataset , details=False):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     there = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byinputdataset?key="%s"'%(dataset)
@@ -4420,6 +4433,14 @@ class workflowInfo:
     def getPriority(self):
         return self.request['RequestPriority']
 
+    def getCorePerTask(self, task):
+        mcores = self.request.get('Multicore',1)
+        mcores_d = {}
+        if 'Chain' in self.request['RequestType']:
+            mcores_d = self._collectinchain('Multicore',default=1)
+        return int(mcores_d.get( task, mcores ))
+
+
     def getMulticore(self):
         mcores = [int(self.request.get('Multicore',1))]
         if 'Chain' in self.request['RequestType']:
@@ -4538,6 +4559,15 @@ class workflowInfo:
             return self._collectinchain('PrimaryDataset').values()
         else:
             return [self.request['PrimaryDataset']]
+
+    def getConfigCacheID(self, taskname =None ):
+        tasks = self.getWorkTasks()
+        mapping = {}
+        for task in tasks:
+            name =  task.pathName.split('/')[-1]
+            cid = task.steps.cmsRun1.application.configuration.configId
+            mapping[name] = cid
+        return mapping
 
     def getCampaigns(self):
         if 'Chain' in self.request['RequestType'] and not self.isRelval():
