@@ -14,6 +14,8 @@ from collections import defaultdict
 def makeReadAds(config):
     for needs, tasks in config.get('read',{}).items():
         anAd = classad.ClassAd()
+        set_read = int(float(needs))
+        anAd["Name"] = str("Set read requirement to %s"% set_read)
         anAd["GridResource"] = "condor localhost localhost"
         anAd["TargetUniverse"] = 5
         anAd["JobRouterTasknames"] = map(str, tasks)
@@ -24,7 +26,7 @@ def makeReadAds(config):
         anAd["Requirements"] = classad.ExprTree(str(exp))
         anAd["set_HasBeenRouted"] = False
         anAd["set_HasBeenReadTuned"] = True
-        anAd["set_EstimatedInputRateKBs"] = int(float(needs))
+        anAd["set_EstimatedInputRateKBs"] = set_read
         print anAd
 
 def makeOverflowAds(config):
