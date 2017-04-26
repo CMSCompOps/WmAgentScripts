@@ -106,7 +106,7 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         allowed_secondary = {}
         assign_parameters = {}
-        check_secondary = True
+        check_secondary = (not wfh.isRelval())
         for campaign in wfh.getCampaigns():
             if campaign in CI.campaigns:
                 assign_parameters.update( CI.campaigns[campaign] )
@@ -212,14 +212,20 @@ def assignor(url ,specific = None, talk=True, options=None):
                 print "Cannot pass for now"
                 #sendEmail("tempting to pass sec location check","but we cannot yet IMO")
                 #pass
-            if secondary_aaa:
-                #just continue without checking
-                continue
 
             presence = getDatasetPresence( url, sec )
             print sec
             print json.dumps(presence, indent=2)
             one_secondary_locations = [site for (site,(there,frac)) in presence.items() if frac>98.]
+
+            if secondary_aaa:
+                if not one_secondary_locations:
+                    ## not even a copy on disk anywhere !!!!
+                    sites_allowed = [] ## will block the assignment
+                    wfh.sendLog('assignor',"The secondary %s is nowhere on disk"% sec)
+                #just continue without checking
+                continue
+
             #one_secondary_locations = [site for (site,(there,frac)) in presence.items() if there]
             if secondary_locations==None:
                 secondary_locations = one_secondary_locations
