@@ -42,22 +42,26 @@ also_locking_from_reqmgr = set()
 LI = lockInfo()
 
 ## add an addHoc list of things to lock. empyting this list would result in unlocking later
-addHocLocks = [
-"/MuonEG/Run2016F-v1/RAW",
-"/SinglePhoton/Run2016B-v1/RAW",
-"/SinglePhoton/Run2016F-v1/RAW",
-"/DoubleMuon/Run2016B-v1/RAW",
-"/DoubleEG/Run2016B-v1/RAW",
-"/MuonEG/Run2016B-v1/RAW",
-"/SingleElectron/Run2016B-v1/RAW",
-"/DoubleEG/Run2016F-v1/RAW",
-"/JetHT/Run2016F-v1/RAW",
-"/JetHT/Run2016B-v1/RAW"
-]
+addHocLocks = json.loads( open('addhoc_lock.json').read())
+
+#[
+#"/MuonEG/Run2016F-v1/RAW",
+#"/SinglePhoton/Run2016B-v1/RAW",
+#"/SinglePhoton/Run2016F-v1/RAW",
+#"/DoubleMuon/Run2016B-v1/RAW",
+#"/DoubleEG/Run2016B-v1/RAW",
+#"/MuonEG/Run2016B-v1/RAW",
+#"/SingleElectron/Run2016B-v1/RAW",
+#"/DoubleEG/Run2016F-v1/RAW",
+#"/JetHT/Run2016F-v1/RAW",
+#"/JetHT/Run2016B-v1/RAW",
+#"/JetHT/Run2016H-v1/RAW"
+#]
 
 for item in addHocLocks:
     ds = item.split('#')[0]
     LI.lock( ds , reason='addhoc lock')
+    newly_locking.add( ds )
 
 #for status in reversed(statuses):
 for status in statuses:
