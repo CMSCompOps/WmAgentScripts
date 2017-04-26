@@ -368,7 +368,7 @@ Worflow waiting in staging (%d) <a href=logs/transferor/last.log target=_blank>l
             pass
         else:
             count+=1
-            text+=stext
+            text_bytr+=stext
     text_bytr+="</ul>"
     
     text_bywf="<ul>"
@@ -919,7 +919,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
                 if a: upcoming_by_site[team][site] += a
         
 
-
+    sites_full = json.loads(open('sites_full.json').read())
     for t in ['sites_T1s_all','sites_T2s_all']:
 #        text+="""
 #<li>%s<a href="javascript:showhide('%s')">[Click to show/hide]</a><br>
@@ -962,6 +962,8 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
             text+='<td>'
             if site in SI.sites_ready:
                 text+= '<b>%s</b><br>'%site
+            elif site in sites_full:
+                text+= '<font color=orange><b>%s</b></font><br>'%site
             else:
                 text+= '<font color=red><b>%s</b></font><br>'%site                
             #text+='<a href=http://dashb-ssb.cern.ch/dashboard/templates/sitePendingRunningJobs.html?site=%s>%s</a><br>'%(site,site)
