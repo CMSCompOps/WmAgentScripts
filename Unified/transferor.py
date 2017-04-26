@@ -258,7 +258,7 @@ def transferor(url ,specific = None, talk=True, options=None):
             
         allowed_secondary = {}
         overide_parameters = {}
-        check_secondary = True
+        check_secondary = (not wfh.isRelval())
         output_tiers = list(set([o.split('/')[-1] for o in wfh.request['OutputDatasets']]))
         for campaign in wfh.getCampaigns():
             if campaign in CI.campaigns:
