@@ -49,7 +49,8 @@
 
   "Run2016B": {
     "go": true,
-    "labels" : ["03Feb2017","15Feb2017","22Feb2017"],
+    "labels" : ["03Feb2017","15Feb2017","22Feb2017", "18Apr2017_ver2"],
+    "overflow" : {"PRIM" : {}},
     "fractionpass": 1.0,
     "lumisize" : -1,
     "maxcopies" : 1
@@ -84,7 +85,7 @@
   },
   "Run2016E": {
     "go": true,
-    "labels" : ["03Feb2017","15Feb2017","22Feb2017"],
+    "labels" : ["03Feb2017","15Feb2017","22Feb2017","18Apr2017"],
     "fractionpass": 1.0,
     "lumisize" : -1,
     "maxcopies" : 1
@@ -106,7 +107,7 @@
   },
   "Run2016H": {
     "go": true,
-    "labels" : ["03Feb2017","22Feb2017"],
+    "labels" : ["03Feb2017","22Feb2017","18Apr2017"],
     "fractionpass": 1.0,
     "lumisize" : -1,
     "maxcopies" : 1
@@ -136,6 +137,7 @@
     "go": true,
     "lumisize" : 400,
     "SiteWhitelist": [ "T1_FR_CCIN2P3","T1_IT_CNAF","T2_CH_CERN"],
+    "secondaries" : {"/MinBias_TuneZ2star_8TeV-pythia6/Summer12-START50_V13-v3/GEN-SIM" : {} },
     "overflow": {"PU":{"max":10000,"pending":0}}
   },
   "pAWinter13": {
@@ -168,13 +170,18 @@
    "fractionpass" : 0.95,
    "tune" : true
   },
+  "PhaseISpring17wmLHEGENOnly" : {
+   "go" : false,
+   "fractionpass" : 0.95,
+   "tune" : true
+  },
   "PhaseISpring17DR" : {
-   "go" : true,
+   "go" : false,
    "lumisize" : 1500,
    "maxcopies": 1,
    "fractionpass" : 0.95,
    "tune" : true,
-   "SiteBlacklist": [ "T1_US_FNAL" ],
+   "SiteBlacklist": [ "T1_US_FNAL" ,"T0_CH_CERN","NONO_T2_CH_CERN_HLT", "T2_CH_CERN"],
    "overflow": {"PU":{"max":20000,"pending":0}},
    "secondaries" : { "/MinBias_TuneCUETP8M1_13TeV-pythia8/PhaseISpring17GS-90X_upgrade2017_realistic_v20-v1/GEN-SIM" : {} }
   },
@@ -203,7 +210,8 @@
    "maxcopies": 1,
    "fractionpass" : 0.95,
    "tune" : true,
-   "secondaries" : {}
+   "SiteBlacklist": [ "T1_US_FNAL", "T0_CH_CERN","T2_CH_CERN_HLT" , "T2_CH_CERN"],
+   "secondaries" : {"/MinBias_TuneCUETP8M1_14TeV-pythia8/PhaseIIFall16GS82-90X_upgrade2023_realistic_v1-v1/GEN-SIM" :{} }
   },
   "pPb816Spring16GS": {
    "go": true,
@@ -667,9 +675,9 @@
     "lumisize" : -1,
     "fractionpass" : 0.95,
     "resize" : { "minCores":3, "maxCores":10, "memoryPerThread": 500},
-    "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue" ],
+    "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue" ,"T0_CH_CERN","T2_CH_CERN_HLT" , "T2_CH_CERN"],
     "maxcopies": 1,
-    "secondaries": {}, 
+    "secondaries": {"/MinBias_TuneCUETP8M1_13TeV-pythia8/PhaseIFall16GS-90X_upgrade2017_realistic_v6_ext1-v1/GEN-SIM": {"SecondaryLocation" : ["T1_US_FNAL","T1_DE_KIT","T1_ES_PIC","T1_IT_CNAF","T1_FR_CCIN2P3","T1_RU_JINR","T1_UK_RAL","T2_CH_CERN","T2_DE_DESY","T2_IT_Bari","T2_IT_Legnaro","T2_US_Caltech","T2_US_Florida","T2_US_MIT","T2_US_Nebraska","T2_US_Purdue","T2_US_Wisconsin"] } }, 
     "tune" : true,
     "overflow": {"PU":{"max":10000,"pending":0}}
   },
