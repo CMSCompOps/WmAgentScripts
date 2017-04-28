@@ -19,13 +19,14 @@
     This script depends on WMCore code, so WMAgent environment,libraries and voms proxy need to be loaded before running it.
 """
 import os
-import datetime
-import dbs3Client
 import pwd
-import sys
 import re
+import sys
 from optparse import OptionParser
 from pprint import pprint
+
+import dbs3Client
+
 try:
     import reqMgrClient
 except:
@@ -38,7 +39,7 @@ reqmgrCouchURL = "https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache"
 DELTA_EVENTS = 1000
 DELTA_LUMIS = 200
 
-def modifySchema(helper, workflow, user, group, cache, events, firstLumi, backfill=False, memory=None, timeperevent=None):
+def modifySchema(cache, workflow, user, group, events, firstLumi, backfill=False, memory=None, timeperevent=None):
     """
     Adapts schema to right parameters.
     If the original workflow points to DBS2, DBS3 URL is fixed instead.
@@ -49,33 +50,30 @@ def modifySchema(helper, workflow, user, group, cache, events, firstLumi, backfi
     paramBlacklist = ['BlockCloseMaxEvents', 'BlockCloseMaxFiles', 'BlockCloseMaxSize', 'BlockCloseMaxWaitTime',
                       'CouchWorkloadDBName', 'CustodialGroup', 'CustodialSubType', 'Dashboard',
                       'GracePeriod', 'HardTimeout', 'InitialPriority', 'inputMode', 'MaxMergeEvents', 'MaxMergeSize',
-                      'MaxRSS', 'MaxVSize', 'MinMergeSize', 'NonCustodialGroup', 'NonCustodialSubType',
+                      'MaxRSS', 'MaxVSize', 'MinMergeSize', 'NonCustodialGroup','NonCustodialSubType',
                       'OutputDatasets', 'ReqMgr2Only', 'RequestDate' 'RequestorDN', 'RequestName', 'RequestStatus',
                       'RequestTransition', 'RequestWorkflow', 'SiteWhitelist', 'SoftTimeout', 'SoftwareVersions',
                       'SubscriptionPriority', 'Team', 'timeStamp', 'TrustSitelists', 'TrustPUSitelists',
                       'TotalEstimatedJobs', 'TotalInputEvents', 'TotalInputLumis', 'TotalInputFiles']
 
     result = {}
-    for key, value in helper.data.request.schema.dictionary_whole_tree_().items():
-        if key in paramBlacklist or value in ([], {}, None, ''):
+    for k, v in cache.iteritems():
+        if k in paramBlacklist or v in ([], {}, None, ''):
             continue
         else:
-            result[key] = value
+            result[k] = v
 
-        # Now apply the specific tweaks
-        if key == 'Memory' and memory:
-            result['Memory'] = memory
-        if key == 'TimePerEvent' and timeperevent:
-            result['TimePerEvent'] = timeperevent
-        elif key == 'Requestor':
-            result['Requestor'] = user
-        elif key == 'Group':
-            result['Group'] = group
-        elif key == 'MergedLFNBase':
-            result['MergedLFNBase'] = helper.getMergedLFNBase()
-        # and required for cross-cloning between prod and testbed
-        elif key == 'CouchURL':
-            result['ConfigCacheUrl'] = result.pop('CouchURL')
+    if memory:
+        result['Memory'] = memory
+    if timeperevent:
+        result['TimePerEvent'] = timeperevent
+    if user:
+        result['Requestor'] = user
+    if group:
+        result['Group'] = group
+    # and required for cross-cloning between prod and testbed
+    if result.get('CouchURL'):
+        result['ConfigCacheUrl'] = result.pop('CouchURL')
 
     #if we are extending the workflow
     if events:
@@ -97,32 +95,9 @@ def modifySchema(helper, workflow, user, group, cache, events, firstLumi, backfi
         # prepend EXT_ to recognize as extension
         result["RequestString"] = 'EXT_' + result["RequestString"]
     else:
-        # Update the request priority
-        if cache and 'RequestPriority' in cache:
-            result['RequestPriority'] = cache['RequestPriority']
-
-    # Merged LFN
-    if 'MergedLFNBase' not in result:
-        result['MergedLFNBase'] = helper.getMergedLFNBase()
-
-    # update information from reqMgr
-    # Add AcquisitionEra, ProcessingString and increase ProcessingVersion by 1
-    result["ProcessingString"] = cache['ProcessingString']
-    result["AcquisitionEra"] = cache['AcquisitionEra']
-    #result["ProcessingString"] = helper.getProcessingString()
-    #result["AcquisitionEra"] = helper.getAcquisitionEra()
-
-    # try to parse processing version as an integer, if don't, assign 1 or 2 given the case.
-    if events:
-        try:
-            #result["ProcessingVersion"] = int(helper.getProcessingVersion())
-            result["ProcessingVersion"] = cache['ProcessingVersion']
-        except ValueError:
-            result["ProcessingVersion"] = 1
-    else:
         try:
             #result["ProcessingVersion"] = int(helper.getProcessingVersion()) + 1
-            result["ProcessingVersion"] = cache['ProcessingVersion'] + 1
+            result["ProcessingVersion"] += 1
         except ValueError:
             result["ProcessingVersion"] = 2
 
@@ -138,28 +113,17 @@ def modifySchema(helper, workflow, user, group, cache, events, firstLumi, backfi
         if "backfill" not in result["RequestString"].lower():
             # Word backfill in the middle of the request strin
             parts = result["RequestString"].split('-')
-            result[
-                "RequestString"] = '-'.join(parts[:2] + ["Backfill"] + parts[2:])
+            result["RequestString"] = '-'.join(parts[:2] + ["Backfill"] + parts[2:])
         if "PrepID" in result:
             # delete entry
             del result["PrepID"]
         if result["RequestType"] == 'TaskChain':
-            for key, value in helper.data.request.schema.dictionary_whole_tree_().items():
-                if type(value) is dict and key.startswith("Task"):
-                    try:
-                        if 'ProcessingString' in value:
-                            result[key]['ProcessingString'] = "BACKFILL"
-                        if 'AcquisitionEra' in value:
-                            result[key]['AcquisitionEra']= value['AcquisitionEra']+ "Backfill"
-                    except KeyError:
-                        print("This taskchain request has no AcquisitionEra or ProcessingString defined into the Tasks, aborting...")
-                        sys.exit(1)
-        # reset the request date
-        now = datetime.datetime.utcnow()
-        result["RequestDate"] = [
-            now.year, now.month, now.day, now.hour, now.minute]
-
-    #result['Memory'] = 3000
+            for taskNumber in range(1, result['TaskChain'] + 1):
+                taskName = 'Task%s' % taskNumber
+                if 'ProcessingString' in result[taskName]:
+                    result[taskName]['ProcessingString'] = "BACKFILL"
+                if 'AcquisitionEra' in result[taskName]:
+                    result[taskName]['AcquisitionEra'] += "Backfill"
 
     return result
 
@@ -167,17 +131,11 @@ def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=F
     """
     clones a workflow
     """
-    # Get info about the workflow to be cloned
-    helper = reqMgrClient.retrieveSchema(workflow, reqmgrCouchURL)
     # Adapt schema and add original request to it
-    try:
-        cache = reqMgrClient.getWorkloadCache(url, workflow)
-    except:
-        cache = None
+    cache = reqMgrClient.getWorkflowInfo(url, workflow)
 
-    schema = modifySchema(helper, workflow, user, group, cache, None, None, backfill, memory, timeperevent)
+    schema = modifySchema(cache, workflow, user, group, None, None, backfill, memory, timeperevent)
 
-    schema['OriginalRequestName'] = workflow
     if verbose:
         pprint(schema)
     
@@ -251,9 +209,9 @@ def extendWorkflow(workflow, user, group, verbose=False, events=None, firstlumi=
     firstlumi = int(firstlumi)
 
     # Get info about the workflow to be cloned
-    helper = reqMgrClient.retrieveSchema(workflow)
-    schema = modifySchema(helper, workflow, user, group, None, events, firstlumi, None)
-    schema['OriginalRequestName'] = workflow
+    cache = reqMgrClient.getWorkflowInfo(url, workflow)
+
+    schema = modifySchema(cache, workflow, user, group, events, firstlumi, None)
     if verbose:
         pprint(schema)
     print 'Submitting workflow'

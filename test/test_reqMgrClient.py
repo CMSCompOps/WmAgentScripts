@@ -83,11 +83,6 @@ class TestReqMgrClient(unittest.TestCase):
             self.fail("None lumis")
         il = float(il)
 
-    def testGetWorkloadCache(self):
-        # getWorkloadCache
-        ca = reqMgr.getWorkloadCache(url, testwf)
-        if ca is None:
-            self.fail("None output")
 
 
 # Creation of request
