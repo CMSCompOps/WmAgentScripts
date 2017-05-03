@@ -3258,6 +3258,23 @@ def getConfigurationLine(url, cacheid, token="# with command line"):
         if line.startswith(token): return line
     return None
     
+def getWorkflowByCampaign(url, campaign, details=False):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    there = '/reqmgr2/data/request?campaign=%s'% campaign
+    there += '&detail=true' if details else '&detail=false'
+    r1=conn.request("GET",there , headers={"Accept":"*/*"})
+    r2=conn.getresponse()
+    data = json.loads(r2.read())['result']
+    if details:
+        ## list of dict
+        r = []
+        for it in data:
+            r.extend( it.values())
+        return r
+    else:
+        return data
+
+    
 def getWorkflowByInput( url, dataset , details=False):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     there = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byinputdataset?key="%s"'%(dataset)

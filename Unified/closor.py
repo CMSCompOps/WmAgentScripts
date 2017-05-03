@@ -6,7 +6,7 @@ import json
 import time
 import sys
 import os
-from utils import getDatasetEventsAndLumis, campaignInfo, getDatasetPresence, findLateFiles, updateSubscription, makeReplicaRequest
+from utils import getDatasetEventsAndLumis, campaignInfo, getDatasetPresence, findLateFiles, updateSubscription, makeReplicaRequest, getWorkflowByCampaign
 from htmlor import htmlor
 from collections import defaultdict
 import reqMgrClient
@@ -164,23 +164,33 @@ def closor(url, specific=None, options=None):
     random.shuffle( wfs )    
     if max_per_round: wfs = wfs[:max_per_round]
 
-    batches = json.loads(open('batches.json').read())
-    by_batch = {}
-    batch_semaphore = defaultdict(int)
-    for bname in batches:
-        for pid in batches[bname]:
-            ## temporary check for adding prepid in batches
-            by_batch[pid] = bname
+    #batches = json.loads(open('batches.json').read())
+    #by_batch = {}
+    #batch_semaphore = defaultdict(int)
+    #for bname in batches:
+    #    for pid in batches[bname]:
+    #        ## temporary check for adding prepid in batches
+    #        by_batch[pid] = bname
 
     ## first go over everything and give it an extra go from batch
-    for wfo in wfs:
-        wfi = workflowInfo(url, wfo.name )
-        ## we want all the wf of the same batch to be in the close status before giving it a full go
-        pid = wfi.request['PrepID']
-        if pid in by_batch:
-            batch_semaphore[by_batch[pid]] += 1
+    #batches_to_go = set()
+    #for wfo in wfs:
+    #    wfi = workflowInfo(url, wfo.name )
+    #    ## we want all the wf of the same batch to be in the close status before giving it a full go
+    #    #pid = wfi.request['PrepID']
+    #    #if pid in by_batch:
+    #    #    batch_semaphore[by_batch[pid]] += 1
+    #    if wfi.isRelva():
+    #        batches_to_go.add( wfi.getCampaign() )
+    #        by_batch[wfi.request['PrepID']] = wfi.getCampaign()
 
-    batch_go = dict([(batch_name, len(batch_content) and len(batch_content)== batch_semaphore[batch_name]) for batch_name,batch_content in batches.items()])
+    ## check on all batches to go if the workflows are not still to be completed
+    batch_go = {}
+    #for b in batches_to_go:
+    #    in_batches = getWorkflowByCampaign(url , b, details=True)
+    #    batch_go[ b ] =  all(lambda s : not s in ['completed','running-open','running-closed','acquired','assigned','assignment-approved'], [r['RequestStatus'] for r in in_batches])
+
+    #batch_go = dict([(batch_name, len(batch_content) and len(batch_content)== batch_semaphore[batch_name]) for batch_name,batch_content in batches.items()])
 
     batch_warnings = defaultdict(set)
     batch_goodness = UC.get("batch_goodness")
@@ -193,11 +203,22 @@ def closor(url, specific=None, options=None):
         wfi = workflowInfo(url, wfo.name )
         wfo.wm_status = wfi.request['RequestStatus']
 
-        has_batch_go = False
-        prepid = wfi.request['PrepID']
-        if prepid in by_batch and not batch_go[by_batch[prepid]]: 
-            wfi.sendLog('closor', 'Cannot close for now because the batch %s is not all close'% by_batch[prepid])
-            continue
+        if wfi.isRelval():
+            has_batch_go = False
+            batch_name = wfi.getCampaign()
+            if not batch_name in batch_go:
+                ## do the esimatation whethere this can be announced : only once per batch
+                in_batches = getWorkflowByCampaign(url , batch_name, details=True)
+                batch_go[ batch_name ]  = all(map(lambda s : not s in ['completed','running-open','running-closed','acquired','assigned','assignment-approved'], [r['RequestStatus'] for r in in_batches]))
+            ## already verified
+            has_batch_go = batch_go[batch_name]
+            if not has_batch_go:
+                wfi.sendLog('closor', 'Cannot close for now because the batch %s is not all close'% batch_name)
+                continue
+        #prepid = wfi.request['PrepID']
+        #if prepid in by_batch and not batch_go[by_batch[prepid]]: 
+        #    wfi.sendLog('closor', 'Cannot close for now because the batch %s is not all close'% by_batch[prepid])
+        #    continue
 
 
         if wfi.request['RequestStatus'] in  ['announced','normal-archived'] and not options.force:
@@ -449,7 +470,7 @@ def closor(url, specific=None, options=None):
         sendLog('closor',"the workflows below are held up \n%s"%("\n".join( sorted(held) )), level='critical')
 
 
-    batches = json.loads(open('batches.json').read())
+    #batches = json.loads(open('batches.json').read())
     for bname,go in batch_go.items():
         if go:
             subject = "Release Validation Samples Batch %s"% bname
@@ -478,7 +499,7 @@ This is an automated message.
       issues)
             to = ['hn-cms-relval@cern.ch']
             sendEmail(subject, text, destination=to )
-            batches.pop( bname )
+            #batches.pop( bname )
     ## pop the done batches
     ###open('batches.json','w').write( json.dumps( batches, indent=2))         
 
