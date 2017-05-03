@@ -155,7 +155,9 @@ def sendEmail( subject, text, sender=None, destination=None ):
         destination = list(set(destination+email_destination))
     if not sender:
         map_who = { 'vlimant' : 'vlimant@cern.ch',
-                    'mcremone' : 'matteoc@fnal.gov' }
+                    'mcremone' : 'matteoc@fnal.gov', 
+                    'qnguyen' : 'thong.nguyen@cern.ch'
+                    }
         user = os.getenv('USER')
         if user in map_who:
             sender = map_who[user]
