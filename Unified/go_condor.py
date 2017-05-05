@@ -198,9 +198,24 @@ def makePerformanceCorrectionsAds(configs):
         anAd["Requirements"] = classad.ExprTree(str(exp))
         anAd['set_HasBeenTimingTuned'] = True
         anAd['set_HasBeenRouted'] = False
-        anAd['set_OriginalMaxWallTimeMins'] = int(timing)
+        anAd['eval_set_OriginalMaxWallTimeMins'] = classad.ExprTree('quantize(%d, 60)' % int(timing))
         print anAd
-        
+
+    for io in configs.get('io', []):
+        wfs = configs['io'][io]
+        anAd = classad.ClassAd()
+        anAd["GridResource"] = "condor localhost localhost"
+        anAd["TargetUniverse"] = 5
+        anAd["Name"] = str("Set IO requirement to %s" % io)
+        anAd["IOTasknames"] = map(str, wfs)
+        io_names_escaped = anAd.lookup('IOTasknames').__repr__()
+        exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (target.HasBeenIOTuned =!= true) && (target.IOEstimate <= %d)' % (io_names_escaped, int(io)))
+        anAd["Requirements"] = classad.ExprTree(str(exp))
+        anAd['set_HasBeenIOTuned'] = True
+        anAd['set_HasBeenRouted'] = False
+        print anAd
+
+
 def makeAds(config):
     makeOverflowAds(config)
     makeSortAds()
