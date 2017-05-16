@@ -920,7 +920,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
         
 
     sites_full = json.loads(open('sites_full.json').read())
-    for t in ['sites_T1s_all','sites_T2s_all']:
+    for t in ['sites_T0s_all','sites_T1s_all','sites_T2s_all','sites_T3s_all']:
 #        text+="""
 #<li>%s<a href="javascript:showhide('%s')">[Click to show/hide]</a><br>
 #<div id="%s" style="display:none;">
