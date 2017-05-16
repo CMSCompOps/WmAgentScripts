@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, sendEmail, sendLog, monitor_pub_dir, unifiedConfiguration
+from utils import getWorkflows, sendEmail, sendLog, monitor_pub_dir, unifiedConfiguration, deep_update
 from collections import defaultdict
 import copy
 import json
@@ -49,11 +49,27 @@ def batchor( url ):
 
     add_on = {}
     batches = json.loads( open('batches.json').read() )
+    relval_routing = UC.get('relval_routing')
+    def pick_one_site( p):
+        ## modify the parameters on the spot to have only one site
+        if "parameters" in p and "SiteWhitelist" in p["parameters"] and len(p["parameters"]["SiteWhitelist"])>1:
+            picked = random.choice( p["parameters"]["SiteWhitelist"] )
+            print "picked",picked,"from",p["parameters"]["SiteWhitelist"]
+            p["parameters"]["SiteWhitelist"] = list(picked)
+            
     for campaign in by_campaign:
         ## get a bunch of information
         setup  = copy.deepcopy( default_setup )
 
-        if 'cc7' in campaign: setup["parameters"]["SiteWhitelist"] = ["T2_US_Nebraska"]
+        for key in relval_routing:
+            if key in campaign:
+                ## augment with the routing information
+                augment_with = relval_routing[key]
+                print "Modifying the batch configuration because of keyword",key
+                print "with",augment_with
+                setup = deep_update( setup, augment_with )
+        #if 'cc7' in campaign: setup["parameters"]["SiteWhitelist"] = ["T2_US_Nebraska"]
+        pick_one_site( setup )
         add_on[campaign] = setup
         sendLog('batchor','Adding the relval campaigns %s with parameters \n%s'%( campaign, json.dumps( setup, indent=2)),level='critical')
         if not campaign in batches: batches[campaign] = []
@@ -64,7 +80,9 @@ def batchor( url ):
         setup  = copy.deepcopy( default_hi_setup )
         hi_site = random.choice(["T1_DE_KIT","T1_FR_CCIN2P3"])
         setup["parameters"]["SiteWhitelist"]=[ hi_site ]
+        #setup["parameters"]["SiteWhitelist"]=["T1_DE_KIT","T1_FR_CCIN2P3"]
 
+        pick_one_site( setup )
         add_on[campaign] = setup
         sendLog('batchor','Adding the HI relval campaigns %s with parameters \n%s'%( campaign, json.dumps( setup, indent=2)),level='critical')
         if not campaign in batches: batches[campaign] = []

@@ -38,6 +38,18 @@ FORMAT = "%(module)s.%(funcName)s(%(lineno)s) => %(message)s (%(asctime)s)"
 DATEFMT = "%Y-%m-%d %H:%M:%S"
 logging.basicConfig(format = FORMAT, datefmt = DATEFMT, level=logging.DEBUG)
 
+
+def deep_update(d, u):
+    for k, v in u.items():
+        if isinstance(v, collections.Mapping):
+            default = v.copy()
+            default.clear()
+            r = update_dict(d.get(k, default), v)
+            d[k] = r
+        else:
+            d[k] = v
+    return d
+
 def sendDashboard( subject, text, criticality='info', show=True):
     ### this sends something to the dashboard ES for error, info, messages
     pass
