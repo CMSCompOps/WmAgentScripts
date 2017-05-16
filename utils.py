@@ -1121,15 +1121,16 @@ class siteInfo:
             try:
                 sites_full = json.loads(open('sites_full.json').read())
                 ### ban or not things that have a lot more upcoming than normal
-                self.sites_banned.extend ( sites_full )
+                ## self.sites_banned.extend ( sites_full )
             except:
                 pass
 
             #data = dataCache.get('ssb_158') ## 158 is the site readyness metric
             data = dataCache.get('ssb_237') ## 237 is the site readyness metric
+
             for siteInfo in data:
                 #print siteInfo['Status']
-                if not siteInfo['Tier'] in [0,1,2]: continue ## ban de-facto all T3
+                if not siteInfo['Tier'] in [0,1,2,3]: continue
                 self.all_sites.append( siteInfo['VOName'] )
                 if siteInfo['VOName'] in self.sites_banned: continue
                 if self.sites_ready_in_agent and siteInfo['VOName'] in self.sites_ready_in_agent:
@@ -1152,14 +1153,15 @@ class siteInfo:
 
         self.sites_auto_approve = UC.get('sites_auto_approve')
 
-        self.sites_eos = [ s for s in self.sites_ready if s in ['T2_CH_CERN','T2_CH_CERN_AI','T2_CH_CERN_T0','T2_CH_CERN_HLT'] ]
+        self.sites_eos = [ s for s in self.sites_ready if s in ['T2_CH_CERN','T2_CH_CERN_HLT'] ]
         self.sites_T3s = [ s for s in self.sites_ready if s.startswith('T3_')]
         self.sites_T2s = [ s for s in self.sites_ready if s.startswith('T2_')]
-        self.sites_T1s = [ s for s in self.sites_ready if (s.startswith('T1_') or s.startswith('T0_'))] ## put the T0 in the T1 : who cares
+        self.sites_T1s = [ s for s in self.sites_ready if s.startswith('T1_')]# or s.startswith('T0_'))] ## put the T0 in the T1 : who cares
+        self.sites_T0s = [ s for s in self.sites_ready if s.startswith('T0_')]
 
         self.sites_T3s_all = [ s for s in self.all_sites if s.startswith('T3_')]
         self.sites_T2s_all = [ s for s in self.all_sites if s.startswith('T2_')]
-        self.sites_T1s_all = [ s for s in self.all_sites if s.startswith('T1_') or s.startswith('T0_')]
+        self.sites_T1s_all = [ s for s in self.all_sites if s.startswith('T1_')]# or s.startswith('T0_')]
         self.sites_T0s_all = [ s for s in self.all_sites if s.startswith('T0_')]
 
         self.sites_AAA = list(set(self.sites_ready) - set(['T2_CH_CERN_HLT']))
@@ -1168,24 +1170,31 @@ class siteInfo:
         #restrict to those that are actually ON
         self.sites_with_goodIO = [s for s in self.sites_with_goodIO if s in self.sites_ready]
         ## those of the above that can be actively targetted for transfers
-        allowed_T2_for_transfer = ["T2_DE_RWTH","T2_DE_DESY", 
+        #allowed_T2_for_transfer = ["T2_DE_RWTH","T2_DE_DESY", 
                                           #not inquired# "T2_ES_CIEMAT",
                                           #no space# ##"T2_FR_GRIF_IRFU", #not inquired# ##"T2_FR_GRIF_LLR", #not inquired"## "T2_FR_IPHC",##not inquired"## "T2_FR_CCIN2P3",
-                                          "T2_IT_Legnaro", "T2_IT_Pisa", "T2_IT_Rome", "T2_IT_Bari",
-                                          "T2_UK_London_Brunel", "T2_UK_London_IC", "T2_UK_SGrid_RALPP",
-                                          "T2_US_Nebraska","T2_US_Wisconsin","T2_US_Purdue","T2_US_Caltech", "T2_US_Florida", "T2_US_UCSD", "T2_US_MIT",
-                                          "T2_BE_IIHE",
-                                          "T2_EE_Estonia",
-                                          "T2_CH_CERN", "T2_CH_CERN_HLT",
+        #                                  "T2_IT_Legnaro", "T2_IT_Pisa", "T2_IT_Rome", "T2_IT_Bari",
+        #                                  "T2_UK_London_Brunel", "T2_UK_London_IC", "T2_UK_SGrid_RALPP",
+        #                                  "T2_US_Nebraska","T2_US_Wisconsin","T2_US_Purdue","T2_US_Caltech", "T2_US_Florida", "T2_US_UCSD", "T2_US_MIT",
+        #                                  "T2_BE_IIHE",
+        #                                  "T2_EE_Estonia",
+        #                                  "T2_CH_CERN", "T2_CH_CERN_HLT",
 
-                                   'T2_RU_INR',
-                                   'T2_UA_KIPT'
-                                          ]
+        #                           'T2_RU_INR',
+        #                           'T2_UA_KIPT'
+        #                                  ]
+                        
         # restrict to those actually ON
-        allowed_T2_for_transfer = [s for s in allowed_T2_for_transfer if s in self.sites_ready]
+        #allowed_T2_for_transfer = [s for s in allowed_T2_for_transfer if s in self.sites_ready]
 
         ## first round of determining the sites that veto transfer
-        self.sites_veto_transfer = [site for site in self.sites_with_goodIO if not site in allowed_T2_for_transfer]
+        #self.sites_veto_transfer = [site for site in self.sites_with_goodIO if not site in allowed_T2_for_transfer]
+        self.sites_veto_transfer = []  ## do not prevent any transfer by default
+
+        ## new site lists for better matching
+        self.sites_with_goodAAA = self.sites_with_goodIO + ['T3_IN_TIFRCloud','T3_US_NERSC'] ## like this for now
+        self.sites_with_goodAAA = [ s for s in self.sites_with_goodAAA if s in self.sites_ready]
+
 
         self.storage = defaultdict(int)
         self.disk = defaultdict(int)
@@ -1197,7 +1206,9 @@ class siteInfo:
         self.addHocStorage = {
             'T2_CH_CERN_T0': 'T2_CH_CERN',
             'T2_CH_CERN_HLT' : 'T2_CH_CERN',
-            'T2_CH_CERN_AI' : 'T2_CH_CERN'
+            'T2_CH_CERN_AI' : 'T2_CH_CERN',
+            'T3_IN_TIFRCloud' : 'T2_IN_TIFR',
+            #'T3_US_NERSC' : 'T1_US_FNAL_Disk'
             }
         ## list here the site which can accomodate high memory requests
         self.sites_memory = {}
@@ -1481,7 +1492,7 @@ class siteInfo:
 
 
     def types(self):
-        return ['sites_T1s','sites_T2s']
+        return ['sites_T1s','sites_T2s','sites_T3s']
         #return ['sites_with_goodIO','sites_T1s','sites_T2s','sites_mcore_ready']#,'sites_veto_transfer']#,'sites_auto_approve']
 
     def CE_to_SE(self, ce):
@@ -1761,31 +1772,6 @@ Updated on %s (GMT) <br>
 
 
         
-
-def getSiteWhiteList( inputs , pickone=False):
-    print "deprecated"
-    sys.exit(-1)
-    return []
-    SI = global_SI()
-    (lheinput,primary,parent,secondary) = inputs
-    sites_allowed=[]
-    if lheinput:
-        sites_allowed = ['T2_CH_CERN'] ## and that's it
-    elif secondary:
-        sites_allowed = list(set(SI.sites_T1s + SI.sites_with_goodIO))
-    elif primary:
-        sites_allowed =list(set( SI.sites_T1s + SI.sites_T2s ))
-    else:
-        # no input at all
-        sites_allowed =list(set( SI.sites_T2s + SI.sites_T1s))
-
-    if pickone:
-        sites_allowed = [SI.pick_CE( sites_allowed )]
-
-    return sites_allowed
-
-def reduceSiteWhiteList( sites_allowed, CI, SI):
-    c_sites_allowed = CI.get(wfh.request['Campaign'], 'SiteWhitelist' , [])
 
 
 def checkTransferApproval(url, phedexid):
@@ -2735,7 +2721,7 @@ def try_getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=
                 continue
             else:
                 all_block_names.remove( block )
-        #print "Mismatch in phedex/DBS blocks"
+        print "Mismatch in phedex/DBS blocks"
         missing_in_phedex = sorted(set(all_block_names) - set(blocks_in_phedex))
         missing_in_dbs = sorted(set(blocks_in_phedex) - set(all_block_names))
         if missing_in_phedex: print missing_in_phedex,"missing in phedex"
@@ -2758,7 +2744,7 @@ def try_getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=
     presence={}
     for (site,blocks) in locations.items():
         site_size = sum([ block['file_size'] for block in all_blocks if (block['block_name'] in blocks and block['block_name'] in all_block_names)])
-        #print site,blocks,all_block_names
+        print site,blocks,all_block_names
         #presence[site] = (set(blocks).issubset(set(all_block_names)), site_size/float(full_size)*100.)
         presence[site] = (set(all_block_names).issubset(set(blocks)), site_size/float(full_size)*100.)
         if site =='T2_US_Nebraska' and False:
@@ -4186,28 +4172,40 @@ class workflowInfo:
                         max_blow_up = blow_up
             return (min_child_job_per_event, root_job_per_event, max_blow_up)    
         return (1.,1.,1.)
+    def heavyRead(self):
+        ## this is an add-hoc way of doing this. True by default. False if "premix" appears in the output datasets or in the campaigns
+        response = True
+        if any(['premix' in c.lower() for c in self.getCampaigns()]):
+            response = False
+        if any(['premix' in o.lower() for o in self.request['OutputDatasets']]):
+            response = False
+        return response
+
     def getSiteWhiteList( self, pickone=False, verbose=True):
         ### this is not used yet, but should replace most
         SI = global_SI()
         (lheinput,primary,parent,secondary) = self.getIO()
         sites_allowed=[]
         if lheinput:
-            sites_allowed = ['T2_CH_CERN'] ## and that's it                                                                                                                                   
+            sites_allowed = sorted(SI.sites_eos) #['T2_CH_CERN'] ## and that's it
         elif secondary:
-            sites_allowed = list(set(SI.sites_T1s + SI.sites_with_goodIO))
+            if self.heavyRead():
+                sites_allowed = sorted(set(SI.sites_T1s + SI.sites_with_goodIO))
+            else:
+                sites_allowed = sorted(set(SI.sites_T1s + SI.sites_with_goodAAA))                
         elif primary:
-            sites_allowed =list(set( SI.sites_T1s + SI.sites_T2s ))
+            sites_allowed =sorted(set( SI.sites_T1s + SI.sites_T2s ))
         else:
             # no input at all
             ## all site should contribute
-            sites_allowed =list(set( SI.sites_T2s + SI.sites_T1s))
+            sites_allowed =sorted(set( SI.sites_T2s + SI.sites_T1s + SI.sites_T3s ))
             ### hack if we have urgency to kick gen-sim away
             #ust2s = set([site for site in SI.sites_T2s if site.startswith('T2_US')])
             #allmcores = set(SI.sites_mcore_ready)
             #sites_allowed =list(set( SI.sites_T2s ) - ust2s) ## remove all US
             #sites_allowed = list(set( SI.sites_T2s ) - allmcores) ## remove all multicore ready
         if pickone:
-            sites_allowed = [SI.pick_CE( sites_allowed )]
+            sites_allowed = sorted([SI.pick_CE( sites_allowed )])
             
         # do further restrictions based on memory
         # do further restrictions based on blow-up factor
