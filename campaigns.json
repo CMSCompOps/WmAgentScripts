@@ -49,7 +49,7 @@
 
   "Run2016B": {
     "go": true,
-    "labels" : ["03Feb2017","15Feb2017","22Feb2017", "18Apr2017_ver2"],
+    "labels" : ["03Feb2017","15Feb2017","22Feb2017", "18Apr2017_ver2","18Apr2017"],
     "overflow" : {"PRIM" : {}},
     "fractionpass": 1.0,
     "lumisize" : -1,
@@ -71,14 +71,14 @@
   },
   "Run2016C": {
     "go": true,
-    "labels" : ["03Feb2017","15Feb2017","22Feb2017"],
+    "labels" : ["03Feb2017","15Feb2017","22Feb2017","18Apr2017"],
     "fractionpass": 1.0,
     "lumisize" : -1,
     "maxcopies" : 1
   },
   "Run2016D": {
     "go": true,
-    "labels" : ["03Feb2017","15Feb2017","22Feb2017"],
+    "labels" : ["03Feb2017","15Feb2017","22Feb2017","18Apr2017"],
     "fractionpass": 1.0,
     "lumisize" : -1,
     "maxcopies" : 1
@@ -92,14 +92,14 @@
   },
   "Run2016F": {
     "go": true,
-    "labels" : ["03Feb2017","15Feb2017","22Feb2017"],
+    "labels" : ["03Feb2017","15Feb2017","22Feb2017","18Apr2017"],
     "fractionpass": 1.0,
     "lumisize" : -1,
     "maxcopies" : 1
   },
   "Run2016G": {
     "go": true,
-    "labels" : ["03Feb2017","15Feb2017","22Feb2017"],
+    "labels" : ["03Feb2017","15Feb2017","22Feb2017","18Apr2017"],
     "fractionpass": 1.0,
     "lumisize" : -1,
     "maxcopies" : 1,
@@ -150,7 +150,8 @@
     "custodial": "T1_FR_CCIN2P3_MSS"    
   }, 
   "pAWinter13DR53X": {
-   "go": false,
+   "go": true,
+   "fractionpass" : 0.95,
    "parameters": {
       "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue", "T2_US_Caltech", "T2_US_Florida", "T2_US_Nebraska", "T2_US_UCSD", "T2_US_Wisconsin" ],
       "MergedLFNBase": "/store/himc"
@@ -166,13 +167,14 @@
   },
   "PhaseISpring17wmLHEGS" : {
    "go" : true,
-   "lumisize" : 1500,
+   "lumisize" : -1,
    "fractionpass" : 0.95,
    "tune" : true
   },
   "PhaseISpring17wmLHEGENOnly" : {
-   "go" : false,
+   "go" : true,
    "fractionpass" : 0.95,
+   "lumisize" : -1,
    "tune" : true
   },
   "PhaseISpring17DR" : {
@@ -212,6 +214,15 @@
    "tune" : true,
    "SiteBlacklist": [ "T1_US_FNAL", "T0_CH_CERN","T2_CH_CERN_HLT" , "T2_CH_CERN"],
    "secondaries" : {"/MinBias_TuneCUETP8M1_14TeV-pythia8/PhaseIIFall16GS82-90X_upgrade2023_realistic_v1-v1/GEN-SIM" :{} }
+  },
+  "PhaseIISpring17DR" : {
+   "go" : false,
+   "lumisize" : 1500,
+   "maxcopies": 1,
+   "fractionpass" : 0.95,
+   "tune" : true,
+   "SiteBlacklist": [ "T1_US_FNAL", "T0_CH_CERN","T2_CH_CERN_HLT" , "T2_CH_CERN"],
+   "secondaries" : {}
   },
   "pPb816Spring16GS": {
    "go": true,
