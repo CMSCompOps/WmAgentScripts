@@ -224,6 +224,12 @@
    "description" : "The users from which we expect relval requests",
    "value" : ["fabozzi","nwickram","bsutar","rverma","prebello","piperov"]
   },
+  "relval_routing":{
+   "description" : "Set of keywords and special settings for relvals",
+   "value" : { "cc7" : { "parameters" : { "SiteWhitelist" : ["T2_US_Nebraska"]}},
+   	       "highIOtobedecidedflag" : {"parameters" : { "SiteWhitelist" : ["T2_US_Nebraska","T2_US_Purdue"]}}
+             }
+  },
   "batch_goodness":{
    "description" : "Level below which to include a note in the batch report",
    "value" : 90
