@@ -54,7 +54,9 @@ def modifySchema(cache, workflow, user, group, events, firstLumi, backfill=False
                       'OutputDatasets', 'ReqMgr2Only', 'RequestDate' 'RequestorDN', 'RequestName', 'RequestStatus',
                       'RequestTransition', 'RequestWorkflow', 'SiteWhitelist', 'SoftTimeout', 'SoftwareVersions',
                       'SubscriptionPriority', 'Team', 'timeStamp', 'TrustSitelists', 'TrustPUSitelists',
-                      'TotalEstimatedJobs', 'TotalInputEvents', 'TotalInputLumis', 'TotalInputFiles']
+                      'TotalEstimatedJobs', 'TotalInputEvents', 'TotalInputLumis', 'TotalInputFiles', 'DN',
+                      'AutoApproveSubscriptionSites', 'NonCustodialSites', 'CustodialSites', 'Teams',
+                      'OutputModulesLFNBases', 'AllowOpportunistic', 'InputDatasets', 'DeleteFromSource', '_id']
 
     result = {}
     for k, v in cache.iteritems():
@@ -124,6 +126,15 @@ def modifySchema(cache, workflow, user, group, events, firstLumi, backfill=False
                     result[taskName]['ProcessingString'] = "BACKFILL"
                 if 'AcquisitionEra' in result[taskName]:
                     result[taskName]['AcquisitionEra'] += "Backfill"
+
+    # DataProcessing requests don't support RequestNumEvents argument anymore
+    if 'InputDataset' in result and result['InputDataset']:
+        result.pop('RequestNumEvents', None)
+    # Dirty check in TaskChain and StepChains
+    if 'Task1' in result and 'InputDataset' in result['Task1'] and result['Task1']['InputDataset']:
+        result['Task1'].pop('RequestNumEvents', None)
+    if 'Step1' in result and 'InputDataset' in result['Step1'] and result['Step1']['InputDataset']:
+        result['Step1'].pop('RequestNumEvents', None)
 
     return result
 
