@@ -5,16 +5,17 @@
     url parameter is normally 'cmsweb.cern.ch'
 """
 
-import urllib
-import httplib
-import re
-import os
-import sys
-import json
-import dbs3Client as dbs3
 import copy
-import time 
+import httplib
+import json
 import optparse
+import os
+import re
+import sys
+import time
+import urllib
+
+import dbs3Client as dbs3
 
 # default headers for PUT and POST methods
 def_headers={"Content-type": "application/json", "Accept": "application/json"}
@@ -49,10 +50,8 @@ class Workflow:
         #if workflow object was provided, deep copy, otherwise pull info
         if obj:
             self.info = workflow.info
-            self.cache = workflow.cache
         else:
             self.info = getWorkflowInfo(url, name)
-            self.cache = getWorkloadCache(url, name)
 
         self.status = self.info['RequestStatus']
         self.type = self.info['RequestType']
@@ -83,8 +82,8 @@ class Workflow:
         it from the workload cache.
         """
         ev = 0
-        if 'TotalInputEvents' in self.cache:
-            ev = self.cache['TotalInputEvents']
+        if 'TotalInputEvents' in self.info:
+            ev = self.info['TotalInputEvents']
         if not ev:
             ev = self.info['RequestNumEvents']/self.info['FilterEfficiency']
         return ev
@@ -95,8 +94,8 @@ class Workflow:
         depending of the kind of workflow, by default gets
         it from the workload cache.
         """
-        if 'TotalInputLumis' in self.cache:
-            return self.cache['TotalInputLumis']
+        if 'TotalInputLumis' in self.info:
+            return self.info['TotalInputLumis']
         return 0
     
     def getOutputEvents(self, ds, skipInvalid=False):
@@ -468,13 +467,6 @@ def isRequestMgr2Request(url, workflow):
     result = getWorkflowInfo(url, workflow)
     return result.get("ReqMgr2Only", False)
 
-def getWorkloadCache(url, workflow):
-    """
-    Retrieves the ReqMgr Workfload Cache
-    """
-    request = requestManagerGet(url, '/couchdb/reqmgr_workload_cache/'+workflow)
-    return request
-
 def getWorkflowStatus(url, workflow):
     """
     Retrieves workflow status
@@ -766,7 +758,6 @@ def getOutputLumis(url, workflow, dataset, skipInvalid=False):
     
 def assignWorkflow(url, workflowname, team, parameters ):
     #local import so it doesn't screw with all other stuff
-    from utils import workflowInfo
     defaults = copy.deepcopy( assignWorkflow.defaults )
     if 'Team' in parameters: ## this needs to go away with moving away from old assignment to new in all scripts
         team = parameters['Team'] 
@@ -1126,12 +1117,13 @@ def abortWorkflow(url, workflowname, cascade=False):
         data = requestManager1Put(url,"/reqmgr/reqMgr/request", params)
     return data
 
-def cloneWorkflow(url, workflowname):
+def cloneWorkflow(url, workflowname, overrideArgs=None):
     """
     This clones a request
     """
+    overrideArgs = overrideArgs or {}
     if isRequestMgr2Request(url, workflowname):
-        data = requestManagerPut(url,"/reqmgr2/data/request", workflowname)
+        data = requestManagerPost(url, "/reqmgr2/data/request/clone/%s" % workflowname, overrideArgs)
     else:
         print "cloneWorkflow Does not function in reqmgr1 in this interface. please migrate."
         data = None
@@ -1144,24 +1136,15 @@ def submitWorkflow(url, schema, reqmgr2=True): ## single switch flip
     url: the instance ued, i.e. 'cmsweb.cern.ch'
     schema: A dictionary with the parameters needed to create
     the workflow
-    
     """
-    if os.getenv('UNIFIED_SUBMIT') == 'reqmgr2': reqmgr2 = True
-    if reqmgr2:
-        data = requestManagerPost(url,"/reqmgr2/data/request", schema)
-        try:
-            newwf = json.loads(data)['result'][0]['request']
-            return newwf
-        except:
-            print "Error in making the request"
-            print data
-            return None
-    else:
-        data = requestManager1Post(url,"/reqmgr/create/makeSchema", schema, nested=True)
+    data = requestManagerPost(url, "/reqmgr2/data/request", schema)
+    try:
+        newwf = json.loads(data)['result'][0]['request']
+        return newwf
+    except:
+        print "Error in making the request"
         print data
-        m = re.search('details\/(.*)\"', data)
-        newWorkflow = m.group(1) if m else None
-        return newWorkflow
+        return None
         
 
 def reqmgr1_to_2_Splitting(params):

@@ -105,6 +105,7 @@ def getWorkloadParameters(workflow):
     batch = workflow.split('_')[2] #TODO fix this
     processingstring = workflow.split('_')[4] #TODO fix this
 
+    # FIXME: broken code!
     list = reqMgr.getWorkflowWorkload('cmsweb.cern.ch', workflow)
 
     primaryds = ''
@@ -237,7 +238,7 @@ def getWorkloadParameters(workflow):
     return wlinfo
 
 def getAssignmentDate(workflow):
-    data = reqMgr.getWorkloadCache('cmsweb.cern.ch', workflow)
+    data = reqMgr.getWorkflowInfo('cmsweb.cern.ch', workflow)
     ls = data['RequestTransition']
     date = None
     for status in ls:
