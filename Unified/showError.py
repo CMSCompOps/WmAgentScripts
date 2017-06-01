@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from utils import workflowInfo, siteInfo, monitor_dir, monitor_pub_dir, base_dir, global_SI, getDatasetPresence, getDatasetBlocksFraction
+from utils import workflowInfo, siteInfo, monitor_dir, monitor_pub_dir, base_dir, global_SI, getDatasetPresence, getDatasetBlocksFraction, getDatasetBlocks
 base_eos_dir = "/afs/cern.ch/user/c/cmst2/Unified/"
 monitor_eos_dir = "/afs/cern.ch/user/c/cmst2/www/unified/"
 url_eos = "https://cmst2.web.cern.ch/cmst2/unified/"
@@ -105,6 +105,7 @@ def parse_one(url, wfn, options=None):
         print high_order_acdc,"order request, pulling down all logs"
         do_all_error_code = True
 
+    #do_CL = False ## hack it out
 
     n_expose = 1
     if options:
@@ -116,6 +117,7 @@ def parse_one(url, wfn, options=None):
                            '60450' : defaultdict(lambda : n_expose),#new
                            '50513':defaultdict(lambda : n_expose),#new
                            '8001': defaultdict(lambda : n_expose),# the usual exception in cmsRun
+                           '8026': defaultdict(lambda : n_expose),# the usual exception in cmsRun
                            '11003': defaultdict(lambda : n_expose),# job extraction
                            '73': defaultdict(lambda : n_expose),# job extraction
                            }
@@ -144,12 +146,16 @@ def parse_one(url, wfn, options=None):
     html+= '</center><hr>'
     if prim:
         html+='Reads in primary<br>'
+        rwl = wfi.getRunWhiteList()
+        lwl = wfi.getLumiWhiteList()
         for dataset in prim:
             html +='<b>%s</b>'%dataset
-            available = getDatasetBlocksFraction(url, dataset)
+            blocks = getDatasetBlocks( dataset, runs= rwl ) if rwl else None
+            blocks = getDatasetBlocks( dataset, lumis= lwl) if lwl else None
+            available = getDatasetBlocksFraction(url, dataset, only_blocks = blocks )
             html +='<br><br>Available %.2f (>1 more than one copy, <1 not in full on disk)<br>'% available
             html +='<ul>'
-            presence = getDatasetPresence(url, dataset)
+            presence = getDatasetPresence(url, dataset, only_blocks = blocks )
 
             for site in sorted(presence.keys()):
                 html += '<li>%s : %.2f %%'%( site, presence[site][1] )
@@ -245,9 +251,10 @@ def parse_one(url, wfn, options=None):
                         for out in sample['output']:
                             #print out
                             if out['type'] == 'logArchive':
-                                if do_JL and ((errorcode_s in expose_archive_code and expose_archive_code[errorcode_s][agent]) or (do_all_error_code)):
+                                if do_JL and ((errorcode_s in expose_archive_code and expose_archive_code[errorcode_s][agent]>0) or (do_all_error_code)):
                                     if errorcode_s in expose_archive_code:
                                         expose_archive_code[errorcode_s][agent]-=1
+                                    print errorcode_s,agent,"error count",expose_archive_code.get(errorcode_s,{}).get(agent,0)
                                     os.system('mkdir -p /tmp/%s'%(os.getenv('USER')))
                                     local = '/tmp/%s/%s'%(os.getenv('USER'),out['lfn'].split('/')[-1])
                                     command = 'xrdcp root://cms-xrd-global.cern.ch/%s %s'%( out['lfn'], local)
@@ -431,7 +438,11 @@ def parse_one(url, wfn, options=None):
         html +='%s<br>'%block
     html += "<br><b>Files in no block</b><br>"
     for f in sorted(files_notin_dbs):
-        html +='%s<br>'%f
+        ## make an xrd ls check on the files
+        #readable = os.system('xrdcp root://cms-xrd-global.cern.ch/%s check.root ; rm -f check.root'%f)
+        #readable = os.system('xrd cms-xrd-global.cern.ch existfile %s'%f)
+        #html +='%s<br>'%(f if readable==0 else '<font color=red>%s</font>'%f)
+        html +='%s<br>'%(f)
 
 
     html += '<hr><br>'
