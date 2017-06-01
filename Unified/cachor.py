@@ -35,10 +35,12 @@ def cachor(spec=None):
 
     #for transfer in all_transfers:
     for phedexid in all_transfers:    
-        if new and phedexid!=sorted(new)[0]: continue
+        print phedexid
+        if new and str(phedexid)!=sorted(new)[0]: continue
         print "running the check on",phedexid
         new_check = checkTransferStatus(url, phedexid, nocollapse=True)
         if new_check : 
+            print json.dumps( new_check ,indent=2)
             all_checks[str(phedexid)] = new_check
         else:
             print "withouth an update, we are in deep shit"
@@ -48,6 +50,7 @@ def cachor(spec=None):
 
     for pid in sorted(all_checks.keys()):
         if not all_checks[pid]:
+            print "Removing empty report for",pid
             all_checks.pop(pid)
     open('cached_transfer_statuses.json','w').write(json.dumps( all_checks , indent=2))
     
