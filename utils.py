@@ -6,6 +6,7 @@ from dbs.apis.dbsClient import DbsApi
 import httplib
 import os
 import json 
+import collections
 from collections import defaultdict
 import random
 from xml.dom.minidom import getDOMImplementation
@@ -41,11 +42,17 @@ logging.basicConfig(format = FORMAT, datefmt = DATEFMT, level=logging.DEBUG)
 
 def deep_update(d, u):
     for k, v in u.items():
-        if isinstance(v, collections.Mapping):
+        if isinstance(v, collections.Mapping) or isinstance(v, dict):
             default = v.copy()
             default.clear()
-            r = update_dict(d.get(k, default), v)
+            r = deep_update(d.get(k, default), v)
             d[k] = r
+        elif isinstance(v, list):
+            d[k]=d.get(k,[])
+            d[k].extend( v ) 
+        elif isinstance(v, set):
+            d[k]=d.get(k,set())
+            d[k].update( v )
         else:
             d[k] = v
     return d
