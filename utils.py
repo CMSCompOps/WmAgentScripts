@@ -2327,53 +2327,71 @@ def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, ve
             all_destinations.add( req['name'] )
     #print sorted( all_destinations)
 
-    ## check first by full dataset
-    print "getting all d-sub for dataset",dataset
-    r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?dataset=%s'%(dataset))
-    r2=conn.getresponse()
-    result = json.loads(r2.read())['phedex']['dataset']
-    
-    in_full = set()
-    for ds in result:
-        for sub in ds['subscription']:
-            phedex_id = sub['request']
-            site = sub['node']
-            if within_sites and not site in within_sites: continue
-            ## it is there and in full
-            if vetoes and any([site.endswith(v) for v in vetoes]): continue
-            for b in all_block_names:
-                destinations[site].add( (b, sub['percent_bytes'], phedex_id) )
-            in_full.add( site )
-                
-    #print sorted(all_destinations)
-    #print sorted(in_full)
-    ## then check block by block at the site not already OK.
-    for site in (all_destinations-in_full):
-        if not site.startswith('T'): continue
-        #for block in all_block_names:
-        #    r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?block=%s&node=%s'%(block, site))
-        #    r2=conn.getresponse()
-        #    result = json.loads(r2.read())
-        print "getting all b-sub for dataset",dataset,'@',site
-        try:
-            url='/phedex/datasvc/json/prod/subscriptions?block=%s%%23*&node=%s&collapse=n'%(dataset, site)
-        #print "querying all block at",site,dataset,url
-            r1=conn.request("GET",url)
-            r2=conn.getresponse()
-            r = r2.read()
-        except Exception as e :
-            ## addhoc to try and move forward
-            if dataset == '/Neutrino_E-10_gun/RunIISpring15PrePremix-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v2-v2/GEN-SIM-DIGI-RAW':
-                continue
-            else:
+
+    if only_blocks:
+        ## do something special when there is a block whitelist
+        for block in only_blocks:
+            try:
+                url='/phedex/datasvc/json/prod/subscriptions?block=%s&collapse=n'%( block.replace('#','%%23'))
+                r1=conn.request("GET",url)
+                r2=conn.getresponse()
+                r = r2.read()
+            except Exception as e: 
+                print str(e)
                 raise Exception(e)
-            
-        #print r
-        result = json.loads(r)['phedex']['dataset']
+            result = json.loads(r)['phedex']['dataset']
+            for ds in result:
+                for block in ds['block']:
+                    for sub in block['subscription']:
+                        site = sub['node']
+                        if vetoes and any([site.endswith(v) for v in vetoes]): continue
+                        destinations[site].add( (block['name'], sub['percent_bytes'], sub['request']))
+        pass
+    
+    else:
+        ## check first by full dataset
+        print "getting all d-sub for dataset",dataset
+        r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?dataset=%s'%(dataset))
+        r2=conn.getresponse()
+        result = json.loads(r2.read())['phedex']['dataset']
+        
+        in_full = set()
         for ds in result:
-            for block in ds['block']:
-                for sub in block['subscription']:
-                    destinations[site].add( (block['name'], sub['percent_bytes'], sub['request']))
+            for sub in ds['subscription']:
+                phedex_id = sub['request']
+                site = sub['node']
+                if within_sites and not site in within_sites: continue
+                ## it is there and in full
+                if vetoes and any([site.endswith(v) for v in vetoes]): continue
+                for b in all_block_names:
+                    destinations[site].add( (b, sub['percent_bytes'], phedex_id) )
+                in_full.add( site )
+                
+        #print sorted(all_destinations)
+        #print sorted(in_full)
+        ## then check block by block at the site not already OK.
+        for site in (all_destinations-in_full):
+            if not site.startswith('T'): continue
+            print "getting all b-sub for dataset",dataset,'@',site
+            try:
+                url='/phedex/datasvc/json/prod/subscriptions?block=%s%%23*&node=%s&collapse=n'%(dataset, site)
+                #print "querying all block at",site,dataset,url
+                r1=conn.request("GET",url)
+                r2=conn.getresponse()
+                r = r2.read()
+            except Exception as e :
+                ## addhoc to try and move forward
+                if dataset == '/Neutrino_E-10_gun/RunIISpring15PrePremix-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v2-v2/GEN-SIM-DIGI-RAW':
+                    continue
+                else:
+                    raise Exception(e)
+            
+            #print r
+            result = json.loads(r)['phedex']['dataset']
+            for ds in result:
+                for block in ds['block']:
+                    for sub in block['subscription']:
+                        destinations[site].add( (block['name'], sub['percent_bytes'], sub['request']))
 
         
     #for site in destinations:
@@ -2752,7 +2770,7 @@ def try_getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=
     presence={}
     for (site,blocks) in locations.items():
         site_size = sum([ block['file_size'] for block in all_blocks if (block['block_name'] in blocks and block['block_name'] in all_block_names)])
-        print site,blocks,all_block_names
+        ### print site,blocks,all_block_names
         #presence[site] = (set(blocks).issubset(set(all_block_names)), site_size/float(full_size)*100.)
         presence[site] = (set(all_block_names).issubset(set(blocks)), site_size/float(full_size)*100.)
         if site =='T2_US_Nebraska' and False:
