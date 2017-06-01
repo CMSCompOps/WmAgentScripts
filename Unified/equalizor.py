@@ -111,6 +111,8 @@ def equalizor(url , specific = None, options=None):
     mapping['T1_DE_KIT'].append( 'T2_CH_CERN' )
     mapping['T2_CH_CERN'].append( 'T1_IT_CNAF' )
     mapping['T2_CH_CERN'].append( 'T1_US_FNAL' )
+    mapping['T2_CH_CERN'].append( 'T3_IN_TIFRCloud' )
+    mapping['T1_IT_CNAF'].append( 'T3_IN_TIFRCloud' )
     #mapping['T2_UK_London_IC'].append( 'T2_CH_CERN' )
     #mapping['T1_UK_RAL'].append( 'T2_BE_IIHE' )
     mapping['T2_UK_London_IC'].append( 'T2_BE_IIHE' )
@@ -184,13 +186,14 @@ def equalizor(url , specific = None, options=None):
         except Exception as e:
             print "No good io data"
             print str(e)
-            return failed_out
+            io_data = None
+            #return failed_out
 
         read_need = None
         binned_io = defaultdict( lambda : defaultdict(float))
         inputGB = None
         denom = 'CoreHr' # 'ReadTimeHrs'
-        if io_data["aggregations"]["2"]["buckets"]:
+        if io_data and io_data["aggregations"]["2"]["buckets"]:
             inputGB=io_data["aggregations"]["2"]["buckets"][0].get('InputGB',{}).get('value',None)
             buckets = io_data["aggregations"]["2"]["buckets"][0].get('RequestCpus',{}).get('buckets',[])
             for bucket in buckets:
@@ -565,6 +568,7 @@ def equalizor(url , specific = None, options=None):
                         print sorted(aaa_sec_grid),"aroudn secondary location",sorted(secondary_locations)
                         ## intersect
                         aaa_grid = aaa_sec_grid & aaa_prim_grid
+                        aaa_grid = aaa_grid & set(memory_allowed)
                     else:
                         print "premix overflow from a taskchain"
                         ### hack hack hack
@@ -574,6 +578,7 @@ def equalizor(url , specific = None, options=None):
 
                     banned_until_you_find_a_way_to_do_this = ['T3_US_OSG']
                     aaa_grid  = filter(lambda s : not s in banned_until_you_find_a_way_to_do_this, aaa_grid)
+                    print sorted(aaa_grid),"for premix"
                     if aaa_grid:
                         wfi.sendLog('equalizor','Extending site whitelist to %s'%sorted(aaa_grid))
                         modifications[wfo.name][task.pathName]= {"AddWhitelist" : sorted(aaa_grid)}
@@ -613,7 +618,7 @@ def equalizor(url , specific = None, options=None):
                             wfi.sendLog('equalizor','Replaceing site whitelie to %s dynamically'% sorted(aaa_grid_in_full))
                             modifications[wfo.name][task.pathName] = { "ReplaceSiteWhitelist" : sorted( aaa_grid_in_full) }
                         else:
-                            if aaa_grid:
+                            if needs and aaa_grid:
                                 print wfo.name
                                 wfi.sendLog('equalizor','Adding in site white list %s dynamically'% sorted(aaa_grid) )
                                 if wfo.name in modifications and task.pathName in modifications[wfo.name] and 'AddWhitelist' in modifications[wfo.name][task.pathName]:
