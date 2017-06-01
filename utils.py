@@ -4220,7 +4220,7 @@ class workflowInfo:
             else:
                 sites_allowed = sorted(set(SI.sites_T1s + SI.sites_with_goodAAA))                
         elif primary:
-            sites_allowed =sorted(set( SI.sites_T1s + SI.sites_T2s ))
+            sites_allowed =sorted(set( SI.sites_T1s + SI.sites_T2s + SI.sites_T3s))
         else:
             # no input at all
             ## all site should contribute
