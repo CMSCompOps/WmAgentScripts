@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput, workflowInfo, getDatasetBlocksFraction, findLostBlocks, findLostBlocksFiles, getDatasetBlockFraction, getDatasetFileFraction, getDatasetPresence, reqmgr_url, monitor_dir, getAllStuckDataset, monitor_pub_dir
-from utils import unifiedConfiguration, componentInfo, sendEmail, getSiteWhiteList, checkTransferLag, sendLog
+from utils import unifiedConfiguration, componentInfo, sendEmail, checkTransferLag, sendLog
 from utils import siteInfo, campaignInfo, unified_url
 import json
 import sys
