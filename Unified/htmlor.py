@@ -123,8 +123,8 @@ def htmlor( caller = ""):
                 text+=', <a href="assistance.html#%s" target="_blank">assist</a>'%wfn
             text+=' : %s '%(wf.status)
 
-        if view and not wfs in ['acquired','assigned','assignment-approved']:
-            text+='<a href="https://cms-pdmv.web.cern.ch/cms-pdmv/stats/growth/%s.gif" target="_blank"><img src="https://cms-pdmv.web.cern.ch/cms-pdmv/stats/growth/%s.gif" style="height:50px"></a>'%(wfn.replace('_','/'),wfn.replace('_','/'))
+        #if view and not wfs in ['acquired','assigned','assignment-approved']:
+        #    text+='<a href="https://cms-pdmv.web.cern.ch/cms-pdmv/stats/growth/%s.gif" target="_blank"><img src="https://cms-pdmv.web.cern.ch/cms-pdmv/stats/growth/%s.gif" style="height:50px"></a>'%(wfn.replace('_','/'),wfn.replace('_','/'))
 
         if ongoing:
             #wl = getWL( wfn )            
@@ -1253,7 +1253,7 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
             name= agent['agent_url'].split(':')[0]
             short_name = name.split('.')[0]
             if agent['drain_mode'] == True: bgcolor = 'bgcolor=orange'
-            if agent['status'] in ['error']: 
+            if agent['status'] in ['error','down']: 
                 ## do you want to send a critical message !
                 sendLog('htmlor','Agent %s with %d component down: %s'%( name,
                                                                          len(agent['down_components']),
@@ -1263,7 +1263,7 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
             for component in agent['down_components']:
                 message += '<br><b>%s</b>'%component
 
-            message += '<br><a href="https://cms-logbook.cern.ch/elog/GlideInWMS/?mode=summary&reverse=0&reverse=1&npp=20&subtext=%s">gwms elog</a>, <a href="https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary&reverse=0&reverse=1&npp=20&subtext=%s">elog</a>, <a href="https://its.cern.ch/jira/issues/?jql=text~%s AND project = CMSCOMPPR AND status != CLOSED">jira</a>'%( short_name, short_name, short_name )
+            message += '<br><a href="https://cms-logbook.cern.ch/elog/GlideInWMS/?mode=summary&reverse=0&reverse=1&npp=20&subtext=%s">gwms elog</a>, <a href="https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary&reverse=0&reverse=1&npp=20&subtext=%s">elog</a>, <a href="https://its.cern.ch/jira/issues/?jql=text~%s* AND project = CMSCOMPPR AND status != CLOSED">jira</a>'%( short_name, short_name, short_name )
 
             pend_txt="<ul>"
             by_site = defaultdict(int)
