@@ -74,28 +74,32 @@
     "labels" : ["03Feb2017","15Feb2017","22Feb2017","18Apr2017"],
     "fractionpass": 1.0,
     "lumisize" : -1,
-    "maxcopies" : 1
+    "maxcopies" : 1,
+    "overflow" : {"PRIM" : {}}
   },
   "Run2016D": {
     "go": true,
     "labels" : ["03Feb2017","15Feb2017","22Feb2017","18Apr2017"],
     "fractionpass": 1.0,
     "lumisize" : -1,
-    "maxcopies" : 1
+    "maxcopies" : 1,
+    "overflow" : {"PRIM" : {}}
   },
   "Run2016E": {
     "go": true,
     "labels" : ["03Feb2017","15Feb2017","22Feb2017","18Apr2017"],
     "fractionpass": 1.0,
     "lumisize" : -1,
-    "maxcopies" : 1
+    "maxcopies" : 1,
+    "overflow" : {"PRIM" : {}}
   },
   "Run2016F": {
     "go": true,
     "labels" : ["03Feb2017","15Feb2017","22Feb2017","18Apr2017"],
     "fractionpass": 1.0,
     "lumisize" : -1,
-    "maxcopies" : 1
+    "maxcopies" : 1,
+    "overflow" : {"PRIM" : {}}
   },
   "Run2016G": {
     "go": true,
@@ -194,6 +198,54 @@
    "fractionpass" : 0.95,
    "tune" : true
   },
+  "PhaseIITDRSpring17GS" : {
+   "go" : true,
+   "lumisize" : 1500,
+   "fractionpass" : 0.95,
+   "tune" : true
+  },
+  "PhaseIITDRSpring17wmLHEGS" : {
+   "go" : true,
+   "lumisize" : 1500,
+   "fractionpass" : 0.95,
+   "tune" : true
+  },
+  "PhaseIITDRSpring17DR" : {
+   "go" : true,
+   "lumisize" : 1500,
+   "maxcopies": 1,
+   "fractionpass" : 0.95,
+   "tune" : true,
+   "SiteBlacklist": [ "T1_US_FNAL", "T0_CH_CERN","T2_CH_CERN_HLT" , "T2_CH_CERN"],
+   "secondaries" : {}
+  },
+  "PhaseIITDRSpring17MiniAOD" : {
+   "go" : true,
+   "lumisize" : -1,
+   "fractionpass" : 0.95,
+   "maxcopies" : 1
+  },
+  "PhaseIISNBSpring17GS" : {
+   "go" : true,
+   "lumisize" : 1500,
+   "fractionpass" : 0.95,
+   "tune" : true
+  },
+  "PhaseIISNBSpring17wmLHEGS" : {
+   "go" : true,
+   "lumisize" : 1500,
+   "fractionpass" : 0.95,
+   "tune" : true
+  },
+  "PhaseIISNBSpring17DR" : {
+   "go" : true,
+   "lumisize" : 1500,
+   "maxcopies": 1,
+   "fractionpass" : 0.95,
+   "tune" : true,
+   "SiteBlacklist": [ "T1_US_FNAL", "T0_CH_CERN","T2_CH_CERN_HLT" , "T2_CH_CERN"],
+   "secondaries" : {}
+  },
   "PhaseIISpring17GS" : {
    "go" : true,
    "lumisize" : 1500,
@@ -208,12 +260,14 @@
   },
   "PhaseIISpring17D" : {
    "go" : true,
+   "toDDM" : [ "GEN-SIM-DIGI-RAW" ],
    "lumisize" : 1500,
    "maxcopies": 1,
    "fractionpass" : 0.95,
    "tune" : true,
    "SiteBlacklist": [ "T1_US_FNAL", "T0_CH_CERN","T2_CH_CERN_HLT" , "T2_CH_CERN"],
-   "secondaries" : {"/MinBias_TuneCUETP8M1_14TeV-pythia8/PhaseIIFall16GS82-90X_upgrade2023_realistic_v1-v1/GEN-SIM" :{} }
+   "secondaries" : {"/MinBias_TuneCUETP8M1_14TeV-pythia8/PhaseIIFall16GS82-90X_upgrade2023_realistic_v1-v1/GEN-SIM" :{}, 
+   		    "/MinBias_TuneCUETP8M1_14TeV-pythia8/PhaseIISpring17GS-90X_upgrade2023_realistic_v9-v1/GEN-SIM" :{"SiteWhitelist" : ["T1_DE_KIT","T2_IT_Rome","T1_UK_RAL","T2_ES_CIEMAT","T2_US_Nebraska","T2_US_Caltech","T2_US_Wisconsin"]} }
   },
   "PhaseIISpring17DR" : {
    "go" : false,
@@ -242,6 +296,7 @@
       "MergedLFNBase": "/store/himc"
     },
     "custodial": "T1_FR_CCIN2P3_MSS",
+    "secondaries" : {"/ReggeGribovPartonMC_EposLHC_pPb_4080_4080_DataBS/pPb816Spring16GS-MB_80X_mcRun2_pA_v4-v2/GEN-SIM" : {"SiteWhiteList" : ["T1_US_FNAL", "T1_DE_KIT", "T2_CH_CERN", "T2_IT_Pisa","T2_US_Nebraska","T2_US_MIT"] }  },
     "lumisize" : 400
   },
   "pPb502Winter16DR" : {
@@ -688,7 +743,7 @@
     "resize" : { "minCores":3, "maxCores":10, "memoryPerThread": 500},
     "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue" ,"T0_CH_CERN","T2_CH_CERN_HLT" , "T2_CH_CERN"],
     "maxcopies": 1,
-    "secondaries": {"/MinBias_TuneCUETP8M1_13TeV-pythia8/PhaseIFall16GS-90X_upgrade2017_realistic_v6_ext1-v1/GEN-SIM": {"SecondaryLocation" : ["T1_US_FNAL","T1_DE_KIT","T1_ES_PIC","T1_IT_CNAF","T1_FR_CCIN2P3","T1_RU_JINR","T1_UK_RAL","T2_CH_CERN","T2_DE_DESY","T2_IT_Bari","T2_IT_Legnaro","T2_US_Caltech","T2_US_Florida","T2_US_MIT","T2_US_Nebraska","T2_US_Purdue","T2_US_Wisconsin"] } }, 
+    "secondaries": {"/MinBias_TuneCUETP8M1_13TeV-pythia8/PhaseIFall16GS-90X_upgrade2017_realistic_v6_ext1-v1/GEN-SIM": {"SiteWhitelist" : ["T1_DE_KIT","T1_ES_PIC","T1_IT_CNAF","T1_FR_CCIN2P3","T1_RU_JINR","T1_UK_RAL","T2_DE_DESY","T2_IT_Bari","T2_IT_Legnaro","T2_US_Caltech","T2_US_Florida","T2_US_MIT","T2_US_Nebraska","T2_US_Purdue","T2_US_Wisconsin"] } }, 
     "tune" : true,
     "overflow": {"PU":{"max":10000,"pending":0}}
   },
