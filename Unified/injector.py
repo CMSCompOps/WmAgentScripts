@@ -127,8 +127,11 @@ def injector(url, options, specific):
 
         if len(true_familly)==0:
             #sendLog('injector','%s had no replacement'%wf.name, level='critical')
-            wfi.sendLog('injector','the workflow was found in trouble with no replacement')
-            no_replacement.add( wf.name )
+            if wfi.isRelval():
+                wfi.sendLog('injector','the workflow was found in trouble with no replacement. As a relval, there is no clean way to handle this.')
+            else:
+                wfi.sendLog('injector','the workflow was found in trouble with no replacement')
+                no_replacement.add( wf.name )
             continue
         else:
             wfi.sendLog('injector','the workflow was found in trouble and has a replacement')

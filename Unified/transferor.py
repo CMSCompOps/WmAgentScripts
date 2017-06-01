@@ -4,7 +4,7 @@ import reqMgrClient
 from McMClient import McMClient
 from utils import makeReplicaRequest
 from utils import workflowInfo, siteInfo, campaignInfo, userLock
-from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, getSiteWhiteList, approveSubscription, getDatasetSize, updateSubscription, getWorkflows, componentInfo, getDatasetDestinations, getDatasetBlocks, DSS
+from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, approveSubscription, getDatasetSize, updateSubscription, getWorkflows, componentInfo, getDatasetDestinations, getDatasetBlocks, DSS
 from utils import unifiedConfiguration, monitor_dir, reqmgr_url
 from utils import lockInfo
 from utils import duplicateLock
@@ -291,53 +291,53 @@ def transferor(url ,specific = None, talk=True, options=None):
             continue
         ## check if the batch is announced
 
-        def check_mcm(wfn):
-            announced=False
-            is_real=False
-            if not wfn.startswith('pdmvserv'):
-                is_real = True
-            try:
-                for b in mcm.getA('batches',query='contains=%s'% wfo.name):
-                    is_real = True
-                    if b['status']=='announced': 
-                        announced=True 
-                        break
-            except:
-                try:
-                    for b in mcm.getA('batches',query='contains=%s'% wfo.name):
-                        is_real = True
-                        if b['status']=='announced': 
-                            announced=True 
-                            break
-                except:
-                    print "could not get mcm batch announcement, assuming not real"
-            return announced,is_real
+        #def check_mcm(wfn):
+        #    announced=False
+        #    is_real=False
+        #    if not wfn.startswith('pdmvserv'):
+        #        is_real = True
+        #    try:
+        #        for b in mcm.getA('batches',query='contains=%s'% wfo.name):
+        #            is_real = True
+        #            if b['status']=='announced': 
+        #                announced=True 
+        #                break
+        #    except:
+        #        try:
+        #            for b in mcm.getA('batches',query='contains=%s'% wfo.name):
+        #                is_real = True
+        #                if b['status']=='announced': 
+        #                    announced=True 
+        #                    break
+        #        except:
+        #            print "could not get mcm batch announcement, assuming not real"
+        #    return announced,is_real
 
-        if not use_mcm:
-            announced,is_real = False,True
-        else:
-            if wfh.request['RequestType'] in ['ReReco']:
-                announced,is_real = True,True
-            else:
-                announced,is_real = check_mcm( wfo.name )
+        #if not use_mcm:
+        #    announced,is_real = False,True
+        #else:
+        #    if wfh.request['RequestType'] in ['ReReco']:
+        #        announced,is_real = True,True
+        #    else:
+        #        announced,is_real = check_mcm( wfo.name )
 
-        if not announced:
-            wfh.sendLog('transferor', "does not look announced.")
+        #if not announced:
+        #    wfh.sendLog('transferor', "does not look announced.")
 
             
-        if not is_real:
-            wfh.sendLog('transferor', "does not appear to be genuine.")
+        #if not is_real:
+        #    wfh.sendLog('transferor', "does not appear to be genuine.")
 
             ## prevent any duplication. if the wf is not mentioned in any batch, regardless of status
-            continue
+        #    continue
 
         ## check on a grace period
-        injection_time = time.mktime(time.strptime('.'.join(map(str,wfh.request['RequestDate'])),"%Y.%m.%d.%H.%M.%S")) / (60.*60.)
-        now = time.mktime(time.gmtime()) / (60.*60.)
-        if float(now - injection_time) < 4.:
-            if not options.go and not announced: 
-                wfh.sendLog('transferor', "It is too soon to start transfer: %3.2fH since injection"%(now - injection_time))
-                continue
+        #injection_time = time.mktime(time.strptime('.'.join(map(str,wfh.request['RequestDate'])),"%Y.%m.%d.%H.%M.%S")) / (60.*60.)
+        #now = time.mktime(time.gmtime()) / (60.*60.)
+        #if float(now - injection_time) < 4.:
+        #    if not options.go and not announced: 
+        #        wfh.sendLog('transferor', "It is too soon to start transfer: %3.2fH since injection"%(now - injection_time))
+        #        continue
 
 
         if passing_along >= allowed_to_handle:

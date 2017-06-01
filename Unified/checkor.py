@@ -204,8 +204,12 @@ def checkor(url, spec=None, options=None):
 
         elif wfo.wm_status in ['failed','aborted','aborted-archived','rejected','rejected-archived','aborted-completed']:
             ## went into trouble
-            wfo.status = 'trouble'
-            wfi.sendLog('checkor',"%s is in trouble %s"%(wfo.name, wfo.wm_status))
+            if wfi.isRelval():
+                wfi.sendLog('checkor',"%s is %s, but will not be set in trouble to find a replacement."%( wfo.name, wfo.wm_status))
+                wfo.status = 'forget'
+            else:
+                wfo.status = 'trouble'
+                wfi.sendLog('checkor',"%s is in trouble %s"%(wfo.name, wfo.wm_status))
             session.commit()
             continue
         elif wfo.wm_status in ['assigned','acquired']:
