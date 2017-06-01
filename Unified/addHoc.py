@@ -10,6 +10,9 @@ import json
 import time
 
 
+## push the PR relval through
+os.system('Unified/assignor.py _PR_newco')
+os.system('Unified/assignor.py _PR_ref')
 
 #os.system('Unified/assignor.py RunIISummer16MiniAODv2')
 #os.system('Unified/assignor.py --from_status staging RunIISummer16DR80Premix')
@@ -20,7 +23,13 @@ if not up.check(): sys.exit(0)
 
 url = reqmgr_url
 
-
+## get rid of all rejected relvals that could appear in trouble
+#for wfo  in session.query(Workflow).filter(Workflow.status=='trouble').all():
+#    wfi = workflowInfo(url, wfo.name)
+#    if wfi.isRelval():
+#        wfo.status ='forget'
+#        print wfo.name,wfi.request['RequestStatus']
+#session.commit()
 
 wfs = getWorkflows(url, 'assigned', details=True)
 
