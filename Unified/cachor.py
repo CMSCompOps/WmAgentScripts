@@ -31,19 +31,19 @@ def cachor(spec=None):
     new = (set(all_transfers) - set(existing))
 
     print len(new),"transfers not look out at all, will do those first",new
-    if spec: new = [spec]
+    if spec: new = [int(spec)]
 
     #for transfer in all_transfers:
     for phedexid in all_transfers:    
-        print phedexid
-        if new and str(phedexid)!=sorted(new)[0]: continue
+        #print phedexid
+        if new and phedexid!=sorted(new)[0]: continue
         print "running the check on",phedexid
         new_check = checkTransferStatus(url, phedexid, nocollapse=True)
         if new_check : 
             print json.dumps( new_check ,indent=2)
             all_checks[str(phedexid)] = new_check
         else:
-            print "withouth an update, we are in deep shit"
+            print "withouth an update, we are in some trouble."
             sendLog('cachor','Failed transfer status check on %s'% phedexid, level='critical')
         #do only one
         break
