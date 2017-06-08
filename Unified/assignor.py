@@ -452,24 +452,35 @@ def assignor(url ,specific = None, talk=True, options=None):
         if options and options.team:
             team = options.team
         parameters['Team'] = team
-        
-        ##parse options entered in command line if any
-        if options:
-            for key in reqMgrClient.assignWorkflow.keys:
-                v=getattr(options,key)
-                if v!=None:
-                    if type(v)==str and ',' in v: 
-                        parameters[key] = filter(None,v.split(','))
-                    else: 
-                        parameters[key] = v
+
 
         if lheinput:
             ## throttle reading LHE article 
             wfh.sendLog('assignor', 'Setting the number of events per job to 500k max')
             parameters['EventsPerJob'] = 500000
 
-        ## pick up campaign specific assignment parameters
-        parameters.update( assign_parameters.get('parameters',{}) )
+        def pick_options(options, parameters):
+            ##parse options entered in command line if any
+            if options:
+                for key in reqMgrClient.assignWorkflow.keys:
+                    v=getattr(options,key)
+                    if v!=None:
+                        if type(v)==str and ',' in v: 
+                            parameters[key] = filter(None,v.split(','))
+                        else: 
+                            parameters[key] = v
+
+        def pick_campaign( assign_parameters, parameters):
+            ## pick up campaign specific assignment parameters
+            parameters.update( assign_parameters.get('parameters',{}) )
+
+        if options.force_options:
+            pick_campaign( assign_parameters, parameters)
+            pick_options(options, parameters)
+        else:
+            ## campaign parameters update last
+            pick_options(options, parameters)
+            pick_campaign( assign_parameters, parameters)
 
         if not options.test:
             parameters['execute'] = True
@@ -587,6 +598,7 @@ if __name__=="__main__":
     parser.add_option('--limit',help="Limit the number of wf to be assigned",default=0,type='int')
     parser.add_option('--priority',help="Lower limit on priority of wf to be assigned", default=0, type='int')
     parser.add_option('--from_status',help="The unified status we should try to assign from", default=None)
+    parser.add_option('--force_options', help="Use the command line options as last modifiers", default=False, action='store_true')
 
     for key in reqMgrClient.assignWorkflow.keys:
         parser.add_option('--%s'%key,help="%s Parameter of request manager assignment interface"%key, default=None)
