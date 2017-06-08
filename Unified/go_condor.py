@@ -11,6 +11,41 @@ import htcondor
 from collections import defaultdict
 
 
+def makeHoldAds(config):
+    """
+    Create a set of rules to hold a task from matching
+    """
+    for task,where in config.get('hold',{}).items():
+        # task is the task name
+        # where is either an empty list=all sites, or a list of sites (not implemented)
+        anAd = classad.ClassAd()
+        anAd["Name"] = str("Holding task %s from %s"%(task, where))
+        anAd["GridResource"] = "condor localhost localhost"
+        anAd["TargetUniverse"] = 5
+        exp = '(HasBeenSetHeld isnt true)  && (target.WMAgent_SubTaskName =?= %s)' % classad.quote(str(task))
+        anAd["Requirements"] = classad.ExprTree(str(exp))
+        ## we use the site whitelist to prevent matching
+        anAd["copy_DESIRED_Sites"] = "Held_DESIRED_Sites"
+        anAd["set_DESIRED_Sites"] = '"T2_NW_NOWHERE"'
+        anAd["set_HasBeenRouted"] = False
+        anAd["set_HasBeenSetHeld"] = True
+        print anAd
+
+def makeReleaseAds(config):
+    """
+    Create a set of rules to release a task to match
+    """
+    for task,where in config.get('release',{}).items():
+        anAd = classad.ClassAd()
+        anAd["Name"] = str("Releasing task %s"%(task))
+        anAd["GridResource"] = "condor localhost localhost"
+        exp = '(HasBeenSetHeld is true) && (target.WMAgent_SubTaskName =?= %s)' % classad.quote(str(task))
+        anAd["Requirements"] = classad.ExprTree(str(exp))
+        anAd["copy_Held_DESIRED_Sites"] = "DESIRED_Sites"
+        anAd["set_HasBeenRouted"] = False
+        anAd["set_HasBeenSetHeld"] = False
+        print anAd
+
 def makeReadAds(config):
     for needs, tasks in config.get('read',{}).items():
         anAd = classad.ClassAd()
