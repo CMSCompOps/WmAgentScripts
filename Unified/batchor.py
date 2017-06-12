@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, sendEmail, sendLog, monitor_pub_dir, unifiedConfiguration, deep_update
+from utils import getWorkflows, sendEmail, sendLog, monitor_pub_dir, unifiedConfiguration, deep_update, global_SI
 from collections import defaultdict
 import copy
 import json
@@ -9,6 +9,7 @@ import random
 
 def batchor( url ):
     UC = unifiedConfiguration()
+    SI = global_SI()
     ## get all workflows in assignment-approved with SubRequestType = relval
     all_wfs = []
     for user in UC.get("user_relval"):
@@ -53,11 +54,13 @@ def batchor( url ):
     def pick_one_site( p):
         ## modify the parameters on the spot to have only one site
         if "parameters" in p and "SiteWhitelist" in p["parameters"] and len(p["parameters"]["SiteWhitelist"])>1:
-            picked = random.choice( p["parameters"]["SiteWhitelist"] )
-            print "picked",picked,"from",p["parameters"]["SiteWhitelist"]
-            p["parameters"]["SiteWhitelist"] = list(picked)
+            choose_from = list(set(p["parameters"]["SiteWhitelist"]) & set(SI.sites_ready))
+            picked = random.choice( choose_from )
+            print "picked",picked,"from",choose_from
+            p["parameters"]["SiteWhitelist"] = [picked]
             
     for campaign in by_campaign:
+        if campaign in batches: continue
         ## get a bunch of information
         setup  = copy.deepcopy( default_setup )
 
@@ -76,6 +79,7 @@ def batchor( url ):
         batches[campaign] = list(set(list(copy.deepcopy( by_campaign[campaign] )) + batches[campaign] ))
 
     for campaign in by_hi_campaign:
+        if campaign in batches: continue
         ## get a bunch of information
         setup  = copy.deepcopy( default_hi_setup )
         hi_site = random.choice(["T1_DE_KIT","T1_FR_CCIN2P3"])

@@ -47,12 +47,12 @@ def deep_update(d, u):
             default.clear()
             r = deep_update(d.get(k, default), v)
             d[k] = r
-        elif isinstance(v, list):
-            d[k]=d.get(k,[])
-            d[k].extend( v ) 
-        elif isinstance(v, set):
-            d[k]=d.get(k,set())
-            d[k].update( v )
+        #elif isinstance(v, list):
+        #    d[k]=d.get(k,[])
+        #    d[k].extend( v ) 
+        #elif isinstance(v, set):
+        #    d[k]=d.get(k,set())
+        #    d[k].update( v )
         else:
             d[k] = v
     return d
