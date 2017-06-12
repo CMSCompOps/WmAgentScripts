@@ -2344,6 +2344,7 @@ def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, ve
                 for block in ds['block']:
                     for sub in block['subscription']:
                         site = sub['node']
+                        if within_sites and not site in within_sites: continue
                         if vetoes and any([site.endswith(v) for v in vetoes]): continue
                         destinations[site].add( (block['name'], sub['percent_bytes'], sub['request']))
         pass
@@ -4306,7 +4307,7 @@ class workflowInfo:
                         return copy.deepcopy( self.request[tname] )
                 return None
             for task in splits:
-                print task
+                print "the task split",task
                 if 'events_per_lumi' in task:
                     events_per_lumi = task['events_per_lumi']
                         
