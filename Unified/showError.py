@@ -120,6 +120,7 @@ def parse_one(url, wfn, options=None):
                            '8026': defaultdict(lambda : n_expose),# the usual exception in cmsRun
                            '11003': defaultdict(lambda : n_expose),# job extraction
                            '73': defaultdict(lambda : n_expose),# job extraction
+                           '87': defaultdict(lambda : n_expose),
                            }
     expose_condor_code = {'99109':defaultdict(lambda : n_expose),#stageout
                           '99303':defaultdict(lambda : n_expose),#no pkl report
@@ -249,7 +250,7 @@ def parse_one(url, wfn, options=None):
                                 expose_condor_code[errorcode_s][agent]-=1
 
                         for out in sample['output']:
-                            #print out
+                            print out
                             if out['type'] == 'logArchive':
                                 if do_JL and ((errorcode_s in expose_archive_code and expose_archive_code[errorcode_s][agent]>0) or (do_all_error_code)):
                                     if errorcode_s in expose_archive_code:
@@ -259,7 +260,10 @@ def parse_one(url, wfn, options=None):
                                     local = '/tmp/%s/%s'%(os.getenv('USER'),out['lfn'].split('/')[-1])
                                     command = 'xrdcp root://cms-xrd-global.cern.ch/%s %s'%( out['lfn'], local)
                                     ## get the file
-                                    os.system( command )
+                                    xec = os.system( command )
+                                    print xec
+                                    if xec!=0 and errorcode_s in expose_archive_code:
+                                        expose_archive_code[errorcode_s][agent]+=1
                                     ## if this actually fail, let's get the file from eos using the new log mapping
                                     ## expose the content
                                     label=out['lfn'].split('/')[-1].split('.')[0]
