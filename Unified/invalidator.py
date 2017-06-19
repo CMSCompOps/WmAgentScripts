@@ -14,6 +14,8 @@ def invalidator(url, invalid_status='INVALID'):
     mcm = McMClient(dev=False)
 
     invalids = mcm.getA('invalidations',query='status=announced')
+    if not invalids: return
+
     print len(invalids),"Object to be invalidated"
     text_to_batch = defaultdict(str)
     text_to_request = defaultdict(str)
