@@ -158,6 +158,7 @@ def makeResizeAds(config):
         anAd['set_WMCore_ResizeJob'] = True
         anAd['set_MinCores'] = minCores
         anAd['set_MaxCores'] = maxCores
+        anAd['set_HasBeenRouted'] = False
         anAd['set_RequestMemory'] = classad.ExprTree('OriginalMemory + %d * ( WMCore_ResizeJob ? ( RequestCpus - OriginalCpus ) : 0 )' % memoryPerThread)
         print anAd
 
