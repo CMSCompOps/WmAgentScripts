@@ -1256,7 +1256,7 @@ class siteInfo:
             if not mss in mss_usage['Tape'][use_field]: 
                 self.storage[mss] = 0 
             else: 
-                self.storage[mss]  = mss_usage['Tape'][use_field][mss]
+                self.storage[mss]  = max(0,mss_usage['Tape'][use_field][mss])
 
             if mss in sites_space_override:
                 self.storage[mss] = sites_space_override[mss]
