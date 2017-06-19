@@ -33,6 +33,7 @@ def singleRecovery(url, task , initial, actions, do=False):
 
     #a massage ? boost the recovery over the initial wf
     payload['RequestPriority'] *= 10
+    payload['RequestPriority'] = min(999999, payload['RequestPriority'])
 
     if actions:
         for action in actions:
