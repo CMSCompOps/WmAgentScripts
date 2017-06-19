@@ -515,12 +515,14 @@ def checkor(url, spec=None, options=None):
                 custodial = None
 
             ## try to get it from campaign configuration
+            force_custodial = False
             if not custodial:
                 for output in out_worth_checking:
                     campaign = campaigns[output]
                     if campaign in CI.campaigns and 'custodial' in CI.campaigns[campaign]:
                         custodial = CI.campaigns[campaign]['custodial']
                         print "Setting custodial to",custodial,"from campaign configuration"
+                        force_custodial = True
 
             group = None
             if campaign in CI.campaigns and 'phedex_group' in CI.campaigns[campaign]:
@@ -558,13 +560,12 @@ def checkor(url, spec=None, options=None):
                     assistance_tags.add('parentcustodial')
                                 
             if custodial and float(SI.storage[custodial]) < size_worth_checking:
-                print "cannot use the parent custodial:",custodial,"because of limited space"
+                print "cannot use the custodial:",custodial,"because of limited space"
                 custodial = None
 
-            if not custodial and pick_custodial:
+            if not custodial and pick_custodial and not force_custodial:
                 ## pick one at random
                 custodial = SI.pick_SE(size=size_worth_checking)
-
 
             if custodial and size_worht_going_to_ddm > tape_size_limit:
                 print wfi.sendLog('checkor',"The total output size (%s TB) is too large for the limit set (%s TB)"%( size_worth_checking, tape_size_limit))
