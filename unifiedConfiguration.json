@@ -1,6 +1,6 @@
 {
  "email_destination" : { 
-   "value" : ["vlimant@cern.ch","matteoc@fnal.gov","areinsvo@nd.edu"],
+   "value" : ["vlimant@cern.ch","matteoc@fnal.gov","areinsvo@nd.edu","thong@caltech.edu"],
    "description" : "The list of people that get the emails notifications"
  },
  "site_for_overflow": {
@@ -49,9 +49,12 @@
  },
  "allowed_bypass": {
    "description" : "Who is allowed to bypass and force complete",
-   "value" : [["vlimant","vlimant@cern.ch"],
-   	     ["prozober","paola.katherine.rozo.bernal@cern.ch"],
-	     ["mcremone","matteoc@fnal.gov"]]
+   "value" : [
+              ["vlimant","vlimant@cern.ch"],
+   	      ["prozober","paola.katherine.rozo.bernal@cern.ch"],
+	      ["mcremone","matteoc@fnal.gov"],
+              ["qnguyen","thong@caltech.edu"]
+             ]
  },
  "max_tail_priority" : {
    "value" : 5,
@@ -222,15 +225,16 @@
   },
   "user_relval":{
    "description" : "The users from which we expect relval requests",
-   "value" : ["fabozzi","nwickram","bsutar","rverma","prebello","piperov","sandhya"]
+   "value" : ["fabozzi","nwickram","bsutar","rverma","prebello","piperov","sandhya","zhenhu"]
   },
   "relval_routing":{
    "description" : "Set of keywords and special settings for relvals",
    "value" : { "cc7" : { "parameters" : { "SiteWhitelist" : ["T2_US_Nebraska"]}},
    	       "highPU" : {"parameters" : { "SiteWhitelist" : ["T2_US_Nebraska","T2_US_Purdue"]}},
 	       "highIO" : {"parameters" : { "SiteWhitelist" : ["T2_US_Nebraska","T2_US_Purdue"]}},
-	       "ALCARELVAL" : { "parameters" : { "SiteWhitelist" : ["T2_CH_CERN"], 
-	       				       		      	"primary_AAA" : true }}
+	       "ALCARELVAL" : { "primary_AAA" : true , 
+	       		      	"parameters" : { "SiteWhitelist" : ["T2_CH_CERN"]}
+				}
              }
   },
   "batch_goodness":{
