@@ -22,7 +22,7 @@ def makeHighPrioAds(config):
         del anAd["RaisedTaskNames"]
         exp = '(HasBeenRaisedHighPrio isnt true)  && member(target.WMAgent_RequestName, %s)' % wfs_escaped
         anAd["Requirements"] = classad.ExprTree(str(exp))        
-        anAd["set_AccountingGroup"] = "production.cmsdataops"
+        anAd["set_AccountingGroup"] = "highprio.cmsdataops"
         anAd["set_HasBeenRaisedHighPrio"] = True
         anAd["set_HasBeenRouted"] = False
         print anAd
