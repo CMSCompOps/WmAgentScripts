@@ -10,6 +10,22 @@ import hashlib
 import htcondor
 from collections import defaultdict
 
+def makeHighPrioAds(config):
+    to_be_raised = config.get('highprio',[])
+    if to_be_raised:
+        anAd = classad.ClassAd()
+        anAd["Name"] = str("Raising to highprio group")
+        anAd["GridResource"] = "condor localhost localhost"
+        anAd["TargetUniverse"] = 5
+        anAd["RaisedTaskNames"] = map(str,to_be_raised)
+        wfs_escaped = anAd.lookup('RaisedTaskNames').__repr__()
+        del anAd["RaisedTaskNames"]
+        exp = '(HasBeenRaisedHighPrio isnt true)  && member(target.WMAgent_RequestName, %s)' % wfs_escaped
+        anAd["Requirements"] = classad.ExprTree(str(exp))        
+        anAd["set_AccountingGroup"] = "production.cmsdataops"
+        anAd["set_HasBeenRaisedHighPrio"] = True
+        anAd["set_HasBeenRouted"] = False
+        print anAd
 
 def makeHoldAds(config):
     """
@@ -244,6 +260,9 @@ def makeAds(config):
     makePerformanceCorrectionsAds(config)    
     makeResizeAds(config)
     makeReadAds(config)
+    makeHoldAds(config)
+    makeReleaseAds(config)
+    makeHighPrioAds(config)
 
 if __name__ == "__main__":
 
