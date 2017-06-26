@@ -4662,7 +4662,7 @@ class workflowInfo:
         if 'Chain' in self.request['RequestType']:
             acqEra = self._collectinchain('AcquisitionEra', func=invertDigits)
         else:
-            acqEra = invertDigits(self.request['Campaign'])
+            acqEra = invertDigits(self.request['AcquisitionEra'])
         return acqEra
 
     def processingString(self):
