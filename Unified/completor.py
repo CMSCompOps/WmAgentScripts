@@ -272,7 +272,10 @@ def completor(url, specific):
         ##### WILL FORCE COMPLETE BELOW
         # only really force complete after n days
 
-        if delay <= allowed_delay: continue
+        if delay <= allowed_delay: 
+            wfi.sendLog('completor','Running since %.2f, waiting for more than %.2f'%( delay, allowed_delay))
+            continue
+        
         ## find ACDCs that might be running
         if max_force>0:
             forceComplete(url, wfi )
@@ -288,9 +291,9 @@ def completor(url, specific):
         #break
     
 
-        if delay >= 40:
-            print wfo.name,"has been running for",dealy,"days"
-            ## bumping up the priority?
+        #if delay >= 40:
+        #    print wfo.name,"has been running for",dealy,"days"
+        #    ## bumping up the priority?
             
 
 
