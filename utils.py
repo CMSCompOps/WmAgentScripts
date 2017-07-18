@@ -196,6 +196,20 @@ def sendEmail( subject, text, sender=None, destination=None ):
     smtpObj.quit()
 
 
+
+
+def condorLogger(agent, workflow, wmbs, errorcode_s):
+    """
+    mechanism to get the condor log out of the agent to a visible place
+    """
+    pass
+
+def cmsswLogger(errorcode_s):
+    """
+    mechanism to get the cmsrun log (from node, or eos) to a visible place
+    """
+    pass
+
 def url_encode_params(params = {}):
     """
     encodes given parameters dictionary. Dictionary values
@@ -353,11 +367,30 @@ def listSubscriptions(url, dataset, within_sites=None):
                 #print node
     #print destinations
     return destinations
+def lock_DDM(lock=True):
+    conn  =  httplib.HTTPSConnection('t3desk007.mit.edu', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    if lock:
+        conn.request("POST","/registry/activitylock/lock?service=unified&app=detox")
+    else:
+        conn.request("POST","/registry/activitylock/unlock?service=unified&app=detox")    
+    response = conn.getresponse()
+    data = response.read()
+    res = json.loads( data )
+    print res
+
+
 
 class lockInfo:
     def __init__(self, andwrite=True):
         self.lockfilename = 'globallocks' ## official name
         self.writeondelete = andwrite
+        ## should lock on DDM
+        try:
+            lock_DDM()
+        except Exception as e:
+            print str(e)
+            pass
+
         if self.writeondelete:
             os.system('echo `date` > %s/globallocks.json.lock'%monitor_pub_dir)
 
@@ -4749,9 +4782,11 @@ class workflowInfo:
             return st
 
         if 'Chain' in self.request['RequestType']:
-            acqEra = self._collectinchain('AcquisitionEra', func=invertDigits)
+            #acqEra = self._collectinchain('AcquisitionEra', func=invertDigits)
+            acqEra = self._collectinchain('AcquisitionEra')
         else:
-            acqEra = invertDigits(self.request['AcquisitionEra'])
+            #acqEra = invertDigits(self.request['AcquisitionEra'])
+            acqEra = self.request['AcquisitionEra']
         return acqEra
 
     def processingString(self):
