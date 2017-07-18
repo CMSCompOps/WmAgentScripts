@@ -14,6 +14,7 @@ import itertools
 from htmlor import htmlor
 
 def equalizor(url , specific = None, options=None):
+
     up = componentInfo(mcm=False, soft=['mcm']) 
     if not up.check(): return 
 
@@ -103,6 +104,8 @@ def equalizor(url , specific = None, options=None):
             if one==two: continue
             mapping[one].append(two)
             pass
+        ## all EU T1 can read from T0
+        mapping['T0_CH_CERN'].append( one )
 
     ## fnal can read from cnaf ?
     #mapping['T1_IT_CNAF'].append( 'T1_US_FNAL' )
@@ -340,7 +343,10 @@ def equalizor(url , specific = None, options=None):
         'time' : {},
         'memory' : {},
         'slope' : {},
-        'read' : {}
+        'read' : {},
+        'hold': {},
+        'release' : {},
+        'highprio' : []
         }
     if options.augment or options.remove:
         previous = json.loads( open('%s/equalizor.json'%monitor_pub_dir).read())
@@ -349,6 +355,10 @@ def equalizor(url , specific = None, options=None):
         interface['time'] = previous.get('time',{})
         interface['slope'] = previous.get('slope', {})
         interface['read'] = previous.get('read',{})
+        interface['hold'] = previous.get('hold',{})
+        interface['release'] = previous.get('release',{})
+        interface['highprio'] = previous.get('highprio',[])
+        
         
     if options.remove:
         if specific in interface['modifications']:
@@ -458,6 +468,7 @@ def equalizor(url , specific = None, options=None):
         ## now parse this for action
         for i_task,(task,campaign) in enumerate(tasks_and_campaigns):
             taskname = task.pathName.split('/')[-1]
+            print taskname,campaign
             if options.augment:
                 print task.pathName
                 print campaign
@@ -888,7 +899,35 @@ def equalizor(url , specific = None, options=None):
                                                                    "Running" : running,
                                                                    "Pending" : idled}
                         wfi,sendLog('equalizor','adding the T0 for %s to %d for %d'%( task.pathName, pending_T0, max_T0))
+            if options.manual and options.manual.count(':')==2:
+                manual_task,a_sites,r_sites = options.manual.split(':')
+                if manual_task == taskname:
 
+                    if a_sites:
+                        print "adding manually",a_sites,"for",task.pathName
+                        if task.pathName in modifications[wfo.name] and 'AddWhitelist' in modifications[wfo.name][task.pathName]:
+                            modifications[wfo.name][task.pathName]['AddWhitelist'] = list(set(modifications[wfo.name][task.pathName]['AddWhitelist'] +a_sites.split(',')))
+                        else:
+                            modifications[wfo.name][task.pathName] = {'AddWhitelist' : list(set(a_sites.split(',')))}
+                    elif r_sites:
+                        print "replacing manually",r_sites,"for",task.pathName
+                        if task.pathName in modifications[wfo.name] and 'ReplaceSiteWhitelist' in modifications[wfo.name][task.pathName]:
+                            modifications[wfo.name][task.pathName]['ReplaceSiteWhitelist'] = list(set(modifications[wfo.name][task.pathName]['ReplaceSiteWhitelist'] +r_sites.split(',')))
+                        else:
+                            modifications[wfo.name][task.pathName] = {'ReplaceSiteWhitelist' : list(set(r_sites.split(',')))}                
+    ## completely add-hoc
+    if options.manual and options.manual.count(':')==3:
+        wf,path,a_sites,r_sites = options.manual.split(':')
+        if a_sites:
+            if path in modifications[wf] and 'AddWhitelist' in modifications[wf][path]:
+                modifications[wf][path]['AddWhitelist'] = list(set(modifications[wf][path]['AddWhitelist'] +a_sites.split(',')))
+            else:
+                modifications[wf][path] = {'AddWhitelist' : list(set(a_sites.split(',')))}
+        elif r_sites:
+            if path in modifications[wf] and 'ReplaceSiteWhitelist' in modifications[wf][path]:
+                modifications[wf][path]['ReplaceSiteWhitelist'] = list(set(modifications[wf][path]['ReplaceSiteWhitelist'] +r_sites.split(',')))
+            else:
+                modifications[wf][path] = {'ReplaceSiteWhitelist' : list(set(r_sites.split(',')))}
 
     interface['modifications'].update( modifications )
 
@@ -959,6 +998,15 @@ def equalizor(url , specific = None, options=None):
     interface['slope'].update( new_slopes )
     interface['read'].update( new_reads )
 
+    if options.high_prio:
+        toggles = options.high_prio.split(',')
+        already_high = interface['highprio']
+        remove = set(already_high) & set(toggles) ## the intersection
+        add = set(toggles) - remove
+        to_set = (set(interface['highprio']) - remove)
+        to_set.update( add )
+        interface['highprio'] = list(to_set)
+
     ## close and save
     close( interface )
 
@@ -973,6 +1021,8 @@ if __name__ == "__main__":
     parser.add_option('--t0',help="Allow to use T0", default=False, action='store_true')
     parser.add_option('--hlt',help="Allow to use HLT", default=False, action='store_true')
     parser.add_option('--tune',help='Enable performance tuning', default=False, action='store_true')
+    parser.add_option('--high_prio',help='Toggle in the list of high priority workflows', default=None)
+    parser.add_option('--manual',help='Just add something fully by hand in there', default=None)
     (options,args) = parser.parse_args()
     spec=None
     if len(args)!=0:
