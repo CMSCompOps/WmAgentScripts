@@ -492,21 +492,16 @@ def assignor(url ,specific = None, talk=True, options=None):
             n_stalled+=1
             continue
         elif split_check:
+            if hold_split and not options.go:
+                wfh.sendLog('assignor','Recommending the change in splitting %s'%( '\n\n'.join([str(i) for i in split_check])))
+                n_stalled+=1
+                continue
             ## operate all recommended changes
             reqMgrClient.setWorkflowSplitting(url, 
                                               wfo.name,
                                               split_check)
             wfh.sendLog('assignor','Applying the change in splitting %s'%( '\n\n'.join([str(i) for i in split_check])))
-            if hold_split and not options.go:
-                n_stalled+=1
-                continue
 
-            ## temporaryly skip it, so that we can attend to it
-            if not options.go:
-                n_stalled+=1
-                continue
-
-            
         #split_check = wfh.checkWorkflowSplitting()
         split_check = True ## bypass completely and use the above
         if split_check!=True:

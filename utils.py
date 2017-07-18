@@ -4372,7 +4372,7 @@ class workflowInfo:
                         print "The default splitting will not work for subsequent steps",events_per_lumi,">",avg_events_per_job
                         max_events_per_lumi.append( int(avg_events_per_job*0.75) )
                
-                    GB_space_limit = 20.
+                    GB_space_limit = 25.
                     if sizeperevent and (avg_events_per_job * sizeperevent ) > (GB_space_limit*1024.**2):
                         print "The output size of task %s is expected to be too large : %d x %.2f kB = %.2f GB > %f GB "% ( tname , 
                                                                                                                            avg_events_per_job, sizeperevent,
@@ -4552,6 +4552,7 @@ class workflowInfo:
         return all_tasks
 
     def getSplittingsNew(self):
+        self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))        
         r1=self.conn.request("GET",'/reqmgr2/data/splitting/%s'%self.request['RequestName'], headers={"Accept":"application/json"} )
         r2=self.conn.getresponse()
         result = json.loads( r2.read() )['result']
