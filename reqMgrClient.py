@@ -757,6 +757,7 @@ def getOutputLumis(url, workflow, dataset, skipInvalid=False):
     return dbs3.getLumiCountDataSet(dataset, skipInvalid)
     
 def assignWorkflow(url, workflowname, team, parameters ):
+    assignWorkflow.errorMessage = ""
     #local import so it doesn't screw with all other stuff
     defaults = copy.deepcopy( assignWorkflow.defaults )
     if 'Team' in parameters: ## this needs to go away with moving away from old assignment to new in all scripts
@@ -810,8 +811,9 @@ def assignWorkflow(url, workflowname, team, parameters ):
             defaults.pop(what)
 
     if not set(assignWorkflow.mandatories).issubset( set(parameters.keys())):
-        print "There are missing parameters"
-        print list(set(assignWorkflow.mandatories) - set(parameters.keys()))
+        assignWorkflow.errorMessage = "There are missing parameters\n"
+        assignWorkflow.errorMessage += str(list(set(assignWorkflow.mandatories) - set(parameters.keys())))
+        print assignWorkflow.errorMessage
         return False
 
 
@@ -827,7 +829,8 @@ def assignWorkflow(url, workflowname, team, parameters ):
         defaults['SiteWhitelist'] = list(set(defaults['SiteWhitelist']) - set(defaults['SiteBlacklist']))
         defaults['SiteBlacklist'] = []
         if not defaults['SiteWhitelist']:
-            print "Cannot assign with no site whitelist"
+            assignWorkflow.errorMessage = "Cannot assign with no site whitelist"
+            print assignWorkflow.errorMessage
             return False
 
 
@@ -903,12 +906,14 @@ def assignWorkflow(url, workflowname, team, parameters ):
                 print "No action for ",aux
 
     if not 'execute' in defaults or not defaults['execute']:
-        print json.dumps( defaults ,indent=2)
+        assignWorkflow.errorMessage = json.dumps( defaults ,indent=2)
+        print assignWorkflow.errorMessage
         return False
     else:
         defaults.pop('execute')
         print "These are the parameters to be used"
         print json.dumps( defaults ,indent=2)
+        
 
     res = setWorkflowAssignment(url, workflowname, defaults)
     if res:
@@ -916,9 +921,10 @@ def assignWorkflow(url, workflowname, team, parameters ):
         return True
     else:
         print "error in assigning",workflowname
+        assignWorkflow.errorMessage = setWorkflowAssignment.errorMessage
         return False
 
-
+assignWorkflow.errorMessage = ""
 assignWorkflow.defaults= {
         #"action": "Assign",
         "SiteBlacklist": [],
@@ -1226,6 +1232,7 @@ def setWorkflowAssignment(url, workflowname, schema):
     """
     This sets the workflow assignment into reqmgr
     """
+    setWorkflowAssignment.errorMessage = ""
     def isOldSchema(schema):
         return any([k.startswith('checkbox') for k in schema.keys()])
 
@@ -1239,6 +1246,7 @@ def setWorkflowAssignment(url, workflowname, schema):
             return ok
         except:
             print data
+            setWorkflowAssignment.errorMessage = data
             return False
     else:
         if not isOldSchema(schema):
@@ -1249,6 +1257,7 @@ def setWorkflowAssignment(url, workflowname, schema):
             return True
         else:
             print data
+            setWorkflowAssignment.errorMessage = data
             return False
     return data
 
