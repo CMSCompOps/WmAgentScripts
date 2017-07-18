@@ -64,8 +64,17 @@ may_have_one.update( may_have_one_too )
 batches = json.loads(open('batches.json').read())
 for b,pids in batches.items(): 
     for pid in pids:
-        wfs = getWorkflowById(url, pid)
-        may_have_one.update( wfs )
+        wfs = getWorkflowById(url, pid, details=True)
+        for wf in wfs:
+            ## check on the announce date
+            announced = filter(lambda o : o['Status']=='announced', wf['RequestTransition'])
+            if announced:
+                announced_time = announced[-1]['UpdateTime']
+                if (now-announced_time) < (7*24*60*60):
+                    ## less than 7 days announced
+                    may_have_one.update( wf['RequestName'] )
+            else:
+                may_have_one.update( wf['RequestName'] )
 
 for logtype in ['report','joblogs','condorlogs']:
     #for d in filter(None,os.popen('ls -d %s/%s/*'%(monitor_dir,logtype)).read().split('\n')):
