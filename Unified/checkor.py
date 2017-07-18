@@ -116,6 +116,7 @@ def checkor(url, spec=None, options=None):
             #sendLog('checkor','no file %s',bypass_file)
             continue
         try:
+            print "Can read bypass from", bypassor
             bypasses.extend( json.loads(open(bypass_file).read()))
         except:
             sendLog('checkor',"cannot get by-passes from %s for %s"%(bypass_file ,bypassor))
@@ -141,6 +142,7 @@ def checkor(url, spec=None, options=None):
             #sendLog('checkor',"no file %s"%rider_file)
             continue
         try:
+            print "Can read force complete from", rider
             bypasses.extend( json.loads(open( rider_file ).read() ) )
         except:
             sendLog('checkor',"cannot get force complete list from %s"%rider)
@@ -151,7 +153,9 @@ def checkor(url, spec=None, options=None):
         #if forcings:
         #    sendEmail('force completing mechanism','please check what checkor is doing with %s'%( ','.join(forcings)))
 
-
+    
+    ## remove empty entries ...
+    bypasses = filter(None, bypasses)
     pattern_fraction_pass = UC.get('pattern_fraction_pass')
 
     total_running_time = 5.*60. 
@@ -246,7 +250,8 @@ def checkor(url, spec=None, options=None):
         bypass_checks = False
 
         for bypass in bypasses:
-            if bypass in wfo.name:
+            #if bypass and bypass in wfo.name:
+            if bypass == wfo.name:
                 wfi.sendLog('checkor',"we can bypass checks on %s because of keyword %s "%( wfo.name, bypass))
                 bypass_checks = True
                 break
@@ -272,13 +277,26 @@ def checkor(url, spec=None, options=None):
         to_ddm_tier = copy.deepcopy(UC.get('tiers_to_DDM'))
         campaigns = {} ## this mapping of campaign per output dataset assumes era==campaing, which is not true for relval
         expected_outputs = copy.deepcopy( wfi.request['OutputDatasets'] )
+
+        ### NEEDS A BUG FIX : find campaign per dataset
+        ## probably best to get outpuut per task, then campaign per task
+        
         for out in wfi.request['OutputDatasets']:
             c = get_campaign(out, wfi)
             campaigns[out] = c 
+        wf_campaigns = wfi.getCampaigns()
+        ## override the previous if there is only one campaign in the workflow
+        if len(wf_campaigns)==1:
+            for out in campaigns:
+                campaigns[out] = wf_campaigns[0]
+
+        for out,c in campaigns.items():
             if c in CI.campaigns and 'custodial_override' in CI.campaigns[c]:
                 vetoed_custodial_tier = list(set(vetoed_custodial_tier) - set(CI.campaigns[c]['custodial_override']))
                 ## add those that we need to check for custodial copy
                 tiers_with_no_check = list(set(tiers_with_no_check) - set(CI.campaigns[c]['custodial_override'])) ## would remove DQM from the vetoed check
+
+        print campaigns
 
         check_output_text = "Initial outputs:"+",".join(sorted(wfi.request['OutputDatasets'] ))
         wfi.request['OutputDatasets'] = [ out for out in wfi.request['OutputDatasets'] if not any([out.split('/')[-1] == veto_tier for veto_tier in tiers_with_no_check])]
