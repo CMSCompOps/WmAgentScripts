@@ -1252,6 +1252,7 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
             bgcolor=''
             name= agent['agent_url'].split(':')[0]
             short_name = name.split('.')[0]
+            dash_name = name.replace('.','-')
             if agent['drain_mode'] == True: bgcolor = 'bgcolor=orange'
             if agent['status'] in ['error','down']: 
                 ## do you want to send a critical message !
