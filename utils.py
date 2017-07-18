@@ -4291,6 +4291,89 @@ class workflowInfo:
 
         return (lheinput,primary,parent,secondary,sites_allowed)
 
+    def checkSplitting(self):
+        #returns hold,<list of params
+        ##return None to indicate that things should not proceed
+        splits = self.getSplittingsNew()
+        hold = False
+        ## for those that are modified, add it and return it
+        modified_splits = []
+
+        if self.request['RequestType']=='TaskChain':        
+            events_per_lumi=None
+            events_per_lumi_inputs = None
+            max_events_per_lumi=[]
+            def find_task_dict( name ):
+                i_task=1 
+                while True: 
+                    tname = 'Task%d'%i_task     
+                    i_task+=1       
+                    if not tname in self.request: break
+                    if self.request[tname]['TaskName'] == name:
+                        return copy.deepcopy( self.request[tname] )
+                return None
+
+            for spl in splits:
+                #print spl
+                task = spl['splitParams']
+                tname = spl['taskName'].split('/')[-1]
+                t = find_task_dict( tname )
+                sizeperevent = t.get('SizePerEvent',None)
+                inputs = t.get('InputDataset',None)
+                events_per_lumi_inputs = getDatasetEventsPerLumi(inputs) if inputs else events_per_lumi_inputs
+                events_per_lumi = events_per_lumi_inputs if events_per_lumi_inputs else events_per_lumi
+                timeperevent = t.get('TimePerEvent',None)
+                #print "the task split",task
+                if 'events_per_lumi' in task:
+                    events_per_lumi = task['events_per_lumi']
+
+                ## avg_events_per_job is base on 8h. we could probably put some margin
+                elif events_per_lumi and 'events_per_job' in task:
+                    avg_events_per_job = (task['events_per_job'] *2 )
+                    ## climb up all task to take the filter eff into account
+                    while t and 'InputTask' in t:
+                        t = find_task_dict( t['InputTask'] )
+                        if 'FilterEfficiency' in t:
+                            avg_events_per_job /= t['FilterEfficiency']
+                    if (events_per_lumi > avg_events_per_job):
+                        print "The default splitting will not work for subsequent steps",events_per_lumi,">",avg_events_per_job
+                        max_events_per_lumi.append( int(avg_events_per_job*0.75) )
+               
+                    GB_space_limit = 20.
+                    if sizeperevent and (avg_events_per_job * sizeperevent ) > (GB_space_limit*1024.**2):
+                        print "The output size of task %s is expected to be too large : %d x %.2f kB = %.2f GB > %f GB "% ( tname , 
+                                                                                                                           avg_events_per_job, sizeperevent,
+                                                                                                                           avg_events_per_job * sizeperevent / (1024.**2 ),
+                                                                                                                           GB_space_limit)
+                        if (events_per_lumi * sizeperevent ) > (GB_space_limit*1024.**2):
+                            ## derive a value for the lumisection
+                            max_events_per_lumi.append(int( (GB_space_limit*1024.**2) / sizeperevent) )
+                            print "The output size task %s is expected to be too large : %.2f GB > %f GB even for one lumi %d, should do %d"% ( tname , 
+                                                                                                                                                events_per_lumi * sizeperevent / (1024.**2 ),
+                                                                                                                                                GB_space_limit,
+                                                                                                                                                events_per_lumi,
+                                                                                                                                                max_events_per_lumi)
+                        else:
+                            ## should still change the avg_events_per_job setting of that task
+                            avg_events_per_job_for_task = int( (GB_space_limit*1024.**2) / sizeperevent)
+                            print "it will actually be OK for one lumisection, but task %s should be set with %d events per job in average"%( tname, avg_events_per_job_for_task)
+                            modified_split_for_task = spl
+                            modified_split_for_task['splitParams']['events_per_job'] = avg_events_per_job_for_task
+                            modified_splits.append( modified_split_for_task )
+                        
+            if max_events_per_lumi:
+                if events_per_lumi_inputs:
+                    ## there was an input dataset somewhere and we cannot break down that lumis, except by changing to EventBased
+                    hold = True
+                else:
+                    root_split = splits[0]
+                    root_split['splitParams']['events_per_lumi'] = min(max_events_per_lumi)
+                    modified_splits.append( root_split )
+
+        ## the return list can easily be used to call the splitting api of reqmgr2
+        return hold,modified_splits
+
+
     def checkWorkflowSplitting( self ):
         answer = True
         answer_d = {}
@@ -4319,7 +4402,7 @@ class workflowInfo:
                         return copy.deepcopy( self.request[tname] )
                 return None
             for task in splits:
-                print "the task split",task
+                #print "the task split",task
                 if 'events_per_lumi' in task:
                     events_per_lumi = task['events_per_lumi']
                         
@@ -4329,6 +4412,9 @@ class workflowInfo:
                     avg_events_per_job = (task['avg_events_per_job'] *2 )
                     tname = task['splittingTask'].split('/')[-1]
                     t = find_task_dict( tname )
+                    
+                    sizeperevent = t.get('SizePerEvent',None)
+                    ## climb up all task to take the filter eff into account
                     while t and 'InputTask' in t:
                         t = find_task_dict( t['InputTask'] )
                         if 'FilterEfficiency' in t:
@@ -4337,6 +4423,30 @@ class workflowInfo:
                         print "The default splitting will not work for subsequent steps",events_per_lumi,">",avg_events_per_job
                         if max_events_per_lumi==None or (max_events_per_lumi < avg_events_per_job):
                             max_events_per_lumi = avg_events_per_job
+               
+                    GB_space_limit = 25.
+                    if sizeperevent and (avg_events_per_job * sizeperevent ) > (GB_space_limit*1024.**2):
+                        print "The output size of task %s is expected to be too large : %d x %.2f kB = %.2f GB > %f GB "% ( tname , 
+                                                                                                                           avg_events_per_job, sizeperevent,
+                                                                                                                           avg_events_per_job * sizeperevent / (1024.**2 ),
+                                                                                                                           GB_space_limit)
+                        if (events_per_lumi * sizeperevent ) > (GB_space_limit*1024.**2):
+                            ## derive a value for the lumisection
+                            max_events_per_lumi =int( (GB_space_limit*1024.**2 /2.) / sizeperevent)
+                            print "The output size task %s is expected to be too large : %.2f GB > %f GB even for one lumi %d, should do %d"% ( tname , 
+                                                                                                                                                events_per_lumi * sizeperevent / (1024.**2 ),
+                                                                                                                                                GB_space_limit,
+                                                                                                                                                events_per_lumi,
+                                                                                                                                                max_events_per_lumi)
+                        else:
+                            ## should still change the avg_events_per_job setting of that task
+                            avg_events_per_job_for_task = int( (GB_space_limit*1024.**2 /2.) / sizeperevent)
+                            print "it will actually be OK for one lumisection, but task %s should be set with %d events per job in average"%( tname, avg_events_per_job_for_task)
+                            
+                                                        
+                            
+
+                        
             if max_events_per_lumi:
                 print "the base splitting should be changed to", max_events_per_lumi,"per lumi"
                 answer_d.update({'EventsPerLumi' : max_events_per_lumi})
@@ -4408,6 +4518,17 @@ class workflowInfo:
             all_tasks.extend( self._taskDescending( ts, select ) )
         return all_tasks
 
+    def getSplittingsNew(self):
+        r1=self.conn.request("GET",'/reqmgr2/data/splitting/%s'%self.request['RequestName'], headers={"Accept":"application/json"} )
+        r2=self.conn.getresponse()
+        result = json.loads( r2.read() )['result']
+        splittings = []
+        for spl in result:
+            if not spl['taskType'] in ['Production','Processing','Skim'] : continue
+            splittings.append( spl )
+
+        return splittings
+
     def getSplittings(self):
 
         spl =[]
@@ -4444,50 +4565,6 @@ class workflowInfo:
         ## this below is a functioning interface for retrieving the splitting from reqmgr2 used to make the call to reqmgr2 splitting change
 
 
-        r1=self.conn.request("GET",'/reqmgr2/data/splitting/%s'%self.request['RequestName'], headers={"Accept":"application/json"} )
-        r2=self.conn.getresponse()
-        translate = { 
-            #'EventAwareLumiBased' : [('events_per_job','avg_events_per_job')]
-            }
-        include = {
-            #'EventAwareLumiBased' : { 'halt_job_on_file_boundaries_event_aware' : 'True' },
-            #'LumiBased' : { 'halt_job_on_file_boundaries' : 'True'}
-            }
-        result = json.loads( r2.read() )['result']
-        splittings = []
-        for spl in result:
-            if not spl['taskType'] in ['Production','Processing','Skim'] : continue
-            splittings.append( spl )
-            ## add default value which were not returned in the first place
-            if spl['splitAlgo'] in include:
-                for k,v in include[spl['splitAlgo']].items():
-                    #splittings[-1][k] = v 
-                    pass
-            if spl['splitAlgo'] in translate:
-                for (src,des) in translate[spl['splitAlgo']]:
-                    splittings[-1][des] = splittings[-1].pop(src)
-
-            continue
-            #spl.append( { "splittingAlgo" : ts.algorithm,
-            #              "splittingTask" : task.pathName,
-            #              } )
-            #get_those = ['events_per_lumi','events_per_job','lumis_per_job','halt_job_on_file_boundaries','max_events_per_lumi','halt_job_on_file_boundaries_event_aware']#,'couchdDB']#,'couchURL']#,'filesetName']
-            
-            #if ts.algorithm in include:
-            #    for k,v in include[ts.algorithm].items():
-            #        spl[-1][k] = v
-
-            #for get in get_those:
-            #    if hasattr(ts,get):
-            #        set_to = get
-            #        if ts.algorithm in translate:
-            #            for (src,des) in translate[ts.algorithm]:
-            #                if src==get:
-            #                    set_to = des
-            #                    break
-            #        spl[-1][set_to] = getattr(ts,get)
-
-        return splittings
 
     def getCurrentStatus(self):
         return self.request['RequestStatus']

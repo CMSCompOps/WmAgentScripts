@@ -47,7 +47,9 @@ def assignor(url ,specific = None, talk=True, options=None):
         print "Overriding to read from",fetch_from
 
     for status in fetch_from:
+        print "getting wf in",status
         wfos.extend(session.query(Workflow).filter(Workflow.status==status).all())
+        print len(wfos)
 
     ## in case of partial, go for fetching a list from json ?
     #if options.partial and not specific:
@@ -72,7 +74,7 @@ def assignor(url ,specific = None, talk=True, options=None):
             break
 
         if specific:
-            if not any(map(lambda sp: sp in wfo.name,specific.split(','))): continue
+            if not any(map(lambda sp: sp in wfo.name, specific.split(','))): continue
             #if not specific in wfo.name: continue
         print "\n\n"
         wfh = workflowInfo( url, wfo.name)
@@ -485,7 +487,28 @@ def assignor(url ,specific = None, talk=True, options=None):
         if not options.test:
             parameters['execute'] = True
 
-        split_check = wfh.checkWorkflowSplitting()
+        hold_split, split_check = wfh.checkSplitting()
+        if split_check==None or split_check==False:
+            n_stalled+=1
+            continue
+        elif split_check:
+            ## operate all recommended changes
+            reqMgrClient.setWorkflowSplitting(url, 
+                                              wfo.name,
+                                              split_check)
+            wfh.sendLog('assignor','Applying the change in splitting %s'%( '\n\n'.join([str(i) for i in split_check])))
+            if hold_split and not options.go:
+                n_stalled+=1
+                continue
+
+            ## temporaryly skip it, so that we can attend to it
+            if not options.go:
+                n_stalled+=1
+                continue
+
+            
+        #split_check = wfh.checkWorkflowSplitting()
+        split_check = True ## bypass completely and use the above
         if split_check!=True:
             parameters.update( split_check )
             if 'NoGo' in split_check.values():
@@ -577,7 +600,8 @@ def assignor(url ,specific = None, talk=True, options=None):
 
 
             else:
-                wfh.sendLog('assignor',"Failed to assign. Please check the logs")
+                wfh.sendLog('assignor',"Failed to assign %s.\n%s \n Please check the logs"%(wfo.name, reqMgrClient.assignWorkflow.errorMessage))
+                sendLog('assignor',"Failed to assign %s.\n%s \n Please check the logs"%(wfo.name, reqMgrClient.assignWorkflow.errorMessage), level='critical')
                 print "ERROR could not assign",wfo.name
         else:
             pass
