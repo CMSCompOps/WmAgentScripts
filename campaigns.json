@@ -269,7 +269,7 @@
    "tune" : true
   },
   "PhaseIISNBSpring17DR" : {
-   "go" : false,
+   "go" : true,
    "lumisize" : 1500,
    "maxcopies": 1,
    "fractionpass" : 0.95,
