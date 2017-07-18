@@ -124,6 +124,28 @@
     "maxcopies" : 1,
     "overflow" : {"PRIM" : {}}
   },
+  "22Jun2017": {
+    "go" : true,
+    "labels" : ["22Jun2017"],
+    "custodial_override" : ["DQMIO"],
+    "fractionpass": 0.95,
+    "partial_copy" : 0.95,	
+    "lumisize" : -1,
+    "maxcopies" : 1,
+    "NO_overflow" : {"PRIM" : {}}
+   },
+  "Commissioning2017": {
+    "go" : true,
+    "custodial_override" : ["DQMIO"],
+    "fractionpass": 0.95,
+    "force-complete" : 0.90,
+    "force-timeout" : 3,
+    "partial_copy" : 0.01,
+    "lumisize" : -1,
+    "maxcopies" : 1,
+    "primary_AAA" : true,
+    "overflow" : {"PRIM" : {}}
+   },	
   "Summer11LegwmLHE": {
     "go": false
   },
@@ -225,6 +247,7 @@
    "fractionpass" : 0.95,
    "tune" : true,
    "SiteBlacklist": [ "T1_US_FNAL", "T0_CH_CERN","T2_CH_CERN_HLT" , "T2_CH_CERN"],
+   "overflow": {"PU":{"max":20000,"pending":0}},
    "secondaries" : { "/MinBias_TuneCUETP8M1_14TeV-pythia8/PhaseIITDRSpring17GS-91X_upgrade2023_realistic_v2-v1/GEN-SIM" :{} }
   },
   "PhaseIITDRSpring17MiniAOD" : {
@@ -246,13 +269,13 @@
    "tune" : true
   },
   "PhaseIISNBSpring17DR" : {
-   "go" : true,
+   "go" : false,
    "lumisize" : 1500,
    "maxcopies": 1,
    "fractionpass" : 0.95,
    "tune" : true,
    "SiteBlacklist": [ "T1_US_FNAL", "T0_CH_CERN","T2_CH_CERN_HLT" , "T2_CH_CERN"],
-   "secondaries" : {}
+   "secondaries" : {"/MinBias_TuneCUETP8M1_14TeV_Neutron-pythia8/PhaseIISNBSpring17GS-91X_upgrade2023_realistic_v2-v1/GEN-SIM" :{} }
   },
   "PhaseIISpring17GS" : {
    "go" : true,
@@ -278,13 +301,46 @@
    		    "/MinBias_TuneCUETP8M1_14TeV-pythia8/PhaseIISpring17GS-90X_upgrade2023_realistic_v9-v1/GEN-SIM" :{"SiteWhitelist" : ["T1_DE_KIT","T2_IT_Rome","T1_UK_RAL","T2_ES_CIEMAT","T2_US_Nebraska","T2_US_Caltech","T2_US_Wisconsin"]} }
   },
   "PhaseIISpring17DR" : {
-   "go" : false,
+   "go" : true,
    "lumisize" : 1500,
    "maxcopies": 1,
    "fractionpass" : 0.95,
    "tune" : true,
    "SiteBlacklist": [ "T1_US_FNAL", "T0_CH_CERN","T2_CH_CERN_HLT" , "T2_CH_CERN"],
-   "secondaries" : {}
+   "secondaries" : {"/MinBias_TuneCUETP8M1_14TeV-pythia8/PhaseIISpring17GS-90X_upgrade2023_realistic_v9-v1/GEN-SIM" : {"SiteWhitelist" : ["T1_UK_RAL","T2_US_Caltech","T2_US_Nebraska","T2_US_Wisconsin","T1_ES_PIC","T1_IT_CNAF"] } }
+  },
+  "PhaseIISummer17wmLHEGENOnly" : {
+   "go" : true,
+   "fractionpass" : 0.95,
+   "lumisize" : -1,
+   "tune" : true
+  },
+  "RunIISummer17GS" : {
+   "go" : true,
+   "labels" : ["92X_upgrade2017_realistic_v2"],
+   "lumisize" : 1500,
+   "fractionpass" : 0.95,
+   "tune" : true
+  },
+  "RunllSummer17GS" : {
+   "go" : true,
+   "labels" : ["92X_upgrade2017_realistic_v2"],
+   "lumisize" : 1500,
+   "fractionpass" : 0.95,
+   "tune" : true
+  },
+  "pPb816Spring16wmLHEGS" : {
+   "go" : false,
+   "lumisize" : 400,
+   "fractionpass" : 0.95,
+   "tune" : true,
+   "parameters": {
+      "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue", "T2_US_Caltech", "T2_US_Florida", "T2_US_Nebraska", "T2_US_UCSD", "T2_US_Wisconsin" ],
+      "MergedLFNBase": "/store/himc"
+    },
+    "secondaries" : {"/ReggeGribovPartonMC_EposLHC_pPb_4080_4080_DataBS/pPb816Spring16GS-MB_80X_mcRun2_pA_v4-v2/GEN-SIM" : {"SiteWhiteList" : ["T1_US_FNAL", "T1_DE_KIT", "T2_CH_CERN", "T2_IT_Pisa","T2_US_Nebraska","T2_US_MIT"] },
+    "/ReggeGribovPartonMC_EposLHC_PbP_4080_4080_DataBS/pPb816Spring16GS-MB_80X_mcRun2_pA_v4-v2/GEN-SIM" : {"SiteWhiteList" : ["T2_CH_CERN", "T2_IT_Pisa","T2_US_MIT","T1_DE_KIT","T1_FR_CCIN2P3"]}  },
+    "custodial": "T1_FR_CCIN2P3_MSS"
   },
   "pPb816Spring16GS": {
    "go": true,
@@ -338,7 +394,7 @@
     "force-complete" : 0.99
   }, 
   "RunIIWinter15pLHE": {
-    "go": false, 
+    "go": true, 
     "parameters": {
       "EventsPerLumi": 200
     },
@@ -467,6 +523,7 @@
   "RunIISummer16MiniAODv2": {
     "go": true,
     "fractionpass" : 0.95,
+    "force-complete" : 0.99,
     "maxcopies": 1,
     "lumisize": -1
   },
