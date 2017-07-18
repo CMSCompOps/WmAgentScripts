@@ -59,6 +59,9 @@ $BASE_DIR/cWrap.sh Unified/checkor.py --strict
 ## initiate automatic recovery
 $BASE_DIR/cWrap.sh Unified/recoveror.py
 
+## submit ACDCs and clones from actions submitted via new recovery tools
+$BASE_DIR/cWrap.sh Unified/actor.py
+
 ## pass along everything that has custodial already and should close
 $BASE_DIR/cWrap.sh Unified/checkor.py  --review
 $BASE_DIR/cWrap.sh Unified/checkor.py  --clear
