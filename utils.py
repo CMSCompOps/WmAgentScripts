@@ -844,6 +844,14 @@ class docCache:
             'cachefile' : None,
             'default' : {}
             }
+        self.cache['gwmsmon_pool'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration(),
+            'getter' : lambda : json.loads(os.popen('curl --retry 5 -s http://cms-gwmsmon.cern.ch/poolview/json/summary').read()),
+            'cachefile' : None,
+            'default' : {}
+            }
         self.cache['mcore_ready'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
@@ -4233,16 +4241,20 @@ class workflowInfo:
             #sites_allowed = list(set( SI.sites_T2s ) - allmcores) ## remove all multicore ready
         if pickone:
             sites_allowed = sorted([SI.pick_CE( sites_allowed )])
-            
+
         # do further restrictions based on memory
         # do further restrictions based on blow-up factor
-        (min_child_job_per_event, root_job_per_event, max_blow_up) = self.getBlowupFactors()
-        if max_blow_up > 5.:
+        (min_child_job_per_event, root_job_per_event, blow_up) = self.getBlowupFactors()
+        UC = unifiedConfiguration()
+        max_blow_up,needed_cores = UC.get('blow_up_limits')
+        if blow_up > max_blow_up:
             ## then restrict to only sites with >4k slots
-            if verbose:
-                print "restricting site white list because of blow-up factor",min_child_job_per_event, root_job_per_event, max_blow_up
-            sites_allowed = list(set(sites_allowed) & set([site for site in sites_allowed if SI.cpu_pledges[site] > 4000]))
-
+            new_sites_allowed = list(set(sites_allowed) & set([site for site in sites_allowed if SI.cpu_pledges[site] > needed_cores]))
+            if new_sites_allowed :
+                sites_allowed = new_sites_allowed
+                print "swaping",verbose
+                if verbose:
+                    print "restricting site white list because of blow-up factor",min_child_job_per_event, root_job_per_event, max_blow_up
 
         CI = campaignInfo()
         for campaign in self.getCampaigns():

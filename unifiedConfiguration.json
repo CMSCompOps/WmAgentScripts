@@ -20,6 +20,7 @@
    "value" : ["T2_CH_CERN_AI",
               "NONO_T0_CH_CERN",
 	      "T2_TH_CUNSTDA",
+	      "NOTANYMORE_T2_US_Nebraska",
 	      "NONO_T2_US_Vanderbilt",
 	      "T2_EE_Estonia",
 	      "T2_UA_KIPT"
@@ -38,6 +39,10 @@
  "sites_with_goodIO": {
     "value" : ["T2_DE_DESY","T2_DE_RWTH","T2_ES_CIEMAT","T2_FR_GRIF_LLR", "T2_FR_GRIF_IRFU", "T2_FR_IPHC","T2_FR_CCIN2P3","T2_IT_Bari", "T2_IT_Legnaro", "T2_IT_Pisa", "T2_IT_Rome","T2_UK_London_Brunel", "T2_UK_London_IC","T2_US_Caltech","T2_US_MIT","T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida","T2_BE_IIHE","T2_EE_Estonia","T2_PL_Swierk","T2_CH_CERN","T2_CH_CERN_HLT"],
     "description" : "The sites identified as having good storage badnwidth"
+ },
+ "blow_up_limits" : {
+   "value" : [5,10],
+   "description" : "Pair of Blow up factor for taskchain above which to act, and needed amount of cores to receive large such taskchain. Probably deprecated now with GQ taking this into account. Was (5,4000) before"
  },
  "max_cpuh_block" : {
    "value" : 40000000,
@@ -233,7 +238,7 @@
    	       "highPU" : {"parameters" : { "SiteWhitelist" : ["T2_US_Nebraska","T2_US_Purdue"]}},
 	       "highIO" : {"parameters" : { "SiteWhitelist" : ["T2_US_Nebraska","T2_US_Purdue"]}},
 	       "ALCARELVAL" : { "primary_AAA" : true , 
-	       		      	"parameters" : { "SiteWhitelist" : ["T2_CH_CERN"]}
+	       		      	"parameters" : { "SiteWhitelist" : ["T1_US_FNAL"]}
 				}
              }
   },
