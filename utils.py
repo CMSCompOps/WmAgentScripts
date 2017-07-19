@@ -4380,12 +4380,13 @@ class workflowInfo:
                                                                                                                            GB_space_limit)
                         if (events_per_lumi * sizeperevent ) > (GB_space_limit*1024.**2):
                             ## derive a value for the lumisection
-                            max_events_per_lumi.append(int( (GB_space_limit*1024.**2) / sizeperevent) )
+                            this_max_events_per_lumi = int( (GB_space_limit*1024.**2) / sizeperevent)
+                            max_events_per_lumi.append( this_max_events_per_lumi )
                             print "The output size task %s is expected to be too large : %.2f GB > %f GB even for one lumi %d, should do %d"% ( tname , 
                                                                                                                                                 events_per_lumi * sizeperevent / (1024.**2 ),
                                                                                                                                                 GB_space_limit,
                                                                                                                                                 events_per_lumi,
-                                                                                                                                                max_events_per_lumi)
+                                                                                                                                                this_max_events_per_lumi)
                         else:
                             ## should still change the avg_events_per_job setting of that task
                             avg_events_per_job_for_task = int( (GB_space_limit*1024.**2) / sizeperevent)
