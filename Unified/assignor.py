@@ -501,6 +501,7 @@ def assignor(url ,specific = None, talk=True, options=None):
                                               wfo.name,
                                               split_check)
             wfh.sendLog('assignor','Applying the change in splitting %s'%( '\n\n'.join([str(i) for i in split_check])))
+            sendLog('assignor','Applying the change in splitting %s'%( '\n\n'.join([str(i) for i in split_check])), level='critical')
 
         #split_check = wfh.checkWorkflowSplitting()
         split_check = True ## bypass completely and use the above
