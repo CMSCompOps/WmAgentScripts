@@ -330,7 +330,7 @@
    "tune" : true
   },
   "pPb816Spring16wmLHEGS" : {
-   "go" : false,
+   "go" : true,
    "lumisize" : 400,
    "fractionpass" : 0.95,
    "tune" : true,
