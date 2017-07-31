@@ -164,7 +164,10 @@ def rejector(url, specific, options=None):
                                   'OutputDatasets', 'ReqMgr2Only', 'RequestDate' 'RequestorDN', 'RequestName', 'RequestStatus',
                                   'RequestTransition', 'RequestWorkflow', 'SiteWhitelist', 'SoftTimeout', 'SoftwareVersions',
                                   'SubscriptionPriority', 'Team', 'timeStamp', 'TrustSitelists', 'TrustPUSitelists',
-                                  'TotalEstimatedJobs', 'TotalInputEvents', 'TotalInputLumis', 'TotalInputFiles']
+                                  'TotalEstimatedJobs', 'TotalInputEvents', 'TotalInputLumis', 'TotalInputFiles',
+                                  ## and the new parameter validation scheme
+                                  'DN', 'AutoApproveSubscriptionSites', 'NonCustodialSites', 'CustodialSites', 
+                                  'OriginalRequestName', 'IgnoredOutputModules', 'OutputModulesLFNBases', 'SiteBlacklist', 'AllowOpportunistic', '_id']
                 for p in paramBlacklist:
                     if p in schema:
                         schema.pop( p )
@@ -175,10 +178,15 @@ def rejector(url, specific, options=None):
                     print "Transforming a TaskChain into a StepChain"
                     schema['RequestType'] = 'StepChain'
                     schema['StepChain'] = schema.pop('TaskChain')
+                    schema['SizePerEvent'] = 0
+                    schema['TimePerEvent'] = 0
                     step=1
                     while True:
                         if 'Task%d'%step in schema:
                             schema['Step%d'%step] = schema.pop('Task%d'%step)
+                            schema['TimePerEvent'] += schema['Step%d'%step].pop('TimePerEvent')
+                            #schema['SizePerEvent'] = max(schema['SizePerEvent'], schema['Step%d'%step].pop('SizePerEvent'))
+                            schema['SizePerEvent'] += schema['Step%d'%step].pop('SizePerEvent')
                             schema['Step%d'%step]['StepName'] = schema['Step%d'%step].pop('TaskName')
                             if 'InputTask' in schema['Step%d'%step]:
                                 schema['Step%d'%step]['InputStep'] = schema['Step%d'%step].pop('InputTask')
