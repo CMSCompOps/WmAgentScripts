@@ -853,6 +853,9 @@ def assignWorkflow(url, workflowname, team, parameters ):
                 wf = workflowInfo(url, workflowname)
                 t = wf.firstTask()
                 params = wf.getSplittings()[0]
+                if wf.request['RequestType']  == 'StepChain':
+                    print "Ignoring changing eventsperlumi in stepchain"
+                    continue
                 if params['splittingAlgo'] != 'EventBased': 
                     print "Ignoring changing events per lumi for",params['splittingAlgo']
                     continue
