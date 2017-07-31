@@ -315,6 +315,23 @@
    "lumisize" : -1,
    "tune" : true
   },
+  "PhaseIISummer17pLHE" : {
+   "go" : true,
+   "fractionpass" : 0.95,
+   "tune" : true
+  },
+  "RunIISummer17PrePremix": {
+    "go": true,
+    "lumisize": -1,
+    "fractionpass" : 0.95,
+   "SiteBlacklist": [ "T1_US_FNAL", "T0_CH_CERN","T2_CH_CERN_HLT" , "T2_CH_CERN"],
+    "secondaries" : {"/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer17GS-92X_upgrade2017_realistic_v2-v1/GEN-SIM" : {"SiteWhitelist" : ["T2_US_Wisconsin","T1_ES_PIC","T1_IT_CNAF","T2_DE_DESY","T2_US_Florida","T2_UK_London_IC"] } }
+  },
+  "RunIISummer17pLHE" : {
+   "go" : true,
+   "fractionpass" : 0.95,
+   "tune" : true
+  },
   "RunIISummer17GS" : {
    "go" : true,
    "labels" : ["92X_upgrade2017_realistic_v2"],
@@ -328,6 +345,30 @@
    "lumisize" : 1500,
    "fractionpass" : 0.95,
    "tune" : true
+  },
+  "RunIISummer17wmLHEGS" : {
+   "go" : false,
+   "lumisize" : -1,
+   "fractionpass" : 0.95,
+   "tune" : true
+  },
+  "RunIISummer17DRStdmix" : {
+   "go":false,
+   "maxcopies": 1,
+   "lumisize": -1,
+   "fractionpass" : 0.95
+  },
+  "RunIISummer17DRPremix" : {
+   "go":false,
+   "maxcopies": 1,
+   "lumisize": -1,
+   "fractionpass" : 0.95
+  },
+  "RunIISummer17MiniAOD" :{
+   "go" : false,
+   "lumisize" : -1,
+   "maxcopies": 1,
+   "fractionpass" : 0.95
   },
   "pPb816Spring16wmLHEGS" : {
    "go" : true,
@@ -353,7 +394,7 @@
     "lumisize" : 400
   },
   "pPb816Summer16DR": {
-   "go": true,
+   "go": false,
    "fractionpass" : 0.95,
    "parameters": {
       "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue", "T2_US_Caltech", "T2_US_Florida", "T2_US_Nebraska", "T2_US_UCSD", "T2_US_Wisconsin" ],
