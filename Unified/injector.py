@@ -3,6 +3,7 @@ from assignSession import *
 from utils import getWorkflows, getWorkflowById, getWorkLoad, componentInfo, sendEmail, workflowInfo, sendLog, reqmgr_url, getDatasetStatus, unifiedConfiguration, duplicateLock
 import sys
 import copy
+import os
 from htmlor import htmlor
 from invalidator import invalidator 
 import optparse
@@ -28,6 +29,7 @@ def injector(url, options, specific):
 
     print len(workflows),"in line"
     cannot_inject = set()
+    to_convert = set()
     status_cache = defaultdict(str)
 
     ## browse for assignment-approved requests, browsed for ours, insert the diff
@@ -79,6 +81,15 @@ def injector(url, options, specific):
                     sendLog('injector',"One of the input of %s is not VALID. %s : %s"%( wf, d, status_cache[d]), level='critical')
                     can_add = False
             if not can_add: continue
+
+            ## temporary hack to transform specific taskchain into stepchains
+            all_tiers = map(lambda o : o.split('/')[-1], wfi.request['OutputDatasets'])
+            duplicate_tier = (len(all_tiers) != len(set(all_tiers)))
+            transform_keywords = ['RunIISummer15wmLHE','RunIISummer15GS','RunIIWinter15GenOnly','RunIIWinter15wmLHE']
+            if wfi.request['RequestType'] == 'TaskChain' and any([keyword in wf for keyword in transform_keywords]) and not duplicate_tier:
+                to_convert.add( wf )
+                wfi.sendLog('injector','Transforming %s TaskChain into StepChain'%wf)
+
             wfi.sendLog('injector',"considering %s"%wf)
 
             new_wf = Workflow( name = wf , status = options.setstatus, wm_status = options.wmstatus) 
@@ -93,6 +104,9 @@ def injector(url, options, specific):
     if cannot_inject:
         #sendEmail('workflow duplicates','These workflow cannot be added in because of duplicates \n\n %s'%( '\n'.join(cannot_inject)))
         sendLog('injector','These workflow cannot be added in because of duplicates \n\n %s'%( '\n'.join(cannot_inject)), level='warning')
+        
+    for wf in to_convert:
+        os.system('./Unified/rejector.py --clone --to_step --comments \"Transform to StepChain\" %s'% wf)
 
     ## passing a round of invalidation of what needs to be invalidated
     if use_mcm and (options.invalidate or True):
