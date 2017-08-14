@@ -2410,7 +2410,7 @@ def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, ve
                 in_full.add( site )
                 
         #print sorted(all_destinations)
-        #print sorted(in_full)
+        print "in full at",sorted(in_full)
         ## then check block by block at the site not already OK.
         for site in (all_destinations-in_full):
             if not site.startswith('T'): continue
@@ -2423,7 +2423,7 @@ def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, ve
                 r = r2.read()
             except Exception as e :
                 ## addhoc to try and move forward
-                if dataset == '/Neutrino_E-10_gun/RunIISpring15PrePremix-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v2-v2/GEN-SIM-DIGI-RAW':
+                if False and dataset == '/Neutrino_E-10_gun/RunIISpring15PrePremix-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v2-v2/GEN-SIM-DIGI-RAW':
                     continue
                 else:
                     raise Exception(e)
