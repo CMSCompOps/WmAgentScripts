@@ -106,7 +106,8 @@ def equalizor(url , specific = None, options=None):
             pass
         ## all EU T1 can read from T0
         mapping['T0_CH_CERN'].append( one )
-
+        
+    mapping['T0_CH_CERN'].append( 'T1_US_FNAL' )
     ## fnal can read from cnaf ?
     #mapping['T1_IT_CNAF'].append( 'T1_US_FNAL' )
     #mapping['T1_IT_CNAF'].extend( [site for site in SI.sites_ready if '_US_' in site] ) ## all US can read from CNAF
