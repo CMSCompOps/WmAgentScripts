@@ -226,7 +226,7 @@
   },
   "user_rereco":{
    "description" : "The users from which we expect ReReco requests",
-   "value" : ["cerminar","fabozzi"]
+   "value" : ["cerminar","fabozzi","prebello"]
   },
   "user_relval":{
    "description" : "The users from which we expect relval requests",
