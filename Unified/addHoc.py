@@ -1,6 +1,7 @@
 #!/usr/bin/env python  
 from utils import workflowInfo, getWorkflows, sendEmail, componentInfo, monitor_dir, reqmgr_url, siteInfo, sendLog, getWorkflowById
-monitor_eos_dir = "/afs/cern.ch/user/c/cmst2/www/unified/"
+#monitor_eos_dir = "/afs/cern.ch/user/c/cmst2/www/unified/"
+monitor_eos_dir = "/eos/project/c/cms-unified-logs/www/"
 
 from assignSession import *
 import reqMgrClient

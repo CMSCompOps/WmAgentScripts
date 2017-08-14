@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 from utils import workflowInfo, siteInfo, monitor_dir, monitor_pub_dir, base_dir, global_SI, getDatasetPresence, getDatasetBlocksFraction, getDatasetBlocks
 base_eos_dir = "/afs/cern.ch/user/c/cmst2/Unified/"
-monitor_eos_dir = "/afs/cern.ch/user/c/cmst2/www/unified/"
-url_eos = "https://cmst2.web.cern.ch/cmst2/unified/"
+#monitor_eos_dir = "/afs/cern.ch/user/c/cmst2/www/unified/"
+#url_eos = "https://cmst2.web.cern.ch/cmst2/unified/"
+monitor_eos_dir = "/eos/project/c/cms-unified-logs/www/"
+#url_eos = "http://test-voc-unified.web.cern.ch/test-voc-unified/unified/"
+url_eos = "http://cern.ch/cms-unified/"
 
 import json
 import sys
