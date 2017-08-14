@@ -65,6 +65,7 @@ for item in addHocLocks:
 
 #for status in reversed(statuses):
 for status in statuses:
+    print time.asctime(time.gmtime()),"CEST, fetching",status
     wfls = getWorkflows(url , status = status,details=True)
     print len(wfls),"in",status
     for wl in wfls:
@@ -74,7 +75,7 @@ for status in statuses:
         ## unknonw to the system
         known = session.query(Workflow).filter(Workflow.name==wl['RequestName']).all()
         if not known: 
-            #print wl['RequestName'],"is unknown, this is bad news" ## no it is not
+            print wl['RequestName'],"is unknown to unified, relocking all I/O"
             for dataset in list(primaries)+list(secondaries)+outputs:
                 also_locking_from_reqmgr.add( dataset )
             continue
@@ -300,7 +301,11 @@ for wfo in session.query(Workflow).filter(Workflow.status=='forget').all():
 
 ### then add everything else that reqmgr knows about in a valid status
 ### this is rather problematic because the locks are created and dealt recursively : i.e we assume to work on the delta between the previous locks and the new created ones. If we add those below, unified will try to unlock them at next round and create all sorts of trboules.
-### newly_locking.update( also_locking_from_reqmgr )
+for item in also_locking_from_reqmgr: 
+    #LI.lock(item, reason='Additional lock of datasets')
+    pass
+
+
 for item in newly_locking:
     ## relock it
     LI.lock(item)
