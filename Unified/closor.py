@@ -446,7 +446,16 @@ def closor(url, specific=None, options=None):
                 wfi.sendLog('closor',"workflow is announced")
             else:
                 wfi.sendLog('closor',"Error with %s to be announced \n%s"%( wfo.name, json.dumps( results )))
-                
+            
+        elif wfi.request['RequestStatus'] in ['failed','aborted','aborted-archived','rejected','rejected-archived','aborted-completed']:
+            if wfi.isRelval():
+                wfo.status = 'forget'
+                wfo.wm_status = wfi.request['RequestStatus']
+                wfi.sendLog('closor',"%s is %s, but will not be set in trouble to find a replacement."%( wfo.name, wfo.wm_status))
+            else:
+                wfo.status = 'trouble'
+                wfo.wm_status = wfi.request['RequestStatus']
+            session.commit()
         else:
             print wfo.name,"not good for announcing:",wfi.request['RequestStatus']
             wfi.sendLog('closor',"cannot be announced")
