@@ -222,9 +222,14 @@ def assignor(url ,specific = None, talk=True, options=None):
 
             if secondary_aaa:
                 if not one_secondary_locations:
-                    ## not even a copy on disk anywhere !!!!
-                    sites_allowed = [] ## will block the assignment
-                    wfh.sendLog('assignor',"The secondary %s is nowhere on disk"% sec)
+                    sec_availability = getDatasetBlocksFraction( url, sec )
+                    if sec_availability >=1. and options.go:
+                        ## there is at least one copy of each block on disk. We should go ahead and let it go.
+                        wfh.sendLog('assignor',"The secondary %s is available %s times on disk, and usable"%( sec, sec_availability))
+                    else:
+                        ## not even a copy on disk anywhere !!!!
+                        sites_allowed = [] ## will block the assignment
+                        wfh.sendLog('assignor',"The secondary %s is nowhere on disk"% sec)
                 #just continue without checking
                 continue
 
