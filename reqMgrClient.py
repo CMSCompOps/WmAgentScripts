@@ -779,21 +779,24 @@ def assignWorkflow(url, workflowname, team, parameters ):
         wf.request['Memory'] = parameters['Memory']
 
     maxRSSs = {}
-    if wf.request['RequestType'] == 'TaskChain':
+    chain_type = 'Step' if 'Step1' in wf.request else ('Task' if 'Task1' in wf.request else None)
+    if chain_type:
         t_i = 1
         while True:
-            t_s = 'Task%d'%t_i
+            t_s = '%s%d'%(chain_type, t_i)
             if not t_s in wf.request: break
             if 'Memory' in wf.request[t_s]:
-                maxRSSs[wf.request[t_s]['TaskName']] = int(wf.request[t_s]['Memory'])*1024
+                maxRSSs[wf.request[t_s]['%sName'%chain_type]] = int(wf.request[t_s]['Memory'])*1024
             else:
                 #nothing partial
                 maxRSSs = {}
             t_i+=1
-    if maxRSSs:
-        defaults['MaxRSS'] = maxRSSs
+    if maxRSSs and chain_type=='Task':
+        defaults['MaxRSS'] = maxRSSs ## set it as a dict
+    elif maxRSSs and chain_type=='Step':
+        defaults['MaxRSS'] = int(max(maxRSSs.values()))*1024 ## set it to the max value
     else:
-        defaults['MaxRSS'] = int(wf.request['Memory'])*1024
+        defaults['MaxRSS'] = int(wf.request['Memory'])*1024 ## set it to the indicated value
 
     defaults.update( parameters )
 
