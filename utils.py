@@ -4331,8 +4331,27 @@ class workflowInfo:
         hold = False
         ## for those that are modified, add it and return it
         modified_splits = []
+        GB_space_limit = unifiedConfiguration().get('GB_space_limit')
 
-        if self.request['RequestType']=='TaskChain':        
+        if self.request['RequestType']=='StepChain':
+            ## the number of event/lumi should not matter at all.
+            ## what you want to be on the look out is that the sum of output size is not too enormeous
+            sizeperevent = self.request.get('SizePerEvent',None) ## already summed up by definition of schema
+            for spl in splits:
+                task = spl['splitParams']
+                tname = spl['taskName'].split('/')[-1]
+                avg_events_per_job = task.get('events_per_job',None)
+                if avg_events_per_job and sizeperevent and (avg_events_per_job * sizeperevent ) > (GB_space_limit*1024.**2):
+                    print "The output size of task %s is expected to be large : %d x %.2f kB = %.2f GB > %f GB "% ( tname ,
+                                                                                                                    avg_events_per_job, sizeperevent,
+                                                                                                                    avg_events_per_job * sizeperevent / (1024.**2 ),
+                                                                                                                    GB_space_limit)
+                    avg_events_per_job_for_task = int( (GB_space_limit*1024.**2) / sizeperevent)
+                    modified_split_for_task = spl
+                    modified_split_for_task['splitParams']['events_per_job'] = avg_events_per_job_for_task
+                    modified_splits.append( modified_split_for_task )
+        
+        elif self.request['RequestType']=='TaskChain':        
             events_per_lumi=None
             events_per_lumi_inputs = None
             max_events_per_lumi=[]
@@ -4352,6 +4371,10 @@ class workflowInfo:
                 tname = spl['taskName'].split('/')[-1]
                 t = find_task_dict( tname )
                 sizeperevent = t.get('SizePerEvent',None)
+                if 'Phase' in spl['taskName']:
+                    ## hack a facto 10 bigger output size than provided
+                    sizeperevent *= 10
+
                 inputs = t.get('InputDataset',None)
                 events_per_lumi_inputs = getDatasetEventsPerLumi(inputs) if inputs else events_per_lumi_inputs
                 events_per_lumi = events_per_lumi_inputs if events_per_lumi_inputs else events_per_lumi
@@ -4361,7 +4384,7 @@ class workflowInfo:
                     events_per_lumi = task['events_per_lumi']
 
                 ## avg_events_per_job is base on 8h. we could probably put some margin
-                elif events_per_lumi and 'events_per_job' in task:
+                if events_per_lumi and 'events_per_job' in task:
                     avg_events_per_job = (task['events_per_job'] *2 )
                     ## climb up all task to take the filter eff into account
                     while t and 'InputTask' in t:
@@ -4372,7 +4395,7 @@ class workflowInfo:
                         print "The default splitting will not work for subsequent steps",events_per_lumi,">",avg_events_per_job
                         max_events_per_lumi.append( int(avg_events_per_job*0.75) )
                
-                    GB_space_limit = 20.
+
                     if sizeperevent and (avg_events_per_job * sizeperevent ) > (GB_space_limit*1024.**2):
                         print "The output size of task %s is expected to be too large : %d x %.2f kB = %.2f GB > %f GB "% ( tname , 
                                                                                                                            avg_events_per_job, sizeperevent,

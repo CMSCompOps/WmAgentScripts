@@ -44,6 +44,10 @@
    "value" : [5,10],
    "description" : "Pair of Blow up factor for taskchain above which to act, and needed amount of cores to receive large such taskchain. Probably deprecated now with GQ taking this into account. Was (5,4000) before"
  },
+ "GB_space_limit" : {
+   "value" : 20,
+   "description" : "The value in GB that we allow the output size to be before adapting the splitting"
+  },
  "max_cpuh_block" : {
    "value" : 40000000,
    "description" : "Value of CPUh above which a wf is blocked from assigning"
