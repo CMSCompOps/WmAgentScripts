@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 from utils import workflowInfo, siteInfo, monitor_dir, monitor_pub_dir, base_dir, global_SI, getDatasetPresence, getDatasetBlocksFraction, getDatasetBlocks
+import time
+
 base_eos_dir = "/afs/cern.ch/user/c/cmst2/Unified/"
 #monitor_eos_dir = "/afs/cern.ch/user/c/cmst2/www/unified/"
 #url_eos = "https://cmst2.web.cern.ch/cmst2/unified/"
@@ -17,6 +19,25 @@ import optparse
 import random
 
 def parse_one(url, wfn, options=None):
+
+    def time_point(label="",sub_lap=False):
+        now = time.mktime(time.gmtime())
+        nows = time.asctime(time.gmtime())
+
+        print "Time check (%s) point at : %s"%(label, nows)
+        print "Since start: %s [s]"% ( now - time_point.start)
+        if sub_lap:
+            print "Sub Lap : %s [s]"% ( now - time_point.sub_lap ) 
+            time_point.sub_lap = now
+        else:
+            print "Lap : %s [s]"% ( now - time_point.lap ) 
+            time_point.lap = now            
+            time_point.sub_lap = now
+
+    time_point.sub_lap = time_point.lap = time_point.start = time.mktime(time.gmtime())
+
+
+    time_point("Starting with %s"% wfn )
 
     SI = global_SI()
     wfi = workflowInfo( url , wfn)
@@ -62,6 +83,8 @@ def parse_one(url, wfn, options=None):
         print json.dumps(total_by_code_dash , indent=2)
         print json.dumps(total_by_site_dash , indent=2)
 
+    time_point("Got most input")
+
     status_per_task = defaultdict(lambda : defaultdict(int))
     
     if not 'AgentJobInfo' in stat:
@@ -97,6 +120,11 @@ def parse_one(url, wfn, options=None):
     task_error_site_count ={}
     one_explanation = defaultdict(set)
 
+    if not where_to_run and not missing_to_run and not missing_to_run_at:
+        print "showError is unable to run"
+        #return task_error_site_count, one_explanation
+        pass
+
     do_JL = True
     do_CL = True
     do_all_error_code = False
@@ -108,30 +136,6 @@ def parse_one(url, wfn, options=None):
         print high_order_acdc,"order request, pulling down all logs"
         do_all_error_code = True
 
-    #do_CL = False ## hack it out
-
-    n_expose = 1
-    if options:
-        n_expose = options.expose 
-    expose_archive_code = {'134':defaultdict(lambda : n_expose),#seg fault
-                           '139':defaultdict(lambda : n_expose),# ???
-                           '99109':defaultdict(lambda : n_expose),#stageout
-                           '99303' : defaultdict(lambda : n_expose),#no pkl report. if you are lucky
-                           '60450' : defaultdict(lambda : n_expose),#new
-                           '50513':defaultdict(lambda : n_expose),#new
-                           '8001': defaultdict(lambda : n_expose),# the usual exception in cmsRun
-                           '8026': defaultdict(lambda : n_expose),# the usual exception in cmsRun
-                           '11003': defaultdict(lambda : n_expose),# job extraction
-                           '73': defaultdict(lambda : n_expose),# job extraction
-                           '87': defaultdict(lambda : n_expose),
-                           }
-    expose_condor_code = {'99109':defaultdict(lambda : n_expose),#stageout
-                          '99303':defaultdict(lambda : n_expose),#no pkl report
-                          '60450':defaultdict(lambda : n_expose),#new
-                          '50513':defaultdict(lambda : n_expose),#new
-                          '11003': defaultdict(lambda : n_expose),
-                          }
-    
     tasks = sorted(set(err.keys() + missing_to_run.keys()))
 
     if not tasks:
@@ -148,6 +152,9 @@ def parse_one(url, wfn, options=None):
         html += '<a href=../datalumi/lumi.%s.html>Lumisection Summary</a><br>'% wfi.request['PrepID']
         
     html+= '</center><hr>'
+
+    time_point("Header writen")
+
     if prim:
         html+='Reads in primary<br>'
         rwl = wfi.getRunWhiteList()
@@ -175,6 +182,9 @@ def parse_one(url, wfn, options=None):
                 html += '<li>%s : %.2f %%'%( site, presence[site][1] )
             html+='</ul>'
         
+
+    time_point("Input checked")
+
     html += "Updated on %s (GMT)" % ( time.asctime(time.gmtime()) )
     html += """
 <ul>
@@ -189,22 +199,44 @@ def parse_one(url, wfn, options=None):
     if tasks:
         min_rank = min([task.count('/') for task in tasks])
     for task in tasks:  
+        n_expose = 2
+        if options:
+            n_expose = options.expose 
+        expose_archive_code = {'134':defaultdict(lambda : n_expose),#seg fault
+                               '139':defaultdict(lambda : n_expose),# ???
+                               '99109':defaultdict(lambda : n_expose),#stageout
+                               '99303' : defaultdict(lambda : n_expose),#no pkl report. if you are lucky
+                               '60450' : defaultdict(lambda : n_expose),#new
+                               '50513':defaultdict(lambda : n_expose),#new
+                               '8001': defaultdict(lambda : n_expose),# the usual exception in cmsRun
+                               '8026': defaultdict(lambda : n_expose),# the usual exception in cmsRun
+                               '11003': defaultdict(lambda : n_expose),# job extraction
+                               '73': defaultdict(lambda : n_expose),# job extraction
+                               '87': defaultdict(lambda : n_expose),
+                               }
+        expose_condor_code = {'99109':defaultdict(lambda : n_expose),#stageout
+                              '99303':defaultdict(lambda : n_expose),#no pkl report
+                              '60450':defaultdict(lambda : n_expose),#new
+                              '50513':defaultdict(lambda : n_expose),#new
+                              '11003': defaultdict(lambda : n_expose),
+                              }
+    
+
         #print task
         task_rank = task.count('/')
         task_short = task.split('/')[-1]
         total_per_site = defaultdict(int)
+        time_point("Starting with task %s"% task_short, sub_lap=True)
+        
         for agent in stat['AgentJobInfo']:
             if not task in stat['AgentJobInfo'][agent]['tasks']: continue
             if not 'sites' in stat['AgentJobInfo'][agent]['tasks'][task]:continue
             for site in stat['AgentJobInfo'][agent]['tasks'][task]['sites']:
 
                 info = stat['AgentJobInfo'][agent]['tasks'][task]['sites'][site]
-                #if site in ['T2_BE_IIHE']:                    print task,json.dumps( info, indent=2)
-                #print info.keys()
                 for s in ['success','failure','cooloff','submitted']:
                     if not s in info: continue
                     data = info[s]
-                    #print s,data
                     if type(data)==dict:
                         total_per_site[site] += sum( data.values() )
                     else:
@@ -253,7 +285,7 @@ def parse_one(url, wfn, options=None):
                                 expose_condor_code[errorcode_s][agent]-=1
 
                         for out in sample['output']:
-                            print out
+                            #print out
                             if out['type'] == 'logArchive':
                                 if do_JL and ((errorcode_s in expose_archive_code and expose_archive_code[errorcode_s][agent]>0) or (do_all_error_code)):
                                     if errorcode_s in expose_archive_code:
@@ -262,9 +294,15 @@ def parse_one(url, wfn, options=None):
                                     os.system('mkdir -p /tmp/%s'%(os.getenv('USER')))
                                     local = '/tmp/%s/%s'%(os.getenv('USER'),out['lfn'].split('/')[-1])
                                     command = 'xrdcp root://cms-xrd-global.cern.ch/%s %s'%( out['lfn'], local)
-                                    ## get the file
-                                    xec = os.system( command )
-                                    print xec
+                                    print "#"*15,"cmsrun log retrieval","#"*15
+                                    if os.system('ls %s'% local)!=0:
+                                        print "running",command
+                                        ## get the file
+                                        xec = os.system( command )
+                                    else:
+                                        print "the file",local,"already exists"
+                                        xec = 0
+
                                     if xec!=0 and errorcode_s in expose_archive_code:
                                         expose_archive_code[errorcode_s][agent]+=1
                                     ## if this actually fail, let's get the file from eos using the new log mapping
@@ -275,19 +313,24 @@ def parse_one(url, wfn, options=None):
                                                                    errorcode_s,
                                                                    task_short,
                                                                    label)
-                                    os.system('mkdir -p %s'%(m_dir))
-                                    os.system('tar zxvf %s -C %s'%(local,m_dir))
-                                    ## truncate the content ??
-                                    for fn in os.popen('find %s -type f'%(m_dir)).read().split('\n'):
-                                        if not fn: continue
-                                        if not fn.endswith('log'): continue
-                                        if any([p in fn for p in ['stdout.log']]):
-                                            trunc = '/tmp/%s/%s'%(os.getenv('USER'), label)
-                                            #print fn
-                                            #print trunc
-                                            head = tail = 1000
-                                            os.system('(head -%d ; echo;echo;echo "<snip>";echo;echo ; tail -%d ) < %s > %s'%(head, tail, fn, trunc))
-                                            os.system('mv %s %s.trunc.txt'%(trunc, fn))
+                                    if os.system('ls %s'% local)==0:
+                                        os.system('mkdir -p %s'%(m_dir))
+                                        os.system('tar zxvf %s -C %s'%(local,m_dir))
+                                        ## truncate the content ??
+                                        actual_logs = os.popen('find %s -type f'%(m_dir)).read().split('\n')
+                                        for fn in actual_logs:
+                                            if not fn: continue
+                                            if not fn.endswith('log'): continue
+                                            if any([p in fn for p in ['stdout.log']]):
+                                                trunc = '/tmp/%s/%s'%(os.getenv('USER'), label)
+                                                #print fn
+                                                #print trunc
+                                                head = tail = 1000
+                                                os.system('(head -%d ; echo;echo;echo "<snip>";echo;echo ; tail -%d ) < %s > %s'%(head, tail, fn, trunc))
+                                                os.system('mv %s %s.trunc.txt'%(trunc, fn))
+                                    else:
+                                        print "no file retrieved in",local
+                                    
 
         #print task
         #print json.dumps( total_count, indent=2)
@@ -309,7 +352,7 @@ def parse_one(url, wfn, options=None):
         ## parse the acdc data
         notreported='NotReported'
         all_missing_stats = set()
-        for site in missing_to_run_at[task]:
+        for site in missing_to_run_at[task] if task in missing_to_run_at else []:
             if not missing_to_run_at[task][site]: continue
             ce = SI.SE_to_CE( site )
             #all_sites.add( ce )
@@ -409,12 +452,12 @@ def parse_one(url, wfn, options=None):
             if not site in SI.sites_ready:
                 color = 'bgcolor=indianred'
                 site_in ='<b>No</b>'
-                if missing_to_run_at[task][SI.CE_to_SE(site)] == 0 or min_rank == task_rank:
+                if task in missing_to_run_at and  missing_to_run_at[task][SI.CE_to_SE(site)] == 0 or min_rank == task_rank:
                     color = 'bgcolor=aquamarine'
                     site_in = '<b>No</b> but fine'
 
             if not no_error:
-                site_in +=" (%s events)"%"{:,}".format(missing_to_run_at[task][SI.CE_to_SE(site)])
+                site_in +=" (%s events)"%("{:,}".format(missing_to_run_at[task][SI.CE_to_SE(site)]) if task in missing_to_run_at else '--')
             html+='<tr><td %s>%s</td>'%(color,site)
             for code in sorted(all_codes):
                 if code == notreported:
