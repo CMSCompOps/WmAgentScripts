@@ -16,6 +16,7 @@ from htmlor import htmlor
 from utils import sendEmail, sendLog
 import math
 import random
+import copy
 
 def transferor(url ,specific = None, talk=True, options=None):
     if userLock():   return
@@ -102,8 +103,19 @@ def transferor(url ,specific = None, talk=True, options=None):
             transfers_per_sites[site] += 1 
         #input_cput[wfo.name] = wfh.getComputingTime()
         #input_st[wfo.name] = wfh.getSystemTime()
+        bwl = []
+        if 'BlockWhitelist' in wfh.request and wfh.request['BlockWhitelist']:
+            bwl = wfh.request['BlockWhitelist']
+        rwl = wfh.getRunWhiteList()
+        lwl = wfh.getLumiWhiteList()
         for prim in primary:  
-            ds_s = dss.get( prim )
+            blocks = copy.deepcopy( bwl )
+            if rwl: 
+                blocks = list(set( blocks + getDatasetBlocks( prim, runs= rwl ) ))
+            if lwl:
+                blocks = list(set( blocks + getDatasetBlocks( dataset, lumis= lwl)))
+
+            ds_s = dss.get( prim, blocks=blocks)
             if prim in stucks: 
                 wfh.sendLog('transferor', "%s appears stuck, so not counting it %s [GB]"%( prim, ds_s))
                 ignored_input_sizes[prim] = ds_s
