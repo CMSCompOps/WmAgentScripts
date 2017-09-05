@@ -4341,6 +4341,7 @@ class workflowInfo:
         ## for those that are modified, add it and return it
         modified_splits = []
         GB_space_limit = unifiedConfiguration().get('GB_space_limit')
+        output_size_correction = unifiedConfiguration().get('output_size_correction')
 
         if self.request['RequestType']=='StepChain':
             ## the number of event/lumi should not matter at all.
@@ -4380,9 +4381,10 @@ class workflowInfo:
                 tname = spl['taskName'].split('/')[-1]
                 t = find_task_dict( tname )
                 sizeperevent = t.get('SizePerEvent',None)
-                if 'Phase' in spl['taskName']:
-                    ## hack a facto 10 bigger output size than provided
-                    sizeperevent *= 10
+                for keyword,factor in output_size_correction.items():
+                    if keyowrd in spl['taskName']:
+                        sizeperevent *= factor
+                        break
 
                 inputs = t.get('InputDataset',None)
                 events_per_lumi_inputs = getDatasetEventsPerLumi(inputs) if inputs else events_per_lumi_inputs
@@ -4429,8 +4431,13 @@ class workflowInfo:
                         
             if max_events_per_lumi:
                 if events_per_lumi_inputs:
-                    ## there was an input dataset somewhere and we cannot break down that lumis, except by changing to EventBased
-                    hold = True
+                    if min(max_events_per_lumi)<events_per_lumi_inputs:
+                        ## there was an input dataset somewhere and we cannot break down that lumis, except by changing to EventBased
+                        print "the smallest value of %s is still smaller than %s evt/lumi in the input"%(max_events_per_lumi, events_per_lumi_inputs)
+                        hold = True
+                    else:
+                        hold = True #to be removed
+                        print "the smallest value of %s is ok compared to %s evt/lumi in the input"%(max_events_per_lumi, events_per_lumi_inputs)
                 else:
                     root_split = splits[0]
                     root_split['splitParams']['events_per_lumi'] = min(max_events_per_lumi)

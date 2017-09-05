@@ -47,7 +47,11 @@
  "GB_space_limit" : {
    "value" : 20,
    "description" : "The value in GB that we allow the output size to be before adapting the splitting"
-  },
+ },
+  "output_size_correction": {
+   "value" : { "Phase" : 5 },
+   "description" : "The correction factor to be applied to SizePerEvent per keyword."
+ },
  "max_cpuh_block" : {
    "value" : 40000000,
    "description" : "Value of CPUh above which a wf is blocked from assigning"
