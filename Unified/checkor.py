@@ -57,6 +57,12 @@ def checkor(url, spec=None, options=None):
     all_completed = set(getWorkflows(url, 'completed' ))
 
     wfs=[]
+    exceptions=[
+        'prebello_Run2016F-v1-JetHT-07Aug17_8029_170807_170835_3040',
+        'prebello_Run2016G-v1-JetHT-07Aug17_8029_170807_173346_8499'
+        ]
+    #for wfn in exceptions:
+    #    wfs.extend( session.query(Workflow).filter(Workflow.name == wfn).all() )
 
     if options.strict:
         ## the one which were running and now have completed
@@ -199,7 +205,8 @@ def checkor(url, spec=None, options=None):
         ## make sure the wm status is up to date.
         # and send things back/forward if necessary.
         wfo.wm_status = wfi.request['RequestStatus']
-        if wfo.wm_status == 'closed-out':
+
+        if wfo.wm_status == 'closed-out' and not wfo.name in exceptions:
             ## manually closed-out
             wfi.sendLog('checkor',"%s is already %s, setting close"%( wfo.name , wfo.wm_status))
             wfo.status = 'close'
@@ -227,7 +234,7 @@ def checkor(url, spec=None, options=None):
                 wfi.sendLog('checkor',"%s is on hold"%wfo.name)
                 continue
 
-        if wfo.wm_status != 'completed': #and not wfo.name in bypasses:
+        if wfo.wm_status != 'completed' and not wfo.name in exceptions: #and not wfo.name in bypasses:
             ## for sure move on with closeout check if in completed
             wfi.sendLog('checkor',"no need to check on %s in status %s"%(wfo.name, wfo.wm_status))
             session.commit()
@@ -273,7 +280,7 @@ def checkor(url, spec=None, options=None):
                     break
         
         tiers_with_no_check = copy.deepcopy(UC.get('tiers_with_no_check')) # dqm*
-        vetoed_custodial_tier = copy.deepcopy(UC.get('tiers_with_no_custodial')) #dqm*, reco
+        vetoed_custodial_tier = copy.deepcopy(UC.get('tiers_with_no_custodial')) if not wfi.isRelval() else [] #no veto for relvals
         to_ddm_tier = copy.deepcopy(UC.get('tiers_to_DDM'))
         campaigns = {} ## this mapping of campaign per output dataset assumes era==campaing, which is not true for relval
         expected_outputs = copy.deepcopy( wfi.request['OutputDatasets'] )
@@ -512,6 +519,89 @@ def checkor(url, spec=None, options=None):
 
         time_point("checked phedex count", sub_lap=True)
 
+        ## presence in dbs
+        dbs_presence = {}
+        dbs_invalid = {}
+        for output in wfi.request['OutputDatasets']:
+            dbs_presence[output] = dbs3Client.getFileCountDataset( output )
+            dbs_invalid[output] = dbs3Client.getFileCountDataset( output, onlyInvalid=True)
+
+        
+        time_point("dbs file count", sub_lap=True)
+
+        if not all([dbs_presence[out] == (dbs_invalid[out]+phedex_presence[out]) for out in wfi.request['OutputDatasets']]) and not options.ignorefiles:
+            mismatch_notice = wfo.name+" has a dbs,phedex mismatch\n"
+            mismatch_notice += "in dbs\n"+json.dumps(dbs_presence, indent=2) +"\n"
+            mismatch_notice += "invalide in dbs\n"+json.dumps(dbs_invalid, indent=2) +"\n"
+            mismatch_notice += "in phedex\n"+json.dumps(phedex_presence, indent=2) +"\n"
+
+            wfi.sendLog('checkor',mismatch_notice)
+            if not 'recovering' in assistance_tags:
+                assistance_tags.add('filemismatch')
+                #print this for show and tell if no recovery on-going
+                for out in dbs_presence:
+                    _,_,missing_phedex,missing_dbs  = getDatasetFiles(url, out)
+                    if missing_phedex:
+                        wfi.sendLog('checkor',"These %d files are missing in phedex\n%s"%(len(missing_phedex),
+                                                                                          "\n".join( missing_phedex )))
+                        were_invalidated = sorted(set(missing_phedex) & set(TMDB_invalid ))
+                        if were_invalidated:
+                            wfi.sendLog('checkor',"These %d files were invalidated globally\n%s"%(len(were_invalidated),
+                                                                                                  "\n".join(were_invalidated)))
+                            sendLog('checkor',"These %d files were invalidated globally\n%s\nand are invalidated in dbs"%(len(were_invalidated),
+                                                                                                                          "\n".join(were_invalidated)), level='critical')
+                            dbs3Client.setFileStatus( were_invalidated, newstatus=0 )
+                                
+                    if missing_dbs:
+                        wfi.sendLog('checkor',"These %d files are missing in dbs\n%s"%(len(missing_dbs),
+                                    "\n".join( missing_dbs )))
+                        were_invalidated = sorted(set(missing_dbs) & set(TMDB_invalid ))
+                        if were_invalidated:
+                            wfi.sendLog('checkor',"These %d files were invalidated globally\n%s"%(len(were_invalidated),
+                                                                                                  "\n".join(were_invalidated)))
+            #if not bypass_checks:
+            ## I don't think we can by pass this
+            is_closing = False
+        
+        time_point("checked file count", sub_lap=True)
+
+        ## put that heavy part almost at the end
+        ## duplication check
+        duplications = {}
+        files_per_rl = {}
+        for output in wfi.request['OutputDatasets']:
+            duplications[output] = "skiped"
+            files_per_rl[output] = "skiped"
+
+        ## check for duplicates prior to making the tape subscription
+        if (is_closing or bypass_checks) and (not options.ignoreduplicates):
+            print "starting duplicate checker for",wfo.name
+            for output in wfi.request['OutputDatasets']:
+                print "\tchecking",output
+                duplications[output] = True
+                try:
+                    duplications[output],files_per_rl[output] = dbs3Client.duplicateRunLumiFiles( output , skipInvalid=True, verbose=True)
+                except:
+                    try:
+                        duplications[output],files_per_rl[output] = dbs3Client.duplicateRunLumiFiles( output , skipInvalid=True, verbose=True)
+                    except Exception as e:
+                        wfi.sendLog('checkor','Not possible to check on duplicate lumi count on %s'%(output))
+                        sendLog('checkor','Not possible to check on duplicate lumi count on %s\n%s'%(output,str(e)),level='critical')
+                        is_closing=False
+
+            if is_closing and any(duplications.values()) and not options.ignoreduplicates:
+                duplicate_notice = ""
+                duplicate_notice += "%s has duplicates\n"%wfo.name
+                duplicate_notice += json.dumps( duplications,indent=2)
+                duplicate_notice += '\n'
+                duplicate_notice += json.dumps( files_per_rl, indent=2)
+                wfi.sendLog('checkor',duplicate_notice)
+                ## hook for making file invalidation ?
+                ## it shouldn't be allowed to bypass it
+                assistance_tags.add('duplicates')
+                is_closing = False 
+
+        time_point("checked duplicates", sub_lap=True)
 
             
         out_worth_checking = [out for out in custodial_locations.keys() if out.split('/')[-1] not in vetoed_custodial_tier]
@@ -636,51 +726,6 @@ def checkor(url, spec=None, options=None):
             print json.dumps(disk_copies, indent=2)
 
 
-        ## presence in dbs
-        dbs_presence = {}
-        dbs_invalid = {}
-        for output in wfi.request['OutputDatasets']:
-            dbs_presence[output] = dbs3Client.getFileCountDataset( output )
-            dbs_invalid[output] = dbs3Client.getFileCountDataset( output, onlyInvalid=True)
-
-        
-        time_point("dbs file count", sub_lap=True)
-
-        if not all([dbs_presence[out] == (dbs_invalid[out]+phedex_presence[out]) for out in wfi.request['OutputDatasets']]) and not options.ignorefiles:
-            mismatch_notice = wfo.name+" has a dbs,phedex mismatch\n"
-            mismatch_notice += "in dbs\n"+json.dumps(dbs_presence, indent=2) +"\n"
-            mismatch_notice += "invalide in dbs\n"+json.dumps(dbs_invalid, indent=2) +"\n"
-            mismatch_notice += "in phedex\n"+json.dumps(phedex_presence, indent=2) +"\n"
-
-            wfi.sendLog('checkor',mismatch_notice)
-            if not 'recovering' in assistance_tags:
-                assistance_tags.add('filemismatch')
-                #print this for show and tell if no recovery on-going
-                for out in dbs_presence:
-                    _,_,missing_phedex,missing_dbs  = getDatasetFiles(url, out)
-                    if missing_phedex:
-                        wfi.sendLog('checkor',"These %d files are missing in phedex\n%s"%(len(missing_phedex),
-                                                                                          "\n".join( missing_phedex )))
-                        were_invalidated = sorted(set(missing_phedex) & set(TMDB_invalid ))
-                        if were_invalidated:
-                            wfi.sendLog('checkor',"These %d files were invalidated globally\n%s"%(len(were_invalidated),
-                                                                                                  "\n".join(were_invalidated)))
-                            sendLog('checkor',"These %d files were invalidated globally\n%s\nand are invalidated in dbs"%(len(were_invalidated),
-                                                                                                                          "\n".join(were_invalidated)), level='critical')
-                            dbs3Client.setFileStatus( were_invalidated, newstatus=0 )
-                                
-                    if missing_dbs:
-                        wfi.sendLog('checkor',"These %d files are missing in dbs\n%s"%(len(missing_dbs),
-                                    "\n".join( missing_dbs )))
-                        were_invalidated = sorted(set(missing_dbs) & set(TMDB_invalid ))
-                        if were_invalidated:
-                            wfi.sendLog('checkor',"These %d files were invalidated globally\n%s"%(len(were_invalidated),
-                                                                                                  "\n".join(were_invalidated)))
-            #if not bypass_checks:
-            ## I don't think we can by pass this
-            is_closing = False
-        
-        time_point("checked file count", sub_lap=True)
 
         fraction_invalid = 0.20
         if not all([(dbs_invalid[out] <= int(fraction_invalid*dbs_presence[out])) for out in wfi.request['OutputDatasets']]) and not options.ignoreinvalid:
@@ -690,49 +735,13 @@ def checkor(url, spec=None, options=None):
             print json.dumps(phedex_presence, indent=2)
             ## need to be going and taking an eye
             assistance_tags.add('invalidfiles')
-            if not bypass_checks:
-                #sub_assistance+="-invalidfiles"
-                is_closing = False
+            ## no need for holding stuff because of a fraction of invalid files
+            #if not bypass_checks:
+            #    #sub_assistance+="-invalidfiles"
+            #    is_closing = False
 
-        ## put that heavy part at the end
-        ## duplication check
-        duplications = {}
-        files_per_rl = {}
-        for output in wfi.request['OutputDatasets']:
-            duplications[output] = "skiped"
-            files_per_rl[output] = "skiped"
 
         time_point("checked invalidation", sub_lap=True)
-
-        if (is_closing or bypass_checks) and (not options.ignoreduplicates):
-            print "starting duplicate checker for",wfo.name
-            for output in wfi.request['OutputDatasets']:
-                print "\tchecking",output
-                duplications[output] = True
-                try:
-                    duplications[output],files_per_rl[output] = dbs3Client.duplicateRunLumiFiles( output , skipInvalid=True, verbose=True)
-                except:
-                    try:
-                        duplications[output],files_per_rl[output] = dbs3Client.duplicateRunLumiFiles( output , skipInvalid=True, verbose=True)
-                    except Exception as e:
-                        wfi.sendLog('checkor','Not possible to check on duplicate lumi count on %s'%(output))
-                        sendLog('checkor','Not possible to check on duplicate lumi count on %s\n%s'%(output,str(e)),level='critical')
-                        is_closing=False
-
-            if is_closing and any(duplications.values()) and not options.ignoreduplicates:
-                duplicate_notice = ""
-                duplicate_notice += "%s has duplicates\n"%wfo.name
-                duplicate_notice += json.dumps( duplications,indent=2)
-                duplicate_notice += '\n'
-                duplicate_notice += json.dumps( files_per_rl, indent=2)
-                wfi.sendLog('checkor',duplicate_notice)
-                ## hook for making file invalidation ?
-                ## it shouldn't be allowed to bypass it
-                assistance_tags.add('duplicates')
-                is_closing = False 
-
-
-        time_point("checked duplicates", sub_lap=True)
 
         time_point("done with %s"%wfo.name)
 
