@@ -66,7 +66,6 @@ def rejector(url, specific, options=None):
 
         comment=""
         if options.comments: comment = ", reason: "+options.comments
-
         wfi.sendLog('rejector','invalidating the workflow by unified operator%s'%comment)
         ## need to find the whole familly and reject the whole gang
         familly = getWorkflowById( url, wfi.request['PrepID'] , details=True)
@@ -167,7 +166,8 @@ def rejector(url, specific, options=None):
                                   'TotalEstimatedJobs', 'TotalInputEvents', 'TotalInputLumis', 'TotalInputFiles',
                                   ## and the new parameter validation scheme
                                   'DN', 'AutoApproveSubscriptionSites', 'NonCustodialSites', 'CustodialSites', 
-                                  'OriginalRequestName', 'IgnoredOutputModules', 'OutputModulesLFNBases', 'SiteBlacklist', 'AllowOpportunistic', '_id']
+                                  'OriginalRequestName', 'IgnoredOutputModules', 'OutputModulesLFNBases', 'SiteBlacklist', 'AllowOpportunistic', '_id',
+                                  'min_merge_size', 'events_per_lumi', 'max_merge_size', 'max_events_per_lumi', 'max_merge_events', 'max_wait_time', 'events_per_job']
                 for p in paramBlacklist:
                     if p in schema:
                         schema.pop( p )
