@@ -302,7 +302,7 @@ for wfo in session.query(Workflow).filter(Workflow.status=='forget').all():
 ### then add everything else that reqmgr knows about in a valid status
 ### this is rather problematic because the locks are created and dealt recursively : i.e we assume to work on the delta between the previous locks and the new created ones. If we add those below, unified will try to unlock them at next round and create all sorts of trboules.
 for item in also_locking_from_reqmgr: 
-    #LI.lock(item, reason='Additional lock of datasets')
+    LI.lock(item, reason='Additional lock of datasets')
     pass
 
 
