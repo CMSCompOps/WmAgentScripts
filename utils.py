@@ -3890,8 +3890,10 @@ class workflowInfo:
             print "using collection name from schema"
 
         if self.recovery_doc != None:
+            print "returning cached self.recovery_doc"
             return self.recovery_doc
         try:
+            print "using",collection_name
             r1=self.conn.request("GET",'/couchdb/acdcserver/_design/ACDC/_view/byCollectionName?key="%s"&include_docs=true&reduce=false'% collection_name)
             r2=self.conn.getresponse()
             rows = json.loads(r2.read())['rows']
@@ -3904,12 +3906,15 @@ class workflowInfo:
 
     def getRecoveryInfo(self):
         self.getRecoveryDoc()
-
+        if not self.recovery_doc:
+            print "nothing retrieved"
+            return {},{},{}
         where_to_run = defaultdict(list)
         missing_to_run = defaultdict(int)
         missing_to_run_at = defaultdict(lambda : defaultdict(int))
         original_whitelist = self.request['SiteWhitelist']
         for doc in self.recovery_doc:
+            #print task
             task = doc['fileset_name']
             for f,info in doc['files'].iteritems():
                 missing_to_run[task] += info['events']
