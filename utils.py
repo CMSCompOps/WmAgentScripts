@@ -1110,12 +1110,16 @@ class DSS:
             print "fetching info of",dataset
             self.bdb[dataset] = getDatasetBlockSize( dataset )
 
-    def get(self, dataset ):
+    def get(self, dataset , blocks=None):
         return self.get_size( dataset )
 
-    def get_size(self, dataset):
+    def get_size(self, dataset, blocks=None):
         self._get( dataset )
-        return sum( self.bdb[dataset].values() )
+        if blocks:
+            ## sum over the specified blocks
+            return sum( [self.bdb[dataset].get(b,0.) for b in blocks ])
+        else:
+            return sum( self.bdb[dataset].values() )
 
     def get_block_size(self, dataset):
         self._get( dataset )
