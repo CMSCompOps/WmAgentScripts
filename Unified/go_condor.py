@@ -42,7 +42,7 @@ def makeHoldAds(config):
         anAd["Requirements"] = classad.ExprTree(str(exp))
         ## we use the site whitelist to prevent matching
         anAd["copy_DESIRED_Sites"] = "Held_DESIRED_Sites"
-        anAd["set_DESIRED_Sites"] = '"T2_NW_NOWHERE"'
+        anAd["set_DESIRED_Sites"] = "T2_NW_NOWHERE"
         anAd["set_HasBeenRouted"] = False
         anAd["set_HasBeenSetHeld"] = True
         print anAd
