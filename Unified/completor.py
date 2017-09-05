@@ -48,6 +48,7 @@ def completor(url, specific):
     good_fractions = {}
     truncate_fractions = {} 
     timeout = {}
+    campaign_injection_delay = {}
     for c in CI.campaigns:
         if 'force-complete' in CI.campaigns[c]:
             good_fractions[c] = CI.campaigns[c]['force-complete']
@@ -55,6 +56,8 @@ def completor(url, specific):
             truncate_fractions[c] = CI.campaigns[c]['truncate-complete']
         if 'force-timeout' in CI.campaigns[c]:
             timeout[c] = CI.campaigns[c]['force-timeout']
+        if 'injection-delay' in CI.campaigns[c]:
+            campaign_injection_delay[c] = CI.campaigns[c]['injection-delay']
 
     long_lasting = {}
 
@@ -94,7 +97,10 @@ def completor(url, specific):
         wfi = workflowInfo(url, wfo.name)
         pids = wfi.getPrepIDs()
         skip=False
-        if not any([c in wfo.name for c in good_fractions]) and not any([c in wfo.name for c in truncate_fractions]): skip=True
+        campaigns = wfi.getCampaigns()
+        if not any([c in good_fractions.keys() for c in campaigns]): skip=True
+        if not any([c in truncate_fractions.keys() for c in campaigns]): skip=True
+
         for user,spec in overrides.items():
 
             if wfi.request['RequestStatus']!='force-complete':
@@ -126,11 +132,14 @@ def completor(url, specific):
                 print "failed error parsing"
                 print str(e)
 
-        c = wfi.request['Campaign']
+        #c = wfi.request['Campaign']
         #if not c in good_fractions: continue
 
-        good_fraction = good_fractions.get(c,1000.)
-        truncate_fraction = truncate_fractions.get(c,1000.)
+        ## until we can map the output to task ...
+        good_fraction = max([good_fractions.get(c,1000.) for c in campaigns ])
+        truncate_fraction = max([truncate_fractions.get(c,1000.) for c in campaigns ])
+        #good_fraction = good_fractions.get(c,1000.)
+        #truncate_fraction = truncate_fractions.get(c,1000.)
 
         print "force at",good_fraction,"truncate at",truncate_fraction
         ignore_fraction = 2.
@@ -201,9 +210,9 @@ def completor(url, specific):
         if is_stuck: wfi.sendLog('completor','%s is stuck'%','.join(is_stuck))
 
         monitor_delay = 7
-        allowed_delay = 14
-        if c in timeout:
-            allowed_delay = timeout[c]
+        #allowed_delay = 14
+        #if c in timeout: allowed_delay = timeout[c]
+        allowed_delay = max([timeout.get(c,14) for c in campaigns])
             
         monitor_delay = min(monitor_delay, allowed_delay)
         ### just skip if too early
