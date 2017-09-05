@@ -344,7 +344,7 @@ def closor(url, specific=None, options=None):
 
                         ## call to makereplicarequest under relval => done
                         for site in destinations:
-                            result = makeReplicaRequest(url, site, [out], 'Copy for release validation consumption', priority='high', approve=True, mail=False, group='RelVal')
+                            result = makeReplicaRequest(url, site, [out], 'Copy for release validation consumption', priority='normal', approve=True, mail=False, group='RelVal')
                             try:
                                 request_id =  result['phedex']['request_created'][0]['id']
                                 results.append( True )
