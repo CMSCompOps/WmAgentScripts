@@ -226,8 +226,8 @@ Last update on <b>%s(CET), %s(GMT)</b>
 <br>
 <hr>
 <a href=logs/ target=_blank title="Directory containing all the logs">logs</a> 
-<a href=joblogs/ target=_blank title="Directory containing logs of jobs that failed with critical errors">job logs</a> 
-<a href=condorlogs/ target=_blank title="Directory containing condor logs of jobs ">condor logs</a> 
+<a href=http://cms-unified.web.cern.ch/cms-unified/joblogs/ target=_blank title="Directory containing logs of jobs that failed with critical errors">job logs</a> 
+<a href=http://cms-unified.web.cern.ch/cms-unified/condorlogs/ target=_blank title="Directory containing condor logs of jobs ">condor logs</a> 
 <a href=report/ target=_blank title="Directory containing error reports on workflows">error reports</a> 
 <a href=logs/last.log target=_blank title="Log of the last module that has run">last</a>
 <a href=statuses.html title="Unified statuses">statuses</a>
