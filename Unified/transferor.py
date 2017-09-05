@@ -435,9 +435,9 @@ def transferor(url ,specific = None, talk=True, options=None):
                 prim_location = [site for (site,info) in destinations.items() if info['completion']==100 and info['data_fraction']==1]
                 ## the rest is places it is going to be
                 prim_destination = [site for site in destinations.keys() if not site in prim_location]
-                ## veto the site with no current disk space
-                prim_destination = [site for site in prim_destination if SI.disk[site]]
-
+                ## veto the site with no current disk space, for things that are not relval
+                prim_destination = [site for site in prim_destination if (SI.disk[site] or wfh.isRelval())]
+                
 
                 if len(prim_location) >= copies_needed:
                     wfh.sendLog('transferor',"The input is all fully in place at %s sites %s"%( len(prim_location), sorted(prim_location)))
@@ -611,7 +611,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                     sec_size = dss.get( sec )
                     for site in sec_to_distribute:
                         site_se =SI.CE_to_SE(site)
-                        if (SI.disk[site_se]*1024.) > sec_size:
+                        if (SI.disk[site_se]*1024.) > sec_size or wfh.isRelval():
                             wfh.sendLog('transferor', 'Sending %s to %s'%( sec, site ))
                             all_transfers[site].append( sec )
                             can_go = False
