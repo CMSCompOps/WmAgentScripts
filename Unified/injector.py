@@ -86,7 +86,7 @@ def injector(url, options, specific):
             all_tiers = map(lambda o : o.split('/')[-1], wfi.request['OutputDatasets'])
             duplicate_tier = (len(all_tiers) != len(set(all_tiers)))
             transform_keywords = ['RunIISummer15wmLHE','RunIISummer15GS','RunIIWinter15GenOnly','RunIIWinter15wmLHE']
-            if wfi.request['RequestType'] == 'TaskChain' and any([keyword in wf for keyword in transform_keywords]) and not duplicate_tier:
+            if (not options.no_convert) and wfi.request['RequestType'] == 'TaskChain' and wfi.request['TaskChain']>1 and any([keyword in wf for keyword in transform_keywords]) and not duplicate_tier:
                 to_convert.add( wf )
                 wfi.sendLog('injector','Transforming %s TaskChain into StepChain'%wf)
 
@@ -203,6 +203,7 @@ if __name__ == "__main__":
     parser.add_option('-u','--user',help="What user to fetch workflow from",default="pdmvserv")
     parser.add_option('-r','--replace',help="the workflow name that should be used for replacement",default=None)
     parser.add_option('--user_relval',help="The user that can inject workflows for relvals", default=None)
+    parser.add_option('--no_convert',help="Prevent the conversion to stepchain", default=False)
     (options,args) = parser.parse_args()
     
     spec = None
