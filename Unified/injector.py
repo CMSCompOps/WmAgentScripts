@@ -147,7 +147,10 @@ def injector(url, options, specific):
         if len(true_familly)==0:
             #sendLog('injector','%s had no replacement'%wf.name, level='critical')
             if wfi.isRelval():
-                wfi.sendLog('injector','the workflow was found in trouble with no replacement. As a relval, there is no clean way to handle this.')
+                #wfi.sendLog('injector','the workflow was found in trouble with no replacement. As a relval, there is no clean way to handle this.')
+                wfi.sendLog('injector','the workflow was found in trouble with no replacement. As a relval, there is no clean way to handle this. Setting forget')
+                wf.status = 'forget'
+                session.commit()
             else:
                 wfi.sendLog('injector','the workflow was found in trouble with no replacement')
                 no_replacement.add( wf.name )
