@@ -113,7 +113,7 @@ def transferor(url ,specific = None, talk=True, options=None):
             if rwl: 
                 blocks = list(set( blocks + getDatasetBlocks( prim, runs= rwl ) ))
             if lwl:
-                blocks = list(set( blocks + getDatasetBlocks( dataset, lumis= lwl)))
+                blocks = list(set( blocks + getDatasetBlocks( prim, lumis= lwl)))
 
             ds_s = dss.get( prim, blocks=blocks)
             if prim in stucks: 
@@ -236,7 +236,10 @@ def transferor(url ,specific = None, talk=True, options=None):
 
         if wfh.request['RequestStatus']!='assignment-approved':
             if wfh.request['RequestStatus'] in ['aborted','rejected','rejected-archived','aborted-archived']:
-                wfo.status = 'trouble' ## so that we look or a replacement
+                if wfh.isReval():
+                    wfo.status = 'forget'
+                else:
+                    wfo.status = 'trouble' ## so that we look or a replacement
             else:
                 wfo.status = 'away'
             wfh.sendLog('transferor', '%s in status %s, setting %s'%( wfo.name,wfh.request['RequestStatus'],wfo.status))
@@ -468,7 +471,8 @@ def transferor(url ,specific = None, talk=True, options=None):
                 prim_to_distribute = [site for site in prim_to_distribute if not SI.CE_to_SE(site) in prim_destination]
                 ## take out the ones that cannot receive transfers
                 potential_destinations = len(prim_to_distribute)
-                prim_to_distribute = [site for site in prim_to_distribute if not SI.CE_to_SE(site) in SI.sites_veto_transfer]
+                #prim_to_distribute = [site for site in prim_to_distribute if not SI.CE_to_SE(site) in SI.sites_veto_transfer]
+                prim_to_distribute = [site for site in prim_to_distribute if (SI.disk[SI.CE_to_SE(site)] or wfh.isRelval())]
 
                 ## do we want to restrict transfers if the amount of site in vetoe are too large ?
                 
@@ -609,7 +613,8 @@ def transferor(url ,specific = None, talk=True, options=None):
                 #sec_to_distribute = [site for site in sec_to_distribute if not any([osite.startswith(site) for osite in sec_destination])]
                 sec_to_distribute = [site for site in sec_to_distribute if not SI.CE_to_SE(site) in sec_destination]
                 #sec_to_distribute = [site for site in sec_to_distribute if not  any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
-                sec_to_distribute = [site for site in sec_to_distribute if not  SI.CE_to_SE(site) in SI.sites_veto_transfer]
+                #sec_to_distribute = [site for site in sec_to_distribute if not  SI.CE_to_SE(site) in SI.sites_veto_transfer]
+                sec_to_distribute = [site for site in sec_to_distribute if (SI.disk[SI.CE_to_SE(site)] or wfh.isRelval())]
 
                 if override_sec_destination:
                     ## intersect with where we want the PU to be
@@ -680,9 +685,9 @@ def transferor(url ,specific = None, talk=True, options=None):
         site_se = SI.CE_to_SE(site)
 
         ## site that do not want input datasets
-        if site in SI.sites_veto_transfer: 
-            print site,"does not want transfers"
-            continue
+        #if site in SI.sites_veto_transfer: 
+        #    print site,"does not want transfers"
+        #    continue
 
         ## throttle the transfer size to T2s ? we'd be screwed by a noPU sample properly configured.
 
