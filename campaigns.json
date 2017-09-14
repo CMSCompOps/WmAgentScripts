@@ -52,7 +52,8 @@
     "overflow" : {"PRIM" : {}},
     "fractionpass": 1.0,
     "lumisize" : -1,
-    "maxcopies" : 1
+    "maxcopies" : 1,
+    "resize" : "auto"
   },
   "Run2015A": {
     "go": true,
@@ -84,7 +85,8 @@
     "fractionpass": 1.0,
     "lumisize" : -1,
     "maxcopies" : 1,
-    "overflow" : {"PRIM" : {}}
+    "overflow" : {"PRIM" : {}},
+    "resize" : "auto"
   },
   "Run2016D": {
     "go": true,
@@ -93,7 +95,8 @@
     "fractionpass": 1.0,
     "lumisize" : -1,
     "maxcopies" : 1,
-    "overflow" : {"PRIM" : {}}
+    "overflow" : {"PRIM" : {}},
+    "resize" : "auto"
   },
   "Run2016E": {
     "go": true,
@@ -103,7 +106,8 @@
     "fractionpass": 1.0,
     "lumisize" : -1,
     "maxcopies" : 1,
-    "overflow" : {"PRIM" : {}}
+    "overflow" : {"PRIM" : {}},
+    "resize" : "auto"
   },
   "Run2016F": {
     "go": true,
@@ -112,7 +116,8 @@
     "fractionpass": 1.0,
     "lumisize" : -1,
     "maxcopies" : 1,
-    "overflow" : {"PRIM" : {}}
+    "overflow" : {"PRIM" : {}},
+    "resize" : "auto"
   },
   "Run2016G": {
     "go": true,
@@ -121,7 +126,8 @@
     "fractionpass": 1.0,
     "lumisize" : -1,
     "maxcopies" : 1,
-    "overflow" : {"PRIM" : {}}
+    "overflow" : {"PRIM" : {}},
+    "resize" : "auto"
   },
   "Run2016H": {
     "go": true,
@@ -130,7 +136,8 @@
     "fractionpass": 1.0,
     "lumisize" : -1,
     "maxcopies" : 1,
-    "overflow" : {"PRIM" : {}}
+    "overflow" : {"PRIM" : {}},
+    "resize" : "auto"
   },
   "22Jun2017": {
     "go" : true,
@@ -154,6 +161,16 @@
     "primary_AAA" : true,
     "overflow" : {"PRIM" : {}}
    },	
+   "EarlyReReco2017" : {
+    "go": false,
+    "labels" : ["12Sep2017"],
+    "custodial_override" : ["DQMIO"],
+    "overflow" : {"PRIM" : {}},
+    "fractionpass": 1.0,
+    "lumisize" : -1,
+    "maxcopies" : 1,
+    "resize" : "auto"
+  },
   "Summer11LegwmLHE": {
     "go": false
   },
@@ -343,7 +360,7 @@
    "maxcopies": 1,
    "fractionpass" : 0.95,
    "tune" : true,
-   "secondaries" : {"/MinBias_TuneCUETP8M1_14TeV-v1-pythia8/PhaseIITDRSpring17GS-91X_upgrade2023_realistic_v3-v1/GEN-SIM" : {"SiteWhitelist" : ["T1_RU_JINR","T1_IT_CNAF","T1_ES_PIC","T1_DE_KIT","T2_US_Caltech","T2_US_Florida","T2_US_MIT","T2_US_UCSD","T2_DE_DESY"] } }
+   "secondaries" : {"/MinBias_TuneCUETP8M1_14TeV-v1-pythia8/PhaseIITDRSpring17GS-91X_upgrade2023_realistic_v3-v1/GEN-SIM" : {"SiteWhitelist" : ["T1_RU_JINR","T1_IT_CNAF","T1_DE_KIT","T2_US_Caltech","T2_US_Florida","T2_US_MIT","T2_US_UCSD","T2_DE_DESY"] } }
   },
  "RunIISummer17CosmicGS" : {
    "go" : true,
@@ -374,7 +391,8 @@
    "go" : true,
    "lumisize" : 1500,
    "fractionpass" : 0.95,
-   "tune" : true
+   "tune" : true,
+   "resize" : "auto"
   },
   "RunllSummer17GS" : {
    "go" : true,
@@ -393,20 +411,28 @@
    "maxcopies": 1,
    "lumisize": -1,
    "secondaries" : {"/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer17GS-92X_upgrade2017_realistic_v2-v1/GEN-SIM" : { "SecondaryLocation" :["T1_ES_PIC","T2_DE_DESY","T2_UK_London_IC","T1_IT_CNAF","T1_US_FNAL","T2_CH_CERN","T2_US_Caltech","T2_US_Florida","T2_US_Nebraska","T2_US_Wisconsin"] } },
-   "fractionpass" : 0.95
+   "fractionpass" : 0.95,
+   "tune" : true,
+   "resize" : "auto"
   },
   "RunIISummer17DRPremix" : {
    "go":true,
    "maxcopies": 1,
    "lumisize": -1,
-   "secondaries" : {"/Neutrino_E-10_gun/RunIISummer17PrePremix-MCv1_92X_upgrade2017_realistic_v8-v1/GEN-SIM-DIGI-RAW": { "SecondaryLocation" : ["T1_US_FNAL","T1_IT_CNAF","T2_CH_CERN"], "secondary_AAA" :true } },
-   "fractionpass" : 0.95
+   "secondaries" : {"/Neutrino_E-10_gun/RunIISummer17PrePremix-MCv1_92X_upgrade2017_realistic_v8-v1/GEN-SIM-DIGI-RAW": {} },
+   "SecondaryLocation" : ["T1_US_FNAL","T1_IT_CNAF","T2_CH_CERN"],
+   "fractionpass" : 0.95,
+   "secondary_AAA" :true,
+   "overflow" : { "PREMIX" : {} },
+   "tune" : true,
+   "resize" : "auto"
   },
   "RunIISummer17MiniAOD" :{
    "go" : true,
    "lumisize" : -1,
    "maxcopies": 1,
-   "fractionpass" : 0.95
+   "fractionpass" : 0.95,
+   "resize" : "auto"
   },
   "pPb816Spring16wmLHEGS" : {
    "go" : true,
@@ -514,7 +540,8 @@
     "fractionpass" : 0.95,
     "force-complete" : 0.99,
     "lumisize" : -1,
-    "tune" : true
+    "tune" : true,
+    "resize" : "auto"
   },
   "RunIISummer15GS": {
     "go": true, 
@@ -525,7 +552,8 @@
     "fractionpass" : 0.95,
     "force-complete" : 0.99,
     "overflow":{"LHE":{"site_list":"sites_AAA"}},
-    "tune" : true
+    "tune" : true,
+    "resize" : "auto"
   }, 
   "RunIIFall15DR75": {
     "go": false
