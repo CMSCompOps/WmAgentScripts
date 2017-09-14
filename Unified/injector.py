@@ -85,7 +85,12 @@ def injector(url, options, specific):
             ## temporary hack to transform specific taskchain into stepchains
             all_tiers = map(lambda o : o.split('/')[-1], wfi.request['OutputDatasets'])
             duplicate_tier = (len(all_tiers) != len(set(all_tiers)))
-            transform_keywords = ['RunIISummer15wmLHE','RunIISummer15GS','RunIIWinter15GenOnly','RunIIWinter15wmLHE']
+            transform_keywords = [
+                #'RunIISummer15wmLHE',
+                #'RunIISummer15GS',
+                'RunIIWinter15GenOnly',
+                #'RunIIWinter15wmLHE'
+                ]
             if (not options.no_convert) and wfi.request['RequestType'] == 'TaskChain' and wfi.request['TaskChain']>1 and any([keyword in wf for keyword in transform_keywords]) and not duplicate_tier:
                 to_convert.add( wf )
                 wfi.sendLog('injector','Transforming %s TaskChain into StepChain'%wf)
