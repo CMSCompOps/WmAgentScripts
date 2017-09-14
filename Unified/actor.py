@@ -53,7 +53,7 @@ def singleRecovery(url, task, initial, actions, do=False):
     #a massage ? boost the recovery over the initial wf
 #    payload['RequestPriority'] *= 10
     #Max priority is 1M
-    payload['RequestPriority'] = min(1000000 - 1,  payload['RequestPriority']*10 )
+    payload['RequestPriority'] = min(500000,  payload['RequestPriority']*2 ) ## never above 500k
 
     #change parameters based on actions here
     if actions:
@@ -194,13 +194,11 @@ def singleClone(url, wfname, actions, comment, do=False):
                 else:
                     payload['Memory'] = actions[action]
                 print "Memory set to " + actions[action]
-
+                wfi.sendLog('actor','Memory of clone set to %d'%actions[action])
 
     print "Clone payload"
 #    print json.dumps( payload , indent=2)
     print actions
-
-
 
     #Create clone
     clone = reqMgrClient.submitWorkflow(url, payload)
@@ -210,6 +208,7 @@ def singleClone(url, wfname, actions, comment, do=False):
         if not clone:
             print "Error twice in making clone for",initial["RequestName"]
             sendLog('actor','Failed to make a clone twice for %s!'%initial["RequestName"],level='critical')
+            wfi.sendLog('actor','Failed to make a clone twice for %s!'%initial["RequestName"])
             return None
 
     if actions:
@@ -222,6 +221,7 @@ def singleClone(url, wfname, actions, comment, do=False):
                     for split in splittings:
                         for act in ['avg_events_per_job','events_per_job','lumis_per_job']:
                             if act in split:
+                                wfi.sendLog('actor','Changing %s (%d) by a factor %d'%( act, split[act], factor))
                                 print "Changing %s (%d) by a factor %d"%( act, split[act], factor),
                                 split[act] /= factor
                                 print "to",split[act]
@@ -234,6 +234,7 @@ def singleClone(url, wfname, actions, comment, do=False):
                     for split in splittings:
                         for act in ['avg_events_per_job','events_per_job','lumis_per_job']:
                             if act in split:
+                                wfi.sendLog('actor','Max splitting set for %s (%d'%( act, split[act]))
                                 print "Changing %s (%d) "%( act, split[act]),
                                 split[act] = 1
                                 print "to max splitting ",split[act]
@@ -245,6 +246,7 @@ def singleClone(url, wfname, actions, comment, do=False):
 
     #Approve
     data = reqMgrClient.setWorkflowApproved(url, clone)
+    wfi.sendLog('actor','Cloned into %s'%clone)
 
 #    wfi.sendLog('actor','Cloned into %s by unified operator %s'%( clone, comment ))
 #    wfi.notifyRequestor('Cloned into %s by unified operator %s'%( clone, comment ),do_batch=False)
@@ -313,14 +315,14 @@ def actor(url,options=None):
 #===========================================================
         if to_clone and options.do:
             print "Let's try kill and clone: "
-
+            wfi.sendLog('actor','Going to clone %s'%wfname)
             results=[]
             datasets = set(wfi.request['OutputDatasets'])
 
             comment=""
 
             if 'comment' in tasks: comment = ", reason: "+ tasks['comment']
-            wfi.sendLog('actor',"invalidating the workflow by unified operators%s"%comment)
+            wfi.sendLog('actor',"invalidating the workflow by traffic controller %s"%comment)
 
             #Reject all workflows in the family
             #first reject the original workflow.
@@ -344,9 +346,11 @@ def actor(url,options=None):
                 cloned =  singleClone(url, wfname, tasks, comment, options.do)
             except:
                 sendLog('actor','Failed to create clone for %s! Check logs for more information. Action will need to be resubmitted.'%wfname,level='critical')
+                wfi.sendLog('actor','Failed to create clone for %s!'%wfname)
                 remove_action(wfname)
             if not cloned:
                 recover = False
+                wfi.sendLog('actor','Failed to create clone for %s!'%wfname)
                 sendLog('actor','Failed to create clone for %s!'%wfname,level='critical')
 
             else:
@@ -451,6 +455,7 @@ def actor(url,options=None):
                             if recovering:
                                 print wfname + " has been partially ACDC'ed. Needs manual attention."
                                 sendLog('actor', "%s has had %s/%s recoveries %s only"%( wfname, len(recovering), num_tasks_to_recover, list(recovering)), level='critical')
+                                wfi.sendLog('actor', "%s has had %s/%s recoveries %s only"%( wfname, len(recovering), num_tasks_to_recover, list(recovering)))
                                 break
                             else:
                                 print wfname + " failed recovery once"
@@ -462,8 +467,8 @@ def actor(url,options=None):
                             continue
 
                     else: #ACDC was made correctly. Now we have to assign it.
+                        wfi.sendLog('actor','ACDC created for task %s. Actions taken \n%s'%(fulltaskname,list(actions)))
                         team = wfi.request['Teams'][0]
-
                         parameters={
                         'SiteWhitelist' : sorted(assign_to_sites),
                         'AcquisitionEra' : wfi.acquisitionEra(),
