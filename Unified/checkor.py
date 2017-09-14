@@ -158,7 +158,7 @@ def checkor(url, spec=None, options=None):
         forcings = mcm.get('/restapi/requests/forcecomplete')
         #if forcings:
         #    sendEmail('force completing mechanism','please check what checkor is doing with %s'%( ','.join(forcings)))
-
+    
     
     ## remove empty entries ...
     bypasses = filter(None, bypasses)
@@ -454,6 +454,8 @@ def checkor(url, spec=None, options=None):
             if not bypass_checks:
                 assistance_tags.add('recovery')
                 is_closing = False
+        else:
+            wfi.sendLog('checkor','passing stats check \n%s \n%s'%( json.dumps(percent_completions, indent=2), json.dumps(fractions_pass, indent=2) ))
 
         if over_100_pass and any([percent_completions[out] >100 for out in fractions_pass]):
             print wfo.name,"is over completed"
@@ -491,7 +493,7 @@ def checkor(url, spec=None, options=None):
             ## hook for rejecting the request ?
             if not bypass_checks:
                 assistance_tags.add('biglumi')
-                is_closing = False 
+                #is_closing = False 
 
 
         any_presence = {}
