@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import workflowInfo, getWorkflows, siteInfo, sendEmail, componentInfo, getDatasetPresence, monitor_dir, monitor_pub_dir, reqmgr_url, campaignInfo, unifiedConfiguration, sendLog
+from utils import workflowInfo, getWorkflows, global_SI, sendEmail, componentInfo, getDatasetPresence, monitor_dir, monitor_pub_dir, reqmgr_url, campaignInfo, unifiedConfiguration, sendLog
 import reqMgrClient
 import json
 import os
@@ -28,9 +28,22 @@ def equalizor(url , specific = None, options=None):
     mapping = defaultdict(list)
     reversed_mapping = defaultdict(list)
     regions = defaultdict(list)
-    SI = siteInfo()
-    CI = campaignInfo()
+
     UC = unifiedConfiguration()
+    over_rides = []
+    use_T0 = ('T0_CH_CERN' in UC.get("site_for_overflow"))
+    if options.t0: use_T0 = True
+    if use_T0: over_rides.append('T0_CH_CERN')
+
+    use_HLT = ('T2_CH_CERN_HLT' in UC.get("site_for_overflow"))
+    if options.hlt: use_HLT = True
+    if use_HLT: over_rides.append('T2_CH_CERN_HLT')
+    
+
+    SI = global_SI( over_rides )
+        
+    CI = campaignInfo()
+
     
     sites_to_consider = SI.all_sites
     for site in sites_to_consider:
@@ -72,13 +85,6 @@ def equalizor(url , specific = None, options=None):
     #mapping['T2_IT_Rome'].append('T3_US_OSG')
     #mapping['T1_US_FNAL'].append('T3_US_NERSC')
     
-    use_T0 = ('T0_CH_CERN' in UC.get("site_for_overflow"))
-    if options.t0: use_T0 = True
-    #if options.augment : use_T0 = True
-
-    use_HLT = ('T2_CH_CERN_HLT' in UC.get("site_for_overflow"))
-    if options.hlt: use_HLT = True
-    #if options.augment : use_HLT=True
 
     if use_HLT:
         mapping['T2_CH_CERN'].append('T2_CH_CERN_HLT')
@@ -98,7 +104,7 @@ def equalizor(url , specific = None, options=None):
 
     ## all europ T1 among each others
     europ_t1 = [site for site in sites_to_consider if site.startswith('T1') and any([reg in site for reg in ['IT','DE','UK','FR','ES','RU']])]
-    print europ_t1
+    #print europ_t1
     for one in europ_t1:
         for two in europ_t1:
             if one==two: continue
@@ -150,10 +156,10 @@ def equalizor(url , specific = None, options=None):
                 reversed_mapping[fb].append(site)
 
     ## this is the fallback mapping
-    print "Direct mapping : site => overflow"
-    print json.dumps( mapping, indent=2)
-    print "Reverse mapping : dest <= from origin"
-    print json.dumps( reversed_mapping, indent=2)
+    #print "Direct mapping : site => overflow"
+    #print json.dumps( mapping, indent=2)
+    #print "Reverse mapping : dest <= from origin"
+    #print json.dumps( reversed_mapping, indent=2)
 
     altered_tasks = set()
 
@@ -218,7 +224,7 @@ def equalizor(url , specific = None, options=None):
                 per_core_io = [ v/k for k,v in binned_io.items()]                
             per_core_io = max( per_core_io )
             #per_core_io = sum( per_core_io ) / float(len(per_core_io))
-            print binned_io
+            print "binned I/O",dict(binned_io)
             read_need = int(per_core_io)
 
 
@@ -269,15 +275,13 @@ def equalizor(url , specific = None, options=None):
             if sum(values) < stats_to_go: 
                 print "not enough stats to go for core-binned mem usage",sum(values),"<",stats_to_go,"at cores=",core_count
                 continue
-            #print core_count
-            #print bins
-            #print values
+            print "Getting information at",core_count, bins, values
             if values:
                 percentiles[core_count] = weighted_percentile( values, bins, memory_percentil)
 
         ## do the fit per core
         #print json.dumps( percentiles , indent=2 )
-
+        
         slopes = []
         #print original_ncore
         #print percentiles
@@ -289,7 +293,7 @@ def equalizor(url , specific = None, options=None):
                 slopes.append( s )
             baseline = int(baseline)
         slope = max(0,int(sum(slopes) / len(slopes))) if slopes else None
-        print "From multiple memory points",baseline,slope
+        print "From multiple memory points",baseline,"MB baseline at",original_ncore,"cores, and",slope,"per thread"
 
         b_m = None
         if baseline: b_m = baseline
@@ -476,9 +480,27 @@ def equalizor(url , specific = None, options=None):
 
             resize = CI.get(campaign,'resize',{})
             
-            if resize:# and not is_chain:
+            if resize and type(resize)==dict:# and not is_chain:
                 print "adding",task.pathName,"in resizing"
                 resizing[task.pathName] = copy.deepcopy(resize)
+            elif resize and resize=='auto':
+                ## can we add this tuning add-hoc by assuming Memory = a + Ncore*b, where a is a fraction of Memory ?
+                mcore = wfi.getCorePerTask( taskname )
+                if mcore!=1:
+                    mem = wfi.getMemoryPerTask( taskname )
+                    fraction_constant = 0.4
+                    min_mem_per_core = 500
+                    print "task param", mem,mcore
+                    mem_per_core_c = int((1-fraction_constant) * mem / float(mcore))
+                    mem_per_core = max(mem_per_core_c, min_mem_per_core)
+                    min_core = max(int(mcore/3.), 3) 
+                    max_core = min(int(2*mcore)+2, 15)
+                    print "adding", task.pathName,"in resizing, calculating",mem_per_core_c,"MB per thread, minimum",min_mem_per_core,"MB, using from",min_core,"to",max_core,"threads"
+
+                    resizing[task.pathName] = { "minCores":min_core, "maxCores": max_core, "memoryPerThread": mem_per_core}
+                else:
+                    print "do not start resizing a task that was set single-core"
+
 
             tune = CI.get(campaign,'tune',options.tune)
             if tune and not campaign in tune_performance:

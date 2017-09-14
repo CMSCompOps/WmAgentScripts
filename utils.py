@@ -1140,7 +1140,7 @@ class DSS:
 
 
 class siteInfo:
-    def __init__(self):
+    def __init__(self, override_good = None):
         
         UC = unifiedConfiguration()
 
@@ -1185,7 +1185,7 @@ class siteInfo:
                 if not siteInfo['Tier'] in [0,1,2,3]: continue
                 self.all_sites.append( siteInfo['VOName'] )
                 if siteInfo['VOName'] in self.sites_banned: continue
-                if self.sites_ready_in_agent and siteInfo['VOName'] in self.sites_ready_in_agent:
+                if (self.sites_ready_in_agent and siteInfo['VOName'] in self.sites_ready_in_agent) or (override_good and siteInfo['VOName'] in override_good):
                     self.sites_ready.append( siteInfo['VOName'] )
                 elif self.sites_ready_in_agent and not siteInfo['VOName'] in self.sites_ready_in_agent:
                     self.sites_not_ready.append( siteInfo['VOName'] )
@@ -1607,9 +1607,10 @@ class siteInfo:
         #return r_weights.keys()[self._weighted_choice_sub(r_weights.values())]
         return self._pick(sites, self.cpu_pledges)
 
-def global_SI():
-    if not global_SI.instance:
-        global_SI.instance = siteInfo()
+def global_SI(a=None):
+    if a or not global_SI.instance:
+        print "making a new instance of siteInfo",a
+        global_SI.instance = siteInfo(a)
     return global_SI.instance
 global_SI.instance = None
 
@@ -4267,15 +4268,15 @@ class workflowInfo:
             sites_allowed = sorted(SI.sites_eos) #['T2_CH_CERN'] ## and that's it
         elif secondary:
             if self.heavyRead():
-                sites_allowed = sorted(set(SI.sites_T1s + SI.sites_with_goodIO))
+                sites_allowed = sorted(set(SI.sites_T0s + SI.sites_T1s + SI.sites_with_goodIO))
             else:
-                sites_allowed = sorted(set(SI.sites_T1s + SI.sites_with_goodAAA))                
+                sites_allowed = sorted(set(SI.sites_T0s + SI.sites_T1s + SI.sites_with_goodAAA))                
         elif primary:
-            sites_allowed =sorted(set( SI.sites_T1s + SI.sites_T2s + SI.sites_T3s))
+            sites_allowed =sorted(set(SI.sites_T0s + SI.sites_T1s + SI.sites_T2s + SI.sites_T3s))
         else:
             # no input at all
             ## all site should contribute
-            sites_allowed =sorted(set( SI.sites_T2s + SI.sites_T1s + SI.sites_T3s ))
+            sites_allowed =sorted(set( SI.sites_T0s + SI.sites_T2s + SI.sites_T1s + SI.sites_T3s ))
             ### hack if we have urgency to kick gen-sim away
             #ust2s = set([site for site in SI.sites_T2s if site.startswith('T2_US')])
             #allmcores = set(SI.sites_mcore_ready)
@@ -4314,7 +4315,7 @@ class workflowInfo:
             if c_black_list:
                 if verbose:
                     print "Reducing the whitelist due to black list in campaign configuration"
-                    print "Removing",c_black_list
+                    print "Removing",sorted(c_black_list)
                 sites_allowed = list(set(sites_allowed) - set(c_black_list))
 
         #ncores = self.request.get('Multicore',1)
@@ -4322,7 +4323,7 @@ class workflowInfo:
         memory_allowed = SI.sitesByMemory( float(self.request['Memory']) , maxCore=ncores)
         if memory_allowed!=None:
             if verbose:
-                print "sites allowing",self.request['Memory'],"MB and",ncores,"core are",memory_allowed
+                print "sites allowing",self.request['Memory'],"MB and",ncores,"core are",sorted(memory_allowed)
             ## mask to sites ready for mcore
             if  ncores>1:
                 memory_allowed = list(set(memory_allowed) & set(SI.sites_mcore_ready))
@@ -4382,7 +4383,7 @@ class workflowInfo:
                 t = find_task_dict( tname )
                 sizeperevent = t.get('SizePerEvent',None)
                 for keyword,factor in output_size_correction.items():
-                    if keyowrd in spl['taskName']:
+                    if keyword in spl['taskName']:
                         sizeperevent *= factor
                         break
 
@@ -4651,6 +4652,13 @@ class workflowInfo:
 
     def getPriority(self):
         return self.request['RequestPriority']
+
+    def getMemoryPerTask(self, task):
+        mems = self.request.get('Memory',None)
+        mems_d = {}
+        if 'Chain' in self.request['RequestType']:
+            mems_d = self._collectinchain('Memory',default=None)
+        return int(mems_d.get( task, mems))
 
     def getCorePerTask(self, task):
         mcores = self.request.get('Multicore',1)
