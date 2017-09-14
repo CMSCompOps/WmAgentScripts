@@ -261,7 +261,7 @@ Last update on <b>%s(CET), %s(GMT)</b>
       time.asctime(time.gmtime()),
       reqmgr_url,
       caller,
-      ', '.join(['<a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=critical&module=%s&limit=100 target=_blank><b><font color=red>%s critical</b></font></a>'%(m,m) for m in ['injector','batchor','transferor','cachor','stagor','assignor','completor','GQ','equalizor','checkor','closor']])
+      ', '.join(['<a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=critical&module=%s&limit=100 target=_blank><b><font color=red>%s critical</b></font></a>'%(m,m) for m in ['injector','batchor','transferor','cachor','stagor','assignor','completor','GQ','equalizor','checkor','recoveror','actor','closor']])
       )
                    )
         
@@ -1086,7 +1086,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 
     lap ( 'done with sites' )
 
-    open('%s/siteInfo.json'%monitor_pub_dir,'w').write(json.dumps(dict([(t,getattr(SI,t)) for t in ['sites_T1s','sites_T2s','sites_with_goodIO']]),indent=2))
+    open('%s/siteInfo.json'%monitor_pub_dir,'w').write(json.dumps(dict([(t,getattr(SI,t)) for t in ['sites_T0s','sites_T1s','sites_T2s','sites_with_goodIO']]),indent=2))
 
     lap ( 'done with sites json' )
 
