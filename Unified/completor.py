@@ -191,7 +191,7 @@ def completor(url, specific):
             tail_cutting_priority = wfi.request['InitialPriority']+ int((delay_priority_increase * (injection_delay - injection_delay_threshold) / 7) / quantized) * quantized
             #print tail_cutting_priority
             tail_cutting_priority += 101 ## to signal it is from this mechanism
-            tail_cutting_priority = min(999999, tail_cutting_priority) ## never go above 1M
+            tail_cutting_priority = min(400000, tail_cutting_priority) ## never go above 400k priority
             #print tail_cutting_priority
             tail_cutting_priority = max(tail_cutting_priority, priority) ## never go below the current value
             #print tail_cutting_priority
