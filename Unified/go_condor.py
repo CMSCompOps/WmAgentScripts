@@ -175,7 +175,8 @@ def makeResizeAds(config):
         anAd['set_MinCores'] = minCores
         anAd['set_MaxCores'] = maxCores
         anAd['set_HasBeenRouted'] = False
-        anAd['set_RequestMemory'] = classad.ExprTree('OriginalMemory + %d * ( WMCore_ResizeJob ? ( RequestCpus - OriginalCpus ) : 0 )' % memoryPerThread)
+        anAd['set_ExtraMemory'] = memoryPerThread
+        #anAd['set_RequestMemory'] = classad.ExprTree('OriginalMemory + %d * ( WMCore_ResizeJob ? ( RequestCpus - OriginalCpus ) : 0 )' % memoryPerThread)
         print anAd
 
 
@@ -251,6 +252,24 @@ def makePerformanceCorrectionsAds(configs):
         anAd['set_HasBeenTimingTuned'] = True
         anAd['set_HasBeenRouted'] = False
         anAd['set_OriginalMaxWallTimeMins'] = int(timing)
+        print anAd
+
+    s_config = configs.get('slope',{})
+    for slope in s_config:
+        wfs = s_config[slope]
+        anAd = classad.ClassAd()
+        anAd["GridResource"] = "condor localhost localhost"
+        anAd["TargetUniverse"] = 5
+        anAd["Name"] = str("Set memory per thread requirement to %s"% slope)
+        anAd["TimeTasknames"] = map(str, wfs)
+        time_names_escaped = anAd.lookup('TimeTasknames').__repr__()
+        exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (target.HasBeenSlopeTuned =!= true)' %( time_names_escaped ))
+        anAd["Requirements"] = classad.ExprTree(str(exp))
+        ## set the expression as it should always have been
+        anAd['set_RequestMemory'] = classad.ExprTree('OriginalMemory + ExtraMemory * ( WMCore_ResizeJob ? ( RequestCpus - OriginalCpus ) : 0 )')
+        anAd['set_HasBeenSlopeTuned'] = True
+        anAd['set_HasBeenRouted'] = False
+        anAd['set_ExtraMemory'] = int(timing)
         print anAd
         
 def makeAds(config):
