@@ -252,6 +252,7 @@ def makePerformanceCorrectionsAds(configs):
         anAd['set_HasBeenTimingTuned'] = True
         anAd['set_HasBeenRouted'] = False
         anAd['set_OriginalMaxWallTimeMins'] = int(timing)
+        ## how to set this ??? anAd['set_EstimatedSingleCoreMins'] = 'OriginalMaxWallTimeMins * OriginalCpus'
         print anAd
 
     s_config = configs.get('slope',{})
@@ -267,9 +268,9 @@ def makePerformanceCorrectionsAds(configs):
         anAd["Requirements"] = classad.ExprTree(str(exp))
         ## set the expression as it should always have been
         anAd['set_RequestMemory'] = classad.ExprTree('OriginalMemory + ExtraMemory * ( WMCore_ResizeJob ? ( RequestCpus - OriginalCpus ) : 0 )')
-        anAd['set_HasBeenSlopeTuned'] = True
+        anAd['set_HasBeenSlopeTuned'] = True 
         anAd['set_HasBeenRouted'] = False
-        anAd['set_ExtraMemory'] = int(timing)
+        anAd['set_ExtraMemory'] = int(slope)
         print anAd
         
 def makeAds(config):
