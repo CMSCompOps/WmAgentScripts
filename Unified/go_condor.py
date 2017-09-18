@@ -266,8 +266,6 @@ def makePerformanceCorrectionsAds(configs):
         time_names_escaped = anAd.lookup('TimeTasknames').__repr__()
         exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (target.HasBeenSlopeTuned =!= true)' %( time_names_escaped ))
         anAd["Requirements"] = classad.ExprTree(str(exp))
-        ## set the expression as it should always have been
-        anAd['set_RequestMemory'] = classad.ExprTree('OriginalMemory + ExtraMemory * ( WMCore_ResizeJob ? ( RequestCpus - OriginalCpus ) : 0 )')
         anAd['set_HasBeenSlopeTuned'] = True 
         anAd['set_HasBeenRouted'] = False
         anAd['set_ExtraMemory'] = int(slope)
