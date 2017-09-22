@@ -236,7 +236,7 @@ def transferor(url ,specific = None, talk=True, options=None):
 
         if wfh.request['RequestStatus']!='assignment-approved':
             if wfh.request['RequestStatus'] in ['aborted','rejected','rejected-archived','aborted-archived']:
-                if wfh.isReval():
+                if wfh.isRelval():
                     wfo.status = 'forget'
                 else:
                     wfo.status = 'trouble' ## so that we look or a replacement
