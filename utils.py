@@ -1187,8 +1187,10 @@ class siteInfo:
                 #print siteInfo['Status']
                 if not siteInfo['Tier'] in [0,1,2,3]: continue
                 self.all_sites.append( siteInfo['VOName'] )
-                if siteInfo['VOName'] in self.sites_banned: continue
-                if (self.sites_ready_in_agent and siteInfo['VOName'] in self.sites_ready_in_agent) or (override_good and siteInfo['VOName'] in override_good):
+                override = (override_good and siteInfo['VOName'] in override_good)
+                if siteInfo['VOName'] in self.sites_banned and not override:
+                    continue
+                if (self.sites_ready_in_agent and siteInfo['VOName'] in self.sites_ready_in_agent) or override:
                     self.sites_ready.append( siteInfo['VOName'] )
                 elif self.sites_ready_in_agent and not siteInfo['VOName'] in self.sites_ready_in_agent:
                     self.sites_not_ready.append( siteInfo['VOName'] )
@@ -1196,7 +1198,10 @@ class siteInfo:
                     self.sites_ready.append( siteInfo['VOName'] )
                 else:
                     self.sites_not_ready.append( siteInfo['VOName'] )
-
+            ##hack
+            self.sites_ready.append('T3_US_OSG')
+            self.all_sites.append('T3_US_OSG')
+            
             
         except Exception as e:
             print "issue with getting SSB readiness"
