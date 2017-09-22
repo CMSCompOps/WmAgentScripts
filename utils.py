@@ -708,18 +708,21 @@ class campaignInfo:
                             #print self.campaigns[c]['parameters']['SiteBlacklist']
                             
     def go(self, c, s=None):
+        GO = False
         if c in self.campaigns and self.campaigns[c]['go']:
             if 'labels' in self.campaigns[c]:
                 if s!=None:
-                    return (s in self.campaigns[c]['labels']) or any([l in s for l in self.campaigns[c]['labels']])
+                    GO = (s in self.campaigns[c]['labels']) or any([l in s for l in self.campaigns[c]['labels']])
                 else:
                     print "Not allowed to go for",c,s
-                    return False
+                    GO = False
             else:
-                return True
+                GO = True
         else:
             print "Not allowed to go for",c
-            return False
+            GO = False
+        return GO
+
     def get(self, c, key, default):
         if c in self.campaigns:
             if key in self.campaigns[c]:
