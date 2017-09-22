@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from utils import workflowInfo, siteInfo, monitor_dir, monitor_pub_dir, base_dir, global_SI, getDatasetPresence, getDatasetBlocksFraction, getDatasetBlocks
+from utils import workflowInfo, siteInfo, monitor_dir, monitor_pub_dir, base_dir, global_SI, getDatasetPresence, getDatasetBlocksFraction, getDatasetBlocks, unifiedConfiguration
 import time
 
 base_eos_dir = "/afs/cern.ch/user/c/cmst2/Unified/"
@@ -40,6 +40,7 @@ def parse_one(url, wfn, options=None):
     time_point("Starting with %s"% wfn )
 
     SI = global_SI()
+    UC = unifiedConfiguration()
     wfi = workflowInfo( url , wfn)
     where_to_run, missing_to_run,missing_to_run_at = wfi.getRecoveryInfo()       
     all_blocks,needed_blocks,files_in_blocks,files_notin_dbs = wfi.getRecoveryBlocks()
@@ -136,6 +137,8 @@ def parse_one(url, wfn, options=None):
         print high_order_acdc,"order request, pulling down all logs"
         do_all_error_code = True
 
+    ##do_all_error_code = True ## enable this by default to get some good stuff out there.
+
     tasks = sorted(set(err.keys() + missing_to_run.keys()))
 
     if not tasks:
@@ -199,28 +202,11 @@ def parse_one(url, wfn, options=None):
     if tasks:
         min_rank = min([task.count('/') for task in tasks])
     for task in tasks:  
-        n_expose = 2
+        n_expose = UC.get('n_error_exposed')
         if options:
             n_expose = options.expose 
-        expose_archive_code = {'134':defaultdict(lambda : n_expose),#seg fault
-                               '139':defaultdict(lambda : n_expose),# ???
-                               '99109':defaultdict(lambda : n_expose),#stageout
-                               '99303' : defaultdict(lambda : n_expose),#no pkl report. if you are lucky
-                               '60450' : defaultdict(lambda : n_expose),#new
-                               '50513':defaultdict(lambda : n_expose),#new
-                               '8001': defaultdict(lambda : n_expose),# the usual exception in cmsRun
-                               '8026': defaultdict(lambda : n_expose),# the usual exception in cmsRun
-                               '11003': defaultdict(lambda : n_expose),# job extraction
-                               '73': defaultdict(lambda : n_expose),# job extraction
-                               '87': defaultdict(lambda : n_expose),
-                               }
-        expose_condor_code = {'99109':defaultdict(lambda : n_expose),#stageout
-                              '99303':defaultdict(lambda : n_expose),#no pkl report
-                              '60450':defaultdict(lambda : n_expose),#new
-                              '50513':defaultdict(lambda : n_expose),#new
-                              '11003': defaultdict(lambda : n_expose),
-                              }
-    
+        expose_archive_code = dict([(str(code), defaultdict(lambda : n_expose)) for code in UC.get('expose_archive_code')])
+        expose_condor_code = dict([(str(code), defaultdict(lambda : n_expose)) for code in UC.get('expose_condor_code')])
 
         #print task
         task_rank = task.count('/')
@@ -401,9 +387,9 @@ def parse_one(url, wfn, options=None):
         for code in sorted(all_codes):
             html+='<th><a href="#%s">%s</a>'%(code,code)
             if str(code) in expose_archive_code or do_all_error_code:
-                html += ' <a href=%s/joblogs/%s/%s/%s>, JL</a>'%( url_eos, wfn, code, task_short )
+                html += ' <a href=%s/joblogs/%s/%s/%s>, JobLog</a>'%( url_eos, wfn, code, task_short )
             if str(code) in expose_condor_code or do_all_error_code:
-                html += ' <a href=%s/condorlogs/%s/%s/%s>, CL</a>'%( url_eos, wfn, code, task_short )
+                html += ' <a href=%s/condorlogs/%s/%s/%s>, CondorLog</a>'%( url_eos, wfn, code, task_short )
             html += '</th>'
 
         html+='<th>Total jobs</th><th>Site Ready</th>'
