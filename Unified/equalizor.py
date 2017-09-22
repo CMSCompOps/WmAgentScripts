@@ -41,7 +41,9 @@ def equalizor(url , specific = None, options=None):
     
 
     SI = global_SI( over_rides )
-        
+    print sorted(SI.all_sites)
+    print sorted(SI.sites_T0s)
+
     CI = campaignInfo()
 
     
@@ -82,14 +84,12 @@ def equalizor(url , specific = None, options=None):
             ## add OSG            
             mapping[site].append('T3_US_OSG')
             pass
-    #mapping['T2_IT_Rome'].append('T3_US_OSG')
-    #mapping['T1_US_FNAL'].append('T3_US_NERSC')
-    
 
     if use_HLT:
         mapping['T2_CH_CERN'].append('T2_CH_CERN_HLT')
 
     if use_T0:
+        ## who can read from T0
         mapping['T2_CH_CERN'].append('T0_CH_CERN')
         mapping['T1_IT_CNAF'].append('T0_CH_CERN')
         mapping['T1_FR_CCIN2P3'].append('T0_CH_CERN')
@@ -152,8 +152,14 @@ def equalizor(url , specific = None, options=None):
     ## create the reverse mapping for the condor module
     for site,fallbacks in mapping.items():
         for fb in fallbacks:
+            if fb == site: 
+                mapping[site].remove(fb)
+                continue
             if not site in reversed_mapping[fb]:
                 reversed_mapping[fb].append(site)
+
+    for site in mapping:
+        mapping[site] = list(set(mapping[site]))
 
     ## this is the fallback mapping
     #print "Direct mapping : site => overflow"
@@ -185,9 +191,21 @@ def equalizor(url , specific = None, options=None):
         return go, task_name, running, idled
     needs_action.pressure = UC.get('overflow_pressure')
 
+    mem_quanta = UC.get('mem_quanta') #MB
+    time_quanta = UC.get('time_quanta') # min
+    slope_quanta = UC.get('slope_quanta') #MB
+    read_quanta = UC.get('read_quanta') #kB/min or something
+
+    def quantize( value, quanta ):
+        N = int(value / quanta)
+        return (N+1)*quanta
+    def s_quantize( value, quanta):
+        return str(quantize( value, quanta ))
+
     def getPerf( task , stats_to_go = 100, original_ncore=1):
         task = task.split('/')[1]+'/'+task.split('/')[-1]
 
+        print "#"*10,"input read performance","#"*10
         failed_out = (None,None,None,None)
         try:
             u = 'http://cms-gwmsmon.cern.ch/prodview/json/historynew/highio720/%s'%task
@@ -227,7 +245,7 @@ def equalizor(url , specific = None, options=None):
             print "binned I/O",dict(binned_io)
             read_need = int(per_core_io)
 
-
+        print "#"*10,"memory usage performance","#"*10
         try:
             u = 'http://cms-gwmsmon.cern.ch/prodview/json/historynew/memorycpu720/%s'%task
             print u
@@ -298,9 +316,11 @@ def equalizor(url , specific = None, options=None):
         b_m = None
         if baseline: b_m = baseline
 
+        print "#"*10,"total core-hour performance","#"*10
 
         time_percentil = 95
         try:
+            ## the returned value is the commitedcorehours ~ walltime * 4
             u = 'http://cms-gwmsmon.cern.ch/prodview/json/historynew/percentileruntime720/%s'%task
             print u
             percentile_data = json.loads(os.popen('curl -s --retry 5 %s'%u).read())
@@ -308,9 +328,9 @@ def equalizor(url , specific = None, options=None):
             print str(e)
             return failed_out
         
-        p_t = percentile_data['aggregations']["2"]["values"].get("%.1f"%time_percentil,None) ## convert in mins
+        p_t = percentile_data['aggregations']["2"]["values"].get("%.1f"%time_percentil,None) 
         if p_t=="NaN":p_t=None
-        if p_t: p_t*=60.
+        if p_t: p_t*=60. ## convert in mins
         w_t = percentile_data["hits"]["total"]
         
         b_t = None
@@ -319,8 +339,7 @@ def equalizor(url , specific = None, options=None):
         else:
             print "not enough stats for time",w_t,"<",stats_to_go,"value is",p_t
 
-
-
+        print "#"*30
         return (b_m,slope,b_t, read_need)
         
     def getcampaign( task ):
@@ -340,6 +359,8 @@ def equalizor(url , specific = None, options=None):
         open('%s/equalizor.json.new'%monitor_pub_dir,'w').write( json.dumps( interface, indent=2))
         os.system('mv %s/equalizor.json.new %s/equalizor.json'%(monitor_pub_dir,monitor_pub_dir))
         os.system('cp %s/equalizor.json %s/logs/equalizor/equalizor.%s.json'%(monitor_pub_dir,monitor_dir,time.mktime(time.gmtime())))
+        ## move it where people use to see it ## should go away at some point
+        os.system('cp %s/equalizor.json /afs/cern.ch/user/c/cmst2/www/unified/.'%( monitor_pub_dir ))
 
     interface = {
         'mapping' : mapping,
@@ -351,6 +372,7 @@ def equalizor(url , specific = None, options=None):
         'read' : {},
         'hold': {},
         'release' : {},
+        'resizing' : {},
         'highprio' : []
         }
     if options.augment or options.remove:
@@ -363,7 +385,7 @@ def equalizor(url , specific = None, options=None):
         interface['hold'] = previous.get('hold',{})
         interface['release'] = previous.get('release',{})
         interface['highprio'] = previous.get('highprio',[])
-        
+        interface['resizing'] = previous.get('resizing',{})
         
     if options.remove:
         if specific in interface['modifications']:
@@ -416,7 +438,8 @@ def equalizor(url , specific = None, options=None):
         wfs = session.query(Workflow).filter(Workflow.name.contains(specific)).all()
     else:
         wfs = session.query(Workflow).filter(Workflow.status == 'away').all()
-        
+
+    short_tasks = set()
     performance = {}
     resizing = {}
     no_routing = [
@@ -435,7 +458,9 @@ def equalizor(url , specific = None, options=None):
             cached = filter(lambda d : d['RequestName']==wfo.name, workflows)
             if not cached : continue
             wfi = workflowInfo(url, wfo.name, request = cached[0])
-        
+
+        if wfi.isRelval(): continue
+
         ## only running-* should get re-routed, unless done by hand
         if not wfi.request['RequestStatus'] in ['running-open','running-closed'] and not specific: continue
 
@@ -451,6 +476,7 @@ def equalizor(url , specific = None, options=None):
 
         if not lhe and not prim and not sec and not wfi.isRelval():
             ## no input at all: go for OSG!!!
+            print "adding", wfo.name, " addhoc for OSG and no task of the workflow requires any input"
             add_to[wfo.name] = ['T3_US_OSG']
 
         ## check needs override
@@ -489,15 +515,23 @@ def equalizor(url , specific = None, options=None):
                 if mcore!=1:
                     mem = wfi.getMemoryPerTask( taskname )
                     fraction_constant = 0.4
-                    min_mem_per_core = 500
+                    min_mem_per_core = 10 ## essentially no min
                     print "task param", mem,mcore
+                    max_mem_per_core = int(mem/float(mcore))
                     mem_per_core_c = int((1-fraction_constant) * mem / float(mcore))
                     mem_per_core = max(mem_per_core_c, min_mem_per_core)
+                    mem_per_core = min(mem_per_core, max_mem_per_core)
                     min_core = max(int(mcore/3.), 3) 
                     max_core = min(int(2*mcore)+2, 15)
-                    print "adding", task.pathName,"in resizing, calculating",mem_per_core_c,"MB per thread, minimum",min_mem_per_core,"MB, using from",min_core,"to",max_core,"threads"
+                    print "Adding %s in resizing, calculating %d < %d < %d MB, using %d to %d cores"%(
+                        task.pathName,
+                        min_mem_per_core, mem_per_core_c, max_mem_per_core,
+                        min_core,max_core)
+                    #print "adding", task.pathName,"in resizing, calculating",mem_per_core_c,
+                    #"MB per thread, minimum",
+                    #min_mem_per_core,"MB, using from",min_core,"to",max_core,"threads"
 
-                    resizing[task.pathName] = { "minCores":min_core, "maxCores": max_core, "memoryPerThread": mem_per_core}
+                    resizing[task.pathName] = { "minCores":min_core, "maxCores": max_core, "memoryPerThread": quantize(mem_per_core, slope_quanta)}
                 else:
                     print "do not start resizing a task that was set single-core"
 
@@ -543,16 +577,24 @@ def equalizor(url , specific = None, options=None):
                     # massage the values : 95% percentile
                     performance[task.pathName] = {}
                     if set_slope:
+                        if set_memory:
+                            ## make sure it cannot go to zero
+                            max_mem_per_core = int(set_memory / float(mcore))                            
+                            set_memory = min( set_memory, max_mem_per_core) 
                         performance[task.pathName]['slope']=set_slope
                         if task.pathName in resizing and "memoryPerThread" in resizing[task.pathName]:
                             resizing[task.pathName]["memoryPerThread"] = set_slope
                         perf_per_config[configcache.get( taskname , 'N/A')]['slope'] = set_slope
                     if set_memory:
-                        performance[task.pathName]['memory']=min(set_memory,15000) ## max to 15GB
+                        performance[task.pathName]['memory']= min(set_memory,15000) ## max to 15GB
                         perf_per_config[configcache.get( taskname , 'N/A')]['memory'] = set_memory
                     if set_time:
-                        performance[task.pathName]['time'] = min(set_time, 1440) ## max to 24H
+                        performance[task.pathName]['time'] = min(set_time, int(1440./mcore)) ## max to 24H per mcore ## set_time is provided in total corehours ~ walltime*ncore
                         perf_per_config[configcache.get( taskname , 'N/A')]['time'] = set_time
+                        if (set_time / mcore) < 60.: ## looks like short jobs all around
+                            print "WHAT IS THIS TASK",task.pathName,"WITH",set_time/mcore,"runtime"
+                            wfi.sendLog('equalizor','The task %s was found to run short jobs of %.2f [mins] at original %d cores setting'%( taskname, set_time / mcore , mcore))
+                            short_tasks.add( (task.pathName, set_time / mcore, mcore) )
                     if set_io:
                         performance[task.pathName]['read'] = set_io
                         perf_per_config[configcache.get( taskname , 'N/A')]['read'] = set_io
@@ -570,7 +612,7 @@ def equalizor(url , specific = None, options=None):
                 needs, task_name, running, idled = needs_action(wfi, task)
                 #needs = True
                 if options.augment:
-                    print "/t",task.pathName
+                    print "\t",task.pathName
                 if is_chain and task.pathName.endswith('_1') and not options.augment:
                     print i_task,"in chain prevents overflowing"
                     needs = False
@@ -610,7 +652,8 @@ def equalizor(url , specific = None, options=None):
                         aaa_grid = set(memory_allowed) & aaa_sec_grid
                         #aaa_grid = set(wfi.request['SiteWhitelist'])
 
-                    banned_until_you_find_a_way_to_do_this = ['T3_US_OSG']
+                    #banned_until_you_find_a_way_to_do_this = ['T3_US_OSG']
+                    banned_until_you_find_a_way_to_do_this = []
                     aaa_grid  = filter(lambda s : not s in banned_until_you_find_a_way_to_do_this, aaa_grid)
                     print sorted(aaa_grid),"for premix"
                     if aaa_grid:
@@ -631,12 +674,18 @@ def equalizor(url , specific = None, options=None):
                         aaa_grid= set()
                         aaa_grid_in_full = set(in_full)
                         for site in sorted(aaa_grid_in_full):
+                            if site == 'T1_US_FNAL':
+                                print  site,mapping.get(site, [])
                             aaa_grid_in_full.update( mapping.get(site, []) )
                         ## just add the neighbors to the existing whitelist. we could do more with block classAd
                         for site in wfi.request['SiteWhitelist']:
                             aaa_grid.update( mapping.get(site, []) )
-                        aaa_grid = aaa_grid & set(sites_allowed + ['T3_US_NERSC']) ## and restrict to site that would be allowed at all (mcore, mem)
-                        aaa_grid_in_full = aaa_grid_in_full & set(sites_allowed + ['T3_US_NERSC']) ## and restrict to site that would be allowed at all (mcore, mem)
+                        add_on = [
+                            'T3_US_OSG',
+                            #'T3_US_NERSC'
+                            ]
+                        aaa_grid = aaa_grid & set(sites_allowed + add_on) ## and restrict to site that would be allowed at all (mcore, mem)
+                        aaa_grid_in_full = aaa_grid_in_full & set(sites_allowed + add_on) ## and restrict to site that would be allowed at all (mcore, mem)
                         gmon = wfi.getGlideMon()
                         needs, task_name, running, idled = needs_action(wfi, task)
                         print needs,running,idled
@@ -895,7 +944,7 @@ def equalizor(url , specific = None, options=None):
                                                                    "Pending" : idled}
                         wfi.sendLog('equalizor','adding the HLT in whitelist of %s to %d for %d'%( task.pathName, pending_HLT, max_HLT))
 
-            if i_task==0 and not sec and use_T0:
+            if i_task==0 and not sec and use_T0 and False: 
                 needs, task_name, running, idled = needs_action(wfi, task)
                 
                 if options.augment: needs=True
@@ -911,17 +960,17 @@ def equalizor(url , specific = None, options=None):
                     if task.pathName in modifications[wfo.name] and 'AddWhitelist' in modifications[wfo.name][task.pathName]:
                         if not "T0_CH_CERN" in modifications[wfo.name][task.pathName]["AddWhitelist"]:
                             modifications[wfo.name][task.pathName]["AddWhitelist"].append( "T0_CH_CERN" )
-                            wfi,sendLog('equalizor','adding the T0 for %s to %d for %d'%( task.pathName, pending_T0, max_T0))
+                            wfi.sendLog('equalizor','adding the T0 for %s to %d for %d'%( task.pathName, pending_T0, max_T0))
                     elif task.pathName in modifications[wfo.name] and 'ReplaceSiteWhitelist' in modifications[wfo.name][task.pathName]:
                         if not "T0_CH_CERN" in modifications[wfo.name][task.pathName]["ReplaceSiteWhitelist"]:
                             modifications[wfo.name][task.pathName]["ReplaceSiteWhitelist"].append( "T0_CH_CERN" )
-                            wfi,sendLog('equalizor','adding the T0 to replacement for %s to %d for %d'%( task.pathName, pending_T0, max_T0))
+                            wfi.sendLog('equalizor','adding the T0 to replacement for %s to %d for %d'%( task.pathName, pending_T0, max_T0))
                     else:
                         modifications[wfo.name][task.pathName] = { "AddWhitelist" : ["T0_CH_CERN"],
                                                                    "Priority" : wfi.request['RequestPriority'],
                                                                    "Running" : running,
                                                                    "Pending" : idled}
-                        wfi,sendLog('equalizor','adding the T0 for %s to %d for %d'%( task.pathName, pending_T0, max_T0))
+                        wfi.sendLog('equalizor','adding the T0 for %s to %d for %d'%( task.pathName, pending_T0, max_T0))
             if options.manual and options.manual.count(':')==2:
                 manual_task,a_sites,r_sites = options.manual.split(':')
                 if manual_task == taskname:
@@ -952,69 +1001,34 @@ def equalizor(url , specific = None, options=None):
             else:
                 modifications[wf][path] = {'ReplaceSiteWhitelist' : list(set(r_sites.split(',')))}
 
+
+    if short_tasks:
+        sendLog('equalizor','These tasks are running very short jobs\n %s'%('\n'.join( ["%s, %.f [mins] observed time at original %d core count"%(a,b,c) for (a,b,c) in sorted( short_tasks )] )), level='critical')
+
+
     interface['modifications'].update( modifications )
 
 
 
     ###  manage the number of core and job resizing
-    #interface['cores']={'T2_CH_CERN_HLT': {'min':4,'max':16}, 'default': {'min':1, 'max':4}}
-    #interface['resizes'] = ['RunIISpring16DR80']
-    interface['resizing'] = resizing
+    interface['resizing'].update(resizing)
 
     ### manage the modification of the memory and target time
-    max_N_mem = 10
-    max_N_time = 10
-    max_N_slope = 10
-    max_N_read = 10
-    ## discretize the memory to N at most values
-    mems = set([o['memory'] for t,o in performance.items() if 'memory' in o])
-    times = set([o['time'] for t,o in performance.items() if 'time' in o])
-    slopes = set([o['slope'] for t,o in performance.items() if 'slope' in o])
-    reads = set([o['read'] for t,o in performance.items() if 'read' in o])
-    if len(mems)>max_N_mem:
-        mem_step = int((max(mems) - min(mems))/ float(max_N_mem))
-        print "rebinning memory"
-        for t in performance:
-            if not 'memory' in performance[t]: continue
-            (m,r) = divmod(performance[t]['memory'], mem_step)
-            performance[t]['memory'] = (m+1)*mem_step
-    if len(times)>max_N_time:
-        print "rebinning memory"
-        time_step = int((max(times) - min(times))/float(max_N_time))
-        for t in performance:
-            if not 'time' in performance[t]: continue
-            (m,r) = divmod(performance[t]['time'], time_step)
-            performance[t]['time'] = (m+1)*time_step
-    if len(slopes)>max_N_slope:
-        slope_step = int((max(slopes) - min(slopes))/ float(max_N_slope))
-        print "rebinning slopes"
-        for t in performance:
-            if not 'slope' in performance[t]: continue
-            (m,r) = divmod(performance[t]['slope'], slope_step)
-            performance[t]['slope'] = (m+1)*slope_step
-
-    if len(reads)>max_N_read:
-        read_step = int((max(reads) - min(reads))/ float(max_N_read))
-        print "rebinning reads"
-        for t in performance:
-            if not 'read' in performance[t]: continue
-            (m,r) = divmod(performance[t]['read'], read_step)
-            performance[t]['read'] = (m+1)*read_step
-
     new_times = defaultdict(list)
     new_memories = defaultdict(list)
     new_slopes = defaultdict(list)
     new_reads = defaultdict(list)
 
+
     for t,o in performance.items():
         if 'time' in o:
-            new_times[str(o['time'])].append( t )
+            new_times[s_quantize(o['time'], time_quanta)].append( t )
         if 'memory' in o:
-            new_memories[str(o['memory'])].append( t )
+            new_memories[s_quantize(o['memory'], mem_quanta)].append( t )
         if 'slope' in o:
-            new_slopes[str(o['slope'])].append( t )
+            new_slopes[s_quantize(o['slope'], slope_quanta)].append( t )
         if 'read' in o:
-            new_reads[str(o['read'])].append( t )
+            new_reads[s_quantize(o['read'], read_quanta)].append( t )
 
     interface['time'].update( new_times )
     interface['memory'].update( new_memories )

@@ -231,7 +231,7 @@ def makePerformanceCorrectionsAds(configs):
         anAd["Name"] = str("Set memory requirement to %s"% memory)
         anAd["MemoryTasknames"] = map(str, wfs)
         memory_names_escaped = anAd.lookup('MemoryTasknames').__repr__()
-        exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (target.HasBeenMemoryTuned =!= true) && (target.RequestMemory >= %d)' %( memory_names_escaped, int(memory) ))
+        exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (target.HasBeenMemoryTuned =!= true) && (target.OriginalMemory >= %d)' %( memory_names_escaped, int(memory) ))
         anAd["Requirements"] = classad.ExprTree(str(exp))
         anAd['set_HasBeenMemoryTuned'] = True
         anAd['set_HasBeenRouted'] = False
@@ -247,12 +247,14 @@ def makePerformanceCorrectionsAds(configs):
         anAd["Name"] = str("Set timing requirement to %s"% timing)
         anAd["TimeTasknames"] = map(str, wfs)
         time_names_escaped = anAd.lookup('TimeTasknames').__repr__()
-        exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (target.HasBeenTimingTuned =!= true) && (target.MaxWallTimeMins <= %d)' %( time_names_escaped, int(timing) ))
+        #exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (target.HasBeenTimingTuned =!= true) && (target.MaxWallTimeMins <= %d)' %( time_names_escaped, int(timing) ))
+        exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (target.HasBeenTimingTuned =!= true) && (target.EstimatedSingleCoreMins <= %d)' %( time_names_escaped, int(timing) ))
         anAd["Requirements"] = classad.ExprTree(str(exp))
         anAd['set_HasBeenTimingTuned'] = True
         anAd['set_HasBeenRouted'] = False
-        anAd['set_OriginalMaxWallTimeMins'] = int(timing)
-        ## how to set this ??? anAd['set_EstimatedSingleCoreMins'] = 'OriginalMaxWallTimeMins * OriginalCpus'
+        #anAd['set_OriginalMaxWallTimeMins'] = int(timing)
+        anAd['set_EstimatedSingleCoreMins'] = int(timing)
+        anAd['set_OriginalMaxWallTimeMins'] = classad.ExprTree('EstimatedSingleCoreMins / OriginalCpus')
         print anAd
 
     s_config = configs.get('slope',{})
