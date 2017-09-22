@@ -4346,10 +4346,12 @@ class workflowInfo:
         #returns hold,<list of params
         ##return None to indicate that things should not proceed
         splits = self.getSplittingsNew()
+        ncores = self.getMulticore()
         hold = False
         ## for those that are modified, add it and return it
         modified_splits = []
         GB_space_limit = unifiedConfiguration().get('GB_space_limit')
+        GB_space_limit *= ncores
         output_size_correction = unifiedConfiguration().get('output_size_correction')
 
         if self.request['RequestType']=='StepChain':
@@ -4535,7 +4537,7 @@ class workflowInfo:
             
             return answer_d if answer_d else answer
 
-        ncores = self.getMulticore()
+
         ## this isn't functioning for taskchain BTW
         if 'InputDataset' in self.request:
             average = getDatasetEventsPerLumi(self.request['InputDataset'])
