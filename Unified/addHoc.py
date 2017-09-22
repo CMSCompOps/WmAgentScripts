@@ -9,7 +9,13 @@ import os
 import sys
 import json
 import time
+import random
 
+## send something to T0
+#wfos = session.query(Workflow).filter(Workflow.name.contains('07Aug17')).all()
+#random.shuffle( wfos )
+#for wfo in wfos[:5]:
+#    os.system('Unified/equalizor.py -a --t0 %s'% wfo.name)
 
 ## push the PR relval through
 os.system('Unified/assignor.py _PR_newco')
