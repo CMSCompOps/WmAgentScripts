@@ -362,6 +362,20 @@
    "tune" : true,
    "secondaries" : {"/MinBias_TuneCUETP8M1_14TeV-v1-pythia8/PhaseIITDRSpring17GS-91X_upgrade2023_realistic_v3-v1/GEN-SIM" : {"SiteWhitelist" : ["T1_RU_JINR","T1_IT_CNAF","T1_DE_KIT","T2_US_Caltech","T2_US_Florida","T2_US_MIT","T2_US_UCSD","T2_DE_DESY"] } }
   },
+  "RunIIFall17wmLHEGS" : {
+   "go" : true,
+   "lumisize" : -1,
+   "fractionpass" : 0.95,
+   "force-complete" : 0.99,
+   "tune" : true
+  },
+ "RunIIFall17GS" : {
+   "go" : true,
+   "lumisize" : -1,
+    "force-complete" : 0.99,
+   "fractionpass" : 0.95,
+   "tune" : true
+ },
  "RunIISummer17CosmicGS" : {
    "go" : true,
    "lumisize" : -1,
@@ -403,6 +417,7 @@
   "RunIISummer17wmLHEGS" : {
    "go" : true,
    "lumisize" : -1,
+   "force-complete" : 0.99,
    "fractionpass" : 0.95,
    "tune" : true
   },
@@ -897,6 +912,35 @@
     "go" : true,
     "lumisize" : -1,
     "fractionpass" : 0.95
+  },
+   "PhaseIITDRFall17GS" : {
+   "go" : false,
+   "lumisize" : 1500,
+   "fractionpass" : 0.95,
+   "tune" : true
+  },
+  "PhaseIITDRFall17wmLHEGS" : {
+   "go" : false,
+   "lumisize" : 1500,
+   "fractionpass" : 0.95,
+   "tune" : true
+  },
+  "PhaseIITDRFall17DR" : {
+   "go" : false,
+   "lumisize" : 1500,
+   "maxcopies": 1,
+   "fractionpass" : 0.95,
+   "force-complete" : 0.99,
+   "tune" : true,
+   "SiteBlacklist": [ "T1_US_FNAL", "T0_CH_CERN","T2_CH_CERN_HLT" , "T2_CH_CERN"],
+   "overflow": {"PU":{"max":20000,"pending":0}},
+   "secondaries" : { }
+  },
+  "PhaseIITDRFall17MiniAOD" : {
+   "go" : false,
+   "lumisize" : -1,
+   "fractionpass" : 0.95,
+   "maxcopies" : 1
   },
   "PhaseIFall16wmLHEGS" : {
     "go" : true,
