@@ -155,13 +155,13 @@ def checkor(url, spec=None, options=None):
             sendEmail("malformated force complet file","%s is not json readable"%rider_file, destination=[email])
 
     if use_mcm:
+        ## this is a list of prepids that are good to complete
         forcings = mcm.get('/restapi/requests/forcecomplete')
-        #if forcings:
-        #    sendEmail('force completing mechanism','please check what checkor is doing with %s'%( ','.join(forcings)))
     
     
     ## remove empty entries ...
     bypasses = filter(None, bypasses)
+
     pattern_fraction_pass = UC.get('pattern_fraction_pass')
 
     total_running_time = 5.*60. 
@@ -229,22 +229,12 @@ def checkor(url, spec=None, options=None):
             session.commit()
             continue
         
-        if '-onhold' in wfo.status:
-            if wfo.name in holdings and wfo.name not in bypasses:
-                wfi.sendLog('checkor',"%s is on hold"%wfo.name)
-                continue
-
         if wfo.wm_status != 'completed' and not wfo.name in exceptions: #and not wfo.name in bypasses:
             ## for sure move on with closeout check if in completed
             wfi.sendLog('checkor',"no need to check on %s in status %s"%(wfo.name, wfo.wm_status))
             session.commit()
             continue
 
-        if wfo.name in holdings and wfo.name not in bypasses:
-            wfo.status = 'assistance-onhold'
-            wfi.sendLog('checkor',"setting %s on hold"%wfo.name)
-            session.commit()
-            continue
 
         session.commit()        
         #sub_assistance="" # if that string is filled, there will be need for manual assistance
@@ -279,6 +269,17 @@ def checkor(url, spec=None, options=None):
                     force_by_user = True
                     break
         
+        if '-onhold' in wfo.status:
+            if wfo.name in holdings and not bypass_checks:
+                wfi.sendLog('checkor',"%s is on hold"%wfo.name)
+                continue
+
+        if wfo.name in holdings and not bypass_checks:
+            wfo.status = 'assistance-onhold'
+            wfi.sendLog('checkor',"setting %s on hold"%wfo.name)
+            session.commit()
+            continue
+
         tiers_with_no_check = copy.deepcopy(UC.get('tiers_with_no_check')) # dqm*
         vetoed_custodial_tier = copy.deepcopy(UC.get('tiers_with_no_custodial')) if not wfi.isRelval() else [] #no veto for relvals
         to_ddm_tier = copy.deepcopy(UC.get('tiers_to_DDM'))
