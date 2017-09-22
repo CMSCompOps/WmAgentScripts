@@ -4,12 +4,32 @@
    "description" : "The list of people that get the emails notifications"
  },
  "site_for_overflow": {
-   "value" : ["T2_CH_CERN_HLT"],
+   "value" : ["T2_CH_CERN_HLT","T0_CH_CERN"],
    "description" : "The sites that we set to overflow and require a specific treatment"
  },
  "overflow_pressure": {
    "value" : 0.5,
    "description" : "The ratio pending/running over which to consider overflowing"
+ },
+ "mem_quanta": {
+    "value" : 100,
+    "description" : "The quanta of memory in MB for the JobRouter"
+ },
+ "time_quanta": {
+    "value" : 50,
+    "description" : "The quanta of time in min for the JobRouter"
+ },
+ "slope_quanta": {
+    "value" : 50,
+    "description" : "The quanta of the slope of memory/core in MB for the JobRouter"
+ },
+ "read_quanta": {
+    "value" : 100,
+    "description" : "The quanta of read requirements in kb/something for the JobRouter"
+ },
+ "htcondor_binning": {
+    "value" : 5,
+    "description" : "The number of bins to use for quantizing values used for tuning job requirements"
  },
  "DDM_buffer_level": {
    "value" : 0.8,
@@ -19,7 +39,8 @@
    "value" : ["T2_CH_CERN_AI",
 	      "T2_TH_CUNSTDA",
 	      "T2_EE_Estonia",
-	      "T2_UA_KIPT"
+	      "T2_UA_KIPT",
+	      "NONO_T0_CH_CERN"
  	      ],
    "description" : "The sites that are banned from production"
  },		 
@@ -29,6 +50,7 @@
  },
  "sites_space_override": {	
    "value" : { 
+      	     "T0_CH_CERN_Disk" : 0
 	       },
    "description" : "Over-ride the available space at a phedex end point"
  },
@@ -172,6 +194,18 @@
   "value" : 4000,
   "description": "The threshold before choping an input dataset in chunk of that size for spreading to sites"
   },
+  "n_error_exposed":{
+    "value" : 2,
+    "description" :"The default number of job cmsrun logs to retrieve"
+  },
+  "expose_archive_code":{
+    "value" : [134,139,99109,99303,60450,50513,50660,8001,8002,8026,11003,73,87],
+    "description" : "The error codes that should get a cmsrun log exposed"
+  },
+  "expose_condor_code":{
+    "value" : [99109,99303,60450,50513,50660,11003],
+    "description" :  "The error codes that should get a condor lot exposed"
+  },
   "error_codes_to_recover": {
   "value" : { "50664" : [ { "legend" : "time-out",
   	           "solution" : "split-2" ,
@@ -230,7 +264,7 @@
   },
   "user_rereco":{
    "description" : "The users from which we expect ReReco requests",
-   "value" : ["cerminar","fabozzi","prebello"]
+   "value" : ["cerminar","fabozzi","prebello","amaltaro"]
   },
   "user_relval":{
    "description" : "The users from which we expect relval requests",
