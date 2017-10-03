@@ -1931,11 +1931,12 @@ def try_findLostBlocksFiles(url, datasetname):
     lost_files = []
     for dataset in result['phedex']['dataset']:
         for item in dataset['block']:
+            if item['is_open'] == 'y' : continue # skip those
             exist=0
             for loc in item['subscription']:
                 exist = max(exist, loc['percent_bytes'])
             if not exist:
-                #print "We have lost:",item['name']
+                print "We have lost:",item['name']
                 #print json.dumps( item, indent=2)
                 lost.append( item )
             elif exist !=100:
