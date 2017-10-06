@@ -56,6 +56,7 @@ $BASE_DIR/cWrap.sh Unified/completor.py
 
 ## check on the wf that have completed already
 $BASE_DIR/cWrap.sh Unified/checkor.py --strict
+$BASE_DIR/cWrap.sh Unified/actor.py
 ## initiate automatic recovery
 $BASE_DIR/cWrap.sh Unified/recoveror.py
 
@@ -64,11 +65,15 @@ $BASE_DIR/cWrap.sh Unified/actor.py
 
 ## pass along everything that has custodial already and should close
 $BASE_DIR/cWrap.sh Unified/checkor.py  --review
+$BASE_DIR/cWrap.sh Unified/actor.py
 $BASE_DIR/cWrap.sh Unified/checkor.py  --clear
+$BASE_DIR/cWrap.sh Unified/actor.py
+
 ## close the wf in closed-out
 $BASE_DIR/cWrap.sh Unified/closor.py
 
 $BASE_DIR/cWrap.sh Unified/checkor.py  --update
+$BASE_DIR/cWrap.sh Unified/actor.py
 
 rm -f $lock_name
 
