@@ -182,7 +182,7 @@ for wf in wfs:
                 else:
                     print "original workflow does not read from any dataset"
                     
-                acdc_location = [si.CE_to_SE(s) for s in wqe['Inputs'][b]]
+                acdc_location = sorted(set([si.CE_to_SE(s) for s in wqe['Inputs'][b]]))
                 if pileup_location != None and not wqe['NoPileupUpdate']: ## meaning we have a secondary and we care about it
                     print "intersecting with secondary",','.join(sorted(pileup_location))
                     acdc_location = list(set(acdc_location) & set(pileup_location))
@@ -191,7 +191,17 @@ for wf in wfs:
                 if not can_run_at:
                     print b,"is at",acdc_location,"and wf set to run from",swl
                     not_runable_acdc.add( wf['RequestName'] )
-                    not_processable.add( b )
+                    #not_processable.add( b )
+                se_whitelist = sorted(set([si.CE_to_SE(s) for s in wqe['SiteWhitelist'] if s in si.sites_ready]))
+                #se_whitelist = swl
+                if wqe['NoInputUpdate']==False and (se_whitelist>=acdc_location):
+                    missing_in_whitelist = sorted([si.SE_to_CE(s) for s in (set(acdc_location) - set(se_whitelist))])
+                    print "Should have",missing_in_whitelist,"also in the whitelist, or have xrootd enabled"
+                    print sorted(acdc_location),"for the ACDC location"
+                    print sorted(se_whitelist),"for the whitelist"
+                    not_runable_acdc.add( wf['RequestName'] )
+                    #not_processable.add( b )
+                
                 continue
             #b is the block
             ds = b.split('#')[0]
@@ -262,7 +272,7 @@ for site in sorted(jobs_for.keys()):
 
 if not_runable_acdc:
     sendLog('GQ','These %s ACDC cannot run \n%s'%( len(not_runable_acdc),
-                                                   '\n'.join(not_runable_acdc)
+                                                   '\n'.join(sorted(not_runable_acdc))
                                                    ),level='critical')
 
 
