@@ -936,6 +936,14 @@ class docCache:
             'cachefile' : None,
             'default' : ""
             }
+        self.cache['site_storage'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration(),
+            'getter' : lambda : getSiteStorage('cmsweb.cern.ch'),
+            'cachefile' : None,
+            'default' : ""
+            }
         self.cache['phedex_nodes'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
@@ -1068,6 +1076,14 @@ def getNodeQueue(url, node):
                 missing += int(usage['miss_bytes'] / 1023.**4) #in TB
         return missing
     return None
+
+def getSiteStorage(url):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    r1=conn.request("GET",'/sitedb/data/prod/data-processing', headers={"Accept":"*/*"})
+    r2=conn.getresponse()
+    r = json.loads(r2.read())['result']
+    return r
+
 
 def getNodesQueue(url):
     ret = defaultdict(int)
@@ -1265,11 +1281,14 @@ class siteInfo:
         self.cpu_pledges = defaultdict(int)
         self.addHocStorage = {
             'T2_CH_CERN_T0': 'T2_CH_CERN',
-            'T2_CH_CERN_HLT' : 'T2_CH_CERN',
             'T2_CH_CERN_AI' : 'T2_CH_CERN',
-            'T3_IN_TIFRCloud' : 'T2_IN_TIFR',
-            #'T3_US_NERSC' : 'T1_US_FNAL_Disk'
             }
+        for (phn,psn) in dataCache.get('site_storage'):
+            if self.SE_to_CE(phn) == psn: continue
+            if psn in ['T2_CH_CERN']: continue
+            #print phn,psn,"have a special setting"
+            self.addHocStorage[psn] = phn
+
         ## list here the site which can accomodate high memory requests
         self.sites_memory = {}
 
@@ -1571,6 +1590,9 @@ class siteInfo:
         elif se.endswith('_MSS'):
             return se.replace('_MSS','')
         else:
+            ## we could return many this way ...
+            #if se in self.addHocStorage.values():
+            #    pass
             return se
 
     def pick_SE(self, sites=None, size=None): ## size needs to be in TB
