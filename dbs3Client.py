@@ -24,8 +24,9 @@ dbs3_url_writer = r'https://cmsweb.cern.ch/dbs/prod/global/DBSWriter'
 def duplicateRunLumi(dataset, verbose=False, skipInvalid=False):
     r,lumisChecked = duplicateRunLumiFiles( dataset, verbose, skipInvalid)
     if verbose:
+        print "dataset :",dataset
         for rl in sorted(lumisChecked.keys()):
-            print rl,"is present in files"
+            print rl,"is in these files"
             for fn in lumisChecked[rl]:
                 print fn
     return r
