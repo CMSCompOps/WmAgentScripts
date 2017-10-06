@@ -61,6 +61,18 @@ def singleRecovery(url, task, initial, actions, do=False):
             if action.startswith('mem') and actions[action] != "" and actions[action] != 'Same':
                 payload['Memory'] = actions[action]
                 print "Memory set to " + actions[action]
+                ## Taskchains needs to be treated special to set the memory to all tasks
+                if initial['RequestType'] == 'TaskChain':
+                    it = 1
+                    while True:
+                        t = 'Task%d'%it
+                        it += 1
+                        if t in initial:
+                            payload[t] = copy.deepcopy(initial[t])
+                            payload[t]['Memory'] = actions[action]
+                        else:
+                            break
+
             if action.startswith('split'):
                 split_alert = (initial['RequestType'] in ['MonteCarlo'] )
                 for key in initial:
@@ -183,18 +195,22 @@ def singleClone(url, wfname, actions, comment, do=False):
         for action in actions:
             if action.startswith('mem') and actions[action] != "" and actions[action] != 'Same':
                 if payload['RequestType'] == 'TaskChain':
+                    print "Setting memory for clone of task chain"
                     it=1
                     while True:
                         t = 'Task%d'%it
                         it+=1
                         if t in payload:
                             payload[t]['Memory'] = actions[action]
+                            print "Memory set for Task%d"%it
                         else:
                             break
                 else:
+                    print "Setting memory for non-taskchain workflow"
                     payload['Memory'] = actions[action]
                 print "Memory set to " + actions[action]
-                wfi.sendLog('actor','Memory of clone set to %d'%actions[action])
+                #This line is doesn't work for some reason
+#                wfi.sendLog('actor','Memory of clone set to %d'%actions[action])
 
     print "Clone payload"
 #    print json.dumps( payload , indent=2)
@@ -342,6 +358,7 @@ def actor(url,options=None):
             if all(map(lambda result : result in ['None',None,True],results)):
                 wfi.sendLog('actor',"%s and children are rejected"%wfname)
 
+            cloned = None
             try:    
                 cloned =  singleClone(url, wfname, tasks, comment, options.do)
             except:
@@ -371,6 +388,7 @@ def actor(url,options=None):
             print "Tasks is "
             print tasks
 
+            all_tasks = wfi.getAllTasks()
 
             ## need a way to verify that this is the first round of ACDC, since the second round will have to be on the ACDC themselves
         
@@ -435,6 +453,14 @@ def actor(url,options=None):
                 print "Task names is " + task
                 fulltaskname = '/' + wfname + '/' + task
 #                print "Full task name is " + fulltaskname
+                wrong_task = False
+                for task_info in all_tasks:
+                    if fulltaskname == task_info.pathName:
+                        if task_info.taskType not in ['Processing','Production','Merge']:
+                            wrong_task=True
+                            wfi.sendLog('actor', "Skipping task %s because the taskType is %s. Can only ACDC Processing, Production, or Merge tasks"%( fulltaskname, task_info.taskType))
+                if wrong_task:
+                    continue
                 print tasks[task]
                 actions = tasks[task]
                 for action in actions:
@@ -443,6 +469,10 @@ def actor(url,options=None):
                             assign_to_sites=[SI.SE_to_CE(actions[action])]
                         else:
                             assign_to_sites=list(set([SI.SE_to_CE(site) for site in actions[action]]))
+#                    if action.startswith('mem') and actions[action] != "" and actions[action] != 'Same' and wfi.request['RequestType'] in ['TaskChain']:
+#                        recover = False;
+#                        print  "Skipping %s for now until Allie fixes memory parameter for TaskChain ACDCs."%wfname
+#                        wfi.sendLog('actor',"Skipping %s for now until Allie fixes memory parameter for TaskChain ACDCs."%wfname)
                 if not 'sites' in actions:
                     assign_to_sites = list(set([SI.SE_to_CE(site) for site in where_to_run[task]]))
                     print "Found",sorted(assign_to_sites),"as sites where to run the ACDC at, from the acdc doc of ",wfname
