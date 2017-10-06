@@ -4,7 +4,8 @@
    "description" : "The list of people that get the emails notifications"
  },
  "site_for_overflow": {
-   "value" : ["T2_CH_CERN_HLT","T0_CH_CERN"],
+   "value" : ["T2_CH_CERN_HLT",
+   	     "nonono_T0_CH_CERN"],
    "description" : "The sites that we set to overflow and require a specific treatment"
  },
  "overflow_pressure": {
@@ -20,7 +21,7 @@
     "description" : "The quanta of time in min for the JobRouter"
  },
  "slope_quanta": {
-    "value" : 50,
+    "value" : 100,
     "description" : "The quanta of the slope of memory/core in MB for the JobRouter"
  },
  "read_quanta": {
@@ -199,11 +200,11 @@
     "description" :"The default number of job cmsrun logs to retrieve"
   },
   "expose_archive_code":{
-    "value" : [134,139,99109,99303,60450,50513,50660,8001,8002,8026,11003,73,87],
+    "value" : [134,139,99109,99303,60450,50513,50660,8001,8002,8026,11003,73,74,87],
     "description" : "The error codes that should get a cmsrun log exposed"
   },
   "expose_condor_code":{
-    "value" : [99109,99303,60450,50513,50660,11003],
+    "value" : [99109,99303,60450,61202,50513,50660,11003],
     "description" :  "The error codes that should get a condor lot exposed"
   },
   "error_codes_to_recover": {
@@ -275,9 +276,9 @@
    "value" : { "cc7" : { "parameters" : { "SiteWhitelist" : ["T2_US_Nebraska"]}},
    	       "highPU" : {"parameters" : { "SiteWhitelist" : ["T2_US_Nebraska","T2_US_Purdue"]}},
 	       "highIO" : {"parameters" : { "SiteWhitelist" : ["T2_US_Nebraska","T2_US_Purdue"]}},
-	       "ALCARELVAL" : { "primary_AAA" : true , 
-	       		      	"parameters" : { "SiteWhitelist" : ["T1_US_FNAL"]}
-				}
+	       "ALCA_" : { "primary_AAA" : true , 
+	       	       	   "parameters" : { "SiteWhitelist" : ["T1_US_FNAL"]}
+			}
              }
   },
   "batch_goodness":{
