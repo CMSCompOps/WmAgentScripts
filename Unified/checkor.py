@@ -26,6 +26,8 @@ def checkor(url, spec=None, options=None):
     if userLock():   return
     if duplicateLock() and not options.go:  return
 
+    ##if not options.go: return ## disable checkor until further notice
+
     fDB = closeoutInfo()
 
     UC = unifiedConfiguration()
@@ -38,13 +40,13 @@ def checkor(url, spec=None, options=None):
         now = time.mktime(time.gmtime())
         nows = time.asctime(time.gmtime())
 
-        print "Time check (%s) point at : %s"%(label, nows)
-        print "Since start: %s [s]"% ( now - time_point.start)
+        print "[checkor] Time check (%s) point at : %s"%(label, nows)
+        print "[checkor] Since start: %s [s]"% ( now - time_point.start)
         if sub_lap:
-            print "Sub Lap : %s [s]"% ( now - time_point.sub_lap ) 
+            print "[checkor] Sub Lap : %s [s]"% ( now - time_point.sub_lap ) 
             time_point.sub_lap = now
         else:
-            print "Lap : %s [s]"% ( now - time_point.lap ) 
+            print "[checkor] Lap : %s [s]"% ( now - time_point.lap ) 
             time_point.lap = now            
             time_point.sub_lap = now
 
@@ -58,8 +60,6 @@ def checkor(url, spec=None, options=None):
 
     wfs=[]
     exceptions=[
-        'prebello_Run2016F-v1-JetHT-07Aug17_8029_170807_170835_3040',
-        'prebello_Run2016G-v1-JetHT-07Aug17_8029_170807_173346_8499'
         ]
     #for wfn in exceptions:
     #    wfs.extend( session.query(Workflow).filter(Workflow.name == wfn).all() )
@@ -197,7 +197,7 @@ def checkor(url, spec=None, options=None):
         
         time.sleep( sleep_time )
         
-        time_point("Starting with %s"% wfo.name)
+        time_point("Starting checkor with with %s"% wfo.name)
 
         ## get info
         wfi = workflowInfo(url, wfo.name)
