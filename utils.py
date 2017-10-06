@@ -4903,6 +4903,13 @@ class workflowInfo:
             mems_d = self._collectinchain('Memory',default=None)
         return int(mems_d.get( task, mems))
 
+    def getCampaignPerTask(self, task):
+        c = self.request.get('Campaign',None)
+        c_d = {}
+        if 'Chain' in self.request['RequestType']:
+            c_d = self._collectinchain('Campaign', default=None)
+        return c_d.get(task, c)
+
     def getCorePerTask(self, task):
         mcores = self.request.get('Multicore',1)
         mcores_d = {}

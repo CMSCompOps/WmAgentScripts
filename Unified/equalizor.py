@@ -342,9 +342,13 @@ def equalizor(url , specific = None, options=None):
         print "#"*30
         return (b_m,slope,b_t, read_need)
         
-    def getcampaign( task ):
+    def getcampaign( task , req=None):
+        taskname = task.pathName.split('/')[-1]
+        if req:
+            c = req.getCampaignPerTask( taskname )
+            if c: return c
+
         try:
-            taskname = task.pathName.split('/')[-1]
             if hasattr( task, 'prepID'):
                 return task.prepID.split('-')[1]
             elif taskname.count('-')>=1:
@@ -467,7 +471,7 @@ def equalizor(url , specific = None, options=None):
         is_chain = (wfi.request['RequestType'] in ['TaskChain','StepChain'])
         tasks_and_campaigns = []
         for task in wfi.getWorkTasks():
-            tasks_and_campaigns.append( (task, getcampaign(task) ) )
+            tasks_and_campaigns.append( (task, getcampaign(task, wfi) ) )
         
         
         lhe,prim,_,sec,sites_allowed = wfi.getSiteWhiteList()#getIO()
@@ -580,13 +584,14 @@ def equalizor(url , specific = None, options=None):
                         if set_memory:
                             ## make sure it cannot go to zero
                             max_mem_per_core = int(set_memory / float(mcore))                            
-                            set_memory = min( set_memory, max_mem_per_core) 
+                            set_slope = min( set_slope, max_mem_per_core) 
                         performance[task.pathName]['slope']=set_slope
                         if task.pathName in resizing and "memoryPerThread" in resizing[task.pathName]:
                             resizing[task.pathName]["memoryPerThread"] = set_slope
                         perf_per_config[configcache.get( taskname , 'N/A')]['slope'] = set_slope
                     if set_memory:
-                        performance[task.pathName]['memory']= min(set_memory,15000) ## max to 15GB
+                        performance[task.pathName]['memory']= min(set_memory, 20000) ## max to 15GB
+                        performance[task.pathName]['memory']= max(set_memory, 1000) ## min to 1GB
                         perf_per_config[configcache.get( taskname , 'N/A')]['memory'] = set_memory
                     if set_time:
                         performance[task.pathName]['time'] = min(set_time, int(1440./mcore)) ## max to 24H per mcore ## set_time is provided in total corehours ~ walltime*ncore
