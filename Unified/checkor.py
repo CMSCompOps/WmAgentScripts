@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, forceComplete, makeReplicaRequest, getDatasetSize, getDatasetFiles, sendLog, reqmgr_url, dbs_url, dbs_url_writer, getForceCompletes
-from utils import componentInfo, unifiedConfiguration, userLock, duplicateLock, dataCache, unified_url
+from utils import componentInfo, unifiedConfiguration, userLock, duplicateLock, dataCache, unified_url, getDatasetLumisAndFiles, getDatasetRuns, duplicateAnalyzer
 import phedexClient
 import dbs3Client
 dbs3Client.dbs3_url = dbs_url
@@ -437,6 +437,51 @@ def checkor(url, spec=None, options=None):
                     
         pass_stats_check = dict([(out, bypass_checks or (percent_completions[out] >= fractions_pass[out])) for out in fractions_pass ])
 
+        lumis_per_run = {} # a dict of dict run:[lumis]
+        files_per_rl = {} # a dict of dict "run:lumi":[files]
+        fetched = dict([(out,False) for out in pass_stats_check])
+
+        blocks = wfi.getBlockWhiteList()
+        rwl = wfi.getRunWhiteList()
+        lwl = wfi.getLumiWhiteList()
+
+
+        ## need to come to a way to do this "fast" so that it can be done more often
+        if not all(pass_stats_check.values()) and False:
+            ## should recalculate a couple of things to be able to make a better check on expected fraction
+            for p in prim:
+                nr = getDatasetRuns(p)
+                if len(nr)>1:
+                    print "fecthing input lumis and files for",p
+                    lumis_per_run[p], files_per_rl[p] = getDatasetLumisAndFiles(p, runs = rwl, lumilist = lwl)
+
+            for out in pass_stats_check:
+                nr = getDatasetRuns(out)
+                if prim and len(nr)>1: 
+                    ## do only for multiple runs output and something in input
+                    lumis_per_run[out], files_per_rl[out] = getDatasetLumisAndFiles(out)
+                    fetched[out] = True
+                    ## now do a better check of fractions
+                    fraction_per_run = {}
+                    a_primary = list(prim)[0]
+                    for run in lumis_per_run[out]:
+                        denom = lumis_per_run[a_primary].get(run,[])
+                        numer = lumis_per_run[out][run]
+                        if denom:
+                            fraction_per_run[run] = float(len(numer))/len(denom)
+                        else:
+                            print "for run",run,"in output, there isnt any run in input..."
+                    lowest_fraction = min( fraction_per_run.values())
+                    highest_fraction = max( fraction_per_run.values())
+                    average_fraction = sum(fraction_per_run.values())/len(fraction_per_run.values())
+                    print "the lowest competion fraction per run for",out," is",lowest_fraction
+                    print "the highest competion fraction per run for",out," is",highest_fraction
+                    print "the average competion fraction per run for",out," is",average_fraction
+                    percent_completions[out] = lowest_fraction
+                
+        pass_stats_check = dict([(out, bypass_checks or (percent_completions[out] >= fractions_pass[out])) for out in fractions_pass ])
+
+
         #if not all([percent_completions[out] >= fractions_pass[out] for out in fractions_pass]):
         if not all(pass_stats_check.values()):
             possible_recoveries = wfi.getRecoveryDoc()
@@ -529,7 +574,12 @@ def checkor(url, spec=None, options=None):
             dbs_presence[output] = dbs3Client.getFileCountDataset( output )
             dbs_invalid[output] = dbs3Client.getFileCountDataset( output, onlyInvalid=True)
 
-        
+        ## prepare the check on having a valid subscription to tape
+        out_worth_checking = [out for out in custodial_locations.keys() if out.split('/')[-1] not in vetoed_custodial_tier]
+        size_worth_checking = sum([getDatasetSize(out)/1023. for out in out_worth_checking ]) ## size in TBs of all outputs
+        size_worht_going_to_ddm = sum([getDatasetSize(out)/1023. for out in out_worth_checking if out.split('/')[-1] in to_ddm_tier ]) ## size in TBs of all outputs
+        all_relevant_output_are_going_to_tape = all(map( lambda sites : len(sites)!=0, [custodial_locations[out] for out in out_worth_checking]))
+
         time_point("dbs file count", sub_lap=True)
 
         if not all([dbs_presence[out] == (dbs_invalid[out]+phedex_presence[out]) for out in wfi.request['OutputDatasets']]) and not options.ignorefiles:
@@ -571,34 +621,47 @@ def checkor(url, spec=None, options=None):
         ## put that heavy part almost at the end
         ## duplication check
         duplications = {}
-        files_per_rl = {}
+        #files_per_rl = {}
+        lumis_with_duplicates = {}
         for output in wfi.request['OutputDatasets']:
             duplications[output] = "skiped"
-            files_per_rl[output] = "skiped"
+            #files_per_rl[output] = "skiped"
 
-        ## check for duplicates prior to making the tape subscription
-        if (is_closing or bypass_checks) and (not options.ignoreduplicates):
+        ## check for duplicates prior to making the tape subscription ## this is quite expensive and we run it twice for each sample
+        if (is_closing or bypass_checks) and (not options.ignoreduplicates) and (not all_relevant_output_are_going_to_tape):
             print "starting duplicate checker for",wfo.name
             for output in wfi.request['OutputDatasets']:
                 print "\tchecking",output
                 duplications[output] = True
-                try:
-                    duplications[output],files_per_rl[output] = dbs3Client.duplicateRunLumiFiles( output , skipInvalid=True, verbose=True)
-                except:
-                    try:
-                        duplications[output],files_per_rl[output] = dbs3Client.duplicateRunLumiFiles( output , skipInvalid=True, verbose=True)
-                    except Exception as e:
-                        wfi.sendLog('checkor','Not possible to check on duplicate lumi count on %s'%(output))
-                        sendLog('checkor','Not possible to check on duplicate lumi count on %s\n%s'%(output,str(e)),level='critical')
-                        is_closing=False
+                if not output in lumis_per_run or not output in files_per_rl:
+                    lumis_per_run[output], files_per_rl[output] = getDatasetLumisAndFiles(output)
+                    fetched[output] = True
+
+                lumis_with_duplicates[output] = [rl for (rl,files) in files_per_rl[output].items() if len(files)>1]
+                duplications[output] = len(lumis_with_duplicates[output])!=0 
 
             if is_closing and any(duplications.values()) and not options.ignoreduplicates:
                 duplicate_notice = ""
                 duplicate_notice += "%s has duplicates\n"%wfo.name
-                duplicate_notice += json.dumps( duplications,indent=2)
-                duplicate_notice += '\n'
-                duplicate_notice += json.dumps( files_per_rl, indent=2)
+                #duplicate_notice += json.dumps( duplications,indent=2)
+                #duplicate_notice += '\n'
+                ## TO DO, make the file list invalidation analysis. to find the files with least number of lumis
+                duplicate_notice += "This number of lumis are duplicated\n"
+                duplicate_notice += json.dumps( dict([(o,len(badl)) for o,badl in lumis_with_duplicates.items() ]), indent=2)
                 wfi.sendLog('checkor',duplicate_notice)
+
+                bad_files = {}
+                for out in duplications:
+                    bad_files[out] = duplicateAnalyzer().files_to_remove( files_per_rl[out] )
+                    duplicate_notice = "These files need to be invalidated\n"
+                    duplicate_notice += json.dumps( sorted(bad_files[out]), indent=2)
+                    wfi.sendLog('checkor',duplicate_notice)
+                
+                ## and invalidate the files in DBS directly witout asking
+                #for out,bads in bad_files.items():
+                #    for fn in bads:
+                #        dbs3Client.setFileStatus( fn, newstatus=0 )
+
                 ## hook for making file invalidation ?
                 ## it shouldn't be allowed to bypass it
                 assistance_tags.add('duplicates')
@@ -607,10 +670,8 @@ def checkor(url, spec=None, options=None):
         time_point("checked duplicates", sub_lap=True)
 
             
-        out_worth_checking = [out for out in custodial_locations.keys() if out.split('/')[-1] not in vetoed_custodial_tier]
-        size_worth_checking = sum([getDatasetSize(out)/1023. for out in out_worth_checking ]) ## size in TBs of all outputs
-        size_worht_going_to_ddm = sum([getDatasetSize(out)/1023. for out in out_worth_checking if out.split('/')[-1] in to_ddm_tier ]) ## size in TBs of all outputs
-        if not all(map( lambda sites : len(sites)!=0, [custodial_locations[out] for out in out_worth_checking])):
+        
+        if is_closing and not all_relevant_output_are_going_to_tape:
             print wfo.name,"has not all custodial location"
             print json.dumps(custodial_locations, indent=2)
 
@@ -783,7 +844,9 @@ def checkor(url, spec=None, options=None):
         ## make the lumi summary 
         if wfi.request['RequestType'] == 'ReReco':
             try:
-                os.system('python Unified/lumi_summary.py %s 1 > /dev/null'%(wfi.request['PrepID']))
+                #os.system('python Unified/lumi_summary.py %s 1 > /dev/null'%(wfi.request['PrepID']))
+                os.system('python Unified/lumi_summary.py %s %d > /dev/null'%(wfi.request['PrepID'],
+                                                                              0 if all(fetched.values()) else 1)) ## no need for fresh fetch if that has been done for all already
                 os.system('python Unified/lumi_plot.py %s > /dev/null'%(wfi.request['PrepID']))
                 wfi.sendLog('checkor','Lumi summary available at %s/datalumi/lumi.%s.html'%(unified_url,wfi.request['PrepID']))
             except Exception as e:

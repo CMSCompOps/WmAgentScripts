@@ -2991,7 +2991,7 @@ def getDatasetRuns(dataset):
 def getFilesWithLumiInRun(dataset, run):
     dbsapi = DbsApi(url=dbs_url)
     start = time.mktime(time.gmtime())
-    reply = dbsapi.listFiles(dataset=dataset, detail=True, run_num=run, validFileOnly=1)
+    reply = dbsapi.listFiles(dataset=dataset, detail=True, run_num=run, validFileOnly=1) if run!=1 else dbsapi.listFiles(dataset=dataset, detail=True,validFileOnly=1)
     #print time.mktime(time.gmtime())-start,'[s]'
     files = [f['logical_file_name'] for f in reply if f['is_file_valid'] == 1]
     start = 0
@@ -3000,13 +3000,220 @@ def getFilesWithLumiInRun(dataset, run):
     while True:
         these = files[start:start+bucket]
         if len(these)==0: break
-        rreply.extend( dbsapi.listFileLumiArray(logical_file_name=these,run_num=run))
+        rreply.extend( dbsapi.listFileLumiArray(logical_file_name=these,run_num=run) if run!=1 else dbsapi.listFileLumiArray(logical_file_name=these))
         start+=bucket
         #print len(rreply)
     return rreply
 
+class duplicateAnalyzer:
+    def __init__(self):
+        """
+        credits to whoever implemented this in the first place
+        """
+    def _buildGraph(self, lumis):
+        graph = {}
+        
+        for lumi in lumis:
+            files = lumis[lumi]
+            #text lines with file names
+            f1 = files[0]
+            f2 = files[1]
+            #create edge (f1, f2)
+            if f1 not in graph:
+                graph[f1] = {}
+            if f2 not in graph[f1]:
+                graph[f1][f2] = 0
+                graph[f1][f2] += 1
+            #create edge (f2, f1)       
+            if f2 not in graph:
+                graph[f2] = {}
+            if f1 not in graph[f2]:
+                graph[f2][f1] = 0
+                graph[f2][f1] += 1
+        return graph    
+
+    def _hasEdges(self,graph):
+        """
+        True if at least one edge is between to vertices,
+        that is, there is at least one lumi present in two different
+        files
+        """
+        for v in graph.values():
+            if v:
+                return True
+        return False
+
+    def _colorBipartiteGraph(self, graph, events):
+        """
+        Removes duplication by identifying a bipartite graph and removing
+        the smaller side
+        """
+        red = set()
+        green = set()
+        
+        for f1, f2d in graph.items():
+            f1red = f1 in red
+            f1green = f1 in green
+            for f2 in f2d.keys():
+                f2red = f2 in red
+                f2green = f2 in green
+                #both have no color
+                if not(f1red or f1green or f2red or f1green):
+                    red.add(f1)
+                    green.add(f2)
+                #some has two colors:
+                elif (f1red and f1green) or (f2red and f2green):
+                    print "NOT BIPARTITE GRAPH"
+                    raise Exception("Not a bipartite graph, cannot use this algorithm for removing")
+                #have same color
+                elif (f1red and f2red) or (f1green and f2green):
+                    print "NOT BIPARTITE GRAPH"
+                    raise Exception("Not a bipartite graph, cannot use this algorithm for removing")
+                    
+                #both are colored but different
+                elif f1red != f2red and f1green != f2green:
+                    continue
+                #color opposite
+                elif f1red:
+                    green.add(f2)
+                elif f1green:
+                    red.add(f2)
+                elif f2red:
+                    green.add(f1)
+                elif f2green:
+                    green.add(f1)
+        #validate against the # of events of the files
+        eventsRed = sum(events[f] for f in red)   
+        eventsGreen = sum(events[f] for f in green)   
+        if eventsRed < eventsGreen:
+            return list(red)
+        else:
+            return list(green)
+
+    def _deleteSmallestVertexFirst(self, graph, events):
+        """
+        Removes duplication by deleting files in a greedy fashion.
+        That is, removing the files smallest files
+        first, and keep doing so until there is no edge on the graph (no lumi
+        in two different files)
+        """
+        files = []
+        print "Initial files:", len(graph)
+        #sort by number of events
+        ls = sorted(graph.keys(), key=lambda x: events[x])
+        #quadratic first
+        while self._hasEdges(graph):
+        #get smallest vertex
+            minv = ls.pop()  
+            #remove minv from all its adjacent vertices
+            for v in graph[minv]:
+                del graph[v][minv]
+            #remove maxv entry
+            del graph[minv]    
+            files.append(minv)
+    
+        #print "End Files:",len(graph), "Invalidated:",len(graph)
+        return files
+
+    def files_to_remove(self, files_per_lumis):
+        lumi_count_per_file = defaultdict(int)
+        for rl,fns in files_per_lumis.items():
+            for fn in fns: lumi_count_per_file[fn]+=1
+        bad_lumis = dict([(rl,files) for rl,files in files_per_lumis.items() if len(files)>1])
+        graph = self._buildGraph(bad_lumis)
+        try: 
+            files = self._colorBipartiteGraph(graph, lumi_count_per_file)
+        except:
+            #print "not with colorBipartiteGraph"
+            files = self._deleteSmallestVertexFirst(graph, lumi_count_per_file)
+        return files
+
+
+def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False):
+    if runs and lumilist:
+        print "should not be used that way"
+        return {},{}
+    lumis =set()
+    if lumilist:
+        for r in lumilist:
+            lumis.update( [(r,l) for l in lumilist[r]])
+
+    now = time.mktime(time.gmtime())
+    dbsapi = DbsApi(url=dbs_url)
+    c_name= '%s/.%s.lumis.json'%(cache_dir,dataset.replace('/','_'))
+    #print os.path.isfile(c_name),with_cache
+    if os.path.isfile(c_name):
+        print "picking up from cache",c_name
+        opened = json.loads(open(c_name).read())
+        if 'time' in opened:
+            record_time = opened['time']
+            if (now-record_time)<(10*60*60):
+                with_cache=True ## if the record is less than 10 hours, it will get it from cache
+        else:
+            with_cache = False ## force new caches
+        ## need to filter on the runs
+        if with_cache and 'lumis' in opened and 'files' in opened:
+            lumi_json = dict([(int(k),v) for (k,v) in opened['lumis'].items()])
+            files_json = dict([(tuple(map(int,k.split(":"))),v) for (k,v) in opened['files'].items()])
+            if runs:
+                lumi_json = dict([(int(k),v) for (k,v) in opened['lumis'].items() if int(k) in runs])
+                files_json = dict([(tuple(map(int,k.split(":"))),v) for (k,v) in opened['files'].items() if int(k.split(':')[0]) in runs])
+            elif lumilist:
+                runs = map(int(lumilist.keys()))
+                lumi_json = dict([(int(k),v) for (k,v) in opened['lumis'].items() if int(k) in runs])
+                files_json = dict([(tuple(map(int,k.split(":"))),v) for (k,v) in opened['files'].items() if map(int,k.split(":")) in lumis])
+
+            print "return from cache"
+            return lumi_json,files_json
+        else:
+            print "old cache. re-querying"
+    print "querying getDatasetLumisAndFiles", dataset
+    #print c_name
+    full_lumi_json = defaultdict(set)
+    files_per_lumi = defaultdict(set) ## the revers dictionnary of files by r:l
+    d_runs = getDatasetRuns( dataset )
+    #print len(runs),"runs"
+    for run in d_runs:
+        files = getFilesWithLumiInRun( dataset, run )
+        #print run,len(files),"files"
+        for f in files:
+            full_lumi_json[run].update( f['lumi_section_num'] )
+            for lumi in f['lumi_section_num']:
+                files_per_lumi[(run,lumi)].add( f['logical_file_name'] )
+
+    ## convert set->list and for a run list
+    lumi_json = {}
+    files_json = {}
+    for r in full_lumi_json: 
+        full_lumi_json[r] = list(full_lumi_json[r])
+        if runs and not r in runs: continue
+        if lumilist:
+            lumi_json[r] = list(full_lumi_json[r] & lumilist.get(r, set()))
+        else:
+            lumi_json[r] = list(full_lumi_json[r])
+    for rl in files_per_lumi.keys():
+        conv = list(files_per_lumi.pop(rl))
+        if runs:
+            if rl[0] in runs: files_json[rl] = conv
+        elif lumis:
+            if rl in lumis: files_json[rl] = conv
+        else:
+            files_json[rl] = conv
+        files_per_lumi['%d:%d'%(rl)] = conv
+
+
+    open(c_name,'w').write( json.dumps(
+            {'lumis' : dict(full_lumi_json),
+             'files' : dict(files_per_lumi),
+             'time' : now}
+            , indent=2))
+    return dict(lumi_json),dict(files_json)
+
 
 def getDatasetLumis(dataset, runs=None, with_cache=False):
+    l,f = getDatasetLumisAndFiles(dataset, runs=runs, lumilist=None, with_cache=with_cache)
+    return l
+"""
     dbsapi = DbsApi(url=dbs_url)
     c_name= '%s/.%s.lumis.json'%(cache_dir,dataset.replace('/','_'))
     if os.path.isfile(c_name) and with_cache:
@@ -3020,6 +3227,7 @@ def getDatasetLumis(dataset, runs=None, with_cache=False):
 
 
     full_lumi_json = defaultdict(set)
+    files_per_lumi = defaultdict(set) ## the revers dictionnary of files by r:l
     d_runs = getDatasetRuns( dataset )
     #print len(runs),"runs"
     for run in d_runs:
@@ -3027,17 +3235,30 @@ def getDatasetLumis(dataset, runs=None, with_cache=False):
         #print run,len(files),"files"
         for f in files:
             full_lumi_json[run].update( f['lumi_section_num'] )
+            for lumi in f['lumi_section_num']:
+                files_per_lumi[(run,lumi)].add( f['logical_file_name'] )
 
-    ## convert
+    ## convert set->list and for a run list
     lumi_json = {}
+    files_json = {}
     for r in full_lumi_json: 
         full_lumi_json[r] = list(full_lumi_json[r])
         if runs and not r in runs: continue
         lumi_json[r] = list(full_lumi_json[r])
-        
-    open(c_name,'w').write( json.dumps( dict(full_lumi_json), indent=2))
-    return dict(lumi_json)
-            
+    for rl in files_per_lumi:
+        if runs and rl[0] in runs:
+            files_json[rl] = list(files_per_lumi[rl])
+        files_per_lumi['%d:%d'%(rl)] = list(files_per_lumi.pop(rl))
+
+
+    open(c_name,'w').write( json.dumps(
+            cache_store = {'lumis' : dict(full_lumi_json),
+                           'files' : dict(files_per_lumi)}
+            , indent=2))
+    #open(c_name,'w').write( json.dumps( dict(full_lumi_json), indent=2))
+
+    return dict(lumi_json),dict(files_json)
+"""
 
 def getDatasetAllEventsPerLumi(dataset, fraction=1):
     dbsapi = DbsApi(url=dbs_url)
@@ -3864,17 +4085,25 @@ class workflowInfo:
     def getRecoveryBlocks(self):
         doc = self.getRecoveryDoc()
         all_files = set()    
+        files_and_loc = defaultdict(set)
         for d in doc:
             all_files.update( d['files'].keys())
+            for fn in d['files']:
+                files_and_loc[ fn ].update( d['files'][fn]['locations'] )
+
         print len(all_files),"file in recovery"
         dbsapi = DbsApi(url=dbs_url)
         all_blocks = set()
+        all_blocks_loc = defaultdict(set)
         files_no_block = set()
         files_in_block = set()
         datasets = set()
         for f in all_files:
             try:
-                r = dbsapi.listFileArray( logical_file_name = f, detail=True)
+                if not f.startswith('/store/unmerged/') and not f.startswith('MCFakeFile-'):
+                    r = dbsapi.listFileArray( logical_file_name = f, detail=True)
+                else:
+                    r = []
             except Exception as e:
                 print "dbsapi.listFileArray failed on",f
                 print str(e)
@@ -3885,19 +4114,22 @@ class workflowInfo:
             else:
                 files_in_block.add( f )
                 all_blocks.update( [df['block_name'] for df in r ])
+                for df in r:
+                    all_blocks_loc[df['block_name']] . update( files_and_loc.get( f, []))
         dataset_blocks = set()
         for dataset in set([block.split('#')[0] for block in all_blocks]):
             print dataset
             dataset_blocks.update( getDatasetBlocks( dataset ) )
-                     
-        return dataset_blocks,all_blocks,files_in_block,files_no_block
+        
+        files_and_loc = dict([(k,list(v)) for (k,v) in files_and_loc.items() if k in files_no_block])
+        return dataset_blocks,all_blocks_loc,files_in_block,files_and_loc#files_no_block
 
     def getRecoveryDoc(self):
         collection_name = self.request['RequestName']
         
-        if 'CollectionName' in self.request and self.request['CollectionName']:             
-            collection_name = self.request['CollectionName']
-            print "using collection name from schema"
+        #if 'CollectionName' in self.request and self.request['CollectionName']:             
+        #    collection_name = self.request['CollectionName']
+        #    print "using collection name from schema"
 
         if self.recovery_doc != None:
             print "returning cached self.recovery_doc"
