@@ -257,7 +257,8 @@ def try_getCustodialSubscriptionRequestSite(datasetName):
     the dataset
     """
     url = 'cmsweb.cern.ch'
-    result = phedexGet(url, '/phedex/datasvc/json/prod/requestlist?dataset='+datasetName+'&type=xfer')
+    result = phedexGet(url, '/phedex/datasvc/json/prod/requestlist?dataset='+datasetName+'&type=xfer&node=T*_MSS')
+    #result = phedexGet(url, '/phedex/datasvc/json/prod/requestlist?dataset='+datasetName+'&type=xfer')
     requests=result['phedex']
     #gets dataset subscription requests
     if 'request' not in requests.keys():
@@ -269,6 +270,7 @@ def try_getCustodialSubscriptionRequestSite(datasetName):
         #if there are pending or aprroved request, watch the satus of them
         if request['approval'] in ['pending','approved','mixed']:
             requestId = request['id']
+            ### check only MSS endpoints
             #print "check",requestId
             result = phedexGet(url, '/phedex/datasvc/json/prod/transferrequests?request='+str(requestId))
             #if not empty
