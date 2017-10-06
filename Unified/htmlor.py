@@ -253,7 +253,8 @@ Last update on <b>%s(CET), %s(GMT)</b>
 %s
 <hr>
 <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/><img src=https://dmytro.web.cern.ch/dmytro/cmsprodmon/images/campaign-RunningCpus.png style="height:150px"></a>
-<a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/><img src=https://dmytro.web.cern.ch/dmytro/cmsprodmon/images/prioritysummarycpuspending.png style="height:150px"></a>
+<a href=https://cms-gwmsmon.cern.ch/prodview><img src=https://cms-gwmsmon.cern.ch/prodview/graphs/prioritysummarycpusinuse/weekly style="height:150px" alt="Click here if it does not load"></a>
+<a href=https://cms-gwmsmon.cern.ch/prodview><img src=https://cms-gwmsmon.cern.ch/prodview/graphs/prioritysummarycpuspending/weekly style="height:150px" alt="Click here if it does not load"></a>
 <hr>
 <br>
 
@@ -276,7 +277,7 @@ Last update on <b>%s(CET), %s(GMT)</b>
         count+=1
     text_by_c=""
     for c in count_by_campaign:
-        text_by_c+='<li> <a href="https://its.cern.ch/jira/issues/?jql=text~%s AND project = CMSCOMPPR">%s</a> (%d) : '%( c,c, sum(count_by_campaign[c].values()) )
+        text_by_c+='<li><a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?campaign=%s&in_production=1>%s</a> <a href="https://its.cern.ch/jira/issues/?jql=text~%s AND project = CMSCOMPPR">JIRA</a> (%d) : '%( c,c,c, sum(count_by_campaign[c].values()) )
         for p in sorted(count_by_campaign[c].keys()):
             text_by_c+="%d (%d), "%(p,count_by_campaign[c][p])
         text_by_c+="</li>"
@@ -313,7 +314,7 @@ Worflow next to handle (%d) <a href=https://cms-pdmv.cern.ch/mcm/batches?status=
 
     text_by_c=""
     for c in count_by_campaign:
-        text_by_c+="<li> %s (%d) : "%( c, sum(count_by_campaign[c].values()) )
+        text_by_c+='<li><a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?campaign=%s&in_production=1>%s</a> <a href="https://its.cern.ch/jira/issues/?jql=text~%s AND project = CMSCOMPPR">JIRA</a> (%d) : '%( c,c,c, sum(count_by_campaign[c].values()) )
         for p in sorted(count_by_campaign[c].keys()):
             text_by_c+="%d (%d), "%(p,count_by_campaign[c][p])
         text_by_c+="</li>"
@@ -420,7 +421,7 @@ Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransfertea
         count+=1
     text_by_c=""
     for c in count_by_campaign:
-        text_by_c+="<li> %s (%d) : "%( c, sum(count_by_campaign[c].values()) )
+        text_by_c+='<li><a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?campaign=%s&in_production=1>%s</a> <a href="https://its.cern.ch/jira/issues/?jql=text~%s AND project = CMSCOMPPR">JIRA</a> (%d) : '%( c,c,c, sum(count_by_campaign[c].values()) )
         for p in sorted(count_by_campaign[c].keys()):
             text_by_c+="%d (%d), "%(p,count_by_campaign[c][p])
         text_by_c+="</li>"
@@ -1243,7 +1244,7 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
 </ul>
 <br>
 <table border=1><thead>
-<tr><td>Agent</td><td>Running/Pending hourly</td><td>Running/Pending daily</td><td>Status</td><td>Creat./Pend.</td></tr></thead>
+<tr><td>Agent</td><td>Running/Pending hourly (<b>jobs</b>)</td><td>Running/Pending daily (<b>CPUs</b>)</td><td>Status</td><td>Creat./Pend.</td></tr></thead>
 """)
     for team,agents in getAllAgents(reqmgr_url).items():
         if not team in ['production','relval','highprio']: continue
@@ -1279,7 +1280,7 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
             html_doc.write("""
 <tr><td %s>%s</td>
 <td><img src=https://cms-gwmsmon.cern.ch/poolview/graphs/%s/hourly></td>
-<td><img src=https://cms-gwmsmon.cern.ch/poolview/graphs/%s/daily></td>
+<td><img src=https://cms-gwmsmon.cern.ch/poolview/graphs/cpus/%s/daily></td>
 <td><img src=https://cms-gwmsmon.cern.ch/poolview/graphs/scheddwarning/%s/hourly></td>
 <td>%s</td>
 </tr>
