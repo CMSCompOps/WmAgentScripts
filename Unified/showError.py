@@ -24,26 +24,35 @@ def parse_one(url, wfn, options=None):
         now = time.mktime(time.gmtime())
         nows = time.asctime(time.gmtime())
 
-        print "Time check (%s) point at : %s"%(label, nows)
-        print "Since start: %s [s]"% ( now - time_point.start)
+        print "[showError] Time check (%s) point at : %s"%(label, nows)
+        print "[showError] Since start: %s [s]"% ( now - time_point.start)
         if sub_lap:
-            print "Sub Lap : %s [s]"% ( now - time_point.sub_lap ) 
+            print "[showError] Sub Lap : %s [s]"% ( now - time_point.sub_lap ) 
             time_point.sub_lap = now
         else:
-            print "Lap : %s [s]"% ( now - time_point.lap ) 
+            print "[showError] Lap : %s [s]"% ( now - time_point.lap ) 
             time_point.lap = now            
             time_point.sub_lap = now
 
     time_point.sub_lap = time_point.lap = time_point.start = time.mktime(time.gmtime())
 
+    task_error_site_count ={}
+    one_explanation = defaultdict(set)
+
+    if wfn in ['vlimant_task_EXO-RunIISummer15wmLHEGS-04800__v1_T_170906_141738_1357']:
+        return task_error_site_count, one_explanation
 
     time_point("Starting with %s"% wfn )
 
     SI = global_SI()
     UC = unifiedConfiguration()
     wfi = workflowInfo( url , wfn)
+    time_point("wfi" ,sub_lap=True)
     where_to_run, missing_to_run,missing_to_run_at = wfi.getRecoveryInfo()       
-    all_blocks,needed_blocks,files_in_blocks,files_notin_dbs = wfi.getRecoveryBlocks()
+    time_point("acdcinfo" ,sub_lap=True)
+    all_blocks,needed_blocks_loc,files_in_blocks,files_and_loc_notin_dbs = wfi.getRecoveryBlocks()
+    time_point("inputs" ,sub_lap=True)
+
 
     ancestor = workflowInfo( url , wfn)
     lhe,prim,_,sec = ancestor.getIO()
@@ -61,7 +70,9 @@ def parse_one(url, wfn, options=None):
     print "cache timeout", cache
 
     err= wfi.getWMErrors(cache=cache)
+    time_point("wmerrors" ,sub_lap=True)
     stat = wfi.getWMStats(cache=cache)
+    time_point("wmstats" ,sub_lap=True)
     #adcd = wfi.getRecoveryDoc()
 
     total_by_code_dash = defaultdict( int )
@@ -118,8 +129,6 @@ def parse_one(url, wfn, options=None):
     print json.dumps(missing_to_run , indent=2)        
     print json.dumps(missing_to_run_at , indent=2)        
     
-    task_error_site_count ={}
-    one_explanation = defaultdict(set)
 
     if not where_to_run and not missing_to_run and not missing_to_run_at:
         print "showError is unable to run"
@@ -136,7 +145,10 @@ def parse_one(url, wfn, options=None):
     if high_order_acdc>=1:
         print high_order_acdc,"order request, pulling down all logs"
         do_all_error_code = True
-
+    if wfi.isRelval():
+        print "getting all codes for relval"
+        do_all_error_code = True
+        
     ##do_all_error_code = True ## enable this by default to get some good stuff out there.
 
     tasks = sorted(set(err.keys() + missing_to_run.keys()))
@@ -299,6 +311,12 @@ def parse_one(url, wfn, options=None):
                                                                    errorcode_s,
                                                                    task_short,
                                                                    label)
+                                    if os.system('ls %s'% local)!=0 and (options and options.from_eos):
+                                        print "no file retrieved using xrootd, using eos source"
+                                        os.system('python /afs/cern.ch/user/v/vlimant/public/ops/whatLog.py --w  %s --log %s --get' %(wfn, 
+                                                                                                                                      out['lfn'].split('/')[-1]) )
+                                        os.system('mv `find /tmp/%s/ -name "%s"` %s'%( os.getenv('USER'), out['lfn'].split('/')[-1], local))
+
                                     if os.system('ls %s'% local)==0:
                                         os.system('mkdir -p %s'%(m_dir))
                                         os.system('tar zxvf %s -C %s'%(local,m_dir))
@@ -375,7 +393,7 @@ def parse_one(url, wfn, options=None):
         missing_events = missing_to_run[task] if task in missing_to_run else 0
         html += "<b>%s</b>"%task.split('/')[-1]
         if missing_events:
-            html += " is missing <b>%s events</b>"%( "{:,}".format(missing_events) )
+            html += ' is missing <b>%s events</b> <a href="https://cmsweb.cern.ch/couchdb/acdcserver/_design/ACDC/_view/byCollectionName?key=%%22%s%%22&include_docs=true&reduce=false" target=_blank>AC/DC</a>'%( "{:,}".format(missing_events) , wfn )
             if no_error:
                 html +="<br><b><font color=red> and has UNreported error</font></b>"
 
@@ -469,16 +487,17 @@ def parse_one(url, wfn, options=None):
         task_error_site_count[task] = error_site_count
 
     html += '<hr><br>'
-    html += "<b>Blocks (%d/%d) needed for recovery</b><br>"%( len(needed_blocks), len(all_blocks))
-    for block in sorted(needed_blocks):
-        html +='%s<br>'%block
+    html += "<b>Blocks (%d/%d) needed for recovery</b><br>"%( len(needed_blocks_loc), len(all_blocks))
+    for block in sorted(needed_blocks_loc.keys()):
+        html +='%s <b>@ %s</b><br>'%(block, ','.join(sorted(needed_blocks_loc[block])))
+
     html += "<br><b>Files in no block</b><br>"
-    for f in sorted(files_notin_dbs):
+    for f in sorted(files_and_loc_notin_dbs.keys()):
         ## make an xrd ls check on the files
         #readable = os.system('xrdcp root://cms-xrd-global.cern.ch/%s check.root ; rm -f check.root'%f)
         #readable = os.system('xrd cms-xrd-global.cern.ch existfile %s'%f)
         #html +='%s<br>'%(f if readable==0 else '<font color=red>%s</font>'%f)
-        html +='%s<br>'%(f)
+        html +='%s <b>@</b> %s<br>'%(f , ','.join(sorted(files_and_loc_notin_dbs[f])) )
 
 
     html += '<hr><br>'
@@ -489,9 +508,14 @@ def parse_one(url, wfn, options=None):
     html+='</table>'
     html+=('<br>'*30)
     html +='</html>'
+    time_point("Report finished")
     wfi.sendLog( 'error', html, show=False)
     fn = '%s'% wfn
+
+    time_point("error send to ES")
     open('%s/report/%s'%(monitor_dir,fn),'w').write( html )
+
+    time_point("Finished with showError")
 
     return task_error_site_count, one_explanation
 
@@ -544,6 +568,7 @@ if __name__=="__main__":
     parser.add_option('--workflow','-w',help="The workflow to make the error report of",default=None)
     parser.add_option('--expose',help="Number of logs to retrieve",default=1,type=int)
     parser.add_option('--all_errors',help="Bypass and expose all error codes", default=False, action='store_true')
+    parser.add_option('--from_eos',help="Retrieve from eos",default=False, action='store_true')
     (options,args) = parser.parse_args()
     
     if options.fast:
