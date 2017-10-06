@@ -41,6 +41,7 @@ def batchor( url ):
             "NonCustodialGroup" : "RelVal"
             },
         "custodial" : "T1_US_FNAL_MSS",
+        "custodial_override" : ["DQMIO"],
         "phedex_group" : "RelVal",
         "lumisize" : -1,
         "fractionpass" : 0.0,
