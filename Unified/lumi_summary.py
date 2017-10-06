@@ -14,7 +14,8 @@ if len(sys.argv) > 1:
 
 fetch=False
 if len(sys.argv)>2:
-    fetch = bool(sys.argv[2])
+    fetch = bool(int(sys.argv[2]))
+    print "setting fetch to",fetch
 
 wfs = getWorkflowById( url, pid , details=True)
 if not wfs:
@@ -65,6 +66,7 @@ for wf in wfs:
     ## collect the actual content of the output
     for out in wf['OutputDatasets']:
         if not out in output_json:
+            #print out, (not fetch)
             output_json[out] = getDatasetLumis( out, with_cache=(not fetch))
             for r in output_json[out]:
                 output_rl[out].extend([(int(r),l) for l in output_json[out][r]])
