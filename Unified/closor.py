@@ -37,9 +37,15 @@ def spawn_harvesting(url, wfi , in_full):
                 all_OK[dqm_input] = False
                 ## raise the subscription to high priority
                 sites = set(wfi.request['NonCustodialSites'])
-                for site in sites:
-                    res = updateSubscription(url, site, dqm_input, priority='high')
-                    print "increased priority",res
+                #for site in sites:
+                #    res = updateSubscription(url, site, dqm_input, priority='high')
+                #    print "increased priority",res
+
+                ## make a subscription somewhere else in the T1s at random each time, hoping it will get there eventually
+                pick = SI.CE_to_SE(random.choice(SI.sites_T1s))
+                print "replicating",dqm_input,"to",pick
+                res = makeReplicaRequest(url, pick, [dqm_input], "Replicating DQM for harvesting", priority='normal', approve=True, mail=False)
+
                 return all_OK,requests
 
         for dqm_input in dqms:
