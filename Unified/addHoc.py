@@ -79,14 +79,20 @@ for b,pids in batches.items():
                 announced_time = announced[-1]['UpdateTime']
                 if (now-announced_time) < (7*24*60*60):
                     ## less than 7 days announced
-                    may_have_one.update( wf['RequestName'] )
+                    may_have_one.add( wf['RequestName'] )
             else:
-                may_have_one.update( wf['RequestName'] )
+                may_have_one.add( wf['RequestName'] )
 
-for logtype in ['report','joblogs','condorlogs']:
+print "wf that can have logs"
+print '\n'.join(sorted(may_have_one))
+
+for (the_dir,logtype) in [(monitor_dir,'report'),
+                          (monitor_eos_dir,'joblogs'),
+                          (monitor_eos_dir,'condorlogs')]:
     #for d in filter(None,os.popen('ls -d %s/%s/*'%(monitor_dir,logtype)).read().split('\n')):
-    for d in filter(None,os.popen('ls -d %s/%s/*'%(monitor_eos_dir,logtype)).read().split('\n')):
-        if not any([m in d for m in may_have_one]):
+    for d in filter(None,os.popen('ls -d %s/%s/*'%(the_dir,logtype)).read().split('\n')):
+        is_locked = any([d.endswith(wf) for wf in may_have_one])
+        if not is_locked:
             ## that can be removed
             print d,"report file can be removed"
             os.system('rm -rf %s'%d)
