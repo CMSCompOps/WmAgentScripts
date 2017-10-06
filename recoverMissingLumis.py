@@ -588,6 +588,7 @@ def defineRequests(workload, requestInfo,
         creationDict["ACDCDatabase"] = acdcCouchDb
         creationDict["RequestString"] = "recovery-%d-%s" % (idx, workload.name()[:-18])
         creationDict["Requestor"] = requestor
+        creationDict["RequestPriority"] = min(500000, requestInfo.get('RequestPriority',60000)*2 )
         creationDict["Group"] = group
         creationDict["TimePerEvent"] = requestInfo['TimePerEvent']
         creationDict["Memory"] = requestInfo['Memory']
