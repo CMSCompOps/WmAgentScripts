@@ -136,7 +136,8 @@ def assignor(url ,specific = None, talk=True, options=None):
                     assign_parameters.update( allowed_secondary[sec] )
 
         if no_go:
-            n_stalled+=1 
+            n_stalled+=1
+            ## make a very loud noise if >100k priority stalled
             continue
 
 
@@ -506,7 +507,7 @@ def assignor(url ,specific = None, talk=True, options=None):
                                               wfo.name,
                                               split_check)
             wfh.sendLog('assignor','Applying the change in splitting %s'%( '\n\n'.join([str(i) for i in split_check])))
-            sendLog('assignor','Applying the change in splitting %s'%( '\n\n'.join([str(i) for i in split_check])), level='critical')
+            #sendLog('assignor','Applying the change in splitting %s'%( '\n\n'.join([str(i) for i in split_check])), level='critical')
 
         #split_check = wfh.checkWorkflowSplitting()
         split_check = True ## bypass completely and use the above
@@ -608,6 +609,8 @@ def assignor(url ,specific = None, talk=True, options=None):
             pass
     print "Assignment summary:"
     sendLog('assignor',"Assigned %d Stalled %s"%(n_assigned, n_stalled))
+    if n_stalled and not options.go and not options.early:
+        sendLog('assignor',"%s workflows cannot be assigned. Please take a look"%(n_stalled), level='critical')
     
 if __name__=="__main__":
     url = reqmgr_url
