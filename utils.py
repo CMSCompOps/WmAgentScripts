@@ -3324,6 +3324,25 @@ def getDatasetEventsPerLumi(dataset):
     #    average = 100
     #return average
            
+def invalidateFiles( files ):
+    all_OK = True
+    #conn  =  httplib.HTTPSConnection('dynamo.mit.edu', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn  =  httplib.HTTPConnection('dynamo.mit.edu')
+    for fn in files:
+        if not all_OK :break ## stop at the first file
+        try:
+            r1 = conn.request("GET", "/registry/invalidation/invalidate?item=%s"%(fn))
+            r2 = conn.getresponse()
+            res = json.loads(r2.read())
+            all_OK = res['result'] == 'OK'
+            print fn,"set for invalidation"
+        except Exception as e:
+            print str(e)
+            print "could not set to invalidate", fn
+            all_OK = False
+
+    return all_OK
+
 def setFileStatus(file_names, validate=True):
     dbswrite = DbsApi(url=dbs_url_writer)
     dbsapi = DbsApi(url=dbs_url)
