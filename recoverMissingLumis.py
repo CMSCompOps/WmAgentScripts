@@ -15,6 +15,7 @@ import logging
 import pickle
 import sys
 import uuid
+import time
 
 from optparse import OptionParser
 
@@ -532,14 +533,18 @@ def defineRequests(workload, requestInfo,
 
     logging.info("About to upload ACDC records to: %s/%s" % (acdcCouchUrl, acdcCouchDb))
     pprint(requests)
+
     # With the request objects we need to build ACDC records and
     # request JSONs
     for idx, requestObject in enumerate(requests):
+        now = time.mktime(time.gmtime())
+        print time.mktime(time.gmtime()) - now,"[s]","starting",idx
         collectionName = '%s_%s' % (workload.name(), str(uuid.uuid1()))
         filesetName = requestObject['task']
         collection = CouchCollection(**{"url": acdcCouchUrl,
                                         "database": acdcCouchDb,
                                         "name": collectionName})
+        print time.mktime(time.gmtime()) - now,"[s]","collection created"
         files = 0
         lumis = 0
         for lfn in datasetInformation[requestObject['input']]:
@@ -559,6 +564,7 @@ def defineRequests(workload, requestInfo,
                                           "database": acdcCouchDb,
                                           "name": filesetName})
                 fileset.setCollection(collection)
+                print time.mktime(time.gmtime()) - now,"[s]","set collection"
                 acdcRuns = []
                 for run in fileRuns:
                     runObject = {}
@@ -577,7 +583,8 @@ def defineRequests(workload, requestInfo,
                             "runs": acdcRuns
                            }
                 fileset.makeFilelist({lfn: acdcFile})
-
+                print time.mktime(time.gmtime()) - now,"[s]","made fileset"
+        print time.mktime(time.gmtime()) - now,"[s]","ending loop"
         # Put the creation parameters
         creationDict = jsonBlob["createRequest"]
         creationDict["OriginalRequestName"] = str(workload.name())
@@ -625,10 +632,11 @@ def defineRequests(workload, requestInfo,
             tokens = processingVersion.split('-')
             assignDict["ProcessingVersion"] = int(tokens[-1][1:])
             assignDict["ProcessingString"] = ('-').join(tokens[:-1])
-
+        print time.mktime(time.gmtime()) - now,"[s]","data prepared"
         fileHandle = open('%s.json' % creationDict["RequestString"], 'w')
         json.dump(jsonBlob, fileHandle)
         fileHandle.close()
+        print time.mktime(time.gmtime()) - now,"[s]","json made"
         logging.info("Created JSON %s for recovery of %s" % ('%s.json' % creationDict["RequestString"],
                                                              requestObject['outputs']))
         logging.info("This will recover %d lumis in %d files" % (lumis, files))
