@@ -429,7 +429,14 @@ def checkor(url, spec=None, options=None):
                     ## defined per tier
                     fractions_pass[output] = CI.campaigns[c]['fractionpass'].get('all', default_pass)
                     if tier in CI.campaigns[c]['fractionpass']:
-                        fractions_pass[output] = CI.campaigns[c]['fractionpass'][tier]
+                        tier_pass_content = CI.campaigns[c]['fractionpass'][tier]
+                        if type(tier_pass_content) == dict:
+                            fractions_pass[output] = CI.campaigns[c]['fractionpass'][tier].get('all', default_pass)
+                            for exp,pass_exp in CI.campaigns[c]['fractionpass'][tier].items():
+                                if output.startswith(exp):
+                                    fractions_pass[output] = pass_exp
+                        else:
+                            fractions_pass[output] = CI.campaigns[c]['fractionpass'][tier]
                     if priority in CI.campaigns[c]['fractionpass']:
                         fractions_pass[output] = CI.campaigns[c]['fractionpass'][priority]
                 else:
@@ -457,17 +464,18 @@ def checkor(url, spec=None, options=None):
 
 
         ## need to come to a way to do this "fast" so that it can be done more often
-        if not all(pass_stats_check.values()) and False:
+        if not all(pass_stats_check.values()):# and False:
+            n_runs = 1
             ## should recalculate a couple of things to be able to make a better check on expected fraction
             for p in prim:
                 nr = getDatasetRuns(p)
                 if len(nr)>1:
                     print "fecthing input lumis and files for",p
                     lumis_per_run[p], files_per_rl[p] = getDatasetLumisAndFiles(p, runs = rwl, lumilist = lwl)
+                    n_runs = len(set(lumis_per_run[p].keys()))
 
             for out in pass_stats_check:
-                nr = getDatasetRuns(out)
-                if prim and len(nr)>1: 
+                if prim and len(n_runs)>1: 
                     ## do only for multiple runs output and something in input
                     lumis_per_run[out], files_per_rl[out] = getDatasetLumisAndFiles(out)
                     fetched[out] = True
@@ -484,9 +492,9 @@ def checkor(url, spec=None, options=None):
                     lowest_fraction = min( fraction_per_run.values())
                     highest_fraction = max( fraction_per_run.values())
                     average_fraction = sum(fraction_per_run.values())/len(fraction_per_run.values())
-                    print "the lowest competion fraction per run for",out," is",lowest_fraction
-                    print "the highest competion fraction per run for",out," is",highest_fraction
-                    print "the average competion fraction per run for",out," is",average_fraction
+                    print "the lowest completion fraction per run for",out," is",lowest_fraction
+                    print "the highest completion fraction per run for",out," is",highest_fraction
+                    print "the average completion fraction per run for",out," is",average_fraction
                     percent_completions[out] = lowest_fraction
                 
         pass_stats_check = dict([(out, bypass_checks or (percent_completions[out] >= fractions_pass[out])) for out in fractions_pass ])
