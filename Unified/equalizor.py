@@ -221,7 +221,7 @@ def equalizor(url , specific = None, options=None):
         binned_io = defaultdict( lambda : defaultdict(float))
         inputGB = None
         denom = 'CoreHr' # 'ReadTimeHrs'
-        if io_data and io_data["aggregations"]["2"]["buckets"]:
+        if io_data and 'aggregations' in io_data and io_data["aggregations"]["2"]["buckets"]:
             inputGB=io_data["aggregations"]["2"]["buckets"][0].get('InputGB',{}).get('value',None)
             buckets = io_data["aggregations"]["2"]["buckets"][0].get('RequestCpus',{}).get('buckets',[])
             for bucket in buckets:
