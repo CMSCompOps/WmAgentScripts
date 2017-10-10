@@ -123,7 +123,9 @@ def checkor(url, spec=None, options=None):
             continue
         try:
             print "Can read bypass from", bypassor
-            bypasses.extend( json.loads(open(bypass_file).read()))
+            extending = json.loads(open(bypass_file).read())
+            print bypassor,"is bypassing",extending
+            bypasses.extend( extending )
         except:
             sendLog('checkor',"cannot get by-passes from %s for %s"%(bypass_file ,bypassor))
             sendEmail("malformated by-pass information","%s is not json readable"%(bypass_file), destination=[email])
@@ -148,8 +150,9 @@ def checkor(url, spec=None, options=None):
             #sendLog('checkor',"no file %s"%rider_file)
             continue
         try:
-            print "Can read force complete from", rider
-            bypasses.extend( json.loads(open( rider_file ).read() ) )
+            extending = json.loads(open( rider_file ).read() )
+            print rider,"is force completing",extending
+            bypasses.extend( extending )
         except:
             sendLog('checkor',"cannot get force complete list from %s"%rider)
             sendEmail("malformated force complet file","%s is not json readable"%rider_file, destination=[email])
