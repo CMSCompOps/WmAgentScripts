@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, forceComplete, makeReplicaRequest, getDatasetSize, getDatasetFiles, sendLog, reqmgr_url, dbs_url, dbs_url_writer, getForceCompletes
-from utils import componentInfo, unifiedConfiguration, userLock, duplicateLock, dataCache, unified_url, getDatasetLumisAndFiles, getDatasetRuns, duplicateAnalyzer
+from utils import componentInfo, unifiedConfiguration, userLock, duplicateLock, dataCache, unified_url, getDatasetLumisAndFiles, getDatasetRuns, duplicateAnalyzer, invalidateFiles
 import phedexClient
 import dbs3Client
 dbs3Client.dbs3_url = dbs_url
@@ -667,17 +667,15 @@ def checkor(url, spec=None, options=None):
                 bad_files = {}
                 for out in duplications:
                     bad_files[out] = duplicateAnalyzer().files_to_remove( files_per_rl[out] )
-                    duplicate_notice = "These files need to be invalidated\n"
+                    duplicate_notice = "These files will be invalidated\n"
                     duplicate_notice += json.dumps( sorted(bad_files[out]), indent=2)
                     wfi.sendLog('checkor',duplicate_notice)
                 
                 ## and invalidate the files in DBS directly witout asking
-                #for out,bads in bad_files.items():
-                #    for fn in bads:
-                #        dbs3Client.setFileStatus( fn, newstatus=0 )
+                for out,bads in bad_files.items():
+                    invalidateFiles(bads) ## for full removal
+                    dbs3Client.setFileStatus( bads, newstatus=0 ) ## invalidate in dbs in the meantime so that the dataset goes into filemismatch category
 
-                ## hook for making file invalidation ?
-                ## it shouldn't be allowed to bypass it
                 assistance_tags.add('duplicates')
                 is_closing = False 
 
