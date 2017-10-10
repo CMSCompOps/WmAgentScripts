@@ -508,7 +508,11 @@ def checkor(url, spec=None, options=None):
 
             ## hook for creating automatically ACDC ?
             if not bypass_checks:
-                assistance_tags.add('recovery')
+                ###############################
+                ## this is the only place that drives what goes in the recoveror
+                #assistance_tags.add('recovery')
+                assistance_tags.add('manual')
+                ###############################
                 is_closing = False
         else:
             wfi.sendLog('checkor','passing stats check \n%s \n%s'%( json.dumps(percent_completions, indent=2), json.dumps(fractions_pass, indent=2) ))
