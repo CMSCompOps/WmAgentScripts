@@ -228,7 +228,6 @@ Last update on <b>%s(CET), %s(GMT)</b>
 <a href=logs/ target=_blank title="Directory containing all the logs">logs</a> 
 <a href=http://cms-unified.web.cern.ch/cms-unified/joblogs/ target=_blank title="Directory containing logs of jobs that failed with critical errors">job logs</a> 
 <a href=http://cms-unified.web.cern.ch/cms-unified/condorlogs/ target=_blank title="Directory containing condor logs of jobs ">condor logs</a> 
-<a href=report/ target=_blank title="Directory containing error reports on workflows">error reports</a> 
 <a href=logs/last.log target=_blank title="Log of the last module that has run">last</a>
 <a href=statuses.html title="Unified statuses">statuses</a>
 <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/ target=_blank>prod mon</a>
@@ -238,9 +237,7 @@ Last update on <b>%s(CET), %s(GMT)</b>
 <a href=locked.html>space</a>
 <a href=outofspace.html>out of space</a>
 <a href=logs/subscribor/last.log target=_blank>blocks</a>
-<a href=logs/agents/last.log>agents</a>
 <br>
-<a href=https://twiki.cern.ch/twiki/bin/view/CMSPublic/CompOpsWorkflowL3Responsibilities#Automatic_Assignment_and_Unified>what am I</a>
 <a href=data.html>json interfaces</a>
 <a href=logs/addHoc/last.log>add-hoc op</a>
 <a href=https://cmssst.web.cern.ch/cmssst/man_override/cgi/manualOverride.py/prodstatus target=_blank title="Link to a restricted page to override sites status">sites override</a>
