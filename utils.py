@@ -4602,10 +4602,11 @@ class workflowInfo:
 
         #ncores = self.request.get('Multicore',1)
         ncores = self.getMulticore()
-        memory_allowed = SI.sitesByMemory( float(self.request['Memory']) , maxCore=ncores)
+        mem = self.getMemory()
+        memory_allowed = SI.sitesByMemory( mem , maxCore=ncores)
         if memory_allowed!=None:
             if verbose:
-                print "sites allowing",self.request['Memory'],"MB and",ncores,"core are",sorted(memory_allowed)
+                print "sites allowing",mem,"MB and",ncores,"core are",sorted(memory_allowed)
             ## mask to sites ready for mcore
             if  ncores>1:
                 memory_allowed = list(set(memory_allowed) & set(SI.sites_mcore_ready))
@@ -4943,6 +4944,13 @@ class workflowInfo:
         if 'Chain' in self.request['RequestType']:
             mems_d = self._collectinchain('Memory',default=None)
         return int(mems_d.get( task, mems))
+    def getMemory(self):
+        mems = [self.request.get('Memory',None)]
+        mems_d = {}
+        if 'Chain' in self.request['RequestType']:
+            mems_d = self._collectinchain('Memory',default=None)
+        mems = filter(None, mems_d.values()) if mems_d else mems
+        return max(mems) if mems else None
 
     def getCampaignPerTask(self, task):
         c = self.request.get('Campaign',None)
