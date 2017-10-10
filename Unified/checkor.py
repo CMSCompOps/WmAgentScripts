@@ -383,12 +383,16 @@ def checkor(url, spec=None, options=None):
             event_expected = int(wfi.request['RequestNumEvents'])
         elif 'Task1' in wfi.request and 'RequestNumEvents' in wfi.request['Task1']:
             event_expected = wfi.request['Task1']['RequestNumEvents']
-            for i in range(1,20):
-                if 'Task%d'%i in wfi.request:
-                    ## this is wrong ibsolute
-                    if 'FilterEfficiency' in wfi.request['Task%d'%i]:
-                        event_expected *= float(wfi.request['Task%d'%i]['FilterEfficiency'])
+            ## this is too much of an approximation. We should therefore only rely on lumis_expected
+            #for i in range(2,20):
+            #    if 'Task%d'%i in wfi.request:
+            #        ## this is wrong ibsolute
+            #        if 'FilterEfficiency' in wfi.request['Task%d'%i]:
+            #            event_expected *= float(wfi.request['Task%d'%i]['FilterEfficiency'])
             event_expected = int(event_expected)
+
+        ## We should only rely on lumis_expected
+        event_expected = 0 
 
         fractions_pass = {}
         events_per_lumi = {}
@@ -397,7 +401,7 @@ def checkor(url, spec=None, options=None):
         (lhe,prim,_,_) = wfi.getIO()
         if lhe or prim: over_100_pass = False
 
-        time_point("execpted statistics", sub_lap=True)
+        time_point("expected statistics", sub_lap=True)
 
 
         for output in wfi.request['OutputDatasets']:
@@ -406,11 +410,14 @@ def checkor(url, spec=None, options=None):
             percent_completions[output] = 0.
 
             if lumi_expected:
+                wfi.sendLog('checkor', "lumi completion %s expected %d"%( lumi_count, lumi_expected))
                 percent_completions[output] = lumi_count / float( lumi_expected )
 
             if event_expected:
-                wfi.sendLog('checkor', "event completion real %s expected %s"%(event_count, event_expected ))
-                percent_completions[output] = max(percent_completions[output], float(event_count) / float( event_expected ) )
+                e_fraction = float(event_count) / float( event_expected )
+                if e_fraction > percent_completions[output]:
+                    percent_completions[output] = e_fraction
+                    wfi.sendLog('checkor', "event completion real %s expected %s"%(event_count, event_expected ))
 
             default_pass = UC.get('default_fraction_pass')
             fractions_pass[output] = default_pass
