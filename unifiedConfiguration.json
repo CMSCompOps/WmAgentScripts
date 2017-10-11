@@ -273,7 +273,7 @@
   },
   "user_relval":{
    "description" : "The users from which we expect relval requests",
-   "value" : ["fabozzi","nwickram","bsutar","rverma","prebello","piperov","sandhya","zhenhu"]
+   "value" : ["fabozzi","nwickram","bsutar","rverma","prebello","piperov","sandhya","zhenhu","muahmad"]
   },
   "relval_routing":{
    "description" : "Set of keywords and special settings for relvals",
