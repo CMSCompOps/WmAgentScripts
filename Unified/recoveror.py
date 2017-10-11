@@ -187,6 +187,11 @@ def recoveror(url,specific,options=None):
     CI = campaignInfo()
     SI = siteInfo()
     UC = unifiedConfiguration()
+    use_recoveror = UC.get('use_recoveror')
+
+    if not use_recoveror and not options.go:
+        print "We are told not to run recoveror"
+        return 
 
     def make_int_keys( d ):
         for code in d:
@@ -450,5 +455,5 @@ if __name__ == '__main__':
     fdb = closeoutInfo()
     fdb.html()
 
-    from showError import parse_all
-    parse_all(url)
+    #from showError import parse_all
+    #parse_all(url)
