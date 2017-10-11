@@ -4149,8 +4149,8 @@ class workflowInfo:
 
         return self.wmstats
 
-    def getRecoveryBlocks(self):
-        doc = self.getRecoveryDoc()
+    def getRecoveryBlocks(self ,collection_name=None):
+        doc = self.getRecoveryDoc(collection_name=collection_name)
         all_files = set()    
         files_and_loc = defaultdict(set)
         for d in doc:
@@ -4191,12 +4191,14 @@ class workflowInfo:
         files_and_loc = dict([(k,list(v)) for (k,v) in files_and_loc.items() if k in files_no_block])
         return dataset_blocks,all_blocks_loc,files_in_block,files_and_loc#files_no_block
 
-    def getRecoveryDoc(self):
-        collection_name = self.request['RequestName']
+    def getRecoveryDoc(self, collection_name=None):
+        if collection_name == None:
+            collection_name = self.request['RequestName']
         
-        #if 'CollectionName' in self.request and self.request['CollectionName']:             
-        #    collection_name = self.request['CollectionName']
-        #    print "using collection name from schema"
+        if 'CollectionName' in self.request and self.request['CollectionName']:
+            if collection_name == True:
+                collection_name = self.request['CollectionName']
+                print "using collection name from schema"
 
         if self.recovery_doc != None:
             print "returning cached self.recovery_doc"
