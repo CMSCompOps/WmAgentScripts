@@ -942,6 +942,7 @@
    "fractionpass" : 0.95,
    "force-complete" : 0.99,
    "tune" : true,
+   "resize" : "auto",
    "SiteWhiteList": ["T1_DE_KIT", "T1_FR_CCIN2P3","T1_IT_CNAF","T1_UK_RAL","T2_DE_DESY","T2_DE_RWTH","T2_UK_London_Brunel","T2_US_Caltech","T2_US_MIT","T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin"],
    "secondaries": {"/MinBias_TuneCUETP8M1_14TeV-v1-pythia8/PhaseIITDRFall17GS-93X_upgrade2023_realistic_v2-v1/GEN-SIM" :{}},
    "overflow": {"PU":{"max":20000,"pending":0}}
