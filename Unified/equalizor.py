@@ -47,7 +47,8 @@ def equalizor(url , specific = None, options=None):
     CI = campaignInfo()
 
     
-    sites_to_consider = SI.all_sites
+    #sites_to_consider = SI.all_sites
+    sites_to_consider = SI.sites_ready
     for site in sites_to_consider:
         region = site.split('_')[1]
         if not region in ['US'
