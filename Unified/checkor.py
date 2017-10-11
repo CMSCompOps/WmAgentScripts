@@ -31,6 +31,7 @@ def checkor(url, spec=None, options=None):
     fDB = closeoutInfo()
 
     UC = unifiedConfiguration()
+    use_recoveror = UC.get('use_recoveror')
     use_mcm = True
     up = componentInfo(mcm=use_mcm, soft=['mcm'])
     if not up.check(): return
@@ -81,7 +82,8 @@ def checkor(url, spec=None, options=None):
 
     ## what is left out are the wf which were running and ended up aborted/failed/...
 
-    
+
+
 
     custodials = defaultdict(list) #sites : dataset list
     transfers = defaultdict(list) #sites : dataset list
@@ -475,7 +477,7 @@ def checkor(url, spec=None, options=None):
                     n_runs = len(set(lumis_per_run[p].keys()))
 
             for out in pass_stats_check:
-                if prim and len(n_runs)>1: 
+                if prim and n_runs>1: 
                     ## do only for multiple runs output and something in input
                     lumis_per_run[out], files_per_rl[out] = getDatasetLumisAndFiles(out)
                     fetched[out] = True
@@ -517,9 +519,7 @@ def checkor(url, spec=None, options=None):
             ## hook for creating automatically ACDC ?
             if not bypass_checks:
                 ###############################
-                ## this is the only place that drives what goes in the recoveror
-                #assistance_tags.add('recovery')
-                assistance_tags.add('manual')
+                assistance_tags.add('recovery' if use_recoveror else 'manual')
                 ###############################
                 is_closing = False
         else:
@@ -932,7 +932,7 @@ def checkor(url, spec=None, options=None):
             print wfo.name,"was tagged with :",list(assistance_tags)
             if 'recovering' in assistance_tags:
                 ## if active ACDC, being under threshold, filemismatch do not matter
-                assistance_tags = assistance_tags - set(['recovery','filemismatch'])
+                assistance_tags = assistance_tags - set(['recovery','filemismatch','manual'])
             if 'recovery' in assistance_tags and 'recovered' in assistance_tags:
                 ## should not set -recovery to anything that had ACDC already
                 assistance_tags = assistance_tags - set(['recovery','recovered']) 

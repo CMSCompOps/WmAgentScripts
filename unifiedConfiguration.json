@@ -205,7 +205,11 @@
   },
   "expose_condor_code":{
     "value" : [99109,99303,60450,61202,50513,50660,11003],
-    "description" :  "The error codes that should get a condor lot exposed"
+    "description" :  "The error codes that should get a condor lot exposed."
+  },
+  "use_recoveror":{
+    "value" : false,
+    "description" : "Whethe automatic recovery can be tried."
   },
   "error_codes_to_recover": {
   "value" : { "50664" : [ { "legend" : "time-out",
