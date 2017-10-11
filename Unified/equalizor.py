@@ -197,6 +197,8 @@ def equalizor(url , specific = None, options=None):
     slope_quanta = UC.get('slope_quanta') #MB
     read_quanta = UC.get('read_quanta') #kB/min or something
 
+    memory_correction = UC.get('memory_correction')
+
     def quantize( value, quanta ):
         N = int(value / quanta)
         return (N+1)*quanta
@@ -590,8 +592,15 @@ def equalizor(url , specific = None, options=None):
                         if task.pathName in resizing and "memoryPerThread" in resizing[task.pathName]:
                             resizing[task.pathName]["memoryPerThread"] = set_slope
                         perf_per_config[configcache.get( taskname , 'N/A')]['slope'] = set_slope
+                    mem = wfi.getMemoryPerTask( taskname )
+                    print taskname,mem
+                    for key,add_hoc_mem in memory_correction.items():
+                        if key in taskname and mem > add_hoc_mem:
+                            print "overiding",set_memory,"to",add_hoc_mem,"by virtue of add-hoc memory_correction",key
+                            set_memory = min( add_hoc_mem, set_memory) if set_memory else add_hoc_mem
+
                     if set_memory:
-                        performance[task.pathName]['memory']= min(set_memory, 20000) ## max to 15GB
+                        performance[task.pathName]['memory']= min(set_memory, 20000) ## max to 20GB
                         performance[task.pathName]['memory']= max(set_memory, 1000) ## min to 1GB
                         perf_per_config[configcache.get( taskname , 'N/A')]['memory'] = set_memory
                     if set_time:

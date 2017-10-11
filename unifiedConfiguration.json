@@ -71,6 +71,10 @@
    "value" : { "Phase" : 5 },
    "description" : "The correction factor to be applied to SizePerEvent per keyword."
  },
+ "memory_correction": {
+   "value" : { "PhaseIITDRFall17DR" : 18000 },
+   "description" : "The memory setting to be set for task with that keyword in"
+ },
  "max_cpuh_block" : {
    "value" : 40000000,
    "description" : "Value of CPUh above which a wf is blocked from assigning"
