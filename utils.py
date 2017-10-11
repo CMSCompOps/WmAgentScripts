@@ -4708,44 +4708,64 @@ class workflowInfo:
 
                 ## avg_events_per_job is base on 8h. we could probably put some margin
                 if events_per_lumi and 'events_per_job' in task:
-                    avg_events_per_job = (task['events_per_job'] *2 )
+                    avg_events_per_job = task['events_per_job'] 
                     ## climb up all task to take the filter eff into account
+                    efficiency_factor = 1.
                     while t and 'InputTask' in t:
                         t = find_task_dict( t['InputTask'] )
                         if 'FilterEfficiency' in t:
-                            avg_events_per_job /= t['FilterEfficiency']
-                    if (events_per_lumi > avg_events_per_job):
-                        print "The default splitting will not work for subsequent steps",events_per_lumi,">",avg_events_per_job
-                        max_events_per_lumi.append( int(avg_events_per_job*0.75) )
-               
+                            efficiency_factor *= t['FilterEfficiency']
+                    events_per_lumi_at_this_task = events_per_lumi * efficiency_factor                        
 
-                    if sizeperevent and (avg_events_per_job * sizeperevent ) > (GB_space_limit*1024.**2):
-                        print "The output size of task %s is expected to be too large : %d x %.2f kB = %.2f GB > %f GB "% ( tname , 
-                                                                                                                           avg_events_per_job, sizeperevent,
-                                                                                                                           avg_events_per_job * sizeperevent / (1024.**2 ),
-                                                                                                                           GB_space_limit)
-                        if (events_per_lumi * sizeperevent ) > (GB_space_limit*1024.**2):
-                            ## derive a value for the lumisection
-                            this_max_events_per_lumi = int( (GB_space_limit*1024.**2) / sizeperevent)
-                            max_events_per_lumi.append( this_max_events_per_lumi )
-                            print "The output size task %s is expected to be too large : %.2f GB > %f GB even for one lumi %d, should do %d"% ( tname , 
-                                                                                                                                                events_per_lumi * sizeperevent / (1024.**2 ),
-                                                                                                                                                GB_space_limit,
-                                                                                                                                                events_per_lumi,
-                                                                                                                                                this_max_events_per_lumi)
+                    #if (events_per_lumi_at_this_task > avg_events_per_job):
+                    #    print "The default splitting will not work for subsequent steps",events_per_lumi,"[in the input dataset] amounts to",events_per_lumi_at_this_task,"[at this task]>",avg_events_per_job,"[splitting for the task]"
+                    #    #max_events_per_lumi.append( int(avg_events_per_job*0.75) ) ##reducing 
+                    #    max_events_per_lumi.append( int(avg_events_per_job*0.75) ) ##reducing 
+                    
+                    
+                    if timeperevent:
+                        job_timeout = 45. ## hours
+                        time_per_input_lumi = events_per_lumi_at_this_task*timeperevent
+                        if (time_per_input_lumi > (job_timeout*60*60)): ##45h
+                            ## even for one lumisection, the job will time out.
+                            print "The running time of task %s is expected to be too large even for one lumi section: %d x %.2f s = %.2f h > %d h"%( tname,
+                                                                                                                                                     events_per_lumi_at_this_task, timeperevent,
+                                                                                                                                                     time_per_input_lumi / (60.*60.),
+                                                                                                                                                     job_timeout)
+                            this_max_events_per_lumi = int( job_timeout*60.*60. / timeperevent)
+                            max_events_per_lumi.append( this_max_events_per_lumi /efficiency_factor ) ## report here, so that if we can change it, we will change this
                         else:
+                            pass
+                            
+
+                    if sizeperevent:# and (avg_events_per_job * sizeperevent ) > (GB_space_limit*1024.**2):
+                        size_per_input_lumi = events_per_lumi_at_this_task*sizeperevent
+                        this_max_events_per_lumi = int( (GB_space_limit*1024.**2) / sizeperevent)
+                        if (size_per_input_lumi > (GB_space_limit*1024.**2)):
+                            ## derive a value for the lumisection
+                            print "The output size task %s is expected to be too large : %.2f GB > %f GB even for one lumi (effective lumi size is ~%d), should go as low as %d"% ( tname , 
+                                                                                                                                                size_per_input_lumi / (1024.**2 ),
+                                                                                                                                                GB_space_limit,
+                                                                                                                                                events_per_lumi_at_this_task,
+                                                                                                                                                this_max_events_per_lumi)
+                            max_events_per_lumi.append( this_max_events_per_lumi/efficiency_factor ) ## adding this to that later on we can check and adpat the split 0
+                        elif (avg_events_per_job * sizeperevent ) > (GB_space_limit*1024.**2):
                             ## should still change the avg_events_per_job setting of that task
-                            avg_events_per_job_for_task = int( (GB_space_limit*1024.**2) / sizeperevent)
-                            print "it will actually be OK for one lumisection, but task %s should be set with %d events per job in average"%( tname, avg_events_per_job_for_task)
+                            print "The output size of task %s is expected to be too large : %d x %.2f kB = %.2f GB > %f GB. Should set as low as %d "% ( tname , 
+                                                                                                                                                         avg_events_per_job, sizeperevent,
+                                                                                                                                                         avg_events_per_job * sizeperevent / (1024.**2 ),
+                                                                                                                                                         GB_space_limit,
+                                                                                                                                                         this_max_events_per_lumi)
+
                             modified_split_for_task = spl
-                            modified_split_for_task['splitParams']['events_per_job'] = avg_events_per_job_for_task
+                            modified_split_for_task['splitParams']['events_per_job'] = this_max_events_per_lumi
                             modified_splits.append( modified_split_for_task )
                         
             if max_events_per_lumi:
                 if events_per_lumi_inputs:
                     if min(max_events_per_lumi)<events_per_lumi_inputs:
                         ## there was an input dataset somewhere and we cannot break down that lumis, except by changing to EventBased
-                        print "the smallest value of %s is still smaller than %s evt/lumi in the input"%(max_events_per_lumi, events_per_lumi_inputs)
+                        print "the smallest value of %s is still smaller than %s evt/lumi of the input"%(max_events_per_lumi, events_per_lumi_inputs)
                         hold = True
                     else:
                         hold = True #to be removed
