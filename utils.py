@@ -16,6 +16,7 @@ import itertools
 import time
 import math 
 import hashlib
+import threading
 
 import smtplib
 from email.MIMEMultipart import MIMEMultipart
@@ -3151,7 +3152,7 @@ class duplicateAnalyzer:
         return files
 
 
-def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False):
+def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False,force=False):
     if runs and lumilist:
         print "should not be used that way"
         return {},{}
@@ -3169,10 +3170,12 @@ def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False)
         opened = json.loads(open(c_name).read())
         if 'time' in opened:
             record_time = opened['time']
-            if (now-record_time)<(10*60*60):
-                with_cache=True ## if the record is less than 10 hours, it will get it from cache
+            if (now-record_time)<(1*60*60):
+                with_cache=True ## if the record is less than 1 hours, it will get it from cache
         else:
             with_cache = False ## force new caches
+        if force: with_cache=False
+
         ## need to filter on the runs
         if with_cache and 'lumis' in opened and 'files' in opened:
             lumi_json = dict([(int(k),v) for (k,v) in opened['lumis'].items()])
@@ -3195,6 +3198,27 @@ def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False)
     files_per_lumi = defaultdict(set) ## the revers dictionnary of files by r:l
     d_runs = getDatasetRuns( dataset )
     #print len(runs),"runs"
+    class getFilesWithLumiInRun_t(threading.Thread):
+        def __init__(self, d,r):
+            threading.Thread.__init__(self)
+            self.d =d 
+            self.r =r
+        def run(self):
+            self.res = getFilesWithLumiInRun( self.d, self.r)
+
+    threads = []
+    for run in d_runs:
+        threads.append( getFilesWithLumiInRun_t( dataset, run))
+        threads[-1].start()
+    while sum([t.is_alive() for t in threads]):
+        pass
+    for t in threads:
+        for f in t.res:
+            full_lumi_json[run].update( f['lumi_section_num'] )
+            for lumi in f['lumi_section_num']:
+                files_per_lumi[(run,lumi)].add( f['logical_file_name'] )            
+
+    """    
     for run in d_runs:
         files = getFilesWithLumiInRun( dataset, run )
         #print run,len(files),"files"
@@ -3202,6 +3226,8 @@ def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False)
             full_lumi_json[run].update( f['lumi_section_num'] )
             for lumi in f['lumi_section_num']:
                 files_per_lumi[(run,lumi)].add( f['logical_file_name'] )
+
+    """
 
     ## convert set->list and for a run list
     lumi_json = {}
