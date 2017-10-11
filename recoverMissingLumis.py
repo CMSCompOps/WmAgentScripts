@@ -16,6 +16,7 @@ import pickle
 import sys
 import uuid
 import time
+import threading
 
 from optparse import OptionParser
 
@@ -211,6 +212,42 @@ def getOutputModules(workload, initialTask=None):
         outputModules.extend(otherOutputModules)
     return outputModules
 
+def ThreadBuster( threads, n_threads, sleepy, verbose=False):
+
+    ntotal=len(threads)
+    print "Processing",ntotal,"threads with",n_threads,"max concurrent"
+    start_now = time.mktime(time.gmtime())
+    r_threads = []
+    bug_every=max(len(threads) / 10., 100.) ## 10 steps of eta verbosity
+    next_ping = int(len(threads)/bug_every)
+    while threads:
+        running = sum([t.is_alive() for t in r_threads])
+        #if verbose: print running,"/",n_threads,"running threads"
+        if n_threads==None or running < n_threads:
+            startme = n_threads-running if n_threads else len(threads)
+            if verbose or int(len(threads)/bug_every)<next_ping:
+                next_ping =int(len(threads)/bug_every)
+                now= time.mktime(time.gmtime())
+                spend = (now - start_now)
+                n_done = ntotal-len(threads)
+                print "Starting",startme,"new threads",len(threads),"remaining" 
+                if n_done:
+                    eta = (spend / n_done) * len(threads)
+                    print "Will finish in ~%.2f [s]"%(eta)
+            if startme > n_threads/5.:
+                sleepy/=2.
+            for it in range(startme):
+                if threads:
+                    r_threads.append( threads.pop(-1))
+                    r_threads[-1].start()
+        time.sleep(sleepy)
+    ##then wait for completion
+    while sum([t.is_alive() for t in r_threads]):
+        time.sleep(1)
+        
+    ## and swap list back
+    return r_threads
+
 
 def getFiles(datasetName, runBlacklist, runWhitelist, blockBlacklist,
              blockWhitelist, dbsUrl, fakeLocation=False):
@@ -225,6 +262,93 @@ def getFiles(datasetName, runBlacklist, runWhitelist, blockBlacklist,
     dbsReader = DBSReader(endpoint=dbsUrl)
     phedexReader = PhEDEx()
     siteDB = SiteDBJSON()
+
+
+    class BlockBuster(threading.Thread):
+        def __init__(self, **args):
+            threading.Thread.__init__(self)
+            for k,v in args.items():
+                setattr(self,k,v)
+            self.major_failure = False
+
+        def run(self):
+            self.files = {}
+            logging = self.l
+            has_parent = self.hp
+            fakeLocation = self.fl
+            blockName = self.bn
+            blockBlacklist = self.bbl
+            blockWhitelist = self.bwl
+
+
+            if blockBlacklist and blockName in blockBlacklist:
+                return
+            if blockWhitelist and blockName not in blockWhitelist:
+                return
+
+            phedexReader = PhEDEx()
+            siteDB = SiteDBJSON()
+            dbsReader = DBSReader(endpoint=self.dbs)
+            replicaInfo = phedexReader.getReplicaInfoForBlocks(block=blockName,
+                                                                    subscribed='y')
+            blockFiles = dbsReader.listFilesInBlock(blockName, lumis=True)
+            if has_parent:
+                try:
+                    blockFileParents = dbsReader.listFilesInBlockWithParents(blockName)
+                except:
+                    print blockName, "does not appear to have a parent, even though it should. Very suspicious"
+                    blockFileParents = dbsReader.listFilesInBlock(blockName)
+            else:
+                blockFileParents = dbsReader.listFilesInBlock(blockName)
+
+            blockLocations = set()
+            # load block locations
+            if len(replicaInfo["phedex"]["block"]) > 0:
+                for replica in replicaInfo["phedex"]["block"][0]["replica"]:
+                    PNN = replica["node"]
+                    PSNs = siteDB.PNNtoPSN(PNN)
+                    blockLocations.add(PNN)
+                    #logging.debug("PhEDEx Node Name: %s\tPSNs: %s", PNN, PSNs)
+
+            # We cannot upload docs without location, so force it in case it's empty
+            if not blockLocations:
+                if fakeLocation:
+                    #logging.info("\t\t %s\tno location", blockName)
+                    blockLocations.update([u'T1_US_FNAL_Disk', u'T2_CH_CERN'])
+                elif not has_parent:  ## this should be the source
+                    #logging.info("Blockname: %s\tno location, ABORT", blockName)
+                    self.major_failure = True
+                    #sys.exit(1)
+                
+            #logging.info("Blockname: %s\tLocations: %s", blockName, blockLocations)
+
+            # for each file on the block
+            for blockFile in blockFiles:
+                parentLFNs = []
+                # populate parent information
+                if blockFileParents and "ParentList" in blockFileParents[0]:
+                    for fileParent in blockFileParents[0]["ParentList"]:
+                        parentLFNs.append(fileParent["LogicalFileName"])
+                runInfo = {}
+                # Lumis not included in file
+                for lumiSection in blockFile["LumiList"]:
+                    if runBlacklist and lumiSection["RunNumber"] in runBlacklist:
+                        continue
+                    if runWhitelist and lumiSection["RunNumber"] not in runWhitelist:
+                        continue
+
+                    if lumiSection["RunNumber"] not in runInfo.keys():
+                        runInfo[lumiSection["RunNumber"]] = []
+
+                    runInfo[lumiSection["RunNumber"]].append(lumiSection["LumiSectionNumber"])
+                if len(runInfo.keys()) > 0:
+                    self.files[blockFile["LogicalFileName"]] = {"runs": runInfo,
+                                                                "events": blockFile["NumberOfEvents"],
+                                                                "size": blockFile["FileSize"],
+                                                                "locations": list(blockLocations),
+                                                                "parents": parentLFNs}
+            return
+            
 
     files = {}
     outputDatasetParts = datasetName.split("/")
@@ -243,76 +367,24 @@ def getFiles(datasetName, runBlacklist, runWhitelist, blockBlacklist,
         print "Dataset with no parent"
         pass
 
+    bthreads=[]
     # traverse each block
     for blockName in blockNames:
-        # deal with white and black list.
-        if blockBlacklist and blockName in blockBlacklist:
-            continue
-        if blockWhitelist and blockName not in blockWhitelist:
-            continue
+        bthreads.append( BlockBuster( bn = blockName,
+                                      hp=has_parent, 
+                                      fl = fakeLocation,
+                                      bbl = blockBlacklist,
+                                      bwl = blockWhitelist,
+                                      l = logging,
+                                      dbs=dbsUrl))
 
-        # existing blocks in phedex
-        replicaInfo = phedexReader.getReplicaInfoForBlocks(block=blockName,
-                                                           subscribed='y')
-        blockFiles = dbsReader.listFilesInBlock(blockName, lumis=True)
-        # has_parent = dbsReader.listBlockParents(blockName)
-        if has_parent:
-            try:
-                blockFileParents = dbsReader.listFilesInBlockWithParents(blockName)
-            except:
-                print blockName, "does not appear to have a parent, even though it should. Very suspicious"
-                blockFileParents = dbsReader.listFilesInBlock(blockName)
-        else:
-            blockFileParents = dbsReader.listFilesInBlock(blockName)
+    print len(bthreads),"block query created"
+    bthreads = ThreadBuster( bthreads, 40, 2., verbose=False)
 
-        blockLocations = set()
-        # load block locations
-        if len(replicaInfo["phedex"]["block"]) > 0:
-            for replica in replicaInfo["phedex"]["block"][0]["replica"]:
-                PNN = replica["node"]
-                PSNs = siteDB.PNNtoPSN(PNN)
-                blockLocations.add(PNN)
-                logging.debug("PhEDEx Node Name: %s\tPSNs: %s", PNN, PSNs)
+    for t in bthreads:
+        if t.major_failure: sys.exit(1)
+        files.update(t.files)
 
-        # We cannot upload docs without location, so force it in case it's empty
-        if not blockLocations:
-            if fakeLocation:
-                logging.info("\t\t %s\tno location", blockName)
-                blockLocations.update([u'T1_US_FNAL_Disk', u'T2_CH_CERN'])
-            elif not has_parent:  ## this should be the source
-                logging.info("Blockname: %s\tno location, ABORT", blockName)
-                sys.exit(1)
-
-        logging.info("Blockname: %s\tLocations: %s", blockName, blockLocations)
-
-        # for each file on the block
-        for blockFile in blockFiles:
-            parentLFNs = []
-            # populate parent information
-            if blockFileParents and "ParentList" in blockFileParents[0]:
-                for fileParent in blockFileParents[0]["ParentList"]:
-                    parentLFNs.append(fileParent["LogicalFileName"])
-            ## remove when https://github.com/dmwm/WMCore/issues/7128 gets fixed
-            # elif not 'RAW' in blockName:
-            #    print "no parent info"
-            runInfo = {}
-            # Lumis not included in file
-            for lumiSection in blockFile["LumiList"]:
-                if runBlacklist and lumiSection["RunNumber"] in runBlacklist:
-                    continue
-                if runWhitelist and lumiSection["RunNumber"] not in runWhitelist:
-                    continue
-
-                if lumiSection["RunNumber"] not in runInfo.keys():
-                    runInfo[lumiSection["RunNumber"]] = []
-
-                runInfo[lumiSection["RunNumber"]].append(lumiSection["LumiSectionNumber"])
-            if len(runInfo.keys()) > 0:
-                files[blockFile["LogicalFileName"]] = {"runs": runInfo,
-                                                       "events": blockFile["NumberOfEvents"],
-                                                       "size": blockFile["FileSize"],
-                                                       "locations": list(blockLocations),
-                                                       "parents": parentLFNs}
     return files
 
 
@@ -416,6 +488,7 @@ def defineRequests(workload, requestInfo,
     that can be feed into the reqmgr.py script and it will assemble
     acdc records that can be uploaded to the database.
     """
+    main_now = time.mktime(time.gmtime())
     # First retrieve the run and block lists and load
     # the information of all datasets
     logging.debug("Original request info:\n%s", requestInfo)
@@ -429,11 +502,15 @@ def defineRequests(workload, requestInfo,
     if datasetInformation is None:
         datasetInformation = {}
         logging.info("Loading DBS information for the datasets...")
+        now = time.mktime(time.gmtime())
         datasetInformation[inputDataset] = getFiles(inputDataset, runBlacklist, runWhitelist,
                                                     blockBlacklist, blockWhitelist, dbsUrl, fakeLocation=fakeLocation)
+        print time.mktime(time.gmtime())-now,"[s] for a call to getFiles",inputDataset
         for dataset in workload.listOutputDatasets():
+            now = time.mktime(time.gmtime())
             datasetInformation[dataset] = getFiles(dataset, runBlacklist, runWhitelist, blockBlacklist, blockWhitelist,
                                                    dbsUrl)
+            print time.mktime(time.gmtime())-now,"[s] for a call to getFiles",dataset
         logging.info("Finished loading DBS information for the datasets...")
 
     # Now get the information about the datasets and tasks
@@ -532,24 +609,37 @@ def defineRequests(workload, requestInfo,
         requests.append(requestObject)
 
     logging.info("About to upload ACDC records to: %s/%s" % (acdcCouchUrl, acdcCouchDb))
-    pprint(requests)
+    ## this printout is making a lot of crap
+    ##pprint(requests)
 
     # With the request objects we need to build ACDC records and
     # request JSONs
-    for idx, requestObject in enumerate(requests):
-        now = time.mktime(time.gmtime())
-        print time.mktime(time.gmtime()) - now,"[s]","starting",idx
-        collectionName = '%s_%s' % (workload.name(), str(uuid.uuid1()))
-        filesetName = requestObject['task']
-        collection = CouchCollection(**{"url": acdcCouchUrl,
-                                        "database": acdcCouchDb,
-                                        "name": collectionName})
-        print time.mktime(time.gmtime()) - now,"[s]","collection created"
-        files = 0
-        lumis = 0
-        for lfn in datasetInformation[requestObject['input']]:
-            fileInfo = datasetInformation[requestObject['input']][lfn]
+
+    class CouchBuster(threading.Thread):
+        def __init__(self, **args):
+            threading.Thread.__init__(self)
+            import copy
+            for k,v in args.items():
+                if not k in ['c']:
+                    setattr(self,k,copy.deepcopy(v))
+                else:
+                    setattr(self,k,v)
+
+        def run(self):
+
+            lfn = self.lfn
+            if self.v:
+                print "Starting for",lfn
+            now = time.mktime(time.gmtime())
+            fileInfo = self.fi
+            requestObject = self.ro
             fileRuns = {}
+            acdcCouchUrl = self.ac
+            acdcCouchDb = self.acd
+            filesetName = self.fsn
+            collection = self.c
+            self.lumis = 0
+            self.files = 0
             for run in fileInfo['runs']:
                 if run in requestObject['lumis']:
                     for lumi in fileInfo['runs'][run][0]:
@@ -557,14 +647,13 @@ def defineRequests(workload, requestInfo,
                             if run not in fileRuns:
                                 fileRuns[run] = []
                             fileRuns[run].append(lumi)
-                            lumis += 1
+                            self.lumis += 1
             if fileRuns:
-                files += 1
+                self.files += 1
                 fileset = CouchFileset(**{"url": acdcCouchUrl,
                                           "database": acdcCouchDb,
                                           "name": filesetName})
                 fileset.setCollection(collection)
-                print time.mktime(time.gmtime()) - now,"[s]","set collection"
                 acdcRuns = []
                 for run in fileRuns:
                     runObject = {}
@@ -582,8 +671,43 @@ def defineRequests(workload, requestInfo,
                             "locations": fileInfo["locations"],
                             "runs": acdcRuns
                            }
+                #
                 fileset.makeFilelist({lfn: acdcFile})
-                print time.mktime(time.gmtime()) - now,"[s]","made fileset"
+            if self.v:
+                print time.mktime(time.gmtime()) - now,"[s] for makeFilelist",lfn
+                
+
+    for idx, requestObject in enumerate(requests):
+        now = time.mktime(time.gmtime())
+        collectionName = '%s_%s' % (workload.name(), str(uuid.uuid1()))
+        print time.mktime(time.gmtime()) - now,"[s]","starting",idx,"in collection name",collectionName
+        filesetName = requestObject['task']
+        collection = CouchCollection(**{"url": acdcCouchUrl,
+                                        "database": acdcCouchDb,
+                                        "name": collectionName})
+        print time.mktime(time.gmtime()) - now,"[s]","collection created"
+        files = 0
+        lumis = 0
+        cthreads=[]
+        for lfn in datasetInformation[requestObject['input']]:
+            cthreads.append( CouchBuster( lfn = lfn,
+                                          fi = datasetInformation[requestObject['input']][lfn],
+                                          ro = requestObject,
+                                          ac = acdcCouchUrl,
+                                          acd = acdcCouchDb,
+                                          fsn = filesetName,
+                                          c = collection,
+                                          v = False
+                                          ))
+            
+        print len(cthreads),"CouchBuster created"            
+        cthreads = ThreadBuster( cthreads, 40, 2., verbose=False)
+
+        for t in cthreads:
+            files += t.files
+            lumis += t.lumis
+        
+
         print time.mktime(time.gmtime()) - now,"[s]","ending loop"
         # Put the creation parameters
         creationDict = jsonBlob["createRequest"]
@@ -640,7 +764,7 @@ def defineRequests(workload, requestInfo,
         logging.info("Created JSON %s for recovery of %s" % ('%s.json' % creationDict["RequestString"],
                                                              requestObject['outputs']))
         logging.info("This will recover %d lumis in %d files" % (lumis, files))
-
+    print time.mktime(time.gmtime()) - main_now,"[s]","to complete"
 
 def main():
     """
