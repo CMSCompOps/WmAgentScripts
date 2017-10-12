@@ -26,12 +26,15 @@ def checkor(url, spec=None, options=None):
     if userLock():   return
     if duplicateLock() and not options.go:  return
 
-    ##if not options.go: return ## disable checkor until further notice
 
+    
     fDB = closeoutInfo()
 
     UC = unifiedConfiguration()
     use_recoveror = UC.get('use_recoveror')
+    #if UC.get('step_checkor_down') and not options.go: return 
+    if not options.go: return ## disable checkor until further notice
+
     use_mcm = True
     up = componentInfo(mcm=use_mcm, soft=['mcm'])
     if not up.check(): return
@@ -620,10 +623,10 @@ def checkor(url, spec=None, options=None):
                         wfi.sendLog('checkor',"These %d files are missing in phedex\n%s"%(len(missing_phedex),
                                                                                           "\n".join( missing_phedex )))
                         were_invalidated = sorted(set(missing_phedex) & set(TMDB_invalid ))
-                        if were_invalidated:
+                        if were_invalidated or options.go:
                             wfi.sendLog('checkor',"These %d files were invalidated globally\n%s"%(len(were_invalidated),
                                                                                                   "\n".join(were_invalidated)))
-                            sendLog('checkor',"These %d files were invalidated globally\n%s\nand are invalidated in dbs"%(len(were_invalidated),
+                            sendLog('checkor',"These %d files were invalidated globally\n%s\nand are not invalidated in dbs"%(len(were_invalidated),
                                                                                                                           "\n".join(were_invalidated)), level='critical')
                             dbs3Client.setFileStatus( were_invalidated, newstatus=0 )
                                 
@@ -675,14 +678,17 @@ def checkor(url, spec=None, options=None):
                 bad_files = {}
                 for out in duplications:
                     bad_files[out] = duplicateAnalyzer().files_to_remove( files_per_rl[out] )
-                    duplicate_notice = "These files will be invalidated\n"
-                    duplicate_notice += json.dumps( sorted(bad_files[out]), indent=2)
-                    wfi.sendLog('checkor',duplicate_notice)
+                    if bad_files[out]:
+                        duplicate_notice = "These files will be invalidated\n"
+                        duplicate_notice += json.dumps( sorted(bad_files[out]), indent=2)
+                        wfi.sendLog('checkor',duplicate_notice)
                 
                 ## and invalidate the files in DBS directly witout asking
                 for out,bads in bad_files.items():
-                    invalidateFiles(bads) ## for full removal
-                    dbs3Client.setFileStatus( bads, newstatus=0 ) ## invalidate in dbs in the meantime so that the dataset goes into filemismatch category
+                    if bads:
+                        invalidateFiles(bads) ## for full removal
+                        dbs3Client.setFileStatus( bads, newstatus=0 ) ## invalidate in dbs in the meantime so that the dataset goes into filemismatch category
+                    pass
 
                 assistance_tags.add('duplicates')
                 is_closing = False 
@@ -774,7 +780,6 @@ def checkor(url, spec=None, options=None):
                 
             if picked_a_tape:
                 print "picked",custodial,"for tape copy"
-
                 ## remember how much you added this round already ; this stays locally
                 SI.storage[custodial] -= size_worth_checking
                 ## register the custodial request, if there are no other big issues
@@ -911,11 +916,14 @@ def checkor(url, spec=None, options=None):
         else:
             if not 'custodial' in assistance_tags or wfi.isRelval():
                 ## do only the report for those
+                time_point("Going on and making error reports")
                 for member in acdc+acdc_inactive+[wfo.name]:
                     try:
+                        if options and options.no_report: continue
                         parse_one(url, member)
                     except:
                         print "Could not make error report for",member
+                time_point("Done with reports")
 
             ## full known list
             #recovering # has active ACDC
@@ -1054,6 +1062,7 @@ if __name__ == "__main__":
     parser.add_option('--ignoreduplicates', help='Force ignoring lumi duplicates', default=False, action='store_true')
     parser.add_option('--tape_size_limit', help='The limit in size of all outputs',default=0,type=int)
     parser.add_option('--html',help='make the monitor page',action='store_true', default=False)
+    parser.add_option('--no_report',help='Prevent from making the error report',action='store_true', default=False)
     (options,args) = parser.parse_args()
     spec=None
     if len(args)!=0:

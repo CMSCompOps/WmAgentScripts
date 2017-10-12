@@ -199,8 +199,12 @@
   "value" : 4000,
   "description": "The threshold before choping an input dataset in chunk of that size for spreading to sites"
   },
+  "retrieve_errors_timeout": {
+    "value" : 10,
+    "description" : "Time in minute that we allow to get logs from where they are before shutting retrieval down."
+  },
   "n_error_exposed":{
-    "value" : 2,
+    "value" : 0,
     "description" :"The default number of job cmsrun logs to retrieve"
   },
   "expose_archive_code":{

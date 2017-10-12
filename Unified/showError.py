@@ -17,9 +17,156 @@ from assignSession import *
 import time
 import optparse
 import random
+import threading
+
+class AgentBuster(threading.Thread):
+    def __init__(self, **args):
+        threading.Thread.__init__(self)
+        self.deamon = True
+        for k,v in args.items():
+            setattr(self,k,v)
+
+    def run(self):
+        ## print are all mangled and not even worth adding at this point ...
+        os.system('ssh %s %s/WmAgentScripts/Unified/exec_expose.sh %s %s %s %s %s %s'%( 
+                self.agent, 
+                self.base_eos_dir, 
+                self.workflow, 
+                self.wmbs,
+                self.errorcode_s,
+                self.base_eos_dir,
+                self.monitor_eos_dir,
+                self.task_short))
+
+class XRDBuster(threading.Thread):
+    def __init__(self, **args):
+        threading.Thread.__init__(self)
+        self.deamon = True
+        for k,v in args.items():
+            setattr(self,k,v)
+
+    def run(self):
+        ## print are all mangled and not even worth adding at this point ...
+        if True:
+            if True:
+                if True:
+                    if True:
+                        if True:
+                            if True:
+                                if True:
+                                    
+                                    os.system('mkdir -p /tmp/%s'%(os.getenv('USER')))
+                                    local = '/tmp/%s/%s'%(os.getenv('USER'),self.out_lfn.split('/')[-1])
+                                    command = 'xrdcp root://cms-xrd-global.cern.ch/%s %s'%( self.out_lfn, local)
+                                    print "#"*15,"cmsrun log retrieval","#"*15
+                                    if os.system('ls %s'% local)!=0:
+                                        print "running",command
+                                        ## get the file
+                                        xec = os.system( command )
+                                    else:
+                                        print "the file",local,"already exists"
+                                        xec = 0
+
+                                    ## expose the content
+                                    label=self.out_lfn.split('/')[-1].split('.')[0]
+                                    m_dir = '%s/joblogs/%s/%s/%s/%s'%(self.monitor_eos_dir, 
+                                                                      self.wfn, 
+                                                                      self.errorcode_s,
+                                                                      self.task_short,
+                                                                      label)
+                                    if os.system('ls %s'% local)!=0 and self.from_eos:
+                                        print "no file retrieved using xrootd, using eos source"
+                                        os.system('python /afs/cern.ch/user/v/vlimant/public/ops/whatLog.py --w  %s --log %s --get' %(self.wfn, 
+                                                                                                                                      self.out_lfn.split('/')[-1]) )
+                                        os.system('mv `find /tmp/%s/ -name "%s"` %s'%( os.getenv('USER'), self.out_lfn.split('/')[-1], local))
+
+                                    if os.system('ls %s'% local)==0:
+                                        os.system('mkdir -p %s'%(m_dir))
+                                        os.system('tar zxvf %s -C %s'%(local,m_dir))
+                                        ## truncate the content ??
+                                        actual_logs = os.popen('find %s -type f'%(m_dir)).read().split('\n')
+                                        for fn in actual_logs:
+                                            if not fn: continue
+                                            if not fn.endswith('log'): continue
+                                            if any([p in fn for p in ['stdout.log']]):
+                                                trunc = '/tmp/%s/%s'%(os.getenv('USER'), label)
+                                                #print fn
+                                                #print trunc
+                                                head = tail = 1000
+                                                os.system('(head -%d ; echo;echo;echo "<snip>";echo;echo ; tail -%d ) < %s > %s'%(head, tail, fn, trunc))
+                                                os.system('mv %s %s.trunc.txt'%(trunc, fn))
+                                    else:
+                                        print "no file retrieved in",local
+
+
+class ThreadHandler(threading.Thread):
+    def __init__(self, **args):
+        threading.Thread.__init__(self)
+        self.threads = args['threads']
+        self.n_threads = args['n_threads']
+        self.sleepy = args['sleepy']
+        self.timeout = args.get('timeout',30)
+        self.verbose = args.get('verbose',False)
+
+    def run(self):
+        random.shuffle(self.threads)
+        ntotal=len(self.threads)
+        print "Processing",ntotal,"threads with",self.n_threads,"max concurrent and timeout",self.timeout,'[min]'
+        start_now = time.mktime(time.gmtime())
+        r_threads = []
+        ## check all running threads and move them in r_threads
+        #for t in threads:
+        #    if t.is_alive():
+        #        r_threads.append( t )
+        #        threads.remove( t ) 
+        ## check all finished threads and move them in r_threads
+
+        bug_every=max(len(self.threads) / 10., 100.) ## 10 steps of eta verbosity
+        next_ping = int(len(self.threads)/bug_every)
+        while self.threads:
+            if (time.mktime(time.gmtime()) - start_now) > (self.timeout*60.):
+                print "Stopping to start threads because the time out is over",time.asctime(time.gmtime())
+                ## transfer all to running
+                while self.threads:
+                    r_threads.append( self.threads.pop(-1))
+                ## then we have to kill all threads
+                for t in r_threads:
+                    pass
+                ## and exit the loop
+                self.threads = r_threads
+                return
+
+                
+            running = sum([t.is_alive() for t in r_threads])
+            #if self.verbose: print running,"/",n_threads,"running threads"
+            if self.n_threads==None or running < self.n_threads:
+                startme = self.n_threads-running if self.n_threads else len(self.threads)
+                if self.verbose or int(len(self.threads)/bug_every)<next_ping:
+                    next_ping =int(len(self.threads)/bug_every)
+                    now= time.mktime(time.gmtime())
+                    spend = (now - start_now)
+                    n_done = ntotal-len(self.threads)
+                    print "Starting",startme,"new threads",len(self.threads),"remaining" 
+                    if n_done:
+                        eta = (spend / n_done) * len(self.threads)
+                        print "Will finish in ~%.2f [s]"%(eta)
+                if startme > self.n_threads/5.:
+                    self.sleepy/=2.
+                for it in range(startme):
+                    if self.threads:
+                        r_threads.append( self.threads.pop(-1))
+                        r_threads[-1].start()
+            time.sleep(self.sleepy)
+        ##then wait for completion
+        while sum([t.is_alive() for t in r_threads]):
+            time.sleep(1)
+        
+        ## and swap list back
+        self.threads = r_threads
+
 
 def parse_one(url, wfn, options=None):
-
+    
     def time_point(label="",sub_lap=False):
         now = time.mktime(time.gmtime())
         nows = time.asctime(time.gmtime())
@@ -43,6 +190,7 @@ def parse_one(url, wfn, options=None):
         return task_error_site_count, one_explanation
 
     time_point("Starting with %s"% wfn )
+    threads = []
 
     SI = global_SI()
     UC = unifiedConfiguration()
@@ -217,6 +365,7 @@ def parse_one(url, wfn, options=None):
         n_expose = UC.get('n_error_exposed')
         if options:
             n_expose = options.expose 
+
         expose_archive_code = dict([(str(code), defaultdict(lambda : n_expose)) for code in UC.get('expose_archive_code')])
         expose_condor_code = dict([(str(code), defaultdict(lambda : n_expose)) for code in UC.get('expose_condor_code')])
 
@@ -276,65 +425,38 @@ def parse_one(url, wfn, options=None):
                         wmbs = sample['wmbsid']
                         workflow = sample['workflow']
 
-                        if do_CL and ((errorcode_s in expose_condor_code and expose_condor_code[errorcode_s][agent]) or do_all_error_code) and 'cern' in agent:
-                            #os.system('ssh %s %s/WmAgentScripts/Unified/exec_expose.sh %s %s %s %s %s %s'%( agent, base_dir, workflow, wmbs, errorcode_s, base_dir, monitor_dir, task_short))
-                            os.system('ssh %s %s/WmAgentScripts/Unified/exec_expose.sh %s %s %s %s %s %s'%( agent, base_eos_dir, workflow, wmbs, errorcode_s, base_eos_dir, monitor_eos_dir, task_short))
+
+                        #if do_CL and ((errorcode_s in expose_condor_code and expose_condor_code[errorcode_s][agent]) or do_all_error_code) and 'cern' in agent:
+                        if do_CL and ((errorcode_s in expose_condor_code and expose_condor_code[errorcode_s][agent])) and 'cern' in agent:
                             if errorcode_s in expose_condor_code:
                                 expose_condor_code[errorcode_s][agent]-=1
+                            print errorcode_s,agent,"error count",expose_condor_code.get(errorcode_s,{}).get(agent,0)
+
+                            threads.append(AgentBuster( agent =agent, 
+                                                        workflow = workflow, 
+                                                        wmbs = wmbs, 
+                                                        errorcode_s = errorcode_s, 
+                                                        base_eos_dir = base_eos_dir, 
+                                                        monitor_eos_dir = monitor_eos_dir, 
+                                                        task_short = task_short))
 
                         for out in sample['output']:
                             #print out
                             if out['type'] == 'logArchive':
-                                if do_JL and ((errorcode_s in expose_archive_code and expose_archive_code[errorcode_s][agent]>0) or (do_all_error_code)):
+                                #if do_JL and ((errorcode_s in expose_archive_code and expose_archive_code[errorcode_s][agent]>0) or (do_all_error_code)):
+                                if do_JL and ((errorcode_s in expose_archive_code and expose_archive_code[errorcode_s][agent]>0)):
                                     if errorcode_s in expose_archive_code:
                                         expose_archive_code[errorcode_s][agent]-=1
                                     print errorcode_s,agent,"error count",expose_archive_code.get(errorcode_s,{}).get(agent,0)
-                                    os.system('mkdir -p /tmp/%s'%(os.getenv('USER')))
-                                    local = '/tmp/%s/%s'%(os.getenv('USER'),out['lfn'].split('/')[-1])
-                                    command = 'xrdcp root://cms-xrd-global.cern.ch/%s %s'%( out['lfn'], local)
-                                    print "#"*15,"cmsrun log retrieval","#"*15
-                                    if os.system('ls %s'% local)!=0:
-                                        print "running",command
-                                        ## get the file
-                                        xec = os.system( command )
-                                    else:
-                                        print "the file",local,"already exists"
-                                        xec = 0
 
-                                    if xec!=0 and errorcode_s in expose_archive_code:
-                                        expose_archive_code[errorcode_s][agent]+=1
-                                    ## if this actually fail, let's get the file from eos using the new log mapping
-                                    ## expose the content
-                                    label=out['lfn'].split('/')[-1].split('.')[0]
-                                    m_dir = '%s/joblogs/%s/%s/%s/%s'%(monitor_eos_dir, 
-                                                                   wfn, 
-                                                                   errorcode_s,
-                                                                   task_short,
-                                                                   label)
-                                    if os.system('ls %s'% local)!=0 and (options and options.from_eos):
-                                        print "no file retrieved using xrootd, using eos source"
-                                        os.system('python /afs/cern.ch/user/v/vlimant/public/ops/whatLog.py --w  %s --log %s --get' %(wfn, 
-                                                                                                                                      out['lfn'].split('/')[-1]) )
-                                        os.system('mv `find /tmp/%s/ -name "%s"` %s'%( os.getenv('USER'), out['lfn'].split('/')[-1], local))
-
-                                    if os.system('ls %s'% local)==0:
-                                        os.system('mkdir -p %s'%(m_dir))
-                                        os.system('tar zxvf %s -C %s'%(local,m_dir))
-                                        ## truncate the content ??
-                                        actual_logs = os.popen('find %s -type f'%(m_dir)).read().split('\n')
-                                        for fn in actual_logs:
-                                            if not fn: continue
-                                            if not fn.endswith('log'): continue
-                                            if any([p in fn for p in ['stdout.log']]):
-                                                trunc = '/tmp/%s/%s'%(os.getenv('USER'), label)
-                                                #print fn
-                                                #print trunc
-                                                head = tail = 1000
-                                                os.system('(head -%d ; echo;echo;echo "<snip>";echo;echo ; tail -%d ) < %s > %s'%(head, tail, fn, trunc))
-                                                os.system('mv %s %s.trunc.txt'%(trunc, fn))
-                                    else:
-                                        print "no file retrieved in",local
-                                    
+                                    threads.append( XRDBuster(
+                                                              out_lfn = out['lfn'],
+                                                              monitor_eos_dir = monitor_eos_dir,
+                                                              wfn = wfn,
+                                                              errorcode_s = errorcode_s,
+                                                              task_short = task_short,
+                                                              from_eos = (options.from_eos if options else False),
+                                                              ) )
 
         #print task
         #print json.dumps( total_count, indent=2)
@@ -486,6 +608,12 @@ def parse_one(url, wfn, options=None):
         html+='</table><br>'
         task_error_site_count[task] = error_site_count
 
+    ## run all retrieval
+    run_threads = ThreadHandler( threads = threads, n_threads = 5, sleepy = 10, 
+                                 timeout=UC.get('retrieve_errors_timeout'),
+                                 verbose=True)
+    run_threads.start()
+
     html += '<hr><br>'
     html += "<b>Blocks (%d/%d) needed for recovery</b><br>"%( len(needed_blocks_loc), len(all_blocks))
     for block in sorted(needed_blocks_loc.keys()):
@@ -516,6 +644,16 @@ def parse_one(url, wfn, options=None):
     open('%s/report/%s'%(monitor_dir,fn),'w').write( html )
 
     time_point("Finished with showError")
+
+    ## then wait for the retrivals to complete
+    ping = 0
+    while run_threads.is_alive():
+        ping+=1
+        if ping%10:
+            time_point("waiting for sub-threads to finish")
+        time.sleep(6)
+
+    time_point("Finished with retrieval threads")
 
     return task_error_site_count, one_explanation
 
@@ -568,6 +706,7 @@ if __name__=="__main__":
     parser.add_option('--workflow','-w',help="The workflow to make the error report of",default=None)
     parser.add_option('--expose',help="Number of logs to retrieve",default=1,type=int)
     parser.add_option('--all_errors',help="Bypass and expose all error codes", default=False, action='store_true')
+    #parser.add_option('--no_logs',help="Bypass retrieval of logs", default=False, action='store_true')
     parser.add_option('--from_eos',help="Retrieve from eos",default=False, action='store_true')
     (options,args) = parser.parse_args()
     
@@ -582,3 +721,5 @@ if __name__=="__main__":
         parse_many(url, options)
     else:
         parse_all(url, options)
+
+    print "ultimate",time.asctime(time.gmtime())
