@@ -3014,7 +3014,15 @@ def getDatasetRuns(dataset):
 def getFilesWithLumiInRun(dataset, run):
     dbsapi = DbsApi(url=dbs_url)
     start = time.mktime(time.gmtime())
-    reply = dbsapi.listFiles(dataset=dataset, detail=True, run_num=run, validFileOnly=1) if run!=1 else dbsapi.listFiles(dataset=dataset, detail=True,validFileOnly=1)
+    try:
+        reply = dbsapi.listFiles(dataset=dataset, detail=True, run_num=run, validFileOnly=1) if run!=1 else dbsapi.listFiles(dataset=dataset, detail=True,validFileOnly=1)
+    except:
+        try:
+            reply = dbsapi.listFiles(dataset=dataset, detail=True, run_num=run, validFileOnly=1) if run!=1 else dbsapi.listFiles(dataset=dataset, detail=True,validFileOnly=1)
+        except:
+            sendLog('getFilesWithLumiInRun','Fatal exception in running dbsapi.listFiles for %s %s '% (dataset,run), level='critical')
+            reply = []
+
     #print time.mktime(time.gmtime())-start,'[s]'
     files = [f['logical_file_name'] for f in reply if f['is_file_valid'] == 1]
     start = 0
@@ -3213,10 +3221,13 @@ def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False,
     while sum([t.is_alive() for t in threads]):
         pass
     for t in threads:
+        if not hasattr(t,'res'): 
+            print "not good to not have a result from the thread"
+            continue
         for f in t.res:
-            full_lumi_json[run].update( f['lumi_section_num'] )
+            full_lumi_json[t.r].update( f['lumi_section_num'] )
             for lumi in f['lumi_section_num']:
-                files_per_lumi[(run,lumi)].add( f['logical_file_name'] )            
+                files_per_lumi[(t.r,lumi)].add( f['logical_file_name'] )            
 
     """    
     for run in d_runs:
@@ -3250,11 +3261,15 @@ def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False,
         files_per_lumi['%d:%d'%(rl)] = conv
 
 
-    open(c_name,'w').write( json.dumps(
-            {'lumis' : dict(full_lumi_json),
-             'files' : dict(files_per_lumi),
-             'time' : now}
-            , indent=2))
+    try:
+        open(c_name,'w').write( json.dumps(
+                {'lumis' : dict(full_lumi_json),
+                 'files' : dict(files_per_lumi),
+                 'time' : now}
+                , indent=2))
+    except:
+        print "could not write the cache file out"
+
     return dict(lumi_json),dict(files_json)
 
 
