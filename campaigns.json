@@ -167,11 +167,11 @@
     "custodial_override" : ["DQMIO"],
     "NO_overflow" : {"PRIM" : {}},
     "fractionpass": { "all":1.0, 
-    		      "DQMIO": { "all" : 0.95, 
-		      	       	 "/SingleMuon/" : 1.0,
-     		      	       	 "/SinglePhoton'" : 1.0,
-				 "/ZeroBias/" : 1.0,
-				 "/JetHT/" : 1.0
+    		      "DQMIO": { "all" : 0.90, 
+		      	       	 "/SingleMuon/" : 0.95,
+     		      	       	 "/SinglePhoton'" : 0.95,
+				 "/ZeroBias/" : 0.95,
+				 "/JetHT/" : 0.95
 				 }},
     "lumisize" : -1,
     "maxcopies" : 1,
