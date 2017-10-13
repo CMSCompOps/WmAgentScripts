@@ -150,16 +150,25 @@ def equalizor(url , specific = None, options=None):
             if prevent in mapping[src]:
                 mapping[src].remove( prevent )
 
+
+    take_site_out = UC.get('site_out_of_overflow')
+
     ## create the reverse mapping for the condor module
     for site,fallbacks in mapping.items():
         for fb in fallbacks:
             if fb == site: 
                 mapping[site].remove(fb)
                 continue
+            if fb in take_site_out:
+                mapping[site].remove(fb)
+                continue
             if not site in reversed_mapping[fb]:
                 reversed_mapping[fb].append(site)
 
-    for site in mapping:
+    for site in mapping.keys():
+        if site in take_site_out:
+            mapping.pop(site)
+            continue
         mapping[site] = list(set(mapping[site]))
 
     ## this is the fallback mapping

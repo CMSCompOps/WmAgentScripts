@@ -3,6 +3,10 @@
    "value" : ["vlimant@cern.ch","matteoc@fnal.gov","areinsvo@nd.edu","thong@caltech.edu"],
    "description" : "The list of people that get the emails notifications"
  },
+ "site_out_of_overflow": {
+   "value" : ["T1_UK_RAL"],
+   "description" : "The sites that shoudl be taken out completely from the overflow mapping"
+ },
  "site_for_overflow": {
    "value" : ["T2_CH_CERN_HLT",
    	     "nonono_T0_CH_CERN"],
