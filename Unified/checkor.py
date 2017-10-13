@@ -33,18 +33,20 @@ def checkor(url, spec=None, options=None):
     UC = unifiedConfiguration()
     use_recoveror = UC.get('use_recoveror')
     #if UC.get('step_checkor_down') and not options.go: return 
-    if not options.go: return ## disable checkor until further notice
+    #if not options.go: return ## disable checkor until further notice
 
     use_mcm = True
     up = componentInfo(mcm=use_mcm, soft=['mcm'])
     if not up.check(): return
     use_mcm = up.status['mcm']
 
-    def time_point(label="",sub_lap=False):
+    def time_point(label="",sub_lap=False, percent=None):
         now = time.mktime(time.gmtime())
         nows = time.asctime(time.gmtime())
 
         print "[checkor] Time check (%s) point at : %s"%(label, nows)
+        if percent:
+            print "[checkor] finishing in about %.2f [s]" %( (now - time_point.start) / percent )
         print "[checkor] Since start: %s [s]"% ( now - time_point.start)
         if sub_lap:
             print "[checkor] Sub Lap : %s [s]"% ( now - time_point.sub_lap ) 
@@ -172,10 +174,11 @@ def checkor(url, spec=None, options=None):
 
     pattern_fraction_pass = UC.get('pattern_fraction_pass')
 
-    total_running_time = 5.*60. 
+    total_running_time = 1.*60. 
     sleep_time = 1
+    will_do_that_many = len(wfs)
     if len(wfs):
-        sleep_time = min(max(0.5, total_running_time / len(wfs)), 10)
+        sleep_time = min(max(0.5, total_running_time / will_do_that_many), 10)
 
     random.shuffle( wfs )
 
@@ -183,15 +186,6 @@ def checkor(url, spec=None, options=None):
 
     ## now you have a record of what file was invalidated globally from TT
     TMDB_invalid = dataCache.get('file_invalidation') 
-    #try:
-    #    TMDB_invalid = set([row[3] for row in csv.reader( os.popen('curl -s "https://docs.google.com/spreadsheets/d/11fFsDOTLTtRcI4Q3gXw0GNj4ZS8IoXMoQDC3CbOo_2o/export?format=csv"'))])
-    #    TMDB_invalid = map(lambda e : e.split(':')[-1], TMDB_invalid)
-    #    print len(TMDB_invalid),"globally invalidated files"
-    #except Exception as e:
-    #    print "TMDB not fetched"
-    #    print str(e)
-    #    TMDB_invalid = []
-
 
     print len(wfs),"to consider, pausing for",sleep_time
     max_per_round = UC.get('max_per_round').get('checkor',None)
@@ -199,13 +193,13 @@ def checkor(url, spec=None, options=None):
     if max_per_round and not spec: wfs = wfs[:max_per_round]
 
 
-
-    for wfo in wfs:
+    
+    for iwfo,wfo in enumerate(wfs):
         if spec and not (spec in wfo.name): continue
         
         time.sleep( sleep_time )
         
-        time_point("Starting checkor with with %s"% wfo.name)
+        time_point("Starting checkor with with %s Progress [%d/%d]"% (wfo.name, iwfo, will_do_that_many), percent = float(iwfo)/will_do_that_many)
 
         ## get info
         wfi = workflowInfo(url, wfo.name)
@@ -237,7 +231,7 @@ def checkor(url, spec=None, options=None):
             session.commit()
             continue
         
-        if wfo.wm_status != 'completed' and not wfo.name in exceptions: #and not wfo.name in bypasses:
+        if wfo.wm_status != 'completed' and not wfo.name in exceptions:
             ## for sure move on with closeout check if in completed
             wfi.sendLog('checkor',"no need to check on %s in status %s"%(wfo.name, wfo.wm_status))
             session.commit()
@@ -376,6 +370,17 @@ def checkor(url, spec=None, options=None):
 
         ## completion check
         percent_completions = {}
+        percent_avg_completions = {}
+        fractions_pass = {}
+        fractions_announce = {}
+        events_per_lumi = {}
+
+        over_100_pass = False
+        (lhe,prim,_,_) = wfi.getIO()
+        if lhe or prim: over_100_pass = False
+
+
+        ### get what is expected in input
         if not 'TotalInputEvents' in wfi.request:
             event_expected,lumi_expected = 0,0
             if not 'recovery' in wfo.status:
@@ -399,34 +404,19 @@ def checkor(url, spec=None, options=None):
         ## We should only rely on lumis_expected
         event_expected = 0 
 
-        fractions_pass = {}
-        events_per_lumi = {}
-
-        over_100_pass = False
-        (lhe,prim,_,_) = wfi.getIO()
-        if lhe or prim: over_100_pass = False
 
         time_point("expected statistics", sub_lap=True)
 
 
         for output in wfi.request['OutputDatasets']:
-            event_count,lumi_count = getDatasetEventsAndLumis(dataset=output)
-            events_per_lumi[output] = event_count/float(lumi_count) if lumi_count else 100
-            percent_completions[output] = 0.
-
-            if lumi_expected:
-                wfi.sendLog('checkor', "lumi completion %s expected %d"%( lumi_count, lumi_expected))
-                percent_completions[output] = lumi_count / float( lumi_expected )
-
-            if event_expected:
-                e_fraction = float(event_count) / float( event_expected )
-                if e_fraction > percent_completions[output]:
-                    percent_completions[output] = e_fraction
-                    wfi.sendLog('checkor', "event completion real %s expected %s"%(event_count, event_expected ))
-
             default_pass = UC.get('default_fraction_pass')
             fractions_pass[output] = default_pass
+            fractions_announce[output] = 1.0
             c = campaigns[output]
+            if c in CI.campaigns and 'earlyannounce' in CI.campaigns[c]:
+                wfi.sendLog('checkor', "Allowed to announce the output %s over %.2f"%(out, CI.campaigns[c]['earlyannounce']))
+                fractions_announce[output] = CI.campaigns[c]['earlyannounce']
+
             if c in CI.campaigns and 'fractionpass' in CI.campaigns[c]:
                 if type(CI.campaigns[c]['fractionpass']) == dict:
                     tier = output.split('/')[-1]
@@ -456,6 +446,25 @@ def checkor(url, spec=None, options=None):
                 if key in output:
                     fractions_pass[output] = pattern_fraction_pass[key]
                     print "overriding fraction to",fractions_pass[output],"by dataset key",key
+
+        time_point("statistics thresholds", sub_lap=True)
+
+        for output in wfi.request['OutputDatasets']:
+            event_count,lumi_count = getDatasetEventsAndLumis(dataset=output)
+            events_per_lumi[output] = event_count/float(lumi_count) if lumi_count else 100
+            percent_completions[output] = 0.
+
+            if lumi_expected:
+                wfi.sendLog('checkor', "lumi completion %s expected %d"%( lumi_count, lumi_expected))
+                percent_completions[output] = lumi_count / float( lumi_expected )
+
+            if event_expected:
+                e_fraction = float(event_count) / float( event_expected )
+                if e_fraction > percent_completions[output]:
+                    percent_completions[output] = e_fraction
+                    wfi.sendLog('checkor', "event completion real %s expected %s"%(event_count, event_expected ))
+
+        time_point("observed statistics", sub_lap=True)
                     
         pass_stats_check = dict([(out, bypass_checks or (percent_completions[out] >= fractions_pass[out])) for out in fractions_pass ])
 
@@ -493,17 +502,32 @@ def checkor(url, spec=None, options=None):
                         if denom:
                             fraction_per_run[run] = float(len(numer))/len(denom)
                         else:
+                            
                             print "for run",run,"in output, there isnt any run in input..."
-                    lowest_fraction = min( fraction_per_run.values())
-                    highest_fraction = max( fraction_per_run.values())
-                    average_fraction = sum(fraction_per_run.values())/len(fraction_per_run.values())
-                    print "the lowest completion fraction per run for",out," is",lowest_fraction
-                    print "the highest completion fraction per run for",out," is",highest_fraction
-                    print "the average completion fraction per run for",out," is",average_fraction
-                    percent_completions[out] = lowest_fraction
+                    if fraction_per_run:
+                        lowest_fraction = min( fraction_per_run.values())
+                        highest_fraction = max( fraction_per_run.values())
+                        average_fraction = sum(fraction_per_run.values())/len(fraction_per_run.values())
+                        print "the lowest completion fraction per run for",out," is",lowest_fraction
+                        print "the highest completion fraction per run for",out," is",highest_fraction
+                        print "the average completion fraction per run for",out," is",average_fraction
+                        percent_avg_completions[out] = average_fraction
+                        percent_completions[out] = lowest_fraction
                 
-        pass_stats_check = dict([(out, bypass_checks or (percent_completions[out] >= fractions_pass[out])) for out in fractions_pass ])
+        time_point("more detailed observed statistics", sub_lap=True)
 
+        pass_stats_check = dict([(out, bypass_checks or (percent_completions[out] >= fractions_pass[out])) for out in fractions_pass ])
+        #pass_stats_check_to_announce = dict([(out, (percent_completions[out] >= fractions_announce[out])) for out in fractions_pass ])
+        pass_stats_check_to_announce = dict([(out, (percent_avg_completions[out] >= fractions_announce[out])) for out in fractions_pass ])
+        should_announce = False
+
+        if all(pass_stats_check_to_announce) and not wfo.status.endswith('-announced'):
+            print "The output of this workflow are essentially good to be announced while we work on the rest"
+            ## edit the status to something funnier
+            #wfo.status += '-announce'
+            #assistance_tags.add('announce')
+            should_announce = True
+        
 
         #if not all([percent_completions[out] >= fractions_pass[out] for out in fractions_pass]):
         if not all(pass_stats_check.values()):
@@ -523,6 +547,7 @@ def checkor(url, spec=None, options=None):
             if not bypass_checks:
                 ###############################
                 assistance_tags.add('recovery' if use_recoveror else 'manual')
+                in_manual += 0 if use_recoveror else 1
                 ###############################
                 is_closing = False
         else:
@@ -956,7 +981,7 @@ def checkor(url, spec=None, options=None):
             ## that means there is something that needs to be done acdc, lumi invalidation, custodial, name it
             print wfo.name,"needs assistance with",",".join( assistance_tags )
             print wfo.name,"existing conditions",",".join( existing_assistance_tags )
-            
+        
             #########################################
             ##### notification to requester #########
             go_notify=False
@@ -1006,6 +1031,9 @@ def checkor(url, spec=None, options=None):
                 new_status = 'assistance-'+'-'.join(sorted(assistance_tags) )
             else:
                 new_status = 'assistance'
+                
+            if should_announce:
+                new_status += '-announce'
 
             ## case where the workflow was in manual from recoveror
             if not 'manual' in wfo.status or new_status!='assistance-recovery':
@@ -1016,11 +1044,24 @@ def checkor(url, spec=None, options=None):
             else:
                 print "current status is",wfo.status,"not changing to anything"
 
-    #open('already_notifified.json','w').write( json.dumps( already_notified , indent=2))
 
     fDB.html()
     if not spec and in_manual!=0:
-        sendEmail("fresh assistance status available","Fresh status are available at %s/assistance.html"%unified_url,destination=['katherine.rozo@cern.ch'])
+        some_details = ""
+        if options.strict:
+            some_details +="Workflows which just got in completed were looked at. Look in manual.\n"
+        if options.update:
+            some_details +="Workflows that are still running (and not completed) got looked at.\n"
+        if options.clear:
+            some_details +="Workflows that just need to close-out were verified. Nothing too new a-priori.\n"
+        if options.review:
+            some_details +="Workflows under intervention got review.\n"
+        count_statuses = defaultdict(int)
+        for wfo in session.query(Workflow).filter(Worklow.status.startswith('assistance')).all():
+            count_statuses[wfo.status]+=1
+        for st in sorted(count_statuses.keys()):
+            some_details += '%3d in status %s'%( st, count_statuses[st])
+        sendEmail("fresh assistance status available","Fresh status are available at %s/assistance.html\n%s"%(unified_url, some_details),destination=['katherine.rozo@cern.ch'])
         #it's a bit annoying
         pass
 

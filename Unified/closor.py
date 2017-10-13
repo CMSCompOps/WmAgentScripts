@@ -155,12 +155,12 @@ def closor(url, specific=None, options=None):
 
     all_late_files = []
     check_fullcopy_to_announce = UC.get('check_fullcopy_to_announce')
-    ## manually closed-out workflows should get to close with checkor
-    #if specific:
-    #    wfs = session.query(Workflow).filter(Workflow.status=='close').filter(Workflow.name.contains(specific)).all()
-    #else:
-    #wfs = session.query(Workflow).filter(Workflow.status=='close').all()     
-    wfs = session.query(Workflow).filter(Workflow.status=='close').all()
+
+    jump_the_line = options.announce if options else False
+    if jump_the_line:
+        wfs = session.query(Workflow).filter(Workflow.status.endswith('-announce')).all()
+    else:
+        wfs = session.query(Workflow).filter(Workflow.status=='close').all()
 
     held = set()
 
@@ -170,34 +170,7 @@ def closor(url, specific=None, options=None):
     random.shuffle( wfs )    
     if max_per_round: wfs = wfs[:max_per_round]
 
-    #batches = json.loads(open('batches.json').read())
-    #by_batch = {}
-    #batch_semaphore = defaultdict(int)
-    #for bname in batches:
-    #    for pid in batches[bname]:
-    #        ## temporary check for adding prepid in batches
-    #        by_batch[pid] = bname
-
-    ## first go over everything and give it an extra go from batch
-    #batches_to_go = set()
-    #for wfo in wfs:
-    #    wfi = workflowInfo(url, wfo.name )
-    #    ## we want all the wf of the same batch to be in the close status before giving it a full go
-    #    #pid = wfi.request['PrepID']
-    #    #if pid in by_batch:
-    #    #    batch_semaphore[by_batch[pid]] += 1
-    #    if wfi.isRelva():
-    #        batches_to_go.add( wfi.getCampaign() )
-    #        by_batch[wfi.request['PrepID']] = wfi.getCampaign()
-
-    ## check on all batches to go if the workflows are not still to be completed
     batch_go = {}
-    #for b in batches_to_go:
-    #    in_batches = getWorkflowByCampaign(url , b, details=True)
-    #    batch_go[ b ] =  all(lambda s : not s in ['completed','running-open','running-closed','acquired','assigned','assignment-approved'], [r['RequestStatus'] for r in in_batches])
-
-    #batch_go = dict([(batch_name, len(batch_content) and len(batch_content)== batch_semaphore[batch_name]) for batch_name,batch_content in batches.items()])
-
     batch_warnings = defaultdict(set)
     batch_goodness = UC.get("batch_goodness")
 
@@ -221,10 +194,6 @@ def closor(url, specific=None, options=None):
             if not has_batch_go:
                 wfi.sendLog('closor', 'Cannot close for now because the batch %s is not all close'% batch_name)
                 continue
-        #prepid = wfi.request['PrepID']
-        #if prepid in by_batch and not batch_go[by_batch[prepid]]: 
-        #    wfi.sendLog('closor', 'Cannot close for now because the batch %s is not all close'% by_batch[prepid])
-        #    continue
 
 
         if wfi.request['RequestStatus'] in  ['announced','normal-archived'] and not options.force:
@@ -233,6 +202,9 @@ def closor(url, specific=None, options=None):
             wfo.wm_status = wfi.request['RequestStatus']
             wfi.sendLog('closor','%s is announced already : %s'%( wfo.name,wfo.wm_status))
         session.commit()
+
+        if jump_the_line:
+            wfi.sendLog('closor','Announcing while completing')
 
         expected_lumis = 1
         if not 'TotalInputLumis' in wfi.request:
@@ -308,22 +280,20 @@ def closor(url, specific=None, options=None):
     
         ## verify if we have to do harvesting
 
-        if not options.no_harvest:
+        if not options.no_harvest or not jump_the_line:
             (OK, requests) = spawn_harvesting(url, wfi, in_full)
             all_OK.update( OK )
 
         ## only that status can let me go into announced
-        if all(all_OK.values()) and ((wfi.request['RequestStatus'] in ['closed-out']) or options.force):
+        if all(all_OK.values()) and ((wfi.request['RequestStatus'] in ['closed-out']) or options.force or jump_the_line):
             print wfo.name,"to be announced"
-            results=[]#'dummy']
+            results=[]
             if not results:
                 for out in outputs:
                     if out in stats and not stats[out]: 
                         continue
                     _,dsn,process_string,tier = out.split('/')
-                    #tier = out.split('/')[-1]
-                    #process_string = out.split(',')[-2]
-                    #dsn = out.split(',')[-3]
+
                     if all_OK[out]:
                         results.append(setDatasetStatus(out, 'VALID'))
                     if all_OK[out] and wfi.isRelval():
@@ -430,26 +400,30 @@ def closor(url, specific=None, options=None):
                         results.append('No Stats')
 
                 if all(map(lambda result : result in ['None',None,True],results)):
-                    ## only announce if all previous are fine
-                    res = reqMgrClient.announceWorkflowCascade(url, wfo.name)
-                    if not res in ['None',None]:
-                        ## check the status again, it might well have toggled
-                        wl_bis = workflowInfo(url, wfo.name)
-                        wfo.wm_status = wl_bis.request['RequestStatus']
-                        session.commit()
-                        if wl_bis.request['RequestStatus'] in  ['announced','normal-archived']:
-                            res = None
-                        else:
-                            ## retry ?
-                            res = reqMgrClient.announceWorkflowCascade(url, wfo.name) 
+                    if not jump_the_line:
+                        ## only announce if all previous are fine
+                        res = reqMgrClient.announceWorkflowCascade(url, wfo.name)
+                        if not res in ['None',None]:
+                            ## check the status again, it might well have toggled
+                            wl_bis = workflowInfo(url, wfo.name)
+                            wfo.wm_status = wl_bis.request['RequestStatus']
+                            session.commit()
+                            if wl_bis.request['RequestStatus'] in  ['announced','normal-archived']:
+                                res = None
+                            else:
+                                ## retry ?
+                                res = reqMgrClient.announceWorkflowCascade(url, wfo.name) 
                             
-                    results.append( res )
+                        results.append( res )
                                 
             #print results
             if all(map(lambda result : result in ['None',None,True],results)):
-                wfo.status = 'done'
+                if jump_the_line:
+                    wfo.status.replace('-announce','-announced')
+                else:
+                    wfo.status = 'done'
                 session.commit()
-                wfi.sendLog('closor',"workflow is announced")
+                wfi.sendLog('closor',"workflow outputs are announced")
             else:
                 wfi.sendLog('closor',"Error with %s to be announced \n%s"%( wfo.name, json.dumps( results )))
             
@@ -527,6 +501,7 @@ if __name__ == "__main__":
     parser.add_option('--no_harvest',help='Bypass the harvesting',default=False,action='store_true')
     parser.add_option('--limit',help="Number of workflow to pass",default=0, type=int)
     parser.add_option('--force', help="Force pushing the workflow through", default=False,action='store_true')
+    parser.add_option('--announce', help="Announce the outputs that should be announced", default=False,action='store_true')
     (options,args) = parser.parse_args()
 
     spec=None
