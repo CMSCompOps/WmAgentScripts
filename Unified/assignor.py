@@ -494,23 +494,26 @@ def assignor(url ,specific = None, talk=True, options=None):
             parameters['execute'] = True
 
         hold_split, split_check = wfh.checkSplitting()
+        if hold_split and not options.go:
+            if split_check:
+                wfh.sendLog('assignor','Holding on to the change in splitting %s'%( '\n\n'.join([str(i) for i in split_check])))
+            else:
+                wfh.sendLog('assignor','Change of splitting is on hold')                
+            n_stalled+=1
+            continue            
+
         if split_check==None or split_check==False:
             n_stalled+=1
             continue
         elif split_check:
-            if hold_split and not options.go:
-                wfh.sendLog('assignor','Recommending the change in splitting %s'%( '\n\n'.join([str(i) for i in split_check])))
-                n_stalled+=1
-                continue
             ## operate all recommended changes
             reqMgrClient.setWorkflowSplitting(url, 
                                               wfo.name,
                                               split_check)
             wfh.sendLog('assignor','Applying the change in splitting %s'%( '\n\n'.join([str(i) for i in split_check])))
-            #sendLog('assignor','Applying the change in splitting %s'%( '\n\n'.join([str(i) for i in split_check])), level='critical')
 
-        #split_check = wfh.checkWorkflowSplitting()
         split_check = True ## bypass completely and use the above
+        """
         if split_check!=True:
             parameters.update( split_check )
             if 'NoGo' in split_check.values():
@@ -534,6 +537,7 @@ def assignor(url ,specific = None, talk=True, options=None):
                 sendLog('assignor',"the workflow %s is too heavy in number of jobs explosion"%wfo.name, level='critical')
             elif 'EventsPerLumi' in split_check.values():
                 wfh.sendLog('assignor', "Modifying the number of events per lumi to be able to process this")
+        """
 
         # Handle run-dependent MC
         pstring = wfh.processingString()
