@@ -3178,7 +3178,7 @@ def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False,
         opened = json.loads(open(c_name).read())
         if 'time' in opened:
             record_time = opened['time']
-            if (now-record_time)<(1*60*60):
+            if (now-record_time)<(0.5*60*60): ## 0 ?
                 with_cache=True ## if the record is less than 1 hours, it will get it from cache
         else:
             with_cache = False ## force new caches
