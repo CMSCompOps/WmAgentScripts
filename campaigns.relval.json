@@ -1524,14 +1524,14 @@
     "fractionpass": 0.0, 
     "go": true
   }, 
-  "CMSSW_9_1_1_patch1__UPSG_MuonAging_SNB_MaskedME0iRPC_PU200_highPU-1498672363": {
+  "CMSSW_9_1_0_pre2__fastSim_premix_nosignal-1491512069": {
     "parameters": {
       "SiteWhitelist": [
-        "T2_US_Nebraska"
+        "T1_US_FNAL"
       ], 
       "MergedLFNBase": "/store/relval", 
-      "Team": "relval", 
-      "NonCustodialGroup": "RelVal"
+      "NonCustodialGroup": "RelVal", 
+      "Team": "relval"
     }, 
     "maxcopies": 1, 
     "custodial": "T1_US_FNAL_MSS", 
@@ -2161,26 +2161,6 @@
     "fractionpass": 0.0, 
     "go": true
   }, 
-  "CMSSW_9_2_11__ALCA_47-2017_10_09_20_06": {
-    "custodial_override": [
-      "DQMIO"
-    ], 
-    "parameters": {
-      "SiteWhitelist": [
-        "T1_US_FNAL"
-      ], 
-      "MergedLFNBase": "/store/relval", 
-      "Team": "relval", 
-      "NonCustodialGroup": "RelVal"
-    }, 
-    "maxcopies": 1, 
-    "custodial": "T1_US_FNAL_MSS", 
-    "lumisize": -1, 
-    "phedex_group": "RelVal", 
-    "fractionpass": 0.0, 
-    "go": true, 
-    "primary_AAA": true
-  }, 
   "CMSSW_9_3_0_pre3__UPSG_Std_2023D17PU140_highPU-1502023481": {
     "parameters": {
       "SiteWhitelist": [
@@ -2533,6 +2513,22 @@
     "fractionpass": 0.0, 
     "go": true, 
     "primary_AAA": true
+  }, 
+  "CMSSW_9_1_0_pre2__data2016B-1491331968": {
+    "parameters": {
+      "SiteWhitelist": [
+        "T1_US_FNAL"
+      ], 
+      "MergedLFNBase": "/store/relval", 
+      "Team": "relval", 
+      "NonCustodialGroup": "RelVal"
+    }, 
+    "maxcopies": 1, 
+    "custodial": "T1_US_FNAL_MSS", 
+    "lumisize": -1, 
+    "phedex_group": "RelVal", 
+    "fractionpass": 0.0, 
+    "go": true
   }, 
   "CMSSW_9_2_9__fullsim_noPU_2017_set1-1502741117": {
     "parameters": {
@@ -3113,14 +3109,14 @@
     "fractionpass": 0.0, 
     "go": true
   }, 
-  "CMSSW_9_1_0_pre2__fastSim_premix_nosignal-1491512069": {
+  "CMSSW_9_1_1_patch1__UPSG_MuonAging_SNB_MaskedME0iRPC_PU200_highPU-1498672363": {
     "parameters": {
       "SiteWhitelist": [
-        "T1_US_FNAL"
+        "T2_US_Nebraska"
       ], 
       "MergedLFNBase": "/store/relval", 
-      "NonCustodialGroup": "RelVal", 
-      "Team": "relval"
+      "Team": "relval", 
+      "NonCustodialGroup": "RelVal"
     }, 
     "maxcopies": 1, 
     "custodial": "T1_US_FNAL_MSS", 
@@ -3196,22 +3192,6 @@
     "fractionpass": 0.0, 
     "go": true
   }, 
-  "CMSSW_9_0_0__fullsim_noPU_2017_set4_gcc630-1490975845": {
-    "parameters": {
-      "SiteWhitelist": [
-        "T1_US_FNAL"
-      ], 
-      "MergedLFNBase": "/store/relval", 
-      "NonCustodialGroup": "RelVal", 
-      "Team": "relval"
-    }, 
-    "maxcopies": 1, 
-    "custodial": "T1_US_FNAL_MSS", 
-    "lumisize": -1, 
-    "phedex_group": "RelVal", 
-    "fractionpass": 0.0, 
-    "go": true
-  }, 
   "CMSSW_8_0_27__ALCARELVAL-2017_04_18_16_45": {
     "parameters": {
       "SiteWhitelist": [
@@ -3245,6 +3225,22 @@
     "go": true
   }, 
   "CMSSW_8_0_27__ALCARELVAL-2017_04_18_16_41": {
+    "parameters": {
+      "SiteWhitelist": [
+        "T1_US_FNAL"
+      ], 
+      "MergedLFNBase": "/store/relval", 
+      "Team": "relval", 
+      "NonCustodialGroup": "RelVal"
+    }, 
+    "maxcopies": 1, 
+    "custodial": "T1_US_FNAL_MSS", 
+    "lumisize": -1, 
+    "phedex_group": "RelVal", 
+    "fractionpass": 0.0, 
+    "go": true
+  }, 
+  "CMSSW_9_3_0_pre2__fastsim_noPU-1500029007": {
     "parameters": {
       "SiteWhitelist": [
         "T1_US_FNAL"
@@ -3762,21 +3758,18 @@
     "fractionpass": 0.0, 
     "go": true
   }, 
-  "CMSSW_9_1_0_pre1__UPSG_VBF_PU140-1492882215": {
+  "CMSSW_9_0_0_pre4__data2016B-1487931138": {
+    "go": true, 
+    "lumisize": -1, 
+    "custodial": "T1_US_FNAL_MSS", 
+    "phedex_group": "RelVal", 
     "parameters": {
       "SiteWhitelist": [
         "T1_US_FNAL"
       ], 
       "MergedLFNBase": "/store/relval", 
-      "NonCustodialGroup": "RelVal", 
       "Team": "relval"
-    }, 
-    "maxcopies": 1, 
-    "custodial": "T1_US_FNAL_MSS", 
-    "lumisize": -1, 
-    "phedex_group": "RelVal", 
-    "fractionpass": 0.0, 
-    "go": true
+    }
   }, 
   "CMSSW_9_1_0_pre1__cosmics_data-1490292922": {
     "parameters": {
@@ -4012,6 +4005,25 @@
     "fractionpass": 0.0, 
     "go": true
   }, 
+  "CMSSW_9_4_0_pre2__pmx_PU_noSig_ph0-1507820941": {
+    "custodial_override": [
+      "DQMIO"
+    ], 
+    "parameters": {
+      "SiteWhitelist": [
+        "T1_US_FNAL"
+      ], 
+      "MergedLFNBase": "/store/relval", 
+      "Team": "relval", 
+      "NonCustodialGroup": "RelVal"
+    }, 
+    "maxcopies": 1, 
+    "custodial": "T1_US_FNAL_MSS", 
+    "lumisize": -1, 
+    "phedex_group": "RelVal", 
+    "fractionpass": 0.0, 
+    "go": true
+  }, 
   "CMSSW_9_2_1__fullsimPU_2017-1496482775": {
     "parameters": {
       "SiteWhitelist": [
@@ -4103,6 +4115,22 @@
       "MergedLFNBase": "/store/relval", 
       "Team": "relval", 
       "NonCustodialGroup": "RelVal"
+    }, 
+    "maxcopies": 1, 
+    "custodial": "T1_US_FNAL_MSS", 
+    "lumisize": -1, 
+    "phedex_group": "RelVal", 
+    "fractionpass": 0.0, 
+    "go": true
+  }, 
+  "CMSSW_9_3_0_pre5__fullsim_noPU_2017_set4-1504519171": {
+    "parameters": {
+      "SiteWhitelist": [
+        "T1_US_FNAL"
+      ], 
+      "MergedLFNBase": "/store/relval", 
+      "NonCustodialGroup": "RelVal", 
+      "Team": "relval"
     }, 
     "maxcopies": 1, 
     "custodial": "T1_US_FNAL_MSS", 
@@ -4714,6 +4742,22 @@
     "fractionpass": 0.0, 
     "go": true
   }, 
+  "CMSSW_9_3_0_pre3__cosmics_mc-1502094426": {
+    "parameters": {
+      "SiteWhitelist": [
+        "T1_US_FNAL"
+      ], 
+      "MergedLFNBase": "/store/relval", 
+      "Team": "relval", 
+      "NonCustodialGroup": "RelVal"
+    }, 
+    "maxcopies": 1, 
+    "custodial": "T1_US_FNAL_MSS", 
+    "lumisize": -1, 
+    "phedex_group": "RelVal", 
+    "fractionpass": 0.0, 
+    "go": true
+  }, 
   "CMSSW_9_2_2__fullSim_noPU_2018-1497040541": {
     "parameters": {
       "SiteWhitelist": [
@@ -4859,22 +4903,6 @@
     "fractionpass": 0.0, 
     "go": true, 
     "primary_AAA": true
-  }, 
-  "CMSSW_9_3_0_pre4__fullsimPU_2017-1503366723": {
-    "parameters": {
-      "SiteWhitelist": [
-        "T1_US_FNAL"
-      ], 
-      "MergedLFNBase": "/store/relval", 
-      "NonCustodialGroup": "RelVal", 
-      "Team": "relval"
-    }, 
-    "maxcopies": 1, 
-    "custodial": "T1_US_FNAL_MSS", 
-    "lumisize": -1, 
-    "phedex_group": "RelVal", 
-    "fractionpass": 0.0, 
-    "go": true
   }, 
   "CMSSW_9_2_9__fullsim_noPU_2017_set3-1502743900": {
     "parameters": {
@@ -5185,22 +5213,6 @@
     "go": true
   }, 
   "CMSSW_9_1_0_pre3__pmx_PU_noSig_2017-1493933183": {
-    "parameters": {
-      "SiteWhitelist": [
-        "T1_US_FNAL"
-      ], 
-      "MergedLFNBase": "/store/relval", 
-      "Team": "relval", 
-      "NonCustodialGroup": "RelVal"
-    }, 
-    "maxcopies": 1, 
-    "custodial": "T1_US_FNAL_MSS", 
-    "lumisize": -1, 
-    "phedex_group": "RelVal", 
-    "fractionpass": 0.0, 
-    "go": true
-  }, 
-  "CMSSW_9_4_0_pre1__data2017D_TrkDPGstudy_HLTcondnew-1506352089": {
     "parameters": {
       "SiteWhitelist": [
         "T1_US_FNAL"
@@ -5554,18 +5566,21 @@
     "go": true, 
     "primary_AAA": true
   }, 
-  "CMSSW_9_0_0_pre4__data2016B-1487931138": {
-    "go": true, 
-    "lumisize": -1, 
-    "custodial": "T1_US_FNAL_MSS", 
-    "phedex_group": "RelVal", 
+  "CMSSW_9_1_0_pre1__UPSG_VBF_PU140-1492882215": {
     "parameters": {
       "SiteWhitelist": [
         "T1_US_FNAL"
       ], 
       "MergedLFNBase": "/store/relval", 
+      "NonCustodialGroup": "RelVal", 
       "Team": "relval"
-    }
+    }, 
+    "maxcopies": 1, 
+    "custodial": "T1_US_FNAL_MSS", 
+    "lumisize": -1, 
+    "phedex_group": "RelVal", 
+    "fractionpass": 0.0, 
+    "go": true
   }, 
   "CMSSW_9_0_0_pre2_ROOT6__fullsim_PU_LHE-1489490205": {
     "parameters": {
@@ -5599,14 +5614,17 @@
     "fractionpass": 0.0, 
     "go": true
   }, 
-  "CMSSW_9_1_2_patch1__UPSG_Std_noPU_EA3000Ultimate-1503058057": {
+  "CMSSW_9_2_9__fullsimPU2017_pmx_ZEE_v2GTPF16-1507808947": {
+    "custodial_override": [
+      "DQMIO"
+    ], 
     "parameters": {
       "SiteWhitelist": [
         "T1_US_FNAL"
       ], 
       "MergedLFNBase": "/store/relval", 
-      "Team": "relval", 
-      "NonCustodialGroup": "RelVal"
+      "NonCustodialGroup": "RelVal", 
+      "Team": "relval"
     }, 
     "maxcopies": 1, 
     "custodial": "T1_US_FNAL_MSS", 
@@ -7351,14 +7369,14 @@
     "go": true, 
     "primary_AAA": true
   }, 
-  "CMSSW_9_3_0_pre5__fastsim_noPU-1504524030": {
+  "CMSSW_9_1_0_pre3__premix_PU_noSignal-1493826624": {
     "parameters": {
       "SiteWhitelist": [
         "T1_US_FNAL"
       ], 
       "MergedLFNBase": "/store/relval", 
-      "Team": "relval", 
-      "NonCustodialGroup": "RelVal"
+      "NonCustodialGroup": "RelVal", 
+      "Team": "relval"
     }, 
     "maxcopies": 1, 
     "custodial": "T1_US_FNAL_MSS", 
@@ -8086,6 +8104,22 @@
     "parameters": {
       "SiteWhitelist": [
         "T2_US_Purdue"
+      ], 
+      "MergedLFNBase": "/store/relval", 
+      "Team": "relval", 
+      "NonCustodialGroup": "RelVal"
+    }, 
+    "maxcopies": 1, 
+    "custodial": "T1_US_FNAL_MSS", 
+    "lumisize": -1, 
+    "phedex_group": "RelVal", 
+    "fractionpass": 0.0, 
+    "go": true
+  }, 
+  "CMSSW_8_0_27__ALCARELVAL-2017_04_18_18_23": {
+    "parameters": {
+      "SiteWhitelist": [
+        "T1_US_FNAL"
       ], 
       "MergedLFNBase": "/store/relval", 
       "Team": "relval", 
@@ -8896,22 +8930,6 @@
     "fractionpass": 0.0, 
     "go": true
   }, 
-  "CMSSW_9_1_0_pre3__UPSG_Tracker_D12PU200-1494175779": {
-    "parameters": {
-      "SiteWhitelist": [
-        "T1_US_FNAL"
-      ], 
-      "MergedLFNBase": "/store/relval", 
-      "Team": "relval", 
-      "NonCustodialGroup": "RelVal"
-    }, 
-    "maxcopies": 1, 
-    "custodial": "T1_US_FNAL_MSS", 
-    "lumisize": -1, 
-    "phedex_group": "RelVal", 
-    "fractionpass": 0.0, 
-    "go": true
-  }, 
   "CMSSW_9_2_0__fullSimPU_2017Design-1495380572": {
     "parameters": {
       "SiteWhitelist": [
@@ -9195,6 +9213,22 @@
     "parameters": {
       "SiteWhitelist": [
         "T2_US_Purdue"
+      ], 
+      "MergedLFNBase": "/store/relval", 
+      "Team": "relval", 
+      "NonCustodialGroup": "RelVal"
+    }, 
+    "maxcopies": 1, 
+    "custodial": "T1_US_FNAL_MSS", 
+    "lumisize": -1, 
+    "phedex_group": "RelVal", 
+    "fractionpass": 0.0, 
+    "go": true
+  }, 
+  "CMSSW_9_3_0_pre2__prod_2016MC-1500028174": {
+    "parameters": {
+      "SiteWhitelist": [
+        "T1_US_FNAL"
       ], 
       "MergedLFNBase": "/store/relval", 
       "Team": "relval", 
@@ -10531,22 +10565,6 @@
     "fractionpass": 0.0, 
     "go": true
   }, 
-  "CMSSW_8_1_0_pre12": {
-    "parameters": {
-      "SiteWhitelist": [
-        "T1_US_FNAL"
-      ], 
-      "MergedLFNBase": "/store/relval", 
-      "NonCustodialGroup": "RelVal", 
-      "Team": "relval"
-    }, 
-    "maxcopies": 1, 
-    "custodial": "T1_US_FNAL_MSS", 
-    "lumisize": -1, 
-    "phedex_group": "RelVal", 
-    "fractionpass": 0.0, 
-    "go": true
-  }, 
   "CMSSW_9_2_8__fullsim_noPU_2017_set5-1502213003": {
     "parameters": {
       "SiteWhitelist": [
@@ -10725,14 +10743,17 @@
     "fractionpass": 0.0, 
     "go": true
   }, 
-  "CMSSW_9_3_0_pre3__cosmics_mc-1502094426": {
+  "CMSSW_9_4_0_pre2__fullSim_no_PU_2017Design-1507131170": {
+    "custodial_override": [
+      "DQMIO"
+    ], 
     "parameters": {
       "SiteWhitelist": [
         "T1_US_FNAL"
       ], 
       "MergedLFNBase": "/store/relval", 
-      "Team": "relval", 
-      "NonCustodialGroup": "RelVal"
+      "NonCustodialGroup": "RelVal", 
+      "Team": "relval"
     }, 
     "maxcopies": 1, 
     "custodial": "T1_US_FNAL_MSS", 
@@ -10872,14 +10893,14 @@
     "fractionpass": 0.0, 
     "go": true
   }, 
-  "CMSSW_8_0_27__ALCARELVAL-2017_04_13_17_02": {
+  "CMSSW_9_4_0_pre1__data2017D_TrkDPGstudy_HLTcondnew-1506352089": {
     "parameters": {
       "SiteWhitelist": [
         "T1_US_FNAL"
       ], 
       "MergedLFNBase": "/store/relval", 
-      "NonCustodialGroup": "RelVal", 
-      "Team": "relval"
+      "Team": "relval", 
+      "NonCustodialGroup": "RelVal"
     }, 
     "maxcopies": 1, 
     "custodial": "T1_US_FNAL_MSS", 
@@ -10955,14 +10976,14 @@
     "fractionpass": 0.0, 
     "go": true
   }, 
-  "CMSSW_9_3_0_pre5__fullsim_noPU_2017_set4-1504519171": {
+  "CMSSW_9_0_0__data2016B_gcc630-1490885724": {
     "parameters": {
       "SiteWhitelist": [
         "T1_US_FNAL"
       ], 
       "MergedLFNBase": "/store/relval", 
-      "NonCustodialGroup": "RelVal", 
-      "Team": "relval"
+      "Team": "relval", 
+      "NonCustodialGroup": "RelVal"
     }, 
     "maxcopies": 1, 
     "custodial": "T1_US_FNAL_MSS", 
@@ -11391,14 +11412,14 @@
     "fractionpass": 0.0, 
     "go": true
   }, 
-  "CMSSW_9_1_0_pre2__data2016B-1491331968": {
+  "CMSSW_8_1_0_pre12": {
     "parameters": {
       "SiteWhitelist": [
         "T1_US_FNAL"
       ], 
       "MergedLFNBase": "/store/relval", 
-      "Team": "relval", 
-      "NonCustodialGroup": "RelVal"
+      "NonCustodialGroup": "RelVal", 
+      "Team": "relval"
     }, 
     "maxcopies": 1, 
     "custodial": "T1_US_FNAL_MSS", 
@@ -12577,22 +12598,6 @@
     "fractionpass": 0.0, 
     "go": true
   }, 
-  "CMSSW_9_3_0_pre4__UPSG_Std_2023D17PU140_highPU-1504370679": {
-    "parameters": {
-      "SiteWhitelist": [
-        "T1_US_FNAL"
-      ], 
-      "MergedLFNBase": "/store/relval", 
-      "Team": "relval", 
-      "NonCustodialGroup": "RelVal"
-    }, 
-    "maxcopies": 1, 
-    "custodial": "T1_US_FNAL_MSS", 
-    "lumisize": -1, 
-    "phedex_group": "RelVal", 
-    "fractionpass": 0.0, 
-    "go": true
-  }, 
   "CMSSW_9_3_0_pre1__prod_2016MC-1499244996": {
     "parameters": {
       "SiteWhitelist": [
@@ -12900,7 +12905,7 @@
     "fractionpass": 0.0, 
     "go": true
   }, 
-  "CMSSW_8_0_27__ALCARELVAL-2017_04_18_18_23": {
+  "CMSSW_9_3_0_pre3__fullSim_noPU_2018-1502096748": {
     "parameters": {
       "SiteWhitelist": [
         "T1_US_FNAL"
@@ -12957,6 +12962,22 @@
       "MergedLFNBase": "/store/relval", 
       "Team": "relval", 
       "NonCustodialGroup": "RelVal"
+    }, 
+    "maxcopies": 1, 
+    "custodial": "T1_US_FNAL_MSS", 
+    "lumisize": -1, 
+    "phedex_group": "RelVal", 
+    "fractionpass": 0.0, 
+    "go": true
+  }, 
+  "CMSSW_9_1_0_pre2__UPSG_VBF_PU140-1493228080": {
+    "parameters": {
+      "SiteWhitelist": [
+        "T1_US_FNAL"
+      ], 
+      "MergedLFNBase": "/store/relval", 
+      "NonCustodialGroup": "RelVal", 
+      "Team": "relval"
     }, 
     "maxcopies": 1, 
     "custodial": "T1_US_FNAL_MSS", 
@@ -14471,14 +14492,14 @@
     "fractionpass": 0.0, 
     "go": true
   }, 
-  "CMSSW_9_1_0_pre2__fastSimPU_premix-1491926141": {
+  "CMSSW_9_1_0_pre3__UPSG_Tracker_D12PU200-1494175779": {
     "parameters": {
       "SiteWhitelist": [
         "T1_US_FNAL"
       ], 
       "MergedLFNBase": "/store/relval", 
-      "NonCustodialGroup": "RelVal", 
-      "Team": "relval"
+      "Team": "relval", 
+      "NonCustodialGroup": "RelVal"
     }, 
     "maxcopies": 1, 
     "custodial": "T1_US_FNAL_MSS", 
@@ -14519,10 +14540,7 @@
     "fractionpass": 0.0, 
     "go": true
   }, 
-  "CMSSW_9_4_0_pre2__fullSim_no_PU_2017Design-1507131170": {
-    "custodial_override": [
-      "DQMIO"
-    ], 
+  "CMSSW_9_2_8__pmx_PU_noSig_2017-1502382943": {
     "parameters": {
       "SiteWhitelist": [
         "T1_US_FNAL"
@@ -14714,14 +14732,14 @@
     "fractionpass": 0.0, 
     "go": true
   }, 
-  "CMSSW_9_1_0_pre2__UPSG_VBF_PU140-1493228080": {
+  "CMSSW_9_1_1_patch3__UPSG_noPU_EA1000-1500752553": {
     "parameters": {
       "SiteWhitelist": [
         "T1_US_FNAL"
       ], 
       "MergedLFNBase": "/store/relval", 
-      "NonCustodialGroup": "RelVal", 
-      "Team": "relval"
+      "Team": "relval", 
+      "NonCustodialGroup": "RelVal"
     }, 
     "maxcopies": 1, 
     "custodial": "T1_US_FNAL_MSS", 
@@ -15019,7 +15037,7 @@
     "fractionpass": 0.0, 
     "go": true
   }, 
-  "CMSSW_9_3_0_pre2__fastsim_noPU-1500029007": {
+  "CMSSW_9_3_0_pre5__fastsim_noPU-1504524030": {
     "parameters": {
       "SiteWhitelist": [
         "T1_US_FNAL"
@@ -15027,6 +15045,22 @@
       "MergedLFNBase": "/store/relval", 
       "Team": "relval", 
       "NonCustodialGroup": "RelVal"
+    }, 
+    "maxcopies": 1, 
+    "custodial": "T1_US_FNAL_MSS", 
+    "lumisize": -1, 
+    "phedex_group": "RelVal", 
+    "fractionpass": 0.0, 
+    "go": true
+  }, 
+  "CMSSW_9_1_0_pre2__fastSimPU_premix-1491926141": {
+    "parameters": {
+      "SiteWhitelist": [
+        "T1_US_FNAL"
+      ], 
+      "MergedLFNBase": "/store/relval", 
+      "NonCustodialGroup": "RelVal", 
+      "Team": "relval"
     }, 
     "maxcopies": 1, 
     "custodial": "T1_US_FNAL_MSS", 
@@ -15471,22 +15505,6 @@
     "fractionpass": 0.0, 
     "go": true
   }, 
-  "CMSSW_9_1_0_pre3__premix_PU_noSignal-1493826624": {
-    "parameters": {
-      "SiteWhitelist": [
-        "T1_US_FNAL"
-      ], 
-      "MergedLFNBase": "/store/relval", 
-      "NonCustodialGroup": "RelVal", 
-      "Team": "relval"
-    }, 
-    "maxcopies": 1, 
-    "custodial": "T1_US_FNAL_MSS", 
-    "lumisize": -1, 
-    "phedex_group": "RelVal", 
-    "fractionpass": 0.0, 
-    "go": true
-  }, 
   "CMSSW_9_2_9__fullsim_noPU_2017_set4-1503434481": {
     "parameters": {
       "SiteWhitelist": [
@@ -15551,14 +15569,14 @@
     "fractionpass": 0.0, 
     "go": true
   }, 
-  "CMSSW_9_0_0__data2016B_gcc630-1490885724": {
+  "CMSSW_9_3_0_pre4__fullsimPU_2017-1503366723": {
     "parameters": {
       "SiteWhitelist": [
         "T1_US_FNAL"
       ], 
       "MergedLFNBase": "/store/relval", 
-      "Team": "relval", 
-      "NonCustodialGroup": "RelVal"
+      "NonCustodialGroup": "RelVal", 
+      "Team": "relval"
     }, 
     "maxcopies": 1, 
     "custodial": "T1_US_FNAL_MSS", 
@@ -15875,7 +15893,7 @@
     "fractionpass": 0.0, 
     "go": true
   }, 
-  "CMSSW_9_3_0_pre3__fullSim_noPU_2018-1502096748": {
+  "CMSSW_9_3_0_pre4__UPSG_Std_2023D17PU140_highPU-1504370679": {
     "parameters": {
       "SiteWhitelist": [
         "T1_US_FNAL"
@@ -16277,10 +16295,10 @@
     "fractionpass": 0.0, 
     "go": true
   }, 
-  "CMSSW_9_3_0_pre2__prod_2016MC-1500028174": {
+  "CMSSW_9_1_1_patch1__UPSG_MuonAging_SNB_MaskedME0GE21iRPC_PU200_highPU-1498672660": {
     "parameters": {
       "SiteWhitelist": [
-        "T1_US_FNAL"
+        "T2_US_Nebraska"
       ], 
       "MergedLFNBase": "/store/relval", 
       "Team": "relval", 
@@ -16849,10 +16867,10 @@
     "fractionpass": 0.0, 
     "go": true
   }, 
-  "CMSSW_9_1_1_patch1__UPSG_MuonAging_SNB_MaskedME0GE21iRPC_PU200_highPU-1498672660": {
+  "CMSSW_9_1_2_patch1__UPSG_Std_noPU_EA3000Ultimate-1503058057": {
     "parameters": {
       "SiteWhitelist": [
-        "T2_US_Nebraska"
+        "T1_US_FNAL"
       ], 
       "MergedLFNBase": "/store/relval", 
       "Team": "relval", 
@@ -17303,6 +17321,25 @@
     "fractionpass": 0.0, 
     "go": true
   }, 
+  "CMSSW_9_2_9__fullsimPU2017_pmx_ZEE_v1GTPF16-1507808111": {
+    "custodial_override": [
+      "DQMIO"
+    ], 
+    "parameters": {
+      "SiteWhitelist": [
+        "T1_US_FNAL"
+      ], 
+      "MergedLFNBase": "/store/relval", 
+      "NonCustodialGroup": "RelVal", 
+      "Team": "relval"
+    }, 
+    "maxcopies": 1, 
+    "custodial": "T1_US_FNAL_MSS", 
+    "lumisize": -1, 
+    "phedex_group": "RelVal", 
+    "fractionpass": 0.0, 
+    "go": true
+  }, 
   "CMSSW_9_2_7__fullSimPU2017_premix-1500995859": {
     "parameters": {
       "SiteWhitelist": [
@@ -17367,14 +17404,14 @@
     "fractionpass": 0.0, 
     "go": true
   }, 
-  "CMSSW_9_1_1_patch3__UPSG_noPU_EA1000-1500752553": {
+  "CMSSW_9_0_0__fullsim_noPU_2017_set4_gcc630-1490975845": {
     "parameters": {
       "SiteWhitelist": [
         "T1_US_FNAL"
       ], 
       "MergedLFNBase": "/store/relval", 
-      "Team": "relval", 
-      "NonCustodialGroup": "RelVal"
+      "NonCustodialGroup": "RelVal", 
+      "Team": "relval"
     }, 
     "maxcopies": 1, 
     "custodial": "T1_US_FNAL_MSS", 
@@ -17693,6 +17730,22 @@
     "fractionpass": 0.0, 
     "go": true
   }, 
+  "CMSSW_8_0_27__ALCARELVAL-2017_04_13_17_02": {
+    "parameters": {
+      "SiteWhitelist": [
+        "T1_US_FNAL"
+      ], 
+      "MergedLFNBase": "/store/relval", 
+      "NonCustodialGroup": "RelVal", 
+      "Team": "relval"
+    }, 
+    "maxcopies": 1, 
+    "custodial": "T1_US_FNAL_MSS", 
+    "lumisize": -1, 
+    "phedex_group": "RelVal", 
+    "fractionpass": 0.0, 
+    "go": true
+  }, 
   "CMSSW_9_1_1_patch1__UPSG_MuonAging_SNB_PU200-1498409239": {
     "parameters": {
       "SiteWhitelist": [
@@ -17777,21 +17830,25 @@
     "fractionpass": 0.0, 
     "go": true
   }, 
-  "CMSSW_9_2_8__pmx_PU_noSig_2017-1502382943": {
+  "CMSSW_9_2_11__ALCA_47-2017_10_09_20_06": {
+    "custodial_override": [
+      "DQMIO"
+    ], 
     "parameters": {
       "SiteWhitelist": [
         "T1_US_FNAL"
       ], 
       "MergedLFNBase": "/store/relval", 
-      "NonCustodialGroup": "RelVal", 
-      "Team": "relval"
+      "Team": "relval", 
+      "NonCustodialGroup": "RelVal"
     }, 
     "maxcopies": 1, 
     "custodial": "T1_US_FNAL_MSS", 
     "lumisize": -1, 
     "phedex_group": "RelVal", 
     "fractionpass": 0.0, 
-    "go": true
+    "go": true, 
+    "primary_AAA": true
   }, 
   "CMSSW_9_3_0_pre1__fullSimPU2017_premix-1502474246": {
     "parameters": {
