@@ -14,6 +14,7 @@ import re
 import copy
 import random
 import optparse
+import sqlalchemy 
 
 def spawn_harvesting(url, wfi , in_full):
     #SI = siteInfo()
@@ -158,7 +159,7 @@ def closor(url, specific=None, options=None):
 
     jump_the_line = options.announce if options else False
     if jump_the_line:
-        wfs = session.query(Workflow).filter(Workflow.status.endswith('-announce')).all()
+        wfs = session.query(Workflow).filter(Workflow.status.contains('announce')).filter(sqlalchemy.not_(Workflow.status.contains('announced'))).all()
     else:
         wfs = session.query(Workflow).filter(Workflow.status=='close').all()
 
@@ -280,7 +281,7 @@ def closor(url, specific=None, options=None):
     
         ## verify if we have to do harvesting
 
-        if not options.no_harvest or not jump_the_line:
+        if not options.no_harvest and not jump_the_line:
             (OK, requests) = spawn_harvesting(url, wfi, in_full)
             all_OK.update( OK )
 
@@ -419,7 +420,8 @@ def closor(url, specific=None, options=None):
             #print results
             if all(map(lambda result : result in ['None',None,True],results)):
                 if jump_the_line:
-                    wfo.status.replace('-announce','-announced')
+                    if not 'announced' in wfo.status:
+                        wfo.status = wfo.status.replace('announce','announced')
                 else:
                     wfo.status = 'done'
                 session.commit()
