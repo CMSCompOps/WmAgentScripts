@@ -34,12 +34,13 @@ def checkor(url, spec=None, options=None):
     use_recoveror = UC.get('use_recoveror')
     #if UC.get('step_checkor_down') and not options.go: return 
     #if not options.go: return ## disable checkor until further notice
-
+    
     use_mcm = True
     up = componentInfo(mcm=use_mcm, soft=['mcm'])
     if not up.check(): return
     use_mcm = up.status['mcm']
 
+    now_s = time.mktime(time.gmtime())
     def time_point(label="",sub_lap=False, percent=None):
         now = time.mktime(time.gmtime())
         nows = time.asctime(time.gmtime())
@@ -131,7 +132,7 @@ def checkor(url, spec=None, options=None):
         try:
             print "Can read bypass from", bypassor
             extending = json.loads(open(bypass_file).read())
-            print bypassor,"is bypassing",extending
+            print bypassor,"is bypassing",json.dumps(sorted(extending))
             bypasses.extend( extending )
         except:
             sendLog('checkor',"cannot get by-passes from %s for %s"%(bypass_file ,bypassor))
@@ -143,7 +144,7 @@ def checkor(url, spec=None, options=None):
             continue
         try:
             extending = json.loads(open(holding_file).read())
-            print bypassor,"is holding",extending
+            print bypassor,"is holding",json.dumps(sorted(extending))
             holdings.extend( extending )
         except:
             sendLog('checkor',"cannot get holdings from %s for %s"%(holding_file, bypassor))
@@ -163,7 +164,7 @@ def checkor(url, spec=None, options=None):
             continue
         try:
             extending = json.loads(open( rider_file ).read() )
-            print rider,"is force completing",extending
+            print rider,"is force completing",json.dumps(sorted(extending))
             bypasses.extend( extending )
         except:
             sendLog('checkor',"cannot get force complete list from %s"%rider)
@@ -378,6 +379,7 @@ def checkor(url, spec=None, options=None):
         percent_avg_completions = {}
         fractions_pass = {}
         fractions_announce = {}
+        fractions_truncate_recovery = {}
         events_per_lumi = {}
 
         over_100_pass = False
@@ -417,9 +419,10 @@ def checkor(url, spec=None, options=None):
             default_pass = UC.get('default_fraction_pass')
             fractions_pass[output] = default_pass
             fractions_announce[output] = 1.0
+            #fractions_truncate_recovery[output] = 0.98 ## above this threshold if the request will pass stats check, we close the acdc
             c = campaigns[output]
             if c in CI.campaigns and 'earlyannounce' in CI.campaigns[c]:
-                wfi.sendLog('checkor', "Allowed to announce the output %s over %.2f"%(out, CI.campaigns[c]['earlyannounce']))
+                wfi.sendLog('checkor', "Allowed to announce the output %s over %.2f by campaign requirement"%(out, CI.campaigns[c]['earlyannounce']))
                 fractions_announce[output] = CI.campaigns[c]['earlyannounce']
 
             if c in CI.campaigns and 'fractionpass' in CI.campaigns[c]:
@@ -451,6 +454,30 @@ def checkor(url, spec=None, options=None):
                 if key in output:
                     fractions_pass[output] = pattern_fraction_pass[key]
                     print "overriding fraction to",fractions_pass[output],"by dataset key",key
+
+            pass_percent_below = fractions_pass[output]-0.02
+            completed_log = filter(lambda change : change["Status"] in ["completed"],wfi.request['RequestTransition'])
+            delay = (now_s - completed_log[-1]['UpdateTime']) / (60.*60.*24.) if completed_log else 0 ## in days
+            print delay,"since completed"
+            weight_full = 7.
+            weight_pass = delay
+            weight_under_pass = 2*delay if int(wfi.request['RequestPriority'])< 80000 else 0. ## allow to drive it below the threshold
+            weight_under_pass = 0. ## otherwise we can end-up having request at 94% waiting for 95%
+            fractions_truncate_recovery[output] = (fractions_pass[output]*weight_pass +1.*weight_full + pass_percent_below*weight_under_pass) / ( weight_pass+weight_full+weight_under_pass)
+
+            if c in CI.campaigns and 'truncaterecovery' in CI.campaigns[c]:
+                wfi.sendLog('checkor', "Allowed to truncate recovery of %s over %.2f by campaign requirement"%(out, CI.campaigns[c]['truncaterecovery']))            
+                fractions_truncate_recovery[output] = CI.campaigns[c]['truncaterecovery']
+            else:
+                wfi.sendLog('checkor', "Can truncate recovery of %s over %.2f"%(out, fractions_truncate_recovery[output]))
+
+            if fractions_truncate_recovery[output] < fractions_pass[output]:
+                print "this is not going to end well if you truncate at a lower threshold than passing",fractions_truncate_recovery[output],fractions_pass[output]
+                ## floor truncating
+                fractions_truncate_recovery[output] = fractions_pass[output]
+                ##### OR 
+                ##wfi.sendLog('checkor', "Lowering the pass bar since recovery is being truncated")
+                ## fractions_pass[output] = fractions_truncate_recovery[output]
 
         time_point("statistics thresholds", sub_lap=True)
 
@@ -502,14 +529,14 @@ def checkor(url, spec=None, options=None):
                     ## now do a better check of fractions
                     fraction_per_run = {}
                     a_primary = list(prim)[0]
-                    for run in lumis_per_run[out]:
+                    all_runs = sorted(set(lumis_per_run[a_primary].keys() + lumis_per_run[out].keys()))
+                    for run in all_runs:
                         denom = lumis_per_run[a_primary].get(run,[])
-                        numer = lumis_per_run[out][run]
+                        numer = lumis_per_run[out].get(run,[])
                         if denom:
                             fraction_per_run[run] = float(len(numer))/len(denom)
                         else:
-                            
-                            print "for run",run,"in output, there isnt any run in input..."
+                            print "for run",run,"in output, there isnt any run in input/output..."
                     if fraction_per_run:
                         lowest_fraction = min( fraction_per_run.values())
                         highest_fraction = max( fraction_per_run.values())
@@ -528,6 +555,7 @@ def checkor(url, spec=None, options=None):
         pass_stats_check_to_announce = dict([(out, (percent_avg_completions[out] >= fractions_announce[out])) for out in fractions_pass ])
         should_announce = False
 
+        pass_stats_check_to_truncate_recovery = dict([(out, (percent_avg_completions[out] >= fractions_truncate_recovery[out])) for out in fractions_pass ])
 
         print "announce checks"
         print pass_stats_check_to_announce
@@ -560,6 +588,15 @@ def checkor(url, spec=None, options=None):
                 is_closing = False
         else:
             wfi.sendLog('checkor','passing stats check \n%s \n%s'%( json.dumps(percent_completions, indent=2), json.dumps(fractions_pass, indent=2) ))
+            ## if we still have acdc running, should we set to force-complete and move-on ?
+            #if 'recovering' in assistance_tags:            
+
+        if all(pass_stats_check.values()) and all(pass_stats_check_to_truncate_recovery.values()):
+            print "This is essentially good to truncate"
+
+            if options.go: 
+                wfi.sendLog('checkor','Will force-complete the recovery for missing statistics')
+                forceComplete(url, wfi)
 
         if over_100_pass and any([percent_completions[out] >100 for out in fractions_pass]):
             print wfo.name,"is over completed"
