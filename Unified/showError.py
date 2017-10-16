@@ -305,15 +305,18 @@ def parse_one(url, wfn, options=None):
         print "no task to look at"
         #return task_error_site_count
         
-    html="<html> <center><h1><a href=https://cmsweb.cern.ch/reqmgr2/fetch?rid=%s>%s</a><br><a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>%s</a><br>"%(
+    html="<html> <center><h1><a href=https://cmsweb.cern.ch/reqmgr2/fetch?rid=%s>%s</a><br><a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>%s</a><br><a href=https://cms-gwmsmon.cern.ch/prodview/%s>Job Progress</a><br>"%(
         wfn,
         wfn,
         wfi.request['PrepID'],
-        wfi.request['PrepID']
+        wfi.request['PrepID'],
+        wfn
         )
-    if wfi.request['RequestType'] in ['ReReco']:
+    r_type = wfi.request.get('OriginalRequestType', wfi.request.get('RequestType','NaT'))
+    if r_type in ['ReReco']:
         html += '<a href=../datalumi/lumi.%s.html>Lumisection Summary</a><br>'% wfi.request['PrepID']
-        
+    
+    html += "Updated on %s (GMT)" % ( time.asctime(time.gmtime()) )    
     html+= '</center><hr>'
 
     time_point("Header writen")
@@ -346,10 +349,21 @@ def parse_one(url, wfn, options=None):
             html+='</ul>'
         
 
+    outs = sorted(wfi.request['OutputDatasets'])
+    if outs:
+        html+='Produces<br>'
+        for dataset in outs:
+            presence = getDatasetPresence(url, dataset)
+            html +='<b>%s</b><ul>'%dataset
+            for site in sorted(presence.keys()):
+                html += '<li>%s : %.2f %%'%( site, presence[site][1] )
+            html+='</ul>'
+            
     time_point("Input checked")
 
-    html += "Updated on %s (GMT)" % ( time.asctime(time.gmtime()) )
+
     html += """
+<hr><br>
 <ul>
 <li> <b><i>dashboard numbers over %d days</b></i>
 <li> &uarr; %% with respect to total number of error in the code
@@ -357,7 +371,7 @@ def parse_one(url, wfn, options=None):
 </ul>
 """%(dash_board_h)
 
-    html += '<hr><br>'
+    html += '<br>'
 
     if tasks:
         min_rank = min([task.count('/') for task in tasks])
