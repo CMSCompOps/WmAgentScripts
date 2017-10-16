@@ -149,6 +149,11 @@ def checkor(url, spec=None, options=None):
             sendLog('checkor',"cannot get holdings from %s for %s"%(holding_file, bypassor))
             sendEmail("malformated by-pass information","%s is not json readable"%(holding_file), destination=[email])
 
+    unhold= ['fabozzi_Run2016B-v2-Tau-07Aug17_ver2_8029_170831_201310_7397']
+    for unh in unhold:
+        if unh in holdings:
+            holdings.remove(unh)
+
     ## once this was force-completed, you want to bypass
     for rider,email in actors:
         rider_file = '/afs/cern.ch/user/%s/%s/public/ops/forcecomplete.json'%(rider[0],rider)
@@ -455,15 +460,16 @@ def checkor(url, spec=None, options=None):
             percent_completions[output] = 0.
 
             if lumi_expected:
-                wfi.sendLog('checkor', "lumi completion %s expected %d"%( lumi_count, lumi_expected))
+                wfi.sendLog('checkor', "lumi completion %s expected %d for %s"%( lumi_count, lumi_expected, output))
                 percent_completions[output] = lumi_count / float( lumi_expected )
 
             if event_expected:
                 e_fraction = float(event_count) / float( event_expected )
                 if e_fraction > percent_completions[output]:
-                    percent_completions[output] = e_fraction
-                    wfi.sendLog('checkor', "event completion real %s expected %s"%(event_count, event_expected ))
+                    #percent_completions[output] = e_fraction
+                    wfi.sendLog('checkor', "event completion real %s expected %s for %s"%(event_count, event_expected , output))
 
+            percent_avg_completions[output] = percent_completions[output]
         time_point("observed statistics", sub_lap=True)
                     
         pass_stats_check = dict([(out, bypass_checks or (percent_completions[out] >= fractions_pass[out])) for out in fractions_pass ])
@@ -517,15 +523,17 @@ def checkor(url, spec=None, options=None):
         time_point("more detailed observed statistics", sub_lap=True)
 
         pass_stats_check = dict([(out, bypass_checks or (percent_completions[out] >= fractions_pass[out])) for out in fractions_pass ])
+        
         #pass_stats_check_to_announce = dict([(out, (percent_completions[out] >= fractions_announce[out])) for out in fractions_pass ])
         pass_stats_check_to_announce = dict([(out, (percent_avg_completions[out] >= fractions_announce[out])) for out in fractions_pass ])
         should_announce = False
 
-        if all(pass_stats_check_to_announce) and not wfo.status.endswith('-announced'):
-            print "The output of this workflow are essentially good to be announced while we work on the rest"
-            ## edit the status to something funnier
-            #wfo.status += '-announce'
-            #assistance_tags.add('announce')
+
+        print "announce checks"
+        print pass_stats_check_to_announce
+        if pass_stats_check_to_announce and all(pass_stats_check_to_announce.values()):
+            wfi.sendLog('checkor',"The output of this workflow are essentially good to be announced while we work on the rest\n%s \n%s"% ( json.dumps( percent_avg_completions , indent =2 ), json.dumps( fractions_announce , indent =2 )))
+            assistance_tags.add('announced' if 'announced' in wfo.status else 'announce')
             should_announce = True
         
 
@@ -977,6 +985,8 @@ def checkor(url, spec=None, options=None):
                 assistance_tags = assistance_tags - set(['recovery'])
                 assistance_tags.add('manual')
                 in_manual += 1
+            if 'custodial' in assistance_tags:
+                assistance_tags = assistance_tags - set(['announce','announced'])
 
             ## that means there is something that needs to be done acdc, lumi invalidation, custodial, name it
             print wfo.name,"needs assistance with",",".join( assistance_tags )
@@ -1032,8 +1042,10 @@ def checkor(url, spec=None, options=None):
             else:
                 new_status = 'assistance'
                 
-            if should_announce:
-                new_status += '-announce'
+            #if should_announce and not 'custodial' in new_status and not 'announce' in wfo.status:
+            #    new_status += '-announce'
+            #if should_announce and '-announced' in wfo.status:
+            #    new_status += '-announced'
 
             ## case where the workflow was in manual from recoveror
             if not 'manual' in wfo.status or new_status!='assistance-recovery':
@@ -1057,10 +1069,9 @@ def checkor(url, spec=None, options=None):
         if options.review:
             some_details +="Workflows under intervention got review.\n"
         count_statuses = defaultdict(int)
-        for wfo in session.query(Workflow).filter(Worklow.status.startswith('assistance')).all():
+        for wfo in session.query(Workflow).filter(Workflow.status.startswith('assistance')).all():
             count_statuses[wfo.status]+=1
-        for st in sorted(count_statuses.keys()):
-            some_details += '%3d in status %s'%( st, count_statuses[st])
+        some_details +='\n'.join(['%3d in status %s'%( count_statuses[st], st ) for st in sorted(count_statuses.keys())])
         sendEmail("fresh assistance status available","Fresh status are available at %s/assistance.html\n%s"%(unified_url, some_details),destination=['katherine.rozo@cern.ch'])
         #it's a bit annoying
         pass
