@@ -212,7 +212,7 @@
     "description" :"The default number of job cmsrun logs to retrieve"
   },
   "expose_archive_code":{
-    "value" : [134,139,99109,99303,60450,50513,50660,8001,8002,8026,11003,73,74,87],
+    "value" : [134,139,99109,99303,60450,50513,50660,8001,8002,8004,8026,11003,73,74,87],
     "description" : "The error codes that should get a cmsrun log exposed"
   },
   "expose_condor_code":{
