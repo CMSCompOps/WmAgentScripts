@@ -521,7 +521,8 @@ def equalizor(url , specific = None, options=None):
                 print campaign
 
             resize = CI.get(campaign,'resize',{})
-            
+
+
             if resize and type(resize)==dict:# and not is_chain:
                 print "adding",task.pathName,"in resizing"
                 resizing[task.pathName] = copy.deepcopy(resize)
@@ -551,6 +552,12 @@ def equalizor(url , specific = None, options=None):
                 else:
                     print "do not start resizing a task that was set single-core"
 
+            if task.pathName in resizing:
+                addhoc_resize = ['MUO-RunIIFall17GS-00012','MUO-RunIIFall17GS-00013','MUO-RunIIFall17GS-00011' ]
+                for k_resize in addhoc_resize:
+                    if k_resize in taskname:
+                        resizing[task.pathName]["minCores"]=1
+                        resizing[task.pathName]["maxCores"]=1
 
             tune = CI.get(campaign,'tune',options.tune)
             if tune and not campaign in tune_performance:
@@ -587,7 +594,6 @@ def equalizor(url , specific = None, options=None):
                 if task.taskType in ['Processing','Production']:
                     mcore = wfi.getCorePerTask( taskname )
                     set_memory,set_slope,set_time,set_io = getPerf( task.pathName , original_ncore = mcore)
-                    #print "Performance %s GB %s min"%( set_memory,set_time)
                     wfi.sendLog('equalizor','Performance tuning to %s GB %s min for %s'%( set_memory,set_time,taskname ))
                     ## get values from gmwsmon
                     # massage the values : 95% percentile
@@ -604,13 +610,15 @@ def equalizor(url , specific = None, options=None):
                     mem = wfi.getMemoryPerTask( taskname )
                     print taskname,mem
                     for key,add_hoc_mem in memory_correction.items():
-                        if key in taskname and mem > add_hoc_mem:
+                        if key in taskname and mem > add_hoc_mem and set_memory > add_hoc_mem:
                             print "overiding",set_memory,"to",add_hoc_mem,"by virtue of add-hoc memory_correction",key
                             set_memory = min( add_hoc_mem, set_memory) if set_memory else add_hoc_mem
 
                     if set_memory:
-                        performance[task.pathName]['memory']= min(set_memory, 20000) ## max to 20GB
-                        performance[task.pathName]['memory']= max(set_memory, 1000) ## min to 1GB
+                        set_memory =  min(set_memory, 20000)
+                        set_memory =  max(set_memory, int(mem/2.))
+                        print "trully setting memory to",set_memory
+                        performance[task.pathName]['memory']= set_memory
                         perf_per_config[configcache.get( taskname , 'N/A')]['memory'] = set_memory
                     if set_time:
                         performance[task.pathName]['time'] = min(set_time, int(1440./mcore)) ## max to 24H per mcore ## set_time is provided in total corehours ~ walltime*ncore
