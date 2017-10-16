@@ -1771,6 +1771,8 @@ Updated on %s (GMT) <br>
 <li> <b>recovering</b> : there is at least one active ACDC for the worflow <font color=orange>(Wait)</font></li>
 <li> <b>recovered</b> : there is at least one inactive ACDC for the workflow <font color=green>(Automatic)</font></li>
 <li> <b>recovery</b> : the final statistics of the sample is not passing the requirements <font color=green>(Automatic)</font> </li>
+<li> <b>announce</b> : the final statistics of the sample is enough to announce the outputs <font color=green>(Automatic)</font> </li>
+<li> <b>announced</b> : the final statistics of the sample is enough and the outputs are announced <font color=green>(Automatic)</font> </li>
 <li> <b>over100</b> : the final statistics is over 100%% <font color=red>(Operator)</font></li>
 <li> <b>biglumi</b> : the maximum size of the lumisection in one of the output has been exceeded <font color=red>(Operator)</font></li>
 <li> <b>filemismatch</b> : there is a mismatch in the number of files in DBS and Phedex <font color=red>(Operator)</font></li>
@@ -3914,7 +3916,9 @@ def getForceCompletes():
             print "no file",rider_file
             continue
         try:
-            overrides[rider] = json.loads(open( rider_file ).read() )
+            extending = json.loads(open( rider_file ).read() )
+            print rider,"is force-completing",sorted(extending)
+            overrides[rider] = extending
         except:
             print "cannot get force complete list from",rider
             sendEmail("malformated force complet file","%s is not json readable"%rider_file, destination=[email])
