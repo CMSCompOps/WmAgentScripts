@@ -4760,6 +4760,8 @@ class workflowInfo:
                             
 
                     if sizeperevent:# and (avg_events_per_job * sizeperevent ) > (GB_space_limit*1024.**2):
+                        if (keyword in spl['taskName']) and (events_per_lumi_at_this_task > avg_events_per_job):
+                            sizeperevent /= factor # For Phase II if processing only 1 lumi per job, do not use the factor of 5 for lumi check
                         size_per_input_lumi = events_per_lumi_at_this_task*sizeperevent
                         this_max_events_per_lumi = int( (GB_space_limit*1024.**2) / sizeperevent)
                         if (size_per_input_lumi > (GB_space_limit*1024.**2)):
