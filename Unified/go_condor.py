@@ -73,11 +73,12 @@ def makeReadAds(config):
         task_names_escaped = anAd.lookup('JobRouterTasknames').__repr__()
         del anAd["JobRouterTasknames"]
 
-        exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (HasBeenReadTuned isnt true)' % task_names_escaped)
+        #exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (HasBeenReadTuned isnt true)' % task_names_escaped)
+        exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (EstimatedInputRateKBs =!= %d)' %( task_names_escaped,int(set_read))) ## just set to a different value
         anAd["Requirements"] = classad.ExprTree(str(exp))
         anAd["set_HasBeenRouted"] = False
         anAd["set_HasBeenReadTuned"] = True
-        anAd["set_EstimatedInputRateKBs"] = set_read
+        anAd["set_EstimatedInputRateKBs"] = int(set_read)
         print anAd
 
 def makeOverflowAds(config):
@@ -231,7 +232,8 @@ def makePerformanceCorrectionsAds(configs):
         anAd["Name"] = str("Set memory requirement to %s"% memory)
         anAd["MemoryTasknames"] = map(str, wfs)
         memory_names_escaped = anAd.lookup('MemoryTasknames').__repr__()
-        exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (target.HasBeenMemoryTuned =!= true) && (target.OriginalMemory >= %d)' %( memory_names_escaped, int(memory) ))
+        #exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (target.HasBeenMemoryTuned =!= true) && (target.OriginalMemory >= %d)' %( memory_names_escaped, int(memory) ))
+        exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (target.HasBeenMemoryTuned =!= true) && (target.OriginalMemory =!= %d)' %( memory_names_escaped, int(memory) )) ## just set to a different value
         anAd["Requirements"] = classad.ExprTree(str(exp))
         anAd['set_HasBeenMemoryTuned'] = True
         anAd['set_HasBeenRouted'] = False
@@ -247,7 +249,6 @@ def makePerformanceCorrectionsAds(configs):
         anAd["Name"] = str("Set timing requirement to %s"% timing)
         anAd["TimeTasknames"] = map(str, wfs)
         time_names_escaped = anAd.lookup('TimeTasknames').__repr__()
-        #exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (target.HasBeenTimingTuned =!= true) && (target.MaxWallTimeMins <= %d)' %( time_names_escaped, int(timing) ))
         exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (target.HasBeenTimingTuned =!= true) && (target.EstimatedSingleCoreMins <= %d)' %( time_names_escaped, int(timing) ))
         anAd["Requirements"] = classad.ExprTree(str(exp))
         anAd['set_HasBeenTimingTuned'] = True
@@ -266,7 +267,8 @@ def makePerformanceCorrectionsAds(configs):
         anAd["Name"] = str("Set memory per thread requirement to %s"% slope)
         anAd["TimeTasknames"] = map(str, wfs)
         time_names_escaped = anAd.lookup('TimeTasknames').__repr__()
-        exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (target.HasBeenSlopeTuned =!= true)' %( time_names_escaped ))
+        #exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (target.HasBeenSlopeTuned =!= true)' %( time_names_escaped ))
+        exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (target.ExtraMemory =!= %d)' %( time_names_escaped , int(slope))) ## just set to a different value
         anAd["Requirements"] = classad.ExprTree(str(exp))
         anAd['set_HasBeenSlopeTuned'] = True 
         anAd['set_HasBeenRouted'] = False
