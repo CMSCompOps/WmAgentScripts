@@ -214,7 +214,7 @@ def equalizor(url , specific = None, options=None):
     def s_quantize( value, quanta):
         return str(quantize( value, quanta ))
 
-    def getPerf( task , stats_to_go = 100, original_ncore=1):
+    def getPerf( task , stats_to_go = 500, original_ncore=1):
         task = task.split('/')[1]+'/'+task.split('/')[-1]
 
         print "#"*10,"input read performance","#"*10
@@ -259,7 +259,8 @@ def equalizor(url , specific = None, options=None):
 
         print "#"*10,"memory usage performance","#"*10
         try:
-            u = 'http://cms-gwmsmon.cern.ch/prodview/json/historynew/memorycpu720/%s'%task
+            #u = 'http://cms-gwmsmon.cern.ch/prodview/json/historynew/memorycpu720/%s/success'%task
+            u = 'http://cms-gwmsmon.cern.ch/prodview/json/historynew/memorycpu720/%s/success'%task
             print u
             perf_data = json.loads(os.popen('curl -s --retry 5 %s'%u).read())
         except Exception as e:
@@ -305,7 +306,12 @@ def equalizor(url , specific = None, options=None):
             if sum(values) < stats_to_go: 
                 print "not enough stats to go for core-binned mem usage",sum(values),"<",stats_to_go,"at cores=",core_count
                 continue
-            print "Getting information at",core_count, bins, values
+            avg = 'N/A'
+            if sum(values):
+                avg = sum([(a*w) for (a,w) in zip(bins,values)]) / sum( values )
+            print "Getting information at",core_count, avg
+            print bins
+            print values
             if values:
                 percentiles[core_count] = weighted_percentile( values, bins, memory_percentil)
 
@@ -313,6 +319,7 @@ def equalizor(url , specific = None, options=None):
         #print json.dumps( percentiles , indent=2 )
         
         slopes = []
+        lever = []
         #print original_ncore
         #print percentiles
         baseline = percentiles[original_ncore] if original_ncore in percentiles else None
@@ -321,9 +328,13 @@ def equalizor(url , specific = None, options=None):
                 if ncore == original_ncore: continue
                 s = (v-baseline) / float((ncore - original_ncore))
                 slopes.append( s )
+                lever.append( abs(ncore - original_ncore) )
             baseline = int(baseline)
-        slope = max(0,int(sum(slopes) / len(slopes))) if slopes else None
+        #slope = max(0,int(sum(slopes) / len(slopes))) if slopes else None
+        slope = max(0,int(sum([l*v for (l,v) in zip(lever,slopes)])/sum(lever))) if slopes else None
         print "From multiple memory points",baseline,"MB baseline at",original_ncore,"cores, and",slope,"per thread"
+        print slopes
+        print lever
 
         b_m = None
         if baseline: b_m = baseline
@@ -605,7 +616,7 @@ def equalizor(url , specific = None, options=None):
                             set_slope = min( set_slope, max_mem_per_core) 
                         performance[task.pathName]['slope']=set_slope
                         if task.pathName in resizing and "memoryPerThread" in resizing[task.pathName]:
-                            resizing[task.pathName]["memoryPerThread"] = set_slope
+                            resizing[task.pathName]["memoryPerThread"] = quantize(set_slope, slope_quanta)
                         perf_per_config[configcache.get( taskname , 'N/A')]['slope'] = set_slope
                     mem = wfi.getMemoryPerTask( taskname )
                     print taskname,mem
@@ -848,22 +859,27 @@ def equalizor(url , specific = None, options=None):
             ### overflow the 76 digi-reco to the site holding the pileup
             if campaign in PU_overflow:
                 force = PU_overflow[campaign]['force'] if 'force' in PU_overflow[campaign] else False
-                secondary_locations = set(SI.sites_ready + force_sites)
-                for s in sec:
-                    if not s in PU_locations:
-                        presence = getDatasetPresence( url, s)
-                        #one_secondary_locations = [site for (site,(there,frac)) in presence.items() if there]
-                        one_secondary_locations = [site for (site,(there,frac)) in presence.items() if frac>98.]
-                        PU_locations[s] = one_secondary_locations
-                    print "secondary is at",sorted(PU_locations[s])
-                    secondary_locations = set([SI.SE_to_CE(site) for site in PU_locations[s]]) & secondary_locations
+                better_secondary_locations = wfi.getClassicalPUOverflow( taskname )
+                if not better_secondary_locations or not options.augment: ## for now, forces -a to use better, not -a to use old way
+                    secondary_locations = set(SI.sites_ready + force_sites)
+                    for s in sec:
+                        if not s in PU_locations:
+                            presence = getDatasetPresence( url, s)
+                            one_secondary_locations = [site for (site,(there,frac)) in presence.items() if frac>98.]
+                            PU_locations[s] = one_secondary_locations
+                        print "secondary is at",sorted(PU_locations[s])
+                        secondary_locations = set([SI.SE_to_CE(site) for site in PU_locations[s]]) & secondary_locations
                     
-                ## we should add all sites that hold the secondary input if any
-                ### given that we have the secondary location available, it is not necessary to use the add-hoc list
-                ##secondary_locations = list(set(PU_overflow[campaign]['sites']) & set( SI.sites_ready ))
-                ## intersect with the sites that are allowed from the request requirement
-                #secondary_locations = secondary_locations & set(memory_allowed)
-                secondary_locations = secondary_locations & set(sites_allowed)
+                    ## we should add all sites that hold the secondary input if any
+                    ### given that we have the secondary location available, it is not necessary to use the add-hoc list
+                    ##secondary_locations = list(set(PU_overflow[campaign]['sites']) & set( SI.sites_ready ))
+                    ## intersect with the sites that are allowed from the request requirement
+                    secondary_locations = secondary_locations & set(sites_allowed)
+                else:
+                    print "Agents know that the secondary is at",better_secondary_locations
+                    secondary_locations = set(better_secondary_locations) & set(memory_allowed)
+
+                print "Using good locations allowed",secondary_locations
 
                 ends = ['_0','StepOneProc','Production', 
                         '_1' ## overflow the reco too

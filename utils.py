@@ -4258,7 +4258,40 @@ class workflowInfo:
 
         return dict(where_to_run),dict(missing_to_run),missing_to_run_at
 
-    
+    def getPileUpJSON(self, task):
+        res = {}
+        agents = self.getActiveAgents()
+        agents = map(lambda s : s.split('/')[-1].split(':')[0], agents)
+        wf = self.request['RequestName']
+        for agent in agents:
+            src = '%s:/data/srv/wmagent/current/install/wmagent/WorkQueueManager/cache/%s/WMSandbox/%s/cmsRun1/pileupconf.json'%(agent, wf, task)
+            dest = '/tmp/%s-%s.json'%( wf, task)
+            if os.path.isfile( dest ):
+                res = json.loads(open( dest ).read())
+                break
+            com = 'scp %s %s'%( src, dest)
+            os.system( com )
+            if os.path.isfile( dest ):
+                res = json.loads(open( dest ).read())
+                break
+        return res
+
+    def getClassicalPUOverflow(self, task):
+        pu = self.getPileUpJSON(task)
+        if not pu: return []
+        ret=set()
+        intersection = None
+        for block in pu['mc']:
+            ret.update( pu['mc'][block]['PhEDExNodeNames'])
+            if intersection:
+                intersection = intersection & set(pu['mc'][block]['PhEDExNodeNames'])
+            else:
+                intersection = set(pu['mc'][block]['PhEDExNodeNames'])
+        SI = global_SI()
+        ret = sorted(set([ SI.SE_to_CE(s) for s in ret if not 'Buffer' in s] ))
+        inter = sorted(set([ SI.SE_to_CE(s) for s in intersection if not 'Buffer' in s]))
+        return inter
+
     def getWorkQueueElements(self):
         wq = self.getWorkQueue()
         wqes = [w[w['type']] for w in wq]
