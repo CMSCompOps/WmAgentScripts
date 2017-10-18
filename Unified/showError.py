@@ -312,6 +312,8 @@ def parse_one(url, wfn, options=None):
         wfi.request['PrepID'],
         wfn
         )
+
+    html += '<a href="https://its.cern.ch/jira/issues/?jql=text~%s AND project = CMSCOMPPR" target="_blank">jira</a><br>'% wfi.request['PrepID']
     r_type = wfi.request.get('OriginalRequestType', wfi.request.get('RequestType','NaT'))
     if r_type in ['ReReco']:
         html += '<a href=../datalumi/lumi.%s.html>Lumisection Summary</a><br>'% wfi.request['PrepID']
