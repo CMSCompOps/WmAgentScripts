@@ -473,7 +473,7 @@ Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransfertea
 
     lines.sort()
     html_doc.write("""
-Worflow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests_in_production.php target=_blank>ongoing</a> <a href=https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary target=_blank>elog</a> <a href=https://cms-gwmsmon.cern.ch/prodview target=_blank>queues</a> <a href=logs/assignor/last.log target=_blank>log</a> <a href=logs/checkor/last.log target=_blank>postlog</a> <a href=logs/equalizor/last.log target=_blank>equ</a> <a href=logs/completor/last.log target=_blank>comp</a> <a href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?in_production=1&rsort=2&older=3">lasting</a>
+Worflow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests_in_production.php target=_blank>ongoing</a> <a href=https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary target=_blank>elog</a> <a href=https://cms-gwmsmon.cern.ch/prodview target=_blank>queues</a> <a href=logs/assignor/last.log target=_blank>log</a> <a href=logs/checkor/last.log target=_blank>postlog</a> <a href=logs/equalizor/last.log target=_blank>equ</a> <a href=logs/completor/last.log target=_blank>comp</a> <a href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?in_production=1&rsort=5&older=3">lasting</a>
 <a href="javascript:showhide('away')">[Click to show/hide]</a>
 <br>
 <div id="away" style="display:none;">
