@@ -75,5 +75,8 @@ $BASE_DIR/cWrap.sh Unified/closor.py
 $BASE_DIR/cWrap.sh Unified/checkor.py  --update
 $BASE_DIR/cWrap.sh Unified/actor.py
 
+## early announce what can be announced already
+$BASE_DIR/cWrap.sh Unified/closor.py --announce
+
 rm -f $lock_name
 
