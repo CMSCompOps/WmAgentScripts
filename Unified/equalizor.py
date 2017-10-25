@@ -564,7 +564,7 @@ def equalizor(url , specific = None, options=None):
                     print "do not start resizing a task that was set single-core"
 
             if task.pathName in resizing:
-                addhoc_resize = ['MUO-RunIIFall17GS-00012','MUO-RunIIFall17GS-00013','MUO-RunIIFall17GS-00011' ]
+                addhoc_resize = ['HIG-RunIIFall17GS-00004']
                 for k_resize in addhoc_resize:
                     if k_resize in taskname:
                         resizing[task.pathName]["minCores"]=1
@@ -605,7 +605,7 @@ def equalizor(url , specific = None, options=None):
                 if task.taskType in ['Processing','Production']:
                     mcore = wfi.getCorePerTask( taskname )
                     set_memory,set_slope,set_time,set_io = getPerf( task.pathName , original_ncore = mcore)
-                    wfi.sendLog('equalizor','Performance tuning to %s GB %s min for %s'%( set_memory,set_time,taskname ))
+
                     ## get values from gmwsmon
                     # massage the values : 95% percentile
                     performance[task.pathName] = {}
@@ -621,13 +621,13 @@ def equalizor(url , specific = None, options=None):
                     mem = wfi.getMemoryPerTask( taskname )
                     print taskname,mem
                     for key,add_hoc_mem in memory_correction.items():
-                        if key in taskname and mem > add_hoc_mem and set_memory > add_hoc_mem:
+                        if key in taskname and mem > add_hoc_mem and (set_memory==None or set_memory > add_hoc_mem):
                             print "overiding",set_memory,"to",add_hoc_mem,"by virtue of add-hoc memory_correction",key
                             set_memory = min( add_hoc_mem, set_memory) if set_memory else add_hoc_mem
 
                     if set_memory:
                         set_memory =  min(set_memory, 20000)
-                        set_memory =  max(set_memory, int(mem/2.))
+                        set_memory =  max(set_memory, int(mem/2.)) ## do not go too low. allow 50% of initial value at most
                         print "trully setting memory to",set_memory
                         performance[task.pathName]['memory']= set_memory
                         perf_per_config[configcache.get( taskname , 'N/A')]['memory'] = set_memory
@@ -641,7 +641,18 @@ def equalizor(url , specific = None, options=None):
                     if set_io:
                         performance[task.pathName]['read'] = set_io
                         perf_per_config[configcache.get( taskname , 'N/A')]['read'] = set_io
-            
+
+                    wfi.sendLog('equalizor',"""Performance tuning of task %s
+%s GB base memory at %d core
+%s GB per thread
+%s min assuming runing 1-thread
+%s KBs estimated per thread
+"""%( taskname, 
+      set_memory, mcore,
+      set_slope,
+      set_time,
+      set_io ))
+                    
             ## rule to remove from the site whitelist site that do not look ready for unified (local banning)
             if wfo.name in restricting_to_ready:
                 if task.taskType in ['Production']:
@@ -860,11 +871,12 @@ def equalizor(url , specific = None, options=None):
             if campaign in PU_overflow:
                 force = PU_overflow[campaign]['force'] if 'force' in PU_overflow[campaign] else False
                 better_secondary_locations = wfi.getClassicalPUOverflow( taskname )
-                if not better_secondary_locations or not options.augment: ## for now, forces -a to use better, not -a to use old way
+                if not better_secondary_locations:
                     secondary_locations = set(SI.sites_ready + force_sites)
                     for s in sec:
                         if not s in PU_locations:
                             presence = getDatasetPresence( url, s)
+                            print json.dumps( presence, indent=2)
                             one_secondary_locations = [site for (site,(there,frac)) in presence.items() if frac>98.]
                             PU_locations[s] = one_secondary_locations
                         print "secondary is at",sorted(PU_locations[s])
@@ -874,6 +886,7 @@ def equalizor(url , specific = None, options=None):
                     ### given that we have the secondary location available, it is not necessary to use the add-hoc list
                     ##secondary_locations = list(set(PU_overflow[campaign]['sites']) & set( SI.sites_ready ))
                     ## intersect with the sites that are allowed from the request requirement
+
                     secondary_locations = secondary_locations & set(sites_allowed)
                 else:
                     print "Agents know that the secondary is at",better_secondary_locations
@@ -882,7 +895,7 @@ def equalizor(url , specific = None, options=None):
                 print "Using good locations allowed",secondary_locations
 
                 ends = ['_0','StepOneProc','Production', 
-                        '_1' ## overflow the reco too
+                        '_1' ## overflow the reco too ...
                         ]
                 if options.augment: ends.append('_1')
                 if any([task.pathName.endswith(finish) for finish in ends]) :
