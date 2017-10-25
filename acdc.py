@@ -24,14 +24,21 @@ for wf in wfs:
                          getWorkflowById( reqmgr_url, pid, details=True))
         acdcs = [r['RequestName'] for r in familly]
     else:
-        makeall = os.popen('./makeACDC.py --all -w %s'% wf).read()
-        for s in [l.split() for l in makeall.split('\n')]:
-            if len(s)!=3: continue
-            if s[1]!='for' : continue
-            acdcs.append( s[0] )
+        com = './makeACDC.py --all -w %s'% wf
+        print com 
+        y = (raw_input('go ?') if not options.dry else 'dry') if not options.go else 'y'
+        if y.lower() in ['y','yes','go','ok']:
+            makeall = os.popen('./makeACDC.py --all -w %s'% wf).read()
+            for s in [l.split() for l in makeall.split('\n')]:
+                if len(s)!=3: continue
+                if s[1]!='for' : continue
+                acdcs.append( s[0] )
     print acdcs
     #sec='--secondary_x' if 'RunIISummer16DR80Premix' in wf else ''
     sec=''
     for acdc in acdcs:
-        os.system('./assign.py %s -w %s %s'%(options.assignoptions, acdc, sec))
-        pass
+        com = './assign.py %s -w %s %s'%(options.assignoptions, acdc, sec)
+        y = (raw_input('go ?') if not options.dry else 'dry') if not options.go else 'y'
+        if y.lower() in ['y','yes','go','ok']:        
+            os.system('./assign.py %s -w %s %s'%(options.assignoptions, acdc, sec))
+
