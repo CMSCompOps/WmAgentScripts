@@ -4281,16 +4281,26 @@ class workflowInfo:
         if not pu: return []
         ret=set()
         intersection = None
+        count_blocks = defaultdict(int)
+
         for block in pu['mc']:
+            #print pu['mc'][block]
             ret.update( pu['mc'][block]['PhEDExNodeNames'])
+            for site in pu['mc'][block]['PhEDExNodeNames']:
+                count_blocks[site]+=pu['mc'][block]['NumberOfEvents']
             if intersection:
                 intersection = intersection & set(pu['mc'][block]['PhEDExNodeNames'])
             else:
                 intersection = set(pu['mc'][block]['PhEDExNodeNames'])
+        
+        max_blocks = max( count_blocks.values())
+        #print json.dumps(count_blocks, indent=2)
+        site_with_enough = [ site for site,count in count_blocks.items() if count > 0.90*max_blocks]
         SI = global_SI()
         ret = sorted(set([ SI.SE_to_CE(s) for s in ret if not 'Buffer' in s] ))
         inter = sorted(set([ SI.SE_to_CE(s) for s in intersection if not 'Buffer' in s]))
-        return inter
+        enough = sorted(set([ SI.SE_to_CE(s) for s in site_with_enough if not 'Buffer' in s]))
+        return enough
 
     def getWorkQueueElements(self):
         wq = self.getWorkQueue()
@@ -5133,7 +5143,7 @@ class workflowInfo:
             if 'InputDataset' in blob:  
                 primary = set(filter(None,[blob['InputDataset']]))
             #elif 'InputDatasets' in blob: primary = set(filter(None,blob['InputDatasets']))
-            if primary and 'IncludeParent' in blob and blob['IncludeParent']:
+            if primary and 'IncludeParents' in blob and blob['IncludeParents']:
                 parent = findParent( primary )
             if 'MCPileup' in blob:
                 secondary = set(filter(None,[blob['MCPileup']]))
