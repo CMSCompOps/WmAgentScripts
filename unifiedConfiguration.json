@@ -72,7 +72,7 @@
    "description" : "The value in GB that we allow the output size to be before adapting the splitting"
  },
   "output_size_correction": {
-   "value" : { "Phase" : 5 },
+   "value" : { "Phase" : 1 },
    "description" : "The correction factor to be applied to SizePerEvent per keyword."
  },
  "memory_correction": {
@@ -207,6 +207,10 @@
     "value" : 10,
     "description" : "Time in minute that we allow to get logs from where they are before shutting retrieval down."
   },
+  "expose_top_N":{
+    "value" : 3,
+    "description" :"The number of top N error code to expose logs of."
+  },
   "n_error_exposed":{
     "value" : 0,
     "description" :"The default number of job cmsrun logs to retrieve"
@@ -294,7 +298,8 @@
 	       "highIO" : {"parameters" : { "SiteWhitelist" : ["T2_US_Nebraska","T2_US_Purdue"]}},
 	       "ALCA_" : { "primary_AAA" : true , 
 	       	       	   "parameters" : { "SiteWhitelist" : ["T1_US_FNAL"]}
-			}
+			},
+	 	"NANO_" : { "parameters" : { "MaxMergeSize" : 100 ,"MinMergeSize": 50 }}
              }
   },
   "batch_goodness":{
