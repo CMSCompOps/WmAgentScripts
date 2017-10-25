@@ -62,7 +62,7 @@ def singleRecovery(url, task, initial, actions, do=False):
                 payload['Memory'] = actions[action]
                 print "Memory set to " + actions[action]
                 ## Taskchains needs to be treated special to set the memory to all tasks
-                if initial['RequestType'] == 'TaskChain':
+                if 'TaskChain' in initial:
                     it = 1
                     while True:
                         t = 'Task%d'%it
@@ -194,7 +194,7 @@ def singleClone(url, wfname, actions, comment, do=False):
     if actions:
         for action in actions:
             if action.startswith('mem') and actions[action] != "" and actions[action] != 'Same':
-                if payload['RequestType'] == 'TaskChain':
+                if 'TaskChain' in payload:
                     print "Setting memory for clone of task chain"
                     it=1
                     while True:
