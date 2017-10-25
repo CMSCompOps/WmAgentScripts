@@ -251,7 +251,7 @@ Last update on <b>%s(CET), %s(GMT)</b>
 <hr>
 <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/><img src=https://dmytro.web.cern.ch/dmytro/cmsprodmon/images/campaign-RunningCpus.png style="height:150px"></a>
 <a href=https://cms-gwmsmon.cern.ch/prodview><img src=https://cms-gwmsmon.cern.ch/prodview/graphs/prioritysummarycpusinuse/weekly style="height:150px" alt="Click here if it does not load"></a>
-<a href=https://cms-gwmsmon.cern.ch/prodview><img src=https://cms-gwmsmon.cern.ch/prodview/graphs/prioritysummarycpuspending/weekly style="height:150px" alt="Click here if it does not load"></a>
+<a href=https://cms-gwmsmon.cern.ch/prodview><img src=https://cms-gwmsmon.cern.ch/prodview/graphs/prioritysummarycpuspending/weekly/log style="height:150px" alt="Click here if it does not load"></a>
 <hr>
 <br>
 
