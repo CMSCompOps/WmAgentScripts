@@ -39,19 +39,32 @@ def getRandomDiskSite(site=None):
         s += "_Disk"
     return s
 
-def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, procstring, trust_site=False, replica=False, verbose=False, taskchain=False, trust_secondary_site=False, memory=None, multicore=None):
+#def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, procstring, trust_site=False, replica=False, verbose=False, taskchain=False, trust_secondary_site=False, memory=None, multicore=None):
+def assignRequest(url, **args):
     """
     Sends assignment request
     """
+    workflow = args.get('workflow')
+    team = args.get('team')
+    sites = args.get('sites')
+    era = args.get('era')
+    procversion = args.get('procversion')
+    activity = args.get('activity')
+    lfn = args.get('lfn')
+    procstring = args.get('procstring')
+    trust_site = args.get('trust_site',False)
+    replica = args.get('replica',False)
+    verbose = args.get('verbose',False)
+    taskchain = args.get('taskchain',False)
+    trust_secondary_site = args.get('trust_secondary_site',False)
+    memory = args.get('memory',None)
+    multicore = args.get('multicore',None)
     #params = copy.deepcopy(reqMgr.assignWorkflow.defaults)
     params = {
-              ##"action" : "Assign",
-              ##"Team" + team: "checked",
               "SiteWhitelist": sites,
               "MergedLFNBase": lfn,
               "Dashboard": activity,
               "ProcessingVersion": procversion,
-              ##"checkbox" + workflow: "checked",
               "execute": True
               }
     
@@ -80,6 +93,11 @@ def assignRequest(url, workflow, team, sites, era, procversion, activity, lfn, p
         #pprint(params)
         params['execute'] = False
         #return False
+
+    if args.get('maxmergeevents',None):
+        params['MaxMergeEvents'] = args.get('maxmergeevents')
+    if args.get('lumisperjob',None):
+        params['LumisPerJob'] = args.get('lumisperjob')
 
     res = reqMgr.assignWorkflow(url, workflow, team, params)
     if res:
@@ -128,6 +146,8 @@ def main():
     parser.add_option('-f', '--file', help='Text file with a list of wokflows. If this option is used, the same settings will be applied to all workflows', dest='file')
     parser.add_option('-w', '--workflow', help='Workflow Name, or coma sperated list', dest='workflow')
     parser.add_option('-m', '--memory', help='Set the Memory parameter to the workflow', dest='memory', default=None, type=int)
+    parser.add_option('--lumisperjob',help='Set the number of lumis per job', default=None, type=int)
+    parser.add_option('--maxmergeevents',help='Set the number of event to merge at max', default=None, type=int)
     parser.add_option('-c', '--multicore', help='Set the multicore parameter to the workfllow', dest='multicore', default=None, type=int)
     parser.add_option('-e', '--era', help='Acquistion era', dest='era')
     parser.add_option("--procstr", dest="procstring", help="Overrides Processing String with a single string")
@@ -372,14 +392,24 @@ def main():
         
         # Really assigning the workflow now
         #print wf_name, '\tEra:', era, '\tProcStr:', procstring, '\tProcVer:', procversion, '\tTeam:', team, '\tSite:', sites
-        assignRequest(url, wf_name, options.team, sites, era, procversion, activity, lfn, procstring, 
+        assignRequest(url, 
+                      workflow = wf_name,
+                      team = options.team,
+                      sites = sites,
+                      era = era, 
+                      procversion = procversion,
+                      activity = activity,
+                      lfn = lfn,
+                      procstring = procstring, 
                       trust_site = xrootd, 
                       replica = options.replica, 
                       verbose = options.test, 
                       taskchain = taskchain, 
                       trust_secondary_site = secondary_xrootd,
                       memory=memory,
-                      multicore=multicore
+                      multicore=multicore,
+                      lumisperjob = options.lumisperjob,
+                      maxmergeevents = options.maxmergeevents
                       )
     
     sys.exit(0)
