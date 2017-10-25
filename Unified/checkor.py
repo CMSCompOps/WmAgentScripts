@@ -472,7 +472,7 @@ def checkor(url, spec=None, options=None):
                 wfi.sendLog('checkor', "Can truncate recovery of %s over %.2f"%(out, fractions_truncate_recovery[output]))
 
             if fractions_truncate_recovery[output] < fractions_pass[output]:
-                print "this is not going to end well if you truncate at a lower threshold than passing",fractions_truncate_recovery[output],fractions_pass[output]
+                print "This is not going to end well if you truncate at a lower threshold than passing",fractions_truncate_recovery[output],fractions_pass[output]
                 ## floor truncating
                 fractions_truncate_recovery[output] = fractions_pass[output]
                 ##### OR 
@@ -591,9 +591,10 @@ def checkor(url, spec=None, options=None):
             ## if we still have acdc running, should we set to force-complete and move-on ?
             #if 'recovering' in assistance_tags:            
 
-        if all(pass_stats_check.values()) and all(pass_stats_check_to_truncate_recovery.values()):
+        if acdc and all(pass_stats_check.values()) and all(pass_stats_check_to_truncate_recovery.values()):
             print "This is essentially good to truncate"
 
+            sendEmail('checkor','Ready to truncate the tail in recovery of %s. Not enabled yet'%( wfi.request['RequestName']))
             if options.go: 
                 wfi.sendLog('checkor','Will force-complete the recovery for missing statistics')
                 forceComplete(url, wfi)
