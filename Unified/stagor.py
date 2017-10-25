@@ -424,7 +424,7 @@ def stagor(url,specific =None, options=None):
         if available < 1.:
             print "incomplete",dsname
             ## there is a problem in the method below that it does not account for files stuck in T1*Buffer only
-            lost_blocks,lost_files = findLostBlocksFiles( url, dsname )
+            lost_blocks,lost_files = findLostBlocksFiles( url, dsname ) if (not dsname.endswith('/RAW')) else ([],[])
             lost_block_names = [item['name'] for item in lost_blocks]
             lost_file_names = [item['name'] for item in lost_files]
 
