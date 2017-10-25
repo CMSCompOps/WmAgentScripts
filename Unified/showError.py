@@ -185,6 +185,7 @@ def parse_one(url, wfn, options=None):
 
     task_error_site_count ={}
     one_explanation = defaultdict(set)
+    per_task_explanation = defaultdict(set)
 
     if wfn in ['vlimant_task_EXO-RunIISummer15wmLHEGS-04800__v1_T_170906_141738_1357']:
         return task_error_site_count, one_explanation
@@ -304,25 +305,33 @@ def parse_one(url, wfn, options=None):
     if not tasks:
         print "no task to look at"
         #return task_error_site_count
-        
-    html="<html> <center><h1><a href=https://cmsweb.cern.ch/reqmgr2/fetch?rid=%s>%s</a><br><a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>%s</a><br><a href=https://cms-gwmsmon.cern.ch/prodview/%s>Job Progress</a><br>"%(
-        wfn,
-        wfn,
-        wfi.request['PrepID'],
-        wfi.request['PrepID'],
-        wfn
-        )
 
-    html += '<a href="https://its.cern.ch/jira/issues/?jql=text~%s AND project = CMSCOMPPR" target="_blank">jira</a><br>'% wfi.request['PrepID']
+    html="<html> <center><h1>%s, Updated on %s (GMT)" % ( wfn, time.asctime(time.gmtime()) )    
+    #html="<html> <center><h1><a href=https://cmsweb.cern.ch/reqmgr2/fetch?rid=%s>%s</a><br><a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>%s</a><br><a href=https://cms-gwmsmon.cern.ch/prodview/%s>Job Progress</a><br>"%(
+    #    wfn,
+    #    wfn,
+    #    wfi.request['PrepID'],
+    #    wfi.request['PrepID'],
+    #    wfn
+    #    )
+
+
+    
+    html+= '</center>'
+    html += '<a href=https://cmsweb.cern.ch/reqmgr2/fetch?rid=%s>dts</a>, '%( wfn )
+    html += '<a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>ac</a>, '% ( wfi.request['PrepID'])
+    html += '<a href=https://cms-gwmsmon.cern.ch/prodview/%s>Job Progress</a>, '%( wfn )
     r_type = wfi.request.get('OriginalRequestType', wfi.request.get('RequestType','NaT'))
     if r_type in ['ReReco']:
-        html += '<a href=../datalumi/lumi.%s.html>Lumisection Summary</a><br>'% wfi.request['PrepID']
-    
-    html += "Updated on %s (GMT)" % ( time.asctime(time.gmtime()) )    
-    html+= '</center><hr>'
+        html += '<a href=../datalumi/lumi.%s.html>Lumisection Summary</a>, '% wfi.request['PrepID']
+    html += '<a href="https://its.cern.ch/jira/issues/?jql=text~%s AND project = CMSCOMPPR" target="_blank">jira</a>'% (wfi.request['PrepID'])
+    html+='<hr>'
+    html += '<a href=#IO>I/O</a>, <a href=#ERROR>Errors</a>, <a href=#BLOCK>blocks</a>, <a href=#FILE>files</a>, <a href=#CODES>Error codes</a><br>'
+    html+='<hr>'
 
     time_point("Header writen")
 
+    html += '<a name=IO></a>'
     if prim:
         html+='Reads in primary<br>'
         rwl = wfi.getRunWhiteList()
@@ -366,6 +375,7 @@ def parse_one(url, wfn, options=None):
 
     html += """
 <hr><br>
+<a name=ERROR></a>
 <ul>
 <li> <b><i>dashboard numbers over %d days</b></i>
 <li> &uarr; %% with respect to total number of error in the code
@@ -427,6 +437,38 @@ def parse_one(url, wfn, options=None):
                     total_count[errorcode_s] += count
                     #error_site_count[errorcode_s][site] += count
                     error_site_count[errorcode_s][ce] += count
+
+        ## show the total
+        all_sites = set()
+        all_codes = set()
+        for code in error_site_count:
+            for site in error_site_count[code]:
+                all_sites.add( site )
+                if code != '0':
+                    all_codes.add( code)
+
+        s_per_code =defaultdict(int)
+        for site in all_sites:
+            for code in sorted(all_codes):
+                s_per_code[code] += error_site_count[code][site]
+        
+        expose_top_N = UC.get('expose_top_N')
+        count_top_N = min( sorted(s_per_code.values(), reverse=True)[:expose_top_N]) if s_per_code else -1
+
+        
+        for exittype in err[task]:
+            #print "\t",err[task][exittype].keys()
+            for errorcode_s in err[task][exittype]:
+                if errorcode_s == '0' : continue
+                #print "\t\t",err[task][exittype][errorcode_s].keys()
+                force_code = (count_top_N>0 and s_per_code[errorcode_s] >= count_top_N)
+                if force_code: print "will expose",errorcode_s,"anyways"
+                for site in err[task][exittype][errorcode_s]:
+                    ce = SI.SE_to_CE(site)
+                    count = err[task][exittype][errorcode_s][site]['errorCount']
+                    ###total_count[errorcode_s] += count
+                    #error_site_count[errorcode_s][site] += count
+                    ###error_site_count[errorcode_s][ce] += count
                     for sample in err[task][exittype][errorcode_s][site]['samples']:
                         #print sample.keys()
                         for step in sample['errors']:
@@ -434,13 +476,22 @@ def parse_one(url, wfn, options=None):
                                 if report['type'] == 'CMSExeption': continue
                                 #if int(report['exitCode']) == int(errorcode_s):
                                 one_explanation[errorcode_s].add("%s (Exit code: %s) \n%s"%(report['type'], report['exitCode'], report['details']))
+                                per_task_explanation["%s:%s"%(task_short,errorcode_s)].add("%s (Exit code: %s) \n%s"%(report['type'], report['exitCode'], report['details']))
                                 #one_explanation[errorcode_s].add( report['details'] )
                                 #else:
                                 #one_explanation[
                         agent = sample['agent_name']
                         wmbs = sample['wmbsid']
                         workflow = sample['workflow']
-
+                        if force_code:
+                            if errorcode_s in expose_condor_code:
+                                expose_condor_code[errorcode_s][agent] += 1
+                            else:
+                                expose_condor_code[errorcode_s] = defaultdict(lambda : n_expose)
+                            if errorcode_s in expose_archive_code:
+                                expose_archive_code[errorcode_s][agent] += 1
+                            else:
+                                expose_archive_code[errorcode_s] = defaultdict(lambda : n_expose)
 
                         #if do_CL and ((errorcode_s in expose_condor_code and expose_condor_code[errorcode_s][agent]) or do_all_error_code) and 'cern' in agent:
                         if do_CL and ((errorcode_s in expose_condor_code and expose_condor_code[errorcode_s][agent])) and 'cern' in agent:
@@ -518,10 +569,10 @@ def parse_one(url, wfn, options=None):
         #miss = "{:,}".format(missing_to_run[task]) if task in missing_to_run else "N/A"
 
         ## show the total
-        s_per_code =defaultdict(int)
-        for site in all_sites:
-            for code in sorted(all_codes):
-                s_per_code[code] += error_site_count[code][site]
+        #s_per_code =defaultdict(int)
+        #for site in all_sites:
+        #    for code in sorted(all_codes):
+        #        s_per_code[code] += error_site_count[code][site]
 
         #no_error = (sum(s_per_code.values())==0)
         no_error = len(all_not_reported)!=0
@@ -541,7 +592,8 @@ def parse_one(url, wfn, options=None):
         #for site in all_sites:
         #    html+='<th>%s</th>'%site
         for code in sorted(all_codes):
-            html+='<th><a href="#%s">%s</a>'%(code,code)
+            #html+='<th><a href="#%s">%s</a>'%(code,code)
+            html+='<th><a href="#%s:%s">%s</a>'%(task_short,code,code)
             if str(code) in expose_archive_code or do_all_error_code:
                 html += ' <a href=%s/joblogs/%s/%s/%s>, JobLog</a>'%( url_eos, wfn, code, task_short )
             if str(code) in expose_condor_code or do_all_error_code:
@@ -631,10 +683,12 @@ def parse_one(url, wfn, options=None):
     run_threads.start()
 
     html += '<hr><br>'
+    html += '<a name=BLOCK></a>'
     html += "<b>Blocks (%d/%d) needed for recovery</b><br>"%( len(needed_blocks_loc), len(all_blocks))
     for block in sorted(needed_blocks_loc.keys()):
         html +='%s <b>@ %s</b><br>'%(block, ','.join(sorted(needed_blocks_loc[block])))
 
+    html += '<a name=FILE></a>'
     html += "<br><b>Files in no block</b><br>"
     for f in sorted(files_and_loc_notin_dbs.keys()):
         ## make an xrd ls check on the files
@@ -645,10 +699,13 @@ def parse_one(url, wfn, options=None):
 
 
     html += '<hr><br>'
+    html += '<a name=CODES></a>'
     html += '<table border=1>'
-    for code in one_explanation:
-        html +='<tr><td><a name="%s">%s</a></td><td>%s</td></tr>'% ( code, code, '<br><br>'.join(one_explanation[code]).replace('\n','<br>' ))
-        #explanations[code].update( one_explanation[code] )
+    for code in per_task_explanation:
+        html +='<tr><td><a name="%s">%s</a></td><td>%s</td></tr>'% ( code, code, '<br><br>'.join(per_task_explanation[code]).replace('\n','<br>' ))
+    #for code in one_explanation:
+    #    html +='<tr><td><a name="%s">%s</a></td><td>%s</td></tr>'% ( code, code, '<br><br>'.join(one_explanation[code]).replace('\n','<br>' ))
+
     html+='</table>'
     html+=('<br>'*30)
     html +='</html>'
