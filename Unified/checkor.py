@@ -594,10 +594,8 @@ def checkor(url, spec=None, options=None):
         if acdc and all(pass_stats_check.values()) and all(pass_stats_check_to_truncate_recovery.values()):
             print "This is essentially good to truncate"
 
-            sendEmail('checkor','Ready to truncate the tail in recovery of %s. Not enabled yet'%( wfi.request['RequestName']))
-            if options.go: 
-                wfi.sendLog('checkor','Will force-complete the recovery for missing statistics')
-                forceComplete(url, wfi)
+            wfi.sendLog('checkor','Will force-complete the recovery to speed things up')
+            forceComplete(url, wfi)
 
         if over_100_pass and any([percent_completions[out] >100 for out in fractions_pass]):
             print wfo.name,"is over completed"
