@@ -2863,6 +2863,16 @@ def try_getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=
     #print json.dumps( presence , indent=2)
     return presence
 
+
+def getDatasetBlocksFromFiles( dataset, files):
+    dbsapi = DbsApi(url=dbs_url)
+    all_files = dbsapi.listFiles( dataset = dataset , detail=True, validFileOnly=1)
+    collected_blocks = set()
+    for fn in all_files:
+        if fn['logical_file_name'] in files:
+            collected_blocks.add( fn['block_name'] )
+    return sorted(collected_blocks)
+
 def getDatasetBlockSize(dataset):
     dbsapi = DbsApi(url=dbs_url)
     blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
@@ -3385,6 +3395,63 @@ def invalidateFiles( files ):
             all_OK = False
 
     return all_OK
+
+def checkParent( dataset ):
+    dbsapi = DbsApi(url=dbs_url)
+    dbswrite = DbsApi(url=dbs_url_writer)
+    
+    ## get the parent dataset
+    parents = findParent(dataset)
+    if len(parents)>1:
+        print "this is clearly a pb"
+        return False
+
+    parents = parents[:1]
+    p_f = {}
+    for parent in parents:
+        _,p_f[parent] = getDatasetLumisAndFiles(parent)
+    ## the list of lumis - file
+    _,f = getDatasetLumisAndFiles(dataset)
+    checked = {}
+    file_parent_fixing = defaultdict(set)
+    for rl,fns in f.items():
+        for fn in fns:
+            ### get their parents
+            file_parents = set()
+            ret = checked.get(fn , dbsapi.listFileParents( logical_file_name = fn ))
+            for r in ret:
+                file_parents.update( r.get('parent_logical_file_name',[]))
+
+            ## if none, make an alarm and fix it
+            if not file_parents:
+                for parent in parents:
+                    file_parents.update(p_f[parent].get(rl, []))
+            if not file_parents:
+                ## this is really an issue and new lumisections were made
+                print rl,"is really problematic in",dataset
+                print "not present in",parents
+            else:
+                ### dbs api to write the parent configuration
+                file_parent_fixing[fn].update(file_parents)
+
+    for fn,file_parents in file_parent_fixing.items():
+        print "Fixing DBS is underway for ",fn
+        #print "Found",sorted(file_parents),"as parents"
+        print "Found",len(file_parents),"as parents in",parents[0]
+        ## that API does not exists
+        dbswrite.updateFile( logical_file_name = fn,
+                             dataset = dataset,
+                             parent_logical_file_name = list(file_parents),
+                             parent_dataset = parents[0]
+                             )
+        pass
+        
+
+def findParent( dataset ):
+    dbsapi = DbsApi(url=dbs_url)
+    ret = dbsapi.listDatasetParents( dataset= dataset)
+    parents = [r.get('parent_dataset',None) for r in ret]
+    return parents
 
 def setFileStatus(file_names, validate=True):
     dbswrite = DbsApi(url=dbs_url_writer)
