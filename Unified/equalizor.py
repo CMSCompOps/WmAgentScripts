@@ -141,35 +141,30 @@ def equalizor(url , specific = None, options=None):
             mapping['T2_CH_CERN'].append(possible)
             pass
 
-    ## remove add-hoc sites from overflow mapping
-    prevent_sites = []#'T2_US_Purdue']
-    for prevent in prevent_sites:
-        if prevent in mapping: mapping.pop( prevent )
-    for src in mapping:
-        for prevent in prevent_sites:
-            if prevent in mapping[src]:
-                mapping[src].remove( prevent )
-
-
     take_site_out = UC.get('site_out_of_overflow')
 
+    for site,fallbacks in mapping.items():
+        mapping[site] = list(set(fallbacks))
+        
     ## create the reverse mapping for the condor module
     for site,fallbacks in mapping.items():
+        if site in take_site_out:
+            mapping.pop(site)
+            continue
         for fb in fallbacks:
             if fb == site: 
+                ## remove self
                 mapping[site].remove(fb)
                 continue
             if fb in take_site_out:
+                ## remove those to be removed
                 mapping[site].remove(fb)
                 continue
             if not site in reversed_mapping[fb]:
                 reversed_mapping[fb].append(site)
 
-    for site in mapping.keys():
-        if site in take_site_out:
-            mapping.pop(site)
-            continue
-        mapping[site] = list(set(mapping[site]))
+    #for site in mapping.keys():
+    #    mapping[site] = list(set(mapping[site]))
 
     ## this is the fallback mapping
     #print "Direct mapping : site => overflow"
