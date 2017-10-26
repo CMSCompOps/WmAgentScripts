@@ -16,6 +16,10 @@
    "value" : 0.5,
    "description" : "The ratio pending/running over which to consider overflowing"
  },
+ "PU_overflow_overflow_reco":{
+   "value" : false,
+   "descrition" : "Whether or not to overflow the second step (reco) for workfow with PU_overflow enabled"
+ },
  "mem_quanta": {
     "value" : 100,
     "description" : "The quanta of memory in MB for the JobRouter"
@@ -299,7 +303,7 @@
 	       "ALCA_" : { "primary_AAA" : true , 
 	       	       	   "parameters" : { "SiteWhitelist" : ["T1_US_FNAL"]}
 			},
-	 	"NANO_" : { "parameters" : { "MaxMergeSize" : 100 ,"MinMergeSize": 50 }}
+	 	"NANO_" : { "parameters" : { "MaxMergeSize" : 100 ,"MinMergeSize": 50, "LumisPerJob" : 1000 }}
              }
   },
   "batch_goodness":{

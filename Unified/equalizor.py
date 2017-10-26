@@ -267,7 +267,7 @@ def equalizor(url , specific = None, options=None):
             print str(e)
             return failed_out
         binned_memory = defaultdict( lambda : defaultdict(float))
-        buckets = filter(lambda i:i['key']!=0,perf_data['aggregations']["2"]["buckets"])
+        buckets = filter(lambda i:i['key']!=0,perf_data['aggregations']["2"]["buckets"]) if 'aggregations' in perf_data else [] ## fail safe on ES missing data
         for bucket in buckets:
             sub_buckets = filter(lambda i:i['key']!=0, bucket["3"]["buckets"])
             for sub_bucket in sub_buckets:
@@ -895,9 +895,11 @@ def equalizor(url , specific = None, options=None):
                 print "Using good locations allowed",secondary_locations
 
                 ends = ['_0','StepOneProc','Production', 
-                        '_1' ## overflow the reco too ...
+                        #'_1' ## overflow the reco too ...
                         ]
-                if options.augment: ends.append('_1')
+                if UC.get('PU_overflow_overflow_reco') or options.augment:
+                    ends.append('_1')
+
                 if any([task.pathName.endswith(finish) for finish in ends]) :
                     needs, task_name, running, idled = needs_action(wfi, task)
                     ## removing the ones in the site whitelist already since they encode the primary input location
