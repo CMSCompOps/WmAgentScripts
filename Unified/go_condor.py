@@ -233,7 +233,8 @@ def makePerformanceCorrectionsAds(configs):
         anAd["MemoryTasknames"] = map(str, wfs)
         memory_names_escaped = anAd.lookup('MemoryTasknames').__repr__()
         #exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (target.HasBeenMemoryTuned =!= true) && (target.OriginalMemory >= %d)' %( memory_names_escaped, int(memory) ))
-        exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (target.HasBeenMemoryTuned =!= true) && (target.OriginalMemory =!= %d)' %( memory_names_escaped, int(memory) )) ## just set to a different value
+        #exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (target.HasBeenMemoryTuned =!= true) && (target.OriginalMemory =!= %d)' %( memory_names_escaped, int(memory) ))
+        exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && ((target.HasBeenMemoryTuned =!= true) || (target.OriginalMemory =!= %d))' %( memory_names_escaped, int(memory) )) ## just set to a different value
         anAd["Requirements"] = classad.ExprTree(str(exp))
         anAd['set_HasBeenMemoryTuned'] = True
         anAd['set_HasBeenRouted'] = False
@@ -249,7 +250,8 @@ def makePerformanceCorrectionsAds(configs):
         anAd["Name"] = str("Set timing requirement to %s"% timing)
         anAd["TimeTasknames"] = map(str, wfs)
         time_names_escaped = anAd.lookup('TimeTasknames').__repr__()
-        exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (target.HasBeenTimingTuned =!= true) && (target.EstimatedSingleCoreMins <= %d)' %( time_names_escaped, int(timing) ))
+        #exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (target.HasBeenTimingTuned =!= true) && (target.EstimatedSingleCoreMins <= %d)' %( time_names_escaped, int(timing) ))
+        exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && ((target.HasBeenTimingTuned =!= true) || (target.EstimatedSingleCoreMins <= %d))' %( time_names_escaped, int(timing) ))
         anAd["Requirements"] = classad.ExprTree(str(exp))
         anAd['set_HasBeenTimingTuned'] = True
         anAd['set_HasBeenRouted'] = False
@@ -275,8 +277,21 @@ def makePerformanceCorrectionsAds(configs):
         anAd['set_ExtraMemory'] = int(slope)
         print anAd
 
-def makeAdhocAds():
+def makeDrainAds():
+    anAd = classad.ClassAd()                                                                                                                                                                       
+    anAd["GridResource"] = "condor localhost localhost"
+    anAd["TargetUniverse"] = 5                                                                                                                                                                     
+    draining_agents = []#"vocms0303"]
+    for agent in draining_agents:
+        anAd["Name"] = str("Drain agent %s"%agent)
+        exp = classad.ExprTree('regexp("%s",GlobalJobId) && JobStatus == 1'% agent)
+        anAd["Requirements"] = classad.ExprTree(str(exp))
+        ##regexp("vocms0303",GlobalJobId) && JobStatus == 1' -af GlobalJobId JobPrio | grep -v 303
+        anAd["set_JobPrio"] = 500000
+        anAd["set_HasBeenRouted"] = False
+        print anAd
 
+def makeAdhocAds():
     anAd = classad.ClassAd()
     anAd["GridResource"] = "condor localhost localhost"
     anAd["TargetUniverse"] = 5
@@ -295,6 +310,19 @@ def makeAdhocAds():
     anAd["set_HasBeenRouted"] = False
     print anAd
 
+    ############################################################
+    ## if you want to reset the routing of eveything in the pool
+    reset_routing = []#'HasBeenRouted','HasBeenRouted_Overflow','HasBeenMemoryTuned','HasBeenSlopeTuned', 'HasBeenTimingTuned','WMCore_ResizeJob','HasBeenReplaced','HasBeenReadTuned','HasBeenRaisedHighPrio']
+    for which_route in reset_routing:
+        anAd = classad.ClassAd()
+        anAd["GridResource"] = "condor localhost localhost"
+        anAd["TargetUniverse"] = 5
+        anAd["Name"] = str("Reset routing for %s"% which_route)
+        exp = classad.ExprTree("%s is true"% which_route)
+        anAd["Requirements"] = classad.ExprTree(str(exp))
+        anAd["set_HasBeenRouted"] = False
+        anAd["set_%s"% which_route] = False
+        print anAd
 
 
 
@@ -310,6 +338,7 @@ def makeAds(config):
     makeReleaseAds(config)
     makeHighPrioAds(config)
     makeAdhocAds()
+    makeDrainAds()
 
 if __name__ == "__main__":
 
