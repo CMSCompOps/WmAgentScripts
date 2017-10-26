@@ -274,7 +274,31 @@ def makePerformanceCorrectionsAds(configs):
         anAd['set_HasBeenRouted'] = False
         anAd['set_ExtraMemory'] = int(slope)
         print anAd
-        
+
+def makeAdhocAds():
+
+    anAd = classad.ClassAd()
+    anAd["GridResource"] = "condor localhost localhost"
+    anAd["TargetUniverse"] = 5
+    anAd["Name"] = str("Correcting memory requirement of 22092")
+    anAd["Requirements"] = classad.ExprTree("OriginalMemory =?= 22092")
+    anAd["set_OriginalMemory"] = 18000
+    anAd["set_HasBeenRouted"] = False
+    print anAd
+
+    anAd = classad.ClassAd()
+    anAd["GridResource"] = "condor localhost localhost"
+    anAd["TargetUniverse"] = 5
+    anAd["Name"] = str("Correcting memory requirement of 23260")
+    anAd["Requirements"] = classad.ExprTree("OriginalMemory =?= 23260")
+    anAd["set_OriginalMemory"] = 19500
+    anAd["set_HasBeenRouted"] = False
+    print anAd
+
+
+
+
+
 def makeAds(config):
     makeOverflowAds(config)
     makeSortAds()
@@ -285,6 +309,7 @@ def makeAds(config):
     makeHoldAds(config)
     makeReleaseAds(config)
     makeHighPrioAds(config)
+    makeAdhocAds()
 
 if __name__ == "__main__":
 
