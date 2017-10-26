@@ -193,14 +193,13 @@ for wf in wfs:
                     not_runable_acdc.add( wf['RequestName'] )
                     #not_processable.add( b )
                 se_whitelist = sorted(set([si.CE_to_SE(s) for s in wqe['SiteWhitelist'] if s in si.sites_ready]))
-                #se_whitelist = swl
-                if wqe['NoInputUpdate']==False and (se_whitelist>=acdc_location):
-                    missing_in_whitelist = sorted([si.SE_to_CE(s) for s in (set(acdc_location) - set(se_whitelist))])
+                missing_in_whitelist = sorted([si.SE_to_CE(s) for s in (set(acdc_location) - set(se_whitelist))])
+                if wqe['NoInputUpdate']==False and missing_in_whitelist: #(se_whitelist>=acdc_location):
+                    #missing_in_whitelist = sorted([si.SE_to_CE(s) for s in (set(acdc_location) - set(se_whitelist))])
                     print "Should have",missing_in_whitelist,"also in the whitelist, or have xrootd enabled"
                     print sorted(acdc_location),"for the ACDC location"
                     print sorted(se_whitelist),"for the whitelist"
                     not_runable_acdc.add( wf['RequestName'] )
-                    #not_processable.add( b )
                 
                 continue
             #b is the block
