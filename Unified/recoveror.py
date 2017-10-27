@@ -43,12 +43,68 @@ def singleRecovery(url, task , initial, actions, do=False):
             #    ## mention it's taking 2 times longer to have a 2 times finer splitting
             #    payload['TimePerEvent'] = factor*payload['TimePerEvent']
             if action.startswith('mem'):
-                increase = int(action.split('-')[-1]) if '-' in action else 1000
+                arg = action.split('-',1)[-1]
+                increase = set_to = None
+                tasks,set_to = arg.split(':') if ':' in arg else (None,arg)
+                tasks = tasks.split(',') if tasks else []
+                if set_to.startswith('+'):
+                    increase = int(set_to[1:])
+                else:
+                    set_to = int(set_to)
                 ## increase the memory requirement by 1G
-                payload['Memory'] += increase
+                if 'TaskChain' in initial:
+                    it = 1
+                    while True:
+                        t = 'Task%d'%it
+                        it += 1
+                        if t in initial:
+                            if tasks and not payload.setdefault(t, initial[t])['TaskName'] in tasks:
+                                print payload[t]['TaskName'],"not concerned"
+                                continue
+                            if set_to:
+                                payload.setdefault(t, initial[t])['Memory'] = set_to
+                            else:
+                                payload.setdefault(t, initial[t])['Memory'] += increase
+                        else:
+                            break
+                else:
+                    payload['Memory'] = set_to
+                #increase = int(action.split('-')[-1]) if '-' in action else 1000
+                ## increase the memory requirement by 1G
+                #payload['Memory'] += increase
+
             if action.startswith('split') and (initial['RequestType'] in ['MonteCarlo'] or (initial['RequestType'] in ['TaskChain'] and not 'InputDataset' in initial['Task1'])):
                 print "I should not be doing splitting for this type of request",initial['RequestName']
                 return None
+            if action.startswith('core'):
+                arg = action.split('-',1)[-1]
+                tasks,set_to = arg.split(':') if ':' in arg else (None,arg)
+                tasks = tasks.split(',') if tasks else []
+                set_to = int(set_to)
+                if 'TaskChain' in initial:
+                    it = 1
+                    while True:
+                        t = 'Task%d'%it
+                        it += 1
+                        if t in initial:
+                            mcore = payload.setdefault(t, initial[t])['Multicore']
+                            if tasks and not payload[t]['TaskName'] in tasks:
+                                print payload[t]['TaskName'],"not concerned"
+                                continue
+                            mem = payload[t]['Memory']
+                            factor = (set_to / float(mcore))
+                            fraction_constant = 0.4 
+                            mem_per_core_c = int((1-fraction_constant) * mem / float(mcore))
+                            ##scale the memory 
+                            payload[t]['Memory'] = mem + (set_to-mcore)*mem_per_core_c
+                            ## scale time/event
+                            payload[t]['TimePerEvent'] /= factor
+                            ## set the number of cores
+                            payload[t]['Multicore'] = set_to
+                        else: 
+                            break
+                else:
+                    payload['Multicore'] = increase
 
     acdc_round = 0
     initial_string = payload['RequestString']

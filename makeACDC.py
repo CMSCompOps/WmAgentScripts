@@ -18,14 +18,21 @@ testbed_url = 'cmsweb-testbed.cern.ch'
 
 from Unified.recoveror import singleRecovery
 from utils import workflowInfo
-def makeACDC(url, wfi, task, memory=None):
+def makeACDC(**args):
+    url = args.get('url')
+    wfi = args.get('wfi')
+    task = args.get('task')
     initial = wfi
-    #task = '/%s/%s'%( workflow, task)
     actions = []
+    memory = args.get('memory',None)
     if memory:
-        increment = initial.request['Memory'] - memory
-        actions.append( 'mem-%d'% increment )
-
+        #increment = initial.request['Memory'] - memory
+        #actions.append( 'mem-%d'% increment )
+        actions.append( 'mem-%s'% memory )
+    mcore = args.get('mcore',None)
+    if mcore:
+        actions.append( 'core-%s'% mcore)
+        
     acdc = singleRecovery(url, task, initial.request, actions, do=True)
     if acdc:
         return acdc
@@ -48,8 +55,10 @@ def main():
                       help="Coma separated list of paths to recover")
     parser.add_option("-a","--all",
                       help="Make acdc for all tasks to be recovered",default=False, action='store_true')
-    parser.add_option("-m","--memory", dest="memory", default=None, type=float,
+    parser.add_option("-m","--memory", dest="memory", default=None, type=int,
                         help="Memory to override the original request memory")
+    parser.add_option("-c","--mcore", dest="mcore", default=None,
+                      help="Multicore to override the original request multicore")
     parser.add_option("--testbed", default=False, action="store_true")
 
     (options, args) = parser.parse_args()
@@ -108,7 +117,9 @@ def main():
         print "Workflow:",wfname
         print "Tasks:",tasks
         for task in tasks:
-            r = makeACDC(url, wfi, task, options.memory) 
+            r = makeACDC(url=url, wfi=wfi, task=task,
+                         memory = options.memory,
+                         mcore = options.mcore) 
             if not r: 
                 print "Error in creating ACDC for",task,"on",wfname
                 break

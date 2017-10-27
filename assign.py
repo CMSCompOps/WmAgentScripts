@@ -86,6 +86,7 @@ def assignRequest(url, **args):
             params['AutoApproveSubscriptionSites'] = [params["NonCustodialSites"]]
     if memory:
         params["Memory"] = memory
+                    
     if multicore:
         params["Multicore"] = multicore
 
