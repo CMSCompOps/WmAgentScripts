@@ -2698,7 +2698,7 @@ def getDatasetOnGoingDeletion( url, dataset ):
 def getDatasetBlocks( dataset, runs=None, lumis=None):
     dbsapi = DbsApi(url=dbs_url)
     all_blocks = set()
-    if runs:
+    if runs == []:
         for r in runs:
             all_blocks.update([item['block_name'] for item in dbsapi.listBlocks(run_num=r, dataset= dataset) ])
     if lumis:
@@ -2714,7 +2714,7 @@ def getDatasetBlocks( dataset, runs=None, lumis=None):
         #needs a series of convoluted calls
         #all_blocks.update([item['block_name'] for item in dbsapi.listBlocks( dataset = dataset )])
         pass
-    if not runs and not lumis:
+    if runs==None and lumis==None:
         all_blocks.update([item['block_name'] for item in dbsapi.listBlocks(dataset= dataset) ])
     
     return list( all_blocks )
