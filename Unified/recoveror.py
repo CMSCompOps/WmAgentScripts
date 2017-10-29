@@ -52,21 +52,26 @@ def singleRecovery(url, task , initial, actions, do=False):
                 else:
                     set_to = int(set_to)
                 ## increase the memory requirement by 1G
+
                 if 'TaskChain' in initial:
+                    mem_dict = {} 
                     it = 1
                     while True:
                         t = 'Task%d'%it
                         it += 1
                         if t in initial:
-                            if tasks and not payload.setdefault(t, initial[t])['TaskName'] in tasks:
-                                print payload[t]['TaskName'],"not concerned"
+                            tname = payload.setdefault(t, initial[t])['TaskName']
+                            mem = mem_dict.setdefault( tname, payload[t]['Memory'])
+                            if tasks and not tname in tasks:
+                                print tname,"not concerned"
                                 continue
                             if set_to:
-                                payload.setdefault(t, initial[t])['Memory'] = set_to
+                                mem_dict[tname] = set_to
                             else:
-                                payload.setdefault(t, initial[t])['Memory'] += increase
+                                mem_dict[tname] += increase
                         else:
                             break
+                    payload['Memory'] = mem_dict
                 else:
                     payload['Memory'] = set_to
                 #increase = int(action.split('-')[-1]) if '-' in action else 1000
@@ -82,27 +87,33 @@ def singleRecovery(url, task , initial, actions, do=False):
                 tasks = tasks.split(',') if tasks else []
                 set_to = int(set_to)
                 if 'TaskChain' in initial:
+                    core_dict = {}
+                    mem_dict = payload['Memory'] if type(payload['Memory'])==dict else {}
                     it = 1
                     while True:
                         t = 'Task%d'%it
                         it += 1
                         if t in initial:
-                            mcore = payload.setdefault(t, initial[t])['Multicore']
-                            if tasks and not payload[t]['TaskName'] in tasks:
-                                print payload[t]['TaskName'],"not concerned"
+                            tname = payload.setdefault(t, initial[t])['TaskName']
+                            mcore = core_dict.setdefault(tname, payload[t]['Multicore'])
+                            mem = mem_dict.setdefault(tname, payload[t]['Memory'])
+                            if tasks and not tname in tasks:
+                                print tname,"not concerned"
                                 continue
-                            mem = payload[t]['Memory']
+
                             factor = (set_to / float(mcore))
                             fraction_constant = 0.4 
                             mem_per_core_c = int((1-fraction_constant) * mem / float(mcore))
                             ##scale the memory 
-                            payload[t]['Memory'] = mem + (set_to-mcore)*mem_per_core_c
+                            mem_dict[tname] += (set_to-mcore)*mem_per_core_c
                             ## scale time/event
-                            payload[t]['TimePerEvent'] /= factor
+                            time_dict[tname] = payload[t]['TimePerEvent'] /factor
                             ## set the number of cores
-                            payload[t]['Multicore'] = set_to
+                            core_dict[tname] = set_to
                         else: 
                             break
+                    payload['Multicore'] = core_dict
+                    ##payload['TimePerEvent'] = time_dict ## cannot be used yet
                 else:
                     payload['Multicore'] = increase
 

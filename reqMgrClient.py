@@ -785,8 +785,11 @@ def assignWorkflow(url, workflowname, team, parameters ):
         while True:
             t_s = '%s%d'%(chain_type, t_i)
             if not t_s in wf.request: break
-            if 'Memory' in wf.request[t_s]:
-                maxRSSs[wf.request[t_s]['%sName'%chain_type]] = int(wf.request[t_s]['Memory'])*1024
+            t_n = wf.request[t_s]['%sName'%chain_type]
+            if type(wf.request['Memory'])==dict and t_n in wf.request['Memory']:
+                maxRSSs[t_n] = int(wf.request['Memory'][t_n])*1024
+            elif 'Memory' in wf.request[t_s]:
+                maxRSSs[t_n] = int(wf.request[t_s]['Memory'])*1024
             else:
                 #nothing partial
                 maxRSSs = {}

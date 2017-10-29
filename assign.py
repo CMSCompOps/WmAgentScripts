@@ -85,10 +85,10 @@ def assignRequest(url, **args):
         if taskchain:
             params['AutoApproveSubscriptionSites'] = [params["NonCustodialSites"]]
     if memory:
-        params["Memory"] = memory
+        params["Memory"] = memory if type(memory)==dict else int(memory)
                     
     if multicore:
-        params["Multicore"] = multicore
+        params["Multicore"] = multicore if type(multicore)==dict else int(multicore)
 
     if verbose:
         #pprint(params)
@@ -146,10 +146,10 @@ def main():
     parser.add_option('--test', action="store_true",help='Nothing is injected, only print infomation about workflow and Era', dest='test')
     parser.add_option('-f', '--file', help='Text file with a list of wokflows. If this option is used, the same settings will be applied to all workflows', dest='file')
     parser.add_option('-w', '--workflow', help='Workflow Name, or coma sperated list', dest='workflow')
-    parser.add_option('-m', '--memory', help='Set the Memory parameter to the workflow', dest='memory', default=None, type=int)
+    parser.add_option('-m', '--memory', help='Set the Memory parameter to the workflow', dest='memory', default=None)
     parser.add_option('--lumisperjob',help='Set the number of lumis per job', default=None, type=int)
     parser.add_option('--maxmergeevents',help='Set the number of event to merge at max', default=None, type=int)
-    parser.add_option('-c', '--multicore', help='Set the multicore parameter to the workfllow', dest='multicore', default=None, type=int)
+    parser.add_option('-c', '--multicore', help='Set the multicore parameter to the workfllow', dest='multicore', default=None)
     parser.add_option('-e', '--era', help='Acquistion era', dest='era')
     parser.add_option("--procstr", dest="procstring", help="Overrides Processing String with a single string")
     parser.add_option('--checksite', default=False,action='store_true')
@@ -375,6 +375,72 @@ def main():
                 sys.exit(0)
 
 
+        ## need to play with memory setting
+        if taskchain:
+            if memory:
+                ## transform into a dictionnary
+                increase = set_to = None
+                tasks,set_to = memory.split(':') if ':' in memory else ("",memory)
+                tasks = tasks.split(',')
+                if set_to.startswith('+'):
+                    increase = int(set_to[1:])
+                else:
+                    set_to = int(set_to)
+                it = 1
+                memory_dict = {}
+                while True:
+                    t = 'Task%d'%it
+                    it += 1
+                    if t in schema:
+                        tname = schema[t]['TaskName']
+                        if tasks and not tname in tasks:
+                            print tname,"not concerned"
+                            memory_dict[tname] = schema[t]['Memory']
+                            continue
+                        if set_to:
+                            memory_dict[tname] = set_to
+                        else:
+                            memory_dict[tname] =schema[t]['Memory'] + increase
+                    else:
+                        break
+                memory = memory_dict
+                print memory_dict
+            ## need to play with multicore setting
+            if multicore:
+                tasks,set_to = multicore.split(':') if ':' in multicore else ("",multicore)
+                tasks = tasks.split(',')
+                set_to = int(set_to)
+                multicore_dict = {}
+                timeperevent_dict = {}
+                it=1
+                while True:
+                    t = 'Task%d'%it
+                    it += 1
+                    if t in schema:
+                        tname = schema[t]['TaskName']
+                        mcore = schema[t]['Multicore']
+                        if tasks and not tname in tasks:
+                            print tname,"not concerned"
+                            multicore_dict[tname] = schema[t]['Multicore']
+                            timeperevent_dict[tname] = schema[t]['TimePerEvent']
+                            continue
+                        mem = memory[tname]
+                        factor = (set_to / float(mcore))
+                        fraction_constant = 0.4
+                        mem_per_core_c = int((1-fraction_constant) * mem / float(mcore))
+                        print "mem per core", mem_per_core_c
+                        print "base mem", mem
+                        ## need to adjut the memory at the same time
+                        ## will crash of --mem was not set in argument :FINE
+                        memory[tname] = mem + (set_to-mcore)*mem_per_core_c
+                        print "final mem",memory[tname]
+                        timeperevent_dict[tname] = schema[t]['TimePerEvent']/factor
+                        multicore_dict[tname] = set_to
+                    else:
+                        break
+                multicore = multicore_dict
+                print multicore
+                print timeperevent_dict,"cannot be used yet."
     # If the --test argument was provided, then just print the information
     # gathered so far and abort the assignment
         print wf_name
