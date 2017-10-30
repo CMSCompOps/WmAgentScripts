@@ -346,7 +346,7 @@ def equalizor(url , specific = None, options=None):
             print str(e)
             return failed_out
         
-        p_t = percentile_data['aggregations']["2"]["values"].get("%.1f"%time_percentil,None) 
+        p_t = percentile_data['aggregations']["2"]["values"].get("%.1f"%time_percentil,None) if 'aggregations' in percentile_data else None
         if p_t=="NaN":p_t=None
         if p_t: p_t*=60. ## convert in mins
         w_t = percentile_data["hits"]["total"]
