@@ -381,7 +381,7 @@ def main():
                 ## transform into a dictionnary
                 increase = set_to = None
                 tasks,set_to = memory.split(':') if ':' in memory else ("",memory)
-                tasks = tasks.split(',')
+                tasks = tasks.split(',') if tasks else []
                 if set_to.startswith('+'):
                     increase = int(set_to[1:])
                 else:
@@ -408,7 +408,7 @@ def main():
             ## need to play with multicore setting
             if multicore:
                 tasks,set_to = multicore.split(':') if ':' in multicore else ("",multicore)
-                tasks = tasks.split(',')
+                tasks = tasks.split(',') if tasks else []
                 set_to = int(set_to)
                 multicore_dict = {}
                 timeperevent_dict = {}
@@ -435,6 +435,7 @@ def main():
                         memory[tname] = mem + (set_to-mcore)*mem_per_core_c
                         print "final mem",memory[tname]
                         timeperevent_dict[tname] = schema[t]['TimePerEvent']/factor
+                        print "setting mcore",set_to
                         multicore_dict[tname] = set_to
                     else:
                         break
