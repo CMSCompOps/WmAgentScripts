@@ -120,9 +120,33 @@ def rejector(url, specific, options=None):
                         schema['Memory'] = options.Memory
                         
                 if options.Multicore:
-                    ## to do : set it properly in taslchains
-                    schema['Multicore'] = options.Multicore
-
+                    ## to do : set it properly in taskchains
+                    if schema['RequestType'] == 'TaskChain':
+                        tasks,set_to = options.Multicore.split(':') if ':' in options.Multicore else ("",options.Multicore)
+                        set_to = int(set_to)
+                        tasks = tasks.split(',') if tasks else ['Task1']
+                        it = 1 
+                        while True:
+                            tt = 'Task%d'% it
+                            it+=1
+                            if tt in schema:
+                                tname = schema[tt]['TaskName']
+                                if tname in tasks or tt in tasks:
+                                    mem = schema[tt]['Memory']
+                                    mcore = schema[tt].get('Multicore',1)
+                                    factor = (set_to / float(mcore))
+                                    fraction_constant = 0.4
+                                    mem_per_core_c = int((1-fraction_constant) * mem / float(mcore))
+                                    print "mem per core", mem_per_core_c
+                                    print "base mem", mem
+                                    ## adjusting the parameter in the clone
+                                    schema[tt]['Memory'] += (set_to-mcore)*mem_per_core_c
+                                    schema[tt]['Multicore'] = set_to
+                                    schema[tt]['TimePerEvent'] /= factor
+                            else:
+                                break
+                    else:
+                        schema['Multicore'] = options.Multicore
                 if options.deterministic:
                     if schema['RequestType'] == 'TaskChain':
                         schema['Task1']['DeterministicPileup']  = True
@@ -226,7 +250,7 @@ if __name__ == "__main__":
     parser.add_option('--comments', help="Give a comment to the clone",default="")
     parser.add_option('-k','--keep',help="keep the outpuy in current status", default=False,action="store_true")
     parser.add_option('--Memory',help="memory parameter of the clone", default=0, type=int)
-    parser.add_option('--Multicore',help="Set the number of core in the clone", default=0, type=int)
+    parser.add_option('--Multicore',help="Set the number of core in the clone", default=None)
     parser.add_option('--ProcessingString',help="change the proc string", default=None)
     parser.add_option('--AcquisitionEra',help="change the acq era", default=None)
     parser.add_option('--PrepID',help='change the prepid',default=None)
