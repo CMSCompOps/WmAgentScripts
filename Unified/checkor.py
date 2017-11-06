@@ -155,20 +155,25 @@ def checkor(url, spec=None, options=None):
         if unh in holdings:
             holdings.remove(unh)
 
+    
+    for rider,extending in overrides.items():
+        print rider,"bypasses by forcecompleting",json.dumps(sorted(extending))
+        bypasses.extend( extending )
+
     ## once this was force-completed, you want to bypass
-    for rider,email in actors:
-        rider_file = '/afs/cern.ch/user/%s/%s/public/ops/forcecomplete.json'%(rider[0],rider)
-        if not os.path.isfile(rider_file):
-            print "no file",rider_file
-            #sendLog('checkor',"no file %s"%rider_file)
-            continue
-        try:
-            extending = json.loads(open( rider_file ).read() )
-            print rider,"is force completing",json.dumps(sorted(extending))
-            bypasses.extend( extending )
-        except:
-            sendLog('checkor',"cannot get force complete list from %s"%rider)
-            sendEmail("malformated force complet file","%s is not json readable"%rider_file, destination=[email])
+    #for rider,email in actors:
+    #    rider_file = '/afs/cern.ch/user/%s/%s/public/ops/forcecomplete.json'%(rider[0],rider)
+    #    if not os.path.isfile(rider_file):
+    #        print "no file",rider_file
+    #        #sendLog('checkor',"no file %s"%rider_file)
+    #        continue
+    #    try:
+    #        extending = json.loads(open( rider_file ).read() )
+    #        print rider,"is force completing",json.dumps(sorted(extending))
+    #        bypasses.extend( extending )
+    #    except:
+    #        sendLog('checkor',"cannot get force complete list from %s"%rider)
+    #        sendEmail("malformated force complet file","%s is not json readable"%rider_file, destination=[email])
 
     if use_mcm:
         ## this is a list of prepids that are good to complete
@@ -197,8 +202,9 @@ def checkor(url, spec=None, options=None):
     max_per_round = UC.get('max_per_round').get('checkor',None)
     if options.limit: max_per_round=options.limit
     if max_per_round and not spec: wfs = wfs[:max_per_round]
-
-
+    
+    ## record all evolution
+    full_picture = defaultdict(dict)
     
     for iwfo,wfo in enumerate(wfs):
         if spec and not (spec in wfo.name): continue
@@ -382,39 +388,65 @@ def checkor(url, spec=None, options=None):
         fractions_truncate_recovery = {}
         events_per_lumi = {}
 
-        over_100_pass = False
+        over_100_pass = True
         (lhe,prim,_,_) = wfi.getIO()
         if lhe or prim: over_100_pass = False
 
+        ## this will create funky issue with LHEGS where the two output of a task can have different expected #of events ... as predicted this is a major complication
+        event_expected_per_task = {} 
+        output_per_task = wfi.getOutputPerTask()
+        task_outputs = {}
+        for task,outs in output_per_task.items():
+            for out in outs:
+                task_outputs[out] = task
 
-        ### get what is expected in input
-        if not 'TotalInputEvents' in wfi.request:
-            event_expected,lumi_expected = 0,0
-            if not 'recovery' in wfo.status:
-                #sendEmail("missing member of the request","TotalInputEvents is missing from the workload of %s"% wfo.name, destination=['jen_a@fnal.gov'])
-                sendLog('checkor',"TotalInputEvents is missing from the workload of %s"% wfo.name, level='critical')
-        else:
-            event_expected,lumi_expected =  wfi.request['TotalInputEvents'],wfi.request['TotalInputLumis']
 
-        if 'RequestNumEvents' in wfi.request and int(wfi.request['RequestNumEvents']):
-            event_expected = int(wfi.request['RequestNumEvents'])
-        elif 'Task1' in wfi.request and 'RequestNumEvents' in wfi.request['Task1']:
-            event_expected = wfi.request['Task1']['RequestNumEvents']
-            ## this is too much of an approximation. We should therefore only rely on lumis_expected
-            #for i in range(2,20):
-            #    if 'Task%d'%i in wfi.request:
-            #        ## this is wrong ibsolute
-            #        if 'FilterEfficiency' in wfi.request['Task%d'%i]:
-            #            event_expected *= float(wfi.request['Task%d'%i]['FilterEfficiency'])
-            event_expected = int(event_expected)
+        ## lumi_expected is constant over all tasks
+        ## event_expected is only valid for the "first task" and one needs to consider all efficiency on the way
+        event_expected,lumi_expected = wfi.request.get('TotalInputEvents',None), wfi.request.get('TotalInputLumis', None)
 
-        ## We should only rely on lumis_expected
-        event_expected = 0 
+        if event_expected == None:
+            sendEmail("missing member of the request","TotalInputEvents is missing from the workload of %s"% wfo.name)
+            sendLog('checkor',"TotalInputEvents is missing from the workload of %s"% wfo.name, level='critical')
+            event_expected = 0 
 
+        ttype = 'Task' if 'TaskChain' in wfi.request else 'Step'
+        it = 1
+        tname_dict = {}
+        while True:
+            tt = '%s%d'%(ttype,it)
+            it+=1
+            if tt in wfi.request:
+                tname = wfi.request[tt]['%sName'% ttype]
+                tname_dict[tname] = tt
+                if not 'Input%s'%ttype in wfi.request[tt] and 'RequestNumEvents' in wfi.request[tt]: 
+                    ## pick up the value provided by the requester, that will work even if the filter effiency is broken
+                    event_expected = wfi.request[tt]['RequestNumEvents']
+            else:
+                break
+
+        if '%sChain'%ttype in wfi.request:
+            ## go on and make the accounting
+            it = 1
+            while True:
+                tt = '%s%d'%(ttype,it)
+                it+=1
+                if tt in wfi.request:
+                    tname = wfi.request[tt]['%sName'% ttype]
+                    event_expected_per_task[tname] = event_expected
+                    ### then go back up all the way to the root task to count filter-efficiency
+                    a_task = wfi.request[tt]
+                    while 'Input%s'%ttype in a_task:
+                        event_expected_per_task[tname] *= a_task.get('FilterEfficiency',1)
+                        mother_task = a_task['Input%s'%ttype]
+                        ## go up
+                        a_task = wfi.request[ tname_dict[mother_task] ]
+                else:
+                    break
 
         time_point("expected statistics", sub_lap=True)
 
-
+        default_fraction_overdoing = UC.get('default_fraction_overdoing')
         for output in wfi.request['OutputDatasets']:
             default_pass = UC.get('default_fraction_pass')
             fractions_pass[output] = default_pass
@@ -490,11 +522,14 @@ def checkor(url, spec=None, options=None):
                 wfi.sendLog('checkor', "lumi completion %s expected %d for %s"%( lumi_count, lumi_expected, output))
                 percent_completions[output] = lumi_count / float( lumi_expected )
 
-            if event_expected:
-                e_fraction = float(event_count) / float( event_expected )
+
+            output_event_expected = event_expected_per_task.get(task_outputs.get(output,'NoTaskFound'), 0)
+            if output_event_expected:
+                e_fraction = float(event_count) / float( output_event_expected )
                 if e_fraction > percent_completions[output]:
-                    #percent_completions[output] = e_fraction
-                    wfi.sendLog('checkor', "event completion real %s expected %s for %s"%(event_count, event_expected , output))
+                    percent_completions[output] = e_fraction
+                    wfi.sendLog('checkor', "overiding : event completion real %s expected %s for %s"%(event_count, output_event_expected, output))
+
 
             percent_avg_completions[output] = percent_completions[output]
         time_point("observed statistics", sub_lap=True)
@@ -550,29 +585,25 @@ def checkor(url, spec=None, options=None):
         time_point("more detailed observed statistics", sub_lap=True)
 
         pass_stats_check = dict([(out, bypass_checks or (percent_completions[out] >= fractions_pass[out])) for out in fractions_pass ])
-        
-        #pass_stats_check_to_announce = dict([(out, (percent_completions[out] >= fractions_announce[out])) for out in fractions_pass ])
         pass_stats_check_to_announce = dict([(out, (percent_avg_completions[out] >= fractions_announce[out])) for out in fractions_pass ])
-        should_announce = False
-
-        pass_stats_check_to_truncate_recovery = dict([(out, (percent_avg_completions[out] >= fractions_truncate_recovery[out])) for out in fractions_pass ])
+        pass_stats_check_to_truncate_recovery = dict([(out, (percent_avg_completions[out] >= fractions_truncate_recovery[out])) for out in fractions_truncate_recovery ])
+        pass_stats_check_over_completion = dict([(out, (percent_completions[out] >= default_fraction_overdoing)) for out in percent_completions ])
 
         print "announce checks"
-        print pass_stats_check_to_announce
+        should_announce = False
         if pass_stats_check_to_announce and all(pass_stats_check_to_announce.values()):
             wfi.sendLog('checkor',"The output of this workflow are essentially good to be announced while we work on the rest\n%s \n%s"% ( json.dumps( percent_avg_completions , indent =2 ), json.dumps( fractions_announce , indent =2 )))
             assistance_tags.add('announced' if 'announced' in wfo.status else 'announce')
+            
             should_announce = True
         
 
-        #if not all([percent_completions[out] >= fractions_pass[out] for out in fractions_pass]):
         if not all(pass_stats_check.values()):
             possible_recoveries = wfi.getRecoveryDoc()
             if possible_recoveries == []:
                 wfi.sendLog('checkor','%s has missing statistics \n%s \n%s, but nothing is recoverable. passing through to annoucement'%( 
                         wfo.name, json.dumps(percent_completions, indent=2), json.dumps(fractions_pass, indent=2) ))
                 sendLog('checkor','%s is not completed, but has nothing to be recovered, passing along ?'%wfo.name, level='critical')
-                #sendEmail('nothing is recoverable','%s is not completed, but has nothing to be recovered, passing along ?'%wfo.name)#,destination=['alan.malta@cern.ch'])
                 ## do not bypass for now, until Alan understands why we are loosing ACDC docs 
                 bypass_checks = True
             else:
@@ -588,8 +619,6 @@ def checkor(url, spec=None, options=None):
                 is_closing = False
         else:
             wfi.sendLog('checkor','passing stats check \n%s \n%s'%( json.dumps(percent_completions, indent=2), json.dumps(fractions_pass, indent=2) ))
-            ## if we still have acdc running, should we set to force-complete and move-on ?
-            #if 'recovering' in assistance_tags:            
 
         if acdc and all(pass_stats_check.values()) and all(pass_stats_check_to_truncate_recovery.values()):
             print "This is essentially good to truncate"
@@ -597,19 +626,16 @@ def checkor(url, spec=None, options=None):
             wfi.sendLog('checkor','Will force-complete the recovery to speed things up')
             forceComplete(url, wfi)
 
-        if over_100_pass and any([percent_completions[out] >100 for out in fractions_pass]):
-            print wfo.name,"is over completed"
-            print json.dumps(percent_completions, indent=2)
-            if not bypass_checks:
-                assistance_tags.add('over100')
-                is_closing = False
+        if over_100_pass and all(pass_stats_check_over_completion.values()):
+            ## all outputs are over the top ...
+            wfi.sendLog('checkor','Should force-complete the request going over 100%')
+            wfi.sendLog('checkor',json.dumps(percent_completions, indent=2))
+            sendEmail( "dataset over completion", "Please take a look at %s"% wfo.name)
+            assistance_tags.add('over100')
+            ## set to force complete the whole thing
+            #forceComplete(url, wfi)
 
         time_point("checked output size", sub_lap=True)
-
-        ## correct lumi < 300 event per lumi
-        #for output in wfi.request['OutputDatasets']:
-        #events_per_lumi[output] = getDatasetEventsPerLumi( output )
-
 
         lumi_upper_limit = {}
         for output in wfi.request['OutputDatasets']:
@@ -837,7 +863,8 @@ def checkor(url, spec=None, options=None):
                 custodial = SI.pick_SE(size=size_worth_checking)
 
             if custodial and size_worht_going_to_ddm > tape_size_limit:
-                print wfi.sendLog('checkor',"The total output size (%s TB) is too large for the limit set (%s TB)"%( size_worth_checking, tape_size_limit))
+                wfi.sendLog('checkor',"The total output size (%s TB) is too large for the limit set (%s TB)"%( size_worth_checking, tape_size_limit))
+                assistance_tags.add('bigoutput')
                 custodial = None
 
             if not custodial:
