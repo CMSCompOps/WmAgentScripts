@@ -235,7 +235,7 @@ def rejector(url, specific, options=None):
                 wfi.sendLog('rejector','Cloned into %s by unified operator %s'%( newWorkflow, comment ))
                 wfi.notifyRequestor('Cloned into %s by unified operator %s'%( newWorkflow, comment ),do_batch=False)
             else:
-                wfo.status = 'forget'
+                wfo.status = 'trouble' if options.set_trouble else 'forget' 
                 wfi.notifyRequestor('Rejected by unified operator %s'%( comment ),do_batch=False)
                 session.commit()
 
@@ -249,6 +249,8 @@ if __name__ == "__main__":
     parser.add_option('-c','--clone',help="clone the workflow",default=False,action="store_true")
     parser.add_option('--comments', help="Give a comment to the clone",default="")
     parser.add_option('-k','--keep',help="keep the outpuy in current status", default=False,action="store_true")
+    parser.add_option('--set_trouble',help="When rejecting but the status should be trouble instead of forget", default=False,action="store_true")
+    ## options for cloning
     parser.add_option('--Memory',help="memory parameter of the clone", default=0, type=int)
     parser.add_option('--Multicore',help="Set the number of core in the clone", default=None)
     parser.add_option('--ProcessingString',help="change the proc string", default=None)
