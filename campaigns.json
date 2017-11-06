@@ -30,8 +30,30 @@
      ]
    }
   },
- "HINppWinter17GS": {
+ "HINXeXeFall17GS": {
     "go": false,
+    "fractionpass": 1.0,
+    "lumisize" : -1,
+    "maxcopies" : 1,
+    "custodial": "T1_FR_CCIN2P3_MSS",
+    "parameters" :{
+      "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue", "T2_US_Caltech", "T2_US_Florida", "T2_US_Nebraska", "T2_US_UCSD", "T2_US_Wisconsin" ],
+      "MergedLFNBase": "/store/himc"
+   }
+  },
+ "HINXeXeFall17DR": {
+    "go": false,
+    "fractionpass": 1.0,
+    "lumisize" : -1,
+    "maxcopies" : 1,
+    "custodial": "T1_FR_CCIN2P3_MSS",
+    "parameters" :{
+      "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue", "T2_US_Caltech", "T2_US_Florida", "T2_US_Nebraska", "T2_US_UCSD", "T2_US_Wisconsin" ],
+      "MergedLFNBase": "/store/himc"
+   }
+  },
+ "HINppWinter17GS": {
+    "go": true,
     "fractionpass": 1.0,
     "lumisize" : -1,
     "maxcopies" : 1,
@@ -42,7 +64,7 @@
    }
   },
   "HINppWinter17wmLHEGS": {
-    "go": false, 
+    "go": true, 
     "fractionpass": 1.0,
     "lumisize" : -1,
     "maxcopies" : 1,
@@ -53,7 +75,7 @@
    }
   },
   "HINppWinter17DR": {
-    "go": false,
+    "go": true,
     "fractionpass": 1.0,
     "lumisize" : -1,
     "maxcopies" : 1,
@@ -416,6 +438,14 @@
    "secondaries" : {"/MinBias_TuneCUETP8M1_14TeV-pythia8/PhaseIIFall16GS82-90X_upgrade2023_realistic_v1-v1/GEN-SIM" :{}, 
    		    "/MinBias_TuneCUETP8M1_14TeV-pythia8/PhaseIISpring17GS-90X_upgrade2023_realistic_v9-v1/GEN-SIM" :{"SiteWhitelist" : ["T1_DE_KIT","T2_IT_Rome","T1_UK_RAL","T2_ES_CIEMAT","T2_US_Nebraska","T2_US_Caltech","T2_US_Wisconsin"]} }
   },
+ "PhaseIIFall17D" : {
+   "go" : false,
+   "lumisize" : -1,
+   "maxcopies": 1,
+   "fractionpass" : 0.95,
+   "tune" : true,
+   "SiteBlacklist": [ "T1_US_FNAL", "T0_CH_CERN","T2_CH_CERN_HLT" , "T2_CH_CERN"]
+ },
   "PhaseIISpring17DR" : {
    "go" : true,
    "lumisize" : 1500,
@@ -432,7 +462,7 @@
     "tune" : true
   },
   "PhaseIISummer17wmLHEGENOnly" : {
-   "go" : false,
+   "go" : true,
    "fractionpass" : 0.95,
    "lumisize" : -1,
    "tune" : true
@@ -840,8 +870,7 @@
     "go" : true,
     "parameters": {	
       "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue", "T2_US_Caltech", "T2_US_Florida", "T2_US_Nebraska", "T2_US_UCSD", "T2_US_Wisconsin" ],
-      "MergedLFNBase": "/store/himc",
-      "secondaries" : {"/Hydjet_Quenched_Cymbal5Ev8_PbPbMinBias_5020GeV/HiFall15-75X_mcRun2_HeavyIon_v14_75X_mcRun2_HeavyIon_v14-v1/GEN-SIM" : {"SiteWhitelist" : ["T1_DE_KIT", "T2_CH_CERN", "T2_IT_Pisa","T1_ES_PIC","T1_UK_RAL","T2_EE_Estonia","T2_IN_TIFR"] } }
+      "MergedLFNBase": "/store/himc"
     },
     "fractionpass" : 0.95,
     "custodial": "T1_FR_CCIN2P3_MSS"
@@ -859,8 +888,7 @@
     "go" : true,
     "parameters": {	
       "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue", "T2_US_Caltech", "T2_US_Florida", "T2_US_Nebraska", "T2_US_UCSD", "T2_US_Wisconsin" ],
-      "MergedLFNBase": "/store/himc",
-      "secondaries" : {"/MinBias_TuneCUETP8M1_5p02TeV-pythia8/pp502Fall15-MCRUN2_71_V1-v1/GEN-SIM" : {} }
+      "MergedLFNBase": "/store/himc"
     },
     "custodial": "T1_FR_CCIN2P3_MSS"
   },
@@ -877,9 +905,9 @@
     "fractionpass" : 0.95,
     "parameters": {
       "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue", "T2_US_Caltech", "T2_US_Florida", "T2_US_Nebraska", "T2_US_UCSD", "T2_US_Wisconsin" ],
-      "MergedLFNBase": "/store/himc",
-      "secondaries" : {"/MinBias_TuneCUETP8M1_5p02TeV-pythia8/pp502Fall15-MCRUN2_71_V1-v1/GEN-SIM" : {} }
+      "MergedLFNBase": "/store/himc"
     },
+    "secondaries" : {"/MinBias_TuneCUETP8M1_5p02TeV-pythia8/pp502Fall15-MCRUN2_71_V1-v1/GEN-SIM" : {} },
     "custodial": "T1_FR_CCIN2P3_MSS"
   },
   "HINPbPbWinter16DR":{
@@ -887,9 +915,9 @@
     "fractionpass" : 0.95,
     "parameters": {
       "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue", "T2_US_Caltech", "T2_US_Florida", "T2_US_Nebraska", "T2_US_UCSD", "T2_US_Wisconsin" ],
-      "MergedLFNBase": "/store/himc",
-      "secondaries" : {"/Hydjet_Quenched_Cymbal5Ev8_PbPbMinBias_5020GeV/HiFall15-75X_mcRun2_HeavyIon_v14_75X_mcRun2_HeavyIon_v14-v1/GEN-SIM" : {"SiteWhitelist" : ["T1_DE_KIT", "T2_CH_CERN", "T2_IT_Pisa","T1_ES_PIC","T1_UK_RAL","T2_EE_Estonia","T2_IN_TIFR"] } }
+      "MergedLFNBase": "/store/himc"
     },
+    "secondaries" : {"/Hydjet_Quenched_Cymbal5Ev8_PbPbMinBias_5020GeV/HiFall15-75X_mcRun2_HeavyIon_v14_75X_mcRun2_HeavyIon_v14-v1/GEN-SIM" : {"SiteWhitelist" : ["T1_DE_KIT", "T2_CH_CERN", "T2_IT_Pisa","T1_ES_PIC","T1_UK_RAL","T2_EE_Estonia","T2_IN_TIFR"] } },
     "custodial": "T1_FR_CCIN2P3_MSS"
   },
   "Summer11Leg": {
@@ -1013,21 +1041,21 @@
   },
    "PhaseIITDRFall17GS" : {
    "go" : true,
-   "lumisize" : 1500,
+   "lumisize" : -1,
    "fractionpass" : 0.95,
    "tune" : false
   },
   "PhaseIITDRFall17wmLHEGS" : {
    "go" : true,
-   "lumisize" : 1500,
+   "lumisize" : -1,
    "fractionpass" : 0.95,
    "tune" : false
   },
   "PhaseIITDRFall17DR" : {
    "go" : true,
-   "lumisize" : 1500,
+   "lumisize" : -1,
    "maxcopies": 1,
-   "fractionpass" : 0.95,
+   "fractionpass" : 0.85,
    "force-complete" : 0.99,
    "tune" : true,
    "resize" : "auto",
