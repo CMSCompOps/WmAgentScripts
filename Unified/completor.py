@@ -19,6 +19,8 @@ def completor(url, specific):
     if use_mcm:
         mcm = McMClient(dev=False)
 
+    safe_mode = True
+
     CI = campaignInfo()
     SI = siteInfo()
     UC = unifiedConfiguration()
@@ -46,6 +48,7 @@ def completor(url, specific):
     completions = json.loads( open('%s/completions.json'%monitor_dir).read())
     
     good_fractions = {}
+    overdoing_fractions = {}
     truncate_fractions = {} 
     timeout = {}
     campaign_injection_delay = {}
@@ -58,6 +61,8 @@ def completor(url, specific):
             timeout[c] = CI.campaigns[c]['force-timeout']
         if 'injection-delay' in CI.campaigns[c]:
             campaign_injection_delay[c] = CI.campaigns[c]['injection-delay']
+        if 'overdoing-complete' in CI.campaigns[c]:
+            overdoing_fractions[c] = CI.campaigns[c]['overdoing-complete']
 
     long_lasting = {}
 
@@ -79,14 +84,9 @@ def completor(url, specific):
     injection_delay_threshold = UC.get("injection_delay_threshold")
     injection_delay_priority = UC.get("injection_delay_priority")
     delay_priority_increase = UC.get("delay_priority_increase")
-
-
-    #wfs_no_location_in_GQ = set()
-    #block_locations = defaultdict(lambda : defaultdict(list))
-    #wfs_no_location_in_GQ = defaultdict(list)
+    default_fraction_overdoing = UC.get('default_fraction_overdoing')
 
     set_force_complete = set()
-
 
     for wfo in wfs:
         if specific and not specific in wfo.name: continue
@@ -98,12 +98,14 @@ def completor(url, specific):
         pids = wfi.getPrepIDs()
         skip=False
         campaigns = wfi.getCampaigns()
-        if not any([c in good_fractions.keys() for c in campaigns]): skip=True
-        if not any([c in truncate_fractions.keys() for c in campaigns]): skip=True
+
+        #if not any([c in good_fractions.keys() for c in campaigns]): skip=True
+        #if not any([c in truncate_fractions.keys() for c in campaigns]): skip=True
 
         for user,spec in overrides.items():
-
-            if wfi.request['RequestStatus']!='force-complete':
+            if not spec: continue
+            spec = filter(None, spec)
+            if not wfi.request['RequestStatus'] in ['force-complete', 'completed']:
                 if any(s in wfo.name for s in spec) or (wfo.name in spec) or any(pid in spec for pid in pids) or any(s in pids for s in spec):
 
                     wfi = workflowInfo(url, wfo.name)
@@ -125,44 +127,29 @@ def completor(url, specific):
         if not wfi.request['RequestStatus'] in ['acquired','running-open','running-closed']: continue
 
 
-        if wfi.request['RequestStatus'] in ['running-open','running-closed'] and (random.random() < 0.01):
-            try:
-                parse_one(url, wfo.name )
-            except Exception as e:
-                print "failed error parsing"
-                print str(e)
-
-        #c = wfi.request['Campaign']
-        #if not c in good_fractions: continue
 
         ## until we can map the output to task ...
-        good_fraction = max([good_fractions.get(c,1000.) for c in campaigns ])
-        truncate_fraction = max([truncate_fractions.get(c,1000.) for c in campaigns ])
-        #good_fraction = good_fractions.get(c,1000.)
-        #truncate_fraction = truncate_fractions.get(c,1000.)
+        output_per_task = wfi.getOutputPerTask() ## can use that one, and follow mapping
+        good_fraction_per_out = {}
+        good_fraction_nodelay_per_out = {}
+        truncate_fraction_per_out = {}
+        #allowed_delay_per_out = {}
+        for task,outs in output_per_task.items():
+            task_campaign = wfi.getCampaignPerTask( task )
+            for out in outs:
+                good_fraction_per_out[out] = good_fractions.get(task_campaign,1000.)
+                good_fraction_nodelay_per_out[out] = overdoing_fractions.get(task_campaign,default_fraction_overdoing)
+                truncate_fraction_per_out[out] = truncate_fractions.get(task_campaign,1000.)
+                #allowed_delay_per_out[out] = timeout.get(task_campaign, 14)
 
-        print "force at",good_fraction,"truncate at",truncate_fraction
-        ignore_fraction = 2.
-        
-        lumi_expected = None
-        event_expected = None
-        if not 'TotalInputEvents' in wfi.request: 
-            if 'RequestNumEvents' in wfi.request:
-                event_expected = wfi.request['RequestNumEvents']
-            else:
-                print "truncated, cannot do anything"
-                continue
-        else:
-            lumi_expected = wfi.request['TotalInputLumis']
-            event_expected = wfi.request['TotalInputEvents']
+        #print "force at", json.dumps( good_fraction_per_out, indent=2)
+        #print "truncate at",json.dumps( truncate_fraction_per_out, indent=2)
 
         now = time.mktime(time.gmtime()) / (60*60*24.)
 
         running_log = filter(lambda change : change["Status"] in ["acquired","running-open","running-closed"],wfi.request['RequestTransition'])
         if not running_log:
             print "\tHas no running log"
-            # cannot figure out when the thing started running
-            #continue
             delay = 0
         else:
             then = running_log[-1]['UpdateTime'] / (60.*60.*24.)
@@ -176,7 +163,6 @@ def completor(url, specific):
             original = workflowInfo(url, original.request['OriginalRequestName'])
         injected_log = filter(lambda change : change["Status"] in ["assignment-approved"],original.request['RequestTransition'])
         if injected_log:
-            #injected_on =time.mktime(time.strptime("-".join(map(lambda n : "%02d"%n, wfi.request['RequestDate'])), "%Y-%m-%d-%H-%M-%S")) / (60.*60.*24.)
             injected_on = injected_log[-1]['UpdateTime'] / (60.*60.*24.)
             injection_delay = now - injected_on
         
@@ -187,14 +173,10 @@ def completor(url, specific):
 
         if injection_delay!=None and injection_delay > injection_delay_threshold and priority >= injection_delay_priority:
             quantized = 5000 ## quantize priority
-            #print wfi.request['InitialPriority']
             tail_cutting_priority = wfi.request['InitialPriority']+ int((delay_priority_increase * (injection_delay - injection_delay_threshold) / 7) / quantized) * quantized
-            #print tail_cutting_priority
             tail_cutting_priority += 101 ## to signal it is from this mechanism
             tail_cutting_priority = min(400000, tail_cutting_priority) ## never go above 400k priority
-            #print tail_cutting_priority
             tail_cutting_priority = max(tail_cutting_priority, priority) ## never go below the current value
-            #print tail_cutting_priority
             
             if priority < tail_cutting_priority:
                 sendLog('completor',"%s Injected since %s [days] priority=%s, increasing to %s"%(wfo.name,injection_delay,priority, tail_cutting_priority), level='critical')
@@ -210,47 +192,41 @@ def completor(url, specific):
         if is_stuck: wfi.sendLog('completor','%s is stuck'%','.join(is_stuck))
 
         monitor_delay = 7
-        #allowed_delay = 14
-        #if c in timeout: allowed_delay = timeout[c]
         allowed_delay = max([timeout.get(c,14) for c in campaigns])
             
         monitor_delay = min(monitor_delay, allowed_delay)
-        ### just skip if too early
-        if delay <= monitor_delay: continue
+
+        ### just skip if too early, just for the sake of not computing the completion fraction just now.
+        # maybe this is fast enough that we can do it for all
+        if delay <= monitor_delay: 
+            print "not enough time has passed yet"
+            continue
 
         long_lasting[wfo.name] = { "delay" : delay,
                                    "injection_delay" : injection_delay }
 
-        percent_completions = {}
+        percent_completions = wfi.getCompletionFraction(caller='completor')
         
-        for output in wfi.request['OutputDatasets']:
-            if "/DQM" in output: continue ## that does not count
-            if not output in completions: completions[output] = { 'injected' : None, 'checkpoints' : [], 'workflow' : wfo.name}
-            ## get completion fraction
-            event_count,lumi_count = getDatasetEventsAndLumis(dataset=output)
-            lumi_completion=0.
-            event_completion=0.
-            if lumi_expected:
-                lumi_completion = lumi_count / float( lumi_expected )
-            if event_expected:
-                event_completion = event_count / float( event_expected )
+        if not percent_completions:
+            sendLog('completor','%s has no output at all'% wfo.name, level='critical')
+            continue
 
-            #take the less optimistic
-            ## taking the max or not : to force-complete on over-pro
-            percent_completions[output] = min( lumi_completion, event_completion )
-            
-            completions[output]['checkpoints'].append( (now, event_completion ) )
+        is_over_allowed_delay = (all([percent_completions[out] >= good_fraction_per_out[out] for out in percent_completions]) and delay >= allowed_delay)
+        is_over_truncation_delay = (is_stuck and (all([percent_completions[out] >= truncate_fraction_per_out[out] for out in percent_completions])) and delay >= allowed_delay)
+        is_over_completion = (all([percent_completions[out] >= good_fraction_nodelay_per_out[out] for out in percent_completions]))
 
-        if all([percent_completions[out] >= good_fraction for out in percent_completions]):
-            wfi.sendLog('completor', "all is above %s \n%s"%( good_fraction, 
+        if is_over_completion:
+            wfi.sendLog('completor', "all is over completed %s\n %s"%( json.dumps( good_fraction_nodelay_per_out, indent=2 ),
+                                                                       json.dumps( percent_completions, indent=2 )
+                                                                       ))
+        elif is_over_allowed_delay:
+            wfi.sendLog('completor', "all is above %s \n%s"%( json.dumps(good_fraction_per_out, indent=2 ), 
                                                               json.dumps( percent_completions, indent=2 )
                                                               ))
-        elif is_stuck and (all([percent_completions[out] >= truncate_fraction for out in percent_completions])):
-            wfi.sendLog('completor', "all is above %s truncation level, and the input is stuck\n%s"%( truncate_fraction,
+        elif is_over_truncation_delay:
+            wfi.sendLog('completor', "all is above %s truncation level, and the input is stuck\n%s"%( json.dumps(truncate_fraction_per_out, indent=2 ),
                                                                                                       json.dumps( percent_completions, indent=2 ) ) )
 
-            sendEmail('workflow for truncation','check on %s'%wfo.name)
-            ##continue ## because you do not want to get this one right now
         else:
             long_lasting[wfo.name].update({
                     'completion': sum(percent_completions.values()) / len(percent_completions),
@@ -259,13 +235,10 @@ def completor(url, specific):
             
             ## do something about the agents this workflow is in
             long_lasting[wfo.name]['agents'] = wfi.getAgents()
-            wfi.sendLog('completor', "%s not over bound %.3f (complete) %.3f truncate \n%s"%(percent_completions.values(), 
-                                                                                             good_fraction, truncate_fraction,
-                                                                                             json.dumps( long_lasting[wfo.name]['agents'], indent=2) ))
-            continue
-
-        if all([percent_completions[out] >= ignore_fraction for out in percent_completions]):
-            print "all is done, just wait a bit"
+            wfi.sendLog('completor', "%s not over bound \ncomplete at %s \n truncate at %s \nRunning %s"%(json.dumps( percent_completions, indent=2), 
+                                                                                                 json.dumps(good_fraction_per_out, indent=2),
+                                                                                                 json.dumps( truncate_fraction_per_out, indent=2),
+                                                                                                 json.dumps( long_lasting[wfo.name]['agents'], indent=2) ))
             continue
 
         for output in  percent_completions:
@@ -281,30 +254,19 @@ def completor(url, specific):
         ##### WILL FORCE COMPLETE BELOW
         # only really force complete after n days
 
-        if delay <= allowed_delay: 
-            wfi.sendLog('completor','Running since %.2f, waiting for more than %.2f'%( delay, allowed_delay))
-            continue
-        
         ## find ACDCs that might be running
         if max_force>0:
-            forceComplete(url, wfi )
-            set_force_complete.add( wfo.name )
             print "going for force-complete of",wfo.name
-            wfi.sendLog('completor','going for force completing')
-            wfi.notifyRequestor("The workflow %s was force completed for running too long"% wfo.name)
-            max_force -=1
+            if not safe_mode:
+                forceComplete(url, wfi )
+                set_force_complete.add( wfo.name )
+                wfi.sendLog('completor','going for force completing')
+                wfi.notifyRequestor("The workflow %s was force completed for running too long"% wfo.name)
+                max_force -=1
+            else:
+                sendEmail('completor', 'The workflow %s is ready for force complete, but completor is in safe mode'%wfo.name)
         else:
             wfi.sendLog('completor',"too many completion this round, cannot force complete")
-
-        ## do it once only for testing
-        #break
-    
-
-        #if delay >= 40:
-        #    print wfo.name,"has been running for",dealy,"days"
-        #    ## bumping up the priority?
-            
-
 
     if set_force_complete:
         sendLog('completor','The followings were set force-complete \n%s'%('\n'.join(set_force_complete)))
