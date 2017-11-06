@@ -1702,7 +1702,7 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
             text += ', <a href=report/%s>report</a>'%(wf)
             if 'ReReco' in tpid:
                 text += ', <a href=%s/datalumi/lumi.%s.html>lumis</a>'%(unified_url,tpid)
-            text += ', <a href="https://its.cern.ch/jira/issues/?jql=text~%s AND project = CMSCOMPPR" target="_blank">jira</a>'%(pid)
+            text += ', <a href="https://its.cern.ch/jira/issues/?jql=(text~%s OR text~task_%s ) AND project = CMSCOMPPR" target="_blank">jira</a>'%(pid,pid)
             text += '</td>'
             
             text+='<td>%s</td>'% out
@@ -1793,6 +1793,7 @@ Updated on %s (GMT) <br>
 <li> <b>announced</b> : the final statistics of the sample is enough and the outputs are announced <font color=green>(Automatic)</font> </li>
 <li> <b>over100</b> : the final statistics is over 100%% <font color=red>(Operator)</font></li>
 <li> <b>biglumi</b> : the maximum size of the lumisection in one of the output has been exceeded <font color=red>(Operator)</font></li>
+<li> <b>bigoutput</b> : the maximum size for an output dataset to go to tape was exceeded (<font color=blue>Requester</font>/<font color=red>Operator)</font></li>
 <li> <b>filemismatch</b> : there is a mismatch in the number of files in DBS and Phedex <font color=red>(Operator)</font></li>
 <li> <b>duplicates</b> : duplicated lumisection have been found and need to be invalidated <font color=red>(Operator)</font></li>
 <li> <b>manual</b> : no automatic recovery was possible <font color=red>(Operator)</font></li>
