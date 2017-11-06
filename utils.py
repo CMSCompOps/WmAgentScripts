@@ -3459,17 +3459,17 @@ def checkParent( dataset ):
                 ### dbs api to write the parent configuration
                 file_parent_fixing[fn].update(file_parents)
 
-    for fn,file_parents in file_parent_fixing.items():
-        print "Fixing DBS is underway for ",fn
-        #print "Found",sorted(file_parents),"as parents"
-        print "Found",len(file_parents),"as parents in",parents[0]
-        ## that API does not exists
-        dbswrite.updateFile( logical_file_name = fn,
-                             dataset = dataset,
-                             parent_logical_file_name = list(file_parents),
-                             parent_dataset = parents[0]
-                             )
-        pass
+    #for fn,file_parents in file_parent_fixing.items():
+    #    print "Fixing DBS is underway for ",fn
+    #    #print "Found",sorted(file_parents),"as parents"
+    #    print "Found",len(file_parents),"as parents in",parents[0]
+    #    ## that API does not exists
+    #    dbswrite.updateFile( logical_file_name = fn,
+    #                         dataset = dataset,
+    #                         parent_logical_file_name = list(file_parents),
+    #                         parent_dataset = parents[0]
+    #                         )
+    #    pass
         
 
 def findParent( dataset ):
