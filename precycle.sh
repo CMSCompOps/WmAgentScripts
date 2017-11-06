@@ -90,7 +90,7 @@ $BASE_DIR/cWrap.sh Unified/assignor.py
 $BASE_DIR/cWrap.sh Unified/lockor.py
 
 ## addhoc operations
-$BASE_DIR/cWrap.sh Unified/addHoc.py
+#$BASE_DIR/cWrap.sh Unified/addHoc.py
 
 rm -f $lock_name
 
