@@ -95,8 +95,13 @@ def assignor(url ,specific = None, talk=True, options=None):
         ## the site whitelist takes into account siteInfo, campaignInfo, memory and cores
         (lheinput,primary,parent,secondary, sites_allowed) = wfh.getSiteWhiteList()
         output_tiers = list(set([o.split('/')[-1] for o in wfh.request['OutputDatasets']]))
-        
-        
+
+        if not output_tiers:
+            n_stalled+=1
+            wfi.sendLog('assignor','There is no output at all')
+            sendLog('assignor','Workflow %s has no output at all'%( wfo.name), level='critical')
+            continue
+
         is_stuck = (all_stuck & primary)
         if is_stuck:
             wfh.sendLog('assignor',"%s are stuck input"%(','.join( is_stuck)))
