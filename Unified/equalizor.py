@@ -330,9 +330,10 @@ def equalizor(url , specific = None, options=None):
         print "From multiple memory points",baseline,"MB baseline at",original_ncore,"cores, and",slope,"per thread"
         print slopes
         print lever
-
+        
         b_m = None
-        if baseline: b_m = baseline
+        if baseline: 
+            b_m = baseline*1.1 ## put 10% on top for safety
 
         print "#"*10,"total core-hour performance","#"*10
 
