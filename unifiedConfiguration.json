@@ -4,7 +4,7 @@
    "description" : "The list of people that get the emails notifications"
  },
  "site_out_of_overflow": {
-   "value" : ["T1_UK_RAL"],
+   "value" : ["T1_UK_RAL","T1_IT_CNAF"],
    "description" : "The sites that shoudl be taken out completely from the overflow mapping"
  },
  "site_for_overflow": {
@@ -21,7 +21,7 @@
    "descrition" : "Whether or not to overflow the second step (reco) for workfow with PU_overflow enabled"
  },
  "mem_quanta": {
-    "value" : 100,
+    "value" : 1000,
     "description" : "The quanta of memory in MB for the JobRouter"
  },
  "time_quanta": {
@@ -29,7 +29,7 @@
     "description" : "The quanta of time in min for the JobRouter"
  },
  "slope_quanta": {
-    "value" : 100,
+    "value" : 250,
     "description" : "The quanta of the slope of memory/core in MB for the JobRouter"
  },
  "read_quanta": {
@@ -118,7 +118,7 @@
  },
  
  "max_force_complete" : {
-   "value" : 10,
+   "value" : 20,
    "description" : "Number of workflow that can be forced complete at a time"
  },
  "max_per_round" : {
@@ -250,7 +250,7 @@
                    "rate" : 20 
                   } ],
         "50660" : [ { "legend" : "memory excess",
-                  "solution" : "mem-1000" ,
+                  "solution" : "mem-+1000" ,
                   "details" : null,
                   "rate" : 20
                   } ],
