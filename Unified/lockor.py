@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from utils import getWorkflows, findCustodialCompletion, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration, getDatasetSize, sendEmail, sendLog, campaignInfo, componentInfo, reqmgr_url, monitor_dir, monitor_pub_dir, getWorkflowByMCPileup, getDatasetPresence, lockInfo
+from utils import getWorkflows, findCustodialCompletion, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration, getDatasetSize, sendEmail, sendLog, campaignInfo, componentInfo, reqmgr_url, monitor_dir, monitor_pub_dir, getWorkflowByMCPileup, getDatasetPresence, lockInfo, getLatestMCPileup
 from assignSession import *
 import json
 import os
@@ -8,6 +8,30 @@ import sys
 from McMClient import McMClient
 import time
 from utils import lockInfo
+
+
+
+now_s = time.mktime(time.gmtime())
+def time_point(label="",sub_lap=False, percent=None):
+    now = time.mktime(time.gmtime())
+    nows = time.asctime(time.gmtime())
+    
+    print "[lockor] Time check (%s) point at : %s"%(label, nows)
+    if percent:
+        print "[lockor] finishing in about %.2f [s]" %( (now - time_point.start) / percent )
+        print "[lockor] Since start: %s [s]"% ( now - time_point.start)
+    if sub_lap:
+        print "[lockor] Sub Lap : %s [s]"% ( now - time_point.sub_lap ) 
+        time_point.sub_lap = now
+    else:
+        print "[lockor] Lap : %s [s]"% ( now - time_point.lap ) 
+        time_point.lap = now            
+        time_point.sub_lap = now
+
+time_point.sub_lap = time_point.lap = time_point.start = time.mktime(time.gmtime())
+
+
+time_point("Starting initialization")
 
 url = reqmgr_url
 
@@ -44,28 +68,19 @@ LI = lockInfo()
 ## add an addHoc list of things to lock. empyting this list would result in unlocking later
 addHocLocks = json.loads( open('addhoc_lock.json').read())
 
-#[
-#"/MuonEG/Run2016F-v1/RAW",
-#"/SinglePhoton/Run2016B-v1/RAW",
-#"/SinglePhoton/Run2016F-v1/RAW",
-#"/DoubleMuon/Run2016B-v1/RAW",
-#"/DoubleEG/Run2016B-v1/RAW",
-#"/MuonEG/Run2016B-v1/RAW",
-#"/SingleElectron/Run2016B-v1/RAW",
-#"/DoubleEG/Run2016F-v1/RAW",
-#"/JetHT/Run2016F-v1/RAW",
-#"/JetHT/Run2016B-v1/RAW",
-#"/JetHT/Run2016H-v1/RAW"
-#]
+time_point("Starting addhoc")
 
 for item in addHocLocks:
     ds = item.split('#')[0]
     LI.lock( ds , reason='addhoc lock')
     newly_locking.add( ds )
 
-#for status in reversed(statuses):
+
+time_point("Starting reversed statuses check")
+
 for status in statuses:
     print time.asctime(time.gmtime()),"CEST, fetching",status
+    time_point("checking %s" % status, sub_lap=True)
     wfls = getWorkflows(url , status = status,details=True)
     print len(wfls),"in",status
     for wl in wfls:
@@ -93,6 +108,7 @@ for status in statuses:
             newly_locking.add(dataset)
     print len(newly_locking),"locks so far"
 
+
 ## avoid duplicates
 also_locking_from_reqmgr = also_locking_from_reqmgr - newly_locking
 print "additional lock for workflows not knonw to unified",len(also_locking_from_reqmgr)
@@ -102,11 +118,11 @@ stuck_custodial={}
 lagging_custodial={}
 missing_approval_custodial={}
 transfer_timeout = UC.get("transfer_timeout")
-secondary_timeout = defaultdict(int)
 
 ## those that are already in lock
 #already_locked = set(json.loads(open('%s/globallocks.json'%monitor_dir).read()))
 already_locked = set( LI.items() )
+
 
 if not already_locked:
     old = json.loads(open('datalocks.json').read())
@@ -117,25 +133,22 @@ if not already_locked:
             already_locked.add( item.split('#')[0] )
     print "found",len(already_locked),"old locks"
 
+time_point("Starting to check for unlockability")
+
+secondary_timeout = getLatestMCPileup(url)
+time_point("Got the age of all secondaries")
+
 ## check on the one left out, which would seem to get unlocked
 for dataset in already_locked-newly_locking:
     try:
         if not dataset:continue
         unlock = False
         bad_ds = False
-
-        if not dataset in secondary_timeout:
-            ## see if it's used in secondary anywhere
-            usors = getWorkflowByMCPileup(url, dataset, details=True)
-            ## find the latest request date using that dataset in secondary
-            for usor in usors:
-                if len(usor['RequestDate'])!=6:continue
-                d =time.mktime(time.strptime("-".join(map(lambda n : "%02d"%n, usor['RequestDate'])), "%Y-%m-%d-%H-%M-%S"))
-                secondary_timeout[dataset] = max(secondary_timeout[dataset],d)
-
-        if secondary_timeout[dataset]: ## different than zero
-            delay_days = 30
-            delay = delay_days*24*60*60 # 30 days     
+        time_point("Checking %s" % dataset)
+        
+        if dataset in secondary_timeout:
+            delay_days = UC.get('secondary_lock_timeout')
+            delay = delay_days*24*60*60 # in days
             if (now-secondary_timeout[dataset])>delay:
                 print "unlocking secondary input after",delay_days,"days"
                 unlock = True
@@ -145,6 +158,7 @@ for dataset in already_locked-newly_locking:
                 newly_locking.add(dataset)
                 continue
 
+        time_point("Checked as useful secondary", sub_lap=True)
 
         tier = dataset.split('/')[-1]
         creators = getWorkflowByOutput( url, dataset , details=True)
@@ -167,6 +181,8 @@ for dataset in already_locked-newly_locking:
             unlock = True
             bad_ds = True
 
+        time_point("Check as necessary output", sub_lap=True)
+
         ds_status=None
         if not unlock:
             ds_status = getDatasetStatus( dataset )
@@ -177,7 +193,7 @@ for dataset in already_locked-newly_locking:
                 unlock = True
                 bad_ds = True
 
-        
+        time_point("Checked status", sub_lap=True)
         if not bad_ds:
             ## get a chance at unlocking if custodial is existing
             (_,dsn,ps,tier) = dataset.split('/')
@@ -195,6 +211,7 @@ for dataset in already_locked-newly_locking:
                 else:
                     newly_locking.add(dataset)
                     unlock = False
+                time_point("Checked presence", sub_lap=True)
             else:
                 custodials,info = findCustodialCompletion(url, dataset)
                 if len(custodials) == 0:
@@ -228,6 +245,7 @@ for dataset in already_locked-newly_locking:
                         sendLog('dataset waiting for custodial with no block, %s looks very odd'% dataset, level='critical')
                         #unlock = True
                         pass
+                    time_point("Check for not on tape yet", sub_lap=True)
                 else:
                     unlock = True
 
@@ -248,6 +266,7 @@ for dataset in already_locked-newly_locking:
                     #unlock=False                    
                     print "Unlocking",dataset,"because no request is using it in input"
                     unlock=True
+                time_point("Checked with mcm for useful input", sub_lap=True)
             else:
                 ## relocking
                 outs = session.query(Output).filter(Output.datasetname==dataset).all()
@@ -264,7 +283,7 @@ for dataset in already_locked-newly_locking:
                 else:
                     print "re-Locking",dataset,"because of special tier needing double check"
                     unlock=False
-        
+                time_point("Checked to keep on disk for 30 days", sub_lap=True)
 
         if unlock:
             print "\tunlocking",dataset
@@ -278,6 +297,7 @@ for dataset in already_locked-newly_locking:
             session.commit()
         else:
             newly_locking.add(dataset)            
+        time_point("Checked all")
     except Exception as e:
         print "Error in checking unlockability. relocking",dataset
         print str(e)
@@ -298,6 +318,7 @@ for wfo in session.query(Workflow).filter(Workflow.status=='forget').all():
         print "then setting",wfo.name,"to",wfo.status
     session.commit()
 
+time_point("verified those in forget")
 
 ### then add everything else that reqmgr knows about in a valid status
 ### this is rather problematic because the locks are created and dealt recursively : i.e we assume to work on the delta between the previous locks and the new created ones. If we add those below, unified will try to unlock them at next round and create all sorts of trboules.
@@ -305,6 +326,7 @@ for item in also_locking_from_reqmgr:
     LI.lock(item, reason='Additional lock of datasets')
     pass
 
+time_point("locking also_locking_from_reqmgr")
 
 for item in newly_locking:
     ## relock it
@@ -314,5 +336,5 @@ for item in LI.items():
     if not item in newly_locking:
         LI.release(item)
 
-#open('%s/globallocks.json.new'%monitor_dir,'w').write( json.dumps( sorted(list(newly_locking)), indent=2))
-#os.system('mv %s/globallocks.json.new %s/globallocks.json'%(monitor_dir,monitor_dir))
+time_point("final lock added")
+

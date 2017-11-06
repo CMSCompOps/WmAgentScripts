@@ -3755,6 +3755,31 @@ def getWorkflowByOutput( url, dataset , details=False):
     else:
         return [item['id'] for item in items]
 
+
+def getLatestMCPileup( url, statuses=None):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    if not statuses:
+        statuses = ['assigned','acquired','running-open','running-closed','force-complete','completed','closed-out','announced']
+    ss = '&'.join(['status=%s'% s for s in statuses])
+    print ss
+    r1=conn.request("GET",'/reqmgr2/data/request?mask=RequestDate&mask=MCPileup&%s'%ss, headers={"Accept":"application/json"})
+    r2=conn.getresponse()
+    data = json.loads(r2.read())
+
+    those = defaultdict(set)
+    for req in data['result']:
+        for v in req.values():
+            t = v.get('MCPileup',None)
+            d = v.get('RequestDate',[])
+            if t and len(d)==6:
+                d =time.mktime(time.strptime("-".join(map(lambda n : "%02d"%int(n), d)), "%Y-%m-%d-%H-%M-%S"))                
+                for tt in t:
+                    those[tt].add( d )
+    ret = {}                
+    for dataset,ages in those.items():
+        ret[dataset] = max(ages)
+    return ret
+
 def getWorkflowByMCPileup( url, dataset , details=False):
     conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     there = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/bymcpileup?key="%s"'%(dataset)
