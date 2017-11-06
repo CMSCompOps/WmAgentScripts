@@ -6,6 +6,7 @@ import optparse
 
 parser = optparse.OptionParser()
 parser.add_option('--go',default=False, action = 'store_true', help='Answer yes to all')
+parser.add_option('--dry', default=False, action = 'store_true', help='Just show all')
 parser.add_option('--workflows',help='Coma separated list of workflows to recover')
 def_assignoptions = '--site acdc --xrootd'
 parser.add_option('--assignoptions',default=def_assignoptions, help='The options to pass to assign.py (default is %s)'%def_assignoptions)
