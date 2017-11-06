@@ -161,6 +161,7 @@ def try_sendLog( subject, text , wfi = None, show=True, level='info'):
         print str(e)
         pass
 
+
 def sendEmail( subject, text, sender=None, destination=None ):
     #print subject
     #print text
@@ -779,6 +780,15 @@ def userLock(component=None):
             return True
     return False
 
+def getWMStats(url):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    url = '/wmstatsserver/data/requestcache'
+    r1=conn.request("GET",url,headers={"Accept":"application/json"})
+    r2=conn.getresponse()
+    return json.loads(r2.read())['result'][0]
+    
+
+
 def genericGet( base, url, load=True, headers=None):
     if not headers: headers={"Accept":"*/*"}
     conn  =  httplib.HTTPSConnection( base,
@@ -992,6 +1002,14 @@ class docCache:
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
             'getter' : lambda : json.loads( os.popen('curl -s --retry 1 --connect-timeout 5 http://137.138.184.204/cache-manager/images/cloudStatus.json').read()),
+            'cachefile' : None,
+            'default' : {}
+            }
+        self.cache['wmstats'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration(),
+            'getter' : lambda : getWMStats('cmsweb.cern.ch'),
             'cachefile' : None,
             'default' : {}
             }
@@ -3362,7 +3380,7 @@ def getDatasetEventsPerLumi(dataset):
     if all_values:
         return sum(all_values) / float(len(all_values))
     else:
-        return 100.
+        return 1.
     ## the thing below does not actually work
     #dbsapi = DbsApi(url=dbs_url)
     #try:
@@ -3414,7 +3432,11 @@ def checkParent( dataset ):
     _,f = getDatasetLumisAndFiles(dataset)
     checked = {}
     file_parent_fixing = defaultdict(set)
+    print len(f),"lumis to check"
+    icount=0
     for rl,fns in f.items():
+        icount+=1
+        if icount%50==0: print icount,'/',len(f)
         for fn in fns:
             ### get their parents
             file_parents = set()
@@ -3424,8 +3446,10 @@ def checkParent( dataset ):
 
             ## if none, make an alarm and fix it
             if not file_parents:
+                print "from DBS",fn,"has no parent"
                 for parent in parents:
                     file_parents.update(p_f[parent].get(rl, []))
+                print "\t found",sorted(file_parents)
             if not file_parents:
                 ## this is really an issue and new lumisections were made
                 print rl,"is really problematic in",dataset
@@ -4002,10 +4026,11 @@ def checkIfBlockIsAtASite(url,block,site):
 
 def getForceCompletes():
     overrides = {}
-    for rider,email in [('vlimant','vlimant@cern.ch'),('jen_a','jen_a@fnal.gov'),('srimanob','srimanob@mail.cern.ch')]:
+    UC = unifiedConfiguration()
+    actors = UC.get('allowed_bypass')
+    for rider,email in actors:
         rider_file = '/afs/cern.ch/user/%s/%s/public/ops/forcecomplete.json'%(rider[0],rider)
         if not os.path.isfile(rider_file):
-            print "no file",rider_file
             continue
         try:
             extending = json.loads(open( rider_file ).read() )
@@ -5072,6 +5097,81 @@ class workflowInfo:
     def getWorkTasks(self):
         return self.getAllTasks(select={'taskType':['Production','Processing','Skim']})
 
+    def getCompletionFraction(self, caller='getCompletionFraction', with_event=True):
+        output_per_task = self.getOutputPerTask()
+        task_outputs = {}
+        for task,outs in output_per_task.items():
+            for out in outs:
+                task_outputs[out] = task
+        
+        percent_completions = {}
+        event_expected_per_task = {}
+        ## for all the outputs
+        event_expected,lumi_expected = self.request.get('TotalInputEvents',0),self.request.get('TotalInputLumis', 0)
+        
+        ttype = 'Task' if 'TaskChain' in self.request else 'Step'
+        it = 1
+        tname_dict = {}
+        while True:
+            tt = '%s%d'%(ttype,it)
+            it+=1
+            if tt in self.request:
+                tname = self.request[tt]['%sName'% ttype]
+                tname_dict[tname] = tt
+                if not 'Input%s'%ttype in self.request[tt] and 'RequestNumEvents' in self.request[tt]: 
+                    ## pick up the value provided by the requester, that will work even if the filter effiency is broken
+                    event_expected = self.request[tt]['RequestNumEvents']
+            else:
+                break
+        
+        if '%sChain'%ttype in self.request:
+            ## go on and make the accounting
+            it = 1
+            while True:
+                tt = '%s%d'%(ttype,it)
+                it+=1
+                if tt in self.request:
+                    tname = self.request[tt]['%sName'% ttype]
+                    event_expected_per_task[tname] = event_expected
+                    ### then go back up all the way to the root task to count filter-efficiency
+                    a_task = self.request[tt]
+                    while 'Input%s'%ttype in a_task:
+                        event_expected_per_task[tname] *= a_task.get('FilterEfficiency',1)
+                        mother_task = a_task['Input%s'%ttype]
+                        ## go up
+                        a_task = self.request[ tname_dict[mother_task] ]
+                else:
+                    break
+            
+        for output in self.request['OutputDatasets']:
+            event_count,lumi_count = getDatasetEventsAndLumis(dataset=output)
+            percent_completions[output] = 0. 
+            if lumi_expected:
+                percent_completions[output] = lumi_count / float( lumi_expected )
+                self.sendLog(caller, "lumi completion %s expected %d for %s"%( lumi_count, lumi_expected, output))
+            output_event_expected = event_expected_per_task.get(task_outputs.get(output,'NoTaskFound'))
+            if output_event_expected and with_event: 
+                e_fraction = float(event_count) / float( output_event_expected )
+                if e_fraction > percent_completions[output]:
+                    percent_completions[output] = e_fraction
+                    self.sendLog(caller, "overiding : event completion real %s expected %s for %s"%(event_count, output_event_expected, output))
+
+        return percent_completions
+
+
+    def getOutputPerTask(self):
+        output_per_task = defaultdict(list)
+        for t in self.getWorkTasks():
+            #print "what",t.subscriptions
+            parse_what = t.subscriptions.outputModules if hasattr(t.subscriptions,'outputModules') else t.subscriptions.outputSubs
+            for om in parse_what:
+                dsname = getattr(t.subscriptions, om).dataset
+                #print dsname
+                #print t._internal_name
+                output_per_task[t._internal_name].append( dsname )
+                
+        return dict(output_per_task)
+        
     def getAllTasks(self, select=None):
         all_tasks = []
         for task in self._tasks():
