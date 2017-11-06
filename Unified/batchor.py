@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, sendEmail, sendLog, monitor_pub_dir, unifiedConfiguration, deep_update, global_SI
+from utils import getWorkflows, sendEmail, sendLog, monitor_pub_dir, unifiedConfiguration, deep_update, global_SI, getWorkflowByCampaign
 from collections import defaultdict
 import copy
 import json
@@ -126,6 +126,17 @@ This is an automated message"""%( new_campaign,
         to = ['hn-cms-dataopsrequests@cern.ch']
         sendEmail(subject, text, destination=to)
         sendLog('batchor',text, level='critical')
+
+    ## go through all existing campaigns and remove the ones not in use anymore ?
+    for old_campaign in campaigns.keys():
+        all_in_batch = getWorkflowByCampaign(url, old_campaign, details=True)
+        is_batch_done = all(map(lambda s : not s in ['completed','running-open','running-closed','acquired','assigned','assignment-approved'], [wf['RequestStatus']for wf in all_in_batch]))
+        ## check all statuses
+        if is_batch_done:
+            #print "batch",old_campaign,"can be closed or removed if necessary"
+            #campaigns[old_campaign]['go'] = False ## disable
+            campaigns.pop( old_campaign ) ## or just drop it all together ?
+            print "batch",old_campaign," configuration was removed"
 
     ## merge all anyways
     campaigns.update( add_on )
