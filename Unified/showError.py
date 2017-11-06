@@ -839,7 +839,7 @@ Last updated on %s (GMT)
             if wf in owf:
                 tops[wf]+=N
 
-    for wf,count in sorted(tops.items(), lambda o : o[1], reverse=True):
+    for wf,count in sorted(tops.items(), key = lambda o : o[1], reverse=True):
         report = set()
         for owf,N in top_cooloff.items():
             if wf in owf:
@@ -848,7 +848,7 @@ Last updated on %s (GMT)
             if wf in owf:
                 report.add( owf)
         for task in sorted(report):
-            ht.werite('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n'%(wf,
+            ht.write('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n'%(wf,
                                                                                            task.split('/')[-1],
                                                                                            top_failure.get(task,'-'),
                                                                                            top_cooloff.get(task,'-'),
