@@ -117,7 +117,7 @@ def htmlor( caller = ""):
                 text+=', <a href="https://cms-pdmv.cern.ch/mcm/requests?prepid=%s" target="_blank">mcm</a>'%(pid)
                 text+=', <a href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s" target="_blank">ac</a>'%(wl_pid)
         text += ', <a href="https://%s/couchdb/workqueue/_design/WorkQueue/_rewrite/elementsInfo?request=%s" target="_blank">gq</a>'%(reqmgr_url,wfn)
-        text += ', <a href="https://its.cern.ch/jira/issues/?jql=text~%s AND project = CMSCOMPPR" target="_blank">jira</a>'% (pid)
+        text += ', <a href="https://its.cern.ch/jira/issues/?jql=(text~%s OR text~task_%s) AND project = CMSCOMPPR" target="_blank">jira</a>'% (pid, pid)
         if status:
             if wf.status.startswith('assistance'):
                 text+=', <a href="assistance.html#%s" target="_blank">assist</a>'%wfn
@@ -246,6 +246,7 @@ Last update on <b>%s(CET), %s(GMT)</b>
 <a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=warning target=_blank><b><font color=orange>warning</b></font></a>
 <a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=critical target=_blank><b><font color=red>all critical</b></font></a>
 <a href=https://its.cern.ch/jira/projects/CMSCOMPPR/issues target=_blank>JIRA</a>
+<a href=toperror.html target=_blank>top errors</a>
 <br>
 %s
 <hr>

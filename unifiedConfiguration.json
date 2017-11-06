@@ -131,6 +131,10 @@
     "completor" : null
     }
  },
+ "default_fraction_overdoing" :{
+   "value" : 1.05,
+   "description" : "Completion fraction above which a workflow will force complete"
+ },
  "default_fraction_pass" : {
    "value" : 1.0,
    "description" : "completion fraction above which to announce dataset"
@@ -162,6 +166,10 @@
  "tiers_to_DDM": {
    "value" : ["AODSIM","MINIAODSIM","GEN-SIM-RAW","GEN-SIM-RECO","GEN-SIM-RECODEBUG","AOD","RECO","MINIAOD","ALCARECO","USER","RAW-RECO","RAWAODSIM"],
    "description": "The data tiers that go to AnaOps"
+ },
+ "secondary_lock_timeout": {
+   "value" : 30,
+   "description": "The number of days to keep a secondary input locked"
  },
  "tiers_keep_on_disk": {
    "value" : ["LHE"],
@@ -210,6 +218,10 @@
   "retrieve_errors_timeout": {
     "value" : 10,
     "description" : "Time in minute that we allow to get logs from where they are before shutting retrieval down."
+  },
+  "full_report_top_N":{
+    "value" : 10,
+    "description" : "The number of top N workflows with failures and cooloff to show."
   },
   "expose_top_N":{
     "value" : 3,

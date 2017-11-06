@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from utils import workflowInfo, siteInfo, monitor_dir, monitor_pub_dir, base_dir, global_SI, getDatasetPresence, getDatasetBlocksFraction, getDatasetBlocks, unifiedConfiguration
+from utils import workflowInfo, siteInfo, monitor_dir, monitor_pub_dir, base_dir, global_SI, getDatasetPresence, getDatasetBlocksFraction, getDatasetBlocks, unifiedConfiguration, getDatasetEventsPerLumi, dataCache, unified_url
 import time
 
 base_eos_dir = "/afs/cern.ch/user/c/cmst2/Unified/"
@@ -18,6 +18,20 @@ import time
 import optparse
 import random
 import threading
+
+class ParseBuster(threading.Thread):
+    def __init__(self, **args):
+        threading.Thread.__init__(self)
+        self.deamon = True
+        self.url = args.get('url')
+        self.wfn = args.get('wfn')
+        self.options = args.get('options')
+        self.task_erro = None
+        self.one_explanation = None
+        
+    def run(self):
+        self.task_error, self.one_explanation = parse_one( self.url, self.wfn, self.options)
+        
 
 class AgentBuster(threading.Thread):
     def __init__(self, **args):
@@ -57,12 +71,15 @@ class XRDBuster(threading.Thread):
                                     
                                     os.system('mkdir -p /tmp/%s'%(os.getenv('USER')))
                                     local = '/tmp/%s/%s'%(os.getenv('USER'),self.out_lfn.split('/')[-1])
-                                    command = 'xrdcp root://cms-xrd-global.cern.ch/%s %s'%( self.out_lfn, local)
+                                    #command = 'xrdcp root://cms-xrd-global.cern.ch/%s %s'%( self.out_lfn, local)
+                                    command = 'XRD_REQUESTTIMEOUT=10 xrdcp root://cms-xrd-global.cern.ch/%s %s'%( self.out_lfn, local)
                                     print "#"*15,"cmsrun log retrieval","#"*15
                                     if os.system('ls %s'% local)!=0:
                                         print "running",command
                                         ## get the file
                                         xec = os.system( command )
+                                        if xec !=0:
+                                            print "\t\t",command,"did not succeed"
                                     else:
                                         print "the file",local,"already exists"
                                         xec = 0
@@ -74,9 +91,12 @@ class XRDBuster(threading.Thread):
                                                                       self.errorcode_s,
                                                                       self.task_short,
                                                                       label)
+                                    print "should try eos?"
                                     if os.system('ls %s'% local)!=0 and self.from_eos:
                                         print "no file retrieved using xrootd, using eos source"
-                                        os.system('python /afs/cern.ch/user/v/vlimant/public/ops/whatLog.py --w  %s --log %s --get' %(self.wfn, 
+                                        ## will parse eos and not doing anything for things already indexed
+                                        os.system('python /afs/cern.ch/user/v/vlimant/public/ops/createLogDB.py --workflow %s'%( self.wfn ))
+                                        os.system('python /afs/cern.ch/user/v/vlimant/public/ops/whatLog.py --workflow  %s --log %s --get' %(self.wfn, 
                                                                                                                                       self.out_lfn.split('/')[-1]) )
                                         os.system('mv `find /tmp/%s/ -name "%s"` %s'%( os.getenv('USER'), self.out_lfn.split('/')[-1], local))
 
@@ -105,7 +125,7 @@ class ThreadHandler(threading.Thread):
         self.threads = args['threads']
         self.n_threads = args['n_threads']
         self.sleepy = args['sleepy']
-        self.timeout = args.get('timeout',30)
+        self.timeout = args.get('timeout',None)
         self.verbose = args.get('verbose',False)
 
     def run(self):
@@ -124,7 +144,7 @@ class ThreadHandler(threading.Thread):
         bug_every=max(len(self.threads) / 10., 100.) ## 10 steps of eta verbosity
         next_ping = int(len(self.threads)/bug_every)
         while self.threads:
-            if (time.mktime(time.gmtime()) - start_now) > (self.timeout*60.):
+            if self.timeout and (time.mktime(time.gmtime()) - start_now) > (self.timeout*60.):
                 print "Stopping to start threads because the time out is over",time.asctime(time.gmtime())
                 ## transfer all to running
                 while self.threads:
@@ -337,7 +357,7 @@ def parse_one(url, wfn, options=None):
         rwl = wfi.getRunWhiteList()
         lwl = wfi.getLumiWhiteList()
         for dataset in prim:
-            html +='<b>%s</b>'%dataset
+            html +='<b>%s </b>(events/lumi ~%d)'%(dataset, getDatasetEventsPerLumi( dataset))
             blocks = getDatasetBlocks( dataset, runs= rwl ) if rwl else None
             blocks = getDatasetBlocks( dataset, lumis= lwl) if lwl else None
             available = getDatasetBlocksFraction(url, dataset, only_blocks = blocks )
@@ -365,7 +385,7 @@ def parse_one(url, wfn, options=None):
         html+='Produces<br>'
         for dataset in outs:
             presence = getDatasetPresence(url, dataset)
-            html +='<b>%s</b><ul>'%dataset
+            html +='<b>%s </b>(events/lumi ~ %d)<ul>'%(dataset, getDatasetEventsPerLumi(dataset))
             for site in sorted(presence.keys()):
                 html += '<li>%s : %.2f %%'%( site, presence[site][1] )
             html+='</ul>'
@@ -385,12 +405,12 @@ def parse_one(url, wfn, options=None):
 
     html += '<br>'
 
+    n_expose_base = options.expose if options else UC.get('n_error_exposed')
+    print "getting",n_expose_base,"logs by default"
     if tasks:
         min_rank = min([task.count('/') for task in tasks])
     for task in tasks:  
-        n_expose = UC.get('n_error_exposed')
-        if options:
-            n_expose = options.expose 
+        n_expose = n_expose_base
 
         expose_archive_code = dict([(str(code), defaultdict(lambda : n_expose)) for code in UC.get('expose_archive_code')])
         expose_condor_code = dict([(str(code), defaultdict(lambda : n_expose)) for code in UC.get('expose_condor_code')])
@@ -484,13 +504,9 @@ def parse_one(url, wfn, options=None):
                         wmbs = sample['wmbsid']
                         workflow = sample['workflow']
                         if force_code:
-                            if errorcode_s in expose_condor_code:
-                                expose_condor_code[errorcode_s][agent] += 1
-                            else:
+                            if not errorcode_s in expose_condor_code:
                                 expose_condor_code[errorcode_s] = defaultdict(lambda : n_expose)
-                            if errorcode_s in expose_archive_code:
-                                expose_archive_code[errorcode_s][agent] += 1
-                            else:
+                            if not errorcode_s in expose_archive_code:
                                 expose_archive_code[errorcode_s] = defaultdict(lambda : n_expose)
 
                         #if do_CL and ((errorcode_s in expose_condor_code and expose_condor_code[errorcode_s][agent]) or do_all_error_code) and 'cern' in agent:
@@ -594,9 +610,9 @@ def parse_one(url, wfn, options=None):
         for code in sorted(all_codes):
             #html+='<th><a href="#%s">%s</a>'%(code,code)
             html+='<th><a href="#%s:%s">%s</a>'%(task_short,code,code)
-            if str(code) in expose_archive_code or do_all_error_code:
+            if (str(code) in expose_archive_code or do_all_error_code):# and n_expose_base:
                 html += ' <a href=%s/joblogs/%s/%s/%s>, JobLog</a>'%( url_eos, wfn, code, task_short )
-            if str(code) in expose_condor_code or do_all_error_code:
+            if (str(code) in expose_condor_code or do_all_error_code):# and n_expose_base:
                 html += ' <a href=%s/condorlogs/%s/%s/%s>, CondorLog</a>'%( url_eos, wfn, code, task_short )
             html += '</th>'
 
@@ -722,7 +738,7 @@ def parse_one(url, wfn, options=None):
     ping = 0
     while run_threads.is_alive():
         ping+=1
-        if ping%10:
+        if ping%100:
             time_point("waiting for sub-threads to finish")
         time.sleep(6)
 
@@ -730,20 +746,142 @@ def parse_one(url, wfn, options=None):
 
     return task_error_site_count, one_explanation
 
+
 def parse_many(url, options):
     wfos = []
     wfos.extend(session.query(Workflow).filter(Workflow.status == 'away').all())
     wfos.extend(session.query(Workflow).filter(Workflow.status.startswith('assistance')).all())
     random.shuffle( wfos ) 
-    for wfo in wfos:
-        parse_one( url, wfo.name, options)
+    parse_those(url, options, [wfo.name for wfo in wfos])
         
         
 def parse_all(url, options=None):
+    those = session.query(Workflow).filter(Workflow.status == 'assistance-manual').all()
+    parse_those(url, options, [wfo.name for wfo in those])
+
+def condensed( st_d ):
+    failure = sum(st_d.get('failure',{}).values())
+    cooloff = sum(st_d.get('cooloff',{}).values())
+    running = st_d.get('submitted',{}).get('running',0)
+    pending = st_d.get('pending',0)
+    success = st_d.get('success',0)
+    queued = sum(st_d.get('queued',{}).values())
+    created = failure + cooloff + running + pending + success + queued
+    return {
+        'created' : created,
+        'queued' : queued,
+        'success' : success,
+        'failure' : failure,
+        'cooloff' : cooloff,
+        'running' : running
+        }
+
+def add_condensed( d1, d2):
+    all_keys = set(d1.keys()+d2.keys())
+    d3= {}
+    for k in all_keys:
+        d3[k] = d1.get(k,0)+d2.get(k,0)
+    return d3
+
+def parse_top(url, options=None):
+    UC = unifiedConfiguration()
+    top_N = UC.get('full_report_top_N')
+    diagnose_by_agent_by_site = defaultdict( lambda : defaultdict( lambda : defaultdict(dict)))
+    wm = dataCache.get('wmstats')
+
+    for wfn in wm.keys():
+        info = wm[wfn].get('AgentJobInfo',{})
+        for agent,ai in info.items():
+            an = agent.split('.')[0]
+            for task,ti in ai['tasks'].items():        
+                for site,si in ti.get('sites',{}).items():
+                    ssi = condensed( si )
+                    diagnose_by_agent_by_site[task][an][site] = ssi 
+               
+    diagnose = defaultdict( dict ) ## the overall picture of the task
+    diagnose_by_site = defaultdict( lambda : defaultdict(dict))
+    diagnose_by_agent = defaultdict( lambda : defaultdict(dict))    
+
+    for task in diagnose_by_agent_by_site:
+        for agent in diagnose_by_agent_by_site[task]:
+            for site in diagnose_by_agent_by_site[task][agent]:
+                diagnose_by_site[task][site] = add_condensed( diagnose_by_site[task][site], diagnose_by_agent_by_site[task][agent][site])
+                diagnose_by_agent[task][agent] = add_condensed( diagnose_by_agent[task][agent], diagnose_by_agent_by_site[task][agent][site])
+                diagnose[task] = add_condensed( diagnose[task], diagnose_by_agent_by_site[task][agent][site])
+    top_cooloff = dict(sorted([(t,i.get('cooloff',0)) for t,i in diagnose.items()], key = lambda o:o[1], reverse=True)[:top_N])
+    top_failure = dict(sorted([(t,i.get('failure',0)) for t,i in diagnose.items()], key = lambda o:o[1], reverse=True)[:top_N])
+    
+    all_bad_wfs = set()
+    all_bad_wfs.update([t.split('/')[1] for t in top_cooloff.keys()] )
+    all_bad_wfs.update([t.split('/')[1] for t in top_failure.keys()] )
+    
+    print "found",len(all_bad_wfs),"to parse for detailled error report"
+    parse_those(url, options, all_bad_wfs)
+
+    ht = open('%s/toperror.html'%monitor_dir, 'w')
+    ht.write("""<html>
+Report of workflows with top %s error in failure and cooloff<br>
+Last updated on %s (GMT)
+<table border=1>
+<thead><tr><th>Workflow</th><th>Task</th><th>Failures</th><th>Cool-offs</th><th> report </th> </tr></thead>
+"""%(
+            top_N,
+            time.asctime( time.gmtime())
+            ))
+
+    ## sort by max errors 
+    tops = defaultdict(int)
+    for wf in sorted(all_bad_wfs):
+        for owf,N in top_cooloff.items():
+            if wf in owf:
+                tops[wf]+=N
+        for owf,N in top_failure.items():
+            if wf in owf:
+                tops[wf]+=N
+
+    for wf,count in sorted(tops.items(), lambda o : o[1], reverse=True):
+        report = set()
+        for owf,N in top_cooloff.items():
+            if wf in owf:
+                report.add( owf)
+        for owf,N in top_failure.items():
+            if wf in owf:
+                report.add( owf)
+        for task in sorted(report):
+            ht.werite('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n'%(wf,
+                                                                                           task.split('/')[-1],
+                                                                                           top_failure.get(task,'-'),
+                                                                                           top_cooloff.get(task,'-'),
+                                                                                           '<a href=%s/report/%s> report </a>'%(unified_url,wf))
+                     )
+    ht.write('</table></html>')
+    ht.close()
+
+def parse_those(url, options=None, those=[]):
+
     explanations = defaultdict(set)
     alls={}
-    for wfo in session.query(Workflow).filter(Workflow.status == 'assistance-manual').all():    
-        task_error, one_explanation = parse_one( url, wfo.name, options)
+    threads = []
+
+    for wfn in those:
+        threads.append( ParseBuster( url = url, wfn = wfn, options=options))
+
+
+    #threads = thread[:5]
+    run_threads = ThreadHandler( threads = threads, n_threads = options.threads if options else 5,
+                                 sleepy = 10,
+                                 timeout = None,
+                                 verbose = True )
+
+    print "running all workers"
+    run_threads.start()
+    while run_threads.is_alive():
+        time.sleep(10)
+
+    print "all threads completed"
+    for worker in threads:
+        task_error = worker.task_error
+        one_explanation = worker.one_explanation
         alls.update( task_error )
         for code in one_explanation:
             explanations[code].update( one_explanation[code] )
@@ -770,17 +908,20 @@ def parse_all(url, options=None):
 if __name__=="__main__":
     url = 'cmsweb.cern.ch'
 
+    UC = unifiedConfiguration()
     parser = optparse.OptionParser()
     parser.add_option('--no_JL',help="Do not get the job logs", action="store_true",default=False)
     parser.add_option('--no_CL',help="Do not get the condor logs", action="store_true",default=False)
     parser.add_option('--fast',help="Retrieve from cache and no logs retrieval", action="store_true", default=False)
     parser.add_option('--many',help="Retrieve for all ongoing and needing help", action="store_true", default=False)
+    parser.add_option('--top',help="Retrieve the top N offenders",action="store_true", default=False)
     parser.add_option('--cache',help="The age in second of the error report before reloading them", default=0, type=float)
     parser.add_option('--workflow','-w',help="The workflow to make the error report of",default=None)
-    parser.add_option('--expose',help="Number of logs to retrieve",default=1,type=int)
+    parser.add_option('--expose',help="Number of logs to retrieve",default=UC.get('n_error_exposed'),type=int)
     parser.add_option('--all_errors',help="Bypass and expose all error codes", default=False, action='store_true')
     #parser.add_option('--no_logs',help="Bypass retrieval of logs", default=False, action='store_true')
     parser.add_option('--from_eos',help="Retrieve from eos",default=False, action='store_true')
+    parser.add_option('--threads',help="The number of parallel workers to get logs", default=5, type=int)
     (options,args) = parser.parse_args()
     
     if options.fast:
@@ -792,6 +933,8 @@ if __name__=="__main__":
         parse_one(url, options.workflow, options)
     elif options.many:
         parse_many(url, options)
+    elif options.top:
+        parse_top(url, options)
     else:
         parse_all(url, options)
 
