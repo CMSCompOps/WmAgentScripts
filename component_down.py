@@ -29,5 +29,5 @@ for component in os.listdir(base_dir):
         restarts['data'][component].append( restart_time )
 
 open('/afs/cern.ch/user/c/cmst1/www/Automatic_Agent_json/%s.restart.json'% agent,'w').write( json.dumps( restarts, indent=2) )
-
+#want to add to eos /eos/project/c/cms-unified-logs/www/
 
