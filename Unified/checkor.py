@@ -178,7 +178,7 @@ def checkor(url, spec=None, options=None):
     if use_mcm:
         ## this is a list of prepids that are good to complete
         forcings = mcm.get('/restapi/requests/forcecomplete')
-    
+        if not forcings: forcings = []
     
     ## remove empty entries ...
     bypasses = filter(None, bypasses)
