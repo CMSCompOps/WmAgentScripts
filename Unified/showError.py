@@ -693,7 +693,7 @@ def parse_one(url, wfn, options=None):
         task_error_site_count[task] = error_site_count
 
     ## run all retrieval
-    run_threads = ThreadHandler( threads = threads, n_threads = 5, sleepy = 10, 
+    run_threads = ThreadHandler( threads = threads, n_threads = options.log_threads if options else 5, sleepy = 10, 
                                  timeout=UC.get('retrieve_errors_timeout'),
                                  verbose=True)
     run_threads.start()
@@ -718,7 +718,7 @@ def parse_one(url, wfn, options=None):
     html += '<a name=CODES></a>'
     html += '<table border=1>'
     for code in per_task_explanation:
-        html +='<tr><td><a name="%s">%s</a></td><td>%s</td></tr>'% ( code, code, '<br><br>'.join(per_task_explanation[code]).replace('\n','<br>' ))
+        html +='<tr><td><a name="%s">%s</a><br><a href=https://twiki.cern.ch/twiki/bin/view/CMSPublic/JobExitCodes>code twiki</a></td><td>%s</td></tr>'% ( code, code, '<br><br>'.join(per_task_explanation[code]).replace('\n','<br>' ))
     #for code in one_explanation:
     #    html +='<tr><td><a name="%s">%s</a></td><td>%s</td></tr>'% ( code, code, '<br><br>'.join(one_explanation[code]).replace('\n','<br>' ))
 
@@ -921,7 +921,8 @@ if __name__=="__main__":
     parser.add_option('--all_errors',help="Bypass and expose all error codes", default=False, action='store_true')
     #parser.add_option('--no_logs',help="Bypass retrieval of logs", default=False, action='store_true')
     parser.add_option('--from_eos',help="Retrieve from eos",default=False, action='store_true')
-    parser.add_option('--threads',help="The number of parallel workers to get logs", default=5, type=int)
+    parser.add_option('--threads',help="The number of parallel workers to get report", default=5, type=int)
+    parser.add_option('--log_threads',help="The number of parallel workers to get logs per report", default=3, type=int)
     (options,args) = parser.parse_args()
     
     if options.fast:
