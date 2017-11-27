@@ -35,18 +35,15 @@ def injector(url, options, specific):
     ## browse for assignment-approved requests, browsed for ours, insert the diff
     for wf in workflows:
         if specific and not specific in wf: continue
+
         exists = session.query(Workflow).filter(Workflow.name == wf ).first()
         if not exists:
             wfi = workflowInfo(url, wf)
-            #wl = getWorkLoad(url, wf)
             ## check first that there isn't related here with something valid
             can_add = True
             ## first try at finding a match
-            #            print wfi.request
             familly = session.query(Workflow).filter(Workflow.name.contains(wfi.request['PrepID'])).all()
             if not familly:
-                #req_familly = getWorkflowById( url, wl['PrepID'])
-                #familly = [session.query(Workflow).filter(Workflow.name == member).first() for member in req_familly]
                 pids = wfi.getPrepIDs()
                 req_familly = []
                 for pid in pids:
@@ -80,6 +77,10 @@ def injector(url, options, specific):
                     wfi.sendLog('injector',"One of the input is not VALID. %s : %s"%( d, status_cache[d]))
                     sendLog('injector',"One of the input of %s is not VALID. %s : %s"%( wf, d, status_cache[d]), level='critical')
                     can_add = False
+
+            ### ban some workflow that you don't like anymore
+            #outputs = wfi.request['OutputDatasets']
+
             if not can_add: continue
 
             ## temporary hack to transform specific taskchain into stepchains
