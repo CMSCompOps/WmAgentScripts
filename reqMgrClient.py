@@ -1090,7 +1090,7 @@ def invalidateWorkflow(url, workflowname, current_status=None, cascade=False):
         return rejectWorkflow(url, workflowname, cascade)
     elif current_status in['normal-archived']:
         return rejectArchivedWorkflow(url, workflowname)
-    elif current_status in ['aborted','rejected','aborted-archived','rejected-archived']:
+    elif current_status in ['aborted','rejected','aborted-completed','aborted-archived','rejected-archived']:
         print workflowname,"already",current_status
         return True
     else:
