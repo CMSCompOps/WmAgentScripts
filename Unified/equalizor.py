@@ -350,7 +350,9 @@ def equalizor(url , specific = None, options=None):
         p_t = percentile_data['aggregations']["2"]["values"].get("%.1f"%time_percentil,None) if 'aggregations' in percentile_data else None
         if p_t=="NaN":p_t=None
         if p_t: p_t*=60. ## convert in mins
-        w_t = percentile_data["hits"]["total"]
+        w_t = 0
+        if "hits" in percentile_data and "total" in percentile_data["hits"]:
+            w_t = percentile_data["hits"]["total"]
         
         b_t = None
         if w_t > stats_to_go and p_t:
@@ -622,7 +624,7 @@ def equalizor(url , specific = None, options=None):
                             set_memory = min( add_hoc_mem, set_memory) if set_memory else add_hoc_mem
 
                     if set_memory:
-                        set_memory =  min(set_memory, 20000)
+                        set_memory =  min(set_memory, 20000) ## no bigger than 20G
                         set_memory =  max(set_memory, int(mem/2.)) ## do not go too low. allow 50% of initial value at most
                         print "trully setting memory to",set_memory
                         performance[task.pathName]['memory']= set_memory
@@ -642,7 +644,7 @@ def equalizor(url , specific = None, options=None):
 %s GB base memory at %d core
 %s GB per thread
 %s min assuming runing 1-thread
-%s KBs estimated per thread
+%s KBs read estimated per thread
 """%( taskname, 
       set_memory, mcore,
       set_slope,
