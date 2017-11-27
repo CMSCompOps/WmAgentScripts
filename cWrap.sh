@@ -20,7 +20,9 @@ echo $USER >> $log
 echo the week $week oddity is $oddity >> $log
 echo module $modulename>> $log 
 
-export X509_USER_PROXY=$HOME/private/personal/voms_proxy.cert
+#export X509_USER_PROXY=$HOME/private/personal/voms_proxy.cert
+#export X509_USER_PROXY=/tmp/$USER-4hty64k793hj
+echo $X509_USER_PROXY >>$log
 
 source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh
 
