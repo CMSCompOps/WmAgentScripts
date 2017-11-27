@@ -19,7 +19,7 @@ def completor(url, specific):
     if use_mcm:
         mcm = McMClient(dev=False)
 
-    safe_mode = True
+    safe_mode = False
 
     CI = campaignInfo()
     SI = siteInfo()
@@ -45,7 +45,10 @@ def completor(url, specific):
 
 
     ## by workflow a list of fraction / timestamps
-    completions = json.loads( open('%s/completions.json'%monitor_dir).read())
+    #old_completions = json.loads( open('%s/completions.json'%monitor_dir).read())
+    #completions = defaultdict(dict)
+    #for old in old_completions:
+    #    completions[old] = old_completions[old]
     
     good_fractions = {}
     overdoing_fractions = {}
@@ -241,8 +244,9 @@ def completor(url, specific):
                                                                                                  json.dumps( long_lasting[wfo.name]['agents'], indent=2) ))
             continue
 
-        for output in  percent_completions:
-            completions[output]['injected'] = then
+        #for output in  percent_completions:
+        #    completions[output]['injected'] = then
+            
 
         #further check on delays
         cpuh = wfi.getComputingTime(unit='d')
@@ -271,7 +275,7 @@ def completor(url, specific):
     if set_force_complete:
         sendLog('completor','The followings were set force-complete \n%s'%('\n'.join(set_force_complete)))
     
-    open('%s/completions.json'%monitor_dir,'w').write( json.dumps( completions , indent=2))
+    #open('%s/completions.json'%monitor_dir,'w').write( json.dumps( completions , indent=2))
     text="These have been running for long"
     
     open('%s/longlasting.json'%monitor_dir,'w').write( json.dumps( long_lasting, indent=2 ))
