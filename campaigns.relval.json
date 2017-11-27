@@ -1,5 +1,24 @@
 {
-  "CMSSW_9_4_0_pre3__data2017C-1509552675": {
+  "CMSSW_10_0_0_pre1__UPSG_Std_2023D21PU200_highPU-1511344425": {
+    "custodial_override": [
+      "DQMIO"
+    ], 
+    "parameters": {
+      "SiteWhitelist": [
+        "T2_US_Nebraska"
+      ], 
+      "MergedLFNBase": "/store/relval", 
+      "Team": "relval", 
+      "NonCustodialGroup": "RelVal"
+    }, 
+    "maxcopies": 1, 
+    "custodial": "T1_US_FNAL_MSS", 
+    "lumisize": -1, 
+    "phedex_group": "RelVal", 
+    "fractionpass": 0.0, 
+    "go": true
+  }, 
+  "CMSSW_10_0_0_pre1__cosmics_data-1510924900": {
     "custodial_override": [
       "DQMIO"
     ], 
@@ -18,74 +37,17 @@
     "fractionpass": 0.0, 
     "go": true
   }, 
-  "CMSSW_9_4_0_pre3__fullsimPU50_2017_highPU_scenarioRun305366-1509796280": {
+  "CMSSW_9_4_0_pre3__fullsimPU50_2017_highPU_scenarioRun305366_nugun-1511521897": {
     "custodial_override": [
       "DQMIO"
     ], 
     "parameters": {
       "SiteWhitelist": [
-        "T2_US_Purdue"
+        "T2_US_Nebraska"
       ], 
       "MergedLFNBase": "/store/relval", 
-      "NonCustodialGroup": "RelVal", 
-      "Team": "relval"
-    }, 
-    "maxcopies": 1, 
-    "custodial": "T1_US_FNAL_MSS", 
-    "lumisize": -1, 
-    "phedex_group": "RelVal", 
-    "fractionpass": 0.0, 
-    "go": true
-  }, 
-  "CMSSW_9_4_0_pre3__fullsimPU50_2017_highPU_scenarioRun305044-1509794818": {
-    "custodial_override": [
-      "DQMIO"
-    ], 
-    "parameters": {
-      "SiteWhitelist": [
-        "T2_US_Purdue"
-      ], 
-      "MergedLFNBase": "/store/relval", 
-      "NonCustodialGroup": "RelVal", 
-      "Team": "relval"
-    }, 
-    "maxcopies": 1, 
-    "custodial": "T1_US_FNAL_MSS", 
-    "lumisize": -1, 
-    "phedex_group": "RelVal", 
-    "fractionpass": 0.0, 
-    "go": true
-  }, 
-  "CMSSW_9_4_0_pre3__fullsimPU50_2017_highPU_scenarioRun305081-1509795385": {
-    "custodial_override": [
-      "DQMIO"
-    ], 
-    "parameters": {
-      "SiteWhitelist": [
-        "T2_US_Purdue"
-      ], 
-      "MergedLFNBase": "/store/relval", 
-      "NonCustodialGroup": "RelVal", 
-      "Team": "relval"
-    }, 
-    "maxcopies": 1, 
-    "custodial": "T1_US_FNAL_MSS", 
-    "lumisize": -1, 
-    "phedex_group": "RelVal", 
-    "fractionpass": 0.0, 
-    "go": true
-  }, 
-  "CMSSW_9_4_0_pre3__fullsimPU50_2017_highPU_scenarioRun305064-1509796149": {
-    "custodial_override": [
-      "DQMIO"
-    ], 
-    "parameters": {
-      "SiteWhitelist": [
-        "T2_US_Purdue"
-      ], 
-      "MergedLFNBase": "/store/relval", 
-      "NonCustodialGroup": "RelVal", 
-      "Team": "relval"
+      "Team": "relval", 
+      "NonCustodialGroup": "RelVal"
     }, 
     "maxcopies": 1, 
     "custodial": "T1_US_FNAL_MSS", 
