@@ -608,6 +608,8 @@ def transferor(url ,specific = None, talk=True, options=None):
                     sec_destination = [site for site in subscriptions] 
                     
                 
+                ## how to make unified understand that it has to wait for the secondary if the sec_destination and 
+
                 #sec_to_distribute = [site for site in sites_allowed if not any([osite.startswith(site) for osite in sec_location])]
                 sec_to_distribute = [site for site in sites_allowed if not SI.CE_to_SE(site) in sec_location]
                 #sec_to_distribute = [site for site in sec_to_distribute if not any([osite.startswith(site) for osite in sec_destination])]
