@@ -16,6 +16,13 @@ except:
 if not data:
     sys.exit(0)
 
+
+## do you want to make the list of required blocks here ?
+
+
+
+
+
 l=''
 all_empty=True
 for ds in data:
