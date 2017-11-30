@@ -5262,6 +5262,13 @@ class workflowInfo:
             c_d = self._collectinchain('Campaign', default=None)
         return c_d.get(task, c)
 
+    def getMulticores(self):
+        mcores = self.request.get('Multicore',1)
+        mcores_d = {}
+        if 'Chain' in self.request['RequestType']:
+            mcores_d = self._collectinchain('Multicore',default=1)
+        return mcores_d.values() if mcores_d else [mcores]
+
     def getCorePerTask(self, task):
         mcores = self.request.get('Multicore',1)
         mcores_d = {}

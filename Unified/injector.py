@@ -21,6 +21,8 @@ def injector(url, options, specific):
 
     UC = unifiedConfiguration()
 
+    transform_keywords = UC.get('convert_to_stepchain')
+
     workflows = getWorkflows(url, status=options.wmstatus, user=options.user)
     for user in UC.get("user_rereco"):
         workflows.extend( getWorkflows(url, status=options.wmstatus, user=user, rtype="ReReco")) 
@@ -85,14 +87,11 @@ def injector(url, options, specific):
 
             ## temporary hack to transform specific taskchain into stepchains
             all_tiers = map(lambda o : o.split('/')[-1], wfi.request['OutputDatasets'])
-            duplicate_tier = (len(all_tiers) != len(set(all_tiers)))
-            transform_keywords = [
-                #'RunIISummer15wmLHE',
-                #'RunIISummer15GS',
-                'RunIIWinter15GenOnly',
-                #'RunIIWinter15wmLHE'
-                ]
-            if (not options.no_convert) and wfi.request['RequestType'] == 'TaskChain' and wfi.request['TaskChain']>1 and any([keyword in wf for keyword in transform_keywords]) and not duplicate_tier:
+            all_cores = len(set(wfi.getMulticores()))==1 ## only one value throughout the chain
+            duplicate_tier = (len(all_tiers) != len(set(all_tiers))) ## could be something that is no longer a pb
+
+            ## match keywords and technical constraints
+            if (not options.no_convert) and wfi.request['RequestType'] == 'TaskChain' and wfi.request['TaskChain']>1 and any([keyword in wf for keyword in transform_keywords]) and not duplicate_tier and all_cores:
                 to_convert.add( wf )
                 wfi.sendLog('injector','Transforming %s TaskChain into StepChain'%wf)
 
