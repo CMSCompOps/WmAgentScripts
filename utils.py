@@ -1686,10 +1686,13 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
         pid = tpid.replace('task_','')
 
         ## return the corresponding html
-        order = ['percentage','acdc','duplicate','correctLumis','missingSubs','dbsFiles','dbsInvFiles','phedexFiles','updated']
+        order = ['percentage','acdc','duplicate','correctLumis','missingSubs','dbsFiles','dbsInvFiles','phedexFiles']#,'updated']
         wf_and_anchor = '<a id="%s">%s</a>'%(wf,wf)
-        for out in self.record[wf]['datasets']:
+        n_out = len(self.record[wf]['datasets'])
+        for io,out in enumerate(self.record[wf]['datasets']):
             text += '<tr bgcolor=%s>'%color
+
+            """
             text += '<td>%s<br>'%wf_and_anchor
             text += '<a href="https://%s/reqmgr2/fetch?rid=%s" target="_blank">dts</a>'%(reqmgr_url, wf)
             text += ', <a href="https://%s/reqmgr2/data/request/%s" target="_blank">wfc</a>'%(reqmgr_url, wf)
@@ -1704,8 +1707,28 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
                 text += ', <a href=%s/datalumi/lumi.%s.html>lumis</a>'%(unified_url,tpid)
             text += ', <a href="https://its.cern.ch/jira/issues/?jql=(text~%s OR text~task_%s ) AND project = CMSCOMPPR" target="_blank">jira</a>'%(pid,pid)
             text += '</td>'
-            
-            text+='<td>%s</td>'% out
+            """
+
+            ## a spanning row
+            wf_text = ""
+            wf_text += '<td rowspan="%d">%s<br>'%(n_out,wf_and_anchor)
+            wf_text += '<a href="https://%s/reqmgr2/fetch?rid=%s" target="_blank">dts</a>'%(reqmgr_url, wf)
+            wf_text += ', <a href="https://%s/reqmgr2/data/request/%s" target="_blank">wfc</a>'%(reqmgr_url, wf)
+            wf_text += ', <a href="https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=full&reverse=0&reverse=1&npp=20&subtext=%s&sall=q" target="_blank">elog</a>'%(pid)
+            wf_text += ', <a href=https://%s/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s>perf</a>'%(reqmgr_url, wf)
+            wf_text += ', <a href=assistance.html#%s>%s</a>'%(wf,wfo.status)
+            wf_text += '<br>'
+            wf_text += '<a href="http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=%s" target="_blank">history</a>'%(pid)
+            wf_text += ', <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>%s</a>'%(tpid,tpid)
+            wf_text += ', <a href=report/%s>report</a>'%(wf)
+            if 'ReReco' in tpid:
+                wf_text += ', <a href=%s/datalumi/lumi.%s.html>lumis</a>'%(unified_url,tpid)
+            wf_text += ', <a href="https://its.cern.ch/jira/issues/?jql=(text~%s OR text~task_%s ) AND project = CMSCOMPPR" target="_blank">jira</a>'%(pid,pid)
+            wf_text += '</td>'
+            if io==0: text += wf_text
+
+            text+='<td>%s/<b>%s<b></td>'% tuple(out.rsplit('/',1))
+            #text+='<td>%s</td>'% out
             lines = []
             for f in order:
                 if f in self.record[wf]['datasets'][out]:
@@ -1716,8 +1739,11 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
                     text+='<td><a href=https://%s/reqmgr2/data/request?prep_id=%s&detail=false>%s</a></td>'%(reqmgr_url, tpid , value)
                 else:
                     text+='<td>%s</td>'% value
-            #text+='<td>%s</td>'%self.record[wf]['closeOutWorkflow']
-            text+='<td>%s</td>'%self.record[wf]['priority']
+            u_text = '<td rowspan="%d">%s</td>'%( n_out, self.record[wf]['datasets'][out]['updated'])
+            if io==0: text+=u_text
+            p_text = '<td rowspan="%d">%s</td>'%( n_out, self.record[wf]['priority'])
+            if io==0: text+=p_text
+            ###text+='<td>%s</td>'%self.record[wf]['priority']
             text+='</tr>'
             wf_and_anchor = wf
 
@@ -1841,8 +1867,10 @@ Updated on %s (GMT) <br>
             ## and use only the wfo
             prio_ordered_wf = [ item[1] for item in prio_ordered_wf ]
             for (count,wfo) in enumerate(prio_ordered_wf):
+                ## change the line color for visibility
                 if count%2:            color='lightblue'
                 else:            color='white'
+
                 if not wfo.name in self.record: 
                     print "wtf with",wfo.name
                     #html.write( self.no_record( wfo.name, wfo, count))
