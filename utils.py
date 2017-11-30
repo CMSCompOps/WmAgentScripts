@@ -4935,6 +4935,7 @@ class workflowInfo:
                     
                     if timeperevent:
                         job_timeout = 45. ## hours
+                        job_target = 8. ## hours
                         time_per_input_lumi = events_per_lumi_at_this_task*timeperevent
                         if (time_per_input_lumi > (job_timeout*60*60)): ##45h
                             ## even for one lumisection, the job will time out.
@@ -4942,7 +4943,7 @@ class workflowInfo:
                                                                                                                                                      events_per_lumi_at_this_task, timeperevent,
                                                                                                                                                      time_per_input_lumi / (60.*60.),
                                                                                                                                                      job_timeout)
-                            this_max_events_per_lumi = int( job_timeout*60.*60. / timeperevent)
+                            this_max_events_per_lumi = int( job_target*60.*60. / timeperevent)
                             max_events_per_lumi.append( this_max_events_per_lumi /efficiency_factor ) ## report here, so that if we can change it, we will change this
                         else:
                             pass
