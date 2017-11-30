@@ -1149,7 +1149,7 @@ class DSS:
             self.bdb[dataset] = getDatasetBlockSize( dataset )
 
     def get(self, dataset , blocks=None):
-        return self.get_size( dataset )
+        return self.get_size( dataset , blocks=blocks)
 
     def get_size(self, dataset, blocks=None):
         self._get( dataset )
