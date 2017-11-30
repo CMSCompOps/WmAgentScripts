@@ -949,6 +949,7 @@ def checkor(url, spec=None, options=None):
             rec = fDB.record[wfo.name]['datasets'][output]
             #rec['percentage'] = float('%.2f'%(percent_completions[output]*100))
             rec['percentage'] = math.floor(percent_completions[output]*10000)/100.## round down
+            rec['fractionpass'] = math.floor(fractions_pass.get(output,0)*10000)/100.
             rec['duplicate'] = duplications[output] if output in duplications else 'N/A'
             rec['phedexReqs'] = float('%.2f'%any_presence[output][custodial_presences[output][0]][1]) if len(custodial_presences[output])!=0 else 'N/A'
             rec['closeOutDataset'] = is_closing

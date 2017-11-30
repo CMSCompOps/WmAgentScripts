@@ -1689,25 +1689,11 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
         order = ['percentage','acdc','duplicate','correctLumis','missingSubs','dbsFiles','dbsInvFiles','phedexFiles']#,'updated']
         wf_and_anchor = '<a id="%s">%s</a>'%(wf,wf)
         n_out = len(self.record[wf]['datasets'])
-        for io,out in enumerate(self.record[wf]['datasets']):
+        o_and_c = [(out,self.record[wf]['datasets'][out].get('percentage')) for out in self.record[wf]['datasets'] ]
+        o_and_c.sort( key = lambda o : o[1])
+        #for io,out in enumerate(self.record[wf]['datasets']):
+        for io,out in enumerate([o[0] for o in o_and_c]):
             text += '<tr bgcolor=%s>'%color
-
-            """
-            text += '<td>%s<br>'%wf_and_anchor
-            text += '<a href="https://%s/reqmgr2/fetch?rid=%s" target="_blank">dts</a>'%(reqmgr_url, wf)
-            text += ', <a href="https://%s/reqmgr2/data/request/%s" target="_blank">wfc</a>'%(reqmgr_url, wf)
-            text += ', <a href="https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=full&reverse=0&reverse=1&npp=20&subtext=%s&sall=q" target="_blank">elog</a>'%(pid)
-            text += ', <a href=https://%s/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s>perf</a>'%(reqmgr_url, wf)
-            text += ', <a href=assistance.html#%s>%s</a>'%(wf,wfo.status)
-            text += '<br>'
-            text += '<a href="http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=%s" target="_blank">history</a>'%(pid)
-            text += ', <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>%s</a>'%(tpid,tpid)
-            text += ', <a href=report/%s>report</a>'%(wf)
-            if 'ReReco' in tpid:
-                text += ', <a href=%s/datalumi/lumi.%s.html>lumis</a>'%(unified_url,tpid)
-            text += ', <a href="https://its.cern.ch/jira/issues/?jql=(text~%s OR text~task_%s ) AND project = CMSCOMPPR" target="_blank">jira</a>'%(pid,pid)
-            text += '</td>'
-            """
 
             ## a spanning row
             wf_text = ""
@@ -1735,8 +1721,17 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
                     value = self.record[wf]['datasets'][out][f]
                 else:
                     value = "-NA-"
+
+
                 if f =='acdc':
                     text+='<td><a href=https://%s/reqmgr2/data/request?prep_id=%s&detail=false>%s</a></td>'%(reqmgr_url, tpid , value)
+                if f=='percentage':
+                    frac = self.record[wf]['datasets'][out].get('fractionpass',0)
+                    if value >= frac:
+                        text+='<td>%s</td>'% value
+                    else:
+                        ## the one in bold will show the ones that need work
+                        text+='<td><b>%s</b></td>'% value                        
                 else:
                     text+='<td>%s</td>'% value
             u_text = '<td rowspan="%d">%s</td>'%( n_out, self.record[wf]['datasets'][out]['updated'])
@@ -3381,6 +3376,11 @@ def getDatasetLumis(dataset, runs=None, with_cache=False):
 
     return dict(lumi_json),dict(files_json)
 """
+def getDatasetListOfFiles(dataset):
+    dbsapi = DbsApi(url=dbs_url)
+    all_files = dbsapi.listFileArray( dataset = dataset, detail=False)
+    all_lfn = sorted([f['logical_file_name'] for f in all_files])
+    return all_lfn
 
 def getDatasetAllEventsPerLumi(dataset, fraction=1):
     dbsapi = DbsApi(url=dbs_url)
