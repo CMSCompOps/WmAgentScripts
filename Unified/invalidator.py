@@ -75,7 +75,9 @@ def invalidator(url, invalid_status='INVALID'):
         if acknowledge:
             ## acknoldge invalidation in mcm, provided we can have the api
             print "acknowledgment to mcm"
-            mcm.get('/restapi/invalidations/acknowledge/%s'%( invalid['_id'] ))
+            ackno_url = '/restapi/invalidations/acknowledge/%s'%( invalid['_id'] )
+            print "at",ackno_url
+            mcm.get(ackno_url)
             # prepare the text for batches
             batches = []
             batches.extend(mcm.getA('batches',query='contains=%s'%batch_lookup))
