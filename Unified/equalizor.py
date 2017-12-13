@@ -12,6 +12,7 @@ import random
 import copy 
 import itertools
 from htmlor import htmlor
+import math
 
 def equalizor(url , specific = None, options=None):
 
@@ -204,8 +205,8 @@ def equalizor(url , specific = None, options=None):
     memory_correction = UC.get('memory_correction')
 
     def quantize( value, quanta ):
-        N = int(value / quanta)
-        return (N+1)*quanta
+        N = int(math.ceil(value / quanta))
+        return (N)*quanta
     def s_quantize( value, quanta):
         return str(quantize( value, quanta ))
 
@@ -497,7 +498,8 @@ def equalizor(url , specific = None, options=None):
         
         lhe,prim,_,sec,sites_allowed = wfi.getSiteWhiteList()#getIO()
         ncores = wfi.getMulticore()
-        memory_allowed = SI.sitesByMemory( float(wfi.request['Memory']) , maxCore=ncores)
+        mem = wfi.getMemory()
+        memory_allowed = SI.sitesByMemory( mem , maxCore=ncores)
 
         if not lhe and not prim and not sec and not wfi.isRelval():
             ## no input at all: go for OSG!!!
@@ -625,21 +627,30 @@ def equalizor(url , specific = None, options=None):
 
                     if set_memory:
                         set_memory =  min(set_memory, 20000) ## no bigger than 20G
-                        set_memory =  max(set_memory, int(mem/2.)) ## do not go too low. allow 50% of initial value at most
+                        set_memory =  max(set_memory, mcore*1000) ## do not go too low. not less than 1G/core.
                         print "trully setting memory to",set_memory
                         performance[task.pathName]['memory']= set_memory
                         perf_per_config[configcache.get( taskname , 'N/A')]['memory'] = set_memory
                     if set_time:
                         performance[task.pathName]['time'] = min(set_time, int(1440./mcore)) ## max to 24H per mcore ## set_time is provided in total corehours ~ walltime*ncore
                         perf_per_config[configcache.get( taskname , 'N/A')]['time'] = set_time
-                        if (set_time / mcore) < 60.: ## looks like short jobs all around
-                            print "WHAT IS THIS TASK",task.pathName,"WITH",set_time/mcore,"runtime"
-                            wfi.sendLog('equalizor','The task %s was found to run short jobs of %.2f [mins] at original %d cores setting'%( taskname, set_time / mcore , mcore))
-                            short_tasks.add( (task.pathName, set_time / mcore, mcore) )
                     if set_io:
                         performance[task.pathName]['read'] = set_io
                         perf_per_config[configcache.get( taskname , 'N/A')]['read'] = set_io
 
+                    ##make up some warnings
+                    if set_time and (set_time / mcore) < 60.: ## looks like short jobs all around
+                        print "WHAT IS THIS TASK",task.pathName,"WITH",set_time/mcore,"runtime"
+                        wfi.sendLog('equalizor','The task %s was found to run short jobs of %.2f [mins] at original %d cores setting'%( taskname, set_time / mcore , mcore))
+                        sendLog('equalizor','The task %s was found to run short jobs of %.2f [mins] at original %d cores setting'%( taskname, set_time / mcore , mcore), level='warning')
+                        short_tasks.add( (task.pathName, set_time / mcore, mcore) )
+
+                    warning_mem = 2000
+                    if set_memory and (set_memory > warning_mem*mcore):
+                        print "WHAT IS THIS TASK",task.pathName,"WITH",set_memory,"memory requirement at",mcore,"cores"
+                        wfi.sendLog('equalizor','The task %s was found to run jobs using %d GB over %d GB/core at %d cores'%( taskname, set_memory, warning_mem, mcore))
+                        sendLog('equalizor','The task %s was found to run jobs using %d GB over %d GB/core at %d cores'%( taskname, set_memory, warning_mem, mcore), level='warning')
+                        
                     wfi.sendLog('equalizor',"""Performance tuning of task %s
 %s GB base memory at %d core
 %s GB per thread
