@@ -630,7 +630,7 @@ def checkor(url, spec=None, options=None):
             ## all outputs are over the top ...
             wfi.sendLog('checkor','Should force-complete the request going over 100%')
             wfi.sendLog('checkor',json.dumps(percent_completions, indent=2))
-            sendEmail( "dataset over completion", "Please take a look at %s"% wfo.name)
+            #sendEmail( "dataset over completion", "Please take a look at %s"% wfo.name)
             assistance_tags.add('over100')
             ## set to force complete the whole thing
             #forceComplete(url, wfi)
