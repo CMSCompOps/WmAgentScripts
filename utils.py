@@ -3717,6 +3717,7 @@ def checkParent( dataset ):
 
 def findParent( dataset ):
     dbsapi = DbsApi(url=dbs_url)
+    print dataset,"for parent"
     ret = dbsapi.listDatasetParents( dataset= dataset)
     parents = [r.get('parent_dataset',None) for r in ret]
     return parents
@@ -5588,7 +5589,8 @@ class workflowInfo:
                 primary = set(filter(None,[blob['InputDataset']]))
             #elif 'InputDatasets' in blob: primary = set(filter(None,blob['InputDatasets']))
             if primary and 'IncludeParents' in blob and blob['IncludeParents']:
-                parent = findParent( primary )
+                for p in primary:
+                    parent.update(findParent( p ))
             if 'MCPileup' in blob:
                 secondary = set(filter(None,[blob['MCPileup']]))
             if 'LheInputFiles' in blob and blob['LheInputFiles'] in ['True',True]:
