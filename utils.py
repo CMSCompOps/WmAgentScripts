@@ -1298,11 +1298,16 @@ class siteInfo:
         self.quota = defaultdict(int)
         self.locked = defaultdict(int)
         self.cpu_pledges = defaultdict(int)
+        ## this is the most natural way to handle this 
+        self.addHocStorageS = defaultdict(set)
         self.addHocStorage = {
             'T2_CH_CERN_T0': 'T2_CH_CERN',
             'T2_CH_CERN_AI' : 'T2_CH_CERN',
             }
+        self.addHocStorageS['T2_CH_CERN_T0'].add( 'T2_CH_CERN')
+        self.addHocStorageS['T2_CH_CERN_AI'].add('T2_CH_CERN')
         for (phn,psn) in dataCache.get('site_storage'):
+            self.addHocStorageS[psn].add( phn )
             if self.SE_to_CE(phn) == psn: continue
             if psn in ['T2_CH_CERN']: continue
             #print phn,psn,"have a special setting"
@@ -1592,6 +1597,15 @@ class siteInfo:
     def types(self):
         return ['sites_T1s','sites_T2s','sites_T3s']
         #return ['sites_with_goodIO','sites_T1s','sites_T2s','sites_mcore_ready']#,'sites_veto_transfer']#,'sites_auto_approve']
+
+    def CE_to_SEs(self, ce ):
+        if type(ce) in [list,set]:
+            r = set()
+            for c in ce:
+                r.update( self.addHocStorageS[c])
+            return list(r)
+        else:
+            return list( self.addHocStorageS[ce])
 
     def CE_to_SE(self, ce):
         if (ce.startswith('T1') or ce.startswith('T0')) and not ce.endswith('_Disk'):

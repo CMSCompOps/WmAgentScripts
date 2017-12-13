@@ -80,6 +80,7 @@ for wf in wfs:
             agent = wqe['ChildQueueUrl'].split('/')[-1].split(':')[0]
         ## where the wf is set to be run at and site ready
         wl = [s for s in wqe['SiteWhitelist'] if s in si.sites_ready]
+        print "WQE whitelist",sorted(wl)
         #wqe_by_agent[agent].append( wqe )
 
         all_wqe_done &= (wqe['Status']=='Done')
@@ -136,7 +137,10 @@ for wf in wfs:
                 pileup_location = list(set(pileup_location) & set(wqe['PileupData'][secondary]))
             #print pileup_location,"secondary"
         ## wqe site whitelist in terms of SE
-        swl = [si.CE_to_SE(s) for s in wl]
+                
+        #swl = [si.CE_to_SE(s) for s in wl]
+        swl = si.CE_to_SEs(wl)
+        print "WQE SE whitelist",sorted(swl)
         if not swl:
             sendLog('GQ',"There is no site at which the workflow %s can run Was provided with %s"%(wf['RequestName'], ','.join(wqe['SiteWhitelist'])), level='critical')
             wfi.sendLog('GQ',"There is not site at which the workflow can run. Was provided with %s"%( ','.join(wqe['SiteWhitelist'])))
