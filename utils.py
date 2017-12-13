@@ -70,8 +70,17 @@ def sendLog( subject, text , wfi = None, show=True ,level='info'):
         print str(e)
         sendEmail('failed logging',subject+text+str(e))
 
+
+
 def searchLog( q , actor=None, limit=50 ):
     conn = httplib.HTTPConnection( 'cms-elastic-fe.cern.ch:9200' )
+    _searchLog(q, actor, limit, conn, prefix = '/logs')
+
+def new_searchLog( q, actor=None, limit=50 ):
+    conn = httplib.HTTPSConnection( 'es-unified.cern.ch' )    
+    _searchLog(q, actor, limit,conn, prefix = '/es/unified-logs', h = es_header())
+
+def _searchLog( q, actor, limit, conn, prefix, h = None):
     goodquery={
         "query": {
             "bool": {
@@ -81,11 +90,6 @@ def searchLog( q , actor=None, limit=50 ):
                             "meta": "*%s*"%q
                             }
                         },
-                    #{
-                        #"term": {
-                        #    "subject": "assignor"
-                        #    }
-                    #    }
                     ]
                 }
             },
@@ -98,14 +102,15 @@ def searchLog( q , actor=None, limit=50 ):
             "text",
             "subject",
             "date",
-            "meta"
+            "meta",
+            #"_id"
             ]
         }
 
     if actor:
         goodquery['query']['bool']['must'][0]['wildcard']['subject'] = actor
 
-    conn.request("POST" , '/logs/_search?size=%d'%limit, json.dumps(goodquery))
+    conn.request("GET" , prefix+'/_search?size=%d'%limit, json.dumps(goodquery) ,headers = h if h else {})
     ## not it's just a matter of sending that query to ES.
     #lq = q.replace(':', '\:').replace('-','\\-')
     #conn.request("GET" , '/logs/_search?q=text:%s'% lq)
@@ -118,10 +123,201 @@ def searchLog( q , actor=None, limit=50 ):
     print o['hits']['total']
     return o['hits']['hits']
 
+def es_header():
+    entrypointname,password = open('Unified/secret_es.txt').readline().split(':')
+    import base64
+    auth = base64.encodestring(('%s:%s' % (entrypointname, password)).replace('\n', '')).replace('\n', '')
+    header = { "Authorization":  "Basic %s"% auth}
+    return header
+
+def migrate_ES():
+    o_conn = httplib.HTTPConnection( 'cms-elastic-fe.cern.ch:9200' )
+    n_conn = httplib.HTTPSConnection( 'es-unified.cern.ch' )
+
+    N = 1000
+    f = 0
+    total_send = 0
+    while False:#True:
+        arxn = '/data/es-archive/query_%s_%s.json'%( N, f)
+        do_q = True
+        total = None
+        if os.path.isfile( arxn):
+            try:
+                #with  open(arxn) as l:
+                #    total = json.loads( l.read())['hits']['total']
+                #    l.close()
+                #    #print total,"is the value of total in cache"
+                print arxn,"already there"
+                do_q = False
+            except:
+                pass
+
+        if do_q:
+            print "querying"
+            o_conn.request('GET','/logs/log/_search?size=%d&from=%d&sort=timestamp:desc&q=timestamp:(<=1511959960)'%( N, f))
+            response =o_conn.getresponse()
+            data = response.read()
+
+            arx = open(arxn, 'w')
+            arx.write( data )
+            arx.close()
+
+        if f%(10*N)==0:
+            print f,"out of",total
+        f+=N
+                
+    #return
+
+    ## get all existing ES since a certain date
+    ## find out the min time and max time from the new instance
+    o_conn.request('GET','/logs/log/_search?size=1&sort=timestamp:desc')
+    response =o_conn.getresponse()
+    data = json.loads(response.read())
+    o_max_date = data['hits']['hits'][0]['_source']['timestamp']
+
+    o_conn.request('GET','/logs/log/_search?size=1&sort=timestamp:asc')
+    response =o_conn.getresponse()
+    data = json.loads(response.read())
+    o_min_date = data['hits']['hits'][0]['_source']['timestamp']
+
+    n_conn.request('GET','/es/unified-logs/log/_search?size=1&sort=timestamp:desc', headers= es_header())
+    response =n_conn.getresponse()
+    data = json.loads(response.read())
+    n_max_date = data['hits']['hits'][0]['_source']['timestamp']
+
+    #print n_max_date
+    ## the hard migration happened at time 1512603883.0 ##everything after that is in the new DB
+
+    ## last lower boundary at time of sync 1511952228
+    ## current last document age 1511959960
+    #n_max_date = 1511959960-1
+
+    n_conn.request('GET','/es/unified-logs/log/_search?size=1&sort=timestamp:asc', headers= es_header())
+    response =n_conn.getresponse()
+    data = json.loads(response.read())
+    n_min_date = data['hits']['hits'][0]['_source']['timestamp']
+
+    
+    ## we should search from now to n_max_date and from n_min_date to 0
+    #query = 'q=timestamp:(>=%d OR <=%d)'%( n_max_date, n_min_date)
+    #query = 'q=timestamp:(>=%d)'%( n_max_date )
+    #query = 'q=timestamp:(<=%d)'%( n_min_date ) ## pick up anything that is older than the oldest one in the new instance ## does not seem to function 
+    #query = 'q=timestamp:(<=%d)'%( 1511959960 ) ## anything older than a reference time
+    query = 'q=timestamp:(<=%d)'%( 1512603883.0 ) ## anything older than a reference time when unified was off and switched over
+
+    print query 
+
+    
+    docs = []
+    N = 500
+    f = 0
+    total_send = 0
+    while True:
+        o_conn.request('GET','/logs/log/_search?size=%d&from=%d&sort=timestamp:desc&%s'%( N, f, query))
+        f+=N
+        response =o_conn.getresponse()
+        data = response.read()
+        d = json.loads( data )
+
+        
+
+        total = d['hits']['total']
+        print total,"documents to send over under",query
+        docs = d['hits']['hits']
+        if not docs: break
+        ## copy them over to the new ES
+        for doc in docs:
+            print "to be send"
+            print doc['_id']
+
+            n_conn.request("GET", '/es/unified-logs/log/%s'% doc['_id'], headers = es_header())
+            response = n_conn.getresponse()
+            data = response.read()
+            if not json.loads( data)['found']:
+                send_doc = doc['_source']
+                encodedParams = urllib.urlencode( send_doc )
+                n_conn.request("POST" , '/es/unified-logs/log/%s'% doc['_id'], json.dumps(send_doc), headers = es_header())
+                response = n_conn.getresponse()
+                data = response.read()
+                try:
+                    res = json.loads( data )
+                    total_send+=1
+                except:
+                    print "failed to upload", data
+            else:
+                print doc['_id'],"already existing"
+
+    print total_send,"send"
+
+def new_sendLog( subject, text , wfi = None, show=True, level='info'):
+    conn = httplib.HTTPSConnection( 'es-unified.cern.ch' )
+
+    conn.request("GET", "/es", headers=es_header())
+    response = conn.getresponse()
+    data = response.read()
+    print data
+
+    ## historical information on how the schema was created
+    """
+    schema= {
+            "date": {
+                "type": "string",
+                "index": "not_analyzed"
+            },
+            "author": {
+                "type": "string"
+            },
+            "subject": {
+                "type": "string"
+            },
+            "text": {
+                "type": "string",
+                "index": "not_analyzed"
+            },
+            "meta": {
+                "type": "string",
+                "index": "not_analyzed"
+            },
+            "timestamp": {
+                "type": "double"
+            }
+            }
+    content = {}
+    settings = { 
+        "settings" : { 
+            "index" : { 
+                "number_of_shards" : 3,
+                "number_of_replicas" : 2
+                }}}
+    content.update( settings )
+    
+    content.update({            "mappings" : {"log" : { "properties" : schema}}})
+
+    conn.request("PUT", "/es/unified-logs",  json.dumps( content ), headers = es_header())
+    response = conn.getresponse()
+    data = response.read()
+    print data    
+    return 
+    """
+    #conn.request('GET', "/es/unified-logs", headers = es_header())
+    #response = conn.getresponse()
+    #data = response.read()
+    #print data
+    #return 
+
+    _try_sendLog( subject, text, wfi, show, level, conn = conn, prefix='/es/unified-logs', h = es_header())
+
 def try_sendLog( subject, text , wfi = None, show=True, level='info'):
-    #import pdb
-    #pdb.set_trace()
-    conn = httplib.HTTPConnection( 'cms-elastic-fe.cern.ch:9200' )    
+    #conn = httplib.HTTPConnection( 'cms-elastic-fe.cern.ch:9200' )
+    #_try_sendLog(subject, text , wfi, show, level, conn = conn)
+    
+    ## send it to the new instance too. Without showing it
+    re_conn = httplib.HTTPSConnection( 'es-unified.cern.ch' )
+    _try_sendLog( subject, text, wfi, show, level, conn = re_conn, prefix='/es/unified-logs', h = es_header())
+    
+
+def _try_sendLog( subject, text , wfi = None, show=True, level='info', conn= None, prefix= '/logs', h =None):
+    #conn = httplib.HTTPConnection( 'cms-elastic-fe.cern.ch:9200' )    
 
     meta_text="level:%s\n"%level
     if wfi:
@@ -150,7 +346,7 @@ def try_sendLog( subject, text , wfi = None, show=True, level='info'):
     if show:
         print text
     encodedParams = urllib.urlencode( doc )
-    conn.request("POST" , '/logs/log/', json.dumps(doc)) 
+    conn.request("POST" , prefix+'/log/', json.dumps(doc), headers = h if h else {})
     response = conn.getresponse()
     data = response.read()
     try:
