@@ -4026,17 +4026,33 @@ def getWorkflowByOutput( url, dataset , details=False):
 
 
 def getLatestMCPileup( url, statuses=None):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     if not statuses:
-        statuses = ['assigned','acquired','running-open','running-closed','force-complete','completed','closed-out','announced']
+        statuses = ['assigned','acquired','running-open','running-closed','force-complete','completed','closed-out','announced',
+                    #'normal-archived'
+                    ]
+
+    """
     ss = '&'.join(['status=%s'% s for s in statuses])
     print ss
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/reqmgr2/data/request?mask=RequestDate&mask=MCPileup&%s'%ss, headers={"Accept":"application/json"})
     r2=conn.getresponse()
     data = json.loads(r2.read())
+    reqs = data['result']
+    """
+
+    reqs = []
+    for status in statuses:
+        print status 
+        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+        r1=conn.request("GET",'/reqmgr2/data/request?mask=RequestDate&mask=MCPileup&status=%s'%status, headers={"Accept":"application/json"})
+        r2=conn.getresponse()
+        data = json.loads(r2.read())
+
+        reqs.extend( data['result'] )
 
     those = defaultdict(set)
-    for req in data['result']:
+    for req in reqs:
         for v in req.values():
             t = v.get('MCPileup',None)
             d = v.get('RequestDate',[])
