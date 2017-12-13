@@ -673,6 +673,7 @@ def equalizor(url , specific = None, options=None):
                 ## figure out primary presence and neighbors
                 ## do the intersection and add if in need.
                 needs, task_name, running, idled = needs_action(wfi, task)
+                restrict_to_allowed = not ((campaign in tune_performance) or (CI.get(campaign,'resize',False)) )
                 #needs = True
                 if options.augment:
                     print "\t",task.pathName
@@ -707,13 +708,14 @@ def equalizor(url , specific = None, options=None):
                         print sorted(aaa_sec_grid),"aroudn secondary location",sorted(secondary_locations)
                         ## intersect
                         aaa_grid = aaa_sec_grid & aaa_prim_grid
-                        aaa_grid = aaa_grid & set(memory_allowed)
+                        if restrict_to_allowed:
+                            aaa_grid = aaa_grid & set(memory_allowed)
                     else:
                         print "premix overflow from a taskchain"
-                        ### hack hack hack
-                        #modifications[wfo.name][task.pathName]= {"ReplaceSiteWhitelist" : ['T2_CH_CERN','T1_US_FNAL']}
-                        aaa_grid = set(memory_allowed) & aaa_sec_grid
-                        #aaa_grid = set(wfi.request['SiteWhitelist'])
+                        if restrict_to_allowed:
+                            aaa_grid = set(memory_allowed) & aaa_sec_grid
+                        else:
+                            aaa_grid = aaa_sec_grid
 
                     #banned_until_you_find_a_way_to_do_this = ['T3_US_OSG']
                     banned_until_you_find_a_way_to_do_this = []
