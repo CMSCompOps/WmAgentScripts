@@ -3439,7 +3439,12 @@ def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False,
     #print os.path.isfile(c_name),with_cache
     if os.path.isfile(c_name):
         print "picking up from cache",c_name
-        opened = json.loads(open(c_name).read())
+        try:
+            opened = json.loads(open(c_name).read())
+        except:
+            opened = {}
+            with_cache = False
+
         if 'time' in opened:
             record_time = opened['time']
             if (now-record_time)<(0.5*60*60): ## 0 ?
