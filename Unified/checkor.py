@@ -696,7 +696,7 @@ def checkor(url, spec=None, options=None):
 
         ## prepare the check on having a valid subscription to tape
         out_worth_checking = [out for out in custodial_locations.keys() if out.split('/')[-1] not in vetoed_custodial_tier]
-        size_worth_checking = sum([getDatasetSize(out)/1023. for out in out_worth_checking ]) ## size in TBs of all outputs
+        size_worth_checking = sum([(getDatasetSize(out)/1023. if not wfi.isRelval() else 0.) for out in out_worth_checking ]) ## size in TBs of all outputs
         size_worht_going_to_ddm = sum([getDatasetSize(out)/1023. for out in out_worth_checking if out.split('/')[-1] in to_ddm_tier ]) ## size in TBs of all outputs
         all_relevant_output_are_going_to_tape = all(map( lambda sites : len(sites)!=0, [custodial_locations[out] for out in out_worth_checking]))
 
