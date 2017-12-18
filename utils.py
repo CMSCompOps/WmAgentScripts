@@ -5457,15 +5457,17 @@ class workflowInfo:
 
 
     def getOutputPerTask(self):
+        all_outputs = self.request['OutputDatasets']
         output_per_task = defaultdict(list)
         for t in self.getWorkTasks():
             #print "what",t.subscriptions
             parse_what = t.subscriptions.outputModules if hasattr(t.subscriptions,'outputModules') else t.subscriptions.outputSubs
             for om in parse_what:
                 dsname = getattr(t.subscriptions, om).dataset
-                #print dsname
-                #print t._internal_name
-                output_per_task[t._internal_name].append( dsname )
+                if dsname in all_outputs: ## do the intersection with real outputs
+                    #print dsname
+                    #print t._internal_name
+                    output_per_task[t._internal_name].append( dsname )
                 
         return dict(output_per_task)
         
