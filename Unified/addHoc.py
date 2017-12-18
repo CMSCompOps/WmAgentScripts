@@ -1,5 +1,5 @@
 #!/usr/bin/env python  
-from utils import workflowInfo, getWorkflows, sendEmail, componentInfo, monitor_dir, reqmgr_url, siteInfo, sendLog, getWorkflowById
+from utils import workflowInfo, getWorkflows, sendEmail, componentInfo, monitor_dir, reqmgr_url, siteInfo, sendLog, getWorkflowById, isHEPCloudReady
 #monitor_eos_dir = "/afs/cern.ch/user/c/cmst2/www/unified/"
 monitor_eos_dir = "/eos/project/c/cms-unified-logs/www/"
 
@@ -10,6 +10,19 @@ import sys
 import json
 import time
 import random
+
+## get all acquired and push one to stepchain so that we can acquire it on nersc
+if isHEPCloudReady(reqmgr_url):
+    wfs = getWorkflows(reqmgr_url, 'acquired', details=True)
+    for wf in wfs:
+        wfi = workflowInfo(reqmgr_url, wf['RequestName'], request = wf )
+        if wfi.isGoodToConvertToStepChain() and wfi.isGoodForNERSC(no_step=True) and isHEPCloudReady(reqmgr_url):
+            print "good to convert to step so that we get something for hepcloud on next round",wf['RequestName']
+            os.system('Unified/rejector.py --to_step --clone --comment "convert to step for hepcloud" %s'% wf['RequestName'])
+            ## just do that once and be done with it
+            break
+
+        
 
 ## send something to T0
 #wfos = session.query(Workflow).filter(Workflow.name.contains('07Aug17')).all()
