@@ -424,17 +424,18 @@ def main():
                             multicore_dict[tname] = schema[t]['Multicore']
                             timeperevent_dict[tname] = schema[t]['TimePerEvent']
                             continue
-                        mem = memory[tname]
-                        factor = (set_to / float(mcore))
-                        fraction_constant = 0.4
-                        mem_per_core_c = int((1-fraction_constant) * mem / float(mcore))
-                        print "mem per core", mem_per_core_c
-                        print "base mem", mem
-                        ## need to adjut the memory at the same time
-                        ## will crash of --mem was not set in argument :FINE
-                        memory[tname] = mem + (set_to-mcore)*mem_per_core_c
-                        print "final mem",memory[tname]
-                        timeperevent_dict[tname] = schema[t]['TimePerEvent']/factor
+                        if memory:
+                            mem = memory[tname]
+                            print mem, memory
+                            factor = (set_to / float(mcore))
+                            fraction_constant = 0.4
+                            mem_per_core_c = int((1-fraction_constant) * mem / float(mcore))
+                            print "mem per core", mem_per_core_c
+                            print "base mem", mem
+                            
+                            memory[tname] = mem + (set_to-mcore)*mem_per_core_c
+                            print "final mem",memory[tname]
+                            timeperevent_dict[tname] = schema[t]['TimePerEvent']/factor
                         print "setting mcore",set_to
                         multicore_dict[tname] = set_to
                     else:
