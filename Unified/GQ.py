@@ -342,7 +342,7 @@ for site,blocks in try_me.items():
     blocks = blocks - replaced 
     if UC.get('block_repositionning'):
         if blocks:
-            result = makeReplicaRequest(url, site, list(blocks), 'item relocation', priority='high', approve=True, mail=False)
+            result = makeReplicaRequest(url, site, list(blocks), 'item relocation', priority='reserved', approve=True, mail=False)
             replaced.update( blocks )
             sendLog('GQ','replacing %s at %s \n%s'%( '\n,'.join(blocks), site, result),level='warning')
     else:
