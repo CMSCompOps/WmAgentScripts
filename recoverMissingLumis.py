@@ -620,10 +620,11 @@ def defineRequests(workload, requestInfo,
             threading.Thread.__init__(self)
             import copy
             for k,v in args.items():
-                if not k in ['c']:
-                    setattr(self,k,copy.deepcopy(v))
-                else:
-                    setattr(self,k,v)
+                #if not k in ['c']:
+                #    setattr(self,k,copy.deepcopy(v))
+                #else:
+                #    setattr(self,k,v)
+                setattr(self,k,v)
 
         def run(self):
 
