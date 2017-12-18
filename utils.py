@@ -1499,6 +1499,7 @@ class siteInfo:
         self.addHocStorage = {
             'T2_CH_CERN_T0': 'T2_CH_CERN',
             'T2_CH_CERN_AI' : 'T2_CH_CERN',
+            'T3_US_NERSC' : 'T1_US_FNAL_Disk'
             }
         self.addHocStorageS['T2_CH_CERN_T0'].add( 'T2_CH_CERN')
         self.addHocStorageS['T2_CH_CERN_AI'].add('T2_CH_CERN')
@@ -1865,6 +1866,13 @@ class siteInfo:
         #    r_weights[site] = self.cpu_pledges[site]
         #return r_weights.keys()[self._weighted_choice_sub(r_weights.values())]
         return self._pick(sites, self.cpu_pledges)
+
+def isHEPCloudReady(url, limit=2):
+    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))    
+    r1=conn.request("GET",'/reqmgr2/data/request?mask=RequestStatus&status=assigned&status=acquired&status=running-open&status=running-closed&team=hepcloud', headers={"Accept":"*/*"})
+    r2=conn.getresponse()
+    return (len(json.loads(r2.read())['result'][0].keys())<limit)
+
 
 def global_SI(a=None):
     if a or not global_SI.instance:
@@ -4359,6 +4367,33 @@ class workflowInfo:
         else:
             return False
 
+    def isGoodForNERSC(self, no_step=False):
+        nersc_archs=set(['slc6_amd64_gcc530','slc6_amd64_gcc630'])
+        good = (self.request['RequestType'] == 'StepChain' or no_step)  and self.request['RequestPriority'] <= 85000 and len(set(self.request['ScramArch'])&nersc_archs)>=1
+        return good
+
+    def isGoodToConvertToStepChain(self ,keywords=None):
+        ## only one value throughout the chain
+        all_same_cores = len(set(self.getMulticores()))==1
+        ##make sure not tow same data tier is produced
+        all_tiers = map(lambda o : o.split('/')[-1], self.request['OutputDatasets'])
+        #single_tiers = (len(all_tiers) == len(set(all_tiers)))
+        single_tiers = True
+        ## more than one task with output until https://github.com/dmwm/WMCore/issues/8269 gets solved
+        output_per_task = self.getOutputPerTask()
+        output_from_single_task = len(output_per_task.keys())==1
+        ## more than one task to not convert single task in a step
+        #more_than_one_task = wfi.request.get('TaskChain',0)>1
+        more_than_one_task = True
+        ## so that conversion happens only for a selected few
+        found_in_transform_keywords = True
+        wf = self.request['RequestName']
+        if keywords:
+            found_in_transform_keywords = any([keyword in wf for keyword in keywords])
+        good = self.request['RequestType'] == 'TaskChain' and more_than_one_task and found_in_transform_keywords and single_tiers and all_same_cores and output_from_single_task
+        return good
+
+
     def notifyRequestor(self, message, do_request=True, do_batch=True, mcm=None):
         if not message: return
         try:
@@ -5509,11 +5544,7 @@ class workflowInfo:
             mems_d = self._collectinchain('Memory',default=None)
         return int(mems_d.get( task, mems))
     def getMemory(self):
-        mems = [self.request.get('Memory',None)]
-        mems_d = {}
-        if 'Chain' in self.request['RequestType']:
-            mems_d = self._collectinchain('Memory',default=None)
-        mems = filter(None, mems_d.values()) if mems_d else mems
+        mems = self.getMemories()
         return max(mems) if mems else None
 
     def getCampaignPerTask(self, task):
@@ -5522,6 +5553,14 @@ class workflowInfo:
         if 'Chain' in self.request['RequestType']:
             c_d = self._collectinchain('Campaign', default=None)
         return c_d.get(task, c)
+
+    def getMemories(self):
+        mems = [self.request.get('Memory',None)]
+        mems_d = {}
+        if 'Chain' in self.request['RequestType']:
+            mems_d = self._collectinchain('Memory',default=None)
+        mems = filter(None, mems_d.values()) if mems_d else mems
+        return mems
 
     def getMulticores(self):
         mcores = self.request.get('Multicore',1)
