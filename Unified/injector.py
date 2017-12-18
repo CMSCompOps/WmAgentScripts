@@ -88,14 +88,15 @@ def injector(url, options, specific):
             if not can_add: continue
 
             ## temporary hack to transform specific taskchain into stepchains
-            all_tiers = map(lambda o : o.split('/')[-1], wfi.request['OutputDatasets'])
-            all_cores = len(set(wfi.getMulticores()))==1 ## only one value throughout the chain
-            duplicate_tier = (len(all_tiers) != len(set(all_tiers))) ## could be something that is no longer a pb
+            #good_for_stepchain = wfi.isGoodToConvertToStepChain( keywords = transform_keywords)
+            good_for_stepchain = wfi.isGoodToConvertToStepChain( keywords = None) 
+
 
             ## match keywords and technical constraints
-            if (not options.no_convert) and wfi.request['RequestType'] == 'TaskChain' and wfi.request['TaskChain']>1 and any([keyword in wf for keyword in transform_keywords]) and not duplicate_tier and all_cores:
+            if (not options.no_convert) and good_for_stepchain and False:
                 to_convert.add( wf )
                 wfi.sendLog('injector','Transforming %s TaskChain into StepChain'%wf)
+                sendEmail('convertion to stepchain','Transforming %s TaskChain into StepChain'%wf)
 
             wfi.sendLog('injector',"considering %s"%wf)
 
