@@ -2,7 +2,7 @@
 from assignSession import *
 import reqMgrClient
 from utils import workflowInfo, campaignInfo, siteInfo, userLock, unifiedConfiguration, reqmgr_url, monitor_pub_dir, monitor_dir, global_SI
-from utils import getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction, getDatasetEventsPerLumi, getLFNbase, getDatasetBlocks, lockInfo, getAllStuckDataset
+from utils import getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction, getDatasetEventsPerLumi, getLFNbase, getDatasetBlocks, lockInfo, getAllStuckDataset, isHEPCloudReady
 from utils import componentInfo, sendEmail, sendLog
 #from utils import lockInfo
 from utils import duplicateLock, notRunningBefore
@@ -98,7 +98,7 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         if not output_tiers:
             n_stalled+=1
-            wfi.sendLog('assignor','There is no output at all')
+            wfh.sendLog('assignor','There is no output at all')
             sendLog('assignor','Workflow %s has no output at all'%( wfo.name), level='critical')
             continue
 
@@ -518,31 +518,6 @@ def assignor(url ,specific = None, talk=True, options=None):
             wfh.sendLog('assignor','Applying the change in splitting %s'%( '\n\n'.join([str(i) for i in split_check])))
 
         split_check = True ## bypass completely and use the above
-        """
-        if split_check!=True:
-            parameters.update( split_check )
-            if 'NoGo' in split_check.values():
-                wfh.sendLog('assignor', "Failing splitting check")
-                sendLog('assignor','the workflow %s is failing the splitting check. Verify in the logs'% wfo.name, level='critical')
-                n_stalled+=1
-                continue
-
-            if 'EventBased' in split_check.values():
-                wfh.sendLog('assignor', "Falling back to event splitting.")
-                #sendEmail("Fallback to EventBased","the workflow %s is too heavy to be processed as it is. Fallback to EventBased splitting"%wfo.name)
-                sendLog('assignor','the workflow %s is too heavy to be processed as it is. Fallback to EventBased splitting ?'%wfo.name, level='critical')
-                ## we have a problem here, that EventBased should never be used as a backup
-                if not options.go:  
-                    n_stalled+=1
-                    continue
-                continue ## skip all together
-            elif 'EventsPerJob' in split_check.values():
-                wfh.sendLog('assignor', "Modifying the number of events per job")
-                #sendEmail("Modifying the job per events","the workflow %s is too heavy in number of jobs explosion"%wfo.name)
-                sendLog('assignor',"the workflow %s is too heavy in number of jobs explosion"%wfo.name, level='critical')
-            elif 'EventsPerLumi' in split_check.values():
-                wfh.sendLog('assignor', "Modifying the number of events per lumi to be able to process this")
-        """
 
         # Handle run-dependent MC
         pstring = wfh.processingString()
@@ -574,7 +549,14 @@ def assignor(url ,specific = None, talk=True, options=None):
                         sendLog('assignor',"leaving splitting untouched for %s, please check on %s"%( pstring, wfo.name), level='critical')
                         wfh.sendLog('assignor',"leaving splitting untouched for PU_RD*, please check.")
 
-
+        if isHEPCloudReady(url) and wfh.isGoodForNERSC():
+            parameters['Team'] = 'hepcloud'
+            parameters['SiteWhitelist'] = ['T3_US_NERSC']
+            if primary:
+                parameters['TrustSitelists'] = True
+            if secondary:
+                parameters['TrustPUSitelists'] = True
+            sendEmail("sending work to hepcloud","pleasse check on %s"% wfh.request['RequestName'], destination=['hufnagel@fnal.gov'])
         
         
         result = reqMgrClient.assignWorkflow(url, wfo.name, None, parameters) ## team is not relevant anymore here
