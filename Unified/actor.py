@@ -317,7 +317,7 @@ def actor(url,options=None):
             sendLog('actor','Action submitted for something other than acdc and clone for workflow %s'%wfname,level='critical')
             print "Can only do acdcs and clones! Skipping workflow ",wfname
             continue
-        if not tasks:
+        if not tasks and to_acdc:
             sendLog('actor','Empty action submitted for workflow %s'%wfname,level='critical')
             print "Moving on. Parameters is blank for " + wfname
             continue
@@ -359,7 +359,7 @@ def actor(url,options=None):
                 wfi.sendLog('actor',"%s and children are rejected"%wfname)
 
             cloned = None
-            try:    
+            try:  
                 cloned =  singleClone(url, wfname, tasks, comment, options.do)
             except:
                 sendLog('actor','Failed to create clone for %s! Check logs for more information. Action will need to be resubmitted.'%wfname,level='critical')
@@ -523,7 +523,16 @@ def actor(url,options=None):
                         else:
                             parameters['TrustSitelists'] = False
 
-                        if 'TrustPUSitelists' in wfi.request and wfi.request['TrustPUSitelists']:
+                        if 'secondary' in actions:
+                            if actions['secondary'] == 'enabled':
+                                print 'Enabling reading the secondary input via xrootd'
+                                parameters['TrustPUSitelists'] = True
+                            elif actions['secondary'] == 'disabled':
+                                parameters['TrustPUSitelists'] = False
+                            #in case secondary is blank or not set to enabled or disabled
+                            elif 'TrustPUSitelists' in wfi.request and wfi.request['TrustPUSitelists']:
+                                parameters['TrustPUSitelists'] = True
+                        elif 'TrustPUSitelists' in wfi.request and wfi.request['TrustPUSitelists']:
                             parameters['TrustPUSitelists'] = True
 
                         if options.ass:
