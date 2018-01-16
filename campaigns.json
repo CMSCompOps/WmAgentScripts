@@ -1,4 +1,9 @@
 {
+  "StoreResults" : {
+    "go": true,
+    "maxcopies" : 1,
+    "primary_AAA" : false
+  },
   "Summer16Geant4102": {
     "go": true,
     "parameters": {
@@ -6,13 +11,13 @@
     } 
   },
   "XeXeReReco2017": {
-    "go": false,
+    "go": true,
     "overflow" : {"PRIM" : {}},
     "DDMcopies": {
                  "all" : { "N" : 2 }
     },
     "custodial_override" : ["DQMIO"],
-    "fractionpass": 1.0,
+    "fractionpass": 0.95,
     "lumisize" : -1,
     "maxcopies" : 1,
     "custodial": "T1_FR_CCIN2P3_MSS",
@@ -56,10 +61,11 @@
   },
  "HINXeXeFall17GS": {
     "go": true,
-    "fractionpass": 1.0,
+    "fractionpass": 0.95,
     "lumisize" : -1,
     "maxcopies" : 1,
     "custodial": "T1_FR_CCIN2P3_MSS",
+    "tune" : true,
     "parameters" :{
       "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue", "T2_US_Caltech", "T2_US_Florida", "T2_US_Nebraska", "T2_US_UCSD", "T2_US_Wisconsin" ],
       "MergedLFNBase": "/store/himc"
@@ -67,9 +73,10 @@
   },
  "HINXeXeFall17DR": {
     "go": true,
-    "fractionpass": 1.0,
+    "fractionpass": 0.95,
     "lumisize" : -1,
     "maxcopies" : 1,
+    "tune" : true,
     "custodial": "T1_FR_CCIN2P3_MSS",
     "parameters" :{
       "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue", "T2_US_Caltech", "T2_US_Florida", "T2_US_Nebraska", "T2_US_UCSD", "T2_US_Wisconsin" ],
@@ -78,7 +85,7 @@
   },
  "HINppWinter17GS": {
     "go": true,
-    "fractionpass": 1.0,
+    "fractionpass": 0.95,
     "lumisize" : -1,
     "maxcopies" : 1,
     "custodial": "T1_FR_CCIN2P3_MSS",
@@ -89,7 +96,7 @@
   },
   "HINppWinter17wmLHEGS": {
     "go": true, 
-    "fractionpass": 1.0,
+    "fractionpass": 0.95,
     "lumisize" : -1,
     "maxcopies" : 1,
     "custodial": "T1_FR_CCIN2P3_MSS",
@@ -100,7 +107,7 @@
   },
   "HINppWinter17DR": {
     "go": true,
-    "fractionpass": 1.0,
+    "fractionpass": 0.95,
     "lumisize" : -1,
     "maxcopies" : 1,
     "custodial": "T1_FR_CCIN2P3_MSS",
@@ -320,6 +327,11 @@
     "maxcopies" : 1,
     "resize" : "auto"
   },
+  "NANOAODProdTest" : {
+   "go" : true,
+   "lumisize" : -1,
+   "maxcopies": 1
+  },
   "Summer11LegwmLHE": {
     "go": false
   },
@@ -522,6 +534,37 @@
    "tune" : true,
    "secondaries" : {"/MinBias_TuneCUETP8M1_14TeV-v1-pythia8/PhaseIITDRSpring17GS-91X_upgrade2023_realistic_v3-v1/GEN-SIM" : {"SiteWhitelist" : ["T1_RU_JINR","T1_IT_CNAF","T1_DE_KIT","T2_US_Caltech","T2_US_Florida","T2_US_MIT","T2_US_UCSD","T2_DE_DESY"] } }
   },
+ "RunIIWinter17GS" : {
+   "go" : true,
+   "lumisize" : -1,
+   "fractionpass" : 0.95,
+   "tune" : true,
+   "resize" : "auto"
+ },
+  "RunIIWinter17wmLHEGS" : {
+   "go" : true,
+   "lumisize" : -1,
+   "fractionpass" : 0.95,
+   "tune" : true
+  },
+  "RunIIWinter17DR" : {
+   "go": true,
+   "maxcopies": 1,
+   "lumisize": -1,
+   "resize" : "auto",
+   "fractionpass" : 0.95,
+   "tune" : true,
+   "secondaries":{"/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter17GS-93X_upgrade2018_realistic_v2-v2/GEN-SIM":{"SiteWhitelist" : ["T2_CH_CERN","T1_US_FNAL","T2_DE_DESY","T2_CH_CSCS"] }},
+   "secondary_AAA": false,
+   "overflow" : { "PU":{"max":20000,"pending":0}}
+  },
+  "RunIIWinter17MiniAOD" :{
+   "go" : true,
+   "lumisize" : -1,
+   "resize" : "auto",
+   "maxcopies": 1,
+   "fractionpass" : 0.95
+  },
   "RunIIFall17pLHE" : {
    "go" : true,
    "lumisize" : -1,
@@ -551,7 +594,7 @@
    "resize" : "auto"
   },
   "RunIIFall17NanoAOD" :{
-   "go" : false,
+   "go" : true,
    "lumisize" : -1,
    "maxcopies": 1,
    "fractionpass" : 0.95
@@ -576,7 +619,8 @@
    "tune" : false,
    "secondaries" : {"/MinBias_TuneCP5_inelasticON_13TeV-pythia8/RunIIFall17GS-93X_mc2017_realistic_v3-v1/GEN-SIM": {"SiteWhitelist" : ["T1_US_FNAL","T2_DE_KIT","T2_IN_TIFR","T2_US_Nebraska","T1_FR_CCIN2P3"]}},
    "secondary_AAA" : false,
-   "resize" : "auto"
+   "resize" : "auto",
+   "overflow" : { "PU":{"max":20000,"pending":0}}
   },
  "RunIISummer17CosmicGS" : {
    "go" : true,
@@ -602,6 +646,7 @@
   },
   "RunIISummer17pLHE" : {
    "go" : true,
+   "lumisize" : 1500,
    "fractionpass" : 0.95,
    "tune" : true
   },
@@ -693,6 +738,9 @@
    "go": true,    
    "fractionpass" : 0.95,
    "custodial": "T1_FR_CCIN2P3_MSS", 
+   "secondaries" : {"/ReggeGribovPartonMC_EposLHC_PbP_2510_2510_DataBS/pPb502Winter16GS-MB_80X_mcRun2_pA_5TeV_v4-v4/GEN-SIM" : {},
+   		    "/ReggeGribovPartonMC_EposLHC_PbP_2510_2510_DataBS/pPb502Winter16GS-MB_80X_mcRun2_pA_5TeV_v4-v3/GEN-SIM" : {}, 
+		    "/ReggeGribovPartonMC_EposLHC_pPb_2510_2510_DataBS/pPb502Winter16GS-MB_80X_mcRun2_pA_5TeV_v4-v3/GEN-SIM" : {} },
    "parameters": {    
       "MergedLFNBase": "/store/himc", 
       "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue", "T2_US_Caltech", "T2_US_Florida", "T2_US_Nebraska", "T2_US_UCSD", "T2_US_Wisconsin" ]
@@ -704,9 +752,11 @@
    "lumisize" : -1,
    "custodial": "T1_FR_CCIN2P3_MSS",
    "parameters": {
-      "MergedLFNBase": "/store/himc",
-      "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue", "T2_US_Caltech", "T2_US_Florida", "T2_US_Nebraska", "T2_US_UCSD", "T2_US_Wisconsin" ]
-   }
+      "MergedLFNBase": "/store/himc"
+   },
+   "SiteWhiteList": ["T1_DE_KIT", "T1_FR_CCIN2P3", "T1_IT_CNAF", "T1_UK_RAL", "T2_DE_DESY","T2_DE_RWTH", "T2_UK_London_Brunel", "T2_US_Caltech","T2_US_MIT","T2_US_Nebraska", "T2_US_Purdue", "T2_US_UCSD", "T2_US_Wisconsin"],
+   "secondaries": { "/ReggeGribovPartonMC_EposLHC_pPb_2510_2510_DataBS/pPb502Winter16GS-MB_80X_mcRun2_pA_5TeV_v4-v3/GEN-SIM" : {}, 
+   		    "/ReggeGribovPartonMC_EposLHC_PbP_2510_2510_DataBS/pPb502Winter16GS-MB_80X_mcRun2_pA_5TeV_v4-v4/GEN-SIM" : {} }
   },
   "RunIIWinter15wmLHE": {
     "go": true, 
