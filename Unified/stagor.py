@@ -78,13 +78,20 @@ def stagor(url,specific =None, options=None):
         wfi = workflowInfo(url, wfo.name)
         if wfi.request['RequestStatus'] in ['running-open','running-closed','completed','assigned','acquired']:
             wfi.sendLog('stagor', "is in status %s"%wfi.request['RequestStatus'])
-            wfi.status='away'
+            wfo.status='away'
             session.commit()
             continue
         if not wfi.request['RequestStatus'] in ['assignment-approved']:
             ## should be setting 'away' too
-            print wfo.name,"is",wfi.request['RequestStatus']
-            sendEmail("wrong status in staging. debug","%s is in %s, should set away."%(wfo.name,wfi.request['RequestStatus']))
+            ## that usually happens for relvals
+            if wfi.request['RequestStatus'] in ['rejected','aborted','aborted-completed','aborted-archived','rejected-archived'] and wfi.isRelval():
+                wfo.status='forget'
+                session.commit()
+                continue
+            else:
+                print wfo.name,"is",wfi.request['RequestStatus']
+                sendEmail("wrong status in staging. debug","%s is in %s, should set away."%(wfo.name,wfi.request['RequestStatus']))
+
         wfois.append( (wfo,wfi) )            
         _,primaries,_,secondaries = wfi.getIO()
         for dataset in list(primaries)+list(secondaries):
