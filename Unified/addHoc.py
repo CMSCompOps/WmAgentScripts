@@ -1,5 +1,5 @@
 #!/usr/bin/env python  
-from utils import workflowInfo, getWorkflows, sendEmail, componentInfo, monitor_dir, reqmgr_url, siteInfo, sendLog, getWorkflowById, isHEPCloudReady
+from utils import workflowInfo, getWorkflows, sendEmail, componentInfo, monitor_dir, reqmgr_url, siteInfo, sendLog, getWorkflowById, isHEPCloudReady, agentInfo
 #monitor_eos_dir = "/afs/cern.ch/user/c/cmst2/www/unified/"
 monitor_eos_dir = "/eos/project/c/cms-unified-logs/www/"
 
@@ -11,16 +11,25 @@ import json
 import time
 import random
 
+## poll agents
+AI = agentInfo(reqmgr_url)
+AI.poll()
+
+
 ## get all acquired and push one to stepchain so that we can acquire it on nersc
-if isHEPCloudReady(reqmgr_url):
+N_for_cloud = isHEPCloudReady(reqmgr_url)
+if N_for_cloud:
+    print "HEP cloud is ready"
     wfs = getWorkflows(reqmgr_url, 'acquired', details=True)
     for wf in wfs:
+        if N_for_cloud<=0: break
         wfi = workflowInfo(reqmgr_url, wf['RequestName'], request = wf )
-        if wfi.isGoodToConvertToStepChain() and wfi.isGoodForNERSC(no_step=True) and isHEPCloudReady(reqmgr_url):
+        print "testing",wf['RequestName']
+        if wfi.isGoodToConvertToStepChain() and wfi.isGoodForNERSC(no_step=True) and N_for_cloud:
             print "good to convert to step so that we get something for hepcloud on next round",wf['RequestName']
             os.system('Unified/rejector.py --to_step --clone --comment "convert to step for hepcloud" %s'% wf['RequestName'])
             ## just do that once and be done with it
-            break
+            N_for_cloud-=1
 
         
 
@@ -87,9 +96,9 @@ for b,pids in batches.items():
         wfs = getWorkflowById(url, pid, details=True)
         for wf in wfs:
             ## check on the announce date
-            announced = filter(lambda o : o['Status']=='announced', wf['RequestTransition'])
+            announced = filter(lambda o : o['Status']in ['announced','rejected','aborted'], wf['RequestTransition']) ## check on any final state
             if announced:
-                announced_time = announced[-1]['UpdateTime']
+                announced_time = max([a['UpdateTime'] for a in announced])
                 if (now-announced_time) < (7*24*60*60):
                     ## less than 7 days announced
                     may_have_one.add( wf['RequestName'] )
