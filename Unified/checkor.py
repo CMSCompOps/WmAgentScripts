@@ -445,6 +445,12 @@ def checkor(url, spec=None, options=None):
                     break
 
         time_point("expected statistics", sub_lap=True)
+        completed_log = filter(lambda change : change["Status"] in ["completed"],wfi.request['RequestTransition'])
+        running_log = filter(lambda change : change["Status"] in ["running-open","running-closed"],wfi.request['RequestTransition'])
+        running_delay = (now_s - (min(l['UpdateTime'] for l in running_log))) / (60.*60.*24.) if running_log else 0 ## in days        
+        delay = (now_s - completed_log[-1]['UpdateTime']) / (60.*60.*24.) if completed_log else 0 ## in days
+        print delay,"since completed"
+
 
         default_fraction_overdoing = UC.get('default_fraction_overdoing')
         for output in wfi.request['OutputDatasets']:
@@ -456,6 +462,10 @@ def checkor(url, spec=None, options=None):
             if c in CI.campaigns and 'earlyannounce' in CI.campaigns[c]:
                 wfi.sendLog('checkor', "Allowed to announce the output %s over %.2f by campaign requirement"%(out, CI.campaigns[c]['earlyannounce']))
                 fractions_announce[output] = CI.campaigns[c]['earlyannounce']
+
+            if c in CI.campaigns and 'damping' in CI.campaigns[c]:
+                ## allow to decrease the pass threshold
+                pass 
 
             if c in CI.campaigns and 'fractionpass' in CI.campaigns[c]:
                 if type(CI.campaigns[c]['fractionpass']) == dict:
@@ -488,9 +498,6 @@ def checkor(url, spec=None, options=None):
                     print "overriding fraction to",fractions_pass[output],"by dataset key",key
 
             pass_percent_below = fractions_pass[output]-0.02
-            completed_log = filter(lambda change : change["Status"] in ["completed"],wfi.request['RequestTransition'])
-            delay = (now_s - completed_log[-1]['UpdateTime']) / (60.*60.*24.) if completed_log else 0 ## in days
-            print delay,"since completed"
             weight_full = 7.
             weight_pass = delay
             weight_under_pass = 2*delay if int(wfi.request['RequestPriority'])< 80000 else 0. ## allow to drive it below the threshold
@@ -510,6 +517,24 @@ def checkor(url, spec=None, options=None):
                 ##### OR 
                 ##wfi.sendLog('checkor', "Lowering the pass bar since recovery is being truncated")
                 ## fractions_pass[output] = fractions_truncate_recovery[output]
+
+
+        #introduce a reduction factor on very old requests
+        timeout_from_started_running = 30 ##start choping after 30 days
+        damping_time = 10 # 1% every 10 days
+        fraction_damping = min(0.01*(max(running_delay - timeout_from_started_running,0)/damping_time),0.05) ## not more than 5% decrease
+        print "We could reduce the passing fraction by",fraction_damping,"given it's been running for long"
+        for out in fractions_pass:
+            if fractions_pass[out]!=1.0: ## strictly ones cannot be set less than one
+                if options.go:
+                    wfi.sendLog('checkor','Reducing pass thresholds by %.3f for long lasting workflow'% fraction_damping)
+                    fractions_pass[out] -= fraction_damping
+                    #fractions_truncate_recovery[out] -= fraction_damping
+                    pass
+
+        #and then make the fraction multiplicative per child
+        ## TODO
+
 
         time_point("statistics thresholds", sub_lap=True)
 
