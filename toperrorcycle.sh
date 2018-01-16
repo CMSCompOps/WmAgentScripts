@@ -48,7 +48,7 @@ echo $$ >> $lock_name
 ## get sso cookie and new grid proxy
 source $BASE_DIR/credentials.sh
 
-$BASE_DIR/cWrap.sh Unified/showError.py --top --expose 3
+$BASE_DIR/cWrap.sh Unified/showError.py --top --expose 2 --threads 2 --log_threads 2
 
 rm -f $lock_name
 
