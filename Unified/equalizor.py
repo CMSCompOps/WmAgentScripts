@@ -361,6 +361,9 @@ def equalizor(url , specific = None, options=None):
         else:
             print "not enough stats for time",w_t,"<",stats_to_go,"value is",p_t
 
+        print "95% of the jobs are running under",b_t
+
+
         print "#"*30
         return (b_m,slope,b_t, read_need)
         
