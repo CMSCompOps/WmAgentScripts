@@ -31,7 +31,7 @@ while True:
         expose_all='/eos/project/c/cms-unified-logs/www/logmapping/%s/'% wf
         os.system('mkdir -p %s'% expose_all)
 
-        
+        agent,jobid = None, None
         if ":" in lf:
             agent,jobid = lf.split(":")
             if not 'vocms' in agent: 
@@ -51,7 +51,8 @@ while True:
             ## parse the condor logs for the tar.gz
             condor_dir ='/eos/project/c/cms-unified-logs/www/logmapping/condorlogs/%s/0/ATask/%s/%s_%s/Job_%s'%(wf,
                                                                                                                 jobid[:3],
-                                                                                                                agent,jobid,
+                                                                                                                agent.split('.')[0],
+                                                                                                                jobid,
                                                                                                                 jobid)
             if not os.path.isdir( condor_dir ):
                 print "Ex: ",com
@@ -109,15 +110,23 @@ while True:
                 continue
             ## show that one
             com = 'python /afs/cern.ch/user/v/vlimant/public/ops/whatLog.py --workflow  %s --log %s > %s/%s.txt'%(wf, lf, expose_all, lf)
+            print 'Ex:',com
             os.system(com)
             ## get it locally
             com = 'python /afs/cern.ch/user/v/vlimant/public/ops/whatLog.py --workflow  %s --log %s --get '%( wf, lf )
+            print 'Ex:',com
             os.system(com)
             lfile = os.popen('find /tmp/vlimant/ -name "*%s"'% lf ).read().replace('\n','')
             print lfile,"is mean to be the local file"
             if lfile and os.path.isfile( lfile ):
                 com = 'cp %s %s/.'%( lfile, expose_all)
+                print 'Ex:',com
                 os.system( com )
+                if agent and jobid:
+                    com = 'cp %s %s/%s_%s.tar.gz'%( lfile, expose_all, agent,jobid)
+                    print 'Ex:',com
+                    os.system( com )
+
                 sendEmail("%s is ready"%lf,"Get the file at http://cms-unified.web.cern.ch/cms-unified/logmapping/%s"%(wf), destination= [whos[who]])
                 print "Got the file",lf
             else:
