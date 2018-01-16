@@ -304,56 +304,6 @@ def transferor(url ,specific = None, talk=True, options=None):
 
         if no_go:
             continue
-        ## check if the batch is announced
-
-        #def check_mcm(wfn):
-        #    announced=False
-        #    is_real=False
-        #    if not wfn.startswith('pdmvserv'):
-        #        is_real = True
-        #    try:
-        #        for b in mcm.getA('batches',query='contains=%s'% wfo.name):
-        #            is_real = True
-        #            if b['status']=='announced': 
-        #                announced=True 
-        #                break
-        #    except:
-        #        try:
-        #            for b in mcm.getA('batches',query='contains=%s'% wfo.name):
-        #                is_real = True
-        #                if b['status']=='announced': 
-        #                    announced=True 
-        #                    break
-        #        except:
-        #            print "could not get mcm batch announcement, assuming not real"
-        #    return announced,is_real
-
-        #if not use_mcm:
-        #    announced,is_real = False,True
-        #else:
-        #    if wfh.request['RequestType'] in ['ReReco']:
-        #        announced,is_real = True,True
-        #    else:
-        #        announced,is_real = check_mcm( wfo.name )
-
-        #if not announced:
-        #    wfh.sendLog('transferor', "does not look announced.")
-
-            
-        #if not is_real:
-        #    wfh.sendLog('transferor', "does not appear to be genuine.")
-
-            ## prevent any duplication. if the wf is not mentioned in any batch, regardless of status
-        #    continue
-
-        ## check on a grace period
-        #injection_time = time.mktime(time.strptime('.'.join(map(str,wfh.request['RequestDate'])),"%Y.%m.%d.%H.%M.%S")) / (60.*60.)
-        #now = time.mktime(time.gmtime()) / (60.*60.)
-        #if float(now - injection_time) < 4.:
-        #    if not options.go and not announced: 
-        #        wfh.sendLog('transferor', "It is too soon to start transfer: %3.2fH since injection"%(now - injection_time))
-        #        continue
-
 
         if passing_along >= allowed_to_handle:
             #if int(wfh.request['RequestPriority']) >= in_transfer_priority and min_transfer_priority!=in_transfer_priority:
@@ -388,8 +338,6 @@ def transferor(url ,specific = None, talk=True, options=None):
 
 
         for dataset in list(primary)+list(parent)+list(secondary):
-            ## lock everything flat
-            #NLI.lock( dataset )
             LI.lock( dataset , reason='staging' )
 
         if not sites_allowed:
@@ -441,7 +389,8 @@ def transferor(url ,specific = None, talk=True, options=None):
                     
                     wfh.sendLog('transferor',"Maxed to %s by campaign configuration %s"%( copies_needed, wfh.request['Campaign']))
 
-
+                if blocks:
+                    print "limiting to blocks","\n".join( sorted( blocks ))
                 ### new ways of making the whole thing
                 destinations,all_block_names = getDatasetDestinations(url, prim, within_sites = [SI.CE_to_SE(site) for site in sites_allowed], only_blocks=blocks )
                 print json.dumps(destinations, indent=2)
@@ -449,7 +398,8 @@ def transferor(url ,specific = None, talk=True, options=None):
                 ## get where the dataset is in full and completed
                 prim_location = [site for (site,info) in destinations.items() if info['completion']==100 and info['data_fraction']==1]
                 ## the rest is places it is going to be
-                prim_destination = [site for site in destinations.keys() if not site in prim_location]
+                #prim_destination = [site for site in destinations.keys() if not site in prim_location]
+                prim_destination = [site for (site,info) in destinations.items() if info['data_fraction']==1 and info['completion']!=100]
                 ## veto the site with no current disk space, for things that are not relval
                 prim_destination = [site for site in prim_destination if (SI.disk[site] or wfh.isRelval())]
                 
@@ -481,9 +431,6 @@ def transferor(url ,specific = None, talk=True, options=None):
                 if not prim_to_distribute or any([transfers_per_sites[site] < max_staging_per_site for site in prim_to_distribute]):
                     ## means there is openings let me go
                     print "There are transfer slots available:",[(site,transfers_per_sites[site]) for site in prim_to_distribute]
-                    #for site in sites_allowed:
-                    #    #increment accross the board, regardless of real destination: could be changed
-                    #    transfers_per_sites[site] += 1
                 else:
                     if int(wfh.request['RequestPriority']) >= in_transfer_priority and min_transfer_priority!=in_transfer_priority:
                         wfh.sendLog('transferor', "Higher priority sample %s >= %s go-on over transfer slots available"%(wfh.request['RequestPriority'], in_transfer_priority))
@@ -506,11 +453,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                             existing.active = True
 
                     session.flush()
-                    #if not options.test:
-                    #    #session.commit()
-                    #    pass
-                    #else:
-                    #    session.flush() ## regardless of commit later on, we need to let the next wf feeding on this transfer to see it in query
+
                     can_go = False
                     transfer_sizes[prim] = input_sizes[prim]
                     staging = True
@@ -526,8 +469,17 @@ def transferor(url ,specific = None, talk=True, options=None):
                 elif len(prim_to_distribute)==0:
                     wfh.sendLog('transferor', "We are going to need extra copies of %s, but no destinations seems available"%(prim))
                     sendLog('transferor', "We are going to need extra copies of %s, but no destinations seems available"%(prim),level='critical')
+
+                    print json.dumps(  prim_to_distribute, indent=2 )
+                    print json.dumps(  prim_location, indent=2 )
+                    print json.dumps(  prim_destination, indent=2 )
+                    
                     prim_to_distribute = [site for site in sites_allowed if not SI.CE_to_SE(site) in prim_location]
-                    prim_to_distribute = [site for site in prim_to_distribute if not SI.CE_to_SE(site) in SI.sites_veto_transfer]
+                    #prim_to_distribute = [site for site in prim_to_distribute if not SI.CE_to_SE(site) in SI.sites_veto_transfer ]
+                    prim_to_distribute = [site for site in prim_to_distribute if (SI.disk[SI.CE_to_SE(site)] or wfh.isRelval()) ]
+
+                    print "changed to"
+                    print json.dumps(  prim_to_distribute, indent=2 )
                     
 
                 if len(prim_to_distribute)>0: ## maybe that a parameter we can play with to limit the 
@@ -726,30 +678,47 @@ def transferor(url ,specific = None, talk=True, options=None):
             answer = raw_input('Continue with that ?')
             if not answer.lower() in ['y','yes','go']:
                 continue
-
+        transfered_items = defaultdict(set)
         if execute:
             priority = 'normal'
-            cds = [ds for ds in datasets+block_datasets if ds in max_priority]
-            if cds and False: ## I don't think this is working. subscription should be updated on the fly and regularly for raising the priority if needed
-                ## decide on an overall priority : that's a bit too large though
-                if any([max_priority[ds]>=90000 for ds in cds]):
-                    priority = 'high'
-                elif all([max_priority[ds]<80000 for ds in cds]):
-                    priority = 'low'
+            cds = [ds for ds in set(datasets+block_datasets) if ds in max_priority]
+            ## bucketize the transfers by priority of workflows
+            prioritized_items=defaultdict(set)
+            for item in items_to_transfer:
+                d = item.split('#')[0]
+                p = max_priority.get(d, 80000)
+                q = 'normal'
+                if p > 100000:
+                    q = 'reserved'
+                elif p < 70000:
+                    q = 'low'
+                prioritized_items[q].add( item )
+
+            for priority,items in prioritized_items.items():
+                result = makeReplicaRequest(url, site_se, list(items), 'prestaging', priority=priority, approve=True)
+                if result:
+                    these_transfers = [o['id'] for o in result['phedex']['request_created']] 
+                    #phedexids.extend( these_transfers )
+                    for ph in these_transfers:
+                        transfered_items[ph].update( items )
+                else:
+                    sendLog('transferor','Could not make a replica request for items %s to site %s'%(items,sorted(site_se)),level='critical')
                 
-            result = makeReplicaRequest(url, site_se, items_to_transfer, 'prestaging', priority=priority, approve=True)
-        else:
-            result= {'phedex':{'request_created' : []}}
-            fake_id-=1
+            #result = makeReplicaRequest(url, site_se, items_to_transfer, 'prestaging', priority=priority, approve=True)
+            #phedexids = [o['id'] for o in result['phedex']['request_created']]:
+        #else:
+        #    #result= {'phedex':{'request_created' : []}}
+        #    phedexids = []
+        #    fake_id-=1
 
 
 
-        if not result:
+        if not transfered_items:
             sendLog('transferor','Could not make a replica request for items %s to site %s'%(items_to_transfer,site),level='critical')
             continue
-        for phedexid in [o['id'] for o in result['phedex']['request_created']]:
+        for phedexid,items in transfered_items.items():
             print phedexid,"transfer created"
-            for transfering in list(set(map(lambda it : it.split('#')[0], items_to_transfer))):
+            for transfering in list(set(map(lambda it : it.split('#')[0], items))):
                 for wfid in workflow_dependencies[transfering]:
                     new_transfer = session.query(TransferImp).filter(TransferImp.phedexid == int(phedexid)).filter( TransferImp.workflow_id == wfid ).first()
                     if not new_transfer:
