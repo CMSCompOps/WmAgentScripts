@@ -460,8 +460,21 @@ def download_file(url, params, path = None, logger = None):
         logger.error("URL called: {url}".format(url = url))
         return None
 
+
+def make_x509_conn(url=reqmgr_url,max_try=5):
+    tries = 0
+    while tries<max_try:
+        try:
+            conn = httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+            return conn
+        except:
+            tries+=1
+            pass
+    return None
+
 def GET(url, there, l=True):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
     r1=conn.request("GET",there)
     r2=conn.getresponse()
     if l:
@@ -470,14 +483,16 @@ def GET(url, there, l=True):
         return r2
 
 def check_ggus( ticket ):
-    conn  =  httplib.HTTPSConnection('ggus.eu', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn('ggus.eu')
+    #conn  =  httplib.HTTPSConnection('ggus.eu', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/index.php?mode=ticket_info&ticket_id=%s&writeFormat=XML'%ticket)
     r2=conn.getresponse()
     print r2
     return False
 
 def getSubscriptions(url, dataset):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     there = '/phedex/datasvc/json/prod/subscriptions?dataset='+dataset 
     r1=conn.request("GET", there)
     r2=conn.getresponse()
@@ -486,7 +501,8 @@ def getSubscriptions(url, dataset):
     return items
 
 def listRequests(url, dataset, site=None):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     there = '/phedex/datasvc/json/prod/requestlist?dataset='+dataset
     r1=conn.request("GET", there)
     r2=conn.getresponse()
@@ -503,7 +519,8 @@ def listRequests(url, dataset, site=None):
     return dict(res)
 
 def listCustodial(url, site='T1_*MSS'):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     there = '/phedex/datasvc/json/prod/requestlist?node=%s&decision=pending'%site
     r1=conn.request("GET", there)
     r2=conn.getresponse()
@@ -520,7 +537,8 @@ def listCustodial(url, site='T1_*MSS'):
     return dict(res)
 
 def listDelete(url, user, site=None):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     there = '/phedex/datasvc/json/prod/requestlist?type=delete&approval=pending&requested_by=%s'% user
     if site:
         there += 'node=%s'% ','.join(site)
@@ -534,7 +552,8 @@ def listDelete(url, user, site=None):
     return list(itertools.chain.from_iterable([(subitem['name'],item['requested_by'],item['id']) for subitem in item['node'] if subitem['decision']=='pending' ] for item in items))
 
 def listSubscriptions(url, dataset, within_sites=None):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset=%s'%(dataset))
     r2=conn.getresponse()
     result = json.loads(r2.read())
@@ -566,7 +585,8 @@ def listSubscriptions(url, dataset, within_sites=None):
     #print destinations
     return destinations
 def lock_DDM(lock=True):
-    conn  =  httplib.HTTPSConnection('t3desk007.mit.edu', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn('t3desk007.mit.edu')
+    #conn  =  httplib.HTTPSConnection('t3desk007.mit.edu', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     if lock:
         conn.request("POST","/registry/activitylock/lock?service=unified&app=detox")
     else:
@@ -742,7 +762,8 @@ class unifiedConfiguration:
             sys.exit(124)
 
 def checkDownTime():
-    conn  =  httplib.HTTPSConnection(reqmgr_url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn()
+    #conn  =  httplib.HTTPSConnection(reqmgr_url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/couchdb/reqmgr_workload_cache/jbadillo_BTV-RunIISpring15MiniAODv2-00011_00081_v0__151030_162715_5312')
     r2=conn.getresponse()
     r = r2.read()
@@ -772,6 +793,7 @@ class componentInfo:
                 print "checking cmsr"
                 from assignSession import session, Workflow
                 all_info = session.query(Workflow).filter(Workflow.name.contains('1')).all()
+                self.status['cmsr'] = True
                 break
             except Exception as e:
                 self.tell('cmsr')
@@ -977,7 +999,8 @@ def userLock(component=None):
     return False
 
 def getWMStats(url):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     url = '/wmstatsserver/data/requestcache'
     r1=conn.request("GET",url,headers={"Accept":"application/json"})
     r2=conn.getresponse()
@@ -1261,14 +1284,16 @@ class docCache:
                     return copy.deepcopy(cache['default'])
 
 def getNodes(url, kind):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/phedex/datasvc/json/prod/nodes')
     r2=conn.getresponse()
     result = json.loads(r2.read())
     return [node['name'] for node in result['phedex']['node'] if node['kind']==kind]
 
 def getNodeUsage(url, node):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/phedex/datasvc/json/prod/nodeusage?node=%s'%node)
     r2=conn.getresponse()
     result = json.loads(r2.read())
@@ -1279,7 +1304,8 @@ def getNodeUsage(url, node):
         return None
 
 def getNodeQueue(url, node):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/phedex/datasvc/json/prod/nodeusagehistory?node=%s'%node)
     r2=conn.getresponse()
     result = json.loads(r2.read())
@@ -1293,7 +1319,8 @@ def getNodeQueue(url, node):
     return None
 
 def getSiteStorage(url):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/sitedb/data/prod/data-processing', headers={"Accept":"*/*"})
     r2=conn.getresponse()
     r = json.loads(r2.read())['result']
@@ -1302,7 +1329,8 @@ def getSiteStorage(url):
 
 def getNodesQueue(url):
     ret = defaultdict(int)
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/phedex/datasvc/json/prod/nodeusagehistory')
     r2=conn.getresponse()
     result = json.loads(r2.read())
@@ -1867,11 +1895,16 @@ class siteInfo:
         #return r_weights.keys()[self._weighted_choice_sub(r_weights.values())]
         return self._pick(sites, self.cpu_pledges)
 
-def isHEPCloudReady(url, limit=2):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))    
+def isHEPCloudReady(url, limit=20):
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))    
     r1=conn.request("GET",'/reqmgr2/data/request?mask=RequestStatus&status=assigned&status=acquired&status=running-open&status=running-closed&team=hepcloud', headers={"Accept":"*/*"})
     r2=conn.getresponse()
-    return (len(json.loads(r2.read())['result'][0].keys())<limit)
+    d = json.loads(r2.read())['result']
+    ok=limit
+    if len(d):
+        ok = max(0,limit-len(d[0].keys()))
+    return ok
 
 
 def global_SI(a=None):
@@ -1943,7 +1976,7 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
 
                 if f =='acdc':
                     text+='<td><a href=https://%s/reqmgr2/data/request?prep_id=%s&detail=false>%s</a></td>'%(reqmgr_url, tpid , value)
-                if f=='percentage':
+                elif f=='percentage':
                     frac = self.record[wf]['datasets'][out].get('fractionpass',0)
                     if value >= frac:
                         text+='<td>%s</td>'% value
@@ -2122,7 +2155,8 @@ Updated on %s (GMT) <br>
 
 
 def checkTransferApproval(url, phedexid):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?request='+str(phedexid))
     r2=conn.getresponse()
     result = json.loads(r2.read())
@@ -2164,7 +2198,8 @@ def getDatasetBlockFraction( dataset, blocks):
     return fract, total, in_block
     
 def findLateFiles(url, datasetname, going_to=None):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     u = '/phedex/datasvc/json/prod/filelatency?dataset=%s'% datasetname
     if going_to:
         u += '&to_node=%s'%going_to
@@ -2207,7 +2242,8 @@ def findLostBlocksFiles(url, datasetname):
         return ([],[])
 
 def try_findLostBlocksFiles(url, datasetname):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 
     r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?block=%s%%23*&collapse=n'% datasetname)
     r2=conn.getresponse()
@@ -2254,7 +2290,8 @@ def checkTransferLag( url, xfer_id , datasets=None):
 
 def try_checkTransferLag( url, xfer_id , datasets=None):
     ## xfer_id tells us what has to go where via subscriptions
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     #r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?request=%s'%(str(xfer_id)))
     #r2=conn.getresponse()
     #result = json.loads(r2.read())
@@ -2346,7 +2383,8 @@ def checkTransferStatus(url, xfer_id, nocollapse=False):
         
 
 def getNodesId(url):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/phedex/datasvc/json/prod/nodes?')
     r2=conn.getresponse()
     result = json.loads(r2.read())
@@ -2356,7 +2394,8 @@ def getNodesId(url):
     return nodes
 
 def try_checkTransferStatus(url, xfer_id, nocollapse=False):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 
     r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?request='+str(xfer_id))
     r2=conn.getresponse()
@@ -2435,7 +2474,8 @@ def findCustodialCompletion(url, dataset):
     return findCustodialLocation(url, dataset, True)
 
 def findCustodialLocation(url, dataset, with_completion=False):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset=%s'%(dataset))
     r2=conn.getresponse()
     result = json.loads(r2.read())
@@ -2499,7 +2539,8 @@ def findCustodialLocation(url, dataset, with_completion=False):
         return list(set(cust)), more_information
 
 def getDatasetFileLocations(url, dataset):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/phedex/datasvc/json/prod/filereplicas?dataset=%s'%(dataset))
     r2=conn.getresponse()
     result = json.loads(r2.read())
@@ -2517,7 +2558,8 @@ def getDatasetFiles(url, dataset ,without_invalid=True ):
     files = dbsapi.listFileArray( dataset= dataset,validFileOnly=without_invalid, detail=True)
     dbs_filenames = [f['logical_file_name'] for f in files]
     
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 
     r1=conn.request("GET",'/phedex/datasvc/json/prod/filereplicas?dataset=%s'%(dataset))
     r2=conn.getresponse()
@@ -2555,7 +2597,8 @@ def try_getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=
     if only_blocks:
         all_block_names = [b for b in all_block_names if b in only_blocks]
 
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 
     r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset=%s'%(dataset))
     r2=conn.getresponse()
@@ -2623,7 +2666,8 @@ def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, ve
     items = None
     while items == None:
         try:
-            conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+            conn = make_x509_conn(url)
+            #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
             url = '/phedex/datasvc/json/prod/requestlist?dataset=%s'%dataset
             if group:
                 url+='group=%s'%group
@@ -2776,7 +2820,8 @@ def getOldDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoe
 
     print len(all_block_names),"blocks"
 
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     #if len(all_block_names)<5000: 
     items = []
     if not complement:
@@ -2826,13 +2871,15 @@ def getOldDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoe
         print "Complementing the destinations with request with no subscriptions"
         print "we have",destinations.keys(),"for now"
         try:
-            conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))  
+            conn = make_x509_conn(url)
+            #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))  
             r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset=%s'%dataset)
             r2=conn.getresponse()
         except:
             print "\twaiting a bit for retry"
             time.sleep(1)
-            conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))  
+            conn = make_x509_conn(url)
+            #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))  
             r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset=%s'%dataset)
             r2=conn.getresponse()
         result = json.loads(r2.read())
@@ -2949,7 +2996,8 @@ def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=N
             raise Exception("getDatasetDestinations crashed")
 
 def getDatasetOnGoingDeletion( url, dataset ):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/phedex/datasvc/json/prod/deletions?dataset=%s&complete=n'%(dataset))
     r2=conn.getresponse()
     result = json.loads(r2.read())['phedex']
@@ -2980,7 +3028,8 @@ def getDatasetBlocks( dataset, runs=None, lumis=None):
     return list( all_blocks )
 
 def getUnsubscribedBlocks(url, site):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     urll = '/phedex/datasvc/json/prod/blockreplicas?node=%s&subscribed=n'%site
     r1=conn.request("GET",urll)
     r2=conn.getresponse()
@@ -3008,7 +3057,8 @@ def getDatasetBlockAndSite( url, dataset, group=None,vetoes=None,complete=None):
 def try_getDatasetBlockAndSite( url, dataset, group=None,vetoes=None,complete=None):
     if vetoes==None:
         vetoes = ['MSS','Buffer','Export']
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     urll = '/phedex/datasvc/json/prod/blockreplicas?dataset=%s'%(dataset)
     if complete:
         urll += '&complete=%s'%complete
@@ -3044,8 +3094,8 @@ def try_getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=
     #print json.dumps( all_blocks, indent=2)
     all_block_names=set([block['block_name'] for block in all_blocks])
     #print sorted(all_block_names)
-    #print full_size
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset=%s'%(dataset))
     r2=conn.getresponse()
     result = json.loads(r2.read())
@@ -3104,22 +3154,22 @@ def try_getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=
     if not full_size:
         print dataset,"is nowhere"
         return {}
-
     full_size = full_size+size_in_phedex
-
-
+    #print locations.items()
     presence={}
     for (site,blocks) in locations.items():
         site_size = sum([ block['file_size'] for block in all_blocks if (block['block_name'] in blocks and block['block_name'] in all_block_names)])
         ### print site,blocks,all_block_names
         #presence[site] = (set(blocks).issubset(set(all_block_names)), site_size/float(full_size)*100.)
         presence[site] = (set(all_block_names).issubset(set(blocks)), site_size/float(full_size)*100.)
-        if site =='T2_US_Nebraska' and False:
-            print site,
-            print set(all_block_names) - set(blocks)
-            print '\n'.join( sorted( all_block_names ))
-            print site
-            print '\n'.join( sorted( blocks ))
+#        if site =='T2_US_Nebraska' and False:
+        """
+        print site,
+        print set(all_block_names) - set(blocks)
+        print '\n'.join( sorted( all_block_names ))
+        print site
+        print '\n'.join( sorted( blocks ))
+        """
     #print json.dumps( presence , indent=2)
     return presence
 
@@ -3649,7 +3699,8 @@ def getDatasetEventsPerLumi(dataset):
            
 def invalidateFiles( files ):
     all_OK = True
-    #conn  =  httplib.HTTPSConnection('dynamo.mit.edu', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn('dynamo.mit.edu')
+##conn  =  httplib.HTTPSConnection('dynamo.mit.edu', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     conn  =  httplib.HTTPConnection('dynamo.mit.edu')
     for fn in files:
         if not all_OK :break ## stop at the first file
@@ -3808,7 +3859,8 @@ def createXML(datasets):
     return result.toprettyxml(indent="  ")
 
 def phedexPost(url, request, params):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     encodedParams = urllib.urlencode(params, doseq=True)
     r1 = conn.request("POST", request, encodedParams)
     r2 = conn.getresponse()
@@ -3825,7 +3877,8 @@ def approveSubscription(url, phedexid, nodes=None , comments =None, decision = '
     if comments==None:
         comments = 'auto-approve of production prestaging'
     if not nodes:
-        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+        conn = make_x509_conn(url)
+        #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?request='+str(phedexid))
         r2=conn.getresponse()
         result = json.loads(r2.read())
@@ -3859,7 +3912,8 @@ def disapproveSubscription(url, phedexid, nodes=None , comments =None):
     if comments==None:
         comments = 'auto-approve of production prestaging'
     if not nodes:
-        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+        conn = make_x509_conn(url)
+        #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?request='+str(phedexid))
         r2=conn.getresponse()
         result = json.loads(r2.read())
@@ -3937,7 +3991,8 @@ def updateSubscription(url, site, item, priority=None, user_group=None, suspend=
     return response
 
 def getWorkLoad(url, wf ):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1= conn.request("GET",'/reqmgr2/data/request/'+wf, headers={"Accept":"*/*"})
     r2=conn.getresponse()
     data = json.loads(r2.read())
@@ -3975,7 +4030,8 @@ def getWorkLoad(url, wf ):
 #        return [item['id'] for item in items]
         
 def getConfigurationFile(url , cacheid):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     there = '/couchdb/reqmgr_config_cache/%s/configFile'% cacheid
     r1=conn.request("GET",there)
     r2=conn.getresponse()
@@ -3988,7 +4044,8 @@ def getConfigurationLine(url, cacheid, token="# with command line"):
     return None
     
 def getWorkflowByCampaign(url, campaign, details=False):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     there = '/reqmgr2/data/request?campaign=%s'% campaign
     there += '&detail=true' if details else '&detail=false'
     r1=conn.request("GET",there , headers={"Accept":"*/*"})
@@ -4005,7 +4062,8 @@ def getWorkflowByCampaign(url, campaign, details=False):
 
     
 def getWorkflowByInput( url, dataset , details=False):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     there = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byinputdataset?key="%s"'%(dataset)
     if details:
         there+='&include_docs=true'
@@ -4019,7 +4077,8 @@ def getWorkflowByInput( url, dataset , details=False):
         return [item['id'] for item in items]
 
 def getWorkflowByOutput( url, dataset , details=False):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     there = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byoutputdataset?key="%s"'%(dataset)
     if details:
         there+='&include_docs=true'
@@ -4042,7 +4101,8 @@ def getLatestMCPileup( url, statuses=None):
     """
     ss = '&'.join(['status=%s'% s for s in statuses])
     print ss
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/reqmgr2/data/request?mask=RequestDate&mask=MCPileup&%s'%ss, headers={"Accept":"application/json"})
     r2=conn.getresponse()
     data = json.loads(r2.read())
@@ -4052,7 +4112,8 @@ def getLatestMCPileup( url, statuses=None):
     reqs = []
     for status in statuses:
         print status 
-        conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+        conn = make_x509_conn(url)
+        #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         r1=conn.request("GET",'/reqmgr2/data/request?mask=RequestDate&mask=MCPileup&status=%s'%status, headers={"Accept":"application/json"})
         r2=conn.getresponse()
         data = json.loads(r2.read())
@@ -4074,7 +4135,8 @@ def getLatestMCPileup( url, statuses=None):
     return ret
 
 def getWorkflowByMCPileup( url, dataset , details=False):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     there = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/bymcpileup?key="%s"'%(dataset)
     if details:
         there+='&include_docs=true'
@@ -4088,7 +4150,8 @@ def getWorkflowByMCPileup( url, dataset , details=False):
         return [item['id'] for item in items]
 
 def getWorkflowById( url, pid , details=False):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     there = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byprepid?key="%s"'%(pid)
     if details:
         there+='&include_docs=true'
@@ -4120,15 +4183,220 @@ def forceComplete(url, wfi):
             print "rejecting",member['RequestName']
             reqMgrClient.invalidateWorkflow(url, member['RequestName'], current_status=member['RequestStatus'])
 
+class agentInfo:
+    def __init__(self, url):
+        self.url = url
+        ## keep some info in a local file
+        try:
+            self.info = json.loads(open('.agent_info.json').read())
+        except:
+            self.info = {}
+
+        self.buckets = defaultdict(list)
+        self.wake_draining = False ## do not wake up agents that are on drain already
+        self.getStatus()
+
+    def getStatus(self):
+        all_agents_prod = getAllAgents(self.url).get('production',[])
+        prod_info = dict([(a['agent_url'].split(':')[0], a) for a in all_agents_prod])
+        all_agents_name = sorted(set(self.info.keys() + prod_info.keys()))
+        
+        now,nows = self.getNow()
+
+        for agent in all_agents_name:
+            linfo = self.info.get( agent, {})
+            pinfo = prod_info.get( agent, {})
+
+            draining = False
+            standby = False
+            
+            if linfo:
+                ## this was already known
+                if pinfo:
+                    ## and is in production
+                    st = 'running'
+                    if pinfo['drain_mode']: st = 'draining'
+                else:
+                    ## and is gone from production
+                    st = 'offline'
+                self.info[agent]['status'] = st 
+            else:
+                ## the agent is new here. let's assume it is in standby if in drain
+                st = 'running'
+                if pinfo['drain_mode']:
+                    st = 'standby' ## for the first time
+                    #st = 'draining'
+                    
+                ## add it
+                self.info[agent] = { 'status' : st,
+                                     'update' : now,
+                                     'date' : nows }
+                    
+
+        for a,i in self.info.items():
+            self.buckets[i['status']].append( a ) 
+
+        if not self.buckets.get('standby',[]):
+            print "There are no agent in standby!!"
+
+        print json.dumps( self.buckets, indent=2)
+
+    def __del__(self):
+        open('.agent_info.json','w').write( json.dumps( self.info, indent=2))
+    def getNow(self):
+        now = time.gmtime()
+        nows = time.asctime( now )
+        now = time.mktime( now )
+        return now,nows
+
+    def flag_standby(self, agent):
+        now,nows = self.getNow()        
+        if self.info.get(agent,{}).get('status',None) == 'draining':
+            self.info[agent]['status'] = 'standby'
+            self.info[agent]['update'] = now
+            self.info[agent]['date'] = nows
+
+    def poll(self, wake_up_draining=False, acting=False):
+        now,nows = self.getNow()
+
+        ### decides if you need to boot and agent
+        need_one = False
+        ### decides if you need to get one out becuase there are too many already
+        retire_agent = False
+
+        ## go through some metric
+        ## collect the number of jobs per agent. 
+        ##sum over those running+draining+standby
+        one_recent_running = False
+        one_recent_standby = False
+        for agent in self.buckets.get('running',[]):
+            if (now-self.info[agent]['update'])<(5*60*60):
+                one_recent_running = True
+        for agent in self.buckets.get('standby',[]):
+            if (now-self.info[agent]['update'])<(5*60*60):
+                one_recent_standby = True
+
+        all_agents = dataCache.get('gwmsmon_pool')
+        over_threshold = True
+        under_threshold = False
+        capacity = 0
+        running = 0
+        pending = 0
+        for agent,ainfo in all_agents.items():
+            if not 'Name' in ainfo: continue
+            agent_name = ainfo['Name']
+            if not agent_name in self.info: continue
+            r = ainfo['TotalRunningJobs']
+            t = ainfo['MaxJobsRunning']
+            running += r
+            pending += ainfo['TotalIdleJobs']
+            print agent_name,r,json.dumps(ainfo, indent=2)
+            if agent_name in self.buckets['running']:
+                capacity += t
+                over_threshold &= (r >= t*0.90)
+                under_threshold |= (r <= 1000)
+
+        print "Capacity",capacity
+        print "Running", running
+        print "Pending", pending
+
+        """
+        all_agents = getAllAgents(self.url)['production']
+        over_threshold = True
+        under_threshold = False
+        for agent in all_agents:
+            r = agent['WMBS_INFO'].get('activeRunJobByStatus',{}).get('Running',0)
+            agent_name = agent['agent_url']
+            print agent_name,r,self.info.get(agent_name)
+            if agent_name in self.buckets['running']:
+                over_threshold &= (r >= 20000*0.90)
+                under_threshold |= (r <= 1000)
+        """
+
+        ## all agents are above the understood limit. so please boot one
+        #
+        if not one_recent_running:
+            if over_threshold: sendEmail('agentInfo','All agents are maxing out. We need a new agent. This will be automated next')            
+            if under_threshold: sendEmail('agentInfo','There are agents under doing and that could be set in standby. This will be automated next')
+
+            if acting:
+                need_one = over_threshold
+                if not over_threshold:
+                    retire_agent = under_threshold
+        
+        if need_one:
+            pick_from = self.buckets.get('standby',[])
+            if not pick_from:
+                if wake_up_draining:
+                    print "wake up an agent that was actually draining"
+                    pick_from = self.buckets.get('draining',[])
+
+            if not pick_from:
+                print "need to wake an agent up, but there are none available"
+            else:
+                # pick one at random in the one idling
+                wake_up = random.choice( pick_from )
+                print "waking up", wake_up
+                if setAgentOn(self.url, wake_up):
+                    self.info[wake_up] = { 'status' : 'running',
+                                           'update' : now,
+                                           'date' : nows }
+                    
+        elif retire_agent:
+            # pick one with most running jobs
+            sleep_up = random.choice( self.running )
+            print "putting to sleep",sleep_up
+            if setAgentDrain(url, sleep_up):
+                self.info[sleep_up] = { 'status' : 'standby',
+                                        'update' : now,
+                                        'date' : nows }                
+        else:
+            print "Everything is fine. No need to retire or add an agent"
+        
+
+def setAgentDrain(url, agent, drain=True):
+    #the agent name has to have .cern.ch and all
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    go_url= '/reqmgr2/data/wmagentconfig/%s'% agent
+    r1=conn.request("GET",go_url, headers={"Accept":"application/json"})
+    r2=conn.getresponse()
+    info = json.loads(r2.read())['result'][-1]
+    draining = info['UserDrainMode']
+    print agent,"is draining?",draining
+
+    #from WMCore.Services.ReqMgrAux.ReqMgrAux import ReqMgrAux
+    #reqMgrAux = ReqMgrAux('https://'+url+'/reqmgr2')
+    #print reqMgrAux.updateAgentDrainingMode( agent, drainFlag = drain )
+    #encodedParams = urllib.urlencode({"AgentDrainMode":drain})
+    #encodedParams = urllib.urlencode({"UserDrainMode":drain})
+    encodedParams = json.dumps({"UserDrainMode":drain})
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    go_url= '/reqmgr2/data/wmagentconfig/%s'% agent
+    r1 = conn.request("PUT", go_url , encodedParams, headers={"Accept":"application/json",
+                                                              "Content-type": "application/json",
+                                                              "Host" : "cmsweb.cern.ch"})
+    r2 = conn.getresponse()
+    res = r2.read()
+    r=  json.loads(res)['result'][0]["ok"]
+    return r
+
+def setAgentOn(url, agent):
+    return setAgentDrain(url, agent, drain=False)
+
+
 def getAgentInfo(url, agent):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     url= '/couchdb/wmstats/%s%%3A9999'%agent
     r1=conn.request("GET",url)
     r2=conn.getresponse()
     return json.loads(r2.read())["WMBS_INFO"]#["sitePendCountByPrio"]
     
 def getAllAgents(url):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     url = '/couchdb/wmstats/_design/WMStats/_view/agentInfo?stale=update_after'
     r1=conn.request("GET",url)
     r2=conn.getresponse()
@@ -4152,7 +4420,8 @@ def getWorkflows(url,status,user=None,details=False,rtype=None, priority=None):
     raise Exception("getWorkflows failed 10 times")
     
 def try_getWorkflows(url,status,user=None,details=False,rtype=None, priority=None):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 
     go_to = '/reqmgr2/data/request?status=%s'%status
     if rtype:
@@ -4233,7 +4502,8 @@ def getListOfBlocks(inputdset,runwhitelist):
 
 def checkIfBlockIsSubscribedToASite(url,block,site):
 
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?block='+block.replace('#','%23'))
 
     r2=conn.getresponse()
@@ -4258,7 +4528,8 @@ def checkIfBlockIsSubscribedToASite(url,block,site):
 
 def checkIfDatasetIsSubscribedToASite(url,dataset,site):
 
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?dataset='+dataset)
     r2=conn.getresponse()
     result = json.loads(r2.read())
@@ -4278,7 +4549,8 @@ def checkIfDatasetIsSubscribedToASite(url,dataset,site):
 
 def checkIfBlockIsAtASite(url,block,site):
     
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicasummary?block='+block.replace('#','%23'))
     r2=conn.getresponse()
 
@@ -4315,7 +4587,8 @@ class workflowInfo:
     def __init__(self, url, workflow, spec=True, request=None,stats=False, wq=False, errors=False):
         self.logs = defaultdict(str)
         self.url = url
-        self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+        self.conn = make_x509_conn(self.url)
+        #self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         if request == None:
             try:
                 r1=self.conn.request("GET",'/reqmgr2/data/request/'+workflow, headers={"Accept":"*/*"})
@@ -4370,9 +4643,14 @@ class workflowInfo:
     def isGoodForNERSC(self, no_step=False):
         nersc_archs=set(['slc6_amd64_gcc530','slc6_amd64_gcc630'])
         good = (self.request['RequestType'] == 'StepChain' or no_step)  and self.request['RequestPriority'] <= 85000 and len(set(self.request['ScramArch'])&nersc_archs)>=1
+        io = _,prim,_,sec = self.getIO()
+        #if prim: good = False
+        #if sec: good = False
+        ## should be of significant size. how do we check that ???
+        #good = good & 
         return good
 
-    def isGoodToConvertToStepChain(self ,keywords=None):
+    def isGoodToConvertToStepChain(self ,keywords=None, talk=False):
         ## only one value throughout the chain
         all_same_cores = len(set(self.getMulticores()))==1
         ##make sure not tow same data tier is produced
@@ -4391,6 +4669,12 @@ class workflowInfo:
         if keywords:
             found_in_transform_keywords = any([keyword in wf for keyword in keywords])
         good = self.request['RequestType'] == 'TaskChain' and more_than_one_task and found_in_transform_keywords and single_tiers and all_same_cores and output_from_single_task
+        if not good and talk:
+            #print more_than_one_task
+            #print found_in_transform_keywords
+            #print "single_tiers
+            print "cores",all_same_cores
+            print "parentage",output_from_single_task
         return good
 
 
@@ -4449,7 +4733,8 @@ class workflowInfo:
 
     def get_spec(self):
         if not self.full_spec:
-            self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+            self.conn = make_x509_conn(self.url)
+            #self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
             r1=self.conn.request("GET",'/couchdb/reqmgr_workload_cache/%s/spec'%self.request['RequestName'])
             r2=self.conn.getresponse()
             self.full_spec = pickle.loads(r2.read())
@@ -4468,7 +4753,8 @@ class workflowInfo:
                         self.errors = d_cache['data']
                         return self.errors
 
-            self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+            self.conn = make_x509_conn(self.url)
+            #self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
             r1=self.conn.request("GET",'/wmstatsserver/data/jobdetail/%s'%(self.request['RequestName']), headers={"Accept":"*/*"})
             r2=self.conn.getresponse()
 
@@ -4481,7 +4767,8 @@ class workflowInfo:
             return self.errors
         except:
             print "Could not get wmstats errors for",self.request['RequestName']
-            self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+            self.conn = make_x509_conn(self.url)
+            #self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
             return {}
 
     def getFullPicture(self, since=1, cache=0):
@@ -4642,7 +4929,8 @@ class workflowInfo:
             rows = json.loads(r2.read())['rows']
             self.recovery_doc = [r['doc'] for r in rows]
         except:
-            self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+            self.conn = make_x509_conn(self.url)
+            #self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
             print "failed to get the acdc document for",self.request['RequestName']
             self.recovery_doc = None
         return self.recovery_doc
@@ -4731,7 +5019,8 @@ class workflowInfo:
                     r1=self.conn.request("GET",'/couchdb/workqueue/_design/WorkQueue/_view/elementsByParent?key="%s"&include_docs=true'% self.request['RequestName'])
                     r2=self.conn.getresponse()
                 except:
-                    self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+                    self.conn = make_x509_conn(self.url)
+                    #self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
                     print "failed to get work queue for",self.request['RequestName']
                     self.workqueue = []
                     return self.workqueue
@@ -4806,7 +5095,8 @@ class workflowInfo:
         if self.summary:
             return self.summary
 
-        self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+        self.conn = make_x509_conn(self.url)
+        #self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         r1=self.conn.request("GET",'/couchdb/workloadsummary/'+self.request['RequestName'], headers={"Accept":"application/json"} )
         r2=self.conn.getresponse()
 
@@ -5364,7 +5654,8 @@ class workflowInfo:
     def getSchema(self):
         #new_schema = copy.deepcopy( self.get_spec().request.schema.dictionary_())
         
-        self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+        self.conn = make_x509_conn(self.url)
+        #self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         r1=self.conn.request("GET",'/reqmgr2/data/request?name=%s'%self.request['RequestName'], headers={"Accept":"application/json"} )
         r2=self.conn.getresponse()
         new_schema = copy.deepcopy( json.loads(r2.read())['result'][0][self.request['RequestName']])
@@ -5393,6 +5684,9 @@ class workflowInfo:
 
     def getWorkTasks(self):
         return self.getAllTasks(select={'taskType':['Production','Processing','Skim']})
+
+    def getExpectedPerTask(self):
+        return {}
 
     def getCompletionFraction(self, caller='getCompletionFraction', with_event=True):
         output_per_task = self.getOutputPerTask()
@@ -5479,7 +5773,8 @@ class workflowInfo:
         return all_tasks
 
     def getSplittingsNew(self):
-        self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))        
+        self.conn = make_x509_conn(self.url)
+        #self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))        
         r1=self.conn.request("GET",'/reqmgr2/data/splitting/%s'%self.request['RequestName'], headers={"Accept":"application/json"} )
         r2=self.conn.getresponse()
         result = json.loads( r2.read() )['result']
