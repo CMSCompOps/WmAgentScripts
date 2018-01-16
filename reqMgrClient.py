@@ -945,8 +945,8 @@ assignWorkflow.defaults= {
         "UnmergedLFNBase": "/store/unmerged",
         "MinMergeSize": 2147483648,
         "MaxMergeSize": 4294967296,
-        "MaxMergeEvents" : 200000, ## shouldn't this be set to infinite ?
-        'BlockCloseMaxEvents' : 2000000,
+        "MaxMergeEvents" : 20000000, ## shouldn't this be set to infinite ?
+        'BlockCloseMaxEvents' : 200000000,
         'BlockCloseMaxWaitTime' : 172800,
         "MaxRSS" : 3000000,
         "MaxVSize": 4394967000,
