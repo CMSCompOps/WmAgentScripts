@@ -352,7 +352,7 @@ def closor(url, specific=None, options=None):
                             sendLog('closor', "could not recognize %s for injecting in DDM"% out, level='critical')
                             continue
 
-                        n_copies = 2
+                        n_copies = 1
                         destinations=[]
                         if to_DDM and campaign and campaign in CI.campaigns and 'DDMcopies' in CI.campaigns[campaign]:
                             ddm_instructions = CI.campaigns[campaign]['DDMcopies']
