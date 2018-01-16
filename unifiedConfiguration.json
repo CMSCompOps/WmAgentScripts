@@ -61,7 +61,6 @@
  },
  "sites_space_override": {	
    "value" : { 
-      	     "T0_CH_CERN_Disk" : 0
 	       },
    "description" : "Over-ride the available space at a phedex end point"
  },
@@ -82,7 +81,7 @@
    "description" : "The correction factor to be applied to SizePerEvent per keyword."
  },
  "memory_correction": {
-   "value" : { "PhaseIITDRFall17DR" : 18000 },
+   "value" : { "RunIIFall17DRPremix" : 14900 },
    "description" : "The memory setting to be set for task with that keyword in"
  },
  "max_cpuh_block" : {
@@ -166,7 +165,7 @@
    "description": "The data tiers that do not go to AnaOps"
  },
  "tiers_to_DDM": {
-   "value" : ["AODSIM","MINIAODSIM","GEN-SIM-RAW","GEN-SIM-RECO","GEN-SIM-RECODEBUG","AOD","RECO","MINIAOD","ALCARECO","USER","RAW-RECO","RAWAODSIM"],
+   "value" : ["AODSIM","MINIAODSIM","GEN-SIM-RAW","GEN-SIM-RECO","GEN-SIM-RECODEBUG","AOD","RECO","MINIAOD","ALCARECO","USER","RAW-RECO","RAWAODSIM","USER","NANOAOD","NANOAODSIM"],
    "description": "The data tiers that go to AnaOps"
  },
  "secondary_lock_timeout": {
@@ -312,6 +311,10 @@
   "user_relval":{
    "description" : "The users from which we expect relval requests",
    "value" : ["fabozzi","nwickram","bsutar","rverma","prebello","piperov","sandhya","zhenhu","muahmad"]
+  },
+  "user_storeresults":{
+   "description" : "The users from which we expect StoreResults requests",
+   "value" : ["areinsvo","qnguyen","mcremone","vlimant"]
   },
   "relval_routing":{
    "description" : "Set of keywords and special settings for relvals",
