@@ -11,6 +11,7 @@
 """
 import sys
 from random import choice
+
 try:
     import htcondor
 except ImportError:
@@ -39,7 +40,7 @@ def increaseCounterInDict(jobDict, site, jobType):
         }
         jobDict[site] = tmp
         jobDict[site][jobType] += 1
-    # print 'dict',dict
+        # print 'dict',dict
 
 
 def fillIDinDict(jobDict, site, jobId):
@@ -70,7 +71,7 @@ def printDict(jobDict, description):
     sortedKeys = sorted(jobDict)
     print '-' * 128
     print '| %-20s | %-10s | %-10s | %-10s | %-10s | %-10s | %-10s | %-10s | %-10s |' % (
-    description, 'Processing', 'Production', 'Merge', 'Cleanup', 'LogCollect', 'Harvesting', 'Skim', 'Total')
+        description, 'Processing', 'Production', 'Merge', 'Cleanup', 'LogCollect', 'Harvesting', 'Skim', 'Total')
     print '-' * 128
     total_processing = 0
     total_production = 0
@@ -99,17 +100,18 @@ def printDict(jobDict, description):
         total_site = siteDict['Processing'] + siteDict['Production'] + siteDict['Merge'] + siteDict['Cleanup'] + \
                      siteDict['LogCollect'] + siteDict['Harvesting'] + siteDict['Skim']
         print '| %-20s | %10d | %10d | %10d | %10d | %10d | %10d | %10d | %10d |' % (site,
-                                                                              siteDict['Processing'],
-                                                                              siteDict['Production'],
-                                                                              siteDict['Merge'],
-                                                                              siteDict['Cleanup'],
-                                                                              siteDict['LogCollect'],
-                                                                              siteDict['Harvesting'],
-                                                                              siteDict['Skim'],
-                                                                              total_site)
+                                                                                     siteDict['Processing'],
+                                                                                     siteDict['Production'],
+                                                                                     siteDict['Merge'],
+                                                                                     siteDict['Cleanup'],
+                                                                                     siteDict['LogCollect'],
+                                                                                     siteDict['Harvesting'],
+                                                                                     siteDict['Skim'],
+                                                                                     total_site)
     print '-' * 128
     print '| %-20s | %10d | %10d | %10d | %10d | %10d | %10d | %10d | %10d |' % (
-    'Total', total_processing, total_production, total_merge, total_cleanup, total_logcollect, total_harvest, total_skim, total)
+        'Total', total_processing, total_production, total_merge, total_cleanup, total_logcollect, total_harvest,
+        total_skim, total)
     print '-' * 128
 
 
@@ -196,7 +198,7 @@ def get_overview(overview_running,
             increaseCounterInDict(overview_pending, site, jobType)
             if maxWallTimeMins > 46 * 60:
                 fillIDWFinDict(jobs_maxwall, site, workflow, jobId)
-                
+
         # if not running or pending, and reason is DEFINED
         elif removereason == "DEFINED":
             increaseCounterInDict(overview_removereason, site, jobType)
@@ -274,7 +276,7 @@ def print_results(overview_running,
             for wf, jobs in jobs_numjobstart[site].items():
                 print wf, ':', ' '.join(jobs)
             print ""
-    
+
 
 def main():
     # Data dictionaries
@@ -311,6 +313,7 @@ def main():
                   jobs_maxwall,
                   jobs_numjobstart,
                   jobs_removereason)
+
 
 if __name__ == '__main__':
     main()
