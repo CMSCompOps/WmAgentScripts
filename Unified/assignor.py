@@ -79,6 +79,13 @@ def assignor(url ,specific = None, talk=True, options=None):
         print "\n\n"
         wfh = workflowInfo( url, wfo.name)
 
+        if wfh.request['RequestStatus'] in ['rejected','aborted','aborted-completed','aborted-archived','rejected-archived'] and wfh.isRelval():
+            wfo.status = 'forget'
+            session.commit()
+            n_stalled+=1
+            continue
+
+
         if options.priority and int(wfh.request['RequestPriority']) < options.priority:
             continue
 
@@ -348,8 +355,31 @@ def assignor(url ,specific = None, talk=True, options=None):
                 sites_allowed = list(set(initial_sites_allowed) & aaa_grid)
                 wfh.sendLog('assignor',"Selected to read primary through xrootd %s"%sorted(sites_allowed))
                 
+        isStoreResults = ( 'StoreResults' == wfh.request.setdefault('RequestType',None) )
+
+        if isStoreResults:
+            if 'MergedLFNBase' in wfh.request:
+                set_lfn = wfh.request['MergedLFNBase']
+            else:
+                n_stalled+= 1
+                wfh.sendLog('assignor',"Cannot assign StoreResults request because MergedLFN is missing")
+                sendLog('assignor','Cannot assign StoreResults request because MergedLFN is missing', level='critical')
+                continue
+
         if not primary_aaa:
-            sites_allowed = sites_with_any_data
+            if not isStoreResults:
+                sites_allowed = sites_with_any_data
+            else:
+                ## if we are dealing with a StoreResults request, we don't need to check dataset availability and 
+                ## should use the SiteWhiteList set in the original request
+                if 'SiteWhitelist' in wfh.request:
+                    sites_allowed = wfh.request['SiteWhitelist'] 
+                else: 
+                    wfh.sendLog('assignor',"Cannot assign StoreResults request because SiteWhitelist is missing")
+                    sendLog('assignor','Cannot assign StoreResults request because SiteWhitelist is missing', level='critical')
+                    n_stalled += 1
+                    continue
+                available_fractions = {}
             wfh.sendLog('assignor',"Selected for any data %s"%sorted(sites_allowed))
 
         ### check on endpoints for on-going transfers

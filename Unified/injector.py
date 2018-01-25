@@ -28,6 +28,8 @@ def injector(url, options, specific):
         workflows.extend( getWorkflows(url, status=options.wmstatus, user=user, rtype="ReReco")) 
     for user in (options.user_relval.split(',') if options.user_relval else UC.get("user_relval")) :
         workflows.extend( getWorkflows(url, status=options.wmstatus, user=user, rtype="TaskChain")) 
+    for user in (options.user_storeresults.split(',') if options.user_storeresults else UC.get("user_storeresults")) :
+        workflows.extend( getWorkflows(url, status=options.wmstatus, user=user, rtype="StoreResults"))
 
     print len(workflows),"in line"
     cannot_inject = set()
@@ -214,6 +216,7 @@ if __name__ == "__main__":
     parser.add_option('-u','--user',help="What user to fetch workflow from",default="pdmvserv")
     parser.add_option('-r','--replace',help="the workflow name that should be used for replacement",default=None)
     parser.add_option('--user_relval',help="The user that can inject workflows for relvals", default=None)
+    parser.add_option('--user_storeresults',help="The user that can inject workflows for store results", default=None)
     parser.add_option('--no_convert',help="Prevent the conversion to stepchain", default=False)
     (options,args) = parser.parse_args()
     
