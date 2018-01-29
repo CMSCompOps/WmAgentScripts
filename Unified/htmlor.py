@@ -538,6 +538,7 @@ Worflow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/reque
     html_doc.write("""Worflow which need assistance (%d)
 <a href=assistance.html target=_blank>assistance</a> 
 <a href=logs/checkor/last.log target=_blank>log</a> <a href=logs/recoveror/last.log target=_blank>postlog</a>
+<a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?in_production=1&rsort=5&older=3&status=validation target=_blank>lasting</a>
 <a href="javascript:showhide('assistance')">[Click to show/hide]</a>
 <br>
 <div id="assistance" style="display:none;">
@@ -1126,19 +1127,24 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
     ## make the locked/available donut chart
     donut_html = open('%s/locked.html'%monitor_dir,'w')
     tight_donut_html = open('%s/outofspace.html'%monitor_dir,'w')
+    remain_reason_html = open('%s/remaining.html'%monitor_dir,'w')
 
     tables = "\n".join([info[0] for site,info in chart_data.items()])
     draws = "\n".join([info[1] for site,info in chart_data.items()])
-    divs = "\n".join([info[2] for site,info in chart_data.items()])
+    #divs = "\n".join([info[2] for site,info in chart_data.items()])
 
     oos_tables = "\n".join([info[0] for site,info in chart_data.items() if site in out_of_space])
     oos_draws = "\n".join([info[1] for site,info in chart_data.items() if site in out_of_space])
-    oos_divs = "\n".join([info[2] for site,info in chart_data.items() if site in out_of_space])
+    #oos_divs = "\n".join([info[2] for site,info in chart_data.items() if site in out_of_space])
 
     
     divs_table="<table border=0>"
     oos_divs_table="<table border=0>"
+    rem_divs_table="<table border=0>"
     i_oos=1
+    by_reason_at_site = defaultdict( lambda : defaultdict(float))
+    all_reasons = set()
+    by_reason_all_sites = defaultdict(float)
     for c,site in enumerate(sorted(chart_data.keys())):
         rem=""
         if site in out_of_space:
@@ -1147,13 +1153,55 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
             divs_table += "<tr>"
         if i_oos%5==0:
             oos_divs_table += "<tr>"
-
+            
         divs_table += "<td>%s%s</td>"%(chart_data[site][2], rem)
         if site in out_of_space:
             oos_divs_table += "<td>%s%s</td>"%(chart_data[site][2], rem)
             i_oos+=1
+
+            ## open the remaining json
+            remaining_reasons = json.loads(open('%s/remaining_%s.json'%(monitor_dir,site)).read())
+            for ds,info in remaining_reasons.items():
+                all_reasons.update( info['reasons'] )
+                for reason in info['reasons']:
+                    if reason == 'lock': continue
+                    by_reason_at_site[site][ reason ]+= (info['size'] / 1024.)
+                    by_reason_all_sites[ reason ] += (info['size'] / 1024.)
+
+
+    rem_chart_data = defaultdict(list)
+    ## now make bar charts DATA per site
+    for i_oos,site in enumerate(sorted(by_reason_at_site.keys())):
+        rem_chart_data[site].append("""
+var data_remain_%s = google.visualization.arrayToDataTable([
+['Overall', 'Space in TB'],
+%s
+]);
+"""%( site,
+      #','.join(["['%s' , %s]"%( reason, value) for reason,value in by_reason_at_site[site].items()])))
+      ','.join(["['%s' , %s]"%( reason, by_reason_at_site[site][reason]) for reason in sorted(all_reasons)])))
+        
+        rem_chart_data[site].append("""
+var remaining_bar_%s = new google.visualization.ColumnChart(document.getElementById('remainbars_%s'));
+remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
+"""%(site, site,
+     site, site, site))
+        rem_chart_data[site].append("""
+<div id="remainbars_%s" style="height: 300px;width: 400px"></div>
+"""%(site))
+
+    ## now make bar charts per site
+    for i_oos,site in enumerate(sorted(by_reason_at_site.keys())):
+        rem_divs_table += "<td>%s</td>"%(rem_chart_data[site][2])
+        if (i_oos+1)%5==0:
+            rem_divs_table += "<tr>"
+    
+    rem_tables = "\n".join([info[0] for site,info in rem_chart_data.items()])
+    rem_draws = "\n".join([info[1] for site,info in rem_chart_data.items()])
+            
     divs_table += "</table>"
     oos_divs_table += "</table>"
+    rem_divs_table += "</table>"
 
     donut_html.write("""
 <html>
@@ -1195,8 +1243,29 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
 </html>
 """%( oos_tables,oos_draws,oos_divs_table   ))
                      
+    remain_reason_html.write("""
+<html>
+  <head>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+      google.load("visualization", "1", {packages:["corechart"]});
+      google.setOnLoadCallback(drawChart);
+      function drawChart() {
+%s
+
+%s
+      }
+    </script>
+  </head>
+  <body>
+%s
+  </body>
+</html>
+"""%( rem_tables,rem_draws,rem_divs_table   ))
+
     donut_html.close()
     tight_donut_html.close()
+    remain_reason_html.close()
 
 
     html_doc.write("""Site configuration
