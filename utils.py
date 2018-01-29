@@ -2370,7 +2370,8 @@ def try_checkTransferLag( url, xfer_id , datasets=None):
 def checkTransferStatus(url, xfer_id, nocollapse=False):
     try:
         v = try_checkTransferStatus(url, xfer_id, nocollapse)
-    except:
+    except Exception as e:
+        print str(e)
         try:
             time.sleep(1)
             v = try_checkTransferStatus(url, xfer_id, nocollapse)
@@ -2421,6 +2422,7 @@ def try_checkTransferStatus(url, xfer_id, nocollapse=False):
         r1=conn.request("GET",subs_url)
         r2=conn.getresponse()
         result = json.loads(r2.read())
+        print result
 
     #print json.dumps( result['phedex']['dataset'] , indent=2)
     for item in  result['phedex']['dataset']:
@@ -4184,8 +4186,9 @@ def forceComplete(url, wfi):
             reqMgrClient.invalidateWorkflow(url, member['RequestName'], current_status=member['RequestStatus'])
 
 class agentInfo:
-    def __init__(self, url):
+    def __init__(self, url, verbose = False):
         self.url = url
+        self.verbose = verbose
         ## keep some info in a local file
         try:
             self.info = json.loads(open('.agent_info.json').read())
@@ -4207,15 +4210,18 @@ class agentInfo:
             linfo = self.info.get( agent, {})
             pinfo = prod_info.get( agent, {})
 
-            draining = False
-            standby = False
-            
+            if self.verbose:
+                print agent
+                print linfo
+                print pinfo
+
             if linfo:
                 ## this was already known
                 if pinfo:
                     ## and is in production
                     st = 'running'
-                    if pinfo['drain_mode']: st = 'draining'
+                    if linfo['status'] == 'standby': st = 'standby'
+                    elif pinfo['drain_mode']: st = 'draining'
                 else:
                     ## and is gone from production
                     st = 'offline'
@@ -4224,14 +4230,16 @@ class agentInfo:
                 ## the agent is new here. let's assume it is in standby if in drain
                 st = 'running'
                 if pinfo['drain_mode']:
-                    st = 'standby' ## for the first time
+                    st = 'standby' 
+                    ## for the first time
                     #st = 'draining'
                     
                 ## add it
                 self.info[agent] = { 'status' : st,
                                      'update' : now,
                                      'date' : nows }
-                    
+                if self.verbose:
+                    print self.info[agent]
 
         for a,i in self.info.items():
             self.buckets[i['status']].append( a ) 
@@ -4239,10 +4247,12 @@ class agentInfo:
         if not self.buckets.get('standby',[]):
             print "There are no agent in standby!!"
 
-        print json.dumps( self.buckets, indent=2)
+        if self.verbose:
+            print json.dumps( self.buckets, indent=2)
 
     def __del__(self):
         open('.agent_info.json','w').write( json.dumps( self.info, indent=2))
+
     def getNow(self):
         now = time.gmtime()
         nows = time.asctime( now )
@@ -4252,6 +4262,8 @@ class agentInfo:
     def flag_standby(self, agent):
         now,nows = self.getNow()        
         if self.info.get(agent,{}).get('status',None) == 'draining':
+            if self.verbose:
+                print "Able to set",agent,"in standby"
             self.info[agent]['status'] = 'standby'
             self.info[agent]['update'] = now
             self.info[agent]['date'] = nows
@@ -4290,34 +4302,33 @@ class agentInfo:
             t = ainfo['MaxJobsRunning']
             running += r
             pending += ainfo['TotalIdleJobs']
-            print agent_name,r,json.dumps(ainfo, indent=2)
+            if self.verbose:
+                print agent_name,r,json.dumps(ainfo, indent=2)
             if agent_name in self.buckets['running']:
                 capacity += t
-                over_threshold &= (r >= t*0.90)
-                under_threshold |= (r <= 1000)
+                stuffed = (r >= t*0.90)
+                light = (r <= 1000)
+                if self.verbose:
+                    print agent
+                    print "is Stuffed?",stuffed
+                    print "is underused?",light
+                over_threshold &= stuffed
+                under_threshold |= light
 
-        print "Capacity",capacity
-        print "Running", running
-        print "Pending", pending
-
-        """
-        all_agents = getAllAgents(self.url)['production']
-        over_threshold = True
-        under_threshold = False
-        for agent in all_agents:
-            r = agent['WMBS_INFO'].get('activeRunJobByStatus',{}).get('Running',0)
-            agent_name = agent['agent_url']
-            print agent_name,r,self.info.get(agent_name)
-            if agent_name in self.buckets['running']:
-                over_threshold &= (r >= 20000*0.90)
-                under_threshold |= (r <= 1000)
-        """
+        if self.verbose:
+            print "Capacity",capacity
+            print "Running", running
+            print "Pending", pending
 
         ## all agents are above the understood limit. so please boot one
         #
         if not one_recent_running:
-            if over_threshold: sendEmail('agentInfo','All agents are maxing out. We need a new agent. This will be automated next')            
-            if under_threshold: sendEmail('agentInfo','There are agents under doing and that could be set in standby. This will be automated next')
+            if over_threshold: 
+                sendLog('agentInfo', 'All agents are maxing out. We need a new agent. This will be automated next', level='critical')            
+                sendEmail('agentInfo','All agents are maxing out. We need a new agent. This will be automated next')
+            if under_threshold: 
+                sendLog('agentInfo', 'There are agents under doing and that could be set in standby. This will be automated next', level='critical')
+                sendEmail('agentInfo','There are agents under doing and that could be set in standby. This will be automated next')
 
             if acting:
                 need_one = over_threshold
@@ -4644,7 +4655,7 @@ class workflowInfo:
         nersc_archs=set(['slc6_amd64_gcc530','slc6_amd64_gcc630'])
         good = (self.request['RequestType'] == 'StepChain' or no_step)  and self.request['RequestPriority'] <= 85000 and len(set(self.request['ScramArch'])&nersc_archs)>=1
         io = _,prim,_,sec = self.getIO()
-        #if prim: good = False
+        if prim: good = False
         #if sec: good = False
         ## should be of significant size. how do we check that ???
         #good = good & 
