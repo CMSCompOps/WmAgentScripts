@@ -12,8 +12,8 @@ import time
 import random
 
 ## poll agents
-AI = agentInfo(reqmgr_url)
-AI.poll()
+AI = agentInfo(reqmgr_url, verbose=True)
+AI.poll(acting=False)
 
 
 ## get all acquired and push one to stepchain so that we can acquire it on nersc
