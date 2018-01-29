@@ -210,7 +210,8 @@ def equalizor(url , specific = None, options=None):
     def s_quantize( value, quanta):
         return str(quantize( value, quanta ))
 
-    def getPerf( task , stats_to_go = 500, original_ncore=1):
+    stats_to_go = UC.get('tune_min_stats')
+    def getPerf( task , stats_to_go, original_ncore=1):
         task = task.split('/')[1]+'/'+task.split('/')[-1]
 
         print "#"*10,"input read performance","#"*10
@@ -361,7 +362,7 @@ def equalizor(url , specific = None, options=None):
         else:
             print "not enough stats for time",w_t,"<",stats_to_go,"value is",p_t
 
-        print "95% of the jobs are running under",b_t
+        print "95% of the jobs are running for a total core-min under",b_t,"[min]"
 
 
         print "#"*30
@@ -469,6 +470,8 @@ def equalizor(url , specific = None, options=None):
         wfs = session.query(Workflow).filter(Workflow.status == 'away').all()
 
     short_tasks = set()
+    hungry_tasks = set()
+    bad_hungry_tasks = set()
     performance = {}
     resizing = {}
     no_routing = [
@@ -607,7 +610,7 @@ def equalizor(url , specific = None, options=None):
                 print "performance",task.taskType,task.pathName
                 if task.taskType in ['Processing','Production']:
                     mcore = wfi.getCorePerTask( taskname )
-                    set_memory,set_slope,set_time,set_io = getPerf( task.pathName , original_ncore = mcore)
+                    set_memory,set_slope,set_time,set_io = getPerf( task.pathName , stats_to_go, original_ncore = mcore)
 
                     ## get values from gmwsmon
                     # massage the values : 95% percentile
@@ -634,8 +637,11 @@ def equalizor(url , specific = None, options=None):
                         print "trully setting memory to",set_memory
                         performance[task.pathName]['memory']= set_memory
                         perf_per_config[configcache.get( taskname , 'N/A')]['memory'] = set_memory
+
                     if set_time:
-                        performance[task.pathName]['time'] = min(set_time, int(1440./mcore)) ## max to 24H per mcore ## set_time is provided in total corehours ~ walltime*ncore
+                        set_time =  min(set_time, int(1440.*mcore)) ## max to 24H per mcore
+                        set_time =  max(set_time, int(30.*mcore)) ## min to 30min per core
+                        performance[task.pathName]['time'] = set_time 
                         perf_per_config[configcache.get( taskname , 'N/A')]['time'] = set_time
                     if set_io:
                         performance[task.pathName]['read'] = set_io
@@ -645,14 +651,18 @@ def equalizor(url , specific = None, options=None):
                     if set_time and (set_time / mcore) < 60.: ## looks like short jobs all around
                         print "WHAT IS THIS TASK",task.pathName,"WITH",set_time/mcore,"runtime"
                         wfi.sendLog('equalizor','The task %s was found to run short jobs of %.2f [mins] at original %d cores setting'%( taskname, set_time / mcore , mcore))
-                        sendLog('equalizor','The task %s was found to run short jobs of %.2f [mins] at original %d cores setting'%( taskname, set_time / mcore , mcore), level='warning')
+                        #sendLog('equalizor','The task %s was found to run short jobs of %.2f [mins] at original %d cores setting'%( taskname, set_time / mcore , mcore), level='warning')
                         short_tasks.add( (task.pathName, set_time / mcore, mcore) )
 
                     warning_mem = 2000
+                    if mem and (mem > warning_mem*mcore):
+                        bad_hungry_tasks.add( (task.pathName, mem, mcore ) )
+
                     if set_memory and (set_memory > warning_mem*mcore):
                         print "WHAT IS THIS TASK",task.pathName,"WITH",set_memory,"memory requirement at",mcore,"cores"
                         wfi.sendLog('equalizor','The task %s was found to run jobs using %d GB over %d GB/core at %d cores'%( taskname, set_memory, warning_mem, mcore))
-                        sendLog('equalizor','The task %s was found to run jobs using %d GB over %d GB/core at %d cores'%( taskname, set_memory, warning_mem, mcore), level='warning')
+                        #sendLog('equalizor','The task %s was found to run jobs using %d GB over %d GB/core at %d cores'%( taskname, set_memory, warning_mem, mcore), level='warning')
+                        hungry_tasks.add( (task.pathName, set_memory, mcore) )
                         
                     wfi.sendLog('equalizor',"""Performance tuning of task %s
 %s GB base memory at %d core
@@ -1081,8 +1091,13 @@ def equalizor(url , specific = None, options=None):
 
     if short_tasks:
         sendLog('equalizor','These tasks are running very short jobs\n %s'%('\n'.join( ["%s, %.f [mins] observed time at original %d core count"%(a,b,c) for (a,b,c) in sorted( short_tasks )] )), level='critical')
+    if hungry_tasks:
+        sendLog('equalizor','These tasks are running with more memory than usual\n %s'%( '\n'.join( ["%s, %.f [MB] observed concumption at original %d core count"%(a,b,c) for (a,b,c) in sorted( hungry_tasks )] )), level='critical')
 
+    if bad_hungry_tasks:
+        sendLog('equalizor','These tasks are configured with more memory than usual\n %s'%( '\n'.join( ["%s, %.f [MB] submitted requirement at original %d core count"%(a,b,c) for (a,b,c) in sorted( bad_hungry_tasks )] )), level='critical')
 
+        
     interface['modifications'].update( modifications )
 
 
