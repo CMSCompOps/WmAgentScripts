@@ -73,7 +73,7 @@ def rejector(url, specific, options=None):
             if fwl['RequestDate'] < wfi.request['RequestDate']: continue
             if fwl['RequestType']!='Resubmission': continue
             ## does not work on second order acd
-            if 'OriginalRequestName' in fwl and fwl['OriginalRequestName'] != wfi.request['RequestName']: continue
+            #if 'OriginalRequestName' in fwl and fwl['OriginalRequestName'] != wfi.request['RequestName']: continue
             print "rejecting",fwl['RequestName']
             reqMgrClient.invalidateWorkflow(url, fwl['RequestName'], current_status=fwl['RequestStatus'], cascade=False)
             datasets.update( fwl['OutputDatasets'] )
