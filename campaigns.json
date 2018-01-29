@@ -299,6 +299,7 @@
     "custodial_override" : ["DQMIO"],
     "overflow" : {"PRIM" : {}},
     "force-complete" : 0.95,
+    "earlyannounce" : 0.99,
     "fractionpass": { "all":1.0,
     		      "DQMIO": { "all" : 0.90,	
                                  "/SingleMuon/" : 0.95,
@@ -932,7 +933,10 @@
              "/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-Realistic25ns13TeV2016Collision_MCRUN2_71_V1-v1/GEN-SIM" : {},
 	     "/Min_Bias_13TeV_pythia8_TuneCUETP8M2/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM" : {},
 	     "/Min_Bias_13TeV_pythia8_TuneCUETP8M4/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM" : {},
-	     "/Min_Bias_13TeV_pythia8_TuneCUETP8M3/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM" : {}
+	     "/Min_Bias_13TeV_pythia8_TuneCUETP8M3/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM" : {},
+	     "/MinBias_TuneCP0_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM" : {},
+	     "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM" : {},
+	     "/MinBias_TuneCP2_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM" : {}
     },
     "NO_tune" : true
   },
