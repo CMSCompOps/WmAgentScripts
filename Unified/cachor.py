@@ -24,7 +24,11 @@ def cachor(spec=None):
             print all_checks.pop( phedexid )
 
     #all_transfers = [transfer for transfer in session.query(Transfer).filter(Transfer.phedexid>0).all()]
-    all_transfers = list(set([imp.phedexid for imp in session.query(TransferImp).filter(TransferImp.active==True).all()]))
+    all_transfers = set()
+    for imp in session.query(TransferImp).filter(TransferImp.active==True).all():
+        all_transfers.add( imp.phedexid ) 
+    all_transfers = list(all_transfers)
+    #all_transfers = list(set([imp.phedexid for imp in session.query(TransferImp).filter(TransferImp.active==True).all()]))
     random.shuffle( all_transfers )
 
     existing = map(int,all_checks.keys()) ## strng keys
