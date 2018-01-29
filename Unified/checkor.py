@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, forceComplete, makeReplicaRequest, getDatasetSize, getDatasetFiles, sendLog, reqmgr_url, dbs_url, dbs_url_writer, getForceCompletes
-from utils import componentInfo, unifiedConfiguration, userLock, duplicateLock, dataCache, unified_url, getDatasetLumisAndFiles, getDatasetRuns, duplicateAnalyzer, invalidateFiles
+from utils import componentInfo, unifiedConfiguration, userLock, duplicateLock, dataCache, unified_url, getDatasetLumisAndFiles, getDatasetRuns, duplicateAnalyzer, invalidateFiles, findParent
 import phedexClient
 import dbs3Client
 dbs3Client.dbs3_url = dbs_url
@@ -526,14 +526,32 @@ def checkor(url, spec=None, options=None):
         print "We could reduce the passing fraction by",fraction_damping,"given it's been running for long"
         for out in fractions_pass:
             if fractions_pass[out]!=1.0: ## strictly ones cannot be set less than one
-                if options.go:
+                if options.go and False:
                     wfi.sendLog('checkor','Reducing pass thresholds by %.3f for long lasting workflow'% fraction_damping)
                     fractions_pass[out] -= fraction_damping
                     #fractions_truncate_recovery[out] -= fraction_damping
                     pass
 
         #and then make the fraction multiplicative per child
-        ## TODO
+        parentage = {} ## a daugther: parents kind of thing
+        for out in fractions_pass.keys():
+            parentage[out] = findParent( out )
+
+        def upward( ns ):
+            r = set(ns)
+            for n in ns:
+                if n in parentage:
+                    r.update(upward( parentage[n] ))
+            return r
+
+        for out in fractions_pass:
+            ancestors = upward(parentage.get(out,[]))
+            initial_pass = fractions_pass[out]
+            descending_pass = fractions_pass[out]
+            for a in ancestors:
+                descending_pass*=fractions_pass.get(a,1.) ## multiply by fraction of all ancestors
+            #fractions_pass[out] = descending_pass
+            print "For",out,"passing at",initial_pass,"is now passing at",descending_pass
 
 
         time_point("statistics thresholds", sub_lap=True)
