@@ -22,6 +22,10 @@
    "value" : false,
    "descrition" : "Whether or not to overflow the second step (reco) for workfow with PU_overflow enabled"
  },
+ "tune_min_stats" :{
+    "value" : 300,
+    "description" : "The number of finished jobs required before making a performance estimate"
+ },
  "mem_quanta": {
     "value" : 1000,
     "description" : "The quanta of memory in MB for the JobRouter"
