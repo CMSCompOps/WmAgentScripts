@@ -95,9 +95,8 @@ class XRDBuster(threading.Thread):
                                     if os.system('ls %s'% local)!=0 and self.from_eos:
                                         print "no file retrieved using xrootd, using eos source"
                                         ## will parse eos and not doing anything for things already indexed
-                                        os.system('python /afs/cern.ch/user/v/vlimant/public/ops/createLogDB.py --workflow %s'%( self.wfn ))
-                                        os.system('python /afs/cern.ch/user/v/vlimant/public/ops/whatLog.py --workflow  %s --log %s --get' %(self.wfn, 
-                                                                                                                                      self.out_lfn.split('/')[-1]) )
+                                        os.system('Unified/createLogDB.py --workflow %s'%( self.wfn ))
+                                        os.system('Unified/whatLog.py --workflow  %s --log %s --get' %(self.wfn,self.out_lfn.split('/')[-1]) )
                                         os.system('mv `find /tmp/%s/ -name "%s"` %s'%( os.getenv('USER'), self.out_lfn.split('/')[-1], local))
 
                                     if os.system('ls %s'% local)==0:
@@ -186,7 +185,7 @@ class ThreadHandler(threading.Thread):
 
 
 def parse_one(url, wfn, options=None):
-    
+
     def time_point(label="",sub_lap=False):
         now = time.mktime(time.gmtime())
         nows = time.asctime(time.gmtime())
@@ -538,7 +537,7 @@ def parse_one(url, wfn, options=None):
                                                               wfn = wfn,
                                                               errorcode_s = errorcode_s,
                                                               task_short = task_short,
-                                                              from_eos = (options.from_eos if options else False),
+                                                              from_eos = (options.from_eos if options else True),
                                                               ) )
 
         #print task
@@ -596,6 +595,7 @@ def parse_one(url, wfn, options=None):
         if not no_error and notreported in all_codes:
             all_codes.remove( notreported )
         missing_events = missing_to_run[task] if task in missing_to_run else 0
+        html += "<a name=%s>"%task.split('/')[-1]
         html += "<b>%s</b>"%task.split('/')[-1]
         if missing_events:
             html += ' is missing <b>%s events</b> <a href="https://cmsweb.cern.ch/couchdb/acdcserver/_design/ACDC/_view/byCollectionName?key=%%22%s%%22&include_docs=true&reduce=false" target=_blank>AC/DC</a>'%( "{:,}".format(missing_events) , wfn )
@@ -773,7 +773,15 @@ def condensed( st_d ):
         'success' : success,
         'failure' : failure,
         'cooloff' : cooloff,
-        'running' : running
+        'running' : running,
+
+        #'cooloff_f' : cooloff / float(success+1.),
+        #'failure_f' : failure / float(success+1.)
+        }
+def ratios( ti ):
+    return {
+        'cooloff_f' :ti.get('cooloff',0) / float(ti.get('success',0)+1),
+        'failure_f' :ti.get('failure',0) / float(ti.get('success',0)+1)
         }
 
 def add_condensed( d1, d2):
@@ -790,6 +798,11 @@ def parse_top(url, options=None):
     wm = dataCache.get('wmstats')
 
     for wfn in wm.keys():
+        ## filter by runn*
+        if not wm[wfn]['RequestStatus'] in ['running-open','running-closed',
+                                            #'completed',
+                                            ]: 
+            continue
         info = wm[wfn].get('AgentJobInfo',{})
         for agent,ai in info.items():
             an = agent.split('.')[0]
@@ -808,8 +821,26 @@ def parse_top(url, options=None):
                 diagnose_by_site[task][site] = add_condensed( diagnose_by_site[task][site], diagnose_by_agent_by_site[task][agent][site])
                 diagnose_by_agent[task][agent] = add_condensed( diagnose_by_agent[task][agent], diagnose_by_agent_by_site[task][agent][site])
                 diagnose[task] = add_condensed( diagnose[task], diagnose_by_agent_by_site[task][agent][site])
-    top_cooloff = dict(sorted([(t,i.get('cooloff',0)) for t,i in diagnose.items()], key = lambda o:o[1], reverse=True)[:top_N])
-    top_failure = dict(sorted([(t,i.get('failure',0)) for t,i in diagnose.items()], key = lambda o:o[1], reverse=True)[:top_N])
+
+
+    ##include fractions
+    for t,ti in diagnose.items():
+        diagnose[t].update( ratios(ti) )
+    for t in diagnose_by_site:
+        for s,ti in diagnose_by_site[t].items():
+            diagnose_by_site[t][s].update( ratios(ti) )
+    for t in diagnose_by_agent:
+        for a,ti in diagnose_by_agent[t].items():
+            diagnose_by_agent[t][a].update( ratios(ti) )
+    for t in diagnose_by_agent_by_site:
+        for a in diagnose_by_agent_by_site[t]:
+            for s,ti in diagnose_by_agent_by_site[t][a].items():
+                diagnose_by_agent_by_site[t][a][s].update( ratios(ti) )
+
+    #top_cooloff = dict(sorted([(t,i.get('cooloff',0)) for t,i in diagnose.items()], key = lambda o:o[1], reverse=True)[:top_N])
+    #top_failure = dict(sorted([(t,i.get('failure',0)) for t,i in diagnose.items()], key = lambda o:o[1], reverse=True)[:top_N])
+    top_cooloff = dict(sorted([(t,i.get('cooloff_f',0)) for t,i in diagnose.items()], key = lambda o:o[1], reverse=True)[:top_N])
+    top_failure = dict(sorted([(t,i.get('failure_f',0)) for t,i in diagnose.items()], key = lambda o:o[1], reverse=True)[:top_N])
     
     all_bad_wfs = set()
     all_bad_wfs.update([t.split('/')[1] for t in top_cooloff.keys()] )
@@ -822,8 +853,9 @@ def parse_top(url, options=None):
     ht.write("""<html>
 Report of workflows with top %s error in failure and cooloff<br>
 Last updated on %s (GMT)
+
 <table border=1>
-<thead><tr><th>Workflow</th><th>Task</th><th>Failures</th><th>Cool-offs</th><th> report </th> </tr></thead>
+<thead><tr><th>Workflow</th><th>Task</th><<th>Success</th><th>Failures</th><th>Fail.Frac</th><th>Cooloffs</th><th>Cool.Frac</th><th> Task Error Report </th> </tr></thead>
 """%(
             top_N,
             time.asctime( time.gmtime())
@@ -839,7 +871,7 @@ Last updated on %s (GMT)
             if wf in owf:
                 tops[wf]+=N
 
-    for wf,count in sorted(tops.items(), key = lambda o : o[1], reverse=True):
+    for iw,(wf,count) in enumerate(sorted(tops.items(), key = lambda o : o[1], reverse=True)):
         report = set()
         for owf,N in top_cooloff.items():
             if wf in owf:
@@ -847,12 +879,21 @@ Last updated on %s (GMT)
         for owf,N in top_failure.items():
             if wf in owf:
                 report.add( owf)
+        
+        lcol = 'bgcolor=%s'% ( 'white' if iw%2==0 else 'lightblue')
         for task in sorted(report):
-            ht.write('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n'%(wf,
-                                                                                           task.split('/')[-1],
-                                                                                           top_failure.get(task,'-'),
-                                                                                           top_cooloff.get(task,'-'),
-                                                                                           '<a href=%s/report/%s> report </a>'%(unified_url,wf))
+            tdiag = diagnose.get(task,{})
+            print task
+            print tdiag
+            ht.write('<tr %s><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n'%(lcol,
+                                                                                                                               wf,
+                                                                                              task.split('/')[-1],
+                                                                                              tdiag.get('success','-'),
+                                                                                              tdiag.get('failure','-'),
+                                                                                              tdiag.get('failure_f','-'),
+                                                                                              tdiag.get('cooloff','-'),
+                                                                                              tdiag.get('cooloff_f','-'),
+                                                                                              '<a href=%s/report/%s#%s> report </a>'%(unified_url,wf, task.split('/')[-1]))
                      )
     ht.write('</table></html>')
     ht.close()
