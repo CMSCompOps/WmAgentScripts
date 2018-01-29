@@ -17,6 +17,7 @@ while True:
     print json.dumps( whos , indent=2)
     print "Can get stuff in"
     wfs = []
+    indexed_this_round = set()
     for who in whos:
         try:
             rw = open('/afs/cern.ch/user/%s/%s/public/ops/retrieve.json'%(who[0],who))
@@ -70,6 +71,7 @@ while True:
                         lf = fullpath.split('/')[-1]
                         found_log = True
                         print "found log name", lf,"in condor log",out.split('/')[-1]
+                        print "full name",fullpath
                         break
                 fh.close()
             if not found_log:
@@ -79,23 +81,25 @@ while True:
             continue
 
         ## then do the rest
-        not_found = (lf and 'nothing found' in os.popen('python /afs/cern.ch/user/v/vlimant/public/ops/whatLog.py --workflow %s --log %s'%(wf,lf)).read())
-        nothing_indexed = ('nothing found' in os.popen('python /afs/cern.ch/user/v/vlimant/public/ops/whatLog.py --workflow  %s'%wf).read())
+        not_found = (lf and 'nothing found' in os.popen('Unified/whatLog.py --workflow %s --log %s'%(wf,lf)).read())
+        nothing_indexed = ('nothing found' in os.popen('Unified/whatLog.py --workflow  %s'%wf).read())
+        not_already_indexed = (wf not in indexed_this_round)
 
         print ("log index NOT found" if not_found else "log index found"),"for",lf
         print ("log NOT indexed" if nothing_indexed else "log indexed"),"for",wf
 
-        if not_found or nothing_indexed:
+        if (not_found or nothing_indexed) and not_already_indexed:
             print "Making the full query from eos to create the index of ",wf
-            com = 'python /afs/cern.ch/user/v/vlimant/public/ops/createLogDB.py --workflow %s'% (wf)
+            indexed_this_round.add( wf )
+            com = 'Unified/createLogDB.py --workflow %s'% (wf)
             print "Ex :",com
             os.system(com) ## heavy
 
         ## list things     ## put the text somewhere useful
         mapf = '%s/mapping.txt'% expose_all
         if not os.path.isfile( mapf ) or not_found or nothing_indexed:
-            com = 'python /afs/cern.ch/user/v/vlimant/public/ops/whatLog.py --workflow %s --where > %s'%( wf,
-                                                                                                          mapf)
+            com = 'Unified/whatLog.py --workflow %s --where > %s'%( wf,
+                                                                    mapf)
             print "Ex :",com
             os.system(com)
         else:
@@ -109,15 +113,24 @@ while True:
                 print final_dest,"already on the web"
                 continue
             ## show that one
-            com = 'python /afs/cern.ch/user/v/vlimant/public/ops/whatLog.py --workflow  %s --log %s > %s/%s.txt'%(wf, lf, expose_all, lf)
+            com = 'Unified/whatLog.py --workflow  %s --log %s > %s/%s.txt'%(wf, lf, expose_all, lf)
             print 'Ex:',com
             os.system(com)
             ## get it locally
-            com = 'python /afs/cern.ch/user/v/vlimant/public/ops/whatLog.py --workflow  %s --log %s --get '%( wf, lf )
+            com = 'Unified/whatLog.py --workflow  %s --log %s --get '%( wf, lf )
             print 'Ex:',com
             os.system(com)
             lfile = os.popen('find /tmp/vlimant/ -name "*%s"'% lf ).read().replace('\n','')
             print lfile,"is mean to be the local file"
+            if not(lfile and os.path.isfile( lfile )):
+                print "file not found, revert to xrd"
+                ## do you want to get it from xrdcp ?
+                com = 'XRD_REQUESTTIMEOUT=10 xrdcp root://cms-xrd-global.cern.ch/%s /tmp/vlimant/%s'%( fullpath , lf)
+                print 'Ex:',com
+                os.system(com)
+            lfile = os.popen('find /tmp/vlimant/ -name "*%s"'% lf ).read().replace('\n','')
+            print lfile,"is mean to be the local file"
+
             if lfile and os.path.isfile( lfile ):
                 com = 'cp %s %s/.'%( lfile, expose_all)
                 print 'Ex:',com
@@ -130,6 +143,7 @@ while True:
                 sendEmail("%s is ready"%lf,"Get the file at http://cms-unified.web.cern.ch/cms-unified/logmapping/%s"%(wf), destination= [whos[who]])
                 print "Got the file",lf
             else:
+                no_file = True
                 print "no file yet retreived"
                 ##sendEmail("%s is ready"%lf,"Get the file at http://cms-unified.web.cern.ch/cms-unified/logmapping/%s"%(wf), destination= [whos[who]])
            
