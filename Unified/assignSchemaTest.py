@@ -10,17 +10,15 @@ Admin_Mode = False
 
 Base = declarative_base()
 
-def schema():
-    return '' if Admin_Mode else 'cms_unified_admin'
 def prefix():
-    return '' if Admin_Mode else schema()+'.'
+    return '' if Admin_Mode else 'cms_unified_admin.'
 def table_args():
-    return {} if Admin_Mode else { "schema" : schema() }
+    return {} if Admin_Mode else { "schema" : "cms_unified_admin" }
 
 class Workflow(Base):
     __tablename__ = 'WORKFLOW'
     __table_args__ = table_args()
-    id = Column(Integer, Sequence('WORKFLOW_ID_SEQ', schema=schema()), primary_key=True)
+    id = Column(Integer, Sequence('WORKFLOW_ID_SEQ'), primary_key=True)
     name = Column(String(400))
     status = Column(String(100),default='considered') ## internal status
     wm_status = Column(String(100),default='assignment-approved') ## status in req manager : we might not be carrying much actually since we are between ass-approved and assigned, although announced is coming afterwards
@@ -29,8 +27,7 @@ class Workflow(Base):
 class Output(Base):
     __tablename__ = 'OUTPUT'
     __table_args__ = table_args()
-    #id = Column(Integer, Sequence(prefix()+'OUTPUT_ID_SEQ'), primary_key=True)
-    id = Column(Integer, Sequence('OUTPUT_ID_SEQ', schema=schema()), primary_key=True)
+    id = Column(Integer, Sequence('OUTPUT_ID_SEQ'), primary_key=True)
     datasetname = Column(String(400))
     nlumis = Column(Integer)
     expectedlumis = Column(Integer)
@@ -46,7 +43,7 @@ class Output(Base):
 class Transfer(Base):
     __tablename__ = 'TRANSFER'
     __table_args__ = table_args()
-    id = Column(Integer, Sequence('TRANSFER_ID_SEQ', schema=schema()), primary_key=True)
+    id = Column(Integer, Sequence('TRANSFER_ID_SEQ'), primary_key=True)
     phedexid = Column(Integer)
     workflows_id = Column(PickleType)
     #status = Column(String(30))  ## to be added ?
@@ -54,7 +51,7 @@ class Transfer(Base):
 class TransferImp(Base):
     __tablename__ = 'TRANSFERIMP'
     __table_args__ = table_args()
-    id = Column(Integer, Sequence('TRANSFERIMP_ID_SEQ', schema=schema()), primary_key=True)
+    id = Column(Integer, Sequence('TRANSFERIMP_ID_SEQ'), primary_key=True)
     phedexid = Column(Integer)
     workflow_id = Column(Integer,ForeignKey(prefix()+'WORKFLOW.id'))
     workflow = relationship(Workflow)
@@ -63,7 +60,7 @@ class TransferImp(Base):
 class Lock(Base):
     __tablename__ = 'lock'
     __table_args__ = table_args()
-    id = Column(Integer, Sequence('lock_id_seq', schema=schema()), primary_key=True)
+    id = Column(Integer, Sequence('lock_id_seq'), primary_key=True)
     item = Column(String(500))
     lock = Column(Boolean)
     is_block = Column(Boolean)
@@ -74,7 +71,7 @@ class Lock(Base):
 class LogRecord(Base):
     __tablename__ = 'logrecord'
     __table_args__ = table_args()
-    id = Column(Integer, Sequence('logrecord_id_seq', schema=schema()), primary_key=True)
+    id = Column(Integer, Sequence('logrecord_id_seq'), primary_key=True)
     workflow = Column(String(400))
     logfile = Column(String(400))
     path = Column(String(400))

@@ -1,5 +1,4 @@
-#from assignSchema import * ## this is the old afs-sqlite based database
-from assignSchema2 import Base, Workflow, Output, Transfer, Lock, engine, TransferImp
+from assignSchema import Base, Workflow, Output, Transfer, Lock, engine, TransferImp, LogRecord
 from sqlalchemy.orm import sessionmaker
 import time
 import copy 
