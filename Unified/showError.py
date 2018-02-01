@@ -816,6 +816,8 @@ def parse_top(url, options=None):
     diagnose_by_agent = defaultdict( lambda : defaultdict(dict))    
 
     for task in diagnose_by_agent_by_site:
+        if '_ACDC' in task: continue
+        if '_RVCMSSW' in task: continue
         for agent in diagnose_by_agent_by_site[task]:
             for site in diagnose_by_agent_by_site[task][agent]:
                 diagnose_by_site[task][site] = add_condensed( diagnose_by_site[task][site], diagnose_by_agent_by_site[task][agent][site])
