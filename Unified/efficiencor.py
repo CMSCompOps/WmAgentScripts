@@ -140,7 +140,7 @@ while True:
                     print 'Ex:',com
                     os.system( com )
 
-                sendEmail("%s is ready"%lf,"Get the file at http://cms-unified.web.cern.ch/cms-unified/logmapping/%s"%(wf), destination= [whos[who]])
+                ##sendEmail("%s is ready"%lf,"Get the file at http://cms-unified.web.cern.ch/cms-unified/logmapping/%s"%(wf), destination= [whos[who]])
                 print "Got the file",lf
             else:
                 no_file = True
