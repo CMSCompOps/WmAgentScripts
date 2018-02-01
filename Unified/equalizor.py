@@ -469,7 +469,11 @@ def equalizor(url , specific = None, options=None):
     else:
         wfs = session.query(Workflow).filter(Workflow.status == 'away').all()
 
+    warning_short_time = UC.get('warning_short_time')
+    warning_long_time = UC.get('warning_long_time')
+
     short_tasks = set()
+    long_tasks = set()
     hungry_tasks = set()
     bad_hungry_tasks = set()
     performance = {}
@@ -639,7 +643,12 @@ def equalizor(url , specific = None, options=None):
                         perf_per_config[configcache.get( taskname , 'N/A')]['memory'] = set_memory
 
                     if set_time:
-                        set_time =  min(set_time, int(1440.*mcore)) ## max to 24H per mcore
+                        if set_time > warning_long_time*mcore:
+                            print "WHAT IS THIS TASK",task.pathName,"WITH",set_time/mcore,"large runtime"
+                            wfi.sendLog('equalizor','WARNING the task %s was found to run long jobs  of %d [h] %d [mins] at original %d cores setting'%( taskname, divmod(set_time / mcore, 60)[0], divmod(set_time / mcore,60)[1] , mcore))
+                            long_tasks.add( (task.pathName, set_time / mcore, mcore) )
+                            
+                        set_time =  min(set_time, int(warning_long_time*mcore)) ## max to 24H per mcore
                         set_time =  max(set_time, int(30.*mcore)) ## min to 30min per core
                         performance[task.pathName]['time'] = set_time 
                         perf_per_config[configcache.get( taskname , 'N/A')]['time'] = set_time
@@ -648,20 +657,20 @@ def equalizor(url , specific = None, options=None):
                         perf_per_config[configcache.get( taskname , 'N/A')]['read'] = set_io
 
                     ##make up some warnings
-                    if set_time and (set_time / mcore) < 60.: ## looks like short jobs all around
-                        print "WHAT IS THIS TASK",task.pathName,"WITH",set_time/mcore,"runtime"
+                    if set_time and (set_time / mcore) < warning_short_time: ## looks like short jobs all around
+                        print "WHAT IS THIS TASK",task.pathName,"WITH",set_time/mcore,"small runtime"
                         wfi.sendLog('equalizor','The task %s was found to run short jobs of %.2f [mins] at original %d cores setting'%( taskname, set_time / mcore , mcore))
-                        #sendLog('equalizor','The task %s was found to run short jobs of %.2f [mins] at original %d cores setting'%( taskname, set_time / mcore , mcore), level='warning')
                         short_tasks.add( (task.pathName, set_time / mcore, mcore) )
 
                     warning_mem = 2000
                     if mem and (mem > warning_mem*mcore):
+                        print "WHAT IS THIS TASK",task.pathName,"WITH",mem,"memory requirement at",mcore,"cores"
                         bad_hungry_tasks.add( (task.pathName, mem, mcore ) )
 
                     if set_memory and (set_memory > warning_mem*mcore):
                         print "WHAT IS THIS TASK",task.pathName,"WITH",set_memory,"memory requirement at",mcore,"cores"
                         wfi.sendLog('equalizor','The task %s was found to run jobs using %d GB over %d GB/core at %d cores'%( taskname, set_memory, warning_mem, mcore))
-                        #sendLog('equalizor','The task %s was found to run jobs using %d GB over %d GB/core at %d cores'%( taskname, set_memory, warning_mem, mcore), level='warning')
+
                         hungry_tasks.add( (task.pathName, set_memory, mcore) )
                         
                     wfi.sendLog('equalizor',"""Performance tuning of task %s
@@ -1090,7 +1099,11 @@ def equalizor(url , specific = None, options=None):
 
 
     if short_tasks:
-        sendLog('equalizor','These tasks are running very short jobs\n %s'%('\n'.join( ["%s, %.f [mins] observed time at original %d core count"%(a,b,c) for (a,b,c) in sorted( short_tasks )] )), level='critical')
+        sendLog('equalizor','These tasks are running very short jobs. Shorter than %d [min] \n %s'%(warning_short_time,'\n'.join( ["%s, %.f [mins] observed time at original %d core count"%(a,b,c) for (a,b,c) in sorted( short_tasks )] )), level='critical')
+
+    if long_tasks:
+        sendLog('equalizor','These tasks are running very long jobs. Longer than %d [min] per core.\n %s'%(warning_long_time,'\n'.join( ["%s, %.f [h] %.f [mins] observed time at original %d core count"%(a,divmod(b,60)[0], divmod(b,60)[1],c) for (a,b,c) in sorted( long_tasks )] )), level='critical')
+
     if hungry_tasks:
         sendLog('equalizor','These tasks are running with more memory than usual\n %s'%( '\n'.join( ["%s, %.f [MB] observed concumption at original %d core count"%(a,b,c) for (a,b,c) in sorted( hungry_tasks )] )), level='critical')
 
