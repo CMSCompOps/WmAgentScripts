@@ -22,6 +22,14 @@
    "value" : false,
    "descrition" : "Whether or not to overflow the second step (reco) for workfow with PU_overflow enabled"
  },
+ "warning_short_time" : { 
+    "value" : 60,
+    "description" : "Time in minutes per core below which jobs are considered too short and a warning is issued."
+ },
+ "warning_long_time" : {
+    "value" : 1440,
+    "description" : "Time in minutes per core above which jobs are considered too long and have a chance at timing out."
+ },
  "tune_min_stats" :{
     "value" : 300,
     "description" : "The number of finished jobs required before making a performance estimate"
@@ -35,7 +43,7 @@
     "description" : "The quanta of time in min for the JobRouter"
  },
  "slope_quanta": {
-    "value" : 250,
+    "value" : 100,
     "description" : "The quanta of the slope of memory/core in MB for the JobRouter"
  },
  "read_quanta": {
