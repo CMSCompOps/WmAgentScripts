@@ -1172,15 +1172,26 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
     rem_chart_data = defaultdict(list)
     ## now make bar charts DATA per site
     for i_oos,site in enumerate(sorted(by_reason_at_site.keys())):
+#        rem_chart_data[site].append("""
+#var data_remain_%s = google.visualization.arrayToDataTable([
+#['Overall', 'Space in TB'],
+#%s
+#]);
+#"""%( site,
+#      ','.join(["['%s' , %s]"%( reason, by_reason_at_site[site][reason]) for reason in sorted(all_reasons)])))
+
         rem_chart_data[site].append("""
 var data_remain_%s = google.visualization.arrayToDataTable([
-['Overall', 'Space in TB'],
-%s
+['Overall', %s],
+['%s' , %s]
 ]);
 """%( site,
-      #','.join(["['%s' , %s]"%( reason, value) for reason,value in by_reason_at_site[site].items()])))
-      ','.join(["['%s' , %s]"%( reason, by_reason_at_site[site][reason]) for reason in sorted(all_reasons)])))
+      ','.join(['"%s"'%reason for reason in sorted(all_reasons)   ]),
+      site,
+      ','.join(['%s'%( by_reason_at_site[site][reason]) for reason in sorted(all_reasons)])))
         
+        
+
         rem_chart_data[site].append("""
 var remaining_bar_%s = new google.visualization.ColumnChart(document.getElementById('remainbars_%s'));
 remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
