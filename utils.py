@@ -4259,14 +4259,17 @@ class agentInfo:
         now = time.mktime( now )
         return now,nows
 
+    def change_status(self, agent, st):
+        now,nows = self.getNow()
+        self.info[agent]['status'] = st
+        self.info[agent]['update'] = now
+        self.info[agent]['date'] = nows
+
     def flag_standby(self, agent):
-        now,nows = self.getNow()        
         if self.info.get(agent,{}).get('status',None) == 'draining':
             if self.verbose:
                 print "Able to set",agent,"in standby"
-            self.info[agent]['status'] = 'standby'
-            self.info[agent]['update'] = now
-            self.info[agent]['date'] = nows
+            self.change_status( agent, 'standby')
 
     def poll(self, wake_up_draining=False, acting=False):
         now,nows = self.getNow()
@@ -4363,27 +4366,18 @@ class agentInfo:
                                         'date' : nows }                
         else:
             print "Everything is fine. No need to retire or add an agent"
-        
 
-def setAgentDrain(url, agent, drain=True):
-    #the agent name has to have .cern.ch and all
+def getAgentConfig(url, agent, keys):
     conn = make_x509_conn(url)
-    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     go_url= '/reqmgr2/data/wmagentconfig/%s'% agent
     r1=conn.request("GET",go_url, headers={"Accept":"application/json"})
     r2=conn.getresponse()
     info = json.loads(r2.read())['result'][-1]
-    draining = info['UserDrainMode']
-    print agent,"is draining?",draining
-
-    #from WMCore.Services.ReqMgrAux.ReqMgrAux import ReqMgrAux
-    #reqMgrAux = ReqMgrAux('https://'+url+'/reqmgr2')
-    #print reqMgrAux.updateAgentDrainingMode( agent, drainFlag = drain )
-    #encodedParams = urllib.urlencode({"AgentDrainMode":drain})
-    #encodedParams = urllib.urlencode({"UserDrainMode":drain})
-    encodedParams = json.dumps({"UserDrainMode":drain})
+    return dict([(k,v) for k,v in info.items() if k in keys])
+    
+def sendAgentConfig(url, agent, config_dict):
+    encodedParams = json.dumps(config_dict)
     conn = make_x509_conn(url)
-    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     go_url= '/reqmgr2/data/wmagentconfig/%s'% agent
     r1 = conn.request("PUT", go_url , encodedParams, headers={"Accept":"application/json",
                                                               "Content-type": "application/json",
@@ -4391,6 +4385,23 @@ def setAgentDrain(url, agent, drain=True):
     r2 = conn.getresponse()
     res = r2.read()
     r=  json.loads(res)['result'][0]["ok"]
+    return r
+
+def addAgentNoRetry(url, agent, error_codes):
+    info = getAgentConfig(url, agent, ['NoRetryExitCodes'])
+    already = info['NoRetryExitCodes']
+    print sorted( already )
+    already.extend( error_codes )
+    already = list(set(already))
+    return sendAgentConfig(url, agent, {'NoRetryExitCodes' : already})
+
+def setAgentDrain(url, agent, drain=True):
+    #the agent name has to have .cern.ch and all
+    info = getAgentConfig(url, agent, ['UserDrainMode'])
+    draining = info['UserDrainMode']
+    print agent,"is draining?",draining
+
+    r = sendAgentConfig(url, agent, {"UserDrainMode":drain})
     return r
 
 def setAgentOn(url, agent):
