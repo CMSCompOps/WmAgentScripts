@@ -1,7 +1,7 @@
 BASE_DIR=/data/unified/WmAgentScripts/
 HTML_DIR=/var/www/html/unified/
 
-lock_name="$BASE_DIR/errorcycle.lock"
+lock_name="$BASE_DIR/remainingcycle.lock"
 
 oweek=`date +%W`
 week=${oweek#0}
@@ -48,8 +48,8 @@ echo $$ >> $lock_name
 ## get sso cookie and new grid proxy
 source $BASE_DIR/credentials.sh
 
-$BASE_DIR/cWrap.sh Unified/showError.py --many --expose 2 --threads 2 --log_threads 2 --from_eos
-#$BASE_DIR/cWrap.sh Unified/showError.py --many --expose 2 --threads 2 --log_threads 2 
+$BASE_DIR/cWrap.sh Unified/remainor.py parse True
+$BASE_DIR/cWrap.sh Unified/remainor.py go
 
 rm -f $lock_name
 

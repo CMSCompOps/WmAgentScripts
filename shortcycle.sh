@@ -7,8 +7,8 @@ oweek=`date +%W`
 week=${oweek#0}
 let oddity=week%2
 
-if ( [ "$USER" = "vlimant" ] && [ "$oddity" = "0" ] ) || ( [ "$USER" = "mcremone" ] && [ "$oddity" = "1" ] ) ; then
-    echo no go for $USER on week $week
+if [ "$USER" != "vlimant" ] ; then
+    echo "single user running from now on"
     exit
 fi
 
@@ -67,11 +67,6 @@ $BASE_DIR/cWrap.sh Unified/GQ.py
 
 $BASE_DIR/cWrap.sh Unified/addHoc.py
 
-$BASE_DIR/cWrap.sh Unified/remainor.py parse True
-$BASE_DIR/cWrap.sh Unified/remainor.py go
-
-## in its own cycle
-##$BASE_DIR/cWrap.sh Unified/showError.py --many 
 
 rm -f $lock_name
 

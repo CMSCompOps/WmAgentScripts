@@ -7,8 +7,8 @@ oweek=`date +%W`
 week=${oweek#0}
 let oddity=week%2
 
-if ( [ "$USER" = "vlimant" ] && [ "$oddity" = "0" ] ) || ( [ "$USER" = "mcremone" ] && [ "$oddity" = "1" ] ) ; then
-    echo no go for $USER on week $week
+if [ "$USER" != "vlimant" ] ; then
+    echo "single user running from now on"
     exit
 fi
 
