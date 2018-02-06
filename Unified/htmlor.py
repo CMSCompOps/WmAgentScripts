@@ -208,6 +208,9 @@ def htmlor( caller = ""):
             print "not getting frame"
             print str(es)
 
+
+    summary_content = {}
+
     html_doc.write("""
 <html>
 <head>
@@ -312,6 +315,10 @@ Worflow next to handle (%d) <a href=https://cms-pdmv.cern.ch/mcm/batches?status=
         count+=1
 
     text_by_c=""
+
+    summary_content['staging'] = count
+    summary_content['staging_by_campaign'] = len(count_by_campaign)
+
     for c in count_by_campaign:
         text_by_c+='<li><a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?campaign=%s&in_production=1>%s</a> <a href="https://its.cern.ch/jira/issues/?jql=text~%s AND project = CMSCOMPPR">JIRA</a> (%d) : '%( c,c,c, sum(count_by_campaign[c].values()) )
         for p in sorted(count_by_campaign[c].keys()):
@@ -407,6 +414,7 @@ Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransfertea
      len( stuck_transfer ),
      text_bywf,
      text_bytr))
+    summary_content['stuck_placement'] = len(stuck_transfer)
 
     lap( 'done with transfers' )
 
@@ -452,12 +460,17 @@ Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransfertea
     relvals = []
     for b in batches: relvals.extend( batches[b] )
     count_by_campaign=defaultdict(lambda : defaultdict(int))
+    count = 0
     for wf in session.query(Workflow).filter(Workflow.status=='away').all():
         wl = getWL( wf.name )
         count_by_campaign[wl['Campaign']][int(wl['RequestPriority'])]+=1
         color = 'orange' if wf.name in relvals else 'black'
         lines.append("<li> <font color=%s>%s</font> <hr></li>"%(color,wfl(wf,view=True,ongoing=True)))
+        count += 1
     text_by_c=""
+
+    summary_content['ongoing'] = count
+    summary_content['ongoing_by_campaign'] = len(count_by_campaign)
 
     for c in sorted(count_by_campaign.keys()):
         text_by_c+="""
@@ -778,6 +791,8 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
       len(lines_thisweek), per_day_s, 
      '\n'.join(lines_thisweek))
                    )
+
+    summary_content['last_week'] = len(lines_lastweek)
 
     lap ( 'done with output' )
 
@@ -1146,10 +1161,12 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
     by_reason_at_site = defaultdict( lambda : defaultdict(float))
     all_reasons = set()
     by_reason_all_sites = defaultdict(float)
+    counting_oos = 0
     for c,site in enumerate(sorted(chart_data.keys())):
         rem=""
         if site in out_of_space:
             rem = "<br><a href=remaining_%s.html>remaining datasets</a>"% site
+            counting_oos += 1
         if c%5==0:
             divs_table += "<tr>"
         if i_oos%5==0:
@@ -1169,6 +1186,8 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
                     by_reason_at_site[site][ reason ]+= (info['size'] / 1024.)
                     by_reason_all_sites[ reason ] += (info['size'] / 1024.)
 
+
+    summary_content['out_of_space'] = counting_oos
 
     rem_chart_data = defaultdict(list)
     ## now make bar charts DATA per site
@@ -1422,6 +1441,9 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
     html_doc.write("<br>"*100)
     html_doc.write("end of page</html>")
     html_doc.close()
+
+    open(time.strftime("%s/summary_%%Y_%%W.json"%(monitor_dir), time.gmtime()), 'w').write(json.dumps(summary_content, indent=2))
+
 
 if __name__ == "__main__":
     htmlor()
