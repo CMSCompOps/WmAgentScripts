@@ -184,6 +184,11 @@ def checkor(url, spec=None, options=None):
     bypasses = filter(None, bypasses)
 
     pattern_fraction_pass = UC.get('pattern_fraction_pass')
+    cumulative_fraction_pass = UC.get('cumulative_fraction_pass')
+    timeout_from_started_running = UC.get('damping_fraction_pass')
+    damping_time = UC.get('damping_fraction_pass_rate')
+    damping_fraction_pass_max = float(UC.get('damping_fraction_pass_max')/ 100.)
+
 
     total_running_time = 1.*60. 
     sleep_time = 1
@@ -516,20 +521,19 @@ def checkor(url, spec=None, options=None):
                 fractions_truncate_recovery[output] = fractions_pass[output]
                 ##### OR 
                 ##wfi.sendLog('checkor', "Lowering the pass bar since recovery is being truncated")
-                ## fractions_pass[output] = fractions_truncate_recovery[output]
+                #
+                #fractions_pass[output] = fractions_truncate_recovery[output]
 
 
         #introduce a reduction factor on very old requests
-        timeout_from_started_running = 30 ##start choping after 30 days
-        damping_time = 10 # 1% every 10 days
-        fraction_damping = min(0.01*(max(running_delay - timeout_from_started_running,0)/damping_time),0.05) ## not more than 5% decrease
+        fraction_damping = min(0.01*(max(running_delay - timeout_from_started_running,0)/damping_time),damping_fraction_pass_max)
         print "We could reduce the passing fraction by",fraction_damping,"given it's been running for long"
         for out in fractions_pass:
             if fractions_pass[out]!=1.0: ## strictly ones cannot be set less than one
-                if options.go and False:
+                if timeout_from_started_running:
                     wfi.sendLog('checkor','Reducing pass thresholds by %.3f for long lasting workflow'% fraction_damping)
                     fractions_pass[out] -= fraction_damping
-                    #fractions_truncate_recovery[out] -= fraction_damping
+                    fractions_truncate_recovery[out] -= fraction_damping
                     pass
 
         #and then make the fraction multiplicative per child
@@ -550,7 +554,8 @@ def checkor(url, spec=None, options=None):
             descending_pass = fractions_pass[out]
             for a in ancestors:
                 descending_pass*=fractions_pass.get(a,1.) ## multiply by fraction of all ancestors
-            #fractions_pass[out] = descending_pass
+            if cumulative_fraction_pass:
+                fractions_pass[out] = descending_pass
             print "For",out,"passing at",initial_pass,"is now passing at",descending_pass
 
 
