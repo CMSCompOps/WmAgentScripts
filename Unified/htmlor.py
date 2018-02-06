@@ -236,6 +236,7 @@ Last update on <b>%s(CET), %s(GMT)</b>
 <a href=http://dynamo.mit.edu/dynamo/detox.php target=_blank>dynamo</a>
 <a href=locked.html>space</a>
 <a href=outofspace.html>out of space</a>
+<a href=remaining.html>locked</a>
 <a href=logs/subscribor/last.log target=_blank>blocks</a>
 <br>
 <a href=data.html>json interfaces</a>
