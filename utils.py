@@ -938,6 +938,9 @@ class campaignInfo:
                     GO = False
             else:
                 GO = True
+        elif c in self.campaigns and not self.campaigns[c]['go']:
+            if s and 'pilot' in s.lower():
+                GO = True
         else:
             print "Not allowed to go for",c
             GO = False
