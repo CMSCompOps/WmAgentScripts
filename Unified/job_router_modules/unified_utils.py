@@ -20,7 +20,11 @@ def siteMapping(in_list, source_to_dests, state={}):
     if isinstance(in_list, classad.Value):
         return classad.Value.Undefined
 
-    possible_sources = source_to_dests.keys()
+    ## add the collection of all known sites in the mapping
+    possible_sources = set(source_to_dests.keys())
+    for source,dests in source_to_dests.items():
+        possible_sources.update( dests )
+
     split_list = _split_re.split(in_list)
     final_set = set()
     for site in split_list:
