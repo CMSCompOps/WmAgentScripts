@@ -211,12 +211,15 @@ def checkor(url, spec=None, options=None):
     ## record all evolution
     full_picture = defaultdict(dict)
     
+
+
+
     for iwfo,wfo in enumerate(wfs):
         if spec and not (spec in wfo.name): continue
         
         time.sleep( sleep_time )
         
-        time_point("Starting checkor with with %s Progress [%d/%d]"% (wfo.name, iwfo, will_do_that_many), percent = float(iwfo)/will_do_that_many)
+        time_point("Starting checkor with %s Progress [%d/%d]"% (wfo.name, iwfo, will_do_that_many), percent = float(iwfo)/will_do_that_many)
 
         ## get info
         wfi = workflowInfo(url, wfo.name)
@@ -1169,6 +1172,14 @@ def checkor(url, spec=None, options=None):
                     session.commit()
             else:
                 print "current status is",wfo.status,"not changing to anything"
+        
+        ## a hook to halt checkor nicely at this stage
+        if os.path.isfile('.checkor_stop'):
+            print "The loop on workflows is shortened"
+            sendEmail('checkor','Checkor loop was shortened artificially using .checkor_stop')
+            os.system('rm -f .checkor_stop')
+            break
+
 
 
     fDB.html()
