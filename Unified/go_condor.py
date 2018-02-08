@@ -83,6 +83,7 @@ def makeReadAds(config):
 
 def makeOverflowAds(config):
     # Mapping from source to a list of destinations.
+    # key can be read by site in values
     reversed_mapping = config['reversed_mapping']
 
     overflow_tasks = {}
@@ -119,6 +120,7 @@ def makeOverflowAds(config):
     # should appear on just one of these ads, meaning it should only get routed
     # once.
     for whitelist_sites, tasks in overflow_tasks.items():
+        ## these are the sites that need to be added in whitelist.
         whitelist_sites_set = set(whitelist_sites.split(","))
 
         # Create an updated source_to_dests, where the dests are filtered
@@ -132,7 +134,7 @@ def makeOverflowAds(config):
         anAd = classad.ClassAd()
         anAd["GridResource"] = "condor localhost localhost"
         anAd["TargetUniverse"] = 5
-        anAd["Name"] = "Master overflow rule for %s" % str(whitelist_sites)
+        anAd["Name"] = "Master overflow rule to run at %s in addition" % str(whitelist_sites)
 
         # ClassAds trick to create a properly-formatted ClassAd list.
         anAd["OverflowTasknames"] = map(str, tasks)
@@ -141,8 +143,8 @@ def makeOverflowAds(config):
 
         exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (HasBeenRouted_Overflow isnt true)' % overflow_names_escaped)
         anAd["Requirements"] = classad.ExprTree(str(exp))
-        # siteMapping will apply the source->dest rules, given the current set of sources in ExtDESIRED_Sites.
-        anAd["eval_set_DESIRED_Sites"] = classad.ExprTree('ifThenElse(siteMapping("", []) isnt error, siteMapping(ExtDESIRED_Sites, %s), ExtDESIRED_Sites)' % str(classad.ClassAd(source_to_dests)))
+        anAd["eval_set_DESIRED_Sites"] = classad.ExprTree('ifThenElse(siteMapping("", []) isnt error, siteMapping(Pre_DESIRED_Sites, %s), Pre_DESIRED_Sites)' % str(classad.ClassAd(source_to_dests)))
+        anAd["eval_set_Pre_DESIRED_Sites"] = classad.ExprTree('DESIRED_Sites')
 
         # Where possible, prefer to run at a site where the input can be read locally.
         anAd['set_Rank'] = classad.ExprTree("stringlistmember(GLIDEIN_CMSSite, ExtDESIRED_Sites)")
@@ -232,8 +234,6 @@ def makePerformanceCorrectionsAds(configs):
         anAd["Name"] = str("Set memory requirement to %s"% memory)
         anAd["MemoryTasknames"] = map(str, wfs)
         memory_names_escaped = anAd.lookup('MemoryTasknames').__repr__()
-        #exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (target.HasBeenMemoryTuned =!= true) && (target.OriginalMemory >= %d)' %( memory_names_escaped, int(memory) ))
-        #exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (target.HasBeenMemoryTuned =!= true) && (target.OriginalMemory =!= %d)' %( memory_names_escaped, int(memory) ))
         exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && ((target.HasBeenMemoryTuned =!= true) || (target.OriginalMemory =!= %d))' %( memory_names_escaped, int(memory) )) ## just set to a different value
         anAd["Requirements"] = classad.ExprTree(str(exp))
         anAd['set_HasBeenMemoryTuned'] = True
@@ -250,12 +250,10 @@ def makePerformanceCorrectionsAds(configs):
         anAd["Name"] = str("Set timing requirement to %s"% timing)
         anAd["TimeTasknames"] = map(str, wfs)
         time_names_escaped = anAd.lookup('TimeTasknames').__repr__()
-        #exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (target.HasBeenTimingTuned =!= true) && (target.EstimatedSingleCoreMins <= %d)' %( time_names_escaped, int(timing) ))
         exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && ((target.HasBeenTimingTuned =!= true) || (target.EstimatedSingleCoreMins <= %d))' %( time_names_escaped, int(timing) ))
         anAd["Requirements"] = classad.ExprTree(str(exp))
         anAd['set_HasBeenTimingTuned'] = True
         anAd['set_HasBeenRouted'] = False
-        #anAd['set_OriginalMaxWallTimeMins'] = int(timing)
         anAd['set_EstimatedSingleCoreMins'] = int(timing)
         anAd['set_OriginalMaxWallTimeMins'] = classad.ExprTree('EstimatedSingleCoreMins / OriginalCpus')
         print anAd
@@ -269,7 +267,6 @@ def makePerformanceCorrectionsAds(configs):
         anAd["Name"] = str("Set memory per thread requirement to %s"% slope)
         anAd["TimeTasknames"] = map(str, wfs)
         time_names_escaped = anAd.lookup('TimeTasknames').__repr__()
-        #exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (target.HasBeenSlopeTuned =!= true)' %( time_names_escaped ))
         exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (target.ExtraMemory =!= %d)' %( time_names_escaped , int(slope))) ## just set to a different value
         anAd["Requirements"] = classad.ExprTree(str(exp))
         anAd['set_HasBeenSlopeTuned'] = True 
@@ -286,7 +283,6 @@ def makeDrainAds():
         anAd["Name"] = str("Drain agent %s"%agent)
         exp = classad.ExprTree('regexp("%s",GlobalJobId) && JobStatus == 1'% agent)
         anAd["Requirements"] = classad.ExprTree(str(exp))
-        ##regexp("vocms0303",GlobalJobId) && JobStatus == 1' -af GlobalJobId JobPrio | grep -v 303
         anAd["set_JobPrio"] = 500000
         anAd["set_HasBeenRouted"] = False
         print anAd
