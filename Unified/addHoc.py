@@ -1,5 +1,5 @@
 #!/usr/bin/env python  
-from utils import workflowInfo, getWorkflows, sendEmail, componentInfo, monitor_dir, reqmgr_url, siteInfo, sendLog, getWorkflowById, isHEPCloudReady, agentInfo
+from utils import workflowInfo, getWorkflows, sendEmail, componentInfo, monitor_dir, reqmgr_url, siteInfo, sendLog, getWorkflowById, isHEPCloudReady, agentInfo, unifiedConfiguration
 #monitor_eos_dir = "/afs/cern.ch/user/c/cmst2/www/unified/"
 monitor_eos_dir = "/eos/project/c/cms-unified-logs/www/"
 
@@ -11,8 +11,15 @@ import json
 import time
 import random
 
+UC = unifiedConfiguration()
+
 ## poll agents
-AI = agentInfo(reqmgr_url, verbose=True)
+AI = agentInfo(url=reqmgr_url, 
+               verbose=True,
+               busy_fraction = UC.get('busy_agent_fraction'),
+               idle_fraction = UC.get('idle_agent_fraction')
+              )
+
 AI.poll(acting=False)
 
 

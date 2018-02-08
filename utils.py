@@ -4189,9 +4189,11 @@ def forceComplete(url, wfi):
             reqMgrClient.invalidateWorkflow(url, member['RequestName'], current_status=member['RequestStatus'])
 
 class agentInfo:
-    def __init__(self, url, verbose = False):
-        self.url = url
-        self.verbose = verbose
+    def __init__(self, **args):
+        self.url = args.ge('url')
+        self.verbose = args.get('verbose')
+        self.busy_fraction = args.get('busy_fraction',0.9)
+        self.idle_fraction = args.get('idle_fraction',0.1)
         ## keep some info in a local file
         try:
             self.info = json.loads(open('.agent_info.json').read())
@@ -4312,8 +4314,8 @@ class agentInfo:
                 print agent_name,r,json.dumps(ainfo, indent=2)
             if agent_name in self.buckets['running']:
                 capacity += t
-                stuffed = (r >= t*0.90)
-                light = (r <= 1000)
+                stuffed = (r >= t*self.busy_fraction)
+                light = (r <= t*self.idle_fraction)
                 if self.verbose:
                     print agent
                     print "is Stuffed?",stuffed
