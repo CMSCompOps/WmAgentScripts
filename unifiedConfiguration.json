@@ -7,7 +7,7 @@
    "value" : 0.9,
    "description" : "Running/MaxRunning job fraction above which to consider an agent busy"
  },
- "idle_agent_fraction: " {
+ "idle_agent_fraction" : {
    "value" : 0.1,
    "description" : "Running/MaxRunning job fraction below which to consider an agent idling"
  },

@@ -4190,7 +4190,7 @@ def forceComplete(url, wfi):
 
 class agentInfo:
     def __init__(self, **args):
-        self.url = args.ge('url')
+        self.url = args.get('url')
         self.verbose = args.get('verbose')
         self.busy_fraction = args.get('busy_fraction',0.9)
         self.idle_fraction = args.get('idle_fraction',0.1)
@@ -4202,10 +4202,23 @@ class agentInfo:
 
         self.buckets = defaultdict(list)
         self.wake_draining = False ## do not wake up agents that are on drain already
-        self.getStatus()
+        self.ready = self.getStatus()
+        if not self.ready:
+            print "AgentInfo could not initialize properly"
+            sys.exit(1)
+
+    def agentStatus(self, agent):
+        for status in self.buckets:
+            if agent in self.buckets[status]:
+                return status 
+        return 'N/A'
 
     def getStatus(self):
-        all_agents_prod = getAllAgents(self.url).get('production',[])
+        all_agents_prod = getAllAgents(self.url).get('production',None)
+        if not all_agents_prod:
+            ## we cannot go on like that. there is something disruptive here
+            print "cannot get production agent information"
+            return False
         prod_info = dict([(a['agent_url'].split(':')[0], a) for a in all_agents_prod])
         all_agents_name = sorted(set(self.info.keys() + prod_info.keys()))
         
@@ -4238,6 +4251,7 @@ class agentInfo:
                     st = 'standby' 
                     ## for the first time
                     #st = 'draining'
+                    print "A new agent in the pool",agent,"setting",st
                     
                 ## add it
                 self.info[agent] = { 'status' : st,
@@ -4254,6 +4268,8 @@ class agentInfo:
 
         if self.verbose:
             print json.dumps( self.buckets, indent=2)
+
+        return True
 
     def __del__(self):
         open('.agent_info.json','w').write( json.dumps( self.info, indent=2))
