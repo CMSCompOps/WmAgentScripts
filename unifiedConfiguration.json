@@ -38,6 +38,10 @@
     "value" : 1440,
     "description" : "Time in minutes per core above which jobs are considered too long and have a chance at timing out."
  },
+ "warning_mem" : {
+    "value" : 2500,
+    "description" : "Value in MB/core over which to consider a workflow from using/configured too much memory"
+ },
  "tune_min_stats" :{
     "value" : 300,
     "description" : "The number of finished jobs required before making a performance estimate"
@@ -137,7 +141,6 @@
    "value" : 75000,
    "description" : "Priority above which we can increase the priority of a workflow after running too long"
  },
- 
  "max_force_complete" : {
    "value" : 20,
    "description" : "Number of workflow that can be forced complete at a time"
