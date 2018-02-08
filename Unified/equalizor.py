@@ -146,7 +146,12 @@ def equalizor(url , specific = None, options=None):
 
     for site,fallbacks in mapping.items():
         mapping[site] = list(set(fallbacks))
-        
+    
+
+    ### mapping is a dictionnary where
+    # key can read from site in values. 
+    ### reverserd mapping is a dictionnary where
+    # key can be read by site in values.
     ## create the reverse mapping for the condor module
     for site,fallbacks in mapping.items():
         if site in take_site_out:
@@ -471,6 +476,7 @@ def equalizor(url , specific = None, options=None):
 
     warning_short_time = UC.get('warning_short_time')
     warning_long_time = UC.get('warning_long_time')
+    warning_mem = UC.get('warning_mem')
 
     short_tasks = set()
     long_tasks = set()
@@ -662,9 +668,9 @@ def equalizor(url , specific = None, options=None):
                         wfi.sendLog('equalizor','The task %s was found to run short jobs of %.2f [mins] at original %d cores setting'%( taskname, set_time / mcore , mcore))
                         short_tasks.add( (task.pathName, set_time / mcore, mcore) )
 
-                    warning_mem = 2000
                     if mem and (mem > warning_mem*mcore):
                         print "WHAT IS THIS TASK",task.pathName,"WITH",mem,"memory requirement at",mcore,"cores"
+                        wfi.sendLog('equalizor','The task %s was found to be confiugred with %d GB over %d GB/core at %d cores'%( taskname, set_memory, warning_mem, mcore))
                         bad_hungry_tasks.add( (task.pathName, mem, mcore ) )
 
                     if set_memory and (set_memory > warning_mem*mcore):
@@ -696,12 +702,13 @@ def equalizor(url , specific = None, options=None):
                 ## do the intersection and add if in need.
                 needs, task_name, running, idled = needs_action(wfi, task)
                 restrict_to_allowed = not ((campaign in tune_performance) or (CI.get(campaign,'resize',False)) )
-                #needs = True
+
                 if options.augment:
                     print "\t",task.pathName
-                if is_chain and task.pathName.endswith('_1') and not options.augment:
+                if False and is_chain and task.pathName.endswith('_1') and not options.augment:
                     print i_task,"in chain prevents overflowing"
                     needs = False
+                    
 
                 if task.taskType in ['Processing','Production'] and needs:
                     secondary_locations = set(SI.sites_ready + force_sites)
