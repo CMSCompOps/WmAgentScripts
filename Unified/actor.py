@@ -59,6 +59,9 @@ def singleRecovery(url, task, initial, actions, do=False):
     if actions:
         for action in actions:
             if action.startswith('mem') and actions[action] != "" and actions[action] != 'Same':
+                #if multicore parameter is also used, need to scale memory by the new number of cores
+                if 'multicore' in actions and actions['multicore'] != "":
+                    continue
                 payload['Memory'] = actions[action]
                 print "Memory set to " + actions[action]
                 ## Taskchains needs to be treated special to set the memory to all tasks
@@ -72,6 +75,53 @@ def singleRecovery(url, task, initial, actions, do=False):
                             payload[t]['Memory'] = actions[action]
                         else:
                             break
+
+            if action.startswith('multicore') and actions[action] != "":
+                set_to = int(actions[action] )
+                ## Taskchains needs to be treated special to set the multicore and memory values to all tasks
+                if 'TaskChain' in initial:
+                    it = 1
+                    while True:
+                        t = 'Task%d'%it
+                        it += 1
+                        if t in initial:
+                            payload[t] = copy.deepcopy(initial[t])
+                            
+                            #Need to scale the memory by the new number of cores
+                            initial_cores = initial[t].setdefault('Multicore', 1) 
+
+                            mem = payload[t]['Memory']
+                            if 'memory' in actions and actions['memory'] != "" and actions['memory'] != 'Same':
+                                mem = actions['memory']
+
+                            fraction_constant = 0.4
+                            mem_per_core_c = int (( 1 - fraction_constant) * mem / float(initial_cores) )
+
+                            payload[t]['Multicore'] = set_to
+                            payload[t]['Memory'] = int ( mem + (set_to - initial_cores)*mem_per_core_c )
+
+                            print "For " + t
+                            print "Multicore set to " + set_to
+                            print "Memory set to " + payload[t]['Memory']
+                        else:
+                           break
+                else:
+                    #Need to scale the memory by the new number of cores
+                    initial_cores = initial.setdefault('Multicore', 1) 
+
+                    mem = payload['Memory']
+                    if 'memory' in actions and actions['memory'] != "" and actions['memory'] != 'Same' :
+                        mem = actions['memory']
+
+                        fraction_constant = 0.4
+                        mem_per_core_c = int (( 1 - fraction_constant) * mem / float(initial_cores) )
+
+                        payload['Multicore'] = set_to
+                        payload['Memory'] = int ( mem + (set_to - initial_cores)*mem_per_core_c )
+
+                        print "Multicore set to " + set_to
+                        print "Memory set to " + payload['Memory']
+
 
             if action.startswith('split'):
                 split_alert = (initial['RequestType'] in ['MonteCarlo'] )
@@ -498,7 +548,8 @@ def actor(url,options=None):
 
                     else: #ACDC was made correctly. Now we have to assign it.
                         wfi.sendLog('actor','ACDC created for task %s. Actions taken \n%s'%(fulltaskname,list(actions)))
-                        team = wfi.request['Teams'][0]
+                        #team = wfi.request['Teams'][0]
+                        team = 'production'
                         parameters={
                         'SiteWhitelist' : sorted(assign_to_sites),
                         'AcquisitionEra' : wfi.acquisitionEra(),
