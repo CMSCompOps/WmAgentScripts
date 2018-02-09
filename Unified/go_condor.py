@@ -143,8 +143,8 @@ def makeOverflowAds(config):
 
         exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (HasBeenRouted_Overflow isnt true)' % overflow_names_escaped)
         anAd["Requirements"] = classad.ExprTree(str(exp))
+        anAd["copy_DESIRED_Sites"] = "Pre_DESIRED_Sites"
         anAd["eval_set_DESIRED_Sites"] = classad.ExprTree('ifThenElse(siteMapping("", []) isnt error, siteMapping(Pre_DESIRED_Sites, %s), Pre_DESIRED_Sites)' % str(classad.ClassAd(source_to_dests)))
-        anAd["eval_set_Pre_DESIRED_Sites"] = classad.ExprTree('DESIRED_Sites')
 
         # Where possible, prefer to run at a site where the input can be read locally.
         anAd['set_Rank'] = classad.ExprTree("stringlistmember(GLIDEIN_CMSSite, ExtDESIRED_Sites)")
