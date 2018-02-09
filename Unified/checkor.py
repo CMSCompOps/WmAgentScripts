@@ -19,7 +19,7 @@ from McMClient import McMClient
 from htmlor import htmlor
 from utils import sendEmail 
 from utils import closeoutInfo
-from showError import parse_one
+from showError import parse_one, showError_options
 #import csv 
 
 def checkor(url, spec=None, options=None):
@@ -210,9 +210,8 @@ def checkor(url, spec=None, options=None):
     
     ## record all evolution
     full_picture = defaultdict(dict)
-    
 
-
+    report_created = 0
 
     for iwfo,wfo in enumerate(wfs):
         if spec and not (spec in wfo.name): continue
@@ -362,10 +361,7 @@ def checkor(url, spec=None, options=None):
                 continue
 
             true_familly.append( member['RequestName'] )
-            #try:
-            #    parse_one(url, member['RequestName'])
-            #except:
-            #    print "Could not make error report for",member['RequestName']
+
 
             if member['RequestStatus'] in ['running-open','running-closed','assigned','acquired']:
                 print wfo.name,"still has an ACDC running",member['RequestName']
@@ -736,6 +732,11 @@ def checkor(url, spec=None, options=None):
         for output in wfi.request['OutputDatasets']:
             phedex_presence[output] = phedexClient.getFileCountDataset(url, output )
 
+        one_output_not_in_phedex = any([Nfiles==0 for Nfiles in phedex_presence.values()])
+        if one_output_not_in_phedex and 'announce' in assistance_tags:
+            wfi.sendLog('checkor','No files in phedex yet, no could to announce')
+            assistance_tags.remove('announce')
+            
         time_point("checked phedex count", sub_lap=True)
 
         ## presence in dbs
@@ -1070,7 +1071,9 @@ def checkor(url, spec=None, options=None):
                 for member in acdc+acdc_inactive+[wfo.name]:
                     try:
                         if options and options.no_report: continue
-                        parse_one(url, member)
+                        so = showError_options( 'expose' = 1 if report_created < 50 else 0)
+                        parse_one(url, member, so)
+                        report_created += 1
                     except:
                         print "Could not make error report for",member
                 time_point("Done with reports")
@@ -1159,10 +1162,6 @@ def checkor(url, spec=None, options=None):
             else:
                 new_status = 'assistance'
                 
-            #if should_announce and not 'custodial' in new_status and not 'announce' in wfo.status:
-            #    new_status += '-announce'
-            #if should_announce and '-announced' in wfo.status:
-            #    new_status += '-announced'
 
             ## case where the workflow was in manual from recoveror
             if not 'manual' in wfo.status or new_status!='assistance-recovery':
@@ -1180,7 +1179,7 @@ def checkor(url, spec=None, options=None):
             os.system('rm -f .checkor_stop')
             break
 
-
+    print report_created,"reports created in this run"
 
     fDB.html()
     if not spec and in_manual!=0:

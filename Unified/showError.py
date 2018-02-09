@@ -230,11 +230,12 @@ def parse_one(url, wfn, options=None):
         lhe,prim,_,sec = ancestor.getIO()
         high_order_acdc += 1
 
+    
+
     no_input = (not lhe) and len(prim)==0 and len(sec)==0
 
     cache = 0
-    if options:
-        cache = options.cache
+    if options: cache = options.cache
     print "cache timeout", cache
 
     err= wfi.getWMErrors(cache=cache)
@@ -247,7 +248,7 @@ def parse_one(url, wfn, options=None):
     total_by_site_dash = defaultdict( int )
     r_dashb =defaultdict( lambda : defaultdict( int ))
     dash_board_h = 1
-    if True :#'pdmvserv_TOP-RunIISummer15wmLHEGS-00103_00183_v0__161005_165048_809' in wfn:
+    if False :
         ## NB get the since from when the wf has started, not a fixed value
         ## no dashboard until we get a better api
         #dashb = wfi.getFullPicture(since=dash_board_h,cache=cache)
@@ -293,8 +294,11 @@ def parse_one(url, wfn, options=None):
     #        db_total_per_code[code] += dashb[site][error]
     
     print "ACDC Information"
+    print "\t where to re-run"
     print json.dumps( where_to_run , indent=2)         
+    print "\t Missing events"
     print json.dumps(missing_to_run , indent=2)        
+    print "\t Missing events per site"
     print json.dumps(missing_to_run_at , indent=2)        
     
 
@@ -317,7 +321,6 @@ def parse_one(url, wfn, options=None):
         print "getting all codes for relval"
         do_all_error_code = True
         
-    ##do_all_error_code = True ## enable this by default to get some good stuff out there.
 
     tasks = sorted(set(err.keys() + missing_to_run.keys()))
 
@@ -326,14 +329,6 @@ def parse_one(url, wfn, options=None):
         #return task_error_site_count
 
     html="<html> <center><h1>%s, Updated on %s (GMT)" % ( wfn, time.asctime(time.gmtime()) )    
-    #html="<html> <center><h1><a href=https://cmsweb.cern.ch/reqmgr2/fetch?rid=%s>%s</a><br><a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>%s</a><br><a href=https://cms-gwmsmon.cern.ch/prodview/%s>Job Progress</a><br>"%(
-    #    wfn,
-    #    wfn,
-    #    wfi.request['PrepID'],
-    #    wfi.request['PrepID'],
-    #    wfn
-    #    )
-
 
     
     html+= '</center>'
@@ -420,10 +415,22 @@ def parse_one(url, wfn, options=None):
         total_per_site = defaultdict(int)
         time_point("Starting with task %s"% task_short, sub_lap=True)
         
+        notreported='NotReported'
+        
+        total_count= defaultdict(int)
+        error_site_count = defaultdict( lambda : defaultdict(int))
+
+        all_not_reported = set()
         for agent in stat['AgentJobInfo']:
-            if not task in stat['AgentJobInfo'][agent]['tasks']: continue
-            if not 'sites' in stat['AgentJobInfo'][agent]['tasks'][task]:continue
-            for site in stat['AgentJobInfo'][agent]['tasks'][task]['sites']:
+            for site in stat['AgentJobInfo'][agent]['tasks'].get(task,{}).get('skipped',{}):
+                info = stat['AgentJobInfo'][agent]['tasks'][task]['skipped'][site]
+                #print info
+                all_not_reported.add( site )
+                ce = SI.SE_to_CE( site )
+                error_site_count[notreported][ce] += info.get('skippedFiles',0)
+                total_count[notreported] += info.get('skippedFiles',0)
+
+            for site in stat['AgentJobInfo'][agent]['tasks'].get(task,{}).get('sites',{}):
 
                 info = stat['AgentJobInfo'][agent]['tasks'][task]['sites'][site]
                 for s in ['success','failure','cooloff','submitted']:
@@ -438,8 +445,8 @@ def parse_one(url, wfn, options=None):
         if any([v in task.lower() for v in ['logcol','cleanup']]): continue
 
 
-        total_count= defaultdict(int)
-        error_site_count = defaultdict( lambda : defaultdict(int))
+        #total_count= defaultdict(int)
+        #error_site_count = defaultdict( lambda : defaultdict(int))
         if not task in err:
             print task,"has not reported error"
             err[task] = {}
@@ -508,7 +515,6 @@ def parse_one(url, wfn, options=None):
                             if not errorcode_s in expose_archive_code:
                                 expose_archive_code[errorcode_s] = defaultdict(lambda : n_expose)
 
-                        #if do_CL and ((errorcode_s in expose_condor_code and expose_condor_code[errorcode_s][agent]) or do_all_error_code) and 'cern' in agent:
                         if do_CL and ((errorcode_s in expose_condor_code and expose_condor_code[errorcode_s][agent])) and 'cern' in agent:
                             if errorcode_s in expose_condor_code:
                                 expose_condor_code[errorcode_s][agent]-=1
@@ -525,7 +531,6 @@ def parse_one(url, wfn, options=None):
                         for out in sample['output']:
                             #print out
                             if out['type'] == 'logArchive':
-                                #if do_JL and ((errorcode_s in expose_archive_code and expose_archive_code[errorcode_s][agent]>0) or (do_all_error_code)):
                                 if do_JL and ((errorcode_s in expose_archive_code and expose_archive_code[errorcode_s][agent]>0)):
                                     if errorcode_s in expose_archive_code:
                                         expose_archive_code[errorcode_s][agent]-=1
@@ -537,7 +542,7 @@ def parse_one(url, wfn, options=None):
                                                               wfn = wfn,
                                                               errorcode_s = errorcode_s,
                                                               task_short = task_short,
-                                                              from_eos = (options.from_eos if options else True),
+                                                              from_eos = (not options.not_from_eos if options else True),
                                                               ) )
 
         #print task
@@ -558,40 +563,28 @@ def parse_one(url, wfn, options=None):
             pass
 
         ## parse the acdc data
-        notreported='NotReported'
-        all_missing_stats = set()
-        for site in missing_to_run_at[task] if task in missing_to_run_at else []:
-            if not missing_to_run_at[task][site]: continue
-            ce = SI.SE_to_CE( site )
-            #all_sites.add( ce )
-            all_missing_stats.add( ce )
+        #notreported='NotReported'
+        #all_missing_stats = set()
+        #for site in missing_to_run_at[task] if task in missing_to_run_at else []:
+        #    if not missing_to_run_at[task][site]: continue
+        #    ce = SI.SE_to_CE( site )
+        #    #all_sites.add( ce )
+        #    all_missing_stats.add( ce )
 
-            error_site_count[notreported][ce] = 0
-            all_codes.add(notreported)
-            ## no error code at that point
             
-        all_missing_stats = all_missing_stats &set(SI.all_sites)
-        all_not_reported = all_missing_stats - all_sites 
+        #all_missing_stats = all_missing_stats &set(SI.all_sites)
+        #all_not_reported = all_missing_stats - all_sites 
         #print task
         #print "site with no report",sorted(all_not_reported)
         #print sorted(all_sites)
         #print sorted(all_missing_stats)
-        all_sites = all_missing_stats | all_sites
-        all_sites = all_sites & set(SI.all_sites)
-        #success = total_count['0']
-        #total_jobs = sum(total_count.values())
-        #print total_jobs,"jobs in total,",success,"successes"
-        #miss = "{:,}".format(missing_to_run[task]) if task in missing_to_run else "N/A"
+        #all_sites = all_missing_stats | all_sites
 
-        ## show the total
-        #s_per_code =defaultdict(int)
-        #for site in all_sites:
-        #    for code in sorted(all_codes):
-        #        s_per_code[code] += error_site_count[code][site]
 
-        #no_error = (sum(s_per_code.values())==0)
+        #all_sites = all_sites & set(SI.all_sites)
+
         no_error = len(all_not_reported)!=0
-
+        
         if not no_error and notreported in all_codes:
             all_codes.remove( notreported )
         missing_events = missing_to_run[task] if task in missing_to_run else 0
@@ -947,25 +940,79 @@ def parse_those(url, options=None, those=[]):
         print code
         print json.dumps( sorted(per_code[code]), indent=2)
 
+class showError_options(object):
+    def __init__(self, **args):
+        UC = unifiedConfiguration()
+        self.default = {
+            'no_JL' : { 'default' : False,
+                        'action' : 'store_true',
+                        'help' : 'Do not get the job logs'
+                        },
+            'no_CL' : { 'default' : False,
+                       'action' : 'store_true',
+                       'help' : 'Do not get the condor logs'
+                       },
+            'all_errors' : { 'default' : False,
+                             'action' : 'store_true',
+                             'help' : 'Bypass and expose all error codes'
+                             },
+            'cache' : { 'default': 0,
+                        'type' : float,
+                        'help' : 'The age in second of the error report before reloading them'
+                        },
+            'expose' : { 'default' : UC.get('n_error_exposed'),
+                         'help' : 'Number of logs to retrieve',
+                         'type' : int
+                         },
+            'not_from_eos' : { 'default' : False,
+                               'action' : 'store_true',
+                               'help' : 'Do NOT retrieve from job logs from eos'
+                               },
+            'threads' : { 'default' : 5,
+                          'type' : int,
+                          'help' : 'The number of parallel workers to get reports'
+                          },
+            'log_threads' : { 'default' : 3,
+                              'type' : int,
+                              'help' : 'The number of parallel workers to get logs per report'
+                              },
+                             
+            }
+        for opt,defv in self.default.items():
+            setattr( self, opt, args.get(opt, defv['default']))
+            
+    def set_parser(self, parser):
+        for opt,defv in self.default.items():
+            parser.add_option('--%s'%opt, 
+                              **defv)
+    def from_parser(self, options):
+        for opt,defv in self.default.items():
+            setattr( self, opt, getattr(options,opt))
 
+            
 if __name__=="__main__":
     url = 'cmsweb.cern.ch'
+    
+    
 
     UC = unifiedConfiguration()
     parser = optparse.OptionParser()
-    parser.add_option('--no_JL',help="Do not get the job logs", action="store_true",default=False)
-    parser.add_option('--no_CL',help="Do not get the condor logs", action="store_true",default=False)
+
+    so = showError_options()
+    so.set_parser( parser )
+    #parser.add_option('--no_JL',help="Do not get the job logs", action="store_true",default=False)
+    #parser.add_option('--no_CL',help="Do not get the condor logs", action="store_true",default=False)
     parser.add_option('--fast',help="Retrieve from cache and no logs retrieval", action="store_true", default=False)
     parser.add_option('--many',help="Retrieve for all ongoing and needing help", action="store_true", default=False)
     parser.add_option('--top',help="Retrieve the top N offenders",action="store_true", default=False)
-    parser.add_option('--cache',help="The age in second of the error report before reloading them", default=0, type=float)
+    #parser.add_option('--cache',help="The age in second of the error report before reloading them", default=0, type=float)
     parser.add_option('--workflow','-w',help="The workflow to make the error report of",default=None)
-    parser.add_option('--expose',help="Number of logs to retrieve",default=UC.get('n_error_exposed'),type=int)
-    parser.add_option('--all_errors',help="Bypass and expose all error codes", default=False, action='store_true')
-    #parser.add_option('--no_logs',help="Bypass retrieval of logs", default=False, action='store_true')
-    parser.add_option('--from_eos',help="Retrieve from eos",default=False, action='store_true')
-    parser.add_option('--threads',help="The number of parallel workers to get report", default=5, type=int)
-    parser.add_option('--log_threads',help="The number of parallel workers to get logs per report", default=3, type=int)
+    #parser.add_option('--expose',help="Number of logs to retrieve",default=UC.get('n_error_exposed'),type=int)
+    #parser.add_option('--all_errors',help="Bypass and expose all error codes", default=False, action='store_true')
+    #not used#parser.add_option('--no_logs',help="Bypass retrieval of logs", default=False, action='store_true')
+    #parser.add_option('--from_eos',help="Retrieve from eos",default=False, action='store_true')
+    #parser.add_option('--threads',help="The number of parallel workers to get report", default=5, type=int)
+    #parser.add_option('--log_threads',help="The number of parallel workers to get logs per report", default=3, type=int)
     (options,args) = parser.parse_args()
     
     if options.fast:
@@ -973,13 +1020,16 @@ if __name__=="__main__":
         options.no_JL = True
         options.no_CL = True
 
+
+    so.from_parser( options )
+
     if options.workflow:
-        parse_one(url, options.workflow, options)
+        parse_one(url, options.workflow, so)
     elif options.many:
-        parse_many(url, options)
+        parse_many(url, so)
     elif options.top:
-        parse_top(url, options)
+        parse_top(url, so)
     else:
-        parse_all(url, options)
+        parse_all(url, so)
 
     print "ultimate",time.asctime(time.gmtime())
