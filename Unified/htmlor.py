@@ -1449,6 +1449,7 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
     html_doc.close()
 
     open(time.strftime("%s/summary_%%Y_%%W.json"%(monitor_dir), time.gmtime()), 'w').write(json.dumps(summary_content, indent=2))
+    open(time.strftime("%s/summary.txt"%(monitor_pub_dir), time.gmtime()), 'w').write(json.dumps(summary_content, indent=2))
 
 
 if __name__ == "__main__":
