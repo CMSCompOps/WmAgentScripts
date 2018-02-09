@@ -958,6 +958,14 @@ class campaignInfo:
         else:
             return {}
 
+    def allSecondaries(self):
+        secs = set()
+        for c in self.campaigns:
+            if self.campaigns[c].get('go'):
+                for sec in self.campaigns[c].get('secondaries',{}):
+                    secs.add( sec )
+        return sorted(secs)
+
 def notRunningBefore( component, time_out = 60*5 ):
     s = 10
     while True:
