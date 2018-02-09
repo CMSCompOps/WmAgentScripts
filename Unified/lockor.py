@@ -119,6 +119,7 @@ print len(already_locked),"already locked items"
 
 time_point("Starting to check for unlockability")
 
+"""
 secondary_timeout = getLatestMCPileup(url)
 time_point("Got the age of all secondaries")
 
@@ -130,6 +131,10 @@ for secondary in secondary_timeout:
     else:
         print "keep a lock on",secondary,"within",delay_days,"days"
         newly_locking.add( secondary )
+"""
+## just using this to lock all valid 
+newly_locking.update( CI.allSecondaries())
+
 
 
 ## check on the one left out, which would seem to get unlocked
