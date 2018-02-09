@@ -1071,7 +1071,7 @@ def checkor(url, spec=None, options=None):
                 for member in acdc+acdc_inactive+[wfo.name]:
                     try:
                         if options and options.no_report: continue
-                        so = showError_options( 'expose' = 1 if report_created < 50 else 0)
+                        so = showError_options( expose = 1 if report_created < 50 else 0)
                         parse_one(url, member, so)
                         report_created += 1
                     except:
