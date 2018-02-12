@@ -38,16 +38,16 @@ for wf in wfs:
         if y.lower() in ['y','yes','go','ok']:
             go = os.popen(com)
             full_log = go.read().split('\n')
-            ##Created JSON recovery-0-prebello_Run2016G-v1-SingleMuon-07Aug17_8029_.json for recovery of ['/SingleMuon/Run2016G-07Aug17-v1/DQMIO']
-            ##This will recover 14 lumis in 13 files
+            this_json = None
             for line in full_log:
                 if line.startswith('Created JSON'):
-                    json = line.split()[2]
-                    json_files.append( json )
+                    this_json = line.split()[2]
+                    json_files.append( this_json )
                     print line
                 if 'This will recover' in line:
                     print line
-
+            if not this_json:
+                print '\n'.join(full_log)
     createst_wfs = []
     if options.nocreation:
         ## look for it in reqmgr
@@ -66,11 +66,14 @@ for wf in wfs:
             if y.lower() in ['y','yes','go','ok']:
                 go = os.popen(com)
                 full_log = go.read().split('\n')
+                wf_created = None
                 for line in full_log:
                     if line.startswith("Created:"):
                         wf_created = line.split()[1]
                         createst_wfs.append( wf_created ) 
                         break
+                if not wf_created:
+                    print '\n'.join(full_log)
     print len(createst_wfs),"that can be submitted"
     for wf in createst_wfs:
         com = './assign.py %s --w %s'%( options.assignoptions, wf)
