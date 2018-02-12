@@ -718,7 +718,7 @@ def defineRequests(workload, requestInfo,
         creationDict["IgnoredOutputModules"] = list(set(outputModules) - set(requestObject['outMod']))
         creationDict["ACDCServer"] = acdcCouchUrl
         creationDict["ACDCDatabase"] = acdcCouchDb
-        creationDict["RequestString"] = "recovery-%d-%s" % (idx, workload.name()[:-18])
+        creationDict["RequestString"] = "r-%d-%s" % (idx, workload.name())[:-50]
         creationDict["Requestor"] = requestor
         creationDict["RequestPriority"] = min(500000, requestInfo.get('RequestPriority',60000)*2 )
         creationDict["Group"] = group
