@@ -30,9 +30,14 @@ dbs_url_writer = os.getenv('UNIFIED_DBS3_WRITER','https://cmsweb.cern.ch/dbs/pro
 phedex_url = os.getenv('UNIFIED_PHEDEX','cmsweb.cern.ch')
 reqmgr_url = os.getenv('UNIFIED_REQMGR','cmsweb.cern.ch')
 monitor_dir = os.getenv('UNIFIED_MON','/var/www/html/unified/')
+monitor_eos_dir = "/eos/project/c/cms-unified-logs/www/"
 monitor_pub_dir = os.getenv('UNIFIED_MON','/var/www/html/unified/public/')
 base_dir =  os.getenv('UNIFIED_DIR','/data/unified/')
+#base_eos_dir = "/afs/cern.ch/user/c/cmst2/Unified/"
+base_eos_dir = "/eos/project/c/cms-unified-logs/"
+
 unified_url = os.getenv('UNIFIED_URL','https://vocms049.cern.ch/unified/')
+url_eos = "http://cern.ch/cms-unified/"
 unified_pub_url = os.getenv('UNIFIED_URL','https://vocms049.cern.ch/unified/public/')
 cache_dir = '/data/unified-cache/'
 
@@ -40,6 +45,8 @@ FORMAT = "%(module)s.%(funcName)s(%(lineno)s) => %(message)s (%(asctime)s)"
 DATEFMT = "%Y-%m-%d %H:%M:%S"
 logging.basicConfig(format = FORMAT, datefmt = DATEFMT, level=logging.DEBUG)
 
+
+do_html_in_each_module = False
 
 def deep_update(d, u):
     for k, v in u.items():

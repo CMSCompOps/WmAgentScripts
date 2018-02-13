@@ -4,7 +4,7 @@ import reqMgrClient
 from McMClient import McMClient
 from utils import makeReplicaRequest
 from utils import workflowInfo, siteInfo, campaignInfo, userLock
-from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, approveSubscription, getDatasetSize, updateSubscription, getWorkflows, componentInfo, getDatasetDestinations, getDatasetBlocks, DSS
+from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, approveSubscription, getDatasetSize, updateSubscription, getWorkflows, componentInfo, getDatasetDestinations, getDatasetBlocks, DSS, do_html_in_each_module
 from utils import unifiedConfiguration, monitor_dir, reqmgr_url
 from utils import lockInfo
 from utils import duplicateLock
@@ -779,4 +779,5 @@ if __name__=="__main__":
 
     transferor(url,spec,options=options)
 
-    htmlor()
+    if do_html_in_each_module:
+        htmlor()

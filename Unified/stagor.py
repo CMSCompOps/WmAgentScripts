@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput, workflowInfo, getDatasetBlocksFraction, findLostBlocks, findLostBlocksFiles, getDatasetBlockFraction, getDatasetFileFraction, getDatasetPresence, reqmgr_url, monitor_dir, getAllStuckDataset, monitor_pub_dir
+from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput, workflowInfo, getDatasetBlocksFraction, findLostBlocks, findLostBlocksFiles, getDatasetBlockFraction, getDatasetFileFraction, getDatasetPresence, reqmgr_url, monitor_dir, getAllStuckDataset, monitor_pub_dir, do_html_in_each_module
 from utils import unifiedConfiguration, componentInfo, sendEmail, checkTransferLag, sendLog
 from utils import siteInfo, campaignInfo, unified_url
 import json
@@ -536,4 +536,5 @@ if __name__ == "__main__":
         spec = args[0]
 
     stagor(url, spec, options)
-    htmlor()
+    if do_html_in_each_module:
+        htmlor()

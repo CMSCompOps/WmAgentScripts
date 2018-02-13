@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, forceComplete, makeReplicaRequest, getDatasetSize, getDatasetFiles, sendLog, reqmgr_url, dbs_url, dbs_url_writer, getForceCompletes
-from utils import componentInfo, unifiedConfiguration, userLock, duplicateLock, dataCache, unified_url, getDatasetLumisAndFiles, getDatasetRuns, duplicateAnalyzer, invalidateFiles, findParent
+from utils import componentInfo, unifiedConfiguration, userLock, duplicateLock, dataCache, unified_url, getDatasetLumisAndFiles, getDatasetRuns, duplicateAnalyzer, invalidateFiles, findParent, do_html_in_each_module
 import phedexClient
 import dbs3Client
 dbs3Client.dbs3_url = dbs_url
@@ -1253,7 +1253,7 @@ if __name__ == "__main__":
 
     checkor(url, spec, options=options)
     
-    if not spec or options.html:
+    if (not spec and do_html_in_each_module) or options.html:
         htmlor()
 
 

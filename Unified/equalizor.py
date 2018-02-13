@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import workflowInfo, getWorkflows, global_SI, sendEmail, componentInfo, getDatasetPresence, monitor_dir, monitor_pub_dir, reqmgr_url, campaignInfo, unifiedConfiguration, sendLog
+from utils import workflowInfo, getWorkflows, global_SI, sendEmail, componentInfo, getDatasetPresence, monitor_dir, monitor_pub_dir, reqmgr_url, campaignInfo, unifiedConfiguration, sendLog, do_html_in_each_module
 import reqMgrClient
 import json
 import os
@@ -1179,5 +1179,5 @@ if __name__ == "__main__":
 
     equalizor(url, spec, options=options)
 
-    if not spec:
+    if not spec and do_html_in_each_module:
         htmlor()

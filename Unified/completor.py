@@ -34,6 +34,7 @@ def completor(url, specific):
 
     max_per_round = UC.get('max_per_round').get('completor',None)
     if max_per_round and not specific: wfs = wfs[:max_per_round]
+        
 
     all_stuck = set()
     ## take into account what stagor was saying
