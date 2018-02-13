@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import componentInfo, sendEmail, setDatasetStatus, unifiedConfiguration, workflowInfo, siteInfo, sendLog, reqmgr_url, monitor_dir, duplicateLock, userLock, global_SI
+from utils import componentInfo, sendEmail, setDatasetStatus, unifiedConfiguration, workflowInfo, siteInfo, sendLog, reqmgr_url, monitor_dir, duplicateLock, userLock, global_SI, do_html_in_each_module
 import reqMgrClient
 import json
 import time
@@ -512,5 +512,5 @@ if __name__ == "__main__":
 
     closor(url,spec, options=options)
 
-    if (not spec) and (not options.limit):
+    if (not spec) and (not options.limit) and do_html_in_each_module:
         htmlor()
