@@ -148,11 +148,11 @@
  "max_per_round" : {
    "description" : "limitation on the number of wf to process per module",
    "value" : {
-    "transferor" : null,
+    "transferor" : 500,
     "assignor" : null,
     "closor" : null,
-    "checkor" : null,
-    "completor" : null
+    "checkor" : 500,
+    "completor" : 1000
     }
  },
  "default_fraction_overdoing" :{
@@ -224,7 +224,7 @@
    "description": "Whether the stagor module can send workflow back to considered"
  },
   "max_handled_workflows": {
-   "value" : 4000,
+   "value" : 6000,
    "description": "The total number of workflows that we allow to handle at a time (transfer, running, assistance)"
   },
   "max_staging_workflows": {
@@ -268,7 +268,7 @@
     "description" :"The number of top N error code to expose logs of."
   },
   "n_error_exposed":{
-    "value" : 0,
+    "value" : 2,
     "description" :"The default number of job cmsrun logs to retrieve"
   },
   "expose_archive_code":{
