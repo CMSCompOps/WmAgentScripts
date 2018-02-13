@@ -47,7 +47,8 @@ def transferor(url ,specific = None, talk=True, options=None):
     being_handled = len(session.query(Workflow).filter(Workflow.status == 'away').all())
     being_handled += len(session.query(Workflow).filter(Workflow.status.startswith('stag')).all())
     being_transfered = len(session.query(Workflow).filter(Workflow.status == 'staging').all())
-    being_handled += len(session.query(Workflow).filter(Workflow.status.startswith('assistance-')).all())
+    #being_handled += len(session.query(Workflow).filter(Workflow.status.startswith('assistance-')).all())
+    being_handled += len(session.query(Workflow).filter(Workflow.status.startswith('assistance-')).filter(~Workflow.status.contains('custodial')).all())
 
     max_to_handle = options.maxworkflows
     max_to_transfer = options.maxstaging
@@ -70,9 +71,21 @@ def transferor(url ,specific = None, talk=True, options=None):
     all_transfers=defaultdict(list)
     workflow_dependencies = defaultdict(set) ## list of wf.id per input dataset
     wfs_and_wfh=[]
+    max_per_round = UC.get('max_per_round').get('transferor',None)
+
     print "getting all wf to consider ..."
     cache = getWorkflows(url, 'assignment-approved', details=True)
-    for wfo in session.query(Workflow).filter(Workflow.status.startswith('considered')).all():
+    all_to_include = session.query(Workflow).filter(Workflow.status.startswith('considered')).all()
+    if len(cache) > 2000:
+        max_to_include = max_per_round
+        cache = sorted( cache , key = lambda r : r['RequestPriority'], reverse=True)
+        highest = [ r['RequestName'] for r in cache[:max_to_include]]
+        all_to_include = [ wfo for wfo in all_to_include if wfo.name in highest]
+        #random.shuffle( all_to_include ) # to limit priority inversion
+        #all_to_include = all_to_include[:max_to_include]
+        print "limiting what to consider to",max_to_include,"because there is too much stuff going on. Got",len(all_to_include)
+
+    for wfo in all_to_include:
         print "\t",wfo.name
         if specific and not specific in wfo.name: continue
         cache_r =filter(lambda d:d['RequestName']==wfo.name, cache)
@@ -227,7 +240,6 @@ def transferor(url ,specific = None, talk=True, options=None):
     destination_cache = {}
     no_goes = set()
 
-    max_per_round = UC.get('max_per_round').get('transferor',None)
     if max_per_round and not spec:
         wfs_and_wfh = wfs_and_wfh[:max_per_round]
     
