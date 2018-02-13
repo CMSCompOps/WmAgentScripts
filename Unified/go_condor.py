@@ -306,6 +306,15 @@ def makeAdhocAds():
     anAd["set_HasBeenRouted"] = False
     print anAd
 
+    anAd = classad.ClassAd()
+    anAd["GridResource"] = "condor localhost localhost"
+    anAd["TargetUniverse"] = 5
+    anAd["Name"] = str("Correcting memory requirement of 15200 for T0")
+    anAd["Requirements"] = classad.ExprTree('OriginalMemory > 14800 && regexp("T0", DESIRED_Sites)')
+    anAd["set_OriginalMemory"] = 14800
+    anAd["set_HasBeenRouted"] = False
+    print anAd
+
     ############################################################
     ## if you want to reset the routing of eveything in the pool
     reset_routing = []#'HasBeenRouted','HasBeenRouted_Overflow','HasBeenMemoryTuned','HasBeenSlopeTuned', 'HasBeenTimingTuned','WMCore_ResizeJob','HasBeenReplaced','HasBeenReadTuned','HasBeenRaisedHighPrio']
