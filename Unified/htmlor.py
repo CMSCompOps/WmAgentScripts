@@ -135,9 +135,11 @@ def htmlor( caller = ""):
         if ongoing:
             if not os.path.isfile('%s/report/%s'%(monitor_dir,wfn)):
                 if (random.random() < 0.005):
-                    print wfn,"report absent, doing it"
-                    os.system('python Unified/showError.py -w %s'%(wfn))
-                    text += '<a href=report/%s target=_blank>report</a>'%wfn
+                    #print wfn,"report absent, doing it"
+                    print wfn,"report absent, NOT doing i. Too expensive"
+                    pass
+                    #os.system('python Unified/showError.py -w %s'%(wfn))
+                    #text += '<a href=report/%s target=_blank>report</a>'%wfn
                 else:
                     #print wfn,"report absent, could be doing it"
                     pass
@@ -1448,8 +1450,12 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
     html_doc.write("end of page</html>")
     html_doc.close()
 
-    open(time.strftime("%s/summary_%%Y_%%W.json"%(monitor_dir), time.gmtime()), 'w').write(json.dumps(summary_content, indent=2))
-    open(time.strftime("%s/summary.txt"%(monitor_pub_dir), time.gmtime()), 'w').write(json.dumps(summary_content, indent=2))
+    this_week = str(int(time.strftime("%W", time.gmtime())))
+    last_week = str(int(time.strftime("%W", time.gmtime()))-1)
+
+    open(time.strftime("%s/summary_%%Y_"%(monitor_dir), time.gmtime())+this_week+".json", 'w').write(json.dumps(summary_content, indent=2))
+    os.system(time.strftime("cp %s/summary_%%Y_"%(monitor_dir), time.gmtime())+this_week+".json %s/summary.txt"%(monitor_pub_dir))
+    os.system(time.strftime("cp %s/summary_%%Y_"%(monitor_dir), time.gmtime())+last_week+".json %s/last_summary.txt"%(monitor_pub_dir))
 
 
 if __name__ == "__main__":
