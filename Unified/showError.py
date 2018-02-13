@@ -1,13 +1,10 @@
 #!/usr/bin/env python
-from utils import workflowInfo, siteInfo, monitor_dir, monitor_pub_dir, base_dir, global_SI, getDatasetPresence, getDatasetBlocksFraction, getDatasetBlocks, unifiedConfiguration, getDatasetEventsPerLumi, dataCache, unified_url
+from utils import workflowInfo, siteInfo, monitor_dir, monitor_pub_dir, base_dir, global_SI, getDatasetPresence, getDatasetBlocksFraction, getDatasetBlocks, unifiedConfiguration, getDatasetEventsPerLumi, dataCache, unified_url, base_eos_dir, monitor_eos_dir, url_eos
 import time
 
-base_eos_dir = "/afs/cern.ch/user/c/cmst2/Unified/"
-#monitor_eos_dir = "/afs/cern.ch/user/c/cmst2/www/unified/"
-#url_eos = "https://cmst2.web.cern.ch/cmst2/unified/"
-monitor_eos_dir = "/eos/project/c/cms-unified-logs/www/"
-#url_eos = "http://test-voc-unified.web.cern.ch/test-voc-unified/unified/"
-url_eos = "http://cern.ch/cms-unified/"
+#base_eos_dir = "/afs/cern.ch/user/c/cmst2/Unified/"
+#monitor_eos_dir = "/eos/project/c/cms-unified-logs/www/"
+#url_eos = "http://cern.ch/cms-unified/"
 
 import json
 import sys
@@ -234,8 +231,7 @@ def parse_one(url, wfn, options=None):
 
     no_input = (not lhe) and len(prim)==0 and len(sec)==0
 
-    cache = 0
-    if options: cache = options.cache
+    cache = options.cache
     print "cache timeout", cache
 
     err= wfi.getWMErrors(cache=cache)
@@ -307,13 +303,9 @@ def parse_one(url, wfn, options=None):
         #return task_error_site_count, one_explanation
         pass
 
-    do_JL = True
-    do_CL = True
-    do_all_error_code = False
-    if options: 
-        do_JL = not options.no_JL
-        do_CL = not options.no_CL
-        do_all_error_code = options.all_errors
+    do_JL = not options.no_JL
+    do_CL = not options.no_CL
+    do_all_error_code = options.all_errors
     if high_order_acdc>=1:
         print high_order_acdc,"order request, pulling down all logs"
         do_all_error_code = True
@@ -399,7 +391,7 @@ def parse_one(url, wfn, options=None):
 
     html += '<br>'
 
-    n_expose_base = options.expose if options else UC.get('n_error_exposed')
+    n_expose_base = options.expose# if options else UC.get('n_error_exposed')
     print "getting",n_expose_base,"logs by default"
     if tasks:
         min_rank = min([task.count('/') for task in tasks])
@@ -542,7 +534,7 @@ def parse_one(url, wfn, options=None):
                                                               wfn = wfn,
                                                               errorcode_s = errorcode_s,
                                                               task_short = task_short,
-                                                              from_eos = (not options.not_from_eos if options else True),
+                                                              from_eos = (not options.not_from_eos),# if options else True),
                                                               ) )
 
         #print task
@@ -686,7 +678,8 @@ def parse_one(url, wfn, options=None):
         task_error_site_count[task] = error_site_count
 
     ## run all retrieval
-    run_threads = ThreadHandler( threads = threads, n_threads = options.log_threads if options else 5, sleepy = 10, 
+    run_threads = ThreadHandler( threads = threads, n_threads = options.log_threads,# if options else 5,
+                                 sleepy = 10, 
                                  timeout=UC.get('retrieve_errors_timeout'),
                                  verbose=True)
     run_threads.start()
@@ -904,7 +897,7 @@ def parse_those(url, options=None, those=[]):
 
 
     #threads = thread[:5]
-    run_threads = ThreadHandler( threads = threads, n_threads = options.threads if options else 5,
+    run_threads = ThreadHandler( threads = threads, n_threads = options.threads,# if options else 5,
                                  sleepy = 10,
                                  timeout = None,
                                  verbose = True )
