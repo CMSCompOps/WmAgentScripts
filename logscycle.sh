@@ -49,11 +49,7 @@ echo $$ >> $lock_name
 ## get sso cookie and new grid proxy
 source $BASE_DIR/credentials.sh
 
-source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh
-
-cd $BASE_DIR
 $BASE_DIR/cWrap.sh Unified/efficiencor.py 1
-#python Unified/efficiencor.py 1
 
 rm -f $lock_name
 

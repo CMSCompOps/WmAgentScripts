@@ -66,18 +66,8 @@ $BASE_DIR/cWrap.sh Unified/injector.py
 ## initiate data placements or pass wf along
 $BASE_DIR/cWrap.sh Unified/transferor.py
 ## assigned those that could have passed through directly
-#$BASE_DIR/cWrap.sh Unified/assignor.py --from_status staged
+$BASE_DIR/cWrap.sh Unified/assignor.py --from_status staged
 
-## get the workflow in/out of the system
-#$BASE_DIR/cWrap.sh Unified/injector.py
-## this could replace stagor in much faster
-#$BASE_DIR/cWrap.sh Unified/assignor.py --early --from_status staging
-## get the workflow in/out the system
-#$BASE_DIR/cWrap.sh Unified/injector.py
-## initiate data placements or pass wf along
-#$BASE_DIR/cWrap.sh Unified/transferor.py
-
-#$BASE_DIR/cWrap.sh Unified/assignor.py --from_status staged
 
 ## get this done once as it is quite slow and heavy, but we need the output json it could produce
 ### right now, that modules fucks up ... too slow
@@ -88,9 +78,6 @@ $BASE_DIR/cWrap.sh Unified/assignor.py
 
 ## unlock dataset that can be unlocked and set status along
 $BASE_DIR/cWrap.sh Unified/lockor.py
-
-## addhoc operations
-#$BASE_DIR/cWrap.sh Unified/addHoc.py
 
 rm -f $lock_name
 
