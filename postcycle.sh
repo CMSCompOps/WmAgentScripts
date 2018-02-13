@@ -54,7 +54,7 @@ $BASE_DIR/cWrap.sh Unified/injector.py
 ## force-complete wf according to rules ## tagging phase
 $BASE_DIR/cWrap.sh Unified/completor.py
 
-## check on the wf that have completed already
+## check on the wf that have just completed
 $BASE_DIR/cWrap.sh Unified/checkor.py --strict
 $BASE_DIR/cWrap.sh Unified/actor.py
 ## initiate automatic recovery
@@ -63,10 +63,16 @@ $BASE_DIR/cWrap.sh Unified/recoveror.py
 ## submit ACDCs and clones from actions submitted via new recovery tools
 $BASE_DIR/cWrap.sh Unified/actor.py
 
-## pass along everything that has custodial already and should close
+## look at everything that had been taken care of already
+$BASE_DIR/cWrap.sh Unified/checkor.py  --review --recovering
+
+## look at everything that has to be taken care of
 $BASE_DIR/cWrap.sh Unified/checkor.py  --review
 $BASE_DIR/cWrap.sh Unified/actor.py
+
+## pass along everything that has custodial already and should close
 $BASE_DIR/cWrap.sh Unified/checkor.py  --clear
+$BASE_DIR/cWrap.sh Unified/closor.py
 $BASE_DIR/cWrap.sh Unified/actor.py
 
 ## close the wf in closed-out
