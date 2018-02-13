@@ -185,6 +185,7 @@ for dataset in already_locked-newly_locking-also_locking_from_reqmgr:
             print "\tunlocking",dataset
             LI.release( dataset )
             ##would like to pass to *-unlock, or even destroy from local db
+            creators = getWorkflowByOutput( url, dataset , details=True)
             for creator in creators:
                 for wfo in  session.query(Workflow).filter(Workflow.name==creator['RequestName']).all():
                     if not 'unlock' in wfo.status and any([wfo.status.startswith(key) for key in ['done','forget']]):
