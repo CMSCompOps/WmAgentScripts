@@ -68,8 +68,6 @@ def checkor(url, spec=None, options=None):
     wfs=[]
     exceptions=[
         ]
-    #for wfn in exceptions:
-    #    wfs.extend( session.query(Workflow).filter(Workflow.name == wfn).all() )
 
     if options.strict:
         ## the one which were running and now have completed
@@ -79,16 +77,18 @@ def checkor(url, spec=None, options=None):
         print "update option is on: checking workflows that have not completed yet"
         wfs.extend( filter(lambda wfo: not wfo.name in all_completed , runnings))
 
-    if options.clear:
+    if options.clear: 
         print "clear option is on: checking workflows that are ready to toggle closed-out"
         wfs.extend( filter(lambda wfo: 'custodial' in wfo.status, standings))
     if options.review:
         print "review option is on: checking the workflows that needed intervention"
-        wfs.extend( filter(lambda wfo: not 'custodial' in wfo.status, standings))
-
-    ## what is left out are the wf which were running and ended up aborted/failed/...
-
-
+        these = filter(lambda wfo: not 'custodial' in wfo.status, standings)
+        if options.recovering:
+            print "review-recovering is on: checking only the workflows that had been already acted on"
+            these = filter(lambda wfo: not 'manual' in wfo.status, these)
+        else:
+            these = filter(lambda wfo: 'manual' in wfo.status, these)
+        wfs.extend( these )
 
 
     custodials = defaultdict(list) #sites : dataset list
@@ -160,20 +160,6 @@ def checkor(url, spec=None, options=None):
         print rider,"bypasses by forcecompleting",json.dumps(sorted(extending))
         bypasses.extend( extending )
 
-    ## once this was force-completed, you want to bypass
-    #for rider,email in actors:
-    #    rider_file = '/afs/cern.ch/user/%s/%s/public/ops/forcecomplete.json'%(rider[0],rider)
-    #    if not os.path.isfile(rider_file):
-    #        print "no file",rider_file
-    #        #sendLog('checkor',"no file %s"%rider_file)
-    #        continue
-    #    try:
-    #        extending = json.loads(open( rider_file ).read() )
-    #        print rider,"is force completing",json.dumps(sorted(extending))
-    #        bypasses.extend( extending )
-    #    except:
-    #        sendLog('checkor',"cannot get force complete list from %s"%rider)
-    #        sendEmail("malformated force complet file","%s is not json readable"%rider_file, destination=[email])
 
     if use_mcm:
         ## this is a list of prepids that are good to complete
@@ -190,12 +176,6 @@ def checkor(url, spec=None, options=None):
     damping_fraction_pass_max = float(UC.get('damping_fraction_pass_max')/ 100.)
 
 
-    total_running_time = 1.*60. 
-    sleep_time = 1
-    will_do_that_many = len(wfs)
-    if len(wfs):
-        sleep_time = min(max(0.5, total_running_time / will_do_that_many), 10)
-
     random.shuffle( wfs )
 
     in_manual = 0
@@ -203,11 +183,30 @@ def checkor(url, spec=None, options=None):
     ## now you have a record of what file was invalidated globally from TT
     TMDB_invalid = dataCache.get('file_invalidation') 
 
-    print len(wfs),"to consider, pausing for",sleep_time
+
     max_per_round = UC.get('max_per_round').get('checkor',None)
-    if options.limit: max_per_round=options.limit
-    if max_per_round and not spec: wfs = wfs[:max_per_round]
-    
+    if options.limit: 
+        print "command line to limit to",options.limit
+        max_per_round=options.limit
+    if max_per_round and not spec: 
+        print "limiting to",max_per_round,"this round"
+
+        ##should be ordering by priority if you can
+        ## order wfs with rank of wfname
+        all_completed_plus = sorted(getWorkflows(url, 'completed' , details=True), key = lambda r : r['RequestPriority'])
+        all_completed_plus = [r['RequestName'] for r in all_completed_plus]
+        def rank( wfn ):
+            return all_completed_plus.index( wfn ) if wfn in all_completed_plus else 0
+        wfs = sorted( wfs, key = lambda wfo : rank( wfo.name ),reverse=True)
+        wfs = wfs[:max_per_round]
+
+    total_running_time = 1.*60. 
+    sleep_time = 1
+    will_do_that_many = len(wfs)
+    if len(wfs):
+        sleep_time = min(max(0.5, total_running_time / will_do_that_many), 10)
+
+    print len(wfs),"to consider, pausing for",sleep_time
     ## record all evolution
     full_picture = defaultdict(dict)
 
@@ -1071,7 +1070,7 @@ def checkor(url, spec=None, options=None):
                 for member in acdc+acdc_inactive+[wfo.name]:
                     try:
                         if options and options.no_report: continue
-                        so = showError_options( expose = 1 if report_created < 50 else 0)
+                        expose = UC.get('n_error_exposed') if (report_created < 50 and 'manual' in assistance_tags) else 0
                         parse_one(url, member, so)
                         report_created += 1
                     except:
@@ -1229,6 +1228,7 @@ if __name__ == "__main__":
 
     parser.add_option('--clear', help='Only the workflow that have reached custodial', action ='store_true', default=False)
     parser.add_option('--review', help='Look at the workflows that have already completed and had required actions', action='store_true', default=False)
+    parser.add_option('--recovering', help='Look at the workflows that already have on-going acdc', action='store_true', default=False)
 
     parser.add_option('--limit',help='The number of workflow to consider for checking', default=0, type=int)
     parser.add_option('--fractionpass',help='The completion fraction that is permitted', default=0.0,type='float')
