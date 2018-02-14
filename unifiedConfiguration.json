@@ -148,7 +148,7 @@
  "max_per_round" : {
    "description" : "limitation on the number of wf to process per module",
    "value" : {
-    "transferor" : 500,
+    "transferor" : 600,
     "assignor" : null,
     "closor" : null,
     "checkor" : 500,
@@ -224,7 +224,7 @@
    "description": "Whether the stagor module can send workflow back to considered"
  },
   "max_handled_workflows": {
-   "value" : 6000,
+   "value" : 8000,
    "description": "The total number of workflows that we allow to handle at a time (transfer, running, assistance)"
   },
   "max_staging_workflows": {
