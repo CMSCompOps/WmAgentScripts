@@ -4702,6 +4702,7 @@ class workflowInfo:
         nersc_archs=set(['slc6_amd64_gcc530','slc6_amd64_gcc630'])
         good = (self.request['RequestType'] == 'StepChain' or no_step)  and self.request['RequestPriority'] <= 85000 and len(set(self.request['ScramArch'])&nersc_archs)>=1
         io = _,prim,_,sec = self.getIO()
+        if self.heavyRead(): good=False
         if prim: good = False
         #if sec: good = False
         ## should be of significant size. how do we check that ???
