@@ -1042,6 +1042,41 @@ def genericGet( base, url, load=True, headers=None):
         result = r2.read() 
     return result
 
+
+
+class UnifiedBuster(threading.Thread):
+    def __init__(self, **args):
+        threading.Thread.__init__(self)
+        self.master = args['master'] ## an locking iterator
+        self.log = ""
+        self.iterate_me = args["iterate_me"]
+
+    def run(self):
+        #pick an item from the master
+        while True:
+            self.master.lock()
+            try:
+                item = next(self.iterate_me)
+            except StopIteration:
+                print "finished"
+                self.master.unlock()
+                break
+            self.master.unlock()
+
+            ## run something on this, giving the output to the master
+            try:
+                self.operate( item )
+            except Exception as e:
+                print "Failed in thread"
+                print str(e)
+                break
+            
+
+    def operate(self, item):
+        print "to be overloaded every where"
+        pass
+
+
 class docCache:
     def __init__(self):
         self.cache = {}
