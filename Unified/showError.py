@@ -733,10 +733,17 @@ def parse_one(url, wfn, options=None):
     return task_error_site_count, one_explanation
 
 
-def parse_many(url, options):
+def parse_ongoing(url, options):
+    parse_many(url, options, statuses= ['away'])
+
+def parse_manual(url, options):
+    parse_many(url, options, statuses= ['manual'])
+
+def parse_many(url, options, statuses):
     wfos = []
-    wfos.extend(session.query(Workflow).filter(Workflow.status == 'away').all())
-    wfos.extend(session.query(Workflow).filter(Workflow.status.startswith('assistance')).all())
+    for s in statuses:
+        if not s: continue
+        wfos.extend(session.query(Workflow).filter(Workflow.status.contains(s)).all())
     random.shuffle( wfos ) 
     parse_those(url, options, [wfo.name for wfo in wfos])
         
@@ -933,6 +940,8 @@ def parse_those(url, options=None, those=[]):
         print code
         print json.dumps( sorted(per_code[code]), indent=2)
 
+
+
 class showError_options(object):
     def __init__(self, **args):
         UC = unifiedConfiguration()
@@ -996,8 +1005,10 @@ if __name__=="__main__":
     #parser.add_option('--no_JL',help="Do not get the job logs", action="store_true",default=False)
     #parser.add_option('--no_CL',help="Do not get the condor logs", action="store_true",default=False)
     parser.add_option('--fast',help="Retrieve from cache and no logs retrieval", action="store_true", default=False)
-    parser.add_option('--many',help="Retrieve for all ongoing and needing help", action="store_true", default=False)
+    parser.add_option('--ongoing',help="Retrieve for all ongoing", action="store_true", default=False)
+    parser.add_option('--manual',help="Retrieve for all workflows needing help", action="store_true", default=False)
     parser.add_option('--top',help="Retrieve the top N offenders",action="store_true", default=False)
+    parser.add_option('--from_status',help="The coma separated list of status keywords",default="")
     #parser.add_option('--cache',help="The age in second of the error report before reloading them", default=0, type=float)
     parser.add_option('--workflow','-w',help="The workflow to make the error report of",default=None)
     #parser.add_option('--expose',help="Number of logs to retrieve",default=UC.get('n_error_exposed'),type=int)
@@ -1018,8 +1029,12 @@ if __name__=="__main__":
 
     if options.workflow:
         parse_one(url, options.workflow, so)
-    elif options.many:
-        parse_many(url, so)
+    elif options.ongoing:
+        parse_ongoing(url, so)
+    elif options.manual:
+        parse_manual(url, so)
+    elif options.from_status:
+        parse_many(url, so, statuses=options.from_status.split(','))
     elif options.top:
         parse_top(url, so)
     else:
