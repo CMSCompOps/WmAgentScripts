@@ -3,7 +3,7 @@ from assignSession import *
 import reqMgrClient
 from utils import workflowInfo, campaignInfo, siteInfo, userLock, unifiedConfiguration, reqmgr_url, monitor_pub_dir, monitor_dir, global_SI
 from utils import getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction, getDatasetEventsPerLumi, getLFNbase, getDatasetBlocks, lockInfo, getAllStuckDataset, isHEPCloudReady, do_html_in_each_module
-from utils import componentInfo, sendEmail, sendLog
+from utils import componentInfo, sendEmail, sendLog, getWorkflows
 #from utils import lockInfo
 from utils import duplicateLock, notRunningBefore
 import optparse
@@ -64,7 +64,19 @@ def assignor(url ,specific = None, talk=True, options=None):
 
     max_per_round = UC.get('max_per_round').get('assignor',None)
     max_cpuh_block = UC.get('max_cpuh_block')
-    random.shuffle( wfos )
+
+    ##order by priority instead of random
+    if options.early:
+        cache = sorted(getWorkflows(url, 'assignment-approved', details=True), key = lambda r : r['RequestPriority'])
+        def rank( wfn ):
+            return cache.index( wfn ) if wfn in cache else 0
+
+        wfos = sorted(wfos, key = lambda wfo : rank( wfo.name ),reverse=True)
+    else:
+        random.shuffle( wfos )
+
+
+
     for wfo in wfos:
         
         if options.limit and (n_stalled+n_assigned)>options.limit:
