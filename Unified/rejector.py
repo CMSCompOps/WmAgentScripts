@@ -205,18 +205,31 @@ def rejector(url, specific, options=None):
                     schema['SizePerEvent'] = 0
                     schema['TimePerEvent'] = 0
                     step=1
+                    s_n = {}
                     while True:
                         if 'Task%d'%step in schema:
                             schema['Step%d'%step] = schema.pop('Task%d'%step)
-                            schema['TimePerEvent'] += schema['Step%d'%step].pop('TimePerEvent')
-                            #schema['SizePerEvent'] = max(schema['SizePerEvent'], schema['Step%d'%step].pop('SizePerEvent'))
-                            schema['SizePerEvent'] += schema['Step%d'%step].pop('SizePerEvent')
                             schema['Step%d'%step]['StepName'] = schema['Step%d'%step].pop('TaskName')
+                            s_n[ schema['Step%d'%step]['StepName'] ] = 'Step%d'%step
                             if 'InputTask' in schema['Step%d'%step]:
                                 schema['Step%d'%step]['InputStep'] = schema['Step%d'%step].pop('InputTask')
+                            eff = 1.
+                            up_s = 'Step%d'%step
+                            while True:
+                                ## climb up a step. supposedely already all converted
+                                up_s = s_n.get(schema[up_s].get('InputStep',None),None)
+                                if up_s:
+                                    ## multiply with the efficiency
+                                    eff *= schema[up_s].get('FilterEfficiency',1.)
+                                else:
+                                    ## or stop there
+                                    break
+
                             if not 'KeepOutput' in schema['Step%d'%step]:
                                 ## this is a weird translation capability. Absence of keepoutput in step means : keep the output. while in TaskChain absence means : drop
                                 schema['Step%d'%step]['KeepOutput'] = False
+                            schema['TimePerEvent'] += eff*schema['Step%d'%step].pop('TimePerEvent')
+                            schema['SizePerEvent'] += eff*schema['Step%d'%step].pop('SizePerEvent')
                             step+=1
                         else:
                             break
