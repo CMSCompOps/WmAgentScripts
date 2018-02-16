@@ -1993,7 +1993,9 @@ global_SI.instance = None
 
 class closeoutInfo:
     def __init__(self):
+        self.owner = os.getpid()
         try:
+            ## this needs to get in a db so as to be concurrent
             self.record = json.loads(open('closedout.json').read())
         except:
             print "No closed-out record, starting fresh"
@@ -2097,6 +2099,8 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
         html.write('<br>'*100) ## so that the anchor works ok
         html.write('bottom of page</html>')
 
+
+        ## write the information out to disk
         open('closedout.json','w').write( json.dumps( self.record , indent=2 ) )
 
     def assistance(self):
