@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import componentInfo, sendEmail, setDatasetStatus, unifiedConfiguration, workflowInfo, siteInfo, sendLog, reqmgr_url, monitor_dir, duplicateLock, userLock, global_SI, do_html_in_each_module
+from utils import componentInfo, sendEmail, setDatasetStatus, unifiedConfiguration, workflowInfo, siteInfo, sendLog, reqmgr_url, monitor_dir, duplicateLock, userLock, global_SI, do_html_in_each_module, getWorkflows
 import reqMgrClient
 import json
 import time
@@ -168,19 +168,29 @@ def closor(url, specific=None, options=None):
     held = set()
 
     print len(wfs),"closing"
+    random.shuffle( wfs )    
     max_per_round = UC.get('max_per_round').get('closor',None)
     if options.limit: max_per_round = options.limit
-    random.shuffle( wfs )    
-    if max_per_round: wfs = wfs[:max_per_round]
+
+    if max_per_round: 
+        ## order them by priority
+        all_closedout = sorted(getWorkflows(url, 'closed-out', details=True), key = lambda r : r['RequestPriority'])
+        def rank( wfn ):
+            return all_closedout.index( wfn ) if wfn in all_closedout else 0
+
+        wfs = sorted( wfs, key = lambda wfo : rank( wfo.name ),reverse=True)
+        wfs = wfs[:max_per_round]
 
     batch_go = {}
     batch_warnings = defaultdict(set)
     batch_goodness = UC.get("batch_goodness")
 
-    for wfo in wfs:
+    for iwfo,wfo in enumerate(wfs):
 
         if specific and not specific in wfo.name: continue
 
+
+        print "Progress [%d/%d]"%( iwfo, len(wfs)
         ## what is the expected #lumis 
         wfi = workflowInfo(url, wfo.name )
         wfo.wm_status = wfi.request['RequestStatus']
