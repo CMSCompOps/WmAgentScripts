@@ -45,8 +45,8 @@ if N_for_cloud:
 #    os.system('Unified/equalizor.py -a --t0 %s'% wfo.name)
 
 ## push the PR relval through
-os.system('Unified/assignor.py _PR_newco')
-os.system('Unified/assignor.py _PR_ref')
+#os.system('Unified/assignor.py _PR_newco')
+#os.system('Unified/assignor.py _PR_ref')
 
 #os.system('Unified/assignor.py RunIISummer16MiniAODv2')
 #os.system('Unified/assignor.py --from_status staging RunIISummer16DR80Premix')
