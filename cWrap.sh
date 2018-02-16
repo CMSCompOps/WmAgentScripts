@@ -1,11 +1,12 @@
 BASE_DIR=/data/unified/WmAgentScripts/
-HTML_DIR=/var/www/html/unified/
+#HTML_DIR=/var/www/html/unified/
+HTML_DIR=/data/unified/www
 
 cd $BASE_DIR
 
-oweek=`date +%W`
-week=${oweek#0}
-let oddity=week%2
+#oweek=`date +%W`
+#week=${oweek#0}
+#let oddity=week%2
 
 if [ "$USER" != "vlimant" ] ; then
     echo "single user running from now on"
@@ -14,11 +15,12 @@ fi
 
 
 modulename=`echo $1 | sed 's/\.py//' | sed 's/Unified\///'`
+mkdir -p $HTML_DIR/logs/$modulename/
 log=$HTML_DIR/logs/$modulename/last.log
 dated_log=$HTML_DIR/logs/$modulename/`date +%F_%T`.log
 echo `date` > $log
 echo $USER >> $log
-echo the week $week oddity is $oddity >> $log
+#echo the week $week oddity is $oddity >> $log
 echo module $modulename>> $log 
 
 #export X509_USER_PROXY=$HOME/private/personal/voms_proxy.cert
