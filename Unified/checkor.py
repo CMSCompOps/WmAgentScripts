@@ -1179,7 +1179,10 @@ def checkor(url, spec=None, options=None):
 
     print report_created,"reports created in this run"
 
-    fDB.html()
+    if not options.clear:
+        ## make the summary and sump only for other cases
+        fDB.html()
+
     if not spec and in_manual!=0:
         some_details = ""
         if options.strict:
