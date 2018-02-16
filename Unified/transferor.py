@@ -103,7 +103,7 @@ def transferor(url ,specific = None, talk=True, options=None):
     in_transfer_priority=None
     min_transfer_priority=None
     print "getting all wf in staging ..."
-    stucks = json.loads(open('%s/stuck_transfers.json'%monitor_dir).read())
+    stucks = json.loads(open('%s/stuck_transfers.json'%monitor_pub_dir).read())
     
     for wfo in session.query(Workflow).filter(Workflow.status=='staging').all():
         wfh = workflowInfo( url, wfo.name, spec=False)
