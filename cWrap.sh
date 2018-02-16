@@ -1,7 +1,7 @@
 BASE_DIR=/data/unified/WmAgentScripts/
 #HTML_DIR=/var/www/html/unified/
-#HTML_DIR=/data/unified/www
-HTML_DIR=/eos/project/c/cms-unified-logs/www/
+HTML_DIR=/data/unified/www
+FINAL_HTML_DIR=/eos/project/c/cms-unified-logs/www/
 
 cd $BASE_DIR
 
@@ -17,11 +17,12 @@ fi
 
 modulename=`echo $1 | sed 's/\.py//' | sed 's/Unified\///'`
 mkdir -p $HTML_DIR/logs/$modulename/
+mkdir -p $FINAL_HTML_DIR/logs/$modulename/
+
 last_log=$HTML_DIR/logs/$modulename/last.log
 dated_log=$HTML_DIR/logs/$modulename/`date +%F_%T`.log
 log=$dated_log
-#link that log as the last
-#ln -s $dated_log $last_log ## does not get served
+
 echo `date` > $log
 echo $USER >> $log
 #echo the week $week oddity is $oddity >> $log
@@ -54,3 +55,5 @@ echo `date` >> $log
 
 #cp $log $dated_log
 cp $log $last_log
+cp $log $FINAL_HTML_DIR/logs/$modulename/.
+cp $log $FINAL_HTML_DIR/logs/$modulename/last.log
