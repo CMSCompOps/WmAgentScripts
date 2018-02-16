@@ -2041,7 +2041,7 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
             wf_text += '<a href="http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=%s" target="_blank">history</a>'%(pid)
             wf_text += ', <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>%s</a>'%(tpid,tpid)
             wf_text += ', <a href=report/%s>report</a>'%(wf)
-            wf_text += ', <a href=%/report/%s>e_report</a>'%(unified_url_eos,wf)
+            #wf_text += ', <a href=%/report/%s>e_report</a>'%(unified_url_eos,wf)
             if 'ReReco' in tpid:
                 wf_text += ', <a href=%s/datalumi/lumi.%s.html>lumis</a>'%(unified_url,tpid)
             wf_text += ', <a href="https://its.cern.ch/jira/issues/?jql=(text~%s OR text~task_%s ) AND project = CMSCOMPPR" target="_blank">jira</a>'%(pid,pid)

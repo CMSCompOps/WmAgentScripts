@@ -145,8 +145,8 @@ def htmlor( caller = ""):
                     pass
             else:
                 text += '<a href=report/%s target=_blank>report</a>'%wfn
-                text += ' <a href=%/report/%s target=_blank>e_report</a>'%(unified_url_eos,wfn)
-                
+                #text += ' <a href=%/report/%s target=_blank>e_report</a>'%(unified_url_eos,wfn)
+
             date2 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime())
 
             date1 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(30*24*60*60)) )
@@ -251,7 +251,7 @@ Last update on <b>%s(CET), %s(GMT)</b>
 <a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=warning target=_blank><b><font color=orange>warning</b></font></a>
 <a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=critical target=_blank><b><font color=red>all critical</b></font></a>
 <a href=https://its.cern.ch/jira/projects/CMSCOMPPR/issues target=_blank>JIRA</a>
-<a href=%s/toperror.html target=_blank>top errors</a>
+<a href=toperror.html target=_blank>top errors</a>
 <br>
 %s
 <hr>
@@ -264,7 +264,6 @@ Last update on <b>%s(CET), %s(GMT)</b>
 """ %(time.asctime(time.localtime()),
       time.asctime(time.gmtime()),
       reqmgr_url,
-      unified_url_eos,
       ', '.join(['<a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=critical&module=%s&limit=100 target=_blank><b><font color=red>%s critical</b></font></a>'%(m,m) for m in ['injector','batchor','transferor','cachor','stagor','assignor','completor','GQ','equalizor','checkor','recoveror','actor','closor']])
       )
                    )
