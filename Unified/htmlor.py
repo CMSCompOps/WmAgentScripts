@@ -1023,7 +1023,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     print outlier_upcoming
     if outlier_upcoming:
         sendLog('GQ','There is an inbalance of upcoming work at %s'%(', '.join([site for site in sorted(outlier_upcoming.keys())])),level='critical')
-        open('sites_full.json','w').write( json.dumps( outlier_upcoming.keys() ))
+        open('%s/sites_full.json'%base_eos_dir,'w').write( json.dumps( outlier_upcoming.keys() ))
         
     def site_div_header(desc):
         div_name = 'site_'+desc.replace(' ','_')
