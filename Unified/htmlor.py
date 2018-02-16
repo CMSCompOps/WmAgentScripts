@@ -6,8 +6,13 @@ import os
 import json
 from collections import defaultdict
 import sys
-from utils import monitor_dir, base_dir, phedex_url, reqmgr_url, monitor_pub_dir, unified_url_eos
+from utils import monitor_dir, base_dir, phedex_url, reqmgr_url, monitor_pub_dir, unified_url_eos, monitor_eos_dir, monitor_pub_eos_dir
 import random
+
+
+## local modification
+monitor_dir = monitor_eos_dir
+monitor_pub_dir = monitor_pub_eos_dir
 
 def htmlor( caller = ""):
     if duplicateLock(silent=True): return

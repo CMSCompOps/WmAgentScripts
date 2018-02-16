@@ -35,6 +35,7 @@ monitor_dir = os.getenv('UNIFIED_MON','/data/unified/www/')
 monitor_eos_dir = "/eos/project/c/cms-unified-logs/www/"
 #monitor_pub_dir = os.getenv('UNIFIED_MON','/var/www/html/unified/public/')
 monitor_pub_dir = os.getenv('UNIFIED_MON','/data/unified/www/public/')
+monitor_pub_eos_dir = "/eos/project/c/cms-unified-logs/www/public/"
 base_dir =  os.getenv('UNIFIED_DIR','/data/unified/')
 #base_eos_dir = "/afs/cern.ch/user/c/cmst2/Unified/"
 base_eos_dir = "/eos/project/c/cms-unified-logs/"
