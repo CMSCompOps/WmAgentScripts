@@ -1,6 +1,7 @@
 BASE_DIR=/data/unified/WmAgentScripts/
 #HTML_DIR=/var/www/html/unified/
-HTML_DIR=/data/unified/www
+#HTML_DIR=/data/unified/www
+HTML_DIR=/eos/project/c/cms-unified-logs/www/
 
 cd $BASE_DIR
 
