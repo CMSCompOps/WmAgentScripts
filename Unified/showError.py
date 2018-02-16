@@ -925,7 +925,7 @@ def parse_those(url, options=None, those=[]):
 
     open('%s/explanations.json'%monitor_dir,'w').write( json.dumps(explanations, indent=2))
 
-    alls = json.loads( open('all_errors.json').read())
+    #alls = json.loads( open('all_errors.json').read())
 
     affected=set()
     per_code = defaultdict(set)
