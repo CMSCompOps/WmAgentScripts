@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import workflowInfo, getWorkflows, global_SI, sendEmail, componentInfo, getDatasetPresence, monitor_dir, monitor_pub_dir, reqmgr_url, campaignInfo, unifiedConfiguration, sendLog, do_html_in_each_module
+from utils import workflowInfo, getWorkflows, global_SI, sendEmail, componentInfo, getDatasetPresence, monitor_dir, monitor_pub_dir, reqmgr_url, campaignInfo, unifiedConfiguration, sendLog, do_html_in_each_module, base_eos_dir
 import reqMgrClient
 import json
 import os
@@ -462,7 +462,7 @@ def equalizor(url , specific = None, options=None):
         }
 
     perf_per_config = defaultdict(dict)
-    for k,v in json.loads(open('perf_per_config.json').read()).items(): perf_per_config[k] = v
+    for k,v in json.loads(open('%s/perf_per_config.json' % base_eos_dir).read()).items(): perf_per_config[k] = v
 
     stay_within_site_whitelist = False
     specific_task=None
