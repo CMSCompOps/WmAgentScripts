@@ -148,11 +148,11 @@
  "max_per_round" : {
    "description" : "limitation on the number of wf to process per module",
    "value" : {
-    "transferor" : 600,
+    "transferor" : 500,
     "assignor" : null,
     "closor" : null,
     "checkor" : 500,
-    "completor" : 1000
+    "completor" : 500
     }
  },
  "default_fraction_overdoing" :{
