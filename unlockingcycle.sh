@@ -1,7 +1,7 @@
 BASE_DIR=/data/unified/WmAgentScripts/
 HTML_DIR=/var/www/html/unified/
 
-lock_name="$BASE_DIR/postcycle.lock"
+lock_name="$BASE_DIR/unlockingcycle.lock"
 
 oweek=`date +%W`
 week=${oweek#0}
@@ -35,7 +35,6 @@ else
     echo "no lock file $lock_name, cycle can run"
 fi
 
-
 if [ ! -r $BASE_DIR/credentials.sh ] ; then
     echo "Cannot read simple files" | mail -s "[Ops] read permission" vlimant@cern.ch,matteoc@fnal.gov
     exit
@@ -44,44 +43,11 @@ fi
 echo $lock_name > $lock_name
 echo `date` >> $lock_name
 echo $$ >> $lock_name
-
 ## get sso cookie and new grid proxy
 source $BASE_DIR/credentials.sh
 
-## get the workflow in/out the system
-#$BASE_DIR/cWrap.sh Unified/injector.py
-
-## force-complete wf according to rules ## tagging phase
-$BASE_DIR/cWrap.sh Unified/completor.py
-
-## check on the wf that have just completed
-$BASE_DIR/cWrap.sh Unified/checkor.py --strict
-$BASE_DIR/cWrap.sh Unified/actor.py
-## initiate automatic recovery
-$BASE_DIR/cWrap.sh Unified/recoveror.py
-
-## submit ACDCs and clones from actions submitted via new recovery tools
-$BASE_DIR/cWrap.sh Unified/actor.py
-
-## look at everything that had been taken care of already
-$BASE_DIR/cWrap.sh Unified/checkor.py  --review --recovering
-
-## look at everything that has to be taken care of
-$BASE_DIR/cWrap.sh Unified/checkor.py  --review
-$BASE_DIR/cWrap.sh Unified/actor.py
-
-## pass along everything that has custodial already and should close
-#$BASE_DIR/cWrap.sh Unified/checkor.py  --clear
-#$BASE_DIR/cWrap.sh Unified/closor.py
-#$BASE_DIR/cWrap.sh Unified/actor.py
-
-
-## look at everything that had to be taken care of
-$BASE_DIR/cWrap.sh Unified/checkor.py  --update
-$BASE_DIR/cWrap.sh Unified/actor.py
-
-## early announce what can be announced already
-#$BASE_DIR/cWrap.sh Unified/closor.py --announce
+## unlock dataset that can be unlocked and set status along
+$BASE_DIR/cWrap.sh Unified/lockor.py
 
 rm -f $lock_name
 
