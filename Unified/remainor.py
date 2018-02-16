@@ -17,10 +17,13 @@ if sys.argv[1] == 'parse':
     if len(sys.argv)>2:
         force = bool(sys.argv[2])
     locks = json.loads(open('%s/globallocks.json'%monitor_pub_dir).read())
-    waiting = json.loads(open('%s/waiting_custodial.json'%monitor_dir).read())
-    stuck = json.loads(open('%s/stuck_custodial.json'%monitor_pub_dir).read())
-    missing = json.loads(open('%s/missing_approval_custodial.json'%monitor_dir).read())
+    #waiting = json.loads(open('%s/waiting_custodial.json'%monitor_dir).read())
+    #stuck = json.loads(open('%s/stuck_custodial.json'%monitor_pub_dir).read())
+    #missing = json.loads(open('%s/missing_approval_custodial.json'%monitor_dir).read())
 
+    waiting = {}
+    stuck = {}
+    missing = {} 
     si = siteInfo()
     remainings={}
     sis = si.disk.keys()
