@@ -1,10 +1,6 @@
 #!/usr/bin/env python
-from utils import workflowInfo, siteInfo, monitor_dir, monitor_pub_dir, base_dir, global_SI, getDatasetPresence, getDatasetBlocksFraction, getDatasetBlocks, unifiedConfiguration, getDatasetEventsPerLumi, dataCache, unified_url, base_eos_dir, monitor_eos_dir, url_eos
+from utils import workflowInfo, siteInfo, monitor_dir, monitor_pub_dir, base_dir, global_SI, getDatasetPresence, getDatasetBlocksFraction, getDatasetBlocks, unifiedConfiguration, getDatasetEventsPerLumi, dataCache, unified_url, base_eos_dir, monitor_eos_dir, unified_url_eos
 import time
-
-#base_eos_dir = "/afs/cern.ch/user/c/cmst2/Unified/"
-#monitor_eos_dir = "/eos/project/c/cms-unified-logs/www/"
-#url_eos = "http://cern.ch/cms-unified/"
 
 import json
 import sys
@@ -596,9 +592,9 @@ def parse_one(url, wfn, options=None):
             #html+='<th><a href="#%s">%s</a>'%(code,code)
             html+='<th><a href="#%s:%s">%s</a>'%(task_short,code,code)
             if (str(code) in expose_archive_code or do_all_error_code):# and n_expose_base:
-                html += ' <a href=%s/joblogs/%s/%s/%s>, JobLog</a>'%( url_eos, wfn, code, task_short )
+                html += ' <a href=%s/joblogs/%s/%s/%s>, JobLog</a>'%( unified_url_eos, wfn, code, task_short )
             if (str(code) in expose_condor_code or do_all_error_code):# and n_expose_base:
-                html += ' <a href=%s/condorlogs/%s/%s/%s>, CondorLog</a>'%( url_eos, wfn, code, task_short )
+                html += ' <a href=%s/condorlogs/%s/%s/%s>, CondorLog</a>'%( unified_url_eos, wfn, code, task_short )
             html += '</th>'
 
         html+='<th>Total jobs</th><th>Site Ready</th>'
@@ -845,7 +841,7 @@ def parse_top(url, options=None):
     print "found",len(all_bad_wfs),"to parse for detailled error report"
     parse_those(url, options, all_bad_wfs)
 
-    ht = open('%s/toperror.html'%monitor_dir, 'w')
+    ht = open('%s/toperror.html'%monitor_eos_dir, 'w')
     ht.write("""<html>
 Report of workflows with top %s error in failure and cooloff<br>
 Last updated on %s (GMT)
