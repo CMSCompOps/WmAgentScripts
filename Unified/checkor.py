@@ -32,8 +32,6 @@ def checkor(url, spec=None, options=None):
 
     UC = unifiedConfiguration()
     use_recoveror = UC.get('use_recoveror')
-    #if UC.get('step_checkor_down') and not options.go: return 
-    #if not options.go: return ## disable checkor until further notice
     
     use_mcm = True
     up = componentInfo(mcm=use_mcm, soft=['mcm'])
@@ -769,7 +767,7 @@ def checkor(url, spec=None, options=None):
                         wfi.sendLog('checkor',"These %d files are missing in phedex\n%s"%(len(missing_phedex),
                                                                                           "\n".join( missing_phedex )))
                         were_invalidated = sorted(set(missing_phedex) & set(TMDB_invalid ))
-                        if were_invalidated or options.go:
+                        if were_invalidated:
                             wfi.sendLog('checkor',"These %d files were invalidated globally\n%s"%(len(were_invalidated),
                                                                                                   "\n".join(were_invalidated)))
                             sendLog('checkor',"These %d files were invalidated globally\n%s\nand are not invalidated in dbs"%(len(were_invalidated),
@@ -1071,6 +1069,7 @@ def checkor(url, spec=None, options=None):
                     try:
                         if options and options.no_report: continue
                         expose = UC.get('n_error_exposed') if (report_created < 50 and 'manual' in assistance_tags) else 0
+                        so = showError_options( expose = expose )
                         parse_one(url, member, so)
                         report_created += 1
                     except:
