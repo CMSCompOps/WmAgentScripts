@@ -17,8 +17,11 @@ fi
 
 modulename=`echo $1 | sed 's/\.py//' | sed 's/Unified\///'`
 mkdir -p $HTML_DIR/logs/$modulename/
-log=$HTML_DIR/logs/$modulename/last.log
+last_log=$HTML_DIR/logs/$modulename/last.log
 dated_log=$HTML_DIR/logs/$modulename/`date +%F_%T`.log
+log=$dated_log
+#link that log as the last
+#ln -s $dated_log $last_log ## does not get served
 echo `date` > $log
 echo $USER >> $log
 #echo the week $week oddity is $oddity >> $log
@@ -49,4 +52,5 @@ let stop=stop-start
 echo $modulename:$start:$stop > $HTML_DIR/logs/$modulename/`date +%s`.time
 echo `date` >> $log
 
-cp $log $dated_log
+#cp $log $dated_log
+cp $log $last_log
