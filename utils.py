@@ -30,9 +30,11 @@ dbs_url_writer = os.getenv('UNIFIED_DBS3_WRITER','https://cmsweb.cern.ch/dbs/pro
 
 phedex_url = os.getenv('UNIFIED_PHEDEX','cmsweb.cern.ch')
 reqmgr_url = os.getenv('UNIFIED_REQMGR','cmsweb.cern.ch')
-monitor_dir = os.getenv('UNIFIED_MON','/var/www/html/unified/')
+#monitor_dir = os.getenv('UNIFIED_MON','/var/www/html/unified/')
+monitor_dir = os.getenv('UNIFIED_MON','/data/unified/www/')
 monitor_eos_dir = "/eos/project/c/cms-unified-logs/www/"
-monitor_pub_dir = os.getenv('UNIFIED_MON','/var/www/html/unified/public/')
+#monitor_pub_dir = os.getenv('UNIFIED_MON','/var/www/html/unified/public/')
+monitor_pub_dir = os.getenv('UNIFIED_MON','/data/unified/www/public/')
 base_dir =  os.getenv('UNIFIED_DIR','/data/unified/')
 #base_eos_dir = "/afs/cern.ch/user/c/cmst2/Unified/"
 base_eos_dir = "/eos/project/c/cms-unified-logs/"

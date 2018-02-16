@@ -717,6 +717,7 @@ def parse_one(url, wfn, options=None):
 
     time_point("error send to ES")
     open('%s/report/%s'%(monitor_dir,fn),'w').write( html )
+    open('%s/report/%s'%(monitor_eos_dir,fn),'w').write( html )
 
     time_point("Finished with showError")
 
