@@ -159,8 +159,10 @@ def closor(url, specific=None, options=None):
 
     jump_the_line = options.announce if options else False
     if jump_the_line:
+        print "announce option is on. Checking on things on-going ready to be announced"
         wfs = session.query(Workflow).filter(Workflow.status.contains('announce')).filter(sqlalchemy.not_(Workflow.status.contains('announced'))).all()
     else:
+        print "regular option. Checking on things done and to be announced"
         wfs = session.query(Workflow).filter(Workflow.status=='close').all()
 
     held = set()
