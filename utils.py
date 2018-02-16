@@ -5059,11 +5059,13 @@ class workflowInfo:
         agents = map(lambda s : s.split('/')[-1].split(':')[0], agents)
         wf = self.request['RequestName']
         for agent in agents:
+            if 'fnal' in agent: continue
             src = '%s:/data/srv/wmagent/current/install/wmagent/WorkQueueManager/cache/%s/WMSandbox/%s/cmsRun1/pileupconf.json'%(agent, wf, task)
             dest = '/tmp/%s-%s.json'%( wf, task)
-            if os.path.isfile( dest ):
+            if os.path.isfile( dest ) and False:
                 res = json.loads(open( dest ).read())
                 break
+            print agent
             com = 'scp %s %s'%( src, dest)
             os.system( com )
             if os.path.isfile( dest ):
@@ -5093,8 +5095,8 @@ class workflowInfo:
         site_with_enough = [ site for site,count in count_blocks.items() if count > 0.90*max_blocks]
         SI = global_SI()
         ret = sorted(set([ SI.SE_to_CE(s) for s in ret if not 'Buffer' in s] ))
-        inter = sorted(set([ SI.SE_to_CE(s) for s in intersection if not 'Buffer' in s]))
-        enough = sorted(set([ SI.SE_to_CE(s) for s in site_with_enough if not 'Buffer' in s]))
+        inter = sorted(set([ SI.SE_to_CE(s) for s in intersection if not ('Buffer' in s or 'MSS' in s)]))
+        enough = sorted(set([ SI.SE_to_CE(s) for s in site_with_enough if not ('Buffer' in s or 'MSS' in s)]))
         return enough
 
     def getWorkQueueElements(self):
