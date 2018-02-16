@@ -549,6 +549,28 @@
    "tune" : true,
    "resize" : "auto"
  },
+  "RunIISpring18wmLHEGS" : {
+   "go" : false,
+   "lumisize" : -1,
+   "fractionpass" : 0.95,
+   "force-complete" : 0.99,
+   "tune" : true
+  },
+  "RunIISpring18DR" :{
+    "go": false,
+    "maxcopies": 1,
+    "lumisize": -1,
+    "resize" : "auto",
+    "fractionpass" : 0.95,
+    "tune" : true   
+ },
+  "RunIISpring18MiniAOD" :{
+   "go" : false,
+   "lumisize" : -1,
+   "resize" : "auto",
+   "maxcopies": 1,
+   "fractionpass" : 0.95
+  },
  "RunIIWinter17GS" : {
    "go" : true,
    "lumisize" : -1,
