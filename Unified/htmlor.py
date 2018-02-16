@@ -6,7 +6,7 @@ import os
 import json
 from collections import defaultdict
 import sys
-from utils import monitor_dir, base_dir, phedex_url, reqmgr_url, monitor_pub_dir
+from utils import monitor_dir, base_dir, phedex_url, reqmgr_url, monitor_pub_dir, url_eos
 import random
 
 def htmlor( caller = ""):
@@ -145,6 +145,7 @@ def htmlor( caller = ""):
                     pass
             else:
                 text += '<a href=report/%s target=_blank>report</a>'%wfn
+                text += ' <a href=%/report/%s target=_blank>e_report</a>'%(url_eos,wfn)
                 
             date2 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime())
 
