@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, sendEmail, sendLog, monitor_pub_dir, unifiedConfiguration, deep_update, global_SI, getWorkflowByCampaign
+from utils import getWorkflows, sendEmail, sendLog, monitor_pub_dir, unifiedConfiguration, deep_update, global_SI, getWorkflowByCampaign, base_eos_dir
 from collections import defaultdict
 import copy
 import json
@@ -50,7 +50,7 @@ def batchor( url ):
     default_hi_setup = copy.deepcopy( default_setup )
 
     add_on = {}
-    batches = json.loads( open('batches.json').read() )
+    batches = json.loads( open('%s/batches.json'%base_eos_dir).read() )
     relval_routing = UC.get('relval_routing')
     def pick_one_site( p):
         ## modify the parameters on the spot to have only one site
@@ -94,7 +94,7 @@ def batchor( url ):
         batches[campaign] = list(set(list(copy.deepcopy( by_hi_campaign[campaign] )) + batches[campaign] ))
         
     
-    open('batches.json','w').write( json.dumps( batches , indent=2 ) )
+    open('%s/batches.json' % base_eos_dir,'w').write( json.dumps( batches , indent=2 ) )
 
     ## open the campaign configuration 
     campaigns = json.loads( open('campaigns.relval.json').read() )

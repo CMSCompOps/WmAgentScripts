@@ -6,13 +6,8 @@ import os
 import json
 from collections import defaultdict
 import sys
-from utils import monitor_dir, base_dir, phedex_url, reqmgr_url, monitor_pub_dir, unified_url_eos, monitor_eos_dir, monitor_pub_eos_dir
+from utils import monitor_dir, base_dir, phedex_url, reqmgr_url, monitor_pub_dir, unified_url_eos, monitor_eos_dir, monitor_pub_eos_dir, base_eos_dir
 import random
-
-
-## local modification
-monitor_dir = monitor_eos_dir
-monitor_pub_dir = monitor_pub_eos_dir
 
 def htmlor( caller = ""):
     if duplicateLock(silent=True): return
@@ -462,7 +457,7 @@ Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransfertea
     lap( 'done with staged' )
     
     lines=[]
-    batches = json.loads(open('batches.json','r').read())
+    batches = json.loads(open('%s/batches.json' % base_eos_dir,'r').read())
     relvals = []
     for b in batches: relvals.extend( batches[b] )
     count_by_campaign=defaultdict(lambda : defaultdict(int))
