@@ -1,7 +1,5 @@
 #!/usr/bin/env python  
-from utils import workflowInfo, getWorkflows, sendEmail, componentInfo, monitor_dir, reqmgr_url, siteInfo, sendLog, getWorkflowById, isHEPCloudReady, agentInfo, unifiedConfiguration
-#monitor_eos_dir = "/afs/cern.ch/user/c/cmst2/www/unified/"
-monitor_eos_dir = "/eos/project/c/cms-unified-logs/www/"
+from utils import workflowInfo, getWorkflows, sendEmail, componentInfo, monitor_dir, reqmgr_url, siteInfo, sendLog, getWorkflowById, isHEPCloudReady, agentInfo, unifiedConfiguration, monitor_eos_dir
 
 from assignSession import *
 import reqMgrClient
@@ -115,7 +113,8 @@ for b,pids in batches.items():
 print "wf that can have logs"
 print '\n'.join(sorted(may_have_one))
 
-for (the_dir,logtype) in [(monitor_dir,'report'),
+for (the_dir,logtype) in [(monitor_eos_dir,'report'),
+                          (monitor_dir,'report'),
                           (monitor_eos_dir,'joblogs'),
                           (monitor_eos_dir,'condorlogs')]:
     #for d in filter(None,os.popen('ls -d %s/%s/*'%(monitor_dir,logtype)).read().split('\n')):
