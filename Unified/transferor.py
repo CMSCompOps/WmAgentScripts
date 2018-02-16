@@ -78,11 +78,10 @@ def transferor(url ,specific = None, talk=True, options=None):
     all_to_include = session.query(Workflow).filter(Workflow.status.startswith('considered')).all()
     if len(cache) > 2000:
         max_to_include = max_per_round
-        cache = sorted( cache , key = lambda r : r['RequestPriority'], reverse=True)
+        random.shuffle( cache ) ## randomize first by wf name
+        cache = sorted( cache , key = lambda r : r['RequestPriority'], reverse=True) ## order by prio
         highest = [ r['RequestName'] for r in cache[:max_to_include]]
         all_to_include = [ wfo for wfo in all_to_include if wfo.name in highest]
-        #random.shuffle( all_to_include ) # to limit priority inversion
-        #all_to_include = all_to_include[:max_to_include]
         print "limiting what to consider to",max_to_include,"because there is too much stuff going on. Got",len(all_to_include)
 
     for wfo in all_to_include:
