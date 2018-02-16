@@ -25,6 +25,7 @@ log=$dated_log
 
 echo `date` > $log
 echo $USER >> $log
+echo $HOSTNAME >> $log
 #echo the week $week oddity is $oddity >> $log
 echo module $modulename>> $log 
 
