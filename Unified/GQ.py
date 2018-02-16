@@ -1,4 +1,4 @@
-from utils import getDatasetBlockAndSite, siteInfo, getWorkflows, workflowInfo, monitor_dir, sendLog, sendEmail, makeReplicaRequest, unifiedConfiguration, getDatasetFileLocations, getAgentInfo
+from utils import getDatasetBlockAndSite, siteInfo, getWorkflows, workflowInfo, monitor_dir, sendLog, sendEmail, makeReplicaRequest, unifiedConfiguration, getDatasetFileLocations, getAgentInfo, base_eos_dir
 from collections import defaultdict
 import time
 import json
@@ -29,7 +29,7 @@ si = siteInfo()
 unprocessable = set()
 
 try:
-    replaced = set(json.loads(open('replaced_blocks.json').read()))
+    replaced = set(json.loads(open('%s/replaced_blocks.json'%base_eos_dir).read()))
 except:
     replaced = set()
 
@@ -279,7 +279,7 @@ if not_runable_acdc:
                                                    ),level='critical')
 
 
-old_stuck_all_done = set(json.loads(open('stuck_all_done.json').read()))
+old_stuck_all_done = set(json.loads(open('%s/stuck_all_done.json'%base_eos_dir).read()))
 really_stuck_all_done = old_stuck_all_done & stuck_all_done
 if really_stuck_all_done:
     sendLog('GQ','These %d workflows have not toggled further to completed while all WQE are done\n%s'%( len(really_stuck_all_done),'\n'.join(sorted(really_stuck_all_done))),
