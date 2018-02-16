@@ -1,7 +1,7 @@
 BASE_DIR=/data/unified/WmAgentScripts/
 HTML_DIR=/var/www/html/unified/
 
-lock_name="$BASE_DIR/shortcycle.lock"
+lock_name="$BASE_DIR/subscribecycle.lock"
 
 oweek=`date +%W`
 week=${oweek#0}
@@ -48,25 +48,14 @@ echo $$ >> $lock_name
 ## get sso cookie and new grid proxy
 source $BASE_DIR/credentials.sh
 
-## all these belo can run as often as we want since they only read from db
-## and for most we want them to run very often
-
-## equalize site white list at the condor level                                                                                      
-$BASE_DIR/cWrap.sh Unified/equalizor.py
-
 ## finsih subscribing output blocks
-#$BASE_DIR/cWrap.sh Unified/subscribor.py away
-#$BASE_DIR/cWrap.sh Unified/subscribor.py assistance*
-#$BASE_DIR/cWrap.sh Unified/subscribor.py done
-#$BASE_DIR/cWrap.sh Unified/subscribor.py close
+$BASE_DIR/cWrap.sh Unified/subscribor.py away
+$BASE_DIR/cWrap.sh Unified/subscribor.py assistance*
+$BASE_DIR/cWrap.sh Unified/subscribor.py done
+$BASE_DIR/cWrap.sh Unified/subscribor.py close
 
 ## subscribe everything that is being produced or waiting around
-#$BASE_DIR/cWrap.sh Unified/subscribor.py wmagent
-
-#$BASE_DIR/cWrap.sh Unified/GQ.py
-
-$BASE_DIR/cWrap.sh Unified/addHoc.py
-
+$BASE_DIR/cWrap.sh Unified/subscribor.py wmagent
 
 rm -f $lock_name
 
