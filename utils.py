@@ -17,6 +17,7 @@ import time
 import math 
 import hashlib
 import threading
+import glob
 
 import smtplib
 from email.MIMEMultipart import MIMEMultipart
@@ -591,6 +592,7 @@ def listSubscriptions(url, dataset, within_sites=None):
                 #print node
     #print destinations
     return destinations
+
 def lock_DDM(lock=True):
     conn = make_x509_conn('t3desk007.mit.edu')
     #conn  =  httplib.HTTPSConnection('t3desk007.mit.edu', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -609,6 +611,7 @@ class lockInfo:
     def __init__(self, andwrite=True):
         self.lockfilename = 'globallocks' ## official name
         self.writeondelete = andwrite
+        self.owner = str(os.getpid())
         ## should lock on DDM
         try:
             lock_DDM()
@@ -616,8 +619,19 @@ class lockInfo:
             print str(e)
             pass
 
+        self.self_lock = '%s/%s.json.%s.lock'%(monitor_pub_dir,self.lockfilename,self.owner)
+        if os.path.isfile( self.self_lock ):
+            print "file",self.self_lock,"is already present"
+            sys.exit(-1)
+
+        self.pub_lock = '%s/%s.json.lock'%(monitor_pub_dir, self.lockfilename)
         if self.writeondelete:
-            os.system('echo `date` > %s/globallocks.json.lock'%monitor_pub_dir)
+            print "setting global lock at",self.pub_lock
+            os.system('echo `date` > %s'% self.pub_lock)
+            print "setting lock lock at", self.self_lock
+            os.system('echo `date` > %s'% self.self_lock)
+
+
 
     def free(self):
         started = time.mktime(time.gmtime())
@@ -663,11 +677,19 @@ class lockInfo:
             #print "writing to json"
             if self.writeondelete:
                 print "writing",len( out ),"locks to the json interface"
-                open('%s/%s.json.new'%(monitor_pub_dir,self.lockfilename),'w').write( json.dumps( sorted(out) , indent=2))
-                os.system('mv %s/%s.json.new %s/%s.json'%(monitor_pub_dir,self.lockfilename,monitor_pub_dir,self.lockfilename))
-                open('%s/%s.detailed.json.new'%(monitor_pub_dir,self.lockfilename),'w').write( json.dumps( detailed_out , indent=2))
-                os.system('mv %s/%s.detailed.json.new %s/%s.detailed.json'%(monitor_pub_dir,self.lockfilename,monitor_pub_dir,self.lockfilename))
-                os.system('rm -f %s/globallocks.json.lock'%monitor_pub_dir)
+                open('%s/%s.%s.json.new'%(monitor_pub_dir,self.lockfilename,self.owner),'w').write( json.dumps( sorted(out) , indent=2))
+                os.system('mv %s/%s.%s.json.new %s/%s.json'%(monitor_pub_dir,self.lockfilename,self.owner,monitor_pub_dir,self.lockfilename))
+                open('%s/%s.%s.detailed.json.new'%(monitor_pub_dir,self.lockfilename,self.owner),'w').write( json.dumps( detailed_out , indent=2))
+                os.system('mv %s/%s.%s.detailed.json.new %s/%s.detailed.json'%(monitor_pub_dir,self.lockfilename,self.owner,monitor_pub_dir,self.lockfilename))
+                ## remove the owned instance
+                os.system('rm -f %s'% self.self_lock)
+                ##check for other locking instances
+                lock_present = glob.glob('%s/globallocks.json.*.lock'% monitor_pub_dir)
+                print "the following lock lock files are present",sorted(lock_present)
+                if not lock_present:
+                    os.system('rm -f %'%self.pub_lock)
+                else:
+                    print "was unable to remove global lock because of",len(lock_present),"lock locks"
         except Exception as e:
             print "Failed writing locks"
             print str(e)
