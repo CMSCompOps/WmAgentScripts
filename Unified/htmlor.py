@@ -6,7 +6,7 @@ import os
 import json
 from collections import defaultdict
 import sys
-from utils import monitor_dir, base_dir, phedex_url, reqmgr_url, monitor_pub_dir, url_eos
+from utils import monitor_dir, base_dir, phedex_url, reqmgr_url, monitor_pub_dir, unified_url_eos
 import random
 
 def htmlor( caller = ""):
@@ -145,7 +145,7 @@ def htmlor( caller = ""):
                     pass
             else:
                 text += '<a href=report/%s target=_blank>report</a>'%wfn
-                text += ' <a href=%/report/%s target=_blank>e_report</a>'%(url_eos,wfn)
+                text += ' <a href=%/report/%s target=_blank>e_report</a>'%(unified_url_eos,wfn)
                 
             date2 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime())
 
@@ -248,12 +248,10 @@ Last update on <b>%s(CET), %s(GMT)</b>
 <a href=data.html>json interfaces</a>
 <a href=logs/addHoc/last.log>add-hoc op</a>
 <a href=https://cmssst.web.cern.ch/cmssst/man_override/cgi/manualOverride.py/prodstatus target=_blank title="Link to a restricted page to override sites status">sites override</a>
-<!-- created from <b>%s
-<a href=logs/last_running>last running</a></b> <object height=20 type="text/html" data="logs/last_running"><p>backup content</p></object>-->
 <a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=warning target=_blank><b><font color=orange>warning</b></font></a>
 <a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=critical target=_blank><b><font color=red>all critical</b></font></a>
 <a href=https://its.cern.ch/jira/projects/CMSCOMPPR/issues target=_blank>JIRA</a>
-<a href=toperror.html target=_blank>top errors</a>
+<a href=%s/toperror.html target=_blank>top errors</a>
 <br>
 %s
 <hr>
@@ -266,7 +264,7 @@ Last update on <b>%s(CET), %s(GMT)</b>
 """ %(time.asctime(time.localtime()),
       time.asctime(time.gmtime()),
       reqmgr_url,
-      caller,
+      unified_url_eos,
       ', '.join(['<a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=critical&module=%s&limit=100 target=_blank><b><font color=red>%s critical</b></font></a>'%(m,m) for m in ['injector','batchor','transferor','cachor','stagor','assignor','completor','GQ','equalizor','checkor','recoveror','actor','closor']])
       )
                    )
