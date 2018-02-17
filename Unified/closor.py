@@ -190,7 +190,7 @@ def closor(url, specific=None, options=None):
         if specific and not specific in wfo.name: continue
 
 
-        print "Progress [%d/%d]"%( iwfo, len(wfs)
+        print "Progress [%d/%d]"%( iwfo, len(wfs))
         ## what is the expected #lumis 
         wfi = workflowInfo(url, wfo.name )
         wfo.wm_status = wfi.request['RequestStatus']
