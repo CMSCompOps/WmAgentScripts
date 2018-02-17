@@ -4279,7 +4279,7 @@ class agentInfo:
         self.idle_fraction = args.get('idle_fraction',0.1)
         ## keep some info in a local file
         try:
-            self.info = json.loads(open('.agent_info.json').read())
+            self.info = json.loads(open('%s/agent_info.json'%base_eos_dir).read())
         except:
             self.info = {}
 
@@ -4355,7 +4355,7 @@ class agentInfo:
         return True
 
     def __del__(self):
-        open('.agent_info.json','w').write( json.dumps( self.info, indent=2))
+        open('%s/agent_info.json'%base_eos_dir,'w').write( json.dumps( self.info, indent=2))
 
     def getNow(self):
         now = time.gmtime()
