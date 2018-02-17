@@ -11,16 +11,6 @@ import random
 
 UC = unifiedConfiguration()
 
-## poll agents
-AI = agentInfo(url=reqmgr_url, 
-               verbose=True,
-               busy_fraction = UC.get('busy_agent_fraction'),
-               idle_fraction = UC.get('idle_agent_fraction')
-              )
-
-AI.poll(acting=False)
-
-
 ## get all acquired and push one to stepchain so that we can acquire it on nersc
 N_for_cloud = isHEPCloudReady(reqmgr_url)
 if N_for_cloud:
