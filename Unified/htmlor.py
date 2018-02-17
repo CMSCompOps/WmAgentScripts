@@ -1345,6 +1345,10 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
 <tr><td>Agent</td><td>Running/Pending hourly (<b>jobs</b>)</td><td>Running/Pending daily (<b>CPUs</b>)</td><td>Status</td><td>Creat./Pend.</td></tr></thead>
 """)
     AI = agentInfo( url = reqmgr_url )
+    verbose=False,
+    busy_fraction = UC.get('busy_agent_fraction'),
+    idle_fraction = UC.get('idle_agent_fraction'))
+    AI.poll(acting=True)
     for team,agents in getAllAgents(reqmgr_url).items():
         if not team in ['production','relval','highprio']: continue
         html_doc.write("<tr><td bgcolor=lightblue>%s</td></tr>"% team)
