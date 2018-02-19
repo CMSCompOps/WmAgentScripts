@@ -1017,21 +1017,30 @@ def notRunningBefore( component, time_out = 60*5 ):
     return True
 
 
-def duplicateLock(component=None, silent=False):
+def duplicateLock(component=None, silent=False, wait=False):
     if not component:
         ## get the caller
         component = sys._getframe(1).f_code.co_name
 
-    ## check that no other instances of assignor is running
-    process_check = filter(None,os.popen('ps -f -e | grep %s.py | grep -v grep  |grep python'%component).read().split('\n'))
-    if len(process_check)>1:
-        ## another component is running on the machine : stop
-        if not silent:
-            sendEmail('overlapping %s'%component,'There are %s instances running %s'%(len(process_check), '\n'.join(process_check)))
-            print "quitting because of overlapping processes"
-        return True
-    return False
-
+    max_sleep = 30*60 # 30 min
+    max_try = 10
+    for i_try in range(max_try):
+        ## check that no other instances of assignor is running
+        process_check = filter(None,os.popen('ps -f -e | grep %s.py | grep -v grep  |grep python'%component).read().split('\n'))
+        if len(process_check)>1:
+            ## another component is running on the machine : stop
+            if not wait:
+                if not silent:
+                    sendEmail('overlapping %s'%component,'There are %s instances running %s'%(len(process_check), '\n'.join(process_check)))
+                    print "quitting because of overlapping processes"
+                return True
+            else:
+                print "Waiting for other %s components to stop running" % component
+                time.sleep( max_sleep / max_try )
+        else:
+            return False
+    ##exhausted the retries
+    return True
     
 def userLock(component=None):
     if not component:  
