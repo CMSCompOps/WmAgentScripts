@@ -48,10 +48,7 @@ echo $$ >> $lock_name
 ## get sso cookie and new grid proxy
 source $BASE_DIR/credentials.sh
 
-## get the workflow in/out the system
-#$BASE_DIR/cWrap.sh Unified/injector.py
-
-## force-complete wf according to rules ## tagging phase
+## force-complete wf according to rules
 $BASE_DIR/cWrap.sh Unified/completor.py
 
 ## check on the wf that have just completed
@@ -70,18 +67,11 @@ $BASE_DIR/cWrap.sh Unified/checkor.py  --review --recovering
 $BASE_DIR/cWrap.sh Unified/checkor.py  --review
 $BASE_DIR/cWrap.sh Unified/actor.py
 
-## pass along everything that has custodial already and should close
-#$BASE_DIR/cWrap.sh Unified/checkor.py  --clear
-#$BASE_DIR/cWrap.sh Unified/closor.py
-#$BASE_DIR/cWrap.sh Unified/actor.py
-
+$BASE_DIR/cWrap.sh Unified/completor.py
 
 ## look at everything that had to be taken care of
 $BASE_DIR/cWrap.sh Unified/checkor.py  --update
 $BASE_DIR/cWrap.sh Unified/actor.py
-
-## early announce what can be announced already
-#$BASE_DIR/cWrap.sh Unified/closor.py --announce
 
 rm -f $lock_name
 
