@@ -4277,6 +4277,8 @@ class agentInfo:
         self.verbose = args.get('verbose')
         self.busy_fraction = args.get('busy_fraction',0.9)
         self.idle_fraction = args.get('idle_fraction',0.1)
+        self.max_pending_cpus = args.get('max_pending_cpus', 500000)
+
         ## keep some info in a local file
         try:
             self.info = json.loads(open('%s/agent_info.json'%base_eos_dir).read())
@@ -4401,12 +4403,14 @@ class agentInfo:
         capacity = 0
         running = 0
         pending = 0
+        cpu_pending = 0
         for agent,ainfo in all_agents.items():
             if not 'Name' in ainfo: continue
             agent_name = ainfo['Name']
             if not agent_name in self.info: continue
             r = ainfo['TotalRunningJobs']
             t = ainfo['MaxJobsRunning']
+            cpu_pending += ainfo['TotalIdleCpus']
             running += r
             pending += ainfo['TotalIdleJobs']
             if self.verbose:
@@ -4425,22 +4429,32 @@ class agentInfo:
         if self.verbose:
             print "Capacity",capacity
             print "Running", running
-            print "Pending", pending
+            print "Pending jobs", pending
+            print "Pending cpus",cpu_pending
+
+        over_cpus = self.max_pending_cpus
+        over_pending = (cpu_pending > over_cpus)
 
         ## all agents are above the understood limit. so please boot one
         #
         if not one_recent_running:
             if over_threshold: 
-                sendLog('agentInfo', 'All agents are maxing out. We need a new agent. This will be automated next', level='critical')            
-                sendEmail('agentInfo','All agents are maxing out. We need a new agent. This will be automated next')
+                msg = 'All agents are maxing out. We neea new agent'
+                sendLog('agentInfo', msg, level='critical')            
+                sendEmail('agentInfo', msg)
             if under_threshold: 
-                sendLog('agentInfo', 'There are agents under doing and that could be set in standby. This will be automated next', level='critical')
-                sendEmail('agentInfo','There are agents under doing and that could be set in standby. This will be automated next')
+                msg = 'There are agents under doing and that could be set in standby'
+                sendLog('agentInfo', msg , level='critical')
+                sendEmail('agentInfo', msg)
+            if over_pending:
+                msg = 'There is more than %d cpus pending, %d. We need to set an agent aside.'% (over_cpus, cpu_pending)
+                sendLog('agentInfo', msg, level='critical')
+                sendEmail('agentInfo', msg)
 
             if acting:
                 need_one = over_threshold
                 if not over_threshold:
-                    retire_agent = under_threshold
+                    retire_agent = under_threshold or over_pending
         
         if need_one:
             pick_from = self.buckets.get('standby',[])
