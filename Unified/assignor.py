@@ -39,7 +39,11 @@ def assignor(url ,specific = None, talk=True, options=None):
         fetch_from.extend(['considered','staging'])
     if specific:
         fetch_from.extend(['considered-tried'])
-    
+
+
+    if options.early:
+        print "Option Early is on"
+
     fetch_from.extend(['staged'])
 
     if options.from_status:
@@ -68,10 +72,13 @@ def assignor(url ,specific = None, talk=True, options=None):
     ##order by priority instead of random
     if options.early:
         cache = sorted(getWorkflows(url, 'assignment-approved', details=True), key = lambda r : r['RequestPriority'])
+        cache = [r['RequestName'] for r in cache]
         def rank( wfn ):
             return cache.index( wfn ) if wfn in cache else 0
 
         wfos = sorted(wfos, key = lambda wfo : rank( wfo.name ),reverse=True)
+        print "10 first",[wfo.name for wfo in wfos[:10]]
+        print "10 last",[wfo.name for wfo in wfos[-10:]]
     else:
         random.shuffle( wfos )
 
