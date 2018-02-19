@@ -176,6 +176,9 @@ def rejector(url, specific, options=None):
                     schema['TaskChain'] = ntask-1
                     schema.pop('Task%d'%ntask)
 
+                if options.priority:
+                    schema['RequestPriority'] = options.priority
+
                 ## update to the current priority
                 schema['RequestPriority'] = wfi.request['RequestPriority']
 
@@ -270,6 +273,7 @@ if __name__ == "__main__":
     parser.add_option('--AcquisitionEra',help="change the acq era", default=None)
     parser.add_option('--PrepID',help='change the prepid',default=None)
     parser.add_option('--EventsPerJob', help="set the events/job on the clone", default=0, type=int)
+    parser.add_option('--priority', help="Change the priority", default=0, type=int)
     parser.add_option('--EventAwareLumiBased', help="set the splitting algo of the clone", default=False, action='store_true')
     parser.add_option('--TimePerEvent', help="set the time/event on the clone", default=0, type=float)
     parser.add_option('--filelist',help='a file with a list of workflows',default=None)
