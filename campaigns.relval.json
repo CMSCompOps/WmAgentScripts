@@ -8,8 +8,8 @@
         "T1_US_FNAL"
       ], 
       "MergedLFNBase": "/store/relval", 
-      "Team": "relval", 
-      "NonCustodialGroup": "RelVal"
+      "NonCustodialGroup": "RelVal", 
+      "Team": "relval"
     }, 
     "maxcopies": 1, 
     "custodial": "T1_US_FNAL_MSS", 
@@ -28,8 +28,8 @@
         "T1_FR_CCIN2P3"
       ], 
       "MergedLFNBase": "/store/relval", 
-      "NonCustodialGroup": "RelVal", 
-      "Team": "relval"
+      "Team": "relval", 
+      "NonCustodialGroup": "RelVal"
     }, 
     "maxcopies": 1, 
     "custodial": "T1_US_FNAL_MSS", 
@@ -47,8 +47,8 @@
         "T1_US_FNAL"
       ], 
       "MergedLFNBase": "/store/relval", 
-      "NonCustodialGroup": "RelVal", 
-      "Team": "relval"
+      "Team": "relval", 
+      "NonCustodialGroup": "RelVal"
     }, 
     "maxcopies": 1, 
     "custodial": "T1_US_FNAL_MSS", 
@@ -66,8 +66,8 @@
         "T1_DE_KIT"
       ], 
       "MergedLFNBase": "/store/relval", 
-      "Team": "relval", 
-      "NonCustodialGroup": "RelVal"
+      "NonCustodialGroup": "RelVal", 
+      "Team": "relval"
     }, 
     "maxcopies": 1, 
     "custodial": "T1_US_FNAL_MSS", 
