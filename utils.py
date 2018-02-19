@@ -693,7 +693,7 @@ class lockInfo:
                 lock_present = glob.glob('%s/globallocks.json.*.lock'% monitor_pub_dir)
                 print "the following lock lock files are present",sorted(lock_present)
                 if not lock_present:
-                    os.system('rm -f %'%self.pub_lock)
+                    os.system('rm -f %s'%self.pub_lock)
                 else:
                     print "was unable to remove global lock because of",len(lock_present),"lock locks"
         except Exception as e:
