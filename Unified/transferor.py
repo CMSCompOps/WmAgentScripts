@@ -713,7 +713,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                     for ph in these_transfers:
                         transfered_items[ph].update( items )
                 else:
-                    sendLog('transferor','Could not make a replica request for items %s to site %s'%(items,sorted(site_se)),level='critical')
+                    sendLog('transferor','Could not make a replica request for items %s to site %s'%(items,site_se),level='critical')
                 
             #result = makeReplicaRequest(url, site_se, items_to_transfer, 'prestaging', priority=priority, approve=True)
             #phedexids = [o['id'] for o in result['phedex']['request_created']]:
