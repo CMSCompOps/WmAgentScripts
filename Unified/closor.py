@@ -175,6 +175,7 @@ def closor(url, specific=None, options=None):
     if max_per_round: 
         ## order them by priority
         all_closedout = sorted(getWorkflows(url, 'closed-out', details=True), key = lambda r : r['RequestPriority'])
+        all_closedout = [r['RequestName'] for r in all_closedout]
         def rank( wfn ):
             return all_closedout.index( wfn ) if wfn in all_closedout else 0
 
