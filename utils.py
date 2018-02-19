@@ -1550,7 +1550,10 @@ class siteInfo:
             ##hack
             self.sites_ready.append('T3_US_OSG')
             self.all_sites.append('T3_US_OSG')
-            
+            #self.sites_ready.append('T3_US_NERSC')
+            #self.all_sites.append('T3_US_NERSC')
+
+
             
         except Exception as e:
             print "issue with getting SSB readiness"
@@ -1617,10 +1620,15 @@ class siteInfo:
         self.addHocStorage = {
             'T2_CH_CERN_T0': 'T2_CH_CERN',
             'T2_CH_CERN_AI' : 'T2_CH_CERN',
-            'T3_US_NERSC' : 'T1_US_FNAL_Disk'
+            'T3_US_NERSC' : 'T1_US_FNAL_Disk',
+            'T3_US_OSG' : 'T1_US_FNAL_Disk'
             }
         self.addHocStorageS['T2_CH_CERN_T0'].add( 'T2_CH_CERN')
         self.addHocStorageS['T2_CH_CERN_AI'].add('T2_CH_CERN')
+
+        for s,d in self.addHocStorage.items():
+            self.addHocStorageS[s].add( d )
+
         for (phn,psn) in dataCache.get('site_storage'):
             self.addHocStorageS[psn].add( phn )
             if self.SE_to_CE(phn) == psn: continue
