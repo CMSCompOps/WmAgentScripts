@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput, workflowInfo, getDatasetBlocksFraction, findLostBlocks, findLostBlocksFiles, getDatasetBlockFraction, getDatasetFileFraction, getDatasetPresence, reqmgr_url, monitor_dir, getAllStuckDataset, monitor_pub_dir, do_html_in_each_module
+from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput, workflowInfo, getDatasetBlocksFraction, findLostBlocks, findLostBlocksFiles, getDatasetBlockFraction, getDatasetFileFraction, getDatasetPresence, reqmgr_url, monitor_dir, getAllStuckDataset, monitor_pub_dir, do_html_in_each_module, base_eos_dir
 from utils import unifiedConfiguration, componentInfo, sendEmail, checkTransferLag, sendLog
 from utils import siteInfo, campaignInfo, unified_url
 import json
@@ -42,7 +42,7 @@ def stagor(url,specific =None, options=None):
             known_lost_files[dataset] = [i['name'] for i in f]
 
     try:
-        cached_transfer_statuses = json.loads(open('cached_transfer_statuses.json').read())
+        cached_transfer_statuses = json.loads(open('%s/cached_transfer_statuses.json'%base_eos_dir).read())
     except:
         print "inexisting transfer statuses. starting fresh"
         cached_transfer_statuses = {}
