@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import checkTransferStatus, duplicateLock, sendLog
+from utils import checkTransferStatus, duplicateLock, sendLog, base_eos_dir
 import json
 import random
 import sys
@@ -12,7 +12,7 @@ def cachor(spec=None):
         print "currently running"
         return
     try:
-        all_checks = json.loads(open('cached_transfer_statuses.json').read())
+        all_checks = json.loads(open('%s/cached_transfer_statuses.json'%base_eos_dir).read())
     except:
         all_checks = {}
 
@@ -56,7 +56,7 @@ def cachor(spec=None):
         if not all_checks[pid]:
             print "Removing empty report for",pid
             all_checks.pop(pid)
-    open('cached_transfer_statuses.json','w').write(json.dumps( all_checks , indent=2))
+    open('%s/cached_transfer_statuses.json'%base_eos_dir,'w').write(json.dumps( all_checks , indent=2))
     
 if __name__ == "__main__":
     spec = sys.argv[1] if len(sys.argv)>1 else None

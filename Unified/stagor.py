@@ -513,9 +513,9 @@ def stagor(url,specific =None, options=None):
     for k in datasets_by_phid:
         datasets_by_phid[k] = list(datasets_by_phid[k])
 
-    open('datasets_by_phid.json','w').write( json.dumps(datasets_by_phid, indent=2 ))
+    open('%s/datasets_by_phid.json'%base_eos_dir,'w').write( json.dumps(datasets_by_phid, indent=2 ))
 
-    open('really_stuck_dataset.json','w').write( json.dumps(list(really_stuck_dataset), indent=2 ))
+    open('%s/really_stuck_dataset.json'%base_eos_dir,'w').write( json.dumps(list(really_stuck_dataset), indent=2 ))
     print '\n'*2,"Datasets really stuck"
     print '\n'.join( really_stuck_dataset )
 
