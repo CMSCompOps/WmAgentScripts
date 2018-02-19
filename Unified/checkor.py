@@ -24,7 +24,7 @@ from showError import parse_one, showError_options
 
 def checkor(url, spec=None, options=None):
     if userLock():   return
-    if duplicateLock() and not options.go:  return
+    if duplicateLock(wait=True) and not options.go:  return
 
 
     
