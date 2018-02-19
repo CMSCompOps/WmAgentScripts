@@ -513,6 +513,8 @@ def equalizor(url , specific = None, options=None):
         
         
         lhe,prim,_,sec,sites_allowed = wfi.getSiteWhiteList()#getIO()
+        sites_allowed_se = set()
+        for s in sites_allowed: sites_allowed_se.update( SI.CE_to_SEs(s) )
         ncores = wfi.getMulticore()
         mem = wfi.getMemory()
         memory_allowed = SI.sitesByMemory( mem , maxCore=ncores)
@@ -537,6 +539,10 @@ def equalizor(url , specific = None, options=None):
                 print "overriding the need for bad agent"
                 needs_overide = True
             return needs_overide
+
+        good_ces = set()
+        for s in SI.sites_ready:
+            good_ces.update( SI.CE_to_SEs( s ))
 
         configcache = wfi.getConfigCacheID()
         ## now parse this for action
@@ -751,7 +757,7 @@ def equalizor(url , specific = None, options=None):
                     aaa_grid  = filter(lambda s : not s in banned_until_you_find_a_way_to_do_this, aaa_grid)
                     print sorted(aaa_grid),"for premix"
                     if aaa_grid:
-                        wfi.sendLog('equalizor','Extending site whitelist to %s'%sorted(aaa_grid))
+                        wfi.sendLog('equalizor','Extending site whitelist for %s to %s due to PREMIX_overflow'%(task.pathName,sorted(aaa_grid)))
                         modifications[wfo.name][task.pathName]= {"AddWhitelist" : sorted(aaa_grid)}
 
             ## rule to overflow jobs on the primary input
@@ -875,8 +881,34 @@ def equalizor(url , specific = None, options=None):
 
             ### rule to avoid the issue of taskchain secondary jobs being stuck at sites processing the initial step
             if campaign in LHE_overflow:
-                #if not is_chain and task.taskType in ['Processing']:
-                if task.taskType in ['Processing']:
+                ## this is a rule for very light/no input to the job.
+                task_has_input = (task.taskType in ['Processing'])
+                
+                ## find the CEs that have the same SE than the allowed sites
+                ## it is not the same as doing the intersection with sites_allowed, as it can be broader here 
+                neighboring_ces = set()
+                for s in SI.sites_ready:
+                    s_se = SI.CE_to_SEs(s)
+                    if any([se in sites_allowed_se for se in s_se]):
+                        neighboring_ces.add( s )
+                
+                needs, task_name, running, idled = needs_action(wfi, task)
+                needs_overide = overide_from_agent( wfi, needs_overide)
+                extend_to = set( LHE_overflow[campaign]) & neighboring_ces ## at the intersection
+                
+                if needs or needs_overide:
+                    wfi.sendLog('equalizor','Extending site whitelist for %s to %s due to LHE_overflow'%(task.pathName.split('/')[-1],sorted(extend_to)))
+                    modifications[wfo.name][task.pathName] = { "AddWhitelist" : list(extend_to),
+                                                               "Running" : running,
+                                                               "Pending" : idled,
+                                                               "Priority" : wfi.request['RequestPriority']
+                                                               }
+                    altered_tasks.add( task.pathName )
+                else:
+                    wfi.sendLog('equalizor','%s of %s is running %d and pending %d. no light overflow'%( task_name, wfo.name, running, idled))
+
+                """
+                if task.taskType in ['Processing']: ## this is for a task processing some input
                     needs, task_name, running, idled = needs_action(wfi, task)
                     needs_overide = overide_from_agent( wfi, needs_overide)
                     extend_to = list(set(copy.deepcopy( LHE_overflow[campaign] )))
@@ -904,7 +936,7 @@ def equalizor(url , specific = None, options=None):
                         altered_tasks.add( task.pathName )
                     else:
                         wfi.sendLog('equalizor','%s of %s is running %d and pending %d'%( task_name, wfo.name, running, idled))
-                        
+                """     
 
 
             ### overflow the 76 digi-reco to the site holding the pileup
