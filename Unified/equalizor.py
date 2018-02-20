@@ -1191,7 +1191,7 @@ def equalizor(url , specific = None, options=None):
     ## close and save
     close( interface )
 
-    open('perf_per_config.json','w').write( json.dumps( perf_per_config, indent=2))
+    open('%s/perf_per_config.json'%base_eos_dir,'w').write( json.dumps( perf_per_config, indent=2))
 
 
 if __name__ == "__main__":
