@@ -4377,7 +4377,7 @@ class agentInfo:
         self.verbose = args.get('verbose')
         self.busy_fraction = args.get('busy_fraction',0.9)
         self.idle_fraction = args.get('idle_fraction',0.1)
-        self.max_pending_cpus = args.get('max_pending_cpus', 500000)
+        self.max_pending_cpus = args.get('max_pending_cpus', 10000000)
 
         ## keep some info in a local file
         try:
@@ -4576,7 +4576,8 @@ class agentInfo:
                     
         elif retire_agent:
             # pick one with most running jobs
-            sleep_up = random.choice( self.running )
+            pick_from = self.buckets.get('running',[])
+            sleep_up = random.choice( pick_from )
             print "putting to sleep",sleep_up
             if setAgentDrain(url, sleep_up):
                 self.info[sleep_up] = { 'status' : 'standby',
