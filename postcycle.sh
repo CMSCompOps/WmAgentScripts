@@ -52,7 +52,7 @@ source $BASE_DIR/credentials.sh
 $BASE_DIR/cWrap.sh Unified/completor.py
 
 ## check on the wf that have just completed
-$BASE_DIR/cWrap.sh Unified/checkor.py --strict
+#$BASE_DIR/cWrap.sh Unified/checkor.py --strict
 $BASE_DIR/cWrap.sh Unified/actor.py
 ## initiate automatic recovery
 $BASE_DIR/cWrap.sh Unified/recoveror.py
