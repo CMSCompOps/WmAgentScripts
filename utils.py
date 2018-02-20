@@ -4483,8 +4483,11 @@ class agentInfo:
                 if pinfo:
                     ## and is in production
                     st = 'running'
-                    if linfo['status'] == 'standby': st = 'standby'
-                    elif pinfo['drain_mode']: st = 'draining'
+                    if pinfo['drain_mode']: 
+                        if linfo['status'] == 'standby':
+                            st = 'standby'
+                        else:
+                            st = 'draining'
                 else:
                     ## and is gone from production
                     st = 'offline'
