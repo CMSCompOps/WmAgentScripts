@@ -1,24 +1,4 @@
 {
-  "CMSSW_9_4_4__ALCA_63-2018_02_05_17_02": {
-    "custodial_override": [
-      "DQMIO"
-    ], 
-    "parameters": {
-      "SiteWhitelist": [
-        "T1_US_FNAL"
-      ], 
-      "MergedLFNBase": "/store/relval", 
-      "NonCustodialGroup": "RelVal", 
-      "Team": "relval"
-    }, 
-    "maxcopies": 1, 
-    "custodial": "T1_US_FNAL_MSS", 
-    "lumisize": -1, 
-    "phedex_group": "RelVal", 
-    "fractionpass": 0.0, 
-    "go": true, 
-    "primary_AAA": true
-  }, 
   "CMSSW_10_0_2__HIN_PU2018-1518472278": {
     "custodial_override": [
       "DQMIO"
