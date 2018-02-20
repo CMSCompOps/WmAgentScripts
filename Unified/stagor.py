@@ -210,12 +210,10 @@ def stagor(url,specific =None, options=None):
 
                 if sites_incomplete_down:
                     sendLog('stagor',"%s are in downtime, while waiting for %s to get there"%( ",".join(sites_incomplete_down), ds))
-                #sites_complete = [SI.SE_to_CE(s) for s,v in checks[ds].items() if v>=good_enough]
-                #endpoint[ds].update( sites_complete )
-                #endpoint[ds].update( sites_incomplete )
-                #endpoint_completed[ds].update( sites_complete )
-                endpoint_incompleted[ds].update( sites_incomplete )
-                endpoint_in_downtime[ds].update( sites_incomplete_down )
+                    endpoint_in_downtime[ds].update( sites_incomplete_down )                    
+                if sites_incomplete:
+                    endpoint_incompleted[ds].update( sites_incomplete )
+
             
 
     time_point("Check on-going transfers")            
@@ -302,9 +300,9 @@ def stagor(url,specific =None, options=None):
             re_transfer = False
             ## there is missing input let's do something more elaborated
             for need in list(primaries):#+list(secondaries):
-                if endpoint_in_downtime[need] == endpoint_incompleted[need]:
+                if endpoint_in_downtime[need] and endpoint_in_downtime[need] == endpoint_incompleted[need]:
                     #print need,"is going to an end point in downtime"
-                    wfi.sendLog('stagor',"%s has only incomplete endpoint in downtime"%need)
+                    wfi.sendLog('stagor',"%s has only incomplete endpoint in downtime\n%s"%(need, endpoint_in_downtime[need] ))
                     re_transfer=True
                 
                 if not se_allowed_key in available_cache[need]:

@@ -287,6 +287,7 @@ def recoveror(url,specific,options=None):
 
         all_errors = {}
         try:
+            ## this is clearly very truncated and should be changed completely
             wfi.getSummary()
             all_errors = wfi.summary['errors']
         except:
