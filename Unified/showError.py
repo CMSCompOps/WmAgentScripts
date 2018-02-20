@@ -168,6 +168,8 @@ class ThreadHandler(threading.Thread):
                     if self.threads:
                         r_threads.append( self.threads.pop(-1))
                         r_threads[-1].start()
+                        ## just wait a sec
+                        time.sleep(5)
             time.sleep(self.sleepy)
         ##then wait for completion
         while sum([t.is_alive() for t in r_threads]):
