@@ -46,8 +46,8 @@ source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh
 echo >> $log
 
 start=`date +%s`
-echo $modulename:`date` >> $HTML_DIR/logs/running
-echo $modulename:`date` > $HTML_DIR/logs/last_running
+echo $modulename:`date` >> $FINAL_HTML_DIR/logs/running
+echo $modulename:`date` > $FINAL_HTML_DIR/logs/last_running
 python $* &>> $log
 
 if [ $? == 0 ]; then
@@ -59,7 +59,7 @@ fi
 
 stop=`date +%s`
 let stop=stop-start
-echo $modulename:$start:$stop > $HTML_DIR/logs/$modulename/`date +%s`.time
+echo $modulename:$start:$stop > $FINAL_HTML_DIR/logs/$modulename/`date +%s`.time
 echo `date` >> $log
 
 #cp $log $dated_log
