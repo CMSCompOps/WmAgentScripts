@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from utils import getWorkflows, findCustodialCompletion, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration, getDatasetSize, sendEmail, sendLog, campaignInfo, componentInfo, reqmgr_url, monitor_dir, monitor_pub_dir, getWorkflowByMCPileup, getDatasetPresence, lockInfo, getLatestMCPileup
+from utils import getWorkflows, findCustodialCompletion, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration, getDatasetSize, sendEmail, sendLog, campaignInfo, componentInfo, reqmgr_url, monitor_dir, monitor_pub_dir, getWorkflowByMCPileup, getDatasetPresence, lockInfo, getLatestMCPileup, base_eos_dir
 from assignSession import *
 import json
 import os
@@ -66,7 +66,7 @@ also_locking_from_reqmgr = set()
 LI = lockInfo()
 
 ## add an addHoc list of things to lock. empyting this list would result in unlocking later
-addHocLocks = json.loads( open('addhoc_lock.json').read())
+addHocLocks = json.loads( open('%s/addhoc_lock.json'%base_eos_dir).read())
 
 time_point("Starting addhoc")
 
