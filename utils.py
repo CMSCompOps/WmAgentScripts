@@ -1018,7 +1018,7 @@ def notRunningBefore( component, time_out = 60*5 ):
 
 
 class moduleLock(object):
-    def __init__(self,component=None, silent=False, wait=False, max_wait = 2400):
+    def __init__(self,component=None, silent=False, wait=False, max_wait = 18000):
         if not component: 
             component = sys._getframe(1).f_code.co_name   
 
@@ -1079,7 +1079,7 @@ class moduleLock(object):
         os.system('rm -f %s'% self.lock )
                  
 
-def duplicateLock(component=None, silent=False, wait=False, max_wait = None):
+def duplicateLock(component=None, silent=False, wait=False, max_wait = 18000):
     ## us the new module locking. requires a full drain so that all locks are set properly
     if False:
         ml = moduleLock( component = component,
