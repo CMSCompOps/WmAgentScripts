@@ -27,7 +27,8 @@ if duplicateLock('createLogDB', wait=True):
     print "existing createlog"
     sys.exit(1)
 
-years = filter(None,os.popen('%s ls /eos/cms/store/logs/prod/'%eos).read().split('\n'))
+#years = filter(None,os.popen('%s ls /eos/cms/store/logs/prod/'%eos).read().split('\n'))
+years = filter(None,os.popen('ls /eos/cms/store/logs/prod/').read().split('\n'))
 
 
 vetoes = ['Express_Run','PromptReco_Run','Repack_Run','Validation','test','Test']
@@ -36,12 +37,14 @@ n_index=0
 for year in years:
     if options.max and n_index>options.max: break
     if check_years and not year in check_years : continue
-    months = filter(None,os.popen('%s ls /eos/cms/store/logs/prod/%s/'%(eos,year)).read().split('\n'))
+    #months = filter(None,os.popen('%s ls /eos/cms/store/logs/prod/%s/'%(eos,year)).read().split('\n'))
+    months = filter(None,os.popen('ls /eos/cms/store/logs/prod/%s/'%(year)).read().split('\n'))
     print year,months
     for month in months:
         if options.max and n_index>options.max: break
         if check_months and not month in check_months : continue
-        workflows = filter(None,os.popen('%s ls /eos/cms/store/logs/prod/%s/%s/WMAgent/'%(eos,year,month)).read().split('\n'))
+        #workflows = filter(None,os.popen('%s ls /eos/cms/store/logs/prod/%s/%s/WMAgent/'%(eos,year,month)).read().split('\n'))
+        workflows = filter(None,os.popen('ls /eos/cms/store/logs/prod/%s/%s/WMAgent/'%(year,month)).read().split('\n'))
         random.shuffle( workflows )
         print year,month,len(workflows)
         ## start reading
@@ -55,7 +58,8 @@ for year in years:
             #    continue
 
             if any(v in workflow or workflow in v for v in vetoes): continue
-            tars = filter(None,os.popen('%s ls /eos/cms/store/logs/prod/%s/%s/WMAgent/%s/'%(eos,year,month,workflow)).read().split('\n'))
+            #tars = filter(None,os.popen('%s ls /eos/cms/store/logs/prod/%s/%s/WMAgent/%s/'%(eos,year,month,workflow)).read().split('\n'))
+            tars = filter(None,os.popen('ls /eos/cms/store/logs/prod/%s/%s/WMAgent/%s/'%(year,month,workflow)).read().split('\n'))
             print workflow,len(tars)
             logs_alread_in_db = list(set([l.logfile  for l in session.query(LogRecord).filter(LogRecord.workflow == workflow).all()]))
             already_in_db = list(set([l.path for l in session.query(LogRecord).filter(LogRecord.workflow == workflow).all()]))
