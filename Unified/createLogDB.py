@@ -22,12 +22,13 @@ specific = options.workflow.split(',') if options.workflow else None
 check_months = options.months.split(',') if options.months else None
 check_years= options.years.split(',') if options.years else None
 
-years = filter(None,os.popen('%s ls /eos/cms/store/logs/prod/'%eos).read().split('\n'))
-
 ### make sure that we run this only on one instance
 if duplicateLock('createLogDB', wait=True):
     print "existing createlog"
     sys.exit(1)
+
+years = filter(None,os.popen('%s ls /eos/cms/store/logs/prod/'%eos).read().split('\n'))
+
 
 vetoes = ['Express_Run','PromptReco_Run','Repack_Run','Validation','test','Test']
 print years
