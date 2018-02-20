@@ -821,7 +821,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
         module_name,run_time,spend = t.split(':')
         ## then do what you want with it !
         if 'cleanor' in module_name: continue
-        if 'htmlor' in module_name: continue
+        #if 'htmlor' in module_name: continue
         if 'messagor' in module_name: continue
         #if 'stagor' in module_name: continue
         per_module[module_name].append( int(spend) )
