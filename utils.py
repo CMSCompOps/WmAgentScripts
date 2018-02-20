@@ -2102,10 +2102,12 @@ class closeoutInfo:
         self.owner = os.getpid()
         try:
             ## this needs to get in a db so as to be concurrent
-            self.record = json.loads(open('closedout.json').read())
+            self.record = json.loads(open('%s/closedout.json'%base_eos_dir).read())
         except:
             print "No closed-out record, starting fresh"
             self.record = {}
+
+        self.removed_keys = set()
 
     def table_header(self):
         text = '<table border=1><thead><tr><th>workflow</th><th>OutputDataSet</th><th>%Compl</th><th>acdc</th><th>Dupl</th><th>LSsize</th><th>Scubscr</th><th>dbsF</th><th>dbsIF</th><th>\
@@ -2184,7 +2186,7 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
         self.assistance()
 
     def summary(self):
-        os.system('cp closedout.json closedout.json.last')
+
         
         html = open('%s/closeout.html'%monitor_dir,'w')
         html.write('<html>')
@@ -2199,6 +2201,7 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
             if not (wfo.status == 'away' or wfo.status.startswith('assistance')):
                 print "Taking",wf,"out of the close-out record"
                 self.record.pop(wf)
+                self.removed_keys.add( wf )
                 continue
             html.write( self.one_line( wf, wfo , count) )
 
@@ -2206,9 +2209,66 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
         html.write('<br>'*100) ## so that the anchor works ok
         html.write('bottom of page</html>')
 
+        self.save()
+        
+    def save(self):
 
+        ## gather all existing content
+        while True:
+            existings = glob.glob('%s/closedout.*.lock'%base_eos_dir)
+            if existings:
+                ## wait until there are no such files any more
+                print len(existings),"existing content",sorted(existings)
+                time.sleep(10)
+            else:
+                break
+
+        ## lock everyone else from collecting info
+        my_file = '%s/closedout.%s.lock'%(base_eos_dir,self.owner)
+        out = open(my_file, 'w')
+        #out.write( json.dumps( self.record , indent=2 ) )
+        out.write( my_file )
+        out.close()
+        
         ## write the information out to disk
-        open('closedout.json','w').write( json.dumps( self.record , indent=2 ) )
+        os.system('cp %s/closedout.json %s/closedout.json.last'%(base_eos_dir, base_eos_dir))
+
+        ## merge the content
+        try:
+            old = json.loads(open('%s/closedout.json'%base_eos_dir).read())
+        except:
+            old = {}
+
+        for wf in old:
+            if wf in self.removed_keys:
+                print wf,"was removed in the process, skipping"
+                continue
+            update_to_old = False
+            if wf not in self.record:
+                update_to_old = true
+            else:
+                # the content is in both place
+                old_ts = [dsi['timestamp'] for ds,dsi in old[wf].get('datasets',{}).items()]
+                new_ts = [dsi['timestamp'] for ds,dsi in self.record[wf].get('datasets',{}).items()]
+                if not new_ts:
+                    ##weird
+                    update_to_old = true
+                else:
+                    if old_ts:
+                        #then we can make the comparison
+                        if max(old_ts) > max(new_ts):
+                            ## the existing timestamp is bigger than the one we have :keep the old one
+                            update_to_old = true
+
+            if update_to_old:
+                self.record[wf] = old[wf]
+
+        out = open('%s/closedout.json'%base_eos_dir,'w')
+        out.write( json.dumps( self.record , indent=2 ) )
+        out.close()
+        time.sleep(100)
+
+        os.system('rm -f %s'% my_file )
 
     def assistance(self):
         from assignSession import session, Workflow
