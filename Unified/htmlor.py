@@ -1344,12 +1344,18 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
 <table border=1><thead>
 <tr><td>Agent</td><td>Running/Pending hourly (<b>jobs</b>)</td><td>Running/Pending daily (<b>CPUs</b>)</td><td>Status</td><td>Creat./Pend.</td></tr></thead>
 """)
+
+
+    #####
+    ### this is more than monitoring
     AI = agentInfo( url = reqmgr_url,
                     verbose=False,
                     busy_fraction = UC.get('busy_agent_fraction'),
                     idle_fraction = UC.get('idle_agent_fraction') 
                     )
     AI.poll(acting=True)
+    #####
+
     for team,agents in getAllAgents(reqmgr_url).items():
         if not team in ['production','relval','highprio']: continue
         html_doc.write("<tr><td bgcolor=lightblue>%s</td></tr>"% team)
@@ -1372,6 +1378,10 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
             message = "%s"%name
             for component in agent['down_components']:
                 message += '<br><b>%s</b>'%component
+                for det in agent['down_component_detail']:
+                    if det['name'] == component:
+                        message += '<br>%s'% det['error_message']
+                
 
             message += '<br><a href="https://cms-logbook.cern.ch/elog/GlideInWMS/?mode=summary&reverse=0&reverse=1&npp=20&subtext=%s">gwms elog</a>, <a href="https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary&reverse=0&reverse=1&npp=20&subtext=%s">elog</a>, <a href="https://its.cern.ch/jira/issues/?jql=text~%s* AND project = CMSCOMPPR AND status != CLOSED">jira</a>'%( short_name, short_name, short_name )
             message += '<br>Unified status : %s'% uas
