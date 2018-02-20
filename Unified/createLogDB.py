@@ -2,12 +2,11 @@
 import os
 import json
 import sys
-#sys.path.append( '/afs/cern.ch/user/v/vlimant/public/ops/')
-#from LogDBSchema import *
-#from transitionLogDBSchema import * ## in oracle
+
 from assignSession import *
 import random
 import optparse
+from utils import moduleLock, duplicateLock
 
 parser = optparse.OptionParser()
 parser.add_option('--workflow', help='Which workflow logs', default=None)
@@ -16,15 +15,19 @@ parser.add_option('--months',help='What month to parse', default=None)
 parser.add_option('--max',help='Limit the number of indexion', default=0, type=int)
 (options,args) = parser.parse_args()
 
-#eos='/afs/cern.ch/project/eos/installation/0.3.84-aquamarine/bin/eos.select'
+
 eos='/usr/bin/eos'
 
 specific = options.workflow.split(',') if options.workflow else None
 check_months = options.months.split(',') if options.months else None
 check_years= options.years.split(',') if options.years else None
 
-
 years = filter(None,os.popen('%s ls /eos/cms/store/logs/prod/'%eos).read().split('\n'))
+
+### make sure that we run this only on one instance
+if duplicateLock('createLogDB', wait=True):
+    print "existing createlog"
+    sys.exit(1)
 
 vetoes = ['Express_Run','PromptReco_Run','Repack_Run','Validation','test','Test']
 print years
@@ -44,6 +47,12 @@ for year in years:
         for workflow in workflows:
             if options.max and n_index>options.max: break
             if specific and not any(s in workflow or workflow in s for s in specific): continue
+
+            #ml = moduleLock( component = 'createLogDB_%s'% workflow, wait=True )
+            #if ml(): 
+            #    print "the workflow is already been handled, skipping"
+            #    continue
+
             if any(v in workflow or workflow in v for v in vetoes): continue
             tars = filter(None,os.popen('%s ls /eos/cms/store/logs/prod/%s/%s/WMAgent/%s/'%(eos,year,month,workflow)).read().split('\n'))
             print workflow,len(tars)
