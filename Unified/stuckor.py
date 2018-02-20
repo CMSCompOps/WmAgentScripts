@@ -6,7 +6,7 @@ def stuckor(url = reqmgr_url):
     
     if duplicateLock(): return
     datasets_by_phid = json.loads(open('%s/datasets_by_phid.json'%base_eos_dir).read())
-    really_stuck_dataset = set(json.loads(open('%/really_stuck_dataset.json'%base_eos_dir).read()))
+    really_stuck_dataset = set(json.loads(open('%s/really_stuck_dataset.json'%base_eos_dir).read()))
 
     UC = unifiedConfiguration()
 
