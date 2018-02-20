@@ -28,8 +28,6 @@ def checkor(url, spec=None, options=None):
     if options.go: wait=False
     if duplicateLock(wait=wait) and not options.go:  return
 
-
-    
     fDB = closeoutInfo()
 
     UC = unifiedConfiguration()
