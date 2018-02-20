@@ -23,12 +23,12 @@ def cachor(spec=None):
             print phedexid,"does not look relevant to be in cache anymore. poping"
             print all_checks.pop( phedexid )
 
-    #all_transfers = [transfer for transfer in session.query(Transfer).filter(Transfer.phedexid>0).all()]
+
     all_transfers = set()
     for imp in session.query(TransferImp).filter(TransferImp.active==True).all():
         all_transfers.add( imp.phedexid ) 
     all_transfers = list(all_transfers)
-    #all_transfers = list(set([imp.phedexid for imp in session.query(TransferImp).filter(TransferImp.active==True).all()]))
+
     random.shuffle( all_transfers )
 
     existing = map(int,all_checks.keys()) ## strng keys
@@ -36,11 +36,13 @@ def cachor(spec=None):
 
     print len(new),"transfers not look out at all, will do those first",new
     if spec: new = [int(spec)]
-
+    new = list(new)
+    random.shuffle( new )
+    
     #for transfer in all_transfers:
     for phedexid in all_transfers:    
         #print phedexid
-        if new and phedexid!=sorted(new)[0]: continue
+        if new and phedexid!=new[0]: continue
         print "running the check on",phedexid
         new_check = checkTransferStatus(url, phedexid, nocollapse=True)
         if new_check : 
