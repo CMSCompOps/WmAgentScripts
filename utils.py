@@ -1017,15 +1017,87 @@ def notRunningBefore( component, time_out = 60*5 ):
     return True
 
 
-def duplicateLock(component=None, silent=False, wait=False):
+class moduleLock(object):
+    def __init__(self,component=None, silent=False, wait=False, max_wait = 2400):
+        if not component: 
+            component = sys._getframe(1).f_code.co_name   
+
+        self.poll = 30
+        self.pid = os.getpid()
+        self.lock = '%s/%s.%s.lock'%( base_eos_dir, component, self.pid)
+        self.component = component
+        self.wait = wait
+        self.silent= silent
+        self.max_wait = max_wait
+        print "duplicate lock for component",self.component,"at",self.lock
+
+    def __call__(self):
+        polled = 0
+        nogo = True
+        locks = []
+        i_try = 0
+        while True:
+            ## check on existing such files
+            locks = glob.glob('%s/%s.%s.lock'%( base_eos_dir, self.component, '*'))
+            if len(locks):
+                ## something is in the way
+                if not self.wait:
+                    nogo =True
+                    break
+                else:
+                    print "Waiting for other %s components to stop running \n%s" % (self.component , sorted(locks))
+                    time.sleep( self.poll )
+                    polled += self.poll
+            else:
+                ## nothing is in the way. go ahead
+                nogo = False
+                break
+            i_try += 1
+            if max_wait and polled > max_wait:
+                print "stop waiting for %s to be released \n%s"% ( self.component , sorted(locks))
+                break 
+
+        if not nogo:
+            ## insert a lock file here
+            l = open( self.lock, 'w')
+            l.write("""%s
+%d
+"""%(time.asctime(time.gmtime()),
+     self.pid))
+            l.close()
+        else:
+            if not self.silent:
+                msg = 'There are %s instances running. Tried for %d [s] \n%s'%(len(locks),
+                                                                               polled,
+                                                                               sorted(locks))
+                sendEmail('overlapping %s'%self.component, msg)
+                print msg
+        return nogo
+
+    def __del__(self):
+        #remove the lock file
+        os.system('rm -f %s'% self.lock )
+                 
+
+def duplicateLock(component=None, silent=False, wait=False, max_wait = None):
+    ## us the new module locking. requires a full drain so that all locks are set properly
+    if False:
+        ml = moduleLock( component = component,
+                         silent = silent,
+                         wait = wait,
+                         max_wait = max_wait)
+        return ml()
+
     if not component:
         ## get the caller
         component = sys._getframe(1).f_code.co_name
 
-    max_sleep = 30*60 # 30 min
-    max_try = 10
+    
+    poll = 30 #s
+    polled = 0
     nogo = True
-    for i_try in range(max_try):
+    i_try = 0
+    while True:
         ## check that no other instances of assignor is running
         process_check = filter(None,os.popen('ps -f -e | grep %s.py | grep -v grep  |grep python'%component).read().split('\n'))
         if len(process_check)>1:
@@ -1035,14 +1107,20 @@ def duplicateLock(component=None, silent=False, wait=False):
                 break
             else:
                 print "Waiting for other %s components to stop running" % component
-                time.sleep( max_sleep / max_try )
+                time.sleep( poll )
+                polled += poll
         else:
             ## the only way to return False is here
             nogo = False
             break
+        i_try += 1
+        if max_wait and polled > max_wait:
+            break
 
     if nogo and not silent:
-        sendEmail('overlapping %s'%component,'There are %s instances running %s'%(len(process_check), '\n'.join(process_check)))
+        sendEmail('overlapping %s'%component,'There are %s instances running. Tried for %d [s] \n%s'%(len(process_check), 
+                                                                                                      polled,
+                                                                                                      '\n'.join(process_check)))
         print "quitting because of overlapping processes"
 
     return nogo
