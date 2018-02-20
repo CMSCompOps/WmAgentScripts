@@ -1,13 +1,9 @@
 BASE_DIR=/data/unified/WmAgentScripts/
-#HTML_DIR=/var/www/html/unified/
+
 HTML_DIR=/data/unified/www
 FINAL_HTML_DIR=/eos/project/c/cms-unified-logs/www/
 
 cd $BASE_DIR
-
-#oweek=`date +%W`
-#week=${oweek#0}
-#let oddity=week%2
 
 if [ "$USER" != "vlimant" ] ; then
     echo "single user running from now on"
@@ -24,6 +20,18 @@ dated_log=$HTML_DIR/logs/$modulename/`date +%F_%T`.log
 log=$dated_log
 
 echo `date` > $log
+
+if [ -f "/eos/project/c/cms-unified-logs/drain_mode" ] ; then
+    echo "System is draining"
+    echo "System is draining" >> $log
+    cp $log $last_log
+    cp $log $FINAL_HTML_DIR/logs/$modulename/.
+    cp $log $FINAL_HTML_DIR/logs/$modulename/last.log
+    exit
+fi
+
+
+
 echo $USER >> $log
 echo $HOSTNAME >> $log
 #echo the week $week oddity is $oddity >> $log
@@ -58,3 +66,5 @@ echo `date` >> $log
 cp $log $last_log
 cp $log $FINAL_HTML_DIR/logs/$modulename/.
 cp $log $FINAL_HTML_DIR/logs/$modulename/last.log
+
+#rm $log
