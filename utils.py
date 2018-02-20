@@ -4874,6 +4874,12 @@ class workflowInfo:
         self.summary = None
 
 
+
+    def checkSettings(self):
+        ## open a mystery file
+        perfs = json.loads(open('%s/perf_per_config.json'% base_eos_dir))
+        ## and check the observed value and the settings of the workflow
+
     def isRelval(self):
         if 'SubRequestType' in self.request and 'RelVal' in self.request['SubRequestType']:
             return True
