@@ -1079,7 +1079,7 @@ class moduleLock(object):
         os.system('rm -f %s'% self.lock )
                  
 
-def duplicateLock(component=None, silent=False, wait=False, max_wait = 18000):
+def duplicateLock(component=None, silent=False, wait=False, max_wait = 18000, max_concurrent=1):
     ## us the new module locking. requires a full drain so that all locks are set properly
     if False:
         ml = moduleLock( component = component,
@@ -1100,7 +1100,7 @@ def duplicateLock(component=None, silent=False, wait=False, max_wait = 18000):
     while True:
         ## check that no other instances of assignor is running
         process_check = filter(None,os.popen('ps -f -e | grep %s.py | grep -v grep  |grep python'%component).read().split('\n'))
-        if len(process_check)>1:
+        if len(process_check)>max_concurrent:
             ## another component is running on the machine : stop
             if not wait:
                 nogo = True
