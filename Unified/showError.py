@@ -849,7 +849,7 @@ Report of workflows with top %s error in failure and cooloff<br>
 Last updated on %s (GMT)
 
 <table border=1>
-<thead><tr><th>Workflow</th><th>Task</th><<th>Success</th><th>Failures</th><th>Fail.Frac</th><th>Cooloffs</th><th>Cool.Frac</th><th> Task Error Report </th> </tr></thead>
+<thead><tr><th>Workflow</th><th>Task</th><th>Success</th><th>Failures</th><th>Fail.Frac</th><th>Cooloffs</th><th>Cool.Frac</th><th> Task Error Report </th> </tr></thead>
 """%(
             top_N,
             time.asctime( time.gmtime())
