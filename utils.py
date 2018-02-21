@@ -5,6 +5,7 @@ from dbs.apis.dbsClient import DbsApi
 #import reqMgrClient
 import httplib
 import os
+import socket
 import json 
 import collections
 from collections import defaultdict
@@ -2099,7 +2100,7 @@ global_SI.instance = None
 
 class closeoutInfo:
     def __init__(self):
-        self.owner = os.getpid()
+        self.owner = "%s-%s"%( socket.gethostname(), os.getpid())
         try:
             ## this needs to get in a db so as to be concurrent
             self.record = json.loads(open('%s/closedout.json'%base_eos_dir).read())
