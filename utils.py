@@ -2246,20 +2246,20 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
                 continue
             update_to_old = False
             if wf not in self.record:
-                update_to_old = true
+                update_to_old = True
             else:
                 # the content is in both place
                 old_ts = [dsi['timestamp'] for ds,dsi in old[wf].get('datasets',{}).items()]
                 new_ts = [dsi['timestamp'] for ds,dsi in self.record[wf].get('datasets',{}).items()]
                 if not new_ts:
                     ##weird
-                    update_to_old = true
+                    update_to_old = True
                 else:
                     if old_ts:
                         #then we can make the comparison
                         if max(old_ts) > max(new_ts):
                             ## the existing timestamp is bigger than the one we have :keep the old one
-                            update_to_old = true
+                            update_to_old = True
 
             if update_to_old:
                 self.record[wf] = old[wf]
