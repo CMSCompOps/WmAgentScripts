@@ -2979,6 +2979,7 @@ def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, ve
                         site = sub['node']
                         if within_sites and not site in within_sites: continue
                         if vetoes and any([site.endswith(v) for v in vetoes]): continue
+                        sub['percent_bytes'] = sub['percent_bytes'] if sub['percent_bytes']!=None else 0
                         destinations[site].add( (block['name'], sub['percent_bytes'], sub['request']))
         pass
     
@@ -2998,6 +2999,7 @@ def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, ve
                 ## it is there and in full
                 if vetoes and any([site.endswith(v) for v in vetoes]): continue
                 for b in all_block_names:
+                    sub['percent_bytes'] = sub['percent_bytes'] if sub['percent_bytes']!=None else 0
                     destinations[site].add( (b, sub['percent_bytes'], phedex_id) )
                 in_full.add( site )
                 
@@ -3025,6 +3027,8 @@ def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, ve
             for ds in result:
                 for block in ds['block']:
                     for sub in block['subscription']:
+                        print sub['percent_bytes']
+                        sub['percent_bytes'] = sub['percent_bytes'] if sub['percent_bytes']!=None else 0
                         destinations[site].add( (block['name'], sub['percent_bytes'], sub['request']))
 
         
