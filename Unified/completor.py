@@ -38,9 +38,21 @@ def completor(url, specific):
 
     all_stuck = set()
     ## take into account what stagor was saying
-    all_stuck.update( json.loads( open('%s/stuck_transfers.json'%monitor_pub_dir).read() ))
-    ## take into account the block that needed to be repositioned recently
-    all_stuck.update( [b.split('#')[0] for b in json.loads( open('%s/missing_blocks.json'%monitor_dir).read()) ] )
+    for itry in range(5):
+        try:
+            all_stuck.update( json.loads( open('%s/stuck_transfers.json'%monitor_pub_dir).read() ))
+            break
+        except:
+            time.sleep(2)
+        
+    for itry inrange(5):
+         try:
+             ## take into account the block that needed to be repositioned recently
+             all_stuck.update( [b.split('#')[0] for b in json.loads( open('%s/missing_blocks.json'%monitor_dir).read()) ] )
+             break
+         except:
+             time.sleep(2)
+
     ## take into account all stuck block and dataset from transfer team
     all_stuck.update( getAllStuckDataset()) 
 
