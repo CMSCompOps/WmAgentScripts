@@ -3261,6 +3261,9 @@ def getDatasetBlocks( dataset, runs=None, lumis=None):
     if lumis:
         for run in lumis:
             try:
+                ## to be fixed, if run==1, this call fails. one needs to provide the following
+                # Exception in listFileArray 'Invalid input: files API does not supprt run_num=1 without logical_file_name.'
+                ### so get first the list of files, then make the call
                 all_files = dbsapi.listFileArray( dataset = dataset, lumi_list = lumis[run], run_num=int(run), detail=True)
             except Exception as e:
                 print "Exception in listFileArray",str(e)
