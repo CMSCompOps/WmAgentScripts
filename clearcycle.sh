@@ -51,6 +51,8 @@ source $BASE_DIR/credentials.sh
 ## get the workflow in/out the system
 $BASE_DIR/cWrap.sh Unified/injector.py
 
+$BASE_DIR/cWrap.sh Unified/completor.py
+
 ## get things that just completed
 $BASE_DIR/cWrap.sh Unified/checkor.py --strict
 ## pass along everything that has custodial already and should close
