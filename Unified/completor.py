@@ -45,7 +45,7 @@ def completor(url, specific):
         except:
             time.sleep(2)
         
-    for itry inrange(5):
+    for itry in range(5):
          try:
              ## take into account the block that needed to be repositioned recently
              all_stuck.update( [b.split('#')[0] for b in json.loads( open('%s/missing_blocks.json'%monitor_dir).read()) ] )
