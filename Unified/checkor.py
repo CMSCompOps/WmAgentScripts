@@ -24,10 +24,13 @@ from showError import parse_one, showError_options
 
 def checkor(url, spec=None, options=None):
     if userLock():   return
-    wait = True
-    if options.go: wait=False
-    if duplicateLock(wait=wait) and not options.go:  return
-
+    
+    ## the duplicate process lock was only necessary to prevent update clash on the closeoutinfo object.
+    ## fDB is concurrent resilient, so it can be removed
+    #wait = True
+    #if options.go: wait=False
+    #if duplicateLock(wait=wait) and not options.go:  return
+    
     fDB = closeoutInfo()
 
     UC = unifiedConfiguration()
