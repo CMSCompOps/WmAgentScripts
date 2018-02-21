@@ -1,5 +1,6 @@
 #talk to mcm
-cern-get-sso-cookie -u https://cms-pdmv.cern.ch/mcm/ -o ~/private/prod-cookie.txt --krb
+export MCM_SSO_COOKIE=/tmp/$USER-$HOSTNAME-vfsvdka573t
+cern-get-sso-cookie -u https://cms-pdmv.cern.ch/mcm/ -o $MCM_SSO_COOKIE --krb
 
 #talk to cmsweb
 #export X509_USER_PROXY=$HOME/private/personal/voms_proxy.cert

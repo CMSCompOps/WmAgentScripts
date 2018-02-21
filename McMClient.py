@@ -28,8 +28,11 @@ class McMClient:
         if self.id=='cert':
             self.__http = httplib.HTTPSConnection(self.server,  cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         elif self.id=='sso':
+            env_cookie = os.environ.get('MCM_SSO_COOKIE',None)
             if cookie:
                 self.cookieFilename = cookie
+            elif env_cookie:
+                self.cookieFilename = env_cookie
             else:
                 if '-dev' in self.server:
                     self.cookieFilename = '%s/private/dev-cookie.txt'%(os.getenv('HOME'))
