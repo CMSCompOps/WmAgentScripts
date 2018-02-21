@@ -1,5 +1,6 @@
 #talk to mcm
 export MCM_SSO_COOKIE=/tmp/$USER-$HOSTNAME-vfsvdka573t
+echo "creating mcm cookie" $MCM_SSO_COOKIE
 cern-get-sso-cookie -u https://cms-pdmv.cern.ch/mcm/ -o $MCM_SSO_COOKIE --krb
 
 #talk to cmsweb
