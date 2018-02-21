@@ -152,7 +152,7 @@
     "assignor" : null,
     "closor" : null,
     "checkor" : 500,
-    "completor" : 500
+    "completor" : null
     }
  },
  "default_fraction_overdoing" :{
