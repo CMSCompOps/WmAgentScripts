@@ -4450,7 +4450,8 @@ class agentInfo:
         self.ready = self.getStatus()
         if not self.ready:
             print "AgentInfo could not initialize properly"
-            sys.exit(1)
+            #print "ARAKIRI : AgentInfo could not initialize properly"
+            #sys.exit(1)
 
     def agentStatus(self, agent):
         for status in self.buckets:
@@ -4541,6 +4542,10 @@ class agentInfo:
             self.change_status( agent, 'standby')
 
     def poll(self, wake_up_draining=False, acting=False):
+        if not self.ready:
+            print "cannot poll the agents without fresh information about them"
+            return False
+
         now,nows = self.getNow()
 
         ### decides if you need to boot and agent
