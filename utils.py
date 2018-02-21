@@ -666,7 +666,7 @@ class lockInfo:
             from assignSession import session, Lock
             out = []
             detailed_out = {}
-            all_locks = session.query(Lock).all()
+            all_locks = session.query(Lock).filter(Lock.lock == True).all()
             print len(all_locks),"existing locks"
             for lock in all_locks:
                 if lock.lock:
