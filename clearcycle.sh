@@ -56,7 +56,7 @@ $BASE_DIR/cWrap.sh Unified/completor.py
 ## get things that just completed
 $BASE_DIR/cWrap.sh Unified/checkor.py --strict
 ## pass along everything that has custodial already and should close
-$BASE_DIR/cWrap.sh Unified/checkor.py  --clear --go ## go to avoid the duplicate warning
+$BASE_DIR/cWrap.sh Unified/checkor.py  --clear
 $BASE_DIR/cWrap.sh Unified/closor.py
 
 ## early announce what can be announced already
