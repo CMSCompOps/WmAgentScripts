@@ -787,9 +787,9 @@ def assignWorkflow(url, workflowname, team, parameters ):
             if not t_s in wf.request: break
             t_n = wf.request[t_s]['%sName'%chain_type]
             if type(wf.request['Memory'])==dict and t_n in wf.request['Memory']:
-                maxRSSs[t_n] = int(wf.request['Memory'][t_n])*1024
+                maxRSSs[t_n] = int(wf.request['Memory'][t_n])
             elif 'Memory' in wf.request[t_s]:
-                maxRSSs[t_n] = int(wf.request[t_s]['Memory'])*1024
+                maxRSSs[t_n] = int(wf.request[t_s]['Memory'])
             else:
                 #nothing partial
                 maxRSSs = {}
@@ -797,9 +797,9 @@ def assignWorkflow(url, workflowname, team, parameters ):
     if maxRSSs and chain_type=='Task':
         defaults['MaxRSS'] = maxRSSs ## set it as a dict
     elif maxRSSs and chain_type=='Step':
-        defaults['MaxRSS'] = int(max(maxRSSs.values()))*1024 ## set it to the max value
+        defaults['MaxRSS'] = int(max(maxRSSs.values())) ## set it to the max value
     else:
-        defaults['MaxRSS'] = int(wf.request['Memory'])*1024 ## set it to the indicated value
+        defaults['MaxRSS'] = int(wf.request['Memory']) ## set it to the indicated value
 
     defaults.update( parameters )
 
@@ -810,7 +810,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
 
         defaults['Multicore'] = wf.request['Multicore']
     #if ('Multicore' in wf.request and wf.request['Multicore']>1):
-    #    defaults['MaxRSS'] = int((wf.request['Memory']*1024+10) * 1.5 * wf.request['Multicore'])
+    #    defaults['MaxRSS'] = int((wf.request['Memory']+10) * 1.5 * wf.request['Multicore'])
     #    defaults['MaxVSize'] = int(10*defaults['MaxRSS'])
     
     pop_useless = ['AcquisitionEra','ProcessingString']
@@ -948,8 +948,8 @@ assignWorkflow.defaults= {
         "MaxMergeEvents" : 20000000, ## shouldn't this be set to infinite ?
         'BlockCloseMaxEvents' : 200000000,
         'BlockCloseMaxWaitTime' : 172800,
-        "MaxRSS" : 3000000,
-        "MaxVSize": 4394967000,
+        "MaxRSS" : 3000,
+        "MaxVSize": 1*1024*1024,  # 1 TiB
         "Dashboard": "production",
         "SoftTimeout" : 159600, ## 44H watchdog, regardless of the requested time ...
         "GracePeriod": 300,
