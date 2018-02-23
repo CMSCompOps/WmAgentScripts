@@ -816,7 +816,6 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 
     per_module = defaultdict(list)
     last_module = defaultdict( str )
-    last_ran = defaultdict(int)
     for t in filter(None,os.popen('cat %s/logs/*/*.time'%monitor_dir).read().split('\n')):
         module_name,run_time,spend = t.split(':')
         ## then do what you want with it !
@@ -845,7 +844,16 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     for m in sorted(per_module.keys()):
         last_module[m] = os.popen("tac %s/logs/running | grep %s | head -1"%(monitor_dir, m)).read()
         ## parse it to make an alert.
-        last_ran[m] = time.mktime(time.gmtime())
+        _,last_date = last_module[m].split(':',1)
+        try:
+            last_time = time.strptime(last_date, "%a %b %d %H:%M:%S CET %Y")
+        except Exception as e:
+            last_time = now
+
+        heart_beat_time_out = 6
+        since_last = now-last_time
+        if since_last > (heart_beat_time_out*60*60): #6h heart beat
+            sendLog('heartbeat',"The module %s has not ran in %s hours, now %s"%(m, heart_beat_time_out, display_time( since_last )))
 
     for m in sorted(per_module.keys()):
         #,spends in per_module.items():
