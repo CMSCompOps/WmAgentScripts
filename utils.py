@@ -2226,10 +2226,11 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
 
         ## lock everyone else from collecting info
         my_file = '%s/closedout.%s.lock'%(base_eos_dir,self.owner)
-        out = open(my_file, 'w')
+        os.system('touch %s'%my_file)
+        #out = open(my_file, 'w')
         #out.write( json.dumps( self.record , indent=2 ) )
-        out.write( my_file )
-        out.close()
+        #out.write( my_file )
+        #out.close()
         
         ## write the information out to disk
         os.system('cp %s/closedout.json %s/closedout.json.last'%(base_eos_dir, base_eos_dir))
