@@ -4444,7 +4444,7 @@ class agentInfo:
     def __init__(self, **args):
         self.url = args.get('url')
         self.verbose = args.get('verbose')
-        self.busy_fraction = args.get('busy_fraction',0.9)
+        self.busy_fraction = args.get('busy_fraction',0.8)
         self.idle_fraction = args.get('idle_fraction',0.1)
         self.max_pending_cpus = args.get('max_pending_cpus', 10000000)
 
@@ -4456,6 +4456,7 @@ class agentInfo:
 
         self.buckets = defaultdict(list)
         self.wake_draining = False ## do not wake up agents that are on drain already
+        self.release = defaultdict(set)
         self.ready = self.getStatus()
         if not self.ready:
             print "AgentInfo could not initialize properly"
@@ -4488,6 +4489,8 @@ class agentInfo:
                 print linfo
                 print pinfo
 
+            if pinfo:
+                self.release[ pinfo['agent_version'] ].add( str(agent) )
             if linfo:
                 ## this was already known
                 if pinfo:
@@ -4550,17 +4553,28 @@ class agentInfo:
                 print "Able to set",agent,"in standby"
             self.change_status( agent, 'standby')
 
-    def poll(self, wake_up_draining=False, acting=False):
+    def poll(self, wake_up_draining=False, acting=False, verbose=False):
         if not self.ready:
             print "cannot poll the agents without fresh information about them"
             return False
 
+        verbose = verbose or self.verbose
+
         now,nows = self.getNow()
+
+        ## annotate who could go
+        candidates_to_standby = set()
+        candidates_to_drain = set()
+        candidates_to_wakeup = set()
 
         ### decides if you need to boot and agent
         need_one = False
         ### decides if you need to get one out becuase there are too many already
+        # put in standby if some agent is running way low
         retire_agent = False
+        ### decide if agents are good to get in drain
+        # put in drain if several agents have a new release
+        drain_agent = False
 
         ## go through some metric
         ## collect the number of jobs per agent. 
@@ -4581,6 +4595,11 @@ class agentInfo:
         running = 0
         pending = 0
         cpu_pending = 0
+        top_release = sorted(self.release.keys())[0] ## this is the latest release
+        oldest_release = sorted(self.release.keys())[-1] #this is the oldest release
+        running_top_release = 0
+        running_old_release = 0
+        standby_top_release = 0
         for agent,ainfo in all_agents.items():
             if not 'Name' in ainfo: continue
             agent_name = ainfo['Name']
@@ -4590,30 +4609,48 @@ class agentInfo:
             cpu_pending += ainfo['TotalIdleCpus']
             running += r
             pending += ainfo['TotalIdleJobs']
-            if self.verbose:
+            if verbose:
                 print agent_name,r,json.dumps(ainfo, indent=2)
+            if agent_name in self.buckets.get('draining',[]):
+                if not agent_name in oldest_release:
+                    candidates_to_wakeup.add( agent_name )
+            if agent_name in self.buckets.get('standby',[]):
+                if agent_name in self.release[top_release]:
+                    standby_top_release += 1 
             if agent_name in self.buckets['running']:
+                if agent_name not in self.release[top_release]:
+                    candidates_to_drain.add( agent_name )
+                    running_old_release += 1
+                else:
+                    running_top_release += 1
                 capacity += t
                 stuffed = (r >= t*self.busy_fraction)
                 light = (r <= t*self.idle_fraction)
-                if self.verbose:
+                if verbose:
                     print agent
                     print "is Stuffed?",stuffed
                     print "is underused?",light
                 over_threshold &= stuffed
                 under_threshold |= light
+                if light:
+                    candidates_to_standby.add( agent_name )
+                    candidates_to_drain.add( agent_name )
 
-        if self.verbose:
+        if verbose or verbose:
             print "Capacity",capacity
             print "Running", running
             print "Pending jobs", pending
             print "Pending cpus",cpu_pending
-
+            print "Running lastest release",running_top_release
+            print "Standby in latest release",standby_top_release
+            print "Running old release",running_old_release
+            
         over_cpus = self.max_pending_cpus
         over_pending = (cpu_pending > over_cpus)
+        release_deploy = ((running_top_release>=2) or (standby_top_release>=2)) and running_old_release
+
 
         ## all agents are above the understood limit. so please boot one
-        #
         if not one_recent_running:
             if over_threshold: 
                 msg = 'All agents are maxing out. We neea new agent'
@@ -4627,18 +4664,27 @@ class agentInfo:
                 msg = 'There is more than %d cpus pending, %d. We need to set an agent aside.'% (over_cpus, cpu_pending)
                 sendLog('agentInfo', msg, level='critical')
                 sendEmail('agentInfo', msg)
-
+            if release_deploy:
+                msg = 'There is a new agent release in town %s. Starting to drain other agents from %s'%( top_release, sorted( candidates_to_drain ))
+                sendLog('agentInfo', msg, level='critical')
+                #sendEmail('agentInfo', msg)
+                
             if acting:
                 need_one = over_threshold
                 if not over_threshold:
                     retire_agent = under_threshold or over_pending
+                if release_deploy:
+                    drain_agent = True
         
         if need_one:
             pick_from = self.buckets.get('standby',[])
             if not pick_from:
                 if wake_up_draining:
                     print "wake up an agent that was actually draining"
-                    pick_from = self.buckets.get('draining',[])
+                    if candidates_to_wakeup:
+                        pick_from = list(candidates_to_wakeup)
+                    else:
+                        pick_from = self.buckets.get('draining',[])
 
             if not pick_from:
                 print "need to wake an agent up, but there are none available"
@@ -4650,18 +4696,37 @@ class agentInfo:
                     self.info[wake_up] = { 'status' : 'running',
                                            'update' : now,
                                            'date' : nows }
-                    
+        elif drain_agent:
+            ## pick one agent to drain
+            sleep_up = None
+            if candidates_to_drain:
+                sleep_up = random.choice( list(candidates_to_drain))
+            if sleep_up:
+                print "putting to drain",sleep_up
+                if setAgentDrain(url, sleep_up):
+                    self.info[sleep_up] = { 'status' : 'draining',
+                                            'update' : now,
+                                            'date' : nows }
+            else:
+                print "a new release deployement is here, but nothing is there to be drained"
+
         elif retire_agent:
             # pick one with most running jobs
-            pick_from = self.buckets.get('running',[])
-            sleep_up = random.choice( pick_from )
-            print "putting to sleep",sleep_up
+            if candidates_to_standby:
+                sleep_up = random.choice( list( candidates_to_standby ))
+            else:
+                pick_from = self.buckets.get('running',[])
+                sleep_up = random.choice( pick_from )
+            print "putting to drain",sleep_up
             if setAgentDrain(url, sleep_up):
                 self.info[sleep_up] = { 'status' : 'standby',
                                         'update' : now,
                                         'date' : nows }                
         else:
-            print "Everything is fine. No need to retire or add an agent"
+            if not acting:
+                print "The polling is not proactive"
+            else:
+                print "Everything is fine. No need to retire or add an agent"
 
 def getAgentConfig(url, agent, keys):
     conn = make_x509_conn(url)
