@@ -689,6 +689,13 @@ class lockInfo:
 
     def __del__(self):
         try:
+            ## let dynamo know that we are done here"
+            lock_DDM( lock = False)
+        except Exception as e:
+            sendEmail('lockInfo','Issue handshaking with dynamo\n%s'%(str(e)))
+
+        ## produce the lock file on disk
+        try:
             from assignSession import session, Lock
             out = []
             detailed_out = {}
@@ -4693,7 +4700,7 @@ class agentInfo:
             if release_deploy:
                 msg = 'There is a new agent release in town %s. Starting to drain other agents from %s'%( top_release, sorted( candidates_to_drain ))
                 sendLog('agentInfo', msg, level='critical')
-                #sendEmail('agentInfo', msg)
+                sendEmail('agentInfo', msg)
                 
             if acting:
                 need_one = over_threshold
