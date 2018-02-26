@@ -4645,7 +4645,8 @@ class agentInfo:
             if verbose:
                 print agent_name,r,json.dumps(ainfo, indent=2)
             if agent_name in self.buckets.get('draining',[]):
-                if not agent_name in oldest_release:
+                if not agent_name in self.release[oldest_release]:
+                    ## you can candidate those not running the latest release
                     candidates_to_wakeup.add( agent_name )
             if agent_name in self.buckets.get('standby',[]):
                 if agent_name in self.release[top_release]:
@@ -4713,16 +4714,20 @@ class agentInfo:
             pick_from = self.buckets.get('standby',[])
             if not pick_from:
                 if wake_up_draining:
-                    print "wake up an agent that was actually draining"
+                    print "wake up an agent that was already draining"
                     if candidates_to_wakeup:
+                        print "picking up from candidated agents"
                         pick_from = list(candidates_to_wakeup)
                     else:
+                        print "picking up from draining agents"
                         pick_from = self.buckets.get('draining',[])
 
             if not pick_from:
                 print "need to wake an agent up, but there are none available"
-                ## this is a major screw up!!!
-                sendEmail('agentInfo','We urgently need a new agent in the pool, but none seem to be available')
+                ## this is a major issue!!!
+                msg = 'We urgently need a new agent in the pool, but none seem to be available'
+                sendEmail('agentInfo', msg)
+                sendLog('agentInfo', msg, level='critical')
             else:
                 # pick one at random in the one idling
                 wake_up = random.choice( pick_from )
@@ -4743,16 +4748,18 @@ class agentInfo:
                                             'update' : now,
                                             'date' : nows }
             else:
-                print "a new release deployement is here, but nothing is there to be drained"
+                print "Agents need to be set in drain, but nothing is there to be drained"
 
         elif retire_agent:
             # pick one with most running jobs
             if candidates_to_standby:
+                print "picking up from the candidated agents"
                 sleep_up = random.choice( list( candidates_to_standby ))
             else:
+                print "picking up from the running agents"
                 pick_from = self.buckets.get('running',[])
                 sleep_up = random.choice( pick_from )
-            print "putting to drain",sleep_up
+            print "putting to standby/drain",sleep_up
             if setAgentDrain(self.url, sleep_up):
                 self.info[sleep_up] = { 'status' : 'standby',
                                         'update' : now,
