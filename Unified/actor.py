@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from utils import workflowInfo, sendEmail, componentInfo, campaignInfo, unifiedConfiguration, siteInfo, sendLog, setDatasetStatus
+from utils import workflowInfo, sendEmail, componentInfo, campaignInfo, unifiedConfiguration, siteInfo, sendLog, setDatasetStatus. moduleLock
 from utils import closeoutInfo, userLock
 import reqMgrClient
 import json
@@ -339,6 +339,7 @@ def singleClone(url, wfname, actions, comment, do=False):
 
 def actor(url,options=None):
     
+    if  moduleLock(wait=False ,silent=True)(): return
     if userLock('actor'): return
     
     up = componentInfo(mcm=False, soft=['mcm'])
