@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from utils import workflowInfo, sendEmail, componentInfo, campaignInfo, unifiedConfiguration, siteInfo, sendLog, setDatasetStatus. moduleLock
+from utils import workflowInfo, sendEmail, componentInfo, campaignInfo, unifiedConfiguration, siteInfo, sendLog, setDatasetStatus, moduleLock
 from utils import closeoutInfo, userLock
 import reqMgrClient
 import json
