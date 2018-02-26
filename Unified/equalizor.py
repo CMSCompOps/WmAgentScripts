@@ -116,19 +116,18 @@ def equalizor(url , specific = None, options=None):
         mapping['T0_CH_CERN'].append( one )
         
     mapping['T0_CH_CERN'].append( 'T1_US_FNAL' )
-    ## fnal can read from cnaf ?
     #mapping['T1_IT_CNAF'].append( 'T1_US_FNAL' )
     #mapping['T1_IT_CNAF'].extend( [site for site in SI.sites_ready if '_US_' in site] ) ## all US can read from CNAF
     mapping['T1_IT_CNAF'].append( 'T2_CH_CERN' )
     mapping['T1_DE_KIT'].append( 'T2_CH_CERN' )
     mapping['T2_CH_CERN'].append( 'T1_IT_CNAF' )
     mapping['T2_CH_CERN'].append( 'T1_US_FNAL' )
-    mapping['T2_CH_CERN'].append( 'T3_IN_TIFRCloud' )
-    mapping['T1_IT_CNAF'].append( 'T3_IN_TIFRCloud' )
+    #mapping['T2_CH_CERN'].append( 'T3_IN_TIFRCloud' )
+    #mapping['T1_IT_CNAF'].append( 'T3_IN_TIFRCloud' )
     #mapping['T2_UK_London_IC'].append( 'T2_CH_CERN' )
     #mapping['T1_UK_RAL'].append( 'T2_BE_IIHE' )
-    mapping['T2_UK_London_IC'].append( 'T2_BE_IIHE' )
-    mapping['T2_UK_London_IC'].append( 'T2_FR_CCIN2P3' )
+    #mapping['T2_UK_London_IC'].append( 'T2_BE_IIHE' )
+    #mapping['T2_UK_London_IC'].append( 'T2_FR_CCIN2P3' )
     for site in sites_to_consider:
         if '_US_' in site:
             mapping[site].append('T2_CH_CERN')
