@@ -13,11 +13,11 @@ import httplib
 import ssl
 
 def remove_action(*args):
-    if not os.path.exists('key.json'):
+    if not os.path.exists('Unified/secret_act.txt'):
         print 'Needs to be called from same directory as key.json'
         exit()
 
-    with open('key.json', 'r') as key_file:
+    with open('Unified/secret_act.txt', 'r') as key_file:
         key_info = json.load(key_file)
 
     conn = httplib.HTTPSConnection(key_info['url'], key_info['port'],
