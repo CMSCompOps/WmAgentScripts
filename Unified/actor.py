@@ -11,6 +11,7 @@ import os
 from utils import reqmgr_url
 import httplib
 import ssl
+import random
 
 def remove_action(*args):
     if not os.path.exists('Unified/secret_act.txt'):
@@ -347,7 +348,13 @@ def actor(url,options=None):
         print "EMPTY!"
         return
 
-    for wfname in action_list:
+    wf_list = action_list.keys()
+    max_per_round = UC.get('max_per_round').get('actor', None)
+    if max_per_round:
+        random.shuffle( wf_list )
+        wf_list = wf_list[:max_per_round]
+
+    for wfname in wf_list:
         print '-'*100
         print "Looking at",wfname,"for recovery options"
 
