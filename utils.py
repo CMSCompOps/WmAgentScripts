@@ -4686,11 +4686,11 @@ class agentInfo:
         ## all agents are above the understood limit. so please boot one
         if not one_recent_running:
             if over_threshold: 
-                msg = 'All agents are maxing out. We neea new agent'
+                msg = 'All agents are maxing out. We need a new agent'
                 sendLog('agentInfo', msg, level='critical')            
                 sendEmail('agentInfo', msg)
             if under_threshold: 
-                msg = 'There are agents under doing and that could be set in standby'
+                msg = 'There are agents under-doing and that could be set in standby'
                 sendLog('agentInfo', msg , level='critical')
                 sendEmail('agentInfo', msg)
             if over_pending:
@@ -4721,6 +4721,8 @@ class agentInfo:
 
             if not pick_from:
                 print "need to wake an agent up, but there are none available"
+                ## this is a major screw up!!!
+                sendEmail('agentInfo','We urgently need a new agent in the pool, but none seem to be available')
             else:
                 # pick one at random in the one idling
                 wake_up = random.choice( pick_from )
