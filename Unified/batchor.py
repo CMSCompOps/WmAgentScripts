@@ -97,7 +97,7 @@ def batchor( url ):
     open('%s/batches.json' % base_eos_dir,'w').write( json.dumps( batches , indent=2 ) )
 
     ## open the campaign configuration 
-    campaigns = json.loads( open('campaigns.relval.json').read() )
+    campaigns = json.loads( open('%s/campaigns.relval.json'%base_eos_dir).read() )
 
 
     ## protect for overwriting ??
@@ -147,7 +147,7 @@ This is an automated message"""%( new_campaign,
     ## read back
     rread = json.loads(open('campaigns.json.updated').read())
 
-    os.system('mv campaigns.json.updated campaigns.relval.json')
+    os.system('mv campaigns.json.updated %s/campaigns.relval.json'%base_eos_dir)
 
 if __name__ == "__main__":
     url = 'cmsweb.cern.ch'
