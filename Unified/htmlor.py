@@ -840,13 +840,14 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 
     html_doc.write("Module running time<br>")
     html_doc.write("<table border=1><thead><tr><th>Module</th><th>Last Ran</th><th>Last Runtime</th><th>Avg Runtime</th></tr></thead>")
-    now = time.mktime(time.gmtime())
+    #now = time.mktime(time.gmtime())
+    now = time.mktime(time.localtime())## the date in the log is in local time
     for m in sorted(per_module.keys()):
         last_module[m] = os.popen("tac %s/logs/running | grep %s | head -1"%(monitor_dir, m)).read()
         ## parse it to make an alert.
         _,last_date = last_module[m].split(':',1)
         try:
-            last_time = time.mktime(time.strptime(last_date, "%a %b %d %H:%M:%S CET %Y\n"))
+            last_time = time.mktime(time.strptime(last_date, "%a %b %d %H:%M:%S %Z %Y\n"))
         except Exception as e:
             print "failed to parse the time from the logs",str(e)
             last_time = now
@@ -858,7 +859,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
         else:
             print "module %s has ran last since %s"%( m , display_time( since_last ))
 
-        last_module[m] = "Since %s"%( display_time( since_last ) )
+        last_module[m] = "%s ago"%( display_time( since_last ) )
 
     for m in sorted(per_module.keys()):
         #,spends in per_module.items():
