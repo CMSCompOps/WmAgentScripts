@@ -498,7 +498,7 @@
    		    "/MinBias_TuneCUETP8M1_14TeV-pythia8/PhaseIISpring17GS-90X_upgrade2023_realistic_v9-v1/GEN-SIM" :{"SiteWhitelist" : ["T1_DE_KIT","T2_IT_Rome","T1_UK_RAL","T2_ES_CIEMAT","T2_US_Nebraska","T2_US_Caltech","T2_US_Wisconsin"]} }
   },
  "PhaseIIFall17D" : {
-   "go" : false,
+   "go" : true,
    "lumisize" : -1,
    "maxcopies": 1,
    "fractionpass" : 0.95,
@@ -961,7 +961,7 @@
    "overflow" : { "PREMIX" : {} }
   },
   "RunIISummer16MiniAODv2": {
-    "go": true,
+    "go": false,
     "fractionpass" : 0.95,
     "force-complete" : 0.99,
     "maxcopies": 1,
