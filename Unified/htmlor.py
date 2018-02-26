@@ -846,8 +846,9 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
         ## parse it to make an alert.
         _,last_date = last_module[m].split(':',1)
         try:
-            last_time = time.strptime(last_date, "%a %b %d %H:%M:%S CET %Y")
+            last_time = time.strptime(last_date, "%a %b %d %H:%M:%S CET %Y\n")
         except Exception as e:
+            print "failed to parse the time from the logs",str(e)
             last_time = now
 
         heart_beat_time_out = 6
@@ -858,6 +859,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
             print "module %s has ran last since %s"%( m , display_time( since_last ))
 
         last_module[m] = "Since %s"%( display_time( since_last ) )
+
     for m in sorted(per_module.keys()):
         #,spends in per_module.items():
         spends = per_module[m]
