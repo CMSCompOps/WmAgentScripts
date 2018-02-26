@@ -600,17 +600,45 @@ def listSubscriptions(url, dataset, within_sites=None):
     #print destinations
     return destinations
 
-def lock_DDM(lock=True):
-    conn = make_x509_conn('t3desk007.mit.edu')
-    #conn  =  httplib.HTTPSConnection('t3desk007.mit.edu', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+def lock_DDM(lock=True, wait=True, timeout=None):
+    #conn = make_x509_conn('dynamo.mit.edu')
+    conn  =  httplib.HTTPSConnection('dynamo.mit.edu', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    go = False
+    waited = 0
+    sleep = 30
     if lock:
-        conn.request("POST","/registry/activitylock/lock?service=unified&app=detox")
+        while True:
+            conn.request("POST","/registry/applock/lock?service=unified&app=detox")
+            response = conn.getresponse()
+            data = response.read()
+            res = json.loads( data )
+            if res['result'].lower() == 'wait':
+                time.sleep( sleep )
+                waited += sleep
+            elif res['result'].lower() == 'ok':
+                print "we locked dynamo for unified"
+                go = True
+                break
+            else:
+                go = False
+                print res
+                break
+            if timeout and waited>timeout:
+                print "locking dynamo for unified has timedout"
+                go = False
     else:
-        conn.request("POST","/registry/activitylock/unlock?service=unified&app=detox")    
-    response = conn.getresponse()
-    data = response.read()
-    res = json.loads( data )
-    print res
+        conn.request("POST","/registry/applock/unlock?service=unified&app=detox")    
+        response = conn.getresponse()
+        data = response.read()
+        res = json.loads( data )
+        if res['result'].lower() == 'ok':
+            print "we unlocked dynamo for unified"
+            go = True
+        else:
+            print res
+            go = True
+    
+    return go
 
 
 
@@ -619,12 +647,10 @@ class lockInfo:
         self.lockfilename = 'globallocks' ## official name
         self.writeondelete = andwrite
         self.owner = str(os.getpid())
-        ## should lock on DDM
-        try:
-            lock_DDM()
-        except Exception as e:
-            print str(e)
-            pass
+        ## should lock on DDM. this waits for dynamo to not be running
+        #if not lock_DDM( timeout = 30*60): ## 30 minutes timeout
+        #    print "Dynamo is preventing us to run"
+        #    sys.exit(13)
 
         self.self_lock = '%s/%s.json.%s.lock'%(monitor_pub_dir,self.lockfilename,self.owner)
         if os.path.isfile( self.self_lock ):
