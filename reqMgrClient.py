@@ -913,6 +913,9 @@ def assignWorkflow(url, workflowname, team, parameters ):
                           "halt_job_on_file_boundaries" : True,
                           "splittingAlgo" : "LumiBased"}
                 print setWorkflowSplitting(url, workflowname, params)
+            elif aux == 'AverageEventsPerJob':
+                wf = workflowInfo(url, workflowname)
+                return False
             else:
                 print "No action for ",aux
 
@@ -1194,6 +1197,7 @@ def setWorkflowSplitting(url, workflowname, schema):
         if ifOldSchema(schema):
             print "old splitting format detected : translating. please migrate."
             schema = reqmgr1_to_2_Splitting(schema)
+        print "post to reqmgr2"
         data = requestManagerPost(url, "/reqmgr2/data/splitting/%s"%workflowname, schema)
     else:
         if not ifOldSchema(schema):
@@ -1201,6 +1205,15 @@ def setWorkflowSplitting(url, workflowname, schema):
             schema = reqmgr2_to_1_Splitting(schema)
         data = requestManager1Post(url,"/reqmgr/view/handleSplittingPage", schema)
     #print data
+
+    ## can try to load the resulting data
+    try:
+        res = json.loads( data )
+    except Exception as e:
+        print "setWorkflowSplitting has failed to update. exiting"
+        print str(e)
+        sys.exit(1)
+
     return data
 
 def reqmgr1_to_2_Assignment( params ):

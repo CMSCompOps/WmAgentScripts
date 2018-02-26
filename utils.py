@@ -5059,6 +5059,18 @@ class workflowInfo:
         self.summary = None
 
 
+    def getFamilly(self, details=True, and_self=False):
+        familly = getWorkflowById( self.url, self.request['PrepID'] ,details=True)
+        true_familly = []
+        for member in familly:
+            if member['RequestDate'] < self.request['RequestDate']: continue
+            if member['RequestStatus'] in ['None',None]: continue
+            if member['RequestName'] == self.request['RequestName'] and not and_self: continue
+            if details:
+                true_familly.append( member )
+            else:
+                true_familly.append( member['RequestName'] )
+        return true_familly
 
     def checkSettings(self):
         ## open a mystery file
@@ -6206,7 +6218,7 @@ class workflowInfo:
             all_tasks.extend( self._taskDescending( ts, select ) )
         return all_tasks
 
-    def getSplittingsNew(self):
+    def getSplittingsNew(self ,strip=False):
         self.conn = make_x509_conn(self.url)
         #self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))        
         r1=self.conn.request("GET",'/reqmgr2/data/splitting/%s'%self.request['RequestName'], headers={"Accept":"application/json"} )
@@ -6215,6 +6227,10 @@ class workflowInfo:
         splittings = []
         for spl in result:
             if not spl['taskType'] in ['Production','Processing','Skim'] : continue
+            if strip:
+                for drop in ['algorithm','trustPUSitelists','trustSitelists','deterministicPileup','type','include_parents','lheInputFiles']:
+                    if drop in spl['splitParams']:
+                        spl['splitParams'].pop(drop)
             splittings.append( spl )
 
         return splittings

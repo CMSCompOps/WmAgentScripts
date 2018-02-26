@@ -29,8 +29,10 @@ def remove_action(*args):
         json.dumps({'key': key_info['key'], 'workflows': args}),
         {'Content-type': 'application/json'})
 
-    print conn.getresponse().read()
+    r= conn.getresponse().read()
+    print r 
     conn.close()
+    return (r == 'Done')
   
 
 def singleRecovery(url, task, initial, actions, do=False):
@@ -175,32 +177,40 @@ def singleRecovery(url, task, initial, actions, do=False):
         for action in actions:
             if action.startswith('split'):
                 acdcInfo = workflowInfo(url, acdc)
-                splittings = acdcInfo.getSplittings()
+                splittings = acdcInfo.getSplittingsNew(strip=True)
                 if actions[action] != 'Same' and actions[action] != 'max':
                     factor = int(actions[action][0:-1]) if 'x' in actions[action] else 2
                     for split in splittings:
+                        split_par = split['splitParams']
                         for act in ['avg_events_per_job','events_per_job','lumis_per_job']:
-                            if act in split:
-                                print "Changing %s (%d) by a factor %d"%( act, split[act], factor),
-                                split[act] /= factor
-                                print "to",split[act]
+                            if act in split_par:
+                                print "Changing %s (%d) by a factor %d"%( act, split_par[act], factor),
+                                split_par[act] /= factor
+                                print "to",split_par[act]
                                 break
-                        split['requestName'] = acdc
-                        print "changing the splitting of",acdc
-                        print json.dumps( split, indent=2 )
-                        print reqMgrClient.setWorkflowSplitting(url, acdc, split )
+                        #split['requestName'] = acdc
+                        #print "changing the splitting of",acdc
+                        #print json.dumps( split, indent=2 )
+                        #print reqMgrClient.setWorkflowSplitting(url, acdc, split )
+
                 elif 'max' in actions[action]:
                     for split in splittings:
+                        split_par = split['splitParams']
                         for act in ['avg_events_per_job','events_per_job','lumis_per_job']:
-                            if act in split:
-                                print "Changing %s (%d) "%( act, split[act]),
-                                split[act] = 1
-                                print "to max splitting ",split[act]
+                            if act in split_par:
+                                print "Changing %s (%d) "%( act, split_par[act]),
+                                split_par[act] = 1
+                                print "to max splitting ",split_par[act]
                                 break
-                        split['requestName'] = acdc
-                        print "changing the splitting of",acdc
-                        print json.dumps( split, indent=2 )
-                        print reqMgrClient.setWorkflowSplitting(url, acdc, split )
+                        #split['requestName'] = acdc
+                        #print "changing the splitting of",acdc
+                        #print json.dumps( split, indent=2 )
+                        #print reqMgrClient.setWorkflowSplitting(url, acdc, split )
+                print "changing the splitting of",acdc
+                print json.dumps( splittings, indent=2 )                
+                done = reqMgrClient.setWorkflowSplitting(url, acdc, splittings )
+                ## check on done == True
+                
 
     data = reqMgrClient.setWorkflowApproved(url, acdc)
     
@@ -282,35 +292,39 @@ def singleClone(url, wfname, actions, comment, do=False):
         for action in actions:
             if action.startswith('split'):
                 cloneinfo = workflowInfo(url, clone)
-                splittings = cloneinfo.getSplittings()
+                splittings = cloneinfo.getSplittingsNew(strip=New)
                 if actions[action] != 'Same' and actions[action] != 'max' and actions[action] != '':
                     factor = int(actions[action][0:-1]) if 'x' in actions[action] else 2
                     for split in splittings:
+                        split_par = split['splitParams']
                         for act in ['avg_events_per_job','events_per_job','lumis_per_job']:
-                            if act in split:
-                                wfi.sendLog('actor','Changing %s (%d) by a factor %d'%( act, split[act], factor))
-                                print "Changing %s (%d) by a factor %d"%( act, split[act], factor),
-                                split[act] /= factor
-                                print "to",split[act]
+                            if act in split_par:
+                                wfi.sendLog('actor','Changing %s (%d) by a factor %d'%( act, split_par[act], factor))
+                                split_par[act] /= factor
+                                print "to",split_par[act]
                                 break
-                        split['requestName'] = clone
-                        print "changing the splitting of",clone
-                        print json.dumps( split, indent=2 )
-                        print reqMgrClient.setWorkflowSplitting(url, clone, split )
+                        #split['requestName'] = clone
+                        #print "changing the splitting of",clone
+                        #print json.dumps( split, indent=2 )
+                        #print reqMgrClient.setWorkflowSplitting(url, clone, split )
                 elif 'max' in actions[action]:
                     for split in splittings:
+                        split_par = split['splitParams']
                         for act in ['avg_events_per_job','events_per_job','lumis_per_job']:
-                            if act in split:
-                                wfi.sendLog('actor','Max splitting set for %s (%d'%( act, split[act]))
-                                print "Changing %s (%d) "%( act, split[act]),
-                                split[act] = 1
-                                print "to max splitting ",split[act]
+                            if act in split_par:
+                                wfi.sendLog('actor','Max splitting set for %s (%d'%( act, split_par[act]))
+                                print "Changing %s (%d) "%( act, split_par[act]),
+                                split_par[act] = 1
+                                print "to max splitting ",split_par[act]
                                 break
-                        split['requestName'] = clone
-                        print "changing the splitting of",clone
-                        print json.dumps( split, indent=2 )
-                        print reqMgrClient.setWorkflowSplitting(url, clone, split )
+                        #split['requestName'] = clone
+                        #print "changing the splitting of",clone
+                        #print json.dumps( split, indent=2 )
+                        #print reqMgrClient.setWorkflowSplitting(url, clone, split )
 
+                print "changing the splitting of",clone
+                print json.dumps( splittings, indent=2 )
+                print reqMgrClient.setWorkflowSplitting(url, clone, splittings )
     #Approve
     data = reqMgrClient.setWorkflowApproved(url, clone)
     wfi.sendLog('actor','Cloned into %s'%clone)
@@ -343,12 +357,16 @@ def actor(url,options=None):
         sendLog('actor','Not able to load action list', level='critical')
         return
 
-    print action_list
+    print json.dumps( action_list, indent=2)
     if not action_list:
         print "EMPTY!"
         return
 
     wf_list = action_list.keys()
+    print json.dumps( sorted( wf_list), indent=2)
+    if options.spec:
+        wf_list = [wf for wf in wf_list if options.spec in wf]
+
     max_per_round = UC.get('max_per_round').get('actor', None)
     if max_per_round:
         random.shuffle( wf_list )
@@ -443,7 +461,7 @@ def actor(url,options=None):
                         else:
                                 tasks[task].append({setting:allTasksDefaults[setting]})
             print "Tasks is "
-            print tasks
+            print json.dumps(tasks, indent=2)
 
             all_tasks = wfi.getAllTasks()
 
@@ -554,7 +572,7 @@ def actor(url,options=None):
                             continue
 
                     else: #ACDC was made correctly. Now we have to assign it.
-                        wfi.sendLog('actor','ACDC created for task %s. Actions taken \n%s'%(fulltaskname,list(actions)))
+                        wfi.sendLog('actor','ACDC created for task %s. Actions taken \n%s'%(fulltaskname,json.dumps(actions)))
                         #team = wfi.request['Teams'][0]
                         team = 'production'
                         parameters={
@@ -635,6 +653,7 @@ if __name__ == '__main__':
     parser.add_option('--test', dest='do', default=True,action='store_false')
     parser.add_option('--leave',dest='ass',default=True,action='store_false')
     parser.add_option('--go',default=False,action='store_true',help="override possible blocking conditions")
+    parser.add_option('--spec',default=None,help='a specific workflow to consider')
     (options,args) = parser.parse_args()
         
     if len(args)!=0:
