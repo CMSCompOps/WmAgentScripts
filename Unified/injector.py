@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, getWorkflowById, getWorkLoad, componentInfo, sendEmail, workflowInfo, sendLog, reqmgr_url, getDatasetStatus, unifiedConfiguration, duplicateLock, do_html_in_each_module
+from utils import getWorkflows, getWorkflowById, getWorkLoad, componentInfo, sendEmail, workflowInfo, sendLog, reqmgr_url, getDatasetStatus, unifiedConfiguration, duplicateLock, do_html_in_each_module, getDatasetFiles
 import sys
 import copy
 import os
@@ -80,6 +80,12 @@ def injector(url, options, specific):
                 if status_cache[d] != 'VALID':
                     wfi.sendLog('injector',"One of the input is not VALID. %s : %s"%( d, status_cache[d]))
                     sendLog('injector',"One of the input of %s is not VALID. %s : %s"%( wf, d, status_cache[d]), level='critical')
+                    can_add = False
+                ## check for any file in phedex, to verify existence
+                _,ph_files,_,_ = getDatasetFiles(url, d)
+                if not ph_files:
+                    wfi.sendLog('injector',"One of the input has no file in phedex: %s" % d )
+                    sendLog('injector',"One of the input has no file in phedex: %s"% d, level='critical')
                     can_add = False
 
             ### ban some workflow that you don't like anymore
