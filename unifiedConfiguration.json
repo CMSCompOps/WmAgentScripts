@@ -150,7 +150,7 @@
    "value" : {
     "transferor" : 500,
     "assignor" : null,
-    "actor" : 1,
+    "actor" : 10,
     "closor" : null,
     "checkor" : 500,
     "completor" : null
