@@ -839,7 +839,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
         return dis
 
     html_doc.write("Module running time<br>")
-    html_doc.write("<table border=1><thead><tr><th>Module</th><th>Last Ran</th><th><Last Runtime</th><th>Avg Runtime</th></tr></thead>")
+    html_doc.write("<table border=1><thead><tr><th>Module</th><th>Last Ran</th><th>Last Runtime</th><th>Avg Runtime</th></tr></thead>")
     now = time.mktime(time.gmtime())
     for m in sorted(per_module.keys()):
         last_module[m] = os.popen("tac %s/logs/running | grep %s | head -1"%(monitor_dir, m)).read()
@@ -854,7 +854,10 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
         since_last = now-last_time
         if since_last > (heart_beat_time_out*60*60): #6h heart beat
             sendLog('heartbeat',"The module %s has not ran in %s hours, now %s"%(m, heart_beat_time_out, display_time( since_last )), level='critical')
+        else:
+            print "module %s has ran last since %s"%( m , display_time( since_last ))
 
+        last_module[m] = "Since %s"%( display_time( since_last ) )
     for m in sorted(per_module.keys()):
         #,spends in per_module.items():
         spends = per_module[m]
