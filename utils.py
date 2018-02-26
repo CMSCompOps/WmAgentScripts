@@ -4703,7 +4703,7 @@ class agentInfo:
                 sleep_up = random.choice( list(candidates_to_drain))
             if sleep_up:
                 print "putting to drain",sleep_up
-                if setAgentDrain(url, sleep_up):
+                if setAgentDrain(self.url, sleep_up):
                     self.info[sleep_up] = { 'status' : 'draining',
                                             'update' : now,
                                             'date' : nows }
@@ -4718,7 +4718,7 @@ class agentInfo:
                 pick_from = self.buckets.get('running',[])
                 sleep_up = random.choice( pick_from )
             print "putting to drain",sleep_up
-            if setAgentDrain(url, sleep_up):
+            if setAgentDrain(self.url, sleep_up):
                 self.info[sleep_up] = { 'status' : 'standby',
                                         'update' : now,
                                         'date' : nows }                
