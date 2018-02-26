@@ -31,6 +31,11 @@ def siteMapping(in_list, source_to_dests, state={}):
     split_list.sort()
     return str(",".join(split_list))
 
+def removeSite(those,from_sites):
+    to_remove = set(_split_re.split(those))
+    from_sites = set(_split_re.split(from_sites))
+    return str(",".join( sorted( from_sites - to_remove )))
+
 classad.register(sortStringSet)
 classad.register(siteMapping)
-
+classad.register(removeSite)

@@ -27,6 +27,44 @@ def makeHighPrioAds(config):
         anAd["set_HasBeenRouted"] = False
         print anAd
 
+
+def makeHoldSiteAds(config):
+    """
+    Create a rule to hold jobs from matching a given site
+    """
+    held_site = config.get('hold_site',['T0_CH_CERN'])
+    for site in held_site:
+        anAd = classad.ClassAd()
+        anAd["GridResource"] = "condor localhost localhost"
+        anAd["TargetUniverse"] = 5
+        anAd["Name"] = str("Holding jobs from %s"%site)
+        anAd["Requirements"] = classad.ExprTree('regexp("%s",DESIRED_Sites) && HasBeenHeldFrom%s isnt true'% (site, site))
+        anAd["copy_DESIRED_Sites"] = "Holding_DESIRED_Sites"
+        ## remove the site string from the sitewhitelist
+        anAd["eval_set_DESIRED_Sites"] = classad.ExprTree('removeSite("%s",Holding_DESIRED_Sites)'% site)
+        anAd["set_HasBeenHeldFrom%s"% site] = True
+        anAd["set_HasBeenRouted"] = False
+        print anAd
+
+def makeReleaseSiteAds(config):
+    """
+    Create a rule to add a site back in site whitelist
+    """
+    relase_site = config.get('release_site',['T0_CH_CERN'])
+    for site in relase_site:
+        anAd = classad.ClassAd()
+        anAd["GridResource"] = "condor localhost localhost"
+        anAd["TargetUniverse"] = 5
+        anAd["Name"] = str("Releasing jobs for %s"%site)
+        anAd["Requirements"] = classad.ExprTree('HasBeenHeldFrom%s is true'% site )
+        anAd["copy_DESIRED_Sites"] = "Editing_DESIRED_Sites"
+        anAd["eval_set_DESIRED_Sites"] = classad.ExprTree('strcat(Editing_DESIRED_Sites,",%s")'% site)
+        anAd["delete_Editing_DESIRED_Sites"] = True
+        anAd["set_HasBeenHeldFrom%s"% site] = False
+        anAd["set_HasBeenRouted"] = False
+        print anAd
+
+    
 def makeHoldAds(config):
     """
     Create a set of rules to hold a task from matching
@@ -315,6 +353,20 @@ def makeAdhocAds():
     anAd["set_HasBeenRouted"] = False
     print anAd
 
+    anAd = classad.ClassAd()
+    anAd["GridResource"] = "condor localhost localhost"
+    anAd["TargetUniverse"] = 5
+    anAd["Name"] = str("Draining T0 VMs")
+    anAd["Requirements"] = classad.ExprTree('regexp("T0_CH_CERN", DESIRED_Sites) && OutOfT0 isnt true')
+    anAd["copy_DESIRED_Sites"] = "T0Off_DESIRED_Sites"
+    with_sites = "T2_CH_CERN"
+    anAd["eval_set_DESIRED_Sites"] = classad.ExprTree('strcat(T0Off_DESIRED_Sites,",%s")'% with_sites)
+    anAd["set_OutOfT0"] = True
+    anAd["set_HasBeenRouted"] = False
+    print anAd
+
+
+
     ############################################################
     ## if you want to reset the routing of eveything in the pool
     reset_routing = []#'HasBeenRouted','HasBeenRouted_Overflow','HasBeenMemoryTuned','HasBeenSlopeTuned', 'HasBeenTimingTuned','WMCore_ResizeJob','HasBeenReplaced','HasBeenReadTuned','HasBeenRaisedHighPrio']
@@ -341,6 +393,8 @@ def makeAds(config):
     makeReadAds(config)
     makeHoldAds(config)
     makeReleaseAds(config)
+    makeHoldSiteAds(config)
+    makeReleaseSiteAds(config)
     makeHighPrioAds(config)
     makeAdhocAds()
     makeDrainAds()
