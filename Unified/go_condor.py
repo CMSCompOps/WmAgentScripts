@@ -10,6 +10,8 @@ import hashlib
 import htcondor
 from collections import defaultdict
 
+
+_site_re = re.compile("(T\d)_([A-Z]{2})_([A-Z]{1}[A-Z,a-z,_]+)$")
 def makeHighPrioAds(config):
     to_be_raised = config.get('highprio',[])
     if to_be_raised:
@@ -32,8 +34,10 @@ def makeHoldSiteAds(config):
     """
     Create a rule to hold jobs from matching a given site
     """
-    held_site = config.get('hold_site',['T0_CH_CERN'])
+    held_site = config.get('hold_site',[])
+
     for site in held_site:
+        if not _site_re.match( site ): continue
         anAd = classad.ClassAd()
         anAd["GridResource"] = "condor localhost localhost"
         anAd["TargetUniverse"] = 5
@@ -50,8 +54,9 @@ def makeReleaseSiteAds(config):
     """
     Create a rule to add a site back in site whitelist
     """
-    relase_site = config.get('release_site',['T0_CH_CERN'])
+    relase_site = config.get('release_site',[])
     for site in relase_site:
+        if not _site_re.match( site ): continue
         anAd = classad.ClassAd()
         anAd["GridResource"] = "condor localhost localhost"
         anAd["TargetUniverse"] = 5
