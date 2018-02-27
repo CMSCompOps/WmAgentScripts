@@ -115,8 +115,6 @@ def makeReadAds(config):
         anAd["JobRouterTasknames"] = map(str, tasks)
         task_names_escaped = anAd.lookup('JobRouterTasknames').__repr__()
         del anAd["JobRouterTasknames"]
-
-        #exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (HasBeenReadTuned isnt true)' % task_names_escaped)
         exp = classad.ExprTree('member(target.WMAgent_SubTaskName, %s) && (EstimatedInputRateKBs =!= %d)' %( task_names_escaped,int(set_read))) ## just set to a different value
         anAd["Requirements"] = classad.ExprTree(str(exp))
         anAd["set_HasBeenRouted"] = False
@@ -362,10 +360,10 @@ def makeAdhocAds():
     anAd["GridResource"] = "condor localhost localhost"
     anAd["TargetUniverse"] = 5
     anAd["Name"] = str("Draining T0 VMs")
-    anAd["Requirements"] = classad.ExprTree('regexp("T0_CH_CERN", DESIRED_Sites) && OutOfT0 isnt true')
+    with_site = "T2_CH_CERN"
+    anAd["Requirements"] = classad.ExprTree('!regexp("%s", DESIRED_Sites) && regexp("T0_CH_CERN", DESIRED_Sites) && OutOfT0 isnt true'%with_site)
     anAd["copy_DESIRED_Sites"] = "T0Off_DESIRED_Sites"
-    with_sites = "T2_CH_CERN"
-    anAd["eval_set_DESIRED_Sites"] = classad.ExprTree('strcat(T0Off_DESIRED_Sites,",%s")'% with_sites)
+    anAd["eval_set_DESIRED_Sites"] = classad.ExprTree('strcat(T0Off_DESIRED_Sites,",%s")'% with_site)
     anAd["set_OutOfT0"] = True
     anAd["set_HasBeenRouted"] = False
     print anAd
