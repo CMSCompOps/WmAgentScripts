@@ -57,9 +57,9 @@ def makeReleaseSiteAds(config):
         anAd["TargetUniverse"] = 5
         anAd["Name"] = str("Releasing jobs for %s"%site)
         anAd["Requirements"] = classad.ExprTree('HasBeenHeldFrom%s is true'% site )
-        anAd["copy_DESIRED_Sites"] = "Editing_DESIRED_Sites"
-        anAd["eval_set_DESIRED_Sites"] = classad.ExprTree('strcat(Editing_DESIRED_Sites,",%s")'% site)
-        anAd["delete_Editing_DESIRED_Sites"] = True
+        anAd["copy_DESIRED_Sites"] = "Releasing_DESIRED_Sites"
+        anAd["eval_set_DESIRED_Sites"] = classad.ExprTree('strcat(Releasing_DESIRED_Sites,",%s")'% site)
+        anAd["delete_Releasing_DESIRED_Sites"] = True
         anAd["set_HasBeenHeldFrom%s"% site] = False
         anAd["set_HasBeenRouted"] = False
         print anAd
