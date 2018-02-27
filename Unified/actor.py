@@ -475,9 +475,9 @@ def actor(url,options=None):
                 sendLog('actor','Cannot create ACDCS for %s because WMErr cannot be reached.'%wfname,level='critical')
                 continue
             if not WMErr:
-                sendLog('actor','Cannot create ACDCS for %s because WMErr is blank.'%wfname,level='critical')
-                print "Moving on. WMErr is blank"
-                continue
+                wfi.sendLog('actor','WMErrors is blank for %s.'%wfname)
+                print "FYI getWMErrors is blank. Presumably there are only unreported errors"
+#                continue
 
             try:
                 where_to_run, missing_to_run,missing_to_run_at =  wfi.getRecoveryInfo()
@@ -497,13 +497,14 @@ def actor(url,options=None):
         
             num_tasks_to_recover = 0
         
-            for task in WMErr:
-                if 'LogCollect' in task: continue
-                if 'Cleanup' in task: continue
-                if not 'jobfailed' in WMErr[task]:
-                    continue
-                else:
-                    num_tasks_to_recover += 1
+            if WMErr:
+                for task in WMErr:
+                    if 'LogCollect' in task: continue
+                    if 'Cleanup' in task: continue
+                    if not 'jobfailed' in WMErr[task]:
+                        continue
+                    else:
+                        num_tasks_to_recover += 1
 #                print "Task to recover: " + task
 
             if not num_tasks_to_recover:
