@@ -36,6 +36,19 @@ def removeSite(those,from_sites):
     from_sites = set(_split_re.split(from_sites))
     return str(",".join( sorted( from_sites - to_remove )))
 
+def uniqueSites(alist):
+    ## remove blanks
+    sites = set(filter(None,_split_re.split(alist)))
+    return str(",".join(sorted( sites )))
+
+def diffSites( old, new):
+    ## return the sites in old but not in new
+    os = set(filter(None,_split_re.split(old)))
+    ns = set(filter(None,_split_re.split(new)))
+    return str(",".join([""]+sorted( set(os) - set(ns)  ))) ## starts with a coma
+
 classad.register(sortStringSet)
 classad.register(siteMapping)
 classad.register(removeSite)
+classad.register(uniqueSites)
+classad.register(diffSites)

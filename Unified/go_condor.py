@@ -30,44 +30,57 @@ def makeHighPrioAds(config):
         print anAd
 
 
-def makeHoldSiteAds(config):
+def makeHoldSiteAds_unused(config):
     """
     Create a rule to hold jobs from matching a given site
     """
     held_site = config.get('hold_site',[])
-
+    held_sites = ','.join([site for site in held_site if _site_re.match( site )])
     for site in held_site:
         if not _site_re.match( site ): continue
         anAd = classad.ClassAd()
         anAd["GridResource"] = "condor localhost localhost"
         anAd["TargetUniverse"] = 5
         anAd["Name"] = str("Holding jobs from %s"%site)
-        anAd["Requirements"] = classad.ExprTree('regexp("%s",DESIRED_Sites) && HasBeenHeldFrom%s isnt true'% (site, site))
-        anAd["copy_DESIRED_Sites"] = "Holding_DESIRED_Sites"
-        ## remove the site string from the sitewhitelist
-        anAd["eval_set_DESIRED_Sites"] = classad.ExprTree('removeSite("%s",Holding_DESIRED_Sites)'% site)
-        anAd["set_HasBeenHeldFrom%s"% site] = True
+        #anAd["Requirements"] = classad.ExprTree('regexp("%s",DESIRED_Sites) && HasBeenHeldFromSite isnt true'% (site))
+        anAd["Requirements"] = classad.ExprTree('regexp("%s",DESIRED_Sites)'% site)
+        #set PreHeld_DESIRED_Sites to a copy of DESIRED_Sites
+        anAd["copy_DESIRED_Sites"] = "PreHeld_DESIRED_Sites"        
+        #set Held_DESIRED_Sites to the union of the previous list and this site
+        anAd["eval_set_SHeld_DESIRED_Sites"] = classad.ExprTree('uniqueSites(ifThenElse(SHeld_DESIRED_Sites isnt undefined,strcat(SHeld_DESIRED_Sites,",%s"),"%s"))'%(site,site))
+        #set DESIRED_Sites to PreHeld_DESIRED_Sites minus Held_DESIRED_Sites
+        anAd["eval_set_DESIRED_Sites"] = classad.ExprTree('removeSite("%s",PreHeld_DESIRED_Sites)'% site)
+        anAd["set_HasBeenHeldFromSite"] = True ## equivalent to Held_DESIRED_Sites != ""
         anAd["set_HasBeenRouted"] = False
         print anAd
 
-def makeReleaseSiteAds(config):
+def makeReleaseSiteAds_unused(config):
     """
     Create a rule to add a site back in site whitelist
     """
-    relase_site = config.get('release_site',[])
-    for site in relase_site:
-        if not _site_re.match( site ): continue
-        anAd = classad.ClassAd()
-        anAd["GridResource"] = "condor localhost localhost"
-        anAd["TargetUniverse"] = 5
-        anAd["Name"] = str("Releasing jobs for %s"%site)
-        anAd["Requirements"] = classad.ExprTree('HasBeenHeldFrom%s is true'% site )
-        anAd["copy_DESIRED_Sites"] = "Releasing_DESIRED_Sites"
-        anAd["eval_set_DESIRED_Sites"] = classad.ExprTree('strcat(Releasing_DESIRED_Sites,",%s")'% site)
-        anAd["delete_Releasing_DESIRED_Sites"] = True
-        anAd["set_HasBeenHeldFrom%s"% site] = False
-        anAd["set_HasBeenRouted"] = False
-        print anAd
+    held_sites = ','.join([site for site in config.get('hold_site',[]) if _site_re.match( site )])
+    ## edit the desired_sites_list 
+    anAd = classad.ClassAd()
+    anAd["GridResource"] = "condor localhost localhost"
+    anAd["TargetUniverse"] = 5
+    anAd["Name"] = str("Releasing held jobs by site")
+    anAd["Requirements"] = classad.ExprTree('PreHeld_DESIRED_Sites isnt undefined && HasBeenHeldFromSite is true && SHeld_DESIRED_Sites isnt undefined && SHeld_DESIRED_Sites =!= ""')
+    anAd["copy_SHeld_DESIRED_Sites"] = "Old_SHeld_DESIRED_Sites"
+    anAd["set_SHeld_DESIRED_Sites"] = str(held_sites)
+    anAd["eval_set_DESIRED_Sites"] = classad.ExprTree('uniqueSites(strcat(PreHeld_DESIRED_Sites,diffSites(Old_SHeld_DESIRED_Sites ,"%s"))'%(str(held_sites)))
+    anAd["set_HasBeenRouted"] = False
+    print anAd
+
+    ## clear the Held_DESIRED_Sites classad
+    anAd = classad.ClassAd()
+    anAd["GridResource"] = "condor localhost localhost"
+    anAd["TargetUniverse"] = 5
+    anAd["Name"] = str("Clearing held list")
+    anAd["Requirements"] = classad.ExprTree('HasBeenHeldFromSite is true && Held_DESIRED_Sites =?= ""')
+    anAd["delete_Held_DESIRED_Sites"] = True
+    anAd["set_HasBeenHeldFromSite"] = False
+    anAd["set_HasBeenRouted"] = False
+    print anAd
 
     
 def makeHoldAds(config):
