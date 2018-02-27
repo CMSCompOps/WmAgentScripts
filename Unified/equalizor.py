@@ -404,6 +404,8 @@ def equalizor(url , specific = None, options=None):
         'memory' : {},
         'slope' : {},
         'read' : {},
+        'hold_site' : [],
+        'release_site' : [],
         'hold': {},
         'release' : {},
         'resizing' : {},
@@ -416,6 +418,8 @@ def equalizor(url , specific = None, options=None):
         interface['time'] = previous.get('time',{})
         interface['slope'] = previous.get('slope', {})
         interface['read'] = previous.get('read',{})
+        interface['hold_site'] = previous.get('hold_site',{})
+        interface['release_site'] = previous.get('release_site',{})
         interface['hold'] = previous.get('hold',{})
         interface['release'] = previous.get('release',{})
         interface['highprio'] = previous.get('highprio',[])
@@ -1186,6 +1190,24 @@ def equalizor(url , specific = None, options=None):
         to_set = (set(interface['highprio']) - remove)
         to_set.update( add )
         interface['highprio'] = list(to_set)
+
+    ## catch wf to be held/release
+    hold_wf = []
+    already_holding = interface['hold'].keys()
+    release_wf = list(set(already_holding)-set(hold_wf))+interface['release'].keys() 
+    hold_wf = list(set(hold_wf)-set(release_wf))
+    for wf in hold_wf:
+        interface['hold'].setdefault(wf,"Everywhere")
+    for wf in release_wf:
+        interface['release'].setdefault(wf,"Everywhere")
+
+    ## catch site to be held/release
+    hold_site = []
+    already_holding = interface['hold_site']
+    release_site = list(set(already_holding) - set(hold_site))+interface['release_site']
+    hold_site = list(set(hold_site) - set(release_site))
+    interface['hold_site'] = hold_site
+    interface['release_site'] = release_site
 
     ## close and save
     close( interface )
