@@ -4615,11 +4615,12 @@ class agentInfo:
         ##sum over those running+draining+standby
         one_recent_running = False
         one_recent_standby = False
+        last_action_timeout = 5 # hours
         for agent in self.buckets.get('running',[]):
-            if (now-self.info[agent]['update'])<(5*60*60):
+            if (now-self.info[agent]['update'])<(last_action_timeout*60*60):
                 one_recent_running = True
         for agent in self.buckets.get('standby',[]):
-            if (now-self.info[agent]['update'])<(5*60*60):
+            if (now-self.info[agent]['update'])<(last_action_timeout*60*60):
                 one_recent_standby = True
 
         all_agents = dataCache.get('gwmsmon_pool')
@@ -4650,7 +4651,10 @@ class agentInfo:
             running += r
             pending += p
 
-            
+        
+        runnings = self.buckets.get('running',[])
+        drainings = self.buckets.get('draining',[])
+        standbies = self.buckets.get('standby',[])
         for agent,ainfo in all_agents.items():
             if not 'Name' in ainfo: continue
             agent_name = ainfo['Name']
@@ -4662,17 +4666,17 @@ class agentInfo:
             cp = ainfo['TotalIdleCpus']
             if verbose:
                 print agent_name,r,json.dumps(ainfo, indent=2)
-            if agent_name in self.buckets.get('draining',[]):
+            if agent_name in drainings:
                 if not agent_name in self.release[oldest_release]:
                     ## you can candidate those not running the latest release
                     candidates_to_wakeup.add( agent_name )
-                if (cp <= cpu_running*self.speed_draining_fraction) and (r <= t*self.speed_draining_fraction) and (cr <= cpu_running*self.speed_draining_fraction):
+                if len(standbies)==0 and (len(runnings) < len(drainings)) and (cp <= cpu_running*self.speed_draining_fraction) and (r <= t*self.speed_draining_fraction) and (cr <= cpu_running*self.speed_draining_fraction):
                     print "The agent is running low enough that we can increase priority all around"
                     speed_draining.add( agent_name )
-            if agent_name in self.buckets.get('standby',[]):
+            if agent_name in standbies:
                 if agent_name in self.release[top_release]:
                     standby_top_release += 1 
-            if agent_name in self.buckets['running']:
+            if agent_name in runnings:
                 if agent_name not in self.release[top_release]:
                     candidates_to_drain.add( agent_name )
                     running_old_release += 1
