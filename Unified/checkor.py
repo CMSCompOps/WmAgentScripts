@@ -766,24 +766,25 @@ def checkor(url, spec=None, options=None):
                 #print this for show and tell if no recovery on-going
                 for out in dbs_presence:
                     _,_,missing_phedex,missing_dbs  = getDatasetFiles(url, out)
+                    show_N_only = 10
                     if missing_phedex:
-                        wfi.sendLog('checkor',"These %d files are missing in phedex\n%s"%(len(missing_phedex),
-                                                                                          "\n".join( missing_phedex )))
+                        wfi.sendLog('checkor',"These %d files are missing in phedex, showing %s only\n%s"%(len(missing_phedex),show_N_only,
+                                                                                                           "\n".join( missing_phedex[:show_N_only] )))
                         were_invalidated = sorted(set(missing_phedex) & set(TMDB_invalid ))
                         if were_invalidated:
-                            wfi.sendLog('checkor',"These %d files were invalidated globally\n%s"%(len(were_invalidated),
-                                                                                                  "\n".join(were_invalidated)))
-                            sendLog('checkor',"These %d files were invalidated globally\n%s\nand are not invalidated in dbs"%(len(were_invalidated),
-                                                                                                                          "\n".join(were_invalidated)), level='critical')
+                            wfi.sendLog('checkor',"These %d files were invalidated globally, showing %d only\n%s"%(len(were_invalidated),show_N_only,
+                                                                                                                   "\n".join(were_invalidated[:show_N_only])))
+                            sendLog('checkor',"These %d files were invalidated globally, showing %d only\n%s\nand are not invalidated in dbs"%(len(were_invalidated),show_N_only,
+                                                                                                                                               "\n".join(were_invalidated[:show_N_only])), level='critical')
                             dbs3Client.setFileStatus( were_invalidated, newstatus=0 )
                                 
                     if missing_dbs:
-                        wfi.sendLog('checkor',"These %d files are missing in dbs\n%s"%(len(missing_dbs),
-                                    "\n".join( missing_dbs )))
+                        wfi.sendLog('checkor',"These %d files are missing in dbs, showing %d only\n%s"%(len(missing_dbs),show_N_only,
+                                                                                                        "\n".join( missing_dbs[:show_N_only] )))
                         were_invalidated = sorted(set(missing_dbs) & set(TMDB_invalid ))
                         if were_invalidated:
-                            wfi.sendLog('checkor',"These %d files were invalidated globally\n%s"%(len(were_invalidated),
-                                                                                                  "\n".join(were_invalidated)))
+                            wfi.sendLog('checkor',"These %d files were invalidated globally,showing %d only\n%s"%(len(were_invalidated),show_N_only,
+                                                                                                                  "\n".join(were_invalidated[:show_N_only])))
             #if not bypass_checks:
             ## I don't think we can by pass this
             is_closing = False
