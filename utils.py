@@ -4479,6 +4479,7 @@ class agentInfo:
         self.verbose = args.get('verbose')
         self.busy_fraction = args.get('busy_fraction',0.8)
         self.idle_fraction = args.get('idle_fraction',0.1)
+        self.speed_draining_fraction = args.get('speed_draining_fraction',0.05)
         self.max_pending_cpus = args.get('max_pending_cpus', 10000000)
 
         ## keep some info in a local file
@@ -4628,26 +4629,46 @@ class agentInfo:
         running = 0
         pending = 0
         cpu_pending = 0
+        cpu_running = 0
         top_release = sorted(self.release.keys())[0] ## this is the latest release
         oldest_release = sorted(self.release.keys())[-1] #this is the oldest release
         running_top_release = 0
         running_old_release = 0
         standby_top_release = 0
+        speed_draining = set()
         for agent,ainfo in all_agents.items():
             if not 'Name' in ainfo: continue
             agent_name = ainfo['Name']
             if not agent_name in self.info: continue
             r = ainfo['TotalRunningJobs']
+            cr = ainfo['TotalRunningCpus']
             t = ainfo['MaxJobsRunning']
-            cpu_pending += ainfo['TotalIdleCpus']
+            p = ainfo['TotalIdleJobs']
+            cp = ainfo['TotalIdleCpus']
+            cpu_pending += cp
+            cpu_running += cr
             running += r
-            pending += ainfo['TotalIdleJobs']
+            pending += p
+
+            
+        for agent,ainfo in all_agents.items():
+            if not 'Name' in ainfo: continue
+            agent_name = ainfo['Name']
+            if not agent_name in self.info: continue
+            r = ainfo['TotalRunningJobs']
+            cr = ainfo['TotalRunningCpus']
+            t = ainfo['MaxJobsRunning']
+            p = ainfo['TotalIdleJobs']
+            cp = ainfo['TotalIdleCpus']
             if verbose:
                 print agent_name,r,json.dumps(ainfo, indent=2)
             if agent_name in self.buckets.get('draining',[]):
                 if not agent_name in self.release[oldest_release]:
                     ## you can candidate those not running the latest release
                     candidates_to_wakeup.add( agent_name )
+                if (cp <= cpu_running*self.speed_draining_fraction) and (r <= t*self.speed_draining_fraction) and (cr <= cpu_running*self.speed_draining_fraction):
+                    print "The agent is running low enough that we can increase priority all around"
+                    speed_draining.add( agent_name )
             if agent_name in self.buckets.get('standby',[]):
                 if agent_name in self.release[top_release]:
                     standby_top_release += 1 
@@ -4672,13 +4693,17 @@ class agentInfo:
 
         if verbose or verbose:
             print "Capacity",capacity
-            print "Running", running
+            print "Running jobs", running
+            print "Running cpus", cpu_running
             print "Pending jobs", pending
             print "Pending cpus",cpu_pending
             print "Running lastest release",running_top_release
             print "Standby in latest release",standby_top_release
             print "Running old release",running_old_release
-            
+            print "These are good for speed drainig",sorted(speed_draining)
+
+        if not acting: speed_draining = []
+
         over_cpus = self.max_pending_cpus
         over_pending = (cpu_pending > over_cpus)
         release_deploy = ((running_top_release>=2) or (standby_top_release>=2)) and running_old_release
@@ -4709,7 +4734,9 @@ class agentInfo:
                     retire_agent = under_threshold or over_pending
                 if release_deploy:
                     drain_agent = True
-        
+
+        open('%s/speed_draining.json'%base_eos_dir,'w').write(json.dumps(sorted(speed_draining)))
+                
         if need_one:
             pick_from = self.buckets.get('standby',[])
             if not pick_from:
