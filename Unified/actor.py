@@ -302,7 +302,7 @@ def singleClone(url, wfname, actions, comment, do=False):
         for action in actions:
             if action.startswith('split'):
                 cloneinfo = workflowInfo(url, clone)
-                splittings = cloneinfo.getSplittingsNew(strip=New)
+                splittings = cloneinfo.getSplittingsNew(strip=True)
                 if actions[action] != 'Same' and actions[action] != 'max' and actions[action] != '':
                     factor = int(actions[action][0:-1]) if 'x' in actions[action] else 2
                     for split in splittings:
