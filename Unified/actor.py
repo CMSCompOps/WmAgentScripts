@@ -447,10 +447,12 @@ def actor(url,options=None):
             cloned = None
             try:  
                 cloned =  singleClone(url, wfname, tasks, comment, options.do)
-            except:
+            except Exception as e:
                 sendLog('actor','Failed to create clone for %s! Check logs for more information. Action will need to be resubmitted.'%wfname,level='critical')
                 wfi.sendLog('actor','Failed to create clone for %s!'%wfname)
-                remove_action(wfname)
+                print str(e)
+                ##let's not remove the action other the workflow goes to "trouble" and the WTC cannot set the action again
+                #remove_action(wfname)
             if not cloned:
                 recover = False
                 wfi.sendLog('actor','Failed to create clone for %s!'%wfname)
