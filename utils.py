@@ -4735,7 +4735,10 @@ class agentInfo:
                 if release_deploy:
                     drain_agent = True
 
-        open('%s/speed_draining.json'%base_eos_dir,'w').write(json.dumps(sorted(speed_draining)))
+        speed_draining = list(speed_draining)
+        random.shuffle(speed_draining)
+        speed_draining = speed_draining[:1]
+        open('%s/speed_draining.json'%base_eos_dir,'w').write(json.dumps(speed_draining))
                 
         if need_one:
             pick_from = self.buckets.get('standby',[])
