@@ -127,6 +127,7 @@ def singleRecovery(url, task, initial, actions, do=False):
 
 
             if action.startswith('split'):
+                
                 split_alert = (initial['RequestType'] in ['MonteCarlo'] )
                 for key in initial:
                     if key == 'SplittingAlgo' and (initial[key] in ['EventBased']):
@@ -134,12 +135,18 @@ def singleRecovery(url, task, initial, actions, do=False):
                     elif key.startswith('Task') and key != 'TaskChain':
                         for key2 in initial[key]:
                             if key2 == 'TaskName':
-                                print "task",task.split('/')[-1]
-                                print "TaskName",initial[key][key2]
-                                if (initial[key][key2] == task) and (initial[key][key2] in ['EventBased']):
-                                    split_alert = True
+                                this_taskname = initial[key][key2]
+                                recover_task = task.split('/')[-1]
+                                print "For recovery of task",recover_task
+                                print "Looking at task",this_taskname
+                                if (recover_task == this_taskname) and (initial[key]['SplittingAlgo'] in ['EventBased']):
+                                    ## the task to be recovered is actually of the wrong type to allow change of splitting
+                                    sendLog('actor','To recover on %s, changing the splitting on %s is not really allowed and this will be ignored instead of failing acdc.'%( task, initial[key]['SplittingAlgo']), level='critical')
+                                    ## do not send an alert and stop the acdc
+                                    #split_alert = True
+
                 if split_alert:
-                    sendLog('actor','Cannot change splitting for %s'%initial['RequestName'],level='warning')
+                    sendLog('actor','Cannot change splitting for %s'%initial['RequestName'],level='critical')
                     print "I should not be doing splitting for this type of request",initial['RequestName']
                     return None
 
@@ -182,6 +189,9 @@ def singleRecovery(url, task, initial, actions, do=False):
                     factor = int(actions[action][0:-1]) if 'x' in actions[action] else 2
                     for split in splittings:
                         split_par = split['splitParams']
+                        if split['splitAlgo'] in ['EventBased']:
+                            sendLog('actor',"Changing the splitting on %s for %s is not permitted. Not changing."%(split['splitAlgo'],initial["RequestName"]), level='critical')
+                            continue
                         for act in ['avg_events_per_job','events_per_job','lumis_per_job']:
                             if act in split_par:
                                 print "Changing %s (%d) by a factor %d"%( act, split_par[act], factor),
