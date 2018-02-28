@@ -322,7 +322,7 @@ def makeDrainAds(config=None):
     draining_agents = config.get('speed_drain',[])
     for agent in draining_agents:
         anAd["Name"] = str("Drain agent %s"%agent)
-        exp = classad.ExprTree('regexp("%s",GlobalJobId) && JobStatus == 1'% str(agent))
+        exp = 'regexp("%s",GlobalJobId) && JobStatus == 1'% str(agent)
         anAd["Requirements"] = classad.ExprTree(str(exp))
         anAd["set_JobPrio"] = 200000
         anAd["set_HasBeenRouted"] = False
