@@ -4,11 +4,19 @@ from utils import sendEmail
 
 pushes = [
     ('campaigns.json','Campaigns synching'),
-    ('campaigns.relval.json','More relvals'),
+    #('campaigns.relval.json','More relvals'),## directly in shared eos
     ('unifiedConfiguration.json','Update unified configuration')
     ]
 
 operate = False
+
+## push local commits to master
+check = os.popen('git diff origin/master master').read()
+if check:
+    print "There are commits to be pushed to repo"
+    print check
+    #os.system('git checkout master')
+    #os.system('git push origin master')
 
 for fn,label in pushes:
     try:
