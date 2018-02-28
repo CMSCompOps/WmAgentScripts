@@ -409,7 +409,8 @@ def equalizor(url , specific = None, options=None):
         'hold': {},
         'release' : {},
         'resizing' : {},
-        'highprio' : []
+        'highprio' : [],
+        'speed_drain' : []
         }
     if options.augment or options.remove:
         previous = json.loads( open('%s/equalizor.json'%monitor_pub_dir).read())
@@ -424,6 +425,7 @@ def equalizor(url , specific = None, options=None):
         interface['release'] = previous.get('release',{})
         interface['highprio'] = previous.get('highprio',[])
         interface['resizing'] = previous.get('resizing',{})
+        interface['speed_drain'] = previous.get('speed_drain',[])
         
     if options.remove:
         if specific in interface['modifications']:
@@ -1208,6 +1210,9 @@ def equalizor(url , specific = None, options=None):
     hold_site = list(set(hold_site) - set(release_site))
     interface['hold_site'] = hold_site
     interface['release_site'] = release_site
+
+    ## drain agents
+    interface['speed_drain'] = json.loads( open('%s/speed_draining.json'%base_eos_dir).read())
 
     ## close and save
     close( interface )

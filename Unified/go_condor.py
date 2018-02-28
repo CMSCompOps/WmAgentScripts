@@ -315,20 +315,20 @@ def makePerformanceCorrectionsAds(configs):
         anAd['set_ExtraMemory'] = int(slope)
         print anAd
 
-def makeDrainAds():
+def makeDrainAds(config=None):
     anAd = classad.ClassAd()                                                                                                                                                                       
     anAd["GridResource"] = "condor localhost localhost"
     anAd["TargetUniverse"] = 5                                                                                                                                                                     
-    draining_agents = []#"vocms0303"]
+    draining_agents = config.get('speed_drain',[])
     for agent in draining_agents:
         anAd["Name"] = str("Drain agent %s"%agent)
         exp = classad.ExprTree('regexp("%s",GlobalJobId) && JobStatus == 1'% agent)
         anAd["Requirements"] = classad.ExprTree(str(exp))
-        anAd["set_JobPrio"] = 500000
+        anAd["set_JobPrio"] = 200000
         anAd["set_HasBeenRouted"] = False
         print anAd
 
-def makeAdhocAds():
+def makeAdhocAds(config):
     anAd = classad.ClassAd()
     anAd["GridResource"] = "condor localhost localhost"
     anAd["TargetUniverse"] = 5
@@ -399,8 +399,8 @@ def makeAds(config):
     makeHoldSiteAds(config)
     makeReleaseSiteAds(config)
     makeHighPrioAds(config)
-    makeAdhocAds()
-    makeDrainAds()
+    makeDrainAds(config)
+    makeAdhocAds(config)
 
 if __name__ == "__main__":
 
