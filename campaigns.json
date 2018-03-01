@@ -962,7 +962,7 @@
    "overflow" : { "PREMIX" : {} }
   },
   "RunIISummer16MiniAODv2": {
-    "go": false,
+    "go": true,
     "fractionpass" : 0.95,
     "force-complete" : 0.99,
     "maxcopies": 1,
