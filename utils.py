@@ -2174,7 +2174,7 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
             wf_text += ', <a href=https://%s/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s>perf</a>'%(reqmgr_url, wf)
             wf_text += ', <a href=assistance.html#%s>%s</a>'%(wf,wfo.status)
             wf_text += '<br>'
-            wf_text += '<a href="http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=%s" target="_blank">history</a>'%(pid)
+            wf_text += '<a href="https://cms-unified.web.cern.ch/cms-unified/showlog/?search=%s" target="_blank">history</a>'%(pid)
             wf_text += ', <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>%s</a>'%(tpid,tpid)
             wf_text += ', <a href=report/%s>report</a>'%(wf)
             #wf_text += ', <a href=%/report/%s>e_report</a>'%(unified_url_eos,wf)
