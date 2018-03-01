@@ -4739,11 +4739,6 @@ class agentInfo:
                 if release_deploy:
                     drain_agent = True
 
-        speed_draining = list(speed_draining)
-        random.shuffle(speed_draining)
-        speed_draining = speed_draining[:1]
-        open('%s/speed_draining.json'%base_eos_dir,'w').write(json.dumps(speed_draining))
-                
         if need_one:
             pick_from = self.buckets.get('standby',[])
             if not pick_from:
@@ -4766,6 +4761,7 @@ class agentInfo:
                 # pick one at random in the one idling
                 wake_up = random.choice( pick_from )
                 print "waking up", wake_up
+                if pick_from in speed_draining: speed_draining.remove( pick_from ) 
                 if setAgentOn(self.url, wake_up):
                     self.info[wake_up] = { 'status' : 'running',
                                            'update' : now,
@@ -4803,6 +4799,12 @@ class agentInfo:
                 print "The polling is not proactive"
             else:
                 print "Everything is fine. No need to retire or add an agent"
+
+        speed_draining = list(speed_draining)
+        random.shuffle(speed_draining)
+        speed_draining = speed_draining[:1]
+        open('%s/speed_draining.json'%base_eos_dir,'w').write(json.dumps(speed_draining))
+                
 
 def getAgentConfig(url, agent, keys):
     conn = make_x509_conn(url)
