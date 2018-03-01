@@ -937,7 +937,7 @@
     "lumisize": -1
   },
   "RunIISpring16MiniAODv2": {
-    "go": true,
+    "go": false,
     "maxcopies": 1,
     "fractionpass" : 0.95,
     "force-complete" : 0.99,
