@@ -557,7 +557,7 @@
    "resize" : "auto"
  },
   "RunIISpring18wmLHEGS" : {
-   "go" : false,
+   "go" : true,
    "lumisize" : -1,
    "fractionpass" : 0.95,
    "force-complete" : 0.99,
@@ -586,7 +586,7 @@
    "overflow" : { "PREMIX" : {} }
   },
   "RunIISpring18MiniAOD" :{
-   "go" : false,
+   "go" : true,
    "lumisize" : -1,
    "resize" : "auto",
    "maxcopies": 1,
