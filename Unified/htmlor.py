@@ -82,7 +82,8 @@ def htmlor( caller = ""):
                 '<a href="closeout.html#%s" target="_blank">clo</a>'%wfn,
                 '<a href="statuses.html#%s" target="_blank">st</a>'%wfn,
                 '<a href="https://%s/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s" target="_blank">perf</a>'%(reqmgr_url,wfn),
-                '<a href="http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=%s" target="_blank">history</a>'%(pid),
+                #'<a href="http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=%s" target="_blank">history</a>'%(pid),
+                '<a href="https://cms-unified.web.cern.ch/cms-unified/showlog/?search=%s" target="_blank">history</a>'%(pid),
                 ])
         if within and (not view or wfs=='completed'):
             wl = getWL( wfn )
@@ -248,8 +249,8 @@ Last update on <b>%s(CET), %s(GMT)</b>
 <a href=data.html>json interfaces</a>
 <a href=logs/addHoc/last.log>add-hoc op</a>
 <a href=https://cmssst.web.cern.ch/cmssst/man_override/cgi/manualOverride.py/prodstatus target=_blank title="Link to a restricted page to override sites status">sites override</a>
-<a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=warning target=_blank><b><font color=orange>warning</b></font></a>
-<a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=critical target=_blank><b><font color=red>all critical</b></font></a>
+<a href=https://cms-unified.web.cern.ch/cms-unified/showlog/?search=warning target=_blank><b><font color=orange>warning</b></font></a>
+<a href=https://cms-unified.web.cern.ch/cms-unified/showlog/?search=critical target=_blank><b><font color=red>all critical</b></font></a>
 <a href=https://its.cern.ch/jira/projects/CMSCOMPPR/issues target=_blank>JIRA</a>
 <a href=toperror.html target=_blank>top errors</a>
 <br>
@@ -264,7 +265,7 @@ Last update on <b>%s(CET), %s(GMT)</b>
 """ %(time.asctime(time.localtime()),
       time.asctime(time.gmtime()),
       reqmgr_url,
-      ', '.join(['<a href=http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=critical&module=%s&limit=100 target=_blank><b><font color=red>%s critical</b></font></a>'%(m,m) for m in ['injector','batchor','transferor','cachor','stagor','assignor','completor','GQ','equalizor','agentInfo','checkor','recoveror','actor','closor']])
+      ', '.join(['<a href=https://cms-unified.web.cern.ch/cms-unified/showlog/?search=critical&module=%s&limit=100 target=_blank><b><font color=red>%s critical</b></font></a>'%(m,m) for m in ['injector','batchor','transferor','cachor','stagor','assignor','completor','GQ','equalizor','agentInfo','checkor','recoveror','actor','closor']])
       )
                    )
         
