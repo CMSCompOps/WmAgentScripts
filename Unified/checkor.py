@@ -830,7 +830,7 @@ def checkor(url, spec=None, options=None):
                     if bad_files[out]:
                         duplicate_notice = "These files %d will be invalidated, showing %d only\n%s"%(len(bad_files[out]),
                                                                                                       show_N_only,
-                                                                                                      "\n".join( bad_files[out][:show_N_only])))
+                                                                                                      "\n".join( bad_files[out][:show_N_only]))
                         wfi.sendLog('checkor',duplicate_notice)
                         ## sending the list is not possible
                         duplicate_notice += json.dumps( sorted(bad_files[out]), indent=2)
