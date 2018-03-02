@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 import time
-from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration, getPrepIDs, componentInfo, getAllAgents, sendLog, duplicateLock, dataCache, agentInfo
+from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration, getPrepIDs, componentInfo, getAllAgents, sendLog, duplicateLock, dataCache, agentInfo, display_time
 import os
 import json
 from collections import defaultdict
@@ -826,18 +826,6 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
         #if 'stagor' in module_name: continue
         per_module[module_name].append( int(spend) )
 
-    def display_time( sec ):
-        m, s = divmod(sec, 60)
-        h, m = divmod(m, 60)
-        dis=""
-        if h:
-            dis += "%d [h] "%h
-        if h or m:
-            dis += "%d [m] "%m
-        if h or m or s:
-            dis += "%d [s]"%s
-            
-        return dis
 
     html_doc.write("Module running time<br>")
     html_doc.write("<table border=1><thead><tr><th>Module</th><th>Last Ran</th><th>Last Runtime</th><th>Avg Runtime</th></tr></thead>")
