@@ -1204,9 +1204,10 @@ def equalizor(url , specific = None, options=None):
         interface['release'].setdefault(wf,"Everywhere")
 
     ## catch site to be held/release
-    hold_site = []
+    site_drive = json.loads(open('%s/site_drive.json'%base_eos_dir).read())
+    hold_site = site_drive.get('hold',[])
     already_holding = interface['hold_site']
-    release_site = list(set(already_holding) - set(hold_site))+interface['release_site']
+    release_site = list(set(already_holding) - set(hold_site))+interface['release_site']+site_drive.get('release',[])
     hold_site = list(set(hold_site) - set(release_site))
     interface['hold_site'] = hold_site
     interface['release_site'] = release_site
