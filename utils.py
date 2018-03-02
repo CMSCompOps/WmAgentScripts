@@ -4629,8 +4629,10 @@ class agentInfo:
         ##sum over those running+draining+standby
         one_recent_running = False
         one_recent_standby = False
+        one_recent_draining = False
         timeout_last_running = None
         timeout_last_standby = None
+        timeout_last_draining = None
         last_action_timeout = 5 *60*60 # hours
         for agent in self.buckets.get('running',[]):
             if (now-self.info[agent]['update'])<(last_action_timeout):
@@ -4645,6 +4647,13 @@ class agentInfo:
                 timeout_for_standby = last_action_timeout - (now-self.info[agent]['update'])
                 if timeout_last_standby == None or timeout_last_standby < timeout_for_standby:
                     timeout_last_standby = timeout_for_standby
+
+        for agent in self.buckets.get('draining',[]):
+            if (now-self.info[agent]['update'])<(last_action_timeout):
+                one_recent_draining = True
+                timeout_for_draining = last_action_timeout - (now-self.info[agent]['update'])
+                if timeout_last_draining == None or timeout_last_draining < timeout_for_draining:
+                    timeout_last_draining = timeout_for_draining
 
         all_agents = dataCache.get('gwmsmon_pool')
         over_threshold = True
@@ -4743,7 +4752,7 @@ class agentInfo:
             if over_threshold: 
                 msg = 'All agents are maxing out. We need a new agent'
                 sendLog('agentInfo', msg, level='critical')            
-                sendEmail('agentInfo', msg)
+                #sendEmail('agentInfo', msg)
             if under_threshold: 
                 msg = 'There are agents under-doing and that could be set in standby'
                 sendLog('agentInfo', msg , level='critical')
@@ -4755,7 +4764,7 @@ class agentInfo:
             if release_deploy:
                 msg = 'There is a new agent release in town %s. Starting to drain other agents from %s'%( top_release, sorted( candidates_to_drain ))
                 sendLog('agentInfo', msg, level='critical')
-                sendEmail('agentInfo', msg)
+                #sendEmail('agentInfo', msg)
                 
             if acting:
                 need_one = over_threshold
