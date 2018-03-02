@@ -344,6 +344,7 @@ def equalizor(url , specific = None, options=None):
         print "#"*10,"total core-hour performance","#"*10
 
         time_percentil = 95
+        backup_time_percentil = 99
         try:
             ## the returned value is the commitedcorehours ~ walltime * 4
             u = 'http://cms-gwmsmon.cern.ch/prodview/json/historynew/percentileruntime720/%s'%task
@@ -354,19 +355,29 @@ def equalizor(url , specific = None, options=None):
             return failed_out
         
         p_t = percentile_data['aggregations']["2"]["values"].get("%.1f"%time_percentil,None) if 'aggregations' in percentile_data else None
+        bck_p_t = percentile_data['aggregations']["2"]["values"].get("%.1f"%backup_time_percentil,None) if 'aggregations' in percentile_data else None
         if p_t=="NaN":p_t=None
+        if bck_p_t=="NaN":p_t=None
+        
         if p_t: p_t*=60. ## convert in mins
+        if bck_p_t: bck_p_t*=60 ## convert in min
         w_t = 0
         if "hits" in percentile_data and "total" in percentile_data["hits"]:
             w_t = percentile_data["hits"]["total"]
         
         b_t = None
+        used_percentil = time_percentil
         if w_t > stats_to_go and p_t:
-            b_t = int(p_t)
+            if bck_p_t and bck_p_t > 2*p_t:
+                print backup_time_percentil,"percentil is giving much better job runtime measurements"
+                used_percentil = backup_time_percentil
+                b_t = int(bck_p_t)
+            else:
+                b_t = int(p_t)
         else:
             print "not enough stats for time",w_t,"<",stats_to_go,"value is",p_t
 
-        print "95% of the jobs are running for a total core-min under",b_t,"[min]"
+        print "%s%% of the jobs are running for a total core-min under %s [min]"%( used_percentil, b_t)
 
 
         print "#"*30
