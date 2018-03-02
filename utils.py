@@ -4481,7 +4481,7 @@ class agentInfo:
         self.idle_fraction = args.get('idle_fraction',0.1)
         self.speed_draining_fraction = args.get('speed_draining_fraction',0.05)
         self.max_pending_cpus = args.get('max_pending_cpus', 10000000)
-
+        self.wake_up_draining = args.get('wake_up_draining', False)
         ## keep some info in a local file
         try:
             self.info = json.loads(open('%s/agent_info.json'%base_eos_dir).read())
@@ -4593,7 +4593,7 @@ class agentInfo:
             return False
 
         verbose = verbose or self.verbose
-
+        wake_up_draining = wake_up_draining or self.wake_up_draining
         now,nows = self.getNow()
 
         ## annotate who could go
@@ -4637,6 +4637,7 @@ class agentInfo:
         running_old_release = 0
         standby_top_release = 0
         speed_draining = set()
+        wake_up_metric = []
         for agent,ainfo in all_agents.items():
             if not 'Name' in ainfo: continue
             agent_name = ainfo['Name']
@@ -4650,6 +4651,7 @@ class agentInfo:
             cpu_running += cr
             running += r
             pending += p
+            wake_up_metric.append( (agent_name, p-r ) )
 
         
         runnings = self.buckets.get('running',[])
@@ -4705,7 +4707,7 @@ class agentInfo:
             print "Standby in latest release",standby_top_release
             print "Running old release",running_old_release
             print "These are good for speed drainig",sorted(speed_draining)
-
+            #print sorted([(a,m) for (a,m) in wake_up_metric], key = lambda o:o[1], reverse=True)
         if not acting: speed_draining = []
 
         over_cpus = self.max_pending_cpus
@@ -4746,11 +4748,16 @@ class agentInfo:
                     print "wake up an agent that was already draining"
                     if candidates_to_wakeup:
                         print "picking up from candidated agents"
-                        pick_from = list(candidates_to_wakeup)
+                        pick_from = candidates_to_wakeup
                     else:
                         print "picking up from draining agents"
                         pick_from = self.buckets.get('draining',[])
 
+                    ## order by the metric
+                    pick_from = [o[0] for o in sorted([(a,m) for (a,m) in wake_up_metric if a in pick_from ], key = lambda o:o[1], reverse=True)]
+                    print wake_up_metric
+                    print pick_from
+                    pick_from = pick_from[:1]
             if not pick_from:
                 print "need to wake an agent up, but there are none available"
                 ## this is a major issue!!!
@@ -4761,7 +4768,7 @@ class agentInfo:
                 # pick one at random in the one idling
                 wake_up = random.choice( pick_from )
                 print "waking up", wake_up
-                if pick_from in speed_draining: speed_draining.remove( pick_from ) 
+                if wake_up in speed_draining: speed_draining.remove( wake_up ) 
                 if setAgentOn(self.url, wake_up):
                     self.info[wake_up] = { 'status' : 'running',
                                            'update' : now,
