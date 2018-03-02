@@ -646,7 +646,7 @@ class lockInfo:
     def __init__(self, andwrite=True):
         self.lockfilename = 'globallocks' ## official name
         self.writeondelete = andwrite
-        self.owner = str(os.getpid())
+        self.owner = "%s-%s"%(socket.gethostname(), os.getpid())
         ## should lock on DDM. this waits for dynamo to not be running
         #if not lock_DDM( timeout = 30*60): ## 30 minutes timeout
         #    print "Dynamo is preventing us to run"
