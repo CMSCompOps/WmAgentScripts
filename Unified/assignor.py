@@ -607,6 +607,8 @@ def assignor(url ,specific = None, talk=True, options=None):
                 parameters['TrustPUSitelists'] = True
             sendEmail("sending work to hepcloud","pleasse check on %s"% wfh.request['RequestName'], destination=['hufnagel@fnal.gov'])
         
+        ## make sure to autoapprove all NonCustodialSites
+        parameters['AutoApproveSubscriptionSites'] = list(set(parameters['NonCustodialSites'] + parameters.get('AutoApproveSubscriptionSites',[])))
         
         result = reqMgrClient.assignWorkflow(url, wfo.name, None, parameters) ## team is not relevant anymore here
 
