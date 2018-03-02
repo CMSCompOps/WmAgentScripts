@@ -42,10 +42,10 @@ def makeHoldSiteAds(config):
         anAd["GridResource"] = "condor localhost localhost"
         anAd["TargetUniverse"] = 5
         anAd["Name"] = str("Holding jobs from %s"%site)
-        anAd["Requirements"] = classad.ExprTree('regexp("%s",DESIRED_Sites) && HasBeenHeldFrom%s isnt true'% (site, site))
+        anAd["Requirements"] = classad.ExprTree(str('regexp("%s",DESIRED_Sites) && HasBeenHeldFrom%s isnt true'% (site, site)))
         anAd["copy_DESIRED_Sites"] = "Holding_DESIRED_Sites"
         ## remove the site string from the sitewhitelist
-        anAd["eval_set_DESIRED_Sites"] = classad.ExprTree('removeSite("%s",Holding_DESIRED_Sites)'% site)
+        anAd["eval_set_DESIRED_Sites"] = classad.ExprTree(str('removeSite("%s",Holding_DESIRED_Sites)'% site))
         anAd["set_HasBeenHeldFrom%s"% site] = True
         anAd["set_HasBeenRouted"] = False
         print anAd
@@ -61,9 +61,9 @@ def makeReleaseSiteAds(config):
         anAd["GridResource"] = "condor localhost localhost"
         anAd["TargetUniverse"] = 5
         anAd["Name"] = str("Releasing jobs for %s"%site)
-        anAd["Requirements"] = classad.ExprTree('HasBeenHeldFrom%s is true'% site )
+        anAd["Requirements"] = classad.ExprTree(str('HasBeenHeldFrom%s is true'% site))
         anAd["copy_DESIRED_Sites"] = "Releasing_DESIRED_Sites"
-        anAd["eval_set_DESIRED_Sites"] = classad.ExprTree('strcat(Releasing_DESIRED_Sites,",%s")'% site)
+        anAd["eval_set_DESIRED_Sites"] = classad.ExprTree(str('strcat(Releasing_DESIRED_Sites,",%s")'% site))
         anAd["delete_Releasing_DESIRED_Sites"] = True
         anAd["set_HasBeenHeldFrom%s"% site] = False
         anAd["set_HasBeenRouted"] = False
@@ -361,9 +361,9 @@ def makeAdhocAds(config):
     anAd["TargetUniverse"] = 5
     anAd["Name"] = str("Draining T0 VMs")
     with_site = "T2_CH_CERN"
-    anAd["Requirements"] = classad.ExprTree('!regexp("%s", DESIRED_Sites) && regexp("T0_CH_CERN", DESIRED_Sites) && OutOfT0 isnt true'%with_site)
+    anAd["Requirements"] = classad.ExprTree(str('!regexp("%s", DESIRED_Sites) && regexp("T0_CH_CERN", DESIRED_Sites) && OutOfT0 isnt true'%with_site))
     anAd["copy_DESIRED_Sites"] = "T0Off_DESIRED_Sites"
-    anAd["eval_set_DESIRED_Sites"] = classad.ExprTree('strcat(T0Off_DESIRED_Sites,",%s")'% with_site)
+    anAd["eval_set_DESIRED_Sites"] = classad.ExprTree(str('strcat(T0Off_DESIRED_Sites,",%s")'% with_site))
     anAd["set_OutOfT0"] = True
     anAd["set_HasBeenRouted"] = False
     print anAd
@@ -378,7 +378,7 @@ def makeAdhocAds(config):
         anAd["GridResource"] = "condor localhost localhost"
         anAd["TargetUniverse"] = 5
         anAd["Name"] = str("Reset routing for %s"% which_route)
-        exp = classad.ExprTree("%s is true"% which_route)
+        exp = "%s is true"% which_route
         anAd["Requirements"] = classad.ExprTree(str(exp))
         anAd["set_HasBeenRouted"] = False
         anAd["set_%s"% which_route] = False
