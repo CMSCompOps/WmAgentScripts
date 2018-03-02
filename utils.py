@@ -4425,6 +4425,20 @@ def getLatestMCPileup( url, statuses=None):
         ret[dataset] = max(ages)
     return ret
 
+def display_time( sec ):
+    if not sec: return sec
+    m, s = divmod(sec, 60)
+    h, m = divmod(m, 60)
+    dis=""
+    if h:
+        dis += "%d [h] "%h
+    if h or m:
+        dis += "%d [m] "%m
+    if h or m or s:
+        dis += "%d [s]"%s
+            
+    return dis
+
 def getWorkflowByMCPileup( url, dataset , details=False):
     conn = make_x509_conn(url)
     #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -4623,7 +4637,7 @@ class agentInfo:
             if (now-self.info[agent]['update'])<(last_action_timeout):
                 one_recent_running = True
                 timeout_for_running = last_action_timeout - (now-self.info[agent]['update'])
-                if since_last_running == None or timeout_last_running < timeout_for_running:
+                if timeout_last_running == None or timeout_last_running < timeout_for_running:
                     timeout_last_running = timeout_for_running
 
         for agent in self.buckets.get('standby',[]):
@@ -4714,10 +4728,11 @@ class agentInfo:
             print "Pending cpus",cpu_pending
             print "Running lastest release",running_top_release
             print "Standby in latest release",standby_top_release
-            print "Running old release",running_old_release
+            print "Running with old release",running_old_release
+            print "These are candidates for draining",sorted(candidates_to_drain)
             print "These are good for speed drainig",sorted(speed_draining)
 
-        if not acting: speed_draining = []
+        if not acting: speed_draining = set()
 
         over_cpus = self.max_pending_cpus
         over_pending = (cpu_pending > over_cpus)
@@ -4750,9 +4765,9 @@ class agentInfo:
                 if release_deploy:
                     drain_agent = True
         else:
-            print "An agent was recently put in running. Cannot do any further acting for another %s [s] last running, %s [s] last standby"% (timeout_last_running, 
-                                                                                                                                              timeout_last_standby)
-
+            print "An agent was recently put in running. Cannot do any further acting for another %s last running or %s last standby"% (display_time(timeout_last_running),
+                                                                                                                                        display_time(timeout_last_standby))
+            
         if need_one:
             pick_from = self.buckets.get('standby',[])
             if not pick_from:
