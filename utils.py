@@ -3990,9 +3990,8 @@ def getDatasetEventsPerLumi(dataset):
            
 def invalidateFiles( files ):
     all_OK = True
-    conn = make_x509_conn('dynamo.mit.edu')
-##conn  =  httplib.HTTPSConnection('dynamo.mit.edu', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    conn  =  httplib.HTTPConnection('dynamo.mit.edu')
+    #conn = make_x509_conn('dynamo.mit.edu')
+    conn  =  httplib.HTTPSConnection('dynamo.mit.edu', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     for fn in files:
         if not all_OK :break ## stop at the first file
         try:
