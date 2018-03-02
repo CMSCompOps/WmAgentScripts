@@ -5902,7 +5902,7 @@ class workflowInfo:
     def checkSplitting(self):
         #returns hold,<list of params
         ##return None to indicate that things should not proceed
-        splits = self.getSplittingsNew()
+        splits = self.getSplittingsNew(strip=True)
         ncores = self.getMulticore()
         hold = False
         ## for those that are modified, add it and return it
