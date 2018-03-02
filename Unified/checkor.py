@@ -752,6 +752,8 @@ def checkor(url, spec=None, options=None):
         size_worht_going_to_ddm = sum([getDatasetSize(out)/1023. for out in out_worth_checking if out.split('/')[-1] in to_ddm_tier ]) ## size in TBs of all outputs
         all_relevant_output_are_going_to_tape = all(map( lambda sites : len(sites)!=0, [custodial_locations[out] for out in out_worth_checking]))
 
+        show_N_only = 10 ## number of files to include in a report log
+
         time_point("dbs file count", sub_lap=True)
 
         if not all([dbs_presence[out] == (dbs_invalid[out]+phedex_presence[out]) for out in wfi.request['OutputDatasets']]) and not options.ignorefiles:
@@ -766,7 +768,6 @@ def checkor(url, spec=None, options=None):
                 #print this for show and tell if no recovery on-going
                 for out in dbs_presence:
                     _,_,missing_phedex,missing_dbs  = getDatasetFiles(url, out)
-                    show_N_only = 10
                     if missing_phedex:
                         wfi.sendLog('checkor',"These %d files are missing in phedex, showing %s only\n%s"%(len(missing_phedex),show_N_only,
                                                                                                            "\n".join( missing_phedex[:show_N_only] )))
@@ -827,7 +828,9 @@ def checkor(url, spec=None, options=None):
                 for out in duplications:
                     bad_files[out] = duplicateAnalyzer().files_to_remove( files_per_rl[out] )
                     if bad_files[out]:
-                        duplicate_notice = "These files %d will be invalidated\n"%(len(bad_files[out]))
+                        duplicate_notice = "These files %d will be invalidated, showing %d only\n%s"%(len(bad_files[out]),
+                                                                                                      show_N_only,
+                                                                                                      "\n".join( bad_files[out][:show_N_only])))
                         wfi.sendLog('checkor',duplicate_notice)
                         ## sending the list is not possible
                         duplicate_notice += json.dumps( sorted(bad_files[out]), indent=2)
