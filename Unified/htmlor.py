@@ -1366,7 +1366,8 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
     AI = agentInfo( url = reqmgr_url,
                     verbose=False,
                     busy_fraction = UC.get('busy_agent_fraction'),
-                    idle_fraction = UC.get('idle_agent_fraction') 
+                    idle_fraction = UC.get('idle_agent_fraction') ,
+                    wake_up_draining=True
                     )
     AI.poll(acting=True)
     #####
