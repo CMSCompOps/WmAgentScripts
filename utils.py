@@ -4809,7 +4809,7 @@ class agentInfo:
                 print "Everything is fine. No need to retire or add an agent"
 
 
-        already_speed_drain = set(json.loads(open('%s/speed_draining.json'%base_eos_dir)))
+        already_speed_drain = set(json.loads(open('%s/speed_draining.json'%base_eos_dir).read()))
         if (already_speed_drain & speed_draining):
             ## lets keep that agent in speed drainig
             print sorted(already_speed_drain),"already in speed draining. not changing this"
