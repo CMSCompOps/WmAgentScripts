@@ -4807,10 +4807,16 @@ class agentInfo:
             else:
                 print "Everything is fine. No need to retire or add an agent"
 
-        speed_draining = list(speed_draining)
-        random.shuffle(speed_draining)
-        speed_draining = speed_draining[:1]
-        open('%s/speed_draining.json'%base_eos_dir,'w').write(json.dumps(speed_draining))
+
+        already_speed_drain = set(json.loads(open('%s/speed_draining.json'%base_eos_dir)))
+        if (already_speed_drain & speed_draining):
+            ## lets keep that agent in speed drainig
+            print sorted(already_speed_drain),"already in speed draining. not changing this"
+        else:
+            speed_draining = list(speed_draining)
+            random.shuffle(speed_draining)
+            speed_draining = speed_draining[:1]
+            open('%s/speed_draining.json'%base_eos_dir,'w').write(json.dumps(speed_draining))
                 
 
 def getAgentConfig(url, agent, keys):
