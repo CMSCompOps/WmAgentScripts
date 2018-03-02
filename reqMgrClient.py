@@ -1212,6 +1212,7 @@ def setWorkflowSplitting(url, workflowname, schema):
     except Exception as e:
         print "setWorkflowSplitting has failed to update. exiting"
         print str(e)
+        print data
         sys.exit(1)
 
     return data
