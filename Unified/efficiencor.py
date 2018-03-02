@@ -69,6 +69,9 @@ while True:
                 for line in fh.read().split('\n'):
                     if 'logArchive.tar.gz' in line:
                         fullpath = filter(lambda w : 'logArchive.tar.gz' in w, line.split())[0]
+                        if not '/' in fullpath:
+                            print fullpath,"not satisfactory to find log file name"
+                            continue
                         lf = fullpath.split('/')[-1]
                         found_log = True
                         print "found log name", lf,"in condor log",out.split('/')[-1]
