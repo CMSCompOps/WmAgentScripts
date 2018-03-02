@@ -4616,13 +4616,22 @@ class agentInfo:
         ##sum over those running+draining+standby
         one_recent_running = False
         one_recent_standby = False
-        last_action_timeout = 5 # hours
+        timeout_last_running = None
+        timeout_last_standby = None
+        last_action_timeout = 5 *60*60 # hours
         for agent in self.buckets.get('running',[]):
-            if (now-self.info[agent]['update'])<(last_action_timeout*60*60):
+            if (now-self.info[agent]['update'])<(last_action_timeout):
                 one_recent_running = True
+                timeout_for_running = last_action_timeout - (now-self.info[agent]['update'])
+                if since_last_running == None or timeout_last_running < timeout_for_running:
+                    timeout_last_running = timeout_for_running
+
         for agent in self.buckets.get('standby',[]):
-            if (now-self.info[agent]['update'])<(last_action_timeout*60*60):
+            if (now-self.info[agent]['update'])<(last_action_timeout):
                 one_recent_standby = True
+                timeout_for_standby = last_action_timeout - (now-self.info[agent]['update'])
+                if timeout_last_standby == None or timeout_last_standby < timeout_for_standby:
+                    timeout_last_standby = timeout_for_standby
 
         all_agents = dataCache.get('gwmsmon_pool')
         over_threshold = True
@@ -4674,7 +4683,6 @@ class agentInfo:
                     ## you can candidate those not running the latest release
                     candidates_to_wakeup.add( agent_name )
                 if len(standbies)==0 and (len(runnings) < len(drainings)) and (cp <= cpu_running*self.speed_draining_fraction) and (r <= t*self.speed_draining_fraction) and (cr <= cpu_running*self.speed_draining_fraction):
-                    print "The agent is running low enough that we can increase priority all around"
                     speed_draining.add( agent_name )
             if agent_name in standbies:
                 if agent_name in self.release[top_release]:
@@ -4698,7 +4706,7 @@ class agentInfo:
                     candidates_to_standby.add( agent_name )
                     candidates_to_drain.add( agent_name )
 
-        if verbose or verbose:
+        if verbose or verbose or True:
             print "Capacity",capacity
             print "Running jobs", running
             print "Running cpus", cpu_running
@@ -4708,7 +4716,7 @@ class agentInfo:
             print "Standby in latest release",standby_top_release
             print "Running old release",running_old_release
             print "These are good for speed drainig",sorted(speed_draining)
-            #print sorted([(a,m) for (a,m) in wake_up_metric], key = lambda o:o[1], reverse=True)
+
         if not acting: speed_draining = []
 
         over_cpus = self.max_pending_cpus
@@ -4741,6 +4749,9 @@ class agentInfo:
                     retire_agent = under_threshold or over_pending
                 if release_deploy:
                     drain_agent = True
+        else:
+            print "An agent was recently put in running. Cannot do any further acting for another %s [s] last running, %s [s] last standby"% (timeout_last_running, 
+                                                                                                                                              timeout_last_standby)
 
         if need_one:
             pick_from = self.buckets.get('standby',[])
