@@ -44,7 +44,8 @@ base_dir =  os.getenv('UNIFIED_DIR','/data/unified/')
 base_eos_dir = "/eos/project/c/cms-unified-logs/"
 
 unified_url = os.getenv('UNIFIED_URL','https://vocms049.cern.ch/unified/')
-unified_url_eos = "http://cern.ch/cms-unified/"
+unified_url_eos = "https://cms-unified.web.cern.ch/cms-unified/"
+unified_url = unified_url_eos
 url_eos = unified_url_eos
 unified_pub_url = os.getenv('UNIFIED_URL','https://vocms049.cern.ch/unified/public/')
 cache_dir = '/data/unified-cache/'
