@@ -1074,20 +1074,23 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 
     text += site_div_header("Approximate Free Tape")
     for mss in SI.storage:
-        waiting = 0
-        try:
-            waiting = float(os.popen("grep '%s is pending . Created since' %s/logs/lockor/last.log  -B 3 | grep size | awk '{ sum+=$6 ; print sum }' | tail -1" % (mss,monitor_dir)).readline())
-        except Exception as e:
-            print str(e)
+        ## this does not work anymore since unified does not check on tape anymore
+        #waiting = 0
+        #try:
+        #    waiting = float(os.popen("grep '%s is pending . Created since' %s/logs/lockor/last.log  -B 3 | grep size | awk '{ sum+=$6 ; print sum }' | tail -1" % (mss,monitor_dir)).readline())
+        #except Exception as e:
+        #    print str(e)
+        #oldest = ""
+        #os.system('grep pending %s/logs/lockor/last.log | sort -u > %s/logs/pending.log'%(monitor_dir,monitor_dir))
+        #try:
+        #    oldest = os.popen("grep '%s is pending . Created since ' %s/logs/lockor/last.log | sort | awk '{print $10, $11, $12, $13, $14 }' | head -1"% (mss,monitor_dir)).readline()
+        #except Exception as e:
+        #    print str(e)
+        #waiting /= 1024.
+        #text+="<li>%s : %d [TB]. Waiting for approval %d [TB] since %s </li>"%(mss, SI.storage[mss], waiting, oldest)
 
-        oldest = ""
-        os.system('grep pending %s/logs/lockor/last.log | sort -u > %s/logs/pending.log'%(monitor_dir,monitor_dir))
-        try:
-            oldest = os.popen("grep '%s is pending . Created since ' %s/logs/lockor/last.log | sort | awk '{print $10, $11, $12, $13, $14 }' | head -1"% (mss,monitor_dir)).readline()
-        except Exception as e:
-            print str(e)
-        waiting /= 1024.
-        text+="<li>%s : %d [TB]. Waiting for approval %d [TB] since %s </li>"%(mss, SI.storage[mss], waiting, oldest)
+        text+="<li>%s : %d [TB]</li>"%(mss, SI.storage[mss])
+
     text += "</ul></div></li>"
 
 
