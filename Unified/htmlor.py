@@ -1387,7 +1387,7 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
             for component in agent['down_components']:
                 message += '<br><b>%s</b>'%component
                 for det in agent['down_component_detail']:
-                    if det['name'] == component:
+                    if type(det)==dict and det['name'] == component:
                         message += '<br>%s'% det['error_message']
                 
 
