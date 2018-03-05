@@ -583,8 +583,8 @@ def parse_one(url, wfn, options=None):
         html += "<b>%s</b>"%task.split('/')[-1]
         if missing_events:
             if feff != 1.:
-                html += ' is missing %s events in input, <b>%s events in output</b>'%( "{:,}".format(missing_events),
-                                                                                       "{:,}".format(int(missing_events*feff)))
+                html += ' is missing %s events in input and <b>about %s events in output</b>'%( "{:,}".format(missing_events),
+                                                                                                "{:,}".format(int(missing_events*feff)))
             else:
                 html += ' is missing <b>%s events in I/O</b>'%( "{:,}".format(missing_events))
 
