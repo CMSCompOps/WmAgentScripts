@@ -477,7 +477,7 @@ Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransfertea
         text_by_c+="""
 <li> <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?campaign=%s>%s</a> <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?in_production=1&campaign=%s>(%d)</a> 
 <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/campaign.php?campaign=%s>mon</a>
-<a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?in_production=1&rsort=8&status=running&campaign=%s>top</a>
+<a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?in_production=1&rsort=6&status=running&campaign=%s>top</a>
 <a href=https://cms-pdmv.cern.ch/pmp/historical?r=%s target=_blank>pmp</a> 
 """%( c,c,c,
       sum(count_by_campaign[c].values()),c,c,c )
@@ -489,7 +489,7 @@ Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransfertea
 
     lines.sort()
     html_doc.write("""
-Worflow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests_in_production.php target=_blank>ongoing</a> <a href=https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary target=_blank>elog</a> <a href=https://cms-gwmsmon.cern.ch/prodview target=_blank>queues</a> <a href=logs/assignor/last.log target=_blank>log</a> <a href=logs/checkor/last.log target=_blank>postlog</a> <a href=logs/equalizor/last.log target=_blank>equ</a> <a href=logs/completor/last.log target=_blank>comp</a> <a href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?in_production=1&rsort=5&older=3">lasting</a>
+Worflow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests_in_production.php target=_blank>ongoing</a> <a href=https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary target=_blank>elog</a> <a href=https://cms-gwmsmon.cern.ch/prodview target=_blank>queues</a> <a href=logs/assignor/last.log target=_blank>log</a> <a href=logs/checkor/last.log target=_blank>postlog</a> <a href=logs/equalizor/last.log target=_blank>equ</a> <a href=logs/completor/last.log target=_blank>comp</a> <a href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?in_production=1&rsort=6&older=3">lasting</a>
 <a href="javascript:showhide('away')">[Click to show/hide]</a>
 <br>
 <div id="away" style="display:none;">
@@ -553,7 +553,7 @@ Worflow on-going (%d) <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/reque
     html_doc.write("""Worflow which need assistance (%d)
 <a href=assistance.html target=_blank>assistance</a> 
 <a href=logs/checkor/last.log target=_blank>log</a> <a href=logs/recoveror/last.log target=_blank>postlog</a>
-<a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?in_production=1&rsort=5&older=3&status=validation target=_blank>lasting</a>
+<a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?in_production=1&rsort=6&older=3&status=validation target=_blank>lasting</a>
 <a href="javascript:showhide('assistance')">[Click to show/hide]</a>
 <br>
 <div id="assistance" style="display:none;">
