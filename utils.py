@@ -4494,6 +4494,7 @@ class agentInfo:
         self.busy_fraction = args.get('busy_fraction',0.8)
         self.idle_fraction = args.get('idle_fraction',0.1)
         self.speed_draining_fraction = args.get('speed_draining_fraction',0.05)
+        self.open_draining_threshold = args.get('open_draining_threshold', 100)
         self.max_pending_cpus = args.get('max_pending_cpus', 10000000)
         self.wake_up_draining = args.get('wake_up_draining', False)
         ## keep some info in a local file
@@ -4669,6 +4670,7 @@ class agentInfo:
         running_old_release = 0
         standby_top_release = 0
         speed_draining = set()
+        open_draining = set()
         wake_up_metric = []
         for agent,ainfo in all_agents.items():
             if not 'Name' in ainfo: continue
@@ -4710,6 +4712,9 @@ class agentInfo:
                         candidates_to_wakeup.add( agent_name )
                 if len(standbies)==0 and (len(runnings) < len(drainings)) and (cp <= cpu_running*self.speed_draining_fraction) and (r <= t*self.speed_draining_fraction) and (cr <= cpu_running*self.speed_draining_fraction):
                     speed_draining.add( agent_name )
+                if len(standbies)==0 and (len(runnings) < len(drainings)) and (r+p <= self.open_draining_threshold):
+                    open_draining.add( agent_name )
+
             if agent_name in standbies:
                 if agent_name in self.release[top_release]:
                     standby_top_release += 1 
@@ -4741,8 +4746,11 @@ class agentInfo:
             print "Running with old release",running_old_release
             print "These are candidates for draining",sorted(candidates_to_drain)
             print "These are good for speed drainig",sorted(speed_draining)
+            print "These are good for open draining",sorted(open_draining)
 
-        if not acting: speed_draining = set()
+        if not acting: 
+            speed_draining = set()
+            open_draining = set()
 
         over_cpus = self.max_pending_cpus
         over_pending = (cpu_pending > over_cpus)
@@ -4806,6 +4814,7 @@ class agentInfo:
                 wake_up = random.choice( pick_from )
                 print "waking up", wake_up
                 if wake_up in speed_draining: speed_draining.remove( wake_up ) 
+                if wake_up in open_draining: open_draining.remove( wake_up )
                 if setAgentOn(self.url, wake_up):
                     self.info[wake_up] = { 'status' : 'running',
                                            'update' : now,
@@ -4844,16 +4853,23 @@ class agentInfo:
             else:
                 print "Everything is fine. No need to retire or add an agent"
 
+        for agent in open_draining:
+            ## set the config tweaks to enable retry=0 and thresold=0
+            pass
 
         already_speed_drain = set(json.loads(open('%s/speed_draining.json'%base_eos_dir).read()))
+        all_in_priority_drain = set()
         if (already_speed_drain & speed_draining):
             ## lets keep that agent in speed drainig
             print sorted(already_speed_drain),"already in speed draining. not changing this"
         else:
             speed_draining = list(speed_draining)
+            ## shuffle and pick on new
             random.shuffle(speed_draining)
-            speed_draining = speed_draining[:1]
-            open('%s/speed_draining.json'%base_eos_dir,'w').write(json.dumps(speed_draining))
+            all_in_priority_drain.update( speed_draining[:1] )
+
+        all_in_priority_drain.update( open_draining )
+        open('%s/speed_draining.json'%base_eos_dir,'w').write(json.dumps( list(all_in_priority_drain) ))
                 
 
 def getAgentConfig(url, agent, keys):
