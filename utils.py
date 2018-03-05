@@ -6348,7 +6348,7 @@ class workflowInfo:
         for spl in result:
             if not spl['taskType'] in ['Production','Processing','Skim'] : continue
             if strip:
-                for drop in ['algorithm','trustPUSitelists','trustSitelists','deterministicPileup','type','include_parents','lheInputFiles','runWhitelist','runBlacklist']:
+                for drop in ['algorithm','trustPUSitelists','trustSitelists','deterministicPileup','type','include_parents','lheInputFiles','runWhitelist','runBlacklist','collectionName']:
                     if drop in spl['splitParams']:
                         spl['splitParams'].pop(drop)
             splittings.append( spl )
