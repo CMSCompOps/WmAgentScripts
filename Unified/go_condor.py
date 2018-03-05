@@ -369,6 +369,14 @@ def makeAdhocAds(config):
     anAd["set_HasBeenRouted"] = False
     print anAd
 
+    anAd = classad.ClassAd()
+    anAd["GridResource"] = "condor localhost localhost"
+    anAd["TargetUniverse"] = 5
+    anAd["Name"] = str("Routing multicore job from ICFA to other sites")
+    anAd["Requirements"] = classad.ExprTree(str('DESIRED_Sites == "T2_ES_IFCA" && Requestcpus =!=1'))
+    anAd["set_DESIRED_Sites"] = "T1_ES_PIC,T2_ES_CIEMAT"
+    anAd["set_HasBeenRouted"] = False
+    print anAd
 
 
     ############################################################
