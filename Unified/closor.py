@@ -206,7 +206,7 @@ def closor(url, specific=None, options=None):
             ## already verified
             has_batch_go = batch_go[batch_name]
             if not has_batch_go:
-                wfi.sendLog('closor', 'Cannot close for now because the batch %s is not all close'% batch_name)
+                wfi.sendLog('closor', 'Cannot close for now because the batch <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?campaign=%s>%s</a> is not all close'%( batch_name, batch_name))
                 continue
 
 
