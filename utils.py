@@ -4698,12 +4698,16 @@ class agentInfo:
             t = ainfo['MaxJobsRunning']
             p = ainfo['TotalIdleJobs']
             cp = ainfo['TotalIdleCpus']
+            stuffed = (r >= t*self.busy_fraction)
+            light = (r <= t*self.idle_fraction)
+
             if verbose:
                 print agent_name,r,json.dumps(ainfo, indent=2)
             if agent_name in drainings:
                 if not agent_name in self.release[oldest_release]:
                     ## you can candidate those not running the latest release
-                    candidates_to_wakeup.add( agent_name )
+                    if not stuffed:
+                        candidates_to_wakeup.add( agent_name )
                 if len(standbies)==0 and (len(runnings) < len(drainings)) and (cp <= cpu_running*self.speed_draining_fraction) and (r <= t*self.speed_draining_fraction) and (cr <= cpu_running*self.speed_draining_fraction):
                     speed_draining.add( agent_name )
             if agent_name in standbies:
@@ -4716,8 +4720,6 @@ class agentInfo:
                 else:
                     running_top_release += 1
                 capacity += t
-                stuffed = (r >= t*self.busy_fraction)
-                light = (r <= t*self.idle_fraction)
                 if verbose:
                     print agent
                     print "is Stuffed?",stuffed
