@@ -578,10 +578,17 @@ def parse_one(url, wfn, options=None):
         if not no_error and notreported in all_codes:
             all_codes.remove( notreported )
         missing_events = missing_to_run[task] if task in missing_to_run else 0
+        feff = wfi.getFilterEfficiency( task.split('/')[-1] )
         html += "<a name=%s>"%task.split('/')[-1]
         html += "<b>%s</b>"%task.split('/')[-1]
         if missing_events:
-            html += ' is missing <b>%s events</b> <a href="https://cmsweb.cern.ch/couchdb/acdcserver/_design/ACDC/_view/byCollectionName?key=%%22%s%%22&include_docs=true&reduce=false" target=_blank>AC/DC</a>'%( "{:,}".format(missing_events) , wfn )
+            if feff != 1.:
+                html += ' is missing %s events in input, <b>%s events in output</b>'%( "{:,}".format(missing_events),
+                                                                                       "{:,}".format(int(missing_events*feff)))
+            else:
+                html += ' is missing <b>%s events in I/O</b>'%( "{:,}".format(missing_events))
+
+            html += ' <a href="https://cmsweb.cern.ch/couchdb/acdcserver/_design/ACDC/_view/byCollectionName?key=%%22%s%%22&include_docs=true&reduce=false" target=_blank>AC/DC</a>'%( wfn )
             if no_error:
                 html +="<br><b><font color=red> and has UNreported error</font></b>"
 
