@@ -11,4 +11,7 @@ assignDatasetToSite.py
 Unified/dbstest.py
 Unified/sqtest.py
 Unified/mcmtest.py
-
+Unified/dbtest.py
+Unified/jiratest.py
+Unified/locktest.py
+Unified/test.py
