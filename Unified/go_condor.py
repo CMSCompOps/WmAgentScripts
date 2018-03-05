@@ -318,13 +318,14 @@ def makePerformanceCorrectionsAds(configs):
 def makeDrainAds(config=None):
     anAd = classad.ClassAd()                                                                                                                                                                       
     anAd["GridResource"] = "condor localhost localhost"
-    anAd["TargetUniverse"] = 5                                                                                                                                                                     
+    anAd["TargetUniverse"] = 5                                                                                                                                                                    
+    set_To = 200000
     draining_agents = config.get('speed_drain',[])
     for agent in draining_agents:
         anAd["Name"] = str("Drain agent %s"%agent)
-        exp = 'regexp("%s",GlobalJobId) && JobStatus == 1'% str(agent)
+        exp = 'regexp("%s",GlobalJobId) && JobStatus == 1 && JobPrio<%d'%(str(agent), set_To)
         anAd["Requirements"] = classad.ExprTree(str(exp))
-        anAd["set_JobPrio"] = 200000
+        anAd["set_JobPrio"] = set_To
         anAd["set_HasBeenRouted"] = False
         print anAd
 
