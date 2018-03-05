@@ -1394,7 +1394,7 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
             message += '<br><a href="https://cms-logbook.cern.ch/elog/GlideInWMS/?mode=summary&reverse=0&reverse=1&npp=20&subtext=%s">gwms elog</a>, <a href="https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary&reverse=0&reverse=1&npp=20&subtext=%s">elog</a>, <a href="https://its.cern.ch/jira/issues/?jql=text~%s* AND project = CMSCOMPPR AND status != CLOSED">jira</a>'%( short_name, short_name, short_name )
             message += '<br>Unified status : %s'% uas
             if short_name in speed_d or name in speed_d:
-                message += '<br>Speed draining'
+                message += '<br><b>Speed draining by priority increase</b>'
 
             pend_txt="<ul>"
             by_site = defaultdict(int)
