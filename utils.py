@@ -6183,6 +6183,24 @@ class workflowInfo:
                     return {'SplittingAlgorithm': 'EventBased'}
         return True
 
+
+    def getFilterEfficiency( self, taskName ):
+        feff = 1.
+        
+        itask = 1
+        while True:
+            ti = 'Task%d'% itask
+            itask +=1
+            if ti in self.request:
+                if self.request[ti]['TaskName'] == taskName:
+                    feff = self.request[ti].get('FilterEfficiency',feff)
+                    break
+            else:
+                break
+
+        return feff
+
+
     def getSchema(self):
         #new_schema = copy.deepcopy( self.get_spec().request.schema.dictionary_())
         
