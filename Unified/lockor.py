@@ -132,7 +132,8 @@ for secondary in secondary_timeout:
         print "keep a lock on",secondary,"within",delay_days,"days"
         newly_locking.add( secondary )
 """
-## just using this to lock all valid 
+
+## just using this to lock all valid secondaries
 newly_locking.update( CI.allSecondaries())
 
 
