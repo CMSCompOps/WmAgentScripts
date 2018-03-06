@@ -778,6 +778,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
     if 'Memory' in parameters:
         wf.request['Memory'] = parameters['Memory']
 
+    """
     maxRSSs = {}
     chain_type = 'Step' if 'Step1' in wf.request else ('Task' if 'Task1' in wf.request else None)
     if chain_type:
@@ -800,7 +801,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
         defaults['MaxRSS'] = int(max(maxRSSs.values()))*1024 ## set it to the max value
     else:
         defaults['MaxRSS'] = int(wf.request['Memory'])*1024 ## set it to the indicated value
-
+    """
     defaults.update( parameters )
 
     if 'Multicore' in parameters:
@@ -951,8 +952,8 @@ assignWorkflow.defaults= {
         "MaxMergeEvents" : 20000000, ## shouldn't this be set to infinite ?
         'BlockCloseMaxEvents' : 200000000,
         'BlockCloseMaxWaitTime' : 172800,
-        "MaxRSS" : 3000000,
-        "MaxVSize": 4394967000,
+        #"MaxRSS" : 3000000,
+        #"MaxVSize": 4394967000,
         "Dashboard": "production",
         "SoftTimeout" : 159600, ## 44H watchdog, regardless of the requested time ...
         "GracePeriod": 300,
