@@ -172,7 +172,7 @@ def checkor(url, spec=None, options=None):
 
     pattern_fraction_pass = UC.get('pattern_fraction_pass')
     cumulative_fraction_pass = UC.get('cumulative_fraction_pass')
-    timeout_from_started_running = UC.get('damping_fraction_pass')
+    timeout_for_damping_fraction = UC.get('damping_fraction_pass')
     damping_time = UC.get('damping_fraction_pass_rate')
     damping_fraction_pass_max = float(UC.get('damping_fraction_pass_max')/ 100.)
 
@@ -453,6 +453,7 @@ def checkor(url, spec=None, options=None):
         running_log = filter(lambda change : change["Status"] in ["running-open","running-closed"],wfi.request['RequestTransition'])
         running_delay = (now_s - (min(l['UpdateTime'] for l in running_log))) / (60.*60.*24.) if running_log else 0 ## in days        
         delay = (now_s - completed_log[-1]['UpdateTime']) / (60.*60.*24.) if completed_log else 0 ## in days
+        completed_delay = delay
         print delay,"since completed"
 
 
@@ -525,11 +526,13 @@ def checkor(url, spec=None, options=None):
 
 
         #introduce a reduction factor on very old requests
-        fraction_damping = min(0.01*(max(running_delay - timeout_from_started_running,0)/damping_time),damping_fraction_pass_max)
-        print "We could reduce the passing fraction by",fraction_damping,"given it's been running for long"
+        #1% every damping_time days after > timeout_for_damping_fraction in completed. Not more than damping_fraction_pass_max
+        #fraction_damping = min(0.01*(max(running_delay - timeout_for_damping_fraction,0)/damping_time),damping_fraction_pass_max)
+        fraction_damping = min(0.01*(max(completed_delay - timeout_for_damping_fraction,0)/damping_time),damping_fraction_pass_max)
+        print "We could reduce the passing fraction by",fraction_damping,"given it's been in for long for long"
         for out in fractions_pass:
             if fractions_pass[out]!=1.0: ## strictly ones cannot be set less than one
-                if timeout_from_started_running:
+                if timeout_for_damping_fraction:
                     wfi.sendLog('checkor','Reducing pass thresholds by %.3f for long lasting workflow'% fraction_damping)
                     fractions_pass[out] -= fraction_damping
                     fractions_truncate_recovery[out] -= fraction_damping
