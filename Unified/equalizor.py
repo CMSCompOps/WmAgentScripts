@@ -912,6 +912,11 @@ def equalizor(url , specific = None, options=None):
                 needs_overide = overide_from_agent( wfi, needs_overide)
                 extend_to = set( LHE_overflow[campaign]) & neighboring_ces ## at the intersection
                 
+
+                if wfi.heavyRead():
+                    needs = False
+                    needs_overide = False
+
                 ## need to stay within the allowed site white list
                 extend_to = extend_to & set(sites_allowed)
 
