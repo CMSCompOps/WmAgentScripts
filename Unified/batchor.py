@@ -130,6 +130,7 @@ This is an automated message"""%( new_campaign,
     ## go through all existing campaigns and remove the ones not in use anymore ?
     for old_campaign in campaigns.keys():
         all_in_batch = getWorkflowByCampaign(url, old_campaign, details=True)
+        if not all_in_batch: continue
         is_batch_done = all(map(lambda s : not s in ['completed','running-open','running-closed','acquired','assigned','assignment-approved'], [wf['RequestStatus']for wf in all_in_batch]))
         ## check all statuses
         if is_batch_done:
