@@ -180,6 +180,10 @@
    "value" : 5,
    "description" : "Value in % of the max damping of passing fraction"
  },
+ "acdc_rank_for_truncate" : {
+   "value" : 2,
+   "description" : "Rank of the acdc after which we truncate at the pass threshold (-1 means any order, 0 means after first round,... )"
+ },
  "pattern_fraction_pass": {
    "value" : { },
    "description" : "overide of the completion fraction of dataset with keyword"

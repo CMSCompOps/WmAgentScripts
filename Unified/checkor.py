@@ -175,7 +175,7 @@ def checkor(url, spec=None, options=None):
     timeout_for_damping_fraction = UC.get('damping_fraction_pass')
     damping_time = UC.get('damping_fraction_pass_rate')
     damping_fraction_pass_max = float(UC.get('damping_fraction_pass_max')/ 100.)
-
+    acdc_rank_for_truncate = UC.get('acdc_rank_for_truncate')
 
     random.shuffle( wfs )
 
@@ -341,6 +341,7 @@ def checkor(url, spec=None, options=None):
         acdc_inactive = []
         forced_already=False
         acdc_bads = []
+        acdc_order = -1
         true_familly = []
         for member in familly:
             if member['RequestType'] != 'Resubmission': continue
@@ -362,6 +363,9 @@ def checkor(url, spec=None, options=None):
 
             true_familly.append( member['RequestName'] )
 
+            for irank in range(10):
+                if 'ACDC%d'%irank in member['RequestName']:
+                    acdc_order = max( irank, acdc_order )
 
             if member['RequestStatus'] in ['running-open','running-closed','assigned','acquired']:
                 print wfo.name,"still has an ACDC running",member['RequestName']
@@ -530,13 +534,26 @@ def checkor(url, spec=None, options=None):
         #fraction_damping = min(0.01*(max(running_delay - timeout_for_damping_fraction,0)/damping_time),damping_fraction_pass_max)
         fraction_damping = min(0.01*(max(completed_delay - timeout_for_damping_fraction,0)/damping_time),damping_fraction_pass_max)
         print "We could reduce the passing fraction by",fraction_damping,"given it's been in for long for long"
+        long_lasting_choped = False
         for out in fractions_pass:
             if fractions_pass[out]!=1.0: ## strictly ones cannot be set less than one
                 if timeout_for_damping_fraction:
-                    wfi.sendLog('checkor','Reducing pass thresholds by %.3f for long lasting workflow'% fraction_damping)
                     fractions_pass[out] -= fraction_damping
                     fractions_truncate_recovery[out] -= fraction_damping
-                    pass
+                    long_lasting_choped = True
+
+        if long_lasting_choped:
+            msg = 'Reducing pass thresholds by %.3f for long lasting workflow'% fraction_damping
+            wfi.sendLog('checkor', msg)
+            sendLog('checkor', msg, level='critical')
+            
+        ## do something about workflow with high order ACDC
+        # acdc_order == -1  None
+        # acdc_order == 0 ACDC0 first round
+        if acdc_order > acdc_rank_for_truncate:
+            ## there is high order acdc on-going. chop the output at the pass fraction
+            wfi.sendLog('checkor','Truncating at pass threshold because of ACDC of rank %d'% acdc_order)
+            fractions_truncate_recovery[out] = fractions_pass[out]
 
         #and then make the fraction multiplicative per child
         parentage = {} ## a daugther: parents kind of thing
