@@ -82,14 +82,16 @@ def checkor(url, spec=None, options=None):
         print "clear option is on: checking workflows that are ready to toggle closed-out"
         wfs.extend( filter(lambda wfo: 'custodial' in wfo.status, standings))
     if options.review:
-        print "review option is on: checking the workflows that needed intervention"
+        #print "review option is on: checking the workflows that needed intervention"
         these = filter(lambda wfo: not 'custodial' in wfo.status, standings)
         if options.recovering:
             print "review-recovering is on: checking only the workflows that had been already acted on"
             these = filter(lambda wfo: not 'manual' in wfo.status, these)
-        else:
+            wfs.extend( these )
+        if options.manual:
+            print "review-manual is on: checking the workflows to be acted on"
             these = filter(lambda wfo: 'manual' in wfo.status, these)
-        wfs.extend( these )
+            wfs.extend( these )
 
 
     custodials = defaultdict(list) #sites : dataset list
@@ -1262,6 +1264,7 @@ if __name__ == "__main__":
     parser.add_option('--clear', help='Only the workflow that have reached custodial', action ='store_true', default=False)
     parser.add_option('--review', help='Look at the workflows that have already completed and had required actions', action='store_true', default=False)
     parser.add_option('--recovering', help='Look at the workflows that already have on-going acdc', action='store_true', default=False)
+    parser.add_option('--manual', help='Look at the workflows in "manual"', action='store_true', default=False)
 
     parser.add_option('--limit',help='The number of workflow to consider for checking', default=0, type=int)
     parser.add_option('--fractionpass',help='The completion fraction that is permitted', default=0.0,type='float')
@@ -1277,11 +1280,14 @@ if __name__ == "__main__":
     if len(args)!=0:
         spec = args[0]
 
+    options.manual = not options.recovering
     if not options.strict and not options.update and not options.clear and not options.review:
         options.strict=True
         options.update=True
         options.clear=True
         options.review=True
+        options.recovering=True
+        options.manual=True
         print "no options passed, assuming we do everything"
 
     checkor(url, spec, options=options)
