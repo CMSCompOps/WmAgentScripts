@@ -169,11 +169,11 @@
    "description" : "Whether or not the pass threshold per campaign are counted as is, or cumulatively."
  },
  "damping_fraction_pass" : {
-   "value" : 0,
-   "description" : "Time in days (since started running) after which to start reducing the pass threshold."
+   "value" : 10,
+   "description" : "Time in days (since completed) after which to start reducing the pass threshold."
  },
  "damping_fraction_pass_rate" : {
-   "value" : 10,
+   "value" : 7,
    "description" : "Time in days (since started running) after which to reduce the passing fration by 1%, every such time."
  },
  "damping_fraction_pass_max" :	{
