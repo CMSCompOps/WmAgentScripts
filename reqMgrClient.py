@@ -774,34 +774,9 @@ def assignWorkflow(url, workflowname, team, parameters ):
 
     wf = workflowInfo(url, workflowname)
 
-    # set the maxrss watchdog to what is specified in the request
     if 'Memory' in parameters:
         wf.request['Memory'] = parameters['Memory']
 
-    """
-    maxRSSs = {}
-    chain_type = 'Step' if 'Step1' in wf.request else ('Task' if 'Task1' in wf.request else None)
-    if chain_type:
-        t_i = 1
-        while True:
-            t_s = '%s%d'%(chain_type, t_i)
-            if not t_s in wf.request: break
-            t_n = wf.request[t_s]['%sName'%chain_type]
-            if type(wf.request['Memory'])==dict and t_n in wf.request['Memory']:
-                maxRSSs[t_n] = int(wf.request['Memory'][t_n])*1024
-            elif 'Memory' in wf.request[t_s]:
-                maxRSSs[t_n] = int(wf.request[t_s]['Memory'])*1024
-            else:
-                #nothing partial
-                maxRSSs = {}
-            t_i+=1
-    if maxRSSs and chain_type=='Task':
-        defaults['MaxRSS'] = maxRSSs ## set it as a dict
-    elif maxRSSs and chain_type=='Step':
-        defaults['MaxRSS'] = int(max(maxRSSs.values()))*1024 ## set it to the max value
-    else:
-        defaults['MaxRSS'] = int(wf.request['Memory'])*1024 ## set it to the indicated value
-    """
     defaults.update( parameters )
 
     if 'Multicore' in parameters:
@@ -810,9 +785,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
         ## hack for multicode assignment
 
         defaults['Multicore'] = wf.request['Multicore']
-    #if ('Multicore' in wf.request and wf.request['Multicore']>1):
-    #    defaults['MaxRSS'] = int((wf.request['Memory']*1024+10) * 1.5 * wf.request['Multicore'])
-    #    defaults['MaxVSize'] = int(10*defaults['MaxRSS'])
+
     
     pop_useless = ['AcquisitionEra','ProcessingString']
     for what in pop_useless:
@@ -952,8 +925,6 @@ assignWorkflow.defaults= {
         "MaxMergeEvents" : 20000000, ## shouldn't this be set to infinite ?
         'BlockCloseMaxEvents' : 200000000,
         'BlockCloseMaxWaitTime' : 172800,
-        #"MaxRSS" : 3000000,
-        #"MaxVSize": 4394967000,
         "Dashboard": "production",
         "SoftTimeout" : 159600, ## 44H watchdog, regardless of the requested time ...
         "GracePeriod": 300,
@@ -978,7 +949,7 @@ assignWorkflow.mandatories = ['Team',
                               #'BlockCloseMaxEvents',
                               #'MinMergeSize',
                               #'MaxMergeEvents',
-                              #'MaxRSS'
+
                               ]
 assignWorkflow.auxiliaries = [ 'SplittingAlgorithm',
                                'EventsPerJob',
