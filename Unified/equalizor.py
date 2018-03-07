@@ -912,6 +912,9 @@ def equalizor(url , specific = None, options=None):
                 needs_overide = overide_from_agent( wfi, needs_overide)
                 extend_to = set( LHE_overflow[campaign]) & neighboring_ces ## at the intersection
                 
+                ## need to stay within the allowed site white list
+                extend_to = extend_to & set(sites_allowed)
+
                 if needs or needs_overide:
                     wfi.sendLog('equalizor','Extending site whitelist for %s to %s due to LHE_overflow'%(task.pathName.split('/')[-1],sorted(extend_to)))
                     modifications[wfo.name][task.pathName] = { "AddWhitelist" : list(extend_to),
