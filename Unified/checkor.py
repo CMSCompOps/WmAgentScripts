@@ -554,10 +554,14 @@ def checkor(url, spec=None, options=None):
             ancestors = upward(parentage.get(out,[]))
             initial_pass = fractions_pass[out]
             descending_pass = fractions_pass[out]
+            descending_truncate = fractions_truncate_recovery[out]
             for a in ancestors:
                 descending_pass*=fractions_pass.get(a,1.) ## multiply by fraction of all ancestors
+                descending_truncate*=fractions_pass.get(a,1.)
             if cumulative_fraction_pass:
                 fractions_pass[out] = descending_pass
+                fractions_truncate_recovery[out] = descending_truncate
+
             print "For",out,"passing at",initial_pass,"is now passing at",descending_pass
 
 
