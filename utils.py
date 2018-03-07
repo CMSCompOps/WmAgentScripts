@@ -4865,6 +4865,7 @@ class agentInfo:
         if (already_speed_drain & speed_draining):
             ## lets keep that agent in speed drainig
             print sorted(already_speed_drain),"already in speed draining. not changing this"
+            all_in_priority_drain = already_speed_drain & speed_draining
         else:
             speed_draining = list(speed_draining)
             ## shuffle and pick on new
