@@ -538,13 +538,13 @@ def checkor(url, spec=None, options=None):
         print "We could reduce the passing fraction by",fraction_damping,"given it's been in for long for long"
         long_lasting_choped = False
         for out in fractions_pass:
-            if fractions_pass[out]!=1.0: ## strictly ones cannot be set less than one
+            if fractions_pass[out]!=1.0 and fraction_damping: ## strictly ones cannot be set less than one
                 if timeout_for_damping_fraction:
                     fractions_pass[out] -= fraction_damping
                     fractions_truncate_recovery[out] -= fraction_damping
                     long_lasting_choped = True
 
-        if long_lasting_choped:
+        if long_lasting_choped :
             msg = 'Reducing pass thresholds by %.3f for long lasting workflow'% fraction_damping
             wfi.sendLog('checkor', msg)
             sendLog('checkor', msg, level='critical')
@@ -580,8 +580,9 @@ def checkor(url, spec=None, options=None):
             if cumulative_fraction_pass:
                 fractions_pass[out] = descending_pass
                 fractions_truncate_recovery[out] = descending_truncate
-
-            print "For",out,"passing at",initial_pass,"is now passing at",descending_pass
+                print "For",out,"previously passing at",initial_pass,"is now passing at",descending_pass
+            else:
+                print "For",out,"isntead of passing at",initial_pass,"could be done with",descending_pass
 
 
         time_point("statistics thresholds", sub_lap=True)
