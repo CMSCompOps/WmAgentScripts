@@ -4667,8 +4667,13 @@ class agentInfo:
         pending = 0
         cpu_pending = 0
         cpu_running = 0
-        top_release = sorted(self.release.keys())[0] ## this is the latest release
-        oldest_release = sorted(self.release.keys())[-1] #this is the oldest release
+        #print sorted(self.release.keys())
+        rel_num = [(r, map(lambda frag : int(frag.replace('patch','')), r.split('.'))) for r in self.release.keys()]
+        rel_num = sorted( rel_num, key = lambda o: o[1], reverse=True)
+        #print rel_num
+        sorted_release = [r[0] for r in rel_num]
+        top_release = sorted_release[0] ## this is the latest release
+        oldest_release = sorted_release[-1] #this is the oldest release
         running_top_release = 0
         running_old_release = 0
         standby_top_release = 0
@@ -4722,11 +4727,14 @@ class agentInfo:
                 if agent_name in self.release[top_release]:
                     standby_top_release += 1 
             if agent_name in runnings:
-                if agent_name not in self.release[top_release]:
+                if agent_name in self.release[top_release]:
+                    running_top_release += 1
+                elif agent_name in self.release[oldest_release]:
                     candidates_to_drain.add( agent_name )
                     running_old_release += 1
                 else:
-                    running_top_release += 1
+                    pass
+
                 capacity += t
                 if verbose:
                     print agent
@@ -4739,6 +4747,9 @@ class agentInfo:
                     candidates_to_drain.add( agent_name )
 
         if verbose or verbose or True:
+            print "agent releases",sorted_release
+            print "latest release",top_release
+            print "oldest release",oldest_release
             print "Capacity",capacity
             print "Running jobs", running
             print "Running cpus", cpu_running
