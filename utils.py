@@ -4618,6 +4618,7 @@ class agentInfo:
         candidates_to_standby = set()
         candidates_to_drain = set()
         candidates_to_wakeup = set()
+        fully_empty = set()
 
         ### decides if you need to boot and agent
         need_one = False
@@ -4694,7 +4695,6 @@ class agentInfo:
             running += r
             pending += p
             wake_up_metric.append( (agent_name, p-r ) )
-
         
         runnings = self.buckets.get('running',[])
         drainings = self.buckets.get('draining',[])
@@ -4712,7 +4712,7 @@ class agentInfo:
             light = (r <= t*self.idle_fraction)
 
             if verbose:
-                print agent_name,r,json.dumps(ainfo, indent=2)
+                print json.dumps(ainfo, indent=2)
             if agent_name in drainings:
                 if not agent_name in self.release[oldest_release]:
                     ## you can candidate those not running the latest release
@@ -4722,6 +4722,8 @@ class agentInfo:
                     speed_draining.add( agent_name )
                 if len(standbies)==0 and (len(runnings) < len(drainings)) and (r+p <= self.open_draining_threshold):
                     open_draining.add( agent_name )
+                if r==0 and p==0:
+                    fully_empty.add( agent_name )
 
             if agent_name in standbies:
                 if agent_name in self.release[top_release]:
@@ -4886,6 +4888,11 @@ class agentInfo:
         all_in_priority_drain.update( open_draining )
         open('%s/speed_draining.json'%base_eos_dir,'w').write(json.dumps( list(all_in_priority_drain) ))
                 
+        if fully_empty:
+            msg = 'These agents are fully empty %s and ready for redeploy'% sorted(fully_empty)
+            sendLog('agentInfo',msg, level='critical')
+            sendEmail('agentInfo', msg, destination=['alan.malta@cern.ch']) ## can be removed at some point
+            
 
 def getAgentConfig(url, agent, keys):
     conn = make_x509_conn(url)
