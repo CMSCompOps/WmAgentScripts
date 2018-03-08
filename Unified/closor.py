@@ -111,7 +111,7 @@ def spawn_harvesting(url, wfi , in_full):
                 print "created",harvest_request,"for harvesting of",dqm_input
                 wfi.sendLog('closor',"created %s for harvesting of %s"%( harvest_request, dqm_input))
                 ## assign it directly
-                team = wfi.request['Teams'][0]
+                team = wfi.request['Team']
                 parameters={
                     'SiteWhitelist' : [SI.SE_to_CE(se) for se in wfi.request['NonCustodialSites']],
                     'AcquisitionEra' : wfi.acquisitionEra(),
