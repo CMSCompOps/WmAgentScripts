@@ -4535,14 +4535,14 @@ class agentInfo:
         for agent in all_agents_name:
             linfo = self.info.get( agent, {})
             pinfo = prod_info.get( agent, {})
-
+            p_release = linfo.get('version',None)
+            release = pinfo.get('agent_version',None)
             if self.verbose:
                 print agent
                 print linfo
                 print pinfo
 
-            if pinfo:
-                self.release[ pinfo['agent_version'] ].add( str(agent) )
+            self.release[ release ].add( str(agent) )
             if linfo:
                 ## this was already known
                 if pinfo:
@@ -4550,6 +4550,9 @@ class agentInfo:
                     st = 'running'
                     if pinfo['drain_mode']: 
                         if linfo['status'] == 'standby':
+                            st = 'standby'
+                        elif p_release and p_release != release:
+                            ## new release means put in standby
                             st = 'standby'
                         else:
                             st = 'draining'
@@ -4572,6 +4575,7 @@ class agentInfo:
                                      'date' : nows }
                 if self.verbose:
                     print self.info[agent]
+            self.info[agent].setdefault('version', release)
 
         for a,i in self.info.items():
             self.buckets[i['status']].append( a ) 
