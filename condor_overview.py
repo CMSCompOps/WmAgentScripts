@@ -11,6 +11,7 @@
 """
 import sys
 from random import choice
+
 try:
     import htcondor
 except ImportError:
@@ -34,10 +35,12 @@ def increaseCounterInDict(jobDict, site, jobType):
             'Merge': 0,
             'Cleanup': 0,
             'LogCollect': 0,
+            'Harvesting': 0,
+            'Skim': 0,
         }
         jobDict[site] = tmp
         jobDict[site][jobType] += 1
-    # print 'dict',dict
+        # print 'dict',dict
 
 
 def fillIDinDict(jobDict, site, jobId):
@@ -66,14 +69,17 @@ def printDict(jobDict, description):
     format-prints dict contents
     """
     sortedKeys = sorted(jobDict)
-    print '-' * 100
-    print '| %-20s | %-10s | %-10s | %-10s | %-10s | %-10s | %-10s |' % (description, 'Processing', 'Production', 'Merge', 'Cleanup', 'LogCollect', 'Total')
-    print '-' * 100
+    print '-' * 128
+    print '| %-20s | %-10s | %-10s | %-10s | %-10s | %-10s | %-10s | %-10s | %-10s |' % (
+        description, 'Processing', 'Production', 'Merge', 'Cleanup', 'LogCollect', 'Harvesting', 'Skim', 'Total')
+    print '-' * 128
     total_processing = 0
     total_production = 0
     total_merge = 0
     total_cleanup = 0
     total_logcollect = 0
+    total_harvest = 0
+    total_skim = 0
     total = 0
     for site in sortedKeys:
         siteDict = jobDict[site]
@@ -82,22 +88,31 @@ def printDict(jobDict, description):
         total_merge += siteDict['Merge']
         total_cleanup += siteDict['Cleanup']
         total_logcollect += siteDict['LogCollect']
+        total_harvest += siteDict['Harvesting']
+        total_skim += siteDict['Skim']
         total += siteDict['Processing']
         total += siteDict['Production']
         total += siteDict['Merge']
         total += siteDict['Cleanup']
         total += siteDict['LogCollect']
-        total_site = siteDict['Processing'] + siteDict['Production'] + siteDict['Merge'] + siteDict['Cleanup']+siteDict['LogCollect']
-        print '| %-20s | %10d | %10d | %10d | %10d | %10d | %10d |' % (site,
-                                                                       siteDict['Processing'],
-                                                                       siteDict['Production'],
-                                                                       siteDict['Merge'],
-                                                                       siteDict['Cleanup'],
-                                                                       siteDict['LogCollect'],
-                                                                       total_site)
-    print '-' * 100
-    print '| %-20s | %10d | %10d | %10d | %10d | %10d | %10d |' % ('Total', total_processing, total_production, total_merge, total_cleanup, total_logcollect, total)
-    print '-' * 100
+        total += siteDict['Harvesting']
+        total += siteDict['Skim']
+        total_site = siteDict['Processing'] + siteDict['Production'] + siteDict['Merge'] + siteDict['Cleanup'] + \
+                     siteDict['LogCollect'] + siteDict['Harvesting'] + siteDict['Skim']
+        print '| %-20s | %10d | %10d | %10d | %10d | %10d | %10d | %10d | %10d |' % (site,
+                                                                                     siteDict['Processing'],
+                                                                                     siteDict['Production'],
+                                                                                     siteDict['Merge'],
+                                                                                     siteDict['Cleanup'],
+                                                                                     siteDict['LogCollect'],
+                                                                                     siteDict['Harvesting'],
+                                                                                     siteDict['Skim'],
+                                                                                     total_site)
+    print '-' * 128
+    print '| %-20s | %10d | %10d | %10d | %10d | %10d | %10d | %10d | %10d |' % (
+        'Total', total_processing, total_production, total_merge, total_cleanup, total_logcollect, total_harvest,
+        total_skim, total)
+    print '-' * 128
 
 
 def get_overview(overview_running,
@@ -125,8 +140,9 @@ def get_overview(overview_running,
                                   'ServerTime',
                                   'JobStartDate',
                                   'WMAgent_SubTaskName',
-                                  'MATCH_EXP_JOBGLIDEIN_CMSSite',
+                                  'MachineAttrGLIDEIN_CMSSite0',
                                   'DESIRED_Sites',
+                                  'CMS_JobType',
                                   'NumJobStarts',
                                   'MaxWallTimeMins'])
     # split lines
@@ -138,7 +154,9 @@ def get_overview(overview_running,
 
         # ServerTime-JobStartDate
         if "JobStartDate" in job:
-            RunTime = job["JobStatus"] - job["JobStartDate"]
+            runTime = job["ServerTime"] - job["JobStartDate"]
+        else:
+            runTime = 0
 
         # get task name
         taskname = job["WMAgent_SubTaskName"]
@@ -148,9 +166,8 @@ def get_overview(overview_running,
 
         # DesiredSite list
         sitelist = job["DESIRED_Sites"].split(",")
-        # if it has a MATCH_EXP_JOBGLIDEIN_CMSSite
-        if "MATCH_EXP_JOBGLIDEIN_CMSSite" in job:
-            site = job["MATCH_EXP_JOBGLIDEIN_CMSSite"]
+        if "MachineAttrGLIDEIN_CMSSite0" in job:
+            site = job["MachineAttrGLIDEIN_CMSSite0"]
         else:
             site = choice(sitelist)
 
@@ -161,34 +178,15 @@ def get_overview(overview_running,
         if len(sitelist) > 1:
             removereason = "DEFINED"
 
-        jobType = ''
-        # the last name
-        name = taskname.split("/")[-1]
-        # get jobType of job from TaskName Name
-        if 'LogCollect' in name:
-            jobType = 'LogCollect'
-        elif 'Merge' in name:
-            jobType = 'Merge'
-        elif 'Cleanup' in name:
-            jobType = 'Cleanup'
-        elif 'Production' in name:
-            jobType = 'Production'
-        elif 'MonteCarloFromGEN' in name:
-            jobType = 'Production'
-        elif 'Processing' in name or 'Proc' in name:
-            jobType = 'Processing'
-        else:
-            jobType = 'Processing'
-        
-        if 'MaxWallTimeMins' in job:
-            maxWallTimeMins = job['MaxWallTimeMins']
-        else:
-            maxWallTimeMins = False
+        jobType = job["CMS_JobType"]
+
+        maxWallTimeMins = job['MaxWallTimeMins']
+
         # IF Running
         if status == 2:
             increaseCounterInDict(overview_running, site, jobType)
             # if larger tan 48 hours
-            if RunTime > 48 * 3600:
+            if runTime > 48 * 3600:
                 increaseCounterInDict(overview_running48, site, jobType)
                 fillIDWFinDict(jobs_48, site, workflow, jobId)
             # if restarted more than 3 times
@@ -198,10 +196,9 @@ def get_overview(overview_running,
         # if Pending
         elif status == 1:
             increaseCounterInDict(overview_pending, site, jobType)
-            #check maxWallTime greater than 24 hours
-            if (maxWallTimeMins and maxWallTimeMins > 46*60) or not maxWallTimeMins:
+            if maxWallTimeMins > 46 * 60:
                 fillIDWFinDict(jobs_maxwall, site, workflow, jobId)
-                
+
         # if not running or pending, and reason is DEFINED
         elif removereason == "DEFINED":
             increaseCounterInDict(overview_removereason, site, jobType)
@@ -279,7 +276,7 @@ def print_results(overview_running,
             for wf, jobs in jobs_numjobstart[site].items():
                 print wf, ':', ' '.join(jobs)
             print ""
-    
+
 
 def main():
     # Data dictionaries
@@ -316,6 +313,7 @@ def main():
                   jobs_maxwall,
                   jobs_numjobstart,
                   jobs_removereason)
+
 
 if __name__ == '__main__':
     main()
