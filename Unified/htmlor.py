@@ -265,7 +265,7 @@ Last update on <b>%s(CET), %s(GMT)</b>
 """ %(time.asctime(time.localtime()),
       time.asctime(time.gmtime()),
       reqmgr_url,
-      ', '.join(['<a href=https://cms-unified.web.cern.ch/cms-unified/showlog/?search=critical&module=%s&limit=100 target=_blank><b><font color=red>%s critical</b></font></a>'%(m,m) for m in ['injector','batchor','transferor','cachor','stagor','assignor','completor','GQ','equalizor','agentInfo','checkor','recoveror','actor','closor']])
+      ', '.join(['<a href=https://cms-unified.web.cern.ch/cms-unified/showlog/?search=critical&module=%s&limit=100 target=_blank><b><font color=red>%s</b></font></a>'%(m,m) for m in ['heartbeat','injector','batchor','transferor','cachor','stagor','assignor','completor','GQ','equalizor','agentInfo','checkor','recoveror','actor','closor']])
       )
                    )
         
