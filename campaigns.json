@@ -527,7 +527,8 @@
    "go" : false,
    "fractionpass" : 0.95,
    "lumisize" : -1,
-   "tune" : true
+   "tune" : true,
+   "parameters" : { "EventsPerLumi" : 2000000 }
   },
   "PhaseIISummer17pLHE" : {
    "go" : true,
