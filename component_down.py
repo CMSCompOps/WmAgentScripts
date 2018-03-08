@@ -29,7 +29,7 @@ for component in os.listdir(base_dir):
         restarts['data'][component].append( restart_time )
 
 open('/data/srv/wmagent/current/bin/%s.restart.json'% agent,'w').write( json.dumps( restarts, indent=2) )
-os.system("xrdcp *.json root://eoscms.cern.ch//eos/cms/store/logs/prod/recent/agent_crashes")
+os.system("xrdcp -f *.json root://eoscms.cern.ch//eos/cms/store/logs/prod/recent/agent_crashes/")
 #open('/eos/cms/store/logs/prod/recent%s.restart.json'% agent,'w').write( json.dumps( restarts, indent=2) )
 #want to add to eos /eos/project/c/cms-unified-logs/www/
 
