@@ -2,7 +2,7 @@
 import os
 import json
 import time
-from utils import sendEmail
+from utils import sendEmail, sendLog
 import sys
 
 ## get the wf from many places
@@ -69,10 +69,11 @@ while True:
                 for line in fh.read().split('\n'):
                     if 'logArchive.tar.gz' in line:
                         fullpath = filter(lambda w : 'logArchive.tar.gz' in w, line.split())[0]
-                        if not '/' in fullpath:
-                            print fullpath,"not satisfactory to find log file name"
-                            continue
                         lf = fullpath.split('/')[-1]
+                        if not '/' in fullpath or lf == 'logArchive.tar.gz':
+                            print fullpath,"not satisfactory to find log file name"
+                            sendLog('efficiencor','check on the logs of efficiencor, for %s'%(wf),level='critical')
+                            continue
                         found_log = True
                         print "found log name", lf,"in condor log",out.split('/')[-1]
                         print "full name",fullpath
