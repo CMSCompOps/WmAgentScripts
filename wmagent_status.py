@@ -12,6 +12,10 @@ from collections import defaultdict
 from operator import itemgetter
 import matplotlib.ticker as ticker
 
+import os
+
+os.system("xrdcp -r root://eoscms.cern.ch//eos/cms/store/logs/prod/recent/agent_crashes .")
+
 fig = plt.subplots(figsize=(15, 6))
 ax1 = plt.subplot(121)
 ax2 = plt.subplot(122)
