@@ -4801,7 +4801,7 @@ class agentInfo:
         else:
             print "An agent was recently put in running. Cannot do any further acting for another %s last running or %s last standby"% (display_time(timeout_last_running),
                                                                                                                                         display_time(timeout_last_standby))
-            
+            candidates_to_wakeup = candidates_to_wakeup - fully_empty
         if need_one:
             pick_from = self.buckets.get('standby',[])
             if not pick_from:
@@ -4891,7 +4891,7 @@ class agentInfo:
         if fully_empty:
             msg = 'These agents are fully empty %s and ready for redeploy'% sorted(fully_empty)
             sendLog('agentInfo',msg, level='critical')
-            sendEmail('agentInfo', msg, destination=['alan.malta@cern.ch']) ## can be removed at some point
+            #sendEmail('agentInfo', msg, destination=['alan.malta@cern.ch']) ## can be removed at some point
             
 
 def getAgentConfig(url, agent, keys):
