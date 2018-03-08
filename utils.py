@@ -4722,9 +4722,9 @@ class agentInfo:
                     ## you can candidate those not running the latest release
                     if not stuffed:
                         candidates_to_wakeup.add( agent_name )
-                if len(standbies)==0 and (len(runnings) < len(drainings)) and (cp <= cpu_running*self.speed_draining_fraction) and (r <= t*self.speed_draining_fraction) and (cr <= cpu_running*self.speed_draining_fraction):
+                if len(standbies)<=1 and (len(runnings) < len(drainings)) and (cp <= cpu_running*self.speed_draining_fraction) and (r <= t*self.speed_draining_fraction) and (cr <= cpu_running*self.speed_draining_fraction):
                     speed_draining.add( agent_name )
-                if len(standbies)==0 and (len(runnings) < len(drainings)) and (r+p <= self.open_draining_threshold):
+                if len(standbies)<=1 and (len(runnings) < len(drainings)) and (r+p <= self.open_draining_threshold):
                     open_draining.add( agent_name )
                 if r==0 and p==0:
                     fully_empty.add( agent_name )
