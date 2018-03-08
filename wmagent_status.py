@@ -21,7 +21,7 @@ ax1 = plt.subplot(121)
 ax2 = plt.subplot(122)
 
 
-filenames = sorted(glob.glob('*.restart.json')) 
+filenames = sorted(glob.glob('agent_crashes/*.restart.json')) 
 str=  ['WorkQueueManager', 'DBS3Upload', 'PhEDExInjector', 'JobAccountant', 'JobCreator' ,'JobSubmitter'  ,'JobTracker' ,'JobStatusLite' ,'JobUpdater' ,'ErrorHandler' ,'RetryManager' ,'JobArchiver' ,'TaskArchiver' ,'AlertProcessor' ,'AlertGenerator' ,'AnalyticsDataCollector' ,'AgentStatusWatcher' ,'ArchiveDataReporter']
 
 filesDict = {}
