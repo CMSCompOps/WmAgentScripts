@@ -4521,6 +4521,53 @@ class agentInfo:
                 return status 
         return 'N/A'
 
+    def checkTrello(self, sync_trello=None, sync_agents=None, acting=False):
+        from TrelloClient import TrelloClient
+        tc = TrelloClient()
+
+        now,nows = self.getNow()
+
+        for agent in self.info:
+            ti = tc.getCard( cn = agent)
+            lid = tc.lists.get(self.info[agent].get('status'))
+            clid = ti.get('idList',None)
+            if lid and clid and lid!=clid:
+                print "there is a mismatch for agent",agent
+                if sync_trello==True or (sync_trello and agent in sync_trello):
+                    print "changing",agent,"into list",lid
+                    if acting:
+                        tc.changeList( cn = agent, ln = lid )
+                if sync_agents==True or (sync_agents and agent in sync_agents):
+                    ## make the operation locally
+                    print "Should operate on the agent",agent
+                    do_drain = False
+                    new_status = None
+                    if clid == tc.lists.get('draining'):
+                        ## put the agent in draining
+                        do_drain = True
+                        new_status = 'draining'
+                    elif clid == tc.lists.get('running'):
+                        ## should undrain the agent
+                        do_drain = False
+                        new_status = 'running'
+                    elif clid == tc.lists.get('standby'):
+                        ## should set the agent in standby
+                        do_drain = True
+                        new_status = 'standby'
+                    ## operate the agent
+                    print agent,do_drain,new_status
+                    if acting:
+                        setAgentDrain(self.url, agent, drain=do_drain)
+                        ## change the local information
+                        self.info[agent].update( {'status' : new_status,
+                                                  'update' : now,
+                                                  'date' : nows }
+                                                 )
+                                             
+            print agent,lid,clid
+            
+            
+        
     def getStatus(self):
         all_agents_prod = getAllAgents(self.url).get('production',None)
         if not all_agents_prod:
@@ -4623,6 +4670,7 @@ class agentInfo:
         candidates_to_drain = set()
         candidates_to_wakeup = set()
         fully_empty = set()
+        manipulated_agents = set()
 
         ### decides if you need to boot and agent
         need_one = False
@@ -4836,6 +4884,7 @@ class agentInfo:
                 if wake_up in speed_draining: speed_draining.remove( wake_up ) 
                 if wake_up in open_draining: open_draining.remove( wake_up )
                 if setAgentOn(self.url, wake_up):
+                    manipulated_agents.add( wake_up )
                     self.info[wake_up] = { 'status' : 'running',
                                            'update' : now,
                                            'date' : nows }
@@ -4847,6 +4896,7 @@ class agentInfo:
             if sleep_up:
                 print "putting to drain",sleep_up
                 if setAgentDrain(self.url, sleep_up):
+                    manipulated_agents.add( sleep_up )
                     self.info[sleep_up] = { 'status' : 'draining',
                                             'update' : now,
                                             'date' : nows }
@@ -4864,6 +4914,7 @@ class agentInfo:
                 sleep_up = random.choice( pick_from )
             print "putting to standby/drain",sleep_up
             if setAgentDrain(self.url, sleep_up):
+                manipulated_agents.add( sleep_up )
                 self.info[sleep_up] = { 'status' : 'standby',
                                         'update' : now,
                                         'date' : nows }                
@@ -4896,7 +4947,9 @@ class agentInfo:
             msg = 'These agents are fully empty %s and ready for redeploy'% sorted(fully_empty)
             sendLog('agentInfo',msg, level='critical')
             #sendEmail('agentInfo', msg, destination=['alan.malta@cern.ch']) ## can be removed at some point
-            
+        
+        ## should update trello with the agents that got manipulated at this time
+        self.checkTrello(sync_trello=list(manipulated_agents))
 
 def getAgentConfig(url, agent, keys):
     conn = make_x509_conn(url)
