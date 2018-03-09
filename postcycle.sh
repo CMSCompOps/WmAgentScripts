@@ -51,27 +51,20 @@ source $BASE_DIR/credentials.sh
 ## force-complete wf according to rules
 $BASE_DIR/cWrap.sh Unified/completor.py
 
-## check on the wf that have just completed
-#$BASE_DIR/cWrap.sh Unified/checkor.py --strict
-#$BASE_DIR/cWrap.sh Unified/actor.py
 ## initiate automatic recovery
 $BASE_DIR/cWrap.sh Unified/recoveror.py
 
-## submit ACDCs and clones from actions submitted via new recovery tools
-#$BASE_DIR/cWrap.sh Unified/actor.py
 
 ## look at everything that had been taken care of already
 $BASE_DIR/cWrap.sh Unified/checkor.py  --review --recovering
 
 ## look at everything that has to be taken care of
 $BASE_DIR/cWrap.sh Unified/checkor.py  --review
-#$$BASE_DIR/cWrap.sh Unified/actor.py
 
 $BASE_DIR/cWrap.sh Unified/completor.py
 
 ## look at everything that had to be taken care of
 $BASE_DIR/cWrap.sh Unified/checkor.py  --update
-#$BASE_DIR/cWrap.sh Unified/actor.py
 
 rm -f $lock_name
 
