@@ -259,6 +259,7 @@ def equalizor(url , specific = None, options=None):
             read_need = int(per_core_io)
 
         print "#"*10,"memory usage performance","#"*10
+        inflate_memory = 1.2
         try:
             #u = 'http://cms-gwmsmon.cern.ch/prodview/json/historynew/memorycpu720/%s/success'%task
             u = 'http://cms-gwmsmon.cern.ch/prodview/json/historynew/memorycpu720/%s/success'%task
@@ -272,7 +273,9 @@ def equalizor(url , specific = None, options=None):
         for bucket in buckets:
             sub_buckets = filter(lambda i:i['key']!=0, bucket["3"]["buckets"])
             for sub_bucket in sub_buckets:
-                binned_memory[int(sub_bucket["key"])][int(bucket["key"])] += sub_bucket["doc_count"]
+                memory = int(float(bucket["key"])*inflate_memory)
+                ncore = int(sub_bucket["key"])
+                binned_memory[ncore][memory] += sub_bucket["doc_count"]
 
         memory_percentil = 90
 
