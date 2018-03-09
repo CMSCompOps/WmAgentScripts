@@ -62,30 +62,34 @@ while True:
 
             outs = os.popen('find %s -name "*.out"'% ( condor_dir )).read()
             #print outs
-            found_log = False
+            lfs = []
             for out in outs.split('\n'):
                 if not out: continue
                 fh = open(out)
                 for line in fh.read().split('\n'):
                     if 'logArchive.tar.gz' in line:
                         fullpath = filter(lambda w : 'logArchive.tar.gz' in w, line.split())[0]
-                        lf = fullpath.split('/')[-1].strip()
-                        if not '/' in fullpath or lf == 'logArchive.tar.gz':
+                        alf = fullpath.split('/')[-1].strip()
+                        if not '/' in fullpath or alf == 'logArchive.tar.gz':
                             print fullpath,"not satisfactory to find log file name"
                             #sendLog('efficiencor','check on the logs of efficiencor, for %s'%(wf),level='critical')
-                            found_log = False
-                            lf = None
+                            alf = None
                             fullpath = None
                             continue
-                        found_log = True
-                        print "found log name", lf,"in condor log",out.split('/')[-1]
-                        print "full name",fullpath
+                        print "found log name", alf,"in condor log",out.split('/')[-1]
+                        #print "full name",fullpath
+                        lfs.append( alf )
                         break
                 fh.close()
-            if not found_log:
+
+            if not lfs:
                 print "Could not find trace of a log file for",lf
                 continue
+            print "found",lfs
+            lf = sorted(lfs)[-1]
+            print "taking",lf
         else:
+            ### already a log filename
             continue
 
         ## then do the rest
