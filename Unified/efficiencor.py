@@ -72,7 +72,7 @@ while True:
                         lf = fullpath.split('/')[-1].strip()
                         if not '/' in fullpath or lf == 'logArchive.tar.gz':
                             print fullpath,"not satisfactory to find log file name"
-                            sendLog('efficiencor','check on the logs of efficiencor, for %s'%(wf),level='critical')
+                            #sendLog('efficiencor','check on the logs of efficiencor, for %s'%(wf),level='critical')
                             found_log = False
                             lf = None
                             fullpath = None
