@@ -65,7 +65,12 @@ while True:
             lfs = []
             for out in outs.split('\n'):
                 if not out: continue
-                fh = open(out)
+                try:
+                    fh = open(out)
+                except:
+                    time.sleep(5)
+                    fh = open(out)
+                    
                 for line in fh.read().split('\n'):
                     if 'logArchive.tar.gz' in line:
                         fullpath = filter(lambda w : 'logArchive.tar.gz' in w, line.split())[0]
