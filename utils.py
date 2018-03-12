@@ -4588,8 +4588,8 @@ class agentInfo:
                 print agent
                 print linfo
                 print pinfo
-
-            self.release[ release ].add( str(agent) )
+            if release:
+                self.release[ release ].add( str(agent) )
             if linfo:
                 ## this was already known
                 if pinfo:
