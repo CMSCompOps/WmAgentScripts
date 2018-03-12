@@ -67,6 +67,7 @@ for wf in wfs:
             print "workflow",wf['RequestName'],"is assigned since",then," that is",since,"days"
             sendLog('GQ','The workflow %s has been assigned for %.2f days'%(wf['RequestName'], since), level='critical')
 
+overall_timeout = 14 #days
 may_have_one=set()
 may_have_one.update([wfo.name for wfo in session.query(Workflow).filter(Workflow.status.startswith('away')).all()])
 may_have_one.update([wfo.name for wfo in session.query(Workflow).filter(Workflow.status.startswith('assistance')).all()])
@@ -108,11 +109,12 @@ for (the_dir,logtype) in [(monitor_eos_dir,'report'),
                           (monitor_eos_dir,'joblogs'),
                           (monitor_eos_dir,'condorlogs')]:
     #for d in filter(None,os.popen('ls -d %s/%s/*'%(monitor_dir,logtype)).read().split('\n')):
-    for d in filter(None,os.popen('ls -d %s/%s/*'%(the_dir,logtype)).read().split('\n')):
+    #for d in filter(None,os.popen('ls -d %s/%s/*'%(the_dir,logtype)).read().split('\n')):
+    for d in filter(None,os.popen('find %s/%s/ -maxdepth 1 -type d -mtime +%d -name * '%( the_dir,logtype, overall_timeout)).read().split('\n')):
         is_locked = any([d.endswith(wf) for wf in may_have_one])
         if not is_locked:
             ## that can be removed
-            print d,"report file can be removed"
+            print d,logtype,"file can be removed"
             os.system('rm -rf %s'%d)
         else:
             print d,"is still in use"
