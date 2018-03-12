@@ -3508,7 +3508,7 @@ def getDatasetChops(dataset, chop_threshold =1000., talk=False, only_blocks=None
     sizes=[]
     if sum_all > chop_threshold:
         items.extend( [[block['block_name']] for block in filter(lambda b : b['file_size'] > chop_threshold, blocks)] )
-        sizes.extend( [[block['file_size']] for block in filter(lambda b : b['file_size'] > chop_threshold, blocks)] )
+        sizes.extend( [block['file_size'] for block in filter(lambda b : b['file_size'] > chop_threshold, blocks)] )
         small_block = filter(lambda b : b['file_size'] <= chop_threshold, blocks)
         small_block.sort( lambda b1,b2 : cmp(b1['file_size'],b2['file_size']), reverse=True)
 
