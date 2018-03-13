@@ -18,7 +18,7 @@ restarts = {
     }
    
 for logpath in glob.glob('%s/*/ComponentLog'% agent_log_base_dir):
-    component,_ = logpath.rsplit('/',2)
+    _,component,_ = logpath.rsplit('/',2)
     print component
     #for grep in os.popen('grep Harness %s/%s/ComponentLog | grep Starting | grep %s'%( base_dir, component,component)):
     for grep in os.popen('grep terminated %s | grep %s'%( logpath ,component )):
