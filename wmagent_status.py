@@ -11,17 +11,16 @@ import matplotlib.cm as cm
 from collections import defaultdict 
 from operator import itemgetter
 import matplotlib.ticker as ticker
+from utils import base_eos_dir
 
 import os
-
-os.system("xrdcp -r root://eoscms.cern.ch//eos/cms/store/logs/prod/recent/agent_crashes .")
 
 fig = plt.subplots(figsize=(15, 6))
 ax1 = plt.subplot(121)
 ax2 = plt.subplot(122)
 
 
-filenames = sorted(glob.glob('agent_crashes/*.restart.json')) 
+filenames = sorted(glob.glob('%s/*.restart.json'%(base_eos_dir)))
 str=  ['WorkQueueManager', 'DBS3Upload', 'PhEDExInjector', 'JobAccountant', 'JobCreator' ,'JobSubmitter'  ,'JobTracker' ,'JobStatusLite' ,'JobUpdater' ,'ErrorHandler' ,'RetryManager' ,'JobArchiver' ,'TaskArchiver' ,'AlertProcessor' ,'AlertGenerator' ,'AnalyticsDataCollector' ,'AgentStatusWatcher' ,'ArchiveDataReporter']
 
 filesDict = {}
