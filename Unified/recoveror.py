@@ -439,7 +439,7 @@ def recoveror(url,specific,options=None):
                         
                 
                 ## and assign it ?
-                team = wfi.request['Teams'][0]
+                team = wfi.request['Team']
                 #assign_to_sites = set(SI.sites_ready) ## that needs to be massaged to prevent assigning to something out.
                 assign_to_sites = set(SI.all_sites)
                 parameters={

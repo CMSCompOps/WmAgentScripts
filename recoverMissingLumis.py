@@ -731,7 +731,7 @@ def defineRequests(workload, requestInfo,
 
         # Assign parameters
         assignDict = jsonBlob["assignRequest"]
-        team = requestInfo['Teams'][0]
+        team = requestInfo['Team']
         processingString = requestInfo['ProcessingString']
         processingVersion = requestInfo['ProcessingVersion']
         acqEra = requestInfo['AcquisitionEra']
