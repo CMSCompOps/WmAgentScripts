@@ -2,12 +2,13 @@ import os
 import time
 import json
 from collections import defaultdict
+from utils import base_eos_dir
 
 agent= os.getenv('HOSTNAME')
 now = time.mktime(time.gmtime())
 since = 7 ## in days
 
-base_dir = '/data/srv/wmagent/current/install/wmagent/'
+agent_log_base_dir = '/data/srv/wmagent/current/install/wmagent/'
 restarts = { 
     "timestamp" : now,
     "since" : since,
@@ -15,11 +16,11 @@ restarts = {
     "data" : defaultdict(list)
     }
    
-for component in os.listdir(base_dir):
+for component in os.listdir(agent_log_base_dir):
     if os.path.isfile(component):continue
     print component
     #for grep in os.popen('grep Harness %s/%s/ComponentLog | grep Starting | grep %s'%( base_dir, component,component)):
-    for grep in os.popen('grep terminated %s/%s/ComponentLog | grep %s'%( base_dir, component,component)):
+    for grep in os.popen('grep terminated %s/%s/ComponentLog | grep %s'%( agent_log_base_dir, component,component)):
         timestamp = grep.split('INFO')[0][:-1].split(',')[0]
         #2016-08-17 16:10:26,753:140679060952832
         restart_date = time.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
@@ -29,7 +30,6 @@ for component in os.listdir(base_dir):
         restarts['data'][component].append( restart_time )
 
 open('/data/srv/wmagent/current/bin/%s.restart.json'% agent,'w').write( json.dumps( restarts, indent=2) )
-os.system("xrdcp -f *.json root://eoscms.cern.ch//eos/cms/store/logs/prod/recent/agent_crashes/")
-#open('/eos/cms/store/logs/prod/recent%s.restart.json'% agent,'w').write( json.dumps( restarts, indent=2) )
-#want to add to eos /eos/project/c/cms-unified-logs/www/
+os.system("xrdcp -f /data/srv/wmagent/current/bin/*.restart.json root://eoscms.cern.ch/%s"%(base_eos_dir))
+
 
