@@ -1,4 +1,5 @@
 import os
+import glob
 import time
 import json
 from collections import defaultdict
@@ -16,11 +17,11 @@ restarts = {
     "data" : defaultdict(list)
     }
    
-for component in os.listdir(agent_log_base_dir):
-    if os.path.isfile(component):continue
+for logpath in glob.glob('%s/*/ComponentLog'% agent_log_base_dir):
+    component,_ = logpath.rsplit('/',2)
     print component
     #for grep in os.popen('grep Harness %s/%s/ComponentLog | grep Starting | grep %s'%( base_dir, component,component)):
-    for grep in os.popen('grep terminated %s/%s/ComponentLog | grep %s'%( agent_log_base_dir, component,component)):
+    for grep in os.popen('grep terminated %s | grep %s'%( logpath ,component )):
         timestamp = grep.split('INFO')[0][:-1].split(',')[0]
         #2016-08-17 16:10:26,753:140679060952832
         restart_date = time.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
