@@ -4564,7 +4564,7 @@ class agentInfo:
                                                   'date' : nows }
                                                  )
                                              
-            print agent,lid,clid
+            #print agent,lid,clid
             
             
         
