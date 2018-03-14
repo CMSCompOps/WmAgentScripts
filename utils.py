@@ -4949,7 +4949,7 @@ class agentInfo:
             #sendEmail('agentInfo', msg, destination=['alan.malta@cern.ch']) ## can be removed at some point
         
         ## should update trello with the agents that got manipulated at this time
-        self.checkTrello(sync_trello=list(manipulated_agents))
+        self.checkTrello(sync_trello=list(manipulated_agents), acting=acting)
 
 def getAgentConfig(url, agent, keys):
     conn = make_x509_conn(url)
