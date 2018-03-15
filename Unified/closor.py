@@ -165,6 +165,10 @@ def closor(url, specific=None, options=None):
         print "regular option. Checking on things done and to be announced"
         wfs = session.query(Workflow).filter(Workflow.status=='close').all()
 
+    wfs_n = [w.name for w in wfs]
+    print "unique names?"
+    print len(set(wfs_n)) == len(wfs_n)
+    
     held = set()
 
     print len(wfs),"closing"
@@ -391,10 +395,10 @@ def closor(url, specific=None, options=None):
                             print "Sending",out," to DDM"
                             status = pass_to_dynamo( [out], N = n_copies, sites=destinations if destinations else None, group = group_spec if group_spec else None)
                             results.append( status )
-                            if status in True:
-                                wfi.sendLog('closor','%s is send to dynamo in %s copies %s'%( out, n_copies, sorted(destination), group_spec))
+                            if status == True:
+                                wfi.sendLog('closor','%s is send to dynamo in %s copies %s %s'%( out, n_copies, sorted(destinations), group_spec))
                             else:
-                                wfi.sendLog('closor',"could not add "+out+" to dynamo pool. check closor logs.", level='critical')
+                                sendLog('closor',"could not add "+out+" to dynamo pool. check closor logs.", level='critical')
                                 wfi.sendLog('closor',"could not add "+out+" to dynamo pool. check closor logs.")
                     else:
                         print wfo.name,"no stats for announcing",out
