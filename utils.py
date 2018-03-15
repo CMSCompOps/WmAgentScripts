@@ -601,6 +601,39 @@ def listSubscriptions(url, dataset, within_sites=None):
     #print destinations
     return destinations
 
+def pass_to_dynamo( items, N ,sites = None, group = None ):
+    try:
+        return _pass_to_dynamo( items, N, sites, group)
+    except Exception as e:
+        print "Failed to pass %s to dynamo"% items
+        print str(e)
+        return False
+
+def _pass_to_dynamo( items, N ,sites = None, group = None ):
+    if sites == None:
+        sites = ['T2_*','T1_*_Disk']
+    if type(items)==str:
+        items = [ items ]
+    conn  =  httplib.HTTPSConnection('dynamo.mit.edu', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    par = {'item' : items, 'site': sites, 'n':N}
+    if group:
+        par.update( {'group' : group })
+    #params = urllib.urlencode(par)
+    print par
+    #print params
+    conn.request("POST","/registry/request/copy", json.dumps(par))
+    response = conn.getresponse()
+    data = response.read()
+    #print data
+    try:
+        res = json.loads( data )
+        #print json.dumps( res, indent=2)
+        return (res['result'] == "OK")
+    except Exception as e:
+        print "Failed _pass_to_dynamo"
+        print str(e)
+        return False
+
 def lock_DDM(lock=True, wait=True, timeout=None):
     #conn = make_x509_conn('dynamo.mit.edu')
     conn  =  httplib.HTTPSConnection('dynamo.mit.edu', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
