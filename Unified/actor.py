@@ -392,20 +392,20 @@ def actor(url,options=None):
 
         to_clone = False
         to_acdc = False
-        for key in action_list[wfname]:
-            if key == 'Parameters':
-                tasks =  action_list[wfname][key]
-            elif key == 'Action' and action_list[wfname][key] == 'acdc':
-                print "Going to create ACDCs for ", wfname
-                to_acdc = True
-            elif key == 'Action' and action_list[wfname][key] == 'clone':
-                print "Going to clone ", wfname
-                to_clone = True
+        to_force = False
+        to_hold = False
+        something_to_do = False
+        tasks = action_list[wfname].get( 'Parameters' , None)
+        to_adcd = action_list[wfname].get( 'Action', None) == 'acdc'
+        to_adcd = action_list[wfname].get( 'Action', None) == 'clone'
+        to_force = action_list[wfname].get( 'Action', None) == 'special' and action_list[wfname].get( 'Parameters' ,{}).get('action',None) in ['by-pass', 'bypass']
+        to_hold = action_list[wfname].get( 'Action', None) == 'special' and action_list[wfname].get( 'Parameters' ,{}).get('action',None) in ['onhold','on-hold']
 
-        if not to_acdc and not to_clone:
-            sendLog('actor','Action submitted for something other than acdc and clone for workflow %s'%wfname,level='critical')
-            print "Can only do acdcs and clones! Skipping workflow ",wfname
+        if not to_acdc and not to_clone and not to_force and not to_hold:
+            sendLog('actor','Action submitted for something other than acdc, clone, bypass or hold for workflow %s'%wfname,level='critical')
+            print json.dumps( action_list[wfname] , indent=2)
             continue
+
         if not tasks and to_acdc:
             sendLog('actor','Empty action submitted for workflow %s'%wfname,level='critical')
             print "Moving on. Parameters is blank for " + wfname
@@ -464,7 +464,17 @@ def actor(url,options=None):
             else:
                 wfi.sendLog('actor',"Workflow %s cloned"%wfname)
 
-
+#===========================================================
+        elif to_force:
+            wfi.sendLog('actor','Bypassing from workflow traffic controler request')
+            forcing = json.loads(open('/afs/cern.ch/user/v/vlimant/public/ops/forcecomplete.json').read())
+            forcing.append( wfname )
+            open('/afs/cern.ch/user/v/vlimant/public/ops/forcecomplete.json','w').write( json.dumps( sorted(forcing) ))
+        elif to_hold:
+            wfi.sendLog('actor','Holding on workflow traffic controler request')
+            holding = json.loads(open('/afs/cern.ch/user/v/vlimant/public/ops/onhold.json').read())
+            holding.append( wfname )
+            open('/afs/cern.ch/user/v/vlimant/public/ops/onhold.json','w').write( json.dumps( sorted( holding) ))
 #===========================================================
         elif to_acdc:
             if 'AllSteps' in tasks:
