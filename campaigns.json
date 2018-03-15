@@ -869,7 +869,7 @@
     "go": false
   },
   "RunIISummer15wmLHEGS": {
-    "go": false,
+    "go": true,
     "parameters": {
       "EventsPerLumi": "x2",
       "MaxMergeEvents": 4000000
