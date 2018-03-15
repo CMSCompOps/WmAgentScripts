@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import componentInfo, sendEmail, setDatasetStatus, unifiedConfiguration, workflowInfo, siteInfo, sendLog, reqmgr_url, monitor_dir, duplicateLock, userLock, global_SI, do_html_in_each_module, getWorkflows
+from utils import componentInfo, sendEmail, setDatasetStatus, unifiedConfiguration, workflowInfo, siteInfo, sendLog, reqmgr_url, monitor_dir, duplicateLock, userLock, global_SI, do_html_in_each_module, getWorkflows, pass_to_dynamo
 import reqMgrClient
 import json
 import time
@@ -389,26 +389,13 @@ def closor(url, specific=None, options=None):
                         ## inject to DDM when necessary
                         if to_DDM:
                             print "Sending",out," to DDM"
-                            p = os.popen('python assignDatasetToSite.py --nCopies=%d --dataset=%s %s %s --debug 0 --exec'%(n_copies, out,destination_spec, group_spec))
-                            ddm_text = p.read()
-                            print ddm_text
-                            status = p.close()
-                            if status!=None:
-                                print "Failed DDM, retrying to send",out,"a second time"
-                                p = os.popen('python assignDatasetToSite.py --nCopies=%d --dataset=%s %s %s --debug 1 --exec'%(n_copies, out,destination_spec, group_spec))
-
-                                ddm_text = p.read()
-                                print ddm_text
-                                status = p.close()    
-                                if status!=None:
-                                    #sendEmail("failed DDM injection","could not add "+out+" to DDM pool. check closor logs.")
-                                    sendLog('closor',"could not add "+out+" to DDM pool. check closor logs.", level='critical')
-                                    if options.force: status = True
+                            status = pass_to_dynamo( [out], N = n_copies, sites=destinations if destinations else None, group = group_spec if group_spec else None)
                             results.append( status )
-                            if status == None:
-                                wfi.sendLog('closor',ddm_text)
-                                wfi.sendLog('closor','%s is send to AnalysisOps DDM pool in %s copies %s'%( out, n_copies, destination_spec))
-                                                            
+                            if status in True:
+                                wfi.sendLog('closor','%s is send to dynamo in %s copies %s'%( out, n_copies, sorted(destination), group_spec))
+                            else:
+                                wfi.sendLog('closor',"could not add "+out+" to dynamo pool. check closor logs.", level='critical')
+                                wfi.sendLog('closor',"could not add "+out+" to dynamo pool. check closor logs.")
                     else:
                         print wfo.name,"no stats for announcing",out
                         results.append('No Stats')
