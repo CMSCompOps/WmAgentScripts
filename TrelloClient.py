@@ -39,7 +39,7 @@ class TrelloClient:
     def _put(self, o, oid, pars):
         url = 'https://api.trello.com/1/%s/%s?%s&%s'%( o, oid, '&'.join(['%s=%s'%(k,v) for (k,v) in pars.items()]), self._auth())
         print url
-        r = os.popen('curl --request PUT --url "%s"'% url)
+        r = os.popen('curl -s --request PUT --url "%s"'% url)
         #print r
         d = {}
         try:
