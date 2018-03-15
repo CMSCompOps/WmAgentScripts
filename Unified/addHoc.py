@@ -110,7 +110,7 @@ for (the_dir,logtype) in [(monitor_eos_dir,'report'),
                           (monitor_eos_dir,'condorlogs')]:
     #for d in filter(None,os.popen('ls -d %s/%s/*'%(monitor_dir,logtype)).read().split('\n')):
     #for d in filter(None,os.popen('ls -d %s/%s/*'%(the_dir,logtype)).read().split('\n')):
-    for d in filter(None,os.popen('find %s/%s/ -maxdepth 1 -type d -mtime +%d -name * '%( the_dir,logtype, overall_timeout)).read().split('\n')):
+    for d in filter(None,os.popen('find %s/%s/ -maxdepth 1 -type d -mtime +%d  '%( the_dir,logtype, overall_timeout)).read().split('\n')):
         is_locked = any([d.endswith(wf) for wf in may_have_one])
         if not is_locked:
             ## that can be removed
