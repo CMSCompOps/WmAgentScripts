@@ -630,7 +630,13 @@ def _pass_to_dynamo( items, N ,sites = None, group = None ):
         #print json.dumps( res, indent=2)
         return (res['result'] == "OK")
     except Exception as e:
+        if data.replace('\n','') == '':
+            print "consider blank as OK"
+            return True
         print "Failed _pass_to_dynamo"
+        print "---"
+        print data
+        print "---"
         print str(e)
         return False
 
