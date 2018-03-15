@@ -65,49 +65,60 @@ def singleRecovery(url, task, initial, actions, do=False):
                 #if multicore parameter is also used, need to scale memory by the new number of cores
                 if 'multicore' in actions and actions['multicore'] != "":
                     continue
-                payload['Memory'] = actions[action]
-                print "Memory set to " + actions[action]
                 ## Taskchains needs to be treated special to set the memory to all tasks
                 if 'TaskChain' in initial:
+                    mem_dict = {}
                     it = 1
                     while True:
                         t = 'Task%d'%it
                         it += 1
                         if t in initial:
-                            payload[t] = copy.deepcopy(initial[t])
-                            payload[t]['Memory'] = actions[action]
+                            tname = payload.setdefault(t, initial[t])['TaskName']
+                            mem = mem_dict.setdefault( tname, payload[t]['Memory'])
+                            mem_dict[tname] = actions[action]
                         else:
                             break
+                    payload['Memory'] = mem_dict
+                    print "Memory set to: " + mem_dict
+                else: 
+                    payload['Memory'] = actions[action]
+                    print "Memory set to: " + actions[action]
+
 
             if action.startswith('multicore') and actions[action] != "":
                 set_to = int(actions[action] )
                 ## Taskchains needs to be treated special to set the multicore and memory values to all tasks
                 if 'TaskChain' in initial:
+                    mem_dict  = payload['Memory'] if type(payload['Memory'])==dict else {}
+                    core_dict = {}
                     it = 1
                     while True:
                         t = 'Task%d'%it
                         it += 1
                         if t in initial:
-                            payload[t] = copy.deepcopy(initial[t])
-                            
-                            #Need to scale the memory by the new number of cores
-                            initial_cores = initial[t].setdefault('Multicore', 1) 
+                            tname = payload.setdefault(t, initial[t])['TaskName']
+                            mem = mem_dict.setdefault( tname, payload[t]['Memory'])                    
 
-                            mem = payload[t]['Memory']
+                            #Need to scale the memory by the new number of cores
+                            initial_cores = payload[t].setdefault('Multicore', 1) 
+
                             if 'memory' in actions and actions['memory'] != "" and actions['memory'] != 'Same':
                                 mem = actions['memory']
 
                             fraction_constant = 0.4
                             mem_per_core_c = int (( 1 - fraction_constant) * mem / float(initial_cores) )
-
-                            payload[t]['Multicore'] = set_to
-                            payload[t]['Memory'] = int ( mem + (set_to - initial_cores)*mem_per_core_c )
+                            
+                            mem_dict[tname] = int ( mem + (set_to - initial_cores)*mem_per_core_c )
+                            core_dict[tname] = set_to
 
                             print "For " + t
                             print "Multicore set to " + set_to
-                            print "Memory set to " + payload[t]['Memory']
+                            print "Memory set to " + mem_dict[tname]
                         else:
                            break
+                    payload['Memory']    = mem_dict
+                    payload['Multicore'] = core_dict
+                                        
                 else:
                     #Need to scale the memory by the new number of cores
                     initial_cores = initial.setdefault('Multicore', 1) 
@@ -116,14 +127,14 @@ def singleRecovery(url, task, initial, actions, do=False):
                     if 'memory' in actions and actions['memory'] != "" and actions['memory'] != 'Same' :
                         mem = actions['memory']
 
-                        fraction_constant = 0.4
-                        mem_per_core_c = int (( 1 - fraction_constant) * mem / float(initial_cores) )
+                    fraction_constant = 0.4
+                    mem_per_core_c = int (( 1 - fraction_constant) * mem / float(initial_cores) )
 
-                        payload['Multicore'] = set_to
-                        payload['Memory'] = int ( mem + (set_to - initial_cores)*mem_per_core_c )
+                    payload['Multicore'] = set_to
+                    payload['Memory'] = int ( mem + (set_to - initial_cores)*mem_per_core_c )
 
-                        print "Multicore set to " + set_to
-                        print "Memory set to " + payload['Memory']
+                    print "Multicore set to " + set_to
+                    print "Memory set to " + payload['Memory']
 
 
             if action.startswith('split'):
@@ -267,21 +278,22 @@ def singleClone(url, wfname, actions, comment, do=False):
             if action.startswith('mem') and actions[action] != "" and actions[action] != 'Same':
                 if 'TaskChain' in payload:
                     print "Setting memory for clone of task chain"
+                    mem_dict = {}
                     it=1
                     while True:
                         t = 'Task%d'%it
                         it+=1
                         if t in payload:
-                            payload[t]['Memory'] = actions[action]
+                            tname = payload[t]['TaskName']
+                            mem_dict[tname] = actions[action]
                             print "Memory set for Task%d"%it
                         else:
                             break
+                    payload['Memory'] = mem_dict
                 else:
                     print "Setting memory for non-taskchain workflow"
                     payload['Memory'] = actions[action]
                 print "Memory set to " + actions[action]
-                #This line is doesn't work for some reason
-#                wfi.sendLog('actor','Memory of clone set to %d'%actions[action])
 
     print "Clone payload"
 #    print json.dumps( payload , indent=2)
@@ -396,8 +408,8 @@ def actor(url,options=None):
         to_hold = False
         something_to_do = False
         tasks = action_list[wfname].get( 'Parameters' , None)
-        to_adcd = action_list[wfname].get( 'Action', None) == 'acdc'
-        to_adcd = action_list[wfname].get( 'Action', None) == 'clone'
+        to_acdc = action_list[wfname].get( 'Action', None) == 'acdc'
+        to_clone = action_list[wfname].get( 'Action', None) == 'clone'
         to_force = action_list[wfname].get( 'Action', None) == 'special' and action_list[wfname].get( 'Parameters' ,{}).get('action',None) in ['by-pass', 'bypass']
         to_hold = action_list[wfname].get( 'Action', None) == 'special' and action_list[wfname].get( 'Parameters' ,{}).get('action',None) in ['onhold','on-hold']
 
