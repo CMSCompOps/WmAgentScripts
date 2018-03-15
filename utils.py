@@ -693,7 +693,8 @@ class lockInfo:
             ## let dynamo know that we are done here"
             lock_DDM( lock = False)
         except Exception as e:
-            sendEmail('lockInfo','Issue handshaking with dynamo\n%s'%(str(e)))
+            #sendEmail('lockInfo','Issue handshaking with dynamo\n%s'%(str(e)))
+            pass
 
         ## produce the lock file on disk
         try:
