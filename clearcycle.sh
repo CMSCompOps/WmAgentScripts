@@ -49,7 +49,7 @@ echo $$ >> $lock_name
 source $BASE_DIR/credentials.sh
 
 ## get the workflow in/out the system
-$BASE_DIR/cWrap.sh Unified/injector.py
+#$BASE_DIR/cWrap.sh Unified/injector.py
 
 $BASE_DIR/cWrap.sh Unified/completor.py
 
