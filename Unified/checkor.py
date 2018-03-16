@@ -796,7 +796,7 @@ def checkor(url, spec=None, options=None):
                 for out in dbs_presence:
                     _,_,missing_phedex,missing_dbs  = getDatasetFiles(url, out)
                     if missing_phedex:
-                        wfi.sendLog('checkor',"These %d files are missing in phedex, showing %s only\n%s"%(len(missing_phedex),show_N_only,
+                        wfi.sendLog('checkor',"These %d files are missing in phedex, or extra in dbs, showing %s only\n%s"%(len(missing_phedex),show_N_only,
                                                                                                            "\n".join( missing_phedex[:show_N_only] )))
                         were_invalidated = sorted(set(missing_phedex) & set(TMDB_invalid ))
                         if were_invalidated:
@@ -807,7 +807,7 @@ def checkor(url, spec=None, options=None):
                             dbs3Client.setFileStatus( were_invalidated, newstatus=0 )
                                 
                     if missing_dbs:
-                        wfi.sendLog('checkor',"These %d files are missing in dbs, showing %d only\n%s"%(len(missing_dbs),show_N_only,
+                        wfi.sendLog('checkor',"These %d files are missing in dbs, or extra in phedex, showing %d only\n%s"%(len(missing_dbs),show_N_only,
                                                                                                         "\n".join( missing_dbs[:show_N_only] )))
                         were_invalidated = sorted(set(missing_dbs) & set(TMDB_invalid ))
                         if were_invalidated:
