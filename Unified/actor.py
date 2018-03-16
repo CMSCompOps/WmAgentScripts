@@ -481,12 +481,12 @@ def actor(url,options=None):
             wfi.sendLog('actor','Bypassing from workflow traffic controler request')
             forcing = json.loads(open('/afs/cern.ch/user/v/vlimant/public/ops/forcecomplete.json').read())
             forcing.append( wfname )
-            open('/afs/cern.ch/user/v/vlimant/public/ops/forcecomplete.json','w').write( json.dumps( sorted(forcing) ))
+            open('/afs/cern.ch/user/v/vlimant/public/ops/forcecomplete.json','w').write( json.dumps( sorted(set(forcing)) ))
         elif to_hold:
             wfi.sendLog('actor','Holding on workflow traffic controler request')
             holding = json.loads(open('/afs/cern.ch/user/v/vlimant/public/ops/onhold.json').read())
             holding.append( wfname )
-            open('/afs/cern.ch/user/v/vlimant/public/ops/onhold.json','w').write( json.dumps( sorted( holding) ))
+            open('/afs/cern.ch/user/v/vlimant/public/ops/onhold.json','w').write( json.dumps( sorted(set(holding)) ))
 #===========================================================
         elif to_acdc:
             if 'AllSteps' in tasks:
