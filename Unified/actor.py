@@ -286,14 +286,14 @@ def singleClone(url, wfname, actions, comment, do=False):
                         it+=1
                         if t in payload:
                             tname = payload[t]['TaskName']
-                            mem_dict[tname] = actions[action]
+                            mem_dict[tname] = int(actions[action])
                             print "Memory set for Task%d"%it
                         else:
                             break
                     payload['Memory'] = mem_dict
                 else:
                     print "Setting memory for non-taskchain workflow"
-                    payload['Memory'] = actions[action]
+                    payload['Memory'] = int(actions[action])
                 print "Memory set to " + actions[action]
 
     print "Clone payload"
