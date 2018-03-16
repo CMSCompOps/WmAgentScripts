@@ -79,10 +79,10 @@ def singleRecovery(url, task, initial, actions, do=False):
                         else:
                             break
                     payload['Memory'] = mem_dict
-                    print "Memory set to: " + mem_dict
+                    print "Memory set to: ",json.dumps( mem_dict, indent=2)
                 else: 
                     payload['Memory'] = actions[action]
-                    print "Memory set to: " + actions[action]
+                    print "Memory set to: ", actions[action]
 
 
             if action.startswith('multicore') and actions[action] != "":
@@ -111,9 +111,9 @@ def singleRecovery(url, task, initial, actions, do=False):
                             mem_dict[tname] = int ( mem + (set_to - initial_cores)*mem_per_core_c )
                             core_dict[tname] = set_to
 
-                            print "For " + t
-                            print "Multicore set to " + set_to
-                            print "Memory set to " + mem_dict[tname]
+                            print "For ", t
+                            print "Multicore set to ", set_to
+                            print "Memory set to ", mem_dict[tname]
                         else:
                            break
                     payload['Memory']    = mem_dict
@@ -133,8 +133,8 @@ def singleRecovery(url, task, initial, actions, do=False):
                     payload['Multicore'] = set_to
                     payload['Memory'] = int ( mem + (set_to - initial_cores)*mem_per_core_c )
 
-                    print "Multicore set to " + set_to
-                    print "Memory set to " + payload['Memory']
+                    print "Multicore set to ", set_to
+                    print "Memory set to ", payload['Memory']
 
 
             if action.startswith('split'):
