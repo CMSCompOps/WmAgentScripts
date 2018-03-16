@@ -66,6 +66,7 @@ def singleRecovery(url, task, initial, actions, do=False):
                 if 'multicore' in actions and actions['multicore'] != "":
                     continue
                 ## Taskchains needs to be treated special to set the memory to all tasks
+                set_to = int(actions[action])
                 if 'TaskChain' in initial:
                     mem_dict = {}
                     it = 1
@@ -75,14 +76,14 @@ def singleRecovery(url, task, initial, actions, do=False):
                         if t in initial:
                             tname = payload.setdefault(t, initial[t])['TaskName']
                             mem = mem_dict.setdefault( tname, payload[t]['Memory'])
-                            mem_dict[tname] = actions[action]
+                            mem_dict[tname] = set_to
                         else:
                             break
                     payload['Memory'] = mem_dict
                     print "Memory set to: ",json.dumps( mem_dict, indent=2)
                 else: 
-                    payload['Memory'] = actions[action]
-                    print "Memory set to: ", actions[action]
+                    payload['Memory'] = set_to
+                    print "Memory set to: ", set_to
 
 
             if action.startswith('multicore') and actions[action] != "":
@@ -97,7 +98,7 @@ def singleRecovery(url, task, initial, actions, do=False):
                         it += 1
                         if t in initial:
                             tname = payload.setdefault(t, initial[t])['TaskName']
-                            mem = mem_dict.setdefault( tname, payload[t]['Memory'])                    
+                            mem = mem_dict.setdefault( tname, payload[t]['Memory'])
 
                             #Need to scale the memory by the new number of cores
                             initial_cores = payload[t].setdefault('Multicore', 1) 
