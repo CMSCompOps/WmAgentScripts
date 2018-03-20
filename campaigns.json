@@ -690,6 +690,14 @@
    "fractionpass" : 0.95,
    "tune" : true
  }, 
+ "RunIISpring18CosmicDR" : {
+   "go" : false,
+   "lumisize" : -1,
+   "maxcopies": 1,
+   "fractionpass" : 0.95,
+   "tune" : true,
+   "secondaries" : {  }
+  },
  "RunIISummer17CosmicGS" : {
    "go" : true,
    "lumisize" : -1,
