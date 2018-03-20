@@ -684,6 +684,12 @@
    "resize" : "auto",
    "overflow" : { "PU":{"max":20000,"pending":0}}
   },
+ "RunIISpring18CosmicGS" : {
+   "go" : false,
+   "lumisize" : -1,
+   "fractionpass" : 0.95,
+   "tune" : true
+ }, 
  "RunIISummer17CosmicGS" : {
    "go" : true,
    "lumisize" : -1,
