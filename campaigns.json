@@ -524,7 +524,7 @@
     "tune" : true
   },
   "PhaseIISummer17wmLHEGENOnly" : {
-   "go" : false,
+   "go" : true,
    "fractionpass" : 0.95,
    "lumisize" : -1,
    "tune" : true
