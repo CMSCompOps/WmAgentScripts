@@ -323,9 +323,12 @@ def checkor(url, spec=None, options=None):
 
         for out,c in campaigns.items():
             if c in CI.campaigns and 'custodial_override' in CI.campaigns[c]:
-                vetoed_custodial_tier = list(set(vetoed_custodial_tier) - set(CI.campaigns[c]['custodial_override']))
-                ## add those that we need to check for custodial copy
-                tiers_with_no_check = list(set(tiers_with_no_check) - set(CI.campaigns[c]['custodial_override'])) ## would remove DQM from the vetoed check
+                if type(CI.campaigns[c]['custodial_override'])==list:
+                    vetoed_custodial_tier = list(set(vetoed_custodial_tier) - set(CI.campaigns[c]['custodial_override']))
+                    ## add those that we need to check for custodial copy
+                    tiers_with_no_check = list(set(tiers_with_no_check) - set(CI.campaigns[c]['custodial_override'])) ## would remove DQM from the vetoed check
+                elif CI.campaigns[c]['custodial_override'] == 'notape':
+                    vetoed_custodial_tier = sorted(set([o.split('/')[-1] for o in wfi.request['OutputDatasets'] ]))
 
         print campaigns
 
