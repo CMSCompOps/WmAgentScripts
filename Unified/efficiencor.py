@@ -69,7 +69,12 @@ while True:
                     fh = open(out)
                 except:
                     time.sleep(5)
-                    fh = open(out)
+                    try:
+                        fh = open(out)
+                    except:
+                        print "file not readable, just removing it"
+                        os.sytem('rm %s'% out)
+                        continue
                     
                 for line in fh.read().split('\n'):
                     if 'logArchive.tar.gz' in line:
