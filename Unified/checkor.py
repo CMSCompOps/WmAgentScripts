@@ -548,7 +548,7 @@ def checkor(url, spec=None, options=None):
                     long_lasting_choped = True
 
         if long_lasting_choped :
-            msg = 'Reducing pass thresholds by %.3f for long lasting workflow %s '%(fraction_damping, wfi.request['RequestName'])
+            msg = 'Reducing pass thresholds by %.3f%% for long lasting workflow %s '%(100*fraction_damping, wfi.request['RequestName'])
             wfi.sendLog('checkor', msg)
             sendLog('checkor', msg, level='critical')
             
