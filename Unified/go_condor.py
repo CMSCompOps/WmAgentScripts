@@ -46,7 +46,7 @@ def makeHoldSiteAds(config):
         anAd["copy_DESIRED_Sites"] = "Holding_DESIRED_Sites"
         ## remove the site string from the sitewhitelist
         anAd["eval_set_DESIRED_Sites"] = classad.ExprTree(str('removeSite("%s",Holding_DESIRED_Sites)'% site))
-        anAd["set_HasBeenHeldFrom%s"% site] = True
+        anAd[str("set_HasBeenHeldFrom%s"% site)] = True
         anAd["set_HasBeenRouted"] = False
         print anAd
 
@@ -65,7 +65,7 @@ def makeReleaseSiteAds(config):
         anAd["copy_DESIRED_Sites"] = "Releasing_DESIRED_Sites"
         anAd["eval_set_DESIRED_Sites"] = classad.ExprTree(str('strcat(Releasing_DESIRED_Sites,",%s")'% site))
         anAd["delete_Releasing_DESIRED_Sites"] = True
-        anAd["set_HasBeenHeldFrom%s"% site] = False
+        anAd[str("set_HasBeenHeldFrom%s"% site)] = False
         anAd["set_HasBeenRouted"] = False
         print anAd
 
