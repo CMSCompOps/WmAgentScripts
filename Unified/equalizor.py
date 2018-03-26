@@ -209,10 +209,13 @@ def equalizor(url , specific = None, options=None):
     memory_correction = UC.get('memory_correction')
 
     def quantize( value, quanta ):
-        N = int(math.ceil(value / quanta))
+        N = int(math.ceil(float(value) / quanta))
         return (N)*quanta
     def s_quantize( value, quanta):
-        return str(quantize( value, quanta ))
+        s = str(quantize( value, quanta ))
+        print value,"==quantized(",quanta,")==>",s
+        return s
+        #return str(quantize( value, quanta ))
 
     stats_to_go = UC.get('tune_min_stats')
     def getPerf( task , stats_to_go, original_ncore=1):
