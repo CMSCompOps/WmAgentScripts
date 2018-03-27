@@ -59,12 +59,15 @@ while True:
             if not os.path.isdir( condor_dir ):
                 print "Ex: ",com
                 os.system(com)
-
-            outs = os.popen('find %s -name "*.out"'% ( condor_dir )).read()
+                
+            #outs = os.popen('find %s -name "*.out"'% ( condor_dir )).read()
             #print outs
+            look_in_files = []
+            look_in_files.extend( filter(None,os.popen('find %s -name "*.log"'% ( condor_dir )).read().filter('\n')) )
+            look_in_files.extend( filter(None,os.popen('find %s -name "*.out"'% ( condor_dir )).read().filter('\n')) )
             lfs = []
-            for out in outs.split('\n'):
-                if not out: continue
+            for out in look_in_files:
+                print "Looking in file",out
                 try:
                     fh = open(out)
                 except:
