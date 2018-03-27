@@ -4567,13 +4567,17 @@ class agentInfo:
 
     def checkTrello(self, sync_trello=None, sync_agents=None, acting=False):
         from TrelloClient import TrelloClient
-        tc = TrelloClient()
+        if not hasattr(self, 'tc'):
+            self.tc = TrelloClient()
+        tc = self.tc
 
         now,nows = self.getNow()
 
         for agent in self.info:
+            #print "checking on",agent
             ti = tc.getCard( cn = agent)
             lid = tc.lists.get(self.info[agent].get('status'))
+            #print agent,lid,self.info[agent].get('status'),tc.lists
             lid_name = tc.getList(ln=lid).get('name')
             clid = ti.get('idList',None)
             if lid and clid and lid!=clid:

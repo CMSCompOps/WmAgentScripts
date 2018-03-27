@@ -17,7 +17,8 @@ class TrelloClient:
             'draining' : '58da314ad8064a3772a8b2b7',
             'running' : '58da313230415813a0f3c31c',
             'standby' : '58da314194946756ba09b66e',
-            'drained' : 'xxx'
+            'drained' : '58da315628847a392b663927',
+            'offline' : '58da315628847a392b663927'
             }
         ## a map of agents
         self.getAgents()
@@ -31,6 +32,7 @@ class TrelloClient:
             fn = n.split(' - ')[0].strip()
             dom = '.cern.ch' if 'vocms' in fn else '.fnal.gov'
             fn+=dom
+            #print n,fn,c.get('id')
             self.agents[fn] = c.get('id')
 
     def _auth(self):
@@ -73,13 +75,6 @@ class TrelloClient:
 
     def getBoard(self, bn = '4np6TByB'):
         return self._get('boards', bn, '/cards?fields=name,url')
-        #r = os.popen('curl -s "https://api.trello.com/1/boards/%s/cards?fields=name,url&%s"'%(bn, self._auth()))
-        #d = {}
-        #try:
-        #    d = json.loads(r.read())
-        #except:
-        #    print "Failed to get board",bn
-        #return d
 
     def getCard(self, cn):
         cn = self.agents.get(cn,cn)
