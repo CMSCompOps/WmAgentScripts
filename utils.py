@@ -4574,11 +4574,12 @@ class agentInfo:
         for agent in self.info:
             ti = tc.getCard( cn = agent)
             lid = tc.lists.get(self.info[agent].get('status'))
+            lid_name = tc.getList(ln=lid).get('name')
             clid = ti.get('idList',None)
             if lid and clid and lid!=clid:
                 print "there is a mismatch for agent",agent
                 if sync_trello==True or (sync_trello and agent in sync_trello):
-                    print "changing",agent,"into list",lid
+                    print "changing",agent,"into list",lid,lid_name
                     if acting:
                         tc.changeList( cn = agent, ln = lid )
                 if sync_agents==True or (sync_agents and agent in sync_agents):
@@ -4599,7 +4600,7 @@ class agentInfo:
                         do_drain = True
                         new_status = 'standby'
                     ## operate the agent
-                    print agent,do_drain,new_status
+                    print "wish to operate",agent,do_drain,new_status
                     if acting:
                         setAgentDrain(self.url, agent, drain=do_drain)
                         ## change the local information
@@ -4994,6 +4995,9 @@ class agentInfo:
         
         ## should update trello with the agents that got manipulated at this time
         self.checkTrello(sync_trello=list(manipulated_agents), acting=acting)
+
+        ## then be slave to the trello board
+        self.checkTrello(sync_agents=True,acting=False)
 
 def getAgentConfig(url, agent, keys):
     conn = make_x509_conn(url)
