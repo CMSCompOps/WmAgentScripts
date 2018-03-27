@@ -561,7 +561,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                     destinations = dict([(k,v) for (k,v) in destination_cache[sec].items() if k in se_allowed])
                     ## truncate location/destination to those making up for >90% of the dataset
                     bad_destinations = [destinations.pop(site) for (site,info) in destinations.items() if info['data_fraction']<0.9]
-                    print sec,json.dumps( destinations , inden=2 )
+                    print sec,json.dumps( destinations , indent=2 )
                     sec_location = [site for (site,info) in destinations.items() if info['completion']>=95]
                     sec_destination = [site for site in destinations.keys() if not site in sec_location] ## this is in SE
                 else:
