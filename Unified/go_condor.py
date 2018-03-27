@@ -378,6 +378,16 @@ def makeAdhocAds(config):
     anAd["set_HasBeenRouted"] = False
     print anAd
 
+    anAd = classad.ClassAd()
+    anAd["GridResource"] = "condor localhost localhost"
+    anAd["TargetUniverse"] = 5
+    anAd["Name"] = str("Shortening long job on KIT")
+    anAd["Requirements"] = classad.ExprTree(str('DESIRED_Sites == "T1_DE_KIT" && MaxWallTimeMins> 1400'))
+    anAd["set_OriginalMaxWallTimeMins"] = 1400
+    anAd["set_EstimatedSingleCoreMins"] = classad.ExprTree('OriginalMaxWallTimeMins * OriginalCpus')
+    anAd["set_HasBeenRouted"] = False
+    print anAd
+
 
     ############################################################
     ## if you want to reset the routing of eveything in the pool
