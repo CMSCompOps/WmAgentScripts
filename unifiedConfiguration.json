@@ -168,6 +168,10 @@
    "value" : false,
    "description" : "Whether or not the pass threshold per campaign are counted as is, or cumulatively."
  },
+ "onhold_timeout": {
+   "value" : -1,
+   "description" : "Number of days from completed after which a workflow onhold gets by-passed automatically."
+ },
  "damping_fraction_pass" : {
    "value" : 10,
    "description" : "Time in days (since completed) after which to start reducing the pass threshold."

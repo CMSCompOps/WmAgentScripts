@@ -4469,14 +4469,18 @@ def getLatestMCPileup( url, statuses=None):
 
 def display_time( sec ):
     if not sec: return sec
+    
     m, s = divmod(sec, 60)
     h, m = divmod(m, 60)
+    d, h = divmod(h, 24)
     dis=""
-    if h:
+    if d: 
+        dis += "%d [d]"%d 
+    if h or d :
         dis += "%d [h] "%h
-    if h or m:
+    if h or m or d:
         dis += "%d [m] "%m
-    if h or m or s:
+    if h or m or s or d :
         dis += "%d [s]"%s
             
     return dis
@@ -5279,6 +5283,11 @@ class workflowInfo:
 
         self.summary = None
 
+
+
+        
+    def getFamiolly(self, details=True, and_self=False):
+        return self.getFamilly(details, and_self)
 
     def getFamilly(self, details=True, and_self=False):
         familly = getWorkflowById( self.url, self.request['PrepID'] ,details=True)
