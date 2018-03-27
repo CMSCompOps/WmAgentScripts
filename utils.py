@@ -5001,7 +5001,7 @@ class agentInfo:
         self.checkTrello(sync_trello=list(manipulated_agents), acting=acting)
 
         ## then be slave to the trello board
-        self.checkTrello(sync_agents=True,acting=False)
+        self.checkTrello(sync_agents=True,acting=acting)
 
 def getAgentConfig(url, agent, keys):
     conn = make_x509_conn(url)
