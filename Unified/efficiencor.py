@@ -63,8 +63,8 @@ while True:
             #outs = os.popen('find %s -name "*.out"'% ( condor_dir )).read()
             #print outs
             look_in_files = []
-            look_in_files.extend( filter(None,os.popen('find %s -name "*.log"'% ( condor_dir )).read().filter('\n')) )
-            look_in_files.extend( filter(None,os.popen('find %s -name "*.out"'% ( condor_dir )).read().filter('\n')) )
+            look_in_files.extend( filter(None,os.popen('find %s -name "*.log"'% ( condor_dir )).read().split('\n')) )
+            look_in_files.extend( filter(None,os.popen('find %s -name "*.out"'% ( condor_dir )).read().split('\n')) )
             lfs = []
             for out in look_in_files:
                 print "Looking in file",out
