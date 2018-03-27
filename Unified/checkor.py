@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, forceComplete, makeReplicaRequest, getDatasetSize, getDatasetFiles, sendLog, reqmgr_url, dbs_url, dbs_url_writer, getForceCompletes
+from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, forceComplete, makeReplicaRequest, getDatasetSize, getDatasetFiles, sendLog, reqmgr_url, dbs_url, dbs_url_writer, getForceCompletes, display_time
 from utils import componentInfo, unifiedConfiguration, userLock, duplicateLock, dataCache, unified_url, getDatasetLumisAndFiles, getDatasetRuns, duplicateAnalyzer, invalidateFiles, findParent, do_html_in_each_module
 import phedexClient
 import dbs3Client
@@ -291,17 +291,35 @@ def checkor(url, spec=None, options=None):
                     bypass_checks = True
                     force_by_user = True
                     break
-        
+
+        delays = [ (now_s - completed_log[-1]['UpdateTime']) / (60.*60.*24.) if completed_log else 0 for completed_log in [filter(lambda change : change["Status"] in ["completed"], m['RequestTransition']) for m in wfi.getFamilly(details=True,and_self=True)]]
+        min_completed_delays = min(delays)
+        completed_log = filter(lambda change : change["Status"] in ["completed"],wfi.request['RequestTransition'])
+        delay = (now_s - completed_log[-1]['UpdateTime']) / (60.*60.*24.) if completed_log else 0 ## in days
+        completed_delay = delay
+        #onhold_completed_delay = delay
+        onhold_completed_delay = min_completed_delays
+        onhold_timeout = UC.get('onhold_timeout')
+
+        print "onhold since",onhold_completed_delay,"timeout at",onhold_timeout
         if '-onhold' in wfo.status:
-            if wfo.name in holdings and not bypass_checks:
-                wfi.sendLog('checkor',"%s is on hold"%wfo.name)
-                continue
+            if onhold_timeout>0 and onhold_timeout<onhold_completed_delay:
+                bypass_checks = True
+                wfi.sendLog('checkor',"%s is on hold and stopped for %.2f days, letting this through with current statistics"%( wfo.name, onhold_completed_delay))
+            else:
+                if wfo.name in holdings and not bypass_checks:
+                    wfi.sendLog('checkor',"%s is on hold"%wfo.name)
+                    continue
 
         if wfo.name in holdings and not bypass_checks:
-            wfo.status = 'assistance-onhold'
-            wfi.sendLog('checkor',"setting %s on hold"%wfo.name)
-            session.commit()
-            continue
+            if onhold_timeout>0and onhold_timeout<onhold_completed_delay:
+                bypass_checks =True
+                wfi.sendLog('checkor',"%s is on hold and stopped for %.2f days, letting this through with current statistics"%( wfo.name, onhold_completed_delay))
+            else:
+                wfo.status = 'assistance-onhold'
+                wfi.sendLog('checkor',"setting %s on hold"%wfo.name)
+                session.commit()
+                continue
 
         tiers_with_no_check = copy.deepcopy(UC.get('tiers_with_no_check')) # dqm*
         vetoed_custodial_tier = copy.deepcopy(UC.get('tiers_with_no_custodial')) if not wfi.isRelval() else [] #no veto for relvals
@@ -458,11 +476,10 @@ def checkor(url, spec=None, options=None):
                     break
 
         time_point("expected statistics", sub_lap=True)
-        completed_log = filter(lambda change : change["Status"] in ["completed"],wfi.request['RequestTransition'])
+
         running_log = filter(lambda change : change["Status"] in ["running-open","running-closed"],wfi.request['RequestTransition'])
         running_delay = (now_s - (min(l['UpdateTime'] for l in running_log))) / (60.*60.*24.) if running_log else 0 ## in days        
-        delay = (now_s - completed_log[-1]['UpdateTime']) / (60.*60.*24.) if completed_log else 0 ## in days
-        completed_delay = delay
+
         print delay,"since completed"
 
 
