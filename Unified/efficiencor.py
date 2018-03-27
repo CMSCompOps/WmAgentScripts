@@ -73,7 +73,7 @@ while True:
                         fh = open(out)
                     except:
                         print "file not readable, just removing it"
-                        os.sytem('rm %s'% out)
+                        os.system('rm %s'% out)
                         continue
                     
                 for line in fh.read().split('\n'):
