@@ -841,7 +841,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
             print "failed to parse the time from the logs",str(e)
             last_time = now
 
-        heart_beat_time_out = 6
+        heart_beat_time_out = 12
         since_last = now-last_time
         if since_last > (heart_beat_time_out*60*60): #6h heart beat
             sendLog('heartbeat',"The module %s has not ran in %s hours, now %s"%(m, heart_beat_time_out, display_time( since_last )), level='critical')
