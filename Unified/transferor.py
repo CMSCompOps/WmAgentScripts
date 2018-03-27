@@ -561,6 +561,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                     destinations = dict([(k,v) for (k,v) in destination_cache[sec].items() if k in se_allowed])
                     ## truncate location/destination to those making up for >90% of the dataset
                     bad_destinations = [destinations.pop(site) for (site,info) in destinations.items() if info['data_fraction']<0.9]
+                    print sec,json.dumps( destinations , inden=2 )
                     sec_location = [site for (site,info) in destinations.items() if info['completion']>=95]
                     sec_destination = [site for site in destinations.keys() if not site in sec_location] ## this is in SE
                 else:
@@ -577,9 +578,13 @@ def transferor(url ,specific = None, talk=True, options=None):
                 sec_to_distribute = [site for site in sites_allowed if not SI.CE_to_SE(site) in sec_location]
                 #sec_to_distribute = [site for site in sec_to_distribute if not any([osite.startswith(site) for osite in sec_destination])]
                 sec_to_distribute = [site for site in sec_to_distribute if not SI.CE_to_SE(site) in sec_destination]
+                presitespace_sec_to_distribute = copy.deepcopy( sec_to_distribute )
                 #sec_to_distribute = [site for site in sec_to_distribute if not  any([osite.startswith(site) for osite in SI.sites_veto_transfer])]
                 #sec_to_distribute = [site for site in sec_to_distribute if not  SI.CE_to_SE(site) in SI.sites_veto_transfer]
                 sec_to_distribute = [site for site in sec_to_distribute if (SI.disk[SI.CE_to_SE(site)] or wfh.isRelval())]
+                ## at this point you have a problem 
+                if len(sec_to_distribute)==0 and len(presitespace_sec_to_distribute):
+                    sendLog('transferor', '%s is getting no possible destinations because of lack of space. To be decided what to do in general'%( sec ), level='critical')
 
                 if override_sec_destination:
                     ## intersect with where we want the PU to be
@@ -604,6 +609,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                                 sendLog('transferor', '%s is too big (%s) for %s (%s). %s will not be able to run there.'%( sec, sec_size, site_se, SI.disk[site_se]*1024, wfo.name), level='critical')
                                 wfh.sendLog('transferor', '%s is too big (%s) for %s (%s). will not be able to run there.'%( sec, sec_size, site_se, SI.disk[site_se]*1024))
                 else:
+                    ## this is bas overall
                     print "the secondary input does not have to be send to site"
 
         ## is that possible to do something more
