@@ -1934,6 +1934,38 @@ class siteInfo:
         sites = [site for site,(matching,running,_) in self.sites_pressure.items() if (running==0 or (matching/float(running))< ratio) and site in self.sites_ready]
         return sites
 
+    def sitesByArch(self, arch ):
+        if not self.sites_memory:
+            print "not enough information about glidein mon"
+            return None
+        rel6=(arch.startswith('slc6'))
+        rel7=(arch.startswith('slc7'))
+        allowed = set()
+        for site,slots in self.sites_memory.items():
+            for slot in slots:
+                if slot['OS'] == 'any' or slot['SINGULARITY'] == True:
+                    ## should match anything
+                    allowed.add( site )
+                elif rel7 and slot['OS'] == 'rhel7':
+                    allowed.add( site )
+                elif rel6 and slot['OS'] == 'rhel6':
+                    allowed.add( site )
+
+        return list(allowed)
+
+    def sitesByArchs(self,archs):
+        by_archs = {}
+        for arch in set(archs):
+            by_archs[arch] = self.sitesByArch(arch)
+        final = None
+        for arch,sites in by_archs.items():
+            if final is None:
+                final = set(sites)
+            else:
+                final = final & set(sites)
+
+        return list(final)
+
     def sitesByMemory( self, maxMem, maxCore=1):
         if not self.sites_memory:
             print "no memory information from glidein mon"
@@ -6092,9 +6124,13 @@ class workflowInfo:
                 memory_allowed = list(set(memory_allowed) & set(SI.sites_mcore_ready))
             sites_allowed = list(set(sites_allowed) & set(memory_allowed))
 
-            
-
-
+        ## check on CC7 compatibility
+        archs = self.getArchs()
+        arch_allowed = SI.sitesByArchs( archs )
+        if not arch_allowed is None:
+            sites_allowed = list(set(arch_allowed) & set(sites_allowed))
+            print "Reducing the whitelist to sites allowing",archs,":",sorted(arch_allowed)
+        
         return (lheinput,primary,parent,secondary,sites_allowed)
 
     def checkSplitting(self):
@@ -6582,6 +6618,13 @@ class workflowInfo:
             mcores_d = self._collectinchain('Multicore',default=1)
         return int(mcores_d.get( task, mcores ))
 
+    def getArchs(self):
+        archs = self.request.get('ScramArch')
+        if 'Chain' in self.request['RequestType']:
+            arch_d = self._collectinchain('ScramArch',default=[])
+            for t in arch_d:
+                archs.extend( arch_d[t] )
+        return archs
 
     def getMulticore(self):
         mcores = [int(self.request.get('Multicore',1))]
