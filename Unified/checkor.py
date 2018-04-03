@@ -1088,7 +1088,7 @@ def checkor(url, spec=None, options=None):
             if wfi.isRelval():
                 ## error report for relval regardless
                 so = showError_options( expose = 2 )
-                parse_one(url, member, so)
+                parse_one(url, wfo.name, so)
                 
             if not options.test:
                 if wfo.wm_status in ['closed-out','announced','normal-archived']:
