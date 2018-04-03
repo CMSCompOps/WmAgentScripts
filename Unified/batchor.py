@@ -23,13 +23,11 @@ def batchor( url ):
     by_hi_campaign = defaultdict(set)
     for wf in wfs:
         print "Relval:",wf['RequestName'], wf['Campaign']
-        #by_campaign[wf['Campaign']].add( wf['RequestName'] )
         by_campaign[wf['Campaign']].add( wf['PrepID'] )
 
 
     for wf in hi_wfs:
         print "HI Relval:",wf['RequestName'], wf['Campaign']
-        #by_hi_campaign[wf['Campaign']].add( wf['RequestName'] )
         by_hi_campaign[wf['Campaign']].add( wf['PrepID'] )
         
     default_setup = {
@@ -71,7 +69,7 @@ def batchor( url ):
                 print "Modifying the batch configuration because of keyword",key
                 print "with",augment_with
                 setup = deep_update( setup, augment_with )
-        #if 'cc7' in campaign: setup["parameters"]["SiteWhitelist"] = ["T2_US_Nebraska"]
+
         pick_one_site( setup )
         add_on[campaign] = setup
         sendLog('batchor','Adding the relval campaigns %s with parameters \n%s'%( campaign, json.dumps( setup, indent=2)),level='critical')
@@ -82,9 +80,9 @@ def batchor( url ):
         if campaign in batches: continue
         ## get a bunch of information
         setup  = copy.deepcopy( default_hi_setup )
-        hi_site = random.choice(["T1_DE_KIT","T1_FR_CCIN2P3"])
+        possible_sites = set(["T1_DE_KIT","T1_FR_CCIN2P3"])
+        hi_site = random.choice(list(possible_sites))
         setup["parameters"]["SiteWhitelist"]=[ hi_site ]
-        #setup["parameters"]["SiteWhitelist"]=["T1_DE_KIT","T1_FR_CCIN2P3"]
 
         pick_one_site( setup )
         add_on[campaign] = setup
