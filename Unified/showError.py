@@ -701,8 +701,15 @@ def parse_one(url, wfn, options=None):
         ## make an xrd ls check on the files
         #readable = os.system('xrdcp root://cms-xrd-global.cern.ch/%s check.root ; rm -f check.root'%f)
         #readable = os.system('xrd cms-xrd-global.cern.ch existfile %s'%f)
-        #html +='%s<br>'%(f if readable==0 else '<font color=red>%s</font>'%f)
-        html +='%s <b>@</b> %s<br>'%(f , ','.join(sorted(files_and_loc_notin_dbs[f])) )
+        print f,"to be checked"
+        if '/store' in f:
+            readable = os.system('XRD_REQUESTTIMEOUT=10 xrdfs root://cms-xrd-global.cern.ch stat %s'%(f))
+        else:
+            readable=0
+        html +='%s <b>@</b> %s<br>'%(f if readable==0 else '<font color=red>%s</font>'%f, ','.join(sorted(files_and_loc_notin_dbs[f])) )
+        #html +='%s <b>@</b> %s<br>'%(f , ','.join(sorted(files_and_loc_notin_dbs[f])) )
+
+
 
 
     html += '<hr><br>'
