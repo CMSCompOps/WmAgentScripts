@@ -1085,6 +1085,11 @@ def checkor(url, spec=None, options=None):
         if is_closing:
             ## toggle status to closed-out in request manager
             wfi.sendLog('checkor',"setting %s closed-out"% wfo.name)
+            if wfi.isRelval():
+                ## error report for relval regardless
+                so = showError_options( expose = 2 )
+                parse_one(url, member, so)
+                
             if not options.test:
                 if wfo.wm_status in ['closed-out','announced','normal-archived']:
                     print wfo.name,"is already",wfo.wm_status,"not trying to closed-out and assuming it does"
