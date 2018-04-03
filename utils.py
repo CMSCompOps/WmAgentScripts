@@ -5003,6 +5003,9 @@ class agentInfo:
         ## then be slave to the trello board
         self.checkTrello(sync_agents=True,acting=acting)
 
+        ## and sync locally
+        self.getStatus()
+
 def getAgentConfig(url, agent, keys):
     conn = make_x509_conn(url)
     go_url= '/reqmgr2/data/wmagentconfig/%s'% agent
