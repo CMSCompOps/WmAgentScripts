@@ -44,6 +44,15 @@ class AgentBuster(threading.Thread):
                 self.base_eos_dir,
                 self.monitor_eos_dir,
                 self.task_short))
+class ReadBuster(threading.Thread):
+    def __init__(self, **args):
+        threading.Thread.__init__(self)
+        self.deamon = True
+        for k,v in args.items():
+            setattr(self,k,v)
+
+    def run(self):
+        self.readable = os.system('XRD_REQUESTTIMEOUT=10 xrdfs root://cms-xrd-global.cern.ch stat %s'%self.file)
 
 class XRDBuster(threading.Thread):
     def __init__(self, **args):
@@ -114,9 +123,9 @@ class XRDBuster(threading.Thread):
 class ThreadHandler(threading.Thread):
     def __init__(self, **args):
         threading.Thread.__init__(self)
-        self.threads = args['threads']
-        self.n_threads = args['n_threads']
-        self.sleepy = args['sleepy']
+        self.threads = args.get('threads', 10)
+        self.n_threads = args.get('n_threads', 10)
+        self.sleepy = args.get('sleepy',10)
         self.timeout = args.get('timeout',None)
         self.verbose = args.get('verbose',False)
 
@@ -697,16 +706,34 @@ def parse_one(url, wfn, options=None):
 
     html += '<a name=FILE></a>'
     html += "<br><b>Files in no block</b><br>"
+    rthreads = []
+    check_files = [ f for f in files_and_loc_notin_dbs.keys() if '/store' in f]
+    random.shuffle( check_files )
+    check_files = check_files[:100]
+    for f in check_files:
+        rthreads.append( ReadBuster( file = f))
+    print "checking on existence of",len(rthreads),"files"
+    run_rthreads = ThreadHandler( threads = rthreads, n_threads = 20, timeout = 10)
+    run_rthreads.start()
+    while run_rthreads.is_alive():
+        time.sleep(10)
+    by_f = {}
+    for t in run_rthreads.threads:
+        by_f[t.file] = t.readable
+        #print "checked",t.file,t.readable
+
     for f in sorted(files_and_loc_notin_dbs.keys()):
-        ## make an xrd ls check on the files
-        #readable = os.system('xrdcp root://cms-xrd-global.cern.ch/%s check.root ; rm -f check.root'%f)
-        #readable = os.system('xrd cms-xrd-global.cern.ch existfile %s'%f)
-        print f,"to be checked"
-        if '/store' in f:
-            readable = os.system('XRD_REQUESTTIMEOUT=10 xrdfs root://cms-xrd-global.cern.ch stat %s'%(f))
+        readable = by_f.get(f,-1)
+        if readable == -1:
+            fs = '%s'%f
+        elif readable == 0:
+            fs = '<font color=light green>%s</font>'%f
+            #print f,"is readable"
         else:
-            readable=0
-        html +='%s <b>@</b> %s<br>'%(f if readable==0 else '<font color=red>%s</font>'%f, ','.join(sorted(files_and_loc_notin_dbs[f])) )
+            fs = '<font color=red>%s</font>'%f
+            #print f,"is not readable"
+            
+        html +='%s <b>@</b> %s<br>'%(fs, ','.join(sorted(files_and_loc_notin_dbs[f])) )
         #html +='%s <b>@</b> %s<br>'%(f , ','.join(sorted(files_and_loc_notin_dbs[f])) )
 
 
