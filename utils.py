@@ -6,16 +6,16 @@ from dbs.apis.dbsClient import DbsApi
 import httplib
 import os
 import socket
-import json 
+import json
 import collections
 from collections import defaultdict
 import random
 from xml.dom.minidom import getDOMImplementation
-import copy 
+import copy
 import pickle
 import itertools
 import time
-import math 
+import math
 import hashlib
 import threading
 import glob
@@ -66,7 +66,7 @@ def deep_update(d, u):
             d[k] = r
         #elif isinstance(v, list):
         #    d[k]=d.get(k,[])
-        #    d[k].extend( v ) 
+        #    d[k].extend( v )
         #elif isinstance(v, set):
         #    d[k]=d.get(k,set())
         #    d[k].update( v )
@@ -77,7 +77,7 @@ def deep_update(d, u):
 def sendDashboard( subject, text, criticality='info', show=True):
     ### this sends something to the dashboard ES for error, info, messages
     pass
-    
+
 def sendLog( subject, text , wfi = None, show=True ,level='info'):
     try:
         try_sendLog( subject, text , wfi, show, level)
@@ -93,7 +93,7 @@ def searchLog( q , actor=None, limit=50 ):
     _searchLog(q, actor, limit, conn, prefix = '/logs')
 
 def new_searchLog( q, actor=None, limit=50 ):
-    conn = httplib.HTTPSConnection( 'es-unified.cern.ch' )    
+    conn = httplib.HTTPSConnection( 'es-unified.cern.ch' )
     _searchLog(q, actor, limit,conn, prefix = '/es/unified-logs', h = es_header())
 
 def _searchLog( q, actor, limit, conn, prefix, h = None):
@@ -181,7 +181,7 @@ def migrate_ES():
         if f%(10*N)==0:
             print f,"out of",total
         f+=N
-                
+
     #return
 
     ## get all existing ES since a certain date
@@ -213,17 +213,17 @@ def migrate_ES():
     data = json.loads(response.read())
     n_min_date = data['hits']['hits'][0]['_source']['timestamp']
 
-    
+
     ## we should search from now to n_max_date and from n_min_date to 0
     #query = 'q=timestamp:(>=%d OR <=%d)'%( n_max_date, n_min_date)
     #query = 'q=timestamp:(>=%d)'%( n_max_date )
-    #query = 'q=timestamp:(<=%d)'%( n_min_date ) ## pick up anything that is older than the oldest one in the new instance ## does not seem to function 
+    #query = 'q=timestamp:(<=%d)'%( n_min_date ) ## pick up anything that is older than the oldest one in the new instance ## does not seem to function
     #query = 'q=timestamp:(<=%d)'%( 1511959960 ) ## anything older than a reference time
     query = 'q=timestamp:(<=%d)'%( 1512603883.0 ) ## anything older than a reference time when unified was off and switched over
 
-    print query 
+    print query
 
-    
+
     docs = []
     N = 500
     f = 0
@@ -235,7 +235,7 @@ def migrate_ES():
         data = response.read()
         d = json.loads( data )
 
-        
+
 
         total = d['hits']['total']
         print total,"documents to send over under",query
@@ -299,41 +299,41 @@ def new_sendLog( subject, text , wfi = None, show=True, level='info'):
             }
             }
     content = {}
-    settings = { 
-        "settings" : { 
-            "index" : { 
+    settings = {
+        "settings" : {
+            "index" : {
                 "number_of_shards" : 3,
                 "number_of_replicas" : 2
                 }}}
     content.update( settings )
-    
+
     content.update({            "mappings" : {"log" : { "properties" : schema}}})
 
     conn.request("PUT", "/es/unified-logs",  json.dumps( content ), headers = es_header())
     response = conn.getresponse()
     data = response.read()
-    print data    
-    return 
+    print data
+    return
     """
     #conn.request('GET', "/es/unified-logs", headers = es_header())
     #response = conn.getresponse()
     #data = response.read()
     #print data
-    #return 
+    #return
 
     _try_sendLog( subject, text, wfi, show, level, conn = conn, prefix='/es/unified-logs', h = es_header())
 
 def try_sendLog( subject, text , wfi = None, show=True, level='info'):
     #conn = httplib.HTTPConnection( 'cms-elastic-fe.cern.ch:9200' )
     #_try_sendLog(subject, text , wfi, show, level, conn = conn)
-    
+
     ## send it to the new instance too. Without showing it
     re_conn = httplib.HTTPSConnection( 'es-unified.cern.ch' )
     _try_sendLog( subject, text, wfi, show, level, conn = re_conn, prefix='/es/unified-logs', h = es_header())
-    
+
 
 def _try_sendLog( subject, text , wfi = None, show=True, level='info', conn= None, prefix= '/logs', h =None):
-    #conn = httplib.HTTPConnection( 'cms-elastic-fe.cern.ch:9200' )    
+    #conn = httplib.HTTPConnection( 'cms-elastic-fe.cern.ch:9200' )
 
     meta_text="level:%s\n"%level
     if wfi:
@@ -366,7 +366,7 @@ def _try_sendLog( subject, text , wfi = None, show=True, level='info', conn= Non
     response = conn.getresponse()
     data = response.read()
     try:
-        res = json.loads( data ) 
+        res = json.loads( data )
         #print 'log:',res['_id'],"was created"
     except Exception as e:
         print "failed"
@@ -388,7 +388,7 @@ def sendEmail( subject, text, sender=None, destination=None ):
         destination = list(set(destination+email_destination))
     if not sender:
         map_who = { 'vlimant' : 'vlimant@cern.ch',
-                    'mcremone' : 'matteoc@fnal.gov', 
+                    'mcremone' : 'matteoc@fnal.gov',
                     'qnguyen' : 'thong.nguyen@cern.ch'
                     }
         user = os.getenv('USER')
@@ -401,7 +401,7 @@ def sendEmail( subject, text, sender=None, destination=None ):
     msg['From'] = sender
     msg['To'] = COMMASPACE.join( destination )
     msg['Date'] = formatdate(localtime=True)
-    new_msg_ID = make_msgid()  
+    new_msg_ID = make_msgid()
     msg['Subject'] = '[Ops] '+subject
     msg.attach(MIMEText(text))
     smtpObj = smtplib.SMTP()
@@ -441,9 +441,9 @@ def url_encode_params(params = {}):
 def download_data(url = None, params = None, headers = None, logger = None):
     """
     Returns data got from server.
-    params has to be a dictionary, which can contain 
-    "key : [value1, value2,...], and that will be 
-    converted to key=value1&key=value2&... 
+    params has to be a dictionary, which can contain
+    "key : [value1, value2,...], and that will be
+    converted to key=value1&key=value2&...
     """
     if not logger:
         logger = logging
@@ -459,7 +459,7 @@ def download_data(url = None, params = None, headers = None, logger = None):
         logger.error(error.format(code = err.code, msg = err.msg))
         logger.error("URL called: {url}".format(url = url))
         return None
-        
+
 def download_file(url, params, path = None, logger = None):
     if not logger:
         logger = logging
@@ -509,7 +509,7 @@ def check_ggus( ticket ):
 def getSubscriptions(url, dataset):
     conn = make_x509_conn(url)
     #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    there = '/phedex/datasvc/json/prod/subscriptions?dataset='+dataset 
+    there = '/phedex/datasvc/json/prod/subscriptions?dataset='+dataset
     r1=conn.request("GET", there)
     r2=conn.getresponse()
     result = json.loads(r2.read())
@@ -564,7 +564,7 @@ def listDelete(url, user, site=None):
     result = json.loads(r2.read())
     items=result['phedex']['request']
     #print json.dumps(items, indent=2)
-    
+
     return list(itertools.chain.from_iterable([(subitem['name'],item['requested_by'],item['id']) for subitem in item['node'] if subitem['decision']=='pending' ] for item in items))
 
 def listSubscriptions(url, dataset, within_sites=None):
@@ -585,7 +585,7 @@ def listSubscriptions(url, dataset, within_sites=None):
     for item in items:
         for node in item['node']:
             if item['type']!='xfer': continue
-            site = node['name']            
+            site = node['name']
             if within_sites and not site in within_sites: continue
             #print item
             if not 'MSS' in site:
@@ -667,7 +667,7 @@ def lock_DDM(lock=True, wait=True, timeout=None):
                 print "locking dynamo for unified has timedout"
                 go = False
     else:
-        conn.request("POST","/registry/applock/unlock?service=unified&app=detox")    
+        conn.request("POST","/registry/applock/unlock?service=unified&app=detox")
         response = conn.getresponse()
         data = response.read()
         res = json.loads( data )
@@ -677,7 +677,7 @@ def lock_DDM(lock=True, wait=True, timeout=None):
         else:
             print res
             go = True
-    
+
     return go
 
 
@@ -753,7 +753,7 @@ class lockInfo:
                     pass
                     ## let's not do that for now
                     #session.delete( lock )
-                    #session.commit()                    
+                    #session.commit()
 
             #print "writing to json"
             if self.writeondelete:
@@ -774,14 +774,14 @@ class lockInfo:
         except Exception as e:
             print "Failed writing locks"
             print str(e)
-        
+
     def release(self, item ):
         try:
             self._release(item)
         except Exception as e:
             print "failed to release"
             print str(e)
-            
+
     def _release(self, item ):
         #from dataLock import locksession, Lock
         from assignSession import session, Lock
@@ -814,10 +814,10 @@ class lockInfo:
         else:
             print "lock for",item,"already existing",l.lock
         now = time.mktime(time.gmtime())
-        ## overwrite the lock 
+        ## overwrite the lock
         message = "[Lock] %s"%item
         if l.lock != True:
-            
+
             l.lock = True
             do_com = True
             message+=" being locked"
@@ -837,8 +837,8 @@ class lockInfo:
             ## to be removed once we have a fully functional lock db
             print "could not lock",item,"at",site
             print str(e)
-            
-    
+
+
     def items(self, locked=True):
         #from dataLock import locksession, Lock
         from assignSession import session, Lock
@@ -918,7 +918,7 @@ class componentInfo:
                     self.code = 121
                     return False
                 break
-                
+
         while True:
             try:
                 print "checking reqmgr"
@@ -926,7 +926,7 @@ class componentInfo:
                     wfi = workflowInfo(reqmgr_url,'sryu_B2G-Summer12DR53X-00743_v4_v2_150126_223017_1156')
                 else:
                     wfi = workflowInfo(reqmgr_url,'pdmvserv_task_B2G-RunIIWinter15wmLHE-00067__v1_T_150505_082426_497')
-                    
+
                 self.status['reqmgr'] = True
                 break
             except Exception as e:
@@ -1036,7 +1036,7 @@ class campaignInfo:
                             reg = black[0:-1]
                             self.campaigns[c]['parameters']['SiteBlacklist'].extend( [site for site in (SI.all_sites) if site.startswith(reg)] )
                             #print self.campaigns[c]['parameters']['SiteBlacklist']
-                            
+
     def go(self, c, s=None):
         GO = False
         if c in self.campaigns and self.campaigns[c]['go']:
@@ -1094,8 +1094,8 @@ def notRunningBefore( component, time_out = 60*5 ):
 
 class moduleLock(object):
     def __init__(self,component=None, silent=False, wait=False, max_wait = 18000):
-        if not component: 
-            component = sys._getframe(1).f_code.co_name   
+        if not component:
+            component = sys._getframe(1).f_code.co_name
 
         self.poll = 30
         self.pid = os.getpid()
@@ -1130,7 +1130,7 @@ class moduleLock(object):
             i_try += 1
             if max_wait and polled > max_wait:
                 print "stop waiting for %s to be released \n%s"% ( self.component , sorted(locks))
-                break 
+                break
 
         if not nogo:
             ## insert a lock file here
@@ -1152,7 +1152,7 @@ class moduleLock(object):
     def __del__(self):
         #remove the lock file
         os.system('rm -f %s'% self.lock )
-                 
+
 
 def duplicateLock(component=None, silent=False, wait=False, max_wait = 18000, max_concurrent=1):
     ## us the new module locking. requires a full drain so that all locks are set properly
@@ -1167,7 +1167,7 @@ def duplicateLock(component=None, silent=False, wait=False, max_wait = 18000, ma
         ## get the caller
         component = sys._getframe(1).f_code.co_name
 
-    
+
     poll = 30 #s
     polled = 0
     nogo = True
@@ -1193,17 +1193,17 @@ def duplicateLock(component=None, silent=False, wait=False, max_wait = 18000, ma
             break
 
     if nogo and not silent:
-        sendEmail('overlapping %s'%component,'There are %s instances running. Tried for %d [s] \n%s'%(len(process_check), 
+        sendEmail('overlapping %s'%component,'There are %s instances running. Tried for %d [s] \n%s'%(len(process_check),
                                                                                                       polled,
                                                                                                       '\n'.join(process_check)))
         print "quitting because of overlapping processes"
 
     return nogo
-    
+
 def userLock(component=None):
-    if not component:  
+    if not component:
         ## get the caller
-        component = sys._getframe(1).f_code.co_name        
+        component = sys._getframe(1).f_code.co_name
     lockers = ['dmytro','mcremone','vlimant']
     for who in lockers:
         if os.path.isfile('/afs/cern.ch/user/%s/%s/public/ops/%s.lock'%(who[0],who,component)):
@@ -1218,7 +1218,7 @@ def getWMStats(url):
     r1=conn.request("GET",url,headers={"Accept":"application/json"})
     r2=conn.getresponse()
     return json.loads(r2.read())['result'][0]
-    
+
 
 
 def genericGet( base, url, load=True, headers=None):
@@ -1232,9 +1232,9 @@ def genericGet( base, url, load=True, headers=None):
     r1=conn.request("GET",url, headers =headers)
     r2=conn.getresponse()
     if load:
-        result = json.loads(r2.read())    
+        result = json.loads(r2.read())
     else:
-        result = r2.read() 
+        result = r2.read()
     return result
 
 
@@ -1265,7 +1265,7 @@ class UnifiedBuster(threading.Thread):
                 print "Failed in thread"
                 print str(e)
                 break
-            
+
 
     def operate(self, item):
         print "to be overloaded every where"
@@ -1464,7 +1464,7 @@ class docCache:
             'cachefile' : None,
             'default' : {}
             }
-        self.cache['hlt_cloud'] = { 
+        self.cache['hlt_cloud'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
@@ -1483,7 +1483,7 @@ class docCache:
         #create the cache files from the labels
         for src in self.cache:
             self.cache[src]['cachefile'] = '.'+src+'.cache.json'
-            
+
 
     def get(self, label, fresh=False):
         now = time.mktime( time.gmtime())
@@ -1503,13 +1503,13 @@ class docCache:
                             print "Failed to read local cache"
                             print str(e)
                             get_back = True
-                    else: get_back = True        
+                    else: get_back = True
                     if get_back:
                         print "no file cache for", label,"getting fresh"
                         cache['data'] = cache['getter']()
                         cache['timestamp'] = now
                         open(cache['cachefile'],'w').write( json.dumps({'data': cache['data'], 'timestamp' : cache['timestamp']}, indent=2) )
-                    
+
                 ## check the time stamp
                 if cache['expiration']+cache['timestamp'] < now or fresh:
                     print "getting fresh",label
@@ -1518,7 +1518,7 @@ class docCache:
                     open(cache['cachefile'],'w').write( json.dumps({'data': cache['data'], 'timestamp' : cache['timestamp']}, indent=2) )
 
                 return cache['data']
-            except Exception as e: 
+            except Exception as e:
                 sendLog('doccache','Failed to get %s\n%s'%(label,str(e)), level='critical')
                 print "failed to get",label
                 print str(e)
@@ -1560,7 +1560,7 @@ def getNodeQueue(url, node):
     print result
     missing = 0
     if len(result['phedex']['node']):
-        for node in result['phedex']['node']:    
+        for node in result['phedex']['node']:
             for usage in node['usage']:
                 missing += int(usage['miss_bytes'] / 1023.**4) #in TB
         return missing
@@ -1646,12 +1646,12 @@ class DSS:
             open('bdss.json','w').write( json.dumps( self.bdb ))
         except:
             print "no access to bdss.json"
-                                    
+
 
 
 class siteInfo:
     def __init__(self, override_good = None):
-        
+
         UC = unifiedConfiguration()
 
         self.sites_ready_in_agent = set()
@@ -1662,7 +1662,7 @@ class siteInfo:
                 #print team
                 if team !='production': continue
                 for agent in agents:
-                    if agent['status'] != 'ok': 
+                    if agent['status'] != 'ok':
                         print agent['status']
                         continue
                     for site,site_info in agent['WMBS_INFO']['thresholds'].iteritems():
@@ -1677,9 +1677,9 @@ class siteInfo:
             self.sites_ready = []
             self.sites_not_ready = []
             self.all_sites = []
-            
+
             self.sites_banned = UC.get('sites_banned')
-            
+
             try:
                 sites_full = json.loads(open('sites_full.json').read())
                 ### ban or not things that have a lot more upcoming than normal
@@ -1701,7 +1701,7 @@ class siteInfo:
                     self.sites_ready.append( siteInfo['VOName'] )
                 elif self.sites_ready_in_agent and not siteInfo['VOName'] in self.sites_ready_in_agent:
                     self.sites_not_ready.append( siteInfo['VOName'] )
-                elif siteInfo['Status'] == 'enabled': 
+                elif siteInfo['Status'] == 'enabled':
                     self.sites_ready.append( siteInfo['VOName'] )
                 else:
                     self.sites_not_ready.append( siteInfo['VOName'] )
@@ -1712,7 +1712,7 @@ class siteInfo:
             #self.all_sites.append('T3_US_NERSC')
 
 
-            
+
         except Exception as e:
             print "issue with getting SSB readiness"
             print str(e)
@@ -1740,7 +1740,7 @@ class siteInfo:
         #restrict to those that are actually ON
         self.sites_with_goodIO = [s for s in self.sites_with_goodIO if s in self.sites_ready]
         ## those of the above that can be actively targetted for transfers
-        #allowed_T2_for_transfer = ["T2_DE_RWTH","T2_DE_DESY", 
+        #allowed_T2_for_transfer = ["T2_DE_RWTH","T2_DE_DESY",
                                           #not inquired# "T2_ES_CIEMAT",
                                           #no space# ##"T2_FR_GRIF_IRFU", #not inquired# ##"T2_FR_GRIF_LLR", #not inquired"## "T2_FR_IPHC",##not inquired"## "T2_FR_CCIN2P3",
         #                                  "T2_IT_Legnaro", "T2_IT_Pisa", "T2_IT_Rome", "T2_IT_Bari",
@@ -1753,7 +1753,7 @@ class siteInfo:
         #                           'T2_RU_INR',
         #                           'T2_UA_KIPT'
         #                                  ]
-                        
+
         # restrict to those actually ON
         #allowed_T2_for_transfer = [s for s in allowed_T2_for_transfer if s in self.sites_ready]
 
@@ -1773,7 +1773,7 @@ class siteInfo:
         self.quota = defaultdict(int)
         self.locked = defaultdict(int)
         self.cpu_pledges = defaultdict(int)
-        ## this is the most natural way to handle this 
+        ## this is the most natural way to handle this
         self.addHocStorageS = defaultdict(set)
         self.addHocStorage = {
             'T2_CH_CERN_T0': 'T2_CH_CERN',
@@ -1820,7 +1820,7 @@ class siteInfo:
 
         ## and get SSB sync
         self.fetch_ssb_info(talk=False)
-        
+
 
         mss_usage = dataCache.get('mss_usage')
         sites_space_override = UC.get('sites_space_override')
@@ -1830,9 +1830,9 @@ class siteInfo:
             #print mss,'used',used
             #if used == None: self.storage[mss] = 0
             #else:  self.storage[mss] = max(0, self.storage[mss]-used)
-            if not mss in mss_usage['Tape'][use_field]: 
-                self.storage[mss] = 0 
-            else: 
+            if not mss in mss_usage['Tape'][use_field]:
+                self.storage[mss] = 0
+            else:
                 self.storage[mss]  = max(0,mss_usage['Tape'][use_field][mss])
 
             if mss in sites_space_override:
@@ -1842,7 +1842,7 @@ class siteInfo:
         self.fetch_queue_info()
         ## and detox info
         self.fetch_detox_info(talk=False, buffer_level=UC.get('DDM_buffer_level'), sites_space_override=sites_space_override)
-        
+
         ## transform no disks in veto transfer
         for (dse,free) in self.disk.items():
             if free<=0:
@@ -1865,7 +1865,7 @@ class siteInfo:
             return info
         except:
             return {}
-        
+
     def availableSlots(self, sites=None):
         s=0
         for site in self.cpu_pledges:
@@ -1901,7 +1901,7 @@ class siteInfo:
         for site in self.sites_memory.keys():
             if not site in self.sites_ready:
                 self.sites_memory.pop( site )
-        
+
         for_max_running = dataCache.get('gwmsmon_site_summary')
         for_better_max_running = dataCache.get('gwmsmon_prod_maxused')
         for site in self.cpu_pledges:
@@ -1912,7 +1912,7 @@ class siteInfo:
 
             if new_max: #new_max > self.cpu_pledges[site] or True:
                 self.cpu_pledges[site] = new_max
-        
+
         for_site_pressure = dataCache.get('gwmsmon_prod_site_summary')
         self.sites_pressure = {}
         for site in self.cpu_pledges:#sites_ready:
@@ -1929,7 +1929,7 @@ class siteInfo:
                 else:
                     pressure = -1 ## does not matter
                     self.sites_pressure[site] = (m, r, pressure)
-    
+
     def sites_low_pressure(self, ratio):
         sites = [site for site,(matching,running,_) in self.sites_pressure.items() if (running==0 or (matching/float(running))< ratio) and site in self.sites_ready]
         return sites
@@ -1987,12 +1987,12 @@ class siteInfo:
         self.queue = dataCache.get('site_queues')
         #for (k,v) in dataCache.get('site_queues').items():
         #    self.queue[k] = v
-        
+
     def fetch_detox_info(self, talk=True, buffer_level=0.8, sites_space_override=None):
         ## put a retry in command line
         info = dataCache.get('detox_sites')
         #info = os.popen('curl --retry 5 -s http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/SitesInfo.txt').read().split('\n')
-        if len(info) < 15: 
+        if len(info) < 15:
             ## fall back to dev
             info = dataCache.get('detox_sites', fresh = True)
             #info = os.popen('curl --retry 5 -s http://t3serv001.mit.edu/~cmsprod/IntelROCCS-Dev/DetoxDataOps/SitesInfo.txt').read().split('\n')
@@ -2012,7 +2012,7 @@ class siteInfo:
             except:
                 sendLog('fetch_detox_info','Unable to read Detox DataOps report',level='critical')
                 break
-            ## bypass 
+            ## bypass
 
             if 'MSS' in site: continue
             queued = self.queue.get(site,0)
@@ -2022,13 +2022,13 @@ class siteInfo:
             available = int(float(quota)*buffer_level) - int(locked) - int(queued_used)
 
             #### .disk = 80%*quota - locked : so it's the effective space
-            #### .free_disk = the buffer space that there is above the 80% quota 
+            #### .free_disk = the buffer space that there is above the 80% quota
             self.disk[site] = available if available >0 else 0
             ddm_free = int(float(quota) - int(locked) - self.disk[site])
             self.free_disk[site] = ddm_free if ddm_free>0 else 0
             if sites_space_override and site in sites_space_override:
                 self.disk[site] = sites_space_override[site]
-                            
+
             self.quota[site] = int(quota)
             self.locked[site] = int(locked)
 
@@ -2044,7 +2044,7 @@ class siteInfo:
             #'UsedTape' : 108,
             #'FreeTape' : 109
             }
-        
+
         all_data = {}
         for name,column in columns.items():
             if talk: print name,column
@@ -2062,7 +2062,7 @@ class siteInfo:
                 value = item['Value']
                 if not site in _info_by_site: _info_by_site[site]={}
                 _info_by_site[site][info] = value
-        
+
         if talk: print json.dumps( _info_by_site, indent =2 )
 
         if talk: print self.disk.keys()
@@ -2078,7 +2078,7 @@ class siteInfo:
                     self.cpu_pledges[site] = int(info[key_for_cpu])
                 elif self.cpu_pledges[site] > 1.5* info[key_for_cpu]:
                     if talk: print site,"could correct",info[key_for_cpu],"instead of",self.cpu_pledges[site],"for CPU"
-                    self.cpu_pledges[site] = int(info[key_for_cpu])                    
+                    self.cpu_pledges[site] = int(info[key_for_cpu])
 
             if 'FreeDisk' in info and info['FreeDisk']:
                 if site in self.disk:
@@ -2185,7 +2185,7 @@ class siteInfo:
 
 def isHEPCloudReady(url, limit=20):
     conn = make_x509_conn(url)
-    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))    
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/reqmgr2/data/request?mask=RequestStatus&status=assigned&status=acquired&status=running-open&status=running-closed&team=hepcloud', headers={"Accept":"*/*"})
     r2=conn.getresponse()
     d = json.loads(r2.read())['result']
@@ -2275,7 +2275,7 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
                         text+='<td>%s</td>'% value
                     else:
                         ## the one in bold will show the ones that need work
-                        text+='<td><b>%s</b></td>'% value                        
+                        text+='<td><b>%s</b></td>'% value
                 else:
                     text+='<td>%s</td>'% value
             u_text = '<td rowspan="%d">%s</td>'%( n_out, self.record[wf]['datasets'][out]['updated'])
@@ -2294,7 +2294,7 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
 
     def summary(self):
 
-        
+
         html = open('%s/closeout.html'%monitor_dir,'w')
         html.write('<html>')
         html.write('Last update on %s(CET), %s(GMT), <a href=logs/checkor/ target=_blank> logs</a> <br><br>'%(time.asctime(time.localtime()),time.asctime(time.gmtime())))
@@ -2317,7 +2317,7 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
         html.write('bottom of page</html>')
 
         self.save()
-        
+
     def save(self):
 
         ## gather all existing content
@@ -2337,7 +2337,7 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
         #out.write( json.dumps( self.record , indent=2 ) )
         #out.write( my_file )
         #out.close()
-        
+
         ## write the information out to disk
         os.system('cp %s/closedout.json %s/closedout.json.last'%(base_eos_dir, base_eos_dir))
 
@@ -2396,13 +2396,13 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
 <META HTTP-EQUIV="refresh" CONTENT="900">
 </head>
 """)
-    
+
         #short_html.write('Last update on %s(CET), %s(GMT), <a href=logs/checkor/last.log target=_blank> log</a> <a href=logs/recoveror/last.log target=_blank> postlog</a> <br>'%(time.asctime(time.localtime()),time.asctime(time.gmtime())))
         #html.write('Last update on %s(CET), %s(GMT), <a href=logs/checkor/last.log target=_blank> log</a> <a href=logs/recoveror/last.log target=_blank> postlog</a><br>'%(time.asctime(time.localtime()),time.asctime(time.gmtime())))
         short_html.write('<a href=logs/checkor/last.log target=_blank> log</a> <a href=logs/recoveror/last.log target=_blank> postlog</a> <br>')
         html.write('<a href=logs/checkor/last.log target=_blank> log</a> <a href=logs/recoveror/last.log target=_blank> postlog</a><br>')
 
-        html.write('<a href=assistance_summary.html> Summary </a> <br>')    
+        html.write('<a href=assistance_summary.html> Summary </a> <br>')
         short_html.write('<a href=assistance.html> Details </a> <br>')
 
 
@@ -2471,10 +2471,10 @@ Updated on %s (GMT) <br>
                 if count%2:            color='lightblue'
                 else:            color='white'
 
-                if not wfo.name in self.record: 
+                if not wfo.name in self.record:
                     print "wtf with",wfo.name
                     #html.write( self.no_record( wfo.name, wfo, count))
-                    continue     
+                    continue
                 prio = self.record[wfo.name]['priority']
                 #lines.append( ( prio ,self.one_line( wfo.name, wfo, count) ) )
                 html.write( self.one_line( wfo.name, wfo, count))
@@ -2483,12 +2483,12 @@ Updated on %s (GMT) <br>
 <tr bgcolor=%s>
 <td> <a id=%s>%s</a> </td><td> %s </td><td> <a href=closeout.html#%s>%s</a> </td>
 </tr>
-"""%( color, 
+"""%( color,
       wfo.name,wfo.name,
-      out, 
+      out,
       wfo.name,
       self.record[wfo.name]['datasets'][out]['percentage'],
-      
+
       )
 
                     #short_lines.append(line)
@@ -2499,13 +2499,13 @@ Updated on %s (GMT) <br>
             short_html.write("</table><br><br>")
 
         short_html.write("<br>"*100)
-        short_html.write("bottom of page</html>")    
+        short_html.write("bottom of page</html>")
         html.write("<br>"*100)
-        html.write("bottom of page</html>")    
+        html.write("bottom of page</html>")
 
 
 
-        
+
 
 
 def checkTransferApproval(url, phedexid):
@@ -2522,7 +2522,7 @@ def checkTransferApproval(url, phedexid):
     return approved
 
 def getDatasetFileFraction( dataset, files):
-    dbsapi = DbsApi(url=dbs_url) 
+    dbsapi = DbsApi(url=dbs_url)
     all_files = dbsapi.listFileArray( dataset= dataset,validFileOnly=1, detail=True)
     total = 0
     in_file = 0
@@ -2534,10 +2534,10 @@ def getDatasetFileFraction( dataset, files):
     if total:
         fract=float(in_file)/float(total)
     return fract, total, in_file
-    
+
 
 def getDatasetBlockFraction( dataset, blocks):
-    dbsapi = DbsApi(url=dbs_url) 
+    dbsapi = DbsApi(url=dbs_url)
     all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
     total=0
     in_block=0
@@ -2550,7 +2550,7 @@ def getDatasetBlockFraction( dataset, blocks):
     if total:
         fract=float(in_block)/float(total)
     return fract, total, in_block
-    
+
 def findLateFiles(url, datasetname, going_to=None):
     conn = make_x509_conn(url)
     #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -2618,7 +2618,7 @@ def try_findLostBlocksFiles(url, datasetname):
                 print "we have lost files on",item['name']
                 ## go deeper then
                 r1=conn.request("GET",'/phedex/datasvc/json/prod/filereplicas?block=%s'%(item['name'].replace('#','%23')))
-                r2=conn.getresponse() 
+                r2=conn.getresponse()
                 sub_result=json.loads(r2.read())
                 for block in sub_result['phedex']['block']:
                     for ph_file in block['file']:
@@ -2666,13 +2666,13 @@ def try_checkTransferLag( url, xfer_id , datasets=None):
     if len(result['phedex']['dataset'])==0:
         print "trying with an earlier date than",timecreate,"for",xfer_id
         subs_url = '/phedex/datasvc/json/prod/subscriptions?request=%s&create_since=%d'%(str(xfer_id),0)
-        subs_url+='&collapse=n' 
+        subs_url+='&collapse=n'
         r1=conn.request("GET",subs_url)
         r2=conn.getresponse()
         result = json.loads(r2.read())
 
     for item in  result['phedex']['dataset']:
-        if 'subscription' not in item:            
+        if 'subscription' not in item:
             #print "sub"
             loop_on = list(itertools.chain.from_iterable([[(subitem['name'],i) for i in subitem['subscription']] for subitem in item['block']]))
         else:
@@ -2687,14 +2687,14 @@ def try_checkTransferLag( url, xfer_id , datasets=None):
                 delay = (now - time_then)/(60.*60.*24.)
                 delay_s = (now - time_then)
                 print "\n",item,"is not complete at",destination,"since", delay ,"[d]"
-                
+
                 if '#' in item:
                     item_url = '/phedex/datasvc/json/prod/blockreplicas?block=%s'%( item.replace('#','%23') )
                 else:
                     item_url = '/phedex/datasvc/json/prod/blockreplicas?dataset=%s'%( item )
                 r1=conn.request("GET",item_url)
-                r2=conn.getresponse()    
-                item_result = json.loads(r2.read()) 
+                r2=conn.getresponse()
+                item_result = json.loads(r2.read())
 
                 for subitem in item_result['phedex']['block']:
                     dones = [replica['node'] for replica in subitem['replica'] if replica['complete'] == 'y']
@@ -2707,7 +2707,7 @@ def try_checkTransferLag( url, xfer_id , datasets=None):
                     ### rate
                     rate = destination_size_GB / delay_s
                     if destination in dones: continue
-                    if not dones: 
+                    if not dones:
                         print "\t\t",subitem['name'],"lost"
                         stuck[ds][subitem['name']][destination] = (block_size,destination_size,delay,rate,dones)
                         continue
@@ -2718,7 +2718,7 @@ def try_checkTransferLag( url, xfer_id , datasets=None):
                     if rate < 10.:
                         ds = item.split('#')[0]
                         stuck[ds][subitem['name']][destination] = (block_size,destination_size,delay,rate,dones)
-                        
+
     return stuck
 
 def checkTransferStatus(url, xfer_id, nocollapse=False):
@@ -2735,7 +2735,7 @@ def checkTransferStatus(url, xfer_id, nocollapse=False):
             sendLog('checkTransferStatus','fatal exception in checkTransferStatus %s\n%s'%(xfer_id, str(e)), level='critical')
             v = {}
     return v
-        
+
 
 def getNodesId(url):
     conn = make_x509_conn(url)
@@ -2781,7 +2781,7 @@ def try_checkTransferStatus(url, xfer_id, nocollapse=False):
     #print json.dumps( result['phedex']['dataset'] , indent=2)
     for item in  result['phedex']['dataset']:
         completions[item['name']]={}
-        if 'subscription' not in item:            
+        if 'subscription' not in item:
             loop_on = list(itertools.chain.from_iterable([subitem['subscription'] for subitem in item['block']]))
         else:
             loop_on = item['subscription']
@@ -2794,7 +2794,7 @@ def try_checkTransferStatus(url, xfer_id, nocollapse=False):
                 completions[item['name']] [sub['node']].append(float(sub['percent_files']))
             else:
                 completions[item['name']] [sub['node']].append(0.)
-        
+
     for item in completions:
         for site in completions[item]:
             ## average it !
@@ -2913,7 +2913,7 @@ def getDatasetFiles(url, dataset ,without_invalid=True ):
     dbsapi = DbsApi(url=dbs_url)
     files = dbsapi.listFileArray( dataset= dataset,validFileOnly=without_invalid, detail=True)
     dbs_filenames = [f['logical_file_name'] for f in files]
-    
+
     conn = make_x509_conn(url)
     #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 
@@ -2925,7 +2925,7 @@ def getDatasetFiles(url, dataset ,without_invalid=True ):
     for block in items:
         for f in block['file']:
             phedex_filenames.append(f['name'])
-    
+
     return dbs_filenames, phedex_filenames, list(set(dbs_filenames) - set(phedex_filenames)), list(set(phedex_filenames)-set(dbs_filenames))
 
 def getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None, sites=None, only_blocks=None):
@@ -2971,20 +2971,20 @@ def try_getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=
     #initialize
     for block in all_block_names:
         block_counts[block] = 0
-    
+
     for item in items:
         for replica in item['replica']:
             if not any(replica['node'].endswith(v) for v in vetoes):
                 if replica['group'] == None: replica['group']=""
                 if complete and not replica['complete']==complete: continue
-                if group!=None and not replica['group'].lower()==group.lower(): continue 
+                if group!=None and not replica['group'].lower()==group.lower(): continue
                 if sites and not replica['node'] in sites:
                     #print "leaving",replica['node'],"out"
                     continue
                 b = item['name']
                 if not b in all_block_names: continue
                 block_counts[ b ] +=1
-    
+
     if not len(block_counts):
         print "no blocks for",dataset
         return 0
@@ -2996,13 +2996,13 @@ def try_getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=
         second_order = sum(block_counts.values())/ float(len(block_counts))
         print dataset,":all",len(block_counts),"available",second_order,"times"
         return second_order
-    
+
 
 
 def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=None, within_sites=None, complement=True):
     if vetoes==None:
         vetoes = ['MSS','Buffer','Export']
-    #print "presence of",dataset                                                                                           
+    #print "presence of",dataset
     dbsapi = DbsApi(url=dbs_url)
     all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
     all_dbs_block_names=set([block['block_name'] for block in all_blocks])
@@ -3029,7 +3029,7 @@ def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, ve
                 url+='group=%s'%group
             r1=conn.request("GET",url)
             r2=conn.getresponse()
-            
+
             items=json.loads(r2.read())['phedex']['request']
         except Exception as e :
             print "\twaiting a bit for retry"
@@ -3049,7 +3049,7 @@ def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, ve
             if not node['name'] in deletes or deletes[node['name']]< stamp:
                 ## add it if not or later delete
                 deletes[node['name']] = stamp
-    
+
     destinations = defaultdict(set)
     all_destinations = set()
     for item in items:
@@ -3076,7 +3076,7 @@ def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, ve
                 r1=conn.request("GET",url)
                 r2=conn.getresponse()
                 r = r2.read()
-            except Exception as e: 
+            except Exception as e:
                 print str(e)
                 raise Exception(e)
             result = json.loads(r)['phedex']['dataset']
@@ -3089,14 +3089,14 @@ def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, ve
                         sub['percent_bytes'] = sub['percent_bytes'] if sub['percent_bytes']!=None else 0
                         destinations[site].add( (block['name'], sub['percent_bytes'], sub['request']))
         pass
-    
+
     else:
         ## check first by full dataset
         print "getting all d-sub for dataset",dataset
         r1=conn.request("GET",'/phedex/datasvc/json/prod/subscriptions?dataset=%s'%(dataset))
         r2=conn.getresponse()
         result = json.loads(r2.read())['phedex']['dataset']
-        
+
         in_full = set()
         for ds in result:
             for sub in ds['subscription']:
@@ -3109,7 +3109,7 @@ def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, ve
                     sub['percent_bytes'] = sub['percent_bytes'] if sub['percent_bytes']!=None else 0
                     destinations[site].add( (b, sub['percent_bytes'], phedex_id) )
                 in_full.add( site )
-                
+
         #print sorted(all_destinations)
         print "in full at",sorted(in_full)
         ## then check block by block at the site not already OK.
@@ -3128,7 +3128,7 @@ def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, ve
                     continue
                 else:
                     raise Exception(e)
-            
+
             #print r
             result = json.loads(r)['phedex']['dataset']
             for ds in result:
@@ -3138,7 +3138,7 @@ def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, ve
                         sub['percent_bytes'] = sub['percent_bytes'] if sub['percent_bytes']!=None else 0
                         destinations[site].add( (block['name'], sub['percent_bytes'], sub['request']))
 
-        
+
     #for site in destinations:
     #    destinations[site] = list( destinations[site])
     #print json.dumps( destinations, indent=2)
@@ -3149,8 +3149,8 @@ def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, ve
         blocks_and_id = dict([(b[0],b[2]) for b in destinations[site]])
         #print blocks_and_id
         completion = sum([b[1] for b in destinations[site]]) / float(len(destinations[site]))
-        
-        re_destinations[site] = { "blocks" : blocks_and_id, 
+
+        re_destinations[site] = { "blocks" : blocks_and_id,
                                #"all_blocks" : list(all_block_names),
                                "data_fraction" : len(blocks) / float(len(all_block_names)) ,
                                "completion" : completion,
@@ -3182,7 +3182,7 @@ def getOldDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoe
 
     conn = make_x509_conn(url)
     #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    #if len(all_block_names)<5000: 
+    #if len(all_block_names)<5000:
     items = []
     if not complement:
         print "global sub query"
@@ -3202,7 +3202,7 @@ def getOldDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoe
         #    result = json.loads(r2.read())
         #    if len(result['phedex']['dataset']):
         #        items.extend( result['phedex']['dataset'][0]['block'] )
-        
+
     destinations=defaultdict(set)
 
 
@@ -3220,11 +3220,11 @@ def getOldDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoe
                 if within_sites and not sub['node'] in within_sites: continue
                 #if sub['group'] == None: sub['group']=""
                 if sub['group'] == None: sub['group']="DataOps" ## assume "" group is dataops
-                if group!=None and not sub['group'].lower()==group.lower(): continue 
+                if group!=None and not sub['group'].lower()==group.lower(): continue
                 destinations[sub['node']].add( (item['name'], int(sub['percent_bytes']), sub['request']) )
     ## per site, a list of the blocks that are subscribed to the site
     ## transform into data_fraction or something valuable
-            
+
     #complement with transfer request, approved, but without subscriptions yet
     if complement:
         time.sleep(1)
@@ -3232,14 +3232,14 @@ def getOldDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoe
         print "we have",destinations.keys(),"for now"
         try:
             conn = make_x509_conn(url)
-            #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))  
+            #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
             r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset=%s'%dataset)
             r2=conn.getresponse()
         except:
             print "\twaiting a bit for retry"
             time.sleep(1)
             conn = make_x509_conn(url)
-            #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))  
+            #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
             r1=conn.request("GET",'/phedex/datasvc/json/prod/requestlist?dataset=%s'%dataset)
             r2=conn.getresponse()
         result = json.loads(r2.read())
@@ -3266,7 +3266,7 @@ def getOldDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoe
         sites_destinations = []
         for req in item['node']:
             if req['name']=='T2_CH_CERN': print "yes to cern"
-                
+
             if within_sites and not req['name'] in within_sites: continue
             #if req['decision'] != 'approved' : continue
             if not req['time_decided']: continue
@@ -3277,7 +3277,7 @@ def getOldDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoe
                 continue
             if req['name'] in times:
                 #if req['name']=='T2_CH_CERN': print times[req['name']]
-                if int(req['time_decided']) > times[req['name']]: 
+                if int(req['time_decided']) > times[req['name']]:
                     ## the node was already seen as a destination with an ealier time, and no delete in between
                     if req['name']=='T2_CH_CERN': print "uhm",phedex_id
                     continue
@@ -3302,28 +3302,28 @@ def getOldDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoe
         for req in sub_items:
             if group!=None and not req['group'].lower()==group.lower(): continue
             for requested_dataset in req['data']['dbs']['dataset']:
-                if requested_dataset['name'] != dataset: 
+                if requested_dataset['name'] != dataset:
                     print requested_dataset,"not the same"
                     continue
                 for site in sites_missing_information:
                     for b in all_block_names:
                         destinations[site].add( (b, 0, phedex_id) )
-                    
+
             for b in req['data']['dbs']['block']:
                 if not b['name'] in all_block_names: continue
                 destinations[site].add((b['name'], 0, phedex_id) )
         #print "added?",(site in destinations.keys())
         if not site in destinations.keys():
             print json.dumps(sub_items, indent=2)
-        
-        
+
+
     for site in destinations:
         blocks = [b[0] for b in destinations[site]]
         blocks_and_id = dict([(b[0],b[2]) for b in destinations[site]])
         #print blocks_and_id
         completion = sum([b[1] for b in destinations[site]]) / float(len(destinations[site]))
-        
-        destinations[site] = { "blocks" : blocks_and_id, 
+
+        destinations[site] = { "blocks" : blocks_and_id,
                                #"all_blocks" : list(all_block_names),
                                "data_fraction" : len(blocks) / float(len(all_block_names)) ,
                                "completion" : completion,
@@ -3338,7 +3338,7 @@ def getOldDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoe
 
         destinations[site]['replication'] = sum([sum([destinations[other_site]['blocks'].count(block) for block in destinations[site]['blocks'] ]) / float(len(destinations[site]['blocks'])) for other_site in destinations.keys()])
     """
-    
+
     return destinations, all_block_names
 
 
@@ -3362,7 +3362,7 @@ def getDatasetOnGoingDeletion( url, dataset ):
     r2=conn.getresponse()
     result = json.loads(r2.read())['phedex']
     return result['dataset']
-    
+
 def getDatasetBlocks( dataset, runs=None, lumis=None):
     dbsapi = DbsApi(url=dbs_url)
     all_blocks = set()
@@ -3381,13 +3381,13 @@ def getDatasetBlocks( dataset, runs=None, lumis=None):
                 all_files = []
             print len(all_files)
             all_blocks.update( [f['block_name'] for f in all_files])
-                
+
         #needs a series of convoluted calls
         #all_blocks.update([item['block_name'] for item in dbsapi.listBlocks( dataset = dataset )])
         pass
     if runs==None and lumis==None:
         all_blocks.update([item['block_name'] for item in dbsapi.listBlocks(dataset= dataset) ])
-    
+
     return list( all_blocks )
 
 def getUnsubscribedBlocks(url, site):
@@ -3404,7 +3404,7 @@ def getUnsubscribedBlocks(url, site):
 
     s = sum([i['bytes'] for i in items])
     print s
-         
+
     return list(collected)
 
 
@@ -3477,7 +3477,7 @@ def try_getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=
                 if replica['group'] == None: replica['group']=""
                 if complete and not replica['complete']==complete: continue
                 #if group!=None and replica['group']==None: continue
-                if group!=None and not replica['group'].lower()==group.lower(): continue 
+                if group!=None and not replica['group'].lower()==group.lower(): continue
                 locations[replica['node']].add( item['name'] )
                 #print "\t",replica['node'],item['name']
                 if item['name'] not in all_block_names and not only_blocks:
@@ -3506,7 +3506,7 @@ def try_getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=
         missing_in_dbs = sorted(set(blocks_in_phedex) - set(all_block_names))
         if missing_in_phedex: print missing_in_phedex,"missing in phedex"
         if missing_in_dbs: print missing_in_dbs,"missing in dbs"
-        
+
     if only_blocks:
         all_block_names = filter( lambda b : b in only_blocks, all_block_names)
         full_size = sum([block['file_size'] for block in all_blocks if (block['block_name'] in only_blocks)])
@@ -3594,7 +3594,7 @@ def getDatasetChops(dataset, chop_threshold =1000., talk=False, only_blocks=None
                 items[-1].append( last['block_name'] )
             sizes.append( size_chunk )
 
-                
+
             if talk:
                 print len(items[-1]),"items below thresholds",size_chunk
                 print items[-1]
@@ -3606,7 +3606,7 @@ def getDatasetChops(dataset, chop_threshold =1000., talk=False, only_blocks=None
         if only_blocks:
             items = [[block['block_name'] for block in blocks]]
         else:
-            items = [[dataset]] 
+            items = [[dataset]]
         sizes = [sum_all]
         if talk:
             print items
@@ -3655,7 +3655,7 @@ def distributeToSites( items, sites , n_copies, weights=None,sizes=None):
                     at.add( picked_site )
                 #print list(at)
             for site in at:
-                spreading[site].extend(item)                
+                spreading[site].extend(item)
         return dict(spreading)
 
 def getDatasetEventsAndLumis(dataset, blocks=None):
@@ -3731,7 +3731,7 @@ class duplicateAnalyzer:
         """
     def _buildGraph(self, lumis):
         graph = {}
-        
+
         for lumi in lumis:
             files = lumis[lumi]
             #text lines with file names
@@ -3743,13 +3743,13 @@ class duplicateAnalyzer:
             if f2 not in graph[f1]:
                 graph[f1][f2] = 0
                 graph[f1][f2] += 1
-            #create edge (f2, f1)       
+            #create edge (f2, f1)
             if f2 not in graph:
                 graph[f2] = {}
             if f1 not in graph[f2]:
                 graph[f2][f1] = 0
                 graph[f2][f1] += 1
-        return graph    
+        return graph
 
     def _hasEdges(self,graph):
         """
@@ -3769,7 +3769,7 @@ class duplicateAnalyzer:
         """
         red = set()
         green = set()
-        
+
         for f1, f2d in graph.items():
             f1red = f1 in red
             f1green = f1 in green
@@ -3788,7 +3788,7 @@ class duplicateAnalyzer:
                 elif (f1red and f2red) or (f1green and f2green):
                     print "NOT BIPARTITE GRAPH"
                     raise Exception("Not a bipartite graph, cannot use this algorithm for removing")
-                    
+
                 #both are colored but different
                 elif f1red != f2red and f1green != f2green:
                     continue
@@ -3802,8 +3802,8 @@ class duplicateAnalyzer:
                 elif f2green:
                     green.add(f1)
         #validate against the # of events of the files
-        eventsRed = sum(events[f] for f in red)   
-        eventsGreen = sum(events[f] for f in green)   
+        eventsRed = sum(events[f] for f in red)
+        eventsGreen = sum(events[f] for f in green)
         if eventsRed < eventsGreen:
             return list(red)
         else:
@@ -3823,14 +3823,14 @@ class duplicateAnalyzer:
         #quadratic first
         while self._hasEdges(graph):
         #get smallest vertex
-            minv = ls.pop()  
+            minv = ls.pop()
             #remove minv from all its adjacent vertices
             for v in graph[minv]:
                 del graph[v][minv]
             #remove maxv entry
-            del graph[minv]    
+            del graph[minv]
             files.append(minv)
-    
+
         #print "End Files:",len(graph), "Invalidated:",len(graph)
         return files
 
@@ -3840,7 +3840,7 @@ class duplicateAnalyzer:
             for fn in fns: lumi_count_per_file[fn]+=1
         bad_lumis = dict([(rl,files) for rl,files in files_per_lumis.items() if len(files)>1])
         graph = self._buildGraph(bad_lumis)
-        try: 
+        try:
             files = self._colorBipartiteGraph(graph, lumi_count_per_file)
         except:
             #print "not with colorBipartiteGraph"
@@ -3902,7 +3902,7 @@ def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False,
     class getFilesWithLumiInRun_t(threading.Thread):
         def __init__(self, d,r):
             threading.Thread.__init__(self)
-            self.d =d 
+            self.d =d
             self.r =r
         def run(self):
             self.res = getFilesWithLumiInRun( self.d, self.r)
@@ -3914,15 +3914,15 @@ def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False,
     while sum([t.is_alive() for t in threads]):
         pass
     for t in threads:
-        if not hasattr(t,'res'): 
+        if not hasattr(t,'res'):
             print "not good to not have a result from the thread"
             continue
         for f in t.res:
             full_lumi_json[t.r].update( f['lumi_section_num'] )
             for lumi in f['lumi_section_num']:
-                files_per_lumi[(t.r,lumi)].add( f['logical_file_name'] )            
+                files_per_lumi[(t.r,lumi)].add( f['logical_file_name'] )
 
-    """    
+    """
     for run in d_runs:
         files = getFilesWithLumiInRun( dataset, run )
         #print run,len(files),"files"
@@ -3936,7 +3936,7 @@ def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False,
     ## convert set->list and for a run list
     lumi_json = {}
     files_json = {}
-    for r in full_lumi_json: 
+    for r in full_lumi_json:
         full_lumi_json[r] = list(full_lumi_json[r])
         if runs and not r in runs: continue
         if lumilist:
@@ -3997,7 +3997,7 @@ def getDatasetLumis(dataset, runs=None, with_cache=False):
     ## convert set->list and for a run list
     lumi_json = {}
     files_json = {}
-    for r in full_lumi_json: 
+    for r in full_lumi_json:
         full_lumi_json[r] = list(full_lumi_json[r])
         if runs and not r in runs: continue
         lumi_json[r] = list(full_lumi_json[r])
@@ -4036,11 +4036,11 @@ def getDatasetAllEventsPerLumi(dataset, fraction=1):
     chunking = 900
     for chunk in [all_files[x:x+chunking] for x in xrange(0, len(all_files), chunking)]:
         ls = dbsapi.listFileLumiArray( logical_file_name = [f['logical_file_name'] for f in chunk])
-        for l in ls: 
+        for l in ls:
             final[l['logical_file_name']][1]+= len(l['lumi_section_num'])
 
 
-    
+
     return    [a/float(b) for (a,b) in final.values()]
 
 def getDatasetEventsPerLumi(dataset):
@@ -4056,13 +4056,13 @@ def getDatasetEventsPerLumi(dataset):
     #except:
     #    print "We had to have a DBS listfilesummaries retry"
     #    time.sleep(1)
-    #    all_files = dbsapi.listFileSummaries( dataset = dataset , validFileOnly=1)        
+    #    all_files = dbsapi.listFileSummaries( dataset = dataset , validFileOnly=1)
     #try:
     #    average = sum([f['num_event']/float(f['num_lumi']) for f in all_files]) / float(len(all_files))
     #except:
     #    average = 100
     #return average
-           
+
 def invalidateFiles( files ):
     all_OK = True
     #conn = make_x509_conn('dynamo.mit.edu')
@@ -4085,7 +4085,7 @@ def invalidateFiles( files ):
 def checkParent( dataset ):
     dbsapi = DbsApi(url=dbs_url)
     dbswrite = DbsApi(url=dbs_url_writer)
-    
+
     ## get the parent dataset
     parents = findParent(dataset)
     if len(parents)>1:
@@ -4137,7 +4137,7 @@ def checkParent( dataset ):
     #                         parent_dataset = parents[0]
     #                         )
     #    pass
-        
+
 
 def findParent( dataset ):
     dbsapi = DbsApi(url=dbs_url)
@@ -4174,11 +4174,11 @@ def setDatasetStatus(dataset, status):
         max_try-=1
         if max_try<0: return False
     return True
-     
+
 def getDatasetStatus(dataset):
-        # initialize API to DBS3                                                                                                                                                                                                                                                     
+        # initialize API to DBS3
         dbsapi = DbsApi(url=dbs_url)
-        # retrieve dataset summary                                                                                                                                                                                                                                                   
+        # retrieve dataset summary
         reply = dbsapi.listDatasets(dataset=dataset,dataset_access_type='*',detail=True)
         if len(reply):
             return reply[0]['dataset_access_type']
@@ -4186,7 +4186,7 @@ def getDatasetStatus(dataset):
             return None
 
 def getDatasets(dataset):
-    # initialize API to DBS3                                                                                                                                                                                                                                                    
+    # initialize API to DBS3
     dbsapi = DbsApi(url=dbs_url)
     # retrieve dataset summary
 
@@ -4194,7 +4194,7 @@ def getDatasets(dataset):
     #reply = dbsapi.listDatasets(dataset=dataset,dataset_access_type='*')
     _,ds,p,t = dataset.split('/')
     a,s,v = p.split('-')
-    reply = dbsapi.listDatasets(primary_ds_name = ds, 
+    reply = dbsapi.listDatasets(primary_ds_name = ds,
                                 #acquisition_era_name = a,
                                 processed_ds_name = p,
                                 data_tier_name = t,
@@ -4213,7 +4213,7 @@ def createXML(datasets):
     # Create the <dbs> base element
     dbs = doc.createElement("dbs")
     dbs.setAttribute("name", dbs_url)
-    result.appendChild(dbs)    
+    result.appendChild(dbs)
     #Create each of the <dataset> element
     for datasetname in datasets:
         dataset=doc.createElement("dataset")
@@ -4264,7 +4264,7 @@ def approveSubscription(url, phedexid, nodes=None , comments =None, decision = '
         'node' : ','.join(nodes),
         'comments' : comments
         }
-    
+
     result = phedexPost(url, "/phedex/datasvc/json/prod/updaterequest", params)
     if not result:
         return False
@@ -4299,7 +4299,7 @@ def disapproveSubscription(url, phedexid, nodes=None , comments =None):
         'node' : ','.join(nodes),
         'comments' : comments
         }
-    
+
     result = phedexPost(url, "/phedex/datasvc/json/prod/updaterequest", params)
     if not result:
         return False
@@ -4346,12 +4346,12 @@ def updateSubscription(url, site, item, priority=None, user_group=None, suspend=
         params['block'] = item.replace('#','%23')
     else:
         params['dataset'] = item
-        
+
     #params['block' if '#' in item else 'dataset'] = item
     if priority:   params['priority'] = priority
     if user_group: params['user_group'] = user_group
     if suspend!=None: params['suspend_until']  = suspend
-    response = phedexPost(url, "/phedex/datasvc/json/prod/updatesubscription", params) 
+    response = phedexPost(url, "/phedex/datasvc/json/prod/updatesubscription", params)
     #print response
     return response
 
@@ -4393,7 +4393,7 @@ def getWorkLoad(url, wf ):
 #        return [item['doc'] for item in items]
 #    else:
 #        return [item['id'] for item in items]
-        
+
 def getConfigurationFile(url , cacheid):
     conn = make_x509_conn(url)
     #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -4401,13 +4401,13 @@ def getConfigurationFile(url , cacheid):
     r1=conn.request("GET",there)
     r2=conn.getresponse()
     return r2.read()
-    
+
 def getConfigurationLine(url, cacheid, token="# with command line"):
     cfg = getConfigurationFile(url, cacheid)
     for line in cfg.split('\n'):
         if line.startswith(token): return line
     return None
-    
+
 def getWorkflowByCampaign(url, campaign, details=False):
     conn = make_x509_conn(url)
     #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -4425,7 +4425,7 @@ def getWorkflowByCampaign(url, campaign, details=False):
     else:
         return data
 
-    
+
 def getWorkflowByInput( url, dataset , details=False):
     conn = make_x509_conn(url)
     #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -4476,7 +4476,7 @@ def getLatestMCPileup( url, statuses=None):
 
     reqs = []
     for status in statuses:
-        print status 
+        print status
         conn = make_x509_conn(url)
         #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         r1=conn.request("GET",'/reqmgr2/data/request?mask=RequestDate&mask=MCPileup&status=%s'%status, headers={"Accept":"application/json"})
@@ -4491,30 +4491,30 @@ def getLatestMCPileup( url, statuses=None):
             t = v.get('MCPileup',None)
             d = v.get('RequestDate',[])
             if t and len(d)==6:
-                d =time.mktime(time.strptime("-".join(map(lambda n : "%02d"%int(n), d)), "%Y-%m-%d-%H-%M-%S"))                
+                d =time.mktime(time.strptime("-".join(map(lambda n : "%02d"%int(n), d)), "%Y-%m-%d-%H-%M-%S"))
                 for tt in t:
                     those[tt].add( d )
-    ret = {}                
+    ret = {}
     for dataset,ages in those.items():
         ret[dataset] = max(ages)
     return ret
 
 def display_time( sec ):
     if not sec: return sec
-    
+
     m, s = divmod(sec, 60)
     h, m = divmod(m, 60)
     d, h = divmod(h, 24)
     dis=""
-    if d: 
-        dis += "%d [d]"%d 
+    if d:
+        dis += "%d [d]"%d
     if h or d :
         dis += "%d [h] "%h
     if h or m or d:
         dis += "%d [m] "%m
     if h or m or s or d :
         dis += "%d [s]"%s
-            
+
     return dis
 
 def getWorkflowByMCPileup( url, dataset , details=False):
@@ -4546,7 +4546,7 @@ def getWorkflowById( url, pid , details=False):
         return [item['doc'] for item in items]
     else:
         return [item['id'] for item in items]
-    
+
 
 
 def forceComplete(url, wfi):
@@ -4594,7 +4594,7 @@ class agentInfo:
     def agentStatus(self, agent):
         for status in self.buckets:
             if agent in self.buckets[status]:
-                return status 
+                return status
         return 'N/A'
 
     def checkTrello(self, sync_trello=None, sync_agents=None, acting=False):
@@ -4644,11 +4644,11 @@ class agentInfo:
                                                   'update' : now,
                                                   'date' : nows }
                                                  )
-                                             
+
             #print agent,lid,clid
-            
-            
-        
+
+
+
     def getStatus(self):
         all_agents_prod = getAllAgents(self.url).get('production',None)
         if not all_agents_prod:
@@ -4657,7 +4657,7 @@ class agentInfo:
             return False
         prod_info = dict([(a['agent_url'].split(':')[0], a) for a in all_agents_prod])
         all_agents_name = sorted(set(self.info.keys() + prod_info.keys()))
-        
+
         now,nows = self.getNow()
 
         for agent in all_agents_name:
@@ -4676,7 +4676,7 @@ class agentInfo:
                 if pinfo:
                     ## and is in production
                     st = 'running'
-                    if pinfo['drain_mode']: 
+                    if pinfo['drain_mode']:
                         if linfo['status'] == 'standby':
                             st = 'standby'
                         elif p_release and p_release != release:
@@ -4687,16 +4687,16 @@ class agentInfo:
                 else:
                     ## and is gone from production
                     st = 'offline'
-                self.info[agent]['status'] = st 
+                self.info[agent]['status'] = st
             else:
                 ## the agent is new here. let's assume it is in standby if in drain
                 st = 'running'
                 if pinfo['drain_mode']:
-                    st = 'standby' 
+                    st = 'standby'
                     ## for the first time
                     #st = 'draining'
                     print "A new agent in the pool",agent,"setting",st
-                    
+
                 ## add it
                 self.info[agent] = { 'status' : st,
                                      'update' : now,
@@ -4706,7 +4706,7 @@ class agentInfo:
             self.info[agent].setdefault('version', release)
 
         for a,i in self.info.items():
-            self.buckets[i['status']].append( a ) 
+            self.buckets[i['status']].append( a )
 
         if not self.buckets.get('standby',[]):
             print "There are no agent in standby!!"
@@ -4763,7 +4763,7 @@ class agentInfo:
         drain_agent = False
 
         ## go through some metric
-        ## collect the number of jobs per agent. 
+        ## collect the number of jobs per agent.
         ##sum over those running+draining+standby
         one_recent_running = False
         one_recent_standby = False
@@ -4828,7 +4828,7 @@ class agentInfo:
             running += r
             pending += p
             wake_up_metric.append( (agent_name, p-r ) )
-        
+
         runnings = self.buckets.get('running',[])
         drainings = self.buckets.get('draining',[])
         standbies = self.buckets.get('standby',[])
@@ -4860,7 +4860,7 @@ class agentInfo:
 
             if agent_name in standbies:
                 if agent_name in self.release[top_release]:
-                    standby_top_release += 1 
+                    standby_top_release += 1
             if agent_name in runnings:
                 if agent_name in self.release[top_release]:
                     running_top_release += 1
@@ -4897,7 +4897,7 @@ class agentInfo:
             print "These are good for speed drainig",sorted(speed_draining)
             print "These are good for open draining",sorted(open_draining)
 
-        if not acting: 
+        if not acting:
             speed_draining = set()
             open_draining = set()
 
@@ -4908,11 +4908,11 @@ class agentInfo:
 
         ## all agents are above the understood limit. so please boot one
         if not one_recent_running:
-            if over_threshold: 
+            if over_threshold:
                 msg = 'All agents are maxing out. We need a new agent'
-                sendLog('agentInfo', msg, level='critical')            
+                sendLog('agentInfo', msg, level='critical')
                 #sendEmail('agentInfo', msg)
-            if under_threshold: 
+            if under_threshold:
                 msg = 'There are agents under-doing and that could be set in standby'
                 sendLog('agentInfo', msg , level='critical')
                 sendEmail('agentInfo', msg)
@@ -4924,7 +4924,7 @@ class agentInfo:
                 msg = 'There is a new agent release in town %s. Starting to drain other agents from %s'%( top_release, sorted( candidates_to_drain ))
                 sendLog('agentInfo', msg, level='critical')
                 #sendEmail('agentInfo', msg)
-                
+
             if acting:
                 need_one = over_threshold
                 if not over_threshold:
@@ -4962,7 +4962,7 @@ class agentInfo:
                 # pick one at random in the one idling
                 wake_up = random.choice( pick_from )
                 print "waking up", wake_up
-                if wake_up in speed_draining: speed_draining.remove( wake_up ) 
+                if wake_up in speed_draining: speed_draining.remove( wake_up )
                 if wake_up in open_draining: open_draining.remove( wake_up )
                 if setAgentOn(self.url, wake_up):
                     manipulated_agents.add( wake_up )
@@ -4998,7 +4998,7 @@ class agentInfo:
                 manipulated_agents.add( sleep_up )
                 self.info[sleep_up] = { 'status' : 'standby',
                                         'update' : now,
-                                        'date' : nows }                
+                                        'date' : nows }
         else:
             if not acting:
                 print "The polling is not proactive"
@@ -5023,12 +5023,12 @@ class agentInfo:
 
         all_in_priority_drain.update( open_draining )
         open('%s/speed_draining.json'%base_eos_dir,'w').write(json.dumps( list(all_in_priority_drain) ))
-                
+
         if fully_empty:
             msg = 'These agents are fully empty %s and ready for redeploy'% sorted(fully_empty)
             sendLog('agentInfo',msg, level='critical')
             #sendEmail('agentInfo', msg, destination=['alan.malta@cern.ch']) ## can be removed at some point
-        
+
         ## should update trello with the agents that got manipulated at this time
         self.checkTrello(sync_trello=list(manipulated_agents), acting=acting)
 
@@ -5045,7 +5045,7 @@ def getAgentConfig(url, agent, keys):
     r2=conn.getresponse()
     info = json.loads(r2.read())['result'][-1]
     return dict([(k,v) for k,v in info.items() if k in keys])
-    
+
 def sendAgentConfig(url, agent, config_dict):
     encodedParams = json.dumps(config_dict)
     conn = make_x509_conn(url)
@@ -5086,7 +5086,7 @@ def getAgentInfo(url, agent):
     r1=conn.request("GET",url)
     r2=conn.getresponse()
     return json.loads(r2.read())["WMBS_INFO"]#["sitePendCountByPrio"]
-    
+
 def getAllAgents(url):
     conn = make_x509_conn(url)
     #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -5111,7 +5111,7 @@ def getWorkflows(url,status,user=None,details=False,rtype=None, priority=None):
             #wait+=2
             retries-=1
     raise Exception("getWorkflows failed 10 times")
-    
+
 def try_getWorkflows(url,status,user=None,details=False,rtype=None, priority=None):
     conn = make_x509_conn(url)
     #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -5127,7 +5127,7 @@ def try_getWorkflows(url,status,user=None,details=False,rtype=None, priority=Non
         go_to+='&initialpriority=%d'%priority ### does not work...
 
     go_to+='&detail=%s'%('true' if details else 'false')
-    r1=conn.request("GET",go_to, headers={"Accept":"application/json"})        
+    r1=conn.request("GET",go_to, headers={"Accept":"application/json"})
     r2=conn.getresponse()
     data = json.loads(r2.read())
     items = data['result']
@@ -5185,7 +5185,7 @@ def getLFNbase(dataset):
 def getListOfBlocks(inputdset,runwhitelist):
     dbsApi = DbsApi(url=dbs_url)
     blocks=dbsApi.listBlocks(dataset = inputdset, run_num = runwhitelist)
-    
+
     block_list = []
 
     for block in blocks:
@@ -5208,15 +5208,15 @@ def checkIfBlockIsSubscribedToASite(url,block,site):
         if subscription['node'] == site:
             return True
 
-    if 'block' in result['phedex']['dataset'][0]:    
+    if 'block' in result['phedex']['dataset'][0]:
 
         assert(len(result['phedex']['dataset'][0]['block']) == 1)
 
         for subscription in result['phedex']['dataset'][0]['block'][0]['subscription']:
             if subscription['node'] == site:
                 return True
-        
-    return False            
+
+    return False
 
 
 def checkIfDatasetIsSubscribedToASite(url,dataset,site):
@@ -5237,11 +5237,11 @@ def checkIfDatasetIsSubscribedToASite(url,dataset,site):
     for subscription in result['phedex']['dataset'][0]['subscription']:
         if subscription['node'] == site:
             return True
-        
-    return False            
+
+    return False
 
 def checkIfBlockIsAtASite(url,block,site):
-    
+
     conn = make_x509_conn(url)
     #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicasummary?block='+block.replace('#','%23'))
@@ -5255,7 +5255,7 @@ def checkIfBlockIsAtASite(url,block,site):
         if replica['node'] == site and replica['complete'] == 'y':
             return True
 
-    return False                
+    return False
 
 
 def getForceCompletes():
@@ -5313,7 +5313,7 @@ class workflowInfo:
         self.wmstats = None
         if stats:
             self.getWMStats()
-        
+
         self.errors = None
         if errors:
             self.getWMErrors()
@@ -5328,7 +5328,7 @@ class workflowInfo:
 
 
 
-        
+
     def getFamiolly(self, details=True, and_self=False):
         return self.getFamilly(details, and_self)
 
@@ -5364,7 +5364,7 @@ class workflowInfo:
         if prim: good = False
         #if sec: good = False
         ## should be of significant size. how do we check that ???
-        #good = good & 
+        #good = good &
         return good
 
     def isGoodToConvertToStepChain(self ,keywords=None, talk=False):
@@ -5398,8 +5398,8 @@ class workflowInfo:
     def notifyRequestor(self, message, do_request=True, do_batch=True, mcm=None):
         if not message: return
         try:
-            
-            if mcm == None: 
+
+            if mcm == None:
                 from McMClient import McMClient
                 mcm = McMClient(dev=False)
             pids = self.getPrepIDs()
@@ -5414,16 +5414,16 @@ class workflowInfo:
                 for src,dest in replacements.items():
                     dedicated_message = dedicated_message.replace(src, dest)
                     add_batch = add_batch.replace(src, dest)
-                    
+
                 batches = mcm.getA('batches',query='contains=%s'%wf_name)
                 batches = filter(lambda b : b['status'] in ['announced','done','reset'], batches)
-                if not batches:  
+                if not batches:
                     batches = mcm.getA('batches',query='contains=%s'%pid)
-                    batches = filter(lambda b : b['status'] in ['announced','done','reset'], batches)  
+                    batches = filter(lambda b : b['status'] in ['announced','done','reset'], batches)
                 if batches:
                     bid = batches[0]['prepid']
-                    print "batch nofication to",bid 
-                    if not bid in items_notified: 
+                    print "batch nofication to",bid
+                    if not bid in items_notified:
                         mcm.put('/restapi/batches/notify', { "notes" : dedicated_message+"\n"+add_batch, "prepid" : bid})
                         items_notified.add( bid )
                 if not pid in items_notified:
@@ -5439,7 +5439,7 @@ class workflowInfo:
         if show:
             print text ## to avoid having to duplicate it
         self.logs[subject] += '\n'+text
-        
+
     def __del__(self):
         self.flushLog()
 
@@ -5542,7 +5542,7 @@ class workflowInfo:
             'date1': time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(since*24*60*60)) ),
             'date2': time.strftime('%Y-%m-%d+%H:%M', time.gmtime())
             }
-            
+
         for key in args:
             if key in dargs:
                 dargs[key] = args[key]
@@ -5587,7 +5587,7 @@ class workflowInfo:
 
     def getRecoveryBlocks(self ,collection_name=None):
         doc = self.getRecoveryDoc(collection_name=collection_name)
-        all_files = set()    
+        all_files = set()
         files_and_loc = defaultdict(set)
         for d in doc:
             all_files.update( d['files'].keys())
@@ -5623,14 +5623,14 @@ class workflowInfo:
         for dataset in set([block.split('#')[0] for block in all_blocks]):
             print dataset
             dataset_blocks.update( getDatasetBlocks( dataset ) )
-        
+
         files_and_loc = dict([(k,list(v)) for (k,v) in files_and_loc.items() if k in files_no_block])
         return dataset_blocks,all_blocks_loc,files_in_block,files_and_loc#files_no_block
 
     def getRecoveryDoc(self, collection_name=None):
         if collection_name == None:
             collection_name = self.request['RequestName']
-        
+
         if 'CollectionName' in self.request and self.request['CollectionName']:
             if collection_name == True:
                 collection_name = self.request['CollectionName']
@@ -5712,7 +5712,7 @@ class workflowInfo:
                 intersection = intersection & set(pu['mc'][block]['PhEDExNodeNames'])
             else:
                 intersection = set(pu['mc'][block]['PhEDExNodeNames'])
-        
+
         max_blocks = max( count_blocks.values())
         #print json.dumps(count_blocks, indent=2)
         site_with_enough = [ site for site,count in count_blocks.items() if count > 0.90*max_blocks]
@@ -5745,10 +5745,10 @@ class workflowInfo:
                     return self.workqueue
             self.workqueue = list([d['doc'] for d in json.loads(r2.read())['rows']])
         return self.workqueue
-    
+
 
     def getJobs(self):
-        agents = self.getActiveAgents()  
+        agents = self.getActiveAgents()
         agents = map(lambda s : s.split('/')[-1].split(':')[0], agents)
 
         class agentCom:
@@ -5829,7 +5829,7 @@ class workflowInfo:
         if summary and 'errors' in summary:
             all_errors = summary['errors']
             for task,errors in all_errors.items():
-                print "\tTask",task 
+                print "\tTask",task
                 ## filtering of tasks we do not care about
                 if 'Clean' in task: continue
                 all_codes = []
@@ -5841,12 +5841,12 @@ class workflowInfo:
                 sum_failed = sum([l[1] for l in all_codes])
                 for errorCode,njobs,name,types,details in all_codes:
                     rate = 100*njobs/float(sum_failed)
-                    #print ("\t\t %10d (%6s%%) failures with error code %10d (%"+str(max_legend)+"s) at stage %s")%(njobs, "%4.2f"%rate, errorCode, legend, name)                                                                                
+                    #print ("\t\t %10d (%6s%%) failures with error code %10d (%"+str(max_legend)+"s) at stage %s")%(njobs, "%4.2f"%rate, errorCode, legend, name)
                     print ("\t\t %10d (%6s%%) failures with error code %10d (%30s) at stage %s")%(njobs, "%4.2f"%rate, errorCode, ','.join(types), name)
-                    
+
                     added_in_recover=False
                     if errorCode in error_codes_to_recover:
-                        ## the error code is registered                                                                                                                                                                                     
+                        ## the error code is registered
                         for case in error_codes_to_recover[errorCode]:
                             match = case['details']
                             matched= (match==None)
@@ -5888,7 +5888,7 @@ class workflowInfo:
                                     message_to_ops += "%s has an error %s blocking an ACDC.\n%s\n "%( wfo.name, errorCode, '#'*50 )
                                     recover = False
                                     added_in_recover=False
-                                
+
                     if errorCode in error_codes_to_notify and not added_in_recover:
                         print "\t\t => we should notify people on this"
                         message_to_user += "%s has an error %s in processing.\n%s\n" %( wfo.name, errorCode, '#'*50 )
@@ -5918,7 +5918,7 @@ class workflowInfo:
     def getComputingTime(self,unit='h'):
         cput = None
         ## look for it in a cache
-        
+
         if 'InputDataset' in self.request:
             ds = self.request['InputDataset']
             if 'BlockWhitelist' in self.request and self.request['BlockWhitelist']:
@@ -5926,7 +5926,7 @@ class workflowInfo:
             else:
                 (ne,_) = getDatasetEventsAndLumis( ds )
             tpe = self.request['TimePerEvent']
-            
+
             cput = ne * tpe
         elif 'Chain' in self.request['RequestType']:
             base = self.request['RequestType'].replace('Chain','')
@@ -5965,7 +5965,7 @@ class workflowInfo:
             ne = float(self.request['RequestNumEvents'])
             fe = float(self.request['FilterEfficiency'])
             tpe = self.request['TimePerEvent']
-            
+
             cput = ne/fe * tpe
 
         if cput==None:
@@ -5978,16 +5978,16 @@ class workflowInfo:
         if unit=='d':
             cput = cput / (60.*60.*24.)
         return cput
-    
+
     #def getNCopies(self, CPUh=None, m = 2, M = 6, w = 50000, C0 = 100000):
     def getNCopies(self, CPUh=None, m = 2, M = 3, w = 50000, C0 = 100000):
-        def sigmoid(x):      
-            return 1 / (1 + math.exp(-x)) 
+        def sigmoid(x):
+            return 1 / (1 + math.exp(-x))
         if CPUh==None:
             CPUh = self.getComputingTime()
         f = sigmoid(-C0/w)
         D = (M-m) / (1-f)
-        O = (f*M - m)/(f-1) 
+        O = (f*M - m)/(f-1)
         #print O
         #print D
         return int(O + D * sigmoid( (CPUh - C0)/w)), CPUh
@@ -6035,14 +6035,14 @@ class workflowInfo:
                             min_child_job_per_event = c_size
                 else:
                     root_job_per_event = c_size
-                    
+
                 if c_size and p_size:
                     blow_up = float(p_size)/ c_size
                     #print "parent jobs",p_size,"compared to my size",c_size
                     #print blow_up
                     if blow_up > max_blow_up:
                         max_blow_up = blow_up
-            return (min_child_job_per_event, root_job_per_event, max_blow_up)    
+            return (min_child_job_per_event, root_job_per_event, max_blow_up)
         return (1.,1.,1.)
     def heavyRead(self):
         ## this is an add-hoc way of doing this. True by default. False if "premix" appears in the output datasets or in the campaigns
@@ -6064,7 +6064,7 @@ class workflowInfo:
             if self.heavyRead():
                 sites_allowed = sorted(set(SI.sites_T0s + SI.sites_T1s + SI.sites_with_goodIO))
             else:
-                sites_allowed = sorted(set(SI.sites_T0s + SI.sites_T1s + SI.sites_with_goodAAA))                
+                sites_allowed = sorted(set(SI.sites_T0s + SI.sites_T1s + SI.sites_with_goodAAA))
         elif primary:
             sites_allowed =sorted(set(SI.sites_T0s + SI.sites_T1s + SI.sites_T2s + SI.sites_T3s))
         else:
@@ -6130,7 +6130,7 @@ class workflowInfo:
         if not arch_allowed is None:
             sites_allowed = list(set(arch_allowed) & set(sites_allowed))
             print "Reducing the whitelist to sites allowing",archs,":",sorted(arch_allowed)
-        
+
         return (lheinput,primary,parent,secondary,sites_allowed)
 
     def checkSplitting(self):
@@ -6162,16 +6162,16 @@ class workflowInfo:
                     modified_split_for_task = spl
                     modified_split_for_task['splitParams']['events_per_job'] = avg_events_per_job_for_task
                     modified_splits.append( modified_split_for_task )
-        
-        elif self.request['RequestType']=='TaskChain':        
+
+        elif self.request['RequestType']=='TaskChain':
             events_per_lumi=None
             events_per_lumi_inputs = None
             max_events_per_lumi=[]
             def find_task_dict( name ):
-                i_task=1 
-                while True: 
-                    tname = 'Task%d'%i_task     
-                    i_task+=1       
+                i_task=1
+                while True:
+                    tname = 'Task%d'%i_task
+                    i_task+=1
                     if not tname in self.request: break
                     if self.request[tname]['TaskName'] == name:
                         return copy.deepcopy( self.request[tname] )
@@ -6198,21 +6198,21 @@ class workflowInfo:
 
                 ## avg_events_per_job is base on 8h. we could probably put some margin
                 if events_per_lumi and 'events_per_job' in task:
-                    avg_events_per_job = task['events_per_job'] 
+                    avg_events_per_job = task['events_per_job']
                     ## climb up all task to take the filter eff into account
                     efficiency_factor = 1.
                     while t and 'InputTask' in t:
                         t = find_task_dict( t['InputTask'] )
                         if 'FilterEfficiency' in t:
                             efficiency_factor *= t['FilterEfficiency']
-                    events_per_lumi_at_this_task = events_per_lumi * efficiency_factor                        
+                    events_per_lumi_at_this_task = events_per_lumi * efficiency_factor
 
                     #if (events_per_lumi_at_this_task > avg_events_per_job):
                     #    print "The default splitting will not work for subsequent steps",events_per_lumi,"[in the input dataset] amounts to",events_per_lumi_at_this_task,"[at this task]>",avg_events_per_job,"[splitting for the task]"
-                    #    #max_events_per_lumi.append( int(avg_events_per_job*0.75) ) ##reducing 
-                    #    max_events_per_lumi.append( int(avg_events_per_job*0.75) ) ##reducing 
-                    
-                    
+                    #    #max_events_per_lumi.append( int(avg_events_per_job*0.75) ) ##reducing
+                    #    max_events_per_lumi.append( int(avg_events_per_job*0.75) ) ##reducing
+
+
                     if timeperevent:
                         job_timeout = 45. ## hours
                         job_target = 8. ## hours
@@ -6227,14 +6227,14 @@ class workflowInfo:
                             max_events_per_lumi.append( this_max_events_per_lumi /efficiency_factor ) ## report here, so that if we can change it, we will change this
                         else:
                             pass
-                            
+
 
                     if sizeperevent:# and (avg_events_per_job * sizeperevent ) > (GB_space_limit*1024.**2):
                         size_per_input_lumi = events_per_lumi_at_this_task*sizeperevent
                         this_max_events_per_lumi = int( (GB_space_limit*1024.**2) / sizeperevent)
                         if (size_per_input_lumi > (GB_space_limit*1024.**2)):
                             ## derive a value for the lumisection
-                            print "The output size task %s is expected to be too large : %.2f GB > %f GB even for one lumi (effective lumi size is ~%d), should go as low as %d"% ( tname , 
+                            print "The output size task %s is expected to be too large : %.2f GB > %f GB even for one lumi (effective lumi size is ~%d), should go as low as %d"% ( tname ,
                                                                                                                                                 size_per_input_lumi / (1024.**2 ),
                                                                                                                                                 GB_space_limit,
                                                                                                                                                 events_per_lumi_at_this_task,
@@ -6242,7 +6242,7 @@ class workflowInfo:
                             max_events_per_lumi.append( this_max_events_per_lumi/efficiency_factor ) ## adding this to that later on we can check and adpat the split 0
                         elif (avg_events_per_job * sizeperevent ) > (GB_space_limit*1024.**2):
                             ## should still change the avg_events_per_job setting of that task
-                            print "The output size of task %s is expected to be too large : %d x %.2f kB = %.2f GB > %f GB. Should set as low as %d "% ( tname , 
+                            print "The output size of task %s is expected to be too large : %d x %.2f kB = %.2f GB > %f GB. Should set as low as %d "% ( tname ,
                                                                                                                                                          avg_events_per_job, sizeperevent,
                                                                                                                                                          avg_events_per_job * sizeperevent / (1024.**2 ),
                                                                                                                                                          GB_space_limit,
@@ -6251,7 +6251,7 @@ class workflowInfo:
                             modified_split_for_task = spl
                             modified_split_for_task['splitParams']['events_per_job'] = this_max_events_per_lumi
                             modified_splits.append( modified_split_for_task )
-                        
+
             if max_events_per_lumi:
                 if events_per_lumi_inputs:
                     if min(max_events_per_lumi)<events_per_lumi_inputs:
@@ -6289,10 +6289,10 @@ class workflowInfo:
             events_per_lumi=None
             max_events_per_lumi=None
             def find_task_dict( name ):
-                i_task=1 
-                while True: 
-                    tname = 'Task%d'%i_task     
-                    i_task+=1       
+                i_task=1
+                while True:
+                    tname = 'Task%d'%i_task
+                    i_task+=1
                     if not tname in self.request: break
                     if self.request[tname]['TaskName'] == name:
                         return copy.deepcopy( self.request[tname] )
@@ -6301,14 +6301,14 @@ class workflowInfo:
                 #print "the task split",task
                 if 'events_per_lumi' in task:
                     events_per_lumi = task['events_per_lumi']
-                        
+
 
                 ## avg_events_per_job is base on 8h. we could probably put some margin
                 elif events_per_lumi and 'avg_events_per_job' in task:
                     avg_events_per_job = (task['avg_events_per_job'] *2 )
                     tname = task['splittingTask'].split('/')[-1]
                     t = find_task_dict( tname )
-                    
+
                     sizeperevent = t.get('SizePerEvent',None)
                     ## climb up all task to take the filter eff into account
                     while t and 'InputTask' in t:
@@ -6319,17 +6319,17 @@ class workflowInfo:
                         print "The default splitting will not work for subsequent steps",events_per_lumi,">",avg_events_per_job
                         if max_events_per_lumi==None or (max_events_per_lumi < avg_events_per_job):
                             max_events_per_lumi = avg_events_per_job
-               
+
                     GB_space_limit = 25.
                     if sizeperevent and (avg_events_per_job * sizeperevent ) > (GB_space_limit*1024.**2):
-                        print "The output size of task %s is expected to be too large : %d x %.2f kB = %.2f GB > %f GB "% ( tname , 
+                        print "The output size of task %s is expected to be too large : %d x %.2f kB = %.2f GB > %f GB "% ( tname ,
                                                                                                                            avg_events_per_job, sizeperevent,
                                                                                                                            avg_events_per_job * sizeperevent / (1024.**2 ),
                                                                                                                            GB_space_limit)
                         if (events_per_lumi * sizeperevent ) > (GB_space_limit*1024.**2):
                             ## derive a value for the lumisection
                             max_events_per_lumi =int( (GB_space_limit*1024.**2 /2.) / sizeperevent)
-                            print "The output size task %s is expected to be too large : %.2f GB > %f GB even for one lumi %d, should do %d"% ( tname , 
+                            print "The output size task %s is expected to be too large : %.2f GB > %f GB even for one lumi %d, should do %d"% ( tname ,
                                                                                                                                                 events_per_lumi * sizeperevent / (1024.**2 ),
                                                                                                                                                 GB_space_limit,
                                                                                                                                                 events_per_lumi,
@@ -6338,15 +6338,15 @@ class workflowInfo:
                             ## should still change the avg_events_per_job setting of that task
                             avg_events_per_job_for_task = int( (GB_space_limit*1024.**2 /2.) / sizeperevent)
                             print "it will actually be OK for one lumisection, but task %s should be set with %d events per job in average"%( tname, avg_events_per_job_for_task)
-                            
-                                                        
-                            
 
-                        
+
+
+
+
             if max_events_per_lumi:
                 print "the base splitting should be changed to", max_events_per_lumi,"per lumi"
                 answer_d.update({'EventsPerLumi' : max_events_per_lumi})
-            
+
             return answer_d if answer_d else answer
 
 
@@ -6356,7 +6356,7 @@ class workflowInfo:
             timing = self.request['TimePerEvent']
 
             ## need to divide by the number of cores in the job
-            ###average /= ncores 
+            ###average /= ncores
             ## if we can stay within 48 with one lumi. do it
             timeout = 48 *60.*60. #self.request['OpenRunningTimeout']
             if (average * timing) < timeout:
@@ -6377,7 +6377,7 @@ class workflowInfo:
 
     def getFilterEfficiency( self, taskName ):
         feff = 1.
-        
+
         itask = 1
         while True:
             ti = 'Task%d'% itask
@@ -6394,7 +6394,7 @@ class workflowInfo:
 
     def getSchema(self):
         #new_schema = copy.deepcopy( self.get_spec().request.schema.dictionary_())
-        
+
         self.conn = make_x509_conn(self.url)
         #self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         r1=self.conn.request("GET",'/reqmgr2/data/request?name=%s'%self.request['RequestName'], headers={"Accept":"application/json"} )
@@ -6406,7 +6406,7 @@ class workflowInfo:
         for (k,v) in new_schema.items():
             if v in [None,'None']:
                 new_schema.pop(k)
-        return new_schema 
+        return new_schema
 
     def _taskDescending(self, node, select=None):
         all_tasks=[]
@@ -6435,12 +6435,12 @@ class workflowInfo:
         for task,outs in output_per_task.items():
             for out in outs:
                 task_outputs[out] = task
-        
+
         percent_completions = {}
         event_expected_per_task = {}
         ## for all the outputs
         event_expected,lumi_expected = self.request.get('TotalInputEvents',0),self.request.get('TotalInputLumis', 0)
-        
+
         ttype = 'Task' if 'TaskChain' in self.request else 'Step'
         it = 1
         tname_dict = {}
@@ -6450,12 +6450,12 @@ class workflowInfo:
             if tt in self.request:
                 tname = self.request[tt]['%sName'% ttype]
                 tname_dict[tname] = tt
-                if not 'Input%s'%ttype in self.request[tt] and 'RequestNumEvents' in self.request[tt]: 
+                if not 'Input%s'%ttype in self.request[tt] and 'RequestNumEvents' in self.request[tt]:
                     ## pick up the value provided by the requester, that will work even if the filter effiency is broken
                     event_expected = self.request[tt]['RequestNumEvents']
             else:
                 break
-        
+
         if '%sChain'%ttype in self.request:
             ## go on and make the accounting
             it = 1
@@ -6474,15 +6474,15 @@ class workflowInfo:
                         a_task = self.request[ tname_dict[mother_task] ]
                 else:
                     break
-            
+
         for output in self.request['OutputDatasets']:
             event_count,lumi_count = getDatasetEventsAndLumis(dataset=output)
-            percent_completions[output] = 0. 
+            percent_completions[output] = 0.
             if lumi_expected:
                 percent_completions[output] = lumi_count / float( lumi_expected )
                 self.sendLog(caller, "lumi completion %s expected %d for %s"%( lumi_count, lumi_expected, output))
             output_event_expected = event_expected_per_task.get(task_outputs.get(output,'NoTaskFound'))
-            if output_event_expected and with_event: 
+            if output_event_expected and with_event:
                 e_fraction = float(event_count) / float( output_event_expected )
                 if e_fraction > percent_completions[output]:
                     percent_completions[output] = e_fraction
@@ -6503,9 +6503,9 @@ class workflowInfo:
                     #print dsname
                     #print t._internal_name
                     output_per_task[t._internal_name].append( dsname )
-                
+
         return dict(output_per_task)
-        
+
     def getAllTasks(self, select=None):
         all_tasks = []
         for task in self._tasks():
@@ -6515,7 +6515,7 @@ class workflowInfo:
 
     def getSplittingsNew(self ,strip=False):
         self.conn = make_x509_conn(self.url)
-        #self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))        
+        #self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         r1=self.conn.request("GET",'/reqmgr2/data/splitting/%s'%self.request['RequestName'], headers={"Accept":"application/json"} )
         r2=self.conn.getresponse()
         result = json.loads( r2.read() )['result']
@@ -6540,7 +6540,7 @@ class workflowInfo:
                           } )
             get_those = ['events_per_lumi','events_per_job','lumis_per_job','halt_job_on_file_boundaries','max_events_per_lumi','halt_job_on_file_boundaries_event_aware']#,'couchdDB']#,'couchURL']#,'filesetName']
             #print ts.__dict__.keys()
-            translate = { 
+            translate = {
                 'EventAwareLumiBased' : [('events_per_job','avg_events_per_job')]
                 }
             include = {
@@ -6550,7 +6550,7 @@ class workflowInfo:
             if ts.algorithm in include:
                 for k,v in include[ts.algorithm].items():
                     spl[-1][k] = v
-                    
+
             for get in get_those:
                 if hasattr(ts,get):
                     set_to = get
@@ -6632,7 +6632,7 @@ class workflowInfo:
             mcores_d = self._collectinchain('Multicore',default=1)
             mcores.extend( map(int, mcores_d.values() ))
         return max(mcores)
-        
+
     def getBlockWhiteList(self):
         bwl=[]
         if 'Chain' in self.request['RequestType']:
@@ -6689,7 +6689,7 @@ class workflowInfo:
             primary=set()
             parent=set()
             secondary=set()
-            if 'InputDataset' in blob:  
+            if 'InputDataset' in blob:
                 primary = set(filter(None,[blob['InputDataset']]))
             #elif 'InputDatasets' in blob: primary = set(filter(None,blob['InputDatasets']))
             if primary and 'IncludeParents' in blob and blob['IncludeParents']:
@@ -6699,7 +6699,7 @@ class workflowInfo:
                 secondary = set(filter(None,[blob['MCPileup']]))
             if 'LheInputFiles' in blob and blob['LheInputFiles'] in ['True',True]:
                 lhe=True
-                
+
             return (lhe,primary, parent, secondary)
 
         if 'Chain' in self.request['RequestType']:
@@ -6727,7 +6727,7 @@ class workflowInfo:
 
     def _collectin_uhm_chain( self , member, func=None,default=None, base=None):
         coll = {}
-        t=1                              
+        t=1
         while '%s%d'%(base,t) in self.request:
             if member in self.request['%s%d'%(base,t)]:
                 if func:
@@ -6802,9 +6802,9 @@ class workflowInfo:
             return self._collectinchain('ProcessingString')
         else:
             return self.request['ProcessingString']
-        
 
-            
+
+
     def go(self,log=False):
         CI = campaignInfo()
         pss = self.processingString()
@@ -6823,7 +6823,7 @@ class workflowInfo:
                     print "no go due to",campaign,label
                 return False
         return True
-            
+
 
 
     def getNextVersion( self ):
@@ -6848,7 +6848,7 @@ class workflowInfo:
                     aps='*'
                 pattern = '/'.join(['',dsn,'-'.join([aera,aps,'v*']),tier])
                 wilds = getDatasets( pattern )
-                print pattern,"->",len(wilds),"match(es)"                    
+                print pattern,"->",len(wilds),"match(es)"
                 for wild in [wildd['dataset'] for wildd in wilds]:
                     (_,_,mid,_) = wild.split('/')
                     v = int(mid.split('-')[-1].replace('v',''))
@@ -6932,6 +6932,6 @@ class workflowInfo:
                         version += 1
                     else:
                         break
-    
+
         return version+1
 
