@@ -54,9 +54,9 @@ source $BASE_DIR/credentials.sh
 $BASE_DIR/cWrap.sh Unified/completor.py
 
 ## get things that just completed
-$BASE_DIR/cWrap.sh Unified/checkor.py --strict
+#$BASE_DIR/cWrap.sh Unified/checkor.py --strict
 ## pass along everything that has custodial already and should close
-$BASE_DIR/cWrap.sh Unified/checkor.py  --clear
+#$BASE_DIR/cWrap.sh Unified/checkor.py  --clear
 $BASE_DIR/cWrap.sh Unified/closor.py
 
 ## early announce what can be announced already
