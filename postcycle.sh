@@ -66,5 +66,9 @@ $BASE_DIR/cWrap.sh Unified/completor.py
 ## look at everything that had to be taken care of
 $BASE_DIR/cWrap.sh Unified/checkor.py  --update
 
+## from clearcycle to avoid duplicated processes
+$BASE_DIR/cWrap.sh Unified/checkor.py --strict
+$BASE_DIR/cWrap.sh Unified/checkor.py  --clear
+
 rm -f $lock_name
 
