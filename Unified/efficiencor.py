@@ -84,7 +84,7 @@ while True:
                     if 'logArchive.tar.gz' in line:
                         fullpath = filter(lambda w : 'logArchive.tar.gz' in w, line.split())[0]
                         alf = fullpath.split('/')[-1].strip()
-                        if not '/' in fullpath or alf == 'logArchive.tar.gz':
+                        if not '/' in fullpath or alf == 'logArchive.tar.gz' or ':' in fullpath:
                             print fullpath,"not satisfactory to find log file name"
                             #sendLog('efficiencor','check on the logs of efficiencor, for %s'%(wf),level='critical')
                             alf = None
