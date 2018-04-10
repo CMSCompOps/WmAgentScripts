@@ -66,6 +66,7 @@ while True:
             look_in_files.extend( filter(None,os.popen('find %s -name "*.log"'% ( condor_dir )).read().split('\n')) )
             look_in_files.extend( filter(None,os.popen('find %s -name "*.out"'% ( condor_dir )).read().split('\n')) )
             lfs = []
+            flfs = []
             for out in look_in_files:
                 print "Looking in file",out
                 try:
@@ -92,6 +93,7 @@ while True:
                         print "found log name", alf,"in condor log",out.split('/')[-1]
                         #print "full name",fullpath
                         lfs.append( alf )
+                        flfs.append( fullpath )
                         break
                 fh.close()
 
@@ -99,7 +101,9 @@ while True:
                 print "Could not find trace of a log file for",lf
                 continue
             print "found",lfs
-            lf = sorted(lfs)[-1]
+            #lf = sorted(lfs)[-1]
+            lf = lfs[-1]
+            fullpath = flfs[-1]
             print "taking",lf
         else:
             ### already a log filename
