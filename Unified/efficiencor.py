@@ -90,7 +90,7 @@ while True:
                             alf = None
                             fullpath = None
                             continue
-                        print "found log name", alf,"in condor log",out.split('/')[-1]
+                        print "found log name", alf,fullpath,"in condor log",out.split('/')[-1]
                         #print "full name",fullpath
                         lfs.append( alf )
                         flfs.append( fullpath )
