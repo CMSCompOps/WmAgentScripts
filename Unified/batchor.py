@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, sendEmail, sendLog, monitor_pub_dir, unifiedConfiguration, deep_update, global_SI, getWorkflowByCampaign, base_eos_dir
+from utils import getWorkflows, sendEmail, sendLog, monitor_pub_dir, unifiedConfiguration, deep_update, global_SI, getWorkflowByCampaign, base_eos_dir, monitor_dir
 from collections import defaultdict
 import copy
 import json
@@ -145,7 +145,9 @@ This is an automated message"""%( new_campaign,
     ## read back
     rread = json.loads(open('campaigns.json.updated').read())
 
-    os.system('mv campaigns.json.updated %s/campaigns.relval.json'%base_eos_dir)
+    os.system('cp campaigns.json.updated %s/campaigns.relval.json'%monitor_dir)
+    os.system('cp campaigns.json.updated %s/campaigns.relval.json'%base_eos_dir)
+
 
 if __name__ == "__main__":
     url = 'cmsweb.cern.ch'
