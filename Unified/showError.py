@@ -710,13 +710,15 @@ def parse_one(url, wfn, options=None):
     check_files = [ f for f in files_and_loc_notin_dbs.keys() if '/store' in f]
     random.shuffle( check_files )
     check_files = check_files[:100]
-    for f in check_files:
-        rthreads.append( ReadBuster( file = f))
-    print "checking on existence of",len(rthreads),"files"
-    run_rthreads = ThreadHandler( threads = rthreads, n_threads = 20, timeout = 10)
-    run_rthreads.start()
-    while run_rthreads.is_alive():
-        time.sleep(10)
+    check_files = [] ## disable it completely
+    if check_files:
+        for f in check_files:
+            rthreads.append( ReadBuster( file = f))
+        print "checking on existence of",len(rthreads),"files"
+        run_rthreads = ThreadHandler( threads = rthreads, n_threads = 20, timeout = 10)
+        run_rthreads.start()
+        while run_rthreads.is_alive():
+            time.sleep(10)
     by_f = {}
     for t in run_rthreads.threads:
         by_f[t.file] = t.readable
