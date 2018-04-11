@@ -4709,7 +4709,9 @@ class agentInfo:
             self.buckets[i['status']].append( a )
 
         if not self.buckets.get('standby',[]):
-            print "There are no agent in standby!!"
+            msg = "There are no agent in standby!!"
+            sendLog('agentInfo', msg, level='critical')
+            sendEmail('agentInfo', msg)
 
         if self.verbose:
             print json.dumps( self.buckets, indent=2)
