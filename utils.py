@@ -90,13 +90,14 @@ def sendLog( subject, text , wfi = None, show=True ,level='info'):
 
 def searchLog( q , actor=None, limit=50 ):
     conn = httplib.HTTPConnection( 'cms-elastic-fe.cern.ch:9200' )
-    _searchLog(q, actor, limit, conn, prefix = '/logs')
+    return _searchLog(q, actor, limit, conn, prefix = '/logs')
 
 def new_searchLog( q, actor=None, limit=50 ):
     conn = httplib.HTTPSConnection( 'es-unified.cern.ch' )
-    _searchLog(q, actor, limit,conn, prefix = '/es/unified-logs', h = es_header())
+    return _searchLog(q, actor, limit,conn, prefix = '/es/unified-logs/log', h = es_header())
 
 def _searchLog( q, actor, limit, conn, prefix, h = None):
+
     goodquery={
         "query": {
             "bool": {
@@ -123,10 +124,15 @@ def _searchLog( q, actor, limit, conn, prefix, h = None):
             ]
         }
 
-    if actor:
-        goodquery['query']['bool']['must'][0]['wildcard']['subject'] = actor
 
-    conn.request("GET" , prefix+'/_search?size=%d'%limit, json.dumps(goodquery) ,headers = h if h else {})
+    goodquery={"query": {"bool": {"must": [{"wildcard": {"meta": "*%s*"%q}}]}}, "sort": [{"timestamp": "desc"}], "_source": ["text", "subject", "date", "meta"]}
+
+    #if actor:
+    #    goodquery['query']['bool']['must'][0]['wildcard']['subject'] = actor
+
+    turl = prefix+'/_search?size=%d'%limit
+    print turl
+    conn.request("GET" , turl, json.dumps(goodquery) ,headers = h if h else {})
     ## not it's just a matter of sending that query to ES.
     #lq = q.replace(':', '\:').replace('-','\\-')
     #conn.request("GET" , '/logs/_search?q=text:%s'% lq)
@@ -135,9 +141,12 @@ def _searchLog( q, actor, limit, conn, prefix, h = None):
     data = response.read()
     o = json.loads( data )
 
-    print o
-    print o['hits']['total']
-    return o['hits']['hits']
+    #print o
+    #print o['hits']['total']
+    hits =  o['hits']['hits']
+    if actor:
+        hits = [h for h in hits if h['_source']['subject']==actor]
+    return hits
 
 def es_header():
     entrypointname,password = open('Unified/secret_es.txt').readline().split(':')
