@@ -1218,7 +1218,7 @@ def checkor(url, spec=None, options=None):
                 new_status = 'assistance-'+'-'.join(sorted(assistance_tags) )
             else:
                 new_status = 'assistance'
-                
+
 
             ## case where the workflow was in manual from recoveror
             if not 'manual' in wfo.status or new_status!='assistance-recovery':
@@ -1238,7 +1238,8 @@ def checkor(url, spec=None, options=None):
 
     print report_created,"reports created in this run"
 
-    if not options.clear:
+    #if not options.clear:
+    if not options.go:
         ## make the summary and sump only for other cases
         fDB.html()
 
