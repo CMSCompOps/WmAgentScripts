@@ -711,6 +711,7 @@ def parse_one(url, wfn, options=None):
     random.shuffle( check_files )
     check_files = check_files[:100]
     check_files = [] ## disable it completely
+    by_f = {}
     if check_files:
         for f in check_files:
             rthreads.append( ReadBuster( file = f))
@@ -719,10 +720,10 @@ def parse_one(url, wfn, options=None):
         run_rthreads.start()
         while run_rthreads.is_alive():
             time.sleep(10)
-    by_f = {}
-    for t in run_rthreads.threads:
-        by_f[t.file] = t.readable
-        #print "checked",t.file,t.readable
+
+        for t in run_rthreads.threads:
+            by_f[t.file] = t.readable
+            #print "checked",t.file,t.readable
 
     for f in sorted(files_and_loc_notin_dbs.keys()):
         readable = by_f.get(f,-1)
