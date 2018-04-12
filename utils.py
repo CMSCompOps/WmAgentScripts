@@ -127,8 +127,9 @@ def _searchLog( q, actor, limit, conn, prefix, h = None):
 
     goodquery={"query": {"bool": {"must": [{"wildcard": {"meta": "*%s*"%q}}]}}, "sort": [{"timestamp": "desc"}], "_source": ["text", "subject", "date", "meta"]}
 
-    #if actor:
-    #    goodquery['query']['bool']['must'][0]['wildcard']['subject'] = actor
+    if actor:
+        #goodquery['query']['bool']['must'][0]['wildcard']['subject'] = actor
+        goodquery['query']['bool']['filter'] = { "term" : { "subject" : actor}}
 
     turl = prefix+'/_search?size=%d'%limit
     print turl
@@ -144,8 +145,8 @@ def _searchLog( q, actor, limit, conn, prefix, h = None):
     #print o
     #print o['hits']['total']
     hits =  o['hits']['hits']
-    if actor:
-        hits = [h for h in hits if h['_source']['subject']==actor]
+    #if actor:
+    #    hits = [h for h in hits if h['_source']['subject']==actor]
     return hits
 
 def es_header():
