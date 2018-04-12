@@ -27,7 +27,7 @@ def checkor(url, spec=None, options=None):
     
     ## the duplicate process lock was only necessary to prevent update clash on the closeoutinfo object.
     ## fDB is concurrent resilient, so it can be removed
-    #wait = True
+    #wait = options.wait
     #if options.go: wait=False
     #if duplicateLock(wait=wait) and not options.go:  return
     
@@ -1283,7 +1283,7 @@ if __name__ == "__main__":
     parser = optparse.OptionParser()
     parser.add_option('-t','--test', help='Only test the checkor', action='store_true', default=False)
     parser.add_option('--go',help='Does not check on duplicate process', action='store_true', default=False)
-
+    #parser.add_option('--wait',help='Wait for another process to clear', action='store_true', default=False)
     parser.add_option('--strict', help='Only running workflow that reached completed', action='store_true', default=False)
     parser.add_option('--update', help='Running workflow that have not yet reached completed', action='store_true', default=False)
 
