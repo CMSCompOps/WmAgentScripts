@@ -10,6 +10,14 @@ if [ "$USER" != "vlimant" ] ; then
     exit
 fi
 
+if [ -r unified_drain ] ; then
+    echo "draining the local process"
+    exit
+fi
+if [ -r /eos/project/c/cms-unified-logs/unified_drain ] ; then
+    echo "draining the global process"
+    exit
+fi
 
 modulename=`echo $1 | sed 's/\.py//' | sed 's/Unified\///'`
 mkdir -p $HTML_DIR/logs/$modulename/
