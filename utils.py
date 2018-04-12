@@ -4854,7 +4854,8 @@ class agentInfo:
             p = ainfo['TotalIdleJobs']
             cp = ainfo['TotalIdleCpus']
             stuffed = (r >= t*self.busy_fraction)
-            light = (r <= t*self.idle_fraction)
+            #light = (r <= t*self.idle_fraction)
+            light = False
 
             if verbose:
                 print json.dumps(ainfo, indent=2)
