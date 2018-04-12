@@ -51,24 +51,24 @@ source $BASE_DIR/credentials.sh
 ## force-complete wf according to rules
 $BASE_DIR/cWrap.sh Unified/completor.py
 
+## look at what is still running : add clear to expedite
+$BASE_DIR/cWrap.sh Unified/checkor.py  --update --clear
+#################################################
+### this is sufficient to clear things that behave
+## those that just completed
+$BASE_DIR/cWrap.sh Unified/checkor.py --strict --clear
 ## initiate automatic recovery
 $BASE_DIR/cWrap.sh Unified/recoveror.py
+## take out the ones that can toggle
+$BASE_DIR/cWrap.sh Unified/checkor.py --clear
+#################################################
 
 
-## look at everything that had been taken care of already
-$BASE_DIR/cWrap.sh Unified/checkor.py  --review --recovering
+## look at everything that had been taken care of already : add clear to expedite 
+$BASE_DIR/cWrap.sh Unified/checkor.py  --review --recovering --clear
 
-## look at everything that has to be taken care of
-$BASE_DIR/cWrap.sh Unified/checkor.py  --review
-
-$BASE_DIR/cWrap.sh Unified/completor.py
-
-## look at everything that had to be taken care of
-$BASE_DIR/cWrap.sh Unified/checkor.py  --update
-
-## from clearcycle to avoid duplicated processes
-$BASE_DIR/cWrap.sh Unified/checkor.py --strict
-$BASE_DIR/cWrap.sh Unified/checkor.py  --clear
+## look at everything that has to be taken care of : add clear to expedite 
+$BASE_DIR/cWrap.sh Unified/checkor.py  --review --manual --clear
 
 rm -f $lock_name
 
