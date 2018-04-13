@@ -5,6 +5,7 @@ import json
 from collections import defaultdict
 import random
 import sys
+import time
 
 url = reqmgr_url
 
@@ -20,7 +21,7 @@ wfs = []
 if status == 'wmagent':
     register=['assigned','acquired','running-open','running-closed','force-complete','completed','closed-out']
     for r in register:
-        wfs.extend( getWorkflows(url, r) )
+        wfs.extend( getWorkflows(url, r, details=True) )
 
 elif status.endswith('*'):
     wfs.extend([wfo.name for wfo in  session.query(Workflow).filter(Workflow.status.startswith(status[:-1])).all() ])
@@ -40,10 +41,16 @@ done = {}
 print len(wfs),"to look the output of"
 
 for iw,wfn in enumerate(wfs):
+    if type(wfn)==dict:
+        wl = wfn
+        wfn = wl['RequestName']
+    else:
+        wl = getWorkLoad(url, wfn)
+
     print "%s/%s:"%(iw,len(wfs)),wfn
-    #wfi = workflowInfo(url, wfo.name)
-    #outs= wfi.request['OutputDatasets']
-    wl = getWorkLoad(url, wfn)
+
+    if not wl:
+        continue
     outs= wl['OutputDatasets']
     for out in outs:
         blocks_at_sites = getDatasetBlockAndSite(url, out, group="")

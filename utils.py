@@ -4366,8 +4366,18 @@ def updateSubscription(url, site, item, priority=None, user_group=None, suspend=
     return response
 
 def getWorkLoad(url, wf ):
+    try:
+        return _getWorkLoad(url, wf )
+    except:
+        time.sleep(5)
+        try:
+            return _getWorkLoad(url, wf )
+        except:
+            print "failed twice to _getWorkLoad(url, wf )"
+            return None
+
+def _getWorkLoad(url, wf ):
     conn = make_x509_conn(url)
-    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1= conn.request("GET",'/reqmgr2/data/request/'+wf, headers={"Accept":"*/*"})
     r2=conn.getresponse()
     data = json.loads(r2.read())
