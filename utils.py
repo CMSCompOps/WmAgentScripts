@@ -4978,6 +4978,8 @@ class agentInfo:
                 if wake_up in speed_draining: speed_draining.remove( wake_up )
                 if wake_up in open_draining: open_draining.remove( wake_up )
                 if setAgentOn(self.url, wake_up):
+                    msg = "putting agent %s in production"% wake_up
+                    sendLog('agentInfo', msg, level='critical')
                     manipulated_agents.add( wake_up )
                     self.info[wake_up] = { 'status' : 'running',
                                            'update' : now,
@@ -4988,8 +4990,9 @@ class agentInfo:
             if candidates_to_drain:
                 sleep_up = random.choice( list(candidates_to_drain))
             if sleep_up:
-                print "putting to drain",sleep_up
                 if setAgentDrain(self.url, sleep_up):
+                    msg = "putting agent %s in drain mode"% sleep_up
+                    sendLog('agentInfo', msg, level='critical')
                     manipulated_agents.add( sleep_up )
                     self.info[sleep_up] = { 'status' : 'draining',
                                             'update' : now,
@@ -5006,8 +5009,9 @@ class agentInfo:
                 print "picking up from the running agents"
                 pick_from = self.buckets.get('running',[])
                 sleep_up = random.choice( pick_from )
-            print "putting to standby/drain",sleep_up
             if setAgentDrain(self.url, sleep_up):
+                msg = "putting agent %s in drain mode for retiring"% sleep_up
+                sendLog('agentInfo', msg, level='critical')
                 manipulated_agents.add( sleep_up )
                 self.info[sleep_up] = { 'status' : 'standby',
                                         'update' : now,
