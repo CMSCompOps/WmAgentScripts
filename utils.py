@@ -4677,6 +4677,9 @@ class agentInfo:
             return False
         prod_info = dict([(a['agent_url'].split(':')[0], a) for a in all_agents_prod])
         all_agents_name = sorted(set(self.info.keys() + prod_info.keys()))
+        ## do you want to use this to make an alarm on agent in error for too long ?
+        self.in_error = [a['agent_url'].split(':')[0] for a in all_agents_prod if a.get('down_components',[])]
+        print "agents with errors",in_error
 
         now,nows = self.getNow()
 
@@ -4731,7 +4734,7 @@ class agentInfo:
         if not self.buckets.get('standby',[]):
             msg = "There are no agent in standby!!"
             sendLog('agentInfo', msg, level='critical')
-            sendEmail('agentInfo', msg)
+            #sendEmail('agentInfo', msg)
 
         if self.verbose:
             print json.dumps( self.buckets, indent=2)
