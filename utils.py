@@ -4679,7 +4679,7 @@ class agentInfo:
         all_agents_name = sorted(set(self.info.keys() + prod_info.keys()))
         ## do you want to use this to make an alarm on agent in error for too long ?
         self.in_error = [a['agent_url'].split(':')[0] for a in all_agents_prod if a.get('down_components',[])]
-        print "agents with errors",in_error
+        print "agents with errors",self.in_error
 
         now,nows = self.getNow()
 
