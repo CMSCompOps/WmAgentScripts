@@ -599,6 +599,23 @@
    "maxcopies": 1,
    "fractionpass" : 0.95
   },
+ "RunIILowPUSpring18GS" : {
+   "go" : false,
+   "lumisize" : -1,
+   "fractionpass" : 0.95,
+   "tune" : true,
+   "resize" : "auto"
+ },
+  "RunIILowPUSpring18DR" :{
+    "go": false,
+    "maxcopies": 1,
+    "lumisize": -1,
+    "resize" : "auto",
+    "fractionpass" : 0.95,
+    "tune" : true,
+    "secondary_AAA": false,
+    "secondaries" : { }
+   },
  "RunIIWinter17GS" : {
    "go" : true,
    "lumisize" : -1,
