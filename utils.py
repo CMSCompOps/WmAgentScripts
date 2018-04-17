@@ -3395,6 +3395,16 @@ def getDatasetBlocks( dataset, runs=None, lumis=None):
         #needs a series of convoluted calls
         #all_blocks.update([item['block_name'] for item in dbsapi.listBlocks( dataset = dataset )])
         pass
+    elif runs:
+        for run in runs:
+            #try:
+            #    all_files = dbsapi.listFileArray( dataset = dataset, run_num=int(run), detail=True)
+            #except Exception as e:
+            #    print "Exception in listFileArray",str(e)
+            #    all_files = []
+            #all_blocks.update( [f['block_name'] for f in all_files])
+            all_blocks.update([b['block_name'] for b in dbsapi.listBlocks(dataset = dataset, run_num = int(run))])
+
     if runs==None and lumis==None:
         all_blocks.update([item['block_name'] for item in dbsapi.listBlocks(dataset= dataset) ])
 
