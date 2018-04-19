@@ -4900,7 +4900,8 @@ class agentInfo:
             if agent_name in runnings:
                 if agent_name in self.release[top_release]:
                     running_top_release += 1
-                elif agent_name in self.release[oldest_release]:
+                #elif agent_name in self.release[oldest_release]:
+                elif not agent_name in self.release[top_release]:
                     candidates_to_drain.add( agent_name )
                     running_old_release += 1
                 else:
@@ -4943,7 +4944,7 @@ class agentInfo:
 
 
         ## all agents are above the understood limit. so please boot one
-        if not one_recent_running:
+        if not (one_recent_running or one_recent_draining or one_recent_standby):
             if over_threshold:
                 msg = 'All agents are maxing out. We need a new agent'
                 sendLog('agentInfo', msg, level='critical')
