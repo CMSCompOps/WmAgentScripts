@@ -557,21 +557,21 @@
    "tune" : true
   },
  "RunIISummer18GS" : {
-   "go" : false,
+   "go" : true,
    "lumisize" : -1,
    "fractionpass" : 0.95,
    "tune" : true,
    "resize" : "auto"
  },
   "RunIISummer18wmLHEGS" : {
-   "go" : false,
+   "go" : true,
    "lumisize" : -1,
    "fractionpass" : 0.95,
    "force-complete" : 0.99,
    "tune" : true
   },
   "RunIISummer18DR" :{
-    "go": false,
+    "go": true,
     "maxcopies": 1,
     "lumisize": -1,
     "resize" : "auto",
@@ -581,7 +581,7 @@
     "secondaries" : {}
   },
   "RunIISummer18MiniAOD" :{
-   "go" : false,
+   "go" : true,
    "lumisize" : -1,
    "resize" : "auto",
    "maxcopies": 1,
