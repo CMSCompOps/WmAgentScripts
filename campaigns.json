@@ -631,14 +631,14 @@
    "fractionpass" : 0.95
   },
  "RunIILowPUSpring18GS" : {
-   "go" : false,
+   "go" : true,
    "lumisize" : -1,
    "fractionpass" : 0.95,
    "tune" : true,
    "resize" : "auto"
  },
   "RunIILowPUSpring18DR" :{
-    "go": false,
+    "go": true,
     "maxcopies": 1,
     "lumisize": -1,
     "resize" : "auto",
