@@ -1797,7 +1797,11 @@ class siteInfo:
         for s,d in self.addHocStorage.items():
             self.addHocStorageS[s].add( d )
 
+        self._map_SE_to_CE = defaultdict(set)
+        self._map_CE_to_SE = defaultdict(set)
         for (phn,psn) in dataCache.get('site_storage'):
+            self._map_SE_to_CE[phn].add(psn)
+            self._map_CE_to_SE[psn].add(phn)
             self.addHocStorageS[psn].add( phn )
             if self.SE_to_CE(phn) == psn: continue
             if psn in ['T2_CH_CERN']: continue
@@ -2131,6 +2135,8 @@ class siteInfo:
             return list( self.addHocStorageS[ce])
 
     def CE_to_SE(self, ce):
+        if ce in self._map_CE_to_SE:
+            return list(self._map_CE_to_SE[ce])[0]
         if (ce.startswith('T1') or ce.startswith('T0')) and not ce.endswith('_Disk'):
             return ce+'_Disk'
         else:
@@ -2141,14 +2147,14 @@ class siteInfo:
                 return ce
 
     def SE_to_CE(self, se):
+        if se in self._map_SE_to_CE:
+            return list(self._map_SE_to_CE[se])[0]
+
         if se.endswith('_Disk'):
             return se.replace('_Disk','')
         elif se.endswith('_MSS'):
             return se.replace('_MSS','')
         else:
-            ## we could return many this way ...
-            #if se in self.addHocStorage.values():
-            #    pass
             return se
 
     def pick_SE(self, sites=None, size=None): ## size needs to be in TB
