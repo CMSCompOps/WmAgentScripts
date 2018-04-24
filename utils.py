@@ -5516,7 +5516,6 @@ class workflowInfo:
     def get_spec(self):
         if not self.full_spec:
             self.conn = make_x509_conn(self.url)
-            #self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
             r1=self.conn.request("GET",'/couchdb/reqmgr_workload_cache/%s/spec'%self.request['RequestName'])
             r2=self.conn.getresponse()
             self.full_spec = pickle.loads(r2.read())
@@ -5536,7 +5535,6 @@ class workflowInfo:
                         return self.errors
 
             self.conn = make_x509_conn(self.url)
-            #self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
             r1=self.conn.request("GET",'/wmstatsserver/data/jobdetail/%s'%(self.request['RequestName']), headers={"Accept":"*/*"})
             r2=self.conn.getresponse()
 
@@ -5545,6 +5543,7 @@ class workflowInfo:
                 open(f_cache,'w').write( json.dumps({'timestamp': time.mktime(time.gmtime()),
                                                      'data' : self.errors}))
             except Exception as e:
+                print "failed getting getWMErrors"
                 print str(e)
             return self.errors
         except:
@@ -5624,6 +5623,7 @@ class workflowInfo:
                                                  'args' : args,
                                                  'data' : self.dashb}))
         except Exception as e:
+            print "failed get dashboard"
             print str(e)
             pass
         return self.dashb
@@ -5646,6 +5646,7 @@ class workflowInfo:
             open(f_cache,'w').write( json.dumps({'timestamp': time.mktime(time.gmtime()),
                                                  'data' : self.wmstats}) )
         except Exception as e:
+            print "failed getWMStats"
             print str(e)
 
         return self.wmstats
@@ -6822,9 +6823,6 @@ class workflowInfo:
 
     def getCampaigns(self):
         if 'Chain' in self.request['RequestType'] and not self.isRelval():
-            #try:
-            #    return self._collectinchain('Campaign').values()
-            #except:
             return list(set(self._collectinchain('AcquisitionEra').values()))
         else:
             return [self.request['Campaign']]
