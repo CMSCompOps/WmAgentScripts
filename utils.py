@@ -4897,15 +4897,14 @@ class agentInfo:
             p = ainfo['TotalIdleJobs']
             cp = ainfo['TotalIdleCpus']
             stuffed = (r >= t*self.busy_fraction)
-            #light = (r <= t*self.idle_fraction)
-            light = False
+            light = (r <= t*self.idle_fraction)
 
             if verbose:
                 print json.dumps(ainfo, indent=2)
             if agent_name in drainings:
                 if not agent_name in self.release[oldest_release]:
                     ## you can candidate those not running the oldest release, and in drain
-                    if not stuffed:
+                    if not stuffed and not light:
                         candidates_to_wakeup.add( agent_name )
                 if len(standbies)<=1 and (cp <= cpu_running*self.speed_draining_fraction) and (r <= t*self.speed_draining_fraction) and (cr <= cpu_running*self.speed_draining_fraction):
                     speed_draining.add( agent_name )
@@ -4917,6 +4916,7 @@ class agentInfo:
             if agent_name in standbies:
                 if agent_name in self.release[top_release]:
                     standby_top_release += 1
+
             if agent_name in runnings:
                 if agent_name in self.release[top_release]:
                     running_top_release += 1
@@ -4934,7 +4934,7 @@ class agentInfo:
                     print "is underused?",light
                 over_threshold &= stuffed
                 under_threshold |= light
-                if light:
+                if light and False: ## prevent this for now
                     candidates_to_standby.add( agent_name )
                     candidates_to_drain.add( agent_name )
 
