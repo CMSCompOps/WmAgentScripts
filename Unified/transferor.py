@@ -339,7 +339,8 @@ def transferor(url ,specific = None, talk=True, options=None):
                         no_budget = True
 
 
-        #if no_budget:
+        if no_budget:
+            continue
         #    break ## try this for a while to make things faster
 
         ## the site white list considers site, campaign, memory and core information
