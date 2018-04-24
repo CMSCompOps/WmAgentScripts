@@ -4938,6 +4938,11 @@ class agentInfo:
                     candidates_to_standby.add( agent_name )
                     candidates_to_drain.add( agent_name )
 
+        candidates_to_drain = candidates_to_drain - recent_running
+        candidates_to_wakeup = candidates_to_wakeup - recent_draining -recent_standby
+        candidates_to_standby = candidates_to_standby - recent_running
+
+
         if verbose or verbose or True:
             print "agent releases",sorted_release
             print "latest release",top_release
@@ -4962,10 +4967,6 @@ class agentInfo:
         over_pending = (cpu_pending > over_cpus)
         release_deploy = ((running_top_release>=2) or (standby_top_release>=2)) and running_old_release
 
-
-        candidates_to_drain = candidates_to_drain - recent_running
-        candidates_to_wakeup = candidates_to_wakeup - recent_draining -recent_standby
-        candidates_to_standby = candidates_to_standby - recent_running
 
         ## all agents are above the understood limit. so please boot one
         if not (one_recent_running or one_recent_draining or one_recent_standby):
