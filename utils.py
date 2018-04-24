@@ -4806,6 +4806,9 @@ class agentInfo:
         ## go through some metric
         ## collect the number of jobs per agent.
         ##sum over those running+draining+standby
+        recent_running = set()
+        recent_standby = set()
+        recent_draining = set()
         one_recent_running = False
         one_recent_standby = False
         one_recent_draining = False
@@ -4813,12 +4816,15 @@ class agentInfo:
         timeout_last_standby = None
         timeout_last_draining = None
         last_action_timeout = 5 *60*60 # hours
+        last_action_static = 20*60*60 # hours
         for agent in self.buckets.get('running',[]):
             if (now-self.info[agent]['update'])<(last_action_timeout):
                 one_recent_running = True
                 timeout_for_running = last_action_timeout - (now-self.info[agent]['update'])
                 if timeout_last_running == None or timeout_last_running < timeout_for_running:
                     timeout_last_running = timeout_for_running
+            if (now-self.info[agent]['update'])<(last_action_static):
+                recent_running.add(agent )
 
         for agent in self.buckets.get('standby',[]):
             if (now-self.info[agent]['update'])<(last_action_timeout):
@@ -4826,6 +4832,8 @@ class agentInfo:
                 timeout_for_standby = last_action_timeout - (now-self.info[agent]['update'])
                 if timeout_last_standby == None or timeout_last_standby < timeout_for_standby:
                     timeout_last_standby = timeout_for_standby
+            if (now-self.info[agent]['update'])<(last_action_static):
+                recent_standby.add(agent )
 
         for agent in self.buckets.get('draining',[]):
             if (now-self.info[agent]['update'])<(last_action_timeout):
@@ -4833,6 +4841,11 @@ class agentInfo:
                 timeout_for_draining = last_action_timeout - (now-self.info[agent]['update'])
                 if timeout_last_draining == None or timeout_last_draining < timeout_for_draining:
                     timeout_last_draining = timeout_for_draining
+            if (now-self.info[agent]['update'])<(last_action_static):
+                recent_draining.add( agent )
+
+        timeout_action = max([timeout_last_running,timeout_last_standby,timeout_last_draining])
+
 
         all_agents = dataCache.get('gwmsmon_pool')
         over_threshold = True
@@ -4845,6 +4858,7 @@ class agentInfo:
         #print sorted(self.release.keys())
         rel_num = [(r, map(lambda frag : int(frag.replace('patch','')), r.split('.'))) for r in self.release.keys()]
         rel_num = sorted( rel_num, key = lambda o: o[1], reverse=True)
+        ###rel_num = sorted( rel_num, key = lambda o: o[1][:3], reverse=True) ## [:3] does not care about the patch version
         #print rel_num
         sorted_release = [r[0] for r in rel_num]
         top_release = sorted_release[0] ## this is the latest release
@@ -4890,7 +4904,7 @@ class agentInfo:
                 print json.dumps(ainfo, indent=2)
             if agent_name in drainings:
                 if not agent_name in self.release[oldest_release]:
-                    ## you can candidate those not running the latest release
+                    ## you can candidate those not running the oldest release, and in drain
                     if not stuffed:
                         candidates_to_wakeup.add( agent_name )
                 if len(standbies)<=1 and (cp <= cpu_running*self.speed_draining_fraction) and (r <= t*self.speed_draining_fraction) and (cr <= cpu_running*self.speed_draining_fraction):
@@ -4949,6 +4963,10 @@ class agentInfo:
         release_deploy = ((running_top_release>=2) or (standby_top_release>=2)) and running_old_release
 
 
+        candidates_to_drain = candidates_to_drain - recent_running
+        candidates_to_wakeup = candidates_to_wakeup - recent_draining -recent_standby
+        candidates_to_standby = candidates_to_standby - recent_running
+
         ## all agents are above the understood limit. so please boot one
         if not (one_recent_running or one_recent_draining or one_recent_standby):
             if over_threshold:
@@ -4975,7 +4993,7 @@ class agentInfo:
                 if release_deploy:
                     drain_agent = True
         else:
-            print "An agent was recently put in running. Cannot do any further acting for another %s last running or %s last standby"% (display_time(timeout_last_running),
+            print "An agent was recently put in running/draining/standby. Cannot do any further acting for another %s last running or %s last standby"% (display_time(timeout_action),
                                                                                                                                         display_time(timeout_last_standby))
             candidates_to_wakeup = candidates_to_wakeup - fully_empty
         if need_one:
