@@ -357,7 +357,7 @@
     "fractionpass" : 0.95
   }, 
   "Summer12WMLHE": {
-    "go": false,
+    "go": true,
     "lumisize" : 800,
     "fractionpass" : 0.95,
     "force-complete" : 0.99
