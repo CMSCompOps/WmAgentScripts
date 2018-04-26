@@ -295,6 +295,14 @@
     "primary_AAA" : true,
     "overflow" : {"PRIM" : {}}
    },	
+  "Commissioning2018": {
+    "go" : false,
+    "custodial_override" : ["DQMIO"],
+    "lumisize" : -1,
+    "fractionpass" : 1.0,
+    "maxcopies" : 1,
+    "overflow" : {"PRIM" : {}}
+   },
    "EOYReReco2017" : {
     "go": true,
     "custodial_override" : ["DQMIO"],
