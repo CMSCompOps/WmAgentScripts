@@ -4621,6 +4621,7 @@ class agentInfo:
         self.buckets = defaultdict(list)
         self.wake_draining = False ## do not wake up agents that are on drain already
         self.release = defaultdict(set)
+        self.m_release = defaultdict(set)
         self.ready = self.getStatus()
         if not self.ready:
             print "AgentInfo could not initialize properly"
@@ -4855,14 +4856,28 @@ class agentInfo:
         pending = 0
         cpu_pending = 0
         cpu_running = 0
-        #print sorted(self.release.keys())
+        ## reduce the release name to major numbers
+        for r in self.release:
+            for ra in self.release[r]:
+                m_r = '.'.join( r.split('.')[:3]) ## limit to major three numbers
+                self.m_release[m_r].add( ra )
+
         rel_num = [(r, map(lambda frag : int(frag.replace('patch','')), r.split('.'))) for r in self.release.keys()]
         rel_num = sorted( rel_num, key = lambda o: o[1], reverse=True)
-        ###rel_num = sorted( rel_num, key = lambda o: o[1][:3], reverse=True) ## [:3] does not care about the patch version
+        m_rel_num = [(r, map(lambda frag : int(frag.replace('patch','')), r.split('.'))) for r in self.m_release.keys()]
+        m_rel_num = sorted( m_rel_num , key = lambda o: o[1], reverse=True)
         #print rel_num
         sorted_release = [r[0] for r in rel_num]
         top_release = sorted_release[0] ## this is the latest release
         oldest_release = sorted_release[-1] #this is the oldest release
+        sorted_m_release = [r[0] for r in m_rel_num]
+        top_m_release = sorted_m_release[0]
+        oldest_m_release = sorted_m_release[-1]
+        if top_m_release == oldest_m_release:
+            oldest_m_release = None
+        if top_release == oldest_release:
+            oldest_release = None
+
         running_top_release = 0
         running_old_release = 0
         standby_top_release = 0
@@ -4921,7 +4936,8 @@ class agentInfo:
                 if agent_name in self.release[top_release]:
                     running_top_release += 1
                 #elif agent_name in self.release[oldest_release]:
-                elif not agent_name in self.release[top_release]:
+                #elif not agent_name in self.release[top_release]:
+                elif not agent_name in self.m_release[top_m_release]: ## use the major release number to select agents to drain: i.e. ignore patches versions.
                     candidates_to_drain.add( agent_name )
                     running_old_release += 1
                 else:
@@ -4945,8 +4961,11 @@ class agentInfo:
 
         if verbose or verbose or True:
             print "agent releases",sorted_release
+            print "agent major releases",sorted_m_release
             print "latest release",top_release
+            print "latest major release",top_m_release
             print "oldest release",oldest_release
+            print "oldest major release",oldest_m_release
             print "Capacity",capacity
             print "Running jobs", running
             print "Running cpus", cpu_running
