@@ -4952,8 +4952,11 @@ class agentInfo:
                     print "is Stuffed?",stuffed
                     print "is underused?",light
                 over_threshold &= stuffed
+
+                light = False ## prevent this for now
+
                 under_threshold |= light
-                if light and False: ## prevent this for now
+                if light:
                     candidates_to_standby.add( agent_name )
                     candidates_to_drain.add( agent_name )
 
