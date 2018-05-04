@@ -1715,11 +1715,12 @@ class siteInfo:
                     self.sites_ready.append( siteInfo['VOName'] )
                 else:
                     self.sites_not_ready.append( siteInfo['VOName'] )
+
             ##hack
-            self.sites_ready.append('T3_US_OSG')
-            self.all_sites.append('T3_US_OSG')
-            #self.sites_ready.append('T3_US_NERSC')
-            #self.all_sites.append('T3_US_NERSC')
+            add_as_ready = ['T3_US_OSG','T3_CH_CERN_HelixNebula','T3_US_NERSC']
+            for aar in add_as_ready:
+                self.sites_ready.append(aar)
+                self.all_sites.append(aar)
 
 
 
@@ -1772,8 +1773,8 @@ class siteInfo:
         self.sites_veto_transfer = []  ## do not prevent any transfer by default
 
         ## new site lists for better matching
-        self.sites_with_goodAAA = self.sites_with_goodIO + ['T3_IN_TIFRCloud','T3_US_NERSC'] ## like this for now
-        self.sites_with_goodAAA = [ s for s in self.sites_with_goodAAA if s in self.sites_ready]
+        self.sites_with_goodAAA = self.sites_with_goodIO + ['T3_IN_TIFRCloud','T3_US_NERSC','T3_CH_CERN_HelixNebula','T3_US_OSG'] ## like this for now
+        self.sites_with_goodAAA = list(set([ s for s in self.sites_with_goodAAA if s in self.sites_ready]))
 
 
         self.storage = defaultdict(int)
@@ -1789,7 +1790,8 @@ class siteInfo:
             'T2_CH_CERN_T0': 'T2_CH_CERN',
             'T2_CH_CERN_AI' : 'T2_CH_CERN',
             'T3_US_NERSC' : 'T1_US_FNAL_Disk',
-            'T3_US_OSG' : 'T1_US_FNAL_Disk'
+            'T3_US_OSG' : 'T1_US_FNAL_Disk',
+            'T3_CH_CERN_HelixNebula' : 'T2_CH_CERN'
             }
         self.addHocStorageS['T2_CH_CERN_T0'].add( 'T2_CH_CERN')
         self.addHocStorageS['T2_CH_CERN_AI'].add('T2_CH_CERN')
