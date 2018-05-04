@@ -446,13 +446,12 @@ def actor(url,options=None):
             #first reject the original workflow.
             reqMgrClient.invalidateWorkflow(url, wfi.request['RequestName'], current_status=wfi.request['RequestStatus'], cascade=False)
             #Then reject any ACDCs associated with that workflow
-            if 'ACDCs' in action_list[wfname]:
-                children = action_list[wfname]['ACDCs']
-                for child in children:
-                    wfi.sendLog('actor',"rejecting %s"%child)
-                    wfi_acdc = workflowInfo(url, child)
-                    reqMgrClient.invalidateWorkflow(url, wfi_acdc.request['RequestName'], current_status=wfi_acdc.request['RequestStatus'], cascade=False)
-                    datasets.update( wfi_acdc.request['OutputDatasets'] )
+            family = getWorkflowById( url, wfi.request['PrepID'] , details=True)
+            for fwl in family:
+                print "rejecting",fwl['RequestName'],fwl['RequestStatus']
+                wfi.sendLog('actor',"rejecting %s, previous status %s"%(fwl['RequestName'],fwl['RequestStatus']))
+                reqMgrClient.invalidateWorkflow(url, fwl['RequestName'], current_status=fwl['RequestStatus'], cascade=False)
+                datasets.update( fwl['OutputDatasets'] )
             #Invalidate all associated output datasets
             for dataset in datasets:
                 results.append( setDatasetStatus(dataset, 'INVALID') )
