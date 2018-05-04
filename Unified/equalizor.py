@@ -545,6 +545,8 @@ def equalizor(url , specific = None, options=None):
             ## no input at all: go for OSG!!!
             print "adding", wfo.name, " addhoc for OSG and no task of the workflow requires any input"
             add_to[wfo.name] = ['T3_US_OSG']
+            add_to[wfo.name] = ['T3_US_NERSC']
+            add_to[wfo.name] = ['T3_CH_CERN_HelixNebula']
 
         ## check needs override
         needs_overide = False
@@ -640,7 +642,7 @@ def equalizor(url , specific = None, options=None):
                                 LHE_overflow[campaign] = copy.deepcopy( getattr(SI,site_list) )
                             else:
                                 LHE_overflow[campaign] = site_list.split(',')
-                    print "adding",campaign,"to light input overflow rules",LHE_overflow[campaign]
+                    print "adding",campaign,"to light input overflow rules",sorted(LHE_overflow[campaign])
 
 
             ### get the task performance, for further massaging.
