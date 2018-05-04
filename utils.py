@@ -4923,7 +4923,8 @@ class agentInfo:
                     ## you can candidate those not running the oldest release, and in drain
                     if not stuffed and not light:
                         candidates_to_wakeup.add( agent_name )
-                if len(standbies)<=1 and (cp <= cpu_running*self.speed_draining_fraction) and (r <= t*self.speed_draining_fraction) and (cr <= cpu_running*self.speed_draining_fraction):
+                #if len(standbies)<=1 and (cp <= cpu_running*self.speed_draining_fraction) and (r <= t*self.speed_draining_fraction) and (cr <= cpu_running*self.speed_draining_fraction):
+                if (cp <= cpu_running*self.speed_draining_fraction) and (r <= t*self.speed_draining_fraction) and (cr <= cpu_running*self.speed_draining_fraction):
                     speed_draining.add( agent_name )
                 if len(standbies)<=1 and (r+p <= self.open_draining_threshold):
                     open_draining.add( agent_name )
@@ -5148,7 +5149,7 @@ def sendAgentConfig(url, agent, config_dict):
 def addAgentNoRetry(url, agent, error_codes):
     info = getAgentConfig(url, agent, ['NoRetryExitCodes'])
     already = info['NoRetryExitCodes']
-    print sorted( already )
+    print "Already in noretry",sorted( already )
     already.extend( error_codes )
     already = list(set(already))
     return sendAgentConfig(url, agent, {'NoRetryExitCodes' : already})
