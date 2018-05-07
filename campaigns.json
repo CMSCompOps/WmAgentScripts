@@ -296,7 +296,7 @@
     "overflow" : {"PRIM" : {}}
    },	
   "Commissioning2018": {
-    "go" : false,
+    "go" : true,
     "custodial_override" : ["DQMIO"],
     "lumisize" : -1,
     "fractionpass" : 1.0,
