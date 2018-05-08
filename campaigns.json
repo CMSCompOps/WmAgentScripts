@@ -639,6 +639,13 @@
    "maxcopies": 1,
    "fractionpass" : 0.95
   },
+ "RunIILowPUSpring18wmLHEGS" : {
+   "go" : false,
+   "lumisize" : -1,
+   "fractionpass" : 0.95,
+   "tune" : true,
+   "resize" : "auto"
+ },
  "RunIILowPUSpring18GS" : {
    "go" : true,
    "lumisize" : -1,
