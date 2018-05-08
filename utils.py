@@ -2137,12 +2137,11 @@ class siteInfo:
             return list( self.addHocStorageS[ce])
 
     def CE_to_SE(self, ce):
-        if ce in self._map_CE_to_SE:
-            return list(self._map_CE_to_SE[ce])[0]
         if (ce.startswith('T1') or ce.startswith('T0')) and not ce.endswith('_Disk'):
             return ce+'_Disk'
+        if ce in self._map_CE_to_SE:
+            return sorted(self._map_CE_to_SE[ce])[0]
         else:
-
             if ce in self.addHocStorage:
                 return self.addHocStorage[ce]
             else:
