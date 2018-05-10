@@ -620,10 +620,10 @@ def pass_to_dynamo( items, N ,sites = None, group = None ):
         return False
 
 def _pass_to_dynamo( items, N ,sites = None, group = None ):
-    if sites == None:
+    if sites == None or sites == []:
         sites = ['T2_*','T1_*_Disk']
     if type(items)==str:
-        items = [ items ]
+        items = items.split(',')
     conn  =  httplib.HTTPSConnection('dynamo.mit.edu', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     par = {'item' : items, 'site': sites, 'n':N}
     if group:
@@ -1717,7 +1717,11 @@ class siteInfo:
                     self.sites_not_ready.append( siteInfo['VOName'] )
 
             ##hack
-            add_as_ready = ['T3_US_OSG','T3_CH_CERN_HelixNebula','T3_US_NERSC']
+            add_as_ready = [
+                'T3_US_OSG',
+                #'T3_CH_CERN_HelixNebula',
+                #'T3_US_NERSC'
+                            ]
             for aar in add_as_ready:
                 self.sites_ready.append(aar)
                 self.all_sites.append(aar)
@@ -5076,7 +5080,7 @@ class agentInfo:
         elif retire_agent:
             # pick one with most running jobs
             if candidates_to_standby:
-                print "picking up from the candidated agents"
+                print "picking up from the candidated agents for standby"
                 sleep_up = random.choice( list( candidates_to_standby ))
             else:
                 print "picking up from the running agents"
