@@ -1088,7 +1088,11 @@ def checkor(url, spec=None, options=None):
             if wfi.isRelval():
                 ## error report for relval regardless
                 so = showError_options( expose = 2 )
-                parse_one(url, wfo.name, so)
+                try:
+                    parse_one(url, wfo.name, so)
+                except Exception as e:
+                    print "Could not make error report for",wfo.name
+                    print "because",str(e)
                 
             if not options.test:
                 if wfo.wm_status in ['closed-out','announced','normal-archived']:
@@ -1131,8 +1135,10 @@ def checkor(url, spec=None, options=None):
                         so = showError_options( expose = expose )
                         parse_one(url, member, so)
                         report_created += 1
-                    except:
+                    except Exception as e:
                         print "Could not make error report for",member
+                        print "because",str(e)
+
                 time_point("Done with reports")
 
             ## full known list
