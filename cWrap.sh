@@ -1,7 +1,7 @@
 BASE_DIR=/data/unified/WmAgentScripts/
 
 HTML_DIR=/data/unified/www
-FINAL_HTML_DIR=/eos/project/c/cms-unified-logs/www/
+FINAL_HTML_DIR=/eos/cms/store/unified/www/
 
 cd $BASE_DIR
 
@@ -14,7 +14,7 @@ if [ -r unified_drain ] ; then
     echo "draining the local process"
     exit
 fi
-if [ -r /eos/project/c/cms-unified-logs/unified_drain ] ; then
+if [ -r /eos/cms/store/unified/unified_drain ] ; then
     echo "draining the global process"
     exit
 fi
@@ -29,7 +29,7 @@ log=$dated_log
 
 echo `date` > $log
 
-if [ -f "/eos/project/c/cms-unified-logs/drain_mode" ] ; then
+if [ -r /eos/cms/store/unified/drain_mode ] ; then
     echo "System is draining"
     echo "System is draining" >> $log
     cp $log $last_log

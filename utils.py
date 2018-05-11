@@ -31,23 +31,26 @@ dbs_url_writer = os.getenv('UNIFIED_DBS3_WRITER','https://cmsweb.cern.ch/dbs/pro
 
 phedex_url = os.getenv('UNIFIED_PHEDEX','cmsweb.cern.ch')
 reqmgr_url = os.getenv('UNIFIED_REQMGR','cmsweb.cern.ch')
-#monitor_dir = os.getenv('UNIFIED_MON','/var/www/html/unified/')
 monitor_dir = os.getenv('UNIFIED_MON','/data/unified/www/')
-monitor_eos_dir = "/eos/project/c/cms-unified-logs/www/"
+#monitor_eos_dir = "/eos/project/c/cms-unified-logs/www/"
+monitor_eos_dir = '/eos/cms/store/unified/www/'
 monitor_dir = monitor_eos_dir
-#monitor_pub_dir = os.getenv('UNIFIED_MON','/var/www/html/unified/public/')
 monitor_pub_dir = os.getenv('UNIFIED_MON','/data/unified/www/public/')
-monitor_pub_eos_dir = "/eos/project/c/cms-unified-logs/www/public/"
+#monitor_pub_eos_dir = "/eos/project/c/cms-unified-logs/www/public/"
+monitor_pub_eos_dir = "/eos/cms/store/unified/www/public/"
 monitor_pub_dir = monitor_pub_eos_dir
 base_dir =  os.getenv('UNIFIED_DIR','/data/unified/')
-#base_eos_dir = "/afs/cern.ch/user/c/cmst2/Unified/"
-base_eos_dir = "/eos/project/c/cms-unified-logs/"
+#base_eos_dir = "/eos/project/c/cms-unified-logs/"
+base_eos_dir = "/eos/cms/store/unified/"
 
-unified_url = os.getenv('UNIFIED_URL','https://vocms049.cern.ch/unified/')
+
+#unified_url = os.getenv('UNIFIED_URL','https://vocms049.cern.ch/unified/')
+unified_url = os.getenv('UNIFIED_URL','https://cms-unified.web.cern.ch/cms-unified/')
 unified_url_eos = "https://cms-unified.web.cern.ch/cms-unified/"
 unified_url = unified_url_eos
 url_eos = unified_url_eos
-unified_pub_url = os.getenv('UNIFIED_URL','https://vocms049.cern.ch/unified/public/')
+#unified_pub_url = os.getenv('UNIFIED_URL','https://vocms049.cern.ch/unified/public/')
+unified_pub_url = os.getenv('UNIFIED_URL','https://cms-unified.web.cern.ch/cms-unified/public/')
 cache_dir = '/data/unified-cache/'
 
 FORMAT = "%(module)s.%(funcName)s(%(lineno)s) => %(message)s (%(asctime)s)"
