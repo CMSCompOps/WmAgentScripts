@@ -1199,7 +1199,7 @@ def checkor(url, spec=None, options=None):
                     'recovery': 'Samples completed with missing statistics:\n%s\n%s '%( '\n'.join(['%.2f %% complete for %s'%(percent_completions[output]*100, output) for output in wfi.request['OutputDatasets'] ] ), perflink ),
                     'biglumi': 'Samples completed with large luminosity blocks:\n%s\n%s '%('\n'.join(['%d > %d for %s'%(events_per_lumi[output], lumi_upper_limit[output], output) for output in wfi.request['OutputDatasets'] if (events_per_lumi[output] > lumi_upper_limit[output])]), splitlink),
                     'duplicates': 'Samples completed with duplicated luminosity blocks:\n%s\n'%( '\n'.join(['%s'%output for output in wfi.request['OutputDatasets'] if output in duplications and duplications[output] ] ) ),
-                    'filemismatch': 'Samples completed with inconsistency in DBS/Phedex',
+                    #'filemismatch': 'Samples completed with inconsistency in DBS/Phedex',
                     #'manual' :                     'Workflow completed and requires manual checks by Ops',
                     }
                 
