@@ -268,7 +268,7 @@ def singleClone(url, wfname, actions, comment, do=False):
                   'SubscriptionPriority', 'Team', 'timeStamp', 'TrustSitelists', 'TrustPUSitelists',
                   'TotalEstimatedJobs', 'TotalInputEvents', 'TotalInputLumis', 'TotalInputFiles','checkbox',
                   'DN', 'AutoApproveSubscriptionSites', 'NonCustodialSites', 'CustodialSites', 'OriginalRequestName', 'Teams', 'OutputModulesLFNBases', 
-                  'SiteBlacklist', 'AllowOpportunistic', '_id']
+                      'SiteBlacklist', 'AllowOpportunistic', '_id', 'Override']
     for p in paramBlacklist:
         if p in payload:
             payload.pop( p )
