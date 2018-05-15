@@ -640,7 +640,7 @@
    "fractionpass" : 0.95
   },
  "RunIILowPUSpring18wmLHEGS" : {
-   "go" : false,
+   "go" : true,
    "lumisize" : -1,
    "fractionpass" : 0.95,
    "tune" : true,
