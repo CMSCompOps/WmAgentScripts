@@ -377,9 +377,12 @@ def actor(url,options=None):
         action_list = json.loads(os.popen('curl -s -k https://vocms0113.cern.ch:80/getaction?days=15').read())
         ## now we have a list of things that we can take action on
     except:
-        print "Not able to load action list :("
-        sendLog('actor','Not able to load action list', level='critical')
-        return
+        try:
+            action_list = json.loads(os.popen('curl -s -k https://vocms0113.cern.ch/getaction?days=15').read())
+        except:
+            print "Not able to load action list :("
+            sendLog('actor','Not able to load action list', level='critical')
+            return
 
     if options.actions:
         action_list = json.loads(open(options.actions).read())
