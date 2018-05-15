@@ -2,7 +2,7 @@
 import os
 import json
 import time
-from utils import sendEmail, sendLog
+from utils import sendEmail, sendLog, monitor_eos_dir
 import sys
 
 ## get the wf from many places
@@ -30,7 +30,7 @@ while True:
     for (wf,lf) in wfs:
         print "#"*30
         print "Getting",wf.strip(),lf.strip()
-        expose_all='/eos/project/c/cms-unified-logs/www/logmapping/%s/'% wf
+        expose_all='%s/logmapping/%s/'%(monitor_eos_dir, wf)
         os.system('mkdir -p %s'% expose_all)
 
         agent,jobid = None, None
@@ -47,11 +47,12 @@ while True:
                 jobid,
                 0,
                 '/afs/cern.ch/user/c/cmst2/Unified/',
-                '/eos/project/c/cms-unified-logs/www/logmapping/',
+                monitor_eos_dir+'/logmapping/',
                 'ATask'
                 )
             ## parse the condor logs for the tar.gz
-            condor_dir ='/eos/project/c/cms-unified-logs/www/logmapping/condorlogs/%s/0/ATask/%s/%s_%s/Job_%s'%(wf,
+            condor_dir ='%s/logmapping/condorlogs/%s/0/ATask/%s/%s_%s/Job_%s'%(monitor_eos_dir,
+                                                                                                                wf,
                                                                                                                 jobid[:3],
                                                                                                                 agent.split('.')[0],
                                                                                                                 jobid,
