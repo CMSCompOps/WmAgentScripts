@@ -1229,7 +1229,11 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
 
     ## now make bar charts per site
     for i_oos,site in enumerate(sorted(by_reason_at_site.keys())):
-        rem_divs_table += "<td>%s</td>"%(rem_chart_data[site][2])
+        rem_link = "<br><a href=remaining_%s.html>remaining datasets</a>"% site if site in out_of_space else ""
+        #rem_link = "<br><a href=remaining_%s.html>remaining datasets</a>"% site
+        print rem_link
+        rem_divs_table += "<td>%s %s</td>"%(rem_chart_data[site][2], rem_link)
+        
         if (i_oos+1)%5==0:
             rem_divs_table += "<tr>"
     
