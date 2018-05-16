@@ -5337,6 +5337,21 @@ def checkIfDatasetIsSubscribedToASite(url,dataset,site):
 
     return False
 
+def getBlockLocations(url, dataset, group=None):
+    conn = make_x509_conn(url)
+    go= '/phedex/datasvc/json/prod/blockreplicas?dataset=%s'%(dataset)
+    if group:
+        go+='&group=%s'%group
+    r1=conn.request("GET",go)
+    r2=conn.getresponse()    
+    result = json.loads(r2.read())['phedex']
+    locations = defaultdict(set)
+    for block in result['block']:
+        for rep in block['replica']:
+            locations[block['name']].add( rep['node'])
+    return dict(locations)
+    
+
 def checkIfBlockIsAtASite(url,block,site):
 
     conn = make_x509_conn(url)
