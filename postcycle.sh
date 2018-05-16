@@ -49,7 +49,7 @@ echo $$ >> $lock_name
 source $BASE_DIR/credentials.sh
 
 ## force-complete wf according to rules
-$BASE_DIR/cWrap.sh Unified/completor.py
+#$BASE_DIR/cWrap.sh Unified/completor.py
 
 ## look at what is still running : add clear to expedite
 $BASE_DIR/cWrap.sh Unified/checkor.py  --update --clear
