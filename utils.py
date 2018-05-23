@@ -1753,6 +1753,17 @@ class siteInfo:
         self.sites_T0s_all = [ s for s in self.all_sites if s.startswith('T0_')]
 
         self.sites_AAA = list(set(self.sites_ready) - set(['T2_CH_CERN_HLT']))
+        add_on_aaa = ['T3_CH_CERN_HelixNebula',
+                      'T3_CH_CERN_HelixNebula_REHA',
+                      
+        ]
+        add_on_good_aaa = ['T3_IN_TIFRCloud',
+                           'T3_US_NERSC',
+                           'T3_US_OSG',
+        ]
+        add_on_aaa = list(set(add_on_good_aaa + add_on_aaa))
+        self.sites_AAA = list(set(self.sites_AAA + add_on_aaa ))
+
         ## could this be an SSB metric ?
         self.sites_with_goodIO = UC.get('sites_with_goodIO')
         #restrict to those that are actually ON
@@ -1780,7 +1791,7 @@ class siteInfo:
         self.sites_veto_transfer = []  ## do not prevent any transfer by default
 
         ## new site lists for better matching
-        self.sites_with_goodAAA = self.sites_with_goodIO + ['T3_IN_TIFRCloud','T3_US_NERSC','T3_CH_CERN_HelixNebula','T3_US_OSG'] ## like this for now
+        self.sites_with_goodAAA = self.sites_with_goodIO + add_on_good_aaa
         self.sites_with_goodAAA = list(set([ s for s in self.sites_with_goodAAA if s in self.sites_ready]))
 
 
