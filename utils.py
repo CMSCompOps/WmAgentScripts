@@ -1722,8 +1722,9 @@ class siteInfo:
             ##hack
             add_as_ready = [
                 'T3_US_OSG',
-                #'T3_CH_CERN_HelixNebula',
-                #'T3_US_NERSC'
+                'T3_CH_CERN_HelixNebula',
+                'T3_CH_CERN_HelixNebula_REHA',
+                'T3_US_NERSC'
                             ]
             for aar in add_as_ready:
                 self.sites_ready.append(aar)
@@ -1809,7 +1810,8 @@ class siteInfo:
             'T2_CH_CERN_AI' : 'T2_CH_CERN',
             'T3_US_NERSC' : 'T1_US_FNAL_Disk',
             'T3_US_OSG' : 'T1_US_FNAL_Disk',
-            'T3_CH_CERN_HelixNebula' : 'T2_CH_CERN'
+            'T3_CH_CERN_HelixNebula' : 'T2_CH_CERN',
+            'T3_CH_CERN_HelixNebula_REHA' : 'T2_CH_CERN'
             }
         self.addHocStorageS['T2_CH_CERN_T0'].add( 'T2_CH_CERN')
         self.addHocStorageS['T2_CH_CERN_AI'].add('T2_CH_CERN')
