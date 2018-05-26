@@ -1268,7 +1268,7 @@
    }
   },
  "RunIIpp5Spring18GS" : {
-   "go" : false,
+   "go" : true,
    "lumisize" : -1,
    "fractionpass" : 0.95,
    "tune" : true,
@@ -1280,7 +1280,7 @@
     "custodial": "T1_FR_CCIN2P3_MSS"
  },
   "RunIIpp5Spring18wmLHEGS" : {
-   "go" : false,
+   "go" : true,
    "lumisize" : -1,
    "fractionpass" : 0.95,
    "force-complete" : 0.99,
@@ -1292,7 +1292,7 @@
     "custodial": "T1_FR_CCIN2P3_MSS"
   },
   "RunIIpp5Spring18DR" :{
-    "go": false,
+    "go": true,
     "maxcopies": 1,
     "lumisize": -1,
     "resize" : "auto",
