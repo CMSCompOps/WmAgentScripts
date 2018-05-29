@@ -2946,6 +2946,7 @@ def getDatasetFileLocations(url, dataset):
                 locations[ f['name'] ] .add( r['node'] )
     return dict( locations )
 
+
 def getDatasetFiles(url, dataset ,without_invalid=True ):
     dbsapi = DbsApi(url=dbs_url)
     files = dbsapi.listFileArray( dataset= dataset,validFileOnly=without_invalid, detail=True)
@@ -4247,6 +4248,54 @@ def getDatasets(dataset):
                                 data_tier_name = t,
                                 dataset_access_type='*')
     return reply
+
+
+def injectFile(url, info):
+    ## do a sub parsing per site
+    per_site = defaultdict( lambda : defaultdict( lambda: defaultdict( list)))
+    for dataset in info:
+        for block in info[dataset]:
+            for file_o in info[dataset][block]:
+                per_site[file_o.pop("site")][dataset][block].append( file_o )
+    for site in per_site:
+        x = createFileXML( per_site[site] )
+        params = { "node" : site,
+                   "data" : x }
+        #print x
+        #print params
+        r = phedexPost(url, '/phedex/datasvc/json/prod/inject', params)
+        print json.dumps( r , indent=2)
+
+
+def createFileXML(dataset_block_file_locations):
+    impl=getDOMImplementation()
+    doc=impl.createDocument(None, "data", None)
+    result = doc.createElement("data")
+    result.setAttribute('version', '2')
+    dbs = doc.createElement("dbs")
+    dbs.setAttribute("name", dbs_url)
+    result.appendChild(dbs)
+    for dataset in dataset_block_file_locations:
+        xdataset=doc.createElement("dataset")
+        ### check these directly in phedex?
+        xdataset.setAttribute("is-open","y")
+        #xdataset.setAttribute("is-transient","y")
+        xdataset.setAttribute("name",dataset)
+        dbs.appendChild(xdataset)
+        for block in dataset_block_file_locations[dataset]:
+            xblock = doc.createElement("block")
+            ## check these in phedex?
+            xblock.setAttribute("is-open","y")
+            xblock.setAttribute("name", block)
+            xdataset.appendChild(xblock)
+            for file_o in dataset_block_file_locations[dataset][block]:
+                xfile = doc.createElement("file")
+                for k,v in file_o.items():
+                    ## should be name, bytes, checksum
+                    xfile.setAttribute(k,str(v))
+                    xblock.appendChild(xfile)
+    return result.toprettyxml(indent="  ")
+
 
 def createXML(datasets):
     """
