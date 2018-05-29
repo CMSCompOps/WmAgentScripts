@@ -42,8 +42,8 @@ def invalidator(url, invalid_status='INVALID'):
             ## to do, we should find a way to reject the workflow and any related acdc
             successes = invalidate(url, wfn, and_self=True, only_resub=True, with_output=False)
             wfi.sendLog('invalidator',"rejection is performed from McM invalidations request")
-            
-            acknowledge= all([ r in ['None',None,True] for r in successes])
+            acknowledge= all(successes)
+
             text = "The workflow %s (%s) was rejected due to invalidation in McM" % ( wfn, pid )
             batch_lookup = wfn ##so that the batch id is taken as the one containing the workflow name
         elif invalid['type'] == 'dataset':
