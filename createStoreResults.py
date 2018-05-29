@@ -11,6 +11,7 @@ Expected input json file like:
 [{"InputDataset": "/EmbeddingRun2016B/MuTauFinalState-imputSep16DoubleMu_mirror_miniAOD-v2/USER",
   "DbsUrl": "phys03",
   "ScramArch": "slc6_amd64_gcc530",
+  "SiteWhitelist": "T2_DE_DESY",
   "PhysicsGroup": "Tau POG",
   "CMSSWVersion": "CMSSW_8_0_26_patch1"},
   {..},
@@ -42,6 +43,7 @@ DEFAULT_DICT = {
     "ProcessingString": "UPDATEME",
     "RequestString": "UPDATEME",
     "ScramArch": "UPDATEME",
+    "SiteWhitelist": "UPDATEME",  # Will be picked by Unified and posted again at assignment
     "AcquisitionEra": "StoreResults",
     "Campaign": "StoreResults",
     "DbsUrl": "https://cmsweb.cern.ch/dbs/prod/phys03/DBSReader",
@@ -65,14 +67,13 @@ def main():
     # now create requests for each of the datasets
     for entry in items:
         migrateDataset(entry['InputDataset'], entry['DbsUrl'])
-        site = entry.pop('SiteWhitelist', [])
         newDict = buildRequest(entry)
         if newDict is None:
             # user provided incomplete data (or mistyped something)
             continue
         # print("Creating StoreResults workflow for:\n%s" % pformat(newDict))
         workflow = submitWorkflow(newDict)
-        approveRequest(workflow,site)
+        approveRequest(workflow)
     sys.exit(0)
 
 
@@ -90,11 +91,11 @@ def migrateDataset(dset, dbsInst):
 def buildRequest(userDict):
     """
     Expects the following user data:
-      CMSSWVersion, ScramArch, DbsUrl, InputDataset and PhysicsGroup 
+      CMSSWVersion, ScramArch, DbsUrl, InputDataset, SiteWhitelist and PhysicsGroup 
     """
     if Counter(userDict.keys()) != Counter(["CMSSWVersion", "ScramArch", "DbsUrl",
-                                            "InputDataset", "PhysicsGroup"]):
-        print("Skipping creation due to user data incomplete: %s" % userDict)
+                                            "InputDataset", "SiteWhitelist", "PhysicsGroup"]):
+        print("ERROR: user input data is incomplete: %s" % userDict)
         return None
 
     newSchema = copy(DEFAULT_DICT)
@@ -130,16 +131,12 @@ def submitWorkflow(schema):
     return requestName
 
 
-def approveRequest(workflow,site):
+def approveRequest(workflow):
     if workflow is None:
         return
-    if site is None:
-        print("Provide a site whitelist as a list of sites where the input dataset is located")
-        return
+
     # print("Approving request...")
-    encodedParams = json.dumps({"RequestStatus": "assignment-approved",
-                                "SiteWhitelist": site})
-    print(encodedParams)
+    encodedParams = json.dumps({"RequestStatus": "assignment-approved"})
     headers = {"Content-type": "application/json",
                "Accept": "application/json"}
 
