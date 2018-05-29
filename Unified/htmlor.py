@@ -232,6 +232,7 @@ def htmlor( caller = ""):
 Last update on <b>%s(CET), %s(GMT)</b>
 <br>
 <hr>
+<a href=info.txt target=_blank title="Some basic running info">info</a>
 <a href=logs/ target=_blank title="Directory containing all the logs">logs</a> 
 <a href=http://cms-unified.web.cern.ch/cms-unified/joblogs/ target=_blank title="Directory containing logs of jobs that failed with critical errors">job logs</a> 
 <a href=http://cms-unified.web.cern.ch/cms-unified/condorlogs/ target=_blank title="Directory containing condor logs of jobs ">condor logs</a> 
