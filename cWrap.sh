@@ -10,15 +10,6 @@ if [ "$USER" != "vlimant" ] ; then
     exit
 fi
 
-if [ -r unified_drain ] ; then
-    echo "draining the local process"
-    exit
-fi
-if [ -r /eos/cms/store/unified/unified_drain ] ; then
-    echo "draining the global process"
-    exit
-fi
-
 modulename=`echo $1 | sed 's/\.py//' | sed 's/Unified\///'`
 mkdir -p $HTML_DIR/logs/$modulename/
 mkdir -p $FINAL_HTML_DIR/logs/$modulename/
@@ -29,14 +20,21 @@ log=$dated_log
 
 echo `date` > $log
 
-if [ -r /eos/cms/store/unified/drain_mode ] ; then
-    echo "System is draining"
-    echo "System is draining" >> $log
+if [ -r unified_drain ] ; then
+    echo "System is locally draining" >> $log
     cp $log $last_log
     cp $log $FINAL_HTML_DIR/logs/$modulename/.
     cp $log $FINAL_HTML_DIR/logs/$modulename/last.log
     exit
 fi
+if [ -r /eos/cms/store/unified/unified_drain ] ; then
+    echo "System is globally draining" >> $log
+    cp $log $last_log
+    cp $log $FINAL_HTML_DIR/logs/$modulename/.
+    cp $log $FINAL_HTML_DIR/logs/$modulename/last.log
+    exit
+fi
+
 
 
 
