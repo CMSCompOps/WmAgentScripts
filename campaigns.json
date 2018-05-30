@@ -535,7 +535,8 @@
     "go" : true,
     "lumisize" : -1,
     "fractionpass" : 0.95,
-    "tune" : true
+    "tune" : true, 
+    "toDDM" : ["GEN"]
   },
   "PhaseIISummer17wmLHEGENOnly" : {
    "go" : true,
