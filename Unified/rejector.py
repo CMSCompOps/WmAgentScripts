@@ -194,11 +194,20 @@ def rejector(url, specific, options=None):
                                   ## and the new parameter validation scheme
                                   'DN', 'AutoApproveSubscriptionSites', 'NonCustodialSites', 'CustodialSites', 
                                   'OriginalRequestName', 'IgnoredOutputModules', 'OutputModulesLFNBases', 'SiteBlacklist', 'AllowOpportunistic', '_id',
-                                  'min_merge_size', 'events_per_lumi', 'max_merge_size', 'max_events_per_lumi', 'max_merge_events', 'max_wait_time', 'events_per_job']
+                                  'min_merge_size', 'events_per_lumi', 'max_merge_size', 'max_events_per_lumi', 'max_merge_events', 'max_wait_time', 'events_per_job',
+                                  'SiteBlacklist', 'AllowOpportunistic', 'Override']
                 for p in paramBlacklist:
                     if p in schema:
                         schema.pop( p )
-                        #pass
+
+                taskParamBlacklist = [ 'EventsPerJob' ] 
+                for i in range(1,100):
+                    t='Task%s'%i
+                    if not t in schema: break
+                    for p in taskParamBlacklist:
+                        if p in schema[t]:
+                            schema[t].pop( p )
+
                 print "submitting"
                 if (options.to_stepchain and (schema['RequestType']=='TaskChain')):
                     ## transform the schema into StepChain schema
