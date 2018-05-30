@@ -272,7 +272,14 @@ def singleClone(url, wfname, actions, comment, do=False):
     for p in paramBlacklist:
         if p in payload:
             payload.pop( p )
-            pass
+
+    taskParamBlacklist = [ 'EventsPerJob' ] 
+    for i in range(1,100):
+        t='Task%s'%i
+        if not t in payload: break
+        for p in taskParamBlacklist:
+            if p in payload[t]:
+                payload[t].pop( p )
 
     if actions:
         for action in actions:
