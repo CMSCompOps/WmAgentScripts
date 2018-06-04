@@ -713,7 +713,7 @@
    "fractionpass" : 0.95,
    "tune" : true
   },
-  "RunIIFall17wmLHEGENONLY" : {
+  "RunIIFall17wmLHEGENOnly" : {
    "go" : false,
    "fractionpass" : 0.95,
    "lumisize" : -1,
