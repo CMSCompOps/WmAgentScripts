@@ -420,7 +420,8 @@
    "go" : true,
    "fractionpass" : 0.95,
    "lumisize" : -1,
-   "tune" : true
+   "tune" : true, 
+   "toDDM" : ["GEN"] 
   },
   "PhaseISpring17DR" : {
    "go" : true,
@@ -542,7 +543,8 @@
    "go" : true,
    "fractionpass" : 0.95,
    "lumisize" : -1,
-   "tune" : true
+   "tune" : true, 
+   "toDDM" : ["GEN"] 
   },
   "PhaseIISummer17pLHE" : {
    "go" : true,
@@ -1097,7 +1099,8 @@
     "lumisize": -1,
     "parameters" : {
       "EventsPerJob": 50000
-    }
+    },
+    "toDDM" : ["GEN"] 
   },
   "RunIISummer16DR80": {
     "go": true,
