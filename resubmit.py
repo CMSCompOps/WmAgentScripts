@@ -65,6 +65,14 @@ def modifySchema(cache, workflow, user, group, events, firstLumi, backfill=False
         else:
             result[k] = v
 
+    ## then further drop nested arguments
+    taskParamBlacklist = [ 'EventsPerJob' ] 
+    for i in range(1,100):
+        t='Task%s'%i
+        if not t in result: break
+        for p in taskParamBlacklist:
+            if p in result[t]:
+                result[t].pop( p )
     if memory:
         result['Memory'] = memory
     if timeperevent:
