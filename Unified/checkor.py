@@ -848,10 +848,21 @@ def checkor(url, spec=None, options=None):
             duplications[output] = "skiped"
             #files_per_rl[output] = "skiped"
 
+        ignoreduplicates ={}
+        for out,c in campaigns.items():
+            if c in CI.campaigns and 'ignoreduplicates' in CI.campaigns[c]:
+                ignoreduplicates[out] = CI.campaigns[c]['ignoreduplicates'] or options.ignoreduplicates
+            else:
+                ignoreduplicates[out] = options.ignoreduplicates
+
+
         ## check for duplicates prior to making the tape subscription ## this is quite expensive and we run it twice for each sample
-        if (is_closing or bypass_checks) and (not options.ignoreduplicates) and (not all_relevant_output_are_going_to_tape):
+        if (is_closing or bypass_checks) and (not all_relevant_output_are_going_to_tape):
             print "starting duplicate checker for",wfo.name
             for output in wfi.request['OutputDatasets']:
+                if (output in ignoreduplicates) and (ignoreduplicates[output]):
+                    print "Not checking \t",output
+                    continue
                 print "\tchecking",output
                 duplications[output] = True
                 if not output in lumis_per_run or not output in files_per_rl:
@@ -861,7 +872,7 @@ def checkor(url, spec=None, options=None):
                 lumis_with_duplicates[output] = [rl for (rl,files) in files_per_rl[output].items() if len(files)>1]
                 duplications[output] = len(lumis_with_duplicates[output])!=0 
 
-            if is_closing and any(duplications.values()) and not options.ignoreduplicates:
+            if is_closing and any(duplications.values()):
                 duplicate_notice = ""
                 duplicate_notice += "%s has duplicates\n"%wfo.name
                 #duplicate_notice += json.dumps( duplications,indent=2)

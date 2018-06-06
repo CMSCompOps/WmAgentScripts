@@ -2,7 +2,8 @@
   "StoreResults" : {
     "go": true,
     "maxcopies" : 1,
-    "primary_AAA" : false
+    "primary_AAA" : false,
+    "ignoreduplicates" : true
   },
   "Summer16Geant4102": {
     "go": true,
