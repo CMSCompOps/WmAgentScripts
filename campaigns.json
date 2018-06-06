@@ -580,7 +580,8 @@
    "lumisize" : -1,
    "fractionpass" : 0.95,
    "force-complete" : 0.99,
-   "tune" : true
+   "tune" : true,
+   "overflow":{"LHE":{"site_list":"sites_AAA"}}
   },
   "RunIISummer18DR" :{
     "go": true,
