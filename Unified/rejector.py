@@ -183,30 +183,7 @@ def rejector(url, specific, options=None):
                 schema['RequestPriority'] = wfi.request['RequestPriority']
 
                 ## drop shit on the way to reqmgr2
-                paramBlacklist = ['BlockCloseMaxEvents', 'BlockCloseMaxFiles', 'BlockCloseMaxSize', 'BlockCloseMaxWaitTime',
-                                  'CouchWorkloadDBName', 'CustodialGroup', 'CustodialSubType', 'Dashboard',
-                                  'GracePeriod', 'HardTimeout', 'InitialPriority', 'inputMode', 'MaxMergeEvents', 'MaxMergeSize',
-                                  'MaxRSS', 'MaxVSize', 'MinMergeSize', 'NonCustodialGroup', 'NonCustodialSubType',
-                                  'OutputDatasets', 'ReqMgr2Only', 'RequestDate' 'RequestorDN', 'RequestName', 'RequestStatus',
-                                  'RequestTransition', 'RequestWorkflow', 'SiteWhitelist', 'SoftTimeout', 'SoftwareVersions',
-                                  'SubscriptionPriority', 'Team', 'timeStamp', 'TrustSitelists', 'TrustPUSitelists',
-                                  'TotalEstimatedJobs', 'TotalInputEvents', 'TotalInputLumis', 'TotalInputFiles',
-                                  ## and the new parameter validation scheme
-                                  'DN', 'AutoApproveSubscriptionSites', 'NonCustodialSites', 'CustodialSites', 
-                                  'OriginalRequestName', 'IgnoredOutputModules', 'OutputModulesLFNBases', 'SiteBlacklist', 'AllowOpportunistic', '_id',
-                                  'min_merge_size', 'events_per_lumi', 'max_merge_size', 'max_events_per_lumi', 'max_merge_events', 'max_wait_time', 'events_per_job',
-                                  'SiteBlacklist', 'AllowOpportunistic', 'Override']
-                for p in paramBlacklist:
-                    if p in schema:
-                        schema.pop( p )
-
-                taskParamBlacklist = [ 'EventsPerJob' ] 
-                for i in range(1,100):
-                    t='Task%s'%i
-                    if not t in schema: break
-                    for p in taskParamBlacklist:
-                        if p in schema[t]:
-                            schema[t].pop( p )
+                schema = reqMgrClient.purgeClonedSchema( schema )
 
                 print "submitting"
                 if (options.to_stepchain and (schema['RequestType']=='TaskChain')):
