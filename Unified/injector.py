@@ -83,7 +83,7 @@ def injector(url, options, specific):
                     can_add = False
                 ## check for any file in phedex, to verify existence
                 _,ph_files,_,_ = getDatasetFiles(url, d)
-                if not ph_files:
+                if not ph_files and not ( 'StoreResults' == wfi.request.setdefault('RequestType',None) ):
                     wfi.sendLog('injector',"One of the input has no file in phedex: %s" % d )
                     sendLog('injector',"One of the input has no file in phedex: %s"% d, level='critical')
                     can_add = False
