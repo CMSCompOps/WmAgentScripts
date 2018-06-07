@@ -257,29 +257,8 @@ def singleClone(url, wfname, actions, comment, do=False):
     else:
         payload['ProcessingVersion'] = 2
 
-
-## drop parameters on the way to reqmgr2
-    paramBlacklist = ['BlockCloseMaxEvents', 'BlockCloseMaxFiles', 'BlockCloseMaxSize', 'BlockCloseMaxWaitTime',
-                  'CouchWorkloadDBName', 'CustodialGroup', 'CustodialSubType', 'Dashboard',
-                  'GracePeriod', 'HardTimeout', 'InitialPriority', 'inputMode', 'MaxMergeEvents', 'MaxMergeSize',
-                  'MaxRSS', 'MaxVSize', 'MinMergeSize', 'NonCustodialGroup', 'NonCustodialSubType',
-                  'OutputDatasets', 'ReqMgr2Only', 'RequestDate' 'RequestorDN', 'RequestName', 'RequestStatus',
-                  'RequestTransition', 'RequestWorkflow', 'SiteWhitelist', 'SoftTimeout', 'SoftwareVersions',
-                  'SubscriptionPriority', 'Team', 'timeStamp', 'TrustSitelists', 'TrustPUSitelists',
-                  'TotalEstimatedJobs', 'TotalInputEvents', 'TotalInputLumis', 'TotalInputFiles','checkbox',
-                  'DN', 'AutoApproveSubscriptionSites', 'NonCustodialSites', 'CustodialSites', 'OriginalRequestName', 'Teams', 'OutputModulesLFNBases', 
-                      'SiteBlacklist', 'AllowOpportunistic', '_id', 'Override']
-    for p in paramBlacklist:
-        if p in payload:
-            payload.pop( p )
-
-    taskParamBlacklist = [ 'EventsPerJob' ] 
-    for i in range(1,100):
-        t='Task%s'%i
-        if not t in payload: break
-        for p in taskParamBlacklist:
-            if p in payload[t]:
-                payload[t].pop( p )
+        
+    payload = reqMgrClient.purgeClonedSchema( payload )
 
     if actions:
         for action in actions:
