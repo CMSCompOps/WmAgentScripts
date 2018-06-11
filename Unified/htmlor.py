@@ -1173,15 +1173,18 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
     counting_oos = 0
     for c,site in enumerate(sorted(chart_data.keys())):
         rem=""
+        bgcol = ""
         if site in out_of_space:
             rem = "<br><a href=remaining_%s.html>remaining datasets</a>"% site
+            bgcol ='bgcolor="red"'
             counting_oos += 1
+            
         if c%5==0:
             divs_table += "<tr>"
         if i_oos%5==0:
             oos_divs_table += "<tr>"
             
-        divs_table += "<td>%s%s</td>"%(chart_data[site][2], rem)
+        divs_table += "<td %s>%s%s</td>"%(bgcol,chart_data[site][2], rem)
         if site in out_of_space:
             oos_divs_table += "<td>%s%s</td>"%(chart_data[site][2], rem)
             i_oos+=1
