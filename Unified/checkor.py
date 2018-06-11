@@ -861,7 +861,8 @@ def checkor(url, spec=None, options=None):
             print "starting duplicate checker for",wfo.name
             for output in wfi.request['OutputDatasets']:
                 if (output in ignoreduplicates) and (ignoreduplicates[output]):
-                    print "Not checking \t",output
+                    print "\tNot checking",output
+                    duplications[output] = False
                     continue
                 print "\tchecking",output
                 duplications[output] = True
