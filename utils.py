@@ -2169,7 +2169,7 @@ class siteInfo:
 
     def SE_to_CE(self, se):
         if se in self._map_SE_to_CE:
-            return list(self._map_SE_to_CE[se])[0]
+            return sorted(self._map_SE_to_CE[se])[0]
 
         if se.endswith('_Disk'):
             return se.replace('_Disk','')
