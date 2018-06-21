@@ -53,6 +53,7 @@ class ReadBuster(threading.Thread):
 
     def run(self):
         self.readable = os.system('XRD_REQUESTTIMEOUT=10 xrdfs root://cms-xrd-global.cern.ch stat %s'%self.file)
+        
 
 class XRDBuster(threading.Thread):
     def __init__(self, **args):
@@ -710,11 +711,24 @@ def parse_one(url, wfn, options=None):
     check_files = [ f for f in files_and_loc_notin_dbs.keys() if '/store' in f]
     random.shuffle( check_files )
     check_files = check_files[:100]
-    check_files = [] ## disable it completely
     by_f = {}
     if check_files:
+        import dynamoClient
+        DC=dynamoClient.dynamoClient()
+        dirs_by_site = defaultdict(set)
         for f in check_files:
-            rthreads.append( ReadBuster( file = f))
+            dir,fn = f.rsplit('/',1)
+            for s in files_and_loc_notin_dbs[f]:
+                dirs_by_site[s].add( dir )
+        files_by_site = DC.files_in_dir( dirs_by_site )
+        print dirs_by_site
+        print files_by_site
+        for f in check_files:
+            for s in files_and_loc_notin_dbs[f]:
+                by_f[f] = (f in files_by_site[s])
+        """
+        for f in check_files:
+            rthreads.append( ReadBuster( file = f ))
         print "checking on existence of",len(rthreads),"files"
         run_rthreads = ThreadHandler( threads = rthreads, n_threads = 20, timeout = 10)
         run_rthreads.start()
@@ -724,12 +738,14 @@ def parse_one(url, wfn, options=None):
         for t in run_rthreads.threads:
             by_f[t.file] = t.readable
             #print "checked",t.file,t.readable
+        """
 
     for f in sorted(files_and_loc_notin_dbs.keys()):
         readable = by_f.get(f,-1)
+        print f,readable
         if readable == -1:
             fs = '%s'%f
-        elif readable == 0:
+        elif readable == True:
             fs = '<font color=light green>%s</font>'%f
             #print f,"is readable"
         else:
