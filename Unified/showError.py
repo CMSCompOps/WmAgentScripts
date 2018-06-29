@@ -782,10 +782,10 @@ def parse_one(url, wfn, options=None):
             lost_html += html_line
         else:
             existing_html += html_line
-    html += "<br><table><thead><tr><td>Site</td><td>Expected files</td><td>Missing files</td></tr></thead>"
+    html += "<br><table border=1><thead><tr><td>Site</td><td>Expected files</td><td>Missing files</td></tr></thead>"
     for s in sorted(expected_files.keys()):
         if missing_files[s] or True:
-            html+="<tr bgcolor=%s><td>%s</td><td>%d</td><td>%d</td></tr>"%( "red" if missing_files[s] else "blue", s, expected_files[s], missing_files[s])
+            html+="<tr bgcolor=%s><td>%s</td><td>%d</td><td>%d</td></tr>"%( "red" if missing_files[s] else "", s, expected_files[s], missing_files[s])
     html += "</table><br>"
 
     if separate_h:
