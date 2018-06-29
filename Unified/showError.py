@@ -710,8 +710,9 @@ def parse_one(url, wfn, options=None):
     rthreads = []
     check_files = [ f for f in files_and_loc_notin_dbs.keys() if '/store' in f]
     random.shuffle( check_files )
-    check_files = check_files[:100]
+    #check_files = check_files[:100]
     by_f = {}
+    f_locations = defaultdict(set)
     if check_files:
         import dynamoClient
         DC=dynamoClient.dynamoClient()
@@ -721,11 +722,17 @@ def parse_one(url, wfn, options=None):
             for s in files_and_loc_notin_dbs[f]:
                 dirs_by_site[s].add( dir )
         files_by_site = DC.files_in_dir( dirs_by_site )
-        print dirs_by_site
-        print files_by_site
+        #print dirs_by_site
+        #print files_by_site
+        
         for f in check_files:
-            for s in files_and_loc_notin_dbs[f]:
-                by_f[f] = (f in files_by_site[s])
+            locs = [s for s in files_by_site if f in files_by_site[s] ]
+            if locs:
+                by_f[f] = True
+                f_locations[f].update( locs )
+            else:
+                by_f[f] = False
+
         """
         for f in check_files:
             rthreads.append( ReadBuster( file = f ))
@@ -739,24 +746,53 @@ def parse_one(url, wfn, options=None):
             by_f[t.file] = t.readable
             #print "checked",t.file,t.readable
         """
-
+    files_html = ""
+    existing_html = ""
+    lost_html = ""
+    separate_h = False
+    missing_files = defaultdict(int)
+    expected_files = defaultdict(int)
     for f in sorted(files_and_loc_notin_dbs.keys()):
         readable = by_f.get(f,-1)
-        print f,readable
-        if readable == -1:
+        if readable == -1 or not 'store' in f:
             fs = '%s'%f
-        elif readable == True:
-            fs = '<font color=light green>%s</font>'%f
-            #print f,"is readable"
+            sites_strs = sorted(files_and_loc_notin_dbs[f])
         else:
-            fs = '<font color=red>%s</font>'%f
-            #print f,"is not readable"
+            for s in files_and_loc_notin_dbs[f]:
+                expected_files[s]+=1
+            if readable == True:
+                fs = '<font color="light green">%s</font>'%f
+                #print f,"is readable"
+            else:
+                fs = '<font color=red>%s</font>'%f
+                #print f,"is not readable"
+                for s in files_and_loc_notin_dbs[f]:
+                    missing_files[s]+=1
+        
+            sites_strs = [ '<font color="%s">%s</font>'% ('light green' if s in f_locations[f] else 'red', s) for s in sorted(files_and_loc_notin_dbs[f])]
+            #seen_at = sorted(f_locations[f])
             
-        html +='%s <b>@</b> %s<br>'%(fs, ','.join(sorted(files_and_loc_notin_dbs[f])) )
-        #html +='%s <b>@</b> %s<br>'%(f , ','.join(sorted(files_and_loc_notin_dbs[f])) )
+        html_line ='%s <b>@</b> %s<br>'%( fs, 
+                                      ','.join( sites_strs ), 
+                                      #','.join(seen_at)
+                                  )
+        if not separate_h:
+            files_html += html_line
+        if readable == False:
+            lost_html += html_line
+        else:
+            existing_html += html_line
+    html += "<br><table><thead><tr><td>Site</td><td>Expected files</td><td>Missing files</td></tr></thead>"
+    for s in sorted(expected_files.keys()):
+        if missing_files[s] or True:
+            html+="<tr bgcolor=%s><td>%s</td><td>%d</td><td>%d</td></tr>"%( "red" if missing_files[s] else "blue", s, expected_files[s], missing_files[s])
+    html += "</table><br>"
 
-
-
+    if separate_h:
+        html += existing_html
+        html += lost_html
+    else:
+        html += files_html
 
     html += '<hr><br>'
     html += '<a name=CODES></a>'

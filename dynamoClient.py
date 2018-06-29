@@ -10,7 +10,9 @@ class dynamoClient(object):
         
     def get_site(self, s):
         print ("caching db for",s)
-        os.system('wget -q -N http://dynamo.mit.edu/consistency/%s_protected.db -O %s '%(s , self._local_file(s)))
+        #os.system('wget --connect-timeout 10 --read-timeout 180 -N http://dynamo.mit.edu/consistency/%s_protected.db -O %s '%(s , self._local_file(s)))
+        d,f = self._local_file(s).rsplit('/',1)
+        os.system('cd %s ; wget -q -N http://dynamo.mit.edu/consistency/%s_protected.db ; cd -'%(d, s ))
         os.system("touch -t `date +'%%Y%%m%%d%%H%%M.%%S'` %s"% self._local_file(s))
 
     def files_in_dir(self, dirs):
