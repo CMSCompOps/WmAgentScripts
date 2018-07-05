@@ -5450,7 +5450,8 @@ class workflowInfo:
             if member['RequestDate'] < self.request['RequestDate']: continue
             if member['RequestStatus'] in ['None',None]: continue
             
-            if (myself and and_self) or (not myself and not and_self) or (only_resub and not acdc) or (not only_resub and acdc):
+            #if (myself and and_self) or (not myself and not and_self) or (only_resub and not acdc) or (not only_resub and acdc):
+	    if (myself and and_self) or (only_resub and acdc and not myself) or (not only_resub and not myself):
                 if details:
                     true_familly.append( member )
                 else:
