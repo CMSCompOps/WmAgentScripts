@@ -1065,6 +1065,20 @@
     "force-timeout" : 7,
     "lumisize": -1
   },
+  "RunIISpring16pLHE": {
+    "go": false,
+    "parameters": {
+      "EventsPerLumi": 200
+    },
+    "recover" : false
+  },
+ "RunIISpring16GS" : {
+   "go" : false,
+   "lumisize" : -1,
+   "fractionpass" : 0.95,
+   "tune" : true,
+   "resize" : "auto"
+ },
   "RunIISummer16DR80Premix":{
    "go":true,
    "maxcopies": 1,
