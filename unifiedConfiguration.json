@@ -122,7 +122,8 @@
               ["vlimant","vlimant@cern.ch"],
    	      ["prozober","paola.katherine.rozo.bernal@cern.ch"],
 	      ["mcremone","matteoc@fnal.gov"],
-              ["qnguyen","thong@caltech.edu"]
+              ["qnguyen","thong@caltech.edu"], 
+	      ["sagarwal","sharad.agarwal@cern.ch"]
              ]
  },
  "max_tail_priority" : {
