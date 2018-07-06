@@ -173,7 +173,7 @@ def singleRecovery(url, task , initial, actions, do=False):
 def new_recoveror(url, specific, options=None):
     if userLock('recoveror'): return
 
-    up = componentInfo(mcm=False, soft=['mcm'])
+    up = componentInfo(soft=['mcm','wtc'])
     if not up.check(): return
 
     CI = campaignInfo()
@@ -248,7 +248,7 @@ def new_recoveror(url, specific, options=None):
 def recoveror(url,specific,options=None):
     if userLock('recoveror'): return
 
-    up = componentInfo(mcm=False, soft=['mcm'])
+    up = componentInfo(soft=['mcm','wtc'])
     if not up.check(): return
 
     CI = campaignInfo()

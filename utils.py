@@ -896,16 +896,19 @@ def checkDownTime():
         return False
 
 class componentInfo:
-    def __init__(self, block=True, mcm=False,soft=None, keep_trying=False):
-        self.mcm = mcm
-        self.soft = soft
+    def __init__(self, block=True, mcm=None, soft=None, keep_trying=False):
+        if soft is None:
+            self.soft = ['mcm','wtc'] ## two components that are not mandatory
+        else:
+            self.soft = soft
         self.block = block
         self.status ={
             'reqmgr' : False,
             'mcm' : False,
             'dbs' : False,
             'phedex' : False,
-            'cmsr' : False
+            'cmsr' : False,
+            'wtc' : False
             }
         self.code = 0
         self.keep_trying = keep_trying
@@ -958,29 +961,28 @@ class componentInfo:
 
         from McMClient import McMClient
 
-        if self.mcm:
-            while True:
-                try:
-                    mcmC = McMClient(dev=False)
-                    print "checking mcm"
-                    test = mcmC.getA('requests',page=0)
-                    time.sleep(1)
-                    if not test:
-                        raise Exception("mcm is corrupted")
-                    else:
-                        self.status['mcm'] = True
-                        break
-                except Exception as e:
-                    self.tell('mcm')
-                    if self.keep_trying:
-                        time.sleep(30)
-                        continue
-                    print "mcm unreachable"
-                    print str(e)
-                    if self.block and not (self.soft and 'mcm' in self.soft):
-                        self.code = 125
-                        return False
+        while True:
+            try:
+                mcmC = McMClient(dev=False)
+                print "checking mcm"
+                test = mcmC.getA('requests',page=0)
+                time.sleep(1)
+                if not test:
+                    raise Exception("mcm is corrupted")
+                else:
+                    self.status['mcm'] = True
                     break
+            except Exception as e:
+                self.tell('mcm')
+                if self.keep_trying:
+                    time.sleep(30)
+                    continue
+                print "mcm unreachable"
+                print str(e)
+                if self.block and not (self.soft and 'mcm' in self.soft):
+                    self.code = 125
+                    return False
+                break
         while True:
             try:
                 print "checking dbs"
@@ -1026,6 +1028,25 @@ class componentInfo:
                     return False
                 break
 
+        from wtcClient import wtcClient
+        while True:
+            try:
+                print "checking on the wtc console"
+                WC = wtcClient()
+                WC.get_actions()
+            except Exception as e:
+                self.tell('wtc')
+                if self.keep_trying:
+                    time.sleep(30)
+                    continue
+                print "wtc unreachable"
+                print str(e)
+                if self.block and not (self.soft and 'wtc' in self.soft):
+                    self.code = 129
+                    return False
+                break
+                
+                
         print json.dumps( self.status, indent=2)
         return True
 

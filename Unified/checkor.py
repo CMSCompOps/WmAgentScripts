@@ -37,7 +37,7 @@ def checkor(url, spec=None, options=None):
     use_recoveror = UC.get('use_recoveror')
     
     use_mcm = True
-    up = componentInfo(mcm=use_mcm, soft=['mcm'])
+    up = componentInfo(soft=['mcm','wtc'])
     if not up.check(): return
     use_mcm = up.status['mcm']
 

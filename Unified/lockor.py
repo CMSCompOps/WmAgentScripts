@@ -36,7 +36,7 @@ time_point("Starting initialization")
 url = reqmgr_url
 
 use_mcm=True
-up = componentInfo(mcm=use_mcm, soft=['mcm'])
+up = componentInfo(soft=['mcm','wtc'])
 if not up.check(): sys.exit(0)
 
 use_mcm = up.status['mcm']

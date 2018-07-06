@@ -23,7 +23,7 @@ def transferor(url ,specific = None, talk=True, options=None):
     if duplicateLock():  return
 
     use_mcm = True
-    up = componentInfo(mcm=use_mcm, soft=['mcm'])
+    up = componentInfo(soft=['mcm','wtc'])
     if not up.check(): return
     use_mcm = up.status['mcm']
 

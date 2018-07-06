@@ -13,7 +13,7 @@ import random
 
 def completor(url, specific):
     use_mcm = True
-    up = componentInfo(mcm=use_mcm, soft=['mcm'])
+    up = componentInfo(soft=['mcm','wtc'])
     if not up.check(): return
     use_mcm = up.status['mcm']
     if use_mcm:

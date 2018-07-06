@@ -12,12 +12,8 @@ import os
 
 def rejector(url, specific, options=None):
 
-    #use_mcm = True
-    #up = componentInfo(mcm=use_mcm, soft=['mcm'])
-    up = componentInfo()
+    up = componentInfo(soft=['wtc'])
     if not up.check(): return
-    #use_mcm = up.status['mcm']
-    #mcm = McMClient(dev=False) if use_mcm else None
 
     if specific and specific.startswith('/'):
         ## this is for a dataset
