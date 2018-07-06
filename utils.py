@@ -1033,7 +1033,11 @@ class componentInfo:
             try:
                 print "checking on the wtc console"
                 WC = wtcClient()
-                WC.get_actions()
+                a = WC.get_actions()
+                if a is None:
+                    raise Exception("No action can be retrieved")
+                self.status['wtc'] = True
+                break
             except Exception as e:
                 self.tell('wtc')
                 if self.keep_trying:
