@@ -25,9 +25,13 @@ class wtcClient(object):
     def get_actions(self):
         try:
             return self._get_actions()
-        except Exception as e:
-            print str(e)
-            return None
+        except:
+            try:
+                self._make_conn()
+                return self._get_actions()
+            except Exception as e:
+                print str(e)
+                return None
             
     def _get_actions(self):
         self.conn.request(
@@ -47,7 +51,8 @@ class wtcClient(object):
             try:
                 self._make_conn()
                 return self._remove_action(*args)
-            except:
+            except Exception as e:
+                print str(e)
                 return None
             
     def _remove_action(self, *args):
@@ -57,9 +62,11 @@ class wtcClient(object):
             json.dumps({'key': self.key_info['key'], 'workflows': args}),
             {'Content-type': 'application/json'})
         
-        r= conn.getresponse().read()
-        print r 
+        r= self.conn.getresponse().read()
+        jr = json.loads( r )
+        print jr 
         #conn.close()
-        return (r == 'Done')
+        #return (r == 'Done')
+        return all([w in jr['success'] for w in args])
 
         
