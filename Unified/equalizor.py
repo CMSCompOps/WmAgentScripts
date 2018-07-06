@@ -16,7 +16,7 @@ import math
 
 def equalizor(url , specific = None, options=None):
 
-    up = componentInfo(mcm=False, soft=['mcm']) 
+    up = componentInfo(soft=['mcm','wtc']) 
     if not up.check(): return 
 
     if not specific:

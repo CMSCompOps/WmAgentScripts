@@ -12,7 +12,7 @@ import random
 def htmlor( caller = ""):
     if duplicateLock(silent=True): return
 
-    up = componentInfo(mcm=False, soft=['mcm'])
+    up = componentInfo(soft=['mcm','wtc'])
     if not up.check(): return 
 
     for backup in ['statuses.json','siteInfo.json','listProtectedLFN.txt','equalizor.json']:
