@@ -634,10 +634,10 @@ def actor(url,options=None):
         
         
         if recover and options.do:
-            r = wC.remove_action(wfname)
+            r = WC.remove_action(wfname)
             if not r:
                 sendLog('actor','not able to remove the action, interlocking the module', level='critical')
-                os.system('touch %s/actor.%s.lock'%( base_eos_dir, os.getpid() ))
+                os.system('touch %s/actor.failed-%s.lock'%( base_eos_dir, os.getpid() ))
                 sys.exit(-1)
 
         if message_to_user:
