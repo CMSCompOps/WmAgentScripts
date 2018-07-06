@@ -23,9 +23,18 @@ class wtcClient(object):
         pass
 
     def get_actions(self):
+        try:
+            return self._get_actions()
+        except Exception as e:
+            print str(e)
+            return None
+            
+    def _get_actions(self):
         self.conn.request(
-            'GET', '/getaction?days=15&key=%s'%self.key_info['key'],
-            #json.dumps({'key': self.key_info['key']}),
+            'GET', 
+            '/getaction?days=15',
+            #'/getaction?days=15&key=%s'%self.key_info['key'],
+            json.dumps({'key': self.key_info['key']}),
             headers = {'Content-type': 'application/json'})
         r= self.conn.getresponse().read()
         action_list = json.loads( r )
