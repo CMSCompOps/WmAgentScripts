@@ -40,6 +40,10 @@ def equalizor(url , specific = None, options=None):
     if options.hlt: use_HLT = True
     if use_HLT: over_rides.append('T2_CH_CERN_HLT')
     
+    use_CSCS = ('T2_CH_CSCS_HPC' in UC.get("site_for_overflow"))
+    if options.cscs: use_CSCS = True
+    if use_CSCS: over_rides.append('T2_CH_CSCS_HPC')
+    
 
     SI = global_SI( over_rides )
     print sorted(SI.all_sites)
@@ -96,6 +100,14 @@ def equalizor(url , specific = None, options=None):
         mapping['T1_IT_CNAF'].append('T0_CH_CERN')
         mapping['T1_FR_CCIN2P3'].append('T0_CH_CERN')
         mapping['T1_DE_KIT'].append('T0_CH_CERN')
+
+    if use_CSCS: 
+	## analog config to T0: 
+	mapping['T2_CH_CERN'].append('T2_CH_CSCS_HPC')
+        mapping['T1_IT_CNAF'].append('T2_CH_CSCS_HPC')
+        mapping['T1_FR_CCIN2P3'].append('T2_CH_CSCS_HPC')
+        mapping['T1_DE_KIT'].append('T2_CH_CSCS_HPC')
+
     ## temptatively
     mapping['T0_CH_CERN'].append( 'T2_CH_CERN' )
 
