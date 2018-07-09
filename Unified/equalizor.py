@@ -1265,6 +1265,7 @@ if __name__ == "__main__":
     parser.add_option('-r','--remove',help='remove on workflow from the document', default=False, action='store_true')
     parser.add_option('--t0',help="Allow to use T0", default=False, action='store_true')
     parser.add_option('--hlt',help="Allow to use HLT", default=False, action='store_true')
+    parser.add_option('--cscs',help="Allow to use CSCS", default=False, action='store_true')
     parser.add_option('--tune',help='Enable performance tuning', default=False, action='store_true')
     parser.add_option('--high_prio',help='Toggle in the list of high priority workflows', default=None)
     parser.add_option('--manual',help='Just add something fully by hand in there', default=None)
