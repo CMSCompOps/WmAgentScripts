@@ -40,9 +40,9 @@ def equalizor(url , specific = None, options=None):
     if options.hlt: use_HLT = True
     if use_HLT: over_rides.append('T2_CH_CERN_HLT')
     
-    use_CSCS = ('T2_CH_CSCS_HPC' in UC.get("site_for_overflow"))
+    use_CSCS = ('T0_CH_CSCS_HPC' in UC.get("site_for_overflow"))
     if options.cscs: use_CSCS = True
-    if use_CSCS: over_rides.append('T2_CH_CSCS_HPC')
+    if use_CSCS: over_rides.append('T0_CH_CSCS_HPC')
     
 
     SI = global_SI( over_rides )
