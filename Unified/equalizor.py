@@ -103,10 +103,10 @@ def equalizor(url , specific = None, options=None):
 
     if use_CSCS: 
 	## analog config to T0: 
-	mapping['T2_CH_CERN'].append('T2_CH_CSCS_HPC')
-        mapping['T1_IT_CNAF'].append('T2_CH_CSCS_HPC')
-        mapping['T1_FR_CCIN2P3'].append('T2_CH_CSCS_HPC')
-        mapping['T1_DE_KIT'].append('T2_CH_CSCS_HPC')
+	mapping['T2_CH_CERN'].append('T0_CH_CSCS_HPC')
+        mapping['T1_IT_CNAF'].append('T0_CH_CSCS_HPC')
+        mapping['T1_FR_CCIN2P3'].append('T0_CH_CSCS_HPC')
+        mapping['T1_DE_KIT'].append('T0_CH_CSCS_HPC')
 
     ## temptatively
     mapping['T0_CH_CERN'].append( 'T2_CH_CERN' )
