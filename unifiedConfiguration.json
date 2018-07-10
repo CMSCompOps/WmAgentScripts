@@ -20,7 +20,7 @@
  "site_for_overflow": {
    "value" : ["T2_CH_CERN_HLT",
    	     "T0_CH_CERN", 
-	     "T2_CH_CSCS_HPC"],
+	     "T0_CH_CSCS_HPC"],
    "description" : "The sites that we set to overflow and require a specific treatment"
  },
  "overflow_pressure": {
