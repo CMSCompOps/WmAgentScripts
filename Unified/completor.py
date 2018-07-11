@@ -197,12 +197,16 @@ def completor(url, specific):
             tail_cutting_priority = max(tail_cutting_priority, priority) ## never go below the current value
             
             if priority < tail_cutting_priority:
-                sendLog('completor',"%s Injected since %s [days] priority=%s, increasing to %s"%(wfo.name,injection_delay,priority, tail_cutting_priority), level='critical')
-                wfi.sendLog('completor','bumping priority to %d for being injected since %s'%( tail_cutting_priority, injection_delay))
                 if max_priority:
+                    sendLog('completor',"%s Injected since %s [days] priority=%s, increasing to %s"%(wfo.name,injection_delay,priority, tail_cutting_priority), level='critical')
+                    wfi.sendLog('completor','bumping priority to %d for being injected since %s'%( tail_cutting_priority, injection_delay))
+
                     reqMgrClient.changePriorityWorkflow(url, wfo.name, tail_cutting_priority)
                     max_priority-=1
                 else:
+                    sendLog('completor',"%s Injected since %s [days] priority=%s, would like to increase to %s"%(wfo.name,injection_delay,priority, tail_cutting_priority), level='critical')
+                    wfi.sendLog('completor','would like to bump priority to %d for being injected since %s'%( tail_cutting_priority, injection_delay))
+
                     print "Could be changing the priority to higher value, but too many already were done"
 
         _,prim,_,_ = wfi.getIO()
