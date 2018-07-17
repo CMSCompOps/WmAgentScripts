@@ -67,6 +67,10 @@
     "value" : 5,
     "description" : "The number of bins to use for quantizing values used for tuning job requirements"
  },
+ "min_core_for_resize": {
+     "value" : 4,
+     "description" : "The minimum of original core requested to allow resizing"
+ },
  "DDM_buffer_level": {
    "value" : 0.8,
    "description" : "The fraction of the DDM quota we are allowed to use"
