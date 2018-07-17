@@ -607,10 +607,10 @@ def equalizor(url , specific = None, options=None):
                     mem_per_core = min(mem_per_core, max_mem_per_core)
                     min_core = max(int(mcore/3.), 3) 
                     max_core = min(int(2*mcore)+2, 15)
-                    print "Adding %s in resizing, calculating %d < %d < %d MB, using %d to %d cores"%(
+                    wfi.sendLog('equalizor', "Adding %s in resizing, calculating %d < %d < %d MB, using %d to %d cores"%(
                         task.pathName,
                         min_mem_per_core, mem_per_core_c, max_mem_per_core,
-                        min_core,max_core)
+                        min_core,max_core))
                     #print "adding", task.pathName,"in resizing, calculating",mem_per_core_c,
                     #"MB per thread, minimum",
                     #min_mem_per_core,"MB, using from",min_core,"to",max_core,"threads"
