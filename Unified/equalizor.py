@@ -596,7 +596,7 @@ def equalizor(url , specific = None, options=None):
             elif resize and resize=='auto':
                 ## can we add this tuning add-hoc by assuming Memory = a + Ncore*b, where a is a fraction of Memory ?
                 mcore = wfi.getCorePerTask( taskname )
-                if mcore<UC.get('min_core_for_resize'):
+                if mcore>=UC.get('min_core_for_resize'):
                     mem = wfi.getMemoryPerTask( taskname )
                     fraction_constant = 0.4
                     min_mem_per_core = 10 ## essentially no min
@@ -617,7 +617,7 @@ def equalizor(url , specific = None, options=None):
 
                     resizing[task.pathName] = { "minCores":min_core, "maxCores": max_core, "memoryPerThread": quantize(mem_per_core, slope_quanta)}
                 else:
-                    print "do not start resizing a task that was set single-core"
+                    print "do not start resizing a task that was set <",UC.get('min_core_for_resize')
 
             if task.pathName in resizing:
                 addhoc_resize = ['HIG-RunIIFall17GS-00004']
