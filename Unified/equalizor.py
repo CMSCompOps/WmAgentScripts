@@ -596,7 +596,7 @@ def equalizor(url , specific = None, options=None):
             elif resize and resize=='auto':
                 ## can we add this tuning add-hoc by assuming Memory = a + Ncore*b, where a is a fraction of Memory ?
                 mcore = wfi.getCorePerTask( taskname )
-                if mcore!=1:
+                if mcore<UC.get('min_core_for_resize'):
                     mem = wfi.getMemoryPerTask( taskname )
                     fraction_constant = 0.4
                     min_mem_per_core = 10 ## essentially no min
@@ -605,7 +605,7 @@ def equalizor(url , specific = None, options=None):
                     mem_per_core_c = int((1-fraction_constant) * mem / float(mcore))
                     mem_per_core = max(mem_per_core_c, min_mem_per_core)
                     mem_per_core = min(mem_per_core, max_mem_per_core)
-                    min_core = max(int(mcore/3.), 3) 
+                    min_core = max(int(mcore/3.), min(mcore,3)) 
                     max_core = min(int(2*mcore)+2, 15)
                     wfi.sendLog('equalizor', "Adding %s in resizing, calculating %d < %d < %d MB, using %d to %d cores"%(
                         task.pathName,
