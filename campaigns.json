@@ -1111,6 +1111,13 @@
     "maxcopies": 1,
     "lumisize": -1
   },
+  "RunIISummer16MiniAODv3": {
+    "go": false,
+    "fractionpass" : 0.95,
+    "force-complete" : 0.99,
+    "maxcopies": 1,
+    "lumisize": -1
+  },
   "RunIISummer16NanoAOD" :{
    "go" : true,
    "lumisize" : -1,
