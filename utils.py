@@ -5064,7 +5064,7 @@ class agentInfo:
                     candidates_to_drain.add( agent_name )
 
         candidates_to_drain = candidates_to_drain - recent_running
-        candidates_to_wakeup = candidates_to_wakeup - recent_draining -recent_standby
+        candidates_to_wakeup = candidates_to_wakeup - recent_draining -recent_standby - set(self.in_error)
         candidates_to_standby = candidates_to_standby - recent_running
 
 
