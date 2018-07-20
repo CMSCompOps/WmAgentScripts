@@ -711,6 +711,7 @@ def parse_one(url, wfn, options=None):
     check_files = [ f for f in files_and_loc_notin_dbs.keys() if '/store' in f]
     random.shuffle( check_files )
     #check_files = check_files[:100]
+    check_files = []
     by_f = {}
     f_locations = defaultdict(set)
     if check_files:
