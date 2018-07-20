@@ -87,6 +87,8 @@ def equalizor(url , specific = None, options=None):
         if site.split('_')[1] == 'US': ## to all site in the US
             ## add NERSC 
             mapping[site].append('T3_US_NERSC')
+            #mapping[site].append('T3_US_TACC')
+            #mapping[site].append('T3_US_PSC')
             ## add OSG            
             mapping[site].append('T3_US_OSG')
             pass
@@ -556,6 +558,8 @@ def equalizor(url , specific = None, options=None):
             print "adding", wfo.name, " addhoc for OSG and no task of the workflow requires any input"
             add_to[wfo.name] = ['T3_US_OSG']
             add_to[wfo.name] = ['T3_US_NERSC']
+            add_to[wfo.name] = ['T3_US_PSC']
+            add_to[wfo.name] = ['T3_US_TACC']
             add_to[wfo.name] = ['T3_CH_CERN_HelixNebula']
 
         ## check needs override
