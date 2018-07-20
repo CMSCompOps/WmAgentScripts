@@ -4767,6 +4767,16 @@ class agentInfo:
                         ## should set the agent in standby
                         do_drain = True
                         new_status = 'standby'
+                    elif clid == tc.lists.get('drained'):
+                        do_drain = True
+                        new_status = 'offline'
+                    elif clid == tc.lists.get('offline'):
+                        do_drain = True
+                        new_status = 'offline'
+                    else:
+                        print "trello status",clid,"not recognized"
+                        continue
+
                     ## operate the agent
                     print "wish to operate",agent,do_drain,new_status
                     if acting:
