@@ -582,6 +582,13 @@
    "fractionpass" : 0.95,
    "tune" : true
   },
+ "RunIIFall18GS" : {
+   "go" : false,
+   "lumisize" : -1,
+   "fractionpass" : 0.95,
+   "tune" : true,
+   "resize" : "auto"
+ },
  "RunIISummer18GS" : {
    "go" : true,
    "lumisize" : -1,
