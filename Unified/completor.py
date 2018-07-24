@@ -235,9 +235,9 @@ def completor(url, specific):
             sendLog('completor','%s has no output at all'% wfo.name, level='critical')
             continue
 
-        is_over_allowed_delay = (all([percent_completions[out] >= good_fraction_per_out[out] for out in percent_completions]) and delay >= allowed_delay)
-        is_over_truncation_delay = (is_stuck and (all([percent_completions[out] >= truncate_fraction_per_out[out] for out in percent_completions])) and delay >= allowed_delay)
-        is_over_completion = (all([percent_completions[out] >= good_fraction_nodelay_per_out[out] for out in percent_completions]))
+        is_over_allowed_delay = (all([percent_completions[out] >= good_fraction_per_out.get(out,1000.) for out in percent_completions]) and delay >= allowed_delay)
+        is_over_truncation_delay = (is_stuck and (all([percent_completions[out] >= truncate_fraction_per_out.get(out,1000.) for out in percent_completions])) and delay >= allowed_delay)
+        is_over_completion = (all([percent_completions[out] >= good_fraction_nodelay_per_out.get(out,1000.) for out in percent_completions]))
 
         if is_over_completion:
             wfi.sendLog('completor', "all is over completed %s\n %s"%( json.dumps( good_fraction_nodelay_per_out, indent=2 ),
