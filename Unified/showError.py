@@ -168,7 +168,7 @@ class ThreadHandler(threading.Thread):
                     now= time.mktime(time.gmtime())
                     spend = (now - start_now)
                     n_done = ntotal-len(self.threads)
-                    print "Starting",startme,"new threads",len(self.threads),"remaining" 
+                    print "Starting",startme,"new threads",len(self.threads),"remaining", time.asctime()
                     if n_done:
                         eta = (spend / n_done) * len(self.threads)
                         print "Will finish in ~%.2f [s]"%(eta)
@@ -706,7 +706,7 @@ def parse_one(url, wfn, options=None):
         html +='%s <b>@ %s</b><br>'%(block, ','.join(sorted(needed_blocks_loc[block])))
 
     html += '<a name=FILE></a>'
-    html += "<br><b>Files in no block</b><br>"
+    html += "<br><b>%s Files in no block</b><br>"%( len(files_and_loc_notin_dbs.keys()))
     rthreads = []
     check_files = [ f for f in files_and_loc_notin_dbs.keys() if '/store' in f]
     random.shuffle( check_files )
@@ -753,7 +753,11 @@ def parse_one(url, wfn, options=None):
     separate_h = False
     missing_files = defaultdict(int)
     expected_files = defaultdict(int)
-    for f in sorted(files_and_loc_notin_dbs.keys()):
+    max_number_of_files = 500 
+    display_files = sorted(files_and_loc_notin_dbs.keys())
+    display_files = display_files[:max_number_of_files] if max_number_of_files else display_files
+    
+    for f in display_files:
         readable = by_f.get(f,-1)
         if readable == -1 or not 'store' in f:
             fs = '%s'%f
