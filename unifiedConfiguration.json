@@ -80,7 +80,9 @@
 	      "T2_TH_CUNSTDA",
 	      "T2_EE_Estonia",
 	      "T2_UA_KIPT",
-	      "T0_CH_CERN"
+	      "T0_CH_CERN", 
+	      "T2_CH_CERN", 
+	      "T2_CH_CERN_HLT"
  	      ],
    "description" : "The sites that are banned from production"
  },		 
