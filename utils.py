@@ -1166,7 +1166,7 @@ class moduleLock(object):
                 nogo = False
                 break
             i_try += 1
-            if max_wait and polled > max_wait:
+            if self.max_wait and polled > self.max_wait:
                 print "stop waiting for %s to be released \n%s"% ( self.component , sorted(locks))
                 break
 
