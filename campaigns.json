@@ -590,7 +590,7 @@
    "tune" : true
   },
  "RunIIFall18GS" : {
-   "go" : false,
+   "go" : true,
    "lumisize" : -1,
    "fractionpass" : 0.95,
    "tune" : true,
