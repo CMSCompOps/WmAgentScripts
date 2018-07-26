@@ -52,6 +52,7 @@ url_eos = unified_url_eos
 #unified_pub_url = os.getenv('UNIFIED_URL','https://vocms049.cern.ch/unified/public/')
 unified_pub_url = os.getenv('UNIFIED_URL','https://cms-unified.web.cern.ch/cms-unified/public/')
 cache_dir = '/data/unified-cache/'
+mongo_db_url = 'vocms0274.cern.ch'
 
 FORMAT = "%(module)s.%(funcName)s(%(lineno)s) => %(message)s (%(asctime)s)"
 DATEFMT = "%Y-%m-%d %H:%M:%S"
