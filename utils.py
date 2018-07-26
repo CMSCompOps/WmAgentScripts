@@ -1749,7 +1749,9 @@ class siteInfo:
                 'T3_US_OSG',
                 'T3_CH_CERN_HelixNebula',
                 'T3_CH_CERN_HelixNebula_REHA',
-                'T3_US_NERSC'
+                #'T3_US_NERSC',
+                'T3_US_TACC',
+                'T3_US_PSC'
                             ]
             for aar in add_as_ready:
                 self.sites_ready.append(aar)
