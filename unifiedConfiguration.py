@@ -1,10 +1,12 @@
-#from utils import mongo_db_url
-mongo_db_url = 'vocms0274.cern.ch'
+from utils import mongo_db_url
 import optparse
 import ssl,pymongo
 import json
+import sys
 
 parser = optparse.OptionParser()
+parser.add_option('--dump',help="dump the whole content in this file",default=None)
+parser.add_option('--load',help="synchronize the db with the content of this file", default=None)
 parser.add_option('-n','--name')
 parser.add_option('-d','--description')
 parser.add_option('-v','--value')
@@ -14,6 +16,24 @@ parser.add_option('-v','--value')
 client = pymongo.MongoClient('mongodb://%s/?ssl=true'%mongo_db_url,
                              ssl_cert_reqs=ssl.CERT_NONE)
 db = client.unified.unifiedConfiguration
+
+if options.load:
+    content = json.loads( open(options.load).read())
+    for k,v in content.items():
+        up = {'name' : k}
+        s = {"$set": v}
+        db.update( up, s )
+        print k,v
+    sys.exit(0)
+if options.dump:
+    uc = {}
+    for content in db.find():
+        content.pop("_id")
+        uc[content.pop("name")] = content
+
+    open(options.dump,'w').write(json.dumps( uc, indent =2))
+    sys.exit(0)
+
 
 post = {}# "name":options.name}
 if options.description:
