@@ -557,8 +557,7 @@
    "toDDM" : ["GEN"],
    "parameters": {
       "EventsPerJob": 1200
-    },
-    "SiteWhitelist" : ["T2_CH_CERN"] 
+    }, 
   },
   "PhaseIISummer17pLHE" : {
    "go" : true,
