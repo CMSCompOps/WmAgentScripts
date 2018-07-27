@@ -870,20 +870,37 @@ class lockInfo:
 
 class unifiedConfiguration:
     def __init__(self):
-        ## we need that configuration to be available always
-        #self.configs = json.loads(open('%s/WmAgentScripts/unifiedConfiguration.json'%base_dir).read())
-        # get it from the web maybe ?
-        #os.system('cp %s/WmAgentScripts/unifiedConfiguration.json %s/unifiedConfiguration.json'%( base_dir, monitor_dir))
-        #self.configs = json.loads(os.popen('curl -s %s/unifiedConfiguration.json'% unified_pub_url).read())
-        self.configs = json.loads(open('unifiedConfiguration.json').read())
+        self.configs = json.loads(open('unifiedConfiguration.json').read()) ## switch to None once you want to read it from mongodb
+        if self.configs is None:
+            try:
+                import pymongo,ssl
+                self.client = pymongo.MongoClient('mongodb://%s/?ssl=true'%mongo_db_url, ssl_cert_reqs=ssl.CERT_NONE)
+                self.db = self.client.unified.unifiedConfiguration
+                quest = self.db.find_one()
+            except:
+                print "could not reach pymongo"
+                self.configs = json.loads(open('unifiedConfiguration.json').read())
 
     def get(self, parameter):
-        if parameter in self.configs:
-            return self.configs[parameter]['value']
+        if self.configs:
+            if parameter in self.configs:
+                return self.configs[parameter]['value']
+            else:
+                print parameter,'is not defined in global configuration'
+                print ','.join(self.configs.keys()),'possible'
+                sys.exit(124)
         else:
-            print parameter,'is not defined in global configuration'
-            print ','.join(self.configs.keys()),'possible'
-            sys.exit(124)
+            found = self.db.find_one({"name": parameter})
+            if found:
+                found.pop("_id")
+                found.pop("name")
+                return found
+            else:
+                availables = [o['name'] for o in self.db.find_one()]
+                print parameter,'is not defined in mongo configuration'
+                print ','.join(availables),'possible'
+                sys.exit(124)
+
 
 def checkDownTime():
     conn = make_x509_conn()
