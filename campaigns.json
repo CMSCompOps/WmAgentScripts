@@ -557,7 +557,7 @@
    "toDDM" : ["GEN"],
    "parameters": {
       "EventsPerJob": 1200
-    }, 
+    }
   },
   "PhaseIISummer17pLHE" : {
    "go" : true,
