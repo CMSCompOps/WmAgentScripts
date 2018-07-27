@@ -301,13 +301,27 @@ def assignor(url ,specific = None, talk=True, options=None):
 
             sites_all_data = [site for site in sites_with_data if SI.CE_to_SE(site) in [psite for (psite,(there,frac)) in presence.items() if there]]
             if primary_aaa:
-                sites_all_data = list(set([SI.SE_to_CE(psite) for (psite,(there,frac)) in presence.items() if there]))
+                sites_all_data = set()
+                for (psite,(there,frac)) in presence.items():
+                    if there:
+                        sites_all_data.update( SI.SE_to_CEs(psite) )
+                sites_all_data = list(sites_all_data)
+                #sites_all_data = list(set([SI.SE_to_CE(psite) for (psite,(there,frac)) in presence.items() if there]))
             sites_with_data = [site for site in sites_with_data if SI.CE_to_SE(site) in [psite for (psite,frac) in presence.items() if frac[1]>90.]]
             sites_with_any_data = [site for site in sites_with_any_data if SI.CE_to_SE(site) in presence.keys()]
             if primary_aaa:
-                sites_with_any_data = list(set([SI.SE_to_CE(psite) for psite in presence.keys()]))
+                sites_with_any_data = set()
+                for psite in presence.keys():
+                    sites_with_any_data.update( SI.SE_to_CEs(psite) )
+                sites_with_any_data = list(sites_with_any_data)
+                #sites_with_any_data = list(set([SI.SE_to_CE(psite) for psite in presence.keys()]))
 
-            wfh.sendLog('assignor',"Holding the data but not allowed %s"%sorted(list(set([se_site for se_site in presence.keys() if not SI.SE_to_CE(se_site) in sites_allowed]))))
+            holding_but_not_allowed = set()
+            for se_site in presence.keys():
+                if not (set(SI.SE_to_CEs(se_site)) & set(sites_allowed)):
+                    holding_but_not_allowed.add( se_site )
+            #wfh.sendLog('assignor',"Holding the data but not allowed %s"%sorted(list(set([se_site for se_site in presence.keys() if not SI.SE_to_CE(se_site) in sites_allowed]))))
+            wfh.sendLog('assignor',"Holding the data but not allowed %s"%sorted( holding_but_not_allowed ))
             if primary_locations==None:
                 primary_locations = presence.keys()
             else:
