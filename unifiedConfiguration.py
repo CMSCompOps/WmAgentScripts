@@ -3,6 +3,7 @@ import optparse
 import ssl,pymongo
 import json
 import sys
+from collections import OrderedDict
 
 parser = optparse.OptionParser()
 parser.add_option('--dump',help="dump the whole content in this file",default=None)
@@ -25,13 +26,16 @@ if options.load:
         db.update( up, s )
         print k,v
     sys.exit(0)
+
 if options.dump:
     uc = {}
     for content in db.find():
         content.pop("_id")
         uc[content.pop("name")] = content
-
-    open(options.dump,'w').write(json.dumps( uc, indent =2))
+    ouc = OrderedDict()
+    for c in sorted(uc.keys()):
+        ouc[c] = uc[c]
+    open(options.dump,'w').write(json.dumps( ouc, indent =2))
     sys.exit(0)
 
 
