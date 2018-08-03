@@ -588,15 +588,6 @@
    "fractionpass" : 0.95,
    "tune" : true
   },
- "RunIIFall18wmLHEGS" : {
-   "go" : false,
-   "lumisize" : -1,
-   "fractionpass" : 0.95,
-   "force-complete" : 0.99,
-   "tune" : true,
-   "overflow":{"LHE":{"site_list":"sites_AAA"}},
-   "toDDM" : ["GEN"]
-  },
  "RunIIFall18GS" : {
    "go" : true,
    "lumisize" : -1,
