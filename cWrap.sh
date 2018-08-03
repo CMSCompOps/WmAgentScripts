@@ -5,7 +5,7 @@ FINAL_HTML_DIR=/eos/cms/store/unified/www/
 
 cd $BASE_DIR
 
-if [ "$USER" != "spflitsc" ] ; then
+if [ "$USER" != "vlimant" ] ; then
     echo "single user running from now on"
     exit
 fi
