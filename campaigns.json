@@ -588,6 +588,12 @@
    "fractionpass" : 0.95,
    "tune" : true
   },
+  "RunIIFall18pLHE" : {
+   "go" : false,
+   "lumisize" : -1,
+   "fractionpass" : 0.95,
+   "tune" : true
+  },
   "RunIIFall18wmLHEGS" : {
    "go" : false,
    "lumisize" : -1,
