@@ -6,7 +6,9 @@ import time
 from collections import defaultdict
 from utils import monitor_pub_dir, workflowInfo, getWorkflows
 
-register=['assigned','acquired','running-open','running-closed','force-complete','completed','closed-out']
+register=[
+    #'assigned','acquired',
+    'running-open','running-closed','force-complete','completed','closed-out']
 wfs = []
 url = 'cmsweb.cern.ch'
 
