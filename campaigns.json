@@ -611,7 +611,7 @@
    "tune" : true,
    "resize" : "auto"
  },
- "RunIISummer18DR" :{
+ "RunIIFall18DR" :{
     "go": false,
     "maxcopies": 1,
     "lumisize": -1,
@@ -619,7 +619,7 @@
     "fractionpass" : 0.95,
     "tune" : true,
     "secondary_AAA": false,
-    "secondaries" : {"/MinBias_TuneCP5_13TeV-pythia8/RunIISummer18GS-101X_upgrade2018_realistic_v7-v1/GEN-SIM" :{"SiteWhitelist" : ["T2_US_Wisconsin","T2_DE_DESY","T2_US_Florida","T1_US_FNAL","T2_CH_CERN","T2_DE_RWTH","T2_US_Nebraska"] }}
+    "secondaries" : {"/MinBias_TuneCP5_13TeV-pythia8/RunIIFall18GS-102X_upgrade2018_realistic_v9-v1/GEN-SIM" :{"SiteWhitelist" : ["T2_US_Wisconsin","T2_DE_DESY","T2_US_Florida","T1_US_FNAL","T2_CH_CERN","T2_DE_RWTH","T2_US_Nebraska"] }}
   },
  "RunIISummer18GS" : {
    "go" : true,
