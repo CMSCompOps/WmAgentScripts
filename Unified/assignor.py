@@ -486,7 +486,7 @@ def assignor(url ,specific = None, talk=True, options=None):
                     n_stalled+=1
                     continue
 
-        if not len(sites_allowed):
+        if not len(sites_allowed) and not options.SiteWhitelist:
             if not options.early:
                 wfh.sendLog('assignor',"cannot be assign with no matched sites")
                 sendLog('assignor','%s has no whitelist'% wfo.name, level='critical')
