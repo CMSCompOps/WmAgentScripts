@@ -621,6 +621,19 @@
     "secondary_AAA": false,
     "secondaries" : {"/MinBias_TuneCP5_13TeV-pythia8/RunIIFall18GS-102X_upgrade2018_realistic_v9-v1/GEN-SIM" :{"SiteWhitelist" : ["T2_US_Wisconsin","T2_DE_DESY","T2_US_Florida","T1_US_FNAL","T2_DE_RWTH","T2_US_Nebraska"] }}
   },
+ "RunIIFall18MiniAOD" :{
+   "go" : false,
+   "lumisize" : -1,
+   "resize" : "auto",
+   "maxcopies": 1,
+   "fractionpass" : 0.95
+  },
+ "RunIIFall18NanoAOD" :{
+   "go" : false,
+   "lumisize" : -1,
+   "maxcopies": 1,
+   "fractionpass" : 0.95
+  },
  "RunIISummer18GS" : {
    "go" : true,
    "lumisize" : -1,
