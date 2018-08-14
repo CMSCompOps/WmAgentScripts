@@ -5803,15 +5803,18 @@ class workflowInfo:
         return self.dashb
 
     def getWMStats(self ,cache=0):
-        try:
-            return self._getWMStats(cache=cache)
-        except:
-            print "Failed once at reading getWMStats"
+        trials = 10
+        while trials>0:
             try:
                 return self._getWMStats(cache=cache)
-            except:
-                print "failed to run getWMStats"
-                return None
+            except Exception as e:
+                print "Failed",trials,"at reading getWMStats"
+                print str(e)
+                print self.request['RequestName']
+
+            trials+=1
+            time.sleep(1)
+        return None
 
     def _getWMStats(self ,cache=0):
         f_cache = '%s/%s.wmstats'%(cache_dir, self.request['RequestName'])
