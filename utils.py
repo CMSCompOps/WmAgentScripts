@@ -5811,8 +5811,9 @@ class workflowInfo:
                 print "Failed",trials,"at reading getWMStats"
                 print str(e)
                 print self.request['RequestName']
+                self.conn = make_x509_conn(self.url)
 
-            trials+=1
+            trials-=1
             time.sleep(1)
         return None
 
