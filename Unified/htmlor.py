@@ -836,8 +836,11 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
         last_module[m] = os.popen("tac %s/logs/running | grep %s | head -1"%(monitor_dir, m)).read()
         ## parse it to make an alert.
         #if not ':' in last_module[m]:continue
-        print "last date for",m
-        _,last_date = last_module[m].split(':',1)
+        print "last date for",m,last_module[m]
+        try:
+            _,last_date = last_module[m].split(':',1)
+        except:
+            continue
         try:
             last_time = time.mktime(time.strptime(last_date, "%a %b %d %H:%M:%S %Z %Y\n"))
         except Exception as e:
