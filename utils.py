@@ -1765,6 +1765,7 @@ class siteInfo:
             ##hack
             add_as_ready = [
                 'T3_US_OSG',
+                'T3_US_Colorado',
                 'T3_CH_CERN_HelixNebula',
                 'T3_CH_CERN_HelixNebula_REHA',
                 #'T3_US_NERSC',
@@ -1808,6 +1809,7 @@ class siteInfo:
                            'T3_US_PSC',
                            'T3_US_TACC',
                            'T3_US_OSG',
+                           'T3_US_Colorado'
         ]
         add_on_aaa = list(set(add_on_good_aaa + add_on_aaa))
         self.sites_AAA = list(set(self.sites_AAA + add_on_aaa ))
@@ -1859,6 +1861,7 @@ class siteInfo:
             'T3_US_TACC' : 'T1_US_FNAL_Disk',
             'T3_US_PSC' : 'T1_US_FNAL_Disk',
             'T3_US_OSG' : 'T1_US_FNAL_Disk',
+            'T3_US_Colorado' : 'T1_US_FNAL_Disk',
             'T3_CH_CERN_HelixNebula' : 'T2_CH_CERN',
             'T3_CH_CERN_HelixNebula_REHA' : 'T2_CH_CERN'
             }
