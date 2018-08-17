@@ -91,6 +91,7 @@ def equalizor(url , specific = None, options=None):
             #mapping[site].append('T3_US_PSC')
             ## add OSG            
             mapping[site].append('T3_US_OSG')
+            #mapping[site].append('T3_US_Colorado')
             pass
 
     if use_HLT:
@@ -557,6 +558,7 @@ def equalizor(url , specific = None, options=None):
             ## no input at all: go for OSG!!!
             print "adding", wfo.name, " addhoc for OSG and no task of the workflow requires any input"
             add_to[wfo.name] = ['T3_US_OSG']
+            add_to[wfo.name] = ['T3_US_Colorado']
             add_to[wfo.name] = ['T3_US_NERSC']
             add_to[wfo.name] = ['T3_US_PSC']
             add_to[wfo.name] = ['T3_US_TACC']
