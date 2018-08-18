@@ -1177,6 +1177,12 @@
    "maxcopies": 1,
    "fractionpass" : 0.95
   },
+  "RunIISummer16NanoAODv3" :{
+   "go" : false,
+   "lumisize" : -1,
+   "maxcopies": 1,
+   "fractionpass" : 0.95
+  },
   "RunIIHighPUTrainsMiniAODv2":{
    "go": true,
    "maxcopies": 1
