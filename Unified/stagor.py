@@ -90,7 +90,11 @@ def stagor(url,specific =None, options=None):
                 continue
             else:
                 print wfo.name,"is",wfi.request['RequestStatus']
-                sendEmail("wrong status in staging. debug","%s is in %s, should set away."%(wfo.name,wfi.request['RequestStatus']))
+                #sendEmail("wrong status in staging. debug","%s is in %s, should set away."%(wfo.name,wfi.request['RequestStatus']))
+                sendLog("stagor","%s is in %s, set away"%(wfo.name,wfi.request['RequestStatus']), level='critical')
+                wf.status = 'away'
+                session.commit()
+                continue
 
         wfois.append( (wfo,wfi) )            
         _,primaries,_,secondaries = wfi.getIO()
