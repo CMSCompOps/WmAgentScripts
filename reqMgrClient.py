@@ -460,7 +460,7 @@ def getWorkflowInfo(url, workflow):
         except:
             time.sleep(1)
             retries -=1
-            print "beep"
+            print "Retrieving workflow information from ReqMgr2..."
     return None
 
 def isRequestMgr2Request(url, workflow):
