@@ -1118,6 +1118,9 @@ def eosRead(filename):
         
 class eosFile(object):
     def __init__(self, filename, dummy=None):
+        if not filename.startswith('/eos/'):
+            print filename,"is not an eos path"
+            sys.exit(2)
         if dummy : print "passed",dummy,"for writing",filename
         self.eos_filename = filename
         self.cache_filename = cache_dir+'/'+filename.replace('/','_')
