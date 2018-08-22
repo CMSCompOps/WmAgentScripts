@@ -52,7 +52,7 @@
     "description" : "The quanta of memory in MB for the JobRouter"
  },
  "time_quanta": {
-    "value" : 50,
+    "value" : 60,
     "description" : "The quanta of time in min for the JobRouter"
  },
  "slope_quanta": {
