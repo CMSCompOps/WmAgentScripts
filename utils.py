@@ -1115,6 +1115,8 @@ def eosRead(filename):
             r = os.system('eos cp %s %s'%( filename.replace('//','/'), cache.replace('//','/')))
             if r==0:
                 return open(cache).read()
+    print "unable to read from eos"
+    sys.exit(2)
         
 class eosFile(object):
     def __init__(self, filename, opt='w'):
