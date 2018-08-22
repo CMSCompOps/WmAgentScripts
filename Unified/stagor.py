@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput, workflowInfo, getDatasetBlocksFraction, findLostBlocks, findLostBlocksFiles, getDatasetBlockFraction, getDatasetFileFraction, getDatasetPresence, reqmgr_url, monitor_dir, getAllStuckDataset, monitor_pub_dir, do_html_in_each_module, base_eos_dir
+from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput, workflowInfo, getDatasetBlocksFraction, findLostBlocks, findLostBlocksFiles, getDatasetBlockFraction, getDatasetFileFraction, getDatasetPresence, reqmgr_url, monitor_dir, getAllStuckDataset, monitor_pub_dir, do_html_in_each_module, base_eos_dir, eosRead
 from utils import unifiedConfiguration, componentInfo, sendEmail, checkTransferLag, sendLog
 from utils import siteInfo, campaignInfo, unified_url
 import json
@@ -25,8 +25,8 @@ def stagor(url,specific =None, options=None):
     completion_by_input = {}
     good_enough = 100.0
     
-    lost_blocks = json.loads(open('%s/lost_blocks_datasets.json'%monitor_dir).read())
-    lost_files = json.loads(open('%s/lost_files_datasets.json'%monitor_dir).read())
+    lost_blocks = json.loads(eosRead('%s/lost_blocks_datasets.json'%monitor_dir))
+    lost_files = json.loads(eosRead('%s/lost_files_datasets.json'%monitor_dir))
     known_lost_blocks = {}
     known_lost_files = {}
     for dataset in set(lost_blocks.keys()+lost_files.keys()):
@@ -42,7 +42,7 @@ def stagor(url,specific =None, options=None):
             known_lost_files[dataset] = [i['name'] for i in f]
 
     try:
-        cached_transfer_statuses = json.loads(open('%s/cached_transfer_statuses.json'%base_eos_dir).read())
+        cached_transfer_statuses = json.loads(eosRead('%s/cached_transfer_statuses.json'%base_eos_dir))
     except:
         print "inexisting transfer statuses. starting fresh"
         cached_transfer_statuses = {}
@@ -240,7 +240,7 @@ def stagor(url,specific =None, options=None):
     open('%s/transfer_statuses.json'%monitor_dir,'w').write( json.dumps( transfer_statuses, indent=2))
     open('%s/dataset_endpoints.json'%monitor_dir,'w').write( json.dumps(dataset_endpoints, indent=2))
 
-    already_stuck = json.loads( open('%s/stuck_transfers.json'%monitor_pub_dir).read() ).keys()
+    already_stuck = json.loads( eosRead('%s/stuck_transfers.json'%monitor_pub_dir) ).keys()
     already_stuck.extend( getAllStuckDataset() )
  
     missing_in_action = defaultdict(list)
