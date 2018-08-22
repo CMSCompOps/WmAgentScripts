@@ -22,7 +22,7 @@ def singleRecovery(url, task, initial, actions, do=False):
         "Requestor" : os.getenv('USER'),
         "Group" : 'DATAOPS',
         "RequestType" : "Resubmission",
-        "ACDCServer" : initial['CouchURL'],
+        "ACDCServer" : initial['ConfigCacheUrl'],
         "ACDCDatabase" : "acdcserver",
         "OriginalRequestName" : initial['RequestName'],
         "OpenRunningTimeout" : 0
