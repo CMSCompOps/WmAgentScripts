@@ -1076,6 +1076,44 @@ class componentInfo:
         sendLog('componentInfo',"The %s component is unreachable."% c, level='critical')
         #sendEmail("%s Component Down"%c,"The component is down, just annoying you with this","vlimant@cern.ch",['vlimant@cern.ch','matteoc@fnal.gov'])
 
+
+class eosFile(object):
+    def __init__(self, filename, dummy=None):
+        if dummy : print "passed",dummy,"for writing",filename
+        self.eos_filename = filename
+        self.cache_filename = cache_dir+'/'+filename.replace('/','_')
+        self.cache = open(self.cache_filename, 'w')
+
+    def write(self, something):
+        self.cache.write( something )
+        return self
+
+    def close(self):
+        self.cache.close()
+        while True:
+            try:
+                print "moving",self.cache_filename,"to",self.eos_filename
+                r = os.system("eos cp %s %s"%( self.cache_filename.replace('//','/'), self.eos_filename.replace('//','/')))
+                if r==0: break
+                print "not able to copy to eos",self.eos_filename,"with code",r
+            except Exception as e:
+                print "Failed to copy",self.eos_filename,"with",str(e)
+                time.sleep(2)
+        """
+        while True:
+            ## reading and writing a file
+            try:
+                self.cache = open(self.cache_filename)
+                self.eos_file = open(self.eos_filename,'w')
+                self.eos_file.write( self.cache.read() )
+                self.eos_file.close()
+                self.cache.close()
+                break
+            except Exception as e:
+                print "Failed to write",self.eos_filename,"with",str(e)
+                time.sleep(2)
+        """
+
 class campaignInfo:
     def __init__(self):
         #this contains accessor to aggreed campaigns, with maybe specific parameters
