@@ -1160,7 +1160,8 @@ class campaignInfo:
     def __init__(self):
         #this contains accessor to aggreed campaigns, with maybe specific parameters
         self.campaigns = json.loads(open('%s/WmAgentScripts/campaigns.json'%base_dir).read())
-        self.campaigns.update( json.loads(open('%s/campaigns.relval.json'%base_eos_dir).read()))
+        #self.campaigns.update( json.loads(open('%s/campaigns.relval.json'%base_eos_dir).read()))
+        self.campaigns.update( json.loads(eosRead('%s/campaigns.relval.json'%base_eos_dir)))
         #SI = siteInfo()
         SI = global_SI()
         for c in self.campaigns:
