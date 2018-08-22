@@ -1,4 +1,4 @@
-from utils import getDatasetBlockAndSite, siteInfo, getWorkflows, workflowInfo, monitor_dir, sendLog, sendEmail, makeReplicaRequest, unifiedConfiguration, getDatasetFileLocations, getAgentInfo, base_eos_dir
+from utils import getDatasetBlockAndSite, siteInfo, getWorkflows, workflowInfo, monitor_dir, sendLog, sendEmail, makeReplicaRequest, unifiedConfiguration, getDatasetFileLocations, getAgentInfo, base_eos_dir, eosFile
 from collections import defaultdict
 import time
 import json
@@ -348,8 +348,10 @@ for site,blocks in try_me.items():
     else:
         sendLog('GQ','tempting to put %s at %s'%( '\n,'.join(blocks), site),level='warning')
 
-open('%s/GQ.json'%monitor_dir,'w').write( json.dumps( jobs_for, indent=2) )
-open('%s/GQ.txt'%monitor_dir,'w').write( report )
+#open('%s/GQ.json'%monitor_dir,'w').write( json.dumps( jobs_for, indent=2) )
+#open('%s/GQ.txt'%monitor_dir,'w').write( report )
+eosFile('%s/GQ.json'%monitor_dir,'w').write( json.dumps( jobs_for, indent=2) ).close()
+eosFile('%s/GQ.txt'%monitor_dir,'w').write( report ).close()
 
 open('replaced_blocks.json','w').write( json.dumps( sorted(replaced), indent=2) )
 
