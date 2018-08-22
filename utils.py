@@ -926,7 +926,8 @@ class componentInfo:
             'dbs' : False,
             'phedex' : False,
             'cmsr' : False,
-            'wtc' : False
+            'wtc' : False,
+            'eos' : False
             }
         self.code = 0
         self.keep_trying = keep_trying
@@ -1065,6 +1066,28 @@ class componentInfo:
                 print str(e)
                 if self.block and not (self.soft and 'wtc' in self.soft):
                     self.code = 129
+                    return False
+                break
+
+        while True:
+            try:
+                print "checking on eos"
+                eosfile = base_eos_dir+'/%s-testfile'%os.getpid()
+                oo = eosFile(eosfile)
+                oo.write("Testing I/O on eos")
+                oo.close() ## commits to eos
+                os.system('rm -f %s'% eosfile)
+                self.status['eos'] = True
+                break
+            except Exception as e:
+                self.tell('eos')
+                if self.keep_trying:
+                    time.sleep(30)
+                    continue
+                print "eos unreachable"
+                print str(e)
+                if self.block and not (self.soft and 'eos' in self.soft):
+                    self.code = 130
                     return False
                 break
                 
