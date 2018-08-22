@@ -465,7 +465,7 @@ def getWorkflowInfo(url, workflow):
 
 def isRequestMgr2Request(url, workflow):
     result = getWorkflowInfo(url, workflow)
-    return result.get("ReqMgr2Only", False)
+    return result.get("ReqMgr2Only", True)
 
 def getWorkflowStatus(url, workflow):
     """
