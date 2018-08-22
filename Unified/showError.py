@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from utils import workflowInfo, siteInfo, monitor_dir, monitor_pub_dir, base_dir, global_SI, getDatasetPresence, getDatasetBlocksFraction, getDatasetBlocks, unifiedConfiguration, getDatasetEventsPerLumi, dataCache, unified_url, base_eos_dir, monitor_eos_dir, unified_url_eos
+from utils import workflowInfo, siteInfo, monitor_dir, monitor_pub_dir, base_dir, global_SI, getDatasetPresence, getDatasetBlocksFraction, getDatasetBlocks, unifiedConfiguration, getDatasetEventsPerLumi, dataCache, unified_url, base_eos_dir, monitor_eos_dir, unified_url_eos, eosFile
 import time
 
 import json
@@ -815,8 +815,10 @@ def parse_one(url, wfn, options=None):
     fn = '%s'% wfn
 
     time_point("error send to ES")
-    open('%s/report/%s'%(monitor_dir,fn),'w').write( html )
-    open('%s/report/%s'%(monitor_eos_dir,fn),'w').write( html )
+    #open('%s/report/%s'%(monitor_dir,fn),'w').write( html )
+    #open('%s/report/%s'%(monitor_eos_dir,fn),'w').write( html )
+    #eosFile('%s/report/%s'%(monitor_dir,fn),'w').write( html ).close()
+    eosFile('%s/report/%s'%(monitor_eos_dir,fn),'w').write( html ).close()
 
     time_point("Finished with showError")
 
@@ -944,7 +946,8 @@ def parse_top(url, options=None):
     print "found",len(all_bad_wfs),"to parse for detailled error report"
     parse_those(url, options, all_bad_wfs)
 
-    ht = open('%s/toperror.html'%monitor_eos_dir, 'w')
+    #ht = open('%s/toperror.html'%monitor_eos_dir, 'w')
+    ht = eosFile('%s/toperror.html'%monitor_eos_dir, 'w')
     ht.write("""<html>
 Report of workflows with top %s error in failure and cooloff<br>
 Last updated on %s (GMT)
@@ -1022,11 +1025,13 @@ def parse_those(url, options=None, those=[]):
         for code in one_explanation:
             explanations[code].update( one_explanation[code] )
 
-    open('%s/all_errors.json'%monitor_dir,'w').write( json.dumps(alls , indent=2 ))
+    #open('%s/all_errors.json'%monitor_dir,'w').write( json.dumps(alls , indent=2 ))
+    eosFile('%s/all_errors.json'%monitor_dir,'w').write( json.dumps(alls , indent=2 )).close()
 
     explanations = dict([(k,list(v)) for k,v in explanations.items()])
 
-    open('%s/explanations.json'%monitor_dir,'w').write( json.dumps(explanations, indent=2))
+    #open('%s/explanations.json'%monitor_dir,'w').write( json.dumps(explanations, indent=2))
+    eosFile('%s/explanations.json'%monitor_dir,'w').write( json.dumps(explanations, indent=2)).close()
 
     #alls = json.loads( open('all_errors.json').read())
 
