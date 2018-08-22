@@ -892,6 +892,9 @@ class transferStatuses:
         else:
             return []
 
+    def content(self):
+        return dict([(d.pop('phedexid'), d) for d in self.db.find()])
+
 class unifiedConfiguration:
     def __init__(self):
         self.configs = json.loads(open('unifiedConfiguration.json').read()) ## switch to None once you want to read it from mongodb
