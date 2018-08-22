@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput, workflowInfo, getDatasetBlocksFraction, findLostBlocks, findLostBlocksFiles, getDatasetBlockFraction, getDatasetFileFraction, getDatasetPresence, reqmgr_url, monitor_dir, getAllStuckDataset, monitor_pub_dir, do_html_in_each_module, base_eos_dir, eosRead
-from utils import unifiedConfiguration, componentInfo, sendEmail, checkTransferLag, sendLog
+from utils import unifiedConfiguration, componentInfo, sendEmail, checkTransferLag, sendLog, transferStatuses
 from utils import siteInfo, campaignInfo, unified_url
 import json
 import sys
@@ -19,6 +19,11 @@ def stagor(url,specific =None, options=None):
     SI = siteInfo()
     CI = campaignInfo()
     UC = unifiedConfiguration()
+
+    TS = transferStatuses()
+    cached_transfer_statuses = TS.content()
+    transfer_statuses = {}
+
 
     done_by_wf_id = {}
     done_by_input = {}
@@ -40,15 +45,6 @@ def stagor(url,specific =None, options=None):
             print dataset,"has no really lost files"
         else:
             known_lost_files[dataset] = [i['name'] for i in f]
-
-    try:
-        cached_transfer_statuses = json.loads(eosRead('%s/cached_transfer_statuses.json'%base_eos_dir))
-    except:
-        print "inexisting transfer statuses. starting fresh"
-        cached_transfer_statuses = {}
-        return False
-
-    transfer_statuses = {}
 
 
     def time_point(label="",sub_lap=False):
@@ -142,10 +138,10 @@ def stagor(url,specific =None, options=None):
 
         ## check on transfer completion
         not_cached = False
-        if str(phedexid) in cached_transfer_statuses:
+        if phedexid in cached_transfer_statuses:
             ### use a cache for transfer that already looked done
             sendLog('stagor',"read %s from cache"%phedexid)
-            checks = cached_transfer_statuses[str(phedexid)]
+            checks = cached_transfer_statuses[phedexid]
         else:
             ## I actually would like to avoid that all I can
             sendLog('stagor','Performing spurious transfer check on %s'% phedexid, level='critical')
@@ -157,13 +153,10 @@ def stagor(url,specific =None, options=None):
                 sendLog('stagor','Stagor has got a skewed input from checkTransferStatus', level='critical')
                 checks = {}
                 pass
-            #checks = {}
-            #not_cached = True
+            else:
+                TS.add( phedexid, checks)                
 
         time_point("Check transfer status %s"% phedexid, sub_lap=True)            
-
-        ## just write this out
-        transfer_statuses[str(phedexid)] = copy.deepcopy(checks)
 
         if not specific:
             for dsname in checks:
@@ -199,7 +192,7 @@ def stagor(url,specific =None, options=None):
 
         if done:
             sendLog('stagor',"%s is done"%phedexid)
-            cached_transfer_statuses[str(phedexid)] = copy.deepcopy(checks)
+            TS.add( phedexid, checks)
         else:
             sendLog('stagor',"%s is not finished %s"%(phedexid, pprint.pformat( checks )))
             ##pprint.pprint( checks )
@@ -236,9 +229,9 @@ def stagor(url,specific =None, options=None):
     print json.dumps( endpoint_incompleted , indent=2)        
 
 
-    #open('cached_transfer_statuses.json','w').write( json.dumps( cached_transfer_statuses, indent=2))
-    open('%s/transfer_statuses.json'%monitor_dir,'w').write( json.dumps( transfer_statuses, indent=2))
-    open('%s/dataset_endpoints.json'%monitor_dir,'w').write( json.dumps(dataset_endpoints, indent=2))
+    #open('%s/transfer_statuses.json'%monitor_dir,'w').write( json.dumps( transfer_statuses, indent=2))
+    eosFile('%s/transfer_statuses.json'%monitor_dir,'w').write( json.dumps( TS.content(), indent=2)).close()
+    eosFile('%s/dataset_endpoints.json'%monitor_dir,'w').write( json.dumps(dataset_endpoints, indent=2)).close()
 
     already_stuck = json.loads( eosRead('%s/stuck_transfers.json'%monitor_pub_dir) ).keys()
     already_stuck.extend( getAllStuckDataset() )
@@ -492,16 +485,16 @@ def stagor(url,specific =None, options=None):
         
 
 
-    rr= open('%s/lost_blocks_datasets.json'%monitor_dir,'w')
+    rr= eosFile('%s/lost_blocks_datasets.json'%monitor_dir,'w')
     rr.write( json.dumps( known_lost_blocks, indent=2))
     rr.close()
 
-    rr= open('%s/lost_files_datasets.json'%monitor_dir,'w')
+    rr= eosFile('%s/lost_files_datasets.json'%monitor_dir,'w')
     rr.write( json.dumps( known_lost_files, indent=2))
     rr.close()
 
 
-    open('%s/incomplete_transfers.json'%monitor_dir,'w').write( json.dumps(missing_in_action, indent=2) )
+    eosFile('%s/incomplete_transfers.json'%monitor_dir,'w').write( json.dumps(missing_in_action, indent=2) ).close()
     print "Stuck transfers and datasets"
     print json.dumps( missing_in_action, indent=2 )
 
@@ -515,9 +508,9 @@ def stagor(url,specific =None, options=None):
     for k in datasets_by_phid:
         datasets_by_phid[k] = list(datasets_by_phid[k])
 
-    open('%s/datasets_by_phid.json'%base_eos_dir,'w').write( json.dumps(datasets_by_phid, indent=2 ))
+    eosFile('%s/datasets_by_phid.json'%base_eos_dir,'w').write( json.dumps(datasets_by_phid, indent=2 )).close()
 
-    open('%s/really_stuck_dataset.json'%base_eos_dir,'w').write( json.dumps(list(really_stuck_dataset), indent=2 ))
+    eosFile('%s/really_stuck_dataset.json'%base_eos_dir,'w').write( json.dumps(list(really_stuck_dataset), indent=2 )).close()
     print '\n'*2,"Datasets really stuck"
     print '\n'.join( really_stuck_dataset )
 
