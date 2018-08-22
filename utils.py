@@ -868,6 +868,30 @@ class lockInfo:
         print "------"+"-"*len(comment)
 
 
+class transferStatuses:
+    def __init__(self):
+        import pymongo,ssl
+        self.client = pymongo.MongoClient('mongodb://%s/?ssl=true'%mongo_db_url, ssl_cert_reqs=ssl.CERT_NONE)
+        self.db = self.client.unified.cachedTransferStatuses
+
+    def pop(self, phedexid):
+        self.db.delete_one({'phedexid' : phedexid})
+
+    def add(self, phedexid, status):
+        status['phedexid'] = phedexid
+        #self.db.insert_one( status )
+        self.db.update_one( {'phedexid' : phedexid},
+                            {"$set": status },
+                            upsert=True
+        )
+
+    def all(self):
+        all = self.db.find()
+        if all:
+            return [d['phedexid'] for d in all ]
+        else:
+            return []
+
 class unifiedConfiguration:
     def __init__(self):
         self.configs = json.loads(open('unifiedConfiguration.json').read()) ## switch to None once you want to read it from mongodb
