@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 import time
-from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration, getPrepIDs, componentInfo, getAllAgents, sendLog, duplicateLock, dataCache, agentInfo, display_time
+from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration, getPrepIDs, componentInfo, getAllAgents, sendLog, duplicateLock, dataCache, agentInfo, display_time, eosFile
 import os
 import json
 from collections import defaultdict
@@ -196,7 +196,8 @@ def htmlor( caller = ""):
 
     ## start to write it
     #html_doc = open('/afs/cern.ch/user/v/vlimant/public/ops/index.html','w')
-    html_doc = open('%s/index.html.new'%monitor_dir,'w')
+    #html_doc = open('%s/index.html.new'%monitor_dir,'w')
+    html_doc = eosFile('%s/index.html.new'%monitor_dir)
     print "Updating the status page ..." 
 
     UC = unifiedConfiguration()
@@ -1032,7 +1033,10 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     print outlier_upcoming
     if outlier_upcoming:
         sendLog('GQ','There is an inbalance of upcoming work at %s'%(', '.join([site for site in sorted(outlier_upcoming.keys())])),level='critical')
-        open('%s/sites_full.json'%base_eos_dir,'w').write( json.dumps( outlier_upcoming.keys() ))
+        #open('%s/sites_full.json'%base_eos_dir,'w').write( json.dumps( outlier_upcoming.keys() ))
+        oo = eosFile('%s/sites_full.json'%base_eos_dir)
+        oo.write( json.dumps( outlier_upcoming.keys() ) )
+        oo.close()
         
     def site_div_header(desc):
         div_name = 'site_'+desc.replace(' ','_')
@@ -1114,7 +1118,10 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 
     lap ( 'done with sites' )
 
-    open('%s/siteInfo.json'%monitor_pub_dir,'w').write(json.dumps(dict([(t,getattr(SI,t)) for t in ['sites_T0s','sites_T1s','sites_T2s','sites_with_goodIO']]),indent=2))
+    #open('%s/siteInfo.json'%monitor_pub_dir,'w').write(json.dumps(dict([(t,getattr(SI,t)) for t in ['sites_T0s','sites_T1s','sites_T2s','sites_with_goodIO']]),indent=2))
+    oo = eosFile('%s/siteInfo.json'%monitor_pub_dir)
+    oo.write(json.dumps(dict([(t,getattr(SI,t)) for t in ['sites_T0s','sites_T1s','sites_T2s','sites_with_goodIO']]),indent=2))
+    oo.close()
 
     lap ( 'done with sites json' )
 
@@ -1153,9 +1160,12 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
 
         
     ## make the locked/available donut chart
-    donut_html = open('%s/locked.html'%monitor_dir,'w')
-    tight_donut_html = open('%s/outofspace.html'%monitor_dir,'w')
-    remain_reason_html = open('%s/remaining.html'%monitor_dir,'w')
+    #donut_html = open('%s/locked.html'%monitor_dir,'w')
+    #tight_donut_html = open('%s/outofspace.html'%monitor_dir,'w')
+    #remain_reason_html = open('%s/remaining.html'%monitor_dir,'w')
+    donut_html = eosFile('%s/locked.html'%monitor_dir)
+    tight_donut_html = eosFile('%s/outofspace.html'%monitor_dir)
+    remain_reason_html = eosFile('%s/remaining.html'%monitor_dir)
 
     tables = "\n".join([info[0] for site,info in chart_data.items()])
     draws = "\n".join([info[1] for site,info in chart_data.items()])
@@ -1460,9 +1470,11 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
     for t in statuses.keys():
         if (now-float(t)) > 7*24*60*60:
             statuses.pop(t)
-    open('%s/statusmon.json'%monitor_dir,'w').write( json.dumps( statuses , indent=2))
+    #open('%s/statusmon.json'%monitor_dir,'w').write( json.dumps( statuses , indent=2))
+    eosFile('%s/statusmon.json'%monitor_dir).write( json.dumps( statuses , indent=2)).close()
 
-    html_doc = open('%s/statuses.html'%monitor_dir,'w')
+    #html_doc = open('%s/statuses.html'%monitor_dir,'w')
+    html_doc = eosFile('%s/statuses.html'%monitor_dir)
     html_doc.write("""                                                                                                                                                                                                                                                                                                      <html>        
 <table border=1>
 <thead>
@@ -1476,7 +1488,8 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
         ## pass all that is unlocked and considered it gone
         wfs[wfo.name] = (wfo.status,wfo.wm_status)
 
-    open('%s/statuses.json'%monitor_pub_dir,'w').write(json.dumps( wfs ))
+    #open('%s/statuses.json'%monitor_pub_dir,'w').write(json.dumps( wfs ))
+    eosFile('%s/statuses.json'%monitor_pub_dir).write(json.dumps( wfs )).close()
     for wfn in sorted(wfs.keys()):
         ## pass all that is unlocked and considered it gone
         if 'unlock' in wfs[wfn][0]: continue
@@ -1489,7 +1502,8 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
     this_week = str(int(time.strftime("%W", time.gmtime())))
     last_week = str(int(time.strftime("%W", time.gmtime()))-1)
 
-    open(time.strftime("%s/summary_%%Y_"%(monitor_dir), time.gmtime())+this_week+".json", 'w').write(json.dumps(summary_content, indent=2))
+    #open(time.strftime("%s/summary_%%Y_"%(monitor_dir), time.gmtime())+this_week+".json", 'w').write(json.dumps(summary_content, indent=2))
+    eosFile(time.strftime("%s/summary_%%Y_"%(monitor_dir), time.gmtime())+this_week+".json").write(json.dumps(summary_content, indent=2)).close()
     os.system(time.strftime("cp %s/summary_%%Y_"%(monitor_dir), time.gmtime())+this_week+".json %s/summary.txt"%(monitor_pub_dir))
     os.system(time.strftime("cp %s/summary_%%Y_"%(monitor_dir), time.gmtime())+last_week+".json %s/last_summary.txt"%(monitor_pub_dir))
 
