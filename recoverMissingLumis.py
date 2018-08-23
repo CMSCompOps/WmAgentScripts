@@ -316,7 +316,7 @@ def getFiles(datasetName, runBlacklist, runWhitelist, blockBlacklist,
                     #logging.info("\t\t %s\tno location", blockName)
                     blockLocations.update([u'T1_US_FNAL_Disk', u'T2_CH_CERN'])
                 elif not has_parent:  ## this should be the source
-                    #logging.info("Blockname: %s\tno location, ABORT", blockName)
+                    logging.info("Blockname: %s\tno location, ABORT", blockName)
                     self.major_failure = True
                     #sys.exit(1)
                 
@@ -382,9 +382,12 @@ def getFiles(datasetName, runBlacklist, runWhitelist, blockBlacklist,
     bthreads = ThreadBuster( bthreads, 40, 2., verbose=False)
 
     for t in bthreads:
-        if t.major_failure: sys.exit(1)
+        if t.major_failure:
+            print "There was a major failure in processing block files"
+            sys.exit(1)
         files.update(t.files)
 
+    print len(files)
     return files
 
 
