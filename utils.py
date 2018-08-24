@@ -867,7 +867,6 @@ class lockInfo:
             print l.item,l.lock
         print "------"+"-"*len(comment)
 
-
 class transferStatuses:
     def __init__(self):
         import pymongo,ssl
@@ -4849,6 +4848,16 @@ def forceComplete(url, wfi):
             print "rejecting",member['RequestName']
             reqMgrClient.invalidateWorkflow(url, member['RequestName'], current_status=member['RequestStatus'])
 
+def agentInfoDB():
+    import pymongo,ssl
+    client =  pymongo.MongoClient('mongodb://%s/?ssl=true'%mongo_db_url, ssl_cert_reqs=ssl.CERT_NONE)
+    return client.unified.agentInfo
+
+def agent_speed_draining(db=None):
+    if db is None:
+        db = agentInfoDB()
+    return set([a['name'] for a in db.find() if a.get('speeddrain',False)])
+
 class agentInfo:
     def __init__(self, **args):
         self.url = args.get('url')
@@ -4860,11 +4869,9 @@ class agentInfo:
         self.max_pending_cpus = args.get('max_pending_cpus', 10000000)
         self.wake_up_draining = args.get('wake_up_draining', False)
         ## keep some info in a local file
-        try:
-            self.info = json.loads(open('%s/agent_info.json'%base_eos_dir).read())
-        except:
-            self.info = {}
-
+        self.db = agentInfoDB()
+        self.all_agents = [a['name'] for a in self.db.find()]
+        #print "got from pymongo",self.all_agents
         self.buckets = defaultdict(list)
         self.wake_draining = False ## do not wake up agents that are on drain already
         self.release = defaultdict(set)
@@ -4872,8 +4879,36 @@ class agentInfo:
         self.ready = self.getStatus()
         if not self.ready:
             print "AgentInfo could not initialize properly"
-            #print "ARAKIRI : AgentInfo could not initialize properly"
-            #sys.exit(1)
+        #print json.dumps(self.buckets, indent=2)
+        print json.dumps(self.content(), indent=2)
+
+    def content(self):
+        ## same as 
+        r= {}
+        for a in self.db.find():
+            a.pop('_id')
+            an = a.pop('name')
+            r[an] = a
+        return r
+
+    def speed_draining(self):
+        return agent_speed_draining(self.db)
+        
+    def _getA(self, agent):
+        a = self.db.find_one({'name' : agent})
+        return a if a else {}
+
+    def _get(self, agent, field, default=None):
+        return self._getA(agent).get(field, default)
+
+    def _update(self, agent, info):
+        ## works for inserting
+        put_info = self._getA(agent)
+        put_info.update( info )
+        put_info['name'] = agent
+        self.db.update_one( {'name': agent},
+                            {"$set": put_info},
+                            upsert = True)
 
     def agentStatus(self, agent):
         for status in self.buckets:
@@ -4889,11 +4924,12 @@ class agentInfo:
 
         now,nows = self.getNow()
 
-        for agent in self.info:
+        for agent in self.all_agents:
             #print "checking on",agent
+            astatus = self._get(agent,'status')
             ti = tc.getCard( cn = agent)
-            lid = tc.lists.get(self.info[agent].get('status'))
-            #print agent,lid,self.info[agent].get('status'),tc.lists
+            lid = tc.lists.get( astatus )
+            #print agent,lid,astatus,tc.lists
             lid_name = tc.getList(ln=lid).get('name')
             clid = ti.get('idList',None)
             if lid and clid and lid!=clid:
@@ -4934,10 +4970,10 @@ class agentInfo:
                     if acting:
                         setAgentDrain(self.url, agent, drain=do_drain)
                         ## change the local information
-                        self.info[agent].update( {'status' : new_status,
-                                                  'update' : now,
-                                                  'date' : nows }
-                                                 )
+                        self._update(agent, {'status' : new_status,
+                                             'update' : now,
+                                             'date' : nows }
+                                     )
 
             #print agent,lid,clid
 
@@ -4950,7 +4986,7 @@ class agentInfo:
             print "cannot get production agent information"
             return False
         prod_info = dict([(a['agent_url'].split(':')[0], a) for a in all_agents_prod])
-        all_agents_name = sorted(set(self.info.keys() + prod_info.keys()))
+        all_agents_name = sorted(set(self.all_agents + prod_info.keys()))
         ## do you want to use this to make an alarm on agent in error for too long ?
         self.in_error = [a['agent_url'].split(':')[0] for a in all_agents_prod if a.get('down_components',[])]
         print "agents with errors",self.in_error
@@ -4958,7 +4994,7 @@ class agentInfo:
         now,nows = self.getNow()
 
         for agent in all_agents_name:
-            linfo = self.info.get( agent, {})
+            linfo = self._getA(agent)
             pinfo = prod_info.get( agent, {})
             p_release = linfo.get('version',None)
             release = pinfo.get('agent_version',None)
@@ -4984,7 +5020,7 @@ class agentInfo:
                 else:
                     ## and is gone from production
                     st = 'offline'
-                self.info[agent]['status'] = st
+                self._update(agent, {'status': st})
             else:
                 ## the agent is new here. let's assume it is in standby if in drain
                 st = 'running'
@@ -4995,15 +5031,16 @@ class agentInfo:
                     print "A new agent in the pool",agent,"setting",st
 
                 ## add it
-                self.info[agent] = { 'status' : st,
+                self._update(agent, {'status' : st,
                                      'update' : now,
                                      'date' : nows }
+                         )
                 if self.verbose:
-                    print self.info[agent]
-            self.info[agent].setdefault('version', release)
+                    print self._getA(agent)
+            self._update(agent, {'version': release})
 
-        for a,i in self.info.items():
-            self.buckets[i['status']].append( a )
+        for a in self.all_agents:
+            self.buckets[self._get(a, 'status')].append( a )
 
         if not self.buckets.get('standby',[]):
             msg = "There are no agent in standby!!"
@@ -5015,9 +5052,6 @@ class agentInfo:
 
         return True
 
-    def __del__(self):
-        open('%s/agent_info.json'%base_eos_dir,'w').write( json.dumps( self.info, indent=2))
-
     def getNow(self):
         now = time.gmtime()
         nows = time.asctime( now )
@@ -5026,12 +5060,13 @@ class agentInfo:
 
     def change_status(self, agent, st):
         now,nows = self.getNow()
-        self.info[agent]['status'] = st
-        self.info[agent]['update'] = now
-        self.info[agent]['date'] = nows
+        self._update(agent, { 'status' : st,
+                              'update': now,
+                              'date' : nows
+                          })
 
     def flag_standby(self, agent):
-        if self.info.get(agent,{}).get('status',None) == 'draining':
+        if self._getA(agent).get('status',None) == 'draining':
             if self.verbose:
                 print "Able to set",agent,"in standby"
             self.change_status( agent, 'standby')
@@ -5076,30 +5111,31 @@ class agentInfo:
         last_action_timeout = 5 *60*60 # hours
         last_action_static = 20*60*60 # hours
         for agent in self.buckets.get('running',[]):
-            if (now-self.info[agent]['update'])<(last_action_timeout):
+            agent_update = self._get(agent, 'update')
+            if (now-agent_update)<(last_action_timeout):
                 one_recent_running = True
-                timeout_for_running = last_action_timeout - (now-self.info[agent]['update'])
+                timeout_for_running = last_action_timeout - (now-agent_update)
                 if timeout_last_running == None or timeout_last_running < timeout_for_running:
                     timeout_last_running = timeout_for_running
-            if (now-self.info[agent]['update'])<(last_action_static):
+            if (now-agent_update)<(last_action_static):
                 recent_running.add(agent )
 
         for agent in self.buckets.get('standby',[]):
-            if (now-self.info[agent]['update'])<(last_action_timeout):
+            if (now-agent_update)<(last_action_timeout):
                 one_recent_standby = True
-                timeout_for_standby = last_action_timeout - (now-self.info[agent]['update'])
+                timeout_for_standby = last_action_timeout - (now-agent_update)
                 if timeout_last_standby == None or timeout_last_standby < timeout_for_standby:
                     timeout_last_standby = timeout_for_standby
-            if (now-self.info[agent]['update'])<(last_action_static):
+            if (now-agent_update)<(last_action_static):
                 recent_standby.add(agent )
 
         for agent in self.buckets.get('draining',[]):
-            if (now-self.info[agent]['update'])<(last_action_timeout):
+            if (now-agent_update)<(last_action_timeout):
                 one_recent_draining = True
-                timeout_for_draining = last_action_timeout - (now-self.info[agent]['update'])
+                timeout_for_draining = last_action_timeout - (now-agent_update)
                 if timeout_last_draining == None or timeout_last_draining < timeout_for_draining:
                     timeout_last_draining = timeout_for_draining
-            if (now-self.info[agent]['update'])<(last_action_static):
+            if (now-agent_update)<(last_action_static):
                 recent_draining.add( agent )
 
         timeout_action = max([timeout_last_running,timeout_last_standby,timeout_last_draining])
@@ -5144,7 +5180,7 @@ class agentInfo:
         for agent,ainfo in all_agents.items():
             if not 'Name' in ainfo: continue
             agent_name = ainfo['Name']
-            if not agent_name in self.info: continue
+            if not agent_name in self.all_agents: continue
             r = ainfo['TotalRunningJobs']
             cr = ainfo['TotalRunningCpus']
             t = ainfo['MaxJobsRunning']
@@ -5162,7 +5198,7 @@ class agentInfo:
         for agent,ainfo in all_agents.items():
             if not 'Name' in ainfo: continue
             agent_name = ainfo['Name']
-            if not agent_name in self.info: continue
+            if not agent_name in self.all_agents: continue
             r = ainfo['TotalRunningJobs']
             cr = ainfo['TotalRunningCpus']
             t = ainfo['MaxJobsRunning']
@@ -5310,9 +5346,7 @@ class agentInfo:
                     msg = "putting agent %s in production"% wake_up
                     sendLog('agentInfo', msg, level='critical')
                     manipulated_agents.add( wake_up )
-                    self.info[wake_up] = { 'status' : 'running',
-                                           'update' : now,
-                                           'date' : nows }
+                    self.change_status(wake_up, 'running')
         elif drain_agent:
             ## pick one agent to drain
             sleep_up = None
@@ -5323,9 +5357,7 @@ class agentInfo:
                     msg = "putting agent %s in drain mode"% sleep_up
                     sendLog('agentInfo', msg, level='critical')
                     manipulated_agents.add( sleep_up )
-                    self.info[sleep_up] = { 'status' : 'draining',
-                                            'update' : now,
-                                            'date' : nows }
+                    self.change_status(sleep_up, 'draining')
             else:
                 print "Agents need to be set in drain, but nothing is there to be drained"
 
@@ -5342,9 +5374,7 @@ class agentInfo:
                 msg = "putting agent %s in drain mode for retiring"% sleep_up
                 sendLog('agentInfo', msg, level='critical')
                 manipulated_agents.add( sleep_up )
-                self.info[sleep_up] = { 'status' : 'standby',
-                                        'update' : now,
-                                        'date' : nows }
+                self.change_status(sleep_up, 'standby')
         else:
             if not acting:
                 print "The polling is not proactive"
@@ -5355,7 +5385,8 @@ class agentInfo:
             ## set the config tweaks to enable retry=0 and thresold=0
             pass
 
-        already_speed_drain = set(json.loads(open('%s/speed_draining.json'%base_eos_dir).read()))
+        already_speed_drain = self.speed_draining()
+        #already_speed_drain = set(json.loads(open('%s/speed_draining.json'%base_eos_dir).read()))
         all_in_priority_drain = set()
         if (already_speed_drain & speed_draining):
             ## lets keep that agent in speed drainig
@@ -5368,7 +5399,10 @@ class agentInfo:
             all_in_priority_drain.update( speed_draining[:1] )
 
         all_in_priority_drain.update( open_draining )
-        open('%s/speed_draining.json'%base_eos_dir,'w').write(json.dumps( list(all_in_priority_drain) ))
+        #open('%s/speed_draining.json'%base_eos_dir,'w').write(json.dumps( list(all_in_priority_drain) ))
+        ## operate this
+        for agent in self.all_agents:
+            self._update(agent, {'speeddrain' : agent in all_in_priority_drain})
 
         if fully_empty:
             msg = 'These agents are fully empty %s and ready for redeploy'% sorted(fully_empty)

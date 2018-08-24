@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import workflowInfo, getWorkflows, global_SI, sendEmail, componentInfo, getDatasetPresence, monitor_dir, monitor_pub_dir, reqmgr_url, campaignInfo, unifiedConfiguration, sendLog, do_html_in_each_module, base_eos_dir, eosRead, eosFile
+from utils import workflowInfo, getWorkflows, global_SI, sendEmail, componentInfo, getDatasetPresence, monitor_dir, monitor_pub_dir, reqmgr_url, campaignInfo, unifiedConfiguration, sendLog, do_html_in_each_module, base_eos_dir, eosRead, eosFile, agent_speed_draining
 import reqMgrClient
 import json
 import os
@@ -50,7 +50,6 @@ def equalizor(url , specific = None, options=None):
     print sorted(SI.sites_T0s)
 
     CI = campaignInfo()
-
     
     #sites_to_consider = SI.all_sites
     sites_to_consider = SI.sites_ready
@@ -1256,7 +1255,7 @@ def equalizor(url , specific = None, options=None):
     interface['release_site'] = release_site
 
     ## drain agents
-    interface['speed_drain'] = json.loads( eosRead('%s/speed_draining.json'%base_eos_dir))
+    interface['speed_drain'] = list(agent_speed_draining())
 
     ## close and save
     close( interface )
