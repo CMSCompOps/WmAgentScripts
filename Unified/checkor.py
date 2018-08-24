@@ -1049,20 +1049,16 @@ def checkor(url, spec=None, options=None):
         time_point("done with %s"%wfo.name)
 
         ## for visualization later on
-        if not wfo.name in fDB.record: 
-            #print "adding",wfo.name,"to close out record"
-            fDB.record[wfo.name] = {
+        put_record = {
             'datasets' :{},
             'name' : wfo.name,
-            'closeOutWorkflow' : None,
+            'closeOutWorkflow' : is_closing,
+            'priority' : wfi.request['RequestPriority'],
+            'prepid' :  wfi.request['PrepID'],
             }
-        fDB.record[wfo.name]['closeOutWorkflow'] = is_closing
-        fDB.record[wfo.name]['priority'] = wfi.request['RequestPriority']
-        fDB.record[wfo.name]['prepid'] = wfi.request['PrepID']
-
         for output in wfi.request['OutputDatasets']:
-            if not output in fDB.record[wfo.name]['datasets']: fDB.record[wfo.name]['datasets'][output] = {}
-            rec = fDB.record[wfo.name]['datasets'][output]
+            if not output in put_record['datasets']: put_record['datasets'][output] = {}
+            rec = put_record['datasets'][output]
             #rec['percentage'] = float('%.2f'%(percent_completions[output]*100))
             rec['percentage'] = math.floor(percent_completions[output]*10000)/100.## round down
             rec['fractionpass'] = math.floor(fractions_pass.get(output,0)*10000)/100.
@@ -1080,6 +1076,8 @@ def checkor(url, spec=None, options=None):
             now = time.gmtime()
             rec['timestamp'] = time.mktime(now)
             rec['updated'] = time.asctime(now)+' (GMT)'
+
+        fDB.update( wfo.name, put_record)
 
         ## make the lumi summary 
         if wfi.request['RequestType'] == 'ReReco':
@@ -1131,6 +1129,7 @@ def checkor(url, spec=None, options=None):
                 if res in [None,"None"]:
                     wfo.status = 'close'
                     session.commit()
+                    fDB.pop( wfo.name )
                     if use_mcm and force_by_mcm:
                         ## shoot large on all prepids, on closing the wf
                         for pid in pids:
@@ -1258,9 +1257,9 @@ def checkor(url, spec=None, options=None):
     print report_created,"reports created in this run"
 
     #if not options.clear:
-    if not options.go:
-        ## make the summary and sump only for other cases
-        fDB.html()
+    #if not options.go:
+    #    ## make the summary and sump only for other cases
+    #    fDB.html()
 
     if not spec and in_manual!=0:
         some_details = ""

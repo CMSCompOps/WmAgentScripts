@@ -2439,14 +2439,44 @@ global_SI.instance = None
 class closeoutInfo:
     def __init__(self):
         self.owner = "%s-%s"%( socket.gethostname(), os.getpid())
-        try:
-            ## this needs to get in a db so as to be concurrent
-            self.record = json.loads(open('%s/closedout.json'%base_eos_dir).read())
-        except:
-            print "No closed-out record, starting fresh"
-            self.record = {}
-
         self.removed_keys = set()
+        import pymongo,ssl
+        self.client =  pymongo.MongoClient('mongodb://%s/?ssl=true'%mongo_db_url, ssl_cert_reqs=ssl.CERT_NONE)
+        self.db = self.client.unified.closeoutInfo
+        self.record = {}
+        #print len([o for o in self.db.find()])
+
+        ### one time sync
+        #olddb = json.loads(eosRead('/eos/cms/store/unified/closedout.json'))
+        #for k,v in olddb.items():
+        #    self.update(k,v)
+
+    def pop(self, wfn):
+        if wfn in self.record:
+            self.record.pop(wfn)
+        self.removed_keys.add( wfn )
+        while self.db.find_one({'name' : wfn}):
+            self.db.delete_one({'name' : wfn})
+
+    def update(self, wfn ,record):
+        put_record = self.db.find_one({'name' : wfn})
+        if not put_record: put_record={}
+        put_record.update( record )
+        self.db.update_one( {'name' : wfn},
+                            {"$set": put_record},
+                            upsert = True)
+        self.record[wfn] = put_record
+        
+    def get(self, wfn):
+        if not wfn in self.record:
+            record = self.db.find_one({'name' : wfn})
+            if record:
+                record.pop('name')
+                record.pop('_id')
+                self.record[wfn] = record
+            else:
+                return None
+        return self.record[wfn]
 
     def table_header(self):
         text = '<table border=1><thead><tr><th>workflow</th><th>OutputDataSet</th><th>%Compl</th><th>acdc</th><th>Dupl</th><th>LSsize</th><th>Scubscr</th><th>dbsF</th><th>dbsIF</th><th>\
@@ -2457,6 +2487,7 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
         if count%2:            color='lightblue'
         else:            color='white'
         text=""
+        _ = self.get( wf ) ## cache the value
         tpid = self.record[wf]['prepid']
         pid = tpid.replace('task_','')
 
@@ -2534,13 +2565,13 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
         html.write( self.table_header() )
 
         from assignSession import session, Workflow
-        for (count,wf) in enumerate(sorted(self.record.keys())):
+        #for (count,wf) in enumerate(sorted(self.record.keys())):
+        for (count,wf) in enumerate(sorted([o['name'] for o in self.db.find()])):
             wfo = session.query(Workflow).filter(Workflow.name == wf).first()
             if not wfo: continue
             if not (wfo.status == 'away' or wfo.status.startswith('assistance')):
                 print "Taking",wf,"out of the close-out record"
-                self.record.pop(wf)
-                self.removed_keys.add( wf )
+                self.pop( wf )
                 continue
             html.write( self.one_line( wf, wfo , count) )
 
@@ -2551,7 +2582,8 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
         self.save()
 
     def save(self):
-
+        return
+        ## all the rest is useless with pymongo
         ## gather all existing content
         while True:
             existings = glob.glob('%s/closedout.*.lock'%base_eos_dir)
@@ -2690,7 +2722,7 @@ Updated on %s (GMT) <br>
             short_lines = []
             prio_ordered_wf = []
             for (count,wfo) in enumerate(assist[status]):
-                if not wfo.name in self.record:
+                if not self.get( wfo.name ):
                     continue
                 prio = self.record[wfo.name]['priority']
                 prio_ordered_wf.append( (prio, wfo) )
@@ -5719,7 +5751,6 @@ class workflowInfo:
                     raise Exception("Failed to get workload cache for %s"%workflow)
         else:
             self.request = copy.deepcopy( request )
-
         self.full_spec=None
         if spec:
             self.get_spec()
