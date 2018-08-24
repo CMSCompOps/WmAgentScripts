@@ -1139,7 +1139,8 @@ def eosRead(filename):
         except Exception as e:
             print "failed to read",filename,"from eos"
             cache = cache_dir+'/'+filename.replace('/','_')
-            r = os.system('eos cp %s %s'%( filename.replace('//','/'), cache.replace('//','/')))
+            #r = os.system('eos cp %s %s'%( filename.replace('//','/'), cache.replace('//','/')))
+            r = os.system('cp %s %s'%( filename.replace('//','/'), cache.replace('//','/')))
             if r==0:
                 return open(cache).read()
     print "unable to read from eos"
