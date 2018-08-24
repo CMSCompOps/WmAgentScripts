@@ -459,7 +459,7 @@ Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransfertea
     lap( 'done with staged' )
     
     lines=[]
-    batches = json.loads(eosRead('%s/batches.json' % base_eos_dir,'r'))
+    batches = json.loads(eosRead('%s/batches.json' % base_eos_dir))
     relvals = []
     for b in batches: relvals.extend( batches[b] )
     count_by_campaign=defaultdict(lambda : defaultdict(int))
