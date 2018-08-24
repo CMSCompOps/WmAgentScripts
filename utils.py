@@ -896,7 +896,8 @@ class transferStatuses:
         rd = {}
         for d in self.db.find():
             d.pop('_id')
-            rd[d.pop('phedexid')] = dict(d)
+            ii = d.pop('phedexid')
+            rd[ii] = dict(d)
         return rd
 
 class unifiedConfiguration:
