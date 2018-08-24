@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import workflowInfo, getWorkflows, global_SI, sendEmail, componentInfo, getDatasetPresence, monitor_dir, monitor_pub_dir, reqmgr_url, campaignInfo, unifiedConfiguration, sendLog, do_html_in_each_module, base_eos_dir
+from utils import workflowInfo, getWorkflows, global_SI, sendEmail, componentInfo, getDatasetPresence, monitor_dir, monitor_pub_dir, reqmgr_url, campaignInfo, unifiedConfiguration, sendLog, do_html_in_each_module, base_eos_dir, eosRead, eosFile
 import reqMgrClient
 import json
 import os
@@ -148,7 +148,7 @@ def equalizor(url , specific = None, options=None):
     force_sites = []
 
     ## overflow CERN to underutilized T1s
-    upcoming = json.loads( open('%s/GQ.json'%monitor_dir).read())
+    upcoming = json.loads( eosRead('%s/GQ.json'%monitor_dir) )
     for possible in SI.sites_T1s:
         if not possible in upcoming:
             mapping['T2_CH_CERN'].append(possible)
@@ -420,7 +420,7 @@ def equalizor(url , specific = None, options=None):
             print str(e)
             return None
     def close( interface ):
-        open('%s/equalizor.json.new'%monitor_pub_dir,'w').write( json.dumps( interface, indent=2))
+        eosFile('%s/equalizor.json.new'%monitor_pub_dir,'w').write( json.dumps( interface, indent=2)).close()
         os.system('mv %s/equalizor.json.new %s/equalizor.json'%(monitor_pub_dir,monitor_pub_dir))
         os.system('cp %s/equalizor.json %s/logs/equalizor/equalizor.%s.json'%(monitor_pub_dir,monitor_dir,time.mktime(time.gmtime())))
         ## move it where people use to see it ## should go away at some point
@@ -443,7 +443,7 @@ def equalizor(url , specific = None, options=None):
         'speed_drain' : []
         }
     if options.augment or options.remove:
-        previous = json.loads( open('%s/equalizor.json'%monitor_pub_dir).read())
+        previous = json.loads( eosRead('%s/equalizor.json'%monitor_pub_dir))
         interface['modifications'] = previous.get('modifications',{})
         interface['memory'] = previous.get('memory',{})
         interface['time'] = previous.get('time',{})
@@ -497,7 +497,7 @@ def equalizor(url , specific = None, options=None):
         }
 
     perf_per_config = defaultdict(dict)
-    for k,v in json.loads(open('%s/perf_per_config.json' % base_eos_dir).read()).items(): perf_per_config[k] = v
+    for k,v in json.loads(eosRead('%s/perf_per_config.json' % base_eos_dir)).items(): perf_per_config[k] = v
 
     stay_within_site_whitelist = False
     specific_task=None
@@ -1247,7 +1247,7 @@ def equalizor(url , specific = None, options=None):
         interface['release'].setdefault(wf,"Everywhere")
 
     ## catch site to be held/release
-    site_drive = json.loads(open('%s/site_drive.json'%base_eos_dir).read())
+    site_drive = json.loads(eosRead('%s/site_drive.json'%base_eos_dir))
     hold_site = site_drive.get('hold',[])
     already_holding = interface['hold_site']
     release_site = list(set(already_holding) - set(hold_site))+interface['release_site']+site_drive.get('release',[])
@@ -1256,12 +1256,12 @@ def equalizor(url , specific = None, options=None):
     interface['release_site'] = release_site
 
     ## drain agents
-    interface['speed_drain'] = json.loads( open('%s/speed_draining.json'%base_eos_dir).read())
+    interface['speed_drain'] = json.loads( eosRead('%s/speed_draining.json'%base_eos_dir))
 
     ## close and save
     close( interface )
 
-    open('%s/perf_per_config.json'%base_eos_dir,'w').write( json.dumps( perf_per_config, indent=2))
+    eosFile('%s/perf_per_config.json'%base_eos_dir,'w').write( json.dumps( perf_per_config, indent=2)).close()
 
 
 if __name__ == "__main__":
