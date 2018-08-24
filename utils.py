@@ -893,7 +893,11 @@ class transferStatuses:
             return []
 
     def content(self):
-        return dict([(d.pop('phedexid'), d) for d in self.db.find()])
+        rd = {}
+        for d in self.db.find():
+            d.pop('_id')
+            rd[d.pop('phedexid')] = dict(d)
+        return rd
 
 class unifiedConfiguration:
     def __init__(self):
