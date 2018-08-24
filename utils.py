@@ -880,12 +880,46 @@ class replacedBlocks:
                                           'time' : time.mktime( time.gmtime() )
                                       }},
                                upsert=True)
-
+            
     def test(self, block):
         ## return "already replaced"
         b = self.db.find_one({'name' : block})
         return True if b else False
     
+class transferDataset:
+    def __init__(self):
+        import pymongo,ssl
+        self.client = pymongo.MongoClient('mongodb://%s/?ssl=true'%mongo_db_url, ssl_cert_reqs=ssl.CERT_NONE)
+        self.db = self.client.unified.transferDataset
+        self.added = set()
+
+        ## one time sync
+        #for k,v in json.loads(eosRead('/eos/cms/store/unified/datasets_by_phid.json')).items():
+        #    self.add(int(k),v)
+            
+    def add(self, phedexid, datasets):
+        self.added.add( phedexid )
+        self.db.update({'phedexid' :phedexid},
+                       {'$set' : { 
+                           'phedexid' :phedexid,
+                           'datasets' : datasets}},
+                       upsert = True)
+
+    def content(self):
+        r = {}
+        for t in self.db.find():
+            r[t['phedexid']] = t['datasets']
+        return r
+
+    def __del__(self):
+        if self.added:
+            phids = [t['phedexid'] for t in self.db.find()]
+            for phid in phids:
+                if not phid in self.added:
+                    while self.db.find_one({'phedexid' : phid}):
+                        self.db.delete_one({'phedexid' : phid})
+                        
+        
 class transferStatuses:
     def __init__(self):
         import pymongo,ssl
