@@ -1916,10 +1916,13 @@ class siteInfo:
         self.sites_T0s_all = [ s for s in self.all_sites if s.startswith('T0_')]
 
         self.sites_AAA = list(set(self.sites_ready) - set(['T2_CH_CERN_HLT']))
+        ## good enough to read lightweight
         add_on_aaa = ['T3_CH_CERN_HelixNebula',
                       'T3_CH_CERN_HelixNebula_REHA',
                       
+                      
         ]
+        ## good enough to do premixing
         add_on_good_aaa = ['T3_IN_TIFRCloud',
                            'T3_US_NERSC',
                            'T3_US_PSC',
@@ -6440,16 +6443,11 @@ class workflowInfo:
             else:
                 sites_allowed = sorted(set(SI.sites_T0s + SI.sites_T1s + SI.sites_with_goodAAA))
         elif primary:
-            sites_allowed =sorted(set(SI.sites_T0s + SI.sites_T1s + SI.sites_T2s + SI.sites_T3s))
+            sites_allowed =sorted(set(SI.sites_T0s + SI.sites_T1s + SI.sites_T2s))# + SI.sites_T3s))
         else:
             # no input at all
             ## all site should contribute
-            sites_allowed =sorted(set( SI.sites_T0s + SI.sites_T2s + SI.sites_T1s + SI.sites_T3s ))
-            ### hack if we have urgency to kick gen-sim away
-            #ust2s = set([site for site in SI.sites_T2s if site.startswith('T2_US')])
-            #allmcores = set(SI.sites_mcore_ready)
-            #sites_allowed =list(set( SI.sites_T2s ) - ust2s) ## remove all US
-            #sites_allowed = list(set( SI.sites_T2s ) - allmcores) ## remove all multicore ready
+            sites_allowed =sorted(set( SI.sites_T0s + SI.sites_T2s + SI.sites_T1s))# + SI.sites_T3s ))
         if pickone:
             sites_allowed = sorted([SI.pick_CE( sites_allowed )])
 
