@@ -867,6 +867,25 @@ class lockInfo:
             print l.item,l.lock
         print "------"+"-"*len(comment)
 
+class replacedBlocks:
+    def __init__(self):
+        import pymongo,ssl
+        self.client = pymongo.MongoClient('mongodb://%s/?ssl=true'%mongo_db_url, ssl_cert_reqs=ssl.CERT_NONE)
+        self.db = self.client.unified.replacedBlocks
+
+    def add(self, blocks):
+        for block in blocks:
+            self.db.update_one({'name' : block},
+                               {'$set' : {'name' : block,
+                                          'time' : time.mktime( time.gmtime() )
+                                      }},
+                               upsert=True)
+
+    def test(self, block):
+        ## return "already replaced"
+        b = self.db.find_one({'name' : block})
+        return True if b else False
+    
 class transferStatuses:
     def __init__(self):
         import pymongo,ssl
