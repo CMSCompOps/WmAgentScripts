@@ -612,7 +612,7 @@
    "resize" : "auto"
  },
  "RunIIFall18DR" :{
-    "go": false,
+    "go": true,
     "maxcopies": 1,
     "lumisize": -1,
     "resize" : "auto",
