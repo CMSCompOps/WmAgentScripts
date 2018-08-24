@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import componentInfo, sendEmail, setDatasetStatus, unifiedConfiguration, workflowInfo, siteInfo, sendLog, reqmgr_url, monitor_dir, duplicateLock, userLock, global_SI, do_html_in_each_module, getWorkflows, pass_to_dynamo
+from utils import componentInfo, sendEmail, setDatasetStatus, unifiedConfiguration, workflowInfo, siteInfo, sendLog, reqmgr_url, monitor_dir, duplicateLock, userLock, global_SI, do_html_in_each_module, getWorkflows, pass_to_dynamo, closeoutInfo
 import reqMgrClient
 import json
 import time
@@ -17,7 +17,6 @@ import optparse
 import sqlalchemy 
 
 def spawn_harvesting(url, wfi , in_full):
-    #SI = siteInfo()
     SI = global_SI()
 
     all_OK = {}
@@ -152,6 +151,7 @@ def closor(url, specific=None, options=None):
 
     UC = unifiedConfiguration()
     CI = campaignInfo()
+    CloseI = closeoutInfo()
 
     all_late_files = []
     check_fullcopy_to_announce = UC.get('check_fullcopy_to_announce')
@@ -428,6 +428,7 @@ def closor(url, specific=None, options=None):
                 else:
                     wfo.status = 'done'
                 session.commit()
+                CloseI.pop( wfo.name )
                 wfi.sendLog('closor',"workflow outputs are announced")
             else:
                 wfi.sendLog('closor',"Error with %s to be announced \n%s"%( wfo.name, json.dumps( results )))

@@ -6,7 +6,7 @@ import os
 import json
 from collections import defaultdict
 import sys
-from utils import monitor_dir, base_dir, phedex_url, reqmgr_url, monitor_pub_dir, unified_url_eos, monitor_eos_dir, monitor_pub_eos_dir, base_eos_dir
+from utils import monitor_dir, base_dir, phedex_url, reqmgr_url, monitor_pub_dir, unified_url_eos, monitor_eos_dir, monitor_pub_eos_dir, base_eos_dir, closeoutInfo
 import random
 
 def htmlor( caller = ""):
@@ -1510,4 +1510,6 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
 
 if __name__ == "__main__":
     htmlor()
+    CI = closeoutInfo()
+    CI.html()
 
