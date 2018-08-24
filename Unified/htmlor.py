@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 import time
-from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration, getPrepIDs, componentInfo, getAllAgents, sendLog, duplicateLock, dataCache, agentInfo, display_time, eosFile
+from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration, getPrepIDs, componentInfo, getAllAgents, sendLog, duplicateLock, dataCache, agentInfo, display_time, eosFile, eosRead
 import os
 import json
 from collections import defaultdict
@@ -21,7 +21,7 @@ def htmlor( caller = ""):
         #os.system('cp %s/%s %s/.'%(monitor_dir, backup, monitor_pub_dir))
 
     try:
-        boost = json.loads(open('%s/equalizor.json'%monitor_pub_dir).read())['modifications']
+        boost = json.loads(eosRead('%s/equalizor.json'%monitor_pub_dir))['modifications']
     except:
         boost = {}
     cache = getWorkflows(reqmgr_url,'assignment-approved', details=True)
@@ -392,7 +392,7 @@ Worflow waiting in staging (%d) <a href=logs/transferor/last.log target=_blank>l
         text_bywf += "</ul></div><hr>"
     text_bywf += '</ul>'
 
-    stuck_transfer = json.loads(open('%s/stuck_transfers.json'%monitor_pub_dir).read())
+    stuck_transfer = json.loads(eosRead('%s/stuck_transfers.json'%monitor_pub_dir))
     html_doc.write("""
 Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransferteam/ target=_blank>dashboard</a> <a href=logs/transferor/last.log target=_blank>log</a> <a href=logs/stagor/last.log target=_blank>postlog</a> <a href=public/stuck_transfers.json target=_blank> %d stuck</a>
 <a href="javascript:showhide('transfer')">[Click to show/hide]</a>
@@ -459,7 +459,7 @@ Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransfertea
     lap( 'done with staged' )
     
     lines=[]
-    batches = json.loads(open('%s/batches.json' % base_eos_dir,'r').read())
+    batches = json.loads(eosRead('%s/batches.json' % base_eos_dir,'r'))
     relvals = []
     for b in batches: relvals.extend( batches[b] )
     count_by_campaign=defaultdict(lambda : defaultdict(int))
@@ -654,15 +654,15 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     start_time_two_weeks_ago = time.mktime(time.gmtime(now - (20*24*60*60))) # 20
     last_week =  int(time.strftime("%W",time.gmtime(now - ( 7*24*60*60))))
 
-    all_locks = json.loads(open('%s/globallocks.json'%monitor_pub_dir).read())    
-    waiting_custodial = json.loads(open('%s/waiting_custodial.json'%monitor_dir).read())
+    all_locks = json.loads(eosRead('%s/globallocks.json'%monitor_pub_dir))    
+    waiting_custodial = json.loads(eosRead('%s/waiting_custodial.json'%monitor_dir))
     all_pending_approval_custodial = dict([(k,item) for k,item in waiting_custodial.items() if 'nodes' in item and not any([node['decided'] for node in item['nodes'].values()]) ])
     n_pending_approval = len( all_pending_approval_custodial )
     #n_pending_approval = len([item for item in waiting_custodial.values() if 'nodes' in item and not any([node['decided'] for node in item['nodes'].values() ])])
-    missing_approval_custodial = json.loads(open('%s/missing_approval_custodial.json'%monitor_dir).read())
+    missing_approval_custodial = json.loads(eosRead('%s/missing_approval_custodial.json'%monitor_dir))
 
-    stuck_custudial = json.loads(open('%s/stuck_custodial.json'%monitor_pub_dir).read())
-    lagging_custudial = json.loads(open('%s/lagging_custodial.json'%monitor_dir).read())
+    stuck_custudial = json.loads(eosRead('%s/stuck_custodial.json'%monitor_pub_dir))
+    lagging_custudial = json.loads(eosRead('%s/lagging_custodial.json'%monitor_dir))
     if len(stuck_custudial):
         stuck_string = ', <font color=red>%d appear to be <a href=public/stuck_custodial.json>stuck</a></font>'% len(stuck_custudial)
     else:
@@ -922,7 +922,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     date1h = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(1*60*60)) )
     date5h = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(5*60*60)) )
     now = time.strftime('%Y-%m-%d+%H:%M', time.gmtime())
-    upcoming = json.loads( open('%s/GQ.json'%monitor_dir).read())
+    upcoming = json.loads( eosRead('%s/GQ.json'%monitor_dir))
 
     text +='<ul>'
 # """
@@ -945,7 +945,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
                 if a: upcoming_by_site[team][site] += a
         
 
-    sites_full = json.loads(open('%s/sites_full.json'%base_eos_dir).read())
+    sites_full = json.loads(eosRead('%s/sites_full.json'%base_eos_dir))
     for t in ['sites_T0s_all','sites_T1s_all','sites_T2s_all','sites_T3s_all']:
 #        text+="""
 #<li>%s<a href="javascript:showhide('%s')">[Click to show/hide]</a><br>
@@ -1104,7 +1104,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     text += "</ul></div></li>"
 
 
-    equalizor = json.loads(open('%s/equalizor.json'%monitor_pub_dir).read())['reversed_mapping']
+    equalizor = json.loads(eosRead('%s/equalizor.json'%monitor_pub_dir))['reversed_mapping']
     text += site_div_header("Xrootd mapping")
     text += "<li><table border=1><thead><tr><th>Sites</th><th>Can read from</th></tr></thead>\n"
     for site in sorted(equalizor):
@@ -1203,7 +1203,7 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
             i_oos+=1
 
             ## open the remaining json
-            remaining_reasons = json.loads(open('%s/remaining_%s.json'%(monitor_dir,site)).read())
+            remaining_reasons = json.loads(eosRead('%s/remaining_%s.json'%(monitor_dir,site)))
             for ds,info in remaining_reasons.items():
                 all_reasons.update( info['reasons'] )
                 for reason in info['reasons']:
@@ -1385,7 +1385,7 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
                     )
     AI.poll(acting=True)
     #####
-    speed_d = json.loads( open('%s/speed_draining.json'%base_eos_dir).read())
+    speed_d = json.loads( eosRead('%s/speed_draining.json'%base_eos_dir))
 
     for team,agents in getAllAgents(reqmgr_url).items():
         if not team in ['production','relval','highprio']: continue
@@ -1460,7 +1460,7 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
     os.system('mv %s/index.html.new %s/index.html'%(monitor_dir,monitor_dir))
 
         
-    statuses = json.loads(open('%s/statusmon.json'%monitor_dir).read())
+    statuses = json.loads(eosRead('%s/statusmon.json'%monitor_dir))
     s_count = defaultdict(int)
     now = time.mktime(time.gmtime())
     for wf in session.query(Workflow).all():
