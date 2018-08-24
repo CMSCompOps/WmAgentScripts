@@ -47,7 +47,8 @@ echo $MCM_SSO_COOKIE >>$log
 echo $X509_USER_PROXY >>$log
 
 source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh
-export PYTHONPATH=$PYTHONPATH:/usr/lib64/python2.7/site-packages
+###export PYTHONPATH=$PYTHONPATH:/usr/lib64/python2.7/site-packages
+###the local python fucks up with os.system('cp whatever whatever_on_eos')
 
 echo >> $log
 
