@@ -18,7 +18,6 @@ def cachor(spec=None):
         transfers = session.query(TransferImp).filter(TransferImp.phedexid==int(phedexid)).filter(TransferImp.active==True).all()
         if not transfers:
             print phedexid,"does not look relevant to be in cache anymore. poping"
-            print all_checks.pop( phedexid )
             TS.pop( phedexid )
 
 
