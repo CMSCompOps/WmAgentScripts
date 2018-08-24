@@ -1127,6 +1127,7 @@ class componentInfo:
         #sendEmail("%s Component Down"%c,"The component is down, just annoying you with this","vlimant@cern.ch",['vlimant@cern.ch','matteoc@fnal.gov'])
 
 def eosRead(filename):
+    filename = filename.replace('//','/')
     if not filename.startswith('/eos/'):
         print filename,"is not an eos path in eosRead"
         #sys.exit(2)
@@ -1138,9 +1139,8 @@ def eosRead(filename):
             return open(filename).read()
         except Exception as e:
             print "failed to read",filename,"from eos"
-            cache = cache_dir+'/'+filename.replace('/','_')
-            #r = os.system('eos cp %s %s'%( filename.replace('//','/'), cache.replace('//','/')))
-            r = os.system('cp %s %s'%( filename.replace('//','/'), cache.replace('//','/')))
+            cache = (cache_dir+'/'+filename.replace('/','_')).replace('//','/')
+            r = os.system('cp %s %s'%( filename, cache ))
             if r==0:
                 return open(cache).read()
     print "unable to read from eos"
@@ -1152,8 +1152,8 @@ class eosFile(object):
             print filename,"is not an eos path"
             sys.exit(2)
         self.opt = opt
-        self.eos_filename = filename
-        self.cache_filename = cache_dir+'/'+filename.replace('/','_')
+        self.eos_filename = filename.replace('//','/')
+        self.cache_filename = (cache_dir+'/'+filename.replace('/','_')).replace('//','/')
         self.cache = open(self.cache_filename, self.opt)
 
     def write(self, something):
@@ -1165,8 +1165,7 @@ class eosFile(object):
         while True:
             try:
                 print "moving",self.cache_filename,"to",self.eos_filename
-                #r = os.system("eos cp %s %s"%( self.cache_filename.replace('//','/'), self.eos_filename.replace('//','/')))
-                r = os.system("cp %s %s"%( self.cache_filename.replace('//','/'), self.eos_filename.replace('//','/')))
+                r = os.system("cp %s %s"%( self.cache_filename, self.eos_filename))
                 if r==0: break
                 print "not able to copy to eos",self.eos_filename,"with code",r
             except Exception as e:
