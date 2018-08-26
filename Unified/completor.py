@@ -2,7 +2,7 @@
 from assignSession import *
 import sys
 import reqMgrClient
-from utils import workflowInfo, getWorkflowById, forceComplete, getDatasetEventsAndLumis, componentInfo, monitor_dir, reqmgr_url, unifiedConfiguration, getForceCompletes, getAllStuckDataset, monitor_pub_dir, moduleLock 
+from utils import workflowInfo, getWorkflowById, forceComplete, getDatasetEventsAndLumis, componentInfo, monitor_dir, reqmgr_url, unifiedConfiguration, getForceCompletes, getAllStuckDataset, monitor_pub_dir, moduleLock , eosFile, eosRead
 from utils import campaignInfo, siteInfo, sendLog, sendEmail
 from collections import defaultdict
 import json
@@ -42,7 +42,7 @@ def completor(url, specific):
     ## take into account what stagor was saying
     for itry in range(5):
         try:
-            all_stuck.update( json.loads( open('%s/stuck_transfers.json'%monitor_pub_dir).read() ))
+            all_stuck.update( json.loads( eosRead('%s/stuck_transfers.json'%monitor_pub_dir)))
             break
         except:
             time.sleep(2)
@@ -50,7 +50,7 @@ def completor(url, specific):
     for itry in range(5):
          try:
              ## take into account the block that needed to be repositioned recently
-             all_stuck.update( [b.split('#')[0] for b in json.loads( open('%s/missing_blocks.json'%monitor_dir).read()) ] )
+             all_stuck.update( [b.split('#')[0] for b in json.loads( eosRead('%s/missing_blocks.json'%monitor_dir)) ] )
              break
          except:
              time.sleep(2)
@@ -299,7 +299,8 @@ def completor(url, specific):
     #open('%s/completions.json'%monitor_dir,'w').write( json.dumps( completions , indent=2))
     text="These have been running for long"
     
-    open('%s/longlasting.json'%monitor_dir,'w').write( json.dumps( long_lasting, indent=2 ))
+    #open('%s/longlasting.json'%monitor_dir,'w').write( json.dumps( long_lasting, indent=2 ))
+    eosFile('%s/longlasting.json'%monitor_dir,'w').write( json.dumps( long_lasting, indent=2 )).close()
 
     for wf,info in sorted(long_lasting.items(), key=lambda tp:tp[1]['delay'], reverse=True):
         delay = info['delay']
