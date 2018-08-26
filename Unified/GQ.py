@@ -330,7 +330,6 @@ for site,blocks in try_me.items():
         if blocks:
             RB.add( blocks )
             result = makeReplicaRequest(url, site, list(blocks), 'item relocation', priority='reserved', approve=True, mail=False)
-            replaced.update( blocks )
             sendLog('GQ','replacing %s at %s \n%s'%( '\n,'.join(blocks), site, result),level='warning')
     else:
         sendLog('GQ','tempting to put %s at %s'%( '\n,'.join(blocks), site),level='warning')
