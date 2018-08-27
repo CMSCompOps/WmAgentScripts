@@ -146,6 +146,11 @@ def stagor(url,specific =None, options=None):
             ## I actually would like to avoid that all I can
             sendLog('stagor','Performing spurious transfer check on %s'% phedexid, level='critical')
             checks = checkTransferStatus(url, phedexid, nocollapse=True)
+            try:
+                print json.dumps(checks, indent=2)
+            except:
+                print checks
+
             if not checks:
                 ## this is going to bias quite heavily the rest of the code. we should abort here
                 #sendLog('stagor','Ending stagor because of skewed input from checkTransferStatus', level='critical')
