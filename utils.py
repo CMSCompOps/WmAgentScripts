@@ -2592,7 +2592,8 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
     def summary(self):
 
 
-        html = open('%s/closeout.html'%monitor_dir,'w')
+        #html = open('%s/closeout.html'%monitor_dir,'w')
+        html = eosFile('%s/closeout.html'%monitor_dir,'w')
         html.write('<html>')
         html.write('Last update on %s(CET), %s(GMT), <a href=logs/checkor/ target=_blank> logs</a> <br><br>'%(time.asctime(time.localtime()),time.asctime(time.gmtime())))
 
@@ -2613,7 +2614,8 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
         html.write('<br>'*100) ## so that the anchor works ok
         html.write('bottom of page</html>')
 
-        self.save()
+        html.close() ## and copy to eos
+        #self.save()
 
     def save(self):
         return
@@ -2680,8 +2682,10 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
         from assignSession import session, Workflow
         wfs = session.query(Workflow).filter(Workflow.status.startswith('assistance')).all()
 
-        short_html = open('%s/assistance_summary.html'%monitor_dir,'w')
-        html = open('%s/assistance.html'%monitor_dir,'w')
+        #short_html = open('%s/assistance_summary.html'%monitor_dir,'w')
+        #html = open('%s/assistance.html'%monitor_dir,'w')
+        short_html = eosFile('%s/assistance_summary.html'%monitor_dir,'w')
+        html = eosFile('%s/assistance.html'%monitor_dir,'w')
         html.write("""
 <html>
 <head>
@@ -2801,9 +2805,9 @@ Updated on %s (GMT) <br>
         html.write("<br>"*100)
         html.write("bottom of page</html>")
 
-
-
-
+        # close and put on eos
+        html.close()
+        short_html.close()
 
 
 def checkTransferApproval(url, phedexid):
