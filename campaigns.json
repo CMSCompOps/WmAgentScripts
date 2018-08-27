@@ -556,7 +556,7 @@
    "tune" : true, 
    "toDDM" : ["GEN"],
    "parameters": {
-      "EventsPerJob": 1200
+      "EventsPerJob": 50000
     },
    "SiteWhitelist": [ "T1_US_FNAL"] 
   },
