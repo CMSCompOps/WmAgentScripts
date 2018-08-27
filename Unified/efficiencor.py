@@ -70,7 +70,8 @@ while True:
             flfs = []
             for out in look_in_files:
                 print "Looking in file",out
-                fhr = eosRead( out )
+                fhr = eosRead( out , trials=2 )
+                if not fhr: continue
                 for line in fhr.split('\n'):
                     if 'logArchive.tar.gz' in line:
                         fullpath = filter(lambda w : 'logArchive.tar.gz' in w, line.split())[0]
