@@ -621,6 +621,18 @@
     "secondary_AAA": false,
     "secondaries" : {"/MinBias_TuneCP5_13TeV-pythia8/RunIIFall18GS-102X_upgrade2018_realistic_v9-v1/GEN-SIM" :{"SiteWhitelist" : ["T1_ES_PIC","T1_RU_JINR","T2_US_MIT","T2_US_Wisconsin","T2_DE_DESY","T2_US_Florida","T2_DE_RWTH","T2_US_Nebraska"] }}
   },
+ "RunIIFall18DRPremix" : {
+   "go": false,
+   "maxcopies": 1,
+   "lumisize": -1,
+   "fractionpass" : 0.95,
+   "tune" : true,
+   "resize" : "auto",
+   "secondaries" : { "/Neutrino_E-10_gun/RunIISummer17PrePremix-101X_upgrade2018_realistic_v7-v1/GEN-SIM-DIGI-RAW": {} },
+   "secondary_AAA" : true,
+   "SecondaryLocation" : ["T1_US_FNAL","T2_CH_CERN","T2_DE_DESY"],
+   "overflow" : { "PREMIX" : {} }
+  },
  "RunIIFall18MiniAOD" :{
    "go" : false,
    "lumisize" : -1,
