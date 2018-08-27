@@ -279,7 +279,7 @@ really_stuck_all_done = old_stuck_all_done & stuck_all_done
 if really_stuck_all_done:
     sendLog('GQ','These %d workflows have not toggled further to completed while all WQE are done\n%s'%( len(really_stuck_all_done),'\n'.join(sorted(really_stuck_all_done))),
             level='critical')
-eosFile('stuck_all_done.json','w').write( json.dumps( sorted( stuck_all_done), indent=2)).close()
+eosFile('%s/stuck_all_done.json'%base_eos_dir,'w').write( json.dumps( sorted( stuck_all_done), indent=2)).close()
 
 if failed_workflow:
     sendLog('GQ','These workflows have failed wqe and will stay stuck:\n%s'%('\n'.join( failed_workflow)))
