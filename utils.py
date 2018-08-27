@@ -6224,21 +6224,19 @@ class workflowInfo:
 
     def getWorkQueue(self):
         if not self.workqueue:
-            try:
-                r1=self.conn.request("GET",'/couchdb/workqueue/_design/WorkQueue/_view/elementsByParent?key="%s"&include_docs=true'% self.request['RequestName'])
-                r2=self.conn.getresponse()
-            except:
+            TT = 0
+            while TT<5:
+                TT+=1
                 try:
-                    time.sleep(1) ## time-out
                     r1=self.conn.request("GET",'/couchdb/workqueue/_design/WorkQueue/_view/elementsByParent?key="%s"&include_docs=true'% self.request['RequestName'])
                     r2=self.conn.getresponse()
-                except:
+                    self.workqueue = list([d['doc'] for d in json.loads(r2.read())['rows']])
+                except Exception as e:
                     self.conn = make_x509_conn(self.url)
-                    #self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-                    print "failed to get work queue for",self.request['RequestName']
+                    time.sleep(1) ## time-out
+                    print "Failed to get workqueue"
+                    print str(e)
                     self.workqueue = []
-                    return self.workqueue
-            self.workqueue = list([d['doc'] for d in json.loads(r2.read())['rows']])
         return self.workqueue
 
 
