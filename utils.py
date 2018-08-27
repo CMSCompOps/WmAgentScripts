@@ -1183,14 +1183,14 @@ class componentInfo:
         sendLog('componentInfo',"The %s component is unreachable."% c, level='critical')
         #sendEmail("%s Component Down"%c,"The component is down, just annoying you with this","vlimant@cern.ch",['vlimant@cern.ch','matteoc@fnal.gov'])
 
-def eosRead(filename):
+def eosRead(filename,trials=5):
     filename = filename.replace('//','/')
     if not filename.startswith('/eos/'):
         print filename,"is not an eos path in eosRead"
         #sys.exit(2)
         #return open(filename).read()
     T=0
-    while T<5:
+    while T<trials:
         T+=1
         try:
             return open(filename).read()
@@ -1201,7 +1201,8 @@ def eosRead(filename):
             if r==0:
                 return open(cache).read()
     print "unable to read from eos"
-    sys.exit(2)
+    #sys.exit(2)
+    return None
         
 class eosFile(object):
     def __init__(self, filename, opt='w'):
