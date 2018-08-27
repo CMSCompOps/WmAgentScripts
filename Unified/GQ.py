@@ -1,4 +1,4 @@
-from utils import getDatasetBlockAndSite, siteInfo, getWorkflows, workflowInfo, monitor_dir, sendLog, sendEmail, makeReplicaRequest, unifiedConfiguration, getDatasetFileLocations, getAgentInfo, base_eos_dir, eosFile, replacedBlocks
+from utils import getDatasetBlockAndSite, siteInfo, getWorkflows, workflowInfo, monitor_dir, sendLog, sendEmail, makeReplicaRequest, unifiedConfiguration, getDatasetFileLocations, getAgentInfo, base_eos_dir, eosFile, replacedBlocks, eosRead
 from collections import defaultdict
 import time
 import json
@@ -274,12 +274,12 @@ if not_runable_acdc:
                                                    ),level='critical')
 
 
-old_stuck_all_done = set(json.loads(open('%s/stuck_all_done.json'%base_eos_dir).read()))
+old_stuck_all_done = set(json.loads(eosRead('%s/stuck_all_done.json'%base_eos_dir)))
 really_stuck_all_done = old_stuck_all_done & stuck_all_done
 if really_stuck_all_done:
     sendLog('GQ','These %d workflows have not toggled further to completed while all WQE are done\n%s'%( len(really_stuck_all_done),'\n'.join(sorted(really_stuck_all_done))),
             level='critical')
-open('stuck_all_done.json','w').write( json.dumps( sorted( stuck_all_done), indent=2))
+eosFile('stuck_all_done.json','w').write( json.dumps( sorted( stuck_all_done), indent=2)).close()
 
 if failed_workflow:
     sendLog('GQ','These workflows have failed wqe and will stay stuck:\n%s'%('\n'.join( failed_workflow)))
@@ -297,7 +297,7 @@ unproc += '\n'.join(sorted(unprocessable))
 report += unproc
 if unprocessable:
     sendLog('GQ',unproc, level='critical')
-    open('%s/missing_blocks.json'%monitor_dir,'w').write( json.dumps( sorted(unprocessable), indent=2) )
+    eosFile('%s/missing_blocks.json'%monitor_dir,'w').write( json.dumps( sorted(unprocessable), indent=2) ).close()
     #sendEmail('unprocessable blocks',"Sending a notification of this new feature until this gets understood. transfering block automatically back to  processing location. \n"+unproc)
 
 try_me = defaultdict(set)
