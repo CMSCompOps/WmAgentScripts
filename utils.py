@@ -930,10 +930,10 @@ class transferStatuses:
         self.db.delete_one({'phedexid' : phedexid})
 
     def add(self, phedexid, status):
-        status['phedexid'] = phedexid
-        #self.db.insert_one( status )
+        to_insert = copy.deepcopy( status )
+        to_insert['phedexid'] = phedexid
         self.db.update_one( {'phedexid' : phedexid},
-                            {"$set": status },
+                            {"$set": to_insert },
                             upsert=True
         )
 
