@@ -140,10 +140,10 @@ This is an automated message"""%( new_campaign,
     campaigns.update( add_on )
 
     ## write it out for posterity
-    eosFile('campaigns.json.updated','w').write(json.dumps( campaigns , indent=2)).close()
+    open('campaigns.json.updated','w').write(json.dumps( campaigns , indent=2))
 
     ## read back
-    rread = json.loads(eosRead('campaigns.json.updated') )
+    rread = json.loads(open('campaigns.json.updated').read() )
 
     os.system('cp campaigns.json.updated %s/campaigns.relval.json'%monitor_dir)
     os.system('cp campaigns.json.updated %s/campaigns.relval.json'%base_eos_dir)
