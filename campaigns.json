@@ -634,14 +634,14 @@
    "overflow" : { "PREMIX" : {} }
   },
  "RunIIFall18MiniAOD" :{
-   "go" : false,
+   "go" : true,
    "lumisize" : -1,
    "resize" : "auto",
    "maxcopies": 1,
    "fractionpass" : 0.95
   },
  "RunIIFall18NanoAOD" :{
-   "go" : false,
+   "go" : true,
    "lumisize" : -1,
    "maxcopies": 1,
    "fractionpass" : 0.95
