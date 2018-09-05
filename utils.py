@@ -5002,10 +5002,11 @@ class agentInfo:
                             upsert = True)
 
     def agentStatus(self, agent):
-        for status in self.buckets:
-            if agent in self.buckets[status]:
-                return status
-        return 'N/A'
+        return self._get(agent, 'status', 'N/A')
+        #for status in self.buckets:
+        #    if agent in self.buckets[status]:
+        #        return status
+        #return 'N/A'
 
     def checkTrello(self, sync_trello=None, sync_agents=None, acting=False):
         from TrelloClient import TrelloClient
