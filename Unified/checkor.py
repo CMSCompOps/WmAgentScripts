@@ -556,7 +556,7 @@ def checkor(url, spec=None, options=None):
         #1% every damping_time days after > timeout_for_damping_fraction in completed. Not more than damping_fraction_pass_max
         #fraction_damping = min(0.01*(max(running_delay - timeout_for_damping_fraction,0)/damping_time),damping_fraction_pass_max)
         fraction_damping = min(0.01*(max(completed_delay - timeout_for_damping_fraction,0)/damping_time),damping_fraction_pass_max)
-        print "We could reduce the passing fraction by",fraction_damping,"given it's been in for long for long"
+        print "We could reduce the passing fraction by",fraction_damping,"given it's been in for long"
         long_lasting_choped = False
         for out in fractions_pass:
             if fractions_pass[out]!=1.0 and fraction_damping: ## strictly ones cannot be set less than one
