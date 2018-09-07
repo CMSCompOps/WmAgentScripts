@@ -795,6 +795,8 @@ def equalizor(url , specific = None, options=None):
                     banned_until_you_find_a_way_to_do_this = []
                     aaa_grid  = filter(lambda s : not s in banned_until_you_find_a_way_to_do_this, aaa_grid)
                     print sorted(aaa_grid),"for premix"
+                    aaa_grid = list(set(aaa_grid)  & set(SI.sites_ready))
+                    print sorted(aaa_grid),"that are ready"
                     if aaa_grid:
                         wfi.sendLog('equalizor','Extending site whitelist for %s to %s due to PREMIX_overflow'%(task.pathName,sorted(aaa_grid)))
                         modifications[wfo.name][task.pathName]= {"AddWhitelist" : sorted(aaa_grid)}
