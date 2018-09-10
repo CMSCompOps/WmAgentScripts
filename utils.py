@@ -6755,6 +6755,7 @@ class workflowInfo:
                             modified_split_for_task = spl
                             modified_split_for_task['splitParams']['events_per_job'] = this_max_events_per_lumi
                             modified_splits.append( modified_split_for_task )
+                            max_events_per_lumi.append( this_max_events_per_lumi/efficiency_factor ) ## adding this to that later on we can check and adpat the split 0
 
             if max_events_per_lumi:
                 if events_per_lumi_inputs:
