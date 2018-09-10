@@ -6764,7 +6764,7 @@ class workflowInfo:
                         print "the smallest value of %s is still smaller than %s evt/lumi of the input"%(max_events_per_lumi, events_per_lumi_inputs)
                         hold = True
                     else:
-                        hold = True #to be removed
+                        #hold = True #to be removed
                         print "the smallest value of %s is ok compared to %s evt/lumi in the input"%(max_events_per_lumi, events_per_lumi_inputs)
                 else:
                     root_split = splits[0]
@@ -6927,7 +6927,7 @@ class workflowInfo:
         for spl in result:
             if not spl['taskType'] in ['Production','Processing','Skim'] : continue
             if strip:
-                for drop in ['algorithm','trustPUSitelists','trustSitelists','deterministicPileup','type','include_parents','lheInputFiles','runWhitelist','runBlacklist','collectionName','group','couchDB','couchURL','owner','initial_lfn_counter','filesetName']:
+                for drop in ['algorithm','trustPUSitelists','trustSitelists','deterministicPileup','type','include_parents','lheInputFiles','runWhitelist','runBlacklist','collectionName','group','couchDB','couchURL','owner','initial_lfn_counter','filesetName', 'runs','lumis']:
                     if drop in spl['splitParams']:
                         spl['splitParams'].pop(drop)
             splittings.append( spl )
