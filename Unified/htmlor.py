@@ -6,7 +6,7 @@ import os
 import json
 from collections import defaultdict
 import sys
-from utils import monitor_dir, base_dir, phedex_url, reqmgr_url, monitor_pub_dir, unified_url_eos, monitor_eos_dir, monitor_pub_eos_dir, base_eos_dir, closeoutInfo
+from utils import monitor_dir, base_dir, phedex_url, reqmgr_url, monitor_pub_dir, unified_url_eos, monitor_eos_dir, monitor_pub_eos_dir, base_eos_dir, closeoutInfo, agent_speed_draining
 import random
 
 def htmlor( caller = ""):
@@ -1385,7 +1385,8 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
                     )
     AI.poll(acting=True)
     #####
-    speed_d = json.loads( eosRead('%s/speed_draining.json'%base_eos_dir))
+    #speed_d = json.loads( eosRead('%s/speed_draining.json'%base_eos_dir))
+    speed_d = list(agent_speed_draining())
 
     for team,agents in getAllAgents(reqmgr_url).items():
         if not team in ['production','relval','highprio']: continue
