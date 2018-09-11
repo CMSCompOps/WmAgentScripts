@@ -338,7 +338,8 @@ def parse_one(url, wfn, options=None):
     r_type = wfi.request.get('OriginalRequestType', wfi.request.get('RequestType','NaT'))
     if r_type in ['ReReco']:
         html += '<a href=../datalumi/lumi.%s.html>Lumisection Summary</a>, '% wfi.request['PrepID']
-    html += '<a href="https://its.cern.ch/jira/issues/?jql=text~%s AND project = CMSCOMPPR" target="_blank">jira</a>'% (wfi.request['PrepID'])
+    html += '<a href="https://its.cern.ch/jira/issues/?jql=text~%s AND project = CMSCOMPPR" target="_blank">jira</a>,'% (wfi.request['PrepID'])
+    html += '<a href="https://vocms0113.cern.ch/seeworkflow/?workflow=%s">console</a>'% wfn
     html+='<hr>'
     html += '<a href=#IO>I/O</a>, <a href=#ERROR>Errors</a>, <a href=#BLOCK>blocks</a>, <a href=#FILE>files</a>, <a href=#CODES>Error codes</a><br>'
     html+='<hr>'
