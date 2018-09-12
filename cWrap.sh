@@ -55,8 +55,8 @@ export PYTHONPATH=$PYTHONPATH:/usr/lib64/python2.7/site-packages
 echo >> $log
 
 start=`date +%s`
-echo $modulename:`date` >> $FINAL_HTML_DIR/logs/running
-echo $modulename:`date` > $FINAL_HTML_DIR/logs/last_running
+python ssi.py $modulename $start
+
 python $* &>> $log
 
 if [ $? == 0 ]; then
@@ -67,8 +67,7 @@ else
 fi
 
 stop=`date +%s`
-let stop=stop-start
-echo $modulename:$start:$stop > $FINAL_HTML_DIR/logs/$modulename/`date +%s`.time
+python ssi.py $modulename $start $stop
 echo `date` >> $log
 
 #cp $log $dated_log
