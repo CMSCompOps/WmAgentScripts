@@ -5084,16 +5084,27 @@ class agentInfo:
         print "agents with errors",self.in_error
 
         now,nows = self.getNow()
-
+        def drained( stats ):
+            upload = stats.get('upload_status',{})
+            condor = stats.get('condor_status',{})
+            ## match 
+            # {u'upload_status': {u'dbs_notuploaded': 0, u'dbs_open_blocks': 0, u'phedex_notuploaded': 0}, u'workflows_completed': True, u'condor_status': {u'idle': 0, u'running': 0}}
+            if upload.get('dbs_notuploaded',1) == 0 and upload.get('dbs_open_blocks',1)==0 and upload.get('phedex_notuploaded',1)==0 and condor.get('idle',1)==0 and condor.get('running',1)==0:
+                return True
+            return False
         for agent in all_agents_name:
             linfo = self._getA(agent)
             pinfo = prod_info.get( agent, {})
             p_release = linfo.get('version',None)
             release = pinfo.get('agent_version',None)
+            is_drained = drained( pinfo.get('drain_stats',{}) )
+                
             if self.verbose:
                 print agent
                 print linfo
                 print pinfo
+                print "drained",is_drained
+
             if release:
                 self.release[ release ].add( str(agent) )
             if linfo:
@@ -5109,6 +5120,9 @@ class agentInfo:
                             st = 'standby'
                         else:
                             st = 'draining'
+                            if is_drained:
+                                print "the",agent,"is fully drained, setting offline"
+                                st = 'offline'
                 else:
                     ## and is gone from production
                     st = 'offline'
@@ -5500,6 +5514,7 @@ class agentInfo:
             msg = 'These agents are fully empty %s and ready for redeploy'% sorted(fully_empty)
             sendLog('agentInfo',msg, level='critical')
             #sendEmail('agentInfo', msg, destination=['alan.malta@cern.ch']) ## can be removed at some point
+            ## manipulate them into the "drained" list
 
         ## should update trello with the agents that got manipulated at this time
         self.checkTrello(sync_trello=list(manipulated_agents), acting=acting)
