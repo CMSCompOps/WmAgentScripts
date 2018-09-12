@@ -216,6 +216,10 @@ def htmlor( caller = ""):
 
     summary_content = {}
 
+    view_modules = ['injector','batchor','transferor','cachor','stagor','assignor','completor','GQ','equalizor','agentInfo','checkor','recoveror','actor','closor']
+
+    all_modules = list(set(view_modules + ['actor','addHoc','assignor','batchor','cachor','checkor','closor','completor','efficiencor','equalizor','GQ','htmlor','injector','lockor','messagor','pushor','recoveror','remainor','showError','stagor','stuckor','subscribor','transferor']))
+
     html_doc.write("""
 <html>
 <head>
@@ -267,7 +271,7 @@ Last update on <b>%s(CET), %s(GMT)</b>
 """ %(time.asctime(time.localtime()),
       time.asctime(time.gmtime()),
       reqmgr_url,
-      ', '.join(['<a href=https://cms-unified.web.cern.ch/cms-unified/showlog/?search=critical&module=%s&limit=100 target=_blank><b><font color=red>%s</b></font></a>'%(m,m) for m in ['heartbeat','injector','batchor','transferor','cachor','stagor','assignor','completor','GQ','equalizor','agentInfo','checkor','recoveror','actor','closor']])
+      ', '.join(['<a href=https://cms-unified.web.cern.ch/cms-unified/showlog/?search=critical&module=%s&limit=100 target=_blank><b><font color=red>%s</b></font></a>'%(m,m) for m in ['heartbeat']+view_modules])
       )
                    )
         
@@ -819,50 +823,46 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 
     per_module = defaultdict(list)
     last_module = defaultdict( str )
-    for t in filter(None,os.popen('cat %s/logs/*/*.time'%monitor_dir).read().split('\n')):
-        module_name,run_time,spend = t.split(':')
-        ## then do what you want with it !
-        if 'cleanor' in module_name: continue
-        #if 'htmlor' in module_name: continue
-        if 'messagor' in module_name: continue
-        #if 'stagor' in module_name: continue
-        per_module[module_name].append( int(spend) )
+    ssi = StartStopInfo()
+    now = time.mktime(time.localtime())## the date in the log is in local time
+    ssi.purge(now, 15 ) ## remove all >15 days old doc
+    
+    for module_name in all_modules:
+        if module_name in ['messagor','cleanor']: continue
+        per_module[module_name] = ssi.get(module_name, metric='lap')
+        last_module[ module_name] =  ssi.get(module_name, metric='start')
+        if last_module[ module_name]:
+            last_module[ module_name] = max(last_module[ module_name])
+        else:
+            print "no mongod record of SS for",module_name
+            last_module[ module_name] = None
 
 
     html_doc.write("Module running time<br>")
     html_doc.write("<table border=1><thead><tr><th>Module</th><th>Last Ran</th><th>Last Runtime</th><th>Avg Runtime</th></tr></thead>")
-    #now = time.mktime(time.gmtime())
-    now = time.mktime(time.localtime())## the date in the log is in local time
-    for m in sorted(per_module.keys()):
-        last_module[m] = os.popen("tac %s/logs/running | grep %s | head -1"%(monitor_dir, m)).read()
-        ## parse it to make an alert.
-        #if not ':' in last_module[m]:continue
-        print "last date for",m,last_module[m]
-        try:
-            _,last_date = last_module[m].split(':',1)
-        except:
-            continue
-        try:
-            last_time = time.mktime(time.strptime(last_date, "%a %b %d %H:%M:%S %Z %Y\n"))
-        except Exception as e:
-            print "failed to parse the time from the logs",str(e)
-            last_time = now
 
+
+
+    for m in sorted(last_module.keys()):
+        last_time = last_module[m]         
+        if not last_time: continue
         heart_beat_time_out = 12
         since_last = now-last_time
         if since_last > (heart_beat_time_out*60*60): #6h heart beat
             sendLog('heartbeat',"The module %s has not ran in %s hours, now %s"%(m, heart_beat_time_out, display_time( since_last )), level='critical')
         else:
             print "module %s has ran last since %s"%( m , display_time( since_last ))
-
         last_module[m] = "%s ago"%( display_time( since_last ) )
 
     for m in sorted(per_module.keys()):
         #,spends in per_module.items():
         spends = per_module[m]
-        avg = sum(spends)/float(len(spends))
-        lasttime =  spends[-1]
-        #html_doc.write("<li>%s : <b>last %s<b>, avg %s</li>\n"%( m, display_time(lasttime), display_time(avg)))
+        if spends:
+            avg = sum(spends)/float(len(spends))
+            lasttime =  spends[-1]
+        else:
+            avg = lasttime = 0
+
         html_doc.write("""
 <tr>
  <td width=300>%s</td>
