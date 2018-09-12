@@ -952,6 +952,41 @@ class transferStatuses:
             rd[ii] = dict(d)
         return rd
 
+class StartStopInfo:
+    def __init__(self):
+        import pymongo,ssl
+        self.client = pymongo.MongoClient('mongodb://%s/?ssl=true'%mongo_db_url, ssl_cert_reqs=ssl.CERT_NONE)
+        self.db = self.client.unified.startStopTime
+        
+    def pushStartStopTime(self, component, start, stop):
+        doc = { 'component' : component,
+                'start' : int(start),
+            }
+        if stop is not None:
+            doc.update({
+                'stop' : int(stop),
+                'lap' : int(stop)-int(start)
+            })
+        
+        self.db.update_one( {'component': component, 'start' : int(start)},
+                            {"$set": doc},
+                            upsert = True)
+
+    def get(self, component, metric='lap'):
+        res = [oo[metric] for oo in sorted(self.db.find({'component' : component}), key = lambda o : o['start']) if metric in oo]
+        return res
+        
+    def purge(self, now, since_in_days):
+        then = now - (since_in_days*24*60*60)
+        ## anything older than then => delete
+        for o in self.db.find():
+            if o['start'] < then:
+                print "removing start/stop from",o['_id'],time.asctime(time.localtime( o['start'])), o['component'], o['start']
+                self.db.delete_one({'_id' : o['_id']})
+                
+      
+
+
 class unifiedConfiguration:
     def __init__(self):
         self.configs = json.loads(open('unifiedConfiguration.json').read()) ## switch to None once you want to read it from mongodb
