@@ -1697,7 +1697,8 @@ class docCache:
                 'timestamp' : time.mktime( time.gmtime()),
                 'expiration' : default_expiration(),
                 #'getter' : lambda : json.loads( os.popen('curl -s --retry 5 https://test-cmstransfererrors.web.cern.ch/test-CMSTransferErrors/stuck_%s.json'%cat).read()),
-                'getter' : lambda : json.loads( os.popen('curl -s --retry 5 https://cms-stucktransfers.web.cern.ch/cms-stucktransfers/stuck_%s.json'%cat).read()),
+                #'getter' : lambda : json.loads( os.popen('curl -s --retry 5 https://cms-stucktransfers.web.cern.ch/cms-stucktransfers/stuck_%s.json'%cat).read()),
+                'getter' : lambda : json.loads( os.popen('curl -s --retry 5 http://snarayan.web.cern.ch/snarayan/TransferErrors/stuck_%s.json'%cat).read()),
                 'cachefile' : None,
                 'default' : {}
                 }
