@@ -186,7 +186,7 @@ def checkor(url, spec=None, options=None):
     ## now you have a record of what file was invalidated globally from TT
     TMDB_invalid = dataCache.get('file_invalidation') 
 
-
+    print "considering",len(wfs),"before any limitation"
     max_per_round = UC.get('max_per_round').get('checkor',None)
     if options.limit: 
         print "command line to limit to",options.limit
@@ -302,8 +302,8 @@ def checkor(url, spec=None, options=None):
         onhold_completed_delay = min_completed_delays
         onhold_timeout = UC.get('onhold_timeout')
 
-        print "onhold since",onhold_completed_delay,"timeout at",onhold_timeout
         if '-onhold' in wfo.status:
+            print "onhold since",onhold_completed_delay,"timeout at",onhold_timeout
             if onhold_timeout>0 and onhold_timeout<onhold_completed_delay:
                 bypass_checks = True
                 wfi.sendLog('checkor',"%s is on hold and stopped for %.2f days, letting this through with current statistics"%( wfo.name, onhold_completed_delay))
