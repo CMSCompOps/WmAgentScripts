@@ -1968,19 +1968,21 @@ class siteInfo:
                 else:
                     self.sites_not_ready.append( siteInfo['VOName'] )
 
-            ##hack
+            ##over-ride those since they are only handled through jobrouting
             add_as_ready = [
                 'T3_US_OSG',
                 'T3_US_Colorado',
                 'T3_CH_CERN_HelixNebula',
                 'T3_CH_CERN_HelixNebula_REHA',
-                #'T3_US_NERSC',
+                'T3_US_NERSC',
                 'T3_US_TACC',
                 'T3_US_PSC'
                             ]
             for aar in add_as_ready:
-                self.sites_ready.append(aar)
-                self.all_sites.append(aar)
+                if not aar in self.sites_ready:
+                    self.sites_ready.append(aar)
+                if not aar in self.all_sites:
+                    self.all_sites.append(aar)
 
 
 
