@@ -5000,6 +5000,7 @@ class agentInfo:
         self.all_agents = [a['name'] for a in self.db.find()]
         #print "got from pymongo",self.all_agents
         self.buckets = defaultdict(list)
+        self.drained = set()
         self.wake_draining = False ## do not wake up agents that are on drain already
         self.release = defaultdict(set)
         self.m_release = defaultdict(set)
@@ -5062,6 +5063,7 @@ class agentInfo:
             clid = ti.get('idList',None)
             if lid and clid and lid!=clid:
                 print "there is a mismatch for agent",agent
+                print "sync_trello",sync_trello,"sync_agents",sync_agents
                 if sync_trello==True or (sync_trello and agent in sync_trello):
                     print "changing",agent,"into list",lid,lid_name
                     if acting:
@@ -5157,8 +5159,8 @@ class agentInfo:
                         else:
                             st = 'draining'
                             if is_drained:
-                                print "the",agent,"is fully drained, setting offline"
-                                st = 'offline'
+                                self.drained.add( agent )
+                            
                 else:
                     ## and is gone from production
                     st = 'offline'
@@ -5361,7 +5363,7 @@ class agentInfo:
                     speed_draining.add( agent_name )
                 if len(standbies)<=1 and (r+p <= self.open_draining_threshold):
                     open_draining.add( agent_name )
-                if r==0 and p==0:
+                if r==0 and p==0 and agent_name in self.drained:
                     fully_empty.add( agent_name )
 
             if agent_name in standbies:
@@ -5416,7 +5418,7 @@ class agentInfo:
             print "These are candidates for draining",sorted(candidates_to_drain)
             print "These are good for speed drainig",sorted(speed_draining)
             print "These are good for open draining",sorted(open_draining)
-
+            print "These are fully empty",sorted(fully_empty)
         if not acting:
             speed_draining = set()
             open_draining = set()
@@ -5528,7 +5530,6 @@ class agentInfo:
             pass
 
         already_speed_drain = self.speed_draining()
-        #already_speed_drain = set(json.loads(open('%s/speed_draining.json'%base_eos_dir).read()))
         all_in_priority_drain = set()
         if (already_speed_drain & speed_draining):
             ## lets keep that agent in speed drainig
@@ -5541,16 +5542,17 @@ class agentInfo:
             all_in_priority_drain.update( speed_draining[:1] )
 
         all_in_priority_drain.update( open_draining )
-        #open('%s/speed_draining.json'%base_eos_dir,'w').write(json.dumps( list(all_in_priority_drain) ))
         ## operate this
         for agent in self.all_agents:
             self._update(agent, {'speeddrain' : agent in all_in_priority_drain})
 
         if fully_empty:
             msg = 'These agents are fully empty %s and ready for redeploy'% sorted(fully_empty)
-            sendLog('agentInfo',msg, level='critical')
-            #sendEmail('agentInfo', msg, destination=['alan.malta@cern.ch']) ## can be removed at some point
+            #sendLog('agentInfo',msg, level='critical')
             ## manipulate them into the "drained" list
+            for agent in fully_empty:
+                self._update(agent, {'status': 'drained'})
+                manipulated_agents.add( agent )
 
         ## should update trello with the agents that got manipulated at this time
         self.checkTrello(sync_trello=list(manipulated_agents), acting=acting)
