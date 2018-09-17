@@ -1143,8 +1143,8 @@ def checkor(url, spec=None, options=None):
                 for member in acdc+acdc_inactive+[wfo.name]:
                     try:
                         if options and options.no_report: continue
-                        expose = UC.get('n_error_exposed') if (report_created < 50 and 'manual' in assistance_tags) else 0
-                        so = showError_options( expose = expose )
+                        #expose = UC.get('n_error_exposed') if (report_created < 50 and 'manual' in assistance_tags) else 0
+                        so = showError_options( expose = 0 )
                         parse_one(url, member, so)
                         report_created += 1
                     except Exception as e:
