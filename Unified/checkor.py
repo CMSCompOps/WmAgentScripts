@@ -1256,10 +1256,14 @@ def checkor(url, spec=None, options=None):
 
     print report_created,"reports created in this run"
 
-    #if not options.clear:
-    #if not options.go:
-    #    ## make the summary and sump only for other cases
-    #    fDB.html()
+    ## warn us if the process took a bit longer than usual
+    if wfs:
+        now = time.mktime(time.gmtime())
+        time_spend_per_workflow = float(now - time_point.start)/ float( float(len(wfs)))
+        print "Average time spend per workflow is", time_spend_per_workflow
+        ## set a threshold to it
+        if time_spend_per_workflow > 60:
+            sendLog('checkor','The module checkor took %.2f [s] per workflow'%( time_spend_per_workflow), level='critical')
 
     if not spec and in_manual!=0:
         some_details = ""
