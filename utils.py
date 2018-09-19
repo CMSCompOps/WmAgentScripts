@@ -1398,8 +1398,17 @@ class moduleLock(object):
         
         print "duplicate lock for component",self.component,"from mongo db"
 
-    def sync(self):
-        ls 
+    def check(self):
+        host = socket.gethostname()
+        locks = [l for l in self.db.find({'host' : host})]
+        for lock in locks:
+            pid = lock.get('pid',None)
+            print "checking on %s on %s"%( pid, host)
+            if not os.path.isdir('/proc/%s'% pid):
+                print "process %s is not here on %s"%( pid, host)
+                self.db.delete_one({ '_id' : lock.get('_id',None)})
+
+
     def all_locks(self):
         locks = [l for l in self.db.find()]
         print "module locks available in mongodb"
