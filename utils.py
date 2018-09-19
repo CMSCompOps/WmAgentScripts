@@ -867,10 +867,14 @@ class lockInfo:
             print l.item,l.lock
         print "------"+"-"*len(comment)
 
+
+def mongo_client():
+    import pymongo,ssl
+    return pymongo.MongoClient('mongodb://%s/?ssl=true'%mongo_db_url, ssl_cert_reqs=ssl.CERT_NONE)
+
 class replacedBlocks:
     def __init__(self):
-        import pymongo,ssl
-        self.client = pymongo.MongoClient('mongodb://%s/?ssl=true'%mongo_db_url, ssl_cert_reqs=ssl.CERT_NONE)
+        self.client = mongo_client()
         self.db = self.client.unified.replacedBlocks
 
     def add(self, blocks):
@@ -888,8 +892,7 @@ class replacedBlocks:
     
 class transferDataset:
     def __init__(self):
-        import pymongo,ssl
-        self.client = pymongo.MongoClient('mongodb://%s/?ssl=true'%mongo_db_url, ssl_cert_reqs=ssl.CERT_NONE)
+        self.client = mongo_client()
         self.db = self.client.unified.transferDataset
         self.added = set()
 
@@ -922,8 +925,7 @@ class transferDataset:
         
 class transferStatuses:
     def __init__(self):
-        import pymongo,ssl
-        self.client = pymongo.MongoClient('mongodb://%s/?ssl=true'%mongo_db_url, ssl_cert_reqs=ssl.CERT_NONE)
+        self.client = mongo_client()
         self.db = self.client.unified.cachedTransferStatuses
 
     def pop(self, phedexid):
@@ -954,8 +956,7 @@ class transferStatuses:
 
 class StartStopInfo:
     def __init__(self):
-        import pymongo,ssl
-        self.client = pymongo.MongoClient('mongodb://%s/?ssl=true'%mongo_db_url, ssl_cert_reqs=ssl.CERT_NONE)
+        self.client = mongo_client()
         self.db = self.client.unified.startStopTime
         
     def pushStartStopTime(self, component, start, stop):
@@ -992,8 +993,7 @@ class unifiedConfiguration:
         self.configs = json.loads(open('unifiedConfiguration.json').read()) ## switch to None once you want to read it from mongodb
         if self.configs is None:
             try:
-                import pymongo,ssl
-                self.client = pymongo.MongoClient('mongodb://%s/?ssl=true'%mongo_db_url, ssl_cert_reqs=ssl.CERT_NONE)
+                self.client = mongo_client()
                 self.db = self.client.unified.unifiedConfiguration
                 quest = self.db.find_one()
             except:
@@ -1035,7 +1035,7 @@ def checkDownTime():
 class componentInfo:
     def __init__(self, block=True, mcm=None, soft=None, keep_trying=False):
         if soft is None:
-            self.soft = ['mcm','wtc'] ## two components that are not mandatory
+            self.soft = ['mcm','wtc', 'mongo'] ##components that are not mandatory
         else:
             self.soft = soft
         self.block = block
@@ -1046,7 +1046,8 @@ class componentInfo:
             'phedex' : False,
             'cmsr' : False,
             'wtc' : False,
-            'eos' : False
+            'eos' : False,
+            'mongo' : False
             }
         self.code = 0
         self.keep_trying = keep_trying
@@ -1210,6 +1211,25 @@ class componentInfo:
                     return False
                 break
                 
+        while True:
+            try:
+                print "checking on mongodb"
+                db = agentInfoDB()
+                infos = [a['status'] for a in db.find()]
+                self.status['mongo'] = True
+                break
+            except Exception as e:
+                self.tell('mongo')
+                if self.keep_trying:
+                    time.sleep(30)
+                    continue
+                print "mongo unreachable"
+                print str(e)
+                if self.block and not (self.soft and 'mongo' in self.soft):
+                    self.code = 131
+                    return False
+                break
+                
                 
         print json.dumps( self.status, indent=2)
         return True
@@ -1279,6 +1299,13 @@ class eosFile(object):
                 print "Failed to write",self.eos_filename,"with",str(e)
                 time.sleep(2)
         """
+
+class relvalInfo:
+    def __init__(self):
+        pass
+    def content(self):
+        ## dump the campaign dict out
+        pass
 
 class campaignInfo:
     def __init__(self):
@@ -1366,8 +1393,7 @@ class moduleLock(object):
         self.silent= silent
         self.max_wait = max_wait
 
-        import pymongo,ssl
-        self.client =  pymongo.MongoClient('mongodb://%s/?ssl=true'%mongo_db_url, ssl_cert_reqs=ssl.CERT_NONE)
+        self.client = mongo_client()
         self.db = self.client.unified.moduleLock
         
         print "duplicate lock for component",self.component,"from mongo db"
@@ -2493,8 +2519,7 @@ class closeoutInfo:
     def __init__(self):
         self.owner = "%s-%s"%( socket.gethostname(), os.getpid())
         self.removed_keys = set()
-        import pymongo,ssl
-        self.client =  pymongo.MongoClient('mongodb://%s/?ssl=true'%mongo_db_url, ssl_cert_reqs=ssl.CERT_NONE)
+        self.client = mongo_client()
         self.db = self.client.unified.closeoutInfo
         self.record = {}
         #print len([o for o in self.db.find()])
@@ -4957,8 +4982,7 @@ def forceComplete(url, wfi):
             reqMgrClient.invalidateWorkflow(url, member['RequestName'], current_status=member['RequestStatus'])
 
 def agentInfoDB():
-    import pymongo,ssl
-    client =  pymongo.MongoClient('mongodb://%s/?ssl=true'%mongo_db_url, ssl_cert_reqs=ssl.CERT_NONE)
+    client = mongo_client()
     return client.unified.agentInfo
 
 def agent_speed_draining(db=None):
