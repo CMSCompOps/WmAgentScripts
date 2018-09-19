@@ -19,7 +19,8 @@ def completor(url, specific):
     if use_mcm:
         mcm = McMClient(dev=False)
 
-    if moduleLock(silent=True)(): return 
+    mlock = moduleLock(silent=True)
+    if mlock(): return 
 
     safe_mode = False
 
