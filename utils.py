@@ -1279,7 +1279,7 @@ class eosFile(object):
         while True:
             try:
                 print "moving",self.cache_filename,"to",self.eos_filename
-                r = os.system("eos cp %s %s"%( self.cache_filename, self.eos_filename))
+                r = os.system("cp %s %s"%( self.cache_filename, self.eos_filename))
                 if r==0: break
                 print "not able to copy to eos",self.eos_filename,"with code",r
             except Exception as e:
