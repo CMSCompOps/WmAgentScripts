@@ -1424,10 +1424,10 @@ class moduleLock(object):
             self.db.insert_one( lockdoc )
         else:
             if not self.silent:
-                msg = 'There are %s instances running. Tried for %d [s] \n%s'%(locks,
-                                                                               polled,
-                                                                               locks)
-                sendEmail('overlapping %s'%self.component, msg)
+                msg = 'There are %s instances running.Possible deadlock. Tried for %d [s] \n%s'%(locks,
+                                                                                                 polled,
+                                                                                                 locks)
+                sendLog('heartbeat', msg , level='critical')
                 print msg
 
 
