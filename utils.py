@@ -1360,7 +1360,8 @@ class moduleLock(object):
 
         self.poll = 30
         self.pid = os.getpid()
-        self.lock = '%s/%s.%s.lock'%( base_eos_dir, component, self.pid)
+        self.host = socket.gethostname()
+        self.lock = '%s/%s.%s-%s.lock'%( base_eos_dir, component, self.host, self.pid)
         self.component = component
         self.wait = wait
         self.silent= silent
@@ -1374,7 +1375,7 @@ class moduleLock(object):
         i_try = 0
         while True:
             ## check on existing such files
-            locks = glob.glob('%s/%s.%s.lock'%( base_eos_dir, self.component, '*'))
+            locks = glob.glob('%s/%s.*.lock'%( base_eos_dir, self.component ))
             if len(locks):
                 ## something is in the way
                 if not self.wait:
