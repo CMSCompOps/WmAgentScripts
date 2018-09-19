@@ -8,7 +8,7 @@ import sys
 url = 'cmsweb.cern.ch'
 
 def cachor(spec=None):
-    mlock = moduleLock(silent=True):
+    mlock = moduleLock(silent=True)
     if mlock(): 
         print "currently running"
         return
