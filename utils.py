@@ -1361,28 +1361,46 @@ class moduleLock(object):
         self.poll = 30
         self.pid = os.getpid()
         self.host = socket.gethostname()
-        self.lock = '%s/%s.%s-%s.lock'%( base_eos_dir, component, self.host, self.pid)
         self.component = component
         self.wait = wait
         self.silent= silent
         self.max_wait = max_wait
-        print "duplicate lock for component",self.component,"at",self.lock
 
+        import pymongo,ssl
+        self.client =  pymongo.MongoClient('mongodb://%s/?ssl=true'%mongo_db_url, ssl_cert_reqs=ssl.CERT_NONE)
+        self.db = self.client.unified.moduleLock
+        
+        print "duplicate lock for component",self.component,"from mongo db"
+
+    def sync(self):
+        ls 
+    def all_locks(self):
+        locks = [l for l in self.db.find()]
+        print "module locks available in mongodb"
+        print sorted(locks)
+        
+    def clean(self, component=None, pid=None, host=None):
+        sdoc = {'component' : component}
+        if pid is not None:
+            sdoc.update({'pid' : pid})
+        if host is not None:
+            sdoc.update({'host' : host})
+        self.db.delete_many( sdoc )
+               
     def __call__(self):
         polled = 0
         nogo = True
         locks = []
         i_try = 0
         while True:
-            ## check on existing such files
-            locks = glob.glob('%s/%s.*.lock'%( base_eos_dir, self.component ))
-            if len(locks):
-                ## something is in the way
+            ## check from existing such lock, solely based on the component, nothing else
+            locks = [l for l in self.db.find({'component' : self.component})]
+            if locks:
                 if not self.wait:
                     nogo =True
                     break
                 else:
-                    print "Waiting for other %s components to stop running \n%s" % (self.component , sorted(locks))
+                    print "Waiting for other %s components to stop running \n%s" % ( self.component , locks)
                     time.sleep( self.poll )
                     polled += self.poll
             else:
@@ -1391,30 +1409,36 @@ class moduleLock(object):
                 break
             i_try += 1
             if self.max_wait and polled > self.max_wait:
-                print "stop waiting for %s to be released \n%s"% ( self.component , sorted(locks))
+                print "stop waiting for %s to be released"% ( self.component )
                 break
-
         if not nogo:
-            ## insert a lock file here
-            l = open( self.lock, 'w')
-            l.write("""%s
-%d
-"""%(time.asctime(time.gmtime()),
-     self.pid))
-            l.close()
+            ## insert a lock doc
+            n = time.gmtime()
+            now = time.mktime( n )
+            nows = time.asctime( n )
+            lockdoc = {'component' : self.component,
+                       'host' : self.host,
+                       'pid' : self.pid,
+                       'time' : now,
+                       'date' : nows}
+            self.db.insert_one( lockdoc )
         else:
             if not self.silent:
-                msg = 'There are %s instances running. Tried for %d [s] \n%s'%(len(locks),
+                msg = 'There are %s instances running. Tried for %d [s] \n%s'%(locks,
                                                                                polled,
-                                                                               sorted(locks))
+                                                                               locks)
                 sendEmail('overlapping %s'%self.component, msg)
                 print msg
+
+
         return nogo
 
     def __del__(self):
-        #remove the lock file
-        os.system('rm -f %s'% self.lock )
-
+        #self.all_locks()
+        # remove the lock doc
+        self.clean( component = self.component,
+                    pid = self.pid,
+                    host = self.host)
 
 def duplicateLock(component=None, silent=False, wait=False, max_wait = 18000, max_concurrent=1):
     ## us the new module locking. requires a full drain so that all locks are set properly
