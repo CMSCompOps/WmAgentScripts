@@ -1458,7 +1458,7 @@ class moduleLock(object):
             self.db.insert_one( lockdoc )
         else:
             if not self.silent:
-                msg = 'There are %s instances running.Possible deadlock. Tried for %d [s] \n%s'%(locks,
+                msg = 'There are %s instances running.Possible deadlock. Tried for %d [s] \n%s'%(len(locks),
                                                                                                  polled,
                                                                                                  locks)
                 sendLog('heartbeat', msg , level='critical')
