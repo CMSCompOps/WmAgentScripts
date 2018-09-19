@@ -5,7 +5,7 @@ from utils import workflowInfo, campaignInfo, siteInfo, userLock, unifiedConfigu
 from utils import getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction, getDatasetEventsPerLumi, getLFNbase, getDatasetBlocks, lockInfo, getAllStuckDataset, isHEPCloudReady, do_html_in_each_module
 from utils import componentInfo, sendEmail, sendLog, getWorkflows
 #from utils import lockInfo
-from utils import duplicateLock, notRunningBefore
+from utils import moduleLock, notRunningBefore
 import optparse
 import itertools
 import time
@@ -18,7 +18,8 @@ import os
 
 def assignor(url ,specific = None, talk=True, options=None):
     if userLock(): return
-    if duplicateLock(): return
+    mlock = moduleLock()
+    if mlock(): return
     if not componentInfo().check(): return
 
     UC = unifiedConfiguration()

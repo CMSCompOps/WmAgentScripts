@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 import time
-from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration, getPrepIDs, componentInfo, getAllAgents, sendLog, duplicateLock, dataCache, agentInfo, display_time, eosFile, eosRead, StartStopInfo
+from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration, getPrepIDs, componentInfo, getAllAgents, sendLog, moduleLock, dataCache, agentInfo, display_time, eosFile, eosRead, StartStopInfo
 import os
 import json
 from collections import defaultdict
@@ -10,7 +10,8 @@ from utils import monitor_dir, base_dir, phedex_url, reqmgr_url, monitor_pub_dir
 import random
 
 def htmlor( caller = ""):
-    if duplicateLock(silent=True): return
+    mlock = moduleLock(silent=True)
+    if mlock: return
 
     up = componentInfo(soft=['mcm','wtc'])
     if not up.check(): return 

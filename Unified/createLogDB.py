@@ -6,7 +6,7 @@ import sys
 from assignSession import *
 import random
 import optparse
-from utils import moduleLock, duplicateLock
+from utils import moduleLock
 
 parser = optparse.OptionParser()
 parser.add_option('--workflow', help='Which workflow logs', default=None)

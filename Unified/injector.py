@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, getWorkflowById, getWorkLoad, componentInfo, sendEmail, workflowInfo, sendLog, reqmgr_url, getDatasetStatus, unifiedConfiguration, duplicateLock, do_html_in_each_module, getDatasetFiles
+from utils import getWorkflows, getWorkflowById, getWorkLoad, componentInfo, sendEmail, workflowInfo, sendLog, reqmgr_url, getDatasetStatus, unifiedConfiguration, moduleLock, do_html_in_each_module, getDatasetFiles
 import sys
 import copy
 import os
@@ -12,7 +12,8 @@ import time
 from collections import defaultdict
 
 def injector(url, options, specific):
-    if duplicateLock(): return 
+    mlock = moduleLock()
+    if mlock(): return
 
     use_mcm = True
     up = componentInfo(soft=['mcm','wtc'] )

@@ -329,7 +329,8 @@ def singleClone(url, wfname, actions, comment, do=False):
 
 def actor(url,options=None):
     
-    if  moduleLock(wait=False ,silent=True)(): return
+    mlock = moduleLock(wait=False ,silent=True)
+    if mlock(): return
     if userLock('actor'): return
     
     up = componentInfo(soft=['mcm'])

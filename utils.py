@@ -1440,52 +1440,6 @@ class moduleLock(object):
                     pid = self.pid,
                     host = self.host)
 
-def duplicateLock(component=None, silent=False, wait=False, max_wait = 18000, max_concurrent=1):
-    ## us the new module locking. requires a full drain so that all locks are set properly
-    if False:
-        ml = moduleLock( component = component,
-                         silent = silent,
-                         wait = wait,
-                         max_wait = max_wait)
-        return ml()
-
-    if not component:
-        ## get the caller
-        component = sys._getframe(1).f_code.co_name
-
-
-    poll = 30 #s
-    polled = 0
-    nogo = True
-    i_try = 0
-    while True:
-        ## check that no other instances of assignor is running
-        process_check = filter(None,os.popen('ps -f -e | grep %s.py | grep -v grep  |grep python'%component).read().split('\n'))
-        if len(process_check)>max_concurrent:
-            ## another component is running on the machine : stop
-            if not wait:
-                nogo = True
-                break
-            else:
-                print "Waiting for other %s components to stop running" % component
-                time.sleep( poll )
-                polled += poll
-        else:
-            ## the only way to return False is here
-            nogo = False
-            break
-        i_try += 1
-        if max_wait and polled > max_wait:
-            break
-
-    if nogo and not silent:
-        sendEmail('overlapping %s'%component,'There are %s instances running. Tried for %d [s] \n%s'%(len(process_check),
-                                                                                                      polled,
-                                                                                                      '\n'.join(process_check)))
-        print "quitting because of overlapping processes"
-
-    return nogo
-
 def userLock(component=None):
     if not component:
         ## get the caller
