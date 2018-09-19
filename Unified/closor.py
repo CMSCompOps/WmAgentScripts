@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import componentInfo, sendEmail, setDatasetStatus, unifiedConfiguration, workflowInfo, siteInfo, sendLog, reqmgr_url, monitor_dir, duplicateLock, userLock, global_SI, do_html_in_each_module, getWorkflows, pass_to_dynamo, closeoutInfo
+from utils import componentInfo, sendEmail, setDatasetStatus, unifiedConfiguration, workflowInfo, siteInfo, sendLog, reqmgr_url, monitor_dir, moduleLock, userLock, global_SI, do_html_in_each_module, getWorkflows, pass_to_dynamo, closeoutInfo
 import reqMgrClient
 import json
 import time
@@ -145,7 +145,8 @@ def spawn_harvesting(url, wfi , in_full):
 
 def closor(url, specific=None, options=None):
     if userLock(): return
-    if duplicateLock(): return
+    mlock  = moduleLock()
+    if mlock(): return
     if not componentInfo().check(): return
 
 

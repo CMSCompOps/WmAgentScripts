@@ -7,7 +7,7 @@ from utils import workflowInfo, siteInfo, campaignInfo, userLock
 from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, approveSubscription, getDatasetSize, updateSubscription, getWorkflows, componentInfo, getDatasetDestinations, getDatasetBlocks, DSS, do_html_in_each_module, eosRead
 from utils import unifiedConfiguration, monitor_dir, reqmgr_url, monitor_pub_dir
 from utils import lockInfo
-from utils import duplicateLock
+from utils import moduleLock
 import json
 from collections import defaultdict
 import optparse
@@ -20,7 +20,8 @@ import copy
 
 def transferor(url ,specific = None, talk=True, options=None):
     if userLock():   return
-    if duplicateLock():  return
+    mlock = moduleLock()
+    if mlock():  return
 
     use_mcm = True
     up = componentInfo(soft=['mcm','wtc'])

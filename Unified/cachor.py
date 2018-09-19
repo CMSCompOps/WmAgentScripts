@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import checkTransferStatus, duplicateLock, sendLog, transferStatuses
+from utils import checkTransferStatus, moduleLock, sendLog, transferStatuses
 import json
 import random
 import sys
@@ -8,7 +8,8 @@ import sys
 url = 'cmsweb.cern.ch'
 
 def cachor(spec=None):
-    if duplicateLock(silent=True): 
+    mlock = moduleLock(silent=True):
+    if mlock(): 
         print "currently running"
         return
     TS = transferStatuses()

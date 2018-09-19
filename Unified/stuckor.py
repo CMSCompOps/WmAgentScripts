@@ -1,10 +1,10 @@
 import json
 from collections import defaultdict
-from utils import unifiedConfiguration, checkTransferLag, reqmgr_url, monitor_dir, duplicateLock, unified_url, monitor_pub_dir, base_eos_dir, eosFile, eosRead, transferDataset
+from utils import unifiedConfiguration, checkTransferLag, reqmgr_url, monitor_dir, moduleLock, unified_url, monitor_pub_dir, base_eos_dir, eosFile, eosRead, transferDataset
 
 def stuckor(url = reqmgr_url):
-    
-    if duplicateLock(): return
+    mlock = moduleLock()
+    if mlock(): return
     TD = transferDataset()
     datasets_by_phid = TD.content()
     really_stuck_dataset = set(json.loads(eosRead('%s/really_stuck_dataset.json'%base_eos_dir)))
