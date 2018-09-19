@@ -26,5 +26,5 @@ for flf in glob.glob('%s*'%base):
 
 ## get rid of deadlock in mongodb
 from utils import moduleLock
-mlock = moduleLock()
+mlock = moduleLock(component='deadlock')
 mlock.check()

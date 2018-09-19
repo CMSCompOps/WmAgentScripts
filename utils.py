@@ -1396,8 +1396,6 @@ class moduleLock(object):
         self.client = mongo_client()
         self.db = self.client.unified.moduleLock
         
-        print "duplicate lock for component",self.component,"from mongo db"
-
     def check(self):
         host = socket.gethostname()
         locks = [l for l in self.db.find({'host' : host})]
@@ -1423,6 +1421,7 @@ class moduleLock(object):
         self.db.delete_many( sdoc )
                
     def __call__(self):
+        print "module lock for component",self.component,"from mongo db"
         polled = 0
         nogo = True
         locks = []
