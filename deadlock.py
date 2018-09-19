@@ -23,3 +23,8 @@ for flf in glob.glob('%s*'%base):
             pass
     except:
         continue
+
+## get rid of deadlock in mongodb
+from utils import moduleLock
+mlock = moduleLock()
+mlock.check()
