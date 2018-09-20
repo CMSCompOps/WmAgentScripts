@@ -54,35 +54,18 @@ def rejector(url, specific, options=None):
         if not wfo:
             print "cannot reject",spec
             return
-        results=[]
         wfi = workflowInfo(url, wfo.name)
-
-        datasets = set(wfi.request['OutputDatasets'])
-        reqMgrClient.invalidateWorkflow(url, wfo.name, current_status=wfi.request['RequestStatus'])
 
         comment=""
         if options.comments: comment = ", reason: "+options.comments
-        wfi.sendLog('rejector','invalidating the workflow by unified operator%s'%comment)
-        ## need to find the whole familly and reject the whole gang
-        familly = getWorkflowById( url, wfi.request['PrepID'] , details=True)
-        for fwl in familly:
-            if fwl['RequestDate'] < wfi.request['RequestDate']: continue
-            if fwl['RequestType']!='Resubmission': continue
-            ## does not work on second order acd
-            #if 'OriginalRequestName' in fwl and fwl['OriginalRequestName'] != wfi.request['RequestName']: continue
-            print "rejecting",fwl['RequestName']
-            reqMgrClient.invalidateWorkflow(url, fwl['RequestName'], current_status=fwl['RequestStatus'], cascade=False)
-            datasets.update( fwl['OutputDatasets'] )
+        if options.keep: 
+            wfi.sendLog('rejector','invalidating the workflow by unified operator%s'%comment)
+        else:
+            wfi.sendLog('rejector','invalidating the workflow and outputs by unified operator%s'%comment)
 
-        for dataset in datasets:
-            if options.keep:
-                print "keeping",dataset,"in its current status"
-            else:
-                results.append( setDatasetStatus(dataset, 'INVALID') )
-                pass
+        results = invalidate(url, wfi, and_self=True, only_resub=True, with_output= (not options.keep))
 
-
-        if all(map(lambda result : result in ['None',None,True],results)):
+        if all(results):
             print wfo.name,"and",datasets,"are rejected"
             if options and options.clone:
                 wfo.status = 'trouble'
