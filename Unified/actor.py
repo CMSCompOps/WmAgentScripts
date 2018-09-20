@@ -405,7 +405,7 @@ def actor(url,options=None):
             wfi.sendLog('actor',"invalidating the workflow by traffic controller %s"%comment)
 
             #Reject all workflows in the family
-            inv_results = invalidate(url, wfi, and_self=True, only_resub=False, with_output=True)
+            inv_results = invalidate(url, wfi, only_resub=False, with_output=True)
             all_good = all(inv_results)
             if all_good:
                 wfi.sendLog('actor',"%s and children are rejected"%wfname)
