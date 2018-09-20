@@ -11,7 +11,7 @@ import random
 
 def htmlor( caller = ""):
     mlock = moduleLock(silent=True)
-    if mlock: return
+    if mlock(): return
 
     up = componentInfo(soft=['mcm','wtc'])
     if not up.check(): return 
