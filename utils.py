@@ -6977,6 +6977,11 @@ class workflowInfo:
     def getOutputPerTask(self):
         all_outputs = self.request['OutputDatasets']
         output_per_task = defaultdict(list)
+        if 'ChainParentageMap' in self.request:
+            for t,info in self.request['ChainParentageMap'].items():
+                for dsname in info.get('ChildDsets'):
+                    output_per_task[t].append( dsname)
+            return dict(output_per_task)
         for t in self.getWorkTasks():
             #print t._internal_name
             #print "what",t.subscriptions
