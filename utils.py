@@ -4971,6 +4971,18 @@ def getWorkflowById( url, pid , details=False):
         return [item['id'] for item in items]
 
 
+def invalidate(url, wfi, only_resub=False, with_output=True):
+    familly = wfi.getFamilly( and_self=True, only_resub=only_resub)
+    outs = set()
+    check = []
+    for fwl in familly:
+        check.append(reqMgrClient.invalidateWorkflow(url, fwl['RequestName'], current_status=fwl['RequestStatus'], cascade=False))
+        outs.update( fwl['OutputDatasets'] )
+    if with_output:
+        for dataset in outs:
+            check.append(setDatasetStatus(dataset, 'INVALID'))
+    check = [r in ['None',None,True] for r in check]
+    return check
 
 def forceComplete(url, wfi):
     import reqMgrClient
@@ -5881,20 +5893,24 @@ class workflowInfo:
 
 
 
-    def getFamiolly(self, details=True, and_self=False):
-        return self.getFamilly(details, and_self)
+    #def getFamiolly(self, details=True, and_self=False):
+    #    return self.getFamilly(details, and_self)
 
-    def getFamilly(self, details=True, and_self=False):
+    def getFamilly(self, details=True, only_resub=False, and_self=False):
         familly = getWorkflowById( self.url, self.request['PrepID'] ,details=True)
         true_familly = []
         for member in familly:
+            acdc = member['RequestType']=='Resubmission'
+            myself = member['RequestName'] == self.request['RequestName']
             if member['RequestDate'] < self.request['RequestDate']: continue
             if member['RequestStatus'] in ['None',None]: continue
-            if member['RequestName'] == self.request['RequestName'] and not and_self: continue
-            if details:
-                true_familly.append( member )
-            else:
-                true_familly.append( member['RequestName'] )
+            
+            if (myself and and_self) or (only_resub and acdc and not myself) or (not only_resub and not myself): 
+                if details:
+                    true_familly.append( member )
+                else:
+                    true_familly.append( member['RequestName'] )
+
         return true_familly
 
     def checkSettings(self):

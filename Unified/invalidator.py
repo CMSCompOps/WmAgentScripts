@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 from McMClient import McMClient
-from utils import workflowInfo, getWorkflowById
+from utils import workflowInfo, invalidate
 import reqMgrClient
 from utils import componentInfo, setDatasetStatus, sendLog
 from collections import defaultdict
@@ -40,18 +40,10 @@ def invalidator(url, invalid_status='INVALID'):
             wfi = workflowInfo(url, wfn)
             success = "not rejected"
             ## to do, we should find a way to reject the workflow and any related acdc
-            success = reqMgrClient.invalidateWorkflow(url, wfn, current_status = wfi.request['RequestStatus'])
-            ## need to find the whole familly and reject the whole gang
-            familly = getWorkflowById( url, wfi.request['PrepID'] , details=True)
-            for fwl in familly:
-                ## take out all acdc
-                if fwl['RequestDate'] < wfi.request['RequestDate']:continue
-                if fwl['RequestType']!='Resubmission': continue
-                print "rejecting",fwl['RequestName']
-                success = reqMgrClient.invalidateWorkflow(url, fwl['RequestName'], current_status=fwl['RequestStatus'])
-                print success
+            successes = invalidate(url, wfn, and_self=True, only_resub=True, with_output=False)
             wfi.sendLog('invalidator',"rejection is performed from McM invalidations request")
-            acknowledge= True
+            acknowledge= all(successes)
+
             text = "The workflow %s (%s) was rejected due to invalidation in McM" % ( wfn, pid )
             batch_lookup = wfn ##so that the batch id is taken as the one containing the workflow name
         elif invalid['type'] == 'dataset':

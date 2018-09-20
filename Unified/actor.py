@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-from utils import workflowInfo, sendEmail, componentInfo, campaignInfo, unifiedConfiguration, siteInfo, sendLog, setDatasetStatus, moduleLock, getWorkflowById
-from utils import closeoutInfo, userLock, base_eos_dir
+from utils import workflowInfo, sendEmail, componentInfo, campaignInfo, unifiedConfiguration, siteInfo, sendLog, setDatasetStatus, moduleLock, invalidate
+from utils import closeoutInfo, userLock
 import reqMgrClient
 import wtcClient
 import json
@@ -400,30 +400,18 @@ def actor(url,options=None):
         if to_clone and options.do:
             print "Let's try kill and clone: "
             wfi.sendLog('actor','Going to clone %s'%wfname)
-            results=[]
-            datasets = set(wfi.request['OutputDatasets'])
-
             comment=""
-
             if 'comment' in tasks: comment = ", reason: "+ tasks['comment']
             wfi.sendLog('actor',"invalidating the workflow by traffic controller %s"%comment)
 
             #Reject all workflows in the family
-            #first reject the original workflow.
-            reqMgrClient.invalidateWorkflow(url, wfi.request['RequestName'], current_status=wfi.request['RequestStatus'], cascade=False)
-            #Then reject any ACDCs associated with that workflow
-            family = getWorkflowById( url, wfi.request['PrepID'] , details=True)
-            for fwl in family:
-                print "rejecting",fwl['RequestName'],fwl['RequestStatus']
-                wfi.sendLog('actor',"rejecting %s, previous status %s"%(fwl['RequestName'],fwl['RequestStatus']))
-                reqMgrClient.invalidateWorkflow(url, fwl['RequestName'], current_status=fwl['RequestStatus'], cascade=False)
-                datasets.update( fwl['OutputDatasets'] )
-            #Invalidate all associated output datasets
-            for dataset in datasets:
-                results.append( setDatasetStatus(dataset, 'INVALID') )
-
-            if all(map(lambda result : result in ['None',None,True],results)):
+            inv_results = invalidate(url, wfi, and_self=True, only_resub=False, with_output=True)
+            all_good = all(inv_results)
+            if all_good:
                 wfi.sendLog('actor',"%s and children are rejected"%wfname)
+            else:
+                sendLog('actor','Failed to reject the familly of %s'% wfname, level='critical')
+                continue
 
             cloned = None
             try:  
