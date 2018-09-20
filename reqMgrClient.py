@@ -354,35 +354,6 @@ def requestManagerGet(url, request, retries=4):
         raise Exception('Maximum queries to ReqMgr exceeded',str(request))
     return request
 
-#def _convertToRequestMgrPostCall(url, request, params, head):
-#    header = {"Content-type": "application/json", "Accept": "application/json"}
-#    if request == '/reqmgr/create/makeSchema':
-#        request = "/reqmgr2/data/request"
-#        data, status = _post(url, request, params, head=header, encode=json.dumps)
-#    else:
-#        raise Exception("no correspondonting reqmgr2 call for %s" % request)
-#    return data
-    
-def requestManager1Post(url, request, params, head = def_headers1, nested=False):
-    """
-    Performs some operation on ReqMgr through
-    an HTTP POST method.
-    url: the instance used, i.e. url='cmsweb.cern.ch' 
-    request: the request suffix url for the POST method
-    params: a dict with the POST parameters
-    nested: deep encode a json parameters
-    """
-    if nested:
-        jsonEncodedParams ={}
-        for pKey in params:
-            jsonEncodedParams[pKey] = json.dumps(params[pKey])
-        encodedParams = urllib.urlencode(jsonEncodedParams)
-    else:
-        encodedParams = urllib.urlencode(params)
-    
-    data, status = _post(url, request, encodedParams, head, encode=None)
-    return data
-    
 def requestManagerPost(url, request, params, head = def_headers):
     """
     Performs some operation on ReqMgr through
@@ -964,12 +935,8 @@ def changePriorityWorkflow(url, workflowname, priority):
     """
     Change the priority of a workflow
     """
-    if isRequestMgr2Request(url, workflowname):
-        params = {"RequestPriority" : priority}
-        data = requestManagerPut(url,"/reqmgr2/data/request/%s"%workflowname, params)
-    else:
-        params = {workflowname + ":status": "", workflowname + ":priority": str(priority)}
-        data = requestManager1Post(url, "/reqmgr/view/doAdmin", params)
+    params = {"RequestPriority" : priority}
+    data = requestManagerPut(url,"/reqmgr2/data/request/%s"%workflowname, params)
 
 def forceCompleteWorkflow(url, workflowname):
     """
@@ -988,21 +955,13 @@ def closeOutWorkflow(url, workflowname, cascade=False):
     Closes out a workflow by changing the state to closed-out
     This does not care about cascade workflows
     """
-    if isRequestMgr2Request(url, workflowname): 
-        params = {"RequestStatus" : "closed-out",
-                  "cascade": cascade}
-        data = requestManagerPut(url,"/reqmgr2/data/request/%s"%workflowname, params)
-        try:
-            return None if (json.loads(data)['result'][0][workflowname] == 'OK') else "Error"
-        except:
-            return "Error"
-    else:
-        if cascade:
-            params = {"requestName" : workflowname,"cascade" : cascade} 
-            data = requestManager1Post(url,"/reqmgr/reqMgr/closeout", params)
-        else:
-            params = {"requestName" : workflowname,"status" : "closed-out"}
-            data = requestManager1Put(url,"/reqmgr/reqMgr/request", params)
+    params = {"RequestStatus" : "closed-out",
+              "cascade": cascade}
+    data = requestManagerPut(url,"/reqmgr2/data/request/%s"%workflowname, params)
+    try:
+        return None if (json.loads(data)['result'][0][workflowname] == 'OK') else "Error"
+    except:
+        return "Error"
     return data
 
 def closeOutWorkflowCascade(url, workflowname):
@@ -1013,17 +972,9 @@ def announceWorkflow(url, workflowname, cascade=False):
     Sets a workflow state to announced
     This does not care about cascade workflows
     """
-    if isRequestMgr2Request(url, workflowname): 
-        params = {"RequestStatus" : "announced",
-                  "cascade": cascade}
-        data = requestManagerPut(url,"/reqmgr2/data/request/%s"%workflowname, params)
-    else:
-        if cascade:
-            params = {"requestName" : workflowname,"cascade" : cascade}
-            data = requestManager1Post(url,"/reqmgr/reqMgr/announce", params)
-        else:
-            params = {"requestName" : workflowname,"status" : "announced"}
-            data = requestManager1Put(url,"/reqmgr/reqMgr/request", params)
+    params = {"RequestStatus" : "announced",
+              "cascade": cascade}
+    data = requestManagerPut(url,"/reqmgr2/data/request/%s"%workflowname, params)
     return data
 
 def announceWorkflowCascade(url, workflowname):
@@ -1180,34 +1131,15 @@ def reqmgr1_to_2_Splitting(params):
     reqmgr2Params["splitParams"] = params
     return [reqmgr2Params]
 
-def reqmgr2_to_1_Splitting(params):
-    if len(params)>1: print "cannot set multiple splitting in reqmgr1 at once : truncating. please migrate."
-    params = params[0]
-    reqmgr1Params = {}
-    reqmgr1Params["splittingTask"] = params["taskName"]
-    reqmgr1Params["splittingAlgo"] = params["splitAlgo"]
-    reqmgr1Params.update( params["splitParams"] )
-    return reqmgr1Params
-
 def setWorkflowSplitting(url, workflowname, schema):
     """
     This sets the workflow splitting into ReqMgr
     """
-    def ifOldSchema(schema):
-        return( type(schema)!=list)
-
-    if isRequestMgr2Request(url, workflowname):
-        if ifOldSchema(schema):
-            print "old splitting format detected : translating. please migrate."
-            schema = reqmgr1_to_2_Splitting(schema)
-        print "post to reqmgr2"
-        data = requestManagerPost(url, "/reqmgr2/data/splitting/%s"%workflowname, schema)
-    else:
-        if not ifOldSchema(schema):
-            print "new schema to reqmgr1 detected: translating. please drain."
-            schema = reqmgr2_to_1_Splitting(schema)
-        data = requestManager1Post(url,"/reqmgr/view/handleSplittingPage", schema)
-    #print data
+    if ifOldSchema(schema):
+        print "old splitting format detected : translating. please migrate."
+        schema = reqmgr1_to_2_Splitting(schema)
+    print "post to reqmgr2"
+    data = requestManagerPost(url, "/reqmgr2/data/splitting/%s"%workflowname, schema)
 
     ## can try to load the resulting data
     try:
@@ -1244,18 +1176,6 @@ def reqmgr1_to_2_Assignment( params ):
     params.pop("checkbox%s" % requestName, None)
     return params
 
-def reqmgr2_to_1_Assignment( params ):
-    params['Team'+params["Teams"][0]] = "checked"
-    params['checkbox'+params['RequestName']] = "checked"
-    priority = params.get('RequestPriority','')
-    if priority:
-        params[params['RequestName']+':priority'] = priority
-    params['action'] = 'Assign'
-    return params
-
-
-
-
 def setWorkflowAssignment(url, workflowname, schema):
     """
     This sets the workflow assignment into reqmgr
@@ -1264,29 +1184,18 @@ def setWorkflowAssignment(url, workflowname, schema):
     def isOldSchema(schema):
         return any([k.startswith('checkbox') for k in schema.keys()])
 
-    if isRequestMgr2Request(url, workflowname):
-        if isOldSchema(schema):
-            print "old schema detected : translating. please migrate."
-            schema = reqmgr1_to_2_Assignment(schema)
-        data = requestManagerPut(url,"/reqmgr2/data/request/%s"%workflowname, schema)
-        try:
-            ok = any(ro[workflowname]=='OK' for ro in json.loads( data )['result'] if workflowname in ro)
-            return ok
-        except:
-            print data
-            setWorkflowAssignment.errorMessage = data
-            return False
-    else:
-        if not isOldSchema(schema):
-            print "new schema to reqmgr1 detected : translating. please drain."
-            schema = reqmgr2_to_1_Assignment(schema)
-        data = requestManager1Post(url, "/reqmgr/assign/handleAssignmentPage", schema, nested=True)
-        if 'Assigned' in data:
-            return True
-        else:
-            print data
-            setWorkflowAssignment.errorMessage = data
-            return False
+    if isOldSchema(schema):
+        print "old schema detected : translating. please migrate."
+        schema = reqmgr1_to_2_Assignment(schema)
+    data = requestManagerPut(url,"/reqmgr2/data/request/%s"%workflowname, schema)
+    try:
+        ok = any(ro[workflowname]=='OK' for ro in json.loads( data )['result'] if workflowname in ro)
+        return ok
+    except:
+        print data
+        setWorkflowAssignment.errorMessage = data
+        return False
+
     return data
 
 
