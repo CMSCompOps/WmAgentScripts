@@ -4972,6 +4972,7 @@ def getWorkflowById( url, pid , details=False):
 
 
 def invalidate(url, wfi, only_resub=False, with_output=True):
+    import reqMgrClient
     familly = wfi.getFamilly( and_self=True, only_resub=only_resub)
     outs = set()
     check = []
