@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from assignSession import *
 from utils import workflowInfo, sendEmail, componentInfo, campaignInfo, unifiedConfiguration, siteInfo, sendLog, setDatasetStatus, moduleLock, invalidate
 from utils import closeoutInfo, userLock
 import reqMgrClient
@@ -319,6 +320,7 @@ def singleClone(url, wfname, actions, comment, do=False):
     data = reqMgrClient.setWorkflowApproved(url, clone)
     wfi.sendLog('actor','Cloned into %s'%clone)
 
+    
 #    wfi.sendLog('actor','Cloned into %s by unified operator %s'%( clone, comment ))
 #    wfi.notifyRequestor('Cloned into %s by unified operator %s'%( clone, comment ),do_batch=False)
 
@@ -428,7 +430,10 @@ def actor(url,options=None):
 
             else:
                 wfi.sendLog('actor',"Workflow %s cloned"%wfname)
-
+                ## set to trouble for swift replacement
+                for wfo in  session.query(Workflow).filter(Workflow.name == wfname).all():
+                    wfo.status = 'trouble'
+                session.commit()
 #===========================================================
         elif to_force:
             wfi.sendLog('actor','Bypassing from workflow traffic controler request')
