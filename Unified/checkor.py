@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, forceComplete, makeReplicaRequest, getDatasetSize, getDatasetFiles, sendLog, reqmgr_url, dbs_url, dbs_url_writer, getForceCompletes, display_time
-from utils import componentInfo, unifiedConfiguration, userLock, duplicateLock, dataCache, unified_url, getDatasetLumisAndFiles, getDatasetRuns, duplicateAnalyzer, invalidateFiles, findParent, do_html_in_each_module
+from utils import componentInfo, unifiedConfiguration, userLock, moduleLock, dataCache, unified_url, getDatasetLumisAndFiles, getDatasetRuns, duplicateAnalyzer, invalidateFiles, findParent, do_html_in_each_module
 import phedexClient
 import dbs3Client
 dbs3Client.dbs3_url = dbs_url
@@ -37,7 +37,7 @@ def checkor(url, spec=None, options=None):
     use_recoveror = UC.get('use_recoveror')
     
     use_mcm = True
-    up = componentInfo(mcm=use_mcm, soft=['mcm'])
+    up = componentInfo(soft=['mcm','wtc'])
     if not up.check(): return
     use_mcm = up.status['mcm']
 
@@ -186,7 +186,7 @@ def checkor(url, spec=None, options=None):
     ## now you have a record of what file was invalidated globally from TT
     TMDB_invalid = dataCache.get('file_invalidation') 
 
-
+    print "considering",len(wfs),"before any limitation"
     max_per_round = UC.get('max_per_round').get('checkor',None)
     if options.limit: 
         print "command line to limit to",options.limit
@@ -201,6 +201,7 @@ def checkor(url, spec=None, options=None):
         def rank( wfn ):
             return all_completed_plus.index( wfn ) if wfn in all_completed_plus else 0
         wfs = sorted( wfs, key = lambda wfo : rank( wfo.name ),reverse=True)
+        if options.update: random.shuffle( wfs )
         wfs = wfs[:max_per_round]
 
     total_running_time = 1.*60. 
@@ -301,8 +302,8 @@ def checkor(url, spec=None, options=None):
         onhold_completed_delay = min_completed_delays
         onhold_timeout = UC.get('onhold_timeout')
 
-        print "onhold since",onhold_completed_delay,"timeout at",onhold_timeout
         if '-onhold' in wfo.status:
+            print "onhold since",onhold_completed_delay,"timeout at",onhold_timeout
             if onhold_timeout>0 and onhold_timeout<onhold_completed_delay:
                 bypass_checks = True
                 wfi.sendLog('checkor',"%s is on hold and stopped for %.2f days, letting this through with current statistics"%( wfo.name, onhold_completed_delay))
@@ -555,7 +556,7 @@ def checkor(url, spec=None, options=None):
         #1% every damping_time days after > timeout_for_damping_fraction in completed. Not more than damping_fraction_pass_max
         #fraction_damping = min(0.01*(max(running_delay - timeout_for_damping_fraction,0)/damping_time),damping_fraction_pass_max)
         fraction_damping = min(0.01*(max(completed_delay - timeout_for_damping_fraction,0)/damping_time),damping_fraction_pass_max)
-        print "We could reduce the passing fraction by",fraction_damping,"given it's been in for long for long"
+        print "We could reduce the passing fraction by",fraction_damping,"given it's been in for long"
         long_lasting_choped = False
         for out in fractions_pass:
             if fractions_pass[out]!=1.0 and fraction_damping: ## strictly ones cannot be set less than one
@@ -848,10 +849,22 @@ def checkor(url, spec=None, options=None):
             duplications[output] = "skiped"
             #files_per_rl[output] = "skiped"
 
+        ignoreduplicates ={}
+        for out,c in campaigns.items():
+            if c in CI.campaigns and 'ignoreduplicates' in CI.campaigns[c]:
+                ignoreduplicates[out] = CI.campaigns[c]['ignoreduplicates'] or options.ignoreduplicates
+            else:
+                ignoreduplicates[out] = options.ignoreduplicates
+
+
         ## check for duplicates prior to making the tape subscription ## this is quite expensive and we run it twice for each sample
-        if (is_closing or bypass_checks) and (not options.ignoreduplicates) and (not all_relevant_output_are_going_to_tape):
+        if (is_closing or bypass_checks) and (not all_relevant_output_are_going_to_tape):
             print "starting duplicate checker for",wfo.name
             for output in wfi.request['OutputDatasets']:
+                if (output in ignoreduplicates) and (ignoreduplicates[output]):
+                    print "\tNot checking",output
+                    duplications[output] = False
+                    continue
                 print "\tchecking",output
                 duplications[output] = True
                 if not output in lumis_per_run or not output in files_per_rl:
@@ -861,7 +874,7 @@ def checkor(url, spec=None, options=None):
                 lumis_with_duplicates[output] = [rl for (rl,files) in files_per_rl[output].items() if len(files)>1]
                 duplications[output] = len(lumis_with_duplicates[output])!=0 
 
-            if is_closing and any(duplications.values()) and not options.ignoreduplicates:
+            if is_closing and any(duplications.values()):
                 duplicate_notice = ""
                 duplicate_notice += "%s has duplicates\n"%wfo.name
                 #duplicate_notice += json.dumps( duplications,indent=2)
@@ -1036,20 +1049,16 @@ def checkor(url, spec=None, options=None):
         time_point("done with %s"%wfo.name)
 
         ## for visualization later on
-        if not wfo.name in fDB.record: 
-            #print "adding",wfo.name,"to close out record"
-            fDB.record[wfo.name] = {
+        put_record = {
             'datasets' :{},
             'name' : wfo.name,
-            'closeOutWorkflow' : None,
+            'closeOutWorkflow' : is_closing,
+            'priority' : wfi.request['RequestPriority'],
+            'prepid' :  wfi.request['PrepID'],
             }
-        fDB.record[wfo.name]['closeOutWorkflow'] = is_closing
-        fDB.record[wfo.name]['priority'] = wfi.request['RequestPriority']
-        fDB.record[wfo.name]['prepid'] = wfi.request['PrepID']
-
         for output in wfi.request['OutputDatasets']:
-            if not output in fDB.record[wfo.name]['datasets']: fDB.record[wfo.name]['datasets'][output] = {}
-            rec = fDB.record[wfo.name]['datasets'][output]
+            if not output in put_record['datasets']: put_record['datasets'][output] = {}
+            rec = put_record['datasets'][output]
             #rec['percentage'] = float('%.2f'%(percent_completions[output]*100))
             rec['percentage'] = math.floor(percent_completions[output]*10000)/100.## round down
             rec['fractionpass'] = math.floor(fractions_pass.get(output,0)*10000)/100.
@@ -1067,6 +1076,8 @@ def checkor(url, spec=None, options=None):
             now = time.gmtime()
             rec['timestamp'] = time.mktime(now)
             rec['updated'] = time.asctime(now)+' (GMT)'
+
+        fDB.update( wfo.name, put_record)
 
         ## make the lumi summary 
         if wfi.request['RequestType'] == 'ReReco':
@@ -1118,6 +1129,7 @@ def checkor(url, spec=None, options=None):
                 if res in [None,"None"]:
                     wfo.status = 'close'
                     session.commit()
+                    fDB.pop( wfo.name )
                     if use_mcm and force_by_mcm:
                         ## shoot large on all prepids, on closing the wf
                         for pid in pids:
@@ -1244,10 +1256,14 @@ def checkor(url, spec=None, options=None):
 
     print report_created,"reports created in this run"
 
-    #if not options.clear:
-    if not options.go:
-        ## make the summary and sump only for other cases
-        fDB.html()
+    ## warn us if the process took a bit longer than usual
+    if wfs:
+        now = time.mktime(time.gmtime())
+        time_spend_per_workflow = float(now - time_point.start)/ float( float(len(wfs)))
+        print "Average time spend per workflow is", time_spend_per_workflow
+        ## set a threshold to it
+        if time_spend_per_workflow > 60:
+            sendLog('checkor','The module checkor took %.2f [s] per workflow'%( time_spend_per_workflow), level='critical')
 
     if not spec and in_manual!=0:
         some_details = ""

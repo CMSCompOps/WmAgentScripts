@@ -1,12 +1,13 @@
 import json
 from collections import defaultdict
-from utils import unifiedConfiguration, checkTransferLag, reqmgr_url, monitor_dir, duplicateLock, unified_url, monitor_pub_dir, base_eos_dir
+from utils import unifiedConfiguration, checkTransferLag, reqmgr_url, monitor_dir, moduleLock, unified_url, monitor_pub_dir, base_eos_dir, eosFile, eosRead, transferDataset
 
 def stuckor(url = reqmgr_url):
-    
-    if duplicateLock(): return
-    datasets_by_phid = json.loads(open('%s/datasets_by_phid.json'%base_eos_dir).read())
-    really_stuck_dataset = set(json.loads(open('%s/really_stuck_dataset.json'%base_eos_dir).read()))
+    mlock = moduleLock()
+    if mlock(): return
+    TD = transferDataset()
+    datasets_by_phid = TD.content()
+    really_stuck_dataset = set(json.loads(eosRead('%s/really_stuck_dataset.json'%base_eos_dir)))
 
     UC = unifiedConfiguration()
 
@@ -59,12 +60,12 @@ def stuckor(url = reqmgr_url):
     print '\n'*2,"report written at %s/logs/incomplete_transfers.log"%unified_url
     print report
 
-    missing_in_action = json.loads(open('%s/incomplete_transfers.json'%monitor_dir).read())
+    missing_in_action = json.loads(eosRead('%s/incomplete_transfers.json'%monitor_dir))
     stuck_transfers = dict([(k,v) for (k,v) in missing_in_action.items() if k in really_stuck_dataset])
     print '\n'*2,'Stuck dataset transfers'
     print json.dumps(stuck_transfers , indent=2)
-    open('%s/stuck_transfers.json'%monitor_pub_dir,'w').write( json.dumps(stuck_transfers , indent=2) )
-    open('%s/logs/incomplete_transfers.log'%monitor_dir,'w').write( report )
+    eosFile('%s/stuck_transfers.json'%monitor_pub_dir,'w').write( json.dumps(stuck_transfers , indent=2) ).close()
+    eosFile('%s/logs/incomplete_transfers.log'%monitor_dir,'w').write( report ).close()
 
 
 if __name__ == "__main__":

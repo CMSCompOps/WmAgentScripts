@@ -8,7 +8,7 @@ import json
 import random 
 
 def collector(url, specific, options):
-    up = componentInfo(mcm=False, soft=['mcm'])
+    up = componentInfo(soft=['mcm','wtc'])
     if not up.check(): return 
 
     SI = siteInfo()

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, getWorkflowById, getWorkLoad, componentInfo, sendEmail, workflowInfo, sendLog, reqmgr_url, getDatasetStatus, unifiedConfiguration, duplicateLock, do_html_in_each_module, getDatasetFiles
+from utils import getWorkflows, getWorkflowById, getWorkLoad, componentInfo, sendEmail, workflowInfo, sendLog, reqmgr_url, getDatasetStatus, unifiedConfiguration, moduleLock, do_html_in_each_module, getDatasetFiles
 import sys
 import copy
 import os
@@ -12,10 +12,11 @@ import time
 from collections import defaultdict
 
 def injector(url, options, specific):
-    if duplicateLock(): return 
+    mlock = moduleLock()
+    if mlock(): return
 
     use_mcm = True
-    up = componentInfo( mcm = use_mcm, soft=['mcm'] )
+    up = componentInfo(soft=['mcm','wtc'] )
     if not up.check(): return
     use_mcm = up.status['mcm']
 
@@ -83,7 +84,7 @@ def injector(url, options, specific):
                     can_add = False
                 ## check for any file in phedex, to verify existence
                 _,ph_files,_,_ = getDatasetFiles(url, d)
-                if not ph_files:
+                if not ph_files and not ( 'StoreResults' == wfi.request.setdefault('RequestType',None) ):
                     wfi.sendLog('injector',"One of the input has no file in phedex: %s" % d )
                     sendLog('injector',"One of the input has no file in phedex: %s"% d, level='critical')
                     can_add = False

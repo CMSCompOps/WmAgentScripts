@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, sendEmail, sendLog, monitor_pub_dir, unifiedConfiguration, deep_update, global_SI, getWorkflowByCampaign, base_eos_dir, monitor_dir
+from utils import getWorkflows, sendEmail, sendLog, monitor_pub_dir, unifiedConfiguration, deep_update, global_SI, getWorkflowByCampaign, base_eos_dir, monitor_dir, eosRead, eosFile
 from collections import defaultdict
 import copy
 import json
@@ -47,7 +47,7 @@ def batchor( url ):
     default_hi_setup = copy.deepcopy( default_setup )
 
     add_on = {}
-    batches = json.loads( open('%s/batches.json'%base_eos_dir).read() )
+    batches = json.loads( eosRead('%s/batches.json'%base_eos_dir) )
     relval_routing = UC.get('relval_routing')
     def pick_one_site( p):
         ## modify the parameters on the spot to have only one site
@@ -91,10 +91,10 @@ def batchor( url ):
         batches[campaign] = list(set(list(copy.deepcopy( by_hi_campaign[campaign] )) + batches[campaign] ))
         
     
-    open('%s/batches.json' % base_eos_dir,'w').write( json.dumps( batches , indent=2 ) )
+    eosFile('%s/batches.json' % base_eos_dir,'w').write( json.dumps( batches , indent=2 ) ).close()
 
     ## open the campaign configuration 
-    campaigns = json.loads( open('%s/campaigns.relval.json'%base_eos_dir).read() )
+    campaigns = json.loads( eosRead('%s/campaigns.relval.json'%base_eos_dir) )
 
 
     ## protect for overwriting ??
@@ -128,7 +128,7 @@ This is an automated message"""%( new_campaign,
     for old_campaign in campaigns.keys():
         all_in_batch = getWorkflowByCampaign(url, old_campaign, details=True)
         if not all_in_batch: continue
-        is_batch_done = all(map(lambda s : not s in ['completed','running-open','running-closed','acquired','assigned','assignment-approved'], [wf['RequestStatus']for wf in all_in_batch]))
+        is_batch_done = all(map(lambda s : not s in ['completed','force-complete','running-open','running-closed','acquired','assigned','assignment-approved'], [wf['RequestStatus']for wf in all_in_batch]))
         ## check all statuses
         if is_batch_done:
             #print "batch",old_campaign,"can be closed or removed if necessary"
@@ -143,7 +143,7 @@ This is an automated message"""%( new_campaign,
     open('campaigns.json.updated','w').write(json.dumps( campaigns , indent=2))
 
     ## read back
-    rread = json.loads(open('campaigns.json.updated').read())
+    rread = json.loads(open('campaigns.json.updated').read() )
 
     os.system('cp campaigns.json.updated %s/campaigns.relval.json'%monitor_dir)
     os.system('cp campaigns.json.updated %s/campaigns.relval.json'%base_eos_dir)

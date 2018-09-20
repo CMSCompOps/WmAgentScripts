@@ -6,7 +6,7 @@ import sys
 from assignSession import *
 import random
 import optparse
-from utils import moduleLock, duplicateLock
+from utils import moduleLock
 
 parser = optparse.OptionParser()
 parser.add_option('--workflow', help='Which workflow logs', default=None)
@@ -20,7 +20,7 @@ specific = options.workflow.split(',') if options.workflow else None
 check_months = options.months.split(',') if options.months else None
 check_years= options.years.split(',') if options.years else None
 
-ml = moduleLock( component='createLogDB_%s'%options.workflow, wait=True)
+ml = moduleLock( component='createLogDB_%s'%options.workflow, wait=True, silent=True)
 if ml():
     print "existing createLogDB",options.workflow
     sys.exit(1)

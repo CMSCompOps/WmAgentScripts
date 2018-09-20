@@ -42,7 +42,7 @@ if N_for_cloud:
 #os.system('Unified/assignor.py --from_status staging RunIISummer16DR80Premix')
 #os.system('Unified/assignor.py --from_status staging RunIISummer16DR80-')
 
-up = componentInfo(mcm=False, soft=['mcm'])                                 
+up = componentInfo(soft=['mcm','wtc'])                                 
 if not up.check(): sys.exit(0)
 
 url = reqmgr_url
@@ -114,8 +114,10 @@ for (the_dir,logtype) in [(monitor_eos_dir,'report'),
         is_locked = any([d.endswith(wf) for wf in may_have_one])
         if not is_locked:
             ## that can be removed
-            print d,logtype,"file can be removed"
+            print d,logtype,"file can be removed\n"
             os.system('rm -rf %s'%d)
+            print "with eos command"
+            os.system('eos rm -rf %s'%d)
         else:
             print d,"is still in use"
     

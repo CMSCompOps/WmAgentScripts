@@ -10,15 +10,6 @@ if [ "$USER" != "vlimant" ] ; then
     exit
 fi
 
-if [ -r unified_drain ] ; then
-    echo "draining the local process"
-    exit
-fi
-if [ -r /eos/cms/store/unified/unified_drain ] ; then
-    echo "draining the global process"
-    exit
-fi
-
 modulename=`echo $1 | sed 's/\.py//' | sed 's/Unified\///'`
 mkdir -p $HTML_DIR/logs/$modulename/
 mkdir -p $FINAL_HTML_DIR/logs/$modulename/
@@ -29,14 +20,21 @@ log=$dated_log
 
 echo `date` > $log
 
-if [ -r /eos/cms/store/unified/drain_mode ] ; then
-    echo "System is draining"
-    echo "System is draining" >> $log
+if [ -r unified_drain ] ; then
+    echo "System is locally draining" >> $log
     cp $log $last_log
     cp $log $FINAL_HTML_DIR/logs/$modulename/.
     cp $log $FINAL_HTML_DIR/logs/$modulename/last.log
     exit
 fi
+if [ -r /eos/cms/store/unified/unified_drain ] ; then
+    echo "System is globally draining" >> $log
+    cp $log $last_log
+    cp $log $FINAL_HTML_DIR/logs/$modulename/.
+    cp $log $FINAL_HTML_DIR/logs/$modulename/last.log
+    exit
+fi
+
 
 
 
@@ -49,12 +47,16 @@ echo $MCM_SSO_COOKIE >>$log
 echo $X509_USER_PROXY >>$log
 
 source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh
+# get pymongo
+###the local python fucks up with os.system('cp whatever whatever_on_eos')
+export PYTHONPATH=$PYTHONPATH:/usr/lib64/python2.7/site-packages
+
 
 echo >> $log
 
 start=`date +%s`
-echo $modulename:`date` >> $FINAL_HTML_DIR/logs/running
-echo $modulename:`date` > $FINAL_HTML_DIR/logs/last_running
+python ssi.py $modulename $start
+
 python $* &>> $log
 
 if [ $? == 0 ]; then
@@ -65,8 +67,7 @@ else
 fi
 
 stop=`date +%s`
-let stop=stop-start
-echo $modulename:$start:$stop > $FINAL_HTML_DIR/logs/$modulename/`date +%s`.time
+python ssi.py $modulename $start $stop
 echo `date` >> $log
 
 #cp $log $dated_log

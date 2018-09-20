@@ -2,7 +2,7 @@
 import os
 import json
 import time
-from utils import sendEmail, sendLog, monitor_eos_dir
+from utils import sendEmail, sendLog, monitor_eos_dir, eosRead
 import sys
 
 ## get the wf from many places
@@ -70,18 +70,9 @@ while True:
             flfs = []
             for out in look_in_files:
                 print "Looking in file",out
-                try:
-                    fh = open(out)
-                except:
-                    time.sleep(5)
-                    try:
-                        fh = open(out)
-                    except:
-                        print "file not readable, just removing it"
-                        os.system('rm %s'% out)
-                        continue
-                    
-                for line in fh.read().split('\n'):
+                fhr = eosRead( out , trials=2 )
+                if not fhr: continue
+                for line in fhr.split('\n'):
                     if 'logArchive.tar.gz' in line:
                         fullpath = filter(lambda w : 'logArchive.tar.gz' in w, line.split())[0]
                         alf = fullpath.split('/')[-1].strip()
@@ -96,7 +87,6 @@ while True:
                         lfs.append( alf )
                         flfs.append( fullpath )
                         break
-                fh.close()
 
             if not lfs:
                 print "Could not find trace of a log file for",lf

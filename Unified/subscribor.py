@@ -9,7 +9,7 @@ import time
 
 url = reqmgr_url
 
-up = componentInfo(mcm=False, soft=['mcm'])
+up = componentInfo(soft=['mcm','wtc'])
 if not up.check(): sys.exit(0)
 
 status = sys.argv[1]

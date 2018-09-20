@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import componentInfo, sendEmail, setDatasetStatus, unifiedConfiguration, workflowInfo, siteInfo, sendLog, reqmgr_url, monitor_dir, duplicateLock, userLock, global_SI, do_html_in_each_module, getWorkflows, pass_to_dynamo
+from utils import componentInfo, sendEmail, setDatasetStatus, unifiedConfiguration, workflowInfo, siteInfo, sendLog, reqmgr_url, monitor_dir, moduleLock, userLock, global_SI, do_html_in_each_module, getWorkflows, pass_to_dynamo, closeoutInfo
 import reqMgrClient
 import json
 import time
@@ -17,7 +17,6 @@ import optparse
 import sqlalchemy 
 
 def spawn_harvesting(url, wfi , in_full):
-    #SI = siteInfo()
     SI = global_SI()
 
     all_OK = {}
@@ -63,7 +62,7 @@ def spawn_harvesting(url, wfi , in_full):
                 'CMSSWVersion',
                 'CouchDBName',
                 'CouchWorkloadDBName',
-                'CouchURL',
+                'ConfigCacheUrl',
                 'DbsUrl',
                 'inputMode',
                 'DQMConfigCacheID',
@@ -90,7 +89,6 @@ def spawn_harvesting(url, wfi , in_full):
                 
             harvesting_schema['RequestString'] = 'HARVEST-'+wfi.request['RequestString']
             harvesting_schema['DQMHarvestUnit'] = 'byRun'
-            harvesting_schema['ConfigCacheUrl'] = harvesting_schema['CouchURL'] ## uhm, how stupid is that ?
             harvesting_schema['RequestPriority'] = min(wfi.request['RequestPriority']*10,999999)
 
             harvest_request = reqMgrClient.submitWorkflow(url, harvesting_schema)
@@ -147,12 +145,14 @@ def spawn_harvesting(url, wfi , in_full):
 
 def closor(url, specific=None, options=None):
     if userLock(): return
-    if duplicateLock(): return
+    mlock  = moduleLock()
+    if mlock(): return
     if not componentInfo().check(): return
 
 
     UC = unifiedConfiguration()
     CI = campaignInfo()
+    CloseI = closeoutInfo()
 
     all_late_files = []
     check_fullcopy_to_announce = UC.get('check_fullcopy_to_announce')
@@ -429,6 +429,7 @@ def closor(url, specific=None, options=None):
                 else:
                     wfo.status = 'done'
                 session.commit()
+                CloseI.pop( wfo.name )
                 wfi.sendLog('closor',"workflow outputs are announced")
             else:
                 wfi.sendLog('closor',"Error with %s to be announced \n%s"%( wfo.name, json.dumps( results )))
