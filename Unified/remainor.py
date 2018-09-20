@@ -1,7 +1,7 @@
 import os
 import json
 #import numpy as np
-from utils import siteInfo, getWorkflowByInput, getWorkflowByOutput, getWorkflowByMCPileup, monitor_dir, monitor_pub_dir
+from utils import siteInfo, getWorkflowByInput, getWorkflowByOutput, getWorkflowByMCPileup, monitor_dir, monitor_pub_dir, eosRead, eosFile
 import sys
 import time
 import random 
@@ -16,7 +16,7 @@ if sys.argv[1] == 'parse':
     force = False
     if len(sys.argv)>2:
         force = bool(sys.argv[2])
-    locks = json.loads(open('%s/globallocks.json'%monitor_pub_dir).read())
+    locks = json.loads(eosRead('%s/globallocks.json'%monitor_pub_dir))
     #waiting = json.loads(open('%s/waiting_custodial.json'%monitor_dir).read())
     #stuck = json.loads(open('%s/stuck_custodial.json'%monitor_pub_dir).read())
     #missing = json.loads(open('%s/missing_approval_custodial.json'%monitor_dir).read())
@@ -87,7 +87,8 @@ if sys.argv[1] == 'parse':
         #print "\t",sum_waiting,"[GB] could be freed by custodial"
         #print "\t",sum_unlocked,"[GB] is not locked by me"
 
-        open('%s/remaining_%s.json'%(monitor_dir,site),'w').write( json.dumps( remainings[site] , indent=2))
+        #open('%s/remaining_%s.json'%(monitor_dir,site),'w').write( json.dumps( remainings[site] , indent=2))
+        eosFile('%s/remaining_%s.json'%(monitor_dir,site),'w').write( json.dumps( remainings[site] , indent=2)).close()
         
 
         ld = remainings[site].items()
@@ -117,17 +118,18 @@ if sys.argv[1] == 'parse':
         for item in ld:
             table+="<tr><td>%s</td><td>%d</td><td><ul>%s</ul></td></tr>\n"%( item[0], item[1]['size'], "<li>".join([""]+item[1]['reasons']))
         table+="</table></html>"
-        open('%s/remaining_%s.html'%(monitor_dir,site),'w').write( table )
+        #open('%s/remaining_%s.html'%(monitor_dir,site),'w').write( table )
+        eosFile('%s/remaining_%s.html'%(monitor_dir,site),'w').write( table ).close()
 
-    open('%s/remaining.json'%monitor_dir,'w').write( json.dumps( remainings , indent=2))
-
+    #open('%s/remaining.json'%monitor_dir,'w').write( json.dumps( remainings , indent=2))
+    eosFile('%s/remaining.json'%monitor_dir,'w').write( json.dumps( remainings , indent=2)).close()
 
 else:
     si = siteInfo()
     remainings={}
     for fn in filter(None,os.popen('ls -1 %s/remaining_*.json | sort '%monitor_dir).read().split('\n')):
         site = fn.split('_',1)[-1].split('.')[0]
-        load = json.loads( open(fn).read())
+        load = json.loads( eosRead(fn))
         remainings[site] = load
         if si.disk[site] : continue
         print site,si.disk[site],"[TB] free",si.quota[site],"[TB] quota"
@@ -137,5 +139,6 @@ else:
         for tag in tags:
             v = sum([ info['size'] for ds,info in load.items() if tag in info['reasons']]) / 1024.
             print "\t %10f [TB] remaining because of %s"%(v,tag)
-    open('%s/remaining.json'%monitor_dir,'w').write( json.dumps( remainings , indent=2))
+    #open('%s/remaining.json'%monitor_dir,'w').write( json.dumps( remainings , indent=2))
+    eosFile('%s/remaining.json'%monitor_dir,'w').write( json.dumps( remainings , indent=2)).close()
 

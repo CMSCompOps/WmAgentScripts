@@ -1,6 +1,6 @@
 {
  "email_destination" : { 
-   "value" : ["vlimant@cern.ch","matteoc@fnal.gov","areinsvo@nd.edu","thong@caltech.edu", "svenja.pflitsch@desy.de"],
+   "value" : ["vlimant@cern.ch","matteoc@fnal.gov","thong@caltech.edu", "svenja.pflitsch@desy.de"],
    "description" : "The list of people that get the emails notifications"
  },
  "busy_agent_fraction" : {
@@ -19,7 +19,8 @@
  },
  "site_for_overflow": {
    "value" : ["T2_CH_CERN_HLT",
-   	     "T0_CH_CERN"],
+	     "T0_CH_CERN", 
+	     "T0_CH_CSCS_HPC"],
    "description" : "The sites that we set to overflow and require a specific treatment"
  },
  "overflow_pressure": {
@@ -51,7 +52,7 @@
     "description" : "The quanta of memory in MB for the JobRouter"
  },
  "time_quanta": {
-    "value" : 50,
+    "value" : 60,
     "description" : "The quanta of time in min for the JobRouter"
  },
  "slope_quanta": {
@@ -66,6 +67,10 @@
     "value" : 5,
     "description" : "The number of bins to use for quantizing values used for tuning job requirements"
  },
+ "min_core_for_resize": {
+     "value" : 4,
+     "description" : "The minimum of original core requested to allow resizing"
+ },
  "DDM_buffer_level": {
    "value" : 0.8,
    "description" : "The fraction of the DDM quota we are allowed to use"
@@ -74,13 +79,15 @@
    "value" : ["T2_CH_CERN_AI",
 	      "T2_TH_CUNSTDA",
 	      "T2_EE_Estonia",
-	      "T2_UA_KIPT",
-	      "T0_CH_CERN"
+	      "T0_CH_CERN",
+	      "T0_CH_CSCS_HPC", 
+	      "T2_CH_CERN", 
+	      "T2_CH_CERN_HLT"
  	      ],
    "description" : "The sites that are banned from production"
  },		 
  "sites_auto_approve": {
-   "value" : ["T0_CH_CERN_MSS","T1_FR_CCIN2P3_MSS"],
+   "value" : ["T0_CH_CERN_MSS","T1_FR_CCIN2P3_MSS","T1_IT_CNAF_MSS"],
    "description" : "The sites we can autoapprove tape request to"
  },
  "sites_space_override": {	
@@ -122,7 +129,8 @@
               ["vlimant","vlimant@cern.ch"],
    	      ["prozober","paola.katherine.rozo.bernal@cern.ch"],
 	      ["mcremone","matteoc@fnal.gov"],
-              ["qnguyen","thong@caltech.edu"]
+              ["qnguyen","thong@caltech.edu"], 
+	      ["sagarwal","sharad.agarwal@cern.ch"]
              ]
  },
  "max_tail_priority" : {
@@ -138,7 +146,7 @@
    "description" : "Priority from original increase per week over the delay threshold"
  },
  "injection_delay_priority" : {
-   "value" : 75000,
+   "value" : 2000000,
    "description" : "Priority above which we can increase the priority of a workflow after running too long"
  },
  "max_force_complete" : {
@@ -152,7 +160,7 @@
     "assignor" : null,
     "actor" : 10,
     "closor" : null,
-    "checkor" : 500,
+    "checkor" : 300,
     "completor" : null
     }
  },
@@ -169,7 +177,7 @@
    "description" : "Whether or not the pass threshold per campaign are counted as is, or cumulatively."
  },
  "onhold_timeout": {
-   "value" : -1,
+   "value" : 14,
    "description" : "Number of days from completed after which a workflow onhold gets by-passed automatically."
  },
  "damping_fraction_pass" : {
@@ -358,7 +366,7 @@
   },
   "user_relval":{
    "description" : "The users from which we expect relval requests",
-   "value" : ["fabozzi","nwickram","bsutar","rverma","prebello","piperov","sandhya","zhenhu","muahmad","pkalbhor","asikdar","ssawant"]
+   "value" : ["fabozzi","nwickram","bsutar","rverma","prebello","piperov","sandhya","zhenhu","muahmad","pkalbhor","asikdar","ssawant","chayanit"]
   },
   "user_storeresults":{
    "description" : "The users from which we expect StoreResults requests",

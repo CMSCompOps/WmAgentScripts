@@ -2,6 +2,7 @@
 from utils import workflowInfo, sendEmail, componentInfo, campaignInfo, unifiedConfiguration, siteInfo, sendLog, setDatasetStatus, moduleLock, invalidate
 from utils import closeoutInfo, userLock
 import reqMgrClient
+import wtcClient
 import json
 import optparse
 import copy
@@ -11,29 +12,9 @@ import os
 from utils import reqmgr_url
 import httplib
 import ssl
+import sys
 import random
-
-def remove_action(*args):
-    if not os.path.exists('Unified/secret_act.txt'):
-        print 'Needs to be called from same directory as key.json'
-        exit()
-
-    with open('Unified/secret_act.txt', 'r') as key_file:
-        key_info = json.load(key_file)
-
-    conn = httplib.HTTPSConnection(key_info['url'], key_info['port'],
-                                   context=ssl._create_unverified_context())
-
-    conn.request(
-        'POST', key_info['path'],
-        json.dumps({'key': key_info['key'], 'workflows': args}),
-        {'Content-type': 'application/json'})
-
-    r= conn.getresponse().read()
-    print r 
-    conn.close()
-    return (r == 'Done')
-  
+from wtcClient import wtcClient
 
 def singleRecovery(url, task, initial, actions, do=False):
     print "Inside single recovery!"
@@ -41,7 +22,7 @@ def singleRecovery(url, task, initial, actions, do=False):
         "Requestor" : os.getenv('USER'),
         "Group" : 'DATAOPS',
         "RequestType" : "Resubmission",
-        "ACDCServer" : initial['CouchURL'],
+        "ACDCServer" : initial['ConfigCacheUrl'],
         "ACDCDatabase" : "acdcserver",
         "OriginalRequestName" : initial['RequestName'],
         "OpenRunningTimeout" : 0
@@ -257,22 +238,8 @@ def singleClone(url, wfname, actions, comment, do=False):
     else:
         payload['ProcessingVersion'] = 2
 
-
-## drop parameters on the way to reqmgr2
-    paramBlacklist = ['BlockCloseMaxEvents', 'BlockCloseMaxFiles', 'BlockCloseMaxSize', 'BlockCloseMaxWaitTime',
-                  'CouchWorkloadDBName', 'CustodialGroup', 'CustodialSubType', 'Dashboard',
-                  'GracePeriod', 'HardTimeout', 'InitialPriority', 'inputMode', 'MaxMergeEvents', 'MaxMergeSize',
-                  'MaxRSS', 'MaxVSize', 'MinMergeSize', 'NonCustodialGroup', 'NonCustodialSubType',
-                  'OutputDatasets', 'ReqMgr2Only', 'RequestDate' 'RequestorDN', 'RequestName', 'RequestStatus',
-                  'RequestTransition', 'RequestWorkflow', 'SiteWhitelist', 'SoftTimeout', 'SoftwareVersions',
-                  'SubscriptionPriority', 'Team', 'timeStamp', 'TrustSitelists', 'TrustPUSitelists',
-                  'TotalEstimatedJobs', 'TotalInputEvents', 'TotalInputLumis', 'TotalInputFiles','checkbox',
-                  'DN', 'AutoApproveSubscriptionSites', 'NonCustodialSites', 'CustodialSites', 'OriginalRequestName', 'Teams', 'OutputModulesLFNBases', 
-                      'SiteBlacklist', 'AllowOpportunistic', '_id', 'Override']
-    for p in paramBlacklist:
-        if p in payload:
-            payload.pop( p )
-            pass
+        
+    payload = reqMgrClient.purgeClonedSchema( payload )
 
     if actions:
         for action in actions:
@@ -362,27 +329,23 @@ def singleClone(url, wfname, actions, comment, do=False):
 
 def actor(url,options=None):
     
-    if  moduleLock(wait=False ,silent=True)(): return
+    mlock = moduleLock(wait=False ,silent=True)
+    if mlock(): return
     if userLock('actor'): return
     
-    up = componentInfo(mcm=False, soft=['mcm'])
+    up = componentInfo(soft=['mcm'])
     if not up.check(): return
     
    # CI = campaignInfo()
     SI = siteInfo()
     UC = unifiedConfiguration()
-    
-    # Need to look at the actions page https://vocms0113.cern.ch:80/getaction (can add ?days=20) and perform any actions listed
-    try:
-        action_list = json.loads(os.popen('curl -s -k https://vocms0113.cern.ch:80/getaction?days=15').read())
-        ## now we have a list of things that we can take action on
-    except:
-        try:
-            action_list = json.loads(os.popen('curl -s -k https://vocms0113.cern.ch/getaction?days=15').read())
-        except:
-            print "Not able to load action list :("
-            sendLog('actor','Not able to load action list', level='critical')
-            return
+    WC = wtcClient()
+
+    action_list = WC.get_actions()
+    if action_list is None:
+        print "Not able to load action list"
+        sendLog('actor','Not able to load action list', level='critical')
+        return
 
     if options.actions:
         action_list = json.loads(open(options.actions).read())
@@ -458,7 +421,6 @@ def actor(url,options=None):
                 wfi.sendLog('actor','Failed to create clone for %s!'%wfname)
                 print str(e)
                 ##let's not remove the action other the workflow goes to "trouble" and the WTC cannot set the action again
-                #remove_action(wfname)
             if not cloned:
                 recover = False
                 wfi.sendLog('actor','Failed to create clone for %s!'%wfname)
@@ -661,7 +623,11 @@ def actor(url,options=None):
         
         
         if recover and options.do:
-            remove_action(wfname)
+            r = WC.remove_action(wfname)
+            if not r:
+                sendLog('actor','not able to remove the action, interlocking the module', level='critical')
+                os.system('touch %s/actor.failed-%s.lock'%( base_eos_dir, os.getpid() ))
+                sys.exit(-1)
 
         if message_to_user:
             print wfname,"to be notified to user(DUMMY)",message_to_user

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from utils import getWorkflows, findCustodialCompletion, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration, getDatasetSize, sendEmail, sendLog, campaignInfo, componentInfo, reqmgr_url, monitor_dir, monitor_pub_dir, getWorkflowByMCPileup, getDatasetPresence, lockInfo, getLatestMCPileup, base_eos_dir
+from utils import getWorkflows, findCustodialCompletion, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration, getDatasetSize, sendEmail, sendLog, campaignInfo, componentInfo, reqmgr_url, monitor_dir, monitor_pub_dir, getWorkflowByMCPileup, getDatasetPresence, lockInfo, getLatestMCPileup, base_eos_dir, eosFile, eosRead
 from assignSession import *
 import json
 import os
@@ -36,7 +36,7 @@ time_point("Starting initialization")
 url = reqmgr_url
 
 use_mcm=True
-up = componentInfo(mcm=use_mcm, soft=['mcm'])
+up = componentInfo(soft=['mcm','wtc'])
 if not up.check(): sys.exit(0)
 
 use_mcm = up.status['mcm']
@@ -66,7 +66,7 @@ also_locking_from_reqmgr = set()
 LI = lockInfo()
 
 ## add an addHoc list of things to lock. empyting this list would result in unlocking later
-addHocLocks = json.loads( open('%s/addhoc_lock.json'%base_eos_dir).read())
+addHocLocks = json.loads( eosRead('%s/addhoc_lock.json'%base_eos_dir))
 
 time_point("Starting addhoc")
 
@@ -209,10 +209,10 @@ waiting_for_custodial={}
 stuck_custodial={}
 lagging_custodial={}
 missing_approval_custodial={}
-open('%s/waiting_custodial.json'%monitor_dir,'w').write( json.dumps( waiting_for_custodial , indent=2) )
-open('%s/stuck_custodial.json'%monitor_pub_dir,'w').write( json.dumps( stuck_custodial , indent=2) )
-open('%s/lagging_custodial.json'%monitor_dir,'w').write( json.dumps( lagging_custodial , indent=2) )
-open('%s/missing_approval_custodial.json'%monitor_dir,'w').write( json.dumps( missing_approval_custodial , indent=2) )
+eosFile('%s/waiting_custodial.json'%monitor_dir,'w').write( json.dumps( waiting_for_custodial , indent=2) ).close()
+eosFile('%s/stuck_custodial.json'%monitor_pub_dir,'w').write( json.dumps( stuck_custodial , indent=2) ).close()
+eosFile('%s/lagging_custodial.json'%monitor_dir,'w').write( json.dumps( lagging_custodial , indent=2) ).close()
+eosFile('%s/missing_approval_custodial.json'%monitor_dir,'w').write( json.dumps( missing_approval_custodial , indent=2) ).close()
 
 ## then for all that would have been invalidated from the past, check whether you can unlock the wf based on output
 for wfo in session.query(Workflow).filter(Workflow.status=='forget').all():

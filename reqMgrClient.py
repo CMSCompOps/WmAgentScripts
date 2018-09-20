@@ -460,12 +460,12 @@ def getWorkflowInfo(url, workflow):
         except:
             time.sleep(1)
             retries -=1
-            print "beep"
+            print "Retrieving workflow information from ReqMgr2..."
     return None
 
 def isRequestMgr2Request(url, workflow):
     result = getWorkflowInfo(url, workflow)
-    return result.get("ReqMgr2Only", False)
+    return result.get("ReqMgr2Only", True)
 
 def getWorkflowStatus(url, workflow):
     """
@@ -1109,6 +1109,37 @@ def abortWorkflow(url, workflowname, cascade=False):
         data = requestManager1Put(url,"/reqmgr/reqMgr/request", params)
     return data
 
+
+def purgeClonedSchema(schema):
+    """
+    Provided a schema created from an existing request, remove all the known unacceptable members
+    """
+    paramBlacklist = ['BlockCloseMaxEvents', 'BlockCloseMaxFiles', 'BlockCloseMaxSize', 'BlockCloseMaxWaitTime',
+                      'CouchWorkloadDBName', 'CustodialGroup', 'CustodialSubType', 'Dashboard',
+                      'GracePeriod', 'HardTimeout', 'InitialPriority', 'inputMode', 'MaxMergeEvents', 'MaxMergeSize',
+                      'MaxRSS', 'MaxVSize', 'MinMergeSize', 'NonCustodialGroup', 'NonCustodialSubType',
+                      'OutputDatasets', 'ReqMgr2Only', 'RequestDate' 'RequestorDN', 'RequestName', 'RequestStatus',
+                      'RequestTransition', 'RequestWorkflow', 'SiteWhitelist', 'SoftTimeout', 'SoftwareVersions',
+                      'SubscriptionPriority', 'Team', 'timeStamp', 'TrustSitelists', 'TrustPUSitelists',
+                      'TotalEstimatedJobs', 'TotalInputEvents', 'TotalInputLumis', 'TotalInputFiles',
+                      ## and the new parameter validation scheme
+                      'DN', 'AutoApproveSubscriptionSites', 'NonCustodialSites', 'CustodialSites', 
+                      'OriginalRequestName', 'IgnoredOutputModules', 'OutputModulesLFNBases', 'SiteBlacklist', 'AllowOpportunistic', '_id',
+                      'min_merge_size', 'events_per_lumi', 'max_merge_size', 'max_events_per_lumi', 'max_merge_events', 'max_wait_time', 'events_per_job',
+                      'SiteBlacklist', 'AllowOpportunistic', 'Override']
+    for p in paramBlacklist:
+        if p in schema:
+            schema.pop( p )
+
+    taskParamBlacklist = [ 'EventsPerJob' ] 
+    for i in range(1,100):
+        t='Task%s'%i
+        if not t in schema: break
+        for p in taskParamBlacklist:
+            if p in schema[t]:
+                schema[t].pop( p )
+    return schema
+    
 def cloneWorkflow(url, workflowname, overrideArgs=None):
     """
     This clones a request

@@ -1,4 +1,4 @@
-from utils import getDatasetBlockAndSite, siteInfo, getWorkflows, workflowInfo, monitor_dir, sendLog, sendEmail, makeReplicaRequest, unifiedConfiguration, getDatasetFileLocations, getAgentInfo, base_eos_dir
+from utils import getDatasetBlockAndSite, siteInfo, getWorkflows, workflowInfo, monitor_dir, sendLog, sendEmail, makeReplicaRequest, unifiedConfiguration, getDatasetFileLocations, getAgentInfo, base_eos_dir, eosFile, replacedBlocks, eosRead
 from collections import defaultdict
 import time
 import json
@@ -27,11 +27,6 @@ wfs_no_location_in_GQ = defaultdict(list)
 si = siteInfo()  
 #bad_blocks = defaultdict( set )
 unprocessable = set()
-
-try:
-    replaced = set(json.loads(open('%s/replaced_blocks.json'%base_eos_dir).read()))
-except:
-    replaced = set()
 
 not_runable_acdc=set()
 agents_down = defaultdict(set)
@@ -279,18 +274,12 @@ if not_runable_acdc:
                                                    ),level='critical')
 
 
-old_stuck_all_done = set(json.loads(open('%s/stuck_all_done.json'%base_eos_dir).read()))
+old_stuck_all_done = set(json.loads(eosRead('%s/stuck_all_done.json'%base_eos_dir)))
 really_stuck_all_done = old_stuck_all_done & stuck_all_done
 if really_stuck_all_done:
     sendLog('GQ','These %d workflows have not toggled further to completed while all WQE are done\n%s'%( len(really_stuck_all_done),'\n'.join(sorted(really_stuck_all_done))),
             level='critical')
-open('stuck_all_done.json','w').write( json.dumps( sorted( stuck_all_done), indent=2))
-
-#for agent in wqe_by_agent:
-    ## sort by priority
-    #work = wqe_by_agent
-    #work.sort( key= lambda i : i['Priority'], reversed=True )
-    ## now you can check whether this is activity on-going for that block
+eosFile('%s/stuck_all_done.json'%base_eos_dir,'w').write( json.dumps( sorted( stuck_all_done), indent=2)).close()
 
 if failed_workflow:
     sendLog('GQ','These workflows have failed wqe and will stay stuck:\n%s'%('\n'.join( failed_workflow)))
@@ -302,18 +291,13 @@ if agents_down:
         #sendLog('GQ','These tasks look stalled in agent %s \n%s'%( agent, '\n'.join(sorted(tasks))),level='critical')
         pass
 
-#report += '\n\n in wqe but not holding a complete block\n\n'
-#for b in bad_blocks:
-#    report += "For %s\n"%b
-#    for s in bad_blocks[b]:
-#        report += "\t %s is not actually holding it\n"%s
 
 unproc = "\n\nUnprocessable blocks : i.e no overlap of the site whitelist and the location\n\n"
 unproc += '\n'.join(sorted(unprocessable))
 report += unproc
 if unprocessable:
     sendLog('GQ',unproc, level='critical')
-    open('%s/missing_blocks.json'%monitor_dir,'w').write( json.dumps( sorted(unprocessable), indent=2) )
+    eosFile('%s/missing_blocks.json'%monitor_dir,'w').write( json.dumps( sorted(unprocessable), indent=2) ).close()
     #sendEmail('unprocessable blocks',"Sending a notification of this new feature until this gets understood. transfering block automatically back to  processing location. \n"+unproc)
 
 try_me = defaultdict(set)
@@ -338,20 +322,21 @@ for wf in wfs_no_location_in_GQ:
         ## pick a site that should host this !
         #wfi.sendLog('GQ','Sending %s to %s'%( b, go_to))
 
+RB = replacedBlocks()
 for site,blocks in try_me.items():
-    blocks = blocks - replaced 
+    replace_blocks = [b for b in blocks if not RB.test(b)  ]
+    blocks = replace_blocks
     if UC.get('block_repositionning'):
         if blocks:
+            RB.add( blocks )
             result = makeReplicaRequest(url, site, list(blocks), 'item relocation', priority='reserved', approve=True, mail=False)
-            replaced.update( blocks )
             sendLog('GQ','replacing %s at %s \n%s'%( '\n,'.join(blocks), site, result),level='warning')
     else:
         sendLog('GQ','tempting to put %s at %s'%( '\n,'.join(blocks), site),level='warning')
 
-open('%s/GQ.json'%monitor_dir,'w').write( json.dumps( jobs_for, indent=2) )
-open('%s/GQ.txt'%monitor_dir,'w').write( report )
+eosFile('%s/GQ.json'%monitor_dir,'w').write( json.dumps( jobs_for, indent=2) ).close()
+eosFile('%s/GQ.txt'%monitor_dir,'w').write( report ).close()
 
-open('replaced_blocks.json','w').write( json.dumps( sorted(replaced), indent=2) )
 
 if heavy_duty:
     sendLog('GQ','There are some heavy duty workflows in the system, likely to cause damage\n%s\n%s'%(sorted(heavy_duty.keys()), json.dumps( heavy_duty, indent=2) ),level='critical')

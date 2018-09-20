@@ -1,18 +1,19 @@
 #!/usr/bin/env python
 from assignSession import *
 import time
-from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration, getPrepIDs, componentInfo, getAllAgents, sendLog, duplicateLock, dataCache, agentInfo, display_time
+from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration, getPrepIDs, componentInfo, getAllAgents, sendLog, moduleLock, dataCache, agentInfo, display_time, eosFile, eosRead, StartStopInfo
 import os
 import json
 from collections import defaultdict
 import sys
-from utils import monitor_dir, base_dir, phedex_url, reqmgr_url, monitor_pub_dir, unified_url_eos, monitor_eos_dir, monitor_pub_eos_dir, base_eos_dir
+from utils import monitor_dir, base_dir, phedex_url, reqmgr_url, monitor_pub_dir, unified_url_eos, monitor_eos_dir, monitor_pub_eos_dir, base_eos_dir, closeoutInfo, agent_speed_draining
 import random
 
 def htmlor( caller = ""):
-    if duplicateLock(silent=True): return
+    mlock = moduleLock(silent=True)
+    if mlock: return
 
-    up = componentInfo(mcm=False, soft=['mcm'])
+    up = componentInfo(soft=['mcm','wtc'])
     if not up.check(): return 
 
     for backup in ['statuses.json','siteInfo.json','listProtectedLFN.txt','equalizor.json']:
@@ -21,7 +22,7 @@ def htmlor( caller = ""):
         #os.system('cp %s/%s %s/.'%(monitor_dir, backup, monitor_pub_dir))
 
     try:
-        boost = json.loads(open('%s/equalizor.json'%monitor_pub_dir).read())['modifications']
+        boost = json.loads(eosRead('%s/equalizor.json'%monitor_pub_dir))['modifications']
     except:
         boost = {}
     cache = getWorkflows(reqmgr_url,'assignment-approved', details=True)
@@ -196,7 +197,8 @@ def htmlor( caller = ""):
 
     ## start to write it
     #html_doc = open('/afs/cern.ch/user/v/vlimant/public/ops/index.html','w')
-    html_doc = open('%s/index.html.new'%monitor_dir,'w')
+    #html_doc = open('%s/index.html.new'%monitor_dir,'w')
+    html_doc = eosFile('%s/index.html.new'%monitor_dir)
     print "Updating the status page ..." 
 
     UC = unifiedConfiguration()
@@ -215,6 +217,10 @@ def htmlor( caller = ""):
 
     summary_content = {}
 
+    view_modules = ['injector','batchor','transferor','cachor','stagor','assignor','completor','GQ','equalizor','agentInfo','checkor','recoveror','actor','closor']
+
+    all_modules = list(set(view_modules + ['actor','addHoc','assignor','batchor','cachor','checkor','closor','completor','efficiencor','equalizor','GQ','htmlor','injector','lockor','messagor','pushor','recoveror','remainor','showError','stagor','stuckor','subscribor','transferor']))
+
     html_doc.write("""
 <html>
 <head>
@@ -232,6 +238,7 @@ def htmlor( caller = ""):
 Last update on <b>%s(CET), %s(GMT)</b>
 <br>
 <hr>
+<a href=info.txt target=_blank title="Some basic running info">info</a>
 <a href=logs/ target=_blank title="Directory containing all the logs">logs</a> 
 <a href=http://cms-unified.web.cern.ch/cms-unified/joblogs/ target=_blank title="Directory containing logs of jobs that failed with critical errors">job logs</a> 
 <a href=http://cms-unified.web.cern.ch/cms-unified/condorlogs/ target=_blank title="Directory containing condor logs of jobs ">condor logs</a> 
@@ -265,7 +272,7 @@ Last update on <b>%s(CET), %s(GMT)</b>
 """ %(time.asctime(time.localtime()),
       time.asctime(time.gmtime()),
       reqmgr_url,
-      ', '.join(['<a href=https://cms-unified.web.cern.ch/cms-unified/showlog/?search=critical&module=%s&limit=100 target=_blank><b><font color=red>%s</b></font></a>'%(m,m) for m in ['heartbeat','injector','batchor','transferor','cachor','stagor','assignor','completor','GQ','equalizor','agentInfo','checkor','recoveror','actor','closor']])
+      ', '.join(['<a href=https://cms-unified.web.cern.ch/cms-unified/showlog/?search=critical&module=%s&limit=100 target=_blank><b><font color=red>%s</b></font></a>'%(m,m) for m in ['heartbeat']+view_modules])
       )
                    )
         
@@ -390,7 +397,7 @@ Worflow waiting in staging (%d) <a href=logs/transferor/last.log target=_blank>l
         text_bywf += "</ul></div><hr>"
     text_bywf += '</ul>'
 
-    stuck_transfer = json.loads(open('%s/stuck_transfers.json'%monitor_pub_dir).read())
+    stuck_transfer = json.loads(eosRead('%s/stuck_transfers.json'%monitor_pub_dir))
     html_doc.write("""
 Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransferteam/ target=_blank>dashboard</a> <a href=logs/transferor/last.log target=_blank>log</a> <a href=logs/stagor/last.log target=_blank>postlog</a> <a href=public/stuck_transfers.json target=_blank> %d stuck</a>
 <a href="javascript:showhide('transfer')">[Click to show/hide]</a>
@@ -457,7 +464,7 @@ Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransfertea
     lap( 'done with staged' )
     
     lines=[]
-    batches = json.loads(open('%s/batches.json' % base_eos_dir,'r').read())
+    batches = json.loads(eosRead('%s/batches.json' % base_eos_dir))
     relvals = []
     for b in batches: relvals.extend( batches[b] )
     count_by_campaign=defaultdict(lambda : defaultdict(int))
@@ -652,15 +659,15 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     start_time_two_weeks_ago = time.mktime(time.gmtime(now - (20*24*60*60))) # 20
     last_week =  int(time.strftime("%W",time.gmtime(now - ( 7*24*60*60))))
 
-    all_locks = json.loads(open('%s/globallocks.json'%monitor_pub_dir).read())    
-    waiting_custodial = json.loads(open('%s/waiting_custodial.json'%monitor_dir).read())
+    all_locks = json.loads(eosRead('%s/globallocks.json'%monitor_pub_dir))    
+    waiting_custodial = json.loads(eosRead('%s/waiting_custodial.json'%monitor_dir))
     all_pending_approval_custodial = dict([(k,item) for k,item in waiting_custodial.items() if 'nodes' in item and not any([node['decided'] for node in item['nodes'].values()]) ])
     n_pending_approval = len( all_pending_approval_custodial )
     #n_pending_approval = len([item for item in waiting_custodial.values() if 'nodes' in item and not any([node['decided'] for node in item['nodes'].values() ])])
-    missing_approval_custodial = json.loads(open('%s/missing_approval_custodial.json'%monitor_dir).read())
+    missing_approval_custodial = json.loads(eosRead('%s/missing_approval_custodial.json'%monitor_dir))
 
-    stuck_custudial = json.loads(open('%s/stuck_custodial.json'%monitor_pub_dir).read())
-    lagging_custudial = json.loads(open('%s/lagging_custodial.json'%monitor_dir).read())
+    stuck_custudial = json.loads(eosRead('%s/stuck_custodial.json'%monitor_pub_dir))
+    lagging_custudial = json.loads(eosRead('%s/lagging_custodial.json'%monitor_dir))
     if len(stuck_custudial):
         stuck_string = ', <font color=red>%d appear to be <a href=public/stuck_custodial.json>stuck</a></font>'% len(stuck_custudial)
     else:
@@ -817,45 +824,46 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 
     per_module = defaultdict(list)
     last_module = defaultdict( str )
-    for t in filter(None,os.popen('cat %s/logs/*/*.time'%monitor_dir).read().split('\n')):
-        module_name,run_time,spend = t.split(':')
-        ## then do what you want with it !
-        if 'cleanor' in module_name: continue
-        #if 'htmlor' in module_name: continue
-        if 'messagor' in module_name: continue
-        #if 'stagor' in module_name: continue
-        per_module[module_name].append( int(spend) )
+    ssi = StartStopInfo()
+    now = time.mktime(time.localtime())## the date in the log is in local time
+    ssi.purge(now, 15 ) ## remove all >15 days old doc
+    
+    for module_name in all_modules:
+        if module_name in ['messagor','cleanor']: continue
+        per_module[module_name] = ssi.get(module_name, metric='lap')
+        last_module[ module_name] =  ssi.get(module_name, metric='start')
+        if last_module[ module_name]:
+            last_module[ module_name] = max(last_module[ module_name])
+        else:
+            print "no mongod record of SS for",module_name
+            last_module[ module_name] = None
 
 
     html_doc.write("Module running time<br>")
     html_doc.write("<table border=1><thead><tr><th>Module</th><th>Last Ran</th><th>Last Runtime</th><th>Avg Runtime</th></tr></thead>")
-    #now = time.mktime(time.gmtime())
-    now = time.mktime(time.localtime())## the date in the log is in local time
-    for m in sorted(per_module.keys()):
-        last_module[m] = os.popen("tac %s/logs/running | grep %s | head -1"%(monitor_dir, m)).read()
-        ## parse it to make an alert.
-        _,last_date = last_module[m].split(':',1)
-        try:
-            last_time = time.mktime(time.strptime(last_date, "%a %b %d %H:%M:%S %Z %Y\n"))
-        except Exception as e:
-            print "failed to parse the time from the logs",str(e)
-            last_time = now
 
+
+
+    for m in sorted(last_module.keys()):
+        last_time = last_module[m]         
+        if not last_time: continue
         heart_beat_time_out = 12
         since_last = now-last_time
         if since_last > (heart_beat_time_out*60*60): #6h heart beat
             sendLog('heartbeat',"The module %s has not ran in %s hours, now %s"%(m, heart_beat_time_out, display_time( since_last )), level='critical')
         else:
             print "module %s has ran last since %s"%( m , display_time( since_last ))
-
         last_module[m] = "%s ago"%( display_time( since_last ) )
 
     for m in sorted(per_module.keys()):
         #,spends in per_module.items():
         spends = per_module[m]
-        avg = sum(spends)/float(len(spends))
-        lasttime =  spends[-1]
-        #html_doc.write("<li>%s : <b>last %s<b>, avg %s</li>\n"%( m, display_time(lasttime), display_time(avg)))
+        if spends:
+            avg = sum(spends)/float(len(spends))
+            lasttime =  spends[-1]
+        else:
+            avg = lasttime = 0
+
         html_doc.write("""
 <tr>
  <td width=300>%s</td>
@@ -915,7 +923,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     date1h = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(1*60*60)) )
     date5h = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(5*60*60)) )
     now = time.strftime('%Y-%m-%d+%H:%M', time.gmtime())
-    upcoming = json.loads( open('%s/GQ.json'%monitor_dir).read())
+    upcoming = json.loads( eosRead('%s/GQ.json'%monitor_dir))
 
     text +='<ul>'
 # """
@@ -938,7 +946,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
                 if a: upcoming_by_site[team][site] += a
         
 
-    sites_full = json.loads(open('%s/sites_full.json'%base_eos_dir).read())
+    sites_full = json.loads(eosRead('%s/sites_full.json'%base_eos_dir))
     for t in ['sites_T0s_all','sites_T1s_all','sites_T2s_all','sites_T3s_all']:
 #        text+="""
 #<li>%s<a href="javascript:showhide('%s')">[Click to show/hide]</a><br>
@@ -1026,7 +1034,10 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     print outlier_upcoming
     if outlier_upcoming:
         sendLog('GQ','There is an inbalance of upcoming work at %s'%(', '.join([site for site in sorted(outlier_upcoming.keys())])),level='critical')
-        open('%s/sites_full.json'%base_eos_dir,'w').write( json.dumps( outlier_upcoming.keys() ))
+        #open('%s/sites_full.json'%base_eos_dir,'w').write( json.dumps( outlier_upcoming.keys() ))
+        oo = eosFile('%s/sites_full.json'%base_eos_dir)
+        oo.write( json.dumps( outlier_upcoming.keys() ) )
+        oo.close()
         
     def site_div_header(desc):
         div_name = 'site_'+desc.replace(' ','_')
@@ -1094,7 +1105,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     text += "</ul></div></li>"
 
 
-    equalizor = json.loads(open('%s/equalizor.json'%monitor_pub_dir).read())['reversed_mapping']
+    equalizor = json.loads(eosRead('%s/equalizor.json'%monitor_pub_dir))['reversed_mapping']
     text += site_div_header("Xrootd mapping")
     text += "<li><table border=1><thead><tr><th>Sites</th><th>Can read from</th></tr></thead>\n"
     for site in sorted(equalizor):
@@ -1108,7 +1119,10 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 
     lap ( 'done with sites' )
 
-    open('%s/siteInfo.json'%monitor_pub_dir,'w').write(json.dumps(dict([(t,getattr(SI,t)) for t in ['sites_T0s','sites_T1s','sites_T2s','sites_with_goodIO']]),indent=2))
+    #open('%s/siteInfo.json'%monitor_pub_dir,'w').write(json.dumps(dict([(t,getattr(SI,t)) for t in ['sites_T0s','sites_T1s','sites_T2s','sites_with_goodIO']]),indent=2))
+    oo = eosFile('%s/siteInfo.json'%monitor_pub_dir)
+    oo.write(json.dumps(dict([(t,getattr(SI,t)) for t in ['sites_T0s','sites_T1s','sites_T2s','sites_with_goodIO']]),indent=2))
+    oo.close()
 
     lap ( 'done with sites json' )
 
@@ -1147,9 +1161,12 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
 
         
     ## make the locked/available donut chart
-    donut_html = open('%s/locked.html'%monitor_dir,'w')
-    tight_donut_html = open('%s/outofspace.html'%monitor_dir,'w')
-    remain_reason_html = open('%s/remaining.html'%monitor_dir,'w')
+    #donut_html = open('%s/locked.html'%monitor_dir,'w')
+    #tight_donut_html = open('%s/outofspace.html'%monitor_dir,'w')
+    #remain_reason_html = open('%s/remaining.html'%monitor_dir,'w')
+    donut_html = eosFile('%s/locked.html'%monitor_dir)
+    tight_donut_html = eosFile('%s/outofspace.html'%monitor_dir)
+    remain_reason_html = eosFile('%s/remaining.html'%monitor_dir)
 
     tables = "\n".join([info[0] for site,info in chart_data.items()])
     draws = "\n".join([info[1] for site,info in chart_data.items()])
@@ -1170,21 +1187,24 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
     counting_oos = 0
     for c,site in enumerate(sorted(chart_data.keys())):
         rem=""
+        bgcol = ""
         if site in out_of_space:
             rem = "<br><a href=remaining_%s.html>remaining datasets</a>"% site
+            bgcol ='bgcolor="red"'
             counting_oos += 1
+            
         if c%5==0:
             divs_table += "<tr>"
         if i_oos%5==0:
             oos_divs_table += "<tr>"
             
-        divs_table += "<td>%s%s</td>"%(chart_data[site][2], rem)
+        divs_table += "<td %s>%s%s</td>"%(bgcol,chart_data[site][2], rem)
         if site in out_of_space:
             oos_divs_table += "<td>%s%s</td>"%(chart_data[site][2], rem)
             i_oos+=1
 
             ## open the remaining json
-            remaining_reasons = json.loads(open('%s/remaining_%s.json'%(monitor_dir,site)).read())
+            remaining_reasons = json.loads(eosRead('%s/remaining_%s.json'%(monitor_dir,site)))
             for ds,info in remaining_reasons.items():
                 all_reasons.update( info['reasons'] )
                 for reason in info['reasons']:
@@ -1366,7 +1386,8 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
                     )
     AI.poll(acting=True)
     #####
-    speed_d = json.loads( open('%s/speed_draining.json'%base_eos_dir).read())
+    #speed_d = json.loads( eosRead('%s/speed_draining.json'%base_eos_dir))
+    speed_d = list(agent_speed_draining())
 
     for team,agents in getAllAgents(reqmgr_url).items():
         if not team in ['production','relval','highprio']: continue
@@ -1441,7 +1462,7 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
     os.system('mv %s/index.html.new %s/index.html'%(monitor_dir,monitor_dir))
 
         
-    statuses = json.loads(open('%s/statusmon.json'%monitor_dir).read())
+    statuses = json.loads(eosRead('%s/statusmon.json'%monitor_dir))
     s_count = defaultdict(int)
     now = time.mktime(time.gmtime())
     for wf in session.query(Workflow).all():
@@ -1451,9 +1472,11 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
     for t in statuses.keys():
         if (now-float(t)) > 7*24*60*60:
             statuses.pop(t)
-    open('%s/statusmon.json'%monitor_dir,'w').write( json.dumps( statuses , indent=2))
+    #open('%s/statusmon.json'%monitor_dir,'w').write( json.dumps( statuses , indent=2))
+    eosFile('%s/statusmon.json'%monitor_dir).write( json.dumps( statuses , indent=2)).close()
 
-    html_doc = open('%s/statuses.html'%monitor_dir,'w')
+    #html_doc = open('%s/statuses.html'%monitor_dir,'w')
+    html_doc = eosFile('%s/statuses.html'%monitor_dir)
     html_doc.write("""                                                                                                                                                                                                                                                                                                      <html>        
 <table border=1>
 <thead>
@@ -1467,7 +1490,8 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
         ## pass all that is unlocked and considered it gone
         wfs[wfo.name] = (wfo.status,wfo.wm_status)
 
-    open('%s/statuses.json'%monitor_pub_dir,'w').write(json.dumps( wfs ))
+    #open('%s/statuses.json'%monitor_pub_dir,'w').write(json.dumps( wfs ))
+    eosFile('%s/statuses.json'%monitor_pub_dir).write(json.dumps( wfs )).close()
     for wfn in sorted(wfs.keys()):
         ## pass all that is unlocked and considered it gone
         if 'unlock' in wfs[wfn][0]: continue
@@ -1480,11 +1504,14 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
     this_week = str(int(time.strftime("%W", time.gmtime())))
     last_week = str(int(time.strftime("%W", time.gmtime()))-1)
 
-    open(time.strftime("%s/summary_%%Y_"%(monitor_dir), time.gmtime())+this_week+".json", 'w').write(json.dumps(summary_content, indent=2))
+    #open(time.strftime("%s/summary_%%Y_"%(monitor_dir), time.gmtime())+this_week+".json", 'w').write(json.dumps(summary_content, indent=2))
+    eosFile(time.strftime("%s/summary_%%Y_"%(monitor_dir), time.gmtime())+this_week+".json").write(json.dumps(summary_content, indent=2)).close()
     os.system(time.strftime("cp %s/summary_%%Y_"%(monitor_dir), time.gmtime())+this_week+".json %s/summary.txt"%(monitor_pub_dir))
     os.system(time.strftime("cp %s/summary_%%Y_"%(monitor_dir), time.gmtime())+last_week+".json %s/last_summary.txt"%(monitor_pub_dir))
 
 
 if __name__ == "__main__":
     htmlor()
+    CI = closeoutInfo()
+    CI.html()
 

@@ -388,6 +388,14 @@ def makeAdhocAds(config):
     anAd["set_HasBeenRouted"] = False
     print anAd
 
+    anAd = classad.ClassAd()
+    anAd["GridResource"] = "condor localhost localhost"
+    anAd["TargetUniverse"] = 5
+    anAd["Name"] = str("restricting genonly to fnal")
+    anAd["Requirements"] = classad.ExprTree(str('regexp(".+PhaseIISummer17wmLHEGENOnly-[^\/]+_0$", WMAgent_SubTaskname) && JobStatus ==1 && DESIRED_Sites != "T1_US_FNAL"'))
+    anAd["set_DESIRED_Sites"] = "T1_US_FNAL"
+    anAd["set_HasBeenRouted"] = False
+    print anAd
 
     ############################################################
     ## if you want to reset the routing of eveything in the pool

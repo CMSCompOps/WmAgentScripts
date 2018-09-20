@@ -27,12 +27,7 @@ from pprint import pprint
 
 import dbs3Client
 
-try:
-    import reqMgrClient
-except:
-    print "WMCore libraries not loaded, run the following command:"
-    print "source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh"
-    sys.exit(0)
+import reqMgrClient
 
 reqmgrCouchURL = "https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache"
 
@@ -46,25 +41,16 @@ def modifySchema(cache, workflow, user, group, events, firstLumi, backfill=False
     if backfill is True, modifies RequestString, ProcessingString, AcquisitionEra
     and Campaign to say Backfill, and restarts requestDate.
     """
-    # list of keys to be removed from the new request schema
-    paramBlacklist = ['BlockCloseMaxEvents', 'BlockCloseMaxFiles', 'BlockCloseMaxSize', 'BlockCloseMaxWaitTime',
-                      'CouchWorkloadDBName', 'CustodialGroup', 'CustodialSubType', 'Dashboard',
-                      'GracePeriod', 'HardTimeout', 'InitialPriority', 'inputMode', 'MaxMergeEvents', 'MaxMergeSize',
-                      'MaxRSS', 'MaxVSize', 'MinMergeSize', 'NonCustodialGroup','NonCustodialSubType',
-                      'OutputDatasets', 'ReqMgr2Only', 'RequestDate' 'RequestorDN', 'RequestName', 'RequestStatus',
-                      'RequestTransition', 'RequestWorkflow', 'SiteWhitelist', 'SoftTimeout', 'SoftwareVersions',
-                      'SubscriptionPriority', 'Team', 'timeStamp', 'TrustSitelists', 'TrustPUSitelists',
-                      'TotalEstimatedJobs', 'TotalInputEvents', 'TotalInputLumis', 'TotalInputFiles', 'DN',
-                      'AutoApproveSubscriptionSites', 'NonCustodialSites', 'CustodialSites', 'Teams',
-                      'OutputModulesLFNBases', 'AllowOpportunistic', 'InputDatasets', 'DeleteFromSource', '_id']
+    result = reqMgrClient.purgeClonedSchema( cache )
 
-    result = {}
-    for k, v in cache.iteritems():
-        if k in paramBlacklist or v in ([], {}, None, ''):
-            continue
-        else:
-            result[k] = v
-
+    ## then further drop nested arguments
+    taskParamBlacklist = [ 'EventsPerJob' ] 
+    for i in range(1,100):
+        t='Task%s'%i
+        if not t in result: break
+        for p in taskParamBlacklist:
+            if p in result[t]:
+                result[t].pop( p )
     if memory:
         result['Memory'] = memory
     if timeperevent:

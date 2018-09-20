@@ -4,10 +4,10 @@ import reqMgrClient
 from McMClient import McMClient
 from utils import makeReplicaRequest
 from utils import workflowInfo, siteInfo, campaignInfo, userLock
-from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, approveSubscription, getDatasetSize, updateSubscription, getWorkflows, componentInfo, getDatasetDestinations, getDatasetBlocks, DSS, do_html_in_each_module
+from utils import getDatasetChops, distributeToSites, getDatasetPresence, listSubscriptions, approveSubscription, getDatasetSize, updateSubscription, getWorkflows, componentInfo, getDatasetDestinations, getDatasetBlocks, DSS, do_html_in_each_module, eosRead
 from utils import unifiedConfiguration, monitor_dir, reqmgr_url, monitor_pub_dir
 from utils import lockInfo
-from utils import duplicateLock
+from utils import moduleLock
 import json
 from collections import defaultdict
 import optparse
@@ -20,10 +20,11 @@ import copy
 
 def transferor(url ,specific = None, talk=True, options=None):
     if userLock():   return
-    if duplicateLock():  return
+    mlock = moduleLock()
+    if mlock():  return
 
     use_mcm = True
-    up = componentInfo(mcm=use_mcm, soft=['mcm'])
+    up = componentInfo(soft=['mcm','wtc'])
     if not up.check(): return
     use_mcm = up.status['mcm']
 
@@ -103,7 +104,8 @@ def transferor(url ,specific = None, talk=True, options=None):
     in_transfer_priority=None
     min_transfer_priority=None
     print "getting all wf in staging ..."
-    stucks = json.loads(open('%s/stuck_transfers.json'%monitor_pub_dir).read())
+    #stucks = json.loads(open('%s/stuck_transfers.json'%monitor_pub_dir).read())
+    stucks = json.loads(eosRead('%s/stuck_transfers.json'%monitor_pub_dir))
     
     for wfo in session.query(Workflow).filter(Workflow.status=='staging').all():
         wfh = workflowInfo( url, wfo.name, spec=False)

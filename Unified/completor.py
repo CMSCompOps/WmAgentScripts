@@ -2,7 +2,7 @@
 from assignSession import *
 import sys
 import reqMgrClient
-from utils import workflowInfo, getWorkflowById, forceComplete, getDatasetEventsAndLumis, componentInfo, monitor_dir, reqmgr_url, unifiedConfiguration, getForceCompletes, getAllStuckDataset, monitor_pub_dir, moduleLock 
+from utils import workflowInfo, getWorkflowById, forceComplete, getDatasetEventsAndLumis, componentInfo, monitor_dir, reqmgr_url, unifiedConfiguration, getForceCompletes, getAllStuckDataset, monitor_pub_dir, moduleLock , eosFile, eosRead
 from utils import campaignInfo, siteInfo, sendLog, sendEmail
 from collections import defaultdict
 import json
@@ -13,13 +13,14 @@ import random
 
 def completor(url, specific):
     use_mcm = True
-    up = componentInfo(mcm=use_mcm, soft=['mcm'])
+    up = componentInfo(soft=['mcm','wtc'])
     if not up.check(): return
     use_mcm = up.status['mcm']
     if use_mcm:
         mcm = McMClient(dev=False)
 
-    if moduleLock(silent=True)(): return 
+    mlock = moduleLock(silent=True)
+    if mlock(): return 
 
     safe_mode = False
 
@@ -42,7 +43,7 @@ def completor(url, specific):
     ## take into account what stagor was saying
     for itry in range(5):
         try:
-            all_stuck.update( json.loads( open('%s/stuck_transfers.json'%monitor_pub_dir).read() ))
+            all_stuck.update( json.loads( eosRead('%s/stuck_transfers.json'%monitor_pub_dir)))
             break
         except:
             time.sleep(2)
@@ -50,7 +51,7 @@ def completor(url, specific):
     for itry in range(5):
          try:
              ## take into account the block that needed to be repositioned recently
-             all_stuck.update( [b.split('#')[0] for b in json.loads( open('%s/missing_blocks.json'%monitor_dir).read()) ] )
+             all_stuck.update( [b.split('#')[0] for b in json.loads( eosRead('%s/missing_blocks.json'%monitor_dir)) ] )
              break
          except:
              time.sleep(2)
@@ -165,7 +166,7 @@ def completor(url, specific):
 
         now = time.mktime(time.gmtime()) / (60*60*24.)
 
-        running_log = filter(lambda change : change["Status"] in ["acquired","running-open","running-closed"],wfi.request['RequestTransition'])
+        running_log = filter(lambda change : change["Status"] in ["running-open","running-closed"],wfi.request['RequestTransition'])
         if not running_log:
             print "\tHas no running log"
             delay = 0
@@ -185,24 +186,30 @@ def completor(url, specific):
             injection_delay = now - injected_on
         
 
+        delay_for_priority_increase = injection_delay
+        #delay_for_priority_increase = delay
 
         (w,d) = divmod(delay, 7 )
         print "\t"*int(w)+"Running since",delay,"[days] priority=",priority
 
-        if injection_delay!=None and injection_delay > injection_delay_threshold and priority >= injection_delay_priority:
+        if delay_for_priority_increase!=None and delay_for_priority_increase > injection_delay_threshold and priority >= injection_delay_priority:
             quantized = 5000 ## quantize priority
-            tail_cutting_priority = wfi.request['InitialPriority']+ int((delay_priority_increase * (injection_delay - injection_delay_threshold) / 7) / quantized) * quantized
+            tail_cutting_priority = wfi.request['InitialPriority']+ int((delay_priority_increase * (delay_for_priority_increase - injection_delay_threshold) / 7) / quantized) * quantized
             tail_cutting_priority += 101 ## to signal it is from this mechanism
             tail_cutting_priority = min(400000, tail_cutting_priority) ## never go above 400k priority
             tail_cutting_priority = max(tail_cutting_priority, priority) ## never go below the current value
             
             if priority < tail_cutting_priority:
-                sendLog('completor',"%s Injected since %s [days] priority=%s, increasing to %s"%(wfo.name,injection_delay,priority, tail_cutting_priority), level='critical')
-                wfi.sendLog('completor','bumping priority to %d for being injected since %s'%( tail_cutting_priority, injection_delay))
                 if max_priority:
+                    sendLog('completor',"%s Injected since %s [days] priority=%s, increasing to %s"%(wfo.name,delay_for_priority_increase,priority, tail_cutting_priority), level='critical')
+                    wfi.sendLog('completor','bumping priority to %d for being injected since %s'%( tail_cutting_priority, delay_for_priority_increase))
+
                     reqMgrClient.changePriorityWorkflow(url, wfo.name, tail_cutting_priority)
                     max_priority-=1
                 else:
+                    sendLog('completor',"%s Injected since %s [days] priority=%s, would like to increase to %s"%(wfo.name,delay_for_priority_increase,priority, tail_cutting_priority), level='critical')
+                    wfi.sendLog('completor','would like to bump priority to %d for being injected since %s'%( tail_cutting_priority, delay_for_priority_increase))
+
                     print "Could be changing the priority to higher value, but too many already were done"
 
         _,prim,_,_ = wfi.getIO()
@@ -229,9 +236,9 @@ def completor(url, specific):
             sendLog('completor','%s has no output at all'% wfo.name, level='critical')
             continue
 
-        is_over_allowed_delay = (all([percent_completions[out] >= good_fraction_per_out[out] for out in percent_completions]) and delay >= allowed_delay)
-        is_over_truncation_delay = (is_stuck and (all([percent_completions[out] >= truncate_fraction_per_out[out] for out in percent_completions])) and delay >= allowed_delay)
-        is_over_completion = (all([percent_completions[out] >= good_fraction_nodelay_per_out[out] for out in percent_completions]))
+        is_over_allowed_delay = (all([percent_completions[out] >= good_fraction_per_out.get(out,1000.) for out in percent_completions]) and delay >= allowed_delay)
+        is_over_truncation_delay = (is_stuck and (all([percent_completions[out] >= truncate_fraction_per_out.get(out,1000.) for out in percent_completions])) and delay >= allowed_delay)
+        is_over_completion = (all([percent_completions[out] >= good_fraction_nodelay_per_out.get(out,1000.) for out in percent_completions]))
 
         if is_over_completion:
             wfi.sendLog('completor', "all is over completed %s\n %s"%( json.dumps( good_fraction_nodelay_per_out, indent=2 ),
@@ -293,7 +300,8 @@ def completor(url, specific):
     #open('%s/completions.json'%monitor_dir,'w').write( json.dumps( completions , indent=2))
     text="These have been running for long"
     
-    open('%s/longlasting.json'%monitor_dir,'w').write( json.dumps( long_lasting, indent=2 ))
+    #open('%s/longlasting.json'%monitor_dir,'w').write( json.dumps( long_lasting, indent=2 ))
+    eosFile('%s/longlasting.json'%monitor_dir,'w').write( json.dumps( long_lasting, indent=2 )).close()
 
     for wf,info in sorted(long_lasting.items(), key=lambda tp:tp[1]['delay'], reverse=True):
         delay = info['delay']
