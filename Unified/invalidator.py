@@ -40,7 +40,7 @@ def invalidator(url, invalid_status='INVALID'):
             wfi = workflowInfo(url, wfn)
             success = "not rejected"
             ## to do, we should find a way to reject the workflow and any related acdc
-            successes = invalidate(url, wfn, only_resub=True, with_output=False)
+            successes = invalidate(url, wfi, only_resub=True, with_output=False)
             wfi.sendLog('invalidator',"rejection is performed from McM invalidations request")
             acknowledge= all(successes)
 
