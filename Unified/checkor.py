@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, forceComplete, makeReplicaRequest, getDatasetSize, getDatasetFiles, sendLog, reqmgr_url, dbs_url, dbs_url_writer, getForceCompletes, display_time
+from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, forceComplete, makeReplicaRequest, getDatasetSize, getDatasetFiles, sendLog, reqmgr_url, dbs_url, dbs_url_writer, getForceCompletes, display_time, checkMemory
 from utils import componentInfo, unifiedConfiguration, userLock, moduleLock, dataCache, unified_url, getDatasetLumisAndFiles, getDatasetRuns, duplicateAnalyzer, invalidateFiles, findParent, do_html_in_each_module
 import phedexClient
 import dbs3Client
@@ -222,6 +222,8 @@ def checkor(url, spec=None, options=None):
         time.sleep( sleep_time )
         
         time_point("Starting checkor with %s Progress [%d/%d]"% (wfo.name, iwfo, will_do_that_many), percent = float(iwfo)/will_do_that_many)
+        usage = checkMemory()
+        print "memory so far",usage
 
         ## get info
         wfi = workflowInfo(url, wfo.name)

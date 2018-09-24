@@ -1032,6 +1032,14 @@ def checkDownTime():
     else:
         return False
 
+def checkMemory():
+    ## credits http://fa.bianp.net/blog/2013/different-ways-to-get-memory-consumption-or-lessons-learned-from-memory_profiler/
+    import resource
+    rusage_denom = 1024.
+    mem = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / rusage_denom
+    return mem
+
+
 class componentInfo:
     def __init__(self, block=True, mcm=None, soft=None, keep_trying=False):
         if soft is None:
