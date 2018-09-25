@@ -5215,7 +5215,9 @@ class agentInfo:
                          )
                 if self.verbose:
                     print self._getA(agent)
-            self._update(agent, {'version': release})
+
+            if release:
+                self._update(agent, {'version': release})
 
         for a in self.all_agents:
             self.buckets[self._get(a, 'status')].append( a )
@@ -5248,6 +5250,8 @@ class agentInfo:
             if self.verbose:
                 print "Able to set",agent,"in standby"
             self.change_status( agent, 'standby')
+        else:
+            print "not changing status from",self._getA(agent).get('status',None)
 
     def poll(self, wake_up_draining=False, acting=False, verbose=False):
         if not self.ready:
