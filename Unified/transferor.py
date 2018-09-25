@@ -33,6 +33,7 @@ def transferor(url ,specific = None, talk=True, options=None):
     else:
         execute = True
 
+    UC = unifiedConfiguration()
     SI = siteInfo()
     CI = campaignInfo()
     #NLI = newLockInfo()
@@ -763,7 +764,7 @@ def transferor(url ,specific = None, talk=True, options=None):
     ## one big session commit at the end that everything went fine
     session.commit()
 
-if __name__=="__main__":
+def OParse():
     UC = unifiedConfiguration()
     url = reqmgr_url
     parser = optparse.OptionParser()  
@@ -778,6 +779,11 @@ if __name__=="__main__":
     parser.add_option('--maxstaging',help="The limit on the number of workflow we want to keep in staging at a time",default=UC.get('max_staging_workflows'),type=int)
     parser.add_option('--maxstagingpersite',help="The limit on the number of workflow we want to keep in staging at a time per site",default=UC.get('max_staging_workflows_per_site'),type=int)
     parser.add_option('--maxcopy',help="Specify the number of copies of the input we need", default=3,type=int)
+    return parser
+
+if __name__=="__main__":
+
+    parser = OParse()
     (options,args) = parser.parse_args()
 
     spec=None

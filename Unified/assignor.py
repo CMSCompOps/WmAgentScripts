@@ -660,9 +660,9 @@ def assignor(url ,specific = None, talk=True, options=None):
     sendLog('assignor',"Assigned %d Stalled %s"%(n_assigned, n_stalled))
     if n_stalled and not options.go and not options.early:
         sendLog('assignor',"%s workflows cannot be assigned. Please take a look"%(n_stalled), level='critical')
-    
-if __name__=="__main__":
-    url = reqmgr_url
+
+
+def OParse():
     parser = optparse.OptionParser()
     parser.add_option('-t','--test', help='Only test the assignment',action='store_true',dest='test',default=False)
     parser.add_option('-e', '--early', help='Fectch from early statuses',default=False, action="store_true")
@@ -679,6 +679,13 @@ if __name__=="__main__":
 
     for key in reqMgrClient.assignWorkflow.keys:
         parser.add_option('--%s'%key,help="%s Parameter of request manager assignment interface"%key, default=None)
+    return parser
+
+
+if __name__=="__main__":
+    url = reqmgr_url
+
+    parser = OParse()
     (options,args) = parser.parse_args()
 
     spec=None

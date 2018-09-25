@@ -78,6 +78,15 @@ def deep_update(d, u):
             d[k] = v
     return d
 
+def Options(parser, **provided_args):
+    ## parse command line 
+    cmd = []
+    for k,v in provided_args.items():
+        cmd.append('--%s'%k)
+        cmd.append('%s'%v)
+    (options,args) = parser.parse_args(cmd)            
+    return options
+
 def sendDashboard( subject, text, criticality='info', show=True):
     ### this sends something to the dashboard ES for error, info, messages
     pass
