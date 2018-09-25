@@ -160,7 +160,7 @@
     "assignor" : null,
     "actor" : 10,
     "closor" : null,
-    "checkor" : 300,
+    "checkor" : 50,
     "completor" : null
     }
  },
