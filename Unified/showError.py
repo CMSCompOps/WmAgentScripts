@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from utils import workflowInfo, siteInfo, monitor_dir, monitor_pub_dir, base_dir, global_SI, getDatasetPresence, getDatasetBlocksFraction, getDatasetBlocks, unifiedConfiguration, getDatasetEventsPerLumi, dataCache, unified_url, base_eos_dir, monitor_eos_dir, unified_url_eos, eosFile
+from utils import workflowInfo, siteInfo, monitor_dir, monitor_pub_dir, base_dir, global_SI, getDatasetPresence, getDatasetBlocksFraction, getDatasetBlocks, unifiedConfiguration, getDatasetEventsPerLumi, dataCache, unified_url, base_eos_dir, monitor_eos_dir, unified_url_eos, eosFile, ThreadHandler
 import time
 
 import json
@@ -121,72 +121,6 @@ class XRDBuster(threading.Thread):
                                         print "no file retrieved in",local
 
 
-class ThreadHandler(threading.Thread):
-    def __init__(self, **args):
-        threading.Thread.__init__(self)
-        self.threads = args.get('threads', 10)
-        self.n_threads = args.get('n_threads', 10)
-        self.sleepy = args.get('sleepy',10)
-        self.timeout = args.get('timeout',None)
-        self.verbose = args.get('verbose',False)
-
-    def run(self):
-        random.shuffle(self.threads)
-        ntotal=len(self.threads)
-        print "Processing",ntotal,"threads with",self.n_threads,"max concurrent and timeout",self.timeout,'[min]'
-        start_now = time.mktime(time.gmtime())
-        r_threads = []
-        ## check all running threads and move them in r_threads
-        #for t in threads:
-        #    if t.is_alive():
-        #        r_threads.append( t )
-        #        threads.remove( t ) 
-        ## check all finished threads and move them in r_threads
-
-        bug_every=max(len(self.threads) / 10., 100.) ## 10 steps of eta verbosity
-        next_ping = int(len(self.threads)/bug_every)
-        while self.threads:
-            if self.timeout and (time.mktime(time.gmtime()) - start_now) > (self.timeout*60.):
-                print "Stopping to start threads because the time out is over",time.asctime(time.gmtime())
-                ## transfer all to running
-                while self.threads:
-                    r_threads.append( self.threads.pop(-1))
-                ## then we have to kill all threads
-                for t in r_threads:
-                    pass
-                ## and exit the loop
-                self.threads = r_threads
-                return
-
-                
-            running = sum([t.is_alive() for t in r_threads])
-            #if self.verbose: print running,"/",n_threads,"running threads"
-            if self.n_threads==None or running < self.n_threads:
-                startme = self.n_threads-running if self.n_threads else len(self.threads)
-                if self.verbose or int(len(self.threads)/bug_every)<next_ping:
-                    next_ping =int(len(self.threads)/bug_every)
-                    now= time.mktime(time.gmtime())
-                    spend = (now - start_now)
-                    n_done = ntotal-len(self.threads)
-                    print "Starting",startme,"new threads",len(self.threads),"remaining", time.asctime()
-                    if n_done:
-                        eta = (spend / n_done) * len(self.threads)
-                        print "Will finish in ~%.2f [s]"%(eta)
-                if startme > self.n_threads/5.:
-                    self.sleepy/=2.
-                for it in range(startme):
-                    if self.threads:
-                        r_threads.append( self.threads.pop(-1))
-                        r_threads[-1].start()
-                        ## just wait a sec
-                        time.sleep(5)
-            time.sleep(self.sleepy)
-        ##then wait for completion
-        while sum([t.is_alive() for t in r_threads]):
-            time.sleep(1)
-        
-        ## and swap list back
-        self.threads = r_threads
 
 
 def parse_one(url, wfn, options=None):
