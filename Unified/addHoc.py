@@ -119,7 +119,8 @@ for (the_dir,logtype) in [(monitor_eos_dir,'report'),
             print "with eos command"
             os.system('eos rm -rf %s'%d)
         else:
-            print d,"is still in use"
+            #print d,"is still in use"
+            pass
     
 ## protected lfn list
 os.system('python listProtectedLFN.py')
