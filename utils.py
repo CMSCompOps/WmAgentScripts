@@ -1284,29 +1284,24 @@ class eosFile(object):
 
     def close(self):
         self.cache.close()
+        bail_and_email = True
         while True:
             try:
                 print "moving",self.cache_filename,"to",self.eos_filename
                 r = os.system("cp %s %s"%( self.cache_filename, self.eos_filename))
                 if r==0: break
                 print "not able to copy to eos",self.eos_filename,"with code",r
+                if bail_and_email:
+                    sendEmail('eosFile','eos is acting up. not able to copy %s to eos code %s'%( self.eos_filename, r))
+                    break
             except Exception as e:
                 print "Failed to copy",self.eos_filename,"with",str(e)
-                time.sleep(30)
-        """
-        while True:
-            ## reading and writing a file
-            try:
-                self.cache = open(self.cache_filename)
-                self.eos_file = open(self.eos_filename,'w')
-                self.eos_file.write( self.cache.read() )
-                self.eos_file.close()
-                self.cache.close()
-                break
-            except Exception as e:
-                print "Failed to write",self.eos_filename,"with",str(e)
-                time.sleep(2)
-        """
+                if bail_and_email:
+                    sendEmail('eosFile','eos is acting up. not able to copy %s to eos \n%s'%( self.eos_filename, stre(e)))
+                    break
+                else:
+                    time.sleep(30)
+                
 
 class relvalInfo:
     def __init__(self):
