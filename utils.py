@@ -5235,7 +5235,8 @@ class agentInfo:
             pinfo = prod_info.get( agent, {})
             p_release = linfo.get('version',None)
             release = pinfo.get('agent_version',None)
-            is_drained = drained( pinfo.get('drain_stats',{}) )
+            #is_drained = drained( pinfo.get('drain_stats',{}) )
+            is_drained = False
                 
             if self.verbose:
                 print agent
