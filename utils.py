@@ -1292,7 +1292,7 @@ class eosFile(object):
                 print "not able to copy to eos",self.eos_filename,"with code",r
             except Exception as e:
                 print "Failed to copy",self.eos_filename,"with",str(e)
-                time.sleep(2)
+                time.sleep(30)
         """
         while True:
             ## reading and writing a file
