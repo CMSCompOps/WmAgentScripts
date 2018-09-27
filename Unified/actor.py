@@ -524,13 +524,17 @@ def actor(url,options=None):
                 assign_to_sites = set()
                 print "Task names is " + task
                 fulltaskname = '/' + wfname + '/' + task
-#                print "Full task name is " + fulltaskname
+                print "Full task name is " + fulltaskname
+                print where_to_run.keys()
                 wrong_task = False
                 for task_info in all_tasks:
                     if fulltaskname == task_info.pathName:
                         if task_info.taskType not in ['Processing','Production','Merge']:
-                            wrong_task=True
+                            wrong_task= True
                             wfi.sendLog('actor', "Skipping task %s because the taskType is %s. Can only ACDC Processing, Production, or Merge tasks"%( fulltaskname, task_info.taskType))
+                if not fulltaskname in where_to_run.keys():
+                    wrong_task= True
+                    wfi.sendLog('actor', "Skipping task %s because there is no acdc doc for it anyways."%(fulltaskname), level='critical')
                 if wrong_task:
                     continue
                 print tasks[task]
@@ -546,13 +550,7 @@ def actor(url,options=None):
 #                        print  "Skipping %s for now until Allie fixes memory parameter for TaskChain ACDCs."%wfname
 #                        wfi.sendLog('actor',"Skipping %s for now until Allie fixes memory parameter for TaskChain ACDCs."%wfname)
                 if not 'sites' in actions:
-                    if not fulltaskname in where_to_run:
-                        ## there is a rather severe issue that one has passed site==auto, 
-                        assign_to_sites = []
-                        sendEmail('actor','severe issue in actor, malformed action or acdc doc')
-                        continue
-                    else:
-                        assign_to_sites = list(set([SI.SE_to_CE(site) for site in where_to_run[fulltaskname]]))
+                    assign_to_sites = list(set([SI.SE_to_CE(site) for site in where_to_run[fulltaskname]]))
                     print "Found",sorted(assign_to_sites),"as sites where to run the ACDC at, from the acdc doc of ",wfname
                 print "Going to run at",sorted(assign_to_sites)
                 if recover:
