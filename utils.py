@@ -1292,12 +1292,14 @@ class eosFile(object):
                 if r==0: break
                 print "not able to copy to eos",self.eos_filename,"with code",r
                 if bail_and_email:
-                    sendEmail('eosFile','eos is acting up. not able to copy %s to eos code %s'%( self.eos_filename, r))
+                    h = socket.gethostname()
+                    sendEmail('eosFile','eos is acting up on %s. not able to copy %s to eos code %s'%( h, self.eos_filename, r))
                     break
             except Exception as e:
                 print "Failed to copy",self.eos_filename,"with",str(e)
                 if bail_and_email:
-                    sendEmail('eosFile','eos is acting up. not able to copy %s to eos \n%s'%( self.eos_filename, stre(e)))
+                    h = socket.gethostname()
+                    sendEmail('eosFile','eos is acting up on %s. not able to copy %s to eos \n%s'%( h, self.eos_filename, stre(e)))
                     break
                 else:
                     time.sleep(30)
