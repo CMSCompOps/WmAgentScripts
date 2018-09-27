@@ -208,6 +208,8 @@ def parse_one(url, wfn, options=None):
     
     if not 'AgentJobInfo' in stat:
         stat['AgentJobInfo'] = {}
+        print "no information in AgentJobInfo, they agents must have been retired. I cannot go on without creating a partial report"
+        return task_error_site_count, one_explanation 
         #print "bad countent ?"
         #print json.dumps(  stat,  indent=2)
 
