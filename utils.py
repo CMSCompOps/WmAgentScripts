@@ -6323,8 +6323,8 @@ class workflowInfo:
         missing_to_run_at = defaultdict(lambda : defaultdict(int))
         original_whitelist = self.request['SiteWhitelist']
         for doc in self.recovery_doc:
-            #print task
             task = doc['fileset_name']
+            #print task,doc['files'].keys()
             for f,info in doc['files'].iteritems():
                 missing_to_run[task] += info['events']
                 if f.startswith('MCFakeFile'):
