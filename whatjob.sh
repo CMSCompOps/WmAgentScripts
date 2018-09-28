@@ -4,7 +4,7 @@ ls -trlh /eos/cms/store/unified/*.lock
 ls -trlh /eos/cms/store/unified/www/*.lock
 ls -trlh /eos/cms/store/unified/www/public/*.lock
 
-for each in 0268 0269 0272 0274 0275; do
+for each in 0268 0269 0272 0273 0274 0275; do
     echo 
     echo "#############################################"
     echo "Set on node" $each
