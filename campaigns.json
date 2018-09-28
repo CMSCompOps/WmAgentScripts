@@ -663,6 +663,14 @@
    "maxcopies": 1,
    "fractionpass" : 0.95
   },
+ "RunIIFall18HEMReReco": {
+    "go": false,
+    "maxcopies": 1,
+    "force-complete" : 0.95,
+    "force-timeout" : 7,
+    "lumisize": -1,
+    "overflow": {"PU":{"max":0,"pending":0,"force":false}}
+  },
  "RunIISummer18GS" : {
    "go" : true,
    "lumisize" : -1,
