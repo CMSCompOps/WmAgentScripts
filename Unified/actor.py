@@ -478,6 +478,9 @@ def actor(url,options=None):
                 where_to_run, missing_to_run,missing_to_run_at =  wfi.getRecoveryInfo()
                 print "Where to run = "
                 print where_to_run
+                if not where_to_run:
+                    sendLog('actor','Cannot create ACDCS for %s because recovery info cannot be found.'%wfname,level='critical')
+                    continue
             except:
                 sendLog('actor','Cannot create ACDCS for %s because recovery info cannot be found.'%wfname,level='critical')
                 print "Moving on. Cannot access recovery info for " + wfname
