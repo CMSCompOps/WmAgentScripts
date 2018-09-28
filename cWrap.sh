@@ -19,6 +19,7 @@ dated_log=$HTML_DIR/logs/$modulename/`date +%F_%T`.log
 log=$dated_log
 
 echo `date` > $log
+echo $$ >> $log
 
 if [ -r unified_drain ] ; then
     echo "System is locally draining" >> $log
