@@ -6020,8 +6020,9 @@ class workflowInfo:
         #single_tiers = (len(all_tiers) == len(set(all_tiers)))
         single_tiers = True
         ## more than one task with output until https://github.com/dmwm/WMCore/issues/8269 gets solved
-        output_per_task = self.getOutputPerTask()
-        output_from_single_task = len(output_per_task.keys())==1
+        #output_per_task = self.getOutputPerTask()
+        #output_from_single_task = len(output_per_task.keys())==1
+        output_from_single_task = True ## the parentage 
         ## more than one task to not convert single task in a step
         #more_than_one_task = wfi.request.get('TaskChain',0)>1
         more_than_one_task = True
