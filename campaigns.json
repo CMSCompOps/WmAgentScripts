@@ -341,7 +341,7 @@
     "resize" : "auto"
   },
   "EarlyReReco2018" : {
-    "go": false,
+    "go": true,
     "labels" : ["17Sep2018"],
     "custodial_override" : ["DQMIO"],
     "overflow" : {"PRIM" : {}},
