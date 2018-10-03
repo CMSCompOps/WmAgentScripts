@@ -1466,7 +1466,7 @@ if __name__ == "__main__":
     parser.add_option('--tape_size_limit', help='The limit in size of all outputs',default=0,type=int)
     parser.add_option('--html',help='make the monitor page',action='store_true', default=False)
     parser.add_option('--no_report',help='Prevent from making the error report',action='store_true', default=False)
-    parser.add_option('--threads',help='Number of threads for processing workflows',default=1, type=int)
+    parser.add_option('--threads',help='Number of threads for processing workflows',default=10, type=int)
     (options,args) = parser.parse_args()
     spec=None
     if len(args)!=0:
