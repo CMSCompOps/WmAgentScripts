@@ -241,7 +241,9 @@ def checkor(url, spec=None, options=None):
                                  n_threads = options.threads,
                                  sleepy = 10,
                                  timeout= 180,
-                                 verbose=True)
+                                 verbose=True,
+                                 label = 'checkor'
+                             )
     run_threads.start()
 
     ## waiting on all to complete
