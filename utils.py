@@ -1561,7 +1561,7 @@ class ThreadHandler(threading.Thread):
                     now= time.mktime(time.gmtime())
                     spend = (now - start_now)
                     n_done = ntotal-len(self.threads)
-                    print '[%s]'%label,"Starting",startme,"new threads",len(self.threads),"remaining", time.asctime()
+                    print '[%s]'%self.label,"Starting",startme,"new threads",len(self.threads),"remaining", time.asctime()
                     if n_done:
                         eta = (spend / n_done) * len(self.threads)
                         print "Will finish in ~%.2f [s]"%(eta)
