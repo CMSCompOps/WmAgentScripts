@@ -670,7 +670,7 @@
    "fractionpass" : 0.95
   },
  "RunIIFall18HEMReReco": {
-    "go": false,
+    "go": true,
     "maxcopies": 1,
     "force-complete" : 0.95,
     "force-timeout" : 7,
