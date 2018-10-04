@@ -1539,6 +1539,9 @@ class ThreadHandler(threading.Thread):
         while self.threads:
             if self.timeout and (time.mktime(time.gmtime()) - start_now) > (self.timeout*60.):
                 print "Stopping to start threads because the time out is over",time.asctime(time.gmtime())
+                for t in r_threads:
+                    while t.is_alive():
+                        time.sleep(5)
                 ## transfer all to running
                 while self.threads:
                     r_threads.append( self.threads.pop(-1))
