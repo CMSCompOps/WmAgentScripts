@@ -326,6 +326,13 @@ def checkor(url, spec=None, options=None):
     print "File Invalidation"
     print invalidations
 
+    ## a hook to halt checkor nicely at this stage
+    if os.path.isfile('.checkor_stop'):
+        print "The loop on workflows was shortened"
+        sendEmail('checkor','Checkor loop was shortened artificially using .checkor_stop')
+        os.system('rm -f .checkor_stop')
+
+
             
 
 class CheckBuster(threading.Thread):
@@ -359,6 +366,11 @@ class CheckBuster(threading.Thread):
             self.failed = True
 
     def check(self):
+
+        ## a hook to halt checkor nicely at this stage
+        if os.path.isfile('.checkor_stop'):
+            print "The check on workflows is shortened"
+            return
 
         UC = self.UC
         CI = self.CI            
@@ -1432,14 +1444,6 @@ class CheckBuster(threading.Thread):
             else:
                 print "current status is",wfo.status,"not changing to anything"
         
-        ## a hook to halt checkor nicely at this stage
-        if os.path.isfile('.checkor_stop'):
-            print "The loop on workflows is shortened"
-            sendEmail('checkor','Checkor loop was shortened artificially using .checkor_stop')
-            os.system('rm -f .checkor_stop')
-            return
-
-
 
 
 
