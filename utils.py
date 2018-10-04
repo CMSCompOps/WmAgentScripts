@@ -1203,9 +1203,11 @@ class componentInfo:
                 eosfile = base_eos_dir+'/%s-testfile'%os.getpid()
                 oo = eosFile(eosfile)
                 oo.write("Testing I/O on eos")
-                oo.close() ## commits to eos
-                os.system('rm -f %s'% eosfile)
-                self.status['eos'] = True
+                r = oo.close() ## commits to eos
+                if r:
+                    r = os.system('rm -f %s'% eosfile)
+                    if r == 0:
+                        self.status['eos'] = True
                 break
             except Exception as e:
                 self.tell('eos')
@@ -1289,12 +1291,13 @@ class eosFile(object):
             try:
                 print "moving",self.cache_filename,"to",self.eos_filename
                 r = os.system("cp %s %s"%( self.cache_filename, self.eos_filename))
-                if r==0: break
+                if r==0: return True
                 print "not able to copy to eos",self.eos_filename,"with code",r
                 if bail_and_email:
                     h = socket.gethostname()
                     sendEmail('eosFile','eos is acting up on %s. not able to copy %s to eos code %s'%( h, self.eos_filename, r))
                     break
+
             except Exception as e:
                 print "Failed to copy",self.eos_filename,"with",str(e)
                 if bail_and_email:
@@ -1303,7 +1306,7 @@ class eosFile(object):
                     break
                 else:
                     time.sleep(30)
-                
+        return False
 
 class relvalInfo:
     def __init__(self):
