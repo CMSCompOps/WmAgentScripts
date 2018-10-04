@@ -1524,6 +1524,7 @@ class ThreadHandler(threading.Thread):
         self.sleepy = args.get('sleepy',10)
         self.timeout = args.get('timeout',None)
         self.verbose = args.get('verbose',False)
+        self.label = args.get('label', 'ThreadHandler')
 
     def run(self):
         random.shuffle(self.threads)
@@ -1531,12 +1532,7 @@ class ThreadHandler(threading.Thread):
         print "Processing",ntotal,"threads with",self.n_threads,"max concurrent and timeout",self.timeout,'[min]'
         start_now = time.mktime(time.gmtime())
         r_threads = []
-        ## check all running threads and move them in r_threads
-        #for t in threads:
-        #    if t.is_alive():
-        #        r_threads.append( t )
-        #        threads.remove( t ) 
-        ## check all finished threads and move them in r_threads
+
 
         bug_every=max(len(self.threads) / 10., 100.) ## 10 steps of eta verbosity
         next_ping = int(len(self.threads)/bug_every)
@@ -1555,7 +1551,6 @@ class ThreadHandler(threading.Thread):
 
                 
             running = sum([t.is_alive() for t in r_threads])
-            #if self.verbose: print running,"/",n_threads,"running threads"
             if self.n_threads==None or running < self.n_threads:
                 startme = self.n_threads-running if self.n_threads else len(self.threads)
                 if self.verbose or int(len(self.threads)/bug_every)<next_ping:
@@ -1563,7 +1558,7 @@ class ThreadHandler(threading.Thread):
                     now= time.mktime(time.gmtime())
                     spend = (now - start_now)
                     n_done = ntotal-len(self.threads)
-                    print "Starting",startme,"new threads",len(self.threads),"remaining", time.asctime()
+                    print '[%s]'%label,"Starting",startme,"new threads",len(self.threads),"remaining", time.asctime()
                     if n_done:
                         eta = (spend / n_done) * len(self.threads)
                         print "Will finish in ~%.2f [s]"%(eta)
