@@ -240,8 +240,8 @@ def checkor(url, spec=None, options=None):
     run_threads = ThreadHandler( threads = checkers,
                                  n_threads = options.threads,
                                  sleepy = 10,
-                                 timeout= 180,
-                                 verbose=True,
+                                 timeout = None,
+                                 verbose = True,
                                  label = 'checkor'
                              )
     run_threads.start()
