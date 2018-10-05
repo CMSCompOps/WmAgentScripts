@@ -230,6 +230,7 @@ def checkor(url, spec=None, options=None):
             overrides = overrides,
             holdings = holdings,
             forcings = forcings,
+            exceptions = exceptions,
             TMDB_invalid = TMDB_invalid,
             UC = UC,
             CI = CI,
@@ -382,6 +383,7 @@ class CheckBuster(threading.Thread):
         overrides = self.overrides
         holdings = self.holdings
         forcings = self.forcings
+        exceptions = self.exceptions
 
         TMDB_invalid = self.TMDB_invalid
 
