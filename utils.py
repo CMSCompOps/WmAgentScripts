@@ -1541,7 +1541,7 @@ class ThreadHandler(threading.Thread):
         next_ping = int(len(self.threads)/bug_every)
         while self.threads:
             if self.timeout and (time.mktime(time.gmtime()) - start_now) > (self.timeout*60.):
-                print "Stopping to start threads because the time out is over",time.asctime(time.gmtime())
+                print '[%s]'%self.label,"Stopping to start threads because the time out is over",time.asctime(time.gmtime())
                 for t in r_threads:
                     while t.is_alive():
                         time.sleep(5)
