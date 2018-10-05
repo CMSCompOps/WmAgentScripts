@@ -56,7 +56,7 @@ $BASE_DIR/cWrap.sh Unified/checkor.py  --update --clear
 #################################################
 ### this is sufficient to clear things that behave
 ## those that just completed
-$BASE_DIR/cWrap.sh Unified/checkor.py --strict --clear
+$BASE_DIR/cWrap.sh Unified/checkor.py --strict --clear --limit 200
 ## initiate automatic recovery
 $BASE_DIR/cWrap.sh Unified/recoveror.py
 ## take out the ones that can toggle
