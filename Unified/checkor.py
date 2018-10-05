@@ -280,7 +280,11 @@ def checkor(url, spec=None, options=None):
             for site,items in to.custodials.items():
                 custodials[site].extend( items )
 
-    print failed_threads,"threads have failed, better check this out"
+    if failed_threads:
+        sendLog('checkor','%d threads have failed, better check this out'% failed_threads, level='critical')
+        ## remove once it's all good
+        sendEmail('checkor','%d threads have failed, better check this out'% failed_threads)
+
     ## conclude things, the good old way
     print report_created,"reports created in this run"
 
@@ -364,7 +368,7 @@ class CheckBuster(threading.Thread):
             #print "due to"
             #print str(e)
             ## there should be a warning at this point
-            sendLog('mt_checkor','failed on %s due to %s'%( self.wfo.name, str(e)), level='critical')
+            sendLog('checkor','failed on %s due to %s'%( self.wfo.name, str(e)), level='critical')
             self.failed = True
 
     def check(self):
