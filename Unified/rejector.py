@@ -2,7 +2,7 @@
 from assignSession import *
 import sys
 import reqMgrClient
-from utils import workflowInfo, setDatasetStatus
+from utils import workflowInfo, setDatasetStatus, invalidate
 from utils import componentInfo, reqmgr_url, getWorkflowById
 from utils import componentInfo, getWorkflowById, sendLog
 import optparse
