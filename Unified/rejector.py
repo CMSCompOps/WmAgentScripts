@@ -63,7 +63,7 @@ def rejector(url, specific, options=None):
         else:
             wfi.sendLog('rejector','invalidating the workflow and outputs by unified operator%s'%comment)
 
-        results = invalidate(url, wfi, and_self=True, only_resub=True, with_output= (not options.keep))
+        results = invalidate(url, wfi, only_resub=True, with_output= (not options.keep))
 
         if all(results):
             print wfo.name,"and",datasets,"are rejected"
