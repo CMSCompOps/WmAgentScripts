@@ -3983,7 +3983,24 @@ def getDatasetBlocksFromFiles( dataset, files):
             collected_blocks.add( fn['block_name'] )
     return sorted(collected_blocks)
 
+def tcWrapper( *argv, **args):
+    label = argv[0]
+    func = argv[1]
+    argv = argv[1:]
+
 def getDatasetBlockSize(dataset):
+    count=5
+    label = "getDatasetBlockSize"
+    while count>0:
+        try:
+            return _getDatasetBlockSize(dataset)
+        except Exception as e:
+            print "[%d] Failed on %s with \n%s"%(count,label,str(e))
+            time.sleep(5)
+    raise Exception("Failed on %s with \n%s"%( label,str(e)))
+
+
+def _getDatasetBlockSize(dataset):
     dbsapi = DbsApi(url=dbs_url)
     blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
     return dict([(block['block_name'],block['file_size']/ (1024.**3)) for block in blocks ])
