@@ -4640,6 +4640,17 @@ def getDatasetStatus(dataset):
             return None
 
 def getDatasets(dataset):
+    count=5
+    label = "getDatasets"
+    while count>0:
+        try:
+            return _getDatasets(dataset)
+        except Exception as e:
+            print "[%d] Failed on %s with \n%s"%(count,label,str(e))
+            time.sleep(5)
+    raise Exception("Failed on %s with \n%s"%( label,str(e)))
+    
+def _getDatasets(dataset):
     # initialize API to DBS3
     dbsapi = DbsApi(url=dbs_url)
     # retrieve dataset summary
