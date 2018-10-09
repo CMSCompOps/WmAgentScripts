@@ -368,7 +368,8 @@ class CheckBuster(threading.Thread):
             #print "due to"
             #print str(e)
             ## there should be a warning at this point
-            sendLog('checkor','failed on %s due to %s'%( self.wfo.name, str(e)), level='critical')
+            import traceback
+            sendLog('checkor','failed on %s due to %s and %s'%( self.wfo.name, str(e), traceback.format_exc()), level='critical')
             self.failed = True
 
     def check(self):
