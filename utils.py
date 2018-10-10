@@ -1208,7 +1208,9 @@ class componentInfo:
                     r = os.system('rm -f %s'% eosfile)
                     if r == 0:
                         self.status['eos'] = True
-                raise Exception("failed to I/O on eos")
+                if not self.status['eos']:
+                    raise Exception("failed to I/O on eos")
+
                 break
             except Exception as e:
                 self.tell('eos')
