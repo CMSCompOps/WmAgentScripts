@@ -578,7 +578,7 @@
    "parameters": {
       "EventsPerJob": 50000
     },
-   "SiteWhitelist": [ "T1_US_FNAL"] 
+   "SiteWhitelist": ["T2_DE_DESY","T2_UK_SGrid_RALPP","T2_RU_JINR","T2_IN_TIFR"] 
   },
   "PhaseIISummer17pLHE" : {
    "go" : true,
