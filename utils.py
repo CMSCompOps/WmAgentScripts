@@ -6768,8 +6768,8 @@ class workflowInfo:
                 if events_per_lumi_inputs:
                     if min(max_events_per_lumi)<events_per_lumi_inputs:
                         ## there was an input dataset somewhere and we cannot break down that lumis, except by changing to EventBased
-                        print "the smallest value of %s is still smaller than %s evt/lumi of the input"%(max_events_per_lumi, events_per_lumi_inputs)
-			sendLog('assignor', 'the smallest value of %s is still smaller than %s evt/lumi of the input'%(max_events_per_lumi, events_per_lumi_inputs), level='critical')
+                        print "the smallest value of %s is still smaller than %s evt/lumi of the input dataset"%(max_events_per_lumi, events_per_lumi_inputs)
+			sendLog('assignor', 'the smallest value of %s is still smaller than %s evt/lumi of the input dataset'%(max_events_per_lumi, events_per_lumi_inputs), level='critical')
                         hold = True
                     else:
                         hold = True #to be removed
