@@ -391,9 +391,9 @@ def makeAdhocAds(config):
     anAd = classad.ClassAd()
     anAd["GridResource"] = "condor localhost localhost"
     anAd["TargetUniverse"] = 5
-    anAd["Name"] = str("restricting genonly to fnal")
-    anAd["Requirements"] = classad.ExprTree(str('regexp(".+PhaseIISummer17wmLHEGENOnly-[^\/]+_0$", WMAgent_SubTaskname) && JobStatus ==1 && DESIRED_Sites != "T1_US_FNAL"'))
-    anAd["set_DESIRED_Sites"] = "T1_US_FNAL"
+    anAd["Name"] = str("restricting genonly to some T2")
+    anAd["Requirements"] = classad.ExprTree(str('regexp(".+PhaseIISummer17wmLHEGENOnly-[^\/]+_0$", WMAgent_SubTaskname) && JobStatus ==1 && DESIRED_Sites == "T1_US_FNAL"'))
+    anAd["set_DESIRED_Sites"] = "T2_DE_DESY,T2_UK_SGrid_RALPP,T2_RU_JINR,T2_IN_TIFR"
     anAd["set_HasBeenRouted"] = False
     print anAd
 
