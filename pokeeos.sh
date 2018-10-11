@@ -1,6 +1,6 @@
 #!/bin/bash
 
-out=/data/unified-cache/listingeos.$$.log
+out=/data/unified-cache/listingeos.$$.$HOSTNAME.log
 date > $out
 ls /eos/cms/store/unified/ >> $out
 date >> $out
