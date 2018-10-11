@@ -742,13 +742,6 @@ class lockInfo:
         return (not locked)
 
     def __del__(self):
-        try:
-            ## let dynamo know that we are done here"
-            lock_DDM( lock = False)
-        except Exception as e:
-            #sendEmail('lockInfo','Issue handshaking with dynamo\n%s'%(str(e)))
-            pass
-
         ## produce the lock file on disk
         try:
             from assignSession import session, Lock
@@ -788,6 +781,15 @@ class lockInfo:
         except Exception as e:
             print "Failed writing locks"
             print str(e)
+
+        try:
+            ## let dynamo know that we are done here"
+            lock_DDM( lock = False)
+        except Exception as e:
+            #sendEmail('lockInfo','Issue handshaking with dynamo\n%s'%(str(e)))
+            pass
+
+
 
     def release(self, item ):
         try:

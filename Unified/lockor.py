@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from utils import getWorkflows, findCustodialCompletion, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration, getDatasetSize, sendEmail, sendLog, campaignInfo, componentInfo, reqmgr_url, monitor_dir, monitor_pub_dir, getWorkflowByMCPileup, getDatasetPresence, lockInfo, getLatestMCPileup, base_eos_dir, eosFile, eosRead
+from utils import getWorkflows, findCustodialCompletion, workflowInfo, getDatasetStatus, getWorkflowByOutput, unifiedConfiguration, getDatasetSize, sendEmail, sendLog, campaignInfo, componentInfo, reqmgr_url, monitor_dir, monitor_pub_dir, getWorkflowByMCPileup, getDatasetPresence, lockInfo, getLatestMCPileup, base_eos_dir, eosFile, eosRead, moduleLock
 from assignSession import *
 import json
 import os
@@ -9,7 +9,12 @@ from McMClient import McMClient
 import time
 from utils import lockInfo
 
+## wait that assignor is not running
+mLock = moduleLock( component = 'transferor', wait=False, silent=True)
+if mLock(): sys.exit(0)
 
+mLock = moduleLock()
+if mLock(): sys.exit(0)
 
 now_s = time.mktime(time.gmtime())
 def time_point(label="",sub_lap=False, percent=None):
