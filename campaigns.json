@@ -676,30 +676,8 @@
     "force-timeout" : 7,
     "lumisize": -1,
     "overflow": {"PU":{"max":0,"pending":0,"force":false}}
-  },
-"RunIIAutumn18pLHE" : {
-   "go" : false,
-   "lumisize" : -1,
-   "fractionpass" : 0.95,
-   "tune" : true
-  },
-  "RunIIAutumn18wmLHEGS" : {
-   "go" : false,
-   "lumisize" : -1,
-   "fractionpass" : 0.95,
-   "force-complete" : 0.99,
-   "tune" : true,
-   "overflow":{"LHE":{"site_list":"sites_AAA"}},
-   "toDDM" : ["GEN"]
-  },
- "RunIIAutumn18GS" : {
-   "go" : false,
-   "lumisize" : -1,
-   "fractionpass" : 0.95,
-   "tune" : true,
-   "resize" : "auto"
- },
-"RunIIAutumn18DR" :{
+  }, 
+ "RunIIAutumn18DR" :{
     "go": false,
     "maxcopies": 1,
     "lumisize": -1,
@@ -716,9 +694,9 @@
    "fractionpass" : 0.95,
    "tune" : true,
    "resize" : "auto",
-   "secondaries" : { "/Neutrino_E-10_gun/RunIISummer17PrePremix-PUFull18_102X_upgrade2018_realistic_v11-v1/GEN-SIM-DIGI-RAW": {} },
+   "secondaries" : { "/Neutrino_E-10_gun/RunIISummer17PrePremix-PUAutumn18_102X_upgrade2018_realistic_v15-v1/GEN-SIM-DIGI-RAW": {} },
    "secondary_AAA" : true,
-   "SecondaryLocation" : ["T1_US_FNAL","T2_CH_CERN","T1_ES_PIC","T2_ES_CIEMAT","T2_US_Florida","T2_US_MIT","T2_US_Nebraska"],
+   "SecondaryLocation" : ["T1_US_FNAL","T2_CH_CERN","T1_ES_PIC","T2_US_Florida","T2_US_MIT","T2_US_Nebraska"],
    "overflow" : { "PREMIX" : {} }
   },
  "RunIIAutumn18MiniAOD" :{
