@@ -619,7 +619,7 @@
    "tune" : true
   },
   "RunIIFall18wmLHEGS" : {
-   "go" : false,
+   "go" : true,
    "lumisize" : -1,
    "fractionpass" : 0.95,
    "force-complete" : 0.99,
