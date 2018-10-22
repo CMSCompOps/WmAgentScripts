@@ -3878,6 +3878,12 @@ def try_getDatasetBlockAndSite( url, dataset, group=None,vetoes=None,complete=No
             if vetoes and any([veto in replica['node'] for veto in vetoes]): continue
             blocks_at_sites[replica['node']].add( item['name'] )
     #return dict([(site,list(blocks)) for site,blocks in blocks_at_sites.items()])
+    
+    #protect prune
+    for s in blocks_at_sites:
+        pbs = [ b for b in blocks_at_sites[s] if b.startswith(dataset)]
+        blocks_at_sites[s] = set(pbs)
+
     return dict(blocks_at_sites)
 
 def getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=None, vetoes=None, within_sites=None):
