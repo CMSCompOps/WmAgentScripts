@@ -3882,6 +3882,8 @@ def try_getDatasetBlockAndSite( url, dataset, group=None,vetoes=None,complete=No
     #protect prune
     for s in blocks_at_sites:
         pbs = [ b for b in blocks_at_sites[s] if b.startswith(dataset)]
+        if len(pbs) != len(blocks_at_sites[s]):
+            sendEmail('getDatasetBlockAndSite','phedex is acting up %s %s'%(dataset, sorted(blocks_at_sites[s])), destination=['bmaier@mit.edu','natasha@fnal.gov','Dmytro.Kovalskyi@cern.ch'])
         blocks_at_sites[s] = set(pbs)
 
     return dict(blocks_at_sites)
