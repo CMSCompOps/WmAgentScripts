@@ -2056,16 +2056,30 @@ class siteInfo:
                 else:
                     self.sites_not_ready.append( siteInfo['VOName'] )
 
+            self.opportunistic_good_aaa_resource = { 
+                'T2_UK_London_IC': ['T3_UK_Opportunistic_dodas'],
+                'T1_US_FNAL_Disk' : ['T3_US_OSG', 'T3_US_Colorado', 'T3_US_NERSC', 'T3_US_TACC', 'T3_US_PSC']
+            }
+            self.opportunistic_aaa_resource = { 
+                'T2_CH_CERN' : ['T3_CH_CERN_HelixNebula', 'T3_CH_CERN_HelixNebula_REHA']
+            }
+
             ##over-ride those since they are only handled through jobrouting
-            add_as_ready = [
-                'T3_US_OSG',
-                'T3_US_Colorado',
-                'T3_CH_CERN_HelixNebula',
-                'T3_CH_CERN_HelixNebula_REHA',
-                'T3_US_NERSC',
-                'T3_US_TACC',
-                'T3_US_PSC'
-                            ]
+            add_as_ready = []
+            ## good enough to read lightweight
+            add_on_aaa = []
+            ## good enough to do premixing
+            add_on_good_aaa = []
+            for src,dsts in self.opportunistic_good_aaa_resource.items():
+                add_as_ready.extend( dsts )
+                add_on_good_aaa.extend( dsts )
+            for src,dsts in self.opportunistic_aaa_resource.items():
+                add_as_ready.extend( dsts )
+                add_on_aaa.extend( dsts )
+            add_as_ready = list(set(add_as_ready))
+            add_on_aaa = list(set(add_on_aaa))
+            add_on_good_aaa = list(set(add_on_good_aaa))
+
             for aar in add_as_ready:
                 if not aar in self.sites_ready:
                     self.sites_ready.append(aar)
@@ -2096,20 +2110,7 @@ class siteInfo:
         self.sites_T0s_all = [ s for s in self.all_sites if s.startswith('T0_')]
 
         self.sites_AAA = list(set(self.sites_ready) - set(['T2_CH_CERN_HLT']))
-        ## good enough to read lightweight
-        add_on_aaa = ['T3_CH_CERN_HelixNebula',
-                      'T3_CH_CERN_HelixNebula_REHA',
-                      
-                      
-        ]
-        ## good enough to do premixing
-        add_on_good_aaa = ['T3_IN_TIFRCloud',
-                           'T3_US_NERSC',
-                           'T3_US_PSC',
-                           'T3_US_TACC',
-                           'T3_US_OSG',
-                           'T3_US_Colorado'
-        ]
+
         add_on_aaa = list(set(add_on_good_aaa + add_on_aaa))
         self.sites_AAA = list(set(self.sites_AAA + add_on_aaa ))
 
@@ -2117,26 +2118,8 @@ class siteInfo:
         self.sites_with_goodIO = UC.get('sites_with_goodIO')
         #restrict to those that are actually ON
         self.sites_with_goodIO = [s for s in self.sites_with_goodIO if s in self.sites_ready]
-        ## those of the above that can be actively targetted for transfers
-        #allowed_T2_for_transfer = ["T2_DE_RWTH","T2_DE_DESY",
-                                          #not inquired# "T2_ES_CIEMAT",
-                                          #no space# ##"T2_FR_GRIF_IRFU", #not inquired# ##"T2_FR_GRIF_LLR", #not inquired"## "T2_FR_IPHC",##not inquired"## "T2_FR_CCIN2P3",
-        #                                  "T2_IT_Legnaro", "T2_IT_Pisa", "T2_IT_Rome", "T2_IT_Bari",
-        #                                  "T2_UK_London_Brunel", "T2_UK_London_IC", "T2_UK_SGrid_RALPP",
-        #                                  "T2_US_Nebraska","T2_US_Wisconsin","T2_US_Purdue","T2_US_Caltech", "T2_US_Florida", "T2_US_UCSD", "T2_US_MIT",
-        #                                  "T2_BE_IIHE",
-        #                                  "T2_EE_Estonia",
-        #                                  "T2_CH_CERN", "T2_CH_CERN_HLT",
-
-        #                           'T2_RU_INR',
-        #                           'T2_UA_KIPT'
-        #                                  ]
-
-        # restrict to those actually ON
-        #allowed_T2_for_transfer = [s for s in allowed_T2_for_transfer if s in self.sites_ready]
 
         ## first round of determining the sites that veto transfer
-        #self.sites_veto_transfer = [site for site in self.sites_with_goodIO if not site in allowed_T2_for_transfer]
         self.sites_veto_transfer = []  ## do not prevent any transfer by default
 
         ## new site lists for better matching

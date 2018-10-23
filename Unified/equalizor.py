@@ -75,6 +75,13 @@ def equalizor(url , specific = None, options=None):
                 pass
                 
         return False
+    simple_aaa = set()
+    for src,dsts in SI.opportunistic_good_aaa_resource.items():
+        mapping[src].extend( dsts )
+        simple_aaa.update( dsts )
+    for src,dsts in SI.opportunistic_aaa_resource.items():
+        mapping[src].extend( dsts )
+        simple_aaa.update( dsts )
 
     for site in sites_to_consider:
         region = site.split('_')[1]
@@ -491,8 +498,6 @@ def equalizor(url , specific = None, options=None):
 
     add_to = {
         #'pdmvserv_EXO-RunIISpring16MiniAODv2-05060_00552_v0__161001_151813_7925' : ['T3_US_OSG'],
-        #'cerminar_Run2016C-v2-SingleElectron-23Sep2016_8020_160923_182146_3498' : ['T3_US_NERSC'],
-        #'cerminar_Run2016C-v2-Tau-23Sep2016_8020_160923_182336_5649' : ['T3_US_NERSC'],
         }
 
     perf_per_config = defaultdict(dict)
@@ -556,12 +561,7 @@ def equalizor(url , specific = None, options=None):
         if not lhe and not prim and not sec and not wfi.isRelval():
             ## no input at all: go for OSG!!!
             print "adding", wfo.name, " addhoc for OSG and no task of the workflow requires any input"
-            add_to[wfo.name] = ['T3_US_OSG']
-            add_to[wfo.name] = ['T3_US_Colorado']
-            add_to[wfo.name] = ['T3_US_NERSC']
-            add_to[wfo.name] = ['T3_US_PSC']
-            add_to[wfo.name] = ['T3_US_TACC']
-            add_to[wfo.name] = ['T3_CH_CERN_HelixNebula']
+            add_to[wfo.name] = list(simple_aaa)
 
         ## check needs override
         needs_overide = False
