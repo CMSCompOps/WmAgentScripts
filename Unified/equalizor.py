@@ -93,6 +93,8 @@ def equalizor(url , specific = None, options=None):
             #mapping[site].append('T3_US_Colorado')
             pass
 
+    mapping['T2_UK_London_IC'].append( 'T3_UK_Opportunistic_dodas' )
+
     if use_HLT:
         mapping['T2_CH_CERN'].append('T2_CH_CERN_HLT')
 
