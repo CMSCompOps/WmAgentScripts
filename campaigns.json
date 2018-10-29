@@ -941,6 +941,19 @@
    "SecondaryLocation" : ["T1_US_FNAL","T2_CH_CERN"],
    "overflow" : { "PREMIX" : {} }
   },
+ "RunIIFall17FSPremix" : {
+   "go": false,
+   "maxcopies": 1,
+   "lumisize": -1,
+   "fractionpass" : 0.95,
+   "tune" : true,
+   "SiteBlacklist": ["T2_CH_CERN_HLT" , "T2_CH_CERN"],
+   "resize" : "auto",
+   "secondaries" : { "/Neutrino_E-10_gun/RunIISummer17PrePremix-MCv2_correctPU_94X_mc2017_realistic_v9-v1/GEN-SIM-DIGI-RAW" : {} },
+   "secondary_AAA" :true,
+   "SecondaryLocation" : ["T1_US_FNAL","T2_CH_CERN"],
+   "overflow" : { "PREMIX" : {} }
+  },  
   "RunIIFall17DRStdmix" : {
    "go": false,
    "maxcopies": 1,
