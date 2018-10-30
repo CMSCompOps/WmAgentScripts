@@ -63,6 +63,7 @@ class McMClient:
     ### generic methods for GET,PUT,DELETE
     def get(self,url):
         fullurl='https://'+(self.server+url).replace('//','/')
+        
         if self.debug:
             print 'url=|'+fullurl+'|'
         if self.id=='sso':
