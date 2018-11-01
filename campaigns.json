@@ -720,6 +720,32 @@
     "lumisize": -1,
     "overflow": {"PU":{"max":0,"pending":0,"force":false}}
   },
+ "RunIILowPUAutumn18wmLHEGS" : {
+   "go" : false,
+   "lumisize" : -1,
+   "fractionpass" : 0.95,
+   "tune" : true,
+   "SiteBlacklist": ["T2_CH_CERN_HLT" , "T2_CH_CERN"],
+   "resize" : "auto"
+ },
+ "RunIILowPUAutumn18GS" : {
+   "go" : false,
+   "lumisize" : -1,
+   "fractionpass" : 0.95,
+   "tune" : true,
+   "SiteBlacklist": ["T2_CH_CERN_HLT" , "T2_CH_CERN"],
+   "resize" : "auto"
+ },
+  "RunIILowPUAutumn18DR" :{
+    "go": false,
+    "maxcopies": 1,
+    "lumisize": -1,
+    "resize" : "auto",
+    "fractionpass" : 0.95,
+    "tune" : true,
+    "secondary_AAA": false,
+    "secondaries" : {"/MinBias_TuneCP5_inelasticON_13TeV-pythia8/RunIIFall17GS-93X_mc2017_realistic_v3-v1/GEN-SIM":{"SiteWhitelist" : ["T1_FR_CCIN2P3_Disk", "T1_US_FNAL_Disk", "T2_US_UCSD"]} }
+ },	
  "RunIISummer18GS" : {
    "go" : true,
    "lumisize" : -1,
