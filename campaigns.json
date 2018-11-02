@@ -858,7 +858,7 @@
    "resize" : "auto"
  },
   "RunIILowPUSpring18DR" :{
-    "go": false,
+    "go": true,
     "maxcopies": 1,
     "lumisize": -1,
     "resize" : "auto",
@@ -1213,13 +1213,14 @@
     "resize" : "auto"
   },
   "RunIISummer15GS": {
-    "go": false, 
+    "go": true, 
     "parameters": {
       "EventsPerLumi": "x2"
     },
     "lumisize" : 1000,
     "fractionpass" : 0.95,
-    "force-complete" : 0.99,
+    "force-complete" : 0.99, 
+    "SiteBlacklist": ["T2_CH_CERN_HLT" , "T2_CH_CERN"],
     "overflow":{"LHE":{"site_list":"sites_AAA"}},
     "tune" : true,
     "resize" : "auto"
@@ -1294,7 +1295,7 @@
    "resize" : "auto"
  },
   "RunIISummer16DR80Premix":{
-   "go":false,
+   "go":true,
    "maxcopies": 1,
    "lumisize": -1,
    "fractionpass" : 0.95,
@@ -1319,7 +1320,7 @@
     "lumisize": -1
   },
   "RunIISummer16MiniAODv3": {
-    "go": false,
+    "go": true,
     "fractionpass" : 0.95,
     "force-complete" : 0.99,
     "maxcopies": 1,
@@ -1327,14 +1328,14 @@
     "lumisize": -1
   },
   "RunIISummer16NanoAOD" :{
-   "go" : false,
+   "go" : true,
    "lumisize" : -1,
    "maxcopies": 1,
    "SiteBlacklist": ["T2_CH_CERN_HLT" , "T2_CH_CERN"],
    "fractionpass" : 0.95
   },
   "RunIISummer16NanoAODv3" :{
-   "go" : false,
+   "go" : true,
    "lumisize" : -1,
    "maxcopies": 1,
    "SiteBlacklist": ["T2_CH_CERN_HLT" , "T2_CH_CERN"],
