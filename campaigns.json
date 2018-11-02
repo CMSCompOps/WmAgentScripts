@@ -742,9 +742,7 @@
     "lumisize": -1,
     "resize" : "auto",
     "fractionpass" : 0.95,
-    "tune" : true,
-    "secondary_AAA": false,
-    "secondaries" : {"/MinBias_TuneCP5_inelasticON_13TeV-pythia8/RunIIFall17GS-93X_mc2017_realistic_v3-v1/GEN-SIM":{"SiteWhitelist" : ["T1_FR_CCIN2P3_Disk", "T1_US_FNAL_Disk", "T2_US_UCSD"]} }
+    "tune" : true
  },	
  "RunIISummer18GS" : {
    "go" : true,
