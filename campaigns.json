@@ -624,6 +624,7 @@
    "fractionpass" : 0.95,
    "force-complete" : 0.99,
    "tune" : true,
+   "SiteBlacklist": ["T2_CH_CERN_HLT" , "T2_CH_CERN"],
    "overflow":{"LHE":{"site_list":"sites_AAA"}},
    "toDDM" : ["GEN"]
   },
@@ -632,6 +633,7 @@
    "lumisize" : -1,
    "fractionpass" : 0.95,
    "tune" : true,
+   "SiteBlacklist": ["T2_CH_CERN_HLT" , "T2_CH_CERN"],
    "resize" : "auto"
  },
  "RunIIFall18DR" :{
