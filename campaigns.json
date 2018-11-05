@@ -706,12 +706,14 @@
    "lumisize" : -1,
    "resize" : "auto",
    "maxcopies": 1,
+   "SiteBlacklist": ["T2_CH_CERN_HLT" , "T2_CH_CERN"],
    "fractionpass" : 0.95
   },
  "RunIIAutumn18NanoAOD" :{
    "go" : true,
    "lumisize" : -1,
    "maxcopies": 1,
+   "SiteBlacklist": ["T2_CH_CERN_HLT" , "T2_CH_CERN"],
    "fractionpass" : 0.95
   },
  "RunIIAutumn18HEMReReco": {
@@ -720,6 +722,7 @@
     "force-complete" : 0.95,
     "force-timeout" : 7,
     "lumisize": -1,
+    "SiteBlacklist": ["T2_CH_CERN_HLT" , "T2_CH_CERN"],
     "overflow": {"PU":{"max":0,"pending":0,"force":false}}
   },
  "RunIILowPUAutumn18wmLHEGS" : {
@@ -743,6 +746,7 @@
     "maxcopies": 1,
     "lumisize": -1,
     "resize" : "auto",
+    "SiteBlacklist": ["T2_CH_CERN_HLT" , "T2_CH_CERN"],
     "fractionpass" : 0.95,
     "tune" : true
  },	
@@ -895,6 +899,7 @@
    "go" : true,
    "lumisize" : -1,
    "resize" : "auto",
+   "SiteBlacklist": ["T2_CH_CERN_HLT" , "T2_CH_CERN"],
    "maxcopies": 1,
    "fractionpass" : 0.95
   },
@@ -996,6 +1001,7 @@
    "go" : true,
    "lumisize" : -1,
    "fractionpass" : 0.95,
+   "SiteBlacklist": ["T2_CH_CERN_HLT" , "T2_CH_CERN"],
    "tune" : true
  }, 
  "RunIISpring18CosmicDR" : {
@@ -1003,6 +1009,7 @@
    "lumisize" : -1,
    "maxcopies": 1,
    "fractionpass" : 0.95,
+   "SiteBlacklist": ["T2_CH_CERN_HLT" , "T2_CH_CERN"],
    "tune" : true,
    "secondaries" : {  }
   },
@@ -1017,6 +1024,7 @@
    "lumisize" : -1,
    "maxcopies": 1,
    "fractionpass" : 0.95,
+   "SiteBlacklist": ["T2_CH_CERN_HLT" , "T2_CH_CERN"],
    "tune" : true,
    "secondaries" : {  }
   },
@@ -1052,6 +1060,7 @@
   "RunllSummer17GS" : {
    "go" : true,
    "lumisize" : 1500,
+   "SiteBlacklist": ["T2_CH_CERN_HLT" , "T2_CH_CERN"],
    "fractionpass" : 0.95,
    "tune" : true
   },
@@ -1278,6 +1287,7 @@
     "fractionpass" : 0.95,
     "force-complete" : 0.99,
     "force-timeout" : 7,
+    "SiteBlacklist": ["T2_CH_CERN_HLT" , "T2_CH_CERN"],
     "lumisize": -1
   },
   "RunIISpring16pLHE": {
