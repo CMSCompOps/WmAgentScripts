@@ -23,7 +23,7 @@ if [ -r $lock_name ] ; then
     if [ "$lock_running" == "0" ] ; then
 	echo "The cycle is locked but $lock_id is not running"
 	ps -e -f | grep Unified
-	cat $lock_name | mail -s "[Ops] Emergency On Cycle Lock. Unified isn't running." vlimant@cern.ch,matteoc@fnal.gov
+	cat $lock_name | mail -s "[Ops] Emergency On Cycle Lock. Unified isn't running." vlimant@cern.ch,matteoc@fnal.gov,svenja.pflitsch@desy.de,thong@caltech.edu
 	rm -f $lock_name
     else
 	echo "cycle is locked"
@@ -36,7 +36,7 @@ else
 fi
 
 if [ ! -r $BASE_DIR/credentials.sh ] ; then
-    echo "Cannot read simple files" | mail -s "[Ops] read permission" vlimant@cern.ch,matteoc@fnal.gov
+    echo "Cannot read simple files" | mail -s "[Ops] read permission" vlimant@cern.ch,matteoc@fnal.gov,svenja.pflitsch@desy.de,thong@caltech.edu
     exit
 fi
 
