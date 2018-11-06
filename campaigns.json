@@ -9,7 +9,7 @@
     "go": true,
     "parameters": {
       "EventsPerLumi": "x10"
-    } C
+    }
   },
   "XeXeReReco2017": {
     "go": true,
