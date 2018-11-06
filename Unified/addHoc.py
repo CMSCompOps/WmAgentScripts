@@ -114,10 +114,14 @@ for (the_dir,logtype) in [(monitor_eos_dir,'report'),
         is_locked = any([d.endswith(wf) for wf in may_have_one])
         if not is_locked:
             ## that can be removed
-            print d,logtype,"file can be removed\n"
-            os.system('rm -rf %s'%d)
-            print "with eos command"
-            os.system('eos rm -rf %s'%d)
+            print ("Removing {}".format(logtype))
+            cmd = "rm -rf {}".format(d)
+            print(cmd)
+            os.system(cmd)
+            eos_cmd = "eos rm -rf {}".format(d)
+            print(eos_cmd)
+            #print "with eos command"
+            os.system(eos_cmd)
         else:
             #print d,"is still in use"
             pass
