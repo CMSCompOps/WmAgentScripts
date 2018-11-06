@@ -9,7 +9,7 @@
     "go": true,
     "parameters": {
       "EventsPerLumi": "x10"
-    } 
+    } C
   },
   "XeXeReReco2017": {
     "go": true,
@@ -285,7 +285,7 @@
     "NO_overflow" : {"PRIM" : {}}
    },
   "Commissioning2017": {
-    "go" : false,
+    "go" : true,
     "custodial_override" : ["DQMIO"],
     "fractionpass": 0.95,
     "force-complete" : 0.90,
@@ -540,14 +540,13 @@
    		    "/MinBias_TuneCUETP8M1_14TeV-pythia8/PhaseIISpring17GS-90X_upgrade2023_realistic_v9-v1/GEN-SIM" :{"SiteWhitelist" : ["T1_DE_KIT","T2_IT_Rome","T1_UK_RAL","T2_ES_CIEMAT","T2_US_Nebraska","T2_US_Caltech","T2_US_Wisconsin"]} }
   },
  "PhaseIIFall17D" : {
-   "go" : false,
+   "go" : true,
    "toDDM" : [ "GEN-SIM-DIGI-RAW" ],
    "lumisize" : -1,
    "maxcopies": 1,
    "fractionpass" : 0.95,
    "tune" : true,
-   "SiteBlacklist": [ "T1_US_FNAL", "T0_CH_CERN","T2_CH_CERN_HLT" , "T2_CH_CERN"],
-   "secondaries" : {"/MinBias_TuneCUETP8M1_14TeV-v1-pythia8/PhaseIITDRFall17GS-93X_upgrade2023_realistic_v2-v1/GEN-SIM" :{"SiteWhitelist" : ["T1_DE_KIT","T2_IT_Pisa","T2_UK_London_Brunel","T2_ES_CIEMAT","T2_US_Nebraska","T2_US_Caltech","T2_US_Wisconsin","T2_US_Purdue"]}}
+   "secondaries" : {"/MinBias_TuneCUETP8M1_14TeV-v1-pythia8/PhaseIITDRFall17GS-93X_upgrade2023_realistic_v2-v1/GEN-SIM" :{"SiteWhitelist" : ["T2_US_Nebraska","T2_IN_TIFR"]}}
  },
   "PhaseIISpring17DR" : {
    "go" : true,
@@ -904,10 +903,9 @@
    "fractionpass" : 0.95
   },
   "RunIIFall17pLHE" : {
-   "go" : false,
+   "go" : true,
    "lumisize" : -1,
    "fractionpass" : 0.95,
-   "SiteBlacklist": ["T2_CH_CERN_HLT" , "T2_CH_CERN"],
    "tune" : true
   },
   "RunIIFall17wmLHEGENOnly" : {
