@@ -1350,11 +1350,16 @@ class batchInfo:
 
 class campaignInfo:
     def __init__(self):
-        #this contains accessor to aggreed campaigns, with maybe specific parameters
-        self.campaigns = json.loads(open('%s/WmAgentScripts/campaigns.json'%base_dir).read())
-        #self.campaigns.update( json.loads(open('%s/campaigns.relval.json'%base_eos_dir).read()))
-        self.campaigns.update( json.loads(eosRead('%s/campaigns.relval.json'%base_eos_dir)))
-        #SI = siteInfo()
+
+        self.campaigns = {}
+        self.client = mongo_client()
+        self.db = self.client.unified.campaignsConfiguration
+        self.campaigns = self.content()
+
+        # one time conversion of the file on eos to mongodb
+        #for rv,rvc in json.loads(eosRead('%s/campaigns.relval.json'%base_eos_dir)).items():
+        #    self.add( rv, rvc, c_type='relval')
+
         SI = global_SI()
         for c in self.campaigns:
             if 'parameters' in self.campaigns[c]:
@@ -1365,6 +1370,33 @@ class campaignInfo:
                             reg = black[0:-1]
                             self.campaigns[c]['parameters']['SiteBlacklist'].extend( [site for site in (SI.all_sites) if site.startswith(reg)] )
                             #print self.campaigns[c]['parameters']['SiteBlacklist']
+
+    def content(self):
+        uc = {}
+        for content in self.db.find():
+            content.pop("_id")
+            uc[content.pop("name")] = content
+        return uc
+
+    def all(self, c_type = None):
+        return [o['name'] for o in self.db.find() if (c_type == None or o.get('type',None) == c_type)]
+
+    def update(self, c_dict, c_type=None):
+        for k,v in c_dict.items():
+            self.add( k, v, c_type=c_type)
+            
+    def add(self, name, content, c_type=None):
+        ## update if needed
+        content['name'] = name
+        if c_type:
+            content['type'] = c_type
+        self.db.update_one({'name' : name},
+                           {"$set": content},
+                           upsert = True
+                       )
+
+    def pop(self, item_name):
+        self.db.delete_one({'name' : item_name})
 
     def go(self, c, s=None):
         GO = False
