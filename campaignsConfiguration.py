@@ -11,6 +11,7 @@ parser.add_option('-n','--name', help='a campaign name to be viewed/added/update
 parser.add_option('--remove', help="remove the specified campaign", default=False, action='store_true')
 parser.add_option('-c','--configuration', help='a json doc for the campaign to be add/updated')
 parser.add_option('-p','--parameter', help='a single parameter to be updated of the form key:value or a.b.key:value for nested')
+parser.add_option('--type', default=None, help='set only to relval for adding a relval campaign', choices = ['relval'])
 (options,args) = parser.parse_args()
 
 
@@ -25,6 +26,7 @@ if options.load:
         #db.update( up, s )
         ## replace the db content
         v['name'] = k
+        if options.type: v['type'] = options.type
         db.replace_one( up, v)
 
         print k,v
@@ -33,6 +35,7 @@ if options.dump:
     uc = {}
     for content in db.find():
         content.pop("_id")
+        if content.get('type',None): continue ## no relval
         uc[content.pop("name")] = content
 
     open(options.dump,'w').write(json.dumps( uc, indent =2))
@@ -82,9 +85,11 @@ if found:
     up = {'_id':found['_id']}
     if post:
         print "replacing",options.name,"with values",post
+        if options.type: post['type'] = options.type
         db.replace_one(up, post)
     elif update:
         ## need to update a value
+        if options.type: update['type'] = options.type
         print "updating",options.name,"with values",update
         db.update( up, {"$set": update} )
     else:
@@ -96,9 +101,11 @@ if found:
 else:
     if post:
         ## entering a new value
+        if options.type: post['type'] = options.type
         post.update( {"name":options.name})
         db.insert_one( post )
     elif update:
+        if options.type: update['type'] = options.type
         post.update( {"name":options.name})
         db.insert_one( update )        
     else:
