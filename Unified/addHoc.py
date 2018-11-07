@@ -1,5 +1,5 @@
 #!/usr/bin/env python  
-from utils import workflowInfo, getWorkflows, sendEmail, componentInfo, monitor_dir, reqmgr_url, siteInfo, sendLog, getWorkflowById, isHEPCloudReady, agentInfo, unifiedConfiguration, monitor_eos_dir, base_eos_dir
+from utils import workflowInfo, getWorkflows, sendEmail, componentInfo, monitor_dir, reqmgr_url, siteInfo, sendLog, getWorkflowById, isHEPCloudReady, agentInfo, unifiedConfiguration, monitor_eos_dir, base_eos_dir, batchInfo
 
 from assignSession import *
 import reqMgrClient
@@ -86,7 +86,7 @@ for wf in wfs:
 may_have_one.update( may_have_one_too )
 
 ## keep all relval reports for *ever* ...
-batches = json.loads(open('%s/batches.json'%base_eos_dir).read())
+batches = BI.content()
 for b,pids in batches.items(): 
     for pid in pids:
         wfs = getWorkflowById(url, pid, details=True)
