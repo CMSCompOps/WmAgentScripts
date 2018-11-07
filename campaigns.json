@@ -1209,7 +1209,7 @@
     "go": false
   },
   "RunIISummer15wmLHEGS": {
-    "go": false,
+    "go": true,
     "parameters": {
       "EventsPerLumi": "x2",
       "MaxMergeEvents": 4000000
@@ -1217,6 +1217,7 @@
     "fractionpass" : 0.95,
     "force-complete" : 0.99,
     "lumisize" : -1,
+    "SiteBlacklist": ["T2_CH_CERN_HLT" , "T2_CH_CERN"],	  
     "tune" : true,
     "resize" : "auto"
   },
