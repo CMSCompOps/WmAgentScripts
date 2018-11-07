@@ -1318,6 +1318,36 @@ class relvalInfo:
         ## dump the campaign dict out
         pass
 
+class batchInfo:
+    def __init__(self):
+        self.client = mongo_client()
+        self.db = self.client.unified.batchInfo
+    def update(self, name, a_list):
+        ex = self.db.find_one({'name' : name})
+        if ex:
+            ex['ids'] = list(set(ex['ids'])+set(a_list))
+        else:
+            ex = {'ids': list(a_list)}
+        self.add( name, ex)
+
+    def add(self, name, content):
+        ## update if necessary
+        self.db.update_one({'name' : name},
+                           {"$set": content},
+                           upsert = True
+                       )
+    def content(self):
+        c = {}
+        for o in self.db.find():
+            c[o['name']] = o['ids']
+        return c
+
+    def all(self):
+        return [o['name'] for o in self.db.find()]
+
+    def pop(self, name):
+        self.db.delete_one({'name': name})
+
 class campaignInfo:
     def __init__(self):
         #this contains accessor to aggreed campaigns, with maybe specific parameters
