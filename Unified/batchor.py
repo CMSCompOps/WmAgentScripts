@@ -92,12 +92,8 @@ def batchor( url ):
         
     
 
-    ## open the campaign configuration 
-    campaigns = json.loads( eosRead('%s/campaigns.relval.json'%base_eos_dir) )
-
-
-    ## protect for overwriting ??
-    for new_campaign in list(set(add_on.keys())-set(campaigns.keys())):
+    ## only new campaigns in announcement
+    for new_campaign in list(set(add_on.keys())-set(CI.all(c_type='relval'))):
         ## this is new, and can be announced as such
         print new_campaign,"is new stuff"
         subject = "Request of RelVal samples batch %s"% new_campaign
@@ -124,7 +120,7 @@ This is an automated message"""%( new_campaign,
         sendLog('batchor',text, level='critical')
 
     ## go through all existing campaigns and remove the ones not in use anymore ?
-    for old_campaign in campaigns.keys():
+    for old_campaign in CI.all(c_type='relval'):
         all_in_batch = getWorkflowByCampaign(url, old_campaign, details=True)
         if not all_in_batch: continue
         is_batch_done = all(map(lambda s : not s in ['completed','force-complete','running-open','running-closed','acquired','assigned','assignment-approved'], [wf['RequestStatus']for wf in all_in_batch]))
@@ -132,21 +128,12 @@ This is an automated message"""%( new_campaign,
         if is_batch_done:
             #print "batch",old_campaign,"can be closed or removed if necessary"
             #campaigns[old_campaign]['go'] = False ## disable
-            campaigns.pop( old_campaign ) ## or just drop it all together ?
+            CI.pop( old_campaign ) ## or just drop it all together ?
+            BI.pop( old_campaign )
             print "batch",old_campaign," configuration was removed"
 
     ## merge all anyways
-    campaigns.update( add_on )
-
-    ## write it out for posterity
-    open('campaigns.json.updated','w').write(json.dumps( campaigns , indent=2))
-
-    ## read back
-    rread = json.loads(open('campaigns.json.updated').read() )
-
-    os.system('cp campaigns.json.updated %s/campaigns.relval.json'%monitor_dir)
-    os.system('cp campaigns.json.updated %s/campaigns.relval.json'%base_eos_dir)
-
+    CI.update( add_on , c_type = 'relval')
 
 if __name__ == "__main__":
     url = 'cmsweb.cern.ch'
