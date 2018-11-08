@@ -86,7 +86,7 @@ for wf in wfs:
 may_have_one.update( may_have_one_too )
 
 ## keep all relval reports for *ever* ...
-batches = BI.content()
+batches = batchInfo().content()
 for b,pids in batches.items(): 
     for pid in pids:
         wfs = getWorkflowById(url, pid, details=True)
