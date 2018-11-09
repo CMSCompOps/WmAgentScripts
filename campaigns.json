@@ -546,7 +546,7 @@
    "maxcopies": 1,
    "fractionpass" : 0.95,
    "tune" : true,
-   "secondaries" : {"/MinBias_TuneCUETP8M1_14TeV-v1-pythia8/PhaseIITDRFall17GS-93X_upgrade2023_realistic_v2-v1/GEN-SIM" :{"SiteWhitelist" : ["T2_US_Nebraska","T2_IN_TIFR"]}}
+   "secondaries" : {"/MinBias_TuneCUETP8M1_14TeV-v1-pythia8/PhaseIITDRFall17GS-93X_upgrade2023_realistic_v2-v1/GEN-SIM" :{"SiteWhitelist" : ["T1_IT_CNAF_Disk","T1_DE_KIT_Disk","T1_RU_JINR_Disk","T1_US_FNAL_Disk","T2_US_Nebraska","T2_FR_IPHC","T2_ES_CIEMAT","T2_FR_GRIF_IRFU","T2_FR_CCIN2P3","T2_UK_London_Brunel","T2_BE_IIHE"]}}
  },
   "PhaseIISpring17DR" : {
    "go" : true,
@@ -869,7 +869,7 @@
     "fractionpass" : 0.95,
     "tune" : true,
     "secondary_AAA": false,
-    "secondaries" : {"/MinBias_TuneCP5_inelasticON_13TeV-pythia8/RunIIFall17GS-93X_mc2017_realistic_v3-v1/GEN-SIM":{"SiteWhitelist" : ["T1_FR_CCIN2P3_Disk", "T1_US_FNAL_Disk", "T2_US_UCSD"]} }
+    "secondaries" : {"/MinBias_TuneCP5_inelasticON_13TeV-pythia8/RunIIFall17GS-93X_mc2017_realistic_v3-v1/GEN-SIM":{"SiteWhitelist" : ["T1_FR_CCIN2P3_Disk", "T1_US_FNAL_Disk","T2_DE_DESY","T2_US_MIT","T2_US_Nebraska","T2_US_UCSD"]} }
    },
  "RunIIWinter17GS" : {
    "go" : true,
