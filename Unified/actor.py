@@ -641,6 +641,11 @@ def actor(url,options=None):
                 os.system('touch %s/actor.failed-%s.lock'%( base_eos_dir, os.getpid() ))
                 sys.exit(-1)
 
+        ## update the status with recovering removing manual
+        for wfo in  session.query(Workflow).filter(Workflow.name == wfname).all():
+            wfo.status = wfo.status.replace('manual','recovering')
+        session.commit()                        
+
         if message_to_user:
             print wfname,"to be notified to user(DUMMY)",message_to_user
 
