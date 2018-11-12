@@ -103,9 +103,11 @@ def stagor(url,specific =None, options=None):
 
     time_point("Check staging workflows")            
 
-    open('%s/dataset_requirements.json'%monitor_dir,'w').write( json.dumps( needs, indent=2))
+    #open('%s/dataset_requirements.json'%monitor_dir,'w').write( json.dumps( needs, indent=2))
+    eosFile('%s/dataset_requirements.json'%monitor_dir,'w').write( json.dumps( needs, indent=2)).close()
     for prio in needs_by_priority: needs_by_priority[prio] = list(set(needs_by_priority[prio]))
-    open('%s/dataset_priorities.json'%monitor_dir,'w').write( json.dumps( needs_by_priority , indent=2))
+    #open('%s/dataset_priorities.json'%monitor_dir,'w').write( json.dumps( needs_by_priority , indent=2))
+    eosFile('%s/dataset_priorities.json'%monitor_dir,'w').write( json.dumps( needs_by_priority , indent=2)).close()
         
 
     dataset_endpoints = defaultdict(set)
@@ -490,16 +492,10 @@ def stagor(url,specific =None, options=None):
         
 
 
-    rr= eosFile('%s/lost_blocks_datasets.json'%monitor_dir,'w')
-    rr.write( json.dumps( known_lost_blocks, indent=2))
-    rr.close()
-
-    rr= eosFile('%s/lost_files_datasets.json'%monitor_dir,'w')
-    rr.write( json.dumps( known_lost_files, indent=2))
-    rr.close()
-
-
+    eosFile('%s/lost_blocks_datasets.json'%monitor_dir,'w').write( json.dumps( known_lost_blocks, indent=2)).close()
+    eosFile('%s/lost_files_datasets.json'%monitor_dir,'w').write( json.dumps( known_lost_files, indent=2)).close()
     eosFile('%s/incomplete_transfers.json'%monitor_dir,'w').write( json.dumps(missing_in_action, indent=2) ).close()
+
     print "Stuck transfers and datasets"
     print json.dumps( missing_in_action, indent=2 )
 
