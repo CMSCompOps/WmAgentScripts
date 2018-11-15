@@ -1464,8 +1464,11 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
     ## and put the file in place
     os.system('mv %s/index.html.new %s/index.html'%(monitor_dir,monitor_dir))
 
-        
-    statuses = json.loads(eosRead('%s/statusmon.json'%monitor_dir))
+    try:
+        statuses = json.loads(eosRead('%s/statusmon.json'%monitor_dir))
+    except:
+        statuses = {}
+
     s_count = defaultdict(int)
     now = time.mktime(time.gmtime())
     for wf in session.query(Workflow).all():
