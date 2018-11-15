@@ -877,6 +877,12 @@ class statusHistory:
         self.client = mongo_client()
         self.db = self.client.unified.statusHistory
 
+    def content(self):
+        c = {}
+        for doc in self.db.find():
+            c[int(doc['time'])] = doc
+        return c
+
     def add(self, now, info):
         info['time'] = time.mktime(now)
         info['date'] = time.asctime(now)
