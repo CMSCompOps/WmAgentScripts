@@ -750,6 +750,14 @@
     "fractionpass" : 0.95,
     "tune" : true
  },	
+ "RunIILowPUAutumn18MiniAOD" :{
+   "go" : false,
+   "lumisize" : -1,
+   "resize" : "auto",
+   "maxcopies": 1,
+   "SiteBlacklist": ["T2_CH_CERN_HLT" , "T2_CH_CERN"],
+   "fractionpass" : 0.95
+  },	
  "RunIISummer18GS" : {
    "go" : true,
    "lumisize" : -1,
