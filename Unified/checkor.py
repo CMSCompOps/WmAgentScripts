@@ -499,12 +499,13 @@ class CheckBuster(threading.Thread):
                     break
 
         delays = [ (now_s - completed_log[-1]['UpdateTime']) / (60.*60.*24.) if completed_log else 0 for completed_log in [filter(lambda change : change["Status"] in ["completed"], m['RequestTransition']) for m in wfi.getFamilly(details=True,and_self=True)]]
-        min_completed_delays = min(delays)
+        min_completed_delays = min(delays) ## take the shortest time since a member of the familly completed
+
         completed_log = filter(lambda change : change["Status"] in ["completed"],wfi.request['RequestTransition'])
         delay = (now_s - completed_log[-1]['UpdateTime']) / (60.*60.*24.) if completed_log else 0 ## in days
-        completed_delay = delay
+        completed_delay = delay ## this is for the workflow itself
         #onhold_completed_delay = delay
-        onhold_completed_delay = min_completed_delays
+        onhold_completed_delay = min_completed_delays ## this is for any workflows (itself, and ACDC) 
         onhold_timeout = UC.get('onhold_timeout')
 
         if '-onhold' in wfo.status:
@@ -1016,7 +1017,10 @@ class CheckBuster(threading.Thread):
 
             wfi.sendLog('checkor',mismatch_notice)
             if not 'recovering' in assistance_tags:
-                assistance_tags.add('filemismatch')
+                if min_completed_delays  < 2: ## less than 2 days in completed for any of the workflow of the prepid
+                    assistance_tags.add('agentfilemismatch')
+                else:
+                    assistance_tags.add('filemismatch')
                 #print this for show and tell if no recovery on-going
                 for out in dbs_presence:
                     _,_,missing_phedex,missing_dbs  = getDatasetFiles(url, out)
