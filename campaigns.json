@@ -918,7 +918,7 @@
    "tune" : true
   },
   "RunIIFall17wmLHEGENOnly" : {
-   "go" : false,
+   "go" : true,
    "fractionpass" : 0.95,
    "lumisize" : -1,
    "tune" : true,
@@ -926,7 +926,7 @@
    "toDDM" : ["GEN"]
   },
   "RunIIFall17wmLHEGS" : {
-   "go" : false,
+   "go" : true,
    "lumisize" : -1,
    "fractionpass" : 0.95,
    "force-complete" : 0.99,
@@ -935,7 +935,7 @@
    "overflow":{"LHE":{"site_list":"sites_AAA"}}
   },
  "RunIIFall17GS" : {
-   "go" : false,
+   "go" : true,
    "lumisize" : -1,
    "force-complete" : 0.99,
    "fractionpass" : 0.95,
@@ -944,7 +944,7 @@
    "resize" : "auto"
  },
   "RunIIFall17MiniAOD" :{
-   "go" : false,
+   "go" : true,
    "lumisize" : -1,
    "maxcopies": 1,
    "fractionpass" : 0.95,
@@ -952,7 +952,7 @@
    "resize" : "auto"
   },
   "RunIIFall17MiniAODv2" :{
-   "go" : false,
+   "go" : true,
    "lumisize" : -1,
    "maxcopies": 1,
    "fractionpass" : 0.95,
@@ -960,21 +960,21 @@
    "resize" : "auto"
   },
   "RunIIFall17NanoAOD" :{
-   "go" : false,
+   "go" : true,
    "lumisize" : -1,
    "maxcopies": 1,
    "SiteBlacklist": ["T2_CH_CERN_HLT" , "T2_CH_CERN"],
    "fractionpass" : 0.95
   },
  "RunIIFall17DRPremix" : {
-   "go": false,
+   "go": true,
    "maxcopies": 1,
    "lumisize": -1,
    "fractionpass" : 0.95,
    "tune" : true,
    "SiteBlacklist": ["T2_CH_CERN_HLT" , "T2_CH_CERN"],
    "resize" : "auto",
-   "secondaries" : { "/Neutrino_E-10_gun/RunIISummer17PrePremix-MCv2_correctPU_94X_mc2017_realistic_v9-v1/GEN-SIM-DIGI-RAW" : {} },
+   "secondaries" : { "" : {} },
    "secondary_AAA" :true,
    "SecondaryLocation" : ["T1_US_FNAL","T2_CH_CERN"],
    "overflow" : { "PREMIX" : {} }
@@ -993,7 +993,7 @@
    "overflow" : { "PREMIX" : {} }
   },  
   "RunIIFall17DRStdmix" : {
-   "go": false,
+   "go": true,
    "maxcopies": 1,
    "lumisize": -1,
    "fractionpass" : 0.95,
@@ -1170,7 +1170,7 @@
    		    "/ReggeGribovPartonMC_EposLHC_PbP_2510_2510_DataBS/pPb502Winter16GS-MB_80X_mcRun2_pA_5TeV_v4-v4/GEN-SIM" : {} }
   },
   "RunIIWinter15wmLHE": {
-    "go": false, 
+    "go": true, 
     "fractionpass" : 0.95,
     "parameters": {
       "EventsPerJob": 100000, 
@@ -1181,7 +1181,7 @@
     "force-complete" : 0.99
   }, 
   "RunIIWinter15pLHE": {
-    "go": false, 
+    "go": true, 
     "parameters": {
       "EventsPerLumi": 200
     },
@@ -1189,7 +1189,7 @@
     "recover" : false
   },
   "RunIIWinter15GenOnly": {
-    "go" : false,
+    "go" : true,
     "fractionpass" : 0.95,
     "parameters": {
       "EventsPerLumi": "x2"
@@ -1198,7 +1198,7 @@
     "SiteBlacklist": ["T2_CH_CERN_HLT" , "T2_CH_CERN"]
   },
   "RunIIWinter15GS": {
-    "go": false, 
+    "go": true, 
     "parameters": {
       "EventsPerLumi": "x2"
     },
@@ -1728,21 +1728,21 @@
     "fractionpass" : 0.95
   },
    "PhaseIITDRFall17GS" : {
-   "go" : false,
+   "go" : true,
    "lumisize" : -1,
    "fractionpass" : 0.95,
    "SiteBlacklist": ["T2_CH_CERN_HLT" , "T2_CH_CERN"],
    "tune" : false
   },
   "PhaseIITDRFall17wmLHEGS" : {
-   "go" : false,
+   "go" : true,
    "lumisize" : -1,
    "fractionpass" : 0.95,
    "SiteBlacklist": ["T2_CH_CERN_HLT" , "T2_CH_CERN"],
    "tune" : false
   },
   "PhaseIITDRFall17DR" : {
-   "go" : false,
+   "go" : true,
    "lumisize" : -1,
    "maxcopies": 1,
    "fractionpass" : 0.85,
