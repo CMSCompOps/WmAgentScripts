@@ -877,7 +877,7 @@
     "fractionpass" : 0.95,
     "tune" : true,
     "secondary_AAA": false,
-    "secondaries" : {"/MinBias_TuneCP5_inelasticON_13TeV-pythia8/RunIIFall17GS-93X_mc2017_realistic_v3-v1/GEN-SIM":{"SiteWhitelist" : ["T1_FR_CCIN2P3_Disk", "T1_US_FNAL_Disk","T2_DE_DESY","T2_US_MIT","T2_US_Nebraska","T2_US_UCSD"]} }
+    "secondaries" : {"/MinBias_TuneCP5_inelasticON_13TeV-pythia8/RunIIFall17GS-93X_mc2017_realistic_v3-v1/GEN-SIM":{"SiteWhitelist" : ["T1_FR_CCIN2P3_Disk", "T1_US_FNAL_Disk","T2_DE_DESY","T2_US_MIT","T2_US_UCSD"]} }
    },
  "RunIIWinter17GS" : {
    "go" : true,
