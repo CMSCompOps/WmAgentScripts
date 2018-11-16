@@ -1462,28 +1462,28 @@
     "custodial": "T1_FR_CCIN2P3_MSS"
   },
   "HiFall15": {
-    "go" : false,
+    "go" : true,
     "parameters": {	
-      "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue", "T2_US_Caltech", "T2_US_Florida", "T2_US_Nebraska", "T2_US_UCSD", "T2_US_Wisconsin" ],
+      "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue", "T2_US_Caltech", "T2_US_Florida", "T2_US_Nebraska", "T2_US_UCSD", "T2_US_Wisconsin","T2_CH_CERN","T2_CH_CERN_HLT" ],
       "MergedLFNBase": "/store/himc"
     },
     "fractionpass" : 0.95,
     "custodial": "T1_FR_CCIN2P3_MSS"
   },
   "pp502Fall15wmLHEGS": {
-    "go" : false,
+    "go" : true,
     "parameters": {	
-      "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue", "T2_US_Caltech", "T2_US_Florida", "T2_US_Nebraska", "T2_US_UCSD", "T2_US_Wisconsin" ],
+      "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue", "T2_US_Caltech", "T2_US_Florida", "T2_US_Nebraska", "T2_US_UCSD", "T2_US_Wisconsin","T2_CH_CERN","T2_CH_CERN_HLT"],
       "MergedLFNBase": "/store/himc"
     },
     "custodial": "T1_FR_CCIN2P3_MSS",
     "lumisize" : -1
   },
   "pp502Fall15": {
-    "go" : false,
+    "go" : true,
     "fractionpass" : 0.95,
     "parameters": {	
-      "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue", "T2_US_Caltech", "T2_US_Florida", "T2_US_Nebraska", "T2_US_UCSD", "T2_US_Wisconsin" ],
+      "SiteBlacklist": [ "T1_US_FNAL", "T2_US_Purdue", "T2_US_Caltech", "T2_US_Florida", "T2_US_Nebraska", "T2_US_UCSD", "T2_US_Wisconsin","T2_CH_CERN","T2_CH_CERN_HLT" ],
       "MergedLFNBase": "/store/himc"
     },
     "custodial": "T1_FR_CCIN2P3_MSS"
