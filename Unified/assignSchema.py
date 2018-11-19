@@ -29,7 +29,6 @@ class Workflow(Base):
 class Output(Base):
     __tablename__ = 'OUTPUT'
     __table_args__ = table_args()
-    #id = Column(Integer, Sequence(prefix()+'OUTPUT_ID_SEQ'), primary_key=True)
     id = Column(Integer, Sequence('OUTPUT_ID_SEQ', schema=schema()), primary_key=True)
     datasetname = Column(String(400))
     nlumis = Column(Integer)
@@ -61,9 +60,9 @@ class TransferImp(Base):
     active = Column(Boolean, default=True)
 
 class LockOfLock(Base):
-    __tablename__ = 'lockoflock'
+    __tablename__ = 'LOCKOFLOCK'
     __table_args__ = table_args()
-    id = Column(Integer, Sequence('lockoflock_id_seq', schema=schema()), primary_key=True)
+    id = Column(Integer, Sequence('LOCKOFLOCK_ID_SEQ', schema=schema()), primary_key=True)
     lock = Column(Boolean)
     time = Column(Integer)
     endtime = Column(Integer)
