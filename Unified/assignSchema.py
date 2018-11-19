@@ -11,7 +11,7 @@ Admin_Mode = False
 Base = declarative_base()
 
 def schema():
-    return '' if Admin_Mode else 'cms_unified_admin'
+    return None if Admin_Mode else 'cms_unified_admin'
 def prefix():
     return '' if Admin_Mode else schema()+'.'
 def table_args():
