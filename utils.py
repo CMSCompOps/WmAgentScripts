@@ -5403,6 +5403,7 @@ class agentInfo:
                 recent_running.add(agent )
 
         for agent in self.buckets.get('standby',[]):
+            agent_update = self._get(agent, 'update')
             if (now-agent_update)<(last_action_timeout):
                 one_recent_standby = True
                 timeout_for_standby = last_action_timeout - (now-agent_update)
@@ -5412,6 +5413,7 @@ class agentInfo:
                 recent_standby.add(agent )
 
         for agent in self.buckets.get('draining',[]):
+            agent_update = self._get(agent, 'update')
             if (now-agent_update)<(last_action_timeout):
                 one_recent_draining = True
                 timeout_for_draining = last_action_timeout - (now-agent_update)
