@@ -813,6 +813,9 @@ class lockInfo:
         return (l and l.lock)
 
     def _lock(self, item, site, reason):
+        if not item:
+            sendEmail('lockInfo', "trying to lock item %s" % item)
+            
         #from dataLock import locksession, Lock
         from assignSession import session, Lock
         l = session.query(Lock).filter(Lock.item == item).first()
