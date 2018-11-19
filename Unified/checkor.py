@@ -499,8 +499,8 @@ class CheckBuster(threading.Thread):
                     break
 
         delays = [ (now_s - completed_log[-1]['UpdateTime']) / (60.*60.*24.) if completed_log else 0 for completed_log in [filter(lambda change : change["Status"] in ["completed"], m['RequestTransition']) for m in wfi.getFamilly(details=True,and_self=True)]]
+        delays = filter(None, delays)
         min_completed_delays = min(delays) ## take the shortest time since a member of the familly completed
-
         completed_log = filter(lambda change : change["Status"] in ["completed"],wfi.request['RequestTransition'])
         delay = (now_s - completed_log[-1]['UpdateTime']) / (60.*60.*24.) if completed_log else 0 ## in days
         completed_delay = delay ## this is for the workflow itself
