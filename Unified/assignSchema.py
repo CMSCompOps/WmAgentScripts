@@ -60,6 +60,15 @@ class TransferImp(Base):
     workflow = relationship(Workflow)
     active = Column(Boolean, default=True)
 
+class LockOfLock(Base):
+    __tablename__ = 'lockoflock'
+    __table_args__ = table_args()
+    id = Column(Integer, Sequence('lockoflock_id_seq', schema=schema()), primary_key=True)
+    lock = Column(Boolean)
+    time = Column(Integer)
+    endtime = Column(Integer)
+    owner = Column(String(300))
+
 class Lock(Base):
     __tablename__ = 'lock'
     __table_args__ = table_args()
