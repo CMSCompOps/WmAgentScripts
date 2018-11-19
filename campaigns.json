@@ -933,7 +933,7 @@
    "tune" : true,
    "SiteBlacklist": ["T2_CH_CERN_HLT" , "T2_CH_CERN"],
    "resize" : "auto",
-   "secondaries" : { "" : {} },
+   "secondaries" : { "/Neutrino_E-10_gun/RunIISummer17PrePremix-MCv2_correctPU_94X_mc2017_realistic_v9-v1/GEN-SIM-DIGI-RAW" : {} },
    "secondary_AAA" :true,
    "SecondaryLocation" : ["T1_US_FNAL","T2_CH_CERN"],
    "overflow" : { "PREMIX" : {} }
