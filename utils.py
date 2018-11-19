@@ -628,7 +628,7 @@ def _pass_to_dynamo( items, N ,sites = None, group = None ):
         sites = ['T2_*','T1_*_Disk']
     if type(items)==str:
         items = items.split(',')
-    conn  =  httplib.HTTPSConnection('dynamo.mit.edu', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn('dynamo.mit.edu')
     par = {'item' : items, 'site': sites, 'n':N}
     if group:
         par.update( {'group' : group })
@@ -722,8 +722,12 @@ class lockInfo:
         sleep_time = 30
         locked = False
         while True:
+            conn = make_x509_conn('dynamo.mit.edu')
             r = os.popen('curl -s http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/inActionLock.txt').read()
-            if not ('Not Found' in r):
+            r1 = conn.request("GET",'/data/applock/check?app=detox')
+            r2 = conn.getresponse()
+            r = json.loads(r2.read())
+            if (r['result'] == 'OK' and r['message'] == 'Locked'):
                 sendLog('LockInfo','DDM lock is present\n%s'%(r),level='warning')
                 locked = True
                 now = time.mktime(time.gmtime())
@@ -739,7 +743,7 @@ class lockInfo:
 
     def __del__(self):
         from assignSession import session, LockOfLock
-        for ll in session.query(LockOfLock).filter(LockOfLock.owner = self.owner).all():
+        for ll in session.query(LockOfLock).filter(LockOfLock.owner == self.owner).all():
             ll.lock = False
             ll.endtime = time.mktime( time.gmtime())
         session.commit()
