@@ -1,0 +1,55 @@
+# sync the code from master
+*/10 * * * * vocms0268 /data/unified/WmAgentScripts/sync.sh &> /dev/null
+*/10 * * * * vocms0269 /data/unified/WmAgentScripts/sync.sh &> /dev/null
+*/10 * * * * vocms0272 /data/unified/WmAgentScripts/sync.sh &> /dev/null
+*/10 * * * * vocms0273 /data/unified/WmAgentScripts/sync.sh &> /dev/null
+#*/10 * * * * vocms0274 /data/unified/WmAgentScripts/sync.sh &> /dev/null
+# sad but needed
+#*/20 * * * * vocms0268 /data/unified/WmAgentScripts/pokeeos.sh &> /dev/null
+*/20 * * * * vocms0269 /data/unified/WmAgentScripts/pokeeos.sh &> /dev/null
+*/20 * * * * vocms0272 /data/unified/WmAgentScripts/pokeeos.sh &> /dev/null
+*/20 * * * * vocms0273 /data/unified/WmAgentScripts/pokeeos.sh &> /dev/null
+#*/20 * * * * vocms0274 /data/unified/WmAgentScripts/pokeeos.sh &> /dev/null
+*/20 * * * * vocms0275 /data/unified/WmAgentScripts/pokeeos.sh &> /dev/null
+## sync the code from master
+4 */2 * * * vocms0269 /data/unified/WmAgentScripts/credentials.sh create &> /dev/null
+6 */1 * * * vocms0268 /data/unified/WmAgentScripts/credentials.sh create &> /dev/null
+8 */1 * * * vocms0272 /data/unified/WmAgentScripts/credentials.sh create &> /dev/null
+9 */2 * * * vocms0273 /data/unified/WmAgentScripts/credentials.sh create &> /dev/null
+#10 */2 * * * vocms0274 /data/unified/WmAgentScripts/credentials.sh create &> /dev/null
+12 */2 * * * vocms0275 /data/unified/WmAgentScripts/credentials.sh create &> /dev/null
+## sync 0275 .json to master
+*/40 * * * * vocms0275 /data/unified/WmAgentScripts/cWrap.sh Unified/pushor.py &> /dev/null
+*/5 * * * * vocms0275 source /data/unified/WmAgentScripts/whatjob.sh > /eos/cms/store/unified/www/info.txt 2> /dev/null
+## single script that cycles through modules
+*/2 * * * * vocms0269 /data/unified/WmAgentScripts/cWrap.sh Unified/cachor.py &> /dev/null
+15 */4 * * * vocms0269 /data/unified/WmAgentScripts/cWrap.sh Unified/stuckor.py &> /dev/null
+10 * 1-31 * * vocms0268 /data/unified/WmAgentScripts/precycle.sh &> /dev/null
+20,50 * 1-31 * * vocms0269 /data/unified/WmAgentScripts/assigncycle.sh &> /dev/null
+30 */4 1-31 * * vocms0269 /data/unified/WmAgentScripts/unlockingcycle.sh &> /dev/null
+###10,40 * 1-31 * * vocms0273 /data/unified/WmAgentScripts/postcycle.sh &> /dev/null
+10,40 * 1-31 * * vocms0273 /data/unified/WmAgentScripts/postcycle-strict.sh &> /dev/null
+15,45 * 1-31 * * vocms0273 /data/unified/WmAgentScripts/postcycle-update.sh &> /dev/null
+20,50 * 1-31 * * vocms0268 /data/unified/WmAgentScripts/postcycle-review-recovering.sh &> /dev/null
+25,55 * 1-31 * * vocms0269 /data/unified/WmAgentScripts/postcycle-review-manual.sh &> /dev/null
+*/20 * 1-31 * * vocms0269 /data/unified/WmAgentScripts/actcycle.sh &> /dev/null
+30,50 * 1-31 * * vocms0272 /data/unified/WmAgentScripts/clearcycle.sh  &> /dev/null
+25,55 * 1-31 * * vocms0268 /data/unified/WmAgentScripts/shortcycle.sh &> /dev/null
+5,35 * 1-31 * * vocms0269 /data/unified/WmAgentScripts/gqcycle.sh &> /dev/null
+45,15 * 1-31 * * vocms0268 /data/unified/WmAgentScripts/subscribecycle.sh &> /dev/null
+*/10 * 1-31 * * vocms0268 /data/unified/WmAgentScripts/viewcycle.sh &> /dev/null
+45 */4 1-31 * * vocms0268 /data/unified/WmAgentScripts/remainingcycle.sh  &> /dev/null
+*/15 * 1-31 * * vocms0272 /data/unified/WmAgentScripts/errorcycle.sh &> /dev/null
+*/25 * 1-31 * * vocms0272 /data/unified/WmAgentScripts/runerrorcycle.sh &> /dev/null
+*/15 */2 1-31 * * vocms0272 /data/unified/WmAgentScripts/toperrorcycle.sh &> /dev/null
+#*/5 * 1-31 * * vocms0269 /data/unified/WmAgentScripts/logscycle.sh &> /dev/null
+1,31 * * * * vocms0269 /data/unified/WmAgentScripts/inputscycle.sh &> /dev/null
+## announce stuff
+00 10 * * 1 vocms0272 /data/unified/WmAgentScripts/cWrap.sh Unified/messagor.py
+## Cleanup
+05 00 * * 1 vocms0268 /data/unified/WmAgentScripts/cleanlog.sh 
+10 00 * * 1 vocms0269 /data/unified/WmAgentScripts/cleanlog.sh 
+15 00 * * 1 vocms0272 /data/unified/WmAgentScripts/cleanlog.sh 
+20 00 * * 1 vocms0274 /data/unified/WmAgentScripts/cleanlog.sh 
+25 00 * * 1 vocms0275 /data/unified/WmAgentScripts/cleanlog.sh 
+00 11 * * 1 vocms0275 /data/unified/WmAgentScripts/cleanBackfills.sh &> /dev/null
