@@ -1021,6 +1021,8 @@ class CheckBuster(threading.Thread):
                     assistance_tags.add('agentfilemismatch')
                 else:
                     assistance_tags.add('filemismatch')
+                if 'announce' in assistance_tags:
+                    assistance_tags.remove('announce')
                 #print this for show and tell if no recovery on-going
                 for out in dbs_presence:
                     _,_,missing_phedex,missing_dbs  = getDatasetFiles(url, out)
