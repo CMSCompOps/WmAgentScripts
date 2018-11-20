@@ -4619,7 +4619,7 @@ def setFileStatus(file_names, validate=True):
             dbswrite.updateFileStatus( logical_file_name= fn['logical_file_name'], is_file_valid = int(validate) )
 
 
-def setDatasetStatus(dataset, status):
+def setDatasetStatus(dataset, status, withFiles=True):
     dbswrite = DbsApi(url=dbs_url_writer)
 
     new_status = getDatasetStatus( dataset )
@@ -4628,10 +4628,19 @@ def setDatasetStatus(dataset, status):
         print "setting dataset status",status,"to inexistant dataset",dataset,"considered succeeding"
         return True
 
+    file_status = -1
+    if status in ['DELETED', 'DEPRECATED', 'INVALID']:
+        file_status = 0
+    else:
+        file_status = 1
     max_try=3
     while new_status != status:
         dbswrite.updateDatasetType(dataset = dataset, dataset_access_type= status)
         new_status = getDatasetStatus( dataset )
+        if withFiles and file_status!=-1:
+            files = dbswrite.listFiles(dataset=dataset)
+            for this_file in files:
+                dbswrite.updateFileStatus(logical_file_name=this_file['logical_file_name'], is_file_valid=file_status)
         max_try-=1
         if max_try<0: return False
     return True
