@@ -147,7 +147,7 @@
    "description" : "Priority above which we can increase the priority of a workflow after running too long"
  },
  "max_force_complete" : {
-   "value" : 20,
+   "value" : 50,
    "description" : "Number of workflow that can be forced complete at a time"
  },
  "max_per_round" : {
