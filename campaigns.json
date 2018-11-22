@@ -1184,7 +1184,6 @@
     "lumisize" : 1000,
     "fractionpass" : 0.95,
     "force-complete" : 0.99, 
-    "SiteBlacklist": ["T2_CH_CERN_HLT" , "T2_CH_CERN"],
     "overflow":{"LHE":{"site_list":"sites_AAA"}},
     "tune" : true,
     "resize" : "auto"
