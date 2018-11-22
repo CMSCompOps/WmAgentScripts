@@ -875,6 +875,30 @@ def mongo_client():
     import pymongo,ssl
     return pymongo.MongoClient('mongodb://%s/?ssl=true'%mongo_db_url, ssl_cert_reqs=ssl.CERT_NONE)
 
+class statusHistory:
+    def __init__(self):
+        self.client = mongo_client()
+        self.db = self.client.unified.statusHistory
+
+    def content(self):
+        c = {}
+        for doc in self.db.find():
+            c[int(doc['time'])] = doc
+        return c
+
+    def add(self, now, info):
+        info['time'] = time.mktime(now)
+        info['date'] = time.asctime(now)
+        self.db.insert_one( info )
+
+    def trim(self, now, days):
+        now = time.mktime(now)
+        for doc in self.db.find():
+            if (float(now)-float(doc['time'])) > days*24*60*60:
+                print "trim history of",doc['_id']
+                self.db.delete_one( {'_id' : doc['_id']})
+
+            
 class replacedBlocks:
     def __init__(self):
         self.client = mongo_client()

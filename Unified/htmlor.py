@@ -6,7 +6,7 @@ import os
 import json
 from collections import defaultdict
 import sys
-from utils import monitor_dir, base_dir, phedex_url, reqmgr_url, monitor_pub_dir, unified_url_eos, monitor_eos_dir, monitor_pub_eos_dir, base_eos_dir, closeoutInfo, agent_speed_draining
+from utils import monitor_dir, base_dir, phedex_url, reqmgr_url, monitor_pub_dir, unified_url_eos, monitor_eos_dir, monitor_pub_eos_dir, base_eos_dir, closeoutInfo, agent_speed_draining, statusHistory
 import random
 
 def htmlor( caller = ""):
@@ -196,9 +196,7 @@ def htmlor( caller = ""):
     lap.start = time.mktime(time.gmtime())
 
     ## start to write it
-    #html_doc = open('/afs/cern.ch/user/v/vlimant/public/ops/index.html','w')
-    #html_doc = open('%s/index.html.new'%monitor_dir,'w')
-    html_doc = eosFile('%s/index.html.new'%monitor_dir)
+    html_doc = eosFile('%s/index.html'%monitor_dir)
     print "Updating the status page ..." 
 
     UC = unifiedConfiguration()
@@ -1461,56 +1459,19 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
 """)
 
     html_doc.close()
-    ## and put the file in place
-    os.system('mv %s/index.html.new %s/index.html'%(monitor_dir,monitor_dir))
 
-    try:
-        statuses = json.loads(eosRead('%s/statusmon.json'%monitor_dir))
-    except:
-        statuses = {}
-
+    SH = statusHistory()
     s_count = defaultdict(int)
-    now = time.mktime(time.gmtime())
+    now = time.gmtime()
     for wf in session.query(Workflow).all():
         s_count[wf.status]+=1
-    statuses[now] = dict( s_count )
-    ## remove old entries
-    for t in statuses.keys():
-        if (now-float(t)) > 7*24*60*60:
-            statuses.pop(t)
-    #open('%s/statusmon.json'%monitor_dir,'w').write( json.dumps( statuses , indent=2))
-    eosFile('%s/statusmon.json'%monitor_dir).write( json.dumps( statuses , indent=2)).close()
-
-    #html_doc = open('%s/statuses.html'%monitor_dir,'w')
-    html_doc = eosFile('%s/statuses.html'%monitor_dir)
-    html_doc.write("""                                                                                                                                                                                                                                                                                                      <html>        
-<table border=1>
-<thead>
-<tr>
-<th> workflow </th><th> status </th><th> wm status</th>
-</tr>
-</thead>
-""")
-    wfs = {}
-    for wfo in session.query(Workflow).all():
-        ## pass all that is unlocked and considered it gone
-        wfs[wfo.name] = (wfo.status,wfo.wm_status)
-
-    #open('%s/statuses.json'%monitor_pub_dir,'w').write(json.dumps( wfs ))
-    eosFile('%s/statuses.json'%monitor_pub_dir).write(json.dumps( wfs )).close()
-    for wfn in sorted(wfs.keys()):
-        ## pass all that is unlocked and considered it gone
-        if 'unlock' in wfs[wfn][0]: continue
-        html_doc.write('<tr><td><a id="%s">%s</a></td><td>%s</td><td>%s</td></tr>\n'%( wfn, wfn, wfs[wfn][0],  wfs[wfn][1]))
-    html_doc.write("</table>")
-    html_doc.write("<br>"*100)
-    html_doc.write("end of page</html>")
-    html_doc.close()
+    SH.add( now, dict(s_count))
+    SH.trim( now, 7 )
 
     this_week = str(int(time.strftime("%W", time.gmtime())))
     last_week = str(int(time.strftime("%W", time.gmtime()))-1)
 
-    #open(time.strftime("%s/summary_%%Y_"%(monitor_dir), time.gmtime())+this_week+".json", 'w').write(json.dumps(summary_content, indent=2))
+
     eosFile(time.strftime("%s/summary_%%Y_"%(monitor_dir), time.gmtime())+this_week+".json").write(json.dumps(summary_content, indent=2)).close()
     os.system(time.strftime("cp %s/summary_%%Y_"%(monitor_dir), time.gmtime())+this_week+".json %s/summary.txt"%(monitor_pub_dir))
     os.system(time.strftime("cp %s/summary_%%Y_"%(monitor_dir), time.gmtime())+last_week+".json %s/last_summary.txt"%(monitor_pub_dir))
