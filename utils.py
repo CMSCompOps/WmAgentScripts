@@ -740,6 +740,14 @@ class DynamoLock:
             locked = False
         return locked
 
+    def deadlock(self):
+        from assignSession import session, LockOfLock
+        Ulocks = session.query(LockOfLock).filter(LockOfLock.lock == True).all()
+        if not Ulocks:
+            ## noone on this end is currently supposed to handshake with dynamo
+            # does not work out 
+            self.full_release()
+
     def __del__(self):
         if self.go: self.release()
 
