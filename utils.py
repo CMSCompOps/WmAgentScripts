@@ -655,8 +655,9 @@ def _pass_to_dynamo( items, N ,sites = None, group = None ):
         return False
 
 class UnifiedLock:
-    def __init__(self, owner, acquire=True):
-        self.owner = owner
+    def __init__(self, acquire=True):
+        self.owner = "%s-%s"%(socket.gethostname(), os.getpid())
+        #self.owner = owner
         if acquire: self.acquire()
 
     def acquire(self):
@@ -668,6 +669,27 @@ class UnifiedLock:
         session.add( ll )
         session.commit()
 
+    def deadlock(self):
+        host = os.getenv('HOST',os.getenv('HOSTNAME',socket.gethostname()))
+        from assignSession import session, LockOfLock
+        to_remove = []
+        for ll in session.query(LockOfLock).filter(LockOfLock.lock== True).filter(LockOfLock.owner.contains(host)).all():
+            print ll.owner
+            try:
+                host,pid = ll.owner.split('-')
+                process = os.popen('ps -e -f | grep %s | grep -v grep'%pid).read()
+                if not process:
+                    print "the lock",ll,"is a deadlock"
+                    to_remove.append( ll )
+            except:
+                print ll.owner,"is not good"
+
+        if to_remove and False:
+            for ll in to_remove:
+                session.delete( ll )
+            session.commit()
+
+            
     def clean(self):
         ##TODO: remove deadlocks
         ##TODO: remove old entries to keep the db under control
@@ -700,7 +722,7 @@ class DynamoLock:
         if acquire: self.acquire()
 
     def acquire(self):
-        self.go = lock_DDM(owner=self.owner wait=self.wait, timeout=self.timeout)
+        self.go = lock_DDM(owner=self.owner, wait=self.wait, timeout=self.timeout)
 
     def free(self):
         return self.go
@@ -729,7 +751,7 @@ class DynamoLock:
 
 def unlock_DDM(owner=None):
     try:
-        return _lock_DDM(owner=owner lock=False, wait=None, timeout=None)
+        return _lock_DDM(owner=owner, lock=False, wait=None, timeout=None)
     except Exception as e:
         print "Failure in unlocking DDM"
         print str(e)
@@ -737,7 +759,7 @@ def unlock_DDM(owner=None):
 
 def lock_DDM(owner=None, wait=True, timeout=None):
     try:
-        return _lock_DDM(owner=owner lock=True, wait=wait, timeout=timeout)
+        return _lock_DDM(owner=owner, lock=True, wait=wait, timeout=timeout)
     except Exception as e:
         print "Failure in locking DDM"
         print str(e)
@@ -791,9 +813,8 @@ def _lock_DDM(owner=None, lock=True, wait=True, timeout=None):
 class lockInfo:
     def __init__(self, andwrite=True):
         self.owner = "%s-%s"%(socket.gethostname(), os.getpid())
-        
         self.ddmlock = DynamoLock( owner = None, timeout = 10*60)
-        self.unifiedlock = UnifiedLock( owner = self.owner )
+        self.unifiedlock = UnifiedLock()
 
     def free(self):
         return self.ddmlock.free()
