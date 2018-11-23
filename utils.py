@@ -654,9 +654,92 @@ def _pass_to_dynamo( items, N ,sites = None, group = None ):
         print str(e)
         return False
 
-def lock_DDM(lock=True, wait=True, timeout=None):
-    #conn = make_x509_conn('dynamo.mit.edu')
-    conn  =  httplib.HTTPSConnection('dynamo.mit.edu', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+class UnifiedLock:
+    def __init__(self, owner, acquire=True):
+        self.owner = owner
+        if acquire: self.acquire()
+
+    def acquire(self):
+        from assignSession import session, LockOfLock
+        ## insert a new object with the proper time stamp
+        ll = LockOfLock( lock=True, 
+                         time = time.mktime( time.gmtime()),
+                         owner = self.owner)
+        session.add( ll )
+        session.commit()
+
+    def clean(self):
+        ##TODO: remove deadlocks
+        ##TODO: remove old entries to keep the db under control
+        return 
+        now = time.mktime(time.gmtime())
+        from assignSession import session, LockOfLock
+        for ll in session.query(LockOfLock).all():
+            ## one needs to go and check the process on the corresponding machine
+            pass
+        session.commit()
+
+    def __del__(self):
+        self.release()
+
+    def release(self):
+        from assignSession import session, LockOfLock
+        for ll in session.query(LockOfLock).filter(LockOfLock.owner == self.owner).all():
+            ll.lock = False
+            ll.endtime = time.mktime( time.gmtime())
+        session.commit()
+
+
+
+class DynamoLock:
+    def __init__(self, wait=True, timeout=None, acquire=True):
+        self.go = False
+        self.wait = wait
+        self.timeout = timeout
+        if acquire: self.acquire()
+
+    def acquire(self):
+        self.go = lock_DDM( wait=self.wait, timeout=self.timeout)
+
+    def free(self):
+        return self.go
+
+    def check(self):
+        conn = make_x509_conn('dynamo.mit.edu')
+        r1 = conn.request("GET",'/data/applock/check?app=detox')
+        r2 = conn.getresponse()
+        r = json.loads(r2.read())
+        if (r['result'] == 'OK' and r['message'] == 'Locked'):
+            locked = True
+        else:
+            locked = False
+        return locked
+
+    def __del__(self):
+        self.release()
+
+    def release(self):
+        if self.go: unlock_DDM()
+
+def unlock_DDM():
+    try:
+        return _lock_DDM( lock=False, wait=None, timeout=None)
+    except Exception as e:
+        print "Failure in unlocking DDM"
+        print str(e)
+        return False
+
+def lock_DDM( wait=True, timeout=None):
+    try:
+        return _lock_DDM( lock=True, wait=wait, timeout=timeout)
+    except Exception as e:
+        print "Failure in locking DDM"
+        print str(e)
+        return False
+
+
+def _lock_DDM(lock=True, wait=True, timeout=None):
+    conn = make_x509_conn('dynamo.mit.edu')
     go = False
     waited = 0
     sleep = 30
@@ -689,6 +772,7 @@ def lock_DDM(lock=True, wait=True, timeout=None):
             print "we unlocked dynamo for unified"
             go = True
         else:
+            print 'possible deadlock'
             print res
             go = True
 
@@ -701,35 +785,13 @@ class lockInfo:
         self.lockfilename = 'globallocks' ## official name
         self.writeondelete = andwrite
         self.owner = "%s-%s"%(socket.gethostname(), os.getpid())
-        from assignSession import session, LockOfLock
-        ## insert a new object with the proper time stamp
-        ll = LockOfLock( lock=True, 
-                         time = time.mktime( time.gmtime()),
-                         owner = self.owner)
-        session.add( ll )
-
-        ## TODO, clean up all old objects to not accumulate a lifetime of locks
-        session.commit()
+        
+        self.ddmlock = DynamoLock( timeout = 10*60)
+        self.unifiedlock = UnifiedLock( owner = self.owner )
 
     def free(self):
-        go = lock_DDM( timeout = 10*60)
-        return go
+        return self.ddmlock.free()
         
-    def __del__(self):
-        from assignSession import session, LockOfLock
-        for ll in session.query(LockOfLock).filter(LockOfLock.owner == self.owner).all():
-            ll.lock = False
-            ll.endtime = time.mktime( time.gmtime())
-        session.commit()
-
-        try:
-            ## let dynamo know that we are done here"
-            lock_DDM( lock = False)
-        except Exception as e:
-            #sendEmail('lockInfo','Issue handshaking with dynamo\n%s'%(str(e)))
-            pass
-
-
     def release(self, item ):
         try:
             self._release(item)
