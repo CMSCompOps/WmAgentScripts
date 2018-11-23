@@ -692,14 +692,15 @@ class UnifiedLock:
 
 
 class DynamoLock:
-    def __init__(self, wait=True, timeout=None, acquire=True):
+    def __init__(self, owner=None, wait=True, timeout=None, acquire=True):
+        self.owner = owner
         self.go = False
         self.wait = wait
         self.timeout = timeout
         if acquire: self.acquire()
 
     def acquire(self):
-        self.go = lock_DDM( wait=self.wait, timeout=self.timeout)
+        self.go = lock_DDM(owner=self.owner wait=self.wait, timeout=self.timeout)
 
     def free(self):
         return self.go
@@ -716,36 +717,43 @@ class DynamoLock:
         return locked
 
     def __del__(self):
-        self.release()
+        if self.go: self.release()
 
     def release(self):
-        if self.go: unlock_DDM()
+        unlock_DDM(self.owner)
 
-def unlock_DDM():
+    def full_release(self):
+        ## release as many times as necessary to get it free
+        while self.check():
+            self.release()
+
+def unlock_DDM(owner=None):
     try:
-        return _lock_DDM( lock=False, wait=None, timeout=None)
+        return _lock_DDM(owner=owner lock=False, wait=None, timeout=None)
     except Exception as e:
         print "Failure in unlocking DDM"
         print str(e)
         return False
 
-def lock_DDM( wait=True, timeout=None):
+def lock_DDM(owner=None, wait=True, timeout=None):
     try:
-        return _lock_DDM( lock=True, wait=wait, timeout=timeout)
+        return _lock_DDM(owner=owner lock=True, wait=wait, timeout=timeout)
     except Exception as e:
         print "Failure in locking DDM"
         print str(e)
         return False
 
 
-def _lock_DDM(lock=True, wait=True, timeout=None):
+def _lock_DDM(owner=None, lock=True, wait=True, timeout=None):
     conn = make_x509_conn('dynamo.mit.edu')
     go = False
     waited = 0
     sleep = 30
+    service = 'unified' ## could be replaced with some owner
+    if owner: service+= '-'+owner
     if lock:
         while True:
-            conn.request("POST","/registry/applock/lock?service=unified&app=detox")
+            conn.request("POST","/registry/applock/lock?service=%s&app=detox"% service )
             response = conn.getresponse()
             data = response.read()
             res = json.loads( data )
@@ -753,7 +761,7 @@ def _lock_DDM(lock=True, wait=True, timeout=None):
                 time.sleep( sleep )
                 waited += sleep
             elif res['result'].lower() == 'ok':
-                print "we locked dynamo for unified"
+                print "we locked dynamo for",service
                 go = True
                 break
             else:
@@ -761,18 +769,18 @@ def _lock_DDM(lock=True, wait=True, timeout=None):
                 print res
                 break
             if timeout and waited>timeout:
-                print "locking dynamo for unified has timedout"
+                print "locking dynamo has timedout for",service
                 go = False
     else:
-        conn.request("POST","/registry/applock/unlock?service=unified&app=detox")
+        conn.request("POST","/registry/applock/unlock?service=%s&app=detox"% service)
         response = conn.getresponse()
         data = response.read()
         res = json.loads( data )
         if res['result'].lower() == 'ok':
-            print "we unlocked dynamo for unified"
+            print "we unlocked dynamo for",service
             go = True
         else:
-            print 'possible deadlock'
+            print 'possible deadlock on',service
             print res
             go = True
 
@@ -786,7 +794,7 @@ class lockInfo:
         self.writeondelete = andwrite
         self.owner = "%s-%s"%(socket.gethostname(), os.getpid())
         
-        self.ddmlock = DynamoLock( timeout = 10*60)
+        self.ddmlock = DynamoLock( owner = None, timeout = 10*60)
         self.unifiedlock = UnifiedLock( owner = self.owner )
 
     def free(self):
