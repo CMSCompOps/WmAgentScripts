@@ -686,7 +686,7 @@ class UnifiedLock:
             except:
                 print ll.owner,"is not good"
 
-        if to_remove and False:
+        if to_remove:
             for ll in to_remove:
                 session.delete( ll )
             session.commit()
