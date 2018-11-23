@@ -701,11 +701,6 @@ class lockInfo:
         self.lockfilename = 'globallocks' ## official name
         self.writeondelete = andwrite
         self.owner = "%s-%s"%(socket.gethostname(), os.getpid())
-        ## should lock on DDM. this waits for dynamo to not be running
-        if not lock_DDM( timeout = 30*60): ## 30 minutes timeout
-            print "Dynamo is preventing us to run"
-            sys.exit(13)
-
         from assignSession import session, LockOfLock
         ## insert a new object with the proper time stamp
         ll = LockOfLock( lock=True, 
@@ -717,31 +712,9 @@ class lockInfo:
         session.commit()
 
     def free(self):
-        started = time.mktime(time.gmtime())
-        #max_wait = 120*60. #2h
-        max_wait = 10*60. #10min
-        sleep_time = 60 ##ping every minute
-        locked = False
-        while True:
-            conn = make_x509_conn('dynamo.mit.edu')
-            #r = os.popen('curl -s http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/inActionLock.txt').read()
-            r1 = conn.request("GET",'/data/applock/check?app=detox')
-            r2 = conn.getresponse()
-            r = json.loads(r2.read())
-            if (r['result'] == 'OK' and r['message'] == 'Locked'):
-                sendLog('LockInfo','DDM lock is present\n%s'%(r),level='warning')
-                locked = True
-                now = time.mktime(time.gmtime())
-                if (now-started) > max_wait: break
-                else:
-                    print "pausing"
-                    time.sleep(sleep_time)
-            else:
-                locked = False
-                break
-
-        return (not locked)
-
+        go = lock_DDM( timeout = 10*60)
+        return go
+        
     def __del__(self):
         from assignSession import session, LockOfLock
         for ll in session.query(LockOfLock).filter(LockOfLock.owner == self.owner).all():
