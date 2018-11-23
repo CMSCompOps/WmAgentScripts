@@ -790,8 +790,6 @@ def _lock_DDM(owner=None, lock=True, wait=True, timeout=None):
 
 class lockInfo:
     def __init__(self, andwrite=True):
-        self.lockfilename = 'globallocks' ## official name
-        self.writeondelete = andwrite
         self.owner = "%s-%s"%(socket.gethostname(), os.getpid())
         
         self.ddmlock = DynamoLock( owner = None, timeout = 10*60)

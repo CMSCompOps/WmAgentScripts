@@ -1,3 +1,4 @@
+from assignSession import *
 import os
 import json
 #import numpy as np
@@ -16,10 +17,7 @@ if sys.argv[1] == 'parse':
     force = False
     if len(sys.argv)>2:
         force = bool(sys.argv[2])
-    locks = json.loads(eosRead('%s/globallocks.json'%monitor_pub_dir))
-    #waiting = json.loads(open('%s/waiting_custodial.json'%monitor_dir).read())
-    #stuck = json.loads(open('%s/stuck_custodial.json'%monitor_pub_dir).read())
-    #missing = json.loads(open('%s/missing_approval_custodial.json'%monitor_dir).read())
+    locks = [l.item.split('#')[0] for l in session.query(Lock).filter(Lock.lock == True).all()]
 
     waiting = {}
     stuck = {}
