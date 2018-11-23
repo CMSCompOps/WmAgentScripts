@@ -50,7 +50,7 @@ if options.remove:
 
 post = {}
 if options.configuration:
-    post.update(json.loads(options.value))
+    post.update(json.loads(options.configuration))
 
 update = {}
 if options.parameter:
