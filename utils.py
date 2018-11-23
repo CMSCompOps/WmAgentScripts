@@ -681,6 +681,8 @@ class UnifiedLock:
                 if not process:
                     print "the lock",ll,"is a deadlock"
                     to_remove.append( ll )
+                else:
+                    print "the lock on",ll.owner,"is legitimate"
             except:
                 print ll.owner,"is not good"
 
