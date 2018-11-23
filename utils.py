@@ -718,12 +718,13 @@ class lockInfo:
 
     def free(self):
         started = time.mktime(time.gmtime())
-        max_wait = 50. #120*60. #2h
-        sleep_time = 30
+        #max_wait = 120*60. #2h
+        max_wait = 10*60. #10min
+        sleep_time = 60 ##ping every minute
         locked = False
         while True:
             conn = make_x509_conn('dynamo.mit.edu')
-            r = os.popen('curl -s http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/inActionLock.txt').read()
+            #r = os.popen('curl -s http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/inActionLock.txt').read()
             r1 = conn.request("GET",'/data/applock/check?app=detox')
             r2 = conn.getresponse()
             r = json.loads(r2.read())
