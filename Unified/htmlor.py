@@ -657,7 +657,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     start_time_two_weeks_ago = time.mktime(time.gmtime(now - (20*24*60*60))) # 20
     last_week =  int(time.strftime("%W",time.gmtime(now - ( 7*24*60*60))))
 
-    all_locks = json.loads(eosRead('%s/globallocks.json'%monitor_pub_dir))    
+    all_locks = [l.item.split('#')[0] for l in session.query(Lock).filter(Lock.lock == True).all()]
     waiting_custodial = json.loads(eosRead('%s/waiting_custodial.json'%monitor_dir))
     all_pending_approval_custodial = dict([(k,item) for k,item in waiting_custodial.items() if 'nodes' in item and not any([node['decided'] for node in item['nodes'].values()]) ])
     n_pending_approval = len( all_pending_approval_custodial )
