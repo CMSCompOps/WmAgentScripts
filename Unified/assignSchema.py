@@ -11,7 +11,7 @@ Admin_Mode = False
 Base = declarative_base()
 
 def schema():
-    return '' if Admin_Mode else 'cms_unified_admin'
+    return None if Admin_Mode else 'cms_unified_admin'
 def prefix():
     return '' if Admin_Mode else schema()+'.'
 def table_args():
@@ -29,7 +29,6 @@ class Workflow(Base):
 class Output(Base):
     __tablename__ = 'OUTPUT'
     __table_args__ = table_args()
-    #id = Column(Integer, Sequence(prefix()+'OUTPUT_ID_SEQ'), primary_key=True)
     id = Column(Integer, Sequence('OUTPUT_ID_SEQ', schema=schema()), primary_key=True)
     datasetname = Column(String(400))
     nlumis = Column(Integer)
@@ -59,6 +58,15 @@ class TransferImp(Base):
     workflow_id = Column(Integer,ForeignKey(prefix()+'WORKFLOW.id'))
     workflow = relationship(Workflow)
     active = Column(Boolean, default=True)
+
+class LockOfLock(Base):
+    __tablename__ = 'LOCKOFLOCK'
+    __table_args__ = table_args()
+    id = Column(Integer, Sequence('LOCKOFLOCK_ID_SEQ', schema=schema()), primary_key=True)
+    lock = Column(Boolean)
+    time = Column(Integer)
+    endtime = Column(Integer)
+    owner = Column(String(300))
 
 class Lock(Base):
     __tablename__ = 'lock'

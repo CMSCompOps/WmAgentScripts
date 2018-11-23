@@ -628,7 +628,7 @@ def _pass_to_dynamo( items, N ,sites = None, group = None ):
         sites = ['T2_*','T1_*_Disk']
     if type(items)==str:
         items = items.split(',')
-    conn  =  httplib.HTTPSConnection('dynamo.mit.edu', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn = make_x509_conn('dynamo.mit.edu')
     par = {'item' : items, 'site': sites, 'n':N}
     if group:
         par.update( {'group' : group })
@@ -702,23 +702,19 @@ class lockInfo:
         self.writeondelete = andwrite
         self.owner = "%s-%s"%(socket.gethostname(), os.getpid())
         ## should lock on DDM. this waits for dynamo to not be running
-        #if not lock_DDM( timeout = 30*60): ## 30 minutes timeout
-        #    print "Dynamo is preventing us to run"
-        #    sys.exit(13)
+        if not lock_DDM( timeout = 30*60): ## 30 minutes timeout
+            print "Dynamo is preventing us to run"
+            sys.exit(13)
 
-        self.self_lock = '%s/%s.json.%s.lock'%(monitor_pub_dir,self.lockfilename,self.owner)
-        if os.path.isfile( self.self_lock ):
-            print "file",self.self_lock,"is already present"
-            sys.exit(-1)
+        from assignSession import session, LockOfLock
+        ## insert a new object with the proper time stamp
+        ll = LockOfLock( lock=True, 
+                         time = time.mktime( time.gmtime()),
+                         owner = self.owner)
+        session.add( ll )
 
-        self.pub_lock = '%s/%s.json.lock'%(monitor_pub_dir, self.lockfilename)
-        if self.writeondelete:
-            print "setting global lock at",self.pub_lock
-            os.system('echo `date` > %s'% self.pub_lock)
-            print "setting lock lock at", self.self_lock
-            os.system('echo `date` > %s'% self.self_lock)
-
-
+        ## TODO, clean up all old objects to not accumulate a lifetime of locks
+        session.commit()
 
     def free(self):
         started = time.mktime(time.gmtime())
@@ -726,8 +722,12 @@ class lockInfo:
         sleep_time = 30
         locked = False
         while True:
+            conn = make_x509_conn('dynamo.mit.edu')
             r = os.popen('curl -s http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/inActionLock.txt').read()
-            if not ('Not Found' in r):
+            r1 = conn.request("GET",'/data/applock/check?app=detox')
+            r2 = conn.getresponse()
+            r = json.loads(r2.read())
+            if (r['result'] == 'OK' and r['message'] == 'Locked'):
                 sendLog('LockInfo','DDM lock is present\n%s'%(r),level='warning')
                 locked = True
                 now = time.mktime(time.gmtime())
@@ -742,6 +742,12 @@ class lockInfo:
         return (not locked)
 
     def __del__(self):
+        from assignSession import session, LockOfLock
+        for ll in session.query(LockOfLock).filter(LockOfLock.owner == self.owner).all():
+            ll.lock = False
+            ll.endtime = time.mktime( time.gmtime())
+        session.commit()
+
         try:
             ## let dynamo know that we are done here"
             lock_DDM( lock = False)
@@ -749,45 +755,6 @@ class lockInfo:
             #sendEmail('lockInfo','Issue handshaking with dynamo\n%s'%(str(e)))
             pass
 
-        ## produce the lock file on disk
-        try:
-            from assignSession import session, Lock
-            out = []
-            detailed_out = {}
-            all_locks = session.query(Lock).filter(Lock.lock == True).all()
-            print len(all_locks),"existing locks"
-            for lock in all_locks:
-                if lock.lock:
-                    out.append( lock.item )
-                    detailed_out[lock.item] = { 'date' : lock.time,
-                                                'reason' : lock.reason
-                                                }
-                else:
-                    #print "poping",lock.item
-                    pass
-                    ## let's not do that for now
-                    #session.delete( lock )
-                    #session.commit()
-
-            #print "writing to json"
-            if self.writeondelete:
-                print "writing",len( out ),"locks to the json interface"
-                open('%s/%s.%s.json.new'%(monitor_pub_dir,self.lockfilename,self.owner),'w').write( json.dumps( sorted(out) , indent=2))
-                os.system('mv %s/%s.%s.json.new %s/%s.json'%(monitor_pub_dir,self.lockfilename,self.owner,monitor_pub_dir,self.lockfilename))
-                open('%s/%s.%s.detailed.json.new'%(monitor_pub_dir,self.lockfilename,self.owner),'w').write( json.dumps( detailed_out , indent=2))
-                os.system('mv %s/%s.%s.detailed.json.new %s/%s.detailed.json'%(monitor_pub_dir,self.lockfilename,self.owner,monitor_pub_dir,self.lockfilename))
-                ## remove the owned instance
-                os.system('rm -f %s'% self.self_lock)
-                ##check for other locking instances
-                lock_present = glob.glob('%s/globallocks.json.*.lock'% monitor_pub_dir)
-                print "the following lock lock files are present",sorted(lock_present)
-                if not lock_present:
-                    os.system('rm -f %s'%self.pub_lock)
-                else:
-                    print "was unable to remove global lock because of",len(lock_present),"lock locks"
-        except Exception as e:
-            print "Failed writing locks"
-            print str(e)
 
     def release(self, item ):
         try:

@@ -1,4 +1,4 @@
-from assignSchema import Base, Workflow, Output, Transfer, Lock, engine, TransferImp, LogRecord
+from assignSchema import Base, Workflow, Output, Transfer, Lock, engine, TransferImp, LogRecord, LockOfLock
 from sqlalchemy.orm import sessionmaker
 import time
 import copy 
