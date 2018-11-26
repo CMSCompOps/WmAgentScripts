@@ -94,8 +94,13 @@ def modifySchema(cache, workflow, user, group, events, firstLumi, backfill=False
         # Modify ProcessingString, AcquisitionEra, Campaign and Request string (if they don't
         # have the word 'backfill' in it
         result["ProcessingString"] = "BACKFILL"
-        if "backfill" not in result["AcquisitionEra"].lower():
-            result["AcquisitionEra"] = result["AcquisitionEra"] + "Backfill"
+        if isinstance(result["AcquisitionEra"],dict):
+            for eraName in result["AcquisitionEra"]:
+                if "backfill" not in result["AcquisitionEra"][eraName].lower():
+                    result["AcquisitionEra"][eraName] = result["AcquisitionEra"][eraName] + "Backfill"
+        else:
+            if "backfill" not in result["AcquisitionEra"].lower():
+                result["AcquisitionEra"] = result["AcquisitionEra"] + "Backfill"
         if "backfill" not in result["Campaign"].lower():
             result["Campaign"] = result["Campaign"] + "-Backfill"
         if "backfill" not in result["RequestString"].lower():
