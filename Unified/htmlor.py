@@ -462,15 +462,13 @@ Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransfertea
     lap( 'done with staged' )
     
     lines=[]
-    batches = json.loads(eosRead('%s/batches.json' % base_eos_dir))
-    relvals = []
-    for b in batches: relvals.extend( batches[b] )
     count_by_campaign=defaultdict(lambda : defaultdict(int))
     count = 0
     for wf in session.query(Workflow).filter(Workflow.status=='away').all():
         wl = getWL( wf.name )
         count_by_campaign[wl['Campaign']][int(wl['RequestPriority'])]+=1
-        color = 'orange' if wf.name in relvals else 'black'
+        #color = 'orange' if wf.name in relvals else 'black' ## this difference of color can be put back somehow using batchInfo
+        color = 'black'
         lines.append("<li> <font color=%s>%s</font> <hr></li>"%(color,wfl(wf,view=True,ongoing=True)))
         count += 1
     text_by_c=""

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, sendEmail, sendLog, monitor_pub_dir, unifiedConfiguration, deep_update, global_SI, getWorkflowByCampaign, base_eos_dir, monitor_dir, eosRead, eosFile
+from utils import getWorkflows, sendEmail, sendLog, monitor_pub_dir, unifiedConfiguration, deep_update, global_SI, getWorkflowByCampaign, base_eos_dir, monitor_dir, eosRead, eosFile, campaignInfo, batchInfo
 from collections import defaultdict
 import copy
 import json
@@ -10,6 +10,8 @@ import random
 def batchor( url ):
     UC = unifiedConfiguration()
     SI = global_SI()
+    CI = campaignInfo()
+    BI = batchInfo()
     ## get all workflows in assignment-approved with SubRequestType = relval
     all_wfs = []
     for user in UC.get("user_relval"):
@@ -47,7 +49,6 @@ def batchor( url ):
     default_hi_setup = copy.deepcopy( default_setup )
 
     add_on = {}
-    batches = json.loads( eosRead('%s/batches.json'%base_eos_dir) )
     relval_routing = UC.get('relval_routing')
     def pick_one_site( p):
         ## modify the parameters on the spot to have only one site
@@ -57,6 +58,7 @@ def batchor( url ):
             print "picked",picked,"from",choose_from
             p["parameters"]["SiteWhitelist"] = [picked]
             
+    batches = BI.all()
     for campaign in by_campaign:
         if campaign in batches: continue
         ## get a bunch of information
@@ -73,8 +75,7 @@ def batchor( url ):
         pick_one_site( setup )
         add_on[campaign] = setup
         sendLog('batchor','Adding the relval campaigns %s with parameters \n%s'%( campaign, json.dumps( setup, indent=2)),level='critical')
-        if not campaign in batches: batches[campaign] = []
-        batches[campaign] = list(set(list(copy.deepcopy( by_campaign[campaign] )) + batches[campaign] ))
+        BI.update( campaign, by_campaign[campaign])
 
     for campaign in by_hi_campaign:
         if campaign in batches: continue
@@ -87,18 +88,12 @@ def batchor( url ):
         pick_one_site( setup )
         add_on[campaign] = setup
         sendLog('batchor','Adding the HI relval campaigns %s with parameters \n%s'%( campaign, json.dumps( setup, indent=2)),level='critical')
-        if not campaign in batches: batches[campaign] = []
-        batches[campaign] = list(set(list(copy.deepcopy( by_hi_campaign[campaign] )) + batches[campaign] ))
+        BI.update( campaign, by_hi_campaign[campaign])
         
     
-    eosFile('%s/batches.json' % base_eos_dir,'w').write( json.dumps( batches , indent=2 ) ).close()
 
-    ## open the campaign configuration 
-    campaigns = json.loads( eosRead('%s/campaigns.relval.json'%base_eos_dir) )
-
-
-    ## protect for overwriting ??
-    for new_campaign in list(set(add_on.keys())-set(campaigns.keys())):
+    ## only new campaigns in announcement
+    for new_campaign in list(set(add_on.keys())-set(CI.all(c_type='relval'))):
         ## this is new, and can be announced as such
         print new_campaign,"is new stuff"
         subject = "Request of RelVal samples batch %s"% new_campaign
@@ -125,7 +120,7 @@ This is an automated message"""%( new_campaign,
         sendLog('batchor',text, level='critical')
 
     ## go through all existing campaigns and remove the ones not in use anymore ?
-    for old_campaign in campaigns.keys():
+    for old_campaign in CI.all(c_type='relval'):
         all_in_batch = getWorkflowByCampaign(url, old_campaign, details=True)
         if not all_in_batch: continue
         is_batch_done = all(map(lambda s : not s in ['completed','force-complete','running-open','running-closed','acquired','assigned','assignment-approved'], [wf['RequestStatus']for wf in all_in_batch]))
@@ -133,21 +128,12 @@ This is an automated message"""%( new_campaign,
         if is_batch_done:
             #print "batch",old_campaign,"can be closed or removed if necessary"
             #campaigns[old_campaign]['go'] = False ## disable
-            campaigns.pop( old_campaign ) ## or just drop it all together ?
+            CI.pop( old_campaign ) ## or just drop it all together ?
+            BI.pop( old_campaign )
             print "batch",old_campaign," configuration was removed"
 
     ## merge all anyways
-    campaigns.update( add_on )
-
-    ## write it out for posterity
-    open('campaigns.json.updated','w').write(json.dumps( campaigns , indent=2))
-
-    ## read back
-    rread = json.loads(open('campaigns.json.updated').read() )
-
-    os.system('cp campaigns.json.updated %s/campaigns.relval.json'%monitor_dir)
-    os.system('cp campaigns.json.updated %s/campaigns.relval.json'%base_eos_dir)
-
+    CI.update( add_on , c_type = 'relval')
 
 if __name__ == "__main__":
     url = 'cmsweb.cern.ch'

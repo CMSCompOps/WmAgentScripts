@@ -4,7 +4,7 @@ import sys
 import reqMgrClient
 from utils import workflowInfo, setDatasetStatus, invalidate
 from utils import componentInfo, reqmgr_url, getWorkflowById
-from utils import componentInfo, getWorkflowById, sendLog
+from utils import componentInfo, getWorkflowById, sendLog, batchInfo
 import optparse
 import json
 import re
@@ -12,6 +12,7 @@ import os
 
 def rejector(url, specific, options=None):
 
+    
     up = componentInfo(soft=['wtc'])
     if not up.check(): return
 
@@ -28,11 +29,14 @@ def rejector(url, specific, options=None):
     elif specific:
         wfs = session.query(Workflow).filter(Workflow.name.contains(specific)).all()
         if not wfs:
-            batches = json.loads(open('batches.json').read())
+            batches = batchInfo().content()
             for bname in batches:
                 if specific == bname:
-                    for wf in batches[bname]:
-                        wfs.append( session.query(Workflow).filter(Workflow.name == wf).first())
+                    for pid in batches[bname]:
+                        b_wfs = getWorkflowById(url, pid)
+                        for wf in b_wfs:
+                            wfs.append( session.query(Workflow).filter(Workflow.name == wf).first())
+                    break
     else:
         wfs = session.query(Workflow).filter(Workflow.status == 'assistance-clone').all()
         #wfs.extend( session.query(Workflow).filter(Workflow.status == 'assistance-reject').all())
