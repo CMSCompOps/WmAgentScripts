@@ -7111,8 +7111,10 @@ class workflowInfo:
                         print "the smallest value of %s is ok compared to %s evt/lumi in the input"%(max_events_per_lumi, events_per_lumi_inputs)
                 else:
                     root_split = splits[0]
-                    root_split['splitParams']['events_per_lumi'] = min(max_events_per_lumi)
-                    modified_splits.append( root_split )
+                    current_split = root_split.get('splitParams',{}).get('events_per_lumi',None)
+                    if current_split and current_split > min(max_events_per_lumi):
+                        root_split['splitParams']['events_per_lumi'] = min(max_events_per_lumi)
+                        modified_splits.append( root_split )
 
         ## the return list can easily be used to call the splitting api of reqmgr2
         return hold,modified_splits
