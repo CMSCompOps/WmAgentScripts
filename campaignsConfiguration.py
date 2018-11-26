@@ -34,8 +34,12 @@ if options.load:
 if options.dump:
     uc = {}
     for content in db.find():
-        content.pop("_id")
+        i=content.pop("_id")
         if content.get('type',None): continue ## no relval
+        if 'name' not in content:
+            db.delete_one({'_id': i})
+            print "dropping",i,content,"because it is malformated"
+            continue
         uc[content.pop("name")] = content
 
     open(options.dump,'w').write(json.dumps( uc, indent =2))
@@ -51,7 +55,7 @@ if options.remove:
 post = {}
 if options.configuration:
     post.update(json.loads(options.configuration))
-
+    post['name'] = options.name
 update = {}
 if options.parameter:
     name,value = options.parameter.split(':',1)
