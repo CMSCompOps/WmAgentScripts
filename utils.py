@@ -1392,7 +1392,7 @@ class batchInfo:
     def update(self, name, a_list):
         ex = self.db.find_one({'name' : name})
         if ex:
-            ex['ids'] = list(set(ex['ids'])+set(a_list))
+            ex['ids'] = list(set(list(ex['ids'])+list(a_list)))
         else:
             ex = {'ids': list(a_list)}
         self.add( name, ex)
