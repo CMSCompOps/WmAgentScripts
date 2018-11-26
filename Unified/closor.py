@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import componentInfo, sendEmail, setDatasetStatus, unifiedConfiguration, workflowInfo, siteInfo, sendLog, reqmgr_url, monitor_dir, moduleLock, userLock, global_SI, do_html_in_each_module, getWorkflows, pass_to_dynamo, closeoutInfo
+from utils import componentInfo, sendEmail, setDatasetStatus, unifiedConfiguration, workflowInfo, siteInfo, sendLog, reqmgr_url, monitor_dir, moduleLock, userLock, global_SI, do_html_in_each_module, getWorkflows, pass_to_dynamo, closeoutInfo, batchInfo
 import reqMgrClient
 import json
 import time
@@ -152,6 +152,7 @@ def closor(url, specific=None, options=None):
 
     UC = unifiedConfiguration()
     CI = campaignInfo()
+    BI = batchInfo()
     CloseI = closeoutInfo()
 
     all_late_files = []
@@ -466,7 +467,6 @@ def closor(url, specific=None, options=None):
         sendLog('closor',"the workflows below are held up \n%s"%("\n".join( sorted(held) )), level='critical')
 
 
-    #batches = json.loads(open('batches.json').read())
     for bname,go in batch_go.items():
         if go:
             subject = "Release Validation Samples Batch %s"% bname
@@ -495,10 +495,8 @@ This is an automated message.
       issues)
             to = ['hn-cms-relval@cern.ch']
             sendEmail(subject, text, destination=to )
-            #batches.pop( bname )
-    ## pop the done batches
-    ###open('batches.json','w').write( json.dumps( batches, indent=2))         
-
+            ## just announced ; take it out now.
+            BI.pop( bname )
 
 
     
