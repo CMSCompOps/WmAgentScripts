@@ -1466,6 +1466,13 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
     SH.add( now, dict(s_count))
     SH.trim( now, 7 )
 
+    wfs = {}
+    for wfo in session.query(Workflow).filter(Workflow.status.contains('manual')).all():
+        wfs[wfo.name] = (wfo.status,wfo.wm_status)
+    eosFile('%s/statuses.json'%monitor_pub_dir).write(json.dumps( wfs )).close()
+    
+
+
     this_week = str(int(time.strftime("%W", time.gmtime())))
     last_week = str(int(time.strftime("%W", time.gmtime()))-1)
 
