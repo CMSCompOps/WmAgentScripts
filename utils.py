@@ -730,7 +730,7 @@ class DynamoLock:
             self.go = not self.check()
             if not self.go and self.wait:
                 waited += wait
-                if waited > self.timeout:
+                if self.timeout and waited > self.timeout:
                     break
                 time.sleep(wait)
 
