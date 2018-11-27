@@ -724,7 +724,17 @@ class DynamoLock:
         if acquire: self.acquire()
 
     def acquire(self):
-        self.go = lock_DDM(owner=self.owner, wait=self.wait, timeout=self.timeout)
+        wait = 30
+        waited = 0 
+        while True:
+            self.go = not self.check()
+            if not self.go and self.wait:
+                waited += wait
+                if waited > self.timeout:
+                    break
+                time.sleep(wait)
+
+        #self.go = lock_DDM(owner=self.owner, wait=self.wait, timeout=self.timeout)
 
     def free(self):
         return self.go
@@ -752,7 +762,8 @@ class DynamoLock:
         if self.go: self.release()
 
     def release(self):
-        unlock_DDM(self.owner)
+        #unlock_DDM(self.owner)
+        pass
 
     def full_release(self):
         ## release as many times as necessary to get it free
@@ -777,6 +788,9 @@ def lock_DDM(owner=None, wait=True, timeout=None):
 
 
 def _lock_DDM(owner=None, lock=True, wait=True, timeout=None):
+    print "deprecated"
+    sys.exit(5)
+    return
     conn = make_x509_conn('dynamo.mit.edu')
     go = False
     waited = 0
