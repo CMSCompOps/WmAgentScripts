@@ -2198,6 +2198,7 @@ class siteInfo:
                 'T3_US_Colorado',
                 'T3_CH_CERN_HelixNebula',
                 'T3_CH_CERN_HelixNebula_REHA',
+                'T3_UK_Opportunistic_dodas',
                 'T3_US_NERSC',
                 'T3_US_TACC',
                 'T3_US_PSC'
@@ -2298,7 +2299,8 @@ class siteInfo:
             'T3_US_OSG' : 'T1_US_FNAL_Disk',
             'T3_US_Colorado' : 'T1_US_FNAL_Disk',
             'T3_CH_CERN_HelixNebula' : 'T2_CH_CERN',
-            'T3_CH_CERN_HelixNebula_REHA' : 'T2_CH_CERN'
+            'T3_CH_CERN_HelixNebula_REHA' : 'T2_CH_CERN',
+            'T3_UK_Opportunistic_dodas' : 'T2_UK_London_IC'
             }
         self.addHocStorageS['T2_CH_CERN_T0'].add( 'T2_CH_CERN')
         self.addHocStorageS['T2_CH_CERN_AI'].add('T2_CH_CERN')
