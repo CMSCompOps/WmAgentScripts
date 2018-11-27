@@ -66,7 +66,11 @@ also_locking_from_reqmgr = set()
 LI = lockInfo()
 
 ## add an addHoc list of things to lock. empyting this list would result in unlocking later
-addHocLocks = json.loads( eosRead('%s/addhoc_lock.json'%base_eos_dir))
+try:
+    addHocLocks = json.loads( eosRead('%s/addhoc_lock.json'%base_eos_dir))
+except:
+    addHocLocks = []
+    sys.exit(0)
 
 time_point("Starting addhoc")
 
