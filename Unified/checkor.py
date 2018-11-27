@@ -235,7 +235,8 @@ def checkor(url, spec=None, options=None):
             UC = UC,
             CI = CI,
             SI = SI,
-            use_mcm = use_mcm
+            use_mcm = use_mcm,
+            mcm = mcm
             ))
 
     ## run the threads
@@ -393,6 +394,7 @@ class CheckBuster(threading.Thread):
         TMDB_invalid = self.TMDB_invalid
 
         use_mcm = self.use_mcm
+        mcm = self.mcm
 
         will_do_that_many = self.will_do_that_many
 
