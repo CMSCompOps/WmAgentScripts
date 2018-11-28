@@ -733,6 +733,7 @@ class DynamoLock:
                 if self.timeout and waited > self.timeout:
                     break
                 time.sleep(wait)
+            break
 
         print "dynamo lock acquired",self.go
         #self.go = lock_DDM(owner=self.owner, wait=self.wait, timeout=self.timeout)
@@ -746,6 +747,7 @@ class DynamoLock:
         r2 = conn.getresponse()
         r = json.loads(r2.read())
         if (r['result'] == 'OK' and r['message'] == 'Locked'):
+            print "waiting on dynamo",r
             locked = True
         else:
             locked = False
