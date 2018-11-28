@@ -734,6 +734,7 @@ class DynamoLock:
                     break
                 time.sleep(wait)
 
+        print "dynamo lock acquired",self.go
         #self.go = lock_DDM(owner=self.owner, wait=self.wait, timeout=self.timeout)
 
     def free(self):
