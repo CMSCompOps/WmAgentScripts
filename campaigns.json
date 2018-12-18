@@ -73,6 +73,7 @@
     "lumisize": -1, 
     "fractionpass": 1.0, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -97,6 +98,7 @@
     "force-complete": 0.9, 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -112,6 +114,7 @@
     "SiteBlacklist": [
       "T1_US_FNAL", 
       "T0_CH_CERN", 
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -225,6 +228,7 @@
     "lumisize": -1, 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -304,6 +308,7 @@
     "lumisize": -1, 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -314,6 +319,7 @@
     "lumisize": -1, 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -323,6 +329,7 @@
     "lumisize": -1, 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -398,6 +405,7 @@
     "lumisize": -1, 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -410,6 +418,7 @@
     ], 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -456,6 +465,7 @@
     "resize": "auto", 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -530,6 +540,7 @@
     "force-timeout": 7, 
     "force-complete": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -587,6 +598,7 @@
     "lumisize": -1, 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -820,6 +832,7 @@
     "lumisize": -1, 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -835,6 +848,7 @@
     "lumisize": 1500, 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -889,6 +903,7 @@
     "lumisize": -1, 
     "earlyannounce": 0.99, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -937,6 +952,7 @@
     "SiteBlacklist": [
       "T1_US_FNAL", 
       "T0_CH_CERN", 
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -1006,6 +1022,7 @@
     "lumisize": -1, 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -1080,6 +1097,7 @@
     ], 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -1103,6 +1121,7 @@
     "lumisize": -1, 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -1126,6 +1145,7 @@
     "force-timeout": 7, 
     "force-complete": 0.99, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -1171,6 +1191,7 @@
     "SiteBlacklist": [
       "T1_US_FNAL", 
       "T0_CH_CERN", 
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -1199,6 +1220,7 @@
     ], 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true
@@ -1207,6 +1229,7 @@
     "lumisize": -1, 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -1219,6 +1242,7 @@
     "lumisize": -1, 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -1265,6 +1289,7 @@
     "lumisize": -1, 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -1275,6 +1300,7 @@
     "lumisize": -1, 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -1339,6 +1365,7 @@
     ], 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -1391,6 +1418,7 @@
     "resize": "auto", 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -1419,6 +1447,7 @@
     "lumisize": -1, 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -1436,6 +1465,7 @@
     "force-timeout": 7, 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -1489,6 +1519,7 @@
     "resize": "auto", 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -1499,6 +1530,7 @@
     "resize": "auto", 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -1509,6 +1541,7 @@
     "resize": "auto", 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -1527,6 +1560,7 @@
         "T2_US_UCSD", 
         "T2_US_Wisconsin", 
         "T2_CH_CERN", 
+        "T2_CH_CERN_HLT"
       ]
     }, 
     "maxcopies": 1, 
@@ -1577,6 +1611,7 @@
     "lumisize": -1, 
     "force-complete": 0.99, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -1622,6 +1657,7 @@
       "T1_US_FNAL", 
       "T2_US_Purdue", 
       "T0_CH_CERN", 
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -1744,6 +1780,7 @@
     "SiteBlacklist": [
       "T1_US_FNAL", 
       "T0_CH_CERN", 
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -1791,6 +1828,7 @@
     "lumisize": -1, 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -1956,6 +1994,7 @@
     "lumisize": -1, 
     "force-complete": 0.99, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -2014,6 +2053,7 @@
         "T2_US_UCSD", 
         "T2_US_Wisconsin", 
         "T2_CH_CERN", 
+        "T2_CH_CERN_HLT"
       ]
     }, 
     "custodial": "T1_FR_CCIN2P3_MSS", 
@@ -2046,6 +2086,7 @@
         "T2_US_UCSD", 
         "T2_US_Wisconsin", 
         "T2_CH_CERN", 
+        "T2_CH_CERN_HLT"
       ]
     }, 
     "custodial": "T1_FR_CCIN2P3_MSS", 
@@ -2131,6 +2172,7 @@
     "lumisize": -1, 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -2158,6 +2200,7 @@
     "lumisize": -1, 
     "fractionpass": 0.85, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -2218,6 +2261,7 @@
         "T2_US_UCSD", 
         "T2_US_Wisconsin", 
         "T2_CH_CERN", 
+        "T2_CH_CERN_HLT"
       ]
     }, 
     "custodial": "T1_FR_CCIN2P3_MSS", 
@@ -2260,6 +2304,7 @@
     "lumisize": -1, 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -2271,6 +2316,7 @@
     "lumisize": -1, 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true
@@ -2279,6 +2325,7 @@
     "lumisize": -1, 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -2369,6 +2416,7 @@
     "lumisize": -1, 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -2379,6 +2427,7 @@
     "lumisize": -1, 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -2457,6 +2506,7 @@
     "lumisize": -1, 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -2485,6 +2535,7 @@
     "lumisize": -1, 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -2495,6 +2546,7 @@
     "lumisize": -1, 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -2504,6 +2556,7 @@
     "lumisize": 1500, 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -2523,6 +2576,7 @@
     "SiteBlacklist": [
       "T1_US_FNAL", 
       "T0_CH_CERN", 
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -2740,6 +2794,7 @@
     "lumisize": -1, 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
@@ -2792,6 +2847,7 @@
     "lumisize": -1, 
     "fractionpass": 0.95, 
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT", 
       "T2_CH_CERN"
     ], 
     "go": true, 
