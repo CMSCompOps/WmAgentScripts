@@ -733,6 +733,7 @@ class DynamoLock:
                 if self.timeout and waited > self.timeout:
                     break
                 time.sleep(wait)
+                print "wait on dynamo"
             break
 
         print "dynamo lock acquired",self.go
@@ -742,6 +743,18 @@ class DynamoLock:
         return self.go
 
     def check(self):
+        retry = 3
+        while retry:
+            try:
+                return self._check()
+            except:
+                print "Failed to check on dynamo",retry
+                retry-=1
+                time.sleep(5)
+        return True
+                
+            
+    def _check(self):
         conn = make_x509_conn('dynamo.mit.edu')
         r1 = conn.request("GET",'/data/applock/check?app=detox')
         r2 = conn.getresponse()
