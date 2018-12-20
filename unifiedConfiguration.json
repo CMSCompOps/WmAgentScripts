@@ -355,7 +355,7 @@
   },
   "user_rereco":{
    "description" : "The users from which we expect ReReco requests",
-   "value" : ["cerminar","fabozzi","prebello","amaltaro"]
+   "value" : ["cerminar","fabozzi","prebello","amaltaro","pgunnell"]
   },
   "convert_to_stepchain":{	
    "description" : "A list of keywords to match workflow names, and convert to StepChain if technical constraints are met",
