@@ -9,11 +9,17 @@ this_week = int(time.strftime("%W",time.gmtime()))
 now = time.mktime(time.gmtime())
 start_time_two_weeks_ago = time.mktime(time.gmtime(now - (15*24*60*60))) # 14+1 days ago
 last_week = int(time.strftime("%W",time.gmtime( now - (7*24*60*60))))
+if last_week == 53:
+    last_week = 0
 subject="Output Produced on Week %d"%(last_week)
 
 ds=defaultdict(list)
 n_produced=0
-for out in session.query(Output).filter(Output.date>=start_time_two_weeks_ago).all():
+all_outs = session.query(Output).filter(Output.date>=start_time_two_weeks_ago).all()
+if len(all_outs)==0:
+    sys.exit(1)
+
+for out in all_outs:
     if  out.workflow.status in ['done-unlock','done','clean','clean-out','clean-unlock']:
         out_week = int(time.strftime("%W",time.gmtime(out.date)))
         if last_week==out_week:
@@ -35,6 +41,8 @@ for t in sorted(ds):
     text += '\n'
 
 text+="\n\n Regards,\nthe production team\n\nThis is an automated message."
+
+print text
 
 sendEmail(subject, text, destination=['hn-cms-datasets@cern.ch'])
 #sendEmail(subject, text)
