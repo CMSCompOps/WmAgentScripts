@@ -6300,6 +6300,13 @@ class workflowInfo:
             sendLog(sub, text, wfi = self, show=False, level='workflow')
 
     def get_spec(self):
+        try:
+            return self._get_spec()
+        except:
+            time.sleep(1)
+            return self._get_spec()
+
+    def _get_spec(self):
         if not self.full_spec:
             self.conn = make_x509_conn(self.url)
             r1=self.conn.request("GET",'/couchdb/reqmgr_workload_cache/%s/spec'%self.request['RequestName'])
