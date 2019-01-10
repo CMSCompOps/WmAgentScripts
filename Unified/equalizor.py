@@ -139,6 +139,7 @@ def equalizor(url , specific = None, options=None):
     mapping['T2_CH_CERN'].append('T3_CH_CERN_HelixNebula')
     mapping['T2_CH_CERN'].append('T3_CH_CERN_HelixNebula_REHA')
     
+    mapping['T2_PL_Swierk'].append('T2_CH_CERN')
 
     for site in sites_to_consider:
         if '_US_' in site:
