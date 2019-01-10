@@ -9,7 +9,7 @@ parser.add_option('--dump',help="dump the whole content in this file",default=No
 parser.add_option('--load',help="synchronize the db with the content of this file", default=None)
 parser.add_option('-n','--name', help='a campaign name to be viewed/added/updated')
 parser.add_option('--remove', help="remove the specified campaign", default=False, action='store_true')
-parser.add_option('-c','--configuration', help='a json doc for the campaign to be add/updated')
+parser.add_option('-c','--configuration', help='either a json doc or a json string for the campaign to be add/updated')
 parser.add_option('-p','--parameter', help='a single parameter to be updated of the form key:value or a.b.key:value for nested')
 parser.add_option('--type', default=None, help='set only to relval for adding a relval campaign', choices = ['relval'])
 (options,args) = parser.parse_args()
@@ -54,7 +54,10 @@ if options.remove:
 
 post = {}
 if options.configuration:
-    post.update(json.loads(options.configuration))
+    try:
+        post.update(json.loads(options.configuration))
+    except:
+        post.update(json.loads(open(options.configuration).read()))
     post['name'] = options.name
 update = {}
 if options.parameter:
