@@ -330,72 +330,72 @@ def makeDrainAds(config=None):
         print anAd
 
 def makeAdhocAds(config):
-    anAd = classad.ClassAd()
-    anAd["GridResource"] = "condor localhost localhost"
-    anAd["TargetUniverse"] = 5
-    anAd["Name"] = str("Correcting memory requirement of 22092")
-    anAd["Requirements"] = classad.ExprTree("OriginalMemory =?= 22092")
-    anAd["set_OriginalMemory"] = 18000
-    anAd["set_HasBeenRouted"] = False
-    print anAd
+    #anAd = classad.ClassAd()
+    #anAd["GridResource"] = "condor localhost localhost"
+    #anAd["TargetUniverse"] = 5
+    #anAd["Name"] = str("Correcting memory requirement of 22092")
+    #anAd["Requirements"] = classad.ExprTree("OriginalMemory =?= 22092")
+    #anAd["set_OriginalMemory"] = 18000
+    #anAd["set_HasBeenRouted"] = False
+    #print anAd
 
-    anAd = classad.ClassAd()
-    anAd["GridResource"] = "condor localhost localhost"
-    anAd["TargetUniverse"] = 5
-    anAd["Name"] = str("Correcting memory requirement of 23260")
-    anAd["Requirements"] = classad.ExprTree("OriginalMemory =?= 23260")
-    anAd["set_OriginalMemory"] = 19500
-    anAd["set_HasBeenRouted"] = False
-    print anAd
+    #anAd = classad.ClassAd()
+    #anAd["GridResource"] = "condor localhost localhost"
+    #anAd["TargetUniverse"] = 5
+    #anAd["Name"] = str("Correcting memory requirement of 23260")
+    #anAd["Requirements"] = classad.ExprTree("OriginalMemory =?= 23260")
+    #anAd["set_OriginalMemory"] = 19500
+    #anAd["set_HasBeenRouted"] = False
+    #print anAd
 
-    anAd = classad.ClassAd()
-    anAd["GridResource"] = "condor localhost localhost"
-    anAd["TargetUniverse"] = 5
-    anAd["Name"] = str("Correcting memory requirement of 15200 for T0")
-    anAd["Requirements"] = classad.ExprTree('OriginalMemory > 14800 && regexp("T0", DESIRED_Sites)')
-    anAd["set_OriginalMemory"] = 14800
-    anAd["set_HasBeenRouted"] = False
-    print anAd
+    #anAd = classad.ClassAd()
+    #anAd["GridResource"] = "condor localhost localhost"
+    #anAd["TargetUniverse"] = 5
+    #anAd["Name"] = str("Correcting memory requirement of 15200 for T0")
+    #anAd["Requirements"] = classad.ExprTree('OriginalMemory > 14800 && regexp("T0", DESIRED_Sites)')
+    #anAd["set_OriginalMemory"] = 14800
+    #anAd["set_HasBeenRouted"] = False
+    #print anAd
 
-    anAd = classad.ClassAd()
-    anAd["GridResource"] = "condor localhost localhost"
-    anAd["TargetUniverse"] = 5
-    anAd["Name"] = str("Draining T0 VMs")
-    with_site = "T2_CH_CERN"
-    anAd["Requirements"] = classad.ExprTree(str('!regexp("%s", DESIRED_Sites) && regexp("T0_CH_CERN", DESIRED_Sites) && OutOfT0 isnt true'%with_site))
-    anAd["copy_DESIRED_Sites"] = "T0Off_DESIRED_Sites"
-    anAd["eval_set_DESIRED_Sites"] = classad.ExprTree(str('strcat(T0Off_DESIRED_Sites,",%s")'% with_site))
-    anAd["set_OutOfT0"] = True
-    anAd["set_HasBeenRouted"] = False
-    print anAd
+    #anAd = classad.ClassAd()
+    #anAd["GridResource"] = "condor localhost localhost"
+    #anAd["TargetUniverse"] = 5
+    #anAd["Name"] = str("Draining T0 VMs")
+    #with_site = "T2_CH_CERN"
+    #anAd["Requirements"] = classad.ExprTree(str('!regexp("%s", DESIRED_Sites) && regexp("T0_CH_CERN", DESIRED_Sites) && OutOfT0 isnt true'%with_site))
+    #anAd["copy_DESIRED_Sites"] = "T0Off_DESIRED_Sites"
+    #anAd["eval_set_DESIRED_Sites"] = classad.ExprTree(str('strcat(T0Off_DESIRED_Sites,",%s")'% with_site))
+    #anAd["set_OutOfT0"] = True
+    #anAd["set_HasBeenRouted"] = False
+    #print anAd
 
-    anAd = classad.ClassAd()
-    anAd["GridResource"] = "condor localhost localhost"
-    anAd["TargetUniverse"] = 5
-    anAd["Name"] = str("Routing multicore job from ICFA to other sites")
-    anAd["Requirements"] = classad.ExprTree(str('DESIRED_Sites == "T2_ES_IFCA" && Requestcpus =!=1'))
-    anAd["set_DESIRED_Sites"] = "T1_ES_PIC,T2_ES_CIEMAT"
-    anAd["set_HasBeenRouted"] = False
-    print anAd
+    #anAd = classad.ClassAd()
+    #anAd["GridResource"] = "condor localhost localhost"
+    #anAd["TargetUniverse"] = 5
+    #anAd["Name"] = str("Routing multicore job from ICFA to other sites")
+    #anAd["Requirements"] = classad.ExprTree(str('DESIRED_Sites == "T2_ES_IFCA" && Requestcpus =!=1'))
+    #anAd["set_DESIRED_Sites"] = "T1_ES_PIC,T2_ES_CIEMAT"
+    #anAd["set_HasBeenRouted"] = False
+    #print anAd
 
-    anAd = classad.ClassAd()
-    anAd["GridResource"] = "condor localhost localhost"
-    anAd["TargetUniverse"] = 5
-    anAd["Name"] = str("Shortening long job on KIT")
-    anAd["Requirements"] = classad.ExprTree(str('DESIRED_Sites == "T1_DE_KIT" && MaxWallTimeMins> 1400'))
-    anAd["set_OriginalMaxWallTimeMins"] = 1400
-    anAd["set_EstimatedSingleCoreMins"] = classad.ExprTree('OriginalMaxWallTimeMins * OriginalCpus')
-    anAd["set_HasBeenRouted"] = False
-    print anAd
+    #anAd = classad.ClassAd()
+    #anAd["GridResource"] = "condor localhost localhost"
+    #anAd["TargetUniverse"] = 5
+    #anAd["Name"] = str("Shortening long job on KIT")
+    #anAd["Requirements"] = classad.ExprTree(str('DESIRED_Sites == "T1_DE_KIT" && MaxWallTimeMins> 1400'))
+    #anAd["set_OriginalMaxWallTimeMins"] = 1400
+    #anAd["set_EstimatedSingleCoreMins"] = classad.ExprTree('OriginalMaxWallTimeMins * OriginalCpus')
+    #anAd["set_HasBeenRouted"] = False
+    #print anAd
 
-    anAd = classad.ClassAd()
-    anAd["GridResource"] = "condor localhost localhost"
-    anAd["TargetUniverse"] = 5
-    anAd["Name"] = str("restricting genonly to some T2")
-    anAd["Requirements"] = classad.ExprTree(str('regexp(".+PhaseIISummer17wmLHEGENOnly-[^\/]+_0$", WMAgent_SubTaskname) && JobStatus ==1 && DESIRED_Sites == "T1_US_FNAL"'))
-    anAd["set_DESIRED_Sites"] = "T2_DE_DESY,T2_UK_SGrid_RALPP,T2_RU_JINR,T2_IN_TIFR"
-    anAd["set_HasBeenRouted"] = False
-    print anAd
+    #anAd = classad.ClassAd()
+    #anAd["GridResource"] = "condor localhost localhost"
+    #anAd["TargetUniverse"] = 5
+    #anAd["Name"] = str("restricting genonly to some T2")
+    #anAd["Requirements"] = classad.ExprTree(str('regexp(".+PhaseIISummer17wmLHEGENOnly-[^\/]+_0$", WMAgent_SubTaskname) && JobStatus ==1 && DESIRED_Sites == "T1_US_FNAL"'))
+    #anAd["set_DESIRED_Sites"] = "T2_DE_DESY,T2_UK_SGrid_RALPP,T2_RU_JINR,T2_IN_TIFR"
+    #anAd["set_HasBeenRouted"] = False
+    #print anAd
 
     ############################################################
     ## if you want to reset the routing of eveything in the pool
