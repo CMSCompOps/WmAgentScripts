@@ -1507,6 +1507,12 @@
     "go": true, 
     "tune": true
   }, 
+  "RunIIAutumn18NanoAODv4": {
+    "maxcopies": 1, 
+    "lumisize": -1, 
+    "fractionpass": 0.95, 
+    "go": false
+  }, 
   "RunIILowPUSpring18wmLHEGS": {
     "lumisize": -1, 
     "resize": "auto", 
@@ -1711,6 +1717,26 @@
     "fractionpass": 0.95, 
     "go": true, 
     "force-complete": 0.99
+  }, 
+  "HINPbPbAutumn18GS": {
+    "parameters": {
+      "MergedLFNBase": "/store/himc", 
+      "SiteBlacklist": [
+        "T1_US_FNAL", 
+        "T2_US_Purdue", 
+        "T2_US_Caltech", 
+        "T2_US_Florida", 
+        "T2_US_Nebraska", 
+        "T2_US_UCSD", 
+        "T2_US_Wisconsin"
+      ]
+    }, 
+    "maxcopies": 1, 
+    "custodial": "T1_FR_CCIN2P3_MSS", 
+    "lumisize": -1, 
+    "fractionpass": 0.95, 
+    "go": true, 
+    "tune": true
   }, 
   "HINPbPbSpring18GS": {
     "parameters": {
@@ -2905,12 +2931,6 @@
     }, 
     "tune": true, 
     "force-complete": 0.99
-  }, 
-  "RunIIFall18NanoAODv4": {
-    "maxcopies": 1, 
-    "lumisize": -1, 
-    "fractionpass": 0.95, 
-    "go": false
   }, 
   "RunIIWinter15pLHE": {
     "go": true, 
