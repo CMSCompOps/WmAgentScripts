@@ -1503,6 +1503,7 @@ class campaignInfo:
                        )
 
     def pop(self, item_name):
+        print "removing",item_name,"from campaign configuration"
         self.db.delete_one({'name' : item_name})
 
     def go(self, c, s=None):
