@@ -1161,6 +1161,7 @@ class componentInfo:
         while True:
             try:
                 print "checking cmsr"
+                sys.stdout.flush()
                 from assignSession import session, Workflow
                 all_info = session.query(Workflow).filter(Workflow.name.contains('1')).all()
                 self.status['cmsr'] = True
@@ -1182,6 +1183,7 @@ class componentInfo:
         while True:
             try:
                 print "checking reqmgr"
+                sys.stdout.flush()
                 if 'testbed' in reqmgr_url:
                     wfi = workflowInfo(reqmgr_url,'sryu_B2G-Summer12DR53X-00743_v4_v2_150126_223017_1156')
                 else:
@@ -1209,6 +1211,7 @@ class componentInfo:
             try:
                 mcmC = McMClient(dev=False)
                 print "checking mcm"
+                sys.stdout.flush()
                 test = mcmC.getA('requests',page=0)
                 time.sleep(1)
                 if not test:
@@ -1230,6 +1233,7 @@ class componentInfo:
         while True:
             try:
                 print "checking dbs"
+                sys.stdout.flush()
                 dbsapi = DbsApi(url=dbs_url)
                 if 'testbed' in dbs_url:
                     blocks = dbsapi.listBlockSummaries( dataset = '/QDTojWinc_NC_M-1200_TuneZ2star_8TeV-madgraph/Summer12pLHE-DMWM_Validation_DONOTDELETE_Alan_TEST-v1/GEN', detail=True)
@@ -1254,6 +1258,7 @@ class componentInfo:
         while True:
             try:
                 print "checking phedex"
+                sys.stdout.flush()
                 if 'testbed' in dbs_url:
                     cust = findCustodialLocation(phedex_url,'/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM')
                 else:
@@ -1276,6 +1281,7 @@ class componentInfo:
         while True:
             try:
                 print "checking on the wtc console"
+                sys.stdout.flush()
                 WC = wtcClient()
                 a = WC.get_actions()
                 if a is None:
@@ -1297,6 +1303,7 @@ class componentInfo:
         while True:
             try:
                 print "checking on eos"
+                sys.stdout.flush()
                 eosfile = base_eos_dir+'/%s-testfile'%os.getpid()
                 oo = eosFile(eosfile)
                 oo.write("Testing I/O on eos")
@@ -1324,6 +1331,7 @@ class componentInfo:
         while True:
             try:
                 print "checking on mongodb"
+                sys.stdout.flush()
                 db = agentInfoDB()
                 infos = [a['status'] for a in db.find()]
                 self.status['mongo'] = True
