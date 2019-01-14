@@ -406,6 +406,15 @@ def makeAdhocAds(config):
     anAd["set_HasBeenRouted"] = False
     print anAd
 
+    anAd = classad.ClassAd()
+    anAd["GridResource"] = "condor localhost localhost"
+    anAd["TargetUniverse"] = 5
+    anAd["Name"] = str("running MuonEG at T2_CH_CERN")
+    anAd["Requirements"] = classad.ExprTree(str('regexp("v1-MuonEG-17Sep2018_1024p1_181005", WMAgent_SubTaskname) && JobStatus ==1 && DESIRED_Sites == "T2_PL_Swierk"'))
+    anAd["set_DESIRED_Sites"] = "T2_CH_CERN"
+    anAd["set_HasBeenRouted"] = False
+    print anAd 
+
     ############################################################
     ## if you want to reset the routing of eveything in the pool
     reset_routing = []#'HasBeenRouted','HasBeenRouted_Overflow','HasBeenMemoryTuned','HasBeenSlopeTuned', 'HasBeenTimingTuned','WMCore_ResizeJob','HasBeenReplaced','HasBeenReadTuned','HasBeenRaisedHighPrio']
