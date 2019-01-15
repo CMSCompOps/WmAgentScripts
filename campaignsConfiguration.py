@@ -41,7 +41,7 @@ if options.dump:
             print "dropping",i,content,"because it is malformated"
             continue
         uc[content.pop("name")] = content
-
+    print len(uc.keys()),"campaigns damp"
     open(options.dump,'w').write(json.dumps( uc, indent =2))
     sys.exit(0)
 
@@ -117,5 +117,5 @@ else:
         db.insert_one( update )        
     else:
         availables = [o["name"] for o in db.find()]
-        print options.name," Not found. Available parameters \n","\n\t".join( sorted( availables))
+        print options.name," Not found. ",len(availables),"available campaigns \n","\n\t".join( sorted( availables))
 
