@@ -198,7 +198,7 @@ def closor(url, specific=None, options=None):
     closers = []
 
     print len(wfs),"closing"
-    run_threads.start()
+    th_start = time.mktime(time.gmtime())
 
     for iwfo,wfo in enumerate(wfs):
         if specific and not specific in wfo.name: continue
@@ -224,7 +224,8 @@ def closor(url, specific=None, options=None):
                                  timeout = None,
                                  verbose = True,
                                  label = 'closor')
-    th_start = time.mktime(time.gmtime())
+
+    run_threads.start()
 
 
     ## waiting on all to complete
