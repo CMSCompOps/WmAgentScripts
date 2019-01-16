@@ -641,7 +641,7 @@ def _pass_to_dynamo( items, N ,sites = None, group = None ):
     data = response.read()
     #print data
     stop = time.mktime(time.gmtime())
-    print stop-start,"[s] to hand over to dynamo"
+    print stop-start,"[s] to hand over to dynamo of",items
     try:
         res = json.loads( data )
         #print json.dumps( res, indent=2)
