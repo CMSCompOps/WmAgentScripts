@@ -259,8 +259,8 @@ def closor(url, specific=None, options=None):
 
     th_stop = time.mktime(time.gmtime())
 
-    if run_threads.threads:
-        time_spend_per_workflow = float( th_stop - th_start) / float( len(run_threads.threads))
+    if wfs:
+        time_spend_per_workflow = (th_stop-th_start) / float(len(wfs))
         print "Average time spend per workflow is", time_spend_per_workflow
 
     if failed_threads:
