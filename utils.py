@@ -624,6 +624,7 @@ def pass_to_dynamo( items, N ,sites = None, group = None ):
         return False
 
 def _pass_to_dynamo( items, N ,sites = None, group = None ):
+    start = time.mktime(time.gmtime())
     if sites == None or sites == []:
         sites = ['T2_*','T1_*_Disk']
     if type(items)==str:
@@ -639,6 +640,8 @@ def _pass_to_dynamo( items, N ,sites = None, group = None ):
     response = conn.getresponse()
     data = response.read()
     #print data
+    stop = time.mktime(time.gmtime())
+    print stop-start,"[s] to hand over to dynamo"
     try:
         res = json.loads( data )
         #print json.dumps( res, indent=2)
