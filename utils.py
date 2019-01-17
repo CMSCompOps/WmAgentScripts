@@ -1496,14 +1496,22 @@ class moduleLock(object):
         self.client = mongo_client()
         self.db = self.client.unified.moduleLock
         
-    def check(self):
+    def check(self, hours_before_kill = 24):
         host = socket.gethostname()
         locks = [l for l in self.db.find({'host' : host})]
+        now = time.mktime(time.gmtime())
         for lock in locks:
             pid = lock.get('pid',None)
             print "checking on %s on %s"%( pid, host)
+            on_since = now - lock.get('time',now)
+            if on_since > (hours_before_kill*60*60):
+                alarm = "process %s on %s is running since %s : killing"%( pid, host, display_time( on_since))
+                sendLog('heartbeat', alarm, level='critical')
+                os.system('sudo kill -9 %s'%(pid))
+                time.sleep(2)
             if not os.path.isdir('/proc/%s'% pid):
-                print "process %s is not here on %s"%( pid, host)
+                alarm = "process %s is not present on %s"%( pid, host)
+                sendLog('heartbeat', alarm, level='critical')
                 self.db.delete_one({ '_id' : lock.get('_id',None)})
 
 
