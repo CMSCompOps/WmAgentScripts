@@ -1505,11 +1505,13 @@ class moduleLock(object):
             print "checking on %s on %s"%( pid, host)
             on_since = now - lock.get('time',now)
             if on_since > (hours_before_kill*60*60):
-                print "process %s on %s is dead, running since %s"%( pid, host, display_time( on_since))
+                alarm = "process %s on %s is running since %s : killing"%( pid, host, display_time( on_since))
+                sendLog('heartbeat', alarm, level='critical')
                 os.system('sudo kill -9 %s'%(pid))
                 time.sleep(2)
             if not os.path.isdir('/proc/%s'% pid):
-                print "process %s is not here on %s"%( pid, host)
+                alarm = "process %s is not present on %s"%( pid, host)
+                sendLog('heartbeat', alarm, level='critical')
                 self.db.delete_one({ '_id' : lock.get('_id',None)})
 
 
