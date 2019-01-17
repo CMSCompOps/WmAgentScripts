@@ -316,6 +316,12 @@ This is an automated message.
             BI.pop( bname )
 
 
+    if os.path.isfile('.closor_stop'):
+        print "The loop on workflows was shortened"
+        sendEmail('closor','Closor loop was shortened artificially using .closor_stop')
+        os.system('rm -f .closor_stop')
+        
+
 
 
 class CloseBuster(threading.Thread):
@@ -340,6 +346,10 @@ class CloseBuster(threading.Thread):
             self.failed = True
 
     def close(self):
+        if os.path.isfile('.closor_stop'):
+            print "The closing of workflows is shortened"
+            return 
+
         url = self.url
         batch_go = self.batch_go
         CI = self.CI
