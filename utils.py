@@ -1156,6 +1156,7 @@ class componentInfo:
                 return False
             time.sleep(ping)
         
+        self.status = self.checks.status
         return self.checks.go
 
 class componentCheck(threading.Thread):
