@@ -206,12 +206,8 @@ def checkor(url, spec=None, options=None):
         wfs = wfs[:max_per_round]
 
     total_running_time = 1.*60. 
-    sleep_time = 1
     will_do_that_many = len(wfs)
-    if len(wfs):
-        sleep_time = min(max(0.5, total_running_time / will_do_that_many), 10)
 
-    print len(wfs),"to consider, pausing for",sleep_time
     ## record all evolution
     full_picture = defaultdict(dict)
 
