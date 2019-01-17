@@ -47,7 +47,7 @@ class AgentBuster(threading.Thread):
 class ReadBuster(threading.Thread):
     def __init__(self, **args):
         threading.Thread.__init__(self)
-        self.deamon = True
+        self.daemon = True
         for k,v in args.items():
             setattr(self,k,v)
 
@@ -58,7 +58,7 @@ class ReadBuster(threading.Thread):
 class XRDBuster(threading.Thread):
     def __init__(self, **args):
         threading.Thread.__init__(self)
-        self.deamon = True
+        self.daemon = True
         for k,v in args.items():
             setattr(self,k,v)
 
