@@ -523,7 +523,8 @@
         "force": false, 
         "pending": 0
       }
-    }
+    }, 
+    "fractionpass": 0.95
   }, 
   "Summer11LegDR": {
     "go": false, 
