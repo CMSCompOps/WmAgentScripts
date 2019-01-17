@@ -616,7 +616,7 @@ def listSubscriptions(url, dataset, within_sites=None):
     return destinations
 
 def pass_to_dynamo( items, N ,sites = None, group = None ):
-    check_N_times = 5
+    check_N_times = 1
     while True:
         check_N_times-=1
         try:
