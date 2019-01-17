@@ -1138,20 +1138,20 @@ def checkMemory():
 
 
 class componentInfo:
-    def __init__(self, block=True, mcm=None, soft=None, keep_trying=False):
+    def __init__(self, block=True, mcm=None, soft=None, keep_trying=False, check_timeout = 120):
         self.checks = componentCheck(block, mcm, soft, keep_trying)
+        self.check_timeout = check_timeout
 
     def check(self):
         check_start = time.mktime(time.gmtime())
         # start the checking
         self.checks.start()
         # on timeout
-        timeout = 5
         ping = 1
         while self.checks.is_alive():
             now = time.mktime(time.gmtime())
-            if (now-check_start) > timeout:
-                print "Timeout in checking the sanity of components"
+            if (now-check_start) > self.check_timeout:
+                print "Timeout in checking the sanity of components",now-check_start,">",self.check_timeout
                 return False
             time.sleep(ping)
         
