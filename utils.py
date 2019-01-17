@@ -1185,22 +1185,16 @@ class componentCheck(threading.Thread):
 
 
     def check_cmsr(self):
-        print "checking cmsr"
-        sys.stdout.flush()
         from assignSession import session, Workflow
         all_info = session.query(Workflow).filter(Workflow.name.contains('1')).all()
 
     def check_reqmgr(self):
-        print "checking reqmgr"
-        sys.stdout.flush()
         if 'testbed' in reqmgr_url:
             wfi = workflowInfo(reqmgr_url,'sryu_B2G-Summer12DR53X-00743_v4_v2_150126_223017_1156')
         else:
             wfi = workflowInfo(reqmgr_url,'pdmvserv_task_B2G-RunIIWinter15wmLHE-00067__v1_T_150505_082426_497')
 
     def check_mcm(self):
-        print "checking mcm"
-        sys.stdout.flush()
         from McMClient import McMClient
         mcmC = McMClient(dev=False)
         test = mcmC.getA('requests',page=0)
@@ -1209,8 +1203,6 @@ class componentCheck(threading.Thread):
             raise Exception("mcm is corrupted")
 
     def check_dbs(self):
-        print "checking dbs"
-        sys.stdout.flush()
         dbsapi = DbsApi(url=dbs_url)
         if 'testbed' in dbs_url:
             blocks = dbsapi.listBlockSummaries( dataset = '/QDTojWinc_NC_M-1200_TuneZ2star_8TeV-madgraph/Summer12pLHE-DMWM_Validation_DONOTDELETE_Alan_TEST-v1/GEN', detail\
@@ -1221,16 +1213,12 @@ class componentCheck(threading.Thread):
             raise Exception("dbs corrupted")
 
     def check_phedex(self):
-        print "checking phedex"
-        sys.stdout.flush()
         if 'testbed' in dbs_url:
             cust = findCustodialLocation(phedex_url,'/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM')
         else:
             cust = findCustodialLocation(phedex_url,'/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM')
 
     def check_wtc(self):
-        print "checking on the wtc console"
-        sys.stdout.flush()
         from wtcClient import wtcClient
         WC = wtcClient()
         a = WC.get_actions()
@@ -1238,8 +1226,6 @@ class componentCheck(threading.Thread):
             raise Exception("No action can be retrieved")
 
     def check_eos(self):
-        print "checking on eos"
-        sys.stdout.flush()
         eosfile = base_eos_dir+'/%s-testfile'%os.getpid()
         oo = eosFile(eosfile)
         oo.write("Testing I/O on eos")
@@ -1250,8 +1236,6 @@ class componentCheck(threading.Thread):
                 raise Exception("failed to I/O on eos")
 
     def check_mongo(self):
-        print "checking on mongodb"
-        sys.stdout.flush()
         db = agentInfoDB()
         infos = [a['status'] for a in db.find()]
         
@@ -1261,6 +1245,8 @@ class componentCheck(threading.Thread):
             ecode+=1
             while True:
                 try:
+                    print "checking on",component
+                    sys.stdout.flush()
                     getattr(self,'check_%s'%component)()
                     self.status[component] = True
                     break
@@ -1280,6 +1266,7 @@ class componentCheck(threading.Thread):
                     break
 
         print json.dumps( self.status, indent=2)
+        sys.stdout.flush()
         return True
 
     def tell(self, c):
