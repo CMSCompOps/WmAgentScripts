@@ -1151,7 +1151,8 @@ class componentInfo:
         while self.checks.is_alive():
             now = time.mktime(time.gmtime())
             if (now-check_start) > self.check_timeout:
-                print "Timeout in checking the sanity of components",now-check_start,">",self.check_timeout
+                alarm =  "Timeout in checking the sanity of components %d > %d "%(now-check_start,self.check_timeout)
+                sendLog('componentInfo',alarm, level='critical')
                 return False
             time.sleep(ping)
         
