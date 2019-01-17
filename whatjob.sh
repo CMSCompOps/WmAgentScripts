@@ -1,7 +1,7 @@
 date 
 
-echo "################ QUOTA #######################"
-eos quota ls -u cmsvoc /eos/cms/store/unified
+#echo "################ QUOTA #######################"
+#eos quota ls -u cmsvoc /eos/cms/store/unified
 
 for each in 0268 0269 0272 0273 0274 0275; do
     echo
