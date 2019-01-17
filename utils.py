@@ -1139,6 +1139,28 @@ def checkMemory():
 
 class componentInfo:
     def __init__(self, block=True, mcm=None, soft=None, keep_trying=False):
+        self.checks = componentCheck(block, mcm, soft, keep_trying)
+
+    def check(self):
+        check_start = time.mktime(time.gmtime())
+        # start the checking
+        self.checks.start()
+        # on timeout
+        timeout = 5
+        ping = 1
+        while self.checks.is_alive():
+            now = time.mktime(time.gmtime())
+            if (now-check_start) > timeout:
+                print "Timeout in checking the sanity of components"
+                return False
+            time.sleep(ping)
+        
+        return self.checks.go
+
+class componentCheck(threading.Thread):
+    def __init__(self, block=True, mcm=None, soft=None, keep_trying=False):
+        threading.Thread.__init__(self)
+        self.daemon = True
         if soft is None:
             self.soft = ['mcm','wtc', 'mongo'] ##components that are not mandatory
         else:
@@ -1156,6 +1178,11 @@ class componentInfo:
             }
         self.code = 0
         self.keep_trying = keep_trying
+        self.go = False
+
+    def run(self):
+        time.sleep(10)
+        self.go = self.check()
 
     def check(self):
         while True:
