@@ -616,12 +616,16 @@ def listSubscriptions(url, dataset, within_sites=None):
     return destinations
 
 def pass_to_dynamo( items, N ,sites = None, group = None ):
-    try:
-        return _pass_to_dynamo( items, N, sites, group)
-    except Exception as e:
-        print "Failed to pass %s to dynamo"% items
-        print str(e)
-        return False
+    check_N_times = 5
+    while True:
+        check_N_times-=1
+        try:
+            return _pass_to_dynamo( items, N, sites, group)
+        except Exception as e:
+            if check_N_times<=0:
+                print "Failed to pass %s to dynamo"% items
+                print str(e)
+                return False
 
 def _pass_to_dynamo( items, N ,sites = None, group = None ):
     start = time.mktime(time.gmtime())
