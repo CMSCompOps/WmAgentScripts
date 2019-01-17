@@ -1181,201 +1181,104 @@ class componentCheck(threading.Thread):
         self.go = False
 
     def run(self):
-        time.sleep(10)
         self.go = self.check()
 
-    def check(self):
-        while True:
-            try:
-                print "checking cmsr"
-                sys.stdout.flush()
-                from assignSession import session, Workflow
-                all_info = session.query(Workflow).filter(Workflow.name.contains('1')).all()
-                self.status['cmsr'] = True
-                break
-            except Exception as e:
-                self.tell('cmsr')
-                if self.keep_trying:
-                    time.sleep(30)
-                    continue
-                import traceback
-                print traceback.format_exc()
-                print "cmsr database is unreachable"
-                print str(e)
-                if self.block and not (self.soft and 'cmsr' in self.soft):
-                    self.code = 121
-                    return False
-                break
 
-        while True:
-            try:
-                print "checking reqmgr"
-                sys.stdout.flush()
-                if 'testbed' in reqmgr_url:
-                    wfi = workflowInfo(reqmgr_url,'sryu_B2G-Summer12DR53X-00743_v4_v2_150126_223017_1156')
-                else:
-                    wfi = workflowInfo(reqmgr_url,'pdmvserv_task_B2G-RunIIWinter15wmLHE-00067__v1_T_150505_082426_497')
+    def check_cmsr(self):
+        print "checking cmsr"
+        sys.stdout.flush()
+        from assignSession import session, Workflow
+        all_info = session.query(Workflow).filter(Workflow.name.contains('1')).all()
 
-                self.status['reqmgr'] = True
-                break
-            except Exception as e:
-                self.tell('reqmgr')
-                if self.keep_trying:
-                    time.sleep(30)
-                    continue
-                import traceback
-                print traceback.format_exc()
-                print reqmgr_url,"unreachable"
-                print str(e)
-                if self.block and not (self.soft and 'reqmgr' in self.soft):
-                    self.code = 123
-                    return False
-                break
+    def check_reqmgr(self):
+        print "checking reqmgr"
+        sys.stdout.flush()
+        if 'testbed' in reqmgr_url:
+            wfi = workflowInfo(reqmgr_url,'sryu_B2G-Summer12DR53X-00743_v4_v2_150126_223017_1156')
+        else:
+            wfi = workflowInfo(reqmgr_url,'pdmvserv_task_B2G-RunIIWinter15wmLHE-00067__v1_T_150505_082426_497')
 
+    def check_mcm(self):
+        print "checking mcm"
+        sys.stdout.flush()
         from McMClient import McMClient
+        mcmC = McMClient(dev=False)
+        test = mcmC.getA('requests',page=0)
+        time.sleep(1)
+        if not test:
+            raise Exception("mcm is corrupted")
 
-        while True:
-            try:
-                mcmC = McMClient(dev=False)
-                print "checking mcm"
-                sys.stdout.flush()
-                test = mcmC.getA('requests',page=0)
-                time.sleep(1)
-                if not test:
-                    raise Exception("mcm is corrupted")
-                else:
-                    self.status['mcm'] = True
-                    break
-            except Exception as e:
-                self.tell('mcm')
-                if self.keep_trying:
-                    time.sleep(30)
-                    continue
-                print "mcm unreachable"
-                print str(e)
-                if self.block and not (self.soft and 'mcm' in self.soft):
-                    self.code = 125
-                    return False
-                break
-        while True:
-            try:
-                print "checking dbs"
-                sys.stdout.flush()
-                dbsapi = DbsApi(url=dbs_url)
-                if 'testbed' in dbs_url:
-                    blocks = dbsapi.listBlockSummaries( dataset = '/QDTojWinc_NC_M-1200_TuneZ2star_8TeV-madgraph/Summer12pLHE-DMWM_Validation_DONOTDELETE_Alan_TEST-v1/GEN', detail=True)
-                else:
-                    blocks = dbsapi.listBlockSummaries( dataset = '/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM', detail=True)
-                    if not blocks:
-                        raise Exception("dbs corrupted")
-                    else:
-                        self.status['dbs'] = True
-                        break
-            except Exception as e:
-                self.tell('dbs')
-                if self.keep_trying:
-                    time.sleep(30)
-                    continue
-                print "dbs unreachable"
-                print str(e)
-                if self.block and not (self.soft and 'dbs' in self.soft):
-                    self.code = 127
-                    return False
-                break
-        while True:
-            try:
-                print "checking phedex"
-                sys.stdout.flush()
-                if 'testbed' in dbs_url:
-                    cust = findCustodialLocation(phedex_url,'/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM')
-                else:
-                    cust = findCustodialLocation(phedex_url,'/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM')
-                    self.status['phedex'] = True
-                    break
-            except Exception as e:
-                self.tell('phedex')
-                if self.keep_trying:
-                    time.sleep(30)
-                    continue
-                print "phedex unreachable"
-                print str(e)
-                if self.block and not (self.soft and 'phedex' in self.soft):
-                    self.code = 128
-                    return False
-                break
+    def check_dbs(self):
+        print "checking dbs"
+        sys.stdout.flush()
+        dbsapi = DbsApi(url=dbs_url)
+        if 'testbed' in dbs_url:
+            blocks = dbsapi.listBlockSummaries( dataset = '/QDTojWinc_NC_M-1200_TuneZ2star_8TeV-madgraph/Summer12pLHE-DMWM_Validation_DONOTDELETE_Alan_TEST-v1/GEN', detail\
+                                                =True)
+        else:
+            blocks = dbsapi.listBlockSummaries( dataset = '/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM', detail=True)
+        if not blocks:
+            raise Exception("dbs corrupted")
 
+    def check_phedex(self):
+        print "checking phedex"
+        sys.stdout.flush()
+        if 'testbed' in dbs_url:
+            cust = findCustodialLocation(phedex_url,'/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM')
+        else:
+            cust = findCustodialLocation(phedex_url,'/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM')
+
+    def check_wtc(self):
+        print "checking on the wtc console"
+        sys.stdout.flush()
         from wtcClient import wtcClient
-        while True:
-            try:
-                print "checking on the wtc console"
-                sys.stdout.flush()
-                WC = wtcClient()
-                a = WC.get_actions()
-                if a is None:
-                    raise Exception("No action can be retrieved")
-                self.status['wtc'] = True
-                break
-            except Exception as e:
-                self.tell('wtc')
-                if self.keep_trying:
-                    time.sleep(30)
-                    continue
-                print "wtc unreachable"
-                print str(e)
-                if self.block and not (self.soft and 'wtc' in self.soft):
-                    self.code = 129
-                    return False
-                break
+        WC = wtcClient()
+        a = WC.get_actions()
+        if a is None:
+            raise Exception("No action can be retrieved")
 
-        while True:
-            try:
-                print "checking on eos"
-                sys.stdout.flush()
-                eosfile = base_eos_dir+'/%s-testfile'%os.getpid()
-                oo = eosFile(eosfile)
-                oo.write("Testing I/O on eos")
-                r = oo.close() ## commits to eos
-                if r:
-                    r = os.system('rm -f %s'% eosfile)
-                    if r == 0:
-                        self.status['eos'] = True
-                if not self.status['eos']:
-                    raise Exception("failed to I/O on eos")
+    def check_eos(self):
+        print "checking on eos"
+        sys.stdout.flush()
+        eosfile = base_eos_dir+'/%s-testfile'%os.getpid()
+        oo = eosFile(eosfile)
+        oo.write("Testing I/O on eos")
+        r = oo.close() ## commits to eos
+        if r:
+            r = os.system('rm -f %s'% eosfile)
+            if not r == 0:
+                raise Exception("failed to I/O on eos")
 
-                break
-            except Exception as e:
-                self.tell('eos')
-                if self.keep_trying:
-                    time.sleep(30)
-                    continue
-                print "eos unreachable"
-                print str(e)
-                if self.block and not (self.soft and 'eos' in self.soft):
-                    self.code = 130
-                    return False
-                break
-                
-        while True:
-            try:
-                print "checking on mongodb"
-                sys.stdout.flush()
-                db = agentInfoDB()
-                infos = [a['status'] for a in db.find()]
-                self.status['mongo'] = True
-                break
-            except Exception as e:
-                self.tell('mongo')
-                if self.keep_trying:
-                    time.sleep(30)
-                    continue
-                print "mongo unreachable"
-                print str(e)
-                if self.block and not (self.soft and 'mongo' in self.soft):
-                    self.code = 131
-                    return False
-                break
-                
-                
+    def check_mongo(self):
+        print "checking on mongodb"
+        sys.stdout.flush()
+        db = agentInfoDB()
+        infos = [a['status'] for a in db.find()]
+        
+    def check(self):
+        ecode = 120
+        for component in sorted(self.status):
+            ecode+=1
+            while True:
+                try:
+                    getattr(self,'check_%s'%component)()
+                    self.status[component] = True
+                    break
+                except Exception as e:
+                    self.tell(component)
+                    if self.keep_trying:
+                        print "re-checking on",component
+                        time.sleep(30)
+                        continue
+                    import traceback
+                    print traceback.format_exc()
+                    print component,"is unreachable"
+                    print str(e)
+                    if self.block and not (self.soft and component in self.soft):
+                        self.code = ecode
+                        return False
+                    break
+
         print json.dumps( self.status, indent=2)
         return True
 
