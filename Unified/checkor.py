@@ -308,8 +308,8 @@ def checkor(url, spec=None, options=None):
         for wfo in session.query(Workflow).filter(Workflow.status.startswith('assistance')).all():
             count_statuses[wfo.status]+=1
         some_details +='\n'.join(['%3d in status %s'%( count_statuses[st], st ) for st in sorted(count_statuses.keys())])
-        sendEmail("fresh assistance status available","Fresh status are available at %s/assistance.html\n%s"%(unified_url, some_details),destination=['katherine.rozo@cern.ch'])
-        #it's a bit annoying
+        #sendLog('checkor',"Fresh status are available at %s/assistance.html\n%s"%(unified_url, some_details))
+        #sendEmail("fresh assistance status available","Fresh status are available at %s/assistance.html\n%s"%(unified_url, some_details),destination=['katherine.rozo@cern.ch'])
         pass
 
     ## custodial requests
