@@ -1141,22 +1141,25 @@ class componentInfo:
     def __init__(self, block=True, mcm=None, soft=None, keep_trying=False, check_timeout = 120):
         self.checks = componentCheck(block, mcm, soft, keep_trying)
         self.check_timeout = check_timeout
+        # start the checking
+        self.checks.start()
 
     def check(self):
         check_start = time.mktime(time.gmtime())
-        # start the checking
-        self.checks.start()
         # on timeout
-        ping = 1
+        ping = 10
         while self.checks.is_alive():
             now = time.mktime(time.gmtime())
             if (now-check_start) > self.check_timeout:
                 alarm =  "Timeout in checking the sanity of components %d > %d "%(now-check_start,self.check_timeout)
                 sendLog('componentInfo',alarm, level='critical')
                 return False
+            print "componentInfo, ping",now,check_start,now-check_start
             time.sleep(ping)
         
         self.status = self.checks.status
+        print "componentInfo, going with"
+        print self.checks.go
         return self.checks.go
 
 class componentCheck(threading.Thread):
@@ -1184,7 +1187,7 @@ class componentCheck(threading.Thread):
 
     def run(self):
         self.go = self.check()
-
+        print "componentCheck finished"
 
     def check_cmsr(self):
         from assignSession import session, Workflow
