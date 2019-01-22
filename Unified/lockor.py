@@ -7,7 +7,7 @@ from collections import defaultdict
 import sys
 from McMClient import McMClient
 import time
-from utils import lockInfo
+from utils import lockInfo, moduleLock
 
 
 
@@ -34,6 +34,9 @@ time_point.sub_lap = time_point.lap = time_point.start = time.mktime(time.gmtime
 time_point("Starting initialization")
 
 url = reqmgr_url
+
+mlock = moduleLock()
+if mlock(): return
 
 use_mcm=True
 up = componentInfo(soft=['mcm','wtc'])
