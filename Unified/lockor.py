@@ -36,7 +36,7 @@ time_point("Starting initialization")
 url = reqmgr_url
 
 mlock = moduleLock()
-if mlock(): return
+if mlock(): sys.exit(0)
 
 use_mcm=True
 up = componentInfo(soft=['mcm','wtc'])
