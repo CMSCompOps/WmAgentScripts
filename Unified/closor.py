@@ -619,7 +619,7 @@ if __name__ == "__main__":
     parser.add_option('--limit',help="Number of workflow to pass",default=0, type=int)
     parser.add_option('--force', help="Force pushing the workflow through", default=False,action='store_true')
     parser.add_option('--announce', help="Announce the outputs that should be announced", default=False,action='store_true')
-    parser.add_option('--threads',help='Number of threads for processing workflows',default=10, type=int)
+    parser.add_option('--threads',help='Number of threads for processing workflows',default=5, type=int)
     (options,args) = parser.parse_args()
 
     spec=None
