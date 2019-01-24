@@ -1456,12 +1456,25 @@ class CheckBuster(threading.Thread):
             else:
                 print "current status is",wfo.status,"not changing to anything"
         
-            ## create a jira in certain cases
+            pop_a_jira = False
+            ## rereco and manual => jira
+            if 'manual' in self.to_status and 'ReReco' in wfi.request['RequestType']:
+                pop_a_jira = True
+            ## end of first round acdc => jira
             if 'recovered' in self.to_status and 'manual' in self.to_status:
+                pop_a_jira = True
+            ## create a jira in certain cases
+            if pop_a_jira:
                 jiras = JC.find( {'prepid' : 'something'})
                 if len(jiras)==0:
                     ## then you can create one
                     JC.create( {} )
+                elif len(jiras)==1:
+                    ## got on already. not ambiguous
+                    pass
+                else:
+                    ## more than one. we should not do anything
+                    pass
                     
 
 
