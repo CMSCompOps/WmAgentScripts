@@ -30,10 +30,17 @@ class JIRAClient:
             'project' : 'CMSCOMPPR',
             'issuetype' : {'id' : "3"}
             }
+        who = {
+            'WorkflowTrafficController' : 'sagarwal',
+            'UnifiedOfficer' : 'sagarwal',
+            'AgentDoc' : 'sagarwal'
+        }
+               
         fields.update(
             {
                 'summary' : '<prepid> issue',
                 'priority' : {'id' : "3"},
+                'description' : "",
                 'assignee' : {'name':'vlimant', 'key':'vlimant'},
                 'labels' : ['WorkflowTrafficController']
             }
