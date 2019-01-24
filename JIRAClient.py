@@ -41,8 +41,15 @@ class JIRAClient:
         i = self.client.create_issue( fields) 
         return i
 
-    def find(self ):
-        pass
+    def find(self ,specifications):
+        query  = 'project=CMSCOMPPR'
+        
+        if specifications.get('prepid',None):
+            query += ' AND summary~%s'%(specifications['prepid'])
+        return self._find( query )
+
+    def _find(self, query):
+        return self.client.search_issues( query )
 
     def get(self, jid):
         return self.client.issue( jid )
@@ -54,3 +61,6 @@ if __name__ == "__main__":
     
     i= JC.get('CMSCOMPPR-4516')
     print i.fields.summary
+
+    ii = JC.find({'prepid' : 'SUS-RunIISummer16MiniAODv3-00261'})
+    print [io.key for io in ii]

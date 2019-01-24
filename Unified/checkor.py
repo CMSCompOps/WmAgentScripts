@@ -16,6 +16,7 @@ import time
 import random
 import math
 from McMClient import McMClient
+from JIRAClient import JIRAClient
 from htmlor import htmlor
 from utils import sendEmail 
 from utils import closeoutInfo
@@ -114,7 +115,7 @@ def checkor(url, spec=None, options=None):
     SI = siteInfo()
     CI = campaignInfo()
     mcm = McMClient(dev=False) if use_mcm else None
-
+    JC = JIRAClient()
 
     ## retrieve bypass and onhold configuration
     bypasses = []
@@ -1455,7 +1456,13 @@ class CheckBuster(threading.Thread):
             else:
                 print "current status is",wfo.status,"not changing to anything"
         
-
+            ## create a jira in certain cases
+            if 'recovered' in self.to_status and 'manual' in self.to_status:
+                jiras = JC.find( {'prepid' : 'something'})
+                if len(jiras)==0:
+                    ## then you can create one
+                    JC.create( {} )
+                    
 
 
 
