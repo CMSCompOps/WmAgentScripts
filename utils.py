@@ -635,7 +635,8 @@ def _pass_to_dynamo( items, N ,sites = None, group = None ):
     #params = urllib.urlencode(par)
     print par
     #print params
-    conn.request("POST","/registry/request/copy", json.dumps(par))
+    #conn.request("POST","/registry/request/copy", json.dumps(par))
+    conn.request("POST","/registry/request/copy_cache", json.dumps(par))
     response = conn.getresponse()
     data = response.read()
     #print data
