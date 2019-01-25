@@ -15,3 +15,4 @@ Unified/dbtest.py
 Unified/jiratest.py
 Unified/locktest.py
 Unified/test.py
+Unified/mongotest.py
