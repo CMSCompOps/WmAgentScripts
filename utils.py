@@ -6243,7 +6243,11 @@ class workflowInfo:
             return self._get_spec()
         except:
             time.sleep(1)
-            return self._get_spec()
+            try:
+                return self._get_spec()
+            except Exception as e:
+                print "cannot get spec for",wfi.request['RequestName']
+                return None
 
     def _get_spec(self):
         if not self.full_spec:
