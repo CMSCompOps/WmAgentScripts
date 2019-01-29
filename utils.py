@@ -1982,6 +1982,16 @@ class docCache:
                     return copy.deepcopy(cache['default'])
 
 def getNodes(url, kind):
+    tries = 5 
+    while tries>0:
+        tries-=1
+        try:
+            return _getNodes(url, kind)
+        except Exception as e:
+            pass
+    print str(e)
+
+def _getNodes(url, kind):
     conn = make_x509_conn(url)
     #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/phedex/datasvc/json/prod/nodes')
@@ -3877,6 +3887,16 @@ def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=N
         except:
             print "failed twice, and crash"
             raise Exception("getDatasetDestinations crashed")
+
+def getDatasetOnGoingDeletion( url, dataset ):
+    tries = 5 
+    while tries>0:
+        tries-=1
+        try:
+            return _getDatasetOnGoingDeletion(url, dataset)
+        except Exception as e:
+            pass
+    print str(e)
 
 def getDatasetOnGoingDeletion( url, dataset ):
     conn = make_x509_conn(url)
