@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import componentInfo, sendEmail, setDatasetStatus, unifiedConfiguration, workflowInfo, siteInfo, sendLog, reqmgr_url, monitor_dir, moduleLock, userLock, global_SI, do_html_in_each_module, getWorkflows, pass_to_dynamo, closeoutInfo, batchInfo
+from utils import ThreadHandler
+import threading
 import reqMgrClient
 import json
 import time
@@ -156,7 +158,6 @@ def closor(url, specific=None, options=None):
     CloseI = closeoutInfo()
 
     all_late_files = []
-    check_fullcopy_to_announce = UC.get('check_fullcopy_to_announce')
 
     jump_the_line = options.announce if options else False
     if jump_the_line:
@@ -166,7 +167,10 @@ def closor(url, specific=None, options=None):
         print "regular option. Checking on things done and to be announced"
         wfs = session.query(Workflow).filter(Workflow.status=='close').all()
 
+    if specific:
+        wfs = [wfo for wfo in wfs if specific in wfo.name]
     wfs_n = [w.name for w in wfs]
+
     print "unique names?"
     print len(set(wfs_n)) == len(wfs_n)
     
@@ -191,12 +195,171 @@ def closor(url, specific=None, options=None):
     batch_warnings = defaultdict(set)
     batch_goodness = UC.get("batch_goodness")
 
-    for iwfo,wfo in enumerate(wfs):
+    closers = []
 
+    print len(wfs),"closing"
+    th_start = time.mktime(time.gmtime())
+
+    for iwfo,wfo in enumerate(wfs):
         if specific and not specific in wfo.name: continue
 
+        closers.append( CloseBuster(
+            wfo = wfo,
+            url = url,
+            CI = CI,
+            UC = UC,
+            jump_the_line = jump_the_line,
+            batch_goodness = batch_goodness,
+            batch_go = batch_go,
+            #stats = stats,
+            batch_warnings = batch_warnings,
+            all_late_files = all_late_files,
+            held = held,
+            ))
 
-        print "Progress [%d/%d]"%( iwfo, len(wfs))
+    
+    run_threads = ThreadHandler( threads = closers,
+                                 n_threads = options.threads,
+                                 sleepy = 10,
+                                 timeout = None,
+                                 verbose = True,
+                                 label = 'closor')
+
+    run_threads.start()
+
+
+    ## waiting on all to complete
+    while run_threads.is_alive():
+        time.sleep(5)
+
+    print len(run_threads.threads),"finished thread to gather information from"
+    failed_threads = 0
+    for to in run_threads.threads:
+        if to.failed:
+            failed_threads += 1
+            continue
+        if to.outs:
+            for outO in to.outs:
+                out = outO.datasetname
+                odb = session.query(Output).filter(Output.datasetname==out).first()
+                if not odb:
+                    print "adding an output object",out
+                    session.add( outO )
+                else:
+                    odb.date = outO.date
+                
+        if to.to_status:
+            to.wfo.status = to.to_status
+        if to.to_wm_status:
+            to.wfo.wm_status = to.to_wm_status
+        if to.closing:
+            CloseI.pop( to.wfo.name )
+
+        session.commit()
+
+    th_stop = time.mktime(time.gmtime())
+
+    if wfs:
+        time_spend_per_workflow = (th_stop-th_start) / float(len(wfs))
+        print "Average time spend per workflow is", time_spend_per_workflow
+
+    if failed_threads:
+        sendLog('closor','%d threads have failed, better check this out'% failed_threads, level='critical')
+        sendEmail('closor','%d threads have failed, better check this out'% failed_threads)
+
+    days_late = 0.
+    retries_late = 10
+
+    really_late_files = [info for info in all_late_files if info['retries']>=retries_late]
+    really_late_files = [info for info in really_late_files if info['delay']/(60*60*24.)>=days_late]
+
+    if really_late_files:
+        subject = 'These %d files are lagging for %d days and %d retries announcing dataset \n%s'%(len(really_late_files), days_late, retries_late, json.dumps( really_late_files , indent=2) )
+        #sendEmail('waiting for files to announce', subject)
+        sendLog('closor', subject, level='warning')
+        sendLog('closor',subject)
+        print subject
+        open('%s/stuck_files.json'%monitor_dir,'w').write( json.dumps( really_late_files , indent=2))
+
+    if held:
+        sendLog('closor',"the workflows below are held up \n%s"%("\n".join( sorted(held) )), level='critical')
+
+    for bname,go in batch_go.items():
+        if go:
+            subject = "Release Validation Samples Batch %s"% bname
+            issues=""
+            if batch_warnings[ bname ]:
+                issues="The following datasets have outstanding completion (<%d%%) issues:\n\n"% batch_goodness
+                issues+="\n".join( sorted( batch_warnings[ bname ] ))
+                issues+="\n\n"
+            text = """
+Dear all,
+
+a batch of release validation workflows has finished.
+
+Batch ID:
+
+%s
+
+Detail of the workflows
+
+https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?campaign=%s
+
+%s 
+This is an automated message.
+"""%( bname, 
+      bname,
+      issues)
+            to = ['hn-cms-relval@cern.ch']
+            sendEmail(subject, text, destination=to )
+            ## just announced ; take it out now.
+            BI.pop( bname )
+
+
+    if os.path.isfile('.closor_stop'):
+        print "The loop on workflows was shortened"
+        sendEmail('closor','Closor loop was shortened artificially using .closor_stop')
+        os.system('rm -f .closor_stop')
+        
+
+
+
+class CloseBuster(threading.Thread):
+    def __init__(self, **args):
+        threading.Thread.__init__(self)
+        ## a bunch of other things
+        for k,v in args.items():
+            setattr(self, k, v)
+
+        self.failed = False
+        self.closing = False
+        self.to_status = None
+        self.to_wm_status = None
+        self.outs = []
+
+    def run(self):
+        try:
+            self.close()
+        except Exception as e:
+            import traceback
+            sendLog('closor','failed on %s due to %s and %s'%( self.wfo.name, str(e), traceback.format_exc()), level='critical')
+            self.failed = True
+
+    def close(self):
+        if os.path.isfile('.closor_stop'):
+            print "The closing of workflows is shortened"
+            return 
+
+        url = self.url
+        batch_go = self.batch_go
+        CI = self.CI
+        UC = self.UC
+        wfo = self.wfo
+
+        jump_the_line = self.jump_the_line
+        batch_goodness = self.batch_goodness
+        check_fullcopy_to_announce = UC.get('check_fullcopy_to_announce')
+
         ## what is the expected #lumis 
         wfi = workflowInfo(url, wfo.name )
         wfo.wm_status = wfi.request['RequestStatus']
@@ -212,15 +375,15 @@ def closor(url, specific=None, options=None):
             has_batch_go = batch_go[batch_name]
             if not has_batch_go:
                 wfi.sendLog('closor', 'Cannot close for now because the batch <a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?campaign=%s>%s</a> is not all close'%( batch_name, batch_name))
-                continue
+                return
 
 
         if wfi.request['RequestStatus'] in  ['announced','normal-archived'] and not options.force:
             ## manually announced ??
-            wfo.status = 'done'
-            wfo.wm_status = wfi.request['RequestStatus']
-            wfi.sendLog('closor','%s is announced already : %s'%( wfo.name,wfo.wm_status))
-        session.commit()
+            self.to_status = 'done'
+            self.to_wm_status = wfi.request['RequestStatus']
+            wfi.sendLog('closor','%s is announced already : %s'%( wfo.name,self.to_wm_status))
+            return 
 
         if jump_the_line:
             wfi.sendLog('closor','Announcing while completing')
@@ -243,12 +406,9 @@ def closor(url, specific=None, options=None):
             print wfo.name,wfi.request['RequestStatus']
         for out in outputs:
             event_count,lumi_count = getDatasetEventsAndLumis(dataset=out)
-            odb = session.query(Output).filter(Output.datasetname==out).first()
-            if not odb:
-                print "adding an output object",out
-                odb = Output( datasetname = out )
-                odb.workflow = wfo
-                session.add( odb )
+            self.outs.append( Output( datasetname = out ))
+            odb = self.outs[-1]
+            odb.workflow = wfo
             odb.nlumis = lumi_count
             odb.nevents = event_count
             odb.workfow_id = wfo.id
@@ -257,13 +417,13 @@ def closor(url, specific=None, options=None):
             else:
                 expected_lumis = odb.expectedlumis
             odb.date = time.mktime(time.gmtime())
-            session.commit()
+
             fraction = lumi_count/float(expected_lumis)*100.
 
             completion_line = "%60s %d/%d = %3.2f%%"%(out,lumi_count,expected_lumis,fraction)
             wfi.sendLog('closor',"\t%s"% completion_line)
             if wfi.isRelval() and fraction < batch_goodness:
-                batch_warnings[ wfi.getCampaign()].add( completion_line )
+                self.batch_warnings[ wfi.getCampaign()].add( completion_line )
             stats[out] = lumi_count
             all_OK[out] = True 
 
@@ -291,14 +451,13 @@ def closor(url, specific=None, options=None):
                     late_info = findLateFiles(url, out, going_to = there )
                     for l in late_info:
                         l.update({"workflow":wfo.name,"dataset":out})
-                    all_late_files.extend( late_info )
+                    self.all_late_files.extend( late_info )
                 if check_fullcopy_to_announce:
                     ## only set this false if the check is relevant
                     all_OK[out] = False
 
     
         ## verify if we have to do harvesting
-
         if not options.no_harvest and not jump_the_line:
             (OK, requests) = spawn_harvesting(url, wfi, in_full)
             all_OK.update( OK )
@@ -309,11 +468,13 @@ def closor(url, specific=None, options=None):
             results=[]
             if not results:
                 for out in outputs:
+                    print "dealing with",out
                     if out in stats and not stats[out]: 
                         continue
                     _,dsn,process_string,tier = out.split('/')
 
                     if all_OK[out]:
+                        print "setting valid"
                         results.append(setDatasetStatus(out, 'VALID'))
                     if all_OK[out] and wfi.isRelval():
                         ## make the specific relval rules and the replicas
@@ -412,91 +573,42 @@ def closor(url, specific=None, options=None):
                         if not res in ['None',None]:
                             ## check the status again, it might well have toggled
                             wl_bis = workflowInfo(url, wfo.name)
-                            wfo.wm_status = wl_bis.request['RequestStatus']
-                            session.commit()
+                            self.to_wm_status = wl_bis.request['RequestStatus']
                             if wl_bis.request['RequestStatus'] in  ['announced','normal-archived']:
                                 res = None
                             else:
-                                ## retry ?
                                 res = reqMgrClient.announceWorkflowCascade(url, wfo.name) 
                             
                         results.append( res )
                                 
-            #print results
+            print results
             if all(map(lambda result : result in ['None',None,True],results)):
                 if jump_the_line:
                     if not 'announced' in wfo.status:
-                        wfo.status = wfo.status.replace('announce','announced')
+                        self.to_status = wfo.status.replace('announce','announced')
                 else:
-                    wfo.status = 'done'
-                session.commit()
-                CloseI.pop( wfo.name )
+                    self.to_status = 'done'
+                    self.closing = True
+                
+                    
                 wfi.sendLog('closor',"workflow outputs are announced")
             else:
                 wfi.sendLog('closor',"Error with %s to be announced \n%s"%( wfo.name, json.dumps( results )))
             
         elif wfi.request['RequestStatus'] in ['failed','aborted','aborted-archived','rejected','rejected-archived','aborted-completed']:
             if wfi.isRelval():
-                wfo.status = 'forget'
-                wfo.wm_status = wfi.request['RequestStatus']
-                wfi.sendLog('closor',"%s is %s, but will not be set in trouble to find a replacement."%( wfo.name, wfo.wm_status))
+                self.to_status = 'forget'
+                self.to_wm_status = wfi.request['RequestStatus']
+                wfi.sendLog('closor',"%s is %s, but will not be set in trouble to find a replacement."%( wfo.name, self.to_wm_status))
             else:
-                wfo.status = 'trouble'
-                wfo.wm_status = wfi.request['RequestStatus']
-            session.commit()
+                self.to_status = 'trouble'
+                self.to_wm_status = wfi.request['RequestStatus']
         else:
             print wfo.name,"not good for announcing:",wfi.request['RequestStatus']
             wfi.sendLog('closor',"cannot be announced")
-            held.add( wfo.name )
-
-    days_late = 0.
-    retries_late = 10
-
-    really_late_files = [info for info in all_late_files if info['retries']>=retries_late]
-    really_late_files = [info for info in really_late_files if info['delay']/(60*60*24.)>=days_late]
-
-    if really_late_files:
-        subject = 'These %d files are lagging for %d days and %d retries announcing dataset \n%s'%(len(really_late_files), days_late, retries_late, json.dumps( really_late_files , indent=2) )
-        #sendEmail('waiting for files to announce', subject)
-        sendLog('closor', subject, level='warning')
-        sendLog('closor',subject)
-        print subject
-        open('%s/stuck_files.json'%monitor_dir,'w').write( json.dumps( really_late_files , indent=2))
-
-    if held:
-        sendLog('closor',"the workflows below are held up \n%s"%("\n".join( sorted(held) )), level='critical')
+            self.held.add( wfo.name )
 
 
-    for bname,go in batch_go.items():
-        if go:
-            subject = "Release Validation Samples Batch %s"% bname
-            issues=""
-            if batch_warnings[ bname ]:
-                issues="The following datasets have outstanding completion (<%d%%) issues:\n\n"% batch_goodness
-                issues+="\n".join( sorted( batch_warnings[ bname ] ))
-                issues+="\n\n"
-            text = """
-Dear all,
-
-a batch of release validation workflows has finished.
-
-Batch ID:
-
-%s
-
-Detail of the workflows
-
-https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?campaign=%s
-
-%s 
-This is an automated message.
-"""%( bname, 
-      bname,
-      issues)
-            to = ['hn-cms-relval@cern.ch']
-            sendEmail(subject, text, destination=to )
-            ## just announced ; take it out now.
-            BI.pop( bname )
 
 
     
@@ -507,6 +619,7 @@ if __name__ == "__main__":
     parser.add_option('--limit',help="Number of workflow to pass",default=0, type=int)
     parser.add_option('--force', help="Force pushing the workflow through", default=False,action='store_true')
     parser.add_option('--announce', help="Announce the outputs that should be announced", default=False,action='store_true')
+    parser.add_option('--threads',help='Number of threads for processing workflows',default=5, type=int)
     (options,args) = parser.parse_args()
 
     spec=None

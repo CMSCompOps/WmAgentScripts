@@ -616,14 +616,19 @@ def listSubscriptions(url, dataset, within_sites=None):
     return destinations
 
 def pass_to_dynamo( items, N ,sites = None, group = None ):
-    try:
-        return _pass_to_dynamo( items, N, sites, group)
-    except Exception as e:
-        print "Failed to pass %s to dynamo"% items
-        print str(e)
-        return False
+    check_N_times = 1
+    while True:
+        check_N_times-=1
+        try:
+            return _pass_to_dynamo( items, N, sites, group)
+        except Exception as e:
+            if check_N_times<=0:
+                print "Failed to pass %s to dynamo"% items
+                print str(e)
+                return False
 
 def _pass_to_dynamo( items, N ,sites = None, group = None ):
+    start = time.mktime(time.gmtime())
     if sites == None or sites == []:
         sites = ['T2_*','T1_*_Disk']
     if type(items)==str:
@@ -640,6 +645,8 @@ def _pass_to_dynamo( items, N ,sites = None, group = None ):
     response = conn.getresponse()
     data = response.read()
     #print data
+    stop = time.mktime(time.gmtime())
+    print stop-start,"[s] to hand over to dynamo of",items
     try:
         res = json.loads( data )
         #print json.dumps( res, indent=2)
@@ -1276,7 +1283,8 @@ class componentCheck(threading.Thread):
         return True
 
     def tell(self, c):
-        sendLog('componentInfo',"The %s component is unreachable."% c, level='critical')
+        host = socket.gethostname()
+        sendLog('componentInfo',"The %s component is unreachable from %s"%(c, host), level='critical')
         #sendEmail("%s Component Down"%c,"The component is down, just annoying you with this","vlimant@cern.ch",['vlimant@cern.ch','matteoc@fnal.gov'])
 
 def eosRead(filename,trials=5):
