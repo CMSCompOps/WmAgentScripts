@@ -3922,7 +3922,7 @@ def getDatasetOnGoingDeletion( url, dataset ):
             pass
     print str(e)
 
-def getDatasetOnGoingDeletion( url, dataset ):
+def _getDatasetOnGoingDeletion( url, dataset ):
     conn = make_x509_conn(url)
     #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/phedex/datasvc/json/prod/deletions?dataset=%s&complete=n'%(dataset))
