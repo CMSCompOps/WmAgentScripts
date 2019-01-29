@@ -1634,41 +1634,44 @@ def genericGet( base, url, load=True, headers=None):
 class ThreadHandler(threading.Thread):
     def __init__(self, **args):
         threading.Thread.__init__(self)
-        self.threads = args.get('threads', 10)
+        self.threads = args.get('threads', [])
         self.n_threads = args.get('n_threads', 10)
+        self.r_threads = []
         self.sleepy = args.get('sleepy',10)
         self.timeout = args.get('timeout',None)
         self.verbose = args.get('verbose',False)
         self.label = args.get('label', 'ThreadHandler')
 
     def run(self):
+        self._run()
+        self.threads = self.r_threads
+
+    def _run(self):
         random.shuffle(self.threads)
         ntotal=len(self.threads)
         print "Processing",ntotal,"threads with",self.n_threads,"max concurrent and timeout",self.timeout,'[min]'
         start_now = time.mktime(time.gmtime())
-        r_threads = []
-
+        self.r_threads = []
+        
 
         bug_every=max(len(self.threads) / 10., 100.) ## 10 steps of eta verbosity
         next_ping = int(len(self.threads)/bug_every)
         while self.threads:
             if self.timeout and (time.mktime(time.gmtime()) - start_now) > (self.timeout*60.):
                 print '[%s]'%self.label,"Stopping to start threads because the time out is over",time.asctime(time.gmtime())
-                for t in r_threads:
+                for t in self.r_threads:
                     while t.is_alive():
                         time.sleep(5)
                 ## transfer all to running
                 while self.threads:
-                    r_threads.append( self.threads.pop(-1))
+                    self.r_threads.append( self.threads.pop(-1))
                 ## then we have to kill all threads
-                for t in r_threads:
+                for t in self.r_threads:
                     pass
-                ## and exit the loop
-                self.threads = r_threads
                 return
 
                 
-            running = sum([t.is_alive() for t in r_threads])
+            running = sum([t.is_alive() for t in self.r_threads])
             if self.n_threads==None or running < self.n_threads:
                 startme = self.n_threads-running if self.n_threads else len(self.threads)
                 if self.verbose or int(len(self.threads)/bug_every)<next_ping:
@@ -1684,17 +1687,19 @@ class ThreadHandler(threading.Thread):
                     self.sleepy/=2.
                 for it in range(startme):
                     if self.threads:
-                        r_threads.append( self.threads.pop(-1))
-                        r_threads[-1].start()
+                        self.r_threads.append( self.threads.pop(-1))
+                        self.r_threads[-1].start()
                         ## just wait a sec
                         time.sleep(5)
             time.sleep(self.sleepy)
         ##then wait for completion
-        while sum([t.is_alive() for t in r_threads]):
-            time.sleep(1)
+        while sum([t.is_alive() for t in self.r_threads]):
+            if self.timeout and (time.mktime(time.gmtime()) - start_now) > (self.timeout*60.):
+                print '[%s]'%self.label,"Stopping to wait for threads because the time out is over",time.asctime(time.gmtime())
+                return
+            time.sleep(self.sleepy)
         
-        ## and swap list back
-        self.threads = r_threads
+
 
 
 class UnifiedBuster(threading.Thread):

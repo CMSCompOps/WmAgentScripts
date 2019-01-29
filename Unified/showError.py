@@ -765,7 +765,7 @@ def parse_one(url, wfn, options=None):
         ping+=1
         if ping%100:
             time_point("waiting for sub-threads to finish")
-        time.sleep(6)
+        time.sleep(30)
 
     time_point("Finished with retrieval threads")
 
