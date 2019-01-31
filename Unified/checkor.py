@@ -1465,14 +1465,23 @@ class CheckBuster(threading.Thread):
                 pop_a_jira = True
             ## create a jira in certain cases
             if pop_a_jira:
-                jiras = JC.find( {'prepid' : 'something'})
+                jiras = JC.find( {'prepid' : wfi.request['PrepID']})
                 if len(jiras)==0:
                     ## then you can create one
-                    JC.create( {} )
+                    JC.create( 
+                        {
+                            'priority' : wfi.request['RequestPriority'],
+                            'summary' : '%s issues'% wfi.request['PrepID'],
+                            'label' : 'WorkflowTrafficController',
+                            'description' : 'https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s \nAutomatic JIRA from unified'
+                        } 
+                    )
                 elif len(jiras)==1:
-                    ## got on already. not ambiguous
+                    print "a jira already exists"
+                    ## got one already. not ambiguous, we can update it
                     pass
                 else:
+                    print "multiple jiras already exist"
                     ## more than one. we should not do anything
                     pass
                     
