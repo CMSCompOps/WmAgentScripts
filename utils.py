@@ -6093,6 +6093,94 @@ def checkIfBlockIsAtASite(url,block,site):
 
     return False
 
+class wtcInfo:
+    def __init__(self):
+        self.client = mongo_client()
+        self.db = self.client.unified.wtcInfo
+
+    def add(self, action, keyword, user=None):
+        ##add an item for the action (hold, bypass, force) for the keyword
+        if not keyword:
+            print "blank keyword is not allowed"
+            return
+        n = time.gmtime()
+        now = time.mktime( n )
+        nows = time.asctime( n )
+        document= {
+            'user' : user if user else os.environ.get('USER',None),
+            'keyword' : keyword,
+            'action' : action,
+            'time' : now,
+            'date' : nows}
+        self.db.update_one( {'keyword' : keyword},
+                            {"$set": document},
+                            upsert = True
+                        )
+    def sync(self):
+
+        force = getForceCompletes()
+        for user,items in force.items():
+            for item in items:
+                print user, item
+                self.add( action='force', keyword=item, user = user)
+                
+
+        UC = unifiedConfiguration()
+        actors = UC.get('allowed_bypass')
+        
+        for bypassor,email in actors:
+            bypass_file = '/afs/cern.ch/user/%s/%s/public/ops/bypass.json'%(bypassor[0],bypassor)
+            if not os.path.isfile(bypass_file):
+                continue
+            try:
+                print "Can read bypass from", bypassor
+                extending = json.loads(open(bypass_file).read())
+                print bypassor,"is bypassing",json.dumps(sorted(extending))
+                for ex in extending:
+                    self.add( action = 'bypass' , keyword = ex, user = bypassor)
+            except:
+                pass
+        
+            holding_file = '/afs/cern.ch/user/%s/%s/public/ops/onhold.json'%(bypassor[0],bypassor)
+            if not os.path.isfile(holding_file):
+                continue
+            try:
+                extending = json.loads(open(holding_file).read())
+                print bypassor,"is holding",json.dumps(sorted(extending))
+                for ex in extending:
+                    self.add( action = 'hold' , keyword = ex, user = bypassor)
+            except:
+                pass
+
+    def _get(self, action):
+        r= defaultdict(list)
+        for i in self.db.find({'action' : action}):
+            r[i['user']].append(i['keyword'])
+        return dict(r)
+        
+    def getHold(self):
+        return self._get('hold')
+    def getBypass(self):
+        return self._get('bypass')
+    def getForce(self):
+        return self._get('force')
+
+    def clean(self):
+        wfns = []
+        for s in ['announced','normal-archived','rejected','aborted']:
+            wfns.extend( getWorkflows( reqmgr_url , s))
+        for item in self.db.find():
+            key = item['keyword']
+            if any([key in wfn for wfn in wfns]):
+                print item.get('keyword'),"can go"
+                self.db.delete_one({'_id' : item.get('_id',None)})
+            
+    def remove(self, keyword):
+        ## will remove from the db anything that the item matches on
+        for item in self.db.find():
+            if item.get('keyword',None) in keyword:
+                print item,"goes away"
+                self.db.delete_one({'_id' : item.get('_id',None)})
 
 def getForceCompletes():
     overrides = {}
