@@ -229,6 +229,7 @@ def checkor(url, spec=None, options=None):
             UC = UC,
             CI = CI,
             SI = SI,
+            JC = JC,
             use_mcm = use_mcm,
             mcm = mcm
             ))
@@ -377,6 +378,7 @@ class CheckBuster(threading.Thread):
         UC = self.UC
         CI = self.CI            
         SI = self.SI
+        JC = self.JC
         url = self.url
 
         bypasses = self.bypasses
@@ -1473,7 +1475,7 @@ class CheckBuster(threading.Thread):
                             'priority' : wfi.request['RequestPriority'],
                             'summary' : '%s issues'% wfi.request['PrepID'],
                             'label' : 'WorkflowTrafficController',
-                            'description' : 'https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s \nAutomatic JIRA from unified'
+                            'description' : 'https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s \nAutomatic JIRA from unified'%( wfi.request['PrepID'])
                         } 
                     )
                 elif len(jiras)==1:
