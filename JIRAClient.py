@@ -5,8 +5,10 @@ class JIRAClient:
     def __init__(self, debug=False,cookie=None):
         self.server='https://its.cern.ch/jira'
 
+        cookie = os.environ.get('JIRA_SSO_COOKIE', cookie)
         cookies = {}
         try:
+            print "using cookie from", cookie
             for l in open(cookie,'r').read().split('\n'):
                 try:
                     s = l.split()

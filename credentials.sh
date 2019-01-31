@@ -1,5 +1,11 @@
 
 #talk to mcm
+export JIRA_SSO_COOKIE=/tmp/$USER-$HOSTNAME-vsdf43vfs
+if [ "$1" == "create" ] ; then
+    echo "creating jira cookie" $JIRA_SSO_COOKIE
+    cern-get-sso-cookie -u https://its.cern.ch/jira/loginCern.jsp -o $JIRA_SSO_COOKIE --krb
+fi
+
 export MCM_SSO_COOKIE=/tmp/$USER-$HOSTNAME-vfsvdka573t
 if [ "$1" == "create" ] ; then
     echo "creating mcm cookie" $MCM_SSO_COOKIE
