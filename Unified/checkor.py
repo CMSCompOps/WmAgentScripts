@@ -42,13 +42,10 @@ def get_campaign(output, wfi):
 
 def checkor(url, spec=None, options=None):
     if userLock():   return
-    
-    ## the duplicate process lock was only necessary to prevent update clash on the closeoutinfo object.
-    ## fDB is concurrent resilient, so it can be removed
-    #wait = options.wait
-    #if options.go: wait=False
-    #if duplicateLock(wait=wait) and not options.go:  return
-    
+
+    mlock = moduleLock(locking=False)
+    ml=mlock()
+
     fDB = closeoutInfo()
 
     UC = unifiedConfiguration()

@@ -1493,7 +1493,7 @@ def notRunningBefore( component, time_out = 60*5 ):
 
 
 class moduleLock(object):
-    def __init__(self,component=None, silent=False, wait=False, max_wait = 18000):
+    def __init__(self,component=None, silent=False, wait=False, max_wait = 18000, locking=True):
         if not component:
             component = sys._getframe(1).f_code.co_name
 
@@ -1504,6 +1504,7 @@ class moduleLock(object):
         self.wait = wait
         self.silent= silent
         self.max_wait = max_wait
+        self.locking = locking
 
         self.client = mongo_client()
         self.db = self.client.unified.moduleLock
@@ -1547,6 +1548,9 @@ class moduleLock(object):
         locks = []
         i_try = 0
         while True:
+            if not self.locking:
+                nogo = False
+                break
             ## check from existing such lock, solely based on the component, nothing else
             locks = [l for l in self.db.find({'component' : self.component})]
             if locks:
