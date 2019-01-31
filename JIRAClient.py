@@ -61,7 +61,24 @@ class JIRAClient:
     def get(self, jid):
         return self.client.issue( jid )
 
+    def _transition(self, status, jid):
+        to = {'closed' : '2',
+              'reopened' : '3',
+              }.get( status , None)
+        if to:
+            try:
+                self.client.transition_issue( jid, to)
+            except Exception as e:
+                print "transition to",status,"not successful"
+                print str(e)
+        else:
+            print "transition to",status,"not known"
 
+    def reopen(self, jid):
+        self._transition('reopened', jid)
+
+    def close(self, jid):
+        self._transition('closed', jid)
 
 if __name__ == "__main__":
     JC = JIRAClient(cookie = 'jira.txt')
@@ -71,3 +88,6 @@ if __name__ == "__main__":
 
     ii = JC.find({'prepid' : 'SUS-RunIISummer16MiniAODv3-00261'})
     print [io.key for io in ii]
+
+    JC.reopen('CMSCOMPPR-4518')
+    JC.close('CMSCOMPPR-4518')
