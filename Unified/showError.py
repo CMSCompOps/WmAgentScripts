@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from utils import workflowInfo, siteInfo, monitor_dir, monitor_pub_dir, base_dir, global_SI, getDatasetPresence, getDatasetBlocksFraction, getDatasetBlocks, unifiedConfiguration, getDatasetEventsPerLumi, dataCache, unified_url, base_eos_dir, monitor_eos_dir, unified_url_eos, eosFile, ThreadHandler
+from utils import workflowInfo, siteInfo, monitor_dir, monitor_pub_dir, base_dir, global_SI, getDatasetPresence, getDatasetBlocksFraction, getDatasetBlocks, unifiedConfiguration, getDatasetEventsPerLumi, dataCache, unified_url, base_eos_dir, monitor_eos_dir, unified_url_eos, eosFile, ThreadHandler, moduleLock
 import time
 
 import json
@@ -1037,7 +1037,8 @@ class showError_options(object):
 if __name__=="__main__":
     url = 'cmsweb.cern.ch'
     
-    
+    mlock = moduleLock(component='showError', locking = False)
+    ml = mlock()
 
     UC = unifiedConfiguration()
     parser = optparse.OptionParser()

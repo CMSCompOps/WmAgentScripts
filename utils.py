@@ -1512,6 +1512,7 @@ class moduleLock(object):
     def check(self, hours_before_kill = 24):
         host = socket.gethostname()
         locks = [l for l in self.db.find({'host' : host})]
+        #print [l.get('component') for l in locks]
         now = time.mktime(time.gmtime())
         for lock in locks:
             pid = lock.get('pid',None)
@@ -1580,6 +1581,7 @@ class moduleLock(object):
                        'time' : now,
                        'date' : nows}
             self.db.insert_one( lockdoc )
+            #print lockdoc
         else:
             if not self.silent:
                 msg = 'There are %s instances running.Possible deadlock. Tried for %d [s] \n%s'%(len(locks),
