@@ -2,7 +2,7 @@
 from assignSession import *
 import sys
 import reqMgrClient
-from utils import workflowInfo, getWorkflowById, forceComplete, getDatasetEventsAndLumis, componentInfo, monitor_dir, reqmgr_url, unifiedConfiguration, getForceCompletes, getAllStuckDataset, monitor_pub_dir, moduleLock , eosFile, eosRead
+from utils import workflowInfo, getWorkflowById, forceComplete, getDatasetEventsAndLumis, componentInfo, monitor_dir, reqmgr_url, unifiedConfiguration, getAllStuckDataset, monitor_pub_dir, moduleLock , eosFile, eosRead, wtcInfo
 from utils import campaignInfo, siteInfo, sendLog, sendEmail
 from collections import defaultdict
 import json
@@ -85,7 +85,8 @@ def completor(url, specific):
 
     long_lasting = {}
 
-    overrides = getForceCompletes()
+    WI = wtcInfo()
+    overrides = WI.getForce()
     if use_mcm:    
         ## add all workflow that mcm wants to get force completed
         mcm_force = mcm.get('/restapi/requests/forcecomplete')
