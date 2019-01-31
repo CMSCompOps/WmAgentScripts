@@ -25,28 +25,60 @@ class JIRAClient:
             sys.exit(1)
         self.client = jira.JIRA('https://its.cern.ch/jira' , options = {'cookies':  cookies})
     
-    def create(self , indications):
+    def create(self , indications , do = True):
         fields = {
             'project' : 'CMSCOMPPR',
             'issuetype' : {'id' : "3"}
             }
+        label = indications.get('label',None)
         who = {
             'WorkflowTrafficController' : 'sagarwal',
             'UnifiedOfficer' : 'sagarwal',
             'AgentDoc' : 'sagarwal'
-        }
-               
-        fields.update(
-            {
-                'summary' : '<prepid> issue',
-                'priority' : {'id' : "3"},
-                'description' : "",
-                'assignee' : {'name':'vlimant', 'key':'vlimant'},
-                'labels' : ['WorkflowTrafficController']
+        }.get(label,None)
+           
+        if label:
+            fields['labels'] = [ label ]
+        if who:
+            fields['assignee'] = {'name':who,'key':who}
+        summary = indications.get('summary',None)
+        if summary:
+            fields['summary'] = summary
+        description = indications.get('description', None)
+        if description:
+            fields['description'] = description
+        priority = indications.get('priority', None)
+        print type(priority)
+        if type(priority) == int:
+            ## transform to a str
+            #needs decision : 6
+            #blocker : 1
+            #critical : 2
+            #major : 3
+            #minor : 4
+
+            prios = {
+                0  : '4',
+                85000  : '3',
+                110000 : '2'
             }
-        )
-        i = self.client.create_issue( fields) 
-        return i
+            
+            set_to = None
+            for p in sorted(prios.keys()):
+                if priority>p:
+                    set_to = prios[p]
+            priority = set_to
+
+        elif not priority.isdigit():
+            priority = { 'decision' : '6',
+                         'blocker' : '1'}.get(priority, None)
+        if priority:
+            fields['priority'] = {'id' : priority}
+
+        print fields
+        if do:
+            i = self.client.create_issue( fields) 
+            return i
 
     def find(self ,specifications):
         query  = 'project=CMSCOMPPR'
@@ -89,5 +121,12 @@ if __name__ == "__main__":
     ii = JC.find({'prepid' : 'SUS-RunIISummer16MiniAODv3-00261'})
     print [io.key for io in ii]
 
-    JC.reopen('CMSCOMPPR-4518')
-    JC.close('CMSCOMPPR-4518')
+    #JC.reopen('CMSCOMPPR-4518')
+    #JC.close('CMSCOMPPR-4518')
+
+    JC.create( {
+        'priority' : 120000,
+        'summary' : 'automatic',
+        'label' : 'WorkflowTrafficController',
+        'description' : 'Automatic JIRA from unified'},
+               do = False)
