@@ -16,6 +16,7 @@ import time
 import random
 import math
 from McMClient import McMClient
+from JIRAClient import JIRAClient
 from htmlor import htmlor
 from utils import sendEmail 
 from utils import closeoutInfo
@@ -114,7 +115,7 @@ def checkor(url, spec=None, options=None):
     SI = siteInfo()
     CI = campaignInfo()
     mcm = McMClient(dev=False) if use_mcm else None
-
+    JC = JIRAClient()
 
     ## retrieve bypass and onhold configuration
     bypasses = []
@@ -228,6 +229,7 @@ def checkor(url, spec=None, options=None):
             UC = UC,
             CI = CI,
             SI = SI,
+            JC = JC,
             use_mcm = use_mcm,
             mcm = mcm
             ))
@@ -376,6 +378,7 @@ class CheckBuster(threading.Thread):
         UC = self.UC
         CI = self.CI            
         SI = self.SI
+        JC = self.JC
         url = self.url
 
         bypasses = self.bypasses
@@ -1455,7 +1458,35 @@ class CheckBuster(threading.Thread):
             else:
                 print "current status is",wfo.status,"not changing to anything"
         
-
+            pop_a_jira = False
+            ## rereco and manual => jira
+            if 'manual' in self.to_status and 'ReReco' in wfi.request['RequestType']:
+                pop_a_jira = True
+            ## end of first round acdc => jira
+            if 'recovered' in self.to_status and 'manual' in self.to_status:
+                pop_a_jira = True
+            ## create a jira in certain cases
+            if pop_a_jira:
+                jiras = JC.find( {'prepid' : wfi.request['PrepID']})
+                if len(jiras)==0:
+                    ## then you can create one
+                    JC.create( 
+                        {
+                            'priority' : wfi.request['RequestPriority'],
+                            'summary' : '%s issues'% wfi.request['PrepID'],
+                            'label' : 'WorkflowTrafficController',
+                            'description' : 'https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s \nAutomatic JIRA from unified'%( wfi.request['PrepID'])
+                        } 
+                    )
+                elif len(jiras)==1:
+                    print "a jira already exists"
+                    ## got one already. not ambiguous, we can update it
+                    pass
+                else:
+                    print "multiple jiras already exist"
+                    ## more than one. we should not do anything
+                    pass
+                    
 
 
 

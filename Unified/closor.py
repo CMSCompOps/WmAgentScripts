@@ -17,6 +17,7 @@ import copy
 import random
 import optparse
 import sqlalchemy 
+from JIRAClient import JIRAClient
 
 def spawn_harvesting(url, wfi , in_full):
     SI = global_SI()
@@ -232,6 +233,7 @@ def closor(url, specific=None, options=None):
     while run_threads.is_alive():
         time.sleep(5)
 
+    JC = JIRAClient()
     print len(run_threads.threads),"finished thread to gather information from"
     failed_threads = 0
     for to in run_threads.threads:
@@ -250,6 +252,11 @@ def closor(url, specific=None, options=None):
                 
         if to.to_status:
             to.wfo.status = to.to_status
+            if to.to_status == "done" and to.wfi:
+                jiras = JC.find({"prepid" : to.wfi.request['PrepID']})
+                for jira in jiras:
+                    JC.close(jira.key)
+
         if to.to_wm_status:
             to.wfo.wm_status = to.to_wm_status
         if to.closing:
@@ -336,6 +343,7 @@ class CloseBuster(threading.Thread):
         self.to_status = None
         self.to_wm_status = None
         self.outs = []
+        self.wfi = None
 
     def run(self):
         try:
@@ -361,7 +369,8 @@ class CloseBuster(threading.Thread):
         check_fullcopy_to_announce = UC.get('check_fullcopy_to_announce')
 
         ## what is the expected #lumis 
-        wfi = workflowInfo(url, wfo.name )
+        self.wfi = workflowInfo(url, wfo.name )
+        wfi = self.wfi
         wfo.wm_status = wfi.request['RequestStatus']
 
         if wfi.isRelval():
