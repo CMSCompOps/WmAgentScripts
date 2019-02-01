@@ -1417,7 +1417,10 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
                     if type(det)==dict and det['name'] == component:
                         message += '<br>%s'% det['error_message']
                         this_week = str(int(time.strftime("%W", time.gmtime())))
-                        alert_summary = "%s %s week %s"%( short_name, component, this_week)
+                        alert_type = agent['status']
+                        if 'thread heartbeat' in det['error_message']:
+                            alert_type = 'heartbeat'
+                        alert_summary = '%s %s %s week %s'%( short_name, component, alert_type, this_week)
                         jiras = JC.find( {'summary' : alert_summary })
                         if len(jiras)==0:
                             print "creating a JIRA for", alert_summary
