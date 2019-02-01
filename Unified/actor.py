@@ -577,7 +577,14 @@ def actor(url,options=None):
 
                     else: #ACDC was made correctly. Now we have to assign it.
                         wfi.sendLog('actor','ACDC created for task %s. Actions taken \n%s'%(fulltaskname,json.dumps(actions)))
-                        jira_comment = "ACDC created for task %s with action %s "%( task , json.dumps(actions))
+                        jira_comment = "%s created ACDC for task %s with action %s"%( 
+                            action_list[wfname].get( 'user', 'unified'),
+                            task , 
+                            json.dumps(actions),
+                        )
+                        reason = action_list[wfname].get( 'Reason', None)
+                        if reason:
+                            jira_comment += '\ndue to: %s'%(reason)
 
                         #team = wfi.request['Teams'][0]
                         team = 'production'
