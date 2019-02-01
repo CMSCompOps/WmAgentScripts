@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from utils import mongo_client
 import optparse
 import ssl,pymongo
