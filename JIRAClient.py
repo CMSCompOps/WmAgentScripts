@@ -87,6 +87,10 @@ class JIRAClient:
             query += ' AND summary~%s'%(specifications['prepid'])
         return self._find( query )
 
+    def comment(self, key, comment):
+        if not comment: return
+        self.client.add_comment( key, comment )
+
     def _find(self, query):
         return self.client.search_issues( query )
 
