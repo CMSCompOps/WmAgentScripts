@@ -639,6 +639,7 @@ def actor(url,options=None):
                                 if len(jiras)==1:
                                     ## put a comment on the single corresponding ticket
                                     JC.comment(jiras[0].key, jira_comment)
+                                    JC.progress(jiras[0].key)
                         except Exception as e:
                             print "failed with JIRA"
                             print str(e)
