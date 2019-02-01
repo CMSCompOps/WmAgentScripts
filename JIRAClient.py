@@ -87,6 +87,10 @@ class JIRAClient:
             query += ' AND summary~%s'%(specifications['prepid'])
         return self._find( query )
 
+    def comment(self, key, comment):
+        if not comment: return
+        self.client.add_comment( key, comment )
+
     def _find(self, query):
         return self.client.search_issues( query )
 
@@ -96,15 +100,20 @@ class JIRAClient:
     def _transition(self, status, jid):
         to = {'closed' : '2',
               'reopened' : '3',
+              'progress' : '4'
               }.get( status , None)
         if to:
             try:
+                print jid,"to",status
                 self.client.transition_issue( jid, to)
             except Exception as e:
                 print "transition to",status,"not successful"
                 print str(e)
         else:
             print "transition to",status,"not known"
+
+    def progress(self, jid):
+        self._transition('progress', jid)
 
     def reopen(self, jid):
         self._transition('reopened', jid)
@@ -121,12 +130,13 @@ if __name__ == "__main__":
     ii = JC.find({'prepid' : 'SUS-RunIISummer16MiniAODv3-00261'})
     print [io.key for io in ii]
 
-    #JC.reopen('CMSCOMPPR-4518')
-    #JC.close('CMSCOMPPR-4518')
+    JC.reopen('CMSCOMPPR-4518')
+    JC.progress('CMSCOMPPR-4518')
+    JC.close('CMSCOMPPR-4518')
 
-    JC.create( {
-        'priority' : 120000,
-        'summary' : 'automatic',
-        'label' : 'WorkflowTrafficController',
-        'description' : 'Automatic JIRA from unified'},
-               do = False)
+    #JC.create( {
+    #    'priority' : 120000,
+    #    'summary' : 'automatic',
+    #    'label' : 'WorkflowTrafficController',
+    #    'description' : 'Automatic JIRA from unified'},
+    #           do = False)
