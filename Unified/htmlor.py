@@ -1418,7 +1418,7 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
                         message += '<br>%s'% det['error_message']
                         this_week = str(int(time.strftime("%W", time.gmtime())))
                         alert_summary = "%s %s week %s"%( short_name, component, this_week)
-                        jiras = JC.find( alert_summary )
+                        jiras = JC.find( {'summary' : alert_summary })
                         if len(jiras)==0:
                             print "creating a JIRA for", alert_summary
                             JC.create(
