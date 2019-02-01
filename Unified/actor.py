@@ -633,11 +633,15 @@ def actor(url,options=None):
                         else:
                             recovering.add( acdc )
                         #wfi.sendLog('actor',"ACDCs created for %s"%wfname)
-                        if jira_comment:
-                            jiras = JC.find({'prepid' : wfi.request['PrepID']})
-                            if len(jiras)==1:
-                                ## put a comment on the single corresponding ticket
-                                JC.comment(jiras[0].key, jira_comment)
+                        try:
+                            if jira_comment:
+                                jiras = JC.find({'prepid' : wfi.request['PrepID']})
+                                if len(jiras)==1:
+                                    ## put a comment on the single corresponding ticket
+                                    JC.comment(jiras[0].key, jira_comment)
+                        except Exception as e:
+                            print "failed with JIRA"
+                            print str(e)
                         
     
         #===========================================================
