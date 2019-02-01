@@ -84,7 +84,7 @@ class JIRAClient:
         query  = 'project=CMSCOMPPR'
         summary = specifications.get('prepid',specifications.get('summary',None))
         if summary:
-            query += ' AND summary~%s'%(summary)
+            query += ' AND summary~"%s"'%(summary)
         return self._find( query )
 
     def comment(self, key, comment):
@@ -140,3 +140,6 @@ if __name__ == "__main__":
     #    'label' : 'WorkflowTrafficController',
     #    'description' : 'Automatic JIRA from unified'},
     #           do = False)
+    
+    ii = JC.find({'summary' : 'vocms0253.cern.ch heartbeat issues'})
+    print [io.key for io in ii]
