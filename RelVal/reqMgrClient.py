@@ -1,1 +1,0 @@
-../reqMgrClient.py
