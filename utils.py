@@ -6167,7 +6167,7 @@ class wtcInfo:
 
     def clean(self):
         wfns = []
-        for s in ['announced','normal-archived','rejected','aborted']:
+        for s in ['announced','normal-archived','rejected','aborted','aborted-archived','rejected-archived']:
             wfns.extend( getWorkflows( reqmgr_url , s))
         for item in self.db.find():
             key = item['keyword']
