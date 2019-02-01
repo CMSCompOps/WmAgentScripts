@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, forceComplete, makeReplicaRequest, getDatasetSize, getDatasetFiles, sendLog, reqmgr_url, dbs_url, dbs_url_writer, getForceCompletes, display_time, checkMemory, ThreadHandler
+from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, forceComplete, makeReplicaRequest, getDatasetSize, getDatasetFiles, sendLog, reqmgr_url, dbs_url, dbs_url_writer, display_time, checkMemory, ThreadHandler, wtcInfo
 from utils import componentInfo, unifiedConfiguration, userLock, moduleLock, dataCache, unified_url, getDatasetLumisAndFiles, getDatasetRuns, duplicateAnalyzer, invalidateFiles, findParent, do_html_in_each_module
 import phedexClient
 import dbs3Client
@@ -120,48 +120,32 @@ def checkor(url, spec=None, options=None):
     ## retrieve bypass and onhold configuration
     bypasses = []
     forcings = []
-    overrides = getForceCompletes()
     holdings = []
 
-    
-    actors = UC.get('allowed_bypass')
-
-    for bypassor,email in actors:
-        bypass_file = '/afs/cern.ch/user/%s/%s/public/ops/bypass.json'%(bypassor[0],bypassor)
-        if not os.path.isfile(bypass_file):
-            #sendLog('checkor','no file %s',bypass_file)
+    WI = wtcInfo()
+    actors = [a for a,_ in UC.get('allowed_bypass')]
+    for user,extending in WI.getHold().items():
+        if not user in actors:
+            print user,"is not allowed to hold"
             continue
-        try:
-            print "Can read bypass from", bypassor
-            extending = json.loads(open(bypass_file).read())
-            print bypassor,"is bypassing",json.dumps(sorted(extending))
-            bypasses.extend( extending )
-        except:
-            sendLog('checkor',"cannot get by-passes from %s for %s"%(bypass_file ,bypassor))
-            sendEmail("malformated by-pass information","%s is not json readable"%(bypass_file), destination=[email])
-        
-        holding_file = '/afs/cern.ch/user/%s/%s/public/ops/onhold.json'%(bypassor[0],bypassor)
-        if not os.path.isfile(holding_file):
-            #sendLog('checkor',"no file %s"%holding_file)
+        print user,"is holding",extending
+        holdings.extend( extending )
+
+    for user,extending in WI.getBypass().items():
+        if not user in actors:
+            print user,"is not allowed to bypass"
             continue
-        try:
-            extending = json.loads(open(holding_file).read())
-            print bypassor,"is holding",json.dumps(sorted(extending))
-            holdings.extend( extending )
-        except:
-            sendLog('checkor',"cannot get holdings from %s for %s"%(holding_file, bypassor))
-            sendEmail("malformated by-pass information","%s is not json readable"%(holding_file), destination=[email])
-
-    unhold= ['fabozzi_Run2016B-v2-Tau-07Aug17_ver2_8029_170831_201310_7397']
-    for unh in unhold:
-        if unh in holdings:
-            holdings.remove(unh)
-
-    
-    for rider,extending in overrides.items():
-        print rider,"bypasses by forcecompleting",json.dumps(sorted(extending))
+        print user,"is bypassing",extending
         bypasses.extend( extending )
-
+        
+    overrides = {}
+    for user,extending in WI.getForce().items():
+        if not user in actors:
+            print user,"is not allowed to force complete"
+            continue
+        print user,"is force-completing",extending
+        bypasses.extend( extending )
+        overrides[user] = extending
 
     if use_mcm:
         ## this is a list of prepids that are good to complete

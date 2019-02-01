@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import workflowInfo, sendEmail, componentInfo, campaignInfo, unifiedConfiguration, siteInfo, sendLog, setDatasetStatus, moduleLock, invalidate
+from utils import workflowInfo, sendEmail, componentInfo, campaignInfo, unifiedConfiguration, siteInfo, sendLog, setDatasetStatus, moduleLock, invalidate, wtcInfo
 from utils import closeoutInfo, userLock
 import reqMgrClient
 import wtcClient
@@ -342,6 +342,7 @@ def actor(url,options=None):
     SI = siteInfo()
     UC = unifiedConfiguration()
     WC = wtcClient()
+    WI = wtcInfo()
 
     action_list = WC.get_actions()
     if action_list is None:
@@ -436,15 +437,11 @@ def actor(url,options=None):
                 session.commit()
 #===========================================================
         elif to_force:
-            wfi.sendLog('actor','Bypassing from workflow traffic controler request')
-            forcing = json.loads(open('/afs/cern.ch/user/v/vlimant/public/ops/forcecomplete.json').read())
-            forcing.append( wfname )
-            open('/afs/cern.ch/user/v/vlimant/public/ops/forcecomplete.json','w').write( json.dumps( sorted(set(forcing)) ))
+            wfi.sendLog('actor','Force-completing from workflow traffic controler request')
+            WI.add(action='force', keyword = wfname, user = action_list[wfname].get( 'user', 'unified'))
         elif to_hold:
             wfi.sendLog('actor','Holding on workflow traffic controler request')
-            holding = json.loads(open('/afs/cern.ch/user/v/vlimant/public/ops/onhold.json').read())
-            holding.append( wfname )
-            open('/afs/cern.ch/user/v/vlimant/public/ops/onhold.json','w').write( json.dumps( sorted(set(holding)) ))
+            WI.add(action='hold', keyword = wfname, user = action_list[wfname].get( 'user', 'unified'))                   
 #===========================================================
         elif to_acdc:
             if 'AllSteps' in tasks:
