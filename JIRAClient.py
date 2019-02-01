@@ -104,6 +104,7 @@ class JIRAClient:
               }.get( status , None)
         if to:
             try:
+                print jid,"to",status
                 self.client.transition_issue( jid, to)
             except Exception as e:
                 print "transition to",status,"not successful"
@@ -131,7 +132,7 @@ if __name__ == "__main__":
 
     JC.reopen('CMSCOMPPR-4518')
     JC.progress('CMSCOMPPR-4518')
-    #JC.close('CMSCOMPPR-4518')
+    JC.close('CMSCOMPPR-4518')
 
     #JC.create( {
     #    'priority' : 120000,
