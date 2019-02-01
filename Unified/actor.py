@@ -16,6 +16,7 @@ import ssl
 import sys
 import random
 from wtcClient import wtcClient
+from JIRAClient import JIRAClient
 
 def singleRecovery(url, task, initial, actions, do=False):
     print "Inside single recovery!"
@@ -172,6 +173,7 @@ def singleRecovery(url, task, initial, actions, do=False):
             print "Error twice in making ACDC for",initial["RequestName"]
             sendLog('actor','Failed twice in making ACDCs for %s!'%initial['RequestName'],level='critical')                
             return None
+
 
     ## change splitting if requested
     if actions:
@@ -343,6 +345,7 @@ def actor(url,options=None):
     UC = unifiedConfiguration()
     WC = wtcClient()
     WI = wtcInfo()
+    JC = JIRAClient()
 
     action_list = WC.get_actions()
     if action_list is None:
@@ -574,6 +577,8 @@ def actor(url,options=None):
 
                     else: #ACDC was made correctly. Now we have to assign it.
                         wfi.sendLog('actor','ACDC created for task %s. Actions taken \n%s'%(fulltaskname,json.dumps(actions)))
+                        jira_comment = "ACDC created for task %s with action %s "%( task , json.dumps(actions))
+
                         #team = wfi.request['Teams'][0]
                         team = 'production'
                         parameters={
@@ -627,7 +632,14 @@ def actor(url,options=None):
                             sendLog('actor',"%s needs to be assigned"%(acdc), level='critical')
                         else:
                             recovering.add( acdc )
-                        wfi.sendLog('actor',"ACDCs created for %s"%wfname)
+                        #wfi.sendLog('actor',"ACDCs created for %s"%wfname)
+                        if jira_comment:
+                            jiras = JC.find({'prepid' : wfi.request['PrepID']})
+                            if len(jiras)==1:
+                                ## put a comment on the single corresponding ticket
+                                JC.comment(jiras[0].key, jira_comment)
+                        
+    
         #===========================================================
         
         
