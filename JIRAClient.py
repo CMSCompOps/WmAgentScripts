@@ -69,7 +69,7 @@ class JIRAClient:
                     set_to = prios[p]
             priority = set_to
 
-        elif not priority.isdigit():
+        elif (priority and not priority.isdigit()):
             priority = { 'decision' : '6',
                          'blocker' : '1'}.get(priority, None)
         if priority:
