@@ -82,9 +82,9 @@ class JIRAClient:
 
     def find(self ,specifications):
         query  = 'project=CMSCOMPPR'
-        
-        if specifications.get('prepid',None):
-            query += ' AND summary~%s'%(specifications['prepid'])
+        summary = specifications.get('prepid',specifications.get('summary',None))
+        if summary:
+            query += ' AND summary~%s'%(summary)
         return self._find( query )
 
     def comment(self, key, comment):
