@@ -33,8 +33,8 @@ class JIRAClient:
         label = indications.get('label',None)
         who = {
             'WorkflowTrafficController' : 'sagarwal',
-            'UnifiedOfficer' : 'sagarwal',
-            'AgentDoc' : 'sagarwal'
+            'UnifiedOfficer' : 'weinberg',
+            'AgentDoc' : 'snorberg'
         }.get(label,None)
            
         if label:
@@ -69,7 +69,7 @@ class JIRAClient:
                     set_to = prios[p]
             priority = set_to
 
-        elif not priority.isdigit():
+        elif (priority and not priority.isdigit()):
             priority = { 'decision' : '6',
                          'blocker' : '1'}.get(priority, None)
         if priority:
@@ -82,9 +82,9 @@ class JIRAClient:
 
     def find(self ,specifications):
         query  = 'project=CMSCOMPPR'
-        
-        if specifications.get('prepid',None):
-            query += ' AND summary~%s'%(specifications['prepid'])
+        summary = specifications.get('prepid',specifications.get('summary',None))
+        if summary:
+            query += ' AND summary~"%s"'%(summary)
         return self._find( query )
 
     def comment(self, key, comment):
@@ -140,3 +140,6 @@ if __name__ == "__main__":
     #    'label' : 'WorkflowTrafficController',
     #    'description' : 'Automatic JIRA from unified'},
     #           do = False)
+    
+    ii = JC.find({'summary' : 'vocms0253.cern.ch heartbeat issues'})
+    print [io.key for io in ii]
