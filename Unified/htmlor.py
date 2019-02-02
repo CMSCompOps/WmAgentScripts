@@ -8,6 +8,7 @@ from collections import defaultdict
 import sys
 from utils import monitor_dir, base_dir, phedex_url, reqmgr_url, monitor_pub_dir, unified_url_eos, monitor_eos_dir, monitor_pub_eos_dir, base_eos_dir, closeoutInfo, agent_speed_draining, statusHistory
 import random
+from JIRAClient import JIRAClient
 
 def htmlor( caller = ""):
     mlock = moduleLock(silent=True)
@@ -1385,6 +1386,7 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
                     wake_up_draining=True
                     )
     AI.poll(acting=True)
+    JC = JIRAClient()
     #####
     #speed_d = json.loads( eosRead('%s/speed_draining.json'%base_eos_dir))
     speed_d = list(agent_speed_draining())
@@ -1414,6 +1416,22 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
                 for det in agent['down_component_detail']:
                     if type(det)==dict and det['name'] == component:
                         message += '<br>%s'% det['error_message']
+                        this_week = str(int(time.strftime("%W", time.gmtime())))
+                        alert_type = agent['status']
+                        if 'thread heartbeat' in det['error_message']:
+                            alert_type = 'heartbeat'
+                        alert_summary = '%s %s %s week %s'%( short_name, component, alert_type, this_week)
+                        jiras = JC.find( {'summary' : alert_summary })
+                        if len(jiras)==0:
+                            print "creating a JIRA for", alert_summary
+                            JC.create(
+                                {
+                                    'summary' : alert_summary,
+                                    'description' : det['error_message'],
+                                    'label' : 'AgentDoc'
+                                })
+                        else:
+                            print "the following jiras already exists",','.join([j.key for j in jiras])
                 
 
             message += '<br><a href="https://cms-logbook.cern.ch/elog/GlideInWMS/?mode=summary&reverse=0&reverse=1&npp=20&subtext=%s">gwms elog</a>, <a href="https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary&reverse=0&reverse=1&npp=20&subtext=%s">elog</a>, <a href="https://its.cern.ch/jira/issues/?jql=text~%s* AND project = CMSCOMPPR AND status != CLOSED">jira</a>'%( short_name, short_name, short_name )
