@@ -1,3 +1,7 @@
+"""
+use the vocms0275 machine with the x509_USER_PROXY and export PYTHONPATH=$PYTHONPATH:/usr/lib64/python2.7/site-packages
+"""
+
 #!/usr/bin/env python
 from utils import wtcInfo
 import optparse
