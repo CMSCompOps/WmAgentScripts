@@ -1203,9 +1203,11 @@ class componentCheck(threading.Thread):
 
     def check_reqmgr(self):
         if 'testbed' in reqmgr_url:
-            wfi = workflowInfo(reqmgr_url,'sryu_B2G-Summer12DR53X-00743_v4_v2_150126_223017_1156')
+            wfi = getWorkLoad(reqmgr_url,'sryu_B2G-Summer12DR53X-00743_v4_v2_150126_223017_1156')
         else:
-            wfi = workflowInfo(reqmgr_url,'pdmvserv_task_B2G-RunIIWinter15wmLHE-00067__v1_T_150505_082426_497')
+            wfi = getWorkLoad(reqmgr_url,'pdmvserv_task_B2G-RunIIWinter15wmLHE-00067__v1_T_150505_082426_497')       
+        name = wfi['RequestName']
+        tests = getWorkflows(reqmgr_url, 'assignment-approved')
 
     def check_mcm(self):
         from McMClient import McMClient
