@@ -401,7 +401,7 @@ def sendEmail( subject, text, sender=None, destination=None ):
     else:
         destination = list(set(destination+email_destination))
     if not sender:
-        map_who = { 'vlimant' : 'vlimant@cern.ch',
+        map_who = { #'vlimant' : 'vlimant@cern.ch',
                     'mcremone' : 'matteoc@fnal.gov',
                     'qnguyen' : 'thong.nguyen@cern.ch'
                     }
