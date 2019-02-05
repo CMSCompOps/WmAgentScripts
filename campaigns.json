@@ -528,15 +528,13 @@
   }, 
   "Summer11LegDR": {
     "go": true, 
-    "SiteWhitelist": [
-      "T1_US_FNAL", 
-      "T1_ES_PIC", 
-      "T1_FR_CCIN2P3", 
-      "T1_IT_CNAF", 
-      "T1_UK_RAL", 
-      "T1_DE_KIT", 
-      "T2_CH_CERN"
-    ]
+    "secondaries": {
+      "/MinBias_TuneZ2_7TeV-pythia6/Summer11Leg-START53_LV4-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T2_ES_CIEMAT"
+        ]
+      }
+    }
   }, 
   "RunIIWinter17wmLHEGS": {
     "lumisize": -1, 
@@ -860,7 +858,7 @@
     "maxcopies": 1, 
     "lumisize": -1, 
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "resize": "auto"
   }, 
   "Phys14DR": {
@@ -1221,7 +1219,7 @@
     "lumisize": -1, 
     "resize": "auto", 
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "secondaries": {
       "/MinBias_TuneCP5_14TeV-pythia8/PhaseIIMTDTDRAutumn18GS-103X_upgrade2023_realistic_v2-v1/GEN-SIM": {
         "SiteWhitelist": [
@@ -1300,6 +1298,31 @@
       "/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1-v2/GEN-SIM": {}
     }, 
     "fractionpass": 0.95
+  }, 
+  "RunIISummer16FSDR": {
+    "parameters": {
+      "EventsPerLumi": "x2"
+    }, 
+    "SiteWhitelist": [
+      "T1_US_FNAL", 
+      "T1_IT_CNAF", 
+      "T1_UK_RAL", 
+      "T1_DE_KIT", 
+      "T2_US_Caltech", 
+      "T2_US_MIT"
+    ], 
+    "lumisize": -1, 
+    "fractionpass": 0.95, 
+    "go": true, 
+    "secondaries": {
+      "/Neutrino_E-10_gun/RunIISummer16FSPremix-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v4-v1/GEN-SIM-DIGI-RAW": {
+        "SecondaryLocation": [
+          "T2_US_Purdue", 
+          "T1_DE_KIT"
+        ], 
+        "secondary_AAA": true
+      }
+    }
   }, 
   "PhaseIFall16wmLHEGS": {
     "go": true, 
@@ -2997,6 +3020,25 @@
     }, 
     "tune": true, 
     "force-complete": 0.99
+  }, 
+  "RunIIFall17FSDR": {
+    "secondary_AAA": false, 
+    "maxcopies": 1, 
+    "lumisize": -1, 
+    "fractionpass": 0.95, 
+    "go": true, 
+    "tune": true, 
+    "secondaries": {
+      "/MinBias_TuneCP2_13TeV-pythia8/RunIIFall17FSPremix-PUMoriond17_94X_mc2017_realistic_v11-v1/GEN-SIM-RECO": {
+        "SiteWhitelist": [
+          "T2_BE_IIHE", 
+          "T2_AT_Vienna", 
+          "T2_CH_CERN", 
+          "T1_US_FNAL"
+        ]
+      }
+    }, 
+    "resize": "auto"
   }, 
   "RunIIWinter15pLHE": {
     "go": true, 
