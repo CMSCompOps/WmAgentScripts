@@ -5204,6 +5204,16 @@ def display_time( sec ):
     return dis
 
 def getWorkflowByMCPileup( url, dataset , details=False):
+    retries=5
+    while retries>0:
+        retries-=1
+        try:
+            return _getWorkflowByMCPileup(url, dataset , details)
+        except Exception as e:
+            pass
+    print str(e)
+    
+def _getWorkflowByMCPileup( url, dataset , details=False):
     conn = make_x509_conn(url)
     #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     there = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/bymcpileup?key="%s"'%(dataset)
@@ -6636,19 +6646,27 @@ class workflowInfo:
         agents = self.getActiveAgents()
         agents = map(lambda s : s.split('/')[-1].split(':')[0], agents)
         wf = self.request['RequestName']
+        inagent=None
         for agent in agents:
             if 'fnal' in agent: continue
             src = '%s:/data/srv/wmagent/current/install/wmagent/WorkQueueManager/cache/%s/WMSandbox/%s/cmsRun1/pileupconf.json'%(agent, wf, task)
             dest = '/tmp/%s-%s.json'%( wf, task)
             if os.path.isfile( dest ) and False:
+                inagent=agent
                 res = json.loads(open( dest ).read())
                 break
             print agent
             com = 'scp %s %s'%( src, dest)
             os.system( com )
             if os.path.isfile( dest ):
+                inagent=agent
                 res = json.loads(open( dest ).read())
                 break
+        if inagent:
+            print "found PU json in:",inagent
+        else:
+            print "PU json not found"
+                
         return res
 
     def getClassicalPUOverflow(self, task):
