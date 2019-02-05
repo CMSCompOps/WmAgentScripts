@@ -231,6 +231,7 @@ def closor(url, specific=None, options=None):
 
     ## waiting on all to complete
     while run_threads.is_alive():
+        #print "Waiting on closing threads",time.asctime(time.gmtime())
         time.sleep(5)
 
     JC = JIRAClient()
