@@ -85,6 +85,14 @@ class JIRAClient:
         summary = specifications.get('prepid',specifications.get('summary',None))
         if summary:
             query += ' AND summary~"%s"'%(summary)
+
+        if specifications.get('status',None):
+            status = specifications['status']
+            if status.startswith('!'):
+                query += ' AND status != %s'%(status[1:])
+            else:
+                query += ' AND status = %s'%(status)
+
         return self._find( query )
 
     def comment(self, key, comment):
