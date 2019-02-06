@@ -1413,9 +1413,9 @@ class campaignInfo:
 
     def content(self):
         uc = {}
-        for content in self.db.find():
-            content.pop("_id")
-            uc[content.pop("name")] = content
+        for c in self.db.find():
+            c.pop("_id")
+            uc[c.pop("name")] = c
         return uc
 
     def all(self, c_type = None):
@@ -1437,6 +1437,7 @@ class campaignInfo:
 
     def pop(self, item_name):
         print "removing",item_name,"from campaign configuration"
+        #sendEmail('campaignInfo','removing %s from configuration'% item_name, destination=['vlimant@cern.ch'])
         self.db.delete_one({'name' : item_name})
 
     def go(self, c, s=None):
