@@ -1390,7 +1390,7 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
     #####
     #speed_d = json.loads( eosRead('%s/speed_draining.json'%base_eos_dir))
     speed_d = list(agent_speed_draining())
-    component_auto_restart = []
+    component_auto_restart = ["ErrorHandler", "JobSubmitter"]
 
     for team,agents in getAllAgents(reqmgr_url).items():
         if not team in ['production','relval','highprio']: continue
