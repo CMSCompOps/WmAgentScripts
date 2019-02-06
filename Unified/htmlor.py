@@ -1201,7 +1201,7 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
     all_reasons = set()
     by_reason_all_sites = defaultdict(float)
     counting_oos = 0
-    RDI = remaingDatasetInfo()
+    RDI = remainingDatasetInfo()
     for c,site in enumerate(sorted(chart_data.keys())):
         rem=""
         bgcol = ""
