@@ -32,9 +32,6 @@ if sys.argv[1] == 'parse':
         if space: 
             continue
         print site,"has no disk space left"
-        #if os.path.isfile('remaining_%s.json'%site) and not force:
-        #    print site,"accounted for"
-        #    continue
 
         remainings[site]={}
 
@@ -87,6 +84,10 @@ if sys.argv[1] == 'parse':
         #print "\t",sum_unlocked,"[GB] is not locked by me"
 
         RDI.set(site, remainings[site])
+        try:
+            eosFile('%s/remaining_%s.json'%(monitor_dir,site),'w').write( json.dumps( remainings[site] , indent=2)).close()
+        except:
+            pass
 
         ld = remainings[site].items()
         ld.sort( key = lambda i:i[1]['size'], reverse=True)
