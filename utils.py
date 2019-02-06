@@ -2707,14 +2707,59 @@ class remaingDatasetInfo:
         self.client = mongo_client()
         self.db = self.client.unified.remaingDatasetInfo
     
+    def clean(self):
+        existings = self.db.find()
+        for o in existings:
+            self.db.delete_one({'_id' :o['_id']})
+ 
+    def sync(self, site=None):
+        if not site:
+            print "synching with all site possible"
+            for fn in filter(None,os.popen('ls -1 %s/remaining_*.json | sort '%monitor_dir).read().split('\n')):
+                site = fn.split('_',1)[-1].split('.')[0]
+                if not any([site.endswith(v) for v in ['_MSS','_Export']]):
+                    self.sync( site )
+        else:
+            print "synching on site",site
+            remaining_reasons = json.loads(eosRead('%s/remaining_%s.json'%(monitor_dir,site)))
+            self.set(site, remaining_reasons)
+
     def set(self, site, info):
-        pass
+        existings = self.db.find({'site' : site})
+        updatings = info.keys()
+        n = time.gmtime()
+        now = time.mktime( n )
+        nows = time.asctime( n )
+        ## drop existing datasets that are not to be updated
+        for dataset in sorted(set(existings) - set(updatings)):
+            self.db.delete_one({'site' : site, 'dataset' : dataset})
+        for dataset,dinfo in info.items():
+            content = { 'site' : site,
+                        'dataset' : dataset,
+                        'reasons' : dinfo.get('reasons',[]),
+                        'size' : dinfo.get('size',0),
+                        'time' : now,
+                        'date' : nows
+                    }
+            self.db.update_one({'site' : site, 'dataset' : dataset},
+                               {"$set": content},
+                               upsert = True)
 
     def sites(self):
-        return []
+        r_sites = sorted(set([r['site'] for r in self.db.find() ]))
+        return r_sites
 
     def get(self, site):
-        return {}
+        existings = self.db.find({'site' : site})
+        r = {}
+        for o in existings:
+            r[o['dataset']] = { 'size' : o.get('size',0),
+                                'reasons' : o.get('reasons',[])}
+        return r
+
+    def tell(self, site):
+        info = self.get(site)
+        print json.dumps(info, indent=2)
 
 def isHEPCloudReady(url, limit=20):
     conn = make_x509_conn(url)
