@@ -2715,16 +2715,27 @@ class remaingDatasetInfo:
     def sync(self, site=None):
         if not site:
             print "synching with all site possible"
-            for fn in filter(None,os.popen('ls -1 %s/remaining_*.json | sort '%monitor_dir).read().split('\n')):
-                site = fn.split('_',1)[-1].split('.')[0]
-                if not any([site.endswith(v) for v in ['_MSS','_Export']]):
-                    self.sync( site )
+            sites = []
+            try:
+                r = json.loads(eosRead('%s/remaining.json'%( monitor_dir)))
+                sites = r.keys()
+            except:
+                try:
+                    for fn in filter(None,os.popen('ls -1 %s/remaining_*.json | sort '%monitor_dir).read().split('\n')):
+                        site = fn.split('_',1)[-1].split('.')[0]
+                        if not any([site.endswith(v) for v in ['_MSS','_Export']]):
+                            sites.append( site )
+                except:
+                    pass
+            for site in sites:
+                self.sync( site )
         else:
             print "synching on site",site
             remaining_reasons = json.loads(eosRead('%s/remaining_%s.json'%(monitor_dir,site)))
             self.set(site, remaining_reasons)
 
     def set(self, site, info):
+        if not info: return
         existings = self.db.find({'site' : site})
         updatings = info.keys()
         n = time.gmtime()
