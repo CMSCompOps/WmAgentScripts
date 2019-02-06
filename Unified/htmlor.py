@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 import time
-from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration, getPrepIDs, componentInfo, getAllAgents, sendLog, moduleLock, dataCache, agentInfo, display_time, eosFile, eosRead, StartStopInfo
+from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration, getPrepIDs, componentInfo, getAllAgents, sendLog, moduleLock, dataCache, agentInfo, display_time, eosFile, eosRead, StartStopInfo, remaingDatasetInfo
 import os
 import json
 from collections import defaultdict
@@ -1186,6 +1186,7 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
     all_reasons = set()
     by_reason_all_sites = defaultdict(float)
     counting_oos = 0
+    RDI = remaingDatasetInfo()
     for c,site in enumerate(sorted(chart_data.keys())):
         rem=""
         bgcol = ""
@@ -1204,13 +1205,7 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
             oos_divs_table += "<td>%s%s</td>"%(chart_data[site][2], rem)
             i_oos+=1
 
-            ## open the remaining json
-            try:
-                remaining_reasons = json.loads(eosRead('%s/remaining_%s.json'%(monitor_dir,site)))
-            except:
-                ## fuck it
-                remaining_reasons = {}
-                print "could not open file with reasons of keeping things at",site,"missing information"
+            remaining_reasons = RDI.get( site )
 
             for ds,info in remaining_reasons.items():
                 all_reasons.update( info['reasons'] )

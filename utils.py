@@ -2702,6 +2702,20 @@ class siteInfo:
         #return r_weights.keys()[self._weighted_choice_sub(r_weights.values())]
         return self._pick(sites, self.cpu_pledges)
 
+class remaingDatasetInfo:
+    def __init__(self):
+        self.client = mongo_client()
+        self.db = self.client.unified.remaingDatasetInfo
+    
+    def set(self, site, info):
+        pass
+
+    def sites(self):
+        return []
+
+    def get(self, site):
+        return {}
+
 def isHEPCloudReady(url, limit=20):
     conn = make_x509_conn(url)
     #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
