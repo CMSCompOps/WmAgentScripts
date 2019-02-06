@@ -1387,10 +1387,12 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
                     )
     AI.poll(acting=True)
     JC = JIRAClient()
+    now = time.mktime(time.gmtime())
     #####
     #speed_d = json.loads( eosRead('%s/speed_draining.json'%base_eos_dir))
     speed_d = list(agent_speed_draining())
     component_auto_restart = ["ErrorHandler", "JobSubmitter"]
+    agent_comment_graceperiod = 4 ## ping the JIRA with a comment > N hours
 
     for team,agents in getAllAgents(reqmgr_url).items():
         if not team in ['production','relval','highprio']: continue
@@ -1431,8 +1433,18 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
                                     'description' : det['error_message'],
                                     'label' : 'AgentDoc'
                                 })
+                        elif len(jiras)==1:
+                            j = jiras[0]
+                            ## add a comment to that JIRA : experimental
+                            last_comment_time = time.mktime(time.strptime(j.fields.comment.comments[-1].updated.split('.')[0],
+                                                              "%Y-%m-%dT%H:%M:%S"))
+                            ## 4h at least between pings in the agent comment
+                            if (last_comment_time - now) > (agent_comment_graceperiod*60*60):
+                                JC.comment(j.key, alert_summary)
+                            else:
+                                print "last comment in the JIRA %s was %s ago"%( j.key, display_time(now-last_comment_time))
                         else:
-                            print "the following jiras already exists",','.join([j.key for j in jiras])
+                            print "the following ambiguous jiras already exists",','.join([j.key for j in jiras])
                 
 
             message += '<br><a href="https://cms-logbook.cern.ch/elog/GlideInWMS/?mode=summary&reverse=0&reverse=1&npp=20&subtext=%s">gwms elog</a>, <a href="https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary&reverse=0&reverse=1&npp=20&subtext=%s">elog</a>, <a href="https://its.cern.ch/jira/issues/?jql=text~%s* AND project = CMSCOMPPR AND status != CLOSED">jira</a>'%( short_name, short_name, short_name )
