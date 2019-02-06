@@ -1390,6 +1390,7 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
     #####
     #speed_d = json.loads( eosRead('%s/speed_draining.json'%base_eos_dir))
     speed_d = list(agent_speed_draining())
+    component_auto_restart = []
 
     for team,agents in getAllAgents(reqmgr_url).items():
         if not team in ['production','relval','highprio']: continue
@@ -1422,7 +1423,7 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
                             alert_type = 'heartbeat'
                         alert_summary = '%s %s %s week %s'%( short_name, component, alert_type, this_week)
                         jiras = JC.find( {'summary' : alert_summary })
-                        if len(jiras)==0:
+                        if len(jiras)==0 and not component in component_auto_restart:
                             print "creating a JIRA for", alert_summary
                             JC.create(
                                 {
