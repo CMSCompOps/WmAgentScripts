@@ -1521,7 +1521,7 @@ class moduleLock(object):
             print "checking on %s on %s"%( pid, host)
             on_since = now - lock.get('time',now)
             if on_since > (hours_before_kill*60*60):
-                alarm = "process %s on %s is running since %s : killing"%( pid, host, display_time( on_since))
+                alarm = "process %s on %s for module %s is running since %s : killing"%( pid, host, lock.get('component',None), display_time( on_since))
                 sendLog('heartbeat', alarm, level='critical')
                 os.system('sudo kill -9 %s'%(pid))
                 time.sleep(2)
