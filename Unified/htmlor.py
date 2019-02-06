@@ -1205,7 +1205,13 @@ chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'
             i_oos+=1
 
             ## open the remaining json
-            remaining_reasons = json.loads(eosRead('%s/remaining_%s.json'%(monitor_dir,site)))
+            try:
+                remaining_reasons = json.loads(eosRead('%s/remaining_%s.json'%(monitor_dir,site)))
+            except:
+                ## fuck it
+                remaining_reasons = {}
+                print "could not open file with reasons of keeping things at",site,"missing information"
+
             for ds,info in remaining_reasons.items():
                 all_reasons.update( info['reasons'] )
                 for reason in info['reasons']:
