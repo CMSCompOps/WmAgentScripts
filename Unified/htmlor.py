@@ -397,7 +397,12 @@ Worflow waiting in staging (%d) <a href=logs/transferor/last.log target=_blank>l
         text_bywf += "</ul></div><hr>"
     text_bywf += '</ul>'
 
-    stuck_transfer = json.loads(eosRead('%s/stuck_transfers.json'%monitor_pub_dir))
+    try:
+        stuck_transfer = json.loads(eosRead('%s/stuck_transfers.json'%monitor_pub_dir))
+    except:
+        stuck_transfer = {}
+        print "eos is screwing with us"
+
     html_doc.write("""
 Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransferteam/ target=_blank>dashboard</a> <a href=logs/transferor/last.log target=_blank>log</a> <a href=logs/stagor/last.log target=_blank>postlog</a> <a href=public/stuck_transfers.json target=_blank> %d stuck</a>
 <a href="javascript:showhide('transfer')">[Click to show/hide]</a>
@@ -664,8 +669,18 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     #n_pending_approval = len([item for item in waiting_custodial.values() if 'nodes' in item and not any([node['decided'] for node in item['nodes'].values() ])])
     missing_approval_custodial = json.loads(eosRead('%s/missing_approval_custodial.json'%monitor_dir))
 
-    stuck_custudial = json.loads(eosRead('%s/stuck_custodial.json'%monitor_pub_dir))
-    lagging_custudial = json.loads(eosRead('%s/lagging_custodial.json'%monitor_dir))
+    try:
+        stuck_custudial = json.loads(eosRead('%s/stuck_custodial.json'%monitor_pub_dir))
+    except:
+        stuck_custudial = {}
+        print "eos is screwing with us"
+
+    try:
+        lagging_custudial = json.loads(eosRead('%s/lagging_custodial.json'%monitor_dir))
+    except:
+        lagging_custudial = {}
+        print "eos is screwing with us"
+
     if len(stuck_custudial):
         stuck_string = ', <font color=red>%d appear to be <a href=public/stuck_custodial.json>stuck</a></font>'% len(stuck_custudial)
     else:
