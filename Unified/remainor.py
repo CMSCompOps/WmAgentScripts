@@ -2,7 +2,7 @@ from assignSession import *
 import os
 import json
 #import numpy as np
-from utils import siteInfo, getWorkflowByInput, getWorkflowByOutput, getWorkflowByMCPileup, monitor_dir, monitor_pub_dir, eosRead, eosFile, remaingDatasetInfo
+from utils import siteInfo, getWorkflowByInput, getWorkflowByOutput, getWorkflowByMCPileup, monitor_dir, monitor_pub_dir, eosRead, eosFile, remainingDatasetInfo
 import sys
 import time
 import random 
@@ -12,7 +12,7 @@ url = 'cmsweb.cern.ch'
 
 
 print time.asctime(time.gmtime())
-RDI = remaingDatasetInfo()
+RDI = remainingDatasetInfo()
 
 if sys.argv[1] == 'parse':
     force = False
@@ -124,11 +124,11 @@ else:
     si = siteInfo()
     remainings={}
     for site in RDI.sites():
-        remainings[site] = RDI.get(site)
+        load = RDI.get(site)
         if si.disk[site] : continue
         print site,si.disk[site],"[TB] free",si.quota[site],"[TB] quota"
 
-        if not remainings[site]: continue
+        if not load: continue
         tags = ['pilup','input','output','lock','unlock','tape','stuck-tape','missing-tape']
         for tag in tags:
             v = sum([ info['size'] for ds,info in load.items() if tag in info['reasons']]) / 1024.
