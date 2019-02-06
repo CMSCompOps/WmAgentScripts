@@ -579,7 +579,7 @@ def actor(url,options=None):
                         wfi.sendLog('actor','ACDC created for task %s. Actions taken \n%s'%(fulltaskname,json.dumps(actions)))
                         jira_comment = "%s created ACDC for task %s with action %s"%( 
                             action_list[wfname].get( 'user', 'unified'),
-                            task , 
+                            task.split('/')[-1] , 
                             json.dumps(actions),
                         )
                         reason = action_list[wfname].get( 'Reason', None)
