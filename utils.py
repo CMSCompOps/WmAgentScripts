@@ -2702,10 +2702,10 @@ class siteInfo:
         #return r_weights.keys()[self._weighted_choice_sub(r_weights.values())]
         return self._pick(sites, self.cpu_pledges)
 
-class remaingDatasetInfo:
+class remainingDatasetInfo:
     def __init__(self):
         self.client = mongo_client()
-        self.db = self.client.unified.remaingDatasetInfo
+        self.db = self.client.unified.remainingDatasetInfo
     
     def clean(self):
         existings = self.db.find()
@@ -2736,7 +2736,7 @@ class remaingDatasetInfo:
 
     def set(self, site, info):
         if not info: return
-        existings = self.db.find({'site' : site})
+        existings = [o['dataset'] for o in self.db.find({'site' : site})]
         updatings = info.keys()
         n = time.gmtime()
         now = time.mktime( n )
