@@ -2,6 +2,7 @@ import os
 import httplib
 import ssl
 import json
+from utils import mongo_client
 
 class wtcClient(object):
     def __init__(self):
@@ -14,6 +15,11 @@ class wtcClient(object):
             self.key_info = json.load(key_file)
         self._make_conn()
 
+        ## the Mongodb part
+        self.client = mongo_client()
+        self.db = self.client['wtc-console'].actions
+        
+
     def _make_conn(self):
         self.conn = httplib.HTTPSConnection(self.key_info['url'], self.key_info['port'],
                                             context=ssl._create_unverified_context())
@@ -24,15 +30,31 @@ class wtcClient(object):
 
     def get_actions(self):
         try:
-            return self._get_actions()
+            actions_1 = self._get_actions()
         except:
             try:
                 self._make_conn()
-                return self._get_actions()
+                actions_1 = self._get_actions()
             except Exception as e:
                 print str(e)
-                return None
-            
+
+        try:
+            ## some massaging of the format has to be done, maybe, depends on the format in mongodb from the new console
+            actions_2 = self.db.find({'acted' : 0})
+        except Exception as e::
+            print str(e)
+
+        duplicates = set(actions_1.keys()) and set(actions_2.keys())
+        if len(duplicates)!=0:
+            print "There are duplicated action being dropped"
+            for a in duplicates:
+                if a in actions_1: actions_1.pop(a)
+                if a in actions_2: actions_2.pop(a)
+                
+        actions = actions_1
+        actions.update( actions_2 )
+        return actions
+
     def _get_actions(self):
         self.conn.request(
             'GET', 
@@ -46,15 +68,24 @@ class wtcClient(object):
         
     def remove_action(self, *args):
         try:
-            return self._remove_action(*args)
+            r_1 = self._remove_action(*args)
         except:
             try:
                 self._make_conn()
-                return self._remove_action(*args)
+                r_1 = self._remove_action(*args)
             except Exception as e:
                 print str(e)
-                return None
-            
+                r_1 = []
+        r_2 = []
+        for w in args:
+            try:
+                self.db.update({'workflow' : w},
+                               {'$set' : {'acted' :1}})
+                r_2.append(True)
+            except Exception as e:
+                r_2.append(False)
+        return r_1+r_2
+
     def _remove_action(self, *args):
 
         self.conn.request(
