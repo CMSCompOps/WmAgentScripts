@@ -917,9 +917,6 @@
   }, 
   "PhaseIIMTDTDRAutumn18wmLHEGS": {
     "lumisize": -1, 
-    "toDDM": [
-      "FEVT"
-    ], 
     "fractionpass": 0.95, 
     "go": true, 
     "overflow": {
@@ -1220,12 +1217,9 @@
     "secondary_AAA": false, 
     "maxcopies": 1, 
     "lumisize": -1, 
-    "toDDM": [
-      "FEVT"
-    ], 
+    "resize": "auto", 
     "fractionpass": 0.95, 
     "go": true, 
-    "tune": true, 
     "secondaries": {
       "/MinBias_TuneCP5_14TeV-pythia8/PhaseIIMTDTDRAutumn18GS-103X_upgrade2023_realistic_v2-v1/GEN-SIM": {
         "SiteWhitelist": [
@@ -1235,7 +1229,7 @@
         ]
       }
     }, 
-    "resize": "auto"
+    "tune": true
   }, 
   "RunIILowPUAutumn18GS": {
     "lumisize": -1, 
@@ -1548,9 +1542,6 @@
   }, 
   "PhaseIIMTDTDRAutumn18GS": {
     "lumisize": -1, 
-    "toDDM": [
-      "FEVT"
-    ], 
     "resize": "auto", 
     "fractionpass": 0.95, 
     "go": true, 
