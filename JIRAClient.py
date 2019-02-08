@@ -122,11 +122,14 @@ class JIRAClient:
             try:
                 print jid,"to",status
                 self.client.transition_issue( jid, to)
+                return True
             except Exception as e:
                 print "transition to",status,"not successful"
                 print str(e)
+                return False
         else:
             print "transition to",status,"not known"
+        return False
 
     def progress(self, jid):
         self._transition('progress', jid)
