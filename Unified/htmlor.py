@@ -1452,8 +1452,7 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
                         elif len(jiras)==1:
                             j = jiras[0]
                             ## add a comment to that JIRA : experimental
-                            last_comment_time = time.mktime(time.strptime(j.fields.comment.comments[-1].updated.split('.')[0],
-                                                              "%Y-%m-%dT%H:%M:%S")) if hasattr(j.fields, 'comment') else now
+                            last_comment_time = JC.time_to_time(j.fields.comment.comments[-1].updated) if hasattr(j.fields, 'comment') else now
                             ## 4h at least between pings in the agent comment
                             if (last_comment_time - now) > (agent_comment_graceperiod*60*60):
                                 JC.comment(j.key, alert_summary)

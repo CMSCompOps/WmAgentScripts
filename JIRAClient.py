@@ -1,5 +1,6 @@
 import sys,os,json
 import jira
+import time
 
 class JIRAClient:
     def __init__(self, debug=False,cookie=None):
@@ -105,6 +106,13 @@ class JIRAClient:
     def get(self, jid):
         return self.client.issue( jid )
 
+    def time_to_time(self, time_str):
+        t = time.mktime(time.strptime( time_str.split('.')[0], "%Y-%m-%dT%H:%M:%S"))
+        return t
+
+    def created(self,j):
+        return self.time_to_time( j.fields.created )
+
     def _transition(self, status, jid):
         to = {'closed' : '2',
               'reopened' : '3',
@@ -138,9 +146,9 @@ if __name__ == "__main__":
     ii = JC.find({'prepid' : 'SUS-RunIISummer16MiniAODv3-00261'})
     print [io.key for io in ii]
 
-    JC.reopen('CMSCOMPPR-4518')
-    JC.progress('CMSCOMPPR-4518')
-    JC.close('CMSCOMPPR-4518')
+    #JC.reopen('CMSCOMPPR-4518')
+    #JC.progress('CMSCOMPPR-4518')
+    #JC.close('CMSCOMPPR-4518')
 
     #JC.create( {
     #    'priority' : 120000,
@@ -150,4 +158,5 @@ if __name__ == "__main__":
     #           do = False)
     
     ii = JC.find({'summary' : 'vocms0253.cern.ch heartbeat issues'})
-    print [io.key for io in ii]
+
+    print [time.asctime(time.gmtime(JC.created(io))) for io in sorted(ii, key=lambda o:JC.created(o))]
