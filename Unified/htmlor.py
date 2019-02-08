@@ -1407,7 +1407,7 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
     #####
     #speed_d = json.loads( eosRead('%s/speed_draining.json'%base_eos_dir))
     speed_d = list(agent_speed_draining())
-    component_auto_restart = ["ErrorHandler", "JobSubmitter"]
+    component_auto_restart = ["ErrorHandler", "JobSubmitter", "CouchServer" ]
     agent_comment_graceperiod = 4 ## ping the JIRA with a comment > N hours
 
     for team,agents in getAllAgents(reqmgr_url).items():
@@ -1437,30 +1437,34 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
                         message += '<br>%s'% det['error_message']
                         this_week = str(int(time.strftime("%W", time.gmtime())))
                         alert_type = agent['status']
+                        if component in component_auto_restart: continue
                         if 'thread heartbeat' in det['error_message']:
                             alert_type = 'heartbeat'
-                        alert_summary = '%s %s %s week %s'%( short_name, component, alert_type, this_week)
+
+                        #alert_summary = '%s %s %s week %s'%( short_name, component, alert_type, this_week)
+                        alert_summary = '%s %s %s'%( short_name, component, alert_type)
+                        #alert_summary = '%s %s issue'%( short_name, component )
                         jiras = JC.find( {'summary' : alert_summary })
-                        if len(jiras)==0 and not component in component_auto_restart:
+                        if len(jiras)==0:
                             print "creating a JIRA for", alert_summary
-                            JC.create(
+                            j = JC.create(
                                 {
                                     'summary' : alert_summary,
                                     'description' : det['error_message'],
                                     'label' : 'AgentDoc'
                                 })
-                        elif len(jiras)==1:
-                            j = jiras[0]
-                            ## add a comment to that JIRA : experimental
-                            last_comment_time = JC.time_to_time(j.fields.comment.comments[-1].updated) if hasattr(j.fields, 'comment') else now
-                            ## 4h at least between pings in the agent comment
-                            if (last_comment_time - now) > (agent_comment_graceperiod*60*60):
-                                JC.comment(j.key, alert_summary)
-                            else:
-                                print "last comment in the JIRA %s was %s ago"%( j.key, display_time(now-last_comment_time))
                         else:
-                            print "the following ambiguous jiras already exists",','.join([j.key for j in jiras])
-                
+                            ## find the last such, and add a comment after the grace period
+                            j = sorted(jiras, key= lambda o:JC.created(o))[-1]
+                            reopened = JC.reopen(j.key)
+                            ## add a comment to that JIRA : experimental
+                            last_comment_time = JC.time_to_time(j.fields.comment.comments[-1].updated) if hasattr(j.fields, 'comment') else JC.created(j)
+                            seconds_since = now - last_comment_time
+                            ## 4h at least between pings in the agent comment
+                            if reopened or (seconds_since > (agent_comment_graceperiod*60*60)):
+                                JC.comment(j.key, det['error_message'])
+                            else:
+                                print "last comment in the JIRA %s was %s ago"%( j.key, display_time(seconds_since))
 
             message += '<br><a href="https://cms-logbook.cern.ch/elog/GlideInWMS/?mode=summary&reverse=0&reverse=1&npp=20&subtext=%s">gwms elog</a>, <a href="https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary&reverse=0&reverse=1&npp=20&subtext=%s">elog</a>, <a href="https://its.cern.ch/jira/issues/?jql=text~%s* AND project = CMSCOMPPR AND status != CLOSED">jira</a>'%( short_name, short_name, short_name )
             message += '<br>Unified status : %s'% uas
