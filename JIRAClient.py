@@ -94,6 +94,10 @@ class JIRAClient:
             else:
                 query += ' AND status = %s'%(status)
 
+        if specifications.get('label'):
+            label = specifications['label']
+            query += ' AND labels = %s'%label
+
         return self._find( query )
 
     def comment(self, key, comment):
