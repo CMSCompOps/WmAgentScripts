@@ -136,13 +136,13 @@ class JIRAClient:
         return False
 
     def progress(self, jid):
-        self._transition('progress', jid)
+        return self._transition('progress', jid)
 
     def reopen(self, jid):
-        self._transition('reopened', jid)
+        return self._transition('reopened', jid)
 
     def close(self, jid):
-        self._transition('closed', jid)
+        return self._transition('closed', jid)
 
 if __name__ == "__main__":
     JC = JIRAClient(cookie = 'jira.txt')
