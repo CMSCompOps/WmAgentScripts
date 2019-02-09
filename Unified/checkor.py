@@ -862,7 +862,7 @@ class CheckBuster(threading.Thread):
                         print "the highest completion fraction per run for",out," is",highest_fraction
                         print "the average completion fraction per run for",out," is",average_fraction
                         percent_avg_completions[out] = average_fraction
-                        percent_completions[out] = lowest_fraction
+                        # percent_completions[out] = lowest_fraction
                 
         time_point("more detailed observed statistics", sub_lap=True)
 
