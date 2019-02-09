@@ -663,22 +663,34 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     last_week =  int(time.strftime("%W",time.gmtime(now - ( 7*24*60*60))))
 
     all_locks = [l.item.split('#')[0] for l in session.query(Lock).filter(Lock.lock == True).all()]
-    waiting_custodial = json.loads(eosRead('%s/waiting_custodial.json'%monitor_dir))
+    try:
+        waiting_custodial = json.loads(eosRead('%s/waiting_custodial.json'%monitor_dir))
+    except Exception as e:
+        print str(e)
+        print "eos is screwing with us"
+        waiting_custodial = {}
     all_pending_approval_custodial = dict([(k,item) for k,item in waiting_custodial.items() if 'nodes' in item and not any([node['decided'] for node in item['nodes'].values()]) ])
     n_pending_approval = len( all_pending_approval_custodial )
     #n_pending_approval = len([item for item in waiting_custodial.values() if 'nodes' in item and not any([node['decided'] for node in item['nodes'].values() ])])
-    missing_approval_custodial = json.loads(eosRead('%s/missing_approval_custodial.json'%monitor_dir))
+    try:
+        missing_approval_custodial = json.loads(eosRead('%s/missing_approval_custodial.json'%monitor_dir))
+    except Exception as e:
+        print str(e)
+        print "eos is screwing with us"
+        missing_approval_custodial = {}
 
     try:
         stuck_custudial = json.loads(eosRead('%s/stuck_custodial.json'%monitor_pub_dir))
-    except:
+    except Exception as e:
         stuck_custudial = {}
+        print str(e)
         print "eos is screwing with us"
 
     try:
         lagging_custudial = json.loads(eosRead('%s/lagging_custodial.json'%monitor_dir))
-    except:
+    except Exception as e:
         lagging_custudial = {}
+        print str(e)
         print "eos is screwing with us"
 
     if len(stuck_custudial):
