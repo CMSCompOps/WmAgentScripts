@@ -111,7 +111,12 @@ class JIRAClient:
         return self.client.issue( jid )
 
     def time_to_time(self, time_str):
-        t = time.mktime(time.strptime( time_str.split('.')[0], "%Y-%m-%dT%H:%M:%S"))
+        ts,aux = time_str.split('.')
+        if '+' in aux:
+            s = int(aux.split('+')[-1])/100.
+        else:
+            s = -int(aux.split('-')[-1])/100.
+        t = time.mktime(time.strptime( ts, "%Y-%m-%dT%H:%M:%S")) - s*60*60
         return t
 
     def created(self,j):
