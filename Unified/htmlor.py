@@ -1474,6 +1474,7 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
                             seconds_since = now - last_comment_time
                             ## 4h at least between pings in the agent comment
                             if reopened or (seconds_since > (agent_comment_graceperiod*60*60)):
+                                print l.key,reopened,now,last_comment_time,JC.created(j),seconds_since, agent_comment_graceperiod
                                 JC.comment(j.key, det['error_message'])
                             else:
                                 print "last comment in the JIRA %s was %s ago"%( j.key, display_time(seconds_since))
