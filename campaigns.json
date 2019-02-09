@@ -832,6 +832,13 @@
     "lumisize": -1, 
     "maxcopies": 1
   }, 
+  "RunIIWinter19CosmicGS": {
+    "lumisize": -1, 
+    "tune": true, 
+    "go": false, 
+    "resize": "auto", 
+    "fractionpass": 0.95
+  }, 
   "RunIISummer16NanoAODv4": {
     "maxcopies": 1, 
     "lumisize": -1, 
@@ -2115,6 +2122,15 @@
     "tune": true, 
     "resize": "auto", 
     "fractionpass": 0.95
+  }, 
+  "RunIIWinter19CosmicDR": {
+    "secondary_AAA": false, 
+    "maxcopies": 1, 
+    "lumisize": -1, 
+    "tune": true, 
+    "go": false, 
+    "fractionpass": 0.95, 
+    "resize": "auto"
   }, 
   "2019GEMUpg14": {
     "go": false
