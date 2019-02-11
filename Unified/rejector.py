@@ -13,7 +13,7 @@ import os
 def rejector(url, specific, options=None):
 
     
-    up = componentInfo(soft=['wtc'])
+    up = componentInfo(soft=['wtc','jira'])
     if not up.check(): return
 
     if specific and specific.startswith('/'):

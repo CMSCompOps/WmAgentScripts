@@ -14,7 +14,7 @@ def htmlor( caller = ""):
     mlock = moduleLock(silent=True)
     if mlock(): return
 
-    up = componentInfo(soft=['mcm','wtc'])
+    up = componentInfo(soft=['mcm','wtc','jira'])
     if not up.check(): return 
 
     for backup in ['statuses.json','siteInfo.json','listProtectedLFN.txt','equalizor.json']:
@@ -1414,7 +1414,7 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
                     wake_up_draining=True
                     )
     AI.poll(acting=True)
-    JC = JIRAClient()
+    JC = JIRAClient() if up.status.get('jira',True) else None
     now = time.mktime(time.gmtime())
     #####
     #speed_d = json.loads( eosRead('%s/speed_draining.json'%base_eos_dir))
@@ -1449,6 +1449,7 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
                         message += '<br>%s'% det['error_message']
                         this_week = str(int(time.strftime("%W", time.gmtime())))
                         alert_type = agent['status']
+                        if not JC: continue
                         if component in component_auto_restart: continue
                         if 'thread heartbeat' in det['error_message']:
                             alert_type = 'heartbeat'

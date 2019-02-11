@@ -1175,7 +1175,7 @@ class componentCheck(threading.Thread):
         threading.Thread.__init__(self)
         self.daemon = True
         if soft is None:
-            self.soft = ['mcm','wtc', 'mongo'] ##components that are not mandatory
+            self.soft = ['mcm','wtc', 'mongo' , 'jira'] ##components that are not mandatory
         else:
             self.soft = soft
         self.block = block
@@ -1187,7 +1187,8 @@ class componentCheck(threading.Thread):
             'cmsr' : False,
             'wtc' : False,
             'eos' : False,
-            'mongo' : False
+            'mongo' : False,
+            'jira' : False
             }
         self.code = 0
         self.keep_trying = keep_trying
@@ -1253,6 +1254,12 @@ class componentCheck(threading.Thread):
     def check_mongo(self):
         db = agentInfoDB()
         infos = [a['status'] for a in db.find()]
+        
+    def check_jira(self):
+        from JIRAClient import JIRAClient
+        JC = JIRAClient()
+        opened = JC.find({'status': 'OPEN'})
+        
         
     def check(self):
         ecode = 120

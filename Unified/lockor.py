@@ -39,7 +39,7 @@ mlock = moduleLock()
 if mlock(): sys.exit(0)
 
 use_mcm=True
-up = componentInfo(soft=['mcm','wtc'])
+up = componentInfo(soft=['mcm','wtc','jira'])
 if not up.check(): sys.exit(0)
 
 use_mcm = up.status['mcm']

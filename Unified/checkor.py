@@ -115,7 +115,7 @@ def checkor(url, spec=None, options=None):
     SI = siteInfo()
     CI = campaignInfo()
     mcm = McMClient(dev=False) if use_mcm else None
-    JC = JIRAClient()
+    JC = JIRAClient() if up.status.get('jira',False) else None
 
     ## retrieve bypass and onhold configuration
     bypasses = []
@@ -1450,7 +1450,7 @@ class CheckBuster(threading.Thread):
             if 'recovered' in self.to_status and 'manual' in self.to_status:
                 pop_a_jira = True
             ## create a jira in certain cases
-            if pop_a_jira:
+            if pop_a_jira and JC:
                 jiras = JC.find( {'prepid' : wfi.request['PrepID']})
                 j_comment = None
                 j = None
