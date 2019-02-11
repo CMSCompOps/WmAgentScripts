@@ -37,22 +37,6 @@
     "fractionpass": 0.95, 
     "go": true
   }, 
-  "RunIISpring25DR": {
-    "maxcopies": 1, 
-    "lumisize": -1, 
-    "resize": "auto", 
-    "fractionpass": 0.95, 
-    "go": false, 
-    "secondaries": {
-      "/MinBias_13TeV-pythia8/RunIIFall17GS-93X_mc2017_realistic_v3-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_XY_ABCD", 
-          "T2_AB_CDEF"
-        ]
-      }
-    }, 
-    "tune": true
-  }, 
   "HINppWinter17GS": {
     "parameters": {
       "MergedLFNBase": "/store/himc", 
@@ -2949,22 +2933,6 @@
     ], 
     "go": true, 
     "overflow": {}, 
-    "tune": true
-  }, 
-  "RunIIFall25DR": {
-    "maxcopies": 1, 
-    "lumisize": -1, 
-    "resize": "auto", 
-    "fractionpass": 0.95, 
-    "go": false, 
-    "secondaries": {
-      "/MinBias_13TeV-pythia8/RunIIFall17GS-93X_mc2017_realistic_v3-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_XY_ABCD", 
-          "T2_AB_CDEF"
-        ]
-      }
-    }, 
     "tune": true
   }, 
   "RunIIAutumn18DR": {
