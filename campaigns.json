@@ -37,6 +37,22 @@
     "fractionpass": 0.95, 
     "go": true
   }, 
+  "RunIISpring25DR": {
+    "maxcopies": 1, 
+    "lumisize": -1, 
+    "resize": "auto", 
+    "fractionpass": 0.95, 
+    "go": false, 
+    "secondaries": {
+      "/MinBias_13TeV-pythia8/RunIIFall17GS-93X_mc2017_realistic_v3-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_XY_ABCD", 
+          "T2_AB_CDEF"
+        ]
+      }
+    }, 
+    "tune": true
+  }, 
   "HINppWinter17GS": {
     "parameters": {
       "MergedLFNBase": "/store/himc", 
@@ -835,7 +851,7 @@
   "RunIIWinter19CosmicGS": {
     "lumisize": -1, 
     "tune": true, 
-    "go": false, 
+    "go": true, 
     "resize": "auto", 
     "fractionpass": 0.95
   }, 
@@ -1312,13 +1328,13 @@
     }, 
     "lumisize": -1, 
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "secondaries": {
       "/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer16FSPremix-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v4-v1/GEN-SIM-RECO": {
         "SecondaryLocation": [
           "T2_BR_SPRACE"
         ], 
-        "secondary_AAA": true
+        "secondary_AAA": false
       }
     }
   }, 
@@ -2128,7 +2144,7 @@
     "maxcopies": 1, 
     "lumisize": -1, 
     "tune": true, 
-    "go": false, 
+    "go": true, 
     "fractionpass": 0.95, 
     "resize": "auto"
   }, 
@@ -2933,6 +2949,22 @@
     ], 
     "go": true, 
     "overflow": {}, 
+    "tune": true
+  }, 
+  "RunIIFall25DR": {
+    "maxcopies": 1, 
+    "lumisize": -1, 
+    "resize": "auto", 
+    "fractionpass": 0.95, 
+    "go": false, 
+    "secondaries": {
+      "/MinBias_13TeV-pythia8/RunIIFall17GS-93X_mc2017_realistic_v3-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_XY_ABCD", 
+          "T2_AB_CDEF"
+        ]
+      }
+    }, 
     "tune": true
   }, 
   "RunIIAutumn18DR": {
