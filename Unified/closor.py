@@ -150,7 +150,8 @@ def closor(url, specific=None, options=None):
     if userLock(): return
     mlock  = moduleLock()
     if mlock(): return
-    if not componentInfo().check(): return
+    cup = componentInfo(soft=['mcm','wtc'])
+    if not up.check(): return
 
 
     UC = unifiedConfiguration()
@@ -234,7 +235,7 @@ def closor(url, specific=None, options=None):
         #print "Waiting on closing threads",time.asctime(time.gmtime())
         time.sleep(5)
 
-    JC = JIRAClient()
+    JC = JIRAClient() if up.status.get('jira',False) else None
     print len(run_threads.threads),"finished thread to gather information from"
     failed_threads = 0
     for to in run_threads.threads:
@@ -253,7 +254,7 @@ def closor(url, specific=None, options=None):
                 
         if to.to_status:
             to.wfo.status = to.to_status
-            if to.to_status == "done" and to.wfi:
+            if JC and to.to_status == "done" and to.wfi:
                 jiras = JC.find({"prepid" : to.wfi.request['PrepID']})
                 for jira in jiras:
                     JC.close(jira.key)
