@@ -42,7 +42,7 @@ if N_for_cloud:
 #os.system('Unified/assignor.py --from_status staging RunIISummer16DR80Premix')
 #os.system('Unified/assignor.py --from_status staging RunIISummer16DR80-')
 
-up = componentInfo(soft=['mcm','wtc'])                                 
+up = componentInfo(soft=['mcm','wtc','jira'])
 if not up.check(): sys.exit(0)
 
 url = reqmgr_url

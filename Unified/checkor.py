@@ -115,7 +115,7 @@ def checkor(url, spec=None, options=None):
     SI = siteInfo()
     CI = campaignInfo()
     mcm = McMClient(dev=False) if use_mcm else None
-    JC = JIRAClient() if up.status.get('jira',True) else None
+    JC = JIRAClient() if up.status.get('jira',False) else None
 
     ## retrieve bypass and onhold configuration
     bypasses = []
