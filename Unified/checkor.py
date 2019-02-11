@@ -420,7 +420,7 @@ class CheckBuster(threading.Thread):
         # and send things back/forward if necessary.
         wfo.wm_status = wfi.request['RequestStatus']
 
-        if wfo.wm_status == 'closed-out' and not wfo.name in exceptions:
+        if wfo.wm_status in ['closed-out','announced'] and not wfo.name in exceptions:
             ## manually closed-out
             wfi.sendLog('checkor',"%s is already %s, setting close"%( wfo.name , wfo.wm_status))
             self.to_status = 'close'
