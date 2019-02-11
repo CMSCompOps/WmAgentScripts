@@ -1,6 +1,6 @@
 {
  "email_destination" : { 
-   "value" : ["matteoc@fnal.gov","thong@caltech.edu", "svenja.pflitsch@desy.de"],
+   "value" : ["matteoc@fnal.gov","thong@caltech.edu", "svenja.pflitsch@desy.de", "snorberg@fnal.gov"],
    "description" : "The list of people that get the emails notifications"
  },
  "busy_agent_fraction" : {
