@@ -28,6 +28,58 @@ class wtcClient(object):
         ## get something from the machine
         pass
 
+    
+    def add(self, wfn, action, params):
+        spec_acdc = { 'Action' : 'acdc',
+                      'Parameters' : { 'TaskName1' : {
+                          'sites' : [], ## [],'auto'
+                          'memory' : 12000,
+                          'multicore' : 5,
+                          'split' : 'x3', #Same, max,'','x5',
+                          'xrootd' : 'enabled', #'disabled'
+                      },
+                                       'TaskName2' : {}
+                                   }
+                  }
+        spec_clone = { 'Action' : 'clone',
+                       'Parameters' : {
+                           'comment' : '', ## optional
+                           'memory' : 12000,
+                           'split' : 'x3', #Same, max,'','x5',
+                       }
+                   }
+        spec_hold = { 'Action' : 'special',
+                      'Parameters' : {
+                          'action' : 'onhold' #on-hold
+                          }
+                  }
+        spec_force = { 'Action' : 'special',
+                       'Parameters' : {
+                          'action' : 'bypass' # by-pass 
+                          }
+                  }
+
+    def _add(self, wfn, action, params):
+        already = self.db.find_one({'workflow' : wfn})
+        if already:
+            if already.get('Action', None) != action:
+                print "inconsistent action on"wfn
+                return
+            already['Parameters'].update( params )
+            # if it exists, updat the Parameters dictionnary
+            self.db.update_one(
+                {'_id' : already.pop('_id')},
+                {'$set' : already}
+                )
+        else:
+            doc = { 'workflow' : wfn,
+                    'Action' : action,
+                    'Parameters' : params }
+            self.db.insert_one( doc )
+
+                    
+        
+        
     def get_actions(self):
         try:
             actions_1 = self._get_actions()
@@ -41,7 +93,7 @@ class wtcClient(object):
         try:
             ## some massaging of the format has to be done, maybe, depends on the format in mongodb from the new console
             actions_2 = self.db.find({'acted' : 0})
-        except Exception as e::
+        except Exception as e:
             print str(e)
 
         duplicates = set(actions_1.keys()) and set(actions_2.keys())
