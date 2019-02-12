@@ -150,7 +150,7 @@ def closor(url, specific=None, options=None):
     if userLock(): return
     mlock  = moduleLock()
     if mlock(): return
-    cup = componentInfo(soft=['mcm','wtc'])
+    up = componentInfo(soft=['mcm','wtc'])
     if not up.check(): return
 
 
