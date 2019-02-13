@@ -17,19 +17,23 @@ class wtcClient(object):
 
         ## the Mongodb part
         self.client = mongo_client()
-        self.db = self.client['wtc-console'].actions
+        collection = 'wtc-console'#'wtc-console-dev'
+        self.adb = self.client[collection].action
+        self.tdb = self.client[collection].task_action
         
 
     def _make_conn(self):
         self.conn = httplib.HTTPSConnection(self.key_info['url'], self.key_info['port'],
                                             context=ssl._create_unverified_context())
         
-    def check(self):
-        ## get something from the machine
-        pass
-
-    
-    def add(self, wfn, action, params):
+    def _old_schema(self, task_a):
+        return {
+            'Action' : task_a['parameters']['action'],
+            'Parameters' : task_a['parameters']
+        }
+        
+    def _transform(self):
+        ## old expected spec in actor
         spec_acdc = { 'Action' : 'acdc',
                       'Parameters' : { 'TaskName1' : {
                           'sites' : [], ## [],'auto'
@@ -59,53 +63,91 @@ class wtcClient(object):
                           }
                   }
 
-    def _add(self, wfn, action, params):
-        already = self.db.find_one({'workflow' : wfn})
+        actions_1 = self._get_actions()
+        now = time.mktime(time.gmtime())
+        for action in actions_1:
+            do = action.get('Action',None)
+            if do == 'acdc':
+                for task,params in action.get('Parameters',{}).items():
+                    ## create a doc per such item
+                    doc = { 'name' : task,
+                            'workflow' : task.split('/')[1],
+                            'acted' : 0,
+                            'timestamp' : now,
+                            'parameters' : params
+                    }
+                    self.tdb.update_one({'name' : task,
+                                         'acted' : 0},
+                                        {'$set' : doc},
+                                        upsert=True)
+            elif do == 'clone':
+                pass
+            elif do == 'special':
+                pass
+
+    def clean(self):
+        aa = self.tdb.find()
+        goon = True
+        while goon:
+            goon = False
+            for a in aa:
+                f = [o for o in self.tdb.find({'name' : a['name']})]
+                if len(f)>1:
+                    print "yup",[o for o in f]
+                    f = sorted(f, key= lambda o:o['timestamp'])
+                    goon = True
+                    #self.tdb.delete_one({'_id': f[1]['_id']})
+                    break
+                else:
+                    print "unique entry for",a['name']
+                    
+
+    def check(self):
+        pass
+    
+    def add(self, wfn, action, params):
+        pass
+
+    def _add(self, task, action, params):
+        now = time.mktime(time.gmtime())
+        wfn = task.split('/')[1]
+        already = self.db.find_one({'name' : task, 'acted' : 0})
         if already:
-            if already.get('Action', None) != action:
-                print "inconsistent action on"wfn
+            if already.get('action', None) != action:
+                print "inconsistent action on",wfn
                 return
-            already['Parameters'].update( params )
+            already['parameters'].update( params )
             # if it exists, updat the Parameters dictionnary
             self.db.update_one(
                 {'_id' : already.pop('_id')},
                 {'$set' : already}
                 )
         else:
-            doc = { 'workflow' : wfn,
-                    'Action' : action,
-                    'Parameters' : params }
+            doc = { 
+                'name' : task,
+                'workflow' : wfn,
+                'acted' : 0,
+                'timestamp' : now,
+                'action' : action,
+                'parameters' : params }
             self.db.insert_one( doc )
 
                     
         
         
     def get_actions(self):
-        try:
-            actions_1 = self._get_actions()
-        except:
-            try:
-                self._make_conn()
-                actions_1 = self._get_actions()
-            except Exception as e:
-                print str(e)
+        actions = self.tdb.find({'acted' : 0})
+        ## this direct return is what we want eventually
+        ## but it requires deep changes in actor
+        #return actions #
+        ## for now, transform into the expected action schema
+        by_wf = {}
+        for a in actions:
+            t_a= self._old_schema(a)
+            by_wf.setdefault(a['workflow'], t_a)['Parameters'].update( t_a.get('Parameters',{}))
+            
+        return by_wf
 
-        try:
-            ## some massaging of the format has to be done, maybe, depends on the format in mongodb from the new console
-            actions_2 = self.db.find({'acted' : 0})
-        except Exception as e:
-            print str(e)
-
-        duplicates = set(actions_1.keys()) and set(actions_2.keys())
-        if len(duplicates)!=0:
-            print "There are duplicated action being dropped"
-            for a in duplicates:
-                if a in actions_1: actions_1.pop(a)
-                if a in actions_2: actions_2.pop(a)
-                
-        actions = actions_1
-        actions.update( actions_2 )
-        return actions
 
     def _get_actions(self):
         self.conn.request(
