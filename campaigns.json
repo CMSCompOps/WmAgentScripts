@@ -2199,11 +2199,17 @@
     "fractionpass": 0.95, 
     "go": true, 
     "secondaries": {
-      "/MinBias_TuneCP2_13TeV-pythia8/RunIIFall17FSPremix-PUMoriond17_94X_mc2017_realistic_v11-v1/GEN-SIM-RECO": {
+      "/MinBias_TuneCP2_13TeV-pythia8/RunIIFall17FSPremixPUMoriond17_94X_mc2017_realistic_v11-v1/GEN-SIM-RECO": {
         "SiteWhitelist": [
           "T1_US_FNAL", 
           "T2_BE_IIHE", 
           "T2_AT_Vienna"
+        ]
+      }, 
+      "/MinBias_TuneCP2_13TeV-pythia8/RunIIAutumn18FSPremix-PUAutumn18_102X_mc2017_realistic_v5-v1/GEN-SIM-RECO": {
+        "SiteWhitelist": [
+          "T1_DE_KIT", 
+          "T2_CH_CERN"
         ]
       }
     }, 
