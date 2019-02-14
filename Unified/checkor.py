@@ -617,7 +617,8 @@ class CheckBuster(threading.Thread):
         task_outputs = {}
         for task,outs in output_per_task.items():
             for out in outs:
-                task_outputs[out] = task
+                #task_outputs[out] = task
+                task_outputs[out] = wfi.request.get(task,{}).get('TaskName',task)
 
 
         ## lumi_expected is constant over all tasks
@@ -662,7 +663,9 @@ class CheckBuster(threading.Thread):
                         a_task = wfi.request[ tname_dict[mother_task] ]
                 else:
                     break
-
+        
+        print event_expected_per_task
+        print task_outputs
         time_point("expected statistics", sub_lap=True)
 
         running_log = filter(lambda change : change["Status"] in ["running-open","running-closed"],wfi.request['RequestTransition'])
@@ -794,19 +797,27 @@ class CheckBuster(threading.Thread):
 
 
         time_point("statistics thresholds", sub_lap=True)
-
+        expectedL = defaultdict(int)
+        expectedN = defaultdict(int)
+        producedL = defaultdict(int)
+        producedN = defaultdict(int)
         for output in wfi.request['OutputDatasets']:
             event_count,lumi_count = getDatasetEventsAndLumis(dataset=output)
+            producedL[output] = lumi_count
+            producedN[output] = event_count
             events_per_lumi[output] = event_count/float(lumi_count) if lumi_count else 100
             percent_completions[output] = 0.
 
             if lumi_expected:
                 wfi.sendLog('checkor', "lumi completion %s expected %d for %s"%( lumi_count, lumi_expected, output))
                 percent_completions[output] = lumi_count / float( lumi_expected )
+                expectedL[output] = lumi_expected
 
 
-            output_event_expected = event_expected_per_task.get(task_outputs.get(output,'NoTaskFound'), 0)
+            output_event_expected = event_expected_per_task.get(task_outputs.get(output,'NoTaskFound'), event_expected)
+            
             if output_event_expected:
+                expectedN[output] = output_event_expected
                 e_fraction = float(event_count) / float( output_event_expected )
                 if e_fraction > percent_completions[output]:
                     percent_completions[output] = e_fraction
@@ -1251,7 +1262,10 @@ class CheckBuster(threading.Thread):
         for output in wfi.request['OutputDatasets']:
             if not output in put_record['datasets']: put_record['datasets'][output] = {}
             rec = put_record['datasets'][output]
-            #rec['percentage'] = float('%.2f'%(percent_completions[output]*100))
+            rec['expectedL'] = expectedL[output]
+            rec['expectedN'] = expectedN[output]
+            rec['producedL'] = producedL[output]
+            rec['producedN'] = producedN[output]
             rec['percentage'] = math.floor(percent_completions[output]*10000)/100.## round down
             rec['fractionpass'] = math.floor(fractions_pass.get(output,0)*10000)/100.
             rec['duplicate'] = duplications[output] if output in duplications else 'N/A'
