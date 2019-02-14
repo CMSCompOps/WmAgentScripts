@@ -2843,8 +2843,20 @@ class closeoutInfo:
         return self.record[wfn]
 
     def table_header(self):
-        text = '<table border=1><thead><tr><th>workflow</th><th>OutputDataSet</th><th>%Compl</th><th>acdc</th><th>Dupl</th><th>LSsize</th><th>Scubscr</th><th>dbsF</th><th>dbsIF</th><th>\
-phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
+        text = """<table border=1>
+<thead><tr>
+<th>workflow</th>
+<th>OutputDataSet</th>
+<th>%Compl</th>
+<th>acdc</th>
+<th>Events</th>
+<th>Lumis</th>
+<th>dbsF</th>
+<th>dbsIF</th>
+<th>phdF</th>
+<th>Updated</th>
+<th>Priority</th>
+</tr></thead>"""
         return text
 
     def one_line(self, wf, wfo, count):
@@ -2856,7 +2868,8 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
         pid = tpid.replace('task_','')
 
         ## return the corresponding html
-        order = ['percentage','acdc','duplicate','correctLumis','missingSubs','dbsFiles','dbsInvFiles','phedexFiles']#,'updated']
+        #order = ['percentage','acdc','duplicate','correctLumis','missingSubs','dbsFiles','dbsInvFiles','phedexFiles']#,'updated']
+        order = ['percentage','acdc','events','lumis','dbsFiles','dbsInvFiles','phedexFiles']#,'updated']
         wf_and_anchor = '<a id="%s">%s</a>'%(wf,wf)
         n_out = len(self.record[wf]['datasets'])
         o_and_c = [(out,self.record[wf]['datasets'][out].get('percentage')) for out in self.record[wf]['datasets'] ]
@@ -2892,7 +2905,7 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
                     value = self.record[wf]['datasets'][out][f]
                 else:
                     value = "-NA-"
-
+                    
 
                 if f =='acdc':
                     text+='<td><a href=https://%s/reqmgr2/data/request?prep_id=%s&detail=false>%s</a></td>'%(reqmgr_url, tpid , value)
@@ -2903,6 +2916,10 @@ phdF</th><th>Updated</th><th>Priority</th></tr></thead>'
                     else:
                         ## the one in bold will show the ones that need work
                         text+='<td><b>%s</b></td>'% value
+                elif f=='events':
+                    text+='<td>%s/%s</td>'% (display_N(self.record[wf]['datasets'][out].get('producedN','NA')), display_N(self.record[wf]['datasets'][out].get('expectedN','NA')))
+                elif f=='lumis':
+                    text+='<td>%s/%s</td>'% (display_N(self.record[wf]['datasets'][out].get('producedL','NA')), display_N(self.record[wf]['datasets'][out].get('expectedL','NA')))                    
                 else:
                     text+='<td>%s</td>'% value
             u_text = '<td rowspan="%d">%s</td>'%( n_out, self.record[wf]['datasets'][out]['updated'])
@@ -5264,6 +5281,23 @@ def getLatestMCPileup( url, statuses=None):
     for dataset,ages in those.items():
         ret[dataset] = max(ages)
     return ret
+
+def display_N( n ):
+    if not str(n).isdigit(): return str(n)
+    k,u = divmod( n, 1000)
+    m,k = divmod( k, 1000)
+    b,m = divmod( m ,1000)
+    dis=""
+    if b:
+        dis += "%dB"%b
+        return dis
+    if m:
+        dis += "%dM"%m
+        return dis
+    if k:
+        dis += "%dK"%k
+        return dis
+    return str(n)
 
 def display_time( sec ):
     if not sec: return sec
