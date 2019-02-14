@@ -1132,8 +1132,15 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 
     text += "</ul></div></li>"
 
+    try:
+        equalizor = json.loads(eosRead('%s/equalizor.json'%monitor_pub_dir))['reversed_mapping']
+    except:
+        time.sleep(10)
+        try:
+            equalizor = json.loads(eosRead('%s/equalizor.json'%monitor_pub_dir))['reversed_mapping']
+        except:
+            equalizor = {}
 
-    equalizor = json.loads(eosRead('%s/equalizor.json'%monitor_pub_dir))['reversed_mapping']
     text += site_div_header("Xrootd mapping")
     text += "<li><table border=1><thead><tr><th>Sites</th><th>Can read from</th></tr></thead>\n"
     for site in sorted(equalizor):
