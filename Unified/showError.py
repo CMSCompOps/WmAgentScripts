@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from utils import workflowInfo, siteInfo, monitor_dir, monitor_pub_dir, base_dir, global_SI, getDatasetPresence, getDatasetBlocksFraction, getDatasetBlocks, unifiedConfiguration, getDatasetEventsPerLumi, dataCache, unified_url, base_eos_dir, monitor_eos_dir, unified_url_eos, eosFile, ThreadHandler, moduleLock
+from utils import workflowInfo, siteInfo, monitor_dir, monitor_pub_dir, base_dir, global_SI, getDatasetPresence, getDatasetBlocksFraction, getDatasetBlocks, unifiedConfiguration, getDatasetEventsPerLumi, dataCache, unified_url, base_eos_dir, monitor_eos_dir, unified_url_eos, eosFile, ThreadHandler, moduleLock, reportInfo
 import time
 
 import json
@@ -153,6 +153,7 @@ def parse_one(url, wfn, options=None):
 
     SI = global_SI()
     UC = unifiedConfiguration()
+    RI = reportInfo()
     wfi = workflowInfo( url , wfn)
     time_point("wfi" ,sub_lap=True)
     where_to_run, missing_to_run,missing_to_run_at = wfi.getRecoveryInfo()       
@@ -258,6 +259,7 @@ def parse_one(url, wfn, options=None):
         do_all_error_code = True
         
 
+    IO_doc = {}
     tasks = sorted(set(err.keys() + missing_to_run.keys()))
 
     if not tasks:
@@ -301,6 +303,7 @@ def parse_one(url, wfn, options=None):
 
             for site in sorted(presence.keys()):
                 html += '<li>%s : %.2f %%'%( site, presence[site][1] )
+                IO_doc.setdefault('primary',{}).setdefault(dataset,{})[site] = presence[site][1]
             html+='</ul><br>'
 
             
@@ -311,6 +314,7 @@ def parse_one(url, wfn, options=None):
             html +='<b>%s</b><ul>'%dataset
             for site in sorted(presence.keys()):
                 html += '<li>%s : %.2f %%'%( site, presence[site][1] )
+                IO_doc.setdefault('secondary',{}).setdefault(dataset,{})[site] = presence[site][1]
             html+='</ul>'
         
 
@@ -319,13 +323,17 @@ def parse_one(url, wfn, options=None):
         html+='Produces<br>'
         for dataset in outs:
             presence = getDatasetPresence(url, dataset)
-            html +='<b>%s </b>(events/lumi ~ %d)<ul>'%(dataset, getDatasetEventsPerLumi(dataset))
+            epl = getDatasetEventsPerLumi(dataset)
+            html +='<b>%s </b>(events/lumi ~ %d)<ul>'%(dataset, epl)
+            IO_doc.setdefault('outputs',{}).setdefault(dataset,{})['eventsperlumi'] = epl
             for site in sorted(presence.keys()):
                 html += '<li>%s : %.2f %%'%( site, presence[site][1] )
+                IO_doc.setdefault('outputs',{}).setdefault(dataset,{}).setdefault('location',{})[site] = presence[site][1]
             html+='</ul>'
             
     time_point("Input checked")
 
+    RI.set_IO( wfn, IO_doc )
 
     html += """
 <hr><br>
