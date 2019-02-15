@@ -373,6 +373,7 @@
    "description" : "Set of keywords and special settings for relvals",
    "value" : { "highPU" : {"parameters" : { "SiteWhitelist" : ["T2_US_Nebraska","T2_US_Purdue"]}},
 	       "highIO" : {"parameters" : { "SiteWhitelist" : ["T2_US_Nebraska","T2_US_Purdue"]}},
+	       "pLHE" : {"parameters" : { "SiteWhitelist" : ["T2_CH_CERN"]}},
 	       "ALCA_" : { "primary_AAA" : true , 
 	       	       	   "parameters" : { "SiteWhitelist" : ["T1_US_FNAL"]}
 			},
