@@ -2818,17 +2818,15 @@ class reportInfo:
     def _convert( self, d ):
         ## convert recursively the types that cannot go in as is
         for k,v in d.items():
-            #print k,type(v)
             if type(v) == set:
-                #print "converting to list"
                 d[k] = list(v)
             elif type(v) in [dict, defaultdict]:
-                #print "nested dict"
                 d[k] = self._convert(v)
         return dict(d)
 
     def _put(self, updating_doc):
         updating_doc = self._convert( updating_doc )
+
         exist = self.db.find_one({'workflow' : updating_doc.get('workflow')})
         if exist:
             # nested info update and pop from new doc
@@ -2843,15 +2841,11 @@ class reportInfo:
                                {'$set': exist})
             
         else:
-            self.db.insert_one({'workflow' : updating_doc.get('workflow')},
-                               {'$set': updating_doc}
-                               )
+            self.db.insert_one( updating_doc )
 
     def set_IO(self, wfn, IO):
-        doc = { 'workflow' : wfn,
-                'primary' : IO.get('primary',{}),
-                'secondary' : IO.get('secondary',{}),
-                'outputs' : IO.get('outputs',{})}
+        doc = { 'workflow' : wfn }
+        doc.update( IO )
         self._put( doc )
         
     def set_errors(self, wfn, task, errors):

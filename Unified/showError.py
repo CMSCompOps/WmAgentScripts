@@ -378,7 +378,7 @@ def parse_one(url, wfn, options=None):
             html+='</ul>'
             
     time_point("Input checked")
-    
+
     RI.purge( wfn )
     RI.set_IO( wfn, IO_doc )
 
@@ -396,7 +396,7 @@ def parse_one(url, wfn, options=None):
 
     n_expose_base = options.expose# if options else UC.get('n_error_exposed')
     print "getting",n_expose_base,"logs by default"
-    task_report = {}
+    reported_tasks= []
     if tasks:
         min_rank = min([task.count('/') for task in tasks])
     for task in tasks:  
@@ -440,7 +440,7 @@ def parse_one(url, wfn, options=None):
         #is the task relevant to recover (discard log, cleanup)
         if any([v in task.lower() for v in ['logcol','cleanup']]): continue
 
-        task_report[task] = {} 
+        reported_tasks.append( task )
         #total_count= defaultdict(int)
         #error_site_count = defaultdict( lambda : defaultdict(int))
         if not task in err:
@@ -698,7 +698,7 @@ def parse_one(url, wfn, options=None):
     html += '<hr>'
     html += '<a name=BLOCK></a>'
     check_files = []
-    for task in task_report:
+    for task in reported_tasks:
         html += '<br>'
         task_n = task.split('/')[-1]
         all_blocks,needed_blocks_loc,files_in_blocks,files_and_loc_in_dbs,files_and_loc_notin_dbs = wfi.getRecoveryBlocks(for_task = task)
