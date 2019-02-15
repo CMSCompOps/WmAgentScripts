@@ -291,8 +291,9 @@ def parse_one(url, wfn, options=None):
         lwl = wfi.getLumiWhiteList()
         for dataset in prim:
             html +='<b>%s </b>(events/lumi ~%d)'%(dataset, getDatasetEventsPerLumi( dataset))
-            blocks = getDatasetBlocks( dataset, runs= rwl ) if rwl else None
-            blocks = getDatasetBlocks( dataset, lumis= lwl) if lwl else None
+            blocks = None
+            blocks = getDatasetBlocks( dataset, runs= rwl ) if rwl else blocks
+            blocks = getDatasetBlocks( dataset, lumis= lwl) if lwl else blocks
             available = getDatasetBlocksFraction(url, dataset, only_blocks = blocks )
             html +='<br><br>Available %.2f (>1 more than one copy, <1 not in full on disk)<br>'% available
             html +='<ul>'
