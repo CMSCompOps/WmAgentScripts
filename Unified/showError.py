@@ -378,7 +378,8 @@ def parse_one(url, wfn, options=None):
             html+='</ul>'
             
     time_point("Input checked")
-
+    
+    RI.purge( wfn )
     RI.set_IO( wfn, IO_doc )
 
     html += """
@@ -395,6 +396,7 @@ def parse_one(url, wfn, options=None):
 
     n_expose_base = options.expose# if options else UC.get('n_error_exposed')
     print "getting",n_expose_base,"logs by default"
+    task_report = {}
     if tasks:
         min_rank = min([task.count('/') for task in tasks])
     for task in tasks:  
@@ -438,7 +440,7 @@ def parse_one(url, wfn, options=None):
         #is the task relevant to recover (discard log, cleanup)
         if any([v in task.lower() for v in ['logcol','cleanup']]): continue
 
-
+        task_report[task] = {} 
         #total_count= defaultdict(int)
         #error_site_count = defaultdict( lambda : defaultdict(int))
         if not task in err:
@@ -693,20 +695,25 @@ def parse_one(url, wfn, options=None):
                                  verbose=True)
     run_threads.start()
 
-    html += '<hr><br>'
+    html += '<hr>'
     html += '<a name=BLOCK></a>'
     check_files = []
-    for task in tasks:
+    for task in task_report:
+        html += '<br>'
         task_n = task.split('/')[-1]
         all_blocks,needed_blocks_loc,files_in_blocks,files_and_loc_in_dbs,files_and_loc_notin_dbs = wfi.getRecoveryBlocks(for_task = task)
 
-        html += "<b>Blocks (%d/%d) needed for recovery of %s</b><br>"%( len(needed_blocks_loc), len(all_blocks), task_n)
-        for block in sorted(needed_blocks_loc.keys()):
-            html +='%s <b>@ %s</b><br>'%(block, ','.join(sorted(needed_blocks_loc[block])))
-        
+        if len(needed_blocks_loc):
+            html += "<b>Blocks (%d/%d) needed for %s</b><br>"%( len(needed_blocks_loc), len(all_blocks), task_n)
+            for block in sorted(needed_blocks_loc.keys()):
+                html +='%s @ %s<br>'%(block, ','.join(sorted(needed_blocks_loc[block])))
+            RI.set_blocks( wfn, task_n, needed_blocks_loc)
+
         html += '<a name=FILE></a>'
-        html += "<br><b>%s Files in block for %s</b><br>"%( len(files_and_loc_in_dbs.keys()), task_n)
-        html += "<br><b>%s Files in no block for %s</b><br>"%( len(files_and_loc_notin_dbs.keys()), task_n)
+        if len(files_and_loc_in_dbs.keys()): 
+            html += "<b>%s Files in block for %s</b><br>"%( len(files_and_loc_in_dbs.keys()), task_n)
+        if len(files_and_loc_notin_dbs.keys()):
+            html += "<b>%s Files in no block for %s</b><br>"%( len(files_and_loc_notin_dbs.keys()), task_n)
 
         max_number_of_files = 500
         display_files = sorted(files_and_loc_notin_dbs.keys())
@@ -729,7 +736,7 @@ def parse_one(url, wfn, options=None):
             for s in files_and_loc_notin_dbs[f]: 
                 missing_files[s] += (1 if (readable==1 and s not in actual_locs) or (readable==0 and s not in actual_locs) else 0) if readable!=-1 else 0
 
-            html_line = '<font color="%s">%s</font> <b>@</b> %s'%( color, f,
+            html_line = '<font color="%s">%s</font> <b>@</b> %s <br>'%( color, f,
                                                                    ','.join(['<font color="%s">%s</font>'%( ('green' if site in actual_locs else 'red') if readable!=-1 else 'black',site) for site in all_locs])
                                                                )
             if not separate_h:
@@ -755,7 +762,7 @@ def parse_one(url, wfn, options=None):
             html += files_html
             
 
-            
+    print RI.get(wfn)
 
     html += '<hr><br>'
     html += '<a name=CODES></a>'
