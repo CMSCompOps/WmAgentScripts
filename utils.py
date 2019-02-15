@@ -2804,18 +2804,48 @@ class reportInfo:
         self.client = mongo_client()
         self.db = self.client.unified.reportInfo
 
-    def purge(self):
+    def purge(self ,wfn=None):
         ## clean in a way of another
-        pass
+        if wfn:
+            for e in  self.db.find( {'workflow' : wfn}):
+                self.db.delete_one({'_id': e['_id']})
+                
     
     def get(self, wfn ):
         doc = self.db.find_one({'workflow' : wfn})
         return doc
 
+    def _convert( self, d ):
+        ## convert recursively the types that cannot go in as is
+        for k,v in d.items():
+            #print k,type(v)
+            if type(v) == set:
+                #print "converting to list"
+                d[k] = list(v)
+            elif type(v) in [dict, defaultdict]:
+                #print "nested dict"
+                d[k] = self._convert(v)
+        return dict(d)
+
     def _put(self, updating_doc):
-        self.db.update_one({'workflow' : updating_doc.get('workflow')},
-                           {'$set': updating_doc},
-                           upsert = True)
+        updating_doc = self._convert( updating_doc )
+        exist = self.db.find_one({'workflow' : updating_doc.get('workflow')})
+        if exist:
+            # nested info update and pop from new doc
+            for nested in ['tasks']:
+                new_info = updating_doc.pop(nested) if nested in updating_doc else {}
+                for k in sorted(exist.get(nested,{}).keys()+new_info.keys()):
+                    exist.setdefault(nested,{}).setdefault(k,{}).update( new_info.get(k,{}))
+
+            #root info update
+            exist.update( updating_doc )
+            self.db.update_one({'workflow' : updating_doc.get('workflow')},
+                               {'$set': exist})
+            
+        else:
+            self.db.insert_one({'workflow' : updating_doc.get('workflow')},
+                               {'$set': updating_doc}
+                               )
 
     def set_IO(self, wfn, IO):
         doc = { 'workflow' : wfn,
@@ -2826,9 +2856,11 @@ class reportInfo:
         
     def set_errors(self, wfn, task, errors):
         pass
+
     def set_blocks(self, wfn, task, blocks):
         doc = { 'workflow' : wfn,
-                'needed_blocks' : blocks}
+                'tasks' : { task : {'needed_blocks' : blocks}}
+            }
         self._put( doc )
 
     def set_files(self, wfn, task, files):
@@ -6703,9 +6735,9 @@ class workflowInfo:
         all_files = set()
         files_and_loc = defaultdict(set)
         for d in doc:
-            all_files.update( d['files'].keys())
             task = d.get('fileset_name',"")
             if for_task and not task.endswith(for_task):continue
+            all_files.update( d['files'].keys())
             for fn in d['files']:
                 files_and_loc[ fn ].update( d['files'][fn]['locations'] )
 
