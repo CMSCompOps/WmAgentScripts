@@ -2827,7 +2827,10 @@ class reportInfo:
     def set_errors(self, wfn, task, errors):
         pass
     def set_blocks(self, wfn, task, blocks):
-        pass
+        doc = { 'workflow' : wfn,
+                'needed_blocks' : blocks}
+        self._put( doc )
+
     def set_files(self, wfn, task, files):
         pass
 
@@ -6695,12 +6698,14 @@ class workflowInfo:
 
         return self.wmstats
 
-    def getRecoveryBlocks(self ,collection_name=None):
+    def getRecoveryBlocks(self ,collection_name=None, for_task= None):
         doc = self.getRecoveryDoc(collection_name=collection_name)
         all_files = set()
         files_and_loc = defaultdict(set)
         for d in doc:
             all_files.update( d['files'].keys())
+            task = d.get('fileset_name',"")
+            if for_task and not task.endswith(for_task):continue
             for fn in d['files']:
                 files_and_loc[ fn ].update( d['files'][fn]['locations'] )
 
@@ -6734,8 +6739,10 @@ class workflowInfo:
             print dataset
             dataset_blocks.update( getDatasetBlocks( dataset ) )
 
-        files_and_loc = dict([(k,list(v)) for (k,v) in files_and_loc.items() if k in files_no_block])
-        return dataset_blocks,all_blocks_loc,files_in_block,files_and_loc#files_no_block
+        ## skim out the files
+        files_and_loc_noblock = dict([(k,list(v)) for (k,v) in files_and_loc.items() if k in files_no_block])
+        files_and_loc = dict([(k,list(v)) for (k,v) in files_and_loc.items() if k in files_in_block])
+        return dataset_blocks,all_blocks_loc,files_in_block,files_and_loc,files_and_loc_noblock
 
     def getRecoveryDoc(self, collection_name=None):
         if collection_name == None:
