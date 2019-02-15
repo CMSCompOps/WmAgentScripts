@@ -2799,6 +2799,37 @@ def global_SI(a=None):
     return global_SI.instance
 global_SI.instance = None
 
+class reportInfo:
+    def __init__(self):
+        self.client = mongo_client()
+        self.db = self.client.unified.reportInfo
+
+    def purge(self):
+        ## clean in a way of another
+        pass
+    
+    def get(self, wfn ):
+        doc = self.db.find_one({'workflow' : wfn})
+        return doc
+
+    def _put(self, updating_doc):
+        self.db.update_one({'workflow' : updating_doc.get('workflow')},
+                           {'$set': updating_doc},
+                           upsert = True)
+
+    def set_IO(self, wfn, IO):
+        doc = { 'workflow' : wfn,
+                'primary' : IO.get('primary',{}),
+                'secondary' : IO.get('secondary',{}),
+                'outputs' : IO.get('outputs',{})}
+        self._put( doc )
+        
+    def set_errors(self, wfn, task, errors):
+        pass
+    def set_blocks(self, wfn, task, blocks):
+        pass
+    def set_files(self, wfn, task, files):
+        pass
 
 
 class closeoutInfo:
