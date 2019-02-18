@@ -7,6 +7,11 @@ from JIRAClient import JIRAClient
 import optparse
 import json
 
+
+def majority_of_139_nanoaod(wfi, record, report):
+    ## check on the main error, and bypass the request
+    return []
+
 def rulor(spec=None, options=None):
     
     mlock = moduleLock()
@@ -24,8 +29,14 @@ def rulor(spec=None, options=None):
     RI = reportInfo()
     WC = wtcClient()
     JC = JIRAClient()
-    
+
+    ## a list of function with a given trace ( wfi, record, report) => (action dict list)
+    rules = [
+        majority_of_139_nanoaod,
+    ]
+
     for wfo in wfs:
+        wfi = workflowInfo( reqmgr_url, wfo.name )
         record = COI.get( wfo.name )
         report = RI.get( wfo.name )
         if not record: 
@@ -40,6 +51,20 @@ def rulor(spec=None, options=None):
         ## parse the information and produce an action document
         ### a rule for on-going issue with memory in campaign ...
         acted = False
+        for condition in rules:
+            acts = condition( wfi, record, report):
+            if acts:
+                print "list of actions being taken for",wfo.name
+                for a in acts:
+                    print json.dumps(a, indent=2)
+                if not options.test:
+                    acted = True
+                    WC.set_actions( acts )
+                    wfo.status = wfo.status.replace('manual','acting')
+                    session.commit()
+                break
+                
+        if acted: continue    
         if "some conditions":
             action_doc =  { 'workflow' : wfo.name,
                             'name' : "a task name",
@@ -48,7 +73,8 @@ def rulor(spec=None, options=None):
                         }
             acted = True
         if acted: continue
-        if "some other conditions":
+        if "majority of 139":
+            
             pass
         if acted: continue
 
@@ -57,7 +83,7 @@ if __name__ == "__main__":
     
     print "yup"
     parser = optparse.OptionParser()
-    parser.add_option('--dummy',help='what?',default=False)
+    parser.add_option('--test',help="Dry run, only show what you want to do", default=False, action="store_true")
     (options,args) = parser.parse_args()
     spec= args[0] if len(args)!=0 else None
 
