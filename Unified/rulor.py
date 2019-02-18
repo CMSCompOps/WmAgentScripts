@@ -30,7 +30,9 @@ def rulor(spec=None, options=None):
         if not record: 
             print "no information to look at"
             continue
+        print "close out information as in the assistance page"
         print record
+        print "report information as in the unified report"
         print report
 
         
