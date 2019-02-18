@@ -768,7 +768,6 @@ def parse_one(url, wfn, options=None):
             html += files_html
             
 
-    print RI.get(wfn)
 
     html += '<hr><br>'
     html += '<a name=CODES></a>'
@@ -777,6 +776,15 @@ def parse_one(url, wfn, options=None):
         html +='<tr><td><a name="%s">%s</a><br><a href=https://twiki.cern.ch/twiki/bin/view/CMSPublic/JobExitCodes>code twiki</a></td><td>%s</td></tr>'% ( code, code, '<br><br>'.join(per_task_explanation[code]).replace('\n','<br>' ))
     #for code in one_explanation:
     #    html +='<tr><td><a name="%s">%s</a></td><td>%s</td></tr>'% ( code, code, '<br><br>'.join(one_explanation[code]).replace('\n','<br>' ))
+    re_cast = defaultdict(dict)
+    for t_and_e in per_task_explanation:
+        task,code = t_and_e.split(':')
+        re_cast[task][code] = per_task_explanation[t_and_e]
+    for task in re_cast:
+        print "logs",re_cast[task]
+        RI.set_logs( wfn, task, re_cast[task] )
+
+    #print RI.get(wfn)
 
     html+='</table>'
     html+=('<br>'*30)

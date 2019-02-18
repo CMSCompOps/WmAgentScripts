@@ -2811,8 +2811,9 @@ class reportInfo:
                 self.db.delete_one({'_id': e['_id']})
                 
     
-    def get(self, wfn ):
+    def get(self, wfn , strip=True):
         doc = self.db.find_one({'workflow' : wfn})
+        if strip: doc.pop('_id')
         return doc
 
     def _convert( self, d ):
@@ -2821,7 +2822,7 @@ class reportInfo:
             if '.' in k:
                 d.pop(k)
                 k = k.replace('.','__dot__')
-                print k,"with a dot"
+                #print k,"with a dot"
             if type(v) == set:
                 d[k] = list(v)
             elif type(v) in [dict, defaultdict]:
@@ -2870,6 +2871,9 @@ class reportInfo:
 
     def set_missing(self, wfn, task, missing):
         self._set_for_task( wfn, task, missing, 'missing')
+
+    def set_logs(self, wfn, task, logs):
+        self._set_for_task( wfn, task, logs, 'logs')
 
     def _set_for_task( self, wfn, task, content , field_name):
         task = task.split('/')[-1]
