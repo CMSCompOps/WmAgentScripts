@@ -5,6 +5,7 @@ from utils import closeoutInfo, reportInfo, reqmgr_url, componentInfo, moduleLoc
 from wtcClient import wtcClient
 from JIRAClient import JIRAClient
 import optparse
+import json
 
 def rulor(spec=None, options=None):
     
@@ -31,9 +32,9 @@ def rulor(spec=None, options=None):
             print "no information to look at"
             continue
         print "close out information as in the assistance page"
-        print record
+        print json.dumps(record, indent=2)
         print "report information as in the unified report"
-        print report
+        print json.dumps(report, indent=2)
 
         
         ## parse the information and produce an action document
