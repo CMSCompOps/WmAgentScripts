@@ -287,7 +287,8 @@ def parse_one(url, wfn, options=None):
     print json.dumps(missing_to_run , indent=2)        
     print "\t Missing events per site"
     print json.dumps(missing_to_run_at , indent=2)        
-    
+    for task in missing_to_run_at:
+        RI.set_missing(wfn, task, missing_to_run_at[task] )
 
     if not where_to_run and not missing_to_run and not missing_to_run_at:
         print "showError is unable to run"
@@ -687,7 +688,8 @@ def parse_one(url, wfn, options=None):
             html +='</tr>\n'
         html+='</table><br>'
         task_error_site_count[task] = error_site_count
-
+        RI.set_errors( wfn, task_short, error_site_count )
+        
     ## run all retrieval
     run_threads = ThreadHandler( threads = threads, n_threads = options.log_threads,# if options else 5,
                                  sleepy = 10, 
@@ -712,8 +714,12 @@ def parse_one(url, wfn, options=None):
         html += '<a name=FILE></a>'
         if len(files_and_loc_in_dbs.keys()): 
             html += "<b>%s Files in block for %s</b><br>"%( len(files_and_loc_in_dbs.keys()), task_n)
+            #print files_and_loc_in_dbs
+            RI.set_files( wfn, task_n, files_and_loc_in_dbs )
         if len(files_and_loc_notin_dbs.keys()):
             html += "<b>%s Files in no block for %s</b><br>"%( len(files_and_loc_notin_dbs.keys()), task_n)
+            #print files_and_loc_notin_dbs
+            RI.set_ufiles(wfn, task_n, files_and_loc_notin_dbs )
 
         max_number_of_files = 500
         display_files = sorted(files_and_loc_notin_dbs.keys())

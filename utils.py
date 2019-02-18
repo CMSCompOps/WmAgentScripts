@@ -2818,15 +2818,23 @@ class reportInfo:
     def _convert( self, d ):
         ## convert recursively the types that cannot go in as is
         for k,v in d.items():
+            if '.' in k:
+                d.pop(k)
+                k = k.replace('.','__dot__')
+                print k,"with a dot"
             if type(v) == set:
                 d[k] = list(v)
             elif type(v) in [dict, defaultdict]:
                 d[k] = self._convert(v)
+            else:
+                ## for re-keying
+                d[k] =v 
+
         return dict(d)
 
     def _put(self, updating_doc):
         updating_doc = self._convert( updating_doc )
-
+        #print updating_doc
         exist = self.db.find_one({'workflow' : updating_doc.get('workflow')})
         if exist:
             # nested info update and pop from new doc
@@ -2849,17 +2857,25 @@ class reportInfo:
         self._put( doc )
         
     def set_errors(self, wfn, task, errors):
-        pass
+        self._set_for_task( wfn, task, errors, 'errors')
 
     def set_blocks(self, wfn, task, blocks):
-        doc = { 'workflow' : wfn,
-                'tasks' : { task : {'needed_blocks' : blocks}}
-            }
-        self._put( doc )
+        self._set_for_task( wfn, task, blocks, 'needed_blocks')
 
     def set_files(self, wfn, task, files):
-        pass
+        self._set_for_task( wfn, task, files, 'files')
 
+    def set_ufiles(self, wfn, task, files):
+        self._set_for_task( wfn, task, files, 'ufiles')
+
+    def set_missing(self, wfn, task, missing):
+        self._set_for_task( wfn, task, missing, 'missing')
+
+    def _set_for_task( self, wfn, task, content , field_name):
+        task = task.split('/')[-1]
+        doc = { 'workflow' : wfn,
+                'tasks' : { task : {field_name : content}}}
+        self._put( doc )
 
 class closeoutInfo:
     def __init__(self):
