@@ -7,10 +7,13 @@ from assignSession import *
 import random
 import optparse
 from utils import moduleLock
+import time
 
+year = int(time.strftime("%Y", time.gmtime()))
+lastyear = year-1
 parser = optparse.OptionParser()
 parser.add_option('--workflow', help='Which workflow logs', default=None)
-parser.add_option('--years',help='What year to parse', default='2017,2018')
+parser.add_option('--years',help='What year to parse', default='%d,%d'%(year, lastyear))
 parser.add_option('--months',help='What month to parse', default=None)
 parser.add_option('--max',help='Limit the number of indexion', default=0, type=int)
 (options,args) = parser.parse_args()
