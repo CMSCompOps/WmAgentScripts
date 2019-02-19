@@ -6223,19 +6223,19 @@ def closeAllBlocks(url, dataset, blocks=None):
     r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset=%s&complete=n'% dataset)
     r2=conn.getresponse()
     result = json.loads(r2.read()).get('phedex',{})
-    print result
     for block in result.get('block',[]):
         if blocks and not block.get('name') in blocks: continue
         sites = list()
         for sub in block.get('replica',[]):
             sites.append(sub.get('node'))
+        if not sites: 
+            print "ERROR cannot close",block.get('name'),"without a location"
+            continue ##a block with no location : how silly
         random.shuffle(sites)
         xml = createBlockXML({dataset: [block.get('name')]})
-        print xml
         params = { "node" : sites[0],
                    "data" : xml}
         r = phedexPost(url, '/phedex/datasvc/json/prod/inject', params)
-        #r = {}
         print json.dumps( r , indent=2)
 
 def checkIfBlockIsAtASite(url,block,site):
