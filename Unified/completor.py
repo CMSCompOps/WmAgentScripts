@@ -188,6 +188,9 @@ def completor(url, specific):
             then = max([change['UpdateTime'] for change in running_log]) / (60.*60.*24.)
             delay = now - then ## in days
 
+        #further check on delays
+        cpuh = wfi.getComputingTime(unit='d')
+        wfi.sendLog('completor',"Requires %.1f [CPUd], running since %.1f [day], last priority change to %d done %.1f [day] ago"%( cpuh, delay, priority, priority_delay))
         if priority_delay!=0 and priority_delay < delay:
             ## regardless when it started running, set the delay to when priority was changed last
             delay = priority_delay
@@ -304,9 +307,6 @@ def completor(url, specific):
         #for output in  percent_completions:
         #    completions[output]['injected'] = then
             
-
-        #further check on delays
-        cpuh = wfi.getComputingTime(unit='d')
 
         ran_at = wfi.request['SiteWhitelist']
                         
