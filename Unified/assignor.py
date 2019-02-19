@@ -651,6 +651,11 @@ def assignor(url ,specific = None, talk=True, options=None):
 
 
             else:
+                ## add a check on duplicated outputs
+                outs= wfi.request['OutputDatasets']
+                if len(outs) != len(set(outs)):
+                    ## duplicated output
+                    duplicated_output = wfi.request['OutputDatasets']
                 wfh.sendLog('assignor',"Failed to assign %s.\n%s \n Please check the logs"%(wfo.name, reqMgrClient.assignWorkflow.errorMessage))
                 sendLog('assignor',"Failed to assign %s.\n%s \n Please check the logs"%(wfo.name, reqMgrClient.assignWorkflow.errorMessage), level='critical')
                 print "ERROR could not assign",wfo.name
