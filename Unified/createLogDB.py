@@ -16,6 +16,7 @@ parser.add_option('--workflow', help='Which workflow logs', default=None)
 parser.add_option('--years',help='What year to parse', default='%d,%d'%(year, lastyear))
 parser.add_option('--months',help='What month to parse', default=None)
 parser.add_option('--max',help='Limit the number of indexion', default=0, type=int)
+parser.add_option('--force',help='Re-insert information', default=False,action='store_true')
 (options,args) = parser.parse_args()
 
 
@@ -54,21 +55,28 @@ for year in years:
 
             tars = filter(None,os.popen('ls /eos/cms/store/logs/prod/%s/%s/WMAgent/%s/'%(year,month,workflow)).read().split('\n'))
             print workflow,len(tars)
-            logs_alread_in_db = list(set([l.logfile  for l in session.query(LogRecord).filter(LogRecord.workflow == workflow).all()]))
-            already_in_db = list(set([l.path for l in session.query(LogRecord).filter(LogRecord.workflow == workflow).all()]))
+            already = session.query(LogRecord).filter(LogRecord.workflow == workflow).all()
+            #already = []
+            if options.force and already:
+                # trash it
+                for a in already:
+                    session.delete( a )
+                session.commit()
+                already = []
+            logs_alread_in_db = sorted(set([l.logfile  for l in already]))
+            already_in_db = sorted(set([l.path for l in already]))
             print len(already_in_db),"already in db"
             print len(tars),"tarball in eos"
             if len(tars) == len(already_in_db):
                 print "Chances are that it is useless to go on"
-                continue
+                if not options.force: continue
 
-            what = [filter(lambda b : b.startswith('LogCollect') or b.endswith('LogCollect'), tar.split('-')) for tar in tars]
-
-            tasks = set(w[0] for w in what if w)
+            tasks = set(filter(lambda b : b.startswith('LogCollect'), ['-'.join(tar.replace(workflow,'').split('-',4)[1:4]) for tar in tars]))
+            #what = [filter(lambda b : b.startswith('LogCollect') or b.endswith('LogCollect'), tar.split('-')) for tar in tars]
+            #tasks = set(w[0] for w in what if w)
             print tasks
             for task in tasks:
                 tars = filter(None,os.popen('ls /eos/cms/store/logs/prod/%s/%s/WMAgent/%s/*%s*.tar'%(year,month,workflow,task)).read().split('\n'))
-
                 print task,len(tars)
                 for tar in tars:
                     local='/tmp/vlimant'
@@ -89,7 +97,7 @@ for year in years:
                             workflow= workflow,
                             logfile = log,
                             path = path,
-                            task = task[:40],
+                            task = task.replace('LogCollectFor','')[:40],
                             year = int(year),
                             month = int(month)
                             )
