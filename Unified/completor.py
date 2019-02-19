@@ -9,9 +9,14 @@ import json
 import random
 from McMClient import McMClient
 from showError import parse_one
+from JIRAClient import JIRAClient
 import random
 
 def completor(url, specific):
+    mlock = moduleLock(silent=True, locking=False)
+    if mlock(): return 
+
+
     use_mcm = True
     up = componentInfo(soft=['mcm','wtc','jira'])
     if not up.check(): return
@@ -19,14 +24,12 @@ def completor(url, specific):
     if use_mcm:
         mcm = McMClient(dev=False)
 
-    mlock = moduleLock(silent=True)
-    if mlock(): return 
-
     safe_mode = False
 
     CI = campaignInfo()
     SI = siteInfo()
     UC = unifiedConfiguration()
+    JC = JIRAClient() if up.status.get('jira',False) else None
 
     wfs = []
     wfs.extend( session.query(Workflow).filter(Workflow.status == 'away').all() )
@@ -60,12 +63,6 @@ def completor(url, specific):
     all_stuck.update( getAllStuckDataset()) 
 
 
-    ## by workflow a list of fraction / timestamps
-    #old_completions = json.loads( open('%s/completions.json'%monitor_dir).read())
-    #completions = defaultdict(dict)
-    #for old in old_completions:
-    #    completions[old] = old_completions[old]
-    
     good_fractions = {}
     overdoing_fractions = {}
     truncate_fractions = {} 
@@ -107,6 +104,13 @@ def completor(url, specific):
     default_fraction_overdoing = UC.get('default_fraction_overdoing')
 
     set_force_complete = set()
+
+    # priority and time above which to fire a JIRA
+    jira_priority_and_delays = { 110000 : 14,
+                                 90000 : 21,
+                            #     80000 : 60,
+                            #0 : 90
+                             }
 
     for wfo in wfs:
         if specific and not specific in wfo.name: continue
@@ -167,13 +171,29 @@ def completor(url, specific):
 
         now = time.mktime(time.gmtime()) / (60*60*24.)
 
+        priority_log = filter(lambda change: change['Priority'] == priority,wfi.request.get('PriorityTransition',[]))
+        if not priority_log:
+            print "\tHas no priority log"
+            priority_delay = 0
+        else:
+            then = max([change['UpdateTime'] for change in priority_log]) / (60.*60.*24.)
+            priority_delay = now - then ## in days
+            print "priority was set to",priority,priority_delay,"[days] ago"
+
         running_log = filter(lambda change : change["Status"] in ["running-open","running-closed"],wfi.request['RequestTransition'])
         if not running_log:
             print "\tHas no running log"
             delay = 0
         else:
-            then = running_log[-1]['UpdateTime'] / (60.*60.*24.)
+            then = max([change['UpdateTime'] for change in running_log]) / (60.*60.*24.)
             delay = now - then ## in days
+
+        #further check on delays
+        cpuh = wfi.getComputingTime(unit='d')
+        wfi.sendLog('completor',"Requires %.1f [CPUd], running since %.1f [day], last priority change to %d done %.1f [day] ago"%( cpuh, delay, priority, priority_delay))
+        if priority_delay!=0 and priority_delay < delay:
+            ## regardless when it started running, set the delay to when priority was changed last
+            delay = priority_delay
 
         ## this is supposed to be the very initial request date, inherited from clones
         injection_delay = None
@@ -192,6 +212,23 @@ def completor(url, specific):
 
         (w,d) = divmod(delay, 7 )
         print "\t"*int(w)+"Running since",delay,"[days] priority=",priority
+        
+        pop_a_jira = False
+        ping_on_jira = 7 *(24*60*60) # 7 days
+        for jp,jd in jira_priority_and_delays.items():
+            if priority >= jp and delay >= jd: pop_a_jira = True
+
+        if pop_a_jira and JC:
+            j,reopened = JC.create_or_last( prepid = wfi.request['PrepID'],
+                                   priority = wfi.request['RequestPriority'],
+                                   label = None,
+                                   reopen = True)
+            last_time = JC.last_time( j )
+            since_last_ping = time.mktime(time.gmtime()) - last_time
+            if since_last_ping > ping_on_jira or since_last_ping< 20: #a while or just created
+                j_comment = "Running since %.1f [days] at priority %d"%( delay, priority)
+                JC.comment(j.key, j_comment)
+            
 
         if delay_for_priority_increase!=None and delay_for_priority_increase > injection_delay_threshold and priority >= injection_delay_priority:
             quantized = 5000 ## quantize priority
@@ -270,9 +307,6 @@ def completor(url, specific):
         #for output in  percent_completions:
         #    completions[output]['injected'] = then
             
-
-        #further check on delays
-        cpuh = wfi.getComputingTime(unit='d')
 
         ran_at = wfi.request['SiteWhitelist']
                         

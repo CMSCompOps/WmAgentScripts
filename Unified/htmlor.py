@@ -1476,10 +1476,9 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
                         else:
                             ## find the last such, and add a comment after the grace period
                             j = sorted(jiras, key= lambda o:JC.created(o))[-1]
-                            j = JC.get(j.key) ## if you want comments, you have to get the issue again this way ...
                             reopened = JC.reopen(j.key)
                             ## add a comment to that JIRA : experimental
-                            last_comment_time = JC.time_to_time(j.fields.comment.comments[-1].updated) if (hasattr(j.fields, 'comment') and j.fields.comment.comments) else JC.created(j)
+                            last_comment_time = JC.last_time(j)
                             seconds_since = now - last_comment_time
                             ## 4h at least between pings in the agent comment
                             if reopened or (seconds_since > (agent_comment_graceperiod*60*60)):
