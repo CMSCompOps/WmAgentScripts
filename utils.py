@@ -6218,15 +6218,25 @@ def getBlockLocations(url, dataset, group=None):
             locations[block['name']].add( rep['node'])
     return dict(locations)
     
-def closeAllBlocks(url, dataset):
+def closeAllBlocks(url, dataset, blocks=None):
     conn = make_x509_conn(url)
     r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset=%s&complete=n'% dataset)
     r2=conn.getresponse()
     result = json.loads(r2.read()).get('phedex',{})
     print result
-    to_close = [block.get('name') for block in result.get('block',[])]
-    xml = createBlockXML({dataset: to_close})
-    print xml
+    for block in result.get('block',[]):
+        if blocks and not block.get('name') in blocks: continue
+        sites = list()
+        for sub in block.get('replica',[]):
+            sites.append(sub.get('node'))
+        random.shuffle(sites)
+        xml = createBlockXML({dataset: [block.get('name')]})
+        print xml
+        params = { "node" : sites[0],
+                   "data" : xml}
+        r = phedexPost(url, '/phedex/datasvc/json/prod/inject', params)
+        #r = {}
+        print json.dumps( r , indent=2)
 
 def checkIfBlockIsAtASite(url,block,site):
 
