@@ -171,13 +171,26 @@ def completor(url, specific):
 
         now = time.mktime(time.gmtime()) / (60*60*24.)
 
+        priority_log = filter(lambda change: change['Priority'] == priority,wfi.request.get('PriorityTransition',[]))
+        if not priority_log:
+            print "\tHas no priority log"
+            priority_delay = 0
+        else:
+            then = max([change['UpdateTime'] for change in priority_log]) / (60.*60.*24.)
+            priority_delay = now - then ## in days
+            print "priority was set to",priority,priority_delay,"[days] ago"
+
         running_log = filter(lambda change : change["Status"] in ["running-open","running-closed"],wfi.request['RequestTransition'])
         if not running_log:
             print "\tHas no running log"
             delay = 0
         else:
-            then = running_log[-1]['UpdateTime'] / (60.*60.*24.)
+            then = max([change['UpdateTime'] for change in running_log]) / (60.*60.*24.)
             delay = now - then ## in days
+
+        if priority_delay!=0 and priority_delay < delay:
+            ## regardless when it started running, set the delay to when priority was changed last
+            delay = priority_delay
 
         ## this is supposed to be the very initial request date, inherited from clones
         injection_delay = None
