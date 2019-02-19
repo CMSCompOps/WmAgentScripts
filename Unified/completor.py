@@ -106,7 +106,7 @@ def completor(url, specific):
     set_force_complete = set()
 
     # priority and time above which to fire a JIRA
-    jira_priority_and_delays = { 11000 : 14,
+    jira_priority_and_delays = { 110000 : 14,
                                  90000 : 21,
                             #     80000 : 60,
                             #0 : 90
