@@ -161,7 +161,7 @@ class JIRAClient:
                 return True
             except Exception as e:
                 print "transition to",status,"not successful"
-                print str(e)
+                #print str(e)
                 return False
         else:
             print "transition to",status,"not known"
