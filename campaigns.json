@@ -1508,17 +1508,16 @@
     "tune": true
   }, 
   "RunIIWinter15GS": {
-    "parameters": {
-      "EventsPerLumi": "x2"
-    }, 
-    "lumisize": 300, 
+    "lumisize": -1, 
+    "resize": "auto", 
     "go": true, 
     "overflow": {
       "LHE": {
         "site_list": "sites_AAA"
       }
     }, 
-    "tune": true
+    "tune": true, 
+    "fractionpass": 0.95
   }, 
   "TTI2023Upg14GS": {
     "go": true, 
@@ -2631,7 +2630,7 @@
     ], 
     "lumisize": -1, 
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "overflow": {
       "PREMIX": {}
     }, 
