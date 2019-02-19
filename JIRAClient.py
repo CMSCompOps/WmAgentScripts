@@ -25,7 +25,34 @@ class JIRAClient:
             print "That ain't going to work out"
             sys.exit(1)
         self.client = jira.JIRA('https://its.cern.ch/jira' , options = {'cookies':  cookies})
-    
+
+    def last_time(self, j):
+        try:
+            j = self.get(j.key)
+        except:
+            j = self.get(j)
+        last_comment_time = self.time_to_time(j.fields.comment.comments[-1].updated) if (hasattr(j.fields, 'comment') and j.fields.comment.comments) else self.created(j)
+        return last_comment_time
+
+    def create_or_last(self, prepid, priority=None, label=None, reopen=False):
+        jiras = self.find( {'prepid' : prepid})
+        j = None
+        reopened = False
+        if len(jiras)==0:
+            c_doc = { 'summary' : prepid,
+                      'description' : 'https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s \nAutomatic JIRA from unified'%( prepid )}
+            if priority: c_doc['priority'] = priority
+            if label: c_doc['label'] = label
+            j = self.create(c_doc)
+        else:
+            j = sorted(jiras, key= lambda o:self.created(o))[-1]
+            if reopen:
+                reopened = self.reopen( j.key )
+        if reopen:
+            return j,reopened
+        else:
+            return j
+
     def create(self , indications , do = True):
         fields = {
             'project' : 'CMSCOMPPR',
