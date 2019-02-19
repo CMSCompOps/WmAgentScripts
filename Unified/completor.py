@@ -13,7 +13,7 @@ from JIRAClient import JIRAClient
 import random
 
 def completor(url, specific):
-    mlock = moduleLock(silent=True, locking=False)
+    mlock = moduleLock(silent=True)
     if mlock(): return 
 
 
