@@ -293,7 +293,7 @@ def assignor(url ,specific = None, talk=True, options=None):
                 endpoints.update( dataset_endpoints[prim] )
             set_lfn = getLFNbase( prim )
             ## if they are requested for processing, they should bbe all closed already
-            #closeAllBlocks(url, d, blocks)
+            closeAllBlocks(url, prim, blocks)
             presence = getDatasetPresence( url, prim , only_blocks=blocks)
             if talk:
                 print prim
