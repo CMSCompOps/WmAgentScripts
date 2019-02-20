@@ -100,7 +100,8 @@ for status in statuses:
             print wl['RequestName'],"is unknown to unified, relocking all I/O"
             for dataset in list(primaries)+list(secondaries)+outputs:
                 print "\t", dataset
-                also_locking_from_reqmgr.add( dataset )
+                if dataset:
+                    also_locking_from_reqmgr.add( dataset )
             continue
 
         if status == 'assignment-approved':
@@ -112,7 +113,8 @@ for status in statuses:
         for dataset in list(primaries)+list(secondaries)+outputs:
             if 'FAKE' in dataset: continue
             if 'None' in dataset: continue
-            newly_locking.add(dataset)
+            if dataset:
+                newly_locking.add(dataset)
             print "\t", dataset
     print len(newly_locking),"locks so far"
 
