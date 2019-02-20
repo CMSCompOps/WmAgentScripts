@@ -62,7 +62,8 @@ class JIRAClient:
         who = {
             'WorkflowTrafficController' : 'sagarwal',
             'UnifiedOfficer' : 'weinberg',
-            'AgentDoc' : 'snorberg'
+            'AgentDoc' : 'snorberg',
+            'Late' : None
         }.get(label,None)
            
         if label:
