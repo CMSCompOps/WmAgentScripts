@@ -221,7 +221,7 @@ def completor(url, specific):
         if pop_a_jira and JC:
             j,reopened = JC.create_or_last( prepid = wfi.request['PrepID'],
                                    priority = wfi.request['RequestPriority'],
-                                   label = None,
+                                   label = 'Late',
                                    reopen = True)
             last_time = JC.last_time( j )
             since_last_ping = time.mktime(time.gmtime()) - last_time
