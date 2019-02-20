@@ -320,7 +320,7 @@ def singleClone(url, wfname, actions, comment, do=False):
                 print reqMgrClient.setWorkflowSplitting(url, clone, splittings )
     #Approve
     data = reqMgrClient.setWorkflowApproved(url, clone)
-    wfi.sendLog('actor','Cloned into %s'%clone)
+    #wfi.sendLog('actor','Cloned into %s'%clone)
 
     
 #    wfi.sendLog('actor','Cloned into %s by unified operator %s'%( clone, comment ))
@@ -416,6 +416,7 @@ def actor(url,options=None):
             if all_good:
                 wfi.sendLog('actor',"%s and children are rejected"%wfname)
             else:
+                wfi.sendLog('actor',"Failed to reject the request and dependents")
                 sendLog('actor','Failed to reject the familly of %s'% wfname, level='critical')
                 continue
 
@@ -433,7 +434,7 @@ def actor(url,options=None):
                 sendLog('actor','Failed to create clone for %s!'%wfname,level='critical')
 
             else:
-                wfi.sendLog('actor',"Workflow %s cloned"%wfname)
+                wfi.sendLog('actor',"Workflow %s cloned into "%(wfname, cloned))
                 ## set to trouble for swift replacement
                 for wfo in  session.query(Workflow).filter(Workflow.name == wfname).all():
                     wfo.status = 'trouble'
@@ -627,18 +628,23 @@ def actor(url,options=None):
                         if options.ass:
                             print "really doing the assignment of the ACDC",acdc
                             parameters['execute']=True
-                            wfi.sendLog('actor',"%s  was assigned for recovery"% acdc)
+                            #wfi.sendLog('actor',"%s  was assigned for recovery"% acdc)
                         else:
                             print "no assignment done with this ACDC",acdc
                             sendLog('actor',"%s needs to be assigned"%(acdc), level='critical')
+                            wfi.sendLog('actor',"%s needs to be assigned by hand"%(acdc))
                             continue
+
  #                       print parameters
                         result = reqMgrClient.assignWorkflow(url, acdc, team, parameters)
                         if not result:
                             print acdc,"was not assigned"
-                            sendLog('actor',"%s needs to be assigned"%(acdc), level='critical')
+                            sendLog('actor',"%s failed to be assigned"%(acdc), level='critical')
+                            wfi.sendLog('actor',"%s failed to get assigned for recovery"% acdc)
                         else:
+                            wfi.sendLog('actor',"%s was assigned for recovery"% acdc)
                             recovering.add( acdc )
+
                         #wfi.sendLog('actor',"ACDCs created for %s"%wfname)
                         try:
                             if jira_comment:
