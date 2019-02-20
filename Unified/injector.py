@@ -82,6 +82,10 @@ def injector(url, options, specific):
                     wfi.sendLog('injector',"One of the input is not VALID. %s : %s"%( d, status_cache[d]))
                     sendLog('injector',"One of the input of %s is not VALID. %s : %s"%( wf, d, status_cache[d]), level='critical')
                     can_add = False
+                #else:
+                #    ##make sure that all blocks get closed
+                #    closeAllBlocks(url, d)
+
                 ## check for any file in phedex, to verify existence
                 _,ph_files,_,_ = getDatasetFiles(url, d)
                 if not ph_files and not ( 'StoreResults' == wfi.request.setdefault('RequestType',None) ):

@@ -4943,6 +4943,25 @@ def injectFile(url, info):
         r = phedexPost(url, '/phedex/datasvc/json/prod/inject', params)
         print json.dumps( r , indent=2)
 
+def createBlockXML(dataset_blocks):
+    impl=getDOMImplementation()
+    doc=impl.createDocument(None, "data", None)
+    result = doc.createElement("data")
+    result.setAttribute('version', '2')
+    dbs = doc.createElement("dbs")
+    dbs.setAttribute("name", dbs_url)
+    result.appendChild(dbs)
+    for dataset in dataset_blocks:
+        xdataset=doc.createElement("dataset")
+        xdataset.setAttribute("is-open","n")
+        xdataset.setAttribute("name",dataset)
+        dbs.appendChild(xdataset)
+        for block in dataset_blocks[dataset]:
+            xblock = doc.createElement("block")
+            xblock.setAttribute("is-open","n")
+            xblock.setAttribute("name", block)
+            xdataset.appendChild(xblock)
+    return result.toprettyxml(indent="  ")
 
 def createFileXML(dataset_block_file_locations):
     impl=getDOMImplementation()
@@ -6199,6 +6218,25 @@ def getBlockLocations(url, dataset, group=None):
             locations[block['name']].add( rep['node'])
     return dict(locations)
     
+def closeAllBlocks(url, dataset, blocks=None):
+    conn = make_x509_conn(url)
+    r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset=%s&complete=n'% dataset)
+    r2=conn.getresponse()
+    result = json.loads(r2.read()).get('phedex',{})
+    for block in result.get('block',[]):
+        if blocks and not block.get('name') in blocks: continue
+        sites = list()
+        for sub in block.get('replica',[]):
+            sites.append(sub.get('node'))
+        if not sites: 
+            print "ERROR cannot close",block.get('name'),"without a location"
+            continue ##a block with no location : how silly
+        random.shuffle(sites)
+        xml = createBlockXML({dataset: [block.get('name')]})
+        params = { "node" : sites[0],
+                   "data" : xml}
+        r = phedexPost(url, '/phedex/datasvc/json/prod/inject', params)
+        print json.dumps( r , indent=2)
 
 def checkIfBlockIsAtASite(url,block,site):
 
