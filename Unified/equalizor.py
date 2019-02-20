@@ -79,7 +79,9 @@ def equalizor(url , specific = None, options=None):
     for site in sites_to_consider:
         region = site.split('_')[1]
         ## fallback to the region, to site with on-going low pressure
-        mapping[site] = [fb for fb in sites_to_consider if any([('_%s_'%(reg) in fb and fb!=site and site_in_depletion(fb))for reg in regions[region]]) ]
+        within_region = [fb for fb in sites_to_consider if any([('_%s_'%(reg) in fb and fb!=site and site_in_depletion(fb))for reg in regions[region]]) ]
+        #print site,region, within_region
+        mapping[site] = within_region
     
 
     for site in sites_to_consider:
@@ -166,6 +168,7 @@ def equalizor(url , specific = None, options=None):
     ## create the reverse mapping for the condor module
     for site,fallbacks in mapping.items():
         if site in take_site_out:
+            print "taking",site,"out of overflow source by unified configuration"
             mapping.pop(site)
             continue
         for fb in fallbacks:
@@ -175,6 +178,7 @@ def equalizor(url , specific = None, options=None):
                 continue
             if fb in take_site_out:
                 ## remove those to be removed
+                print "taking",fb,"out of overflow destination by unified configuration"
                 mapping[site].remove(fb)
                 continue
             if not site in reversed_mapping[fb]:
