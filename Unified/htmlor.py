@@ -662,7 +662,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     start_time_two_weeks_ago = time.mktime(time.gmtime(now - (20*24*60*60))) # 20
     last_week =  int(time.strftime("%W",time.gmtime(now - ( 7*24*60*60))))
 
-    all_locks = [l.item.split('#')[0] for l in session.query(Lock).filter(Lock.lock == True).all()]
+    all_locks = [l.item.split('#')[0] for l in session.query(Lock).filter(Lock.lock == True).all() if l.item]
     try:
         waiting_custodial = json.loads(eosRead('%s/waiting_custodial.json'%monitor_dir))
     except Exception as e:
