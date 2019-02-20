@@ -6219,20 +6219,26 @@ def getBlockLocations(url, dataset, group=None):
     return dict(locations)
     
 def closeAllBlocks(url, dataset, blocks=None):
+    dbsapi = DbsApi(url=dbs_url)
+    dbs_b = dbsapi.listBlocks(dataset = dataset)
+    dbs_closed = set([b.get('block_name') for b in dbs_b if b.get('open_for_writing')==0])
     conn = make_x509_conn(url)
     r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset=%s&complete=n'% dataset)
     r2=conn.getresponse()
     result = json.loads(r2.read()).get('phedex',{})
     for block in result.get('block',[]):
-        if blocks and not block.get('name') in blocks: continue
+        bname = block.get('name')
+        if blocks and not bname in blocks: continue
+        ## verify that the block is indeed closed in DBS
+        if not bname in dbs_closed: continue
         sites = list()
         for sub in block.get('replica',[]):
             sites.append(sub.get('node'))
         if not sites: 
-            print "ERROR cannot close",block.get('name'),"without a location"
+            print "ERROR cannot close",bname,"without a location"
             continue ##a block with no location : how silly
         random.shuffle(sites)
-        xml = createBlockXML({dataset: [block.get('name')]})
+        xml = createBlockXML({dataset: [ bname ]})
         params = { "node" : sites[0],
                    "data" : xml}
         r = phedexPost(url, '/phedex/datasvc/json/prod/inject', params)
