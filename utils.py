@@ -6229,9 +6229,7 @@ def getBlockLocations(url, dataset, group=None):
     return dict(locations)
     
 def closeAllBlocks(url, dataset, blocks=None):
-    dbsapi = DbsApi(url=dbs_url)
-    dbs_b = dbsapi.listBlocks(dataset = dataset)
-    dbs_closed = set([b.get('block_name') for b in dbs_b if b.get('open_for_writing')==0])
+    dbswrite = DbsApi(url=dbs_url_writer)
     conn = make_x509_conn(url)
     r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset=%s&complete=n'% dataset)
     r2=conn.getresponse()
@@ -6253,6 +6251,7 @@ def closeAllBlocks(url, dataset, blocks=None):
                    "data" : xml}
         r = phedexPost(url, '/phedex/datasvc/json/prod/inject', params)
         print json.dumps( r , indent=2)
+        dbswrite.updateBlockStatus( block_name = bname, open_for_writing = 0)
 
 def checkIfBlockIsAtASite(url,block,site):
 
