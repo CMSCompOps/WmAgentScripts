@@ -2817,6 +2817,7 @@ class reportInfo:
         return doc
 
     def _convert( self, d ):
+        d = copy.deepcopy(d)
         ## convert recursively the types that cannot go in as is
         for k,v in d.items():
             if '.' in k:
