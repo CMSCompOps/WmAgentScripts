@@ -725,7 +725,11 @@ def parse_one(url, wfn, options=None):
         display_files = sorted(files_and_loc_notin_dbs.keys())
         display_files = display_files[:max_number_of_files] if max_number_of_files else display_files
         check_files = [ f for f in files_and_loc_notin_dbs.keys() if '/store' in f]
-        files_status, files_location = checkFilesLocations( check_files )# , mode='xrootd') 
+        check_location_mode = options.check_location
+        if check_location_mode is None and len(check_files)< 10: 
+            ## fallback to xrootd if nothing was said, and there aren't many files
+            check_location_mode = 'xrootd'
+        files_status, files_location = checkFilesLocations( check_files , mode= check_location_mode) 
         files_html = ""
         existing_html = ""
         lost_html = ""
@@ -1050,6 +1054,10 @@ class showError_options(object):
                          'help' : 'Number of logs to retrieve',
                          'type' : int
                          },
+            'check_location' : { 'default' : None,
+                                 'help' : 'Enable the checking of file location',
+                                 'choices' : [None,'none','xrootd','dynamo']
+                },
             'not_from_eos' : { 'default' : False,
                                'action' : 'store_true',
                                'help' : 'Do NOT retrieve from job logs from eos'
@@ -1087,21 +1095,12 @@ if __name__=="__main__":
 
     so = showError_options()
     so.set_parser( parser )
-    #parser.add_option('--no_JL',help="Do not get the job logs", action="store_true",default=False)
-    #parser.add_option('--no_CL',help="Do not get the condor logs", action="store_true",default=False)
     parser.add_option('--fast',help="Retrieve from cache and no logs retrieval", action="store_true", default=False)
     parser.add_option('--ongoing',help="Retrieve for all ongoing", action="store_true", default=False)
     parser.add_option('--manual',help="Retrieve for all workflows needing help", action="store_true", default=False)
     parser.add_option('--top',help="Retrieve the top N offenders",action="store_true", default=False)
     parser.add_option('--from_status',help="The coma separated list of status keywords",default="")
-    #parser.add_option('--cache',help="The age in second of the error report before reloading them", default=0, type=float)
     parser.add_option('--workflow','-w',help="The workflow to make the error report of",default=None)
-    #parser.add_option('--expose',help="Number of logs to retrieve",default=UC.get('n_error_exposed'),type=int)
-    #parser.add_option('--all_errors',help="Bypass and expose all error codes", default=False, action='store_true')
-    #not used#parser.add_option('--no_logs',help="Bypass retrieval of logs", default=False, action='store_true')
-    #parser.add_option('--from_eos',help="Retrieve from eos",default=False, action='store_true')
-    #parser.add_option('--threads',help="The number of parallel workers to get report", default=5, type=int)
-    #parser.add_option('--log_threads',help="The number of parallel workers to get logs per report", default=3, type=int)
     (options,args) = parser.parse_args()
     
     if options.fast:
