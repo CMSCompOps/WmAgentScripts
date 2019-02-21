@@ -55,7 +55,7 @@ class ReadBuster(threading.Thread):
         self.readable = os.system('XRD_REQUESTTIMEOUT=10 xrdfs root://cms-xrd-global.cern.ch stat %s'%self.file)
         
 
-class XRDBuster(threading.Thread):
+class LogBuster(threading.Thread):
     def __init__(self, **args):
         threading.Thread.__init__(self)
         self.daemon = True
@@ -98,7 +98,12 @@ class XRDBuster(threading.Thread):
                                     if os.system('ls %s'% local)!=0 and self.from_eos:
                                         print "no file retrieved using xrootd, using eos source"
                                         ## will parse eos and not doing anything for things already indexed
-                                        os.system('Unified/createLogDB.py --workflow %s'%( self.wfn ))
+                                        date_option = ""
+                                        if self.date:
+                                            this_month = int(time.strftime("%m", time.gmtime()))
+                                            date_option = ' --year %d --month %s '%( self.date[0], ','.join(map(str,range(self.date[1], this_month+1))))
+                                            print "using",date_option,"to find logs on eos"
+                                        os.system('Unified/createLogDB.py --workflow %s %s '%( self.wfn , date_option))
                                         os.system('Unified/whatLog.py --workflow  %s --log %s --get' %(self.wfn,self.out_lfn.split('/')[-1]) )
                                         os.system('mv `find /tmp/%s/ -name "%s"` %s'%( os.getenv('USER'), self.out_lfn.split('/')[-1], local))
 
@@ -476,10 +481,11 @@ def parse_one(url, wfn, options=None):
                                         expose_archive_code[errorcode_s][agent]-=1
                                     print errorcode_s,agent,"error count",expose_archive_code.get(errorcode_s,{}).get(agent,0)
 
-                                    threads.append( XRDBuster(
+                                    threads.append( LogBuster(
                                                               out_lfn = out['lfn'],
                                                               monitor_eos_dir = monitor_eos_dir,
                                                               wfn = wfn,
+                                                              date = wfi.request.get('RequestDate',[]),
                                                               errorcode_s = errorcode_s,
                                                               task_short = task_short,
                                                               from_eos = (not options.not_from_eos),# if options else True),
