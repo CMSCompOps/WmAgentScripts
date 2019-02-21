@@ -5376,17 +5376,27 @@ def getWorkflowById( url, pid , details=False):
     else:
         return [item['id'] for item in items]
 
-
 def invalidate(url, wfi, only_resub=False, with_output=True):
+    tries = 3
+    while tries:
+        tries-=1
+        check = _invalidate(url, wfi, only_resub, with_output)
+        if all(check):
+            break
+    return check
+
+def _invalidate(url, wfi, only_resub=False, with_output=True):
     import reqMgrClient
     familly = wfi.getFamilly( and_self=True, only_resub=only_resub)
     outs = set()
     check = []
     for fwl in familly:
+        print "checking wf family:", fwl['RequestName'], fwl['RequestStatus'], fwl['OutputDatasets']
         check.append(reqMgrClient.invalidateWorkflow(url, fwl['RequestName'], current_status=fwl['RequestStatus'], cascade=False))
         outs.update( fwl['OutputDatasets'] )
     if with_output:
         for dataset in outs:
+            print "printing datasets again", dataset
             check.append(setDatasetStatus(dataset, 'INVALID'))
     check = [r in ['None',None,True] for r in check]
     return check
