@@ -19,7 +19,6 @@ parser.add_option('--max',help='Limit the number of indexion', default=0, type=i
 parser.add_option('--force',help='Re-insert information', default=False,action='store_true')
 (options,args) = parser.parse_args()
 
-
 specific = options.workflow.split(',') if options.workflow else None
 check_months = options.months.split(',') if options.months else None
 check_years= options.years.split(',') if options.years else None
@@ -29,7 +28,10 @@ if ml():
     print "existing createLogDB",options.workflow
     sys.exit(1)
 
-years = filter(None,os.popen('ls /eos/cms/store/logs/prod/').read().split('\n'))
+if check_years:
+    years = check_years
+else:
+    years = filter(None,os.popen('ls /eos/cms/store/logs/prod/').read().split('\n'))
 
 
 vetoes = ['Express_Run','PromptReco_Run','Repack_Run','Validation','test','Test']
@@ -38,31 +40,39 @@ n_index=0
 for year in years:
     if options.max and n_index>options.max: break
     if check_years and not year in check_years : continue
-    months = filter(None,os.popen('ls /eos/cms/store/logs/prod/%s/'%(year)).read().split('\n'))
+    if check_months:
+        months = check_months
+    else:
+        months = filter(None,os.popen('ls /eos/cms/store/logs/prod/%s/'%(year)).read().split('\n'))
+    
     print year,months
     for month in months:
         if options.max and n_index>options.max: break
         if check_months and not month in check_months : continue
-        workflows = filter(None,os.popen('ls /eos/cms/store/logs/prod/%s/%s/WMAgent/'%(year,month)).read().split('\n'))
+        if specific:
+            workflows = specific
+        else:
+            workflows = filter(None,os.popen('ls /eos/cms/store/logs/prod/%s/%s/WMAgent/'%(year,month)).read().split('\n'))
         random.shuffle( workflows )
-        print year,month,len(workflows)
+        print year,"/",month,":",len(workflows),"workflows"
         ## start reading
         for workflow in workflows:
             if options.max and n_index>options.max: break
             if specific and not any(s in workflow or workflow in s for s in specific): continue
 
             if any(v in workflow or workflow in v for v in vetoes): continue
-
+            month = "%02d"%int(month)
             tars = filter(None,os.popen('ls /eos/cms/store/logs/prod/%s/%s/WMAgent/%s/'%(year,month,workflow)).read().split('\n'))
-            print workflow,len(tars)
-            already = session.query(LogRecord).filter(LogRecord.workflow == workflow).all()
+            if not tars: continue
+            print workflow,":",len(tars),"tarballs"
             #already = []
-            if options.force and already:
-                # trash it
-                for a in already:
-                    session.delete( a )
-                session.commit()
+            if options.force:
+                N_deleted = session.query(LogRecord).filter(LogRecord.workflow == workflow).delete()
+                print N_deleted,"deleted entries"
                 already = []
+            else:
+                already = session.query(LogRecord).filter(LogRecord.workflow == workflow).all()
+
             logs_alread_in_db = sorted(set([l.logfile  for l in already]))
             already_in_db = sorted(set([l.path for l in already]))
             print len(already_in_db),"already in db"
