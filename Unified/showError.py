@@ -101,7 +101,15 @@ class LogBuster(threading.Thread):
                                         date_option = ""
                                         if self.date:
                                             this_month = int(time.strftime("%m", time.gmtime()))
-                                            date_option = ' --year %d --month %s '%( self.date[0], ','.join(map(str,range(self.date[1], this_month+1))))
+                                            N_months_back = 3
+                                            this_year = int(time.strftime("%Y", time.gmtime()))
+                                            if this_month-N_months_back<0:
+                                                m_s = ','.join(map(str,list(range(1, this_month+1)) + list(range(this_month-N_months_back+12, 13))))
+                                                y_s = '%d,%d'%( this_year, this_year-1 )
+                                            else:
+                                                m_s = ','.join(map(str, range(this_month-N_months_back, this_month+1)))
+                                                y_s = str(this_year)
+                                            date_option = ' --year %s --month %s '%( y_s, m_s )
                                             print "using",date_option,"to find logs on eos"
                                         os.system('Unified/createLogDB.py --workflow %s %s '%( self.wfn , date_option))
                                         os.system('Unified/whatLog.py --workflow  %s --log %s --get' %(self.wfn,self.out_lfn.split('/')[-1]) )
