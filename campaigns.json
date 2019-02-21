@@ -37,6 +37,16 @@
     "fractionpass": 0.95, 
     "go": true
   }, 
+  "RunIISummer19ULRECO": {
+    "secondary_AAA": false, 
+    "maxcopies": 1, 
+    "lumisize": -1, 
+    "fractionpass": 0.95, 
+    "go": false, 
+    "tune": true, 
+    "secondaries": {}, 
+    "resize": "auto"
+  }, 
   "HINppWinter17GS": {
     "parameters": {
       "MergedLFNBase": "/store/himc", 
@@ -58,6 +68,13 @@
   }, 
   "CosmicSpring16DR80": {
     "go": false
+  }, 
+  "RunIISummer19UL17GS": {
+    "lumisize": -1, 
+    "resize": "auto", 
+    "fractionpass": 0.95, 
+    "go": false, 
+    "tune": true
   }, 
   "PhaseIITDRSpring17GS": {
     "lumisize": 1500, 
@@ -557,6 +574,21 @@
       "maxCores": 10, 
       "memoryPerThread": 200
     }
+  }, 
+  "RunIISummer19UL2017HLT": {
+    "secondary_AAA": false, 
+    "PU": {
+      "max": 0, 
+      "force": false, 
+      "pending": 0
+    }, 
+    "maxcopies": 1, 
+    "lumisize": -1, 
+    "resize": "auto", 
+    "fractionpass": 0.95, 
+    "go": false, 
+    "secondaries": {}, 
+    "tune": true
   }, 
   "Summer11LegwmLHE": {
     "go": true
@@ -2247,6 +2279,16 @@
     "fractionpass": 0.95, 
     "go": true, 
     "tune": true
+  }, 
+  "RunIISummer19ULDIGI": {
+    "secondary_AAA": false, 
+    "maxcopies": 1, 
+    "lumisize": -1, 
+    "fractionpass": 0.95, 
+    "go": false, 
+    "tune": true, 
+    "secondaries": {}, 
+    "resize": "auto"
   }, 
   "PhaseIISpring17GS": {
     "lumisize": 1500, 
