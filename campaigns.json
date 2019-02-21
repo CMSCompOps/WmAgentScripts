@@ -577,16 +577,18 @@
   }, 
   "RunIISummer19UL2017HLT": {
     "secondary_AAA": false, 
-    "PU": {
-      "max": 0, 
-      "force": false, 
-      "pending": 0
-    }, 
     "maxcopies": 1, 
     "lumisize": -1, 
     "resize": "auto", 
     "fractionpass": 0.95, 
     "go": false, 
+    "overflow": {
+      "PU": {
+        "max": 0, 
+        "force": false, 
+        "pending": 0
+      }
+    }, 
     "secondaries": {}, 
     "tune": true
   }, 
