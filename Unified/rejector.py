@@ -169,6 +169,7 @@ def rejector(url, specific, options=None):
                     ## transform the schema into StepChain schema
                     print "Transforming a TaskChain into a StepChain"
                     mcore = 0
+                    mem = 0
                     schema['RequestType'] = 'StepChain'
                     schema['StepChain'] = schema.pop('TaskChain')
                     schema['SizePerEvent'] = 0
@@ -180,10 +181,12 @@ def rejector(url, specific, options=None):
                             sname = 'Step%d'%step
                             schema[sname] = schema.pop('Task%d'%step)
                             tmcore = schema[sname].pop('Multicore')
+                            tmem = schema[sname].pop('Memory')
                             if mcore and tmcore != mcore:
                                 wfi.sendLog('rejector','the conversion to stepchain encoutered different value of Multicore %d != %d'%( tmcore, mcore))
                                 sendLog('rejector','the conversion of %s to stepchain encoutered different value of Multicore %d != %d'%( wfo.name, tmcore, mcore), level='critical')
                             mcore = max(mcore, tmcore)
+                            mem = max(mem, tmem)
                             schema[sname]['StepName'] = schema[sname].pop('TaskName')
                             s_n[ schema[sname]['StepName'] ] = sname
                             if 'InputTask' in schema[sname]:
@@ -209,7 +212,7 @@ def rejector(url, specific, options=None):
                         else:
                             break
                     schema['Multicore'] = mcore
-
+                    schema['Memory'] = mem
                 print json.dumps( schema, indent=2 )
                 newWorkflow = reqMgrClient.submitWorkflow(url, schema)
                 if not newWorkflow:
