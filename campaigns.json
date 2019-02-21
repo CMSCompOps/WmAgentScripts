@@ -2988,18 +2988,28 @@
     "secondary_AAA": false, 
     "maxcopies": 1, 
     "lumisize": -1, 
-    "resize": "auto", 
     "fractionpass": 0.95, 
     "go": true, 
+    "tune": true, 
     "secondaries": {
       "/MinBias_TuneCP1_13TeV-pythia8/RunIIFall18GS-102X_upgrade2018_realistic_v11-v1/GEN-SIM": {
         "SiteWhitelist": [
           "T1_RU_JINR"
         ]
       }, 
+      "/MinBias_TuneCP5_13TeV-pythia8/RunIIFall18GS-newECALCrystalGeometryFor2017_102X_mc2017_realistic_v5-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_DE_KIT"
+        ]
+      }, 
       "/MinBias_TuneCP5_13TeV-pythia8_Fall18/RunIIFall18GS-102X_upgrade2018_realistic_v11-v1/GEN-SIM": {
         "SiteWhitelist": [
           "T1_IT_CNAF"
+        ]
+      }, 
+      "/MinBias_TuneCP5_13TeV-pythia8/RunIIFall18GS-newECALCrystalGeometryFor2016_102X_mcRun2_asymptotic_v5-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_US_FNAL"
         ]
       }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIFall18GS-102X_upgrade2018_realistic_v9-v1/GEN-SIM": {
@@ -3011,7 +3021,7 @@
         ]
       }
     }, 
-    "tune": true
+    "resize": "auto"
   }, 
   "RunIISpring18DR": {
     "secondary_AAA": false, 
