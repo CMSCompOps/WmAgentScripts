@@ -434,7 +434,7 @@ def actor(url,options=None):
                 sendLog('actor','Failed to create clone for %s!'%wfname,level='critical')
 
             else:
-                wfi.sendLog('actor',"Workflow %s cloned into "%(wfname, cloned))
+                wfi.sendLog('actor',"Workflow %s cloned into %s"%(wfname, cloned))
                 ## set to trouble for swift replacement
                 for wfo in  session.query(Workflow).filter(Workflow.name == wfname).all():
                     wfo.status = 'trouble'
