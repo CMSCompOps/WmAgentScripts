@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from utils import workflowInfo, siteInfo, monitor_dir, monitor_pub_dir, base_dir, global_SI, getDatasetPresence, getDatasetBlocksFraction, getDatasetBlocks, unifiedConfiguration, getDatasetEventsPerLumi, dataCache, unified_url, base_eos_dir, monitor_eos_dir, unified_url_eos, eosFile, ThreadHandler, moduleLock
+from utils import workflowInfo, siteInfo, monitor_dir, monitor_pub_dir, base_dir, global_SI, getDatasetPresence, getDatasetBlocksFraction, getDatasetBlocks, unifiedConfiguration, getDatasetEventsPerLumi, dataCache, unified_url, base_eos_dir, monitor_eos_dir, unified_url_eos, eosFile, ThreadHandler, moduleLock, reportInfo
 import time
 
 import json
@@ -52,7 +52,7 @@ class ReadBuster(threading.Thread):
             setattr(self,k,v)
 
     def run(self):
-        self.readable = os.system('XRD_REQUESTTIMEOUT=10 xrdfs root://cms-xrd-global.cern.ch stat %s'%self.file)
+        self.readable = (os.system('XRD_REQUESTTIMEOUT=10 xrdfs root://cms-xrd-global.cern.ch stat %s'%self.file)==0)
         
 
 class LogBuster(threading.Thread):
@@ -135,6 +135,52 @@ class LogBuster(threading.Thread):
 
 
 
+def checkFilesLocations( file_list , mode= None):
+    ## dummy at the moment
+    if mode == 'dynamo':
+        return checkFilesLocations_dynamo( file_list ) 
+    elif mode == 'xrootd':
+        return checkFilesLocations_xrootd( file_list )
+    else:
+        return {},{}
+
+def checkFilesLocations_dynamo( check_files ):
+    import dynamoClient
+    DC=dynamoClient.dynamoClient()
+    dirs_by_site = defaultdict(set)
+    by_f = {}
+    f_locations = defaultdict( set )
+    for f in check_files:
+        dir,fn = f.rsplit('/',1)
+        for s in files_and_loc_notin_dbs[f]:
+            dirs_by_site[s].add( dir )
+    files_by_site = DC.files_in_dir( dirs_by_site )
+    for f in check_files:
+        locs = [s for s in files_by_site if f in files_by_site[s] ]
+        if locs:
+            by_f[f] = True
+            f_locations[f].update( locs )
+        else:
+            by_f[f] = False
+    return by_f, dict(f_locations)
+
+def checkFilesLocations_xrootd( check_files ):
+    rthreads = []
+    random.shuffle( check_files )
+    by_f = {}
+    f_locations = defaultdict(set)
+    for f in check_files:
+        rthreads.append( ReadBuster( file = f ))
+    print "checking on existence of",len(rthreads),"files"
+    run_rthreads = ThreadHandler( threads = rthreads, n_threads = 20, timeout = 10)
+    run_rthreads.start()
+    while run_rthreads.is_alive():
+        time.sleep(10)
+
+    for t in run_rthreads.threads:
+        by_f[t.file] = t.readable
+        #print "checked",t.file,t.readable
+    return by_f, dict(f_locations)
 
 def parse_one(url, wfn, options=None):
 
@@ -166,11 +212,12 @@ def parse_one(url, wfn, options=None):
 
     SI = global_SI()
     UC = unifiedConfiguration()
+    RI = reportInfo()
     wfi = workflowInfo( url , wfn)
     time_point("wfi" ,sub_lap=True)
     where_to_run, missing_to_run,missing_to_run_at = wfi.getRecoveryInfo()       
     time_point("acdcinfo" ,sub_lap=True)
-    all_blocks,needed_blocks_loc,files_in_blocks,files_and_loc_notin_dbs = wfi.getRecoveryBlocks()
+    all_blocks,needed_blocks_loc,files_in_blocks,files_and_loc_in_dbs,files_and_loc_notin_dbs = wfi.getRecoveryBlocks()
     time_point("inputs" ,sub_lap=True)
 
 
@@ -253,7 +300,8 @@ def parse_one(url, wfn, options=None):
     print json.dumps(missing_to_run , indent=2)        
     print "\t Missing events per site"
     print json.dumps(missing_to_run_at , indent=2)        
-    
+    for task in missing_to_run_at:
+        RI.set_missing(wfn, task, missing_to_run_at[task] )
 
     if not where_to_run and not missing_to_run and not missing_to_run_at:
         print "showError is unable to run"
@@ -271,6 +319,7 @@ def parse_one(url, wfn, options=None):
         do_all_error_code = True
         
 
+    IO_doc = {}
     tasks = sorted(set(err.keys() + missing_to_run.keys()))
 
     if not tasks:
@@ -314,6 +363,7 @@ def parse_one(url, wfn, options=None):
 
             for site in sorted(presence.keys()):
                 html += '<li>%s : %.2f %%'%( site, presence[site][1] )
+                IO_doc.setdefault('primary',{}).setdefault(dataset,{})[site] = presence[site][1]
             html+='</ul><br>'
 
             
@@ -324,6 +374,7 @@ def parse_one(url, wfn, options=None):
             html +='<b>%s</b><ul>'%dataset
             for site in sorted(presence.keys()):
                 html += '<li>%s : %.2f %%'%( site, presence[site][1] )
+                IO_doc.setdefault('secondary',{}).setdefault(dataset,{})[site] = presence[site][1]
             html+='</ul>'
         
 
@@ -332,13 +383,18 @@ def parse_one(url, wfn, options=None):
         html+='Produces<br>'
         for dataset in outs:
             presence = getDatasetPresence(url, dataset)
-            html +='<b>%s </b>(events/lumi ~ %d)<ul>'%(dataset, getDatasetEventsPerLumi(dataset))
+            epl = getDatasetEventsPerLumi(dataset)
+            html +='<b>%s </b>(events/lumi ~ %d)<ul>'%(dataset, epl)
+            IO_doc.setdefault('outputs',{}).setdefault(dataset,{})['eventsperlumi'] = epl
             for site in sorted(presence.keys()):
                 html += '<li>%s : %.2f %%'%( site, presence[site][1] )
+                IO_doc.setdefault('outputs',{}).setdefault(dataset,{}).setdefault('location',{})[site] = presence[site][1]
             html+='</ul>'
             
     time_point("Input checked")
 
+    RI.purge( wfn )
+    RI.set_IO( wfn, IO_doc )
 
     html += """
 <hr><br>
@@ -354,6 +410,7 @@ def parse_one(url, wfn, options=None):
 
     n_expose_base = options.expose# if options else UC.get('n_error_exposed')
     print "getting",n_expose_base,"logs by default"
+    reported_tasks= []
     if tasks:
         min_rank = min([task.count('/') for task in tasks])
     for task in tasks:  
@@ -397,7 +454,7 @@ def parse_one(url, wfn, options=None):
         #is the task relevant to recover (discard log, cleanup)
         if any([v in task.lower() for v in ['logcol','cleanup']]): continue
 
-
+        reported_tasks.append( task )
         #total_count= defaultdict(int)
         #error_site_count = defaultdict( lambda : defaultdict(int))
         if not task in err:
@@ -645,7 +702,8 @@ def parse_one(url, wfn, options=None):
             html +='</tr>\n'
         html+='</table><br>'
         task_error_site_count[task] = error_site_count
-
+        RI.set_errors( wfn, task_short, error_site_count )
+        
     ## run all retrieval
     run_threads = ThreadHandler( threads = threads, n_threads = options.log_threads,# if options else 5,
                                  sleepy = 10, 
@@ -653,105 +711,81 @@ def parse_one(url, wfn, options=None):
                                  verbose=True)
     run_threads.start()
 
-    html += '<hr><br>'
+    html += '<hr>'
     html += '<a name=BLOCK></a>'
-    html += "<b>Blocks (%d/%d) needed for recovery</b><br>"%( len(needed_blocks_loc), len(all_blocks))
-    for block in sorted(needed_blocks_loc.keys()):
-        html +='%s <b>@ %s</b><br>'%(block, ','.join(sorted(needed_blocks_loc[block])))
-
-    html += '<a name=FILE></a>'
-    html += "<br><b>%s Files in no block</b><br>"%( len(files_and_loc_notin_dbs.keys()))
-    rthreads = []
-    check_files = [ f for f in files_and_loc_notin_dbs.keys() if '/store' in f]
-    random.shuffle( check_files )
-    #check_files = check_files[:100]
     check_files = []
-    by_f = {}
-    f_locations = defaultdict(set)
-    if check_files:
-        import dynamoClient
-        DC=dynamoClient.dynamoClient()
-        dirs_by_site = defaultdict(set)
-        for f in check_files:
-            dir,fn = f.rsplit('/',1)
-            for s in files_and_loc_notin_dbs[f]:
-                dirs_by_site[s].add( dir )
-        files_by_site = DC.files_in_dir( dirs_by_site )
-        #print dirs_by_site
-        #print files_by_site
-        
-        for f in check_files:
-            locs = [s for s in files_by_site if f in files_by_site[s] ]
-            if locs:
-                by_f[f] = True
-                f_locations[f].update( locs )
+    for task in reported_tasks:
+        html += '<br>'
+        task_n = task.split('/')[-1]
+        all_blocks,needed_blocks_loc,files_in_blocks,files_and_loc_in_dbs,files_and_loc_notin_dbs = wfi.getRecoveryBlocks(for_task = task)
+
+        if len(needed_blocks_loc):
+            html += "<b>Blocks (%d/%d) needed for %s</b><br>"%( len(needed_blocks_loc), len(all_blocks), task_n)
+            for block in sorted(needed_blocks_loc.keys()):
+                html +='%s @ %s<br>'%(block, ','.join(sorted(needed_blocks_loc[block])))
+            RI.set_blocks( wfn, task_n, needed_blocks_loc)
+
+        html += '<a name=FILE></a>'
+        if len(files_and_loc_in_dbs.keys()): 
+            html += "<b>%s Files in block for %s</b><br>"%( len(files_and_loc_in_dbs.keys()), task_n)
+            #print files_and_loc_in_dbs
+            RI.set_files( wfn, task_n, files_and_loc_in_dbs )
+        if len(files_and_loc_notin_dbs.keys()):
+            html += "<b>%s Files in no block for %s</b><br>"%( len(files_and_loc_notin_dbs.keys()), task_n)
+            #print files_and_loc_notin_dbs
+            RI.set_ufiles(wfn, task_n, files_and_loc_notin_dbs )
+
+        max_number_of_files = 500
+        display_files = sorted(files_and_loc_notin_dbs.keys())
+        display_files = display_files[:max_number_of_files] if max_number_of_files else display_files
+        check_files = [ f for f in files_and_loc_notin_dbs.keys() if '/store' in f]
+        check_location_mode = options.check_location
+        if check_location_mode is None and len(check_files)< 10: 
+            ## fallback to xrootd if nothing was said, and there aren't many files
+            check_location_mode = 'xrootd'
+        files_status, files_location = checkFilesLocations( check_files , mode= check_location_mode) 
+        files_html = ""
+        existing_html = ""
+        lost_html = ""
+        missing_files = defaultdict(int)
+        expected_files = defaultdict(int)
+        separate_h = False
+        for f in sorted(display_files):
+            readable = files_status.get(f,-1) #0 not, -1 unknown, 1 yes
+            color = {-1:'black',0:'red',1:'green'}.get( readable)
+            reported_locs = sorted(files_and_loc_notin_dbs[f])
+            actual_locs = sorted(files_location.get(f,[]))
+            all_locs = sorted(set(reported_locs+actual_locs))
+            for s in files_and_loc_notin_dbs[f]: expected_files[s]+=1
+            for s in files_and_loc_notin_dbs[f]: 
+                missing_files[s] += (1 if (readable==1 and s not in actual_locs) or (readable==0 and s not in actual_locs) else 0) if readable!=-1 else 0
+
+            html_line = '<font color="%s">%s</font> <b>@</b> %s <br>'%( color, f,
+                                                                   ','.join(['<font color="%s">%s</font>'%( ('green' if site in actual_locs else 'red') if readable!=-1 else 'black',site) for site in all_locs])
+                                                               )
+            if not separate_h:
+                files_html += html_line
+            if readable == 0:
+                lost_html += html_line
             else:
-                by_f[f] = False
+                existing_html += html_line
 
-        """
-        for f in check_files:
-            rthreads.append( ReadBuster( file = f ))
-        print "checking on existence of",len(rthreads),"files"
-        run_rthreads = ThreadHandler( threads = rthreads, n_threads = 20, timeout = 10)
-        run_rthreads.start()
-        while run_rthreads.is_alive():
-            time.sleep(10)
-
-        for t in run_rthreads.threads:
-            by_f[t.file] = t.readable
-            #print "checked",t.file,t.readable
-        """
-    files_html = ""
-    existing_html = ""
-    lost_html = ""
-    separate_h = False
-    missing_files = defaultdict(int)
-    expected_files = defaultdict(int)
-    max_number_of_files = 500 
-    display_files = sorted(files_and_loc_notin_dbs.keys())
-    display_files = display_files[:max_number_of_files] if max_number_of_files else display_files
+        if any(missing_files.values()) and False: ## the table it not relevant without upto date information on file locations
+            html += "<br><table border=1><thead><tr><td>Site</td><td>Expected files</td><td>Missing files</td></tr></thead>"
+            for site in sorted(expected_files.keys()):
+                html+="<tr bgcolor=%s><td>%s</td><td>%d</td><td>%d</td></tr>"%("red" if missing_files[site] else "",
+                                                                               site,
+                                                                               expected_files[site],
+                                                                               missing_files[site])
+            html += "</table><br>"
     
-    for f in display_files:
-        readable = by_f.get(f,-1)
-        if readable == -1 or not 'store' in f:
-            fs = '%s'%f
-            sites_strs = sorted(files_and_loc_notin_dbs[f])
+        if separate_h:
+            html += existing_html
+            html += lost_html
         else:
-            for s in files_and_loc_notin_dbs[f]:
-                expected_files[s]+=1
-            if readable == True:
-                fs = '<font color="light green">%s</font>'%f
-                #print f,"is readable"
-            else:
-                fs = '<font color=red>%s</font>'%f
-                #print f,"is not readable"
-                for s in files_and_loc_notin_dbs[f]:
-                    missing_files[s]+=1
-        
-            sites_strs = [ '<font color="%s">%s</font>'% ('light green' if s in f_locations[f] else 'red', s) for s in sorted(files_and_loc_notin_dbs[f])]
-            #seen_at = sorted(f_locations[f])
+            html += files_html
             
-        html_line ='%s <b>@</b> %s<br>'%( fs, 
-                                      ','.join( sites_strs ), 
-                                      #','.join(seen_at)
-                                  )
-        if not separate_h:
-            files_html += html_line
-        if readable == False:
-            lost_html += html_line
-        else:
-            existing_html += html_line
-    html += "<br><table border=1><thead><tr><td>Site</td><td>Expected files</td><td>Missing files</td></tr></thead>"
-    for s in sorted(expected_files.keys()):
-        if missing_files[s] or True:
-            html+="<tr bgcolor=%s><td>%s</td><td>%d</td><td>%d</td></tr>"%( "red" if missing_files[s] else "", s, expected_files[s], missing_files[s])
-    html += "</table><br>"
 
-    if separate_h:
-        html += existing_html
-        html += lost_html
-    else:
-        html += files_html
 
     html += '<hr><br>'
     html += '<a name=CODES></a>'
@@ -760,6 +794,15 @@ def parse_one(url, wfn, options=None):
         html +='<tr><td><a name="%s">%s</a><br><a href=https://twiki.cern.ch/twiki/bin/view/CMSPublic/JobExitCodes>code twiki</a></td><td>%s</td></tr>'% ( code, code, '<br><br>'.join(per_task_explanation[code]).replace('\n','<br>' ))
     #for code in one_explanation:
     #    html +='<tr><td><a name="%s">%s</a></td><td>%s</td></tr>'% ( code, code, '<br><br>'.join(one_explanation[code]).replace('\n','<br>' ))
+    re_cast = defaultdict(dict)
+    for t_and_e in per_task_explanation:
+        task,code = t_and_e.split(':')
+        re_cast[task][code] = per_task_explanation[t_and_e]
+    for task in re_cast:
+        print "logs",re_cast[task]
+        RI.set_logs( wfn, task, re_cast[task] )
+
+    #print RI.get(wfn)
 
     html+='</table>'
     html+=('<br>'*30)
@@ -1026,6 +1069,10 @@ class showError_options(object):
                          'help' : 'Number of logs to retrieve',
                          'type' : int
                          },
+            'check_location' : { 'default' : None,
+                                 'help' : 'Enable the checking of file location',
+                                 'choices' : [None,'none','xrootd','dynamo']
+                },
             'not_from_eos' : { 'default' : False,
                                'action' : 'store_true',
                                'help' : 'Do NOT retrieve from job logs from eos'
@@ -1063,21 +1110,12 @@ if __name__=="__main__":
 
     so = showError_options()
     so.set_parser( parser )
-    #parser.add_option('--no_JL',help="Do not get the job logs", action="store_true",default=False)
-    #parser.add_option('--no_CL',help="Do not get the condor logs", action="store_true",default=False)
     parser.add_option('--fast',help="Retrieve from cache and no logs retrieval", action="store_true", default=False)
     parser.add_option('--ongoing',help="Retrieve for all ongoing", action="store_true", default=False)
     parser.add_option('--manual',help="Retrieve for all workflows needing help", action="store_true", default=False)
     parser.add_option('--top',help="Retrieve the top N offenders",action="store_true", default=False)
     parser.add_option('--from_status',help="The coma separated list of status keywords",default="")
-    #parser.add_option('--cache',help="The age in second of the error report before reloading them", default=0, type=float)
     parser.add_option('--workflow','-w',help="The workflow to make the error report of",default=None)
-    #parser.add_option('--expose',help="Number of logs to retrieve",default=UC.get('n_error_exposed'),type=int)
-    #parser.add_option('--all_errors',help="Bypass and expose all error codes", default=False, action='store_true')
-    #not used#parser.add_option('--no_logs',help="Bypass retrieval of logs", default=False, action='store_true')
-    #parser.add_option('--from_eos',help="Retrieve from eos",default=False, action='store_true')
-    #parser.add_option('--threads',help="The number of parallel workers to get report", default=5, type=int)
-    #parser.add_option('--log_threads',help="The number of parallel workers to get logs per report", default=3, type=int)
     (options,args) = parser.parse_args()
     
     if options.fast:

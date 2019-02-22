@@ -2799,7 +2799,99 @@ def global_SI(a=None):
     return global_SI.instance
 global_SI.instance = None
 
+class reportInfo:
+    def __init__(self):
+        self.client = mongo_client()
+        self.db = self.client.unified.reportInfo
 
+    def purge(self ,wfn=None, grace=None, wipe=False):
+        ## clean in a way of another
+        if wfn:
+            for e in  self.db.find( {'workflow' : wfn}):
+                self.db.delete_one({'_id': e['_id']})
+        if grace:
+            then = mktime( time.gmtime()) - (grace*24*60*60) ## s
+            for o in self.db.find({ 'time': { '$lt': then } } ):
+                self.db.delete_one({'_id': o['_id']})
+        if wipe == True:
+            if raw_input('wipe repor db?').lower() in ['y','yes']:
+                for o in self.db.find():
+                    self.db.delete_one({'_id': o['_id']})
+    
+    def get(self, wfn , strip=True):
+        doc = self.db.find_one({'workflow' : wfn})
+        if strip: doc.pop('_id')
+        return doc
+
+    def _convert( self, d ):
+        d = copy.deepcopy(d)
+        ## convert recursively the types that cannot go in as is
+        for k,v in d.items():
+            if '.' in k:
+                d.pop(k)
+                k = k.replace('.','__dot__')
+                #print k,"with a dot"
+            if type(v) == set:
+                d[k] = list(v)
+            elif type(v) in [dict, defaultdict]:
+                d[k] = self._convert(v)
+            else:
+                ## for re-keying
+                d[k] =v 
+
+        return dict(d)
+
+    def _put(self, updating_doc):
+        now = time.gmtime()
+        date = time.asctime( now )
+        now = time.mktime( now )
+        updating_doc = self._convert( updating_doc )
+        updating_doc.update({'time' : now, 'date' : date})
+        #print updating_doc
+        exist = self.db.find_one({'workflow' : updating_doc.get('workflow')})
+        if exist:
+            # nested info update and pop from new doc
+            for nested in ['tasks']:
+                new_info = updating_doc.pop(nested) if nested in updating_doc else {}
+                for k in sorted(exist.get(nested,{}).keys()+new_info.keys()):
+                    exist.setdefault(nested,{}).setdefault(k,{}).update( new_info.get(k,{}))
+
+            #root info update
+            exist.update( updating_doc )
+            self.db.update_one({'workflow' : updating_doc.get('workflow')},
+                               {'$set': exist})
+            
+        else:
+            self.db.insert_one( updating_doc )
+
+    def set_IO(self, wfn, IO):
+        doc = { 'workflow' : wfn }
+        doc.update( IO )
+        self._put( doc )
+        
+    def set_errors(self, wfn, task, errors):
+        self._set_for_task( wfn, task, errors, 'errors')
+
+    def set_blocks(self, wfn, task, blocks):
+        self._set_for_task( wfn, task, blocks, 'needed_blocks')
+
+    def set_files(self, wfn, task, files):
+        self._set_for_task( wfn, task, files, 'files')
+
+    def set_ufiles(self, wfn, task, files):
+        self._set_for_task( wfn, task, files, 'ufiles')
+
+    def set_missing(self, wfn, task, missing):
+        self._set_for_task( wfn, task, missing, 'missing')
+
+    def set_logs(self, wfn, task, logs):
+        self._set_for_task( wfn, task, logs, 'logs')
+
+    def _set_for_task( self, wfn, task, content , field_name):
+        task = task.split('/')[-1]
+        doc = { 'workflow' : wfn,
+                'tasks' : { task : {field_name : content}}}
+        self._put( doc )
 
 class closeoutInfo:
     def __init__(self):
@@ -6717,11 +6809,13 @@ class workflowInfo:
 
         return self.wmstats
 
-    def getRecoveryBlocks(self ,collection_name=None):
+    def getRecoveryBlocks(self ,collection_name=None, for_task= None):
         doc = self.getRecoveryDoc(collection_name=collection_name)
         all_files = set()
         files_and_loc = defaultdict(set)
         for d in doc:
+            task = d.get('fileset_name',"")
+            if for_task and not task.endswith(for_task):continue
             all_files.update( d['files'].keys())
             for fn in d['files']:
                 files_and_loc[ fn ].update( d['files'][fn]['locations'] )
@@ -6756,8 +6850,10 @@ class workflowInfo:
             print dataset
             dataset_blocks.update( getDatasetBlocks( dataset ) )
 
-        files_and_loc = dict([(k,list(v)) for (k,v) in files_and_loc.items() if k in files_no_block])
-        return dataset_blocks,all_blocks_loc,files_in_block,files_and_loc#files_no_block
+        ## skim out the files
+        files_and_loc_noblock = dict([(k,list(v)) for (k,v) in files_and_loc.items() if k in files_no_block])
+        files_and_loc = dict([(k,list(v)) for (k,v) in files_and_loc.items() if k in files_in_block])
+        return dataset_blocks,all_blocks_loc,files_in_block,files_and_loc,files_and_loc_noblock
 
     def getRecoveryDoc(self, collection_name=None):
         if collection_name == None:
