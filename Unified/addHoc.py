@@ -1,5 +1,5 @@
 #!/usr/bin/env python  
-from utils import workflowInfo, getWorkflows, sendEmail, componentInfo, monitor_dir, reqmgr_url, siteInfo, sendLog, getWorkflowById, isHEPCloudReady, agentInfo, unifiedConfiguration, monitor_eos_dir, base_eos_dir, batchInfo
+from utils import workflowInfo, getWorkflows, sendEmail, componentInfo, monitor_dir, reqmgr_url, siteInfo, sendLog, getWorkflowById, isHEPCloudReady, agentInfo, unifiedConfiguration, monitor_eos_dir, base_eos_dir, batchInfo, reportInfo
 
 from assignSession import *
 import reqMgrClient
@@ -103,6 +103,9 @@ for b,pids in batches.items():
 
 print "wf that can have logs"
 print '\n'.join(sorted(may_have_one))
+
+RI = reportInfo()
+RI.purge( grace = 30 ) 
 
 for (the_dir,logtype) in [(monitor_eos_dir,'report'),
                           (monitor_dir,'report'),
