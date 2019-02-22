@@ -2804,12 +2804,19 @@ class reportInfo:
         self.client = mongo_client()
         self.db = self.client.unified.reportInfo
 
-    def purge(self ,wfn=None):
+    def purge(self ,wfn=None, grace=None, wipe=False):
         ## clean in a way of another
         if wfn:
             for e in  self.db.find( {'workflow' : wfn}):
                 self.db.delete_one({'_id': e['_id']})
-                
+        if grace:
+            then = mktime( time.gmtime()) - (grace*24*60*60) ## s
+            for o in self.db.find({ 'time': { '$lt': then } } ):
+                self.db.delete_one({'_id': o['_id']})
+        if wipe == True:
+            if raw_input('wipe repor db?').lower() in ['y','yes']:
+                for o in self.db.find():
+                    self.db.delete_one({'_id': o['_id']})
     
     def get(self, wfn , strip=True):
         doc = self.db.find_one({'workflow' : wfn})
@@ -2835,7 +2842,11 @@ class reportInfo:
         return dict(d)
 
     def _put(self, updating_doc):
+        now = time.gmtime()
+        date = time.asctime( now )
+        now = time.mktime( now )
         updating_doc = self._convert( updating_doc )
+        updating_doc.update({'time' : now, 'date' : date})
         #print updating_doc
         exist = self.db.find_one({'workflow' : updating_doc.get('workflow')})
         if exist:
