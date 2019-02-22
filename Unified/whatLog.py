@@ -26,16 +26,20 @@ eos='/usr/bin/eos'
 logs = []
 if options.logfile:
     if options.workflow:
-        logs = session.query(LogRecord).filter(LogRecord.logfile.contains( options.logfile)).filter(LogRecord.workflow.contains( options.workflow )).all()
+        #logs = session.query(LogRecord).filter(LogRecord.logfile.contains( options.logfile)).filter(LogRecord.workflow.contains( options.workflow )).all()
+        logs = session.query(LogRecord).filter(LogRecord.logfile == options.logfile).filter(LogRecord.workflow == options.workflow).all()
     else:
-        logs = session.query(LogRecord).filter(LogRecord.logfile.contains( options.logfile)).all()
+        #logs = session.query(LogRecord).filter(LogRecord.logfile.contains( options.logfile)).all()
+        logs = session.query(LogRecord).filter(LogRecord.logfile == options.logfile).all()
 else:
     if options.workflow:
         if options.task:
             #logs = session.query(LogRecord).filter(LogRecord.workflow.contains( options.workflow )).filter(LogRecord.task.contains( options.task)).all()
-            logs = session.query(LogRecord).filter(LogRecord.workflow.contains( options.workflow )).filter(LogRecord.task == options.task).all()
+            #logs = session.query(LogRecord).filter(LogRecord.workflow.contains( options.workflow )).filter(LogRecord.task == options.task).all()
+            logs = session.query(LogRecord).filter(LogRecord.workflow == options.workflow).filter(LogRecord.task == options.task).all()
         else:
-            logs = session.query(LogRecord).filter(LogRecord.workflow.contains( options.workflow )).all()
+            #logs = session.query(LogRecord).filter(LogRecord.workflow.contains( options.workflow )).all()
+            logs = session.query(LogRecord).filter(LogRecord.workflow == options.workflow).all()
 
 if not logs:
     print "nothing found"
