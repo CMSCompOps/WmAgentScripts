@@ -799,7 +799,7 @@ def parse_one(url, wfn, options=None):
         task,code = t_and_e.split(':')
         re_cast[task][code] = per_task_explanation[t_and_e]
     for task in re_cast:
-        print "logs",re_cast[task]
+        #print "logs",re_cast[task]
         RI.set_logs( wfn, task, re_cast[task] )
 
     #print RI.get(wfn)
