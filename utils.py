@@ -6329,8 +6329,6 @@ def closeAllBlocks(url, dataset, blocks=None):
     for block in result.get('block',[]):
         bname = block.get('name')
         if blocks and not bname in blocks: continue
-        ## verify that the block is indeed closed in DBS
-        if not bname in dbs_closed: continue
         sites = list()
         for sub in block.get('replica',[]):
             sites.append(sub.get('node'))
@@ -6343,6 +6341,7 @@ def closeAllBlocks(url, dataset, blocks=None):
                    "data" : xml}
         r = phedexPost(url, '/phedex/datasvc/json/prod/inject', params)
         print json.dumps( r , indent=2)
+        ## close the block in dbs
         dbswrite.updateBlockStatus( block_name = bname, open_for_writing = 0)
 
 def checkIfBlockIsAtASite(url,block,site):
