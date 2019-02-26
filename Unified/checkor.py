@@ -758,7 +758,7 @@ class CheckBuster(threading.Thread):
         if long_lasting_choped :
             msg = 'Reducing pass thresholds by %.3f%% for long lasting workflow %s '%(100*fraction_damping, wfi.request['RequestName'])
             wfi.sendLog('checkor', msg)
-            sendLog('checkor', msg, level='critical')
+            #sendLog('checkor', msg, level='critical')
             
         ## do something about workflow with high order ACDC
         # acdc_order == -1  None
