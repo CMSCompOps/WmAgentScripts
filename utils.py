@@ -7460,6 +7460,11 @@ class workflowInfo:
                                                                                                                                                      events_per_lumi_at_this_task, timeperevent,
                                                                                                                                                      time_per_input_lumi / (60.*60.),
                                                                                                                                                      job_timeout)
+				
+			    sendLog('assignor',"The running time of task %s is expected to be too large even for one lumi section: %d x %.2f s = %.2f h > %d h"%( tname,
+                                                                                                                                                     events_per_lumi_at_this_task, timeperevent,
+                                                                                                                                                     time_per_input_lumi / (60.*60.),
+                                                                                                                                                     job_timeout), level='critical')
                             this_max_events_per_lumi = int( job_target*60.*60. / timeperevent)
                             max_events_per_lumi.append( this_max_events_per_lumi /efficiency_factor ) ## report here, so that if we can change it, we will change this
                         else:
