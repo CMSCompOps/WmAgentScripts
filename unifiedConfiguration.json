@@ -14,7 +14,7 @@
  "site_out_of_overflow": {
    "value" : [
                "NONO_T1_UK_RAL",
-	       "T1_IT_CNAF",
+               "NONO_T1_IT_CNAF",
                "T0_CH_CSCS_HPC"],
    "description" : "The sites that should be taken out completely from the overflow mapping"
  },
