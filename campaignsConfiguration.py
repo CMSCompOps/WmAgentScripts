@@ -45,7 +45,7 @@ if options.dump:
             pass
         uc[content.pop("name")] = content
     print len(uc.keys()),"campaigns damp"
-    open(options.dump,'w').write(json.dumps( uc, indent =2))
+    open(options.dump,'w').write(json.dumps( uc, indent =2, sort_keys=True))
     sys.exit(0)
 
 if options.remove:
@@ -107,7 +107,7 @@ if found:
         # not other headers in the output, so that it can be json loadable
         found.pop('name')
         found.pop('_id')
-        print json.dumps(found, indent=2)
+        print json.dumps(found, indent=2, sort_keys=True)
 else:
     if post:
         ## entering a new value
