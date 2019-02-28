@@ -18,4 +18,4 @@ if [ "$1" == "create" ] ; then
     cat $HOME/private/$USER.txt | voms-proxy-init -voms cms --valid 140:00 --rfc -pwstdin
 fi
 
-export PYTHONPATH=$PYTHONPATH:/usr/lib64/python2.7/site-packages
+export PYTHONPATH=$PYTHONPATH:/usr/lib64/python2.7/site-packages:/usr/lib/python2.7/site-packages
