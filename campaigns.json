@@ -71,10 +71,10 @@
   }, 
   "RunIISummer19UL17GS": {
     "lumisize": -1, 
-    "resize": "auto", 
     "fractionpass": 0.95, 
     "go": false, 
-    "tune": true
+    "tune": true, 
+    "resize": "auto"
   }, 
   "PhaseIITDRSpring17GS": {
     "lumisize": 1500, 
@@ -106,10 +106,10 @@
     ], 
     "maxcopies": 1, 
     "partial_copy": 0.01, 
-    "fractionpass": 0.95, 
     "lumisize": -1, 
     "force-timeout": 3, 
     "force-complete": 0.9, 
+    "fractionpass": 0.95, 
     "go": true, 
     "overflow": {
       "PRIM": {}
@@ -329,15 +329,28 @@
   }, 
   "RunIILowPUAutumn18wmLHEGS": {
     "lumisize": -1, 
+    "resize": "auto", 
     "fractionpass": 0.95, 
     "go": true, 
-    "tune": true, 
-    "resize": "auto"
+    "tune": true
   }, 
   "RunIISummer16DR80": {
     "maxcopies": 2, 
     "partial_copy": 0.95, 
     "NO_tune": true, 
+    "NONONO_force-complete": 0.99, 
+    "lumisize": -1, 
+    "NONONO_partial_copy": 0.98, 
+    "fractionpass": 0.95, 
+    "NONONO_force-timeout": 7, 
+    "go": true, 
+    "overflow": {
+      "PU": {
+        "max": 20000, 
+        "force": false, 
+        "pending": 0
+      }
+    }, 
     "secondaries": {
       "/Min_Bias_13TeV_pythia8_TuneCUETP8M4/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM": {}, 
       "/MinBias_TuneCP2_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM": {}, 
@@ -352,20 +365,7 @@
         ]
       }, 
       "/Min_Bias_13TeV_pythia8_TuneCUETP8M2/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM": {}
-    }, 
-    "lumisize": -1, 
-    "NONONO_force-complete": 0.99, 
-    "fractionpass": 0.95, 
-    "NONONO_force-timeout": 7, 
-    "go": true, 
-    "overflow": {
-      "PU": {
-        "max": 20000, 
-        "force": false, 
-        "pending": 0
-      }
-    }, 
-    "NONONO_partial_copy": 0.98
+    }
   }, 
   "RunIISpring16pLHE": {
     "go": false, 
@@ -392,10 +392,10 @@
   }, 
   "RunIIFall17GS": {
     "lumisize": -1, 
-    "resize": "auto", 
     "force-complete": 0.99, 
     "go": true, 
     "tune": true, 
+    "resize": "auto", 
     "fractionpass": 0.95
   }, 
   "RunIIWinter17MiniAOD": {
@@ -645,10 +645,10 @@
   }, 
   "RunIISpring16GS": {
     "lumisize": -1, 
-    "resize": "auto", 
     "fractionpass": 0.95, 
     "go": false, 
-    "tune": true
+    "tune": true, 
+    "resize": "auto"
   }, 
   "Summer16Geant4102": {
     "go": true, 
@@ -937,13 +937,8 @@
       "DQMIO"
     ], 
     "maxcopies": 1, 
-    "force-complete": 0.95, 
     "lumisize": -1, 
     "earlyannounce": 0.99, 
-    "go": true, 
-    "overflow": {
-      "PRIM": {}
-    }, 
     "fractionpass": {
       "all": 1.0, 
       "DQMIO": {
@@ -954,7 +949,12 @@
         "/SinglePhoton": 0.95, 
         "/SingleMuon/": 0.95
       }
-    }
+    }, 
+    "go": true, 
+    "overflow": {
+      "PRIM": {}
+    }, 
+    "force-complete": 0.95
   }, 
   "PhaseIIMTDTDRAutumn18wmLHEGS": {
     "lumisize": -1, 
@@ -1025,17 +1025,17 @@
       ]
     }, 
     "maxcopies": 1, 
-    "DDMcopies": {
-      "all": {
-        "N": 2
-      }
-    }, 
-    "lumisize": -1, 
     "custodial": "T1_FR_CCIN2P3_MSS", 
+    "lumisize": -1, 
     "fractionpass": 0.95, 
     "go": true, 
     "overflow": {
       "PRIM": {}
+    }, 
+    "DDMcopies": {
+      "all": {
+        "N": 2
+      }
     }
   }, 
   "RunIISummer18DRPremix": {
@@ -1178,15 +1178,15 @@
     "NO_NO_fractionpass": {
       "90000": 0.9
     }, 
-    "fractionpass": 0.95, 
     "lumisize": -1, 
     "force-timeout": 7, 
+    "force-complete": 0.99, 
     "resize": {
       "minCores": 3, 
       "maxCores": 10, 
       "memoryPerThread": 500
     }, 
-    "force-complete": 0.99, 
+    "fractionpass": 0.95, 
     "go": true, 
     "overflow": {
       "PREMIX": {}
@@ -1274,10 +1274,10 @@
   }, 
   "RunIILowPUAutumn18GS": {
     "lumisize": -1, 
+    "resize": "auto", 
     "fractionpass": 0.95, 
     "go": true, 
-    "tune": true, 
-    "resize": "auto"
+    "tune": true
   }, 
   "RunIIFall18FSPremix": {
     "secondary_AAA": true, 
@@ -1327,7 +1327,7 @@
   }, 
   "RunIIFall15DR76": {
     "lumisize": -1, 
-    "force-complete": 0.99, 
+    "fractionpass": 0.95, 
     "go": true, 
     "overflow": {
       "PU": {
@@ -1338,7 +1338,7 @@
     "secondaries": {
       "/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1-v2/GEN-SIM": {}
     }, 
-    "fractionpass": 0.95
+    "force-complete": 0.99
   }, 
   "RunIISummer16FSDR": {
     "parameters": {
@@ -1485,10 +1485,10 @@
   }, 
   "RunIISummer18GS": {
     "lumisize": -1, 
-    "resize": "auto", 
     "fractionpass": 0.95, 
     "go": true, 
-    "tune": true
+    "tune": true, 
+    "resize": "auto"
   }, 
   "Summer16wmLHEGENOnly14TeV": {
     "parameters": {
@@ -1543,14 +1543,14 @@
   }, 
   "RunIIWinter15GS": {
     "lumisize": -1, 
-    "resize": "auto", 
+    "tune": true, 
     "go": true, 
     "overflow": {
       "LHE": {
         "site_list": "sites_AAA"
       }
     }, 
-    "tune": true, 
+    "resize": "auto", 
     "fractionpass": 0.95
   }, 
   "TTI2023Upg14GS": {
@@ -1573,17 +1573,44 @@
   }, 
   "PhaseIIMTDTDRAutumn18GS": {
     "lumisize": -1, 
-    "resize": "auto", 
     "fractionpass": 0.95, 
     "go": true, 
+    "tune": true, 
+    "resize": "auto"
+  }, 
+  "HINPbPbAutumn18wmLHEGSHIMix": {
+    "maxcopies": 1, 
+    "MergedLFNBase": "/store/himc", 
+    "custodial": "T1_FR_CCIN2P3_MSS", 
+    "lumisize": -1, 
+    "fractionpass": 0.95, 
+    "SiteBlacklist": [
+      "T1_US_FNAL", 
+      "T2_US_Purdue", 
+      "T2_US_Caltech", 
+      "T2_US_Florida", 
+      "T2_US_Nebraska", 
+      "T2_US_UCSD", 
+      "T2_US_Wisconsin", 
+      "T2_CH_CERN"
+    ], 
+    "go": false, 
+    "secondaries": {
+      "/MinBias_Hydjet_Drum5F_2018_5p02TeV/HINPbPbAutumn18GS-103X_upgrade2018_realistic_HI_v11-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_RU_JINR", 
+          "T1_FR_CCIN2P3"
+        ]
+      }
+    }, 
     "tune": true
   }, 
   "RunIISpring18GS": {
     "lumisize": -1, 
-    "resize": "auto", 
     "fractionpass": 0.95, 
     "go": true, 
-    "tune": true
+    "tune": true, 
+    "resize": "auto"
   }, 
   "RunIIAutumn18NanoAODv4": {
     "maxcopies": 1, 
@@ -1593,17 +1620,17 @@
   }, 
   "RunIILowPUSpring18wmLHEGS": {
     "lumisize": -1, 
-    "resize": "auto", 
     "fractionpass": 0.95, 
     "go": true, 
-    "tune": true
+    "tune": true, 
+    "resize": "auto"
   }, 
   "RunIILowPUSpring18GS": {
     "lumisize": -1, 
-    "resize": "auto", 
     "fractionpass": 0.95, 
     "go": true, 
-    "tune": true
+    "tune": true, 
+    "resize": "auto"
   }, 
   "RunIIFall17FSPremix": {
     "secondary_AAA": true, 
@@ -1787,10 +1814,10 @@
   }, 
   "RunIIWinter17GS": {
     "lumisize": -1, 
-    "resize": "auto", 
     "fractionpass": 0.95, 
     "go": true, 
-    "tune": true
+    "tune": true, 
+    "resize": "auto"
   }, 
   "RunIISummer16NanoAODv3": {
     "maxcopies": 1, 
@@ -2150,19 +2177,19 @@
   }, 
   "RunIISummer17wmLHEGS": {
     "lumisize": -1, 
+    "resize": "auto", 
     "force-complete": 0.99, 
     "go": true, 
     "tune": true, 
-    "resize": "auto", 
     "fractionpass": 0.95
   }, 
   "RunIIWinter19CosmicDR": {
     "secondary_AAA": false, 
     "maxcopies": 1, 
     "lumisize": -1, 
-    "tune": true, 
-    "go": true, 
     "fractionpass": 0.95, 
+    "go": true, 
+    "tune": true, 
     "resize": "auto"
   }, 
   "2019GEMUpg14": {
@@ -2392,14 +2419,14 @@
     "resize": "auto"
   }, 
   "Summer12": {
-    "fractionpass": 0.95, 
+    "force-complete": 0.99, 
     "go": true, 
     "overflow": {
       "LHE": {
         "site_list": "sites_AAA"
       }
     }, 
-    "force-complete": 0.99
+    "fractionpass": 0.95
   }, 
   "CosmicWinter15GS": {
     "go": false
@@ -2450,6 +2477,33 @@
     ], 
     "fractionpass": 0.95, 
     "go": true, 
+    "tune": true
+  }, 
+  "HINPbPbAutumn18GSHIMix": {
+    "maxcopies": 1, 
+    "MergedLFNBase": "/store/himc", 
+    "custodial": "T1_FR_CCIN2P3_MSS", 
+    "lumisize": -1, 
+    "fractionpass": 0.95, 
+    "SiteBlacklist": [
+      "T1_US_FNAL", 
+      "T2_US_Purdue", 
+      "T2_US_Caltech", 
+      "T2_US_Florida", 
+      "T2_US_Nebraska", 
+      "T2_US_UCSD", 
+      "T2_US_Wisconsin", 
+      "T2_CH_CERN"
+    ], 
+    "go": false, 
+    "secondaries": {
+      "/MinBias_Hydjet_Drum5F_2018_5p02TeV/HINPbPbAutumn18GS-103X_upgrade2018_realistic_HI_v11-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_RU_JINR", 
+          "T1_FR_CCIN2P3"
+        ]
+      }
+    }, 
     "tune": true
   }, 
   "PhaseIISNBSpring17wmLHEGS": {
@@ -2509,10 +2563,10 @@
   "RunIILowPUAutumn18DR": {
     "maxcopies": 1, 
     "lumisize": -1, 
-    "resize": "auto", 
     "fractionpass": 0.95, 
     "go": true, 
-    "tune": true
+    "tune": true, 
+    "resize": "auto"
   }, 
   "RunIISummer16NanoAOD": {
     "maxcopies": 1, 
@@ -2830,9 +2884,9 @@
       "DQMIO": {
         "/JetHT/": 0.95, 
         "all": 0.9, 
-        "/ZeroBias/": 0.95, 
         "/SinglePhoton'": 0.95, 
-        "/SingleMuon/": 0.95
+        "/SingleMuon/": 0.95, 
+        "/ZeroBias/": 0.95
       }
     }, 
     "go": true, 
@@ -2950,9 +3004,9 @@
       "DQMIO": {
         "/JetHT/": 0.95, 
         "all": 0.9, 
-        "/ZeroBias/": 0.95, 
         "/SinglePhoton'": 0.95, 
-        "/SingleMuon/": 0.95
+        "/SingleMuon/": 0.95, 
+        "/ZeroBias/": 0.95
       }
     }, 
     "go": true, 
@@ -3065,10 +3119,10 @@
   }, 
   "RunIIFall18GS": {
     "lumisize": -1, 
-    "resize": "auto", 
     "fractionpass": 0.95, 
     "go": true, 
-    "tune": true
+    "tune": true, 
+    "resize": "auto"
   }, 
   "RunIIWinter17DR": {
     "secondary_AAA": false, 
