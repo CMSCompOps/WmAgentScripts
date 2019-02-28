@@ -2810,7 +2810,7 @@ class reportInfo:
             for e in  self.db.find( {'workflow' : wfn}):
                 self.db.delete_one({'_id': e['_id']})
         if grace:
-            then = mktime( time.gmtime()) - (grace*24*60*60) ## s
+            then = time.mktime( time.gmtime()) - (grace*24*60*60) ## s
             for o in self.db.find({ 'time': { '$lt': then } } ):
                 self.db.delete_one({'_id': o['_id']})
         if wipe == True:
