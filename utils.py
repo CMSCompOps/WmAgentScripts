@@ -4694,41 +4694,31 @@ def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False,
     #print c_name
     full_lumi_json = defaultdict(set)
     files_per_lumi = defaultdict(set) ## the revers dictionnary of files by r:l
-    d_runs = getDatasetRuns( dataset )
-    #print len(runs),"runs"
-    class getFilesWithLumiInRun_t(threading.Thread):
-        def __init__(self, d,r):
-            threading.Thread.__init__(self)
-            self.d =d
-            self.r =r
-        def run(self):
-            self.res = getFilesWithLumiInRun( self.d, self.r)
 
+    class getFilesFromBlock(threading.Thread):
+        def __init__(self, b, dbs=None):
+            threading.Thread.__init__(self)
+            self.b = b
+            self.a = dbs if dbs else DbsApi(url=dbs_url)
+            self.res = None
+            
+        def run(self):
+
+            self.res = self.a.listFileLumis( block_name = self.b )
+                            
     threads = []
-    for run in d_runs:
-        threads.append( getFilesWithLumiInRun_t( dataset, run))
+    all_blocks = dbsapi.listBlocks( dataset = dataset )
+    for block in all_blocks:
+        threads.append( getFilesFromBlock( block.get('block_name') ))
         threads[-1].start()
     while sum([t.is_alive() for t in threads]):
         pass
     for t in threads:
-        if not hasattr(t,'res'):
-            print "not good to not have a result from the thread"
-            continue
+        if not t.res: continue
         for f in t.res:
-            full_lumi_json[t.r].update( f['lumi_section_num'] )
+            full_lumi_json[ f['run_num'] ].update( f['lumi_section_num'])
             for lumi in f['lumi_section_num']:
-                files_per_lumi[(t.r,lumi)].add( f['logical_file_name'] )
-
-    """
-    for run in d_runs:
-        files = getFilesWithLumiInRun( dataset, run )
-        #print run,len(files),"files"
-        for f in files:
-            full_lumi_json[run].update( f['lumi_section_num'] )
-            for lumi in f['lumi_section_num']:
-                files_per_lumi[(run,lumi)].add( f['logical_file_name'] )
-
-    """
+                files_per_lumi[(f['run_num'], lumi)].add( f['logical_file_name'])
 
     ## convert set->list and for a run list
     lumi_json = {}
