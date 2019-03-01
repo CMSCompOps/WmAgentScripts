@@ -77,7 +77,6 @@ class JIRAClient:
         if description:
             fields['description'] = description
         priority = indications.get('priority', None)
-        print type(priority)
         if type(priority) == int:
             ## transform to a str
             #needs decision : 6
@@ -94,7 +93,7 @@ class JIRAClient:
             
             set_to = None
             for p in sorted(prios.keys()):
-                if priority>p:
+                if priority>=p:
                     set_to = prios[p]
             priority = set_to
 
