@@ -11,6 +11,7 @@ user = os.environ.get('USER')
 parser = optparse.OptionParser()
 parser.add_option('--action', choices=['hold','bypass','force'])
 parser.add_option('--keyword')
+parser.add_option('--reason', help="A message to put in notification to mcm request", default="")
 parser.add_option('--pop',action='store_true')
 (options,args) = parser.parse_args()
 
@@ -20,5 +21,7 @@ if options.pop:
 else:
     WI.add( action= options.action,
             keyword = options.keyword,
-            user= user)
+            user= user,
+            reason = options.reason
+    )
 

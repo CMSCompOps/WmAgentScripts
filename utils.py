@@ -6462,7 +6462,7 @@ class wtcInfo:
         self.client = mongo_client()
         self.db = self.client.unified.wtcInfo
 
-    def add(self, action, keyword, user=None):
+    def add(self, action, keyword, user=None, reason=None):
         ##add an item for the action (hold, bypass, force) for the keyword
         if not keyword:
             print "blank keyword is not allowed"
@@ -6476,10 +6476,16 @@ class wtcInfo:
             'action' : action,
             'time' : now,
             'date' : nows}
+        if reason:
+            document.update('reason' : reason)
         self.db.update_one( {'keyword' : keyword},
                             {"$set": document},
                             upsert = True
                         )
+    def reason(self, keyword):
+        exist = self.db.find_one({'keyword' : keyword})
+        return exist.get('reason',None) if exist else None
+
     def sync(self):
 
         force = getForceCompletes()
