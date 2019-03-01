@@ -515,6 +515,7 @@ class CheckBuster(threading.Thread):
                 if reason:
                         notification += " for the reason: %s"%reason
                 wfi.sendLog('checkor',notification)
+                wfi.notifyRequestor(notification, do_batch=False)
                 return
 
         tiers_with_no_check = copy.deepcopy(UC.get('tiers_with_no_check')) # dqm*
