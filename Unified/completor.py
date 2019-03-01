@@ -129,12 +129,15 @@ def completor(url, specific):
             spec = filter(None, spec)
             if not wfi.request['RequestStatus'] in ['force-complete', 'completed']:
                 if any(s in wfo.name for s in spec) or (wfo.name in spec) or any(pid in spec for pid in pids) or any(s in pids for s in spec):
-
+                    reason = WI.reason(wfo.name)
                     wfi = workflowInfo(url, wfo.name)
                     forceComplete(url , wfi )
                     skip=True
-                    wfi.notifyRequestor("The workflow %s was force completed by request of %s"%(wfo.name,user), do_batch=False)
-                    wfi.sendLog('completor','%s is asking for %s to be force complete'%(user,wfo.name))
+                    notification = "The workflow %s was force completed by request of %s"%(wfo.name,user)
+                    if reason:
+                        notification += " for the reason: %s:"%reason
+                    wfi.notifyRequestor(notification, do_batch=False)
+                    wfi.sendLog('completor',notification)
                     break
     
         if wfo.status.startswith('assistance'): skip = True
