@@ -497,7 +497,11 @@ class CheckBuster(threading.Thread):
                 wfi.sendLog('checkor',"%s is on hold and stopped for %.2f days, letting this through with current statistics"%( wfo.name, onhold_completed_delay))
             else:
                 if wfo.name in holdings and not bypass_checks:
-                    wfi.sendLog('checkor',"%s is on hold"%wfo.name)
+                    reason = WI.reason(wfo.name)
+                    notification = "%s is on hold"%wfo.name
+                    if reason: 
+                        notification += " for the reason: %s"%reason
+                    wfi.sendLog('checkor',notification)
                     return
 
         if wfo.name in holdings and not bypass_checks:
@@ -506,7 +510,11 @@ class CheckBuster(threading.Thread):
                 wfi.sendLog('checkor',"%s is on hold and stopped for %.2f days, letting this through with current statistics"%( wfo.name, onhold_completed_delay))
             else:
                 self.to_status = 'assistance-onhold'
-                wfi.sendLog('checkor',"setting %s on hold"%wfo.name)
+                reason = WI.reason(wfo.name)
+                notification = "setting %s on hold"%wfo.name
+                if reason:
+                        notification += " for the reason: %s"%reason
+                wfi.sendLog('checkor',notification)
                 return
 
         tiers_with_no_check = copy.deepcopy(UC.get('tiers_with_no_check')) # dqm*
@@ -919,8 +927,6 @@ class CheckBuster(threading.Thread):
             wfi.sendLog('checkor','passing stats check \nCurrent stats:\n%s \nRequired stats:\n%s'%( json.dumps(percent_completions, indent=2), json.dumps(fractions_pass, indent=2) ))
 
         if acdc and all(pass_stats_check.values()) and all(pass_stats_check_to_truncate_recovery.values()):
-            print "This is essentially good to truncate"
-
             wfi.sendLog('checkor','Will force-complete the recovery to speed things up')
             forceComplete(url, wfi)
 
