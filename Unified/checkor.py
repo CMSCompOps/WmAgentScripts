@@ -592,7 +592,7 @@ class CheckBuster(threading.Thread):
                     forced_already=True
             elif member['RequestStatus'] in ['failed']:
                 acdc_failed.append( member['RequestName'] )
-                assistance_tags.add('manual')
+                #set this or not assistance_tags.add('inconsistent')
             else:
                 acdc_inactive.append( member['RequestName'] )
                 assistance_tags.add('recovered')
