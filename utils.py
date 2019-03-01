@@ -4946,6 +4946,17 @@ def setFileStatus(file_names, validate=True):
 
 
 def setDatasetStatus(dataset, status, withFiles=True):
+    retries = 3
+    while retries>0:
+        retries-=1
+        try:
+            return _setDatasetStatus(dataset, status, withFiles)
+        except Exception as e:
+            time.sleep(1)
+    print "Failed to set status",status,"on",dataset
+    return False
+
+def _setDatasetStatus(dataset, status, withFiles=True):
     dbswrite = DbsApi(url=dbs_url_writer)
 
     new_status = getDatasetStatus( dataset )
