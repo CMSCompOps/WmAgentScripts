@@ -594,8 +594,12 @@ class CheckBuster(threading.Thread):
                 is_closing = False
                 assistance_tags.add('recovering')
                 if (force_by_mcm or force_by_user) and not forced_already:
-                    wfi.sendLog('checkor','%s is being forced completed while recovering'%wfo.name)
-                    wfi.notifyRequestor("The workflow %s was force completed"% wfo.name, do_batch=False)
+                    reason = WI.reason( wfo.name )
+                    notification = "The workflow %s is being forced completed while recovering"%wfo.name
+                    if reason:
+                        notification += " for the reason: %s"%reason
+                    wfi.sendLog('checkor',notification)
+                    wfi.notifyRequestor(notification, do_batch=False)
                     forceComplete(url, wfi)
                     forced_already=True
             elif member['RequestStatus'] in ['failed']:
