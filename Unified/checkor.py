@@ -566,10 +566,11 @@ class CheckBuster(threading.Thread):
                 if not member['RequestStatus'] in ['rejected-archived','rejected','aborted','aborted-archived']:
                     ##this is not good at all
                     wfi.sendLog('checkor','inconsistent ACDC %s'%member['RequestName'] )
-                    #sendLog('checkor','inconsistent ACDC %s'%member['RequestName'], level='critical')
+                    sendLog('checkor','inconsistent ACDC %s'%member['RequestName'], level='critical')
                     acdc_bads.append( member['RequestName'] )
                     is_closing = False
                     assistance_tags.add('manual')
+                    assistance_tags.add('inconsistent')
                 continue
 
             true_familly.append( member['RequestName'] )
