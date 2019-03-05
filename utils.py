@@ -4645,7 +4645,7 @@ class duplicateAnalyzer:
         return files
 
 
-def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False,force=False):
+def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False,force=False, check_with_invalid_files_too=False):
     if runs and lumilist:
         print "should not be used that way"
         return {},{}
@@ -4704,7 +4704,7 @@ def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False,
             
         def run(self):
 
-            self.res = self.a.listFileLumis( block_name = self.b )
+            self.res = self.a.listFileLumis( block_name = self.b , validFileOnly=int(not check_with_invalid_files_too))
                             
     threads = []
     all_blocks = dbsapi.listBlocks( dataset = dataset )
