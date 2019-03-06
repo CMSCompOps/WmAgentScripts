@@ -894,7 +894,6 @@ class lockInfo:
         if not item:
             sendEmail('lockInfo', "trying to lock item %s" % item)
             
-        #from dataLock import locksession, Lock
         from assignSession import session, Lock
         l = session.query(Lock).filter(Lock.item == item).first()
         do_com = False
@@ -916,7 +915,7 @@ class lockInfo:
             l.lock = True
             do_com = True
             message+=" being locked"
-        if reason!=l.reason:
+        if reason and reason!=l.reason:
             l.reason = reason
             do_com =True
             message+=" because of %s"%reason
@@ -925,7 +924,7 @@ class lockInfo:
             l.time = now
             session.commit()
 
-    def lock(self, item, site='', reason='staging'):
+    def lock(self, item, site='', reason=None):
         try:
             self._lock( item, site, reason)
         except Exception as e:
