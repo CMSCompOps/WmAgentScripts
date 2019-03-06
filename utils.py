@@ -1483,6 +1483,7 @@ class campaignInfo:
         for c in self.campaigns:
             if self.campaigns[c].get('go'):
                 for sec in self.campaigns[c].get('secondaries',{}):
+                    if not sec: continue
                     secs.add( sec )
         return sorted(secs)
 
