@@ -132,7 +132,7 @@ class JIRAClient:
         self.client.add_comment( key, comment )
 
     def _find(self, query):
-        return self.client.search_issues( query )
+        return self.client.search_issues( query ,maxResults=-1)
 
     def get(self, jid):
         return self.client.issue( jid )
