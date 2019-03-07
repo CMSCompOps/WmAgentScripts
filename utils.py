@@ -26,6 +26,11 @@ from email.MIMEText import MIMEText
 from email.Utils import COMMASPACE, formatdate
 from email.utils import make_msgid
 
+## add local python paths
+for p in ['/usr/lib64/python2.7/site-packages','/usr/lib/python2.7/site-packages']:
+    if not p in sys.path: sys.path.append(p)
+
+
 dbs_url = os.getenv('UNIFIED_DBS3_READER' ,'https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
 dbs_url_writer = os.getenv('UNIFIED_DBS3_WRITER','https://cmsweb.cern.ch/dbs/prod/global/DBSWriter')
 
