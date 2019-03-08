@@ -1156,7 +1156,7 @@
       "18Apr2017_ver2", 
       "18Apr2017", 
       "07Aug17", 
-      "07Dec2018",
+      "07Dec2018", 
       "28Feb2019"
     ], 
     "maxcopies": 1, 
@@ -1187,7 +1187,7 @@
       "18Apr2017_ver2", 
       "18Apr2017", 
       "07Aug17", 
-      "07Dec2018",
+      "07Dec2018", 
       "28Feb2019"
     ], 
     "maxcopies": 1, 
@@ -1218,7 +1218,7 @@
       "18Apr2017_ver2", 
       "18Apr2017", 
       "07Aug17", 
-      "07Dec2018",
+      "07Dec2018", 
       "28Feb2019"
     ], 
     "maxcopies": 1, 
@@ -1249,7 +1249,7 @@
       "18Apr2017_ver2", 
       "18Apr2017", 
       "07Aug17", 
-      "07Dec2018",
+      "07Dec2018", 
       "28Feb2019"
     ], 
     "maxcopies": 1, 
@@ -1280,7 +1280,7 @@
       "18Apr2017_ver2", 
       "18Apr2017", 
       "07Aug17", 
-      "07Dec2018",
+      "07Dec2018", 
       "28Feb2019"
     ], 
     "maxcopies": 1, 
@@ -1311,7 +1311,7 @@
       "18Apr2017_ver2", 
       "18Apr2017", 
       "07Aug17", 
-      "07Dec2018",
+      "07Dec2018", 
       "28Feb2019"
     ], 
     "maxcopies": 1, 
@@ -1342,7 +1342,7 @@
       "18Apr2017_ver2", 
       "18Apr2017", 
       "07Aug17", 
-      "07Dec2018",
+      "07Dec2018", 
       "28Feb2019"
     ], 
     "maxcopies": 1, 
@@ -1373,7 +1373,7 @@
       "18Apr2017_ver2", 
       "18Apr2017", 
       "07Aug17", 
-      "07Dec2018",
+      "07Dec2018", 
       "28Feb2019"
     ], 
     "maxcopies": 1, 
@@ -2583,6 +2583,23 @@
     "go": false, 
     "lumisize": -1, 
     "maxcopies": 1, 
+    "resize": "auto", 
+    "secondaries": {}, 
+    "secondary_AAA": false, 
+    "tune": true
+  }, 
+  "RunIISummer19ULHLT": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "overflow": {
+      "PU": {
+        "force": false, 
+        "max": 0, 
+        "pending": 0
+      }
+    }, 
     "resize": "auto", 
     "secondaries": {}, 
     "secondary_AAA": false, 
