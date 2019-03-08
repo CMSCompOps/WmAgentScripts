@@ -1444,10 +1444,7 @@
     "secondary_AAA": true, 
     "tune": true
   }, 
-  "RunIIAutumn18FSPremix": {
-    "SecondaryLocation": [
-      ""
-    ], 
+  "RunIIAutumn18FSPremix": { 
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
