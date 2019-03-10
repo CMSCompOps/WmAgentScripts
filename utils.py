@@ -3158,8 +3158,8 @@ Updated on %s (GMT) <br>
 <br><ul>
 <li> <b>custodial</b> : one the output dataset is waiting for the subscription to tape to be made. The request has been created already.<font color=green>(Automatic)</font></li>
 <li> <b>parentcustodial</b> : the parent of the dataset is not set on tape <font color=red>(Operator)</font></li>
-<!--<li> <b>recovering</b> : there is at least one active ACDC for the worflow <font color=orange>(Wait)</font></li>-->
-<!--<li> <b>recovered</b> : there is at least one inactive ACDC for the workflow <font color=green>(Automatic)</font></li>-->
+<li> <b>recovering</b> : there is at least one active ACDC for the worflow <font color=orange>(Wait)</font></li>
+<li> <b>recovered</b> : there is at least one inactive ACDC for the workflow <font color=green>(Automatic)</font>
 <li> <b>recovery</b> : the final statistics of the sample is not passing the requirements <font color=green>(Automatic)</font> </li>
 <li> <b>announce</b> : the final statistics of the sample is enough to announce the outputs <font color=green>(Automatic)</font> </li>
 <li> <b>announced</b> : the final statistics of the sample is enough and the outputs are announced <font color=green>(Automatic)</font> </li>
@@ -3168,13 +3168,8 @@ Updated on %s (GMT) <br>
 <li> <b>bigoutput</b> : the maximum size for an output dataset to go to tape was exceeded (<font color=blue>Requester</font>/<font color=red>Operator)</font></li>
 <li> <b>filemismatch</b> : there is a mismatch in the number of files in DBS and Phedex <font color=red>(Operator)</font></li>
 <li> <b>duplicates</b> : duplicated lumisection have been found and need to be invalidated <font color=green>(Automatic)</font></li>
-<!--<li> <b>manual</b> : no automatic recovery was possible <font color=red>(Operator)</font></li>-->
-<!--<li> <b>on-hold</b> : there was a notification made that a decision needs to be taken to move forward. Check the JIRA for details <font color=blue>(Requester</font>/<font color=red>Operator)</font></li>-->
-<li> <b>assistance-manual</b> : Basic manual where the requests comes when they fail for the first time <font color=red>(Operator)</font></li>
-<li> <b>assistance-manual-recovered</b> : Manual where the requests come afte the first or consecutive ACDCs fails <font color=red>(Operator)</font></li>
-<li> <b>assistance-onhold</b> : When the requests are manually added by the operator to on-hold and waiting for the JIRA/HN ticket to be answered in ordered to check what action needs to be taken<font color=red>(Operator)</font></li>
-<li> <b>assistance-recovering</b> : When the first ACDC is running <font color=orange>(Wait/No Action required)</font></li>
-<li> <b>assistance-recovered-recovering</b> : When the second or later ACDCs are running <font color=orange>(Wait/No Action required)</font></li>
+<li> <b>manual</b> : no automatic recovery was possible <font color=red>(Operator)</font></li>
+<li> <b>on-hold</b> : there was a notification made that a decision needs to be taken to move forward. Check the JIRA for details <font color=blue>(Requester</font>/<font color=red>Operator)</font></li>
 </ul><br>
 """%( time.asctime(time.gmtime()))
 
