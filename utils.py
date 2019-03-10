@@ -3168,8 +3168,9 @@ Updated on %s (GMT) <br>
 <li> <b>bigoutput</b> : the maximum size for an output dataset to go to tape was exceeded (<font color=blue>Requester</font>/<font color=red>Operator)</font></li>
 <li> <b>filemismatch</b> : there is a mismatch in the number of files in DBS and Phedex <font color=red>(Operator)</font></li>
 <li> <b>duplicates</b> : duplicated lumisection have been found and need to be invalidated <font color=green>(Automatic)</font></li>
-<li> <b>manual</b> : no automatic recovery was possible <font color=red>(Operator)</font></li>
+<!--<li> <b>manual</b> : no automatic recovery was possible <font color=red>(Operator)</font></li>-->
 <li> <b>on-hold</b> : there was a notification made that a decision needs to be taken to move forward. Check the JIRA for details <font color=blue>(Requester</font>/<font color=red>Operator)</font></li>
+<li><b>assistance-manual</b> : Basic manual where the requests comes when they fail for the first time <font color=red>(Operator)</font></li>
 </ul><br>
 """%( time.asctime(time.gmtime()))
 
