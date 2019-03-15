@@ -108,7 +108,7 @@ def buildRequest(userDict):
     acqEra, procStr = procDset.split("-", 1)
     newSchema["AcquisitionEra"] = acqEra  # should we worry about lenght limits?
     procStr, procVer = procStr.rsplit("-", 1)
-    newSchema["ProcessingString"] = procStr[:80]  # first 80 chars
+    newSchema["ProcessingString"] = "StoreResults_" + procStr[:67]  # limit to 80 chars
     newSchema["ProcessingVersion"] = int(procVer[1:])
     # Use PrimaryDataset and ProcessedDataset in the RequestString
     newSchema["RequestString"] = primDset[:50] + "-" + procDset[:50]
