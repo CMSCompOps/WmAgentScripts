@@ -768,7 +768,14 @@
     "go": true, 
     "lumisize": -1, 
     "resize": "auto", 
-    "tune": true
+    "tune": true,
+    "secondaries": {
+      "/MinBias_Hydjet_Drume5_5p5TeV_TuneCP5_Pythia8/PhaseIIMTDTDRAutumn18GS-103X_upgrade2023_realistic_v2-v2/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_US_FNAL"
+      ]
+     }
+    }
   }, 
   "PhaseIIMTDTDRAutumn18MiniAOD": {
     "fractionpass": 0.95, 
