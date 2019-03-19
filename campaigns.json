@@ -747,17 +747,17 @@
     "maxcopies": 1, 
     "resize": "auto", 
     "secondaries": {
+      "/MinBias_Hydjet_Drume5_5p5TeV_TuneCP5_Pythia8/PhaseIIMTDTDRAutumn18GS-103X_upgrade2023_realistic_v2-v2/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_US_FNAL"
+        ]
+      }, 
       "/MinBias_TuneCP5_14TeV-pythia8/PhaseIIMTDTDRAutumn18GS-103X_upgrade2023_realistic_v2-v1/GEN-SIM": {
         "SiteWhitelist": [
           "T1_IT_CNAF", 
           "T2_US_Nebraska", 
           "T2_US_Purdue"
         ]
-      },
-     "/MinBias_Hydjet_Drume5_5p5TeV_TuneCP5_Pythia8/PhaseIIMTDTDRAutumn18GS-103X_upgrade2023_realistic_v2-v2/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_US_FNAL"
-       ]
       }
     }, 
     "secondary_AAA": false, 
@@ -768,14 +768,14 @@
     "go": true, 
     "lumisize": -1, 
     "resize": "auto", 
-    "tune": true,
     "secondaries": {
       "/MinBias_Hydjet_Drume5_5p5TeV_TuneCP5_Pythia8/PhaseIIMTDTDRAutumn18GS-103X_upgrade2023_realistic_v2-v2/GEN-SIM": {
         "SiteWhitelist": [
           "T1_US_FNAL"
-      ]
-     }
-    }
+        ]
+      }
+    }, 
+    "tune": true
   }, 
   "PhaseIIMTDTDRAutumn18MiniAOD": {
     "fractionpass": 0.95, 
@@ -1414,6 +1414,11 @@
           "T2_US_Nebraska"
         ]
       }, 
+      "/MinBias_TuneCP5_13TeV-pythia8/RunIIFall18GS-IdealGeometry_102X_upgrade2018_design_v9-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_US_FNAL"
+        ]
+      }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIFall18GS-newECALCrystalGeometryFor2016_102X_mcRun2_asymptotic_v5-v1/GEN-SIM": {
         "SiteWhitelist": [
           "T1_US_FNAL"
@@ -1427,11 +1432,6 @@
       "/MinBias_TuneCP5_13TeV-pythia8_Fall18/RunIIFall18GS-102X_upgrade2018_realistic_v11-v1/GEN-SIM": {
         "SiteWhitelist": [
           "T1_IT_CNAF"
-        ]
-      },
-      "/MinBias_TuneCP5_13TeV-pythia8/RunIIFall18GS-IdealGeometry_102X_upgrade2018_design_v9-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_US_FNAL"
         ]
       }
     }, 
@@ -2265,17 +2265,17 @@
       "EventsPerLumi": "x2"
     }, 
     "secondaries": {
+      "/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer16FSPremix-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v4-v1/GEN-SIM-RECO": {
+        "SiteWhitelist": [
+          "T1_US_FNAL", 
+          "T2_FI_HIP"
+        ], 
+        "secondary_AAA": false
+      }, 
       "/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer16FSPremixPUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v4-v1/GEN-SIM-RECO": {
         "SiteWhitelist": [
           "T1_US_FNAL"
         ], 
-        "secondary_AAA": false
-      },
-      "/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer16FSPremix-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v4-v1/GEN-SIM-RECO": {
-        "SiteWhitelist": [
-          "T1_US_FNAL",
-          "T2_FI_HIP"
-        ],
         "secondary_AAA": false
       }
     }
@@ -2734,6 +2734,66 @@
     "go": true, 
     "lumisize": -1, 
     "resize": "auto", 
+    "tune": true
+  }, 
+  "RunIIWinter19PFCalib16GS": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "resize": "auto", 
+    "tune": true
+  }, 
+  "RunIIWinter19PFCalib16pLHE": {
+    "go": false, 
+    "parameters": {
+      "EventsPerLumi": 200
+    }, 
+    "recover": false
+  }, 
+  "RunIIWinter19PFCalib16wmLHEGS": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "tune": true
+  }, 
+  "RunIIWinter19PFCalib17GS": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "resize": "auto", 
+    "tune": true
+  }, 
+  "RunIIWinter19PFCalib17pLHE": {
+    "go": false, 
+    "parameters": {
+      "EventsPerLumi": 200
+    }, 
+    "recover": false
+  }, 
+  "RunIIWinter19PFCalib17wmLHEGS": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "tune": true
+  }, 
+  "RunIIWinter19PFCalib18GS": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "resize": "auto", 
+    "tune": true
+  }, 
+  "RunIIWinter19PFCalib18pLHE": {
+    "go": false, 
+    "parameters": {
+      "EventsPerLumi": 200
+    }, 
+    "recover": false
+  }, 
+  "RunIIWinter19PFCalib18wmLHEGS": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
     "tune": true
   }, 
   "RunIIpp5Spring18DR": {
