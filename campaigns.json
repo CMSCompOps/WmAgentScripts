@@ -1428,6 +1428,11 @@
         "SiteWhitelist": [
           "T1_IT_CNAF"
         ]
+      },
+      "/MinBias_TuneCP5_13TeV-pythia8/RunIIFall18GS-IdealGeometry_102X_upgrade2018_design_v9-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_US_FNAL"
+        ]
       }
     }, 
     "secondary_AAA": false, 
