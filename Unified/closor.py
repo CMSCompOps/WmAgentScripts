@@ -486,7 +486,7 @@ class CloseBuster(threading.Thread):
 
                     if all_OK[out]:
                         print "setting valid"
-                        results.append(setDatasetStatus(out, 'VALID'))
+                        results.append(setDatasetStatus(out, 'VALID', withFiles=False))
                     if all_OK[out] and wfi.isRelval():
                         ## make the specific relval rules and the replicas
                         ## figure the destination(s) out
