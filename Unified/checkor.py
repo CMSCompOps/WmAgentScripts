@@ -549,6 +549,7 @@ class CheckBuster(threading.Thread):
         ## anything running on acdc : getting the real prepid is not worth it
         familly = getWorkflowById(url, wfi.request['PrepID'], details=True)
         acdc = []
+        acdc_failed = []
         acdc_inactive = []
         forced_already=False
         acdc_bads = []
@@ -566,10 +567,10 @@ class CheckBuster(threading.Thread):
                 if not member['RequestStatus'] in ['rejected-archived','rejected','aborted','aborted-archived']:
                     ##this is not good at all
                     wfi.sendLog('checkor','inconsistent ACDC %s'%member['RequestName'] )
-                    #sendLog('checkor','inconsistent ACDC %s'%member['RequestName'], level='critical')
                     acdc_bads.append( member['RequestName'] )
                     is_closing = False
                     assistance_tags.add('manual')
+                    assistance_tags.add('inconsistent')
                 continue
 
             true_familly.append( member['RequestName'] )
@@ -589,11 +590,15 @@ class CheckBuster(threading.Thread):
                     wfi.notifyRequestor("The workflow %s was force completed"% wfo.name, do_batch=False)
                     forceComplete(url, wfi)
                     forced_already=True
+            elif member['RequestStatus'] in ['failed']:
+                acdc_failed.append( member['RequestName'] )
+                #set this or not assistance_tags.add('inconsistent')
             else:
                 acdc_inactive.append( member['RequestName'] )
                 assistance_tags.add('recovered')
+        if acdc_failed:
+            sendLog('checkor','For %s, ACDC %s failed'% wfo.name, ','.join(acdc_failed), level='critical')
         if acdc_bads:
-            #sendEmail('inconsistent ACDC','for %s, ACDC %s is inconsistent, preventing from closing'%( wfo.name, ','.join(acdc_bads) ))
             sendLog('checkor','For %s, ACDC %s is inconsistent, preventing from closing or will create a mess.'%( wfo.name, ','.join(acdc_bads) ), level='critical')
 
         time_point("checked workflow familly", sub_lap=True)
