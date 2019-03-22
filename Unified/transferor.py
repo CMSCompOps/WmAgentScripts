@@ -96,8 +96,8 @@ def transferor(url ,specific = None, talk=True, options=None):
     print "... done"
 
     transfers_per_sites = defaultdict(int)
-    input_sizes = {}
-    ignored_input_sizes = {}
+    input_sizes = defaultdict(float)
+    ignored_input_sizes = defaultdict(float)
     input_cput = {}
     input_st = {}
     ## list the size of those in transfer already
@@ -117,24 +117,14 @@ def transferor(url ,specific = None, talk=True, options=None):
             transfers_per_sites[site] += 1 
         #input_cput[wfo.name] = wfh.getComputingTime()
         #input_st[wfo.name] = wfh.getSystemTime()
-        bwl = []
-        if 'BlockWhitelist' in wfh.request and wfh.request['BlockWhitelist']:
-            bwl = wfh.request['BlockWhitelist']
-        rwl = wfh.getRunWhiteList()
-        lwl = wfh.getLumiWhiteList()
+        blocks = wfh.getBlocks()
         for prim in primary:  
-            blocks = copy.deepcopy( bwl )
-            if rwl: 
-                blocks = list(set( blocks + getDatasetBlocks( prim, runs= rwl ) ))
-            if lwl:
-                blocks = list(set( blocks + getDatasetBlocks( prim, lumis= lwl)))
-
             ds_s = dss.get( prim, blocks=blocks)
             if prim in stucks: 
                 wfh.sendLog('transferor', "%s appears stuck, so not counting it %s [GB]"%( prim, ds_s))
-                ignored_input_sizes[prim] = ds_s
+                ignored_input_sizes[prim] = max(ds_s, ignored_input_sizes[prim])
             else:
-                input_sizes[prim] = ds_s
+                input_sizes[prim] = max(ds_s, input_sizes[prim])
                 wfh.sendLog('transferor', "%s needs %s [GB]"%( wfo.name, ds_s))
         if in_transfer_priority==None:
             in_transfer_priority = int(wfh.request['RequestPriority'])
@@ -172,14 +162,15 @@ def transferor(url ,specific = None, talk=True, options=None):
     ## list the size of all inputs
     primary_input_per_workflow_gb = defaultdict(float)
     print "getting all input sizes ..."
+    input_blocks = {}
     for (wfo,wfh) in wfs_and_wfh:
         (_,primary,_,_) = wfh.getIO()
-        #input_cput[wfo.name] = wfh.getComputingTime()
-        #input_st[wfo.name] = wfh.getSystemTime()
+        blocks = wfh.getBlocks()
+        input_blocks[wfo.name] = blocks
         for prim in primary:
             ## do not count it if it appears stalled !
-            prim_size = dss.get( prim )
-            input_sizes[prim] = prim_size
+            prim_size = dss.get( prim , blocks=blocks)
+            input_sizes[prim] = max(prim_size, input_sizes[prim])
             primary_input_per_workflow_gb[wfo.name] += prim_size
     print "... done"
 
@@ -236,7 +227,7 @@ def transferor(url ,specific = None, talk=True, options=None):
     max_priority = defaultdict(int)
     needs_transfer=0 ## so that we can count'em
     passing_along = 0
-    transfer_sizes={}
+    transfer_sizes=defaultdict(float)
     went_over_budget=False
     destination_cache = {}
     no_goes = set()
@@ -259,8 +250,10 @@ def transferor(url ,specific = None, talk=True, options=None):
             continue
 
         (lheinput,primary,parent,secondary,sites_allowed) = wfh.getSiteWhiteList()
-        #(_,primary,_,_) = wfh.getIO()
-        this_load=sum([input_sizes[prim] for prim in primary])
+        blocks = input_blocks.get(wfo.name, wfh.getBlocks())
+        if blocks:
+            print "Reading only",len(blocks),"blocks in input"
+        this_load = sum([dss.get(prim, blocks=blocks) for prim in primary])
         no_budget = False
         if ( this_load and (sum(transfer_sizes.values())+this_load > transfer_limit or went_over_budget ) ):
             if went_over_budget:
@@ -362,22 +355,6 @@ def transferor(url ,specific = None, talk=True, options=None):
             sendLog('transferor',"%s has no possible sites to run at"%( wfo.name ),level='critical')
             continue
 
-        blocks = []
-        if 'BlockWhitelist' in wfh.request and wfh.request['BlockWhitelist']:
-            blocks = wfh.request['BlockWhitelist']
-        rwl = wfh.getRunWhiteList()
-        if rwl:
-            ## augment with run white list
-            for dataset in primary:
-                blocks = list(set( blocks + getDatasetBlocks( dataset, runs= rwl ) ))
-        lwl = wfh.getLumiWhiteList()
-        if lwl:
-            ## augment with the lumi white list
-            for dataset in primary:
-                blocks = list(set( blocks + getDatasetBlocks( dataset, lumis= lwl ) ))
-
-        if blocks:
-            print "Reading only",len(blocks),"blocks in input"
 
         can_go = True
         staging=False
@@ -471,7 +448,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                     session.flush()
 
                     can_go = False
-                    transfer_sizes[prim] = input_sizes[prim]
+                    transfer_sizes[prim] = max(this_load, transfer_sizes[prim])
                     staging = True
 
                 # reduce the number of copies required by the on-going full transfer : how do we bootstrap on waiting for them ??
@@ -526,7 +503,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                                 spreading[site]=blocks
                             else:
                                 spreading[site]=[prim]
-                        transfer_sizes[prim] = input_sizes[prim] ## this is approximate if blocks are specified
+                        transfer_sizes[prim] = max(this_load, transfer_sizes[prim])
                     can_go = False
                     wfh.sendLog('transferor', "selected CE destinations %s"%(sorted( spreading.keys())))
                     for (site,items) in spreading.items():
