@@ -2739,13 +2739,6 @@
     "lumisize": -1, 
     "resize": "auto", 
     "tune": true,
-    "parameters": {
-       "NonCustodialSites":[
-         "T1_US_FNAL",
-         "T1_DE_KIT",
-         "T2_US_Nebraska"
-      ]
-    }
   }, 
   "RunIIWinter19PFCalib16pLHE": {
     "go": false, 
@@ -2766,13 +2759,6 @@
     "lumisize": -1, 
     "resize": "auto", 
     "tune": true,
-    "parameters": {
-       "NonCustodialSites":[
-         "T1_US_FNAL",
-         "T1_DE_KIT",
-         "T2_US_Nebraska"
-      ]
-    }
   }, 
   "RunIIWinter19PFCalib17pLHE": {
     "go": false, 
@@ -2793,13 +2779,6 @@
     "lumisize": -1, 
     "resize": "auto", 
     "tune": true,
-    "parameters": {
-       "NonCustodialSites":[
-         "T1_US_FNAL",
-         "T1_DE_KIT",
-         "T2_US_Nebraska"
-      ]
-    }
   }, 
   "RunIIWinter19PFCalib18pLHE": {
     "go": false, 
