@@ -315,7 +315,7 @@ def stagor(url,specific =None, options=None):
                         wfi.sendLog('stagor',"assuming it is OK to move on like this already for %s"%need)
                         jump_ahead = True
                     else:
-                        wfi.sendLog('stagor',"Available %s times"% available_cache[need][se_allowed_key])
+                        wfi.sendLog('stagor',"Available {} times. {} needed".format(available_cache[need][se_allowed_key], copies_needed))
                         missing_and_downtime = list(set(endpoint_in_downtime[need]) & set(endpoint_incompleted[need]))
                         if missing_and_downtime:
                             wfi.sendLog('stagor',"%s is incomplete at %s which is in downtime, trying to move along"%(need, ','.join(missing_and_downtime)))
