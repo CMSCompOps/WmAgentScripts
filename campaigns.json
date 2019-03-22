@@ -1749,9 +1749,6 @@
     "tune": true
   }, 
   "RunIIFall18FSPremix": {
-    "SecondaryLocation": [
-      ""
-    ], 
     "fractionpass": 0.95, 
     "go": false, 
     "lumisize": -1, 
@@ -1760,9 +1757,6 @@
       "PREMIX": {}
     }, 
     "resize": "auto", 
-    "secondaries": {
-      "": {}
-    }, 
     "secondary_AAA": true, 
     "tune": true
   }, 
@@ -2086,7 +2080,6 @@
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
-    "secondaries": {}, 
     "tune": true
   }, 
   "RunIISpring18CosmicGS": {
@@ -2348,7 +2341,6 @@
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
-    "secondaries": {}, 
     "tune": true
   }, 
   "RunIISummer17CosmicGS": {
@@ -2592,7 +2584,6 @@
       }
     }, 
     "resize": "auto", 
-    "secondaries": {}, 
     "secondary_AAA": false, 
     "tune": true
   }, 
@@ -2602,7 +2593,6 @@
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto", 
-    "secondaries": {}, 
     "secondary_AAA": false, 
     "tune": true
   }, 
@@ -2619,7 +2609,6 @@
       }
     }, 
     "resize": "auto", 
-    "secondaries": {}, 
     "secondary_AAA": false, 
     "tune": true
   }, 
@@ -2629,7 +2618,6 @@
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto", 
-    "secondaries": {}, 
     "secondary_AAA": false, 
     "tune": true
   }, 
