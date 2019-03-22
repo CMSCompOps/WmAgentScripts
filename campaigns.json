@@ -1470,9 +1470,6 @@
       "PREMIX": {}
     }, 
     "resize": "auto", 
-    "secondaries": {
-      "": {}
-    }, 
     "secondary_AAA": true, 
     "tune": true
   }, 
