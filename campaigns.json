@@ -2738,7 +2738,7 @@
     "go": false, 
     "lumisize": -1, 
     "resize": "auto", 
-    "tune": true,
+    "tune": true
   }, 
   "RunIIWinter19PFCalib16pLHE": {
     "go": false, 
@@ -2758,7 +2758,7 @@
     "go": false, 
     "lumisize": -1, 
     "resize": "auto", 
-    "tune": true,
+    "tune": true
   }, 
   "RunIIWinter19PFCalib17pLHE": {
     "go": false, 
@@ -2778,7 +2778,7 @@
     "go": false, 
     "lumisize": -1, 
     "resize": "auto", 
-    "tune": true,
+    "tune": true
   }, 
   "RunIIWinter19PFCalib18pLHE": {
     "go": false, 
