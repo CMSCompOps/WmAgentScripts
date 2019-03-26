@@ -2790,6 +2790,18 @@
     "secondary_AAA": false, 
     "tune": true
   }, 
+  "RunIIWinter19PFCalibDRPremix": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "overflow": {
+      "PREMIX": {}
+    }, 
+    "resize": "auto", 
+    "secondary_AAA": true, 
+    "tune": true
+  }, 
   "RunIIWinter19PFCalibMiniAOD": {
     "fractionpass": 0.95, 
     "go": false, 
