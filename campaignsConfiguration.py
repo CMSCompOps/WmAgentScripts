@@ -39,10 +39,9 @@ if options.dump:
         i=content.pop("_id")
         if content.get('type',None) != options.type: continue ## no relval
         if 'name' not in content:
-            #db.delete_one({'_id': i})
+            db.delete_one({'_id': i})
             print "dropping",i,content,"because it is malformated"
-            #continue
-            pass
+            continue
         uc[content.pop("name")] = content
     print len(uc.keys()),"campaigns damp"
     open(options.dump,'w').write(json.dumps( uc, indent =2, sort_keys=True))
