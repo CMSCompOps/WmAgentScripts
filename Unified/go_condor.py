@@ -461,5 +461,9 @@ if __name__ == "__main__":
     if 'UNIFIED_OVERFLOW_CONFIG' not in htcondor.param:
         sys.exit(0)
 
-    config = json.load(urllib.urlopen(htcondor.param['UNIFIED_OVERFLOW_CONFIG']))
-    makeAds(config)
+    try:
+        config = json.load(urllib.urlopen(htcondor.param['UNIFIED_OVERFLOW_CONFIG']))
+        makeAds(config)
+    except:
+        ### well that's too bad
+        pass
