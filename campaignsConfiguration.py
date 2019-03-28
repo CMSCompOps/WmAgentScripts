@@ -116,7 +116,7 @@ else:
         db.insert_one( post )
     elif update:
         if options.type: update['type'] = options.type
-        post.update( {"name":options.name})
+        update.update( {"name":options.name})
         db.insert_one( update )        
     else:
         availables = [o["name"] for o in db.find()]
