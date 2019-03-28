@@ -2726,13 +2726,13 @@
   }, 
   "RunIIWinter19PFCalib16GS": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "resize": "auto", 
     "tune": true
   }, 
   "RunIIWinter19PFCalib16pLHE": {
-    "go": false, 
+    "go": true, 
     "parameters": {
       "EventsPerLumi": 200
     }, 
@@ -2740,19 +2740,19 @@
   }, 
   "RunIIWinter19PFCalib16wmLHEGS": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "tune": true
   }, 
   "RunIIWinter19PFCalib17GS": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "resize": "auto", 
     "tune": true
   }, 
   "RunIIWinter19PFCalib17pLHE": {
-    "go": false, 
+    "go": true, 
     "parameters": {
       "EventsPerLumi": 200
     }, 
@@ -2760,13 +2760,13 @@
   }, 
   "RunIIWinter19PFCalib17wmLHEGS": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "tune": true
   }, 
   "RunIIWinter19PFCalib18GS": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "resize": "auto", 
     "tune": true
@@ -2780,7 +2780,7 @@
   }, 
   "RunIIWinter19PFCalib18wmLHEGS": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "tune": true
   }, 
