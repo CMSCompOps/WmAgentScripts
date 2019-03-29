@@ -538,7 +538,7 @@ def actor(url,options=None):
                             wfi.sendLog('actor', "Skipping task %s because the taskType is %s. Can only ACDC Processing, Production, or Merge tasks"%( fulltaskname, task_info.taskType))
                 if not fulltaskname in where_to_run.keys():
                     wrong_task= True
-                    wfi.sendLog('actor', "Skipping task %s because there is no acdc doc for it anyways."%(fulltaskname), level='critical')
+                    wfi.sendLog('actor', "Skipping task %s because there is no acdc doc for it anyways."%(fulltaskname))
                 if wrong_task:
                     continue
                 print tasks[task]
