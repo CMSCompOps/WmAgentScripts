@@ -4717,10 +4717,15 @@ def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False,
     all_blocks = dbsapi.listBlocks( dataset = dataset )
     for block in all_blocks:
         threads.append( getFilesFromBlock( block.get('block_name') ))
-        threads[-1].start()
-    while sum([t.is_alive() for t in threads]):
-        pass
-    for t in threads:
+
+    run_rthreads = ThreadHandler( threads = threads,
+                                  n_threads = 10,
+                                  label = 'getDatasetLumisAndFiles')
+    run_rthreads.start()
+    while run_rthreads.is_alive():
+        time.sleep(1)
+
+    for t in run_rthreads.threads:
         if not t.res: continue
         for f in t.res:
             full_lumi_json[ f['run_num'] ].update( f['lumi_section_num'])
