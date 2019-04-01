@@ -1660,14 +1660,6 @@
     "SecondaryLocation": [
       "T2_CH_CERN"
     ], 
-    "SiteBlacklist": [
-      "T2_FR_GRIF_IRFU", 
-      "T3_US_OSG", 
-      "T3_US_NERSC", 
-      "T3_US_Colorado", 
-      "T2_DE_RWTH", 
-      "T2_US_Nebraska"
-    ], 
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
@@ -1732,14 +1724,6 @@
     "tune": true
   }, 
   "RunIIFall17wmLHEGS": {
-    "SiteBlacklist": [
-      "T2_FR_GRIF_IRFU", 
-      "T3_US_OSG", 
-      "T3_US_NERSC", 
-      "T3_US_Colorado", 
-      "T2_DE_RWTH", 
-      "T2_US_Nebraska"
-    ], 
     "force-complete": 0.99, 
     "fractionpass": 0.95, 
     "go": true, 
@@ -1777,14 +1761,6 @@
     "tune": true
   }, 
   "RunIIFall18wmLHEGS": {
-    "SiteBlacklist": [
-      "T2_FR_GRIF_IRFU", 
-      "T3_US_OSG", 
-      "T3_US_NERSC", 
-      "T3_US_Colorado", 
-      "T2_DE_RWTH", 
-      "T2_US_Nebraska"
-    ], 
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
@@ -2169,14 +2145,6 @@
     "tune": true
   }, 
   "RunIISummer15wmLHEGS": {
-    "SiteBlacklist": [
-      "T2_FR_GRIF_IRFU", 
-      "T3_US_OSG", 
-      "T3_US_NERSC", 
-      "T3_US_Colorado", 
-      "T2_DE_RWTH", 
-      "T2_US_Nebraska"
-    ], 
     "force-complete": 0.99, 
     "fractionpass": 0.95, 
     "go": true, 
@@ -2274,14 +2242,6 @@
     }
   }, 
   "RunIISummer16FSPremix": {
-    "SiteBlacklist": [
-      "T2_FR_GRIF_IRFU", 
-      "T3_US_OSG", 
-      "T3_US_NERSC", 
-      "T3_US_Colorado", 
-      "T2_DE_RWTH", 
-      "T2_US_Nebraska"
-    ], 
     "SiteWhitelist": [
       "T1_US_FNAL", 
       "T1_IT_CNAF", 
