@@ -2418,6 +2418,12 @@
       ]
     }, 
     "secondaries": {
+      "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib16GS-105X_mcRun2_asymptotic_v2-v1/GEN-SIM": {},
+      "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib18GS-105X_upgrade2018_realistic_v4-v1/GEN-SIM": {
+        "SiteWhitelist": [ 
+          "T1_US_FNAL" 
+         ] 
+       },  
       "/MinBias_TuneCP2_13TeV-pythia8/RunIIFall17FSPremix-PUMoriond17_94X_mc2017_realistic_v11-v1/GEN-SIM-RECO": {
         "SiteWhitelist": [
           "T1_US_FNAL", 
