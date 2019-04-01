@@ -2418,12 +2418,6 @@
       ]
     }, 
     "secondaries": {
-      "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib16GS-105X_mcRun2_asymptotic_v2-v1/GEN-SIM": {},
-      "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib18GS-105X_upgrade2018_realistic_v4-v1/GEN-SIM": {
-        "SiteWhitelist": [ 
-          "T1_US_FNAL" 
-         ] 
-       },  
       "/MinBias_TuneCP2_13TeV-pythia8/RunIIFall17FSPremix-PUMoriond17_94X_mc2017_realistic_v11-v1/GEN-SIM-RECO": {
         "SiteWhitelist": [
           "T1_US_FNAL", 
@@ -2463,6 +2457,12 @@
           "T2_CH_CERN", 
           "T2_DE_RWTH", 
           "T2_US_Nebraska"
+        ]
+      }, 
+      "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib16GS-105X_mcRun2_asymptotic_v2-v1/GEN-SIM": {}, 
+      "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib18GS-105X_upgrade2018_realistic_v4-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_US_FNAL"
         ]
       }, 
       "/MinBias_TuneCP5_inelasticON_13TeV-pythia8/RunIIFall17GS-93X_mc2017_realistic_v3-v1/GEN-SIM": {
@@ -2778,7 +2778,7 @@
     "tune": true
   }, 
   "RunIIWinter19PFCalib18pLHE": {
-    "go": false, 
+    "go": true, 
     "parameters": {
       "EventsPerLumi": 200
     }, 
@@ -2795,14 +2795,14 @@
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
-    "resize": "auto",
+    "resize": "auto", 
     "secondaries": {
+      "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib16GS-105X_mcRun2_asymptotic_v2-v1/GEN-SIM": {}, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib18GS-105X_upgrade2018_realistic_v4-v1/GEN-SIM": {
         "SiteWhitelist": [
           "T1_US_FNAL"
-         ]   
-       },
-      "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib16GS-105X_mcRun2_asymptotic_v2-v1/GEN-SIM": {}
+        ]
+      }
     }, 
     "secondary_AAA": false, 
     "tune": true
