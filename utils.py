@@ -7981,7 +7981,12 @@ class workflowInfo:
         aes = self.campaigns()
 
         if type(pss) == dict:
-            pas = [(aes[t],pss[t]) for t in pss]
+	    try:
+            	pas = [(aes[t],pss[t]) for t in pss]
+	    except Exception as e:
+		print(str(e))
+		print("Available processing string keys: {}".format(pss.keys()))
+		print("Available campaign keys: {}".format(aes.keys()))
         else:
             pas = [(aes,pss)]
         for campaign,label in pas:
