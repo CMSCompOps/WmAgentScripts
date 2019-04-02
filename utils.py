@@ -7984,9 +7984,13 @@ class workflowInfo:
 	    try:
             	pas = [(aes[t],pss[t]) for t in pss]
 	    except Exception as e:
-		print(str(e))
-		print("Available processing string keys: {}".format(pss.keys()))
-		print("Available campaign keys: {}".format(aes.keys()))
+		err_msg = str(e)
+		err_msg += "\nAvailable processing string keys: {}".format(pss.keys())
+		err_msg += "\nAvailable campaign keys: {}".format(aes.keys())
+		print(err_msg)
+		self.sendLog('go',err_msg, level='critical')
+		sendEmail('failed assigning',err_msg)
+		return False
         else:
             pas = [(aes,pss)]
         for campaign,label in pas:
