@@ -7988,7 +7988,7 @@ class workflowInfo:
 		err_msg += "\nAvailable processing string keys: {}".format(pss.keys())
 		err_msg += "\nAvailable campaign keys: {}".format(aes.keys())
 		print(err_msg)
-		self.sendLog('go',err_msg, level='critical')
+		self.sendLog('go', err_msg)
 		sendEmail('failed assigning',err_msg)
 		return False
         else:
