@@ -7987,6 +7987,7 @@ class workflowInfo:
 		err_msg = str(e)
 		err_msg += "\nAvailable processing string: {}".format(pss)
 		err_msg += "\nAvailable campaign: {}".format(aes)
+		err_msg += "\nNo go because keys don't match."
 		print(err_msg)
 		self.sendLog('go', err_msg)
 		sendEmail('failed assigning',err_msg)
