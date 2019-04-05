@@ -6581,6 +6581,7 @@ class workflowInfo:
         return good
 
     def isGoodToConvertToStepChain(self ,keywords=None, talk=False):
+        all_same_arch = True
         ## only one value throughout the chain
         all_same_cores = len(set(self.getMulticores()))==1
         ##make sure not tow same data tier is produced
@@ -6596,10 +6597,18 @@ class workflowInfo:
         more_than_one_task = True
         ## so that conversion happens only for a selected few
         found_in_transform_keywords = True
+
+        listScrams = self.getArchs()
+        setOSs = []
+        for sc in listScrams:
+            listOSs.add(sc[:4])
+        if len(setOSs) > 1:
+            all_same_arch = False
+            
         wf = self.request['RequestName']
         if keywords:
             found_in_transform_keywords = any([keyword in wf for keyword in keywords])
-        good = self.request['RequestType'] == 'TaskChain' and more_than_one_task and found_in_transform_keywords and single_tiers and all_same_cores and output_from_single_task
+        good = self.request['RequestType'] == 'TaskChain' and more_than_one_task and found_in_transform_keywords and single_tiers and all_same_cores and output_from_single_task and all_same_arch
         if not good and talk:
             #print more_than_one_task
             #print found_in_transform_keywords
