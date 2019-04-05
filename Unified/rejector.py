@@ -172,6 +172,8 @@ def rejector(url, specific, options=None):
                 if (options.to_stepchain and (schema['RequestType']=='TaskChain')):
                     ## transform the schema into StepChain schema
                     print "Transforming a TaskChain into a StepChain"
+                    mcore = 0
+                    mem = 0
                     schema['RequestType'] = 'StepChain'
                     schema['StepChain'] = schema.pop('TaskChain')
                     schema['SizePerEvent'] = 0
@@ -180,13 +182,21 @@ def rejector(url, specific, options=None):
                     s_n = {}
                     while True:
                         if 'Task%d'%step in schema:
-                            schema['Step%d'%step] = schema.pop('Task%d'%step)
-                            schema['Step%d'%step]['StepName'] = schema['Step%d'%step].pop('TaskName')
-                            s_n[ schema['Step%d'%step]['StepName'] ] = 'Step%d'%step
-                            if 'InputTask' in schema['Step%d'%step]:
-                                schema['Step%d'%step]['InputStep'] = schema['Step%d'%step].pop('InputTask')
+                            sname = 'Step%d'%step
+                            schema[sname] = schema.pop('Task%d'%step)
+                            tmcore = schema[sname].pop('Multicore')
+                            tmem = schema[sname].pop('Memory')
+                            if mcore and tmcore != mcore:
+                                wfi.sendLog('rejector','the conversion to stepchain encoutered different value of Multicore %d != %d'%( tmcore, mcore))
+                                sendLog('rejector','the conversion of %s to stepchain encoutered different value of Multicore %d != %d'%( wfo.name, tmcore, mcore), level='critical')
+                            mcore = max(mcore, tmcore)
+                            mem = max(mem, tmem)
+                            schema[sname]['StepName'] = schema[sname].pop('TaskName')
+                            s_n[ schema[sname]['StepName'] ] = sname
+                            if 'InputTask' in schema[sname]:
+                                schema[sname]['InputStep'] = schema[sname].pop('InputTask')
                             eff = 1.
-                            up_s = 'Step%d'%step
+                            up_s = sname
                             while True:
                                 ## climb up a step. supposedely already all converted
                                 up_s = s_n.get(schema[up_s].get('InputStep',None),None)
@@ -197,16 +207,16 @@ def rejector(url, specific, options=None):
                                     ## or stop there
                                     break
 
-                            if not 'KeepOutput' in schema['Step%d'%step]:
+                            if not 'KeepOutput' in schema[sname]:
                                 ## this is a weird translation capability. Absence of keepoutput in step means : keep the output. while in TaskChain absence means : drop
-                                schema['Step%d'%step]['KeepOutput'] = False
-                            schema['TimePerEvent'] += eff*schema['Step%d'%step].pop('TimePerEvent')
-                            schema['SizePerEvent'] += eff*schema['Step%d'%step].pop('SizePerEvent')
+                                schema[sname]['KeepOutput'] = False
+                            schema['TimePerEvent'] += eff*schema[sname].pop('TimePerEvent')
+                            schema['SizePerEvent'] += eff*schema[sname].pop('SizePerEvent')
                             step+=1
                         else:
                             break
-
-
+                    schema['Multicore'] = mcore
+                    schema['Memory'] = mem
                 print json.dumps( schema, indent=2 )
                 newWorkflow = reqMgrClient.submitWorkflow(url, schema)
                 if not newWorkflow:
