@@ -5342,7 +5342,12 @@ def getWorkflowByInput( url, dataset , details=False):
     r1=conn.request("GET",there)
     r2=conn.getresponse()
     data = json.loads(r2.read())
-    items = data['rows']
+    try:
+        items = data['rows']
+    except Exception as e:
+	print(str(e))
+	print("Error while getting workflow information from input data {}".format(dataset))
+	raise
     if details:
         return [item['doc'] for item in items]
     else:
