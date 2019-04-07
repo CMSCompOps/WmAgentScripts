@@ -760,8 +760,9 @@ class DynamoLock:
         while retry:
             try:
                 return self._check()
-            except:
+            except Exception as e:
                 print "Failed to check on dynamo",retry
+		print(str(e))
                 retry-=1
                 time.sleep(5)
         return True
