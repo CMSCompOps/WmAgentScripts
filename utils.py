@@ -6601,7 +6601,7 @@ class workflowInfo:
         listScrams = self.getArchs()
         setOSs = []
         for sc in listScrams:
-            listOSs.add(sc[:4])
+            setOSs.add(sc[:4])
         if len(setOSs) > 1:
             all_same_arch = False
             
