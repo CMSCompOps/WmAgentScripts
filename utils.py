@@ -6599,7 +6599,7 @@ class workflowInfo:
         found_in_transform_keywords = True
 
         listScrams = self.getArchs()
-        setOSs = []
+        setOSs = {}
         for sc in listScrams:
             setOSs.add(sc[:4])
         if len(setOSs) > 1:
