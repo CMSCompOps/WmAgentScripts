@@ -905,7 +905,7 @@ class CheckBuster(threading.Thread):
                 ## do not bypass for now, until Alan understands why we are loosing ACDC docs 
                 bypass_checks = True
             else:
-                wfi.sendLog('checkor','%s is not completed  \n%s \n%s'%( 
+                wfi.sendLog('checkor','%s is not completed.\nCurrent stats:\n%s \nRequired stats:\n%s'%( 
                         wfo.name, json.dumps(percent_completions, indent=2), json.dumps(fractions_pass, indent=2) ))
 
             ## hook for creating automatically ACDC ?
@@ -916,7 +916,7 @@ class CheckBuster(threading.Thread):
                 ###############################
                 is_closing = False
         else:
-            wfi.sendLog('checkor','passing stats check \n%s \n%s'%( json.dumps(percent_completions, indent=2), json.dumps(fractions_pass, indent=2) ))
+            wfi.sendLog('checkor','passing stats check \nCurrent stats:\n%s \nRequired stats:\n%s'%( json.dumps(percent_completions, indent=2), json.dumps(fractions_pass, indent=2) ))
 
         if acdc and all(pass_stats_check.values()) and all(pass_stats_check_to_truncate_recovery.values()):
             print "This is essentially good to truncate"
