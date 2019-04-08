@@ -5131,7 +5131,9 @@ def phedexPost(url, request, params):
     try:
         result = json.loads(res)
     except:
-        print "PHEDEX error",res
+        print "PHEDEX error. Response: ",res
+	print "\t- URL: {}".format(url)
+	print "\t- POST Request: {}".format(request)
         return None
     conn.close()
     return result
