@@ -299,7 +299,12 @@ def stagor(url,specific =None, options=None):
                 print json.dumps( readys, indent=2 )
         else:
             wfi.sendLog('stagor',"missing requirements")
-            copies_needed,_ = wfi.getNCopies()
+            copies_needed_from_CPUh, _ = wfi.getNCopies()
+            
+            if 'Campaign' in wfi.request and wfi.request['Campaign'] in CI.campaigns and 'maxcopies' in CI.campaigns[wfi.request['Campaign']]:
+                copies_needed_from_campaign = CI.campaigns[wfi.request['Campaign']]['maxcopies']
+                copies_needed = min(copies_needed_from_campaign, copies_needed_from_CPUh)
+
             jump_ahead = False
             re_transfer = False
             ## there is missing input let's do something more elaborated
