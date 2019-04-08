@@ -1061,7 +1061,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     outlier_upcoming =  outliers( upcoming_ratios )
     print outlier_upcoming
     if outlier_upcoming:
-        sendLog('GQ','There is an inbalance of upcoming work at %s'%(', '.join([site for site in sorted(outlier_upcoming.keys())])),level='critical')
+        sendLog('GQ','There is an inbalance of upcoming work at %s'%(', '.join([site for site in sorted(outlier_upcoming.keys())])),level='warning')
         #open('%s/sites_full.json'%base_eos_dir,'w').write( json.dumps( outlier_upcoming.keys() ))
         oo = eosFile('%s/sites_full.json'%base_eos_dir)
         oo.write( json.dumps( outlier_upcoming.keys() ) )
