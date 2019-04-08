@@ -1191,16 +1191,16 @@ def equalizor(url , specific = None, options=None):
 
 
     if short_tasks:
-        sendLog('equalizor','These tasks are running very short jobs. Shorter than %d [min] \n %s'%(warning_short_time,'\n'.join( ["%s, %.f [mins] observed time at original %d core count"%(a,b,c) for (a,b,c) in sorted( short_tasks )] )), level='critical')
+        sendLog('equalizor','These tasks are running very short jobs. Shorter than %d [min] \n %s'%(warning_short_time,'\n'.join( ["%s, %.f [mins] observed time at original %d core count"%(a,b,c) for (a,b,c) in sorted( short_tasks )] )), level='warning')
 
     if long_tasks:
-        sendLog('equalizor','These tasks are running very long jobs. Longer than %d [min] per core.\n %s'%(warning_long_time,'\n'.join( ["%s, %.f [h] %.f [mins] observed time at original %d core count"%(a,divmod(b,60)[0], divmod(b,60)[1],c) for (a,b,c) in sorted( long_tasks )] )), level='critical')
+        sendLog('equalizor','These tasks are running very long jobs. Longer than %d [min] per core.\n %s'%(warning_long_time,'\n'.join( ["%s, %.f [h] %.f [mins] observed time at original %d core count"%(a,divmod(b,60)[0], divmod(b,60)[1],c) for (a,b,c) in sorted( long_tasks )] )), level='warning')
 
     if hungry_tasks:
-        sendLog('equalizor','These tasks are running with more memory than usual\n %s'%( '\n'.join( ["%s, %.f [MB] observed concumption at original %d core count"%(a,b,c) for (a,b,c) in sorted( hungry_tasks )] )), level='critical')
+        sendLog('equalizor','These tasks are running with more memory than usual\n %s'%( '\n'.join( ["%s, %.f [MB] observed concumption at original %d core count"%(a,b,c) for (a,b,c) in sorted( hungry_tasks )] )), level='warning')
 
     if bad_hungry_tasks:
-        sendLog('equalizor','These tasks are configured with more memory than usual\n %s'%( '\n'.join( ["%s, %.f [MB] submitted requirement at original %d core count"%(a,b,c) for (a,b,c) in sorted( bad_hungry_tasks )] )), level='critical')
+        sendLog('equalizor','These tasks are configured with more memory than usual\n %s'%( '\n'.join( ["%s, %.f [MB] submitted requirement at original %d core count"%(a,b,c) for (a,b,c) in sorted( bad_hungry_tasks )] )), level='warning')
 
         
     interface['modifications'].update( modifications )
