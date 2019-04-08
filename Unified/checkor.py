@@ -274,7 +274,7 @@ def checkor(url, spec=None, options=None):
         time_spend_per_workflow = float(now - time_point.start)/ float( float(len(wfs)))
         print "Average time spend per workflow is", time_spend_per_workflow
         ## set a threshold to it
-        if time_spend_per_workflow > 60:
+        if time_spend_per_workflow > 120:
             sendLog('checkor','The module checkor took %.2f [s] per workflow'%( time_spend_per_workflow), level='critical')
 
     if not spec and in_manual!=0:
