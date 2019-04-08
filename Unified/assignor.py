@@ -275,7 +275,7 @@ def assignor(url ,specific = None, talk=True, options=None):
             #sites_allowed = [site for site in sites_allowed if any([osite.startswith(site) for osite in one_secondary_locations])]
             sites_allowed = [site for site in sites_allowed if SI.CE_to_SE(site) in one_secondary_locations]
             
-        wfh.sendLog('assignor',"From/after secondary requirement, now Allowed%s"%sorted(sites_allowed))
+        wfh.sendLog('assignor',"Intersecting with secondary requirement, now allowed %s"%sorted(sites_allowed))
 
         initial_sites_allowed = copy.deepcopy( sites_allowed ) ## keep track of this, after secondary input location restriction : that's how you want to operate it
 
