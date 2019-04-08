@@ -1442,7 +1442,7 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
                 ## do you want to send a critical message !
                 sendLog('htmlor','Agent %s with %d component down: %s'%( name,
                                                                          len(agent['down_components']),
-                                                                         ", ".join(agent['down_components'])), level='critical')
+                                                                         ", ".join(agent['down_components'])), level='warning')
                 bgcolor = 'bgcolor=red'
             uas = AI.agentStatus( name )
             if uas == 'standby':
