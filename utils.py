@@ -5134,6 +5134,7 @@ def phedexPost(url, request, params):
         print "PHEDEX error. Response: ",res
 	print "\t- URL: {}".format(url)
 	print "\t- POST Request: {}".format(request)
+	print "\t- Params: {}".format(encodedParams)
         return None
     conn.close()
     return result
