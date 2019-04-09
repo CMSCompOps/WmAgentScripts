@@ -82,8 +82,7 @@ def checkor(url, spec=None, options=None):
     all_completed = set(getWorkflows(url, 'completed' ))
 
     wfs=[]
-    exceptions=[
-        ]
+    exceptions=[]
 
     if options.strict:
         ## the one which were running and now have completed
@@ -260,7 +259,7 @@ def checkor(url, spec=None, options=None):
             for site,items in to.custodials.items():
                 custodials[site].extend( items )
 
-    if float(failed_threads/run_threads.n_threads) > 0.7:
+    if float(failed_threads/run_threads.n_threads) > 0:
         sendLog('checkor','%d/%d threads have failed, better check this out'% (failed_threads, run_threads.n_threads), level='critical')
         ## remove once it's all good
         sendEmail('checkor','%d/%d threads have failed, better check this out'% (failed_threads,run_threads.n_threads))
