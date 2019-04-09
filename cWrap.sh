@@ -63,7 +63,7 @@ python $* &>> $log
 if [ $? == 0 ]; then
     echo "finished" >> $log
 else
-    echo "abnormal termination" >> $log
+    echo "\nAbnormal termination with exit code $?" >> $log
     mail -s "[Ops] module "$modulename" failed" -a $log matteoc@fnal.gov,thong.nguyen@cern.ch,sharad.agarwal@cern.ch
 fi
 
