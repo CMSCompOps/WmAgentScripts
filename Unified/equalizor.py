@@ -806,7 +806,7 @@ def equalizor(url , specific = None, options=None):
                         modifications[wfo.name][task.pathName]= {"AddWhitelist" : sorted(aaa_grid)}
 
             ## rule to overflow jobs on the primary input
-            if campaign in PRIM_overflow:
+            if campaign in PRIM_overflow and 'HI' not in wfo.name:
                 if task.taskType in ['Processing','Production']:
                     if not wfi.request['TrustSitelists']:
                         ###xrootd is OFF
