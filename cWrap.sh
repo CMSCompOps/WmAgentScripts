@@ -64,7 +64,7 @@ if [ $? == 0 ]; then
     echo "finished" >> $log
 else
     echo "abnormal termination" >> $log
-    mail -s "[Ops] module "$modulename" failed" -a $log matteoc@fnal.gov,thong.nguyen@cern.ch,svenja.pflitsch@desy.de
+    mail -s "[Ops] module "$modulename" failed" -a $log matteoc@fnal.gov,thong.nguyen@cern.ch,sharad.agarwal@cern.ch
 fi
 
 stop=`date +%s`
