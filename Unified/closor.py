@@ -272,7 +272,7 @@ def closor(url, specific=None, options=None):
         time_spend_per_workflow = (th_stop-th_start) / float(len(wfs))
         print "Average time spend per workflow is", time_spend_per_workflow
 
-    if float(failed_threads/run_threads.n_threads) > 0.7:
+    if float(failed_threads/run_threads.n_threads) > 0:
         sendLog('checkor','%d/%d threads have failed, better check this out'% (failed_threads, run_threads.n_threads), level='critical')
         sendEmail('checkor','%d/%d threads have failed, better check this out'% (failed_threads,run_threads.n_threads))
 
