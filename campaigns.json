@@ -1478,6 +1478,15 @@
     "tune": true
   }, 
   "RunIIAutumn18FSPremix": {
+    "SecondaryLocation": [
+       "T2_US_Caltech",
+       "T2_UK_London_IC",
+       "T2_DE_RWTH",
+       "T1_ES_PIC",
+       "T1_US_FNAL",
+       "T1_RU_JINR",
+       "T2_US_Nebraska"
+      ],
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
