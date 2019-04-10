@@ -1459,8 +1459,8 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
                         if not JC: continue
                         if component in component_auto_restart: continue
                         #trying to check the value why it's none
-                        print "/n/nCHECK ME OUT/n"
-                        print det['error_message']
+                        print "/n/nCHECK ME OUT/n/n"
+                        print det
                         print "/n/n"
                         if 'thread heartbeat' in det['error_message']:
                             alert_type = 'heartbeat'
