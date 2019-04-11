@@ -3272,7 +3272,12 @@ def checkTransferApproval(url, phedexid):
 
 def getDatasetFileFraction( dataset, files):
     dbsapi = DbsApi(url=dbs_url)
-    all_files = dbsapi.listFileArray( dataset= dataset,validFileOnly=1, detail=True)
+    try:
+        all_files = dbsapi.listFileArray( dataset= dataset,validFileOnly=1, detail=True)
+    except Exception as e:
+	print("dbsapi.listFileArray failed on {}".format(dataset))
+	print(str(e))
+	raise
     total = 0
     in_file = 0
     for f in all_files:
@@ -3287,7 +3292,12 @@ def getDatasetFileFraction( dataset, files):
 
 def getDatasetBlockFraction( dataset, blocks):
     dbsapi = DbsApi(url=dbs_url)
-    all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
+    try:
+        all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
+    except Exception as e:
+	print("dbsapi.listBlockSummaries failed on {}".format(dataset))
+	print(str(e))
+	raise
     total=0
     in_block=0
     for block in all_blocks:
@@ -3671,7 +3681,12 @@ def getDatasetFiles(url, dataset ,without_invalid=True ):
 
 def _getDatasetFiles(url, dataset ,without_invalid=True ):
     dbsapi = DbsApi(url=dbs_url)
-    files = dbsapi.listFileArray( dataset= dataset,validFileOnly=without_invalid, detail=True)
+    try:
+        files = dbsapi.listFileArray( dataset= dataset,validFileOnly=without_invalid, detail=True)
+    except Exception as e:
+	print("dbsapi.listFileArray failed on {}".format(dataset))
+	print(str(e))
+	raise
     dbs_filenames = [f['logical_file_name'] for f in files]
 
     conn = make_x509_conn(url)
@@ -3708,7 +3723,13 @@ def try_getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=
     dbsapi = DbsApi(url=dbs_url)
     #all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
     #all_block_names=set([block['block_name'] for block in all_blocks])
-    files = dbsapi.listFileArray( dataset= dataset,validFileOnly=1, detail=True)
+    try:
+        files = dbsapi.listFileArray( dataset= dataset,validFileOnly=1, detail=True)
+    except Exception as e:
+	print("dbsapi.listFileArray failed on {}".format(dataset))
+	print(str(e))
+	raise
+	
     all_block_names = list(set([f['block_name'] for f in files]))
     if only_blocks:
         all_block_names = [b for b in all_block_names if b in only_blocks]
@@ -3764,7 +3785,12 @@ def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, ve
         vetoes = ['MSS','Buffer','Export']
     #print "presence of",dataset
     dbsapi = DbsApi(url=dbs_url)
-    all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
+    try:
+        all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
+    except Exception as e:
+	print("dbsapi.listBlocksSummaries failed on {}".format(dataset))
+	print(str(e))
+	raise
     all_dbs_block_names=set([block['block_name'] for block in all_blocks])
     all_block_names=set([block['block_name'] for block in all_blocks])
     if only_blocks:
@@ -4241,7 +4267,12 @@ def try_getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=
         vetoes = ['MSS','Buffer','Export']
     #print "presence of",dataset
     dbsapi = DbsApi(url=dbs_url)
-    all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
+    try:
+        all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
+    except Exception as e:
+	print("dbsapi.listBlockSummaries failed on {}".format(dataset))
+	print(str(e))
+	raise
     #print json.dumps( all_blocks, indent=2)
     all_block_names=set([block['block_name'] for block in all_blocks])
     #print sorted(all_block_names)
@@ -4327,7 +4358,12 @@ def try_getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=
 
 def getDatasetBlocksFromFiles( dataset, files):
     dbsapi = DbsApi(url=dbs_url)
-    all_files = dbsapi.listFiles( dataset = dataset , detail=True, validFileOnly=1)
+    try:
+        all_files = dbsapi.listFiles( dataset = dataset , detail=True, validFileOnly=1)
+    except Exception as e:
+	print("dbsapi.listFiles failed on {}".format(dataset))
+	print(str(e))
+	raise
     collected_blocks = set()
     for fn in all_files:
         if fn['logical_file_name'] in files:
@@ -6263,16 +6299,28 @@ def getPrepIDs(wl):
 
 def getLFNbase(dataset):
         # initialize API to DBS3
-        dbsapi = DbsApi(url=dbs_url)
+	dbsapi = DbsApi(url=dbs_url)
+	try:
+	    reply = dbsapi.listFiles(dataset=dataset)
+        except Exception as e:
+	    print("Problem with listFiles query from DBSAPI with dataset {}".format(dataset))
+	    print(str(e))
+	    raise
         # retrieve file
-        reply = dbsapi.listFiles(dataset=dataset)
         file = reply[0]['logical_file_name']
         return '/'.join(file.split('/')[:3])
 
 
 def getListOfBlocks(inputdset,runwhitelist):
-    dbsApi = DbsApi(url=dbs_url)
-    blocks=dbsApi.listBlocks(dataset = inputdset, run_num = runwhitelist)
+    dbsApi = DbsApi(url=dbs_url) 
+    try:
+        blocks=dbsApi.listBlocks(dataset = inputdset, run_num = runwhitelist)
+    except Exception as e:
+	print("Problem with listBlocks query from DBSAPI")
+	print("dataset = {}".format(inputdset))
+ 	print("run_num = {}".format(runwhiteist))
+	print(str(e))
+	raise
 
     block_list = []
 
@@ -6364,8 +6412,14 @@ def closeAllBlocks(url, dataset, blocks=None):
         r = phedexPost(url, '/phedex/datasvc/json/prod/inject', params)
         print json.dumps( r , indent=2)
         ## close the block in dbs
-        dbswrite.updateBlockStatus( block_name = bname, open_for_writing = 0)
-
+	try:
+            dbswrite.updateBlockStatus( block_name = bname, open_for_writing = 0)
+        except Exception as e:
+	    print("Problem with query updateBlockStatus from DBSAPI")
+	    print("block_name = {}".format(bname))
+	    print(str(e))
+	    raise
+	
 def checkIfBlockIsAtASite(url,block,site):
 
     conn = make_x509_conn(url)
