@@ -1486,6 +1486,9 @@
       "T1_US_FNAL", 
       "T1_RU_JINR", 
       "T2_US_Nebraska"
+    ],
+    "SiteBlacklist": [
+      "T2_CH_CERN_HLT"
     ], 
     "fractionpass": 0.95, 
     "go": true, 
