@@ -2829,7 +2829,8 @@
         "SiteWhitelist": [
           "T1_DE_KIT", 
           "T1_RU_JINR", 
-          "T1_FR_CCIN2P3"
+          "T1_FR_CCIN2P3",
+          "T1_IT_CNAF"
         ]
       }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib18GS-105X_upgrade2018_realistic_v4-v1/GEN-SIM": {
