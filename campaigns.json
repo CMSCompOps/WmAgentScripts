@@ -1486,7 +1486,7 @@
       "T1_US_FNAL", 
       "T1_RU_JINR", 
       "T2_US_Nebraska"
-    ],
+    ], 
     "SiteBlacklist": [
       "T2_CH_CERN_HLT"
     ], 
@@ -2454,7 +2454,7 @@
       }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib17GS-105X_mc2017_realistic_v5_ext1-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_DE_KIT" 
+          "T1_DE_KIT"
         ]
       }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib18GS-105X_upgrade2018_realistic_v4-v1/GEN-SIM": {
@@ -2589,6 +2589,19 @@
     "lumisize": -1, 
     "resize": "auto", 
     "tune": true
+  }, 
+  "RunIISummer19UL18MiniAOD": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "resize": "auto"
+  }, 
+  "RunIISummer19UL18NanoAOD": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1
   }, 
   "RunIISummer19UL2017HLT": {
     "fractionpass": 0.95, 
@@ -2814,8 +2827,8 @@
       }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib17GS-105X_mc2017_realistic_v5_ext1-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_DE_KIT",
-          "T1_RU_JINR",
+          "T1_DE_KIT", 
+          "T1_RU_JINR", 
           "T1_FR_CCIN2P3"
         ]
       }, 
