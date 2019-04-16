@@ -63,8 +63,11 @@ python $* &>> $log
 if [ $? == 0 ]; then
     echo "finished" >> $log
 else
+    emaillog = $log.log
     echo -e "\nAbnormal termination with exit code $?" >> $log
-    mail -s "[Ops] module "$modulename" failed" -a $log matteoc@fnal.gov,thong.nguyen@cern.ch,sharad.agarwal@cern.ch
+    top -u vlimant -n1  -o %MEM -c >> $log
+    echo "Abnormal termination, check $log" > emaillog
+    mail -s "[Ops] module "$modulename" failed" -a $emaillog matteoc@fnal.gov,thong.nguyen@cern.ch,sharad.agarwal@cern.ch
 fi
 
 stop=`date +%s`
