@@ -66,7 +66,7 @@ else
     emaillog = $log.log
     echo -e "\nAbnormal termination with exit code $?" >> $log
     top -u vlimant -n1  -o %MEM -c >> $log
-    echo "Abnormal termination, check $log" > emaillog
+    echo "Abnormal termination, check $log" > $emaillog
     mail -s "[Ops] module "$modulename" failed" -a $emaillog matteoc@fnal.gov,thong.nguyen@cern.ch,sharad.agarwal@cern.ch
 fi
 
