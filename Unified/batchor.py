@@ -117,7 +117,7 @@ This is an automated message"""%( new_campaign,
         print text
         to = ['hn-cms-dataopsrequests@cern.ch']
         sendEmail(subject, text, destination=to)
-        sendLog('batchor',text, level='critical')
+        # sendLog('batchor',text, level='critical')
 
     ## go through all existing campaigns and remove the ones not in use anymore ?
     for old_campaign in CI.all(c_type='relval'):
