@@ -5,11 +5,6 @@ FINAL_HTML_DIR=/eos/cms/store/unified/www/
 
 cd $BASE_DIR
 
-if [ "$USER" != "vlimant" ] ; then
-    echo "single user running from now on"
-    exit
-fi
-
 modulename=`echo $1 | sed 's/\.py//' | sed 's/Unified\///'`
 mkdir -p $HTML_DIR/logs/$modulename/
 mkdir -p $FINAL_HTML_DIR/logs/$modulename/
@@ -65,7 +60,7 @@ if [ $? == 0 ]; then
 else
     emaillog = $log.log
     echo -e "\nAbnormal termination with exit code $?" >> $log
-    top -u vlimant -n1  -o %MEM -c >> $log
+    top -n1  -o %MEM -c >> $log
     echo "Abnormal termination, check $log" > $emaillog
     mail -s "[Ops] module "$modulename" failed" -a $emaillog matteoc@fnal.gov,thong.nguyen@cern.ch,sharad.agarwal@cern.ch
 fi
