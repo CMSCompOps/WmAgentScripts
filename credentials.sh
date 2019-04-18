@@ -15,6 +15,7 @@ fi
 #talk to cmsweb
 export X509_USER_PROXY=/tmp/$USER-4hty64k793hj
 if [ "$1" == "create" ] ; then
+    echo "creating grid proxy" $X509_USER_PROXY
     cat $HOME/private/$USER.txt | voms-proxy-init -voms cms --valid 140:00 --rfc -pwstdin
 fi
 
