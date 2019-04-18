@@ -21,7 +21,7 @@ for each in `find $LOCAL_DIR/logs/ -name "*.json"` ; do
 done
 
 echo "cleaning files in cache dir"
-for each in `ls $CACHE_DIR/*` ; do
+for each in `find $CACHE_DIR/` ; do
     age=$((($(date +%s)-$(date +%s -r $each))/86400))
     if [ $age -gt 15 ] ; then
 	echo remove $each
