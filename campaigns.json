@@ -43,7 +43,8 @@
   "Commissioning2018": {
     "custodial_override": [
       "DQMIO"
-    ], 
+    ],
+    "custodial": "T1_US_FNAL_MSS", 
     "fractionpass": 1.0, 
     "go": true, 
     "lumisize": -1, 
