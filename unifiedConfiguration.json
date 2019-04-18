@@ -359,7 +359,7 @@
   },
   "convert_to_stepchain":{	
    "description" : "A list of keywords to match workflow names, and convert to StepChain if technical constraints are met",
-   "value" : [ "RunIIWinter15GenOnly","NOTYETENABLED_RunIIFall17wmLHEGS" ]
+   "value" : [ "NOTYETENABLED_RunIIFall17wmLHEGS" ]
   },
   "user_relval":{
    "description" : "The users from which we expect relval requests",
