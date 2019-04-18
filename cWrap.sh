@@ -58,7 +58,7 @@ python $* &>> $log
 if [ $? == 0 ]; then
     echo "finished" >> $log
 else
-    emaillog = $log.log
+    emaillog=$log.log
     echo -e "\nAbnormal termination with exit code $?" >> $log
     top -n1  -o %MEM -c >> $log
     echo "Abnormal termination, check $log" > $emaillog
