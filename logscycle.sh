@@ -7,12 +7,6 @@ oweek=`date +%W`
 week=${oweek#0}
 let oddity=week%2
 
-if [ "$USER" != "vlimant" ] ; then
-    echo "single user running from now on"
-    exit
-fi
-
-
 if [ -r $lock_name ] ; then
     echo "lock file $lock_name is present"
     echo current id is $$
