@@ -62,7 +62,7 @@ else
     echo -e "\nAbnormal termination with exit code $?" >> $log
     top -n1  -o %MEM -c >> $log
     echo "Abnormal termination, check $log" > $emaillog
-    mail -s "[Ops] module "$modulename" failed" -a $emaillog matteoc@fnal.gov,thong.nguyen@cern.ch,sharad.agarwal@cern.ch
+    mail -s "[Ops] module "$modulename" failed" -a $emaillog cmsunified@cern.ch
 fi
 
 stop=`date +%s`
