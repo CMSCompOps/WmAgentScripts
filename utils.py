@@ -4974,8 +4974,18 @@ def checkParent( dataset ):
     #                         )
     #    pass
 
-
 def findParent( dataset ):
+    retries = 3
+    while retries>0:
+        retries-=1
+        try:
+            return _findParent( dataset )
+        except Exception as e:
+            time.sleep(1)
+    print "Failed on finding parents of",dataset
+    raise e
+
+def _findParent( dataset ):
     dbsapi = DbsApi(url=dbs_url)
     print dataset,"for parent"
     ret = dbsapi.listDatasetParents( dataset= dataset)
