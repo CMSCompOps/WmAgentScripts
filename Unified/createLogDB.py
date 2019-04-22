@@ -89,7 +89,6 @@ for year in years:
                 tars = filter(None,os.popen('ls /eos/cms/store/logs/prod/%s/%s/WMAgent/%s/*%s*.tar'%(year,month,workflow,task)).read().split('\n'))
                 print task,len(tars)
                 for tar in tars:
-                    local='/tmp/vlimant'
                     tar = tar.split('/')[-1]
                     ## this is heavy, how can we avoid this ?
                     path = '/eos/cms/store/logs/prod/%s/%s/WMAgent/%s/%s'%(year,month,workflow,tar)
@@ -99,7 +98,6 @@ for year in years:
                     
                     ## a full copy is a bit too much
                     tarloc = '/eos/cms/store/logs/prod/%s/%s/WMAgent/%s/%s'%( year,month,workflow,tar)
-                    tarlloc = '%s/%s'%( local, tar)
 
                     logs = filter(None,map(lambda b : b.split('/')[-1], os.popen('tar tf %s'%(tarloc)).read().split('\n')))
                     for log in logs:
