@@ -2618,11 +2618,79 @@
     "secondary_AAA": true, 
     "tune": true
   }, 
+  "RunIISummer19UL17DIGI": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "resize": "auto", 
+    "secondary_AAA": false, 
+    "tune": true
+  }, 
+  "RunIISummer19UL17DIGIPremix": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "resize": "auto", 
+    "secondary_AAA": false, 
+    "tune": true
+  }, 
   "RunIISummer19UL17GS": {
     "fractionpass": 0.95, 
     "go": false, 
     "lumisize": -1, 
     "resize": "auto", 
+    "tune": true
+  }, 
+  "RunIISummer19UL17HLT": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "overflow": {
+      "PU": {
+        "force": false, 
+        "max": 0, 
+        "pending": 0
+      }
+    }, 
+    "resize": "auto", 
+    "secondary_AAA": false, 
+    "tune": true
+  }, 
+  "RunIISummer19UL17MiniAOD": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "resize": "auto"
+  }, 
+  "RunIISummer19UL17NanoAOD": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1
+  }, 
+  "RunIISummer19UL17RECO": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "resize": "auto", 
+    "secondary_AAA": false, 
+    "tune": true
+  }, 
+  "RunIISummer19UL17pLHE": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "tune": true
+  }, 
+  "RunIISummer19UL17wmLHEGS": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
     "tune": true
   }, 
   "RunIISummer19UL18MiniAOD": {
@@ -2878,12 +2946,12 @@
     "tune": true
   }, 
   "RunIIWinter19PFCalibDRPremix": {
-    "fractionpass": 0.95, 
-    "go": true,
     "SecondaryLocation": [
-      "T1_US_FNAL",
+      "T1_US_FNAL", 
       "T2_CH_CERN"
     ], 
+    "fractionpass": 0.95, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
