@@ -41,10 +41,10 @@
     "primary_AAA": true
   }, 
   "Commissioning2018": {
+    "custodial": "T1_US_FNAL_MSS", 
     "custodial_override": [
       "DQMIO"
-    ],
-    "custodial": "T1_US_FNAL_MSS", 
+    ], 
     "fractionpass": 1.0, 
     "go": true, 
     "lumisize": -1, 
@@ -2449,7 +2449,7 @@
       }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib16GS-105X_mcRun2_asymptotic_v2-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T2_IT_Pisa",
+          "T2_IT_Pisa", 
           "T2_IT_Legnaro"
         ]
       }, 
@@ -2571,6 +2571,31 @@
     }, 
     "tune": true
   }, 
+  "RunIISummer19UL16DIGIPremix": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "resize": "auto", 
+    "secondary_AAA": true, 
+    "tune": true
+  }, 
+  "RunIISummer19UL16HLT": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "overflow": {
+      "PU": {
+        "force": false, 
+        "max": 0, 
+        "pending": 0
+      }
+    }, 
+    "resize": "auto", 
+    "secondary_AAA": true, 
+    "tune": true
+  }, 
   "RunIISummer19UL16MiniAOD": {
     "fractionpass": 0.95, 
     "go": false, 
@@ -2583,6 +2608,15 @@
     "go": false, 
     "lumisize": -1, 
     "maxcopies": 1
+  }, 
+  "RunIISummer19UL16RECO": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "resize": "auto", 
+    "secondary_AAA": true, 
+    "tune": true
   }, 
   "RunIISummer19UL17GS": {
     "fractionpass": 0.95, 
@@ -2830,7 +2864,7 @@
         "SiteWhitelist": [
           "T1_DE_KIT", 
           "T1_RU_JINR", 
-          "T1_FR_CCIN2P3",
+          "T1_FR_CCIN2P3", 
           "T1_IT_CNAF"
         ]
       }, 
@@ -2850,11 +2884,11 @@
     "maxcopies": 1, 
     "overflow": {
       "PREMIX": {}
-    },
+    }, 
+    "resize": "auto", 
     "secondaries": {
       "/Neutrino_E-10_gun/RunIISummer17PrePremix-PUPFCalib_2017Conditions_105X_mc2017_realistic_v5-v2/PREMIX": {}
     }, 
-    "resize": "auto", 
     "secondary_AAA": true, 
     "tune": true
   }, 
