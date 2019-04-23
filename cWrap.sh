@@ -3,6 +3,10 @@ BASE_DIR=/data/unified/WmAgentScripts/
 HTML_DIR=/data/unified/www
 FINAL_HTML_DIR=/eos/cms/store/unified/www/
 
+if [ ! -d $FINAL_HTML_DIR ] ; then 
+    echo "Cannot read the log destination",$FINAL_HTML_DIR
+    exit
+fi
 cd $BASE_DIR
 
 modulename=`echo $1 | sed 's/\.py//' | sed 's/Unified\///'`
