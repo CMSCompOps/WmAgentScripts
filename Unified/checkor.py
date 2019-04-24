@@ -451,6 +451,7 @@ class CheckBuster(threading.Thread):
         assistance_tags = set()
 
         is_closing = True
+        stop_duplicate_check = False
 
         ## get it from somewhere
         bypass_checks = False
@@ -954,17 +955,16 @@ class CheckBuster(threading.Thread):
         if any([ (events_per_lumi[out] <= lumi_lower_limit) for out in events_per_lumi]):
             print wfo.name,"has very small lumisections"
             print json.dumps(events_per_lumi, indent=2)
-            if not bypass_checks:
-                assistance_tags.add('smalllumi')
-                is_closing = False
+            assistance_tags.add('smalllumi')
+            is_closing = False
+            stop_duplicate_check = True
 
         if any([ (lumi_upper_limit[out]>0 and events_per_lumi[out] >= lumi_upper_limit[out]) for out in events_per_lumi]):
             print wfo.name,"has big lumisections"
             print json.dumps(events_per_lumi, indent=2)
             ## hook for rejecting the request ?
-            if not bypass_checks:
-                assistance_tags.add('biglumi')
-                #is_closing = False 
+            assistance_tags.add('biglumi')
+            is_closing = False 
 
 
         any_presence = {}
@@ -1073,7 +1073,7 @@ class CheckBuster(threading.Thread):
 
 
         ## check for duplicates prior to making the tape subscription ## this is quite expensive and we run it twice for each sample
-        if (is_closing or bypass_checks) and (not all_relevant_output_are_going_to_tape):
+        if (not stop_duplicate_check) and (is_closing or bypass_checks) and (not all_relevant_output_are_going_to_tape):
             print "starting duplicate checker for",wfo.name
             for output in wfi.request['OutputDatasets']:
                 if (output in ignoreduplicates) and (ignoreduplicates[output]):
