@@ -116,12 +116,15 @@ class McMClient:
         else:
             print "Not implemented Yet ?"
             self.__http.request("DELETE", url, headers=self.headers)
-                       
+        r = self.response()
         try:
-            d=json.loads(self.response())
+            d=json.loads(r)
             return d
-        except:
+        except Exception as e :
             print "ERROR"
+            print fullurl
+            print str(e)
+            print r
             return None             
     #####################
     #### generic methods for i/o
