@@ -40,11 +40,10 @@ fi
 
 echo $USER >> $log
 echo $HOSTNAME >> $log
-#echo the week $week oddity is $oddity >> $log
 echo module $modulename>> $log 
 
-echo $MCM_SSO_COOKIE >>$log
-echo $X509_USER_PROXY >>$log
+#echo $MCM_SSO_COOKIE >>$log
+#echo $X509_USER_PROXY >>$log
 
 source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh
 # get pymongo
@@ -63,9 +62,14 @@ if [ $? == 0 ]; then
     echo "finished" >> $log
 else
     emaillog=$log.log
+    failed_pid=$!
     echo -e "\nAbnormal termination with exit code $?" >> $log
     top -n1  -o %MEM -c >> $log
     echo "Abnormal termination, check $log" > $emaillog
+    echo $failed_pid >> $emaillog
+    echo $USER >> $emaillog
+    echo $HOSTNAME >> $emaillog
+    echo module $modulename>> $emaillog 
     mail -s "[Ops] module "$modulename" failed" -a $emaillog cmsunified@cern.ch
 fi
 
