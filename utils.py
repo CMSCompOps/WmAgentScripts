@@ -414,7 +414,7 @@ def sendEmail( subject, text, sender=None, destination=None ):
         if user in map_who:
             sender = map_who[user]
         else:
-            sender = 'vlimant@cern.ch'
+            sender = 'cmsunified@cern.ch'
 
     msg = MIMEMultipart()
     msg['From'] = sender
