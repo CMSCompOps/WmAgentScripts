@@ -935,6 +935,7 @@ class CheckBuster(threading.Thread):
         time_point("checked output size", sub_lap=True)
 
         lumi_upper_limit = {}
+        lumi_lower_limit = 50 ## make this a unified parameter if you want
         for output in wfi.request['OutputDatasets']:
             upper_limit = 301.
             campaign = campaigns[output]
@@ -950,6 +951,13 @@ class CheckBuster(threading.Thread):
             lumi_upper_limit[output] = upper_limit
             if wfi.request['RequestType'] in ['ReDigi','ReReco']: lumi_upper_limit[output] = -1
         
+        if any([ (events_per_lumi[out] <= lumi_lower_limit) for out in events_per_lumi]):
+            print wfo.name,"has very small lumisections"
+            print json.dumps(events_per_lumi, indent=2)
+            if not bypass_checks:
+                assistance_tags.add('smalllumi')
+                is_closing = False
+
         if any([ (lumi_upper_limit[out]>0 and events_per_lumi[out] >= lumi_upper_limit[out]) for out in events_per_lumi]):
             print wfo.name,"has big lumisections"
             print json.dumps(events_per_lumi, indent=2)
