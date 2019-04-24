@@ -2693,6 +2693,25 @@
     "lumisize": -1, 
     "tune": true
   }, 
+  "RunIISummer19UL18DR": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "tune": true
+  }, 
+  "RunIISummer19UL18DRPremix": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "resize": "auto", 
+    "secondary_AAA": true, 
+    "tune": true,
+    "overflow": {
+      "PREMIX": {}
+    }
+  }, 
   "RunIISummer19UL18MiniAOD": {
     "fractionpass": 0.95, 
     "go": false, 
