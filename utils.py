@@ -4853,6 +4853,8 @@ def _getDatasetListOfFiles(dataset):
     return all_lfn
 
 def getDatasetAllEventsPerLumi(dataset, fraction=1):
+    return runWithRetries(_getDatasetAllEventsPerLumi,[dataset], { 'fraction': fraction})
+def _getDatasetAllEventsPerLumi(dataset, fraction=1):
     dbsapi = DbsApi(url=dbs_url)
     all_files = dbsapi.listFileArray( dataset = dataset ,detail=True)
     if fraction!=1:
