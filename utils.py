@@ -4845,6 +4845,8 @@ def getDatasetLumis(dataset, runs=None, with_cache=False):
     return dict(lumi_json),dict(files_json)
 """
 def getDatasetListOfFiles(dataset):
+    return runWithRetries(_getDatasetListOfFiles, [dataset],{})
+def _getDatasetListOfFiles(dataset):
     dbsapi = DbsApi(url=dbs_url)
     all_files = dbsapi.listFileArray( dataset = dataset, detail=False)
     all_lfn = sorted([f['logical_file_name'] for f in all_files])
