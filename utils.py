@@ -5473,15 +5473,7 @@ def display_time( sec ):
     return dis
 
 def getWorkflowByMCPileup( url, dataset , details=False):
-    retries=5
-    while retries>0:
-        retries-=1
-        try:
-            return _getWorkflowByMCPileup(url, dataset , details)
-        except Exception as e:
-            pass
-    print str(e)
-    
+    return runWithRetries(_getWorkflowByMCPileup, [url, dataset],{'details':details})
 def _getWorkflowByMCPileup( url, dataset , details=False):
     conn = make_x509_conn(url)
     #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
