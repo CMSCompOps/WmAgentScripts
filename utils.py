@@ -3674,12 +3674,7 @@ def getDatasetFiles(url, dataset ,without_invalid=True ):
     return runWithRetries(_getDatasetFiles, [url, dataset], {'without_invalid':without_invalid}, retries =5, wait=5)
 def _getDatasetFiles(url, dataset ,without_invalid=True ):
     dbsapi = DbsApi(url=dbs_url)
-    try:
-        files = dbsapi.listFileArray( dataset= dataset,validFileOnly=without_invalid, detail=True)
-    except Exception as e:
-	print("dbsapi.listFileArray failed on {}".format(dataset))
-	print(str(e))
-	raise
+    files = dbsapi.listFileArray( dataset= dataset,validFileOnly=without_invalid, detail=True)
     dbs_filenames = [f['logical_file_name'] for f in files]
 
     conn = make_x509_conn(url)
