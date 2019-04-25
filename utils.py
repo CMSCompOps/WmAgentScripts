@@ -6281,18 +6281,30 @@ def runWithRetries( glb_fcn,
                     retries = 3,
                     wait = 1
                 ):
-    while retries>0:
-        retries-=1
+    message = ""
+    tries=0
+    while tries<=retries:
+        tries+=1
         try:
             return glb_fcn(*fcn_pargs,**fcn_args)
-        except:
+        except Exception as e:
+            ## signal this somewhere
+            message = "Failed to run function {} with arguments {} {} for {}/{} times and {}[s] wait. Exception\n {}".format( glb_fcn.__name__,
+                                                                                                                              str(fcn_pargs),
+                                                                                                                              str(fcn_args),
+                                                                                                                              tries,
+                                                                                                                              retries,
+                                                                                                                              wait,
+                                                                                                                              str(e))
+            print (message)
+            ##one has to unable one of those
+            #sendEmail('failed function', message)
+            #sendLog('componentInfo',message, level='critical')
             time.sleep(wait)
-    print ("Failed to run function {} with arguments {} for {} times and {}s wait. Exception\n {}".format( glb_fcn.__name__,
-                                                                                                           str(fcn_args),
-                                                                                                           retries,
-                                                                                                           wait,
-                                                                                                           str(e)))
-    raise e
+    ##one has to unable one of those
+    #sendEmail('failed function', message)
+    #sendLog('componentInfo',message, level='critical')
+    raise Exception(message)
 
 def getLFNbase(dataset):
     return runWithRetries(_getLFNbase, [dataset],{})
