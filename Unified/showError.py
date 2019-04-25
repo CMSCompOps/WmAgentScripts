@@ -15,7 +15,7 @@ import threading
 class ParseBuster(threading.Thread):
     def __init__(self, **args):
         threading.Thread.__init__(self)
-        self.deamon = True
+        self.daemon = True
         self.url = args.get('url')
         self.wfn = args.get('wfn')
         self.options = args.get('options')
@@ -29,7 +29,7 @@ class ParseBuster(threading.Thread):
 class AgentBuster(threading.Thread):
     def __init__(self, **args):
         threading.Thread.__init__(self)
-        self.deamon = True
+        self.daemon = True
         for k,v in args.items():
             setattr(self,k,v)
 
