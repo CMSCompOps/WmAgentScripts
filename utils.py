@@ -3672,7 +3672,6 @@ def getDatasetFileLocations(url, dataset):
 
 def getDatasetFiles(url, dataset ,without_invalid=True ):
     return runWithRetries(_getDatasetFiles, [url, dataset], {'without_invalid':without_invalid}, retries =5, wait=5)
-
 def _getDatasetFiles(url, dataset ,without_invalid=True ):
     dbsapi = DbsApi(url=dbs_url)
     try:
@@ -4973,7 +4972,7 @@ def findParent( dataset ):
     return runWithRetries( _findParent, [dataset], {})
 def _findParent( dataset ):
     dbsapi = DbsApi(url=dbs_url)
-    print dataset,"for parent"
+    #print dataset,"for parent"
     ret = dbsapi.listDatasetParents( dataset= dataset)
     parents = [r.get('parent_dataset',None) for r in ret]
     return parents
@@ -4991,16 +4990,7 @@ def setFileStatus(file_names, validate=True):
 
 
 def setDatasetStatus(dataset, status, withFiles=True):
-    retries = 3
-    while retries>0:
-        retries-=1
-        try:
-            return _setDatasetStatus(dataset, status, withFiles)
-        except Exception as e:
-            time.sleep(1)
-    print "Failed to set status",status,"on",dataset
-    return False
-
+    return runWithRetries(_setDatasetStatus, [dataset, status], {'withFiles':withFiles})
 def _setDatasetStatus(dataset, status, withFiles=True):
     dbswrite = DbsApi(url=dbs_url_writer)
 
