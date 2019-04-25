@@ -6328,6 +6328,8 @@ def runWithRetries( glb_fcn,
     raise e
 
 def getLFNbase(dataset):
+    return runWithRetries(_getLFNbase, [dataset],{})
+def _getLFNbase(dataset):
         # initialize API to DBS3
 	dbsapi = DbsApi(url=dbs_url)
 	try:
