@@ -4877,6 +4877,8 @@ def _getDatasetAllEventsPerLumi(dataset, fraction=1):
     return    [a/float(b) for (a,b) in final.values()]
 
 def getDatasetEventsPerLumi(dataset):
+    return runWithRetries(_getDatasetEventsPerLumi,[dataset],{})
+def _getDatasetEventsPerLumi(dataset):
     all_values = getDatasetAllEventsPerLumi(dataset)
     if all_values:
         return sum(all_values) / float(len(all_values))
