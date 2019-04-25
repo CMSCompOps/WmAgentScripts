@@ -3671,14 +3671,7 @@ def getDatasetFileLocations(url, dataset):
 
 
 def getDatasetFiles(url, dataset ,without_invalid=True ):
-    tries = 5 
-    while tries>0:
-        tries-=1
-        try:
-            return _getDatasetFiles(url, dataset ,without_invalid)
-        except Exception as e:
-            pass
-    print str(e)
+    return runWithRetries(_getDatasetFiles, [url, dataset], {'without_invalid':without_invalid}, retries =5, wait=5)
 
 def _getDatasetFiles(url, dataset ,without_invalid=True ):
     dbsapi = DbsApi(url=dbs_url)
