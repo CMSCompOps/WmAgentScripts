@@ -6308,6 +6308,25 @@ def getPrepIDs(wl):
     else:
         return []
 
+def runWithRetries( glb_fcn, 
+                    fcn_pargs,
+                    fcn_args,
+                    retries = 3,
+                    wait = 1
+                ):
+    while retries>0:
+        retries-=1
+        try:
+            return glb_fcn(*fcn_pargs,**fcn_args)
+        except:
+            time.sleep(wait)
+    print ("Failed to run function {} with arguments {} for {} times and {}s wait. Exception\n {}".format( glb_fcn.__name__,
+                                                                                                           str(fcn_args),
+                                                                                                           retries,
+                                                                                                           wait,
+                                                                                                           str(e)))
+    raise e
+
 def getLFNbase(dataset):
         # initialize API to DBS3
 	dbsapi = DbsApi(url=dbs_url)
