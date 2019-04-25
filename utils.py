@@ -6311,12 +6311,7 @@ def getLFNbase(dataset):
 def _getLFNbase(dataset):
         # initialize API to DBS3
 	dbsapi = DbsApi(url=dbs_url)
-	try:
-	    reply = dbsapi.listFiles(dataset=dataset)
-        except Exception as e:
-	    print("Problem with listFiles query from DBSAPI with dataset {}".format(dataset))
-	    print(str(e))
-	    raise
+        reply = dbsapi.listFiles(dataset=dataset)
         # retrieve file
         file = reply[0]['logical_file_name']
         return '/'.join(file.split('/')[:3])
