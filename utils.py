@@ -4373,6 +4373,8 @@ def _getDatasetBlockSize(dataset):
     return dict([(block['block_name'],block['file_size']/ (1024.**3)) for block in blocks ])
 
 def getDatasetSize(dataset):
+    return runWithRetries(_getDatasetSize, [dataset],{})
+def _getDatasetSize(dataset):
     dbsapi = DbsApi(url=dbs_url)
     blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
     ## put everything in terms of GB
