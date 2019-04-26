@@ -952,7 +952,7 @@ class CheckBuster(threading.Thread):
             lumi_upper_limit[output] = upper_limit
             if wfi.request['RequestType'] in ['ReDigi','ReReco']: lumi_upper_limit[output] = -1
         
-        if any([ (events_per_lumi[out] <= lumi_lower_limit) for out in events_per_lumi if not out.endswith('DQMIO')]):
+        if (not prim) and any([ (events_per_lumi[out] <= lumi_lower_limit) for out in events_per_lumi if not out.endswith('DQMIO')]):
             wfi.sendLog('checkor',"%s has very small lumisections\n%s"%( wfo.name, json.dumps(events_per_lumi, indent=2)))
             assistance_tags.add('smalllumi')
             is_closing = False
