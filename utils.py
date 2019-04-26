@@ -7575,16 +7575,13 @@ class workflowInfo:
                             max_events_per_lumi.append( this_max_events_per_lumi ) ## adding this to that later on we can check and adpat the split 0
                         elif (avg_events_per_job * sizeperevent * efficiency_factor) > (GB_space_limit*1024.**2):
                             ## should still change the avg_events_per_job setting of that task
-                            print "The output size of task %s is expected to be too large : %d x %.2f kB = %.2f GB > %f GB. Should set as low as %d "% ( tname ,
-                                                                                                                                                         avg_events_per_job, sizeperevent,
-                                                                                                                                                         avg_events_per_job * sizeperevent / (1024.**2 ),
+                            msg = "The output size of task %s is expected to be too large : %d x %.2f kB x %.5f = %.2f GB > %f GB. Reducing to %d "% ( tname ,
+                                                                                                                                                         avg_events_per_job, sizeperevent, efficiency_factor,
+                                                                                                                                                         avg_events_per_job * sizeperevent * efficiency_factor / (1024.**2 ),
                                                                                                                                                          GB_space_limit,
                                                                                                                                                          this_max_events_per_lumi)
-			    sendLog('assignor', 'The output size of task %s is expected to be too large : %d x %.2f kB = %.2f GB > %f GB. Should set as low as %d'%( tname ,
-                                                                                                                                                         avg_events_per_job, sizeperevent,
-                                                                                                                                                         avg_events_per_job * sizeperevent / (1024.**2 ),
-                                                                                                                                                         GB_space_limit,
-                                                                                                                                                         this_max_events_per_lumi), level='critical')
+			    sendLog('assignor', msg)
+			    print(msg)
                             modified_split_for_task = spl
                             modified_split_for_task['splitParams']['events_per_job'] = this_max_events_per_lumi
                             modified_splits.append( modified_split_for_task )
