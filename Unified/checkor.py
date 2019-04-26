@@ -259,7 +259,7 @@ def checkor(url, spec=None, options=None):
             for site,items in to.custodials.items():
                 custodials[site].extend( items )
     n_wfs = len(run_threads.threads)
-    if float(failed_threads/n_wfs) > 0:
+    if n_wfs and float(failed_threads/n_wfs) > 0:
         sendLog('checkor','%d/%d threads have failed, better check this out'% (failed_threads, n_wfs), level='critical')
         ## remove once it's all good
         sendEmail('checkor','%d/%d threads have failed, better check this out'% (failed_threads,n_wfs))
