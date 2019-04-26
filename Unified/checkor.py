@@ -258,11 +258,11 @@ def checkor(url, spec=None, options=None):
         if to.custodials:
             for site,items in to.custodials.items():
                 custodials[site].extend( items )
-
-    if float(failed_threads/run_threads.n_threads) > 0:
-        sendLog('checkor','%d/%d threads have failed, better check this out'% (failed_threads, run_threads.n_threads), level='critical')
+    n_wfs = len(run_threads.threads)
+    if float(failed_threads/n_wfs) > 0:
+        sendLog('checkor','%d/%d threads have failed, better check this out'% (failed_threads, n_wfs), level='critical')
         ## remove once it's all good
-        sendEmail('checkor','%d/%d threads have failed, better check this out'% (failed_threads,run_threads.n_threads))
+        sendEmail('checkor','%d/%d threads have failed, better check this out'% (failed_threads,n_wfs))
 
     ## conclude things, the good old way
     print report_created,"reports created in this run"
