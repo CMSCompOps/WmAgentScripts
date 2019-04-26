@@ -3692,18 +3692,8 @@ def _getDatasetFiles(url, dataset ,without_invalid=True ):
     return dbs_filenames, phedex_filenames, list(set(dbs_filenames) - set(phedex_filenames)), list(set(phedex_filenames)-set(dbs_filenames))
 
 def getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None, sites=None, only_blocks=None):
-    try:
-        r = try_getDatasetBlocksFraction(url, dataset, complete,group,vetoes,sites,only_blocks)
-    except:
-        try:
-            r = try_getDatasetBlocksFraction(url, dataset, complete,group,vetoes,sites,only_blocks)
-        except Exception as e:
-            #print sendEmail("exception in getDatasetBlocksFraction",str(e))
-            sendLog('getDatasetBlocksFraction',"exception in getDatasetBlocksFraction for %s \n %s"%( dataset, str(e)), level='critical')
-            r = 0.
-    return r
-
-def try_getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None, sites=None, only_blocks=None):
+    return runWithRetries(_getDatasetBlocksFraction, [url, dataset],{'complete':complete, 'group':group, 'vetoes':vetoes, 'sites':sites, 'only_blocks':only_blocks})
+def _getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None, sites=None, only_blocks=None):
     ###count how manytimes a dataset is replicated < 100%: not all blocks > 100% several copies exis
     if vetoes==None:
         vetoes = ['MSS','Buffer','Export']
