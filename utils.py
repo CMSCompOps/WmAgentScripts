@@ -7572,7 +7572,7 @@ class workflowInfo:
                                                                                                                                                 GB_space_limit,
                                                                                                                                                 events_per_lumi_at_this_task,
                                                                                                                                                 this_max_events_per_lumi), level='critical')
-                            max_events_per_lumi.append( this_max_events_per_lumi/efficiency_factor ) ## adding this to that later on we can check and adpat the split 0
+                            max_events_per_lumi.append( this_max_events_per_lumi ) ## adding this to that later on we can check and adpat the split 0
                         elif (avg_events_per_job * sizeperevent * efficiency_factor) > (GB_space_limit*1024.**2):
                             ## should still change the avg_events_per_job setting of that task
                             print "The output size of task %s is expected to be too large : %d x %.2f kB = %.2f GB > %f GB. Should set as low as %d "% ( tname ,
