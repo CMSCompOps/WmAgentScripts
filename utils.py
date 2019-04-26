@@ -7559,7 +7559,7 @@ class workflowInfo:
 
                     if sizeperevent:# and (avg_events_per_job * sizeperevent ) > (GB_space_limit*1024.**2):
                         size_per_input_lumi = events_per_lumi_at_this_task*sizeperevent
-                        this_max_events_per_lumi = int( (GB_space_limit*1024.**2) / sizeperevent)
+                        this_max_events_per_lumi = int( (GB_space_limit*1024.**2) / sizeperevent / efficiency_factor)
                         if (size_per_input_lumi > (GB_space_limit*1024.**2)):
                             ## derive a value for the lumisection
                             print "The output size task %s is expected to be too large : %.2f GB > %f GB even for one lumi (effective lumi size is ~%d), should go as low as %d"% ( tname ,
@@ -7573,7 +7573,7 @@ class workflowInfo:
                                                                                                                                                 events_per_lumi_at_this_task,
                                                                                                                                                 this_max_events_per_lumi), level='critical')
                             max_events_per_lumi.append( this_max_events_per_lumi/efficiency_factor ) ## adding this to that later on we can check and adpat the split 0
-                        elif (avg_events_per_job * sizeperevent ) > (GB_space_limit*1024.**2):
+                        elif (avg_events_per_job * sizeperevent * efficiency_factor) > (GB_space_limit*1024.**2):
                             ## should still change the avg_events_per_job setting of that task
                             print "The output size of task %s is expected to be too large : %d x %.2f kB = %.2f GB > %f GB. Should set as low as %d "% ( tname ,
                                                                                                                                                          avg_events_per_job, sizeperevent,
