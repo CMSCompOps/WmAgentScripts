@@ -4138,6 +4138,8 @@ def _getDatasetOnGoingDeletion( url, dataset ):
     return result['dataset']
 
 def getDatasetBlocks( dataset, runs=None, lumis=None):
+    return runWithRetries(_getDatasetBlocks, [dataset],{'runs':runs,'lumis':lumis})
+def _getDatasetBlocks( dataset, runs=None, lumis=None):
     dbsapi = DbsApi(url=dbs_url)
     all_blocks = set()
     if runs == []:
