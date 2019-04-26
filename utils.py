@@ -5394,25 +5394,27 @@ def getWorkflowByInput( url, dataset , details=False):
         return [item['id'] for item in items]
 
 def getWorkflowByOutput( url, dataset , details=False):
-    conn = make_x509_conn(url)
+    retries=3
+    while retries>0
+        retries-=1
+        try:
+            conn = make_x509_conn(url)
     #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    there = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byoutputdataset?key="%s"'%(dataset)
-    if details:
-        there+='&include_docs=true'
-    r1=conn.request("GET",there)
-    r2=conn.getresponse()
-    data = json.loads(r2.read())
-    try:
-        items = data['rows']
-    except Exception as e:
-        print(str(e))
-        print("Error while getting workflow information from output data {}".format(dataset))
-        raise
-    if details:
-        return [item['doc'] for item in items]
-    else:
-        return [item['id'] for item in items]
-
+            there = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byoutputdataset?key="%s"'%(dataset)
+            if details:
+                there+='&include_docs=true'
+            r1=conn.request("GET",there)
+            r2=conn.getresponse()
+            data = json.loads(r2.read())
+            items = data['rows']
+            if details:
+                return [item['doc'] for item in items]
+            else:
+                return [item['id'] for item in items]
+        except Exception as e:
+            time.sleep(1)
+    print "Failed to get workflow by output"
+    return False
 
 def getLatestMCPileup( url, statuses=None):
     if not statuses:
