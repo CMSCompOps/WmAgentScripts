@@ -6274,7 +6274,7 @@ def runWithRetries( glb_fcn,
                     fcn_pargs,
                     fcn_args,
                     retries = 3,
-                    wait = 1
+                    wait = 3
                 ):
     message = ""
     tries=0
