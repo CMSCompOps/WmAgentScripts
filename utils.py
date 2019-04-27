@@ -6273,8 +6273,8 @@ def getPrepIDs(wl):
 def runWithRetries( glb_fcn, 
                     fcn_pargs,
                     fcn_args,
-                    retries = 3,
-                    wait = 3
+                    retries = 10,
+                    wait = 5
                 ):
     message = ""
     tries=0
