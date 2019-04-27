@@ -6273,6 +6273,7 @@ def getPrepIDs(wl):
 def runWithRetries( glb_fcn, 
                     fcn_pargs,
                     fcn_args,
+                    default='NoDefaultValue',
                     retries = 10,
                     wait = 5
                 ):
@@ -6302,7 +6303,10 @@ def runWithRetries( glb_fcn,
     ##one has to unable one of those
     #sendEmail('failed function', message)
     #sendLog('componentInfo',message, level='critical')
-    raise Exception(message)
+    if default != 'NoDefaultValue':
+        return default
+    else:
+        raise Exception(message)
 
 def getLFNbase(dataset):
     return runWithRetries(_getLFNbase, [dataset],{})
