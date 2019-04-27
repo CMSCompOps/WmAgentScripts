@@ -4142,9 +4142,6 @@ def getDatasetBlocks( dataset, runs=None, lumis=None):
 def _getDatasetBlocks( dataset, runs=None, lumis=None):
     dbsapi = DbsApi(url=dbs_url)
     all_blocks = set()
-    if runs == []:
-        for r in runs:
-            all_blocks.update([item['block_name'] for item in dbsapi.listBlocks(run_num=r, dataset= dataset) ])
     if lumis:
         for run in lumis:
             try:
@@ -4158,18 +4155,19 @@ def _getDatasetBlocks( dataset, runs=None, lumis=None):
             print len(all_files)
             all_blocks.update( [f['block_name'] for f in all_files])
 
-        #needs a series of convoluted calls
-        #all_blocks.update([item['block_name'] for item in dbsapi.listBlocks( dataset = dataset )])
-        pass
     elif runs:
         for run in runs:
-            #try:
-            #    all_files = dbsapi.listFileArray( dataset = dataset, run_num=int(run), detail=True)
-            #except Exception as e:
-            #    print "Exception in listFileArray",str(e)
-            #    all_files = []
-            #all_blocks.update( [f['block_name'] for f in all_files])
-            all_blocks.update([b['block_name'] for b in dbsapi.listBlocks(dataset = dataset, run_num = int(run))])
+            r=3
+            while r>0:
+                r-=1
+                try:
+                    all_blocks.update([b['block_name'] for b in dbsapi.listBlocks(dataset = dataset, run_num = int(run))])
+                    break
+                except Exception as e:
+                    time.sleep(1)
+            if r==0:
+                raise e
+
 
     if runs==None and lumis==None:
         all_blocks.update([item['block_name'] for item in dbsapi.listBlocks(dataset= dataset) ])
