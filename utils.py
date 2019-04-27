@@ -6283,14 +6283,17 @@ def runWithRetries( glb_fcn,
         try:
             return glb_fcn(*fcn_pargs,**fcn_args)
         except Exception as e:
+            import traceback
+            tb = traceback.format_exc()
             ## signal this somewhere
-            message = "Failed to run function {} with arguments {} {} for {}/{} times and {}[s] wait. Exception\n {}".format( glb_fcn.__name__,
-                                                                                                                              str(fcn_pargs),
-                                                                                                                              str(fcn_args),
-                                                                                                                              tries,
-                                                                                                                              retries,
-                                                                                                                              wait,
-                                                                                                                              str(e))
+            message = "Failed to run function {} with arguments {} {} for {}/{} times and {}[s] wait. Exception\n {}\n {}".format( glb_fcn.__name__,
+                                                                                                                                   str(fcn_pargs),
+                                                                                                                                   str(fcn_args),
+                                                                                                                                   tries,
+                                                                                                                                   retries,
+                                                                                                                                   wait,
+                                                                                                                                   str(e),
+                                                                                                                                   tb)
             print (message)
             ##one has to unable one of those
             #sendEmail('failed function', message)
