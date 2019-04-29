@@ -6673,7 +6673,7 @@ class workflowInfo:
             all_same_arch = False
             
         pss = self.processingString()
-	if type(pss)==dict():
+	if type(pss)==dict:
 	    pssString = ''.join('{}{}'.format(key, val) for key, val in pss.items())
 	else:
 	    pssString = pss
