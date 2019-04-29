@@ -101,14 +101,14 @@ def injector(url, options, specific):
             if not can_add: continue
 
             ## temporary hack to transform specific taskchain into stepchains
-            good_for_stepchain = wfi.isGoodToConvertToStepChain( keywords = transform_keywords)
-            #good_for_stepchain = wfi.isGoodToConvertToStepChain( keywords = None) 
+            #good_for_stepchain = wfi.isGoodToConvertToStepChain( keywords = transform_keywords)
+            good_for_stepchain = wfi.isGoodToConvertToStepChain( keywords = None) 
 
 
             ## match keywords and technical constraints
-            if (not options.no_convert) and good_for_stepchain and not wfi.isRelval():
-                to_convert.add( wf )
-                wfi.sendLog('injector','Transforming %s TaskChain into StepChain'%wf)
+            #if (not options.no_convert) and good_for_stepchain and not wfi.isRelval():
+            #    to_convert.add( wf )
+            #    wfi.sendLog('injector','Transforming %s TaskChain into StepChain'%wf)
             #    #sendEmail('convertion to stepchain','Transforming %s TaskChain into StepChain'%wf)
 
             wfi.sendLog('injector',"considering %s"%wf)
