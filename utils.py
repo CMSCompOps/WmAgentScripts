@@ -5011,6 +5011,8 @@ def _setDatasetStatus(dataset, status, withFiles=True):
     return True
 
 def getDatasetStatus(dataset):
+    return runWithRetries(_getDatasetStatus,[dataset],{})
+def _getDatasetStatus(dataset):
         # initialize API to DBS3
         dbsapi = DbsApi(url=dbs_url)
         # retrieve dataset summary
