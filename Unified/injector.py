@@ -106,10 +106,10 @@ def injector(url, options, specific):
 
 
             ## match keywords and technical constraints
-            #if (not options.no_convert) and good_for_stepchain and not wfi.isRelval():
-            #    to_convert.add( wf )
-            #    wfi.sendLog('injector','Transforming %s TaskChain into StepChain'%wf)
-            #    #sendEmail('convertion to stepchain','Transforming %s TaskChain into StepChain'%wf)
+            if (not options.no_convert) and good_for_stepchain and not wfi.isRelval():
+                to_convert.add( wf )
+                wfi.sendLog('injector','Transforming %s TaskChain into StepChain'%wf)
+                sendEmail('convertion to stepchain','Transforming %s TaskChain into StepChain'%wf)
 
             wfi.sendLog('injector',"considering %s"%wf)
 
