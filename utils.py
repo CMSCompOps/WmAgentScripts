@@ -6648,9 +6648,8 @@ class workflowInfo:
 
     def isGoodToConvertToStepChain(self ,keywords=None, talk=False):
         all_same_arch = True
-        ## only one value throughout the chain, it's dealt with differently in rejector
-        #all_same_cores = len(set(self.getMulticores()))==1
-        all_same_cores = True
+        ## only one value throughout the chain
+        all_same_cores = len(set(self.getMulticores()))==1
         ##make sure not tow same data tier is produced
         all_tiers = map(lambda o : o.split('/')[-1], self.request['OutputDatasets'])
         #single_tiers = (len(all_tiers) == len(set(all_tiers)))
@@ -6672,8 +6671,7 @@ class workflowInfo:
         if len(setOSs) > 1:
             all_same_arch = False
             
-        #wf = self.request['RequestName']
-        wf = self.request['ProcessingString']+self.request['RequestName']
+        wf = self.request['RequestName']
         if keywords:
             found_in_transform_keywords = any([keyword in wf for keyword in keywords])
         good = self.request['RequestType'] == 'TaskChain' and more_than_one_task and found_in_transform_keywords and single_tiers and all_same_cores and output_from_single_task and all_same_arch
