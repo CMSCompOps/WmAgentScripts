@@ -5280,11 +5280,20 @@ def updateSubscription(url, site, item, priority=None, user_group=None, suspend=
 
     #params['block' if '#' in item else 'dataset'] = item
     if priority:   params['priority'] = priority
-    if user_group: params['user_group'] = user_group
+    #if user_group: params['user_group'] = user_group
+    if user_group: params['group'] = user_group
     if suspend!=None: params['suspend_until']  = suspend
     response = phedexPost(url, "/phedex/datasvc/json/prod/updatesubscription", params)
     #print response
     return response
+
+def allCompleteToAnaOps(url, dataset):
+    subs = getSubscriptions(url, dataset)
+    for dataset in subs['dataset']:
+        for sub in dataset['subscription']:
+            if sub['group'] == 'DataOps' and sub['percent_bytes']==100 and not any([v in sub['node'] for v in ['MSS','Export','Buffer']]):
+                print dataset['name'],"on",sub['node'],"changed to Anaops"
+                updateSubscription(reqmgr_url, sub['node'], dataset['name'], user_group='AnalysisOps')
 
 def getWorkLoad(url, wf ):
     try:
