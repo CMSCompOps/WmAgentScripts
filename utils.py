@@ -6649,7 +6649,8 @@ class workflowInfo:
     def isGoodToConvertToStepChain(self ,keywords=None, talk=False):
         all_same_arch = True
         ## only one value throughout the chain
-        all_same_cores = len(set(self.getMulticores()))==1
+        #all_same_cores = len(set(self.getMulticores()))==1
+	all_same_cores = True
         ##make sure not tow same data tier is produced
         all_tiers = map(lambda o : o.split('/')[-1], self.request['OutputDatasets'])
         #single_tiers = (len(all_tiers) == len(set(all_tiers)))
