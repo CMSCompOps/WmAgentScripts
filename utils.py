@@ -414,7 +414,7 @@ def sendEmail( subject, text, sender=None, destination=None ):
         if user in map_who:
             sender = map_who[user]
         else:
-            sender = 'vlimant@cern.ch'
+            sender = 'cmsunified@cern.ch'
 
     msg = MIMEMultipart()
     msg['From'] = sender
@@ -760,8 +760,9 @@ class DynamoLock:
         while retry:
             try:
                 return self._check()
-            except:
+            except Exception as e:
                 print "Failed to check on dynamo",retry
+		print(str(e))
                 retry-=1
                 time.sleep(5)
         return True
@@ -3166,6 +3167,7 @@ Updated on %s (GMT) <br>
 <li> <b>announced</b> : the final statistics of the sample is enough and the outputs are announced <font color=green>(Automatic)</font> </li>
 <li> <b>over100</b> : the final statistics is over 100%% <font color=red>(Operator)</font></li>
 <li> <b>biglumi</b> : the maximum size of the lumisection in one of the output has been exceeded <font color=red>(Operator)</font></li>
+<li> <b>smalllumi</b> : the size of the lumisection of one of the output is too small <font color=red>(Operator)</font></li>
 <li> <b>bigoutput</b> : the maximum size for an output dataset to go to tape was exceeded (<font color=blue>Requester</font>/<font color=red>Operator)</font></li>
 <li> <b>filemismatch</b> : there is a mismatch in the number of files in DBS and Phedex <font color=red>(Operator)</font></li>
 <li> <b>duplicates</b> : duplicated lumisection have been found and need to be invalidated <font color=green>(Automatic)</font></li>
@@ -3271,7 +3273,12 @@ def checkTransferApproval(url, phedexid):
 
 def getDatasetFileFraction( dataset, files):
     dbsapi = DbsApi(url=dbs_url)
-    all_files = dbsapi.listFileArray( dataset= dataset,validFileOnly=1, detail=True)
+    try:
+        all_files = dbsapi.listFileArray( dataset= dataset,validFileOnly=1, detail=True)
+    except Exception as e:
+	print("dbsapi.listFileArray failed on {}".format(dataset))
+	print(str(e))
+	raise
     total = 0
     in_file = 0
     for f in all_files:
@@ -3286,7 +3293,12 @@ def getDatasetFileFraction( dataset, files):
 
 def getDatasetBlockFraction( dataset, blocks):
     dbsapi = DbsApi(url=dbs_url)
-    all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
+    try:
+        all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
+    except Exception as e:
+	print("dbsapi.listBlockSummaries failed on {}".format(dataset))
+	print(str(e))
+	raise
     total=0
     in_block=0
     for block in all_blocks:
@@ -3659,15 +3671,7 @@ def getDatasetFileLocations(url, dataset):
 
 
 def getDatasetFiles(url, dataset ,without_invalid=True ):
-    tries = 5 
-    while tries>0:
-        tries-=1
-        try:
-            return _getDatasetFiles(url, dataset ,without_invalid)
-        except Exception as e:
-            pass
-    print str(e)
-
+    return runWithRetries(_getDatasetFiles, [url, dataset], {'without_invalid':without_invalid}, retries =5, wait=5)
 def _getDatasetFiles(url, dataset ,without_invalid=True ):
     dbsapi = DbsApi(url=dbs_url)
     files = dbsapi.listFileArray( dataset= dataset,validFileOnly=without_invalid, detail=True)
@@ -3688,18 +3692,8 @@ def _getDatasetFiles(url, dataset ,without_invalid=True ):
     return dbs_filenames, phedex_filenames, list(set(dbs_filenames) - set(phedex_filenames)), list(set(phedex_filenames)-set(dbs_filenames))
 
 def getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None, sites=None, only_blocks=None):
-    try:
-        r = try_getDatasetBlocksFraction(url, dataset, complete,group,vetoes,sites,only_blocks)
-    except:
-        try:
-            r = try_getDatasetBlocksFraction(url, dataset, complete,group,vetoes,sites,only_blocks)
-        except Exception as e:
-            #print sendEmail("exception in getDatasetBlocksFraction",str(e))
-            sendLog('getDatasetBlocksFraction',"exception in getDatasetBlocksFraction for %s \n %s"%( dataset, str(e)), level='critical')
-            r = 0.
-    return r
-
-def try_getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None, sites=None, only_blocks=None):
+    return runWithRetries(_getDatasetBlocksFraction, [url, dataset],{'complete':complete, 'group':group, 'vetoes':vetoes, 'sites':sites, 'only_blocks':only_blocks})
+def _getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None, sites=None, only_blocks=None):
     ###count how manytimes a dataset is replicated < 100%: not all blocks > 100% several copies exis
     if vetoes==None:
         vetoes = ['MSS','Buffer','Export']
@@ -3707,7 +3701,13 @@ def try_getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=
     dbsapi = DbsApi(url=dbs_url)
     #all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
     #all_block_names=set([block['block_name'] for block in all_blocks])
-    files = dbsapi.listFileArray( dataset= dataset,validFileOnly=1, detail=True)
+    try:
+        files = dbsapi.listFileArray( dataset= dataset,validFileOnly=1, detail=True)
+    except Exception as e:
+	print("dbsapi.listFileArray failed on {}".format(dataset))
+	print(str(e))
+	raise
+	
     all_block_names = list(set([f['block_name'] for f in files]))
     if only_blocks:
         all_block_names = [b for b in all_block_names if b in only_blocks]
@@ -3763,7 +3763,12 @@ def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, ve
         vetoes = ['MSS','Buffer','Export']
     #print "presence of",dataset
     dbsapi = DbsApi(url=dbs_url)
-    all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
+    try:
+        all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
+    except Exception as e:
+	print("dbsapi.listBlocksSummaries failed on {}".format(dataset))
+	print(str(e))
+	raise
     all_dbs_block_names=set([block['block_name'] for block in all_blocks])
     all_block_names=set([block['block_name'] for block in all_blocks])
     if only_blocks:
@@ -4133,11 +4138,10 @@ def _getDatasetOnGoingDeletion( url, dataset ):
     return result['dataset']
 
 def getDatasetBlocks( dataset, runs=None, lumis=None):
+    return runWithRetries(_getDatasetBlocks, [dataset],{'runs':runs,'lumis':lumis})
+def _getDatasetBlocks( dataset, runs=None, lumis=None):
     dbsapi = DbsApi(url=dbs_url)
     all_blocks = set()
-    if runs == []:
-        for r in runs:
-            all_blocks.update([item['block_name'] for item in dbsapi.listBlocks(run_num=r, dataset= dataset) ])
     if lumis:
         for run in lumis:
             try:
@@ -4151,18 +4155,19 @@ def getDatasetBlocks( dataset, runs=None, lumis=None):
             print len(all_files)
             all_blocks.update( [f['block_name'] for f in all_files])
 
-        #needs a series of convoluted calls
-        #all_blocks.update([item['block_name'] for item in dbsapi.listBlocks( dataset = dataset )])
-        pass
     elif runs:
         for run in runs:
-            #try:
-            #    all_files = dbsapi.listFileArray( dataset = dataset, run_num=int(run), detail=True)
-            #except Exception as e:
-            #    print "Exception in listFileArray",str(e)
-            #    all_files = []
-            #all_blocks.update( [f['block_name'] for f in all_files])
-            all_blocks.update([b['block_name'] for b in dbsapi.listBlocks(dataset = dataset, run_num = int(run))])
+            r=3
+            while r>0:
+                r-=1
+                try:
+                    all_blocks.update([b['block_name'] for b in dbsapi.listBlocks(dataset = dataset, run_num = int(run))])
+                    break
+                except Exception as e:
+                    time.sleep(1)
+            if r==0:
+                raise e
+
 
     if runs==None and lumis==None:
         all_blocks.update([item['block_name'] for item in dbsapi.listBlocks(dataset= dataset) ])
@@ -4240,7 +4245,12 @@ def try_getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=
         vetoes = ['MSS','Buffer','Export']
     #print "presence of",dataset
     dbsapi = DbsApi(url=dbs_url)
-    all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
+    try:
+        all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
+    except Exception as e:
+	print("dbsapi.listBlockSummaries failed on {}".format(dataset))
+	print(str(e))
+	raise
     #print json.dumps( all_blocks, indent=2)
     all_block_names=set([block['block_name'] for block in all_blocks])
     #print sorted(all_block_names)
@@ -4326,7 +4336,12 @@ def try_getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=
 
 def getDatasetBlocksFromFiles( dataset, files):
     dbsapi = DbsApi(url=dbs_url)
-    all_files = dbsapi.listFiles( dataset = dataset , detail=True, validFileOnly=1)
+    try:
+        all_files = dbsapi.listFiles( dataset = dataset , detail=True, validFileOnly=1)
+    except Exception as e:
+	print("dbsapi.listFiles failed on {}".format(dataset))
+	print(str(e))
+	raise
     collected_blocks = set()
     for fn in all_files:
         if fn['logical_file_name'] in files:
@@ -4356,6 +4371,8 @@ def _getDatasetBlockSize(dataset):
     return dict([(block['block_name'],block['file_size']/ (1024.**3)) for block in blocks ])
 
 def getDatasetSize(dataset):
+    return runWithRetries(_getDatasetSize, [dataset],{})
+def _getDatasetSize(dataset):
     dbsapi = DbsApi(url=dbs_url)
     blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
     ## put everything in terms of GB
@@ -4815,12 +4832,16 @@ def getDatasetLumis(dataset, runs=None, with_cache=False):
     return dict(lumi_json),dict(files_json)
 """
 def getDatasetListOfFiles(dataset):
+    return runWithRetries(_getDatasetListOfFiles, [dataset],{})
+def _getDatasetListOfFiles(dataset):
     dbsapi = DbsApi(url=dbs_url)
     all_files = dbsapi.listFileArray( dataset = dataset, detail=False)
     all_lfn = sorted([f['logical_file_name'] for f in all_files])
     return all_lfn
 
 def getDatasetAllEventsPerLumi(dataset, fraction=1):
+    return runWithRetries(_getDatasetAllEventsPerLumi,[dataset], { 'fraction': fraction})
+def _getDatasetAllEventsPerLumi(dataset, fraction=1):
     dbsapi = DbsApi(url=dbs_url)
     all_files = dbsapi.listFileArray( dataset = dataset ,detail=True)
     if fraction!=1:
@@ -4843,6 +4864,8 @@ def getDatasetAllEventsPerLumi(dataset, fraction=1):
     return    [a/float(b) for (a,b) in final.values()]
 
 def getDatasetEventsPerLumi(dataset):
+    return runWithRetries(_getDatasetEventsPerLumi,[dataset],{})
+def _getDatasetEventsPerLumi(dataset):
     all_values = getDatasetAllEventsPerLumi(dataset)
     if all_values:
         return sum(all_values) / float(len(all_values))
@@ -4939,8 +4962,10 @@ def checkParent( dataset ):
 
 
 def findParent( dataset ):
+    return runWithRetries( _findParent, [dataset], {})
+def _findParent( dataset ):
     dbsapi = DbsApi(url=dbs_url)
-    print dataset,"for parent"
+    #print dataset,"for parent"
     ret = dbsapi.listDatasetParents( dataset= dataset)
     parents = [r.get('parent_dataset',None) for r in ret]
     return parents
@@ -4958,16 +4983,7 @@ def setFileStatus(file_names, validate=True):
 
 
 def setDatasetStatus(dataset, status, withFiles=True):
-    retries = 3
-    while retries>0:
-        retries-=1
-        try:
-            return _setDatasetStatus(dataset, status, withFiles)
-        except Exception as e:
-            time.sleep(1)
-    print "Failed to set status",status,"on",dataset
-    return False
-
+    return runWithRetries(_setDatasetStatus, [dataset, status], {'withFiles':withFiles})
 def _setDatasetStatus(dataset, status, withFiles=True):
     dbswrite = DbsApi(url=dbs_url_writer)
 
@@ -4995,6 +5011,8 @@ def _setDatasetStatus(dataset, status, withFiles=True):
     return True
 
 def getDatasetStatus(dataset):
+    return runWithRetries(_getDatasetStatus,[dataset],{})
+def _getDatasetStatus(dataset):
         # initialize API to DBS3
         dbsapi = DbsApi(url=dbs_url)
         # retrieve dataset summary
@@ -5130,7 +5148,10 @@ def phedexPost(url, request, params):
     try:
         result = json.loads(res)
     except:
-        print "PHEDEX error",res
+        print "PHEDEX error. Response: ",res
+	print "\t- URL: {}".format(url)
+	print "\t- POST Request: {}".format(request)
+	print "\t- Params: {}".format(encodedParams)
         return None
     conn.close()
     return result
@@ -5342,7 +5363,12 @@ def getWorkflowByInput( url, dataset , details=False):
     r1=conn.request("GET",there)
     r2=conn.getresponse()
     data = json.loads(r2.read())
-    items = data['rows']
+    try:
+        items = data['rows']
+    except Exception as e:
+	print(str(e))
+	print("Error while getting workflow information from input data {}".format(dataset))
+	raise
     if details:
         return [item['doc'] for item in items]
     else:
@@ -5442,15 +5468,7 @@ def display_time( sec ):
     return dis
 
 def getWorkflowByMCPileup( url, dataset , details=False):
-    retries=5
-    while retries>0:
-        retries-=1
-        try:
-            return _getWorkflowByMCPileup(url, dataset , details)
-        except Exception as e:
-            pass
-    print str(e)
-    
+    return runWithRetries(_getWorkflowByMCPileup, [url, dataset],{'details':details})
 def _getWorkflowByMCPileup( url, dataset , details=False):
     conn = make_x509_conn(url)
     #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
@@ -6252,18 +6270,65 @@ def getPrepIDs(wl):
     else:
         return []
 
+def runWithRetries( glb_fcn, 
+                    fcn_pargs,
+                    fcn_args,
+                    default='NoDefaultValue',
+                    retries = 10,
+                    wait = 5
+                ):
+    message = ""
+    tries=0
+    while tries<retries:
+        tries+=1
+        try:
+            return glb_fcn(*fcn_pargs,**fcn_args)
+        except Exception as e:
+            import traceback
+            tb = traceback.format_exc()
+            ## signal this somewhere
+            message = "Failed to run function {} with arguments {} {} for {}/{} times and {}[s] wait. Exception\n {}\n {}".format( glb_fcn.__name__,
+                                                                                                                                   str(fcn_pargs),
+                                                                                                                                   str(fcn_args),
+                                                                                                                                   tries,
+                                                                                                                                   retries,
+                                                                                                                                   wait,
+                                                                                                                                   str(e),
+                                                                                                                                   tb)
+            print (message)
+            ##one has to unable one of those
+            #sendEmail('failed function', message)
+            #sendLog('componentInfo',message, level='critical')
+            time.sleep(wait)
+    ##one has to unable one of those
+    #sendEmail('failed function', message)
+    #sendLog('componentInfo',message, level='critical')
+    if default != 'NoDefaultValue':
+        return default
+    else:
+        raise Exception(message)
+
 def getLFNbase(dataset):
+    return runWithRetries(_getLFNbase, [dataset],{})
+def _getLFNbase(dataset):
         # initialize API to DBS3
-        dbsapi = DbsApi(url=dbs_url)
-        # retrieve file
+	dbsapi = DbsApi(url=dbs_url)
         reply = dbsapi.listFiles(dataset=dataset)
+        # retrieve file
         file = reply[0]['logical_file_name']
         return '/'.join(file.split('/')[:3])
 
 
 def getListOfBlocks(inputdset,runwhitelist):
-    dbsApi = DbsApi(url=dbs_url)
-    blocks=dbsApi.listBlocks(dataset = inputdset, run_num = runwhitelist)
+    dbsApi = DbsApi(url=dbs_url) 
+    try:
+        blocks=dbsApi.listBlocks(dataset = inputdset, run_num = runwhitelist)
+    except Exception as e:
+	print("Problem with listBlocks query from DBSAPI")
+	print("dataset = {}".format(inputdset))
+ 	print("run_num = {}".format(runwhiteist))
+	print(str(e))
+	raise
 
     block_list = []
 
@@ -6355,8 +6420,14 @@ def closeAllBlocks(url, dataset, blocks=None):
         r = phedexPost(url, '/phedex/datasvc/json/prod/inject', params)
         print json.dumps( r , indent=2)
         ## close the block in dbs
-        dbswrite.updateBlockStatus( block_name = bname, open_for_writing = 0)
-
+	try:
+            dbswrite.updateBlockStatus( block_name = bname, open_for_writing = 0)
+        except Exception as e:
+	    print("Problem with query updateBlockStatus from DBSAPI")
+	    print("block_name = {}".format(bname))
+	    print(str(e))
+	    raise
+	
 def checkIfBlockIsAtASite(url,block,site):
 
     conn = make_x509_conn(url)
@@ -6577,9 +6648,9 @@ class workflowInfo:
 
     def isGoodToConvertToStepChain(self ,keywords=None, talk=False):
         all_same_arch = True
-        ## only one value throughout the chain, it's dealt with differently in rejector
+        ## only one value throughout the chain
         #all_same_cores = len(set(self.getMulticores()))==1
-        all_same_cores = True
+	all_same_cores = True
         ##make sure not tow same data tier is produced
         all_tiers = map(lambda o : o.split('/')[-1], self.request['OutputDatasets'])
         #single_tiers = (len(all_tiers) == len(set(all_tiers)))
@@ -6595,21 +6666,19 @@ class workflowInfo:
         found_in_transform_keywords = True
 
         listScrams = self.getArchs()
-        setOSs = []
+        setOSs = set()
         for sc in listScrams:
-            listOSs.add(sc[:4])
+            setOSs.add(sc[:4])
         if len(setOSs) > 1:
             all_same_arch = False
             
-        #wf = self.request['RequestName']
-        #wf = self.request['ProcessingString']+self.request['RequestName']
         pss = self.processingString()
 	if type(pss)==dict():
 	    pssString = ''.join('{}{}'.format(key, val) for key, val in pss.items())
 	else:
 	    pssString = pss
-	wf = pssString+self.request['RequestName']
-                
+        wf = pssString+self.request['RequestName']
+	
         if keywords:
             found_in_transform_keywords = any([keyword in wf for keyword in keywords])
         good = self.request['RequestType'] == 'TaskChain' and more_than_one_task and found_in_transform_keywords and single_tiers and all_same_cores and output_from_single_task and all_same_arch
@@ -7504,7 +7573,7 @@ class workflowInfo:
 
                     if sizeperevent:# and (avg_events_per_job * sizeperevent ) > (GB_space_limit*1024.**2):
                         size_per_input_lumi = events_per_lumi_at_this_task*sizeperevent
-                        this_max_events_per_lumi = int( (GB_space_limit*1024.**2) / sizeperevent)
+                        this_max_events_per_lumi = int( (GB_space_limit*1024.**2) / sizeperevent / efficiency_factor)
                         if (size_per_input_lumi > (GB_space_limit*1024.**2)):
                             ## derive a value for the lumisection
                             print "The output size task %s is expected to be too large : %.2f GB > %f GB even for one lumi (effective lumi size is ~%d), should go as low as %d"% ( tname ,
@@ -7517,19 +7586,16 @@ class workflowInfo:
                                                                                                                                                 GB_space_limit,
                                                                                                                                                 events_per_lumi_at_this_task,
                                                                                                                                                 this_max_events_per_lumi), level='critical')
-                            max_events_per_lumi.append( this_max_events_per_lumi/efficiency_factor ) ## adding this to that later on we can check and adpat the split 0
-                        elif (avg_events_per_job * sizeperevent ) > (GB_space_limit*1024.**2):
+                            max_events_per_lumi.append( this_max_events_per_lumi ) ## adding this to that later on we can check and adpat the split 0
+                        elif (avg_events_per_job * sizeperevent * efficiency_factor) > (GB_space_limit*1024.**2):
                             ## should still change the avg_events_per_job setting of that task
-                            print "The output size of task %s is expected to be too large : %d x %.2f kB = %.2f GB > %f GB. Should set as low as %d "% ( tname ,
-                                                                                                                                                         avg_events_per_job, sizeperevent,
-                                                                                                                                                         avg_events_per_job * sizeperevent / (1024.**2 ),
+                            msg = "The output size of task %s is expected to be too large : %d x %.2f kB x %.5f = %.2f GB > %f GB. Reducing to %d "% ( tname ,
+                                                                                                                                                         avg_events_per_job, sizeperevent, efficiency_factor,
+                                                                                                                                                         avg_events_per_job * sizeperevent * efficiency_factor / (1024.**2 ),
                                                                                                                                                          GB_space_limit,
                                                                                                                                                          this_max_events_per_lumi)
-			    sendLog('assignor', 'The output size of task %s is expected to be too large : %d x %.2f kB = %.2f GB > %f GB. Should set as low as %d'%( tname ,
-                                                                                                                                                         avg_events_per_job, sizeperevent,
-                                                                                                                                                         avg_events_per_job * sizeperevent / (1024.**2 ),
-                                                                                                                                                         GB_space_limit,
-                                                                                                                                                         this_max_events_per_lumi), level='critical')
+			    sendLog('assignor', msg)
+			    print(msg)
                             modified_split_for_task = spl
                             modified_split_for_task['splitParams']['events_per_job'] = this_max_events_per_lumi
                             modified_splits.append( modified_split_for_task )
