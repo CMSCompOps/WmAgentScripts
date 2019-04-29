@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import workflowInfo, sendEmail, componentInfo, campaignInfo, unifiedConfiguration, siteInfo, sendLog, setDatasetStatus, moduleLock, invalidate, wtcInfo
-from utils import closeoutInfo, userLock
+from utils import closeoutInfo, userLock, base_eos_dir
 import reqMgrClient
 import wtcClient
 import json
