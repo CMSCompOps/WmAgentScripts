@@ -6602,7 +6602,7 @@ class workflowInfo:
             all_same_arch = False
             
         #wf = self.request['RequestName']
-        wf = self.request['ProcessingString']
+        wf = self.request['ProcessingString']+self.request['RequestName']
         if keywords:
             found_in_transform_keywords = any([keyword in wf for keyword in keywords])
         good = self.request['RequestType'] == 'TaskChain' and more_than_one_task and found_in_transform_keywords and single_tiers and all_same_cores and output_from_single_task and all_same_arch
