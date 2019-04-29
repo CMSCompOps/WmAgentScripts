@@ -2,7 +2,7 @@ from assignSession import *
 import os
 import json
 #import numpy as np
-from utils import siteInfo, getWorkflowByInput, getWorkflowByOutput, getWorkflowByMCPileup, monitor_dir, monitor_pub_dir, eosRead, eosFile, remainingDatasetInfo
+from utils import siteInfo, getWorkflowByInput, getWorkflowByOutput, getWorkflowByMCPileup, monitor_dir, monitor_pub_dir, eosRead, eosFile, remainingDatasetInfo, moduleLock
 import sys
 import time
 import random 
@@ -10,6 +10,8 @@ from collections import defaultdict
 
 url = 'cmsweb.cern.ch'
 
+mlock = moduleLock(component='remainor',locking=False)
+ml=mlock()
 
 print time.asctime(time.gmtime())
 RDI = remainingDatasetInfo()
