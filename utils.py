@@ -4866,6 +4866,13 @@ def _getDatasetAllEventsPerLumi(dataset, fraction=1):
 def getDatasetEventsPerLumi(dataset):
     return runWithRetries(_getDatasetEventsPerLumi,[dataset],{})
 def _getDatasetEventsPerLumi(dataset):
+    event_count,lumi_count = getDatasetEventsAndLumis(dataset)
+    if lumi_count:
+        return float(event_count) / float(lumi_count)
+    else:
+        return 0.
+
+def _nono_getDatasetEventsPerLumi(dataset):
     all_values = getDatasetAllEventsPerLumi(dataset)
     if all_values:
         return sum(all_values) / float(len(all_values))
