@@ -70,7 +70,7 @@ def rejector(url, specific, options=None):
         results = invalidate(url, wfi, only_resub=True, with_output= (not options.keep))
 
         if all(results):
-            print wfo.name,"and",datasets,"are rejected"
+            print wfo.name,"rejected"
             if options and options.clone:
                 wfo.status = 'trouble'
                 session.commit()                
