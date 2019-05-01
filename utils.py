@@ -34,6 +34,9 @@ for p in ['/usr/lib64/python2.7/site-packages','/usr/lib/python2.7/site-packages
 dbs_url = os.getenv('UNIFIED_DBS3_READER' ,'https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
 dbs_url_writer = os.getenv('UNIFIED_DBS3_WRITER','https://cmsweb.cern.ch/dbs/prod/global/DBSWriter')
 
+_dbsApi = DbsApi(url=dbs_url)
+_dbsApiWriter = DbsApi(url=dbs_url_writer)
+
 phedex_url = os.getenv('UNIFIED_PHEDEX','cmsweb.cern.ch')
 reqmgr_url = os.getenv('UNIFIED_REQMGR','cmsweb.cern.ch')
 monitor_dir = os.getenv('UNIFIED_MON','/data/unified/www/')
@@ -1227,7 +1230,7 @@ class componentCheck(threading.Thread):
             raise Exception("mcm is corrupted")
 
     def check_dbs(self):
-        dbsapi = DbsApi(url=dbs_url)
+        dbsapi = _dbsApi
         if 'testbed' in dbs_url:
             blocks = dbsapi.listBlockSummaries( dataset = '/QDTojWinc_NC_M-1200_TuneZ2star_8TeV-madgraph/Summer12pLHE-DMWM_Validation_DONOTDELETE_Alan_TEST-v1/GEN', detail\
                                                 =True)
@@ -3364,7 +3367,7 @@ def getDatasetFileFraction( dataset, files):
 
 
 def getDatasetBlockFraction( dataset, blocks):
-    dbsapi = DbsApi(url=dbs_url)
+    dbsapi = _dbsApi
     try:
         all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
     except Exception as e:
@@ -3827,7 +3830,7 @@ def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, ve
     if vetoes==None:
         vetoes = ['MSS','Buffer','Export']
     #print "presence of",dataset
-    dbsapi = DbsApi(url=dbs_url)
+    dbsapi = _dbsApi
     try:
         all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
     except Exception as e:
@@ -3990,7 +3993,7 @@ def getOldDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoe
     if vetoes==None:
         vetoes = ['MSS','Buffer','Export']
     #print "presence of",dataset
-    dbsapi = DbsApi(url=dbs_url)
+    dbsapi = _dbsApi
     all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
     all_dbs_block_names=set([block['block_name'] for block in all_blocks])
     all_block_names=set([block['block_name'] for block in all_blocks])
@@ -4205,7 +4208,7 @@ def _getDatasetOnGoingDeletion( url, dataset ):
 def getDatasetBlocks( dataset, runs=None, lumis=None):
     return runWithRetries(_getDatasetBlocks, [dataset],{'runs':runs,'lumis':lumis})
 def _getDatasetBlocks( dataset, runs=None, lumis=None):
-    dbsapi = DbsApi(url=dbs_url)
+    dbsapi = _dbsApi
     all_blocks = set()
     if lumis:
         print "Entering a heavy check on block per lumi"
@@ -4310,7 +4313,7 @@ def try_getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=
     if vetoes==None:
         vetoes = ['MSS','Buffer','Export']
     #print "presence of",dataset
-    dbsapi = DbsApi(url=dbs_url)
+    dbsapi = _dbsApi
     try:
         all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
     except Exception as e:
@@ -4401,7 +4404,7 @@ def try_getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=
 
 
 def getDatasetBlocksFromFiles( dataset, files):
-    dbsapi = DbsApi(url=dbs_url)
+    dbsapi = _dbsApi
     try:
         all_files = dbsapi.listFiles( dataset = dataset , detail=True, validFileOnly=1)
     except Exception as e:
@@ -4432,14 +4435,14 @@ def getDatasetBlockSize(dataset):
 
 
 def _getDatasetBlockSize(dataset):
-    dbsapi = DbsApi(url=dbs_url)
+    dbsapi = _dbsApi
     blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
     return dict([(block['block_name'],block['file_size']/ (1024.**3)) for block in blocks ])
 
 def getDatasetSize(dataset):
     return runWithRetries(_getDatasetSize, [dataset],{})
 def _getDatasetSize(dataset):
-    dbsapi = DbsApi(url=dbs_url)
+    dbsapi = _dbsApi
     blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
     ## put everything in terms of GB
     return sum([block['file_size'] / (1024.**3) for block in blocks])
@@ -4447,7 +4450,7 @@ def _getDatasetSize(dataset):
 def getDatasetChops(dataset, chop_threshold =1000., talk=False, only_blocks=None):
     chop_threshold = float(chop_threshold)
     ## does a *flat* choping of the input in chunk of size less than chop threshold
-    dbsapi = DbsApi(url=dbs_url)
+    dbsapi = _dbsApi
     blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
 
     ## restrict to these blocks only
@@ -4561,7 +4564,7 @@ def getDatasetEventsAndLumis(dataset, blocks=None):
 
 
 def try_getDatasetEventsAndLumis(dataset, blocks=None):
-    dbsapi = DbsApi(url=dbs_url)
+    dbsapi = _dbsApi
     all_files = []
     if blocks:
         for b in blocks:
@@ -4576,7 +4579,7 @@ def try_getDatasetEventsAndLumis(dataset, blocks=None):
 
 
 def getDatasetRuns(dataset):
-    dbsapi = DbsApi(url=dbs_url)
+    dbsapi = _dbsApi
     reply = dbsapi.listRuns(dataset=dataset)
     runs = []
     for run in reply:
@@ -4587,7 +4590,7 @@ def getDatasetRuns(dataset):
     return runs
 
 def getFilesWithLumiInRun(dataset, run):
-    dbsapi = DbsApi(url=dbs_url)
+    dbsapi = _dbsApi
     start = time.mktime(time.gmtime())
     try:
         reply = dbsapi.listFiles(dataset=dataset, detail=True, run_num=run, validFileOnly=1) if run!=1 else dbsapi.listFiles(dataset=dataset, detail=True,validFileOnly=1)
@@ -4868,7 +4871,7 @@ def _bad_getDatasetEventsPerLumi(dataset):
     else:
         return 1.
     ## the thing below does not actually work
-    #dbsapi = DbsApi(url=dbs_url)
+    #dbsapi = _dbsApi
     #try:
     #    all_files = dbsapi.listFileSummaries( dataset = dataset , validFileOnly=1)
     #except:
@@ -4901,8 +4904,8 @@ def invalidateFiles( files ):
     return all_OK
 
 def checkParent( dataset ):
-    dbsapi = DbsApi(url=dbs_url)
-    dbswrite = DbsApi(url=dbs_url_writer)
+    dbsapi = _dbsApi
+    dbswrite = _dbsApiWriter
 
     ## get the parent dataset
     parents = findParent(dataset)
@@ -4960,15 +4963,15 @@ def checkParent( dataset ):
 def findParent( dataset ):
     return runWithRetries( _findParent, [dataset], {})
 def _findParent( dataset ):
-    dbsapi = DbsApi(url=dbs_url)
+    dbsapi = _dbsApi
     #print dataset,"for parent"
     ret = dbsapi.listDatasetParents( dataset= dataset)
     parents = [r.get('parent_dataset',None) for r in ret]
     return parents
 
 def setFileStatus(file_names, validate=True):
-    dbswrite = DbsApi(url=dbs_url_writer)
-    dbsapi = DbsApi(url=dbs_url)
+    dbswrite = _dbsApiWriter
+    dbsapi = _dbsApi
     files = dbsapi.listFileArray(logical_file_name = file_names, detail=True)
     for fn in files:
         status = fn['is_file_valid']
@@ -4981,7 +4984,7 @@ def setFileStatus(file_names, validate=True):
 def setDatasetStatus(dataset, status, withFiles=True):
     return runWithRetries(_setDatasetStatus, [dataset, status], {'withFiles':withFiles})
 def _setDatasetStatus(dataset, status, withFiles=True):
-    dbswrite = DbsApi(url=dbs_url_writer)
+    dbswrite = _dbsApiWriter
 
     new_status = getDatasetStatus( dataset )
     if new_status == None:
@@ -5010,7 +5013,7 @@ def getDatasetStatus(dataset):
     return runWithRetries(_getDatasetStatus,[dataset],{})
 def _getDatasetStatus(dataset):
         # initialize API to DBS3
-        dbsapi = DbsApi(url=dbs_url)
+        dbsapi = _dbsApi
         # retrieve dataset summary
         reply = dbsapi.listDatasets(dataset=dataset,dataset_access_type='*',detail=True)
         if len(reply):
@@ -5031,7 +5034,7 @@ def getDatasets(dataset):
     
 def _getDatasets(dataset):
     # initialize API to DBS3
-    dbsapi = DbsApi(url=dbs_url)
+    dbsapi = _dbsApi
     # retrieve dataset summary
 
     ## that does not work anymore
@@ -6318,7 +6321,7 @@ def getLFNbase(dataset):
     return runWithRetries(_getLFNbase, [dataset],{})
 def _getLFNbase(dataset):
         # initialize API to DBS3
-	dbsapi = DbsApi(url=dbs_url)
+	dbsapi = _dbsApi
         reply = dbsapi.listFiles(dataset=dataset)
         # retrieve file
         file = reply[0]['logical_file_name']
@@ -6326,7 +6329,7 @@ def _getLFNbase(dataset):
 
 
 def getListOfBlocks(inputdset,runwhitelist):
-    dbsApi = DbsApi(url=dbs_url) 
+    dbsApi = _dbsApi
     try:
         blocks=dbsApi.listBlocks(dataset = inputdset, run_num = runwhitelist)
     except Exception as e:
@@ -6405,7 +6408,7 @@ def getBlockLocations(url, dataset, group=None):
     return dict(locations)
     
 def closeAllBlocks(url, dataset, blocks=None):
-    dbswrite = DbsApi(url=dbs_url_writer)
+    dbswrite = _dbsApiWriter
     conn = make_x509_conn(url)
     r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset=%s&complete=n'% dataset)
     r2=conn.getresponse()
@@ -6926,7 +6929,7 @@ class workflowInfo:
                 files_and_loc[ fn ].update( d['files'][fn]['locations'] )
 
         print len(all_files),"file in recovery"
-        dbsapi = DbsApi(url=dbs_url)
+        dbsapi = _dbsApi
         all_blocks = set()
         all_blocks_loc = defaultdict(set)
         files_no_block = set()
