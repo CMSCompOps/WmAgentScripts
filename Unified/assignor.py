@@ -62,10 +62,9 @@ def assignor(url ,specific = None, talk=True, options=None):
 
     print "I am running"
     dataset_endpoints = json.loads(open('%s/dataset_endpoints.json'%monitor_dir).read())
-    print dataset_endpoints
     aaa_mapping = json.loads(open('%s/equalizor.json'%monitor_pub_dir).read())['mapping']
-    print aaa_mapping
     print "I am running"
+    print aaa_mapping
     all_stuck = set()
     all_stuck.update( json.loads( open('%s/stuck_transfers.json'%monitor_pub_dir).read() ))
     all_stuck.update( getAllStuckDataset()) 
