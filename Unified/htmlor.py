@@ -1468,6 +1468,7 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
                         #alert_summary = '%s %s %s week %s'%( short_name, component, alert_type, this_week)
                         alert_summary = '%s %s %s'%( short_name, component, alert_type)
                         #alert_summary = '%s %s issue'%( short_name, component )
+                        """
                         jiras = JC.find( {'summary' : alert_summary })
                         if len(jiras)==0:
                             print "creating a JIRA for", alert_summary
@@ -1490,6 +1491,7 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
                                 JC.comment(j.key, det['error_message'])
                             else:
                                 print "last comment in the JIRA %s was %s ago"%( j.key, display_time(seconds_since))
+                        """
 
             message += '<br><a href="https://cms-logbook.cern.ch/elog/GlideInWMS/?mode=summary&reverse=0&reverse=1&npp=20&subtext=%s">gwms elog</a>, <a href="https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary&reverse=0&reverse=1&npp=20&subtext=%s">elog</a>, <a href="https://its.cern.ch/jira/issues/?jql=text~%s* AND project = CMSCOMPPR AND status != CLOSED">jira</a>'%( short_name, short_name, short_name )
             message += '<br>Unified status : %s'% uas
