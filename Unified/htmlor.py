@@ -1468,30 +1468,29 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
                         #alert_summary = '%s %s %s week %s'%( short_name, component, alert_type, this_week)
                         alert_summary = '%s %s %s'%( short_name, component, alert_type)
                         #alert_summary = '%s %s issue'%( short_name, component )
-                        """
-                        jiras = JC.find( {'summary' : alert_summary })
-                        if len(jiras)==0:
-                            print "creating a JIRA for", alert_summary
-                            j = JC.create(
-                                {
-                                    'summary' : alert_summary,
-                                    'description' : det['error_message'],
-                                    'label' : 'AgentDoc'
-                                })
-                        else:
-                            ## find the last such, and add a comment after the grace period
-                            j = sorted(jiras, key= lambda o:JC.created(o))[-1]
-                            reopened = JC.reopen(j.key)
-                            ## add a comment to that JIRA : experimental
-                            last_comment_time = JC.last_time(j)
-                            seconds_since = now - last_comment_time
-                            ## 4h at least between pings in the agent comment
-                            if reopened or (seconds_since > (agent_comment_graceperiod*60*60)):
-                                #print j.key,reopened,now,last_comment_time,JC.created(j),seconds_since, agent_comment_graceperiod
-                                JC.comment(j.key, det['error_message'])
+                        if alert_type is not 'heartbeat':
+                            jiras = JC.find( {'summary' : alert_summary })
+                            if len(jiras)==0:
+                                print "creating a JIRA for", alert_summary
+                                j = JC.create(
+                                    {
+                                        'summary' : alert_summary,
+                                        'description' : det['error_message'],
+                                        'label' : 'AgentDoc'
+                                    })
                             else:
-                                print "last comment in the JIRA %s was %s ago"%( j.key, display_time(seconds_since))
-                        """
+                                ## find the last such, and add a comment after the grace period
+                                j = sorted(jiras, key= lambda o:JC.created(o))[-1]
+                                reopened = JC.reopen(j.key)
+                                ## add a comment to that JIRA : experimental
+                                last_comment_time = JC.last_time(j)
+                                seconds_since = now - last_comment_time
+                                ## 4h at least between pings in the agent comment
+                                if reopened or (seconds_since > (agent_comment_graceperiod*60*60)):
+                                    #print j.key,reopened,now,last_comment_time,JC.created(j),seconds_since, agent_comment_graceperiod
+                                    JC.comment(j.key, det['error_message'])
+                                else:
+                                    print "last comment in the JIRA %s was %s ago"%( j.key, display_time(seconds_since))
 
             message += '<br><a href="https://cms-logbook.cern.ch/elog/GlideInWMS/?mode=summary&reverse=0&reverse=1&npp=20&subtext=%s">gwms elog</a>, <a href="https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary&reverse=0&reverse=1&npp=20&subtext=%s">elog</a>, <a href="https://its.cern.ch/jira/issues/?jql=text~%s* AND project = CMSCOMPPR AND status != CLOSED">jira</a>'%( short_name, short_name, short_name )
             message += '<br>Unified status : %s'% uas
