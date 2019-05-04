@@ -60,11 +60,8 @@ def assignor(url ,specific = None, talk=True, options=None):
     #if options.partial and not specific:
     #    pass
 
-    print "I am running"
     dataset_endpoints = json.loads(open('%s/dataset_endpoints.json'%monitor_dir).read())
     aaa_mapping = json.loads(open('%s/equalizor.json'%monitor_pub_dir).read())['mapping']
-    print "I am running"
-    print aaa_mapping
     all_stuck = set()
     all_stuck.update( json.loads( open('%s/stuck_transfers.json'%monitor_pub_dir).read() ))
     all_stuck.update( getAllStuckDataset()) 
@@ -72,7 +69,6 @@ def assignor(url ,specific = None, talk=True, options=None):
     max_per_round = UC.get('max_per_round').get('assignor',None)
     max_cpuh_block = UC.get('max_cpuh_block')
 
-    print "I am running"
     ##order by priority instead of random
     if options.early:
         cache = sorted(getWorkflows(url, 'assignment-approved', details=True), key = lambda r : r['RequestPriority'])
