@@ -2,7 +2,7 @@ from assignSession import *
 import os
 import json
 #import numpy as np
-from utils import siteInfo, getWorkflowByInput, getWorkflowByOutput, getWorkflowByMCPileup, monitor_dir, monitor_pub_dir, eosRead, eosFile, remainingDatasetInfo, moduleLock
+from utils import siteInfo, getWorkflowByInput, getWorkflowByOutput, getWorkflowByMCPileup, monitor_dir, monitor_pub_dir, eosRead, eosFile, remainingDatasetInfo, moduleLock, allCompleteToAnaOps
 import sys
 import time
 import random 
@@ -115,10 +115,21 @@ if sys.argv[1] == 'parse':
 
         table += "</table>\n"
         table += "<table border=1></thead><tr><th>Dataset</th><th>Size [GB]</th><th>Label</th></tr></thead>\n"
+        only_unlock = set()
         for item in ld:
             table+="<tr><td>%s</td><td>%d</td><td><ul>%s</ul></td></tr>\n"%( item[0], item[1]['size'], "<li>".join([""]+item[1]['reasons']))
+            if item[1]['reasons']==['unlock']:
+                only_unlock.add(item[0])
         table+="</table></html>"
         eosFile('%s/remaining_%s.html'%(monitor_dir,site),'w').write( table ).close()
+        change_dataops_subs_to_anaops_once_unlocked= False
+        
+        if change_dataops_subs_to_anaops_once_unlocked:
+            for item in only_unlock:
+                tier = item.split('/')[-1]
+                if tier in ['FEVT','AOD','AODSIM','MINIAOD','MINIAODSIM','NANOAOD','NANOAODSIM']:
+                    print "Sending",item,"to anaops"
+                    allCompleteToAnaOps(url, item)
 
     #eosFile('%s/remaining.json'%monitor_dir,'w').write( json.dumps( remainings , indent=2)).close()
 
