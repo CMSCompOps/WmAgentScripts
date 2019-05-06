@@ -29,12 +29,16 @@ if sys.argv[1] == 'parse':
     remainings={}
     sis = si.disk.keys()
     random.shuffle( sis )
+    n_site = 2
     for site in sis:
         space = si.disk[site]
         if space: 
             continue
+        if n_site<0:
+            break
+        n_site -= 1
         print site,"has no disk space left"
-
+        
         remainings[site]={}
 
         print site,"has",space,"[TB] left out of",si.quota[site]
