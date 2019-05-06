@@ -18,8 +18,11 @@ RDI = remainingDatasetInfo()
 
 if sys.argv[1] == 'parse':
     force = False
+    spec_site = None
     if len(sys.argv)>2:
         force = bool(sys.argv[2])
+    if len(sys.argv)>3:
+        spec_site = sys.argv[3]
     locks = [l.item.split('#')[0] for l in session.query(Lock).filter(Lock.lock == True).all()]
 
     waiting = {}
@@ -31,6 +34,8 @@ if sys.argv[1] == 'parse':
     random.shuffle( sis )
     n_site = 2
     for site in sis:
+        if spec_site and not site in spec_site:
+            continue
         space = si.disk[site]
         if space: 
             continue
