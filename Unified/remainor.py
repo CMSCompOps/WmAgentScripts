@@ -122,11 +122,14 @@ if sys.argv[1] == 'parse':
                 only_unlock.add(item[0])
         table+="</table></html>"
         eosFile('%s/remaining_%s.html'%(monitor_dir,site),'w').write( table ).close()
-        for item in only_unlock:
-            tier = item.split('/')[-1]
-            if tier in ['FEVT','AOD','AODSIM','MINIAOD','MINIAODSIM','NANOAOD','NANOAODSIM']:
-                print "Sending",item,"to anaops"
-                allCompleteToAnaOps(url, item)
+        change_dataops_subs_to_anaops_once_unlocked= False
+        
+        if change_dataops_subs_to_anaops_once_unlocked:
+            for item in only_unlock:
+                tier = item.split('/')[-1]
+                if tier in ['FEVT','AOD','AODSIM','MINIAOD','MINIAODSIM','NANOAOD','NANOAODSIM']:
+                    print "Sending",item,"to anaops"
+                    allCompleteToAnaOps(url, item)
 
     #eosFile('%s/remaining.json'%monitor_dir,'w').write( json.dumps( remainings , indent=2)).close()
 
