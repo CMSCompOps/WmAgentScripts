@@ -2,8 +2,12 @@ date
 
 #echo "################ QUOTA #######################"
 #eos quota ls -u cmsvoc /eos/cms/store/unified
+nodes="0268 0269 0272 0273 0274 0275"
+if [ ! -z $1 ] ; then
+    nodes=$1
+fi
 
-for each in 0268 0269 0272 0273 0274 0275; do
+for each in $nodes; do
     echo
     echo "#############################################" 
     echo "Set on node" $each 
