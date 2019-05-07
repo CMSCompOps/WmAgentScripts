@@ -1476,7 +1476,8 @@
     "secondaries": {
       "/MinBias_TuneCP2_13TeV-pythia8/RunIIAutumn18FSPremix-PUAutumn18_102X_upgrade2018_realistic_v15-v1/GEN-SIM-RECO": {
         "SiteWhitelist": [
-          "T1_IT_CNAF"
+          "T1_IT_CNAF",
+          "T1_US_FNAL"
         ]
       }
     }, 
