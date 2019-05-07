@@ -2257,20 +2257,19 @@
     "lumisize": -1, 
     "parameters": {
       "EventsPerLumi": "x2"
-    }, 
+    },
+    "secondary_AAA": false, 
     "secondaries": {
       "/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer16FSPremix-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v4-v1/GEN-SIM-RECO": {
         "SiteWhitelist": [
           "T1_US_FNAL", 
           "T2_FI_HIP"
-        ], 
-        "secondary_AAA": false
+        ] 
       }, 
       "/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer16FSPremixPUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v4-v1/GEN-SIM-RECO": {
         "SiteWhitelist": [
           "T1_US_FNAL"
-        ], 
-        "secondary_AAA": false
+        ] 
       }
     }
   }, 
