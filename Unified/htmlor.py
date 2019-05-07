@@ -1185,10 +1185,10 @@ var data_%s = google.visualization.arrayToDataTable([
       ))
         chart_data[site].append("""
 var chart_%s = new google.visualization.PieChart(document.getElementById('donutchart_%s'));
-chart_%s.draw(data_%s, {title: '%s %s [TB]', pieHole:0.4, slices:{0:{color:'red'},1:{color:'green'},2:{color:'orange'},3:{color:'blue'}}});
+chart_%s.draw(data_%s, {title: '%s %s / %s [TB]', pieHole:0.4, slices:{0:{color:'red'},1:{color:'green'},2:{color:'orange'},3:{color:'blue'}}});
 """%(site,site,
      site,site,
-     site,SI.quota[site]))
+     site, SI.locked[site], SI.quota[site]))
         chart_data[site].append("""
 <div id="donutchart_%s" style="height: 200px;width: 300px"></div>
 """%(site))
@@ -1276,9 +1276,9 @@ var data_remain_%s = google.visualization.arrayToDataTable([
 
         rem_chart_data[site].append("""
 var remaining_bar_%s = new google.visualization.ColumnChart(document.getElementById('remainbars_%s'));
-remaining_bar_%s.draw(data_remain_%s, {title: '%s [TB]'});
+remaining_bar_%s.draw(data_remain_%s, {title: '%s %s / %s [TB]'});
 """%(site, site,
-     site, site, site))
+     site, site, site, SI.locked[site], SI.quota[site]))
         rem_chart_data[site].append("""
 <div id="remainbars_%s" style="height: 300px;width: 400px"></div>
 """%(site))
