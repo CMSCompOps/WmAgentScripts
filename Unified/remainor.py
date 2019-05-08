@@ -2,7 +2,7 @@ from assignSession import *
 import os
 import json
 #import numpy as np
-from utils import siteInfo, getWorkflowByInput, getWorkflowByOutput, getWorkflowByMCPileup, monitor_dir, monitor_pub_dir, eosRead, eosFile, remainingDatasetInfo, moduleLock, allCompleteToAnaOps
+from utils import siteInfo, getWorkflowByInput, getWorkflowByOutput, getWorkflowByMCPileup, monitor_dir, monitor_pub_dir, eosRead, eosFile, remainingDatasetInfo, moduleLock, allCompleteToAnaOps, getDatasetStatus, setDatasetStatus
 import sys
 import time
 import random 
@@ -54,7 +54,10 @@ if sys.argv[1] == 'parse':
         sum_stuck=0.
         sum_missing=0.
         sum_unlocked=0.
-        for (size,dataset) in ds:
+        n_ds = 10
+        i_ds = 0
+        for i_ds,(size,dataset) in enumerate(ds):
+            if n_ds and i_ds>=n_ds: break
             remainings[site][dataset] = {"size" : size, "reasons": []}
             #print "-"*10
             if not dataset in locks:
@@ -132,15 +135,24 @@ if sys.argv[1] == 'parse':
                 only_unlock.add(item[0])
         table+="</table></html>"
         eosFile('%s/remaining_%s.html'%(monitor_dir,site),'w').write( table ).close()
+
         change_dataops_subs_to_anaops_once_unlocked= False
-        
-        if change_dataops_subs_to_anaops_once_unlocked:
-            for item in only_unlock:
-                tier = item.split('/')[-1]
-                if tier in ['FEVT','AOD','AODSIM','MINIAOD','MINIAODSIM','NANOAOD','NANOAODSIM']:
+        invalidate_anything_left_production_once_unlocked = False
+        for item in only_unlock:
+            tier = item.split('/')[-1]
+            ds_status = getDatasetStatus(item)
+            print item,ds_status
+            if ds_status == 'PRODUCTION':
+                print item,"is found",ds_status,"and unklocked"
+                if invalidate_anything_left_production_once_unlocked:
+                    print "Setting status to invalid for",item
+                    setDatasetStatus(item, 'INVALID')
+            if tier in ['FEVT','AOD','AODSIM','MINIAOD','MINIAODSIM','NANOAOD','NANOAODSIM']:
+                print item,"looks like analysis and still dataops"
+                if change_dataops_subs_to_anaops_once_unlocked:
                     print "Sending",item,"to anaops"
                     allCompleteToAnaOps(url, item)
-
+                    
     #eosFile('%s/remaining.json'%monitor_dir,'w').write( json.dumps( remainings , indent=2)).close()
 
 else:
