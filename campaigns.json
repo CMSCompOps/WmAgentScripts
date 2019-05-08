@@ -2654,6 +2654,13 @@
     "secondary_AAA": false, 
     "tune": true
   }, 
+  "RunIISummer19UL17GEN": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "resize": "auto", 
+    "tune": true
+  }, 
   "RunIISummer19UL17GS": {
     "fractionpass": 0.95, 
     "go": false, 
