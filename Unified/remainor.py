@@ -54,7 +54,7 @@ if sys.argv[1] == 'parse':
         sum_stuck=0.
         sum_missing=0.
         sum_unlocked=0.
-        n_ds = 10
+        n_ds = None
         i_ds = 0
         for i_ds,(size,dataset) in enumerate(ds):
             if n_ds and i_ds>=n_ds: break
