@@ -43,7 +43,7 @@ if N_for_cloud:
         print "testing",wf['RequestName']
         if wfi.isGoodToConvertToStepChain() and wfi.isGoodForNERSC(no_step=True) and N_for_cloud:
             print "good to convert to step so that we get something for hepcloud on next round",wf['RequestName']
-            os.system('Unified/rejector.py --to_step --clone --comment "convert to step for hepcloud" %s'% wf['RequestName'])
+            os.system('Unified/rejector.py --clone --comment "convert to step for hepcloud" %s'% wf['RequestName'])
             ## just do that once and be done with it
             N_for_cloud-=1
 
