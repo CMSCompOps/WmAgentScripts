@@ -36,14 +36,11 @@ if [ -r /eos/cms/store/unified/unified_drain ] ; then
 fi
 
 
-
-
 echo $USER >> $log
 echo $HOSTNAME >> $log
 echo module $modulename>> $log 
 
-export PYTHONPATH=$PYTHONPATH:/usr/lib64/python2.7/site-packages:/usr/lib/python2.7/site-packages
-source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh
+source set.sh
 
 echo >> $log
 
