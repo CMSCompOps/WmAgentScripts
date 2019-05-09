@@ -19,7 +19,7 @@ class JIRAClient:
                     pass
         except:
             print cookie,"is not a file?"
-            print "run cern-get-sso-cookie -u https://its.cern.ch/jira/loginCern.jsp -o jira.txt, or something like that"
+            print "run cern-get-sso-cookie -u https://its.cern.ch/jira/loginCern.jsp -o %s --krb, or something like that"%cookie
         #print cookies
         if not cookies:
             print "That ain't going to work out"
