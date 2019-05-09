@@ -2634,7 +2634,10 @@
     "fractionpass": 0.95, 
     "go": false, 
     "lumisize": -1, 
-    "tune": true
+    "tune": true,
+    "toDDM": [
+        "GEN"
+    ]
   }, 
   "RunIISummer19UL17DIGI": {
     "fractionpass": 0.95, 
@@ -2659,7 +2662,10 @@
     "go": false, 
     "lumisize": -1, 
     "resize": "auto", 
-    "tune": true
+    "tune": true,
+    "toDDM": [
+        "GEN"
+    ]
   }, 
   "RunIISummer19UL17GS": {
     "fractionpass": 0.95, 
@@ -2723,7 +2729,10 @@
     "fractionpass": 0.95, 
     "go": false, 
     "lumisize": -1, 
-    "tune": true
+    "tune": true,
+    "toDDM": [
+        "GEN"
+    ]
   }, 
   "RunIISummer19UL17wmLHEGS": {
     "fractionpass": 0.95, 
