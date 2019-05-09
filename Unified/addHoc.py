@@ -33,14 +33,14 @@ for t in those:
 UC = unifiedConfiguration()
 
 ## get all acquired and push one to stepchain so that we can acquire it on nersc
-N_for_cloud = isHEPCloudReady(reqmgr_url)
-if N_for_cloud:
-    print "HEP cloud is ready"
-    wfs = getWorkflows(reqmgr_url, 'acquired', details=True)
-    for wf in wfs:
-        if N_for_cloud<=0: break
-        wfi = workflowInfo(reqmgr_url, wf['RequestName'], request = wf )
-        print "testing",wf['RequestName']
+#N_for_cloud = isHEPCloudReady(reqmgr_url)
+#if N_for_cloud:
+#    print "HEP cloud is ready"
+#    wfs = getWorkflows(reqmgr_url, 'acquired', details=True)
+#    for wf in wfs:
+#        if N_for_cloud<=0: break
+#        wfi = workflowInfo(reqmgr_url, wf['RequestName'], request = wf )
+#        print "testing",wf['RequestName']
         #if wfi.isGoodToConvertToStepChain() and wfi.isGoodForNERSC(no_step=True) and N_for_cloud:
         #    print "good to convert to step so that we get something for hepcloud on next round",wf['RequestName']
         #    os.system('Unified/rejector.py --to_step --clone --comment "convert to step for hepcloud" %s'% wf['RequestName'])
