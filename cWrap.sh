@@ -41,7 +41,9 @@ echo $HOSTNAME >> $log
 echo module $modulename>> $log 
 
 echo $PWD
-ls set.sh
+ls -l set.sh
+echo $BASE_DIR
+ls -l $BASE_DIR/set.sh
 source set.sh
 ##source $BASE_DIR/set.sh
 
