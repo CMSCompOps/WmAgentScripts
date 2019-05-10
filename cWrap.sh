@@ -40,7 +40,7 @@ echo $USER >> $log
 echo $HOSTNAME >> $log
 echo module $modulename>> $log 
 
-source set.sh
+source $BASE_DIR/set.sh
 
 echo >> $log
 
