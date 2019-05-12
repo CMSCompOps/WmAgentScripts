@@ -9,6 +9,7 @@ import optparse
 import json
 import re
 import os
+import time
 
 def rejector(url, specific, options=None):
 
@@ -223,6 +224,12 @@ def rejector(url, specific, options=None):
                     msg = "Error in cloning {}".format(wfo.name)
                     print(msg)
                     wfi.sendLog('rejector',msg)
+                          
+                    # Get the error message
+                    time.sleep(5)
+                    data = reqMgrClient.requestManagerPost(url, "/reqmgr2/data/request", schema)
+                    wfi.sendLog('rejector',data)
+                    
                     print json.dumps( schema, indent=2 )
                     return 
                 print newWorkflow
