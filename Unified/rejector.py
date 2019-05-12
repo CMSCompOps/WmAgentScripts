@@ -220,7 +220,9 @@ def rejector(url, specific, options=None):
                 print json.dumps( schema, indent=2 )
                 newWorkflow = reqMgrClient.submitWorkflow(url, schema)
                 if not newWorkflow:
-                    print "error in cloning",wfo.name
+                    msg = "Error in cloning {}".format(wfo.name)
+                    print(msg)
+                    wfi.sendLog('rejector',msg)
                     print json.dumps( schema, indent=2 )
                     return 
                 print newWorkflow
@@ -235,7 +237,9 @@ def rejector(url, specific, options=None):
                 session.commit()
 
         else:
-            print "error in rejecting",wfo.name,results
+            msg = "Error in rejecting {}: {}".format(wfo.name,results)
+            print(msg)
+            wfi.sendLog('rejector',msg)
 
 if __name__ == "__main__":
     url = reqmgr_url
