@@ -2,7 +2,7 @@ from assignSession import *
 import os
 import json
 #import numpy as np
-from utils import siteInfo, getWorkflowByInput, getWorkflowByOutput, getWorkflowByMCPileup, monitor_dir, monitor_pub_dir, eosRead, eosFile, remainingDatasetInfo, moduleLock, allCompleteToAnaOps, getDatasetStatus, setDatasetStatus
+from utils import siteInfo, getWorkflowByInput, getWorkflowByOutput, getWorkflowByMCPileup, monitor_dir, monitor_pub_dir, eosRead, eosFile, remainingDatasetInfo, moduleLock, allCompleteToAnaOps, getDatasetStatus, setDatasetStatus, unifiedConfiguration
 import sys
 import time
 import random 
@@ -15,6 +15,8 @@ ml=mlock()
 
 print time.asctime(time.gmtime())
 RDI = remainingDatasetInfo()
+UC = unifiedConfiguration()
+to_ddm = UC.get('tiers_to_DDM')
 
 if sys.argv[1] == 'parse':
     force = False
@@ -147,7 +149,7 @@ if sys.argv[1] == 'parse':
                 if invalidate_anything_left_production_once_unlocked:
                     print "Setting status to invalid for",item
                     setDatasetStatus(item, 'INVALID')
-            if tier in ['FEVT','AOD','AODSIM','MINIAOD','MINIAODSIM','NANOAOD','NANOAODSIM']:
+            if tier in to_ddm:
                 print item,"looks like analysis and still dataops"
                 if change_dataops_subs_to_anaops_once_unlocked:
                     print "Sending",item,"to anaops"
