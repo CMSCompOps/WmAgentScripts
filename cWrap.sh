@@ -14,7 +14,8 @@ mkdir -p $HTML_DIR/logs/$modulename/
 mkdir -p $FINAL_HTML_DIR/logs/$modulename/
 
 last_log=$HTML_DIR/logs/$modulename/last.log
-dated_log=$HTML_DIR/logs/$modulename/`date +%F_%T`.log
+s_dated_log=$modulename/`date +%F_%T`.log
+dated_log=$HTML_DIR/logs/$s_dated_log
 log=$dated_log
 
 echo `date` > $log
@@ -57,6 +58,7 @@ else
     echo -e "\nAbnormal termination with exit code $?" >> $log
     top -n1  -o %MEM -c >> $log
     echo "Abnormal termination, check $log" > $emaillog
+    echo "https://cms-unified.web.cern.ch/cms-unified/logs/$s_dated_log" >> $emaillog
     echo $failed_pid >> $emaillog
     echo $USER >> $emaillog
     echo $HOSTNAME >> $emaillog
