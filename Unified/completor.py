@@ -225,7 +225,7 @@ def completor(url, specific):
                                    reopen = True)
             last_time = JC.last_time( j )
             since_last_ping = time.mktime(time.gmtime()) - last_time
-            if since_last_ping > ping_on_jira or since_last_ping< 20: #a while or just created
+            if since_last_ping > ping_on_jira or since_last_ping< 200: #a while or just created
                 j_comment = "Running since %.1f [days] at priority %d"%( delay, priority)
                 JC.comment(j.key, j_comment)
             
