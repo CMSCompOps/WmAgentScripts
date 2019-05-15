@@ -8095,6 +8095,17 @@ class workflowInfo:
 		return False
         else:
             pas = [(aes,pss)]
+	
+	# If there is 'pilot' keyword in any of processing String, just assign the workflow
+	for campaign,label in pas:
+	    if 'pilot' in label.lowercase():
+		msg = "Detected 'pilot' keyword in processingString {} in campaign {}. Assigning the workflow.".format(label,campaign)
+		if log:
+		    self.sendLog('go',msg)
+		else:
+		    print(msg)
+		return True
+	
         for campaign,label in pas:
             if not CI.go( campaign, label):
                 if log:
