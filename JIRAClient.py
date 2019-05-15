@@ -37,6 +37,7 @@ class JIRAClient:
     def create_or_last(self, prepid, priority=None, label=None, reopen=False):
         jiras = self.find( {'prepid' : prepid})
         j = None
+        created = False
         reopened = False
         if len(jiras)==0:
             c_doc = { 'summary' : prepid,
@@ -44,14 +45,12 @@ class JIRAClient:
             if priority: c_doc['priority'] = priority
             if label: c_doc['label'] = label
             j = self.create(c_doc)
+            created = True
         else:
             j = sorted(jiras, key= lambda o:self.created(o))[-1]
             if reopen:
                 reopened = self.reopen( j.key )
-        if reopen:
-            return j,reopened
-        else:
-            return j
+        return j,reopened,created
 
     def create(self , indications , do = True):
         fields = {
