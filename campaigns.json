@@ -1459,10 +1459,6 @@
   "RunIIAutumn18DRPremix": {
     "SecondaryLocation": [
       "T1_US_FNAL", 
-      "T2_CH_CERN", 
-      "T1_ES_PIC", 
-      "T2_US_Florida", 
-      "T2_US_MIT", 
       "T2_US_Nebraska"
     ], 
     "fractionpass": 0.95, 
@@ -1498,11 +1494,7 @@
   }, 
   "RunIIAutumn18FSPremix": {
     "SecondaryLocation": [
-      "T2_UK_London_IC", 
-      "T2_DE_RWTH", 
-      "T1_ES_PIC", 
       "T1_US_FNAL", 
-      "T1_RU_JINR", 
       "T2_US_Nebraska"
     ], 
     "SiteBlacklist": [
