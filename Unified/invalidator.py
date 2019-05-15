@@ -60,7 +60,9 @@ def invalidator(url, invalid_status='INVALID'):
                 acknowledge= True
                 text = "The dataset %s (%s) was set INVALID due to invalidation in McM" % ( dataset, pid )
             else:
-                print "invalidation of",dataset,"did not go so well"
+                msg = "Could not invalidate ",dataset,". Please consider contacting data management team for manual intervention."
+                print(msg)
+                sendLog('invalidator', msg, level='critical')
         else:
             print "\t\t",invalid['type']," type not recognized"
 
