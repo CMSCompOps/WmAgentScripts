@@ -8098,7 +8098,7 @@ class workflowInfo:
 	
 	# If there is 'pilot' keyword in any of processing String, just assign the workflow
 	for campaign,label in pas:
-	    if 'pilot' in label.lowercase():
+	    if 'pilot' in label.lower():
 		msg = "Detected 'pilot' keyword in processingString {} in campaign {}. Assigning the workflow.".format(label,campaign)
 		if log:
 		    self.sendLog('go',msg)
