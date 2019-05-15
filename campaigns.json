@@ -24,6 +24,18 @@
     "maxcopies": 1, 
     "partial_copy": 0.95
   }, 
+  "BParking05May2019": {
+    "custodial_override": [
+      "DQMIO"
+    ], 
+    "fractionpass": 1, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "overflow": {
+      "PRIM": {}
+    }
+  }, 
   "Commissioning2017": {
     "custodial_override": [
       "DQMIO"
@@ -2634,10 +2646,10 @@
     "fractionpass": 0.95, 
     "go": false, 
     "lumisize": -1, 
-    "tune": true,
     "toDDM": [
-        "GEN"
-    ]
+      "GEN"
+    ], 
+    "tune": true
   }, 
   "RunIISummer19UL17DIGI": {
     "fractionpass": 0.95, 
@@ -2662,10 +2674,10 @@
     "go": false, 
     "lumisize": -1, 
     "resize": "auto", 
-    "tune": true,
     "toDDM": [
-        "GEN"
-    ]
+      "GEN"
+    ], 
+    "tune": true
   }, 
   "RunIISummer19UL17GS": {
     "fractionpass": 0.95, 
@@ -2729,10 +2741,10 @@
     "fractionpass": 0.95, 
     "go": false, 
     "lumisize": -1, 
-    "tune": true,
     "toDDM": [
-        "GEN"
-    ]
+      "GEN"
+    ], 
+    "tune": true
   }, 
   "RunIISummer19UL17wmLHEGS": {
     "fractionpass": 0.95, 
