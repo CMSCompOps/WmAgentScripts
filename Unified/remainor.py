@@ -1,54 +1,69 @@
+#!/usr/bin/env python
 from assignSession import *
 import os
 import json
 #import numpy as np
-from utils import siteInfo, getWorkflowByInput, getWorkflowByOutput, getWorkflowByMCPileup, monitor_dir, monitor_pub_dir, eosRead, eosFile, remainingDatasetInfo, moduleLock, allCompleteToAnaOps, getDatasetStatus, setDatasetStatus, unifiedConfiguration
+from utils import siteInfo, getWorkflowByInput, getWorkflowByOutput, getWorkflowByMCPileup, monitor_dir, monitor_pub_dir, eosRead, eosFile, remainingDatasetInfo, moduleLock, allCompleteToAnaOps, getDatasetStatus, setDatasetStatus, unifiedConfiguration, ThreadHandler
 import sys
 import time
 import random 
 from collections import defaultdict
+import threading
+import optparse
+import copy
 
-url = 'cmsweb.cern.ch'
+class DatasetCheckBuster(threading.Thread):
+    def __init__(self, **args):
+        threading.Thread.__init__(self)
+        self.daemon = True
+        for k,v in args.items():
+            setattr(self,k,v)
 
-mlock = moduleLock(component='remainor',locking=False)
-ml=mlock()
+    def run(self):
+        url = self.url
+        dataset= self.dataset
+        reasons = []
+        statuses = ['assignment-approved','assigned','acquired','running-open','running-closed','completed','force-complete','closed-out']
 
-print time.asctime(time.gmtime())
-RDI = remainingDatasetInfo()
-UC = unifiedConfiguration()
-to_ddm = UC.get('tiers_to_DDM')
+        ##print "reqmgr check on ",dataset
+        actors = getWorkflowByInput( url, dataset , details=True)
+        using_actors = [actor for actor in actors if actor['RequestStatus'] in statuses]
+        if len(using_actors):
+            reasons.append('input')
 
-if sys.argv[1] == 'parse':
-    force = False
-    spec_site = None
-    if len(sys.argv)>2:
-        force = bool(sys.argv[2])
-    if len(sys.argv)>3:
-        spec_site = sys.argv[3]
-    locks = [l.item.split('#')[0] for l in session.query(Lock).filter(Lock.lock == True).all()]
+        actors = getWorkflowByOutput( url, dataset , details=True)
+        using_actors = [actor for actor in actors if actor['RequestStatus'] in statuses]
+        if len(using_actors):
+            reasons.append('output')
 
-    waiting = {}
-    stuck = {}
-    missing = {} 
-    si = siteInfo()
-    remainings={}
-    sis = si.disk.keys()
-    random.shuffle( sis )
-    n_site = 2
-    for site in sis:
-        if spec_site and not site in spec_site:
-            continue
-        space = si.disk[site]
-        if space: 
-            continue
-        if n_site<0:
-            break
-        n_site -= 1
-        print site,"has no disk space left"
+        actors = getWorkflowByMCPileup( url, dataset , details=True)
+        using_actors = [actor for actor in actors if actor['RequestStatus'] in statuses]
+        if len(using_actors):
+            reasons.append('pilup')
         
-        remainings[site]={}
+        self.reasons = reasons
 
-        print site,"has",space,"[TB] left out of",si.quota[site]
+
+class SiteBuster(threading.Thread):
+    def __init__(self, **args):
+        threading.Thread.__init__(self)
+        self.daemon = True
+        for k,v in args.items():
+            setattr(self,k,v)
+        
+    def run(self):
+        site = self.site
+        print "checking on site",site
+        si = self.SI
+        UC = self.UC
+        RDI = self.RDI
+        options = self.options
+        locks = self.locks
+        waiting = self.waiting
+        stuck = self.stuck
+        missing = self.missing
+        remainings = {}
+        
         ds = si.getRemainingDatasets(si.CE_to_SE(site))
         #print len(ds)
         taken_size=0.
@@ -56,65 +71,71 @@ if sys.argv[1] == 'parse':
         sum_stuck=0.
         sum_missing=0.
         sum_unlocked=0.
-        n_ds = None
+        n_ds = options.ndatasets
         i_ds = 0
+        ds_threads = []
         for i_ds,(size,dataset) in enumerate(ds):
             if n_ds and i_ds>=n_ds: break
-            remainings[site][dataset] = {"size" : size, "reasons": []}
+            remainings[dataset] = {"size" : size, "reasons": []}
             #print "-"*10
             if not dataset in locks:
                 #print dataset,"is not locked"
                 sum_unlocked += size
-                remainings[site][dataset]["reasons"].append('unlock')
+                remainings[dataset]["reasons"].append('unlock')
             else:
-                remainings[site][dataset]["reasons"].append('lock')
+                remainings[dataset]["reasons"].append('lock')
             if dataset in waiting:
                 #print dataset,"is waiting for custodial"
                 sum_waiting+=size
-                remainings[site][dataset]["reasons"].append('tape')
+                remainings[dataset]["reasons"].append('tape')
 
             if dataset in stuck:
                 sum_stuck+=size
-                remainings[site][dataset]["reasons"].append('stuck-tape')
+                remainings[dataset]["reasons"].append('stuck-tape')
             if dataset in missing:
                 sum_missing +=size
-                remainings[site][dataset]["reasons"].append('missing-tape')
+                remainings[dataset]["reasons"].append('missing-tape')
 
-            statuses = ['assignment-approved','acquired','running-open','running-closed','completed','closed-out']
-            actors = getWorkflowByInput( url, dataset , details=True)
-            #actors = [wfc['doc'] for wfc in by_input if wfc['key']==dataset]
-            using_actors = [actor for actor in actors if actor['RequestStatus'] in statuses]
-            if len(using_actors):remainings[site][dataset]["reasons"].append('input')
-            actors = getWorkflowByOutput( url, dataset , details=True)
-            #actors = [wfc['doc'] for wfc in by_output if wfc['key']==dataset]
-            using_actors = [actor for actor in actors if actor['RequestStatus'] in statuses]
-            if len(using_actors):remainings[site][dataset]["reasons"].append('output')
-            actors = getWorkflowByMCPileup( url, dataset , details=True)
-            #actors = [wfc['doc'] for wfc in by_pileup if wfc['key']==dataset]
-            using_actors = [actor for actor in actors if actor['RequestStatus'] in statuses]
-            if len(using_actors):remainings[site][dataset]["reasons"].append('pilup')
+            ds_threads.append( DatasetCheckBuster( dataset = dataset,
+                                                   url = url))
+
         
-            print dataset,remainings[site][dataset]["reasons"]
+        run_threads = ThreadHandler( threads = ds_threads,
+                                     n_threads = 10 ,
+                                     start_wait = 0,
+                                     timeout = None,
+                                     verbose=True)
+        ## start and sync
+        run_threads.run()
+        #run_threads.start()
+        #while run_threads.is_alive():
+        #    time.sleep(10)        
+
+        for t in run_threads.threads:
+            remainings[t.dataset]["reasons"].extend( t.reasons )
+            remainings[t.dataset]["reasons"].sort()
+            print t.dataset,remainings[t.dataset]["reasons"]
 
         #print "\t",sum_waiting,"[GB] could be freed by custodial"
         print "\t",sum_unlocked,"[GB] is not locked by unified"
 
-        RDI.set(site, remainings[site])
+        print "updating database with remaining datasets"
+        RDI.set(site, remainings)
         try:
-            eosFile('%s/remaining_%s.json'%(monitor_dir,site),'w').write( json.dumps( remainings[site] , indent=2)).close()
+            eosFile('%s/remaining_%s.json'%(monitor_dir,site),'w').write( json.dumps( remainings , indent=2)).close()
         except:
             pass
 
-        ld = remainings[site].items()
+        ld = remainings.items()
         ld.sort( key = lambda i:i[1]['size'], reverse=True)
         table = "<html>Updated %s GMT, <a href=remaining_%s.json>json data</a><br>"%(time.asctime(time.gmtime()),site)
 
         accumulate = defaultdict(lambda : defaultdict(float))
-        for item in remainings[site]:
+        for item in remainings:
             tier = item.split('/')[-1]
 
-            for reason in remainings[site][item]['reasons']:
-                accumulate[reason][tier] += remainings[site][item]['size']
+            for reason in remainings[item]['reasons']:
+                accumulate[reason][tier] += remainings[item]['size']
         table += "<table border=1></thead><tr><th>Reason</th><th>size [TB]</th></thead>"
         for reason in accumulate:
             s=0
@@ -148,27 +169,78 @@ if sys.argv[1] == 'parse':
         table+="</table></html>"
         eosFile('%s/remaining_%s.html'%(monitor_dir,site),'w').write( table ).close()
 
-        change_dataops_subs_to_anaops_once_unlocked= False
-        invalidate_anything_left_production_once_unlocked = False
         print "checking on unlock only datasets"
+        to_ddm = UC.get('tiers_to_DDM')
         for item in only_unlock:
             tier = item.split('/')[-1]
             ds_status = getDatasetStatus(item)
             print item,ds_status
             if ds_status == 'PRODUCTION':
                 print item,"is found",ds_status,"and unklocked"
-                if invalidate_anything_left_production_once_unlocked:
+                if options.invalidate_anything_left_production_once_unlocked:
                     print "Setting status to invalid for",item
                     setDatasetStatus(item, 'INVALID')
             if tier in to_ddm:
                 print item,"looks like analysis and still dataops"
-                if change_dataops_subs_to_anaops_once_unlocked:
+                if options.change_dataops_subs_to_anaops_once_unlocked:
                     print "Sending",item,"to anaops"
                     allCompleteToAnaOps(url, item)
-                    
-    #eosFile('%s/remaining.json'%monitor_dir,'w').write( json.dumps( remainings , indent=2)).close()
 
-else:
+def parse( options ):
+    RDI = remainingDatasetInfo()
+    UC = unifiedConfiguration()
+
+    spec_site = options.site.split(',')
+
+    ## fetching global information
+    locks = [l.item.split('#')[0] for l in session.query(Lock).filter(Lock.lock == True).all()]
+    waiting = {}
+    stuck = {}
+    missing = {} 
+    si = siteInfo()
+    sis = si.disk.keys()
+    random.shuffle( sis )
+    n_site = options.nsites
+    i_site = 0
+    for site in sis:
+        if spec_site and not site in spec_site:
+            continue
+        space = si.disk[site]
+        if space and not spec_site: 
+            continue
+        if n_site and i_site>n_site:
+            break
+        i_site += 1
+        
+        print site,"has",space,"[TB] left out of",si.quota[site]
+
+
+        threads = []
+        threads.append( SiteBuster( site = site,
+                                    UC = UC,
+                                    RDI = RDI,
+                                    SI = si,
+                                    locks = copy.deepcopy(locks),
+                                    waiting = copy.deepcopy(waiting),
+                                    stuck = copy.deepcopy(stuck),
+                                    missing = copy.deepcopy(missing),
+                                    options = copy.deepcopy(options)
+                                ))
+    run_threads = ThreadHandler( threads = threads, 
+                                 n_threads = 5 , 
+                                 start_wait = 0,
+                                 timeout = None,
+                                 verbose=True)
+    run_threads.run()
+    #run_threads.start()
+    #while run_threads.is_alive():
+    #    time.sleep(10)
+    
+
+                    
+def summary():
+    ## not used anymore IMO
+    RDI = remainingDatasetInfo()
     si = siteInfo()
     remainings={}
     for site in RDI.sites():
@@ -181,6 +253,23 @@ else:
         for tag in tags:
             v = sum([ info['size'] for ds,info in load.items() if tag in info['reasons']]) / 1024.
             print "\t %10f [TB] remaining because of %s"%(v,tag)
-    #open('%s/remaining.json'%monitor_dir,'w').write( json.dumps( remainings , indent=2))
-    #eosFile('%s/remaining.json'%monitor_dir,'w').write( json.dumps( remainings , indent=2)).close()
+
+
+if __name__ == "__main__":
+    url = 'cmsweb.cern.ch'
+    
+    mlock = moduleLock(component='remainor',locking=False)
+    ml=mlock()
+
+
+    parser = optparse.OptionParser()
+    parser.add_option('-s','--site', help="coma separated list of site to parse", default="")
+    parser.add_option('-n','--nsites',help="number of site to parse", default=0, type=int)
+    parser.add_option('-d','--ndatasets',help="number of top datasets to parse", default=0, type=int)
+    parser.add_option('--subs-to-anaops', dest='change_dataops_subs_to_anaops_once_unlocked', default=False, action='store_true')
+    parser.add_option('--invalidate', dest='invalidate_anything_left_production_once_unlocked', default=False, action='store_true')
+    (options,args) = parser.parse_args()
+
+    parse( options )
+    
 
