@@ -157,7 +157,7 @@ class SiteBuster(threading.Thread):
             reasons = item[1]['reasons']
             sub_url = '<a href="https://cmsweb.cern.ch/das/request?input=%s">%s</a>'%(ds_name, ds_name)
             if 'unlock' in reasons:
-                sub_url = ', <a href="https://cmsweb.cern.ch/phedex/datasvc/xml/prod/subscriptions?block=%s%%23*&node=%s">block</a>'%(ds_name, site)
+                sub_url += ', <a href="https://cmsweb.cern.ch/phedex/datasvc/xml/prod/subscriptions?block=%s%%23*&node=%s">block</a>'%(ds_name, site)
             if 'unlock' in reasons or 'input' in reasons:
                 sub_url += ', <a href="https://cmsweb.cern.ch/reqmgr2/data/request?inputdataset=%s&mask=RequestName&mask=RequestStatus">input</a>'%(ds_name)
             if 'unlock' in reasons or 'output' in reasons:
