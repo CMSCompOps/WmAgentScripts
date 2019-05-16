@@ -1681,7 +1681,7 @@ class ThreadHandler(threading.Thread):
     def _run(self):
         random.shuffle(self.threads)
         ntotal=len(self.threads)
-        print "[%s] Processing %d threads with %d max concurrent and timeout %d [min]"%( self.label, ntotal,self.n_threads, self.timeout)
+        print "[%s] Processing %d threads with %d max concurrent and timeout %s [min]"%( self.label, ntotal,self.n_threads, self.timeout)
         start_now = time.mktime(time.gmtime())
         self.r_threads = []
         
@@ -1698,7 +1698,7 @@ class ThreadHandler(threading.Thread):
                 if n_done > int(ntotal*0.05):
                     ## shoot for 10 reminder in total                                                                                                              
                     self.show_eta = max(self.show_eta, int(total_expected/10.))
-            print "[%] Will finish in about %s. %d/%d. spend %s. expected total %s, ping in %d [s] "%(
+            print "[%s] Will finish in about %s. %d/%d. spend %s. expected total %s, ping in %d [s] "%(
                 self.label,
                 display_time(eta) if eta else "N/A", 
                 n_done, ntotal,
