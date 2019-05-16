@@ -34,8 +34,9 @@ fi
 
 echo $lock_name > $lock_name
 echo `date` >> $lock_name
-echo $$ >> $lock_name
 echo $HOSTNAME >> $lock_name
+echo $$ >> $lock_name
+
 ## set sso cookie and grid proxy locations: not creating them
 source $BASE_DIR/credentials.sh
 
