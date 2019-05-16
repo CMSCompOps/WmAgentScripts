@@ -1475,29 +1475,17 @@ class CheckBuster(threading.Thread):
                 pop_a_jira = True
             ## create a jira in certain cases
             if pop_a_jira and JC:
-                jiras = JC.find( {'prepid' : wfi.request['PrepID']})
                 j_comment = None
-                j = None
-                if len(jiras)==0:
-                    ## then you can create one
-                    j = JC.create( 
-                        {
-                            'priority' : wfi.request['RequestPriority'],
-                            'summary' : '%s issues'% wfi.request['PrepID'],
-                            'label' : 'WorkflowTrafficController',
-                            'description' : 'https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s \nAutomatic JIRA from unified'%( wfi.request['PrepID'])
-                        } 
-                    )
+                j,reopened,just_created = JC.wf_create_or_last( prepid = wfi.request['PrepID'],
+                                                                priority = wfi.request['RequestPriority'],
+                                                                label = 'WorkflowTrafficController',
+                                                                reopen = True)
+                if just_created:
                     j_comment = "Appears in %s"%(self.to_status)
-                else:
-                    ## pick up the last one
-                    print "a jira already exists, taking the last one"
-                    j = sorted(jiras, key= lambda o:JC.created(o))[-1]
-                    if JC.reopen(j.key):
-                        j_comment = "Came back in %s"%(self.to_status)
+                if reopened:
+                    j_comment = "Came back in %s"%(self.to_status)
                 if j and j_comment:
                     JC.comment(j.key,j_comment)
-
 
 if __name__ == "__main__":
     url = reqmgr_url
