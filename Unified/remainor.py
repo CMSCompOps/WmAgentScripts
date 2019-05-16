@@ -101,6 +101,7 @@ class SiteBuster(threading.Thread):
 
         
         run_threads = ThreadHandler( threads = ds_threads,
+                                     label = '%s Dataset Threads'%site,
                                      n_threads = 10 ,
                                      start_wait = 0,
                                      timeout = None,
@@ -176,12 +177,12 @@ class SiteBuster(threading.Thread):
             ds_status = getDatasetStatus(item)
             print item,ds_status
             if ds_status == 'PRODUCTION':
-                print item,"is found",ds_status,"and unklocked"
+                print item,"is found",ds_status,"and unklocked on",site
                 if options.invalidate_anything_left_production_once_unlocked:
                     print "Setting status to invalid for",item
                     setDatasetStatus(item, 'INVALID')
             if tier in to_ddm:
-                print item,"looks like analysis and still dataops"
+                print item,"looks like analysis and still dataops on",site
                 if options.change_dataops_subs_to_anaops_once_unlocked:
                     print "Sending",item,"to anaops"
                     allCompleteToAnaOps(url, item)
@@ -190,7 +191,7 @@ def parse( options ):
     RDI = remainingDatasetInfo()
     UC = unifiedConfiguration()
 
-    spec_site = options.site.split(',')
+    spec_site = filter(None,options.site.split(','))
 
     ## fetching global information
     locks = [l.item.split('#')[0] for l in session.query(Lock).filter(Lock.lock == True).all()]
@@ -202,6 +203,7 @@ def parse( options ):
     random.shuffle( sis )
     n_site = options.nsites
     i_site = 0
+    threads = []
     for site in sis:
         if spec_site and not site in spec_site:
             continue
@@ -213,9 +215,6 @@ def parse( options ):
         i_site += 1
         
         print site,"has",space,"[TB] left out of",si.quota[site]
-
-
-        threads = []
         threads.append( SiteBuster( site = site,
                                     UC = UC,
                                     RDI = RDI,
@@ -227,6 +226,7 @@ def parse( options ):
                                     options = copy.deepcopy(options)
                                 ))
     run_threads = ThreadHandler( threads = threads, 
+                                 label = 'Site Threads',
                                  n_threads = 5 , 
                                  start_wait = 0,
                                  timeout = None,
