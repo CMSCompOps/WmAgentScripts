@@ -127,7 +127,9 @@
               ["vlimant","vlimant@cern.ch"],
 	      ["mcremone","matteoc@fnal.gov"],
               ["qnguyen","thong@caltech.edu"], 
-	      ["sagarwal","sharad.agarwal@cern.ch"]
+	      ["sagarwal","sharad.agarwal@cern.ch"],
+	      ["knaskar","kousik.naskar@cern.ch"],
+	      ["jen_a","jen_a@fnal.gov"]
              ]
  },
  "max_tail_priority" : {
