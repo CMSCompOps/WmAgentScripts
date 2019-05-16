@@ -1671,13 +1671,43 @@ class ThreadHandler(threading.Thread):
         self._run()
         self.threads = self.r_threads
 
+    def get_eta(self):
+        n_done = sum([not t.is_alive() for t in self.r_threads])
+        now= time.mktime(time.gmtime())
+        spend = now - self.start_now 
+        n_remaining = ntotal - n_done
+
+
     def _run(self):
         random.shuffle(self.threads)
         ntotal=len(self.threads)
-        print "Processing",ntotal,"threads with",self.n_threads,"max concurrent and timeout",self.timeout,'[min]'
+        print "[%s] Processing %d threads with %d max concurrent and timeout %d [min]"%( self.label, ntotal,self.n_threads, self.timeout)
         start_now = time.mktime(time.gmtime())
         self.r_threads = []
         
+
+        def get_eta():
+            n_done = sum([not t.is_alive() for t in self.r_threads])
+            now= time.mktime(time.gmtime())
+            spend = (now - start_now)
+            n_remaining = ntotal - n_done
+            if n_done:
+                time_per_thread = spend / float(n_done)
+                eta = time_per_thread * n_remaining
+                total_expected = int(ntotal * time_per_thread)
+                if n_done > int(ntotal*0.05):
+                    ## shoot for 10 reminder in total                                                                                                              
+                    self.show_eta = max(self.show_eta, int(total_expected/10.))
+            print "[%] Will finish in about %s. %d/%d. spend %s. expected total %s, ping in %d [s] "%(
+                self.label,
+                display_time(eta) if eta else "N/A", 
+                n_done, ntotal,
+                display_time(spend),
+                display_time(total_expected),
+            self.show_eta
+            )
+        
+
 
         bug_every=max(len(self.threads) / 10., 100.) ## 10 steps of eta verbosity
         next_ping = int(len(self.threads)/bug_every)
@@ -1687,7 +1717,7 @@ class ThreadHandler(threading.Thread):
         last_talk = time.mktime(time.gmtime())
         while self.threads:
             if self.timeout and (time.mktime(time.gmtime()) - start_now) > (self.timeout*60.):
-                print '[%s]'%self.label,"Stopping to start threads because the time out is over",time.asctime(time.gmtime())
+                print "[%s] Stopping to start threads because the time out is over %d "%(self.label,time.asctime(time.gmtime()))
                 for t in self.r_threads:
                     while t.is_alive():
                         time.sleep(refresh_ping)
@@ -1703,33 +1733,18 @@ class ThreadHandler(threading.Thread):
             ## check on running and start enough new threads
             running = sum([t.is_alive() for t in self.r_threads])
             now= time.mktime(time.gmtime())
+
             if self.n_threads==None or running < self.n_threads:
                 startme = self.n_threads-running if self.n_threads else len(self.threads)
 
                 if self.verbose and now - last_talk > self.show_eta:
                     last_talk = now
-                    spend = (now - start_now)
-                    n_done = ntotal-len(self.threads)
-                    n_remaining = len(self.threads)
-                    #print '[%s]'%self.label,"Starting",startme,"new threads",len(self.threads),"remaining", time.asctime()
-                    if n_done:
-                        time_per_thread = spend / float(n_done)                        
-                        eta = time_per_thread * n_remaining
-                        total_expected = int(ntotal * time_per_thread)
-                        if n_done > int(ntotal*0.05):
-                            self.show_eta = max(self.show_eta, int(total_expected/10.))
-                    print "Will finish in about %s. %d/%d. spend %s. expected total %s, ping in %d [s] "%(display_time(eta) if eta else "N/A", 
-                                                                                                          n_done, ntotal,
-                                                                                                          display_time(spend),
-                                                                                                          display_time(total_expected),
-                                                                                                          self.show_eta
-                    )
-                    ## shoot for 10 reminder in total
-
+                    get_eta()
                     
                     if time_per_thread and refresh_ping > 5*time_per_thread:
                         refresh_ping = 2*time_per_thread
 
+                ## start enough threads
                 for it in range(startme):
                     if self.threads:
                         self.r_threads.append( self.threads.pop(-1))
@@ -1742,10 +1757,14 @@ class ThreadHandler(threading.Thread):
             #time.sleep(refresh_ping)
         ##then wait for completion
         while sum([t.is_alive() for t in self.r_threads]):
-            if self.timeout and (time.mktime(time.gmtime()) - start_now) > (self.timeout*60.):
-                print '[%s]'%self.label,"Stopping to wait for threads because the time out is over",time.asctime(time.gmtime())
+            now= time.mktime(time.gmtime())
+            if self.timeout and (now - start_now) > (self.timeout*60.):
+                print "[%s] Stopping to start threads because the time out is over %d "%(self.label,time.asctime(time.gmtime()))
                 return
-            time.sleep(self.sleepy)
+            if now - last_talk > self.show_eta:
+                last_talk = now
+                get_eta()
+            #time.sleep(self.sleepy)
         
 
 
