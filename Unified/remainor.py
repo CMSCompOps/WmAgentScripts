@@ -97,7 +97,7 @@ if sys.argv[1] == 'parse':
             print dataset,remainings[site][dataset]["reasons"]
 
         #print "\t",sum_waiting,"[GB] could be freed by custodial"
-        #print "\t",sum_unlocked,"[GB] is not locked by me"
+        print "\t",sum_unlocked,"[GB] is not locked by unified"
 
         RDI.set(site, remainings[site])
         try:
@@ -131,15 +131,26 @@ if sys.argv[1] == 'parse':
         table += "<table border=1></thead><tr><th>Dataset</th><th>Size [GB]</th><th>Label</th></tr></thead>\n"
         only_unlock = set()
         for item in ld:
-            sub_url = '<a href="https://cmsweb.cern.ch/phedex/datasvc/xml/prod/subscriptions?block=%s%%23*&node=%s">%s</a>'%(item[0], site, item[0])
-            table+="<tr><td>%s</td><td>%d</td><td><ul>%s</ul></td></tr>\n"%( sub_url, item[1]['size'], "<li>".join([""]+item[1]['reasons']))
-            if item[1]['reasons']==['unlock']:
+            ds_name = item[0]
+            reasons = item[1]['reasons']
+            sub_url = '<a href="https://cmsweb.cern.ch/das/request?input=%s">%s</a>'%(ds_name, ds_name)
+            if 'unlock' in reasons:
+                sub_url = ', <a href="https://cmsweb.cern.ch/phedex/datasvc/xml/prod/subscriptions?block=%s%%23*&node=%s">block</a>'%(ds_name, site)
+            if 'unlock' in reasons or 'input' in reasons:
+                sub_url += ', <a href="https://cmsweb.cern.ch/reqmgr2/data/request?inputdataset=%s&mask=RequestName&mask=RequestStatus">input</a>'%(ds_name)
+            if 'unlock' in reasons or 'output' in reasons:
+                sub_url += ', <a href="https://cmsweb.cern.ch/reqmgr2/data/request?outputdataset=%s&mask=RequestName&mask=RequestStatus">output</a>'%(ds_name)
+            if 'pilup' in reasons:
+                sub_url += ', <a href="https://cmsweb.cern.ch/reqmgr2/data/request?mc_pileup=%s&mask=RequestName&mask=RequestStatus">secondary</a>'%(ds_name)                
+            table+="<tr><td>%s</td><td>%d</td><td><ul>%s</ul></td></tr>\n"%( sub_url, item[1]['size'], "<li>".join([""]+reasons))
+            if reasons==['unlock']:
                 only_unlock.add(item[0])
         table+="</table></html>"
         eosFile('%s/remaining_%s.html'%(monitor_dir,site),'w').write( table ).close()
 
         change_dataops_subs_to_anaops_once_unlocked= False
         invalidate_anything_left_production_once_unlocked = False
+        print "checking on unlock only datasets"
         for item in only_unlock:
             tier = item.split('/')[-1]
             ds_status = getDatasetStatus(item)
