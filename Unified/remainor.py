@@ -131,7 +131,7 @@ if sys.argv[1] == 'parse':
         table += "<table border=1></thead><tr><th>Dataset</th><th>Size [GB]</th><th>Label</th></tr></thead>\n"
         only_unlock = set()
         for item in ld:
-            sub_url = '<a href="https://cmsweb.cern.ch/phedex/datasvc/xml/prod/subscriptions?dataset=%s">%s</a>'%(item[0], item[0])
+            sub_url = '<a href="https://cmsweb.cern.ch/phedex/datasvc/xml/prod/subscriptions?block=%s%%23*&node=%s">%s</a>'%(item[0], site, item[0])
             table+="<tr><td>%s</td><td>%d</td><td><ul>%s</ul></td></tr>\n"%( sub_url, item[1]['size'], "<li>".join([""]+item[1]['reasons']))
             if item[1]['reasons']==['unlock']:
                 only_unlock.add(item[0])
