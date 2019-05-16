@@ -219,10 +219,10 @@ def completor(url, specific):
             if priority >= jp and delay >= jd: pop_a_jira = True
 
         if pop_a_jira and JC:
-            j,reopened,just_created = JC.create_or_last( prepid = wfi.request['PrepID'],
-                                                    priority = wfi.request['RequestPriority'],
-                                                    label = 'Late',
-                                                    reopen = True)
+            j,reopened,just_created = JC.wf_create_or_last( prepid = wfi.request['PrepID'],
+                                                            priority = wfi.request['RequestPriority'],
+                                                            label = 'Late',
+                                                            reopen = True)
             last_time = JC.last_time( j )
             since_last_ping = time.mktime(time.gmtime()) - last_time
             if since_last_ping > ping_on_jira or just_created:
