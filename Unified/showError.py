@@ -332,11 +332,12 @@ def parse_one(url, wfn, options=None):
     html+= '</center>'
     html += '<a href=https://cmsweb.cern.ch/reqmgr2/fetch?rid=%s>dts</a>, '%( wfn )
     html += '<a href=https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s>ac</a>, '% ( wfi.request['PrepID'])
-    html += '<a href=https://cms-gwmsmon.cern.ch/prodview/%s>Job Progress</a>, '%( wfn )
+    html += '<a href=https://cms-gwmsmon.cern.ch/prodview/%s>gwmsmon</a>, '%( wfn )
+    html += '<a href="https://cmsweb.cern.ch/couchdb/workqueue/_design/WorkQueue/_rewrite/elementsInfo?request=%s">WQE, </a>'%( wfn )
     r_type = wfi.request.get('OriginalRequestType', wfi.request.get('RequestType','NaT'))
     if r_type in ['ReReco']:
         html += '<a href=../datalumi/lumi.%s.html>Lumisection Summary</a>, '% wfi.request['PrepID']
-    html += '<a href="https://its.cern.ch/jira/issues/?jql=text~%s AND project = CMSCOMPPR" target="_blank">jira</a>,'% (wfi.request['PrepID'])
+    html += '<a href="https://its.cern.ch/jira/issues/?jql=text~%s AND project = CMSCOMPPR" target="_blank">jira</a>, '% (wfi.request['PrepID'])
     html += '<a href="https://vocms0113.cern.ch/seeworkflow/?workflow=%s">console</a>,'% wfn
     html += '<a href="http://vocms0276.cern.ch/tasks?page=1&filter=%s">new console</a>,'% wfn
     html += '<a href="http://wc-dev.cern.ch/tasks?page=1&filter=%s">dev console</a>'% wfn
