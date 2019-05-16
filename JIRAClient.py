@@ -34,14 +34,15 @@ class JIRAClient:
         last_comment_time = self.time_to_time(j.fields.comment.comments[-1].updated) if (hasattr(j.fields, 'comment') and j.fields.comment.comments) else self.created(j)
         return last_comment_time
 
-    def create_or_last(self, prepid, priority=None, label=None, reopen=False):
-        jiras = self.find( {'prepid' : prepid})
+    def create_or_last(self, find_spec, summary, description, priority=None, label=None, reopen=False):
+        jiras = self.find( find_spec )
         j = None
         created = False
         reopened = False
         if len(jiras)==0:
-            c_doc = { 'summary' : prepid,
-                      'description' : 'https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s \nAutomatic JIRA from unified'%( prepid )}
+            c_doc = { 'summary' : summary,
+                      'description' : description
+                      }
             if priority: c_doc['priority'] = priority
             if label: c_doc['label'] = label
             j = self.create(c_doc)
@@ -51,6 +52,24 @@ class JIRAClient:
             if reopen:
                 reopened = self.reopen( j.key )
         return j,reopened,created
+
+    def site_create_or_last(self, site, priority=None, label=None, reopen=False):
+        summmary = 'Site %s out of space'%( site )
+        return self.create_or_last( 
+            find_spec = {'summary' : summmary},
+            summary = summary,
+            description = 'https://cms-unified.web.cern.ch/cms-unified/remaining_%s.html \nAutomatic JIRA from unified'%( site ) ,
+            priority = priority,
+            label = label,
+            reopen = reopen)
+    def wf_create_or_last(self, prepid, priority=None, label=None, reopen=False):
+        return self.create_or_last( 
+            find_spec = {'prepid' : prepid},
+            summary = prepid,
+            description = 'https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s \nAutomatic JIRA from unified'%( prepid ),
+            priority = priority,
+            label = label,
+            reopen = reopen)
 
     def create(self , indications , do = True):
         fields = {
