@@ -15,6 +15,7 @@ def htmlor( caller = ""):
     if mlock(): return
 
     up = componentInfo(soft=['mcm','wtc','jira'])
+    JC = JIRAClient() if up.status.get('jira',True) else None
     if not up.check(): return 
 
     for backup in ['statuses.json','siteInfo.json','listProtectedLFN.txt','equalizor.json']:
@@ -1196,21 +1197,15 @@ chart_%s.draw(data_%s, {title: '%s %s / %s [TB]', pieHole:0.4, slices:{0:{color:
 
         
     ## make the locked/available donut chart
-    #donut_html = open('%s/locked.html'%monitor_dir,'w')
-    #tight_donut_html = open('%s/outofspace.html'%monitor_dir,'w')
-    #remain_reason_html = open('%s/remaining.html'%monitor_dir,'w')
     donut_html = eosFile('%s/locked.html'%monitor_dir)
     tight_donut_html = eosFile('%s/outofspace.html'%monitor_dir)
     remain_reason_html = eosFile('%s/remaining.html'%monitor_dir)
 
     tables = "\n".join([info[0] for site,info in chart_data.items()])
     draws = "\n".join([info[1] for site,info in chart_data.items()])
-    #divs = "\n".join([info[2] for site,info in chart_data.items()])
 
     oos_tables = "\n".join([info[0] for site,info in chart_data.items() if site in out_of_space])
     oos_draws = "\n".join([info[1] for site,info in chart_data.items() if site in out_of_space])
-    #oos_divs = "\n".join([info[2] for site,info in chart_data.items() if site in out_of_space])
-
     
     divs_table="<table border=0>"
     oos_divs_table="<table border=0>"
@@ -1221,6 +1216,7 @@ chart_%s.draw(data_%s, {title: '%s %s / %s [TB]', pieHole:0.4, slices:{0:{color:
     by_reason_all_sites = defaultdict(float)
     counting_oos = 0
     RDI = remainingDatasetInfo()
+    ping_JIRA_on_OOS_site = 7*24*60*60 # 7 days
     for c,site in enumerate(sorted(chart_data.keys())):
         rem=""
         bgcol = ""
@@ -1248,20 +1244,23 @@ chart_%s.draw(data_%s, {title: '%s %s / %s [TB]', pieHole:0.4, slices:{0:{color:
                     by_reason_at_site[site][ reason ]+= (info['size'] / 1024.)
                     by_reason_all_sites[ reason ] += (info['size'] / 1024.)
 
+            ## propagate the information to JIRA
+            if JC:
+                j,reopened,just_created = JC.site_create_or_last(
+                    site = site,
+                    label = 'Site',
+                    reopen = True)
+                last_time = JC.last_time( j )
+                since_last_ping = time.mktime(time.gmtime()) - last_time
+                site_comment = "The site is out of space for central processing"
+                if since_last_ping > ping_JIRA_on_OOS_site or just_created or reopened:
+                    JC.comment(j.key, site_comment)
 
     summary_content['out_of_space'] = counting_oos
 
     rem_chart_data = defaultdict(list)
     ## now make bar charts DATA per site
     for i_oos,site in enumerate(sorted(by_reason_at_site.keys())):
-#        rem_chart_data[site].append("""
-#var data_remain_%s = google.visualization.arrayToDataTable([
-#['Overall', 'Space in TB'],
-#%s
-#]);
-#"""%( site,
-#      ','.join(["['%s' , %s]"%( reason, by_reason_at_site[site][reason]) for reason in sorted(all_reasons)])))
-
         rem_chart_data[site].append("""
 var data_remain_%s = google.visualization.arrayToDataTable([
 ['Overall', %s],
@@ -1421,7 +1420,6 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s %s / %s [TB]'});
                     wake_up_draining=True
                     )
     AI.poll(acting=True)
-    JC = JIRAClient() if up.status.get('jira',True) else None
     now = time.mktime(time.gmtime())
     #####
     #speed_d = json.loads( eosRead('%s/speed_draining.json'%base_eos_dir))
