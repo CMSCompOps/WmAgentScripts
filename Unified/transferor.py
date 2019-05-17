@@ -421,7 +421,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                     wfh.sendLog('transferor',"The input is all fully in place at %s sites %s"%( len(prim_location), sorted(prim_location)))
                     continue
                 copies_needed = max(0,copies_needed - len(prim_location))
-                wfh.sendLog('transferor',"not counting existing copies ; now need %s"% copies_needed)
+                wfh.sendLog('transferor',"Counting existing copies ; now need %s"% copies_needed)
                 copies_being_made = [ sum([info['blocks'].keys().count(block) for site,info in destinations.items() if site in prim_destination]) for block in all_block_names]
 
                 latching_on_transfers = set()
@@ -474,7 +474,7 @@ def transferor(url ,specific = None, talk=True, options=None):
                 # reduce the number of copies required by the on-going full transfer : how do we bootstrap on waiting for them ??
                 #copies_needed = max(0,copies_needed - len(prim_destination))
                 copies_needed = max(0,copies_needed - min(copies_being_made))
-                wfh.sendLog('transferor', "Not counting the copies being made ; then need %s"% copies_needed)                    
+                wfh.sendLog('transferor', "Counting the copies being made ; then need %s"% copies_needed)                    
                 if copies_needed == 0:
                     wfh.sendLog('transferor', "The input is either fully in place or getting in full somewhere with %s"% latching_on_transfers)
                     can_go = True
