@@ -172,7 +172,10 @@ class SiteBuster(threading.Thread):
 
         print "checking on unlock only datasets"
         to_ddm = UC.get('tiers_to_DDM')
-        for item in only_unlock:
+        #look_at = list(only_unlock)
+        look_at = list(only_unlock)[:20]
+        #look_at = list([ds for ds in only_unlock if not ds.endswith('NANOAODSIM')])
+        for item in look_at:
             tier = item.split('/')[-1]
             ds_status = getDatasetStatus(item)
             print item,ds_status
