@@ -410,19 +410,25 @@ def transferor(url ,specific = None, talk=True, options=None):
 
                 ## get where the dataset is in full and completed
                 prim_location = [site for (site,info) in destinations.items() if info['completion']==100 and info['data_fraction']==1]
-                ## the rest is places it is going to be
-                #prim_destination = [site for site in destinations.keys() if not site in prim_location]
-                prim_destination = [site for (site,info) in destinations.items() if info['data_fraction']==1 and info['completion']!=100]
-                ## veto the site with no current disk space, for things that are not relval
-                prim_destination = [site for site in prim_destination if (SI.disk[site] or wfh.isRelval())]
-                
 
                 if len(prim_location) >= copies_needed:
                     wfh.sendLog('transferor',"The input is all fully in place at %s sites %s"%( len(prim_location), sorted(prim_location)))
                     continue
                 copies_needed = max(0,copies_needed - len(prim_location))
                 wfh.sendLog('transferor',"Counting existing copies ; now need %s"% copies_needed)
-                copies_being_made = [ sum([info['blocks'].keys().count(block) for site,info in destinations.items() if site in prim_destination]) for block in all_block_names]
+
+                ## the rest is places it is going to be
+                #prim_destination = [site for site in destinations.keys() if not site in prim_location]
+                #prim_destination = [site for (site,info) in destinations.items() if info['data_fraction']==1 and info['completion']!=100]
+                full_copy_destination = [site for (site,info) in destinations.items() if info['data_fraction']==1 and info['completion']!=100]
+                full_copy_destination = [site for site in full_copy_destination if any(SI.SE_to_CEs(site) in sites_allowed])]
+                partial_copy_destination = [site for (site,info) in destinations.items() if info['data_fraction']!=1 and info['completion']!=100]
+                partial_copy_destination = [site for site in partial_copy_destination if any([SI.SE_to_CEs(site) in sites_allowed])]
+                
+                ## veto the site with no current disk space, for things that are not relval
+                #prim_destination = [site for site in prim_destination if (SI.disk[site] or wfh.isRelval())]
+
+                copies_being_made = [ sum([info['blocks'].keys().count(block) for site,info in destinations.items() if site not in prim_location]) for block in all_block_names]
 
                 latching_on_transfers = set()
                 [latching_on_transfers.update(info['blocks'].values()) for site,info in destinations.items() if site in prim_destination]
