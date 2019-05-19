@@ -286,7 +286,10 @@ def stagor(url,specific =None, options=None):
                 print json.dumps( done_by_input[need] , indent=2)
                 readys[need] = True
             else:
-                wfi.sendLog('stagor',"%s is not ready \n%s"%(need,json.dumps( done_by_input[need] , indent=2)))
+                wfi.sendLog('stagor',"%s is not ready \n%s.\nWaiting for the following:"%(need,json.dumps( done_by_input[need] , indent=2)))
+                for request_id in done_by_input[need]:
+                    if not done_by_input[need][request_id]:
+                        wfi.sendLog('stagor',"https://cmsweb.cern.ch/phedex/prod/Request::View?request={}".format(request_id))
                 readys[need] = False
 
         if readys and all(readys.values()):
