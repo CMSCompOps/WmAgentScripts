@@ -1459,7 +1459,7 @@
   "RunIIAutumn18DRPremix": {
     "SecondaryLocation": [
       "T1_US_FNAL", 
-      "T2_US_Nebraska"
+      "T2_CH_CERN"
     ], 
     "fractionpass": 0.95, 
     "go": true, 
@@ -1495,7 +1495,9 @@
   "RunIIAutumn18FSPremix": {
     "SecondaryLocation": [
       "T1_US_FNAL", 
-      "T2_US_Nebraska"
+      "T2_US_Nebraska",
+      "T1_DE_KIT",
+      "T1_RU_JINR"
     ], 
     "SiteBlacklist": [
       "T2_CH_CERN_HLT"
