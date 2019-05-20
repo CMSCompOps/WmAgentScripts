@@ -2775,6 +2775,16 @@
     "secondary_AAA": true, 
     "tune": true
   }, 
+  "RunIISummer19UL18GEN": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "resize": "auto", 
+    "toDDM": [
+      "GEN"
+    ], 
+    "tune": true
+  }, 
   "RunIISummer19UL18MiniAOD": {
     "fractionpass": 0.95, 
     "go": false, 
