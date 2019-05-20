@@ -1422,6 +1422,19 @@
     }, 
     "resize": "auto"
   }, 
+  "Run3Summer19GS": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "resize": "auto", 
+    "tune": true
+  }, 
+  "Run3Summer19wmLHEGS": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "tune": true
+  }, 
   "RunIIAutumn18DR": {
     "fractionpass": 0.95, 
     "go": true, 
