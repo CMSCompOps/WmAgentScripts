@@ -1495,8 +1495,8 @@
   "RunIIAutumn18FSPremix": {
     "SecondaryLocation": [
       "T1_US_FNAL", 
-      "T2_US_Nebraska",
-      "T1_DE_KIT",
+      "T2_US_Nebraska", 
+      "T1_DE_KIT", 
       "T1_RU_JINR"
     ], 
     "SiteBlacklist": [
@@ -2589,6 +2589,16 @@
     "maxcopies": 1, 
     "resize": "auto", 
     "secondary_AAA": true, 
+    "tune": true
+  }, 
+  "RunIISummer19UL16GEN": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "resize": "auto", 
+    "toDDM": [
+      "GEN"
+    ], 
     "tune": true
   }, 
   "RunIISummer19UL16HLT": {
