@@ -1057,6 +1057,18 @@
     "lumisize": 1500, 
     "tune": true
   }, 
+  "PhaseIITDRSpring19GS": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "tune": true
+  }, 
+  "PhaseIITDRSpring19wmLHEGS": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "tune": true
+  }, 
   "PhaseISpring17DR": {
     "SiteBlacklist": [
       "T1_US_FNAL", 
