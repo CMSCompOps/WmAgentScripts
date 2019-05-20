@@ -2798,6 +2798,13 @@
     "lumisize": -1, 
     "maxcopies": 1
   }, 
+  "RunIISummer19UL18SIM": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "resize": "auto", 
+    "tune": true
+  }, 
   "RunIISummer19UL2017HLT": {
     "fractionpass": 0.95, 
     "go": false, 
