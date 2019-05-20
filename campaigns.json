@@ -2785,6 +2785,22 @@
     ], 
     "tune": true
   }, 
+  "RunIISummer19UL18HLT": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "overflow": {
+      "PU": {
+        "force": false, 
+        "max": 0, 
+        "pending": 0
+      }
+    }, 
+    "resize": "auto", 
+    "secondary_AAA": false, 
+    "tune": true
+  }, 
   "RunIISummer19UL18MiniAOD": {
     "fractionpass": 0.95, 
     "go": false, 
@@ -2803,6 +2819,16 @@
     "go": false, 
     "lumisize": -1, 
     "resize": "auto", 
+    "tune": true
+  }, 
+  "RunIISummer19UL18wmLHEGEN": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "resize": "auto", 
+    "toDDM": [
+      "GEN"
+    ], 
     "tune": true
   }, 
   "RunIISummer19UL2017HLT": {
