@@ -24,12 +24,15 @@
     "maxcopies": 1, 
     "partial_copy": 0.95
   }, 
-  "BParking05May2019": {
+  "BParking2019": {
     "custodial_override": [
       "DQMIO"
     ], 
     "fractionpass": 1, 
     "go": false, 
+    "labels": [
+      "05May2019"
+    ], 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
@@ -2795,22 +2798,6 @@
     "toDDM": [
       "GEN"
     ], 
-    "tune": true
-  }, 
-  "RunIISummer19UL18HLT": {
-    "fractionpass": 0.95, 
-    "go": false, 
-    "lumisize": -1, 
-    "maxcopies": 1, 
-    "overflow": {
-      "PU": {
-        "force": false, 
-        "max": 0, 
-        "pending": 0
-      }
-    }, 
-    "resize": "auto", 
-    "secondary_AAA": false, 
     "tune": true
   }, 
   "RunIISummer19UL18MiniAOD": {
