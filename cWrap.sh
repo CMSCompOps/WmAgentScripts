@@ -63,7 +63,7 @@ else
     echo $USER >> $emaillog
     echo $HOSTNAME >> $emaillog
     echo module $modulename>> $emaillog 
-    mail -s "[Ops] module "$modulename" failed" -a $emaillog cmsunified@cern.ch,thong@caltech.edu
+    mail -s "[Ops] module "$modulename" failed" cmsunified@cern.ch,thong@caltech.edu <<< $(emaillog)
 fi
 
 stop=`date +%s`
