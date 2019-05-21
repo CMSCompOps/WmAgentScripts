@@ -29,7 +29,7 @@
       "DQMIO"
     ], 
     "fractionpass": 1, 
-    "go": false, 
+    "go": true, 
     "labels": [
       "05May2019"
     ], 
