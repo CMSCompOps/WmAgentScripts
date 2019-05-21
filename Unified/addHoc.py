@@ -33,7 +33,7 @@ else:
                 print statuses
                 JC.close(t.key) ## uncomment to close JIRAs
                 continue
-         print t.key,statuses
+        print t.key,statuses
 
 UC = unifiedConfiguration()
 
