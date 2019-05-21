@@ -14,8 +14,8 @@ from JIRAClient import JIRAClient
 try:
     JC = JIRAClient()
 except Exception as e:
-    print(e)
-    sendLog('addHoc',e,level='critical')
+    print(str(e))
+    sendLog('addHoc',str(e),level='critical')
 else:    
     those = JC.find({'status' : '!CLOSED'})
     for t in those:
