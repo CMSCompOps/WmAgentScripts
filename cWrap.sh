@@ -53,10 +53,11 @@ python $* &>> $log
 if [ $? == 0 ]; then
     echo "finished" >> $log
 else
-    emaillog=$log.log
-    failed_pid=$!
     echo -e "\nAbnormal termination with exit code $?" >> $log
     top -n1  -o %MEM -c >> $log
+    
+    emaillog=$log.txt
+    failed_pid=$!
     echo "Abnormal termination, check $log" > $emaillog
     echo "https://cms-unified.web.cern.ch/cms-unified/logs/$s_dated_log" >> $emaillog
     echo $failed_pid >> $emaillog
