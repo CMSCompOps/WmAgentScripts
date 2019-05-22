@@ -124,7 +124,7 @@ def injector(url, options, specific):
 
     if cannot_inject:
         #sendEmail('workflow duplicates','These workflow cannot be added in because of duplicates \n\n %s'%( '\n'.join(cannot_inject)))
-        sendLog('injector','These workflow cannot be added in because of duplicates \n\n %s'%( '\n'.join(cannot_inject)), level='warning')
+        sendLog('injector','These workflow cannot be added in because of duplicates \n\n %s'%( '\n'.join(cannot_inject)), level='critical')
         
     for wf in to_convert:
         os.system('./Unified/rejector.py --clone --to_step --comments \"Transform to StepChain\" %s'% wf)
