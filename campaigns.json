@@ -2772,7 +2772,7 @@
   }, 
   "RunIISummer19UL17SIM": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "resize": "auto", 
     "tune": true
