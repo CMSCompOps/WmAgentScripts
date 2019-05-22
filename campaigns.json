@@ -1592,6 +1592,12 @@
     "lumisize": -1, 
     "maxcopies": 1
   }, 
+  "RunIIAutumn18NanoAODv5": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1
+  }, 
   "RunIIAutumn18RECOBParking": {
     "fractionpass": 0.95, 
     "go": true, 
