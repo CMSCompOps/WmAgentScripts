@@ -7658,8 +7658,8 @@ class workflowInfo:
                                                                                                                                                          avg_events_per_job * sizeperevent * efficiency_factor / (1024.**2 ),
                                                                                                                                                          GB_space_limit,
                                                                                                                                                          this_max_events_per_lumi)
-							sendLog('assignor', msg)
-							print(msg)
+			    sendLog('assignor', msg)
+			    print(msg)
                             modified_split_for_task = spl
                             modified_split_for_task['splitParams']['events_per_job'] = this_max_events_per_lumi
                             modified_splits.append( modified_split_for_task )
