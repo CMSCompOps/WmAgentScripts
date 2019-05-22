@@ -7630,7 +7630,8 @@ class workflowInfo:
                                                                                                                                                      time_per_input_lumi / (60.*60.),
                                                                                                                                                      job_timeout), level='critical')
                             this_max_events_per_lumi = int( job_target*60.*60. / timeperevent)
-                            max_events_per_lumi.append( this_max_events_per_lumi ) # For time constraint, don't take filter efficiency into account (B/c it's already factored in TimePerEvent?)
+                            max_events_per_lumi.append( this_max_events_per_lumi / efficiency_factor) # to be tested
+
                         else:
                             pass
 
