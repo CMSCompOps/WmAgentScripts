@@ -10,13 +10,11 @@ import time
 import random
 from JIRAClient import JIRAClient
 
+up = componentInfo(soft=['mcm','wtc','jira'])
+if not up.check(): sys.exit(0)
 
-try:
-    JC = JIRAClient()
-except Exception as e:
-    print(str(e))
-    sendLog('addHoc',str(e),level='critical')
-else:    
+JC = JIRAClient() if up.status.get('jira',False) else None
+if JC:
     those = JC.find({'status' : '!CLOSED'})
     for t in those:
         s= t.fields.summary
@@ -68,8 +66,6 @@ UC = unifiedConfiguration()
 #os.system('Unified/assignor.py --from_status staging RunIISummer16DR80Premix')
 #os.system('Unified/assignor.py --from_status staging RunIISummer16DR80-')
 
-up = componentInfo(soft=['mcm','wtc','jira'])
-if not up.check(): sys.exit(0)
 
 url = reqmgr_url
 
