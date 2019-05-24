@@ -7613,7 +7613,9 @@ class workflowInfo:
                     #    #max_events_per_lumi.append( int(avg_events_per_job*0.75) ) ##reducing
                     #    max_events_per_lumi.append( int(avg_events_per_job*0.75) ) ##reducing
 
-
+		    # Time_per_event as input from PPD does not take into account of the filter efficiency. 
+		    # Therefore the time constraint must be number of actual events that the job needs to run on
+		    # ie, before the filter efficiency, not the number of output events (ie, after the filter efficiency).
                     if timeperevent:
                         job_timeout = 45. ## hours
                         job_target = 8. ## hours
@@ -7635,7 +7637,7 @@ class workflowInfo:
                         else:
                             pass
 
-
+                    # Size constraint only applies to the output; therefore it should take filter efficiency into account.
                     if sizeperevent:# and (avg_events_per_job * sizeperevent ) > (GB_space_limit*1024.**2):
                         size_per_input_lumi = events_per_lumi_at_this_task*sizeperevent*efficiency_factor
                         this_max_events_per_lumi = int( (GB_space_limit*1024.**2) / sizeperevent / efficiency_factor) # Take filter eff for size constraint of output
