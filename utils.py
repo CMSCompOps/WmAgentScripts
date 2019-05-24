@@ -7605,7 +7605,7 @@ class workflowInfo:
                         t = find_task_dict( t['InputTask'] )
                         if 'FilterEfficiency' in t:
                             efficiency_factor *= t['FilterEfficiency']
-                    events_per_lumi_at_this_task = events_per_lumi * efficiency_factor
+                    events_per_lumi_at_this_task = events_per_lumi 
                     all_filter_efficiency.append(efficiency_factor)
 			
                     #if (events_per_lumi_at_this_task > avg_events_per_job):
@@ -7637,7 +7637,7 @@ class workflowInfo:
 
 
                     if sizeperevent:# and (avg_events_per_job * sizeperevent ) > (GB_space_limit*1024.**2):
-                        size_per_input_lumi = events_per_lumi_at_this_task*sizeperevent
+                        size_per_input_lumi = events_per_lumi_at_this_task*sizeperevent*efficiency_factor
                         this_max_events_per_lumi = int( (GB_space_limit*1024.**2) / sizeperevent / efficiency_factor) # Take filter eff for size constraint of output
                         if (size_per_input_lumi > (GB_space_limit*1024.**2)):
                             ## derive a value for the lumisection
