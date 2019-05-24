@@ -33,7 +33,7 @@ Generate your proxy::
 
 Type your key password and should display something like this::
 
-    Contacting voms.cern.ch:15002 [/DC=ch/DC=cern/OU=computers/CN=voms.cern.ch] "cms"... Remote VOMS server contacted succesfully. Created proxy in /tmp/x509up_uXXXX. Your proxy is valid until Thu Oct 09 21:53:28 CEST 2014
+    Contacting voms.cern.ch:15002 [/DC=ch/DC=cern/OU=computers/CN=voms.cern.ch] "cms"... Remote VOMS server contacted succesfully. Created proxy in /tmp/x509up_uXXXX. Your proxy is valid until Fri May 24 21:53:28 CEST 2019
 
 Export the X509_USER_PROXY variable to the environment (so it can be used by python), **use proxy location in the previous step**::
 
@@ -48,7 +48,7 @@ Loading WMAgent Environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Some of the scripts need WMAgent libraries, which at the moment are only installed on WMAgent machines.
-(i.e. vocms049 ... vocms174)
+(i.e. vocms0275)
 Log in to the machine and type::
 
     source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh
