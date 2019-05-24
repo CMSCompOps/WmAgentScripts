@@ -2735,7 +2735,7 @@
   }, 
   "RunIISummer19UL17GEN": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "resize": "auto", 
     "toDDM": [
