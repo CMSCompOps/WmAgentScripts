@@ -2939,6 +2939,12 @@
     "secondary_AAA": false, 
     "tune": true
   }, 
+  "RunIISummer19ULPrePremix": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "tune": true
+  }, 
   "RunIISummer19ULRECO": {
     "fractionpass": 0.95, 
     "go": false, 
