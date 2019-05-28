@@ -229,7 +229,7 @@ def equalizor(url , specific = None, options=None):
         return (N)*quanta
     def s_quantize( value, quanta):
         s = str(quantize( value, quanta ))
-        print value,"==quantized(",quanta,")==>",s
+        #print value,"==quantized(",quanta,")==>",s
         return s
         #return str(quantize( value, quanta ))
 
