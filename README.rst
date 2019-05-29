@@ -9,14 +9,10 @@ Setting Up Scripts
 Download the Scripts
 ~~~~~~~~~~~~~~~~~~~~
 
-The easiest wy to download the WmAgentScripts is using git on lxplus or your own machine::
+The easiest way to download the WmAgentScripts is using git on lxplus or your own local machine::
 
     git clone https://github.com/CMSCompOps/WmAgentScripts.git
 
-.. Note::
-
-  Does this work? I know a lot of things depend on dbsClient.
-  OpsSpace tries to install this, but it's not tested yet.
 
 Creating Proxy
 ~~~~~~~~~~~~~~
@@ -42,23 +38,23 @@ Export the X509_USER_PROXY variable to the environment (so it can be used by pyt
 This is a one line command for all this procedure::
 
     export X509_USER_PROXY=$(voms-proxy-init -voms cms | grep Created | cut -c18- | tr -d '.')
+    
+Some scripts also need some special PYTHON packages. So use this one line command to export them::
+
+    export PYTHONPATH=$PYTHONPATH:/usr/lib64/python2.7/site-packages
 
 
 Loading WMAgent Environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Some of the scripts need WMAgent libraries, which at the moment are only installed on WMAgent machines.
-(i.e. vocms0275)
+
 Log in to the machine and type::
 
     source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh
 
 Scripts that interact with the Request Manager
 ----------------------------------------------
-
-.. Note::
-
-   I'll leave this up to you guys, but here's an example of how to display the help message.
 
 assign.py
 ~~~~~~~~~
