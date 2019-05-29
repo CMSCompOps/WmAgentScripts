@@ -2738,11 +2738,11 @@
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto", 
-    "secondary_AAA": false, 
-    "tune": true,
     "secondaries": {
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL17SIM-106X_mc2017_realistic_v3-v1/SIM": {}
-    }
+    }, 
+    "secondary_AAA": false, 
+    "tune": true
   }, 
   "RunIISummer19UL17DIGIPremix": {
     "fractionpass": 0.95, 
@@ -2946,19 +2946,19 @@
     "fractionpass": 0.95, 
     "go": false, 
     "lumisize": -1, 
-    "tune": true,
     "secondaries": {
+      "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL17SIM-106X_mc2017_realistic_v3-v1/SIM": {}, 
       "/MinBias_TuneCP5_14TeV-pythia8/PhaseIITDRSpring19GS-106X_upgrade2023_realistic_v2_ext1-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T2_DE_RWTH",
-          "T1_IT_CNAF",
-          "T1_DE_KIT",
-          "T2_US_Wisconsin",
+          "T2_DE_RWTH", 
+          "T1_IT_CNAF", 
+          "T1_DE_KIT", 
+          "T2_US_Wisconsin", 
           "T2_US_Florida"
         ]
-      },
-     "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL17SIM-106X_mc2017_realistic_v3-v1/SIM": {}
-   }
+      }
+    }, 
+    "tune": true
   }, 
   "RunIISummer19ULRECO": {
     "fractionpass": 0.95, 
@@ -3436,6 +3436,18 @@
     "go": true, 
     "parameters": {
       "EventsPerLumi": 25
+    }
+  }, 
+  "UltraLegacy2017": {
+    "custodial_override": [
+      "DQMIO"
+    ], 
+    "fractionpass": 1, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "overflow": {
+      "PRIM": {}
     }
   }, 
   "Upg2017Summer15DR": {
