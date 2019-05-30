@@ -7607,7 +7607,8 @@ class workflowInfo:
                     filter_efficiency_at_this_task = 1.
                     if 'FilterEfficiency' in t:
                         filter_efficiency_at_this_task *= t['FilterEfficiency']
-                    
+                    all_filter_efficiency.append(filter_efficiency_at_this_task)
+                            
                     ## climb up all task to take the filter eff of the input tasks into account
                     efficiency_factor = 1.
                     while t and 'InputTask' in t:
