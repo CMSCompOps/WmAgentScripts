@@ -7701,10 +7701,12 @@ class workflowInfo:
                     current_split = root_split.get('splitParams',{}).get('events_per_lumi',None)
 		    
                     # Safeguard for small lumi:
+                    UC = unifiedConfiguration()
+                    min_lumi = UC.get("min_events_per_lumi_output")
                     if current_split:
                         effective_output_lumi = min(current_split, min(max_events_per_lumi)) * efficiency_factor
-                        if effective_output_lumi < 50:
-                            sendLog("assignor","{} will get {} events per lumi in output. Smaller than 50 is troublesome.".format(root_split['taskName'], effective_output_lumi), level='critical')
+                        if effective_output_lumi < min_lumi:
+                            sendLog("assignor","{} will get {} events per lumi in output. Smaller than {} is troublesome.".format(root_split['taskName'], effective_output_lumi, min_lumi), level='critical')
                             hold = True
                         
                         if current_split > min(max_events_per_lumi):

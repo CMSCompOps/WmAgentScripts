@@ -171,6 +171,10 @@
    "value" : 1.0,
    "description" : "completion fraction above which to announce dataset"
  },
+ "min_events_per_lumi_output" : {
+   "value" : 50,
+   "description": "minimum of events per lumisection allowed in the output"
+ },    
  "cumulative_fraction_pass": {
    "value" : false,
    "description" : "Whether or not the pass threshold per campaign are counted as is, or cumulatively."
