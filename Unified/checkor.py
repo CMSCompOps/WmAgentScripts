@@ -936,7 +936,7 @@ class CheckBuster(threading.Thread):
         time_point("checked output size", sub_lap=True)
 
         lumi_upper_limit = {}
-        lumi_lower_limit = 50 ## make this a unified parameter if you want
+        lumi_lower_limit = UC.get("min_events_per_lumi_output") 
         for output in wfi.request['OutputDatasets']:
             upper_limit = 301.
             campaign = campaigns[output]
