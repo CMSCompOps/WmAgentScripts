@@ -7557,7 +7557,6 @@ class workflowInfo:
             events_per_lumi=None
             events_per_lumi_inputs = None
             max_events_per_lumi=[]
-            all_filter_efficiency=[1.]
 
             def find_task_dict( name ):
                 i_task=1
@@ -7604,7 +7603,6 @@ class workflowInfo:
                     filter_efficiency_at_this_task = 1.
                     if 'FilterEfficiency' in t:
                         filter_efficiency_at_this_task *= t['FilterEfficiency']
-                    all_filter_efficiency.append(filter_efficiency_at_this_task)
                             
                     ## climb up all task to take the filter eff of the input tasks into account
                     efficiency_factor = 1.
@@ -7696,7 +7694,7 @@ class workflowInfo:
 		    
                     # Safeguard for small lumi:
                     if current_split:
-                        effective_output_lumi = min(current_split, min(max_events_per_lumi)) * min(all_filter_efficiency)
+                        effective_output_lumi = min(current_split, min(max_events_per_lumi)) * efficiency_factor
                         if effective_output_lumi < 50:
                             sendLog("assignor","{} will get {} events per lumi in output. Smaller than 50 is troublesome.".format(root_split['taskName'], effective_output_lumi), level='critical')
                             hold = True
