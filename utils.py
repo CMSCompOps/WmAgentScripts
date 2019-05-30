@@ -3372,7 +3372,15 @@ def findLateFiles(url, datasetname, going_to=None):
             for latency in destination['blocklatency']:
                 for flatency in latency['filelatency']:
                     if not flatency['time_at_destination']:
-                        print flatency['lfn'],"is not coming out from",flatency["from_node"],"to",destination['name'],"since", time.asctime(time.gmtime(flatency['time_first_attempt'])),"since last",time.asctime(time.gmtime(flatency['time_latest_attempt'])),"after",flatency['attempts'],"attempts"
+                        msg = "{} is not coming out from {} to {} since {}. Last try at {} after {} attempts".format(flatency['lfn'], 
+														     flatency["from_node"], 
+														     destination['name'], 
+														     time.asctime(time.gmtime(flatency['time_first_attempt'])),
+														     time.asctime(time.gmtime(flatency['time_latest_attempt'])),
+														     flatency['attempts'])
+			
+			print(msg)
+			sendLog('closor',msg,level='critical')											     
                         ret.append({
                                 'file' : flatency['lfn'],
                                 'from' : flatency["from_node"],
