@@ -7565,7 +7565,7 @@ class workflowInfo:
             events_per_lumi=None
             events_per_lumi_inputs = None
             max_events_per_lumi=[]
-	    all_filter_efficiency=[1.]
+
             def find_task_dict( name ):
                 i_task=1
                 while True:
@@ -7575,7 +7575,7 @@ class workflowInfo:
                     if self.request[tname]['TaskName'] == name:
                         return copy.deepcopy( self.request[tname] )
                 return None
-
+                        
             for spl in splits:
                 #print spl
                 task = spl['splitParams']
@@ -7588,8 +7588,6 @@ class workflowInfo:
                     #GB_space_limit = 10000 * ncores
                     print "the output is not kept, but keeping the output size to",GB_space_limit
 
-                #print tname,ncores
-                #print GB_space_limit
                 sizeperevent = t.get('SizePerEvent',None)
                 for keyword,factor in output_size_correction.items():
                     if keyword in spl['taskName']:
@@ -7607,97 +7605,111 @@ class workflowInfo:
                 ## avg_events_per_job is base on 8h. we could probably put some margin
                 if events_per_lumi and 'events_per_job' in task:
                     avg_events_per_job = task['events_per_job']
-                    ## climb up all task to take the filter eff into account
+                    
+                    # For the size constraint, need both the filter efficiency of the previous task (efficiency_factor) and of the current task (filter_efficiency_at_this_task). 
+                    # The output size of the current task need to take into account of both
+                    filter_efficiency_at_this_task = 1.
+                    if 'FilterEfficiency' in t:
+                        filter_efficiency_at_this_task *= t['FilterEfficiency']
+                            
+                    ## climb up all task to take the filter eff of the input tasks into account
                     efficiency_factor = 1.
                     while t and 'InputTask' in t:
                         t = find_task_dict( t['InputTask'] )
                         if 'FilterEfficiency' in t:
                             efficiency_factor *= t['FilterEfficiency']
-                    events_per_lumi_at_this_task = events_per_lumi * efficiency_factor
-                    all_filter_efficiency.append(efficiency_factor)
+                    
+                    # efficiency_factor is the accummulate filter efficiency of the input tasks, not the current task
+                    events_per_lumi_at_this_task = events_per_lumi * efficiency_factor  
+                    # This is the input events per lumi of the task, after taking filter efficiency of the previous tasks into account
 			
                     #if (events_per_lumi_at_this_task > avg_events_per_job):
                     #    print "The default splitting will not work for subsequent steps",events_per_lumi,"[in the input dataset] amounts to",events_per_lumi_at_this_task,"[at this task]>",avg_events_per_job,"[splitting for the task]"
                     #    #max_events_per_lumi.append( int(avg_events_per_job*0.75) ) ##reducing
                     #    max_events_per_lumi.append( int(avg_events_per_job*0.75) ) ##reducing
 
-
                     if timeperevent:
                         job_timeout = 45. ## hours
                         job_target = 8. ## hours
                         time_per_input_lumi = events_per_lumi_at_this_task*timeperevent
+
                         if (time_per_input_lumi > (job_timeout*60*60)): ##45h
                             ## even for one lumisection, the job will time out.
-                            print "The running time of task %s is expected to be too large even for one lumi section: %d x %.2f s = %.2f h > %d h"%( tname,
+                            msg = "The running time of task {} is expected to be too large even for one lumi section: {} x {:.2f} s = {:.2f} h > {} h".format( tname,
                                                                                                                                                      events_per_lumi_at_this_task, timeperevent,
                                                                                                                                                      time_per_input_lumi / (60.*60.),
                                                                                                                                                      job_timeout)
-				
-			    sendLog('assignor',"The running time of task %s is expected to be too large even for one lumi section: %d x %.2f s = %.2f h > %d h"%( tname,
-                                                                                                                                                     events_per_lumi_at_this_task, timeperevent,
-                                                                                                                                                     time_per_input_lumi / (60.*60.),
-                                                                                                                                                     job_timeout), level='critical')
+				            
+                            sendLog('assignor', msg)  # We don't hold the workflow here so no need to send critical message
+
                             this_max_events_per_lumi = int( job_target*60.*60. / timeperevent)
-                            max_events_per_lumi.append( this_max_events_per_lumi / efficiency_factor) # to be tested
+                            # This is the possible events per lumi for this task, after taking filter efficiencies of the input tasks into account
+
+                            max_events_per_lumi.append(this_max_events_per_lumi / efficiency_factor) 
+                            # This is the possible events per lumi for the whole chain, before taking any filter efficiency into account
 
                         else:
                             pass
-
-
+                    
                     if sizeperevent:# and (avg_events_per_job * sizeperevent ) > (GB_space_limit*1024.**2):
-                        size_per_input_lumi = events_per_lumi_at_this_task*sizeperevent
-                        this_max_events_per_lumi = int( (GB_space_limit*1024.**2) / sizeperevent / efficiency_factor) # Take filter eff for size constraint of output
+                        size_per_input_lumi = events_per_lumi_at_this_task * sizeperevent * filter_efficiency_at_this_task
+                        # This is the output size of this task, after taking filter efficiencies of the input task and current task into account
+
+                        this_max_events_per_lumi = int( (GB_space_limit*1024.**2) / sizeperevent / efficiency_factor / filter_efficiency_at_this_task) 
+                        # This is the possible events per lumi for the whole chain, before taking any filter efficiency into account
+                        
                         if (size_per_input_lumi > (GB_space_limit*1024.**2)):
                             ## derive a value for the lumisection
-                            print "The output size task %s is expected to be too large : %.2f GB > %f GB even for one lumi (effective lumi size is ~%d), should go as low as %d"% ( tname ,
+                            msg = "The output size task %s is expected to be too large : %.2f GB > %f GB even for one lumi (effective lumi size is ~%d), should go as low as %d"% ( tname ,
                                                                                                                                                 size_per_input_lumi / (1024.**2 ),
                                                                                                                                                 GB_space_limit,
                                                                                                                                                 events_per_lumi_at_this_task,
                                                                                                                                                 this_max_events_per_lumi)
-			    sendLog('assignor', "The output size task %s is expected to be too large : %.2f GB > %f GB even for one lumi (effective lumi size is ~%d), should go as low as %d"% ( tname ,
-                                                                                                                                                size_per_input_lumi / (1024.**2 ),
-                                                                                                                                                GB_space_limit,
-                                                                                                                                                events_per_lumi_at_this_task,
-                                                                                                                                                this_max_events_per_lumi), level='critical')
+                            sendLog('assignor', msg) # We don't hold the workflow here so no need to send critical message
+
                             max_events_per_lumi.append( this_max_events_per_lumi ) ## adding this to that later on we can check and adpat the split 0
-                        elif (avg_events_per_job * sizeperevent * efficiency_factor) > (GB_space_limit*1024.**2):
-                            ## should still change the avg_events_per_job setting of that task
-                            msg = "The output size of task %s is expected to be too large : %d x %.2f kB x %.5f = %.2f GB > %f GB. Reducing to %d "% ( tname ,
-                                                                                                                                                         avg_events_per_job, sizeperevent, efficiency_factor,
-                                                                                                                                                         avg_events_per_job * sizeperevent * efficiency_factor / (1024.**2 ),
-                                                                                                                                                         GB_space_limit,
-                                                                                                                                                         this_max_events_per_lumi)
-			    sendLog('assignor', msg)
-			    print(msg)
+
+                        elif (avg_events_per_job * sizeperevent * filter_efficiency_at_this_task) > (GB_space_limit*1024.**2):
+                            # avg_events_per_job is the current events_per_job setting in this task dict
+                            # should still change the avg_events_per_job setting of that task
+                            
+                            msg = "The output size of task %s is expected to be too large : %d x %.2f kB * %.4f = %.2f GB > %f GB. Reducing to %d "% ( tname ,
+                                                                                                                                                 avg_events_per_job, sizeperevent, filter_efficiency_at_this_task, 
+                                                                                                                                                 avg_events_per_job * sizeperevent * filter_efficiency_at_this_task / (1024.**2),
+                                                                                                                                                 GB_space_limit,
+                                                                                                                                                 this_max_events_per_lumi)
+                            sendLog('assignor', msg) # We don't hold the workflow here so no need to send critical message
+                            print(msg)
+
                             modified_split_for_task = spl
                             modified_split_for_task['splitParams']['events_per_job'] = this_max_events_per_lumi
                             modified_splits.append( modified_split_for_task )
                             max_events_per_lumi.append( this_max_events_per_lumi ) ## adding this to that later on we can check and adpat the split 0
-
+            
             if max_events_per_lumi:
                 if events_per_lumi_inputs:
                     if min(max_events_per_lumi)<events_per_lumi_inputs:
                         ## there was an input dataset somewhere and we cannot break down that lumis, except by changing to EventBased
-                        print "the smallest value of %s is still smaller than %s evt/lumi of the input dataset"%(max_events_per_lumi, events_per_lumi_inputs)
-			sendLog('assignor', 'the smallest value of %s is still smaller than %s evt/lumi of the input dataset'%(max_events_per_lumi, events_per_lumi_inputs), level='critical')
+                        msg = "The smallest value of %s is still smaller than %s evt/lumi of the input dataset"%(max_events_per_lumi, events_per_lumi_inputs)
+                        sendLog('assignor', msg, level='critical')
                         hold = True
                     else:
                         #hold = True #to be removed
-                        print "the smallest value of %s is ok compared to %s evt/lumi in the input"%(max_events_per_lumi, events_per_lumi_inputs)
+                        print "The smallest value of %s is ok compared to %s evt/lumi in the input"%(max_events_per_lumi, events_per_lumi_inputs)
                 else:
                     root_split = splits[0]
                     current_split = root_split.get('splitParams',{}).get('events_per_lumi',None)
 		    
-		    # Safeguard for small lumi:
-		    if current_split:
-			effective_output_lumi = min(current_split, min(max_events_per_lumi)) * min(all_filter_efficiency)
-			if effective_output_lumi < 50:
-			    sendLog("assignor","{} will get {} events per lumi in output. Smaller than 50 is troublesome.".format(root_split['taskName'], effective_output_lumi), level='critical')
-			    hold = True
-
-			if current_split > min(max_events_per_lumi):
-				root_split['splitParams']['events_per_lumi'] = min(max_events_per_lumi)
-				modified_splits.append( root_split )
+                    # Safeguard for small lumi:
+                    if current_split:
+                        effective_output_lumi = min(current_split, min(max_events_per_lumi)) * efficiency_factor
+                        if effective_output_lumi < 50:
+                            sendLog("assignor","{} will get {} events per lumi in output. Smaller than 50 is troublesome.".format(root_split['taskName'], effective_output_lumi), level='critical')
+                            hold = True
+                        
+                        if current_split > min(max_events_per_lumi):
+                            root_split['splitParams']['events_per_lumi'] = min(max_events_per_lumi)
+                            modified_splits.append( root_split )
 
         ## the return list can easily be used to call the splitting api of reqmgr2
         return hold,modified_splits
