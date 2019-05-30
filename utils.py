@@ -7581,9 +7581,6 @@ class workflowInfo:
                     #GB_space_limit = 10000 * ncores
                     print "the output is not kept, but keeping the output size to",GB_space_limit
 
-                print tname,ncores
-                print t
-                #print GB_space_limit
                 sizeperevent = t.get('SizePerEvent',None)
                 for keyword,factor in output_size_correction.items():
                     if keyword in spl['taskName']:
@@ -7613,7 +7610,6 @@ class workflowInfo:
                     efficiency_factor = 1.
                     while t and 'InputTask' in t:
                         t = find_task_dict( t['InputTask'] )
-                        print(t)
                         if 'FilterEfficiency' in t:
                             efficiency_factor *= t['FilterEfficiency']
                     
@@ -7710,9 +7706,6 @@ class workflowInfo:
                             modified_splits.append( root_split )
 
         ## the return list can easily be used to call the splitting api of reqmgr2
-        print "hold: ",hold
-        print "modified split ",modified_splits
-        sys.exit()
         return hold,modified_splits
 
 
