@@ -7569,7 +7569,7 @@ class workflowInfo:
                         return copy.deepcopy( self.request[tname] )
                 return None
             
-            for step, spl in enumerate(splits):
+            for spl in splits:
                 #print spl
                 task = spl['splitParams']
                 tname = spl['taskName'].split('/')[-1]
