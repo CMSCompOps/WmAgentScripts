@@ -7575,6 +7575,10 @@ class workflowInfo:
                     if self.request[tname]['TaskName'] == name:
                         return copy.deepcopy( self.request[tname] )
                 return None
+            
+            # Safeguard for small lumi:
+            UC = unifiedConfiguration()
+            min_lumi = UC.get("min_events_per_lumi_output")
                         
             for spl in splits:
                 #print spl
@@ -7658,6 +7662,9 @@ class workflowInfo:
                         this_max_events_per_lumi = int( (GB_space_limit*1024.**2) / sizeperevent / efficiency_factor / filter_efficiency_at_this_task) 
                         # This is the possible events per lumi for the whole chain, before taking any filter efficiency into account
                         
+                        this_max_events_per_job = int( (GB_space_limit*1024.**2) / sizeperevent / filter_efficiency_at_this_task) 
+                        # This is the allowed events per job for this task, not relevant to filter efficiency of the previous task
+                        
                         if (size_per_input_lumi > (GB_space_limit*1024.**2)):
                             ## derive a value for the lumisection
                             msg = "The output size task %s is expected to be too large : %.2f GB > %f GB even for one lumi (effective lumi size is ~%d), should go as low as %d"% ( tname ,
@@ -7667,7 +7674,7 @@ class workflowInfo:
                                                                                                                                                 this_max_events_per_lumi)
                             sendLog('assignor', msg) # We don't hold the workflow here so no need to send critical message
 
-                            max_events_per_lumi.append( this_max_events_per_lumi ) ## adding this to that later on we can check and adpat the split 0
+                            max_events_per_lumi.append( this_max_events_per_lumi ) ## adding this to that later on we can check and adapt the split 0
 
                         elif (avg_events_per_job * sizeperevent * filter_efficiency_at_this_task) > (GB_space_limit*1024.**2):
                             # avg_events_per_job is the current events_per_job setting in this task dict
@@ -7677,15 +7684,23 @@ class workflowInfo:
                                                                                                                                                  avg_events_per_job, sizeperevent, filter_efficiency_at_this_task, 
                                                                                                                                                  avg_events_per_job * sizeperevent * filter_efficiency_at_this_task / (1024.**2),
                                                                                                                                                  GB_space_limit,
-                                                                                                                                                 this_max_events_per_lumi)
+                                                                                                                                                 this_max_events_per_job)
                             sendLog('assignor', msg) # We don't hold the workflow here so no need to send critical message
                             print(msg)
 
                             modified_split_for_task = spl
-                            modified_split_for_task['splitParams']['events_per_job'] = this_max_events_per_lumi
+                            modified_split_for_task['splitParams']['events_per_job'] = this_max_events_per_job
                             modified_splits.append( modified_split_for_task )
-                            max_events_per_lumi.append( this_max_events_per_lumi ) ## adding this to that later on we can check and adpat the split 0
+                            max_events_per_lumi.append( this_max_events_per_lumi ) ## adding this to that later on we can check and adapt the split 0
+
+                    # Safeguard for small lumi per task:
+                    if max_events_per_lumi:
+                        effective_output_lumi_at_this_task = min(max_events_per_lumi) * filter_efficiency_at_this_task
+                        if effective_output_lumi_at_this_task < min_lumi:
+                            sendLog("assignor","{} will get {} events per lumi in output. Smaller than {} is troublesome.".format(tname, effective_output_lumi_at_this_task, min_lumi), level='critical')
+                            hold = True
             
+            # Double check across the whole chain:
             if max_events_per_lumi:
                 if events_per_lumi_inputs:
                     if min(max_events_per_lumi)<events_per_lumi_inputs:
@@ -7700,15 +7715,7 @@ class workflowInfo:
                     root_split = splits[0]
                     current_split = root_split.get('splitParams',{}).get('events_per_lumi',None)
 		    
-                    # Safeguard for small lumi:
-                    UC = unifiedConfiguration()
-                    min_lumi = UC.get("min_events_per_lumi_output")
                     if current_split:
-                        effective_output_lumi = min(current_split, min(max_events_per_lumi)) * efficiency_factor
-                        if effective_output_lumi < min_lumi:
-                            sendLog("assignor","{} will get {} events per lumi in output. Smaller than {} is troublesome.".format(root_split['taskName'], effective_output_lumi, min_lumi), level='critical')
-                            hold = True
-                        
                         if current_split > min(max_events_per_lumi):
                             root_split['splitParams']['events_per_lumi'] = min(max_events_per_lumi)
                             modified_splits.append( root_split )
