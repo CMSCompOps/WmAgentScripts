@@ -3380,7 +3380,8 @@ def findLateFiles(url, datasetname, going_to=None):
 														     flatency['attempts'])
 			
 			print(msg)
-			sendLog('closor',msg,level='critical')											     
+			if flatency['attempts'] > 5:
+			    sendLog('closor',msg,level='critical')											     
                         ret.append({
                                 'file' : flatency['lfn'],
                                 'from' : flatency["from_node"],
