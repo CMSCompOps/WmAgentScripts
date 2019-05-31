@@ -7694,9 +7694,11 @@ class workflowInfo:
                             max_events_per_lumi.append( this_max_events_per_lumi ) ## adding this to that later on we can check and adapt the split 0
 
                     # Safeguard for small lumi per task:
+                    effective_output_lumi_at_this_task = events_per_lumi_at_this_task * filter_efficiency_at_this_task 
                     if max_events_per_lumi:
-                        effective_output_lumi_at_this_task = min(max_events_per_lumi) * filter_efficiency_at_this_task
-                        if effective_output_lumi_at_this_task < min_lumi:
+                        effective_output_lumi_at_this_task = min(events_per_lumi_at_this_task, min(max_events_per_lumi)) * filter_efficiency_at_this_task
+                    
+                    if effective_output_lumi_at_this_task < min_lumi:
                             sendLog("assignor","{} will get {} events per lumi in output. Smaller than {} is troublesome.".format(tname, effective_output_lumi_at_this_task, min_lumi), level='critical')
                             hold = True
             
