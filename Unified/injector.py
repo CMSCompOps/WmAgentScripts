@@ -101,8 +101,8 @@ def injector(url, options, specific):
             if not can_add: continue
 
             ## temporary hack to transform specific taskchain into stepchains
-            good_for_stepchain = wfi.isGoodToConvertToStepChain( keywords = transform_keywords)
-            #good_for_stepchain = wfi.isGoodToConvertToStepChain( keywords = None) 
+            #good_for_stepchain = wfi.isGoodToConvertToStepChain( keywords = transform_keywords)
+            good_for_stepchain = wfi.isGoodToConvertToStepChain( keywords = None) 
 
 
             ## match keywords and technical constraints
