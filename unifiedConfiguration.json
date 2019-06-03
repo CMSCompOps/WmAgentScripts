@@ -364,8 +364,8 @@
    "value" : ["cerminar","fabozzi","prebello","amaltaro","pgunnell"]
   },
   "convert_to_stepchain":{	
-   "description" : "A list of keywords to match workflow names, and convert to StepChain if technical constraints are met",
-   "value" : [ "StepChainTest","NOTYETENABLED_RunIIFall17wmLHEGS" ]
+   "description" : "A list of keywords to match workflow campaigns and processing strings, and convert to StepChain if technical constraints are met",
+   "value" : [ "StepChainTest","NOTYETENABLED_RunIIFall17wmLHEGS","UL" ]
   },
   "user_relval":{
    "description" : "The users from which we expect relval requests",
