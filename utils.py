@@ -6731,8 +6731,8 @@ class workflowInfo:
         #output_from_single_task = len(output_per_task.keys())==1
         output_from_single_task = True ## the parentage 
         ## more than one task to not convert single task in a step
-        #more_than_one_task = wfi.request.get('TaskChain',0)>1
-        more_than_one_task = True
+        more_than_one_task = wfi.request.get('TaskChain',0)>1
+        #more_than_one_task = True
         ## so that conversion happens only for a selected few
         found_in_transform_keywords = True
 
