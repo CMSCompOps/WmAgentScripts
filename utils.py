@@ -7580,7 +7580,10 @@ class workflowInfo:
             # Safeguard for small lumi:
             UC = unifiedConfiguration()
             min_lumi = UC.get("min_events_per_lumi_output")
-                        
+            
+            # Flag for small lumi
+            small_lumi = False
+
             for spl in splits:
                 #print spl
                 task = spl['splitParams']
@@ -7640,18 +7643,18 @@ class workflowInfo:
 
                         if (time_per_input_lumi > (job_timeout*60*60)): ##45h
                             ## even for one lumisection, the job will time out.
-                            msg = "The running time of task {} is expected to be too large even for one lumi section: {} x {:.2f} s = {:.2f} h > {} h".format( tname,
-                                                                                                                                                     events_per_lumi_at_this_task, timeperevent,
-                                                                                                                                                     time_per_input_lumi / (60.*60.),
-                                                                                                                                                     job_timeout)
-				            
-                            sendLog('assignor', msg)  # We don't hold the workflow here so no need to send critical message
 
                             this_max_events_per_lumi = int( job_target*60.*60. / timeperevent)
                             # This is the possible events per lumi for this task, after taking filter efficiencies of the input tasks into account
 
                             max_events_per_lumi.append(this_max_events_per_lumi / efficiency_factor) 
                             # This is the possible events per lumi for the whole chain, before taking any filter efficiency into account
+                            
+                            msg = "The running time of task {} is expected to be too large even for one lumi section: {} x {:.2f} s = {:.2f} h > {} h. Should go as low as {}".format( tname,
+                                                                                                                                                     events_per_lumi_at_this_task, timeperevent,
+                                                                                                                                                     time_per_input_lumi / (60.*60.),
+                                                                                                                                                     job_timeout, this_max_events_per_lumi)
+                            self.sendLog('assignor', msg)  
 
                         else:
                             pass
@@ -7673,7 +7676,7 @@ class workflowInfo:
                                                                                                                                                 GB_space_limit,
                                                                                                                                                 events_per_lumi_at_this_task,
                                                                                                                                                 this_max_events_per_lumi)
-                            sendLog('assignor', msg) # We don't hold the workflow here so no need to send critical message
+                            self.sendLog('assignor', msg) 
 
                             max_events_per_lumi.append( this_max_events_per_lumi ) ## adding this to that later on we can check and adapt the split 0
 
@@ -7686,8 +7689,7 @@ class workflowInfo:
                                                                                                                                                  avg_events_per_job * sizeperevent * filter_efficiency_at_this_task / (1024.**2),
                                                                                                                                                  GB_space_limit,
                                                                                                                                                  this_max_events_per_job)
-                            sendLog('assignor', msg) # We don't hold the workflow here so no need to send critical message
-                            print(msg)
+                            self.sendLog('assignor', msg) # We don't hold the workflow here so no need to send critical message
 
                             modified_split_for_task = spl
                             modified_split_for_task['splitParams']['events_per_job'] = this_max_events_per_job
@@ -7699,9 +7701,13 @@ class workflowInfo:
                     if max_events_per_lumi:
                         effective_output_lumi_at_this_task = min(events_per_lumi_at_this_task, min(max_events_per_lumi)) * filter_efficiency_at_this_task
                     
-                    if effective_output_lumi_at_this_task < min_lumi:
-                            sendLog("assignor","{} will get {} events per lumi in output. Smaller than {} is troublesome.".format(tname, effective_output_lumi_at_this_task, min_lumi), level='critical')
+                    if effective_output_lumi_at_this_task < min_lumi and not small_lumi: # Only do this once per workflow
+                            msg = "{} will get {} events per lumi in output. Smaller than {} is troublesome.".format(tname, effective_output_lumi_at_this_task, min_lumi)
+                            self.sendLog('assignor',msg)
+                            critical_msg = msg + '\nWorkflow URL: https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=task_{}'.format(self.getPrepIDs()[0])
+                            sendLog('assignor', critical_msg, level='critical')
                             hold = True
+                            small_lumi = True
             
             # Double check across the whole chain:
             if max_events_per_lumi:
