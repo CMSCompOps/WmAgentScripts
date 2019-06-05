@@ -48,7 +48,7 @@ if use_mcm:
     print "mcm interface is up"
     mcm = McMClient(dev=False)
 
-statuses = ['assignment-approved','assigned','failed','acquired','running-open','running-closed','force-complete','completed','closed-out']
+statuses = ['assignment-approved','assigned','failed','staging','staged','acquired','running-open','running-closed','force-complete','completed','closed-out']
 
 UC = unifiedConfiguration()
 CI = campaignInfo()
