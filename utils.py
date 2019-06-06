@@ -654,8 +654,10 @@ def _pass_to_dynamo( items, N ,sites = None, group = None ):
     print stop-start,"[s] to hand over to dynamo of",items
     try:
         res = json.loads( data )
-        #print json.dumps( res, indent=2)
-        return (res['result'] == "OK")
+        isOK = (res['result'] == "OK")
+	if not isOK: print json.dumps( res, indent=2)
+	return isOK
+	
     except Exception as e:
         #if data.replace('\n','') == '':
         #    print "consider blank as OK"
