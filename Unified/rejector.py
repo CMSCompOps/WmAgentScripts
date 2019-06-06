@@ -103,16 +103,26 @@ def rejector(url, specific, options=None):
                     else:
                         schema['Memory'] = options.Memory
 
-                if options.short_task:
+                if options.short_task and schema['RequestType'] == 'TaskChain':
+                    translate = {}
                     it = 1
                     while True:
                         tt = 'Task%d'% it
                         if tt in schema:
                             tname = schema[tt]['TaskName']
-                            schema[tt]['TaskName'] = 'T%d'%it
+                            ntname = 'T%d'%it
+                            translate[tname] = ntname
+                            it+=1
+                            schema[tt]['TaskName'] = ntname
+                            if 'InputTask' in schema[tt]:
+                                itname = schema[tt]['InputTask']
+                                schema[tt]['InputTask'] = translate[itname]
                         else:
                             break
-                        it+=1
+                    for k in schema.get('ProcessingString',{}).keys():
+                        schema['ProcessingString'][translate[k]] = schema['ProcessingString'].pop(k)
+                    for k in schema.get('AcquisitionEra',{}).keys():
+                        schema['AcquisitionEra'][translate[k]] = schema['AcquisitionEra'].pop(k)
 
                         
                 if options.Multicore:
