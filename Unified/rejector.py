@@ -102,6 +102,17 @@ def rejector(url, specific, options=None):
                                 break
                     else:
                         schema['Memory'] = options.Memory
+
+                if options.short_task:
+                    it = 1
+                    while True:
+                        tt = 'Task%d'% it
+                        it+=1
+                        if tt in schema:
+                            tname = schema[tt]['TaskName']
+                            schema[tt]['TaskName'] = 'T%d'%it
+                        else:
+                            break
                         
                 if options.Multicore:
                     ## to do : set it properly in taskchains
@@ -270,6 +281,7 @@ if __name__ == "__main__":
     parser.add_option('--no_output',help='keep only the output of the last task of TaskChain',default=False,action='store_true')
     parser.add_option('--deterministic',help='set the splitting to deterministic in the clone',default=False,action='store_true')
     parser.add_option('--runs',help='set the run whitelist in the clone',default=None)
+    parser.add_option('--short_task', help='Reduce the TaskName to a minimal value', default=False,action='store_true')
     parser.add_option('-s','--to_stepchain',help='transform a TaskChain into StepChain',default=False,action='store_true')
     (options,args) = parser.parse_args()
 
