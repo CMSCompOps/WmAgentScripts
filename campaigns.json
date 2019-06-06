@@ -2514,6 +2514,13 @@
           "T2_BE_IIHE", 
           "T2_AT_Vienna"
         ]
+      },
+      "/MinBias_TuneCP5_14TeV-pythia8/Run3Summer19GS-106X_upgrade2021_realistic_v5-v1/GEN-SIM": {
+         "SiteWhitelist": [
+           "T2_CH_CERN",
+           "T2_US_Wisconsin",
+           "T2_US_Vanderbilt"
+       ]
       }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIFall18GS-102X_upgrade2018_realistic_v9-v1/GEN-SIM": {
         "SiteWhitelist": [
