@@ -304,8 +304,10 @@ def transferor(url ,specific = None, talk=True, options=None):
 
         if secondary and check_secondary:
             if (set(secondary)&set(allowed_secondary.keys())!=set(secondary)):
-                wfh.sendLog('transferor','%s is not an allowed secondary'%(', '.join(set(secondary)-set(allowed_secondary.keys()))))
-                sendLog('transferor','%s is not an allowed secondary'%(', '.join(set(secondary)-set(allowed_secondary.keys()))), level='critical')
+                msg = '%s is not an allowed secondary'%(', '.join(set(secondary)-set(allowed_secondary.keys())))
+                wfh.sendLog('transferor',msg)
+                critical_msg = msg + '\nWorkflow URL: https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=task_{}'.format(wfh.getPrepIDs()[0])
+                sendLog('transferor', critical_msg, level='critical')
                 if not options.go: 
                     no_go = True
             for sec in secondary:
