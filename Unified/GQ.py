@@ -39,6 +39,12 @@ for wf in wfs:
     if spec and not spec in wf['RequestName']: continue
 
     wfi = workflowInfo(url, wf['RequestName'], request=wf)
+    splits = wfi.getSplittingsNew(all_tasks=True)
+    if any([len(s['taskName'])>700 for s in splits]):
+        print "one of the task name is much too long"
+        ## this should ring some alarm bells
+        continue
+
     sitewhitelist = wfi.request['SiteWhitelist']
     wqs = wfi.getWorkQueue()
     

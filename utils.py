@@ -7880,7 +7880,7 @@ class workflowInfo:
             all_tasks.extend( self._taskDescending( ts, select ) )
         return all_tasks
 
-    def getSplittingsNew(self ,strip=False):
+    def getSplittingsNew(self ,strip=False,all_tasks=False):
         self.conn = make_x509_conn(self.url)
         #self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         r1=self.conn.request("GET",'/reqmgr2/data/splitting/%s'%self.request['RequestName'], headers={"Accept":"application/json"} )
@@ -7888,7 +7888,7 @@ class workflowInfo:
         result = json.loads( r2.read() )['result']
         splittings = []
         for spl in result:
-            if not spl['taskType'] in ['Production','Processing','Skim'] : continue
+            if not all_tasks and not spl['taskType'] in ['Production','Processing','Skim'] : continue
             if strip:
                 for drop in ['algorithm','trustPUSitelists','trustSitelists','deterministicPileup','type','include_parents','lheInputFiles','runWhitelist','runBlacklist','collectionName','group','couchDB','couchURL','owner','initial_lfn_counter','filesetName', 'runs','lumis']:
                     if drop in spl['splitParams']:
