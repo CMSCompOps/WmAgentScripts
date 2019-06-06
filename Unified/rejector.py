@@ -107,12 +107,13 @@ def rejector(url, specific, options=None):
                     it = 1
                     while True:
                         tt = 'Task%d'% it
-                        it+=1
                         if tt in schema:
                             tname = schema[tt]['TaskName']
                             schema[tt]['TaskName'] = 'T%d'%it
                         else:
                             break
+                        it+=1
+
                         
                 if options.Multicore:
                     ## to do : set it properly in taskchains
