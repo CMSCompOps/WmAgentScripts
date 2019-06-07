@@ -6726,8 +6726,8 @@ class workflowInfo:
 	#all_same_cores = True
         ##make sure not tow same data tier is produced
         all_tiers = map(lambda o : o.split('/')[-1], self.request['OutputDatasets'])
-        #single_tiers = (len(all_tiers) == len(set(all_tiers)))
-        single_tiers = True
+        single_tiers = (len(all_tiers) == len(set(all_tiers)))
+        #single_tiers = True
         ## more than one task with output until https://github.com/dmwm/WMCore/issues/8269 gets solved
         #output_per_task = self.getOutputPerTask()
         #output_from_single_task = len(output_per_task.keys())==1
