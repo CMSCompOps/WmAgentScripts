@@ -22,8 +22,9 @@ def injector(url, options, specific):
 
     UC = unifiedConfiguration()
 
-    transform_keywords = UC.get('convert_to_stepchain')
-
+    #transform_keywords = UC.get('convert_to_stepchain')
+    transform_keywords = None
+    
     workflows = getWorkflows(url, status=options.wmstatus, user=options.user)
     for user in UC.get("user_rereco"):
         workflows.extend( getWorkflows(url, status=options.wmstatus, user=user, rtype="ReReco")) 
@@ -102,9 +103,7 @@ def injector(url, options, specific):
 
             ## temporary hack to transform specific taskchain into stepchains
             good_for_stepchain = wfi.isGoodToConvertToStepChain( keywords = transform_keywords)
-            #good_for_stepchain = wfi.isGoodToConvertToStepChain( keywords = None) 
-
-
+            
             ## match keywords and technical constraints
             if (not options.no_convert) and good_for_stepchain and not wfi.isRelval():
                 to_convert.add( wf )
