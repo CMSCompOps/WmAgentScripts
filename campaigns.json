@@ -2766,7 +2766,7 @@
     "maxcopies": 1, 
     "resize": "auto", 
     "secondaries": {
-      "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL17SIM-106X_mc2017_realistic_v3-v1/SIM": {}
+      "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL17SIM-106X_mc2017_realistic_v3-v2/SIM": {}
     }, 
     "secondary_AAA": false, 
     "tune": true
@@ -2884,7 +2884,7 @@
   }, 
   "RunIISummer19UL18GEN": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "resize": "auto", 
     "toDDM": [
@@ -2920,7 +2920,7 @@
   }, 
   "RunIISummer19UL18wmLHEGEN": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "resize": "auto", 
     "toDDM": [
@@ -2974,7 +2974,11 @@
     "go": false, 
     "lumisize": -1, 
     "secondaries": {
-      "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL17SIM-106X_mc2017_realistic_v3-v1/SIM": {}, 
+      "/MinBias_TuneCP5_13TeV-pythia8_test/RunIISummer19UL17SIM-pilot_106X_mc2017_realistic_v3_ext1-v1/SIM": {
+        "SiteWhitelist": [
+          "T1_IT_CNAF"
+        ]
+      }, 
       "/MinBias_TuneCP5_14TeV-pythia8/PhaseIITDRSpring19GS-106X_upgrade2023_realistic_v2_ext1-v1/GEN-SIM": {
         "SiteWhitelist": [
           "T1_IT_CNAF", 
