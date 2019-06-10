@@ -7707,7 +7707,9 @@ class workflowInfo:
                             msg = "{} will get {} events per lumi in output. Smaller than {} is troublesome.".format(tname, effective_output_lumi_at_this_task, min_lumi)
                             self.sendLog('assignor',msg)
                             critical_msg = msg + '\nWorkflow URL: https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=task_{}'.format(self.getPrepIDs()[0])
-                            sendLog('assignor', critical_msg, level='critical')
+                            if self.isRelval():
+				critical_msg = msg + '\nWorkflow URL: https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id={}'.format(self.getPrepIDs()[0])	
+			    sendLog('assignor', critical_msg, level='critical')
                             hold = True
                             small_lumi = True
             
