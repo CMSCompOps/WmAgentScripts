@@ -7586,6 +7586,9 @@ class workflowInfo:
             # Flag for small lumi
             small_lumi = False
 
+	        # No safeguard if the input dataset already has small lumi
+            (_,prim,_,_) = self.getIO()
+		     
             for spl in splits:
                 #print spl
                 task = spl['splitParams']
@@ -7703,13 +7706,13 @@ class workflowInfo:
                     if max_events_per_lumi:
                         effective_output_lumi_at_this_task = min(events_per_lumi_at_this_task, min(max_events_per_lumi)) * filter_efficiency_at_this_task
                     
-                    if effective_output_lumi_at_this_task < min_lumi and not small_lumi: # Only do this once per workflow
+                    if (effective_output_lumi_at_this_task < min_lumi) and (not prim) and (not small_lumi): # Only do this once per workflow
                             msg = "{} will get {} events per lumi in output. Smaller than {} is troublesome.".format(tname, effective_output_lumi_at_this_task, min_lumi)
                             self.sendLog('assignor',msg)
                             critical_msg = msg + '\nWorkflow URL: https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=task_{}'.format(self.getPrepIDs()[0])
                             if self.isRelval():
-				critical_msg = msg + '\nWorkflow URL: https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id={}'.format(self.getPrepIDs()[0])	
-			    sendLog('assignor', critical_msg, level='critical')
+                                critical_msg = msg + '\nWorkflow URL: https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id={}'.format(self.getPrepIDs()[0])
+                            sendLog('assignor', critical_msg, level='critical')
                             hold = True
                             small_lumi = True
             
