@@ -501,7 +501,7 @@ class CheckBuster(threading.Thread):
                     return
 
         if wfo.name in holdings and not bypass_checks:
-            if onhold_timeout>0and onhold_timeout<onhold_completed_delay:
+            if onhold_timeout>0 and onhold_timeout<onhold_completed_delay:
                 bypass_checks =True
                 wfi.sendLog('checkor',"%s is on hold and stopped for %.2f days, letting this through with current statistics"%( wfo.name, onhold_completed_delay))
             else:
