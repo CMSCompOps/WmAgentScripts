@@ -123,7 +123,7 @@ This is an automated message"""%( new_campaign,
     for old_campaign in CI.all(c_type='relval'):
         all_in_batch = getWorkflowByCampaign(url, old_campaign, details=True)
         if not all_in_batch: continue
-        is_batch_done = all(map(lambda s : not s in ['completed','force-complete','running-open','running-closed','acquired','assigned','assignment-approved'], [wf['RequestStatus']for wf in all_in_batch]))
+        is_batch_done = all(map(lambda s : not s in ['completed','force-complete','running-open','running-closed','acquired','staged','staging','assigned','assignment-approved'], [wf['RequestStatus']for wf in all_in_batch]))
         ## check all statuses
         if is_batch_done:
             #print "batch",old_campaign,"can be closed or removed if necessary"
