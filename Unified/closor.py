@@ -381,7 +381,7 @@ class CloseBuster(threading.Thread):
             if not batch_name in batch_go:
                 ## do the esimatation whethere this can be announced : only once per batch
                 in_batches = getWorkflowByCampaign(url , batch_name, details=True)
-                batch_go[ batch_name ]  = all(map(lambda s : not s in ['completed','running-open','running-closed','acquired','assigned','assignment-approved'], [r['RequestStatus'] for r in in_batches]))
+                batch_go[ batch_name ]  = all(map(lambda s : not s in ['completed','running-open','running-closed','acquired','staged','staging','assigned','assignment-approved'], [r['RequestStatus'] for r in in_batches]))
             ## already verified
             has_batch_go = batch_go[batch_name]
             if not has_batch_go:
