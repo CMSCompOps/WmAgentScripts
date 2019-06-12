@@ -2691,7 +2691,7 @@
   }, 
   "RunIISummer19UL16GEN": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "resize": "auto", 
     "toDDM": [
@@ -2980,9 +2980,10 @@
     "go": true, 
     "lumisize": -1, 
     "secondaries": {
-      "/MinBias_TuneCP5_13TeV-pythia8_test/RunIISummer19UL17SIM-pilot_106X_mc2017_realistic_v3_ext1-v1/SIM": {
+      "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL17SIM-106X_mc2017_realistic_v3-v2/SIM": {
         "SiteWhitelist": [
-          "T1_IT_CNAF"
+          "T1_US_FNAL",
+          "T1_RU_JINR"
         ]
       }, 
       "/MinBias_TuneCP5_14TeV-pythia8/PhaseIITDRSpring19GS-106X_upgrade2023_realistic_v2_ext1-v1/GEN-SIM": {
