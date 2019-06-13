@@ -44,7 +44,8 @@ for wf in wfs:
     splits = wfi.getSplittingsNew(all_tasks=True)
     if any([len(s['taskName']) > task_path_name_limit for s in splits]):
         
-        msg = "The full task path name exceeds the limit of {} characters. Ask the requestors to either shorten task names or have fewer tasks in the chain.".format(task_path_name_limit)
+        msg = "The full task path name exceeds the limit of {} characters. The requestor should either shorten task names or have fewer tasks in the chain.".format(task_path_name_limit)
+        wfi.sendLog("GQ",msg)
         msg += '\nWorkflow URL: https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=task_{}'.format(wfi.getPrepIDs()[0])
         sendLog("GQ", msg, level='critical')
         
