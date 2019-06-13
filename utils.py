@@ -6207,13 +6207,13 @@ class agentInfo:
         ## and sync locally
         self.getStatus()
 
-def getAgentConfig(url, agent, keys):
+def getAgentConfig(url, agent):
     conn = make_x509_conn(url)
     go_url= '/reqmgr2/data/wmagentconfig/%s'% agent
-    r1=conn.request("GET",go_url, headers={"Accept":"application/json"})
+    conn.request("GET",go_url, headers={"Accept":"application/json"})
     r2=conn.getresponse()
     info = json.loads(r2.read())['result'][-1]
-    return dict([(k,v) for k,v in info.items() if k in keys])
+    return info
 
 def sendAgentConfig(url, agent, config_dict):
     encodedParams = json.dumps(config_dict)
@@ -6228,20 +6228,20 @@ def sendAgentConfig(url, agent, config_dict):
     return r
 
 def addAgentNoRetry(url, agent, error_codes):
-    info = getAgentConfig(url, agent, ['NoRetryExitCodes'])
+    info = getAgentConfig(url, agent)
     already = info['NoRetryExitCodes']
     print "Already in noretry",sorted( already )
     already.extend( error_codes )
-    already = list(set(already))
-    return sendAgentConfig(url, agent, {'NoRetryExitCodes' : already})
+    info['NoRetryExitCodes'] = list(set(already))
+    return sendAgentConfig(url, agent, info)
 
 def setAgentDrain(url, agent, drain=True):
     #the agent name has to have .cern.ch and all
-    info = getAgentConfig(url, agent, ['UserDrainMode'])
-    draining = info['UserDrainMode']
-    print agent,"is draining?",draining
+    info = getAgentConfig(url, agent)
+    print agent,"is draining?",info['UserDrainMode']
 
-    r = sendAgentConfig(url, agent, {"UserDrainMode":drain})
+    info['UserDrainMode'] = drain
+    r = sendAgentConfig(url, agent, info)
     return r
 
 def setAgentOn(url, agent):
