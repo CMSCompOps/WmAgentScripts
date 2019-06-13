@@ -2696,7 +2696,10 @@
     "resize": "auto", 
     "toDDM": [
       "GEN"
-    ], 
+    ],
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "tune": true
   }, 
   "RunIISummer19UL16HLT": {
@@ -2757,7 +2760,10 @@
     "toDDM": [
       "GEN"
     ], 
-    "tune": true
+    "tune": true,
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ]
   }, 
   "RunIISummer19UL17DIGI": {
     "fractionpass": 0.95, 
@@ -2790,7 +2796,10 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
-    "resize": "auto", 
+    "resize": "auto",
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "toDDM": [
       "GEN"
     ], 
@@ -2858,6 +2867,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "toDDM": [
       "GEN"
     ], 
@@ -2896,6 +2908,9 @@
     "toDDM": [
       "GEN"
     ], 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "tune": true
   }, 
   "RunIISummer19UL18MiniAOD": {
@@ -2932,6 +2947,9 @@
     "toDDM": [
       "GEN"
     ], 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "tune": true
   }, 
   "RunIISummer19UL2017HLT": {
