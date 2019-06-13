@@ -35,14 +35,19 @@ files_locations = {}
 stuck_all_done = set()
 heavy_duty = {}
 
+task_path_name_limit = UC.get("full_task_path_name_limit")
+
 for wf in wfs:
     if spec and not spec in wf['RequestName']: continue
 
     wfi = workflowInfo(url, wf['RequestName'], request=wf)
     splits = wfi.getSplittingsNew(all_tasks=True)
-    if any([len(s['taskName'])>700 for s in splits]):
-        print "one of the task name is much too long"
-        ## this should ring some alarm bells
+    if any([len(s['taskName']) > task_path_name_limit for s in splits]):
+        
+        msg = "The full task path name exceeds the limit of {} characters. Ask the requestors to either shorten task names or have fewer tasks in the chain.".format(task_path_name_limit)
+        msg += '\nWorkflow URL: https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=task_{}'.format(wfi.getPrepIDs()[0])
+        sendLog("GQ", msg, level='critical')
+        
         continue
 
     sitewhitelist = wfi.request['SiteWhitelist']
