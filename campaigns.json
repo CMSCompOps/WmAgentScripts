@@ -3676,10 +3676,7 @@
     "go": false
   }, 
   "Upg2017Summer15GS": {
-    "go": false,
-    "SiteBlacklist": [
-      "T3_US_NERSC"
-     ], 
+    "go": false
   }, 
   "UpgFall14pLHE": {
     "go": false, 
