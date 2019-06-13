@@ -76,7 +76,10 @@
   "CosmicFall16PhaseIGS": {
     "fractionpass": 0.95, 
     "go": true, 
-    "lumisize": -1
+    "lumisize": -1,
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ]
   }, 
   "CosmicSpring16DR80": {
     "go": false
@@ -221,7 +224,8 @@
         "T2_US_Florida", 
         "T2_US_Nebraska", 
         "T2_US_UCSD", 
-        "T2_US_Wisconsin"
+        "T2_US_Wisconsin",
+        "T3_US_NERSC"
       ]
     }, 
     "tune": true
@@ -269,7 +273,8 @@
         "T2_US_Nebraska", 
         "T2_US_UCSD", 
         "T2_US_Wisconsin", 
-        "T2_CH_CERN"
+        "T2_CH_CERN",
+        "T3_US_NERSC"
       ]
     }, 
     "tune": true
@@ -336,7 +341,8 @@
         "T2_US_Florida", 
         "T2_US_Nebraska", 
         "T2_US_UCSD", 
-        "T2_US_Wisconsin"
+        "T2_US_Wisconsin",
+        "T3_US_NERSC"
       ]
     }, 
     "tune": true
@@ -356,7 +362,8 @@
         "T2_US_Florida", 
         "T2_US_Nebraska", 
         "T2_US_UCSD", 
-        "T2_US_Wisconsin"
+        "T2_US_Wisconsin",
+        "T3_US_NERSC"
       ]
     }, 
     "tune": true
@@ -429,7 +436,8 @@
         "T2_US_Florida", 
         "T2_US_Nebraska", 
         "T2_US_UCSD", 
-        "T2_US_Wisconsin"
+        "T2_US_Wisconsin",
+        "T3_US_NERSC"
       ]
     }, 
     "tune": true
@@ -488,7 +496,8 @@
         "T2_US_Florida", 
         "T2_US_Nebraska", 
         "T2_US_UCSD", 
-        "T2_US_Wisconsin"
+        "T2_US_Wisconsin",
+        "T3_US_NERSC"
       ]
     }
   }, 
@@ -507,7 +516,8 @@
         "T2_US_Florida", 
         "T2_US_Nebraska", 
         "T2_US_UCSD", 
-        "T2_US_Wisconsin"
+        "T2_US_Wisconsin",
+        "T3_US_NERSC"
       ]
     }
   }, 
@@ -677,6 +687,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "resize": {
       "maxCores": 10, 
       "memoryPerThread": 200, 
@@ -692,6 +705,9 @@
   "PhaseIFall16wmLHEGS": {
     "fractionpass": 0.95, 
     "go": true, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "lumisize": -1
   }, 
   "PhaseIIFall16DR82": {
@@ -784,6 +800,9 @@
     "go": true, 
     "lumisize": -1, 
     "resize": "auto", 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "secondaries": {
       "/MinBias_Hydjet_Drume5_5p5TeV_TuneCP5_Pythia8/PhaseIIMTDTDRAutumn18GS-103X_upgrade2023_realistic_v2-v2/GEN-SIM": {
         "SiteWhitelist": [
@@ -804,6 +823,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "overflow": {
       "LHE": {
         "site_list": "sites_AAA"
@@ -831,12 +853,18 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": 1500, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "tune": true
   }, 
   "PhaseIISNBSpring17wmLHEGS": {
     "fractionpass": 0.95, 
     "go": true, 
-    "lumisize": 1500, 
+    "lumisize": 1500,
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "tune": true
   }, 
   "PhaseIISpr18AODMiniAOD": {
@@ -901,12 +929,18 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": 1500, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "tune": true
   }, 
   "PhaseIISpring17wmLHEGS": {
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": 1500, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "tune": true
   }, 
   "PhaseIISummer17D": {
@@ -1005,6 +1039,9 @@
   "PhaseIITDRFall17GS": {
     "fractionpass": 0.95, 
     "go": true, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "lumisize": -1, 
     "tune": false
   }, 
@@ -1019,6 +1056,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "tune": false
   }, 
   "PhaseIITDRSpring17DR": {
@@ -1046,6 +1086,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": 1500, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "tune": true
   }, 
   "PhaseIITDRSpring17MiniAOD": {
@@ -1058,6 +1101,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": 1500, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "tune": true
   }, 
   "PhaseIITDRSpring19DR": {
@@ -1082,6 +1128,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "tune": true
   }, 
   "PhaseIITDRSpring19MiniAOD": {
@@ -1095,6 +1144,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "tune": true
   }, 
   "PhaseISpring17DR": {
@@ -1121,6 +1173,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": 1500, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "tune": true
   }, 
   "PhaseISpring17MiniAOD": {
@@ -1143,6 +1198,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "tune": true
   }, 
   "Phys14DR": {
@@ -1459,6 +1517,9 @@
     "go": true, 
     "lumisize": -1, 
     "resize": "auto", 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "tune": true
   }, 
   "Run3Summer19MiniAOD": {
@@ -1477,6 +1538,9 @@
   "Run3Summer19wmLHEGS": {
     "fractionpass": 0.95, 
     "go": false, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "lumisize": -1, 
     "tune": true
   }, 
@@ -1798,6 +1862,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "resize": "auto", 
     "tune": true
   }, 
@@ -1853,6 +1920,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "overflow": {
       "LHE": {
         "site_list": "sites_AAA"
@@ -1877,6 +1947,9 @@
     "go": true, 
     "lumisize": -1, 
     "resize": "auto", 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "tune": true
   }, 
   "RunIIFall18pLHE": {
@@ -1889,6 +1962,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "overflow": {}, 
     "tune": true
   }, 
@@ -1935,6 +2011,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "resize": "auto", 
     "tune": true
   }, 
@@ -1949,6 +2028,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "resize": "auto", 
     "tune": true
   }, 
@@ -1976,6 +2058,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "resize": "auto", 
     "tune": true
   }, 
@@ -1984,6 +2069,9 @@
     "go": true, 
     "lumisize": -1, 
     "resize": "auto", 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "tune": true
   }, 
   "RunIISpring15DR74": {
@@ -2133,6 +2221,9 @@
     "go": false, 
     "lumisize": -1, 
     "resize": "auto", 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "tune": true
   }, 
   "RunIISpring16MiniAODv1": {
@@ -2190,6 +2281,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "tune": true
   }, 
   "RunIISpring18DR": {
@@ -2236,6 +2330,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "resize": "auto", 
     "tune": true
   }, 
@@ -2251,6 +2348,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "tune": true
   }, 
   "RunIISummer15GS": {
@@ -2258,6 +2358,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": 1000, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "overflow": {
       "LHE": {
         "site_list": "sites_AAA"
@@ -2274,6 +2377,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "parameters": {
       "EventsPerLumi": "x2", 
       "MaxMergeEvents": 4000000
@@ -2440,6 +2546,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "tune": true
   }, 
   "RunIISummer17DRPremix": {
@@ -2486,6 +2595,9 @@
   }, 
   "RunIISummer17GS": {
     "fractionpass": 0.95, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "go": true, 
     "lumisize": 1500, 
     "tune": true
@@ -2608,6 +2720,9 @@
     "go": true, 
     "lumisize": -1, 
     "resize": "auto", 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "tune": true
   }, 
   "RunIISummer18DR": {
@@ -2658,6 +2773,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "resize": "auto", 
     "tune": true
   }, 
@@ -2673,6 +2791,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "overflow": {
       "LHE": {
         "site_list": "sites_AAA"
@@ -2810,6 +2931,9 @@
     "go": false, 
     "lumisize": -1, 
     "resize": "auto", 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "tune": true
   }, 
   "RunIISummer19UL17HLT": {
@@ -2879,6 +3003,9 @@
     "fractionpass": 0.95, 
     "go": false, 
     "lumisize": -1, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "tune": true
   }, 
   "RunIISummer19UL18DR": {
@@ -3028,6 +3155,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "overflow": {
       "LHE": {
         "site_list": "sites_AAA"
@@ -3092,6 +3222,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "resize": "auto", 
     "tune": true
   }, 
@@ -3106,6 +3239,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "tune": true
   }, 
   "RunIIWinter19CosmicDR": {
@@ -3121,6 +3257,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "resize": "auto", 
     "tune": true
   }, 
@@ -3129,6 +3268,9 @@
     "go": true, 
     "lumisize": -1, 
     "resize": "auto", 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "tune": true
   }, 
   "RunIIWinter19PFCalib16pLHE": {
@@ -3142,12 +3284,18 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "tune": true
   }, 
   "RunIIWinter19PFCalib17GS": {
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "resize": "auto", 
     "tune": true
   }, 
@@ -3162,6 +3310,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "tune": true
   }, 
   "RunIIWinter19PFCalib18GS": {
@@ -3169,6 +3320,9 @@
     "go": true, 
     "lumisize": -1, 
     "resize": "auto", 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "tune": true
   }, 
   "RunIIWinter19PFCalib18pLHE": {
@@ -3182,6 +3336,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "tune": true
   }, 
   "RunIIWinter19PFCalibDR": {
@@ -3302,7 +3459,8 @@
         "T2_US_Florida", 
         "T2_US_Nebraska", 
         "T2_US_UCSD", 
-        "T2_US_Wisconsin"
+        "T2_US_Wisconsin",
+        "T3_US_NERSC"
       ]
     }, 
     "resize": "auto", 
@@ -3336,14 +3494,16 @@
         "T2_US_Florida", 
         "T2_US_Nebraska", 
         "T2_US_UCSD", 
-        "T2_US_Wisconsin"
+        "T2_US_Wisconsin",
+        "T3_US_NERSC"
       ]
     }, 
     "tune": true
   }, 
   "RunllSummer17GS": {
     "SiteBlacklist": [
-      "T2_CH_CERN"
+      "T2_CH_CERN",
+      "T3_US_NERSC"
     ], 
     "fractionpass": 0.95, 
     "go": true, 
@@ -3442,6 +3602,9 @@
   "TP2023HGCALGS": {
     "fractionpass": 0.9, 
     "go": true, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "parameters": {
       "EventsPerLumi": 25
     }
@@ -3490,6 +3653,9 @@
   }, 
   "TTI2023Upg14GS": {
     "go": true, 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "parameters": {
       "EventsPerLumi": 25
     }
@@ -3510,7 +3676,10 @@
     "go": false
   }, 
   "Upg2017Summer15GS": {
-    "go": false
+    "go": false,
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
   }, 
   "UpgFall14pLHE": {
     "go": false, 
@@ -3623,6 +3792,9 @@
       "T2_US_UCSD", 
       "T2_US_Wisconsin"
     ], 
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+     ], 
     "custodial": "T1_FR_CCIN2P3_MSS", 
     "fractionpass": 0.95, 
     "go": true, 
@@ -3649,7 +3821,8 @@
         "T2_US_Florida", 
         "T2_US_Nebraska", 
         "T2_US_UCSD", 
-        "T2_US_Wisconsin"
+        "T2_US_Wisconsin",
+        "T3_US_NERSC"
       ]
     }
   }, 
@@ -3676,7 +3849,8 @@
         "T2_US_Florida", 
         "T2_US_Nebraska", 
         "T2_US_UCSD", 
-        "T2_US_Wisconsin"
+        "T2_US_Wisconsin",
+        "T3_US_NERSC"
       ]
     }, 
     "secondaries": {
@@ -3771,7 +3945,8 @@
         "T2_US_Florida", 
         "T2_US_Nebraska", 
         "T2_US_UCSD", 
-        "T2_US_Wisconsin"
+        "T2_US_Wisconsin",
+        "T3_US_NERSC"
       ]
     }
   }
