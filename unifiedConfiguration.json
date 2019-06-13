@@ -11,6 +11,10 @@
    "value" : 0.1,
    "description" : "Running/MaxRunning job fraction below which to consider an agent idling"
  },
+ "full_task_path_name_limit" : {
+   "value" : 1250,
+   "description" : "Maximum number of characters allowed for full task path name in a workflow"
+ },
  "site_out_of_overflow": {
    "value" : [
                "NONO_T1_UK_RAL",
