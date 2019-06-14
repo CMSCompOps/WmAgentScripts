@@ -227,7 +227,7 @@ if __name__ == "__main__":
     parser.add_option('-r','--replace',help="the workflow name that should be used for replacement",default=None)
     parser.add_option('--user_relval',help="The user that can inject workflows for relvals", default=None)
     parser.add_option('--user_storeresults',help="The user that can inject workflows for store results", default=None)
-    parser.add_option('--no_convert',help="Prevent the conversion to stepchain", default=False)
+    parser.add_option('--no_convert',help="Prevent the conversion to stepchain", default=True)
     (options,args) = parser.parse_args()
     
     spec = None
