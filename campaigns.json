@@ -2866,7 +2866,9 @@
     "go": true, 
     "lumisize": -1, 
     "resize": "auto", 
-    "tune": true
+    "tune": true,
+    "maxcopies": 1,
+    "primary_AAA": true
   }, 
   "RunIISummer19UL16pLHE": {
     "fractionpass": 0.95, 
@@ -2979,7 +2981,9 @@
     "go": true, 
     "lumisize": -1, 
     "resize": "auto", 
-    "tune": true
+    "tune": true,
+    "maxcopies": 1,
+    "primary_AAA": true
   }, 
   "RunIISummer19UL17pLHE": {
     "fractionpass": 0.95, 
@@ -3058,7 +3062,9 @@
     "go": true, 
     "lumisize": -1, 
     "resize": "auto", 
-    "tune": true
+    "tune": true,
+    "maxcopies": 1,
+    "primary_AAA": true
   }, 
   "RunIISummer19UL18pLHE": {
     "fractionpass": 0.95, 
