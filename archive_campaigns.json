@@ -2440,18 +2440,6 @@
       "EventsPerLumi": 25
     }
   }, 
-  "UltraLegacy2017": {
-    "custodial_override": [
-      "DQMIO"
-    ], 
-    "fractionpass": 1, 
-    "go": false, 
-    "lumisize": -1, 
-    "maxcopies": 1, 
-    "overflow": {
-      "PRIM": {}
-    }
-  }, 
   "Upg2017Summer15DR": {
     "go": false
   }, 
