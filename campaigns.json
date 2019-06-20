@@ -2872,7 +2872,7 @@
   }, 
   "RunIISummer19UL16pLHE": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "tune": true
   }, 
@@ -3068,7 +3068,7 @@
   }, 
   "RunIISummer19UL18pLHE": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "tune": true
   }, 
