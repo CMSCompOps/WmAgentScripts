@@ -1417,44 +1417,6 @@
     "lumisize": -1, 
     "maxcopies": 1
   }, 
-  "RunIIFall17DRStdmix": {
-    "fractionpass": 0.95, 
-    "go": true, 
-    "lumisize": -1, 
-    "maxcopies": 1, 
-    "overflow": {
-      "PU": {
-        "max": 20000, 
-        "pending": 0
-      }
-    }, 
-    "resize": "auto", 
-    "secondaries": {
-      "/MinBias_TuneCP1_13TeV-pythia8/RunIIFall17GS-93X_mc2017_realistic_v3-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_DE_KIT", 
-          "T1_IT_CNAF"
-        ]
-      }, 
-      "/MinBias_TuneCP5_13TeV-pythia8_Fall17/RunIIFall17GS-93X_mc2017_realistic_v3-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_IT_CNAF", 
-          "T1_DE_KIT"
-        ]
-      }, 
-      "/MinBias_TuneCP5_inelasticON_13TeV-pythia8/RunIIFall17GS-93X_mc2017_realistic_v3-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_US_FNAL", 
-          "T1_DE_KIT", 
-          "T2_IN_TIFR", 
-          "T2_US_Nebraska", 
-          "T1_FR_CCIN2P3"
-        ]
-      }
-    }, 
-    "secondary_AAA": false, 
-    "tune": false
-  }, 
   "RunIIFall17FSDR": {
     "fractionpass": 0.95, 
     "go": true, 
