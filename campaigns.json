@@ -638,6 +638,24 @@
       ]
     }
   }, 
+  "LowPU2010": {
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+    ], 
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "resize": "auto", 
+    "tune": true
+  }, 
+  "LowPU2010DR42": {
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "tune": true
+  }, 
   "NANOAODProdTest": {
     "go": true, 
     "lumisize": -1, 
