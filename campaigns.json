@@ -2987,7 +2987,7 @@
   }, 
   "RunIISummer19UL17pLHE": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "tune": true
   }, 
