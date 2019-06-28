@@ -7719,8 +7719,10 @@ class workflowInfo:
                 if events_per_lumi_inputs:
                     if min(max_events_per_lumi)<events_per_lumi_inputs:
                         ## there was an input dataset somewhere and we cannot break down that lumis, except by changing to EventBased
-                        msg = "The smallest value of %s is still smaller than %s evt/lumi of the input dataset"%(max_events_per_lumi, events_per_lumi_inputs)
-                        sendLog('assignor', msg, level='critical')
+                        msg = "Possible events per lumi of this wf (min(%s)) is smaller than %s evt/lumi of the input dataset"%(max_events_per_lumi, events_per_lumi_inputs)
+                        self.sendLog('assignor', msg)
+			critical_msg = msg + '\nWorkflow URL: https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=task_{}'.format(self.getPrepIDs()[0])
+                        sendLog('assignor', critical_msg, level='critical')
                         hold = True
                     else:
                         #hold = True #to be removed
