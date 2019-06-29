@@ -28,7 +28,7 @@
     "custodial_override": [
       "DQMIO"
     ], 
-    "fractionpass": 1, 
+    "fractionpass": 0.99, 
     "go": true, 
     "labels": [
       "05May2019"
