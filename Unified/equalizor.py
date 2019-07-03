@@ -719,18 +719,18 @@ def equalizor(url , specific = None, options=None):
 
                     if mem and (mem > warning_mem*mcore):
                         print "WHAT IS THIS TASK",task.pathName,"WITH",mem,"memory requirement at",mcore,"cores"
-                        wfi.sendLog('equalizor','The task %s was found to be confiugred with %d GB over %d GB/core at %d cores'%( taskname, mem, warning_mem, mcore))
+                        wfi.sendLog('equalizor','The task %s was found to be confiugred with %d MB over %d MB/core at %d cores'%( taskname, mem, warning_mem, mcore))
                         bad_hungry_tasks.add( (task.pathName, mem, mcore ) )
 
                     if set_memory and (set_memory > warning_mem*mcore):
                         print "WHAT IS THIS TASK",task.pathName,"WITH",set_memory,"memory requirement at",mcore,"cores"
-                        wfi.sendLog('equalizor','The task %s was found to run jobs using %d GB over %d GB/core at %d cores'%( taskname, set_memory, warning_mem, mcore))
+                        wfi.sendLog('equalizor','The task %s was found to run jobs using %d MB over %d MB/core at %d cores'%( taskname, set_memory, warning_mem, mcore))
 
                         hungry_tasks.add( (task.pathName, set_memory, mcore) )
                         
                     wfi.sendLog('equalizor',"""Performance tuning of task %s
-%s GB base memory at %d core
-%s GB per thread
+%s MB base memory at %d core
+%s MB per thread
 %s min assuming runing 1-thread
 %s KBs read estimated per thread
 """%( taskname, 
