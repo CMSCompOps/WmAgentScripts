@@ -2611,7 +2611,8 @@
       }, 
       "/MinBias_TuneCP5_14TeV-pythia8/Run3Summer19GS-106X_upgrade2021_realistic_v5-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_DE_KIT"
+          "T1_DE_KIT",
+          "T2_US_Vanderbilt"
         ]
       }, 
       "/MinBias_TuneCP5_inelasticON_13TeV-pythia8/RunIIFall17GS-93X_mc2017_realistic_v3-v1/GEN-SIM": {
