@@ -316,6 +316,7 @@ def transferor(url ,specific = None, talk=True, options=None):
 
         if 'SiteWhitelist' in overide_parameters:
             sites_allowed = list(set(sites_allowed) & set(overide_parameters['SiteWhitelist']))
+            wfh.sendLog('transferor','Intersecting with the overriding whitelist parameters, allowed sites become {}'.format(sites_allowed))
 
         if no_go:
             continue
