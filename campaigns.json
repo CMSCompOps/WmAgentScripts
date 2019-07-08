@@ -2921,6 +2921,15 @@
     "lumisize": -1, 
     "tune": true
   }, 
+  "RunIISummer19UL18DIGI": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "resize": "auto", 
+    "secondary_AAA": false, 
+    "tune": true
+  }, 
   "RunIISummer19UL18DR": {
     "fractionpass": 0.95, 
     "go": false, 
