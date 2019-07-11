@@ -7458,6 +7458,11 @@ class workflowInfo:
         if any(['premix' in o.lower() for o in self.request['OutputDatasets']]):
             response = False
         return response
+    
+    def producePremix(self):
+        # Determine whether workflow is producing PREMIX 
+        output_datatiers = [x.split('/')[-1].lower() for x in self.request['OutputDatasets']]
+        return 'premix' in output_datatiers
 
     def getSiteWhiteList( self, pickone=False, verbose=True):
         ### this is not used yet, but should replace most

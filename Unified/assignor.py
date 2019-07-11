@@ -15,6 +15,7 @@ import random
 import json
 import copy
 import os
+import sys
 
 def assignor(url ,specific = None, talk=True, options=None):
     if userLock(): return
@@ -627,9 +628,7 @@ def assignor(url ,specific = None, talk=True, options=None):
         
         ## make sure to autoapprove all NonCustodialSites
         parameters['AutoApproveSubscriptionSites'] = list(set(parameters['NonCustodialSites'] + parameters.get('AutoApproveSubscriptionSites',[])))
-        
         result = reqMgrClient.assignWorkflow(url, wfo.name, None, parameters) ## team is not relevant anymore here
-
 
         # set status
         if not options.test:
@@ -638,6 +637,13 @@ def assignor(url ,specific = None, talk=True, options=None):
                 session.commit()
                 n_assigned+=1
                 wfh.sendLog('assignor',"Properly assigned\n%s"%(json.dumps( parameters, indent=2)))
+		if wfh.producePremix():
+		    title = "Heavy workflow assigned to {}".format(parameters['SiteWhitelist'])
+		    body = "Workflow name: {}".format(wfh.request['RequestName'])
+		    body += "\nOutput dataset(s): {}".format(wfh.request['OutputDatasets'])
+		    body += "\nAssigned to: {}".format(parameters['SiteWhitelist'])
+		    sendEmail(title, body, destination=['cms-production-heavy-workflow-notifications@cern.ch'])
+
                 try:
                     ## refetch information and lock output
                     new_wfi = workflowInfo( url, wfo.name)
