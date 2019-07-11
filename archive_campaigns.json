@@ -1302,13 +1302,6 @@
     }, 
     "resize": "auto"
   }, 
-  "Run3Summer19DR": {
-    "fractionpass": 0.95, 
-    "go": false, 
-    "lumisize": -1, 
-    "maxcopies": 1, 
-    "tune": true
-  }, 
   "RunIIAutumn18FSDR": {
     "fractionpass": 0.95, 
     "go": true, 
