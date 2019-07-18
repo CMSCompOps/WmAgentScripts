@@ -2829,7 +2829,7 @@
       "T2_CH_CERN"
     ], 
     "fractionpass": 0.95, 
-    "go": true, 
+    "go": false, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto", 
