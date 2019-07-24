@@ -2251,7 +2251,8 @@ class siteInfo:
                 'T3_CH_CERN_HelixNebula_REHA',
                 'T3_US_NERSC',
                 'T3_US_TACC',
-                'T3_US_PSC'
+                'T3_US_PSC',
+                'T3_US_SDSC'
                             ]
             for aar in add_as_ready:
                 if not aar in self.sites_ready:
@@ -2295,7 +2296,8 @@ class siteInfo:
                            'T3_US_PSC',
                            'T3_US_TACC',
                            'T3_US_OSG',
-                           'T3_US_Colorado'
+                           'T3_US_Colorado',
+                           'T3_US_SDSC'
         ]
         add_on_aaa = list(set(add_on_good_aaa + add_on_aaa))
         self.sites_AAA = list(set(self.sites_AAA + add_on_aaa ))
@@ -2345,6 +2347,7 @@ class siteInfo:
             'T2_CH_CERN_AI' : 'T2_CH_CERN',
             'T3_US_NERSC' : 'T1_US_FNAL_Disk',
             'T3_US_TACC' : 'T1_US_FNAL_Disk',
+            'T3_US_SDSC' : 'T1_US_FNAL_Disk',
             'T3_US_PSC' : 'T1_US_FNAL_Disk',
             'T3_US_OSG' : 'T1_US_FNAL_Disk',
             'T3_US_Colorado' : 'T1_US_FNAL_Disk',
