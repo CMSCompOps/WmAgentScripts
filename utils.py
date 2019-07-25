@@ -1311,6 +1311,17 @@ def is_json(myjson):
         return False
   return True
 
+def read_file(target):
+    content = open(target).read()
+    if target.endswith('json'):
+        if is_json(content):
+            return content
+        else:
+            print("Opening an invalid json file, return {}")
+            return '{}'
+    else:
+        return content
+
 def eosRead(filename,trials=5):
     filename = filename.replace('//','/')
     if not filename.startswith('/eos/'):
@@ -1321,23 +1332,14 @@ def eosRead(filename,trials=5):
     while T<trials:
         T+=1
         try:
-            content = open(filename).read()
-            if filename.endswith('json'):
-                if is_json(content):
-                    return content
-                else:
-                    print("Opening an invalid json file, return {}")
-                    return '{}'
-            else:
-                return content
-            
+            return read_file(filename) 
         except Exception as e:
             print "failed to read",filename,"from eos"
             time.sleep(2)
             cache = (cache_dir+'/'+filename.replace('/','_')).replace('//','/')
             r = os.system('cp %s %s'%( filename, cache ))
             if r==0:
-                return open(cache).read()
+                return read_file(cache)
     print "unable to read from eos"
     #sys.exit(2)
     return None
