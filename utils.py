@@ -1309,7 +1309,7 @@ def is_json(myjson):
         json_object = json.loads(myjson)
     except ValueError, e:
         return False
-  return True
+    return True
 
 def read_file(target):
     content = open(target).read()
