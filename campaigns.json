@@ -37,7 +37,8 @@
     "maxcopies": 1, 
     "overflow": {
       "PRIM": {}
-    }
+    }, 
+    "partial_copy": 0.95
   }, 
   "Commissioning2017": {
     "custodial_override": [
