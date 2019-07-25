@@ -89,8 +89,8 @@ def equalizor(url , specific = None, options=None):
             ## add NERSC 
             mapping[site].append('T3_US_NERSC')
             mapping[site].append('T3_US_SDSC')
-            #mapping[site].append('T3_US_TACC')
-            #mapping[site].append('T3_US_PSC')
+            mapping[site].append('T3_US_TACC')
+            mapping[site].append('T3_US_PSC')
             ## add OSG            
             mapping[site].append('T3_US_OSG')
             #mapping[site].append('T3_US_Colorado')
