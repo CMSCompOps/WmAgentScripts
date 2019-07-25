@@ -3214,6 +3214,7 @@
     "tune": true
   }, 
   "RunIIWinter19PFCalib16pLHE": {
+    "fractionpass": 0.95, 
     "go": true, 
     "parameters": {
       "EventsPerLumi": 200
@@ -3234,6 +3235,7 @@
     "tune": true
   }, 
   "RunIIWinter19PFCalib17pLHE": {
+    "fractionpass": 0.95, 
     "go": true, 
     "parameters": {
       "EventsPerLumi": 200
@@ -3254,6 +3256,7 @@
     "tune": true
   }, 
   "RunIIWinter19PFCalib18pLHE": {
+    "fractionpass": 0.95, 
     "go": true, 
     "parameters": {
       "EventsPerLumi": 200
@@ -3595,6 +3598,7 @@
     "go": false
   }, 
   "UpgFall14pLHE": {
+    "fractionpass": 0.95, 
     "go": false, 
     "parameters": {
       "EventsPerLumi": 25
