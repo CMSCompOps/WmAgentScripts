@@ -1304,6 +1304,13 @@ class componentCheck(threading.Thread):
         sendLog('componentInfo',"The %s component is unreachable from %s"%(c, host), level='critical')
         #sendEmail("%s Component Down"%c,"The component is down, just annoying you with this","vlimant@cern.ch",['vlimant@cern.ch','matteoc@fnal.gov'])
 
+def is_json(myjson):
+    try:
+        json_object = json.loads(myjson)
+    except ValueError, e:
+        return False
+  return True
+
 def eosRead(filename,trials=5):
     filename = filename.replace('//','/')
     if not filename.startswith('/eos/'):
@@ -1314,7 +1321,16 @@ def eosRead(filename,trials=5):
     while T<trials:
         T+=1
         try:
-            return open(filename).read()
+            content = open(filename).read()
+            if filename.endswith('json'):
+                if is_json(content):
+                    return content
+                else:
+                    print("Opening an invalid json file, return {}")
+                    return '{}'
+            else:
+                return content
+            
         except Exception as e:
             print "failed to read",filename,"from eos"
             time.sleep(2)
