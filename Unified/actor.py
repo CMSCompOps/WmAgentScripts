@@ -57,9 +57,8 @@ def singleRecovery(url, task, initial, actions, do=False):
 		    elif actions[action].lower().endswith('kb'):
 			set_to = int(actions[action][:-2])
 		    else:
-			# invalid
-		 	sendLog('actor','Cannot create ACDC on {}: Wrong memory parameter: {}'.format(initial['RequestName'], actions[action]), level='critical')
-			return None	
+			# invalid parameter -- making no change
+			continue
                 if 'TaskChain' in initial:
                     mem_dict = {}
                     it = 1
