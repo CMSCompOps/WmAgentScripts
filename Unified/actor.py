@@ -53,7 +53,7 @@ def singleRecovery(url, task, initial, actions, do=False):
                     set_to = int(actions[action])
 		except ValueError:
 		    if actions[action].lower().endswith('gb'):
-			set_to = int(actions[action][:-2]*1024)
+			set_to = int(actions[action][:-2])*1024
 		    elif actions[action].lower().endswith('kb'):
 			set_to = int(actions[action][:-2])
 		    else:
