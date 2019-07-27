@@ -27,7 +27,7 @@ def assignor(url ,specific = None, talk=True, options=None):
     CI = campaignInfo()
     SI = siteInfo()
     SI = global_SI()
-    NLI = newLockInfo()
+    ###NLI = newLockInfo()
     ###if not NLI.free() and not options.go: return
     LI = lockInfo()
     if not LI.free() and not options.go: return
