@@ -3,7 +3,7 @@ from assignSession import *
 import reqMgrClient
 from utils import workflowInfo, campaignInfo, siteInfo, userLock, unifiedConfiguration, reqmgr_url, monitor_pub_dir, monitor_dir, global_SI
 from utils import getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction, getDatasetEventsPerLumi, getLFNbase, getDatasetBlocks, lockInfo, getAllStuckDataset, isHEPCloudReady, do_html_in_each_module
-from utils import componentInfo, sendEmail, sendLog, getWorkflows, closeAllBlocks
+from utils import componentInfo, sendEmail, sendLog, getWorkflows, closeAllBlocks, eosRead
 #from utils import lockInfo
 from utils import moduleLock, notRunningBefore
 import optparse
@@ -25,10 +25,10 @@ def assignor(url ,specific = None, talk=True, options=None):
 
     UC = unifiedConfiguration()
     CI = campaignInfo()
-    #SI = siteInfo()
+    SI = siteInfo()
     SI = global_SI()
-    #NLI = newLockInfo()
-    #if not NLI.free() and not options.go: return
+    NLI = newLockInfo()
+    ###if not NLI.free() and not options.go: return
     LI = lockInfo()
     if not LI.free() and not options.go: return
 
@@ -61,10 +61,10 @@ def assignor(url ,specific = None, talk=True, options=None):
     #if options.partial and not specific:
     #    pass
 
-    dataset_endpoints = json.loads(open('%s/dataset_endpoints.json'%monitor_dir).read())
-    aaa_mapping = json.loads(open('%s/equalizor.json'%monitor_pub_dir).read())['mapping']
+    dataset_endpoints = json.loads(eosRead('%s/dataset_endpoints.json'%monitor_dir))
+    aaa_mapping = json.loads(eosRead('%s/equalizor.json'%monitor_pub_dir))['mapping']
     all_stuck = set()
-    all_stuck.update( json.loads( open('%s/stuck_transfers.json'%monitor_pub_dir).read() ))
+    all_stuck.update( json.loads(eosRead('%s/stuck_transfers.json'%monitor_pub_dir) ))
     all_stuck.update( getAllStuckDataset()) 
 
     max_per_round = UC.get('max_per_round').get('assignor',None)
