@@ -1738,7 +1738,7 @@ class ThreadHandler(threading.Thread):
         last_talk = time.mktime(time.gmtime())
         while self.threads:
             if self.timeout and (time.mktime(time.gmtime()) - start_now) > (self.timeout*60.):
-                print "[%s] Stopping to start threads because the time out is over %d "%(self.label,time.asctime(time.gmtime()))
+                print "[%s] Stopping to start threads because the time out is over %s "%(self.label,time.asctime(time.gmtime()))
                 for t in self.r_threads:
                     while t.is_alive():
                         time.sleep(refresh_ping)
