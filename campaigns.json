@@ -25,6 +25,7 @@
     "partial_copy": 0.95
   }, 
   "BParking2019": {
+    "custodial": "T0_CH_CERN_MSS", 
     "custodial_override": [
       "DQMIO"
     ], 
