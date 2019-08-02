@@ -1404,6 +1404,9 @@
   "UltraLegacy2017": {
     "custodial_override": [
       "DQMIO"
+    ],
+    "labels": [
+      "PHATTEST"
     ], 
     "fractionpass": 1, 
     "go": true, 
