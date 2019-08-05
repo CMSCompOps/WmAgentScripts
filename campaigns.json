@@ -23,7 +23,6 @@
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto", 
-    "secondary_AAA": false, 
     "tune": true
   }, 
   "RunIISummer19UL18HLT": {
@@ -39,7 +38,6 @@
       }
     }, 
     "resize": "auto", 
-    "secondary_AAA": false, 
     "tune": true
   },
   "Run3Summer19DR": {
@@ -872,7 +870,6 @@
       }
     }, 
     "resize": "auto", 
-    "secondary_AAA": true, 
     "tune": true
   }, 
   "RunIISummer19UL16MiniAOD": {
@@ -894,7 +891,6 @@
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto", 
-    "secondary_AAA": true, 
     "tune": true
   }, 
   "RunIISummer19UL16SIM": {
@@ -985,7 +981,6 @@
       }
     }, 
     "resize": "auto", 
-    "secondary_AAA": false, 
     "tune": true
   }, 
   "RunIISummer19UL17MiniAOD": {
@@ -1007,7 +1002,6 @@
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto", 
-    "secondary_AAA": false, 
     "tune": true
   }, 
   "RunIISummer19UL17SIM": {
@@ -1120,7 +1114,6 @@
       }
     }, 
     "resize": "auto", 
-    "secondary_AAA": false, 
     "tune": true
   }, 
   "RunIISummer19ULDIGI": {
@@ -1145,7 +1138,6 @@
       }
     }, 
     "resize": "auto", 
-    "secondary_AAA": false, 
     "tune": true
   }, 
   "RunIISummer19ULPrePremix": {
@@ -1176,7 +1168,6 @@
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto", 
-    "secondary_AAA": false, 
     "tune": true
   },
   "RunIIWinter15pLHE": {
