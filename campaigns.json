@@ -294,7 +294,9 @@
           "T1_DE_KIT", 
           "T2_DE_RWTH", 
           "T2_US_Florida", 
-          "T2_US_Wiscosin"
+          "T2_US_Wiscosin",
+          "T2_US_Nebraska",
+          "T2_US_Purdue"
         ]
       }
     }, 
@@ -1156,7 +1158,9 @@
           "T1_IT_CNAF", 
           "T1_DE_KIT", 
           "T2_US_Wisconsin", 
-          "T2_US_Florida"
+          "T2_US_Florida",
+          "T2_US_Nebraska",
+          "T2_US_Purdue"
         ]
       }
     }, 
