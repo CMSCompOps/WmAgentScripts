@@ -498,7 +498,7 @@ def assignor(url ,specific = None, talk=True, options=None):
             n_stalled+=1
             continue
 
-
+ 
         t1_only = [ce for ce in sites_allowed if ce.startswith('T1')]
         if t1_only:
             # try to pick from T1 only first
