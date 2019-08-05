@@ -195,6 +195,7 @@ def closor(url, specific=None, options=None):
 
     batch_go = {}
     batch_warnings = defaultdict(set)
+    batch_extreme_warnings = defaultdict(set)
     batch_goodness = UC.get("batch_goodness")
 
     closers = []
@@ -215,6 +216,7 @@ def closor(url, specific=None, options=None):
             batch_go = batch_go,
             #stats = stats,
             batch_warnings = batch_warnings,
+            batch_extreme_warnings = batch_extreme_warnings,
             all_late_files = all_late_files,
             held = held,
             ))
@@ -317,6 +319,34 @@ https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?campaign=%s
 %s 
 This is an automated message.
 """%( bname, 
+      bname,
+      issues)
+            to = ['hn-cms-relval@cern.ch']
+            sendEmail(subject, text, destination=to )
+            ## just announced ; take it out now.
+            #BI.pop( bname )
+            subject = "Release Validation low statistics"
+            issues = ""
+            if batch_extreme_warnings[ bname ]:
+                issues="The following datasets have outstanding completion (<50%%) issues:\n\n"
+                issues+="\n".join( sorted( batch_extreme_warnings[ bname ] ))
+                issues+="\n\n"
+            text = """
+Dear all,
+
+a batch of release validation workflows has finished.
+
+Batch ID:
+
+%s
+
+Detail of the workflows
+
+https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?campaign=%s
+
+%s 
+This is an automated message.
+"""%( bname,
       bname,
       issues)
             to = ['hn-cms-relval@cern.ch']
@@ -435,6 +465,8 @@ class CloseBuster(threading.Thread):
             wfi.sendLog('closor',"\t%s"% completion_line)
             if wfi.isRelval() and fraction < batch_goodness:
                 self.batch_warnings[ wfi.getCampaign()].add( completion_line )
+                if fraction < 50:
+                    self.batch_extreme_warnings[ wfi.getCampaign()].add( completion_line )
             stats[out] = lumi_count
             all_OK[out] = True 
 
