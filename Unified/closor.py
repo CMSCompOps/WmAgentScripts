@@ -331,27 +331,19 @@ This is an automated message.
                 issues="The following datasets have outstanding completion (<50%%) issues:\n\n"
                 issues+="\n".join( sorted( batch_extreme_warnings[ bname ] ))
                 issues+="\n\n"
-            text = """
-Dear all,
-
-a batch of release validation workflows has finished.
-
-Batch ID:
-
-%s
-
-Detail of the workflows
-
-https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?campaign=%s
-
-%s 
-This is an automated message.
-"""%( bname,
-      bname,
-      issues)
-            to = ['hn-cms-relval@cern.ch']
-            sendEmail(subject, text, destination=to )
-            ## just announced ; take it out now.
+                text = ""
+                text+= "Dear all,\n\n"
+                text+= "A batch of release validation workflows has finished.\n\n"
+                text+= "Batch ID:\n"
+                text+= "%s\n"%( bname )
+                text+= "Detail of the workflows\n"
+                text+= "https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?campaign=%s\n"%( bname )
+                text+= "%s\n"%(issues) 
+                text+= "This is an automated message."
+                text+= ""
+                to = ['hn-cms-relval@cern.ch']
+                sendEmail(subject, text, destination=to )
+                ## just announced ; take it out now.
             BI.pop( bname )
 
 
