@@ -325,7 +325,7 @@ This is an automated message.
             sendEmail(subject, text, destination=to )
             ## just announced ; take it out now.
             #BI.pop( bname )
-            subject = "Release Validation low statistics"
+            subject = "Low Statistics for Relval"
             issues = ""
             if batch_extreme_warnings[ bname ]:
                 issues="The following datasets have outstanding completion (<50%%) issues:\n\n"
