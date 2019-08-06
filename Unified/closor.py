@@ -334,12 +334,12 @@ This is an automated message.
                 text = ""
                 text+= "Dear all,\n\n"
                 text+= "A batch of release validation workflows has finished.\n\n"
-                text+= "Batch ID:\n"
-                text+= "%s\n"%( bname )
-                text+= "Detail of the workflows\n"
-                text+= "https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?campaign=%s\n"%( bname )
-                text+= "%s\n"%(issues) 
-                text+= "This is an automated message."
+                text+= "Batch ID:\n\n"
+                text+= "%s\n\n"%( bname )
+                text+= "Detail of the workflows\n\n"
+                text+= "https://dmytro.web.cern.ch/dmytro/cmsprodmon/requests.php?campaign=%s\n\n"%( bname )
+                text+= "%s\n\n"%(issues) 
+                text+= "This is an automated message.\n\n"
                 text+= ""
                 to = ['hn-cms-relval@cern.ch']
                 sendEmail(subject, text, destination=to )
