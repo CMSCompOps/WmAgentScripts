@@ -1401,7 +1401,11 @@
       "DQMIO"
     ],
     "labels": [
-      "PHATTEST"
+      "PHATTEST",
+      "25Jul2019",
+      "27May2019",
+      "29Jun2019",
+      "25Jul2019"
     ], 
     "fractionpass": 1, 
     "go": true, 
