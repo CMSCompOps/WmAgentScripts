@@ -1423,5 +1423,42 @@
     "resize": "auto",
     "secondary_AAA": true,
     "tune": true
+  },
+  "HINppWinter16DR": {
+    "custodial": "T1_FR_CCIN2P3_MSS",
+    "fractionpass": 0.95,
+    "go": true,
+    "parameters": {
+      "MergedLFNBase": "/store/himc",
+      "SiteBlacklist": [
+        "T1_US_FNAL",
+        "T2_US_Purdue",
+        "T2_US_Caltech",
+        "T2_US_Florida",
+        "T2_US_Nebraska",
+        "T2_US_UCSD",
+        "T2_US_Wisconsin"
+      ]
+    },
+    "secondaries": {
+      "/MinBias_TuneCUETP8M1_5p02TeV-pythia8/pp502Fall15-MCRUN2_71_V1-v1/GEN-SIM": {}
+    }
+  },
+  "pp502Fall15": {
+    "custodial": "T1_FR_CCIN2P3_MSS",
+    "fractionpass": 0.95,
+    "go": true,
+    "parameters": {
+      "MergedLFNBase": "/store/himc",
+      "SiteBlacklist": [
+        "T1_US_FNAL",
+        "T2_US_Purdue",
+        "T2_US_Caltech",
+        "T2_US_Florida",
+        "T2_US_Nebraska",
+        "T2_US_UCSD",
+        "T2_US_Wisconsin"
+      ]
+    }
   }
 }
