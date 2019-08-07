@@ -1,10 +1,12 @@
 """
 For more details about StoreResults workflows, please refer to:
 https://github.com/dmwm/WMCore/wiki/StoreResults-requests
+
 Pre-requisites:
  1. a valid proxy in your X509_USER_PROXY variable
  2. wmagent env: source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh
  3. have the correct permissions in SiteDB, otherwise dataset migration won't work
+
 Expected input json file like:
 [{"InputDataset": "/EmbeddingRun2016B/MuTauFinalState-imputSep16DoubleMu_mirror_miniAOD-v2/USER",
   "DbsUrl": "phys03",
@@ -14,6 +16,7 @@ Expected input json file like:
   "CMSSWVersion": "CMSSW_8_0_26_patch1"},
   {..},
   {..}]
+
 """
 
 from __future__ import print_function, division
@@ -106,12 +109,17 @@ def buildRequest(userDict):
     # Truncate the ProcessingString, otherwise it can be larger than allowed
     primDset, procDset, _tier = newSchema['InputDataset'].split("/")[1:]
     acqEra, procStr = procDset.split("-", 1)
-    newSchema["AcquisitionEra"] = acqEra  # should we worry about lenght limits?
+    newSchema["AcquisitionEra"] = acqEra  # should we worry about length limits?
     procStr, procVer = procStr.rsplit("-", 1)
     newSchema["ProcessingString"] = "StoreResults_" + procStr[:67]  # limit to 80 chars
-    newSchema["ProcessingVersion"] = int(procVer[1:])
+    # ProcessingString cannot have a dash char
+    newSchema["ProcessingString"] = newSchema["ProcessingString"].replace("-", "_")
+    try:
+        newSchema["ProcessingVersion"] = int(procVer[1:])
+    except ValueError:
+        newSchema["ProcessingVersion"] = 1
     # Use PrimaryDataset and ProcessedDataset in the RequestString
-    newSchema["RequestString"] = primDset[:50] + "-" + procDset[:50]
+    newSchema["RequestString"] = primDset[:35] + "-" + procDset[:35]
     return newSchema
 
 
