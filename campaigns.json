@@ -1,91 +1,4 @@
 {
-  "RunIISummer19UL18DIGI": {
-    "fractionpass": 0.95, 
-    "go": false, 
-    "lumisize": -1, 
-    "maxcopies": 1, 
-    "resize": "auto", 
-    "secondary_AAA": false, 
-    "tune": true
-  },
-  "RunIISummer19UL18DIGIPremix": {
-    "fractionpass": 0.95, 
-    "go": false, 
-    "lumisize": -1, 
-    "maxcopies": 1, 
-    "resize": "auto", 
-    "secondary_AAA": true, 
-    "tune": true
-  }, 
-  "RunIISummer19UL18RECO": {
-    "fractionpass": 0.95, 
-    "go": false, 
-    "lumisize": -1, 
-    "maxcopies": 1, 
-    "resize": "auto", 
-    "tune": true
-  }, 
-  "RunIISummer19UL18HLT": {
-    "fractionpass": 0.95, 
-    "go": false, 
-    "lumisize": -1, 
-    "maxcopies": 1, 
-    "overflow": {
-      "PU": {
-        "force": false, 
-        "max": 0, 
-        "pending": 0
-      }
-    }, 
-    "resize": "auto", 
-    "tune": true
-  },
-  "Run3Summer19DR": {
-    "fractionpass": 0.95, 
-    "go": true, 
-    "lumisize": -1, 
-    "maxcopies": 1, 
-    "secondaries": {
-      "/MinBias_TuneCP5_14TeV-pythia8/Run3Summer19GS-106X_upgrade2021_realistic_v5-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_DE_KIT", 
-          "T2_US_Vanderbilt"
-        ]
-      }
-    }, 
-    "tune": true
-  },   
-  "Run3Summer19DRPremix": {
-    "SecondaryLocation": [
-      "T1_US_FNAL", 
-      "T2_CH_CERN"
-    ], 
-    "fractionpass": 0.95, 
-    "go": true, 
-    "lumisize": -1, 
-    "maxcopies": 1, 
-    "overflow": {
-      "PREMIX": {}
-    }, 
-    "resize": "auto", 
-    "secondaries": {
-      "/Neutrino_E-10_gun/RunIISummer17PrePremix-PURun3_106X_mcRun3_2021_realistic_v1-v1/PREMIX": {}, 
-      "/Neutrino_E-10_gun/RunIISummer17PrePremix-PURun3_106X_mcRun3_2021_realistic_v3-v4/PREMIX": {}, 
-      "/Neutrino_E-10_gun/RunIISummer17PrePremix-PURun3_106X_mcRun3_2023_realistic_v3-v2/PREMIX": {}, 
-      "/Neutrino_E-10_gun/RunIISummer17PrePremix-PURun3_106X_mcRun3_2024_realistic_v4-v2/PREMIX": {}
-    }, 
-    "secondary_AAA": true, 
-    "tune": true
-  }, 
-  "RunIISummer19UL18DIGIPremix": {
-    "fractionpass": 0.95, 
-    "go": false, 
-    "lumisize": -1, 
-    "maxcopies": 1, 
-    "resize": "auto", 
-    "secondary_AAA": true, 
-    "tune": true
-  },
   "BParking2019": {
     "custodial": "T0_CH_CERN_MSS", 
     "custodial_override": [
@@ -100,9 +13,9 @@
     "maxcopies": 1, 
     "overflow": {
       "PRIM": {}
-    },
+    }, 
     "partial_copy": 0.95
-  },
+  }, 
   "Commissioning2018": {
     "custodial": "T1_US_FNAL_MSS", 
     "custodial_override": [
@@ -115,7 +28,7 @@
     "overflow": {
       "PRIM": {}
     }
-  },
+  }, 
   "HINPbPbAutumn18DR": {
     "custodial": "T1_FR_CCIN2P3_MSS", 
     "fractionpass": 0.95, 
@@ -261,7 +174,27 @@
       }
     }, 
     "tune": true
-  },
+  }, 
+  "HINppWinter16DR": {
+    "custodial": "T1_FR_CCIN2P3_MSS", 
+    "fractionpass": 0.95, 
+    "go": true, 
+    "parameters": {
+      "MergedLFNBase": "/store/himc", 
+      "SiteBlacklist": [
+        "T1_US_FNAL", 
+        "T2_US_Purdue", 
+        "T2_US_Caltech", 
+        "T2_US_Florida", 
+        "T2_US_Nebraska", 
+        "T2_US_UCSD", 
+        "T2_US_Wisconsin"
+      ]
+    }, 
+    "secondaries": {
+      "/MinBias_TuneCUETP8M1_5p02TeV-pythia8/pp502Fall15-MCRUN2_71_V1-v1/GEN-SIM": {}
+    }
+  }, 
   "LowPU2010": {
     "fractionpass": 0.95, 
     "go": true, 
@@ -278,10 +211,10 @@
     "tune": true
   }, 
   "NANOAODRun2DataProd": {
-    "go": true,  
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
-  },
+  }, 
   "PhaseIITDRSpring19DR": {
     "fractionpass": 0.95, 
     "go": true, 
@@ -294,8 +227,8 @@
           "T1_DE_KIT", 
           "T2_DE_RWTH", 
           "T2_US_Florida", 
-          "T2_US_Wiscosin",
-          "T2_US_Nebraska",
+          "T2_US_Wiscosin", 
+          "T2_US_Nebraska", 
           "T2_US_Purdue"
         ]
       }
@@ -319,6 +252,43 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "tune": true
+  }, 
+  "Run3Summer19DR": {
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "secondaries": {
+      "/MinBias_TuneCP5_14TeV-pythia8/Run3Summer19GS-106X_upgrade2021_realistic_v5-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_DE_KIT", 
+          "T2_US_Vanderbilt"
+        ]
+      }
+    }, 
+    "tune": true
+  }, 
+  "Run3Summer19DRPremix": {
+    "SecondaryLocation": [
+      "T1_US_FNAL", 
+      "T2_CH_CERN"
+    ], 
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "overflow": {
+      "PREMIX": {}
+    }, 
+    "resize": "auto", 
+    "secondaries": {
+      "/Neutrino_E-10_gun/RunIISummer17PrePremix-PURun3_106X_mcRun3_2021_realistic_v1-v1/PREMIX": {}, 
+      "/Neutrino_E-10_gun/RunIISummer17PrePremix-PURun3_106X_mcRun3_2021_realistic_v3-v4/PREMIX": {}, 
+      "/Neutrino_E-10_gun/RunIISummer17PrePremix-PURun3_106X_mcRun3_2023_realistic_v3-v2/PREMIX": {}, 
+      "/Neutrino_E-10_gun/RunIISummer17PrePremix-PURun3_106X_mcRun3_2024_realistic_v4-v2/PREMIX": {}
+    }, 
+    "secondary_AAA": true, 
     "tune": true
   }, 
   "Run3Summer19GS": {
@@ -414,7 +384,7 @@
     }, 
     "secondary_AAA": true, 
     "tune": true
-  },
+  }, 
   "RunIIAutumn18FSPremix": {
     "SecondaryLocation": [
       "T1_US_FNAL", 
@@ -466,240 +436,240 @@
   }, 
   "RunIIFall17DRPremix": {
     "SecondaryLocation": [
-      "T1_US_FNAL",
+      "T1_US_FNAL", 
       "T2_CH_CERN"
-    ],
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
-    "maxcopies": 1,
+    ], 
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
     "overflow": {
       "PREMIX": {}
-    },
-    "resize": "auto",
+    }, 
+    "resize": "auto", 
     "secondaries": {
       "/Neutrino_E-10_gun/RunIISummer17PrePremix-MCv2_correctPU_94X_mc2017_realistic_v9-v1/GEN-SIM-DIGI-RAW": {}
-    },
-    "secondary_AAA": true,
+    }, 
+    "secondary_AAA": true, 
     "tune": true
-  },
+  }, 
   "RunIIFall17DRStdmix": {
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
-    "maxcopies": 1,
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
     "overflow": {
       "PU": {
-        "max": 20000,
+        "max": 20000, 
         "pending": 0
       }
-    },
-    "resize": "auto",
+    }, 
+    "resize": "auto", 
     "secondaries": {
       "/MinBias_TuneCP1_13TeV-pythia8/RunIIFall17GS-93X_mc2017_realistic_v3-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_DE_KIT",
+          "T1_DE_KIT", 
           "T1_IT_CNAF"
         ]
-      },
+      }, 
       "/MinBias_TuneCP5_13TeV-pythia8_Fall17/RunIIFall17GS-93X_mc2017_realistic_v3-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_IT_CNAF",
+          "T1_IT_CNAF", 
           "T1_DE_KIT"
         ]
-      },
+      }, 
       "/MinBias_TuneCP5_inelasticON_13TeV-pythia8/RunIIFall17GS-93X_mc2017_realistic_v3-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_US_FNAL",
-          "T1_DE_KIT",
-          "T2_IN_TIFR",
-          "T2_US_Nebraska",
+          "T1_US_FNAL", 
+          "T1_DE_KIT", 
+          "T2_IN_TIFR", 
+          "T2_US_Nebraska", 
           "T1_FR_CCIN2P3"
         ]
       }
-    },
-    "secondary_AAA": false,
+    }, 
+    "secondary_AAA": false, 
     "tune": false
-  },
+  }, 
   "RunIIFall17FSPremix": {
     "SecondaryLocation": [
       "T2_CH_CERN"
-    ],
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
-    "maxcopies": 1,
+    ], 
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
     "overflow": {
       "PREMIX": {}
-    },
-    "resize": "auto",
+    }, 
+    "resize": "auto", 
     "secondaries": {
       "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUMoriond17_94X_mc2017_realistic_v15-v1/GEN-SIM-DIGI-RAW": {}
-    },
-    "secondary_AAA": true,
+    }, 
+    "secondary_AAA": true, 
     "tune": true
-  },
+  }, 
   "RunIIFall17GS": {
-    "force-complete": 0.99,
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
-    "resize": "auto",
+    "force-complete": 0.99, 
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
+    "resize": "auto", 
     "tune": true
-  },
+  }, 
   "RunIIFall17MiniAODv2": {
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
-    "maxcopies": 1,
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
     "resize": "auto"
-  },
+  }, 
   "RunIIFall17NanoAOD": {
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
     "maxcopies": 1
-  },
+  }, 
   "RunIIFall17NanoAODv4": {
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
     "maxcopies": 1
-  },
+  }, 
   "RunIIFall17NanoAODv5": {
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
     "maxcopies": 1
-  },
+  }, 
   "RunIIFall17pLHE": {
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
     "tune": true
-  },
+  }, 
   "RunIIFall17wmLHEGS": {
-    "force-complete": 0.99,
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
+    "force-complete": 0.99, 
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
     "overflow": {
       "LHE": {
         "site_list": "sites_AAA"
       }
-    },
+    }, 
     "tune": true
-  },
+  }, 
   "RunIIFall18GS": {
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
-    "resize": "auto",
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
+    "resize": "auto", 
     "tune": true
-  },
+  }, 
   "RunIIFall18pLHE": {
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
     "tune": true
-  },
+  }, 
   "RunIIFall18wmLHEGS": {
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
-    "overflow": {},
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
+    "overflow": {}, 
     "tune": true
-  },
+  }, 
   "RunIISummer15GS": {
-    "force-complete": 0.99,
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": 1000,
+    "force-complete": 0.99, 
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": 1000, 
     "overflow": {
       "LHE": {
         "site_list": "sites_AAA"
       }
-    },
+    }, 
     "parameters": {
       "EventsPerLumi": "x2"
-    },
-    "resize": "auto",
+    }, 
+    "resize": "auto", 
     "tune": true
-  },
+  }, 
   "RunIISummer15wmLHEGS": {
-    "force-complete": 0.99,
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
+    "force-complete": 0.99, 
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
     "parameters": {
-      "EventsPerLumi": "x2",
+      "EventsPerLumi": "x2", 
       "MaxMergeEvents": 4000000
-    },
-    "resize": "auto",
+    }, 
+    "resize": "auto", 
     "tune": true
-  },
+  }, 
   "RunIISummer16DR80": {
-    "NONONO_force-complete": 0.99,
-    "NONONO_force-timeout": 7,
-    "NONONO_partial_copy": 0.98,
-    "NO_tune": true,
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
-    "maxcopies": 2,
+    "NONONO_force-complete": 0.99, 
+    "NONONO_force-timeout": 7, 
+    "NONONO_partial_copy": 0.98, 
+    "NO_tune": true, 
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
+    "maxcopies": 2, 
     "overflow": {
       "PU": {
-        "force": false,
-        "max": 20000,
+        "force": false, 
+        "max": 20000, 
         "pending": 0
       }
-    },
-    "partial_copy": 0.95,
+    }, 
+    "partial_copy": 0.95, 
     "secondaries": {
-      "/MinBias_TuneCP0_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM": {},
-      "/MinBias_TuneCP2_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM": {},
-      "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM": {},
+      "/MinBias_TuneCP0_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM": {}, 
+      "/MinBias_TuneCP2_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM": {}, 
+      "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM": {}, 
       "/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1_ext1-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_US_FNAL",
+          "T1_US_FNAL", 
           "T2_US_Nebraska"
         ]
-      },
-      "/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-Realistic25ns13TeV2016Collision_MCRUN2_71_V1-v1/GEN-SIM": {},
-      "/Min_Bias_13TeV_pythia8_TuneCUETP8M2/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM": {},
-      "/Min_Bias_13TeV_pythia8_TuneCUETP8M3/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM": {},
+      }, 
+      "/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-Realistic25ns13TeV2016Collision_MCRUN2_71_V1-v1/GEN-SIM": {}, 
+      "/Min_Bias_13TeV_pythia8_TuneCUETP8M2/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM": {}, 
+      "/Min_Bias_13TeV_pythia8_TuneCUETP8M3/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM": {}, 
       "/Min_Bias_13TeV_pythia8_TuneCUETP8M4/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM": {}
     }
-  },
+  }, 
   "RunIISummer16DR80Premix": {
     "NO_NO_fractionpass": {
       "90000": 0.9
-    },
+    }, 
     "SecondaryLocation": [
       "T1_US_FNAL"
-    ],
-    "force-complete": 0.99,
-    "force-timeout": 7,
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
-    "maxcopies": 1,
+    ], 
+    "force-complete": 0.99, 
+    "force-timeout": 7, 
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
     "overflow": {
       "PREMIX": {}
-    },
-    "partial_copy": 0.95,
+    }, 
+    "partial_copy": 0.95, 
     "resize": {
-      "maxCores": 10,
-      "memoryPerThread": 500,
+      "maxCores": 10, 
+      "memoryPerThread": 500, 
       "minCores": 3
-    },
+    }, 
     "secondaries": {
       "/Neutrino_E-10_gun/RunIISpring15PrePremix-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v2-v2/GEN-SIM-DIGI-RAW": {}
-    },
-    "secondary_AAA": true,
-    "truncate-complete": 0.95,
+    }, 
+    "secondary_AAA": true, 
+    "truncate-complete": 0.95, 
     "tune": true
-  },
+  }, 
   "RunIISummer16FSPremix": {
     "SiteWhitelist": [
       "T1_US_FNAL", 
@@ -727,128 +697,137 @@
     }
   }, 
   "RunIISummer16MiniAODv3": {
-    "force-complete": 0.99,
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
+    "force-complete": 0.99, 
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
     "maxcopies": 1
-  },
+  }, 
   "RunIISummer16NanoAOD": {
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
     "maxcopies": 1
-  },
+  }, 
   "RunIISummer16NanoAODv4": {
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
     "maxcopies": 1
-  },
+  }, 
   "RunIISummer16NanoAODv5": {
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
     "maxcopies": 1
-  },
+  }, 
   "RunIISummer17PrePremix": {
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
     "parameters": {
       "NonCustodialSites": [
-        "T2_CH_CERN",
+        "T2_CH_CERN", 
         "T1_US_FNAL_Disk"
       ]
-    },
+    }, 
     "secondaries": {
       "/MinBias_TuneCP2_13TeV-pythia8/RunIIFall17FSPremix-PUMoriond17_94X_mc2017_realistic_v11-v1/GEN-SIM-RECO": {
         "SiteWhitelist": [
-          "T1_US_FNAL",
-          "T2_BE_IIHE",
+          "T1_US_FNAL", 
+          "T2_BE_IIHE", 
           "T2_AT_Vienna"
         ]
-      },
+      }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIFall18GS-102X_upgrade2018_realistic_v9-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_ES_PIC",
-          "T1_RU_JINR",
-          "T2_US_MIT",
-          "T2_US_Wisconsin",
-          "T2_DE_DESY",
-          "T2_US_Florida",
-          "T2_DE_RWTH",
+          "T1_ES_PIC", 
+          "T1_RU_JINR", 
+          "T2_US_MIT", 
+          "T2_US_Wisconsin", 
+          "T2_DE_DESY", 
+          "T2_US_Florida", 
+          "T2_DE_RWTH", 
           "T2_US_Nebraska"
         ]
-      },
+      }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring18GS-100X_upgrade2018_realistic_v9-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T2_US_Wisconsin",
-          "T2_DE_DESY",
-          "T2_US_Florida",
-          "T1_US_FNAL",
-          "T2_CH_CERN",
-          "T2_DE_RWTH",
+          "T2_US_Wisconsin", 
+          "T2_DE_DESY", 
+          "T2_US_Florida", 
+          "T1_US_FNAL", 
+          "T2_CH_CERN", 
+          "T2_DE_RWTH", 
           "T2_US_Nebraska"
         ]
-      },
+      }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer18GS-101X_upgrade2018_realistic_v7-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T2_US_Wisconsin",
-          "T2_DE_DESY",
-          "T2_US_Florida",
-          "T1_US_FNAL",
-          "T2_CH_CERN",
-          "T2_DE_RWTH",
+          "T2_US_Wisconsin", 
+          "T2_DE_DESY", 
+          "T2_US_Florida", 
+          "T1_US_FNAL", 
+          "T2_CH_CERN", 
+          "T2_DE_RWTH", 
           "T2_US_Nebraska"
         ]
-      },
+      }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib16GS-105X_mcRun2_asymptotic_v2-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T2_IT_Pisa",
+          "T2_IT_Pisa", 
           "T2_IT_Legnaro"
         ]
-      },
+      }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib17GS-105X_mc2017_realistic_v5_ext1-v1/GEN-SIM": {
         "SiteWhitelist": [
           "T1_DE_KIT"
         ]
-      },
+      }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib18GS-105X_upgrade2018_realistic_v4-v1/GEN-SIM": {
         "SiteWhitelist": [
           "T1_US_FNAL"
         ]
-      },
+      }, 
       "/MinBias_TuneCP5_14TeV-pythia8/Run3Summer19GS-106X_upgrade2021_realistic_v5-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_DE_KIT",
+          "T1_DE_KIT", 
           "T2_US_Vanderbilt"
         ]
-      },
+      }, 
       "/MinBias_TuneCP5_inelasticON_13TeV-pythia8/RunIIFall17GS-93X_mc2017_realistic_v3-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T2_US_Nebraska",
-          "T2_US_Caltech",
-          "T2_US_MIT",
-          "T1_FR_CCIN2P3",
-          "T1_DE_KIT",
-          "T2_CH_CERN",
+          "T2_US_Nebraska", 
+          "T2_US_Caltech", 
+          "T2_US_MIT", 
+          "T1_FR_CCIN2P3", 
+          "T1_DE_KIT", 
+          "T2_CH_CERN", 
           "T2_CH_CERN_HLT"
         ]
-      },
+      }, 
       "/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer17GS-92X_upgrade2017_realistic_v2-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T2_US_Wisconsin",
-          "T1_ES_PIC",
-          "T1_IT_CNAF",
-          "T2_DE_DESY",
-          "T2_US_Florida",
+          "T2_US_Wisconsin", 
+          "T1_ES_PIC", 
+          "T1_IT_CNAF", 
+          "T2_DE_DESY", 
+          "T2_US_Florida", 
           "T2_UK_London_IC"
         ]
       }
-    },
+    }, 
     "tune": true
-  },
+  }, 
+  "RunIISummer19UL16DIGIPremix": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "resize": "auto", 
+    "secondary_AAA": true, 
+    "tune": true
+  }, 
   "RunIISummer19UL16GEN": {
     "fractionpass": 0.95, 
     "go": true, 
@@ -952,7 +931,7 @@
     }, 
     "secondary_AAA": true, 
     "tune": true
-  },  
+  }, 
   "RunIISummer19UL17GEN": {
     "fractionpass": 0.95, 
     "go": true, 
@@ -1036,6 +1015,24 @@
     "lumisize": -1, 
     "tune": true
   }, 
+  "RunIISummer19UL18DIGI": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "resize": "auto", 
+    "secondary_AAA": false, 
+    "tune": true
+  }, 
+  "RunIISummer19UL18DIGIPremix": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "resize": "auto", 
+    "secondary_AAA": true, 
+    "tune": true
+  }, 
   "RunIISummer19UL18DR": {
     "fractionpass": 0.95, 
     "go": false, 
@@ -1065,6 +1062,21 @@
     ], 
     "tune": true
   }, 
+  "RunIISummer19UL18HLT": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "overflow": {
+      "PU": {
+        "force": false, 
+        "max": 0, 
+        "pending": 0
+      }
+    }, 
+    "resize": "auto", 
+    "tune": true
+  }, 
   "RunIISummer19UL18MiniAOD": {
     "fractionpass": 0.95, 
     "go": false, 
@@ -1077,6 +1089,14 @@
     "go": false, 
     "lumisize": -1, 
     "maxcopies": 1
+  }, 
+  "RunIISummer19UL18RECO": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "resize": "auto", 
+    "tune": true
   }, 
   "RunIISummer19UL18SIM": {
     "fractionpass": 0.95, 
@@ -1158,8 +1178,8 @@
           "T1_IT_CNAF", 
           "T1_DE_KIT", 
           "T2_US_Wisconsin", 
-          "T2_US_Florida",
-          "T2_US_Nebraska",
+          "T2_US_Florida", 
+          "T2_US_Nebraska", 
           "T2_US_Purdue"
         ]
       }
@@ -1173,291 +1193,263 @@
     "maxcopies": 1, 
     "resize": "auto", 
     "tune": true
-  },
+  }, 
   "RunIIWinter15pLHE": {
-    "go": true,
-    "fractionpass": 0.95,
+    "fractionpass": 0.95, 
+    "go": true, 
     "parameters": {
       "EventsPerLumi": 200
-    },
+    }, 
     "recover": false
-  },
+  }, 
   "RunIIWinter19PFCalib16GS": {
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
-    "resize": "auto",
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
+    "resize": "auto", 
     "tune": true
-  },
+  }, 
   "RunIIWinter19PFCalib16pLHE": {
-    "go": true,
-    "fractionpass": 0.95,
+    "fractionpass": 0.95, 
+    "go": true, 
     "parameters": {
       "EventsPerLumi": 200
-    },
+    }, 
     "recover": false
-  },
+  }, 
   "RunIIWinter19PFCalib16wmLHEGS": {
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
     "tune": true
-  },
+  }, 
   "RunIIWinter19PFCalib17GS": {
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
-    "resize": "auto",
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
+    "resize": "auto", 
     "tune": true
-  },
+  }, 
   "RunIIWinter19PFCalib17pLHE": {
-    "go": true,
-    "fractionpass": 0.95,
+    "fractionpass": 0.95, 
+    "go": true, 
     "parameters": {
       "EventsPerLumi": 200
-    },
+    }, 
     "recover": false
-  },
+  }, 
   "RunIIWinter19PFCalib17wmLHEGS": {
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
     "tune": true
-  },
+  }, 
   "RunIIWinter19PFCalib18GS": {
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
-    "resize": "auto",
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
+    "resize": "auto", 
     "tune": true
-  },
+  }, 
   "RunIIWinter19PFCalib18pLHE": {
-    "go": true,
-    "fractionpass": 0.95,
+    "fractionpass": 0.95, 
+    "go": true, 
     "parameters": {
       "EventsPerLumi": 200
-    },
+    }, 
     "recover": false
-  },
+  }, 
   "RunIIWinter19PFCalib18wmLHEGS": {
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
     "tune": true
-  },
+  }, 
   "RunIIWinter19PFCalibDR": {
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
-    "maxcopies": 1,
-    "resize": "auto",
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "resize": "auto", 
     "secondaries": {
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib16GS-105X_mcRun2_asymptotic_v2-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_DE_KIT",
+          "T1_DE_KIT", 
           "T2_IT_Legnaro"
         ]
-      },
+      }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib17GS-105X_mc2017_realistic_v5_ext1-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_DE_KIT",
-          "T1_RU_JINR",
-          "T1_FR_CCIN2P3",
+          "T1_DE_KIT", 
+          "T1_RU_JINR", 
+          "T1_FR_CCIN2P3", 
           "T1_IT_CNAF"
         ]
-      },
+      }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib18GS-105X_upgrade2018_realistic_v4-v1/GEN-SIM": {
         "SiteWhitelist": [
           "T1_US_FNAL"
         ]
       }
-    },
-    "secondary_AAA": false,
+    }, 
+    "secondary_AAA": false, 
     "tune": true
-  },
+  }, 
   "RunIIWinter19PFCalibDRPremix": {
     "SecondaryLocation": [
-      "T1_US_FNAL",
+      "T1_US_FNAL", 
       "T2_CH_CERN"
-    ],
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
-    "maxcopies": 1,
+    ], 
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
     "overflow": {
       "PREMIX": {}
-    },
-    "resize": "auto",
+    }, 
+    "resize": "auto", 
     "secondaries": {
-      "/Neutrino_E-10_gun/RunIISummer17PrePremix-PUPFCalib_2016Conditions_105X_mcRun2_asymptotic_v2-v1/PREMIX": {},
-      "/Neutrino_E-10_gun/RunIISummer17PrePremix-PUPFCalib_2017Conditions_105X_mc2017_realistic_v5-v2/PREMIX": {},
+      "/Neutrino_E-10_gun/RunIISummer17PrePremix-PUPFCalib_2016Conditions_105X_mcRun2_asymptotic_v2-v1/PREMIX": {}, 
+      "/Neutrino_E-10_gun/RunIISummer17PrePremix-PUPFCalib_2017Conditions_105X_mc2017_realistic_v5-v2/PREMIX": {}, 
       "/Neutrino_E-10_gun/RunIISummer17PrePremix-PUPFCalib_2018Conditions_105X_upgrade2018_realistic_v4-v2/PREMIX": {}
-    },
-    "secondary_AAA": true,
+    }, 
+    "secondary_AAA": true, 
     "tune": true
-  },
+  }, 
   "RunIIWinter19PFCalibMiniAOD": {
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
-    "maxcopies": 1,
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
     "resize": "auto"
-  },
+  }, 
   "RunIIWinter19PFCalibNanoAOD": {
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
     "maxcopies": 1
-  },
+  }, 
   "RunIIpp5Spring18DR": {
-    "custodial": "T1_FR_CCIN2P3_MSS",
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
-    "maxcopies": 1,
+    "custodial": "T1_FR_CCIN2P3_MSS", 
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
     "parameters": {
-      "MergedLFNBase": "/store/himc",
+      "MergedLFNBase": "/store/himc", 
       "SiteBlacklist": [
-        "T1_US_FNAL",
-        "T2_US_Purdue",
-        "T2_US_Caltech",
-        "T2_US_Florida",
-        "T2_US_Nebraska",
-        "T2_US_UCSD",
+        "T1_US_FNAL", 
+        "T2_US_Purdue", 
+        "T2_US_Caltech", 
+        "T2_US_Florida", 
+        "T2_US_Nebraska", 
+        "T2_US_UCSD", 
         "T2_US_Wisconsin"
       ]
-    },
-    "resize": "auto",
+    }, 
+    "resize": "auto", 
     "secondaries": {
       "/MinBias_TuneCUETP8M1_2017_5p02TeV-pythia8/RunIIpp5Spring18GS-94X_mc2017_realistic_v10For2017G_v3-v2/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_FR_CCIN2P3",
-          "T2_CH_CERN",
-          "T2_US_MIT",
+          "T1_FR_CCIN2P3", 
+          "T2_CH_CERN", 
+          "T2_US_MIT", 
           "T2_DE_DESY"
         ]
-      },
+      }, 
       "/MinBias_TuneCUETP8M1_5p02TeV-pythia8/HINppWinter17GS-92X_upgrade2017_realistic_v11-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_FR_CCIN2P3",
-          "T2_CH_CERN",
-          "T2_US_MIT",
+          "T1_FR_CCIN2P3", 
+          "T2_CH_CERN", 
+          "T2_US_MIT", 
           "T2_DE_DESY"
         ]
       }
-    },
-    "secondary_AAA": false,
+    }, 
+    "secondary_AAA": false, 
     "tune": true
-  },
+  }, 
   "RunIIpp5Spring18GS": {
-    "custodial": "T1_FR_CCIN2P3_MSS",
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
+    "custodial": "T1_FR_CCIN2P3_MSS", 
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
     "parameters": {
-      "MergedLFNBase": "/store/himc",
+      "MergedLFNBase": "/store/himc", 
       "SiteBlacklist": [
-        "T1_US_FNAL",
-        "T2_US_Purdue",
-        "T2_US_Caltech",
-        "T2_US_Florida",
-        "T2_US_Nebraska",
-        "T2_US_UCSD",
+        "T1_US_FNAL", 
+        "T2_US_Purdue", 
+        "T2_US_Caltech", 
+        "T2_US_Florida", 
+        "T2_US_Nebraska", 
+        "T2_US_UCSD", 
         "T2_US_Wisconsin"
       ]
-    },
-    "resize": "auto",
+    }, 
+    "resize": "auto", 
     "tune": true
-  },
+  }, 
   "RunIIpp5Spring18MiniAOD": {
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
-    "maxcopies": 1,
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
     "resize": "auto"
-  },
+  }, 
   "RunIIpp5Spring18wmLHEGS": {
-    "custodial": "T1_FR_CCIN2P3_MSS",
-    "force-complete": 0.99,
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
+    "custodial": "T1_FR_CCIN2P3_MSS", 
+    "force-complete": 0.99, 
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
     "parameters": {
-      "MergedLFNBase": "/store/himc",
+      "MergedLFNBase": "/store/himc", 
       "SiteBlacklist": [
-        "T1_US_FNAL",
-        "T2_US_Purdue",
-        "T2_US_Caltech",
-        "T2_US_Florida",
-        "T2_US_Nebraska",
-        "T2_US_UCSD",
+        "T1_US_FNAL", 
+        "T2_US_Purdue", 
+        "T2_US_Caltech", 
+        "T2_US_Florida", 
+        "T2_US_Nebraska", 
+        "T2_US_UCSD", 
         "T2_US_Wisconsin"
       ]
-    },
+    }, 
     "tune": true
-  },
+  }, 
   "UltraLegacy2017": {
     "custodial_override": [
       "DQMIO"
-    ],
-    "labels": [
-      "PHATTEST",
-      "25Jul2019",
-      "27May2019",
-      "29Jun2019",
-      "25Jul2019"
     ], 
     "fractionpass": 1, 
     "go": true, 
+    "labels": [
+      "PHATTEST", 
+      "25Jul2019", 
+      "27May2019", 
+      "29Jun2019", 
+      "25Jul2019"
+    ], 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
       "PRIM": {}
     }
-  },
-  "RunIISummer19UL16DIGIPremix": {
-    "fractionpass": 0.95,
-    "go": false,
-    "lumisize": -1,
-    "maxcopies": 1,
-    "resize": "auto",
-    "secondary_AAA": true,
-    "tune": true
-  },
-  "HINppWinter16DR": {
-    "custodial": "T1_FR_CCIN2P3_MSS",
-    "fractionpass": 0.95,
-    "go": true,
-    "parameters": {
-      "MergedLFNBase": "/store/himc",
-      "SiteBlacklist": [
-        "T1_US_FNAL",
-        "T2_US_Purdue",
-        "T2_US_Caltech",
-        "T2_US_Florida",
-        "T2_US_Nebraska",
-        "T2_US_UCSD",
-        "T2_US_Wisconsin"
-      ]
-    },
-    "secondaries": {
-      "/MinBias_TuneCUETP8M1_5p02TeV-pythia8/pp502Fall15-MCRUN2_71_V1-v1/GEN-SIM": {}
-    }
-  },
+  }, 
   "pp502Fall15": {
-    "custodial": "T1_FR_CCIN2P3_MSS",
-    "fractionpass": 0.95,
-    "go": true,
+    "custodial": "T1_FR_CCIN2P3_MSS", 
+    "fractionpass": 0.95, 
+    "go": true, 
     "parameters": {
-      "MergedLFNBase": "/store/himc",
+      "MergedLFNBase": "/store/himc", 
       "SiteBlacklist": [
-        "T1_US_FNAL",
-        "T2_US_Purdue",
-        "T2_US_Caltech",
-        "T2_US_Florida",
-        "T2_US_Nebraska",
-        "T2_US_UCSD",
-        "T2_US_Wisconsin"
+        "T1_US_FNAL", 
+        "T2_US_Purdue", 
+        "T2_US_Caltech", 
+        "T2_US_Florida", 
+        "T2_US_Nebraska", 
+        "T2_US_UCSD", 
+        "T2_US_Wisconsin", 
+        "T2_CH_CERN"
       ]
     }
   }
