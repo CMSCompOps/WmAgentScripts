@@ -263,7 +263,7 @@
       "/MinBias_TuneCP5_14TeV-pythia8/Run3Summer19GS-106X_upgrade2021_realistic_v5-v1/GEN-SIM": {
         "SiteWhitelist": [
           "T1_DE_KIT", 
-          "T2_US_Vanderbilt",
+          "T2_US_Vanderbilt", 
           "T2_US_Nebraska"
         ]
       }
@@ -710,6 +710,12 @@
     "lumisize": -1, 
     "maxcopies": 1
   }, 
+  "RunIISummer16NanoAODv3": {
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
+    "maxcopies": 1
+  }, 
   "RunIISummer16NanoAODv4": {
     "fractionpass": 0.95, 
     "go": true, 
@@ -793,7 +799,7 @@
       "/MinBias_TuneCP5_14TeV-pythia8/Run3Summer19GS-106X_upgrade2021_realistic_v5-v1/GEN-SIM": {
         "SiteWhitelist": [
           "T1_DE_KIT", 
-          "T2_US_Vanderbilt",
+          "T2_US_Vanderbilt", 
           "T2_US_Nebraska"
         ]
       }, 
