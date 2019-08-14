@@ -1845,12 +1845,6 @@
     "lumisize": -1, 
     "maxcopies": 1
   }, 
-  "RunIISummer16NanoAODv3": {
-    "fractionpass": 0.95, 
-    "go": true, 
-    "lumisize": -1, 
-    "maxcopies": 1
-  }, 
   "RunIISummer17CosmicDR": {
     "fractionpass": 0.95, 
     "go": true, 
