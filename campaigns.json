@@ -435,6 +435,15 @@
     "lumisize": -1, 
     "maxcopies": 1
   }, 
+  "RunIIAutumn18RECOBParking": {
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "resize": "auto", 
+    "secondary_AAA": false, 
+    "tune": true
+  }, 
   "RunIIFall17DRPremix": {
     "SecondaryLocation": [
       "T1_US_FNAL", 
