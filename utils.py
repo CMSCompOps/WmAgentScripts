@@ -2113,6 +2113,17 @@ def getNodeUsage(url, node):
     else:
         return None
 
+def getGroupUsage(url, node):
+    conn = make_x509_conn(url)
+    r1=conn.request("GET", '/phedex/datasvc/json/prod/groupusage?node=%s&group=DataOps'%node)
+    r2=conn.getresponse()
+    result = json.loads(r2.read())
+    for a in result['phedex']['node']:
+        for b in a.keys():
+            if b == 'group':
+                for e in a[b]:
+                    return (e["dest_bytes"])
+
 def getNodeQueue(url, node):
     conn = make_x509_conn(url)
     #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
