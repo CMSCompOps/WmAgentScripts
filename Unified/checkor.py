@@ -597,7 +597,7 @@ class CheckBuster(threading.Thread):
                 acdc_inactive.append( member['RequestName'] )
                 assistance_tags.add('recovered')
         if acdc_failed:
-            sendLog('checkor','For %s, ACDC %s failed'% wfo.name, ','.join(acdc_failed), level='critical')
+            sendLog('checkor','For %s, ACDC %s failed' % (wfo.name, ','.join(acdc_failed)), level='critical')
         if acdc_bads:
             sendLog('checkor','For %s, ACDC %s is inconsistent, preventing from closing or will create a mess.'%( wfo.name, ','.join(acdc_bads) ), level='critical')
 
