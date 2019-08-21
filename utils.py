@@ -1961,7 +1961,7 @@ class docCache:
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : getNodesQueue('cmsweb-testbed.cern.ch'),
+            'getter' : lambda : getNodesQueue('cmsweb.cern.ch'),
             'cachefile' : None,
             'default' : ""
             }
