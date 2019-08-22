@@ -2625,7 +2625,7 @@ class siteInfo:
             #print site,self.queue.get(site,0)
             ## consider quota to be 80% of what's available
             queued_used = 0
-            available = int(float(quota)*buffer_level) - int(locked) - int(queued_used)
+            available = float(quota) - float(getGroupUsage(url,site))
 
             #### .disk = 80%*quota - locked : so it's the effective space
             #### .free_disk = the buffer space that there is above the 80% quota
