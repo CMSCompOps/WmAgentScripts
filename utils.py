@@ -2122,7 +2122,9 @@ def getGroupUsage(url, node):
         for b in a.keys():
             if b == 'group':
                 for e in a[b]:
-                    return (e["dest_bytes"])
+                    dest_bytes = e["dest_bytes"]
+                    return int(dest_bytes/1024/1024/1024/1024) #in TB
+
 
 def getNodeQueue(url, node):
     conn = make_x509_conn(url)
@@ -2625,7 +2627,7 @@ class siteInfo:
             #print site,self.queue.get(site,0)
             ## consider quota to be 80% of what's available
             queued_used = 0
-            available = float(quota) - float(getGroupUsage(phedex_url,site))
+            available = int(quota) - int(getGroupUsage(phedex_url,site))
 
             #### .disk = 80%*quota - locked : so it's the effective space
             #### .free_disk = the buffer space that there is above the 80% quota
