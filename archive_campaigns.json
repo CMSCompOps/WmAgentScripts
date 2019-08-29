@@ -2108,12 +2108,6 @@
     "resize": "auto", 
     "tune": true
   }, 
-  "RunIIpp5Spring18pLHE": {
-    "fractionpass": 0.95, 
-    "go": true, 
-    "lumisize": -1, 
-    "tune": true
-  }, 
   "RunllSummer17GS": {
     "SiteBlacklist": [
       "T2_CH_CERN", 

@@ -1413,6 +1413,12 @@
     "maxcopies": 1, 
     "resize": "auto"
   }, 
+  "RunIIpp5Spring18pLHE": {
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
+    "tune": true
+  }, 
   "RunIIpp5Spring18wmLHEGS": {
     "custodial": "T1_FR_CCIN2P3_MSS", 
     "force-complete": 0.99, 
