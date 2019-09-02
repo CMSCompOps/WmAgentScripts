@@ -21,7 +21,7 @@
     "custodial_override": [
       "DQMIO"
     ], 
-    "fractionpass": 1.0, 
+    "fractionpass": 0.99, 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
