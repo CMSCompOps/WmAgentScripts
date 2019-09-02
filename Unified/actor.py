@@ -226,11 +226,12 @@ def singleRecovery(url, task, initial, actions, do=False):
                         #print json.dumps( split, indent=2 )
                         #print reqMgrClient.setWorkflowSplitting(url, acdc, split )
                         
-                # Sanity check for LumiBased algo
+                # Sanity check for LumiBased algo, removing unsupported parameters
                 for split in splittings:
                     if split['splitAlgo'] in ['LumiBased']:
                         print("Removing events_per_job because of LumiBased algo")
                         split['splitParams'].pop('events_per_job', None)
+                        split['splitParams'].pop('job_time_limit', None)
 
                 print "changing the splitting of",acdc
                 print json.dumps( splittings, indent=2 )                
