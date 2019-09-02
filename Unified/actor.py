@@ -197,11 +197,11 @@ def singleRecovery(url, task, initial, actions, do=False):
                         if split['splitAlgo'] in ['EventBased']:
                             sendLog('actor',"Changing the splitting on %s for %s is not permitted. Not changing."%(split['splitAlgo'],initial["RequestName"]), level='critical')
                             continue
-                        if split['splitAlgo'] in ['LumiBased']:
-                            sendLog('actor',"Changing the splitting on %s with events parameter for %s is not permitted. Removing events_per_job parameter."%(split['splitAlgo'], initial["RequestName"]), level='critical')
-                            split_par.pop("events_per_job", None)
+                        
                         for act in ['avg_events_per_job','events_per_job','lumis_per_job']:
                             if act in split_par:
+                                if split['splitAlgo'] in ['LumiBased'] and "events" in act:
+                                    continue
                                 print "Changing %s (%d) by a factor %d"%( act, split_par[act], factor),
                                 split_par[act] /= factor
                                 split_par[act] = max(split_par[act],1)
@@ -225,6 +225,13 @@ def singleRecovery(url, task, initial, actions, do=False):
                         #print "changing the splitting of",acdc
                         #print json.dumps( split, indent=2 )
                         #print reqMgrClient.setWorkflowSplitting(url, acdc, split )
+                        
+                # Sanity check for LumiBased algo
+                for split in splittings:
+                    if split['splitAlgo'] in ['LumiBased']:
+                        print("Removing events_per_job because of LumiBased algo")
+                        split['splitParams'].pop('events_per_job', None)
+
                 print "changing the splitting of",acdc
                 print json.dumps( splittings, indent=2 )                
                 done = reqMgrClient.setWorkflowSplitting(url, acdc, splittings )
