@@ -202,7 +202,7 @@ def singleRecovery(url, task, initial, actions, do=False):
                             for param in split_par:
                                 if 'events_per_job' in param:
                                     split_par.pop(param, None)
-                            for act in ['avg_events_per_job','events_per_job','lumis_per_job']:
+                        for act in ['avg_events_per_job','events_per_job','lumis_per_job']:
                             if act in split_par:
                                 print "Changing %s (%d) by a factor %d"%( act, split_par[act], factor),
                                 split_par[act] /= factor
