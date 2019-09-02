@@ -198,7 +198,7 @@ def singleRecovery(url, task, initial, actions, do=False):
                             sendLog('actor',"Changing the splitting on %s for %s is not permitted. Not changing."%(split['splitAlgo'],initial["RequestName"]), level='critical')
                             continue
                         if split['splitAlgo'] in ['LumiBased'] and 'events' in split_par:
-                            sendLog('actor',"Changing the splitting on %s with %s for %s is not permitted. Not changing."%(split['splitAlgo'], split_par, initial["RequestName"]), level='critical')
+                            sendLog('actor',"Changing the splitting on %s with events parameter for %s is not permitted. Not changing."%(split['splitAlgo'], initial["RequestName"]), level='critical')
                             continue
                         for act in ['avg_events_per_job','events_per_job','lumis_per_job']:
                             if act in split_par:
