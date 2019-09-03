@@ -1183,7 +1183,7 @@ class componentCheck(threading.Thread):
         threading.Thread.__init__(self)
         self.daemon = True
         if soft is None:
-            self.soft = ['mcm','wtc', 'mongo' , 'jira'] ##components that are not mandatory
+            self.soft = ['mcm','wtc', 'mongo' , 'jira','dynamo'] ##components that are not mandatory
         else:
             self.soft = soft
         self.block = block
@@ -1196,7 +1196,8 @@ class componentCheck(threading.Thread):
             'wtc' : False,
             'eos' : False,
             'mongo' : False,
-            'jira' : False
+            'jira' : False,
+            'dynamo': False
             }
         self.code = 0
         self.keep_trying = keep_trying
@@ -1207,6 +1208,10 @@ class componentCheck(threading.Thread):
         self.go = self.check()
         print "componentCheck finished"
 
+    def check_dynamo(self):
+        DL = DynamoLock(acquire = False)
+        gogo = DL._check()
+        
     def check_cmsr(self):
         from assignSession import session, Workflow
         all_info = session.query(Workflow).filter(Workflow.name.contains('1')).all()
