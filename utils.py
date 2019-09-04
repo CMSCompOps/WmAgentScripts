@@ -1154,8 +1154,8 @@ def checkMemory():
 
 
 class componentInfo:
-    def __init__(self, block=True, mcm=None, soft=None, keep_trying=False, check_timeout = 120):
-        self.checks = componentCheck(block, mcm, soft, keep_trying)
+    def __init__(self, block=True, mcm=None, soft=None, keep_trying=False, check_timeout = 120, hard=None):
+        self.checks = componentCheck(block, mcm, soft, hard, keep_trying)
         self.check_timeout = check_timeout
         # start the checking
         self.checks.start()
@@ -1179,13 +1179,22 @@ class componentInfo:
         return self.checks.go
 
 class componentCheck(threading.Thread):
-    def __init__(self, block=True, mcm=None, soft=None, keep_trying=False):
+    def __init__(self, block=True, mcm=None, soft=None, hard=None, keep_trying=False):
         threading.Thread.__init__(self)
         self.daemon = True
+        soft_default = ['mcm','wtc', 'mongo' , 'jira', 'dynamo']
         if soft is None:
-            self.soft = ['mcm','wtc', 'mongo' , 'jira','dynamo'] ##components that are not mandatory
+            self.soft = [c for c in soft_default] ##components that are not mandatory
         else:
             self.soft = soft
+        ## overwrite the default soft components
+        if hard is not None:
+            for h in hard:
+                if h not in soft_default:
+                    raise Exception("{} is not a known soft component ({})".format( h, ','.join(soft_default)))
+                    
+                if h in self.soft:
+                    self.soft.remove(h)
         self.block = block
         self.status ={
             'reqmgr' : False,
