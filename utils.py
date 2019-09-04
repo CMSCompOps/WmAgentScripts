@@ -7850,14 +7850,16 @@ class workflowInfo:
             if not all_tasks and not spl['taskType'] in ['Production','Processing','Skim'] : continue
             if strip:
                 for drop in ['algorithm','trustPUSitelists','trustSitelists','deterministicPileup','type','include_parents','lheInputFiles','runWhitelist','runBlacklist','collectionName','group','couchDB','couchURL','owner','initial_lfn_counter','filesetName', 'runs','lumis']:
-                    if drop in spl['splitParams']:
-                        spl['splitParams'].pop(drop)
+                    spl['splitParams'].pop(drop, None)
+                if spl['splitAlgo'] == 'LumiBased':
+                    for drop in ['events_per_job','job_time_limit']:
+                        spl['splitParams'].pop(drop, None)                        
+                    
             splittings.append( spl )
 
         return splittings
 
     def getSplittings(self):
-
         spl =[]
         for task in self.getWorkTasks():
             ts = task.input.splitting
