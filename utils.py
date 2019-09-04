@@ -1182,7 +1182,7 @@ class componentCheck(threading.Thread):
     def __init__(self, block=True, mcm=None, soft=None, hard=None, keep_trying=False):
         threading.Thread.__init__(self)
         self.daemon = True
-        soft_default = ['mcm','wtc', 'mongo' , 'jira', 'dynamo']
+        soft_default = ['mcm', 'wtc', 'jira', 'dynamo']
         if soft is None:
             self.soft = [c for c in soft_default] ##components that are not mandatory
         else:
