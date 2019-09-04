@@ -496,11 +496,11 @@ def download_file(url, params, path = None, logger = None):
         return None
 
 
-def make_x509_conn(url=reqmgr_url,max_try=5):
+def make_x509_conn(url=reqmgr_url,max_try=5, timeout=None):
     tries = 0
     while tries<max_try:
         try:
-            conn = httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+            conn = httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'), timeout=timeout)
             return conn
         except:
             tries+=1
@@ -771,7 +771,7 @@ class DynamoLock:
                 
             
     def _check(self):
-        conn = make_x509_conn('dynamo.mit.edu')
+        conn = make_x509_conn('dynamo.mit.edu', timeout=10)
         r1 = conn.request("GET",'/data/applock/check?app=detox')
         r2 = conn.getresponse()
         r = json.loads(r2.read())
@@ -1291,7 +1291,7 @@ class componentCheck(threading.Thread):
             self.checking = component
             while True:
                 try:
-                    print "checking on",component
+                    print "checking on",component,("(soft)" if component in self.soft else "(hard)")
                     sys.stdout.flush()
                     getattr(self,'check_%s'%component)()
                     self.status[component] = True
