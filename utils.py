@@ -1364,11 +1364,11 @@ class eosFile(object):
         bail_and_email = False
         T = 0
         while T < self.trials:
-	        T += 1
+            T += 1
             try:
                 print "moving",self.cache_filename,"to",self.eos_filename
                 print("Attempt {}".format(T))
-                r = os.system("cp %s %s"%( self.cache_filename, self.eos_filename))
+                r = os.system("eoscp %s %s"%( self.cache_filename, self.eos_filename))
                 if r==0 and os.path.getsize(self.eos_filename) > 0: return True
                 print "not able to copy to eos",self.eos_filename,"with code",r
                 time.sleep(30)
@@ -3163,7 +3163,7 @@ class closeoutInfo:
         #out.close()
 
         ## write the information out to disk
-        os.system('cp %s/closedout.json %s/closedout.json.last'%(base_eos_dir, base_eos_dir))
+        os.system('eoscp %s/closedout.json %s/closedout.json.last'%(base_eos_dir, base_eos_dir))
 
         ## merge the content
         try:
