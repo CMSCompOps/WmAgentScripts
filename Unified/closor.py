@@ -152,7 +152,7 @@ def closor(url, specific=None, options=None):
     if userLock(): return
     mlock  = moduleLock()
     if mlock(): return
-    up = componentInfo(hard=['mongo', 'jira', 'dynamo'])
+    up = componentInfo(hard=['jira', 'dynamo'])
     if not up.check(): return
 
 
