@@ -16,7 +16,7 @@ def injector(url, options, specific):
     if mlock(): return
 
     use_mcm = True
-    up = componentInfo(soft=['mcm','wtc','jira'] )
+    up = componentInfo()
     if not up.check(): return
     use_mcm = up.status['mcm']
 

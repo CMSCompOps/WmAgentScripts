@@ -9,7 +9,7 @@ import time
 
 def invalidator(url, invalid_status='INVALID'):
     use_mcm = True
-    up = componentInfo(soft=['wtc','jira'])
+    up = componentInfo(hard=['mcm'])
     if not up.check(): return
     mcm = McMClient(dev=False)
 

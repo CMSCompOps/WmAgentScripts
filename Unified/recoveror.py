@@ -173,7 +173,7 @@ def singleRecovery(url, task , initial, actions, do=False):
 def new_recoveror(url, specific, options=None):
     if userLock('recoveror'): return
 
-    up = componentInfo(soft=['mcm','wtc','jira'])
+    up = componentInfo()
     if not up.check(): return
 
     CI = campaignInfo()

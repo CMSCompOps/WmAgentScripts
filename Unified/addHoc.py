@@ -10,7 +10,7 @@ import time
 import random
 from JIRAClient import JIRAClient
 
-up = componentInfo(soft=['mcm','wtc','jira'])
+up = componentInfo()
 if not up.check(): sys.exit(0)
 
 JC = JIRAClient() if up.status.get('jira',False) else None

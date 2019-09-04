@@ -52,7 +52,7 @@ def checkor(url, spec=None, options=None):
     UC = unifiedConfiguration()
     
     use_mcm = True
-    up = componentInfo(soft=['mcm','wtc'])
+    up = componentInfo(hard=['jira'])
     if not up.check(): return
     use_mcm = up.status['mcm']
 

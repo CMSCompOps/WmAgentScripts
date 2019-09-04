@@ -16,7 +16,7 @@ username = getpass.getuser()
 def rejector(url, specific, options=None):
 
     
-    up = componentInfo(soft=['wtc','jira'])
+    up = componentInfo(hard=['mcm'])
     #if not up.check(): return
 
     if specific and specific.startswith('/'):

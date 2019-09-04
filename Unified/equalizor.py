@@ -16,7 +16,8 @@ import math
 
 def equalizor(url , specific = None, options=None):
 
-    up = componentInfo(soft=['mcm','wtc','jira']) 
+    up = componentInfo()
+    if not up.check(): return 
 
     if not specific:
     	if not up.check(): return # Only check component when running cron job with everything
