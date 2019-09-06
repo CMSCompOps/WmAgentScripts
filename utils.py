@@ -25,7 +25,7 @@ from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
 from email.Utils import COMMASPACE, formatdate
 from email.utils import make_msgid
-
+#
 ## add local python paths
 for p in ['/usr/lib64/python2.7/site-packages','/usr/lib/python2.7/site-packages']:
     if not p in sys.path: sys.path.append(p)
