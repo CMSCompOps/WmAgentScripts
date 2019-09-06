@@ -2118,13 +2118,15 @@ def getGroupUsage(url, node):
     r1=conn.request("GET", '/phedex/datasvc/json/prod/groupusage?node=%s&group=DataOps'%node)
     r2=conn.getresponse()
     result = json.loads(r2.read())
-    for a in result['phedex']['node']:
-        for b in a.keys():
-            if b == 'group':
-                for e in a[b]:
-                    dest_bytes = e["dest_bytes"]
-                    return int(dest_bytes/1024/1024/1024/1024) #in TB
-
+    if len(result['phedex']['node']) is not 0:
+        for a in result['phedex']['node']:
+            for b in a.keys():
+                if b == 'group':
+                    for e in a[b]:
+                        dest_bytes = e["dest_bytes"]
+                        return int(dest_bytes/1024/1024/1024/1024) #in TB
+    else:
+        return 0 # if site has ['node']=[]
 
 def getNodeQueue(url, node):
     conn = make_x509_conn(url)
