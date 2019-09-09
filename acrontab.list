@@ -36,6 +36,8 @@
 1,31 * * * * vocms0269 /data/unified/WmAgentScripts/inputscycle.sh &> /dev/null
 ## announce stuff
 00 10 * * 1 vocms0272 /data/unified/WmAgentScripts/cWrap.sh Unified/messagor.py
+## Monitoring
+*/5 * * * * vocms0273 cd /afs/cern.ch/user/c/cmsunified/mon; ./unified_component_monitor.py; curl -s -i -F file=@unified_component_monitor.xml xsls.cern.ch > /dev/null
 ## Cleanup
 05 00 * * 1 vocms0268 /data/unified/WmAgentScripts/cleanlog.sh 
 10 00 * * 1 vocms0269 /data/unified/WmAgentScripts/cleanlog.sh 
