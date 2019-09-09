@@ -1456,6 +1456,64 @@
       "PRIM": {}
     }
   }, 
+  "pPb816Spring16GS": {
+    "custodial": "T1_FR_CCIN2P3_MSS", 
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": 400, 
+    "parameters": {
+      "MergedLFNBase": "/store/himc", 
+      "SiteBlacklist": [
+        "T1_US_FNAL", 
+        "T2_US_Purdue", 
+        "T2_US_Caltech", 
+        "T2_US_Florida", 
+        "T2_US_Nebraska", 
+        "T2_US_UCSD", 
+        "T2_US_Wisconsin", 
+        "T3_US_NERSC"
+      ]
+    }
+  }, 
+  "pPb816Summer16DR": {
+    "custodial": "T1_FR_CCIN2P3_MSS", 
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": 400, 
+    "parameters": {
+      "MergedLFNBase": "/store/himc", 
+      "SiteBlacklist": [
+        "T1_US_FNAL", 
+        "T2_US_Purdue", 
+        "T2_US_Caltech", 
+        "T2_US_Florida", 
+        "T2_US_Nebraska", 
+        "T2_US_UCSD", 
+        "T2_US_Wisconsin"
+      ]
+    }, 
+    "secondaries": {
+      "/ReggeGribovPartonMC_EposLHC_PbP_4080_4080_DataBS/pPb816Spring16GS-MB_80X_mcRun2_pA_v4-v2/GEN-SIM": {
+        "SiteWhitelist": [
+          "T2_CH_CERN", 
+          "T2_IT_Pisa", 
+          "T2_US_MIT", 
+          "T1_DE_KIT", 
+          "T1_FR_CCIN2P3"
+        ]
+      }, 
+      "/ReggeGribovPartonMC_EposLHC_pPb_4080_4080_DataBS/pPb816Spring16GS-MB_80X_mcRun2_pA_v4-v2/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_US_FNAL", 
+          "T1_DE_KIT", 
+          "T2_CH_CERN", 
+          "T2_IT_Pisa", 
+          "T2_US_Nebraska", 
+          "T2_US_MIT"
+        ]
+      }
+    }
+  }, 
   "pp502Fall15": {
     "custodial": "T1_FR_CCIN2P3_MSS", 
     "fractionpass": 0.95, 
