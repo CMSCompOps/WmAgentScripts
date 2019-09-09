@@ -259,7 +259,7 @@ def rejector(url, specific, options=None):
                 data = reqMgrClient.setWorkflowApproved(url, newWorkflow)
                 print data
                 wfi.sendLog('rejector','Cloned into %s by unified operator %s'%( newWorkflow, comment ))
-                wfi.notifyRequestor('Cloned into %s by unified operator %s'%( newWorkflow, comment ),do_batch=False)
+                #wfi.notifyRequestor('Cloned into %s by unified operator %s'%( newWorkflow, comment ),do_batch=False)
             else:
                 wfo.status = 'trouble' if options.set_trouble else 'forget' 
                 wfi.notifyRequestor('Rejected by unified operator %s'%( comment ),do_batch=False)
