@@ -265,6 +265,11 @@
           "T1_DE_KIT", 
           "T2_US_Vanderbilt"
         ]
+       },
+        "/MinBias_TuneCP5_14TeV-pythia8/Run3Summer19GS-2018Scenario_106X_upgrade2021_realistic_v5-v1/GEN-SIM": {
+         "SiteWhitelist": [
+           "T1_ES_PIC_Disk"
+         ]
       }
     }, 
     "tune": true
