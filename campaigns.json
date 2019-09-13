@@ -641,14 +641,12 @@
     "secondaries": {
       "/MinBias_TuneCP0_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM": {}, 
       "/MinBias_TuneCP2_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM": {}, 
-      "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM": {}, 
       "/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1_ext1-v1/GEN-SIM": {
         "SiteWhitelist": [
           "T1_US_FNAL", 
           "T2_US_Nebraska"
         ]
       }, 
-      "/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-Realistic25ns13TeV2016Collision_MCRUN2_71_V1-v1/GEN-SIM": {}, 
       "/Min_Bias_13TeV_pythia8_TuneCUETP8M2/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM": {}, 
       "/Min_Bias_13TeV_pythia8_TuneCUETP8M3/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM": {}, 
       "/Min_Bias_13TeV_pythia8_TuneCUETP8M4/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM": {}
@@ -777,17 +775,6 @@
         ]
       }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring18GS-100X_upgrade2018_realistic_v9-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T2_US_Wisconsin", 
-          "T2_DE_DESY", 
-          "T2_US_Florida", 
-          "T1_US_FNAL", 
-          "T2_CH_CERN", 
-          "T2_DE_RWTH", 
-          "T2_US_Nebraska"
-        ]
-      }, 
-      "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer18GS-101X_upgrade2018_realistic_v7-v1/GEN-SIM": {
         "SiteWhitelist": [
           "T2_US_Wisconsin", 
           "T2_DE_DESY", 
