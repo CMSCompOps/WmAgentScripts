@@ -4,12 +4,12 @@
    "description" : "The list of people that get the emails notifications"
  },
  "busy_agent_fraction" : {
-   "value" : 0.9,
-   "description" : "Running/MaxRunning job fraction above which to consider an agent busy"
+   "value" : 1.1,
+   "description" : "Running/MaxRunning job fraction above which to consider an agent busy. Default 0.9"
  },
  "idle_agent_fraction" : {
-   "value" : 0.1,
-   "description" : "Running/MaxRunning job fraction below which to consider an agent idling"
+   "value" : -1,
+   "description" : "Running/MaxRunning job fraction below which to consider an agent idling. Default 0.1"
  },
  "full_task_path_name_limit" : {
    "value" : 1250,
