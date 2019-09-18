@@ -365,7 +365,8 @@
         "SiteWhitelist": [
           "T1_ES_PIC"
         ]
-      }
+      },
+      "/MinBias_TuneCP5_13TeV_NeutronHP-pythia8/RunIIFall18GS-SNB_102X_upgrade2018_realistic_v17-v1/GEN-SIM": {}
     }, 
     "secondary_AAA": false, 
     "tune": true
