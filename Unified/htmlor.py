@@ -1496,7 +1496,9 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s %s / %s [TB]'});
             message += '<br>Unified status : %s'% uas
             if short_name in speed_d or name in speed_d:
                 message += '<br><b>Speed draining by priority increase</b>'
-
+            if uas == "draining" and 'cern' in short_name:
+                ## adiabatically draining
+                os.system('ssh {} python /afs/cern.ch/user/v/vlimant/public/ops/agent_drain.py'.format( short_name ))
             pend_txt="<ul>"
             by_site = defaultdict(int)
             for site in agent['WMBS_INFO']['sitePendCountByPrio']:
