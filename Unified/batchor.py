@@ -4,7 +4,7 @@ from utils import getWorkflows, sendEmail, sendLog, monitor_pub_dir, unifiedConf
 from collections import defaultdict
 import copy
 import json
-import os
+import os, sys
 import random
 
 def batchor( url ):
