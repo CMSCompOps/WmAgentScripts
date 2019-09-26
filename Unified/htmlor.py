@@ -1418,7 +1418,7 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s %s / %s [TB]'});
                     verbose=False,
                     busy_fraction = UC.get('busy_agent_fraction'),
                     idle_fraction = UC.get('idle_agent_fraction') ,
-                    wake_up_draining=True
+                    wake_up_draining=False,
                     )
     AI.poll(acting=True)
     JC = JIRAClient() if up.status.get('jira',True) else None
