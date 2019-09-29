@@ -19,7 +19,7 @@ import math
 import hashlib
 import threading
 import glob
-
+import datetime
 import smtplib
 from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
@@ -1317,8 +1317,9 @@ def read_file(target):
         if is_json(content):
             return content
         else:
-            print("Opening an invalid json file, return {}")
-            return '{}'
+            print("Opening an invalid json file")
+            sendLog("eosRead","Error reading json file {} at {}".format(target, datetime.datetime.now()), level='critical')
+            return "{}"
     else:
         return content
 
