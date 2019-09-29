@@ -1010,7 +1010,10 @@
     "maxcopies": 1, 
     "primary_AAA": true, 
     "resize": "auto", 
-    "tune": true
+    "tune": true,
+    "overflow": {
+      "PRIM": {}
+    } 
   }, 
   "RunIISummer19UL17pLHE": {
     "fractionpass": 0.95, 
