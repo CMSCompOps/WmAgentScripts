@@ -829,7 +829,10 @@ def equalizor(url , specific = None, options=None):
                             aaa_grid.update( mapping.get(site, []) )
                         add_on = [
                             'T3_US_OSG',
-                            #'T3_US_NERSC'
+                            'T3_US_NERSC',
+			    'T3_US_SDSC',
+			    'T3_US_TACC',
+			    'T3_US_PSC'
                             ]
                         aaa_grid = aaa_grid & set(sites_allowed + add_on) ## and restrict to site that would be allowed at all (mcore, mem)
                         aaa_grid_in_full = aaa_grid_in_full & set(sites_allowed + add_on) ## and restrict to site that would be allowed at all (mcore, mem)
