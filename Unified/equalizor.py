@@ -808,7 +808,7 @@ def equalizor(url , specific = None, options=None):
                         modifications[wfo.name][task.pathName]= {"AddWhitelist" : sorted(aaa_grid)}
 
             ## rule to overflow jobs on the primary input
-            if campaign in PRIM_overflow:
+            if campaign in PRIM_overflow and len(prim)>0: # in case the overflow is set to latter campaigns in the task chain
                 if task.taskType in ['Processing','Production']:
                     if not wfi.request['TrustSitelists']:
                         ###xrootd is OFF
@@ -830,9 +830,9 @@ def equalizor(url , specific = None, options=None):
                         add_on = [
                             'T3_US_OSG',
                             'T3_US_NERSC',
-			    'T3_US_SDSC',
-			    'T3_US_TACC',
-			    'T3_US_PSC'
+			                'T3_US_SDSC',
+                            'T3_US_TACC',
+                            'T3_US_PSC'
                             ]
                         aaa_grid = aaa_grid & set(sites_allowed + add_on) ## and restrict to site that would be allowed at all (mcore, mem)
                         aaa_grid_in_full = aaa_grid_in_full & set(sites_allowed + add_on) ## and restrict to site that would be allowed at all (mcore, mem)
