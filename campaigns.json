@@ -1476,7 +1476,10 @@
       "DQMIO"
     ], 
     "fractionpass": 1, 
-    "go": true, 
+    "go": true,
+    "labels": [
+      "ForValUL2018"
+    ], 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
