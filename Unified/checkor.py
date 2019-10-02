@@ -938,7 +938,7 @@ class CheckBuster(threading.Thread):
         lumi_upper_limit = {}
         lumi_lower_limit = UC.get("min_events_per_lumi_output") 
         for output in wfi.request['OutputDatasets']:
-            upper_limit = 301.
+            upper_limit = 1001.
             campaign = campaigns[output]
 
             if campaign in CI.campaigns and 'lumisize' in CI.campaigns[campaign]:
