@@ -1008,12 +1008,12 @@
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
-    "primary_AAA": true, 
-    "resize": "auto", 
-    "tune": true,
     "overflow": {
       "PRIM": {}
-    } 
+    }, 
+    "primary_AAA": true, 
+    "resize": "auto", 
+    "tune": true
   }, 
   "RunIISummer19UL17pLHE": {
     "fractionpass": 0.95, 
@@ -1025,13 +1025,13 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "overflow": {
+      "PREMIX": {}
+    }, 
     "toDDM": [
       "GEN"
     ], 
-    "tune": true,
-    "overflow": {
-      "PREMIX": {}
-    } 
+    "tune": true
   }, 
   "RunIISummer19UL17wmLHEGS": {
     "fractionpass": 0.95, 
@@ -1196,13 +1196,13 @@
           "T1_US_FNAL", 
           "T1_RU_JINR"
         ]
-       },
-       "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL18SIM-106X_upgrade2018_realistic_v4-v1/SIM": {
+      }, 
+      "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL18SIM-106X_upgrade2018_realistic_v4-v1/SIM": {
         "SiteWhitelist": [
-          "T1_UK_RAL",
+          "T1_UK_RAL", 
           "T1_FR_CCIN2P3"
-          ]
-       },       
+        ]
+      }, 
       "/MinBias_TuneCP5_14TeV-pythia8/PhaseIITDRSpring19GS-106X_upgrade2023_realistic_v2_ext1-v1/GEN-SIM": {
         "SiteWhitelist": [
           "T1_IT_CNAF", 
@@ -1476,10 +1476,7 @@
       "DQMIO"
     ], 
     "fractionpass": 1, 
-    "go": true,
-    "labels": [
-      "ForValUL2018"
-    ], 
+    "go": false, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
