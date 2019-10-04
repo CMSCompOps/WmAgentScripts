@@ -3,6 +3,7 @@ import sys,os,json
 import time
 
 # JIRA requires a peculiar combination of package versions sometimes
+# Github issue: https://github.com/CMSCompOps/WmAgentScripts/issues/454
 try:
     import jira
 except ImportError as e:
