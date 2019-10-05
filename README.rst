@@ -41,8 +41,7 @@ This is a one line command for all this procedure::
     
 Some scripts also need some special PYTHON packages. So use this one line command to export them::
 
-    export PYTHONPATH=$PYTHONPATH:/usr/lib64/python2.7/site-packages
-
+    export PYTHONPATH=$PYTHONPATH:/usr/lib64/python2.7/site-packages:/usr/lib/python2.7/site-packages
 
 Loading WMAgent Environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
