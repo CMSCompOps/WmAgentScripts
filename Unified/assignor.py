@@ -18,10 +18,10 @@ import os
 import sys
 
 def assignor(url ,specific = None, talk=True, options=None):
-    if userLock(): return
+    if userLock() and not options.manual: return
     mlock = moduleLock()
-    if mlock(): return
-    if not componentInfo().check(): return
+    if mlock() and not options.manual: return
+    if not componentInfo().check() and not options.manual: return
 
     UC = unifiedConfiguration()
     CI = campaignInfo()
@@ -30,7 +30,7 @@ def assignor(url ,specific = None, talk=True, options=None):
     ###NLI = newLockInfo()
     ###if not NLI.free() and not options.go: return
     LI = lockInfo()
-    if not LI.free() and not options.go: return
+    if not LI.free() and not options.go and not options.manual: return
 
     n_assigned = 0
     n_stalled = 0
@@ -674,6 +674,7 @@ if __name__=="__main__":
     url = reqmgr_url
     parser = optparse.OptionParser()
     parser.add_option('-t','--test', help='Only test the assignment',action='store_true',dest='test',default=False)
+    parser.add_option('-m','--manual', help='Manual assignment, bypassing lock check',action='store_true',dest='manual',default=False)
     parser.add_option('-e', '--early', help='Fectch from early statuses',default=False, action="store_true")
     parser.add_option('-p', '--partial', help='Let the workflow assign to place with any part of the data, existent of being made',default=False, action="store_true")
     parser.add_option('--good_enough', help='Only useful with --partial option, determines whether to get the workflow started', default=0.5, type=float)
