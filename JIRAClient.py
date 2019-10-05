@@ -1,6 +1,26 @@
+from subprocess import PIPE,Popen
 import sys,os,json
-import jira
 import time
+
+# JIRA requires a peculiar combination of package versions sometimes
+# Github issue: https://github.com/CMSCompOps/WmAgentScripts/issues/454
+try:
+    import jira
+except ImportError as e:
+    try:
+        cmd1 = 'sudo yum remove python-requests python-urllib3 -y' 
+        cmd2 = 'sudo pip uninstall urllib3 requests chardet -y'
+        cmd3 = 'echo yes | sudo pip install urllib3==1.25.6 requests==2.22.0 chardet==3.0.2'
+
+        Popen(cmd1, shell=True, stderr=PIPE, stdout=PIPE)
+        Popen(cmd2, shell=True, stderr=PIPE, stdout=PIPE)
+        Popen(cmd3, shell=True, stderr=PIPE, stdout=PIPE)
+
+        import jira
+    except ImportError as e:
+        print(e)
+        raise ImportError
+
 
 class JIRAClient:
     def __init__(self, debug=False,cookie=None):
