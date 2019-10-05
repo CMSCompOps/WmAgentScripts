@@ -35,7 +35,7 @@ Export the X509_USER_PROXY variable to the environment (so it can be used by pyt
 
     export X509_USER_PROXY=/tmp/x509up_uXXXX
 
-This is a one line command for all this procedure::
+This is a one line command for all this procedure, assuming there is no password needed for the proxy::
 
     export X509_USER_PROXY=$(voms-proxy-init -voms cms | grep Created | cut -c18- | tr -d '.')
     
