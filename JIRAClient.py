@@ -9,8 +9,8 @@ try:
 except ImportError as e:
     try:
         cmd1 = 'sudo yum remove python-requests python-urllib3 -y' 
-        cmd2 = 'sudo pip uninstall urllib3 requests chardet -y'
-        cmd3 = 'echo yes | sudo pip install urllib3==1.25.6 requests==2.22.0 chardet==3.0.2'
+        cmd2 = 'sudo pip uninstall urllib3 requests -y'
+        cmd3 = 'echo yes | sudo pip install urllib3 requests'
 
         Popen(cmd1, shell=True, stderr=PIPE, stdout=PIPE)
         Popen(cmd2, shell=True, stderr=PIPE, stdout=PIPE)
