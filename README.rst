@@ -29,7 +29,10 @@ Generate your proxy::
 
 Type your key password and should display something like this::
 
-    Contacting voms.cern.ch:15002 [/DC=ch/DC=cern/OU=computers/CN=voms.cern.ch] "cms"... Remote VOMS server contacted succesfully. Created proxy in /tmp/x509up_uXXXX. Your proxy is valid until Fri May 24 21:53:28 CEST 2019
+    Contacting voms.cern.ch:15002 [/DC=ch/DC=cern/OU=computers/CN=voms.cern.ch] "cms"... 
+    Remote VOMS server contacted succesfully. 
+    Created proxy in /tmp/x509up_uXXXX. 
+    Your proxy is valid until Fri May 24 21:53:28 CEST 2019
 
 Export the X509_USER_PROXY variable to the environment (so it can be used by python), **use proxy location in the previous step**::
 
