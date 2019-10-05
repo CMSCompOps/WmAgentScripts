@@ -1,6 +1,7 @@
 from subprocess import PIPE,Popen
 import sys,os,json
 import time
+from utils import sendLog
 
 # JIRA requires a peculiar combination of package versions sometimes
 # Github issue: https://github.com/CMSCompOps/WmAgentScripts/issues/454
@@ -11,16 +12,18 @@ except ImportError as e:
         cmd1 = 'sudo yum remove python-requests python-urllib3 -y' 
         cmd2 = 'sudo pip uninstall urllib3 requests -y'
         cmd3 = 'echo yes | sudo pip install urllib3 requests'
-
+        
+        print("Error importing jira: {}\nDoing the following commands: \n\t{}\n\t{}\n\t{}".format(e,cmd1, cmd2, cmd3))
         Popen(cmd1, shell=True, stderr=PIPE, stdout=PIPE)
         Popen(cmd2, shell=True, stderr=PIPE, stdout=PIPE)
         Popen(cmd3, shell=True, stderr=PIPE, stdout=PIPE)
 
         import jira
     except ImportError as e:
-        print(e)
-        raise ImportError
-
+        hostname = os.environ['HOSTNAME']
+        msg = "Error importing jira on {}. Cannot run this module.\n\t{}".format(hostname, str(e))
+        sendLog("jira", msg, level='critical')
+        raise e
 
 class JIRAClient:
     def __init__(self, debug=False,cookie=None):
