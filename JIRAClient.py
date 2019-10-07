@@ -10,13 +10,14 @@ try:
 except ImportError as e:
     try:
         cmd1 = 'sudo yum remove python-requests python-urllib3 -y' 
-        cmd2 = 'sudo pip uninstall urllib3 requests -y'
-        cmd3 = 'echo yes | sudo pip install urllib3 requests'
-        
-        print("Error importing jira: {}\nDoing the following commands: \n\t{}\n\t{}\n\t{}".format(e,cmd1, cmd2, cmd3))
+        #cmd2 = 'sudo pip uninstall urllib3 requests -y'
+        #cmd3 = 'echo yes | sudo pip install urllib3 requests'
+        cmd2 = 'sudo pip install --upgrade --force-reinstall requests urllib3'
+
+        print("Error importing jira: {}\nDoing the following commands: \n\t{}\n\t{}".format(e,cmd1, cmd2))
         Popen(cmd1, shell=True, stderr=PIPE, stdout=PIPE)
         Popen(cmd2, shell=True, stderr=PIPE, stdout=PIPE)
-        Popen(cmd3, shell=True, stderr=PIPE, stdout=PIPE)
+        #Popen(cmd3, shell=True, stderr=PIPE, stdout=PIPE)
 
         import jira
     except ImportError as e:
