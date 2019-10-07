@@ -11,22 +11,22 @@ try:
 except ImportError as e:
     try:
         cmd1 = 'sudo yum remove python-requests python-urllib3 -y' 
-        #cmd2 = 'sudo pip uninstall urllib3 requests -y'
-        #cmd3 = 'echo yes | sudo pip install urllib3 requests'
         cmd2 = 'sudo pip install --upgrade --force-reinstall requests urllib3'
 
         print("Error importing jira: {}\nDoing the following commands: \n\t{}\n\t{}".format(e,cmd1, cmd2))
-        Popen(cmd1, shell=True, stderr=PIPE, stdout=PIPE)
-        Popen(cmd2, shell=True, stderr=PIPE, stdout=PIPE)
-        #Popen(cmd3, shell=True, stderr=PIPE, stdout=PIPE)
-
+        cmd1out, cmd1err = Popen(cmd1, shell=True, stderr=PIPE, stdout=PIPE).communicate()
+        print(cmd1out)
+        print(cmd1err)
+        cmd2out, cmd2err = Popen(cmd2, shell=True, stderr=PIPE, stdout=PIPE).communicate()
+        print(cmd2out)
+        print(cmd2err)
         import jira
     except ImportError as e:
         if socket.gethostname().find('.')>=0:
             hostname=socket.gethostname()
         else:
             hostname=socket.gethostbyaddr(socket.gethostname())[0]
-        msg = "Error importing jira on {}. Cannot run this module.\n\t{}".format(hostname, str(e))
+        msg = "Error importing jira on {}:\n\t{}".format(hostname, str(e))
         sendLog("jira", msg, level='critical')
         raise e
 
