@@ -2,6 +2,7 @@ from subprocess import PIPE,Popen
 import sys,os,json
 import time
 from utils import sendLog
+import socket
 
 # JIRA requires a peculiar combination of package versions sometimes
 # Github issue: https://github.com/CMSCompOps/WmAgentScripts/issues/454
@@ -20,7 +21,10 @@ except ImportError as e:
 
         import jira
     except ImportError as e:
-        hostname = os.environ['HOSTNAME']
+        if socket.gethostname().find('.')>=0:
+            hostname=socket.gethostname()
+        else:
+            hostname=socket.gethostbyaddr(socket.gethostname())[0]
         msg = "Error importing jira on {}. Cannot run this module.\n\t{}".format(hostname, str(e))
         sendLog("jira", msg, level='critical')
         raise e
