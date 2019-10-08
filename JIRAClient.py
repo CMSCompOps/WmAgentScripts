@@ -9,21 +9,20 @@ import socket
 try:
     import jira
 except ImportError as e:
-    try:
-        cmd1 = 'sudo yum remove python-requests python-urllib3 -y' 
-        cmd2 = 'sudo pip install --upgrade --force-reinstall requests urllib3'
+    cmd1 = 'sudo yum remove python-requests python-urllib3 -y' 
+    cmd2 = 'sudo pip install --upgrade --force-reinstall requests urllib3'
 
-        print("Error importing jira: {}\nDoing the following commands: \n\t{}\n\t{}".format(e,cmd1, cmd2))
-        cmd1out, cmd1err = Popen(cmd1, shell=True, stderr=PIPE, stdout=PIPE).communicate()
-        print(cmd1out)
-        print(cmd1err)
-        cmd2out, cmd2err = Popen(cmd2, shell=True, stderr=PIPE, stdout=PIPE).communicate()
-        print(cmd2out)
-        print(cmd2err)
-        #import jira # It doesn't seem to work properly right away when installing via subprocess
-        # Just exit and let the next Unified cycle restart it
-        print("Exiting...")
-        sys.exit(1)
+    print("Error importing jira: {}\nDoing the following commands: \n\t{}\n\t{}".format(str(e),cmd1, cmd2))
+    cmd1out, cmd1err = Popen(cmd1, shell=True, stderr=PIPE, stdout=PIPE).communicate()
+    print(cmd1out)
+    print(cmd1err)
+    cmd2out, cmd2err = Popen(cmd2, shell=True, stderr=PIPE, stdout=PIPE).communicate()
+    print(cmd2out)
+    print(cmd2err)
+    #import jira # It doesn't seem to work properly right away when installing via subprocess
+    # Just exit and let the next Unified cycle restart it
+    print("Exiting...")
+    sys.exit(1)
 
 class JIRAClient:
     def __init__(self, debug=False,cookie=None):
