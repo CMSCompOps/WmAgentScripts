@@ -22,7 +22,7 @@ except ImportError as e:
     #import jira # It doesn't seem to work properly right away when installing via subprocess
     # Just exit and let the next Unified cycle restart it
     print("Exiting...")
-    sys.exit(1)
+    sys.exit()
 
 class JIRAClient:
     def __init__(self, debug=False,cookie=None):
