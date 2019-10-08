@@ -20,15 +20,10 @@ except ImportError as e:
         cmd2out, cmd2err = Popen(cmd2, shell=True, stderr=PIPE, stdout=PIPE).communicate()
         print(cmd2out)
         print(cmd2err)
-        import jira
-    except ImportError as e:
-        if socket.gethostname().find('.')>=0:
-            hostname=socket.gethostname()
-        else:
-            hostname=socket.gethostbyaddr(socket.gethostname())[0]
-        msg = "Error importing jira on {}:\n\t{}".format(hostname, str(e))
-        sendLog("jira", msg, level='critical')
-        raise e
+        #import jira # It doesn't seem to work properly right away when installing via subprocess
+        # Just exit and let the next Unified cycle restart it
+        print("Exiting...")
+        sys.exit(1)
 
 class JIRAClient:
     def __init__(self, debug=False,cookie=None):
