@@ -1840,38 +1840,38 @@ class docCache:
         def default_expiration():
             ## a random time between 20 min and 30 min.
             return 20*60+random.random()*10*60
-        self.cache['ssb_106'] = {
-            'data' : None,
-            'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=106&batch=1&lastdata=1"').read())['csvdata'],
-            'cachefile' : None,
-            'default' : []
-            }
-        self.cache['ssb_107'] = {
-            'data' : None,
-            'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=107&batch=1&lastdata=1"').read())['csvdata'],
-            'cachefile' : None,
-            'default' : []
-            }
-        self.cache['ssb_108'] = {
-            'data' : None,
-            'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=108&batch=1&lastdata=1"').read())['csvdata'],
-            'cachefile' : None,
-            'default' : []
-            }
-        self.cache['ssb_109'] = {
-            'data' : None,
-            'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=109&batch=1&lastdata=1"').read())['csvdata'],
-            'cachefile' : None,
-            'default' : []
-            }
+        #self.cache['ssb_106'] = {
+         #   'data' : None,
+         #   'timestamp' : time.mktime( time.gmtime()),
+         #   'expiration' : default_expiration(),
+         #   'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=106&batch=1&lastdata=1"').read())['csvdata'],
+         #   'cachefile' : None,
+         #   'default' : []
+         #   }
+        #self.cache['ssb_107'] = {
+         #   'data' : None,
+         #   'timestamp' : time.mktime( time.gmtime()),
+         #   'expiration' : default_expiration(),
+         #   'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=107&batch=1&lastdata=1"').read())['csvdata'],
+         #   'cachefile' : None,
+         #   'default' : []
+         #   }
+        #self.cache['ssb_108'] = {
+         #   'data' : None,
+         #   'timestamp' : time.mktime( time.gmtime()),
+         #   'expiration' : default_expiration(),
+         #   'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=108&batch=1&lastdata=1"').read())['csvdata'],
+         #   'cachefile' : None,
+         #   'default' : []
+         #   }
+        #self.cache['ssb_109'] = {
+         #   'data' : None,
+         #   'timestamp' : time.mktime( time.gmtime()),
+         #   'expiration' : default_expiration(),
+         #   'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=109&batch=1&lastdata=1"').read())['csvdata'],
+         #   'cachefile' : None,
+         #   'default' : []
+         #   }
         self.cache['ssb_136'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
@@ -1880,14 +1880,14 @@ class docCache:
             'cachefile' : None,
             'default' : []
             }
-        self.cache['ssb_158'] = {
-            'data' : None,
-            'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=158&batch=1&lastdata=1"').read())['csvdata'],
-            'cachefile' : None,
-            'default' : []
-            }
+        #self.cache['ssb_158'] = {
+         #   'data' : None,
+         #   'timestamp' : time.mktime( time.gmtime()),
+         #   'expiration' : default_expiration(),
+         #   'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=158&batch=1&lastdata=1"').read())['csvdata'],
+         #   'cachefile' : None,
+         #   'default' : []
+         #   }
         self.cache['ssb_237'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
