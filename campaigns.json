@@ -897,7 +897,7 @@
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
-    "primary_AAA": true, 
+    "primary_AAA": false, 
     "resize": "auto", 
     "tune": true
   }, 
@@ -1011,7 +1011,7 @@
     "overflow": {
       "PRIM": {}
     }, 
-    "primary_AAA": true, 
+    "primary_AAA": false, 
     "resize": "auto", 
     "tune": true
   }, 
@@ -1127,7 +1127,7 @@
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
-    "primary_AAA": true, 
+    "primary_AAA": false, 
     "resize": "auto", 
     "tune": true
   }, 
