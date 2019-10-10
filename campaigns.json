@@ -750,6 +750,12 @@
     "lumisize": -1, 
     "maxcopies": 1
   }, 
+  "RunIISummer16NanoAODv6": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1
+  }, 
   "RunIISummer17PrePremix": {
     "fractionpass": 0.95, 
     "go": true, 
