@@ -872,6 +872,11 @@
     "toDDM": [
       "GEN"
     ], 
+    "parameters": {
+      "NonCustodialSites": [
+        "T2_CH_CERN", 
+        "T1_US_FNAL"
+      ],
     "tune": true
   }, 
   "RunIISummer19UL16HLT": {
@@ -915,7 +920,7 @@
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
-    "primary_AAA": false, 
+    "primary_AAA": true, 
     "resize": "auto", 
     "tune": true
   }, 
@@ -976,6 +981,11 @@
     "toDDM": [
       "GEN"
     ], 
+    "parameters": {
+      "NonCustodialSites": [
+        "T2_CH_CERN", 
+        "T1_US_FNAL"
+      ],
     "tune": true
   }, 
   "RunIISummer19UL17GS": {
@@ -1029,7 +1039,7 @@
     "overflow": {
       "PRIM": {}
     }, 
-    "primary_AAA": false, 
+    "primary_AAA": true, 
     "resize": "auto", 
     "tune": true
   }, 
@@ -1102,6 +1112,11 @@
     "toDDM": [
       "GEN"
     ], 
+    "parameters": {
+      "NonCustodialSites": [
+        "T2_CH_CERN", 
+        "T1_US_FNAL"
+      ],
     "tune": true
   }, 
   "RunIISummer19UL18HLT": {
@@ -1145,7 +1160,7 @@
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
-    "primary_AAA": false, 
+    "primary_AAA": true, 
     "resize": "auto", 
     "tune": true
   }, 
