@@ -2602,13 +2602,9 @@ class siteInfo:
     def fetch_ssb_info(self,talk=True):
         ## and complement information from ssb
         columns= {
-            'PledgeTape' : 107,
             'realCPU' : 136,
             'prodCPU' : 159,
-            'CPUbound' : 160,
-            'FreeDisk' : 106,
-            #'UsedTape' : 108,
-            #'FreeTape' : 109
+            'CPUbound' : 160
             }
 
         all_data = {}
@@ -2646,24 +2642,24 @@ class siteInfo:
                     if talk: print site,"could correct",info[key_for_cpu],"instead of",self.cpu_pledges[site],"for CPU"
                     self.cpu_pledges[site] = int(info[key_for_cpu])
 
-            if 'FreeDisk' in info and info['FreeDisk']:
-                if site in self.disk:
-                    if self.disk[site] < info['FreeDisk']:
-                        if talk: print site,"could use",info['FreeDisk'],"instead of",self.disk[site],"for disk"
-                        self.disk[site] = int(info['FreeDisk'])
-                else:
-                    if not ssite in self.disk:
-                        if talk: print "setting",info['FreeDisk']," disk for",ssite
-                        self.disk[ssite] = int(info['FreeDisk'])
+#             if 'FreeDisk' in info and info['FreeDisk']:
+#                 if site in self.disk:
+#                     if self.disk[site] < info['FreeDisk']:
+#                         if talk: print site,"could use",info['FreeDisk'],"instead of",self.disk[site],"for disk"
+#                         self.disk[site] = int(info['FreeDisk'])
+#                 else:
+#                     if not ssite in self.disk:
+#                         if talk: print "setting",info['FreeDisk']," disk for",ssite
+#                         self.disk[ssite] = int(info['FreeDisk'])
 
-            if 'FreeDisk' in info and site!=ssite and info['FreeDisk']:
-                if ssite in self.disk:
-                    if self.disk[ssite] < info['FreeDisk']:
-                        if talk: print ssite,"could use",info['FreeDisk'],"instead of",self.disk[ssite],"for disk"
-                        self.disk[ssite] = int(info['FreeDisk'])
-                else:
-                    if talk: print "setting",info['FreeDisk']," disk for",ssite
-                    self.disk[ssite] = int(info['FreeDisk'])
+#             if 'FreeDisk' in info and site!=ssite and info['FreeDisk']:
+#                 if ssite in self.disk:
+#                     if self.disk[ssite] < info['FreeDisk']:
+#                         if talk: print ssite,"could use",info['FreeDisk'],"instead of",self.disk[ssite],"for disk"
+#                         self.disk[ssite] = int(info['FreeDisk'])
+#                 else:
+#                     if talk: print "setting",info['FreeDisk']," disk for",ssite
+#                     self.disk[ssite] = int(info['FreeDisk'])
 
             #if 'FreeTape' in info and 'UsedTape' in info and tsite in self.storage and info['FreeTape']:
             #    if info['UsedTape'] and self.storage[tsite] < info['FreeTape']:
