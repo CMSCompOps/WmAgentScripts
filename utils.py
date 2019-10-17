@@ -1840,51 +1840,11 @@ class docCache:
         def default_expiration():
             ## a random time between 20 min and 30 min.
             return 20*60+random.random()*10*60
-        self.cache['ssb_106'] = {
-            'data' : None,
-            'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=106&batch=1&lastdata=1"').read())['csvdata'],
-            'cachefile' : None,
-            'default' : []
-            }
-        self.cache['ssb_107'] = {
-            'data' : None,
-            'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=107&batch=1&lastdata=1"').read())['csvdata'],
-            'cachefile' : None,
-            'default' : []
-            }
-        self.cache['ssb_108'] = {
-            'data' : None,
-            'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=108&batch=1&lastdata=1"').read())['csvdata'],
-            'cachefile' : None,
-            'default' : []
-            }
-        self.cache['ssb_109'] = {
-            'data' : None,
-            'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=109&batch=1&lastdata=1"').read())['csvdata'],
-            'cachefile' : None,
-            'default' : []
-            }
         self.cache['ssb_136'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
             'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=136&batch=1&lastdata=1"').read())['csvdata'],
-            'cachefile' : None,
-            'default' : []
-            }
-        self.cache['ssb_158'] = {
-            'data' : None,
-            'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=158&batch=1&lastdata=1"').read())['csvdata'],
             'cachefile' : None,
             'default' : []
             }
@@ -2642,13 +2602,9 @@ class siteInfo:
     def fetch_ssb_info(self,talk=True):
         ## and complement information from ssb
         columns= {
-            'PledgeTape' : 107,
             'realCPU' : 136,
             'prodCPU' : 159,
-            'CPUbound' : 160,
-            'FreeDisk' : 106,
-            #'UsedTape' : 108,
-            #'FreeTape' : 109
+            'CPUbound' : 160
             }
 
         all_data = {}
@@ -2686,24 +2642,24 @@ class siteInfo:
                     if talk: print site,"could correct",info[key_for_cpu],"instead of",self.cpu_pledges[site],"for CPU"
                     self.cpu_pledges[site] = int(info[key_for_cpu])
 
-            if 'FreeDisk' in info and info['FreeDisk']:
-                if site in self.disk:
-                    if self.disk[site] < info['FreeDisk']:
-                        if talk: print site,"could use",info['FreeDisk'],"instead of",self.disk[site],"for disk"
-                        self.disk[site] = int(info['FreeDisk'])
-                else:
-                    if not ssite in self.disk:
-                        if talk: print "setting",info['FreeDisk']," disk for",ssite
-                        self.disk[ssite] = int(info['FreeDisk'])
+#             if 'FreeDisk' in info and info['FreeDisk']:
+#                 if site in self.disk:
+#                     if self.disk[site] < info['FreeDisk']:
+#                         if talk: print site,"could use",info['FreeDisk'],"instead of",self.disk[site],"for disk"
+#                         self.disk[site] = int(info['FreeDisk'])
+#                 else:
+#                     if not ssite in self.disk:
+#                         if talk: print "setting",info['FreeDisk']," disk for",ssite
+#                         self.disk[ssite] = int(info['FreeDisk'])
 
-            if 'FreeDisk' in info and site!=ssite and info['FreeDisk']:
-                if ssite in self.disk:
-                    if self.disk[ssite] < info['FreeDisk']:
-                        if talk: print ssite,"could use",info['FreeDisk'],"instead of",self.disk[ssite],"for disk"
-                        self.disk[ssite] = int(info['FreeDisk'])
-                else:
-                    if talk: print "setting",info['FreeDisk']," disk for",ssite
-                    self.disk[ssite] = int(info['FreeDisk'])
+#             if 'FreeDisk' in info and site!=ssite and info['FreeDisk']:
+#                 if ssite in self.disk:
+#                     if self.disk[ssite] < info['FreeDisk']:
+#                         if talk: print ssite,"could use",info['FreeDisk'],"instead of",self.disk[ssite],"for disk"
+#                         self.disk[ssite] = int(info['FreeDisk'])
+#                 else:
+#                     if talk: print "setting",info['FreeDisk']," disk for",ssite
+#                     self.disk[ssite] = int(info['FreeDisk'])
 
             #if 'FreeTape' in info and 'UsedTape' in info and tsite in self.storage and info['FreeTape']:
             #    if info['UsedTape'] and self.storage[tsite] < info['FreeTape']:
