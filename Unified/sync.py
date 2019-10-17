@@ -2,13 +2,13 @@
 from assignSession import *
 from utils import workflowInfo, reqmgr_url
 import sys
-import optparse
+import argparse
 
-parser = optparse.OptionParser()
-parser.add_option('-w',help='the workflow name to change the status of')
-parser.add_option('-s',help='the new status to be set')
-parser.add_option('--comments',help='an additional comment to register in the unified log',default=None)
-(options,args) = parser.parse_args()
+parser = argparse.ArgumentParser()
+parser.add_argument('-w', help='the workflow name to change the status of')
+parser.add_argument('-s', help='the new status to be set')
+parser.add_argument('--comments', help='an additional comment to register in the unified log',default=None)
+options = parser.parse_args()
 url = reqmgr_url
 
 if __name__ == "__main__":
