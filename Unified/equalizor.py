@@ -864,7 +864,7 @@ def equalizor(url , specific = None, options=None):
                         dataset = list(prim)[0]
                         all_blocks,blocks = wfi.getActiveBlocks()
                         count_all = sum([len(v) for k,v in all_blocks.items()])
-                        fraction_left = float(len(blocks))/ count_all
+                        # fraction_left = float(len(blocks))/ count_all
                         #if fraction_left< 0.5:                            print '\n'.join( blocks )
                         presence = getDatasetPresence(url, dataset, only_blocks=blocks )
                         ## in full is really the only place we can go to safely, since we have no job-data matching
