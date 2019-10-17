@@ -215,7 +215,7 @@ def equalizor(url , specific = None, options=None):
             go = True
         else:
             go = False
-	print("[INFO]: Task {} has {} running, {} idle. Action needed: {}".format(task_name, running, idled, go))
+        print("[INFO]: Task {} has {} running, {} idle. Action needed: {}".format(task_name, running, idled, go))
         return go, task_name, running, idled
     needs_action.pressure = UC.get('overflow_pressure')
 
