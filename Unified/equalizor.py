@@ -900,6 +900,8 @@ def equalizor(url , specific = None, options=None):
                         ##if new_ones: 
                         # [Thong] With the current situation in Oct 2019 where only type of workflows needs primary xrootd 
                         # is UL SIM that also needs primary overflow, this condition `if new_ones` does not seem to be appropriate anymore.
+                        # See https://github.com/CMSCompOps/WmAgentScripts/blob/c298703f4b886c2876766013118b37ded40f59a2/Unified/equalizor.py#L893-L911 
+                        # for the previous settings. 
 
 		        ## we will be add sites 
 		        if needs and aaa_grid:
