@@ -56,5 +56,5 @@ if __name__ == "__main__":
         #    wf.status = 'considered'
         print wf.name, wf.wm_status, wf.status
 
-        wfi.sendLog('sync','Setting status from %s to %s (%s)%s'%(old_status,wf.status,wf.wm_status,('\nreason: %s'%(comment) if comment else "")))
+        wfi.sendLog('sync','Setting status from {} to {} ({}). Reason: {}'.format(old_status,wf.status,wf.wm_status, comment)) # Please always put reason
     session.commit()
