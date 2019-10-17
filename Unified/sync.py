@@ -7,7 +7,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-w', type=str, action='store', required='True', help='the workflow name to change the status of')
 parser.add_argument('-s', type=str, action='store', required='True', help='the new status to be set')
-parser.add_argument('--comments', type=str, action='store', help='an additional comment to register in the unified log',default=None)
+parser.add_argument('--comments', type=str, action='store', required='True', help='an additional comment to register in the unified log',default=None)
 options = parser.parse_args()
 url = reqmgr_url
 
