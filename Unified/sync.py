@@ -3,6 +3,8 @@ from assignSession import *
 from utils import workflowInfo, reqmgr_url
 import sys
 import argparse
+import getpass
+username = getpass.getuser()
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-w', type=str, action='store', required=True, help='The workflow name to change the status of')
@@ -14,7 +16,7 @@ url = reqmgr_url
 if __name__ == "__main__":
     spec = options.w
     status = options.s
-    comment = options.comments
+    comment = options.comments + " - {}".format(username)
 
     if not status:
         print "need to pass -s"
