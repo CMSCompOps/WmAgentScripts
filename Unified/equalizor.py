@@ -831,7 +831,7 @@ def equalizor(url , specific = None, options=None):
                         add_on = [
                             'T3_US_OSG',
                             'T3_US_NERSC',
-			                'T3_US_SDSC',
+                            'T3_US_SDSC',
                             'T3_US_TACC',
                             'T3_US_PSC'
                             ]
@@ -877,30 +877,40 @@ def equalizor(url , specific = None, options=None):
                         aaa_grid = set(in_full)
                         for site in list(aaa_grid):
                             aaa_grid.update( mapping.get(site, []) )
+                        add_on = [
+                            'T3_US_OSG',
+                            'T3_US_NERSC',
+                            'T3_US_SDSC',
+                            'T3_US_TACC',
+                            'T3_US_PSC'
+                            ]
 
                         new_ones = set(in_full) - set(wfi.request['SiteWhitelist']) ## symptomatic of data have been repositionned
                         common = set(in_full) & set(wfi.request['SiteWhitelist'])
                         extra_shit = set(wfi.request['SiteWhitelist']) - aaa_grid ## symptomatic of too generous site-whitelist
 
-                        aaa_grid = aaa_grid & set(sites_allowed+ ['T3_US_NERSC']) ## restrict to site that would be allowed at all (mcore, mem)
+                        aaa_grid = aaa_grid & set(sites_allowed + add_on) ## restrict to site that would be allowed at all (mcore, mem)
                         new_grid = aaa_grid - set(wfi.request['SiteWhitelist'])
                         print dataset,"is in full ",len(blocks),"/",count_all," at",in_full
                         print '\n'.join( sorted(blocks) )
                         print "running at",site_in_use
                         print "in common of the site whitelist",sorted(common)
                         print "site now also hosting the data",sorted(new_ones)
-                        print "site in whitelist with no data",sorted(extra_shit)## with no data and not within aaa reach
-                        if new_ones:
-                            ## we will be add sites 
-                            if needs and aaa_grid:
-                                print wfo.name,"would replace for",sorted(aaa_grid)
-                                print "but no thanks"
-                                wfi.sendLog('equalizor','Changing the site whitelist to %s dynamically'%(sorted(aaa_grid)))
-                                modifications[wfo.name][task.pathName] = { "ReplaceSiteWhitelist" : sorted(aaa_grid) }
-                            elif new_grid:
-                                print wfo.name,"would complement up to",sorted(aaa_grid)
-                                wfi.sendLog('equalizor','Adding site white list to %s dynamically'% sorted(new_grid) )
-                                modifications[wfo.name][task.pathName] = { "AddWhitelist" : sorted(new_grid) }
+                        print "site in whitelist with no data",sorted(extra_shit) # with no data and not within aaa reach
+                        ##if new_ones: 
+                        # [Thong] With the current situation in Oct 2019 where only type of workflows needs primary xrootd 
+                        # is UL SIM that also needs primary overflow, this condition `if new_ones` does not seem to be appropriate anymore.
+
+		        ## we will be add sites 
+		        if needs and aaa_grid:
+			    print wfo.name,"would replace for",sorted(aaa_grid)
+                            #print "but no thanks"
+                            wfi.sendLog('equalizor','Changing the site whitelist to %s dynamically'%(sorted(aaa_grid)))
+                            modifications[wfo.name][task.pathName] = { "ReplaceSiteWhitelist" : sorted(aaa_grid) }
+                        elif new_grid:
+                            print wfo.name,"would complement up to",sorted(aaa_grid)
+                            wfi.sendLog('equalizor','Adding site white list to %s dynamically'% sorted(new_grid) )
+                            modifications[wfo.name][task.pathName] = { "AddWhitelist" : sorted(new_grid) }
                                 
                         elif len(extra_shit)>5:
                             if aaa_grid:
