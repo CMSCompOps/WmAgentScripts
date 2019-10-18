@@ -828,15 +828,16 @@ def equalizor(url , specific = None, options=None):
                         ## just add the neighbors to the existing whitelist. we could do more with block classAd
                         for site in wfi.request['SiteWhitelist']:
                             aaa_grid.update( mapping.get(site, []) )
-                        add_on = [
-                            'T3_US_OSG',
-                            'T3_US_NERSC',
-                            'T3_US_SDSC',
-                            'T3_US_TACC',
-                            'T3_US_PSC'
-                            ]
-                        aaa_grid = aaa_grid & set(sites_allowed + add_on) ## and restrict to site that would be allowed at all (mcore, mem)
-                        aaa_grid_in_full = aaa_grid_in_full & set(sites_allowed + add_on) ## and restrict to site that would be allowed at all (mcore, mem)
+#                        add_on = [
+#                            'T3_US_OSG',
+#                            'T3_US_NERSC',
+#                            'T3_US_SDSC',
+#                            'T3_US_TACC',
+#                            'T3_US_PSC'
+#                            ]
+			# The add_on above should already been in the mapping for aaa_grid
+                        aaa_grid = aaa_grid & set(sites_allowed) ## and restrict to site that would be allowed at all (mcore, mem)
+                        aaa_grid_in_full = aaa_grid_in_full & set(sites_allowed) ## and restrict to site that would be allowed at all (mcore, mem)
                         gmon = wfi.getGlideMon()
                         needs, task_name, running, idled = needs_action(wfi, task)
                         print needs,running,idled
@@ -877,19 +878,19 @@ def equalizor(url , specific = None, options=None):
                         aaa_grid = set(in_full)
                         for site in list(aaa_grid):
                             aaa_grid.update( mapping.get(site, []) )
-                        add_on = [
-                            'T3_US_OSG',
-                            'T3_US_NERSC',
-                            'T3_US_SDSC',
-                            'T3_US_TACC',
-                            'T3_US_PSC'
-                            ]
-
+#                        add_on = [
+#                            'T3_US_OSG',
+#                            'T3_US_NERSC',
+#                            'T3_US_SDSC',
+#                            'T3_US_TACC',
+#                            'T3_US_PSC'
+#                            ]
+			# The add_on above should already been in the mapping for aaa_grid
                         new_ones = set(in_full) - set(wfi.request['SiteWhitelist']) ## symptomatic of data have been repositionned
                         common = set(in_full) & set(wfi.request['SiteWhitelist'])
                         extra_shit = set(wfi.request['SiteWhitelist']) - aaa_grid ## symptomatic of too generous site-whitelist
 
-                        aaa_grid = aaa_grid & set(sites_allowed + add_on) ## restrict to site that would be allowed at all (mcore, mem)
+                        aaa_grid = aaa_grid & set(sites_allowed) ## restrict to site that would be allowed at all (mcore, mem)
                         new_grid = aaa_grid - set(wfi.request['SiteWhitelist'])
                         print dataset,"is in full ",len(blocks),"/",count_all," at",in_full
                         print '\n'.join( sorted(blocks) )
