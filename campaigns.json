@@ -1225,7 +1225,13 @@
   "RunIISummer19ULPrePremix": {
     "fractionpass": 0.95, 
     "go": true, 
-    "lumisize": -1, 
+    "lumisize": -1,
+    "parameters": {
+      "NonCustodialSites": [
+        "T2_CH_CERN", 
+        "T1_US_FNAL"
+      ]
+     },  
     "secondaries": {
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL17SIM-106X_mc2017_realistic_v3-v2/SIM": {
         "SiteWhitelist": [
