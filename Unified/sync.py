@@ -9,7 +9,7 @@ username = getpass.getuser()
 parser = argparse.ArgumentParser()
 parser.add_argument('-w', type=str, action='store', required=True, help='The workflow name to change the status of')
 parser.add_argument('-s', type=str, action='store', required=True, help='The new status to be set')
-parser.add_argument('--comments', type=str, action='store', required=True, help='Reason for manual intervention, to be registered in the Unified log',default=None)
+parser.add_argument('--comments', type=str, action='store', required=True, help='Reason for manual intervention, to be registered in the Unified log')
 options = parser.parse_args()
 url = reqmgr_url
 
