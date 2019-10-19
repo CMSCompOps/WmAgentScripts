@@ -3,7 +3,7 @@ from assignSession import *
 from utils import workflowInfo, getWorkflows, global_SI, sendEmail, componentInfo, getDatasetPresence, monitor_dir, monitor_pub_dir, reqmgr_url, campaignInfo, unifiedConfiguration, sendLog, do_html_in_each_module, base_eos_dir, eosRead, eosFile, agent_speed_draining
 import reqMgrClient
 import json
-import os
+import os, sys
 import time
 import random
 import optparse
@@ -17,9 +17,9 @@ import math
 def equalizor(url , specific = None, options=None):
 
     up = componentInfo(soft=['mcm','wtc','jira']) 
-    if not up.check(): return 
 
     if not specific:
+    	if not up.check(): return # Only check component when running cron job with everything
         workflows = getWorkflows(url, status='running-closed', details=True)
         workflows.extend(getWorkflows(url, status='running-open', details=True))
 
@@ -878,6 +878,7 @@ def equalizor(url , specific = None, options=None):
                         aaa_grid = set(in_full)
                         for site in list(aaa_grid):
                             aaa_grid.update( mapping.get(site, []) )
+
 #                        add_on = [
 #                            'T3_US_OSG',
 #                            'T3_US_NERSC',
@@ -889,7 +890,6 @@ def equalizor(url , specific = None, options=None):
                         new_ones = set(in_full) - set(wfi.request['SiteWhitelist']) ## symptomatic of data have been repositionned
                         common = set(in_full) & set(wfi.request['SiteWhitelist'])
                         extra_shit = set(wfi.request['SiteWhitelist']) - aaa_grid ## symptomatic of too generous site-whitelist
-
                         aaa_grid = aaa_grid & set(sites_allowed) ## restrict to site that would be allowed at all (mcore, mem)
                         new_grid = aaa_grid - set(wfi.request['SiteWhitelist'])
                         print dataset,"is in full ",len(blocks),"/",count_all," at",in_full
