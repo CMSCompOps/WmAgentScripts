@@ -7473,6 +7473,8 @@ class workflowInfo:
         if pickone:
             sites_allowed = sorted([SI.pick_CE( sites_allowed )])
 
+        print("Initially allow {}".format(sites_allowed))
+
         # do further restrictions based on memory
         # do further restrictions based on blow-up factor
         (min_child_job_per_event, root_job_per_event, blow_up) = self.getBlowupFactors()
@@ -7511,20 +7513,26 @@ class workflowInfo:
         mem = self.getMemory()
         memory_allowed = SI.sitesByMemory( mem , maxCore=ncores)
         if memory_allowed!=None:
-            if verbose:
-                print "sites allowing",mem,"MB and",ncores,"core are",sorted(memory_allowed)
             ## mask to sites ready for mcore
+            if verbose:
+                print ("[INFO] Sites allowing {} MB and {} core are".format(mem, ncores, sorted(memory_allowed)))
             if  ncores>1:
                 memory_allowed = list(set(memory_allowed) & set(SI.sites_mcore_ready))
+            if verbose:
+                print ("[INFO] Sites ready for multicore: {}".format(sorted(list(set(SI.sites_mcore_ready)))))
+            sites_removed = list(set(sites_allowed) - set(memory_allowed))
             sites_allowed = list(set(sites_allowed) & set(memory_allowed))
+        print("Removing sites due to {} MB and {} core(s) requirements: {}".format(mem, ncores, sorted(sorted(sites_removed))))
 
         ## check on CC7 compatibility
         archs = self.getArchs()
         arch_allowed = SI.sitesByArchs( archs )
         if not arch_allowed is None:
+            sites_removed = list(set(sites_allowed) - set(arch_allowed))
             sites_allowed = list(set(arch_allowed) & set(sites_allowed))
-            print "Reducing the whitelist to sites allowing",archs,":",sorted(arch_allowed)
-
+            print("[INFO] Sites allowing {}: {}".format(archs, sorted(list(arch_allowed))))
+            print "Reducing the whitelist to sites allowing",archs,". Removing ",sorted(sites_removed)
+        print("After all of these, allowing: {}".format(sorted(sites_allowed)))
         return (lheinput,primary,parent,secondary,sites_allowed)
 
     def checkSplitting(self):
