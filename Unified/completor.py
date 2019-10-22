@@ -2,7 +2,7 @@
 from assignSession import *
 import sys
 import reqMgrClient
-from utils import workflowInfo, getWorkflowById, forceComplete, getDatasetEventsAndLumis, componentInfo, monitor_dir, reqmgr_url, unifiedConfiguration, getAllStuckDataset, monitor_pub_dir, moduleLock , eosFile, eosRead, wtcInfo
+from utils import workflowInfo, getWorkflowById, forceComplete, getDatasetEventsAndLumis, componentInfo, monitor_dir, reqmgr_url, unifiedConfiguration, monitor_pub_dir, moduleLock , eosFile, eosRead, wtcInfo
 from utils import campaignInfo, siteInfo, sendLog, sendEmail
 from collections import defaultdict
 import json
@@ -59,8 +59,6 @@ def completor(url, specific):
          except:
              time.sleep(2)
 
-    ## take into account all stuck block and dataset from transfer team
-    all_stuck.update( getAllStuckDataset()) 
 
 
     good_fractions = {}
