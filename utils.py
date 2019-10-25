@@ -2998,6 +2998,7 @@ class closeoutInfo:
         else:            color='white'
         text=""
         _ = self.get( wf ) ## cache the value
+	if not wf in self.record: return ""
         tpid = self.record[wf]['prepid']
         pid = tpid.replace('task_','')
 
