@@ -1384,13 +1384,13 @@ class eosFile(object):
                 print "Failed to copy",self.eos_filename,"with",str(e)
                 if bail_and_email:
                     h = socket.gethostname()
-                    print 'eos is acting up on %s on %s. not able to copy %s to eos \n%s'%( h, time.asctime(), self.eos_filename, stre(e))
+                    print 'eos is acting up on %s on %s. not able to copy %s to eos \n%s'%( h, time.asctime(), self.eos_filename, str(e))
                     #sendEmail('eosFile','eos is acting up on %s on %s. not able to copy %s to eos \n%s'%( h, time.asctime(), self.eos_filename, stre(e)))
                     break
                 else:
                     time.sleep(30)
         h = socket.gethostname()
-        msg = 'eos is acting up on %s on %s. not able to copy %s to eos \n%s'%( h, time.asctime(), self.eos_filename, stre(e))
+        msg = 'eos is acting up on %s on %s. not able to copy %s to eos \n%s'%( h, time.asctime(), self.eos_filename, str(e))
         sendEmail('eosFile',msg)
         print(msg)
         return False
