@@ -1952,17 +1952,6 @@ class docCache:
             'cachefile' : None,
             'default' : ""
             }
-        for cat in ['1','2','m1','m3','m4','m5','m6']:
-            self.cache['stuck_cat%s'%cat] = {
-                'data' : None,
-                'timestamp' : time.mktime( time.gmtime()),
-                'expiration' : default_expiration(),
-                #'getter' : lambda : json.loads( os.popen('curl -s --retry 5 https://test-cmstransfererrors.web.cern.ch/test-CMSTransferErrors/stuck_%s.json'%cat).read()),
-                #'getter' : lambda : json.loads( os.popen('curl -s --retry 5 https://cms-stucktransfers.web.cern.ch/cms-stucktransfers/stuck_%s.json'%cat).read()),
-                'getter' : lambda : json.loads( os.popen('curl -s --retry 5 http://snarayan.web.cern.ch/snarayan/TransferErrors/stuck_%s.json'%cat).read()),
-                'cachefile' : None,
-                'default' : {}
-                }
         def get_invalidation():
             import csv
             TMDB_invalid = set([row[3] for row in csv.reader( os.popen('curl -s "https://docs.google.com/spreadsheets/d/11fFsDOTLTtRcI4Q3gXw0GNj4ZS8IoXMoQDC3CbOo_2o/export?format=csv"'))])
@@ -2131,14 +2120,6 @@ def getNodesQueue(url):
 
 
 dataCache = docCache()
-
-def getAllStuckDataset():
-    all_stuck = set()
-    for cat in ['1','2','m1','m3','m4','m5','m6']:
-        info = dataCache.get('stuck_cat%s'%cat)
-        all_stuck.update( info.keys() )
-    return all_stuck
-
 
 class DSS:
     def __init__(self):

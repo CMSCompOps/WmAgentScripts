@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput, workflowInfo, getDatasetBlocksFraction, findLostBlocks, findLostBlocksFiles, getDatasetBlockFraction, getDatasetFileFraction, getDatasetPresence, reqmgr_url, monitor_dir, getAllStuckDataset, monitor_pub_dir, do_html_in_each_module, base_eos_dir, eosRead, eosFile, transferDataset
+from utils import checkTransferStatus, checkTransferApproval, approveSubscription, getWorkflowByInput, workflowInfo, getDatasetBlocksFraction, findLostBlocks, findLostBlocksFiles, getDatasetBlockFraction, getDatasetFileFraction, getDatasetPresence, reqmgr_url, monitor_dir, monitor_pub_dir, do_html_in_each_module, base_eos_dir, eosRead, eosFile, transferDataset
 from utils import unifiedConfiguration, componentInfo, sendEmail, checkTransferLag, sendLog, transferStatuses
 from utils import siteInfo, campaignInfo, unified_url
 import json
@@ -241,7 +241,6 @@ def stagor(url,specific =None, options=None):
     eosFile('%s/dataset_endpoints.json'%monitor_dir,'w').write( json.dumps(dataset_endpoints, indent=2)).close()
 
     already_stuck = json.loads( eosRead('%s/stuck_transfers.json'%monitor_pub_dir) ).keys()
-    already_stuck.extend( getAllStuckDataset() )
  
     missing_in_action = defaultdict(list)
 

@@ -2,7 +2,7 @@
 from assignSession import *
 import reqMgrClient
 from utils import workflowInfo, campaignInfo, siteInfo, userLock, unifiedConfiguration, reqmgr_url, monitor_pub_dir, monitor_dir, global_SI
-from utils import getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction, getDatasetEventsPerLumi, getLFNbase, getDatasetBlocks, lockInfo, getAllStuckDataset, isHEPCloudReady, do_html_in_each_module
+from utils import getWorkLoad, getDatasetPresence, getDatasets, findCustodialLocation, getDatasetBlocksFraction, getDatasetEventsPerLumi, getLFNbase, getDatasetBlocks, lockInfo, isHEPCloudReady, do_html_in_each_module
 from utils import componentInfo, sendEmail, sendLog, getWorkflows, closeAllBlocks, eosRead
 #from utils import lockInfo
 from utils import moduleLock, notRunningBefore
@@ -65,7 +65,6 @@ def assignor(url ,specific = None, talk=True, options=None):
     aaa_mapping = json.loads(eosRead('%s/equalizor.json'%monitor_pub_dir))['mapping']
     all_stuck = set()
     all_stuck.update( json.loads(eosRead('%s/stuck_transfers.json'%monitor_pub_dir) ))
-    all_stuck.update( getAllStuckDataset()) 
 
     max_per_round = UC.get('max_per_round').get('assignor',None)
     max_cpuh_block = UC.get('max_cpuh_block')
