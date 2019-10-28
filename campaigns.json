@@ -254,6 +254,37 @@
     "lumisize": -1, 
     "tune": true
   }, 
+  "Run2016F": {
+    "custodial_override": [
+      "DQMIO"
+    ], 
+    "fractionpass": {
+      "DQMIO": {
+        "/JetHT/": 0.95, 
+        "/SingleMuon/": 0.95, 
+        "/SinglePhoton": 0.95, 
+        "/ZeroBias/": 0.95, 
+        "all": 0.9
+      }, 
+      "all": 1.0
+    }, 
+    "go": true, 
+    "labels": [
+      "03Feb2017", 
+      "15Feb2017", 
+      "22Feb2017", 
+      "18Apr2017_ver2", 
+      "18Apr2017", 
+      "07Aug17", 
+      "07Dec2018", 
+      "28Feb2019"
+    ], 
+    "maxcopies": 1, 
+    "overflow": {
+      "PRIM": {}
+    }, 
+    "resize": "auto"
+  }, 
   "Run3Summer19DR": {
     "fractionpass": 0.95, 
     "go": true, 
@@ -929,15 +960,15 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
-    "toDDM": [
-      "GEN"
-    ], 
     "parameters": {
       "NonCustodialSites": [
         "T2_CH_CERN", 
         "T1_US_FNAL"
       ]
-    },
+    }, 
+    "toDDM": [
+      "GEN"
+    ], 
     "tune": true
   }, 
   "RunIISummer19UL17DIGI": {
@@ -1052,15 +1083,15 @@
     "overflow": {
       "PREMIX": {}
     }, 
-    "toDDM": [
-      "GEN"
-    ], 
     "parameters": {
       "NonCustodialSites": [
         "T2_CH_CERN", 
         "T1_US_FNAL"
       ]
-    },
+    }, 
+    "toDDM": [
+      "GEN"
+    ], 
     "tune": true
   }, 
   "RunIISummer19UL17wmLHEGS": {
@@ -1171,16 +1202,16 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
-    "resize": "auto", 
-    "toDDM": [
-      "GEN"
-    ], 
     "parameters": {
       "NonCustodialSites": [
         "T2_CH_CERN", 
         "T1_US_FNAL"
       ]
-    },
+    }, 
+    "resize": "auto", 
+    "toDDM": [
+      "GEN"
+    ], 
     "tune": true
   }, 
   "RunIISummer19UL2017HLT": {
@@ -1225,13 +1256,13 @@
   "RunIISummer19ULPrePremix": {
     "fractionpass": 0.95, 
     "go": true, 
-    "lumisize": -1,
+    "lumisize": -1, 
     "parameters": {
       "NonCustodialSites": [
         "T2_CH_CERN", 
         "T1_US_FNAL"
       ]
-     },  
+    }, 
     "secondaries": {
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL17SIM-106X_mc2017_realistic_v3-v2/SIM": {
         "SiteWhitelist": [
