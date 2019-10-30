@@ -579,7 +579,7 @@ class CheckBuster(threading.Thread):
                 if 'ACDC%d'%irank in member['RequestName']:
                     acdc_order = max( irank, acdc_order )
 
-            if member['RequestStatus'] in ['running-open','running-closed','assigned','acquired']:
+            if member['RequestStatus'] in ['running-open','running-closed','assigned','acquired','staging','staged']:
                 print wfo.name,"still has an ACDC running",member['RequestName']
                 acdc.append( member['RequestName'] )
                 ## cannot be bypassed!
