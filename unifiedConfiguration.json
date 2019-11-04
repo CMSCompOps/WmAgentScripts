@@ -248,7 +248,7 @@
    "description": "Whether the stagor module can send workflow back to considered"
  },
   "max_handled_workflows": {
-   "value" : 8000,
+   "value" : 4000,
    "description": "The total number of workflows that we allow to handle at a time (transfer, running, assistance)"
   },
   "max_staging_workflows": {
