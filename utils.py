@@ -3318,13 +3318,8 @@ def getDatasetFileArray( dataset, validFileOnly, detail, cache_timeout=30):
     return all_files
 
 def getDatasetFileFraction( dataset, files):
-    dbsapi = DbsApi(url=dbs_url)
-    try:
-        all_files = dbsapi.listFileArray( dataset= dataset,validFileOnly=1, detail=True)
-    except Exception as e:
-	print("dbsapi.listFileArray failed on {}".format(dataset))
-	print(str(e))
-	raise
+    all_files = getDatasetFileArray( dataset, validFileOnly=1, detail=True)
+
     total = 0
     in_file = 0
     for f in all_files:
