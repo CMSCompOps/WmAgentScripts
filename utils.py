@@ -3288,10 +3288,10 @@ def checkTransferApproval(url, phedexid):
             approved[node['name']] = (node['decision']=='approved')
     return approved
 
-def getDatasetFileArray( dataset, validFileOnly, detail, cache_timeout=30):
+def getDatasetFileArray( dataset, validFileOnly=0, detail=False, cache_timeout=30):
     ## check for cache content
     cached = None
-    cache_file = '{}/dbs_listFileArray_{}'.format( cache_dir, dataset)
+    cache_file = '{}/dbs_listFileArray_{}'.format( cache_dir, dataset.replace('/','_'))
     now = time.mktime(time.gmtime())
     if os.path.isfile(cache_file):
         json_cache = json.loads(open( cache_file).read())
@@ -3302,6 +3302,7 @@ def getDatasetFileArray( dataset, validFileOnly, detail, cache_timeout=30):
             cached = json_cache
 
     if cached:
+        print ("listFileArray {} taken from cache".format( dataset ))
         all_files = cached['all_files']
     else:
         dbsapi = DbsApi(url=dbs_url)
@@ -3314,7 +3315,7 @@ def getDatasetFileArray( dataset, validFileOnly, detail, cache_timeout=30):
         all_files = [f for f in all_files if f['is_file_valid']==1]
     if not detail:
         keys= ['logical_file_name','is_file_valid']
-        all_files = [ [ dict(k,v) for k,v in f.items() if k in keys] for f in all_files]
+        all_files = [ dict([ (k,v) for k,v in f.items() if k in keys]) for f in all_files]
     return all_files
 
 def getDatasetFileFraction( dataset, files):
