@@ -3288,6 +3288,35 @@ def checkTransferApproval(url, phedexid):
             approved[node['name']] = (node['decision']=='approved')
     return approved
 
+def getDatasetFileArray( dataset, validFileOnly, detail, cache_timeout=30):
+    ## check for cache content
+    cached = None
+    cache_file = '{}/dbs_listFileArray_{}'.format( cache_dir, dataset)
+    now = time.mktime(time.gmtime())
+    if os.path.isfile(cache_file):
+        json_cache = json.loads(open( cache_file).read())
+        then = json_cache.get('time', now)
+        if (now - then) > cache_timeout*60:
+            cached = None
+        else:
+            cached = json_cache
+
+    if cached:
+        all_files = cached['all_files']
+    else:
+        dbsapi = DbsApi(url=dbs_url)
+        all_files = dbsapi.listFileArray( dataset= dataset, detail=True)
+        ## cache the content now
+        open(cache_file,'w').write( json.dumps( {'time': now,
+                                                 'all_files' : all_files}))
+    
+    if validFileOnly:
+        all_files = [f for f in all_files if f['is_file_valid']==1]
+    if not detail:
+        keys= ['logical_file_name','is_file_valid']
+        all_files = [ [ dict(k,v) for k,v in f.items() if k in keys] for f in all_files]
+    return all_files
+
 def getDatasetFileFraction( dataset, files):
     dbsapi = DbsApi(url=dbs_url)
     try:
