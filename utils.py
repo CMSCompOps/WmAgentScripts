@@ -3724,8 +3724,7 @@ def getDatasetFileLocations(url, dataset):
 def getDatasetFiles(url, dataset ,without_invalid=True ):
     return runWithRetries(_getDatasetFiles, [url, dataset], {'without_invalid':without_invalid}, retries =5, wait=5)
 def _getDatasetFiles(url, dataset ,without_invalid=True ):
-    dbsapi = DbsApi(url=dbs_url)
-    files = dbsapi.listFileArray( dataset= dataset,validFileOnly=without_invalid, detail=True)
+    files = getDatasetFileArray( dataset, validFileOnly=without_invalid, detail=True)
     dbs_filenames = [f['logical_file_name'] for f in files]
 
     conn = make_x509_conn(url)
@@ -3749,30 +3748,15 @@ def _getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=Non
     if vetoes==None:
         vetoes = ['MSS','Buffer','Export']
 
-    dbsapi = DbsApi(url=dbs_url)
-    #all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
-    #all_block_names=set([block['block_name'] for block in all_blocks])
-    try:
-        files = dbsapi.listFileArray( dataset= dataset,validFileOnly=1, detail=True)
-    except Exception as e:
-	print("dbsapi.listFileArray failed on {}".format(dataset))
-	print(str(e))
-	raise
+    files = getDatasetFileArray(dataset, validFileOnly=1, detail=True)
 	
     all_block_names = list(set([f['block_name'] for f in files]))
     if only_blocks:
         all_block_names = [b for b in all_block_names if b in only_blocks]
 
     conn = make_x509_conn(url)
-    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-
     r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset=%s'%(dataset))
     r2=conn.getresponse()
-    #retry since it does not look like its getting the right info in the first shot
-    #print "retry"
-    #time.sleep(2)
-    #r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset=%s'%(dataset))
-    #r2=conn.getresponse()
 
     result = json.loads(r2.read())
     items=result['phedex']['block']
@@ -4885,8 +4869,8 @@ def getDatasetLumis(dataset, runs=None, with_cache=False):
 def getDatasetListOfFiles(dataset):
     return runWithRetries(_getDatasetListOfFiles, [dataset],{})
 def _getDatasetListOfFiles(dataset):
-    dbsapi = DbsApi(url=dbs_url)
-    all_files = dbsapi.listFileArray( dataset = dataset, detail=False)
+    all_files = getDatasetFileArray( dataset )
+    print all_files
     all_lfn = sorted([f['logical_file_name'] for f in all_files])
     return all_lfn
 
@@ -4894,7 +4878,7 @@ def getDatasetAllEventsPerLumi(dataset, fraction=1):
     return runWithRetries(_getDatasetAllEventsPerLumi,[dataset], { 'fraction': fraction})
 def _getDatasetAllEventsPerLumi(dataset, fraction=1):
     dbsapi = DbsApi(url=dbs_url)
-    all_files = dbsapi.listFileArray( dataset = dataset ,detail=True)
+    all_files = getDatasetFileArray( dataset, detail=True)
     if fraction!=1:
         ## truncate if need be
         random.shuffle( all_files )
@@ -4909,8 +4893,6 @@ def _getDatasetAllEventsPerLumi(dataset, fraction=1):
         ls = dbsapi.listFileLumiArray( logical_file_name = [f['logical_file_name'] for f in chunk])
         for l in ls:
             final[l['logical_file_name']][1]+= len(l['lumi_section_num'])
-
-
 
     return    [a/float(b) for (a,b) in final.values()]
 
