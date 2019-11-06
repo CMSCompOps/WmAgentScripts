@@ -10,3 +10,7 @@ UL.deadlock()
 from utils import moduleLock
 mlock = moduleLock(component='deadlock')
 mlock.check()
+
+from utils import cacheInfo
+cache = cacheInfo()
+cache.purge()
