@@ -2924,17 +2924,23 @@ class cacheInfo:
     def get(self, key):
         now = time.mktime(time.gmtime())
         o =self.db.find_one({'key':key})
-        if o and o['expire'] > now:
-            return o['data']
+        if o:
+            if o['expire'] > now:
+                print "cache hit",key
+                return o['data']
+            else:
+                print "expired doc",key
+                return None
         else:
+            print "cache miss",key
             return None
 
     def store(self, key, data, lifetime_min=10):
         now = time.mktime(time.gmtime())
         content = {'data': data,
                    'key' : key,
-                   'time' : now,
-                   'expire' : now + 60*lifetime_min,
+                   'time' : int(now),
+                   'expire' : int(now + 60*lifetime_min),
                    'lifetime' : lifetime_min}
         self.db.update_one({'key': key},
                            {"$set": content},
