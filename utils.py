@@ -4208,6 +4208,7 @@ def _getDatasetBlocks( dataset, runs=None, lumis=None):
     dbsapi = DbsApi(url=dbs_url)
     all_blocks = set()
     if lumis:
+        print "Entering a heavy check on block per lumi"
         for run in lumis:
             try:
                 ## to be fixed, if run==1, this call fails. one needs to provide the following

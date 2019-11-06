@@ -17,7 +17,7 @@ for each in $nodes; do
     ssh  vocms$each "uptime"
     echo "############## RUNNING ######################"
     ssh  vocms$each "ps -e -f | grep Uni| grep -v grep"
-
+    
     ssh vocms$each "cd /data/unified/WmAgentScripts ; source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh ; python /data/unified/WmAgentScripts/Unified/deadlock.py"
     
     #ssh vocms$each "sudo chmod g+rw -R /data/unified/"
