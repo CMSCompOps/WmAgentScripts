@@ -1839,7 +1839,7 @@ class docCache:
         self.cache = {}
         def default_expiration():
             ## a random time between 20 min and 30 min.
-            return 20*60+random.random()*10*60
+            return int(20 + random.random()*10)
         self.cache['ssb_136'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
@@ -1998,50 +1998,26 @@ class docCache:
 
 
     def get(self, label, fresh=False):
-        now = time.mktime( time.gmtime())
-        if label in self.cache:
-            cache = self.cache[label]
-            get_back = False
+        if not label in self.cache:
+            print "unkown cache doc key",label
+            return None
+        cache = cacheInfo()
+        cached = cache.get( label ) if not fresh else None
+        if cached:
+            return cached
+        else:
+            o = self.cache[label]
             try:
-                if not cache['data']:
-                    #check the file version
-                    if os.path.isfile(cache['cachefile']):
-                        try:
-                            print "load",label,"from file",cache['cachefile']
-                            f_cache = json.loads(open(cache['cachefile']).read())
-                            cache['data' ] = f_cache['data']
-                            cache['timestamp' ] = f_cache['timestamp']
-                        except Exception as e:
-                            print "Failed to read local cache"
-                            print str(e)
-                            get_back = True
-                    else: get_back = True
-                    if get_back:
-                        print "no file cache for", label,"getting fresh"
-                        cache['data'] = cache['getter']()
-                        cache['timestamp'] = now
-                        open(cache['cachefile'],'w').write( json.dumps({'data': cache['data'], 'timestamp' : cache['timestamp']}, indent=2) )
-
-                ## check the time stamp
-                if cache['expiration']+cache['timestamp'] < now or fresh:
-                    print "getting fresh",label
-                    cache['data'] = cache['getter']()
-                    cache['timestamp'] = now
-                    open(cache['cachefile'],'w').write( json.dumps({'data': cache['data'], 'timestamp' : cache['timestamp']}, indent=2) )
-
-                return cache['data']
+                data =  o['getter']()
             except Exception as e:
                 sendLog('doccache','Failed to get %s\n%s'%(label,str(e)), level='critical')
                 print "failed to get",label
                 print str(e)
-                if os.path.isfile(cache['cachefile']):
-                    print "load",label,"from file",cache['cachefile']
-                    f_cache = json.loads(open(cache['cachefile']).read())
-                    cache['data' ] = f_cache['data']
-                    cache['timestamp' ] = f_cache['timestamp']
-                    return cache['data']
-                else:
-                    return copy.deepcopy(cache['default'])
+                data = o['default']
+            cache.store( label, 
+                         data = data,
+                         lifetime_min = o['expiration'] )
+            return data
 
 def getNodes(url, kind):
     tries = 5 
@@ -2916,6 +2892,69 @@ class reportInfo:
                 'tasks' : { task : {field_name : content}}}
         self._put( doc )
 
+class cacheInfo:
+    def __init__(self):
+        self.client = mongo_client()
+        self.db = self.client.unified.cacheInfo
+
+    def get(self, key):
+        now = time.mktime(time.gmtime())
+        o =self.db.find_one({'key':key})
+        if o:
+            if o['expire'] > now:
+                if not 'data' in o:
+                    return self.from_file(key)
+                else:
+                    print "cache hit",key
+                    return o['data']
+            else:
+                print "expired doc",key
+                return None
+        else:
+            print "cache miss",key
+            return None
+
+    def _file_key(self, key):
+        cache_file = '{}/{}'.format(cache_dir, key)
+        return cache_file
+
+    def from_file(self, key):
+        fn = self._file_key(key)
+        if os.path.isfile( fn):
+            print "file cache hit",key
+            return json.loads(open(fn).read())
+        else:
+            print "file cachemiss",key
+            return None
+    def store(self, key, data, lifetime_min=10):
+        import pymongo
+        now = time.mktime(time.gmtime())
+        content = {'data': data,
+                   'key' : key,
+                   'time' : int(now),
+                   'expire' : int(now + 60*lifetime_min),
+                   'lifetime' : lifetime_min}
+        try:
+            self.db.update_one({'key': key},
+                               {"$set": content},
+                               upsert = True)
+        except pymongo.errors.DocumentTooLarge as e:
+            print ("too large to go in mongo. in file instead")
+            open(self._file_key(key),'w').write( json.dumps( content.pop('data') ))
+            self.db.update_one({'key': key},
+                               {"$set": content},
+                               upsert = True)
+        except Exception as e:
+            print str(e)
+
+    def purge(self):
+        now = time.mktime(time.gmtime())
+        # delete all documents with passed expiration time 
+        before = len([o for o in self.db.find()])
+        self.db.delete_many({'expire' : { '$lt' : now}})
+        after = len([o for o in self.db.find()])
+        print "purged",before-after,"document from cache"
+
 class closeoutInfo:
     def __init__(self):
         self.owner = "%s-%s"%( socket.gethostname(), os.getpid())
@@ -3288,14 +3327,30 @@ def checkTransferApproval(url, phedexid):
             approved[node['name']] = (node['decision']=='approved')
     return approved
 
+def getDatasetFileArray( dataset, validFileOnly=0, detail=False, cache_timeout=30):
+    ## check for cache content
+    cache_key = 'dbs_listFileArray_{}'.format( dataset )
+    cache = cacheInfo()
+    cached = cache.get(cache_key)
+    
+    if cached:
+        print ("listFileArray {} taken from cache".format( dataset ))
+        all_files = cached
+    else:
+        dbsapi = DbsApi(url=dbs_url)
+        all_files = dbsapi.listFileArray( dataset= dataset, detail=True)
+        cache.store( cache_key, all_files)
+    
+    if validFileOnly:
+        all_files = [f for f in all_files if f['is_file_valid']==1]
+    if not detail:
+        keys= ['logical_file_name','is_file_valid']
+        all_files = [ dict([ (k,v) for k,v in f.items() if k in keys]) for f in all_files]
+    return all_files
+
 def getDatasetFileFraction( dataset, files):
-    dbsapi = DbsApi(url=dbs_url)
-    try:
-        all_files = dbsapi.listFileArray( dataset= dataset,validFileOnly=1, detail=True)
-    except Exception as e:
-	print("dbsapi.listFileArray failed on {}".format(dataset))
-	print(str(e))
-	raise
+    all_files = getDatasetFileArray( dataset, validFileOnly=1, detail=True)
+
     total = 0
     in_file = 0
     for f in all_files:
@@ -3699,8 +3754,7 @@ def getDatasetFileLocations(url, dataset):
 def getDatasetFiles(url, dataset ,without_invalid=True ):
     return runWithRetries(_getDatasetFiles, [url, dataset], {'without_invalid':without_invalid}, retries =5, wait=5)
 def _getDatasetFiles(url, dataset ,without_invalid=True ):
-    dbsapi = DbsApi(url=dbs_url)
-    files = dbsapi.listFileArray( dataset= dataset,validFileOnly=without_invalid, detail=True)
+    files = getDatasetFileArray( dataset, validFileOnly=without_invalid, detail=True)
     dbs_filenames = [f['logical_file_name'] for f in files]
 
     conn = make_x509_conn(url)
@@ -3724,30 +3778,15 @@ def _getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=Non
     if vetoes==None:
         vetoes = ['MSS','Buffer','Export']
 
-    dbsapi = DbsApi(url=dbs_url)
-    #all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
-    #all_block_names=set([block['block_name'] for block in all_blocks])
-    try:
-        files = dbsapi.listFileArray( dataset= dataset,validFileOnly=1, detail=True)
-    except Exception as e:
-	print("dbsapi.listFileArray failed on {}".format(dataset))
-	print(str(e))
-	raise
+    files = getDatasetFileArray(dataset, validFileOnly=1, detail=True)
 	
     all_block_names = list(set([f['block_name'] for f in files]))
     if only_blocks:
         all_block_names = [b for b in all_block_names if b in only_blocks]
 
     conn = make_x509_conn(url)
-    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-
     r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset=%s'%(dataset))
     r2=conn.getresponse()
-    #retry since it does not look like its getting the right info in the first shot
-    #print "retry"
-    #time.sleep(2)
-    #r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset=%s'%(dataset))
-    #r2=conn.getresponse()
 
     result = json.loads(r2.read())
     items=result['phedex']['block']
@@ -4169,6 +4208,7 @@ def _getDatasetBlocks( dataset, runs=None, lumis=None):
     dbsapi = DbsApi(url=dbs_url)
     all_blocks = set()
     if lumis:
+        print "Entering a heavy check on block per lumi"
         for run in lumis:
             try:
                 ## to be fixed, if run==1, this call fails. one needs to provide the following
@@ -4706,162 +4746,87 @@ def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False,
 
     now = time.mktime(time.gmtime())
     dbsapi = DbsApi(url=dbs_url)
-    c_name= '%s/.%s.lumis.json'%(cache_dir,dataset.replace('/','_'))
-    #print os.path.isfile(c_name),with_cache
-    if os.path.isfile(c_name):
-        print "picking up from cache",c_name
-        try:
-            opened = json.loads(open(c_name).read())
-        except:
-            opened = {}
-            with_cache = False
+    cache_key = 'json_lumis_{}'.format( dataset )
+    cache = cacheInfo()
+    cached = None
+    if force: with_cache=False
+    if with_cache:
+        cached = cache.get( cache_key )
+        
+    if not cached:
+        ## do the full query
+        
+        print "querying getDatasetLumisAndFiles", dataset
+        full_lumi_json = defaultdict(set)
+        files_per_lumi = defaultdict(set) ## the revers dictionnary of files by r:l
 
-        if 'time' in opened:
-            record_time = opened['time']
-            if (now-record_time)<(0.5*60*60): ## 0 ?
-                with_cache=True ## if the record is less than 1 hours, it will get it from cache
-        else:
-            with_cache = False ## force new caches
-        if force: with_cache=False
-
-        ## need to filter on the runs
-        if with_cache and 'lumis' in opened and 'files' in opened:
-            lumi_json = dict([(int(k),v) for (k,v) in opened['lumis'].items()])
-            files_json = dict([(tuple(map(int,k.split(":"))),v) for (k,v) in opened['files'].items()])
-            if runs:
-                lumi_json = dict([(int(k),v) for (k,v) in opened['lumis'].items() if int(k) in runs])
-                files_json = dict([(tuple(map(int,k.split(":"))),v) for (k,v) in opened['files'].items() if int(k.split(':')[0]) in runs])
-            elif lumilist:
-                runs = map(int(lumilist.keys()))
-                lumi_json = dict([(int(k),v) for (k,v) in opened['lumis'].items() if int(k) in runs])
-                files_json = dict([(tuple(map(int,k.split(":"))),v) for (k,v) in opened['files'].items() if map(int,k.split(":")) in lumis])
-
-            print "return from cache"
-            return lumi_json,files_json
-        else:
-            print "old cache. re-querying"
-    print "querying getDatasetLumisAndFiles", dataset
-    #print c_name
-    full_lumi_json = defaultdict(set)
-    files_per_lumi = defaultdict(set) ## the revers dictionnary of files by r:l
-
-    class getFilesFromBlock(threading.Thread):
-        def __init__(self, b, dbs=None):
-            threading.Thread.__init__(self)
-            self.b = b
-            self.a = dbs if dbs else DbsApi(url=dbs_url)
-            self.res = None
+        class getFilesFromBlock(threading.Thread):
+            def __init__(self, b, dbs=None):
+                threading.Thread.__init__(self)
+                self.b = b
+                self.a = dbs if dbs else DbsApi(url=dbs_url)
+                self.res = None
             
-        def run(self):
-
-            self.res = self.a.listFileLumis( block_name = self.b , validFileOnly=int(not check_with_invalid_files_too))
+            def run(self):
+                self.res = self.a.listFileLumis( block_name = self.b , validFileOnly=int(not check_with_invalid_files_too))
                             
-    threads = []
-    all_blocks = dbsapi.listBlocks( dataset = dataset )
-    for block in all_blocks:
-        threads.append( getFilesFromBlock( block.get('block_name') ))
+        threads = []
+        all_blocks = dbsapi.listBlocks( dataset = dataset )
+        for block in all_blocks:
+            threads.append( getFilesFromBlock( block.get('block_name') ))
 
-    run_rthreads = ThreadHandler( threads = threads,
-                                  n_threads = 10,
-                                  label = 'getDatasetLumisAndFiles')
-    run_rthreads.start()
-    while run_rthreads.is_alive():
-        time.sleep(1)
+        run_rthreads = ThreadHandler( threads = threads,
+                                      n_threads = 10,
+                                      label = 'getDatasetLumisAndFiles')
+        run_rthreads.start()
+        while run_rthreads.is_alive():
+            time.sleep(1)
 
-    for t in run_rthreads.threads:
-        if not t.res: continue
-        for f in t.res:
-            full_lumi_json[ f['run_num'] ].update( f['lumi_section_num'])
-            for lumi in f['lumi_section_num']:
-                files_per_lumi[(f['run_num'], lumi)].add( f['logical_file_name'])
+        for t in run_rthreads.threads:
+            if not t.res: continue
+            for f in t.res:
+                full_lumi_json[ str(f['run_num']) ].update( f['lumi_section_num'])
+                for lumi in f['lumi_section_num']:
+                    #files_per_lumi[(f['run_num'], lumi)].add( f['logical_file_name'])
+                    files_per_lumi['{}:{}'.format(f['run_num'], lumi)].add( f['logical_file_name'])
+        for k,v in full_lumi_json.items():
+            full_lumi_json[k] = list(v)
+        for k,v in files_per_lumi.items():
+            files_per_lumi[k] = list(v)
 
-    ## convert set->list and for a run list
-    lumi_json = {}
-    files_json = {}
-    for r in full_lumi_json:
-        full_lumi_json[r] = list(full_lumi_json[r])
-        if runs and not r in runs: continue
-        if lumilist:
-            lumi_json[r] = list(full_lumi_json[r] & lumilist.get(r, set()))
-        else:
-            lumi_json[r] = list(full_lumi_json[r])
-    for rl in files_per_lumi.keys():
-        conv = list(files_per_lumi.pop(rl))
-        if runs:
-            if rl[0] in runs: files_json[rl] = conv
-        elif lumis:
-            if rl in lumis: files_json[rl] = conv
-        else:
-            files_json[rl] = conv
-        files_per_lumi['%d:%d'%(rl)] = conv
+        cache.store( cache_key,
+                     {'files' : files_per_lumi,
+                      'lumis' : full_lumi_json},
+                     lifetime_min =600)
+    else:
+        files_per_lumi = cached['files']
+        full_lumi_json = cached['lumis']
 
 
-    try:
-        open(c_name,'w').write( json.dumps(
-                {'lumis' : dict(full_lumi_json),
-                 'files' : dict(files_per_lumi),
-                 'time' : now}
-                , indent=2))
-    except:
-        print "could not write the cache file out"
 
-    return dict(lumi_json),dict(files_json)
+    ## need to filter on the runs
+    lumi_json = dict([(int(k),v) for (k,v) in full_lumi_json.items()])
+    files_json = dict([(tuple(map(int,k.split(":"))),v) for (k,v) in files_per_lumi.items()])
+    if runs:
+        lumi_json = dict([(int(k),v) for (k,v) in full_lumi_json.items() if int(k) in runs])
+        files_json = dict([(tuple(map(int,k.split(":"))),v) for (k,v) in files_per_lumi.items() if int(k.split(':')[0]) in runs])
+    elif lumilist:
+        runs = map(int(lumilist.keys()))
+        lumi_json = dict([(int(k),v) for (k,v) in full_lumi_json.items() if int(k) in runs])
+        files_json = dict([(tuple(map(int,k.split(":"))),v) for (k,v) in files_per_lumi.items() if map(int,k.split(":")) in lumis])
+
+    return lumi_json,files_json
 
 
 def getDatasetLumis(dataset, runs=None, with_cache=False):
     l,f = getDatasetLumisAndFiles(dataset, runs=runs, lumilist=None, with_cache=with_cache)
     return l
-"""
-    dbsapi = DbsApi(url=dbs_url)
-    c_name= '%s/.%s.lumis.json'%(cache_dir,dataset.replace('/','_'))
-    if os.path.isfile(c_name) and with_cache:
-        print "picking up from cache",c_name
-        opened = json.loads(open(c_name).read())
-        ## need to filter on the runs
-        if runs:
-            return dict([(k,v) for (k,v) in opened.items() if int(k) in runs])
-        else:
-            return opened
 
-
-    full_lumi_json = defaultdict(set)
-    files_per_lumi = defaultdict(set) ## the revers dictionnary of files by r:l
-    d_runs = getDatasetRuns( dataset )
-    #print len(runs),"runs"
-    for run in d_runs:
-        files = getFilesWithLumiInRun( dataset, run )
-        #print run,len(files),"files"
-        for f in files:
-            full_lumi_json[run].update( f['lumi_section_num'] )
-            for lumi in f['lumi_section_num']:
-                files_per_lumi[(run,lumi)].add( f['logical_file_name'] )
-
-    ## convert set->list and for a run list
-    lumi_json = {}
-    files_json = {}
-    for r in full_lumi_json:
-        full_lumi_json[r] = list(full_lumi_json[r])
-        if runs and not r in runs: continue
-        lumi_json[r] = list(full_lumi_json[r])
-    for rl in files_per_lumi:
-        if runs and rl[0] in runs:
-            files_json[rl] = list(files_per_lumi[rl])
-        files_per_lumi['%d:%d'%(rl)] = list(files_per_lumi.pop(rl))
-
-
-    open(c_name,'w').write( json.dumps(
-            cache_store = {'lumis' : dict(full_lumi_json),
-                           'files' : dict(files_per_lumi)}
-            , indent=2))
-    #open(c_name,'w').write( json.dumps( dict(full_lumi_json), indent=2))
-
-    return dict(lumi_json),dict(files_json)
-"""
 def getDatasetListOfFiles(dataset):
     return runWithRetries(_getDatasetListOfFiles, [dataset],{})
 def _getDatasetListOfFiles(dataset):
-    dbsapi = DbsApi(url=dbs_url)
-    all_files = dbsapi.listFileArray( dataset = dataset, detail=False)
+    all_files = getDatasetFileArray( dataset )
+    print all_files
     all_lfn = sorted([f['logical_file_name'] for f in all_files])
     return all_lfn
 
@@ -4869,7 +4834,7 @@ def getDatasetAllEventsPerLumi(dataset, fraction=1):
     return runWithRetries(_getDatasetAllEventsPerLumi,[dataset], { 'fraction': fraction})
 def _getDatasetAllEventsPerLumi(dataset, fraction=1):
     dbsapi = DbsApi(url=dbs_url)
-    all_files = dbsapi.listFileArray( dataset = dataset ,detail=True)
+    all_files = getDatasetFileArray( dataset, detail=True)
     if fraction!=1:
         ## truncate if need be
         random.shuffle( all_files )
@@ -4884,8 +4849,6 @@ def _getDatasetAllEventsPerLumi(dataset, fraction=1):
         ls = dbsapi.listFileLumiArray( logical_file_name = [f['logical_file_name'] for f in chunk])
         for l in ls:
             final[l['logical_file_name']][1]+= len(l['lumi_section_num'])
-
-
 
     return    [a/float(b) for (a,b) in final.values()]
 
