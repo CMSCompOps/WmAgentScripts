@@ -4741,106 +4741,76 @@ def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False,
 
     now = time.mktime(time.gmtime())
     dbsapi = DbsApi(url=dbs_url)
-    c_name= '%s/.%s.lumis.json'%(cache_dir,dataset.replace('/','_'))
-    #print os.path.isfile(c_name),with_cache
-    if os.path.isfile(c_name):
-        print "picking up from cache",c_name
-        try:
-            opened = json.loads(open(c_name).read())
-        except:
-            opened = {}
-            with_cache = False
+    cache_key = 'json_lumis_{}'.format( dataset )
+    cache = cacheInfo()
+    cached = None
+    if force: with_cache=False
+    if with_cache:
+        cached = cache.get( cache_key )
+        
+    if not cached:
+        ## do the full query
+        
+        print "querying getDatasetLumisAndFiles", dataset
+        full_lumi_json = defaultdict(set)
+        files_per_lumi = defaultdict(set) ## the revers dictionnary of files by r:l
 
-        if 'time' in opened:
-            record_time = opened['time']
-            if (now-record_time)<(0.5*60*60): ## 0 ?
-                with_cache=True ## if the record is less than 1 hours, it will get it from cache
-        else:
-            with_cache = False ## force new caches
-        if force: with_cache=False
-
-        ## need to filter on the runs
-        if with_cache and 'lumis' in opened and 'files' in opened:
-            lumi_json = dict([(int(k),v) for (k,v) in opened['lumis'].items()])
-            files_json = dict([(tuple(map(int,k.split(":"))),v) for (k,v) in opened['files'].items()])
-            if runs:
-                lumi_json = dict([(int(k),v) for (k,v) in opened['lumis'].items() if int(k) in runs])
-                files_json = dict([(tuple(map(int,k.split(":"))),v) for (k,v) in opened['files'].items() if int(k.split(':')[0]) in runs])
-            elif lumilist:
-                runs = map(int(lumilist.keys()))
-                lumi_json = dict([(int(k),v) for (k,v) in opened['lumis'].items() if int(k) in runs])
-                files_json = dict([(tuple(map(int,k.split(":"))),v) for (k,v) in opened['files'].items() if map(int,k.split(":")) in lumis])
-
-            print "return from cache"
-            return lumi_json,files_json
-        else:
-            print "old cache. re-querying"
-    print "querying getDatasetLumisAndFiles", dataset
-    #print c_name
-    full_lumi_json = defaultdict(set)
-    files_per_lumi = defaultdict(set) ## the revers dictionnary of files by r:l
-
-    class getFilesFromBlock(threading.Thread):
-        def __init__(self, b, dbs=None):
-            threading.Thread.__init__(self)
-            self.b = b
-            self.a = dbs if dbs else DbsApi(url=dbs_url)
-            self.res = None
+        class getFilesFromBlock(threading.Thread):
+            def __init__(self, b, dbs=None):
+                threading.Thread.__init__(self)
+                self.b = b
+                self.a = dbs if dbs else DbsApi(url=dbs_url)
+                self.res = None
             
-        def run(self):
-
-            self.res = self.a.listFileLumis( block_name = self.b , validFileOnly=int(not check_with_invalid_files_too))
+            def run(self):
+                self.res = self.a.listFileLumis( block_name = self.b , validFileOnly=int(not check_with_invalid_files_too))
                             
-    threads = []
-    all_blocks = dbsapi.listBlocks( dataset = dataset )
-    for block in all_blocks:
-        threads.append( getFilesFromBlock( block.get('block_name') ))
+        threads = []
+        all_blocks = dbsapi.listBlocks( dataset = dataset )
+        for block in all_blocks:
+            threads.append( getFilesFromBlock( block.get('block_name') ))
 
-    run_rthreads = ThreadHandler( threads = threads,
-                                  n_threads = 10,
-                                  label = 'getDatasetLumisAndFiles')
-    run_rthreads.start()
-    while run_rthreads.is_alive():
-        time.sleep(1)
+        run_rthreads = ThreadHandler( threads = threads,
+                                      n_threads = 10,
+                                      label = 'getDatasetLumisAndFiles')
+        run_rthreads.start()
+        while run_rthreads.is_alive():
+            time.sleep(1)
 
-    for t in run_rthreads.threads:
-        if not t.res: continue
-        for f in t.res:
-            full_lumi_json[ f['run_num'] ].update( f['lumi_section_num'])
-            for lumi in f['lumi_section_num']:
-                files_per_lumi[(f['run_num'], lumi)].add( f['logical_file_name'])
+        for t in run_rthreads.threads:
+            if not t.res: continue
+            for f in t.res:
+                full_lumi_json[ str(f['run_num']) ].update( f['lumi_section_num'])
+                for lumi in f['lumi_section_num']:
+                    #files_per_lumi[(f['run_num'], lumi)].add( f['logical_file_name'])
+                    files_per_lumi['{}:{}'.format(f['run_num'], lumi)].add( f['logical_file_name'])
+        for k,v in full_lumi_json.items():
+            full_lumi_json[k] = list(v)
+        for k,v in files_per_lumi.items():
+            files_per_lumi[k] = list(v)
 
-    ## convert set->list and for a run list
-    lumi_json = {}
-    files_json = {}
-    for r in full_lumi_json:
-        full_lumi_json[r] = list(full_lumi_json[r])
-        if runs and not r in runs: continue
-        if lumilist:
-            lumi_json[r] = list(full_lumi_json[r] & lumilist.get(r, set()))
-        else:
-            lumi_json[r] = list(full_lumi_json[r])
-    for rl in files_per_lumi.keys():
-        conv = list(files_per_lumi.pop(rl))
-        if runs:
-            if rl[0] in runs: files_json[rl] = conv
-        elif lumis:
-            if rl in lumis: files_json[rl] = conv
-        else:
-            files_json[rl] = conv
-        files_per_lumi['%d:%d'%(rl)] = conv
+        cache.store( cache_key,
+                     {'files' : files_per_lumi,
+                      'lumis' : full_lumi_json},
+                     lifetime_min =600)
+    else:
+        files_per_lumi = cached['files']
+        full_lumi_json = cached['lumis']
 
 
-    try:
-        open(c_name,'w').write( json.dumps(
-                {'lumis' : dict(full_lumi_json),
-                 'files' : dict(files_per_lumi),
-                 'time' : now}
-                , indent=2))
-    except:
-        print "could not write the cache file out"
 
-    return dict(lumi_json),dict(files_json)
+    ## need to filter on the runs
+    lumi_json = dict([(int(k),v) for (k,v) in full_lumi_json.items()])
+    files_json = dict([(tuple(map(int,k.split(":"))),v) for (k,v) in files_per_lumi.items()])
+    if runs:
+        lumi_json = dict([(int(k),v) for (k,v) in full_lumi_json.items() if int(k) in runs])
+        files_json = dict([(tuple(map(int,k.split(":"))),v) for (k,v) in files_per_lumi.items() if int(k.split(':')[0]) in runs])
+    elif lumilist:
+        runs = map(int(lumilist.keys()))
+        lumi_json = dict([(int(k),v) for (k,v) in full_lumi_json.items() if int(k) in runs])
+        files_json = dict([(tuple(map(int,k.split(":"))),v) for (k,v) in files_per_lumi.items() if map(int,k.split(":")) in lumis])
+
+    return lumi_json,files_json
 
 
 def getDatasetLumis(dataset, runs=None, with_cache=False):
