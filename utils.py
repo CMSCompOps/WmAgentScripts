@@ -2916,6 +2916,35 @@ class reportInfo:
                 'tasks' : { task : {field_name : content}}}
         self._put( doc )
 
+class cacheInfo:
+    def __init__(self):
+        self.client = mongo_client()
+        self.db = self.client.unified.cacheInfo
+
+    def get(self, key):
+        now = time.mktime(time.gmtime())
+        o =self.db.find_one({'key':key})
+        if o and o['expire'] > now:
+            return o['data']
+        else:
+            return None
+
+    def store(self, key, data, lifetime_min=10):
+        now = time.mktime(time.gmtime())
+        content = {'data': data,
+                   'key' : key,
+                   'time' : now,
+                   'expire' : now + 60*lifetime_min,
+                   'lifetime' : lifetime_min}
+        self.db.update_one({'key': key},
+                           {"$set": content},
+                           upsert = True)
+
+    def purge(self):
+        now = time.mktime(time.gmtime())
+        # delete all documents with passed expiration time 
+        self.db.delete({'expire' : { '$lt' : now}})
+
 class closeoutInfo:
     def __init__(self):
         self.owner = "%s-%s"%( socket.gethostname(), os.getpid())
