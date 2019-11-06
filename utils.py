@@ -2902,8 +2902,11 @@ class cacheInfo:
         o =self.db.find_one({'key':key})
         if o:
             if o['expire'] > now:
-                print "cache hit",key
-                return o['data']
+                if not 'data' in o:
+                    return self.from_file(key)
+                else:
+                    print "cache hit",key
+                    return o['data']
             else:
                 print "expired doc",key
                 return None
@@ -2911,16 +2914,38 @@ class cacheInfo:
             print "cache miss",key
             return None
 
+    def _file_key(self, key):
+        cache_file = '{}/{}'.format(cache_dir, key)
+        return cache_file
+
+    def from_file(self, key):
+        fn = self._file_key(key)
+        if os.path.isfile( fn):
+            print "file cache hit",key
+            return json.loads(open(fn).read())
+        else:
+            print "file cachemiss",key
+            return None
     def store(self, key, data, lifetime_min=10):
+        import pymongo
         now = time.mktime(time.gmtime())
         content = {'data': data,
                    'key' : key,
                    'time' : int(now),
                    'expire' : int(now + 60*lifetime_min),
                    'lifetime' : lifetime_min}
-        self.db.update_one({'key': key},
-                           {"$set": content},
-                           upsert = True)
+        try:
+            self.db.update_one({'key': key},
+                               {"$set": content},
+                               upsert = True)
+        except pymongo.errors.DocumentTooLarge as e:
+            print ("too large to go in mongo. in file instead")
+            open(self._file_key(key),'w').write( json.dumps( content.pop('data') ))
+            self.db.update_one({'key': key},
+                               {"$set": content},
+                               upsert = True)
+        except Exception as e:
+            print str(e)
 
     def purge(self):
         now = time.mktime(time.gmtime())
