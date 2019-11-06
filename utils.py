@@ -1839,7 +1839,7 @@ class docCache:
         self.cache = {}
         def default_expiration():
             ## a random time between 20 min and 30 min.
-            return 20*60+random.random()*10*60
+            return int(20 + random.random()*10)
         self.cache['ssb_136'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
@@ -1998,50 +1998,26 @@ class docCache:
 
 
     def get(self, label, fresh=False):
-        now = time.mktime( time.gmtime())
-        if label in self.cache:
-            cache = self.cache[label]
-            get_back = False
+        if not label in self.cache:
+            print "unkown cache doc key",label
+            return None
+        cache = cacheInfo()
+        cached = cache.get( label ) if not fresh else None
+        if cached:
+            return cached
+        else:
+            o = self.cache[label]
             try:
-                if not cache['data']:
-                    #check the file version
-                    if os.path.isfile(cache['cachefile']):
-                        try:
-                            print "load",label,"from file",cache['cachefile']
-                            f_cache = json.loads(open(cache['cachefile']).read())
-                            cache['data' ] = f_cache['data']
-                            cache['timestamp' ] = f_cache['timestamp']
-                        except Exception as e:
-                            print "Failed to read local cache"
-                            print str(e)
-                            get_back = True
-                    else: get_back = True
-                    if get_back:
-                        print "no file cache for", label,"getting fresh"
-                        cache['data'] = cache['getter']()
-                        cache['timestamp'] = now
-                        open(cache['cachefile'],'w').write( json.dumps({'data': cache['data'], 'timestamp' : cache['timestamp']}, indent=2) )
-
-                ## check the time stamp
-                if cache['expiration']+cache['timestamp'] < now or fresh:
-                    print "getting fresh",label
-                    cache['data'] = cache['getter']()
-                    cache['timestamp'] = now
-                    open(cache['cachefile'],'w').write( json.dumps({'data': cache['data'], 'timestamp' : cache['timestamp']}, indent=2) )
-
-                return cache['data']
+                data =  o['getter']()
             except Exception as e:
                 sendLog('doccache','Failed to get %s\n%s'%(label,str(e)), level='critical')
                 print "failed to get",label
                 print str(e)
-                if os.path.isfile(cache['cachefile']):
-                    print "load",label,"from file",cache['cachefile']
-                    f_cache = json.loads(open(cache['cachefile']).read())
-                    cache['data' ] = f_cache['data']
-                    cache['timestamp' ] = f_cache['timestamp']
-                    return cache['data']
-                else:
-                    return copy.deepcopy(cache['default'])
+                data = o['default']
+            cache.store( label, 
+                         data = data,
+                         lifetime_min = o['expiration'] )
+            return data
 
 def getNodes(url, kind):
     tries = 5 
