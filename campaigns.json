@@ -907,7 +907,13 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
-    "resize": "auto", 
+    "resize": "auto",
+    "parameters": {
+      "NonCustodialSites": [
+        "T2_CH_CERN", 
+        "T1_US_FNAL"
+      ]
+    },  
     "toDDM": [
       "GEN"
     ], 
@@ -1017,7 +1023,13 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
-    "resize": "auto", 
+    "resize": "auto",
+    "parameters": {
+      "NonCustodialSites": [
+        "T2_CH_CERN", 
+        "T1_US_FNAL"
+      ]
+    },  
     "toDDM": [
       "GEN"
     ], 
@@ -1149,7 +1161,13 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
-    "resize": "auto", 
+    "resize": "auto",
+    "parameters": {
+      "NonCustodialSites": [
+        "T2_CH_CERN", 
+        "T1_US_FNAL"
+      ]
+    },  
     "toDDM": [
       "GEN"
     ], 
