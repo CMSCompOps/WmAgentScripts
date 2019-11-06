@@ -3319,26 +3319,17 @@ def checkTransferApproval(url, phedexid):
 
 def getDatasetFileArray( dataset, validFileOnly=0, detail=False, cache_timeout=30):
     ## check for cache content
-    cached = None
-    cache_file = '{}/dbs_listFileArray_{}'.format( cache_dir, dataset.replace('/','_'))
-    now = time.mktime(time.gmtime())
-    if os.path.isfile(cache_file):
-        json_cache = json.loads(open( cache_file).read())
-        then = json_cache.get('time', now)
-        if (now - then) > cache_timeout*60:
-            cached = None
-        else:
-            cached = json_cache
-
+    cache_key = 'dbs_listFileArray_{}'.format( dataset )
+    cache = cacheInfo()
+    cached = cache.get(cache_key)
+    
     if cached:
         print ("listFileArray {} taken from cache".format( dataset ))
-        all_files = cached['all_files']
+        all_files = cached
     else:
         dbsapi = DbsApi(url=dbs_url)
         all_files = dbsapi.listFileArray( dataset= dataset, detail=True)
-        ## cache the content now
-        open(cache_file,'w').write( json.dumps( {'time': now,
-                                                 'all_files' : all_files}))
+        cache.store( cache_key, all_files)
     
     if validFileOnly:
         all_files = [f for f in all_files if f['is_file_valid']==1]
