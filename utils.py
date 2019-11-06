@@ -4792,52 +4792,7 @@ def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False,
 def getDatasetLumis(dataset, runs=None, with_cache=False):
     l,f = getDatasetLumisAndFiles(dataset, runs=runs, lumilist=None, with_cache=with_cache)
     return l
-"""
-    dbsapi = DbsApi(url=dbs_url)
-    c_name= '%s/.%s.lumis.json'%(cache_dir,dataset.replace('/','_'))
-    if os.path.isfile(c_name) and with_cache:
-        print "picking up from cache",c_name
-        opened = json.loads(open(c_name).read())
-        ## need to filter on the runs
-        if runs:
-            return dict([(k,v) for (k,v) in opened.items() if int(k) in runs])
-        else:
-            return opened
 
-
-    full_lumi_json = defaultdict(set)
-    files_per_lumi = defaultdict(set) ## the revers dictionnary of files by r:l
-    d_runs = getDatasetRuns( dataset )
-    #print len(runs),"runs"
-    for run in d_runs:
-        files = getFilesWithLumiInRun( dataset, run )
-        #print run,len(files),"files"
-        for f in files:
-            full_lumi_json[run].update( f['lumi_section_num'] )
-            for lumi in f['lumi_section_num']:
-                files_per_lumi[(run,lumi)].add( f['logical_file_name'] )
-
-    ## convert set->list and for a run list
-    lumi_json = {}
-    files_json = {}
-    for r in full_lumi_json:
-        full_lumi_json[r] = list(full_lumi_json[r])
-        if runs and not r in runs: continue
-        lumi_json[r] = list(full_lumi_json[r])
-    for rl in files_per_lumi:
-        if runs and rl[0] in runs:
-            files_json[rl] = list(files_per_lumi[rl])
-        files_per_lumi['%d:%d'%(rl)] = list(files_per_lumi.pop(rl))
-
-
-    open(c_name,'w').write( json.dumps(
-            cache_store = {'lumis' : dict(full_lumi_json),
-                           'files' : dict(files_per_lumi)}
-            , indent=2))
-    #open(c_name,'w').write( json.dumps( dict(full_lumi_json), indent=2))
-
-    return dict(lumi_json),dict(files_json)
-"""
 def getDatasetListOfFiles(dataset):
     return runWithRetries(_getDatasetListOfFiles, [dataset],{})
 def _getDatasetListOfFiles(dataset):
