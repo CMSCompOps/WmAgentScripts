@@ -6740,28 +6740,36 @@ class workflowInfo:
             self.full_spec = pickle.loads(r2.read())
         return self.full_spec
 
-    def getWMErrors(self,cache_timeout=0):
-        cache = cacheInfo()
-        cache_key = 'wmerror_{}'.format( self.request['RequestName'])
-        cached = cache.get( cache_key )
-        if cached: 
-            return cached
-            
-
+    def getWMErrors(self,cache=0):
         try:
+            f_cache = '%s/%s.wmerror'%(cache_dir, self.request['RequestName'])
+            if cache:
+                if os.path.isfile(f_cache):
+                    d_cache = json.loads(open(f_cache).read())
+                    now = time.mktime(time.gmtime())
+                    stamp = d_cache['timestamp']
+                    if (now-stamp) < cache:
+                        print "wmerrors taken from cache",f_cache
+                        self.errors = d_cache['data']
+                        return self.errors
+
             self.conn = make_x509_conn(self.url)
             r1=self.conn.request("GET",'/wmstatsserver/data/jobdetail/%s'%(self.request['RequestName']), headers={"Accept":"*/*"})
             r2=self.conn.getresponse()
 
             self.errors = json.loads(r2.read())['result'][0][self.request['RequestName']]
-            cache.store( cache_key,
-                         data= self.errors )
-
-        except Exception as e:
-            print "failed getting getWMErrors"
-            print str(e)
-            self.errors = {}
-        return self.errors
+            try:
+                open(f_cache,'w').write( json.dumps({'timestamp': time.mktime(time.gmtime()),
+                                                     'data' : self.errors}))
+            except Exception as e:
+                print "failed getting getWMErrors"
+                print str(e)
+            return self.errors
+        except:
+            print "Could not get wmstats errors for",self.request['RequestName']
+            self.conn = make_x509_conn(self.url)
+            #self.conn  =  httplib.HTTPSConnection(self.url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+            return {}
 
     def getFullPicture(self, since=1, cache=0):
         by_site = self.getDashboard(since, sortby='site')
