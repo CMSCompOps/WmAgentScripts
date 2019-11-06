@@ -3350,6 +3350,7 @@ def getDatasetFileArray( dataset, validFileOnly=0, detail=False, cache_timeout=3
     return all_files
 
 def getDatasetFileFraction( dataset, files):
+    # VK TODO: can be replaced with dataset summary API which returns total number of evnts, files
     all_files = getDatasetFileArray( dataset, validFileOnly=1, detail=True)
 
     total = 0
@@ -3755,6 +3756,7 @@ def getDatasetFileLocations(url, dataset):
 def getDatasetFiles(url, dataset ,without_invalid=True ):
     return runWithRetries(_getDatasetFiles, [url, dataset], {'without_invalid':without_invalid}, retries =5, wait=5)
 def _getDatasetFiles(url, dataset ,without_invalid=True ):
+    # VK TODO: can be replaced with list of files API
     files = getDatasetFileArray( dataset, validFileOnly=without_invalid, detail=True)
     dbs_filenames = [f['logical_file_name'] for f in files]
 
@@ -3779,6 +3781,7 @@ def _getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=Non
     if vetoes==None:
         vetoes = ['MSS','Buffer','Export']
 
+    # VK TODO: replace with call to get list of blocks for a given dataset
     files = getDatasetFileArray(dataset, validFileOnly=1, detail=True)
 	
     all_block_names = list(set([f['block_name'] for f in files]))
@@ -4826,6 +4829,7 @@ def getDatasetLumis(dataset, runs=None, with_cache=False):
 def getDatasetListOfFiles(dataset):
     return runWithRetries(_getDatasetListOfFiles, [dataset],{})
 def _getDatasetListOfFiles(dataset):
+    # VK TODO: get list of files for a given dataset
     all_files = getDatasetFileArray( dataset )
     print all_files
     all_lfn = sorted([f['logical_file_name'] for f in all_files])
@@ -4835,6 +4839,7 @@ def getDatasetAllEventsPerLumi(dataset, fraction=1):
     return runWithRetries(_getDatasetAllEventsPerLumi,[dataset], { 'fraction': fraction})
 def _getDatasetAllEventsPerLumi(dataset, fraction=1):
     dbsapi = DbsApi(url=dbs_url)
+    # VK TODO: can it be replaced with dataset summary API?
     all_files = getDatasetFileArray( dataset, detail=True)
     if fraction!=1:
         ## truncate if need be
