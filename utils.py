@@ -3328,9 +3328,9 @@ def checkTransferApproval(url, phedexid):
             approved[node['name']] = (node['decision']=='approved')
     return approved
 
-def getDatasetFileArray( dataset, validFileOnly=0, detail=False, cache_timeout=30):
+def getDatasetFileArray( dataset, validFileOnly=0, detail=False, cache_timeout=30, use_array=False):
     ## check for cache content
-    cache_key = 'dbs_listFileArray_{}'.format( dataset )
+    cache_key = 'dbs_{}_{}'.format( 'listFileArray' if use_array else 'listFile' dataset )
     cache = cacheInfo()
     cached = cache.get(cache_key)
     
@@ -3339,7 +3339,10 @@ def getDatasetFileArray( dataset, validFileOnly=0, detail=False, cache_timeout=3
         all_files = cached
     else:
         dbsapi = DbsApi(url=dbs_url)
-        all_files = dbsapi.listFileArray( dataset= dataset, detail=True)
+        if use_array:
+            all_files = dbsapi.listFileArray( dataset= dataset, detail=True)
+        else:
+            all_files = dbsapi.listFiles( dataset = dataset, detail = True)
         cache.store( cache_key, all_files)
     
     if validFileOnly:
