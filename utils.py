@@ -3330,12 +3330,13 @@ def checkTransferApproval(url, phedexid):
 
 def getDatasetFileArray( dataset, validFileOnly=0, detail=False, cache_timeout=30, use_array=False):
     ## check for cache content
-    cache_key = 'dbs_{}_{}'.format( 'listFileArray' if use_array else 'listFile' , dataset )
+    call = 'listFileArray' if use_array else 'listFile'
+    cache_key = 'dbs_{}_{}'.format( call , dataset )
     cache = cacheInfo()
     cached = cache.get(cache_key)
     
     if cached:
-        print ("listFileArray {} taken from cache".format( dataset ))
+        print ("{} {} taken from cache".format(call, dataset ))
         all_files = cached
     else:
         dbsapi = DbsApi(url=dbs_url)
