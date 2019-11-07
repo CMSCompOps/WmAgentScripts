@@ -4985,7 +4985,7 @@ def _findParent( dataset ):
 def setFileStatus(file_names, validate=True):
     dbswrite = DbsApi(url=dbs_url_writer)
     dbsapi = DbsApi(url=dbs_url)
-    files = dbsapi.listFileArray(logical_file_name = file_names, detail=True)
+    files = dbsapi.listFiles(logical_file_name = file_names, detail=True)
     for fn in files:
         status = fn['is_file_valid']
         if status != validate:
