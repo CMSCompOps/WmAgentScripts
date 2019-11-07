@@ -3354,6 +3354,7 @@ def getDatasetFileArray( dataset, validFileOnly=0, detail=False, cache_timeout=3
 
 def getDatasetFileFraction( dataset, files):
     # VK TODO: can be replaced with dataset summary API which returns total number of evnts, files
+    # JRV: this requires to count only valid files.
     all_files = getDatasetFileArray( dataset, validFileOnly=1, detail=True)
 
     total = 0
@@ -3760,6 +3761,7 @@ def getDatasetFiles(url, dataset ,without_invalid=True ):
     return runWithRetries(_getDatasetFiles, [url, dataset], {'without_invalid':without_invalid}, retries =5, wait=5)
 def _getDatasetFiles(url, dataset ,without_invalid=True ):
     # VK TODO: can be replaced with list of files API
+    # JRV: done through getDatasetFileArray
     files = getDatasetFileArray( dataset, validFileOnly=without_invalid, detail=True)
     dbs_filenames = [f['logical_file_name'] for f in files]
 
@@ -3785,6 +3787,7 @@ def _getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=Non
         vetoes = ['MSS','Buffer','Export']
 
     # VK TODO: replace with call to get list of blocks for a given dataset
+    # JRV: need only the blocks with valid files.
     files = getDatasetFileArray(dataset, validFileOnly=1, detail=True)
 	
     all_block_names = list(set([f['block_name'] for f in files]))
@@ -4829,37 +4832,40 @@ def getDatasetLumis(dataset, runs=None, with_cache=False):
     l,f = getDatasetLumisAndFiles(dataset, runs=runs, lumilist=None, with_cache=with_cache)
     return l
 
-def getDatasetListOfFiles(dataset):
-    return runWithRetries(_getDatasetListOfFiles, [dataset],{})
-def _getDatasetListOfFiles(dataset):
-    # VK TODO: get list of files for a given dataset
-    all_files = getDatasetFileArray( dataset )
-    print all_files
-    all_lfn = sorted([f['logical_file_name'] for f in all_files])
-    return all_lfn
+#unused
+#def getDatasetListOfFiles(dataset):
+#    return runWithRetries(_getDatasetListOfFiles, [dataset],{})
+#def _getDatasetListOfFiles(dataset):
+#    # VK TODO: get list of files for a given dataset
+#    # JRV: the function is unused
+#    all_files = getDatasetFileArray( dataset )
+#    print all_files
+#    all_lfn = sorted([f['logical_file_name'] for f in all_files])
+#    return all_lfn
 
-def getDatasetAllEventsPerLumi(dataset, fraction=1):
-    return runWithRetries(_getDatasetAllEventsPerLumi,[dataset], { 'fraction': fraction})
-def _getDatasetAllEventsPerLumi(dataset, fraction=1):
-    dbsapi = DbsApi(url=dbs_url)
-    # VK TODO: can it be replaced with dataset summary API?
-    all_files = getDatasetFileArray( dataset, detail=True)
-    if fraction!=1:
-        ## truncate if need be
-        random.shuffle( all_files )
-        all_files = all_files[:int(fraction*len(all_files)+1)]
-
-    result = []
-    final = {}
-    for f in all_files:
-        final[f['logical_file_name']] = [f['event_count'],0]
-    chunking = 900
-    for chunk in [all_files[x:x+chunking] for x in xrange(0, len(all_files), chunking)]:
-        ls = dbsapi.listFileLumiArray( logical_file_name = [f['logical_file_name'] for f in chunk])
-        for l in ls:
-            final[l['logical_file_name']][1]+= len(l['lumi_section_num'])
-
-    return    [a/float(b) for (a,b) in final.values()]
+#def getDatasetAllEventsPerLumi(dataset, fraction=1):
+#    return runWithRetries(_getDatasetAllEventsPerLumi,[dataset], { 'fraction': fraction})
+#def _getDatasetAllEventsPerLumi(dataset, fraction=1):
+#    dbsapi = DbsApi(url=dbs_url)
+#    # VK TODO: can it be replaced with dataset summary API?
+#    # JRV: the function is not used
+#    all_files = getDatasetFileArray( dataset, detail=True)
+#    if fraction!=1:
+#        ## truncate if need be
+#        random.shuffle( all_files )
+#        all_files = all_files[:int(fraction*len(all_files)+1)]
+#
+#    result = []
+#    final = {}
+#    for f in all_files:
+#        final[f['logical_file_name']] = [f['event_count'],0]
+#    chunking = 900
+#    for chunk in [all_files[x:x+chunking] for x in xrange(0, len(all_files), chunking)]:
+#        ls = dbsapi.listFileLumiArray( logical_file_name = [f['logical_file_name'] for f in chunk])
+#        for l in ls:
+#            final[l['logical_file_name']][1]+= len(l['lumi_section_num'])
+#
+#    return    [a/float(b) for (a,b) in final.values()]
 
 def getDatasetEventsPerLumi(dataset):
     return runWithRetries(_getDatasetEventsPerLumi,[dataset],{})
@@ -4870,25 +4876,25 @@ def _getDatasetEventsPerLumi(dataset):
     else:
         return 0.
 
-def _bad_getDatasetEventsPerLumi(dataset):
-    all_values = getDatasetAllEventsPerLumi(dataset)
-    if all_values:
-        return sum(all_values) / float(len(all_values))
-    else:
-        return 1.
-    ## the thing below does not actually work
-    #dbsapi = DbsApi(url=dbs_url)
-    #try:
-    #    all_files = dbsapi.listFileSummaries( dataset = dataset , validFileOnly=1)
-    #except:
-    #    print "We had to have a DBS listfilesummaries retry"
-    #    time.sleep(1)
-    #    all_files = dbsapi.listFileSummaries( dataset = dataset , validFileOnly=1)
-    #try:
-    #    average = sum([f['num_event']/float(f['num_lumi']) for f in all_files]) / float(len(all_files))
-    #except:
-    #    average = 100
-    #return average
+#def _bad_getDatasetEventsPerLumi(dataset):
+#    all_values = getDatasetAllEventsPerLumi(dataset)
+#    if all_values:
+#        return sum(all_values) / float(len(all_values))
+#    else:
+#        return 1.
+#    ## the thing below does not actually work
+#    #dbsapi = DbsApi(url=dbs_url)
+#    #try:
+#    #    all_files = dbsapi.listFileSummaries( dataset = dataset , validFileOnly=1)
+#    #except:
+#    #    print "We had to have a DBS listfilesummaries retry"
+#    #    time.sleep(1)
+#    #    all_files = dbsapi.listFileSummaries( dataset = dataset , validFileOnly=1)
+#    #try:
+#    #    average = sum([f['num_event']/float(f['num_lumi']) for f in all_files]) / float(len(all_files))
+#    #except:
+#    #    average = 100
+#    #return average
 
 def invalidateFiles( files ):
     all_OK = True
