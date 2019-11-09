@@ -2915,7 +2915,7 @@ class cacheInfo:
             return None
 
     def _file_key(self, key):
-        cache_file = '{}/{}'.format(cache_dir, key)
+        cache_file = '{}/{}'.format(cache_dir, key.replace('_',''))
         return cache_file
 
     def from_file(self, key):
