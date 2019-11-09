@@ -1723,6 +1723,7 @@ class ThreadHandler(threading.Thread):
             spend = (now - start_now)
             n_remaining = ntotal - n_done
             eta = None
+            total_expected = 0
             if n_done:
                 time_per_thread = spend / float(n_done)
                 eta = time_per_thread * n_remaining
