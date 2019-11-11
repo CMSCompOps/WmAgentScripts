@@ -894,6 +894,15 @@
     "maxcopies": 1, 
     "tune": true
   }, 
+  "RunIISummer19CosmicGS": {
+    "SiteBlacklist": [
+      "T3_US_NERSC"
+    ], 
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "tune": true
+  }, 
   "RunIISummer19UL16DIGIPremix": {
     "fractionpass": 0.95, 
     "go": false, 
@@ -907,16 +916,16 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
-    "resize": "auto", 
-    "toDDM": [
-      "GEN"
-    ], 
     "parameters": {
       "NonCustodialSites": [
         "T2_CH_CERN", 
         "T1_US_FNAL"
       ]
     }, 
+    "resize": "auto", 
+    "toDDM": [
+      "GEN"
+    ], 
     "tune": true
   }, 
   "RunIISummer19UL16HLT": {
@@ -1023,16 +1032,16 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
-    "resize": "auto", 
-    "toDDM": [
-      "GEN"
-    ], 
     "parameters": {
       "NonCustodialSites": [
         "T2_CH_CERN", 
         "T1_US_FNAL"
       ]
     }, 
+    "resize": "auto", 
+    "toDDM": [
+      "GEN"
+    ], 
     "tune": true
   }, 
   "RunIISummer19UL17GS": {
@@ -1161,16 +1170,16 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
-    "resize": "auto", 
-    "toDDM": [
-      "GEN"
-    ], 
     "parameters": {
       "NonCustodialSites": [
         "T2_CH_CERN", 
         "T1_US_FNAL"
       ]
     }, 
+    "resize": "auto", 
+    "toDDM": [
+      "GEN"
+    ], 
     "tune": true
   }, 
   "RunIISummer19UL18HLT": {
