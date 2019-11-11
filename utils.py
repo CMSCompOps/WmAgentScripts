@@ -5864,6 +5864,7 @@ class agentInfo:
 
 
         all_agents = dataCache.get('gwmsmon_pool')
+	if not all_agents: return
         over_threshold = True
         under_threshold = False
         capacity = 0
