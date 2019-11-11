@@ -911,6 +911,12 @@
     "toDDM": [
       "GEN"
     ], 
+    "parameters": {
+      "NonCustodialSites": [
+        "T2_CH_CERN", 
+        "T1_US_FNAL"
+      ]
+    }, 
     "tune": true
   }, 
   "RunIISummer19UL16HLT": {
@@ -1021,6 +1027,12 @@
     "toDDM": [
       "GEN"
     ], 
+    "parameters": {
+      "NonCustodialSites": [
+        "T2_CH_CERN", 
+        "T1_US_FNAL"
+      ]
+    }, 
     "tune": true
   }, 
   "RunIISummer19UL17GS": {
@@ -1153,6 +1165,12 @@
     "toDDM": [
       "GEN"
     ], 
+    "parameters": {
+      "NonCustodialSites": [
+        "T2_CH_CERN", 
+        "T1_US_FNAL"
+      ]
+    }, 
     "tune": true
   }, 
   "RunIISummer19UL18HLT": {
