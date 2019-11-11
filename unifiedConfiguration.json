@@ -1,6 +1,6 @@
 {
  "email_destination" : { 
-   "value" : ["lesko@physics.umn.edu","thong@caltech.edu","sharad.agarwal@cern.ch","cmsunified@cern.ch"],
+   "value" : ["lesko@physics.umn.edu","jen_a@fnal.gov","sharad.agarwal@cern.ch","cmsunified@cern.ch"],
    "description" : "The list of people that get the emails notifications"
  },
  "busy_agent_fraction" : {
@@ -129,8 +129,6 @@
    "description" : "Who is allowed to bypass and force complete",
    "value" : [
               ["vlimant","vlimant@cern.ch"],
-	      ["mcremone","matteoc@fnal.gov"],
-              ["qnguyen","thong@caltech.edu"], 
 	      ["sagarwal","sharad.agarwal@cern.ch"],
 	      ["knaskar","kousik.naskar@cern.ch"],
 	      ["jen_a","jen_a@fnal.gov"]
@@ -377,7 +375,7 @@
   },
   "user_storeresults":{
    "description" : "The users from which we expect StoreResults requests",
-   "value" : ["areinsvo","qnguyen","mcremone","vlimant"]
+   "value" : ["cmsunified", "sagarwal"]
   },
   "relval_routing":{
    "description" : "Set of keywords and special settings for relvals",
