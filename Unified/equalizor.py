@@ -560,7 +560,8 @@ def equalizor(url , specific = None, options=None):
         memory_allowed = SI.sitesByMemory( mem , maxCore=ncores)
 
         if not lhe and not prim and not sec and not wfi.isRelval():
-                ## no input at all: go for HPC!!!
+	    if (sec and wfi.request['TrustPUSitelists']) or (not sec):
+                ## no local read input: go for HPC!!!
                 print ("Adding {} adhoc for HPC as no task of the workflow requires any input".format(wfo.name))
                 add_to[wfo.name] = ['T3_US_OSG']
                 add_to[wfo.name] = ['T3_US_Colorado']
