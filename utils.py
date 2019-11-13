@@ -6203,6 +6203,9 @@ def getAllAgents(url):
     return teams
 
 def getWorkflowsByName(url, names, details=False):
+    return runWithRetries(_getWorkflowsByName, [url, names], {'details': details}, retries =5, wait=5)
+
+def _getWorkflowsByName(url, names, details=False):
     conn = make_x509_conn(url)
 
     go_to = '/reqmgr2/data/request?'
@@ -6217,27 +6220,18 @@ def getWorkflowsByName(url, names, details=False):
     data = json.loads(r2.read())
     items = data['result']
 
-    print "%d retrieved for %d workflow names with details: %s" % (len(items), len(names), details)
     if details and items:
         workflows = items[0].values()
     else:
         workflows = items
 
+    print "%d retrieved for %d workflow names with details: %s" % (len(workflows), len(names), details)
     return workflows
 
 def getWorkflows(url,status,user=None,details=False,rtype=None, priority=None):
-    retries=10000
-    wait=2
-    while retries>0:
-        try:
-            return try_getWorkflows(url, status,user,details,rtype,priority)
-        except Exception as e:
-            print "getWorkflows retried"
-            print str(e)
-            time.sleep(wait)
-            #wait+=2
-            retries-=1
-    raise Exception("getWorkflows failed 10 times")
+    return runWithRetries(try_getWorkflows, [url, status],
+                          {'user': user, 'details': details, 'rtype': rtype, 'priority': priority},
+                          retries =5, wait=5)
 
 def try_getWorkflows(url,status,user=None,details=False,rtype=None, priority=None):
     conn = make_x509_conn(url)
