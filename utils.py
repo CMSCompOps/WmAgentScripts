@@ -6202,6 +6202,29 @@ def getAllAgents(url):
         teams[r['agent_team']].append( r )
     return teams
 
+def getWorkflowsByName(url, names, details=False):
+    conn = make_x509_conn(url)
+
+    go_to = '/reqmgr2/data/request?'
+    if isinstance(names, basestring):
+        names = [names]
+    for wfName in names:
+        go_to += '&name=%s' % wfName
+    go_to += '&detail=%s'%('true' if details else 'false')
+
+    conn.request("GET",go_to, headers={"Accept":"application/json"})
+    r2=conn.getresponse()
+    data = json.loads(r2.read())
+    items = data['result']
+
+    print "%d retrieved for %d workflow names with details: %s" % (len(items), len(names), details)
+    if details and items:
+        workflows = items[0].values()
+    else:
+        workflows = items
+
+    return workflows
+
 def getWorkflows(url,status,user=None,details=False,rtype=None, priority=None):
     retries=10000
     wait=2
