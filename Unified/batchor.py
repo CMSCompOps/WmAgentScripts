@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, sendEmail, sendLog, monitor_pub_dir, unifiedConfiguration, deep_update, global_SI, getWorkflowByCampaign, base_eos_dir, monitor_dir, eosRead, eosFile, campaignInfo, batchInfo
+from utils import getWorkflows, sendEmail, sendLog, monitor_pub_dir, unifiedConfiguration, deep_update, global_SI, getWorkflowByCampaign, base_eos_dir, monitor_dir, eosRead, eosFile, campaignInfo, batchInfo, getWorkflowsByName
 from collections import defaultdict
 import copy
 import json
@@ -14,8 +14,12 @@ def batchor( url ):
     BI = batchInfo()
     ## get all workflows in assignment-approved with SubRequestType = relval
     all_wfs = []
-    for user in UC.get("user_relval"):
-        all_wfs.extend( getWorkflows(url, 'assignment-approved', details=True, user=user, rtype='TaskChain') )
+    if UC.get("user_relval"):
+        users = ','.join(UC.get("user_relval"))
+        wfs = getWorkflows(url, 'assignment-approved', details=False, user=users, rtype='TaskChain')
+        if wfs:
+            # then there is likely work to be done
+            all_wfs = getWorkflowsByName(url, wfs, details=True)
 
     wfs = filter( lambda r :r['SubRequestType'] == 'RelVal' if 'SubRequestType' in r else False, all_wfs)
     ## need a special treatment for those
