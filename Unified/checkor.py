@@ -1024,8 +1024,6 @@ class CheckBuster(threading.Thread):
                     assistance_tags.add('agentfilemismatch')
                 else:
                     assistance_tags.add('filemismatch')
-                if 'announce' in assistance_tags:
-                    assistance_tags.remove('announce')
                 #print this for show and tell if no recovery on-going
                 for out in dbs_presence:
                     _,_,missing_phedex,missing_dbs  = getDatasetFiles(url, out)
@@ -1400,6 +1398,8 @@ class CheckBuster(threading.Thread):
                 assistance_tags.add('manual')
             if 'custodial' in assistance_tags:
                 assistance_tags = assistance_tags - set(['announce','announced'])
+            if any((tag in assistance_tags) for tag in ['duplicates','filemismatch','agentfilemismatch']):
+                assistance_tags = assistance_tags - set(['announce'])
 
             ## that means there is something that needs to be done acdc, lumi invalidation, custodial, name it
             print wfo.name,"needs assistance with",",".join( assistance_tags )
