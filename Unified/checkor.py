@@ -990,7 +990,7 @@ class CheckBuster(threading.Thread):
 
         one_output_not_in_phedex = any([Nfiles==0 for Nfiles in phedex_presence.values()])
         if one_output_not_in_phedex and 'announce' in assistance_tags:
-            wfi.sendLog('checkor','No files in phedex yet, no could to announce')
+            wfi.sendLog('checkor','No files in phedex yet, no good to announce')
             assistance_tags.remove('announce')
             
         time_point("checked phedex count", sub_lap=True)
