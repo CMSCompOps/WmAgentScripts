@@ -1105,6 +1105,12 @@
     "lumisize": -1, 
     "tune": true
   }, 
+  "RunIISummer19UL17pLHEGEN": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "tune": true
+  }, 
   "RunIISummer19UL17wmLHEGEN": {
     "fractionpass": 0.95, 
     "go": true, 
@@ -1134,7 +1140,7 @@
     "go": false, 
     "lumisize": -1, 
     "maxcopies": 1, 
-    "resize": "auto",
+    "resize": "auto", 
     "secondaries": {
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL18SIM-106X_upgrade2018_realistic_v4-v1/SIM": {}
     }, 
