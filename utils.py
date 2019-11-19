@@ -1167,7 +1167,7 @@ class componentInfo:
         while self.checks.is_alive():
             now = time.mktime(time.gmtime())
             if (now-check_start) > self.check_timeout:
-                alarm =  "Timeout in checking the sanity of components %d > %d "%(now-check_start,self.check_timeout)
+                alarm =  "Timeout in checking the sanity of components %d > %d , while checking on %s"%(now-check_start,self.check_timeout, self.checks.checking)
                 sendLog('componentInfo',alarm, level='critical')
                 return False
             print "componentInfo, ping",now,check_start,now-check_start
@@ -1201,6 +1201,7 @@ class componentCheck(threading.Thread):
         self.code = 0
         self.keep_trying = keep_trying
         self.go = False
+        self.checking=None
 
     def run(self):
         self.go = self.check()
@@ -1273,6 +1274,7 @@ class componentCheck(threading.Thread):
         ecode = 120
         for component in sorted(self.status):
             ecode+=1
+            self.checking = component
             while True:
                 try:
                     print "checking on",component
