@@ -4188,18 +4188,9 @@ def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=N
             raise Exception("getDatasetDestinations crashed")
 
 def getDatasetOnGoingDeletion( url, dataset ):
-    tries = 5 
-    while tries>0:
-        tries-=1
-        try:
-            return _getDatasetOnGoingDeletion(url, dataset)
-        except Exception as e:
-            pass
-    print str(e)
-
+    return runWithRetries(_getDatasetOnGoingDeletion, [url, dataset])
 def _getDatasetOnGoingDeletion( url, dataset ):
     conn = make_x509_conn(url)
-    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/phedex/datasvc/json/prod/deletions?dataset=%s&complete=n'%(dataset))
     r2=conn.getresponse()
     result = json.loads(r2.read())['phedex']
@@ -4262,14 +4253,8 @@ def getUnsubscribedBlocks(url, site):
 
 
 def getDatasetBlockAndSite( url, dataset, group=None,vetoes=None,complete=None):
-    ret=10
-    while ret>0:
-        try:
-            return try_getDatasetBlockAndSite( url, dataset, group, vetoes, complete)
-        except:
-            print dataset,"failed"
-            ret-=1
-    return None
+    return runWithRetries( try_getDatasetBlockAndSite, [url, dataset], {'group':group, 'vetoes':vetoes, 'complete':complete}, default=None)
+
 def try_getDatasetBlockAndSite( url, dataset, group=None,vetoes=None,complete=None):
     if vetoes==None:
         vetoes = ['MSS','Buffer','Export']
