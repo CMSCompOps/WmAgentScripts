@@ -5350,7 +5350,7 @@ def getWorkflowByCampaign(url, campaign, details=False):
 def getWorkflowByInput( url, dataset , details=False):
     return runWithRetries(_getWorkflowByInput, [url, dataset],{'details':details})
 
-def _getWorkflowByInput( url, dataset , details=False )
+def _getWorkflowByInput( url, dataset , details=False ):
     conn = make_x509_conn(url)
     #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     there = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byinputdataset?key="%s"'%(dataset)
