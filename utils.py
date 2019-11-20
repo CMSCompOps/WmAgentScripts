@@ -5363,6 +5363,9 @@ def getWorkflowByCampaign(url, campaign, details=False):
 
 
 def getWorkflowByInput( url, dataset , details=False):
+    return runWithRetries(_getWorkflowByInput, [url, dataset],{'details':details})
+
+def _getWorkflowByInput( url, dataset , details=False )
     conn = make_x509_conn(url)
     #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     there = '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byinputdataset?key="%s"'%(dataset)
@@ -5371,12 +5374,8 @@ def getWorkflowByInput( url, dataset , details=False):
     r1=conn.request("GET",there)
     r2=conn.getresponse()
     data = json.loads(r2.read())
-    try:
-        items = data['rows']
-    except Exception as e:
-	print(str(e))
-	print("Error while getting workflow information from input data {}".format(dataset))
-	raise
+    items = data['rows']
+
     if details:
         return [item['doc'] for item in items]
     else:
