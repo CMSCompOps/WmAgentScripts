@@ -6,6 +6,8 @@ import copy
 import json
 import os, sys
 import random
+from campaignAPI import parseMongoCampaigns, createCampaignConfig, deleteCampaignConfig
+
 
 def batchor( url ):
     UC = unifiedConfiguration()
@@ -80,6 +82,9 @@ def batchor( url ):
         add_on[campaign] = setup
         sendLog('batchor','Adding the relval campaigns %s with parameters \n%s'%( campaign, json.dumps( setup, indent=2)),level='critical')
         BI.update( campaign, by_campaign[campaign])
+        wmcoreCamp = parseMongoCampaigns(campaign)
+        res = createCampaignConfig(wmcoreCamp)
+        print "Campaign %s correctly created in ReqMgr2: %s" % (wmcoreCamp['CampaignName'], res)
 
     for campaign in by_hi_campaign:
         if campaign in batches: continue
@@ -93,8 +98,9 @@ def batchor( url ):
         add_on[campaign] = setup
         sendLog('batchor','Adding the HI relval campaigns %s with parameters \n%s'%( campaign, json.dumps( setup, indent=2)),level='critical')
         BI.update( campaign, by_hi_campaign[campaign])
-        
-    
+        wmcoreCamp = parseMongoCampaigns(campaign)
+        res = createCampaignConfig(wmcoreCamp)
+        print "Campaign %s correctly created in ReqMgr2: %s" % (wmcoreCamp['CampaignName'], res)
 
     ## only new campaigns in announcement
     for new_campaign in list(set(add_on.keys())-set(CI.all(c_type='relval'))):
@@ -135,6 +141,9 @@ This is an automated message"""%( new_campaign,
             CI.pop( old_campaign ) ## or just drop it all together ?
             BI.pop( old_campaign )
             print "batch",old_campaign," configuration was removed"
+            res = deleteCampaignConfig(old_campaign)
+            print "Campaign %s correctly deleted in ReqMgr2: %s" % (old_campaign, res)
+
 
     ## merge all anyways
     CI.update( add_on , c_type = 'relval')

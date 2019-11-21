@@ -18,6 +18,8 @@ import random
 import optparse
 import sqlalchemy 
 from JIRAClient import JIRAClient
+from campaignAPI import deleteCampaignConfig
+
 
 def spawn_harvesting(url, wfi , in_full):
     SI = global_SI()
@@ -326,6 +328,7 @@ def closor(url, specific=None, options=None):
             sendEmail(subject, text, destination=to )
             ## just announced ; take it out now.
             BI.pop( bname )
+            deleteCampaignConfig(bname)
 
 
     if os.path.isfile('.closor_stop'):
