@@ -4188,7 +4188,7 @@ def getDatasetDestinations( url, dataset, only_blocks=None, group=None, vetoes=N
             raise Exception("getDatasetDestinations crashed")
 
 def getDatasetOnGoingDeletion( url, dataset ):
-    return runWithRetries(_getDatasetOnGoingDeletion, [url, dataset])
+    return runWithRetries(_getDatasetOnGoingDeletion, [url, dataset], {})
 def _getDatasetOnGoingDeletion( url, dataset ):
     conn = make_x509_conn(url)
     r1=conn.request("GET",'/phedex/datasvc/json/prod/deletions?dataset=%s&complete=n'%(dataset))
