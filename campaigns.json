@@ -980,6 +980,12 @@
     "lumisize": -1, 
     "tune": true
   }, 
+  "RunIISummer19UL16pLHEGEN": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "tune": true
+  }, 
   "RunIISummer19UL16wmLHEGEN": {
     "fractionpass": 0.95, 
     "go": true, 
