@@ -82,7 +82,9 @@ def batchor( url ):
         add_on[campaign] = setup
         sendLog('batchor','Adding the relval campaigns %s with parameters \n%s'%( campaign, json.dumps( setup, indent=2)),level='critical')
         BI.update( campaign, by_campaign[campaign])
-        wmcoreCamp = parseMongoCampaigns(campaign)
+        # now update it in central CouchDB
+        setup['name'] = campaign
+        wmcoreCamp = parseMongoCampaigns(setup)
         res = createCampaignConfig(wmcoreCamp)
         print "Campaign %s correctly created in ReqMgr2: %s" % (wmcoreCamp['CampaignName'], res)
 
@@ -98,7 +100,9 @@ def batchor( url ):
         add_on[campaign] = setup
         sendLog('batchor','Adding the HI relval campaigns %s with parameters \n%s'%( campaign, json.dumps( setup, indent=2)),level='critical')
         BI.update( campaign, by_hi_campaign[campaign])
-        wmcoreCamp = parseMongoCampaigns(campaign)
+        # now update it in central CouchDB
+        setup['name'] = campaign
+        wmcoreCamp = parseMongoCampaigns(setup)
         res = createCampaignConfig(wmcoreCamp)
         print "Campaign %s correctly created in ReqMgr2: %s" % (wmcoreCamp['CampaignName'], res)
 
