@@ -8,6 +8,7 @@ assignDatasetToSite.py
 *.log
 *.list
 *.last
+.idea
 setupThong.sh
 Unified/dbstest.py
 Unified/sqtest.py
