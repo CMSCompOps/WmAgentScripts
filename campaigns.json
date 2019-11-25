@@ -1165,7 +1165,7 @@
   }, 
   "RunIISummer19UL18DIGI": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto", 
@@ -1221,7 +1221,7 @@
   }, 
   "RunIISummer19UL18HLT": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
@@ -1236,7 +1236,7 @@
   }, 
   "RunIISummer19UL18MiniAOD": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto"
@@ -1249,7 +1249,7 @@
   }, 
   "RunIISummer19UL18RECO": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto", 
