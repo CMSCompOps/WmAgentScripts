@@ -27,6 +27,11 @@ def createCampaignConfig(docContent, url=reqmgr_url):
     :param docContent: dictionary with the campaign content
     :return: a boolean whether it succeeded (True) or not (False)
     """
+    if isinstance(docContent, list) and len(docContent) > 1:
+        print("ERROR: createCampaignConfig expects a single campaign configuration, not a list of them!")
+        return False
+    elif isinstance(docContent, list):
+        docContent = docContent[0]
     outcome = True
     headers = {"Content-type": "application/json", "Accept": "application/json"}
     conn = make_x509_conn(url)
