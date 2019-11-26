@@ -16,22 +16,6 @@
     }, 
     "partial_copy": 0.95
   }, 
-  "CMSSW_11_0_0_pre12__pmx_PU_noSig_2021-1574516890": {
-    "custodial_override": "notape", 
-    "fractionpass": 0.0, 
-    "go": true, 
-    "lumisize": -1, 
-    "maxcopies": 1, 
-    "parameters": {
-      "MergedLFNBase": "/store/relval", 
-      "NonCustodialGroup": "RelVal", 
-      "SiteWhitelist": [
-        "T1_US_FNAL"
-      ], 
-      "Team": "relval"
-    }, 
-    "phedex_group": "RelVal"
-  }, 
   "Commissioning2018": {
     "custodial": "T1_US_FNAL_MSS", 
     "custodial_override": [
