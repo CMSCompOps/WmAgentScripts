@@ -84,7 +84,7 @@ def batchor( url ):
         BI.update( campaign, by_campaign[campaign])
         # now update it in central CouchDB
         setup['name'] = campaign
-        wmcoreCamp = parseMongoCampaigns(setup)
+        wmcoreCamp = parseMongoCampaigns(setup)[0]
         res = createCampaignConfig(wmcoreCamp)
         print "Campaign %s correctly created in ReqMgr2: %s" % (wmcoreCamp['CampaignName'], res)
 
@@ -102,7 +102,7 @@ def batchor( url ):
         BI.update( campaign, by_hi_campaign[campaign])
         # now update it in central CouchDB
         setup['name'] = campaign
-        wmcoreCamp = parseMongoCampaigns(setup)
+        wmcoreCamp = parseMongoCampaigns(setup)[0]
         res = createCampaignConfig(wmcoreCamp)
         print "Campaign %s correctly created in ReqMgr2: %s" % (wmcoreCamp['CampaignName'], res)
 
