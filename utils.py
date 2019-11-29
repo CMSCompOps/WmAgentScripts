@@ -7081,7 +7081,7 @@ class workflowInfo:
                 try:
                     r1=self.conn.request("GET",'/couchdb/workqueue/_design/WorkQueue/_view/elementsByParent?key="%s"&include_docs=true'% self.request['RequestName'])
                     r2=self.conn.getresponse()
-                    self.workqueue = list([d['doc'] for d in json.loads(r2.read())['rows']])
+                    self.workqueue = list([d['doc'] for d in json.loads(r2.read())['rows'] if d['doc'] is not None])
                 except Exception as e:
                     self.conn = make_x509_conn(self.url)
                     time.sleep(1) ## time-out
