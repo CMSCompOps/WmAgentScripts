@@ -6418,6 +6418,7 @@ def closeAllBlocks(url, dataset, blocks=None):
     for block in result.get('block',[]):
         bname = block.get('name')
         if blocks and not bname in blocks: continue
+        if block.get('is_open') == 'n': continue
         sites = list()
         for sub in block.get('replica',[]):
             sites.append(sub.get('node'))
