@@ -2156,7 +2156,7 @@ class siteInfo:
                 if team !='production': continue
                 for agent in agents:
                     if agent['status'] != 'ok':
-                        print agent['status']
+                        #print("agent status",agent['status'])
                         continue
                     for site,site_info in agent['WMBS_INFO']['thresholds'].iteritems():
                         if site_info['state'] in ['Normal']:
