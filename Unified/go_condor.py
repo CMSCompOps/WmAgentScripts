@@ -424,6 +424,17 @@ def makeAdhocAds(config):
     anAd["set_HasBeenRouted"] = False
     print anAd 
 
+    anAd = classad.ClassAd()
+    anAd["GridResource"] = "condor localhost localhost"
+    anAd["TargetUniverse"] = 5
+    anAd["Name"] = str("Bad ACDC memory setup")
+    anAd["Requirements"] = classad.ExprTree('WMAgent_SubTaskName == "/cmsunified_ACDC0_task_TOP-RunIISummer15wmLHEGS-00446__v1_T_191204_024055_375/TOP-RunIISummer15wmLHEGS-00446_0"')
+    anAd["set_RequestMemory"] = 4000
+    #anAd["set_HasBeenRouted"] = False
+    print anAd
+
+
+
     ############################################################
     ## if you want to reset the routing of eveything in the pool
     reset_routing = []#'HasBeenRouted','HasBeenRouted_Overflow','HasBeenMemoryTuned','HasBeenSlopeTuned', 'HasBeenTimingTuned','WMCore_ResizeJob','HasBeenReplaced','HasBeenReadTuned','HasBeenRaisedHighPrio']
