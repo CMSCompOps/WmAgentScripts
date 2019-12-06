@@ -10,6 +10,8 @@ import json
 import re
 import os
 import time
+import getpass
+username = getpass.getuser()
 
 def rejector(url, specific, options=None):
 
@@ -64,9 +66,9 @@ def rejector(url, specific, options=None):
         comment=""
         if options.comments: comment = ", reason: "+options.comments
         if options.keep: 
-            wfi.sendLog('rejector','invalidating the workflow by unified operator%s'%comment)
+            wfi.sendLog('rejector','invalidating the workflow by unified operator {}{}'.format(username, comment))
         else:
-            wfi.sendLog('rejector','invalidating the workflow and outputs by unified operator%s'%comment)
+            wfi.sendLog('rejector','invalidating the workflow and outputs by unified operator {}{}'.format(username, comment))
 
         results = invalidate(url, wfi, only_resub=True, with_output= (not options.keep))
 
