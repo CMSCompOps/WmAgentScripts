@@ -158,7 +158,7 @@
    "description" : "limitation on the number of wf to process per module",
    "value" : {
     "transferor" : 500,
-    "assignor" : 50,
+    "assignor" : null,
     "actor" : 10,
     "closor" : null,
     "checkor" : 500,
