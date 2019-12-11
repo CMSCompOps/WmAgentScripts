@@ -1,6 +1,6 @@
 {
  "email_destination" : { 
-   "value" : ["lesko@physics.umn.edu","jen_a@fnal.gov","sharad.agarwal@cern.ch","cmsunified@cern.ch"],
+   "value" : ["lesko@physics.umn.edu","jen_a@fnal.gov","sharad.agarwal@cern.ch","cmsunified@cern.ch","zqewang@ucdavis.edu"],
    "description" : "The list of people that get the emails notifications"
  },
  "busy_agent_fraction" : {
@@ -131,7 +131,8 @@
               ["vlimant","vlimant@cern.ch"],
 	      ["sagarwal","sharad.agarwal@cern.ch"],
 	      ["knaskar","kousik.naskar@cern.ch"],
-	      ["jen_a","jen_a@fnal.gov"]
+	      ["jen_a","jen_a@fnal.gov"],
+	      ["wangz","zqewang@ucdavis.edu"]
              ]
  },
  "max_tail_priority" : {
@@ -375,7 +376,7 @@
   },
   "user_storeresults":{
    "description" : "The users from which we expect StoreResults requests",
-   "value" : ["cmsunified", "sagarwal"]
+   "value" : ["cmsunified", "sagarwal", "wangz"]
   },
   "relval_routing":{
    "description" : "Set of keywords and special settings for relvals",
