@@ -8012,7 +8012,7 @@ class workflowInfo:
         blocks = set()
         (_,primary,_,_) = self.getIO()
 
-        blocks.update( self.getBlockWhitelist() )
+        blocks.update( self.getBlockWhiteList() )
         run_list = self.getRunWhiteList()
         if run_list:
             for dataset in primary:

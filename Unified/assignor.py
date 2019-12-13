@@ -204,17 +204,7 @@ def assignor(url ,specific = None, talk=True, options=None):
         wfh.sendLog('assignor',"Site white list %s"%sorted(sites_allowed))
         override_sec_location = CI.get(wfh.request['Campaign'], 'SecondaryLocation', [])
 
-        blocks = wfh.getBlockWhiteList()
-        rwl = wfh.getRunWhiteList()
-        if rwl:
-            ## augment with run white list
-            for dataset in primary:
-                blocks = list(set( blocks + getDatasetBlocks( dataset, runs=rwl ) ))
-        lwl = wfh.getLumiWhiteList()
-        if lwl:
-            ## augment with lumi white list
-            for dataset in primary:
-                blocks = list(set( blocks + getDatasetBlocks( dataset, lumis=lwl)))
+        blocks = wfh.getBlocks()
 
         wfh.sendLog('assignor',"Allowed %s"%sorted(sites_allowed))
         secondary_locations=None
