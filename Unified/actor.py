@@ -200,8 +200,6 @@ def singleRecovery(url, task, initial, actions, do=False):
                         
                         for act in ['avg_events_per_job','events_per_job','lumis_per_job']:
                             if act in split_par:
-                                if split['splitAlgo'] in ['LumiBased'] and "events" in act:
-                                    continue
                                 print "Changing %s (%d) by a factor %d"%( act, split_par[act], factor),
                                 split_par[act] /= factor
                                 split_par[act] = max(split_par[act],1)
@@ -221,17 +219,7 @@ def singleRecovery(url, task, initial, actions, do=False):
                                 split_par[act] = 1
                                 print "to max splitting ",split_par[act]
                                 break
-                        #split['requestName'] = acdc
-                        #print "changing the splitting of",acdc
-                        #print json.dumps( split, indent=2 )
-                        #print reqMgrClient.setWorkflowSplitting(url, acdc, split )
                         
-                # Sanity check for LumiBased algo, removing unsupported parameters
-                for split in splittings:
-                    if split['splitAlgo'] in ['LumiBased']:
-                        print("Removing events_per_job because of LumiBased algo")
-                        split['splitParams'].pop('events_per_job', None)
-                        split['splitParams'].pop('job_time_limit', None)
 
                 print "changing the splitting of",acdc
                 print json.dumps( splittings, indent=2 )                
