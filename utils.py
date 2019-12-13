@@ -8020,7 +8020,7 @@ class workflowInfo:
         lumi_list = self.getLumiWhiteList()
         if lumi_list:
             for dataset in primary:
-                blocks.update( getDatasetBlocks( dataset, lumis= self.request['LumiList'] ) )
+                blocks.update( getDatasetBlocks( dataset, lumis=lumi_list ) )
         return list( blocks )
     def getIO(self):
         lhe=False
