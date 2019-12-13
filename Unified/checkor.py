@@ -1153,7 +1153,7 @@ class CheckBuster(threading.Thread):
                 group = CI.campaigns[campaign]['phedex_group']
                 print "using group",group,"for replica"
 
-            if custodial and float(SI.storage[custodial]) < size_worth_checking:
+            if not force_custodial and custodial and float(SI.storage[custodial]) < size_worth_checking:
                 print "cannot use the campaign configuration custodial:",custodial,"because of limited space"
                 custodial = None
 
@@ -1183,7 +1183,7 @@ class CheckBuster(threading.Thread):
                     pick_custodial = False
                     assistance_tags.add('parentcustodial')
                                 
-            if custodial and float(SI.storage[custodial]) < size_worth_checking:
+            if not force_custodial and custodial and float(SI.storage[custodial]) < size_worth_checking:
                 print "cannot use the custodial:",custodial,"because of limited space"
                 custodial = None
 
