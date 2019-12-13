@@ -879,7 +879,17 @@
           "T2_CH_CERN", 
           "T2_CH_CERN_HLT"
         ]
-      }, 
+      },
+      "/MinBias_TuneCP5_14TeV-pythia8/PhaseIITDRSpring19GS-106X_upgrade2023_realistic_v2_ext1-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T2_US_Wisconsin",
+          "T2_US_Purdue ",
+          "T2_US_Florida",
+          "T1_IT_CNAF",
+          "T1_DE_KIT",
+          "T2_US_Nebraska"
+        ]
+      },
       "/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer17GS-92X_upgrade2017_realistic_v2-v1/GEN-SIM": {
         "SiteWhitelist": [
           "T2_US_Wisconsin", 
