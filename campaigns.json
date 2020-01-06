@@ -928,6 +928,22 @@
     "secondary_AAA": true, 
     "tune": true
   }, 
+  "RunIISummer19UL16DIGIPremixAPV": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "overflow": {
+      "PU": {
+        "force": false, 
+        "max": 0, 
+        "pending": 0
+      }
+    }, 
+    "resize": "auto", 
+    "secondary_AAA": true, 
+    "tune": true
+  }, 
   "RunIISummer19UL16GEN": {
     "fractionpass": 0.95, 
     "go": true, 
