@@ -923,7 +923,7 @@
     "tune": true
   }, 
   "RunIISummer18NanoAODv7": {
-    "fractionpass": 0.95, 
+    "fractionpass": 0.95,
     "go": false, 
     "lumisize": -1, 
     "maxcopies": 1
