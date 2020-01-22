@@ -227,6 +227,13 @@
     "maxcopies": 1, 
     "tune": true
   }, 
+  "Phase2HLTTDRWinter20wmLHEGS": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "tune": true
+  }, 
   "PhaseIITDRSpring19DR": {
     "fractionpass": 0.95, 
     "go": true, 
@@ -923,7 +930,7 @@
     "tune": true
   }, 
   "RunIISummer18NanoAODv7": {
-    "fractionpass": 0.95,
+    "fractionpass": 0.95, 
     "go": false, 
     "lumisize": -1, 
     "maxcopies": 1
@@ -955,15 +962,15 @@
         "max": 0, 
         "pending": 0
       }
-    },
+    }, 
+    "resize": "auto", 
     "secondaries": {
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL16SIM-106X_mcRun2_asymptotic_v3-v1/GEN-SIM": {
         "SiteWhitelist": [
           "T1_US_FNAL"
         ]
       }
-    },
-    "resize": "auto", 
+    }, 
     "secondary_AAA": false, 
     "tune": true
   }, 
