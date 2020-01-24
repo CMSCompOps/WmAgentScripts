@@ -261,7 +261,7 @@
           "T2_DE_RWTH", 
           "T2_US_Florida", 
           "T2_US_Wiscosin", 
-          "T2_US_Nebraska" 
+          "T2_US_Nebraska"
         ]
       }
     }, 
@@ -384,6 +384,14 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "tune": true
+  }, 
+  "Run3Winter20DRPremix": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "secondary_AAA": true, 
     "tune": true
   }, 
   "RunIIAutumn18DR": {
@@ -1441,7 +1449,7 @@
           "T1_DE_KIT", 
           "T2_US_Wisconsin", 
           "T2_US_Florida", 
-          "T2_US_Nebraska" 
+          "T2_US_Nebraska"
         ]
       }
     }, 
