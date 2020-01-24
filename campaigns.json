@@ -394,6 +394,13 @@
     "secondary_AAA": true, 
     "tune": true
   }, 
+  "Run3Winter20GS": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "resize": "auto"
+  }, 
   "Run3Winter20MiniAOD": {
     "fractionpass": 0.95, 
     "go": false, 
