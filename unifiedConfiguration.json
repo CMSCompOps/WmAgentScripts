@@ -392,5 +392,9 @@
   "batch_goodness":{
    "description" : "Level below which to include a note in the batch report",
    "value" : 90
+  },
+  "efficiency_threshold_for_stepchain":{
+   "description" : "Minimum efficiency threshold for step chain conversion",
+   "value" : 0.75
   }
 }
