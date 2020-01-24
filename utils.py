@@ -6628,6 +6628,7 @@ class workflowInfo:
 
         self.summary = None
 
+        self.UC = unifiedConfiguration()
 
 
 
@@ -6677,16 +6678,13 @@ class workflowInfo:
         timeInfo = dict()
         if 'Chain' in self.request['RequestType']:
             base = self.request['RequestType'].replace('Chain','')
-            itask=1
-            carry_on = {}
-            while True:
+            for itask in range(1, self.request['TaskChain'] + 1):
                 t = '%s%d'%(base, itask)
-                itask+=1
                 if t in self.request:
                     task = self.request[t]
                     timeInfo[t] = {
                         'tpe':task.get('TimePerEvent')/task.get('FilterEfficiency',1),
-                        'cores':task.get('Multicore',1)
+                        'cores':task.get('Multicore', self.request['Multicore'])
                     }
                 else:
                     break
@@ -6707,7 +6705,7 @@ class workflowInfo:
         # print "Total time per event for TaskChain: %0.1f" % totalTimePerEvent
         efficiency /= totalTimePerEvent*max_ncores
         # print "CPU efficiency of StepChain with %u cores: %0.1f%%" % (max_ncores,efficiency*100)
-        acceptable_efficiency = efficiency>0.75
+        acceptable_efficiency = efficiency > self.UC.get("efficiency_threshold_for_stepchain")
 
         ## only one value throughout the chain
         all_same_cores = len(set(self.getMulticores()))==1
