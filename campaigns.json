@@ -401,6 +401,13 @@
     "maxcopies": 1, 
     "resize": "auto"
   }, 
+  "Run3Winter20NanoAOD": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "resize": "auto"
+  }, 
   "RunIIAutumn18DR": {
     "fractionpass": 0.95, 
     "go": true, 
