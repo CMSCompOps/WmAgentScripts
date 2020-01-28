@@ -1121,6 +1121,22 @@
     "lumisize": -1, 
     "maxcopies": 1
   }, 
+  "RunIISummer19UL16NanoAODAPV": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "overflow": {
+      "PU": {
+        "force": false, 
+        "max": 0, 
+        "pending": 0
+      }
+    }, 
+    "resize": "auto", 
+    "secondary_AAA": false, 
+    "tune": true
+  }, 
   "RunIISummer19UL16RECO": {
     "fractionpass": 0.95, 
     "go": false, 
@@ -1151,6 +1167,22 @@
     "maxcopies": 1, 
     "primary_AAA": true, 
     "resize": "auto", 
+    "tune": true
+  }, 
+  "RunIISummer19UL16SIMAPV": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "overflow": {
+      "PU": {
+        "force": false, 
+        "max": 0, 
+        "pending": 0
+      }
+    }, 
+    "resize": "auto", 
+    "secondary_AAA": false, 
     "tune": true
   }, 
   "RunIISummer19UL16pLHE": {
