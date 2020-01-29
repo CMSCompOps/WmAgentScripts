@@ -3866,7 +3866,7 @@ def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, ve
         try:
             conn = make_x509_conn(url)
             #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-            url = '/phedex/datasvc/json/prod/requestlist?dataset=%s'%dataset
+            url = '/phedex/datasvc/json/prod/requestlist?dataset=%s&group=AnalysisOps&group=DataOps'%dataset
             if group:
                 url+='group=%s'%group
             r1=conn.request("GET",url)
