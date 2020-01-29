@@ -1456,6 +1456,19 @@ class campaignInfo:
                             reg = black[0:-1]
                             self.campaigns[c]['parameters']['SiteBlacklist'].extend( [site for site in (SI.all_sites) if site.startswith(reg)] )
                             #print self.campaigns[c]['parameters']['SiteBlacklist']
+    def close_stopped(self):
+        # get all GO campaigns
+        all_go = [c['name'] for c in self.db.find({"go":True})]
+        # get all stopped campaigns
+        from McMClient import McMClient
+        mcm = McMClient(dev=False)
+        all_stopped = [c['prepid'] for c in mcm.get('/search?db_name=campaigns&status=stopped')['results']]
+        # synch GO=False to all stopped campaigns
+        for go in all_go:
+            if go in all_stopped:
+                ## update the campaigns to go=False
+                print go,"is stopped in McM, stopping in Unified"
+                #self.db.update_one({'name' : go},{'go' : False})
 
     def content(self):
         uc = {}
