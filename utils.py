@@ -1943,7 +1943,6 @@ class docCache:
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            #'getter' : lambda : getSiteStorage('cmsweb.cern.ch'),
             'getter' : lambda : getSiteStorage('cms-cric.cern.ch'),
             'cachefile' : None,
             'default' : ""
@@ -2070,7 +2069,6 @@ def getNodeQueue(url, node):
 
 def getSiteStorage(url):
     conn = make_x509_conn(url)
-    #r1=conn.request("GET",'/sitedb/data/prod/data-processing', headers={"Accept":"*/*"})
     r1=conn.request("GET",'/api/cms/site/query/?json&preset=data-processing', headers={"Accept":"application/json"})
     r2=conn.getresponse()
     r = json.loads(r2.read())['result']
