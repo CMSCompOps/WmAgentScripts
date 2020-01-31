@@ -555,15 +555,21 @@ def actor(url,options=None):
                 for action in actions:
                     if action.startswith('sites'):
                         if type(actions[action]) != list:
-                            assign_to_sites=[SI.SE_to_CE(actions[action])]
+                            assign_to_sites=SI.SE_to_CEs(actions[action])
                         else:
-                            assign_to_sites=list(set([SI.SE_to_CE(site) for site in actions[action]]))
+                            assign_to_sites=[]
+                            for site in actions[action]:
+                                assign_to_sites.extend( SI.SE_to_CEs(site))
+                            assign_to_sites=sorted(set(assign_to_sites))
 #                    if action.startswith('mem') and actions[action] != "" and actions[action] != 'Same' and wfi.request['RequestType'] in ['TaskChain']:
 #                        recover = False;
 #                        print  "Skipping %s for now until Allie fixes memory parameter for TaskChain ACDCs."%wfname
 #                        wfi.sendLog('actor',"Skipping %s for now until Allie fixes memory parameter for TaskChain ACDCs."%wfname)
                 if not 'sites' in actions:
-                    assign_to_sites = list(set([SI.SE_to_CE(site) for site in where_to_run[fulltaskname]]))
+                    assign_to_sites=[]
+                    for site in where_to_run[task]:
+                        assign_to_sites.extend( SI.SE_to_CEs(site))
+                    assign_to_sites=sorted(set(assign_to_sites))
                     print "Found",sorted(assign_to_sites),"as sites where to run the ACDC at, from the acdc doc of ",wfname
                 print "Going to run at",sorted(assign_to_sites)
                 if recover:
