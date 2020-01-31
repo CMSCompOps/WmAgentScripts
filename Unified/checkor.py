@@ -155,8 +155,10 @@ def checkor(url, spec=None, options=None):
                 if force_complete_jira_string in c.body:
                     user = c.author.name
                     prepid = jira.fields.summary.split()[0]
-                    bypasses.update( prepid )
-                    overrides[user].extend( prepid )
+                    keyword = c.body[(c.body.find(force_complete_jira_string)+len(force_complete_jira_string)):].split()[0]
+                    if keyword and user in actors:
+                        bypasses.update( keyword )
+                        overrides[user].extend( keyword )
                     break
         bypass_jira_string = "cmsunified please do bypass"
         to_check = JC.find({'text' : bypass_jira_string, "status" : "!CLOSED"})
@@ -166,7 +168,10 @@ def checkor(url, spec=None, options=None):
                 if bypass_jira_string in c.body:
                     user = c.author.name
                     prepid = jira.fields.summary.split()[0]
-                    bypasses.update( prepid )
+                    keyword = c.body[(c.body.find(bypass_jira_string)+len(bypass_jira_string)):].split()[0]
+                    if keyword and user in actors:
+                        bypasses.update( keyword )
+                    break
                     
     if use_mcm:
         ## this is a list of prepids that are good to complete
