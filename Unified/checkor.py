@@ -157,6 +157,7 @@ def checkor(url, spec=None, options=None):
                     prepid = jira.fields.summary.split()[0]
                     keyword = c.body[(c.body.find(force_complete_jira_string)+len(force_complete_jira_string)):].split()[0]
                     if keyword and user in actors:
+                        print user,"is force-completing", keyword,"from JIRA"
                         bypasses.update( keyword )
                         overrides[user].extend( keyword )
                     break
@@ -170,6 +171,7 @@ def checkor(url, spec=None, options=None):
                     prepid = jira.fields.summary.split()[0]
                     keyword = c.body[(c.body.find(bypass_jira_string)+len(bypass_jira_string)):].split()[0]
                     if keyword and user in actors:
+                        print user,"is bypassing", keyword,"from JIRA"
                         bypasses.update( keyword )
                     break
                     
