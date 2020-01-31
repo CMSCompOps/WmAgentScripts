@@ -258,10 +258,7 @@
         "SiteWhitelist": [
           "T1_IT_CNAF", 
           "T1_DE_KIT", 
-          "T2_DE_RWTH", 
-          "T2_US_Florida", 
-          "T2_US_Wiscosin", 
-          "T2_US_Nebraska"
+          "T2_US_Florida"
         ]
       }
     }, 
@@ -946,11 +943,9 @@
       }, 
       "/MinBias_TuneCP5_14TeV-pythia8/PhaseIITDRSpring19GS-106X_upgrade2023_realistic_v2_ext1-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T2_US_Wisconsin", 
           "T2_US_Florida", 
           "T1_IT_CNAF", 
-          "T1_DE_KIT", 
-          "T2_US_Nebraska"
+          "T1_DE_KIT"
         ]
       }, 
       "/MinBias_TuneCP5_14TeV-pythia8/Run3Summer19GS-106X_upgrade2021_realistic_v5-v1/GEN-SIM": {
@@ -1563,9 +1558,7 @@
         "SiteWhitelist": [
           "T1_IT_CNAF", 
           "T1_DE_KIT", 
-          "T2_US_Wisconsin", 
-          "T2_US_Florida", 
-          "T2_US_Nebraska"
+          "T2_US_Florida"
         ]
       }
     }, 
