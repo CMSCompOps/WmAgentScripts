@@ -1076,7 +1076,7 @@
       "T2_CH_CERN"
     ], 
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto", 
@@ -1120,7 +1120,7 @@
   }, 
   "RunIISummer19UL16HLT": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
@@ -1151,7 +1151,7 @@
   }, 
   "RunIISummer19UL16MiniAOD": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto"
@@ -1174,7 +1174,7 @@
   }, 
   "RunIISummer19UL16NanoAOD": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
   }, 
@@ -1196,7 +1196,7 @@
   }, 
   "RunIISummer19UL16RECO": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto", 
