@@ -525,7 +525,12 @@
     }, 
     "resize": "auto", 
     "secondaries": {
-      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUMoriond18_102X_upgrade2018_realistic_v15-v2/GEN-SIM-DIGI-RAW": {}
+      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUMoriond18_102X_upgrade2018_realistic_v15-v2/GEN-SIM-DIGI-RAW": {
+        "SiteWhitelist": [
+          "T2_CH_CERN",
+          "T2_US_Purdue"
+          ]
+        }
     }, 
     "secondary_AAA": true, 
     "tune": true
