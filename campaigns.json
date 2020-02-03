@@ -413,6 +413,14 @@
     "secondary_AAA": true, 
     "tune": true
   }, 
+  "Run3Winter20DRPremixMiniAOD": {
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "resize": "auto", 
+    "secondary_AAA": true
+  }, 
   "Run3Winter20GS": {
     "fractionpass": 0.95, 
     "go": true, 
