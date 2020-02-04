@@ -6494,41 +6494,6 @@ class wtcInfo:
                             {"$set": document},
                             upsert = True
                         )
-    def sync(self):
-
-        force = getForceCompletes()
-        for user,items in force.items():
-            for item in items:
-                print user, item
-                self.add( action='force', keyword=item, user = user)
-                
-
-        UC = unifiedConfiguration()
-        actors = UC.get('allowed_bypass')
-        
-        for bypassor,email in actors:
-            bypass_file = '/afs/cern.ch/user/%s/%s/public/ops/bypass.json'%(bypassor[0],bypassor)
-            if not os.path.isfile(bypass_file):
-                continue
-            try:
-                print "Can read bypass from", bypassor
-                extending = json.loads(open(bypass_file).read())
-                print bypassor,"is bypassing",json.dumps(sorted(extending))
-                for ex in extending:
-                    self.add( action = 'bypass' , keyword = ex, user = bypassor)
-            except:
-                pass
-        
-            holding_file = '/afs/cern.ch/user/%s/%s/public/ops/onhold.json'%(bypassor[0],bypassor)
-            if not os.path.isfile(holding_file):
-                continue
-            try:
-                extending = json.loads(open(holding_file).read())
-                print bypassor,"is holding",json.dumps(sorted(extending))
-                for ex in extending:
-                    self.add( action = 'hold' , keyword = ex, user = bypassor)
-            except:
-                pass
 
     def _get(self, action):
         r= defaultdict(list)
@@ -6559,24 +6524,6 @@ class wtcInfo:
             if item.get('keyword',None) in keyword:
                 print item,"goes away"
                 self.db.delete_one({'_id' : item.get('_id',None)})
-
-def getForceCompletes():
-    overrides = {}
-    UC = unifiedConfiguration()
-    actors = UC.get('allowed_bypass')
-    for rider,email in actors:
-        rider_file = '/afs/cern.ch/user/%s/%s/public/ops/forcecomplete.json'%(rider[0],rider)
-        if not os.path.isfile(rider_file):
-            continue
-        try:
-            extending = json.loads(open( rider_file ).read() )
-            print rider,"is force-completing",sorted(extending)
-            overrides[rider] = extending
-        except:
-            print "cannot get force complete list from",rider
-            sendEmail("malformated force complet file","%s is not json readable"%rider_file, destination=[email])
-    return overrides
-
 
 class workflowInfo:
     def __init__(self, url, workflow, spec=True, request=None,stats=False, wq=False, errors=False):
