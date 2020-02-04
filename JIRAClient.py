@@ -143,9 +143,13 @@ class JIRAClient:
             else:
                 query += ' AND status = %s'%(status)
 
-        if specifications.get('label'):
+        if specifications.get('label',None):
             label = specifications['label']
             query += ' AND labels = %s'%label
+
+        if specifications.get('text',None):
+            string = specifications['text']
+            query += ' AND text ~ "%s"'% string
 
         return self._find( query )
 

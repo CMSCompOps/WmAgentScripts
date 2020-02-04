@@ -137,15 +137,44 @@ def checkor(url, spec=None, options=None):
         print user,"is bypassing",extending
         bypasses.extend( extending )
         
-    overrides = {}
+    overrides = defaultdict(list)
     for user,extending in WI.getForce().items():
         if not user in actors:
             print user,"is not allowed to force complete"
             continue
         print user,"is force-completing",extending
         bypasses.extend( extending )
-        overrides[user] = extending
+        overrides[user].extend(extending)
 
+    if JC:
+        force_complete_jira_string = "cmsunified please do force-complete"
+        to_check = JC.find({'text' : force_complete_jira_string, "status" : "!CLOSED"})
+        for j in to_check:
+            jira = JC.get(j.key)
+            for c in jira.fields.comment.comments:
+                if force_complete_jira_string in c.body:
+                    user = c.author.name
+                    prepid = jira.fields.summary.split()[0]
+                    keyword = c.body[(c.body.find(force_complete_jira_string)+len(force_complete_jira_string)):].split()[0]
+                    if keyword and user in actors:
+                        print user,"is force-completing", keyword,"from JIRA"
+                        bypasses.extend( keyword )
+                        overrides[user].extend( keyword )
+                    break
+        bypass_jira_string = "cmsunified please do bypass"
+        to_check = JC.find({'text' : bypass_jira_string, "status" : "!CLOSED"})
+        for j in to_check:
+            jira = JC.get(j.key)
+            for c in jira.fields.comment.comments:
+                if bypass_jira_string in c.body:
+                    user = c.author.name
+                    prepid = jira.fields.summary.split()[0]
+                    keyword = c.body[(c.body.find(bypass_jira_string)+len(bypass_jira_string)):].split()[0]
+                    if keyword and user in actors:
+                        print user,"is bypassing", keyword,"from JIRA"
+                        bypasses.extend( keyword )
+                    break
+                    
     if use_mcm:
         ## this is a list of prepids that are good to complete
         forcings = mcm.get('/restapi/requests/forcecomplete')
