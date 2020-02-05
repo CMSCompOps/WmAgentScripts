@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html lang=en>
+  <head>
+    <title>Unified Logs</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+  </head>
+
+  <body>
+
+    <form>
+      Submit another query:
+      <input type="text" name="search" value="<?php echo $query;?>">
+      Module:
+      <input type="text" name="module" value="<?php echo $module;?>">
+      Logs Limit:
+      <input type="text" name="limit" value="<?php echo $limit;?>">
+      Elastic Search Size:
+      <input type="text" name="size" value="<?php echo $size;?>">
+      Keep Duplicates:
+      <input type="checkbox" name="all"<?php echo $checked;?>>
+      <input type="submit">
+    </form>
+
+    <table border="3" style="border-collapse: collapse;">
+      <?php
+         foreach($logs as $log) {
+           echo '<tr><th width=60px><div class="box ' . $log['subject'] . '"></div></th>';
+           echo '<th>' . $log['subject'] . '</th><th>' . $log['date'] . '</th></tr><tr><td colspan="3">';
+           foreach ($log['text'] as $line)
+             echo $line . '<br>';
+           echo '<br></td></tr>';
+         }
+      ?>
+    </table>
+
+    <h3>Meta Data:</h3>
+    
+    <?php
+       foreach (explode("\n", $o[0]['_source']['meta']) as $line)
+          echo $line . '<br>';
+    ?>
+  </body>
+</html>

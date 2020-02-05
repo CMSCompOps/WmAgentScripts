@@ -1,0 +1,51 @@
+th {
+  text-align:center;font-size:100%;border: 3px solid #ddc;padding:.4em
+} 
+
+td {
+  text-align:left;font-size:100%;border: 3px solid #ddc;padding:.2em
+}
+
+table {
+  border: 1px border-collapse:collapse #ddc;width:100%
+}
+
+.box {
+  float: left;  width: 40px;  height: 20px;  margin: 10px;
+}
+
+.injector {
+  background: #cccccc
+}
+
+.transferor {
+  background: #ff0000
+}
+
+.stagor {
+  background: #0000ff
+}
+
+.assignor {
+  background: #00ff00
+}
+
+.checkor {
+  background: #ff6600
+}
+
+.closor {
+  background: #9966ff
+}
+
+.cleanor {
+  background: #00ffff
+}
+
+.rejector {
+  background: #000000
+}
+
+.completor {
+  background: #ffff00
+}
