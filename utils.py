@@ -3861,11 +3861,10 @@ def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, ve
 
     print len(all_block_names),"blocks"
 
+    conn = make_x509_conn(url)
     items = None
-    while items == None:
+    while items is None:
         try:
-            conn = make_x509_conn(url)
-            #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
             url = '/phedex/datasvc/json/prod/requestlist?dataset=%s&group=AnalysisOps&group=DataOps'%dataset
             if group:
                 url+='group=%s'%group
@@ -3877,7 +3876,26 @@ def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, ve
             print "\twaiting a bit for retry"
             print e
             time.sleep(1)
+            conn = make_x509_conn(url)
 
+
+    d_items = None
+    while d_items is None:
+        try:
+            url = '/phedex/datasvc/json/prod/requestlist?dataset=%s&type=delete'%dataset
+            if group:
+                url+='group=%s'%group
+            r1=conn.request("GET",url)
+            r2=conn.getresponse()
+
+            d_items=json.loads(r2.read())['phedex']['request']
+        except Exception as e :
+            print "\twaiting a bit for retry"
+            print e
+            time.sleep(1)
+            conn = make_x509_conn(url)
+
+    items.extend( d_items )
 
     deletes = {}
     now = time.mktime(time.gmtime())
