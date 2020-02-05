@@ -150,9 +150,6 @@ for (the_dir,logtype) in [(monitor_eos_dir,'report'),
         else:
             #print d,"is still in use"
             pass
-    
-## protected lfn list
-os.system('python listProtectedLFN.py')
 
 ### dump the knonw thresholds
 si = siteInfo()
