@@ -153,15 +153,15 @@ def htmlor( caller = ""):
             date2 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime())
 
             date1 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(30*24*60*60)) )
-            text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#table=Jobs&date1=%s&date2=%s&sortby=site&task=wmagent_%s"> 1m</a>'%( date1, date2, wfn )
+            #text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#table=Jobs&date1=%s&date2=%s&sortby=site&task=wmagent_%s"> 1m</a>'%( date1, date2, wfn )
             date1 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(7*24*60*60)) )
-            text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#table=Jobs&date1=%s&date2=%s&sortby=site&task=wmagent_%s"> 1w</a>'%( date1, date2, wfn )
+            #text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#table=Jobs&date1=%s&date2=%s&sortby=site&task=wmagent_%s"> 1w</a>'%( date1, date2, wfn )
             date1 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(1*24*60*60)) )
-            text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#table=Jobs&date1=%s&date2=%s&sortby=site&task=wmagent_%s">1d</a>'%( date1, date2, wfn )
+            #text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#table=Jobs&date1=%s&date2=%s&sortby=site&task=wmagent_%s">1d</a>'%( date1, date2, wfn )
             date1 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(5*60*60)) )
-            text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#table=Jobs&date1=%s&date2=%s&sortby=site&task=wmagent_%s"> 5h</a>'%( date1, date2, wfn )
+            #text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#table=Jobs&date1=%s&date2=%s&sortby=site&task=wmagent_%s"> 5h</a>'%( date1, date2, wfn )
             date1 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(1*60*60)) )
-            text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#table=Jobs&date1=%s&date2=%s&sortby=site&task=wmagent_%s"> 1h</a>'%( date1, date2, wfn )
+            #text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#table=Jobs&date1=%s&date2=%s&sortby=site&task=wmagent_%s"> 1h</a>'%( date1, date2, wfn )
 
         if ongoing and wfn in boost:
             for task in boost[wfn]:
@@ -1021,19 +1021,17 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
                 text+= '<font color=orange><b>%s</b></font><br>'%site
             else:
                 text+= '<font color=red><b>%s</b></font><br>'%site                
-            #text+='<a href=http://dashb-ssb.cern.ch/dashboard/templates/sitePendingRunningJobs.html?site=%s>%s</a><br>'%(site,site)
             text+='<a href="https://cms-gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="https://cms-gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:75px"></a>'%( site,site )
             text+='<img src="https://cms-gwmsmon.cern.ch/totalview/graphs/%s/fairshare/daily" style="height:75px"><br>'%(site)
             text+='<img src="https://cms-gwmsmon.cern.ch/prodview/graphs/siteprioritysummarycpuspending/%s/daily" style="height:75px">'%(site)
             text+='<img src="https://cms-gwmsmon.cern.ch/prodview/graphs/siteprioritysummarycpusinuse/%s/daily" style="height:75px"><br>'%(site)
 
-            text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=&check=submitted&sortby=activity&scale=linear&bars=20&date1=%s&date2=%s">1m</a>'%( site,date1m,now )
-            text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=&check=submitted&sortby=activity&scale=linear&bars=20&date1=%s&date2=%s">1w</a>'%( site,date7d,now )
-            text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=&check=submitted&sortby=activity&scale=linear&bars=20&date1=%s&date2=%s">1d</a>'%( site,date1d,now )
-            text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=&check=submitted&sortby=activity&scale=linear&bars=20&date1=%s&date2=%s">5h</a>'%( site,date5h,now )
-            text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=&check=submitted&sortby=activity&scale=linear&bars=20&date1=%s&date2=%s">1h</a>'%( site,date1h,now )
+            #text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=&check=submitted&sortby=activity&scale=linear&bars=20&date1=%s&date2=%s">1m</a>'%( site,date1m,now )
+            #text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=&check=submitted&sortby=activity&scale=linear&bars=20&date1=%s&date2=%s">1w</a>'%( site,date7d,now )
+            #text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=&check=submitted&sortby=activity&scale=linear&bars=20&date1=%s&date2=%s">1d</a>'%( site,date1d,now )
+            #text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=&check=submitted&sortby=activity&scale=linear&bars=20&date1=%s&date2=%s">5h</a>'%( site,date5h,now )
+            #text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=&check=submitted&sortby=activity&scale=linear&bars=20&date1=%s&date2=%s">1h</a>'%( site,date1h,now )
             text+=', <a href="https://cms-site-readiness.web.cern.ch/cms-site-readiness/SiteReadiness/HTML/SiteReadinessReport.html#%s">SAM</a><br>'%( site )
-            #text+='<a href=http://dashb-ssb.cern.ch/dashboard/templates/sitePendingRunningJobs.html?site=%s>dashb</a><br>'%(site,site)
             text+='%s<br>'%(ht_cpu)
             text+='%s%s'%(ht_disk,up_com)
             text+='</td>'
