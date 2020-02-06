@@ -2563,7 +2563,6 @@ class siteInfo:
         for name,column in columns.items():
             if talk: print name,column
             try:
-                #data = json.loads(os.popen('curl -s "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=%s&batch=1&lastdata=1"'%column).read())
                 #all_data[name] =  data['csvdata']
                 all_data[name] =  dataCache.get('ssb_%d'% column) #data['csvdata']
             except:
