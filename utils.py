@@ -2901,7 +2901,8 @@ class cacheInfo:
 
     def get(self, key):
         now = time.mktime(time.gmtime())
-        o =self.db.find_one({'key':key})
+        s_key = self.transform_key(key)
+        o =self.db.find_one({'key':s_key})
         if o:
             if o['expire'] > now:
                 if not 'data' in o:
@@ -2916,6 +2917,9 @@ class cacheInfo:
             print "cache miss",key
             return None
 
+    def _transfor_key(self, key): return key.replace('.','___dot___')
+    #def _used_key(self,mdb_key): return mdb_key.replace('___dot___','.')
+
     def _file_key(self, key):
         cache_file = '{}/{}'.format(cache_dir, key.replace('/','_'))
         return cache_file
@@ -2928,22 +2932,24 @@ class cacheInfo:
         else:
             print "file cachemiss",key
             return None
+
     def store(self, key, data, lifetime_min=10):
         import pymongo
         now = time.mktime(time.gmtime())
+        s_key = self.transform_key(key)
         content = {'data': data,
-                   'key' : key,
+                   'key' : s_key,
                    'time' : int(now),
                    'expire' : int(now + 60*lifetime_min),
                    'lifetime' : lifetime_min}
         try:
-            self.db.update_one({'key': key},
+            self.db.update_one({'key': s_key},
                                {"$set": content},
                                upsert = True)
         except pymongo.errors.DocumentTooLarge as e:
             print ("too large to go in mongo. in file instead")
             open(self._file_key(key),'w').write( json.dumps( content.pop('data') ))
-            self.db.update_one({'key': key},
+            self.db.update_one({'key': s_key},
                                {"$set": content},
                                upsert = True)
         except Exception as e:
