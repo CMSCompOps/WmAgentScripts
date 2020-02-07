@@ -844,7 +844,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 %s
 </pre>
 """%(os.getenv('USER'),
-     os.popen('acrontab -l | grep -i unified | grep -v \#  |sort -f ').read()))
+     os.popen('acrontab -l | grep -i unified | grep -v \#  |sort -k 6').read()))
 
 
     per_module = defaultdict(list)
