@@ -3505,10 +3505,23 @@ def try_checkTransferLag( url, xfer_id , datasets=None):
     result = json.loads(r2.read())
     timecreate=min([r['time_create'] for r in result['phedex']['request']])
     subs_url = '/phedex/datasvc/json/prod/subscriptions?request=%s&create_since=%d'%(str(xfer_id),timecreate)
-    subs_url+='&collapse=n'
     r1=conn.request("GET",subs_url)
     r2=conn.getresponse()
     result = json.loads(r2.read())
+
+    #only check '&collapse=n' when there is dataset level subscription
+    add_collapse=False
+
+    for item in  result['phedex']['dataset']:
+        if 'subscription' in item:
+             add_collapse=True
+             break
+    if add_collapse:
+        subs_url+='&collapse=n'
+        r1=conn.request("GET",subs_url)
+        r2=conn.getresponse()
+        result = json.loads(r2.read())
+
 
     now = time.mktime( time.gmtime() )
     #print result
@@ -3516,10 +3529,16 @@ def try_checkTransferLag( url, xfer_id , datasets=None):
     if len(result['phedex']['dataset'])==0:
         print "trying with an earlier date than",timecreate,"for",xfer_id
         subs_url = '/phedex/datasvc/json/prod/subscriptions?request=%s&create_since=%d'%(str(xfer_id),0)
-        subs_url+='&collapse=n'
         r1=conn.request("GET",subs_url)
         r2=conn.getresponse()
         result = json.loads(r2.read())
+        for item in  result['phedex']['dataset']:
+            if 'subscription' in item:
+                subs_url+='&collapse=n'
+                r1=conn.request("GET",subs_url)
+                r2=conn.getresponse()
+                result = json.loads(r2.read())
+                break
 
     for item in  result['phedex']['dataset']:
         if 'subscription' not in item:
