@@ -8248,6 +8248,15 @@ class workflowInfo:
             for output in  outputs:
                 print output
                 (_,dsn,ps,tier) = output.split('/')
+                if ps.count("-") == 2:
+                    (aera,aps,_) = ps.split('-')
+                elif ps.count("-") == 3:
+                    (aera,fn,aps,_) = ps.split('-')
+                else:
+                    ## cannot so anything
+                    print "the processing string is mal-formated",ps
+                    return None
+
                 if aera == 'None' or aera == 'FAKE':
                     print "no era, using ",era
                     aera=era
