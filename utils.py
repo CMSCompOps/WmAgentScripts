@@ -1840,6 +1840,12 @@ class UnifiedBuster(threading.Thread):
 class docCache:
     def __init__(self):
         self.cache = {}
+        with open('Unified/monit_secret.json') as monit:
+            conf = json.load(monit)
+        query = """'{"search_type":"query_then_fetch","ignore_unavailable":true,"index":["monit_prod_cmssst_*","monit_prod_cmssst_*"]}
+{"size":1,"query":{"bool":{"filter":[{"range":{"metadata.timestamp":{"gte":"now-1d","lte":"now","format":"epoch_millis"}}},{"query_string":{"analyze_wildcard":true,"query":"metadata.type: ssbmetric AND metadata.type_prefix:raw AND metadata.path: sts15min"}}]}},"sort":{"metadata.timestamp":{"order":"desc","unmapped_type":"boolean"}},"script_fields":{},"docvalue_fields":["metadata.timestamp"]}
+'"""    
+        TIMESTAMP = json.loads(os.popen('curl -X POST %s -H "Authorization: Bearer %s" -H "Content-Type: application/json" -d %s'%(conf["url"],conf["token"],query)).read())["responses"][0]["hits"]["hits"][0]["_source"]["metadata"]["timestamp"]
         def default_expiration():
             ## a random time between 20 min and 30 min.
             return int(20 + random.random()*10)
@@ -1855,7 +1861,10 @@ class docCache:
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=237&batch=1&lastdata=1"').read())['csvdata'],
+            query2 = """'{"search_type":"query_then_fetch","ignore_unavailable":true,"index":["monit_prod_cmssst_*","monit_prod_cmssst_*"]}
+{"size":500,"_source": {"includes":["data.name","data.prod_status"]},"query":{"bool":{"filter":[{"range":{"metadata.timestamp":{"gte":"now-1d","lte":"now","format":"epoch_millis"}}},{"query_string":{"analyze_wildcard":true,"query":"metadata.type: ssbmetric AND metadata.type_prefix:raw AND metadata.path: sts15min ABD metadata.timestamp:%s"}}]}},"sort":{"metadata.timestamp":{"order":"desc","unmapped_type":"boolean"}},"script_fields":{},"docvalue_fields":["metadata.timestamp"]}
+'"""%(str(TIMESTAMP))
+            'getter' : lambda : json.loads(os.popen('curl -X POST %s -H "Authorization: Bearer %s" -H "Content-Type: application/json" -d %s'%(conf["url"],conf["token"],query2)).read())["responses"][0]["hits"]["hits"],
             'cachefile' : None,
             'default' : []
             }
@@ -1918,6 +1927,15 @@ class docCache:
         self.cache['gwmsmon_prod_maxused' ] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration(),
+            'getter' : lambda : json.loads(os.popen('curl --retry 5 -s http://cms-gwmsmon.cern.ch/prodview//json/maxusedcpus').read()),
+            'cachefile' : None,
+            'default' : {}
+            }
+        self.cache['detox_sites'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration(),
             'expiration' : default_expiration(),
             'getter' : lambda : json.loads(os.popen('curl --retry 5 -s http://cms-gwmsmon.cern.ch/prodview//json/maxusedcpus').read()),
             'cachefile' : None,
@@ -2176,20 +2194,18 @@ class siteInfo:
             data = dataCache.get('ssb_237') ## 237 is the site readyness metric
 
             for siteInfo in data:
-                #print siteInfo['Status']
-                if not siteInfo['Tier'] in [0,1,2,3]: continue
-                self.all_sites.append( siteInfo['VOName'] )
-                override = (override_good and siteInfo['VOName'] in override_good)
-                if siteInfo['VOName'] in self.sites_banned and not override:
+                self.all_sites.append( siteInfo["_source"]["data"]['name'] )
+                override = (override_good and siteInfo["_source"]["data"]['name'] in override_good)
+                if siteInfo["_source"]["data"]['name'] in self.sites_banned and not override:
                     continue
-                if (self.sites_ready_in_agent and siteInfo['VOName'] in self.sites_ready_in_agent) or override:
-                    self.sites_ready.append( siteInfo['VOName'] )
-                elif self.sites_ready_in_agent and not siteInfo['VOName'] in self.sites_ready_in_agent:
-                    self.sites_not_ready.append( siteInfo['VOName'] )
-                elif siteInfo['Status'] == 'enabled':
-                    self.sites_ready.append( siteInfo['VOName'] )
+                if (self.sites_ready_in_agent and siteInfo["_source"]["data"]['name'] in self.sites_ready_in_agent) or override:
+                    self.sites_ready.append( siteInfo["_source"]["data"]['name'] )
+                elif self.sites_ready_in_agent and not siteInfo["_source"]["data"]['name'] in self.sites_ready_in_agent:
+                    self.sites_not_ready.append( siteInfo["_source"]["data"]['name'] )
+                elif siteInfo["_source"]["data"]['prod_status'] == 'enabled':
+                    self.sites_ready.append( siteInfo["_source"]["data"]['name'] )
                 else:
-                    self.sites_not_ready.append( siteInfo['VOName'] )
+                    self.sites_not_ready.append( siteInfo["_source"]["data"]['name'] )
 
             ##over-ride those since they are only handled through jobrouting
             add_as_ready = [
@@ -8241,15 +8257,6 @@ class workflowInfo:
             for output in  outputs:
                 print output
                 (_,dsn,ps,tier) = output.split('/')
-                if ps.count("-") == 2:
-                    (aera,aps,_) = ps.split('-')
-                elif ps.count("-") == 3:
-                    (aera,fn,aps,_) = ps.split('-')
-                else:
-                    ## cannot so anything
-                    print "the processing string is mal-formated",ps
-                    return None
-
                 if aera == 'None' or aera == 'FAKE':
                     print "no era, using ",era
                     aera=era
