@@ -3514,14 +3514,13 @@ def try_checkTransferLag( url, xfer_id , datasets=None):
 
     for item in  result['phedex']['dataset']:
         if 'subscription' in item:
-             add_collapse=True
-             break
+            add_collapse=True
+            break
     if add_collapse:
         subs_url+='&collapse=n'
         r1=conn.request("GET",subs_url)
         r2=conn.getresponse()
         result = json.loads(r2.read())
-
 
     now = time.mktime( time.gmtime() )
     #print result
