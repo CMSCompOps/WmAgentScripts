@@ -1880,7 +1880,10 @@ class docCache:
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=160&batch=1&lastdata=1"').read())['csvdata'],
+            query2 = """'{"search_type":"query_then_fetch","ignore_unavailable":true,"index":["monit_prod_cmssst_*","monit_prod_cmssst_*"]}
+{"size":500,"_source": {"includes":["data.name","data.core_cpu_intensive"]},"query":{"bool":{"filter":[{"range":{"metadata.timestamp":{"gte":"now-1d","lte":"now","format":"epoch_millis"}}},{"query_string":{"analyze_wildcard":true,"query":"metadata.type: ssbmetric AND metadata.type_prefix:raw AND metadata.path: scap15min ABD metadata.timestamp:%s"}}]}},"sort":{"metadata.timestamp":{"order":"desc","unmapped_type":"boolean"}},"script_fields":{},"docvalue_fields":["metadata.timestamp"]}
+'"""%(str(TIMESTAMP))
+            'getter' : lambda : json.loads(os.popen('curl -X POST %s -H "Authorization: Bearer %s" -H "Content-Type: application/json" -d %s'%(conf["url"],conf["token"],query2)).read())["responses"][0]["hits"]["hits"],
             'cachefile' : None,
             'default' : []
             }
@@ -2181,7 +2184,7 @@ class siteInfo:
 
             self.sites_banned = UC.get('sites_banned')
 
-            #data = dataCache.get('ssb_158') ## 158 is the site readyness metric
+            dataCache = docCache()
             data = dataCache.get('ssb_237') ## 237 is the site readyness metric
 
             for siteInfo in data:
@@ -2577,17 +2580,16 @@ class siteInfo:
         for name,column in columns.items():
             if talk: print name,column
             try:
-                #data = json.loads(os.popen('curl -s "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=%s&batch=1&lastdata=1"'%column).read())
-                #all_data[name] =  data['csvdata']
+                dataCache = docCache()
                 all_data[name] =  dataCache.get('ssb_%d'% column) #data['csvdata']
             except:
                 print "cannot get info from ssb for",name
         _info_by_site = {}
         for info in all_data:
             for item in all_data[info]:
-                site = item['VOName']
+                site = item["_source"]["data"]['name']
                 if site.startswith('T3'): continue
-                value = item['Value']
+                value = item["_source"]["data"]['core_cpu_intensive']
                 if not site in _info_by_site: _info_by_site[site]={}
                 _info_by_site[site][info] = value
 
