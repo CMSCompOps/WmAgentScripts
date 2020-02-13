@@ -3512,7 +3512,7 @@ def try_checkTransferLag( url, xfer_id , datasets=None):
     #only check '&collapse=n' when there is dataset level subscription
     add_collapse=False
 
-    for item in  result['phedex']['dataset']:
+    for item in result['phedex']['dataset']:
         if 'subscription' in item:
             add_collapse=True
             break
@@ -3539,7 +3539,7 @@ def try_checkTransferLag( url, xfer_id , datasets=None):
                 result = json.loads(r2.read())
                 break
 
-    for item in  result['phedex']['dataset']:
+    for item in result['phedex']['dataset']:
         if 'subscription' not in item:
             #print "sub"
             loop_on = list(itertools.chain.from_iterable([[(subitem['name'],i) for i in subitem['subscription']] for subitem in item['block']]))
