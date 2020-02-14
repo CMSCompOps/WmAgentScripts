@@ -1843,7 +1843,7 @@ class docCache:
         with open('Unified/monit_secret.json') as monit:
             conf = json.load(monit)
         query = """'{"search_type":"query_then_fetch","ignore_unavailable":true,"index":["monit_prod_cmssst_*","monit_prod_cmssst_*"]}
-{"size":1,"query":{"bool":{"filter":[{"range":{"metadata.timestamp":{"gte":"now-1d","lte":"now","format":"epoch_millis"}}},{"query_string":{"analyze_wildcard":true,"query":"metadata.type: ssbmetric AND metadata.type_prefix:raw AND metadata.path: sts15min"}}]}},"sort":{"metadata.timestamp":{"order":"desc","unmapped_type":"boolean"}},"script_fields":{},"docvalue_fields":["metadata.timestamp"]}
+{"size":1,"query":{"bool":{"filter":[{"range":{"metadata.timestamp":{"gte":"now-1d","lte":"now","format":"epoch_millis"}}},{"query_string":{"analyze_wildcard":true,"query":"metadata.type: ssbmetric AND metadata.type_prefix:raw AND metadata.path: scap15min"}}]}},"sort":{"metadata.timestamp":{"order":"desc","unmapped_type":"boolean"}},"script_fields":{},"docvalue_fields":["metadata.timestamp"]}
 '"""    
         TIMESTAMP = json.loads(os.popen('curl -X POST %s -H "Authorization: Bearer %s" -H "Content-Type: application/json" -d %s'%(conf["url"],conf["token"],query)).read())["responses"][0]["hits"]["hits"][0]["_source"]["metadata"]["timestamp"]
         def default_expiration():
@@ -1853,7 +1853,10 @@ class docCache:
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=136&batch=1&lastdata=1"').read())['csvdata'],
+            query2 = """'{"search_type":"query_then_fetch","ignore_unavailable":true,"index":["monit_prod_cmssst_*","monit_prod_cmssst_*"]}
+{"size":500,"_source": {"includes":["data.name","data.core_max_used"]},"query":{"bool":{"filter":[{"range":{"metadata.timestamp":{"gte":"now-1d","lte":"now","format":"epoch_millis"}}},{"query_string":{"analyze_wildcard":true,"query":"metadata.type: ssbmetric AND metadata.type_prefix:raw AND metadata.path: scap15min ABD metadata.timestamp:%s"}}]}},"sort":{"metadata.timestamp":{"order":"desc","unmapped_type":"boolean"}},"script_fields":{},"docvalue_fields":["metadata.timestamp"]}
+'"""%(str(TIMESTAMP))
+            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 -X POST %s -H "Authorization: Bearer %s" -H "Content-Type: application/json" -d %s'%(conf["url"],conf["token"],query2)).read())["responses"][0]["hits"]["hits"],
             'cachefile' : None,
             'default' : []
             }
@@ -1861,7 +1864,10 @@ class docCache:
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=159&batch=1&lastdata=1"').read())['csvdata'],
+            query2 = """'{"search_type":"query_then_fetch","ignore_unavailable":true,"index":["monit_prod_cmssst_*","monit_prod_cmssst_*"]}
+{"size":500,"_source": {"includes":["data.name","data.core_production"]},"query":{"bool":{"filter":[{"range":{"metadata.timestamp":{"gte":"now-1d","lte":"now","format":"epoch_millis"}}},{"query_string":{"analyze_wildcard":true,"query":"metadata.type: ssbmetric AND metadata.type_prefix:raw AND metadata.path: scap15min ABD metadata.timestamp:%s"}}]}},"sort":{"metadata.timestamp":{"order":"desc","unmapped_type":"boolean"}},"script_fields":{},"docvalue_fields":["metadata.timestamp"]}
+'"""%(str(TIMESTAMP))
+            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 -X POST %s -H "Authorization: Bearer %s" -H "Content-Type: application/json" -d %s'%(conf["url"],conf["token"],query2)).read())["responses"][0]["hits"]["hits"],
             'cachefile' : None,
             'default' : []
             }
@@ -1872,7 +1878,7 @@ class docCache:
             query2 = """'{"search_type":"query_then_fetch","ignore_unavailable":true,"index":["monit_prod_cmssst_*","monit_prod_cmssst_*"]}
 {"size":500,"_source": {"includes":["data.name","data.core_cpu_intensive"]},"query":{"bool":{"filter":[{"range":{"metadata.timestamp":{"gte":"now-1d","lte":"now","format":"epoch_millis"}}},{"query_string":{"analyze_wildcard":true,"query":"metadata.type: ssbmetric AND metadata.type_prefix:raw AND metadata.path: scap15min ABD metadata.timestamp:%s"}}]}},"sort":{"metadata.timestamp":{"order":"desc","unmapped_type":"boolean"}},"script_fields":{},"docvalue_fields":["metadata.timestamp"]}
 '"""%(str(TIMESTAMP))
-            'getter' : lambda : json.loads(os.popen('curl -X POST %s -H "Authorization: Bearer %s" -H "Content-Type: application/json" -d %s'%(conf["url"],conf["token"],query2)).read())["responses"][0]["hits"]["hits"],
+            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 -X POST %s -H "Authorization: Bearer %s" -H "Content-Type: application/json" -d %s'%(conf["url"],conf["token"],query2)).read())["responses"][0]["hits"]["hits"],
             'cachefile' : None,
             'default' : []
             }
