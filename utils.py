@@ -1849,7 +1849,7 @@ class docCache:
         def default_expiration():
             ## a random time between 20 min and 30 min.
             return int(20 + random.random()*10)
-        self.cache['ssb_136'] = {
+        self.cache['ssb_data.core_max_used'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
@@ -1860,7 +1860,7 @@ class docCache:
             'cachefile' : None,
             'default' : []
             }
-        self.cache['ssb_159'] = {
+        self.cache['ssb_data.core_production'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
@@ -1871,7 +1871,7 @@ class docCache:
             'cachefile' : None,
             'default' : []
             }
-        self.cache['ssb_160'] = {
+        self.cache['ssb_data.core_cpu_intensive'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
@@ -2575,9 +2575,9 @@ class siteInfo:
     def fetch_ssb_info(self,talk=True):
         ## and complement information from ssb
         columns= {
-            'realCPU' : 136,
-            'prodCPU' : 159,
-            'CPUbound' : 160
+            'realCPU' : 'data.core_max_used',
+            'prodCPU' : 'data.core_production',
+            'CPUbound' : 'data.core_cpu_intensive'
             }
 
         all_data = {}
@@ -2593,7 +2593,7 @@ class siteInfo:
             for item in all_data[info]:
                 site = item["_source"]["data"]['name']
                 if site.startswith('T3'): continue
-                value = item["_source"]["data"]['core_cpu_intensive']
+                value = item["_source"]["data"][column]
                 if not site in _info_by_site: _info_by_site[site]={}
                 _info_by_site[site][info] = value
 
