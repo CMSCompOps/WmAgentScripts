@@ -1849,35 +1849,39 @@ class docCache:
         def default_expiration():
             ## a random time between 20 min and 30 min.
             return int(20 + random.random()*10)
+        
+        query2 = """'{"search_type":"query_then_fetch","ignore_unavailable":true,"index":["monit_prod_cmssst_*","monit_prod_cmssst_*"]}
+{"size":500,"_source": {"includes":["data.name","data.core_max_used"]},"query":{"bool":{"filter":[{"range":{"metadata.timestamp":{"gte":"now-1d","lte":"now","format":"epoch_millis"}}},{"query_string":{"analyze_wildcard":true,"query":"metadata.type: ssbmetric AND metadata.type_prefix:raw AND metadata.path: scap15min ABD metadata.timestamp:%s"}}]}},"sort":{"metadata.timestamp":{"order":"desc","unmapped_type":"boolean"}},"script_fields":{},"docvalue_fields":["metadata.timestamp"]}
+'"""%(str(self.TIMESTAMP))
+
         self.cache['ssb_core_max_used'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            query2 = """'{"search_type":"query_then_fetch","ignore_unavailable":true,"index":["monit_prod_cmssst_*","monit_prod_cmssst_*"]}
-{"size":500,"_source": {"includes":["data.name","data.core_max_used"]},"query":{"bool":{"filter":[{"range":{"metadata.timestamp":{"gte":"now-1d","lte":"now","format":"epoch_millis"}}},{"query_string":{"analyze_wildcard":true,"query":"metadata.type: ssbmetric AND metadata.type_prefix:raw AND metadata.path: scap15min ABD metadata.timestamp:%s"}}]}},"sort":{"metadata.timestamp":{"order":"desc","unmapped_type":"boolean"}},"script_fields":{},"docvalue_fields":["metadata.timestamp"]}
-'"""%(str(self.TIMESTAMP))
             'getter' : lambda : json.loads(os.popen('curl -s --retry 5 -X POST %s -H "Authorization: Bearer %s" -H "Content-Type: application/json" -d %s'%(conf["url"],conf["token"],query2)).read())["responses"][0]["hits"]["hits"],
             'cachefile' : None,
             'default' : []
             }
+        query2 = """'{"search_type":"query_then_fetch","ignore_unavailable":true,"index":["monit_prod_cmssst_*","monit_prod_cmssst_*"]}
+{"size":500,"_source": {"includes":["data.name","data.core_production"]},"query":{"bool":{"filter":[{"range":{"metadata.timestamp":{"gte":"now-1d","lte":"now","format":"epoch_millis"}}},{"query_string":{"analyze_wildcard":true,"query":"metadata.type: ssbmetric AND metadata.type_prefix:raw AND metadata.path: scap15min ABD metadata.timestamp:%s"}}]}},"sort":{"metadata.timestamp":{"order":"desc","unmapped_type":"boolean"}},"script_fields":{},"docvalue_fields":["metadata.timestamp"]}
+'"""%(str(self.TIMESTAMP))
+
         self.cache['ssb_core_production'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            query2 = """'{"search_type":"query_then_fetch","ignore_unavailable":true,"index":["monit_prod_cmssst_*","monit_prod_cmssst_*"]}
-{"size":500,"_source": {"includes":["data.name","data.core_production"]},"query":{"bool":{"filter":[{"range":{"metadata.timestamp":{"gte":"now-1d","lte":"now","format":"epoch_millis"}}},{"query_string":{"analyze_wildcard":true,"query":"metadata.type: ssbmetric AND metadata.type_prefix:raw AND metadata.path: scap15min ABD metadata.timestamp:%s"}}]}},"sort":{"metadata.timestamp":{"order":"desc","unmapped_type":"boolean"}},"script_fields":{},"docvalue_fields":["metadata.timestamp"]}
-'"""%(str(self.TIMESTAMP))
             'getter' : lambda : json.loads(os.popen('curl -s --retry 5 -X POST %s -H "Authorization: Bearer %s" -H "Content-Type: application/json" -d %s'%(conf["url"],conf["token"],query2)).read())["responses"][0]["hits"]["hits"],
             'cachefile' : None,
             'default' : []
             }
+        query2 = """'{"search_type":"query_then_fetch","ignore_unavailable":true,"index":["monit_prod_cmssst_*","monit_prod_cmssst_*"]}
+{"size":500,"_source": {"includes":["data.name","data.core_cpu_intensive"]},"query":{"bool":{"filter":[{"range":{"metadata.timestamp":{"gte":"now-1d","lte":"now","format":"epoch_millis"}}},{"query_string":{"analyze_wildcard":true,"query":"metadata.type: ssbmetric AND metadata.type_prefix:raw AND metadata.path: scap15min ABD metadata.timestamp:%s"}}]}},"sort":{"metadata.timestamp":{"order":"desc","unmapped_type":"boolean"}},"script_fields":{},"docvalue_fields":["metadata.timestamp"]}
+'"""%(str(self.TIMESTAMP))
+
         self.cache['ssb_core_cpu_intensive'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            query2 = """'{"search_type":"query_then_fetch","ignore_unavailable":true,"index":["monit_prod_cmssst_*","monit_prod_cmssst_*"]}
-{"size":500,"_source": {"includes":["data.name","data.core_cpu_intensive"]},"query":{"bool":{"filter":[{"range":{"metadata.timestamp":{"gte":"now-1d","lte":"now","format":"epoch_millis"}}},{"query_string":{"analyze_wildcard":true,"query":"metadata.type: ssbmetric AND metadata.type_prefix:raw AND metadata.path: scap15min ABD metadata.timestamp:%s"}}]}},"sort":{"metadata.timestamp":{"order":"desc","unmapped_type":"boolean"}},"script_fields":{},"docvalue_fields":["metadata.timestamp"]}
-'"""%(str(self.TIMESTAMP))
             'getter' : lambda : json.loads(os.popen('curl -s --retry 5 -X POST %s -H "Authorization: Bearer %s" -H "Content-Type: application/json" -d %s'%(conf["url"],conf["token"],query2)).read())["responses"][0]["hits"]["hits"],
             'cachefile' : None,
             'default' : []
@@ -2192,18 +2196,18 @@ class siteInfo:
             data = json.loads(os.popen('curl -s --retry 5 -X POST %s -H "Authorization: Bearer %s" -H "Content-Type: application/json" -d %s'%(conf["url"],conf["token"],query2)).read())["responses"][0]["hits"]["hits"], 
 
             for siteInfo in data:
-                self.all_sites.append( siteInfo["_source"]["data"]['name'] )
-                override = (override_good and siteInfo["_source"]["data"]['name'] in override_good)
-                if siteInfo["_source"]["data"]['name'] in self.sites_banned and not override:
+                self.all_sites.append( siteInfo['_source']['data']['name'] )
+                override = (override_good and siteInfo['_source']['data']['name'] in override_good)
+                if siteInfo['_source']['data']['name'] in self.sites_banned and not override:
                     continue
-                if (self.sites_ready_in_agent and siteInfo["_source"]["data"]['name'] in self.sites_ready_in_agent) or override:
-                    self.sites_ready.append( siteInfo["_source"]["data"]['name'] )
-                elif self.sites_ready_in_agent and not siteInfo["_source"]["data"]['name'] in self.sites_ready_in_agent:
-                    self.sites_not_ready.append( siteInfo["_source"]["data"]['name'] )
-                elif siteInfo["_source"]["data"]['prod_status'] == 'enabled':
-                    self.sites_ready.append( siteInfo["_source"]["data"]['name'] )
+                if (self.sites_ready_in_agent and siteInfo['_source']['data']['name'] in self.sites_ready_in_agent) or override:
+                    self.sites_ready.append( siteInfo['_source']['data']['name'] )
+                elif self.sites_ready_in_agent and not siteInfo['_source']['data']['name'] in self.sites_ready_in_agent:
+                    self.sites_not_ready.append( siteInfo['_source']['data']['name'] )
+                elif siteInfo['_source']['data']['prod_status'] == 'enabled':
+                    self.sites_ready.append( siteInfo['_source']['data']['name'] )
                 else:
-                    self.sites_not_ready.append( siteInfo["_source"]["data"]['name'] )
+                    self.sites_not_ready.append( siteInfo['_source']['data']['name'] )
 
             ##over-ride those since they are only handled through jobrouting
             add_as_ready = [
