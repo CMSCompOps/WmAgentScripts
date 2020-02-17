@@ -2585,20 +2585,19 @@ class siteInfo:
             }
 
         all_data = {}
+        dataCache = docCache()
         for name,column in columns.items():
             if talk: print name,column
             try:
-                dataCache = docCache()
-                all_data[name] =  dataCache.get('ssb_%d'% column) #data['csvdata']
+                all_data[name] =  dataCache.get('ssb_%s'% column) #data['csvdata']
             except:
                 print "cannot get info from ssb for",name
         _info_by_site = {}
         for info in all_data:
             for item in all_data[info]:
-                site = item["_source"]["data"]['name']
+                site = item['_source']['data']['name']
                 if site.startswith('T3'): continue
-                final_column = 'data.%s'%(column)
-                value = item["_source"]["data"][final_column]
+                value = item['_source']['data'][columns[info]]
                 if not site in _info_by_site: _info_by_site[site]={}
                 _info_by_site[site][info] = value
 
