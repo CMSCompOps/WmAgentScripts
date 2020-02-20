@@ -2147,6 +2147,7 @@ class DSS:
 
 
 class siteInfo:
+    get_dashbssb_si = get_dashbssb
     def __init__(self, override_good = None):
 
         UC = unifiedConfiguration()
@@ -2177,7 +2178,7 @@ class siteInfo:
 
             self.sites_banned = UC.get('sites_banned')
 
-            data = get_dashbssb('sts15min','prod_status')
+            data = get_dashbssb_si('sts15min','prod_status')
             for siteInfo in data[0]:
                 self.all_sites.append( siteInfo['_source']['data']['name'] )
                 override = (override_good and siteInfo['_source']['data']['name'] in override_good)
