@@ -1860,7 +1860,7 @@ class docCache:
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : get_dashb_ssb('scap15min','core_max_used'),
+            'getter' : lambda : get_dashb_ssb('scap15min','core_max_used'),
             'cachefile' : None,
             'default' : []
             }
@@ -1868,7 +1868,7 @@ class docCache:
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : get_dashb_ssb('scap15min','core_production'),
+            'getter' : lambda : get_dashb_ssb('scap15min','core_production'),
             'cachefile' : None,
             'default' : []
             }
@@ -1876,7 +1876,7 @@ class docCache:
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : get_dashb_ssb('scap15min','core_cpu_intensive'),
+            'getter' : lambda : get_dashb_ssb('scap15min','core_cpu_intensive'),
             'cachefile' : None,
             'default' : []
             }
