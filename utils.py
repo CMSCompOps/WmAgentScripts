@@ -2568,7 +2568,6 @@ class siteInfo:
             }
 
         all_data = {}
-        dataCache = docCache()
         for name,column in columns.items():
             if talk: print name,column
             try:
