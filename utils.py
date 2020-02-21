@@ -1669,6 +1669,19 @@ def getWMStats(url):
     r2=conn.getresponse()
     return json.loads(r2.read())['result'][0]
 
+def get_dashbssb(path_name, ssb_metric):
+    with open('Unified/monit_secret.json') as monit:
+        conf = json.load(monit)
+    query = """'{"search_type":"query_then_fetch","ignore_unavailable":true,"index":["monit_prod_cmssst_*","monit_prod_cmssst_*"]}
+{"size":1,"query":{"bool":{"filter":[{"range":{"metadata.timestamp":{"gte":"now-1d","lte":"now","format":"epoch_millis"}}},{"query_string":{"analyze_wildcard":true,"query":"metadata.type: ssbmetric AND metadata.type_prefix:raw AND metadata.path: %s"}}]}},"sort":{"metadata.timestamp":{"order":"desc","unmapped_type":"boolean"}},"script_fields":{},"docvalue_fields":["metadata.timestamp"]}
+'"""%(str(path_name))
+    TIMESTAMP = json.loads(os.popen('curl -s -X POST %s -H "Authorization: Bearer %s" -H "Content-Type: application/json" -d %s'%(conf["url"],conf["token"],query)).read())["responses"][0]["hits"]["hits"][0]["_source"]["metadata"]["timestamp"]
+    query2 = """'{"search_type":"query_then_fetch","ignore_unavailable":true,"index":["monit_prod_cmssst_*","monit_prod_cmssst_*"]}
+{"size":500,"_source": {"includes":["data.name","data.%s"]},"query":{"bool":{"filter":[{"range":{"metadata.timestamp":{"gte":"now-1d","lte":"now","format":"epoch_millis"}}},{"query_string":{"analyze_wildcard":true,"query":"metadata.type: ssbmetric AND metadata.type_prefix:raw AND metadata.path: %s AND metadata.timestamp:%s"}}]}},"sort":{"metadata.timestamp":{"order":"desc","unmapped_type":"boolean"}},"script_fields":{},"docvalue_fields":["metadata.timestamp"]}
+'"""%(str(ssb_metric),str(path_name),str(TIMESTAMP))
+    result = json.loads(os.popen('curl -s --retry 5 -X POST %s -H "Authorization: Bearer %s" -H "Content-Type: application/json" -d %s'%(conf["url"],conf["token"],query2)).read())["responses"][0]["hits"]["hits"]    
+    return [ item['_source']['data'] for item in result]
+    
 
 
 def genericGet( base, url, load=True, headers=None):
@@ -1839,39 +1852,31 @@ class UnifiedBuster(threading.Thread):
 
 class docCache:
     def __init__(self):
-        self.cache = {}
+        self.cache = {}        
         def default_expiration():
             ## a random time between 20 min and 30 min.
             return int(20 + random.random()*10)
-        self.cache['ssb_136'] = {
+        self.cache['ssb_core_max_used'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=136&batch=1&lastdata=1"').read())['csvdata'],
+            'getter' : lambda : get_dashbssb('scap15min','core_max_used'),
             'cachefile' : None,
             'default' : []
             }
-        self.cache['ssb_237'] = {
+        self.cache['ssb_core_production'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=237&batch=1&lastdata=1"').read())['csvdata'],
+            'getter' : lambda : get_dashbssb('scap15min','core_production'),
             'cachefile' : None,
             'default' : []
             }
-        self.cache['ssb_159'] = {
+        self.cache['ssb_core_cpu_intensive'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=159&batch=1&lastdata=1"').read())['csvdata'],
-            'cachefile' : None,
-            'default' : []
-            }
-        self.cache['ssb_160'] = {
-            'data' : None,
-            'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=160&batch=1&lastdata=1"').read())['csvdata'],
+            'getter' : lambda : get_dashbssb('scap15min','core_cpu_intensive'),
             'cachefile' : None,
             'default' : []
             }
@@ -2172,24 +2177,20 @@ class siteInfo:
 
             self.sites_banned = UC.get('sites_banned')
 
-            #data = dataCache.get('ssb_158') ## 158 is the site readyness metric
-            data = dataCache.get('ssb_237') ## 237 is the site readyness metric
-
+            data = get_dashbssb('sts15min','prod_status')
             for siteInfo in data:
-                #print siteInfo['Status']
-                if not siteInfo['Tier'] in [0,1,2,3]: continue
-                self.all_sites.append( siteInfo['VOName'] )
-                override = (override_good and siteInfo['VOName'] in override_good)
-                if siteInfo['VOName'] in self.sites_banned and not override:
+                self.all_sites.append( siteInfo['name'] )
+                override = (override_good and siteInfo['name'] in override_good)
+                if siteInfo['name'] in self.sites_banned and not override:
                     continue
-                if (self.sites_ready_in_agent and siteInfo['VOName'] in self.sites_ready_in_agent) or override:
-                    self.sites_ready.append( siteInfo['VOName'] )
-                elif self.sites_ready_in_agent and not siteInfo['VOName'] in self.sites_ready_in_agent:
-                    self.sites_not_ready.append( siteInfo['VOName'] )
-                elif siteInfo['Status'] == 'enabled':
-                    self.sites_ready.append( siteInfo['VOName'] )
+                if (self.sites_ready_in_agent and siteInfo['name'] in self.sites_ready_in_agent) or override:
+                    self.sites_ready.append( siteInfo['name'] )
+                elif self.sites_ready_in_agent and not siteInfo['name'] in self.sites_ready_in_agent:
+                    self.sites_not_ready.append( siteInfo['name'] )
+                elif siteInfo['prod_status'] == 'enabled':
+                    self.sites_ready.append( siteInfo['name'] )
                 else:
-                    self.sites_not_ready.append( siteInfo['VOName'] )
+                    self.sites_not_ready.append( siteInfo['name'] )
 
             ##over-ride those since they are only handled through jobrouting
             add_as_ready = [
@@ -2561,26 +2562,24 @@ class siteInfo:
     def fetch_ssb_info(self,talk=True):
         ## and complement information from ssb
         columns= {
-            'realCPU' : 136,
-            'prodCPU' : 159,
-            'CPUbound' : 160
+            'realCPU' : 'core_max_used',
+            'prodCPU' : 'core_production',
+            'CPUbound' : 'core_cpu_intensive'
             }
 
         all_data = {}
         for name,column in columns.items():
             if talk: print name,column
             try:
-                #data = json.loads(os.popen('curl -s "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=%s&batch=1&lastdata=1"'%column).read())
-                #all_data[name] =  data['csvdata']
-                all_data[name] =  dataCache.get('ssb_%d'% column) #data['csvdata']
+                all_data[name] =  dataCache.get('ssb_%s'% column) 
             except:
                 print "cannot get info from ssb for",name
         _info_by_site = {}
         for info in all_data:
             for item in all_data[info]:
-                site = item['VOName']
+                site = item['name']
                 if site.startswith('T3'): continue
-                value = item['Value']
+                value = item[columns[info]]
                 if not site in _info_by_site: _info_by_site[site]={}
                 _info_by_site[site][info] = value
 
