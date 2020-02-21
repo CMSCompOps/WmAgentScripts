@@ -1679,7 +1679,8 @@ def get_dashbssb(path_name, ssb_metric):
     query2 = """'{"search_type":"query_then_fetch","ignore_unavailable":true,"index":["monit_prod_cmssst_*","monit_prod_cmssst_*"]}
 {"size":500,"_source": {"includes":["data.name","data.%s"]},"query":{"bool":{"filter":[{"range":{"metadata.timestamp":{"gte":"now-1d","lte":"now","format":"epoch_millis"}}},{"query_string":{"analyze_wildcard":true,"query":"metadata.type: ssbmetric AND metadata.type_prefix:raw AND metadata.path: %s AND metadata.timestamp:%s"}}]}},"sort":{"metadata.timestamp":{"order":"desc","unmapped_type":"boolean"}},"script_fields":{},"docvalue_fields":["metadata.timestamp"]}
 '"""%(str(ssb_metric),str(path_name),str(TIMESTAMP))
-    return json.loads(os.popen('curl -s --retry 5 -X POST %s -H "Authorization: Bearer %s" -H "Content-Type: application/json" -d %s'%(conf["url"],conf["token"],query2)).read())["responses"][0]["hits"]["hits"]    
+    result = json.loads(os.popen('curl -s --retry 5 -X POST %s -H "Authorization: Bearer %s" -H "Content-Type: application/json" -d %s'%(conf["url"],conf["token"],query2)).read())["responses"][0]["hits"]["hits"]    
+    return [ item['_source']['data'] for item in result]
     
 
 
@@ -1850,7 +1851,6 @@ class UnifiedBuster(threading.Thread):
 
 
 class docCache:
-    get_dashb_ssb = get_dashbssb
     def __init__(self):
         self.cache = {}        
         def default_expiration():
@@ -1860,7 +1860,7 @@ class docCache:
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : get_dashb_ssb('scap15min','core_max_used'),
+            'getter' : lambda : get_dashbssb('scap15min','core_max_used'),
             'cachefile' : None,
             'default' : []
             }
@@ -1868,7 +1868,7 @@ class docCache:
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : get_dashb_ssb('scap15min','core_production'),
+            'getter' : lambda : get_dashbssb('scap15min','core_production'),
             'cachefile' : None,
             'default' : []
             }
@@ -1876,7 +1876,7 @@ class docCache:
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : get_dashb_ssb('scap15min','core_cpu_intensive'),
+            'getter' : lambda : get_dashbssb('scap15min','core_cpu_intensive'),
             'cachefile' : None,
             'default' : []
             }
@@ -2147,7 +2147,6 @@ class DSS:
 
 
 class siteInfo:
-    get_dashbssb_si = get_dashbssb
     def __init__(self, override_good = None):
 
         UC = unifiedConfiguration()
@@ -2178,20 +2177,20 @@ class siteInfo:
 
             self.sites_banned = UC.get('sites_banned')
 
-            data = get_dashbssb_si('sts15min','prod_status')
-            for siteInfo in data[0]:
-                self.all_sites.append( siteInfo['_source']['data']['name'] )
-                override = (override_good and siteInfo['_source']['data']['name'] in override_good)
-                if siteInfo['_source']['data']['name'] in self.sites_banned and not override:
+            data = get_dashbssb('sts15min','prod_status')
+            for siteInfo in data:
+                self.all_sites.append( siteInfo['name'] )
+                override = (override_good and siteInfo['name'] in override_good)
+                if siteInfo['name'] in self.sites_banned and not override:
                     continue
-                if (self.sites_ready_in_agent and siteInfo['_source']['data']['name'] in self.sites_ready_in_agent) or override:
-                    self.sites_ready.append( siteInfo['_source']['data']['name'] )
-                elif self.sites_ready_in_agent and not siteInfo['_source']['data']['name'] in self.sites_ready_in_agent:
-                    self.sites_not_ready.append( siteInfo['_source']['data']['name'] )
-                elif siteInfo['_source']['data']['prod_status'] == 'enabled':
-                    self.sites_ready.append( siteInfo['_source']['data']['name'] )
+                if (self.sites_ready_in_agent and siteInfo['name'] in self.sites_ready_in_agent) or override:
+                    self.sites_ready.append( siteInfo['name'] )
+                elif self.sites_ready_in_agent and not siteInfo['name'] in self.sites_ready_in_agent:
+                    self.sites_not_ready.append( siteInfo['name'] )
+                elif siteInfo['prod_status'] == 'enabled':
+                    self.sites_ready.append( siteInfo['name'] )
                 else:
-                    self.sites_not_ready.append( siteInfo['_source']['data']['name'] )
+                    self.sites_not_ready.append( siteInfo['name'] )
 
             ##over-ride those since they are only handled through jobrouting
             add_as_ready = [
@@ -2573,15 +2572,15 @@ class siteInfo:
         for name,column in columns.items():
             if talk: print name,column
             try:
-                all_data[name] =  dataCache.get('ssb_%s'% column) #data['csvdata']
+                all_data[name] =  dataCache.get('ssb_%s'% column) 
             except:
                 print "cannot get info from ssb for",name
         _info_by_site = {}
         for info in all_data:
             for item in all_data[info]:
-                site = item['_source']['data']['name']
+                site = item['name']
                 if site.startswith('T3'): continue
-                value = item['_source']['data'][columns[info]]
+                value = item[columns[info]]
                 if not site in _info_by_site: _info_by_site[site]={}
                 _info_by_site[site][info] = value
 
