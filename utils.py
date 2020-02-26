@@ -3227,7 +3227,7 @@ Updated on %s (GMT) <br>
 <li> <b>smalllumi</b> : the size of the lumisection of one of the output is too small <font color=red>(Operator)</font></li>
 <li> <b>bigoutput</b> : the maximum size for an output dataset to go to tape was exceeded (<font color=blue>Requester</font>/<font color=red>Operator)</font></li>
 <li> <b>filemismatch</b> : there is a mismatch in the number of files in DBS and Phedex <font color=red>(Operator)</font></li>
-<li> <b>agentfilemismatch<b> : there is a mismatch in the number of files in DBS and Phedex, and the grace period for the agent is not over <font color=green>(Automatic)</font></li>
+<li> <b>agentfilemismatch</b> : there is a mismatch in the number of files in DBS and Phedex, and the grace period for the agent is not over <font color=green>(Automatic)</font></li>
 <li> <b>duplicates</b> : duplicated lumisection have been found and need to be invalidated <font color=green>(Automatic)</font></li>
 <li> <b>inconsistent</b> : the output of the recovery workflow is not consistent with the main workflow <font color=red>(Operator)</font></li>
 <li> <b>manual</b> : no automatic recovery was possible <font color=red>(Operator)</font></li>
