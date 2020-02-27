@@ -39,8 +39,8 @@ def mappor(url , options=None):
     
 
     SI = global_SI( over_rides )
-    print sorted(SI.all_sites)
-    print sorted(SI.sites_T0s)
+    #print sorted(SI.all_sites)
+    #print sorted(SI.sites_T0s)
 
     CI = campaignInfo()
     
