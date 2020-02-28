@@ -495,7 +495,7 @@
           "T2_US_MIT", 
           "T2_DE_DESY", 
           "T2_CH_CERN", 
-          "T2_US_Nebraska",
+          "T2_US_Nebraska", 
           "T2_US_Caltech"
         ]
       }, 
@@ -961,7 +961,7 @@
           "T2_US_MIT", 
           "T2_DE_DESY", 
           "T2_CH_CERN", 
-          "T2_US_Nebraska",
+          "T2_US_Nebraska", 
           "T2_US_Caltech"
         ]
       }, 
@@ -1469,15 +1469,15 @@
     "maxcopies": 1, 
     "resize": "auto", 
     "secondaries": {
+      "/MinBias_TuneCP1_13TeV-pythia8/RunIISummer19UL18SIM-106X_upgrade2018_realistic_v11_L1v1-v2/GEN-SIM": {
+        "SiteWhitelist": [
+          "T2_FR_GRIF_IRFU"
+        ]
+      }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL18SIM-106X_upgrade2018_realistic_v4-v1/SIM": {
         "SiteWhitelist": [
           "T1_UK_RAL", 
           "T2_US_Nebraska"
-        ]
-      },
-      "/MinBias_TuneCP1_13TeV-pythia8/RunIISummer19UL18SIM-106X_upgrade2018_realistic_v11_L1v1-v2/GEN-SIM": {
-        "SiteWhitelist": [
-          "T2_FR_GRIF_IRFU"
         ]
       }
     }, 
