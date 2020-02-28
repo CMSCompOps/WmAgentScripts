@@ -1920,6 +1920,20 @@
         "T2_US_Wisconsin", 
         "T3_US_NERSC"
       ]
+    }, 
+    "secondaries": {
+      "/ReggeGribovPartonMC_EposLHC_PbP_4080_4080_DataBS/pPb816Spring16GS-MB_80X_mcRun2_pA_v4-v2/GEN-SIM": {
+        "SiteWhitelist": [
+          "T2_US_MIT", 
+          "T1_DE_KIT", 
+          "T2_BE_IIHE"
+        ]
+      }, 
+      "/ReggeGribovPartonMC_EposLHC_pPb_4080_4080_DataBS/pPb816Spring16GS-MB_80X_mcRun2_pA_v4-v2/GEN-SIM": {
+        "SiteWhitelist": [
+          "T2_US_MIT"
+        ]
+      }
     }
   }, 
   "pPb816Summer16DR": {
