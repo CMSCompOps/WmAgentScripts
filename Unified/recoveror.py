@@ -24,7 +24,7 @@ def singleRecovery(url, task , initial, actions, do=False):
         "OriginalRequestName" : initial['RequestName'],
         "OpenRunningTimeout" : 0
         }
-    copy_over = ['PrepID', 'Campaign', 'RequestPriority', 'TimePerEvent', 'SizePerEvent', 'Group', 'Memory', 'RequestString' ,'CMSSWVersion']        
+    copy_over = ['PrepID', 'Campaign', 'RequestPriority', 'TimePerEvent', 'SizePerEvent', 'Group', 'Memory', 'RequestString' ,'CMSSWVersion','TotalEstimatedJobs']        
     for c in copy_over:
         if c in initial:
             payload[c] = copy.deepcopy(initial[c])
@@ -32,8 +32,15 @@ def singleRecovery(url, task , initial, actions, do=False):
             print c,"not in the initial payload"
 
     #a massage ? boost the recovery over the initial wf
-    payload['RequestPriority'] *= 2
-    payload['RequestPriority'] = min(500000, payload['RequestPriority'])
+    #low boost for #jobs > 500
+    heavyacdc = False
+    if payload['TotalEstimatedJobs'] and payload['TotalEstimatedJobs']>500:
+        heavyacdc = True
+
+    if heavyacdc:
+        payload['RequestPriority'] = min(500000,  payload['RequestPriority']*1.2 ) ## never above 500k
+    else:
+        payload['RequestPriority'] = min(500000,  payload['RequestPriority']*2 ) ## never above 500k
 
     if actions:
         for action in actions:
