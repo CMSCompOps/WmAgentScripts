@@ -18,7 +18,8 @@ import random
 from wtcClient import wtcClient
 from JIRAClient import JIRAClient
 
-def singleRecovery(url, task, initial, actions, do=False):
+def singleRecovery(url, task, wfi, actions, do=False):
+    initial = wfi.request
     print "Inside single recovery!"
     payload = {
         "Requestor" : os.getenv('USER'),
@@ -583,7 +584,7 @@ def actor(url,options=None):
                 print "Going to run at",sorted(assign_to_sites)
                 if recover:
                     print "Initiating recovery"
-                    acdc = singleRecovery(url, fulltaskname, wfi.request, actions, do = options.do)
+                    acdc = singleRecovery(url, fulltaskname, wfi, actions, do = options.do)
                     if not acdc:
                         if options.do:
                             if recovering:

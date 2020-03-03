@@ -14,7 +14,8 @@ import re
 import os
 from utils import reqmgr_url
 
-def singleRecovery(url, task , initial, actions, do=False):
+def singleRecovery(url, task , wfi, actions, do=False):
+    initial = wfi.request
     payload = {
         "Requestor" : os.getenv('USER'),
         "Group" : 'DATAOPS',
@@ -244,7 +245,7 @@ def new_recoveror(url, specific, options=None):
             ## make acdc for all tasks
             for task in task_to_recover:
                 actions = list(set([case['solution'] for code,case in task_to_recover[task]  ]))
-                acdc = singleRecovery(url, task, wfi.request , actions, do = True)
+                acdc = singleRecovery(url, task, wfi , actions, do = True)
         elif send_clone:
             ## this will get it cloned
             wfo.status = 'assistance-clone'
@@ -427,7 +428,7 @@ def recoveror(url,specific,options=None):
 
                 ## from here you can fetch known solutions, to known error codes
                 actions = list(set([case['solution'] for code,case in task_to_recover[task]  ]))
-                acdc = singleRecovery(url, task, wfi.request , actions, do = options.do)
+                acdc = singleRecovery(url, task, wfi , actions, do = options.do)
 
                 if not acdc:
                     if options.do:
