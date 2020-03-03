@@ -7767,12 +7767,10 @@ class workflowInfo:
             for out in outs:
                 task_outputs[out] = task
 
-        event_per_job = self.request.get('EventsPerJob')
-        event_expected_per_task = {}
-
-        ## for all the outputs
-        event_expected = self.request.get('TotalInputEvents',0)
-
+        lumi_per_job = None
+        event_per_lumi = None
+        lumi_expected = self.request.get('TotalInputLumis', 0)
+        total_event = self.request.get('TotalInputEvents')
         ttype = 'Task' if 'TaskChain' in self.request else 'Step'
         it = 1
         tname_dict = {}
@@ -7782,13 +7780,13 @@ class workflowInfo:
             if tt in self.request:
                 tname = self.request[tt]['%sName'% ttype]
                 tname_dict[tname] = tt
-                if not event_per_job:
-                    event_per_job = self.request[tt]['EventsPerJob']
-                if not 'Input%s'%ttype in self.request[tt] and 'RequestNumEvents' in self.request[tt]:
-                    event_expected = self.request[tt]['RequestNumEvents']
+                #initial event per job should be in task1/step1
+                if not event_per_lumi:
+                    event_per_lumi = self.request[tt]['EventsPerLumi']
+                if not lumi_per_job:
+                    lumi_per_job = float( self.request[tt]['EventsPerJob']) / float(self.request[tt]['EventsPerLumi'])
             else:
                 break
-
         find_task = None
         if '%sChain'%ttype in self.request:
             ## go on and make the accounting
@@ -7798,30 +7796,32 @@ class workflowInfo:
                 it+=1
                 if tt in self.request:
                     tname = self.request[tt]['%sName'% ttype]
-                    event_expected_per_task[tt] = event_expected
                     if tname == taskname:
                         find_task = tt
-                    a_task = self.request[tt]
-                    if not event_per_job:
-                        event_per_job = self.request[tt]['EventsPerJob']
-                    while 'Input%s'%ttype in a_task:
-                        event_expected_per_task[tt] *= a_task.get('FilterEfficiency',1)
-                        mother_task = a_task['Input%s'%ttype]
-                        ## go up
-                        a_task = self.request[ tname_dict[mother_task] ]
                 else:
                     break
 
+        final_failed_jobs=None
         failed_jobs = 0
-        for output in self.request['OutputDatasets']:
+        find_output = False
+        for output in self.request['OutputDatasets']:# and find_task:
             event_count,lumi_count = getDatasetEventsAndLumis(dataset=output)
+            print task_outputs.get(output,'NoTask')
+            # only use lumi here, as EventBased may give event_count without accounting for filter efficiency
+            if not lumi_expected:
+                lumi_expected = float (total_events) / float (event_per_lumi)
+            final_failed_jobs = - lumi_count + float( lumi_expected )
+            # task match
             if task_outputs.get(output,'NoTask') != find_task:
                 continue
-            output_event_expected = event_expected_per_task.get(task_outputs.get(output,'NoTaskFound'))
-            if output_event_expected:
-                failed_jobs = failed_jobs - float(event_count) + float( output_event_expected )
+            find_output = True
+            failed_jobs = failed_jobs - lumi_count + float( lumi_expected )
 
-        failed_jobs = float(failed_jobs) / float(event_per_job)
+        failed_jobs = float(failed_jobs) / float(lumi_per_job)
+        #some task may not have output dataset, using the total failed jobs instead
+        if not find_output:
+            failed_jobs = float(final_failed_jobs) / float(lumi_per_job)
+
         return failed_jobs
 
 
