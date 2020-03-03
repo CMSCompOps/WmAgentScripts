@@ -95,14 +95,8 @@ def sendLog( subject, text , wfi = None, show=True ,level='info'):
         print str(e)
         sendEmail('failed logging',subject+text+str(e))
 
-
-
-def searchLog( q , actor=None, limit=50 ):
-    conn = httplib.HTTPConnection( 'cms-elastic-fe.cern.ch:9200' )
-    return _searchLog(q, actor, limit, conn, prefix = '/logs')
-
 def new_searchLog( q, actor=None, limit=50 ):
-    conn = httplib.HTTPSConnection( 'es-unified.cern.ch' )
+    conn = httplib.HTTPSConnection( 'es-unified7.cern.ch' )
     return _searchLog(q, actor, limit,conn, prefix = '/es/unified-logs/log', h = es_header())
 
 def _searchLog( q, actor, limit, conn, prefix, h = None):
@@ -162,12 +156,12 @@ def es_header():
     entrypointname,password = open('Unified/secret_es.txt').readline().split(':')
     import base64
     auth = base64.encodestring(('%s:%s' % (entrypointname, password)).replace('\n', '')).replace('\n', '')
-    header = { "Authorization":  "Basic %s"% auth}
+    header = { "Authorization":  "Basic %s"% auth, "Content-Type": "application/json"}
     return header
 
 def migrate_ES():
-    o_conn = httplib.HTTPConnection( 'cms-elastic-fe.cern.ch:9200' )
-    n_conn = httplib.HTTPSConnection( 'es-unified.cern.ch' )
+    o_conn = httplib.HTTPConnection( 'es-unified.cern.ch' )
+    n_conn = httplib.HTTPSConnection( 'es-unified7.cern.ch' )
 
     N = 1000
     f = 0
@@ -205,12 +199,12 @@ def migrate_ES():
 
     ## get all existing ES since a certain date
     ## find out the min time and max time from the new instance
-    o_conn.request('GET','/logs/log/_search?size=1&sort=timestamp:desc')
+    o_conn.request('GET','/logs/log/_search?size=1&sort=timestamp:desc', headers= es_header())
     response =o_conn.getresponse()
     data = json.loads(response.read())
     o_max_date = data['hits']['hits'][0]['_source']['timestamp']
 
-    o_conn.request('GET','/logs/log/_search?size=1&sort=timestamp:asc')
+    o_conn.request('GET','/logs/log/_search?size=1&sort=timestamp:asc', headers= es_header())
     response =o_conn.getresponse()
     data = json.loads(response.read())
     o_min_date = data['hits']['hits'][0]['_source']['timestamp']
@@ -285,7 +279,7 @@ def migrate_ES():
     print total_send,"send"
 
 def new_sendLog( subject, text , wfi = None, show=True, level='info'):
-    conn = httplib.HTTPSConnection( 'es-unified.cern.ch' )
+    conn = httplib.HTTPSConnection( 'es-unified7.cern.ch' )
 
     conn.request("GET", "/es", headers=es_header())
     response = conn.getresponse()
@@ -347,7 +341,7 @@ def try_sendLog( subject, text , wfi = None, show=True, level='info'):
     #_try_sendLog(subject, text , wfi, show, level, conn = conn)
 
     ## send it to the new instance too. Without showing it
-    re_conn = httplib.HTTPSConnection( 'es-unified.cern.ch' )
+    re_conn = httplib.HTTPSConnection( 'es-unified7.cern.ch' )
     _try_sendLog( subject, text, wfi, show, level, conn = re_conn, prefix='/es/unified-logs', h = es_header())
 
 
