@@ -7760,6 +7760,71 @@ class workflowInfo:
     def getExpectedPerTask(self):
         return {}
 
+    def getFailedJobs(self, taskname, caller='getFailedJobs'):
+        output_per_task = self.getOutputPerTask()
+        task_outputs = {}
+        for task,outs in output_per_task.items():
+            for out in outs:
+                task_outputs[out] = task
+
+        event_per_job = self.request.get('EventsPerJob')
+        event_expected_per_task = {}
+
+        ## for all the outputs
+        event_expected = self.request.get('TotalInputEvents',0)
+
+        ttype = 'Task' if 'TaskChain' in self.request else 'Step'
+        it = 1
+        tname_dict = {}
+        while True:
+            tt = '%s%d'%(ttype,it)
+            it+=1
+            if tt in self.request:
+                tname = self.request[tt]['%sName'% ttype]
+                tname_dict[tname] = tt
+                if not event_per_job:
+                    event_per_job = self.request[tt]['EventsPerJob']
+                if not 'Input%s'%ttype in self.request[tt] and 'RequestNumEvents' in self.request[tt]:
+                    event_expected = self.request[tt]['RequestNumEvents']
+            else:
+                break
+
+        find_task = None
+        if '%sChain'%ttype in self.request:
+            ## go on and make the accounting
+            it = 1
+            while True:
+                tt = '%s%d'%(ttype,it)
+                it+=1
+                if tt in self.request:
+                    tname = self.request[tt]['%sName'% ttype]
+                    event_expected_per_task[tt] = event_expected
+                    if tname == taskname:
+                        find_task = tt
+                    a_task = self.request[tt]
+                    if not event_per_job:
+                        event_per_job = self.request[tt]['EventsPerJob']
+                    while 'Input%s'%ttype in a_task:
+                        event_expected_per_task[tt] *= a_task.get('FilterEfficiency',1)
+                        mother_task = a_task['Input%s'%ttype]
+                        ## go up
+                        a_task = self.request[ tname_dict[mother_task] ]
+                else:
+                    break
+
+        failed_jobs = 0
+        for output in self.request['OutputDatasets']:
+            event_count,lumi_count = getDatasetEventsAndLumis(dataset=output)
+            if task_outputs.get(output,'NoTask') != find_task:
+                continue
+            output_event_expected = event_expected_per_task.get(task_outputs.get(output,'NoTaskFound'))
+            if output_event_expected:
+                failed_jobs = failed_jobs - float(event_count) + float( output_event_expected )
+
+        failed_jobs = float(failed_jobs) / float(event_per_job)
+        return failed_jobs
+
+
     def getCompletionFraction(self, caller='getCompletionFraction', with_event=True):
         output_per_task = self.getOutputPerTask()
         task_outputs = {}
