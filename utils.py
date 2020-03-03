@@ -7804,9 +7804,8 @@ class workflowInfo:
         final_failed_jobs=None
         failed_jobs = 0
         find_output = False
-        for output in self.request['OutputDatasets']:# and find_task:
+        for output in self.request['OutputDatasets']:
             event_count,lumi_count = getDatasetEventsAndLumis(dataset=output)
-            print task_outputs.get(output,'NoTask')
             # only use lumi here, as EventBased may give event_count without accounting for filter efficiency
             if not lumi_expected:
                 lumi_expected = float (total_events) / float (event_per_lumi)
