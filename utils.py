@@ -97,7 +97,7 @@ def sendLog( subject, text , wfi = None, show=True ,level='info'):
 
 def new_searchLog( q, actor=None, limit=50 ):
     conn = httplib.HTTPSConnection( 'es-unified7.cern.ch' )
-    return _searchLog(q, actor, limit,conn, prefix = '/es/unified-logs/log', h = es_header())
+    return _searchLog(q, actor, limit,conn, prefix = '/es/unified-logs/_doc', h = es_header())
 
 def _searchLog( q, actor, limit, conn, prefix, h = None):
 
@@ -375,11 +375,12 @@ def _try_sendLog( subject, text , wfi = None, show=True, level='info', conn= Non
     if show:
         print text
     encodedParams = urllib.urlencode( doc )
-    conn.request("POST" , prefix+'/log/', json.dumps(doc), headers = h if h else {})
+    conn.request("POST" , prefix+'/_doc/', json.dumps(doc), headers = h if h else {})
     response = conn.getresponse()
     data = response.read()
     try:
         res = json.loads( data )
+        print res
         #print 'log:',res['_id'],"was created"
     except Exception as e:
         print "failed"
