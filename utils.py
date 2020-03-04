@@ -380,7 +380,6 @@ def _try_sendLog( subject, text , wfi = None, show=True, level='info', conn= Non
     data = response.read()
     try:
         res = json.loads( data )
-        print res
         #print 'log:',res['_id'],"was created"
     except Exception as e:
         print "failed"
