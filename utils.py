@@ -7761,16 +7761,32 @@ class workflowInfo:
         return {}
 
     def getFailedJobs(self, taskname, caller='getFailedJobs'):
+        self.getRecoveryDoc()
+        if not self.recovery_doc:
+            print "nothing retrieved"
+            return 0
+        missing_to_run = defaultdict(int)
+        for doc in self.recovery_doc:
+            task = doc['fileset_name']
+            for f,info in doc['files'].iteritems():
+                missing_to_run[task] += info['events']
+
         output_per_task = self.getOutputPerTask()
         task_outputs = {}
         for task,outs in output_per_task.items():
             for out in outs:
                 task_outputs[out] = task
+                print task," and ",out
 
+        event_per_job = None
         lumi_per_job = None
         event_per_lumi = None
-        lumi_expected = self.request.get('TotalInputLumis', 0)
+        filter_eff = {}
+        ## for all the outputs
+        event_expected,lumi_expected = self.request.get('TotalInputEvents',0),self.request.get('TotalInputLumis', 0)
         total_event = self.request.get('TotalInputEvents')
+
+        print "total event=",total_event
         ttype = 'Task' if 'TaskChain' in self.request else 'Step'
         it = 1
         tname_dict = {}
@@ -7780,14 +7796,14 @@ class workflowInfo:
             if tt in self.request:
                 tname = self.request[tt]['%sName'% ttype]
                 tname_dict[tname] = tt
-                #initial event per job should be in task1/step1
-                if not event_per_lumi:
-                    event_per_lumi = self.request[tt]['EventsPerLumi']
-                if not lumi_per_job:
-                    lumi_per_job = float( self.request[tt]['EventsPerJob']) / float(self.request[tt]['EventsPerLumi'])
+                if not event_per_job:
+                    event_per_job = float( self.request[tt]['EventsPerJob'])
             else:
                 break
+
         find_task = None
+
+        taskname_short = taskname.split("/")[-1]
         if '%sChain'%ttype in self.request:
             ## go on and make the accounting
             it = 1
@@ -7796,30 +7812,34 @@ class workflowInfo:
                 it+=1
                 if tt in self.request:
                     tname = self.request[tt]['%sName'% ttype]
-                    if tname == taskname:
+                    filter_eff[tt] = 1
+#                    print tname," eventfirst_expected=", event_expected
+                    if tname == taskname_short:
                         find_task = tt
+                    a_task = self.request[tt]
+                    while 'Input%s'%ttype in a_task:
+                        filter_eff[tt] *= a_task.get('FilterEfficiency',1)
+                        mother_task = a_task['Input%s'%ttype]
+                        ## go up
+                        a_task = self.request[ tname_dict[mother_task] ]
                 else:
                     break
-
-        final_failed_jobs=None
         failed_jobs = 0
-        find_output = False
-        for output in self.request['OutputDatasets']:
-            event_count,lumi_count = getDatasetEventsAndLumis(dataset=output)
-            # only use lumi here, as EventBased may give event_count without accounting for filter efficiency
-            if not lumi_expected:
-                lumi_expected = float (total_events) / float (event_per_lumi)
-            final_failed_jobs = - lumi_count + float( lumi_expected )
-            # task match
-            if task_outputs.get(output,'NoTask') != find_task:
-                continue
-            find_output = True
-            failed_jobs = failed_jobs - lumi_count + float( lumi_expected )
+        if missing_to_run[taskname]:
+            failed_jobs = float (missing_to_run[taskname])
 
-        failed_jobs = float(failed_jobs) / float(lumi_per_job)
-        #some task may not have output dataset, using the total failed jobs instead
-        if not find_output:
-            failed_jobs = float(final_failed_jobs) / float(lumi_per_job)
+        if self.request['RequestType']=='TaskChain':
+            splits = self.getSplittingsNew(strip=True)
+
+            for spl in splits:
+                if spl['taskName'] != taskname:
+                    continue
+                #print spl
+                task = spl['splitParams']
+                if 'events_per_job' in task:
+                    event_per_job = task['events_per_job']
+
+        failed_jobs = float(failed_jobs) / float(event_per_job)/float(filter_eff[find_task])
 
         return failed_jobs
 

@@ -43,8 +43,7 @@ def singleRecovery(url, task, wfi, actions, do=False):
     #low boost for #jobs > 500
     heavyacdc = False
 
-    task_name = tasl.split("/")[-1]
-    failjobs = wfi.getFailedJobs(task_name)
+    failjobs = wfi.getFailedJobs(task)
     if failjobs and failjobs>500:
         heavyacdc = True
 
