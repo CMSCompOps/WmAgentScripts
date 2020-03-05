@@ -47,6 +47,7 @@ def singleRecovery(url, task, wfi, actions, do=False):
     if failjobs and failjobs>500:
         heavyacdc = True
 
+    original_priority = payload['RequestPriority']
     if heavyacdc:
         payload['RequestPriority'] = min(500000,  payload['RequestPriority']*1.2 ) 
     else:
@@ -220,7 +221,10 @@ def singleRecovery(url, task, wfi, actions, do=False):
                         #print "changing the splitting of",acdc
                         #print json.dumps( split, indent=2 )
                         #print reqMgrClient.setWorkflowSplitting(url, acdc, split )
-
+                    if failjobs<500 and failjobs*factor > 500:
+                        print "splitting causes jobs passing threshold"
+                        new_priority = min(500000,  original_priority*1.2 )
+                        split_change = reqMgrClient.changePriorityWorkflow(url, acdc, new_priority)
                 elif 'max' in actions[action]:
                     for split in splittings:
                         split_par = split['splitParams']
@@ -230,6 +234,8 @@ def singleRecovery(url, task, wfi, actions, do=False):
                                 split_par[act] = 1
                                 print "to max splitting ",split_par[act]
                                 break
+                    new_priority = min(500000,  original_priority*1.2 )
+                    split_change = reqMgrClient.changePriorityWorkflow(url, acdc, new_priority)
                         
 
                 print "changing the splitting of",acdc
