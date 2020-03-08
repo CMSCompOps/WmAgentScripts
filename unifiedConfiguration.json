@@ -376,7 +376,7 @@
   },
   "user_storeresults":{
    "description" : "The users from which we expect StoreResults requests",
-   "value" : ["cmsunified", "sagarwal", "wangz"]
+   "value" : ["cmsunified", "sagarwal", "wangz","snorberg"]
   },
   "relval_routing":{
    "description" : "Set of keywords and special settings for relvals",
