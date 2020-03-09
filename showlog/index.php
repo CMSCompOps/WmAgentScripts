@@ -5,7 +5,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 function search_logs($q, $size, $m) {
-  $url = 'https://es-unified7.cern.ch:9203/unified-logs/_doc/_search?size=' . $size;
+  $url = 'https://es-unified7.cern.ch:443/es/unified-logs/_doc/_search?size=' . $size;
   ###$goodquery = '{"query": {"bool": {"must": [{"wildcard": {"meta": "*' . $q . '*"}}]}}, "sort": [{"timestamp": "desc"}], "_source": ["text", "subject", "date", "meta"]}';
   if (!$m)
      $goodquery = '{"query": {"wildcard": {"meta": "*' . $q . '*"}}, "sort": [{"timestamp": "desc"}], "_source": ["text", "subject", "date", "meta"]}';
