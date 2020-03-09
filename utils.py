@@ -226,7 +226,7 @@ def try_sendLog( subject, text , wfi = None, show=True, level='info'):
     _try_sendLog( subject, text, wfi, show, level, conn = re_conn, prefix='/es/unified-logs', h = es_header())
 
 
-def _try_sendLog( subject, text , wfi = None, show=True, level='info', conn= None, prefix= '/_doc', h =None):
+def _try_sendLog( subject, text , wfi = None, show=True, level='info', conn= None, prefix= '/es/unified-logs', h =None):
     #conn = httplib.HTTPConnection( 'cms-elastic-fe.cern.ch:9200' )
 
     meta_text="level:%s\n"%level
