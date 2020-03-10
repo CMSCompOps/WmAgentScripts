@@ -43,6 +43,6 @@
 10 00 * * 1 vocms0269 /data/unified/WmAgentScripts/cleanlog.sh 
 15 00 * * 1 vocms0272 /data/unified/WmAgentScripts/cleanlog.sh 
 20 00 * * 1 vocms0273 /data/unified/WmAgentScripts/cleanlog.sh 
-25 00 * * 1 vocms0274 /data/unified/WmAgentScripts/cleanlog.sh 
+#25 00 * * 1 vocms0274 /data/unified/WmAgentScripts/cleanlog.sh 
 30 00 * * 1 vocms0275 /data/unified/WmAgentScripts/cleanlog.sh 
 00 11 * * 1 vocms0275 /data/unified/WmAgentScripts/cleanBackfills.sh &> /dev/null
