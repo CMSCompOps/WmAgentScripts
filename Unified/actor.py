@@ -18,7 +18,7 @@ import random
 from wtcClient import wtcClient
 from JIRAClient import JIRAClient
 
-def singleRecovery(url, task, wfi, actions, do=False):
+def singleRecovery(url, task, wfi, actions, do=False, priority_change=False):
     initial = wfi.request
     print "Inside single recovery!"
     payload = {
@@ -41,18 +41,14 @@ def singleRecovery(url, task, wfi, actions, do=False):
 #    payload['RequestPriority'] *= 10
     #Max priority is 1M
     #low boost for #jobs > 500
-    heavyacdc = False
-
-    failjobs = wfi.getFailedJobs(task)
-    if failjobs and failjobs>500:
-        heavyacdc = True
 
     original_priority = payload['RequestPriority']
-    if heavyacdc:
-        payload['RequestPriority'] = min(500000,  payload['RequestPriority']*1.2 ) 
-    else:
-        payload['RequestPriority'] = min(500000,  payload['RequestPriority']*2 ) ## never above 500k
+    payload['RequestPriority'] = min(500000,  payload['RequestPriority']*2 ) ## never above 500k
 
+    if priority_change:
+        failjobs = wfi.getFailedJobs(task)
+        if failjobs and failjobs>500:
+            payload['RequestPriority'] = min(500000,  original_priority*1.2 )
     #change parameters based on actions here
     if actions:
         for action in actions:
@@ -221,7 +217,7 @@ def singleRecovery(url, task, wfi, actions, do=False):
                         #print "changing the splitting of",acdc
                         #print json.dumps( split, indent=2 )
                         #print reqMgrClient.setWorkflowSplitting(url, acdc, split )
-                    if failjobs<500 and failjobs*factor > 500:
+                    if priority_change and failjobs and failjobs<500 and failjobs*factor > 500:
                         print "splitting causes jobs passing threshold"
                         new_priority = min(500000,  original_priority*1.2 )
                         split_change = reqMgrClient.changePriorityWorkflow(url, acdc, new_priority)
@@ -234,8 +230,9 @@ def singleRecovery(url, task, wfi, actions, do=False):
                                 split_par[act] = 1
                                 print "to max splitting ",split_par[act]
                                 break
-                    new_priority = min(500000,  original_priority*1.2 )
-                    split_change = reqMgrClient.changePriorityWorkflow(url, acdc, new_priority)
+                    if priority_change:
+                        new_priority = min(500000,  original_priority*1.2 )
+                        split_change = reqMgrClient.changePriorityWorkflow(url, acdc, new_priority)
                         
 
                 print "changing the splitting of",acdc
@@ -591,7 +588,7 @@ def actor(url,options=None):
                 print "Going to run at",sorted(assign_to_sites)
                 if recover:
                     print "Initiating recovery"
-                    acdc = singleRecovery(url, fulltaskname, wfi, actions, do = options.do)
+                    acdc = singleRecovery(url, fulltaskname, wfi, actions, do = options.do, priority_change = options.change)
                     if not acdc:
                         if options.do:
                             if recovering:
@@ -727,6 +724,7 @@ if __name__ == '__main__':
     parser.add_option('--go',default=False,action='store_true',help="override possible blocking conditions")
     parser.add_option('--spec',default=None,help='a specific workflow to consider')
     parser.add_option('--actions', default=None,help='a file name with the actions to be taken')
+    parser.add_option('--change', default=False,help='option to downgrade the priority')
     (options,args) = parser.parse_args()
         
     if len(args)!=0:
