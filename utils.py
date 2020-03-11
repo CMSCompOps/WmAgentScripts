@@ -1889,7 +1889,7 @@ class docCache:
             self.cache[src]['cachefile'] = '.'+src+'.cache.json'
 
 
-    def get(self, label, fresh=False):
+    def get(self, label, fresh=False, lastdoc=False):
         if not label in self.cache:
             print "unkown cache doc key",label
             return None
@@ -1905,6 +1905,10 @@ class docCache:
                 sendLog('doccache','Failed to get %s\n%s'%(label,str(e)), level='critical')
                 print "failed to get",label
                 print str(e)
+                if lastdoc:
+                    last_doc = cache.get( label, no_expire=True)
+                    if last_doc:
+                        return last_doc
                 data = o['default']
             cache.store( label, 
                          data = data,
@@ -2782,11 +2786,11 @@ class cacheInfo:
         self.client = mongo_client()
         self.db = self.client.unified.cacheInfo
 
-    def get(self, key):
+    def get(self, key, no_expire=False):
         now = time.mktime(time.gmtime())
         o =self.db.find_one({'key':key})
         if o:
-            if o['expire'] > now:
+            if no_expire or (o['expire'] > now):
                 if not 'data' in o:
                     return self.from_file(key)
                 else:
