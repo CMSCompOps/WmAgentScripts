@@ -1889,7 +1889,7 @@ class docCache:
             self.cache[src]['cachefile'] = '.'+src+'.cache.json'
 
 
-    def get(self, label, fresh=False, lastdoc=False):
+    def get(self, label, fresh=False, lastdoc=True):
         if not label in self.cache:
             print "unkown cache doc key",label
             return None
@@ -1902,7 +1902,7 @@ class docCache:
             try:
                 data =  o['getter']()
             except Exception as e:
-                sendLog('doccache','Failed to get %s\n%s'%(label,str(e)), level='critical')
+                sendLog('doccache','Failed to get {}\n{}\n{}'.format(label,type(e),str(e)), level='critical')
                 print "failed to get",label
                 print str(e)
                 if lastdoc:
@@ -2065,7 +2065,7 @@ class siteInfo:
 
             self.sites_banned = UC.get('sites_banned')
 
-            data = dataCache.get('ssb_prod_status', lastdoc=True)
+            data = dataCache.get('ssb_prod_status')
             for siteInfo in data:
                 self.all_sites.append( siteInfo['name'] )
                 override = (override_good and siteInfo['name'] in override_good)
