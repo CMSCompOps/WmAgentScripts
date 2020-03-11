@@ -2090,7 +2090,7 @@ class siteInfo:
         except Exception as e:
             print "issue with getting SSB readiness"
             print str(e)
-            sendEmail('bad sites configuration','falling to get any sites')
+            #sendEmail('bad sites configuration','falling to get any sites')
             sys.exit(-9)
 
 
