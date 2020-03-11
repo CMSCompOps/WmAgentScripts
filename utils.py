@@ -1756,6 +1756,14 @@ class docCache:
             'cachefile' : None,
             'default' : []
             }
+        self.cache['ssb_prod_status'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration(),
+            'getter' : lambda : get_dashbssb('sts15min','prod_status'),
+            'cachefile' : None,
+            'default' : {}
+            }
         self.cache['gwmsmon_totals'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
