@@ -2827,13 +2827,14 @@ class cacheInfo:
             self.db.update_one({'key': key},
                                {"$set": content},
                                upsert = True)
-        except pymongo.errors.DocumentTooLarge as e:
-            print ("too large to go in mongo. in file instead")
+        except (pymongo.errors.WriteError,pymongo.errors.DocumentTooLarge) as e:
+            print ("cannot go in mongo. in file instead")
             open(self._file_key(key),'w').write( json.dumps( content.pop('data') ))
             self.db.update_one({'key': key},
                                {"$set": content},
                                upsert = True)
         except Exception as e:
+            print type(e)
             print str(e)
 
     def purge(self):
