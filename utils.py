@@ -2065,7 +2065,7 @@ class siteInfo:
 
             self.sites_banned = UC.get('sites_banned')
 
-            data = get_dashbssb('sts15min','prod_status')
+            data = dataCache.get('ssb_prod_status', lastdoc=True)
             for siteInfo in data:
                 self.all_sites.append( siteInfo['name'] )
                 override = (override_good and siteInfo['name'] in override_good)
