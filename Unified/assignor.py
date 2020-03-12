@@ -205,7 +205,8 @@ def assignor(url ,specific = None, talk=True, options=None):
         override_sec_location = CI.get(wfh.request['Campaign'], 'SecondaryLocation', [])
 
         blocks = wfh.getBlocks()
-
+        if blocks:
+            wfh.sendLog('assignor',"Needs {} blocks in input {}".format(len(blocks), '\n'.join(blocks)))
         wfh.sendLog('assignor',"Allowed %s"%sorted(sites_allowed))
         secondary_locations=None
 
