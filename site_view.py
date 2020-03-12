@@ -22,7 +22,7 @@ def json_read(jstring):
 # get file
 if os.path.exists(os.path.join(tmpdir,'site_view.txt')):
 	os.remove(os.path.join(tmpdir,'site_view.txt'))
-os.system('curl -H \'Accept:text/csv\' http://dashb-ssb.cern.ch/dashboard/request.py/getall > '+os.path.join(tmpdir,'site_view.txt'))
+#os.system('curl -H \'Accept:text/csv\' http://dashb-ssb.cern.ch/dashboard/request.py/getall > '+os.path.join(tmpdir,'site_view.txt'))
 os.chmod(os.path.join(tmpdir,'site_view.txt'),0755)
 
 # parse file

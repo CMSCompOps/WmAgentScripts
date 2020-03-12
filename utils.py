@@ -2261,13 +2261,6 @@ class siteInfo:
             s += getattr(self,what).get(se,0)
         return s
 
-    def usage(self,site):
-        try:
-            info = json.loads( os.popen('curl -s "http://dashb-cms-job.cern.ch/dashboard/request.py/jobsummary-plot-or-table2?site=%s&check=submitted&sortby=activity&prettyprint"' % site ).read() )
-            return info
-        except:
-            return {}
-
     def availableSlots(self, sites=None):
         s=0
         for site in self.cpu_pledges:
