@@ -159,7 +159,7 @@ def checkor(url, spec=None, options=None):
                     if keyword and user in actors:
                         print user,"is force-completing", keyword,"from JIRA"
                         bypasses.append( keyword )
-                        overrides[user].extend( keyword )
+                        overrides[user].append( keyword )
                     break
         bypass_jira_string = "cmsunified please do bypass"
         to_check = JC.find({'text' : bypass_jira_string, "status" : "!CLOSED"})

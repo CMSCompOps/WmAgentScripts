@@ -1,6 +1,6 @@
 {
  "email_destination" : { 
-   "value" : ["lesko@physics.umn.edu","jen_a@fnal.gov","sharad.agarwal@cern.ch","cmsunified@cern.ch","wangzqe@mit.edu"],
+   "value" : ["optimistcynic@gmail.com","jen_a@fnal.gov","sharad.agarwal@cern.ch","cmsunified@cern.ch","wangzqe@mit.edu"],
    "description" : "The list of people that get the emails notifications"
  },
  "busy_agent_fraction" : {
@@ -376,7 +376,7 @@
   },
   "user_storeresults":{
    "description" : "The users from which we expect StoreResults requests",
-   "value" : ["cmsunified", "sagarwal", "wangz"]
+   "value" : ["cmsunified", "sagarwal", "wangz","snorberg"]
   },
   "relval_routing":{
    "description" : "Set of keywords and special settings for relvals",

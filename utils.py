@@ -95,15 +95,9 @@ def sendLog( subject, text , wfi = None, show=True ,level='info'):
         print str(e)
         sendEmail('failed logging',subject+text+str(e))
 
-
-
-def searchLog( q , actor=None, limit=50 ):
-    conn = httplib.HTTPConnection( 'cms-elastic-fe.cern.ch:9200' )
-    return _searchLog(q, actor, limit, conn, prefix = '/logs')
-
 def new_searchLog( q, actor=None, limit=50 ):
-    conn = httplib.HTTPSConnection( 'es-unified.cern.ch' )
-    return _searchLog(q, actor, limit,conn, prefix = '/es/unified-logs/log', h = es_header())
+    conn = httplib.HTTPSConnection( 'es-unified7.cern.ch' )
+    return _searchLog(q, actor, limit,conn, prefix = '/es/unified-logs/_doc', h = es_header())
 
 def _searchLog( q, actor, limit, conn, prefix, h = None):
 
@@ -162,130 +156,11 @@ def es_header():
     entrypointname,password = open('Unified/secret_es.txt').readline().split(':')
     import base64
     auth = base64.encodestring(('%s:%s' % (entrypointname, password)).replace('\n', '')).replace('\n', '')
-    header = { "Authorization":  "Basic %s"% auth}
+    header = { "Authorization":  "Basic %s"% auth, "Content-Type": "application/json"}
     return header
 
-def migrate_ES():
-    o_conn = httplib.HTTPConnection( 'cms-elastic-fe.cern.ch:9200' )
-    n_conn = httplib.HTTPSConnection( 'es-unified.cern.ch' )
-
-    N = 1000
-    f = 0
-    total_send = 0
-    while False:#True:
-        arxn = '/data/es-archive/query_%s_%s.json'%( N, f)
-        do_q = True
-        total = None
-        if os.path.isfile( arxn):
-            try:
-                #with  open(arxn) as l:
-                #    total = json.loads( l.read())['hits']['total']
-                #    l.close()
-                #    #print total,"is the value of total in cache"
-                print arxn,"already there"
-                do_q = False
-            except:
-                pass
-
-        if do_q:
-            print "querying"
-            o_conn.request('GET','/logs/log/_search?size=%d&from=%d&sort=timestamp:desc&q=timestamp:(<=1511959960)'%( N, f))
-            response =o_conn.getresponse()
-            data = response.read()
-
-            arx = open(arxn, 'w')
-            arx.write( data )
-            arx.close()
-
-        if f%(10*N)==0:
-            print f,"out of",total
-        f+=N
-
-    #return
-
-    ## get all existing ES since a certain date
-    ## find out the min time and max time from the new instance
-    o_conn.request('GET','/logs/log/_search?size=1&sort=timestamp:desc')
-    response =o_conn.getresponse()
-    data = json.loads(response.read())
-    o_max_date = data['hits']['hits'][0]['_source']['timestamp']
-
-    o_conn.request('GET','/logs/log/_search?size=1&sort=timestamp:asc')
-    response =o_conn.getresponse()
-    data = json.loads(response.read())
-    o_min_date = data['hits']['hits'][0]['_source']['timestamp']
-
-    n_conn.request('GET','/es/unified-logs/log/_search?size=1&sort=timestamp:desc', headers= es_header())
-    response =n_conn.getresponse()
-    data = json.loads(response.read())
-    n_max_date = data['hits']['hits'][0]['_source']['timestamp']
-
-    #print n_max_date
-    ## the hard migration happened at time 1512603883.0 ##everything after that is in the new DB
-
-    ## last lower boundary at time of sync 1511952228
-    ## current last document age 1511959960
-    #n_max_date = 1511959960-1
-
-    n_conn.request('GET','/es/unified-logs/log/_search?size=1&sort=timestamp:asc', headers= es_header())
-    response =n_conn.getresponse()
-    data = json.loads(response.read())
-    n_min_date = data['hits']['hits'][0]['_source']['timestamp']
-
-
-    ## we should search from now to n_max_date and from n_min_date to 0
-    #query = 'q=timestamp:(>=%d OR <=%d)'%( n_max_date, n_min_date)
-    #query = 'q=timestamp:(>=%d)'%( n_max_date )
-    #query = 'q=timestamp:(<=%d)'%( n_min_date ) ## pick up anything that is older than the oldest one in the new instance ## does not seem to function
-    #query = 'q=timestamp:(<=%d)'%( 1511959960 ) ## anything older than a reference time
-    query = 'q=timestamp:(<=%d)'%( 1512603883.0 ) ## anything older than a reference time when unified was off and switched over
-
-    print query
-
-
-    docs = []
-    N = 500
-    f = 0
-    total_send = 0
-    while True:
-        o_conn.request('GET','/logs/log/_search?size=%d&from=%d&sort=timestamp:desc&%s'%( N, f, query))
-        f+=N
-        response =o_conn.getresponse()
-        data = response.read()
-        d = json.loads( data )
-
-
-
-        total = d['hits']['total']
-        print total,"documents to send over under",query
-        docs = d['hits']['hits']
-        if not docs: break
-        ## copy them over to the new ES
-        for doc in docs:
-            print "to be send"
-            print doc['_id']
-
-            n_conn.request("GET", '/es/unified-logs/log/%s'% doc['_id'], headers = es_header())
-            response = n_conn.getresponse()
-            data = response.read()
-            if not json.loads( data)['found']:
-                send_doc = doc['_source']
-                encodedParams = urllib.urlencode( send_doc )
-                n_conn.request("POST" , '/es/unified-logs/log/%s'% doc['_id'], json.dumps(send_doc), headers = es_header())
-                response = n_conn.getresponse()
-                data = response.read()
-                try:
-                    res = json.loads( data )
-                    total_send+=1
-                except:
-                    print "failed to upload", data
-            else:
-                print doc['_id'],"already existing"
-
-    print total_send,"send"
-
 def new_sendLog( subject, text , wfi = None, show=True, level='info'):
-    conn = httplib.HTTPSConnection( 'es-unified.cern.ch' )
+    conn = httplib.HTTPSConnection( 'es-unified7.cern.ch' )
 
     conn.request("GET", "/es", headers=es_header())
     response = conn.getresponse()
@@ -347,11 +222,11 @@ def try_sendLog( subject, text , wfi = None, show=True, level='info'):
     #_try_sendLog(subject, text , wfi, show, level, conn = conn)
 
     ## send it to the new instance too. Without showing it
-    re_conn = httplib.HTTPSConnection( 'es-unified.cern.ch' )
+    re_conn = httplib.HTTPSConnection( 'es-unified7.cern.ch' )
     _try_sendLog( subject, text, wfi, show, level, conn = re_conn, prefix='/es/unified-logs', h = es_header())
 
 
-def _try_sendLog( subject, text , wfi = None, show=True, level='info', conn= None, prefix= '/logs', h =None):
+def _try_sendLog( subject, text , wfi = None, show=True, level='info', conn= None, prefix= '/es/unified-logs', h =None):
     #conn = httplib.HTTPConnection( 'cms-elastic-fe.cern.ch:9200' )
 
     meta_text="level:%s\n"%level
@@ -381,11 +256,12 @@ def _try_sendLog( subject, text , wfi = None, show=True, level='info', conn= Non
     if show:
         print text
     encodedParams = urllib.urlencode( doc )
-    conn.request("POST" , prefix+'/log/', json.dumps(doc), headers = h if h else {})
+    conn.request("POST" , prefix+'/_doc/', json.dumps(doc), headers = h if h else {})
     response = conn.getresponse()
     data = response.read()
     try:
         res = json.loads( data )
+        print res
         #print 'log:',res['_id'],"was created"
     except Exception as e:
         print "failed"
@@ -1669,6 +1545,19 @@ def getWMStats(url):
     r2=conn.getresponse()
     return json.loads(r2.read())['result'][0]
 
+def get_dashbssb(path_name, ssb_metric):
+    with open('Unified/monit_secret.json') as monit:
+        conf = json.load(monit)
+    query = """'{"search_type":"query_then_fetch","ignore_unavailable":true,"index":["monit_prod_cmssst_*","monit_prod_cmssst_*"]}
+{"size":1,"query":{"bool":{"filter":[{"range":{"metadata.timestamp":{"gte":"now-1d","lte":"now","format":"epoch_millis"}}},{"query_string":{"analyze_wildcard":true,"query":"metadata.type: ssbmetric AND metadata.type_prefix:raw AND metadata.path: %s"}}]}},"sort":{"metadata.timestamp":{"order":"desc","unmapped_type":"boolean"}},"script_fields":{},"docvalue_fields":["metadata.timestamp"]}
+'"""%(str(path_name))
+    TIMESTAMP = json.loads(os.popen('curl -s -X POST %s -H "Authorization: Bearer %s" -H "Content-Type: application/json" -d %s'%(conf["url"],conf["token"],query)).read())["responses"][0]["hits"]["hits"][0]["_source"]["metadata"]["timestamp"]
+    query2 = """'{"search_type":"query_then_fetch","ignore_unavailable":true,"index":["monit_prod_cmssst_*","monit_prod_cmssst_*"]}
+{"size":500,"_source": {"includes":["data.name","data.%s"]},"query":{"bool":{"filter":[{"range":{"metadata.timestamp":{"gte":"now-1d","lte":"now","format":"epoch_millis"}}},{"query_string":{"analyze_wildcard":true,"query":"metadata.type: ssbmetric AND metadata.type_prefix:raw AND metadata.path: %s AND metadata.timestamp:%s"}}]}},"sort":{"metadata.timestamp":{"order":"desc","unmapped_type":"boolean"}},"script_fields":{},"docvalue_fields":["metadata.timestamp"]}
+'"""%(str(ssb_metric),str(path_name),str(TIMESTAMP))
+    result = json.loads(os.popen('curl -s --retry 5 -X POST %s -H "Authorization: Bearer %s" -H "Content-Type: application/json" -d %s'%(conf["url"],conf["token"],query2)).read())["responses"][0]["hits"]["hits"]    
+    return [ item['_source']['data'] for item in result]
+    
 
 
 def genericGet( base, url, load=True, headers=None):
@@ -1839,39 +1728,31 @@ class UnifiedBuster(threading.Thread):
 
 class docCache:
     def __init__(self):
-        self.cache = {}
+        self.cache = {}        
         def default_expiration():
             ## a random time between 20 min and 30 min.
             return int(20 + random.random()*10)
-        self.cache['ssb_136'] = {
+        self.cache['ssb_core_max_used'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=136&batch=1&lastdata=1"').read())['csvdata'],
+            'getter' : lambda : get_dashbssb('scap15min','core_max_used'),
             'cachefile' : None,
             'default' : []
             }
-        self.cache['ssb_237'] = {
+        self.cache['ssb_core_production'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=237&batch=1&lastdata=1"').read())['csvdata'],
+            'getter' : lambda : get_dashbssb('scap15min','core_production'),
             'cachefile' : None,
             'default' : []
             }
-        self.cache['ssb_159'] = {
+        self.cache['ssb_core_cpu_intensive'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=159&batch=1&lastdata=1"').read())['csvdata'],
-            'cachefile' : None,
-            'default' : []
-            }
-        self.cache['ssb_160'] = {
-            'data' : None,
-            'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(os.popen('curl -s --retry 5 "http://dashb-ssb.cern.ch/dashboard/request.py/getplotdata?columnid=160&batch=1&lastdata=1"').read())['csvdata'],
+            'getter' : lambda : get_dashbssb('scap15min','core_cpu_intensive'),
             'cachefile' : None,
             'default' : []
             }
@@ -2172,24 +2053,20 @@ class siteInfo:
 
             self.sites_banned = UC.get('sites_banned')
 
-            #data = dataCache.get('ssb_158') ## 158 is the site readyness metric
-            data = dataCache.get('ssb_237') ## 237 is the site readyness metric
-
+            data = get_dashbssb('sts15min','prod_status')
             for siteInfo in data:
-                #print siteInfo['Status']
-                if not siteInfo['Tier'] in [0,1,2,3]: continue
-                self.all_sites.append( siteInfo['VOName'] )
-                override = (override_good and siteInfo['VOName'] in override_good)
-                if siteInfo['VOName'] in self.sites_banned and not override:
+                self.all_sites.append( siteInfo['name'] )
+                override = (override_good and siteInfo['name'] in override_good)
+                if siteInfo['name'] in self.sites_banned and not override:
                     continue
-                if (self.sites_ready_in_agent and siteInfo['VOName'] in self.sites_ready_in_agent) or override:
-                    self.sites_ready.append( siteInfo['VOName'] )
-                elif self.sites_ready_in_agent and not siteInfo['VOName'] in self.sites_ready_in_agent:
-                    self.sites_not_ready.append( siteInfo['VOName'] )
-                elif siteInfo['Status'] == 'enabled':
-                    self.sites_ready.append( siteInfo['VOName'] )
+                if (self.sites_ready_in_agent and siteInfo['name'] in self.sites_ready_in_agent) or override:
+                    self.sites_ready.append( siteInfo['name'] )
+                elif self.sites_ready_in_agent and not siteInfo['name'] in self.sites_ready_in_agent:
+                    self.sites_not_ready.append( siteInfo['name'] )
+                elif siteInfo['prod_status'] == 'enabled':
+                    self.sites_ready.append( siteInfo['name'] )
                 else:
-                    self.sites_not_ready.append( siteInfo['VOName'] )
+                    self.sites_not_ready.append( siteInfo['name'] )
 
             ##over-ride those since they are only handled through jobrouting
             add_as_ready = [
@@ -2213,7 +2090,7 @@ class siteInfo:
         except Exception as e:
             print "issue with getting SSB readiness"
             print str(e)
-            sendEmail('bad sites configuration','falling to get any sites')
+            #sendEmail('bad sites configuration','falling to get any sites')
             sys.exit(-9)
 
 
@@ -2554,25 +2431,24 @@ class siteInfo:
     def fetch_ssb_info(self,talk=True):
         ## and complement information from ssb
         columns= {
-            'realCPU' : 136,
-            'prodCPU' : 159,
-            'CPUbound' : 160
+            'realCPU' : 'core_max_used',
+            'prodCPU' : 'core_production',
+            'CPUbound' : 'core_cpu_intensive'
             }
 
         all_data = {}
         for name,column in columns.items():
             if talk: print name,column
             try:
-                #all_data[name] =  data['csvdata']
-                all_data[name] =  dataCache.get('ssb_%d'% column) #data['csvdata']
+                all_data[name] =  dataCache.get('ssb_%s'% column) 
             except:
                 print "cannot get info from ssb for",name
         _info_by_site = {}
         for info in all_data:
             for item in all_data[info]:
-                site = item['VOName']
+                site = item['name']
                 if site.startswith('T3'): continue
-                value = item['Value']
+                value = item[columns[info]]
                 if not site in _info_by_site: _info_by_site[site]={}
                 _info_by_site[site][info] = value
 
@@ -3220,6 +3096,7 @@ Updated on %s (GMT) <br>
 <li> <b>smalllumi</b> : the size of the lumisection of one of the output is too small <font color=red>(Operator)</font></li>
 <li> <b>bigoutput</b> : the maximum size for an output dataset to go to tape was exceeded (<font color=blue>Requester</font>/<font color=red>Operator)</font></li>
 <li> <b>filemismatch</b> : there is a mismatch in the number of files in DBS and Phedex <font color=red>(Operator)</font></li>
+<li> <b>agentfilemismatch</b> : there is a mismatch in the number of files in DBS and Phedex, and the grace period for the agent is not over <font color=green>(Automatic)</font></li>
 <li> <b>duplicates</b> : duplicated lumisection have been found and need to be invalidated <font color=green>(Automatic)</font></li>
 <li> <b>inconsistent</b> : the output of the recovery workflow is not consistent with the main workflow <font color=red>(Operator)</font></li>
 <li> <b>manual</b> : no automatic recovery was possible <font color=red>(Operator)</font></li>
@@ -3852,12 +3729,11 @@ def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, ve
 
     print len(all_block_names),"blocks"
 
+    conn = make_x509_conn(url)
     items = None
-    while items == None:
+    while items is None:
         try:
-            conn = make_x509_conn(url)
-            #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-            url = '/phedex/datasvc/json/prod/requestlist?dataset=%s'%dataset
+            url = '/phedex/datasvc/json/prod/requestlist?dataset=%s&group=AnalysisOps&group=DataOps'%dataset
             if group:
                 url+='group=%s'%group
             r1=conn.request("GET",url)
@@ -3868,7 +3744,26 @@ def getBetterDatasetDestinations( url, dataset, only_blocks=None, group=None, ve
             print "\twaiting a bit for retry"
             print e
             time.sleep(1)
+            conn = make_x509_conn(url)
 
+
+    d_items = None
+    while d_items is None:
+        try:
+            url = '/phedex/datasvc/json/prod/requestlist?dataset=%s&type=delete'%dataset
+            if group:
+                url+='group=%s'%group
+            r1=conn.request("GET",url)
+            r2=conn.getresponse()
+
+            d_items=json.loads(r2.read())['phedex']['request']
+        except Exception as e :
+            print "\twaiting a bit for retry"
+            print e
+            time.sleep(1)
+            conn = make_x509_conn(url)
+
+    items.extend( d_items )
 
     deletes = {}
     now = time.mktime(time.gmtime())

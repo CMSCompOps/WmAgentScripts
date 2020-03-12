@@ -1,0 +1,10 @@
+name: Check Python Syntax
+
+on: [pull_request, push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Python Style Checker
+      uses: andymckay/pycodestyle-action@0.1.3
