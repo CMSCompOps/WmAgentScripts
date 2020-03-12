@@ -49,7 +49,7 @@ def mappor(url , options=None):
     for site in sites_to_consider:
         region = site.split('_')[1]
         if not region in ['US'
-                          ,'DE','IT','FR',
+                          ,'DE','IT','FR','CH',
                           'ES',
                           'UK',
                           'RU'### latest addition
