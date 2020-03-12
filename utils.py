@@ -1756,6 +1756,14 @@ class docCache:
             'cachefile' : None,
             'default' : []
             }
+        self.cache['ssb_prod_status'] = {
+            'data' : None,
+            'timestamp' : time.mktime( time.gmtime()),
+            'expiration' : default_expiration(),
+            'getter' : lambda : get_dashbssb('sts15min','prod_status'),
+            'cachefile' : None,
+            'default' : {}
+            }
         self.cache['gwmsmon_totals'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
@@ -1881,7 +1889,7 @@ class docCache:
             self.cache[src]['cachefile'] = '.'+src+'.cache.json'
 
 
-    def get(self, label, fresh=False):
+    def get(self, label, fresh=False, lastdoc=True):
         if not label in self.cache:
             print "unkown cache doc key",label
             return None
@@ -1894,9 +1902,13 @@ class docCache:
             try:
                 data =  o['getter']()
             except Exception as e:
-                sendLog('doccache','Failed to get %s\n%s'%(label,str(e)), level='critical')
+                sendLog('doccache','Failed to get {}\n{}\n{}'.format(label,type(e),str(e)), level='critical')
                 print "failed to get",label
                 print str(e)
+                if lastdoc:
+                    last_doc = cache.get( label, no_expire=True)
+                    if last_doc:
+                        return last_doc
                 data = o['default']
             cache.store( label, 
                          data = data,
@@ -2053,7 +2065,7 @@ class siteInfo:
 
             self.sites_banned = UC.get('sites_banned')
 
-            data = get_dashbssb('sts15min','prod_status')
+            data = dataCache.get('ssb_prod_status')
             for siteInfo in data:
                 self.all_sites.append( siteInfo['name'] )
                 override = (override_good and siteInfo['name'] in override_good)
@@ -2767,11 +2779,11 @@ class cacheInfo:
         self.client = mongo_client()
         self.db = self.client.unified.cacheInfo
 
-    def get(self, key):
+    def get(self, key, no_expire=False):
         now = time.mktime(time.gmtime())
         o =self.db.find_one({'key':key})
         if o:
-            if o['expire'] > now:
+            if no_expire or (o['expire'] > now):
                 if not 'data' in o:
                     return self.from_file(key)
                 else:
@@ -2808,13 +2820,14 @@ class cacheInfo:
             self.db.update_one({'key': key},
                                {"$set": content},
                                upsert = True)
-        except pymongo.errors.DocumentTooLarge as e:
-            print ("too large to go in mongo. in file instead")
+        except (pymongo.errors.WriteError,pymongo.errors.DocumentTooLarge) as e:
+            print ("cannot go in mongo. in file instead")
             open(self._file_key(key),'w').write( json.dumps( content.pop('data') ))
             self.db.update_one({'key': key},
                                {"$set": content},
                                upsert = True)
         except Exception as e:
+            print type(e)
             print str(e)
 
     def purge(self):
