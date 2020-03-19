@@ -1011,7 +1011,6 @@ class StartStopInfo:
         then = now - (since_in_days*24*60*60)
         self.db.delete_many( { 'start' : {'$lt': then }})
 
-
 def checkDownTime():
     conn = make_x509_conn()
     #conn  =  httplib.HTTPSConnection(reqmgr_url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
