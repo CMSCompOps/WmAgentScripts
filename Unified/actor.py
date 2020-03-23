@@ -588,7 +588,7 @@ def actor(url,options=None):
                 print "Going to run at",sorted(assign_to_sites)
                 if recover:
                     print "Initiating recovery"
-                    acdc = singleRecovery(url, fulltaskname, wfi, actions, do = options.do, priority_change = options.change)
+                    acdc = singleRecovery(url, fulltaskname, wfi, actions, do = options.do, priority_change = True) #options.change
                     if not acdc:
                         if options.do:
                             if recovering:
