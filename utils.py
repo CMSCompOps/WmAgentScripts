@@ -7805,8 +7805,10 @@ class workflowInfo:
                 event_per_job = task['events_per_job']
             else:
                 return 0
-        failed_jobs = float(failed_jobs) / float(event_per_job)
-
+        if event_per_job:                    
+            failed_jobs = float(failed_jobs) / float(event_per_job)
+        else:
+            return 0
         return failed_jobs
 
 
