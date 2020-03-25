@@ -306,7 +306,7 @@ def getFiles(datasetName, runBlacklist, runWhitelist, blockBlacklist,
             if len(replicaInfo["phedex"]["block"]) > 0:
                 for replica in replicaInfo["phedex"]["block"][0]["replica"]:
                     PNN = replica["node"]
-                    PSNs = CRIC.PNNstoPSNs(PNN)
+                    PSNs = CRICsite.PNNstoPSNs(PNN)
                     blockLocations.add(PNN)
                     #logging.debug("PhEDEx Node Name: %s\tPSNs: %s", PNN, PSNs)
 
