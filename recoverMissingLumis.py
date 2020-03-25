@@ -6,7 +6,7 @@ from WMCore.Database.CMSCouch import Database
 from WMCore.Services.DBS.DBSReader import DBSReader
 from WMCore.Services.PhEDEx.PhEDEx import PhEDEx
 from WMCore.Services.RequestDB.RequestDBReader import RequestDBReader
-from WMCore.Services.SiteDB.SiteDB import SiteDBJSON
+from WMCore.Services.CRIC.CRIC import CRIC
 from WMCore.WMSpec.WMWorkload import WMWorkloadHelper
 from pprint import pprint
 
@@ -261,7 +261,7 @@ def getFiles(datasetName, runBlacklist, runWhitelist, blockBlacklist,
     """
     dbsReader = DBSReader(endpoint=dbsUrl)
     phedexReader = PhEDEx()
-    siteDB = SiteDBJSON()
+    CRICsite = CRIC()
 
 
     class BlockBuster(threading.Thread):
@@ -287,7 +287,7 @@ def getFiles(datasetName, runBlacklist, runWhitelist, blockBlacklist,
                 return
 
             phedexReader = PhEDEx()
-            siteDB = SiteDBJSON()
+            CRICsite = CRIC()
             dbsReader = DBSReader(endpoint=self.dbs)
             replicaInfo = phedexReader.getReplicaInfoForBlocks(block=blockName,
                                                                     subscribed='y')
@@ -306,7 +306,7 @@ def getFiles(datasetName, runBlacklist, runWhitelist, blockBlacklist,
             if len(replicaInfo["phedex"]["block"]) > 0:
                 for replica in replicaInfo["phedex"]["block"][0]["replica"]:
                     PNN = replica["node"]
-                    PSNs = siteDB.PNNtoPSN(PNN)
+                    PSNs = CRIC.PNNstoPSNs(PNN)
                     blockLocations.add(PNN)
                     #logging.debug("PhEDEx Node Name: %s\tPSNs: %s", PNN, PSNs)
 
