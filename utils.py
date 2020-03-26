@@ -8178,3 +8178,20 @@ class workflowInfo:
 
         return version+1
 
+def getFailedJobs(taskname, caller='getFailedJobs'):
+    wfname=taskname.split('/')[1]
+    print 'wfname=',wfname
+    conn = make_x509_conn(reqmgr_url)
+    r1=conn.request("GET",'/wmstatsserver/data/filtered_requests?RequestName=%s&mask=PrepID&mask=AgentJobInfo'%(wfname),headers={"Accept":"application/json"})
+    r2=conn.getresponse()
+    reading = json.loads(r2.read())
+    failed_jobs = 0
+
+    for info in reading['result']:
+        for f,taskinfo in info['AgentJobInfo'].iteritems():
+            if taskname in taskinfo['tasks'] and 'failure' in taskinfo['tasks'][taskname]['status']:
+                for ff,njobs in taskinfo['tasks'][taskname]['status']['failure'].iteritems():
+                    failed_jobs += njobs
+
+    return failed_jobs
+
