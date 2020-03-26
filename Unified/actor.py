@@ -18,7 +18,9 @@ import random
 from wtcClient import wtcClient
 from JIRAClient import JIRAClient
 
+
 def singleRecovery(url, task, initial, actions, do=False, priority_change=False):
+
     print "Inside single recovery!"
     payload = {
         "Requestor" : os.getenv('USER'),
@@ -39,10 +41,12 @@ def singleRecovery(url, task, initial, actions, do=False, priority_change=False)
     #a massage ? boost the recovery over the initial wf
 #    payload['RequestPriority'] *= 10
     #Max priority is 1M
+
     original_priority = payload['RequestPriority']
     payload['RequestPriority'] = min(500000,  payload['RequestPriority']*2 ) ## never above 500k
 
     if priority_change:
+
         failjobs = getFailedJobs(task)
         if failjobs and failjobs>500:
             payload['RequestPriority'] = min(500000,  original_priority*1.2 )
@@ -215,7 +219,8 @@ def singleRecovery(url, task, initial, actions, do=False, priority_change=False)
                         #print "changing the splitting of",acdc
                         #print json.dumps( split, indent=2 )
                         #print reqMgrClient.setWorkflowSplitting(url, acdc, split )
-    #consider the splitting
+
+ #consider the splitting
                     if priority_change and failjobs and failjobs<500 and failjobs*factor > 500:
                         print "splitting causes jobs passing threshold"
                         new_priority = min(500000,  original_priority*1.2 )
@@ -233,6 +238,7 @@ def singleRecovery(url, task, initial, actions, do=False, priority_change=False)
                     if priority_change:
                         new_priority = min(500000,  original_priority*1.2 )
                         split_change = reqMgrClient.changePriorityWorkflow(url, acdc, new_priority)    
+
 
                 print "changing the splitting of",acdc
                 print json.dumps( splittings, indent=2 )                
@@ -587,7 +593,9 @@ def actor(url,options=None):
                 print "Going to run at",sorted(assign_to_sites)
                 if recover:
                     print "Initiating recovery"
+
                     acdc = singleRecovery(url, fulltaskname, wfi.request, actions, do = options.do, priority_change = True)
+
                     if not acdc:
                         if options.do:
                             if recovering:
@@ -723,6 +731,7 @@ if __name__ == '__main__':
     parser.add_option('--go',default=False,action='store_true',help="override possible blocking conditions")
     parser.add_option('--spec',default=None,help='a specific workflow to consider')
     parser.add_option('--actions', default=None,help='a file name with the actions to be taken')
+    parser.add_option('--change', default=False,help='option to downgrade the priority')
     (options,args) = parser.parse_args()
         
     if len(args)!=0:

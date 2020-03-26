@@ -31,33 +31,78 @@ for p in ['/usr/lib64/python2.7/site-packages','/usr/lib/python2.7/site-packages
     if not p in sys.path: sys.path.append(p)
 
 
-dbs_url = os.getenv('UNIFIED_DBS3_READER' ,'https://cmsweb.cern.ch/dbs/prod/global/DBSReader')
-dbs_url_writer = os.getenv('UNIFIED_DBS3_WRITER','https://cmsweb.cern.ch/dbs/prod/global/DBSWriter')
+def mongo_client():
+    import pymongo, ssl
+    return pymongo.MongoClient('mongodb://%s/?ssl=true' % mongo_db_url,
+                               ssl_cert_reqs=ssl.CERT_NONE)
 
-phedex_url = os.getenv('UNIFIED_PHEDEX','cmsweb.cern.ch')
-reqmgr_url = os.getenv('UNIFIED_REQMGR','cmsweb.cern.ch')
-monitor_dir = os.getenv('UNIFIED_MON','/data/unified/www/')
-#monitor_eos_dir = "/eos/project/c/cms-unified-logs/www/"
-monitor_eos_dir = '/eos/cms/store/unified/www/'
+
+class unifiedConfiguration:
+    def __init__(self, configFile='unifiedConfiguration.json'):
+        # Explicitly set configFile to 'None' once you want to read from MongoDB
+        self.configFile = configFile
+        if self.configFile is None:
+            self.configs = self.configFile
+        else:
+            try:
+                self.configs = json.loads(open(self.configFile).read())
+            except Exception as ex:
+                print("Could not read configuration file: %s\nException: %s" %
+                      (self.configFile, str(ex)))
+                sys.exit(124)
+
+        if self.configs is None:
+            try:
+                self.client = mongo_client()
+                self.db = self.client.unified.unifiedConfiguration
+                # quest = self.db.find_one()
+            except Exception as ex:
+                print ("Could not reach pymongo.\n Exception: \n%s" % str(ex))
+                # self.configs = json.loads(open(self.configFile).read())
+                sys.exit(124)
+
+    def get(self, parameter):
+        if self.configs:
+            if parameter in self.configs:
+                return self.configs[parameter]['value']
+            else:
+                print parameter, 'is not defined in global configuration'
+                print ','.join(self.configs.keys()), 'possible'
+                sys.exit(124)
+        else:
+            found = self.db.find_one({"name": parameter})
+            if found:
+                found.pop("_id")
+                found.pop("name")
+                return found
+            else:
+                availables = [o['name'] for o in self.db.find_one()]
+                print parameter, 'is not defined in mongo configuration'
+                print ','.join(availables), 'possible'
+                sys.exit(124)
+
+
+SC = unifiedConfiguration('serviceConfiguration.json')
+
+mongo_db_url = SC.get('mongo_db_url')
+dbs_url = os.getenv('UNIFIED_DBS3_READER', SC.get('dbs_url'))
+dbs_url_writer = os.getenv('UNIFIED_DBS3_WRITER', SC.get('dbs_url_writer'))
+phedex_url = os.getenv('UNIFIED_PHEDEX', SC.get('phedex_url'))
+reqmgr_url = os.getenv('UNIFIED_REQMGR', SC.get('reqmgr_url'))
+monitor_dir = os.getenv('UNIFIED_MON', SC.get('monitor_dir'))
+monitor_eos_dir = SC.get('monitor_eos_dir')
 monitor_dir = monitor_eos_dir
-monitor_pub_dir = os.getenv('UNIFIED_MON','/data/unified/www/public/')
-#monitor_pub_eos_dir = "/eos/project/c/cms-unified-logs/www/public/"
-monitor_pub_eos_dir = "/eos/cms/store/unified/www/public/"
+monitor_pub_dir = os.getenv('UNIFIED_MON', SC.get('monitor_pub_eos_dir'))
+monitor_pub_eos_dir = SC.get('monitor_pub_eos_dir')
 monitor_pub_dir = monitor_pub_eos_dir
-base_dir =  os.getenv('UNIFIED_DIR','/data/unified/')
-#base_eos_dir = "/eos/project/c/cms-unified-logs/"
-base_eos_dir = "/eos/cms/store/unified/"
-
-
-#unified_url = os.getenv('UNIFIED_URL','https://vocms049.cern.ch/unified/')
-unified_url = os.getenv('UNIFIED_URL','https://cms-unified.web.cern.ch/cms-unified/')
-unified_url_eos = "https://cms-unified.web.cern.ch/cms-unified/"
+base_dir =  os.getenv('UNIFIED_DIR', SC.get('base_dir'))
+base_eos_dir = SC.get('base_eos_dir')
+unified_url = os.getenv('UNIFIED_URL', SC.get('unified_url'))
+unified_url_eos = SC.get('unified_url_eos')
 unified_url = unified_url_eos
 url_eos = unified_url_eos
-#unified_pub_url = os.getenv('UNIFIED_URL','https://vocms049.cern.ch/unified/public/')
-unified_pub_url = os.getenv('UNIFIED_URL','https://cms-unified.web.cern.ch/cms-unified/public/')
-cache_dir = '/data/unified-cache/'
-mongo_db_url = 'vocms0274.cern.ch'
+unified_pub_url = os.getenv('UNIFIED_URL', SC.get('unified_pub_url'))
+cache_dir = SC.get('cache_dir')
 
 FORMAT = "%(module)s.%(funcName)s(%(lineno)s) => %(message)s (%(asctime)s)"
 DATEFMT = "%Y-%m-%d %H:%M:%S"
@@ -833,10 +878,6 @@ class lockInfo:
         print "------"+"-"*len(comment)
 
 
-def mongo_client():
-    import pymongo,ssl
-    return pymongo.MongoClient('mongodb://%s/?ssl=true'%mongo_db_url, ssl_cert_reqs=ssl.CERT_NONE)
-
 class statusHistory:
     def __init__(self):
         self.client = mongo_client()
@@ -975,39 +1016,6 @@ class StartStopInfo:
                 self.db.delete_one({'_id' : o['_id']})
                 
       
-
-
-class unifiedConfiguration:
-    def __init__(self):
-        self.configs = json.loads(open('unifiedConfiguration.json').read()) ## switch to None once you want to read it from mongodb
-        if self.configs is None:
-            try:
-                self.client = mongo_client()
-                self.db = self.client.unified.unifiedConfiguration
-                quest = self.db.find_one()
-            except:
-                print "could not reach pymongo"
-                self.configs = json.loads(open('unifiedConfiguration.json').read())
-
-    def get(self, parameter):
-        if self.configs:
-            if parameter in self.configs:
-                return self.configs[parameter]['value']
-            else:
-                print parameter,'is not defined in global configuration'
-                print ','.join(self.configs.keys()),'possible'
-                sys.exit(124)
-        else:
-            found = self.db.find_one({"name": parameter})
-            if found:
-                found.pop("_id")
-                found.pop("name")
-                return found
-            else:
-                availables = [o['name'] for o in self.db.find_one()]
-                print parameter,'is not defined in mongo configuration'
-                print ','.join(availables),'possible'
-                sys.exit(124)
 
 
 def checkDownTime():
@@ -7641,6 +7649,56 @@ class workflowInfo:
 
     def getExpectedPerTask(self):
         return {}
+
+    def getFailedJobs(self, taskname, caller='getFailedJobs'):
+        self.getRecoveryDoc()
+        if not self.recovery_doc:
+            print "nothing retrieved"
+            return 0
+        missing_to_run = defaultdict(int)
+        for doc in self.recovery_doc:
+            task = doc['fileset_name']
+            for f,info in doc['files'].iteritems():
+                missing_to_run[task] += info['events']
+
+        event_per_job = None
+        ## for all the outputs
+
+        ttype = 'Task' if 'TaskChain' in self.request else 'Step'
+        find_task = None
+
+        taskname_short = taskname.split("/")[-1]
+        if '%sChain'%ttype in self.request:
+            ## go on and make the accounting
+            it = 1
+            while True:
+                tt = '%s%d'%(ttype,it)
+                it+=1
+                if tt in self.request:
+                    tname = self.request[tt]['%sName'% ttype]
+                    if tname == taskname_short:
+                        find_task = tt
+                else:
+                    break
+        failed_jobs = 0
+        if missing_to_run[taskname]:
+            failed_jobs = float (missing_to_run[taskname])
+
+        splits = self.getSplittingsNew(strip=True)
+
+        for spl in splits:
+            if spl['taskName'] != taskname:
+                continue
+            #print spl
+            task = spl['splitParams']
+            if 'events_per_job' in task:
+                event_per_job = task['events_per_job']
+            else:
+                return 0
+        failed_jobs = float(failed_jobs) / float(event_per_job)
+
+        return failed_jobs
+
 
     def getCompletionFraction(self, caller='getCompletionFraction', with_event=True):
         output_per_task = self.getOutputPerTask()
