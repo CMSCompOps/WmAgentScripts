@@ -7650,56 +7650,6 @@ class workflowInfo:
     def getExpectedPerTask(self):
         return {}
 
-    def getFailedJobs(self, taskname, caller='getFailedJobs'):
-        self.getRecoveryDoc()
-        if not self.recovery_doc:
-            print "nothing retrieved"
-            return 0
-        missing_to_run = defaultdict(int)
-        for doc in self.recovery_doc:
-            task = doc['fileset_name']
-            for f,info in doc['files'].iteritems():
-                missing_to_run[task] += info['events']
-
-        event_per_job = None
-        ## for all the outputs
-
-        ttype = 'Task' if 'TaskChain' in self.request else 'Step'
-        find_task = None
-
-        taskname_short = taskname.split("/")[-1]
-        if '%sChain'%ttype in self.request:
-            ## go on and make the accounting
-            it = 1
-            while True:
-                tt = '%s%d'%(ttype,it)
-                it+=1
-                if tt in self.request:
-                    tname = self.request[tt]['%sName'% ttype]
-                    if tname == taskname_short:
-                        find_task = tt
-                else:
-                    break
-        failed_jobs = 0
-        if missing_to_run[taskname]:
-            failed_jobs = float (missing_to_run[taskname])
-
-        splits = self.getSplittingsNew(strip=True)
-
-        for spl in splits:
-            if spl['taskName'] != taskname:
-                continue
-            #print spl
-            task = spl['splitParams']
-            if 'events_per_job' in task:
-                event_per_job = task['events_per_job']
-            else:
-                return 0
-        failed_jobs = float(failed_jobs) / float(event_per_job)
-
-        return failed_jobs
-
-
     def getCompletionFraction(self, caller='getCompletionFraction', with_event=True):
         output_per_task = self.getOutputPerTask()
         task_outputs = {}
@@ -8236,3 +8186,19 @@ class workflowInfo:
 
         return version+1
 
+def getFailedJobs(taskname, caller='getFailedJobs'):
+    wfname=taskname.split('/')[1]
+    print 'wfname=',wfname
+    conn = make_x509_conn(reqmgr_url)
+    r1=conn.request("GET",'/wmstatsserver/data/filtered_requests?RequestName=%s&mask=PrepID&mask=AgentJobInfo'%(wfname),headers={"Accept":"application/json"})
+    r2=conn.getresponse()
+    reading = json.loads(r2.read())
+    failed_jobs = 0
+
+    for info in reading['result']:
+        for f,taskinfo in info['AgentJobInfo'].iteritems():
+            if taskname in taskinfo['tasks'] and 'failure' in taskinfo['tasks'][taskname]['status']:
+                for ff,njobs in taskinfo['tasks'][taskname]['status']['failure'].iteritems():
+                    failed_jobs += njobs
+
+    return failed_jobs
