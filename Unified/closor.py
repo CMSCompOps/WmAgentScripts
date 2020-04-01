@@ -551,24 +551,24 @@ class CloseBuster(threading.Thread):
                             continue
 
                         n_copies = 1
-                        destinations=[]
-                        if to_DDM and campaign and campaign in CI.campaigns and 'DDMcopies' in CI.campaigns[campaign]:
-                            ddm_instructions = CI.campaigns[campaign]['DDMcopies']
-                            if type(ddm_instructions) == int:
-                                n_copies = CI.campaigns[campaign]['DDMcopies']
-                            elif type(ddm_instructions) == dict:
-                                ## a more fancy configuration
-                                for ddmtier,indication in ddm_instructions.items():
-                                    if ddmtier==tier or ddmtier in ['*','all']:
-                                        ## this is for us
-                                        if 'N' in indication:
-                                            n_copies = indication['N']
-                                        if 'host' in indication:
-                                            destinations = indication['host']
+                        #destinations=[]
+                        #if to_DDM and campaign and campaign in CI.campaigns and 'DDMcopies' in CI.campaigns[campaign]:
+                        #    ddm_instructions = CI.campaigns[campaign]['DDMcopies']
+                        #    if type(ddm_instructions) == int:
+                        #        n_copies = CI.campaigns[campaign]['DDMcopies']
+                        #    elif type(ddm_instructions) == dict:
+                        #        ## a more fancy configuration
+                        #        for ddmtier,indication in ddm_instructions.items():
+                        #            if ddmtier==tier or ddmtier in ['*','all']:
+                        #                ## this is for us
+                        #                if 'N' in indication:
+                        #                    n_copies = indication['N']
+                        #                if 'host' in indication:
+                        #                    destinations = indication['host']
                                             
-                        destination_spec = ""
-                        if destinations:
-                            destination_spec = "--destination="+",".join( destinations )
+                        #destination_spec = ""
+                        #if destinations:
+                        #    destination_spec = "--destination="+",".join( destinations )
                         group_spec = "" ## not used yet 
                         ### should make this a campaign configuration
                         ## inject to DDM when necessary

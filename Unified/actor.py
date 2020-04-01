@@ -20,7 +20,6 @@ from JIRAClient import JIRAClient
 
 
 def singleRecovery(url, task, initial, actions, do=False, priority_change=False):
-
     print "Inside single recovery!"
     payload = {
         "Requestor" : os.getenv('USER'),
