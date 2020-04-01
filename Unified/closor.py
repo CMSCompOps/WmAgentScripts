@@ -551,7 +551,7 @@ class CloseBuster(threading.Thread):
                             continue
 
                         n_copies = 1
-                        destinations=[]
+                        #destinations=[]
                         #if to_DDM and campaign and campaign in CI.campaigns and 'DDMcopies' in CI.campaigns[campaign]:
                         #    ddm_instructions = CI.campaigns[campaign]['DDMcopies']
                         #    if type(ddm_instructions) == int:
