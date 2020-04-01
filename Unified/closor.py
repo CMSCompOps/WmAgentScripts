@@ -569,12 +569,12 @@ class CloseBuster(threading.Thread):
                         #destination_spec = ""
                         #if destinations:
                         #    destination_spec = "--destination="+",".join( destinations )
-                        group_spec = "" ## not used yet 
+                        #group_spec = "" ## not used yet 
                         ### should make this a campaign configuration
                         ## inject to DDM when necessary
                         if to_DDM:
                             print "Sending",out," to DDM"
-                            status = pass_to_dynamo( [out], N = n_copies, sites=destinations if destinations else None, group = group_spec if group_spec else None)
+                            status = pass_to_dynamo( [out], N = n_copies, sites=destinations if destinations else None, None)
                             results.append( status )
                             if status == True:
                                 wfi.sendLog('closor','%s is send to dynamo in %s copies %s %s'%( out, n_copies, sorted(destinations), group_spec))
