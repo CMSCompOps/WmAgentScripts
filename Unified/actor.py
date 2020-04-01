@@ -730,6 +730,7 @@ if __name__ == '__main__':
     parser.add_option('--go',default=False,action='store_true',help="override possible blocking conditions")
     parser.add_option('--spec',default=None,help='a specific workflow to consider')
     parser.add_option('--actions', default=None,help='a file name with the actions to be taken')
+    parser.add_option('--change', default=False,help='option to downgrade the priority')
     (options,args) = parser.parse_args()
         
     if len(args)!=0:
