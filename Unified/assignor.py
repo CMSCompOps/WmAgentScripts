@@ -219,6 +219,7 @@ def assignor(url ,specific = None, talk=True, options=None):
         for prim in list(primary):
             set_lfn = getLFNbase( prim )
             ## if they are requested for processing, they should bbe all closed already
+            # FIXME: remove this closeAllBlocks
             closeAllBlocks(url, prim, blocks)
 
         ## should be 2 but for the time-being let's lower it to get things going
@@ -400,6 +401,8 @@ def assignor(url ,specific = None, talk=True, options=None):
                     parameters['EventsPerJob'] = eventsPerJob
                 else:
                     spl = wfh.getSplittings()[0]
+                    # FIXME: decide which of the lines below needs to remain...
+                    eventsPerJobEstimated = spl['events_per_job'] if 'events_per_job' in spl else None
                     eventsPerJobEstimated = spl['avg_events_per_job'] if 'avg_events_per_job' in spl else None
                     if eventsPerJobEstimated and eventsPerJobEstimated > eventsPerJob:
                         #sendEmail("setting lumi splitting for run-dependent MC","%s was assigned with %s lumis/job"%( wfo.name, lumisPerJob))

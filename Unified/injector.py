@@ -222,7 +222,7 @@ if __name__ == "__main__":
     parser = optparse.OptionParser()
     parser.add_option('-i','--invalidate',help="fetch invalidations from mcm",default=False,action='store_true')
     parser.add_option('-w','--wmstatus',help="from which status in req-mgr",default="assignment-approved")
-    parser.add_option('-s','--setstatus',help="What status to set locally",default="considered")
+    parser.add_option('-s','--setstatus',help="What status to set locally",default="staged")
     parser.add_option('-u','--user',help="What user to fetch workflow from",default="pdmvserv")
     parser.add_option('-r','--replace',help="the workflow name that should be used for replacement",default=None)
     parser.add_option('--user_relval',help="The user that can inject workflows for relvals", default=None)
