@@ -2828,10 +2828,7 @@ class cacheInfo:
     def purge(self):
         now = time.mktime(time.gmtime())
         # delete all documents with passed expiration time 
-        #before = len([o for o in self.db.find()])
         self.db.delete_many({'expire' : { '$lt' : now}})
-        #after = len([o for o in self.db.find()])
-        #print "purged",before-after,"document from cache"
 
 class closeoutInfo:
     def __init__(self):
