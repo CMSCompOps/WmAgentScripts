@@ -2685,12 +2685,10 @@ class reportInfo:
     def purge(self ,wfn=None, grace=None, wipe=False):
         ## clean in a way of another
         if wfn:
-            for e in  self.db.find( {'workflow' : wfn}):
-                self.db.delete_one({'_id': e['_id']})
+            self.db.delete_many( {'workflow' : wfn} )
         if grace:
             then = time.mktime( time.gmtime()) - (grace*24*60*60) ## s
-            for o in self.db.find({ 'time': { '$lt': then } } ):
-                self.db.delete_one({'_id': o['_id']})
+            self.db.delete_many( { 'time': { '$lt': then } } )
         if wipe == True:
             if raw_input('wipe repor db?').lower() in ['y','yes']:
                 for o in self.db.find():
