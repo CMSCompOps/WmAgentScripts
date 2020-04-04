@@ -2593,6 +2593,9 @@ class remainingDatasetInfo:
         self.client = mongo_client()
         self.db = self.client.unified.remainingDatasetInfo
     
+    def __del__(self):
+        self.purge(60)
+
     def purge(self, grace=30):
         now = time.mktime(time.gmtime()) - (grace*24*60*60)
         self.db.delete_many({'time': { '$lt': then}})
