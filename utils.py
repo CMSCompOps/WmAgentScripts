@@ -968,13 +968,7 @@ class StartStopInfo:
         
     def purge(self, now, since_in_days):
         then = now - (since_in_days*24*60*60)
-        ## anything older than then => delete
-        for o in self.db.find():
-            if o['start'] < then:
-                print "removing start/stop from",o['_id'],time.asctime(time.localtime( o['start'])), o['component'], o['start']
-                self.db.delete_one({'_id' : o['_id']})
-                
-      
+        self.db.delete_many( { 'start' : '$lt': then })
 
 
 class unifiedConfiguration:
