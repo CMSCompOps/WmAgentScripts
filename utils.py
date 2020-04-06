@@ -968,7 +968,7 @@ class StartStopInfo:
         
     def purge(self, now, since_in_days):
         then = now - (since_in_days*24*60*60)
-        self.db.delete_many( { 'start' : '$lt': then })
+        self.db.delete_many( { 'start' : {'$lt': then }})
 
 
 class unifiedConfiguration:
