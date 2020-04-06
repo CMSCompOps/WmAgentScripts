@@ -968,13 +968,7 @@ class StartStopInfo:
         
     def purge(self, now, since_in_days):
         then = now - (since_in_days*24*60*60)
-        ## anything older than then => delete
-        for o in self.db.find():
-            if o['start'] < then:
-                print "removing start/stop from",o['_id'],time.asctime(time.localtime( o['start'])), o['component'], o['start']
-                self.db.delete_one({'_id' : o['_id']})
-                
-      
+        self.db.delete_many( { 'start' : '$lt': then })
 
 
 class unifiedConfiguration:
@@ -2599,6 +2593,13 @@ class remainingDatasetInfo:
         self.client = mongo_client()
         self.db = self.client.unified.remainingDatasetInfo
     
+    def __del__(self):
+        self.purge(60)
+
+    def purge(self, grace=30):
+        now = time.mktime(time.gmtime()) - (grace*24*60*60)
+        self.db.delete_many({'time': { '$lt': then}})
+
     def clean(self):
         existings = self.db.find()
         for o in existings:
@@ -2691,12 +2692,10 @@ class reportInfo:
     def purge(self ,wfn=None, grace=None, wipe=False):
         ## clean in a way of another
         if wfn:
-            for e in  self.db.find( {'workflow' : wfn}):
-                self.db.delete_one({'_id': e['_id']})
+            self.db.delete_many( {'workflow' : wfn} )
         if grace:
             then = time.mktime( time.gmtime()) - (grace*24*60*60) ## s
-            for o in self.db.find({ 'time': { '$lt': then } } ):
-                self.db.delete_one({'_id': o['_id']})
+            self.db.delete_many( { 'time': { '$lt': then } } )
         if wipe == True:
             if raw_input('wipe repor db?').lower() in ['y','yes']:
                 for o in self.db.find():
@@ -2836,10 +2835,7 @@ class cacheInfo:
     def purge(self):
         now = time.mktime(time.gmtime())
         # delete all documents with passed expiration time 
-        #before = len([o for o in self.db.find()])
         self.db.delete_many({'expire' : { '$lt' : now}})
-        #after = len([o for o in self.db.find()])
-        #print "purged",before-after,"document from cache"
 
 class closeoutInfo:
     def __init__(self):
