@@ -1148,13 +1148,15 @@
       }
     }, 
     "resize": "auto", 
-     
-      "/DYToEE_M-20_CT10_TuneZ2star_v2_8TeV-powheg-pythia6/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM":{
+    
+    "secondaries": { 
+      "/Neutrino_E-10_gun/RunIISummer19ULPrePremix-UL16_106X_mcRun2_asymptotic_v10-v1/PREMIX":{
         "SecondaryLocation": [
           "T1_US_FNAL",
           "T2_CH_CERN"
         ]
-      },
+      }
+    },
     "secondary_AAA": true, 
     "tune": true
   }, 
