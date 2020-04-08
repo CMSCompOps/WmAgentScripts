@@ -32,6 +32,9 @@ def transferor(url ,specific = None, talk=True, options=None):
         execute = False
     else:
         execute = True
+    # FIXME Alan on 1/april/2020: does NOT get any real data placement made
+    execute = False
+    print "transferor module set to execute data placement: %s", execute
 
     SI = siteInfo()
     CI = campaignInfo()
@@ -245,6 +248,8 @@ def transferor(url ,specific = None, talk=True, options=None):
                 else:
                     wfo.status = 'trouble' ## so that we look or a replacement
             else:
+                # TODO Alan on 1/april/2020: it looks like this has to be done for
+                # any workflow not in assignment-approved
                 wfo.status = 'away'
             wfh.sendLog('transferor', '%s in status %s, setting %s'%( wfo.name,wfh.request['RequestStatus'],wfo.status))
             continue
@@ -345,7 +350,8 @@ def transferor(url ,specific = None, talk=True, options=None):
         if options and options.tosites:
             sites_allowed = options.tosites.split(',')
 
-
+        # TODO Alan on 1/april/2020: the 2 lines below can be removed once we
+        # handle data locking from WMCore
         for dataset in list(primary)+list(parent)+list(secondary):
             LI.lock( dataset , reason='staging' )
 
@@ -413,7 +419,6 @@ def transferor(url ,specific = None, talk=True, options=None):
                 prim_to_distribute = [site for site in sites_allowed if not SI.CE_to_SE(site) in prim_location]
                 prim_to_distribute = [site for site in prim_to_distribute if not SI.CE_to_SE(site) in prim_destination]
                 ## take out the ones that cannot receive transfers
-                potential_destinations = len(prim_to_distribute)
                 #prim_to_distribute = [site for site in prim_to_distribute if not SI.CE_to_SE(site) in SI.sites_veto_transfer]
                 prim_to_distribute = [site for site in prim_to_distribute if (SI.disk[SI.CE_to_SE(site)] or wfh.isRelval())]
 
@@ -599,8 +604,9 @@ def transferor(url ,specific = None, talk=True, options=None):
             ## no explicit transfer required this time
             if staging:
                 ## but using existing ones
-                wfh.sendLog('transferor', "latches on existing transfers, and nothing else, settin staging")
-                wfo.status = 'staging'
+                wfh.sendLog('transferor', "latches on existing transfers, and nothing else, setting staging")
+                wfh.sendLog('transferor', "forcing it from staging to staged in favor of MicroServices")
+                wfo.status = 'staged'
                 needs_transfer+=1
             else:
                 wfh.sendLog('transferor', "should just be assigned now to %s"%sorted(sites_allowed))
@@ -611,11 +617,13 @@ def transferor(url ,specific = None, talk=True, options=None):
             continue
         else:
             ## there is an explicit transfer required
+            # TODO Alan on 1/april/2020: this needs to be kept
             if staging:
                 ## and also using an existing one
                 wfh.sendLog('transferor', "latches on existing transfers")
                 if not options.test:
-                    wfo.status = 'staging'
+                    wfh.sendLog('transferor', "forcing it from staging to staged in favor of MicroServices")
+                    wfo.status = 'staged'
                     wfh.sendLog('transferor', "setting %s status to %s"%(wfo.name,wfo.status))
                     #session.commit()
             wfh.sendLog('transferor',"needs a transfer")
@@ -668,8 +676,9 @@ def transferor(url ,specific = None, talk=True, options=None):
         if execute:
             sendLog('transferor', details_text)
         else:
-            print "Would make a replica to",site,"(CE)",site_se,"(SE) for"
+            print "DRY-RUN: Would make a replica to",site,"(CE)",site_se,"(SE) for"
             print details_text
+            continue
 
         ## operate the transfer
         if options and options.stop:
@@ -702,7 +711,12 @@ def transferor(url ,specific = None, talk=True, options=None):
                         transfered_items[ph].update( items )
                 else:
                     sendLog('transferor','Could not make a replica request for items %s to site %s'%(items,site_se),level='critical')
-                
+
+            if not transfered_items:
+                sendLog('transferor',
+                        'Could not make a replica request for items %s to site %s' % (items_to_transfer, site),
+                        level='critical')
+                continue
             #result = makeReplicaRequest(url, site_se, items_to_transfer, 'prestaging', priority=priority, approve=True)
             #phedexids = [o['id'] for o in result['phedex']['request_created']]:
         #else:
@@ -711,10 +725,6 @@ def transferor(url ,specific = None, talk=True, options=None):
         #    fake_id-=1
 
 
-
-        if not transfered_items:
-            sendLog('transferor','Could not make a replica request for items %s to site %s'%(items_to_transfer,site),level='critical')
-            continue
         for phedexid,items in transfered_items.items():
             print phedexid,"transfer created"
             for transfering in list(set(map(lambda it : it.split('#')[0], items))):
@@ -731,11 +741,14 @@ def transferor(url ,specific = None, talk=True, options=None):
                     wf_id_in_prestaging.add( wfid )
             #session.commit()
 
+    # TODO Alan on 1/april/2020: it might be that this module will be resume in the lines below only
     for wfid in wf_id_in_prestaging:
+        wfh.sendLog('transferor', "transfers made for wfid: %s" % wfid)
+        wfh.sendLog('transferor', "forcing it from staging to staged in favor of MicroServices")
         tr_wf = session.query(Workflow).get(wfid)
         if tr_wf and tr_wf.status!='staging':
             if execute:
-                tr_wf.status = 'staging'
+                tr_wf.status = 'staged'
                 if talk:
                     print "setting",tr_wf.name,"to staging"
         #session.commit()
