@@ -622,6 +622,12 @@
     "lumisize": -1, 
     "maxcopies": 1
   }, 
+  "RunIIAutumn18NanoAODv7": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1
+  }, 
   "RunIIAutumn18RECOBParking": {
     "fractionpass": 0.95, 
     "go": true, 
@@ -742,6 +748,12 @@
   "RunIIFall17NanoAODv6": {
     "fractionpass": 0.95, 
     "go": true, 
+    "lumisize": -1, 
+    "maxcopies": 1
+  }, 
+  "RunIIFall17NanoAODv7": {
+    "fractionpass": 0.95, 
+    "go": false, 
     "lumisize": -1, 
     "maxcopies": 1
   }, 
@@ -947,12 +959,6 @@
     "lumisize": -1, 
     "maxcopies": 1
   }, 
-  "RunIISummer17NanoAODv7": {
-    "fractionpass": 0.95, 
-    "go": false, 
-    "lumisize": -1, 
-    "maxcopies": 1
-  }, 
   "RunIISummer17PrePremix": {
     "fractionpass": 0.95, 
     "go": true, 
@@ -1050,12 +1056,6 @@
       }
     }, 
     "tune": true
-  }, 
-  "RunIISummer18NanoAODv7": {
-    "fractionpass": 0.95, 
-    "go": false, 
-    "lumisize": -1, 
-    "maxcopies": 1
   }, 
   "RunIISummer19CosmicDR": {
     "fractionpass": 0.95, 
