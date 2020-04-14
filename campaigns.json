@@ -753,7 +753,7 @@
   }, 
   "RunIIFall17NanoAODv7": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
   }, 
@@ -955,7 +955,7 @@
   }, 
   "RunIISummer16NanoAODv7": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
   }, 
