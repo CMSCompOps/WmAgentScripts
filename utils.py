@@ -8188,10 +8188,12 @@ def getFailedJobs(taskname, caller='getFailedJobs'):
     failed_jobs = 0
 
     for info in reading['result']:
-        for f,taskinfo in info['AgentJobInfo'].iteritems():
-            if taskname in taskinfo['tasks'] and 'failure' in taskinfo['tasks'][taskname]['status']:
-                for ff,njobs in taskinfo['tasks'][taskname]['status']['failure'].iteritems():
-                    failed_jobs += njobs
+        for agentName in info.get('AgentJobInfo', {}):
+            if taskname in info['AgentJobInfo'][agentName].get("tasks", {}):
+                taskInfo = info['AgentJobInfo'][agentName]["tasks"][taskname]
+                if "failure" in taskInfo.get("status", {}):
+                    for failureType, numFailures in taskInfo["status"]["failure"].items():
+                        failed_jobs += numFailures
 
     return failed_jobs
 
