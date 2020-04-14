@@ -1277,7 +1277,7 @@
   }, 
   "RunIISummer19UL16RECOAPV": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
@@ -1301,7 +1301,7 @@
   }, 
   "RunIISummer19UL16SIMAPV": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
