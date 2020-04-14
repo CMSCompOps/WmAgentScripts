@@ -1231,7 +1231,7 @@
   }, 
   "RunIISummer19UL16MiniAODAPV": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
