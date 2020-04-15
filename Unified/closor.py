@@ -499,7 +499,7 @@ class CloseBuster(threading.Thread):
                         ## make the specific relval rules and the replicas
                         ## figure the destination(s) out
                         destinations = set()
-                        if tier != "RECO" and tier != "ALCARECO":
+                        if tier != "RECO" and tier != "ALCARECO" and tier != "NANOAOD" and tier != "NANOAODSIM":
                             destinations.add('T2_CH_CERN')
                         if tier == "GEN-SIM":
                             destinations.add('T1_US_FNAL_Disk')
@@ -508,10 +508,10 @@ class CloseBuster(threading.Thread):
                         if tier == "GEN-SIM-RECO":
                             destinations.add('T1_US_FNAL_Disk')
 
-                        if "RelValTTBar" in dsn and "TkAlMinBias" in process_string and tier != "ALCARECO":
+                        if "RelValTTBar" in dsn and "TkAlMinBias" in process_string and tier != "ALCARECO" and tier != "NANOAOD" and tier != "NANOAODSIM":
                             destinations.add('T2_CH_CERN')
 
-                        if "MinimumBias" in dsn and "SiStripCalMinBias" in process_string and tier != "ALCARECO":
+                        if "MinimumBias" in dsn and "SiStripCalMinBias" in process_string and tier != "ALCARECO" and tier != "NANOAOD" and tier != "NANOAODSIM":
                             destinations.add('T2_CH_CERN')
                         
                         if destinations:

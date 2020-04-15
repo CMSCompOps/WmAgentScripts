@@ -227,7 +227,7 @@
    "description": "The data tiers that do not go to AnaOps"
  },
  "tiers_to_DDM": {
-   "value" : ["AODSIM","MINIAODSIM","GEN-SIM-RAW","GEN-SIM-RECO","GEN-SIM-RECODEBUG","AOD","RECO","MINIAOD","ALCARECO","USER","RAW-RECO","RAWAODSIM","NANOAOD","NANOAODSIM","FEVT","PREMIX"],
+   "value" : ["AODSIM","MINIAODSIM","GEN-SIM-RAW","GEN-SIM-RECO","GEN-SIM-RECODEBUG","AOD","RECO","MINIAOD","ALCARECO","USER","RAW-RECO","RAWAODSIM","FEVT","PREMIX"],
    "description": "The data tiers that go to AnaOps"
  },
  "secondary_lock_timeout": {
