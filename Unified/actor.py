@@ -736,11 +736,11 @@ if __name__ == '__main__':
         print "No arguments accepted."
     else:
         if not options.do: options.ass=False
-        actor(url,options=options)
+        try:
+            actor(url,options=options)
+        except:
+            sendLog('actor','module has failed to operate, interlocking the module', level='critical')
+            os.system('touch %s/actor.failed-%s.lock'%( base_eos_dir, os.getpid() ))
+            sys.exit(-1)
 
-#    fdb = closeoutInfo()
-#    fdb.html()
-
-#    from showError import parse_all
- #   parse_all(url)
 
