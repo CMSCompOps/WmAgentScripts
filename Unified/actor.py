@@ -15,6 +15,7 @@ import httplib
 import ssl
 import sys
 import random
+import glob
 from wtcClient import wtcClient
 from JIRAClient import JIRAClient
 
@@ -359,7 +360,11 @@ def singleClone(url, wfname, actions, comment, do=False):
 
 
 def actor(url,options=None):
-    
+
+    if glob.glob('%s/actor.failed-*.lock'%( base_eos_dir )):
+        sendLog('actor','module is locked because of past failures', level='critical')
+        return
+
     mlock = moduleLock(wait=False ,silent=True)
     if mlock(): return
     if userLock('actor'): return
