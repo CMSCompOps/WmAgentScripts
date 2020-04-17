@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 from assignSession import *
-import sys
 import reqMgrClient
 from utils import workflowInfo, setDatasetStatus, invalidate
 from utils import componentInfo, reqmgr_url, getWorkflowById
@@ -15,9 +14,7 @@ username = getpass.getuser()
 
 def rejector(url, specific, options=None):
 
-    
-    up = componentInfo(soft=['wtc','jira'])
-    #if not up.check(): return
+    if not componentInfo(soft=['wtc','jira']).check(): return
 
     if specific and specific.startswith('/'):
         ## this is for a dataset
