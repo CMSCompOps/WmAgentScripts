@@ -2243,7 +2243,11 @@ class siteInfo:
 
             if mss in sites_space_override:
                 self.storage[mss] = sites_space_override[mss]
-
+            
+            ## disbale PIC tape temparorily
+            if mss == 'T1_ES_PIC_MSS':
+                self.storage[mss] = 0
+                print "disable T1_ES_PIC_MSS temparorily" 
 
         self.fetch_queue_info()
         ## and detox info
