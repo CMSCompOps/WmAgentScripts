@@ -9,7 +9,7 @@ $BASE_DIR/cWrap.sh Unified/transferor.py
 
 ## get this done once as it is quite slow and heavy, but we need the output json it could produce
 ## in for timing measurements
-$BASE_DIR/cWrap.sh Unified/stagor.py
+#$BASE_DIR/cWrap.sh Unified/stagor.py
 
 rm -f $lock_name
 
