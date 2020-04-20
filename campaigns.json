@@ -1208,7 +1208,7 @@
   }, 
   "RunIISummer19UL16HLTAPV": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
@@ -1360,7 +1360,7 @@
   }, 
   "RunIISummer19UL16wmLHEGENAPV": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
