@@ -3214,7 +3214,7 @@ def _getFileBlock( f ):
     ## if not found, get that file info again and amend
     dbsapi = DbsApi(url=dbs_url)
     r = dbsapi.listFileArray( logical_file_name = f, detail=True)
-    return [df['block_name'] for df in r[0] if r else None
+    return [df['block_name'] for df in r][0] if r else None
 
 def getDatasetFileArray( dataset, validFileOnly=0, detail=False, cache_timeout=30, use_array=False):
     ## check for cache content
