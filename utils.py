@@ -3205,6 +3205,17 @@ def checkTransferApproval(url, phedexid):
             approved[node['name']] = (node['decision']=='approved')
     return approved
 
+def getFileBlock( file_name ):
+    return runWithRetries(_getFileBlock, [file_name],{})
+
+def _getFileBlock( f ):
+    ## this function should get in one shot all files and blocks
+    ## cache it, return the block of that file
+    ## if not found, get that file info again and amend
+    dbsapi = DbsApi(url=dbs_url)
+    r = dbsapi.listFileArray( logical_file_name = f, detail=True)
+    return [df['block_name'] for df in r][0] if r else None
+
 def getDatasetFileArray( dataset, validFileOnly=0, detail=False, cache_timeout=30, use_array=False):
     ## check for cache content
     call = 'listFileArray' if use_array else 'listFile'
