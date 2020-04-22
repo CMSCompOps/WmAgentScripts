@@ -3205,6 +3205,17 @@ def checkTransferApproval(url, phedexid):
             approved[node['name']] = (node['decision']=='approved')
     return approved
 
+def getFileBlock( file_name ):
+    return runWithRetries(_getFileBlock, [file_name],{})
+
+def _getFileBlock( f ):
+    ## this function should get in one shot all files and blocks
+    ## cache it, return the block of that file
+    ## if not found, get that file info again and amend
+    dbsapi = DbsApi(url=dbs_url)
+    r = dbsapi.listFileArray( logical_file_name = f, detail=True)
+    return [df['block_name'] for df in r][0] if r else None
+
 def getDatasetFileArray( dataset, validFileOnly=0, detail=False, cache_timeout=30, use_array=False):
     ## check for cache content
     call = 'listFileArray' if use_array else 'listFile'
@@ -6834,28 +6845,29 @@ class workflowInfo:
         files_no_block = set()
         files_in_block = set()
         datasets = set()
+        cache = cacheInfo()
+        file_block_cache = defaultdict( str )
         for f in all_files:
-            try:
-                if not f.startswith('/store/unmerged/') and not f.startswith('MCFakeFile-'):
-                    r = dbsapi.listFileArray( logical_file_name = f, detail=True)
+            if not f.startswith('/store/unmerged/') and not f.startswith('MCFakeFile-'):
+                if f in file_block_cache:
+                    file_block = file_block_cache[ f ]
                 else:
-                    r = []
-            except Exception as e:
-                print "dbsapi.listFileArray failed on",f
-                print str(e)
-                continue
-
-            if not r:
-                files_no_block.add( f)
-            else:
+                    file_block = getFileBlock( f ) 
+                    if file_block:
+                        for _f in getDatasetFileArray( file_block.split('#')[0], detail=True, cache_timeout=12*60*60 ):
+                            file_block_cache[ _f['logical_file_name' ] ] = _f['block_name']
+                    
                 files_in_block.add( f )
-                all_blocks.update( [df['block_name'] for df in r ])
-                for df in r:
-                    all_blocks_loc[df['block_name']] . update( files_and_loc.get( f, []))
+                all_blocks.add( file_block )
+                all_blocks_loc[file_block].update( files_and_loc.get( f, []) )
+            else:
+                files_no_block.add( f )
+
+        file_block_doc = defaultdict( lambda : defaultdict( set ))
         dataset_blocks = set()
-        for dataset in set([block.split('#')[0] for block in all_blocks]):
-            print dataset
-            dataset_blocks.update( getDatasetBlocks( dataset ) )
+        for _f,_b in file_block_cache.iteritems():
+            file_block_doc[ _b.split('#')[0]][_b].add( _f )
+            dataset_blocks.add( _b )
 
         ## skim out the files
         files_and_loc_noblock = dict([(k,list(v)) for (k,v) in files_and_loc.items() if k in files_no_block])
