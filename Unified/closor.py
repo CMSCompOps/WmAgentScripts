@@ -374,6 +374,7 @@ class CloseBuster(threading.Thread):
 
         jump_the_line = self.jump_the_line
         batch_goodness = self.batch_goodness
+        check_parentage_to_announce = UC.get('check_parentage_to_announce')
         check_fullcopy_to_announce = UC.get('check_fullcopy_to_announce')
 
         ## what is the expected #lumis 
@@ -584,6 +585,14 @@ class CloseBuster(threading.Thread):
                     else:
                         print wfo.name,"no stats for announcing",out
                         results.append('No Stats')
+
+                # adding check for PrentageResolved flag from ReqMgr:
+                if wfi.request['RequestType'] == 'StepChain' and check_parentage_to_announce:
+                    if wfi.request['ParentageResolved']:
+                        results.append(True)
+                    else:
+                        wfi.sendLog('closor',"Delayed announcement of %s due to unresolved Parentage dependencies" % wfi.request['RequestName'])
+                        results.append('No ParentageResolved')
 
                 if all(map(lambda result : result in ['None',None,True],results)):
                     if not jump_the_line:
