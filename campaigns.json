@@ -121,8 +121,7 @@
         "T2_US_Florida", 
         "T2_US_Nebraska", 
         "T2_US_UCSD", 
-        "T2_US_Wisconsin", 
-        "T2_CH_CERN"
+        "T2_US_Wisconsin" 
       ]
     }, 
     "tune": true
