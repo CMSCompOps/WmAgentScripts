@@ -1899,7 +1899,9 @@ class docCache:
                 print str(e)
                 if lastdoc:
                     last_doc = cache.get( label, no_expire=True)
+                    print "last document in cache for",label,"is",last_doc
                     if last_doc:
+                        print "returning the last doc in cache"
                         return last_doc
                 data = o['default']
             cache.store( label, 
