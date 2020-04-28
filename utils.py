@@ -6555,12 +6555,13 @@ class workflowInfo:
                     break
         return timeInfo
 
-    def isGoodToConvertToStepChain(self ,keywords=None, talk=False):
+    def isGoodToConvertToStepChain(self ,keywords=None, talk=False, debug=False):
         all_same_arch = True
 
         ## efficiency 
         try:
             time_info = self.getTimeInfoForChain()
+            if debug: print time_info
             totalTimePerEvent = 0
             efficiency = 0
             max_ncores = 1
@@ -6568,12 +6569,14 @@ class workflowInfo:
                 totalTimePerEvent += info['tpe']
                 efficiency += info['tpe']*info['cores']
                 if info['cores']>max_ncores: max_ncores = info['cores']
-                # print "Total time per event for TaskChain: %0.1f" % totalTimePerEvent
-                efficiency /= totalTimePerEvent*max_ncores
-                # print "CPU efficiency of StepChain with %u cores: %0.1f%%" % (max_ncores,efficiency*100)
-                acceptable_efficiency = efficiency > self.UC.get("efficiency_threshold_for_stepchain")
+            if debug: print "Total time per event for TaskChain: %0.1f" % totalTimePerEvent
+            efficiency /= totalTimePerEvent*max_ncores
+            if debug: print "CPU efficiency of StepChain with %u cores: %0.1f%%" % (max_ncores,efficiency*100)
+            acceptable_efficiency = efficiency > self.UC.get("efficiency_threshold_for_stepchain")
         except TypeError:
             acceptable_efficiency = False
+            if debug:
+                print "Caught TypeError"
 
         ## only one value throughout the chain
         all_same_cores = len(set(self.getMulticores()))==1
