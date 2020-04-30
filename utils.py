@@ -6556,6 +6556,8 @@ class workflowInfo:
         return timeInfo
 
     def isGoodToConvertToStepChain(self ,keywords=None, talk=False, debug=False):
+        # Conversion is supported only from TaskChain to StepChain
+        if self.request['RequestType'] != 'TaskChain': return False 
         all_same_arch = True
 
         ## efficiency 
@@ -6570,9 +6572,12 @@ class workflowInfo:
                 efficiency += info['tpe']*info['cores']
                 if info['cores']>max_ncores: max_ncores = info['cores']
             if debug: print "Total time per event for TaskChain: %0.1f" % totalTimePerEvent
-            efficiency /= totalTimePerEvent*max_ncores
-            if debug: print "CPU efficiency of StepChain with %u cores: %0.1f%%" % (max_ncores,efficiency*100)
-            acceptable_efficiency = efficiency > self.UC.get("efficiency_threshold_for_stepchain")
+            if totalTimePerEvent > 0:
+                efficiency /= totalTimePerEvent*max_ncores
+                if debug: print "CPU efficiency of StepChain with %u cores: %0.1f%%" % (max_ncores,efficiency*100)
+                acceptable_efficiency = efficiency > self.UC.get("efficiency_threshold_for_stepchain")
+            else:
+                acceptable_efficiency = False
         except TypeError:
             acceptable_efficiency = False
             if debug:
