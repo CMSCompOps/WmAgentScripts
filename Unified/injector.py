@@ -188,7 +188,7 @@ def injector(url, options, specific):
                 sendLog('injector',"putting %s as replacement of %s"%( member, wf.name))
                 status = 'away'
                 if fwl['RequestStatus'] in ['assignment-approved']:
-                    status = 'considered'
+                    status = 'staged'
                 new_wf = Workflow( name = member, status = status, wm_status = fwl['RequestStatus'])
                 wf.status = 'forget'
                 session.add( new_wf ) 
