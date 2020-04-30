@@ -102,7 +102,7 @@ def injector(url, options, specific):
             if not can_add: continue
 
             ## temporary hack to transform specific taskchain into stepchains
-            print "considering the workflow %s for step-chain conversion"%wfi
+            print "considering the workflow %s for step-chain conversion"%wf
             good_for_stepchain = wfi.isGoodToConvertToStepChain( keywords = transform_keywords)
             
             ## match keywords and technical constraints
