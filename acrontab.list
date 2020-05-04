@@ -15,7 +15,6 @@
 ## single script that cycles through modules
 */2 * * * * vocms0269 /data/unified/WmAgentScripts/cWrap.sh Unified/cachor.py &> /dev/null
 15 */4 * * * vocms0269 /data/unified/WmAgentScripts/cWrap.sh Unified/stuckor.py &> /dev/null
-10 * 1-31 * * vocms0268 /data/unified/WmAgentScripts/precycle.sh &> /dev/null
 20,50 * 1-31 * * vocms0269 /data/unified/WmAgentScripts/assigncycle.sh &> /dev/null
 30 */4 1-31 * * vocms0269 /data/unified/WmAgentScripts/unlockingcycle.sh &> /dev/null
 10,40 * 1-31 * * vocms0273 /data/unified/WmAgentScripts/postcycle-strict.sh &> /dev/null
