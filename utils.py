@@ -1541,14 +1541,18 @@ def _get_dashbssb(path_name, ssb_metric):
     with open('Unified/monit_secret.json') as monit:
         conf = json.load(monit)
     query = """'{"search_type":"query_then_fetch","ignore_unavailable":true,"index":["monit_prod_cmssst_*","monit_prod_cmssst_*"]}
-{"size":1,"query":{"bool":{"filter":[{"range":{"metadata.timestamp":{"gte":"now-1d","lte":"now","format":"epoch_millis"}}},{"query_string":{"analyze_wildcard":true,"query":"metadata.type: ssbmetric AND metadata.type_prefix:raw AND metadata.path: %s"}}]}},"sort":{"metadata.timestamp":{"order":"desc","unmapped_type":"boolean"}},"script_fields":{},"docvalue_fields":["metadata.timestamp"]}
+{"size":1,"query":{"bool":{"filter":[{"range":{"metadata.timestamp":{"gte":"now-2d","lte":"now","format":"epoch_millis"}}},{"query_string":{"analyze_wildcard":true,"query":"metadata.type: ssbmetric AND metadata.type_prefix:raw AND metadata.path: %s"}}]}},"sort":{"metadata.timestamp":{"order":"desc","unmapped_type":"boolean"}},"script_fields":{},"docvalue_fields":["metadata.timestamp"]}
 '"""%(str(path_name))
     TIMESTAMP = json.loads(os.popen('curl -s -X POST %s -H "Authorization: Bearer %s" -H "Content-Type: application/json" -d %s'%(conf["url"],conf["token"],query)).read())["responses"][0]["hits"]["hits"][0]["_source"]["metadata"]["timestamp"]
     query2 = """'{"search_type":"query_then_fetch","ignore_unavailable":true,"index":["monit_prod_cmssst_*","monit_prod_cmssst_*"]}
-{"size":500,"_source": {"includes":["data.name","data.%s"]},"query":{"bool":{"filter":[{"range":{"metadata.timestamp":{"gte":"now-1d","lte":"now","format":"epoch_millis"}}},{"query_string":{"analyze_wildcard":true,"query":"metadata.type: ssbmetric AND metadata.type_prefix:raw AND metadata.path: %s AND metadata.timestamp:%s"}}]}},"sort":{"metadata.timestamp":{"order":"desc","unmapped_type":"boolean"}},"script_fields":{},"docvalue_fields":["metadata.timestamp"]}
+{"size":500,"_source": {"includes":["data.name","data.%s"]},"query":{"bool":{"filter":[{"range":{"metadata.timestamp":{"gte":"now-2d","lte":"now","format":"epoch_millis"}}},{"query_string":{"analyze_wildcard":true,"query":"metadata.type: ssbmetric AND metadata.type_prefix:raw AND metadata.path: %s AND metadata.timestamp:%s"}}]}},"sort":{"metadata.timestamp":{"order":"desc","unmapped_type":"boolean"}},"script_fields":{},"docvalue_fields":["metadata.timestamp"]}
 '"""%(str(ssb_metric),str(path_name),str(TIMESTAMP))
     result = json.loads(os.popen('curl -s --retry 5 -X POST %s -H "Authorization: Bearer %s" -H "Content-Type: application/json" -d %s'%(conf["url"],conf["token"],query2)).read())["responses"][0]["hits"]["hits"]    
-    return [ item['_source']['data'] for item in result]
+    result = [ item['_source']['data'] for item in result] 
+    if result: 
+        return result
+    else:
+        raise Exception("get_dashbssb returns an empty collection")
     
 
 
@@ -1899,7 +1903,9 @@ class docCache:
                 print str(e)
                 if lastdoc:
                     last_doc = cache.get( label, no_expire=True)
+                    print "last document in cache for",label,"is",last_doc
                     if last_doc:
+                        print "returning the last doc in cache"
                         return last_doc
                 data = o['default']
             cache.store( label, 
@@ -2827,10 +2833,12 @@ class cacheInfo:
             print type(e)
             print str(e)
 
-    def purge(self):
-        now = time.mktime(time.gmtime())
-        # delete all documents with passed expiration time 
-        self.db.delete_many({'expire' : { '$lt' : now}})
+    def purge(self, grace = 2):
+        limit = time.mktime(time.gmtime())
+        # delete all documents with passed expiration time
+        # by more than <grace> days
+        limit -= grace*24*60*60
+        self.db.delete_many({'expire' : { '$lt' : limit}})
 
 class closeoutInfo:
     def __init__(self):
@@ -3204,6 +3212,17 @@ def checkTransferApproval(url, phedexid):
         for node in item['node']:
             approved[node['name']] = (node['decision']=='approved')
     return approved
+
+def getFileBlock( file_name ):
+    return runWithRetries(_getFileBlock, [file_name],{})
+
+def _getFileBlock( f ):
+    ## this function should get in one shot all files and blocks
+    ## cache it, return the block of that file
+    ## if not found, get that file info again and amend
+    dbsapi = DbsApi(url=dbs_url)
+    r = dbsapi.listFileArray( logical_file_name = f, detail=True)
+    return [df['block_name'] for df in r][0] if r else None
 
 def getDatasetFileArray( dataset, validFileOnly=0, detail=False, cache_timeout=30, use_array=False):
     ## check for cache content
@@ -6536,12 +6555,15 @@ class workflowInfo:
                     break
         return timeInfo
 
-    def isGoodToConvertToStepChain(self ,keywords=None, talk=False):
+    def isGoodToConvertToStepChain(self ,keywords=None, talk=False, debug=False):
+        # Conversion is supported only from TaskChain to StepChain
+        if self.request['RequestType'] != 'TaskChain': return False 
         all_same_arch = True
 
         ## efficiency 
         try:
             time_info = self.getTimeInfoForChain()
+            if debug: print time_info
             totalTimePerEvent = 0
             efficiency = 0
             max_ncores = 1
@@ -6549,12 +6571,17 @@ class workflowInfo:
                 totalTimePerEvent += info['tpe']
                 efficiency += info['tpe']*info['cores']
                 if info['cores']>max_ncores: max_ncores = info['cores']
-                # print "Total time per event for TaskChain: %0.1f" % totalTimePerEvent
+            if debug: print "Total time per event for TaskChain: %0.1f" % totalTimePerEvent
+            if totalTimePerEvent > 0:
                 efficiency /= totalTimePerEvent*max_ncores
-                # print "CPU efficiency of StepChain with %u cores: %0.1f%%" % (max_ncores,efficiency*100)
+                if debug: print "CPU efficiency of StepChain with %u cores: %0.1f%%" % (max_ncores,efficiency*100)
                 acceptable_efficiency = efficiency > self.UC.get("efficiency_threshold_for_stepchain")
+            else:
+                acceptable_efficiency = False
         except TypeError:
             acceptable_efficiency = False
+            if debug:
+                print "Caught TypeError"
 
         ## only one value throughout the chain
         all_same_cores = len(set(self.getMulticores()))==1
@@ -6834,28 +6861,29 @@ class workflowInfo:
         files_no_block = set()
         files_in_block = set()
         datasets = set()
+        cache = cacheInfo()
+        file_block_cache = defaultdict( str )
         for f in all_files:
-            try:
-                if not f.startswith('/store/unmerged/') and not f.startswith('MCFakeFile-'):
-                    r = dbsapi.listFileArray( logical_file_name = f, detail=True)
+            if not f.startswith('/store/unmerged/') and not f.startswith('MCFakeFile-'):
+                if f in file_block_cache:
+                    file_block = file_block_cache[ f ]
                 else:
-                    r = []
-            except Exception as e:
-                print "dbsapi.listFileArray failed on",f
-                print str(e)
-                continue
-
-            if not r:
-                files_no_block.add( f)
-            else:
+                    file_block = getFileBlock( f ) 
+                    if file_block:
+                        for _f in getDatasetFileArray( file_block.split('#')[0], detail=True, cache_timeout=12*60*60 ):
+                            file_block_cache[ _f['logical_file_name' ] ] = _f['block_name']
+                    
                 files_in_block.add( f )
-                all_blocks.update( [df['block_name'] for df in r ])
-                for df in r:
-                    all_blocks_loc[df['block_name']] . update( files_and_loc.get( f, []))
+                all_blocks.add( file_block )
+                all_blocks_loc[file_block].update( files_and_loc.get( f, []) )
+            else:
+                files_no_block.add( f )
+
+        file_block_doc = defaultdict( lambda : defaultdict( set ))
         dataset_blocks = set()
-        for dataset in set([block.split('#')[0] for block in all_blocks]):
-            print dataset
-            dataset_blocks.update( getDatasetBlocks( dataset ) )
+        for _f,_b in file_block_cache.iteritems():
+            file_block_doc[ _b.split('#')[0]][_b].add( _f )
+            dataset_blocks.add( _b )
 
         ## skim out the files
         files_and_loc_noblock = dict([(k,list(v)) for (k,v) in files_and_loc.items() if k in files_no_block])

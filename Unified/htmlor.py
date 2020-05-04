@@ -217,9 +217,9 @@ def htmlor( caller = ""):
     summary_content = {}
 
     view_not_a_module = ['agentInfo','componentInfo']
-    view_modules = ['injector','batchor','transferor','cachor','stagor','assignor','completor','GQ','equalizor','checkor','recoveror','actor','closor']+view_not_a_module
+    view_modules = ['injector','batchor','transferor','cachor','assignor','completor','GQ','equalizor','checkor','recoveror','actor','closor']+view_not_a_module
 
-    all_modules = list(set(view_modules + ['actor','addHoc','assignor','batchor','cachor','checkor','closor','completor','efficiencor','equalizor','GQ','htmlor','injector','lockor','messagor','recoveror','remainor','showError','stagor','stuckor','subscribor','transferor']))
+    all_modules = list(set(view_modules + ['actor','addHoc','assignor','batchor','cachor','checkor','closor','completor','efficiencor','equalizor','GQ','htmlor','injector','lockor','messagor','recoveror','remainor','showError','stuckor','subscribor','transferor']))
 
     html_doc.write("""
 <html>
