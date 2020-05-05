@@ -10,8 +10,8 @@ def step_chain_test(url, wf):
 
 if __name__ == "__main__":
     url = reqmgr_url
-    if len(sys.argv)==2:
-        wfs = [ sys.argv[1] ]
+    if len(sys.argv)>1:
+        wfs = sys.argv[1].split(",")
     else:
         wfs = [
             'pdmvserv_task_TSG-Run3Winter20wmLHEGS-00017__v1_T_200408_150110_9739',
