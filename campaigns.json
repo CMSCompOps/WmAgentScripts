@@ -1093,7 +1093,7 @@
       },
       "/MinBias_TuneCP1_13TeV-pythia8/RunIISummer19UL16SIM-106X_mcRun2_asymptotic_v10-v2/GEN-SIM": {
         "SiteWhitelist": [
-          "T2_FR_GRIF_LLR"
+          "T1_FR_CCIN2P3_Disk"
         ]
       }
     }, 
