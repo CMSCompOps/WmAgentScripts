@@ -242,6 +242,10 @@
   "value" : false,
   "description": "Whether to check for a full copy being present prior to announcing a dataset"
  },
+ "check_parentage_to_announce": {
+  "value" : true,
+  "description": "Whether to check if all blocks are having their parentage dependencies resolved before announcing a dataset"
+ },
  "stagor_sends_back": {
    "value" : true,
    "description": "Whether the stagor module can send workflow back to considered"
