@@ -8210,9 +8210,15 @@ def getFailedJobs(taskname, caller='getFailedJobs'):
     wfname=taskname.split('/')[1]
     print 'wfname=',wfname
     conn = make_x509_conn(reqmgr_url)
-    r1=conn.request("GET",'/wmstatsserver/data/filtered_requests?RequestName=%s&mask=PrepID&mask=AgentJobInfo'%(wfname),headers={"Accept":"application/json"})
-    r2=conn.getresponse()
-    reading = json.loads(r2.read())
+    try:
+        r1=conn.request("GET",'/wmstatsserver/data/filtered_requests?RequestName=%s&mask=PrepID&mask=AgentJobInfo'%(wfname),headers={"Accept":"application/json"})
+        r2=conn.getresponse()
+        reading = json.loads(r2.read())
+    except Exception as e:
+        sendLog('componentInfo','not able to connect to wmstats server', level='critical')
+        print str(e)
+        return 0
+
     failed_jobs = 0
 
     for info in reading['result']:
