@@ -141,6 +141,43 @@ def getFileCountDataset(url, dataset):
     for block in result['phedex']['block']:
         files += block['files']
     return files
+
+def getFileCountPerBlock(url, dataset):
+    """
+    Returns the number of files per block in a dataset registered in phedex
+    """
+    result = phedexGet(url, '/phedex/datasvc/json/prod/blockreplicas?dataset='+dataset, auth=False)
+    if 'block' not in result['phedex']:
+        return {}
+    elif not result['phedex']['block']:
+        return {}
+    # we need blocks to be a list of tuples so we can create a set out of this
+    blocks = []
+    #check all blocks
+    for block in result['phedex']['block']:
+        # blocks.append({'name':block['name'],
+        #                'files':block['files']})
+        blocks.append((block['name'],block['files']))
+
+    return blocks
+
+
+def getFileNamesDataset(url, dataset):
+    """
+    Returns a set of file names in a dataset registered in phedex
+    """
+    result = phedexGet(url, '/phedex/datasvc/json/prod/filereplicas?dataset='+dataset, auth=False)
+    if 'block' not in result['phedex']:
+        return set()
+    elif not result['phedex']['block']:
+        return set()
+    files = []
+    # check all blocks
+    for block in result['phedex']['block']:
+        for _file in block['file']:
+            files.append(_file['name'])
+    return set(files)
+
         
 def getTransferPercentage(url, dataset, site):
     """
