@@ -6818,7 +6818,7 @@ class workflowInfo:
 
             trials-=1
             time.sleep(1)
-        return None
+        return {}
 
     def _getWMStats(self ,cache=0):
         f_cache = '%s/%s.wmstats'%(cache_dir, self.request['RequestName'])
