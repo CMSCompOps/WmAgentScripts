@@ -92,8 +92,9 @@ def batchor( url ):
         if campaign in batches: continue
         ## get a bunch of information
         setup  = copy.deepcopy( default_hi_setup )
-        possible_sites = set(["T1_DE_KIT","T1_FR_CCIN2P3"])
-        hi_site = random.choice(list(possible_sites))
+        ##possible_sites = set(["T1_DE_KIT","T1_FR_CCIN2P3"])
+        ##hi_site = random.choice(list(possible_sites))
+        hi_site = "T2_CH_CERN"
         setup["parameters"]["SiteWhitelist"]=[ hi_site ]
 
         pick_one_site( setup )
