@@ -98,4 +98,7 @@ else:
     secret = open('Unified/secret_cmsr_rw.txt','r').read().strip()    
 
 engine = create_engine(secret)
-Base.metadata.create_all(engine)
+try:
+    Base.metadata.create_all(engine)
+except:
+    print "Failed to create_all(engine)"
