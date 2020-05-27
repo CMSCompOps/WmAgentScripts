@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import checkTransferStatus, moduleLock, sendLog, transferStatuses
+from utils import checkTransferStatus, moduleLock, sendLog, transferStatuses, componentInfo
 import json
 import random
 import sys
@@ -12,6 +12,7 @@ def cachor(spec=None):
     if mlock(): 
         print "currently running"
         return
+    if not componentInfo().check(): return
     TS = transferStatuses()
     print sorted(TS.all()),"cached transfers"
     ## pop all that are now in inactive
