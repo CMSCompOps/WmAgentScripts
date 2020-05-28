@@ -6806,7 +6806,7 @@ class workflowInfo:
         return self.dashb
 
     def getWMStats(self ,cache=0):
-        trials = 10
+        trials = 1
         while trials>0:
             try:
                 return self._getWMStats(cache=cache)
