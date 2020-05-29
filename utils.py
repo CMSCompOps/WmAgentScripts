@@ -6711,11 +6711,6 @@ class workflowInfo:
                         self.errors = d_cache['data']
                         return self.errors
 
-            # Alan Malta on 28/May/2020
-            ### FIXME TODO temporarily skipping this call
-            print "temporarily bypassing getWMErrors"
-            return {}
-            ### end of temporary hack code
             self.conn = make_x509_conn(self.url)
             r1=self.conn.request("GET",'/wmstatsserver/data/jobdetail/%s'%(self.request['RequestName']), headers={"Accept":"*/*"})
             r2=self.conn.getresponse()
@@ -6836,12 +6831,7 @@ class workflowInfo:
                     print "wmstats taken from cache",f_cache
                     self.wmstats = d_cache['data']
                     return self.wmstats
-        # Alan Malta on 28/may/2020
-        ### FIXME TODO temporarily query reqmgr2 instead of wmstats
-        print "temporarily querying reqmgr2 instead of wmstatsserver"
-        r1=self.conn.request("GET",'/reqmgr2/data/request/%s'%self.request['RequestName'], headers={"Accept":"application/json"})
-        ### end of hack, uncomment line below
-        #r1=self.conn.request("GET",'/wmstatsserver/data/request/%s'%self.request['RequestName'], headers={"Accept":"application/json"})
+        r1=self.conn.request("GET",'/wmstatsserver/data/request/%s'%self.request['RequestName'], headers={"Accept":"application/json"})
         r2=self.conn.getresponse()
         self.wmstats = json.loads(r2.read())['result'][0][self.request['RequestName']]
         try:
