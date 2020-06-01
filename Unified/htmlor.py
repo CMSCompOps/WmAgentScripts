@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 import time
-from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration, getPrepIDs, componentInfo, getAllAgents, sendLog, moduleLock, dataCache, agentInfo, display_time, eosFile, eosRead, StartStopInfo, remainingDatasetInfo
+from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration, getPrepIDs, componentInfo, getAllAgents, sendLog, moduleLock, dataCache, agentInfo, display_time, eosFile, eosRead, StartStopInfo, remainingDatasetInfo, findCustodialLocation
 import os
 import json
 from collections import defaultdict
