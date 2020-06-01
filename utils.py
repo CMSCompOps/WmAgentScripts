@@ -1061,7 +1061,7 @@ class componentCheck(threading.Thread):
             'reqmgr' : False,
             'mcm' : False,
             'dbs' : False,
-            'phedex' : False,
+#            'phedex' : False,
             'cmsr' : False,
             'wtc' : False,
             'eos' : False,
@@ -1102,11 +1102,11 @@ class componentCheck(threading.Thread):
         if not blocks:
             raise Exception("dbs corrupted")
 
-    def check_phedex(self):
-        if 'testbed' in dbs_url:
-            cust = findCustodialLocation(phedex_url,'/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM')
-        else:
-            cust = findCustodialLocation(phedex_url,'/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM')
+#    def check_phedex(self):
+#        if 'testbed' in dbs_url:
+#            cust = findCustodialLocation(phedex_url,'/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM')
+#        else:
+#            cust = findCustodialLocation(phedex_url,'/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM')
 
     def check_wtc(self):
         from wtcClient import wtcClient
