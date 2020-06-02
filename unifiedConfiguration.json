@@ -230,6 +230,14 @@
    "value" : ["AODSIM","MINIAODSIM","GEN-SIM-RAW","GEN-SIM-RECO","GEN-SIM-RECODEBUG","AOD","RECO","MINIAOD","ALCARECO","USER","RAW-RECO","RAWAODSIM","NANOAOD","NANOAODSIM","FEVT","PREMIX"],
    "description": "The data tiers that go to AnaOps"
  },
+ "tiers_to_rucio_relval": {
+   "value" : ["NANOAOD", "NANOAODSIM"],
+   "description": "The data tiers not to be considered for output data placement - RelVal workflows."
+ },
+ "tiers_to_rucio_nonrelval": {
+   "value" : [],
+   "description": "The data tiers not to be considered for output data placement - NonRelVal workflows."
+ },
  "secondary_lock_timeout": {
    "value" : 30,
    "description": "The number of days to keep a secondary input locked"
