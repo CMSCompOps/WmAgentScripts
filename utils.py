@@ -1792,14 +1792,14 @@ class docCache:
             'cachefile' : None,
             'default' : {}
             }
-        self.cache['gwmsmon_site_summary' ] = {
-            'data' : None,
-            'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(os.popen('curl --retry 5 -s http://cms-gwmsmon.cern.ch/totalview//json/site_summary').read()),
-            'cachefile' : None,
-            'default' : {}
-            }
+        #self.cache['gwmsmon_site_summary' ] = {
+         #   'data' : None,
+         #   'timestamp' : time.mktime( time.gmtime()),
+         #   'expiration' : default_expiration(),
+         #   'getter' : lambda : json.loads(os.popen('curl --retry 5 -s http://cms-gwmsmon.cern.ch/totalview//json/site_summary').read()),
+         #   'cachefile' : None,
+         #   'default' : {}
+         #   }
         self.cache['gwmsmon_prod_maxused' ] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
@@ -2307,7 +2307,7 @@ class siteInfo:
             if not site in self.sites_ready:
                 self.sites_memory.pop( site )
 
-        for_max_running = dataCache.get('gwmsmon_site_summary')
+        #for_max_running = dataCache.get('gwmsmon_site_summary')
         for_better_max_running = dataCache.get('gwmsmon_prod_maxused')
         for site in self.cpu_pledges:
             new_max = self.cpu_pledges[site]
