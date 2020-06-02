@@ -50,6 +50,8 @@ class unifiedConfiguration:
                 print("Could not read configuration file: %s\nException: %s" %
                       (self.configFile, str(ex)))
                 sys.exit(124)
+<<<<<<< HEAD
+=======
 
         if self.configs is None:
             try:
@@ -80,8 +82,42 @@ class unifiedConfiguration:
                 print parameter, 'is not defined in mongo configuration'
                 print ','.join(availables), 'possible'
                 sys.exit(124)
+>>>>>>> 903aa2bb6853f8c146fe10c4800d352713216cc9
+
+        if self.configs is None:
+            try:
+                self.client = mongo_client()
+                self.db = self.client.unified.unifiedConfiguration
+                # quest = self.db.find_one()
+            except Exception as ex:
+                print ("Could not reach pymongo.\n Exception: \n%s" % str(ex))
+                # self.configs = json.loads(open(self.configFile).read())
+                sys.exit(124)
+
+<<<<<<< HEAD
+    def get(self, parameter):
+        if self.configs:
+            if parameter in self.configs:
+                return self.configs[parameter]['value']
+            else:
+                print parameter, 'is not defined in global configuration'
+                print ','.join(self.configs.keys()), 'possible'
+                sys.exit(124)
+        else:
+            found = self.db.find_one({"name": parameter})
+            if found:
+                found.pop("_id")
+                found.pop("name")
+                return found
+            else:
+                availables = [o['name'] for o in self.db.find_one()]
+                print parameter, 'is not defined in mongo configuration'
+                print ','.join(availables), 'possible'
+                sys.exit(124)
 
 
+=======
+>>>>>>> 903aa2bb6853f8c146fe10c4800d352713216cc9
 SC = unifiedConfiguration('serviceConfiguration.json')
 
 mongo_db_url = SC.get('mongo_db_url')
@@ -1010,6 +1046,7 @@ class StartStopInfo:
     def purge(self, now, since_in_days):
         then = now - (since_in_days*24*60*60)
         self.db.delete_many( { 'start' : {'$lt': then }})
+
 
 def checkDownTime():
     conn = make_x509_conn()
