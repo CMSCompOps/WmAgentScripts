@@ -101,7 +101,6 @@
     "maxcopies": 1
   }, 
   "RunIISummer19UL16wmLHEGENAPV": {
-    "secondary_AAA": false, 
     "tune": true, 
     "maxcopies": 1, 
     "lumisize": -1, 
@@ -1454,7 +1453,6 @@
     "maxcopies": 1
   }, 
   "RunIISummer19UL16GENAPV": {
-    "secondary_AAA": false, 
     "tune": true, 
     "maxcopies": 1, 
     "lumisize": -1, 
