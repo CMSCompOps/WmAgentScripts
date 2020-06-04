@@ -13,6 +13,9 @@ import getpass
 username = getpass.getuser()
 
 def rejector(url, specific, options=None):
+    
+    if options.test:
+        print "Test mode - no changes propagate to the production system"
 
     if not componentInfo(soft=['wtc','jira']).check(): return
 
@@ -62,18 +65,26 @@ def rejector(url, specific, options=None):
 
         comment=""
         if options.comments: comment = ", reason: "+options.comments
-        if options.keep: 
-            wfi.sendLog('rejector','invalidating the workflow by unified operator {}{}'.format(username, comment))
+        if options.test:
+            if options.keep: 
+                print 'invalidating the workflow by unified operator {}{}'.format(username, comment)
+            else:
+                print 'invalidating the workflow and outputs by unified operator {}{}'.format(username, comment)
+            results = [True]
         else:
-            wfi.sendLog('rejector','invalidating the workflow and outputs by unified operator {}{}'.format(username, comment))
+            if options.keep: 
+                wfi.sendLog('rejector','invalidating the workflow by unified operator {}{}'.format(username, comment))
+            else:
+                wfi.sendLog('rejector','invalidating the workflow and outputs by unified operator {}{}'.format(username, comment))
 
-        results = invalidate(url, wfi, only_resub=True, with_output= (not options.keep))
+            results = invalidate(url, wfi, only_resub=True, with_output= (not options.keep))
 
         if all(results):
             print wfo.name,"rejected"
             if options and options.clone:
-                wfo.status = 'trouble'
-                session.commit()                
+                if not options.test:
+                    wfo.status = 'trouble'
+                    session.commit()                
                 schema = wfi.getSchema()
                 schema['Requestor'] = os.getenv('USER')
                 schema['Group'] = 'DATAOPS'
@@ -209,8 +220,11 @@ def rejector(url, specific, options=None):
                             tmcore = schema[sname].pop('Multicore')
                             tmem = schema[sname].pop('Memory')
                             if mcore and tmcore != mcore:
-                                wfi.sendLog('rejector','the conversion to stepchain encoutered different value of Multicore %d != %d'%( tmcore, mcore))
-                                sendLog('rejector','the conversion of %s to stepchain encoutered different value of Multicore %d != %d'%( wfo.name, tmcore, mcore), level='critical')
+                                if options.test:
+                                    print 'the conversion of %s to stepchain encoutered different value of Multicore %d != %d' % (wfo.name, tmcore, mcore)
+                                else:
+                                    wfi.sendLog('rejector','the conversion to stepchain encoutered different value of Multicore %d != %d'%( tmcore, mcore))
+                                    sendLog('rejector','the conversion of %s to stepchain encoutered different value of Multicore %d != %d'%( wfo.name, tmcore, mcore), level='critical')
                             mcore = max(mcore, tmcore)
                             mem = max(mem, tmem)
                             schema[sname]['StepName'] = schema[sname].pop('TaskName')
@@ -240,39 +254,45 @@ def rejector(url, specific, options=None):
                     schema['Multicore'] = mcore
                     schema['Memory'] = mem
                 print json.dumps( schema, indent=2 )
-                newWorkflow = reqMgrClient.submitWorkflow(url, schema)
-                if not newWorkflow:
-                    msg = "Error in cloning {}".format(wfo.name)
-                    print(msg)
-                    wfi.sendLog('rejector',msg)
-                          
-                    # Get the error message
-                    time.sleep(5)
-                    data = reqMgrClient.requestManagerPost(url, "/reqmgr2/data/request", schema)
-                    wfi.sendLog('rejector',data)
-                    
-                    print json.dumps( schema, indent=2 )
-                    return 
-                print newWorkflow
+                if not options.test:
+                    newWorkflow = reqMgrClient.submitWorkflow(url, schema)
+                    if not newWorkflow:
+                        msg = "Error in cloning {}".format(wfo.name)
+                        print(msg)
+                        wfi.sendLog('rejector',msg)
 
-                data = reqMgrClient.setWorkflowApproved(url, newWorkflow)
-                print data
-                wfi.sendLog('rejector','Cloned into %s by unified operator %s'%( newWorkflow, comment ))
-                #wfi.notifyRequestor('Cloned into %s by unified operator %s'%( newWorkflow, comment ),do_batch=False)
+                        # Get the error message
+                        time.sleep(5)
+                        data = reqMgrClient.requestManagerPost(url, "/reqmgr2/data/request", schema)
+                        wfi.sendLog('rejector',data)
+
+                        print json.dumps( schema, indent=2 )
+                        return 
+                        print newWorkflow
+
+                    data = reqMgrClient.setWorkflowApproved(url, newWorkflow)
+                    print data
+                    wfi.sendLog('rejector','Cloned into %s by unified operator %s'%( newWorkflow, comment ))
+                    #wfi.notifyRequestor('Cloned into %s by unified operator %s'%( newWorkflow, comment ),do_batch=False)
             else:
-                wfo.status = 'trouble' if options.set_trouble else 'forget' 
-                wfi.notifyRequestor('Rejected by unified operator %s'%( comment ),do_batch=False)
-                session.commit()
+                if options.test:
+                    print 'Rejected by unified operator %s'%( comment )
+                else:
+                    wfo.status = 'trouble' if options.set_trouble else 'forget' 
+                    wfi.notifyRequestor('Rejected by unified operator %s'%( comment ),do_batch=False)
+                    session.commit()
 
         else:
-            msg = "Error in rejecting {}: {}".format(wfo.name,results)
-            print(msg)
-            wfi.sendLog('rejector',msg)
+            msg = "Error in rejecting {}: {}".format(wfo.name, results)
+            print msg
+            if not options.test:
+                wfi.sendLog('rejector', msg)
 
 if __name__ == "__main__":
     url = reqmgr_url
 
     parser = optparse.OptionParser()
+    parser.add_option('-t', '--test', help="test mode - no changes are made", default=False, action="store_true")
     parser.add_option('-c','--clone',help="clone the workflow",default=False,action="store_true")
     parser.add_option('--comments', help="Give a comment to the clone",default="")
     parser.add_option('-k','--keep',help="keep the outpuy in current status", default=False,action="store_true")
