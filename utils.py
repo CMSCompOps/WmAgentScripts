@@ -1535,7 +1535,7 @@ def getWMStats(url):
     return json.loads(r2.read())['result'][0]
 
 def get_dashbssb(path_name, ssb_metric):
-    return runWithRetries(_get_dashbssb, [path_name, ssb_metric], {})
+    return runWithRetries(_get_dashbssb, [path_name, ssb_metric],{})
 
 def _get_dashbssb(path_name, ssb_metric):
     with open('Unified/monit_secret.json') as monit:
