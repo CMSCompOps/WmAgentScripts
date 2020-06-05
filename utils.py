@@ -8222,12 +8222,13 @@ def getFailedJobs(taskname, caller='getFailedJobs'):
     failed_jobs = 0
 
     for info in reading['result']:
-        for agentName in info.get('AgentJobInfo', {}):
-            if taskname in info['AgentJobInfo'][agentName].get("tasks", {}):
-                taskInfo = info['AgentJobInfo'][agentName]["tasks"][taskname]
-                if "failure" in taskInfo.get("status", {}):
-                    for failureType, numFailures in taskInfo["status"]["failure"].items():
-                        failed_jobs += numFailures
-
+        if info.get('AgentJobInfo', {}) is not None:
+            for agentName in info.get('AgentJobInfo', {}):
+                if taskname in info['AgentJobInfo'][agentName].get("tasks", {}):
+                    taskInfo = info['AgentJobInfo'][agentName]["tasks"][taskname]
+                    if "failure" in taskInfo.get("status", {}):
+                        for failureType, numFailures in taskInfo["status"]["failure"].items():
+                            failed_jobs += numFailures
+    
     return failed_jobs
 
