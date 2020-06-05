@@ -86,6 +86,9 @@ def rejector(url, specific, options=None):
                     wfo.status = 'trouble'
                     session.commit()                
                 schema = wfi.getSchema()
+                if options.test:
+                    print "Original schema"
+                    print json.dumps( schema, indent=2 )
                 schema['Requestor'] = os.getenv('USER')
                 schema['Group'] = 'DATAOPS'
                 schema['OriginalRequestName'] = wfo.name
@@ -217,7 +220,13 @@ def rejector(url, specific, options=None):
                         if 'Task%d'%step in schema:
                             sname = 'Step%d'%step
                             schema[sname] = schema.pop('Task%d'%step)
-                            tmcore = schema[sname].pop('Multicore')
+                            if 'Multicore' in schema[sname] and schema[sname]['Multicore']==1:
+                                # enforce single-core mode assuming that all Tasks with
+                                # Multicore=1 are not thread-safe
+                                tmcore = schema[sname]['Multicore']
+                            else:
+                                # remove explicit assignment of the number of cores
+                                tmcore = schema[sname].pop('Multicore')
                             tmem = schema[sname].pop('Memory')
                             if mcore and tmcore != mcore:
                                 if options.test:
@@ -253,6 +262,7 @@ def rejector(url, specific, options=None):
                             break
                     schema['Multicore'] = mcore
                     schema['Memory'] = mem
+                print "New request schema"
                 print json.dumps( schema, indent=2 )
                 if not options.test:
                     newWorkflow = reqMgrClient.submitWorkflow(url, schema)
