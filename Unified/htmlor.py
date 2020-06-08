@@ -17,7 +17,7 @@ def htmlor( caller = ""):
     up = componentInfo(soft=['mcm','wtc','jira'])
     if not up.check(): return 
 
-    for backup in ['statuses.json','siteInfo.json','listProtectedLFN.txt','equalizor.json']:
+    for backup in ['statuses.json','siteInfo.json','equalizor.json']:
         print "copying",backup,"to old location"
         os.system('cp %s/%s /afs/cern.ch/user/c/cmst2/www/unified/.'%(monitor_pub_dir, backup))
         #os.system('cp %s/%s %s/.'%(monitor_dir, backup, monitor_pub_dir))
