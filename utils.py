@@ -1219,7 +1219,7 @@ class eosFile(object):
             sys.exit(2)
         self.opt = opt
         self.eos_filename = filename.replace('//','/')
-        self.eos_filename = 'root://eoscms.cern.ch/'+self.eos_filename
+#        self.eos_filename = 'root://eoscms.cern.ch/'+self.eos_filename
         self.cache_filename = (cache_dir+'/'+filename.replace('/','_')).replace('//','/')
         self.cache = open(self.cache_filename, self.opt)
         self.trials = trials
