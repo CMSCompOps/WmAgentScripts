@@ -3027,8 +3027,8 @@ class closeoutInfo:
         #out.close()
 
         ## write the information out to disk
-        new_base_eos_dir = 'root://eoscms.cern.ch/'+base_eos_dir
-        os.system('eoscp %s/closedout.json %s/closedout.json.last'%(new_base_eos_dir, new_base_eos_dir))
+#        new_base_eos_dir = 'root://eoscms.cern.ch/'+base_eos_dir
+        os.system('eoscp %s/closedout.json %s/closedout.json.last'%(base_eos_dir, base_eos_dir))
 
         ## merge the content
         try:
