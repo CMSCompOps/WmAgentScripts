@@ -278,7 +278,7 @@ def rejector(url, specific, options=None):
 
                         print json.dumps( schema, indent=2 )
                         return 
-                        print newWorkflow
+                    print newWorkflow
 
                     data = reqMgrClient.setWorkflowApproved(url, newWorkflow)
                     print data
