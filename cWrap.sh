@@ -10,7 +10,7 @@ fi
 cd $BASE_DIR
 
 modulename=`echo $1 | sed 's/\.py//' | sed 's/Unified\///'`
-eos root://eoscms.cern.ch mkdir -p $HTML_DIR/logs/$modulename/
+mkdir -p $HTML_DIR/logs/$modulename/
 eos root://eoscms.cern.ch mkdir -p $FINAL_HTML_DIR/logs/$modulename/
 
 last_log=$HTML_DIR/logs/$modulename/last.log
