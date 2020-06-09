@@ -1219,6 +1219,7 @@ class eosFile(object):
             sys.exit(2)
         self.opt = opt
         self.eos_filename = filename.replace('//','/')
+        self.eos_filename = 'root://eoscms.cern.ch/'+self.eos_filename
         self.cache_filename = (cache_dir+'/'+filename.replace('/','_')).replace('//','/')
         self.cache = open(self.cache_filename, self.opt)
         self.trials = trials
@@ -3026,7 +3027,8 @@ class closeoutInfo:
         #out.close()
 
         ## write the information out to disk
-        os.system('eoscp %s/closedout.json %s/closedout.json.last'%(base_eos_dir, base_eos_dir))
+        new_base_eos_dir = 'root://eoscms.cern.ch/'+base_eos_dir
+        os.system('eoscp %s/closedout.json %s/closedout.json.last'%(new_base_eos_dir, new_base_eos_dir))
 
         ## merge the content
         try:
