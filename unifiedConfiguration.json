@@ -235,7 +235,7 @@
    "description": "The data tiers not to be considered for output data placement - RelVal workflows."
  },
  "tiers_to_rucio_nonrelval": {
-   "value" : [],
+   "value" : ["NANOAOD", "NANOAODSIM"],
    "description": "The data tiers not to be considered for output data placement - NonRelVal workflows."
  },
  "secondary_lock_timeout": {
