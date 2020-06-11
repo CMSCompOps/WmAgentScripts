@@ -501,7 +501,7 @@ class CloseBuster(threading.Thread):
                         ## figure the destination(s) out
                         destinations = set()
                         if tier in UC.get("tiers_to_rucio_relval"):
-                            sendLog("Data Tier: %s is blacklisted, so skipping dataset placement for: %s" % (tier,out))
+                            wfi.sendLog('closor', "Data Tier: %s is blacklisted, so skipping dataset placement for: %s" % (tier,out))
                             continue
                         if tier != "RECO" and tier != "ALCARECO":
                             destinations.add('T2_CH_CERN')
