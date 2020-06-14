@@ -24,15 +24,15 @@ echo $$ >> $log
 if [ -r unified_drain ] ; then
     echo "System is locally draining" >> $log
     cp $log $last_log
-    cp $log $FINAL_HTML_DIR/logs/$modulename/.
-    cp $log $FINAL_HTML_DIR/logs/$modulename/last.log
+    eos cp $log $FINAL_HTML_DIR/logs/$modulename/.
+    eos cp $log $FINAL_HTML_DIR/logs/$modulename/last.log
     exit
 fi
 if [ -r /eos/cms/store/unified/unified_drain ] ; then
     echo "System is globally draining" >> $log
     cp $log $last_log
-    cp $log $FINAL_HTML_DIR/logs/$modulename/.
-    cp $log $FINAL_HTML_DIR/logs/$modulename/last.log
+    eos cp $log $FINAL_HTML_DIR/logs/$modulename/.
+    eos cp $log $FINAL_HTML_DIR/logs/$modulename/last.log
     exit
 fi
 
@@ -74,7 +74,7 @@ echo `date` >> $log
 
 #cp $log $dated_log
 cp $log $last_log
-cp $log $FINAL_HTML_DIR/logs/$modulename/.
-cp $log $FINAL_HTML_DIR/logs/$modulename/last.log
+eos cp $log $FINAL_HTML_DIR/logs/$modulename/.
+eos cp $log $FINAL_HTML_DIR/logs/$modulename/last.log
 
 #rm $log
