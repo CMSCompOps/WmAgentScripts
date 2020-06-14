@@ -17,7 +17,7 @@ def htmlor( caller = ""):
     up = componentInfo(soft=['mcm','wtc','jira'])
     if not up.check(): return 
 
-    for backup in ['statuses.json','siteInfo.json','listProtectedLFN.txt','equalizor.json']:
+    for backup in ['statuses.json','siteInfo.json','equalizor.json']:
         print "copying",backup,"to old location"
         os.system('cp %s/%s /afs/cern.ch/user/c/cmst2/www/unified/.'%(monitor_pub_dir, backup))
         #os.system('cp %s/%s %s/.'%(monitor_dir, backup, monitor_pub_dir))
@@ -217,9 +217,9 @@ def htmlor( caller = ""):
     summary_content = {}
 
     view_not_a_module = ['agentInfo','componentInfo']
-    view_modules = ['injector','batchor','cachor','assignor','completor','GQ','equalizor','checkor','recoveror','actor','closor']+view_not_a_module
+    view_modules = ['injector','batchor','assignor','completor','GQ','equalizor','checkor','recoveror','actor','closor']+view_not_a_module
 
-    all_modules = list(set(view_modules + ['actor','addHoc','assignor','batchor','cachor','checkor','closor','completor','efficiencor','equalizor','GQ','htmlor','injector','lockor','messagor','recoveror','remainor','showError','stuckor','subscribor']))
+    all_modules = list(set(view_modules + ['actor','addHoc','assignor','batchor','checkor','closor','completor','efficiencor','equalizor','GQ','htmlor','injector','lockor','messagor','recoveror','remainor','showError','stuckor','subscribor']))
 
     html_doc.write("""
 <html>

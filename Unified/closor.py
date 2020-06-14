@@ -500,6 +500,9 @@ class CloseBuster(threading.Thread):
                         ## make the specific relval rules and the replicas
                         ## figure the destination(s) out
                         destinations = set()
+                        if tier in UC.get("tiers_to_rucio_relval"):
+                            wfi.sendLog('closor', "Data Tier: %s is blacklisted, so skipping dataset placement for: %s" % (tier,out))
+                            continue
                         if tier != "RECO" and tier != "ALCARECO":
                             destinations.add('T2_CH_CERN')
                         if tier == "GEN-SIM":
@@ -541,6 +544,10 @@ class CloseBuster(threading.Thread):
                             to_DDM = True
 
                         ## by typical enabling
+                        if tier in UC.get("tiers_to_rucio_nonrelval"):
+                            sendLog("Data Tier: %s is blacklisted, so skipping dataset placement for: %s" % (tier,out))
+                            continue
+
                         if tier in UC.get("tiers_to_DDM"):
                             to_DDM = True
                         ## check for unitarity

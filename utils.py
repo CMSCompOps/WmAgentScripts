@@ -1219,6 +1219,7 @@ class eosFile(object):
             sys.exit(2)
         self.opt = opt
         self.eos_filename = filename.replace('//','/')
+#        self.eos_filename = 'root://eoscms.cern.ch/'+self.eos_filename
         self.cache_filename = (cache_dir+'/'+filename.replace('/','_')).replace('//','/')
         self.cache = open(self.cache_filename, self.opt)
         self.trials = trials
@@ -1535,7 +1536,7 @@ def getWMStats(url):
     return json.loads(r2.read())['result'][0]
 
 def get_dashbssb(path_name, ssb_metric):
-    return runWithRetries(_get_dashbssb, [path_name, ssb_metric], {})
+    return runWithRetries(_get_dashbssb, [path_name, ssb_metric],{})
 
 def _get_dashbssb(path_name, ssb_metric):
     with open('Unified/monit_secret.json') as monit:
@@ -1792,14 +1793,14 @@ class docCache:
             'cachefile' : None,
             'default' : {}
             }
-        self.cache['gwmsmon_site_summary' ] = {
-            'data' : None,
-            'timestamp' : time.mktime( time.gmtime()),
-            'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(os.popen('curl --retry 5 -s http://cms-gwmsmon.cern.ch/totalview//json/site_summary').read()),
-            'cachefile' : None,
-            'default' : {}
-            }
+        #self.cache['gwmsmon_site_summary' ] = {
+         #   'data' : None,
+         #   'timestamp' : time.mktime( time.gmtime()),
+         #   'expiration' : default_expiration(),
+         #   'getter' : lambda : json.loads(os.popen('curl --retry 5 -s http://cms-gwmsmon.cern.ch/totalview//json/site_summary').read()),
+         #   'cachefile' : None,
+         #   'default' : {}
+         #   }
         self.cache['gwmsmon_prod_maxused' ] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
@@ -2307,7 +2308,7 @@ class siteInfo:
             if not site in self.sites_ready:
                 self.sites_memory.pop( site )
 
-        for_max_running = dataCache.get('gwmsmon_site_summary')
+        #for_max_running = dataCache.get('gwmsmon_site_summary')
         for_better_max_running = dataCache.get('gwmsmon_prod_maxused')
         for site in self.cpu_pledges:
             new_max = self.cpu_pledges[site]
@@ -3026,7 +3027,8 @@ class closeoutInfo:
         #out.close()
 
         ## write the information out to disk
-        os.system('eoscp %s/closedout.json %s/closedout.json.last'%(base_eos_dir, base_eos_dir))
+        new_base_eos_dir = 'root://eoscms.cern.ch/'+base_eos_dir
+        os.system('eoscp %s/closedout.json %s/closedout.json.last'%(new_base_eos_dir, new_base_eos_dir))
 
         ## merge the content
         try:
@@ -8222,12 +8224,13 @@ def getFailedJobs(taskname, caller='getFailedJobs'):
     failed_jobs = 0
 
     for info in reading['result']:
-        for agentName in info.get('AgentJobInfo', {}):
-            if taskname in info['AgentJobInfo'][agentName].get("tasks", {}):
-                taskInfo = info['AgentJobInfo'][agentName]["tasks"][taskname]
-                if "failure" in taskInfo.get("status", {}):
-                    for failureType, numFailures in taskInfo["status"]["failure"].items():
-                        failed_jobs += numFailures
-
+        if info.get('AgentJobInfo', {}) is not None:
+            for agentName in info.get('AgentJobInfo', {}):
+                if taskname in info['AgentJobInfo'][agentName].get("tasks", {}):
+                    taskInfo = info['AgentJobInfo'][agentName]["tasks"][taskname]
+                    if "failure" in taskInfo.get("status", {}):
+                        for failureType, numFailures in taskInfo["status"]["failure"].items():
+                            failed_jobs += numFailures
+    
     return failed_jobs
 

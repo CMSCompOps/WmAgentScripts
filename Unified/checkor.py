@@ -15,6 +15,7 @@ import copy
 import time
 import random
 import math
+from RucioClient import RucioClient
 from McMClient import McMClient
 from JIRAClient import JIRAClient
 from htmlor import htmlor
@@ -1012,10 +1013,43 @@ class CheckBuster(threading.Thread):
 
         time_point("checked custodiality", sub_lap=True)
 
-        ## presence in phedex
+        ## presence in phedex and/or rucio
         phedex_presence ={}
+        rucioClient = RucioClient()
         for output in wfi.request['OutputDatasets']:
-            phedex_presence[output] = phedexClient.getFileCountDataset(url, output )
+            _,dsn,process_string,tier = output.split('/')
+            if tier in set(UC.get('tiers_to_rucio_relval')) | set(UC.get('tiers_to_rucio_nonrelval')):
+                # - creates lists of tuples ot the type: ('blockName', numFiles)
+                #   for all blockNames per Dataset known to both Phedex and Rucio
+                # - creates the union of the two sets in order to avoid any duplicates
+                #   (files present in both systems)
+                # - sums the number of files for the union set
+                # - assigns the value to 'phedex_presence' even though the full sum
+                #   of the files is present in both systems - this way we avoid
+                #   changing the code for the rest of the consistency checks
+                phedex_filecount_pb = phedexClient.getFileCountPerBlock(url, output)
+                rucio_filecount_pb = rucioClient.getFileCountPerBlock(output)
+                all_filecount_pb = set(phedex_filecount_pb) | set(rucio_filecount_pb)
+                all_blocks = set(map(lambda x: x[0], phedex_filecount_pb)) | set(map(lambda x: x[0], rucio_filecount_pb))
+
+                # bellow we will misscount in case there are same blocks in both
+                # Rucio and Phedex but with different number of files in the two
+                # systems - they will enter the sum twice, because the two tuples
+                # will be concidered as two different blocks from the two subsets
+                # hence the following check:
+                if len(all_blocks) == len(all_filecount_pb):
+                    phedex_presence[output] = sum(map(lambda x: x[1], all_filecount_pb))
+                else:
+                    # TODO: to check if we need to rise a higher level of alarm here.
+                    msg = "There are inconsistences of number of files per block"
+                    msg += "between Phedex and Rucio for dataset: {}".format(output)
+                    wfi.sendLog('checkor', msg)
+                    phedex_presence[output] = 0
+                    # we do not announce this output untill the discrepancy from above is resolved
+                del(all_filecount_pb)
+                del(all_blocks)
+            else:
+                phedex_presence[output] = phedexClient.getFileCountDataset(url, output)
 
         one_output_not_in_phedex = any([Nfiles==0 for Nfiles in phedex_presence.values()])
         if one_output_not_in_phedex and 'announce' in assistance_tags:
@@ -1055,7 +1089,16 @@ class CheckBuster(threading.Thread):
                     assistance_tags.add('filemismatch')
                 #print this for show and tell if no recovery on-going
                 for out in dbs_presence:
-                    _,_,missing_phedex,missing_dbs  = getDatasetFiles(url, out)
+                    dbs_filenames,phedex_filenames,missing_phedex,missing_dbs  = getDatasetFiles(url, out)
+
+                    # Corrections to the lists of files present in Phedex for the data Tiers managed by Rucio
+                    _,dsn,process_string,tier = output.split('/')
+                    if tier in set(UC.get('tiers_to_rucio_relval')) | set(UC.get('tiers_to_rucio_nonrelval')):
+                        # Here recalculating the filenames as a union of the phedex_files | rucio_files
+                        all_filenames = set(phedex_filenames) | set(rucioClient.getFileNamesDataset(out))
+                        missing_phedex = list(set(dbs_filenames) - all_filenames)
+                        missing_dbs = list(all_filenames - set(dbs_filenames))
+
                     if missing_phedex:
                         wfi.sendLog('checkor',"These %d files are missing in phedex, or extra in dbs, showing %s only\n%s"%(len(missing_phedex),show_N_only,
                                                                                                            "\n".join( missing_phedex[:show_N_only] )))
