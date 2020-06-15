@@ -545,7 +545,7 @@ class CloseBuster(threading.Thread):
 
                         ## by typical enabling
                         if tier in UC.get("tiers_to_rucio_nonrelval"):
-                            sendLog("Data Tier: %s is blacklisted, so skipping dataset placement for: %s" % (tier,out))
+                            wfi.sendLog('closor',"Data Tier: %s is blacklisted, so skipping dataset placement for: %s" % (tier,out))
                             continue
 
                         if tier in UC.get("tiers_to_DDM"):
