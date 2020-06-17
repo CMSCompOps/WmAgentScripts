@@ -313,7 +313,7 @@
     "maxcopies": 1, 
     "lumisize": -1, 
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "overflow": {
       "PU": {
         "max": 0, 
