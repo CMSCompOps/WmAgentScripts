@@ -25,3 +25,5 @@ else
     echo "using grid proxy" $X509_USER_PROXY
 fi
 
+#talk to rucio
+export RUCIO_HOME=~/.local/
