@@ -93,6 +93,6 @@ class RucioClient(Client):
                 blocks.append((block, self.getFileCountBlock(block)))
         except Exception as e:
             print(str(e))
-            return 0
+            return []
         return blocks
 
