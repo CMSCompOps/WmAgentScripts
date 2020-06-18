@@ -27,7 +27,7 @@ class RucioClient(Client):
             'auth_host': 'https://cms-rucio-auth.cern.ch',
             'auth_type': 'x509_proxy',
             'ca_cert': '/etc/grid-security/certificates/',
-            'account': 'unified'
+            'account': 'unified' if os.getenv('USER')=='cmsunified' else os.getenv('USER')
         }
 
         defaultConfig.update(kwargs)
