@@ -1,11 +1,13 @@
 echo 'INFO: Setting identity'
 USER=$(whoami)
-kinit $USER@CERN.CH
+kinit "$USER"@CERN.CH
 echo 'INFO: Setting Grid env and proxy'
+# shellcheck disable=SC1091
 source /afs/cern.ch/project/gd/LCG-share/3.2.11-1/etc/profile.d/grid-env.sh
 voms-proxy-init -voms cms
 {
 echo 'INFO: Setting agent environment'
+# shellcheck disable=SC1091
 source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh
 } || {
 echo 'ERROR: This machine does not have WMAgent installed. Not sourcing Agent environment'

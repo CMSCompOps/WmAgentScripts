@@ -8,10 +8,12 @@
 location="/afs/cern.ch/user/c/cmst1/CondorMonitoring"
 outputdir="/afs/cern.ch/user/c/cmst1/www/CondorMonitoring/"
 
-#Set environment 
+# Set environment 
+# shellcheck disable=SC1091
 source /data/admin/wmagent/env.sh
+# shellcheck disable=SC1091
 source /data/srv/wmagent/current/apps/wmagent/etc/profile.d/init.sh
-cd $location
+cd $location||exit
 
 #Email if things are running slowly
 if [ -f scriptRunning.run ];
@@ -33,6 +35,6 @@ fi
 python JobCounter.py &> JobCounter.log
 exitstatus="$?"
 echo "JobCounter.py exit status: $exitstatus"
-cp *.json $outputdir
-cp *.txt $outputdir
+cp ./*.json $outputdir
+cp ./*.txt $outputdir
 rm scriptRunning.run
