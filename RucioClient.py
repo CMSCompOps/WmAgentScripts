@@ -9,7 +9,10 @@ Environment:
     ${RUCIO_HOME}/rucio.cfg
 """
 
+import os
+if not os.getenv('RUCIO_HOME'): os.environ['RUCIO_HOME']='/data/unified/WmAgentScripts/Unified/'
 from rucio.client import Client
+
 
 class RucioClient(Client):
     """
