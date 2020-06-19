@@ -91,8 +91,10 @@ class RucioClient(Client):
             blocks = []
             for block in self.getBlockNamesDataset(dataset):
                 blocks.append((block, self.getFileCountBlock(block)))
+            if blocks is None:
+                raise Exception("number of file count per block is None")
         except Exception as e:
             print(str(e))
-            return []
+            return 0
         return blocks
 
