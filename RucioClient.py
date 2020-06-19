@@ -75,6 +75,8 @@ class RucioClient(Client):
         """
         try:
             numFiles = self.get_metadata(self.scope, block)['length']
+            if numFiles is None:
+                raise Exception("block length in rucio is None")
         except Exception as e:
             print(str(e))
             return 0
@@ -91,6 +93,6 @@ class RucioClient(Client):
                 blocks.append((block, self.getFileCountBlock(block)))
         except Exception as e:
             print(str(e))
-            return 0
+            return []
         return blocks
 
