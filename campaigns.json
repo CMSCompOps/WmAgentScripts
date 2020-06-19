@@ -1888,7 +1888,11 @@
     "maxcopies": 1, 
     "lumisize": -1, 
     "fractionpass": 0.95, 
-    "go": true, 
+    "go": true,
+    "SiteWhitelist": [
+      "T1_DE_KIT",
+      "T2_US_Florida"
+    ], 
     "secondaries": {
       "/MinBias_TuneCP5_14TeV-pythia8/Phase2HLTTDRWinter20GS-110X_mcRun4_realistic_v3-v1/GEN-SIM": {
         "SiteWhitelist": [
