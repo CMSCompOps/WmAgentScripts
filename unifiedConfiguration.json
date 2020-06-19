@@ -207,7 +207,7 @@
    "description" : "overide of the completion fraction of dataset with keyword"
  },
  "tiers_with_no_custodial": {
-   "value" : ["DQM","DQMIO","RECO","RAWAODSIM"],
+   "value" : ["DQM","DQMIO","RECO","RAWAODSIM","NANOAOD","NANOAODSIM"],
    "description": "The data tiers that do not go to tape. Can be overidden by custodial overide at campaign level"
  },
  "use_parent_custodial": {
