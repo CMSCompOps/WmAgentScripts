@@ -573,7 +573,7 @@ def equalizor(url , specific = None, options=None):
                         wfi.sendLog('equalizor','The task %s was found to run short jobs of %.2f [mins] at original %d cores setting'%( taskname, set_time / mcore , mcore))
                         short_tasks.add( (task.pathName, set_time / mcore, mcore) )
 
-                    if mem and (mem > warning_mem*mcore):
+                    if mem and ((mem > warning_mem*mcore) if wfi.request['RequestType'] != 'StepChain' else (mem > warning_mem*wfi.getMulticore())):
                         print "WHAT IS THIS TASK",task.pathName,"WITH",mem,"memory requirement at",mcore,"cores"
                         wfi.sendLog('equalizor','The task %s was found to be confiugred with %d MB over %d MB/core at %d cores'%( taskname, mem, warning_mem, mcore))
                         bad_hungry_tasks.add( (task.pathName, mem, mcore ) )
