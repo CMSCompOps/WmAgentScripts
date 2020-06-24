@@ -997,7 +997,8 @@
   }, 
   "RunIISummer19UL16DIGIAPV": {
     "SiteWhitelist": [
-      "T1_US_FNAL" 
+      "T1_US_FNAL",
+      "T1_FR_CCIN2P3" 
     ], 
     "fractionpass": 0.95, 
     "go": true, 
