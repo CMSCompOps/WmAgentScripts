@@ -204,7 +204,7 @@ def assignor(url ,specific = None, talk=True, options=None):
         if 'Campaign' in wfh.request and wfh.request['Campaign'] in CI.campaigns:
             assign_parameters.update( CI.campaigns[wfh.request['Campaign']] )
 
-        if 'primary_AAA' in assign_parameters:
+        if 'primary_AAA' in assign_parameters and primary:
             primary_aaa = primary_aaa or assign_parameters['primary_AAA']
         if 'secondary_AAA' in assign_parameters:
             secondary_aaa = secondary_aaa or assign_parameters['secondary_AAA']
