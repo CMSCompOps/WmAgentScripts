@@ -150,6 +150,13 @@
     "lumisize": -1, 
     "maxcopies": 1
   }, 
+  "Phase2HLTTDRSummer20ReRECO": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "resize": "auto"
+  }, 
   "Phase2HLTTDRWinter20DIGI": {
     "SiteWhitelist": [
       "T1_DE_KIT", 
