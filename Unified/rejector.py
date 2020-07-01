@@ -233,7 +233,7 @@ def rejector(url, specific, options=None):
                                     print 'the conversion of %s to stepchain encoutered different value of Multicore %d != %d' % (wfo.name, tmcore, mcore)
                                 else:
                                     wfi.sendLog('rejector','the conversion to stepchain encoutered different value of Multicore %d != %d'%( tmcore, mcore))
-                                    sendLog('rejector','the conversion of %s to stepchain encoutered different value of Multicore %d != %d'%( wfo.name, tmcore, mcore), level='critical')
+                                    sendLog('rejector','the conversion of %s to stepchain encoutered different value of Multicore %d != %d'%( wfo.name, tmcore, mcore))
                             mcore = max(mcore, tmcore)
                             mem = max(mem, tmem)
                             schema[sname]['StepName'] = schema[sname].pop('TaskName')
