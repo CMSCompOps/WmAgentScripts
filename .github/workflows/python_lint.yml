@@ -1,0 +1,25 @@
+name: PyLint test
+
+on: [push, pull_request]
+
+jobs:
+  lint-python:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2.2.0
+    - name: Get Diff Action
+      uses: technote-space/get-diff-action@v1.2.8
+      with:
+        SUFFIX_FILTER: .py
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 2.7
+    - name: Install and Pylint
+      run: |
+        python2 -m pip install pylint
+    - name: Lint with pylint
+      run: |
+        pylint ${{ env.GIT_DIFF }}
+      if: env.GIT_DIFF
