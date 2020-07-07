@@ -11,7 +11,7 @@ cd $BASE_DIR
 
 modulename=`echo $1 | sed 's/\.py//' | sed 's/Unified\///'`
 mkdir -p $HTML_DIR/logs/$modulename/
-eos mkdir -p $FINAL_HTML_DIR/logs/$modulename/
+env EOS_MGM_URL=root://eoscms.cern.ch eos mkdir -p $FINAL_HTML_DIR/logs/$modulename/
 
 last_log=$HTML_DIR/logs/$modulename/last.log
 s_dated_log=$modulename/`date +%F_%T`.log
@@ -24,15 +24,15 @@ echo $$ >> $log
 if [ -r unified_drain ] ; then
     echo "System is locally draining" >> $log
     cp $log $last_log
-    eos cp $log $FINAL_HTML_DIR/logs/$modulename/.
-    eos cp $log $FINAL_HTML_DIR/logs/$modulename/last.log
+    env EOS_MGM_URL=root://eoscms.cern.ch eos cp $log $FINAL_HTML_DIR/logs/$modulename/.
+    env EOS_MGM_URL=root://eoscms.cern.ch eos cp $log $FINAL_HTML_DIR/logs/$modulename/last.log
     exit
 fi
 if [ -r /eos/cms/store/unified/unified_drain ] ; then
     echo "System is globally draining" >> $log
     cp $log $last_log
-    eos cp $log $FINAL_HTML_DIR/logs/$modulename/.
-    eos cp $log $FINAL_HTML_DIR/logs/$modulename/last.log
+    env EOS_MGM_URL=root://eoscms.cern.ch eos cp $log $FINAL_HTML_DIR/logs/$modulename/.
+    env EOS_MGM_URL=root://eoscms.cern.ch eos cp $log $FINAL_HTML_DIR/logs/$modulename/last.log
     exit
 fi
 
@@ -74,7 +74,7 @@ echo `date` >> $log
 
 #cp $log $dated_log
 cp $log $last_log
-eos cp $log $FINAL_HTML_DIR/logs/$modulename/.
-eos cp $log $FINAL_HTML_DIR/logs/$modulename/last.log
+env EOS_MGM_URL=root://eoscms.cern.ch eos cp $log $FINAL_HTML_DIR/logs/$modulename/.
+env EOS_MGM_URL=root://eoscms.cern.ch eos cp $log $FINAL_HTML_DIR/logs/$modulename/last.log
 
 #rm $log

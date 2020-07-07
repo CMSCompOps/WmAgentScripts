@@ -1237,7 +1237,7 @@ class eosFile(object):
             try:
                 print "moving",self.cache_filename,"to",self.eos_filename
                 print("Attempt {}".format(T))
-                r = os.system("eoscp %s %s"%( self.cache_filename, self.eos_filename))
+                r = os.system("env EOS_MGM_URL=root://eoscms.cern.ch eos cp %s %s"%( self.cache_filename, self.eos_filename))
                 if r==0 and os.path.getsize(self.eos_filename) > 0: return True
                 print "not able to copy to eos",self.eos_filename,"with code",r
                 time.sleep(30)
@@ -3028,7 +3028,7 @@ class closeoutInfo:
 
         ## write the information out to disk
         new_base_eos_dir = 'root://eoscms.cern.ch/'+base_eos_dir
-        os.system('eoscp %s/closedout.json %s/closedout.json.last'%(new_base_eos_dir, new_base_eos_dir))
+        os.system('env EOS_MGM_URL=root://eoscms.cern.ch eos cp %s/closedout.json %s/closedout.json.last'%(new_base_eos_dir, new_base_eos_dir))
 
         ## merge the content
         try:
