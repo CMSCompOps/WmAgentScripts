@@ -428,18 +428,10 @@
     "maxcopies": 1, 
     "resize": "auto", 
     "secondaries": {
-      "/MinBias_TuneCP1_13TeV-pythia8/RunIIFall18GS-102X_upgrade2018_realistic_v11-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_RU_JINR"
-        ]
-      }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIFall18GS-102X_upgrade2018_realistic_v9-v1/GEN-SIM": {
         "SiteWhitelist": [
           "T2_US_MIT", 
-          "T2_DE_DESY", 
-          "T2_CH_CERN", 
-          "T2_US_Nebraska", 
-          "T2_US_Caltech"
+          "T2_DE_DESY" 
         ]
       }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIFall18GS-IdealGeometry_102X_upgrade2018_design_v9-v1/GEN-SIM": {
@@ -607,10 +599,7 @@
       }, 
       "/MinBias_TuneCP5_inelasticON_13TeV-pythia8/RunIIFall17GS-93X_mc2017_realistic_v3-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_US_FNAL", 
           "T1_DE_KIT", 
-          "T2_IN_TIFR", 
-          "T2_US_Nebraska", 
           "T1_FR_CCIN2P3"
         ]
       }
@@ -757,17 +746,12 @@
     }, 
     "partial_copy": 0.95, 
     "secondaries": {
-      "/MinBias_TuneCP0_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM": {}, 
-      "/MinBias_TuneCP2_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM": {}, 
       "/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1_ext1-v1/GEN-SIM": {
         "SiteWhitelist": [
           "T1_US_FNAL", 
           "T2_US_Nebraska"
         ]
-      }, 
-      "/Min_Bias_13TeV_pythia8_TuneCUETP8M2/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM": {}, 
-      "/Min_Bias_13TeV_pythia8_TuneCUETP8M3/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM": {}, 
-      "/Min_Bias_13TeV_pythia8_TuneCUETP8M4/RunIISummer15GS-MCRUN2_71_V1-v1/GEN-SIM": {}
+      } 
     }
   }, 
   "RunIISummer16DR80Premix": {
@@ -871,59 +855,41 @@
     "secondaries": {
       "/MinBias_TuneCP2_13TeV-pythia8/RunIIFall17FSPremix-PUMoriond17_94X_mc2017_realistic_v11-v1/GEN-SIM-RECO": {
         "SiteWhitelist": [
-          "T1_US_FNAL", 
-          "T2_BE_IIHE", 
-          "T2_AT_Vienna"
+          "T2_US_MIT", 
+          "T2_DE_DESY"
         ]
       }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIFall18GS-102X_upgrade2018_realistic_v9-v1/GEN-SIM": {
         "SiteWhitelist": [
           "T2_US_MIT", 
-          "T2_DE_DESY", 
-          "T2_CH_CERN", 
-          "T2_US_Nebraska", 
-          "T2_US_Caltech"
+          "T2_DE_DESY" 
         ]
       }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring18GS-100X_upgrade2018_realistic_v9-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T2_US_Wisconsin", 
-          "T2_DE_DESY", 
-          "T2_US_Florida", 
-          "T1_US_FNAL", 
-          "T2_CH_CERN", 
-          "T2_DE_RWTH", 
-          "T2_US_Nebraska"
+          "T2_DE_RWTH" 
         ]
       }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib16GS-105X_mcRun2_asymptotic_v2-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T2_IT_Pisa", 
+          "T1_FR_CCIN2P3", 
           "T2_IT_Legnaro"
         ]
       }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib17GS-105X_mc2017_realistic_v5_ext1-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_DE_KIT"
+          "T1_FR_CCIN2P3",
+          "T1_IT_CNAF"
         ]
       }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib18GS-105X_upgrade2018_realistic_v4-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_US_FNAL"
+          "T2_US_Florida"
         ]
       }, 
       "/MinBias_TuneCP5_14TeV-pythia8/PhaseIITDRSpring19GS-106X_upgrade2023_realistic_v2_ext1-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T2_US_Florida", 
-          "T1_IT_CNAF", 
-          "T1_DE_KIT"
-        ]
-      }, 
-      "/MinBias_TuneCP5_14TeV-pythia8/Run3Summer19GS-106X_upgrade2021_realistic_v5-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_DE_KIT", 
-          "T2_US_Vanderbilt", 
-          "T2_US_Nebraska"
+          "T2_US_Florida" 
         ]
       }, 
       "/MinBias_TuneCP5_14TeV-pythia8/Run3Winter20GS-110X_mcRun3_2021_realistic_v6-v1/GEN-SIM": {
@@ -934,23 +900,14 @@
       }, 
       "/MinBias_TuneCP5_inelasticON_13TeV-pythia8/RunIIFall17GS-93X_mc2017_realistic_v3-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T2_US_Nebraska", 
-          "T2_US_Caltech", 
-          "T2_US_MIT", 
           "T1_FR_CCIN2P3", 
-          "T1_DE_KIT", 
-          "T2_CH_CERN", 
-          "T2_CH_CERN_HLT"
+          "T1_DE_KIT" 
         ]
       }, 
       "/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer17GS-92X_upgrade2017_realistic_v2-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T2_US_Wisconsin", 
-          "T1_ES_PIC", 
           "T1_IT_CNAF", 
-          "T2_DE_DESY", 
-          "T2_US_Florida", 
-          "T2_UK_London_IC"
+          "T2_US_MIT"
         ]
       }
     }, 
@@ -997,6 +954,7 @@
       }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL16SIM-106X_mcRun2_asymptotic_v3-v1/GEN-SIM": {
         "SiteWhitelist": [
+          "T1_UK_RAL",
           "T1_US_FNAL"
         ]
       }
@@ -1029,6 +987,7 @@
       }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL16SIM-106X_mcRun2_asymptotic_v3-v1/GEN-SIM": {
         "SiteWhitelist": [
+          "T1_UK_RAL",
           "T1_US_FNAL"
         ]
       }
@@ -1303,9 +1262,7 @@
       }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL17SIM-106X_mc2017_realistic_v3-v2/SIM": {
         "SiteWhitelist": [
-          "T1_UK_RAL", 
-          "T1_US_FNAL", 
-          "T1_DE_KIT"
+          "T1_UK_RAL" 
         ]
       }
     }, 
@@ -1567,6 +1524,7 @@
     "secondaries": {
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL16SIM-106X_mcRun2_asymptotic_v3-v1/GEN-SIM": {
         "SiteWhitelist": [
+          "T1_UK_RAL",
           "T1_US_FNAL"
         ]
       }, 
@@ -1577,8 +1535,7 @@
       }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL17SIM-106X_mc2017_realistic_v3-v2/SIM": {
         "SiteWhitelist": [
-          "T1_US_FNAL", 
-          "T1_RU_JINR"
+          "T1_UK_RAL"
         ]
       }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL18SIM-106X_upgrade2018_realistic_v4-v1/SIM": {
@@ -1589,8 +1546,6 @@
       }, 
       "/MinBias_TuneCP5_14TeV-pythia8/PhaseIITDRSpring19GS-106X_upgrade2023_realistic_v2_ext1-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_IT_CNAF", 
-          "T1_DE_KIT", 
           "T2_US_Florida"
         ]
       }
@@ -1685,21 +1640,19 @@
     "secondaries": {
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib16GS-105X_mcRun2_asymptotic_v2-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_DE_KIT", 
+          "T1_FR_CCIN2P3", 
           "T2_IT_Legnaro"
         ]
       }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib17GS-105X_mc2017_realistic_v5_ext1-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_DE_KIT", 
-          "T1_RU_JINR", 
           "T1_FR_CCIN2P3", 
           "T1_IT_CNAF"
         ]
       }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib18GS-105X_upgrade2018_realistic_v4-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_US_FNAL"
+          "T2_US_Florida"
         ]
       }
     }, 
@@ -1747,18 +1700,13 @@
     "secondaries": {
       "/MinBias_TuneCUETP8M1_2017_5p02TeV-pythia8/RunIIpp5Spring18GS-94X_mc2017_realistic_v10For2017G_v3-v2/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_FR_CCIN2P3", 
-          "T2_CH_CERN", 
           "T2_US_MIT", 
           "T2_DE_DESY"
         ]
       }, 
       "/MinBias_TuneCUETP8M1_5p02TeV-pythia8/HINppWinter17GS-92X_upgrade2017_realistic_v11-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_FR_CCIN2P3", 
-          "T2_CH_CERN", 
-          "T2_US_MIT", 
-          "T2_DE_DESY"
+          "T2_US_MIT" 
         ]
       }
     }, 
@@ -1907,20 +1855,13 @@
     "secondaries": {
       "/ReggeGribovPartonMC_EposLHC_PbP_4080_4080_DataBS/pPb816Spring16GS-MB_80X_mcRun2_pA_v4-v2/GEN-SIM": {
         "SiteWhitelist": [
-          "T2_CH_CERN", 
           "T2_IT_Pisa", 
-          "T2_US_MIT", 
-          "T1_DE_KIT", 
-          "T1_FR_CCIN2P3"
+          "T2_US_MIT" 
         ]
       }, 
       "/ReggeGribovPartonMC_EposLHC_pPb_4080_4080_DataBS/pPb816Spring16GS-MB_80X_mcRun2_pA_v4-v2/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_US_FNAL", 
-          "T1_DE_KIT", 
-          "T2_CH_CERN", 
           "T2_IT_Pisa", 
-          "T2_US_Nebraska", 
           "T2_US_MIT"
         ]
       }
