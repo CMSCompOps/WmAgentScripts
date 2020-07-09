@@ -410,15 +410,6 @@
     "resize": "auto"
   }, 
   "RunIIAutumn18DR": {
-    "SiteWhitelist": [
-      "T2_US_MIT", 
-      "T2_DE_DESY", 
-      "T2_US_Nebraska", 
-      "T1_US_FNAL", 
-      "T1_DE_KIT", 
-      "T1_IT_CNAF", 
-      "T1_ES_PIC"
-    ], 
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
@@ -562,11 +553,6 @@
     "tune": true
   }, 
   "RunIIFall17DRStdmix": {
-    "SiteWhitelist": [
-      "T1_DE_KIT", 
-      "T1_IT_CNAF", 
-      "T1_FR_CCIN2P3"
-    ], 
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
@@ -723,10 +709,6 @@
     "NONONO_force-timeout": 7, 
     "NONONO_partial_copy": 0.98, 
     "NO_tune": true, 
-    "SiteWhitelist": [
-      "T1_US_FNAL", 
-      "T2_US_Nebraska"
-    ], 
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
