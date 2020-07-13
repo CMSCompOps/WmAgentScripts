@@ -578,23 +578,6 @@
     "go": true, 
     "tune": true
   }, 
-  "HiFall15": {
-    "go": true, 
-    "custodial": "T1_FR_CCIN2P3_MSS", 
-    "fractionpass": 0.95, 
-    "parameters": {
-      "MergedLFNBase": "/store/himc", 
-      "SiteBlacklist": [
-        "T1_US_FNAL", 
-        "T2_US_Purdue", 
-        "T2_US_Caltech", 
-        "T2_US_Florida", 
-        "T2_US_Nebraska", 
-        "T2_US_UCSD", 
-        "T2_US_Wisconsin"
-      ]
-    }
-  }, 
   "RunIISpring16DR80": {
     "maxcopies": 2, 
     "SiteWhitelist": [
@@ -1173,36 +1156,6 @@
       "T1_UK_RAL", 
       "T1_DE_KIT"
     ]
-  }, 
-  "HINPbPbWinter16DR": {
-    "go": true, 
-    "custodial": "T1_FR_CCIN2P3_MSS", 
-    "fractionpass": 0.95, 
-    "parameters": {
-      "MergedLFNBase": "/store/himc", 
-      "SiteBlacklist": [
-        "T1_US_FNAL", 
-        "T2_US_Purdue", 
-        "T2_US_Caltech", 
-        "T2_US_Florida", 
-        "T2_US_Nebraska", 
-        "T2_US_UCSD", 
-        "T2_US_Wisconsin"
-      ]
-    }, 
-    "secondaries": {
-      "/Hydjet_Quenched_Cymbal5Ev8_PbPbMinBias_5020GeV/HiFall15-75X_mcRun2_HeavyIon_v14_75X_mcRun2_HeavyIon_v14-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_DE_KIT", 
-          "T2_CH_CERN", 
-          "T2_IT_Pisa", 
-          "T1_ES_PIC", 
-          "T1_UK_RAL", 
-          "T2_EE_Estonia", 
-          "T2_IN_TIFR"
-        ]
-      }
-    }
   }, 
   "RunIISummer17pLHE": {
     "go": true, 
