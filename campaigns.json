@@ -469,7 +469,8 @@
           "T2_US_MIT", 
           "T2_DE_DESY"
         ]
-      }, 
+      },
+      "/MinBias_TuneCP1_13TeV-pythia8/RunIIFall18GS-102X_upgrade2018_realistic_v11-v1/GEN-SIM": {}, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIFall18GS-IdealGeometry_102X_upgrade2018_design_v9-v1/GEN-SIM": {
         "SiteWhitelist": [
           "T1_US_FNAL"
