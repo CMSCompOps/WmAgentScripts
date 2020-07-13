@@ -2673,7 +2673,7 @@
     "fractionpass": 0.95, 
     "tune": true, 
     "maxcopies": 1
-  }
+  },
   "RunIIAutumn18NanoAOD": {
     "fractionpass": 0.95, 
     "go": true, 
