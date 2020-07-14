@@ -8086,7 +8086,11 @@ class workflowInfo:
 		else:
 		    print(msg)
 		return True
-	
+        # If there is 'pilot' in SubRequestType (an alternative pilot)
+        if 'SubRequestType' in self.request and 'pilot' in self.request['SubRequestType']:
+            print "Alternative pilot"
+            return True        
+ 	
         for campaign,label in pas:
             if not CI.go( campaign, label):
                 if log:
