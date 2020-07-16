@@ -215,7 +215,7 @@
    "description": "Use the location of the parent dataset for custodial copy"
  },
  "tape_size_limit" : {
-   "value" : 850,
+   "value" : 300,
    "description" : "Size over which to prevent transfer to tape automatically"
  },
  "tiers_with_no_check": {

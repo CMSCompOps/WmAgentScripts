@@ -1261,10 +1261,18 @@ class CheckBuster(threading.Thread):
                 ## pick one at random
                 custodial = SI.pick_SE(size=size_worth_checking)
 
-            if custodial and size_worht_going_to_ddm > tape_size_limit:
-                wfi.sendLog('checkor',"The total output size (%s TB) is too large for the limit set (%s TB)"%( size_worth_checking, tape_size_limit))
-                assistance_tags.add('bigoutput')
-                custodial = None
+#            if custodial and size_worth_checking > tape_size_limit:
+#                wfi.sendLog('checkor',"The total output size (%s TB) is too large for the limit set (%s TB)"%( size_worth_checking, tape_size_limit))
+#                assistance_tags.add('bigoutput')
+#                custodial = None
+
+            if custodial:
+                for output in out_worth_checking:
+                    if out_worth_checking[output] > tape_size_limit:
+                        wfi.sendLog('checkor',"%s output size (%s TB) is too large for the limit set (%s TB)"%( output, out_worth_checking[output], tape_size_limit))
+                        assistance_tags.add('bigoutput')
+                        custodial = None
+
 
             if not custodial:
                 print "cannot find a custodial for",wfo.name
