@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 import time
-from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration, getPrepIDs, componentInfo, getAllAgents, sendLog, moduleLock, dataCache, agentInfo, display_time, eosFile, eosRead, StartStopInfo, remainingDatasetInfo
+from utils import getWorkLoad, campaignInfo, siteInfo, getWorkflows, unifiedConfiguration, getPrepIDs, componentInfo, getAllAgents, sendLog, moduleLock, dataCache, agentInfo, display_time, eosFile, eosRead, StartStopInfo, remainingDatasetInfo, findCustodialLocation
 import os
 import json
 from collections import defaultdict
@@ -16,6 +16,13 @@ def htmlor( caller = ""):
 
     up = componentInfo(soft=['mcm','wtc','jira'])
     if not up.check(): return 
+    #phedex check    
+    try:
+        print "checking on phedex"
+        cust = findCustodialLocation(phedex_url,'/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM')
+    except Exception as e:
+        print "fail phedex fail"
+        return  
 
     for backup in ['statuses.json','siteInfo.json','equalizor.json']:
         print "copying",backup,"to old location"

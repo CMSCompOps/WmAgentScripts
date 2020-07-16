@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, forceComplete, makeReplicaRequest, getDatasetSize, getDatasetFiles, sendLog, reqmgr_url, dbs_url, dbs_url_writer, display_time, checkMemory, ThreadHandler, wtcInfo
-from utils import componentInfo, unifiedConfiguration, userLock, moduleLock, dataCache, unified_url, getDatasetLumisAndFiles, getDatasetRuns, duplicateAnalyzer, invalidateFiles, findParent, do_html_in_each_module
+from utils import componentInfo, unifiedConfiguration, userLock, moduleLock, dataCache, unified_url, getDatasetLumisAndFiles, getDatasetRuns, duplicateAnalyzer, invalidateFiles, findParent, do_html_in_each_module, phedex_url
 import phedexClient
 import dbs3Client
 dbs3Client.dbs3_url = dbs_url
@@ -55,6 +55,14 @@ def checkor(url, spec=None, options=None):
     use_mcm = True
     up = componentInfo(soft=['mcm','wtc'])
     if not up.check(): return
+    #phedex check    
+    try:
+        print "checking on phedex"
+        cust = findCustodialLocation(phedex_url,'/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM')
+    except Exception as e:
+        print "fail phedex fail"
+        return   
+
     use_mcm = up.status['mcm']
 
     now_s = time.mktime(time.gmtime())
