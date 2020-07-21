@@ -1,22 +1,19 @@
-name: Check Shell Script Syntax
+name: ShellCheck
 
-on: [push, pull_request]
+on: [pull_request]
 
 jobs:
-  build:
+  lint:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v2.2.0
-    - name: Get Diff Action
-      uses: technote-space/get-diff-action@v1.2.8
+    - name: shellcheck
+      uses: reviewdog/action-shellcheck@v1
       with:
-        SUFFIX_FILTER: .sh
-    - name: Install ShellCheck
-      run: |
-        sudo apt-get install shellcheck
-      if: env.GIT_DIFF
-    - name: Lint with ShellCheck
-      run: |
-        shellcheck --shell=bash -x ${{ env.GIT_DIFF }}
-      if: env.GIT_DIFF
+        github_token: ${{ secrets.github_token }}
+        level: info
+        fail_on_error: true
+        shellcheck_flags: '--shell=bash -x'
+        reporter: github-pr-review
+        pattern: "*.sh"
