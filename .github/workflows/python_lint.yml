@@ -16,10 +16,29 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 2.7
-    - name: Install and Pylint
+    - name: Install Pylint
       run: |
         python2 -m pip install pylint
-    - name: Lint with pylint
+    - name: Generate error reports
       run: |
-        pylint ${{ env.GIT_DIFF }}
+        pylint --msg-template='{path}:{line:3d}:{column}: [{msg_id}] {msg} ({symbol})' --suggestion-mode=y --reports=y --disable=RP0101,RP0401,RP0402,RP0701,RP0801  ${{ env.GIT_DIFF }} | tee temp.txt
       if: env.GIT_DIFF
+    - name: Parse output
+      if: env.GIT_DIFF && github.event_name == 'pull_request'
+      run: |
+        cat temp.txt | sed -n '/Report/,$p' | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' > report.txt
+    - name: Comment Test Coverage
+      if: env.GIT_DIFF && github.event_name == 'pull_request'
+      env:
+        URL: ${{ github.event.pull_request.comments_url }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        curl -X POST $URL \
+          -H "Content-Type: application/json" -H \
+          "Authorization: token $GITHUB_TOKEN" \
+          --data '{ "body": "<pre>'"$(head -n 1 report.txt)"'</pre>" }'
+    - name: Check warnings and errors
+      run: |
+         pylint --msg-template='{path}:{line:3d}:{column}: [{msg_id}] {msg} ({symbol})' --suggestion-mode=y --disable=all --enable=E,W  ${{ env.GIT_DIFF }}
+      if: env.GIT_DIFF
+      
