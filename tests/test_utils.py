@@ -55,9 +55,22 @@ class TestUnifiedConfiguration(unittest.TestCase):
                     "test@cern.ch", "test@testmail.com"])
 
     def test_get_mongodb(self):
-        
+
         # TODO: mock db and write tests
         pass
+
+
+class TestEsHeader(unittest.TestCase):
+
+    def test_es_header(self):
+        from WmAgentScripts.utils import es_header
+        mock_date = mock_open(read_data=u"fake_entrypointname:fake_password")
+        with patch('__builtin__.open', mock_date):
+            result = es_header()
+            fake_result = {
+                'Content-Type': 'application/json',
+                'Authorization': 'Basic ZmFrZV9lbnRyeXBvaW50bmFtZTpmYWtlX3Bhc3N3b3Jk'}
+            self.assertEqual(result, fake_result)
 
 
 if __name__ == '__main__':
