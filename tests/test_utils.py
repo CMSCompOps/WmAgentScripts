@@ -70,7 +70,16 @@ class TestEsHeader(unittest.TestCase):
             fake_result = {
                 'Content-Type': 'application/json',
                 'Authorization': 'Basic ZmFrZV9lbnRyeXBvaW50bmFtZTpmYWtlX3Bhc3N3b3Jk'}
-            self.assertEqual(result, fake_result)
+            self.assertDictEqual(result, fake_result)
+
+
+class TestUrlEncodeParams(unittest.TestCase):
+
+    def test_url_encode_params(self):
+        from WmAgentScripts.utils import url_encode_params
+        params = {"query1": "test1", "query2": ["test2", "test3"]}
+        result = url_encode_params(params)
+        self.assertEqual(result, "query2=test2&query2=test3&query1=test1")
 
 
 if __name__ == '__main__':
