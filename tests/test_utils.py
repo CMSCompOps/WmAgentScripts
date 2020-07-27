@@ -1,9 +1,9 @@
 import sys
 
 import unittest
+import json
 import mock
 from mock import MagicMock, patch, mock_open
-import json
 
 
 class TestDeepUpdate(unittest.TestCase):
@@ -44,7 +44,7 @@ class TestUnifiedConfiguration(unittest.TestCase):
         from WmAgentScripts.utils import unifiedConfiguration, open_json_file
         mock_open_json = mock_open(read_data=self.test_json)
         with patch('__builtin__.open', mock_open_json):
-            result = open_json_file('filename')
+            open_json_file('filename')
             uc = unifiedConfiguration(configFile='fake_file_path')
             self.assertEqual(
                 uc.get("email"), ["test@cern.ch", "test@testmail.com"])
@@ -80,6 +80,91 @@ class TestUrlEncodeParams(unittest.TestCase):
         params = {"query1": "test1", "query2": ["test2", "test3"]}
         result = url_encode_params(params)
         self.assertEqual(result, "query2=test2&query2=test3&query1=test1")
+
+
+class TestGET(unittest.TestCase):
+
+    def test_get(self):
+
+        class MockResponse:
+            def __init__(self, *args, **kwargs):
+                self.response = None, 404
+
+            def request(self, *args, **kwargs):
+                if args[1] == 'test.json':
+                    self.response = {"key1": "value1"}, 200
+                elif args[1] == 'anothertest.json':
+                    self.response = {"key2": "value2"}, 200
+                else:
+                    self.response = None, 404
+
+            def getresponse(self):
+                return self.response
+
+        from WmAgentScripts.utils import GET
+        with patch('WmAgentScripts.utils.make_x509_conn', MockResponse):
+            response = GET(
+                url='http://someurl.com/',
+                there='test.json',
+                l=False)
+            self.assertDictEqual({"key1": "value1"}, response[0])
+            self.assertEqual(200, response[1])
+
+            response = GET(
+                url='http://someurl.com/',
+                there='anothertest.json',
+                l=False)
+            self.assertDictEqual({"key2": "value2"}, response[0])
+            self.assertEqual(200, response[1])
+
+            response = GET(url=None, there=None, l=False)
+            self.assertEqual((None, 404), response)
+
+    def test_get_json_object(self):
+
+        from StringIO import StringIO
+
+        class ContextualStringIO(StringIO):
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                self.close()
+                return False
+
+        class MockResponseStringIo:
+            def __init__(self, *args, **kwargs):
+                self.response = None, 404
+
+            def request(self, *args, **kwargs):
+                if args[1] == 'test.json':
+                    self.response = {"key1": "value1"}, 200
+                elif args[1] == 'anothertest.json':
+                    self.response = {"key2": "value2"}, 200
+                else:
+                    self.response = None, 404
+
+            def getresponse(self):
+                return ContextualStringIO(json.dumps(self.response))
+
+        from WmAgentScripts.utils import GET
+        with patch('WmAgentScripts.utils.make_x509_conn', MockResponseStringIo):
+            response = GET(
+                url='http://someurl.com/',
+                there='test.json',
+                l=True)
+            self.assertDictEqual({"key1": "value1"}, response[0])
+            self.assertEqual(200, response[1])
+
+            response = GET(
+                url='http://someurl.com/',
+                there='anothertest.json',
+                l=True)
+            self.assertDictEqual({"key2": "value2"}, response[0])
+            self.assertEqual(200, response[1])
+
+            response = GET(url=None, there=None, l=True)
+            self.assertEqual([None, 404], response)
 
 
 if __name__ == '__main__':
