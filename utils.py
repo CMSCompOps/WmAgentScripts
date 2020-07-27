@@ -1129,7 +1129,7 @@ class componentCheck(threading.Thread):
         oo.write("Testing I/O on eos")
         r = oo.close() ## commits to eos
         if r:
-            r = os.system('rm -f %s'% eosfile)
+            r = os.system('env EOS_MGM_URL=root://eoscms.cern.ch eos rm -f %s'% eosfile)
             if not r == 0:
                 raise Exception("failed to I/O on eos")
 
@@ -1213,7 +1213,7 @@ def eosRead(filename,trials=5):
             print "failed to read",filename,"from eos"
             time.sleep(2)
             cache = (cache_dir+'/'+filename.replace('/','_')).replace('//','/')
-            r = os.system('cp %s %s'%( filename, cache ))
+            r = os.system('env EOS_MGM_URL=root://eoscms.cern.ch eos cp %s %s'%( filename, cache ))
             if r==0:
                 return read_file(cache)
     print "unable to read from eos"
@@ -3040,7 +3040,7 @@ class closeoutInfo:
 
         ## merge the content
         try:
-            old = json.loads(open('%s/closedout.json'%base_eos_dir).read())
+            old = json.loads(eosRead('%s/closedout.json'%base_eos_dir))
         except:
             old = {}
 
@@ -3068,12 +3068,12 @@ class closeoutInfo:
             if update_to_old:
                 self.record[wf] = old[wf]
 
-        out = open('%s/closedout.json'%base_eos_dir,'w')
+        out = eosFile('%s/closedout.json'%base_eos_dir)
         out.write( json.dumps( self.record , indent=2 ) )
         out.close()
         time.sleep(100)
 
-        os.system('rm -f %s'% my_file )
+        os.system('env EOS_MGM_URL=root://eoscms.cern.ch eos rm -f %s'% my_file )
 
     def assistance(self):
         from assignSession import session, Workflow
@@ -6529,7 +6529,7 @@ class workflowInfo:
 
     def checkSettings(self):
         ## open a mystery file
-        perfs = json.loads(open('%s/perf_per_config.json'% base_eos_dir))
+        perfs = json.loads(eosRead('%s/perf_per_config.json'% base_eos_dir))
         ## and check the observed value and the settings of the workflow
 
     def isRelval(self):

@@ -278,10 +278,10 @@ def equalizor(url , specific = None, options=None):
             return None
     def close( interface ):
         eosFile('%s/equalizor.json.new'%monitor_pub_dir,'w').write( json.dumps( interface, indent=2)).close()
-        os.system('mv %s/equalizor.json.new %s/equalizor.json'%(monitor_pub_dir,monitor_pub_dir))
-        os.system('cp %s/equalizor.json %s/logs/equalizor/equalizor.%s.json'%(monitor_pub_dir,monitor_dir,time.mktime(time.gmtime())))
+        os.system('env EOS_MGM_URL=root://eoscms.cern.ch eos mv %s/equalizor.json.new %s/equalizor.json'%(monitor_pub_dir,monitor_pub_dir))
+        os.system('env EOS_MGM_URL=root://eoscms.cern.ch eos cp %s/equalizor.json %s/logs/equalizor/equalizor.%s.json'%(monitor_pub_dir,monitor_dir,time.mktime(time.gmtime())))
         ## move it where people use to see it ## should go away at some point
-        os.system('cp %s/equalizor.json /afs/cern.ch/user/c/cmst2/www/unified/.'%( monitor_pub_dir ))
+        os.system('env EOS_MGM_URL=root://eoscms.cern.ch eos cp %s/equalizor.json /afs/cern.ch/user/c/cmst2/www/unified/.'%( monitor_pub_dir ))
 
     interface = {
         'mapping' : mapping,

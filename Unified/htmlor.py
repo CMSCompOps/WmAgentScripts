@@ -26,7 +26,7 @@ def htmlor( caller = ""):
 
     for backup in ['statuses.json','siteInfo.json','equalizor.json']:
         print "copying",backup,"to old location"
-        os.system('cp %s/%s /afs/cern.ch/user/c/cmst2/www/unified/.'%(monitor_pub_dir, backup))
+        os.system('env EOS_MGM_URL=root://eoscms.cern.ch eos cp %s/%s /afs/cern.ch/user/c/cmst2/www/unified/.'%(monitor_pub_dir, backup))
         #os.system('cp %s/%s %s/.'%(monitor_dir, backup, monitor_pub_dir))
 
     try:
@@ -1560,8 +1560,8 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s %s / %s [TB]'});
 
 
     eosFile(time.strftime("%s/summary_%%Y_"%(monitor_dir), time.gmtime())+this_week+".json").write(json.dumps(summary_content, indent=2)).close()
-    os.system(time.strftime("cp %s/summary_%%Y_"%(monitor_dir), time.gmtime())+this_week+".json %s/summary.txt"%(monitor_pub_dir))
-    os.system(time.strftime("cp %s/summary_%%Y_"%(monitor_dir), time.gmtime())+last_week+".json %s/last_summary.txt"%(monitor_pub_dir))
+    os.system(time.strftime("env EOS_MGM_URL=root://eoscms.cern.ch eos cp %s/summary_%%Y_"%(monitor_dir), time.gmtime())+this_week+".json %s/summary.txt"%(monitor_pub_dir))
+    os.system(time.strftime("env EOS_MGM_URL=root://eoscms.cern.ch eos cp %s/summary_%%Y_"%(monitor_dir), time.gmtime())+last_week+".json %s/last_summary.txt"%(monitor_pub_dir))
 
 
 if __name__ == "__main__":
