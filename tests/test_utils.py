@@ -167,5 +167,36 @@ class TestGET(unittest.TestCase):
             self.assertEqual([None, 404], response)
 
 
+class TestGetSubscription(unittest.TestCase):
+
+    def testGetSubscription(self):
+        from StringIO import StringIO
+
+        class ContextualStringIO(StringIO):
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                self.close()
+                return False
+
+        class MockResponseStringIo:
+            def __init__(self, *args, **kwargs):
+                self.response = None, 404
+
+            def request(self, *args, **kwargs):
+                self.response = {"phedex": "value1"}
+
+            def getresponse(self):
+                return ContextualStringIO(json.dumps(self.response))
+
+        from WmAgentScripts.utils import getSubscriptions
+        with patch('WmAgentScripts.utils.make_x509_conn', MockResponseStringIo):
+            response = getSubscriptions(
+                url='http://someurl.com/',
+                dataset="somedataset")
+            self.assertEqual(response, "value1")
+
+
 if __name__ == '__main__':
     unittest.main()
