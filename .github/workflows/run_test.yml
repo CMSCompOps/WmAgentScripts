@@ -1,0 +1,21 @@
+name: Unit test
+
+on: [push, pull_request]
+
+jobs:
+  lint-python:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2.2.0
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 2.7
+    - name: Install Pytest and mock
+      run: |
+        python2 -m pip install pytest mock
+    - name: Run pytest
+      run: |
+        python2 -m pytest -v tests
+      
