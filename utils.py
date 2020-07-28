@@ -1129,7 +1129,7 @@ class componentCheck(threading.Thread):
         oo.write("Testing I/O on eos")
         r = oo.close() ## commits to eos
         if r:
-            r = os.system('env EOS_MGM_URL=root://eoscms.cern.ch eos rm -f %s'% eosfile)
+            r = os.system('env EOS_MGM_URL=root://eoscms.cern.ch eos rm %s'% eosfile)
             if not r == 0:
                 raise Exception("failed to I/O on eos")
 
