@@ -228,5 +228,39 @@ class TestListRequests(unittest.TestCase):
             self.assertDictEqual(response, {'someSite': ['someId']})
 
 
+class TestListRequests(unittest.TestCase):
+
+    def testListCustodial(self):
+
+        class MockResponseStringIo:
+            def __init__(self, *args, **kwargs):
+                self.response = None, 404
+
+            def request(self, *args, **kwargs):
+                self.response = {"phedex": {
+                    "request": [{
+                        "node": [
+                            {"name": "someSite"},
+                            {"name": "someSite1"}
+                        ],
+                        "id": "someId",
+                        "type": "xfer"
+                    }]}
+                }
+
+            def getresponse(self):
+                return ContextualStringIO(json.dumps(self.response))
+
+        from WmAgentScripts.utils import listCustodial
+        with patch('WmAgentScripts.utils.make_x509_conn', MockResponseStringIo):
+            response = listCustodial(
+                url='http://someurl.com/',
+            )
+            print response
+            self.assertDictEqual(
+                response, {
+                    'someSite1': ['someId'], 'someSite': ['someId']})
+
+
 if __name__ == '__main__':
     unittest.main()
