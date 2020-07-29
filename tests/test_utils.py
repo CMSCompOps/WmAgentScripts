@@ -5,6 +5,17 @@ import json
 import mock
 from mock import MagicMock, patch, mock_open
 
+from StringIO import StringIO
+
+
+class ContextualStringIO(StringIO):
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+        return False
+
 
 class TestDeepUpdate(unittest.TestCase):
 
@@ -122,16 +133,6 @@ class TestGET(unittest.TestCase):
 
     def test_get_json_object(self):
 
-        from StringIO import StringIO
-
-        class ContextualStringIO(StringIO):
-            def __enter__(self):
-                return self
-
-            def __exit__(self, *args):
-                self.close()
-                return False
-
         class MockResponseStringIo:
             def __init__(self, *args, **kwargs):
                 self.response = None, 404
@@ -170,15 +171,6 @@ class TestGET(unittest.TestCase):
 class TestGetSubscription(unittest.TestCase):
 
     def testGetSubscription(self):
-        from StringIO import StringIO
-
-        class ContextualStringIO(StringIO):
-            def __enter__(self):
-                return self
-
-            def __exit__(self, *args):
-                self.close()
-                return False
 
         class MockResponseStringIo:
             def __init__(self, *args, **kwargs):
@@ -196,6 +188,44 @@ class TestGetSubscription(unittest.TestCase):
                 url='http://someurl.com/',
                 dataset="somedataset")
             self.assertEqual(response, "value1")
+
+
+class TestListRequests(unittest.TestCase):
+
+    def testListRequests(self):
+
+        class MockResponseStringIo:
+            def __init__(self, *args, **kwargs):
+                self.response = None, 404
+
+            def request(self, *args, **kwargs):
+                self.response = {"phedex": {
+                    "request": [{
+                        "node": [
+                            {"name": "someSite"},
+                            {"name": "someSite1"}
+                        ],
+                        "id": "someId"
+                    }]}
+                }
+
+            def getresponse(self):
+                return ContextualStringIO(json.dumps(self.response))
+
+        from WmAgentScripts.utils import listRequests
+        with patch('WmAgentScripts.utils.make_x509_conn', MockResponseStringIo):
+            response = listRequests(
+                url='http://someurl.com/',
+                dataset="somedataset",
+                site=None)
+            self.assertDictEqual(
+                response, {
+                    'someSite1': ['someId'], 'someSite': ['someId']})
+            response = listRequests(
+                url='http://someurl.com/',
+                dataset="somedataset",
+                site='someSite')
+            self.assertDictEqual(response, {'someSite': ['someId']})
 
 
 if __name__ == '__main__':
