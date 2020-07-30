@@ -262,5 +262,57 @@ class TestListRequests(unittest.TestCase):
                     'someSite1': ['someId'], 'someSite': ['someId']})
 
 
+class TestListSubscriptions(unittest.TestCase):
+
+    def testListSubscriptions(self):
+
+        class MockResponseStringIo:
+            def __init__(self, *args, **kwargs):
+                self.response = None, 404
+
+            def request(self, *args, **kwargs):
+                self.response = {"phedex": {
+                    "request": [{
+                        "node": [{
+                                "name": "someSite",
+                                "decision": "approved",
+                                "time_decided": 1300
+                            },
+                            {
+                                "name": "someSite1",
+                                "decision": "pending",
+                                "time_decided": 1400
+                            },
+                            {
+                                "name": "someSiteMSS",
+                                "decision": "pending",
+                                "time_decided": 1400
+                            },
+                        ],
+                        "id": "someId",
+                        "type": "xfer"
+                    }]}
+                }
+
+            def getresponse(self):
+                return ContextualStringIO(json.dumps(self.response))
+
+        from WmAgentScripts.utils import listSubscriptions
+        with patch('WmAgentScripts.utils.make_x509_conn', MockResponseStringIo):
+            response = listSubscriptions(
+                url='http://someurl.com/',
+                dataset='somedataset'
+            )
+            self.assertDictEqual(
+                response, {'someSite': ('someId', True), 'someSite1': ('someId', False)})
+
+            response = listSubscriptions(
+                url='http://someurl.com/',
+                dataset='somedataset',
+                within_sites=['someSite']
+            )
+            self.assertDictEqual(
+                response, {'someSite': ('someId', True)})
+
 if __name__ == '__main__':
     unittest.main()
