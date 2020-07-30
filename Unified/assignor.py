@@ -303,7 +303,7 @@ def assignor(url ,specific = None, talk=True, options=None):
             # then pick any otherwise
             sites_out = [SI.pick_dSE([SI.CE_to_SE(ce) for ce in sites_allowed])]
             
-            
+        print "available=",SI.disk[sites_out]    
         wfh.sendLog('assignor',"Placing the output on %s"%sites_out)
         parameters={
             'SiteWhitelist' : sites_allowed,
