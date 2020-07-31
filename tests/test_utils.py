@@ -352,5 +352,41 @@ class TestPass_to_dynamo(unittest.TestCase):
             self.assertFalse(response)
 
 
+class TesCheckDownTime(unittest.TestCase):
+
+    def testCheckDownTime(self):
+
+        class MockResponseStringIo(StringIO):
+            status = 503
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                self.close()
+                return False
+
+        class MockResponse:
+            def __init__(self, *args, **kwargs):
+                self.response = None
+
+            def request(self, *args, **kwargs):
+                self.response = {}
+
+            def getresponse(self):
+                return MockResponseStringIo(json.dumps(self.response))
+
+        from WmAgentScripts.utils import checkDownTime
+
+        with patch('WmAgentScripts.utils.make_x509_conn', MockResponse):
+            response = checkDownTime()
+            self.assertTrue(response)
+
+        MockResponseStringIo.status = 404
+        with patch('WmAgentScripts.utils.make_x509_conn', MockResponse):
+            response = checkDownTime()
+            self.assertFalse(response)
+
+
 if __name__ == '__main__':
     unittest.main()
