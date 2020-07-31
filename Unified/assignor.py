@@ -307,8 +307,8 @@ def assignor(url ,specific = None, talk=True, options=None):
         wfh.sendLog('assignor',"Placing the output on %s"%sites_out)
         parameters={
             'SiteWhitelist' : sites_allowed,
-            'NonCustodialSites' : sites_out,
-            'AutoApproveSubscriptionSites' : list(set(sites_out)),
+            'NonCustodialSites' : [],
+            'AutoApproveSubscriptionSites' : [],
             'AcquisitionEra' : wfh.acquisitionEra(),
             'ProcessingString' : wfh.processingString(),
             'MergedLFNBase' : set_lfn,
