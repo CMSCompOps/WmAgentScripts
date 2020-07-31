@@ -196,7 +196,7 @@ class TestListRequests(unittest.TestCase):
 
         class MockResponseStringIo:
             def __init__(self, *args, **kwargs):
-                self.response = None, 404
+                self.response = None
 
             def request(self, *args, **kwargs):
                 self.response = {"phedex": {
@@ -234,7 +234,7 @@ class TestListRequests(unittest.TestCase):
 
         class MockResponseStringIo:
             def __init__(self, *args, **kwargs):
-                self.response = None, 404
+                self.response = None
 
             def request(self, *args, **kwargs):
                 self.response = {"phedex": {
@@ -268,12 +268,13 @@ class TestListSubscriptions(unittest.TestCase):
 
         class MockResponseStringIo:
             def __init__(self, *args, **kwargs):
-                self.response = None, 404
+                self.response = None
 
             def request(self, *args, **kwargs):
                 self.response = {"phedex": {
                     "request": [{
-                        "node": [{
+                        "node": [
+                            {
                                 "name": "someSite",
                                 "decision": "approved",
                                 "time_decided": 1300
@@ -304,7 +305,11 @@ class TestListSubscriptions(unittest.TestCase):
                 dataset='somedataset'
             )
             self.assertDictEqual(
-                response, {'someSite': ('someId', True), 'someSite1': ('someId', False)})
+                response, {
+                    'someSite': (
+                        'someId', True),
+                    'someSite1': (
+                        'someId', False)})
 
             response = listSubscriptions(
                 url='http://someurl.com/',
@@ -313,6 +318,39 @@ class TestListSubscriptions(unittest.TestCase):
             )
             self.assertDictEqual(
                 response, {'someSite': ('someId', True)})
+
+
+class TestPass_to_dynamo(unittest.TestCase):
+
+    def test_pass_to_dynamo(self):
+
+        class MockResponseStringIo:
+            response = {"result": "OK"}
+
+            def __init__(self, *args, **kwargs):
+                pass
+
+            def request(self, *args, **kwargs):
+                pass
+
+            def getresponse(self):
+                return ContextualStringIO(json.dumps(self.response))
+
+        from WmAgentScripts.utils import pass_to_dynamo
+        with patch('WmAgentScripts.utils.make_x509_conn', MockResponseStringIo):
+            response = pass_to_dynamo(
+                items=["items1", "item2"],
+                N=10
+            )
+            self.assertTrue(response)
+        MockResponseStringIo.response = {"result": "Not OK"}
+        with patch('WmAgentScripts.utils.make_x509_conn', MockResponseStringIo):
+            response = pass_to_dynamo(
+                items=["items1", "item2"],
+                N=10
+            )
+            self.assertFalse(response)
+
 
 if __name__ == '__main__':
     unittest.main()
