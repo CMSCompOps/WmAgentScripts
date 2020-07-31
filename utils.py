@@ -2580,12 +2580,19 @@ class siteInfo:
         return r_weights.keys()[self._weighted_choice_sub(r_weights.values())]
 
     def _weighted_choice_sub(self,ws):
-        rnd = random.random() * sum(ws)
-        #print ws
-        for i, w in enumerate(ws):
-            rnd -= w
-            if rnd <= 0:
-                return i
+        if sum(ws)>0:
+            rnd = random.random() * sum(ws)
+            #print ws
+            for i, w in enumerate(ws):
+                rnd -= w
+                if rnd <= 0:
+                    return i
+        else:
+            rnd = random.random() * len(ws)  ## add a random selection if all sites are 0
+            for i, w in enumerate(ws):
+                rnd -= 1
+                if rnd <= 0:
+                    return i
         print "could not make a choice from ",ws,"and",rnd
         return None
 
