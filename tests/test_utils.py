@@ -388,5 +388,21 @@ class TesCheckDownTime(unittest.TestCase):
             self.assertFalse(response)
 
 
+class TestIsJson(unittest.TestCase):
+
+    def test_is_json(self):
+        from WmAgentScripts.utils import is_json
+
+        test_json = {
+            "first": {"a": "A"},
+            "second": "B"
+        }
+
+        self.assertTrue(is_json(json.dumps(test_json)))
+
+        with self.assertRaises(TypeError):
+            self.assertFalse(is_json(test_json))
+
+
 if __name__ == '__main__':
     unittest.main()
