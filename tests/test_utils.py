@@ -429,5 +429,24 @@ class TestReadFile(unittest.TestCase):
                 self.assertEqual(textcontent, '{}')
 
 
+class TestGetWMStats(unittest.TestCase):
+
+    def test_getWMStats(self):
+        class MockResponseStringIo:
+            def __init__(self, *args, **kwargs):
+                self.response = None, 404
+
+            def request(self, *args, **kwargs):
+                self.response = {"result": [200]}
+
+            def getresponse(self):
+                return ContextualStringIO(json.dumps(self.response))
+
+        from WmAgentScripts.utils import getWMStats
+        with patch('WmAgentScripts.utils.make_x509_conn', MockResponseStringIo):
+            response = getWMStats(url='http://someurl.com/')
+            self.assertEqual(response, 200)
+
+
 if __name__ == '__main__':
     unittest.main()
