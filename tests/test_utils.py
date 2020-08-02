@@ -404,5 +404,30 @@ class TestIsJson(unittest.TestCase):
             self.assertFalse(is_json(test_json))
 
 
+class TestReadFile(unittest.TestCase):
+
+    def test_read_file(self):
+        from WmAgentScripts.utils import read_file
+        test_json = {
+            "first": {"a": "A"},
+            "second": "B"
+        }
+        test_data = "test data"
+
+        with patch('WmAgentScripts.utils.sendLog', return_value=None):
+            mock_open_json = mock_open(read_data=json.dumps(test_json))
+            with patch('__builtin__.open', mock_open_json):
+                content = json.loads(read_file('filename.json'))
+                self.assertDictEqual(content, test_json)
+
+            mock_open_file = mock_open(read_data=test_data)
+            with patch('__builtin__.open', mock_open_file):
+                content = read_file('filename')
+                self.assertEqual(content, test_data)
+
+                textcontent = read_file('filename.json')
+                self.assertEqual(textcontent, '{}')
+
+
 if __name__ == '__main__':
     unittest.main()
