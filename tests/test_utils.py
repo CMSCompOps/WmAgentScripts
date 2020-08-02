@@ -7,6 +7,10 @@ from mock import MagicMock, patch, mock_open
 
 from StringIO import StringIO
 
+sys.modules['dbs'] = MagicMock()
+sys.modules['dbs.apis'] = MagicMock()
+sys.modules['dbs.apis.dbsClient'] = MagicMock()
+
 
 class ContextualStringIO(StringIO):
     def __enter__(self):
@@ -29,9 +33,6 @@ class TestDeepUpdate(unittest.TestCase):
             "first": {"a": "B"},
             "second": "C"
         }
-        sys.modules['dbs'] = MagicMock()
-        sys.modules['dbs.apis'] = MagicMock()
-        sys.modules['dbs.apis.dbsClient'] = MagicMock()
         from WmAgentScripts.utils import deep_update
         self.deep_update = deep_update
 
@@ -446,6 +447,44 @@ class TestGetWMStats(unittest.TestCase):
         with patch('WmAgentScripts.utils.make_x509_conn', MockResponseStringIo):
             response = getWMStats(url='http://someurl.com/')
             self.assertEqual(response, 200)
+
+
+class TestCheckTransferApproval(unittest.TestCase):
+
+    def test_checkTransferApproval(self):
+        class MockResponseStringIo:
+            def __init__(self, *args, **kwargs):
+                self.response = None
+
+            def request(self, *args, **kwargs):
+                self.response = {"phedex": {
+                    "request": [{
+                        "node": [
+                            {
+                                "name": "someSite",
+                                "decision": "approved",
+                            },
+                            {
+                                "name": "someSite1",
+                                "decision": "pending",
+                            },
+                        ],
+                    }]}
+                }
+
+            def getresponse(self):
+                return ContextualStringIO(json.dumps(self.response))
+
+        from WmAgentScripts.utils import checkTransferApproval
+        with patch('WmAgentScripts.utils.make_x509_conn', MockResponseStringIo):
+            response = checkTransferApproval(
+                url='http://someurl.com/',
+                phedexid='someid'
+            )
+            self.assertDictEqual(
+                response, {
+                    'someSite': True,
+                    'someSite1': False})
 
 
 if __name__ == '__main__':
