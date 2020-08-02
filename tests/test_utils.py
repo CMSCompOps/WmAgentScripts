@@ -523,5 +523,48 @@ class TestGetNodesId(unittest.TestCase):
                     'someSite1': 'someId1'})
 
 
+class TestGetDatasetFileLocations(unittest.TestCase):
+    def test_getDatasetFileLocations(self):
+        class MockResponseStringIo:
+            def __init__(self, *args, **kwargs):
+                self.response = None
+
+            def request(self, *args, **kwargs):
+                self.response = {"phedex": {
+                    "block": [{
+                        "file": [
+                            {
+                                "name": "someSite",
+                                "decision": "approved",
+                                "replica": [{
+                                    "node": "someNode"
+                                }]
+                            },
+                            {
+                                "name": "someSite1",
+                                "decision": "pending",
+                                "replica": [{
+                                    "node": "someNode1"
+                                }]
+                            },
+                        ],
+                    }]}
+                }
+
+            def getresponse(self):
+                return ContextualStringIO(json.dumps(self.response))
+        from WmAgentScripts.utils import getDatasetFileLocations
+        with patch('WmAgentScripts.utils.make_x509_conn', MockResponseStringIo):
+            response = getDatasetFileLocations(
+                url='http://someurl.com/',
+                dataset='somedataset'
+            )
+            print response
+            self.assertDictEqual(
+                response, {
+                    'someSite': set(['someNode']),
+                    'someSite1': set(['someNode1'])})
+
+
 if __name__ == '__main__':
     unittest.main()
