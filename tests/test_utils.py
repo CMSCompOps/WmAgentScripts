@@ -487,5 +487,41 @@ class TestCheckTransferApproval(unittest.TestCase):
                     'someSite1': False})
 
 
+class TestGetNodesId(unittest.TestCase):
+
+    def test_getNodesId(self):
+        class MockResponseStringIo:
+            def __init__(self, *args, **kwargs):
+                self.response = None
+
+            def request(self, *args, **kwargs):
+                self.response = {"phedex": {
+                    "node": [
+                        {
+                            "name": "someSite",
+                            "id": "someId",
+                        },
+                        {
+                            "name": "someSite1",
+                            "id": "someId1",
+                        },
+                    ],
+                    "type": "xfer"
+                }}
+
+            def getresponse(self):
+                return ContextualStringIO(json.dumps(self.response))
+
+        from WmAgentScripts.utils import getNodesId
+        with patch('WmAgentScripts.utils.make_x509_conn', MockResponseStringIo):
+            response = getNodesId(
+                url='http://someurl.com/'
+            )
+            self.assertDictEqual(
+                response, {
+                    'someSite': 'someId',
+                    'someSite1': 'someId1'})
+
+
 if __name__ == '__main__':
     unittest.main()
