@@ -559,11 +559,42 @@ class TestGetDatasetFileLocations(unittest.TestCase):
                 url='http://someurl.com/',
                 dataset='somedataset'
             )
-            print response
             self.assertDictEqual(
                 response, {
                     'someSite': set(['someNode']),
                     'someSite1': set(['someNode1'])})
+
+
+class TestInvalidateFiles(unittest.TestCase):
+
+    def test_invalidateFiles(self):
+
+        class MockResponseStringIo:
+            response = {"result": "OK"}
+
+            def __init__(self, *args, **kwargs):
+                pass
+
+            def request(self, *args, **kwargs):
+                pass
+
+            def getresponse(self):
+                return ContextualStringIO(json.dumps(self.response))
+
+        from WmAgentScripts.utils import invalidateFiles
+
+        with patch('WmAgentScripts.utils.httplib.HTTPSConnection', MockResponseStringIo):
+            response = invalidateFiles(
+                files=["file1", "file2"],
+            )
+            self.assertTrue(response)
+
+        MockResponseStringIo.response = {"result": "Not OK"}
+        with patch('WmAgentScripts.utils.httplib.HTTPSConnection', MockResponseStringIo):
+            response = invalidateFiles(
+                files=["file1", "file2"],
+            )
+            self.assertFalse(response)
 
 
 if __name__ == '__main__':
