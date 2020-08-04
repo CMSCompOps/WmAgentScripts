@@ -1075,7 +1075,8 @@ class CheckBuster(threading.Thread):
 
         ## prepare the check on having a valid subscription to tape
         out_worth_checking = [out for out in custodial_locations.keys() if out.split('/')[-1] not in vetoed_custodial_tier]
-        size_worth_checking = sum([(getDatasetSize(out)/1023. if not wfi.isRelval() else 0.) for out in out_worth_checking ]) ## size in TBs of all outputs
+        size_worth_checking = [(getDatasetSize(out)/1023. if not wfi.isRelval() else 0.) for out in out_worth_checking ] ## size in TBs of all outputs
+        total_size_worth_checking = sum(size_worth_checking)
         size_worht_going_to_ddm = sum([getDatasetSize(out)/1023. for out in out_worth_checking if out.split('/')[-1] in to_ddm_tier ]) ## size in TBs of all outputs
         all_relevant_output_are_going_to_tape = all(map( lambda sites : len(sites)!=0, [custodial_locations[out] for out in out_worth_checking]))
 
@@ -1212,7 +1213,7 @@ class CheckBuster(threading.Thread):
             for output in out_worth_checking:
                 if len(custodial_locations[output]): 
                     custodial = custodial_locations[output][0]
-            if custodial and float(SI.storage[custodial]) < size_worth_checking:
+            if custodial and float(SI.storage[custodial]) < total_size_worth_checking:
                 print "cannot use the other output custodial:",custodial,"because of limited space"
                 custodial = None
 
@@ -1231,7 +1232,7 @@ class CheckBuster(threading.Thread):
                 group = CI.campaigns[campaign]['phedex_group']
                 print "using group",group,"for replica"
 
-            if not force_custodial and custodial and float(SI.storage[custodial]) < size_worth_checking:
+            if not force_custodial and custodial and float(SI.storage[custodial]) < total_size_worth_checking:
                 print "cannot use the campaign configuration custodial:",custodial,"because of limited space"
                 custodial = None
 
@@ -1261,31 +1262,31 @@ class CheckBuster(threading.Thread):
                     pick_custodial = False
                     assistance_tags.add('parentcustodial')
                                 
-            if not force_custodial and custodial and float(SI.storage[custodial]) < size_worth_checking:
+            if not force_custodial and custodial and float(SI.storage[custodial]) < total_size_worth_checking:
                 print "cannot use the custodial:",custodial,"because of limited space"
                 custodial = None
 
             if not custodial and pick_custodial and not force_custodial:
                 ## pick one at random
-                custodial = SI.pick_SE(size=size_worth_checking)
+                custodial = SI.pick_SE(size=total_size_worth_checking)
 
-            if custodial and size_worth_checking > tape_size_limit:
-                wfi.sendLog('checkor',"The total output size (%s TB) is too large for the limit set (%s TB)"%( size_worth_checking, tape_size_limit))
+            if custodial and total_size_worth_checking > tape_size_limit:
+                wfi.sendLog('checkor',"The total output size (%s TB) is too large for the limit set (%s TB)"%( total_size_worth_checking, tape_size_limit))
                 assistance_tags.add('bigoutput')
                 custodial = None
 
             if custodial:
                 for output in out_worth_checking:
-                    if getDatasetSize(output)/1023 > tape_size_limit:
-                        wfi.sendLog('checkor',"%s output size (%s TB) is too large for the limit set (%s TB)"%( output, out_worth_checking[output], tape_size_limit))
+                    if size_worth_checking[output] > tape_size_limit:
+                        wfi.sendLog('checkor',"%s output size (%s TB) is too large for the limit set (%s TB)"%( output, size_worth_checking[output], tape_size_limit))
                         assistance_tags.add('bigoutput')
                         custodial = None
 
 
             if not custodial:
                 print "cannot find a custodial for",wfo.name
-                wfi.sendLog('checkor',"cannot find a custodial for %s probably because of the total output size %d"%( wfo.name, size_worth_checking))
-                sendLog('checkor',"cannot find a custodial for %s probably because of the total output size %d"%( wfo.name, size_worth_checking), level='critical')
+                wfi.sendLog('checkor',"cannot find a custodial for %s probably because of the total output size %d"%( wfo.name, total_size_worth_checking))
+                sendLog('checkor',"cannot find a custodial for %s probably because of the total output size %d"%( wfo.name, total_size_worth_checking), level='critical')
 
             picked_a_tape = custodial and (is_closing or bypass_checks)
             #cannot be bypassed
@@ -1294,7 +1295,7 @@ class CheckBuster(threading.Thread):
             if picked_a_tape:
                 print "picked",custodial,"for tape copy"
                 ## remember how much you added this round already ; this stays locally
-                SI.storage[custodial] -= size_worth_checking
+                SI.storage[custodial] -= total_size_worth_checking
                 ## register the custodial request, if there are no other big issues
                 holding = []
                 for output in out_worth_checking:
