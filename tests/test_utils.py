@@ -624,6 +624,18 @@ class TestGetConfigurationFile(unittest.TestCase):
             self.assertEqual(
                 response, "Test1 line 1\nTest2 line 2\nTest3 line 3")
 
+    def test_getConfigurationLine(self):
+        from WmAgentScripts.utils import getConfigurationLine
+
+        with patch('WmAgentScripts.utils.make_x509_conn', self.mockresponse):
+
+            response = getConfigurationLine(
+                url='http://someurl.com/',
+                cacheid='cacheid',
+                token='Test2')
+
+            self.assertEqual(response, "Test2 line 2")
+
 
 if __name__ == '__main__':
     unittest.main()
