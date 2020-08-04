@@ -597,5 +597,33 @@ class TestInvalidateFiles(unittest.TestCase):
             self.assertFalse(response)
 
 
+class TestGetConfigurationFile(unittest.TestCase):
+
+    def setUp(self):
+        class MockResponseStringIo:
+
+            def __init__(self, *args, **kwargs):
+                self.response = None
+
+            def request(self, *args, **kwargs):
+                self.response = "Test1 line 1\nTest2 line 2\nTest3 line 3"
+
+            def getresponse(self):
+                return ContextualStringIO(self.response)
+
+        self.mockresponse = MockResponseStringIo
+
+    def test_getConfigurationFile(self):
+        from WmAgentScripts.utils import getConfigurationFile, getConfigurationLine
+
+        with patch('WmAgentScripts.utils.make_x509_conn', self.mockresponse):
+            response = getConfigurationFile(
+                url='http://someurl.com/',
+                cacheid='cacheid'
+            )
+            self.assertEqual(
+                response, "Test1 line 1\nTest2 line 2\nTest3 line 3")
+
+
 if __name__ == '__main__':
     unittest.main()
