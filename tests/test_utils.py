@@ -408,6 +408,7 @@ class TestIsJson(unittest.TestCase):
 class TestReadFile(unittest.TestCase):
 
     def test_read_file(self):
+
         from WmAgentScripts.utils import read_file
         test_json = {
             "first": {"a": "A"},
@@ -452,7 +453,9 @@ class TestGetWMStats(unittest.TestCase):
 class TestCheckTransferApproval(unittest.TestCase):
 
     def test_checkTransferApproval(self):
+
         class MockResponseStringIo:
+
             def __init__(self, *args, **kwargs):
                 self.response = None
 
@@ -490,7 +493,9 @@ class TestCheckTransferApproval(unittest.TestCase):
 class TestGetNodesId(unittest.TestCase):
 
     def test_getNodesId(self):
+
         class MockResponseStringIo:
+
             def __init__(self, *args, **kwargs):
                 self.response = None
 
@@ -524,7 +529,9 @@ class TestGetNodesId(unittest.TestCase):
 
 
 class TestGetDatasetFileLocations(unittest.TestCase):
+
     def test_getDatasetFileLocations(self):
+
         class MockResponseStringIo:
             def __init__(self, *args, **kwargs):
                 self.response = None
@@ -553,12 +560,15 @@ class TestGetDatasetFileLocations(unittest.TestCase):
 
             def getresponse(self):
                 return ContextualStringIO(json.dumps(self.response))
+
         from WmAgentScripts.utils import getDatasetFileLocations
+
         with patch('WmAgentScripts.utils.make_x509_conn', MockResponseStringIo):
             response = getDatasetFileLocations(
                 url='http://someurl.com/',
                 dataset='somedataset'
             )
+
             self.assertDictEqual(
                 response, {
                     'someSite': set(['someNode']),
@@ -635,6 +645,51 @@ class TestGetConfigurationFile(unittest.TestCase):
                 token='Test2')
 
             self.assertEqual(response, "Test2 line 2")
+
+
+class TestGetWorkflowByCampaign(unittest.TestCase):
+
+    def test_getWorkflowByCampaign(self):
+
+        class MockResponseStringIo:
+
+            def __init__(self, *args, **kwargs):
+                self.response = None
+
+            def request(self, *args, **kwargs):
+                self.response = {"result":
+                                 [{"data": [
+                                     {
+                                         "name": "someSite",
+                                     },
+                                     {
+                                         "name": "someSite1",
+                                     },
+                                 ],
+                                 }]
+                                 }
+
+            def getresponse(self):
+                return ContextualStringIO(json.dumps(self.response))
+
+        from WmAgentScripts.utils import getWorkflowByCampaign
+
+        with patch('WmAgentScripts.utils.make_x509_conn', MockResponseStringIo):
+            response = getWorkflowByCampaign(
+                url='http://someurl.com/',
+                campaign='somecampaign',
+                details=False
+            )
+            self.assertEqual(
+                response, [{'data': [{'name': 'someSite'}, {'name': 'someSite1'}]}])
+
+            response = getWorkflowByCampaign(
+                url='http://someurl.com/',
+                campaign='somecampaign',
+                details=True
+            )
+            self.assertEqual(
+                response, [[{'name': 'someSite'}, {'name': 'someSite1'}]])
 
 
 if __name__ == '__main__':
