@@ -257,7 +257,6 @@ class TestListRequests(unittest.TestCase):
             response = listCustodial(
                 url='http://someurl.com/',
             )
-            print response
             self.assertDictEqual(
                 response, {
                     'someSite1': ['someId'], 'someSite': ['someId']})
