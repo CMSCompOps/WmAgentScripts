@@ -1277,6 +1277,7 @@ class CheckBuster(threading.Thread):
 
             if custodial:
                 for output in out_worth_checking:
+                    print output
                     if getDatasetSize(output)/1023 > tape_size_limit:
                         wfi.sendLog('checkor',"%s output size (%s TB) is too large for the limit set (%s TB)"%( output, out_worth_checking[output], tape_size_limit))
                         assistance_tags.add('bigoutput')
