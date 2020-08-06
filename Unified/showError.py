@@ -121,6 +121,7 @@ class LogBuster(threading.Thread):
                                                                       self.errorcode_s,
                                                                       self.task_short,
                                                                       label)
+                                        os.system('mkdir -p %s'%(tem_local))
                                         os.system('tar zxvf %s -C %s'%(local,tem_local))
                                         os.system('env EOS_MGM_URL=root://eoscms.cern.ch eos cp -r %s/* %s'%(tem_local, m_dir))
                                         ## truncate the content ??
