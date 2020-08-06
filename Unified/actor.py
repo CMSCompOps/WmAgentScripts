@@ -700,7 +700,7 @@ def actor(url,options=None):
             r = WC.remove_action(wfname)
             if not r:
                 sendLog('actor','not able to remove the action, interlocking the module', level='critical')
-                os.system('touch %s/actor.failed-%s.lock'%( base_eos_dir, os.getpid() ))
+                os.system('env EOS_MGM_URL=root://eoscms.cern.ch eos touch %s/actor.failed-%s.lock'%( base_eos_dir, os.getpid() ))
                 sys.exit(-1)
 
         ## update the status with recovering removing manual

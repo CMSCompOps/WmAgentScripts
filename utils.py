@@ -3035,7 +3035,7 @@ class closeoutInfo:
 
         ## lock everyone else from collecting info
         my_file = '%s/closedout.%s.lock'%(base_eos_dir,self.owner)
-        os.system('touch %s'%my_file)
+        os.system('env EOS_MGM_URL=root://eoscms.cern.ch eos touch %s'%my_file)
         #out = open(my_file, 'w')
         #out.write( json.dumps( self.record , indent=2 ) )
         #out.write( my_file )
