@@ -295,13 +295,12 @@ def assignor(url ,specific = None, talk=True, options=None):
             continue
 
  
-        t1_only = [ce for ce in sites_allowed if ce.startswith('T1')]
-        if t1_only:
+#        t1_only = [ce for ce in sites_allowed if ce.startswith('T1')]
+#        if t1_only:
             # try to pick from T1 only first
-            sites_out = [SI.pick_dSE([SI.CE_to_SE(ce) for ce in t1_only])]
-        else:
+#            sites_out = [SI.pick_dSE([SI.CE_to_SE(ce) for ce in t1_only])]
             # then pick any otherwise
-            sites_out = [SI.pick_dSE([SI.CE_to_SE(ce) for ce in sites_allowed])]
+        sites_out = [SI.pick_dSE([SI.CE_to_SE(ce) for ce in sites_allowed])]
             
         print "available=",SI.disk[sites_out[0]]    
         wfh.sendLog('assignor',"Placing the output on %s"%sites_out)
