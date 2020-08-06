@@ -82,8 +82,8 @@ class JIRAClient:
             }
         label = indications.get('label',None)
         who = {
-            'WorkflowTrafficController' : 'sagarwal',
-            'UnifiedOfficer' : 'sagarwal',
+            'WorkflowTrafficController' : 'haozturk',
+            'UnifiedOfficer' : 'snorberg',
             'AgentDoc' : 'jen_a',
             'Late' : None
         }.get(label,None)
