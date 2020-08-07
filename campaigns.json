@@ -247,8 +247,7 @@
     "fractionpass": 0.95, 
     "go": false, 
     "lumisize": -1, 
-    "maxcopies": 1, 
-    "resize": "auto"
+    "maxcopies": 1 
   }, 
   "Phase2HLTTDRWinter20DIGI": {
     "SiteWhitelist": [
