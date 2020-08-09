@@ -17,6 +17,7 @@ reqmgr_url = "cmsweb.cern.ch"
 test_dataset = "/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM"
 mongo_db_docker_url = "0.0.0.0:32774"
 
+
 class ContextualStringIO(StringIO):
     def __enter__(self):
         return self
@@ -40,7 +41,8 @@ def mock_make_x509_conn(url=reqmgr_url, max_try=5):
 
 
 def mock_mongo_client():
-    return pymongo.MongoClient('mongodb://%s/'% mongo_db_docker_url)
+    return pymongo.MongoClient('mongodb://%s/' % mongo_db_docker_url)
+
 
 class TestDeepUpdate(unittest.TestCase):
 
@@ -313,63 +315,63 @@ class TestListCustodial(unittest.TestCase):
             print response
             self.assertDictEqual(response,
                                  {'T1_US_FNAL_MSS': [2345013,
-                                                      2345083,
-                                                      2345230,
-                                                      2345350,
-                                                      2345586,
-                                                      2345858,
-                                                      2346380,
-                                                      2346956,
-                                                      2347154,
-                                                      2347520,
-                                                      2347851,
-                                                      2349029,
-                                                      2349077,
-                                                      2349378,
-                                                      2349379,
-                                                      2349684,
-                                                      2350365,
-                                                      2350577,
-                                                      2350849,
-                                                      2351209,
-                                                      2351236,
-                                                      2352060,
-                                                      2352170,
-                                                      2352228,
-                                                      2352416,
-                                                      2352695,
-                                                      2352781,
-                                                      2352859,
-                                                      2353136,
-                                                      2353137,
-                                                      2353267,
-                                                      2353341,
-                                                      2353361,
-                                                      2353408,
-                                                      2353415,
-                                                      2353500,
-                                                      2353597,
-                                                      2353796,
-                                                      2353830,
-                                                      2353952,
-                                                      2353963,
-                                                      2354169,
-                                                      2354231,
-                                                      2354415,
-                                                      2354580,
-                                                      2354583,
-                                                      2354684,
-                                                      2354922,
-                                                      2354937,
-                                                      2354988,
-                                                      2355007,
-                                                      2355246,
-                                                      2355284,
-                                                      2355657],
+                                                     2345083,
+                                                     2345230,
+                                                     2345350,
+                                                     2345586,
+                                                     2345858,
+                                                     2346380,
+                                                     2346956,
+                                                     2347154,
+                                                     2347520,
+                                                     2347851,
+                                                     2349029,
+                                                     2349077,
+                                                     2349378,
+                                                     2349379,
+                                                     2349684,
+                                                     2350365,
+                                                     2350577,
+                                                     2350849,
+                                                     2351209,
+                                                     2351236,
+                                                     2352060,
+                                                     2352170,
+                                                     2352228,
+                                                     2352416,
+                                                     2352695,
+                                                     2352781,
+                                                     2352859,
+                                                     2353136,
+                                                     2353137,
+                                                     2353267,
+                                                     2353341,
+                                                     2353361,
+                                                     2353408,
+                                                     2353415,
+                                                     2353500,
+                                                     2353597,
+                                                     2353796,
+                                                     2353830,
+                                                     2353952,
+                                                     2353963,
+                                                     2354169,
+                                                     2354231,
+                                                     2354415,
+                                                     2354580,
+                                                     2354583,
+                                                     2354684,
+                                                     2354922,
+                                                     2354937,
+                                                     2354988,
+                                                     2355007,
+                                                     2355246,
+                                                     2355284,
+                                                     2355657],
                                   'T1_FR_CCIN2P3_MSS': [1319254,
-                                                         1319259,
-                                                         1319315,
-                                                         1321435]})
+                                                        1319259,
+                                                        1319315,
+                                                        1321435]})
 
 
 class TestListSubscriptions(unittest.TestCase):
@@ -818,13 +820,22 @@ class TestGetWorkflowByCampaign(unittest.TestCase):
                 response, [[{'name': 'someSite'}, {'name': 'someSite1'}]])
 
 
+class TestGetAllAgents(unittest.TestCase):
+    def test_getAllAgents(self):
+        from WmAgentScripts.utils import getBlockLocations as getAllAgents
+
+        with patch('WmAgentScripts.utils.make_x509_conn', mock_make_x509_conn):
+            response = getAllAgents(url=reqmgr_url, dataset=test_dataset)
+            self.assertDictEqual(response, {})
+
+
 class TestAgentSpeedDraining(unittest.TestCase):
     def test_agent_speed_draining(self):
         from WmAgentScripts.utils import agent_speed_draining
 
         with patch('WmAgentScripts.utils.mongo_client', mock_mongo_client):
-            response=agent_speed_draining()
-            self.assertEqual(response, set([u'vocms0250.cern.ch']))
+            response = agent_speed_draining()
+            self.assertEqual(response, set(['vocms0250.cern.ch']))
 
 
 if __name__ == '__main__':
