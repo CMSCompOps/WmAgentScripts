@@ -3,7 +3,7 @@ name: Unit test
 on: [push, pull_request]
 
 jobs:
-  lint-python:
+  unit-test:
     runs-on: ['self-hosted', 'Linux', 'X64']
     steps:
     - name: Checkout

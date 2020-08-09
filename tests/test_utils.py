@@ -820,13 +820,22 @@ class TestGetWorkflowByCampaign(unittest.TestCase):
                 response, [[{'name': 'someSite'}, {'name': 'someSite1'}]])
 
 
-class TestGetAllAgents(unittest.TestCase):
-    def test_getAllAgents(self):
-        from WmAgentScripts.utils import getBlockLocations as getAllAgents
+class TestGetBlockLocations(unittest.TestCase):
+    def test_getBlockLocations(self):
+        from WmAgentScripts.utils import getBlockLocations
 
         with patch('WmAgentScripts.utils.make_x509_conn', mock_make_x509_conn):
-            response = getAllAgents(url=reqmgr_url, dataset=test_dataset)
+            response = getBlockLocations(url=reqmgr_url, dataset=test_dataset)
             self.assertDictEqual(response, {})
+
+
+class TestGetNodesQueue(unittest.TestCase):
+    def test_getNodesQueue(self):
+        from WmAgentScripts.utils import getNodesQueue
+
+        with patch('WmAgentScripts.utils.make_x509_conn', mock_make_x509_conn):
+            response = getNodesQueue(url=reqmgr_url)
+            self.assertIn('T3_RU_MEPhI', response)
 
 
 class TestAgentSpeedDraining(unittest.TestCase):
@@ -839,7 +848,7 @@ class TestAgentSpeedDraining(unittest.TestCase):
 
 
 class TestBatchInfo(unittest.TestCase):
-    def test_content(self):
+    def test_batchInfo(self):
         from WmAgentScripts.utils import batchInfo
 
         with patch('WmAgentScripts.utils.mongo_client', mock_mongo_client):
