@@ -838,5 +838,20 @@ class TestAgentSpeedDraining(unittest.TestCase):
             self.assertEqual(response, set(['vocms0250.cern.ch']))
 
 
+class TestBatchInfo(unittest.TestCase):
+    def test_content(self):
+        from WmAgentScripts.utils import batchInfo
+
+        with patch('WmAgentScripts.utils.mongo_client', mock_mongo_client):
+            obj = batchInfo()
+            all = obj.all()
+            self.assertIn(
+                'CMSSW_10_4_0_pre1__UPSG_Std_2023D24noPU-1542117255', all)
+            content = obj.content()
+            self.assertIn(
+                'CMSSW_10_4_0_pre1__UPSG_Std_2023D24noPU-1542117255',
+                content)
+
+
 if __name__ == '__main__':
     unittest.main()
