@@ -818,5 +818,14 @@ class TestGetWorkflowByCampaign(unittest.TestCase):
                 response, [[{'name': 'someSite'}, {'name': 'someSite1'}]])
 
 
+class TestAgentSpeedDraining(unittest.TestCase):
+    def test_agent_speed_draining(self):
+        from WmAgentScripts.utils import agent_speed_draining
+
+        with patch('WmAgentScripts.utils.mongo_client', mock_mongo_client):
+            response=agent_speed_draining()
+            self.assertEqual(response, set([u'vocms0250.cern.ch']))
+
+
 if __name__ == '__main__':
     unittest.main()
