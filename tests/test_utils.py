@@ -5,6 +5,7 @@ import unittest
 import json
 import mock
 from mock import MagicMock, patch, mock_open
+import pymongo
 
 from StringIO import StringIO
 
@@ -14,7 +15,7 @@ sys.modules['dbs.apis.dbsClient'] = MagicMock()
 
 reqmgr_url = "cmsweb.cern.ch"
 test_dataset = "/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM"
-
+mongo_db_docker_url = "0.0.0.0:32774"
 
 class ContextualStringIO(StringIO):
     def __enter__(self):
@@ -37,6 +38,9 @@ def mock_make_x509_conn(url=reqmgr_url, max_try=5):
             pass
     return None
 
+
+def mock_mongo_client():
+    return pymongo.MongoClient('mongodb://%s/'% mongo_db_docker_url)
 
 class TestDeepUpdate(unittest.TestCase):
 
