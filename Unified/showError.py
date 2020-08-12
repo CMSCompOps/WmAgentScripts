@@ -124,6 +124,7 @@ class LogBuster(threading.Thread):
                                         os.system('mkdir -p %s'%(tem_local))
                                         os.system('tar zxvf %s -C %s'%(local,tem_local))
                                         os.system('env EOS_MGM_URL=root://eoscms.cern.ch eos cp -r %s/* %s'%(tem_local, m_dir))
+                                        os.system('rm -rf %s'%(tem_local))          #avoid running out of space
                                         ## truncate the content ??
                                         actual_logs = os.popen('find %s -type f'%(m_dir)).read().split('\n')
                                         for fn in actual_logs:
