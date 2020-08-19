@@ -17,7 +17,7 @@ def rejector(url, specific, options=None):
     if options.test:
         print "Test mode - no changes propagate to the production system"
 
-    if not componentInfo(soft=['wtc','jira']).check(): return
+    if not componentInfo(soft=['wtc','jira']).check() and not options.manual: return
 
     if specific and specific.startswith('/'):
         ## this is for a dataset
@@ -303,7 +303,7 @@ if __name__ == "__main__":
 
     parser = optparse.OptionParser()
     parser.add_option('-t', '--test', help="test mode - no changes are made", default=False, action="store_true")
-    parser.add_option('-m','--manual', help='Manual assignment, bypassing lock check',action='store_true',dest='manual',default=False)
+    parser.add_option('-m','--manual', help='Bypass JIRA check',action='store_true',dest='manual',default=False)
     parser.add_option('-c','--clone',help="clone the workflow",default=False,action="store_true")
     parser.add_option('--comments', help="Give a comment to the clone",default="")
     parser.add_option('-k','--keep',help="keep the outpuy in current status", default=False,action="store_true")
