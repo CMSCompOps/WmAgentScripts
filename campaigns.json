@@ -359,6 +359,25 @@
     }, 
     "resize": "auto"
   }, 
+  "Run3Summer19DR": {
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "secondaries": {
+      "/MinBias_TuneCP5_14TeV-pythia8/Run3Summer19GS-106X_upgrade2021_realistic_v5-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_RU_JINR"
+        ]
+      }, 
+      "/MinBias_TuneCP5_14TeV-pythia8/Run3Summer19GS-2018Scenario_106X_upgrade2021_realistic_v5-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_ES_PIC"
+        ]
+      }
+    }, 
+    "tune": true
+  }, 
   "Run3Summer19DRPremix": {
     "SecondaryLocation": [
       "T1_US_FNAL", 
@@ -379,25 +398,6 @@
       "/Neutrino_E-10_gun/RunIISummer17PrePremix-PURun3_106X_mcRun3_2024_realistic_v4-v2/PREMIX": {}
     }, 
     "secondary_AAA": true, 
-    "tune": true
-  },
-  "Run3Summer19DR": {
-    "maxcopies": 1,
-    "lumisize": -1,
-    "fractionpass": 0.95,
-    "go": true,
-    "secondaries": {
-      "/MinBias_TuneCP5_14TeV-pythia8/Run3Summer19GS-106X_upgrade2021_realistic_v5-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_RU_JINR"
-        ]
-      },
-      "/MinBias_TuneCP5_14TeV-pythia8/Run3Summer19GS-2018Scenario_106X_upgrade2021_realistic_v5-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_ES_PIC"
-        ]
-      }
-    },
     "tune": true
   }, 
   "Run3Summer19GS": {
