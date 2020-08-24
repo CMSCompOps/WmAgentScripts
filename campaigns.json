@@ -4,7 +4,7 @@
       "DQMIO"
     ], 
     "fractionpass": 0.99, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
@@ -294,13 +294,6 @@
     "maxcopies": 1, 
     "tune": true
   }, 
-  "Phase2HLTTDRWinter20MiniAOD": {
-    "fractionpass": 0.95, 
-    "go": false, 
-    "lumisize": -1, 
-    "maxcopies": 1, 
-    "resize": "auto"
-  }, 
   "Phase2HLTTDRWinter20RECOMiniAOD": {
     "fractionpass": 0.95, 
     "go": true, 
@@ -455,14 +448,6 @@
     }, 
     "secondary_AAA": false
   }, 
-  "Run3Winter20DRPremix": {
-    "fractionpass": 0.95, 
-    "go": false, 
-    "lumisize": -1, 
-    "maxcopies": 1, 
-    "secondary_AAA": true, 
-    "tune": true
-  }, 
   "Run3Winter20DRPremixMiniAOD": {
     "SecondaryLocation": [
       "T1_US_FNAL", 
@@ -481,20 +466,6 @@
   "Run3Winter20GS": {
     "fractionpass": 0.95, 
     "go": true, 
-    "lumisize": -1, 
-    "maxcopies": 1, 
-    "resize": "auto"
-  }, 
-  "Run3Winter20MiniAOD": {
-    "fractionpass": 0.95, 
-    "go": false, 
-    "lumisize": -1, 
-    "maxcopies": 1, 
-    "resize": "auto"
-  }, 
-  "Run3Winter20NanoAOD": {
-    "fractionpass": 0.95, 
-    "go": false, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto"
