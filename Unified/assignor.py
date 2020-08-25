@@ -414,16 +414,14 @@ def assignor(url ,specific = None, talk=True, options=None):
                         sendLog('assignor',"leaving splitting untouched for %s, please check on %s"%( pstring, wfo.name), level='critical')
                         wfh.sendLog('assignor',"leaving splitting untouched for PU_RD*, please check.")
 
-        """
-        if isHEPCloudReady(url) and wfh.isGoodForNERSC():
-            parameters['Team'] = 'hepcloud'
-            parameters['SiteWhitelist'] = ['T3_US_NERSC']
-            if primary:
-                parameters['TrustSitelists'] = True
-            if secondary:
-                parameters['TrustPUSitelists'] = True
-            sendEmail("sending work to hepcloud","pleasse check on %s"% wfh.request['RequestName'], destination=['hufnagel@fnal.gov'])
-        """
+        #if isHEPCloudReady(url) and wfh.isGoodForNERSC():
+        #    parameters['Team'] = 'hepcloud'
+        #    parameters['SiteWhitelist'] = ['T3_US_NERSC']
+        #    if primary:
+        #        parameters['TrustSitelists'] = True
+        #    if secondary:
+        #        parameters['TrustPUSitelists'] = True
+        #    sendEmail("sending work to hepcloud","pleasse check on %s"% wfh.request['RequestName'], destination=['hufnagel@fnal.gov'])
 
         ## make sure to autoapprove all NonCustodialSites
         parameters['AutoApproveSubscriptionSites'] = list(set(parameters['NonCustodialSites'] + parameters.get('AutoApproveSubscriptionSites',[])))
