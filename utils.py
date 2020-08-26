@@ -2173,7 +2173,7 @@ class siteInfo:
         self.sites_veto_transfer = []  ## do not prevent any transfer by default
 
         ## new site lists for better matching
-        self.sites_with_goodAAA = self.sites_with_goodIO + add_on_good_aaa
+        self.sites_with_goodAAA = add_on_good_aaa
         self.sites_with_goodAAA = list(set([ s for s in self.sites_with_goodAAA if s in self.sites_ready]))
 
 
@@ -7355,7 +7355,7 @@ class workflowInfo:
             if self.heavyRead():
                 sites_allowed = sorted(set(SI.sites_T0s + SI.sites_T1s + SI.sites_with_goodIO))
             else:
-                sites_allowed = sorted(set(SI.sites_T0s + SI.sites_T1s + SI.sites_with_goodAAA))
+                sites_allowed = sorted(set(SI.sites_T0s + SI.sites_T1s + SI.sites_T2s + SI.sites_with_goodAAA))
         elif primary:
             sites_allowed =sorted(set(SI.sites_T0s + SI.sites_T1s + SI.sites_T2s))# + SI.sites_T3s))
         else:
