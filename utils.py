@@ -6574,7 +6574,16 @@ class workflowInfo:
 
     def isGoodToConvertToStepChain(self ,keywords=None, talk=False, debug=False):
         # Conversion is supported only from TaskChain to StepChain
-        if self.request['RequestType'] != 'TaskChain': return False 
+        if self.request['RequestType'] != 'TaskChain': return False
+
+        # Conversion is not supported if there is a task whose EventStreams is nonzero 
+        for key,value in self.request.items():
+            if key.startswith('Task') and type(value) is dict: 
+                if 'EventStreams' in value:
+                    if value['EventStreams'] != 0:
+                        print('EventStreams is ' + str(value['EventStreams']) + ' do not convert')
+                        return False
+
         all_same_arch = True
 
         ## efficiency 
