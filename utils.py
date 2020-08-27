@@ -6549,7 +6549,7 @@ class workflowInfo:
         nersc_archs=set(['slc6_amd64_gcc530','slc6_amd64_gcc630'])
         good = (self.request['RequestType'] == 'StepChain' or no_step)  and self.request['RequestPriority'] <= 85000 and len(set(self.request['ScramArch'])&nersc_archs)>=1
         io = _,prim,_,sec = self.getIO()
-        if self.heavyRead(): good=False
+        if self.heavyRead(sec): good=False
         if prim: good = False
         #if sec: good = False
         ## should be of significant size. how do we check that ???
@@ -7330,13 +7330,11 @@ class workflowInfo:
                         max_blow_up = blow_up
             return (min_child_job_per_event, root_job_per_event, max_blow_up)
         return (1.,1.,1.)
-    def heavyRead(self):
-        ## this is an add-hoc way of doing this. True by default. False if "premix" appears in the output datasets or in the campaigns
-        response = True
-        if any(['premix' in c.lower() for c in self.getCampaigns()]):
-            response = False
-        if any(['premix' in o.lower() for o in self.request['OutputDatasets']]):
-            response = False
+    def heavyRead(self,secondary):
+        ## Fasle by default. True if "minbias" appears in the secondary
+        response = False
+        if any(['minbias' in c.lower() for c in secondary]):
+            response = True
         return response
     
     def producePremix(self):
@@ -7352,7 +7350,7 @@ class workflowInfo:
         if lheinput:
             sites_allowed = sorted(SI.sites_eos) #['T2_CH_CERN'] ## and that's it
         elif secondary:
-            if self.heavyRead():
+            if self.heavyRead(secondary):
                 sites_allowed = sorted(set(SI.sites_T0s + SI.sites_T1s + SI.sites_with_goodIO))
             else:
                 sites_allowed = sorted(set(SI.sites_T0s + SI.sites_T1s + SI.sites_T2s + SI.sites_with_goodAAA))
