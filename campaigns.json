@@ -1700,6 +1700,21 @@
     }, 
     "tune": true
   }, 
+  "RunIISummer20UL16wmLHEGENAPV": {
+    "fractionpass": 0.95, 
+    "go": true, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "overflow": {
+      "PU": {
+        "force": false, 
+        "max": 0, 
+        "pending": 0
+      }
+    }, 
+    "resize": "auto", 
+    "tune": true
+  }, 
   "RunIIWinter15pLHE": {
     "fractionpass": 0.95, 
     "go": true, 
