@@ -1211,6 +1211,21 @@
     }, 
     "resize": "auto", 
     "tune": true
+  },
+  "RunIISummer20UL16GENAPV": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "overflow": {
+      "PU": {
+        "force": false,
+        "max": 0,
+        "pending": 0
+      }
+    },
+    "resize": "auto",
+    "tune": true
   }, 
   "RunIISummer19UL16HLT": {
     "fractionpass": 0.95, 
