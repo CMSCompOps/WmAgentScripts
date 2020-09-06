@@ -1350,7 +1350,7 @@
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL17SIM-106X_mc2017_realistic_v3-v2/SIM": {
         "SiteWhitelist": [
           "T1_UK_RAL", 
-          "T2_BE_IIHE", 
+          "T2_US_Nebraska", 
           "T1_US_FNAL"
         ]
       }
