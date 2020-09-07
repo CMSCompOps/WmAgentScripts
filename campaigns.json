@@ -10,6 +10,33 @@
     "overflow": {
       "PRIM": {}
     }
+  },
+  "HINPbPbAutumn18wmLHEGSHIMix": {
+    "maxcopies": 1,
+    "MergedLFNBase": "/store/himc",
+    "custodial": "T1_FR_CCIN2P3_MSS",
+    "lumisize": -1,
+    "fractionpass": 0.95,
+    "SiteBlacklist": [
+      "T1_US_FNAL",
+      "T2_US_Purdue",
+      "T2_US_Caltech",
+      "T2_US_Florida",
+      "T2_US_Nebraska",
+      "T2_US_UCSD",
+      "T2_US_Wisconsin",
+      "T2_CH_CERN"
+    ],
+    "go": true,
+    "secondaries": {
+      "/MinBias_Hydjet_Drum5F_2018_5p02TeV/HINPbPbAutumn18GS-103X_upgrade2018_realistic_HI_v11-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_RU_JINR",
+          "T1_FR_CCIN2P3"
+        ]
+      }
+    },
+    "tune": true
   }, 
   "HINPbPbAutumn18DR": {
     "SiteWhitelist": [
