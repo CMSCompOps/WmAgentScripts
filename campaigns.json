@@ -1576,11 +1576,6 @@
     "tune": true
   }, 
   "RunIISummer19UL18DIGI": {
-    "SiteWhitelist": [
-      "T1_UK_RAL", 
-      "T2_US_Nebraska", 
-      "T2_FR_GRIF_IRFU"
-    ], 
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
