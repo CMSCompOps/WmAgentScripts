@@ -1334,6 +1334,21 @@
     }, 
     "resize": "auto", 
     "tune": true
+  },
+  "RunIISummer20UL16RECOAPV": {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "overflow": {
+      "PU": {
+        "force": false,
+        "max": 0,
+        "pending": 0
+      }
+    },
+    "resize": "auto",
+    "tune": true
   }, 
   "RunIISummer19UL16SIM": {
     "fractionpass": 0.95, 
