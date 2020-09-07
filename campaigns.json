@@ -1846,6 +1846,22 @@
     "secondary_AAA": false, 
     "tune": true
   }, 
+  "RunIISummer20UL16pLHEGENAPV": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "overflow": {
+      "PU": {
+        "force": false, 
+        "max": 0, 
+        "pending": 0
+      }
+    }, 
+    "resize": "auto", 
+    "secondary_AAA": false, 
+    "tune": true
+  }, 
   "RunIISummer20UL16wmLHEGENAPV": {
     "fractionpass": 0.95, 
     "go": true, 
