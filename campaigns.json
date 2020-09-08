@@ -1756,6 +1756,21 @@
     }, 
     "tune": true
   }, 
+  "RunIISummer20UL16DIGI": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "overflow": {
+      "PU": {
+        "force": false, 
+        "max": 0, 
+        "pending": 0
+      }
+    }, 
+    "resize": "auto", 
+    "tune": true
+  }, 
   "RunIISummer20UL16DIGIAPV": {
     "SiteWhitelist": [
       "T1_US_FNAL", 
@@ -1784,6 +1799,21 @@
     "secondary_AAA": false, 
     "tune": true
   }, 
+  "RunIISummer20UL16DIGIPremix": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "overflow": {
+      "PU": {
+        "force": false, 
+        "max": 0, 
+        "pending": 0
+      }
+    }, 
+    "resize": "auto", 
+    "tune": true
+  }, 
   "RunIISummer20UL16DIGIPremixAPV": {
     "fractionpass": 0.95, 
     "go": false, 
@@ -1808,7 +1838,37 @@
     "secondary_AAA": true, 
     "tune": true
   }, 
+  "RunIISummer20UL16GEN": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "overflow": {
+      "PU": {
+        "force": false, 
+        "max": 0, 
+        "pending": 0
+      }
+    }, 
+    "resize": "auto", 
+    "tune": true
+  }, 
   "RunIISummer20UL16GENAPV": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "overflow": {
+      "PU": {
+        "force": false, 
+        "max": 0, 
+        "pending": 0
+      }
+    }, 
+    "resize": "auto", 
+    "tune": true
+  }, 
+  "RunIISummer20UL16HLT": {
     "fractionpass": 0.95, 
     "go": false, 
     "lumisize": -1, 
@@ -1839,6 +1899,21 @@
     "secondary_AAA": false, 
     "tune": true
   }, 
+  "RunIISummer20UL16MiniAOD": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "overflow": {
+      "PU": {
+        "force": false, 
+        "max": 0, 
+        "pending": 0
+      }
+    }, 
+    "resize": "auto", 
+    "tune": true
+  }, 
   "RunIISummer20UL16MiniAODAPV": {
     "fractionpass": 0.95, 
     "go": false, 
@@ -1853,6 +1928,21 @@
     }, 
     "resize": "auto", 
     "secondary_AAA": false, 
+    "tune": true
+  }, 
+  "RunIISummer20UL16NanoAOD": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "overflow": {
+      "PU": {
+        "force": false, 
+        "max": 0, 
+        "pending": 0
+      }
+    }, 
+    "resize": "auto", 
     "tune": true
   }, 
   "RunIISummer20UL16NanoAODAPV": {
@@ -1871,7 +1961,37 @@
     "secondary_AAA": false, 
     "tune": true
   }, 
+  "RunIISummer20UL16RECO": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "overflow": {
+      "PU": {
+        "force": false, 
+        "max": 0, 
+        "pending": 0
+      }
+    }, 
+    "resize": "auto", 
+    "tune": true
+  }, 
   "RunIISummer20UL16RECOAPV": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "overflow": {
+      "PU": {
+        "force": false, 
+        "max": 0, 
+        "pending": 0
+      }
+    }, 
+    "resize": "auto", 
+    "tune": true
+  }, 
+  "RunIISummer20UL16SIM": {
     "fractionpass": 0.95, 
     "go": false, 
     "lumisize": -1, 
@@ -1902,6 +2022,21 @@
     "secondary_AAA": false, 
     "tune": true
   }, 
+  "RunIISummer20UL16pLHEGEN": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "overflow": {
+      "PU": {
+        "force": false, 
+        "max": 0, 
+        "pending": 0
+      }
+    }, 
+    "resize": "auto", 
+    "tune": true
+  }, 
   "RunIISummer20UL16pLHEGENAPV": {
     "fractionpass": 0.95, 
     "go": false, 
@@ -1916,6 +2051,21 @@
     }, 
     "resize": "auto", 
     "secondary_AAA": false, 
+    "tune": true
+  }, 
+  "RunIISummer20UL16wmLHEGEN": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "overflow": {
+      "PU": {
+        "force": false, 
+        "max": 0, 
+        "pending": 0
+      }
+    }, 
+    "resize": "auto", 
     "tune": true
   }, 
   "RunIISummer20UL16wmLHEGENAPV": {
