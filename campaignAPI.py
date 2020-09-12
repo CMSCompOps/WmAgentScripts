@@ -111,6 +111,7 @@ def parseMongoCampaigns(campaigns, verbose=False):
         'SecondaryLocation': 'SecondaryLocation',
         'secondaries': 'Secondaries',
         'partial_copy': 'PartialCopy',
+        'toDDM': 'TiersToDM',
         'maxcopies': 'MaxCopies'}
     # campaign schema dict
     confRec = {
@@ -122,6 +123,7 @@ def parseMongoCampaigns(campaigns, verbose=False):
         'SecondaryLocation': [],
         'Secondaries': {},
         'PartialCopy': 1,
+        'TiersToDM': [],
         'MaxCopies': 1}
 
     if not isinstance(campaigns, list):
