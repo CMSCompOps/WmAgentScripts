@@ -496,6 +496,7 @@ class CloseBuster(threading.Thread):
                     if all_OK[out]:
                         print "setting valid"
                         results.append(setDatasetStatus(out, 'VALID', withFiles=False))
+                    '''
                     if all_OK[out] and wfi.isRelval():
                         ## make the specific relval rules and the replicas
                         ## figure the destination(s) out
@@ -529,7 +530,7 @@ class CloseBuster(threading.Thread):
                                 results.append( True )
                             except:
                                 results.append( 'Failed relval transfer' )
-                        
+                    '''
                     elif all_OK[out]:
 
                         campaign = None
