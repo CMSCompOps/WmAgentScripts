@@ -151,7 +151,7 @@ def spawn_harvesting(url, wfi , in_full):
 def closor(url, specific=None, options=None):
     if userLock(): return
     mlock  = moduleLock()
-    if mlock(): return
+    if mlock() and not options.manual: return
     up = componentInfo(soft=['mcm','wtc'])
     if not up.check(): return
 
@@ -207,7 +207,7 @@ def closor(url, specific=None, options=None):
 
     for iwfo,wfo in enumerate(wfs):
         if specific and not specific in wfo.name: continue
-
+        if not options.manual and 'rucio' in (wfo.name).lower(): continue
         closers.append( CloseBuster(
             wfo = wfo,
             url = url,
@@ -655,6 +655,7 @@ if __name__ == "__main__":
     parser.add_option('--force', help="Force pushing the workflow through", default=False,action='store_true')
     parser.add_option('--announce', help="Announce the outputs that should be announced", default=False,action='store_true')
     parser.add_option('--threads',help='Number of threads for processing workflows',default=5, type=int)
+    parser.add_option('-m','--manual', help='Manual close, bypassing lock check',action='store_true',dest='manual',default=False)
     (options,args) = parser.parse_args()
 
     spec=None
