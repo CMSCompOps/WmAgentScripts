@@ -48,7 +48,7 @@ for iw,wfn in enumerate(wfs):
         wl = getWorkLoad(url, wfn)
 
     print "%s/%s:"%(iw,len(wfs)),wfn
-
+    if 'rucio' in wfn.lower(): continue
     if not wl:
         continue
     outs= wl['OutputDatasets']

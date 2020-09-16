@@ -42,6 +42,8 @@ def injector(url, options, specific):
     for wf in workflows:
         if specific and not specific in wf: continue
 
+        if not options.manual and 'rucio' in wf.lower(): continue
+
         exists = session.query(Workflow).filter(Workflow.name == wf ).first()
         if not exists:
             wfi = workflowInfo(url, wf)
@@ -143,6 +145,7 @@ def injector(url, options, specific):
     for wf in session.query(Workflow).filter(Workflow.status == 'trouble').all():
         print wf.name
         if specific and not specific in wf.name: continue
+        if not options.manual and 'rucio' in wf.lower(): continue
         print wf.name
         wfi = workflowInfo(url, wf.name )
         wl = wfi.request #getWorkLoad(url, wf.name)
