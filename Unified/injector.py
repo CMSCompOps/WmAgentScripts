@@ -13,7 +13,7 @@ from collections import defaultdict
 
 def injector(url, options, specific):
     mlock = moduleLock()
-    if mlock(): return
+    if mlock() and not options.manual: return
 
     use_mcm = True
     up = componentInfo(soft=['mcm','wtc','jira'] )
@@ -229,6 +229,7 @@ if __name__ == "__main__":
     parser.add_option('--user_relval',help="The user that can inject workflows for relvals", default=None)
     parser.add_option('--user_storeresults',help="The user that can inject workflows for store results", default=None)
     parser.add_option('--no_convert',help="Prevent the conversion to stepchain", default=False)
+    parser.add_option('-m','--manual', help='Manual inject, bypassing lock check',action='store_true',dest='manual',default=False)
     (options,args) = parser.parse_args()
     
     spec = None
