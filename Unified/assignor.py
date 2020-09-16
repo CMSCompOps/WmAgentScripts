@@ -90,6 +90,8 @@ def assignor(url ,specific = None, talk=True, options=None):
         if specific:
             if not any(map(lambda sp: sp in wfo.name, specific.split(','))): continue
             #if not specific in wfo.name: continue
+
+        if not options.manual and 'rucio' in (wfo.name).lower(): continue
         print "\n\n"
         wfh = workflowInfo( url, wfo.name)
 
