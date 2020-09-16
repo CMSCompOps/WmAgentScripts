@@ -89,13 +89,6 @@ def injector(url, options, specific):
                 #    ##make sure that all blocks get closed
                 #    closeAllBlocks(url, d)
 
-                ## check for any file in phedex, to verify existence
-                _,ph_files,_,_ = getDatasetFiles(url, d)
-                if not ph_files and not ( 'StoreResults' == wfi.request.setdefault('RequestType',None) ):
-                    wfi.sendLog('injector',"One of the input has no file in phedex: %s" % d )
-                    sendLog('injector',"One of the input has no file in phedex: %s"% d, level='critical')
-                    can_add = False
-
             ### ban some workflow that you don't like anymore
             #outputs = wfi.request['OutputDatasets']
 

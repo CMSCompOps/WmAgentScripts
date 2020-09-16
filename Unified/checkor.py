@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, forceComplete, makeReplicaRequest, getDatasetSize, getDatasetFiles, sendLog, reqmgr_url, dbs_url, dbs_url_writer, display_time, checkMemory, ThreadHandler, wtcInfo
-from utils import componentInfo, unifiedConfiguration, userLock, moduleLock, dataCache, unified_url, getDatasetLumisAndFiles, getDatasetRuns, duplicateAnalyzer, invalidateFiles, findParent, do_html_in_each_module, phedex_url
-import phedexClient
+from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, campaignInfo, getWorkflowById, forceComplete, makeReplicaRequest, getDatasetSize, sendLog, reqmgr_url, dbs_url, dbs_url_writer, display_time, checkMemory, ThreadHandler, wtcInfo
+from utils import componentInfo, unifiedConfiguration, userLock, moduleLock, dataCache, unified_url, getDatasetLumisAndFiles, getDatasetRuns, duplicateAnalyzer, invalidateFiles, findParent, do_html_in_each_module
 import dbs3Client
 dbs3Client.dbs3_url = dbs_url
 dbs3Client.dbs3_url_writer = dbs_url_writer
@@ -55,13 +54,6 @@ def checkor(url, spec=None, options=None):
     use_mcm = True
     up = componentInfo(soft=['mcm','wtc'])
     if not up.check(): return
-    #phedex check    
-    try:
-        print "checking on phedex"
-        cust = findCustodialLocation(phedex_url,'/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM')
-    except Exception as e:
-        print "fail phedex fail"
-        return   
 
     use_mcm = up.status['mcm']
 
@@ -336,16 +328,16 @@ def checkor(url, spec=None, options=None):
     ## custodial requests
     print "Custodials"
     print json.dumps(custodials, indent=2)
-    for site in custodials:
-        items_at = defaultdict(set)
-        for i in custodials[site]:
-            item, group = i.split('@') if '@' in i else (i,'DataOps')
-            items_at[group].add( item )
-        for group,items in items_at.items():
-            print ','.join(items),'=>',site,'@',group
-            if not options.test:
-                result = makeReplicaRequest(url, site, sorted(items) ,"custodial copy at production close-out",custodial='y',priority='low', approve = (site in SI.sites_auto_approve) , group=group)
-                print result
+#    for site in custodials:
+#        items_at = defaultdict(set)
+#        for i in custodials[site]:
+#            item, group = i.split('@') if '@' in i else (i,'DataOps')
+#            items_at[group].add( item )
+#        for group,items in items_at.items():
+#            print ','.join(items),'=>',site,'@',group
+#            if not options.test:
+#                result = makeReplicaRequest(url, site, sorted(items) ,"custodial copy at production close-out",custodial='y',priority='low', approve = (site in SI.sites_auto_approve) , group=group)
+#                print result
 
     print "File Invalidation"
     print invalidations
@@ -1005,29 +997,30 @@ class CheckBuster(threading.Thread):
 
 
         any_presence = {}
-        for output in wfi.request['OutputDatasets']:
-            any_presence[output] = getDatasetPresence(url, output, vetoes=[])
+#        for output in wfi.request['OutputDatasets']:
+#            any_presence[output] = getDatasetPresence(url, output, vetoes=[])
 
-        time_point("checked dataset presence", sub_lap=True)
+#        time_point("checked dataset presence", sub_lap=True)
 
         ## custodial copy
         custodial_locations = {}
         custodial_presences = {}
-        for output in wfi.request['OutputDatasets']:
-            custodial_presences[output] = [s for s in any_presence[output] if 'MSS' in s]
-            custodial_locations[output] = phedexClient.getCustodialSubscriptionRequestSite(output)
+#        for output in wfi.request['OutputDatasets']:
+#            custodial_presences[output] = [s for s in any_presence[output] if 'MSS' in s]
+#            custodial_locations[output] = phedexClient.getCustodialSubscriptionRequestSite(output)
+#
+#            if not custodial_locations[output]:
+#                custodial_locations[output] = []
 
-            if not custodial_locations[output]:
-                custodial_locations[output] = []
+#        time_point("checked custodiality", sub_lap=True)
 
-        time_point("checked custodiality", sub_lap=True)
-
-        ## presence in phedex and/or rucio
-        phedex_presence ={}
+        ## presence in rucio
+        rucio_presence ={}
         rucioClient = RucioClient()
         for output in wfi.request['OutputDatasets']:
             _,dsn,process_string,tier = output.split('/')
-            if tier in set(UC.get('tiers_to_rucio_relval')) | set(UC.get('tiers_to_rucio_nonrelval')):
+#            if tier in set(UC.get('tiers_to_rucio_relval')) | set(UC.get('tiers_to_rucio_nonrelval')):
+             if True:
                 # - creates lists of tuples ot the type: ('blockName', numFiles)
                 #   for all blockNames per Dataset known to both Phedex and Rucio
                 # - creates the union of the two sets in order to avoid any duplicates
@@ -1036,36 +1029,28 @@ class CheckBuster(threading.Thread):
                 # - assigns the value to 'phedex_presence' even though the full sum
                 #   of the files is present in both systems - this way we avoid
                 #   changing the code for the rest of the consistency checks
-                phedex_filecount_pb = phedexClient.getFileCountPerBlock(url, output)
                 rucio_filecount_pb = rucioClient.getFileCountPerBlock(output)
-                all_filecount_pb = set(phedex_filecount_pb) | set(rucio_filecount_pb)
-                all_blocks = set(map(lambda x: x[0], phedex_filecount_pb)) | set(map(lambda x: x[0], rucio_filecount_pb))
+                all_filecount_pb =  set(rucio_filecount_pb)
+                all_blocks = set(map(lambda x: x[0], rucio_filecount_pb))
 
-                # bellow we will misscount in case there are same blocks in both
-                # Rucio and Phedex but with different number of files in the two
-                # systems - they will enter the sum twice, because the two tuples
-                # will be concidered as two different blocks from the two subsets
-                # hence the following check:
                 if len(all_blocks) == len(all_filecount_pb):
-                    phedex_presence[output] = sum(map(lambda x: x[1], all_filecount_pb))
+                    rucio_presence[output] = sum(map(lambda x: x[1], all_filecount_pb))
                 else:
                     # TODO: to check if we need to rise a higher level of alarm here.
                     msg = "There are inconsistences of number of files per block"
                     msg += "between Phedex and Rucio for dataset: {}".format(output)
                     wfi.sendLog('checkor', msg)
-                    phedex_presence[output] = 0
+                    rucio_presence[output] = 0
                     # we do not announce this output untill the discrepancy from above is resolved
                 del(all_filecount_pb)
                 del(all_blocks)
-            else:
-                phedex_presence[output] = phedexClient.getFileCountDataset(url, output)
 
-        one_output_not_in_phedex = any([Nfiles==0 for Nfiles in phedex_presence.values()])
-        if one_output_not_in_phedex and 'announce' in assistance_tags:
-            wfi.sendLog('checkor','No files in phedex yet, no good to announce')
+        one_output_not_in_rucio = any([Nfiles==0 for Nfiles in rucio_presence.values()])
+        if one_output_not_in_rucio and 'announce' in assistance_tags:
+            wfi.sendLog('checkor','No files in rucio yet, no good to announce')
             assistance_tags.remove('announce')
             
-        time_point("checked phedex count", sub_lap=True)
+        time_point("checked rucio count", sub_lap=True)
 
         ## presence in dbs
         dbs_presence = {}
@@ -1084,11 +1069,11 @@ class CheckBuster(threading.Thread):
 
         time_point("dbs file count", sub_lap=True)
 
-        if not all([dbs_presence[out] == (dbs_invalid[out]+phedex_presence[out]) for out in wfi.request['OutputDatasets']]) and not options.ignorefiles:
-            mismatch_notice = wfo.name+" has a dbs,phedex mismatch\n"
+        if not all([dbs_presence[out] == (dbs_invalid[out]+rucio_presence[out]) for out in wfi.request['OutputDatasets']]) and not options.ignorefiles:
+            mismatch_notice = wfo.name+" has a dbs,rucio mismatch\n"
             mismatch_notice += "in dbs\n"+json.dumps(dbs_presence, indent=2) +"\n"
             mismatch_notice += "invalide in dbs\n"+json.dumps(dbs_invalid, indent=2) +"\n"
-            mismatch_notice += "in phedex\n"+json.dumps(phedex_presence, indent=2) +"\n"
+            mismatch_notice += "in rucio\n"+json.dumps(rucio_presence, indent=2) +"\n"
 
             wfi.sendLog('checkor',mismatch_notice)
             if not 'recovering' in assistance_tags:
@@ -1098,20 +1083,20 @@ class CheckBuster(threading.Thread):
                     assistance_tags.add('filemismatch')
                 #print this for show and tell if no recovery on-going
                 for out in dbs_presence:
-                    dbs_filenames,phedex_filenames,missing_phedex,missing_dbs  = getDatasetFiles(url, out)
+                    dbs_filenames,rucio_filenames,missing_rucio,missing_dbs  = getDatasetFiles(url, out)
 
                     # Corrections to the lists of files present in Phedex for the data Tiers managed by Rucio
                     _,dsn,process_string,tier = output.split('/')
-                    if tier in set(UC.get('tiers_to_rucio_relval')) | set(UC.get('tiers_to_rucio_nonrelval')):
-                        # Here recalculating the filenames as a union of the phedex_files | rucio_files
-                        all_filenames = set(phedex_filenames) | set(rucioClient.getFileNamesDataset(out))
-                        missing_phedex = list(set(dbs_filenames) - all_filenames)
+#                    if tier in set(UC.get('tiers_to_rucio_relval')) | set(UC.get('tiers_to_rucio_nonrelval')):
+                     if True:
+                        all_filenames = set(rucioClient.getFileNamesDataset(out))
+                        missing_rucio = list(set(dbs_filenames) - all_filenames)
                         missing_dbs = list(all_filenames - set(dbs_filenames))
 
-                    if missing_phedex:
-                        wfi.sendLog('checkor',"These %d files are missing in phedex, or extra in dbs, showing %s only\n%s"%(len(missing_phedex),show_N_only,
-                                                                                                           "\n".join( missing_phedex[:show_N_only] )))
-                        were_invalidated = sorted(set(missing_phedex) & set(TMDB_invalid ))
+                    if missing_rucio:
+                        wfi.sendLog('checkor',"These %d files are missing in rucio, or extra in dbs, showing %s only\n%s"%(len(missing_rucio),show_N_only,
+                                                                                                           "\n".join( missing_rucio[:show_N_only] )))
+                        were_invalidated = sorted(set(missing_rucio) & set(TMDB_invalid ))
                         if were_invalidated:
                             wfi.sendLog('checkor',"These %d files were invalidated globally, showing %d only\n%s"%(len(were_invalidated),show_N_only,
                                                                                                                    "\n".join(were_invalidated[:show_N_only])))
@@ -1120,7 +1105,7 @@ class CheckBuster(threading.Thread):
                             dbs3Client.setFileStatus( were_invalidated, newstatus=0 )
                                 
                     if missing_dbs:
-                        wfi.sendLog('checkor',"These %d files are missing in dbs, or extra in phedex, showing %d only\n%s"%(len(missing_dbs),show_N_only,
+                        wfi.sendLog('checkor',"These %d files are missing in dbs, or extra in rucio, showing %d only\n%s"%(len(missing_dbs),show_N_only,
                                                                                                         "\n".join( missing_dbs[:show_N_only] )))
                         were_invalidated = sorted(set(missing_dbs) & set(TMDB_invalid ))
                         if were_invalidated:
@@ -1228,6 +1213,7 @@ class CheckBuster(threading.Thread):
                         force_custodial = True
 
             group = None
+            #phedex_group is a name parameter defined in batchor
             if campaign in CI.campaigns and 'phedex_group' in CI.campaigns[campaign]:
                 group = CI.campaigns[campaign]['phedex_group']
                 print "using group",group,"for replica"
@@ -1242,25 +1228,6 @@ class CheckBuster(threading.Thread):
             tape_size_limit = options.tape_size_limit if options.tape_size_limit else UC.get("tape_size_limit")
                 
             _,prim,_,_ = wfi.getIO()
-            if not custodial and prim and use_parent_custodial:
-                parent_dataset = prim.pop()
-                ## this is terribly dangerous to assume only 
-                parents_custodial = phedexClient.getCustodialSubscriptionRequestSite( parent_dataset )
-                ###parents_custodial = findCustodialLocation(url, parent_dataset)
-                if not parents_custodial:
-                    parents_custodial = []
-
-                if len(parents_custodial):
-                    custodial = parents_custodial[0]
-                else:
-                    print "the input dataset",parent_dataset,"does not have custodial in the first place. abort"
-                    #sendEmail( "dataset has no custodial location", "Please take a look at %s in the logs of checkor"%parent_dataset)
-                    ## does not work for RAWOADSIM
-                    sendLog('checkor',"Please take a look at %s for missing custodial location"% parent_dataset)
-                    ## cannot be bypassed, this is an issue to fix
-                    is_closing = False
-                    pick_custodial = False
-                    assistance_tags.add('parentcustodial')
                                 
             if not force_custodial and custodial and float(SI.storage[custodial]) < size_worth_checking:
                 print "cannot use the custodial:",custodial,"because of limited space"
@@ -1301,19 +1268,12 @@ class CheckBuster(threading.Thread):
                 holding = []
                 for output in out_worth_checking:
                     if not len(custodial_locations[output]):
-                        if phedex_presence[output]>=1:
-                            wfi.sendLog('checkor','Using %s as a tape destination for %s'%(custodial, output))
-                            self.custodials[custodial].append( output )
-                            if group: self.custodials[custodial][-1]+='@%s'%group
-                            ## let's wait and see if that's needed 
-                            assistance_tags.add('custodial')
-                            holding.append( output )
-                        elif output in pass_stats_check and pass_stats_check[output]:
+                        if output in pass_stats_check and pass_stats_check[output]:
                                 ## there is no file in phedex, but the actual stats check is OK, meaning we are good to let this pass along. the dbs/phedex check will pick this up anyways otherwise
-                            wfi.sendLog('checkor','No file in phedex for %s, but statistics check passed'%output)
+                            wfi.sendLog('checkor','%s statistics check passed'%output)
                         else:
                             ## does not look good
-                            wfi.sendLog('checkor','No file in phedex for %s, not good to add to custodial requests'%output)
+                            wfi.sendLog('checkor',' %s, not good to add to custodial requests'%output)
                             holding.append( output )
                 if not holding:
                     is_closing = True
@@ -1336,7 +1296,7 @@ class CheckBuster(threading.Thread):
             print wfo.name,"has a dbs invalid file level too high"
             print json.dumps(dbs_presence, indent=2)
             print json.dumps(dbs_invalid, indent=2)
-            print json.dumps(phedex_presence, indent=2)
+            print json.dumps(rucio_presence, indent=2)
             ## need to be going and taking an eye
             assistance_tags.add('invalidfiles')
             ## no need for holding stuff because of a fraction of invalid files
@@ -1374,7 +1334,7 @@ class CheckBuster(threading.Thread):
             rec['missingSubs'] = False if len(custodial_locations[output])==0 else ','.join(list(set(custodial_locations[output])))
             rec['dbsFiles'] = dbs_presence[output]
             rec['dbsInvFiles'] = dbs_invalid[output]
-            rec['phedexFiles'] = phedex_presence[output]
+            rec['rucioFiles'] = rucio_presence[output]
             rec['acdc'] = "%d / %d"%(len(acdc),len(acdc+acdc_inactive))
             rec['familly'] = true_familly
             now = time.gmtime()
@@ -1606,7 +1566,7 @@ if __name__ == "__main__":
 
     parser.add_option('--limit',help='The number of workflow to consider for checking', default=0, type=int)
     parser.add_option('--fractionpass',help='The completion fraction that is permitted', default=0.0,type='float')
-    parser.add_option('--ignorefiles', help='Force ignoring dbs/phedex differences', action='store_true', default=False)
+    parser.add_option('--ignorefiles', help='Force ignoring dbs/rucio differences', action='store_true', default=False)
     parser.add_option('--ignoreinvalid', help='Force ignoring high level of invalid files', action='store_true', default=False)
     parser.add_option('--lumisize', help='Force the upper limit on lumisection', default=0, type='float')
     parser.add_option('--ignoreduplicates', help='Force ignoring lumi duplicates', default=False, action='store_true')

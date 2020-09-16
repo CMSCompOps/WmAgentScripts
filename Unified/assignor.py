@@ -221,8 +221,6 @@ def assignor(url ,specific = None, talk=True, options=None):
         for prim in list(primary):
             set_lfn = getLFNbase( prim )
             ## if they are requested for processing, they should bbe all closed already
-            # FIXME: remove this closeAllBlocks
-            closeAllBlocks(url, prim, blocks)
 
         ## should be 2 but for the time-being let's lower it to get things going
         _copies_wanted,cpuh = wfh.getNCopies()

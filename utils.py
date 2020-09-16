@@ -3679,17 +3679,17 @@ def _getDatasetFiles(url, dataset ,without_invalid=True ):
     files = getDatasetFileArray( dataset, validFileOnly=without_invalid, detail=True)
     dbs_filenames = [f['logical_file_name'] for f in files]
 
-    conn = make_x509_conn(url)
+#    conn = make_x509_conn(url)
     #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 
-    r1=conn.request("GET",'/phedex/datasvc/json/prod/filereplicas?dataset=%s'%(dataset))
-    r2=conn.getresponse()
-    result = json.loads(r2.read())
-    items=result['phedex']['block']
+#    r1=conn.request("GET",'/phedex/datasvc/json/prod/filereplicas?dataset=%s'%(dataset))
+#    r2=conn.getresponse()
+#    result = json.loads(r2.read())
+#    items=result['phedex']['block']
     phedex_filenames = []
-    for block in items:
-        for f in block['file']:
-            phedex_filenames.append(f['name'])
+#    for block in items:
+#        for f in block['file']:
+#            phedex_filenames.append(f['name'])
 
     return dbs_filenames, phedex_filenames, list(set(dbs_filenames) - set(phedex_filenames)), list(set(phedex_filenames)-set(dbs_filenames))
 
