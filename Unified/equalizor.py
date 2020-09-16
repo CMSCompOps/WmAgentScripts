@@ -386,6 +386,7 @@ def equalizor(url , specific = None, options=None):
 
         if specific and not specific in wfo.name: 
             continue
+        if not options.manual and 'rucio' in (wfo.name).lower(): continue 
         if specific:
             wfi = workflowInfo(url, wfo.name)
         else:
