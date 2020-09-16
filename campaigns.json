@@ -1747,7 +1747,7 @@
       }
     }, 
     "tune": true
-  }, =
+  }, 
   "RunIISummer20UL16DIGI": {
     "fractionpass": 0.95, 
     "go": false, 
