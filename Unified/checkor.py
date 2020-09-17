@@ -236,7 +236,7 @@ def checkor(url, spec=None, options=None):
     for iwfo,wfo in enumerate(wfs):
         ## do the check other one workflow
         if spec and not (spec in wfo.name): continue
-        if not spec and ('pdmvserv_task_EXO-RunIISummer15wmLHEGS-06326__v1_T_200915_001010_9780'.lower() in (wfo.name).lower() or 'pdmvserv_task_EXO-RunIISummer15wmLHEGS-06323__v1_T_200915_000832_1217'.lower() in (wfo.name).lower()): continue
+        if not spec and ('pdmvserv_task_EXO-RunIISummer16NanoAODv7-09221__v1_T_200917_014704_3490'.lower() in (wfo.name).lower() or 'pdmvserv_task_HIG-RunIISummer16NanoAODv7-03979__v1_T_200915_013748_1986'.lower() in (wfo.name).lower()): continue
         checkers.append( CheckBuster(
             will_do_that_many = will_do_that_many,
             url = url,
