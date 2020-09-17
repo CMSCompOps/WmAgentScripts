@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, forceComplete, makeReplicaRequest, getDatasetSize, getDatasetFiles, sendLog, reqmgr_url, dbs_url, dbs_url_writer, display_time, checkMemory, ThreadHandler, wtcInfo
+from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, forceComplete, getDatasetSize, getDatasetFiles, sendLog, reqmgr_url, dbs_url, dbs_url_writer, display_time, checkMemory, ThreadHandler, wtcInfo
 from utils import componentInfo, unifiedConfiguration, userLock, moduleLock, dataCache, unified_url, getDatasetLumisAndFiles, getDatasetRuns, duplicateAnalyzer, invalidateFiles, findParent, do_html_in_each_module, phedex_url
 import phedexClient
 import dbs3Client
@@ -332,20 +332,6 @@ def checkor(url, spec=None, options=None):
         #sendLog('checkor',"Fresh status are available at %s/assistance.html\n%s"%(unified_url, some_details))
         #sendEmail("fresh assistance status available","Fresh status are available at %s/assistance.html\n%s"%(unified_url, some_details),destination=['katherine.rozo@cern.ch'])
         pass
-
-    ## custodial requests
-    print "Custodials"
-    print json.dumps(custodials, indent=2)
-    for site in custodials:
-        items_at = defaultdict(set)
-        for i in custodials[site]:
-            item, group = i.split('@') if '@' in i else (i,'DataOps')
-            items_at[group].add( item )
-        for group,items in items_at.items():
-            print ','.join(items),'=>',site,'@',group
-            if not options.test:
-                result = makeReplicaRequest(url, site, sorted(items) ,"custodial copy at production close-out",custodial='y',priority='low', approve = (site in SI.sites_auto_approve) , group=group)
-                print result
 
     print "File Invalidation"
     print invalidations

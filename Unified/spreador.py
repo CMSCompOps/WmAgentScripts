@@ -3,7 +3,7 @@
 import json
 import os
 from collections import defaultdict
-from utils import lockInfo, siteInfo, getDatasetBlocksFraction, getDatasetChops, distributeToSites, makeReplicaRequest
+from utils import lockInfo, siteInfo, getDatasetBlocksFraction, getDatasetChops, distributeToSites
 url = 'cmsweb.cern.ch'
 
 
@@ -69,6 +69,4 @@ for site,items in full_spread.items():
     print se
     print len(items)
     print json.dumps(sorted(items), indent=2)
-    if act:
-        print makeReplicaRequest(url, se , list(set(items)), 'pre-staging', priority='high', approve=True, mail=False)
 
