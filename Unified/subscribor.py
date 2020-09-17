@@ -48,7 +48,7 @@ for iw,wfn in enumerate(wfs):
         wl = getWorkLoad(url, wfn)
 
     print "%s/%s:"%(iw,len(wfs)),wfn
-    if 'rucio' in wfn.lower(): continue
+    if ('pdmvserv_task_EXO-RunIISummer16NanoAODv7-09137__v1_T_200916_174252_490'.lower() in wfn.lower() or 'pdmvserv_task_EXO-RunIISummer16NanoAODv7-09144__v1_T_200916_174257_4262'.lower() in wfn.lower()): continue
     if not wl:
         continue
     outs= wl['OutputDatasets']
