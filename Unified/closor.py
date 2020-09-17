@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import componentInfo, sendEmail, setDatasetStatus, unifiedConfiguration, workflowInfo, siteInfo, sendLog, reqmgr_url, monitor_dir, moduleLock, userLock, global_SI, do_html_in_each_module, getWorkflows, pass_to_dynamo, closeoutInfo, batchInfo
+from utils import componentInfo, sendEmail, setDatasetStatus, unifiedConfiguration, workflowInfo, siteInfo, sendLog, reqmgr_url, monitor_dir, moduleLock, userLock, global_SI, do_html_in_each_module, getWorkflows, closeoutInfo, batchInfo
 from utils import ThreadHandler
 import threading
 import reqMgrClient
@@ -557,18 +557,7 @@ class CloseBuster(threading.Thread):
                         destination_spec = ""
                         if destinations:
                             destination_spec = "--destination="+",".join( destinations )
-                        group_spec = "" ## not used yet 
-                        ### should make this a campaign configuration
-                        ## inject to DDM when necessary
-                        if to_DDM:
-                            print "Sending",out," to DDM"
-                            status = pass_to_dynamo( [out], N = n_copies, sites=destinations if destinations else None, group = group_spec if group_spec else None)
-                            results.append( status )
-                            if status == True:
-                                wfi.sendLog('closor','%s is send to dynamo in %s copies %s %s'%( out, n_copies, sorted(destinations), group_spec))
-                            else:
-                                sendLog('closor',"could not add "+out+" to dynamo pool. check closor logs.", level='critical')
-                                wfi.sendLog('closor',"could not add "+out+" to dynamo pool. check closor logs.")
+                        group_spec = "" ## not used yet
                     else:
                         print wfo.name,"no stats for announcing",out
                         results.append('No Stats')
