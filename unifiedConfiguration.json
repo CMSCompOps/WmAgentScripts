@@ -82,7 +82,6 @@
  "sites_banned": {
    "value" : ["T2_CH_CERN_AI",
 	      "T2_TH_CUNSTDA",
-	      "T2_EE_Estonia",
 	      "T0_CH_CERN",
 	      "T0_CH_CSCS_HPC"
  	      ],
