@@ -42,7 +42,8 @@ def injector(url, options, specific):
     for wf in workflows:
         if specific and not specific in wf: continue
 
-        if not options.manual and 'rucio' in wf.lower(): continue
+        #If we need it, we should use wf.name.lower() in the following line
+        #if not options.manual and 'rucio' in wf.lower(): continue
 
         exists = session.query(Workflow).filter(Workflow.name == wf ).first()
         if not exists:
