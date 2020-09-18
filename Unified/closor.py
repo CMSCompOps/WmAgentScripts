@@ -207,7 +207,7 @@ def closor(url, specific=None, options=None):
 
     for iwfo,wfo in enumerate(wfs):
         if specific and not specific in wfo.name: continue
-        if not options.manual and ('pdmvserv_task_EXO-RunIISummer16NanoAODv7-09221__v1_T_200917_014704_3490'.lower() in (wfo.name).lower() or 'pdmvserv_task_HIG-RunIISummer16NanoAODv7-03979__v1_T_200915_013748_1986'.lower() in (wfo.name).lower()): continue
+        if not options.manual and ('cmsunified_task_HIG-RunIIFall17wmLHEGS-05036__v1_T_200712_005621_4159'.lower() in (wfo.name).lower() or 'pdmvserv_task_HIG-RunIISummer16NanoAODv7-03979__v1_T_200915_013748_1986'.lower() in (wfo.name).lower()): continue
         closers.append( CloseBuster(
             wfo = wfo,
             url = url,
