@@ -999,12 +999,6 @@ class CheckBuster(threading.Thread):
         ## custodial copy
         custodial_locations = {}
         custodial_presences = {}
-        for output in wfi.request['OutputDatasets']:
-            custodial_presences[output] = [s for s in any_presence[output] if 'MSS' in s]
-            custodial_locations[output] = phedexClient.getCustodialSubscriptionRequestSite(output)
-
-            if not custodial_locations[output]:
-                custodial_locations[output] = []
 
         time_point("checked custodiality", sub_lap=True)
 
@@ -1353,11 +1347,9 @@ class CheckBuster(threading.Thread):
             rec['percentage'] = math.floor(percent_completions[output]*10000)/100.## round down
             rec['fractionpass'] = math.floor(fractions_pass.get(output,0)*10000)/100.
             rec['duplicate'] = duplications[output] if output in duplications else 'N/A'
-            rec['phedexReqs'] = float('%.2f'%any_presence[output][custodial_presences[output][0]][1]) if len(custodial_presences[output])!=0 else 'N/A'
             rec['closeOutDataset'] = is_closing
             rec['transPerc'] = float('%.2f'%any_presence[output][ disk_copies[output][0]][1]) if len(disk_copies[output])!=0 else 'N/A'
             rec['correctLumis'] = int(events_per_lumi[output]) if (events_per_lumi[output] > lumi_upper_limit[output]) else True
-            rec['missingSubs'] = False if len(custodial_locations[output])==0 else ','.join(list(set(custodial_locations[output])))
             rec['dbsFiles'] = dbs_presence[output]
             rec['dbsInvFiles'] = dbs_invalid[output]
             rec['phedexFiles'] = phedex_presence[output]
