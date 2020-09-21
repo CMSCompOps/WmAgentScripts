@@ -20,5 +20,5 @@ jobs:
         sudo npm install -g jsonlint
     - name: Lint with jsonlint
       run: |
-        for file in ${{ env.GIT_DIFF }}; do npx jsonlint $file; done
+        for file in ${{ env.GIT_DIFF }}; do jsonlint $file; done
       if: env.GIT_DIFF
