@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC1091
 source /data/admin/wmagent/env.sh
 condor_rm -constraint 'JobStatus == 3 && ( CurrentTime - EnteredCurrentStatus ) > 3600' -forcex
 condor_rm -constraint 'JobStatus == 5 && ( CurrentTime - EnteredCurrentStatus ) > 86400'
