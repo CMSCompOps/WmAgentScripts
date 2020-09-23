@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import workflowInfo, getDatasetBlockAndSite, getWorkLoad, makeReplicaRequest, sendEmail, getDatasetOnGoingDeletion, componentInfo, reqmgr_url, getWorkflows
+from utils import workflowInfo, getDatasetBlockAndSite, getWorkLoad, sendEmail, getDatasetOnGoingDeletion, componentInfo, reqmgr_url, getWorkflows
 import json
 from collections import defaultdict
 import random
@@ -78,8 +78,6 @@ for site,blocks in all_blocks_at_sites.items():
     print "Would subscribe",len(blocks),"blocks to",site
     print "\tSubscribe",len(blocks),"blocks to",site    
     done[site].extend( blocks )
-    if blocks:
-        print makeReplicaRequest(url, site, list(blocks), "Production blocks", priority="low", approve=True,mail=False)
-        time.sleep(1)
+
 
 #open('myblock_done.json','w').write( json.dumps( done, indent=2 ))

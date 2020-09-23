@@ -1,4 +1,4 @@
-from utils import getDatasetBlockAndSite, siteInfo, getWorkflows, workflowInfo, monitor_dir, sendLog, sendEmail, makeReplicaRequest, unifiedConfiguration, getDatasetFileLocations, getAgentInfo, base_eos_dir, eosFile, replacedBlocks, eosRead
+from utils import getDatasetBlockAndSite, siteInfo, getWorkflows, workflowInfo, monitor_dir, sendLog, sendEmail, unifiedConfiguration, getDatasetFileLocations, getAgentInfo, base_eos_dir, eosFile, replacedBlocks, eosRead
 from collections import defaultdict
 import time
 import json
@@ -341,8 +341,7 @@ for site,blocks in try_me.items():
     if UC.get('block_repositionning'):
         if blocks:
             RB.add( blocks )
-            result = makeReplicaRequest(url, site, list(blocks), 'item relocation', priority='reserved', approve=True, mail=False)
-            sendLog('GQ','replacing %s at %s \n%s'%( '\n,'.join(blocks), site, result),level='warning')
+            sendLog('GQ','should have replaced %s at %s'%( '\n,'.join(blocks), site),level='warning')
     else:
         sendLog('GQ','tempting to put %s at %s'%( '\n,'.join(blocks), site),level='warning')
 

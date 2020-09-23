@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, forceComplete, makeReplicaRequest, getDatasetSize, getDatasetFiles, sendLog, reqmgr_url, dbs_url, dbs_url_writer, display_time, checkMemory, ThreadHandler, wtcInfo
+from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, forceComplete, getDatasetSize, getDatasetFiles, sendLog, reqmgr_url, dbs_url, dbs_url_writer, display_time, checkMemory, ThreadHandler, wtcInfo
 from utils import componentInfo, unifiedConfiguration, userLock, moduleLock, dataCache, unified_url, getDatasetLumisAndFiles, getDatasetRuns, duplicateAnalyzer, invalidateFiles, findParent, do_html_in_each_module, phedex_url
 import phedexClient
 import dbs3Client
@@ -332,20 +332,6 @@ def checkor(url, spec=None, options=None):
         #sendLog('checkor',"Fresh status are available at %s/assistance.html\n%s"%(unified_url, some_details))
         #sendEmail("fresh assistance status available","Fresh status are available at %s/assistance.html\n%s"%(unified_url, some_details),destination=['katherine.rozo@cern.ch'])
         pass
-
-    ## custodial requests
-    print "Custodials"
-    print json.dumps(custodials, indent=2)
-    for site in custodials:
-        items_at = defaultdict(set)
-        for i in custodials[site]:
-            item, group = i.split('@') if '@' in i else (i,'DataOps')
-            items_at[group].add( item )
-        for group,items in items_at.items():
-            print ','.join(items),'=>',site,'@',group
-            if not options.test:
-                result = makeReplicaRequest(url, site, sorted(items) ,"custodial copy at production close-out",custodial='y',priority='low', approve = (site in SI.sites_auto_approve) , group=group)
-                print result
 
     print "File Invalidation"
     print invalidations
@@ -1013,12 +999,6 @@ class CheckBuster(threading.Thread):
         ## custodial copy
         custodial_locations = {}
         custodial_presences = {}
-        for output in wfi.request['OutputDatasets']:
-            custodial_presences[output] = [s for s in any_presence[output] if 'MSS' in s]
-            custodial_locations[output] = phedexClient.getCustodialSubscriptionRequestSite(output)
-
-            if not custodial_locations[output]:
-                custodial_locations[output] = []
 
         time_point("checked custodiality", sub_lap=True)
 
@@ -1367,11 +1347,9 @@ class CheckBuster(threading.Thread):
             rec['percentage'] = math.floor(percent_completions[output]*10000)/100.## round down
             rec['fractionpass'] = math.floor(fractions_pass.get(output,0)*10000)/100.
             rec['duplicate'] = duplications[output] if output in duplications else 'N/A'
-            rec['phedexReqs'] = float('%.2f'%any_presence[output][custodial_presences[output][0]][1]) if len(custodial_presences[output])!=0 else 'N/A'
             rec['closeOutDataset'] = is_closing
             rec['transPerc'] = float('%.2f'%any_presence[output][ disk_copies[output][0]][1]) if len(disk_copies[output])!=0 else 'N/A'
             rec['correctLumis'] = int(events_per_lumi[output]) if (events_per_lumi[output] > lumi_upper_limit[output]) else True
-            rec['missingSubs'] = False if len(custodial_locations[output])==0 else ','.join(list(set(custodial_locations[output])))
             rec['dbsFiles'] = dbs_presence[output]
             rec['dbsInvFiles'] = dbs_invalid[output]
             rec['phedexFiles'] = phedex_presence[output]

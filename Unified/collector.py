@@ -2,7 +2,7 @@
 import optparse
 from McMClient import McMClient
 from collections import defaultdict
-from utils import makeReplicaRequest, siteInfo, getDatasetDestinations, getDatasetPresence, unifiedConfiguration, getDatasetChops, distributeToSites, DSS, componentInfo
+from utils import siteInfo, getDatasetDestinations, getDatasetPresence, unifiedConfiguration, getDatasetChops, distributeToSites, DSS, componentInfo
 import itertools
 import json 
 import random 
@@ -128,10 +128,6 @@ def collector(url, specific, options):
 
         if options.test:
             result= {'phedex':{'request_created' : []}}
-        else:
-            ##result = makeReplicaRequest(url, site_se, items_to_transfer, 'fetching pre-production', priority='normal', approve=True)
-            ## should make sure there is something in it
-            pass
 
             
     

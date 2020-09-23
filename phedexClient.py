@@ -466,10 +466,9 @@ def main():
     url='cmsweb.cern.ch'
     #reads file, striping and ignoring empty lines
     outputdatasets = [ds.strip() for ds in open(filename).readlines() if ds.strip()]
-    resp = makeReplicaRequest(url, site, outputdatasets, comments)
-    print resp
-    
-    sys.exit(0);
+    print "ERROR: Not making any data replica requests"
+
+    sys.exit(0)
 
 if __name__ == "__main__":
     main()

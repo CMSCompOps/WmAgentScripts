@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import componentInfo, sendEmail, setDatasetStatus, unifiedConfiguration, workflowInfo, siteInfo, sendLog, reqmgr_url, monitor_dir, moduleLock, userLock, global_SI, do_html_in_each_module, getWorkflows, pass_to_dynamo, closeoutInfo, batchInfo
+from utils import componentInfo, sendEmail, setDatasetStatus, unifiedConfiguration, workflowInfo, siteInfo, sendLog, reqmgr_url, monitor_dir, moduleLock, userLock, global_SI, do_html_in_each_module, getWorkflows, closeoutInfo, batchInfo
 from utils import ThreadHandler
 import threading
 import reqMgrClient
@@ -8,7 +8,7 @@ import json
 import time
 import sys
 import os
-from utils import getDatasetEventsAndLumis, campaignInfo, getDatasetPresence, findLateFiles, updateSubscription, makeReplicaRequest, getWorkflowByCampaign
+from utils import getDatasetEventsAndLumis, campaignInfo, getDatasetPresence, findLateFiles, updateSubscription, getWorkflowByCampaign
 from htmlor import htmlor
 from collections import defaultdict
 import reqMgrClient
@@ -41,17 +41,6 @@ def spawn_harvesting(url, wfi , in_full):
             for dqm_input in dqms:
                 all_OK[dqm_input] = False
                 ## raise the subscription to high priority
-                sites = set(wfi.request['NonCustodialSites'])
-                for site in sites:
-                    res = updateSubscription(url, site, dqm_input, priority='reserved')
-                    print "increased priority",res
-
-                ## make a subscription somewhere else in the T1s at random each time, hoping it will get there eventually
-                #pick = SI.CE_to_SE(random.choice(SI.sites_T1s))
-                #print "replicating",dqm_input,"to",pick
-                #res = makeReplicaRequest(url, pick, [dqm_input], "Replicating DQM for harvesting", priority='normal', approve=True, mail=False)
-
-                return all_OK,requests
 
         for dqm_input in dqms:
             ## handle it properly
@@ -520,15 +509,6 @@ class CloseBuster(threading.Thread):
                         
                         if destinations:
                             wfi.sendLog('closor', '%s to go to %s'%(out, ', '.join( sorted( destinations ))))
-
-                        ## call to makereplicarequest under relval => done
-                        for site in destinations:
-                            result = makeReplicaRequest(url, site, [out], 'Copy for release validation consumption', priority='normal', approve=True, mail=False, group='RelVal')
-                            try:
-                                request_id =  result['phedex']['request_created'][0]['id']
-                                results.append( True )
-                            except:
-                                results.append( 'Failed relval transfer' )
                         
                     elif all_OK[out]:
 
@@ -577,18 +557,7 @@ class CloseBuster(threading.Thread):
                         destination_spec = ""
                         if destinations:
                             destination_spec = "--destination="+",".join( destinations )
-                        group_spec = "" ## not used yet 
-                        ### should make this a campaign configuration
-                        ## inject to DDM when necessary
-                        if to_DDM:
-                            print "Sending",out," to DDM"
-                            status = pass_to_dynamo( [out], N = n_copies, sites=destinations if destinations else None, group = group_spec if group_spec else None)
-                            results.append( status )
-                            if status == True:
-                                wfi.sendLog('closor','%s is send to dynamo in %s copies %s %s'%( out, n_copies, sorted(destinations), group_spec))
-                            else:
-                                sendLog('closor',"could not add "+out+" to dynamo pool. check closor logs.", level='critical')
-                                wfi.sendLog('closor',"could not add "+out+" to dynamo pool. check closor logs.")
+                        group_spec = "" ## not used yet
                     else:
                         print wfo.name,"no stats for announcing",out
                         results.append('No Stats')
