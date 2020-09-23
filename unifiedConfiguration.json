@@ -88,7 +88,7 @@
    "description" : "The sites that are banned from production"
  },		 
  "sites_auto_approve": {
-   "value" : ["T0_CH_CERN_MSS","T1_FR_CCIN2P3_MSS","T1_IT_CNAF_MSS"],
+   "value" : ["T0_CH_CERN_MSS","T1_FR_CCIN2P3_MSS","T1_IT_CNAF_MSS", "T1_RU_JINR_MSS"],
    "description" : "The sites we can autoapprove tape request to"
  },
  "sites_space_override": {	
