@@ -16,10 +16,10 @@
 15 */4 * * * vocms0269 /data/unified/WmAgentScripts/cWrap.sh Unified/stuckor.py &> /dev/null
 20,50 * 1-31 * * vocms0269 /data/unified/WmAgentScripts/assigncycle.sh &> /dev/null
 #30 */4 1-31 * * vocms0269 /data/unified/WmAgentScripts/unlockingcycle.sh &> /dev/null
-10,40 * 1-31 * * vocms0273 /data/unified/WmAgentScripts/postcycle-strict.sh &> /dev/null
-15,45 * 1-31 * * vocms0273 /data/unified/WmAgentScripts/postcycle-update.sh &> /dev/null
-20,50 * 1-31 * * vocms0268 /data/unified/WmAgentScripts/postcycle-review-recovering.sh &> /dev/null
-25,55 * 1-31 * * vocms0269 /data/unified/WmAgentScripts/postcycle-review-manual.sh &> /dev/null
+#10,40 * 1-31 * * vocms0273 /data/unified/WmAgentScripts/postcycle-strict.sh &> /dev/null
+#15,45 * 1-31 * * vocms0273 /data/unified/WmAgentScripts/postcycle-update.sh &> /dev/null
+#20,50 * 1-31 * * vocms0268 /data/unified/WmAgentScripts/postcycle-review-recovering.sh &> /dev/null
+#25,55 * 1-31 * * vocms0269 /data/unified/WmAgentScripts/postcycle-review-manual.sh &> /dev/null
 */5 * 1-31 * * vocms0269 /data/unified/WmAgentScripts/actcycle.sh &> /dev/null
 30,50 * 1-31 * * vocms0272 /data/unified/WmAgentScripts/clearcycle.sh  &> /dev/null
 25,55 * 1-31 * * vocms0268 /data/unified/WmAgentScripts/shortcycle.sh &> /dev/null
