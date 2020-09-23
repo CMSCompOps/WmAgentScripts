@@ -2098,7 +2098,7 @@
   }, 
   "RunIISummer20UL17DIGI": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
@@ -2122,7 +2122,7 @@
   }, 
   "RunIISummer20UL17DIGIPremix": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
@@ -2145,7 +2145,7 @@
   }, 
   "RunIISummer20UL17GEN": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
@@ -2160,7 +2160,7 @@
   }, 
   "RunIISummer20UL17HLT": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
@@ -2175,7 +2175,7 @@
   }, 
   "RunIISummer20UL17MiniAOD": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
@@ -2190,7 +2190,7 @@
   }, 
   "RunIISummer20UL17NanoAOD": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
@@ -2205,7 +2205,7 @@
   }, 
   "RunIISummer20UL17RECO": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
@@ -2220,7 +2220,7 @@
   }, 
   "RunIISummer20UL17SIM": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
@@ -2235,7 +2235,7 @@
   }, 
   "RunIISummer20UL17pLHEGEN": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
@@ -2250,7 +2250,7 @@
   }, 
   "RunIISummer20UL17wmLHEGEN": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
