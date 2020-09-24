@@ -223,11 +223,11 @@
    "description": "The data tiers that do not pass closeout checks. Can be overidden by custodial overide at campaign level"
  },
  "tiers_no_DDM": {
-   "value" : ["GEN-SIM","LHE","GEN","SIM","DQM","DQMIO","GEN-SIM-DIGI-RAW","RAW","GEN-SIM-DIGI"],
+   "value" : ["GEN-SIM","GEN","SIM","DQM","DQMIO","GEN-SIM-DIGI-RAW","RAW","GEN-SIM-DIGI"],
    "description": "The data tiers that do not go to AnaOps"
  },
  "tiers_to_DDM": {
-   "value" : ["GEN-SIM-DIGI-RAW-MINIAOD","AODSIM","MINIAODSIM","GEN-SIM-RAW","GEN-SIM-RECO","GEN-SIM-RECODEBUG","AOD","RECO","MINIAOD","ALCARECO","USER","RAW-RECO","RAWAODSIM","NANOAOD","NANOAODSIM","FEVT","PREMIX"],
+   "value" : ["LHE", "GEN-SIM-DIGI-RAW-MINIAOD","AODSIM","MINIAODSIM","GEN-SIM-RAW","GEN-SIM-RECO","GEN-SIM-RECODEBUG","AOD","RECO","MINIAOD","ALCARECO","USER","RAW-RECO","RAWAODSIM","NANOAOD","NANOAODSIM","FEVT","PREMIX"],
    "description": "The data tiers that go to AnaOps"
  },
  "tiers_to_rucio_relval": {
