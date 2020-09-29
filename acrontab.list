@@ -13,7 +13,7 @@
 */40 * * * * vocms0275 /data/unified/WmAgentScripts/cWrap.sh Unified/pushor.py &> /dev/null
 */5 * * * * vocms0275 source /data/unified/WmAgentScripts/whatjob.sh > /eos/cms/store/unified/www/info.txt 2> /dev/null
 ## single script that cycles through modules
-15 */4 * * * vocms0269 /data/unified/WmAgentScripts/cWrap.sh Unified/stuckor.py &> /dev/null
+#15 */4 * * * vocms0269 /data/unified/WmAgentScripts/cWrap.sh Unified/stuckor.py &> /dev/null
 20,50 * 1-31 * * vocms0269 /data/unified/WmAgentScripts/assigncycle.sh &> /dev/null
 #30 */4 1-31 * * vocms0269 /data/unified/WmAgentScripts/unlockingcycle.sh &> /dev/null
 10,40 * 1-31 * * vocms0273 /data/unified/WmAgentScripts/postcycle-strict.sh &> /dev/null
