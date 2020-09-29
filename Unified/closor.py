@@ -8,7 +8,7 @@ import json
 import time
 import sys
 import os
-from utils import getDatasetEventsAndLumis, campaignInfo, getDatasetPresence, findLateFiles, updateSubscription, getWorkflowByCampaign
+from utils import getDatasetEventsAndLumis, campaignInfo, getDatasetPresence, getWorkflowByCampaign
 from htmlor import htmlor
 from collections import defaultdict
 import reqMgrClient
@@ -456,11 +456,11 @@ class CloseBuster(threading.Thread):
                 print json.dumps( at_destination )
                 print json.dumps( else_where, indent=2 )
                 ## do the full stuck transfer study, missing files and shit !
-                for there in going_to:
-                    late_info = findLateFiles(url, out, going_to = there )
-                    for l in late_info:
-                        l.update({"workflow":wfo.name,"dataset":out})
-                    self.all_late_files.extend( late_info )
+                #for there in going_to:
+                #    late_info = findLateFiles(url, out, going_to = there )
+                #    for l in late_info:
+                #        l.update({"workflow":wfo.name,"dataset":out})
+                #    self.all_late_files.extend( late_info )
                 if check_fullcopy_to_announce:
                     ## only set this false if the check is relevant
                     all_OK[out] = False
