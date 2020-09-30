@@ -794,7 +794,10 @@
     "force-complete": 0.99, 
     "fractionpass": 0.95, 
     "go": true, 
-    "lumisize": -1, 
+    "lumisize": -1,
+    "SiteBlacklist": [
+      "T2_US_Caltech"
+    ],     
     "resize": "auto", 
     "tune": true
   }, 
@@ -844,7 +847,10 @@
   "RunIIFall18GS": {
     "fractionpass": 0.95, 
     "go": true, 
-    "lumisize": -1, 
+    "lumisize": -1,
+    "SiteBlacklist": [
+      "T2_US_Caltech"
+    ], 
     "resize": "auto", 
     "tune": true
   }, 
@@ -866,6 +872,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": 1000, 
+    "SiteBlacklist": [
+      "T2_US_Caltech"
+    ],
     "overflow": {
       "LHE": {
         "site_list": "sites_AAA"
@@ -2385,6 +2394,21 @@
   "RunIISummer20UL18wmLHEGEN": {
     "fractionpass": 0.95, 
     "go": true, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "overflow": {
+      "PU": {
+        "force": false, 
+        "max": 0, 
+        "pending": 0
+      }
+    }, 
+    "resize": "auto", 
+    "tune": true
+  }, 
+  "RunIISummer20ULPrePremix": {
+    "fractionpass": 0.95, 
+    "go": false, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
