@@ -794,7 +794,10 @@
     "force-complete": 0.99, 
     "fractionpass": 0.95, 
     "go": true, 
-    "lumisize": -1, 
+    "lumisize": -1,
+    "SiteBlacklist": [
+      "T2_US_Caltech"
+    ],     
     "resize": "auto", 
     "tune": true
   }, 
@@ -844,7 +847,10 @@
   "RunIIFall18GS": {
     "fractionpass": 0.95, 
     "go": true, 
-    "lumisize": -1, 
+    "lumisize": -1,
+    "SiteBlacklist": [
+      "T2_US_Caltech"
+    ], 
     "resize": "auto", 
     "tune": true
   }, 
@@ -866,6 +872,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": 1000, 
+    "SiteBlacklist": [
+      "T2_US_Caltech"
+    ],
     "overflow": {
       "LHE": {
         "site_list": "sites_AAA"
