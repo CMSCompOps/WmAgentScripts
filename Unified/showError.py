@@ -357,44 +357,47 @@ def parse_one(url, wfn, options=None):
     html += '<a name=IO></a>'
     if prim:
         html+='Reads in primary<br>'
-        blocks = wfi.getBlocks()
+        #blocks = wfi.getBlocks()
         for dataset in prim:
             html +='<b>%s </b>(events/lumi ~%d)'%(dataset, getDatasetEventsPerLumi( dataset))
+            html += '<br>'
+        #    available = getDatasetBlocksFraction(url, dataset, only_blocks = blocks )
+        #    html +='<br><br>Available %.2f (>1 more than one copy, <1 not in full on disk)<br>'% available
+        #    html +='<ul>'
+        #    presence = getDatasetPresence(url, dataset, only_blocks = blocks )
 
-            available = getDatasetBlocksFraction(url, dataset, only_blocks = blocks )
-            html +='<br><br>Available %.2f (>1 more than one copy, <1 not in full on disk)<br>'% available
-            html +='<ul>'
-            presence = getDatasetPresence(url, dataset, only_blocks = blocks )
+        #    for site in sorted(presence.keys()):
+        #        html += '<li>%s : %.2f %%'%( site, presence[site][1] )
+        #        IO_doc.setdefault('primary',{}).setdefault(dataset,{})[site] = presence[site][1]
+        #    html+='</ul><br>'
 
-            for site in sorted(presence.keys()):
-                html += '<li>%s : %.2f %%'%( site, presence[site][1] )
-                IO_doc.setdefault('primary',{}).setdefault(dataset,{})[site] = presence[site][1]
-            html+='</ul><br>'
 
             
     if sec:
         html+='Reads in secondary<br>'
         for dataset in sec:
-            presence = getDatasetPresence(url, dataset)
+        #    presence = getDatasetPresence(url, dataset)
             html +='<b>%s</b><ul>'%dataset
-            for site in sorted(presence.keys()):
-                html += '<li>%s : %.2f %%'%( site, presence[site][1] )
-                IO_doc.setdefault('secondary',{}).setdefault(dataset,{})[site] = presence[site][1]
-            html+='</ul>'
+            html += '<br>'
+        #    for site in sorted(presence.keys()):
+        #        html += '<li>%s : %.2f %%'%( site, presence[site][1] )
+        #        IO_doc.setdefault('secondary',{}).setdefault(dataset,{})[site] = presence[site][1]
+        #    html+='</ul>'
         
 
     outs = sorted(wfi.request['OutputDatasets'])
     if outs:
         html+='Produces<br>'
         for dataset in outs:
-            presence = getDatasetPresence(url, dataset)
+        #    presence = getDatasetPresence(url, dataset)
             epl = getDatasetEventsPerLumi(dataset)
             html +='<b>%s </b>(events/lumi ~ %d)<ul>'%(dataset, epl)
-            IO_doc.setdefault('outputs',{}).setdefault(dataset,{})['eventsperlumi'] = epl
-            for site in sorted(presence.keys()):
-                html += '<li>%s : %.2f %%'%( site, presence[site][1] )
-                IO_doc.setdefault('outputs',{}).setdefault(dataset,{}).setdefault('location',{})[site] = presence[site][1]
-            html+='</ul>'
+            html += '<br>'
+        #    IO_doc.setdefault('outputs',{}).setdefault(dataset,{})['eventsperlumi'] = epl
+        #    for site in sorted(presence.keys()):
+        #        html += '<li>%s : %.2f %%'%( site, presence[site][1] )
+        #        IO_doc.setdefault('outputs',{}).setdefault(dataset,{}).setdefault('location',{})[site] = presence[site][1]
+        #    html+='</ul>'
             
     time_point("Input checked")
 
