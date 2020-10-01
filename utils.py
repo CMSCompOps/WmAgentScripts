@@ -1266,7 +1266,7 @@ class eosFile(object):
                 else:
                     time.sleep(30)
         h = socket.gethostname()
-        msg = 'eos is acting up on %s on %s. not able to copy %s to eos \n%s'%( h, time.asctime(), self.eos_filename, str(e))
+        msg = 'eos is acting up on %s on %s. not able to copy %s to eos'%( h, time.asctime(), self.eos_filename)
         sendEmail('eosFile',msg)
         print(msg)
         return False
