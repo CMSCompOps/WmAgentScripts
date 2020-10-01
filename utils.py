@@ -7353,8 +7353,10 @@ class workflowInfo:
         elif secondary:
             if self.heavyRead(secondary):
                 sites_allowed = sorted(set(SI.sites_T0s + SI.sites_T1s + SI.sites_with_goodIO))
+                print "Reading minbias"
             else:
                 sites_allowed = sorted(set(SI.sites_T0s + SI.sites_T1s + SI.sites_with_goodAAA))
+                print "Reading premix"
         elif primary:
             sites_allowed =sorted(set(SI.sites_T0s + SI.sites_T1s + SI.sites_T2s))# + SI.sites_T3s))
         else:
