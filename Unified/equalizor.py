@@ -815,7 +815,7 @@ def equalizor(url , specific = None, options=None):
                 extend_to = set( LHE_overflow[campaign]) & neighboring_ces ## at the intersection
                 
 
-                if wfi.heavyRead():
+                if wfi.heavyRead(sec):
                     needs = False
                     needs_overide = False
 
