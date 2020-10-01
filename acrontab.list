@@ -24,7 +24,7 @@
 30,50 * 1-31 * * vocms0272 /data/unified/WmAgentScripts/clearcycle.sh  &> /dev/null
 25,55 * 1-31 * * vocms0268 /data/unified/WmAgentScripts/shortcycle.sh &> /dev/null
 5,35 * 1-31 * * vocms0269 /data/unified/WmAgentScripts/gqcycle.sh &> /dev/null
-45,15 * 1-31 * * vocms0268 /data/unified/WmAgentScripts/subscribecycle.sh &> /dev/null
+#45,15 * 1-31 * * vocms0268 /data/unified/WmAgentScripts/subscribecycle.sh &> /dev/null
 */10 * 1-31 * * vocms0268 /data/unified/WmAgentScripts/viewcycle.sh &> /dev/null
 45 */4 1-31 * * vocms0268 /data/unified/WmAgentScripts/remainingcycle.sh  &> /dev/null
 */15 * 1-31 * * vocms0272 /data/unified/WmAgentScripts/errorcycle.sh &> /dev/null
