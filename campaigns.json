@@ -2408,7 +2408,7 @@
   }, 
   "RunIISummer20ULPrePremix": {
     "fractionpass": 0.95,
-    "partial_copy": 0.95, 
+    "partial_copy": 0.99, 
     "go": false, 
     "lumisize": -1, 
     "maxcopies": 1, 
