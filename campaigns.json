@@ -2409,7 +2409,7 @@
   "RunIISummer20ULPrePremix": {
     "fractionpass": 0.95,
     "partial_copy": 0.99, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
