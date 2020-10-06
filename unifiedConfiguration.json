@@ -412,5 +412,9 @@
   "efficiency_threshold_for_stepchain":{
    "description" : "Minimum efficiency threshold for step chain conversion",
    "value" : 0.75
-  }
+  },
+  "sites_for_DQMHarvest": {
+    "value" : ["T2_CH_CERN","T1_US_FNAL"],
+    "description" : "The sites to assign DQM/DMQIO harvesting workflows"
+ },
 }
