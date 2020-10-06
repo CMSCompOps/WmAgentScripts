@@ -999,36 +999,36 @@ class CheckBuster(threading.Thread):
         rucioClient = RucioClient()
         for output in wfi.request['OutputDatasets']:
             _,dsn,process_string,tier = output.split('/')
-#            if tier in set(UC.get('tiers_to_rucio_relval')) | set(UC.get('tiers_to_rucio_nonrelval')):
-             if True:
-                # - creates lists of tuples ot the type: ('blockName', numFiles)
-                #   for all blockNames per Dataset known to both Phedex and Rucio
-                # - creates the union of the two sets in order to avoid any duplicates
-                #   (files present in both systems)
-                # - sums the number of files for the union set
-                # - assigns the value to 'rucio_presence' even though the full sum
-                #   of the files is present in both systems - this way we avoid
-                #   changing the code for the rest of the consistency checks
-                rucio_filecount_pb = rucioClient.getFileCountPerBlock(output)
-                all_filecount_pb =  set(rucio_filecount_pb)
-                all_blocks = set(map(lambda x: x[0], rucio_filecount_pb))
+#           if tier in set(UC.get('tiers_to_rucio_relval')) | set(UC.get('tiers_to_rucio_nonrelval')):
+            
+            # - creates lists of tuples ot the type: ('blockName', numFiles)
+            #   for all blockNames per Dataset known to both Phedex and Rucio
+            # - creates the union of the two sets in order to avoid any duplicates
+            #   (files present in both systems)
+            # - sums the number of files for the union set
+            # - assigns the value to 'rucio_presence' even though the full sum
+            #   of the files is present in both systems - this way we avoid
+            #   changing the code for the rest of the consistency checks
+            rucio_filecount_pb = rucioClient.getFileCountPerBlock(output)
+            all_filecount_pb =  set(rucio_filecount_pb)
+            all_blocks = set(map(lambda x: x[0], rucio_filecount_pb))
 
-                # bellow we will misscount in case there are same blocks in both
-                # Rucio and Phedex but with different number of files in the two
-                # systems - they will enter the sum twice, because the two tuples
-                # will be concidered as two different blocks from the two subsets
-                # hence the following check:
-                if len(all_blocks) == len(all_filecount_pb):
-                    rucio_presence[output] = sum(map(lambda x: x[1], all_filecount_pb))
-                else:
-                    # TODO: to check if we need to rise a higher level of alarm here.
-                    msg = "There are inconsistences of number of files per block"
-                    msg += "between Phedex and Rucio for dataset: {}".format(output)
-                    wfi.sendLog('checkor', msg)
-                    rucio_presence[output] = 0
-                    # we do not announce this output untill the discrepancy from above is resolved
-                del(all_filecount_pb)
-                del(all_blocks)
+            # bellow we will misscount in case there are same blocks in both
+            # Rucio and Phedex but with different number of files in the two
+            # systems - they will enter the sum twice, because the two tuples
+            # will be concidered as two different blocks from the two subsets
+            # hence the following check:
+            if len(all_blocks) == len(all_filecount_pb):
+                rucio_presence[output] = sum(map(lambda x: x[1], all_filecount_pb))
+            else:
+                # TODO: to check if we need to rise a higher level of alarm here.
+                msg = "There are inconsistences of number of files per block"
+                msg += "between Phedex and Rucio for dataset: {}".format(output)
+                wfi.sendLog('checkor', msg)
+                rucio_presence[output] = 0
+                # we do not announce this output untill the discrepancy from above is resolved
+            del(all_filecount_pb)
+            del(all_blocks)
 
         one_output_not_in_rucio = any([Nfiles==0 for Nfiles in rucio_presence.values()])
         if one_output_not_in_rucio and 'announce' in assistance_tags:
