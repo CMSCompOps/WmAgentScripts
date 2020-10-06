@@ -3,7 +3,7 @@ from assignSession import *
 import reqMgrClient
 from utils import workflowInfo, campaignInfo, siteInfo, userLock, unifiedConfiguration, reqmgr_url, monitor_pub_dir, monitor_dir, global_SI
 from utils import getDatasetEventsPerLumi, getLFNbase, lockInfo, isHEPCloudReady, do_html_in_each_module
-from utils import componentInfo, sendEmail, sendLog, getWorkflows, closeAllBlocks, eosRead
+from utils import componentInfo, sendEmail, sendLog, getWorkflows, eosRead
 #from utils import lockInfo
 from utils import moduleLock
 import optparse
@@ -222,7 +222,7 @@ def assignor(url ,specific = None, talk=True, options=None):
             set_lfn = getLFNbase( prim )
             ## if they are requested for processing, they should bbe all closed already
             # FIXME: remove this closeAllBlocks
-            closeAllBlocks(url, prim, blocks)
+            #closeAllBlocks(url, prim, blocks)
 
         ## should be 2 but for the time-being let's lower it to get things going
         _copies_wanted,cpuh = wfh.getNCopies()
