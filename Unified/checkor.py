@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, findCustodialLocation, getDatasetEventsPerLumi, siteInfo, getDatasetPresence, campaignInfo, getWorkflowById, forceComplete, getDatasetSize, getDatasetFiles, sendLog, reqmgr_url, dbs_url, dbs_url_writer, display_time, checkMemory, ThreadHandler, wtcInfo
+from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, getDatasetEventsPerLumi, siteInfo, campaignInfo, getWorkflowById, forceComplete, getDatasetSize, getDatasetFiles, sendLog, reqmgr_url, dbs_url, dbs_url_writer, display_time, checkMemory, ThreadHandler, wtcInfo
 from utils import componentInfo, unifiedConfiguration, userLock, moduleLock, dataCache, unified_url, getDatasetLumisAndFiles, getDatasetRuns, duplicateAnalyzer, invalidateFiles, findParent, do_html_in_each_module, phedex_url
 import phedexClient
 import dbs3Client
@@ -55,13 +55,6 @@ def checkor(url, spec=None, options=None):
     use_mcm = True
     up = componentInfo(soft=['mcm','wtc'])
     if not up.check(): return
-    #phedex check    
-    try:
-        print "checking on phedex"
-        cust = findCustodialLocation(phedex_url,'/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM')
-    except Exception as e:
-        print "fail phedex fail"
-        return   
 
     use_mcm = up.status['mcm']
 
@@ -990,9 +983,9 @@ class CheckBuster(threading.Thread):
             is_closing = False 
 
 
-        any_presence = {}
-        for output in wfi.request['OutputDatasets']:
-            any_presence[output] = getDatasetPresence(url, output, vetoes=[])
+        #any_presence = {}
+        #for output in wfi.request['OutputDatasets']:
+        #    any_presence[output] = getDatasetPresence(url, output, vetoes=[])
 
         time_point("checked dataset presence", sub_lap=True)
 
@@ -1301,13 +1294,13 @@ class CheckBuster(threading.Thread):
         time_point("determined tape location", sub_lap=True)
 
         ## disk copy 
-        disk_copies = {}
-        for output in wfi.request['OutputDatasets']:
-            disk_copies[output] = [s for s in any_presence[output] if (not 'MSS' in s) and (not 'Buffer' in s)]
+        #disk_copies = {}
+        #for output in wfi.request['OutputDatasets']:
+        #    disk_copies[output] = [s for s in any_presence[output] if (not 'MSS' in s) and (not 'Buffer' in s)]
 
-        if not all(map( lambda sites : len(sites)!=0, disk_copies.values())):
-            print wfo.name,"has not all output on disk"
-            print json.dumps(disk_copies, indent=2)
+        #if not all(map( lambda sites : len(sites)!=0, disk_copies.values())):
+        #    print wfo.name,"has not all output on disk"
+        #    print json.dumps(disk_copies, indent=2)
 
 
 
@@ -1348,7 +1341,7 @@ class CheckBuster(threading.Thread):
             rec['fractionpass'] = math.floor(fractions_pass.get(output,0)*10000)/100.
             rec['duplicate'] = duplications[output] if output in duplications else 'N/A'
             rec['closeOutDataset'] = is_closing
-            rec['transPerc'] = float('%.2f'%any_presence[output][ disk_copies[output][0]][1]) if len(disk_copies[output])!=0 else 'N/A'
+            #rec['transPerc'] = float('%.2f'%any_presence[output][ disk_copies[output][0]][1]) if len(disk_copies[output])!=0 else 'N/A'
             rec['correctLumis'] = int(events_per_lumi[output]) if (events_per_lumi[output] > lumi_upper_limit[output]) else True
             rec['dbsFiles'] = dbs_presence[output]
             rec['dbsInvFiles'] = dbs_invalid[output]
