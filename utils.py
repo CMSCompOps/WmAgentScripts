@@ -25,7 +25,6 @@ from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
 from email.Utils import COMMASPACE, formatdate
 from email.utils import make_msgid
-
 #
 ## add local python paths
 for p in ['/usr/lib64/python2.7/site-packages','/usr/lib/python2.7/site-packages']:
@@ -3673,7 +3672,28 @@ def getDatasetFileLocations(url, dataset):
     return dict( locations )
 
 
+def getDatasetFiles(url, dataset ,without_invalid=True ):
+    return runWithRetries(_getDatasetFiles, [url, dataset], {'without_invalid':without_invalid}, retries =5, wait=5)
+def _getDatasetFiles(url, dataset ,without_invalid=True ):
+    # VK TODO: can be replaced with list of files API
+    # JRV: done through getDatasetFileArray
+    #files = getDatasetFileArray( dataset, validFileOnly=without_invalid, detail=True)
+    #dbs_filenames = [f['logical_file_name'] for f in files]
 
+    #conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+
+    #r1=conn.request("GET",'/phedex/datasvc/json/prod/filereplicas?dataset=%s'%(dataset))
+    #r2=conn.getresponse()
+    #result = json.loads(r2.read())
+    #items=result['phedex']['block']
+    #phedex_filenames = []
+    #for block in items:
+    #    for f in block['file']:
+    #        phedex_filenames.append(f['name'])
+
+    #return dbs_filenames, phedex_filenames, list(set(dbs_filenames) - set(phedex_filenames)), list(set(phedex_filenames)-set(dbs_filenames))
+    return [],[],[],[]
 
 def getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None, sites=None, only_blocks=None):
     return runWithRetries(_getDatasetBlocksFraction, [url, dataset],{'complete':complete, 'group':group, 'vetoes':vetoes, 'sites':sites, 'only_blocks':only_blocks})
