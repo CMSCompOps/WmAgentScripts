@@ -23,7 +23,7 @@ from utils import closeoutInfo
 from showError import parse_one, showError_options
 import threading
 import sys
-
+from RucioClient import RucioClient
 def get_campaign(output, wfi):
     ## this should be a perfect matching of output->task->campaign
     campaign = None
@@ -1558,6 +1558,32 @@ class CheckBuster(threading.Thread):
                 if j and j_comment:
                     JC.comment(j.key,j_comment)
 
+
+def getDatasetFiles(url, dataset ,without_invalid=True ):
+    return runWithRetries(_getDatasetFiles, [url, dataset], {'without_invalid':without_invalid}, retries =5, wait=5)
+def _getDatasetFiles(url, dataset ,without_invalid=True ):
+    # VK TODO: can be replaced with list of files API
+    # JRV: done through getDatasetFileArray
+    files = getDatasetFileArray( dataset, validFileOnly=without_invalid, detail=True)
+    dbs_filenames = [f['logical_file_name'] for f in files]
+
+    #conn = make_x509_conn(url)
+    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+
+    #r1=conn.request("GET",'/phedex/datasvc/json/prod/filereplicas?dataset=%s'%(dataset))
+    #r2=conn.getresponse()
+    #result = json.loads(r2.read())
+    #items=result['phedex']['block']
+    #phedex_filenames = []
+    #for block in items:
+    #    for f in block['file']:
+    #        phedex_filenames.append(f['name'])
+
+    rucioClient = RucioClient()
+    rucio_filenames = rucioClient.getFileNamesDataset(dataset)
+
+    #return dbs_filenames, phedex_filenames, list(set(dbs_filenames) - set(phedex_filenames)), list(set(phedex_filenames)-set(dbs_filenames))
+    return dbs_filenames, rucio_filenames, list(set(dbs_filenames) - set(rucio_filenames)), list(set(rucio_filenames)-set(dbs_filenames))
 
 if __name__ == "__main__":
     url = reqmgr_url
