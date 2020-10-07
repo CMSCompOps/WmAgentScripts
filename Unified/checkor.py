@@ -1560,8 +1560,7 @@ class CheckBuster(threading.Thread):
 
 
 def getDatasetFiles(url, dataset ,without_invalid=True ):
-    return runWithRetries(_getDatasetFiles, [url, dataset], {'without_invalid':without_invalid}, retries =5, wait=5)
-def _getDatasetFiles(url, dataset ,without_invalid=True ):
+
     # VK TODO: can be replaced with list of files API
     # JRV: done through getDatasetFileArray
     files = getDatasetFileArray( dataset, validFileOnly=without_invalid, detail=True)
