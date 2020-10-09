@@ -349,7 +349,7 @@
       }, 
       "/MinBias_TuneCP5_14TeV-pythia8/Phase2HLTTDRWinter20GS-110X_mcRun4_realistic_v3_ext1-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_IT_CNAF"
+          "T1_RU_JINR"
         ]
       }
     }
