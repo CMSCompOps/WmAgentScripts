@@ -26,7 +26,8 @@ def assignor(url ,specific = None, talk=True, options=None):
     ###NLI = newLockInfo()
     ###if not NLI.free() and not options.go: return
     LI = lockInfo()
-    if not LI.free() and not options.go and not options.manual: return
+    #if not LI.free() and not options.go and not options.manual: return
+    if not options.go and not options.manual: return
 
     n_assigned = 0
     n_stalled = 0
