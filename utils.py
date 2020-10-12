@@ -790,11 +790,11 @@ def _lock_DDM(owner=None, lock=True, wait=True, timeout=None):
 class lockInfo:
     def __init__(self, andwrite=True):
         self.owner = "%s-%s"%(socket.gethostname(), os.getpid())
-        self.ddmlock = DynamoLock( owner = None, timeout = 10*60)
+        #self.ddmlock = DynamoLock( owner = None, timeout = 10*60)
         self.unifiedlock = UnifiedLock()
 
-    def free(self):
-        return self.ddmlock.free()
+    #def free(self):
+    #    return self.ddmlock.free()
         
     def release(self, item ):
         try:
