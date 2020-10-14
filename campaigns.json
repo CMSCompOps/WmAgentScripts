@@ -1817,7 +1817,7 @@
   }, 
   "RunIISummer20UL16GEN": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
@@ -2016,7 +2016,7 @@
   }, 
   "RunIISummer20UL16pLHEGENAPV": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
@@ -2107,7 +2107,7 @@
   }, 
   "RunIISummer20UL17GEN": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
@@ -2239,17 +2239,11 @@
     }, 
     "resize": "auto", 
     "secondaries": {
-      "/MinBias_TuneCP1_13TeV-pythia8/RunIISummer19UL18SIM-106X_upgrade2018_realistic_v11_L1v1-v2/GEN-SIM": {
+      " /MinBias_TuneCP5_13TeV-pythia8/RunIISummer20UL18SIM-106X_upgrade2018_realistic_v11_L1v1-v2/GEN-SIM": {
         "SiteWhitelist": [
-          "T2_FR_GRIF_IRFU"
+          "T1_IT_CNAF"
         ]
-      }, 
-      "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL18SIM-106X_upgrade2018_realistic_v4-v1/SIM": {
-        "SiteWhitelist": [
-          "T1_UK_RAL", 
-          "T2_US_Nebraska"
-        ]
-      }
+      } 
     }, 
     "secondary_AAA": false, 
     "tune": true
@@ -2369,7 +2363,7 @@
   }, 
   "RunIISummer20UL18pLHEGEN": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
