@@ -1770,10 +1770,6 @@
     "tune": true
   }, 
   "RunIISummer20UL16DIGIPremix": {
-    "SecondaryLocation": [
-      "T1_US_FNAL", 
-      "T2_CH_CERN"
-    ], 
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
@@ -1787,7 +1783,12 @@
     }, 
     "resize": "auto", 
     "secondaries": {
-      "/Neutrino_E-10_gun/RunIISummer19ULPrePremix-UL16_106X_mcRun2_asymptotic_v10-v2/PREMIX": {}
+      "/Neutrino_E-10_gun/RunIISummer20ULPrePremix-UL16_106X_mcRun2_asymptotic_v13-v1/PREMIX": {
+            "SecondaryLocation": [
+          "T1_US_FNAL",
+          "T2_CH_CERN"
+        ]
+      }
     }, 
     "secondary_AAA": true, 
     "tune": true
@@ -1806,7 +1807,7 @@
     }, 
     "resize": "auto", 
     "secondaries": {
-      "/Neutrino_E-10_gun/RunIISummer19ULPrePremix-UL16_106X_mcRun2_asymptotic_v10-v2/PREMIX": {
+      "/Neutrino_E-10_gun/RunIISummer20ULPrePremix-UL16_106X_mcRun2_asymptotic_v13-v1/PREMIX": {
         "SecondaryLocation": [
           "T1_US_FNAL", 
           "T2_CH_CERN"
