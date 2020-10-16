@@ -12,10 +12,6 @@
     }
   }, 
   "HINPbPbAutumn18DR": {
-    "SiteWhitelist": [
-      "T1_RU_JINR", 
-      "T1_FR_CCIN2P3"
-    ], 
     "custodial": "T1_FR_CCIN2P3_MSS", 
     "fractionpass": 0.95, 
     "go": true, 
@@ -76,10 +72,6 @@
       "T2_US_UCSD", 
       "T2_US_Wisconsin", 
       "T2_CH_CERN"
-    ], 
-    "SiteWhitelist": [
-      "T1_RU_JINR", 
-      "T1_FR_CCIN2P3"
     ], 
     "custodial": "T1_FR_CCIN2P3_MSS", 
     "fractionpass": 0.95, 
@@ -331,10 +323,6 @@
     "maxcopies": 1
   }, 
   "Phase2HLTTDRWinter20DIGI": {
-    "SiteWhitelist": [
-      "T1_DE_KIT", 
-      "T2_US_Florida"
-    ], 
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
@@ -545,10 +533,6 @@
     "resize": "auto"
   }, 
   "Run3Winter20DRMiniAOD": {
-    "SiteWhitelist": [
-      "T1_ES_PIC", 
-      "T1_US_FNAL"
-    ], 
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
@@ -955,15 +939,6 @@
     "tune": true
   }, 
   "RunIISummer16FSPremix": {
-    "SiteWhitelist": [
-      "T1_US_FNAL", 
-      "T1_IT_CNAF", 
-      "T1_UK_RAL", 
-      "T1_DE_KIT", 
-      "T2_US_Caltech", 
-      "T2_US_Nebraska", 
-      "T2_US_MIT"
-    ], 
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
@@ -972,7 +947,7 @@
     }, 
     "secondaries": {
       "/Neutrino_E-10_gun/RunIISummer16FSPremix-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v4-v1/GEN-SIM-DIGI-RAW": {
-        "SecondaryLocation": [
+        "SiteWhitelist": [
           "T2_US_Purdue", 
           "T1_DE_KIT"
         ], 
@@ -1100,10 +1075,6 @@
     "tune": true
   }, 
   "RunIISummer19UL16DIGI": {
-    "SiteWhitelist": [
-      "T1_US_FNAL", 
-      "T1_FR_CCIN2P3_Disk"
-    ], 
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
@@ -1133,10 +1104,6 @@
     "tune": true
   }, 
   "RunIISummer19UL16DIGIAPV": {
-    "SiteWhitelist": [
-      "T1_US_FNAL", 
-      "T1_FR_CCIN2P3"
-    ], 
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
@@ -1743,10 +1710,6 @@
     "tune": true
   }, 
   "RunIISummer20UL16DIGIAPV": {
-    "SiteWhitelist": [
-      "T1_US_FNAL", 
-      "T1_FR_CCIN2P3"
-    ], 
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
@@ -2499,12 +2462,6 @@
     "tune": true
   }, 
   "RunIIWinter19PFCalibDR": {
-    "SiteWhitelist": [
-      "T2_IT_Legnaro", 
-      "T1_FR_CCIN2P3", 
-      "T1_IT_CNAF", 
-      "T2_US_Florida"
-    ], 
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
@@ -2546,10 +2503,6 @@
     "maxcopies": 1
   }, 
   "RunIIpp5Spring18DR": {
-    "SiteWhitelist": [
-      "T2_US_MIT", 
-      "T2_DE_DESY"
-    ], 
     "custodial": "T1_FR_CCIN2P3_MSS", 
     "fractionpass": 0.95, 
     "go": true, 
