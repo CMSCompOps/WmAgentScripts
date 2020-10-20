@@ -31,7 +31,7 @@
 */25 * 1-31 * * vocms0272 /data/unified/WmAgentScripts/runerrorcycle.sh &> /dev/null
 */15 */2 1-31 * * vocms0272 /data/unified/WmAgentScripts/toperrorcycle.sh &> /dev/null
 #*/5 * 1-31 * * vocms0269 /data/unified/WmAgentScripts/logscycle.sh &> /dev/null
-1,31 * * * * vocms0269 /data/unified/WmAgentScripts/inputscycle.sh &> /dev/null
+#1,31 * * * * vocms0269 /data/unified/WmAgentScripts/inputscycle.sh &> /dev/null
 ## announce stuff
 00 10 * * 1 vocms0272 /data/unified/WmAgentScripts/cWrap.sh Unified/messagor.py
 ## Monitoring
