@@ -790,11 +790,11 @@ def _lock_DDM(owner=None, lock=True, wait=True, timeout=None):
 class lockInfo:
     def __init__(self, andwrite=True):
         self.owner = "%s-%s"%(socket.gethostname(), os.getpid())
-        self.ddmlock = DynamoLock( owner = None, timeout = 10*60)
+        #self.ddmlock = DynamoLock( owner = None, timeout = 10*60)
         self.unifiedlock = UnifiedLock()
 
-    def free(self):
-        return self.ddmlock.free()
+    #def free(self):
+    #    return self.ddmlock.free()
         
     def release(self, item ):
         try:
@@ -1266,7 +1266,7 @@ class eosFile(object):
                 else:
                     time.sleep(30)
         h = socket.gethostname()
-        msg = 'eos is acting up on %s on %s. not able to copy %s to eos \n%s'%( h, time.asctime(), self.eos_filename, str(e))
+        msg = 'eos is acting up on %s on %s. not able to copy %s to eos'%( h, time.asctime(), self.eos_filename)
         sendEmail('eosFile',msg)
         print(msg)
         return False
@@ -2173,7 +2173,8 @@ class siteInfo:
         self.sites_veto_transfer = []  ## do not prevent any transfer by default
 
         ## new site lists for better matching
-        self.sites_with_goodAAA = self.sites_with_goodIO + add_on_good_aaa
+        self.sites_with_goodAAA = UC.get('sites_with_goodAAA')
+        self.sites_with_goodAAA = self.sites_with_goodAAA + add_on_good_aaa
         self.sites_with_goodAAA = list(set([ s for s in self.sites_with_goodAAA if s in self.sites_ready]))
 
 
@@ -3676,22 +3677,23 @@ def getDatasetFiles(url, dataset ,without_invalid=True ):
 def _getDatasetFiles(url, dataset ,without_invalid=True ):
     # VK TODO: can be replaced with list of files API
     # JRV: done through getDatasetFileArray
-    files = getDatasetFileArray( dataset, validFileOnly=without_invalid, detail=True)
-    dbs_filenames = [f['logical_file_name'] for f in files]
+    #files = getDatasetFileArray( dataset, validFileOnly=without_invalid, detail=True)
+    #dbs_filenames = [f['logical_file_name'] for f in files]
 
-    conn = make_x509_conn(url)
+    #conn = make_x509_conn(url)
     #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
 
-    r1=conn.request("GET",'/phedex/datasvc/json/prod/filereplicas?dataset=%s'%(dataset))
-    r2=conn.getresponse()
-    result = json.loads(r2.read())
-    items=result['phedex']['block']
-    phedex_filenames = []
-    for block in items:
-        for f in block['file']:
-            phedex_filenames.append(f['name'])
+    #r1=conn.request("GET",'/phedex/datasvc/json/prod/filereplicas?dataset=%s'%(dataset))
+    #r2=conn.getresponse()
+    #result = json.loads(r2.read())
+    #items=result['phedex']['block']
+    #phedex_filenames = []
+    #for block in items:
+    #    for f in block['file']:
+    #        phedex_filenames.append(f['name'])
 
-    return dbs_filenames, phedex_filenames, list(set(dbs_filenames) - set(phedex_filenames)), list(set(phedex_filenames)-set(dbs_filenames))
+    #return dbs_filenames, phedex_filenames, list(set(dbs_filenames) - set(phedex_filenames)), list(set(phedex_filenames)-set(dbs_filenames))
+    return [],[],[],[]
 
 def getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None, sites=None, only_blocks=None):
     return runWithRetries(_getDatasetBlocksFraction, [url, dataset],{'complete':complete, 'group':group, 'vetoes':vetoes, 'sites':sites, 'only_blocks':only_blocks})
@@ -6549,7 +6551,7 @@ class workflowInfo:
         nersc_archs=set(['slc6_amd64_gcc530','slc6_amd64_gcc630'])
         good = (self.request['RequestType'] == 'StepChain' or no_step)  and self.request['RequestPriority'] <= 85000 and len(set(self.request['ScramArch'])&nersc_archs)>=1
         io = _,prim,_,sec = self.getIO()
-        if self.heavyRead(): good=False
+        if self.heavyRead(sec): good=False
         if prim: good = False
         #if sec: good = False
         ## should be of significant size. how do we check that ???
@@ -7339,13 +7341,11 @@ class workflowInfo:
                         max_blow_up = blow_up
             return (min_child_job_per_event, root_job_per_event, max_blow_up)
         return (1.,1.,1.)
-    def heavyRead(self):
-        ## this is an add-hoc way of doing this. True by default. False if "premix" appears in the output datasets or in the campaigns
-        response = True
-        if any(['premix' in c.lower() for c in self.getCampaigns()]):
-            response = False
-        if any(['premix' in o.lower() for o in self.request['OutputDatasets']]):
-            response = False
+    def heavyRead(self,secondary):
+        ## Fasle by default. True if "minbias" appears in the secondary
+        response = False
+        if any(['minbias' in c.lower() for c in secondary]):
+            response = True
         return response
     
     def producePremix(self):
@@ -7361,10 +7361,12 @@ class workflowInfo:
         if lheinput:
             sites_allowed = sorted(SI.sites_eos) #['T2_CH_CERN'] ## and that's it
         elif secondary:
-            if self.heavyRead():
+            if self.heavyRead(secondary):
                 sites_allowed = sorted(set(SI.sites_T0s + SI.sites_T1s + SI.sites_with_goodIO))
+                print "Reading minbias"
             else:
                 sites_allowed = sorted(set(SI.sites_T0s + SI.sites_T1s + SI.sites_with_goodAAA))
+                print "Reading premix"
         elif primary:
             sites_allowed =sorted(set(SI.sites_T0s + SI.sites_T1s + SI.sites_T2s))# + SI.sites_T3s))
         else:

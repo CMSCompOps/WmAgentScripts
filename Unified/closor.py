@@ -8,7 +8,7 @@ import json
 import time
 import sys
 import os
-from utils import getDatasetEventsAndLumis, campaignInfo, getDatasetPresence, findLateFiles, updateSubscription, getWorkflowByCampaign
+from utils import getDatasetEventsAndLumis, campaignInfo, getDatasetPresence, getWorkflowByCampaign
 from htmlor import htmlor
 from collections import defaultdict
 import reqMgrClient
@@ -21,7 +21,8 @@ from JIRAClient import JIRAClient
 from campaignAPI import deleteCampaignConfig
 
 
-def spawn_harvesting(url, wfi , in_full):
+#def spawn_harvesting(url, wfi , in_full):
+def spawn_harvesting(url, wfi , sites_for_DQMHarvest):
     SI = global_SI()
 
     all_OK = {}
@@ -36,10 +37,10 @@ def spawn_harvesting(url, wfi , in_full):
 
         wfi = workflowInfo(url, wfi.request['RequestName'])
         dqms = [out for out in outputs if '/DQM' in out]
-        if not all([in_full[dqm_input] for dqm_input in dqms]):
-            wfi.sendLog('closor',"will not be able to assign the harvesting: holding up")
-            for dqm_input in dqms:
-                all_OK[dqm_input] = False
+        #if not all([in_full[dqm_input] for dqm_input in dqms]):
+        #    wfi.sendLog('closor',"will not be able to assign the harvesting: holding up")
+        #    for dqm_input in dqms:
+        #        all_OK[dqm_input] = False
                 ## raise the subscription to high priority
 
         for dqm_input in dqms:
@@ -112,14 +113,15 @@ def spawn_harvesting(url, wfi , in_full):
                     'ProcessingVersion' : wfi.request['ProcessingVersion'],
                     'execute' : True
                     }
-                if in_full[dqm_input]:
-                    print "using full copy at",in_full[dqm_input]
-                    parameters['SiteWhitelist'] = [SI.SE_to_CE(se) for se in in_full[dqm_input]]
-                else:
-                    print "cannot do anything if not having a full copy somewhere"
+                #if in_full[dqm_input]:
+                #    print "using full copy at",in_full[dqm_input]
+                #    parameters['SiteWhitelist'] = [SI.SE_to_CE(se) for se in in_full[dqm_input]]
+                #else:
+                #    print "cannot do anything if not having a full copy somewhere"
                     
-                    all_OK[dqm_input]=False
-                    continue
+                #    all_OK[dqm_input]=False
+                #    continue
+                parameters['SiteWhitelist'] = sites_for_DQMHarvest
 
                 result = reqMgrClient.assignWorkflow(url, harvest_request, team, parameters)
                 if not result:
@@ -438,37 +440,42 @@ class CloseBuster(threading.Thread):
 
 
         ## check for at least one full copy prior to moving on
-        in_full = {}
+        #in_full = {}
         for out in outputs:
-            in_full[out] = []
-            presence = getDatasetPresence( url, out )
-            where = [site for site,info in presence.items() if info[0]]
-            if where:
-                all_OK[out] = True
-                print out,"is in full at",",".join(where)
-                in_full[out] = copy.deepcopy(where)
-            else:
+            all_OK[out] = True
+            #in_full[out] = []
+            #presence = getDatasetPresence( url, out )
+            #where = [site for site,info in presence.items() if info[0]]
+            #if where:
+            #    all_OK[out] = True
+            #    print out,"is in full at",",".join(where)
+            #    in_full[out] = copy.deepcopy(where)
+            #else:
 
-                going_to = wfi.request['NonCustodialSites']+wfi.request['CustodialSites']
-                wfi.sendLog('closor',"%s is not in full anywhere. send to %s"%(out, ",".join(sorted(going_to))))
-                at_destination = dict([(k,v) for (k,v) in presence.items() if k in going_to])
-                else_where = dict([(k,v) for (k,v) in presence.items() if not k in going_to])
-                print json.dumps( at_destination )
-                print json.dumps( else_where, indent=2 )
+            #    going_to = wfi.request['NonCustodialSites']+wfi.request['CustodialSites']
+            #    wfi.sendLog('closor',"%s is not in full anywhere. send to %s"%(out, ",".join(sorted(going_to))))
+            #    at_destination = dict([(k,v) for (k,v) in presence.items() if k in going_to])
+            #    else_where = dict([(k,v) for (k,v) in presence.items() if not k in going_to])
+            #    print json.dumps( at_destination )
+            #    print json.dumps( else_where, indent=2 )
                 ## do the full stuck transfer study, missing files and shit !
-                for there in going_to:
-                    late_info = findLateFiles(url, out, going_to = there )
-                    for l in late_info:
-                        l.update({"workflow":wfo.name,"dataset":out})
-                    self.all_late_files.extend( late_info )
-                if check_fullcopy_to_announce:
+                #for there in going_to:
+                #    late_info = findLateFiles(url, out, going_to = there )
+                #    for l in late_info:
+                #        l.update({"workflow":wfo.name,"dataset":out})
+                #    self.all_late_files.extend( late_info )
+            #    if check_fullcopy_to_announce:
                     ## only set this false if the check is relevant
-                    all_OK[out] = False
+            #        all_OK[out] = False
 
     
         ## verify if we have to do harvesting
         if not options.no_harvest and not jump_the_line:
-            (OK, requests) = spawn_harvesting(url, wfi, in_full)
+            #(OK, requests) = spawn_harvesting(url, wfi, in_full)
+            sites_for_DQMHarvest = UC.get("sites_for_DQMHarvest")
+            (OK, requests) = spawn_harvesting(url, wfi, sites_for_DQMHarvest)
+            print "Harvesting workflow has been created and assigned to: "
+            print sites_for_DQMHarvest
             all_OK.update( OK )
 
         ## only that status can let me go into announced

@@ -602,6 +602,7 @@ def equalizor(url , specific = None, options=None):
                     new_list = list(set(SI.sites_ready)&set(wfi.request['SiteWhitelist']))
                     modifications[wfo.name][task.pathName] = { "ReplaceSiteWhitelist" : new_list }
 
+            """
             if campaign in PREMIX_overflow:
                 ## figure out secondary location and neighbors
                 ## figure out primary presence and neighbors
@@ -798,6 +799,8 @@ def equalizor(url , specific = None, options=None):
                     else:
                         modifications[wfo.name][task.pathName] = { "AddWhitelist" : augment_to }
 
+            """
+
             ### rule to avoid the issue of taskchain secondary jobs being stuck at sites processing the initial step
             if campaign in LHE_overflow:
                 ## this is a rule for very light/no input to the job.
@@ -816,7 +819,7 @@ def equalizor(url , specific = None, options=None):
                 extend_to = set( LHE_overflow[campaign]) & neighboring_ces ## at the intersection
                 
 
-                if wfi.heavyRead():
+                if wfi.heavyRead(sec):
                     needs = False
                     needs_overide = False
 
@@ -832,40 +835,9 @@ def equalizor(url , specific = None, options=None):
                                                                }
                     altered_tasks.add( task.pathName )
                 else:
-                    wfi.sendLog('equalizor','%s of %s is running %d and pending %d. no light overflow'%( task_name, wfo.name, running, idled))
+                    wfi.sendLog('equalizor','%s of %s is running %d and pending %d. no light overflow'%( task_name, wfo.name, running, idled))   
 
-                """
-                if task.taskType in ['Processing']: ## this is for a task processing some input
-                    needs, task_name, running, idled = needs_action(wfi, task)
-                    needs_overide = overide_from_agent( wfi, needs_overide)
-                    extend_to = list(set(copy.deepcopy( LHE_overflow[campaign] )))
-                    if stay_within_site_whitelist:
-                        extend_to = list(set(extend_to) & set(wfi.request['SiteWhitelist'])) ## restrict to stupid-site-whitelist
-                    extend_to = list(set(extend_to) & set(SI.sites_ready + force_sites))
-
-                    if is_chain:
-                        print "further restricting to initially allowed sites"
-                        ## restrict to initial allowed sites
-                        extend_to = list(set(extend_to) & set(sites_allowed))
-
-                    if not extend_to: 
-                        print "Nowhere to extend to"
-                        continue
-                    if extend_to and needs or needs_overide:
-                        
-                        modifications[wfo.name][task.pathName] = { "ReplaceSiteWhitelist" : extend_to ,"Running" : running, "Pending" : idled, "Priority" : wfi.request['RequestPriority']}
-                        wfi.sendLog('equalizor','%s of %s is running %d and pending %d, taking action : ReplaceSiteWhitelist \n %s'%( task_name,
-                                                                                                                                      wfo.name,
-                                                                                                                                      running,
-                                                                                                                                      idled ,
-                                                                                                                                      json.dumps( sorted(modifications[wfo.name][task.pathName]['ReplaceSiteWhitelist']))))
-
-                        altered_tasks.add( task.pathName )
-                    else:
-                        wfi.sendLog('equalizor','%s of %s is running %d and pending %d'%( task_name, wfo.name, running, idled))
-                """     
-
-
+            """
             ### overflow the 76 digi-reco to the site holding the pileup
             if campaign in PU_overflow:
                 force = PU_overflow[campaign]['force'] if 'force' in PU_overflow[campaign] else False
@@ -939,6 +911,7 @@ def equalizor(url , specific = None, options=None):
                                                                                                                     json.dumps( sorted(augment_by), indent=2 )))
                     else:
                         print task_name,"of",wfo.name,"running",running,"and pending",idled
+            """
 
             ### overflow the skims back to multi-core 
             if campaign in ['Run2015D','Run2015C_25ns'] and task.taskType =='Skim':

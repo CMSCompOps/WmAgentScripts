@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from assignSession import *
-from utils import getWorkflows, getWorkflowById, getWorkLoad, componentInfo, sendEmail, workflowInfo, sendLog, reqmgr_url, getDatasetStatus, unifiedConfiguration, moduleLock, do_html_in_each_module, getDatasetFiles
+from utils import getWorkflows, getWorkflowById, getWorkLoad, componentInfo, sendEmail, workflowInfo, sendLog, reqmgr_url, getDatasetStatus, unifiedConfiguration, moduleLock, do_html_in_each_module
 import sys
 import copy
 import os
@@ -91,11 +91,11 @@ def injector(url, options, specific):
                 #    closeAllBlocks(url, d)
 
                 ## check for any file in phedex, to verify existence
-                _,ph_files,_,_ = getDatasetFiles(url, d)
-                if not ph_files and not ( 'StoreResults' == wfi.request.setdefault('RequestType',None) ):
-                    wfi.sendLog('injector',"One of the input has no file in phedex: %s" % d )
-                    sendLog('injector',"One of the input has no file in phedex: %s"% d, level='critical')
-                    can_add = False
+                #_,ph_files,_,_ = getDatasetFiles(url, d)
+                #if not ph_files and not ( 'StoreResults' == wfi.request.setdefault('RequestType',None) ):
+                #    wfi.sendLog('injector',"One of the input has no file in phedex: %s" % d )
+                #    sendLog('injector',"One of the input has no file in phedex: %s"% d, level='critical')
+                #    can_add = False
 
             ### ban some workflow that you don't like anymore
             #outputs = wfi.request['OutputDatasets']
