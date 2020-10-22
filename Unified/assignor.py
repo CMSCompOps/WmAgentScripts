@@ -281,7 +281,19 @@ def assignor(url ,specific = None, talk=True, options=None):
         #        sendLog('assignor','%s has no whitelist'% wfo.name, level='critical')
         #    n_stalled+=1
         #    continue
-
+        
+        #check PU sitewhitelist overlap with sitewhitelist
+        minbias_site=[]
+        for campaign in wfh.getCampaigns():
+            if campaign in CI.campaigns and 'secondaries' in CI.campaigns[campaign]:
+                tem_sec=CI.campaigns[campaign]['secondaries']
+                for sec in secondary:
+                    if ['minbias' in sec.lower()] and [sec in tem_sec] and ['SiteWhitelist' in tem_sec[sec]]:
+                       for site in tem_sec[sec]['SiteWhitelist']:
+                           minbias_site.append(site)
+        if minbias_site and not bool(set(minbias_site) & set(sites_allowed)):
+            wfh.sendLog('assignor',"minbias located sites not available %s"%sorted(minbias_site))
+            continue
 
         low_pressure = SI.sites_low_pressure(0.4)
         ## if any of the site allowed is low pressure : reduce to 1 copy so that it gets started
