@@ -114,11 +114,6 @@ def assignor(url ,specific = None, talk=True, options=None):
         ## the site whitelist takes into account siteInfo, campaignInfo, memory and cores
         (lheinput,primary,parent,secondary, sites_allowed) = wfh.getSiteWhiteList()
 
-        # Include HEPCloud sites in the sitewhitelist of non-classical-mixing StepChain requests
-        hepcloud_sites = UC.get('HEPCloud_sites')
-        if wfh.request['RequestType'] == 'StepChain' and not wfh.heavyRead(secondary):
-            sites_allowed += hepcloud_sites
-            wfh.sendLog('assignor',"Include HEPCloud in the sitewhitelist of %s"%wfo.name)
 
 
         output_tiers = list(set([o.split('/')[-1] for o in wfh.request['OutputDatasets']]))
