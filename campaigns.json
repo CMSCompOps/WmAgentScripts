@@ -2227,7 +2227,9 @@
   }, 
   "RunIISummer20UL18DIGIPremix": {
     "SecondaryLocation": [
-      "T1_IT_CNAF"
+      "T1_IT_CNAF",
+      "T1_US_FNAL",
+      "T2_CH_CERN"
     ], 
     "fractionpass": 0.95, 
     "go": true, 
