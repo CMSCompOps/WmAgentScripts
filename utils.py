@@ -3592,9 +3592,11 @@ def try_checkTransferStatus(url, xfer_id, nocollapse=False):
     return completions
 
 def findCustodialCompletion(url, dataset):
-    return findCustodialLocation(url, dataset, True)
+    pass
+#    return findCustodialLocation(url, dataset, True)
 
 def findCustodialLocation(url, dataset, with_completion=False):
+    pass
     conn = make_x509_conn(url)
     #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     r1=conn.request("GET",'/phedex/datasvc/json/prod/blockreplicas?dataset=%s'%(dataset))
@@ -3699,6 +3701,7 @@ def _getDatasetFiles(url, dataset ,without_invalid=True ):
     return [],[],[],[]
 
 def getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None, sites=None, only_blocks=None):
+    pass
     return runWithRetries(_getDatasetBlocksFraction, [url, dataset],{'complete':complete, 'group':group, 'vetoes':vetoes, 'sites':sites, 'only_blocks':only_blocks})
 def _getDatasetBlocksFraction(url, dataset, complete='y', group=None, vetoes=None, sites=None, only_blocks=None):
     ###count how manytimes a dataset is replicated < 100%: not all blocks > 100% several copies exis
@@ -4197,6 +4200,7 @@ def getUnsubscribedBlocks(url, site):
 
 
 def getDatasetBlockAndSite( url, dataset, group=None,vetoes=None,complete=None):
+    pass
     return runWithRetries( try_getDatasetBlockAndSite, [url, dataset], {'group':group, 'vetoes':vetoes, 'complete':complete}, default=None)
 
 def try_getDatasetBlockAndSite( url, dataset, group=None,vetoes=None,complete=None):
@@ -4231,6 +4235,7 @@ def try_getDatasetBlockAndSite( url, dataset, group=None,vetoes=None,complete=No
     return dict(blocks_at_sites)
 
 def getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=None, vetoes=None, within_sites=None):
+    pass
     try:
         return try_getDatasetPresence( url, dataset, complete, only_blocks, group, vetoes, within_sites)
     except Exception as e:
@@ -5208,6 +5213,7 @@ def updateSubscription(url, site, item, priority=None, user_group=None, suspend=
     return response
 
 def allCompleteToAnaOps(url, dataset):
+    pass
     subs = getSubscriptions(url, dataset)
     for dataset in subs['dataset']:
         for sub in dataset['subscription']:
