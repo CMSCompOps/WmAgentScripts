@@ -2537,8 +2537,7 @@
     "secondaries": {
       "/MinBias_TuneCUETP8M1_2017_5p02TeV-pythia8/RunIIpp5Spring18GS-94X_mc2017_realistic_v10For2017G_v3-v2/GEN-SIM": {
         "SiteWhitelist": [
-          "T2_US_MIT", 
-          "T2_DE_DESY"
+          "T2_US_MIT"
         ]
       }, 
       "/MinBias_TuneCUETP8M1_5p02TeV-pythia8/HINppWinter17GS-92X_upgrade2017_realistic_v11-v1/GEN-SIM": {
