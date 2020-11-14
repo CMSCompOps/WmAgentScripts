@@ -7370,20 +7370,20 @@ class workflowInfo:
             else:
                 sites_allowed = sorted(set(SI.sites_T0s + SI.sites_T1s + SI.sites_with_goodAAA))
                 if self.request['RequestType'] == 'StepChain':
-                    sites_allowed += SI.HEPCloud_sites
+                    sites_allowed = sorted(set(sites_allowed + SI.HEPCloud_sites))
                     print "Include HEPCloud in the sitewhitelist of ",self.request['RequestName']
                 print "Reading premix"
         elif primary:
             sites_allowed =sorted(set(SI.sites_T0s + SI.sites_T1s + SI.sites_T2s))# + SI.sites_T3s))
             if self.request['RequestType'] == 'StepChain':
-                    sites_allowed += SI.HEPCloud_sites
+                    sites_allowed = sorted(set(sites_allowed + SI.HEPCloud_sites))
                     print "Include HEPCloud in the sitewhitelist of ",self.request['RequestName']
         else:
             # no input at all
             ## all site should contribute
             sites_allowed =sorted(set( SI.sites_T0s + SI.sites_T2s + SI.sites_T1s))# + SI.sites_T3s ))
             if self.request['RequestType'] == 'StepChain':
-                    sites_allowed += SI.HEPCloud_sites
+                    sites_allowed = sorted(set(sites_allowed + SI.HEPCloud_sites))
                     print "Include HEPCloud in the sitewhitelist of ",self.request['RequestName']
         if pickone:
             sites_allowed = sorted([SI.pick_CE( sites_allowed )])
