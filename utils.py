@@ -7440,13 +7440,13 @@ class workflowInfo:
         print("Removing sites due to {} MB and {} core(s) requirements: {}".format(mem, ncores, sorted(sorted(sites_removed))))
 
         ## check on CC7 compatibility
-        archs = self.getArchs()
-        arch_allowed = SI.sitesByArchs( archs )
-        if not arch_allowed is None:
-            sites_removed = list(set(sites_allowed) - set(arch_allowed))
-            sites_allowed = list(set(arch_allowed) & set(sites_allowed))
-            print("[INFO] Sites allowing {}: {}".format(archs, sorted(list(arch_allowed))))
-            print "Reducing the whitelist to sites allowing",archs,". Removing ",sorted(sites_removed)
+        #archs = self.getArchs()
+        #arch_allowed = SI.sitesByArchs( archs )
+        #if not arch_allowed is None:
+        #    sites_removed = list(set(sites_allowed) - set(arch_allowed))
+        #    sites_allowed = list(set(arch_allowed) & set(sites_allowed))
+        #    print("[INFO] Sites allowing {}: {}".format(archs, sorted(list(arch_allowed))))
+        #    print "Reducing the whitelist to sites allowing",archs,". Removing ",sorted(sites_removed)
         print("After all of these, allowing: {}".format(sorted(sites_allowed)))
         return (lheinput,primary,parent,secondary,sites_allowed)
 
