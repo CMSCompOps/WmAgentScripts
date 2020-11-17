@@ -1773,7 +1773,7 @@ class docCache:
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(os.popen('curl --retry 5 -s http://cms-gwmsmon.cern.ch/poolview/json/totals').read()),
+            'getter' : lambda : json.loads(os.popen('curl --retry 5 -s https://cms-gwmsmon.cern.ch/poolview/json/totals').read()),
             'cachefile' : None,
             'default' : {}
             }
@@ -1781,7 +1781,7 @@ class docCache:
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(os.popen('curl --retry 5 -s http://cms-gwmsmon.cern.ch/poolview/json/summary').read()),
+            'getter' : lambda : json.loads(os.popen('curl --retry 5 -s https://cms-gwmsmon.cern.ch/poolview/json/summary').read()),
             'cachefile' : None,
             'default' : {}
             }
@@ -1797,7 +1797,7 @@ class docCache:
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(os.popen('curl --retry 5 -s http://cms-gwmsmon.cern.ch/prodview//json/site_summary').read()),
+            'getter' : lambda : json.loads(os.popen('curl --retry 5 -s https://cms-gwmsmon.cern.ch/prodview//json/site_summary').read()),
             'cachefile' : None,
             'default' : {}
             }
@@ -1813,7 +1813,7 @@ class docCache:
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
             'expiration' : default_expiration(),
-            'getter' : lambda : json.loads(os.popen('curl --retry 5 -s http://cms-gwmsmon.cern.ch/prodview//json/maxusedcpus').read()),
+            'getter' : lambda : json.loads(os.popen('curl --retry 5 -s https://cms-gwmsmon.cern.ch/prodview//json/maxusedcpus').read()),
             'cachefile' : None,
             'default' : {}
             }
@@ -7200,7 +7200,7 @@ class workflowInfo:
 
     def getGlideMon(self):
         try:
-            gmon = json.loads(os.popen('curl -s http://cms-gwmsmon.cern.ch/prodview/json/%s/summary'%self.request['RequestName']).read())
+            gmon = json.loads(os.popen('curl -s https://cms-gwmsmon.cern.ch/prodview/json/%s/summary'%self.request['RequestName']).read())
             return gmon
         except:
             print "cannot get glidemon info",self.request['RequestName']
