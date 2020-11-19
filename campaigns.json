@@ -672,8 +672,7 @@
   }, 
   "RunIIAutumn18DRPremix": {
     "SecondaryLocation": [
-      "T1_US_FNAL", 
-      "T2_CH_CERN"
+      "T1_US_FNAL"
     ], 
     "fractionpass": 0.95, 
     "go": true, 
@@ -749,8 +748,7 @@
   }, 
   "RunIIFall17DRPremix": {
     "SecondaryLocation": [
-      "T1_US_FNAL", 
-      "T2_CH_CERN"
+      "T1_US_FNAL"
     ], 
     "fractionpass": 0.95, 
     "go": true, 
@@ -958,8 +956,7 @@
       "90000": 0.9
     }, 
     "SecondaryLocation": [
-      "T1_US_FNAL", 
-      "T2_CH_CERN"
+      "T1_US_FNAL"
     ], 
     "force-complete": 0.99, 
     "force-timeout": 7, 
@@ -1181,8 +1178,7 @@
   }, 
   "RunIISummer19UL16DIGIPremix": {
     "SecondaryLocation": [
-      "T1_US_FNAL", 
-      "T2_CH_CERN"
+      "T1_US_FNAL"
     ], 
     "fractionpass": 0.95, 
     "go": true, 
@@ -1211,8 +1207,7 @@
     "secondaries": {
       "/Neutrino_E-10_gun/RunIISummer19ULPrePremix-UL16_106X_mcRun2_asymptotic_v10-v2/PREMIX": {
         "SecondaryLocation": [
-          "T1_US_FNAL", 
-          "T2_CH_CERN"
+          "T1_US_FNAL"
         ]
       }
     }, 
@@ -1470,8 +1465,7 @@
   }, 
   "RunIISummer19UL17DIGIPremix": {
     "SecondaryLocation": [
-      "T1_US_FNAL", 
-      "T2_CH_CERN"
+      "T1_US_FNAL"
     ], 
     "fractionpass": 0.95, 
     "go": true, 
