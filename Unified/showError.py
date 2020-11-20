@@ -345,9 +345,8 @@ def parse_one(url, wfn, options=None):
     if r_type in ['ReReco']:
         html += '<a href=../datalumi/lumi.%s.html>Lumisection Summary</a>, '% wfi.request['PrepID']
     html += '<a href="https://its.cern.ch/jira/issues/?jql=text~%s AND project = CMSCOMPPR" target="_blank">jira</a>, '% (wfi.request['PrepID'])
-    html += '<a href="https://vocms0113.cern.ch/seeworkflow2/?workflow=%s">console</a>,'% wfn
-    #html += '<a href="http://vocms0276.cern.ch/tasks?page=1&filter=%s">new console</a>,'% wfn
-    #html += '<a href="http://wc-dev.cern.ch/tasks?page=1&filter=%s">dev console</a>'% wfn
+    html += '<a href="https://vocms0113.cern.ch/seeworkflow2/?workflow=%s">old console</a>,'% wfn
+    html += '<a href="%s/seeworkflow2/?workflow=%s">new console</a>,'% (wfn, UC.get('acdc_console_url'))
     html+='<hr>'
     html += '<a href=#IO>I/O</a>, <a href=#ERROR>Errors</a>, <a href=#BLOCK>blocks</a>, <a href=#FILE>files</a>, <a href=#CODES>Error codes</a><br>'
     html+='<hr>'
