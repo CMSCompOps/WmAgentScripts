@@ -420,5 +420,9 @@
   "HEPCloud_sites": {
     "value" : ["T3_US_NERSC","T3_US_PSC","T3_US_SDSC","T3_US_TACC"],
     "description" : "HEPCloud sites"
+  },
+  "acdc_console_url": {
+    "value" : "https://vocms0113.cern.ch",
+    "description" : "Base url to the ACDC console"
   }
 }
