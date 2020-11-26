@@ -15,8 +15,8 @@ class wtcClient(object):
         self._make_conn()
 
     def _make_conn(self):
-        self.conn = httplib.HTTPSConnection(self.key_info['url'], self.key_info['port'],
-                                            context=ssl._create_unverified_context())
+        #self.conn = httplib.HTTPSConnection(self.key_info['url'], self.key_info['port'],context=ssl._create_unverified_context())
+        self.conn = httplib.HTTPConnection(self.key_info['url'], self.key_info['port'])
         
     def check(self):
         ## get something from the machine
