@@ -422,7 +422,7 @@
     "description" : "HEPCloud sites"
   },
   "acdc_console_url": {
-    "value" : "https://workflowrecovery.cern.ch",
+    "value" : "https://wfrecovery.cern.ch",
     "description" : "Base url to the ACDC console"
   }
 }
