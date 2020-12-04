@@ -1694,7 +1694,7 @@
   }, 
   "RunIISummer19UL18NanoAODv2": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
   }, 
@@ -2160,7 +2160,7 @@
   }, 
   "RunIISummer20UL16wmLHENanoGEN": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
@@ -2466,7 +2466,7 @@
   }, 
   "RunIISummer20UL18NanoAODv2": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
