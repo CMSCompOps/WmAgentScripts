@@ -295,7 +295,7 @@
     "maxcopies": 1
   }, 
   "NanoAODUL16Data": {
-    "fractionpass": 0.95, 
+    "fractionpass": 1, 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
@@ -310,7 +310,7 @@
     "tune": true
   }, 
   "NanoAODUL17Data": {
-    "fractionpass": 0.95, 
+    "fractionpass": 1, 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
@@ -325,7 +325,7 @@
     "tune": true
   }, 
   "NanoAODUL18Data": {
-    "fractionpass": 0.95, 
+    "fractionpass": 1, 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
