@@ -2188,8 +2188,7 @@
         "pending": 0
       }
     }, 
-    "resize": "auto", 
-    "secondary_AAA": false, 
+    "resize": "auto",  
     "tune": true
   }, 
   "RunIISummer20UL16wmLHEGEN": {
