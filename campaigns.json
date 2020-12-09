@@ -283,6 +283,24 @@
     }, 
     "resize": "auto", 
     "tune": true
+  },
+  "MiniAODUL16Data": {
+    "go": false,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "resize": "auto"
+  },
+  "MiniAODUL17Data": {
+    "go": false,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "resize": "auto"
+  },
+  "MiniAODUL18Data": {
+    "go": false,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "resize": "auto"
   }, 
   "NANOAODRun2DataProd": {
     "go": true, 
@@ -294,8 +312,7 @@
     "lumisize": -1, 
     "maxcopies": 1
   }, 
-  "NanoAODUL16Data": {
-    "fractionpass": 0.95, 
+  "NanoAODUL16Data": { 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
@@ -309,8 +326,7 @@
     "resize": "auto", 
     "tune": true
   }, 
-  "NanoAODUL17Data": {
-    "fractionpass": 0.95, 
+  "NanoAODUL17Data": { 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
@@ -324,8 +340,7 @@
     "resize": "auto", 
     "tune": true
   }, 
-  "NanoAODUL18Data": {
-    "fractionpass": 0.95, 
+  "NanoAODUL18Data": { 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
@@ -522,8 +537,7 @@
     "maxcopies": 1, 
     "resize": "auto"
   }, 
-  "Run3Summer19NanoAOD": {
-    "fractionpass": 0.95, 
+  "Run3Summer19NanoAOD": { 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
@@ -721,19 +735,16 @@
     "resize": "auto"
   }, 
   "RunIIAutumn18NanoAODv5": {
-    "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
   }, 
   "RunIIAutumn18NanoAODv6": {
-    "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
   }, 
   "RunIIAutumn18NanoAODv7": {
-    "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
@@ -836,20 +847,17 @@
     "maxcopies": 1, 
     "resize": "auto"
   }, 
-  "RunIIFall17NanoAODv5": {
-    "fractionpass": 0.95, 
+  "RunIIFall17NanoAODv5": { 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
   }, 
   "RunIIFall17NanoAODv6": {
-    "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
   }, 
   "RunIIFall17NanoAODv7": {
-    "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
@@ -1037,20 +1045,17 @@
     "lumisize": -1, 
     "maxcopies": 1
   }, 
-  "RunIISummer16NanoAODv5": {
-    "fractionpass": 0.95, 
+  "RunIISummer16NanoAODv5": { 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
   }, 
   "RunIISummer16NanoAODv6": {
-    "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
   }, 
   "RunIISummer16NanoAODv7": {
-    "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
@@ -1311,6 +1316,13 @@
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto"
+  },
+  "RunIISummer19UL16MiniAODv2": {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "resize": "auto"
   }, 
   "RunIISummer19UL16MiniAODAPV": {
     "fractionpass": 0.95, 
@@ -1327,15 +1339,29 @@
     "resize": "auto", 
     "secondary_AAA": false, 
     "tune": true
+  },
+  "RunIISummer19UL16MiniAODAPVv2": {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "overflow": {
+      "PU": {
+        "force": false,
+        "max": 0,
+        "pending": 0
+      }
+    },
+    "resize": "auto",
+    "secondary_AAA": false,
+    "tune": true
   }, 
   "RunIISummer19UL16NanoAOD": {
-    "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
   }, 
   "RunIISummer19UL16NanoAODAPV": {
-    "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
@@ -1351,13 +1377,11 @@
     "tune": true
   }, 
   "RunIISummer19UL16NanoAODAPVv2": {
-    "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
   }, 
   "RunIISummer19UL16NanoAODv2": {
-    "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
@@ -1545,15 +1569,20 @@
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto"
+  },
+  "RunIISummer19UL17MiniAODv2": {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "resize": "auto"
   }, 
   "RunIISummer19UL17NanoAOD": {
-    "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
   }, 
   "RunIISummer19UL17NanoAODv2": {
-    "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
@@ -1685,15 +1714,20 @@
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto"
+  },
+  "RunIISummer19UL18MiniAODv2": {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "resize": "auto"
   }, 
   "RunIISummer19UL18NanoAOD": {
-    "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
   }, 
   "RunIISummer19UL18NanoAODv2": {
-    "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
@@ -1974,8 +2008,38 @@
     "secondary_AAA": false, 
     "tune": true
   }, 
-  "RunIISummer20UL16NanoAOD": {
+  "RunIISummer20UL16MiniAODAPVv2": {
     "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "overflow": {
+      "PU": {
+        "force": false, 
+        "max": 0, 
+        "pending": 0
+      }
+    }, 
+    "resize": "auto", 
+    "secondary_AAA": false, 
+    "tune": true
+  }, 
+  "RunIISummer20UL16MiniAODv2": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "overflow": {
+      "PU": {
+        "force": false, 
+        "max": 0, 
+        "pending": 0
+      }
+    }, 
+    "resize": "auto", 
+    "tune": true
+  }, 
+  "RunIISummer20UL16NanoAOD": {
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
@@ -1990,7 +2054,6 @@
     "tune": true
   }, 
   "RunIISummer20UL16NanoAODAPV": {
-    "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
@@ -2006,7 +2069,6 @@
     "tune": true
   }, 
   "RunIISummer20UL16NanoAODAPVv2": {
-    "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
@@ -2022,7 +2084,6 @@
     "tune": true
   }, 
   "RunIISummer20UL16NanoAODv2": {
-    "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
@@ -2265,8 +2326,22 @@
     "resize": "auto", 
     "tune": true
   }, 
-  "RunIISummer20UL17NanoAOD": {
+  "RunIISummer20UL17MiniAODv2": {
     "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "overflow": {
+      "PU": {
+        "force": false, 
+        "max": 0, 
+        "pending": 0
+      }
+    }, 
+    "resize": "auto", 
+    "tune": true
+  }, 
+  "RunIISummer20UL17NanoAOD": {
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
@@ -2281,7 +2356,6 @@
     "tune": true
   }, 
   "RunIISummer20UL17NanoAODv2": {
-    "fractionpass": 0.95, 
     "go": false, 
     "lumisize": -1, 
     "maxcopies": 1, 
@@ -2449,8 +2523,22 @@
     "resize": "auto", 
     "tune": true
   }, 
-  "RunIISummer20UL18NanoAOD": {
+  "RunIISummer20UL18MiniAODv2": {
     "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "overflow": {
+      "PU": {
+        "force": false, 
+        "max": 0, 
+        "pending": 0
+      }
+    }, 
+    "resize": "auto", 
+    "tune": true
+  }, 
+  "RunIISummer20UL18NanoAOD": {
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
@@ -2465,7 +2553,6 @@
     "tune": true
   }, 
   "RunIISummer20UL18NanoAODv2": {
-    "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
@@ -2680,7 +2767,6 @@
     "resize": "auto"
   }, 
   "RunIIWinter19PFCalibNanoAOD": {
-    "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
