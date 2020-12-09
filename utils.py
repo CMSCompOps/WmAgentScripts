@@ -2174,7 +2174,8 @@ class siteInfo:
 
         ## new site lists for better matching
         self.sites_with_goodAAA = UC.get('sites_with_goodAAA')
-        self.sites_with_goodAAA = self.sites_with_goodAAA + add_on_good_aaa
+        #self.sites_with_goodAAA = self.sites_with_goodAAA + add_on_good_aaa
+        self.sites_with_goodAAA = self.sites_with_goodAAA
         self.sites_with_goodAAA = list(set([ s for s in self.sites_with_goodAAA if s in self.sites_ready]))
 
         self.HEPCloud_sites = UC.get('HEPCloud_sites')
