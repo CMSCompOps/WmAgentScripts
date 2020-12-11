@@ -470,13 +470,13 @@ class CloseBuster(threading.Thread):
 
     
         ## verify if we have to do harvesting
-        if not options.no_harvest and not jump_the_line:
-            #(OK, requests) = spawn_harvesting(url, wfi, in_full)
-            sites_for_DQMHarvest = UC.get("sites_for_DQMHarvest")
-            (OK, requests) = spawn_harvesting(url, wfi, sites_for_DQMHarvest)
-            print "Harvesting workflow has been created and assigned to: "
-            print sites_for_DQMHarvest
-            all_OK.update( OK )
+        #if not options.no_harvest and not jump_the_line:
+        #    #(OK, requests) = spawn_harvesting(url, wfi, in_full)
+        #    sites_for_DQMHarvest = UC.get("sites_for_DQMHarvest")
+        #    (OK, requests) = spawn_harvesting(url, wfi, sites_for_DQMHarvest)
+        #    print "Harvesting workflow has been created and assigned to: "
+        #    print sites_for_DQMHarvest
+        #    all_OK.update( OK )
 
         ## only that status can let me go into announced
         if all(all_OK.values()) and ((wfi.request['RequestStatus'] in ['closed-out']) or options.force or jump_the_line):
