@@ -1575,7 +1575,7 @@
   },
   "RunIISummer19UL17MiniAODv2": {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "lumisize": -1,
     "maxcopies": 1,
     "resize": "auto"
@@ -2330,7 +2330,7 @@
   }, 
   "RunIISummer20UL17MiniAODv2": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
@@ -2527,7 +2527,7 @@
   }, 
   "RunIISummer20UL18MiniAODv2": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
