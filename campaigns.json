@@ -291,13 +291,13 @@
     "resize": "auto"
   },
   "MiniAODUL17Data": {
-    "go": false,
+    "go": true,
     "lumisize": -1,
     "maxcopies": 1,
     "resize": "auto"
   },
   "MiniAODUL18Data": {
-    "go": false,
+    "go": true,
     "lumisize": -1,
     "maxcopies": 1,
     "resize": "auto"
@@ -540,7 +540,8 @@
     "maxcopies": 1, 
     "resize": "auto"
   }, 
-  "Run3Summer19NanoAOD": { 
+  "Run3Summer19NanoAOD": {
+    "fractionpass": 0.99, 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
@@ -738,16 +739,19 @@
     "resize": "auto"
   }, 
   "RunIIAutumn18NanoAODv5": {
+    "fractionpass": 0.99,
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
   }, 
   "RunIIAutumn18NanoAODv6": {
+    "fractionpass": 0.99,
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
   }, 
   "RunIIAutumn18NanoAODv7": {
+    "fractionpass": 0.99,
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
@@ -851,16 +855,19 @@
     "resize": "auto"
   }, 
   "RunIIFall17NanoAODv5": { 
+    "fractionpass": 0.99,
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
   }, 
   "RunIIFall17NanoAODv6": {
+    "fractionpass": 0.99,
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
   }, 
   "RunIIFall17NanoAODv7": {
+    "fractionpass": 0.99,
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
@@ -1048,17 +1055,20 @@
     "lumisize": -1, 
     "maxcopies": 1
   }, 
-  "RunIISummer16NanoAODv5": { 
+  "RunIISummer16NanoAODv5": {
+    "fractionpass": 0.99, 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
   }, 
   "RunIISummer16NanoAODv6": {
+    "fractionpass": 0.99,
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
   }, 
   "RunIISummer16NanoAODv7": {
+    "fractionpass": 0.99,
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
@@ -1360,11 +1370,13 @@
     "tune": true
   }, 
   "RunIISummer19UL16NanoAOD": {
+    "fractionpass": 0.99,
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
   }, 
   "RunIISummer19UL16NanoAODAPV": {
+    "fractionpass": 0.99,
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
@@ -1380,11 +1392,13 @@
     "tune": true
   }, 
   "RunIISummer19UL16NanoAODAPVv2": {
+    "fractionpass": 0.99,
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
   }, 
   "RunIISummer19UL16NanoAODv2": {
+    "fractionpass": 0.99,
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
@@ -1581,11 +1595,13 @@
     "resize": "auto"
   }, 
   "RunIISummer19UL17NanoAOD": {
+    "fractionpass": 0.99,
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
   }, 
   "RunIISummer19UL17NanoAODv2": {
+    "fractionpass": 0.99,
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
@@ -1697,7 +1713,7 @@
     "tune": true
   }, 
   "RunIISummer19UL18HLT": {
-    "fractionpass": 0.95, 
+    "fractionpass": 0.99, 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
@@ -1712,31 +1728,33 @@
     "tune": true
   }, 
   "RunIISummer19UL18MiniAOD": {
-    "fractionpass": 0.95, 
+    "fractionpass": 0.99, 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto"
   },
   "RunIISummer19UL18MiniAODv2": {
-    "fractionpass": 0.95,
-    "go": false,
+    "fractionpass": 0.99,
+    "go": true,
     "lumisize": -1,
     "maxcopies": 1,
     "resize": "auto"
   }, 
   "RunIISummer19UL18NanoAOD": {
+    "fractionpass": 0.99,
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
   }, 
   "RunIISummer19UL18NanoAODv2": {
+    "fractionpass": 0.99,
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
   }, 
   "RunIISummer19UL18RECO": {
-    "fractionpass": 0.95, 
+    "fractionpass": 0.99, 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
@@ -1744,7 +1762,7 @@
     "tune": true
   }, 
   "RunIISummer19UL18SIM": {
-    "fractionpass": 0.95, 
+    "fractionpass": 0.99, 
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
@@ -1753,19 +1771,19 @@
     "tune": true
   }, 
   "RunIISummer19UL18pLHE": {
-    "fractionpass": 0.95, 
+    "fractionpass": 0.99, 
     "go": true, 
     "lumisize": -1, 
     "tune": true
   }, 
   "RunIISummer19UL18pLHEGEN": {
-    "fractionpass": 0.95, 
+    "fractionpass": 0.99, 
     "go": true, 
     "lumisize": -1, 
     "tune": true
   }, 
   "RunIISummer19UL18wmLHEGEN": {
-    "fractionpass": 0.95, 
+    "fractionpass": 0.99, 
     "go": true, 
     "lumisize": -1, 
     "parameters": {
@@ -2043,6 +2061,7 @@
     "tune": true
   }, 
   "RunIISummer20UL16NanoAOD": {
+    "fractionpass": 0.99,
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
@@ -2057,6 +2076,7 @@
     "tune": true
   }, 
   "RunIISummer20UL16NanoAODAPV": {
+    "fractionpass": 0.99,
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
@@ -2072,6 +2092,7 @@
     "tune": true
   }, 
   "RunIISummer20UL16NanoAODAPVv2": {
+    "fractionpass": 0.99,
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
@@ -2087,6 +2108,7 @@
     "tune": true
   }, 
   "RunIISummer20UL16NanoAODv2": {
+    "fractionpass": 0.99,
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
@@ -2344,6 +2366,7 @@
     "tune": true
   }, 
   "RunIISummer20UL17NanoAOD": {
+    "fractionpass": 0.99,
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
@@ -2358,6 +2381,7 @@
     "tune": true
   }, 
   "RunIISummer20UL17NanoAODv2": {
+    "fractionpass": 0.99,
     "go": false, 
     "lumisize": -1, 
     "maxcopies": 1, 
@@ -2541,6 +2565,7 @@
     "tune": true
   }, 
   "RunIISummer20UL18NanoAOD": {
+    "fractionpass": 0.99,
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
@@ -2555,6 +2580,7 @@
     "tune": true
   }, 
   "RunIISummer20UL18NanoAODv2": {
+    "fractionpass": 0.99,
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
@@ -2769,6 +2795,7 @@
     "resize": "auto"
   }, 
   "RunIIWinter19PFCalibNanoAOD": {
+    "fractionpass": 0.99,
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1
