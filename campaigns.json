@@ -1254,6 +1254,7 @@
     "secondaries": {
       "/Neutrino_E-10_gun/RunIISummer19ULPrePremix-UL16_106X_mcRun2_asymptotic_v10-v2/PREMIX": {
         "SecondaryLocation": [
+          "T2_CH_CERN",
           "T1_US_FNAL"
         ]
       }
