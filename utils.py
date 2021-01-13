@@ -1922,23 +1922,23 @@ class docCache:
                          lifetime_min = o['expiration'] )
             return data
 
-def getNodes(url, kind):
-    tries = 5 
-    while tries>0:
-        tries-=1
-        try:
-            return _getNodes(url, kind)
-        except Exception as e:
-            pass
-    print str(e)
+#def getNodes(url, kind):
+#    tries = 5 
+#    while tries>0:
+#        tries-=1
+#        try:
+#            return _getNodes(url, kind)
+#        except Exception as e:
+#            pass
+#    print str(e)
 
-def _getNodes(url, kind):
-    conn = make_x509_conn(url)
-    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    r1=conn.request("GET",'/phedex/datasvc/json/prod/nodes')
-    r2=conn.getresponse()
-    result = json.loads(r2.read())
-    return [node['name'] for node in result['phedex']['node'] if node['kind']==kind]
+#def _getNodes(url, kind):
+#    conn = make_x509_conn(url)
+#    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+#    r1=conn.request("GET",'/phedex/datasvc/json/prod/nodes')
+#    r2=conn.getresponse()
+#    result = json.loads(r2.read())
+#    return [node['name'] for node in result['phedex']['node'] if node['kind']==kind]
 
 def getNodeUsage(url, node):
     conn = make_x509_conn(url)
@@ -2239,10 +2239,10 @@ class siteInfo:
             #if s == 'T0_CH_CERN':
             #    self.disk[ self.CE_to_SE(s)]=200 ## temporary override
 
-        tapes = getNodes(phedex_url, 'MSS')
-        for mss in tapes:
-            if mss in self.sites_banned: continue # not using these tapes for MC familly
-            self.storage[mss] = 0
+        #tapes = getNodes(phedex_url, 'MSS')
+        #for mss in tapes:
+        #    if mss in self.sites_banned: continue # not using these tapes for MC familly
+        #    self.storage[mss] = 0
 
         ## and get SSB sync
         self.fetch_ssb_info(talk=False)
@@ -2251,18 +2251,18 @@ class siteInfo:
         mss_usage = dataCache.get('mss_usage')
         sites_space_override = UC.get('sites_space_override')
         use_field = 'Usable'
-        for mss in self.storage:
+        #for mss in self.storage:
             #used = dataCache.get(mss+'_usage')
             #print mss,'used',used
             #if used == None: self.storage[mss] = 0
             #else:  self.storage[mss] = max(0, self.storage[mss]-used)
-            if not mss in mss_usage['Tape'][use_field]:
-                self.storage[mss] = 0
-            else:
-                self.storage[mss]  = max(0,mss_usage['Tape'][use_field][mss])
+        #    if not mss in mss_usage['Tape'][use_field]:
+        #        self.storage[mss] = 0
+        #    else:
+        #        self.storage[mss]  = max(0,mss_usage['Tape'][use_field][mss])
 
-            if mss in sites_space_override:
-                self.storage[mss] = sites_space_override[mss]
+        #    if mss in sites_space_override:
+        #        self.storage[mss] = sites_space_override[mss]
 
 
         self.fetch_queue_info()
@@ -2561,11 +2561,11 @@ class siteInfo:
         else:
             return se
 
-    def pick_SE(self, sites=None, size=None): ## size needs to be in TB
-        if size:
-            return self._pick(sites, dict([(se,free) for (se,free) in self.storage.items() if free>size]))
-        else:
-            return self._pick(sites, self.storage)
+    #def pick_SE(self, sites=None, size=None): ## size needs to be in TB
+    #    if size:
+    #        return self._pick(sites, dict([(se,free) for (se,free) in self.storage.items() if free>size]))
+    #    else:
+    #        return self._pick(sites, self.storage)
 
     def pick_dSE(self, sites=None):
         return self._pick(sites, self.disk, and_fail=True)
