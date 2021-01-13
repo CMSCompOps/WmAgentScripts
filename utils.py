@@ -2434,7 +2434,7 @@ class siteInfo:
             ## bypass
 
             if 'MSS' in site: continue
-            queued = self.queue.get(site,0)
+            #queued = self.queue.get(site,0)
             #print site,self.queue.get(site,0)
             ## consider quota to be 80% of what's available
             queued_used = 0
