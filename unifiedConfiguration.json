@@ -97,7 +97,7 @@
    "description" : "Over-ride the available space at a phedex end point"
  },
  "sites_with_goodIO": {
-    "value" : ["T2_CH_CSCS","T2_DE_DESY","T2_DE_RWTH","T2_ES_CIEMAT","T2_FR_GRIF_LLR", "T2_FR_GRIF_IRFU", "T2_FR_IPHC","T2_FR_CCIN2P3","T2_IT_Bari", "T2_IT_Legnaro", "T2_IT_Pisa", "T2_IT_Rome","T2_UK_London_Brunel", "T2_UK_London_IC","T2_US_Caltech","T2_US_MIT","T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida","T2_BE_IIHE","T2_EE_Estonia","T2_PL_Swierk","T2_CH_CERN","T2_CH_CERN_HLT"],
+    "value" : ["T2_CH_CSCS","T2_DE_DESY","T2_DE_RWTH","T2_ES_CIEMAT","T2_FR_GRIF_LLR", "T2_FR_GRIF_IRFU", "T2_FR_IPHC","T2_FR_CCIN2P3","T2_IT_Bari", "T2_IT_Legnaro", "T2_IT_Pisa", "T2_IT_Rome","T2_UK_London_Brunel", "T2_UK_London_IC","T2_US_Caltech","T2_US_MIT","T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida","T2_BE_IIHE","T2_EE_Estonia","T2_PL_Swierk","T2_CH_CERN","T2_CH_CERN_HLT","T2_KR_KISTI","T2_UK_SGrid_RALPP","T2_BR_SPRACE","T2_UA_KIPT","T2_BR_UERJ","T2_BE_UCL","T2_RU_JINR"],
     "description" : "The sites identified as having good storage bandwidth"
  },
  "sites_with_goodAAA": {
