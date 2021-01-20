@@ -216,7 +216,7 @@ def assignor(url ,specific = None, talk=True, options=None):
 
         wfh.sendLog('assignor',"Initial values for primary_AAA=%s and secondary_AAA=%s"%(primary_aaa, secondary_aaa))
 
-        if primary_aaa or secondary_aaa:
+        if primary_aaa:
             if "T2_CH_CERN_HLT" in sites_allowed:
                 sites_allowed.remove("T2_CH_CERN_HLT")
 
