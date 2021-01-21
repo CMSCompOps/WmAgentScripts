@@ -255,7 +255,7 @@
     "tune": true
   }, 
   "MiniAODHI18Data": {
-    "fractionpass": 0.95, 
+    "fractionpass": 1.0, 
     "go": false, 
     "lumisize": -1, 
     "maxcopies": 1, 
