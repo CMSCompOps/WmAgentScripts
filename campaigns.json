@@ -1000,7 +1000,8 @@
       "90000": 0.9
     }, 
     "SecondaryLocation": [
-      "T1_US_FNAL"
+      "T1_US_FNAL",
+      "T2_CH_CERN"
     ], 
     "force-complete": 0.99, 
     "force-timeout": 7, 
