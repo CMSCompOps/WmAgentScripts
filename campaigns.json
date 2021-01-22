@@ -2283,7 +2283,8 @@
     "secondaries": {
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer20UL17SIM-106X_mc2017_realistic_v6-v2/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_IT_CNAF_Disk"
+          "T1_IT_CNAF_Disk",
+          "T1_IT_CNAF"
         ]
       }
     }, 
@@ -2449,10 +2450,6 @@
     "tune": true
   }, 
   "RunIISummer20UL17wmLHEGEN": {
-   "SiteWhitelist": [
-      "T1_IT_CNAF_Disk", 
-      "T1_IT_CNAF"
-    ], 
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
