@@ -2449,6 +2449,10 @@
     "tune": true
   }, 
   "RunIISummer20UL17wmLHEGEN": {
+   "SiteWhitelist": [
+      "T1_IT_CNAF_Disk", 
+      "T1_IT_CNAF"
+    ], 
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
