@@ -998,7 +998,10 @@
   "RunIISummer16DR80Premix": {
     "NO_NO_fractionpass": {
       "90000": 0.9
-    }, 
+    },
+    "SiteBlacklist": [
+      "T2_CH_CERN_HLT"
+    ], 
     "SecondaryLocation": [
       "T1_US_FNAL",
       "T2_CH_CERN"
@@ -1685,6 +1688,9 @@
     "SecondaryLocation": [
       "T1_US_FNAL", 
       "T2_CH_CERN"
+    ],
+    "SiteBlacklist": [
+      "T2_CH_CERN_HLT"
     ], 
     "fractionpass": 0.95, 
     "go": true, 
