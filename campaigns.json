@@ -254,6 +254,13 @@
     "maxcopies": 1, 
     "tune": true
   }, 
+  "MiniAODHI18Data": {
+    "fractionpass": 1.0, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "resize": "auto"
+  }, 
   "MiniAODUL16Data": {
     "go": false, 
     "lumisize": -1, 
@@ -2289,7 +2296,8 @@
     "secondaries": {
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer20UL17SIM-106X_mc2017_realistic_v6-v2/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_IT_CNAF_Disk"
+          "T1_IT_CNAF_Disk",
+          "T1_IT_CNAF"
         ]
       }
     }, 
