@@ -692,7 +692,10 @@
   "RunIIAutumn18DRPremix": {
     "SecondaryLocation": [
       "T1_US_FNAL"
-    ], 
+    ],
+    "SiteBlacklist": [
+      "T2_CH_CERN_HLT"
+    ],  
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
