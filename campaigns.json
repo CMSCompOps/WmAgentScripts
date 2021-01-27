@@ -908,7 +908,8 @@
   }, 
   "RunIIFall18GS": {
     "SiteBlacklist": [
-      "T2_US_Caltech"
+      "T2_US_Caltech",
+      "T2_CH_CERN_HLT"
     ], 
     "fractionpass": 0.95, 
     "go": true, 
