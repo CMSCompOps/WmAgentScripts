@@ -888,7 +888,10 @@
     "force-complete": 0.99, 
     "fractionpass": 0.95, 
     "go": true, 
-    "lumisize": -1, 
+    "lumisize": -1,
+    "SiteBlacklist": [
+      "T2_CH_CERN_HLT"
+    ], 
     "overflow": {
       "LHE": {
         "site_list": "sites_AAA"
