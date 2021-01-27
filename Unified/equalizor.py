@@ -953,7 +953,8 @@ def equalizor(url , specific = None, options=None):
                 
 
 
-
+            """
+            ### Disable for now due to #767
             ### add the HLT at partner of CERN
             if 'T2_CH_CERN' in wfi.request['SiteWhitelist'] and i_task in [0,1] and use_HLT and not wfi.request['TrustSitelists']:
                 needs, task_name, running, idled = needs_action(wfi, task)
@@ -979,6 +980,7 @@ def equalizor(url , specific = None, options=None):
                                                                    "Pending" : idled}
                         wfi.sendLog('equalizor','adding the HLT in whitelist of %s to %d for %d'%( task.pathName, pending_HLT, max_HLT))
 
+            """
             if i_task==0 and not sec and use_T0 and False: 
                 needs, task_name, running, idled = needs_action(wfi, task)
                 
