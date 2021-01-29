@@ -135,15 +135,6 @@ class Workflow:
         """
         pass
 
-    def getSecondaryAAA():
-        """
-        Function to get the secondaryAAA/TrustPUSitelists value of the request (Either True or False)
-
-        :param: None
-        :returns: the secondaryAAA/TrustPUSitelists value of the request (Either True or False)
-        :rtype: boolean
-        """
-        pass
 
 
 
