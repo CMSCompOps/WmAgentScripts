@@ -648,6 +648,27 @@
     "maxcopies": 1, 
     "resize": "auto"
   }, 
+  "Run3Winter21DRMiniAOD": {
+    "fractionpass": 1.0, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "resize": "auto"
+  }, 
+  "Run3Winter21GS": {
+    "fractionpass": 1.0, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "resize": "auto"
+  }, 
+  "Run3Winter21wmLHEGS": {
+    "fractionpass": 1.0, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "resize": "auto"
+  }, 
   "RunIIAutumn18DR": {
     "fractionpass": 0.95, 
     "go": true, 
@@ -2283,7 +2304,7 @@
     "secondaries": {
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer20UL17SIM-106X_mc2017_realistic_v6-v2/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_IT_CNAF_Disk",
+          "T1_IT_CNAF_Disk", 
           "T1_IT_CNAF"
         ]
       }
