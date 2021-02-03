@@ -720,7 +720,10 @@
   "RunIIAutumn18DRPremix": {
     "SecondaryLocation": [
       "T1_US_FNAL"
-    ], 
+    ],
+    "SiteBlacklist": [
+      "T2_CH_CERN_HLT"
+    ],  
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
@@ -796,6 +799,9 @@
   "RunIIFall17DRPremix": {
     "SecondaryLocation": [
       "T1_US_FNAL"
+    ],
+    "SiteBlacklist": [
+      "T2_CH_CERN_HLT"
     ], 
     "fractionpass": 0.95, 
     "go": true, 
@@ -910,7 +916,10 @@
     "force-complete": 0.99, 
     "fractionpass": 0.95, 
     "go": true, 
-    "lumisize": -1, 
+    "lumisize": -1,
+    "SiteBlacklist": [
+      "T2_CH_CERN_HLT"
+    ], 
     "overflow": {
       "LHE": {
         "site_list": "sites_AAA"
@@ -920,7 +929,8 @@
   }, 
   "RunIIFall18GS": {
     "SiteBlacklist": [
-      "T2_US_Caltech"
+      "T2_US_Caltech",
+      "T2_CH_CERN_HLT"
     ], 
     "fractionpass": 0.95, 
     "go": true, 
@@ -935,6 +945,9 @@
     "tune": true
   }, 
   "RunIIFall18wmLHEGS": {
+    "SiteBlacklist": [
+      "T2_CH_CERN_HLT"
+    ], 
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
@@ -986,6 +999,9 @@
     "tune": true
   }, 
   "RunIISummer15wmLHEGS": {
+    "SiteBlacklist": [
+      "T2_CH_CERN_HLT"
+    ], 
     "force-complete": 0.99, 
     "fractionpass": 0.95, 
     "go": true, 
@@ -1026,9 +1042,13 @@
   "RunIISummer16DR80Premix": {
     "NO_NO_fractionpass": {
       "90000": 0.9
-    }, 
+    },
+    "SiteBlacklist": [
+      "T2_CH_CERN_HLT"
+    ], 
     "SecondaryLocation": [
-      "T1_US_FNAL"
+      "T1_US_FNAL",
+      "T2_CH_CERN"
     ], 
     "force-complete": 0.99, 
     "force-timeout": 7, 
@@ -1712,6 +1732,9 @@
     "SecondaryLocation": [
       "T1_US_FNAL", 
       "T2_CH_CERN"
+    ],
+    "SiteBlacklist": [
+      "T2_CH_CERN_HLT"
     ], 
     "fractionpass": 0.95, 
     "go": true, 
