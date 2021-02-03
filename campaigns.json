@@ -924,6 +924,9 @@
     "tune": true
   }, 
   "RunIIFall18wmLHEGS": {
+    "SiteBlacklist": [
+      "T2_CH_CERN_HLT"
+    ], 
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
@@ -975,6 +978,9 @@
     "tune": true
   }, 
   "RunIISummer15wmLHEGS": {
+    "SiteBlacklist": [
+      "T2_CH_CERN_HLT"
+    ], 
     "force-complete": 0.99, 
     "fractionpass": 0.95, 
     "go": true, 
