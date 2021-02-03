@@ -875,6 +875,7 @@
   }, 
   "RunIIFall17GS": {
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT",
       "T2_US_Caltech"
     ], 
     "force-complete": 0.99, 
@@ -1753,6 +1754,9 @@
     "tune": true
   }, 
   "RunIISummer19UL18GEN": {
+    "SiteBlacklist": [
+      "T2_CH_CERN_HLT"
+    ],
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
@@ -1839,6 +1843,9 @@
     "tune": true
   }, 
   "RunIISummer19UL18wmLHEGEN": {
+    "SiteBlacklist": [
+      "T2_CH_CERN_HLT"
+    ],
     "fractionpass": 0.99, 
     "go": true, 
     "lumisize": -1, 
