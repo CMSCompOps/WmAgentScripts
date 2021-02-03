@@ -255,6 +255,9 @@
     "tune": true
   }, 
   "MiniAODHI18Data": {
+    "SiteWhitelist": [
+     "T2_US_Vanderbilt"
+        ],
     "fractionpass": 1.0, 
     "go": false, 
     "lumisize": -1, 
@@ -981,7 +984,8 @@
   }, 
   "RunIISummer15GS": {
     "SiteBlacklist": [
-      "T2_US_Caltech"
+      "T2_US_Caltech",
+      "T2_CH_CERN_HLT"
     ], 
     "force-complete": 0.99, 
     "fractionpass": 0.95, 
