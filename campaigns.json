@@ -255,6 +255,9 @@
     "tune": true
   }, 
   "MiniAODHI18Data": {
+    "SiteWhitelist": [
+     "T2_US_Vanderbilt"
+        ],
     "fractionpass": 1.0, 
     "go": false, 
     "lumisize": -1, 
@@ -648,6 +651,27 @@
     "maxcopies": 1, 
     "resize": "auto"
   }, 
+  "Run3Winter21DRMiniAOD": {
+    "fractionpass": 1.0, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "resize": "auto"
+  }, 
+  "Run3Winter21GS": {
+    "fractionpass": 1.0, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "resize": "auto"
+  }, 
+  "Run3Winter21wmLHEGS": {
+    "fractionpass": 1.0, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "resize": "auto"
+  }, 
   "RunIIAutumn18DR": {
     "fractionpass": 0.95, 
     "go": true, 
@@ -851,6 +875,7 @@
   }, 
   "RunIIFall17GS": {
     "SiteBlacklist": [
+      "T2_CH_CERN_HLT",
       "T2_US_Caltech"
     ], 
     "force-complete": 0.99, 
@@ -960,7 +985,8 @@
   }, 
   "RunIISummer15GS": {
     "SiteBlacklist": [
-      "T2_US_Caltech"
+      "T2_US_Caltech",
+      "T2_CH_CERN_HLT"
     ], 
     "force-complete": 0.99, 
     "fractionpass": 0.95, 
@@ -1728,6 +1754,9 @@
     "tune": true
   }, 
   "RunIISummer19UL18GEN": {
+    "SiteBlacklist": [
+      "T2_CH_CERN_HLT"
+    ],
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
@@ -1814,6 +1843,9 @@
     "tune": true
   }, 
   "RunIISummer19UL18wmLHEGEN": {
+    "SiteBlacklist": [
+      "T2_CH_CERN_HLT"
+    ],
     "fractionpass": 0.99, 
     "go": true, 
     "lumisize": -1, 
@@ -2306,7 +2338,7 @@
     "secondaries": {
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer20UL17SIM-106X_mc2017_realistic_v6-v2/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_IT_CNAF_Disk",
+          "T1_IT_CNAF_Disk", 
           "T1_IT_CNAF"
         ]
       }
