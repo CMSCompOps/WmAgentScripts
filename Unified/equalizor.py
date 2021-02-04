@@ -405,7 +405,7 @@ def equalizor(url , specific = None, options=None):
             tasks_and_campaigns.append( (task, getcampaign(task, wfi) ) )
         
         
-        lhe,prim,_,sec,sites_allowed = wfi.getSiteWhiteList()#getIO()
+        lhe,prim,_,sec,sites_allowed,sites_not_allowed = wfi.getSiteWhiteList()#getIO()
         sites_allowed_se = set()
         for s in sites_allowed: sites_allowed_se.update( SI.CE_to_SEs(s) )
         ncores = wfi.getMulticore()
