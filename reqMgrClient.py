@@ -809,7 +809,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
 
     if defaults['SiteBlacklist'] and defaults['SiteWhitelist']:
         defaults['SiteWhitelist'] = list(set(defaults['SiteWhitelist']) - set(defaults['SiteBlacklist']))
-        defaults['SiteBlacklist'] = []
+        #defaults['SiteBlacklist'] = []
         if not defaults['SiteWhitelist']:
             assignWorkflow.errorMessage = "Cannot assign with no site whitelist"
             print assignWorkflow.errorMessage
