@@ -112,7 +112,7 @@ def assignor(url ,specific = None, talk=True, options=None):
         wfh.sendLog('assignor',"%s to be assigned %s"%(wfo.name, options_text))
 
         ## the site whitelist takes into account siteInfo, campaignInfo, memory and cores
-        (lheinput,primary,parent,secondary, sites_allowed) = wfh.getSiteWhiteList()
+        (lheinput,primary,parent,secondary, sites_allowed, sites_not_allowed) = wfh.getSiteWhiteList()
 
 
 
@@ -219,6 +219,9 @@ def assignor(url ,specific = None, talk=True, options=None):
         if primary_aaa:
             if "T2_CH_CERN_HLT" in sites_allowed:
                 sites_allowed.remove("T2_CH_CERN_HLT")
+            if "T2_CH_CERN_HLT" not in sites_not_allowed:
+                sites_not_allowed.append("T2_CH_CERN_HLT")
+
 
         ## keep track of this, after secondary input location restriction : that's how you want to operate it
         initial_sites_allowed = copy.deepcopy( sites_allowed )
@@ -316,6 +319,7 @@ def assignor(url ,specific = None, talk=True, options=None):
         wfh.sendLog('assignor',"Placing the output on %s"%sites_out)
         parameters={
             'SiteWhitelist' : sites_allowed,
+            'SiteBlacklist' : sites_not_allowed,
             'NonCustodialSites' : sites_out,
             'AutoApproveSubscriptionSites' : list(set(sites_out)),
             'AcquisitionEra' : wfh.acquisitionEra(),
