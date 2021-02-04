@@ -7362,6 +7362,7 @@ class workflowInfo:
         SI = global_SI()
         (lheinput,primary,parent,secondary) = self.getIO()
         sites_allowed=[]
+        sites_not_allowed=[]
         if lheinput:
             sites_allowed = sorted(SI.sites_eos) #['T2_CH_CERN'] ## and that's it
         elif secondary:
@@ -7423,6 +7424,7 @@ class workflowInfo:
                     print "Reducing the whitelist due to black list in campaign configuration"
                     print "Removing",sorted(c_black_list)
                 sites_allowed = list(set(sites_allowed) - set(c_black_list))
+                sites_not_allowed = c_black_list
 
         #ncores = self.getMulticore()
         #mem = self.getMemory()
@@ -7448,7 +7450,8 @@ class workflowInfo:
         #    print("[INFO] Sites allowing {}: {}".format(archs, sorted(list(arch_allowed))))
         #    print "Reducing the whitelist to sites allowing",archs,". Removing ",sorted(sites_removed)
         print("After all of these, allowing: {}".format(sorted(sites_allowed)))
-        return (lheinput,primary,parent,secondary,sites_allowed)
+        print("After all of these, not allowing: {}".format(sorted(sites_not_allowed)))
+        return (lheinput,primary,parent,secondary,sites_allowed,sites_not_allowed)
 
     def checkSplitting(self):
         #returns hold,<list of params
