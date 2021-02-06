@@ -725,8 +725,9 @@
       "T1_US_FNAL"
     ],
     "SiteBlacklist": [
+      "T2_CH_CERN",
       "T2_CH_CERN_HLT"
-    ],  
+    ], 
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
@@ -804,6 +805,7 @@
       "T1_US_FNAL"
     ],
     "SiteBlacklist": [
+      "T2_CH_CERN",
       "T2_CH_CERN_HLT"
     ], 
     "fractionpass": 0.95, 
@@ -875,6 +877,7 @@
   }, 
   "RunIIFall17GS": {
     "SiteBlacklist": [
+      "T2_CH_CERN",
       "T2_CH_CERN_HLT",
       "T2_US_Caltech"
     ], 
@@ -922,6 +925,7 @@
     "go": true, 
     "lumisize": -1,
     "SiteBlacklist": [
+      "T2_CH_CERN",
       "T2_CH_CERN_HLT"
     ], 
     "overflow": {
@@ -934,6 +938,7 @@
   "RunIIFall18GS": {
     "SiteBlacklist": [
       "T2_US_Caltech",
+      "T2_CH_CERN",
       "T2_CH_CERN_HLT"
     ], 
     "fractionpass": 0.95, 
@@ -950,8 +955,9 @@
   }, 
   "RunIIFall18wmLHEGS": {
     "SiteBlacklist": [
+      "T2_CH_CERN",
       "T2_CH_CERN_HLT"
-    ], 
+    ],
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
@@ -986,6 +992,7 @@
   "RunIISummer15GS": {
     "SiteBlacklist": [
       "T2_US_Caltech",
+      "T2_CH_CERN",
       "T2_CH_CERN_HLT"
     ], 
     "force-complete": 0.99, 
@@ -1005,8 +1012,9 @@
   }, 
   "RunIISummer15wmLHEGS": {
     "SiteBlacklist": [
+      "T2_CH_CERN",
       "T2_CH_CERN_HLT"
-    ], 
+    ],
     "force-complete": 0.99, 
     "fractionpass": 0.95, 
     "go": true, 
@@ -1049,6 +1057,7 @@
       "90000": 0.9
     },
     "SiteBlacklist": [
+      "T2_CH_CERN",
       "T2_CH_CERN_HLT"
     ], 
     "SecondaryLocation": [
@@ -1739,8 +1748,9 @@
       "T2_CH_CERN"
     ],
     "SiteBlacklist": [
+      "T2_CH_CERN",
       "T2_CH_CERN_HLT"
-    ], 
+    ],
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
@@ -1755,6 +1765,7 @@
   }, 
   "RunIISummer19UL18GEN": {
     "SiteBlacklist": [
+      "T2_CH_CERN",
       "T2_CH_CERN_HLT"
     ],
     "fractionpass": 0.95, 
@@ -1844,6 +1855,7 @@
   }, 
   "RunIISummer19UL18wmLHEGEN": {
     "SiteBlacklist": [
+      "T2_CH_CERN",
       "T2_CH_CERN_HLT"
     ],
     "fractionpass": 0.99, 
