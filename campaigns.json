@@ -3027,6 +3027,15 @@
     "overflow": {
       "PRIM": {}
     }
+  },
+  "pPb816Spring16pLHE": {
+    "go": true, 
+    "tune": true, 
+    "custodial": "T1_FR_CCIN2P3_MSS", 
+    "fractionpass": 0.95, 
+    "parameters": {
+      "MergedLFNBase": "/store/himc"
+    }
   }, 
   "pPb816Spring16GS": {
     "custodial": "T1_FR_CCIN2P3_MSS", 
