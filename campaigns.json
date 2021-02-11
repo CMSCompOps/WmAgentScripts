@@ -259,7 +259,7 @@
      "T2_US_Vanderbilt"
         ],
     "fractionpass": 1.0, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto"
