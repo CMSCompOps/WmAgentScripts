@@ -34,7 +34,7 @@
     "secondaries": {
       "/MinBias_Hydjet_Drum5F_2018_5p02TeV/HINPbPbAutumn18GS-103X_upgrade2018_realistic_HI_v11-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_RU_JINR", 
+          "T1_RU_JINR_Disk", 
           "T1_FR_CCIN2P3"
         ]
       }
@@ -81,7 +81,7 @@
     "secondaries": {
       "/MinBias_Hydjet_Drum5F_2018_5p02TeV/HINPbPbAutumn18GS-103X_upgrade2018_realistic_HI_v11-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_RU_JINR", 
+          "T1_RU_JINR_Disk", 
           "T1_FR_CCIN2P3"
         ]
       }
@@ -149,7 +149,7 @@
     "secondaries": {
       "/MinBias_Hydjet_Drum5F_2018_5p02TeV/HINPbPbAutumn18GS-103X_upgrade2018_realistic_HI_v11-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_RU_JINR", 
+          "T1_RU_JINR_Disk", 
           "T1_FR_CCIN2P3"
         ]
       }
@@ -405,7 +405,7 @@
     "secondaries": {
       "/MinBias_TuneCP5_14TeV-pythia8/Phase2HLTTDRWinter20GS-110X_mcRun4_realistic_v3_ext1-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_RU_JINR"
+          "T1_RU_JINR_Disk"
         ]
       }, 
       "/RelValMinBias_14TeV/CMSSW_11_1_2_patch3-110X_mcRun4_realistic_v3_2026D49noPU_BSzpz35-v1/GEN-SIM": {
@@ -503,7 +503,7 @@
     "secondaries": {
       "/MinBias_TuneCP5_14TeV-pythia8/Run3Summer19GS-106X_upgrade2021_realistic_v5-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_RU_JINR"
+          "T1_RU_JINR_Disk"
         ]
       }, 
       "/MinBias_TuneCP5_14TeV-pythia8/Run3Summer19GS-2018Scenario_106X_upgrade2021_realistic_v5-v1/GEN-SIM": {
@@ -747,7 +747,7 @@
       "T1_US_FNAL_Disk", 
       "T2_US_Nebraska", 
       "T1_DE_KIT", 
-      "T1_RU_JINR"
+      "T1_RU_JINR_Disk"
     ], 
     "SiteBlacklist": [
       "T2_CH_CERN_HLT"
