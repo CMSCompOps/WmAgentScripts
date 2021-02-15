@@ -35,7 +35,7 @@
       "/MinBias_Hydjet_Drum5F_2018_5p02TeV/HINPbPbAutumn18GS-103X_upgrade2018_realistic_HI_v11-v1/GEN-SIM": {
         "SiteWhitelist": [
           "T1_RU_JINR_Disk", 
-          "T1_FR_CCIN2P3"
+          "T1_FR_CCIN2P3_Disk"
         ]
       }
     }, 
@@ -82,7 +82,7 @@
       "/MinBias_Hydjet_Drum5F_2018_5p02TeV/HINPbPbAutumn18GS-103X_upgrade2018_realistic_HI_v11-v1/GEN-SIM": {
         "SiteWhitelist": [
           "T1_RU_JINR_Disk", 
-          "T1_FR_CCIN2P3"
+          "T1_FR_CCIN2P3_Disk"
         ]
       }
     }, 
@@ -150,7 +150,7 @@
       "/MinBias_Hydjet_Drum5F_2018_5p02TeV/HINPbPbAutumn18GS-103X_upgrade2018_realistic_HI_v11-v1/GEN-SIM": {
         "SiteWhitelist": [
           "T1_RU_JINR_Disk", 
-          "T1_FR_CCIN2P3"
+          "T1_FR_CCIN2P3_Disk"
         ]
       }
     }, 
@@ -850,7 +850,7 @@
       "/MinBias_TuneCP5_inelasticON_13TeV-pythia8/RunIIFall17GS-93X_mc2017_realistic_v3-v1/GEN-SIM": {
         "SiteWhitelist": [
           "T1_DE_KIT_Disk", 
-          "T1_FR_CCIN2P3"
+          "T1_FR_CCIN2P3_Disk"
         ]
       }
     }, 
@@ -1166,13 +1166,13 @@
       }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib16GS-105X_mcRun2_asymptotic_v2-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_FR_CCIN2P3", 
+          "T1_FR_CCIN2P3_Disk", 
           "T2_IT_Legnaro"
         ]
       }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib17GS-105X_mc2017_realistic_v5_ext1-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_FR_CCIN2P3", 
+          "T1_FR_CCIN2P3_Disk", 
           "T1_IT_CNAF_Disk"
         ]
       }, 
@@ -1194,7 +1194,7 @@
       }, 
       "/MinBias_TuneCP5_inelasticON_13TeV-pythia8/RunIIFall17GS-93X_mc2017_realistic_v3-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_FR_CCIN2P3", 
+          "T1_FR_CCIN2P3_Disk", 
           "T1_DE_KIT_Disk"
         ]
       }, 
@@ -1270,7 +1270,7 @@
     "secondaries": {
       "/MinBias_TuneCP1_13TeV-pythia8/RunIISummer19UL16SIM-106X_mcRun2_asymptotic_v10-v2/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_FR_CCIN2P3"
+          "T1_FR_CCIN2P3_Disk"
         ]
       }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL16SIM-106X_mcRun2_asymptotic_v3-v1/GEN-SIM": {
@@ -1582,7 +1582,7 @@
     "secondaries": {
       "/MinBias_TuneCP1_13TeV-pythia8/RunIISummer19UL17SIM-106X_mc2017_realistic_v6-v2/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_FR_CCIN2P3"
+          "T1_FR_CCIN2P3_Disk"
         ]
       }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL17SIM-106X_mc2017_realistic_v3-v2/SIM": {
@@ -2844,13 +2844,13 @@
     "secondaries": {
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib16GS-105X_mcRun2_asymptotic_v2-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_FR_CCIN2P3", 
+          "T1_FR_CCIN2P3_Disk", 
           "T2_IT_Legnaro"
         ]
       }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib17GS-105X_mc2017_realistic_v5_ext1-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_FR_CCIN2P3", 
+          "T1_FR_CCIN2P3_Disk", 
           "T1_IT_CNAF_Disk"
         ]
       }, 
