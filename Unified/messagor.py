@@ -29,7 +29,7 @@ for out in all_outs:
 
 text="""Dear all,
 
-The folowing %d datasets have been produced last week:
+The following %d datasets have been produced last week:
 
 """%(n_produced)
 
