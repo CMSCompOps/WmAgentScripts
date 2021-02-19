@@ -256,8 +256,8 @@
   }, 
   "MiniAODHI18Data": {
     "SiteWhitelist": [
-     "T2_US_Vanderbilt"
-        ],
+      "T2_US_Vanderbilt"
+    ], 
     "fractionpass": 1.0, 
     "go": true, 
     "lumisize": -1, 
@@ -652,6 +652,12 @@
     "resize": "auto"
   }, 
   "Run3Winter21DRMiniAOD": {
+    "/MinBias_TuneCP5_14TeV-pythia8/Run3Winter21GS-112X_mcRun3_2021_realistic_v15-v1/GEN-SIM": {
+      "SiteWhitelist": [
+        "T1_US_FNAL_Disk", 
+        "T1_UK_RAL_Disk"
+      ]
+    }, 
     "fractionpass": 1.0, 
     "go": false, 
     "lumisize": -1, 
@@ -723,9 +729,9 @@
   "RunIIAutumn18DRPremix": {
     "SecondaryLocation": [
       "T1_US_FNAL_Disk"
-    ],
+    ], 
     "SiteBlacklist": [
-      "T2_CH_CERN",
+      "T2_CH_CERN", 
       "T2_CH_CERN_HLT"
     ], 
     "fractionpass": 0.95, 
@@ -803,9 +809,9 @@
   "RunIIFall17DRPremix": {
     "SecondaryLocation": [
       "T1_US_FNAL_Disk"
-    ],
+    ], 
     "SiteBlacklist": [
-      "T2_CH_CERN",
+      "T2_CH_CERN", 
       "T2_CH_CERN_HLT"
     ], 
     "fractionpass": 0.95, 
@@ -877,8 +883,8 @@
   }, 
   "RunIIFall17GS": {
     "SiteBlacklist": [
-      "T2_CH_CERN",
-      "T2_CH_CERN_HLT",
+      "T2_CH_CERN", 
+      "T2_CH_CERN_HLT", 
       "T2_US_Caltech"
     ], 
     "force-complete": 0.99, 
@@ -920,14 +926,14 @@
     "tune": true
   }, 
   "RunIIFall17wmLHEGS": {
+    "SiteBlacklist": [
+      "T2_CH_CERN", 
+      "T2_CH_CERN_HLT"
+    ], 
     "force-complete": 0.99, 
     "fractionpass": 0.95, 
     "go": true, 
-    "lumisize": -1,
-    "SiteBlacklist": [
-      "T2_CH_CERN",
-      "T2_CH_CERN_HLT"
-    ], 
+    "lumisize": -1, 
     "overflow": {
       "LHE": {
         "site_list": "sites_AAA"
@@ -937,8 +943,8 @@
   }, 
   "RunIIFall18GS": {
     "SiteBlacklist": [
-      "T2_US_Caltech",
-      "T2_CH_CERN",
+      "T2_US_Caltech", 
+      "T2_CH_CERN", 
       "T2_CH_CERN_HLT"
     ], 
     "fractionpass": 0.95, 
@@ -955,9 +961,9 @@
   }, 
   "RunIIFall18wmLHEGS": {
     "SiteBlacklist": [
-      "T2_CH_CERN",
+      "T2_CH_CERN", 
       "T2_CH_CERN_HLT"
-    ],
+    ], 
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
@@ -991,8 +997,8 @@
   }, 
   "RunIISummer15GS": {
     "SiteBlacklist": [
-      "T2_US_Caltech",
-      "T2_CH_CERN",
+      "T2_US_Caltech", 
+      "T2_CH_CERN", 
       "T2_CH_CERN_HLT"
     ], 
     "force-complete": 0.99, 
@@ -1012,9 +1018,9 @@
   }, 
   "RunIISummer15wmLHEGS": {
     "SiteBlacklist": [
-      "T2_CH_CERN",
+      "T2_CH_CERN", 
       "T2_CH_CERN_HLT"
-    ],
+    ], 
     "force-complete": 0.99, 
     "fractionpass": 0.95, 
     "go": true, 
@@ -1055,14 +1061,14 @@
   "RunIISummer16DR80Premix": {
     "NO_NO_fractionpass": {
       "90000": 0.9
-    },
-    "SiteBlacklist": [
-      "T2_CH_CERN",
-      "T2_CH_CERN_HLT"
-    ], 
+    }, 
     "SecondaryLocation": [
-      "T1_US_FNAL_Disk",
+      "T1_US_FNAL_Disk", 
       "T2_CH_CERN"
+    ], 
+    "SiteBlacklist": [
+      "T2_CH_CERN", 
+      "T2_CH_CERN_HLT"
     ], 
     "force-complete": 0.99, 
     "force-timeout": 7, 
@@ -1746,11 +1752,11 @@
     "SecondaryLocation": [
       "T1_US_FNAL_Disk", 
       "T2_CH_CERN"
-    ],
+    ], 
     "SiteBlacklist": [
-      "T2_CH_CERN",
+      "T2_CH_CERN", 
       "T2_CH_CERN_HLT"
-    ],
+    ], 
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
@@ -1765,9 +1771,9 @@
   }, 
   "RunIISummer19UL18GEN": {
     "SiteBlacklist": [
-      "T2_CH_CERN",
+      "T2_CH_CERN", 
       "T2_CH_CERN_HLT"
-    ],
+    ], 
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
@@ -1855,9 +1861,9 @@
   }, 
   "RunIISummer19UL18wmLHEGEN": {
     "SiteBlacklist": [
-      "T2_CH_CERN",
+      "T2_CH_CERN", 
       "T2_CH_CERN_HLT"
-    ],
+    ], 
     "fractionpass": 0.99, 
     "go": true, 
     "lumisize": -1, 
@@ -2983,6 +2989,20 @@
     }, 
     "tune": true
   }, 
+  "SnowmassWinter21GEN": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "resize": "auto"
+  }, 
+  "SnowmassWinter21wmLHEGEN": {
+    "fractionpass": 0.95, 
+    "go": false, 
+    "lumisize": -1, 
+    "maxcopies": 1, 
+    "resize": "auto"
+  }, 
   "UltraLegacy2016": {
     "custodial_override": [
       "DQMIO"
@@ -3026,15 +3046,6 @@
     "maxcopies": 1, 
     "overflow": {
       "PRIM": {}
-    }
-  },
-  "pPb816Spring16pLHE": {
-    "go": true, 
-    "tune": true, 
-    "custodial": "T1_FR_CCIN2P3_MSS", 
-    "fractionpass": 0.95, 
-    "parameters": {
-      "MergedLFNBase": "/store/himc"
     }
   }, 
   "pPb816Spring16GS": {
