@@ -3072,6 +3072,15 @@
       }
     }
   }, 
+  "pPb816Spring16pLHE": {
+    "custodial": "T1_FR_CCIN2P3_MSS", 
+    "fractionpass": 0.95, 
+    "go": true, 
+    "parameters": {
+      "MergedLFNBase": "/store/himc"
+    }, 
+    "tune": true
+  }, 
   "pPb816Summer16DR": {
     "custodial": "T1_FR_CCIN2P3_MSS", 
     "fractionpass": 0.95, 
