@@ -652,11 +652,13 @@
     "resize": "auto"
   }, 
   "Run3Winter21DRMiniAOD": {
+   "secondaries": { 
     "/MinBias_TuneCP5_14TeV-pythia8/Run3Winter21GS-112X_mcRun3_2021_realistic_v15-v1/GEN-SIM": {
       "SiteWhitelist": [
         "T1_US_FNAL_Disk", 
         "T1_UK_RAL_Disk"
       ]
+     }
     }, 
     "fractionpass": 1.0, 
     "go": false, 
