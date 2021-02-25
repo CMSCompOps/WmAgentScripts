@@ -5,19 +5,93 @@ Author     : Hasan Ozturk <haozturk AT cern dot com>
 Description: Workflow class provides all the information needed for the filtering of workflows in assistance manual.
 
 """
+from utils.WebTools import getResponse
+from utils.SearchTools import findKeys
 
 class Workflow:
 
-    def _init_(self, workflow, url='cmsweb.cern.ch'):
+    def __init__(self, workflowName, url='cmsweb.cern.ch'):
         """
         Initialize the Workflow class
-        :param str workflow: is the name of the workflow
+        :param str workflowName: is the name of the workflow
         :param str url: is the url to fetch information from
         """
 
-        super(Workflow, self)._init_()
-        self.workflow = workflow
+        self.workflowName = workflowName
         self.url = url
+        self.workflowParams = self.getWorkflowParams()
+
+    def getWorkflowParams(self):
+
+        """
+        Get the workflow parameters from ReqMgr2.
+        See the `ReqMgr 2 wiki <https://github.com/dmwm/WMCore/wiki/reqmgr2-apis>`_
+        for more details.
+        :returns: Parameters for the workflow from ReqMgr2.
+        :rtype: dict
+        """
+
+        try:
+            result = getResponse(url=self.url,
+                                 endpoint='/reqmgr2/data/request/',
+                                 param=self.workflowName)
+
+            for params in result['result']:
+                for key, item in params.items():
+                    if key == self.workflowName:
+                        self.workflowParams = item
+                        return item
+
+        except Exception as error:
+            print 'Failed to get workflow params from reqmgr for %s '% self.workflowName
+            print str(error) 
+
+    def getPrepID(self):
+        """
+        :param: None
+        :returns: PrepID
+        :rtype: string
+        """
+        return self.workflowParams.get('PrepID')
+
+    def getNumberOfEvents(self):
+        """
+        :param: None
+        :returns: Number of events requested
+        :rtype: int
+        """
+        return self.workflowParams.get('TotalInputEvents')
+
+    def getRequestType(self):
+        """
+        :param: None
+        :returns: Request Type
+        :rtype: string
+        """
+
+        return self.workflowParams.get('RequestType')
+
+    def getSiteWhitelist(self):
+        """
+        :param: None
+        :returns: SiteWhitelist
+        :rtype: string
+        """
+
+        return self.workflowParams.get('SiteWhitelist')
+
+
+    def getCampaigns(self):
+        """
+        Function to get the list of campaigns that this workflow belongs to
+
+        :param: None
+        :returns: list of campaigns that this workflow belongs to
+        :rtype: list of strings
+        """
+        
+        return findKeys('Campaign',self.workflowParams)
+
 
     ## Get runtime related values
 
@@ -65,7 +139,7 @@ class Workflow:
 
     ## Get request related values
 
-    def getPrimaryDataset():
+    def getPrimaryDataset(self):
         """
         :assumption: every production workflow reads just one PD
 
@@ -73,7 +147,8 @@ class Workflow:
         :returns: the name of the PD that this workflow reads
         :rtype: string 
         """
-        pass
+        
+        return findKeys('InputDataset',self.workflowParams)
 
     def getPrimaryDatasetLocation():
         """
@@ -85,7 +160,7 @@ class Workflow:
         """
         pass
 
-    def getSecondaryDatasets():
+    def getSecondaryDatasets(self):
         """
         :info: a workflow can read more than one secondary datasets
 
@@ -93,7 +168,8 @@ class Workflow:
         :returns: list of the names of PUs that this workflow reads
         :rtype: list of strings
         """
-        pass
+        
+        return findKeys('MCPileup',self.workflowParams)
 
     def getSecondaryDatasetsLocation():
         """
@@ -102,16 +178,6 @@ class Workflow:
         :param: None
         :returns: dictionary containing PU name and location pairs
         :rtype: dict
-        """
-        pass
-
-    def getCampaigns():
-        """
-        Function to get the list of campaigns that this workflow belongs to
-
-        :param: None
-        :returns: list of campaigns that this workflow belongs to
-        :rtype: list of strings
         """
         pass
 
