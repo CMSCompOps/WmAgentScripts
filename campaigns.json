@@ -2993,14 +2993,14 @@
   }, 
   "SnowmassWinter21GEN": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto"
   }, 
   "SnowmassWinter21wmLHEGEN": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto"
