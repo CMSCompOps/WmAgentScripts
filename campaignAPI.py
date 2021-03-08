@@ -175,10 +175,6 @@ def _getSiteList(keyName, initialValue, uniRecord):
         print("Found internal %s for campaign: %s" % (keyName, uniRecord['name']))
         initialValue = _intersect(initialValue, uniRecord["parameters"][keyName])
 
-    for _, innerDict in uniRecord.get("secondaries", {}).items():
-        if keyName in innerDict:
-            print("Found internal %s for campaign: %s" % (keyName, uniRecord['name']))
-            initialValue = _intersect(initialValue, innerDict[keyName])
     return initialValue
 
 
