@@ -2340,6 +2340,36 @@
     }, 
     "resize": "auto", 
     "tune": true
+  },
+  "RunIISummer20UL17wmLHENanoGEN": {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "overflow": {
+      "PU": {
+        "force": false,
+        "max": 0,
+        "pending": 0
+      }
+    },
+    "resize": "auto",
+    "tune": true
+  },
+  "RunIISummer20UL18wmLHENanoGEN": {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "overflow": {
+      "PU": {
+        "force": false,
+        "max": 0,
+        "pending": 0
+      }
+    },
+    "resize": "auto",
+    "tune": true
   }, 
   "RunIISummer20UL17DIGI": {
     "fractionpass": 0.95, 
@@ -2993,14 +3023,14 @@
   }, 
   "SnowmassWinter21GEN": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto"
   }, 
   "SnowmassWinter21wmLHEGEN": {
     "fractionpass": 0.95, 
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto"
