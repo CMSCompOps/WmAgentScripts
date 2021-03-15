@@ -25,7 +25,9 @@ from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
 from email.Utils import COMMASPACE, formatdate
 from email.utils import make_msgid
-#
+
+from RucioClient import RucioClient
+
 ## add local python paths
 for p in ['/usr/lib64/python2.7/site-packages','/usr/lib/python2.7/site-packages']:
     if not p in sys.path: sys.path.append(p)
@@ -7367,7 +7369,12 @@ class workflowInfo:
             sites_allowed = sorted(SI.sites_eos) #['T2_CH_CERN'] ## and that's it
         elif secondary:
             if self.heavyRead(secondary):
-                sites_allowed = sorted(set(SI.sites_T0s + SI.sites_T1s + SI.sites_with_goodIO))
+                # Get PU locations which are protected by wmcore_transferor in terms of CE/PSN name
+                rucioClient = RucioClient()
+                for sec in secondary:
+                    pileup_locations = rucioClient.getDatasetLocationsByAccount(sec, "wmcore_transferor")
+                    sites_allowed += pileup_locations
+                sites_allowed = sorted(set(sites_allowed))
                 print "Reading minbias"
             else:
                 sites_allowed = sorted(set(SI.sites_T0s + SI.sites_T1s + SI.sites_with_goodAAA))
