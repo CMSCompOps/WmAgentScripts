@@ -5,7 +5,7 @@ Author     : Hasan Ozturk <haozturk AT cern dot com>
 Description: Class which contains helper functions for web interaction
 
 """
-
+import json
 import os
 import httplib
 from UnifiedConfiguration import UnifiedConfiguration

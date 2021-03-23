@@ -5,8 +5,11 @@ Author     : Hasan Ozturk <haozturk AT cern dot com>
 Description: Workflow class provides all the information needed for the filtering of workflows in assistance manual.
 
 """
-from utils.WebTools import getResponse
-from utils.SearchTools import findKeys
+from JIRAClient import JIRAClient
+
+from utilities.WebTools import getResponse
+from utilities.SearchTools import findKeys
+
 
 class Workflow:
 
@@ -43,8 +46,8 @@ class Workflow:
                         return item
 
         except Exception as error:
-            print 'Failed to get workflow params from reqmgr for %s '% self.workflowName
-            print str(error) 
+            print 'Failed to get workflow params from reqmgr for %s ' % self.workflowName
+            print str(error)
 
     def getPrepID(self):
         """
@@ -80,7 +83,6 @@ class Workflow:
 
         return self.workflowParams.get('SiteWhitelist')
 
-
     def getCampaigns(self):
         """
         Function to get the list of campaigns that this workflow belongs to
@@ -89,13 +91,12 @@ class Workflow:
         :returns: list of campaigns that this workflow belongs to
         :rtype: list of strings
         """
-        
-        return findKeys('Campaign',self.workflowParams)
 
+        return findKeys('Campaign', self.workflowParams)
 
     ## Get runtime related values
 
-    def getAge():
+    def getAge(self):
         """
         Number of days since the creation of the workflow
 
@@ -105,7 +106,7 @@ class Workflow:
         """
         pass
 
-    def getLabels():
+    def getLabels(self):
         """
         A workflow can have multiple labels. These labels are also going to be present on JIRA
         Current labels:
@@ -117,18 +118,33 @@ class Workflow:
         :returns: list of labels
         :rtype: list
         """
-        pass
 
-    def getErrors():
-    	"""
+        prepID = self.getPrepID()
+        JC = JIRAClient()
+
+        tickets = JC.find({'prepid': prepID})
+        labels = []
+        if len(tickets) == 0:
+            ## TODO: Create a ticket for every workflow in assistance (Checkor module)
+            print "There is no JIRA ticket for %s" % prepID
+        else:
+            ## pick up the last one
+            print "There is at least one JIRA ticket, taking the last one"
+            ticket = sorted(tickets, key=lambda o: JC.created(o))[-1]
+            labels = ticket.fields.labels
+
+        return labels
+
+    def getErrors(self):
+        """
         :param None
         :returns: a dictionary containing error codes and number of failed jobs for each task/step in the following format::
                   {task: {errorcode: {site: failed_job_count}}}
         :rtype: dict
         """
-    	pass
+        pass
 
-    def getFailureRate():
+    def getFailureRate(self):
         """
         :param None
         :returns: a dictionary containing failure rates for each task/step in the following format::
@@ -147,10 +163,10 @@ class Workflow:
         :returns: the name of the PD that this workflow reads
         :rtype: string 
         """
-        
-        return findKeys('InputDataset',self.workflowParams)
 
-    def getPrimaryDatasetLocation():
+        return findKeys('InputDataset', self.workflowParams)
+
+    def getPrimaryDatasetLocation(self):
         """
         :assumption: every production workflow reads just one PD
 
@@ -168,10 +184,10 @@ class Workflow:
         :returns: list of the names of PUs that this workflow reads
         :rtype: list of strings
         """
-        
-        return findKeys('MCPileup',self.workflowParams)
 
-    def getSecondaryDatasetsLocation():
+        return findKeys('MCPileup', self.workflowParams)
+
+    def getSecondaryDatasetsLocation(self):
         """
         :info: a workflow can read more than one secondary datasets
 
@@ -181,7 +197,7 @@ class Workflow:
         """
         pass
 
-    def getPrimaryAAA():
+    def getPrimaryAAA(self):
         """
         Function to get the primaryAAA/TrustSitelists value of the request (Either True or False)
 
@@ -191,7 +207,7 @@ class Workflow:
         """
         pass
 
-    def getSecondaryAAA():
+    def getSecondaryAAA(self):
         """
         Function to get the secondaryAAA/TrustPUSitelists value of the request (Either True or False)
 
@@ -200,10 +216,3 @@ class Workflow:
         :rtype: boolean
         """
         pass
-
-
-
-
-    
-
-
