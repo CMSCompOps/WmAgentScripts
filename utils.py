@@ -7372,8 +7372,9 @@ class workflowInfo:
                 # Get PU locations which are protected by wmcore_transferor in terms of CE/PSN name
                 rucioClient = RucioClient()
                 for sec in secondary:
-                    pileup_locations = rucioClient.getDatasetLocationsByAccount(sec, "wmcore_transferor")
-                    sites_allowed += pileup_locations
+                    pileup_locations_mstransferor = rucioClient.getDatasetLocationsByAccount(sec, "wmcore_transferor")
+                    pileup_locations_transferops = rucioClient.getDatasetLocationsByAccount(sec, "transfer_ops")
+                    sites_allowed += pileup_locations_mstransferor + pileup_locations_transferops
                 sites_allowed = sorted(set(sites_allowed))
                 print "Reading minbias"
             else:
