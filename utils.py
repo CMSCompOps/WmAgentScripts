@@ -7433,20 +7433,20 @@ class workflowInfo:
                 sites_allowed = list(set(sites_allowed) - set(c_black_list))
                 sites_not_allowed = c_black_list
 
-        #ncores = self.getMulticore()
-        #mem = self.getMemory()
-        #memory_allowed = SI.sitesByMemory( mem , maxCore=ncores)
-        #if memory_allowed!=None:
+        ncores = self.getMulticore()
+        mem = self.getMemory()
+        memory_allowed = SI.sitesByMemory( mem , maxCore=ncores)
+        if memory_allowed!=None:
             ## mask to sites ready for mcore
-        #    if verbose:
-        #        print ("[INFO] Sites allowing {} MB and {} core are".format(mem, ncores, sorted(memory_allowed)))
-        #    if  ncores>1:
-        #        memory_allowed = list(set(memory_allowed) & set(SI.sites_mcore_ready))
-        #    if verbose:
-        #        print ("[INFO] Sites ready for multicore: {}".format(sorted(list(set(SI.sites_mcore_ready)))))
-        #    sites_removed = list(set(sites_allowed) - set(memory_allowed))
-        #    sites_allowed = list(set(sites_allowed) & set(memory_allowed))
-        #print("Removing sites due to {} MB and {} core(s) requirements: {}".format(mem, ncores, sorted(sorted(sites_removed))))
+            if verbose:
+                print ("[INFO] Sites allowing {} MB and {} core are".format(mem, ncores, sorted(memory_allowed)))
+            if  ncores>1:
+                memory_allowed = list(set(memory_allowed) & set(SI.sites_mcore_ready))
+            if verbose:
+                print ("[INFO] Sites ready for multicore: {}".format(sorted(list(set(SI.sites_mcore_ready)))))
+            sites_removed = list(set(sites_allowed) - set(memory_allowed))
+            sites_allowed = list(set(sites_allowed) & set(memory_allowed))
+        print("Removing sites due to {} MB and {} core(s) requirements: {}".format(mem, ncores, sorted(sorted(sites_removed))))
 
         ## check on CC7 compatibility
         #archs = self.getArchs()
