@@ -954,13 +954,7 @@ class CheckBuster(threading.Thread):
             wfi.sendLog('checkor',"%s has large lumisections\n%s"%( wfo.name, json.dumps(events_per_lumi, indent=2)))
             ## hook for rejecting the request ?
             assistance_tags.add('biglumi')
-            is_closing = False 
-
-        ## custodial copy
-        custodial_locations = {}
-        custodial_presences = {}
-
-        time_point("checked custodiality", sub_lap=True)
+            is_closing = False
 
         ## presence in rucio
         rucio_presence ={}
@@ -1013,10 +1007,6 @@ class CheckBuster(threading.Thread):
             dbs_invalid[output] = dbs3Client.getFileCountDataset( output, onlyInvalid=True)
 
         ## prepare the check on having a valid subscription to tape
-        out_worth_checking = [out for out in custodial_locations.keys() if out.split('/')[-1] not in vetoed_custodial_tier]
-        size_worth_checking = sum([(getDatasetSize(out)/1023. if not wfi.isRelval() else 0.) for out in out_worth_checking ]) ## size in TBs of all outputs
-        size_worht_going_to_ddm = sum([getDatasetSize(out)/1023. for out in out_worth_checking if out.split('/')[-1] in to_ddm_tier ]) ## size in TBs of all outputs
-        all_relevant_output_are_going_to_tape = all(map( lambda sites : len(sites)!=0, [custodial_locations[out] for out in out_worth_checking]))
 
         show_N_only = 10 ## number of files to include in a report log
 
@@ -1082,9 +1072,9 @@ class CheckBuster(threading.Thread):
             else:
                 ignoreduplicates[out] = options.ignoreduplicates
 
-
-        ## check for duplicates prior to making the tape subscription ## this is quite expensive and we run it twice for each sample
-        if (not stop_duplicate_check) and (is_closing or bypass_checks) and (not all_relevant_output_are_going_to_tape):
+        # Duplicate check is disabled for now
+        stop_duplicate_check = True
+        if (not stop_duplicate_check) and (is_closing or bypass_checks):
             print "starting duplicate checker for",wfo.name
             for output in wfi.request['OutputDatasets']:
                 if (output in ignoreduplicates) and (ignoreduplicates[output]):
@@ -1131,104 +1121,6 @@ class CheckBuster(threading.Thread):
                 is_closing = False 
 
         time_point("checked duplicates", sub_lap=True)
-
-            
-        
-        if is_closing and not all_relevant_output_are_going_to_tape:
-            print wfo.name,"has not all custodial location"
-            print json.dumps(custodial_locations, indent=2)
-
-            ##########
-            ## hook for making a custodial replica ?
-            custodial = None
-            ## get from other outputs
-            for output in out_worth_checking:
-                if len(custodial_locations[output]): 
-                    custodial = custodial_locations[output][0]
-            if custodial and float(SI.storage[custodial]) < size_worth_checking:
-                print "cannot use the other output custodial:",custodial,"because of limited space"
-                custodial = None
-
-            ## try to get it from campaign configuration
-            force_custodial = False
-            if not custodial:
-                for output in out_worth_checking:
-                    campaign = campaigns[output]
-                    if campaign in CI.campaigns and 'custodial' in CI.campaigns[campaign]:
-                        custodial = CI.campaigns[campaign]['custodial']
-                        print "Setting custodial to",custodial,"from campaign configuration"
-                        force_custodial = True
-
-            group = None
-            #phedex_group is a name parameter defined in batchor
-            if campaign in CI.campaigns and 'phedex_group' in CI.campaigns[campaign]:
-                group = CI.campaigns[campaign]['phedex_group']
-                print "using group",group,"for replica"
-
-            if not force_custodial and custodial and float(SI.storage[custodial]) < size_worth_checking:
-                print "cannot use the campaign configuration custodial:",custodial,"because of limited space"
-                custodial = None
-
-            ## get from the parent
-            pick_custodial = True
-            use_parent_custodial = UC.get('use_parent_custodial')
-            tape_size_limit = options.tape_size_limit if options.tape_size_limit else UC.get("tape_size_limit")
-                
-            _,prim,_,_ = wfi.getIO()
-                                
-            if not force_custodial and custodial and float(SI.storage[custodial]) < size_worth_checking:
-                print "cannot use the custodial:",custodial,"because of limited space"
-                custodial = None
-
-            if custodial and size_worth_checking > tape_size_limit:
-                wfi.sendLog('checkor',"The total output size (%s TB) is too large for the limit set (%s TB)"%( size_worth_checking, tape_size_limit))
-                assistance_tags.add('bigoutput')
-                custodial = None
-
-            if custodial:
-                for output in out_worth_checking:
-                    print output
-                    if getDatasetSize(output)/1023 > tape_size_limit:
-                        wfi.sendLog('checkor',"%s output size (%s TB) is too large for the limit set (%s TB)"%( output, out_worth_checking[output], tape_size_limit))
-                        assistance_tags.add('bigoutput')
-                        custodial = None
-
-
-            if not custodial:
-                print "cannot find a custodial for",wfo.name
-                wfi.sendLog('checkor',"cannot find a custodial for %s probably because of the total output size %d"%( wfo.name, size_worth_checking))
-                sendLog('checkor',"cannot find a custodial for %s probably because of the total output size %d"%( wfo.name, size_worth_checking), level='critical')
-
-            picked_a_tape = custodial and (is_closing or bypass_checks)
-            #cannot be bypassed
-            is_closing = False
-                
-            if picked_a_tape:
-                print "picked",custodial,"for tape copy"
-                ## remember how much you added this round already ; this stays locally
-                SI.storage[custodial] -= size_worth_checking
-                ## register the custodial request, if there are no other big issues
-                holding = []
-                for output in out_worth_checking:
-                    if not len(custodial_locations[output]):
-                        if rucio_presence[output]>=1:
-                            wfi.sendLog('checkor','Using %s as a tape destination for %s'%(custodial, output))
-                            self.custodials[custodial].append( output )
-                            if group: self.custodials[custodial][-1]+='@%s'%group
-                            ## let's wait and see if that's needed 
-                            assistance_tags.add('custodial')
-                            holding.append( output )
-                        elif output in pass_stats_check and pass_stats_check[output]:
-                                ## there is no file in rucio, but the actual stats check is OK, meaning we are good to let this pass along. the dbs/rucio check will pick this up anyways otherwise
-                            wfi.sendLog('checkor','No file in rucio for %s, but statistics check passed'%output)
-                        else:
-                            ## does not look good
-                            wfi.sendLog('checkor','No file in rucio for %s, not good to add to custodial requests'%output)
-                            holding.append( output )
-                if not holding:
-                    is_closing = True
-
-        time_point("determined tape location", sub_lap=True)
 
         fraction_invalid = 0.20
         if not all([(dbs_invalid[out] <= int(fraction_invalid*dbs_presence[out])) for out in wfi.request['OutputDatasets']]) and not options.ignoreinvalid:
