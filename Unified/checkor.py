@@ -43,27 +43,12 @@ def get_campaign(output, wfi):
 
 def getDatasetFiles(url, dataset ,without_invalid=True ):
 
-    # VK TODO: can be replaced with list of files API
-    # JRV: done through getDatasetFileArray
     files = getDatasetFileArray( dataset, validFileOnly=without_invalid, detail=True)
     dbs_filenames = [f['logical_file_name'] for f in files]
-
-    #conn = make_x509_conn(url)
-    #conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-
-    #r1=conn.request("GET",'/phedex/datasvc/json/prod/filereplicas?dataset=%s'%(dataset))
-    #r2=conn.getresponse()
-    #result = json.loads(r2.read())
-    #items=result['phedex']['block']
-    #phedex_filenames = []
-    #for block in items:
-    #    for f in block['file']:
-    #        phedex_filenames.append(f['name'])
 
     rucioClient = RucioClient()
     rucio_filenames = rucioClient.getFileNamesDataset(dataset)
 
-    #return dbs_filenames, phedex_filenames, list(set(dbs_filenames) - set(phedex_filenames)), list(set(phedex_filenames)-set(dbs_filenames))
     return dbs_filenames, rucio_filenames, list(set(dbs_filenames) - set(rucio_filenames)), list(set(rucio_filenames)-set(dbs_filenames))
 
 def checkor(url, spec=None, options=None):
@@ -135,7 +120,6 @@ def checkor(url, spec=None, options=None):
 
 
     custodials = defaultdict(list) #sites : dataset list
-    #transfers = defaultdict(list) #sites : dataset list
     invalidations = [] #a list of files
     SI = siteInfo()
     CI = campaignInfo()
@@ -208,16 +192,7 @@ def checkor(url, spec=None, options=None):
     
     ## remove empty entries ...
     bypasses = filter(None, bypasses)
-
-    #pattern_fraction_pass = UC.get('pattern_fraction_pass')
-    #cumulative_fraction_pass = UC.get('cumulative_fraction_pass')
-    #timeout_for_damping_fraction = UC.get('damping_fraction_pass')
-    #damping_time = UC.get('damping_fraction_pass_rate')
-    #damping_fraction_pass_max = float(UC.get('damping_fraction_pass_max')/ 100.)
-    #acdc_rank_for_truncate = UC.get('acdc_rank_for_truncate')
-
     random.shuffle( wfs )
-
     in_manual = 0
 
     ## now you have a record of what file was invalidated globally from TT
@@ -253,7 +228,6 @@ def checkor(url, spec=None, options=None):
     for iwfo,wfo in enumerate(wfs):
         ## do the check other one workflow
         if spec and not (spec in wfo.name): continue
-        if not spec and ('cmsunified_task_HIG-RunIIFall17wmLHEGS-05036__v1_T_200712_005621_4159'.lower() in (wfo.name).lower() or 'pdmvserv_task_HIG-RunIISummer16NanoAODv7-03979__v1_T_200915_013748_1986'.lower() in (wfo.name).lower()): continue
         checkers.append( CheckBuster(
             will_do_that_many = will_do_that_many,
             url = url,
@@ -346,8 +320,6 @@ def checkor(url, spec=None, options=None):
         for wfo in session.query(Workflow).filter(Workflow.status.startswith('assistance')).all():
             count_statuses[wfo.status]+=1
         some_details +='\n'.join(['%3d in status %s'%( count_statuses[st], st ) for st in sorted(count_statuses.keys())])
-        #sendLog('checkor',"Fresh status are available at %s/assistance.html\n%s"%(unified_url, some_details))
-        #sendEmail("fresh assistance status available","Fresh status are available at %s/assistance.html\n%s"%(unified_url, some_details),destination=['katherine.rozo@cern.ch'])
         pass
 
     print "File Invalidation"
@@ -382,12 +354,8 @@ class CheckBuster(threading.Thread):
 
     def run(self):
         try:
-            #with open(self.log_file, 'w') as sys.stdout:
             self.check()
         except Exception as e:
-            #print "failed on", self.wfo.name
-            #print "due to"
-            #print str(e)
             ## there should be a warning at this point
             import traceback
             sendLog('checkor','failed on %s due to %s and %s'%( self.wfo.name, str(e), traceback.format_exc()), level='critical')
@@ -486,9 +454,6 @@ class CheckBuster(threading.Thread):
             wfi.sendLog('checkor',"no need to check on %s in status %s"%(wfo.name, wfo.wm_status))
             return
 
-
-        #session.commit()        
-        #sub_assistance="" # if that string is filled, there will be need for manual assistance
         existing_assistance_tags = set(wfo.status.split('-')[1:]) #[0] should be assistance
         assistance_tags = set()
 
@@ -726,7 +691,6 @@ class CheckBuster(threading.Thread):
             default_pass = UC.get('default_fraction_pass')
             fractions_pass[output] = default_pass
             fractions_announce[output] = 1.0
-            #fractions_truncate_recovery[output] = 0.98 ## above this threshold if the request will pass stats check, we close the acdc
             c = campaigns[output]
             if c in CI.campaigns and 'earlyannounce' in CI.campaigns[c]:
                 wfi.sendLog('checkor', "Allowed to announce the output %s over %.2f by campaign requirement"%(out, CI.campaigns[c]['earlyannounce']))
@@ -783,15 +747,9 @@ class CheckBuster(threading.Thread):
                 print "This is not going to end well if you truncate at a lower threshold than passing",fractions_truncate_recovery[output],fractions_pass[output]
                 ## floor truncating
                 fractions_truncate_recovery[output] = fractions_pass[output]
-                ##### OR 
-                ##wfi.sendLog('checkor', "Lowering the pass bar since recovery is being truncated")
-                #
-                #fractions_pass[output] = fractions_truncate_recovery[output]
 
 
         #introduce a reduction factor on very old requests
-        #1% every damping_time days after > timeout_for_damping_fraction in completed. Not more than damping_fraction_pass_max
-        #fraction_damping = min(0.01*(max(running_delay - timeout_for_damping_fraction,0)/damping_time),damping_fraction_pass_max)
         fraction_damping = min(0.01*(max(completed_delay - timeout_for_damping_fraction,0)/damping_time),damping_fraction_pass_max)
         print "We could reduce the passing fraction by",fraction_damping,"given it's been in for long"
         long_lasting_choped = False
@@ -805,11 +763,8 @@ class CheckBuster(threading.Thread):
         if long_lasting_choped :
             msg = 'Reducing pass thresholds by %.3f%% for long lasting workflow %s '%(100*fraction_damping, wfi.request['RequestName'])
             wfi.sendLog('checkor', msg)
-            #sendLog('checkor', msg, level='critical')
-            
+
         ## do something about workflow with high order ACDC
-        # acdc_order == -1  None
-        # acdc_order == 0 ACDC0 first round
         if acdc_order > acdc_rank_for_truncate:
             ## there is high order acdc on-going. chop the output at the pass fraction
             wfi.sendLog('checkor','Truncating at pass threshold because of ACDC of rank %d'% acdc_order)
@@ -952,10 +907,7 @@ class CheckBuster(threading.Thread):
 
             ## hook for creating automatically ACDC ?
             if not bypass_checks:
-                ###############################
                 assistance_tags.add('recovery' if use_recoveror else 'manual')
-                #in_manual += 0 if use_recoveror else 1
-                ###############################
                 is_closing = False
         else:
             wfi.sendLog('checkor','passing stats check \nCurrent stats:\n%s \nRequired stats:\n%s'%( json.dumps(percent_completions, indent=2), json.dumps(fractions_pass, indent=2) ))
@@ -970,10 +922,8 @@ class CheckBuster(threading.Thread):
             ## all outputs are over the top ...
             wfi.sendLog('checkor','Should force-complete the request going over 100%')
             wfi.sendLog('checkor',json.dumps(percent_completions, indent=2))
-            #sendEmail( "dataset over completion", "Please take a look at %s"% wfo.name)
             assistance_tags.add('over100')
             ## set to force complete the whole thing
-            #forceComplete(url, wfi)
 
         time_point("checked output size", sub_lap=True)
 
@@ -1005,13 +955,6 @@ class CheckBuster(threading.Thread):
             ## hook for rejecting the request ?
             assistance_tags.add('biglumi')
             is_closing = False 
-
-
-        #any_presence = {}
-        #for output in wfi.request['OutputDatasets']:
-        #    any_presence[output] = getDatasetPresence(url, output, vetoes=[])
-
-        #time_point("checked dataset presence", sub_lap=True)
 
         ## custodial copy
         custodial_locations = {}
@@ -1097,7 +1040,6 @@ class CheckBuster(threading.Thread):
 
                     # Corrections to the lists of files present in Phedex for the data Tiers managed by Rucio
                     _,dsn,process_string,tier = output.split('/')
-#                    if tier in set(UC.get('tiers_to_rucio_relval')) | set(UC.get('tiers_to_rucio_nonrelval')):
                     if True:
                         # Here recalculating the filenames as a union of the rucio_files | rucio_files
                         all_filenames = set(rucioClient.getFileNamesDataset(out))
@@ -1122,8 +1064,6 @@ class CheckBuster(threading.Thread):
                         if were_invalidated:
                             wfi.sendLog('checkor',"These %d files were invalidated globally,showing %d only\n%s"%(len(were_invalidated),show_N_only,
                                                                                                                   "\n".join(were_invalidated[:show_N_only])))
-            #if not bypass_checks:
-            ## I don't think we can by pass this
             is_closing = False
         
         time_point("checked file count", sub_lap=True)
@@ -1131,11 +1071,9 @@ class CheckBuster(threading.Thread):
         ## put that heavy part almost at the end
         ## duplication check
         duplications = {}
-        #files_per_rl = {}
         lumis_with_duplicates = {}
         for output in wfi.request['OutputDatasets']:
             duplications[output] = "skiped"
-            #files_per_rl[output] = "skiped"
 
         ignoreduplicates ={}
         for out,c in campaigns.items():
@@ -1165,8 +1103,6 @@ class CheckBuster(threading.Thread):
             if is_closing and any(duplications.values()):
                 duplicate_notice = ""
                 duplicate_notice += "%s has duplicates\n"%wfo.name
-                #duplicate_notice += json.dumps( duplications,indent=2)
-                #duplicate_notice += '\n'
                 ## TO DO, make the file list invalidation analysis. to find the files with least number of lumis
                 duplicate_notice += "This number of lumis are duplicated\n"
                 duplicate_notice += json.dumps( dict([(o,len(badl)) for o,badl in lumis_with_duplicates.items() ]), indent=2)
@@ -1239,33 +1175,10 @@ class CheckBuster(threading.Thread):
             tape_size_limit = options.tape_size_limit if options.tape_size_limit else UC.get("tape_size_limit")
                 
             _,prim,_,_ = wfi.getIO()
-#            if not custodial and prim and use_parent_custodial:
-#                parent_dataset = prim.pop()
-                ## this is terribly dangerous to assume only 
-#                parents_custodial = phedexClient.getCustodialSubscriptionRequestSite( parent_dataset )
-                ###parents_custodial = findCustodialLocation(url, parent_dataset)
-#                if not parents_custodial:
-#                    parents_custodial = []
-
-#                if len(parents_custodial):
-#                    custodial = parents_custodial[0]
-#                else:
-#                    print "the input dataset",parent_dataset,"does not have custodial in the first place. abort"
-                    #sendEmail( "dataset has no custodial location", "Please take a look at %s in the logs of checkor"%parent_dataset)
-                    ## does not work for RAWOADSIM
-#                    sendLog('checkor',"Please take a look at %s for missing custodial location"% parent_dataset)
-                    ## cannot be bypassed, this is an issue to fix
-#                    is_closing = False
-#                    pick_custodial = False
-#                    assistance_tags.add('parentcustodial')
                                 
             if not force_custodial and custodial and float(SI.storage[custodial]) < size_worth_checking:
                 print "cannot use the custodial:",custodial,"because of limited space"
                 custodial = None
-
-            #if not custodial and pick_custodial and not force_custodial:
-                ## pick one at random
-            #    custodial = SI.pick_SE(size=size_worth_checking)
 
             if custodial and size_worth_checking > tape_size_limit:
                 wfi.sendLog('checkor',"The total output size (%s TB) is too large for the limit set (%s TB)"%( size_worth_checking, tape_size_limit))
@@ -1317,17 +1230,6 @@ class CheckBuster(threading.Thread):
 
         time_point("determined tape location", sub_lap=True)
 
-        ## disk copy 
-        #disk_copies = {}
-        #for output in wfi.request['OutputDatasets']:
-        #    disk_copies[output] = [s for s in any_presence[output] if (not 'MSS' in s) and (not 'Buffer' in s)]
-
-        #if not all(map( lambda sites : len(sites)!=0, disk_copies.values())):
-        #    print wfo.name,"has not all output on disk"
-        #    print json.dumps(disk_copies, indent=2)
-
-
-
         fraction_invalid = 0.20
         if not all([(dbs_invalid[out] <= int(fraction_invalid*dbs_presence[out])) for out in wfi.request['OutputDatasets']]) and not options.ignoreinvalid:
             print wfo.name,"has a dbs invalid file level too high"
@@ -1337,10 +1239,6 @@ class CheckBuster(threading.Thread):
             ## need to be going and taking an eye
             assistance_tags.add('invalidfiles')
             ## no need for holding stuff because of a fraction of invalid files
-            #if not bypass_checks:
-            #    #sub_assistance+="-invalidfiles"
-            #    is_closing = False
-
 
         time_point("checked invalidation", sub_lap=True)
 
@@ -1365,7 +1263,6 @@ class CheckBuster(threading.Thread):
             rec['fractionpass'] = math.floor(fractions_pass.get(output,0)*10000)/100.
             rec['duplicate'] = duplications[output] if output in duplications else 'N/A'
             rec['closeOutDataset'] = is_closing
-            #rec['transPerc'] = float('%.2f'%any_presence[output][ disk_copies[output][0]][1]) if len(disk_copies[output])!=0 else 'N/A'
             rec['correctLumis'] = int(events_per_lumi[output]) if (events_per_lumi[output] > lumi_upper_limit[output]) else True
             rec['dbsFiles'] = dbs_presence[output]
             rec['dbsInvFiles'] = dbs_invalid[output]
@@ -1376,13 +1273,11 @@ class CheckBuster(threading.Thread):
             rec['timestamp'] = time.mktime(now)
             rec['updated'] = time.asctime(now)+' (GMT)'
 
-        #fDB.update( wfo.name, put_record)
         self.put_record = put_record
 
         ## make the lumi summary 
         if wfi.request['RequestType'] == 'ReReco':
             try:
-                #os.system('python Unified/lumi_summary.py %s 1 > /dev/null'%(wfi.request['PrepID']))
                 os.system('python Unified/lumi_summary.py %s %d > /dev/null'%(wfi.request['PrepID'],
                                                                               0 if all(fetched.values()) else 1)) ## no need for fresh fetch if that has been done for all already
                 os.system('python Unified/lumi_plot.py %s > /dev/null'%(wfi.request['PrepID']))
@@ -1427,15 +1322,8 @@ class CheckBuster(threading.Thread):
                     
                 
                 if res in [None,"None"]:
-                    #wfo.status = 'close'
                     self.to_status = 'close'
-                    #session.commit()
-                    #fDB.pop( wfo.name )
                     self.force_by_mcm = force_by_mcm
-                    #if use_mcm and force_by_mcm:
-                        ## shoot large on all prepids, on closing the wf
-                        #for pid in pids:
-                            #mcm.delete('/restapi/requests/forcecomplete/%s'%pid)
                 else:
                     print "could not close out",wfo.name,"will try again next time"
         else:
@@ -1445,7 +1333,6 @@ class CheckBuster(threading.Thread):
                 for member in acdc+acdc_inactive+[wfo.name]:
                     try:
                         if options and options.no_report: continue
-                        #expose = UC.get('n_error_exposed') if (report_created < 50 and 'manual' in assistance_tags) else 0
                         expose = UC.get('n_error_exposed') if ('manual' in assistance_tags) else 0
                         so = showError_options( expose = expose )
                         parse_one(url, member, so)
@@ -1498,15 +1385,6 @@ class CheckBuster(threading.Thread):
             
 
             if go_notify:
-                #if wfo.name in already_notified:
-                #    print "double notification"
-                #    sendEmail('double notification','please take a look at %s'%(wfo.name))                    
-                #else:
-                #    already_notified.append( wfo.name )
-
-                ###detailslink = 'https://cmsweb.cern.ch/reqmgr/view/details/%s'
-                #detailslink = 'https://cmsweb.cern.ch/reqmgr2/fetch?rid=%s'%(wfo.name)
-                ###perflink = 'https://cmsweb.cern.ch/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s'%(wfo.name)
                 perflink = '%s/report/%s'%(unified_url,wfo.name)
                 splitlink = 'https://cmsweb.cern.ch/reqmgr/view/splitting/%s'%(wfo.name)
                 ## notify templates
@@ -1514,8 +1392,6 @@ class CheckBuster(threading.Thread):
                     'recovery': 'Samples completed with missing statistics:\n%s\n%s '%( '\n'.join(['%.2f %% complete for %s'%(percent_completions[output]*100, output) for output in wfi.request['OutputDatasets'] ] ), perflink ),
                     'biglumi': 'Samples completed with large luminosity blocks:\n%s\n%s '%('\n'.join(['%d > %d for %s'%(events_per_lumi[output], lumi_upper_limit[output], output) for output in wfi.request['OutputDatasets'] if (events_per_lumi[output] > lumi_upper_limit[output])]), splitlink),
                     'duplicates': 'Samples completed with duplicated luminosity blocks:\n%s\n'%( '\n'.join(['%s'%output for output in wfi.request['OutputDatasets'] if output in duplications and duplications[output] ] ) ),
-                    #'filemismatch': 'Samples completed with inconsistency in DBS/Phedex',
-                    #'manual' :                     'Workflow completed and requires manual checks by Ops',
                     }
                 
                 content = "The request PREPID (WORKFLOW) is facing issue in production.\n"
@@ -1543,10 +1419,8 @@ class CheckBuster(threading.Thread):
 
             ## case where the workflow was in manual from recoveror
             if not 'manual' in wfo.status or new_status!='assistance-recovery':
-                #wfo.status = new_status
                 if not options.test:
                     wfi.sendLog('checkor','setting %s to %s'%(wfo.name, new_status))
-                    #session.commit()
                     self.to_status = new_status
             else:
                 print "current status is",wfo.status,"not changing to anything"
@@ -1627,5 +1501,3 @@ if __name__ == "__main__":
     
     if (not spec and do_html_in_each_module) or options.html:
         htmlor()
-
-
