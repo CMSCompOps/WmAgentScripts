@@ -1,11 +1,5 @@
 #!/usr/bin/env python
-from assignSession import *
-from utils import getWorkflows, workflowInfo, getDatasetEventsAndLumis, siteInfo, campaignInfo, getWorkflowById, forceComplete, sendLog, reqmgr_url, dbs_url, dbs_url_writer, checkMemory, ThreadHandler, wtcInfo
-from utils import componentInfo, unifiedConfiguration, userLock, moduleLock, dataCache, unified_url, getDatasetLumisAndFiles, getDatasetRuns, duplicateAnalyzer, invalidateFiles, findParent, do_html_in_each_module, getDatasetFileArray
-import dbs3Client
-dbs3Client.dbs3_url = dbs_url
-dbs3Client.dbs3_url_writer = dbs_url_writer
-import reqMgrClient
+
 import json
 from collections import defaultdict
 import optparse
@@ -14,14 +8,51 @@ import copy
 import time
 import random
 import math
+import threading
+
+from assignSession import *
+from htmlor import htmlor
+from showError import parse_one, showError_options
+
+from RucioClient import RucioClient
 from McMClient import McMClient
 from JIRAClient import JIRAClient
-from htmlor import htmlor
-from utils import sendEmail 
-from utils import closeoutInfo
-from showError import parse_one, showError_options
-import threading
-from RucioClient import RucioClient
+import dbs3Client
+import reqMgrClient
+
+from utils import getWorkflows,\
+                  workflowInfo,\
+                  getDatasetEventsAndLumis, \
+                  siteInfo, \
+                  campaignInfo, \
+                  getWorkflowById, \
+                  forceComplete, \
+                  sendLog, \
+                  reqmgr_url, \
+                  dbs_url, \
+                  dbs_url_writer, \
+                  checkMemory,\
+                  ThreadHandler,\
+                  wtcInfo,\
+                  componentInfo, \
+                  unifiedConfiguration, \
+                  userLock, \
+                  moduleLock, \
+                  dataCache, \
+                  unified_url, \
+                  getDatasetLumisAndFiles,\
+                  getDatasetRuns,\
+                  duplicateAnalyzer,\
+                  invalidateFiles, \
+                  findParent, \
+                  do_html_in_each_module, \
+                  getDatasetFileArray,\
+                  sendEmail, \
+                  closeoutInfo
+
+dbs3Client.dbs3_url = dbs_url
+dbs3Client.dbs3_url_writer = dbs_url_writer
+
 def get_campaign(output, wfi):
     ## this should be a perfect matching of output->task->campaign
     wf_campaign = None
