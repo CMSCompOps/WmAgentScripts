@@ -1,5 +1,5 @@
 #!/usr/bin/env python  
-from utils import workflowInfo, getWorkflows, sendEmail, componentInfo, monitor_dir, reqmgr_url, siteInfo, sendLog, getWorkflowById, isHEPCloudReady, agentInfo, unifiedConfiguration, monitor_eos_dir, base_eos_dir, batchInfo, reportInfo
+from utils import workflowInfo, getWorkflows, sendEmail, componentInfo, monitor_dir, reqmgr_url, siteInfo, sendLog, getWorkflowById, agentInfo, unifiedConfiguration, monitor_eos_dir, base_eos_dir, batchInfo, reportInfo
 
 from assignSession import *
 import reqMgrClient
@@ -35,47 +35,7 @@ if JC:
 
 UC = unifiedConfiguration()
 
-## get all acquired and push one to stepchain so that we can acquire it on nersc
-#N_for_cloud = isHEPCloudReady(reqmgr_url)
-#if N_for_cloud:
-#    print "HEP cloud is ready"
-#    wfs = getWorkflows(reqmgr_url, 'acquired', details=True)
-#    for wf in wfs:
-#        if N_for_cloud<=0: break
-#        wfi = workflowInfo(reqmgr_url, wf['RequestName'], request = wf )
-#        print "testing",wf['RequestName']
-        #if wfi.isGoodToConvertToStepChain() and wfi.isGoodForNERSC(no_step=True) and N_for_cloud:
-        #    print "good to convert to step so that we get something for hepcloud on next round",wf['RequestName']
-        #    os.system('Unified/rejector.py --to_step --clone --comment "convert to step for hepcloud" %s'% wf['RequestName'])
-            ## just do that once and be done with it
-        #    N_for_cloud-=1
-
-        
-
-## send something to T0
-#wfos = session.query(Workflow).filter(Workflow.name.contains('07Aug17')).all()
-#random.shuffle( wfos )
-#for wfo in wfos[:5]:
-#    os.system('Unified/equalizor.py -a --t0 %s'% wfo.name)
-
-## push the PR relval through
-#os.system('Unified/assignor.py _PR_newco')
-#os.system('Unified/assignor.py _PR_ref')
-
-#os.system('Unified/assignor.py RunIISummer16MiniAODv2')
-#os.system('Unified/assignor.py --from_status staging RunIISummer16DR80Premix')
-#os.system('Unified/assignor.py --from_status staging RunIISummer16DR80-')
-
-
 url = reqmgr_url
-
-## get rid of all rejected relvals that could appear in trouble
-#for wfo  in session.query(Workflow).filter(Workflow.status=='trouble').all():
-#    wfi = workflowInfo(url, wfo.name)
-#    if wfi.isRelval():
-#        wfo.status ='forget'
-#        print wfo.name,wfi.request['RequestStatus']
-#session.commit()
 
 wfs = getWorkflows(url, 'assigned', details=True)
 
