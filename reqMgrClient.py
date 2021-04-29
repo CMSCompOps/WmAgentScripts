@@ -970,6 +970,7 @@ def changePriorityWorkflow(url, workflowname, priority):
     else:
         params = {workflowname + ":status": "", workflowname + ":priority": str(priority)}
         data = requestManager1Post(url, "/reqmgr/view/doAdmin", params)
+    return data
 
 def forceCompleteWorkflow(url, workflowname):
     """

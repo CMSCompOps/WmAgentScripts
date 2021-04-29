@@ -22,10 +22,11 @@ def main():
         parser.error("Provide workflow names and priority")
         sys.exit(0)
         
-    priority = args[-1]
+    priority = int(args[-1])
     # repeat for everyone
     for wf in wfs:
-        reqMgrClient.changePriorityWorkflow(url, wf, priority)
+        res = reqMgrClient.changePriorityWorkflow(url, wf, priority)
+        print res
     
 
 if __name__ == "__main__":
