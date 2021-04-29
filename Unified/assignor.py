@@ -2,7 +2,7 @@
 from assignSession import *
 import reqMgrClient
 from utils import workflowInfo, campaignInfo, siteInfo, userLock, unifiedConfiguration, reqmgr_url, monitor_pub_dir, monitor_dir, global_SI
-from utils import getDatasetEventsPerLumi, getLFNbase, lockInfo, isHEPCloudReady, do_html_in_each_module
+from utils import getDatasetEventsPerLumi, getLFNbase, lockInfo, do_html_in_each_module
 from utils import componentInfo, sendEmail, sendLog, getWorkflows, eosRead
 #from utils import lockInfo
 from utils import moduleLock
@@ -293,12 +293,6 @@ def assignor(url ,specific = None, talk=True, options=None):
         #    continue
 
 
-        low_pressure = SI.sites_low_pressure(0.4)
-        ## if any of the site allowed is low pressure : reduce to 1 copy so that it gets started
-        allowed_and_low = sorted(set(low_pressure) & set(sites_allowed))
-        if allowed_and_low:
-            wfh.sendLog('assignor',"The workflow can run at %s under low pressure currently"%( ','.join( allowed_and_low )))
-
         if not len(sites_allowed) and not options.SiteWhitelist:
             if not options.early:
                 wfh.sendLog('assignor',"cannot be assign with no matched sites")
@@ -426,15 +420,6 @@ def assignor(url ,specific = None, talk=True, options=None):
                         #sendEmail("leaving splitting untouched for PU_RD*","please check on "+wfo.name)
                         sendLog('assignor',"leaving splitting untouched for %s, please check on %s"%( pstring, wfo.name), level='critical')
                         wfh.sendLog('assignor',"leaving splitting untouched for PU_RD*, please check.")
-
-        #if isHEPCloudReady(url) and wfh.isGoodForNERSC():
-        #    parameters['Team'] = 'hepcloud'
-        #    parameters['SiteWhitelist'] = ['T3_US_NERSC']
-        #    if primary:
-        #        parameters['TrustSitelists'] = True
-        #    if secondary:
-        #        parameters['TrustPUSitelists'] = True
-        #    sendEmail("sending work to hepcloud","pleasse check on %s"% wfh.request['RequestName'], destination=['hufnagel@fnal.gov'])
 
         ## make sure to autoapprove all NonCustodialSites
         parameters['AutoApproveSubscriptionSites'] = list(set(parameters['NonCustodialSites'] + parameters.get('AutoApproveSubscriptionSites',[])))
