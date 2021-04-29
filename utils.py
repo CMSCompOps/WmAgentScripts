@@ -1132,6 +1132,30 @@ class docCache:
             'cachefile' : None,
             'default' : {}
             }
+        self.cache['ssb_core_max_used'] = {
+            'data': None,
+            'timestamp': time.mktime(time.gmtime()),
+            'expiration': default_expiration(),
+            'getter': lambda: get_dashbssb('scap15min', 'core_max_used'),
+            'cachefile': None,
+            'default': []
+        }
+        self.cache['ssb_core_production'] = {
+            'data': None,
+            'timestamp': time.mktime(time.gmtime()),
+            'expiration': default_expiration(),
+            'getter': lambda: get_dashbssb('scap15min', 'core_production'),
+            'cachefile': None,
+            'default': []
+        }
+        self.cache['ssb_core_cpu_intensive'] = {
+            'data': None,
+            'timestamp': time.mktime(time.gmtime()),
+            'expiration': default_expiration(),
+            'getter': lambda: get_dashbssb('scap15min', 'core_cpu_intensive'),
+            'cachefile': None,
+            'default': []
+        }
         self.cache['gwmsmon_totals'] = {
             'data' : None,
             'timestamp' : time.mktime( time.gmtime()),
