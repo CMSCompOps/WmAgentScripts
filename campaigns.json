@@ -3218,7 +3218,12 @@
     "lumisize": -1,
     "maxcopies": 1,
     "secondaries": {
-      "/RelValFS_PREMIXUP18_PU50/CMSSW_10_6_22-PU_106X_upgrade2018_realistic_v16_FastSim-v1/PREMIX": {}
+      "/RelValFS_PREMIXUP18_PU50/CMSSW_10_6_22-PU_106X_upgrade2018_realistic_v16_FastSim-v1/PREMIX": 
+      {
+           "SiteWhitelist": [
+                     "T2_CH_CERN"
+                            ], 
+    }
     },
     "secondary_AAA": true
   },
@@ -3231,7 +3236,12 @@
     "lumisize": -1,
     "maxcopies": 1,
     "secondaries": {
-      "/RelValFS_PREMIXUP18_PU50/CMSSW_10_6_22-PU_106X_upgrade2018_realistic_v16_FastSim-v1/PREMIX": {}
+      "/RelValFS_PREMIXUP18_PU50/CMSSW_10_6_22-PU_106X_upgrade2018_realistic_v16_FastSim-v1/PREMIX": 
+                {
+                    "SiteWhitelist": [
+                                 "T2_CH_CERN"
+                                      ],
+                 }
     },
     "secondary_AAA": true
   },
@@ -3241,7 +3251,12 @@
     "lumisize": -1,
     "maxcopies": 1,
     "secondaries": {
-      "/RelValFS_PREMIXUP17_PU50/CMSSW_10_6_22-PU_106X_mc2017_realistic_v9_FastSim-v1/PREMIX": {}
+      "/RelValFS_PREMIXUP17_PU50/CMSSW_10_6_22-PU_106X_mc2017_realistic_v9_FastSim-v1/PREMIX": 
+                {
+                   "SiteWhitelist": [
+                                 "T2_CH_CERN"
+                                     ],
+                               }
     },
     "SecondaryLocation": [
       "T2_CH_CERN"
@@ -3254,7 +3269,12 @@
     "lumisize": -1,
     "maxcopies": 1,
     "secondaries": {
-      "/RelValFS_PREMIXUP17_PU50/CMSSW_10_6_22-PU_106X_mc2017_realistic_v9_FastSim-v1/PREMIX": {}
+      "/RelValFS_PREMIXUP17_PU50/CMSSW_10_6_22-PU_106X_mc2017_realistic_v9_FastSim-v1/PREMIX": 
+                {
+                 "SiteWhitelist": [
+                             "T2_CH_CERN"
+                                           ],
+                              }
     },
     "SecondaryLocation": [
       "T2_CH_CERN"
@@ -3267,7 +3287,12 @@
     "lumisize": -1,
     "maxcopies": 1,
     "secondaries": {
-      "/RelValFS_PREMIXUP15_PU25/CMSSW_10_6_22-PU_106X_mcRun2_asymptotic_v16_FastSim-v1/PREMIX": {}
+      "/RelValFS_PREMIXUP15_PU25/CMSSW_10_6_22-PU_106X_mcRun2_asymptotic_v16_FastSim-v1/PREMIX": 
+                {
+                     "SiteWhitelist": [
+                               "T2_CH_CERN"
+                                       ],
+                           }
     },
     "SecondaryLocation": [
       "T2_CH_CERN"
@@ -3280,7 +3305,12 @@
     "lumisize": -1,
     "maxcopies": 1,
     "secondaries": {
-      "/RelValFS_PREMIXUP15_PU25/CMSSW_10_6_22-PU_106X_mcRun2_asymptotic_v16_FastSim-v1/PREMIX": {}
+      "/RelValFS_PREMIXUP15_PU25/CMSSW_10_6_22-PU_106X_mcRun2_asymptotic_v16_FastSim-v1/PREMIX": 
+                {
+                     "SiteWhitelist": [
+                                "T2_CH_CERN"
+                                              ],
+                                         }
     },
     "SecondaryLocation": [
       "T2_CH_CERN"
@@ -3293,7 +3323,12 @@
     "lumisize": -1,
     "maxcopies": 1,
     "secondaries": {
-      "/RelValFS_PREMIXUP15_PU25/CMSSW_10_6_22-PU_106X_mcRun2_asymptotic_v16_FastSim-v1/PREMIX": {}
+      "/RelValFS_PREMIXUP15_PU25/CMSSW_10_6_22-PU_106X_mcRun2_asymptotic_v16_FastSim-v1/PREMIX": 
+                {
+                      "SiteWhitelist": [
+                          "T2_CH_CERN"
+                                       ],
+                                      }
     },
     "SecondaryLocation": [
       "T2_CH_CERN"
@@ -3306,7 +3341,12 @@
     "lumisize": -1,
     "maxcopies": 1,
     "secondaries": {
-      "/RelValFS_PREMIXUP15_PU25/CMSSW_10_6_22-PU_106X_mcRun2_asymptotic_v16_FastSim-v1/PREMIX": {}
+      "/RelValFS_PREMIXUP15_PU25/CMSSW_10_6_22-PU_106X_mcRun2_asymptotic_v16_FastSim-v1/PREMIX": 
+                {
+                      "SiteWhitelist": [
+                                "T2_CH_CERN"
+                                                   ],
+                                            }
     },
     "SecondaryLocation": [
       "T2_CH_CERN"
@@ -3315,7 +3355,7 @@
   },
   "RunIIFall17FSPrePremix": {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "lumisize": -1,
     "maxcopies": 1
   }
