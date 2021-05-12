@@ -3221,9 +3221,9 @@
       "/RelValFS_PREMIXUP18_PU50/CMSSW_10_6_22-PU_106X_upgrade2018_realistic_v16_FastSim-v1/PREMIX": 
       {
            "SiteWhitelist": [
-                     "T2_CH_CERN"
-                            ], 
-    }
+             "T2_CH_CERN"
+           ] 
+      }
     },
     "secondary_AAA": true
   },
@@ -3237,11 +3237,11 @@
     "maxcopies": 1,
     "secondaries": {
       "/RelValFS_PREMIXUP18_PU50/CMSSW_10_6_22-PU_106X_upgrade2018_realistic_v16_FastSim-v1/PREMIX": 
-                {
-                    "SiteWhitelist": [
-                                 "T2_CH_CERN"
-                                      ],
-                 }
+      {
+             "SiteWhitelist": [
+                "T2_CH_CERN"
+             ]
+      }
     },
     "secondary_AAA": true
   },
@@ -3252,11 +3252,11 @@
     "maxcopies": 1,
     "secondaries": {
       "/RelValFS_PREMIXUP17_PU50/CMSSW_10_6_22-PU_106X_mc2017_realistic_v9_FastSim-v1/PREMIX": 
-                {
-                   "SiteWhitelist": [
-                                 "T2_CH_CERN"
-                                     ],
-                               }
+      {
+            "SiteWhitelist": [
+               "T2_CH_CERN"
+             ]
+      }
     },
     "SecondaryLocation": [
       "T2_CH_CERN"
@@ -3273,7 +3273,7 @@
                 {
                  "SiteWhitelist": [
                              "T2_CH_CERN"
-                                           ],
+                                           ]
                               }
     },
     "SecondaryLocation": [
@@ -3291,7 +3291,7 @@
                 {
                      "SiteWhitelist": [
                                "T2_CH_CERN"
-                                       ],
+                                       ]
                            }
     },
     "SecondaryLocation": [
@@ -3309,7 +3309,7 @@
                 {
                      "SiteWhitelist": [
                                 "T2_CH_CERN"
-                                              ],
+                                              ]
                                          }
     },
     "SecondaryLocation": [
@@ -3327,7 +3327,7 @@
                 {
                       "SiteWhitelist": [
                           "T2_CH_CERN"
-                                       ],
+                                       ]
                                       }
     },
     "SecondaryLocation": [
@@ -3345,7 +3345,7 @@
                 {
                       "SiteWhitelist": [
                                 "T2_CH_CERN"
-                                                   ],
+                                                   ]
                                             }
     },
     "SecondaryLocation": [
