@@ -425,8 +425,12 @@
     "value" : "https://wfrecovery.cern.ch",
     "description" : "Base url to the ACDC console"
   },
-  "nCores_for_stepchain": {
+  "max_nCores_for_stepchain": {
     "value" : 4,
-    "description" : "Number of cores(Multicore) for stepchain workflows"
+    "description" : "Maximum number of cores(Multicore) for stepchain workflows"
+  },
+  "max_memory_for_stepchain": {
+    "value" : 7900,
+    "description" : "Maximum memory for stepchain workflows"
   }
 }

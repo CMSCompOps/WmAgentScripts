@@ -3,7 +3,7 @@ from assignSession import *
 import reqMgrClient
 from utils import workflowInfo, setDatasetStatus, invalidate
 from utils import componentInfo, reqmgr_url, getWorkflowById
-from utils import componentInfo, getWorkflowById, sendLog, batchInfo
+from utils import componentInfo, getWorkflowById, sendLog, batchInfo, unifiedConfiguration
 import optparse
 import json
 import re
@@ -13,7 +13,9 @@ import getpass
 username = getpass.getuser()
 
 def rejector(url, specific, options=None):
-    
+
+    UC = unifiedConfiguration()
+
     if options.test:
         print "Test mode - no changes propagate to the production system"
 
@@ -260,6 +262,9 @@ def rejector(url, specific, options=None):
                             step+=1
                         else:
                             break
+                    if mcore > UC.get("max_nCores_for_stepchain") or mem > UC.get("max_memory_for_stepchain"):
+                        mcore = UC.get("max_nCores_for_stepchain")
+                        mem = UC.get("max_memory_for_stepchain")
                     schema['Multicore'] = mcore
                     schema['Memory'] = mem
                 print "New request schema"

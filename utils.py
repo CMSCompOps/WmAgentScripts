@@ -3912,10 +3912,10 @@ class workflowInfo:
             totalTimePerEvent = 0
             efficiency = 0
             #max_ncores = 1
-            nCores = self.UC.get("nCores_for_stepchain")
+            nCores = self.UC.get("max_nCores_for_stepchain")
             for i,info in time_info.items():
                 totalTimePerEvent += info['tpe']
-                efficiency += info['tpe']*info['cores']
+                efficiency += info['tpe']*min(info['cores'], nCores)
                 #if info['cores']>max_ncores: max_ncores = info['cores']
             if debug: print "Total time per event for TaskChain: %0.1f" % totalTimePerEvent
             if totalTimePerEvent > 0:
