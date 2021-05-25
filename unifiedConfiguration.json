@@ -424,5 +424,9 @@
   "acdc_console_url": {
     "value" : "https://wfrecovery.cern.ch",
     "description" : "Base url to the ACDC console"
+  },
+  "nCores_for_stepchain": {
+    "value" : 4,
+    "description" : "Number of cores(Multicore) for stepchain workflows"
   }
 }

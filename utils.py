@@ -3911,15 +3911,18 @@ class workflowInfo:
             if debug: print time_info
             totalTimePerEvent = 0
             efficiency = 0
-            max_ncores = 1
+            #max_ncores = 1
+            nCores = self.UC.get("nCores_for_stepchain")
             for i,info in time_info.items():
                 totalTimePerEvent += info['tpe']
                 efficiency += info['tpe']*info['cores']
-                if info['cores']>max_ncores: max_ncores = info['cores']
+                #if info['cores']>max_ncores: max_ncores = info['cores']
             if debug: print "Total time per event for TaskChain: %0.1f" % totalTimePerEvent
             if totalTimePerEvent > 0:
-                efficiency /= totalTimePerEvent*max_ncores
-                if debug: print "CPU efficiency of StepChain with %u cores: %0.1f%%" % (max_ncores,efficiency*100)
+                #efficiency /= totalTimePerEvent*max_ncores
+                efficiency /= totalTimePerEvent * nCores
+                #if debug: print "CPU efficiency of StepChain with %u cores: %0.1f%%" % (max_ncores,efficiency*100)
+                if debug: print "CPU efficiency of StepChain with %u cores: %0.1f%%" % (nCores, efficiency * 100)
                 acceptable_efficiency = efficiency > self.UC.get("efficiency_threshold_for_stepchain")
             else:
                 acceptable_efficiency = False
