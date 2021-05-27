@@ -29,9 +29,11 @@ def injector(url, options, specific):
     for user in UC.get("user_rereco"):
         workflows.extend( getWorkflows(url, status=options.wmstatus, user=user, rtype="ReReco")) 
     for user in (options.user_relval.split(',') if options.user_relval else UC.get("user_relval")) :
-        workflows.extend( getWorkflows(url, status=options.wmstatus, user=user, rtype="TaskChain")) 
+        workflows.extend( getWorkflows(url, status=options.wmstatus, user=user, rtype="TaskChain"))
+    for user in UC.get("pnr_users"):
+        workflows.extend(getWorkflows(url, status=options.wmstatus, user=user, rtype="TaskChain"))
     for user in (options.user_storeresults.split(',') if options.user_storeresults else UC.get("user_storeresults")) :
-        workflows.extend( getWorkflows(url, status=options.wmstatus, user=user, rtype="StoreResults"))
+        workflows.extend( getWorkflows(url, status=options.wmstatus, user=user, rtype="StoreResult"))
 
     print len(workflows),"in line"
     cannot_inject = set()
