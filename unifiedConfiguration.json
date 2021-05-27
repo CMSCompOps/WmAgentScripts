@@ -432,5 +432,9 @@
   "max_memory_for_stepchain": {
     "value" : 7900,
     "description" : "Maximum memory for stepchain workflows"
+  },
+  "pnr_users": {
+    "value" : ["haozturk"],
+    "description" : "PnR users"
   }
 }
