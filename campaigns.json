@@ -242,14 +242,14 @@
                            ]
                              },
        "tune": true,
-           "secondaries": {
-                     "/Hydjet_Quenched_Cymbal5Ev8_PbPbMinBias_5020GeV/HiFall15-75X_mcRun2_HeavyIon_v14_75X_mcRun2_HeavyIon_v14-v1/GEN-SIM": {
-                                 "SiteWhitelist": [
-                                               "TT2_ES_CIEMAT"
-                                                   ]
-                                          }
-                     }
-                   },
+       "secondaries": {
+         "/Hydjet_Quenched_Cymbal5Ev8_PbPbMinBias_5020GeV/HiFall15-75X_mcRun2_HeavyIon_v14_75X_mcRun2_HeavyIon_v14-v1/GEN-SIM": {
+          "SiteWhitelist": [
+                     "T2_ES_CIEMAT"
+                           ]
+                 }
+         }
+   },
   "HINPbPbSpring21MiniAOD": {
        "custodial": "T1_FR_CCIN2P3_MSS",
        "fractionpass": 0.95,
