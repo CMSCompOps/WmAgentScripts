@@ -313,7 +313,7 @@
     "resize": "auto"
   }, 
   "MiniAODUL16Data": {
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto"
