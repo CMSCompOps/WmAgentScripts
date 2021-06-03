@@ -313,7 +313,7 @@
     "resize": "auto"
   }, 
   "MiniAODUL16Data": {
-    "go": false, 
+    "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto"
@@ -3318,24 +3318,6 @@
                                 "T2_CH_CERN"
                                               ]
                                          }
-    },
-    "SecondaryLocation": [
-      "T2_CH_CERN"
-    ],
-    "secondary_AAA": true
-  },
-  "RunIISpring21UL16FSGSPremixAPV": {
-    "fractionpass": 0.95,
-    "go": false,
-    "lumisize": -1,
-    "maxcopies": 1,
-    "secondaries": {
-      "/RelValFS_PREMIXUP15_PU25/CMSSW_10_6_22-PU_106X_mcRun2_asymptotic_v16_FastSim-v1/PREMIX": 
-                {
-                      "SiteWhitelist": [
-                          "T2_CH_CERN"
-                                       ]
-                                      }
     },
     "SecondaryLocation": [
       "T2_CH_CERN"
