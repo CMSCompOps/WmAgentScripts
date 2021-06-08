@@ -327,8 +327,10 @@ def assignor(url ,specific = None, talk=True, options=None):
             wfh.sendLog('assignor',"Reading primary through xrootd at %s"%sorted(sites_allowed))            
 
         if secondary_aaa:
-            parameters['TrustPUSitelists'] = True
-            wfh.sendLog('assignor',"Reading secondary through xrootd at %s"%sorted(sites_allowed))            
+            # Do not set TrustPUSitelist to True if there is no secondary
+            if secondary:
+                parameters['TrustPUSitelists'] = True
+                wfh.sendLog('assignor',"Reading secondary through xrootd at %s"%sorted(sites_allowed))
 
         ## plain assignment here
         team='production'
