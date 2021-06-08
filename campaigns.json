@@ -629,7 +629,7 @@
     "secondaries": {
       "/MinBias_TuneCP5_14TeV-pythia8/Run3Winter20GS-110X_mcRun3_2021_realistic_v6-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_ES_PIC_Disk", 
+          "T1_UK_RAL_Disk", 
           "T1_US_FNAL_Disk"
         ]
       }
@@ -670,14 +670,6 @@
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto", 
-    "secondaries": {
-      "/MinBias_TuneCP5_14TeV-pythia8/Run3Winter20GS-110X_mcRun3_2021_realistic_v6-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_ES_PIC_Disk", 
-          "T1_US_FNAL_Disk"
-        ]
-      }
-    }, 
     "secondary_AAA": false
   }, 
   "Run3Winter20DRPremixMiniAOD": {
@@ -795,11 +787,11 @@
     "secondaries": {
            "/MinBias_TuneCP5_14TeV-pythia8/Run3Winter20GS-110X_mcRun3_2021_realistic_v6-v1/GEN-SIM": {
                 "SiteWhitelist": [
-                         "T1_ES_PIC_Disk",
-                         "T1_US_FNAL_Disk"
-                                 ]
-                                     }
-                              },
+                  "T1_ES_PIC_Disk",
+                  "T1_US_FNAL_Disk"
+                           ]
+                      }
+                   },
     "secondary_AAA": false  
   },
   "Phase2D81Spring21GS":{
@@ -1339,9 +1331,9 @@
       }
     },
    "SiteBlacklist": [
-         "T2_CH_CERN",
-         "T2_CH_CERN_HLT"
-               ], 
+     "T2_CH_CERN",
+     "T2_CH_CERN_HLT"
+         ], 
     "partial_copy": 0.95, 
     "resize": "auto", 
     "secondaries": {
@@ -1372,9 +1364,9 @@
       }
     }, 
     "SiteBlacklist": [
-             "T2_CH_CERN",
-             "T2_CH_CERN_HLT"
-                  ], 
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT"
+          ], 
     "partial_copy": 0.95, 
     "resize": "auto", 
     "secondaries": {
@@ -1397,9 +1389,9 @@
       "T1_US_FNAL_Disk"
     ], 
     "SiteBlacklist": [
-              "T2_CH_CERN",
-               "T2_CH_CERN_HLT"
-                   ],
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT"
+          ],
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
@@ -1425,9 +1417,9 @@
       }
     },
     "SiteBlacklist": [
-             "T2_CH_CERN",
-             "T2_CH_CERN_HLT"
-                     ], 
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT"
+           ], 
     "partial_copy": 0.95, 
     "resize": "auto", 
     "secondaries": {
@@ -1445,9 +1437,9 @@
     "go": true, 
     "lumisize": -1, 
     "SiteBlacklist": [
-              "T2_CH_CERN",
-             "T2_CH_CERN_HLT"
-               ],
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT"
+          ],
     "parameters": {
       "NonCustodialSites": [
         "T2_CH_CERN", 
@@ -1466,9 +1458,9 @@
     "lumisize": -1, 
     "maxcopies": 1, 
     "SiteBlacklist": [
-              "T2_CH_CERN",
-              "T2_CH_CERN_HLT"
-                ],
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT"
+          ],
     "overflow": {
       "PU": {
         "force": false, 
@@ -1485,9 +1477,9 @@
     "lumisize": -1, 
     "maxcopies": 1, 
     "SiteBlacklist": [
-              "T2_CH_CERN",
-              "T2_CH_CERN_HLT"
-                ],
+       "T2_CH_CERN",
+       "T2_CH_CERN_HLT"
+           ],
     "overflow": {
       "PU": {
         "force": false, 
@@ -1511,9 +1503,9 @@
       }
     }, 
     "SiteBlacklist": [
-              "T2_CH_CERN",
-              "T2_CH_CERN_HLT"
-                 ],
+       "T2_CH_CERN",
+       "T2_CH_CERN_HLT"
+           ],
     "resize": "auto", 
     "secondary_AAA": false, 
     "tune": true
@@ -1522,9 +1514,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "SiteBlacklist": [
-              "T2_CH_CERN",
-              "T2_CH_CERN_HLT"
-                  ],
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT"
+         ],
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto"
@@ -1533,9 +1525,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "SiteBlacklist": [
-              "T2_CH_CERN",
-              "T2_CH_CERN_HLT"
-                ],
+       "T2_CH_CERN",
+       "T2_CH_CERN_HLT"
+         ],
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
@@ -1555,9 +1547,9 @@
     "lumisize": -1, 
     "maxcopies": 1,
     "SiteBlacklist": [
-             "T2_CH_CERN",
-             "T2_CH_CERN_HLT"
-                ], 
+       "T2_CH_CERN",
+       "T2_CH_CERN_HLT"
+         ], 
     "overflow": {
       "PU": {
         "force": false, 
@@ -1573,9 +1565,9 @@
     "fractionpass": 0.95, 
     "go": true,
     "SiteBlacklist": [
-            "T2_CH_CERN",
-            "T2_CH_CERN_HLT"
-                  ], 
+       "T2_CH_CERN",
+       "T2_CH_CERN_HLT"
+           ], 
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto"
@@ -1584,9 +1576,9 @@
     "fractionpass": 0.99, 
     "go": true, 
     "SiteBlacklist": [
-             "T2_CH_CERN",
-             "T2_CH_CERN_HLT"
-               ],
+        "T2_CH_CERN",
+        "T2_CH_CERN_HLT"  
+    ],
     "lumisize": -1, 
     "maxcopies": 1
   }, 
@@ -1595,9 +1587,9 @@
     "go": true, 
     "lumisize": -1, 
     "SiteBlacklist": [
-                  "T2_CH_CERN",
-                  "T2_CH_CERN_HLT"
-                      ],
+       "T2_CH_CERN",
+       "T2_CH_CERN_HLT"
+         ],
     "maxcopies": 1, 
     "overflow": {
       "PU": {
@@ -1614,9 +1606,9 @@
     "fractionpass": 0.99, 
     "go": true, 
     "SiteBlacklist": [
-                 "T2_CH_CERN",
-                 "T2_CH_CERN_HLT"
-                    ],    
+       "T2_CH_CERN",
+       "T2_CH_CERN_HLT"
+          ],    
     "lumisize": -1, 
     "maxcopies": 1
   }, 
@@ -1624,9 +1616,9 @@
     "fractionpass": 0.99, 
     "go": true, 
     "SiteBlacklist": [
-               "T2_CH_CERN",
-               "T2_CH_CERN_HLT"
-                   ],    
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT"
+          ],    
     "lumisize": -1, 
     "maxcopies": 1
   }, 
@@ -1634,9 +1626,9 @@
     "fractionpass": 0.95, 
     "go": true, 
     "SiteBlacklist": [
-              "T2_CH_CERN",
-              "T2_CH_CERN_HLT"
-                  ],    
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT"
+          ],    
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto", 
@@ -1647,9 +1639,9 @@
     "go": true, 
     "lumisize": -1, 
     "SiteBlacklist": [
-             "T2_CH_CERN",
-             "T2_CH_CERN_HLT"
-                   ],        
+       "T2_CH_CERN",
+       "T2_CH_CERN_HLT"
+           ],        
     "maxcopies": 1, 
     "overflow": {
       "PU": {
@@ -1667,9 +1659,9 @@
     "lumisize": -1, 
     "maxcopies": 1,
     "SiteBlacklist": [
-             "T2_CH_CERN",
-             "T2_CH_CERN_HLT"
-                    ],        
+       "T2_CH_CERN",
+       "T2_CH_CERN_HLT"
+          ],        
     "primary_AAA": true, 
     "resize": "auto", 
     "tune": true
@@ -1678,9 +1670,9 @@
     "fractionpass": 0.95, 
     "go": true,
     "SiteBlacklist": [
-                "T2_CH_CERN",
-                "T2_CH_CERN_HLT"
-                    ],    
+       "T2_CH_CERN",
+       "T2_CH_CERN_HLT"
+         ],    
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
