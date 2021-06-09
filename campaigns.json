@@ -669,7 +669,15 @@
     "go": true, 
     "lumisize": -1, 
     "maxcopies": 1, 
-    "resize": "auto", 
+    "resize": "auto",
+    "secondaries": {
+      "/MinBias_TuneCP5_14TeV-pythia8/Run3Winter20GS-110X_mcRun3_2021_realistic_v6-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_UK_RAL_Disk",
+          "T1_US_FNAL_Disk"
+        ]
+      }
+    },
     "secondary_AAA": false
   }, 
   "Run3Winter20DRPremixMiniAOD": {
@@ -780,7 +788,7 @@
   },
   "Phase2Spring21DRMiniAOD":{
     "fractionpass": 0.95,
-    "go": true,
+    "go": false,
     "lumisize": -1,
     "maxcopies": 1,
     "resize": "auto",
@@ -796,21 +804,21 @@
   },
   "Phase2D81Spring21GS":{
       "fractionpass": 0.95,
-      "go": true,
+      "go": false,
       "lumisize": -1,
       "maxcopies": 1,
       "resize": "auto"
   },
   "Phase2D80Spring21GS":{
     "fractionpass": 0.95,
-    "go": true,
+    "go": false,
     "lumisize": -1,
     "maxcopies": 1,
     "resize": "auto"
   },
   "Phase2D76Spring21GS":{
     "fractionpass": 0.95,
-    "go": true,
+    "go": false,
     "lumisize": -1,
     "maxcopies": 1,
     "resize": "auto"
