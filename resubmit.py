@@ -136,7 +136,7 @@ def modifySchema(cache, workflow, user, group, events, firstLumi, backfill=False
                     stepName = "Task%s" % str(taskNumber)
                 if stepName in result:
                     if "FilterEfficiency" in result[stepName]:
-                        result["FilterEfficiency"] = float(filterEff)
+                        result[stepName]["FilterEfficiency"] = float(filterEff)
                     else:
                         raise Exception("There is no FilterEfficiency in %s" % stepName)
                 else:
