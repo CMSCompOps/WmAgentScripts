@@ -1,6 +1,290 @@
 { 
 
-
+  "RunIIWinter19PFCalibNanoAOD": {
+    "fractionpass": 0.99,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1
+  },
+  "RunIIWinter19PFCalibMiniAOD": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "resize": "auto"
+  },
+  "RunIIWinter19PFCalibDR": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "resize": "auto",
+    "secondaries": {
+      "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib16GS-105X_mcRun2_asymptotic_v2-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_FR_CCIN2P3_Disk",
+          "T2_IT_Legnaro"
+        ]
+      },
+      "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib17GS-105X_mc2017_realistic_v5_ext1-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_FR_CCIN2P3_Disk",
+          "T1_IT_CNAF_Disk"
+        ]
+      },
+      "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib18GS-105X_upgrade2018_realistic_v4-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T2_US_Florida"
+        ]
+      }
+    },
+    "secondary_AAA": false,
+    "tune": true
+  },
+  "RunIIWinter19PFCalib18wmLHEGS": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "tune": true
+  },
+  "RunIIWinter19PFCalib18pLHE": {
+    "fractionpass": 0.95,
+    "go": true,
+    "parameters": {
+      "EventsPerLumi": 200
+    },
+    "recover": false
+  },
+  "RunIIWinter19PFCalib18GS": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "resize": "auto",
+    "tune": true
+  },
+  "RunIIWinter19PFCalib17wmLHEGS": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "tune": true
+  },
+  "RunIIWinter19PFCalib17pLHE": {
+    "fractionpass": 0.95,
+    "go": true,
+    "parameters": {
+      "EventsPerLumi": 200
+    },
+    "recover": false
+  },
+  "RunIIWinter19PFCalib17GS": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "resize": "auto",
+    "tune": true
+  },
+  "RunIIWinter19PFCalib16wmLHEGS": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "tune": true
+  },
+  "RunIIWinter19PFCalib16pLHE": {
+    "fractionpass": 0.95,
+    "go": true,
+    "parameters": {
+      "EventsPerLumi": 200
+    },
+    "recover": false
+  },
+  "RunIIWinter19PFCalib16GS": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "resize": "auto",
+    "tune": true
+  },
+  "RunIISummer16NanoAODv6": {
+    "fractionpass": 0.99,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1
+  },
+  "RunIISummer16NanoAODv5": {
+    "fractionpass": 0.99,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1
+  },
+  "RunIISummer16MiniAODv2": {
+    "force-complete": 0.99,
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1
+  },
+  "RunIIFall17NanoAODv6": {
+    "fractionpass": 0.99,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1
+  },
+  "RunIIFall17NanoAODv5": {
+    "fractionpass": 0.99,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1
+  },
+  "RunIIAutumn18NanoAODv6": {
+    "fractionpass": 0.99,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1
+  },
+  "RunIIAutumn18NanoAODv5": {
+    "fractionpass": 0.99,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1
+  },
+  "Run3Summer20GSHCAL": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "resize": "auto"
+  }, 
+  "Run3Summer20DRMiniAODHCAL": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "resize": "auto",
+    "secondaries": {
+      "/MinBias_TuneCP5_14TeV-pythia8/Run3Winter20GS-110X_mcRun3_2021_realistic_v6-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_UK_RAL_Disk",
+          "T1_US_FNAL_Disk"
+        ]
+      }
+    },
+    "secondary_AAA": false
+  },
+  "Run3Winter20wmLHEGS": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "resize": "auto"
+  }, 
+  "Run3Winter20DRPremixMiniAOD": {
+    "SecondaryLocation": [
+      "T1_US_FNAL_Disk",
+      "T2_CH_CERN"
+    ],
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "resize": "auto",
+    "secondaries": {
+      "/Neutrino_E-10_gun/RunIISummer17PrePremix-PURun3Winter20_110X_mcRun3_2021_realistic_v6-v2/PREMIX": {}
+    },
+    "secondary_AAA": true
+  },
+  "Run3Winter20DR": {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "resize": "auto"
+  },
+  "Run3Summer19wmLHEGS": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "tune": true
+  },
+  "Run3Summer19NanoAOD": {
+    "fractionpass": 0.99,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1
+  },
+  "Run3Summer19MiniAOD": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "resize": "auto"
+  },
+  "Run3Summer19GS": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "resize": "auto",
+    "tune": true
+  },
+  "Run3Summer19DRPremix": {
+    "SecondaryLocation": [
+      "T1_US_FNAL_Disk",
+      "T2_CH_CERN"
+    ],
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "overflow": {
+      "PREMIX": {}
+    },
+    "resize": "auto",
+    "secondaries": {
+      "/Neutrino_E-10_gun/RunIISummer17PrePremix-PURun3_106X_mcRun3_2021_realistic_v1-v1/PREMIX": {},
+      "/Neutrino_E-10_gun/RunIISummer17PrePremix-PURun3_106X_mcRun3_2021_realistic_v3-v4/PREMIX": {},
+      "/Neutrino_E-10_gun/RunIISummer17PrePremix-PURun3_106X_mcRun3_2023_realistic_v3-v2/PREMIX": {},
+      "/Neutrino_E-10_gun/RunIISummer17PrePremix-PURun3_106X_mcRun3_2024_realistic_v4-v2/PREMIX": {}
+    },
+    "secondary_AAA": true,
+    "tune": true
+  },
+  "Run3Summer19DR": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "secondaries": {
+      "/MinBias_TuneCP5_14TeV-pythia8/Run3Summer19GS-106X_upgrade2021_realistic_v5-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_RU_JINR_Disk"
+        ]
+      },
+      "/MinBias_TuneCP5_14TeV-pythia8/Run3Summer19GS-2018Scenario_106X_upgrade2021_realistic_v5-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_ES_PIC_Disk"
+        ]
+      }
+    },
+    "tune": true
+  },
+  "PhaseIITDRSpring19wmLHEGS": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "tune": true
+  },
+  "PhaseIITDRSpring19MiniAOD": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "resize": "auto"
+  },
+  "PhaseIITDRSpring19GS": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "tune": true
+  },
   "HINppWinter17DR": {
     "custodial": "T1_FR_CCIN2P3_MSS", 
     "fractionpass": 0.95, 
