@@ -7,7 +7,7 @@ Description: General API for reading data from DBS
 import logging
 #from dbs.apis.dbsClient import DbsApi
 
-class DBS3Reader(object):
+class DBSReader(object):
     """
     _DBSReader_
     General API for reading data from DBS
