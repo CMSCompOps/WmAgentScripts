@@ -2261,7 +2261,7 @@
     "tune": true
   },
   "RunIISummer20UL16NanoAODv9": {
-    "fractionpass": 0.99,
+    "fractionpass": 0.95,
     "go": false,
     "lumisize": -1,
     "maxcopies": 1,
@@ -2276,7 +2276,7 @@
     "tune": true
   },
   "RunIISummer20UL16NanoAODAPVv9": {
-    "fractionpass": 0.99,
+    "fractionpass": 0.95,
     "go": false,
     "lumisize": -1,
     "maxcopies": 1,
@@ -2594,7 +2594,7 @@
     "tune": true
   },
   "RunIISummer20UL17NanoAODv9": {
-    "fractionpass": 0.99,
+    "fractionpass": 0.95,
     "go": false,
     "lumisize": -1,
     "maxcopies": 1,
@@ -2808,7 +2808,7 @@
     "tune": true
   },
   "RunIISummer20UL18NanoAODv9": {
-    "fractionpass": 0.99,
+    "fractionpass": 0.95,
     "go": false,
     "lumisize": -1,
     "maxcopies": 1,
@@ -3092,7 +3092,7 @@
       "MergedLFNBase": "/store/himc", 
       "SiteBlacklist": [
         "T1_US_FNAL", 
-        "T2_US_Purdue", 
+        "T2_US_Purdue",
         "T2_US_Caltech", 
         "T2_US_Florida", 
         "T2_US_Nebraska", 
