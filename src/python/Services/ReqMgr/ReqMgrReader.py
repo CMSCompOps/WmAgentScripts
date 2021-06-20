@@ -42,21 +42,15 @@ class ReqMgrReader(object):
 
 
             data = result['result']
+            print("PRINT")
+            print(data)
+            print("LOGGER")
             self.logger.info(data)
-            print("")
             if details:
                 ## list of dict
                 r = []
                 for it in data:
                     r.extend(it.values())
-                if data == r:
-                    print ("Equal!")
-                    self.logger.info("Equal!")
-                else:
-                    print("Not Equal!")
-                    self.logger.info("Not Equal!")
-
-                print(r)
                 return r
             else:
                 return data
