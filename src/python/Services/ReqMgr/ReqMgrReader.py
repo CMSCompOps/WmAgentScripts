@@ -16,7 +16,7 @@ class ReqMgrReader(object):
     General API for reading data from ReqMgr
     """
 
-    def __init__(self, url, logger=None, **contact):
+    def __init__(self, url=None, logger=None, **contact):
 
         try:
             configurationHandler = ConfigurationHandler()
