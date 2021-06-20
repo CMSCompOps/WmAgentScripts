@@ -23,7 +23,7 @@ class ReqMgrReader(object):
             self.reqmgrUrl = os.getenv('REQMGR_URL', configurationHandler.get('reqmgr_url'))
             self.logger = logger or logging.getLogger(self.__class__.__name__)
         except Exception as e:
-            msg = "Error in DBSReader with DbsApi\n"
+            msg = "Error initializing ReqMgrReader\n"
             msg += "%s\n" % format(e)
             raise Exception(msg)
 
@@ -42,6 +42,8 @@ class ReqMgrReader(object):
 
 
             data = result['result']
+            self.logger.info(data)
+            print("")
             if details:
                 ## list of dict
                 r = []
@@ -49,9 +51,12 @@ class ReqMgrReader(object):
                     r.extend(it.values())
                 if data == r:
                     print ("Equal!")
-                    self.logger.info("Error!")
+                    self.logger.info("Equal!")
                 else:
                     print("Not Equal!")
+                    self.logger.info("Not Equal!")
+
+                print(r)
                 return r
             else:
                 return data
