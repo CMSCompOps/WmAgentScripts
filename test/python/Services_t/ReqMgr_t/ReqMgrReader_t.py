@@ -17,16 +17,18 @@ class ReqMgrReaderTest(unittest.TestCase):
     # For now, just test for one of the workflows
     campaignParams = {
         "campaign": "Run3Winter21DRMiniAOD",
-        "workflow": "cmsunified_task_TSG-Run3Winter21DRMiniAOD-00081__v1_T_210507_182332_1792",
-        "RequestStatus": "normal-archived"
+        "workflow": "cmsunified_task_TSG-Run3Winter21DRMiniAOD-00081__v1_T_210507_182332_1792"
     }
 
     def testGetWorkflowByCampaign(self):
         """getWorkflowByCampaign gets workflows for a given campaign"""
         reqMgrReader = ReqMgrReader()
         workflows = reqMgrReader.getWorkflowByCampaign(self.campaignParams.get("campaign"), details=True)
-        self.assertTrue(self.campaignParams.get("workflow") in workflows)
-        self.assertEqual(self.campaignParams.get("RequestStatus"), workflows.get(self.campaignParams.get("workflow")).get("RequestStatus"))
+        isFound = False
+        for workflow in workflows:
+            if workflow["RequestName"] == self.campaignParams.get("workflow"):
+                isFound = True
+        self.assertTrue(isFound)
 
 
 if __name__ == '__main__':
