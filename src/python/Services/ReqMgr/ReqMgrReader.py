@@ -33,7 +33,7 @@ class ReqMgrReader(object):
         The function to get the list of workflows for a given campaign
         :param campaign: campaign name
         :param details: if True, it returns details for each workflow, o/w, just workflow names
-        :return: lis
+        :return: list of dicts if details True, list of strings o/w
         """
 
         try:
@@ -43,7 +43,6 @@ class ReqMgrReader(object):
 
 
             data = result['result']
-            self.logger.info("Logger Test")
             if details:
                 ## list of dict
                 r = []
@@ -55,5 +54,5 @@ class ReqMgrReader(object):
 
 
         except Exception as error:
-            print('Failed to get workflows from reqmgr for campaign %s ' % campaign)
-            print(str(error))
+            self.logger.error('Failed to get workflows from reqmgr for campaign %s ' % campaign)
+            self.logger.error(str(error))
