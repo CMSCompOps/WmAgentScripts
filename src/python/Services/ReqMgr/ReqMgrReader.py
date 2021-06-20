@@ -21,6 +21,7 @@ class ReqMgrReader(object):
         try:
             configurationHandler = ConfigurationHandler()
             self.reqmgrUrl = os.getenv('REQMGR_URL', configurationHandler.get('reqmgr_url'))
+            logging.basicConfig(level=logging.INFO)
             self.logger = logger or logging.getLogger(self.__class__.__name__)
         except Exception as e:
             msg = "Error initializing ReqMgrReader\n"
@@ -42,10 +43,7 @@ class ReqMgrReader(object):
 
 
             data = result['result']
-            print("PRINT")
-            print(data)
-            print("LOGGER")
-            self.logger.info(data)
+            self.logger.info("Logger Test")
             if details:
                 ## list of dict
                 r = []

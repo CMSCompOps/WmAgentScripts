@@ -5,10 +5,7 @@ Unit test for ReqMgr DBS helper class.
 """
 
 import unittest
-
 from Services.ReqMgr.ReqMgrReader import ReqMgrReader
-
-DATASET_INVALID = '/ggXToJPsiJPsi_JPsiToMuMu_M6p2_JPCZeroMinusPlus_TuneCP5_13TeV-pythia8-JHUGen/RunIIFall17pLHE-93X_mc2017_realistic_v3-v2/LHE'
 
 
 class ReqMgrReaderTest(unittest.TestCase):
