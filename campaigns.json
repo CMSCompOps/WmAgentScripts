@@ -678,6 +678,26 @@
     "lumisize": -1,
     "maxcopies": 1,
     "resize": "auto",
+    "secondaries": {
+        "/MinBias_TuneCP5_14TeV-pythia8/Phase2D76Spring21GS-113X_mcRun4_realistic_v7-v1/GEN-SIM": {
+            "SiteWhitelist": [
+                "T1_US_FNAL_Disk",
+                "T1_IT_CNAF_Disk"
+                ]
+        },
+        "/MinBias_TuneCP5_14TeV-pythia8/Phase2D80Spring21GS-113X_mcRun4_realistic_T25_v1-v1/GEN-SIM": {
+            "SiteWhitelist": [
+                "T2_US_Nebraska",
+                "T2_IT_Pisa"
+                    ]
+        },
+        "/MinBias_TuneCP5_14TeV-pythia8/Phase2D81Spring21GS-113X_mcRun4_realistic_T26_v1-v1/GEN-SIM": {
+            "SiteWhitelist": [
+                "T1_DE_KIT_Disk",
+                "T2_US_Wisconsin"
+                    ]
+        }
+    },
     "secondary_AAA": false  
   },
   "Phase2D81Spring21GS":{
@@ -3300,6 +3320,27 @@
     "fractionpass": 0.95,
     "go": true,
     "lumisize": -1,
-    "maxcopies": 1
+    "maxcopies": 1,
+    "secondaries": {
+        "/MinBias_TuneCP2_13TeV-pythia8/RunIISpring21UL18FSGSPremix-PUFSUL18_106X_upgrade2018_realistic_v16-v1/GEN-SIM-RECO":
+        {
+            "SiteWhitelist": [
+                "T1_US_FNAL_Disk"
+            ]
+        },
+        "/MinBias_TuneCP2_13TeV-pythia8/RunIISpring21UL16FSGSPremix-PUFSUL16_106X_mcRun2_asymptotic_v16-v1/GEN-SIM-RECO":
+        {
+            "SiteWhitelist":[
+                "T2_US_Purdue"
+            ]
+        },
+        "/MinBias_TuneCP2_13TeV-pythia8/RunIISpring21UL17FSGSPremix-PUFSUL17_106X_mc2017_realistic_v9-v1/GEN-SIM-RECO":
+        {
+            "SiteWhitelist":[
+                "T1_ES_PIC_Disk"
+                ]
+        }
+
+     }
   }
 }
