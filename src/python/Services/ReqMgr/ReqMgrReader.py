@@ -21,6 +21,7 @@ class ReqMgrReader(object):
         try:
             configurationHandler = ConfigurationHandler()
             self.reqmgrUrl = os.getenv('REQMGR_URL', configurationHandler.get('reqmgr_url'))
+            self.reqmgrTestbedUrl = "cmsweb-testbed.cern.ch"
             logging.basicConfig(level=logging.INFO)
             self.logger = logger or logging.getLogger(self.__class__.__name__)
         except Exception as e:
@@ -37,7 +38,7 @@ class ReqMgrReader(object):
         """
 
         try:
-            result = getResponse(url=self.reqmgrUrl,
+            result = getResponse(url=self.reqmgrTestbedUrl,
                                  endpoint='/reqmgr2/data/request/',
                                  param={"campaign": campaign, "detail": str(details)})
 
