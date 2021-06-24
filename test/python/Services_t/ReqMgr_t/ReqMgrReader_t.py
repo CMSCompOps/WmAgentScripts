@@ -4,8 +4,6 @@ _ReqMgrReader_t_
 Unit test for ReqMgr DBS helper class.
 """
 
-from re import split
-from sys import float_repr_style
 import unittest
 from Services.ReqMgr.ReqMgrReader import ReqMgrReader
 
@@ -56,6 +54,8 @@ class ReqMgrReaderTest(unittest.TestCase):
     otherWorkflowsParams = {
         "toTestSchema": {
             "workflow": "pdmvserv_task_BPH-RunIIFall18GS-00350__v1_T_201021_154340_8354",
+            "totalKeys": 100,
+            "nonNullKeys": 94,
         },
         "toTestSplittings": {
             "workflow": "pdmvserv_task_BPH-RunIIFall18GS-00350__v1_T_201021_154340_8354",
@@ -93,12 +93,31 @@ class ReqMgrReaderTest(unittest.TestCase):
 
     def testGetWorkflowSchema(self):
         """getWorkflowSchema gets schema for a given workflow"""
+        # Test when drop_null is False
         reqMgrReader = ReqMgrReader()
         schema = reqMgrReader.getWorkflowSchema(
             self.otherWorkflowsParams.get("toTestSchema").get("workflow"), tries=1
         )
         isDict = isinstance(schema, dict)
         self.assertTrue(isDict)
+
+        hasNKeys = len(schema.keys()) == self.otherWorkflowsParams.get("toTestSchema").get("totalKeys")
+        self.assertTrue(hasNKeys)
+
+        isFound = schema["RequestName"] == self.otherWorkflowsParams.get(
+            "toTestSchema"
+        ).get("workflow")
+        self.assertTrue(isFound)
+
+        # Test when drop_null is True
+        schema = reqMgrReader.getWorkflowSchema(
+            self.otherWorkflowsParams.get("toTestSchema").get("workflow"), drop_null=True, tries=1
+        )
+        isDict = isinstance(schema, dict)
+        self.assertTrue(isDict)
+
+        hasNKeys = len(schema.keys()) == self.otherWorkflowsParams.get("toTestSchema").get("nonNullKeys")
+        self.assertTrue(hasNKeys)
 
         isFound = schema["RequestName"] == self.otherWorkflowsParams.get(
             "toTestSchema"
@@ -206,20 +225,6 @@ class ReqMgrReaderTest(unittest.TestCase):
             for workflow in workflows
         )
         self.assertTrue(isSubRequstTypeEqual)
-
-    def testGetSchema(self):
-        """getSchema gets schema for a given workflow"""
-        reqMgrReader = ReqMgrReader()
-        schema = reqMgrReader.getSchema(
-            self.otherWorkflowsParams.get("toTestSchema").get("workflow")
-        )
-        isDict = isinstance(schema, dict)
-        self.assertTrue(isDict)
-
-        isFound = schema["RequestName"] == self.otherWorkflowsParams.get(
-            "toTestSchema"
-        ).get("workflow")
-        self.assertTrue(isFound)
 
     def testGetReqmgrInfo(self):
         """getReqmgrInfo gets reqmgr info"""

@@ -83,6 +83,8 @@ class ReqMgrReader(object):
     def getWorkflowSchema(
         self,
         wf: str,
+        drop_null: bool = False,
+        make_copy: bool = False,
         tries: int = 2,
         try_cache: bool = False,
         wait: int = 0,
@@ -90,12 +92,18 @@ class ReqMgrReader(object):
         """
         The function to get the schema for a given workflow
         :param wf: workflow name
+        :param drop_null: if True, drop key with null values from the schema
+        :param make_copy: if True, return a copy of the schema
         :param tries: number of tries for gettting a request response
         :return: a dict
         """
         try:
             return self._runWithRetries(
-                self._getWorkflowSchema, [wf], tries=tries, wait=wait
+                self._getWorkflowSchema,
+                [wf],
+                {"drop_null": drop_null, "make_copy": make_copy},
+                tries=tries,
+                wait=wait,
             )
 
         except Exception as error:
@@ -103,36 +111,37 @@ class ReqMgrReader(object):
             self.logger.error(str(error))
             if try_cache:
                 self.logger.info("Will try to get workload cache")
-                return self._getWorkflowCacheSchema(wf)
+                return self._getWorkflowSchema(
+                    wf, drop_null=drop_null, make_copy=make_copy, from_cache=True
+                )
 
-    def _getWorkflowSchema(self, wf: str) -> dict:
+    def _getWorkflowSchema(
+        self,
+        wf: str,
+        drop_null: bool = False,
+        make_copy: bool = False,
+        from_cache: bool = False,
+    ) -> dict:
         """
-        The function to get the workload for a given workflow
+        The function to get the schema for a given workflow
         :param wf: workflow name
+        :param drop_null: if True, drop key with null values from the schema
+        :param make_copy: if True, return a copy of the schema
+        :param from_cache: if True, get schema from cache
         :return: a dict
         """
         result = getResponse(
-            url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["req"] + wf
+            url=self.reqmgrUrl,
+            endpoint=self.reqmgrEndpoint["couchdb" if from_cache else "req"] + wf,
         )
-        return result["result"][0][wf]
-
-    def _getWorkflowCacheSchema(self, wf: str) -> dict:
-        """
-        The function to get cache schema for a given workflow
-        :param wf: workflow
-        :return: a dict
-        """
-        try:
-            # TODO: confirm call against couchdb
-            result = getResponse(
-                url=self.reqmgrUrl,
-                endpoint=self.reqmgrEndpoint["couchdb"] + wf,
-            )
-            return result["result"][0][wf]
-
-        except Exception as error:
-            self.logger.error(f"Failed to get workload cache for workflow {wf}")
-            self.logger.error(str(error))
+        if make_copy:
+            data = copy.deepcopy(result["result"][0][wf])
+        else:
+            data = result["result"][0][wf]
+            
+        if drop_null:
+            return {k: v for k, v in data.items() if v not in [None, "None"]}
+        return data
 
     def getWorkflowSchemaByCampaign(
         self, campaign: str, details: bool = False
@@ -314,26 +323,6 @@ class ReqMgrReader(object):
             self.logger.error(
                 f"Failed to get configuration from reqmgr for agent {agent}"
             )
-            self.logger.error(str(error))
-
-    def getSchema(self, wf: str) -> dict:
-        """
-        The function to get the schema for a given workflow
-        :param wf: workflow name
-        :return: a dict, where there is no key with null values
-        """
-        try:
-            result = getResponse(
-                url=self.reqmgrUrl,
-                endpoint=self.reqmgrEndpoint["req"],
-                param={"name": wf},
-            )
-            # TODO: is the deepcopy necessary?
-            data = copy.deepcopy(result["result"][0][wf])
-            return {k: v for k, v in data.items() if v not in [None, "None"]}
-
-        except Exception as error:
-            self.logger.error(f"Failed to get schema from reqmgr for {wf}")
             self.logger.error(str(error))
 
     def getSplittingsNew(
