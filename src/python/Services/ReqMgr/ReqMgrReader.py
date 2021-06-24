@@ -79,7 +79,57 @@ class ReqMgrReader(object):
             return default
         raise Exception("NoDefaultValue")
 
-    def getWorkflowByCampaign(
+    def getWorkflowSchema(
+        self, wf: str, tries: int = 2, try_cache: bool = False
+    ) -> dict:
+        """
+        The function to get the schema for a given workflow
+        :param wf: workflow name
+        :param tries: number of tries for gettting a request response
+        :return: a dict
+        """
+        try:
+            return self._runWithRetries(
+                self._getWorkflowSchema, [wf], tries=tries, wait=0
+            )
+
+        except Exception as error:
+            self.logger.error(f"Failed to get workload from reqmgr for workflow {wf}")
+            self.logger.error(str(error))
+            if try_cache:
+                self.logger.info("Will try to get workload cache")
+                return self._getWorkflowCacheSchema(wf)
+
+    def _getWorkflowSchema(self, wf: str) -> dict:
+        """
+        The function to get the workload for a given workflow
+        :param wf: workflow name
+        :return: a dict
+        """
+        result = getResponse(
+            url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["req"] + wf
+        )
+        return result["result"][0][wf]
+
+    def _getWorkflowCacheSchema(self, wf: str) -> dict:
+        """
+        The function to get cache schema for a given workflow
+        :param wf: workflow
+        :return: a dict
+        """
+        try:
+            # TODO: confirm call against couchdb
+            result = getResponse(
+                url=self.reqmgrUrl,
+                endpoint="/couchdb/reqmgr_workload_cache/" + wf,
+            )
+            return result["result"][0][wf]
+
+        except Exception as error:
+            self.logger.error(f"Failed to get workload cache for workflow {wf}")
+            self.logger.error(str(error))
+
+    def getWorkflowSchemaByCampaign(
         self, campaign: str, details: bool = False
     ) -> Union[List[dict], List[str]]:
         """
@@ -89,27 +139,119 @@ class ReqMgrReader(object):
         :return: list of dicts if details True, list of strings o/w
         """
         try:
-            result = getResponse(
-                url=self.reqmgrUrl,
-                endpoint=self.reqmgrEndpoint["req"],
-                param={"campaign": campaign, "detail": str(details)},
-            )
-
-            data = result["result"]
-            if details:
-                ## list of dict
-                r = []
-                for it in data:
-                    r.extend(it.values())
-                return r
-            else:
-                return data
+            return self._getWorkflowSchemaByParam({"campaign": campaign}, details)
 
         except Exception as error:
             self.logger.error(
                 f"Failed to get workflows from reqmgr for campaign {campaign}"
             )
             self.logger.error(str(error))
+
+    def getWorkflowSchemaByOutput(
+        self, dataset: str, details: bool = False
+    ) -> Union[List[dict], List[str]]:
+        """
+        The function to get the list of workflows for a given output
+        :param dataset: dateset name
+        :param details: if True, it returns details for each workflow, o/w just workflows names
+        :return: a list of dicts if details is True, list of strings o/w
+        """
+        try:
+            return self._getWorkflowSchemaByParam({"outputdataset": dataset}, details)
+
+        except Exception as error:
+            self.logger.error(
+                f"Failed to get workflows from reqmgr for dataset {dataset}"
+            )
+            self.logger.error(str(error))
+
+    def getWorkflowSchemaByPrepId(
+        self, pid: str, details: bool = False
+    ) -> Union[List[dict], List[str]]:
+        """
+        The function to get the list of workflows for a given prep id
+        :param pid: id
+        :param details: if True, it returns details for each workflow, o/w just workflows names
+        :return: a list of dicts if details is True, list of strings o/w
+        """
+        try:
+            return self._getWorkflowSchemaByParam({"prep_id": pid}, details)
+
+        except Exception as error:
+            self.logger.error(f"Failed to get workflows from reqmgr for id {pid}")
+            self.logger.error(str(error))
+
+    def getWorkflowsByStatus(
+        self,
+        status: str,
+        user: Optional[str] = None,
+        details: bool = False,
+        rtype: Optional[str] = None,
+        priority: Optional[str] = None,
+        tries: int = 5,
+        wait: int = 5,
+    ) -> Union[List[dict], List[str]]:
+        """
+        The function to get the list of workflows for a given status (and user/request type/priority)
+        :param status: workflow status
+        :param user: request user, if any
+        :param details: if True, it returns it returns details for each workflow, o/w just workflows names
+        :param type: request type, if any
+        :param priority: request priority, if any
+        :param tries: number of tries
+        :param wait: wait time between tries
+        :return: a list of dicts if details is True, list of strings o/w
+        """
+        try:
+            param = {"status": status}
+            if user:
+                param["requestor"] = user.split(",")
+            if rtype:
+                param["request_type"] = rtype
+            if priority:
+                # TODO: does this work?
+                param["initialpriority"] = priority
+                self.logger.info(f"Priority {priority} is requested")
+
+            return self._runWithRetries(
+                self._getWorkflowSchemaByParam,
+                [param],
+                {"details": details},
+                tries=tries,
+                wait=wait,
+            )
+
+        except Exception as error:
+            self.logger.error(
+                f"Failed to get workflows from reqmgr for {status} (user={user}, type={rtype}, priority={priority})"
+            )
+            self.logger.error(str(error))
+
+    def _getWorkflowSchemaByParam(
+        self, param: dict, details: bool = False
+    ) -> Union[List[dict], List[str]]:
+        """
+        The function to get the list of workflows for given key/value pairs of params
+        :param param: key/value
+        :param details: if True, it returns details for each workflow, o/w just workflows names
+        :return: a list of dicts if details is True, list of strings o/w
+        """
+        result = getResponse(
+            url=self.reqmgrUrl,
+            endpoint=self.reqmgrEndpoint["req"],
+            param={**param, **{"detail": str(details)}},
+        )
+        data = result["result"]
+
+        self.logger.info(f"{len(data)} workflows retrieved by request")
+
+        if details:
+            ## list of dict
+            r = []
+            for it in data:
+                r.extend(it.values())
+            return r
+        return data
 
     def getWorkflowsByName(
         self,
@@ -166,188 +308,6 @@ class ReqMgrReader(object):
             f"{len(workflows)} retrieved for {len(names)} workflow names, {'with' if details else 'without'} details"
         )
         return workflows
-
-    def getWorkflowsByStatus(
-        self,
-        status: str,
-        user: Optional[str] = None,
-        details: bool = False,
-        rtype: Optional[str] = None,
-        priority: Optional[str] = None,
-        tries: int = 5,
-        wait: int = 5,
-    ):
-        # TODO: what does this function return?
-        """
-        The function to get (???) for given a workflow status
-        :param status: workflow status
-        :param user: request user, if any
-        :param details: if True, it returns (???)
-        :param type: request type, if any
-        :param priority: request priority, if any
-        :param tries: number of tries
-        :param wait: wait time between tries
-        :return: (???)
-        """
-        try:
-            return self._runWithRetries(
-                self._getWorkflowsByStatus,
-                [status],
-                {
-                    "user": user,
-                    "details": details,
-                    "rtype": rtype,
-                    "priority": priority,
-                },
-                tries=tries,
-                wait=wait,
-            )
-
-        except Exception as error:
-            self.logger.error(
-                f"Failed to get workflows from reqmgr for {status} (user={user}, type={rtype}, priority={priority})"
-            )
-            self.logger.error(str(error))
-
-    def _getWorkflowsByStatus(
-        self,
-        status: str,
-        user: Optional[str] = None,
-        details: bool = False,
-        rtype: Optional[str] = None,
-        priority: Optional[str] = None,
-    ):
-        # TODO: what does this function return?
-        """
-        The function to get (???) for given a workflow status
-        :param status: workflow status
-        :param user: request user, if any
-        :param details: if True, it returns (???)
-        :param type: request type, if any
-        :param priority: request priority, if any
-        :return: (???)
-        """
-        param = {"status": status, "detail": str(details)}
-        if user:
-            param["requestor"] = user.split(",")
-        if rtype:
-            param["request_type"] = rtype
-        if priority:
-            # TODO: does this work?
-            param["initialpriority"] = priority
-            self.logger.info(f"Priority {priority} is requested")
-
-        result = getResponse(
-            self.reqmgrUrl, endpoint=self.reqmgrEndpoint["req"], param=param
-        )
-        data = result["result"]
-
-        workflows = []
-        for item in data:
-            if details:
-                workflows.extend([v for k, v in item.items()])
-
-        self.logger.info(
-            f"{len(workflows)} retrieved for {len(status)} status (user={user}, type={rtype}, priority={priority})"
-        )
-
-    def getWorkflowByOutput(self, dataset: str, details: bool = False):
-        # TODO: what does this function return?
-        """
-        The function to get (???) for a given dataset
-        :param dataset: dateset name
-        :param details: if True, it returns (???)
-        :return: list of (???)
-        """
-        try:
-            result = getResponse(
-                url=self.reqmgrUrl,
-                endpoint=self.reqmgrEndpoint["req"],
-                param={"outputdataset": dataset, "detail": str(details)},
-            )
-            data = result["rows"]
-            key = "doc" if details else "id"
-            return [item[key] for item in data]
-
-        except Exception as error:
-            self.logger.error(
-                f"Failed to get workflows from reqmgr for dataset {dataset}"
-            )
-            self.logger.error(str(error))
-
-    def getWorkflowById(self, pid: str, details: bool = False):
-        # TODO: what does this function return?
-        """
-        The function to get (???) for a given id
-        :param pid: id
-        :param details: if True, it returns (???)
-        :return: list of (???)
-        """
-        try:
-            result = getResponse(
-                url=self.reqmgrUrl,
-                endpoint=self.reqmgrEndpoint["req"],
-                param={"prep_id": pid, "detail": str(details)},
-            )
-            data = result["rows"]
-            key = "doc" if details else "id"
-            return [item[key] for item in data]
-
-        except Exception as error:
-            self.logger.error(f"Failed to get workflows from reqmgr for id {pid}")
-            self.logger.error(str(error))
-
-    def getWorkLoad(self, wf: str, tries: int = 2, try_cache: bool = False):
-        # TODO: what does this function return?
-        # TODO: this function does the same as request of line 3814, in the workflowInfo.__init__.
-        # I added the try_cache param so that this function can deal with what is done in the workflowInfo
-        """
-        The function to get the workload for a given workflow
-        :param wf: workflow name
-        :param tries: number of tries for gettting a request response
-        :return: (???)
-        """
-        try:
-            self._runWithRetries(self._getWorkLoad, [wf], tries=tries, wait=0)
-
-        except Exception as error:
-            self.logger.error(f"Failed to get workload from reqmgr for workflow {wf}")
-            self.logger.error(str(error))
-            if try_cache:
-                self.logger.info("Will try to get workload cache")
-                return self._getWorkLoadCache(wf)
-
-    def _getWorkLoad(self, wf: str):
-        # TODO: what does this function return?
-        """
-        The function to get the workload for a given workflow
-        :param wf: workflow name
-        :return: (???)
-        """
-        result = getResponse(
-            url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["req"] + wf
-        )
-        return result["result"][0][wf]
-
-    def _getWorkLoadCache(self, wf: str):
-        # TODO: what does this function return?
-        # TODO: is this name ok? it was in workflowInfo.__init__, after line 3823
-        """
-        The function to get cache info for a given workflow
-        :param wf: workflow
-        :return: (???)
-        """
-        try:
-            # TODO: confirm call against couchdb
-            result = getResponse(
-                url=self.reqmgrUrl,
-                endpoint="/couchdb/reqmgr_workload_cache/" + wf,
-            )
-            return result["result"][0][wf]
-
-        except Exception as error:
-            self.logger.error(f"Failed to get workload cache for workflow {wf}")
-            self.logger.error(str(error))
 
     def getReqmgrInfo(self):
         # TODO: what does this function return?

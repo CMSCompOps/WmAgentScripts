@@ -28,14 +28,13 @@ def getResponse(
         headers = {"Accept": "application/json"}
 
     if isinstance(param, dict):
-        _param = "&".join(
-            [
-                "=".join([k, v]) if isinstance(v, str) else "=".join([k, vi])
-                for vi in v
-                for k, v in param.items()
-            ]
-        )
-        param = "?" + _param
+        _param = []
+        for k, v in param.items():
+            if isinstance(v, str):
+                _param += ["=".join([k, v])]
+            elif isinstance(v, list):
+                _param += ["=".join([k, vi]) for vi in v]
+        param = "?" + "&".join(_param)
 
     try:
         conn = getX509Conn(url)
