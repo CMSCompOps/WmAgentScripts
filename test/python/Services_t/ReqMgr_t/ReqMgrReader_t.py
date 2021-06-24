@@ -4,6 +4,8 @@ _ReqMgrReader_t_
 Unit test for ReqMgr DBS helper class.
 """
 
+from re import split
+from sys import float_repr_style
 import unittest
 from Services.ReqMgr.ReqMgrReader import ReqMgrReader
 
@@ -37,7 +39,7 @@ class ReqMgrReaderTest(unittest.TestCase):
     }
 
     # There are three worflows under this combination of status, user and request type
-    # It will return too much data o/w
+    # Requests are made using the three filters, it will return too much data o/w
     statusParams = {
         "status": "normal-archived",
         "user": "sagarwal",
@@ -47,12 +49,46 @@ class ReqMgrReaderTest(unittest.TestCase):
             "sagarwal_Run2018A-v1-Commissioning-06Jun2018_1015_180823_210612_6118",
             "sagarwal_Run2017H-v1-SingleMuon-14Jan2019_944_190129_125411_428",
         ],
+        "subrtype": "",
     }
 
+    # Other workflow params
     otherWorkflowsParams = {
         "toTestSchema": {
             "workflow": "pdmvserv_task_BPH-RunIIFall18GS-00350__v1_T_201021_154340_8354",
         },
+        "toTestSplittings": {
+            "workflow": "pdmvserv_task_BPH-RunIIFall18GS-00350__v1_T_201021_154340_8354",
+            "dropingParams": [
+                "algorithm",
+                "trustPUSitelists",
+                "trustSitelists",
+                "deterministicPileup",
+                "type",
+                "include_parents",
+                "lheInputFiles",
+                "runWhitelist",
+                "runBlacklist",
+                "collectionName",
+                "group",
+                "couchDB",
+                "couchURL",
+                "owner",
+                "initial_lfn_counter",
+                "filesetName",
+                "runs",
+                "lumis",
+            ],
+        },
+    }
+
+    # The values in the info response change, so just test for keys
+    infoParams = {
+        "keys": [
+            "wmcore_reqmgr_version",
+            "reqmgr_db_info",
+            "reqmgr_last_injected_request",
+        ]
     }
 
     def testGetWorkflowSchema(self):
@@ -122,10 +158,11 @@ class ReqMgrReaderTest(unittest.TestCase):
 
         isFound = False
         for workflow in workflows:
-            if workflow not in self.prepIdParams.get("workflows"):
+            if workflow["RequestName"] not in self.prepIdParams.get("workflows"):
                 break
         else:
             isFound = True
+        self.assertTrue(isFound)
 
     def testGetWorkflowsByStatus(self):
         """getWorkflowsByStatus gets workflows for a given status"""
@@ -144,6 +181,98 @@ class ReqMgrReaderTest(unittest.TestCase):
             workflow in self.statusParams.get("workflows") for workflow in workflows
         )
         self.assertTrue(isFound)
+
+    def testGetWorkflowSchemaByName(self):
+        """getWorkflowSchemaByName gets workflows for a given name"""
+        reqMgrReader = ReqMgrReader()
+        workflows = reqMgrReader.getWorkflowSchemaByName(
+            self.statusParams.get("workflows"),
+            details=True,
+            tries=1,
+        )
+        sameLen = len(workflows) == len(self.statusParams.get("workflows"))
+        self.assertTrue(sameLen)
+
+        isFound = False
+        for workflow in workflows:
+            if workflow["RequestName"] not in self.statusParams.get("workflows"):
+                break
+        else:
+            isFound = True
+        self.assertTrue(isFound)
+
+        isSubRequstTypeEqual = all(
+            workflow["SubRequestType"] == self.statusParams.get("subrtype")
+            for workflow in workflows
+        )
+        self.assertTrue(isSubRequstTypeEqual)
+
+    def testGetSchema(self):
+        """getSchema gets schema for a given workflow"""
+        reqMgrReader = ReqMgrReader()
+        schema = reqMgrReader.getSchema(
+            self.otherWorkflowsParams.get("toTestSchema").get("workflow")
+        )
+        isDict = isinstance(schema, dict)
+        self.assertTrue(isDict)
+
+        isFound = schema["RequestName"] == self.otherWorkflowsParams.get(
+            "toTestSchema"
+        ).get("workflow")
+        self.assertTrue(isFound)
+
+    def testGetReqmgrInfo(self):
+        """getReqmgrInfo gets reqmgr info"""
+        reqMgrReader = ReqMgrReader()
+        info = reqMgrReader.getReqmgrInfo()
+        sameLen = len(info[0]) == len(self.infoParams.get("keys"))
+        self.assertTrue(sameLen)
+
+        isFound = all(i in self.infoParams.get("keys") for i in info[0])
+        self.assertTrue(isFound)
+
+    def testGetSplittingsNew(self):
+        """getReqmgrInfo gets splittings for a given workflow name"""
+        # Test when strip is False and all_tasks is False
+        reqMgrReader = ReqMgrReader()
+        splittings = reqMgrReader.getSplittingsNew(
+            self.otherWorkflowsParams.get("toTestSplittings").get("workflow"),
+        )
+        isFound = all(
+            self.otherWorkflowsParams.get("toTestSplittings").get("workflow")
+            in splt["taskName"]
+            for splt in splittings
+        )
+        self.assertTrue(isFound)
+
+        keptOnlySomeTasksTypes = all(
+            splt["taskType"] in ["Production", "Processing", "Skim"]
+            for splt in splittings
+        )
+        self.assertTrue(keptOnlySomeTasksTypes)
+
+        # Test when strip is True and all_tasks is True
+        splittings = reqMgrReader.getSplittingsNew(
+            self.otherWorkflowsParams.get("toTestSplittings").get("workflow"),
+            strip=True,
+            all_tasks=True,
+        )
+        isFound = all(
+            self.otherWorkflowsParams.get("toTestSplittings").get("workflow")
+            in splt["taskName"]
+            for splt in splittings
+        )
+        self.assertTrue(isFound)
+
+        keptOnlySomeParams = False
+        for splt in splittings:
+            if splt["splitParams"] in self.otherWorkflowsParams.get(
+                "toTestSplittings"
+            ).get("dropingParams"):
+                break
+        else:
+            keptOnlySomeParams = True
+        self.assertTrue(keptOnlySomeParams)
 
 
 if __name__ == "__main__":

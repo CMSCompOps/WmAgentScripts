@@ -34,6 +34,7 @@ class ReqMgrReader(object):
                 "info": "/reqmgr2/data/info/",
                 "agentConfig": "/reqmgr2/data/wmagentconfig/",
                 "splitting": "/reqmgr2/data/splitting/",
+                "couchdb": "/couchdb/reqmgr_workload_cache/",
             }
 
             logging.basicConfig(level=logging.INFO)
@@ -80,7 +81,11 @@ class ReqMgrReader(object):
         raise Exception("NoDefaultValue")
 
     def getWorkflowSchema(
-        self, wf: str, tries: int = 2, try_cache: bool = False
+        self,
+        wf: str,
+        tries: int = 2,
+        try_cache: bool = False,
+        wait: int = 0,
     ) -> dict:
         """
         The function to get the schema for a given workflow
@@ -90,7 +95,7 @@ class ReqMgrReader(object):
         """
         try:
             return self._runWithRetries(
-                self._getWorkflowSchema, [wf], tries=tries, wait=0
+                self._getWorkflowSchema, [wf], tries=tries, wait=wait
             )
 
         except Exception as error:
@@ -121,7 +126,7 @@ class ReqMgrReader(object):
             # TODO: confirm call against couchdb
             result = getResponse(
                 url=self.reqmgrUrl,
-                endpoint="/couchdb/reqmgr_workload_cache/" + wf,
+                endpoint=self.reqmgrEndpoint["couchdb"] + wf,
             )
             return result["result"][0][wf]
 
@@ -209,7 +214,7 @@ class ReqMgrReader(object):
             if rtype:
                 param["request_type"] = rtype
             if priority:
-                # TODO: does this work?
+                # TODO: does this work? if not, can I remove this?
                 param["initialpriority"] = priority
                 self.logger.info(f"Priority {priority} is requested")
 
@@ -225,6 +230,34 @@ class ReqMgrReader(object):
             self.logger.error(
                 f"Failed to get workflows from reqmgr for {status} (user={user}, type={rtype}, priority={priority})"
             )
+            self.logger.error(str(error))
+
+    def getWorkflowSchemaByName(
+        self,
+        names: Union[str, List[str]],
+        details: bool = False,
+        tries: int = 5,
+        wait: int = 5,
+    ) -> Union[List[dict], List[str]]:
+        """
+        The function to get the list of workflows for a given name (or names)
+        :param names: workflow name(s)
+        :param details: if True, it returns it returns details for each workflow, o/w just workflows names
+        :param tries: number of tries
+        :param wait: wait time between tries
+        :return: a list of dicts if details is True, list of strings o/w
+        """
+        try:
+            return self._runWithRetries(
+                self._getWorkflowSchemaByParam,
+                [{"name": names}],
+                {"details": details},
+                tries=tries,
+                wait=wait,
+            )
+
+        except Exception as error:
+            self.logger.error(f"Failed to get workflows from reqmgr for {names}")
             self.logger.error(str(error))
 
     def _getWorkflowSchemaByParam(
@@ -243,77 +276,17 @@ class ReqMgrReader(object):
         )
         data = result["result"]
 
-        self.logger.info(f"{len(data)} workflows retrieved by request")
+        if details and data:
+            data = [*data[0].values()]
 
-        if details:
-            ## list of dict
-            r = []
-            for it in data:
-                r.extend(it.values())
-            return r
+        self.logger.info(f"{len(data)} workflows retrieved for {param}")
+
         return data
 
-    def getWorkflowsByName(
-        self,
-        names: Union[str, List[str]],
-        details: bool = False,
-        tries: int = 5,
-        wait: int = 5,
-    ):
-        # TODO: what does this function return?
-        """
-        The function to get (???) for given workflow name(s)
-        :param names: workflow name(s)
-        :param details: if True, it returns (???)
-        :param tries: number of tries
-        :param wait: wait time between tries
-        :return: (???)
-        """
-        try:
-            return self._runWithRetries(
-                self._getWorkflowsByName,
-                [names],
-                {"details": details},
-                tries=tries,
-                wait=wait,
-            )
-
-        except Exception as error:
-            self.logger.error(f"Failed to get workflows from reqmgr for {names}")
-            self.logger.error(str(error))
-
-    def _getWorkflowsByName(self, names: Union[str, List[str]], details: bool = False):
-        # TODO: what does this function return?
-        """
-        The function to get (???) for given workflow name(s)
-        :param names: workflow name(s)
-        :param details: if True, it returns (???)
-        :return: (???)
-        """
-        if isinstance(names, str):
-            names = [names]
-
-        result = getResponse(
-            url=self.reqmgrUrl,
-            endpoint=self.reqmgrEndpoint["req"],
-            param={"name": names, "detail": str(details)},
-        )
-        data = result["result"]
-        if details and data:
-            workflows = data[0].values()
-        else:
-            workflows = data
-
-        self.logger.info(
-            f"{len(workflows)} retrieved for {len(names)} workflow names, {'with' if details else 'without'} details"
-        )
-        return workflows
-
-    def getReqmgrInfo(self):
-        # TODO: what does this function return?
+    def getReqmgrInfo(self) -> List[dict]:
         """
         The function to get the reqmgr info
-        :return: (???)
+        :return: a list of dicts
         """
         try:
             result = getResponse(
@@ -325,12 +298,11 @@ class ReqMgrReader(object):
             self.logger.error("Failed to get reqmgr info")
             self.logger.error(str(error))
 
-    def getAgentConfig(self, agent: str):
-        # TODO: what does this function return?
+    def getAgentConfig(self, agent: str) -> dict:
         """
         The function to get the configuration for a given agent
         :param agent: agent name
-        :return: (???)
+        :return: a dict
         """
         try:
             result = getResponse(
@@ -344,77 +316,84 @@ class ReqMgrReader(object):
             )
             self.logger.error(str(error))
 
-    def getSchema(self, name: str) -> dict:
-        # TODO: what does this function return?
+    def getSchema(self, wf: str) -> dict:
         """
-        The function to get the schema for a given request name
-        :param name: agent name
-        :return: a dict of (???)
-        """
-        try:
-            result = self._getWorkflowsByName(name)
-            # TODO: is the deepcopy necessary?
-            data = copy.deepcopy(result[0][name])
-            return {k: v for k, v in data.items() if v not in [None, "None"]}
-
-        except Exception as error:
-            self.logger.error(f"Failed to get schema from reqmgr for {name}")
-            self.logger.error(str(error))
-
-    def getSplittingsNew(self, name: str, strip: bool = False, all_tasks: bool = False):
-        # TODO: what does this function return?
-        # TODO: is this a new version of getSplittings?
-        """
-        The function to get splittings for a given request name
-        :param name: request name
-        :return: (???)
+        The function to get the schema for a given workflow
+        :param wf: workflow name
+        :return: a dict, where there is no key with null values
         """
         try:
             result = getResponse(
-                url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["splitting"] + name
+                url=self.reqmgrUrl,
+                endpoint=self.reqmgrEndpoint["req"],
+                param={"name": wf},
+            )
+            # TODO: is the deepcopy necessary?
+            data = copy.deepcopy(result["result"][0][wf])
+            return {k: v for k, v in data.items() if v not in [None, "None"]}
+
+        except Exception as error:
+            self.logger.error(f"Failed to get schema from reqmgr for {wf}")
+            self.logger.error(str(error))
+
+    def getSplittingsNew(
+        self, wf: str, strip: bool = False, all_tasks: bool = False
+    ) -> List[dict]:
+        # TODO: rename
+        """
+        The function to get splittings for a given workflow name
+        :param wf: workflow name
+        :param strip: if True, it will drop some split params, o/w it will keep all params
+        :param all_tasks: if True, it will keep all tasks types, o/w it will keep only production, processing and skim tasks
+        :return: a list of dicts
+        """
+        try:
+            result = getResponse(
+                url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["splitting"] + wf
             )
             data = result["result"]
+            if not strip and all_tasks:
+                return data
 
-            splittings = []
+            keepingTasksOfType = ["Production", "Processing", "Skim"]
+            dropingParams = [
+                "algorithm",
+                "trustPUSitelists",
+                "trustSitelists",
+                "deterministicPileup",
+                "type",
+                "include_parents",
+                "lheInputFiles",
+                "runWhitelist",
+                "runBlacklist",
+                "collectionName",
+                "group",
+                "couchDB",
+                "couchURL",
+                "owner",
+                "initial_lfn_counter",
+                "filesetName",
+                "runs",
+                "lumis",
+            ]
+            dropingLumiBasedParams = ["events_per_job", "job_time_limit"]
+
+            cleanData = []
             for splt in data:
-                if not all_tasks and not splt["taskType"] in [
-                    "Production",
-                    "Processing",
-                    "Skim",
-                ]:
+                if not all_tasks and splt["taskType"] not in keepingTasksOfType:
                     continue
 
                 if strip:
-                    for drop in [
-                        "algorithm",
-                        "trustPUSitelists",
-                        "trustSitelists",
-                        "deterministicPileup",
-                        "type",
-                        "include_parents",
-                        "lheInputFiles",
-                        "runWhitelist",
-                        "runBlacklist",
-                        "collectionName",
-                        "group",
-                        "couchDB",
-                        "couchURL",
-                        "owner",
-                        "initial_lfn_counter",
-                        "filesetName",
-                        "runs",
-                        "lumis",
-                    ]:
+                    for drop in dropingParams:
                         splt["splitParams"].pop(drop, None)
 
                     if splt["splitAlgo"] is "LumiBased":
-                        for drop in ["events_per_job", "job_time_limit"]:
+                        for drop in dropingLumiBasedParams:
                             splt["splitParams"].pop(drop, None)
 
-                splittings.append(splt)
-
-            return splittings
+                cleanData.append(splt)
+            return cleanData
 
         except Exception as error:
-            self.logger.error(f"Failed to get splittings from reqmgr for {name}")
+            self.logger.error(f"Failed to get splittings from reqmgr for {wf}")
             self.logger.error(str(error))
