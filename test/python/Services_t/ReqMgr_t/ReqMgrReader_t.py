@@ -109,6 +109,12 @@ class ReqMgrReaderTest(unittest.TestCase):
         workflows = reqMgrReader.getWorkflowsByCampaign(
             self.campaignParams.get("campaign"), details=True
         )
+        isList = isinstance(workflows, list)
+        self.assertTrue(isList)
+
+        isListOfDicts = isinstance(workflows[0], dict)
+        self.assertTrue(isListOfDicts)
+
         isFound = False
         for workflow in workflows:
             if workflow["RequestName"] == self.campaignParams.get("workflow"):
@@ -120,6 +126,12 @@ class ReqMgrReaderTest(unittest.TestCase):
         # Test when details is False
         reqMgrReader = ReqMgrReader()
         workflows = reqMgrReader.getWorkflowsByOutput(self.outputParams.get("dataset"))
+        isList = isinstance(workflows, list)
+        self.assertTrue(isList)
+
+        isListOfStr = isinstance(workflows[0], str)
+        self.assertTrue(isListOfStr)
+
         isFound = workflows[0] == self.outputParams.get("workflow")
         self.assertTrue(isFound)
 
@@ -127,6 +139,12 @@ class ReqMgrReaderTest(unittest.TestCase):
         workflows = reqMgrReader.getWorkflowsByOutput(
             self.outputParams.get("dataset"), details=True
         )
+        isList = isinstance(workflows, list)
+        self.assertTrue(isList)
+
+        isListOfDicts = isinstance(workflows[0], dict)
+        self.assertTrue(isListOfDicts)
+
         isFound = workflows[0]["RequestName"] == self.outputParams.get("workflow")
         self.assertTrue(isFound)
 
@@ -135,6 +153,12 @@ class ReqMgrReaderTest(unittest.TestCase):
         # Test when details is False
         reqMgrReader = ReqMgrReader()
         workflows = reqMgrReader.getWorkflowsByPrepId(self.prepIdParams.get("prep_id"))
+        isList = isinstance(workflows, list)
+        self.assertTrue(isList)
+
+        isListOfStr = isinstance(workflows[0], str)
+        self.assertTrue(isListOfStr)
+
         sameLen = len(workflows) == len(self.prepIdParams.get("workflows"))
         self.assertTrue(sameLen)
 
@@ -147,6 +171,12 @@ class ReqMgrReaderTest(unittest.TestCase):
         workflows = reqMgrReader.getWorkflowsByPrepId(
             self.prepIdParams.get("prep_id"), details=True
         )
+        isList = isinstance(workflows, list)
+        self.assertTrue(isList)
+
+        isListOfDicts = isinstance(workflows[0], dict)
+        self.assertTrue(isListOfDicts)
+
         sameLen = len(workflows) == len(self.prepIdParams.get("workflows"))
         self.assertTrue(sameLen)
 
@@ -167,6 +197,12 @@ class ReqMgrReaderTest(unittest.TestCase):
             details=False,
             rtype=self.statusParams.get("rtype"),
         )
+        isList = isinstance(workflows, list)
+        self.assertTrue(isList)
+
+        isListOfStr = isinstance(workflows[0], str)
+        self.assertTrue(isListOfStr)
+
         sameLen = len(workflows) == len(self.statusParams.get("workflows"))
         self.assertTrue(sameLen)
 
@@ -182,6 +218,12 @@ class ReqMgrReaderTest(unittest.TestCase):
             self.statusParams.get("workflows"),
             details=True,
         )
+        isList = isinstance(workflows, list)
+        self.assertTrue(isList)
+
+        isListOfDicts = isinstance(workflows[0], dict)
+        self.assertTrue(isListOfDicts)
+
         sameLen = len(workflows) == len(self.statusParams.get("workflows"))
         self.assertTrue(sameLen)
 
@@ -203,6 +245,12 @@ class ReqMgrReaderTest(unittest.TestCase):
         """getReqmgrInfo gets reqmgr info"""
         reqMgrReader = ReqMgrReader()
         info = reqMgrReader.getReqmgrInfo()
+        isList = isinstance(info, list)
+        self.assertTrue(isList)
+
+        isListOfDicts = isinstance(info[0], dict)
+        self.assertTrue(isListOfDicts)
+
         sameLen = len(info[0]) == len(self.infoParams.get("keys"))
         self.assertTrue(sameLen)
 
@@ -216,6 +264,12 @@ class ReqMgrReaderTest(unittest.TestCase):
         splittings = reqMgrReader.getSplittingsSchema(
             self.otherWorkflowsParams.get("toTestSplittings").get("workflow"),
         )
+        isList = isinstance(splittings, list)
+        self.assertTrue(isList)
+
+        isListOfDicts = isinstance(splittings[0], dict)
+        self.assertTrue(isListOfDicts)
+
         isFound = all(
             self.otherWorkflowsParams.get("toTestSplittings").get("workflow")
             in splt["taskName"]
@@ -235,6 +289,12 @@ class ReqMgrReaderTest(unittest.TestCase):
             strip=True,
             allTasks=True,
         )
+        isList = isinstance(splittings, list)
+        self.assertTrue(isList)
+
+        isListOfDicts = isinstance(splittings[0], dict)
+        self.assertTrue(isListOfDicts)
+
         isFound = all(
             self.otherWorkflowsParams.get("toTestSplittings").get("workflow")
             in splt["taskName"]
