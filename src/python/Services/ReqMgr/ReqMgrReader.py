@@ -9,6 +9,7 @@ import os
 import time
 import copy
 from Utils.WebTools import getResponse
+from Utils.Decorators import runWithRetries
 from Utils.ConfigurationHandler import ConfigurationHandler
 
 from typing import List, Optional, Union, Any, Callable
@@ -166,6 +167,7 @@ class ReqMgrReader(object):
             self.logger.error(f"Failed to get workflows from reqmgr for {names}")
             self.logger.error(str(error))
 
+    @runWithRetries(tries=2, wait=5)
     def getWorkflowsByParam(
         self, param: dict, details: bool = False
     ) -> Union[List[dict], List[str]]:
