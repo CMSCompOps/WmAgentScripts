@@ -1,47 +1,42 @@
 #!/usr/bin/env python
-#import json
-import sys
-import json
 import reqMgrClient as reqmgr
 import optparse
 
-def setStatus(url, workflowname,newstatus):
-    print "Setting %s to %s" % (workflowname,newstatus)
-    if newstatus == 'closed-out':
-        return reqmgr.closeOutWorkflowCascade(url, workflowname)
-    elif newstatus == 'announced':
-        return reqmgr.announceWorkflowCascade(url, workflowname)
-    else:
-        print "cannot cascade to",newstatus
 
-def getStatus(url, workflow):
-    conn  =  httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
-    r1=conn.request('GET','/reqmgr/reqMgr/request?requestName=' + workflow)
-    r2=conn.getresponse()
-    #data = r2.read()
-    s = json.loads(r2.read())
-    t = s['RequestStatus']
-    return t
+def setStatus(url, workflowname, newstatus, cascade):
+    print
+    "Setting %s to %s" % (workflowname, newstatus)
+    if newstatus == 'closed-out':
+        return reqmgr.closeOutWorkflow(url, workflowname, cascade)
+    elif newstatus == 'announced':
+        return reqmgr.announceWorkflow(url, workflowname, cascade)
+    elif newstatus == "staged":
+        return reqmgr.setStatusToStaged(url, workflowname, cascade)
+    else:
+        print
+        "ERROR: Cannot set status to ", newstatus
+
 
 def main():
-    
     parser = optparse.OptionParser()
-    parser.add_option('-u','--url',help='Which server to communicate with', default='cmsweb.cern.ch',choices=['cmsweb.cern.ch','cmsweb-testbed.cern.ch'])
-    parser.add_option('-w','--wf',help='Filelis of coma separated list of workflows')
-    parser.add_option('-s','--status',help='The new status', choices=['closed-out','announced'])
-    (options,args) = parser.parse_args()
+    parser.add_option('-u', '--url', help='Which server to communicate with', default='cmsweb.cern.ch', choices=['cmsweb.cern.ch', 'cmsweb-testbed.cern.ch'])
+    parser.add_option('-w', '--workflow', help='Workflow name')
+    parser.add_option('-f', '--file', help='A file name which contains the workflows (One workflow in each line)')
+    parser.add_option('-c', '--cascade', help='Set the workflow state in cascade mode', default=False)
+    parser.add_option('-s', '--status', help='The new status', choices=['staged', 'closed-out', 'announced'])
+    (options, args) = parser.parse_args()
 
-    wfs = []
-    try:
-        f = open(options.wf, 'r')
-        wfs.extend([l.strip('\n').strip(' ') for l in f])
-        f.close()
-    except:
-        wfs.extend(options.wf.split(','))
-    
-    for wf in wfs:
-        r = setStatus(options.url, wf, options.status)
+    if not options.status:
+        parser.error('Status is not given')
+
+    if options.workflow:
+        setStatus(options.url, options.workflow, options.status, options.cascade)
+    elif options.file:
+        for workflow in filter(None, open(options.filelist).read().split('\n')):
+            setStatus(options.url, workflow, options.status, options.cascade)
+    else:
+        parser.error("You should provide either workflow or file options")
 
 
-if __name__ == "__main__":
+if __name__ == "_main_":
     main()

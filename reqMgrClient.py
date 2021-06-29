@@ -1346,7 +1346,32 @@ def getInputEventsTaskChain(request):
 #            print "Hey, you have NO block and run black list :-("
 
 
+def setStatusToStaged(url, workflowname, cascade=False):
+    """
+    Closes out a workflow by changing the state to closed-out
+    This does not care about cascade workflows
+    """
+    if isRequestMgr2Request(url, workflowname):
+        params = {"RequestStatus" : "staged",
+                  "cascade": cascade}
+        try:
+            data = requestManagerPut(url,"/reqmgr2/data/request/%s"%workflowname, params)
+        except Exception as e:
+            print "ERROR:"
+            print e
 
+        try:
+            return None if (json.loads(data)['result'][0][workflowname] == 'OK') else "Error"
+        except:
+            return "Error"
+    else:
+        if cascade:
+            params = {"requestName" : workflowname,"cascade" : cascade}
+            data = requestManager1Post(url,"/reqmgr/reqMgr/staged", params)
+        else:
+            params = {"requestName" : workflowname,"status" : "staged"}
+            data = requestManager1Put(url,"/reqmgr/reqMgr/request", params)
+    return data
 
 
 if __name__ == "__main__":
