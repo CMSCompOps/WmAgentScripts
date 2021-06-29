@@ -30,7 +30,7 @@ def main():
     if options.workflow:
         setStatus(options.url, options.workflow, options.status, options.cascade)
     elif options.file:
-        for workflow in filter(None, open(options.filelist).read().split('\n')):
+        for workflow in filter(None, open(options.file).read().split('\n')):
             setStatus(options.url, workflow, options.status, options.cascade)
     else:
         parser.error("You should provide either workflow or file options")
