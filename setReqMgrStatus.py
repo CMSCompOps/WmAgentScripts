@@ -4,8 +4,7 @@ import optparse
 
 
 def setStatus(url, workflowname, newstatus, cascade):
-    print
-    "Setting %s to %s" % (workflowname, newstatus)
+    print "Setting %s to %s" % (workflowname, newstatus)
     if newstatus == 'closed-out':
         return reqmgr.closeOutWorkflow(url, workflowname, cascade)
     elif newstatus == 'announced':
@@ -13,8 +12,7 @@ def setStatus(url, workflowname, newstatus, cascade):
     elif newstatus == "staged":
         return reqmgr.setStatusToStaged(url, workflowname, cascade)
     else:
-        print
-        "ERROR: Cannot set status to ", newstatus
+        print "ERROR: Cannot set status to ", newstatus
 
 
 def main():
@@ -38,5 +36,5 @@ def main():
         parser.error("You should provide either workflow or file options")
 
 
-if __name__ == "_main_":
+if __name__ == "__main__":
     main()
