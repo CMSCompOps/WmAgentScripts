@@ -18,6 +18,7 @@ configurationHandler = ConfigurationHandler()
 reqmgrUrl = os.getenv("REQMGR_URL", configurationHandler.get("reqmgr_url"))
 mongoUrl = configurationHandler.get("mongo_db_url")
 
+
 def getX509Conn(url=reqmgrUrl, max_try=5):
     tries = 0
     while tries < max_try:
@@ -34,15 +35,15 @@ def getX509Conn(url=reqmgrUrl, max_try=5):
     return None
 
 
-def mongoClient(url: str = mongoUrl) -> Optional[pymongo.MongoClient]:
+def mongoClient(url: str = mongoUrl) -> pymongo.MongoClient:
     """
-    The function to get mongo client
-    :return: mongo client, none o/w
+    The function to get the mongo client
+    :return: mongo client
     """
     try:
         return pymongo.MongoClient(
             f"mongodb://{url}/?ssl=true", ssl_cert_reqs=ssl.CERT_NONE
         )
     except:
-        pass
-    return None
+        print("Failed to get mongo client")
+        return None

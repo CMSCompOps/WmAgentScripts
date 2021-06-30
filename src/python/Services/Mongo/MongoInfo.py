@@ -1,5 +1,3 @@
-# TODO: this should be in Services or Utils?
-
 import os
 import time
 import logging

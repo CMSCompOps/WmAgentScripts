@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Callable, Optional, Any, List
 
 
-def runWithThreads(f: Callable, maxThreads: int = 10) -> list:
+def runWithMultiThreading(f: Callable, maxThreads: int = 10) -> list:
     """
     The function that defines a decorator to run a given function with multi threading
     :param f: function
@@ -23,7 +23,7 @@ def runWithThreads(f: Callable, maxThreads: int = 10) -> list:
         threadsParam = {"maxThreads": maxThreads}
         result = []
         with ThreadPoolExecutor(
-            max_workers=max(threadsParam["maxThreads"], len(lst)),
+            max_workers=min(threadsParam["maxThreads"], len(lst)),
             thread_name_prefix=f.__name__,
         ) as threadPool:
             threads = {threadPool.submit(f, **kwargs): kwargs for kwargs in lst}
