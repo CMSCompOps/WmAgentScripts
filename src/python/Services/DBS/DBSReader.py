@@ -4,17 +4,16 @@ Author     : Hasan Ozturk <haozturk AT cern dot com>
 Description: General API for reading data from DBS
 """
 
-# from dbs.apis.dbsClient import DbsApi
 import logging
 import os
-import time
 from collections import defaultdict
+from dbs.apis.dbsClient import DbsApi
 
 from Utils.ConfigurationHandler import ConfigurationHandler
 from Utils.Decorators import runWithThreads
 from Services.MongoInfo.MongoInfo import CacheInfo
 
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Union
 
 
 class DBSReader(object):
@@ -31,14 +30,15 @@ class DBSReader(object):
     ) -> None:
         try:
             if url:
-                self.dbsURL = url.replace("cmsweb.cern.ch", "cmsweb-prod.cern.ch")
+                # TODO: keep this ?
+                self.dbsUrl = url.replace("cmsweb.cern.ch", "cmsweb-prod.cern.ch")
             else:
                 configurationHandler = ConfigurationHandler()
-                self.dbsURL = os.getenv(
+                self.dbsUrl = os.getenv(
                     "DBS_READER_URL", configurationHandler.get("dbs_url")
                 )
-            # self.dbs = DbsApi(self.dbsURL, **contact)
-            self.dbs = None
+            self.dbs = DbsApi(self.dbsUrl, **contact)
+            self.cache = CacheInfo()
             self.logger = logger or logging.getLogger(self.__class__.__name__)
 
         except Exception as e:
@@ -46,12 +46,11 @@ class DBSReader(object):
             msg += f"{e}\n"
             raise Exception(msg)
 
-    def getDBSStatus(self, dataset: str):
-        # TODO: what type does this function returns ?
+    def getDBSStatus(self, dataset: str) -> str:
         """
-        The function to get the DBS status of outputs
+        The function to get the DBS status of a given dataset
         :param dataset: dataset name
-        :return: DBS status of the given dataset
+        :return: DBS status
         """
         try:
             response = self.dbs.listDatasets(
@@ -68,13 +67,12 @@ class DBSReader(object):
             )
             self.logger.error(str(error))
 
-    def getFilesWithLumiInRun(self, dataset: str, run: int):
-        # TODO: what does this function returns ?
+    def getFilesWithLumiInRun(self, dataset: str, run: int) -> List[dict]:
         """
-        The function to get the files of a given dataset and run
+        The function to get the lumi arrays for a given dataset and run
         :param dataset: dataset name
         :param run: run name
-        :return: a list of (???)
+        :return: a list of lumi arrays
         """
         try:
             result = (
@@ -84,23 +82,14 @@ class DBSReader(object):
                 if run != 1
                 else self.dbs.listFiles(dataset=dataset, detail=True, validFileOnly=1)
             )
-            filenames = [
-                file["logical_file_name"]
-                for file in result
-                if file["is_file_valid"] == 1
-            ]
-            files = []
-            bucketSize = 100
-            for bucketStart in range(0, len(filenames), bucketSize):
-                bucketFilenames = filenames[bucketStart : bucketStart + bucketSize]
-                files.extend(
-                    self.dbs.listFileLumiArray(
-                        logical_file_name=bucketFilenames, run_num=run
-                    )
-                    if run != 1
-                    else self.dbs.listFileLumiArray(logical_file_name=bucketFilenames)
-                )
-            return files
+            filenames = [file["logical_file_name"] for file in result]
+            querySize = 100
+            return self._getLumiArrays(
+                [
+                    {"filenames": filenames[i : i + querySize], "run": run}
+                    for i in range(0, len(filenames), querySize)
+                ]
+            )
 
         except Exception as error:
             self.logger.error(
@@ -110,17 +99,37 @@ class DBSReader(object):
             )
             self.logger.error(str(error))
 
-    def getFileBlock(self, filename: str) -> str:
-        # TODO: rename, getFileBlockName?
+    @runWithThreads
+    def _getLumiArrays(self, filenames: List[str], run: int) -> List[dict]:
+        # TODO: test if it is working properly with the wrapper
+        # TODO: rename ?
         """
-        The function to get the block name of a given file
+        The function to get the lumi arrays for a given set of file names and run
+        :param filename: lumi logical file names
+        :param run: run name
+        :return: a list of lumi arrays
+
+        This function runs with threads
+        """
+        try:
+            return (
+                self.dbs.listFileLumiArray(logical_file_name=filenames, run_num=run)
+                if run != 1
+                else self.dbs.listFileLumiArray(logical_file_name=filenames)
+            )
+        except Exception as error:
+            self.logger.error("Failed to get lumi array files")
+            self.logger.error(str(error))
+
+    def getBlockName(self, filename: str) -> str:
+        """
+        The function to get the block name for a given file
         :param filename: file name
         :return: block name
         """
         try:
             result = self.dbs.listFileArray(logical_file_name=filename, detail=True)
-            # TODO: check a better way of doing this, possibly result[0]["block_name"] ?
-            return [df["block_name"] for df in result][0]
+            return result[0]["block_name"]
 
         except Exception as error:
             self.logger.error("Failed to get block name from DBS for file %s", filename)
@@ -131,40 +140,30 @@ class DBSReader(object):
         dataset: str,
         validFileOnly: bool = False,
         details: bool = False,
-        useArray: bool = False,
     ) -> List[dict]:
-        # TODO: try to simplify this
-        # TODO: try to optimize this
         """
         The function to get the file array for a given dataset
         :param dataset: dataset name
-        :param validFileOnly: file status
-        :param details: if True, returns (???)
-        :param useArray: if True, returns (???)
-        :return: file array
+        :param validFileOnly: if True, keep only valid files, keep all o/w
+        :param details: if True, returns details for each file, just file names and validity o/w
+        :return: a list of file dicts
         """
         try:
-            cacheCall = "listFileArray" if useArray else "listFile"
-            cacheKey = f"dbs_{cacheCall}_{dataset}"
-            cached = CacheInfo().get(cacheKey)
-
+            cacheKey = f"dbs_listFile_{dataset}"
+            cached = self.cache.get(cacheKey)
             if cached:
-                self.logger.info("%s of %s taken from cache", cacheCall, dataset)
+                self.logger.info("listFile of %s taken from cache", dataset)
                 files = cached
-            elif useArray:
-                files = self.dbs.listFileArray(dataset=dataset, detail=True)
             else:
                 files = self.dbs.listFiles(dataset=dataset, detail=True)
+                self.cache.store(cacheKey, files)
 
             if validFileOnly:
                 files = [file for file in files if file["is_file_valid"]]
 
             if not details:
                 keysToKeep = ["logical_file_name", "is_file_valid"]
-                files = [
-                    dict([(k, v) for k, v in file.items() if k in keysToKeep])
-                    for file in files
-                ]
+                files = [self._filterKeysByList(file, keysToKeep) for file in files]
 
             return files
 
@@ -262,7 +261,6 @@ class DBSReader(object):
         return list(blocks)
 
     def getDatasetSize(self, dataset: str) -> float:
-        # TODO: try to optimize this
         """
         The function to get the size (in terms of GB) of a given dataset
         :param dataset: dataset name
@@ -295,13 +293,9 @@ class DBSReader(object):
             else:
                 files = self.dbs.listFileSummaries(dataset=dataset, validFileOnly=1)
 
-            if files == [None]:
-                files = []
-
-            events = sum([file["num_event"] for file in files])
-            lumis = sum([file["num_lumi"] for file in files])
+            events = sum([file["num_event"] for file in files if file is not None])
+            lumis = sum([file["num_lumi"] for file in files if file is not None])
             return events, lumis
-
         except Exception as error:
             self.logger.error("Failed to get events and lumis from DBS")
             self.logger.error(str(error))
@@ -310,7 +304,7 @@ class DBSReader(object):
         """
         The function to get the runs for a given dataset
         :param dataset: dataset name
-        :return: list of runs
+        :return: a list of runs
         """
         try:
             result = self.dbs.listRuns(dataset=dataset)
@@ -329,22 +323,17 @@ class DBSReader(object):
     def getDatasetLumisAndFiles(
         self,
         dataset: str,
-        runs=None,
-        lumis=None,
-        withCache: bool = False,
-        force: bool = False,
-        checkInvalidFiles: bool = False,
-    ):
-        # TODO: try to optimize this
+        runs: Optional[list] = None,
+        lumis: Optional[dict] = None,
+        validFileOnly: bool = True,
+    ) -> Tuple[dict, dict]:
         # TODO: try to simplify this
         """
         The function to get the lumis and files of a given dataset
         :param dataset: dataset name
         :param runs: runs names
-        :param lumis: lumis names
-        :param withCache: (???)
-        :param force: (???)
-        :param checkInvalidFiles: (???)
+        :param lumis: lumis names and runs
+        :param validFileOnly: if True, keeps only valid files, keep all o/w
         :return: a dict of lumis and a dict of files
         """
         if runs and lumis:
@@ -352,87 +341,54 @@ class DBSReader(object):
             return {}, {}
 
         try:
-            if lumis:
-                lumis = set((k, v) for k, v in lumis.items())
-
-            if force:
-                withCache = False
-
-            cache = CacheInfo()
             cacheKey = f"json_lumis_{dataset}"
-            if withCache:
-                cacheKey = f"json_lumis_{dataset}"
-                cached = cache.get(cacheKey)
-
-            if not withCache or not cached:
-                self.logger.info("Querying getDatasetLumisAndFiles for %s", dataset)
-                fullLumiJson = defaultdict(set)
-                filesPerLumi = defaultdict(set)
-
-                # TODO: try to simplify this
+            cached = self.cache.get(cacheKey)
+            if cached:
+                self.logger.info("lumis of %s taken from cache", dataset)
+                filesPerLumi, lumisPerRun = cached["files"], cached["lumis"]
+            else:
+                filesPerLumi, lumisPerRun = defaultdict(set), defaultdict(set)
                 blocks = self.dbs.listBlocks(dataset=dataset)
-                threads = [
-                    {
-                        "block": block.get("block_name"),
-                        "checkInvalidFiles": checkInvalidFiles,
-                    }
-                    for block in blocks
-                ]
-                threadsResult = self._getBlockFiles(threads)
-                for thread in threadsResult:
-                    if not thread.files:
-                        continue
-                    for file in thread.files:
-                        fullLumiJson[str(file["run_num"])].update(
-                            file["lumi_section_num"]
+                files = self._getBlockFiles(
+                    [
+                        {
+                            "block": block.get("block_name"),
+                            "validFileOnly": validFileOnly,
+                        }
+                        for block in blocks
+                    ]
+                )
+                for file in files:
+                    runKey = str(file["run_num"])
+                    lumisPerRun[runKey].update(file["lumi_section_num"])
+                    for lumiKey in file["lumi_section_num"]:
+                        filesPerLumi[f"{runKey}:{lumiKey}"].add(
+                            file["logical_file_name"]
                         )
-                        for lumi in file["lumi_section_num"]:
-                            filesPerLumi[f"{file['run_num']}:{lumi}"].add(
-                                file["logical_file_name"]
-                            )
 
-                for k, v in fullLumiJson.items():
-                    fullLumiJson[k] = list(v)
-                for k, v in filesPerLumi.items():
-                    filesPerLumi[k] = list(v)
+                lumisPerRun = dict((k, list(v)) for k, v in lumisPerRun.items())
+                filesPerLumi = dict((k, list(v)) for k, v in filesPerLumi.items())
 
-                cache.store(
+                self.cache.store(
                     cacheKey,
-                    {"files": filesPerLumi, "lumis": fullLumiJson},
+                    {"files": filesPerLumi, "lumis": lumisPerRun},
                     lifeTimeMinutes=600,
                 )
-            else:
-                filesPerLumi = cached["files"]
-                fullLumiJson = cached["lumis"]
 
-            lumiJson = dict([(int(k), v) for (k, v) in fullLumiJson.items()])
-            filesJson = dict(
-                [(tuple(map(int, k.split(":"))), v) for (k, v) in filesPerLumi.items()]
+            lumisPerRun = dict((int(k), v) for k, v in lumisPerRun.items())
+            filesPerLumi = dict(
+                (tuple(map(int, k.split(":"))), v) for k, v in filesPerLumi.items()
             )
+
             if runs:
-                lumiJson = dict(
-                    [(int(k), v) for (k, v) in fullLumiJson.items() if int(k) in runs]
-                )
-                filesJson = dict(
-                    [
-                        (tuple(map(int, k.split(":"))), v)
-                        for (k, v) in filesPerLumi.items()
-                        if int(k.split(":")[0]) in runs
-                    ]
-                )
+                lumisPerRun = self._filterKeysByList(lumisPerRun, runs)
+                filesPerLumi = self._filterKeysByList(filesPerLumi, runs)
             elif lumis:
                 runs = map(int(lumis.keys()))
-                lumiJson = dict(
-                    [(int(k), v) for (k, v) in fullLumiJson.items() if int(k) in runs]
-                )
-                filesJson = dict(
-                    [
-                        (tuple(map(int, k.split(":"))), v)
-                        for (k, v) in filesPerLumi.items()
-                        if map(int, k.split(":")) in lumis
-                    ]
-                )
-            return lumiJson, filesJson
+                lumis = set((k, v) for k, v in lumis.items())
+                lumisPerRun = self._filterKeysByList(lumisPerRun, runs)
+                filesPerLumi = self._filterKeysByList(filesPerLumi, lumis)
+            return lumisPerRun, filesPerLumi
 
         except Exception as error:
             self.logger.error(
@@ -441,41 +397,52 @@ class DBSReader(object):
             self.logger.error(str(error))
 
     @runWithThreads
-    def _getBlockFiles(
-        self,
-        block: str,
-        checkInvalidFiles: bool = False,
-    ):
+    def _getBlockFiles(self, block: str, validFileOnly: bool = True) -> dict:
+        # TODO: rename ?
+        """
+        The function to get lumi files from a given block
+        :param block: block name
+        :param validFileOnly: if True, keeps only valid files, keep all o/w
+        :return: lumi files
+        """
         try:
-            return self.dbs.listFileLumis(
-                block, validFileOnly=int(not checkInvalidFiles)
-            )
+            return self.dbs.listFileLumis(block, validFileOnly=int(validFileOnly))
         except Exception as error:
             self.logger.error("Failed to get files from DBS for block %s", block)
             self.logger.error(str(error))
 
-    def findParent(self, dataset: str):
-        # TODO: what type does this function return ?
+    def _filterKeysByList(data: dict, lst: list) -> dict:
+        """
+        The function to filter dict keys by a given list
+        :param data: a dict
+        :param lst: key values to keep
+        :return: a dict
+        """
+        return dict(
+            (k, v)
+            for k, v in data.items()
+            if k in lst or (isinstance(k, tuple) and k[0] in lst)
+        )
+
+    def getDatasetParent(self, dataset: str) -> List[str]:
         """
         The function to get the parent dataset of a given dataset
         :param dataset: dataset name
-        :return: a list of parent datasets
+        :return: a list of dataset parents names
         """
         try:
             result = self.dbs.listDatasetParents(dataset=dataset)
-            return [parent.get("parent_dataset") for parent in result]
+            return [item.get("parent_dataset") for item in result]
 
         except Exception as error:
             self.logger.error("Failed to get parents from DBS for dataset %s", dataset)
             self.logger.error(str(error))
 
-    def getDatasets(self, dataset: str):
-        # TODO: what does this function return ?
-        # TODO: rename, getDatasetInfo ?
+    def getDatasetNames(self, dataset: str) -> List[dict]:
         """
-        The function to get (???)
+        The function to get the datasets matching a given dataset name
         :param dataset: dataset name
-        :return: (????)
+        :return: a list of dicts with dataset names
         """
         try:
             _, datasetName, processedName, tierName = dataset.split("/")
@@ -491,12 +458,11 @@ class DBSReader(object):
             self.logger.error("Failed to get info from DBS for dataset %s", dataset)
             self.logger.error(str(error))
 
-    def getLFNbase(self, dataset: str):
-        # TODO: what does this function return ?
+    def getLFNbase(self, dataset: str) -> str:
         """
-        The function to get (???)
+        The function to get the logical file name base for a given dataset
         :param dataset: dataset name
-        :return: (????)
+        :return: logical file name base
         """
         try:
             result = self.dbs.listFiles(dataset=dataset)
@@ -504,105 +470,55 @@ class DBSReader(object):
             return "/".join(filename.split("/")[:3])
 
         except Exception as error:
-            self.logger.error("Failed to get name from DBS for dataset %s", dataset)
+            self.logger.error("Failed to get LFN base from DBS for dataset %s", dataset)
             self.logger.error(str(error))
 
-    def getRecoveryBlocks(
-        self, collectionName: Optional[str] = None, forTask: Optional[str] = None
-    ):
-        # TODO: what does this function return ?
-        # TODO: try to simplify this
+    def getRecoveryBlocks(self, filesAndLocations: dict) -> Tuple[list, dict]:
         """
         The function to get the blocks needed for the recovery of a workflow
-        :param collectionName: collection name
-        :param forTask: (????)
-        :return: (????)
+        :param filesAndLocations: dict of files names and locations in DBS
+        :return: all blocks and locations,
         """
         try:
-            # TODO: implement getRecoveryDoc ?
-            # TODO: use docs or files as input param instead of the collectionName ?
-            docs = self.getRecoveryDoc(collectionName)
-            files = set()
-            filesAndLoc = defaultdict(set)
-            for doc in docs:
-                task = doc.get("fileset_name", "")
-                if forTask and not task.endswith(forTask):
-                    continue
-                files.update(doc["files"].keys())
-                for filename in doc["files"]:
-                    filesAndLoc[filename].update(doc["files"][filename]["locations"])
-
-            self.logger.info(f"{len(files)} files in recovery")
             blocks = set()
-            blocksLoc = defaultdict(set)
-            filesNoBlock = set()
-            filesInBlock = set()
-            datasets = set()
-            cache = CacheInfo()
-            fileBlockCache = defaultdict(str)
-            for file in files:
-                if not file.startswith("/store/unmerged/") and not file.startswith(
-                    "MCFakeFile-"
-                ):
-                    if file in fileBlockCache:
-                        fileBlock = fileBlockCache[file]
-                    else:
-                        fileBlock = self.getFileBlock(file)
-                        if fileBlock:
-                            for fileArray in self.getDatasetFileArray(
-                                fileBlock.split("#")[0],
-                                detail=True,
-                                cacheTimeour=12 * 60 * 60,
-                            ):
-                                fileBlockCache[
-                                    fileArray["logical_file_name"]
-                                ] = fileBlock["block_name"]
-                    filesInBlock.add(file)
-                    blocks.add(fileBlock)
-                    blocksLoc[fileBlock].update(filesAndLoc.get(file, []))
+            blocksAndLocations = defaultdict(set)
+            cacheBlockFiles = defaultdict(str)
+            for file, location in filesAndLocations.items():
+                if file in cacheBlockFiles:
+                    blockName = cacheBlockFiles[file]
                 else:
-                    filesNoBlock.add(file)
-
-            fileBlockDoc = defaultdict(lambda: defaultdict(set))
-            datasetBlocks = set()
-            for file, block in fileBlockCache.items():
-                fileBlockDoc[block.split("#")[0]][block].add(file)
-                datasetBlocks.add(block)
-
-            filesAndLocNoBlock = dict(
-                [(k, list(v)) for (k, v) in filesAndLoc.items() if k in filesNoBlock]
-            )
-            filesAndLoc = dict(
-                [(k, list(v)) for (k, v) in filesAndLoc.items() if k in filesInBlock]
-            )
-            return (
-                datasetBlocks,
-                blocksLoc,
-                filesInBlock,
-                filesAndLoc,
-                filesAndLocNoBlock,
-            )
+                    blockName = self.getBlockName(file)
+                    if blockName:
+                        filesArrays = self.getDatasetFileArray(
+                            blockName.split("#")[0], details=True
+                        )
+                        for fileArray in filesArrays:
+                            cacheBlockFiles[fileArray["logical_file_name"]] = fileArray[
+                                "block_name"
+                            ]
+                            blocks.add(fileArray["block_name"])
+                blocksAndLocations[blockName].update(location)
+            return blocks, blocksAndLocations
 
         except Exception as error:
-            self.logger.error(
-                "Failed to recovery blocks from DBS for %s", collectionName
-            )
+            self.logger.error("Failed to recovery blocks from DBS")
             self.logger.error(str(error))
 
-    def getRecoveryDoc(self, collectionName: str):
-        # TODO: what does this function return ?
+    # MOVE TO OTHER FILE
+    def getRecoveryDocs(self, collectionName: str) -> List[dict]:
         # TODO: confirm call against couchdb
-        # TODO: I don't think this should be here
+        # TODO: this function doesn't make sense here
+        # TODO: missing url
         """
         The function to get the recovery docs of a given collection
         :param collectionName: collection name
-        :return: (????)
+        :return: list of recovery docs
         """
         from Utils.WebTools import getResponse
 
         try:
             result = getResponse(
-                url=self.dbsURL,
+                url=None,
                 endpoint=f"/couchdb/acdcserver/_design/ACDC/_view/byCollectionName?key={collectionName}&include_docs=true&reduce=false",
             )
             data = result["rows"]
@@ -614,3 +530,49 @@ class DBSReader(object):
                 collectionName,
             )
             self.logger.error(str(error))
+
+    def getRecoveryFilesAndLocations(
+        self, recoveryDocs: List[dict], suffixTaskFilter: Optional[str] = None
+    ) -> dict:
+        # TODO: this function doesn't make sense here
+        """
+        The function to get the files and locations of given recovery docs
+        :param recoveryDocs: recovery docs
+        :param suffixTaskFilter: filter tasks ending with given suffix
+        :return: a dict of files and locations
+        """
+        filesAndLocations = defaultdict(set)
+        for doc in recoveryDocs:
+            task = doc.get("fileset_name", "")
+            if suffixTaskFilter and not task.endswith(suffixTaskFilter):
+                continue
+
+            for filename in doc["files"]:
+                filesAndLocations[filename].update(doc["files"][filename]["locations"])
+            else:
+                filesAndLocations[filename].update([])
+
+        self.logger.info(f"{len(filesAndLocations)} files in recovery")
+
+        return dict((k, list(v)) for k, v in filesAndLocations.items())
+
+    def splitFilesInAndNotInBDS(self, filesAndLocations: dict) -> Tuple[dict, dict]:
+        # TODO: this function doesn't make sense here
+        """
+        The function to split the files in a subset of files in DBS and not in DBS
+        :param filesAndLocations: dict of files and locations
+        :return: two dicts of files and locations
+        """
+        filesInDBS, filesNotInDBS = set(), set()
+        for filename in filesAndLocations:
+            if any(
+                filename.startswith(strg)
+                for strg in ["/store/unmerged/", "MCFakeFile-"]
+            ):
+                filesNotInDBS.add(filename)
+            else:
+                filesInDBS.add(filename)
+
+        inDBS = self._filterKeysByList(filesAndLocations, filesInDBS)
+        notInDBS = self._filterKeysByList(filesAndLocations, filesNotInDBS)
+        return inDBS, notInDBS

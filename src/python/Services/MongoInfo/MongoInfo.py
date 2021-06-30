@@ -16,30 +16,19 @@ from Utils.ConfigurationHandler import ConfigurationHandler
 class MongoInfo(ABC):
     """
     _MongoInfo_
-    General abstract class for interacting with Mongo collections
+    General abstract class for talking to Mongo collections
     """
 
     def __init__(
         self,
-        db: Optional[str] = None,
         logger: Optional[logging.Logger] = None,
     ):
         self.client = mongoClient()
-        self.db = (
-            self.client.unified[db]
-            if db
-            else self.client.unified[self.__class__.__name__]
-        )
+        self.db = self._set_db()
         self.logger = logger or logging.getLogger(self.__class__.__name__)
 
     @abstractmethod
-    def get(self):
-        """The function to get data from mongo"""
-        pass
-
-    @abstractmethod
-    def store(self):
-        """The function to store data in mongo"""
+    def _set_db(self):
         pass
 
 
@@ -48,6 +37,10 @@ class CacheInfo(MongoInfo):
     _CacheInfo_
     Class for interaction with CacheInfo in Mongo
     """
+
+    def _set_db(self):
+        # TODO: what type does this function return ?
+        return self.client.unified.cacheInfo
 
     def _getFromFile(self, key: str):
         # TODO: what type does this function return ?

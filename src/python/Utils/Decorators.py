@@ -28,7 +28,13 @@ def runWithThreads(f: Callable, maxThreads: int = 10) -> list:
         ) as threadPool:
             threads = {threadPool.submit(f, **kwargs): kwargs for kwargs in lst}
             for thread in as_completed(threads):
-                result.append(thread.result())
+                threadResult = thread.result()
+                if threadResult is None:
+                    continue
+                if isinstance(threadResult, list):
+                    result.extend(threadResult)
+                else:
+                    result.append(threadResult)
         return result
 
     return wrapper
