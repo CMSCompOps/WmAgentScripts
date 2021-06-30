@@ -115,42 +115,32 @@ class ReqMgrReader(object):
             self.logger.error(str(error))
 
     def getWorkflowsByStatus(
-        self,
-        status: str,
-        details: bool = False,
-        user: Optional[str] = None,
-        rtype: Optional[str] = None,
-        priority: Optional[str] = None,
+        self, status: str, details: bool = False, **extraParam
     ) -> Union[List[dict], List[str]]:
         """
         The function to get the list of workflows for a given status (and user/request type/priority)
         :param status: workflow status
         :param details: if True, it returns it returns details for each workflow, o/w just workflows names
-        :param user: request user, if any
-        :param type: request type, if any
-        :param priority: request priority, if any
+        :param extraParam: user, requestType and/or priority, if any
         :return: a list of dicts if details is True, list of strings o/w
         """
         try:
-            param = {"status": status}
-            if user:
-                param["requestor"] = user.split(",")
-            if rtype:
-                param["request_type"] = rtype
-            if priority:
-                # TODO: does this work? if not, can I remove this?
-                param["initialpriority"] = priority
-                self.logger.info("Priority %s is requested", priority)
-
+            extraParamMap = {
+                "user": "requestor",
+                "requestType": "request_type",
+                "priority": "initialpriority",
+            }
+            extraParam = {
+                extraParamMap[k]: v for k, v in extraParam.items() if k in extraParamMap
+            }
+            param = {**{"status": status}, **extraParam}
             return self.getWorkflowsByParam(param, details=details)
 
         except Exception as error:
             self.logger.error(
-                "Failed to get workflows from reqmgr for %s (user=%s, type=%s, priority=%s)",
+                "Failed to get workflows from reqmgr for status %s (and other param: %s)",
                 status,
-                user,
-                rtype,
-                priority,
+                extraParam,
             )
             self.logger.error(str(error))
 
