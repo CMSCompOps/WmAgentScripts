@@ -185,7 +185,7 @@ class DBSReader(object):
 
             if not details:
                 keysToKeep = ["logical_file_name", "is_file_valid"]
-                files = list(self.filterKeysByList(keysToKeep, files))
+                files = list(filterDictsByKeyList(keysToKeep, *files))
 
             return files
 
@@ -408,11 +408,11 @@ class DBSReader(object):
             blocks = set()
             blocksAndLocations = defaultdict(set)
             cacheBlockFiles = defaultdict(str)
-            for file, location in filesAndLocations.items():
-                if file in cacheBlockFiles:
-                    blockName = cacheBlockFiles[file]
+            for filename, location in filesAndLocations.items():
+                if filename in cacheBlockFiles:
+                    blockName = cacheBlockFiles[filename]
                 else:
-                    blockName = self.getBlockName(file)
+                    blockName = self.getBlockName(filename)
                     if blockName:
                         filesArrays = self.getDatasetFileArray(
                             blockName.split("#")[0], details=True
@@ -429,56 +429,26 @@ class DBSReader(object):
             self.logger.error("Failed to recovery blocks from DBS")
             self.logger.error(str(error))
 
-    # TODO: TOO COMPLEX
     def getDatasetLumisAndFiles(
-        self,
-        dataset: str,
-        runs: Optional[list] = None,
-        lumis: Optional[dict] = None,
-        validFileOnly: bool = True,
+        self, dataset: str, validFileOnly: bool = True
     ) -> Tuple[dict, dict]:
-        # TODO: try to simplify this: filter by runs and lumis as other functions ?
         """
         The function to get the lumis and files of a given dataset
         :param dataset: dataset name
-        :param runs: runs names
-        :param lumis: lumis names and runs
-        :param validFileOnly: if True, keeps only valid files, keep all o/w
-        :return: a dict of lumis and a dict of files
+        :param validFileOnly: if True, keep only valid files, keep all o/w
+        :return: a dict in the format {run: [lumis]} and a dict in the format {(run:lumis): [files]}
         """
-        if runs and lumis:
-            self.logger.error("Only runs or lumis should be defined, not both")
-            return {}, {}
-
         try:
             cacheKey = f"json_lumis_{dataset}"
             cached = self.cache.get(cacheKey)
             if cached:
                 self.logger.info("lumis of %s taken from cache", dataset)
-                filesByLumis, lumisByRun = cached["files"], cached["lumis"]
+                lumisByRun, filesByLumis = cached["lumis"], cached["files"]
             else:
-                filesByLumis, lumisByRun = defaultdict(set), defaultdict(set)
                 blocks = self.dbs.listBlocks(dataset=dataset)
-                files = self._getBlockFileLumis(
-                    [
-                        {
-                            "block": block.get("block_name"),
-                            "validFileOnly": validFileOnly,
-                        }
-                        for block in blocks
-                    ]
+                lumisByRun, filesByLumis = self.getBlocksLumisAndFilesForCaching(
+                    blocks, validFileOnly
                 )
-                for file in files:
-                    runKey = str(file["run_num"])
-                    lumisByRun[runKey].update(file["lumi_section_num"])
-                    for lumiKey in file["lumi_section_num"]:
-                        filesByLumis[f"{runKey}:{lumiKey}"].add(
-                            file["logical_file_name"]
-                        )
-
-                lumisByRun = dict((k, list(v)) for k, v in lumisByRun.items())
-                filesByLumis = dict((k, list(v)) for k, v in filesByLumis.items())
-
                 self.cache.store(
                     cacheKey,
                     {"files": filesByLumis, "lumis": lumisByRun},
@@ -489,16 +459,6 @@ class DBSReader(object):
             filesByLumis = dict(
                 (tuple(map(int, k.split(":"))), v) for k, v in filesByLumis.items()
             )
-
-            if runs:
-                lumisByRun, filesByLumis = self.filterKeysByList(
-                    runs, lumisByRun, filesByLumis
-                )
-            elif lumis:
-                runs = map(int(lumis.keys()))
-                lumis = set((k, v) for k, v in lumis.items())
-                lumisByRun = self.filterKeysByList(runs, lumisByRun)
-                filesByLumis = self.filterKeysByList(lumis, filesByLumis)
             return lumisByRun, filesByLumis
 
         except Exception as error:
@@ -507,71 +467,123 @@ class DBSReader(object):
             )
             self.logger.error(str(error))
 
-    # TODO: MOVE TO ANOTHER FILE
-    def getRecoveryFilesAndLocations(
-        self, recoveryDocs: List[dict], suffixTaskFilter: Optional[str] = None
-    ) -> dict:
-        # TODO: this function doesn't make sense here
+    def getBlocksLumisAndFilesForCaching(
+        self, blocks: List[dict], validFileOnly: bool = True
+    ) -> Tuple[dict, dict]:
         """
-        The function to get the files and locations of given recovery docs
-        :param recoveryDocs: recovery docs
-        :param suffixTaskFilter: filter tasks ending with given suffix
-        :return: a dict of files and locations
+        The function to get the lumis and files of given blocks
+        :param blocks: blocks
+        :param validFileOnly: if True, keep only valid files, keep all o/w
+        :return: a dict in the format {run: [lumis]} and a dict in the format {(run:lumis): [files]}
         """
-        filesAndLocations = defaultdict(set)
-        for doc in recoveryDocs:
-            task = doc.get("fileset_name", "")
-            if suffixTaskFilter and not task.endswith(suffixTaskFilter):
-                continue
+        filesByLumis, lumisByRun = defaultdict(set), defaultdict(set)
+        files = self._getBlockFileLumis(
+            [
+                {"block": block.get("block_name"), "validFileOnly": validFileOnly}
+                for block in blocks
+            ]
+        )
+        for file in files:
+            runKey = str(file["run_num"])
+            lumisByRun[runKey].update(file["lumi_section_num"])
+            for lumiKey in file["lumi_section_num"]:
+                filesByLumis[f"{runKey}:{lumiKey}"].add(file["logical_file_name"])
 
-            for filename in doc["files"]:
-                filesAndLocations[filename].update(doc["files"][filename]["locations"])
-            else:
-                filesAndLocations[filename].update([])
+        lumisByRun = dict((k, list(v)) for k, v in lumisByRun.items())
+        filesByLumis = dict((k, list(v)) for k, v in filesByLumis.items())
+        return lumisByRun, filesByLumis
 
-        self.logger.info(f"{len(filesAndLocations)} files in recovery")
 
-        return dict((k, list(v)) for k, v in filesAndLocations.items())
-
-    def splitFilesInAndNotInBDS(self, filesAndLocations: dict) -> Tuple[dict, dict]:
-        # TODO: this function doesn't make sense here
-        # TODO: rename
-        """
-        The function to split the files in a subset of files in DBS and not in DBS
-        :param filesAndLocations: dict of files and locations
-        :return: two dicts of files and locations
-        """
-        filesInDBS, filesNotInDBS = set(), set()
-        for filename in filesAndLocations:
-            if any(
-                filename.startswith(strg)
-                for strg in ["/store/unmerged/", "MCFakeFile-"]
-            ):
-                filesNotInDBS.add(filename)
-            else:
-                filesInDBS.add(filename)
-
-        inDBS = self.filterKeysByList(filesInDBS, filesAndLocations)
-        notInDBS = self.filterKeysByList(filesNotInDBS, filesAndLocations)
-        return inDBS, notInDBS
-
-    def filterKeysByList(
-        self, lst: list, data: dict, *otherData
-    ) -> Union[dict, List[dict]]:
-        # TODO: rename
-        """
-        The function to filter dict keys by a given list
-        :param lst: key values to keep
-        :param data: dict
-        :return: filtered data
-        """
-        filteredData = []
-        for d in [data] + list(otherData):
-            filteredData.append(
-                dict(
-                    (k, v)
-                    for k, v in d.items()
-                    if k in lst or (isinstance(k, tuple) and k[0] in lst)
-                )
+# TODO: MOVE TO ANOTHER MODULE (MAYBE ONE FOR DATA CLEANING?)
+def filterDictsByKeyList(lst: list, data: dict, *otherData: dict) -> dict:
+    """
+    The function to filter dict data by a given list of keys to keep
+    :param lst: key values to keep
+    :param data/otherData: dicts
+    :return: filtered data (keeping the input order)
+    """
+    filteredData = []
+    for d in [data] + list(otherData):
+        filteredData.append(
+            dict(
+                (k, v)
+                for k, v in d.items()
+                if k in lst or (isinstance(k, tuple) and k[0] in lst)
             )
-        return tuple(filteredData) if len(filteredData) > 1 else filteredData[0]
+        )
+    return tuple(filteredData) if len(filteredData) > 1 else filteredData[0]
+
+
+def filterLumisAndFilesByRuns(
+    filesByLumis: dict, lumisByRun: dict, runs: list
+) -> Tuple[dict, dict]:
+    """
+    The function to get the lumis and files filteres by runs
+    :param filesByLumis: a dict in the format {run: [lumis]}
+    :param lumisByRun: a dict in the format {(run:lumis): [files]}
+    :param run: run names
+    :return: a dict in the format {run: [lumis]} and a dict in the format {(run:lumis): [files]}
+    """
+    return filterDictsByKeyList(runs, lumisByRun, filesByLumis)
+
+
+def filterLumisAndFilesByLumis(
+    filesByLumis: dict, lumisByRun: dict, lumis: dict
+) -> Tuple[dict, dict]:
+    """
+    The function to get the lumis and files filteres by lumis
+    :param filesByLumis: a dict in the format {run: [lumis]}
+    :param lumisByRun: a dict in the format {(run:lumis): [files]}
+    :param lumis: a dict in the format {run: lumis}
+    :return: a dict in the format {run: [lumis]} and a dict in the format {(run:lumis): [files]}
+    """
+    runs = map(int, lumis.keys())
+    lumis = set((k, v) for k, v in lumis.items())
+    lumisByRun = filterDictsByKeyList(runs, lumisByRun)
+    filesByLumis = filterDictsByKeyList(lumis, filesByLumis)
+    return lumisByRun, filesByLumis
+
+
+def getRecoveryFilesAndLocations(
+    recoveryDocs: List[dict], suffixTaskFilter: Optional[str] = None
+) -> dict:
+    """
+    The function to get the files and locations of given recovery docs
+    :param recoveryDocs: recovery docs
+    :param suffixTaskFilter: filter tasks ending with given suffix
+    :return: a dict of files and locations
+    """
+    filesAndLocations = defaultdict(set)
+    for doc in recoveryDocs:
+        task = doc.get("fileset_name", "")
+        if suffixTaskFilter and not task.endswith(suffixTaskFilter):
+            continue
+
+        for filename in doc["files"]:
+            filesAndLocations[filename].update(doc["files"][filename]["locations"])
+        else:
+            filesAndLocations[filename].update([])
+
+    print(f"{len(filesAndLocations)} files in recovery")
+
+    return dict((k, list(v)) for k, v in filesAndLocations.items())
+
+
+def splitFilesInAndNotInBDS(filesAndLocations: dict) -> Tuple[dict, dict]:
+    """
+    The function to split the files in a subset of files in DBS and not in DBS
+    :param filesAndLocations: dict of files and locations
+    :return: two dicts of files and locations
+    """
+    filesInDBS, filesNotInDBS = set(), set()
+    for filename in filesAndLocations:
+        if any(
+            filename.startswith(strg) for strg in ["/store/unmerged/", "MCFakeFile-"]
+        ):
+            filesNotInDBS.add(filename)
+        else:
+            filesInDBS.add(filename)
+
+    inDBS = filterDictsByKeyList(filesInDBS, filesAndLocations)
+    notInDBS = filterDictsByKeyList(filesNotInDBS, filesAndLocations)
+    return inDBS, notInDBS
