@@ -14,7 +14,8 @@ def runWithRetries(
     :param default: default value to return in case all the tries have failed, raise Exception o/w
     :return: function output, default value o/w
     """
-    def decorator(f):
+
+    def decorator(f: Callable):
         @wraps(f)
         def wrapper(*args, **kwargs):
             retriesParam = {"tries": tries, "wait": wait}

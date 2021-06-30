@@ -6,13 +6,12 @@ Description: General API for reading data from ReqMgr
 
 import logging
 import os
-import time
 import copy
 from Utils.WebTools import getResponse
 from Utils.Decorators import runWithRetries
 from Utils.ConfigurationHandler import ConfigurationHandler
 
-from typing import List, Optional, Union, Any, Callable
+from typing import List, Optional, Union
 
 
 class ReqMgrReader(object):
@@ -21,9 +20,7 @@ class ReqMgrReader(object):
     General API for reading data from ReqMgr
     """
 
-    def __init__(
-        self, url: str = None, logger: Optional[logging.Logger] = None, **contact
-    ) -> None:
+    def __init__(self, logger: Optional[logging.Logger] = None, **contact):
         try:
             configurationHandler = ConfigurationHandler()
             self.reqmgrUrl = os.getenv(
@@ -53,14 +50,16 @@ class ReqMgrReader(object):
         """
         try:
             result = getResponse(
-                url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["request"] + wf
+                url=self.reqmgrUrl,
+                endpoint=self.reqmgrEndpoint["request"],
+                param={"name": wf},
             )
             if makeCopy:
                 return copy.deepcopy(result["result"][0][wf])
             return result["result"][0][wf]
 
         except Exception as error:
-            self.logger.error(f"Failed to get workload from reqmgr for workflow {wf}")
+            self.logger.error("Failed to get workload from reqmgr for workflow %s", wf)
             self.logger.error(str(error))
 
     def getWorkflowsByCampaign(
@@ -77,7 +76,7 @@ class ReqMgrReader(object):
 
         except Exception as error:
             self.logger.error(
-                f"Failed to get workflows from reqmgr for campaign {campaign}"
+                "Failed to get workflows from reqmgr for campaign %s", campaign
             )
             self.logger.error(str(error))
 
@@ -95,7 +94,7 @@ class ReqMgrReader(object):
 
         except Exception as error:
             self.logger.error(
-                f"Failed to get workflows from reqmgr for dataset {dataset}"
+                "Failed to get workflows from reqmgr for dataset %s", dataset
             )
             self.logger.error(str(error))
 
@@ -112,22 +111,22 @@ class ReqMgrReader(object):
             return self.getWorkflowsByParam({"prep_id": pid}, details)
 
         except Exception as error:
-            self.logger.error(f"Failed to get workflows from reqmgr for id {pid}")
+            self.logger.error("Failed to get workflows from reqmgr for id %s", pid)
             self.logger.error(str(error))
 
     def getWorkflowsByStatus(
         self,
         status: str,
-        user: Optional[str] = None,
         details: bool = False,
+        user: Optional[str] = None,
         rtype: Optional[str] = None,
         priority: Optional[str] = None,
     ) -> Union[List[dict], List[str]]:
         """
         The function to get the list of workflows for a given status (and user/request type/priority)
         :param status: workflow status
-        :param user: request user, if any
         :param details: if True, it returns it returns details for each workflow, o/w just workflows names
+        :param user: request user, if any
         :param type: request type, if any
         :param priority: request priority, if any
         :return: a list of dicts if details is True, list of strings o/w
@@ -141,13 +140,17 @@ class ReqMgrReader(object):
             if priority:
                 # TODO: does this work? if not, can I remove this?
                 param["initialpriority"] = priority
-                self.logger.info(f"Priority {priority} is requested")
+                self.logger.info("Priority %s is requested", priority)
 
             return self.getWorkflowsByParam(param, details=details)
 
         except Exception as error:
             self.logger.error(
-                f"Failed to get workflows from reqmgr for {status} (user={user}, type={rtype}, priority={priority})"
+                "Failed to get workflows from reqmgr for %s (user=%s, type=%s, priority=%s)",
+                status,
+                user,
+                rtype,
+                priority,
             )
             self.logger.error(str(error))
 
@@ -164,10 +167,10 @@ class ReqMgrReader(object):
             return self.getWorkflowsByParam({"name": names}, details=details)
 
         except Exception as error:
-            self.logger.error(f"Failed to get workflows from reqmgr for {names}")
+            self.logger.error("Failed to get workflows from reqmgr for %s", names)
             self.logger.error(str(error))
 
-    @runWithRetries(tries=2, wait=5)
+    @runWithRetries(tries=2)
     def getWorkflowsByParam(
         self, param: dict, details: bool = False
     ) -> Union[List[dict], List[str]]:
@@ -187,7 +190,7 @@ class ReqMgrReader(object):
         if details and data:
             data = [*data[0].values()]
 
-        self.logger.info(f"{len(data)} workflows retrieved for {param}")
+        self.logger.info("%s workflows retrieved for %s", len(data), param)
 
         return data
 
@@ -220,7 +223,7 @@ class ReqMgrReader(object):
 
         except Exception as error:
             self.logger.error(
-                f"Failed to get configuration from reqmgr for agent {agent}"
+                "Failed to get configuration from reqmgr for agent %s", agent
             )
             self.logger.error(str(error))
 
@@ -247,7 +250,7 @@ class ReqMgrReader(object):
             return data
 
         except Exception as error:
-            self.logger.error(f"Failed to get splittings from reqmgr for {wf}")
+            self.logger.error("Failed to get splittings from reqmgr for %s", wf)
             self.logger.error(str(error))
 
     def _filterSplittingsTaskTypes(self, splittings: List[dict]) -> List[dict]:
