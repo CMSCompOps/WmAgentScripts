@@ -4,8 +4,9 @@ Author     : Hasan Ozturk <haozturk AT cern dot com>
 Description: General API for reading data from DBS
 """
 
-import logging
 import os
+import logging
+from logging import Logger
 from collections import defaultdict
 from dbs.apis.dbsClient import DbsApi
 
@@ -23,10 +24,7 @@ class DBSReader(object):
     """
 
     def __init__(
-        self,
-        url: Optional[str] = None,
-        logger: Optional[logging.Logger] = None,
-        **contact,
+        self, url: Optional[str] = None, logger: Optional[Logger] = None, **contact
     ):
         try:
             if url:
@@ -46,17 +44,36 @@ class DBSReader(object):
             msg += f"{e}\n"
             raise Exception(msg)
 
+    def check(self) -> bool:
+        """
+        The function to check dbs is responding
+        """
+        try:
+            if "testbed" in self.dbsUrl:
+                checkDataset = "/QDTojWinc_NC_M-1200_TuneZ2star_8TeV-madgraph/Summer12pLHE-DMWM_Validation_DONOTDELETE_Alan_TEST-v1/GEN"
+            else:
+                checkDataset = "/TTJets_mtop1695_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM"
+            response = self.dbs.listBlockSummaries(dataset=checkDataset, detail=True)
+            if not response:
+                raise Exception("DBS corrupted")
+            return True
+
+        except Exception as error:
+            self.logger.error("Failed to get any response from DBS")
+            self.logger.error(str(error))
+            return False
+
     @runWithMultiThreading
     def _getFileLumiArray(self, filenames: List[str], run: int) -> List[dict]:
-        # TODO: test if it is working properly with mt
+        # TODO: (for when the environment is deployed) test if it is working properly with mt
         """
-        The function to get the lumi arrays for a given set of file names and run
-        :param filename: lumi logical file names
-        :param run: run name
-        :return: a list of lumi arrays
+        The function to get the lumi section arrays for a given set of file names in given run
+        :param filename: logical file names
+        :param run: run number
+        :return: a list of lumi section arrays
 
         This function runs by default with multithreading and a list of
-        dicts, e. g. [{'filename': filename, 'run': run}] must be given as input.
+        dicts, e. g. [{'filename': filename, 'run': run}], must be given as input.
         """
         try:
             return (
@@ -70,13 +87,13 @@ class DBSReader(object):
             self.logger.error(str(error))
 
     @runWithMultiThreading
-    def _getBlockFileLumis(self, block: str, validFileOnly: bool = True) -> dict:
-        # TODO: test if it is working properly with mt
+    def _getBlockFileLumis(self, block: str, validFileOnly: bool = True) -> List[dict]:
+        # TODO: (for when the environment is deployed) test if it is working properly with mt
         """
-        The function to get lumi files from a given block
+        The function to get lumi section files from a given block
         :param block: block name
         :param validFileOnly: if True, keeps only valid files, keep all o/w
-        :return: lumi files
+        :return: lumi sections files
 
         This function runs by default with multithreading and a list of
         dicts, e. g. [{'block': block}] must be given as input.
@@ -113,10 +130,10 @@ class DBSReader(object):
 
     def getFilesWithLumiInRun(self, dataset: str, run: int) -> List[dict]:
         """
-        The function to get the files with lumi for a given dataset and run
+        The function to get the files with lumi sections for a given dataset in a given run
         :param dataset: dataset name
-        :param run: run name
-        :return: a list of files with lumi
+        :param run: run number
+        :return: a list of files with lumi sections
         """
         try:
             result = (
@@ -127,26 +144,24 @@ class DBSReader(object):
                 else self.dbs.listFiles(dataset=dataset, detail=True, validFileOnly=1)
             )
             filenames = [file["logical_file_name"] for file in result]
+
             querySize = 100
-            return self._getFileLumiArray(
-                [
-                    {"filenames": filenames[i : i + querySize], "run": run}
-                    for i in range(0, len(filenames), querySize)
-                ]
-            )
+            queryFilesList = [
+                {"filenames": filenames[i : i + querySize], "run": run}
+                for i in range(0, len(filenames), querySize)
+            ]
+            return self._getFileLumiArray(queryFilesList)
 
         except Exception as error:
             self.logger.error(
-                "Failed to get files for dataset %s and run %s",
-                dataset,
-                run,
+                "Failed to get files for dataset %s and run %s", dataset, run
             )
             self.logger.error(str(error))
 
     def getBlockName(self, filename: str) -> str:
         """
         The function to get the block name for a given file
-        :param filename: file name
+        :param filename: logical file name
         :return: block name
         """
         try:
@@ -158,16 +173,13 @@ class DBSReader(object):
             self.logger.error(str(error))
 
     def getDatasetFiles(
-        self,
-        dataset: str,
-        validFileOnly: bool = False,
-        details: bool = False,
+        self, dataset: str, validFileOnly: bool = False, details: bool = False
     ) -> List[dict]:
         """
         The function to get the files for a given dataset
         :param dataset: dataset name
         :param validFileOnly: if True, keep only valid files, keep all o/w
-        :param details: if True, returns details for each file, just file names and validity o/w
+        :param details: if True, returns details for each file, o/w only keep file names and validity
         :return: a list of files
         """
         try:
@@ -178,6 +190,7 @@ class DBSReader(object):
                 files = cached
             else:
                 files = self.dbs.listFiles(dataset=dataset, detail=True)
+                self.logger.info("Caching listFile of %s", dataset)
                 self.cache.store(cacheKey, files)
 
             if validFileOnly:
@@ -209,16 +222,15 @@ class DBSReader(object):
 
         except Exception as error:
             self.logger.error(
-                "Failed to get block names from DBS for dataset %s",
-                dataset,
+                "Failed to get block names from DBS for dataset %s", dataset
             )
             self.logger.error(str(error))
 
     def getDatasetBlockNamesByRuns(self, dataset: str, runs: list) -> List[str]:
         """
-        The function to get the block names of a given dataset and runs
+        The function to get the block names of a given dataset in the given runs
         :param dataset: dataset name
-        :param runs: run names
+        :param runs: run numbers
         :return: a list of block names
         """
         try:
@@ -234,23 +246,20 @@ class DBSReader(object):
 
         except Exception as error:
             self.logger.error(
-                "Failed to get block names from DBS for dataset %s",
-                dataset,
+                "Failed to get block names from DBS for dataset %s", dataset
             )
             self.logger.error(str(error))
 
-    def getDatasetBlockNamesByLumis(self, dataset: str, lumis: dict) -> List[str]:
-        # TODO: check type of lumis
-        # TODO: needed a fix in here :/
+    def getDatasetBlockNamesByLumis(self, dataset: str, lumisByRun: dict) -> List[str]:
         """
-        The function to get the block names of a given dataset and runs
+        The function to get the block names of a given dataset in the given lumi sections
         :param dataset: dataset name
-        :param lumis: dict relating run name and lumi list
+        :param lumisByRun: a dict of format {run: [lumis]}
         :return: a list of block names
         """
         try:
             blocks = set()
-            for run, lumiList in lumis.items():
+            for run, lumiList in lumisByRun.items():
                 if int(run) != 1:
                     result = self.dbs.listFileArray(
                         dataset=dataset,
@@ -259,8 +268,8 @@ class DBSReader(object):
                         detail=True,
                     )
                 else:
-                    # NOTE: dbs api does not support run_num=1 w/o logical_file_name
-                    # To avoid the exception, in this case make the call with filename insteads of lumis
+                    # NOTE: dbs api does not support run_num=1 w/o defining a logical_file_name
+                    # To avoid the exception, in this case make the call with filenames instead of lumis
                     files = self.getDatasetFiles(dataset)
                     filenames = [file["logical_file_name"] for file in files]
                     result = self.dbs.listFileArray(
@@ -274,8 +283,7 @@ class DBSReader(object):
 
         except Exception as error:
             self.logger.error(
-                "Failed to get block names from DBS for dataset %s",
-                dataset,
+                "Failed to get block names from DBS for dataset %s", dataset
             )
             self.logger.error(str(error))
 
@@ -295,9 +303,9 @@ class DBSReader(object):
 
     def getDatasetEventsAndLumis(self, dataset: str) -> Tuple[int, int]:
         """
-        The function to get number of events and lumis for a given dataset
+        The function to get the total number of events and lumi sections for a given dataset
         :param dataset: dataset name
-        :return: number of events and lumis
+        :return: total number of events and of lumi sections
         """
         try:
             files = self.dbs.listFileSummaries(dataset=dataset, validFileOnly=1)
@@ -311,9 +319,9 @@ class DBSReader(object):
 
     def getBlocksEventsAndLumis(self, blocks: List[str]) -> Tuple[int, int]:
         """
-        The function to get number of events and lumis for given blocks
+        The function to get the total number of events and lumi sections for given blocks
         :param blocks: blocks names
-        :return: number of events and lumis
+        :return: total number of events and of lumi sections
         """
         try:
             files = []
@@ -333,7 +341,7 @@ class DBSReader(object):
         """
         The function to get the runs for a given dataset
         :param dataset: dataset name
-        :return: a list of runs
+        :return: a list of run numbers
         """
         try:
             result = self.dbs.listRuns(dataset=dataset)
@@ -353,7 +361,7 @@ class DBSReader(object):
         """
         The function to get the parent dataset of a given dataset
         :param dataset: dataset name
-        :return: a list of dataset parents names
+        :return: a list of parent names
         """
         try:
             result = self.dbs.listDatasetParents(dataset=dataset)
@@ -385,9 +393,9 @@ class DBSReader(object):
 
     def getLFNBase(self, dataset: str) -> str:
         """
-        The function to get the logical file name base for a given dataset
+        The function to get the base of logical file names for a given dataset
         :param dataset: dataset name
-        :return: logical file name base
+        :return: base of logical file names
         """
         try:
             result = self.dbs.listFiles(dataset=dataset)
@@ -401,54 +409,60 @@ class DBSReader(object):
     def getRecoveryBlocks(self, filesAndLocations: dict) -> Tuple[list, dict]:
         """
         The function to get the blocks needed for the recovery of a workflow
-        :param filesAndLocations: dict of files names and locations in DBS
-        :return: all blocks and locations,
+        :param filesAndLocations: dict of file names and locations
+        :return: all blocks and locations in DBS
         """
         try:
             blocks = set()
             blocksAndLocations = defaultdict(set)
-            cacheBlockFiles = defaultdict(str)
+            cachedBlockFiles = defaultdict(str)
             for filename, location in filesAndLocations.items():
-                if filename in cacheBlockFiles:
-                    blockName = cacheBlockFiles[filename]
+                if filename in cachedBlockFiles:
+                    blockName = cachedBlockFiles[filename]
                 else:
                     blockName = self.getBlockName(filename)
                     if blockName:
-                        filesArrays = self.getDatasetFileArray(
+                        files = self.getDatasetFileArray(
                             blockName.split("#")[0], details=True
                         )
-                        for fileArray in filesArrays:
-                            cacheBlockFiles[fileArray["logical_file_name"]] = fileArray[
+                        for file in files:
+                            cachedBlockFiles[file["logical_file_name"]] = file[
                                 "block_name"
                             ]
-                            blocks.add(fileArray["block_name"])
+                            blocks.add(file["block_name"])
+                    else:
+                        continue
                 blocksAndLocations[blockName].update(location)
-            return blocks, blocksAndLocations
+
+            blocksAndLocations = mapDictValuesTypeToList(blocksAndLocations)
+            return list(blocks), blocksAndLocations
 
         except Exception as error:
             self.logger.error("Failed to recovery blocks from DBS")
             self.logger.error(str(error))
 
     def getDatasetLumisAndFiles(
-        self, dataset: str, validFileOnly: bool = True
+        self, dataset: str, validFileOnly: bool = True, withCache: bool = True
     ) -> Tuple[dict, dict]:
         """
         The function to get the lumis and files of a given dataset
         :param dataset: dataset name
-        :param validFileOnly: if True, keep only valid files, keep all o/w
+        :param validFileOnly: if True, keep only valid files, o/w keep all
+        :param withCache: if True, get cached data, o/w build from blocks
         :return: a dict in the format {run: [lumis]} and a dict in the format {(run:lumis): [files]}
         """
         try:
             cacheKey = f"json_lumis_{dataset}"
             cached = self.cache.get(cacheKey)
-            if cached:
-                self.logger.info("lumis of %s taken from cache", dataset)
+            if withCache and cached:
+                self.logger.info("json_lumis of %s taken from cache", dataset)
                 lumisByRun, filesByLumis = cached["lumis"], cached["files"]
             else:
                 blocks = self.dbs.listBlocks(dataset=dataset)
                 lumisByRun, filesByLumis = self.getBlocksLumisAndFilesForCaching(
                     blocks, validFileOnly
                 )
+                self.logger.info("Caching json_lumis of %s", dataset)
                 self.cache.store(
                     cacheKey,
                     {"files": filesByLumis, "lumis": lumisByRun},
@@ -474,7 +488,7 @@ class DBSReader(object):
         The function to get the lumis and files of given blocks
         :param blocks: blocks
         :param validFileOnly: if True, keep only valid files, keep all o/w
-        :return: a dict in the format {run: [lumis]} and a dict in the format {(run:lumis): [files]}
+        :return: a dict in the format {'run': [lumis]} and a dict in the format {'run:lumis': [files]}, where the keys are strings
         """
         filesByLumis, lumisByRun = defaultdict(set), defaultdict(set)
         files = self._getBlockFileLumis(
@@ -489,18 +503,19 @@ class DBSReader(object):
             for lumiKey in file["lumi_section_num"]:
                 filesByLumis[f"{runKey}:{lumiKey}"].add(file["logical_file_name"])
 
-        lumisByRun = dict((k, list(v)) for k, v in lumisByRun.items())
-        filesByLumis = dict((k, list(v)) for k, v in filesByLumis.items())
+        lumisByRun = mapDictValuesTypeToList(lumisByRun)
+        filesByLumis = mapDictValuesTypeToList(filesByLumis)
         return lumisByRun, filesByLumis
 
 
-# TODO: MOVE TO ANOTHER MODULE (MAYBE ONE FOR DATA CLEANING?)
+# TODO: MOVE TO SOMEWHERE ELSE ?
+# Maybe some file to put data cleaning functions ?
 def filterDictsByKeyList(lst: list, data: dict, *otherData: dict) -> dict:
     """
     The function to filter dict data by a given list of keys to keep
     :param lst: key values to keep
     :param data/otherData: dicts
-    :return: filtered data (keeping the input order)
+    :return: filtered data (keep the input order if more than one dict is given)
     """
     filteredData = []
     for d in [data] + list(otherData):
@@ -514,41 +529,22 @@ def filterDictsByKeyList(lst: list, data: dict, *otherData: dict) -> dict:
     return tuple(filteredData) if len(filteredData) > 1 else filteredData[0]
 
 
-def filterLumisAndFilesByRuns(
-    filesByLumis: dict, lumisByRun: dict, runs: list
-) -> Tuple[dict, dict]:
+def mapDictValuesTypeToList(data: dict) -> dict:
     """
-    The function to get the lumis and files filteres by runs
-    :param filesByLumis: a dict in the format {run: [lumis]}
-    :param lumisByRun: a dict in the format {(run:lumis): [files]}
-    :param run: run names
-    :return: a dict in the format {run: [lumis]} and a dict in the format {(run:lumis): [files]}
+    The function to map the values of a dict to list type values
+    :param data: dict
+    :return: dict of format {k: list(v)}
     """
-    return filterDictsByKeyList(runs, lumisByRun, filesByLumis)
+    return dict((k, list(v)) for k, v in data.items())
 
 
-def filterLumisAndFilesByLumis(
-    filesByLumis: dict, lumisByRun: dict, lumis: dict
-) -> Tuple[dict, dict]:
-    """
-    The function to get the lumis and files filteres by lumis
-    :param filesByLumis: a dict in the format {run: [lumis]}
-    :param lumisByRun: a dict in the format {(run:lumis): [files]}
-    :param lumis: a dict in the format {run: lumis}
-    :return: a dict in the format {run: [lumis]} and a dict in the format {(run:lumis): [files]}
-    """
-    runs = map(int, lumis.keys())
-    lumis = set((k, v) for k, v in lumis.items())
-    lumisByRun = filterDictsByKeyList(runs, lumisByRun)
-    filesByLumis = filterDictsByKeyList(lumis, filesByLumis)
-    return lumisByRun, filesByLumis
-
-
+# TODO: MOVE TO SOMEWHERE ELSE ?
+# This is whats done just after getRecoveryDoc(), in getRecoveryBlocks(), in utils.py
 def getRecoveryFilesAndLocations(
     recoveryDocs: List[dict], suffixTaskFilter: Optional[str] = None
 ) -> dict:
     """
-    The function to get the files and locations of given recovery docs
+    The function to get the files and locations for given recovery docs
     :param recoveryDocs: recovery docs
     :param suffixTaskFilter: filter tasks ending with given suffix
     :return: a dict of files and locations
@@ -566,12 +562,14 @@ def getRecoveryFilesAndLocations(
 
     print(f"{len(filesAndLocations)} files in recovery")
 
-    return dict((k, list(v)) for k, v in filesAndLocations.items())
+    filesAndLocations = mapDictValuesTypeToList(filesAndLocations)
+    return filesAndLocations
 
 
-def splitFilesInAndNotInBDS(filesAndLocations: dict) -> Tuple[dict, dict]:
+# This creates half of the original outputs of getRecoveryBlocks(), in utils.py
+def splitFilesAndLocationsInDBS(filesAndLocations: dict) -> Tuple[dict, dict]:
     """
-    The function to split the files in a subset of files in DBS and not in DBS
+    The function to split the files in a subset of files in DBS and of files not in DBS
     :param filesAndLocations: dict of files and locations
     :return: two dicts of files and locations
     """
@@ -585,5 +583,42 @@ def splitFilesInAndNotInBDS(filesAndLocations: dict) -> Tuple[dict, dict]:
             filesInDBS.add(filename)
 
     inDBS = filterDictsByKeyList(filesInDBS, filesAndLocations)
+    inDBS = mapDictValuesTypeToList(inDBS)
+
     notInDBS = filterDictsByKeyList(filesNotInDBS, filesAndLocations)
+    notInDBS = mapDictValuesTypeToList(notInDBS)
+
     return inDBS, notInDBS
+
+
+# TODO: MOVE TO SOMEWHERE ELSE ?
+# This is whats done in the end of getDatasetLumisAndFiles(), in utils.py when runs != None
+def filterLumisAndFilesByRuns(
+    filesByLumis: dict, lumisByRun: dict, runs: list
+) -> Tuple[dict, dict]:
+    """
+    The function to get the lumi sections and files filtered by given runs
+    :param filesByLumis: a dict of format {run: [lumis]}
+    :param lumisByRun: a dict of format {(run:lumis): [files]}
+    :param run: run names
+    :return: a dict of format {run: [lumis]} and a dict of format {(run:lumis): [files]}
+    """
+    return filterDictsByKeyList(runs, lumisByRun, filesByLumis)
+
+
+# This is whats done in the end of getDatasetLumisAndFiles(), in utils.py when lumis != None
+def filterLumisAndFilesByLumis(
+    filesByLumis: dict, lumisByRun: dict, lumis: dict
+) -> Tuple[dict, dict]:
+    """
+    The function to get the lumi sections and files filtered by given lumi sections
+    :param filesByLumis: a dict of format {run: [lumis]}
+    :param lumisByRun: a dict of format {(run:lumis): [files]}
+    :param lumis: a dict of format {run: lumis}
+    :return: a dict of format {run: [lumis]} and a dict of format {(run:lumis): [files]}
+    """
+    runs = map(int, lumis.keys())
+    lumis = set((k, v) for k, v in lumis.items())
+    lumisByRun = filterDictsByKeyList(runs, lumisByRun)
+    filesByLumis = filterDictsByKeyList(lumis, filesByLumis)
+    return lumisByRun, filesByLumis

@@ -38,12 +38,14 @@ def getX509Conn(url=reqmgrUrl, max_try=5):
 def mongoClient(url: str = mongoUrl) -> pymongo.MongoClient:
     """
     The function to get the mongo client
+    :param url: mongo url
     :return: mongo client
     """
     try:
         return pymongo.MongoClient(
             f"mongodb://{url}/?ssl=true", ssl_cert_reqs=ssl.CERT_NONE
         )
+
     except:
         print("Failed to get mongo client")
         return None

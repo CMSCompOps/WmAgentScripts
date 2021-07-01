@@ -5,9 +5,10 @@ Description: General API for writing data to DBS
 """
 
 
-# from dbs.apis.dbsClient import DbsApi
-import logging
 import os
+import logging
+from logging import Logger
+from dbs.apis.dbsClient import DbsApi
 from Utils.ConfigurationHandler import ConfigurationHandler
 
 from typing import Optional, List
@@ -20,10 +21,7 @@ class DBSWriter(object):
     """
 
     def __init__(
-        self,
-        url: Optional[str] = None,
-        logger: Optional[logging.Logger] = None,
-        **contact,
+        self, url: Optional[str] = None, logger: Optional[Logger] = None, **contact
     ):
         try:
             if url:
@@ -33,8 +31,8 @@ class DBSWriter(object):
                 self.dbsURL = os.getenv(
                     "DBS_WRITER_URL", configurationHandler.get("dbs_url_writer")
                 )
-            # self.dbs = DbsApi(self.dbsURL, **contact)
-            self.dbs = None
+            self.dbs = DbsApi(self.dbsURL, **contact)
+            logging.basicConfig(level=logging.INFO)
             self.logger = logger or logging.getLogger(self.__class__.__name__)
 
         except Exception as e:
@@ -72,7 +70,7 @@ class DBSWriter(object):
         :param dataset: dataset name
         :param actualStatus: actual dataset status
         :param newStatus: new dataset status
-        :param withFiles: if True, files status are also updated, they are not o/w
+        :param withFiles: if True, files status are also updated
         :return: True in case the dataset status was updated, False o/w
         """
         try:
@@ -82,12 +80,11 @@ class DBSWriter(object):
                     dataset,
                 )
                 return True
+
             self.dbs.updateDatasetType(dataset=dataset, dataset_access_type=newStatus)
             if withFiles:
                 files = self.dbs.listFiles(dataset=dataset)
-                fileStatus = (
-                    0 if newStatus in ["DELETED", "DEPRECATED", "INVALID"] else 1
-                )
+                fileStatus = newStatus not in ["DELETED", "DEPRECATED", "INVALID"]
                 self.setFileStatus(files, fileStatus)
             return True
 

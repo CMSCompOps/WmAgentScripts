@@ -1,9 +1,9 @@
 import os
 import time
-import logging
 import pymongo
 import json
-from abc import ABC, abstractmethod
+import logging
+from logging import Logger
 
 from typing import Optional
 
@@ -11,37 +11,22 @@ from Utils.Authenticate import mongoClient
 from Utils.ConfigurationHandler import ConfigurationHandler
 
 
-class MongoInfo(ABC):
-    """
-    _MongoInfo_
-    General abstract class for talking to Mongo collections
-    """
-
-    def __init__(
-        self,
-        logger: Optional[logging.Logger] = None,
-    ):
-        self.client = mongoClient()
-        self.db = self._set_db()
-        self.logger = logger or logging.getLogger(self.__class__.__name__)
-
-    @abstractmethod
-    def _set_db(self):
-        pass
-
-
-class CacheInfo(MongoInfo):
+class CacheInfo:
     """
     _CacheInfo_
-    Class for interaction with CacheInfo in Mongo
+    For reading and writing in mongo cacheInfo
     """
 
-    def _set_db(self):
-        # TODO: what type does this function return ?
-        return self.client.unified.cacheInfo
+    def __init__(self, logger: Optional[Logger] = None):
+        configurationHandler = ConfigurationHandler()
+        self.mongoUrl = configurationHandler.get("mongo_db_url")
+        self.cacheDir = configurationHandler.get("cache_dir")
+        self.client = mongoClient(self.mongoUrl)
+        self.collection = self.client.unified.cacheInfo
+        logging.basicConfig(level=logging.INFO)
+        self.logger = logger or logging.getLogger(self.__class__.__name__)
 
     def _getFromFile(self, key: str):
-        # TODO: what type does this function return ?
         """
         The function to get key data from file
         :param key: key
@@ -53,22 +38,20 @@ class CacheInfo(MongoInfo):
             with open(fileKey) as file:
                 data = json.loads(file.read())
             return data
+
         else:
-            self.logger.info(f"File cache miss {key}")
+            self.logger.info("File cache miss %s", key)
             return None
 
     def _getFileKey(self, key: str) -> str:
-        # TODO: rename ?
         """
         The function to get the file path for a given key
         :param key: key
         :return: file path
         """
-        cacheDir = ConfigurationHandler().get("cache_dir")
-        return f"{cacheDir}/{key.replace('/','_')}"
+        return f"{self.cacheDir}/{key.replace('/','_')}"
 
     def get(self, key: str, noExpire: bool = False):
-        # TODO: what type does this function return ?
         """
         The function to get data from mongo cache info given a key
         :param key: key name
@@ -77,7 +60,7 @@ class CacheInfo(MongoInfo):
         """
         try:
             now = time.mktime(time.gmtime())
-            foundKey = self.db.find_one({"key": key})
+            foundKey = self.collection.find_one({"key": key})
             if foundKey:
                 if noExpire or foundKey["expire"] > now:
                     if "data" not in foundKey:
@@ -93,8 +76,8 @@ class CacheInfo(MongoInfo):
                 return None
 
         except Exception as error:
-            self.logger.error(f"Failed to get {key} from cache")
-            self.logger.error(f"{str(error)}")
+            self.logger.error("Failed to get %s from cache", key)
+            self.logger.error(str(error))
 
     def store(self, key: str, data: dict, lifeTimeMinutes: int = 10) -> bool:
         """
@@ -114,20 +97,19 @@ class CacheInfo(MongoInfo):
         }
 
         try:
-            self.db.update_one({"key": key}, {"$set": content}, upsert=True)
+            self.collection.update_one({"key": key}, {"$set": content}, upsert=True)
             return True
 
         except (pymongo.errors.WriteError, pymongo.errors.DocumentTooLarge) as error:
             self.logger.error("Failed writing in CacheInfo, will use file instead")
-            # TODO: what is actually done here ?
             with open(self._getFileKey(key), "w") as file:
                 file.write(json.dumps(content.pop("data")))
-            self.db.update_one({"key": key}, {"$set": content}, upsert=True)
+            self.collection.update_one({"key": key}, {"$set": content}, upsert=True)
             return True
 
         except Exception as error:
-            self.logger.error(f"Failed to store {key} in CacheInfo")
-            self.logger.error(f"{str(error)}")
+            self.logger.error("Failed to store %s in CacheInfo", key)
+            self.logger.error(str(error))
 
         return False
 
@@ -140,9 +122,10 @@ class CacheInfo(MongoInfo):
         try:
             now = time.mktime(time.gmtime())
             expireLimit = now - expiredDays * 86400
-            self.db.delete_many({"expire": {"$lt": expireLimit}})
+            self.collection.delete_many({"expire": {"$lt": expireLimit}})
             return True
+
         except Exception as error:
             self.logger.error("Failed to purge data from cache")
-            self.logger.error(f"{str(error)}")
-        return False
+            self.logger.error(str(error))
+            return False
