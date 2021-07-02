@@ -9,8 +9,6 @@ import http.client
 import pymongo
 import ssl
 
-from typing import Optional
-
 from Utils.ConfigurationHandler import ConfigurationHandler
 
 # Get necessary parameters
@@ -42,9 +40,7 @@ def mongoClient(url: str = mongoUrl) -> pymongo.MongoClient:
     :return: mongo client
     """
     try:
-        return pymongo.MongoClient(
-            f"mongodb://{url}/?ssl=true", ssl_cert_reqs=ssl.CERT_NONE
-        )
+        return pymongo.MongoClient(f"mongodb://{url}/?ssl=true", ssl_cert_reqs=ssl.CERT_NONE)
 
     except:
         print("Failed to get mongo client")
