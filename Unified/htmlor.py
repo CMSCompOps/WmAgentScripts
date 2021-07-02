@@ -27,9 +27,6 @@ def htmlor( caller = ""):
     except:
         boost = {}
     cache = getWorkflows(reqmgr_url,'assignment-approved', details=True)
-    cache.extend( getWorkflows(reqmgr_url,'acquired', details=True) )
-    cache.extend( getWorkflows(reqmgr_url,'running-open', details=True) )
-    cache.extend( getWorkflows(reqmgr_url,'running-closed', details=True) )
     def getWL( wfn ):
         cached = filter(lambda d : d['RequestName']==wfn, cache)
         if cached:
