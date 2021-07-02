@@ -3,10 +3,11 @@
 _DBSReader_t_
 Unit test for the DBS helper class.
 """
-# TODO: mock cache in DBSReader
 
 import unittest
+from unittest.mock import patch
 from Services.DBS.DBSReader import DBSReader
+
 
 class DBSReaderTest(unittest.TestCase):
     # There are many more blocks and files under these datasets
@@ -117,9 +118,13 @@ class DBSReaderTest(unittest.TestCase):
         isFound = block == self.validDataset.get("block_name")
         self.assertTrue(isFound)
 
-    def testGetDatasetFiles(self):
+    @patch("Services.Mongo.CacheInfo.CacheInfo.get")
+    @patch("Services.Mongo.CacheInfo.CacheInfo.store")
+    def testGetDatasetFiles(self, mock_store, mock_get):
         """getDatasetFiles gets files of a dataset"""
         # Test when details is False and validFileOnly is False
+        mock_store.return_value = True
+        mock_get.return_value = None
         dbsReader = DBSReader(self.url)
         files = dbsReader.getDatasetFiles(self.invalidDataset.get("dataset"))
         isList = isinstance(files, list)
@@ -147,6 +152,8 @@ class DBSReaderTest(unittest.TestCase):
         self.assertTrue(isFound)
 
         # Test when details is False and validFileOnly is True
+        mock_store.return_value = True
+        mock_get.return_value = None
         files = dbsReader.getDatasetFiles(
             self.invalidDataset.get("dataset"), validFileOnly=True
         )
@@ -311,8 +318,12 @@ class DBSReaderTest(unittest.TestCase):
         isFound = name == self.validDataset.get("logical_file_name_base")
         self.assertTrue(isFound)
 
-    def testGetDatasetLumisAndFiles(self):
+    @patch("Services.Mongo.CacheInfo.CacheInfo.get")
+    @patch("Services.Mongo.CacheInfo.CacheInfo.store")
+    def testGetDatasetLumisAndFiles(self, mock_store, mock_get):
         """getDatasetLumisAndFiles gets lumi sections and files of a dataset"""
+        mock_store.return_value = True
+        mock_get.return_value = None
         dbsReader = DBSReader(self.url)
         results = dbsReader.getDatasetLumisAndFiles(
             self.validDataset.get("dataset"), withCache=False

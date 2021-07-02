@@ -14,7 +14,7 @@ from Utils.ConfigurationHandler import ConfigurationHandler
 class CacheInfo:
     """
     _CacheInfo_
-    For reading and writing in mongo cacheInfo
+    For reading/writing collection cacheInfo in MongoDB
     """
 
     def __init__(self, logger: Optional[Logger] = None):

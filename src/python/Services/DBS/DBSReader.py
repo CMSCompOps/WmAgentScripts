@@ -12,9 +12,9 @@ from dbs.apis.dbsClient import DbsApi
 
 from Utils.ConfigurationHandler import ConfigurationHandler
 from Utils.Decorators import runWithMultiThreading
-from Services.Mongo.MongoInfo import CacheInfo
+from Services.Mongo.CacheInfo import CacheInfo
 
-from typing import Optional, List, Tuple, Union
+from typing import Callable, Optional, List, Tuple
 
 
 class DBSReader(object):
@@ -198,7 +198,7 @@ class DBSReader(object):
 
             if not details:
                 keysToKeep = ["logical_file_name", "is_file_valid"]
-                files = list(filterDictsByKeyList(keysToKeep, *files))
+                files = list(filterKeys(keysToKeep, *files))
 
             return files
 
@@ -434,7 +434,7 @@ class DBSReader(object):
                         continue
                 blocksAndLocations[blockName].update(location)
 
-            blocksAndLocations = mapDictValuesTypeToList(blocksAndLocations)
+            blocksAndLocations = mapValues(list, blocksAndLocations)
             return list(blocks), blocksAndLocations
 
         except Exception as error:
@@ -503,14 +503,14 @@ class DBSReader(object):
             for lumiKey in file["lumi_section_num"]:
                 filesByLumis[f"{runKey}:{lumiKey}"].add(file["logical_file_name"])
 
-        lumisByRun = mapDictValuesTypeToList(lumisByRun)
-        filesByLumis = mapDictValuesTypeToList(filesByLumis)
+        lumisByRun = mapValues(list, lumisByRun)
+        filesByLumis = mapValues(list, filesByLumis)
         return lumisByRun, filesByLumis
 
 
 # TODO: MOVE TO SOMEWHERE ELSE ?
 # Maybe some file to put data cleaning functions ?
-def filterDictsByKeyList(lst: list, data: dict, *otherData: dict) -> dict:
+def filterKeys(lst: list, data: dict, *otherData: dict) -> dict:
     """
     The function to filter dict data by a given list of keys to keep
     :param lst: key values to keep
@@ -529,13 +529,14 @@ def filterDictsByKeyList(lst: list, data: dict, *otherData: dict) -> dict:
     return tuple(filteredData) if len(filteredData) > 1 else filteredData[0]
 
 
-def mapDictValuesTypeToList(data: dict) -> dict:
+def mapValues(f: Callable, data: dict) -> dict:
     """
-    The function to map the values of a dict to list type values
+    The function to map the values of a dict by a given function
+    :param f: the function to apply to values
     :param data: dict
-    :return: dict of format {k: list(v)}
+    :return: dict of format {k: f(v)}
     """
-    return dict((k, list(v)) for k, v in data.items())
+    return dict((k, f(v)) for k, v in data.items())
 
 
 # TODO: MOVE TO SOMEWHERE ELSE ?
@@ -562,7 +563,7 @@ def getRecoveryFilesAndLocations(
 
     print(f"{len(filesAndLocations)} files in recovery")
 
-    filesAndLocations = mapDictValuesTypeToList(filesAndLocations)
+    filesAndLocations = mapValues(list, filesAndLocations)
     return filesAndLocations
 
 
@@ -582,11 +583,11 @@ def splitFilesAndLocationsInDBS(filesAndLocations: dict) -> Tuple[dict, dict]:
         else:
             filesInDBS.add(filename)
 
-    inDBS = filterDictsByKeyList(filesInDBS, filesAndLocations)
-    inDBS = mapDictValuesTypeToList(inDBS)
+    inDBS = filterKeys(filesInDBS, filesAndLocations)
+    inDBS = mapValues(list, inDBS)
 
-    notInDBS = filterDictsByKeyList(filesNotInDBS, filesAndLocations)
-    notInDBS = mapDictValuesTypeToList(notInDBS)
+    notInDBS = filterKeys(filesNotInDBS, filesAndLocations)
+    notInDBS = mapValues(list, notInDBS)
 
     return inDBS, notInDBS
 
@@ -603,7 +604,7 @@ def filterLumisAndFilesByRuns(
     :param run: run names
     :return: a dict of format {run: [lumis]} and a dict of format {(run:lumis): [files]}
     """
-    return filterDictsByKeyList(runs, lumisByRun, filesByLumis)
+    return filterKeys(runs, lumisByRun, filesByLumis)
 
 
 # This is whats done in the end of getDatasetLumisAndFiles(), in utils.py when lumis != None
@@ -619,6 +620,6 @@ def filterLumisAndFilesByLumis(
     """
     runs = map(int, lumis.keys())
     lumis = set((k, v) for k, v in lumis.items())
-    lumisByRun = filterDictsByKeyList(runs, lumisByRun)
-    filesByLumis = filterDictsByKeyList(lumis, filesByLumis)
+    lumisByRun = filterKeys(runs, lumisByRun)
+    filesByLumis = filterKeys(lumis, filesByLumis)
     return lumisByRun, filesByLumis
