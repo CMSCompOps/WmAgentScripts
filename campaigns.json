@@ -421,7 +421,7 @@
   },
   "NanoAODv9UL16Data": {
      "fractionpass": 1,
-     "go": false,
+     "go": true,
      "lumisize": -1,
      "maxcopies": 1,
      "resize": "auto",
@@ -437,7 +437,7 @@
     },
   "NanoAODv9UL18Data": {
      "fractionpass": 1,
-     "go": false,
+     "go": true,
      "lumisize": -1,
      "maxcopies": 1,
      "resize": "auto",
