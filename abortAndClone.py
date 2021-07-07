@@ -37,6 +37,7 @@ def main():
     (options, args) = parser.parse_args()
     
     # Check the arguments, get info from them
+    # add coment
     if options.file:
         wfs = [l.strip() for l in open(options.file) if l.strip()]
         if len(args) == 2:
