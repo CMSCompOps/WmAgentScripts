@@ -429,7 +429,7 @@
     },
   "NanoAODv9UL17Data": {
      "fractionpass": 1,
-     "go": false,
+     "go": true,
      "lumisize": -1,
      "maxcopies": 1,
      "resize": "auto",
