@@ -13,7 +13,7 @@ from dbs.apis.dbsClient import DbsApi
 from Utils.ConfigurationHandler import ConfigurationHandler
 from Utils.IteratorTools import mapValues, mapKeys, filterKeys
 from Utils.Decorators import runWithMultiThreading
-from Services.Mongo.CacheInfo import CacheInfo
+from Cache.CacheManager import CacheManager
 
 from typing import Callable, Optional, List, Tuple
 
@@ -32,7 +32,7 @@ class DBSReader(object):
                 configurationHandler = ConfigurationHandler()
                 self.dbsUrl = os.getenv("DBS_READER_URL", configurationHandler.get("dbs_url"))
             self.dbs = DbsApi(self.dbsUrl, **contact)
-            self.cache = CacheInfo()
+            self.cache = CacheManager()
             logging.basicConfig(level=logging.INFO)
             self.logger = logger or logging.getLogger(self.__class__.__name__)
 
@@ -179,7 +179,7 @@ class DBSReader(object):
             else:
                 files = self.dbs.listFiles(dataset=dataset, detail=True)
                 self.logger.info("Caching listFile of %s", dataset)
-                self.cache.store(cacheKey, files)
+                self.cache.set(cacheKey, files)
 
             if validFileOnly:
                 files = [file for file in files if file["is_file_valid"]]
@@ -434,7 +434,7 @@ class DBSReader(object):
                 blocks = self.dbs.listBlocks(dataset=dataset)
                 lumisByRun, filesByLumis = self.getBlocksLumisAndFilesForCaching(blocks, validFileOnly)
                 self.logger.info("Caching json_lumis of %s", dataset)
-                self.cache.store(
+                self.cache.set(
                     cacheKey,
                     {"files": filesByLumis, "lumis": lumisByRun},
                     lifeTimeMinutes=600,
@@ -469,7 +469,7 @@ class DBSReader(object):
             lumisByRun = mapValues(list, lumisByRun)
             filesByLumis = mapValues(list, filesByLumis)
             return lumisByRun, filesByLumis
-        
+
         except Exception as error:
             self.logger.error("Failed to get lumi sections and files from DBS for given blocks")
             self.logger.error(str(error))
@@ -495,10 +495,8 @@ def getRecoveryFilesAndLocations(recoveryDocs: List[dict], suffixTaskFilter: Opt
         if suffixTaskFilter and not task.endswith(suffixTaskFilter):
             continue
 
-        for filename in doc["files"]:
-            filesAndLocations[filename].update(doc["files"][filename]["locations"])
-        else:
-            filesAndLocations[filename].update([])
+        for filename, data in doc["files"].items():
+            filesAndLocations[filename].update(data.get("locations", []))
 
     filesAndLocations = mapValues(list, filesAndLocations)
 
