@@ -41,7 +41,7 @@ class ReqMgrReaderTest(unittest.TestCase):
     statusParams = {
         "status": "normal-archived",
         "user": "sagarwal",
-        "rtype": "ReReco",
+        "requestType": "ReReco",
         "workflows": [
             "sagarwal_Run2017E-31Mar2018-v1-HighMultiplicityEOF3-Nano1June2019_10215_190607_141831_7758",
             "sagarwal_Run2018A-v1-Commissioning-06Jun2018_1015_180823_210612_6118",
@@ -92,23 +92,17 @@ class ReqMgrReaderTest(unittest.TestCase):
     def testGetWorkflowSchema(self):
         """getWorkflowSchema gets schema for a given workflow"""
         reqMgrReader = ReqMgrReader()
-        schema = reqMgrReader.getWorkflowSchema(
-            self.otherWorkflowsParams.get("toTestSchema").get("workflow")
-        )
+        schema = reqMgrReader.getWorkflowSchema(self.otherWorkflowsParams.get("toTestSchema").get("workflow"))
         isDict = isinstance(schema, dict)
         self.assertTrue(isDict)
 
-        isFound = schema["RequestName"] == self.otherWorkflowsParams.get(
-            "toTestSchema"
-        ).get("workflow")
+        isFound = schema["RequestName"] == self.otherWorkflowsParams.get("toTestSchema").get("workflow")
         self.assertTrue(isFound)
 
     def testGetWorkflowsByCampaign(self):
         """getWorkflowsByCampaign gets workflows for a given campaign"""
         reqMgrReader = ReqMgrReader()
-        workflows = reqMgrReader.getWorkflowsByCampaign(
-            self.campaignParams.get("campaign"), details=True
-        )
+        workflows = reqMgrReader.getWorkflowsByCampaign(self.campaignParams.get("campaign"), details=True)
         isList = isinstance(workflows, list)
         self.assertTrue(isList)
 
@@ -136,9 +130,7 @@ class ReqMgrReaderTest(unittest.TestCase):
         self.assertTrue(isFound)
 
         # Test when details is True
-        workflows = reqMgrReader.getWorkflowsByOutput(
-            self.outputParams.get("dataset"), details=True
-        )
+        workflows = reqMgrReader.getWorkflowsByOutput(self.outputParams.get("dataset"), details=True)
         isList = isinstance(workflows, list)
         self.assertTrue(isList)
 
@@ -162,15 +154,11 @@ class ReqMgrReaderTest(unittest.TestCase):
         sameLen = len(workflows) == len(self.prepIdParams.get("workflows"))
         self.assertTrue(sameLen)
 
-        isFound = all(
-            workflow in self.prepIdParams.get("workflows") for workflow in workflows
-        )
+        isFound = all(workflow in self.prepIdParams.get("workflows") for workflow in workflows)
         self.assertTrue(isFound)
 
         # Test when details is True
-        workflows = reqMgrReader.getWorkflowsByPrepId(
-            self.prepIdParams.get("prep_id"), details=True
-        )
+        workflows = reqMgrReader.getWorkflowsByPrepId(self.prepIdParams.get("prep_id"), details=True)
         isList = isinstance(workflows, list)
         self.assertTrue(isList)
 
@@ -195,7 +183,7 @@ class ReqMgrReaderTest(unittest.TestCase):
             self.statusParams.get("status"),
             user=self.statusParams.get("user"),
             details=False,
-            rtype=self.statusParams.get("rtype"),
+            requestType=self.statusParams.get("requestType"),
         )
         isList = isinstance(workflows, list)
         self.assertTrue(isList)
@@ -206,9 +194,7 @@ class ReqMgrReaderTest(unittest.TestCase):
         sameLen = len(workflows) == len(self.statusParams.get("workflows"))
         self.assertTrue(sameLen)
 
-        isFound = all(
-            workflow in self.statusParams.get("workflows") for workflow in workflows
-        )
+        isFound = all(workflow in self.statusParams.get("workflows") for workflow in workflows)
         self.assertTrue(isFound)
 
     def testGetWorkflowsByNames(self):
@@ -236,8 +222,7 @@ class ReqMgrReaderTest(unittest.TestCase):
         self.assertTrue(isFound)
 
         isSubRequstTypeEqual = all(
-            workflow["SubRequestType"] == self.statusParams.get("subrtype")
-            for workflow in workflows
+            workflow["SubRequestType"] == self.statusParams.get("subrtype") for workflow in workflows
         )
         self.assertTrue(isSubRequstTypeEqual)
 
@@ -271,16 +256,12 @@ class ReqMgrReaderTest(unittest.TestCase):
         self.assertTrue(isListOfDicts)
 
         isFound = all(
-            self.otherWorkflowsParams.get("toTestSplittings").get("workflow")
-            in splt["taskName"]
+            self.otherWorkflowsParams.get("toTestSplittings").get("workflow") in splt["taskName"]
             for splt in splittings
         )
         self.assertTrue(isFound)
 
-        keptOnlySomeTasksTypes = all(
-            splt["taskType"] in ["Production", "Processing", "Skim"]
-            for splt in splittings
-        )
+        keptOnlySomeTasksTypes = all(splt["taskType"] in ["Production", "Processing", "Skim"] for splt in splittings)
         self.assertTrue(keptOnlySomeTasksTypes)
 
         # Test when strip is True and allTasks is True
@@ -296,17 +277,14 @@ class ReqMgrReaderTest(unittest.TestCase):
         self.assertTrue(isListOfDicts)
 
         isFound = all(
-            self.otherWorkflowsParams.get("toTestSplittings").get("workflow")
-            in splt["taskName"]
+            self.otherWorkflowsParams.get("toTestSplittings").get("workflow") in splt["taskName"]
             for splt in splittings
         )
         self.assertTrue(isFound)
 
         keptOnlySomeParams = False
         for splt in splittings:
-            if splt["splitParams"] in self.otherWorkflowsParams.get(
-                "toTestSplittings"
-            ).get("dropingParams"):
+            if splt["splitParams"] in self.otherWorkflowsParams.get("toTestSplittings").get("dropingParams"):
                 break
         else:
             keptOnlySomeParams = True

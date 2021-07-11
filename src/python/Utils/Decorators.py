@@ -4,9 +4,7 @@ from functools import wraps
 from typing import Callable, Optional, Any
 
 
-def runWithRetries(
-    tries: int = 10, wait: int = 5, default: Optional[Any] = None
-) -> Any:
+def runWithRetries(tries: int = 10, wait: int = 5, default: Optional[Any] = None) -> Any:
     """
     The function that defines a decorator to run a given function with retries
     :param tries: number of tries
@@ -24,15 +22,13 @@ def runWithRetries(
                     return f(*args, **kwargs)
 
                 except Exception as error:
-                    print(
-                        f"Failed running function {f.__name__} on try #{i+1} of {retriesParam['tries']}"
-                    )
+                    print(f"Failed running function {f.__name__} on try #{i+1} of {retriesParam['tries']}")
                     print(str(error))
                     time.sleep(retriesParam["wait"])
 
-                if default:
-                    return default
-                raise Exception("NoDefaultValue")
+            if default is not None:
+                return default
+            raise Exception("NoDefaultValue")
 
         return wrapper
 
